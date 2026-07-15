@@ -12,6 +12,9 @@ const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
 
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
+    // אתחול מנגנון הטאבים (מעבר בין חלוניות)
+    initTabs();
+
     // קביעת תאריך ברירת מחדל להיום
     const dateInput = document.getElementById('selected-date');
     if (dateInput) {
@@ -42,6 +45,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// מנגנון ניווט טאבים חלק
+function initTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTabId = button.getAttribute('data-tab');
+
+            // 1. נסיר את הקלאס הפעיל מכל הכפתורים ונשים על הלחוץ
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // 2. נסיר את קלאס התצוגה מכל הטאבים ונציג רק את הטאב שנבחר
+            tabContents.forEach(content => {
+                content.classList.remove('active-tab');
+                if (content.id === targetTabId) {
+                    content.classList.add('active-tab');
+                }
+            });
+        });
+    });
+}
+
 // בניית תיבות הלו"ז כחלוניות נפרדות (day-card) עם שעות נקיות
 function buildWeeklyScheduleUI() {
     const container = document.querySelector('.schedule-container');
@@ -51,7 +78,7 @@ function buildWeeklyScheduleUI() {
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
         const dayDiv = document.createElement('div');
-        dayDiv.className = 'day-card'; // שינוי לחלונית נפרדת!
+        dayDiv.className = 'day-card';
         
         let slotsHTML = '';
         for (let i = 1; i <= 6; i++) {
