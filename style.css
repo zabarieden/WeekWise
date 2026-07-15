@@ -16,7 +16,7 @@ body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     margin: 0;
-    padding: 12px; /* פחות ריווח בצדדים בטלפון */
+    padding: 12px;
     direction: rtl;
     -webkit-tap-highlight-color: transparent;
 }
@@ -27,7 +27,7 @@ header {
 }
 
 .logo {
-    font-size: 1.8rem; /* קצת יותר קטן במובייל */
+    font-size: 1.8rem;
     font-weight: 800;
     background: linear-gradient(45deg, var(--accent-pink), var(--accent-blue));
     -webkit-background-clip: text;
@@ -104,7 +104,7 @@ header p {
     text-align: center;
 }
 
-/* סרגל הטאבים - קבוע למעלה במובייל */
+/* סרגל הטאבים */
 .tabs-nav {
     display: flex;
     justify-content: center;
@@ -125,7 +125,7 @@ header p {
     color: var(--text-secondary);
     border: none;
     padding: 8px 10px;
-    font-size: 0.85rem; /* גודל כפתור נוח בטלפון */
+    font-size: 0.85rem;
     font-weight: 700;
     border-radius: 6px;
     cursor: pointer;
@@ -160,7 +160,7 @@ header p {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 16px; /* פחות ריווח פנימי לחסכון במקום */
+    padding: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
@@ -187,7 +187,7 @@ h2 {
     margin: 0;
 }
 
-/* 📅 לו"ז שבועי - התאמה מטורפת למובייל */
+/* 📅 לו"ז שבועי */
 .schedule-container {
     display: flex;
     gap: 12px;
@@ -202,7 +202,7 @@ h2 {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 12px;
-    min-width: 280px; /* תופס כמעט את כל רוחב המסך בטלפון */
+    min-width: 280px;
     max-width: 300px;
     scroll-snap-align: center;
     flex-shrink: 0;
@@ -231,7 +231,7 @@ h2 {
     border-radius: 6px;
     padding: 6px 8px;
     display: grid;
-    grid-template-columns: 70px 1fr; /* שעה ומשימה בשורה אחת כדי לחסוך מקום! */
+    grid-template-columns: 70px 1fr;
     gap: 8px;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.01);
@@ -255,11 +255,6 @@ h2 {
     color: var(--text-primary);
     padding: 2px 0;
     font-size: 0.85rem;
-}
-
-.slot-task:focus {
-    outline: none;
-    border-bottom-color: var(--accent-pink);
 }
 
 /* 🍎 מעקב ארוחות קומפקטי במובייל */
@@ -305,7 +300,6 @@ h2 {
     outline: none;
 }
 
-/* הפיכת שדות האוכל והקלוריות לשורה אחת! */
 .food-input {
     background-color: #222538;
     border: 1px solid var(--border-color);
@@ -327,26 +321,9 @@ h2 {
     text-align: center;
 }
 
-.meal-row input {
-    margin: 0;
-}
-
-/* שילוב שדות קלט זה לצד זה */
-.meal-row .food-input, .meal-row .calories-input {
-    display: inline-block;
-}
-
 .meal-inputs-wrap {
     display: flex;
     gap: 8px;
-}
-
-/* שינוי המבנה של השדות ב-HTML דרך CSS כך שיהיו בשורה */
-.meal-row {
-    position: relative;
-}
-.meal-row input[type="text"] {
-    width: auto;
 }
 
 /* מנהל ארוחות מוכנות */
@@ -382,7 +359,7 @@ button {
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-pink), #e0006c);
     color: #fff;
-    width: 100%; /* תמיד כפתור רחב ונוח ללחיצה במובייל */
+    width: 100%;
 }
 
 .btn-secondary {
@@ -393,7 +370,7 @@ button {
     width: 100%;
 }
 
-/* 📊 מדדי קלוריות - שורה אחת אופקית במובייל! */
+/* 📊 מדדי קלוריות */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -415,7 +392,7 @@ button {
 }
 
 .stat-number {
-    font-size: 1.4rem; /* קומפקטי וקריא */
+    font-size: 1.4rem;
     font-weight: 800;
     margin-bottom: 3px;
 }
@@ -424,7 +401,84 @@ button {
     font-size: 0.7rem;
 }
 
-/* 🎯 המרכז שלי במובייל */
+/* 📈 מנגנון מד התקדמות שבועי */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 5px;
+}
+
+.progress-row {
+    background-color: #1c1e2d;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.progress-title {
+    font-weight: 700;
+}
+
+.progress-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-counter {
+    background-color: #222538;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-counter:hover {
+    background-color: var(--accent-blue);
+    color: #0c0d12;
+}
+
+.progress-bar-bg {
+    background-color: #222538;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-bar-fill.completed {
+    background: linear-gradient(90deg, var(--accent-pink), #e0006c);
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+}
+
+/* 🎯 המרכז שלי */
 .my-center-grid {
     display: flex;
     flex-direction: column;
@@ -490,7 +544,7 @@ button {
     padding: 0 5px;
 }
 
-/* רספונסיביות למסכים רחבים (מחשב) */
+/* רספונסיביות */
 @media (min-width: 769px) {
     body {
         padding: 20px;
