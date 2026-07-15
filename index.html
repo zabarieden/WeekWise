@@ -9,99 +9,210 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header>
-        <div class="logo">WeekWise ⚡</div>
-        <p>הלו"ז, התזונה והאימונים שלי במקום אחד</p>
-    </header>
 
-    <!-- סרגל טאבים לניווט מהיר -->
-    <nav class="tabs-nav">
-        <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
-        <button class="tab-button" data-tab="nutrition-section">🍎 מעקב ארוחות</button>
-        <button class="tab-button" data-tab="stats-section">📊 מדדי קלוריות</button>
-    </nav>
+    <!-- מסך כניסה למערכת -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <h2>⚡ ברוכה הבאה ל-WeekWise</h2>
+            <p>הקלידי שם משתמש כדי להיכנס ללוח האישי שלך:</p>
+            <input type="text" id="username-input" placeholder="שם משתמש (למשל: Eden)" autofocus>
+            <button id="btn-login" class="btn-primary">היכנסי למערכת</button>
+        </div>
+    </div>
 
-    <main class="dashboard-container">
-        
-        <!-- טאב 1: לו"ז שבועי (בגלילה צידית של חלוניות נפרדות) -->
-        <section class="tab-content active-tab" id="schedule-section">
-            <div class="card">
-                <h2>📅 הלו"ז השבועי שלי</h2>
-                <div class="schedule-container">
-                    <!-- ימי השבוע כחלוניות נפרדות יווצרו כאן דינמית -->
-                </div>
-            </div>
-        </section>
+    <!-- האפליקציה הראשית (מוסתרת עד לכניסה) -->
+    <div id="app-container" style="display: none;">
+        <header>
+            <div class="logo">WeekWise ⚡</div>
+            <p>הלו"ז, התזונה והאימונים של <span id="display-user" style="color: var(--accent-blue); font-weight: bold;"></span></p>
+            <button id="btn-logout" class="btn-logout">🚪 התנתק</button>
+        </header>
 
-        <!-- טאב 2: מעקב ארוחות וקלוריות מפורט -->
-        <section class="tab-content" id="nutrition-section">
-            <div class="card">
-                <div class="card-header">
-                    <h2>🍎 מעקב ארוחות יומי</h2>
-                    <div class="date-picker-container">
-                        <input type="date" id="selected-date">
-                    </div>
-                </div>
-                
-                <button id="btn-copy-yesterday" class="btn-secondary">📋 שכפל תפריט מיום קודם</button>
-                
-                <div class="meals-container">
-                    <!-- ארוחות 1-4 ונשנושים -->
-                    <div class="meal-row" data-meal="meal_1">
-                        <span class="meal-label">ארוחה 1</span>
-                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                        <input type="number" placeholder="קלוריות" class="calories-input">
-                    </div>
-                    <div class="meal-row" data-meal="meal_2">
-                        <span class="meal-label">ארוחה 2</span>
-                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                        <input type="number" placeholder="קלוריות" class="calories-input">
-                    </div>
-                    <div class="meal-row" data-meal="meal_3">
-                        <span class="meal-label">ארוחה 3</span>
-                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                        <input type="number" placeholder="קלוריות" class="calories-input">
-                    </div>
-                    <div class="meal-row" data-meal="meal_4">
-                        <span class="meal-label">ארוחה 4</span>
-                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                        <input type="number" placeholder="קלוריות" class="calories-input">
-                    </div>
-                    <div class="meal-row" data-meal="snack">
-                        <span class="meal-label">נשנושים</span>
-                        <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
-                        <input type="number" placeholder="קלוריות" class="calories-input">
+        <!-- סרגל טאבים לניווט מהיר -->
+        <nav class="tabs-nav">
+            <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
+            <button class="tab-button" data-tab="nutrition-section">🍎 תזונה ומדדים</button>
+            <button class="tab-button" data-tab="my-center-section">🎯 המרכז שלי</button>
+        </nav>
+
+        <main class="dashboard-container">
+            
+            <!-- טאב 1: לו"ז שבועי (בגלילה צידית של חלוניות נפרדות) -->
+            <section class="tab-content active-tab" id="schedule-section">
+                <div class="card">
+                    <h2>📅 הלו"ז השבועי שלי</h2>
+                    <div class="schedule-container">
+                        <!-- ימי השבוע כחלוניות נפרדות יווצרו כאן דינמית -->
                     </div>
                 </div>
-                <button id="btn-save-nutrition" class="btn-primary">💾 שמור תפריט להיום</button>
-            </div>
-        </section>
+            </section>
 
-        <!-- טאב 3: סיכומים ומספרים -->
-        <section class="tab-content" id="stats-section">
-            <div class="card">
-                <h2>📊 מדדי קלוריות</h2>
-                <div class="stats-grid">
-                    <div class="stat-box today">
-                        <h3>היום</h3>
-                        <div class="stat-number" id="calories-today">0</div>
-                        <span class="stat-unit">קלוריות</span>
+            <!-- טאב 2: מעקב ארוחות ותזונה -->
+            <section class="tab-content" id="nutrition-section">
+                <!-- חלונית מעקב ארוחות -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2>🍎 מעקב ארוחות יומי</h2>
+                        <div class="date-picker-container">
+                            <input type="date" id="selected-date">
+                        </div>
                     </div>
-                    <div class="stat-box weekly">
-                        <h3>ממוצע שבועי</h3>
-                        <div class="stat-number" id="calories-weekly">0</div>
-                        <span class="stat-unit">קלוריות</span>
+                    
+                    <button id="btn-copy-yesterday" class="btn-secondary">📋 שכפל תפריט מיום קודם</button>
+                    
+                    <div class="meals-container">
+                        <!-- ארוחה 1 -->
+                        <div class="meal-row" data-meal="meal_1">
+                            <div class="meal-header-row">
+                                <span class="meal-label">ארוחה 1</span>
+                                <select class="preset-select" data-category="morning">
+                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                </select>
+                            </div>
+                            <input type="text" placeholder="מה אכלת?" class="food-input">
+                            <input type="number" placeholder="קלוריות" class="calories-input">
+                        </div>
+
+                        <!-- ארוחה 2 -->
+                        <div class="meal-row" data-meal="meal_2">
+                            <div class="meal-header-row">
+                                <span class="meal-label">ארוחה 2</span>
+                                <select class="preset-select" data-category="noon">
+                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                </select>
+                            </div>
+                            <input type="text" placeholder="מה אכלת?" class="food-input">
+                            <input type="number" placeholder="קלוריות" class="calories-input">
+                        </div>
+
+                        <!-- ארוחה 3 -->
+                        <div class="meal-row" data-meal="meal_3">
+                            <div class="meal-header-row">
+                                <span class="meal-label">ארוחה 3</span>
+                                <select class="preset-select" data-category="evening">
+                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                </select>
+                            </div>
+                            <input type="text" placeholder="מה אכלת?" class="food-input">
+                            <input type="number" placeholder="קלוריות" class="calories-input">
+                        </div>
+
+                        <!-- ארוחה 4 -->
+                        <div class="meal-row" data-meal="meal_4">
+                            <div class="meal-header-row">
+                                <span class="meal-label">ארוחה 4</span>
+                                <select class="preset-select" data-category="evening">
+                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                </select>
+                            </div>
+                            <input type="text" placeholder="מה אכלת?" class="food-input">
+                            <input type="number" placeholder="קלוריות" class="calories-input">
+                        </div>
+
+                        <!-- נשנושים -->
+                        <div class="meal-row" data-meal="snack">
+                            <div class="meal-header-row">
+                                <span class="meal-label">נשנושים</span>
+                                <select class="preset-select" data-category="snack">
+                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                </select>
+                            </div>
+                            <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
+                            <input type="number" placeholder="קלוריות" class="calories-input">
+                        </div>
                     </div>
-                    <div class="stat-box monthly">
-                        <h3>ממוצע חודשי</h3>
-                        <div class="stat-number" id="calories-monthly">0</div>
-                        <span class="stat-unit">קלוריות</span>
+                    
+                    <button id="btn-save-nutrition" class="btn-primary">💾 שמור תפריט להיום</button>
+                </div>
+
+                <!-- חלונית הוספת ארוחה מוכנה חדשה למאגר -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2>➕ הוספת ארוחה מוכנה חדשה למאגר</h2>
+                    <div class="preset-manager-grid">
+                        <input type="text" id="new-preset-name" placeholder="שם הארוחה (למשל: יוגורט ושיבולת שועל)">
+                        <input type="number" id="new-preset-calories" placeholder="כמות קלוריות">
+                        <select id="new-preset-category">
+                            <option value="morning">🌅 ארוחת בוקר וקלות</option>
+                            <option value="noon">☀️ ארוחות עיקריות (צהריים / ערב)</option>
+                            <option value="evening">🌙 ארוחות עיקריות (צהריים / ערב)</option>
+                            <option value="snack">🍭 נשנושים ומתוקים</option>
+                        </select>
+                        <button id="btn-add-preset" class="btn-primary">➕ הוסף למאגר שלי</button>
                     </div>
                 </div>
-            </div>
-        </section>
 
-    </main>
+                <!-- חלונית סיכומים ומדדי קלוריות (משולבת פה בתחתית!) -->
+                <div class="card">
+                    <h2>📊 מדדי קלוריות</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box today">
+                            <h3>היום</h3>
+                            <div class="stat-number" id="calories-today">0</div>
+                            <span class="stat-unit">קלוריות</span>
+                        </div>
+                        <div class="stat-box weekly">
+                            <h3>ממוצע שבועי</h3>
+                            <div class="stat-number" id="calories-weekly">0</div>
+                            <span class="stat-unit">קלוריות</span>
+                        </div>
+                        <div class="stat-box monthly">
+                            <h3>ממוצע חודשי</h3>
+                            <div class="stat-number" id="calories-monthly">0</div>
+                            <span class="stat-unit">קלוריות</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- טאב 3: המרכז שלי (משימות, קניות ודברים חשובים) -->
+            <section class="tab-content" id="my-center-section">
+                <div class="my-center-grid">
+                    
+                    <!-- דברים חשובים (אדום/בולט בראש הדף) -->
+                    <div class="card important-card">
+                        <h2 style="color: #ff3b30;">⚠️ דברים חשובים מאוד!</h2>
+                        <div class="list-add-group">
+                            <input type="text" id="add-important-input" placeholder="להתקשר לרופא, לבטל מנוי...">
+                            <button onclick="addCenterItem('important')">➕</button>
+                        </div>
+                        <ul id="important-list" class="center-list"></ul>
+                    </div>
+
+                    <!-- משימות השבוע (מתי עושים מה) -->
+                    <div class="card">
+                        <h2>📌 משימות השבוע (מתי/מה)</h2>
+                        <div class="list-add-group">
+                            <input type="text" id="add-weekly-input" placeholder="יום שלישי: לקחת חבילה מהדואר...">
+                            <button onclick="addCenterItem('weekly')">➕</button>
+                        </div>
+                        <ul id="weekly-list" class="center-list"></ul>
+                    </div>
+
+                    <!-- דברים לעשות בכללי -->
+                    <div class="card">
+                        <h2>💡 דברים לעשות בכללי</h2>
+                        <div class="list-add-group">
+                            <input type="text" id="add-general-input" placeholder="לסדר את הארון, לנקות נעליים...">
+                            <button onclick="addCenterItem('general')">➕</button>
+                        </div>
+                        <ul id="general-list" class="center-list"></ul>
+                    </div>
+
+                    <!-- רשימת קניות שבועית -->
+                    <div class="card">
+                        <h2>🛒 רשימת קניות שבועית</h2>
+                        <div class="list-add-group">
+                            <input type="text" id="add-shopping-input" placeholder="חלב שיבולת שועל, קוטג'...">
+                            <button onclick="addCenterItem('shopping')">➕</button>
+                        </div>
+                        <ul id="shopping-list" class="center-list"></ul>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
 
     <script src="app.js"></script>
 </body>
