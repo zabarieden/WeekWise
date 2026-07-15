@@ -32,7 +32,7 @@
         <nav class="tabs-nav">
             <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
             <button class="tab-button" data-tab="nutrition-section">🍎 תזונה ומדדים</button>
-            <button class="tab-button" data-tab="my-center-section">🎯 המרכז שלי</button>
+            <button class="tab-button" data-tab="my-center-section">🎯 Focus ⚡</button>
         </nav>
 
         <main class="dashboard-container">
@@ -41,9 +41,12 @@
             <section class="tab-content active-tab" id="schedule-section">
                 <div class="card" style="margin-bottom: 20px;">
                     <h2>📅 הלו"ז השבועי שלי</h2>
-                    <div class="schedule-container">
-                        <!-- ימי השבוע כחלוניות נפרדות יווצרו כאן דינמית -->
+                    <div class="schedule-accordion" id="accordion-container">
+                        <!-- ימי השבוע כרצועות נפתחות בלחיצה יווצרו כאן דינמית -->
                     </div>
+                    
+                    <!-- כפתור איפוס כל השבוע מרוכז למטה -->
+                    <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 15px;">🧹 איפוס וניקוי כל הלו"ז השבועי</button>
                 </div>
 
                 <!-- חלונית הוספת/עדכון משימה ללו"ז מלמטה -->
@@ -60,12 +63,16 @@
                             <option value="Saturday">יום שבת</option>
                         </select>
                         <select id="add-slot-num">
-                            <option value="1">חריץ 1</option>
-                            <option value="2">חריץ 2</option>
-                            <option value="3">חריץ 3</option>
-                            <option value="4">חריץ 4</option>
-                            <option value="5">חריץ 5</option>
-                            <option value="6">חריץ 6</option>
+                            <option value="1">#1</option>
+                            <option value="2">#2</option>
+                            <option value="3">#3</option>
+                            <option value="4">#4</option>
+                            <option value="5">#5</option>
+                            <option value="6">#6</option>
+                            <option value="7">#7</option>
+                            <option value="8">#8</option>
+                            <option value="9">#9</option>
+                            <option value="10">#10</option>
                         </select>
                         <input type="text" id="add-slot-time" placeholder="שעה (למשל: 09:00)">
                         <input type="text" id="add-slot-task" placeholder="שם המשימה החופשית...">
@@ -216,7 +223,7 @@
                 </div>
             </section>
 
-            <!-- טאב 3: המרכז שלי -->
+            <!-- טאב 3: Focus ⚡ (גלילה אנכית מהירה וקלה) -->
             <section class="tab-content" id="my-center-section">
                 <div class="my-center-grid">
                     
@@ -253,8 +260,8 @@
                         </div>
                     </div>
 
-                    <!-- 🛒 סידורים, משימות וקניות בכללי (מאוחד, רשימה אחת חופשית!) -->
-                    <div class="card" style="grid-column: span 2;">
+                    <!-- 🛒 סידורים, משימות וקניות בכללי (רשימה משולבת אחת חופשית!) -->
+                    <div class="card">
                         <h2>🛒 סידורים, משימות וקניות בכללי</h2>
                         <div class="list-add-group">
                             <input type="text" id="add-general-input" placeholder="להקליד כאן כל מוצר לקנות, משימה או סידור כללי...">
