@@ -7,7 +7,7 @@ let supabaseClient;
 const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// 10 שעות ברירת מחדל קבועות מראש לחריצים החדשים!
+// 10 שעות ברירת מחדל קבועות מראש לחריצים
 const defaultHours = [
     '07:00', '09:00', '11:00', '13:00', '15:00', 
     '17:00', '19:00', '20:00', '21:00', '22:00'
@@ -109,6 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnClearWeek) {
         btnClearWeek.addEventListener('click', clearEntireWeeklySchedule);
     }
+
+    // כפתור שמירת משקל חדש
+    const btnSaveWeight = document.getElementById('btn-save-weight');
+    if (btnSaveWeight) {
+        btnSaveWeight.addEventListener('click', saveNewWeightRecord);
+    }
 });
 
 // פונקציית כניסה למערכת
@@ -120,15 +126,23 @@ async function loginUser(username) {
     document.getElementById('app-container').style.display = 'block';
     document.getElementById('display-user').innerText = username;
 
+    // אתחול תאריכים
     const dateInput = document.getElementById('selected-date');
+    const today = new Date().toISOString().split('T')[0];
+    
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         loadDailyNutrition(today);
         
         dateInput.onchange = (e) => {
             loadDailyNutrition(e.target.value);
         };
+    }
+
+    // הגדרת תאריך ברירת מחדל גם במעקב משקל
+    const weightDateInput = document.getElementById('new-weight-date');
+    if (weightDateInput) {
+        weightDateInput.value = today;
     }
 
     if (username.toLowerCase() === 'eden') {
@@ -142,6 +156,7 @@ async function loginUser(username) {
     loadAllCenterItems();
     loadMealPresetsToSelects();
     loadProgressTargets();
+    loadWeightHistory(); // טעינת משקלים מהדאטהבייס
 
     const btnSave = document.getElementById('btn-save-nutrition');
     if (btnSave) {
@@ -250,11 +265,12 @@ function toggleAccordion(day) {
     if (!item) return;
 
     const isActive = item.classList.contains('active');
+    document.querySelectorAll('.accordion-item').forEach(el => {
+        if (el.id !== 'accordion-weight-card') { // מונע סגירת כרטיסיית המשקל
+            el.classList.remove('active');
+        }
+    });
 
-    // סגירת כל הימים האחרים
-    document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
-
-    // פתיחה או סגירה של הנוכחי
     if (!isActive) {
         item.classList.add('active');
     }
@@ -281,12 +297,10 @@ async function loadWeeklySchedule() {
             }
             slotEl.querySelector('.slot-task').value = item.task_title || '';
             
-            // עיצוב אופי המשימה + תוספת האמוג'י לתצוגה ממורכזת ויפה
             const colorClass = item.task_color === 'purple' ? 'task-purple' : 'task-pink';
             slotEl.classList.remove('task-pink', 'task-purple');
             slotEl.classList.add(colorClass);
 
-            // אם קיימת משימה, נרצה שיהיה רשום האמוג'י של האופי לפניה
             const taskInput = slotEl.querySelector('.slot-task');
             if (item.task_title) {
                 const emoji = item.task_color === 'purple' ? '📚' : '🔋';
@@ -375,7 +389,7 @@ async function saveScheduleSlotFromAdder() {
     loadWeeklySchedule();
 }
 
-// כפתור מחיקת/ניקוי משימה ספציפית דרך חלונית הניהול למטה
+// כפתור מחיקת/ניקוי משימה ספציפית דרך חלונית הניהול
 async function deleteScheduleSlotFromAdder() {
     if (!supabaseClient) return;
 
@@ -391,7 +405,7 @@ async function deleteScheduleSlotFromAdder() {
     toggleAccordion(day);
 }
 
-// מחיקת משימה בודדת מחריץ לו"ז (האיקס האדום הקטן)
+// מחיקת משימה בודדת מחריץ לו"ז
 async function clearSingleSlot(day, slot) {
     if (!supabaseClient) return;
 
@@ -836,4 +850,117 @@ async function deleteProgressTarget(id) {
     }
 
     loadProgressTargets();
+}
+
+// ======================== ⚖️ מנגנון מעקב משקל תקופתי ========================
+
+// פונקציית פתיחה/סגירה של אקורדיון המשקל
+function toggleWeightAccordion() {
+    const content = document.getElementById('weight-accordion-content');
+    const icon = document.getElementById('weight-icon');
+    const card = document.getElementById('accordion-weight-card');
+    
+    if (!content || !icon) return;
+
+    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') {
+        content.style.maxHeight = '500px'; // פותח את האקורדיון
+        icon.style.transform = 'rotate(180deg)';
+        card.style.borderColor = 'var(--accent-purple)';
+    } else {
+        content.style.maxHeight = '0px'; // סוגר את האקורדיון
+        icon.style.transform = 'rotate(0deg)';
+        card.style.borderColor = 'var(--border-color)';
+    }
+}
+
+// שמירת רשומת משקל חדשה
+async function saveNewWeightRecord() {
+    if (!supabaseClient) return;
+
+    const weightInput = document.getElementById('new-weight-val');
+    const dateInput = document.getElementById('new-weight-date');
+
+    const weight = parseFloat(weightInput.value);
+    const dateVal = dateInput.value;
+
+    if (!weight || weight <= 0 || !dateVal) {
+        alert('אנא הזיני משקל תקין ותאריך.');
+        return;
+    }
+
+    const { error } = await supabaseClient.from('weight_tracker').insert({
+        username: currentUsername,
+        weight_date: dateVal,
+        weight_value: weight
+    });
+
+    if (error) {
+        console.error('Error saving weight record:', error);
+        alert('שגיאה בשמירת המשקל בדאטהבייס.');
+        return;
+    }
+
+    weightInput.value = ''; // איפוס השדה
+    loadWeightHistory(); // טעינת היסטוריה מעודכנת
+}
+
+// טעינת היסטוריית משקלים מהדאטהבייס (הכי חדש בהתחלה!)
+async function loadWeightHistory() {
+    if (!supabaseClient) return;
+
+    const { data, error } = await supabaseClient
+        .from('weight_tracker')
+        .select('*')
+        .eq('username', currentUsername)
+        .order('weight_date', { ascending: false }); // מסדר לפי תאריך מהחדש לישן
+
+    if (error) {
+        console.error('Error loading weight history:', error);
+        return;
+    }
+
+    const listUl = document.getElementById('weight-history-list');
+    if (!listUl) return;
+    listUl.innerHTML = '';
+
+    if (data.length === 0) {
+        listUl.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin: 5px 0 0 0;">אין משקלים שמורים עדיין. הוסיפי את השקילה הראשונה שלך! ⚖️</p>`;
+        return;
+    }
+
+    data.forEach(item => {
+        // המרת התאריך לפורמט עברי מסודר (למשל: 15.07.2026)
+        const dateParts = item.weight_date.split('-');
+        const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 800; color: var(--accent-pink); font-size: 1.05rem;">${item.weight_value} ק"ג</span>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">ב- ${formattedDate}</span>
+            </div>
+            <button class="btn-delete-item" onclick="deleteWeightRecord('${item.id}')" title="מחק שקילה">❌</button>
+        `;
+        listUl.appendChild(li);
+    });
+}
+
+// מחיקת שקילה מההיסטוריה
+async function deleteWeightRecord(id) {
+    if (!supabaseClient) return;
+
+    const confirmDelete = confirm('האם למחוק שקילה זו מההיסטוריה?');
+    if (!confirmDelete) return;
+
+    const { error } = await supabaseClient
+        .from('weight_tracker')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error deleting weight record:', error);
+        return;
+    }
+
+    loadWeightHistory();
 }
