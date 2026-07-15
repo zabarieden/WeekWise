@@ -16,18 +16,18 @@ body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     margin: 0;
-    padding: 20px;
+    padding: 12px; /* פחות ריווח בצדדים בטלפון */
     direction: rtl;
+    -webkit-tap-highlight-color: transparent;
 }
 
 header {
     text-align: center;
-    margin-bottom: 20px;
-    position: relative;
+    margin-bottom: 15px;
 }
 
 .logo {
-    font-size: 2.2rem;
+    font-size: 1.8rem; /* קצת יותר קטן במובייל */
     font-weight: 800;
     background: linear-gradient(45deg, var(--accent-pink), var(--accent-blue));
     -webkit-background-clip: text;
@@ -37,27 +37,23 @@ header {
 
 header p {
     color: var(--text-secondary);
-    margin: 5px 0 0;
-    font-size: 1rem;
+    margin: 3px 0 0;
+    font-size: 0.9rem;
 }
 
 .btn-logout {
     background-color: #2c1a24;
     color: var(--accent-pink);
     border: 1px solid rgba(255, 0, 127, 0.2);
-    font-size: 0.85rem;
-    padding: 6px 12px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
     border-radius: 6px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
     transition: var(--transition);
 }
-.btn-logout:hover {
-    background-color: var(--accent-pink);
-    color: #fff;
-}
 
-/* מסך כניסה (Login Overlay) */
+/* מסך כניסה */
 .login-overlay {
     position: fixed;
     top: 0;
@@ -69,29 +65,30 @@ header p {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 20px;
+    padding: 15px;
 }
 
 .login-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 40px 30px;
+    padding: 30px 20px;
     width: 100%;
-    max-width: 450px;
+    max-width: 400px;
     text-align: center;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
 .login-card h2 {
-    font-size: 1.8rem;
-    margin-bottom: 15px;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
     justify-content: center;
 }
 
 .login-card p {
     color: var(--text-secondary);
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
 }
 
 .login-card input {
@@ -102,31 +99,22 @@ header p {
     border-radius: 8px;
     padding: 12px;
     font-size: 1rem;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     box-sizing: border-box;
     text-align: center;
 }
 
-.login-card input:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-}
-
-.login-card button {
-    width: 100%;
-}
-
-/* סרגל הטאבים (הניווט) */
+/* סרגל הטאבים - קבוע למעלה במובייל */
 .tabs-nav {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
+    gap: 5px;
+    margin-bottom: 15px;
     background-color: var(--bg-card);
-    padding: 8px;
-    border-radius: 12px;
+    padding: 5px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
-    max-width: 600px;
+    max-width: 500px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -136,18 +124,14 @@ header p {
     background: transparent;
     color: var(--text-secondary);
     border: none;
-    padding: 10px 15px;
-    font-size: 0.95rem;
+    padding: 8px 10px;
+    font-size: 0.85rem; /* גודל כפתור נוח בטלפון */
     font-weight: 700;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
-}
-
-.tab-button:hover {
-    color: var(--text-primary);
-    background-color: rgba(255, 255, 255, 0.03);
+    text-align: center;
 }
 
 .tab-button.active {
@@ -155,34 +139,29 @@ header p {
     color: #0c0d12;
 }
 
-/* ניהול הצגת והסתרת הטאבים */
+/* ניהול טאבים */
 .tab-content {
     display: none; 
 }
 
 .tab-content.active-tab {
     display: block; 
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.25s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dashboard Container */
+/* קונטיינר ראשי */
 .dashboard-container {
     max-width: 1000px;
     margin: 0 auto;
 }
 
-/* Cards style */
+/* עיצוב חלוניות */
 .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 16px; /* פחות ריווח פנימי לחסכון במקום */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
 }
@@ -191,16 +170,16 @@ header p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 h2 {
-    font-size: 1.3rem;
-    margin: 0 0 15px 0;
+    font-size: 1.15rem;
+    margin: 0 0 10px 0;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     color: #fff;
 }
 
@@ -208,60 +187,54 @@ h2 {
     margin: 0;
 }
 
-/* קונטיינר הלו"ז השבועי - תומך בגלילה צידית חלקה */
+/* 📅 לו"ז שבועי - התאמה מטורפת למובייל */
 .schedule-container {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     overflow-x: auto;
-    padding: 5px 2px 15px 2px;
+    padding: 2px 2px 10px 2px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
 }
 
-/* כרטיסיית יום עצמאית */
 .day-card {
     background-color: #1c1e2d;
     border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 16px;
-    min-width: 260px;
-    max-width: 290px;
-    scroll-snap-align: start;
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 280px; /* תופס כמעט את כל רוחב המסך בטלפון */
+    max-width: 300px;
+    scroll-snap-align: center;
     flex-shrink: 0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    transition: var(--transition);
-}
-
-.day-card:hover {
-    border-color: var(--accent-blue);
 }
 
 .day-name {
     font-weight: 800;
     color: var(--accent-blue);
-    margin-bottom: 12px;
-    font-size: 1.15rem;
+    margin-bottom: 10px;
+    font-size: 1rem;
     border-bottom: 1px solid rgba(0, 210, 255, 0.15);
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     text-align: center;
 }
 
 .slots-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .slot-input-group {
     background-color: #222538;
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: grid;
+    grid-template-columns: 70px 1fr; /* שעה ומשימה בשורה אחת כדי לחסוך מקום! */
+    gap: 8px;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.01);
 }
 
 .slot-time {
@@ -270,23 +243,17 @@ h2 {
     color: var(--accent-blue) !important;
     font-weight: 700;
     text-align: center;
-    border-radius: 6px;
-    padding: 5px !important;
-    font-size: 0.85rem;
+    border-radius: 4px;
+    padding: 4px 2px !important;
+    font-size: 0.8rem;
 }
 
-.slot-time:focus {
-    border-color: var(--accent-blue) !important;
-    outline: none;
-}
-
-/* שדה הזנת משימה בלו"ז - תומך ב-datalist לבחירה מהירה */
 .slot-task {
     background: transparent;
     border: none;
     border-bottom: 1px solid #3c4261;
     color: var(--text-primary);
-    padding: 4px 2px;
+    padding: 2px 0;
     font-size: 0.85rem;
 }
 
@@ -295,199 +262,183 @@ h2 {
     border-bottom-color: var(--accent-pink);
 }
 
-.schedule-container::-webkit-scrollbar {
-    height: 6px;
-}
-.schedule-container::-webkit-scrollbar-track {
-    background: #0c0d12;
-    border-radius: 10px;
-}
-.schedule-container::-webkit-scrollbar-thumb {
-    background: var(--accent-blue);
-    border-radius: 10px;
-}
-
-/* Nutrition inputs style */
+/* 🍎 מעקב ארוחות קומפקטי במובייל */
 .meals-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
 .meal-row {
+    background-color: #1c1e2d;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background-color: #1c1e2d;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .meal-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 4px;
 }
 
 .meal-label {
     font-weight: 700;
+    font-size: 0.9rem;
     color: var(--accent-pink);
 }
 
-/* תיבת הבחירה המהירה של הארוחות המוכנות */
 .preset-select {
     background-color: #222538;
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.8rem;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    max-width: 170px;
     outline: none;
-    cursor: pointer;
 }
 
-.food-input, .calories-input, #selected-date {
+/* הפיכת שדות האוכל והקלוריות לשורה אחת! */
+.food-input {
     background-color: #222538;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     border-radius: 6px;
-    padding: 10px;
-    font-size: 0.95rem;
+    padding: 8px;
+    font-size: 0.85rem;
+    flex: 1;
 }
 
-.food-input:focus, .calories-input:focus {
-    outline: none;
-    border-color: var(--accent-pink);
+.calories-input {
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85rem;
+    width: 70px;
+    text-align: center;
 }
 
-/* מנהל ארוחות מוכנות חדשות */
+.meal-row input {
+    margin: 0;
+}
+
+/* שילוב שדות קלט זה לצד זה */
+.meal-row .food-input, .meal-row .calories-input {
+    display: inline-block;
+}
+
+.meal-inputs-wrap {
+    display: flex;
+    gap: 8px;
+}
+
+/* שינוי המבנה של השדות ב-HTML דרך CSS כך שיהיו בשורה */
+.meal-row {
+    position: relative;
+}
+.meal-row input[type="text"] {
+    width: auto;
+}
+
+/* מנהל ארוחות מוכנות */
 .preset-manager-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 12px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .preset-manager-grid input, .preset-manager-grid select {
     background-color: #222538;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.9rem;
-    outline: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-    .preset-manager-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Buttons */
+/* כפתורים */
 button {
     font-family: inherit;
     font-weight: 600;
     border-radius: 8px;
-    padding: 12px 20px;
+    padding: 10px 15px;
     cursor: pointer;
     transition: var(--transition);
     border: none;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-pink), #e0006c);
     color: #fff;
-}
-
-.btn-primary:hover {
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    transform: translateY(-2px);
+    width: 100%; /* תמיד כפתור רחב ונוח ללחיצה במובייל */
 }
 
 .btn-secondary {
     background-color: #202436;
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    margin-bottom: 15px;
+    margin-bottom: 12px;
+    width: 100%;
 }
 
-.btn-secondary:hover {
-    background-color: #2b304a;
-}
-
-/* Statistics Style */
+/* 📊 מדדי קלוריות - שורה אחת אופקית במובייל! */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-@media (max-width: 600px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
+    gap: 10px;
 }
 
 .stat-box {
     background-color: #1c1e2d;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 10px;
+    padding: 12px 6px;
     text-align: center;
     border: 1px solid var(--border-color);
 }
 
 .stat-box h3 {
-    margin: 0 0 10px 0;
-    font-size: 1rem;
+    margin: 0 0 5px 0;
+    font-size: 0.75rem;
     color: var(--text-secondary);
 }
 
 .stat-number {
-    font-size: 2.5rem;
+    font-size: 1.4rem; /* קומפקטי וקריא */
     font-weight: 800;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
-
-.today .stat-number { color: var(--accent-pink); }
-.weekly .stat-number { color: var(--accent-blue); }
-.monthly .stat-number { color: var(--accent-green); }
 
 .stat-unit {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
+    font-size: 0.7rem;
 }
 
-/* המרכז שלי: סידור קוביות הרשימות */
+/* 🎯 המרכז שלי במובייל */
 .my-center-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .important-card {
-    grid-column: span 2;
-    border: 1.5px solid rgba(255, 59, 48, 0.3);
+    border: 1px solid rgba(255, 59, 48, 0.4);
 }
 
-@media (max-width: 768px) {
-    .my-center-grid {
-        grid-template-columns: 1fr;
-    }
-    .important-card {
-        grid-column: span 1;
-    }
-}
-
-/* קבוצת הזנת פריט לרשימה */
 .list-add-group {
     display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .list-add-group input {
@@ -495,55 +446,100 @@ button {
     background-color: #222538;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.9rem;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85rem;
     outline: none;
 }
 
 .list-add-group button {
-    padding: 10px 15px;
+    padding: 8px 12px;
     background-color: var(--accent-blue);
     color: #0c0d12;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: bold;
+    width: auto;
 }
 
-/* רשימות פריטים מותאמות למחיקה מהירה */
 .center-list {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .center-list li {
     background-color: #1c1e2d;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 15px;
+    border-radius: 6px;
+    padding: 8px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.95rem;
-    transition: var(--transition);
-}
-
-.center-list li:hover {
-    border-color: var(--accent-pink);
+    font-size: 0.85rem;
 }
 
 .btn-delete-item {
     background: transparent;
     color: var(--text-secondary);
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     cursor: pointer;
-    padding: 2px 8px;
+    padding: 0 5px;
 }
 
-.btn-delete-item:hover {
-    color: var(--accent-pink);
+/* רספונסיביות למסכים רחבים (מחשב) */
+@media (min-width: 769px) {
+    body {
+        padding: 20px;
+    }
+    .tabs-nav {
+        margin-bottom: 25px;
+    }
+    .card {
+        padding: 24px;
+        border-radius: 16px;
+    }
+    .day-card {
+        min-width: 260px;
+        max-width: 290px;
+    }
+    .slot-input-group {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+    .slot-time {
+        font-size: 0.85rem;
+        padding: 5px !important;
+    }
+    .slot-task {
+        font-size: 0.85rem;
+    }
+    .meal-row {
+        padding: 15px;
+    }
+    .preset-manager-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 12px;
+    }
+    .btn-primary, .btn-secondary {
+        width: auto;
+    }
+    .stat-number {
+        font-size: 2.2rem;
+    }
+    .stat-box {
+        padding: 20px;
+    }
+    .my-center-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .important-card {
+        grid-column: span 2;
+    }
 }
