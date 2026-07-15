@@ -7,6 +7,9 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+// שעות ברירת מחדל לקוביות הלו"ז (החל מ-7 בבוקר, כל שעתיים)
+const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
+
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
     // קביעת תאריך ברירת מחדל להיום
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-copy-yesterday').addEventListener('click', copyFromYesterday);
 });
 
-// בניית תיבות הלו"ז הריקות (6 משימות לכל יום) - מותאם לגלילה צידית
+// בניית תיבות הלו"ז כחלוניות נפרדות (day-card) עם שעות נקיות
 function buildWeeklyScheduleUI() {
     const container = document.querySelector('.schedule-container');
     container.innerHTML = '';
@@ -39,14 +42,15 @@ function buildWeeklyScheduleUI() {
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
         const dayDiv = document.createElement('div');
-        dayDiv.className = 'day-column';
+        dayDiv.className = 'day-card'; // שינוי לחלונית נפרדת!
         
         let slotsHTML = '';
         for (let i = 1; i <= 6; i++) {
+            const defaultHour = defaultHours[i - 1]; // קבלת השעה המתאימה
             slotsHTML += `
                 <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
-                    <input type="text" placeholder="🕒 שעה (למשל: 18:00)" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
-                    <input type="text" placeholder="⚡ משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" value="${defaultHour}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
                 </div>
             `;
         }
@@ -70,7 +74,10 @@ async function loadWeeklySchedule() {
     data.forEach(item => {
         const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
         if (slotEl) {
-            slotEl.querySelector('.slot-time').value = item.time_of_day || '';
+            // נשנה את השעה רק אם שונה ונשמר משהו מותאם אישית בדאטהבייס
+            if (item.time_of_day !== undefined && item.time_of_day !== null && item.time_of_day !== '') {
+                slotEl.querySelector('.slot-time').value = item.time_of_day;
+            }
             slotEl.querySelector('.slot-task').value = item.task_title || '';
         }
     });
