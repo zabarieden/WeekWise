@@ -21,7 +21,7 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .logo {
@@ -39,26 +39,65 @@ header p {
     font-size: 1rem;
 }
 
-/* Dashboard Layout */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 20px;
-    max-width: 1400px;
+/* עיצוב סרגל הטאבים (הניווט) */
+.tabs-nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    background-color: var(--bg-card);
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab-button {
+    flex: 1;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.tab-button:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* עיצוב הטאב הפעיל כרגע */
+.tab-button.active {
+    background: linear-gradient(135deg, var(--accent-blue), #00a2ff);
+    color: #0c0d12;
+}
+
+/* ניהול הצגת והסתרת הטאבים */
+.tab-content {
+    display: none; /* כברירת מחדל הכל מוסתר */
+}
+
+.tab-content.active-tab {
+    display: block; /* רק הטאב הפעיל מוצג */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    max-width: 1000px;
     margin: 0 auto;
-}
-
-#stats-section {
-    grid-column: span 2;
-}
-
-@media (max-width: 1024px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    #stats-section {
-        grid-column: span 1;
-    }
 }
 
 /* Cards style */
@@ -93,7 +132,7 @@ h2 {
     margin: 0;
 }
 
-/* קונטיינר ראשי ללו"ז השבועי - תומך בגלילה צידית חלקה */
+/* קונטיינר הלו"ז השבועי - תומך בגלילה צידית חלקה של כרטיסיות הימים */
 .schedule-container {
     display: flex;
     gap: 15px;
@@ -103,9 +142,9 @@ h2 {
     -webkit-overflow-scrolling: touch;
 }
 
-/* כל יום הופך לחלונית עצמאית ומהממת */
+/* כרטיסיית יום עצמאית */
 .day-card {
-    background-color: var(--bg-card);
+    background-color: #1c1e2d;
     border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 16px;
@@ -133,16 +172,14 @@ h2 {
     text-align: center;
 }
 
-/* סידור המשימות לגובה */
 .slots-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-/* קוביית משימה נקייה */
 .slot-input-group {
-    background-color: #1c1e2d;
+    background-color: #222538;
     border-radius: 8px;
     padding: 10px;
     display: flex;
@@ -151,9 +188,8 @@ h2 {
     border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* שדות קלט של השעה והמשימה */
 .slot-time {
-    background: #222538 !important;
+    background: #1c1e2d !important;
     border: 1px solid var(--border-color) !important;
     color: var(--accent-blue) !important;
     font-weight: 700;
@@ -183,7 +219,6 @@ h2 {
     border-bottom-color: var(--accent-pink);
 }
 
-/* פס גלילה דק ואסטטי */
 .schedule-container::-webkit-scrollbar {
     height: 6px;
 }
