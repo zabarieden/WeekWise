@@ -1,269 +1,51 @@
-:root {
-    --bg-main: #0c0d12;
-    --bg-card: #161822;
-    --border-color: #26293b;
-    --text-primary: #f1f3f9;
-    --text-secondary: #9098b1;
-    --accent-pink: #ff007f;
-    --accent-blue: #00d2ff;
-    --accent-green: #00e676;
-    --transition: all 0.25s ease;
-}
-
-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    margin: 0;
-    padding: 20px;
-    direction: rtl;
-}
-
-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.logo {
-    font-size: 2.2rem;
-    font-weight: 800;
-    background: linear-gradient(45deg, var(--accent-pink), var(--accent-blue));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 1px;
-}
-
-header p {
-    color: var(--text-secondary);
-    margin: 5px 0 0;
-    font-size: 1rem;
-}
-
-/* Dashboard Layout */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-#stats-section {
-    grid-column: span 2;
-}
-
-@media (max-width: 1024px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    #stats-section {
-        grid-column: span 1;
-    }
-}
-
-/* Cards style */
-.card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-h2 {
-    font-size: 1.3rem;
-    margin: 0 0 15px 0;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-}
-
-.card-header h2 {
-    margin: 0;
-}
-
-.subtitle {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-}
-
-/* Buttons */
-button {
-    font-family: inherit;
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: var(--transition);
-    border: none;
-    font-size: 0.95rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--accent-pink), #e0006c);
-    color: #fff;
-}
-
-.btn-primary:hover {
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background-color: #202436;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background-color: #2b304a;
-}
-
-/* Schedule List Style */
+/* לו"ז שבועי במבנה גלילה צידית (קרוסלה) */
 .schedule-container {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
 }
 
+/* עיצוב עמודת יום יחיד בלו"ז */
 .day-column {
     background-color: #1c1e2d;
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 12px;
+    padding: 18px;
+    min-width: 280px; /* רוחב קבוע לכל יום כדי שיעמדו יפה אחד ליד השני */
+    max-width: 320px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
 }
 
-.day-name {
-    font-weight: 700;
-    color: var(--accent-blue);
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
+/* שינוי פריסת התיבות בתוך יום לגובה (תופס פחות רוחב) */
 .slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .slot-input-group {
     background-color: #222538;
-    border-radius: 6px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.slot-input-group input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid #3c4261;
-    color: var(--text-primary);
-    padding: 4px;
-    font-size: 0.85rem;
+/* הוספת פס גלילה דק ויפה ללו"ז השבועי */
+.schedule-container::-webkit-scrollbar {
+    height: 8px;
 }
-
-.slot-input-group input:focus {
-    outline: none;
-    border-bottom-color: var(--accent-blue);
-}
-
-/* Nutrition inputs style */
-.meals-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.meal-row {
-    display: grid;
-    grid-template-columns: 100px 1fr 100px;
-    gap: 15px;
-    align-items: center;
-    background-color: #1c1e2d;
-    padding: 12px;
+.schedule-container::-webkit-scrollbar-track {
+    background: #0c0d12;
     border-radius: 10px;
 }
-
-.meal-label {
-    font-weight: 700;
-    color: var(--accent-pink);
-}
-
-.food-input, .calories-input, #selected-date {
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 0.95rem;
-}
-
-.food-input:focus, .calories-input:focus {
-    outline: none;
-    border-color: var(--accent-pink);
-}
-
-/* Statistics Style */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-@media (max-width: 600px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    .meal-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    .meal-label {
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 4px;
-    }
-}
-
-.stat-box {
-    background-color: #1c1e2d;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid var(--border-color);
-}
-
-.stat-box h3 {
-    margin: 0 0 10px 0;
-    font-size: 1rem;
-    color: var(--text-secondary);
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 5px;
-}
-
-.today .stat-number { color: var(--accent-pink); }
-.weekly .stat-number { color: var(--accent-blue); }
-.monthly .stat-number { color: var(--accent-green); }
-
-.stat-unit {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
+.schedule-container::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 10px;
 }
