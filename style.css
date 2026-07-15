@@ -93,107 +93,99 @@ h2 {
     margin: 0;
 }
 
-.subtitle {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-}
-
-/* Buttons */
-button {
-    font-family: inherit;
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: var(--transition);
-    border: none;
-    font-size: 0.95rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--accent-pink), #e0006c);
-    color: #fff;
-}
-
-.btn-primary:hover {
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background-color: #202436;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background-color: #2b304a;
-}
-
-/* לו"ז שבועי במבנה גלילה צידית (קרוסלה) */
+/* קונטיינר ראשי לכל ימי השבוע - גלילה צידית של חלוניות נפרדות */
 .schedule-container {
     display: flex;
     gap: 20px;
     overflow-x: auto;
-    padding-bottom: 15px;
+    padding: 10px 5px 20px 5px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
 }
 
-/* עיצוב עמודת יום יחיד בלו"ז */
-.day-column {
-    background-color: #1c1e2d;
-    border-radius: 12px;
-    padding: 18px;
-    min-width: 280px; /* רוחב קבוע לכל יום כדי שיעמדו יפה אחד ליד השני */
-    max-width: 320px;
+/* כל יום הופך לחלונית (Card) עצמאית ומבודדת! */
+.day-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    min-width: 290px;
+    max-width: 330px;
     scroll-snap-align: start;
     flex-shrink: 0;
-    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+}
+
+.day-card:hover {
+    border-color: var(--accent-blue);
 }
 
 .day-name {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--accent-blue);
     margin-bottom: 15px;
-    font-size: 1.1rem;
-    border-bottom: 1px solid rgba(0, 210, 255, 0.2);
-    padding-bottom: 8px;
+    font-size: 1.25rem;
+    border-bottom: 1px solid rgba(0, 210, 255, 0.15);
+    padding-bottom: 10px;
+    text-align: center;
 }
 
-/* שינוי פריסת התיבות בתוך יום לגובה */
+/* סידור המשימות לגובה */
 .slots-grid {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
+/* קוביית משימה נקייה */
 .slot-input-group {
-    background-color: #222538;
-    border-radius: 8px;
-    padding: 10px;
+    background-color: #1c1e2d;
+    border-radius: 10px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-.slot-input-group input {
+/* עיצוב שדה השעה ככפתור/קובייה קטנה ונקייה */
+.slot-time {
+    background: #222538 !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--accent-blue) !important;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 6px;
+    padding: 6px !important;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.slot-time:focus {
+    border-color: var(--accent-blue) !important;
+    outline: none;
+}
+
+/* שדה הזנת משימה */
+.slot-task {
     background: transparent;
     border: none;
     border-bottom: 1px solid #3c4261;
     color: var(--text-primary);
-    padding: 4px;
-    font-size: 0.85rem;
+    padding: 6px 4px;
+    font-size: 0.9rem;
 }
 
-.slot-input-group input:focus {
+.slot-task:focus {
     outline: none;
-    border-bottom-color: var(--accent-blue);
+    border-bottom-color: var(--accent-pink);
 }
 
-/* הוספת פס גלילה דק ויפה ללו"ז השבועי */
+/* פס גלילה מהמם */
 .schedule-container::-webkit-scrollbar {
     height: 8px;
 }
