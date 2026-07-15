@@ -93,27 +93,27 @@ h2 {
     margin: 0;
 }
 
-/* קונטיינר ראשי לכל ימי השבוע - גלילה צידית של חלוניות נפרדות */
+/* קונטיינר ראשי ללו"ז השבועי - תומך בגלילה צידית חלקה */
 .schedule-container {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     overflow-x: auto;
-    padding: 10px 5px 20px 5px;
+    padding: 5px 2px 15px 2px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
 }
 
-/* כל יום הופך לחלונית (Card) עצמאית ומבודדת! */
+/* כל יום הופך לחלונית עצמאית ומהממת */
 .day-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    min-width: 290px;
-    max-width: 330px;
+    border-radius: 14px;
+    padding: 16px;
+    min-width: 260px;
+    max-width: 290px;
     scroll-snap-align: start;
     flex-shrink: 0;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     transition: var(--transition);
@@ -126,10 +126,10 @@ h2 {
 .day-name {
     font-weight: 800;
     color: var(--accent-blue);
-    margin-bottom: 15px;
-    font-size: 1.25rem;
+    margin-bottom: 12px;
+    font-size: 1.15rem;
     border-bottom: 1px solid rgba(0, 210, 255, 0.15);
-    padding-bottom: 10px;
+    padding-bottom: 8px;
     text-align: center;
 }
 
@@ -137,21 +137,21 @@ h2 {
 .slots-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* קוביית משימה נקייה */
 .slot-input-group {
     background-color: #1c1e2d;
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-/* עיצוב שדה השעה ככפתור/קובייה קטנה ונקייה */
+/* שדות קלט של השעה והמשימה */
 .slot-time {
     background: #222538 !important;
     border: 1px solid var(--border-color) !important;
@@ -159,10 +159,9 @@ h2 {
     font-weight: 700;
     text-align: center;
     border-radius: 6px;
-    padding: 6px !important;
-    font-size: 0.9rem;
+    padding: 5px !important;
+    font-size: 0.85rem;
     cursor: pointer;
-    transition: var(--transition);
 }
 
 .slot-time:focus {
@@ -170,14 +169,13 @@ h2 {
     outline: none;
 }
 
-/* שדה הזנת משימה */
 .slot-task {
     background: transparent;
     border: none;
     border-bottom: 1px solid #3c4261;
     color: var(--text-primary);
-    padding: 6px 4px;
-    font-size: 0.9rem;
+    padding: 4px 2px;
+    font-size: 0.85rem;
 }
 
 .slot-task:focus {
@@ -185,9 +183,9 @@ h2 {
     border-bottom-color: var(--accent-pink);
 }
 
-/* פס גלילה מהמם */
+/* פס גלילה דק ואסטטי */
 .schedule-container::-webkit-scrollbar {
-    height: 8px;
+    height: 6px;
 }
 .schedule-container::-webkit-scrollbar-track {
     background: #0c0d12;
@@ -233,6 +231,39 @@ h2 {
 .food-input:focus, .calories-input:focus {
     outline: none;
     border-color: var(--accent-pink);
+}
+
+/* Buttons */
+button {
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-pink), #e0006c);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: #202436;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.btn-secondary:hover {
+    background-color: #2b304a;
 }
 
 /* Statistics Style */
