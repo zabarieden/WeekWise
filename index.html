@@ -32,7 +32,7 @@
         <nav class="tabs-nav">
             <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
             <button class="tab-button" data-tab="nutrition-section">🍎 תזונה ומדדים</button>
-            <button class="tab-button" data-tab="my-center-section">🎯 Focus ⚡</button>
+            <button class="tab-button" data-tab="my-center-section">⚡ Focus</button>
         </nav>
 
         <main class="dashboard-container">
@@ -45,13 +45,13 @@
                         <!-- ימי השבוע כרצועות נפתחות בלחיצה יווצרו כאן דינמית -->
                     </div>
                     
-                    <!-- כפתור איפוס כל השבוע מרוכז למטה -->
+                    <!-- כפתור איפוס כל השבוע -->
                     <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 15px;">🧹 איפוס וניקוי כל הלו"ז השבועי</button>
                 </div>
 
-                <!-- חלונית הוספת/עדכון משימה ללו"ז מלמטה -->
+                <!-- חלונית ניהול משימה: הוספה או ניקוי משימה ספציפית -->
                 <div class="card">
-                    <h2>➕ הוספת משימה חדשה ללו"ז</h2>
+                    <h2>⚙️ ניהול משימות בלו"ז</h2>
                     <div class="schedule-adder-grid">
                         <select id="add-slot-day">
                             <option value="Sunday">יום ראשון</option>
@@ -91,7 +91,11 @@
                             </div>
                         </div>
                         
-                        <button id="btn-save-new-slot" class="btn-primary">💾 שמור משימה בלו"ז</button>
+                        <!-- שני כפתורי פעולה נפרדים בשורה -->
+                        <div class="action-buttons-wrap">
+                            <button id="btn-save-new-slot" class="btn-primary">💾 שמור משימה בלו"ז</button>
+                            <button id="btn-delete-slot-specific" class="btn-clear-specific">🗑️ נקה משימה ספציפית</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -223,13 +227,13 @@
                 </div>
             </section>
 
-            <!-- טאב 3: Focus ⚡ (גלילה אנכית מהירה וקלה) -->
+            <!-- טאב 3: Focus ⚡ -->
             <section class="tab-content" id="my-center-section">
                 <div class="my-center-grid">
                     
-                    <!-- דברים חשובים (אדום/בולט בראש הדף) -->
+                    <!-- דברים חשובים (סגול-ורדרד עמוק ומעודן!) -->
                     <div class="card important-card">
-                        <h2 style="color: #ff3b30;">⚠️ דברים חשובים מאוד!</h2>
+                        <h2>⚠️ דברים חשובים מאוד!</h2>
                         <div class="list-add-group">
                             <input type="text" id="add-important-input" placeholder="להתקשר לרופא, לבטל מנוי...">
                             <button onclick="addCenterItem('important')">➕</button>
@@ -260,7 +264,7 @@
                         </div>
                     </div>
 
-                    <!-- 🛒 סידורים, משימות וקניות בכללי (רשימה משולבת אחת חופשית!) -->
+                    <!-- 🛒 סידורים, משימות וקניות בכללי -->
                     <div class="card">
                         <h2>🛒 סידורים, משימות וקניות בכללי</h2>
                         <div class="list-add-group">
