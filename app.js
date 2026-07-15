@@ -2,7 +2,7 @@
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt'; 
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient;
 
 const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -23,7 +23,7 @@ const edenDefaultPresets = [
     { meal_category: 'morning', food_name: 'שיבולת שועל ויוגורט (יוגורט + 3 כפות ש"ש + דבש + נס קפה)', calories: 255 },
     { meal_category: 'morning', food_name: "טוסט קוטג' ונס קפה (פרוסת לחם מלא + 2 כפות קוטג' + נס קפה)", calories: 226 },
     { meal_category: 'morning', food_name: 'ארוחת בוקר ישראלית קלה (2 פרוסות לחם ילדים + צהובה 15% + זיתים + קטשופ + יוגורט)', calories: 290 },
-    // צהריים / ערב (צהריים מיוצג כ-noon, ערב כ-evening)
+    // צהריים / ערב
     { meal_category: 'noon', food_name: 'ארוחת קופסה קלילה (200ג תפוד + 2 ביצים קשות + מאפינס קוטג + שרי)', calories: 415 },
     { meal_category: 'noon', food_name: 'ארוחת קופסה משביעה (150ג חזה עוף + 100ג אורז לבן + ירקות)', calories: 350 },
     { meal_category: 'noon', food_name: 'ארוחת אורז וביצים (100ג אורז + 2 ביצים קשות + מאפינס קוטג + רבע מאפינס טונה + חמוצים)', calories: 390 },
@@ -38,7 +38,7 @@ const edenDefaultPresets = [
     { meal_category: 'snack', food_name: 'במבה שקית קטנה (15 גרם)', calories: 134 },
     { meal_category: 'snack', food_name: 'פרוסת עוגה', calories: 65 },
     { meal_category: 'snack', food_name: 'בננה בינונית', calories: 90 },
-    { meal_category: 'snack', food_name: 'رסק תפוחים קטן (יחידה אחת)', calories: 20 },
+    { meal_category: 'snack', food_name: 'רסק תפוחים קטן (יחידה אחת)', calories: 20 },
     { meal_category: 'snack', food_name: '3 מלפפונים חמוצים', calories: 15 },
     { meal_category: 'snack', food_name: 'כף חומוס', calories: 28 },
     { meal_category: 'snack', food_name: 'נס קפה עם חלב שיבולת שועל', calories: 60 }
@@ -46,35 +46,71 @@ const edenDefaultPresets = [
 
 let currentUsername = '';
 
+// פונקציה אמינה לאתחול החיבור לשרת
+function initSupabase() {
+    if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return true;
+    } else {
+        console.error('Supabase library is not loaded yet!');
+        return false;
+    }
+}
+
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
-    // בדיקת כניסה קודמת
+    // ננסה לאתחל את החיבור
+    const isReady = initSupabase();
+
+    // אתחול מנגנון הטאבים
+    initTabs();
+
+    // בדיקת כניסה קודמת בזיכרון המקומי של הדפדפן
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
+        if (!supabaseClient && window.supabase) {
+            initSupabase();
+        }
         loginUser(savedUser);
     }
 
     // כפתור כניסה
-    document.getElementById('btn-login').addEventListener('click', () => {
-        const usernameVal = document.getElementById('username-input').value.trim();
-        if (usernameVal) {
-            loginUser(usernameVal);
-        }
-    });
+    const btnLogin = document.getElementById('btn-login');
+    if (btnLogin) {
+        btnLogin.addEventListener('click', () => {
+            if (!supabaseClient) {
+                const initialized = initSupabase();
+                if (!initialized) {
+                    alert('המערכת עדיין בטעינה, אנא נסי שוב בעוד שנייה.');
+                    return;
+                }
+            }
+            const usernameVal = document.getElementById('username-input').value.trim();
+            if (usernameVal) {
+                loginUser(usernameVal);
+            } else {
+                alert('אנא הקלידי שם משתמש');
+            }
+        });
+    }
 
     // כפתור התנתקות
-    document.getElementById('btn-logout').addEventListener('click', logoutUser);
-
-    // אתחול טאבים
-    initTabs();
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', logoutUser);
+    }
 
     // כפתור הוספת ארוחה מוכנה למאגר
-    document.getElementById('btn-add-preset').addEventListener('click', addCustomPreset);
+    const btnAddPreset = document.getElementById('btn-add-preset');
+    if (btnAddPreset) {
+        btnAddPreset.addEventListener('click', addCustomPreset);
+    }
 });
 
 // פונקציית כניסה למערכת
 async function loginUser(username) {
     currentUsername = username;
+    // שמירה בזיכרון של הדפדפן כדי שלא תצטרכי להיכנס כל פעם מחדש!
     localStorage.setItem('weekwise_user', username);
 
     document.getElementById('login-overlay').style.display = 'none';
@@ -83,8 +119,16 @@ async function loginUser(username) {
 
     // הגדרת תאריך ברירת מחדל
     const dateInput = document.getElementById('selected-date');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.value = today;
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        loadDailyNutrition(today);
+        
+        // מניעת כפל מאזינים
+        dateInput.onchange = (e) => {
+            loadDailyNutrition(e.target.value);
+        };
+    }
 
     // אם המשתמש הוא Eden, נבדוק ונטען עבורה את ארוחות ברירת המחדל
     if (username.toLowerCase() === 'eden') {
@@ -94,18 +138,19 @@ async function loginUser(username) {
     // טעינת נתונים
     buildWeeklyScheduleUI();
     loadWeeklySchedule();
-    loadDailyNutrition(today);
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
 
-    // מאזיני ארוחות ותזונה
-    dateInput.addEventListener('change', (e) => {
-        loadDailyNutrition(e.target.value);
-    });
+    const btnSave = document.getElementById('btn-save-nutrition');
+    if (btnSave) {
+        btnSave.onclick = saveNutrition;
+    }
 
-    document.getElementById('btn-save-nutrition').addEventListener('click', saveNutrition);
-    document.getElementById('btn-copy-yesterday').addEventListener('click', copyFromYesterday);
+    const btnCopy = document.getElementById('btn-copy-yesterday');
+    if (btnCopy) {
+        btnCopy.onclick = copyFromYesterday;
+    }
 }
 
 // פונקציית התנתקות
@@ -116,6 +161,7 @@ function logoutUser() {
 
 // טעינה אוטומטית של הארוחות של עדן לראשונה
 async function checkAndSetupEdenPresets() {
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
         .from('meal_presets')
         .select('id')
@@ -125,7 +171,6 @@ async function checkAndSetupEdenPresets() {
     if (error) return;
 
     if (!data || data.length === 0) {
-        // המאגר ריק, נכניס את ארוחות ברירת המחדל
         for (let preset of edenDefaultPresets) {
             await supabaseClient.from('meal_presets').insert({
                 username: currentUsername,
@@ -165,7 +210,6 @@ function buildWeeklyScheduleUI() {
     if (!container) return;
     container.innerHTML = '';
 
-    // יצירת רשימת אפשרויות המשימה המוכנות (Datalist)
     let optionsHTML = defaultTasksList.map(task => `<option value="${task}">`).join('');
     const datalistId = 'default-tasks-datalist';
     let datalistEl = document.getElementById(datalistId);
@@ -202,6 +246,7 @@ function buildWeeklyScheduleUI() {
 
 // טעינת הלו"ז של המשתמש הנוכחי
 async function loadWeeklySchedule() {
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
         .from('weekly_schedule')
         .select('*')
@@ -225,6 +270,7 @@ async function loadWeeklySchedule() {
 
 // שמירת חריץ לו"ז בודד ברגע שמקלידים
 async function saveScheduleSlot(day, slot) {
+    if (!supabaseClient) return;
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     if (!slotEl) return;
     const timeVal = slotEl.querySelector('.slot-time').value;
@@ -252,6 +298,7 @@ async function saveScheduleSlot(day, slot) {
 
 // טעינת הארוחות המוכנות של המשתמש והשמתן בתיבות הבחירה
 async function loadMealPresetsToSelects() {
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
         .from('meal_presets')
         .select('*')
@@ -268,10 +315,8 @@ async function loadMealPresetsToSelects() {
         select.innerHTML = '<option value="">📋 בחרי ארוחה קבועה...</option>';
 
         const filtered = data.filter(item => {
-            // התאמה בין הקטגוריות
             if (category === 'morning') return item.meal_category === 'morning';
             if (category === 'snack') return item.meal_category === 'snack';
-            // צהריים וערב מאוחדים לאותו המאגר
             if (category === 'noon' || category === 'evening') {
                 return item.meal_category === 'noon' || item.meal_category === 'evening';
             }
@@ -286,7 +331,6 @@ async function loadMealPresetsToSelects() {
             select.appendChild(option);
         });
 
-        // חיבור מאזין לבחירת ארוחה
         select.onchange = (e) => {
             const selectedOption = e.target.options[e.target.selectedIndex];
             if (!selectedOption.value) return;
@@ -300,6 +344,7 @@ async function loadMealPresetsToSelects() {
 
 // הוספת ארוחה מוכנה חדשה דרך המסך
 async function addCustomPreset() {
+    if (!supabaseClient) return;
     const name = document.getElementById('new-preset-name').value.trim();
     const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
     const category = document.getElementById('new-preset-category').value;
@@ -325,12 +370,12 @@ async function addCustomPreset() {
     document.getElementById('new-preset-name').value = '';
     document.getElementById('new-preset-calories').value = '';
     
-    // טעינה מחדש של תפריטי הבחירה
     loadMealPresetsToSelects();
 }
 
 // טעינת התזונה לתאריך נבחר
 async function loadDailyNutrition(date) {
+    if (!supabaseClient) return;
     document.querySelectorAll('.meal-row').forEach(row => {
         row.querySelector('.food-input').value = '';
         row.querySelector('.calories-input').value = '';
@@ -364,6 +409,7 @@ async function loadDailyNutrition(date) {
 
 // שמירת התפריט של היום
 async function saveNutrition() {
+    if (!supabaseClient) return;
     const dateInput = document.getElementById('selected-date');
     if (!dateInput) return;
     const date = dateInput.value;
@@ -401,6 +447,7 @@ async function saveNutrition() {
 
 // פונקציית הקסם: שכפול תפריט מיום קודם
 async function copyFromYesterday() {
+    if (!supabaseClient) return;
     const dateInput = document.getElementById('selected-date');
     if (!dateInput) return;
     const currentDate = dateInput.value;
@@ -433,6 +480,7 @@ async function copyFromYesterday() {
 
 // טעינת ממוצעים וסטטיסטיקות
 async function loadStats() {
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
         .from('calorie_tracker')
         .select('date, calories')
@@ -458,10 +506,11 @@ async function loadStats() {
     if (monthlyEl) monthlyEl.innerText = average;
 }
 
-// ======================== המרכז שלי: רשימות ומשימות ========================
+// ======================== המרכז שלי ========================
 
 // הוספת פריט חדש למרכז שלי
 async function addCenterItem(type) {
+    if (!supabaseClient) return;
     const inputEl = document.getElementById(`add-${type}-input`);
     if (!inputEl) return;
     const content = inputEl.value.trim();
@@ -485,6 +534,7 @@ async function addCenterItem(type) {
 
 // טעינת קטגוריה בודדת במרכז שלי
 async function loadCenterItems(type) {
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
         .from('my_center_tasks')
         .select('*')
@@ -521,6 +571,7 @@ function loadAllCenterItems() {
 
 // מחיקת פריט מהמרכז שלי
 async function deleteCenterItem(id, type) {
+    if (!supabaseClient) return;
     const { error } = await supabaseClient
         .from('my_center_tasks')
         .delete()
