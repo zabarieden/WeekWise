@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnClearWeek.addEventListener('click', clearEntireWeeklySchedule);
     }
 
-    // כפתור שמירת משקל חדש
     const btnSaveWeight = document.getElementById('btn-save-weight');
     if (btnSaveWeight) {
         btnSaveWeight.addEventListener('click', saveNewWeightRecord);
@@ -126,7 +125,6 @@ async function loginUser(username) {
     document.getElementById('app-container').style.display = 'block';
     document.getElementById('display-user').innerText = username;
 
-    // אתחול תאריכים
     const dateInput = document.getElementById('selected-date');
     const today = new Date().toISOString().split('T')[0];
     
@@ -139,7 +137,6 @@ async function loginUser(username) {
         };
     }
 
-    // הגדרת תאריך ברירת מחדל גם במעקב משקל
     const weightDateInput = document.getElementById('new-weight-date');
     if (weightDateInput) {
         weightDateInput.value = today;
@@ -150,13 +147,13 @@ async function loginUser(username) {
     }
 
     // טעינת נתונים
-    buildWeeklyScheduleAccordionUI();
+    buildWeeklyScheduleAccordionUI(); // הפונקציה המשודרגת שמחשבת תאריכים
     await loadWeeklySchedule();
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
     loadProgressTargets();
-    loadWeightHistory(); // טעינת משקלים מהדאטהבייס
+    loadWeightHistory();
 
     const btnSave = document.getElementById('btn-save-nutrition');
     if (btnSave) {
@@ -220,7 +217,27 @@ function initTabs() {
     });
 }
 
-// בניית האקורדיון (ימים נפתחים בלחיצה) של הלו"ז השבועי
+// פונקציית קסם שמחשבת את התאריך המדויק לכל יום בשבוע הנוכחי
+function getFormattedDateForDay(dayIndex) {
+    const current = new Date();
+    const currentDayOfWeek = current.getDay(); // 0 = ראשון, 1 = שני...
+    
+    // חישוב המרחק מיום ראשון של השבוע הנוכחי
+    const distanceToSunday = currentDayOfWeek; 
+    const sundayDate = new Date(current);
+    sundayDate.setDate(current.getDate() - distanceToSunday);
+    
+    // הוספת הימים לפי היום הספציפי בשבוע
+    const targetDate = new Date(sundayDate);
+    targetDate.setDate(sundayDate.getDate() + dayIndex);
+    
+    const day = targetDate.getDate();
+    const month = targetDate.getMonth() + 1; // חודשים מתחילים מ-0
+    
+    return `${day}.${month}`;
+}
+
+// בניית האקורדיון עם תאריכים דינמיים שמתעדכנים כל שבוע מחדש!
 function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     if (!container) return;
@@ -228,6 +245,7 @@ function buildWeeklyScheduleAccordionUI() {
 
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
+        const dateStr = getFormattedDateForDay(dayIndex); // חישוב התאריך הדינמי לשבוע הנוכחי
         
         const itemDiv = document.createElement('div');
         itemDiv.className = 'accordion-item';
@@ -248,7 +266,7 @@ function buildWeeklyScheduleAccordionUI() {
 
         itemDiv.innerHTML = `
             <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
-                <span>📅 יום ${dayName}</span>
+                <span>📅 יום ${dayName} <span style="font-size: 0.8rem; color: var(--text-secondary); margin-right: 5px; font-weight: normal;">(${dateStr})</span></span>
                 <span class="accordion-icon">▼</span>
             </div>
             <div class="accordion-content">
@@ -266,7 +284,7 @@ function toggleAccordion(day) {
 
     const isActive = item.classList.contains('active');
     document.querySelectorAll('.accordion-item').forEach(el => {
-        if (el.id !== 'accordion-weight-card') { // מונע סגירת כרטיסיית המשקל
+        if (el.id !== 'accordion-weight-card') {
             el.classList.remove('active');
         }
     });
@@ -607,7 +625,7 @@ async function copyFromYesterday() {
     yesterdayObj.setDate(yesterdayObj.getDate() - 1);
     const yesterdayDateStr = yesterdayObj.toISOString().split('T')[0];
 
-    const { data: yesterdayData, error } = await supabaseClient
+    const { data: yesterdayData, error = null } = await supabaseClient
         .from('calorie_tracker')
         .select('*')
         .eq('username', currentUsername)
@@ -710,6 +728,7 @@ async function loadCenterItems(type) {
     });
 }
 
+// טעינת הפריטים
 function loadAllCenterItems() {
     loadCenterItems('important');
     loadCenterItems('weekly');
@@ -852,9 +871,8 @@ async function deleteProgressTarget(id) {
     loadProgressTargets();
 }
 
-// ======================== ⚖️ מנגנון מעקב משקל תקופתי ========================
+// ======================== ⚖️ מעקב משקל תקופתי ========================
 
-// פונקציית פתיחה/סגירה של אקורדיון המשקל
 function toggleWeightAccordion() {
     const content = document.getElementById('weight-accordion-content');
     const icon = document.getElementById('weight-icon');
@@ -863,17 +881,16 @@ function toggleWeightAccordion() {
     if (!content || !icon) return;
 
     if (content.style.maxHeight === '0px' || content.style.maxHeight === '') {
-        content.style.maxHeight = '500px'; // פותח את האקורדיון
+        content.style.maxHeight = '500px';
         icon.style.transform = 'rotate(180deg)';
         card.style.borderColor = 'var(--accent-purple)';
     } else {
-        content.style.maxHeight = '0px'; // סוגר את האקורדיון
+        content.style.maxHeight = '0px';
         icon.style.transform = 'rotate(0deg)';
         card.style.borderColor = 'var(--border-color)';
     }
 }
 
-// שמירת רשומת משקל חדשה
 async function saveNewWeightRecord() {
     if (!supabaseClient) return;
 
@@ -900,11 +917,10 @@ async function saveNewWeightRecord() {
         return;
     }
 
-    weightInput.value = ''; // איפוס השדה
-    loadWeightHistory(); // טעינת היסטוריה מעודכנת
+    weightInput.value = '';
+    loadWeightHistory();
 }
 
-// טעינת היסטוריית משקלים מהדאטהבייס (הכי חדש בהתחלה!)
 async function loadWeightHistory() {
     if (!supabaseClient) return;
 
@@ -912,7 +928,7 @@ async function loadWeightHistory() {
         .from('weight_tracker')
         .select('*')
         .eq('username', currentUsername)
-        .order('weight_date', { ascending: false }); // מסדר לפי תאריך מהחדש לישן
+        .order('weight_date', { ascending: false });
 
     if (error) {
         console.error('Error loading weight history:', error);
@@ -929,7 +945,6 @@ async function loadWeightHistory() {
     }
 
     data.forEach(item => {
-        // המרת התאריך לפורמט עברי מסודר (למשל: 15.07.2026)
         const dateParts = item.weight_date.split('-');
         const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
 
@@ -945,7 +960,6 @@ async function loadWeightHistory() {
     });
 }
 
-// מחיקת שקילה מההיסטוריה
 async function deleteWeightRecord(id) {
     if (!supabaseClient) return;
 
