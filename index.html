@@ -24,7 +24,7 @@
     <div id="app-container" style="display: none;">
         <header>
             <div class="logo">WeekWise ⚡</div>
-            <p>הלו"ז, התזונה והאימונים של <span id="display-user" style="color: var(--accent-blue); font-weight: bold;"></span></p>
+            <p>הלו"ז, התזונה והאימונים של <span id="display-user" style="color: var(--accent-purple); font-weight: bold;"></span></p>
             <button id="btn-logout" class="btn-logout">🚪 התנתק</button>
         </header>
 
@@ -37,12 +37,54 @@
 
         <main class="dashboard-container">
             
-            <!-- טאב 1: לו"ז שבועי (בגלילה צידית של חלוניות נפרדות) -->
+            <!-- טאב 1: לו"ז שבועי -->
             <section class="tab-content active-tab" id="schedule-section">
-                <div class="card">
+                <div class="card" style="margin-bottom: 20px;">
                     <h2>📅 הלו"ז השבועי שלי</h2>
                     <div class="schedule-container">
                         <!-- ימי השבוע כחלוניות נפרדות יווצרו כאן דינמית -->
+                    </div>
+                </div>
+
+                <!-- חלונית הוספת/עדכון משימה ללו"ז מלמטה -->
+                <div class="card">
+                    <h2>➕ הוספת משימה חדשה ללו"ז</h2>
+                    <div class="schedule-adder-grid">
+                        <select id="add-slot-day">
+                            <option value="Sunday">יום ראשון</option>
+                            <option value="Monday">יום שני</option>
+                            <option value="Tuesday">יום שלישי</option>
+                            <option value="Wednesday">יום רביעי</option>
+                            <option value="Thursday">יום חמישי</option>
+                            <option value="Friday">יום שישי</option>
+                            <option value="Saturday">יום שבת</option>
+                        </select>
+                        <select id="add-slot-num">
+                            <option value="1">חריץ 1</option>
+                            <option value="2">חריץ 2</option>
+                            <option value="3">חריץ 3</option>
+                            <option value="4">חריץ 4</option>
+                            <option value="5">חריץ 5</option>
+                            <option value="6">חריץ 6</option>
+                        </select>
+                        <input type="text" id="add-slot-time" placeholder="שעה (למשל: 09:00)">
+                        <input type="text" id="add-slot-task" placeholder="שם המשימה החופשית...">
+                        
+                        <div class="color-selector-wrap">
+                            <label style="font-size: 0.8rem; color: var(--text-secondary);">אופי המשימה:</label>
+                            <div class="color-options">
+                                <label class="color-radio pink-radio">
+                                    <input type="radio" name="slot-color" value="pink" checked>
+                                    <span class="radio-custom pink-span">🔋 אקטיבי</span>
+                                </label>
+                                <label class="color-radio purple-radio">
+                                    <input type="radio" name="slot-color" value="purple">
+                                    <span class="radio-custom purple-span">📚 רגוע</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button id="btn-save-new-slot" class="btn-primary">💾 שמור משימה בלו"ז</button>
                     </div>
                 </div>
             </section>
@@ -151,7 +193,7 @@
                     </div>
                 </div>
 
-                <!-- חלונית סיכומים ומדדי קלוריות (משולבת פה בתחתית!) -->
+                <!-- חלונית סיכומים ומדדי קלוריות -->
                 <div class="card">
                     <h2>📊 מדדי קלוריות</h2>
                     <div class="stats-grid">
@@ -174,7 +216,7 @@
                 </div>
             </section>
 
-            <!-- טאב 3: המרכז שלי (משימות, קניות ודברים חשובים) -->
+            <!-- טאב 3: המרכז שלי -->
             <section class="tab-content" id="my-center-section">
                 <div class="my-center-grid">
                     
@@ -198,17 +240,7 @@
                         <ul id="weekly-list" class="center-list"></ul>
                     </div>
 
-                    <!-- דברים לעשות בכללי -->
-                    <div class="card">
-                        <h2>💡 דברים לעשות בכללי</h2>
-                        <div class="list-add-group">
-                            <input type="text" id="add-general-input" placeholder="לסדר את הארון, לנקות נעליים...">
-                            <button onclick="addCenterItem('general')">➕</button>
-                        </div>
-                        <ul id="general-list" class="center-list"></ul>
-                    </div>
-
-                    <!-- מד התקדמות שבועי (רעיונות ויעדים בצורה יצירתית!) -->
+                    <!-- 📈 מד התקדמות שבועי -->
                     <div class="card">
                         <h2>📈 מד התקדמות שבועי</h2>
                         <div class="list-add-group">
@@ -221,14 +253,14 @@
                         </div>
                     </div>
 
-                    <!-- רשימת קניות שבועית -->
+                    <!-- 🛒 סידורים, משימות וקניות בכללי (מאוחד, רשימה אחת חופשית!) -->
                     <div class="card" style="grid-column: span 2;">
-                        <h2>🛒 רשימת קניות שבועית</h2>
+                        <h2>🛒 סידורים, משימות וקניות בכללי</h2>
                         <div class="list-add-group">
-                            <input type="text" id="add-shopping-input" placeholder="חלב שיבולת שועל, קוטג'...">
-                            <button onclick="addCenterItem('shopping')">➕</button>
+                            <input type="text" id="add-general-input" placeholder="להקליד כאן כל מוצר לקנות, משימה או סידור כללי...">
+                            <button onclick="addCenterItem('general')">➕</button>
                         </div>
-                        <ul id="shopping-list" class="center-list"></ul>
+                        <ul id="general-list" class="center-list"></ul>
                     </div>
 
                 </div>
