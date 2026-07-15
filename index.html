@@ -14,76 +14,89 @@
         <p>הלו"ז, התזונה והאימונים שלי במקום אחד</p>
     </header>
 
-    <main class="dashboard-grid">
+    <!-- סרגל טאבים לניווט מהיר -->
+    <nav class="tabs-nav">
+        <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
+        <button class="tab-button" data-tab="nutrition-section">🍎 מעקב ארוחות</button>
+        <button class="tab-button" data-tab="stats-section">📊 מדדי קלוריות</button>
+    </nav>
+
+    <main class="dashboard-container">
         
-        <!-- חלונית 1: לו"ז שבועי ממוקד (בגלילה צידית של חלוניות נפרדות) -->
-        <section class="card" id="schedule-section">
-            <h2>📅 לו"ז שבועי</h2>
-            <div class="schedule-container">
-                <!-- ימי השבוע כחלוניות נפרדות (day-card) יווצרו כאן דינמית -->
+        <!-- טאב 1: לו"ז שבועי (בגלילה צידית של חלוניות נפרדות) -->
+        <section class="tab-content active-tab" id="schedule-section">
+            <div class="card">
+                <h2>📅 הלו"ז השבועי שלי</h2>
+                <div class="schedule-container">
+                    <!-- ימי השבוע כחלוניות נפרדות יווצרו כאן דינמית -->
+                </div>
             </div>
         </section>
 
-        <!-- חלונית 2: מעקב ארוחות וקלוריות מפורט -->
-        <section class="card" id="nutrition-section">
-            <div class="card-header">
-                <h2>🍎 מעקב ארוחות יומי</h2>
-                <div class="date-picker-container">
-                    <input type="date" id="selected-date">
+        <!-- טאב 2: מעקב ארוחות וקלוריות מפורט -->
+        <section class="tab-content" id="nutrition-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🍎 מעקב ארוחות יומי</h2>
+                    <div class="date-picker-container">
+                        <input type="date" id="selected-date">
+                    </div>
                 </div>
+                
+                <button id="btn-copy-yesterday" class="btn-secondary">📋 שכפל תפריט מיום קודם</button>
+                
+                <div class="meals-container">
+                    <!-- ארוחות 1-4 ונשנושים -->
+                    <div class="meal-row" data-meal="meal_1">
+                        <span class="meal-label">ארוחה 1</span>
+                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                        <input type="number" placeholder="קלוריות" class="calories-input">
+                    </div>
+                    <div class="meal-row" data-meal="meal_2">
+                        <span class="meal-label">ארוחה 2</span>
+                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                        <input type="number" placeholder="קלוריות" class="calories-input">
+                    </div>
+                    <div class="meal-row" data-meal="meal_3">
+                        <span class="meal-label">ארוחה 3</span>
+                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                        <input type="number" placeholder="קלוריות" class="calories-input">
+                    </div>
+                    <div class="meal-row" data-meal="meal_4">
+                        <span class="meal-label">ארוחה 4</span>
+                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                        <input type="number" placeholder="קלוריות" class="calories-input">
+                    </div>
+                    <div class="meal-row" data-meal="snack">
+                        <span class="meal-label">נשנושים</span>
+                        <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
+                        <input type="number" placeholder="קלוריות" class="calories-input">
+                    </div>
+                </div>
+                <button id="btn-save-nutrition" class="btn-primary">💾 שמור תפריט להיום</button>
             </div>
-            
-            <button id="btn-copy-yesterday" class="btn-secondary">📋 שכפל תפריט מיום קודם</button>
-            
-            <div class="meals-container">
-                <!-- ארוחות 1-4 ונשנושים -->
-                <div class="meal-row" data-meal="meal_1">
-                    <span class="meal-label">ארוחה 1</span>
-                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                    <input type="number" placeholder="קלוריות" class="calories-input">
-                </div>
-                <div class="meal-row" data-meal="meal_2">
-                    <span class="meal-label">ארוחה 2</span>
-                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                    <input type="number" placeholder="קלוריות" class="calories-input">
-                </div>
-                <div class="meal-row" data-meal="meal_3">
-                    <span class="meal-label">ארוחה 3</span>
-                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                    <input type="number" placeholder="קלוריות" class="calories-input">
-                </div>
-                <div class="meal-row" data-meal="meal_4">
-                    <span class="meal-label">ארוחה 4</span>
-                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                    <input type="number" placeholder="קלוריות" class="calories-input">
-                </div>
-                <div class="meal-row" data-meal="snack">
-                    <span class="meal-label">נשנושים</span>
-                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
-                    <input type="number" placeholder="קלוריות" class="calories-input">
-                </div>
-            </div>
-            <button id="btn-save-nutrition" class="btn-primary">💾 שמור תפריט להיום</button>
         </section>
 
-        <!-- חלונית 3: סיכומים ומספרים -->
-        <section class="card" id="stats-section">
-            <h2>📊 מדדי קלוריות</h2>
-            <div class="stats-grid">
-                <div class="stat-box today">
-                    <h3>היום</h3>
-                    <div class="stat-number" id="calories-today">0</div>
-                    <span class="stat-unit">קלוריות</span>
-                </div>
-                <div class="stat-box weekly">
-                    <h3>ממוצע שבועי</h3>
-                    <div class="stat-number" id="calories-weekly">0</div>
-                    <span class="stat-unit">קלוריות</span>
-                </div>
-                <div class="stat-box monthly">
-                    <h3>ממוצע חודשי</h3>
-                    <div class="stat-number" id="calories-monthly">0</div>
-                    <span class="stat-unit">קלוריות</span>
+        <!-- טאב 3: סיכומים ומספרים -->
+        <section class="tab-content" id="stats-section">
+            <div class="card">
+                <h2>📊 מדדי קלוריות</h2>
+                <div class="stats-grid">
+                    <div class="stat-box today">
+                        <h3>היום</h3>
+                        <div class="stat-number" id="calories-today">0</div>
+                        <span class="stat-unit">קלוריות</span>
+                    </div>
+                    <div class="stat-box weekly">
+                        <h3>ממוצע שבועי</h3>
+                        <div class="stat-number" id="calories-weekly">0</div>
+                        <span class="stat-unit">קלוריות</span>
+                    </div>
+                    <div class="stat-box monthly">
+                        <h3>ממוצע חודשי</h3>
+                        <div class="stat-number" id="calories-monthly">0</div>
+                        <span class="stat-unit">קלוריות</span>
+                    </div>
                 </div>
             </div>
         </section>
