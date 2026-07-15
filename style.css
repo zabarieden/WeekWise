@@ -5,7 +5,8 @@
     --text-primary: #f1f3f9;
     --text-secondary: #9098b1;
     --accent-pink: #ff007f;
-    --accent-blue: #00d2ff;
+    --accent-purple: #a855f7; /* סגול אחלמה יוקרתי במקום הכחול! */
+    --accent-purple-light: #c084fc;
     --accent-green: #00e676;
     --accent-red: #ff3b30;
     --transition: all 0.25s ease;
@@ -29,7 +30,7 @@ header {
 .logo {
     font-size: 1.8rem;
     font-weight: 800;
-    background: linear-gradient(45deg, var(--accent-pink), var(--accent-blue));
+    background: linear-gradient(45deg, var(--accent-pink), var(--accent-purple));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: 1px;
@@ -135,7 +136,7 @@ header p {
 }
 
 .tab-button.active {
-    background: linear-gradient(135deg, var(--accent-blue), #00a2ff);
+    background: linear-gradient(135deg, var(--accent-purple), #8b5cf6);
     color: #0c0d12;
 }
 
@@ -212,10 +213,10 @@ h2 {
 
 .day-name {
     font-weight: 800;
-    color: var(--accent-blue);
+    color: var(--accent-purple);
     margin-bottom: 10px;
     font-size: 1rem;
-    border-bottom: 1px solid rgba(0, 210, 255, 0.15);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.15);
     padding-bottom: 6px;
     text-align: center;
 }
@@ -235,17 +236,38 @@ h2 {
     gap: 8px;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.01);
+    transition: var(--transition);
+}
+
+/* 🎨 צבעי משימות אקטיביות (וורוד) ורגועות (סגול) */
+.slot-input-group.task-pink {
+    border-right: 4px solid var(--accent-pink);
+}
+
+.slot-input-group.task-purple {
+    border-right: 4px solid var(--accent-purple);
 }
 
 .slot-time {
     background: #1c1e2d !important;
     border: 1px solid var(--border-color) !important;
-    color: var(--accent-blue) !important;
+    color: var(--text-primary) !important;
     font-weight: 700;
     text-align: center;
     border-radius: 4px;
     padding: 4px 2px !important;
     font-size: 0.8rem;
+}
+
+/* הדגשת שעת משימה לפי האופי */
+.task-pink .slot-time {
+    color: var(--accent-pink) !important;
+    border-color: rgba(255, 0, 127, 0.3) !important;
+}
+
+.task-purple .slot-time {
+    color: var(--accent-purple) !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
 }
 
 .slot-task {
@@ -257,7 +279,72 @@ h2 {
     font-size: 0.85rem;
 }
 
-/* 🍎 מעקב ארוחות קומפקטי במובייל */
+/* חלונית הוספת משימה ללו"ז מלמטה */
+.schedule-adder-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.schedule-adder-grid select, .schedule-adder-grid input {
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+/* עיצוב בחירת הצבעים בטפסים */
+.color-selector-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.color-options {
+    display: flex;
+    gap: 15px;
+}
+
+.color-radio {
+    position: relative;
+    cursor: pointer;
+}
+
+.color-radio input {
+    display: none;
+}
+
+.radio-custom {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.pink-span {
+    color: var(--accent-pink);
+}
+
+.purple-span {
+    color: var(--accent-purple);
+}
+
+.color-radio input:checked + .pink-span {
+    background-color: rgba(255, 0, 127, 0.15);
+    border-color: var(--accent-pink);
+}
+
+.color-radio input:checked + .purple-span {
+    background-color: rgba(168, 85, 247, 0.15);
+    border-color: var(--accent-purple);
+}
+
+/* 🍎 מעקב ארוחות */
 .meals-container {
     display: flex;
     flex-direction: column;
@@ -401,6 +488,10 @@ button {
     font-size: 0.7rem;
 }
 
+.today .stat-number { color: var(--accent-pink); }
+.weekly .stat-number { color: var(--accent-purple); }
+.monthly .stat-number { color: var(--accent-green); }
+
 /* 📈 מנגנון מד התקדמות שבועי */
 .progress-container {
     display: flex;
@@ -453,7 +544,7 @@ button {
 }
 
 .btn-counter:hover {
-    background-color: var(--accent-blue);
+    background-color: var(--accent-purple);
     color: #0c0d12;
 }
 
@@ -468,7 +559,7 @@ button {
 .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -508,7 +599,7 @@ button {
 
 .list-add-group button {
     padding: 8px 12px;
-    background-color: var(--accent-blue);
+    background-color: var(--accent-purple);
     color: #0c0d12;
     border-radius: 6px;
     font-weight: bold;
@@ -595,5 +686,15 @@ button {
     }
     .important-card {
         grid-column: span 2;
+    }
+    .schedule-adder-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 120px 2fr auto auto;
+        gap: 12px;
+        align-items: center;
+    }
+    .color-selector-wrap {
+        flex-direction: row;
+        align-items: center;
     }
 }
