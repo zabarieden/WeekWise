@@ -188,9 +188,9 @@
                         <ul id="important-list" class="center-list"></ul>
                     </div>
 
-                    <!-- משימות השבוע (מתי עושים מה) -->
+                    <!-- משימות השבוע -->
                     <div class="card">
-                        <h2>📌 משימות השבוע (מתי/מה)</h2>
+                        <h2>📌 משימות השבוע</h2>
                         <div class="list-add-group">
                             <input type="text" id="add-weekly-input" placeholder="יום שלישי: לקחת חבילה מהדואר...">
                             <button onclick="addCenterItem('weekly')">➕</button>
@@ -208,8 +208,21 @@
                         <ul id="general-list" class="center-list"></ul>
                     </div>
 
-                    <!-- רשימת קניות שבועית -->
+                    <!-- מד התקדמות שבועי (רעיונות ויעדים בצורה יצירתית!) -->
                     <div class="card">
+                        <h2>📈 מד התקדמות שבועי</h2>
+                        <div class="list-add-group">
+                            <input type="text" id="progress-name-input" placeholder="יעד שבועי (למשל: אימוני כוח)">
+                            <input type="number" id="progress-target-input" placeholder="יעד" style="width: 70px; text-align: center;">
+                            <button onclick="addProgressTarget()">➕</button>
+                        </div>
+                        <div id="progress-container" class="progress-container">
+                            <!-- כאן ייווצרו ברי גדילה ומדים דינמיים -->
+                        </div>
+                    </div>
+
+                    <!-- רשימת קניות שבועית -->
+                    <div class="card" style="grid-column: span 2;">
                         <h2>🛒 רשימת קניות שבועית</h2>
                         <div class="list-add-group">
                             <input type="text" id="add-shopping-input" placeholder="חלב שיבולת שועל, קוטג'...">
