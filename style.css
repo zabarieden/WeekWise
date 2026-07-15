@@ -9,6 +9,8 @@
     --accent-purple-light: #c084fc;
     --accent-green: #00e676;
     --accent-red: #ff3b30;
+    --accent-important-bg: #2d182e; /* סגול-ענבים עמוק ומעודן לחלוטין לקבוצת דברים חשובים */
+    --accent-important-border: #ab47bc; /* גבול סגול ורדרד עוצמתי אך עדין */
     --transition: all 0.25s ease;
 }
 
@@ -188,7 +190,7 @@ h2 {
     margin: 0;
 }
 
-/* 📅 לו"ז שבועי - אקורדיון אלגנטי (Accordion) */
+/* 📅 לו"ז שבועי */
 .schedule-accordion {
     display: flex;
     flex-direction: column;
@@ -226,7 +228,6 @@ h2 {
     transition: transform 0.25s ease;
 }
 
-/* תצוגת פתיחה */
 .accordion-item.active {
     border-color: var(--accent-purple);
 }
@@ -263,14 +264,13 @@ h2 {
     border-radius: 6px;
     padding: 6px 8px;
     display: grid;
-    grid-template-columns: 35px 65px 1fr auto; /* מספר, שעה, משימה, כפתור מחיקה */
+    grid-template-columns: 35px 65px 1fr auto;
     gap: 8px;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.01);
     transition: var(--transition);
 }
 
-/* צבעי האופי השונים של המשימות */
 .slot-input-group.task-pink {
     border-right: 4px solid var(--accent-pink);
 }
@@ -279,7 +279,6 @@ h2 {
     border-right: 4px solid var(--accent-purple);
 }
 
-/* מספר קטן בצד */
 .slot-num-label {
     font-size: 0.75rem;
     color: var(--text-secondary);
@@ -298,7 +297,6 @@ h2 {
     font-size: 0.8rem;
 }
 
-/* צבעי שעות המשימות לפי האופי */
 .task-pink .slot-time {
     color: var(--accent-pink) !important;
     border-color: rgba(255, 0, 127, 0.3) !important;
@@ -309,7 +307,6 @@ h2 {
     border-color: rgba(168, 85, 247, 0.3) !important;
 }
 
-/* משימה מוצגת יפה באמצע */
 .slot-task {
     background: transparent;
     border: none;
@@ -317,7 +314,7 @@ h2 {
     color: var(--text-primary);
     padding: 4px 0;
     font-size: 0.85rem;
-    text-align: center; /* כיתוב יפה באמצע */
+    text-align: center;
 }
 
 .slot-task:focus {
@@ -325,7 +322,6 @@ h2 {
     border-bottom-color: var(--accent-pink);
 }
 
-/* כפתור מחיקת משימה בודדת */
 .btn-delete-slot {
     background: transparent;
     color: var(--text-secondary);
@@ -343,7 +339,7 @@ h2 {
     color: var(--accent-red);
 }
 
-/* כפתור ניקוי ואיפוס כל השבוע */
+/* כפתור איפוס כל השבוע */
 .btn-clear-week {
     width: 100%;
     background-color: #2c1a1e;
@@ -363,6 +359,35 @@ h2 {
     box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
 }
 
+/* כפתורי הפעולה בתחתית חלונית הניהול */
+.action-buttons-wrap {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.btn-clear-specific {
+    flex: 1;
+    background-color: #221d28;
+    color: var(--accent-purple-light);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-clear-specific:hover {
+    background-color: var(--accent-purple);
+    color: #0c0d12;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.schedule-adder-grid .btn-primary {
+    flex: 1.5;
+}
+
 /* חלונית הוספת משימה ללו"ז מלמטה */
 .schedule-adder-grid {
     display: flex;
@@ -380,7 +405,6 @@ h2 {
     outline: none;
 }
 
-/* עיצוב בחירת הצבעים בטפסים */
 .color-selector-wrap {
     display: flex;
     flex-direction: column;
@@ -653,15 +677,27 @@ button {
     box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
 }
 
-/* 🎯 Focus (המרכז שלי לשעבר - גלילה חלקה למעלה) */
+/* 🎯 Focus - עיצוב מעודן ויוקרתי לדברים חשובים */
 .my-center-grid {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+/* הענבים-אחלמה המעודן והעוצמתי לדברים חשובים */
 .important-card {
-    border: 1px solid rgba(255, 59, 48, 0.4);
+    background-color: var(--accent-important-bg) !important;
+    border: 1px solid var(--accent-important-border) !important;
+}
+
+.important-card h2 {
+    color: var(--accent-important-border) !important;
+    text-shadow: 0 0 8px rgba(171, 71, 188, 0.3);
+}
+
+.important-card .list-add-group button {
+    background-color: var(--accent-important-border) !important;
+    color: #fff !important;
 }
 
 .list-add-group {
