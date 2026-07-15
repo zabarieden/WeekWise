@@ -14,29 +14,38 @@ const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
 document.addEventListener('DOMContentLoaded', () => {
     // קביעת תאריך ברירת מחדל להיום
     const dateInput = document.getElementById('selected-date');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.value = today;
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        loadDailyNutrition(today);
+        
+        dateInput.addEventListener('change', (e) => {
+            loadDailyNutrition(e.target.value);
+        });
+    }
 
     // בניית ממשק הלו"ז השבועי
     buildWeeklyScheduleUI();
     
     // טעינת נתונים
     loadWeeklySchedule();
-    loadDailyNutrition(today);
     loadStats();
 
-    // מאזיני אירועים
-    dateInput.addEventListener('change', (e) => {
-        loadDailyNutrition(e.target.value);
-    });
+    const btnSave = document.getElementById('btn-save-nutrition');
+    if (btnSave) {
+        btnSave.addEventListener('click', saveNutrition);
+    }
 
-    document.getElementById('btn-save-nutrition').addEventListener('click', saveNutrition);
-    document.getElementById('btn-copy-yesterday').addEventListener('click', copyFromYesterday);
+    const btnCopy = document.getElementById('btn-copy-yesterday');
+    if (btnCopy) {
+        btnCopy.addEventListener('click', copyFromYesterday);
+    }
 });
 
 // בניית תיבות הלו"ז כחלוניות נפרדות (day-card) עם שעות נקיות
 function buildWeeklyScheduleUI() {
     const container = document.querySelector('.schedule-container');
+    if (!container) return;
     container.innerHTML = '';
 
     daysOfWeek.forEach((dayName, dayIndex) => {
@@ -74,7 +83,6 @@ async function loadWeeklySchedule() {
     data.forEach(item => {
         const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
         if (slotEl) {
-            // נשנה את השעה רק אם שונה ונשמר משהו מותאם אישית בדאטהבייס
             if (item.time_of_day !== undefined && item.time_of_day !== null && item.time_of_day !== '') {
                 slotEl.querySelector('.slot-time').value = item.time_of_day;
             }
@@ -86,10 +94,10 @@ async function loadWeeklySchedule() {
 // שמירת חריץ לו"ז בודד ברגע שמקלידים
 async function saveScheduleSlot(day, slot) {
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
+    if (!slotEl) return;
     const timeVal = slotEl.querySelector('.slot-time').value;
     const taskVal = slotEl.querySelector('.slot-task').value;
 
-    // נבדוק קודם אם השורה הזו כבר קיימת בדאטהבייס
     const { data: existing } = await supabaseClient
         .from('weekly_schedule')
         .select('id')
@@ -98,13 +106,11 @@ async function saveScheduleSlot(day, slot) {
         .maybeSingle();
 
     if (existing) {
-        // עדכון
         await supabaseClient
             .from('weekly_schedule')
             .update({ time_of_day: timeVal, task_title: taskVal })
             .eq('id', existing.id);
     } else {
-        // יצירה מחדש
         await supabaseClient
             .from('weekly_schedule')
             .insert({ day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
@@ -113,7 +119,6 @@ async function saveScheduleSlot(day, slot) {
 
 // טעינת התזונה לתאריך נבחר
 async function loadDailyNutrition(date) {
-    // איפוס שדות
     document.querySelectorAll('.meal-row').forEach(row => {
         row.querySelector('.food-input').value = '';
         row.querySelector('.calories-input').value = '';
@@ -139,12 +144,15 @@ async function loadDailyNutrition(date) {
         }
     });
 
-    document.getElementById('calories-today').innerText = totalToday;
+    const todayElement = document.getElementById('calories-today');
+    if (todayElement) todayElement.innerText = totalToday;
 }
 
 // שמירת התפריט של היום
 async function saveNutrition() {
-    const date = document.getElementById('selected-date').value;
+    const dateInput = document.getElementById('selected-date');
+    if (!dateInput) return;
+    const date = dateInput.value;
     const mealRows = document.querySelectorAll('.meal-row');
 
     for (let row of mealRows) {
@@ -152,7 +160,6 @@ async function saveNutrition() {
         const food = row.querySelector('.food-input').value;
         const cals = parseInt(row.querySelector('.calories-input').value) || 0;
 
-        // בדיקה אם קיים
         const { data: existing } = await supabaseClient
             .from('calorie_tracker')
             .select('id')
@@ -179,14 +186,14 @@ async function saveNutrition() {
 
 // פונקציית הקסם: שכפול תפריט מיום קודם
 async function copyFromYesterday() {
-    const currentDate = document.getElementById('selected-date').value;
+    const dateInput = document.getElementById('selected-date');
+    if (!dateInput) return;
+    const currentDate = dateInput.value;
     
-    // מציאת התאריך של אתמול
     const yesterdayObj = new Date(currentDate);
     yesterdayObj.setDate(yesterdayObj.getDate() - 1);
     const yesterdayDateStr = yesterdayObj.toISOString().split('T')[0];
 
-    // שליפת הנתונים של אתמול
     const { data: yesterdayData, error } = await supabaseClient
         .from('calorie_tracker')
         .select('*')
@@ -197,7 +204,6 @@ async function copyFromYesterday() {
         return;
     }
 
-    // הדבקת הנתונים לתוך התיבות בדפדפן (המשתמשת צריכה ללחוץ על "שמור" כדי שזה יישמר רשמית להיום)
     yesterdayData.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
         if (row) {
@@ -214,7 +220,6 @@ async function loadStats() {
     const { data, error } = await supabaseClient.from('calorie_tracker').select('date, calories');
     if (error || !data) return;
 
-    // נחשב סכומים לפי תאריכים
     const dailyTotals = {};
     data.forEach(item => {
         dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.calories;
@@ -223,10 +228,12 @@ async function loadStats() {
     const values = Object.values(dailyTotals);
     if (values.length === 0) return;
 
-    // חישוב ממוצעים פשוטים לתצוגה
     const totalSum = values.reduce((sum, val) => sum + val, 0);
     const average = Math.round(totalSum / values.length);
 
-    document.getElementById('calories-weekly').innerText = average; 
-    document.getElementById('calories-monthly').innerText = average;
+    const weeklyEl = document.getElementById('calories-weekly');
+    if (weeklyEl) weeklyEl.innerText = average; 
+
+    const monthlyEl = document.getElementById('calories-monthly');
+    if (monthlyEl) monthlyEl.innerText = average;
 }
