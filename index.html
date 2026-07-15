@@ -91,7 +91,6 @@
                             </div>
                         </div>
                         
-                        <!-- שני כפתורי פעולה נפרדים בשורה -->
                         <div class="action-buttons-wrap">
                             <button id="btn-save-new-slot" class="btn-primary">💾 שמור משימה בלו"ז</button>
                             <button id="btn-delete-slot-specific" class="btn-clear-specific">🗑️ נקה משימה ספציפית</button>
@@ -205,7 +204,7 @@
                 </div>
 
                 <!-- חלונית סיכומים ומדדי קלוריות -->
-                <div class="card">
+                <div class="card" style="margin-bottom: 20px;">
                     <h2>📊 מדדי קלוריות</h2>
                     <div class="stats-grid">
                         <div class="stat-box today">
@@ -222,6 +221,26 @@
                             <h3>ממוצע חודשי</h3>
                             <div class="stat-number" id="calories-monthly">0</div>
                             <span class="stat-unit">קלוריות</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⚖️ חלונית מעקב משקל תקופתי (נפתחת בלחיצה - קומפקטית ומעוצבת!) -->
+                <div class="card accordion-item" id="accordion-weight-card" style="padding: 0; overflow: hidden;">
+                    <div class="accordion-header" onclick="toggleWeightAccordion()">
+                        <span>⚖️ מעקב משקל תקופתי</span>
+                        <span class="accordion-icon" id="weight-icon">▼</span>
+                    </div>
+                    <div class="accordion-content" id="weight-accordion-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+                        <div style="padding: 16px; display: flex; flex-direction: column; gap: 15px;">
+                            <div class="weight-inputs-wrap">
+                                <input type="number" step="0.1" id="new-weight-val" placeholder="משקל (למשל: 58.5)">
+                                <input type="date" id="new-weight-date">
+                                <button id="btn-save-weight" class="btn-primary" style="width: auto; margin: 0;">💾 שמור משקל</button>
+                            </div>
+                            <ul id="weight-history-list" class="center-list" style="margin-top: 10px;">
+                                <!-- המשקלים שהוזנו יופיעו כאן דינמית -->
+                            </ul>
                         </div>
                     </div>
                 </div>
