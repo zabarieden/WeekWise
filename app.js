@@ -46,7 +46,7 @@ const edenDefaultPresets = [
 
 let currentUsername = '';
 
-// פונקציה אמינה לאתחול החיבור לשרת
+// פונקציה לאתחול החיבור לשרת
 function initSupabase() {
     if (window.supabase) {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -59,13 +59,10 @@ function initSupabase() {
 
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
-    // ננסה לאתחל את החיבור
     const isReady = initSupabase();
-
-    // אתחול מנגנון הטאבים
     initTabs();
 
-    // בדיקת כניסה קודמת בזיכרון המקומי של הדפדפן
+    // בדיקת כניסה קודמת בזיכרון המקומי
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) {
@@ -110,27 +107,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // פונקציית כניסה למערכת
 async function loginUser(username) {
     currentUsername = username;
-    // שמירה בזיכרון של הדפדפן כדי שלא תצטרכי להיכנס כל פעם מחדש!
     localStorage.setItem('weekwise_user', username);
 
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'block';
     document.getElementById('display-user').innerText = username;
 
-    // הגדרת תאריך ברירת מחדל
     const dateInput = document.getElementById('selected-date');
     if (dateInput) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         loadDailyNutrition(today);
         
-        // מניעת כפל מאזינים
         dateInput.onchange = (e) => {
             loadDailyNutrition(e.target.value);
         };
     }
 
-    // אם המשתמש הוא Eden, נבדוק ונטען עבורה את ארוחות ברירת המחדל
     if (username.toLowerCase() === 'eden') {
         await checkAndSetupEdenPresets();
     }
@@ -141,6 +134,7 @@ async function loginUser(username) {
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
+    loadProgressTargets(); // טעינת המדים השבועיים
 
     const btnSave = document.getElementById('btn-save-nutrition');
     if (btnSave) {
@@ -583,4 +577,129 @@ async function deleteCenterItem(id, type) {
     }
 
     loadCenterItems(type);
+}
+
+// ======================== מנגנון המדים וההתקדמות השבועיים ========================
+
+// הוספת יעד התקדמות שבועי חדש
+async function addProgressTarget() {
+    if (!supabaseClient) return;
+    const nameInput = document.getElementById('progress-name-input');
+    const targetInput = document.getElementById('progress-target-input');
+
+    const name = nameInput.value.trim();
+    const targetVal = parseInt(targetInput.value) || 0;
+
+    if (!name || targetVal <= 0) {
+        alert('אנא הזיני שם מטרה ויעד תקין (גדול מ-0)');
+        return;
+    }
+
+    const { error } = await supabaseClient.from('weekly_progress_targets').insert({
+        username: currentUsername,
+        target_name: name,
+        current_val: 0,
+        target_val: targetVal
+    });
+
+    if (error) {
+        console.error('Error saving progress target:', error);
+        return;
+    }
+
+    nameInput.value = '';
+    targetInput.value = '';
+    loadProgressTargets();
+}
+
+// טעינת מדים שבועיים מהדאטהבייס
+async function loadProgressTargets() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+        .from('weekly_progress_targets')
+        .select('*')
+        .eq('username', currentUsername)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Error loading progress targets:', error);
+        return;
+    }
+
+    const container = document.getElementById('progress-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center;">אין יעדים שבועיים פעילים. הוסיפי אחד למעלה! 📈</p>`;
+        return;
+    }
+
+    data.forEach(item => {
+        const percentage = Math.min(Math.round((item.current_val / item.target_val) * 100), 100);
+        const isCompleted = item.current_val >= item.target_val;
+
+        const row = document.createElement('div');
+        row.className = 'progress-row';
+        row.innerHTML = `
+            <div class="progress-info">
+                <span class="progress-title">${item.target_name}</span>
+                <div class="progress-counter">
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', -1)">-</button>
+                    <span style="font-weight: bold; min-width: 40px; text-align: center;">${item.current_val} / ${item.target_val}</span>
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', 1)">+</button>
+                    <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')" style="margin-right: 5px;">❌</button>
+                </div>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill ${isCompleted ? 'completed' : ''}" style="width: ${percentage}%;"></div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+// שינוי הערך (פלוס ומינוס)
+async function changeProgressVal(id, change) {
+    if (!supabaseClient) return;
+
+    const { data: item } = await supabaseClient
+        .from('weekly_progress_targets')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (!item) return;
+
+    let newVal = item.current_val + change;
+    if (newVal < 0) newVal = 0; // מניעת ערכים שליליים
+
+    const { error } = await supabaseClient
+        .from('weekly_progress_targets')
+        .update({ current_val: newVal })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error updating progress:', error);
+        return;
+    }
+
+    loadProgressTargets();
+}
+
+// מחיקת יעד התקדמות
+async function deleteProgressTarget(id) {
+    if (!supabaseClient) return;
+
+    const { error } = await supabaseClient
+        .from('weekly_progress_targets')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error deleting target:', error);
+        return;
+    }
+
+    loadProgressTargets();
 }
