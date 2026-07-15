@@ -7,6 +7,7 @@
     --accent-pink: #ff007f;
     --accent-blue: #00d2ff;
     --accent-green: #00e676;
+    --accent-red: #ff3b30;
     --transition: all 0.25s ease;
 }
 
@@ -22,6 +23,7 @@ body {
 header {
     text-align: center;
     margin-bottom: 20px;
+    position: relative;
 }
 
 .logo {
@@ -39,7 +41,82 @@ header p {
     font-size: 1rem;
 }
 
-/* עיצוב סרגל הטאבים (הניווט) */
+.btn-logout {
+    background-color: #2c1a24;
+    color: var(--accent-pink);
+    border: 1px solid rgba(255, 0, 127, 0.2);
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: var(--transition);
+}
+.btn-logout:hover {
+    background-color: var(--accent-pink);
+    color: #fff;
+}
+
+/* מסך כניסה (Login Overlay) */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.login-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.login-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.login-card p {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+}
+
+.login-card input {
+    width: 100%;
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.login-card button {
+    width: 100%;
+}
+
+/* סרגל הטאבים (הניווט) */
 .tabs-nav {
     display: flex;
     justify-content: center;
@@ -73,7 +150,6 @@ header p {
     background-color: rgba(255, 255, 255, 0.03);
 }
 
-/* עיצוב הטאב הפעיל כרגע */
 .tab-button.active {
     background: linear-gradient(135deg, var(--accent-blue), #00a2ff);
     color: #0c0d12;
@@ -81,11 +157,11 @@ header p {
 
 /* ניהול הצגת והסתרת הטאבים */
 .tab-content {
-    display: none; /* כברירת מחדל הכל מוסתר */
+    display: none; 
 }
 
 .tab-content.active-tab {
-    display: block; /* רק הטאב הפעיל מוצג */
+    display: block; 
     animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -132,7 +208,7 @@ h2 {
     margin: 0;
 }
 
-/* קונטיינר הלו"ז השבועי - תומך בגלילה צידית חלקה של כרטיסיות הימים */
+/* קונטיינר הלו"ז השבועי - תומך בגלילה צידית חלקה */
 .schedule-container {
     display: flex;
     gap: 15px;
@@ -197,7 +273,6 @@ h2 {
     border-radius: 6px;
     padding: 5px !important;
     font-size: 0.85rem;
-    cursor: pointer;
 }
 
 .slot-time:focus {
@@ -205,6 +280,7 @@ h2 {
     outline: none;
 }
 
+/* שדה הזנת משימה בלו"ז - תומך ב-datalist לבחירה מהירה */
 .slot-task {
     background: transparent;
     border: none;
@@ -240,18 +316,36 @@ h2 {
 }
 
 .meal-row {
-    display: grid;
-    grid-template-columns: 100px 1fr 100px;
-    gap: 15px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     background-color: #1c1e2d;
-    padding: 12px;
+    padding: 15px;
     border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.meal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .meal-label {
     font-weight: 700;
     color: var(--accent-pink);
+}
+
+/* תיבת הבחירה המהירה של הארוחות המוכנות */
+.preset-select {
+    background-color: #222538;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    outline: none;
+    cursor: pointer;
 }
 
 .food-input, .calories-input, #selected-date {
@@ -266,6 +360,30 @@ h2 {
 .food-input:focus, .calories-input:focus {
     outline: none;
     border-color: var(--accent-pink);
+}
+
+/* מנהל ארוחות מוכנות חדשות */
+.preset-manager-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.preset-manager-grid input, .preset-manager-grid select {
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+@media (max-width: 768px) {
+    .preset-manager-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Buttons */
@@ -312,14 +430,6 @@ button {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    .meal-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    .meal-label {
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 4px;
-    }
 }
 
 .stat-box {
@@ -350,4 +460,90 @@ button {
     font-size: 0.8rem;
     color: var(--text-secondary);
     text-transform: uppercase;
+}
+
+/* המרכז שלי: סידור קוביות הרשימות */
+.my-center-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.important-card {
+    grid-column: span 2;
+    border: 1.5px solid rgba(255, 59, 48, 0.3);
+}
+
+@media (max-width: 768px) {
+    .my-center-grid {
+        grid-template-columns: 1fr;
+    }
+    .important-card {
+        grid-column: span 1;
+    }
+}
+
+/* קבוצת הזנת פריט לרשימה */
+.list-add-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.list-add-group input {
+    flex: 1;
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.list-add-group button {
+    padding: 10px 15px;
+    background-color: var(--accent-blue);
+    color: #0c0d12;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+/* רשימות פריטים מותאמות למחיקה מהירה */
+.center-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.center-list li {
+    background-color: #1c1e2d;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.center-list li:hover {
+    border-color: var(--accent-pink);
+}
+
+.btn-delete-item {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 2px 8px;
+}
+
+.btn-delete-item:hover {
+    color: var(--accent-pink);
 }
