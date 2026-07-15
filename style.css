@@ -9,8 +9,8 @@
     --accent-purple-light: #c084fc;
     --accent-green: #00e676;
     --accent-red: #ff3b30;
-    --accent-important-bg: #2d182e; /* סגול-ענבים עמוק ומעודן לחלוטין לקבוצת דברים חשובים */
-    --accent-important-border: #ab47bc; /* גבול סגול ורדרד עוצמתי אך עדין */
+    --accent-important-bg: #2d182e;
+    --accent-important-border: #ab47bc;
     --transition: all 0.25s ease;
 }
 
@@ -677,14 +677,34 @@ button {
     box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
 }
 
-/* 🎯 Focus - עיצוב מעודן ויוקרתי לדברים חשובים */
+/* ⚖️ מעקב משקל תקופתי: עיצוב שדות והזנה */
+.weight-inputs-wrap {
+    display: flex;
+    gap: 8px;
+}
+
+.weight-inputs-wrap input {
+    background-color: #222538;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    flex: 1;
+}
+
+.weight-inputs-wrap input[type="date"] {
+    flex: 1.2;
+}
+
+/* 🎯 Focus */
 .my-center-grid {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-/* הענבים-אחלמה המעודן והעוצמתי לדברים חשובים */
 .important-card {
     background-color: var(--accent-important-bg) !important;
     border: 1px solid var(--accent-important-border) !important;
