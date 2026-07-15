@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-copy-yesterday').addEventListener('click', copyFromYesterday);
 });
 
-// בניית תיבות הלו"ז הריקות (6 משימות לכל יום)
+// בניית תיבות הלו"ז הריקות (6 משימות לכל יום) - מותאם לגלילה צידית
 function buildWeeklyScheduleUI() {
     const container = document.querySelector('.schedule-container');
     container.innerHTML = '';
@@ -45,8 +45,8 @@ function buildWeeklyScheduleUI() {
         for (let i = 1; i <= 6; i++) {
             slotsHTML += `
                 <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
-                    <input type="text" placeholder="שעה (למשל: 18:00)" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
-                    <input type="text" placeholder="משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="🕒 שעה (למשל: 18:00)" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="⚡ משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
                 </div>
             `;
         }
