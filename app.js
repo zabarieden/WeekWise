@@ -100,6 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSaveNewSlot.addEventListener('click', saveScheduleSlotFromAdder);
     }
 
+    const btnDeleteSlotSpecific = document.getElementById('btn-delete-slot-specific');
+    if (btnDeleteSlotSpecific) {
+        btnDeleteSlotSpecific.addEventListener('click', deleteScheduleSlotFromAdder);
+    }
+
     const btnClearWeek = document.getElementById('btn-clear-entire-week');
     if (btnClearWeek) {
         btnClearWeek.addEventListener('click', clearEntireWeeklySchedule);
@@ -131,7 +136,7 @@ async function loginUser(username) {
     }
 
     // טעינת נתונים
-    buildWeeklyScheduleAccordionUI(); // בניית האקורדיון החדש!
+    buildWeeklyScheduleAccordionUI();
     await loadWeeklySchedule();
     loadStats();
     loadAllCenterItems();
@@ -200,7 +205,7 @@ function initTabs() {
     });
 }
 
-// בניית האקורדיון (ימים נפתחים בלחיצה) של הלו"ז השבועי - תומך ב-10 חריצים!
+// בניית האקורדיון (ימים נפתחים בלחיצה) של הלו"ז השבועי
 function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     if (!container) return;
@@ -214,7 +219,7 @@ function buildWeeklyScheduleAccordionUI() {
         itemDiv.id = `accordion-${dbDay}`;
 
         let slotsHTML = '';
-        for (let i = 1; i <= 10; i++) { // הוספנו 4 משימות - סה"כ 10 חריצים!
+        for (let i = 1; i <= 10; i++) {
             const defaultHour = defaultHours[i - 1];
             slotsHTML += `
                 <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
@@ -285,7 +290,6 @@ async function loadWeeklySchedule() {
             const taskInput = slotEl.querySelector('.slot-task');
             if (item.task_title) {
                 const emoji = item.task_color === 'purple' ? '📚' : '🔋';
-                // אם הטקסט כבר מכיל את האמוג'י נמנע כפל
                 if (!taskInput.value.startsWith('🔋') && !taskInput.value.startsWith('📚')) {
                     taskInput.value = `${emoji} ${item.task_title}`;
                 }
@@ -302,7 +306,6 @@ async function saveScheduleSlot(day, slot) {
     const timeVal = slotEl.querySelector('.slot-time').value;
     let taskVal = slotEl.querySelector('.slot-task').value.trim();
 
-    // נקה אמוג'י מההתחלה כדי לשמור נקי בדאטהבייס
     taskVal = taskVal.replace(/^(🔋|📚)\s*/, '');
 
     const { data: existing } = await supabaseClient
@@ -326,7 +329,7 @@ async function saveScheduleSlot(day, slot) {
             .insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: color });
     }
 
-    loadWeeklySchedule(); // טעינה וצביעה מחדש
+    loadWeeklySchedule();
 }
 
 // הוספת/עדכון משימה דרך החלונית למטה
@@ -368,17 +371,30 @@ async function saveScheduleSlotFromAdder() {
     document.getElementById('add-slot-time').value = '';
     document.getElementById('add-slot-task').value = '';
 
-    // פתח אוטומטית את היום שעדכנו
     toggleAccordion(day);
-
     loadWeeklySchedule();
 }
 
-// מחיקת משימה בודדת מחריץ לו"ז
+// כפתור מחיקת/ניקוי משימה ספציפית דרך חלונית הניהול למטה
+async function deleteScheduleSlotFromAdder() {
+    if (!supabaseClient) return;
+
+    const day = document.getElementById('add-slot-day').value;
+    const slot = parseInt(document.getElementById('add-slot-num').value);
+
+    const confirmClear = confirm(`האם למחוק את משימה #${slot} ביום שבחרת?`);
+    if (!confirmClear) return;
+
+    await clearSingleSlot(day, slot);
+    alert('המשימה נמחקה בהצלחה!');
+    
+    toggleAccordion(day);
+}
+
+// מחיקת משימה בודדת מחריץ לו"ז (האיקס האדום הקטן)
 async function clearSingleSlot(day, slot) {
     if (!supabaseClient) return;
 
-    // מחיקה מהדאטהבייס
     await supabaseClient
         .from('weekly_schedule')
         .delete()
@@ -386,12 +402,10 @@ async function clearSingleSlot(day, slot) {
         .eq('day_of_week', day)
         .eq('slot_number', slot);
 
-    // ניקוי חזותי
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     if (slotEl) {
         slotEl.querySelector('.slot-task').value = '';
         slotEl.classList.remove('task-pink', 'task-purple');
-        // שחזור שעת ברירת מחדל
         slotEl.querySelector('.slot-time').value = defaultHours[slot - 1];
     }
 }
@@ -415,7 +429,6 @@ async function clearEntireWeeklySchedule() {
 
     alert('הלו"ז השבועי אופס ונוקה בהצלחה!');
     
-    // בנייה וטעינה מחדש של לוח נקי
     buildWeeklyScheduleAccordionUI();
     loadWeeklySchedule();
 }
