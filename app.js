@@ -10,13 +10,6 @@ const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 // שעות ברירת מחדל לקוביות הלו"ז
 const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
 
-// משימות מוכנות לבחירה בלו"ז השבועי
-const defaultTasksList = [
-    'פילאטיס', 'אימון כח', 'לשבת לסחור', 'נסיעה לבויילר', 
-    'היפ הופ', 'ריצה', 'הליכה', 'עבודה בקפה', 
-    'שיעור גיטרה', 'שיעור פיתוח קול', 'שיעור פסנתר', 'זמן למידה'
-];
-
 // ארוחות ברירת מחדל ל-Eden (יוטענו אוטומטית רק עבורה ל-Supabase בכניסה הראשונה)
 const edenDefaultPresets = [
     // בוקר וקלות
@@ -59,10 +52,10 @@ function initSupabase() {
 
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
-    const isReady = initSupabase();
+    initSupabase();
     initTabs();
 
-    // בדיקת כניסה קודמת בזיכרון המקומי
+    // בדיקת כניסה קודמת
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) {
@@ -102,6 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnAddPreset) {
         btnAddPreset.addEventListener('click', addCustomPreset);
     }
+
+    // כפתור הוספת משימה ללו"ז השבועי מלמטה
+    const btnSaveNewSlot = document.getElementById('btn-save-new-slot');
+    if (btnSaveNewSlot) {
+        btnSaveNewSlot.addEventListener('click', saveScheduleSlotFromAdder);
+    }
 });
 
 // פונקציית כניסה למערכת
@@ -134,7 +133,7 @@ async function loginUser(username) {
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
-    loadProgressTargets(); // טעינת המדים השבועיים
+    loadProgressTargets();
 
     const btnSave = document.getElementById('btn-save-nutrition');
     if (btnSave) {
@@ -204,16 +203,6 @@ function buildWeeklyScheduleUI() {
     if (!container) return;
     container.innerHTML = '';
 
-    let optionsHTML = defaultTasksList.map(task => `<option value="${task}">`).join('');
-    const datalistId = 'default-tasks-datalist';
-    let datalistEl = document.getElementById(datalistId);
-    if (!datalistEl) {
-        datalistEl = document.createElement('datalist');
-        datalistEl.id = datalistId;
-        datalistEl.innerHTML = optionsHTML;
-        document.body.appendChild(datalistEl);
-    }
-
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
         const dayDiv = document.createElement('div');
@@ -225,7 +214,7 @@ function buildWeeklyScheduleUI() {
             slotsHTML += `
                 <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
                     <input type="text" value="${defaultHour}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
-                    <input type="text" placeholder="משימה ${i}" class="slot-task" list="${datalistId}" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
                 </div>
             `;
         }
@@ -258,17 +247,59 @@ async function loadWeeklySchedule() {
                 slotEl.querySelector('.slot-time').value = item.time_of_day;
             }
             slotEl.querySelector('.slot-task').value = item.task_title || '';
+            
+            // הגדרת הצבע של החריץ לפי מה שנשמר
+            const colorClass = item.task_color === 'purple' ? 'task-purple' : 'task-pink';
+            slotEl.classList.remove('task-pink', 'task-purple');
+            slotEl.classList.add(colorClass);
         }
     });
 }
 
-// שמירת חריץ לו"ז בודד ברגע שמקלידים
+// שמירת חריץ לו"ז בודד ברגע שמקלידים ישירות בתוכו
 async function saveScheduleSlot(day, slot) {
     if (!supabaseClient) return;
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     if (!slotEl) return;
     const timeVal = slotEl.querySelector('.slot-time').value;
     const taskVal = slotEl.querySelector('.slot-task').value;
+
+    const { data: existing } = await supabaseClient
+        .from('weekly_schedule')
+        .select('id, task_color')
+        .eq('username', currentUsername)
+        .eq('day_of_week', day)
+        .eq('slot_number', slot)
+        .maybeSingle();
+
+    const color = existing ? (existing.task_color || 'pink') : 'pink';
+
+    if (existing) {
+        await supabaseClient
+            .from('weekly_schedule')
+            .update({ time_of_day: timeVal, task_title: taskVal })
+            .eq('id', existing.id);
+    } else {
+        await supabaseClient
+            .from('weekly_schedule')
+            .insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: color });
+    }
+}
+
+// הוספת/שמירת משימה ללו"ז דרך החלונית למטה
+async function saveScheduleSlotFromAdder() {
+    if (!supabaseClient) return;
+    
+    const day = document.getElementById('add-slot-day').value;
+    const slot = parseInt(document.getElementById('add-slot-num').value);
+    const timeVal = document.getElementById('add-slot-time').value.trim();
+    const taskVal = document.getElementById('add-slot-task').value.trim();
+    const colorVal = document.querySelector('input[name="slot-color"]:checked').value;
+
+    if (!timeVal || !taskVal) {
+        alert('אנא הזיני שעה ושם משימה לשמירה.');
+        return;
+    }
 
     const { data: existing } = await supabaseClient
         .from('weekly_schedule')
@@ -281,16 +312,25 @@ async function saveScheduleSlot(day, slot) {
     if (existing) {
         await supabaseClient
             .from('weekly_schedule')
-            .update({ time_of_day: timeVal, task_title: taskVal })
+            .update({ time_of_day: timeVal, task_title: taskVal, task_color: colorVal })
             .eq('id', existing.id);
     } else {
         await supabaseClient
             .from('weekly_schedule')
-            .insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
+            .insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: colorVal });
     }
+
+    alert('המשימה נשמרה בלו"ז בהצלחה!');
+    
+    // איפוס קלט
+    document.getElementById('add-slot-time').value = '';
+    document.getElementById('add-slot-task').value = '';
+
+    // רענון הלו"ז השבועי
+    loadWeeklySchedule();
 }
 
-// טעינת הארוחות המוכנות של המשתמש והשמתן בתיבות הבחירה
+// טעינת הארוחות המוכנות
 async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -336,7 +376,7 @@ async function loadMealPresetsToSelects() {
     });
 }
 
-// הוספת ארוחה מוכנה חדשה דרך המסך
+// הוספת ארוחה מוכנה חדשה
 async function addCustomPreset() {
     if (!supabaseClient) return;
     const name = document.getElementById('new-preset-name').value.trim();
@@ -439,7 +479,7 @@ async function saveNutrition() {
     loadStats();
 }
 
-// פונקציית הקסם: שכפול תפריט מיום קודם
+// שכפול תפריט מיום קודם
 async function copyFromYesterday() {
     if (!supabaseClient) return;
     const dateInput = document.getElementById('selected-date');
@@ -502,7 +542,6 @@ async function loadStats() {
 
 // ======================== המרכז שלי ========================
 
-// הוספת פריט חדש למרכז שלי
 async function addCenterItem(type) {
     if (!supabaseClient) return;
     const inputEl = document.getElementById(`add-${type}-input`);
@@ -526,7 +565,6 @@ async function addCenterItem(type) {
     loadCenterItems(type);
 }
 
-// טעינת קטגוריה בודדת במרכז שלי
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -555,15 +593,12 @@ async function loadCenterItems(type) {
     });
 }
 
-// טעינת כל הקטגוריות במרכז שלי במכה
 function loadAllCenterItems() {
     loadCenterItems('important');
     loadCenterItems('weekly');
     loadCenterItems('general');
-    loadCenterItems('shopping');
 }
 
-// מחיקת פריט מהמרכז שלי
 async function deleteCenterItem(id, type) {
     if (!supabaseClient) return;
     const { error } = await supabaseClient
@@ -579,9 +614,8 @@ async function deleteCenterItem(id, type) {
     loadCenterItems(type);
 }
 
-// ======================== מנגנון המדים וההתקדמות השבועיים ========================
+// ======================== מדים שבועיים ========================
 
-// הוספת יעד התקדמות שבועי חדש
 async function addProgressTarget() {
     if (!supabaseClient) return;
     const nameInput = document.getElementById('progress-name-input');
@@ -612,7 +646,6 @@ async function addProgressTarget() {
     loadProgressTargets();
 }
 
-// טעינת מדים שבועיים מהדאטהבייס
 async function loadProgressTargets() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -659,7 +692,6 @@ async function loadProgressTargets() {
     });
 }
 
-// שינוי הערך (פלוס ומינוס)
 async function changeProgressVal(id, change) {
     if (!supabaseClient) return;
 
@@ -672,7 +704,7 @@ async function changeProgressVal(id, change) {
     if (!item) return;
 
     let newVal = item.current_val + change;
-    if (newVal < 0) newVal = 0; // מניעת ערכים שליליים
+    if (newVal < 0) newVal = 0;
 
     const { error } = await supabaseClient
         .from('weekly_progress_targets')
@@ -687,7 +719,6 @@ async function changeProgressVal(id, change) {
     loadProgressTargets();
 }
 
-// מחיקת יעד התקדמות
 async function deleteProgressTarget(id) {
     if (!supabaseClient) return;
 
