@@ -7,8 +7,11 @@ let supabaseClient;
 const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// שעות ברירת מחדל לקוביות הלו"ז
-const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
+// 10 שעות ברירת מחדל קבועות מראש לחריצים החדשים!
+const defaultHours = [
+    '07:00', '09:00', '11:00', '13:00', '15:00', 
+    '17:00', '19:00', '20:00', '21:00', '22:00'
+];
 
 // ארוחות ברירת מחדל ל-Eden (יוטענו אוטומטית רק עבורה ל-Supabase בכניסה הראשונה)
 const edenDefaultPresets = [
@@ -55,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
     initTabs();
 
-    // בדיקת כניסה קודמת
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) {
@@ -64,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loginUser(savedUser);
     }
 
-    // כפתור כניסה
     const btnLogin = document.getElementById('btn-login');
     if (btnLogin) {
         btnLogin.addEventListener('click', () => {
@@ -84,22 +85,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // כפתור התנתקות
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', logoutUser);
     }
 
-    // כפתור הוספת ארוחה מוכנה למאגר
     const btnAddPreset = document.getElementById('btn-add-preset');
     if (btnAddPreset) {
         btnAddPreset.addEventListener('click', addCustomPreset);
     }
 
-    // כפתור הוספת משימה ללו"ז השבועי מלמטה
     const btnSaveNewSlot = document.getElementById('btn-save-new-slot');
     if (btnSaveNewSlot) {
         btnSaveNewSlot.addEventListener('click', saveScheduleSlotFromAdder);
+    }
+
+    const btnClearWeek = document.getElementById('btn-clear-entire-week');
+    if (btnClearWeek) {
+        btnClearWeek.addEventListener('click', clearEntireWeeklySchedule);
     }
 });
 
@@ -128,8 +131,8 @@ async function loginUser(username) {
     }
 
     // טעינת נתונים
-    buildWeeklyScheduleUI();
-    loadWeeklySchedule();
+    buildWeeklyScheduleAccordionUI(); // בניית האקורדיון החדש!
+    await loadWeeklySchedule();
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
@@ -197,37 +200,62 @@ function initTabs() {
     });
 }
 
-// בניית תיבות הלו"ז
-function buildWeeklyScheduleUI() {
-    const container = document.querySelector('.schedule-container');
+// בניית האקורדיון (ימים נפתחים בלחיצה) של הלו"ז השבועי - תומך ב-10 חריצים!
+function buildWeeklyScheduleAccordionUI() {
+    const container = document.getElementById('accordion-container');
     if (!container) return;
     container.innerHTML = '';
 
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'day-card';
         
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item';
+        itemDiv.id = `accordion-${dbDay}`;
+
         let slotsHTML = '';
-        for (let i = 1; i <= 6; i++) {
+        for (let i = 1; i <= 10; i++) { // הוספנו 4 משימות - סה"כ 10 חריצים!
             const defaultHour = defaultHours[i - 1];
             slotsHTML += `
                 <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
+                    <span class="slot-num-label">#${i}</span>
                     <input type="text" value="${defaultHour}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
-                    <input type="text" placeholder="משימה ${i}" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})" title="מחק משימה">❌</button>
                 </div>
             `;
         }
 
-        dayDiv.innerHTML = `
-            <div class="day-name">${dayName}</div>
-            <div class="slots-grid">${slotsHTML}</div>
+        itemDiv.innerHTML = `
+            <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
+                <span>📅 יום ${dayName}</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content">
+                <div class="slots-grid">${slotsHTML}</div>
+            </div>
         `;
-        container.appendChild(dayDiv);
+        container.appendChild(itemDiv);
     });
 }
 
-// טעינת הלו"ז של המשתמש הנוכחי
+// פתיחה וסגירה של יום בלו"ז בלחיצה
+function toggleAccordion(day) {
+    const item = document.getElementById(`accordion-${day}`);
+    if (!item) return;
+
+    const isActive = item.classList.contains('active');
+
+    // סגירת כל הימים האחרים
+    document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
+
+    // פתיחה או סגירה של הנוכחי
+    if (!isActive) {
+        item.classList.add('active');
+    }
+}
+
+// טעינת הלו"ז השבועי
 async function loadWeeklySchedule() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -248,10 +276,20 @@ async function loadWeeklySchedule() {
             }
             slotEl.querySelector('.slot-task').value = item.task_title || '';
             
-            // הגדרת הצבע של החריץ לפי מה שנשמר
+            // עיצוב אופי המשימה + תוספת האמוג'י לתצוגה ממורכזת ויפה
             const colorClass = item.task_color === 'purple' ? 'task-purple' : 'task-pink';
             slotEl.classList.remove('task-pink', 'task-purple');
             slotEl.classList.add(colorClass);
+
+            // אם קיימת משימה, נרצה שיהיה רשום האמוג'י של האופי לפניה
+            const taskInput = slotEl.querySelector('.slot-task');
+            if (item.task_title) {
+                const emoji = item.task_color === 'purple' ? '📚' : '🔋';
+                // אם הטקסט כבר מכיל את האמוג'י נמנע כפל
+                if (!taskInput.value.startsWith('🔋') && !taskInput.value.startsWith('📚')) {
+                    taskInput.value = `${emoji} ${item.task_title}`;
+                }
+            }
         }
     });
 }
@@ -262,7 +300,10 @@ async function saveScheduleSlot(day, slot) {
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     if (!slotEl) return;
     const timeVal = slotEl.querySelector('.slot-time').value;
-    const taskVal = slotEl.querySelector('.slot-task').value;
+    let taskVal = slotEl.querySelector('.slot-task').value.trim();
+
+    // נקה אמוג'י מההתחלה כדי לשמור נקי בדאטהבייס
+    taskVal = taskVal.replace(/^(🔋|📚)\s*/, '');
 
     const { data: existing } = await supabaseClient
         .from('weekly_schedule')
@@ -284,9 +325,11 @@ async function saveScheduleSlot(day, slot) {
             .from('weekly_schedule')
             .insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: color });
     }
+
+    loadWeeklySchedule(); // טעינה וצביעה מחדש
 }
 
-// הוספת/שמירת משימה ללו"ז דרך החלונית למטה
+// הוספת/עדכון משימה דרך החלונית למטה
 async function saveScheduleSlotFromAdder() {
     if (!supabaseClient) return;
     
@@ -322,15 +365,62 @@ async function saveScheduleSlotFromAdder() {
 
     alert('המשימה נשמרה בלו"ז בהצלחה!');
     
-    // איפוס קלט
     document.getElementById('add-slot-time').value = '';
     document.getElementById('add-slot-task').value = '';
 
-    // רענון הלו"ז השבועי
+    // פתח אוטומטית את היום שעדכנו
+    toggleAccordion(day);
+
     loadWeeklySchedule();
 }
 
-// טעינת הארוחות המוכנות
+// מחיקת משימה בודדת מחריץ לו"ז
+async function clearSingleSlot(day, slot) {
+    if (!supabaseClient) return;
+
+    // מחיקה מהדאטהבייס
+    await supabaseClient
+        .from('weekly_schedule')
+        .delete()
+        .eq('username', currentUsername)
+        .eq('day_of_week', day)
+        .eq('slot_number', slot);
+
+    // ניקוי חזותי
+    const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
+    if (slotEl) {
+        slotEl.querySelector('.slot-task').value = '';
+        slotEl.classList.remove('task-pink', 'task-purple');
+        // שחזור שעת ברירת מחדל
+        slotEl.querySelector('.slot-time').value = defaultHours[slot - 1];
+    }
+}
+
+// מחיקת ואיפוס כל הלו"ז השבועי
+async function clearEntireWeeklySchedule() {
+    if (!supabaseClient) return;
+
+    const confirmClear = confirm('האם את בטוחה שברצונך למחוק ולנקות את כל הלו"ז השבועי של כל הימים? פועלה זו אינה ניתנת לביטול.');
+    if (!confirmClear) return;
+
+    const { error } = await supabaseClient
+        .from('weekly_schedule')
+        .delete()
+        .eq('username', currentUsername);
+
+    if (error) {
+        alert('שגיאה באיפוס הלו"ז.');
+        return;
+    }
+
+    alert('הלו"ז השבועי אופס ונוקה בהצלחה!');
+    
+    // בנייה וטעינה מחדש של לוח נקי
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
+}
+
+// טעינת ארוחות מוכנות
 async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
@@ -376,7 +466,7 @@ async function loadMealPresetsToSelects() {
     });
 }
 
-// הוספת ארוחה מוכנה חדשה
+// הוספת ארוחה מוכנה
 async function addCustomPreset() {
     if (!supabaseClient) return;
     const name = document.getElementById('new-preset-name').value.trim();
@@ -540,7 +630,7 @@ async function loadStats() {
     if (monthlyEl) monthlyEl.innerText = average;
 }
 
-// ======================== המרכז שלי ========================
+// ======================== Focus ⚡ ========================
 
 async function addCenterItem(type) {
     if (!supabaseClient) return;
