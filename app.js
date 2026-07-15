@@ -23,7 +23,7 @@ const edenDefaultPresets = [
     { meal_category: 'noon', food_name: 'ארוחת קופסה קלילה (200ג תפוד + 2 ביצים קשות + מאפינס קוטג + שרי)', calories: 415 },
     { meal_category: 'noon', food_name: 'ארוחת קופסה משביעה (150ג חזה עוף + 100ג אורז לבן + ירקות)', calories: 350 },
     { meal_category: 'noon', food_name: 'ארוחת אורז וביצים (100ג אורז + 2 ביצים קשות + מאפינס קוטג + רבע מאפינס טונה + חמוצים)', calories: 390 },
-    { meal_category: 'noon', food_name: 'ארוחת עוף ותפוח אדמה מזינה (150ג חזה עוף + 200ג תפוד + כף חומוס + סלט עגבניות + ירקות)', calories: 520 },
+    { meal_category: 'noon', food_name: 'ארוחת עוף ותפוח אדמה מזינה (150ג חזה עוף + 200ג תפוד + כףחומוס + סלט עגבניות + ירקות)', calories: 520 },
     { meal_category: 'evening', food_name: 'ארוחת קופסה קלילה (200ג תפוד + 2 ביצים קשות + מאפינס קוטג + שרי)', calories: 415 },
     { meal_category: 'evening', food_name: 'ארוחת קופסה משביעה (150ג חזה עוף + 100ג אורז לבן + ירקות)', calories: 350 },
     { meal_category: 'evening', food_name: 'ארוחת אורז וביצים (100ג אורז + 2 ביצים קשות + מאפינס קוטג + רבע מאפינס טונה + חמוצים)', calories: 390 },
@@ -147,7 +147,7 @@ async function loginUser(username) {
     }
 
     // טעינת נתונים
-    buildWeeklyScheduleAccordionUI(); // הפונקציה המשודרגת שמחשבת תאריכים
+    buildWeeklyScheduleAccordionUI();
     await loadWeeklySchedule();
     loadStats();
     loadAllCenterItems();
@@ -217,27 +217,25 @@ function initTabs() {
     });
 }
 
-// פונקציית קסם שמחשבת את התאריך המדויק לכל יום בשבוע הנוכחי
+// פונקציה שמחשבת את התאריך המדויק לכל יום בשבוע הנוכחי
 function getFormattedDateForDay(dayIndex) {
     const current = new Date();
-    const currentDayOfWeek = current.getDay(); // 0 = ראשון, 1 = שני...
+    const currentDayOfWeek = current.getDay();
     
-    // חישוב המרחק מיום ראשון של השבוע הנוכחי
     const distanceToSunday = currentDayOfWeek; 
     const sundayDate = new Date(current);
     sundayDate.setDate(current.getDate() - distanceToSunday);
     
-    // הוספת הימים לפי היום הספציפי בשבוע
     const targetDate = new Date(sundayDate);
     targetDate.setDate(sundayDate.getDate() + dayIndex);
     
     const day = targetDate.getDate();
-    const month = targetDate.getMonth() + 1; // חודשים מתחילים מ-0
+    const month = targetDate.getMonth() + 1;
     
     return `${day}.${month}`;
 }
 
-// בניית האקורדיון עם תאריכים דינמיים שמתעדכנים כל שבוע מחדש!
+// בניית האקורדיון עם תאריך מצד ימין עדין וללא אימוג'י
 function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     if (!container) return;
@@ -245,7 +243,7 @@ function buildWeeklyScheduleAccordionUI() {
 
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
-        const dateStr = getFormattedDateForDay(dayIndex); // חישוב התאריך הדינמי לשבוע הנוכחי
+        const dateStr = getFormattedDateForDay(dayIndex);
         
         const itemDiv = document.createElement('div');
         itemDiv.className = 'accordion-item';
@@ -266,7 +264,11 @@ function buildWeeklyScheduleAccordionUI() {
 
         itemDiv.innerHTML = `
             <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
-                <span>📅 יום ${dayName} <span style="font-size: 0.8rem; color: var(--text-secondary); margin-right: 5px; font-weight: normal;">(${dateStr})</span></span>
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.85rem; color: var(--accent-purple-light); font-weight: normal; min-width: 35px; display: inline-block;">${dateStr}</span>
+                    <span style="color: #3c4261; font-weight: normal;">|</span>
+                    <span>יום ${dayName}</span>
+                </span>
                 <span class="accordion-icon">▼</span>
             </div>
             <div class="accordion-content">
@@ -728,7 +730,6 @@ async function loadCenterItems(type) {
     });
 }
 
-// טעינת הפריטים
 function loadAllCenterItems() {
     loadCenterItems('important');
     loadCenterItems('weekly');
