@@ -23,7 +23,7 @@ const edenDefaultPresets = [
     { meal_category: 'noon', food_name: 'ארוחת קופסה קלילה (200ג תפוד + 2 ביצים קשות + מאפינס קוטג + שרי)', calories: 415 },
     { meal_category: 'noon', food_name: 'ארוחת קופסה משביעה (150ג חזה עוף + 100ג אורז לבן + ירקות)', calories: 350 },
     { meal_category: 'noon', food_name: 'ארוחת אורז וביצים (100ג אורז + 2 ביצים קשות + מאפינס קוטג + רבע מאפינס טונה + חמוצים)', calories: 390 },
-    { meal_category: 'noon', food_name: 'ארוחת עוף ותפוח אדמה מזינה (150ג חזה עוף + 200ג תפוד + כףחומוס + סלט עגבניות + ירקות)', calories: 520 },
+    { meal_category: 'noon', food_name: 'ארוחת עוף ותפוח אדמה מזינה (150ג חזה עוף + 200ג תפוד + כף חומוס + סלט עגבניות + ירקות)', calories: 520 },
     { meal_category: 'evening', food_name: 'ארוחת קופסה קלילה (200ג תפוד + 2 ביצים קשות + מאפינס קוטג + שרי)', calories: 415 },
     { meal_category: 'evening', food_name: 'ארוחת קופסה משביעה (150ג חזה עוף + 100ג אורז לבן + ירקות)', calories: 350 },
     { meal_category: 'evening', food_name: 'ארוחת אורז וביצים (100ג אורז + 2 ביצים קשות + מאפינס קוטג + רבע מאפינס טונה + חמוצים)', calories: 390 },
@@ -56,7 +56,7 @@ function initSupabase() {
 // הפעלה ראשונית
 document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
-    initTabs();
+    initCubesNavigation(); // אתחול מנגנון הקוביות החדש!
 
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (usernameVal) {
                 loginUser(usernameVal);
             } else {
-                alert('אנא הקלידי שם משתמש');
+                alert('אנא הקלידו שם משתמש');
             }
         });
     }
@@ -154,16 +154,6 @@ async function loginUser(username) {
     loadMealPresetsToSelects();
     loadProgressTargets();
     loadWeightHistory();
-
-    const btnSave = document.getElementById('btn-save-nutrition');
-    if (btnSave) {
-        btnSave.onclick = saveNutrition;
-    }
-
-    const btnCopy = document.getElementById('btn-copy-yesterday');
-    if (btnCopy) {
-        btnCopy.onclick = copyFromYesterday;
-    }
 }
 
 // פונקציית התנתקות
@@ -195,21 +185,23 @@ async function checkAndSetupEdenPresets() {
     }
 }
 
-// מנגנון ניווט טאבים
-function initTabs() {
-    const tabButtons = document.querySelectorAll('.tab-button');
+// מנגנון ניווט קוביות (Dashboard Cubes Navigation)
+function initCubesNavigation() {
+    const cubes = document.querySelectorAll('.nav-cube');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTabId = button.getAttribute('data-tab');
+    cubes.forEach(cube => {
+        cube.addEventListener('click', () => {
+            const targetId = cube.getAttribute('data-target');
 
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+            // עדכון המצב הפעיל של הקוביות
+            cubes.forEach(c => cube.classList.remove('active'));
+            cube.classList.add('active');
 
+            // החלפת חלונית התוכן הגלויה
             tabContents.forEach(content => {
                 content.classList.remove('active-tab');
-                if (content.id === targetTabId) {
+                if (content.id === targetId) {
                     content.classList.add('active-tab');
                 }
             });
@@ -483,7 +475,7 @@ async function loadMealPresetsToSelects() {
     const selectElements = document.querySelectorAll('.preset-select');
     selectElements.forEach(select => {
         const category = select.getAttribute('data-category');
-        select.innerHTML = '<option value="">📋 בחרי ארוחה קבועה...</option>';
+        select.innerHTML = '<option value="">📋 בחירת ארוחה קבועה...</option>';
 
         const filtered = data.filter(item => {
             if (category === 'morning') return item.meal_category === 'morning';
@@ -677,7 +669,7 @@ async function loadStats() {
     if (monthlyEl) monthlyEl.innerText = average;
 }
 
-// ======================== Focus ⚡ ========================
+// ======================== מרכז השליטה ========================
 
 async function addCenterItem(type) {
     if (!supabaseClient) return;
@@ -786,10 +778,7 @@ async function addProgressTarget() {
 async function loadProgressTargets() {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient
-        .from('weekly_progress_targets')
-        .select('*')
-        .eq('username', currentUsername)
-        .order('created_at', { ascending: true });
+        .from('weekly_progress_targets').select('*').eq('username', currentUsername).order('created_at', { ascending: true });
 
     if (error) {
         console.error('Error loading progress targets:', error);
@@ -833,10 +822,7 @@ async function changeProgressVal(id, change) {
     if (!supabaseClient) return;
 
     const { data: item } = await supabaseClient
-        .from('weekly_progress_targets')
-        .select('*')
-        .eq('id', id)
-        .single();
+        .from('weekly_progress_targets').select('*').eq('id', id).single();
 
     if (!item) return;
 
@@ -844,9 +830,7 @@ async function changeProgressVal(id, change) {
     if (newVal < 0) newVal = 0;
 
     const { error } = await supabaseClient
-        .from('weekly_progress_targets')
-        .update({ current_val: newVal })
-        .eq('id', id);
+        .from('weekly_progress_targets').update({ current_val: newVal }).eq('id', id);
 
     if (error) {
         console.error('Error updating progress:', error);
@@ -860,9 +844,7 @@ async function deleteProgressTarget(id) {
     if (!supabaseClient) return;
 
     const { error } = await supabaseClient
-        .from('weekly_progress_targets')
-        .delete()
-        .eq('id', id);
+        .from('weekly_progress_targets').delete().eq('id', id);
 
     if (error) {
         console.error('Error deleting target:', error);
@@ -926,10 +908,7 @@ async function loadWeightHistory() {
     if (!supabaseClient) return;
 
     const { data, error } = await supabaseClient
-        .from('weight_tracker')
-        .select('*')
-        .eq('username', currentUsername)
-        .order('weight_date', { ascending: false });
+        .from('weight_tracker').select('*').eq('username', currentUsername).order('weight_date', { ascending: false });
 
     if (error) {
         console.error('Error loading weight history:', error);
@@ -968,9 +947,7 @@ async function deleteWeightRecord(id) {
     if (!confirmDelete) return;
 
     const { error } = await supabaseClient
-        .from('weight_tracker')
-        .delete()
-        .eq('id', id);
+        .from('weight_tracker').delete().eq('id', id);
 
     if (error) {
         console.error('Error deleting weight record:', error);
