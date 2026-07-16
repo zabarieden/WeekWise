@@ -1,212 +1,598 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MySevenDays: Smart Calendar</title>
-    <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=21">
-    <!-- חיבור ל-Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
+const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt'; 
 
-    <!-- מעטפת האפליקציה הנעולה בגודל מובייל קלאסי -->
-    <div class="phone-wrapper">
+let supabaseClient;
 
-        <!-- כדורי פלזמה דינמיים ברקע בגווני ורוד וסגול כדי לייצר עומק לזכוכית -->
-        <div class="ambient-glow glow-pink"></div>
-        <div class="ambient-glow glow-purple"></div>
+const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-        <!-- מסך כניסה למערכת -->
-        <div id="login-overlay" class="login-overlay">
-            <div class="login-card">
-                <h2>⚡ MySevenDays</h2>
-                <p>Smart Calendar</p>
-                <input type="text" id="username-input" placeholder="שם משתמש" autofocus>
-                <button id="btn-login" class="btn-primary">היכנסו</button>
-            </div>
-        </div>
+const defaultHours = [
+    '07:00', '09:00', '11:00', '13:00', '15:00', 
+    '17:00', '19:00', '20:00', '21:00', '22:00'
+];
 
-        <!-- האפליקציה הראשית -->
-        <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; display: flex; flex-direction: column;">
-            
-            <div class="dashboard-grid" style="margin-top: 10px;">
-                <div class="nav-cube active" data-target="schedule-section">
-                    <span class="cube-icon">🗓️</span>
-                    <span class="cube-title">לו"ז</span>
-                </div>
-                <div class="nav-cube" data-target="nutrition-section">
-                    <span class="cube-icon">🍎</span>
-                    <span class="cube-title">תזונה</span>
-                </div>
-                <div class="nav-cube" data-target="my-center-section">
-                    <span class="cube-icon">✨</span>
-                    <span class="cube-title">מטרות</span>
-                </div>
-            </div>
+let currentUsername = '';
 
-            <div class="main-scroll-area">
-                
-                <!-- חלונית 1: השבוע שלי -->
-                <section class="tab-content active-tab" id="schedule-section">
-                    <div class="card">
-                        <div class="card-title-row">
-                            <h2>MySevenDays</h2>
-                            <button class="btn-floating-add" onclick="openModal('modal-add-task')">＋</button>
-                        </div>
-                        <div class="schedule-accordion" id="accordion-container">
-                        </div>
-                        <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
-                    </div>
-                </section>
+function initSupabase() {
+    if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return true;
+    }
+    return false;
+}
 
-                <!-- חלונית 2: מעקב ארוחות ותזונה -->
-                <section class="tab-content" id="nutrition-section">
-                    <div class="card ai-card" style="margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.35); background: rgba(25, 18, 38, 0.45);">
-                        <h2 style="font-size: 0.95rem; color: var(--accent-purple-light); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">🤖 AI Nutrition Assistant</h2>
-                        <div class="ai-input-wrapper">
-                            <input type="text" id="ai-nutrition-prompt" placeholder="דוגמה: תוסיף 50 גרם פופקורן לנשנוש 1" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; color: #fff; font-size: 0.8rem; outline: none;">
-                            <button id="btn-run-ai" style="padding: 10px 14px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">עדכן ✨</button>
-                        </div>
-                    </div>
+document.addEventListener('DOMContentLoaded', () => {
+    initSupabase();
+    initCubesNavigation();
 
-                    <div class="card" style="margin-bottom: 16px;">
-                        <div class="card-header-column">
-                            <div class="card-title-row" style="width: 100%;">
-                                <h2>יומן ארוחות</h2>
-                                <button class="btn-floating-add" onclick="openModal('modal-add-preset')">＋</button>
-                            </div>
-                            <div class="date-picker-container" style="margin-top: 10px; width: 100%;">
-                                <input type="date" id="selected-date">
-                            </div>
-                        </div>
-                        
-                        <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;">שכפל מאתמול</button>
-                        
-                        <div class="meals-container" style="margin-top: 15px;">
-                            <div class="meal-row" data-meal="meal_1">
-                                <div class="meal-header-row"><span class="meal-label">ארוחה 1</span><select class="preset-select" data-category="morning"></select></div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_1">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_1">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_2">
-                                <div class="meal-header-row"><span class="meal-label">ארוחה 2</span><select class="preset-select" data-category="noon"></select></div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_2">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_2">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_3">
-                                <div class="meal-header-row"><span class="meal-label">ארוחה 3</span><select class="preset-select" data-category="evening"></select></div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_3">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_3">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_4">
-                                <div class="meal-header-row"><span class="meal-label">נשנושים 1</span><select class="preset-select" data-category="snack"></select></div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_4">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_4">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="snack">
-                                <div class="meal-header-row"><span class="meal-label">נשנושים 2</span><select class="preset-select" data-category="snack"></select></div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input" id="food-snack">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-snack">
-                                </div>
-                            </div>
-                        </div>
-                        <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;">שמור תפריט</button>
-                    </div>
+    const savedUser = localStorage.getItem('weekwise_user');
+    if (savedUser) {
+        if (!supabaseClient && window.supabase) initSupabase();
+        loginUser(savedUser);
+    }
 
-                    <div class="card" style="margin-bottom: 16px;">
-                        <h2>מדדי קלוריות</h2>
-                        <div class="stats-grid">
-                            <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="calories-today">0</div></div>
-                            <div class="stat-box weekly"><h3>ממוצע שבועי</h3><div class="stat-number" id="calories-weekly">0</div></div>
-                            <div class="stat-box monthly"><h3>ממוצע חודשי</h3><div class="stat-number" id="calories-monthly">0</div></div>
-                        </div>
-                    </div>
-                </section>
+    const btnLogin = document.getElementById('btn-login');
+    if (btnLogin) {
+        btnLogin.addEventListener('click', () => {
+            if (!supabaseClient) initSupabase();
+            const usernameVal = document.getElementById('username-input').value.trim();
+            if (usernameVal) loginUser(usernameVal);
+            else alert('אנא הקלידו שם משתמש');
+        });
+    }
 
-                <!-- חלונית 3: מטרות ומשימות -->
-                <section class="tab-content" id="my-center-section">
-                    <div class="my-center-grid">
-                        <div class="card important-card">
-                            <div class="card-title-row"><h2>דברים חשובים מאוד</h2><button class="btn-floating-add" onclick="openCenterAdder('important')">➕</button></div>
-                            <ul id="important-list" class="center-list"></ul>
-                        </div>
-                        <div class="card">
-                            <div class="card-title-row"><h2>משימות</h2><button class="btn-floating-add" onclick="openCenterAdder('weekly')">➕</button></div>
-                            <ul id="weekly-list" class="center-list"></ul>
-                        </div>
-                        <div class="card">
-                            <div class="card-title-row"><h2>יעדי התקדמות</h2><button class="btn-floating-add" onclick="openModal('modal-add-progress')">➕</button></div>
-                            <div id="progress-container" class="progress-container"></div>
-                        </div>
-                    </div>
-                </section>
+    document.getElementById('btn-logout').addEventListener('click', logoutUser);
+    document.getElementById('btn-add-preset').addEventListener('click', () => {
+        addCustomPreset();
+        closeModal('modal-add-preset');
+    });
+    document.getElementById('btn-save-new-slot').addEventListener('click', () => {
+        saveScheduleSlotFromAdder();
+        closeModal('modal-add-task');
+    });
+    document.getElementById('btn-delete-slot-specific').addEventListener('click', () => {
+        deleteScheduleSlotFromAdder();
+        closeModal('modal-add-task');
+    });
+    document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
+    document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
 
-                <div style="text-align: center; margin: 25px 0 10px 0;">
-                    <button id="btn-logout" class="btn-logout">🚪 התנתקות</button>
-                </div>
+    // חיבור כפתור ה-AI החכם
+    const btnRunAI = document.getElementById('btn-run-ai');
+    if (btnRunAI) {
+        btnRunAI.addEventListener('click', runSmartAIParser);
+    }
+});
 
-                <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; padding-bottom: 25px; font-family: -apple-system, sans-serif; letter-spacing: 0.5px;">
-                    © 2026 all rights reserved. app developed by eden zabari.
-                </div>
-            </div>
-        </div>
+// 🤖 מנוע ה-AI המשולב לקריאה ופירוק טקסט חופשי (NLP Parser)
+function runSmartAIParser() {
+    const promptInput = document.getElementById('ai-nutrition-prompt');
+    if (!promptInput) return;
+    const text = promptInput.value.trim();
+    if (!text) return alert('אנא הקלידו משפט קודם');
 
-        <!-- Modals -->
-        <div id="modal-add-task" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>הוספת משימה</h3>
-                <div class="schedule-adder-grid">
-                    <select id="add-slot-day"><option value="Sunday">ראשון</option><option value="Monday">שני</option><option value="Tuesday">שלישי</option><option value="Wednesday">רביעי</option><option value="Thursday">חמישי</option><option value="Friday">שישי</option><option value="Saturday">שבת</option></select>
-                    <select id="add-slot-num">
-                        <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option><option value="7">#7</option><option value="8">#8</option><option value="9">#9</option><option value="10">#10</option>
-                    </select>
-                    <input type="text" id="add-slot-time" placeholder="שעה (למשל: 09:00)">
-                    <input type="text" id="add-slot-task" placeholder="שם המשימה...">
-                    <div class="action-buttons-wrap">
-                        <button id="btn-save-new-slot" class="btn-primary">שמור</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-task')">סגור</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    let targetMeal = 'snack'; // ברירת מחדל
+    if (text.includes('ארוחה 1') || text.includes('בוקר')) targetMeal = 'meal_1';
+    else if (text.includes('ארוחה 2') || text.includes('צהריים') || text.includes('צהרים')) targetMeal = 'meal_2';
+    else if (text.includes('ארוחה 3') || text.includes('ערב')) targetMeal = 'meal_3';
+    else if (text.includes('ארוחה 4') || text.includes('נשנושים 1') || text.includes('נשנוש 1')) targetMeal = 'meal_4';
+    else if (text.includes('נשנושים') || text.includes('מתוקים') || text.includes('נשנוש 2')) targetMeal = 'snack';
 
-        <div id="modal-add-preset" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>הוספת ארוחה</h3>
-                <div class="preset-manager-grid">
-                    <input type="text" id="new-preset-name" placeholder="שם הארוחה">
-                    <input type="number" id="new-preset-calories" placeholder="קלוריות">
-                    <button id="btn-add-preset" class="btn-primary">שמור</button>
-                </div>
-            </div>
-        </div>
+    const foodInput = document.getElementById(`food-${targetMeal}`);
+    const calsInput = document.getElementById(`cals-${targetMeal}`);
+
+    // פקודת ניקוי
+    if (text.includes('נקה') || text.includes('תמחק') || text.includes('מחק')) {
+        if (foodInput) foodInput.value = '';
+        if (calsInput) calsInput.value = '';
+        promptInput.value = '';
+        return alert('הארוחה נוקתה לבקשתך!');
+    }
+
+    // חילוץ מספר הקלוריות מהמשפט
+    const numberMatch = text.match(/\d+/);
+    const calories = numberMatch ? parseInt(numberMatch[0]) : '';
+
+    // חילוץ תיאור המאכל (מסיר את הקלוריות והארוחה מהמשפט)
+    let foodDescription = text
+        .replace(/\d+/g, '')
+        .replace(/קלוריות|קלוריה/g, '')
+        .replace(/ארוחה \d/g, '')
+        .replace(/בוקר|צהריים|צהרים|ערב/g, '')
+        .replace(/נשנושים|נשנוש \d|מתוקים/g, '')
+        .replace(/תוסיף|תעדכן|תשים|שלי/g, '')
+        .replace(/[-–—,.-]/g, '')
+        .trim();
+
+    if (foodInput && foodDescription) foodInput.value = foodDescription;
+    if (calsInput && calories) calsInput.value = calories;
+
+    promptInput.value = '';
+    alert('ה-AI עדכן את הטופס בהצלחה! לחצי על שמירה כדי לעדכן סופית ✨');
+}
+
+async function loginUser(username) {
+    currentUsername = username;
+    localStorage.setItem('weekwise_user', username);
+
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+
+    const dateInput = document.getElementById('selected-date');
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (dateInput) {
+        dateInput.value = today;
+        loadDailyNutrition(today);
+        dateInput.onchange = (e) => loadDailyNutrition(e.target.value);
+    }
+
+    const weightDateInput = document.getElementById('new-weight-date');
+    if (weightDateInput) weightDateInput.value = today;
+
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+    loadStats();
+    loadAllCenterItems();
+    loadMealPresetsToSelects();
+    loadProgressTargets();
+    loadWeightHistory();
+
+    document.getElementById('btn-save-nutrition').onclick = saveNutrition;
+    document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
+}
+
+function logoutUser() {
+    localStorage.removeItem('weekwise_user');
+    location.reload();
+}
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('open');
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('open');
+}
+
+function openCenterAdder(type) {
+    const titleMap = { important: 'דבר חשוב מאוד', weekly: 'משימה לשבוע', general: 'סידור / קנייה' };
+    const text = prompt(`הקלידו ${titleMap[type]} חדש:`);
+    if (!text || !text.trim()) return;
+    insertCenterItemDirect(type, text.trim());
+}
+
+async function insertCenterItemDirect(type, content) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('my_center_tasks').insert({
+        username: currentUsername, task_type: type, content: content
+    });
+    loadCenterItems(type);
+}
+
+function initCubesNavigation() {
+    const cubes = document.querySelectorAll('.nav-cube');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    cubes.forEach(cube => {
+        cube.addEventListener('click', () => {
+            const targetId = cube.getAttribute('data-target');
+            cubes.forEach(c => c.classList.remove('active'));
+            cube.classList.add('active');
+            tabContents.forEach(content => {
+                content.classList.remove('active-tab');
+                if (content.id === targetId) content.classList.add('active-tab');
+            });
+        });
+    });
+}
+
+function getFormattedDateForDay(dayIndex) {
+    const current = new Date();
+    const currentDayOfWeek = current.getDay();
+    const distanceToSunday = currentDayOfWeek; 
+    const sundayDate = new Date(current);
+    sundayDate.setDate(current.getDate() - distanceToSunday);
+    const targetDate = new Date(sundayDate);
+    targetDate.setDate(sundayDate.getDate() + dayIndex);
+    return `${targetDate.getDate()}.${targetDate.getMonth() + 1}`;
+}
+
+function buildWeeklyScheduleAccordionUI() {
+    const container = document.getElementById('accordion-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    daysOfWeek.forEach((dayName, dayIndex) => {
+        const dbDay = dbDaysMap[dayIndex];
+        const dateStr = getFormattedDateForDay(dayIndex);
         
-        <div id="modal-add-progress" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>יעד חדש</h3>
-                <div class="preset-manager-grid">
-                    <input type="text" id="progress-name-input" placeholder="שם המטרה">
-                    <input type="number" id="progress-target-input" placeholder="יעד שבועי">
-                    <button onclick="addProgressTarget(); closeModal('modal-add-progress');" class="btn-primary">הוסף</button>
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item';
+        itemDiv.id = `accordion-${dbDay}`;
+
+        let slotsHTML = '';
+        for (let i = 1; i <= 10; i++) {
+            const defaultHour = defaultHours[i - 1];
+            slotsHTML += `
+                <div class="slot-input-group" data-day="${dbDay}" data-slot="${i}">
+                    <span class="slot-num-label">#${i}</span>
+                    <input type="text" value="${defaultHour}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <input type="text" placeholder="" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})">
+                    <button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button>
+                </div>
+            `;
+        }
+
+        itemDiv.innerHTML = `
+            <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.85rem; color: var(--accent-purple-light); font-weight: normal; min-width: 35px;">${dateStr}</span>
+                    <span style="color: rgba(255,255,255,0.15);">|</span>
+                    <span>יום ${dayName}</span>
+                </span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content"><div class="slots-grid">${slotsHTML}</div></div>
+        `;
+        container.appendChild(itemDiv);
+    });
+}
+
+function toggleAccordion(day) {
+    const item = document.getElementById(`accordion-${day}`);
+    if (!item) return;
+    const isActive = item.classList.contains('active');
+    document.querySelectorAll('.accordion-item').forEach(el => {
+        if (el.id !== 'accordion-weight-card') el.classList.remove('active');
+    });
+    if (!isActive) item.classList.add('active');
+}
+
+async function loadWeeklySchedule() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('weekly_schedule').select('*').eq('username', currentUsername);
+    if (!data) return;
+
+    data.forEach(item => {
+        const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
+        if (slotEl) {
+            if (item.time_of_day) slotEl.querySelector('.slot-time').value = item.time_of_day;
+            slotEl.querySelector('.slot-task').value = item.task_title || '';
+            const colorClass = item.task_color === 'purple' ? 'task-purple' : 'task-pink';
+            slotEl.classList.remove('task-pink', 'task-purple');
+            slotEl.classList.add(colorClass);
+
+            const taskInput = slotEl.querySelector('.slot-task');
+            if (item.task_title) {
+                const emoji = item.task_color === 'purple' ? '📚' : '🔋';
+                if (!taskInput.value.startsWith('🔋') && !taskInput.value.startsWith('📚')) {
+                    taskInput.value = `${emoji} ${item.task_title}`;
+                }
+            }
+        }
+    });
+}
+
+async function saveScheduleSlot(day, slot) {
+    if (!supabaseClient) return;
+    const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
+    if (!slotEl) return;
+    const timeVal = slotEl.querySelector('.slot-time').value;
+    let taskVal = slotEl.querySelector('.slot-task').value.trim();
+    taskVal = taskVal.replace(/^(🔋|📚)\s*/, '');
+
+    const { data: existing } = await supabaseClient.from('weekly_schedule').select('id, task_color').eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
+    const color = existing ? (existing.task_color || 'pink') : 'pink';
+
+    if (existing) {
+        await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
+    } else {
+        await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: color });
+    }
+    loadWeeklySchedule();
+}
+
+async function saveScheduleSlotFromAdder() {
+    if (!supabaseClient) return;
+    const day = document.getElementById('add-slot-day').value;
+    const slot = parseInt(document.getElementById('add-slot-num').value);
+    const timeVal = document.getElementById('add-slot-time').value.trim();
+    const taskVal = document.getElementById('add-slot-task').value.trim();
+    const colorVal = document.querySelector('input[name="slot-color"]:checked').value;
+
+    if (!timeVal || !taskVal) return;
+
+    const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
+
+    if (existing) {
+        await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal, task_color: colorVal }).eq('id', existing.id);
+    } else {
+        await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal, task_color: colorVal });
+    }
+    document.getElementById('add-slot-time').value = '';
+    document.getElementById('add-slot-task').value = '';
+    toggleAccordion(day);
+    loadWeeklySchedule();
+}
+
+async function deleteScheduleSlotFromAdder() {
+    if (!supabaseClient) return;
+    const day = document.getElementById('add-slot-day').value;
+    const slot = parseInt(document.getElementById('add-slot-num').value);
+    await clearSingleSlot(day, slot);
+    toggleAccordion(day);
+}
+
+async function clearSingleSlot(day, slot) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot);
+    const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
+    if (slotEl) {
+        slotEl.querySelector('.slot-task').value = '';
+        slotEl.classList.remove('task-pink', 'task-purple');
+        slotEl.querySelector('.slot-time').value = defaultHours[slot - 1];
+    }
+}
+
+async function clearEntireWeeklySchedule() {
+    if (!supabaseClient) return;
+    if (!confirm('לנקות את כל הלו״ז השבועי?')) return;
+    await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername);
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
+}
+
+async function loadMealPresetsToSelects() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('username', currentUsername);
+    if (!data) return;
+
+    document.querySelectorAll('.preset-select').forEach(select => {
+        const category = select.getAttribute('data-category');
+        select.innerHTML = '<option value="">📋 ארוחה קבועה...</option>';
+        const filtered = data.filter(item => {
+            if (category === 'morning') return item.meal_category === 'morning';
+            if (category === 'snack') return item.meal_category === 'snack';
+            return item.meal_category === 'noon' || item.meal_category === 'evening';
+        });
+
+        filtered.forEach(preset => {
+            const option = document.createElement('option');
+            option.value = preset.calories;
+            option.textContent = `${preset.food_name} (${preset.calories})`;
+            option.dataset.foodName = preset.food_name;
+            select.appendChild(option);
+        });
+
+        select.onchange = (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            if (!selectedOption.value) return;
+            const mealRow = e.target.closest('.meal-row');
+            mealRow.querySelector('.food-input').value = selectedOption.dataset.foodName;
+            mealRow.querySelector('.calories-input').value = selectedOption.value;
+        };
+    });
+}
+
+async function addCustomPreset() {
+    if (!supabaseClient) return;
+    const name = document.getElementById('new-preset-name').value.trim();
+    const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
+    const category = document.getElementById('new-preset-category').value;
+
+    if (!name || calories <= 0) return;
+
+    await supabaseClient.from('meal_presets').insert({ username: currentUsername, meal_category: category, food_name: name, calories: calories });
+    document.getElementById('new-preset-name').value = '';
+    document.getElementById('new-preset-calories').value = '';
+    loadMealPresetsToSelects();
+}
+
+async function loadDailyNutrition(date) {
+    if (!supabaseClient) return;
+    document.querySelectorAll('.meal-row').forEach(row => { row.querySelector('.food-input').value = ''; row.querySelector('.calories-input').value = ''; });
+
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', date);
+    if (!data) return;
+
+    let totalToday = 0;
+    data.forEach(item => {
+        const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
+        if (row) {
+            row.querySelector('.food-input').value = item.food_description || '';
+            row.querySelector('.calories-input').value = item.calories || '';
+            totalToday += item.calories || 0;
+        }
+    });
+    document.getElementById('calories-today').innerText = totalToday;
+}
+
+async function saveNutrition() {
+    if (!supabaseClient) return;
+    const date = document.getElementById('selected-date').value;
+    const mealRows = document.querySelectorAll('.meal-row');
+
+    for (let row of mealRows) {
+        const mealType = row.getAttribute('data-meal');
+        const food = row.querySelector('.food-input').value;
+        const cals = parseInt(row.querySelector('.calories-input').value) || 0;
+
+        const { data: existing } = await supabaseClient.from('calorie_tracker').select('id').eq('username', currentUsername).eq('date', date).eq('meal_type', mealType).maybeSingle();
+
+        if (existing) {
+            await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals }).eq('id', existing.id);
+        } else {
+            await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, date: date, meal_type: mealType, food_description: food, calories: cals });
+        }
+    }
+    alert('התזונה נשמרה!');
+    loadDailyNutrition(date);
+    loadStats();
+}
+
+async function copyFromYesterday() {
+    if (!supabaseClient) return;
+    const currentDate = document.getElementById('selected-date').value;
+    const yesterdayObj = new Date(currentDate);
+    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+    const yesterdayDateStr = yesterdayObj.toISOString().split('T')[0];
+
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', yesterdayDateStr);
+    if (!data || data.length === 0) return alert('אין תפריט מאתמול.');
+
+    data.forEach(item => {
+        const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
+        if (row) {
+            row.querySelector('.food-input').value = item.food_description || '';
+            row.querySelector('.calories-input').value = item.calories || 0;
+        }
+    });
+}
+
+async function loadStats() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('calorie_tracker').select('date, calories').eq('username', currentUsername);
+    if (!data) return;
+
+    const dailyTotals = {};
+    data.forEach(item => dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.calories);
+    const values = Object.values(dailyTotals);
+    if (values.length === 0) return;
+
+    let sum = 0;
+    const average = Math.round(values.reduce((s, v) => sum = s + v, 0) / values.length);
+    document.getElementById('calories-weekly').innerText = average; 
+    document.getElementById('calories-monthly').innerText = average;
+}
+
+async function loadCenterItems(type) {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('username', currentUsername).eq('task_type', type).order('created_at', { ascending: true });
+    if (!data) return;
+
+    const listUl = document.getElementById(`${type}-list`);
+    if (!listUl) return;
+    listUl.innerHTML = '';
+
+    data.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${item.content}</span><button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>`;
+        listUl.appendChild(li);
+    });
+}
+
+function loadAllCenterItems() { loadCenterItems('important'); loadCenterItems('weekly'); loadCenterItems('general'); }
+
+async function deleteCenterItem(id, type) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('my_center_tasks').delete().eq('id', id);
+    loadCenterItems(type);
+}
+
+async function addProgressTarget() {
+    if (!supabaseClient) return;
+    const name = document.getElementById('progress-name-input').value.trim();
+    const targetVal = parseInt(document.getElementById('progress-target-input').value) || 0;
+
+    if (!name || targetVal <= 0) return;
+
+    await supabaseClient.from('weekly_progress_targets').insert({ username: currentUsername, target_name: name, current_val: 0, target_val: targetVal });
+    document.getElementById('progress-name-input').value = '';
+    document.getElementById('progress-target-input').value = '';
+    loadProgressTargets();
+}
+
+async function loadProgressTargets() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('weekly_progress_targets').select('*').eq('username', currentUsername).order('created_at', { ascending: true });
+    const container = document.getElementById('progress-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין יעדים פעילים.</p>';
+        return;
+    }
+
+    data.forEach(item => {
+        const percentage = Math.min(Math.round((item.current_val / item.target_val) * 100), 100);
+        const isCompleted = item.current_val >= item.target_val;
+
+        const row = document.createElement('div');
+        row.className = 'progress-row';
+        row.innerHTML = `
+            <div class="progress-info">
+                <span>${item.target_name}</span>
+                <div class="progress-counter">
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', -1)">-</button>
+                    <span style="font-weight: 600; min-width: 35px; text-align: center;">${item.current_val}/${item.target_val}</span>
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', 1)">+</button>
+                    <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')">❌</button>
                 </div>
             </div>
-        </div>
-    </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill ${isCompleted ? 'completed' : ''}" style="width: ${percentage}%;"></div></div>
+        `;
+        container.appendChild(row);
+    });
+}
 
-    <script src="app.js?v=21"></script>
-</body>
-</html>
+async function changeProgressVal(id, change) {
+    if (!supabaseClient) return;
+    const { data: item } = await supabaseClient.from('weekly_progress_targets').select('*').eq('id', id).single();
+    if (!item) return;
+    let newVal = Math.max(0, item.current_val + change);
+    await supabaseClient.from('weekly_progress_targets').update({ current_val: newVal }).eq('id', id);
+    loadProgressTargets();
+}
+
+async function deleteProgressTarget(id) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('weekly_progress_targets').delete().eq('id', id);
+    loadProgressTargets();
+}
+
+function toggleWeightAccordion() {
+    const content = document.getElementById('weight-accordion-content');
+    const icon = document.getElementById('weight-icon');
+    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { content.style.maxHeight = '400px'; icon.style.transform = 'rotate(180deg)'; }
+    else { content.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; }
+}
+
+async function saveNewWeightRecord() {
+    if (!supabaseClient) return;
+    const weight = parseFloat(document.getElementById('new-weight-val').value);
+    const dateVal = document.getElementById('new-weight-date').value;
+
+    if (!weight || !dateVal) return;
+
+    await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: dateVal, weight_value: weight });
+    document.getElementById('new-weight-val').value = '';
+    loadWeightHistory();
+}
+
+async function loadWeightHistory() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('weight_tracker').select('*').eq('username', currentUsername).order('weight_date', { ascending: false });
+    const listUl = document.getElementById('weight-history-list');
+    if (!listUl) return;
+    listUl.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        listUl.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין שקילות.</p>`;
+        return;
+    }
+
+    data.forEach(item => {
+        const parts = item.weight_date.split('-');
+        listUl.innerHTML += `<li><span>${item.weight_value} ק״ג <small style="color:var(--text-secondary);">(${parts[2]}.${parts[1]})</small></span><button class="btn-delete-item" onclick="deleteWeightRecord('${item.id}')">❌</button></li>`;
+    });
+}
+
+async function deleteWeightRecord(id) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('weight_tracker').delete().eq('id', id);
+    loadWeightHistory();
+}
