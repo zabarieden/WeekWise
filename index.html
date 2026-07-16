@@ -13,45 +13,52 @@
     <!-- מסך כניסה למערכת -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-card">
-            <h2>⚡ ברוכה הבאה ל-WeekWise</h2>
-            <p>הקלידי שם משתמש כדי להיכנס ללוח האישי שלך:</p>
-            <input type="text" id="username-input" placeholder="שם משתמש (למשל: Eden)" autofocus>
-            <button id="btn-login" class="btn-primary">היכנסי למערכת</button>
+            <h2>⚡ WeekWise</h2>
+            <p>הקלידו שם משתמש כדי להיכנס ללוח האישי שלכם:</p>
+            <input type="text" id="username-input" placeholder="שם משתמש" autofocus>
+            <button id="btn-login" class="btn-primary">היכנסו</button>
         </div>
     </div>
 
-    <!-- האפליקציה הראשית (מוסתרת עד לכניסה) -->
+    <!-- האפליקציה הראשית -->
     <div id="app-container" style="display: none;">
         <header>
-            <div class="logo">WeekWise ⚡</div>
-            <p>הלו"ז, התזונה והאימונים של <span id="display-user" style="color: var(--accent-purple); font-weight: bold;"></span></p>
-            <button id="btn-logout" class="btn-logout">🚪 התנתק</button>
+            <div class="logo">WeekWise</div>
+            <p>הלו"ז, התזונה והאימונים של <span id="display-user" style="color: var(--accent-purple); font-weight: 600;"></span></p>
         </header>
 
-        <!-- סרגל טאבים לניווט מהיר -->
-        <nav class="tabs-nav">
-            <button class="tab-button active" data-tab="schedule-section">📅 לו"ז שבועי</button>
-            <button class="tab-button" data-tab="nutrition-section">🍎 תזונה ומדדים</button>
-            <button class="tab-button" data-tab="my-center-section">⚡ Focus</button>
-        </nav>
+        <!-- לוח אריחים מינימליסטי בסגנון Apple -->
+        <div class="dashboard-grid">
+            <div class="nav-cube active" data-target="schedule-section">
+                <span class="cube-icon">🗓️</span>
+                <span class="cube-title">השבוע שלי</span>
+            </div>
+            <div class="nav-cube" data-target="nutrition-section">
+                <span class="cube-icon">🍎</span>
+                <span class="cube-title">תזונה ומדדים</span>
+            </div>
+            <div class="nav-cube" data-target="my-center-section">
+                <span class="cube-icon">📈</span>
+                <span class="cube-title">מטרות ומשימות</span>
+            </div>
+        </div>
 
         <main class="dashboard-container">
             
-            <!-- טאב 1: לו"ז שבועי -->
+            <!-- חלונית 1: השבוע שלי -->
             <section class="tab-content active-tab" id="schedule-section">
                 <div class="card" style="margin-bottom: 20px;">
-                    <h2>📅 הלו"ז השבועי שלי</h2>
+                    <h2>השבוע שלי</h2>
                     <div class="schedule-accordion" id="accordion-container">
-                        <!-- ימי השבוע כרצועות נפתחות בלחיצה יווצרו כאן דינמית -->
+                        <!-- ימי השבוע יווצרו כאן דינמית -->
                     </div>
                     
-                    <!-- כפתור איפוס כל השבוע -->
-                    <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 15px;">🧹 איפוס וניקוי כל הלו"ז השבועי</button>
+                    <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
                 </div>
 
-                <!-- חלונית ניהול משימה: הוספה או ניקוי משימה ספציפית -->
+                <!-- חלונית ניהול משימה -->
                 <div class="card">
-                    <h2>⚙️ ניהול משימות בלו"ז</h2>
+                    <h2>ניהול משימות בלו"ז</h2>
                     <div class="schedule-adder-grid">
                         <select id="add-slot-day">
                             <option value="Sunday">יום ראשון</option>
@@ -92,25 +99,24 @@
                         </div>
                         
                         <div class="action-buttons-wrap">
-                            <button id="btn-save-new-slot" class="btn-primary">💾 שמור משימה בלו"ז</button>
-                            <button id="btn-delete-slot-specific" class="btn-clear-specific">🗑️ נקה משימה ספציפית</button>
+                            <button id="btn-save-new-slot" class="btn-primary">שמור משימה</button>
+                            <button id="btn-delete-slot-specific" class="btn-clear-specific">נקה משימה</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- טאב 2: מעקב ארוחות ותזונה -->
+            <!-- חלונית 2: מעקב ארוחות ותזונה -->
             <section class="tab-content" id="nutrition-section">
-                <!-- חלונית מעקב ארוחות -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div class="card-header">
-                        <h2>🍎 מעקב ארוחות יומי</h2>
+                        <h2>מעקב ארוחות יומי</h2>
                         <div class="date-picker-container">
                             <input type="date" id="selected-date">
                         </div>
                     </div>
                     
-                    <button id="btn-copy-yesterday" class="btn-secondary">📋 שכפל תפריט מיום קודם</button>
+                    <button id="btn-copy-yesterday" class="btn-secondary">שכפל תפריט מיום קודם</button>
                     
                     <div class="meals-container">
                         <!-- ארוחה 1 -->
@@ -118,7 +124,7 @@
                             <div class="meal-header-row">
                                 <span class="meal-label">ארוחה 1</span>
                                 <select class="preset-select" data-category="morning">
-                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                    <option value="">בחירת ארוחה קבועה...</option>
                                 </select>
                             </div>
                             <div class="meal-inputs-wrap">
@@ -132,7 +138,7 @@
                             <div class="meal-header-row">
                                 <span class="meal-label">ארוחה 2</span>
                                 <select class="preset-select" data-category="noon">
-                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                    <option value="">בחירת ארוחה קבועה...</option>
                                 </select>
                             </div>
                             <div class="meal-inputs-wrap">
@@ -146,7 +152,7 @@
                             <div class="meal-header-row">
                                 <span class="meal-label">ארוחה 3</span>
                                 <select class="preset-select" data-category="evening">
-                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                    <option value="">בחירת ארוחה קבועה...</option>
                                 </select>
                             </div>
                             <div class="meal-inputs-wrap">
@@ -160,7 +166,7 @@
                             <div class="meal-header-row">
                                 <span class="meal-label">ארוחה 4</span>
                                 <select class="preset-select" data-category="evening">
-                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                    <option value="">בחירת ארוחה קבועה...</option>
                                 </select>
                             </div>
                             <div class="meal-inputs-wrap">
@@ -174,7 +180,7 @@
                             <div class="meal-header-row">
                                 <span class="meal-label">נשנושים</span>
                                 <select class="preset-select" data-category="snack">
-                                    <option value="">📋 בחרי ארוחה קבועה...</option>
+                                    <option value="">בחירת ארוחה קבועה...</option>
                                 </select>
                             </div>
                             <div class="meal-inputs-wrap">
@@ -184,14 +190,14 @@
                         </div>
                     </div>
                     
-                    <button id="btn-save-nutrition" class="btn-primary">💾 שמור תפריט להיום</button>
+                    <button id="btn-save-nutrition" class="btn-primary">שמור תפריט להיום</button>
                 </div>
 
                 <!-- חלונית הוספת ארוחה מוכנה חדשה למאגר -->
                 <div class="card" style="margin-bottom: 20px;">
-                    <h2>➕ הוספת ארוחה מוכנה חדשה למאגר</h2>
+                    <h2>הוספת ארוחה מוכנה חדשה למאגר</h2>
                     <div class="preset-manager-grid">
-                        <input type="text" id="new-preset-name" placeholder="שם הארוחה (למשל: יוגורט ושיבולת שועל)">
+                        <input type="text" id="new-preset-name" placeholder="שם הארוחה">
                         <input type="number" id="new-preset-calories" placeholder="כמות קלוריות">
                         <select id="new-preset-category">
                             <option value="morning">🌅 ארוחת בוקר וקלות</option>
@@ -199,13 +205,13 @@
                             <option value="evening">🌙 ארוחות עיקריות (צהריים / ערב)</option>
                             <option value="snack">🍭 נשנושים ומתוקים</option>
                         </select>
-                        <button id="btn-add-preset" class="btn-primary">➕ הוסף למאגר שלי</button>
+                        <button id="btn-add-preset" class="btn-primary">הוסף למאגר</button>
                     </div>
                 </div>
 
                 <!-- חלונית סיכומים ומדדי קלוריות -->
                 <div class="card" style="margin-bottom: 20px;">
-                    <h2>📊 מדדי קלוריות</h2>
+                    <h2>מדדי קלוריות</h2>
                     <div class="stats-grid">
                         <div class="stat-box today">
                             <h3>היום</h3>
@@ -228,33 +234,33 @@
                 <!-- ⚖️ חלונית מעקב משקל תקופתי -->
                 <div class="card accordion-item" id="accordion-weight-card" style="padding: 0; overflow: hidden;">
                     <div class="accordion-header" onclick="toggleWeightAccordion()">
-                        <span>⚖️ מעקב משקל תקופתי</span>
+                        <span>מעקב משקל תקופתי</span>
                         <span class="accordion-icon" id="weight-icon">▼</span>
                     </div>
                     <div class="accordion-content" id="weight-accordion-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
                         <div style="padding: 16px; display: flex; flex-direction: column; gap: 15px;">
                             <div class="weight-inputs-wrap">
-                                <input type="number" step="0.1" id="new-weight-val" placeholder="משקל (למשל: 58.5)">
+                                <input type="number" step="0.1" id="new-weight-val" placeholder="משקל (ק״ג)">
                                 <input type="date" id="new-weight-date">
-                                <button id="btn-save-weight" class="btn-primary" style="width: auto; margin: 0;">💾 שמור משקל</button>
+                                <button id="btn-save-weight" class="btn-primary" style="width: auto; margin: 0;">שמור משקל</button>
                             </div>
                             <ul id="weight-history-list" class="center-list" style="margin-top: 10px;">
-                                <!-- המשקלים שהוזנו יופיעו כאן דינמית -->
+                                <!-- המשקלים יופיעו כאן דינמית -->
                             </ul>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- טאב 3: Focus ⚡ -->
+            <!-- חלונית 3: מטרות ומשימות -->
             <section class="tab-content" id="my-center-section">
                 <div class="my-center-grid">
                     
                     <!-- דברים חשובים -->
                     <div class="card important-card">
-                        <h2>⚠️ דברים חשובים מאוד!</h2>
+                        <h2>דברים חשובים מאוד</h2>
                         <div class="list-add-group">
-                            <input type="text" id="add-important-input" placeholder="להתקשר לרופא, לבטל מנוי...">
+                            <input type="text" id="add-important-input" placeholder="להקליד כאן דברים קריטיים...">
                             <button onclick="addCenterItem('important')">➕</button>
                         </div>
                         <ul id="important-list" class="center-list"></ul>
@@ -262,9 +268,9 @@
 
                     <!-- משימות השבוע -->
                     <div class="card">
-                        <h2>📌 משימות השבוע</h2>
+                        <h2>משימות השבוע</h2>
                         <div class="list-add-group">
-                            <input type="text" id="add-weekly-input" placeholder="יום שלישי: לקחת חבילה מהדואר...">
+                            <input type="text" id="add-weekly-input" placeholder="להוסיף משימה לשבוע...">
                             <button onclick="addCenterItem('weekly')">➕</button>
                         </div>
                         <ul id="weekly-list" class="center-list"></ul>
@@ -272,22 +278,22 @@
 
                     <!-- 📈 מד התקדמות שבועי -->
                     <div class="card">
-                        <h2>📈 מד התקדמות שבועי</h2>
+                        <h2>מד התקדמות שבועי</h2>
                         <div class="list-add-group">
-                            <input type="text" id="progress-name-input" placeholder="יעד שבועי (למשל: אימוני כוח)">
+                            <input type="text" id="progress-name-input" placeholder="יעד שבועי (למשל: אימונים)">
                             <input type="number" id="progress-target-input" placeholder="יעד" style="width: 70px; text-align: center;">
                             <button onclick="addProgressTarget()">➕</button>
                         </div>
                         <div id="progress-container" class="progress-container">
-                            <!-- כאן ייווצרו ברי גדילה ומדים דינמיים -->
+                            <!-- מד התקדמות דינמי -->
                         </div>
                     </div>
 
                     <!-- 🛒 סידורים, משימות וקניות בכללי -->
                     <div class="card">
-                        <h2>🛒 סידורים, משימות וקניות בכללי</h2>
+                        <h2>סידורים, משימות וקניות בכללי</h2>
                         <div class="list-add-group">
-                            <input type="text" id="add-general-input" placeholder="להקליד כאן כל מוצר לקנות, משימה או סידור כללי...">
+                            <input type="text" id="add-general-input" placeholder="מוצרים לקנות, סידורים או משימות...">
                             <button onclick="addCenterItem('general')">➕</button>
                         </div>
                         <ul id="general-list" class="center-list"></ul>
@@ -296,10 +302,15 @@
                 </div>
             </section>
 
+            <!-- 🚪 כפתור התנתקות ממוקם יפה למטה בתחתית כל האפליקציה -->
+            <div style="text-align: center; margin: 30px 0 15px 0;">
+                <button id="btn-logout" class="btn-logout" style="width: 100%; max-width: 200px; padding: 14px;">🚪 התנתקות מהמערכת</button>
+            </div>
+
         </main>
     </div>
 
-    <!-- שבירת הזיכרון של הדפדפן באמצעות גרסה קבועה מראש v=3 -->
-    <script src="app.js?v=3"></script>
+    <!-- עדכון לגרסה v=8 לשבירת קאש -->
+    <script src="app.js?v=8"></script>
 </body>
 </html>
