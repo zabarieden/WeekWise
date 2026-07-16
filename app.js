@@ -1,4 +1,3 @@
-// הגדרות החיבור ל-Supabase שלך
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt'; 
 
@@ -64,8 +63,7 @@ async function loginUser(username) {
     localStorage.setItem('weekwise_user', username);
 
     document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-container').style.display = 'block';
-    document.getElementById('display-user').innerText = username;
+    document.getElementById('app-container').style.display = 'flex';
 
     const dateInput = document.getElementById('selected-date');
     const today = new Date().toISOString().split('T')[0];
@@ -96,7 +94,6 @@ function logoutUser() {
     location.reload();
 }
 
-// פונקציות פתיחה וסגירה של החלונות הצפים (Modals)
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.classList.add('open');
@@ -107,13 +104,10 @@ function closeModal(modalId) {
     if (modal) modal.classList.remove('open');
 }
 
-// פתיחת תיבת הוספה מהירה בדף מטרות ומשימות באמצעות ה-Prompt המובנה של אפל
 function openCenterAdder(type) {
     const titleMap = { important: 'דבר חשוב מאוד', weekly: 'משימה לשבוע', general: 'סידור / קנייה' };
     const text = prompt(`הקלידו ${titleMap[type]} חדש:`);
     if (!text || !text.trim()) return;
-    
-    // הזנה ישירה לדאטהבייס
     insertCenterItemDirect(type, text.trim());
 }
 
@@ -415,6 +409,7 @@ async function loadStats() {
     const values = Object.values(dailyTotals);
     if (values.length === 0) return;
 
+    let sum = 0;
     const average = Math.round(values.reduce((s, v) => sum = s + v, 0) / values.length);
     document.getElementById('calories-weekly').innerText = average; 
     document.getElementById('calories-monthly').innerText = average;
