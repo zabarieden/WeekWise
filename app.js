@@ -1,16 +1,9 @@
-const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co'; 
-const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt'; 
-
+const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
-
-const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const daysOfWeek = ['ראשון', 'שני', 'שלשי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-const defaultHours = [
-    '07:00', '09:00', '11:00', '13:00', '15:00', 
-    '17:00', '19:00', '20:00', '21:00', '22:00'
-];
-
+const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
 let currentUsername = '';
 
 function initSupabase() {
@@ -24,7 +17,7 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
     initCubesNavigation();
-
+    
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) initSupabase();
@@ -56,18 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
+    
+    // פונקציונליות ה-AI החדשה
+    document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
 });
 
 async function loginUser(username) {
     currentUsername = username;
     localStorage.setItem('weekwise_user', username);
-
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
 
     const dateInput = document.getElementById('selected-date');
     const today = new Date().toISOString().split('T')[0];
-    
+
     if (dateInput) {
         dateInput.value = today;
         loadDailyNutrition(today);
@@ -87,6 +82,39 @@ async function loginUser(username) {
 
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
+}
+
+/**
+ * עיבוד קלט מה-AI (פופקורן / נס קפה)
+ */
+function processAIRecipe() {
+    const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
+    if (!input) return;
+
+    let foodName = "";
+    let calories = 0;
+    let targetMeal = "";
+
+    if (input.includes("פופקורן")) {
+        foodName = "פופקורן";
+        calories = 50;
+        targetMeal = "meal_4"; 
+    } else if (input.includes("נס קפה")) {
+        foodName = "נס קפה שיבולת שועל";
+        calories = 60;
+        targetMeal = "meal_1";
+    }
+
+    if (targetMeal && foodName) {
+        const mealRow = document.querySelector(`[data-meal="${targetMeal}"]`);
+        if (mealRow) {
+            mealRow.querySelector('.food-input').value = foodName;
+            mealRow.querySelector('.calories-input').value = calories;
+            document.getElementById('ai-nutrition-prompt').value = "";
+        }
+    } else {
+        alert("לא זיהיתי את המנה במאגר ה-AI.");
+    }
 }
 
 function logoutUser() {
@@ -122,7 +150,6 @@ async function insertCenterItemDirect(type, content) {
 function initCubesNavigation() {
     const cubes = document.querySelectorAll('.nav-cube');
     const tabContents = document.querySelectorAll('.tab-content');
-
     cubes.forEach(cube => {
         cube.addEventListener('click', () => {
             const targetId = cube.getAttribute('data-target');
@@ -139,7 +166,7 @@ function initCubesNavigation() {
 function getFormattedDateForDay(dayIndex) {
     const current = new Date();
     const currentDayOfWeek = current.getDay();
-    const distanceToSunday = currentDayOfWeek; 
+    const distanceToSunday = currentDayOfWeek;
     const sundayDate = new Date(current);
     sundayDate.setDate(current.getDate() - distanceToSunday);
     const targetDate = new Date(sundayDate);
@@ -151,11 +178,9 @@ function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     if (!container) return;
     container.innerHTML = '';
-
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
         const dateStr = getFormattedDateForDay(dayIndex);
-        
         const itemDiv = document.createElement('div');
         itemDiv.className = 'accordion-item';
         itemDiv.id = `accordion-${dbDay}`;
@@ -172,7 +197,6 @@ function buildWeeklyScheduleAccordionUI() {
                 </div>
             `;
         }
-
         itemDiv.innerHTML = `
             <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
                 <span style="display: flex; align-items: center; gap: 8px;">
@@ -202,7 +226,6 @@ async function loadWeeklySchedule() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('weekly_schedule').select('*').eq('username', currentUsername);
     if (!data) return;
-
     data.forEach(item => {
         const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
         if (slotEl) {
@@ -211,14 +234,6 @@ async function loadWeeklySchedule() {
             const colorClass = item.task_color === 'purple' ? 'task-purple' : 'task-pink';
             slotEl.classList.remove('task-pink', 'task-purple');
             slotEl.classList.add(colorClass);
-
-            const taskInput = slotEl.querySelector('.slot-task');
-            if (item.task_title) {
-                const emoji = item.task_color === 'purple' ? '📚' : '🔋';
-                if (!taskInput.value.startsWith('🔋') && !taskInput.value.startsWith('📚')) {
-                    taskInput.value = `${emoji} ${item.task_title}`;
-                }
-            }
         }
     });
 }
@@ -228,12 +243,9 @@ async function saveScheduleSlot(day, slot) {
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     if (!slotEl) return;
     const timeVal = slotEl.querySelector('.slot-time').value;
-    let taskVal = slotEl.querySelector('.slot-task').value.trim();
-    taskVal = taskVal.replace(/^(🔋|📚)\s*/, '');
-
+    const taskVal = slotEl.querySelector('.slot-task').value.trim();
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id, task_color').eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
     const color = existing ? (existing.task_color || 'pink') : 'pink';
-
     if (existing) {
         await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
     } else {
@@ -249,11 +261,8 @@ async function saveScheduleSlotFromAdder() {
     const timeVal = document.getElementById('add-slot-time').value.trim();
     const taskVal = document.getElementById('add-slot-task').value.trim();
     const colorVal = document.querySelector('input[name="slot-color"]:checked').value;
-
     if (!timeVal || !taskVal) return;
-
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
-
     if (existing) {
         await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal, task_color: colorVal }).eq('id', existing.id);
     } else {
@@ -296,7 +305,6 @@ async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('username', currentUsername);
     if (!data) return;
-
     document.querySelectorAll('.preset-select').forEach(select => {
         const category = select.getAttribute('data-category');
         select.innerHTML = '<option value="">📋 ארוחה קבועה...</option>';
@@ -305,7 +313,6 @@ async function loadMealPresetsToSelects() {
             if (category === 'snack') return item.meal_category === 'snack';
             return item.meal_category === 'noon' || item.meal_category === 'evening';
         });
-
         filtered.forEach(preset => {
             const option = document.createElement('option');
             option.value = preset.calories;
@@ -313,7 +320,6 @@ async function loadMealPresetsToSelects() {
             option.dataset.foodName = preset.food_name;
             select.appendChild(option);
         });
-
         select.onchange = (e) => {
             const selectedOption = e.target.options[e.target.selectedIndex];
             if (!selectedOption.value) return;
@@ -329,22 +335,16 @@ async function addCustomPreset() {
     const name = document.getElementById('new-preset-name').value.trim();
     const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
     const category = document.getElementById('new-preset-category').value;
-
     if (!name || calories <= 0) return;
-
     await supabaseClient.from('meal_presets').insert({ username: currentUsername, meal_category: category, food_name: name, calories: calories });
-    document.getElementById('new-preset-name').value = '';
-    document.getElementById('new-preset-calories').value = '';
     loadMealPresetsToSelects();
 }
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
     document.querySelectorAll('.meal-row').forEach(row => { row.querySelector('.food-input').value = ''; row.querySelector('.calories-input').value = ''; });
-
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', date);
     if (!data) return;
-
     let totalToday = 0;
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
@@ -361,21 +361,17 @@ async function saveNutrition() {
     if (!supabaseClient) return;
     const date = document.getElementById('selected-date').value;
     const mealRows = document.querySelectorAll('.meal-row');
-
     for (let row of mealRows) {
         const mealType = row.getAttribute('data-meal');
         const food = row.querySelector('.food-input').value;
         const cals = parseInt(row.querySelector('.calories-input').value) || 0;
-
         const { data: existing } = await supabaseClient.from('calorie_tracker').select('id').eq('username', currentUsername).eq('date', date).eq('meal_type', mealType).maybeSingle();
-
         if (existing) {
             await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals }).eq('id', existing.id);
         } else {
             await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, date: date, meal_type: mealType, food_description: food, calories: cals });
         }
     }
-    alert('התזונה נשמרה!');
     loadDailyNutrition(date);
     loadStats();
 }
@@ -386,10 +382,8 @@ async function copyFromYesterday() {
     const yesterdayObj = new Date(currentDate);
     yesterdayObj.setDate(yesterdayObj.getDate() - 1);
     const yesterdayDateStr = yesterdayObj.toISOString().split('T')[0];
-
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', yesterdayDateStr);
     if (!data || data.length === 0) return alert('אין תפריט מאתמול.');
-
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
         if (row) {
@@ -403,15 +397,13 @@ async function loadStats() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('calorie_tracker').select('date, calories').eq('username', currentUsername);
     if (!data) return;
-
     const dailyTotals = {};
     data.forEach(item => dailyTotals[item.date] = (dailyTotals[item.date] || 0) + item.calories);
     const values = Object.values(dailyTotals);
     if (values.length === 0) return;
-
     let sum = 0;
     const average = Math.round(values.reduce((s, v) => sum = s + v, 0) / values.length);
-    document.getElementById('calories-weekly').innerText = average; 
+    document.getElementById('calories-weekly').innerText = average;
     document.getElementById('calories-monthly').innerText = average;
 }
 
@@ -419,11 +411,9 @@ async function loadCenterItems(type) {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('username', currentUsername).eq('task_type', type).order('created_at', { ascending: true });
     if (!data) return;
-
     const listUl = document.getElementById(`${type}-list`);
     if (!listUl) return;
     listUl.innerHTML = '';
-
     data.forEach(item => {
         const li = document.createElement('li');
         li.innerHTML = `<span>${item.content}</span><button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>`;
@@ -443,12 +433,8 @@ async function addProgressTarget() {
     if (!supabaseClient) return;
     const name = document.getElementById('progress-name-input').value.trim();
     const targetVal = parseInt(document.getElementById('progress-target-input').value) || 0;
-
     if (!name || targetVal <= 0) return;
-
     await supabaseClient.from('weekly_progress_targets').insert({ username: currentUsername, target_name: name, current_val: 0, target_val: targetVal });
-    document.getElementById('progress-name-input').value = '';
-    document.getElementById('progress-target-input').value = '';
     loadProgressTargets();
 }
 
@@ -458,16 +444,10 @@ async function loadProgressTargets() {
     const container = document.getElementById('progress-container');
     if (!container) return;
     container.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין יעדים פעילים.</p>`;
-        return;
-    }
-
+    if (!data || data.length === 0) return;
     data.forEach(item => {
         const percentage = Math.min(Math.round((item.current_val / item.target_val) * 100), 100);
         const isCompleted = item.current_val >= item.target_val;
-
         const row = document.createElement('div');
         row.className = 'progress-row';
         row.innerHTML = `
@@ -512,11 +492,8 @@ async function saveNewWeightRecord() {
     if (!supabaseClient) return;
     const weight = parseFloat(document.getElementById('new-weight-val').value);
     const dateVal = document.getElementById('new-weight-date').value;
-
     if (!weight || !dateVal) return;
-
     await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: dateVal, weight_value: weight });
-    document.getElementById('new-weight-val').value = '';
     loadWeightHistory();
 }
 
@@ -526,12 +503,7 @@ async function loadWeightHistory() {
     const listUl = document.getElementById('weight-history-list');
     if (!listUl) return;
     listUl.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        listUl.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין שקילות.</p>`;
-        return;
-    }
-
+    if (!data || data.length === 0) return;
     data.forEach(item => {
         const parts = item.weight_date.split('-');
         listUl.innerHTML += `<li><span>${item.weight_value} ק״ג <small style="color:var(--text-secondary);">(${parts[2]}.${parts[1]})</small></span><button class="btn-delete-item" onclick="deleteWeightRecord('${item.id}')">❌</button></li>`;
