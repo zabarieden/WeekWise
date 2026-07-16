@@ -1,59 +1,64 @@
 :root {
-    --bg-main: #0c0d12;
-    --bg-card: #161822;
-    --border-color: #26293b;
-    --text-primary: #f1f3f9;
-    --text-secondary: #9098b1;
-    --accent-pink: #ff007f;
-    --accent-purple: #a855f7;
-    --accent-purple-light: #c084fc;
-    --accent-green: #00e676;
-    --accent-red: #ff3b30;
-    --accent-important-bg: #2d182e;
-    --accent-important-border: #ab47bc;
-    --transition: all 0.25s ease;
+    --bg-main: #000000; /* שחור עמוק סטייל אולד אייפון */
+    --bg-card: rgba(22, 24, 35, 0.7); /* זכוכית שקופה למחצה */
+    --border-color: rgba(255, 255, 255, 0.08); /* גבול עדין בקושי נראה */
+    --text-primary: #f5f5f7; /* לבן פנינה של אפל */
+    --text-secondary: #86868b; /* אפור מט שקט */
+    --accent-purple: #865cd6; /* סגול יוקרתי ומעודן של אפל */
+    --accent-purple-light: #a78bfa;
+    --accent-gray: #1c1c1e; /* אפור כהה מעודן למילוי */
+    --accent-pink: #e91e63;
+    --accent-green: #30d158; /* ירוק מערכת נקי */
+    --accent-red: #ff453a; /* אדום מערכת עדין */
+    --transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-primary);
     margin: 0;
-    padding: 12px;
+    padding: 16px;
     direction: rtl;
+    letter-spacing: -0.2px;
+    -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
 }
 
 header {
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
+    padding-top: 10px;
 }
 
 .logo {
-    font-size: 1.8rem;
-    font-weight: 800;
-    background: linear-gradient(45deg, var(--accent-pink), var(--accent-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 1px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
 header p {
     color: var(--text-secondary);
-    margin: 3px 0 0;
+    margin: 5px 0 0;
     font-size: 0.9rem;
 }
 
 .btn-logout {
-    background-color: #2c1a24;
-    color: var(--accent-pink);
-    border: 1px solid rgba(255, 0, 127, 0.2);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     font-size: 0.8rem;
-    padding: 5px 10px;
-    border-radius: 6px;
+    padding: 6px 12px;
+    border-radius: 20px; /* עגול חלק של אפל */
     cursor: pointer;
-    margin-top: 8px;
+    margin-top: 12px;
     transition: var(--transition);
+}
+
+.btn-logout:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* מסך כניסה */
@@ -68,172 +73,152 @@ header p {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 15px;
 }
 
 .login-card {
-    background-color: var(--bg-card);
+    background-color: var(--accent-gray);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 30px 20px;
+    border-radius: 20px;
+    padding: 35px 25px;
     width: 100%;
-    max-width: 400px;
+    max-width: 360px;
     text-align: center;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
 .login-card h2 {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     margin-bottom: 10px;
-    justify-content: center;
+    font-weight: 700;
 }
 
 .login-card p {
     color: var(--text-secondary);
-    margin-bottom: 20px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    margin-bottom: 25px;
 }
 
 .login-card input {
     width: 100%;
-    background-color: #222538;
+    background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 14px;
     font-size: 1rem;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     box-sizing: border-box;
+    outline: none;
     text-align: center;
 }
 
-/* סרגל הטאבים */
-.tabs-nav {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 15px;
-    background-color: var(--bg-card);
-    padding: 5px;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
+/* 🎛️ לוח אריחים מינימליסטי (Dashboard Grid) בתקן של Apple */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px auto;
     max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
-.tab-button {
-    flex: 1;
-    background: transparent;
-    color: var(--text-secondary);
-    border: none;
-    padding: 8px 10px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border-radius: 6px;
+.nav-cube {
+    background-color: var(--accent-gray);
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 18px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     cursor: pointer;
     transition: var(--transition);
-    white-space: nowrap;
-    text-align: center;
 }
 
-.tab-button.active {
-    background: linear-gradient(135deg, var(--accent-purple), #8b5cf6);
-    color: #0c0d12;
+.nav-cube:active {
+    transform: scale(0.96); /* אפקט לחיצה קפיצי של אפל */
 }
 
-/* ניהול טאבים */
+.nav-cube.active {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.cube-icon {
+    font-size: 1.4rem;
+}
+
+.cube-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.nav-cube.active .cube-title {
+    color: var(--text-primary);
+}
+
+/* ניהול חלוניות */
 .tab-content {
     display: none; 
 }
 
 .tab-content.active-tab {
     display: block; 
-    animation: fadeIn 0.25s ease-in-out;
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* קונטיינר ראשי */
-.dashboard-container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-/* עיצוב חלוניות */
 .card {
-    background-color: var(--bg-card);
+    background-color: var(--accent-gray);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
 }
 
 h2 {
-    font-size: 1.15rem;
-    margin: 0 0 10px 0;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #fff;
+    font-size: 1.2rem;
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
-.card-header h2 {
-    margin: 0;
-}
-
-/* 📅 לו"ז שבועי */
+/* 📅 אקורדיון שבוע קומפקטי ונקי */
 .schedule-accordion {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .accordion-item {
-    background-color: #1c1e2d;
+    background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    transition: var(--transition);
 }
 
 .accordion-header {
-    background-color: #222538;
-    padding: 12px 15px;
-    font-weight: 800;
-    color: var(--accent-purple);
+    padding: 14px 16px;
+    font-weight: 600;
+    color: var(--text-primary);
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1rem;
+    font-size: 0.95rem;
     user-select: none;
-    transition: var(--transition);
-}
-
-.accordion-header:hover {
-    background-color: #2b304a;
 }
 
 .accordion-icon {
-    font-size: 0.8rem;
-    transition: transform 0.25s ease;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
 }
 
 .accordion-item.active {
-    border-color: var(--accent-purple);
-}
-
-.accordion-item.active .accordion-header {
-    border-bottom: 1px solid var(--border-color);
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .accordion-item.active .accordion-icon {
@@ -243,83 +228,58 @@ h2 {
 .accordion-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+    transition: max-height 0.25s ease-out;
 }
 
 .accordion-item.active .accordion-content {
-    max-height: 1000px;
-    transition: max-height 0.35s ease-in-out;
-    padding: 10px;
+    max-height: 1200px;
+    padding: 12px;
 }
 
 .slots-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
-/* שורת המשימה בלו"ז */
+/* חריץ המשימה */
 .slot-input-group {
-    background-color: #222538;
-    border-radius: 6px;
-    padding: 6px 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 6px 10px;
     display: grid;
-    grid-template-columns: 35px 65px 1fr auto;
-    gap: 8px;
+    grid-template-columns: 30px 65px 1fr auto;
+    gap: 10px;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.01);
-    transition: var(--transition);
+    border: 1px solid var(--border-color);
 }
 
-.slot-input-group.task-pink {
-    border-right: 4px solid var(--accent-pink);
-}
-
-.slot-input-group.task-purple {
-    border-right: 4px solid var(--accent-purple);
-}
+.slot-input-group.task-pink { border-right: 3px solid var(--accent-purple); }
+.slot-input-group.task-purple { border-right: 3px solid var(--text-secondary); }
 
 .slot-num-label {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    font-weight: bold;
-    text-align: center;
 }
 
 .slot-time {
-    background: #1c1e2d !important;
-    border: 1px solid var(--border-color) !important;
+    background: transparent !important;
+    border: none !important;
     color: var(--text-primary) !important;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
-    border-radius: 4px;
-    padding: 4px 2px !important;
-    font-size: 0.8rem;
-}
-
-.task-pink .slot-time {
-    color: var(--accent-pink) !important;
-    border-color: rgba(255, 0, 127, 0.3) !important;
-}
-
-.task-purple .slot-time {
-    color: var(--accent-purple) !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
+    font-size: 0.85rem;
+    padding: 0 !important;
 }
 
 .slot-task {
     background: transparent;
     border: none;
-    border-bottom: 1px solid #3c4261;
     color: var(--text-primary);
     padding: 4px 0;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-align: center;
-}
-
-.slot-task:focus {
     outline: none;
-    border-bottom-color: var(--accent-pink);
 }
 
 .btn-delete-slot {
@@ -328,242 +288,124 @@ h2 {
     border: none;
     font-size: 0.75rem;
     cursor: pointer;
-    padding: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
+    padding: 2px;
 }
 
-.btn-delete-slot:hover {
-    color: var(--accent-red);
-}
-
-/* כפתור איפוס כל השבוע */
+/* כפתור איפוס שבועי */
 .btn-clear-week {
-    width: 100%;
-    background-color: #2c1a1e;
+    background-color: rgba(255, 69, 58, 0.08);
     color: var(--accent-red);
-    border: 1px solid rgba(255, 59, 48, 0.2);
-    font-weight: bold;
+    border: 1px solid rgba(255, 69, 58, 0.15);
     font-size: 0.85rem;
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 12px;
+    padding: 12px;
     cursor: pointer;
-    transition: var(--transition);
+    font-weight: 600;
 }
 
-.btn-clear-week:hover {
-    background-color: var(--accent-red);
-    color: #fff;
-    box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
-}
-
-/* כפתורי הפעולה בתחתית חלונית הניהול */
-.action-buttons-wrap {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-}
-
-.btn-clear-specific {
-    flex: 1;
-    background-color: #221d28;
-    color: var(--accent-purple-light);
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    font-weight: bold;
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-clear-specific:hover {
-    background-color: var(--accent-purple);
-    color: #0c0d12;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
-}
-
-.schedule-adder-grid .btn-primary {
-    flex: 1.5;
-}
-
-/* חלונית הוספת משימה ללו"ז מלמטה */
-.schedule-adder-grid {
+/* טפסי הזנה חכמים */
+.schedule-adder-grid, .preset-manager-grid {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.schedule-adder-grid select, .schedule-adder-grid input {
-    background-color: #222538;
+.schedule-adder-grid select, .schedule-adder-grid input,
+.preset-manager-grid select, .preset-manager-grid input {
+    background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 12px;
     font-size: 0.9rem;
     outline: none;
 }
 
-.color-selector-wrap {
+.action-buttons-wrap {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
-.color-options {
-    display: flex;
-    gap: 15px;
-}
-
-.color-radio {
-    position: relative;
+/* כפתורים כלליים של Apple */
+button {
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 12px 20px;
     cursor: pointer;
-}
-
-.color-radio input {
-    display: none;
-}
-
-.radio-custom {
-    display: inline-block;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
     transition: var(--transition);
+    border: none;
 }
 
-.pink-span {
-    color: var(--accent-pink);
+.btn-primary {
+    background-color: var(--text-primary);
+    color: var(--bg-main);
 }
 
-.purple-span {
-    color: var(--accent-purple);
+.btn-primary:active {
+    background-color: #e5e5ea;
 }
 
-.color-radio input:checked + .pink-span {
-    background-color: rgba(255, 0, 127, 0.15);
-    border-color: var(--accent-pink);
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
 }
 
-.color-radio input:checked + .purple-span {
-    background-color: rgba(168, 85, 247, 0.15);
-    border-color: var(--accent-purple);
+.btn-clear-specific {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
-/* 🍎 מעקב ארוחות */
+/* 🍎 תזונה ומדדים */
 .meals-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 15px;
 }
 
 .meal-row {
-    background-color: #1c1e2d;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    background-color: rgba(0, 0, 0, 0.15);
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .meal-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    padding-bottom: 4px;
 }
 
 .meal-label {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.9rem;
-    color: var(--accent-pink);
+    color: var(--text-primary);
 }
 
 .preset-select {
-    background-color: #222538;
-    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 3px 6px;
+    border-radius: 8px;
+    padding: 4px 8px;
     font-size: 0.75rem;
-    max-width: 170px;
     outline: none;
-}
-
-.food-input {
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.85rem;
-    flex: 1;
-}
-
-.calories-input {
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.85rem;
-    width: 70px;
-    text-align: center;
 }
 
 .meal-inputs-wrap {
     display: flex;
-    gap: 8px;
-}
-
-/* מנהל ארוחות מוכנות */
-.preset-manager-grid {
-    display: flex;
-    flex-direction: column;
     gap: 10px;
 }
 
-.preset-manager-grid input, .preset-manager-grid select {
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.85rem;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* כפתורים */
-button {
-    font-family: inherit;
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: var(--transition);
-    border: none;
-    font-size: 0.9rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--accent-pink), #e0006c);
-    color: #fff;
-    width: 100%;
-}
-
-.btn-secondary {
-    background-color: #202436;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    margin-bottom: 12px;
-    width: 100%;
-}
+.food-input { flex: 1; padding: 10px; background-color: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color:#fff; border-radius: 8px; font-size:0.85rem; outline:none;}
+.calories-input { width: 75px; padding: 10px; background-color: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color:#fff; border-radius: 8px; font-size:0.85rem; text-align:center; outline:none;}
 
 /* 📊 מדדי קלוריות */
 .stats-grid {
@@ -573,49 +415,101 @@ button {
 }
 
 .stat-box {
-    background-color: #1c1e2d;
-    border-radius: 10px;
-    padding: 12px 6px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 14px 6px;
     text-align: center;
     border: 1px solid var(--border-color);
 }
 
 .stat-box h3 {
-    margin: 0 0 5px 0;
+    margin: 0 0 6px 0;
     font-size: 0.75rem;
     color: var(--text-secondary);
+    font-weight: 500;
 }
 
 .stat-number {
     font-size: 1.4rem;
-    font-weight: 800;
-    margin-bottom: 3px;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
-.stat-unit {
-    font-size: 0.7rem;
+/* 📈 מטרות ויעדים (Focus לשעבר) */
+.my-center-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.today .stat-number { color: var(--accent-pink); }
-.weekly .stat-number { color: var(--accent-purple); }
-.monthly .stat-number { color: var(--accent-green); }
+.important-card {
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
 
-/* 📈 מנגנון מד התקדמות שבועי */
+.list-add-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.list-add-group input {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.list-add-group button {
+    padding: 10px 16px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-radius: 10px;
+}
+
+.center-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.center-list li {
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.btn-delete-item {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+}
+
+/* 📈 מד התקדמות שבועי */
 .progress-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 5px;
 }
 
 .progress-row {
-    background-color: #1c1e2d;
+    background-color: rgba(0, 0, 0, 0.15);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    border-radius: 12px;
+    padding: 12px;
 }
 
 .progress-info {
@@ -623,10 +517,7 @@ button {
     justify-content: space-between;
     align-items: center;
     font-size: 0.85rem;
-}
-
-.progress-title {
-    font-weight: 700;
+    margin-bottom: 8px;
 }
 
 .progress-counter {
@@ -636,190 +527,53 @@ button {
 }
 
 .btn-counter {
-    background-color: #222538;
+    background-color: rgba(255, 255, 255, 0.05);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    width: 25px;
-    height: 25px;
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.9rem;
     font-weight: bold;
-    cursor: pointer;
-    padding: 0;
-}
-
-.btn-counter:hover {
-    background-color: var(--accent-purple);
-    color: #0c0d12;
 }
 
 .progress-bar-bg {
-    background-color: #222538;
-    height: 8px;
-    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.04);
+    height: 6px;
+    border-radius: 3px;
     overflow: hidden;
-    position: relative;
 }
 
 .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-    border-radius: 4px;
-    transition: width 0.3s ease;
+    background-color: var(--text-primary);
+    border-radius: 3px;
+    transition: width 0.2s ease;
 }
 
 .progress-bar-fill.completed {
-    background: linear-gradient(90deg, var(--accent-pink), #e0006c);
-    box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+    background-color: var(--accent-green);
 }
 
-/* ⚖️ מעקב משקל תקופתי: עיצוב שדות והזנה */
-.weight-inputs-wrap {
-    display: flex;
-    gap: 8px;
+.color-selector-wrap { display: flex; flex-direction: column; gap: 6px; }
+.color-options { display: flex; gap: 12px; }
+.color-radio input { display: none; }
+.radio-custom { display: inline-block; padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); }
+.color-radio input:checked + .radio-custom { background-color: rgba(255, 255, 255, 0.1); border-color: var(--text-primary); }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.weight-inputs-wrap input {
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.9rem;
-    outline: none;
-    flex: 1;
-}
-
-.weight-inputs-wrap input[type="date"] {
-    flex: 1.2;
-}
-
-/* 🎯 Focus */
-.my-center-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.important-card {
-    background-color: var(--accent-important-bg) !important;
-    border: 1px solid var(--accent-important-border) !important;
-}
-
-.important-card h2 {
-    color: var(--accent-important-border) !important;
-    text-shadow: 0 0 8px rgba(171, 71, 188, 0.3);
-}
-
-.important-card .list-add-group button {
-    background-color: var(--accent-important-border) !important;
-    color: #fff !important;
-}
-
-.list-add-group {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.list-add-group input {
-    flex: 1;
-    background-color: #222538;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.85rem;
-    outline: none;
-}
-
-.list-add-group button {
-    padding: 8px 12px;
-    background-color: var(--accent-purple);
-    color: #0c0d12;
-    border-radius: 6px;
-    font-weight: bold;
-    width: auto;
-}
-
-.center-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.center-list li {
-    background-color: #1c1e2d;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 8px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-}
-
-.btn-delete-item {
-    background: transparent;
-    color: var(--text-secondary);
-    border: none;
-    font-size: 0.8rem;
-    cursor: pointer;
-    padding: 0 5px;
-}
-
-/* רספונסיביות */
 @media (min-width: 769px) {
-    body {
-        padding: 20px;
-    }
-    .tabs-nav {
-        margin-bottom: 25px;
-    }
-    .card {
-        padding: 24px;
-        border-radius: 16px;
-    }
-    .meal-row {
-        padding: 15px;
-    }
-    .preset-manager-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr auto;
-        gap: 12px;
-    }
-    .btn-primary, .btn-secondary {
-        width: auto;
-    }
-    .stat-number {
-        font-size: 2.2rem;
-    }
-    .stat-box {
-        padding: 20px;
-    }
-    .my-center-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-    .important-card {
-        grid-column: span 2;
-    }
-    .schedule-adder-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 120px 2fr auto auto;
-        gap: 12px;
-        align-items: center;
-    }
-    .color-selector-wrap {
-        flex-direction: row;
-        align-items: center;
-    }
+    body { padding: 30px; }
+    .dashboard-grid { gap: 15px; margin-bottom: 30px; }
+    .card { padding: 24px; border-radius: 20px; }
+    .my-center-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .important-card { grid-column: span 2; }
+    .schedule-adder-grid { display: grid; grid-template-columns: 1fr 1fr 120px 2fr auto auto; gap: 12px; align-items: center; }
 }
