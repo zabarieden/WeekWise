@@ -1,20 +1,19 @@
 :root {
-    --bg-main: #000000; /* שחור מוחלט */
-    --bg-glass: rgba(25, 25, 27, 0.55); /* זכוכית מעושנת שקופה למחצה */
-    --bg-sheet: #1c1c1e; /* אפור פנל של אפל */
-    --border-color: rgba(212, 175, 55, 0.15); /* גבול זהב דקיק ועדין */
+    --bg-main: #000000; /* שחור מוחלט מט */
+    --bg-glass: rgba(18, 18, 20, 0.45); /* זכוכית מעושנת איכותית של iOS */
+    --bg-sheet: #1c1c1e; /* אפור פנל פנימי של אפל */
+    --border-color: rgba(212, 175, 55, 0.16); /* גבול זהב דקיק ועדין לשולי הזכוכית */
     --text-primary: #f5f5f7; 
     --text-secondary: #a1a1a6; 
-    --accent-gold: #d4af37; /* זהב שמפניה מלכותי */
-    --accent-gold-hover: #f3e5ab;
-    --accent-green: #10b981; /* ירוק אמרלד יוקרתי ונקי */
+    --accent-gold: #d4af37; /* זהב שמפניה מטאלי */
+    --accent-green: #10b981; /* ירוק אמרלד פרימיום */
     --accent-red: #ff453a; 
-    --transition: all 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+    --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg-main);
+    background-color: #050505;
     color: var(--text-primary);
     margin: 0;
     padding: 0;
@@ -24,57 +23,84 @@ body {
     align-items: center;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    overflow: hidden;
 }
 
-/* 🔒 קונטיינר מעטפת - הופך את האתר לאפליקציית מובייל נעולה גם במחשב */
+/* 🔒 מעטפת האפליקציה הנעולה בגודל סמארטפון - מונע התפזרות במחשב */
 .phone-wrapper {
-    width: 100%;
-    max-width: 430px; /* רוחב מושלם של iPhone Pro Max */
+    width: 100vw;
+    max-width: 420px; /* גודל אידיאלי למובייל פלאנר */
     height: 100vh;
     background-color: var(--bg-main);
-    border-left: 1px solid rgba(255, 255, 255, 0.03);
-    border-right: 1px solid rgba(255, 255, 255, 0.03);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
     position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
     padding: 16px;
+    border-left: 1px solid rgba(255, 255, 255, 0.02);
+    border-right: 1px solid rgba(255, 255, 255, 0.02);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+}
+
+/* 🔮 כדורי הברק הדינמיים ברקע שמעירים את אפקט הזכוכית */
+.ambient-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    -webkit-filter: blur(70px);
+    opacity: 0.22;
+    z-index: 1;
+    pointer-events: none;
+    animation: floatingGlow 12s infinite alternate ease-in-out;
+}
+.glow-gold {
+    width: 180px;
+    height: 180px;
+    background-color: var(--accent-gold);
+    top: 20%;
+    left: -10%;
+}
+.glow-green {
+    width: 220px;
+    height: 220px;
+    background-color: var(--accent-green);
+    bottom: 15%;
+    right: -15%;
+    animation-delay: -5s;
 }
 
 header {
     text-align: center;
     margin-bottom: 15px;
-    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
 }
-
 .logo {
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--accent-gold);
     letter-spacing: -0.5px;
 }
-
 header p {
     color: var(--text-secondary);
     margin: 4px 0 0;
     font-size: 0.85rem;
 }
 
-/* 🎛️ תפריט קוביות זכוכית וזהב */
+/* 🎛️ תפריט קוביות זכוכית */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-bottom: 15px;
-    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
 }
-
 .nav-cube {
     background-color: var(--bg-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 12px 4px;
@@ -86,88 +112,86 @@ header p {
     cursor: pointer;
     transition: var(--transition);
 }
-
 .nav-cube:active { transform: scale(0.95); }
 .nav-cube.active { 
     background-color: rgba(212, 175, 55, 0.08); 
-    border-color: var(--accent-gold); 
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.1);
 }
-
 .cube-icon { font-size: 1.2rem; }
 .cube-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
 .nav-cube.active .cube-title { color: var(--accent-gold); }
 
-/* 📜 אזור גלילה מרכזי נפרד לתוכן האפליקציה */
+/* 📜 אזור הגלילה הפנימי */
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 20px;
-    scrollbar-width: none; /* הסתרת סרגל גלילה */
+    position: relative;
+    z-index: 5;
+    scrollbar-width: none;
 }
 .main-scroll-area::-webkit-scrollbar { display: none; }
 
-/* 🔒 מנגנון הסתרה מוחלט לטאבים שאינם פעילים - פותר את הערבוב שראית! */
+/* 🧹 נעילה והפרדה הרמטית של הטאבים - פותר לחלוטין את הערבוב על המסך! */
 .tab-content { 
-    display: none; 
+    display: none !important; 
 }
 .tab-content.active-tab { 
-    display: block; 
-    animation: fadeIn 0.2s ease-out; 
+    display: block !important; 
+    animation: fadeIn 0.25s ease-out; 
 }
 
-/* 💎 כרטיסיות זכוכית מעוצבות */
+/* 💎 כרטיסיות זכוכית מטופשת (Frosted Glass Card) */
 .card {
     background-color: var(--bg-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 16px;
     margin-bottom: 14px;
 }
-
 .card-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
-
 h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary); }
 
-/* כפתור ה- ＋ העגול של אפל בזהב */
+/* כפתור הפלוס העגול בזהב */
 .btn-floating-add {
     background-color: rgba(212, 175, 55, 0.06);
     color: var(--accent-gold);
     border: 1px solid var(--border-color);
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
     padding: 0;
     transition: var(--transition);
 }
-.btn-floating-add:active { transform: scale(0.9); background-color: rgba(212, 175, 55, 0.15); }
+.btn-floating-add:active { transform: scale(0.9); background-color: rgba(212, 175, 55, 0.2); }
 
 /* 📅 אקורדיון לו"ז שבועי */
 .schedule-accordion { display: flex; flex-direction: column; gap: 6px; }
-.accordion-item { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px; overflow: hidden; }
+.accordion-item { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; overflow: hidden; }
 .accordion-header { padding: 12px 14px; font-weight: 600; color: var(--text-primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
 .accordion-icon { font-size: 0.7rem; color: var(--text-secondary); transition: transform 0.2s ease; }
-.accordion-item.active { border-color: rgba(212, 175, 55, 0.2); }
+.accordion-item.active { border-color: rgba(212, 175, 55, 0.25); background-color: rgba(0,0,0,0.4); }
 .accordion-item.active .accordion-icon { transform: rotate(180deg); }
 .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
-.accordion-item.active .accordion-content { max-height: 1000px; padding: 10px; }
+.accordion-item.active .accordion-content { max-height: 1200px; padding: 10px; }
 
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }
-.slot-input-group { background-color: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.02); }
+.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); }
 
-/* אפיון משימות בירוק וזהב */
+/* חלוקת משימות לירוק וזהב */
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-green); }
 .slot-input-group.task-purple { border-right: 3px solid var(--accent-gold); }
 
@@ -179,71 +203,72 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 
-.btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; }
+.btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 
-/* 🍎 תזונה */
+/* 🍎 תזונה יוונית מעוצבת */
 .meals-container { display: flex; flex-direction: column; gap: 8px; }
-.meal-row { background-color: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; }
+.meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; }
 .meal-header-row { display: flex; justify-content: space-between; align-items: center; }
 .meal-label { font-weight: 600; font-size: 0.8rem; color: var(--accent-green); }
-.preset-select { background-color: rgba(255, 255, 255, 0.04); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 2px 4px; font-size: 0.7rem; outline: none; }
+.preset-select { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; padding: 2px 4px; font-size: 0.7rem; outline: none; }
 .meal-inputs-wrap { display: flex; gap: 8px; }
-.food-input { flex: 1; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.04); color:#fff; border-radius: 6px; font-size:0.8rem; outline:none; }
-.calories-input { width: 60px; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.04); color:#fff; border-radius: 6px; font-size:0.8rem; text-align:center; outline:none; }
+.food-input { flex: 1; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; outline:none; }
+.calories-input { width: 60px; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; text-align:center; outline:none; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stat-box { background-color: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 10px 2px; text-align: center; border: 1px solid rgba(255,255,255,0.03); }
+.stat-box { background-color: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 10px 2px; text-align: center; border: 1px solid rgba(255,255,255,0.02); }
 .stat-box h3 { margin: 0 0 2px 0; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; }
-.stat-number { font-size: 1.2rem; font-weight: 700; }
+.stat-number { font-size: 1.25rem; font-weight: 700; }
 .today .stat-number { color: var(--accent-green); }
 .weekly .stat-number { color: var(--accent-gold); }
 .monthly .stat-number { color: var(--text-primary); }
 
 .weight-inputs-wrap { display: flex; gap: 8px; }
-.weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.04); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1; }
+.weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1; }
 
 /* 📈 מטרות ומשימות */
 .my-center-grid { display: flex; flex-direction: column; gap: 12px; }
-.important-card { border: 1px solid rgba(255, 69, 58, 0.2) !important; background-color: rgba(255, 69, 58, 0.02) !important; }
+.important-card { border: 1px solid rgba(255, 69, 58, 0.15) !important; background-color: rgba(255, 69, 58, 0.01) !important; }
 .important-card h2 { color: var(--accent-red); }
 .center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.center-list li { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+.center-list li { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.01); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; }
 
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
-.progress-row { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,0.02); border-radius: 10px; padding: 10px; }
+.progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
 .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 6px; }
 .progress-counter { display: flex; align-items: center; gap: 6px; }
-.btn-counter { background-color: rgba(255, 255, 255, 0.04); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-.progress-bar-bg { background-color: rgba(255, 255, 255, 0.03); height: 4px; border-radius: 2px; overflow: hidden; }
+.btn-counter { background-color: rgba(255, 255, 255, 0.04); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+.progress-bar-bg { background-color: rgba(255, 255, 255, 0.02); height: 4px; border-radius: 2px; overflow: hidden; }
 .progress-bar-fill { height: 100%; width: 0%; background-color: var(--accent-gold); border-radius: 2px; transition: width 0.2s ease; }
-.progress-bar-fill.completed { background-color: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+.progress-bar-fill.completed { background-color: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
 
-/* 🚪 כפתור התנתקות למטה */
+/* 🚪 התנתקות */
 .btn-logout {
     background-color: transparent;
     color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     font-size: 0.8rem;
     border-radius: 20px;
     padding: 10px 20px;
     cursor: pointer;
     transition: var(--transition);
 }
-.btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.2); }
+.btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.15); }
 
 /* ==================== חלונות צפים (Modals) ==================== */
 .apple-modal {
-    position: absolute; /* ננעל בתוך קונטיינר הטלפון! */
+    position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 2000;
     display: none;
     justify-content: center;
     align-items: flex-end;
     animation: fadeOverlay 0.2s ease-out;
 }
-
 .modal-sheet {
     background-color: var(--bg-sheet);
     border-top: 1px solid var(--border-color);
@@ -251,34 +276,37 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     padding: 10px 20px 30px 20px;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7);
     box-sizing: border-box;
     transform: translateY(100%);
-    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1);
 }
-
-.modal-header-bar { display: flex; justify-content: center; padding: 5px 0 15px 0; }
+.modal-header-bar { display: flex; justify-content: center; padding: 5px 0 12px 0; }
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-.modal-sheet h3 { margin: 0 0 20px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-gold); }
+.modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-gold); }
 
-/* כפתורים וטפסים בחלון צף */
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
 .schedule-adder-grid select, .schedule-adder-grid input,
 .preset-manager-grid select, .preset-manager-grid input {
-    background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none;
+    background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none;
 }
 .action-buttons-wrap { display: flex; gap: 8px; }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; }
 .btn-primary { background: linear-gradient(135deg, var(--accent-gold), #b8860b); color: #000; width: 100%; }
-.btn-secondary { background-color: rgba(255, 255, 255, 0.03); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.05); width: 100%; }
-.btn-clear-specific { background-color: rgba(255, 255, 255, 0.04); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.06); }
+.btn-secondary { background-color: rgba(255, 255, 255, 0.02); color: var(--text-primary); border: 1px solid var(--border-color); width: 100%; }
+.btn-clear-specific { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); }
 
 .apple-modal.open { display: flex; }
 .apple-modal.open .modal-sheet { transform: translateY(0); }
 
 /* מסך כניסה */
-.login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-main); display: flex; justify-content: center; align-items: center; z-index: 3000; }
-.login-card { background-color: var(--bg-sheet); border: 1px solid var(--border-color); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; }
+.login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
+.login-card { background-color: var(--bg-sheet); border: 1px solid var(--border-color); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
+/* תנועה דקורטיבית איטית ברקע לכדורים */
+@keyframes floatingGlow {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(15px, 25px) scale(1.1); }
+}
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
