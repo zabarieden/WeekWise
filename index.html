@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>השבוע שלי</title>
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=20">
+    <link rel="stylesheet" href="theme.css?v=19">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -63,18 +63,8 @@
                     </div>
                 </section>
 
-                <!-- חלונית 2: מעקב ארוחות ותזונה -->
+                <!-- חلوנית 2: מעקב ארוחות ותזונה -->
                 <section class="tab-content" id="nutrition-section">
-                    
-                    <!-- 🤖 שורת ה-AI החכמה החדשה - עיצוב פרימיום נקי -->
-                    <div class="card ai-card" style="margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.35); background: rgba(25, 18, 38, 0.45);">
-                        <h2 style="font-size: 0.95rem; color: var(--accent-purple-light); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">🤖 רישום ועריכה חכמה ב-AI</h2>
-                        <div class="ai-input-wrapper">
-                            <input type="text" id="ai-nutrition-prompt" placeholder="לדוגמה: תוספת פופקורן 50 גרם לארוחה 4..." style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; color: #fff; font-size: 0.8rem; outline: none;">
-                            <button id="btn-run-ai" style="padding: 10px 14px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">עדכן ✨</button>
-                        </div>
-                    </div>
-
                     <div class="card" style="margin-bottom: 16px;">
                         <div class="card-header-column">
                             <div class="card-title-row" style="width: 100%;">
@@ -95,8 +85,8 @@
                                     <select class="preset-select" data-category="morning"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_1">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_1">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input">
+                                    <input type="number" placeholder="קלוריות" class="calories-input">
                                 </div>
                             </div>
                             <div class="meal-row" data-meal="meal_2">
@@ -105,8 +95,8 @@
                                     <select class="preset-select" data-category="noon"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_2">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_2">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input">
+                                    <input type="number" placeholder="קלוריות" class="calories-input">
                                 </div>
                             </div>
                             <div class="meal-row" data-meal="meal_3">
@@ -115,8 +105,8 @@
                                     <select class="preset-select" data-category="evening"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_3">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_3">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input">
+                                    <input type="number" placeholder="קלוריות" class="calories-input">
                                 </div>
                             </div>
                             <div class="meal-row" data-meal="meal_4">
@@ -125,8 +115,8 @@
                                     <select class="preset-select" data-category="snack"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_4">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_4">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input">
+                                    <input type="number" placeholder="קלוריות" class="calories-input">
                                 </div>
                             </div>
                             <div class="meal-row" data-meal="snack">
@@ -135,8 +125,8 @@
                                     <select class="preset-select" data-category="snack"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input" id="food-snack">
-                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-snack">
+                                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
+                                    <input type="number" placeholder="קלוריות" class="calories-input">
                                 </div>
                             </div>
                         </div>
@@ -274,6 +264,6 @@
 
     </div>
 
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=17"></script>
 </body>
 </html>
