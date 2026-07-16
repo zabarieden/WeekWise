@@ -1,12 +1,12 @@
 :root {
-    --bg-main: #000000; /* שחור עמוק מוחלט */
-    --bg-glass: rgba(28, 24, 38, 0.65); /* זכוכית מעושנת חצי-שקופה */
-    --bg-sheet: #191622; /* סגול-חצות עמוק לחלונות צפים */
-    --border-color: rgba(255, 0, 127, 0.25); /* גבול ורוד מטאלי עדין ויוקרתי */
+    --bg-main: #000000; 
+    --bg-glass: rgba(30, 27, 38, 0.65); 
+    --bg-sheet: #191622; 
+    --border-color: rgba(255, 0, 127, 0.25); 
     --text-primary: #f5f5f7; 
     --text-secondary: #a1a1a6; 
-    --accent-pink: #ff007f; /* ורוד פוקסיה זוהר */
-    --accent-purple: #a855f7; /* סגול אולטרה-מרין */
+    --accent-pink: #ff007f; 
+    --accent-purple: #a855f7; 
     --accent-purple-light: #c084fc;
     --accent-green: #00e676; 
     --accent-red: #ff453a; 
@@ -28,7 +28,6 @@ body {
     overflow: hidden;
 }
 
-/* 🔒 מעטפת האפליקציה הנעולה בגודל סמארטפון */
 .phone-wrapper {
     width: 100vw;
     max-width: 420px; 
@@ -45,7 +44,6 @@ body {
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
 }
 
-/* 🔮 כדורי הברק הדינמיים ברקע שמעירים את אפקט הזכוכית בוורוד וסגול */
 .ambient-glow {
     position: absolute;
     border-radius: 50%;
@@ -56,43 +54,11 @@ body {
     pointer-events: none;
     animation: floatingGlow 10s infinite alternate ease-in-out;
 }
-.glow-pink {
-    width: 200px;
-    height: 200px;
-    background-color: var(--accent-pink);
-    top: 15%;
-    left: -15%;
-}
-.glow-purple {
-    width: 240px;
-    height: 240px;
-    background-color: var(--accent-purple);
-    bottom: 20%;
-    right: -20%;
-    animation-delay: -4s;
-}
+.glow-pink { width: 200px; height: 200px; background-color: var(--accent-pink); top: 15%; left: -15%; }
+.glow-purple { width: 240px; height: 240px; background-color: var(--accent-purple); bottom: 20%; right: -20%; animation-delay: -4s; }
 
-header {
-    text-align: center;
-    margin-bottom: 15px;
-    position: relative;
-    z-index: 5;
-}
-.logo {
-    font-size: 1.8rem;
-    font-weight: 800;
-    background: linear-gradient(45deg, var(--accent-pink), var(--accent-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
-}
-header p {
-    color: var(--text-secondary);
-    margin: 4px 0 0;
-    font-size: 0.85rem;
-}
+header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5; display: none; }
 
-/* 🎛️ תפריט קוביות זכוכית */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -128,7 +94,6 @@ header p {
 .cube-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
 .nav-cube.active .cube-title { color: var(--text-primary); }
 
-/* 📜 אזור הגלילה הפנימי */
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
@@ -138,16 +103,9 @@ header p {
 }
 .main-scroll-area::-webkit-scrollbar { display: none; }
 
-/* 🧹 הפרדה הרמטית של הטאבים */
-.tab-content { 
-    display: none !important; 
-}
-.tab-content.active-tab { 
-    display: block !important; 
-    animation: fadeIn 0.25s ease-out; 
-}
+.tab-content { display: none !important; }
+.tab-content.active-tab { display: block !important; animation: fadeIn 0.25s ease-out; }
 
-/* 💎 כרטיסיות זכוכית מטופשת (Frosted Glass Card) */
 .card {
     background-color: var(--bg-glass);
     backdrop-filter: blur(25px);
@@ -159,15 +117,9 @@ header p {
     margin-bottom: 14px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.card-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
+.card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary); }
 
-/* כפתור הפלוס העגול בוורוד */
 .btn-floating-add {
     background-color: rgba(255, 0, 127, 0.08);
     color: var(--accent-pink);
@@ -186,7 +138,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .btn-floating-add:active { transform: scale(0.9); background-color: rgba(255, 0, 127, 0.2); }
 
-/* 📅 אקורדיון לו"ז שבועי */
 .schedule-accordion { display: flex; flex-direction: column; gap: 6px; }
 .accordion-item { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; overflow: hidden; }
 .accordion-header { padding: 12px 14px; font-weight: 600; color: var(--text-primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
@@ -198,8 +149,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }
 .slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); }
-
-/* חלוקת משימות לורוד וסגול */
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
 .slot-input-group.task-purple { border-right: 3px solid var(--accent-purple); }
 
@@ -207,13 +156,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-time { background: transparent !important; border: none !important; color: var(--text-primary) !important; font-weight: 600; text-align: center; font-size: 0.8rem; padding: 0 !important; outline: none; }
 .task-pink .slot-time { color: var(--accent-pink) !important; }
 .task-purple .slot-time { color: var(--accent-purple) !important; }
-
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 
-/* 🍎 תזונה */
 .meals-container { display: flex; flex-direction: column; gap: 8px; }
 .meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; }
 .meal-header-row { display: flex; justify-content: space-between; align-items: center; }
@@ -234,13 +181,33 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .weight-inputs-wrap { display: flex; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1; }
 
-/* 📈 מטרות ומשימות */
+/* 📉 מטרות ומשימות - שדרוג מלא לרשימה מעוצבת זכוכית */
 .my-center-grid { display: flex; flex-direction: column; gap: 12px; }
 .important-card { border: 1px solid rgba(255, 0, 127, 0.25) !important; background-color: rgba(255, 0, 127, 0.02) !important; }
 .important-card h2 { color: var(--accent-pink); }
-.center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.center-list li { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.01); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-.btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; }
+
+.center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.center-list li { 
+    background-color: rgba(20, 18, 26, 0.5); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2); /* פס סגול דק בתחתית */
+    border-radius: 12px; 
+    padding: 12px 14px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    font-size: 0.9rem; 
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.important-card .center-list li {
+    border-bottom: 1px solid rgba(255, 0, 127, 0.25); /* פס ורוד לדברים החשובים */
+}
+
+.btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); }
+.btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
 .progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
@@ -251,53 +218,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .progress-bar-fill { height: 100%; width: 0%; background-color: var(--accent-purple); border-radius: 2px; transition: width 0.2s ease; }
 .progress-bar-fill.completed { background-color: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
 
-/* 🚪 התנתקות */
-.btn-logout {
-    background-color: transparent;
-    color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 0.8rem;
-    border-radius: 20px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: var(--transition);
-}
+.btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.15); }
 
-/* חלונות צפים (Modals) */
-.apple-modal {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    z-index: 2000;
-    display: none;
-    justify-content: center;
-    align-items: flex-end;
-    animation: fadeOverlay 0.2s ease-out;
-}
-.modal-sheet {
-    background-color: var(--bg-sheet);
-    border-top: 1px solid rgba(255, 0, 127, 0.2);
-    width: 100%;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    padding: 10px 20px 30px 20px;
-    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7);
-    box-sizing: border-box;
-    transform: translateY(100%);
-    transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1);
-}
+.apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; animation: fadeOverlay 0.2s ease-out; }
+.modal-sheet { background-color: var(--bg-sheet); border-top: 1px solid rgba(255, 0, 127, 0.2); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(100%); transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1); }
 .modal-header-bar { display: flex; justify-content: center; padding: 5px 0 12px 0; }
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
 
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input,
-.preset-manager-grid select, .preset-manager-grid input {
-    background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none;
-}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; }
 .action-buttons-wrap { display: flex; gap: 8px; }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; }
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }
@@ -307,13 +238,9 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .apple-modal.open { display: flex; }
 .apple-modal.open .modal-sheet { transform: translateY(0); }
 
-/* מסך כניסה */
 .login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
-@keyframes floatingGlow {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(20px, 30px) scale(1.1); }
-}
+@keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
