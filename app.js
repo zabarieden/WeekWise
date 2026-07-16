@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
-const daysOfWeek = ['ראשון', 'שני', 'שלשי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
 let currentUsername = '';
