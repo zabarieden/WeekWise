@@ -467,8 +467,13 @@ async function deleteProgressTarget(id) {
 function toggleWeightAccordion() {
     const content = document.getElementById('weight-accordion-content');
     const icon = document.getElementById('weight-icon');
-    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { content.style.maxHeight = '400px'; icon.style.transform = 'rotate(180deg)'; }
-    else { content.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; }
+    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { 
+        content.style.maxHeight = '400px'; 
+        icon.style.transform = 'rotate(180deg)'; 
+    } else { 
+        content.style.maxHeight = '0px'; 
+        icon.style.transform = 'rotate(0deg)'; 
+    }
 }
 
 async function saveNewWeightRecord() {
