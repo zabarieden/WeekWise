@@ -1,99 +1,212 @@
-const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
-let supabaseClient;
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MySevenDays: Smart Calendar</title>
+    <!-- חיבור לקובץ עיצוב מעודכן -->
+    <link rel="stylesheet" href="theme.css?v=21">
+    <!-- חיבור ל-Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
 
-const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
+    <!-- מעטפת האפליקציה הנעולה בגודל מובייל קלאסי -->
+    <div class="phone-wrapper">
 
-function initSupabase() {
-    if (window.supabase) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        return true;
-    }
-    return false;
-}
+        <!-- כדורי פלזמה דינמיים ברקע בגווני ורוד וסגול כדי לייצר עומק לזכוכית -->
+        <div class="ambient-glow glow-pink"></div>
+        <div class="ambient-glow glow-purple"></div>
 
-document.addEventListener('DOMContentLoaded', () => {
-    initSupabase();
-    initCubesNavigation();
-
-    document.getElementById('btn-login').addEventListener('click', async () => {
-        const email = document.getElementById('email-input').value;
-        const pass = document.getElementById('password-input').value;
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-        if (error) alert(error.message); else location.reload();
-    });
-
-    document.getElementById('btn-run-ai').addEventListener('click', runSmartAIParser);
-    checkAuth();
-});
-
-async function checkAuth() {
-    const { data } = await supabaseClient.auth.getSession();
-    if (data.session) {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app-container').style.display = 'flex';
-        loadAllData();
-    }
-}
-
-async function loadAllData() {
-    buildWeeklyScheduleAccordionUI();
-    await loadWeeklySchedule();
-}
-
-function buildWeeklyScheduleAccordionUI() {
-    const container = document.getElementById('accordion-container');
-    if (!container) return;
-    container.innerHTML = '';
-    daysOfWeek.forEach((dayName, dayIndex) => {
-        const dbDay = dbDaysMap[dayIndex];
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'accordion-item';
-        itemDiv.id = `accordion-${dbDay}`;
-        itemDiv.innerHTML = `
-            <div class="accordion-header" onclick="toggleAccordion('${dbDay}')">
-                <span>יום ${dayName}</span><span class="accordion-icon">▼</span>
+        <!-- מסך כניסה למערכת -->
+        <div id="login-overlay" class="login-overlay">
+            <div class="login-card">
+                <h2>⚡ MySevenDays</h2>
+                <p>Smart Calendar</p>
+                <input type="text" id="username-input" placeholder="שם משתמש" autofocus>
+                <button id="btn-login" class="btn-primary">היכנסו</button>
             </div>
-            <div class="accordion-content"><div class="slots-grid"></div></div>
-        `;
-        container.appendChild(itemDiv);
-    });
-}
+        </div>
 
-function toggleAccordion(day) {
-    document.getElementById(`accordion-${day}`).classList.toggle('active');
-}
+        <!-- האפליקציה הראשית -->
+        <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; display: flex; flex-direction: column;">
+            
+            <div class="dashboard-grid" style="margin-top: 10px;">
+                <div class="nav-cube active" data-target="schedule-section">
+                    <span class="cube-icon">🗓️</span>
+                    <span class="cube-title">לו"ז</span>
+                </div>
+                <div class="nav-cube" data-target="nutrition-section">
+                    <span class="cube-icon">🍎</span>
+                    <span class="cube-title">תזונה</span>
+                </div>
+                <div class="nav-cube" data-target="my-center-section">
+                    <span class="cube-icon">✨</span>
+                    <span class="cube-title">מטרות</span>
+                </div>
+            </div>
 
-async function loadWeeklySchedule() {
-    // כאן יתבצע ה-Fetch מה-Supabase
-    console.log("Loading schedule...");
-}
+            <div class="main-scroll-area">
+                
+                <!-- חלונית 1: השבוע שלי -->
+                <section class="tab-content active-tab" id="schedule-section">
+                    <div class="card">
+                        <div class="card-title-row">
+                            <h2>MySevenDays</h2>
+                            <button class="btn-floating-add" onclick="openModal('modal-add-task')">＋</button>
+                        </div>
+                        <div class="schedule-accordion" id="accordion-container">
+                        </div>
+                        <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
+                    </div>
+                </section>
 
-function runSmartAIParser() {
-    const promptInput = document.getElementById('ai-nutrition-prompt');
-    const text = promptInput.value.trim();
-    if (!text) return;
-    
-    // לוגיקת ניתוח ה-AI
-    const num = text.match(/\d+/);
-    console.log("AI Processing:", text, "Calories:", num ? num[0] : 'None');
-    
-    promptInput.value = '';
-    alert('הנתונים עובדו!');
-}
+                <!-- חלונית 2: מעקב ארוחות ותזונה -->
+                <section class="tab-content" id="nutrition-section">
+                    <div class="card ai-card" style="margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.35); background: rgba(25, 18, 38, 0.45);">
+                        <h2 style="font-size: 0.95rem; color: var(--accent-purple-light); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">🤖 AI Nutrition Assistant</h2>
+                        <div class="ai-input-wrapper">
+                            <input type="text" id="ai-nutrition-prompt" placeholder="דוגמה: תוסיף 50 גרם פופקורן לנשנוש 1" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; color: #fff; font-size: 0.8rem; outline: none;">
+                            <button id="btn-run-ai" style="padding: 10px 14px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">עדכן ✨</button>
+                        </div>
+                    </div>
 
-function initCubesNavigation() {
-    document.querySelectorAll('.nav-cube').forEach(cube => {
-        cube.addEventListener('click', () => {
-            document.querySelectorAll('.nav-cube').forEach(c => c.classList.remove('active'));
-            cube.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
-            document.getElementById(cube.dataset.target).classList.add('active-tab');
-        });
-    });
-}
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div class="card-header-column">
+                            <div class="card-title-row" style="width: 100%;">
+                                <h2>יומן ארוחות</h2>
+                                <button class="btn-floating-add" onclick="openModal('modal-add-preset')">＋</button>
+                            </div>
+                            <div class="date-picker-container" style="margin-top: 10px; width: 100%;">
+                                <input type="date" id="selected-date">
+                            </div>
+                        </div>
+                        
+                        <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;">שכפל מאתמול</button>
+                        
+                        <div class="meals-container" style="margin-top: 15px;">
+                            <div class="meal-row" data-meal="meal_1">
+                                <div class="meal-header-row"><span class="meal-label">ארוחה 1</span><select class="preset-select" data-category="morning"></select></div>
+                                <div class="meal-inputs-wrap">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_1">
+                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_1">
+                                </div>
+                            </div>
+                            <div class="meal-row" data-meal="meal_2">
+                                <div class="meal-header-row"><span class="meal-label">ארוחה 2</span><select class="preset-select" data-category="noon"></select></div>
+                                <div class="meal-inputs-wrap">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_2">
+                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_2">
+                                </div>
+                            </div>
+                            <div class="meal-row" data-meal="meal_3">
+                                <div class="meal-header-row"><span class="meal-label">ארוחה 3</span><select class="preset-select" data-category="evening"></select></div>
+                                <div class="meal-inputs-wrap">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_3">
+                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_3">
+                                </div>
+                            </div>
+                            <div class="meal-row" data-meal="meal_4">
+                                <div class="meal-header-row"><span class="meal-label">נשנושים 1</span><select class="preset-select" data-category="snack"></select></div>
+                                <div class="meal-inputs-wrap">
+                                    <input type="text" placeholder="מה אכלת?" class="food-input" id="food-meal_4">
+                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-meal_4">
+                                </div>
+                            </div>
+                            <div class="meal-row" data-meal="snack">
+                                <div class="meal-header-row"><span class="meal-label">נשנושים 2</span><select class="preset-select" data-category="snack"></select></div>
+                                <div class="meal-inputs-wrap">
+                                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input" id="food-snack">
+                                    <input type="number" placeholder="קלוריות" class="calories-input" id="cals-snack">
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;">שמור תפריט</button>
+                    </div>
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+                    <div class="card" style="margin-bottom: 16px;">
+                        <h2>מדדי קלוריות</h2>
+                        <div class="stats-grid">
+                            <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="calories-today">0</div></div>
+                            <div class="stat-box weekly"><h3>ממוצע שבועי</h3><div class="stat-number" id="calories-weekly">0</div></div>
+                            <div class="stat-box monthly"><h3>ממוצע חודשי</h3><div class="stat-number" id="calories-monthly">0</div></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- חלונית 3: מטרות ומשימות -->
+                <section class="tab-content" id="my-center-section">
+                    <div class="my-center-grid">
+                        <div class="card important-card">
+                            <div class="card-title-row"><h2>דברים חשובים מאוד</h2><button class="btn-floating-add" onclick="openCenterAdder('important')">➕</button></div>
+                            <ul id="important-list" class="center-list"></ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-title-row"><h2>משימות</h2><button class="btn-floating-add" onclick="openCenterAdder('weekly')">➕</button></div>
+                            <ul id="weekly-list" class="center-list"></ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-title-row"><h2>יעדי התקדמות</h2><button class="btn-floating-add" onclick="openModal('modal-add-progress')">➕</button></div>
+                            <div id="progress-container" class="progress-container"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <div style="text-align: center; margin: 25px 0 10px 0;">
+                    <button id="btn-logout" class="btn-logout">🚪 התנתקות</button>
+                </div>
+
+                <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; padding-bottom: 25px; font-family: -apple-system, sans-serif; letter-spacing: 0.5px;">
+                    © 2026 all rights reserved. app developed by eden zabari.
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="modal-add-task" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>הוספת משימה</h3>
+                <div class="schedule-adder-grid">
+                    <select id="add-slot-day"><option value="Sunday">ראשון</option><option value="Monday">שני</option><option value="Tuesday">שלישי</option><option value="Wednesday">רביעי</option><option value="Thursday">חמישי</option><option value="Friday">שישי</option><option value="Saturday">שבת</option></select>
+                    <select id="add-slot-num">
+                        <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option><option value="7">#7</option><option value="8">#8</option><option value="9">#9</option><option value="10">#10</option>
+                    </select>
+                    <input type="text" id="add-slot-time" placeholder="שעה (למשל: 09:00)">
+                    <input type="text" id="add-slot-task" placeholder="שם המשימה...">
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-new-slot" class="btn-primary">שמור</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-task')">סגור</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-add-preset" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>הוספת ארוחה</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="new-preset-name" placeholder="שם הארוחה">
+                    <input type="number" id="new-preset-calories" placeholder="קלוריות">
+                    <button id="btn-add-preset" class="btn-primary">שמור</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="modal-add-progress" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>יעד חדש</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="progress-name-input" placeholder="שם המטרה">
+                    <input type="number" id="progress-target-input" placeholder="יעד שבועי">
+                    <button onclick="addProgressTarget(); closeModal('modal-add-progress');" class="btn-primary">הוסף</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=21"></script>
+</body>
+</html>
