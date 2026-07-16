@@ -56,7 +56,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
+
+    // חיבור כפתור ה-AI החכם
+    const btnRunAI = document.getElementById('btn-run-ai');
+    if (btnRunAI) {
+        btnRunAI.addEventListener('click', runSmartAIParser);
+    }
 });
+
+// 🤖 מנוע ה-AI המשולב לקריאה ופירוק טקסט חופשי (NLP Parser)
+function runSmartAIParser() {
+    const promptInput = document.getElementById('ai-nutrition-prompt');
+    if (!promptInput) return;
+    const text = promptInput.value.trim();
+    if (!text) return alert('אנא הקלידו משפט קודם');
+
+    let targetMeal = 'snack'; // ברירת מחדל
+    if (text.includes('ארוחה 1') || text.includes('בוקר')) targetMeal = 'meal_1';
+    else if (text.includes('ארוחה 2') || text.includes('צהריים') || text.includes('צהרים')) targetMeal = 'meal_2';
+    else if (text.includes('ארוחה 3') || text.includes('ערב')) targetMeal = 'meal_3';
+    else if (text.includes('ארוחה 4') || text.includes('נשנושים 1') || text.includes('נשנוש 1')) targetMeal = 'meal_4';
+    else if (text.includes('נשנושים') || text.includes('מתוקים') || text.includes('נשנוש 2')) targetMeal = 'snack';
+
+    const foodInput = document.getElementById(`food-${targetMeal}`);
+    const calsInput = document.getElementById(`cals-${targetMeal}`);
+
+    // פקודת ניקוי
+    if (text.includes('נקה') || text.includes('תמחק') || text.includes('מחק')) {
+        if (foodInput) foodInput.value = '';
+        if (calsInput) calsInput.value = '';
+        promptInput.value = '';
+        return alert('הארוחה נוקתה לבקשתך!');
+    }
+
+    // חילוץ מספר הקלוריות מהמשפט
+    const numberMatch = text.match(/\d+/);
+    const calories = numberMatch ? parseInt(numberMatch[0]) : '';
+
+    // חילוץ תיאור המאכל (מסיר את הקלוריות והארוחה מהמשפט)
+    let foodDescription = text
+        .replace(/\d+/g, '')
+        .replace(/קלוריות|קלוריה/g, '')
+        .replace(/ארוחה \d/g, '')
+        .replace(/בוקר|צהריים|צהרים|ערב/g, '')
+        .replace(/נשנושים|נשנוש \d|מתוקים/g, '')
+        .replace(/תוסיף|תעדכן|תשים|שלי/g, '')
+        .replace(/[-–—,.-]/g, '')
+        .trim();
+
+    if (foodInput && foodDescription) foodInput.value = foodDescription;
+    if (calsInput && calories) calsInput.value = calories;
+
+    promptInput.value = '';
+    alert('ה-AI עדכן את הטופס בהצלחה! לחצי על שמירה כדי לעדכן סופית ✨');
+}
 
 async function loginUser(username) {
     currentUsername = username;
@@ -460,7 +513,7 @@ async function loadProgressTargets() {
     container.innerHTML = '';
 
     if (!data || data.length === 0) {
-        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין יעדים פעילים.</p>`;
+        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center;">אין יעדים פעילים.</p>';
         return;
     }
 
