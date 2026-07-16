@@ -29,13 +29,9 @@
 
         <!-- האפליקציה הראשית -->
         <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; display: flex; flex-direction: column;">
-            <header>
-                <div class="logo">השבוע שלי</div>
-                <p>הלו"ז, התזונה והמטרות של <span id="display-user" style="color: var(--accent-pink); font-weight: 600;"></span></p>
-            </header>
-
-            <!-- לוח אריחי זכוכית מעוצב מחדש בוורוד וסגול -->
-            <div class="dashboard-grid">
+            
+            <!-- הבלוק העליון נמחק לחלוטין - מתחילים ישר מקוביות הניווט מזכוכית -->
+            <div class="dashboard-grid" style="margin-top: 10px;">
                 <div class="nav-cube active" data-target="schedule-section">
                     <span class="cube-icon">🗓️</span>
                     <span class="cube-title">השבוע שלי</span>
@@ -262,6 +258,7 @@
 
     </div>
 
-    <script src="app.js?v=13"></script>
+    <!-- גרסה v=14 המבטיחה ריענון מיידי -->
+    <script src="app.js?v=14"></script>
 </body>
 </html>
