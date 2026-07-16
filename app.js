@@ -17,13 +17,11 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
     initCubesNavigation();
-    
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) initSupabase();
         loginUser(savedUser);
     }
-
     const btnLogin = document.getElementById('btn-login');
     if (btnLogin) {
         btnLogin.addEventListener('click', () => {
@@ -33,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else alert('אנא הקלידו שם משתמש');
         });
     }
-
     document.getElementById('btn-logout').addEventListener('click', logoutUser);
     document.getElementById('btn-add-preset').addEventListener('click', () => {
         addCustomPreset();
@@ -49,62 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
-    
-    // פונקציונליות ה-AI החדשה
     document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
 });
 
-async function loginUser(username) {
-    currentUsername = username;
-    localStorage.setItem('weekwise_user', username);
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-container').style.display = 'flex';
-
-    const dateInput = document.getElementById('selected-date');
-    const today = new Date().toISOString().split('T')[0];
-
-    if (dateInput) {
-        dateInput.value = today;
-        loadDailyNutrition(today);
-        dateInput.onchange = (e) => loadDailyNutrition(e.target.value);
-    }
-
-    const weightDateInput = document.getElementById('new-weight-date');
-    if (weightDateInput) weightDateInput.value = today;
-
-    buildWeeklyScheduleAccordionUI();
-    await loadWeeklySchedule();
-    loadStats();
-    loadAllCenterItems();
-    loadMealPresetsToSelects();
-    loadProgressTargets();
-    loadWeightHistory();
-
-    document.getElementById('btn-save-nutrition').onclick = saveNutrition;
-    document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
-}
-
-/**
- * עיבוד קלט מה-AI (פופקורן / נס קפה)
- */
-function processAIRecipe() {
+async function processAIRecipe() {
     const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
     if (!input) return;
-
     let foodName = "";
     let calories = 0;
     let targetMeal = "";
-
     if (input.includes("פופקורן")) {
         foodName = "פופקורן";
         calories = 50;
         targetMeal = "meal_4"; 
-    } else if (input.includes("נס קפה")) {
+    } else if (input.includes("נס קפה") || input.includes("שיבולת שועל")) {
         foodName = "נס קפה שיבולת שועל";
         calories = 60;
         targetMeal = "meal_1";
     }
-
     if (targetMeal && foodName) {
         const mealRow = document.querySelector(`[data-meal="${targetMeal}"]`);
         if (mealRow) {
@@ -113,8 +72,33 @@ function processAIRecipe() {
             document.getElementById('ai-nutrition-prompt').value = "";
         }
     } else {
-        alert("לא זיהיתי את המנה במאגר ה-AI.");
+        alert("לא זיהיתי את המנה במאגר.");
     }
+}
+
+async function loginUser(username) {
+    currentUsername = username;
+    localStorage.setItem('weekwise_user', username);
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+    const dateInput = document.getElementById('selected-date');
+    const today = new Date().toISOString().split('T')[0];
+    if (dateInput) {
+        dateInput.value = today;
+        loadDailyNutrition(today);
+        dateInput.onchange = (e) => loadDailyNutrition(e.target.value);
+    }
+    const weightDateInput = document.getElementById('new-weight-date');
+    if (weightDateInput) weightDateInput.value = today;
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+    loadStats();
+    loadAllCenterItems();
+    loadMealPresetsToSelects();
+    loadProgressTargets();
+    loadWeightHistory();
+    document.getElementById('btn-save-nutrition').onclick = saveNutrition;
+    document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
 }
 
 function logoutUser() {
@@ -184,7 +168,6 @@ function buildWeeklyScheduleAccordionUI() {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'accordion-item';
         itemDiv.id = `accordion-${dbDay}`;
-
         let slotsHTML = '';
         for (let i = 1; i <= 10; i++) {
             const defaultHour = defaultHours[i - 1];
