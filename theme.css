@@ -92,13 +92,13 @@ box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
 flex: 1;
 overflow-y: auto;
 position: relative;
-z-index: 5;
-padding-bottom: 40px;
+z-index: 10;
+padding-bottom: 80px;
 scrollbar-width: none;
 }
 .main-scroll-area::-webkit-scrollbar { display: none; }
-.tab-content { display: none !important; min-height: 100%; }
-.tab-content.active-tab { display: flex !important; flex-direction: column; animation: fadeIn 0.25s ease-out; }
+.tab-content { display: none !important; }
+.tab-content.active-tab { display: block !important; animation: fadeIn 0.25s ease-out; }
 .card {
 background-color: var(--bg-glass);
 backdrop-filter: blur(25px);
@@ -109,6 +109,8 @@ border-radius: 16px;
 padding: 16px;
 margin-bottom: 14px;
 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+position: relative;
+z-index: 5;
 }
 .card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary); }
@@ -127,6 +129,7 @@ font-weight: bold;
 cursor: pointer;
 padding: 0;
 transition: var(--transition);
+z-index: 10;
 }
 .btn-floating-add:active { transform: scale(0.9); background-color: rgba(255, 0, 127, 0.2); }
 .schedule-accordion { display: flex; flex-direction: column; gap: 6px; }
@@ -136,7 +139,7 @@ transition: var(--transition);
 .accordion-item.active { border-color: rgba(168, 85, 247, 0.2); background-color: rgba(0,0,0,0.4); }
 .accordion-item.active .accordion-icon { transform: rotate(180deg); }
 .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
-.accordion-item.active .accordion-content { max-height: 1200px; padding: 10px; }
+.accordion-item.active .accordion-content { max-height: 2000px; padding: 10px; }
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }
 .slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); }
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
@@ -187,13 +190,13 @@ box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 .important-card .center-list li {
 border-bottom: 1px solid rgba(255, 0, 127, 0.25);
 }
-.btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); }
+.btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
 .progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
 .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 6px; }
 .progress-counter { display: flex; align-items: center; gap: 6px; }
-.btn-counter { background-color: rgba(255, 255, 255, 0.04); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+.btn-counter { background-color: rgba(255, 255, 255, 0.04); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 10;}
 .progress-bar-bg { background-color: rgba(255, 255, 255, 0.02); height: 4px; border-radius: 2px; overflow: hidden; }
 .progress-bar-fill { height: 100%; width: 0%; background-color: var(--accent-purple); border-radius: 2px; transition: width 0.2s ease; }
 .progress-bar-fill.completed { background-color: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
@@ -205,9 +208,9 @@ border-bottom: 1px solid rgba(255, 0, 127, 0.25);
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; }
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 .action-buttons-wrap { display: flex; gap: 8px; }
-button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; }
+button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; z-index: 10;}
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }
 .btn-secondary { background-color: rgba(255, 255, 255, 0.02); color: var(--text-primary); border: 1px solid rgba(255, 0, 127, 0.1); width: 100%; }
 .btn-clear-specific { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); }
