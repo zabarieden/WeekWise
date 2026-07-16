@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>השבוע שלי</title>
-    <!-- חיבור לקובץ עיצוב חדש כדי לעקוף את הזיכרון התקוע של הדפדפן -->
-    <link rel="stylesheet" href="theme.css?v=15">
+    <!-- חיבור לקובץ עיצוב מעודכן -->
+    <link rel="stylesheet" href="theme.css?v=17">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -31,7 +31,7 @@
         <!-- האפליקציה הראשית -->
         <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; display: flex; flex-direction: column;">
             
-            <!-- התחלה ישירה מקוביות הניווט מזכוכית ורודה וסגולה -->
+            <!-- התחלה ישירה מקוביות הניווט מזכוכית -->
             <div class="dashboard-grid" style="margin-top: 10px;">
                 <div class="nav-cube active" data-target="schedule-section">
                     <span class="cube-icon">🗓️</span>
@@ -41,8 +41,9 @@
                     <span class="cube-icon">🍎</span>
                     <span class="cube-title">תזונה ומדדים</span>
                 </div>
+                <!-- האייקון החדש והנוצץ שלך כאן ✨ -->
                 <div class="nav-cube" data-target="my-center-section">
-                    <span class="cube-icon">📈</span>
+                    <span class="cube-icon">✨</span>
                     <span class="cube-title">מטרות ומשימות</span>
                 </div>
             </div>
@@ -111,8 +112,8 @@
                             </div>
                             <div class="meal-row" data-meal="meal_4">
                                 <div class="meal-header-row">
-                                    <span class="meal-label">ארוחה 4</span>
-                                    <select class="preset-select" data-category="evening"></select>
+                                    <span class="meal-label">נשנושים 1</span>
+                                    <select class="preset-select" data-category="snack"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
                                     <input type="text" placeholder="מה אכלת?" class="food-input">
@@ -121,7 +122,7 @@
                             </div>
                             <div class="meal-row" data-meal="snack">
                                 <div class="meal-header-row">
-                                    <span class="meal-label">נשנושים</span>
+                                    <span class="meal-label">נשנושים 2</span>
                                     <select class="preset-select" data-category="snack"></select>
                                 </div>
                                 <div class="meal-inputs-wrap">
@@ -259,6 +260,6 @@
 
     </div>
 
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=17"></script>
 </body>
 </html>
