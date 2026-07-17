@@ -117,6 +117,14 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     box-sizing: border-box;
 }
 .card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-title-row.collapsible-header { cursor: pointer; user-select: none; }
+.card-header-actions { display: flex; align-items: center; gap: 8px; }
+.card-toggle-icon { font-size: 0.7rem; color: var(--text-secondary); transition: transform 0.2s ease; }
+.card-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+.card.expanded .card-title-row.collapsible-header { margin-bottom: 12px; }
+.card:not(.expanded) .card-title-row.collapsible-header { margin-bottom: 0; }
+.card.expanded .card-body { max-height: 3000px; }
+.card.expanded .card-toggle-icon { transform: rotate(180deg); }
 h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary); }
 .btn-floating-add {
     background-color: rgba(255, 0, 127, 0.08);
@@ -172,7 +180,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .monthly .stat-number { color: var(--text-primary); }
 .weight-inputs-wrap { display: flex; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1; }
-#weight-accordion-content { max-height: 250px !important; overflow-y: auto !important; padding: 10px; z-index: 10; position: relative; }
 .my-center-grid { display: flex; flex-direction: column; gap: 12px; }
 .important-card { border: 1px solid rgba(255, 0, 127, 0.25) !important; background-color: rgba(255, 0, 127, 0.02) !important; }
 .important-card h2 { color: var(--accent-pink); }
@@ -186,7 +193,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border-radius: 12px;
     padding: 12px 14px;
     display: flex;
-    flex-direction: row-reverse; /* כאן מסודר ה-V שיהיה בצד ימין! */
+    flex-direction: row; /* הצ'קבוקס בצד ימין, כפתור המחיקה בצד שמאל */
     justify-content: space-between;
     align-items: center;
     font-size: 0.9rem;

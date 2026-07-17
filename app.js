@@ -137,7 +137,7 @@ async function loginUser(username) {
     document.getElementById('app-container').style.display = 'flex';
     
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const selectedDateInput = document.getElementById('selected-date');
     if(selectedDateInput) selectedDateInput.value = today;
     const weightDateInput = document.getElementById('new-weight-date');
@@ -152,7 +152,8 @@ async function loginUser(username) {
     loadWeightHistory();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
-    
+    selectedDateInput.onchange = (e) => loadDailyNutrition(e.target.value);
+
     // טעינת תזונה להיום אוטומטית (אם קיים)
     if(today) { loadDailyNutrition(today); }
 }
@@ -170,6 +171,13 @@ function initCubesNavigation() {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
         tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
     }));
+}
+
+function getLocalDateString(dateObj = new Date()) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function getFormattedDateForDay(dayIndex) {
@@ -203,6 +211,11 @@ function toggleAccordion(day) {
     const isActive = item.classList.contains('active');
     document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
     if (!isActive) item.classList.add('active');
+}
+
+function toggleCardSection(headerEl) {
+    const card = headerEl.closest('.card');
+    if (card) card.classList.toggle('expanded');
 }
 
 async function loadWeeklySchedule() {
@@ -240,7 +253,13 @@ async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_s
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
+    document.querySelectorAll('.meal-row').forEach(row => {
+        row.querySelector('.food-input').value = '';
+        row.querySelector('.calories-input').value = '';
+    });
+    document.getElementById('calories-today').innerText = '0';
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', date);
+    if (!data) return;
     let total = 0;
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
@@ -266,7 +285,6 @@ async function addProgressTarget() { /* לוגיקה זהה למקור */ }
 async function loadProgressTargets() { /* לוגיקה זהה למקור */ }
 async function changeProgressVal(id, change) { /* לוגיקה זהה למקור */ }
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
-function toggleWeightAccordion() { const c = document.getElementById('weight-accordion-content'); c.style.maxHeight = c.style.maxHeight === '250px' ? '0px' : '250px'; }
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: d, weight_value: w }); loadWeightHistory(); }
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('username', currentUsername).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }

@@ -52,105 +52,118 @@
                 <!-- חלונית 1: השבוע שלי -->
                 <section class="tab-content active-tab" id="schedule-section">
                     <div class="card">
-                        <div class="card-title-row">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>השבוע שלי</h2>
-                            <button class="btn-floating-add" onclick="openModal('modal-add-task')">＋</button>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
+                                <span class="card-toggle-icon">▼</span>
+                            </div>
                         </div>
-                        <div class="schedule-accordion" id="accordion-container">
-                            <!-- ימי השבוע יווצרו כאן דינמית -->
+                        <div class="card-body">
+                            <div class="schedule-accordion" id="accordion-container">
+                                <!-- ימי השבוע יווצרו כאן דינמית -->
+                            </div>
+                            <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
                         </div>
-                        <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
                     </div>
                 </section>
 
                 <!-- חلوנית 2: מעקב ארוחות ותזונה -->
                 <section class="tab-content" id="nutrition-section">
                     <div class="card" style="margin-bottom: 16px;">
-                        <div class="card-header-column">
-                            <div class="card-title-row" style="width: 100%;">
-                                <h2>מעקב ארוחות יומי</h2>
-                                <button class="btn-floating-add" onclick="openModal('modal-add-preset')">＋</button>
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2>מעקב ארוחות יומי</h2>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset')">＋</button>
+                                <span class="card-toggle-icon">▼</span>
                             </div>
-                            <div class="date-picker-container" style="margin-top: 10px; width: 100%;">
+                        </div>
+                        <div class="card-body">
+                            <div class="date-picker-container" style="width: 100%;">
                                 <input type="date" id="selected-date">
                             </div>
+
+                            <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;">שכפל תפריט מיום קודם</button>
+
+                            <div class="meals-container" style="margin-top: 15px;">
+                                <div class="meal-row" data-meal="meal_1">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label">ארוחה 1</span>
+                                        <select class="preset-select" data-category="morning"></select>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                    </div>
+                                </div>
+                                <div class="meal-row" data-meal="meal_2">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label">ארוחה 2</span>
+                                        <select class="preset-select" data-category="noon"></select>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                    </div>
+                                </div>
+                                <div class="meal-row" data-meal="meal_3">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label">ארוחה 3</span>
+                                        <select class="preset-select" data-category="evening"></select>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                    </div>
+                                </div>
+                                <div class="meal-row" data-meal="meal_4">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label">נשנושים 1</span>
+                                        <select class="preset-select" data-category="snack"></select>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" placeholder="מה אכלת?" class="food-input">
+                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                    </div>
+                                </div>
+                                <div class="meal-row" data-meal="snack">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label">נשנושים 2</span>
+                                        <select class="preset-select" data-category="snack"></select>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
+                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;">שמור תפריט להיום</button>
                         </div>
-                        
-                        <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;">שכפל תפריט מיום קודם</button>
-                        
-                        <div class="meals-container" style="margin-top: 15px;">
-                            <div class="meal-row" data-meal="meal_1">
-                                <div class="meal-header-row">
-                                    <span class="meal-label">ארוחה 1</span>
-                                    <select class="preset-select" data-category="morning"></select>
-                                </div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                                    <input type="number" placeholder="קלוריות" class="calories-input">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_2">
-                                <div class="meal-header-row">
-                                    <span class="meal-label">ארוחה 2</span>
-                                    <select class="preset-select" data-category="noon"></select>
-                                </div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                                    <input type="number" placeholder="קלוריות" class="calories-input">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_3">
-                                <div class="meal-header-row">
-                                    <span class="meal-label">ארוחה 3</span>
-                                    <select class="preset-select" data-category="evening"></select>
-                                </div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                                    <input type="number" placeholder="קלוריות" class="calories-input">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="meal_4">
-                                <div class="meal-header-row">
-                                    <span class="meal-label">נשנושים 1</span>
-                                    <select class="preset-select" data-category="snack"></select>
-                                </div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="מה אכלת?" class="food-input">
-                                    <input type="number" placeholder="קלוריות" class="calories-input">
-                                </div>
-                            </div>
-                            <div class="meal-row" data-meal="snack">
-                                <div class="meal-header-row">
-                                    <span class="meal-label">נשנושים 2</span>
-                                    <select class="preset-select" data-category="snack"></select>
-                                </div>
-                                <div class="meal-inputs-wrap">
-                                    <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
-                                    <input type="number" placeholder="קלוריות" class="calories-input">
-                                </div>
-                            </div>
-                        </div>
-                        <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;">שמור תפריט להיום</button>
                     </div>
 
                     <!-- מדדי קלוריות -->
                     <div class="card" style="margin-bottom: 16px;">
-                        <h2>מדדי קלוריות</h2>
-                        <div class="stats-grid">
-                            <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="calories-today">0</div></div>
-                            <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="calories-weekly">0</div></div>
-                            <div class="stat-box monthly"><h3>חודשי</h3><div class="stat-number" id="calories-monthly">0</div></div>
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2>מדדי קלוריות</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="calories-today">0</div></div>
+                                <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="calories-weekly">0</div></div>
+                                <div class="stat-box monthly"><h3>חודשי</h3><div class="stat-number" id="calories-monthly">0</div></div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- מעקב משקל -->
-                    <div class="card accordion-item" id="accordion-weight-card" style="padding: 0; overflow: hidden;">
-                        <div class="accordion-header" onclick="toggleWeightAccordion()">
-                            <span>מעקב משקל תקופתי</span>
-                            <span class="accordion-icon" id="weight-icon">▼</span>
+                    <div class="card" id="accordion-weight-card">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2>מעקב משקל תקופתי</h2>
+                            <span class="card-toggle-icon">▼</span>
                         </div>
-                        <div class="accordion-content" id="weight-accordion-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-                            <div style="padding: 16px; display: flex; flex-direction: column; gap: 15px;">
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
                                 <div class="weight-inputs-wrap">
                                     <input type="number" step="0.1" id="new-weight-val" placeholder="משקל (ק״ג)">
                                     <input type="date" id="new-weight-date">
@@ -166,20 +179,20 @@
                 <section class="tab-content" id="my-center-section">
                     <div class="my-center-grid">
                         <div class="card important-card">
-                            <div class="card-title-row"><h2>דברים חשובים מאוד</h2><button class="btn-floating-add" onclick="openCenterAdder('important')">➕</button></div>
-                            <ul id="important-list" class="center-list"></ul>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>דברים חשובים מאוד</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('important')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-body"><ul id="important-list" class="center-list"></ul></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row"><h2>משימות השבוע</h2><button class="btn-floating-add" onclick="openCenterAdder('weekly')">➕</button></div>
-                            <ul id="weekly-list" class="center-list"></ul>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>משימות השבוע</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-body"><ul id="weekly-list" class="center-list"></ul></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row"><h2>מד התקדמות שבועי</h2><button class="btn-floating-add" onclick="openModal('modal-add-progress')">➕</button></div>
-                            <div id="progress-container" class="progress-container"></div>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>מד התקדמות שבועי</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-body"><div id="progress-container" class="progress-container"></div></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row"><h2>סידורים, משימות וקניות בכללי</h2><button class="btn-floating-add" onclick="openCenterAdder('general')">➕</button></div>
-                            <ul id="general-list" class="center-list"></ul>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>סידורים, משימות וקניות בכללי</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
                         </div>
                     </div>
                 </section>
