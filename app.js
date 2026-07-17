@@ -321,9 +321,55 @@ async function copyFromYesterday() {
 }
 async function loadStats() { /* לוגיקה זהה למקור */ }
 async function deleteCenterItem(id, type) { await supabaseClient.from('my_center_tasks').delete().eq('id', id); loadCenterItems(type); }
-async function addProgressTarget() { /* לוגיקה זהה למקור */ }
-async function loadProgressTargets() { /* לוגיקה זהה למקור */ }
-async function changeProgressVal(id, change) { /* לוגיקה זהה למקור */ }
+async function addProgressTarget() {
+    if (!supabaseClient) return;
+    const nameInput = document.getElementById('progress-name-input');
+    const targetInput = document.getElementById('progress-target-input');
+    const name = nameInput.value.trim();
+    const target = parseInt(targetInput.value) || 0;
+    if (!name || target <= 0) return;
+    await supabaseClient.from('weekly_progress_targets').insert({ username: currentUsername, target_name: name, target_val: target, current_val: 0 });
+    nameInput.value = '';
+    targetInput.value = '';
+    loadProgressTargets();
+}
+
+async function loadProgressTargets() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('weekly_progress_targets').select('*').eq('username', currentUsername).order('created_at', { ascending: true });
+    if (!data) return;
+    const container = document.getElementById('progress-container');
+    container.innerHTML = '';
+    data.forEach(item => {
+        const pct = item.target_val > 0 ? Math.min(100, Math.round((item.current_val / item.target_val) * 100)) : 0;
+        const row = document.createElement('div');
+        row.className = 'progress-row';
+        row.innerHTML = `
+            <div class="progress-info">
+                <span>${item.target_name}</span>
+                <div class="progress-counter">
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', -1)">-</button>
+                    <span>${item.current_val} / ${item.target_val}</span>
+                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', 1)">+</button>
+                    <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')">❌</button>
+                </div>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill ${pct >= 100 ? 'completed' : ''}" style="width: ${pct}%;"></div></div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+async function changeProgressVal(id, change) {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('weekly_progress_targets').select('current_val, target_val').eq('id', id).maybeSingle();
+    if (!data) return;
+    let newVal = data.current_val + change;
+    if (newVal < 0) newVal = 0;
+    if (newVal > data.target_val) newVal = data.target_val;
+    await supabaseClient.from('weekly_progress_targets').update({ current_val: newVal }).eq('id', id);
+    loadProgressTargets();
+}
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: d, weight_value: w }); loadWeightHistory(); }
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('username', currentUsername).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
