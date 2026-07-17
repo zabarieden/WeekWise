@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
 });
 
-// --- הלוגיקה החדשה לסימון V עם קו חוצה ---
+// --- הלוגיקה החדשה לסימון V מצד ימין (קוביית סימון) ---
 async function toggleTaskStatus(id, currentStatus, type) {
     if (!supabaseClient) return;
     await supabaseClient.from('my_center_tasks').update({ is_completed: !currentStatus }).eq('id', id);
@@ -64,12 +64,15 @@ async function loadCenterItems(type) {
     listUl.innerHTML = '';
     data.forEach(item => {
         const li = document.createElement('li');
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
         li.innerHTML = `
-            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'};">
+            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1;">
                 ${item.content}
             </span>
-            <div class="task-actions">
-                <button class="btn-complete-item" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
+            <div class="task-actions" style="display: flex; gap: 8px;">
+                <button class="btn-complete-item" style="width: 30px; height: 30px; cursor: pointer; border: 1px solid var(--accent-green); background: transparent; color: var(--accent-green);" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                     ${item.is_completed ? '🔄' : '✓'}
                 </button>
                 <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
@@ -79,6 +82,47 @@ async function loadCenterItems(type) {
     });
 }
 
+// --- ניהול ארוחות (הוספה ועריכה) ---
+async function addCustomPreset() {
+    const name = document.getElementById('new-preset-name').value.trim();
+    const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
+    const category = document.getElementById('new-preset-category').value;
+    if (!name || calories <= 0) return;
+    await supabaseClient.from('meal_presets').insert({ username: currentUsername, meal_category: category, food_name: name, calories: calories });
+    loadMealPresetsToSelects();
+    alert("הארוחה נוספה למאגר בהצלחה!");
+}
+
+async function loadMealPresetsToSelects() {
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('username', currentUsername);
+    if (!data) return;
+    document.querySelectorAll('.preset-select').forEach(select => {
+        const category = select.getAttribute('data-category');
+        select.innerHTML = '<option value="">📋 ארוחה קבועה...</option>';
+        const filtered = data.filter(item => {
+            if (category === 'morning') return item.meal_category === 'morning';
+            if (category === 'snack') return item.meal_category === 'snack';
+            return item.meal_category === 'noon' || item.meal_category === 'evening';
+        });
+        filtered.forEach(preset => {
+            const option = document.createElement('option');
+            option.value = preset.calories;
+            option.textContent = `${preset.food_name} (${preset.calories})`;
+            option.dataset.foodName = preset.food_name;
+            select.appendChild(option);
+        });
+        select.onchange = (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            if (!selectedOption.value) return;
+            const mealRow = e.target.closest('.meal-row');
+            mealRow.querySelector('.food-input').value = selectedOption.dataset.foodName;
+            mealRow.querySelector('.calories-input').value = selectedOption.value;
+        };
+    });
+}
+
+// --- פונקציות המערכת הקיימות ---
 async function processAIRecipe() {
     const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
     if (!input) return;
@@ -188,24 +232,6 @@ async function deleteScheduleSlotFromAdder() { /* ... */ }
 async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
 async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername); buildWeeklyScheduleAccordionUI(); }
 
-async function loadMealPresetsToSelects() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('meal_presets').select('*').eq('username', currentUsername);
-    if (!data) return;
-    document.querySelectorAll('.preset-select').forEach(select => {
-        select.innerHTML = '<option value="">📋 ארוחה קבועה...</option>';
-        data.forEach(p => { const opt = document.createElement('option'); opt.value = p.calories; opt.textContent = `${p.food_name} (${p.calories})`; opt.dataset.foodName = p.food_name; select.appendChild(opt); });
-    });
-}
-
-async function addCustomPreset() {
-    const name = document.getElementById('new-preset-name').value;
-    const cals = document.getElementById('new-preset-calories').value;
-    const cat = document.getElementById('new-preset-category').value;
-    await supabaseClient.from('meal_presets').insert({ username: currentUsername, food_name: name, calories: cals, meal_category: cat });
-    loadMealPresetsToSelects();
-}
-
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', date);
@@ -227,12 +253,12 @@ async function saveNutrition() {
     alert('נשמר!');
 }
 
-async function copyFromYesterday() { /* לוגיקה זהה למקור */ }
-async function loadStats() { /* לוגיקה זהה למקור */ }
+async function copyFromYesterday() { /* ... */ }
+async function loadStats() { /* ... */ }
 async function deleteCenterItem(id, type) { await supabaseClient.from('my_center_tasks').delete().eq('id', id); loadCenterItems(type); }
-async function addProgressTarget() { /* לוגיקה זהה למקור */ }
-async function loadProgressTargets() { /* לוגיקה זהה למקור */ }
-async function changeProgressVal(id, change) { /* לוגיקה זהה למקור */ }
+async function addProgressTarget() { /* ... */ }
+async function loadProgressTargets() { /* ... */ }
+async function changeProgressVal(id, change) { /* ... */ }
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
 function toggleWeightAccordion() { const c = document.getElementById('weight-accordion-content'); c.style.maxHeight = c.style.maxHeight === '250px' ? '0px' : '250px'; }
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: d, weight_value: w }); loadWeightHistory(); }
