@@ -283,18 +283,23 @@ async function saveScheduleSlotFromAdder() {
     const slot = parseInt(document.getElementById('add-slot-num').value);
     const timeVal = document.getElementById('add-slot-time').value.trim();
     const taskVal = document.getElementById('add-slot-task').value.trim();
-    const reminderMinutes = document.getElementById('add-slot-reminder').value;
+    const reminderMinutes = parseInt(document.getElementById('add-slot-reminder').value) || 0;
     const reminderText = document.getElementById('add-slot-reminder-text').value.trim();
-    await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
-    saveReminderSettings(day, slot, reminderMinutes, reminderText, timeVal, taskVal);
+    await supabaseClient.from('weekly_schedule').insert({
+        username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal,
+        reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null,
+        reminder_text: reminderText || null
+    });
     loadWeeklySchedule();
 }
 
 async function deleteScheduleSlotFromAdder() { /* לוגיקה זהה למקור */ }
 
-// --- מערכת תזכורות מקומית (localStorage) עם צליל Web Audio API ---
-// הערה: טבלת weekly_schedule ב-Supabase לא כוללת עמודות לתזכורת, ואין גישת DDL
-// דרך מפתח ה-anon, לכן התזכורות נשמרות מקומית על המכשיר לפי משתמש+יום+משבצת.
+// --- מערכת תזכורות (מסונכרנת דרך Supabase) עם צליל Web Audio API ---
+// הגדרות התזכורת (דקות לפני + טקסט) נשמרות בעמודות reminder_minutes/reminder_text
+// בטבלת weekly_schedule, כך שהן מסונכרנות בין כל המכשירים של המשתמש.
+// "כבר הופעל היום" נשאר מקומי per-device (localStorage לפי מזהה השורה), כי זה
+// רק מונע כפילות הצגה על אותו מכשיר ולא צריך להיות משותף בין מכשירים.
 
 let reminderAudioCtx = null;
 
@@ -325,42 +330,33 @@ function playReminderChime() {
     });
 }
 
-function reminderKey(day, slot) {
-    return `weekwise_reminder_${currentUsername}_${day}_${slot}`;
+function reminderFiredKey(rowId) {
+    return `weekwise_reminder_fired_${rowId}`;
 }
 
-function saveReminderSettings(day, slot, minutesBeforeStr, text, taskTime, taskTitle) {
-    const minutesBefore = parseInt(minutesBeforeStr) || 0;
-    if (minutesBefore <= 0) {
-        localStorage.removeItem(reminderKey(day, slot));
-        return;
-    }
-    localStorage.setItem(reminderKey(day, slot), JSON.stringify({
-        minutesBefore, text, taskTime, taskTitle, lastFiredDate: null
-    }));
-}
-
-function checkReminders() {
-    if (!currentUsername) return;
+async function checkReminders() {
+    if (!supabaseClient || !currentUsername) return;
     const now = new Date();
     const todayDbDay = dbDaysMap[now.getDay()];
     const todayStr = getLocalDateString(now);
-    for (let slot = 1; slot <= 10; slot++) {
-        const raw = localStorage.getItem(reminderKey(todayDbDay, slot));
-        if (!raw) continue;
-        let rem;
-        try { rem = JSON.parse(raw); } catch { continue; }
-        if (!rem.taskTime || rem.lastFiredDate === todayStr) continue;
-        const [h, m] = rem.taskTime.split(':').map(Number);
-        if (isNaN(h) || isNaN(m)) continue;
+    const { data } = await supabaseClient.from('weekly_schedule')
+        .select('id, time_of_day, task_title, reminder_minutes, reminder_text')
+        .eq('username', currentUsername)
+        .eq('day_of_week', todayDbDay)
+        .gt('reminder_minutes', 0);
+    if (!data) return;
+    data.forEach(item => {
+        if (!item.time_of_day) return;
+        if (localStorage.getItem(reminderFiredKey(item.id)) === todayStr) return;
+        const [h, m] = item.time_of_day.split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) return;
         const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-        const triggerDate = new Date(taskDate.getTime() - rem.minutesBefore * 60000);
+        const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
         if (now >= triggerDate && now < taskDate) {
-            fireReminder(rem);
-            rem.lastFiredDate = todayStr;
-            localStorage.setItem(reminderKey(todayDbDay, slot), JSON.stringify(rem));
+            fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
+            localStorage.setItem(reminderFiredKey(item.id), todayStr);
         }
-    }
+    });
 }
 
 function fireReminder(rem) {
