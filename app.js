@@ -57,7 +57,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveDefaultHours();
         closeModal('modal-settings-hours');
     });
+    document.querySelectorAll('.calories-input').forEach(input => {
+        input.addEventListener('input', updateLiveCaloriesToday);
+    });
 });
+
+function updateLiveCaloriesToday() {
+    let total = 0;
+    document.querySelectorAll('.calories-input').forEach(input => {
+        total += parseInt(input.value) || 0;
+    });
+    document.getElementById('calories-today').innerText = total;
+}
 
 // --- הלוגיקה לסימון V מצד ימין ---
 async function toggleTaskStatus(id, currentStatus, type) {
@@ -127,6 +138,7 @@ async function loadMealPresetsToSelects() {
             const mealRow = e.target.closest('.meal-row');
             mealRow.querySelector('.food-input').value = selectedOption.dataset.foodName;
             mealRow.querySelector('.calories-input').value = selectedOption.value;
+            updateLiveCaloriesToday();
         };
     });
 }
@@ -524,9 +536,18 @@ async function saveNutrition() {
     const date = document.getElementById('selected-date').value;
     const mealRows = document.querySelectorAll('.meal-row');
     for (let row of mealRows) {
-        const type = row.getAttribute('data-meal'), food = row.querySelector('.food-input').value, cals = row.querySelector('.calories-input').value;
-        await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals });
+        const type = row.getAttribute('data-meal');
+        const food = row.querySelector('.food-input').value;
+        const cals = parseInt(row.querySelector('.calories-input').value) || 0;
+        const { data: existing } = await supabaseClient.from('calorie_tracker').select('id').eq('user_id', currentUserId).eq('date', date).eq('meal_type', type).maybeSingle();
+        if (existing) {
+            await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals }).eq('id', existing.id);
+        } else {
+            await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals });
+        }
     }
+    await loadDailyNutrition(date);
+    loadStats();
     alert('נשמר!');
 }
 
@@ -545,7 +566,28 @@ async function copyFromYesterday() {
     });
     alert('התפריט שוכפל מהיום הקודם! לחצו "שמור תפריט להיום" כדי לשמור אותו.');
 }
-async function loadStats() { /* לוגיקה זהה למקור */ }
+async function loadStats() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('calorie_tracker').select('date, calories').eq('user_id', currentUserId);
+    if (!data) return;
+
+    const now = new Date();
+    const todayStr = getLocalDateString(now);
+    const sunday = new Date(now); sunday.setDate(now.getDate() - now.getDay());
+    const weekStartStr = getLocalDateString(sunday);
+    const saturday = new Date(sunday); saturday.setDate(sunday.getDate() + 6);
+    const weekEndStr = getLocalDateString(saturday);
+    const monthPrefix = todayStr.slice(0, 7);
+
+    let weekly = 0, monthly = 0;
+    data.forEach(item => {
+        const cals = Number(item.calories) || 0;
+        if (item.date >= weekStartStr && item.date <= weekEndStr) weekly += cals;
+        if (item.date && item.date.startsWith(monthPrefix)) monthly += cals;
+    });
+    document.getElementById('calories-weekly').innerText = weekly;
+    document.getElementById('calories-monthly').innerText = monthly;
+}
 async function deleteCenterItem(id, type) { await supabaseClient.from('my_center_tasks').delete().eq('id', id); loadCenterItems(type); }
 async function addProgressTarget() {
     if (!supabaseClient) return;
