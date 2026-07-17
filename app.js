@@ -205,9 +205,31 @@ function buildWeeklyScheduleAccordionUI() {
         for (let i = 1; i <= 10; i++) {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1]}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button></div>`;
         }
-        itemDiv.innerHTML = `<div class="accordion-header" onclick="toggleAccordion('${dbDay}')"><span>${dateStr} | יום ${dayName}</span><span class="accordion-icon">▼</span></div><div class="accordion-content"><div class="slots-grid">${slotsHTML}</div></div>`;
+        itemDiv.innerHTML = `<div class="accordion-header" onclick="toggleAccordion('${dbDay}')"><span>${dateStr} | יום ${dayName}</span><span class="accordion-icon">▼</span></div><div class="accordion-content"><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="שעה"><input type="text" class="day-add-task-input" placeholder="הוסיפו משימה ליום זה..."><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">➕ הוספה</button></div></div>`;
         container.appendChild(itemDiv);
     });
+}
+
+async function addTaskToDay(day) {
+    const container = document.getElementById(`accordion-${day}`);
+    if (!container) return;
+    const timeInput = container.querySelector('.day-add-time');
+    const taskInput = container.querySelector('.day-add-task-input');
+    const timeVal = timeInput.value.trim();
+    const taskVal = taskInput.value.trim();
+    if (!taskVal) return;
+    const slots = container.querySelectorAll('.slot-input-group');
+    let targetSlot = null;
+    for (const slotEl of slots) {
+        if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
+    }
+    if (!targetSlot) { alert('כל המשבצות ליום זה תפוסות, נקו משבצת קיימת כדי להוסיף עוד.'); return; }
+    const slotNum = targetSlot.getAttribute('data-slot');
+    targetSlot.querySelector('.slot-task').value = taskVal;
+    if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
+    await saveScheduleSlot(day, slotNum);
+    timeInput.value = '';
+    taskInput.value = '';
 }
 
 function toggleAccordion(day) {
@@ -282,7 +304,21 @@ async function saveNutrition() {
     alert('נשמר!');
 }
 
-async function copyFromYesterday() { /* לוגיקה זהה למקור */ }
+async function copyFromYesterday() {
+    if (!supabaseClient) return;
+    const currentDate = document.getElementById('selected-date').value;
+    if (!currentDate) return;
+    const prevDateObj = new Date(`${currentDate}T00:00:00`);
+    prevDateObj.setDate(prevDateObj.getDate() - 1);
+    const prevDate = getLocalDateString(prevDateObj);
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', prevDate);
+    if (!data || data.length === 0) { alert('לא נמצא תפריט שמור מהיום הקודם.'); return; }
+    data.forEach(item => {
+        const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
+        if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; }
+    });
+    alert('התפריט שוכפל מהיום הקודם! לחצו "שמור תפריט להיום" כדי לשמור אותו.');
+}
 async function loadStats() { /* לוגיקה זהה למקור */ }
 async function deleteCenterItem(id, type) { await supabaseClient.from('my_center_tasks').delete().eq('id', id); loadCenterItems(type); }
 async function addProgressTarget() { /* לוגיקה זהה למקור */ }
