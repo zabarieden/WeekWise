@@ -3,9 +3,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
 const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
+let defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
 let currentUsername = '';
+let currentUserId = null;
 let reminderIntervalStarted = false;
+let authMode = 'login';
 
 function initSupabase() {
     if (window.supabase) {
@@ -15,27 +17,26 @@ function initSupabase() {
     return false;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initSupabase();
     initCubesNavigation();
     document.addEventListener('click', unlockReminderAudio, { once: true });
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkReminders();
     });
-    const savedUser = localStorage.getItem('weekwise_user');
-    if (savedUser) {
-        if (!supabaseClient && window.supabase) initSupabase();
-        loginUser(savedUser);
+
+    if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) initAppAfterAuth(session.user);
     }
-    const btnLogin = document.getElementById('btn-login');
-    if (btnLogin) {
-        btnLogin.addEventListener('click', () => {
-            if (!supabaseClient) initSupabase();
-            const usernameVal = document.getElementById('username-input').value.trim();
-            if (usernameVal) loginUser(usernameVal);
-            else alert('אנא הקלידו שם משתמש');
-        });
-    }
+
+    updateAuthUI();
+    document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        authMode = authMode === 'login' ? 'signup' : 'login';
+        updateAuthUI();
+    });
+    document.getElementById('btn-auth-submit').addEventListener('click', submitAuthForm);
     document.getElementById('btn-logout').addEventListener('click', logoutUser);
     document.getElementById('btn-add-preset').addEventListener('click', () => {
         addCustomPreset();
@@ -52,6 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
     document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
+    document.getElementById('btn-save-hours').addEventListener('click', () => {
+        saveDefaultHours();
+        closeModal('modal-settings-hours');
+    });
 });
 
 // --- הלוגיקה לסימון V מצד ימין ---
@@ -67,7 +72,7 @@ function loadAllCenterItems() {
 
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('username', currentUsername).eq('task_type', type).order('created_at', { ascending: true });
+    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('created_at', { ascending: true });
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
     listUl.innerHTML = '';
@@ -92,14 +97,14 @@ async function addCustomPreset() {
     const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
     const category = document.getElementById('new-preset-category').value;
     if (!name || calories <= 0) return;
-    await supabaseClient.from('meal_presets').insert({ username: currentUsername, meal_category: category, food_name: name, calories: calories });
+    await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
     loadMealPresetsToSelects();
     alert("הארוחה נוספה למאגר בהצלחה!");
 }
 
 async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('meal_presets').select('*').eq('username', currentUsername);
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
     if (!data) return;
     document.querySelectorAll('.preset-select').forEach(select => {
         const category = select.getAttribute('data-category');
@@ -139,12 +144,59 @@ async function processAIRecipe() {
     } else { alert("לא זיהיתי את המנה במאגר."); }
 }
 
-async function loginUser(username) {
-    currentUsername = username;
-    localStorage.setItem('weekwise_user', username);
+function updateAuthUI() {
+    const subtitle = document.getElementById('auth-mode-subtitle');
+    const submitBtn = document.getElementById('btn-auth-submit');
+    const toggleText = document.getElementById('auth-toggle-text');
+    const toggleLink = document.getElementById('auth-toggle-link');
+    const messageEl = document.getElementById('auth-message');
+    if (authMode === 'login') {
+        subtitle.textContent = 'התחברו לחשבון שלכם:';
+        submitBtn.textContent = 'התחברו';
+        toggleText.textContent = 'אין לכם חשבון?';
+        toggleLink.textContent = 'הרשמה';
+    } else {
+        subtitle.textContent = 'צרו חשבון חדש:';
+        submitBtn.textContent = 'הרשמה';
+        toggleText.textContent = 'כבר יש לכם חשבון?';
+        toggleLink.textContent = 'התחברות';
+    }
+    messageEl.textContent = '';
+}
+
+async function submitAuthForm() {
+    const email = document.getElementById('auth-email-input').value.trim();
+    const password = document.getElementById('auth-password-input').value;
+    const messageEl = document.getElementById('auth-message');
+    messageEl.textContent = '';
+    if (!email || !password) { messageEl.textContent = 'נא למלא אימייל וסיסמה'; return; }
+    if (!supabaseClient) initSupabase();
+    if (!supabaseClient) { messageEl.textContent = 'שגיאת התחברות לשרת, נסו לרענן את הדף.'; return; }
+
+    if (authMode === 'signup') {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) { messageEl.textContent = error.message; return; }
+        if (data.session) {
+            initAppAfterAuth(data.user);
+        } else {
+            messageEl.style.color = 'var(--accent-green)';
+            messageEl.textContent = 'נרשמתם בהצלחה! בדקו את המייל שלכם לאישור החשבון, ואז התחברו.';
+            authMode = 'login';
+            updateAuthUI();
+        }
+    } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) { messageEl.textContent = 'אימייל או סיסמה שגויים.'; return; }
+        initAppAfterAuth(data.user);
+    }
+}
+
+async function initAppAfterAuth(user) {
+    currentUserId = user.id;
+    currentUsername = user.email;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    
+
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
     const selectedDateInput = document.getElementById('selected-date');
@@ -152,6 +204,7 @@ async function loginUser(username) {
     const weightDateInput = document.getElementById('new-weight-date');
     if(weightDateInput) weightDateInput.value = today;
 
+    loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     await loadWeeklySchedule();
     loadStats();
@@ -166,6 +219,7 @@ async function loginUser(username) {
     // טעינת תזונה להיום אוטומטית (אם קיים)
     if(today) { loadDailyNutrition(today); }
 
+    requestNotificationPermission();
     checkReminders();
     if (!reminderIntervalStarted) {
         reminderIntervalStarted = true;
@@ -173,11 +227,14 @@ async function loginUser(username) {
     }
 }
 
-function logoutUser() { localStorage.removeItem('weekwise_user'); location.reload(); }
+async function logoutUser() {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+    location.reload();
+}
 function openModal(modalId) { document.getElementById(modalId).classList.add('open'); }
 function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
 function openCenterAdder(type) { const text = prompt("הוסיפו משימה:"); if(text) insertCenterItemDirect(type, text); }
-async function insertCenterItemDirect(type, content) { await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, task_type: type, content: content }); loadCenterItems(type); }
+async function insertCenterItemDirect(type, content) { await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content }); loadCenterItems(type); }
 
 function initCubesNavigation() {
     const cubes = document.querySelectorAll('.nav-cube');
@@ -200,6 +257,39 @@ function getFormattedDateForDay(dayIndex) {
     const sundayDate = new Date(current); sundayDate.setDate(current.getDate() - current.getDay());
     const targetDate = new Date(sundayDate); targetDate.setDate(sundayDate.getDate() + dayIndex);
     return `${targetDate.getDate()}.${targetDate.getMonth() + 1}`;
+}
+
+// --- שעות ברירת מחדל מותאמות אישית (נשמר מקומית per-device, זו העדפת תצוגה בלבד) ---
+function defaultHoursKey() {
+    return `weekwise_default_hours_${currentUserId}`;
+}
+
+function loadCustomDefaultHours() {
+    const raw = localStorage.getItem(defaultHoursKey());
+    if (!raw) return;
+    try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length === 10) defaultHours = parsed;
+    } catch {}
+}
+
+function openHoursSettingsModal() {
+    for (let i = 1; i <= 10; i++) {
+        document.getElementById(`settings-hour-${i}`).value = defaultHours[i - 1] || '';
+    }
+    openModal('modal-settings-hours');
+}
+
+function saveDefaultHours() {
+    const newHours = [];
+    for (let i = 1; i <= 10; i++) {
+        const val = document.getElementById(`settings-hour-${i}`).value.trim();
+        newHours.push(val || defaultHours[i - 1] || '');
+    }
+    defaultHours = newHours;
+    localStorage.setItem(defaultHoursKey(), JSON.stringify(newHours));
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
 }
 
 function buildWeeklyScheduleAccordionUI() {
@@ -260,7 +350,12 @@ function toggleCardSection(headerEl) {
 
 async function loadWeeklySchedule() {
     if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('weekly_schedule').select('*').eq('username', currentUsername);
+    document.querySelectorAll('.slot-input-group').forEach(slotEl => {
+        const slotNum = parseInt(slotEl.getAttribute('data-slot'));
+        slotEl.querySelector('.slot-time').value = defaultHours[slotNum - 1] || '';
+        slotEl.querySelector('.slot-task').value = '';
+    });
+    const { data } = await supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId);
     if (!data) return;
     data.forEach(item => {
         const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
@@ -273,9 +368,9 @@ async function saveScheduleSlot(day, slot) {
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     const timeVal = slotEl.querySelector('.slot-time').value;
     const taskVal = slotEl.querySelector('.slot-task').value.trim();
-    const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
+    const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
     if (existing) await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
-    else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
+    else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
 }
 
 async function saveScheduleSlotFromAdder() {
@@ -285,15 +380,23 @@ async function saveScheduleSlotFromAdder() {
     const taskVal = document.getElementById('add-slot-task').value.trim();
     const reminderMinutes = parseInt(document.getElementById('add-slot-reminder').value) || 0;
     const reminderText = document.getElementById('add-slot-reminder-text').value.trim();
-    await supabaseClient.from('weekly_schedule').insert({
-        username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal,
+    const payload = {
+        time_of_day: timeVal,
+        task_title: taskVal,
         reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null,
         reminder_text: reminderText || null
-    });
+    };
+    const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
+    if (existing) await supabaseClient.from('weekly_schedule').update(payload).eq('id', existing.id);
+    else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, ...payload });
     loadWeeklySchedule();
 }
 
-async function deleteScheduleSlotFromAdder() { /* לוגיקה זהה למקור */ }
+async function deleteScheduleSlotFromAdder() {
+    const day = document.getElementById('add-slot-day').value;
+    const slot = parseInt(document.getElementById('add-slot-num').value);
+    await clearSingleSlot(day, slot);
+}
 
 // --- מערכת תזכורות (מסונכרנת דרך Supabase) עם צליל Web Audio API ---
 // הגדרות התזכורת (דקות לפני + טקסט) נשמרות בעמודות reminder_minutes/reminder_text
@@ -335,13 +438,13 @@ function reminderFiredKey(rowId) {
 }
 
 async function checkReminders() {
-    if (!supabaseClient || !currentUsername) return;
+    if (!supabaseClient || !currentUserId) return;
     const now = new Date();
     const todayDbDay = dbDaysMap[now.getDay()];
     const todayStr = getLocalDateString(now);
     const { data } = await supabaseClient.from('weekly_schedule')
         .select('id, time_of_day, task_title, reminder_minutes, reminder_text')
-        .eq('username', currentUsername)
+        .eq('user_id', currentUserId)
         .eq('day_of_week', todayDbDay)
         .gt('reminder_minutes', 0);
     if (!data) return;
@@ -362,6 +465,24 @@ async function checkReminders() {
 function fireReminder(rem) {
     playReminderChime();
     showReminderToast(rem.taskTitle, rem.text);
+    showBrowserNotification(rem.taskTitle, rem.text);
+}
+
+function requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function showBrowserNotification(taskTitle, text) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const notification = new Notification(`⏰ תזכורת: ${taskTitle || 'משימה'}`, {
+        body: text || 'הגיע הזמן למשימה שלך!',
+        icon: 'icon.png',
+        tag: `weekwise-reminder-${taskTitle}`
+    });
+    notification.onclick = () => { window.focus(); notification.close(); };
 }
 
 let reminderToastTimeout = null;
@@ -379,8 +500,8 @@ function dismissReminderToast() {
     const toast = document.getElementById('reminder-toast');
     if (toast) toast.classList.remove('show');
 }
-async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
-async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername); buildWeeklyScheduleAccordionUI(); }
+async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
+async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); }
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
@@ -389,7 +510,7 @@ async function loadDailyNutrition(date) {
         row.querySelector('.calories-input').value = '';
     });
     document.getElementById('calories-today').innerText = '0';
-    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', date);
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', date);
     if (!data) return;
     let total = 0;
     data.forEach(item => {
@@ -404,7 +525,7 @@ async function saveNutrition() {
     const mealRows = document.querySelectorAll('.meal-row');
     for (let row of mealRows) {
         const type = row.getAttribute('data-meal'), food = row.querySelector('.food-input').value, cals = row.querySelector('.calories-input').value;
-        await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, date: date, meal_type: type, food_description: food, calories: cals });
+        await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals });
     }
     alert('נשמר!');
 }
@@ -416,7 +537,7 @@ async function copyFromYesterday() {
     const prevDateObj = new Date(`${currentDate}T00:00:00`);
     prevDateObj.setDate(prevDateObj.getDate() - 1);
     const prevDate = getLocalDateString(prevDateObj);
-    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('username', currentUsername).eq('date', prevDate);
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', prevDate);
     if (!data || data.length === 0) { alert('לא נמצא תפריט שמור מהיום הקודם.'); return; }
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
@@ -433,7 +554,7 @@ async function addProgressTarget() {
     const name = nameInput.value.trim();
     const target = parseInt(targetInput.value) || 0;
     if (!name || target <= 0) return;
-    await supabaseClient.from('weekly_progress_targets').insert({ username: currentUsername, target_name: name, target_val: target, current_val: 0 });
+    await supabaseClient.from('weekly_progress_targets').insert({ username: currentUsername, user_id: currentUserId, target_name: name, target_val: target, current_val: 0 });
     nameInput.value = '';
     targetInput.value = '';
     loadProgressTargets();
@@ -441,7 +562,7 @@ async function addProgressTarget() {
 
 async function loadProgressTargets() {
     if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('weekly_progress_targets').select('*').eq('username', currentUsername).order('created_at', { ascending: true });
+    const { data } = await supabaseClient.from('weekly_progress_targets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
     if (!data) return;
     const container = document.getElementById('progress-container');
     container.innerHTML = '';
@@ -476,6 +597,6 @@ async function changeProgressVal(id, change) {
     loadProgressTargets();
 }
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
-async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, weight_date: d, weight_value: w }); loadWeightHistory(); }
-async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('username', currentUsername).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
+async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w }); loadWeightHistory(); }
+async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }

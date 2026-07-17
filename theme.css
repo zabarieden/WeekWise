@@ -241,6 +241,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .modal-header-bar { display: flex; justify-content: center; padding: 5px 0 12px 0; }
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
+.modal-subtitle { margin: -8px 0 14px 0; font-size: 0.75rem; color: var(--text-secondary); text-align: center; }
+.hours-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
 .schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 .reminder-fields-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -263,6 +266,14 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .apple-modal.open .modal-sheet { transform: translateY(0); }
 .login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.login-card p { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 14px 0; }
+.login-card input { display: block; width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; direction: ltr; }
+.login-card input:focus { border-color: var(--accent-purple); }
+.login-card .btn-primary { margin-top: 4px; }
+.auth-message { min-height: 1.1em; color: var(--accent-pink); font-size: 0.8rem !important; margin: 0 0 8px 0 !important; }
+.auth-toggle-line { margin: 16px 0 0 0 !important; font-size: 0.8rem !important; }
+.auth-toggle-line a { color: var(--accent-purple-light); font-weight: 600; text-decoration: none; margin-right: 4px; }
+.auth-toggle-line a:hover { text-decoration: underline; }
 input[type="date"] {
     background: rgba(0, 0, 0, 0.3) !important;
     color: var(--accent-purple-light) !important;

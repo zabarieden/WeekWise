@@ -29,13 +29,19 @@
         <div class="ambient-glow glow-pink"></div>
         <div class="ambient-glow glow-purple"></div>
 
-        <!-- מסך כניסה למערכת -->
+        <!-- מסך כניסה למערכת: התחברות/הרשמה עם Supabase Auth -->
         <div id="login-overlay" class="login-overlay">
             <div class="login-card">
                 <h2>⚡ השבוע שלי</h2>
-                <p>הקלידו שם משתמש לכניסה:</p>
-                <input type="text" id="username-input" placeholder="שם משתמש" autofocus>
-                <button id="btn-login" class="btn-primary">היכנסו</button>
+                <p id="auth-mode-subtitle">התחברו לחשבון שלכם:</p>
+                <input type="email" id="auth-email-input" placeholder="אימייל" autocomplete="email" autofocus>
+                <input type="password" id="auth-password-input" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="current-password">
+                <p id="auth-message" class="auth-message"></p>
+                <button id="btn-auth-submit" class="btn-primary">התחברו</button>
+                <p class="auth-toggle-line">
+                    <span id="auth-toggle-text">אין לכם חשבון?</span>
+                    <a href="#" id="auth-toggle-link">הרשמה</a>
+                </p>
             </div>
         </div>
 
@@ -66,6 +72,7 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>השבוע שלי</h2>
                             <div class="card-header-actions">
+                                <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" title="התאמת שעות ברירת מחדל">⚙️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
@@ -268,6 +275,31 @@
                 <div class="reminder-toast-text"></div>
             </div>
             <button class="reminder-toast-close" onclick="dismissReminderToast()">✕</button>
+        </div>
+
+        <!-- חלון צף: התאמת שעות ברירת מחדל ללוח הזמנים -->
+        <div id="modal-settings-hours" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>שעות ברירת מחדל ללוח הזמנים</h3>
+                <p class="modal-subtitle">כך יראו המשבצות הריקות בכל יום. אפשר תמיד לשנות שעה בודדת ישירות בלוח.</p>
+                <div class="hours-settings-grid">
+                    <input type="text" id="settings-hour-1" class="hours-input" placeholder="#1">
+                    <input type="text" id="settings-hour-2" class="hours-input" placeholder="#2">
+                    <input type="text" id="settings-hour-3" class="hours-input" placeholder="#3">
+                    <input type="text" id="settings-hour-4" class="hours-input" placeholder="#4">
+                    <input type="text" id="settings-hour-5" class="hours-input" placeholder="#5">
+                    <input type="text" id="settings-hour-6" class="hours-input" placeholder="#6">
+                    <input type="text" id="settings-hour-7" class="hours-input" placeholder="#7">
+                    <input type="text" id="settings-hour-8" class="hours-input" placeholder="#8">
+                    <input type="text" id="settings-hour-9" class="hours-input" placeholder="#9">
+                    <input type="text" id="settings-hour-10" class="hours-input" placeholder="#10">
+                </div>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button id="btn-save-hours" class="btn-primary">שמירת ברירת המחדל</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-settings-hours')">ביטול</button>
+                </div>
+            </div>
         </div>
 
         <!-- חלון צף: הוספת ארוחה קבועה למאגר -->
