@@ -168,6 +168,8 @@ z-index: 10;
 .monthly .stat-number { color: var(--text-primary); }
 .weight-inputs-wrap { display: flex; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1; }
+/* תיקון מעקב משקל - הוספנו גובה מוגבל וגלילה */
+#weight-accordion-content { max-height: 250px !important; overflow-y: auto !important; padding: 10px; z-index: 10; position: relative; }
 .my-center-grid { display: flex; flex-direction: column; gap: 12px; }
 .important-card { border: 1px solid rgba(255, 0, 127, 0.25) !important; background-color: rgba(255, 0, 127, 0.02) !important; }
 .important-card h2 { color: var(--accent-pink); }
@@ -192,6 +194,8 @@ border-bottom: 1px solid rgba(255, 0, 127, 0.25);
 }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
+/* כפתור V חדש */
+.btn-complete-item { background: transparent; color: var(--accent-green); border: none; cursor: pointer; font-size: 1rem; margin-left: 5px; z-index: 10; }
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
 .progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
 .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 6px; }
@@ -218,6 +222,16 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .apple-modal.open .modal-sheet { transform: translateY(0); }
 .login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+/* תיקון צבע תאריך */
+input[type="date"] {
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: var(--accent-purple-light) !important;
+    border: 1px solid var(--accent-purple) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    font-weight: bold !important;
+    width: 100% !important;
+}
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
