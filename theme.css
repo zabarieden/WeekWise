@@ -153,7 +153,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
 .accordion-item.active .accordion-content { max-height: 2000px; padding: 10px; }
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }
-.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); }
+.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease; }
+.slot-input-group.just-added { background-color: rgba(0, 230, 118, 0.15); box-shadow: 0 0 0 1px var(--accent-green); }
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
 .slot-input-group.task-purple { border-right: 3px solid var(--accent-purple); }
 .slot-num-label { font-size: 0.7rem; color: var(--text-secondary); }

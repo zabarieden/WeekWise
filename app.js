@@ -227,6 +227,9 @@ async function addTaskToDay(day) {
     const slotNum = targetSlot.getAttribute('data-slot');
     targetSlot.querySelector('.slot-task').value = taskVal;
     if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
+    targetSlot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetSlot.classList.add('just-added');
+    setTimeout(() => targetSlot.classList.remove('just-added'), 1200);
     await saveScheduleSlot(day, slotNum);
     timeInput.value = '';
     taskInput.value = '';
