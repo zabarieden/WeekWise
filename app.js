@@ -399,7 +399,13 @@ async function loadCenterItems(type) {
     listUl.innerHTML = '';
     data.forEach(item => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${item.content}</span><button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>`;
+        li.innerHTML = `
+            <span>${item.content}</span>
+            <div class="task-actions">
+                <button class="btn-complete-item" onclick="alert('בוצע!')">✓</button>
+                <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
+            </div>
+        `;
         listUl.appendChild(li);
     });
 }
@@ -467,13 +473,8 @@ async function deleteProgressTarget(id) {
 function toggleWeightAccordion() {
     const content = document.getElementById('weight-accordion-content');
     const icon = document.getElementById('weight-icon');
-    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { 
-        content.style.maxHeight = '400px'; 
-        icon.style.transform = 'rotate(180deg)'; 
-    } else { 
-        content.style.maxHeight = '0px'; 
-        icon.style.transform = 'rotate(0deg)'; 
-    }
+    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { content.style.maxHeight = '400px'; icon.style.transform = 'rotate(180deg)'; }
+    else { content.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; }
 }
 
 async function saveNewWeightRecord() {
