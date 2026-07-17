@@ -49,6 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
 });
 
+// פונקציית עזר להעברת משימה להיסטוריה (ה-V)
+async function completeTask(id, content, type) {
+    if (!supabaseClient) return;
+    // מוסיף לטבלה החדשה שיצרת
+    await supabaseClient.from('completed_tasks').insert({
+        username: currentUsername,
+        content: content
+    });
+    // מוחק מהטבלה הפעילה
+    await deleteCenterItem(id, type);
+}
+
 async function processAIRecipe() {
     const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
     if (!input) return;
@@ -402,7 +414,7 @@ async function loadCenterItems(type) {
         li.innerHTML = `
             <span>${item.content}</span>
             <div class="task-actions">
-                <button class="btn-complete-item" onclick="alert('בוצע!')">✓</button>
+                <button class="btn-complete-item" onclick="completeTask('${item.id}', '${item.content}', '${type}')">✓</button>
                 <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
             </div>
         `;
@@ -473,8 +485,13 @@ async function deleteProgressTarget(id) {
 function toggleWeightAccordion() {
     const content = document.getElementById('weight-accordion-content');
     const icon = document.getElementById('weight-icon');
-    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { content.style.maxHeight = '400px'; icon.style.transform = 'rotate(180deg)'; }
-    else { content.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; }
+    if (content.style.maxHeight === '0px' || content.style.maxHeight === '') { 
+        content.style.maxHeight = '400px'; 
+        icon.style.transform = 'rotate(180deg)'; 
+    } else { 
+        content.style.maxHeight = '0px'; 
+        icon.style.transform = 'rotate(0deg)'; 
+    }
 }
 
 async function saveNewWeightRecord() {
