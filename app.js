@@ -20,7 +20,7 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', async () => {
     initSupabase();
     initCubesNavigation();
-    document.addEventListener('click', unlockReminderAudio, { once: true });
+    document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkReminders();
     });
@@ -60,7 +60,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.calories-input').forEach(input => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
+    document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
+    document.getElementById('center-item-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitCenterItem();
+    });
 });
+
+// --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---
+let appToastTimeout = null;
+function showAppToast(message, type = 'success') {
+    const toast = document.getElementById('app-toast');
+    if (!toast) return;
+    const icon = document.getElementById('app-toast-icon');
+    toast.classList.remove('error');
+    if (type === 'error') { toast.classList.add('error'); icon.textContent = '⚠️'; }
+    else { icon.textContent = '✅'; }
+    document.getElementById('app-toast-text').textContent = message;
+    toast.classList.add('show');
+    clearTimeout(appToastTimeout);
+    appToastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+}
 
 function updateLiveCaloriesToday() {
     let total = 0;
@@ -103,14 +122,74 @@ async function loadCenterItems(type) {
 }
 
 // --- ניהול ארוחות (מוטמע מחדש במלואו) ---
+let editingPresetId = null;
+let cachedPresets = [];
+
 async function addCustomPreset() {
-    const name = document.getElementById('new-preset-name').value.trim();
-    const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
+    const nameInput = document.getElementById('new-preset-name');
+    const caloriesInput = document.getElementById('new-preset-calories');
+    const name = nameInput.value.trim();
+    const calories = parseInt(caloriesInput.value) || 0;
     const category = document.getElementById('new-preset-category').value;
     if (!name || calories <= 0) return;
-    await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
+
+    if (editingPresetId) {
+        await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories }).eq('id', editingPresetId);
+        showAppToast('הארוחה עודכנה בהצלחה!');
+        cancelPresetEdit();
+    } else {
+        await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
+        showAppToast('הארוחה נוספה למאגר בהצלחה!');
+    }
+    nameInput.value = '';
+    caloriesInput.value = '';
     loadMealPresetsToSelects();
-    alert("הארוחה נוספה למאגר בהצלחה!");
+    loadPresetManageList();
+}
+
+function editPreset(id) {
+    const preset = cachedPresets.find(p => p.id === id);
+    if (!preset) return;
+    editingPresetId = id;
+    document.getElementById('new-preset-name').value = preset.food_name;
+    document.getElementById('new-preset-calories').value = preset.calories;
+    document.getElementById('new-preset-category').value = preset.meal_category;
+    document.getElementById('btn-add-preset').textContent = '💾 עדכון ארוחה';
+}
+
+function cancelPresetEdit() {
+    editingPresetId = null;
+    document.getElementById('new-preset-name').value = '';
+    document.getElementById('new-preset-calories').value = '';
+    document.getElementById('btn-add-preset').textContent = 'הוסף למאגר';
+}
+
+async function deletePreset(id) {
+    await supabaseClient.from('meal_presets').delete().eq('id', id);
+    if (editingPresetId === id) cancelPresetEdit();
+    loadMealPresetsToSelects();
+    loadPresetManageList();
+    showAppToast('הארוחה נמחקה מהמאגר.');
+}
+
+async function loadPresetManageList() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+    cachedPresets = data || [];
+    const list = document.getElementById('preset-manage-list');
+    if (!list) return;
+    list.innerHTML = '';
+    cachedPresets.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
+            <div class="preset-manage-actions">
+                <button class="btn-edit-item" onclick="editPreset('${item.id}')">✏️</button>
+                <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
+            </div>
+        `;
+        list.appendChild(li);
+    });
 }
 
 async function loadMealPresetsToSelects() {
@@ -153,7 +232,7 @@ async function processAIRecipe() {
     if (targetMeal && foodName) {
         const mealRow = document.querySelector(`[data-meal="${targetMeal}"]`);
         if (mealRow) { mealRow.querySelector('.food-input').value = foodName; mealRow.querySelector('.calories-input').value = calories; document.getElementById('ai-nutrition-prompt').value = ""; }
-    } else { alert("לא זיהיתי את המנה במאגר."); }
+    } else { showAppToast('לא זיהיתי את המנה במאגר.', 'error'); }
 }
 
 function updateAuthUI() {
@@ -245,7 +324,24 @@ async function logoutUser() {
 }
 function openModal(modalId) { document.getElementById(modalId).classList.add('open'); }
 function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
-function openCenterAdder(type) { const text = prompt("הוסיפו משימה:"); if(text) insertCenterItemDirect(type, text); }
+let pendingCenterItemType = null;
+function openCenterAdder(type) {
+    pendingCenterItemType = type;
+    const input = document.getElementById('center-item-input');
+    input.value = '';
+    openModal('modal-add-center-item');
+    setTimeout(() => input.focus(), 150);
+}
+
+function submitCenterItem() {
+    const input = document.getElementById('center-item-input');
+    const text = input.value.trim();
+    closeModal('modal-add-center-item');
+    if (!text || !pendingCenterItemType) return;
+    insertCenterItemDirect(pendingCenterItemType, text);
+    pendingCenterItemType = null;
+}
+
 async function insertCenterItemDirect(type, content) { await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content }); loadCenterItems(type); }
 
 function initCubesNavigation() {
@@ -336,7 +432,7 @@ async function addTaskToDay(day) {
     for (const slotEl of slots) {
         if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
     }
-    if (!targetSlot) { alert('כל המשבצות ליום זה תפוסות, נקו משבצת קיימת כדי להוסיף עוד.'); return; }
+    if (!targetSlot) { showAppToast('כל המשבצות ליום זה תפוסות, נקו משבצת קיימת כדי להוסיף עוד.', 'error'); return; }
     const slotNum = targetSlot.getAttribute('data-slot');
     targetSlot.querySelector('.slot-task').value = taskVal;
     if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
@@ -426,8 +522,13 @@ function unlockReminderAudio() {
     if (reminderAudioCtx && reminderAudioCtx.state === 'suspended') reminderAudioCtx.resume();
 }
 
-function playReminderChime() {
+async function playReminderChime() {
+    unlockReminderAudio();
     if (!reminderAudioCtx) return;
+    if (reminderAudioCtx.state === 'suspended') {
+        try { await reminderAudioCtx.resume(); } catch (e) { /* still locked without a fresh gesture, nothing more we can do here */ }
+    }
+    if (reminderAudioCtx.state !== 'running') return;
     const now = reminderAudioCtx.currentTime;
     const notes = [523.25, 659.25, 783.99]; // דו-מי-סול: אקורד עולה נעים
     notes.forEach((freq, i) => {
@@ -443,6 +544,11 @@ function playReminderChime() {
         osc.start(start);
         osc.stop(start + 0.7);
     });
+}
+
+function testReminderChime() {
+    playReminderChime();
+    showAppToast('🔊 מנגן צליל בדיקה...');
 }
 
 function reminderFiredKey(rowId) {
@@ -467,7 +573,9 @@ async function checkReminders() {
         if (isNaN(h) || isNaN(m)) return;
         const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
         const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
-        if (now >= triggerDate && now < taskDate) {
+        // בכוונה בלי חסם עליון: אם האפליקציה הייתה סגורה/ברקע כשהגיע הזמן, עדיף
+        // להציג את התזכורת באיחור (פעם אחת בלבד, בזכות reminderFiredKey) מאשר לפספס אותה.
+        if (now >= triggerDate) {
             fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
             localStorage.setItem(reminderFiredKey(item.id), todayStr);
         }
@@ -548,7 +656,7 @@ async function saveNutrition() {
     }
     await loadDailyNutrition(date);
     loadStats();
-    alert('נשמר!');
+    showAppToast('נשמר בהצלחה!');
 }
 
 async function copyFromYesterday() {
@@ -559,12 +667,13 @@ async function copyFromYesterday() {
     prevDateObj.setDate(prevDateObj.getDate() - 1);
     const prevDate = getLocalDateString(prevDateObj);
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', prevDate);
-    if (!data || data.length === 0) { alert('לא נמצא תפריט שמור מהיום הקודם.'); return; }
+    if (!data || data.length === 0) { showAppToast('לא נמצא תפריט שמור מהיום הקודם.', 'error'); return; }
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
         if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; }
     });
-    alert('התפריט שוכפל מהיום הקודם! לחצו "שמור תפריט להיום" כדי לשמור אותו.');
+    updateLiveCaloriesToday();
+    showAppToast('התפריט שוכפל מהיום הקודם! לחצו "שמור תפריט להיום" כדי לשמור.');
 }
 async function loadStats() {
     if (!supabaseClient || !currentUserId) return;

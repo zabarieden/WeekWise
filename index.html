@@ -92,7 +92,7 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>מעקב ארוחות יומי</h2>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset')">＋</button>
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset'); loadPresetManageList();">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -257,6 +257,7 @@
                             <option value="15">🔔 15 דקות לפני</option>
                         </select>
                         <input type="text" id="add-slot-reminder-text" placeholder="טקסט תזכורת מותאם אישית (אופציונלי)">
+                        <button type="button" class="btn-test-chime" onclick="testReminderChime()">🔊 בדיקת צליל</button>
                     </div>
                     <div class="action-buttons-wrap">
                         <button id="btn-save-new-slot" class="btn-primary">שמור</button>
@@ -275,6 +276,27 @@
                 <div class="reminder-toast-text"></div>
             </div>
             <button class="reminder-toast-close" onclick="dismissReminderToast()">✕</button>
+        </div>
+
+        <!-- הודעת מערכת כללית ויפה, במקום alert() הדפדפן -->
+        <div id="app-toast" class="app-toast">
+            <span id="app-toast-icon">✅</span>
+            <span id="app-toast-text"></span>
+        </div>
+
+        <!-- חלון צף: הוספת פריט לרשימות (משימות/מטרות), במקום prompt() הדפדפן -->
+        <div id="modal-add-center-item" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>הוספת פריט</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="center-item-input" placeholder="הקלידו כאן...">
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-center-item" class="btn-primary">הוספה</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-center-item')">ביטול</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- חלון צף: התאמת שעות ברירת מחדל ללוח הזמנים -->
@@ -315,9 +337,11 @@
                     </select>
                     <div class="action-buttons-wrap">
                         <button id="btn-add-preset" class="btn-primary">הוסף למאגר</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-preset')">ביטול</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-preset'); cancelPresetEdit();">ביטול</button>
                     </div>
                 </div>
+                <h3 class="preset-manage-title">ניהול ארוחות קבועות</h3>
+                <ul id="preset-manage-list" class="center-list preset-manage-list"></ul>
             </div>
         </div>
 
