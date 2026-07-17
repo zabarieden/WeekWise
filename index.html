@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>השבוע שלי</title>
+
+    <!-- PWA: הפיכת האתר לאפליקציה שניתן להתקין ממסך הבית -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="theme-color" content="#07060a">
+    <!-- iOS מתעלם מה-manifest לצורך מצב מסך מלא, וצריך את התגיות הבאות בנפרד -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="השבוע שלי">
+
     <!-- חיבור לקובץ עיצוב מעודכן -->
     <link rel="stylesheet" href="theme.css?v=19">
     <!-- חיבור ל-Supabase -->
