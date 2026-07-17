@@ -56,6 +56,10 @@ async function toggleTaskStatus(id, currentStatus, type) {
     loadCenterItems(type);
 }
 
+function loadAllCenterItems() {
+    ['important', 'weekly', 'general'].forEach(type => loadCenterItems(type));
+}
+
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('username', currentUsername).eq('task_type', type).order('created_at', { ascending: true });
