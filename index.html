@@ -242,6 +242,15 @@
                             <label class="color-radio"><input type="radio" name="slot-color" value="purple"><span class="radio-custom">📚 רגוע</span></label>
                         </div>
                     </div>
+                    <div class="reminder-fields-wrap">
+                        <select id="add-slot-reminder">
+                            <option value="0">🔕 ללא תזכורת</option>
+                            <option value="5">🔔 5 דקות לפני</option>
+                            <option value="10">🔔 10 דקות לפני</option>
+                            <option value="15">🔔 15 דקות לפני</option>
+                        </select>
+                        <input type="text" id="add-slot-reminder-text" placeholder="טקסט תזכורת מותאם אישית (אופציונלי)">
+                    </div>
                     <div class="action-buttons-wrap">
                         <button id="btn-save-new-slot" class="btn-primary">שמור</button>
                         <button id="btn-delete-slot-specific" class="btn-clear-specific">נקה</button>
@@ -249,6 +258,16 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- באנר תזכורת נקי, מוצג מעל הכל כשמגיע זמן ההתראה -->
+        <div id="reminder-toast" class="reminder-toast">
+            <div class="reminder-toast-icon">⏰</div>
+            <div class="reminder-toast-body">
+                <div class="reminder-toast-title"></div>
+                <div class="reminder-toast-text"></div>
+            </div>
+            <button class="reminder-toast-close" onclick="dismissReminderToast()">✕</button>
         </div>
 
         <!-- חלון צף: הוספת ארוחה קבועה למאגר -->

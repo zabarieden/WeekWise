@@ -5,6 +5,7 @@ const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמי�
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
 let currentUsername = '';
+let reminderIntervalStarted = false;
 
 function initSupabase() {
     if (window.supabase) {
@@ -17,6 +18,10 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
     initCubesNavigation();
+    document.addEventListener('click', unlockReminderAudio, { once: true });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkReminders();
+    });
     const savedUser = localStorage.getItem('weekwise_user');
     if (savedUser) {
         if (!supabaseClient && window.supabase) initSupabase();
@@ -160,6 +165,12 @@ async function loginUser(username) {
 
     // טעינת תזונה להיום אוטומטית (אם קיים)
     if(today) { loadDailyNutrition(today); }
+
+    checkReminders();
+    if (!reminderIntervalStarted) {
+        reminderIntervalStarted = true;
+        setInterval(checkReminders, 20000);
+    }
 }
 
 function logoutUser() { localStorage.removeItem('weekwise_user'); location.reload(); }
@@ -272,11 +283,106 @@ async function saveScheduleSlotFromAdder() {
     const slot = parseInt(document.getElementById('add-slot-num').value);
     const timeVal = document.getElementById('add-slot-time').value.trim();
     const taskVal = document.getElementById('add-slot-task').value.trim();
+    const reminderMinutes = document.getElementById('add-slot-reminder').value;
+    const reminderText = document.getElementById('add-slot-reminder-text').value.trim();
     await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
+    saveReminderSettings(day, slot, reminderMinutes, reminderText, timeVal, taskVal);
     loadWeeklySchedule();
 }
 
 async function deleteScheduleSlotFromAdder() { /* לוגיקה זהה למקור */ }
+
+// --- מערכת תזכורות מקומית (localStorage) עם צליל Web Audio API ---
+// הערה: טבלת weekly_schedule ב-Supabase לא כוללת עמודות לתזכורת, ואין גישת DDL
+// דרך מפתח ה-anon, לכן התזכורות נשמרות מקומית על המכשיר לפי משתמש+יום+משבצת.
+
+let reminderAudioCtx = null;
+
+function unlockReminderAudio() {
+    if (!reminderAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) reminderAudioCtx = new AudioCtx();
+    }
+    if (reminderAudioCtx && reminderAudioCtx.state === 'suspended') reminderAudioCtx.resume();
+}
+
+function playReminderChime() {
+    if (!reminderAudioCtx) return;
+    const now = reminderAudioCtx.currentTime;
+    const notes = [523.25, 659.25, 783.99]; // דו-מי-סול: אקורד עולה נעים
+    notes.forEach((freq, i) => {
+        const osc = reminderAudioCtx.createOscillator();
+        const gain = reminderAudioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = now + i * 0.16;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.22, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.65);
+        osc.connect(gain).connect(reminderAudioCtx.destination);
+        osc.start(start);
+        osc.stop(start + 0.7);
+    });
+}
+
+function reminderKey(day, slot) {
+    return `weekwise_reminder_${currentUsername}_${day}_${slot}`;
+}
+
+function saveReminderSettings(day, slot, minutesBeforeStr, text, taskTime, taskTitle) {
+    const minutesBefore = parseInt(minutesBeforeStr) || 0;
+    if (minutesBefore <= 0) {
+        localStorage.removeItem(reminderKey(day, slot));
+        return;
+    }
+    localStorage.setItem(reminderKey(day, slot), JSON.stringify({
+        minutesBefore, text, taskTime, taskTitle, lastFiredDate: null
+    }));
+}
+
+function checkReminders() {
+    if (!currentUsername) return;
+    const now = new Date();
+    const todayDbDay = dbDaysMap[now.getDay()];
+    const todayStr = getLocalDateString(now);
+    for (let slot = 1; slot <= 10; slot++) {
+        const raw = localStorage.getItem(reminderKey(todayDbDay, slot));
+        if (!raw) continue;
+        let rem;
+        try { rem = JSON.parse(raw); } catch { continue; }
+        if (!rem.taskTime || rem.lastFiredDate === todayStr) continue;
+        const [h, m] = rem.taskTime.split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) continue;
+        const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+        const triggerDate = new Date(taskDate.getTime() - rem.minutesBefore * 60000);
+        if (now >= triggerDate && now < taskDate) {
+            fireReminder(rem);
+            rem.lastFiredDate = todayStr;
+            localStorage.setItem(reminderKey(todayDbDay, slot), JSON.stringify(rem));
+        }
+    }
+}
+
+function fireReminder(rem) {
+    playReminderChime();
+    showReminderToast(rem.taskTitle, rem.text);
+}
+
+let reminderToastTimeout = null;
+function showReminderToast(taskTitle, text) {
+    const toast = document.getElementById('reminder-toast');
+    if (!toast) return;
+    toast.querySelector('.reminder-toast-title').textContent = `⏰ תזכורת: ${taskTitle || 'משימה'}`;
+    toast.querySelector('.reminder-toast-text').textContent = text || 'הגיע הזמן למשימה שלך!';
+    toast.classList.add('show');
+    clearTimeout(reminderToastTimeout);
+    reminderToastTimeout = setTimeout(dismissReminderToast, 8000);
+}
+
+function dismissReminderToast() {
+    const toast = document.getElementById('reminder-toast');
+    if (toast) toast.classList.remove('show');
+}
 async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
 async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('username', currentUsername); buildWeeklyScheduleAccordionUI(); }
 

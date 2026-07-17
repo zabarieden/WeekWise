@@ -243,6 +243,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
 .schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.reminder-fields-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+.reminder-fields-wrap select { flex: 1 1 140px; min-width: 0; box-sizing: border-box; }
+.reminder-fields-wrap input { flex: 2 1 200px; min-width: 0; box-sizing: border-box; }
+
+.reminder-toast { position: absolute; top: -140px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(255,0,127,0.18), rgba(168,85,247,0.18)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,0,127,0.35); border-radius: 16px; padding: 14px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 4000; transition: top 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
+.reminder-toast.show { top: 16px; }
+.reminder-toast-icon { font-size: 1.4rem; line-height: 1; }
+.reminder-toast-body { flex: 1; min-width: 0; }
+.reminder-toast-title { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 2px; }
+.reminder-toast-text { font-size: 0.8rem; color: var(--text-secondary); word-break: break-word; }
+.reminder-toast-close { background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; padding: 2px; flex-shrink: 0; }
 .action-buttons-wrap { display: flex; gap: 8px; }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; z-index: 10;}
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }
