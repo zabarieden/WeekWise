@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
 });
 
-// --- הלוגיקה החדשה לסימון V מצד ימין (קוביית סימון) ---
 async function toggleTaskStatus(id, currentStatus, type) {
     if (!supabaseClient) return;
     await supabaseClient.from('my_center_tasks').update({ is_completed: !currentStatus }).eq('id', id);
@@ -64,16 +63,13 @@ async function loadCenterItems(type) {
     listUl.innerHTML = '';
     data.forEach(item => {
         const li = document.createElement('li');
-        li.style.display = "flex";
-        li.style.justifyContent = "space-between";
-        li.style.alignItems = "center";
         li.innerHTML = `
-            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1;">
+            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1; text-align: right;">
                 ${item.content}
             </span>
             <div class="task-actions" style="display: flex; gap: 8px;">
-                <button class="btn-complete-item" style="width: 30px; height: 30px; cursor: pointer; border: 1px solid var(--accent-green); background: transparent; color: var(--accent-green);" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
-                    ${item.is_completed ? '🔄' : '✓'}
+                <button class="btn-complete-item" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
+                    ${item.is_completed ? '✓' : ''}
                 </button>
                 <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
             </div>
@@ -82,7 +78,6 @@ async function loadCenterItems(type) {
     });
 }
 
-// --- ניהול ארוחות (הוספה ועריכה) ---
 async function addCustomPreset() {
     const name = document.getElementById('new-preset-name').value.trim();
     const calories = parseInt(document.getElementById('new-preset-calories').value) || 0;
@@ -122,7 +117,6 @@ async function loadMealPresetsToSelects() {
     });
 }
 
-// --- פונקציות המערכת הקיימות ---
 async function processAIRecipe() {
     const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
     if (!input) return;
@@ -140,6 +134,12 @@ async function loginUser(username) {
     localStorage.setItem('weekwise_user', username);
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
+    
+    const weightDateInput = document.getElementById('new-weight-date');
+    if(weightDateInput) {
+        weightDateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
     buildWeeklyScheduleAccordionUI();
     await loadWeeklySchedule();
     loadStats();
