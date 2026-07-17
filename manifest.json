@@ -1,6 +1,6 @@
 {
-  "name": "השבוע שלי",
-  "short_name": "השבוע שלי",
+  "name": "MyWeek",
+  "short_name": "MyWeek",
   "description": "ניהול לוח זמנים שבועי, תזונה ומטרות אישיות",
   "start_url": "./index.html",
   "scope": "./",

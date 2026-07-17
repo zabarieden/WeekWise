@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>השבוע שלי</title>
+    <title>MyWeek</title>
 
     <!-- PWA: הפיכת האתר לאפליקציה שניתן להתקין ממסך הבית -->
     <link rel="manifest" href="manifest.json">
@@ -13,7 +13,7 @@
     <!-- iOS מתעלם מה-manifest לצורך מצב מסך מלא, וצריך את התגיות הבאות בנפרד -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="השבוע שלי">
+    <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
     <link rel="stylesheet" href="theme.css?v=19">
@@ -32,7 +32,7 @@
         <!-- מסך כניסה למערכת: התחברות/הרשמה עם Supabase Auth -->
         <div id="login-overlay" class="login-overlay">
             <div class="login-card">
-                <h2>⚡ השבוע שלי</h2>
+                <h2>⚡ MyWeek</h2>
                 <p id="auth-mode-subtitle">התחברו לחשבון שלכם:</p>
                 <input type="email" id="auth-email-input" placeholder="אימייל" autocomplete="email" autofocus>
                 <input type="password" id="auth-password-input" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="current-password">
@@ -52,7 +52,7 @@
             <div class="dashboard-grid" style="margin-top: 10px;">
                 <div class="nav-cube active" data-target="schedule-section">
                     <span class="cube-icon">🗓️</span>
-                    <span class="cube-title">השבוע שלי</span>
+                    <span class="cube-title">MyWeek</span>
                 </div>
                 <div class="nav-cube" data-target="nutrition-section">
                     <span class="cube-icon">🍎</span>
@@ -66,11 +66,11 @@
 
             <div class="main-scroll-area">
                 
-                <!-- חלונית 1: השבוע שלי -->
+                <!-- חלונית 1: MyWeek -->
                 <section class="tab-content active-tab" id="schedule-section">
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>השבוע שלי</h2>
+                            <h2>MyWeek</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" title="התאמת שעות ברירת מחדל">⚙️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
