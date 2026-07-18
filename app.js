@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('center-item-input').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') submitCenterItem();
     });
+    document.getElementById('btn-save-steps').addEventListener('click', saveSteps);
 });
 
 // --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---
@@ -306,10 +307,10 @@ async function initAppAfterAuth(user) {
     loadWeightHistory();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
-    selectedDateInput.onchange = (e) => loadDailyNutrition(e.target.value);
+    selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
 
-    // טעינת תזונה להיום אוטומטית (אם קיים)
-    if(today) { loadDailyNutrition(today); }
+    // טעינת תזונה וצעדים להיום אוטומטית (אם קיים)
+    if(today) { loadDailyNutrition(today); loadDailySteps(today); }
 
     requestNotificationPermission();
     checkReminders();
@@ -347,7 +348,15 @@ async function insertCenterItemDirect(type, content) {
     if (!supabaseClient || !currentUserId) { showAppToast('לא מחוברים - נסו לרענן את הדף ולהתחבר מחדש.', 'error'); return; }
     const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content });
     if (error) { showAppToast('שגיאה בהוספת הפריט: ' + error.message, 'error'); return; }
-    loadCenterItems(type);
+    await loadCenterItems(type);
+    expandCardForList(`${type}-list`);
+    showAppToast('הפריט נוסף בהצלחה!');
+}
+
+function expandCardForList(listId) {
+    const list = document.getElementById(listId);
+    const card = list && list.closest('.card');
+    if (card) card.classList.add('expanded');
 }
 
 function initCubesNavigation() {
@@ -788,3 +797,47 @@ async function deleteProgressTarget(id) { await supabaseClient.from('weekly_prog
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w }); loadWeightHistory(); }
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }
+
+// --- מד צעדים יומי, מסונכרן דרך Supabase (טבלת step_tracker) ---
+async function loadDailySteps(date) {
+    if (!supabaseClient || !currentUserId) return;
+    document.getElementById('steps-input').value = '';
+    document.getElementById('steps-today').innerText = '0';
+    const { data, error } = await supabaseClient.from('step_tracker').select('*').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
+    if (error) { showAppToast('שגיאה בטעינת מד הצעדים: ' + error.message, 'error'); return; }
+    if (data) {
+        document.getElementById('steps-input').value = data.step_count;
+        document.getElementById('steps-today').innerText = data.step_count;
+    }
+    loadStepStats();
+}
+
+async function saveSteps() {
+    if (!supabaseClient || !currentUserId) return;
+    const date = document.getElementById('selected-date').value;
+    const steps = parseInt(document.getElementById('steps-input').value) || 0;
+    const { data: existing } = await supabaseClient.from('step_tracker').select('id').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
+    const { error } = existing
+        ? await supabaseClient.from('step_tracker').update({ step_count: steps }).eq('id', existing.id)
+        : await supabaseClient.from('step_tracker').insert({ username: currentUsername, user_id: currentUserId, step_date: date, step_count: steps });
+    if (error) { showAppToast('שגיאה בשמירת הצעדים: ' + error.message, 'error'); return; }
+    document.getElementById('steps-today').innerText = steps;
+    loadStepStats();
+    showAppToast('הצעדים נשמרו בהצלחה!');
+}
+
+async function loadStepStats() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('step_tracker').select('step_date, step_count').eq('user_id', currentUserId);
+    if (!data) return;
+    const now = new Date();
+    const sunday = new Date(now); sunday.setDate(now.getDate() - now.getDay());
+    const weekStartStr = getLocalDateString(sunday);
+    const saturday = new Date(sunday); saturday.setDate(sunday.getDate() + 6);
+    const weekEndStr = getLocalDateString(saturday);
+    let weekly = 0;
+    data.forEach(item => {
+        if (item.step_date >= weekStartStr && item.step_date <= weekEndStr) weekly += Number(item.step_count) || 0;
+    });
+    document.getElementById('steps-weekly').innerText = weekly;
+}

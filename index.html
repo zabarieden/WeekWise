@@ -177,6 +177,24 @@
                         </div>
                     </div>
 
+                    <!-- מד צעדים -->
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2>מד צעדים יומי</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="weight-inputs-wrap">
+                                <input type="number" id="steps-input" placeholder="מספר צעדים">
+                                <button id="btn-save-steps" class="btn-primary">שמור</button>
+                            </div>
+                            <div class="stats-grid" style="margin-top: 10px;">
+                                <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="steps-today">0</div></div>
+                                <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="steps-weekly">0</div></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- מעקב משקל -->
                     <div class="card" id="accordion-weight-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">

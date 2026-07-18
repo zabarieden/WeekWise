@@ -91,11 +91,14 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
     position: relative;
     z-index: 10;
     padding-bottom: 80px;
     scrollbar-width: none;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 }
 .main-scroll-area::-webkit-scrollbar { display: none; }
@@ -151,12 +154,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .day-tab-name { font-size: 0.75rem; font-weight: 700; }
 .day-tab-date { font-size: 0.65rem; opacity: 0.7; }
 
-.days-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.days-scroll-container { display: flex; overflow-x: auto; min-width: 0; max-width: 100%; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .days-scroll-container::-webkit-scrollbar { display: none; }
-.day-page { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; }
+.day-page { flex: 0 0 100%; min-width: 0; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; }
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }
-.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px 1fr auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease; }
+.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 6px 10px; display: grid; grid-template-columns: 25px 60px minmax(0, 1fr) auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease; min-width: 0; max-width: 100%; box-sizing: border-box; }
 .slot-input-group.just-added { background-color: rgba(0, 230, 118, 0.15); box-shadow: 0 0 0 1px var(--accent-green); }
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
 .slot-input-group.task-purple { border-right: 3px solid var(--accent-purple); }
@@ -164,7 +167,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-time { background: transparent !important; border: none !important; color: var(--text-primary) !important; font-weight: 600; text-align: center; font-size: 0.8rem; padding: 0 !important; outline: none; }
 .task-pink .slot-time { color: var(--accent-pink) !important; }
 .task-purple .slot-time { color: var(--accent-purple) !important; }
-.slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; }
+.slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; min-width: 0; box-sizing: border-box; }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .day-add-task-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); }
