@@ -167,7 +167,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     z-index: 10;
 }
 .btn-floating-add:active { transform: scale(0.9); background-color: rgba(255, 0, 127, 0.2); }
-.day-tabs-strip { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.day-tabs-strip { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .day-tabs-strip::-webkit-scrollbar { display: none; }
 .day-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 10px; padding: 8px 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-family: inherit; }
 .day-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.15); }
@@ -176,8 +176,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .schedule-touch-row { display: flex; width: 100%; max-width: 100%; box-sizing: border-box; }
 .vertical-scroll-track { flex: 0 0 12%; min-width: 12%; max-width: 12%; touch-action: pan-y; }
-.days-scroll-container { display: flex; flex: 1 1 88%; overflow-x: auto !important; overscroll-behavior-x: contain; touch-action: pan-x; min-width: 0; max-width: 88% !important; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.days-scroll-container { display: flex; flex: 1 1 88%; overflow-x: auto !important; overscroll-behavior-x: contain; min-width: 0; max-width: 88% !important; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .days-scroll-container::-webkit-scrollbar { display: none; }
+
+.scroll-assist-buttons { position: absolute; bottom: 90px; left: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 3500; pointer-events: auto; }
+.btn-scroll-assist { width: 44px; height: 44px; border-radius: 50%; background-color: rgba(168, 85, 247, 0.28); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(168, 85, 247, 0.45); color: var(--text-primary); font-size: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); opacity: 0.88; transition: var(--transition); padding: 0; pointer-events: auto; touch-action: manipulation; }
+.btn-scroll-assist:active { transform: scale(0.9); opacity: 1; }
 .day-page { flex: 0 0 100%; min-width: 0; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; }
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .slots-grid { display: flex; flex-direction: column; gap: 6px; }

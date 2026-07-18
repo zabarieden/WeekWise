@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=24">
+    <link rel="stylesheet" href="theme.css?v=25">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -249,10 +249,16 @@
                     © 2026 all rights reserved. app developed by eden zabari.
                 </div>
             </div>
+
+            <!-- כפתורי סיוע לגלילה אנכית, קבועים בפינה השמאלית התחתונה -->
+            <div class="scroll-assist-buttons">
+                <button type="button" class="btn-scroll-assist" id="btn-scroll-up" title="גלילה למעלה">▲</button>
+                <button type="button" class="btn-scroll-assist" id="btn-scroll-down" title="גלילה למטה">▼</button>
+            </div>
         </div>
 
         <!-- ==================== חלונות צפים (Modals) ==================== -->
-        
+
         <!-- חלון צף: הוספת משימה ללו"ז -->
         <div id="modal-add-task" class="apple-modal">
             <div class="modal-sheet">
@@ -387,6 +393,6 @@
 
     </div>
 
-    <script src="app.js?v=19"></script>
+    <script src="app.js?v=20"></script>
 </body>
 </html>

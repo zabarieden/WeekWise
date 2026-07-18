@@ -64,7 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.key === 'Enter') submitCenterItem();
     });
     document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
+    document.getElementById('btn-scroll-up').addEventListener('click', () => scrollMainBy(-300));
+    document.getElementById('btn-scroll-down').addEventListener('click', () => scrollMainBy(300));
 });
+
+function scrollMainBy(deltaY) {
+    const area = document.querySelector('.main-scroll-area');
+    if (area) area.scrollBy({ top: deltaY, behavior: 'smooth' });
+}
 
 // --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---
 let appToastTimeout = null;
