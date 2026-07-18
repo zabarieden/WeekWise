@@ -68,18 +68,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.key === 'Enter') submitCenterItem();
     });
     document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
-    document.getElementById('btn-scroll-up').addEventListener('click', () => scrollMainBy(-300));
-    document.getElementById('btn-scroll-down').addEventListener('click', () => scrollMainBy(300));
     document.getElementById('btn-ai-quick-add').addEventListener('click', handleAIQuickAdd);
     document.querySelectorAll('.btn-upgrade').forEach(btn => {
-        btn.addEventListener('click', () => showAppToast(t('settings_upgrade_toast'), 'error'));
+        btn.addEventListener('click', () => openPremiumUpgradeModal());
     });
 });
-
-function scrollMainBy(deltaY) {
-    const area = document.querySelector('.main-scroll-area');
-    if (area) area.scrollBy({ top: deltaY, behavior: 'smooth' });
-}
 
 // --- שפה: אכלוס בורר השפה, ורענון תוכן דינמי כשמחליפים שפה ---
 function populateLanguageDropdown() {
@@ -264,6 +257,14 @@ async function loadMealPresetsToSelects() {
     });
 }
 
+function togglePasswordVisibility() {
+    const input = document.getElementById('auth-password-input');
+    const btn = document.getElementById('btn-toggle-password');
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁️' : '🙈';
+}
+
 function updateAuthUI() {
     const subtitle = document.getElementById('auth-mode-subtitle');
     const submitBtn = document.getElementById('btn-auth-submit');
@@ -336,10 +337,12 @@ async function initAppAfterAuth(user) {
         loadWeightHistory(),
         loadCalendarEvents(),
         loadRecipes(),
-        loadAiUsage()
+        loadAiUsage(),
+        loadPremiumStatus()
     ]);
     loadAllCenterItems();
     hideAppLoadingOverlay();
+    applyPwaShortcutDeepLink();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -416,6 +419,14 @@ function initCubesNavigation() {
 function switchToTab(targetId) {
     const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
     if (cube) cube.click();
+}
+
+// --- קיצורי דרך של ה-PWA (manifest.json shortcuts): קפיצה ישירה ללשונית מבוקשת ---
+function applyPwaShortcutDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'recipes-section'];
+    if (view && validTargets.includes(view)) switchToTab(view);
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -543,7 +554,7 @@ function buildWeeklyScheduleAccordionUI() {
         let slotsHTML = '';
         const slotNumbers = daySlotsConfig[dbDay] && daySlotsConfig[dbDay].length ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">${i}</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
         container.appendChild(pageDiv);
@@ -890,7 +901,40 @@ async function deleteRecipe() {
     if (currentRecipeCategory) openRecipeCategory(currentRecipeCategory);
 }
 
+// --- פרימיום מאוחד: is_premium גלובלי חוסם/משחרר כל הגבלה בכל האפליקציה ---
+// אין עדיין מעבד תשלום אמיתי מחובר (Stripe וכו') - הכפתור מציג הודעת "בקרוב"
+// בלבד, בדיוק כמו כרטיסי הפרימיום הקיימים בהגדרות. הלוגיקה כאן היא ה"מנעול"
+// המוכן: ברגע שיחובר תשלום אמיתי, מספיק לעדכן is_premium=true בטבלה ותכף
+// הכל נפתח אוטומטית בלי לשנות עוד קוד.
+let isPremiumUser = false;
+let selectedPremiumTier = 'semiannual';
+
+async function loadPremiumStatus() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('is_premium').eq('user_id', currentUserId).maybeSingle();
+    isPremiumUser = !!(data && data.is_premium);
+}
+
+function openPremiumUpgradeModal() {
+    document.querySelectorAll('.premium-tier-option').forEach(el => el.classList.remove('selected'));
+    const defaultOption = document.querySelector(`.premium-tier-option[data-tier="${selectedPremiumTier}"]`);
+    if (defaultOption) defaultOption.classList.add('selected');
+    openModal('modal-premium-upgrade');
+}
+
+function selectPremiumTier(el) {
+    selectedPremiumTier = el.getAttribute('data-tier');
+    document.querySelectorAll('.premium-tier-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+function submitPremiumUpgrade() {
+    closeModal('modal-premium-upgrade');
+    showAppToast(t('settings_upgrade_toast'));
+}
+
 // --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---
+// חסימה זו מדולגת לחלוטין עבור משתמשי פרימיום (isPremiumUser)
 const RECIPE_AI_FREE_LIMIT = 10;
 let cachedAiUsage = 0;
 
@@ -908,7 +952,11 @@ async function incrementAiUsage() {
 }
 
 async function parseRecipeWithAI() {
-    if (cachedAiUsage >= RECIPE_AI_FREE_LIMIT) { openModal('modal-ai-limit-reached'); return; }
+    if (!isPremiumUser && cachedAiUsage >= RECIPE_AI_FREE_LIMIT) {
+        showAppToast(t('recipe_ai_limit_desc'), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
     const raw = document.getElementById('recipe-ai-raw-input').value.trim();
     if (!raw) { showAppToast(t('recipe_ai_empty'), 'error'); return; }
 
@@ -1099,8 +1147,61 @@ function fireReminder(rem) {
 function requestNotificationPermission() {
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
-        Notification.requestPermission();
+        Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') registerPushNotifications();
+        });
+    } else if (Notification.permission === 'granted') {
+        registerPushNotifications();
     }
+}
+
+// --- Push ברקע: מנוי Web Push אמיתי, כדי שתזכורות יתריעו גם כשהאפליקציה סגורה ---
+// מפתח VAPID ציבורי בלבד - המפתח הפרטי חי אך ורק כ-secret בפונקציית ה-Edge
+// בצד שרת (ראו supabase/functions/send-due-reminders), לעולם לא בקוד לקוח.
+const VAPID_PUBLIC_KEY = 'BFSnO1uByNjAM_704-SH7BPRsZGeguMolXHpwAeLISjya09iN5wS4l6UBY-AjBTapVg63kAzOGX6jWoi91DldSo';
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+}
+
+async function registerPushNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try {
+        const registration = await navigator.serviceWorker.register('./sw.js');
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+        await savePushSubscription(subscription);
+    } catch (err) {
+        console.error('Push subscription failed:', err);
+    }
+}
+
+async function savePushSubscription(subscription) {
+    if (!supabaseClient || !currentUserId) return;
+    const json = subscription.toJSON();
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const { data: existing } = await supabaseClient.from('push_subscriptions').select('id').eq('endpoint', json.endpoint).maybeSingle();
+    const payload = {
+        user_id: currentUserId,
+        username: currentUsername,
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+        timezone: timezone
+    };
+    if (existing) await supabaseClient.from('push_subscriptions').update(payload).eq('id', existing.id);
+    else await supabaseClient.from('push_subscriptions').insert(payload);
 }
 
 function showBrowserNotification(taskTitle, text) {
