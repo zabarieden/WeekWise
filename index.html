@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=19">
+    <link rel="stylesheet" href="theme.css?v=20">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -184,11 +184,11 @@
                             <span class="card-toggle-icon">▼</span>
                         </div>
                         <div class="card-body">
-                            <div class="weight-inputs-wrap">
-                                <input type="number" id="steps-input" placeholder="מספר צעדים">
-                                <button id="btn-save-steps" class="btn-primary">שמור</button>
+                            <div id="steps-connect-wrap">
+                                <button id="btn-connect-health" class="btn-secondary">🔗 חיבור למד בריאות</button>
+                                <p class="steps-connect-note">חיבור אוטומטי ל-Google Fit / Apple Health יתאפשר בגרסת האפליקציה הנייטיבית.</p>
                             </div>
-                            <div class="stats-grid" style="margin-top: 10px;">
+                            <div class="stats-grid stats-grid-2col" style="margin-top: 10px;">
                                 <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="steps-today">0</div></div>
                                 <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="steps-weekly">0</div></div>
                             </div>
@@ -384,6 +384,6 @@
 
     </div>
 
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>

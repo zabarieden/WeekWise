@@ -185,6 +185,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .food-input { flex: 1 1 120px; min-width: 0; box-sizing: border-box; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; outline:none; }
 .calories-input { flex: 0 0 60px; box-sizing: border-box; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; text-align:center; outline:none; }
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats-grid-2col { grid-template-columns: repeat(2, 1fr); }
+#steps-connect-wrap { display: flex; flex-direction: column; gap: 8px; }
+.steps-connect-note { font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin: 0; line-height: 1.4; }
 .stat-box { background-color: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 10px 2px; text-align: center; border: 1px solid rgba(255,255,255,0.02); }
 .stat-box h3 { margin: 0 0 2px 0; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; }
 .stat-number { font-size: 1.25rem; font-weight: 700; }

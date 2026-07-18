@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
-    document.getElementById('btn-run-ai').addEventListener('click', processAIRecipe);
     document.getElementById('btn-save-hours').addEventListener('click', () => {
         saveDefaultHours();
         closeModal('modal-settings-hours');
@@ -64,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('center-item-input').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') submitCenterItem();
     });
-    document.getElementById('btn-save-steps').addEventListener('click', saveSteps);
+    document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
 });
 
 // --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---
@@ -222,19 +221,6 @@ async function loadMealPresetsToSelects() {
             updateLiveCaloriesToday();
         };
     });
-}
-
-// --- פונקציות המערכת הקיימות ---
-async function processAIRecipe() {
-    const input = document.getElementById('ai-nutrition-prompt').value.toLowerCase();
-    if (!input) return;
-    let foodName = "", calories = 0, targetMeal = "";
-    if (input.includes("פופקורן")) { foodName = "פופקורן"; calories = 50; targetMeal = "meal_4"; }
-    else if (input.includes("נס קפה") || input.includes("שיבולת שועל")) { foodName = "נס קפה שיבולת שועל"; calories = 60; targetMeal = "meal_1"; }
-    if (targetMeal && foodName) {
-        const mealRow = document.querySelector(`[data-meal="${targetMeal}"]`);
-        if (mealRow) { mealRow.querySelector('.food-input').value = foodName; mealRow.querySelector('.calories-input').value = calories; document.getElementById('ai-nutrition-prompt').value = ""; }
-    } else { showAppToast('לא זיהיתי את המנה במאגר.', 'error'); }
 }
 
 function updateAuthUI() {
@@ -798,32 +784,21 @@ async function saveNewWeightRecord() { const w = document.getElementById('new-we
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }
 
-// --- מד צעדים יומי, מסונכרן דרך Supabase (טבלת step_tracker) ---
+// --- מד צעדים יומי: תצוגה בלבד, מקור הנתונים יהיה סנכרון אוטומטי עתידי ---
+// (Google Fit / Apple Health) דרך אפליקציה נייטיבית - אין קלט ידני יותר.
 async function loadDailySteps(date) {
     if (!supabaseClient || !currentUserId) return;
-    document.getElementById('steps-input').value = '';
     document.getElementById('steps-today').innerText = '0';
     const { data, error } = await supabaseClient.from('step_tracker').select('*').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
     if (error) { showAppToast('שגיאה בטעינת מד הצעדים: ' + error.message, 'error'); return; }
     if (data) {
-        document.getElementById('steps-input').value = data.step_count;
         document.getElementById('steps-today').innerText = data.step_count;
     }
     loadStepStats();
 }
 
-async function saveSteps() {
-    if (!supabaseClient || !currentUserId) return;
-    const date = document.getElementById('selected-date').value;
-    const steps = parseInt(document.getElementById('steps-input').value) || 0;
-    const { data: existing } = await supabaseClient.from('step_tracker').select('id').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
-    const { error } = existing
-        ? await supabaseClient.from('step_tracker').update({ step_count: steps }).eq('id', existing.id)
-        : await supabaseClient.from('step_tracker').insert({ username: currentUsername, user_id: currentUserId, step_date: date, step_count: steps });
-    if (error) { showAppToast('שגיאה בשמירת הצעדים: ' + error.message, 'error'); return; }
-    document.getElementById('steps-today').innerText = steps;
-    loadStepStats();
-    showAppToast('הצעדים נשמרו בהצלחה!');
+function connectHealthData() {
+    showAppToast('חיבור אוטומטי למד בריאות יתאפשר בגרסת האפליקציה הנייטיבית (Capacitor) - כרגע אין דרך לחבר Google Fit / Apple Health מאתר רגיל.', 'error');
 }
 
 async function loadStepStats() {
