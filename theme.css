@@ -35,6 +35,17 @@ body {
     overflow-x: hidden !important;
     position: relative;
     max-width: 100vw;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+/* טקסט בשדות קלט/טקסטאריה חייב להישאר ניתן לבחירה/עריכה כרגיל - רק תוויות
+   ותוכן סטטי "מתים" לחלוטין (בלי בחירה, בלי תפריט חיפוש/העתקה של הדפדפן) */
+input, textarea, select {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 .phone-wrapper {
     width: 100vw;
