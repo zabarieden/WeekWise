@@ -23,9 +23,10 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
     position: relative;
     max-width: 100vw;
 }
@@ -33,12 +34,13 @@ body {
     width: 100vw;
     max-width: 420px;
     height: 100vh;
+    height: 100dvh;
     background-color: var(--bg-main);
     position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
     box-sizing: border-box;
     padding: 16px;
     border-left: 1px solid rgba(255, 255, 255, 0.02);
@@ -95,7 +97,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden !important;
     overscroll-behavior-x: contain;
     min-width: 0;
     position: relative;
@@ -159,7 +162,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .day-tab-name { font-size: 0.75rem; font-weight: 700; }
 .day-tab-date { font-size: 0.65rem; opacity: 0.7; }
 
-.days-scroll-container { display: flex; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; min-width: 0; max-width: 100%; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.days-scroll-container { display: flex; width: 100%; overflow-x: auto !important; overscroll-behavior-x: contain; touch-action: pan-x; min-width: 0; max-width: 100% !important; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .days-scroll-container::-webkit-scrollbar { display: none; }
 .day-page { flex: 0 0 100%; min-width: 0; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; }
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
