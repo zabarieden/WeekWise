@@ -204,6 +204,18 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; min-width: 0; box-sizing: border-box; }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
+
+/* מבט ליומן: כרטיס אג'נדה קבוע, תמיד פתוח (אין collapsible-header, ולכן אין חץ) */
+.calendar-glance-card .card-body { max-height: none; overflow: visible; }
+.calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
+.calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
+.calendar-glance-list { display: flex; flex-direction: column; gap: 10px; }
+.calendar-glance-day-group { background-color: rgba(20, 18, 26, 0.5); border: 1px solid rgba(255, 255, 255, 0.04); border-inline-start: 3px solid var(--accent-purple); border-radius: 10px; padding: 10px 12px; box-sizing: border-box; }
+.calendar-glance-day-header { font-size: 0.82rem; font-weight: 700; color: var(--accent-purple-light); margin-bottom: 6px; }
+.calendar-glance-item { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 0.85rem; }
+.calendar-glance-item-time { color: var(--accent-pink); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 46px; }
+.calendar-glance-item-task { color: var(--text-primary); flex: 1 1 auto; min-width: 0; text-align: start; }
+.calendar-glance-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
 .meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
 .meal-header-row { display: flex; justify-content: space-between; align-items: center; }
@@ -228,8 +240,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
 .my-center-grid { display: flex; flex-direction: column; gap: 12px; }
-.important-card { border: 1px solid rgba(255, 0, 127, 0.25) !important; background-color: rgba(255, 0, 127, 0.02) !important; }
-.important-card h2 { color: var(--accent-pink); }
 .center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .center-list li {
     background-color: rgba(20, 18, 26, 0.5);
@@ -249,7 +259,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     width: 100%;
     box-sizing: border-box;
 }
-.important-card .center-list li { border-bottom: 1px solid rgba(255, 0, 127, 0.25); }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 .btn-complete-item { 

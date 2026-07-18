@@ -137,7 +137,7 @@ async function toggleTaskStatus(id, currentStatus, type) {
 }
 
 function loadAllCenterItems() {
-    ['important', 'weekly', 'general'].forEach(type => loadCenterItems(type));
+    ['weekly', 'general'].forEach(type => loadCenterItems(type));
 }
 
 async function loadCenterItems(type) {
@@ -526,11 +526,64 @@ async function loadWeeklySchedule() {
         slotEl.querySelector('.slot-task').value = '';
     });
     const { data } = await supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId);
-    if (!data) return;
-    data.forEach(item => {
-        const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
-        if (slotEl) { slotEl.querySelector('.slot-time').value = item.time_of_day; slotEl.querySelector('.slot-task').value = item.task_title || ''; }
-    });
+    if (data) {
+        data.forEach(item => {
+            const slotEl = document.querySelector(`[data-day="${item.day_of_week}"][data-slot="${item.slot_number}"]`);
+            if (slotEl) { slotEl.querySelector('.slot-time').value = item.time_of_day; slotEl.querySelector('.slot-task').value = item.task_title || ''; }
+        });
+    }
+    renderCalendarGlance();
+}
+
+// --- מבט ליומן: אג'נדה קלה מתוך לוח הזמנים הקיים, מהיום והלאה לאורך השבוע ---
+function renderCalendarGlance() {
+    const container = document.getElementById('calendar-glance-list');
+    if (!container) return;
+    container.innerHTML = '';
+    const todayIdx = new Date().getDay();
+    let hasAny = false;
+    for (let offset = 0; offset < 7; offset++) {
+        const dayIndex = (todayIdx + offset) % 7;
+        const dayPage = document.getElementById(`daypage-${dbDaysMap[dayIndex]}`);
+        if (!dayPage) continue;
+        const items = [];
+        dayPage.querySelectorAll('.slot-input-group').forEach(slotEl => {
+            const task = slotEl.querySelector('.slot-task').value.trim();
+            if (!task) return;
+            items.push({ time: slotEl.querySelector('.slot-time').value.trim(), task });
+        });
+        if (!items.length) continue;
+        items.sort((a, b) => a.time.localeCompare(b.time));
+        hasAny = true;
+
+        const group = document.createElement('div');
+        group.className = 'calendar-glance-day-group';
+        const header = document.createElement('div');
+        header.className = 'calendar-glance-day-header';
+        header.textContent = `${getDayName(dayIndex)} · ${getFormattedDateForDay(dayIndex)}`;
+        group.appendChild(header);
+
+        items.forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'calendar-glance-item';
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'calendar-glance-item-time';
+            timeSpan.textContent = it.time;
+            const taskSpan = document.createElement('span');
+            taskSpan.className = 'calendar-glance-item-task';
+            taskSpan.textContent = it.task;
+            row.appendChild(timeSpan);
+            row.appendChild(taskSpan);
+            group.appendChild(row);
+        });
+        container.appendChild(group);
+    }
+    if (!hasAny) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-glance-empty';
+        empty.textContent = t('calendar_glance_empty');
+        container.appendChild(empty);
+    }
 }
 
 async function saveScheduleSlot(day, slot) {
@@ -541,6 +594,7 @@ async function saveScheduleSlot(day, slot) {
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
     if (existing) await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
     else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
+    renderCalendarGlance();
 }
 
 async function saveScheduleSlotFromAdder() {
@@ -683,7 +737,7 @@ function dismissReminderToast() {
     if (toast) toast.classList.remove('show');
 }
 async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
-async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); }
+async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); renderCalendarGlance(); }
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
