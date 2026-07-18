@@ -319,7 +319,30 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-edit-item:hover { color: var(--accent-purple-light); transform: scale(1.1); }
 
 .settings-label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; }
-.language-select { width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; cursor: pointer; }
+.language-select {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgba(20, 10, 30, 0.55);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23c084fc'><path d='M5.5 7.5l4.5 5 4.5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: left 12px center;
+    background-size: 14px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid var(--accent-purple);
+    color: var(--accent-purple-light);
+    border-radius: 10px;
+    padding: 12px 12px 12px 36px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.language-select:focus, .language-select:hover { border-color: var(--accent-pink); box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+.language-select option { background-color: var(--bg-sheet); color: var(--text-primary); }
+html[dir="rtl"] .language-select { background-position: right 12px center; padding: 12px 36px 12px 12px; }
 .ai-quick-add-wrap { display: flex; flex-direction: column; gap: 10px; }
 #ai-quick-add-input { width: 100%; box-sizing: border-box; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; resize: vertical; font-family: inherit; }
 .premium-tier-card { background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
