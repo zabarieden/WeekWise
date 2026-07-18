@@ -1,13 +1,16 @@
 // Supabase Edge Function: scan-recipe-image
 //
-// Accepts a base64-encoded photo of a recipe (handwritten note, screenshot, cookbook
-// page - anything) from the logged-in app, sends it to a real vision-capable AI model,
-// and returns a structured {title, category, calories, ingredients, instructions} object
-// for the frontend to drop straight into the (still fully editable) Add Recipe form.
+// Accepts a base64-encoded photo OR PDF of a recipe (handwritten note, screenshot,
+// cookbook page, scanned document - anything) from the logged-in app, sends it to a
+// real vision-capable AI model, and returns a structured {title, category, calories,
+// ingredients, instructions} object for the frontend to drop straight into the (still
+// fully editable) Add Recipe form.
 //
-// Enforces a 10-scan free limit per user (server-side, since a client-only check can be
-// bypassed) using the same user_ai_usage table the text-parse limit already uses, and
-// skips the limit entirely for users with user_premium.is_premium = true.
+// Enforces a single shared 10-free-scan/upload limit per user (server-side, since a
+// client-only check can be bypassed) using the same user_ai_usage.image_scans_used
+// counter regardless of whether the file is an image or a PDF - "10 uploads, 10 scans,
+// or a mix of both" all count against the same total - and skips the limit entirely for
+// users with user_premium.is_premium = true.
 //
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
@@ -76,6 +79,16 @@ Deno.serve(async (req) => {
         const { imageBase64, mediaType } = body;
         if (!imageBase64 || !mediaType) return jsonResponse({ error: "missing_image" }, 400);
 
+        const isPdf = mediaType === "application/pdf";
+        const isImage = mediaType.startsWith("image/");
+        if (!isPdf && !isImage) return jsonResponse({ error: "unsupported_file_type" }, 400);
+
+        // Anthropic מבחין בין בלוק "image" (לתמונות) לבלוק "document" (ל-PDF) -
+        // שני הסוגים נתמכים באותה קריאת API אחת, רק סוג התוכן שונה
+        const fileContentBlock = isPdf
+            ? { type: "document", source: { type: "base64", media_type: mediaType, data: imageBase64 } }
+            : { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } };
+
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -90,15 +103,15 @@ Deno.serve(async (req) => {
                     {
                         role: "user",
                         content: [
-                            { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+                            fileContentBlock,
                             {
                                 type: "text",
                                 text:
-                                    "This image contains a recipe - it might be a handwritten note, a screenshot, or a " +
-                                    "photo of a cookbook page. Transcribe it faithfully and extract it with the " +
-                                    "extract_recipe tool. Keep ingredients and instructions exactly as written in the " +
-                                    "image - do not invent, embellish, or add anything that isn't actually there. If a " +
-                                    "word is illegible, skip it rather than guessing.",
+                                    "This file contains a recipe - it might be a handwritten note, a screenshot, a photo " +
+                                    "of a cookbook page, or a scanned/exported PDF document. Transcribe it faithfully and " +
+                                    "extract it with the extract_recipe tool. Keep ingredients and instructions exactly " +
+                                    "as written in the file - do not invent, embellish, or add anything that isn't " +
+                                    "actually there. If a word is illegible, skip it rather than guessing.",
                             },
                         ],
                     },

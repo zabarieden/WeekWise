@@ -586,12 +586,28 @@ async function removeDaySlot(day, slot) {
         // אמיתי ולא "יקפוץ" ישר למצב הסופי בלי שום אנימציה (ואז transitionend לא נורה כלל)
         void slotEl.offsetHeight;
         slotEl.classList.add('slot-removing');
-        const removeNow = () => { if (slotEl.isConnected) slotEl.remove(); };
+        const removeNow = () => {
+            if (slotEl.isConnected) slotEl.remove();
+            updateEmptyDayState(day);
+        };
         slotEl.addEventListener('transitionend', removeNow, { once: true });
         setTimeout(removeNow, 350); // רשת ביטחון מוחלטת: השורה תוסר גם אם שום transition לא נורה
     }
 
     await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
+}
+
+// אחרי שנשלפה שורה אחרונה ביום מסוים, מחביאים את .slots-grid הריק (במקום
+// שיישאר תיבה כהה ריקה שנתקעת על המסך) ומציגים רמז ידידותי במקומו.
+function updateEmptyDayState(day) {
+    const pageDiv = document.getElementById(`daypage-${day}`);
+    if (!pageDiv) return;
+    const grid = pageDiv.querySelector('.slots-grid');
+    const emptyHint = pageDiv.querySelector('.day-page-empty');
+    if (!grid || !emptyHint) return;
+    const isEmpty = grid.children.length === 0;
+    grid.classList.toggle('hidden', isEmpty);
+    emptyHint.classList.toggle('hidden', !isEmpty);
 }
 
 function addDaySlot(day) {
@@ -658,11 +674,15 @@ function buildWeeklyScheduleAccordionUI() {
         pageDiv.id = `daypage-${dbDay}`;
         pageDiv.setAttribute('data-day', dbDay);
         let slotsHTML = '';
-        const slotNumbers = daySlotsConfig[dbDay] && daySlotsConfig[dbDay].length ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
+        // חשוב: משתמשים ב-!== undefined ולא ב-truthy/length, כי מערך ריק ([])
+        // הוא falsy מבחינת .length - יום שהמשתמש מחק ממנו את כל השורות היה
+        // "נופל" בטעות בחזרה ל-10 שורות ברירת המחדל בכל בנייה מחדש של הלוח.
+        const slotNumbers = daySlotsConfig[dbDay] !== undefined ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
         slotNumbers.forEach(i => {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">${i}</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
-        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
+        const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
@@ -1371,6 +1391,11 @@ async function handleRecipeImageSelected(event) {
     const file = input.files && input.files[0];
     input.value = ''; // מאפשר לבחור את אותו קובץ שוב בפעם הבאה
     if (!file) return;
+
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+        showAppToast(t('recipe_scan_unsupported_type'), 'error');
+        return;
+    }
 
     if (!isPremiumUser && cachedImageScansUsed >= IMAGE_SCAN_FREE_LIMIT) {
         showAppToast(t('recipe_scan_limit_desc'), 'error');
