@@ -577,9 +577,18 @@ async function removeDaySlot(day, slot) {
     if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
     daySlotsConfig[day] = daySlotsConfig[day].filter(n => n !== slot);
     saveDaySlotsConfig();
+
+    // הסרה ממוקדת של השורה הספציפית בלבד עם קריסה חלקה, במקום פירוק ובנייה
+    // מחדש של כל לוח השבוע - זה גם מהיר יותר וגם לא גורם להבהוב של שורות אחרות.
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
+    if (slotEl) {
+        slotEl.classList.add('slot-removing');
+        const removeNow = () => { if (slotEl.isConnected) slotEl.remove(); };
+        slotEl.addEventListener('transitionend', removeNow, { once: true });
+        setTimeout(removeNow, 350); // רשת ביטחון אם ה-transition לא נורה (למשל prefers-reduced-motion)
+    }
+
     await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
-    buildWeeklyScheduleAccordionUI();
-    loadWeeklySchedule();
 }
 
 function addDaySlot(day) {
