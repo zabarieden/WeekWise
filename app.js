@@ -355,7 +355,9 @@ async function initAppAfterAuth(user) {
         loadCalendarEvents(),
         loadRecipes(),
         loadAiUsage(),
-        loadPremiumStatus()
+        loadPremiumStatus(),
+        loadColorTheme(),
+        loadMonthlyGoal()
     ]);
     loadAllCenterItems();
     hideAppLoadingOverlay();
@@ -635,6 +637,99 @@ function addDaySlot(day) {
     saveDaySlotsConfig();
     buildWeeklyScheduleAccordionUI();
     loadWeeklySchedule();
+}
+
+// --- מתכנן לו"ז חכם (פרימיום בלבד): AI אמיתי מפרש תיאור חופשי לכמה אירועים
+// חוזרים בבת אחת, ומכניס כל אחד למשבצת פנויה (או שורה חדשה) ביום המתאים ---
+function openAiSchedulePlannerModal() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    document.getElementById('ai-schedule-input').value = '';
+    openModal('modal-ai-schedule-planner');
+}
+
+function showScheduleAiLoading() {
+    const el = document.getElementById('schedule-ai-loading');
+    if (el) el.classList.remove('hidden');
+}
+
+function hideScheduleAiLoading() {
+    const el = document.getElementById('schedule-ai-loading');
+    if (el) el.classList.add('hidden');
+}
+
+async function parseScheduleWithAI() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const input = document.getElementById('ai-schedule-input');
+    const text = input.value.trim();
+    if (!text) { showAppToast(t('schedule_ai_empty'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    const loadingTimer = setTimeout(showScheduleAiLoading, 5000);
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text })
+        });
+        const result = await res.json();
+
+        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
+        if (!res.ok || result.error || !result.events || !result.events.length) {
+            showAppToast(t('schedule_ai_failed'), 'error');
+            return;
+        }
+
+        // מקבצים את האירועים שחולצו לפי יום, כדי להקצות משבצת פנויה (או שורה
+        // חדשה) לכל אחד בלי שיתנגשו זה בזה על אותה משבצת
+        const byDay = {};
+        result.events.forEach(ev => {
+            if (!dbDaysMap.includes(ev.day_of_week)) return;
+            if (!byDay[ev.day_of_week]) byDay[ev.day_of_week] = [];
+            byDay[ev.day_of_week].push(ev);
+        });
+
+        Object.keys(byDay).forEach(day => {
+            if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+            const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
+            const emptySlotNums = daySlotEls.filter(el => !el.querySelector('.slot-task').value.trim()).map(el => parseInt(el.getAttribute('data-slot')));
+            byDay[day].forEach((ev, index) => {
+                if (index < emptySlotNums.length) {
+                    ev._slotNum = emptySlotNums[index];
+                } else {
+                    const nums = daySlotsConfig[day];
+                    const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+                    daySlotsConfig[day] = [...nums, nextNum];
+                    ev._slotNum = nextNum;
+                }
+            });
+        });
+        saveDaySlotsConfig();
+        buildWeeklyScheduleAccordionUI();
+        await loadWeeklySchedule();
+
+        for (const day of Object.keys(byDay)) {
+            for (const ev of byDay[day]) {
+                const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${ev._slotNum}"]`);
+                if (!slotEl) continue;
+                slotEl.querySelector('.slot-time').value = ev.time;
+                slotEl.querySelector('.slot-task').value = ev.task_title;
+                await saveScheduleSlot(day, ev._slotNum);
+            }
+        }
+
+        input.value = '';
+        closeModal('modal-ai-schedule-planner');
+        showAppToast(t('schedule_ai_success'));
+    } catch (err) {
+        showAppToast(t('schedule_ai_failed'), 'error');
+    } finally {
+        clearTimeout(loadingTimer);
+        hideScheduleAiLoading();
+    }
 }
 
 function loadCustomDefaultHours() {
@@ -1343,6 +1438,211 @@ function selectPremiumTier(el) {
 function submitPremiumUpgrade() {
     closeModal('modal-premium-upgrade');
     showAppToast(t('settings_upgrade_toast'));
+}
+
+// --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
+// זה רק עניין של להחליף את attribute ה-data-color-theme על ה-html ---
+function colorThemeKey() {
+    return `weekwise_color_theme_${currentUserId}`;
+}
+
+function applyColorTheme(themeName) {
+    if (!themeName || themeName === 'default') document.documentElement.removeAttribute('data-color-theme');
+    else document.documentElement.setAttribute('data-color-theme', themeName);
+    document.querySelectorAll('.theme-swatch').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-theme') === (themeName || 'default'));
+    });
+}
+
+async function selectColorTheme(themeName) {
+    if (themeName !== 'default' && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    applyColorTheme(themeName);
+    localStorage.setItem(colorThemeKey(), themeName);
+    if (supabaseClient && currentUserId) {
+        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (existing) await supabaseClient.from('user_premium').update({ theme: themeName }).eq('user_id', currentUserId);
+        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, theme: themeName });
+    }
+}
+
+async function loadColorTheme() {
+    let themeName = 'default';
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('user_premium').select('theme').eq('user_id', currentUserId).maybeSingle();
+        if (data && data.theme) themeName = data.theme;
+    }
+    if (themeName === 'default') {
+        const local = localStorage.getItem(colorThemeKey());
+        if (local) themeName = local;
+    }
+    applyColorTheme(themeName);
+}
+
+// --- יעדים חודשיים + מערכת פרס עצמי (פרימיום): מתחבר לנתונים קיימים
+// (משקל/משימות שהושלמו) כדי לחשב התקדמות בפועל, ולא רק דגל ידני ---
+function currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+let cachedMonthlyGoal = null;
+
+async function loadMonthlyGoal() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('month_key', currentMonthKey()).maybeSingle();
+    cachedMonthlyGoal = data || null;
+    await renderMonthlyGoal();
+}
+
+async function computeGoalCurrentValue(goal) {
+    if (goal.goal_type === 'weight') {
+        const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1).maybeSingle();
+        return data ? data.weight_value : null;
+    }
+    if (goal.goal_type === 'tasks') {
+        const { data } = await supabaseClient.from('my_center_tasks').select('id').eq('user_id', currentUserId).eq('is_completed', true);
+        return data ? data.length : 0;
+    }
+    return goal.current_value || 0; // custom: מתעדכן ידנית ע"י המשתמש בלבד
+}
+
+function isGoalAchieved(goal, currentValue) {
+    if (currentValue === null || currentValue === undefined) return false;
+    if (goal.goal_type === 'weight') return currentValue <= goal.target_value;
+    return currentValue >= goal.target_value;
+}
+
+function goalProgressPercent(goal, currentValue) {
+    if (currentValue === null || currentValue === undefined) return 0;
+    if (goal.goal_type === 'weight') {
+        const start = typeof goal.starting_value === 'number' ? goal.starting_value : currentValue;
+        if (start === goal.target_value) return currentValue <= goal.target_value ? 100 : 0;
+        const pct = ((start - currentValue) / (start - goal.target_value)) * 100;
+        return Math.min(100, Math.max(0, Math.round(pct)));
+    }
+    if (!goal.target_value) return 0;
+    return Math.min(100, Math.max(0, Math.round((currentValue / goal.target_value) * 100)));
+}
+
+async function renderMonthlyGoal() {
+    const container = document.getElementById('monthly-goal-content');
+    if (!container) return;
+
+    if (!isPremiumUser) {
+        container.innerHTML = `<p class="monthly-goal-empty">${t('monthly_goal_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
+        return;
+    }
+
+    if (!cachedMonthlyGoal) {
+        container.innerHTML = `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p><button class="btn-secondary" onclick="openSetMonthlyGoalModal()">${t('monthly_goal_set_btn')}</button>`;
+        return;
+    }
+
+    const goal = cachedMonthlyGoal;
+    const currentValue = await computeGoalCurrentValue(goal);
+    const achieved = isGoalAchieved(goal, currentValue);
+    const pct = goalProgressPercent(goal, currentValue);
+
+    if (achieved && !goal.achieved) {
+        await supabaseClient.from('monthly_goals').update({ achieved: true, current_value: currentValue }).eq('id', goal.id);
+        cachedMonthlyGoal.achieved = true;
+        celebrateGoalAchieved(goal);
+    } else if (currentValue !== null && currentValue !== goal.current_value) {
+        await supabaseClient.from('monthly_goals').update({ current_value: currentValue }).eq('id', goal.id);
+        cachedMonthlyGoal.current_value = currentValue;
+    }
+
+    const displayValue = currentValue !== null ? currentValue : '—';
+    container.innerHTML = `
+        <div class="monthly-goal-header-row">
+            <span class="monthly-goal-name">${goal.goal_name}${achieved ? ' 🏆' : ''}</span>
+            <button class="btn-delete-item" onclick="deleteMonthlyGoal()">❌</button>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill${achieved ? ' completed' : ''}" style="width: ${pct}%;"></div></div>
+        <div class="monthly-goal-values">${displayValue} / ${goal.target_value}</div>
+        ${goal.goal_type === 'custom' ? `<button class="btn-secondary" style="margin-top: 8px;" onclick="incrementCustomGoal()">${t('monthly_goal_increment_btn')}</button>` : ''}
+    `;
+}
+
+function openSetMonthlyGoalModal() {
+    document.getElementById('monthly-goal-name-input').value = '';
+    document.getElementById('monthly-goal-type-input').value = 'tasks';
+    document.getElementById('monthly-goal-target-input').value = '';
+    openModal('modal-set-monthly-goal');
+}
+
+async function saveMonthlyGoal() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const name = document.getElementById('monthly-goal-name-input').value.trim();
+    const type = document.getElementById('monthly-goal-type-input').value;
+    const target = parseFloat(document.getElementById('monthly-goal-target-input').value);
+    if (!name || isNaN(target)) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+
+    let startingValue = null;
+    if (type === 'weight') {
+        const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1).maybeSingle();
+        startingValue = data ? data.weight_value : target;
+    }
+
+    const { error } = await supabaseClient.from('monthly_goals').insert({
+        username: currentUsername, user_id: currentUserId, goal_name: name, goal_type: type,
+        target_value: target, starting_value: startingValue, current_value: 0,
+        month_key: currentMonthKey(), achieved: false
+    });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    closeModal('modal-set-monthly-goal');
+    showAppToast(t('item_added_success'));
+    await loadMonthlyGoal();
+}
+
+async function deleteMonthlyGoal() {
+    if (!cachedMonthlyGoal) return;
+    await supabaseClient.from('monthly_goals').delete().eq('id', cachedMonthlyGoal.id);
+    cachedMonthlyGoal = null;
+    await renderMonthlyGoal();
+}
+
+async function incrementCustomGoal() {
+    if (!cachedMonthlyGoal) return;
+    const newValue = (cachedMonthlyGoal.current_value || 0) + 1;
+    await supabaseClient.from('monthly_goals').update({ current_value: newValue }).eq('id', cachedMonthlyGoal.id);
+    cachedMonthlyGoal.current_value = newValue;
+    await renderMonthlyGoal();
+}
+
+function celebrateGoalAchieved(goal) {
+    const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
+    const msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
+    document.getElementById('goal-celebration-text').textContent = msg;
+    openModal('modal-goal-celebration');
+}
+
+async function toggleMonthlyGoalLookback() {
+    const list = document.getElementById('monthly-goal-lookback-list');
+    if (!list) return;
+    const willShow = list.classList.contains('hidden');
+    if (willShow) await loadPastMonthlyGoals();
+    list.classList.toggle('hidden', !willShow);
+}
+
+async function loadPastMonthlyGoals() {
+    const list = document.getElementById('monthly-goal-lookback-list');
+    if (!list || !supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).lt('month_key', currentMonthKey()).order('month_key', { ascending: false });
+    list.innerHTML = '';
+    if (!data || !data.length) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-glance-empty';
+        empty.textContent = t('monthly_goal_lookback_empty');
+        list.appendChild(empty);
+        return;
+    }
+    data.forEach(g => {
+        const row = document.createElement('div');
+        row.className = 'monthly-goal-lookback-item' + (g.achieved ? ' achieved' : '');
+        row.innerHTML = `<span class="monthly-goal-lookback-month">${g.month_key}</span><span class="monthly-goal-lookback-name">${g.goal_name}</span><span class="monthly-goal-lookback-values">${g.current_value}/${g.target_value}</span><span>${g.achieved ? '🏆' : '—'}</span>`;
+        list.appendChild(row);
+    });
 }
 
 // --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---

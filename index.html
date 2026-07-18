@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=44">
+    <link rel="stylesheet" href="theme.css?v=45">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -84,6 +84,7 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>MyWeek</h2>
                             <div class="card-header-actions">
+                                <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openAiSchedulePlannerModal()" data-i18n-title="schedule_ai_planner_title" title="AI Schedule Planner (Premium)">🧠</button>
                                 <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" data-i18n-title="schedule_hours_gear_title" title="Set default hours">⚙️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
                                 <span class="card-toggle-icon">▼</span>
@@ -255,6 +256,19 @@
                         <div class="card">
                             <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="progress_title">Weekly Progress Tracker</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                             <div class="card-body"><div id="progress-container" class="progress-container"></div></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                                <h2 data-i18n="monthly_goal_title">🏆 Monthly Goal (Premium)</h2>
+                                <div class="card-header-actions">
+                                    <button class="btn-floating-add" onclick="event.stopPropagation(); toggleMonthlyGoalLookback()" data-i18n-title="monthly_goal_lookback_title" title="Look back">🕓</button>
+                                    <span class="card-toggle-icon">▼</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="monthly-goal-content"></div>
+                                <div id="monthly-goal-lookback-list" class="monthly-goal-lookback-list hidden"></div>
+                            </div>
                         </div>
                         <div class="card">
                             <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
@@ -431,6 +445,13 @@
                 <label class="settings-label" data-i18n="settings_language_label" for="language-select">Language</label>
                 <select id="language-select" class="language-select"></select>
 
+                <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
+                <div class="theme-picker-grid">
+                    <button type="button" class="theme-swatch theme-swatch-default" data-theme="default" onclick="selectColorTheme('default')" title="Default"></button>
+                    <button type="button" class="theme-swatch theme-swatch-blue" data-theme="blue_teal" onclick="selectColorTheme('blue_teal')" title="Blue & Teal"><span class="theme-swatch-lock">🔒</span></button>
+                    <button type="button" class="theme-swatch theme-swatch-gold" data-theme="gold_red" onclick="selectColorTheme('gold_red')" title="Gold & Red"><span class="theme-swatch-lock">🔒</span></button>
+                </div>
+
                 <h3 class="premium-drawer-title" data-i18n="settings_premium_title">Premium Upgrades</h3>
                 <div class="premium-tier-card">
                     <h3 data-i18n="settings_elevate_title">⭐ Elevate — Custom Icon Backgrounds</h3>
@@ -506,6 +527,56 @@
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-progress')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: מתכנן לו"ז חכם (AI אמיתי, פרימיום בלבד) -->
+        <div id="modal-ai-schedule-planner" class="apple-modal">
+            <div class="modal-sheet">
+                <div id="schedule-ai-loading" class="recipe-scan-loading hidden">
+                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                    <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
+                </div>
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="schedule_ai_modal_title">🧠 AI Schedule Planner</h3>
+                <p class="modal-subtitle" data-i18n="schedule_ai_modal_subtitle">Describe your recurring weekly plans in plain language and let AI fill in the schedule for you.</p>
+                <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g. I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop class on Tuesdays at 19:00"></textarea>
+                <div class="action-buttons-wrap" style="margin-top: 10px;">
+                    <button onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-ai-schedule-planner')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: הגדרת יעד חודשי (פרימיום בלבד) -->
+        <div id="modal-set-monthly-goal" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="monthly-goal-name-input" data-i18n-placeholder="monthly_goal_name_placeholder" placeholder="Goal name (e.g. Lose weight, Finish tasks)">
+                    <select id="monthly-goal-type-input" class="language-select">
+                        <option value="tasks" data-i18n="monthly_goal_type_tasks">Tasks completed</option>
+                        <option value="weight" data-i18n="monthly_goal_type_weight">Weight target</option>
+                        <option value="custom" data-i18n="monthly_goal_type_custom">Custom (manual progress)</option>
+                    </select>
+                    <input type="number" id="monthly-goal-target-input" data-i18n-placeholder="monthly_goal_target_placeholder" placeholder="Target number">
+                    <div class="action-buttons-wrap">
+                        <button onclick="saveMonthlyGoal()" class="btn-primary" data-i18n="monthly_goal_save_btn">Set goal</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-set-monthly-goal')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: חגיגת השגת יעד + הצעת פרס -->
+        <div id="modal-goal-celebration" class="apple-modal">
+            <div class="modal-sheet goal-celebration-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="goal-celebration-emoji">🎉</div>
+                <h3 data-i18n="monthly_goal_achieved_title">Goal Reached!</h3>
+                <p id="goal-celebration-text" class="modal-subtitle"></p>
+                <button class="btn-primary btn-premium-cta" style="width: 100%;" onclick="closeModal('modal-goal-celebration')" data-i18n="monthly_goal_celebration_close_btn">Thank you, I earned it!</button>
             </div>
         </div>
 
@@ -596,6 +667,12 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="premium_modal_title">Go Premium</h3>
                 <p class="modal-subtitle" data-i18n="premium_modal_subtitle">Unlock every current and future premium feature across the app.</p>
+                <ul class="premium-benefits-list">
+                    <li><span class="premium-benefit-icon">🎨</span><span data-i18n="premium_benefit_themes">Custom accent color themes</span></li>
+                    <li><span class="premium-benefit-icon">🧠</span><span data-i18n="premium_benefit_ai_planner">AI Schedule Planner - describe your week in plain language</span></li>
+                    <li><span class="premium-benefit-icon">🏆</span><span data-i18n="premium_benefit_goals">Monthly goals with reward celebrations</span></li>
+                    <li><span class="premium-benefit-icon">📷</span><span data-i18n="premium_benefit_unlimited">Unlimited recipe scans/uploads and saved meals</span></li>
+                </ul>
                 <div class="premium-tiers-grid">
                     <div class="premium-tier-option" data-tier="monthly" onclick="selectPremiumTier(this)">
                         <div class="premium-tier-name" data-i18n="premium_tier_monthly">Monthly</div>
@@ -618,7 +695,7 @@
 
     </div>
 
-    <script src="i18n.js?v=15"></script>
-    <script src="app.js?v=39"></script>
+    <script src="i18n.js?v=16"></script>
+    <script src="app.js?v=40"></script>
 </body>
 </html>

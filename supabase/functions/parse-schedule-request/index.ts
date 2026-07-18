@@ -1,0 +1,126 @@
+// Supabase Edge Function: parse-schedule-request
+//
+// Premium-only feature: accepts a free-text description of someone's recurring weekly
+// plans (e.g. "I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop
+// class on Tuesdays at 19:00") and uses a real AI model to extract every distinct
+// recurring event as {day_of_week, time, task_title}. The frontend then finds an open
+// slot (or adds a new row) for each one in the existing weekly_schedule accordion.
+//
+// Unlike the recipe scanner/text parser, this is gated on user_premium.is_premium alone -
+// there's no free-tier fallback count, since the whole feature is a premium perk.
+//
+// Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+// כדאי לבדוק שהמודל הזה עדיין נתמך/מומלץ לפני הפריסה:
+// https://docs.anthropic.com/en/docs/about-claude/models
+const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+function jsonResponse(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    });
+}
+
+Deno.serve(async (req) => {
+    if (req.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
+    if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+
+    try {
+        const authHeader = req.headers.get("Authorization") || "";
+        const jwt = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
+        if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
+        const userId = userData.user.id;
+
+        const { data: premiumRow } = await supabase
+            .from("user_premium")
+            .select("is_premium")
+            .eq("user_id", userId)
+            .maybeSingle();
+        const isPremium = !!premiumRow?.is_premium;
+        if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
+
+        const body = await req.json();
+        const text: string = body?.text;
+        if (!text || !text.trim()) return jsonResponse({ error: "missing_text" }, 400);
+
+        const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: ANTHROPIC_MODEL,
+                max_tokens: 1500,
+                messages: [
+                    {
+                        role: "user",
+                        content:
+                            "The user described their recurring weekly plans below, in any language. Extract every " +
+                            "distinct recurring event (one entry per day+activity combination - if an activity " +
+                            "happens on multiple days, create a separate entry for each day). Use 24-hour HH:MM time " +
+                            "format. Day names must be in English exactly as Sunday, Monday, Tuesday, Wednesday, " +
+                            "Thursday, Friday, or Saturday. Keep task titles short and in the same language the user " +
+                            "wrote in. Do not invent events that weren't mentioned.\n\nText: " + text,
+                    },
+                ],
+                tools: [
+                    {
+                        name: "extract_schedule_events",
+                        description: "Extract recurring weekly schedule events from natural language.",
+                        input_schema: {
+                            type: "object",
+                            properties: {
+                                events: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            day_of_week: { type: "string", enum: DAY_NAMES },
+                                            time: { type: "string", description: "24-hour HH:MM format" },
+                                            task_title: { type: "string" },
+                                        },
+                                        required: ["day_of_week", "time", "task_title"],
+                                    },
+                                },
+                            },
+                            required: ["events"],
+                        },
+                    },
+                ],
+                tool_choice: { type: "tool", name: "extract_schedule_events" },
+            }),
+        });
+
+        if (!anthropicRes.ok) {
+            const errText = await anthropicRes.text();
+            return jsonResponse({ error: "ai_provider_error", detail: errText }, 502);
+        }
+
+        const anthropicJson = await anthropicRes.json();
+        const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
+        if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
+
+        return jsonResponse({ ok: true, events: toolUseBlock.input.events || [] });
+    } catch (err) {
+        return jsonResponse({ error: "server_error", detail: String(err) }, 500);
+    }
+});
