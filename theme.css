@@ -249,6 +249,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-event-title-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
 .calendar-glance-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 
+.calendar-event-recurring-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; padding: 2px 0; }
+.calendar-event-recurring-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; }
+
+.calendar-event-series { display: flex; flex-direction: column; }
+.calendar-event-series-header { margin-bottom: 0; }
+.calendar-event-series-toggle { background: transparent; border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); border-radius: 8px; width: 26px; height: 26px; font-size: 0.68rem; padding: 0; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.calendar-event-series-toggle:active { transform: scale(0.92); }
+.calendar-event-series-dates { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 10px 14px; margin-top: -4px; background-color: rgba(20, 18, 26, 0.3); border-radius: 0 0 12px 12px; border-inline-start: 3px solid var(--accent-purple); }
+.calendar-event-series-date-line { background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); color: var(--accent-purple-light); font-size: 0.72rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; }
+
 /* המתכונים שלי: רשת קוביות (תמיד פתוחה, ללא חץ קיפול) + תצוגת פרטים במסך מלא */
 .recipes-main-card .card-body { max-height: none; overflow: visible; }
 .hidden { display: none !important; }
@@ -322,6 +332,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-form-grid input, .recipe-form-grid textarea, .recipe-form-grid select { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; font-family: inherit; resize: vertical; box-sizing: border-box; width: 100%; }
 #recipe-ai-raw-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(168, 85, 247, 0.2); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.85rem; outline: none; font-family: inherit; resize: vertical; box-sizing: border-box; width: 100%; margin-bottom: 8px; }
 #btn-recipe-ai-parse { width: 100%; margin-bottom: 4px; }
+.recipe-scan-divider { text-align: center; font-size: 0.7rem; color: var(--text-secondary); opacity: 0.6; margin: 8px 0; text-transform: uppercase; letter-spacing: 1px; }
+#btn-recipe-scan-image { width: 100%; margin-bottom: 4px; }
 
 .recipe-detail-view {
     display: none;

@@ -724,6 +724,12 @@ function formatEventDateBadge(dateStr) {
     return `${day}.${month}`;
 }
 
+function toggleRecurringDurationVisibility() {
+    const checkbox = document.getElementById('calendar-event-recurring-checkbox');
+    const durationSelect = document.getElementById('calendar-event-duration-input');
+    durationSelect.classList.toggle('hidden', !checkbox.checked);
+}
+
 async function loadCalendarEvents() {
     if (!supabaseClient) return;
     const container = document.getElementById('calendar-glance-list');
@@ -738,37 +744,143 @@ async function loadCalendarEvents() {
         container.appendChild(empty);
         return;
     }
+
+    // מקבצים אירועים חוזרים לפי recurrence_group_id, כדי להציג פריט אחד לכל סדרה
+    // (עם חץ להרחבה) במקום שורה נפרדת לכל תאריך שנוצר
+    const seriesMap = new Map();
+    const singleEvents = [];
     data.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'calendar-event-item';
-        const dateBadge = document.createElement('span');
-        dateBadge.className = 'calendar-event-date-badge';
-        dateBadge.textContent = formatEventDateBadge(item.event_date);
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'calendar-event-title-text';
-        titleSpan.textContent = item.event_title;
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
-        deleteBtn.onclick = () => deleteCalendarEvent(item.id);
-        row.appendChild(dateBadge);
-        row.appendChild(titleSpan);
-        row.appendChild(deleteBtn);
-        container.appendChild(row);
+        if (item.recurrence_group_id) {
+            if (!seriesMap.has(item.recurrence_group_id)) seriesMap.set(item.recurrence_group_id, []);
+            seriesMap.get(item.recurrence_group_id).push(item);
+        } else {
+            singleEvents.push(item);
+        }
     });
+
+    const displayEntries = [];
+    singleEvents.forEach(item => displayEntries.push({ sortDate: item.event_date, render: () => buildSingleEventRow(item) }));
+    seriesMap.forEach((items, groupId) => {
+        items.sort((a, b) => a.event_date.localeCompare(b.event_date));
+        displayEntries.push({ sortDate: items[0].event_date, render: () => buildRecurringEventRow(items, groupId) });
+    });
+    displayEntries.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
+    displayEntries.forEach(entry => container.appendChild(entry.render()));
+}
+
+function buildSingleEventRow(item) {
+    const row = document.createElement('div');
+    row.className = 'calendar-event-item';
+    const dateBadge = document.createElement('span');
+    dateBadge.className = 'calendar-event-date-badge';
+    dateBadge.textContent = formatEventDateBadge(item.event_date);
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'calendar-event-title-text';
+    titleSpan.textContent = item.event_title;
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-delete-item';
+    deleteBtn.textContent = '❌';
+    deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+    row.appendChild(dateBadge);
+    row.appendChild(titleSpan);
+    row.appendChild(deleteBtn);
+    return row;
+}
+
+function buildRecurringEventRow(items, groupId) {
+    const wrap = document.createElement('div');
+    wrap.className = 'calendar-event-series';
+
+    const header = document.createElement('div');
+    header.className = 'calendar-event-item calendar-event-series-header';
+
+    const dateBadge = document.createElement('span');
+    dateBadge.className = 'calendar-event-date-badge';
+    dateBadge.textContent = formatEventDateBadge(items[0].event_date);
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'calendar-event-title-text';
+    const lastDate = formatEventDateBadge(items[items.length - 1].event_date);
+    titleSpan.textContent = `${items[0].event_title} · ${t('calendar_event_weekly_until')} ${lastDate}`;
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'calendar-event-series-toggle';
+    toggleBtn.textContent = '▼';
+    toggleBtn.title = t('calendar_event_show_dates_title');
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-delete-item';
+    deleteBtn.textContent = '❌';
+    deleteBtn.onclick = () => deleteRecurringSeries(groupId);
+
+    header.appendChild(dateBadge);
+    header.appendChild(titleSpan);
+    header.appendChild(toggleBtn);
+    header.appendChild(deleteBtn);
+
+    const datesList = document.createElement('div');
+    datesList.className = 'calendar-event-series-dates hidden';
+    items.forEach(occurrence => {
+        const line = document.createElement('div');
+        line.className = 'calendar-event-series-date-line';
+        line.textContent = formatEventDateBadge(occurrence.event_date);
+        datesList.appendChild(line);
+    });
+
+    toggleBtn.onclick = () => {
+        const willShow = datesList.classList.contains('hidden');
+        datesList.classList.toggle('hidden', !willShow);
+        toggleBtn.textContent = willShow ? '▲' : '▼';
+    };
+
+    wrap.appendChild(header);
+    wrap.appendChild(datesList);
+    return wrap;
+}
+
+// יוצר תאריך אחד לשבוע, מתחילת הטווח ועד סוף מספר החודשים שנבחר - זהו הבסיס
+// למחוללי "משימות חוזרות" כמו שיעור גיטרה שבועי למשך 3/6/12 חודשים
+function generateWeeklyDates(startDateStr, months) {
+    const dates = [];
+    const start = new Date(`${startDateStr}T00:00:00`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + months);
+    const current = new Date(start);
+    while (current <= end) {
+        dates.push(getLocalDateString(current));
+        current.setDate(current.getDate() + 7);
+    }
+    return dates;
 }
 
 async function addCalendarEvent() {
     const titleInput = document.getElementById('calendar-event-title-input');
     const dateInput = document.getElementById('calendar-event-date-input');
+    const recurringCheckbox = document.getElementById('calendar-event-recurring-checkbox');
+    const durationSelect = document.getElementById('calendar-event-duration-input');
     const title = titleInput.value.trim();
     const date = dateInput.value;
     if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date });
+
+    let rows;
+    if (recurringCheckbox.checked) {
+        const months = parseInt(durationSelect.value) || 3;
+        const groupId = crypto.randomUUID();
+        rows = generateWeeklyDates(date, months).map(eventDate => ({
+            username: currentUsername, user_id: currentUserId,
+            event_title: title, event_date: eventDate, recurrence_group_id: groupId
+        }));
+    } else {
+        rows = [{ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, recurrence_group_id: null }];
+    }
+
+    const { error } = await supabaseClient.from('calendar_events').insert(rows);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     titleInput.value = '';
     dateInput.value = '';
+    recurringCheckbox.checked = false;
+    toggleRecurringDurationVisibility();
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
@@ -776,6 +888,11 @@ async function addCalendarEvent() {
 
 async function deleteCalendarEvent(id) {
     await supabaseClient.from('calendar_events').delete().eq('id', id);
+    loadCalendarEvents();
+}
+
+async function deleteRecurringSeries(groupId) {
+    await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId);
     loadCalendarEvents();
 }
 
@@ -1030,12 +1147,15 @@ function submitPremiumUpgrade() {
 // --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---
 // חסימה זו מדולגת לחלוטין עבור משתמשי פרימיום (isPremiumUser)
 const RECIPE_AI_FREE_LIMIT = 10;
+const IMAGE_SCAN_FREE_LIMIT = 10;
 let cachedAiUsage = 0;
+let cachedImageScansUsed = 0;
 
 async function loadAiUsage() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used, image_scans_used').eq('user_id', currentUserId).maybeSingle();
     cachedAiUsage = data ? data.recipe_ai_parses_used : 0;
+    cachedImageScansUsed = data ? (data.image_scans_used || 0) : 0;
 }
 
 async function incrementAiUsage() {
@@ -1063,6 +1183,73 @@ async function parseRecipeWithAI() {
 
     await incrementAiUsage();
     showAppToast(t('recipe_ai_parsed_success'));
+}
+
+// --- סריקת מתכון מתמונה: AI אמיתי בעל יכולת ראייה, דרך פרוקסי Edge Function בצד שרת ---
+// המפתח האמיתי (Anthropic) חי אך ורק כ-secret בפונקציית ה-Edge, לעולם לא בקוד לקוח.
+// המגבלה של 10 סריקות חינם נאכפת בשרת (לא ניתן לעקוף אותה מהלקוח).
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+            if (!match) { reject(new Error('invalid_data_url')); return; }
+            resolve({ mediaType: match[1], base64: match[2] });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleRecipeImageSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = ''; // מאפשר לבחור את אותו קובץ שוב בפעם הבאה
+    if (!file) return;
+
+    if (!isPremiumUser && cachedImageScansUsed >= IMAGE_SCAN_FREE_LIMIT) {
+        showAppToast(t('recipe_scan_limit_desc'), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    showAppToast(t('recipe_scan_in_progress'));
+    try {
+        const { mediaType, base64 } = await fileToBase64(file);
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ imageBase64: base64, mediaType })
+        });
+        const result = await res.json();
+
+        if (res.status === 402 || result.error === 'limit_reached') {
+            showAppToast(t('recipe_scan_limit_desc'), 'error');
+            openPremiumUpgradeModal();
+            return;
+        }
+        if (!res.ok || result.error || !result.recipe) {
+            showAppToast(t('recipe_scan_failed'), 'error');
+            return;
+        }
+
+        const recipe = result.recipe;
+        document.getElementById('recipe-title-input').value = recipe.title || '';
+        if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
+        document.getElementById('recipe-calories-input').value = recipe.calories || '';
+        document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
+        document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
+        if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
+        showAppToast(t('recipe_scan_success'));
+    } catch (err) {
+        showAppToast(t('recipe_scan_failed'), 'error');
+    }
 }
 
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---

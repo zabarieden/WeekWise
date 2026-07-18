@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=38">
+    <link rel="stylesheet" href="theme.css?v=39">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -516,6 +516,15 @@
                 <div class="preset-manager-grid">
                     <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title...">
                     <input type="date" id="calendar-event-date-input">
+                    <label class="calendar-event-recurring-toggle">
+                        <input type="checkbox" id="calendar-event-recurring-checkbox" onchange="toggleRecurringDurationVisibility()">
+                        <span data-i18n="calendar_event_recurring_label">Repeat weekly (same day each week)</span>
+                    </label>
+                    <select id="calendar-event-duration-input" class="language-select hidden">
+                        <option value="3" data-i18n="calendar_event_duration_3m">For 3 months</option>
+                        <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
+                        <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
+                    </select>
                     <div class="action-buttons-wrap">
                         <button onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event')" data-i18n="cancel_btn">Cancel</button>
@@ -531,6 +540,9 @@
                 <h3 id="modal-add-recipe-title" data-i18n="recipe_modal_title">Add Recipe</h3>
                 <textarea id="recipe-ai-raw-input" rows="4" data-i18n-placeholder="recipe_ai_paste_placeholder" placeholder="Paste a recipe here (from a website, WhatsApp, or notes)..."></textarea>
                 <button type="button" id="btn-recipe-ai-parse" class="btn-secondary" onclick="parseRecipeWithAI()" data-i18n="recipe_ai_parse_btn">✨ Parse with AI</button>
+                <div class="recipe-scan-divider" data-i18n="recipe_scan_or_divider">or</div>
+                <input type="file" id="recipe-image-input" accept="image/*" capture="environment" class="hidden" onchange="handleRecipeImageSelected(event)">
+                <button type="button" id="btn-recipe-scan-image" class="btn-secondary" onclick="document.getElementById('recipe-image-input').click()" data-i18n="recipe_scan_image_btn">📷 Scan a photo</button>
                 <div class="recipe-form-grid">
                     <input type="text" id="recipe-title-input" data-i18n-placeholder="recipe_title_placeholder" placeholder="Recipe title">
                     <select id="recipe-category-input" class="language-select">
@@ -584,7 +596,7 @@
 
     </div>
 
-    <script src="i18n.js?v=9"></script>
-    <script src="app.js?v=31"></script>
+    <script src="i18n.js?v=10"></script>
+    <script src="app.js?v=32"></script>
 </body>
 </html>
