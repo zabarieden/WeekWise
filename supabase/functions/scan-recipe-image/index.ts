@@ -38,6 +38,10 @@ const CORS_HEADERS = {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
+// בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
+const DEV_SUPERUSER_EMAILS = ["eden.zabari2@gmail.com"];
+
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
@@ -56,13 +60,14 @@ Deno.serve(async (req) => {
         const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
         const userId = userData.user.id;
+        const userEmail = (userData.user.email || "").toLowerCase();
 
         const { data: premiumRow } = await supabase
             .from("user_premium")
             .select("is_premium")
             .eq("user_id", userId)
             .maybeSingle();
-        const isPremium = !!premiumRow?.is_premium;
+        const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")

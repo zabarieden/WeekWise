@@ -1,13 +1,13 @@
-// Supabase Edge Function: parse-schedule-request
+// Supabase Edge Function: scan-meal-photo
 //
-// Premium-only feature: accepts a free-text description of someone's recurring weekly
-// plans (e.g. "I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop
-// class on Tuesdays at 19:00") and uses a real AI model to extract every distinct
-// recurring event as {day_of_week, time, task_title}. The frontend then finds an open
-// slot (or adds a new row) for each one in the existing weekly_schedule accordion.
+// Premium-only feature: accepts a base64 photo of a meal and uses a real vision-capable
+// AI model to identify the food items present and estimate calories for each, returning
+// {items: [{food_name, calories}, ...]}. The frontend drops each item straight into the
+// next empty meal-tracker row for the selected date and saves - no manual typing.
 //
-// Unlike the recipe scanner/text parser, this is gated on user_premium.is_premium alone -
-// there's no free-tier fallback count, since the whole feature is a premium perk.
+// Gated on user_premium.is_premium alone (like parse-schedule-request) - no free-tier
+// fallback, since reliable food identification + calorie estimation needs real vision
+// understanding a heuristic can't approximate.
 //
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
@@ -20,7 +20,9 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
 
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
+// בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
+const DEV_SUPERUSER_EMAILS = ["eden.zabari2@gmail.com"];
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -29,10 +31,6 @@ const CORS_HEADERS = {
 };
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-// עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
-// בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
-const DEV_SUPERUSER_EMAILS = ["eden.zabari2@gmail.com"];
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -50,8 +48,8 @@ Deno.serve(async (req) => {
         const jwt = authHeader.replace("Bearer ", "");
         const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
-        const userId = userData.user.id;
         const userEmail = (userData.user.email || "").toLowerCase();
+        const userId = userData.user.id;
 
         const { data: premiumRow } = await supabase
             .from("user_premium")
@@ -62,8 +60,10 @@ Deno.serve(async (req) => {
         if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const body = await req.json();
-        const text: string = body?.text;
-        if (!text || !text.trim()) return jsonResponse({ error: "missing_text" }, 400);
+        const { imageBase64, mediaType } = body;
+        if (!imageBase64 || !mediaType || !mediaType.startsWith("image/")) {
+            return jsonResponse({ error: "missing_image" }, 400);
+        }
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -74,44 +74,47 @@ Deno.serve(async (req) => {
             },
             body: JSON.stringify({
                 model: ANTHROPIC_MODEL,
-                max_tokens: 1500,
+                max_tokens: 1000,
                 messages: [
                     {
                         role: "user",
-                        content:
-                            "The user described their recurring weekly plans below, in any language. Extract every " +
-                            "distinct recurring event (one entry per day+activity combination - if an activity " +
-                            "happens on multiple days, create a separate entry for each day). Use 24-hour HH:MM time " +
-                            "format. Day names must be in English exactly as Sunday, Monday, Tuesday, Wednesday, " +
-                            "Thursday, Friday, or Saturday. Keep task titles short and in the same language the user " +
-                            "wrote in. Do not invent events that weren't mentioned.\n\nText: " + text,
+                        content: [
+                            { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+                            {
+                                type: "text",
+                                text:
+                                    "This photo shows a meal. Identify each distinct food item visible and estimate its " +
+                                    "calorie count as best you can from portion size and appearance. Combine items that " +
+                                    "are clearly part of one dish into a single entry rather than over-splitting. Extract " +
+                                    "the results with the log_meal_items tool.",
+                            },
+                        ],
                     },
                 ],
                 tools: [
                     {
-                        name: "extract_schedule_events",
-                        description: "Extract recurring weekly schedule events from natural language.",
+                        name: "log_meal_items",
+                        description: "Extract identified food items and estimated calories from a meal photo.",
                         input_schema: {
                             type: "object",
                             properties: {
-                                events: {
+                                items: {
                                     type: "array",
                                     items: {
                                         type: "object",
                                         properties: {
-                                            day_of_week: { type: "string", enum: DAY_NAMES },
-                                            time: { type: "string", description: "24-hour HH:MM format" },
-                                            task_title: { type: "string" },
+                                            food_name: { type: "string" },
+                                            calories: { type: "integer" },
                                         },
-                                        required: ["day_of_week", "time", "task_title"],
+                                        required: ["food_name", "calories"],
                                     },
                                 },
                             },
-                            required: ["events"],
+                            required: ["items"],
                         },
                     },
                 ],
-                tool_choice: { type: "tool", name: "extract_schedule_events" },
+                tool_choice: { type: "tool", name: "log_meal_items" },
             }),
         });
 
@@ -124,7 +127,7 @@ Deno.serve(async (req) => {
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
 
-        return jsonResponse({ ok: true, events: toolUseBlock.input.events || [] });
+        return jsonResponse({ ok: true, items: toolUseBlock.input.items || [] });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }

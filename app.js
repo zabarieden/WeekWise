@@ -69,9 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
     document.getElementById('btn-ai-quick-add').addEventListener('click', handleAIQuickAdd);
-    document.querySelectorAll('.btn-upgrade').forEach(btn => {
-        btn.addEventListener('click', () => openPremiumUpgradeModal());
-    });
 });
 
 // --- שפה: אכלוס בורר השפה, ורענון תוכן דינמי כשמחליפים שפה ---
@@ -240,7 +237,10 @@ function updatePresetLimitHint() {
     const hint = document.getElementById('preset-limit-hint');
     if (!hint) return;
     if (isPremiumUser) { hint.textContent = ''; return; }
-    hint.textContent = `${t('preset_limit_hint_prefix')} ${cachedPresets.length}/${MEAL_PRESET_FREE_LIMIT}`;
+    // מוצג רק כשנשארו 1-2 מקומות פנויים (כלומר 8 או 9 ארוחות שמורות) - שקט
+    // ולא פולשני עד שהמגבלה ממש קרובה, לא באופן קבוע
+    const remaining = MEAL_PRESET_FREE_LIMIT - cachedPresets.length;
+    hint.textContent = (remaining > 0 && remaining <= 2) ? t('preset_limit_near_hint').replace('{count}', remaining) : '';
 }
 
 async function loadMealPresetsToSelects() {
@@ -1416,8 +1416,16 @@ async function deleteRecipe() {
 let isPremiumUser = false;
 let selectedPremiumTier = 'semiannual';
 
+// עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
+// זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
+const DEV_SUPERUSER_EMAILS = ['eden.zabari2@gmail.com'];
+
 async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
+    if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
+        isPremiumUser = true;
+        return;
+    }
     const { data } = await supabaseClient.from('user_premium').select('is_premium').eq('user_id', currentUserId).maybeSingle();
     isPremiumUser = !!(data && data.is_premium);
 }
@@ -2063,6 +2071,69 @@ async function loadDailyNutrition(date) {
         if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; total += item.calories; }
     });
     document.getElementById('calories-today').innerText = total;
+}
+
+// --- זיהוי ארוחה מתמונה (פרימיום בלבד): AI אמיתי בעל יכולת ראייה, דרך אותו
+// דפוס פרוקסי בצד שרת כמו סריקת מתכונים - מזהה פריטי מזון וקלוריות ומכניס
+// אותם ישירות לשורות הריקות הבאות במעקב הארוחות היומי, בלי הקלדה ידנית ---
+function openMealPhotoScan() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    document.getElementById('meal-photo-input').click();
+}
+
+function showMealPhotoLoading() {
+    const el = document.getElementById('meal-photo-loading');
+    if (el) el.classList.remove('hidden');
+}
+
+function hideMealPhotoLoading() {
+    const el = document.getElementById('meal-photo-loading');
+    if (el) el.classList.add('hidden');
+}
+
+async function handleMealPhotoSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    if (!file.type.startsWith('image/')) { showAppToast(t('meal_photo_unsupported_type'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    const loadingTimer = setTimeout(showMealPhotoLoading, 5000);
+    try {
+        const { mediaType, base64 } = await fileToBase64(file);
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ imageBase64: base64, mediaType })
+        });
+        const result = await res.json();
+
+        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
+        if (!res.ok || result.error || !result.items || !result.items.length) {
+            showAppToast(t('meal_photo_failed'), 'error');
+            return;
+        }
+
+        const emptyRows = Array.from(document.querySelectorAll('.meal-row')).filter(row => !row.querySelector('.food-input').value.trim());
+        result.items.slice(0, emptyRows.length).forEach((item, index) => {
+            emptyRows[index].querySelector('.food-input').value = item.food_name || '';
+            emptyRows[index].querySelector('.calories-input').value = item.calories || 0;
+        });
+
+        await saveNutrition();
+        showAppToast(t('meal_photo_success'));
+    } catch (err) {
+        showAppToast(t('meal_photo_failed'), 'error');
+    } finally {
+        clearTimeout(loadingTimer);
+        hideMealPhotoLoading();
+    }
 }
 
 async function saveNutrition() {
