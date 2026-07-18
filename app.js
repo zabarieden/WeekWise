@@ -334,6 +334,8 @@ async function initAppAfterAuth(user) {
     loadProgressTargets();
     loadWeightHistory();
     loadCalendarEvents();
+    loadRecipes();
+    loadAiUsage();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -604,6 +606,162 @@ async function addCalendarEvent() {
 async function deleteCalendarEvent(id) {
     await supabaseClient.from('calendar_events').delete().eq('id', id);
     loadCalendarEvents();
+}
+
+// --- המתכונים שלי: רשת קוביות + תצוגת פרטים במסך מלא ---
+let cachedRecipes = [];
+
+async function loadRecipes() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('recipes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
+    cachedRecipes = data || [];
+    const grid = document.getElementById('recipes-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!cachedRecipes.length) {
+        const empty = document.createElement('div');
+        empty.className = 'recipes-empty';
+        empty.textContent = t('recipes_empty');
+        grid.appendChild(empty);
+        return;
+    }
+    cachedRecipes.forEach(recipe => {
+        const card = document.createElement('div');
+        card.className = 'recipe-card';
+        card.onclick = () => openRecipeDetail(recipe.id);
+        const title = document.createElement('div');
+        title.className = 'recipe-card-title';
+        title.textContent = recipe.title;
+        const calories = document.createElement('div');
+        calories.className = 'recipe-card-calories';
+        calories.textContent = recipe.calories ? `${recipe.calories} ${t('calories_unit')}` : '';
+        card.appendChild(title);
+        card.appendChild(calories);
+        grid.appendChild(card);
+    });
+}
+
+function openAddRecipeForm() {
+    document.getElementById('recipe-ai-raw-input').value = '';
+    document.getElementById('recipe-title-input').value = '';
+    document.getElementById('recipe-category-input').value = 'main';
+    document.getElementById('recipe-calories-input').value = '';
+    document.getElementById('recipe-ingredients-input').value = '';
+    document.getElementById('recipe-instructions-input').value = '';
+    openModal('modal-add-recipe');
+}
+
+async function saveRecipe() {
+    const title = document.getElementById('recipe-title-input').value.trim();
+    const category = document.getElementById('recipe-category-input').value;
+    const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
+    const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
+    const instructions = document.getElementById('recipe-instructions-input').value.trim();
+    if (!title) { showAppToast(t('recipe_title_required'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const { error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, title, category, calories, ingredients, instructions });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    closeModal('modal-add-recipe');
+    showAppToast(t('item_added_success'));
+    loadRecipes();
+}
+
+function openRecipeDetail(id) {
+    const recipe = cachedRecipes.find(r => r.id === id);
+    if (!recipe) return;
+    document.getElementById('recipe-detail-title').textContent = recipe.title;
+    document.getElementById('recipe-detail-category').textContent = t(`recipe_category_${recipe.category}`);
+    document.getElementById('recipe-detail-calories').textContent = recipe.calories ? `${recipe.calories} ${t('calories_unit')}` : '';
+
+    const ingredientsList = document.getElementById('recipe-detail-ingredients');
+    ingredientsList.innerHTML = '';
+    (recipe.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean).forEach(line => {
+        const li = document.createElement('li');
+        li.textContent = line;
+        ingredientsList.appendChild(li);
+    });
+
+    const instructionsEl = document.getElementById('recipe-detail-instructions');
+    instructionsEl.innerHTML = '';
+    (recipe.instructions || '').split('\n').map(s => s.trim()).filter(Boolean).forEach(line => {
+        const p = document.createElement('p');
+        p.textContent = line;
+        instructionsEl.appendChild(p);
+    });
+
+    document.getElementById('recipe-detail-view').classList.add('open');
+}
+
+function closeRecipeDetail() {
+    document.getElementById('recipe-detail-view').classList.remove('open');
+}
+
+// --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---
+const RECIPE_AI_FREE_LIMIT = 10;
+let cachedAiUsage = 0;
+
+async function loadAiUsage() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used').eq('user_id', currentUserId).maybeSingle();
+    cachedAiUsage = data ? data.recipe_ai_parses_used : 0;
+}
+
+async function incrementAiUsage() {
+    cachedAiUsage += 1;
+    const { data: existing } = await supabaseClient.from('user_ai_usage').select('user_id').eq('user_id', currentUserId).maybeSingle();
+    if (existing) await supabaseClient.from('user_ai_usage').update({ recipe_ai_parses_used: cachedAiUsage }).eq('user_id', currentUserId);
+    else await supabaseClient.from('user_ai_usage').insert({ user_id: currentUserId, username: currentUsername, recipe_ai_parses_used: cachedAiUsage });
+}
+
+async function parseRecipeWithAI() {
+    if (cachedAiUsage >= RECIPE_AI_FREE_LIMIT) { openModal('modal-ai-limit-reached'); return; }
+    const raw = document.getElementById('recipe-ai-raw-input').value.trim();
+    if (!raw) { showAppToast(t('recipe_ai_empty'), 'error'); return; }
+
+    const parsed = parseRecipeText(raw);
+    document.getElementById('recipe-title-input').value = parsed.title;
+    document.getElementById('recipe-category-input').value = parsed.category;
+    document.getElementById('recipe-calories-input').value = parsed.calories || '';
+    document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
+    document.getElementById('recipe-instructions-input').value = parsed.instructions;
+
+    await incrementAiUsage();
+    showAppToast(t('recipe_ai_parsed_success'));
+}
+
+// --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): מזהה כותרת/קלוריות/מצרכים/הוראות בטקסט חופשי ---
+function parseRecipeText(raw) {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const ingredientHeaderRe = /^(ingredients|מצרכים|רכיבים|ingr[ée]dients|المكونات)\s*:?$/i;
+    const instructionHeaderRe = /^(instructions|directions|method|preparation|הוראות(?:\s*הכנה)?|אופן ההכנה|طريقة التحضير|pr[ée]paration)\s*:?$/i;
+
+    const title = lines[0] || '';
+    const caloriesMatch = raw.match(/(\d{2,5})\s*(kcal|cal|calories|קלוריות|سعرة)/i);
+    const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
+
+    const ingredientStart = lines.findIndex(l => ingredientHeaderRe.test(l));
+    const instructionStart = lines.findIndex(l => instructionHeaderRe.test(l));
+
+    let ingredients = '';
+    let instructions = '';
+
+    if (ingredientStart !== -1) {
+        const end = instructionStart !== -1 && instructionStart > ingredientStart ? instructionStart : lines.length;
+        ingredients = lines.slice(ingredientStart + 1, end).join('\n');
+    }
+    if (instructionStart !== -1) {
+        instructions = lines.slice(instructionStart + 1).join('\n');
+    }
+    if (ingredientStart === -1 && instructionStart === -1) {
+        instructions = lines.slice(1).join('\n');
+    }
+
+    const lower = raw.toLowerCase();
+    let category = 'main';
+    if (/breakfast|בוקר|petit.d[ée]jeuner|فطور/i.test(lower)) category = 'breakfast';
+    else if (/snack|חטיף|collation|وجبة خفيفة/i.test(lower)) category = 'snack';
+
+    return { title, category, calories, ingredients, instructions };
 }
 
 async function saveScheduleSlotFromAdder() {
