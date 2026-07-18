@@ -316,6 +316,7 @@ async function initAppAfterAuth(user) {
     currentUsername = user.email;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
+    showAppLoadingOverlay();
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -326,16 +327,19 @@ async function initAppAfterAuth(user) {
 
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
-    await loadWeeklySchedule();
-    loadStats();
+    await Promise.all([
+        loadWeeklySchedule(),
+        loadStats(),
+        loadMealPresetsToSelects(),
+        loadPresetManageList(),
+        loadProgressTargets(),
+        loadWeightHistory(),
+        loadCalendarEvents(),
+        loadRecipes(),
+        loadAiUsage()
+    ]);
     loadAllCenterItems();
-    loadMealPresetsToSelects();
-    loadPresetManageList();
-    loadProgressTargets();
-    loadWeightHistory();
-    loadCalendarEvents();
-    loadRecipes();
-    loadAiUsage();
+    hideAppLoadingOverlay();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -349,6 +353,16 @@ async function initAppAfterAuth(user) {
         reminderIntervalStarted = true;
         setInterval(checkReminders, 20000);
     }
+}
+
+function showAppLoadingOverlay() {
+    const overlay = document.getElementById('app-loading-overlay');
+    if (overlay) overlay.classList.add('open');
+}
+
+function hideAppLoadingOverlay() {
+    const overlay = document.getElementById('app-loading-overlay');
+    if (overlay) overlay.classList.remove('open');
 }
 
 async function logoutUser() {
@@ -423,6 +437,56 @@ function defaultHoursKey() {
     return `weekwise_default_hours_${currentUserId}`;
 }
 
+// --- מספרי המשבצות הפעילות ליום (ניתנות להוספה/הסרה), נשמר מקומית per-device ---
+// ה-10 המקוריות הן רק פריסת ברירת מחדל ראשונית, לא מבנה קבוע
+let daySlotsConfig = {};
+
+function daySlotsKey() {
+    return `weekwise_day_slots_${currentUserId}`;
+}
+
+function defaultDaySlotNumbers() {
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+}
+
+function loadDaySlotsConfig() {
+    const raw = localStorage.getItem(daySlotsKey());
+    if (raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+                daySlotsConfig = parsed;
+                return;
+            }
+        } catch {}
+    }
+    daySlotsConfig = {};
+    dbDaysMap.forEach(day => { daySlotsConfig[day] = defaultDaySlotNumbers(); });
+}
+
+function saveDaySlotsConfig() {
+    localStorage.setItem(daySlotsKey(), JSON.stringify(daySlotsConfig));
+}
+
+async function removeDaySlot(day, slot) {
+    if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+    daySlotsConfig[day] = daySlotsConfig[day].filter(n => n !== slot);
+    saveDaySlotsConfig();
+    await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
+}
+
+function addDaySlot(day) {
+    if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+    const nums = daySlotsConfig[day];
+    const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+    daySlotsConfig[day] = [...nums, nextNum];
+    saveDaySlotsConfig();
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
+}
+
 function loadCustomDefaultHours() {
     const raw = localStorage.getItem(defaultHoursKey());
     if (!raw) return;
@@ -455,6 +519,7 @@ function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     const tabsStrip = document.getElementById('day-tabs-strip');
     if (!container) return;
+    loadDaySlotsConfig();
     container.innerHTML = '';
     if (tabsStrip) tabsStrip.innerHTML = '';
     dbDaysMap.forEach((dbDay, dayIndex) => {
@@ -476,10 +541,11 @@ function buildWeeklyScheduleAccordionUI() {
         pageDiv.id = `daypage-${dbDay}`;
         pageDiv.setAttribute('data-day', dbDay);
         let slotsHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1]}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button></div>`;
-        }
-        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div>`;
+        const slotNumbers = daySlotsConfig[dbDay] && daySlotsConfig[dbDay].length ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
+        slotNumbers.forEach(i => {
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+        });
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
@@ -608,24 +674,61 @@ async function deleteCalendarEvent(id) {
     loadCalendarEvents();
 }
 
-// --- המתכונים שלי: רשת קוביות + תצוגת פרטים במסך מלא ---
-let cachedRecipes = [];
+// --- המתכונים שלי: רשת קטגוריות קבועה -> רשימת מתכונים מסוננת -> תצוגת פרטים במסך מלא ---
+const RECIPE_CATEGORIES = [
+    { key: 'appetizers', icon: '🥟' },
+    { key: 'breakfast', icon: '🍳' },
+    { key: 'meat_mains', icon: '🍖' },
+    { key: 'dairy_mains', icon: '🧀' },
+    { key: 'sides', icon: '🥔' },
+    { key: 'snacks', icon: '🍿' },
+    { key: 'salads', icon: '🥗' },
+    { key: 'soups', icon: '🍲' },
+    { key: 'desserts', icon: '🍰' }
+];
 
-async function loadRecipes() {
-    if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('recipes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
-    cachedRecipes = data || [];
+let cachedRecipes = [];
+let currentRecipeCategory = null;
+let currentDetailRecipeId = null;
+let editingRecipeId = null;
+
+function renderRecipeCategoriesGrid() {
+    const grid = document.getElementById('recipes-categories-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    RECIPE_CATEGORIES.forEach(cat => {
+        const count = cachedRecipes.filter(r => r.category === cat.key).length;
+        const card = document.createElement('div');
+        card.className = 'recipe-category-card';
+        card.onclick = () => openRecipeCategory(cat.key);
+        const icon = document.createElement('div');
+        icon.className = 'recipe-category-icon';
+        icon.textContent = cat.icon;
+        const label = document.createElement('div');
+        label.className = 'recipe-category-label';
+        label.textContent = t(`recipe_category_${cat.key}`);
+        const countEl = document.createElement('div');
+        countEl.className = 'recipe-category-count';
+        countEl.textContent = count;
+        card.appendChild(icon);
+        card.appendChild(label);
+        card.appendChild(countEl);
+        grid.appendChild(card);
+    });
+}
+
+function renderRecipeCards(list) {
     const grid = document.getElementById('recipes-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    if (!cachedRecipes.length) {
+    if (!list.length) {
         const empty = document.createElement('div');
         empty.className = 'recipes-empty';
         empty.textContent = t('recipes_empty');
         grid.appendChild(empty);
         return;
     }
-    cachedRecipes.forEach(recipe => {
+    list.forEach(recipe => {
         const card = document.createElement('div');
         card.className = 'recipe-card';
         card.onclick = () => openRecipeDetail(recipe.id);
@@ -641,13 +744,63 @@ async function loadRecipes() {
     });
 }
 
+function openRecipeCategory(categoryKey) {
+    currentRecipeCategory = categoryKey;
+    document.getElementById('recipes-list-category-title').textContent = t(`recipe_category_${categoryKey}`);
+    renderRecipeCards(cachedRecipes.filter(r => r.category === categoryKey));
+    document.getElementById('recipes-categories-grid').classList.add('hidden');
+    document.getElementById('recipes-list-view').classList.add('open');
+}
+
+function closeRecipeCategory() {
+    currentRecipeCategory = null;
+    document.getElementById('recipes-list-view').classList.remove('open');
+    document.getElementById('recipes-categories-grid').classList.remove('hidden');
+}
+
+async function loadRecipes() {
+    if (!supabaseClient || !currentUserId) return;
+    showRecipesLoading();
+    const { data } = await supabaseClient.from('recipes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
+    cachedRecipes = data || [];
+    renderRecipeCategoriesGrid();
+    if (currentRecipeCategory) renderRecipeCards(cachedRecipes.filter(r => r.category === currentRecipeCategory));
+}
+
+function showRecipesLoading() {
+    const grid = document.getElementById('recipes-categories-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton-card';
+        grid.appendChild(skeleton);
+    }
+}
+
 function openAddRecipeForm() {
+    editingRecipeId = null;
+    document.getElementById('modal-add-recipe-title').textContent = t('recipe_modal_title');
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = '';
-    document.getElementById('recipe-category-input').value = 'main';
+    document.getElementById('recipe-category-input').value = currentRecipeCategory || '';
     document.getElementById('recipe-calories-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
     document.getElementById('recipe-instructions-input').value = '';
+    openModal('modal-add-recipe');
+}
+
+function openEditRecipeForm() {
+    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    if (!recipe) return;
+    editingRecipeId = recipe.id;
+    document.getElementById('modal-add-recipe-title').textContent = t('recipe_edit_modal_title');
+    document.getElementById('recipe-ai-raw-input').value = '';
+    document.getElementById('recipe-title-input').value = recipe.title || '';
+    document.getElementById('recipe-category-input').value = recipe.category || '';
+    document.getElementById('recipe-calories-input').value = recipe.calories || '';
+    document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
+    document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
     openModal('modal-add-recipe');
 }
 
@@ -658,42 +811,83 @@ async function saveRecipe() {
     const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
     const instructions = document.getElementById('recipe-instructions-input').value.trim();
     if (!title) { showAppToast(t('recipe_title_required'), 'error'); return; }
+    if (!category) { showAppToast(t('recipe_category_required'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, title, category, calories, ingredients, instructions });
+
+    const payload = { title, category, calories, ingredients, instructions };
+    let error;
+    if (editingRecipeId) {
+        ({ error } = await supabaseClient.from('recipes').update(payload).eq('id', editingRecipeId));
+    } else {
+        ({ error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, ...payload }));
+    }
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+
+    const wasEditing = !!editingRecipeId;
+    const editedId = editingRecipeId;
+    editingRecipeId = null;
     closeModal('modal-add-recipe');
-    showAppToast(t('item_added_success'));
-    loadRecipes();
+    showAppToast(t(wasEditing ? 'recipe_updated_success' : 'item_added_success'));
+    await loadRecipes();
+    if (wasEditing && editedId) openRecipeDetail(editedId);
 }
 
 function openRecipeDetail(id) {
     const recipe = cachedRecipes.find(r => r.id === id);
     if (!recipe) return;
+    currentDetailRecipeId = id;
     document.getElementById('recipe-detail-title').textContent = recipe.title;
     document.getElementById('recipe-detail-category').textContent = t(`recipe_category_${recipe.category}`);
     document.getElementById('recipe-detail-calories').textContent = recipe.calories ? `${recipe.calories} ${t('calories_unit')}` : '';
 
     const ingredientsList = document.getElementById('recipe-detail-ingredients');
     ingredientsList.innerHTML = '';
-    (recipe.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean).forEach(line => {
+    const ingredientLines = (recipe.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean);
+    if (ingredientLines.length) {
+        ingredientLines.forEach(line => {
+            const li = document.createElement('li');
+            li.textContent = line;
+            ingredientsList.appendChild(li);
+        });
+    } else {
         const li = document.createElement('li');
-        li.textContent = line;
+        li.className = 'recipe-detail-empty-line';
+        li.textContent = t('recipe_no_ingredients');
         ingredientsList.appendChild(li);
-    });
+    }
 
     const instructionsEl = document.getElementById('recipe-detail-instructions');
     instructionsEl.innerHTML = '';
-    (recipe.instructions || '').split('\n').map(s => s.trim()).filter(Boolean).forEach(line => {
+    const instructionLines = (recipe.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
+    if (instructionLines.length) {
+        instructionLines.forEach(line => {
+            const p = document.createElement('p');
+            p.textContent = line;
+            instructionsEl.appendChild(p);
+        });
+    } else {
         const p = document.createElement('p');
-        p.textContent = line;
+        p.className = 'recipe-detail-empty-line';
+        p.textContent = t('recipe_no_instructions');
         instructionsEl.appendChild(p);
-    });
+    }
 
     document.getElementById('recipe-detail-view').classList.add('open');
 }
 
 function closeRecipeDetail() {
+    currentDetailRecipeId = null;
     document.getElementById('recipe-detail-view').classList.remove('open');
+}
+
+async function deleteRecipe() {
+    if (!currentDetailRecipeId) return;
+    const idToDelete = currentDetailRecipeId;
+    await supabaseClient.from('recipes').delete().eq('id', idToDelete);
+    closeRecipeDetail();
+    showAppToast(t('recipe_deleted_success'));
+    await loadRecipes();
+    if (currentRecipeCategory) openRecipeCategory(currentRecipeCategory);
 }
 
 // --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---
@@ -720,7 +914,7 @@ async function parseRecipeWithAI() {
 
     const parsed = parseRecipeText(raw);
     document.getElementById('recipe-title-input').value = parsed.title;
-    document.getElementById('recipe-category-input').value = parsed.category;
+    if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
     document.getElementById('recipe-calories-input').value = parsed.calories || '';
     document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
     document.getElementById('recipe-instructions-input').value = parsed.instructions;
@@ -729,11 +923,20 @@ async function parseRecipeWithAI() {
     showAppToast(t('recipe_ai_parsed_success'));
 }
 
-// --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): מזהה כותרת/קלוריות/מצרכים/הוראות בטקסט חופשי ---
+// --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
+// מזהה כותרות "מצרכים/הוראות" גם באמצע שורה (עם נקודתיים), מסנן שורות "רעש" טיפוסיות
+// מאתרי מתכונים (זמן הכנה, דירוג, שיתוף וכו'), ובהיעדר כותרות - ממיין כל שורה לפי
+// דפוסי כמות/יחידות מול פעלי בישול, בלי לנחש או להמציא תוכן שלא הופיע בטקסט המקורי.
+const RECIPE_JUNK_LINE_RE = /^(print|share|save|rate this recipe|jump to recipe|prep\s*time|cook\s*time|total\s*time|servings?|yield|nutrition|difficulty|course|cuisine|advertisement|★|https?:\/\/|שתפו|הדפיסו|שמרו|דרגו|זמן הכנה|זמן בישול|מספר מנות|קושי)/i;
+const RECIPE_INGREDIENT_WORD_RE = /^([\d½¼¾⅓⅔]|cup|cups|tbsp|tablespoon|tsp|teaspoon|gram|grams|\bg\b|kg|ml|\bl\b|oz|ounce|clove|cloves|pinch|slice|slices|כוס|כפית|כף|גרם|ק"ג|ג'|מ"ל|קורט|שן|פרוסות|יחידות)/i;
+const RECIPE_INSTRUCTION_WORD_RE = /^(step\s*\d|\d+[.)]\s|mix|stir|bake|heat|add|pour|chop|preheat|whisk|combine|serve|cook|boil|fry|ערבבו|אפו|בשלו|הוסיפו|חממו|קצצו|טגנו|ערבבי|הכינו|קרמלו|בחשו)/i;
+
 function parseRecipeText(raw) {
-    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-    const ingredientHeaderRe = /^(ingredients|מצרכים|רכיבים|ingr[ée]dients|المكونات)\s*:?$/i;
-    const instructionHeaderRe = /^(instructions|directions|method|preparation|הוראות(?:\s*הכנה)?|אופן ההכנה|طريقة التحضير|pr[ée]paration)\s*:?$/i;
+    const rawLines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = rawLines.filter(l => !RECIPE_JUNK_LINE_RE.test(l));
+
+    const ingredientHeaderRe = /^(ingredients?|מצרכים|מרכיבים|רכיבים|ingr[ée]dients?|المكونات)\s*:?\s*(.*)$/i;
+    const instructionHeaderRe = /^(instructions?|directions?|method|preparation|הוראות(?:\s*(?:ה)?הכנה)?|אופן\s*(?:ה)?הכנה|طريقة\s*التحضير|pr[ée]paration)\s*:?\s*(.*)$/i;
 
     const title = lines[0] || '';
     const caloriesMatch = raw.match(/(\d{2,5})\s*(kcal|cal|calories|קלוריות|سعرة)/i);
@@ -745,21 +948,43 @@ function parseRecipeText(raw) {
     let ingredients = '';
     let instructions = '';
 
-    if (ingredientStart !== -1) {
-        const end = instructionStart !== -1 && instructionStart > ingredientStart ? instructionStart : lines.length;
-        ingredients = lines.slice(ingredientStart + 1, end).join('\n');
-    }
-    if (instructionStart !== -1) {
-        instructions = lines.slice(instructionStart + 1).join('\n');
-    }
-    if (ingredientStart === -1 && instructionStart === -1) {
-        instructions = lines.slice(1).join('\n');
+    if (ingredientStart !== -1 || instructionStart !== -1) {
+        if (ingredientStart !== -1) {
+            const headerMatch = lines[ingredientStart].match(ingredientHeaderRe);
+            const inlineFirstItem = headerMatch && headerMatch[2] ? [headerMatch[2]] : [];
+            const end = instructionStart !== -1 && instructionStart > ingredientStart ? instructionStart : lines.length;
+            ingredients = [...inlineFirstItem, ...lines.slice(ingredientStart + 1, end)].join('\n');
+        }
+        if (instructionStart !== -1) {
+            const headerMatch = lines[instructionStart].match(instructionHeaderRe);
+            const inlineFirstStep = headerMatch && headerMatch[2] ? [headerMatch[2]] : [];
+            instructions = [...inlineFirstStep, ...lines.slice(instructionStart + 1)].join('\n');
+        }
+    } else {
+        const bodyLines = lines.slice(1);
+        const ingredientLines = [];
+        const instructionLines = [];
+        bodyLines.forEach(line => {
+            if (RECIPE_INGREDIENT_WORD_RE.test(line) && !RECIPE_INSTRUCTION_WORD_RE.test(line)) ingredientLines.push(line);
+            else if (RECIPE_INSTRUCTION_WORD_RE.test(line)) instructionLines.push(line);
+            else if (line.split(' ').length <= 6) ingredientLines.push(line);
+            else instructionLines.push(line);
+        });
+        ingredients = ingredientLines.join('\n');
+        instructions = instructionLines.join('\n');
     }
 
     const lower = raw.toLowerCase();
-    let category = 'main';
-    if (/breakfast|בוקר|petit.d[ée]jeuner|فطور/i.test(lower)) category = 'breakfast';
-    else if (/snack|חטיף|collation|وجبة خفيفة/i.test(lower)) category = 'snack';
+    let category = '';
+    if (/breakfast|ארוחת בוקר|petit.d[ée]jeuner|desayuno|فطور/i.test(lower)) category = 'breakfast';
+    else if (/appetizer|starter|ראשונ|entrada|entr[ée]e|مقبلات/i.test(lower)) category = 'appetizers';
+    else if (/salad|סלט|ensalada|salade|سلطة/i.test(lower)) category = 'salads';
+    else if (/soup|מרק|sopa|soupe|شوربة/i.test(lower)) category = 'soups';
+    else if (/dessert|קינוח|postre|حلوى/i.test(lower)) category = 'desserts';
+    else if (/snack|נשנוש|ביניים|collation|aperitivo|وجبة خفيفة/i.test(lower)) category = 'snacks';
+    else if (/side dish|תוספת|accompagnement|guarnici[oó]n|جانبي/i.test(lower)) category = 'sides';
+    else if (/dairy|חלבי|גבינה|fromage|queso|لبن|جبن/i.test(lower)) category = 'dairy_mains';
+    else if (/meat|chicken|beef|בשר|עוף|בשרי|viande|poulet|carne|لحم|دجاج/i.test(lower)) category = 'meat_mains';
 
     return { title, category, calories, ingredients, instructions };
 }

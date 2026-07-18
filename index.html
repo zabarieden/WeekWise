@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=34">
+    <link rel="stylesheet" href="theme.css?v=35">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -43,6 +43,11 @@
                     <a href="#" id="auth-toggle-link" data-i18n="auth_toggle_signup">Sign Up</a>
                 </p>
             </div>
+        </div>
+
+        <!-- מסך טעינה עדין בזמן שליפת הנתונים מ-Supabase לאחר התחברות -->
+        <div id="app-loading-overlay" class="app-loading-overlay">
+            <div class="app-loading-spinner"></div>
         </div>
 
         <!-- האפליקציה הראשית -->
@@ -265,7 +270,19 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="recipes-grid" class="recipes-grid"></div>
+                            <!-- רמה 1: רשת קטגוריות קבועה -->
+                            <div id="recipes-categories-grid" class="recipes-categories-grid"></div>
+
+                            <!-- רמה 2: רשימת המתכונים בקטגוריה שנבחרה -->
+                            <div id="recipes-list-view" class="recipes-list-view">
+                                <div class="recipes-list-header">
+                                    <button class="btn-recipe-back" onclick="closeRecipeCategory()">
+                                        <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
+                                    </button>
+                                    <h3 id="recipes-list-category-title"></h3>
+                                </div>
+                                <div id="recipes-grid" class="recipes-grid"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -299,6 +316,14 @@
                     <button class="btn-recipe-back" onclick="closeRecipeDetail()">
                         <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
                     </button>
+                    <div class="recipe-detail-header-actions">
+                        <button class="btn-recipe-edit" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" title="Edit recipe">
+                            ✏️ <span data-i18n="recipe_edit_btn">Edit</span>
+                        </button>
+                        <button class="btn-recipe-delete" onclick="deleteRecipe()" data-i18n-title="recipe_delete_title" title="Delete recipe">
+                            🗑️ <span data-i18n="recipe_delete_btn">Delete</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="recipe-detail-body">
                     <h2 id="recipe-detail-title"></h2>
@@ -506,15 +531,22 @@
         <div id="modal-add-recipe" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="recipe_modal_title">Add Recipe</h3>
+                <h3 id="modal-add-recipe-title" data-i18n="recipe_modal_title">Add Recipe</h3>
                 <textarea id="recipe-ai-raw-input" rows="4" data-i18n-placeholder="recipe_ai_paste_placeholder" placeholder="Paste a recipe here (from a website, WhatsApp, or notes)..."></textarea>
                 <button type="button" id="btn-recipe-ai-parse" class="btn-secondary" onclick="parseRecipeWithAI()" data-i18n="recipe_ai_parse_btn">✨ Parse with AI</button>
                 <div class="recipe-form-grid">
                     <input type="text" id="recipe-title-input" data-i18n-placeholder="recipe_title_placeholder" placeholder="Recipe title">
                     <select id="recipe-category-input" class="language-select">
+                        <option value="" data-i18n="recipe_category_select_placeholder">Select category...</option>
+                        <option value="appetizers" data-i18n="recipe_category_appetizers">Appetizers</option>
                         <option value="breakfast" data-i18n="recipe_category_breakfast">Breakfast</option>
-                        <option value="main" data-i18n="recipe_category_main">Main</option>
-                        <option value="snack" data-i18n="recipe_category_snack">Snack</option>
+                        <option value="meat_mains" data-i18n="recipe_category_meat_mains">Meat Mains</option>
+                        <option value="dairy_mains" data-i18n="recipe_category_dairy_mains">Dairy Mains</option>
+                        <option value="sides" data-i18n="recipe_category_sides">Sides</option>
+                        <option value="snacks" data-i18n="recipe_category_snacks">Snacks</option>
+                        <option value="salads" data-i18n="recipe_category_salads">Salads</option>
+                        <option value="soups" data-i18n="recipe_category_soups">Soups</option>
+                        <option value="desserts" data-i18n="recipe_category_desserts">Desserts</option>
                     </select>
                     <input type="number" id="recipe-calories-input" data-i18n-placeholder="recipe_calories_placeholder" placeholder="Total calories">
                     <textarea id="recipe-ingredients-input" rows="4" data-i18n-placeholder="recipe_ingredients_placeholder" placeholder="One ingredient per line"></textarea>
@@ -540,7 +572,7 @@
 
     </div>
 
-    <script src="i18n.js?v=7"></script>
-    <script src="app.js?v=27"></script>
+    <script src="i18n.js?v=8"></script>
+    <script src="app.js?v=28"></script>
 </body>
 </html>
