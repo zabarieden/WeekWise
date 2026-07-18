@@ -436,8 +436,16 @@ function buildWeeklyScheduleAccordionUI() {
 }
 
 function scrollToDay(dbDay) {
+    // בכוונה לא scrollIntoView: זה "מטפס" בכל שרשרת ה-ancestors וגולל כל מכל
+    // גלילה שהוא מוצא בדרך, לא רק את מכל הימים. כאן גוללים ידנית ורק את
+    // מכל הימים עצמו, כדי שהקלקה על יום לעולם לא תזיז שום דבר אחר בעמוד.
+    const container = document.getElementById('accordion-container');
     const page = document.getElementById(`daypage-${dbDay}`);
-    if (page) page.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    if (!container || !page) return;
+    const containerRect = container.getBoundingClientRect();
+    const pageRect = page.getBoundingClientRect();
+    const delta = pageRect.left - containerRect.left;
+    container.scrollBy({ left: delta, behavior: 'smooth' });
 }
 
 let dayScrollObserver = null;
@@ -475,7 +483,7 @@ async function addTaskToDay(day) {
     const slotNum = targetSlot.getAttribute('data-slot');
     targetSlot.querySelector('.slot-task').value = taskVal;
     if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
-    targetSlot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetSlot.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     targetSlot.classList.add('just-added');
     setTimeout(() => targetSlot.classList.remove('just-added'), 1200);
     await saveScheduleSlot(day, slotNum);
