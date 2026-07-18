@@ -102,7 +102,8 @@ function loadAllCenterItems() {
 
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('created_at', { ascending: true });
+    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('created_at', { ascending: true });
+    if (error) { showAppToast('שגיאה בטעינת הרשימה: ' + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
     listUl.innerHTML = '';
@@ -342,7 +343,12 @@ function submitCenterItem() {
     pendingCenterItemType = null;
 }
 
-async function insertCenterItemDirect(type, content) { await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content }); loadCenterItems(type); }
+async function insertCenterItemDirect(type, content) {
+    if (!supabaseClient || !currentUserId) { showAppToast('לא מחוברים - נסו לרענן את הדף ולהתחבר מחדש.', 'error'); return; }
+    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content });
+    if (error) { showAppToast('שגיאה בהוספת הפריט: ' + error.message, 'error'); return; }
+    loadCenterItems(type);
+}
 
 function initCubesNavigation() {
     const cubes = document.querySelectorAll('.nav-cube');
@@ -402,25 +408,63 @@ function saveDefaultHours() {
 
 function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
+    const tabsStrip = document.getElementById('day-tabs-strip');
     if (!container) return;
     container.innerHTML = '';
+    if (tabsStrip) tabsStrip.innerHTML = '';
     daysOfWeek.forEach((dayName, dayIndex) => {
         const dbDay = dbDaysMap[dayIndex];
         const dateStr = getFormattedDateForDay(dayIndex);
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'accordion-item';
-        itemDiv.id = `accordion-${dbDay}`;
+
+        if (tabsStrip) {
+            const tab = document.createElement('button');
+            tab.type = 'button';
+            tab.className = 'day-tab' + (dayIndex === 0 ? ' active' : '');
+            tab.id = `daytab-${dbDay}`;
+            tab.innerHTML = `<span class="day-tab-name">${dayName}</span><span class="day-tab-date">${dateStr}</span>`;
+            tab.onclick = () => scrollToDay(dbDay);
+            tabsStrip.appendChild(tab);
+        }
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'day-page';
+        pageDiv.id = `daypage-${dbDay}`;
+        pageDiv.setAttribute('data-day', dbDay);
         let slotsHTML = '';
         for (let i = 1; i <= 10; i++) {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1]}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button></div>`;
         }
-        itemDiv.innerHTML = `<div class="accordion-header" onclick="toggleAccordion('${dbDay}')"><span>${dateStr} | יום ${dayName}</span><span class="accordion-icon">▼</span></div><div class="accordion-content"><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="שעה"><input type="text" class="day-add-task-input" placeholder="הוסיפו משימה ליום זה..."><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">➕ הוספה</button></div></div>`;
-        container.appendChild(itemDiv);
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | יום ${dayName}</div><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="שעה"><input type="text" class="day-add-task-input" placeholder="הוסיפו משימה ליום זה..."><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">➕ הוספה</button></div>`;
+        container.appendChild(pageDiv);
     });
+    setupDayScrollObserver();
+}
+
+function scrollToDay(dbDay) {
+    const page = document.getElementById(`daypage-${dbDay}`);
+    if (page) page.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+}
+
+let dayScrollObserver = null;
+function setupDayScrollObserver() {
+    const container = document.getElementById('accordion-container');
+    if (!container) return;
+    if (dayScrollObserver) dayScrollObserver.disconnect();
+    dayScrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                const day = entry.target.getAttribute('data-day');
+                document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+                const tab = document.getElementById(`daytab-${day}`);
+                if (tab) tab.classList.add('active');
+            }
+        });
+    }, { root: container, threshold: [0.5] });
+    document.querySelectorAll('.day-page').forEach(page => dayScrollObserver.observe(page));
 }
 
 async function addTaskToDay(day) {
-    const container = document.getElementById(`accordion-${day}`);
+    const container = document.getElementById(`daypage-${day}`);
     if (!container) return;
     const timeInput = container.querySelector('.day-add-time');
     const taskInput = container.querySelector('.day-add-task-input');
@@ -442,13 +486,6 @@ async function addTaskToDay(day) {
     await saveScheduleSlot(day, slotNum);
     timeInput.value = '';
     taskInput.value = '';
-}
-
-function toggleAccordion(day) {
-    const item = document.getElementById(`accordion-${day}`);
-    const isActive = item.classList.contains('active');
-    document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
-    if (!isActive) item.classList.add('active');
 }
 
 function toggleCardSection(headerEl) {
