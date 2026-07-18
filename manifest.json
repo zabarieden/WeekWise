@@ -1,15 +1,15 @@
 {
   "name": "MyWeek",
   "short_name": "MyWeek",
-  "description": "ניהול לוח זמנים שבועי, תזונה ומטרות אישיות",
+  "description": "Weekly schedule, nutrition, and personal goals management",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#07060a",
   "theme_color": "#07060a",
-  "lang": "he",
-  "dir": "rtl",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     { "src": "icon.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icon.png", "sizes": "512x512", "type": "image/png" }

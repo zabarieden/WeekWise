@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=25">
+    <link rel="stylesheet" href="theme.css?v=26">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -33,21 +33,21 @@
         <div id="login-overlay" class="login-overlay">
             <div class="login-card">
                 <h2>⚡ MyWeek</h2>
-                <p id="auth-mode-subtitle">התחברו לחשבון שלכם:</p>
-                <input type="email" id="auth-email-input" placeholder="אימייל" autocomplete="email" autofocus>
-                <input type="password" id="auth-password-input" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="current-password">
+                <p id="auth-mode-subtitle" data-i18n="auth_login_subtitle">Log in to your account:</p>
+                <input type="email" id="auth-email-input" data-i18n-placeholder="auth_email_placeholder" placeholder="Email" autocomplete="email" autofocus>
+                <input type="password" id="auth-password-input" data-i18n-placeholder="auth_password_placeholder" placeholder="Password (at least 6 characters)" autocomplete="current-password">
                 <p id="auth-message" class="auth-message"></p>
-                <button id="btn-auth-submit" class="btn-primary">התחברו</button>
+                <button id="btn-auth-submit" class="btn-primary" data-i18n="auth_login_btn">Log In</button>
                 <p class="auth-toggle-line">
-                    <span id="auth-toggle-text">אין לכם חשבון?</span>
-                    <a href="#" id="auth-toggle-link">הרשמה</a>
+                    <span id="auth-toggle-text" data-i18n="auth_no_account">Don't have an account?</span>
+                    <a href="#" id="auth-toggle-link" data-i18n="auth_toggle_signup">Sign Up</a>
                 </p>
             </div>
         </div>
 
         <!-- האפליקציה הראשית -->
         <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; flex-direction: column;">
-            
+
             <!-- התחלה ישירה מקוביות הניווט מזכוכית -->
             <div class="dashboard-grid" style="margin-top: 10px;">
                 <div class="nav-cube active" data-target="schedule-section">
@@ -56,23 +56,27 @@
                 </div>
                 <div class="nav-cube" data-target="nutrition-section">
                     <span class="cube-icon">🍎</span>
-                    <span class="cube-title">תזונה ומדדים</span>
+                    <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
                 </div>
                 <div class="nav-cube" data-target="my-center-section">
                     <span class="cube-icon">✨</span>
-                    <span class="cube-title">מטרות ומשימות</span>
+                    <span class="cube-title" data-i18n="nav_goals">Goals & Tasks</span>
+                </div>
+                <div class="nav-cube" data-target="settings-section">
+                    <span class="cube-icon">⚙️</span>
+                    <span class="cube-title" data-i18n="nav_settings">Settings</span>
                 </div>
             </div>
 
             <div class="main-scroll-area">
-                
+
                 <!-- חלונית 1: MyWeek -->
                 <section class="tab-content active-tab" id="schedule-section">
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>MyWeek</h2>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" title="התאמת שעות ברירת מחדל">⚙️</button>
+                                <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" data-i18n-title="schedule_hours_gear_title" title="Set default hours">⚙️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
@@ -87,7 +91,7 @@
                                 </div>
                                 <div class="vertical-scroll-track" aria-hidden="true"></div>
                             </div>
-                            <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;">ניקוי כל הלו"ז השבועי</button>
+                            <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;" data-i18n="schedule_clear_week_btn">Clear entire weekly schedule</button>
                         </div>
                     </div>
                 </section>
@@ -96,7 +100,7 @@
                 <section class="tab-content" id="nutrition-section">
                     <div class="card" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>מעקב ארוחות יומי</h2>
+                            <h2 data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset'); loadPresetManageList();">＋</button>
                                 <span class="card-toggle-icon">▼</span>
@@ -107,75 +111,75 @@
                                 <input type="date" id="selected-date">
                             </div>
 
-                            <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;">שכפל תפריט מיום קודם</button>
+                            <button id="btn-copy-yesterday" class="btn-secondary" style="margin-top: 10px;" data-i18n="nutrition_copy_yesterday_btn">Copy menu from previous day</button>
 
                             <div class="meals-container" style="margin-top: 15px;">
                                 <div class="meal-row" data-meal="meal_1">
                                     <div class="meal-header-row">
-                                        <span class="meal-label">ארוחה 1</span>
+                                        <span class="meal-label" data-i18n="meal_label_1">Meal 1</span>
                                         <select class="preset-select" data-category="morning"></select>
                                     </div>
                                     <div class="meal-inputs-wrap">
-                                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
                                     </div>
                                 </div>
                                 <div class="meal-row" data-meal="meal_2">
                                     <div class="meal-header-row">
-                                        <span class="meal-label">ארוחה 2</span>
+                                        <span class="meal-label" data-i18n="meal_label_2">Meal 2</span>
                                         <select class="preset-select" data-category="noon"></select>
                                     </div>
                                     <div class="meal-inputs-wrap">
-                                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
                                     </div>
                                 </div>
                                 <div class="meal-row" data-meal="meal_3">
                                     <div class="meal-header-row">
-                                        <span class="meal-label">ארוחה 3</span>
+                                        <span class="meal-label" data-i18n="meal_label_3">Meal 3</span>
                                         <select class="preset-select" data-category="evening"></select>
                                     </div>
                                     <div class="meal-inputs-wrap">
-                                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
                                     </div>
                                 </div>
                                 <div class="meal-row" data-meal="meal_4">
                                     <div class="meal-header-row">
-                                        <span class="meal-label">נשנושים 1</span>
+                                        <span class="meal-label" data-i18n="meal_label_4">Snack 1</span>
                                         <select class="preset-select" data-category="snack"></select>
                                     </div>
                                     <div class="meal-inputs-wrap">
-                                        <input type="text" placeholder="מה אכלת?" class="food-input">
-                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
                                     </div>
                                 </div>
                                 <div class="meal-row" data-meal="snack">
                                     <div class="meal-header-row">
-                                        <span class="meal-label">נשנושים 2</span>
+                                        <span class="meal-label" data-i18n="meal_label_snack">Snack 2</span>
                                         <select class="preset-select" data-category="snack"></select>
                                     </div>
                                     <div class="meal-inputs-wrap">
-                                        <input type="text" placeholder="נשנושים ומתוקים..." class="food-input">
-                                        <input type="number" placeholder="קלוריות" class="calories-input">
+                                        <input type="text" data-i18n-placeholder="snack_input_placeholder" placeholder="Snacks and treats..." class="food-input">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
                                     </div>
                                 </div>
                             </div>
-                            <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;">שמור תפריט להיום</button>
+                            <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;" data-i18n="nutrition_save_btn">Save today's menu</button>
                         </div>
                     </div>
 
                     <!-- מדדי קלוריות -->
                     <div class="card" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>מדדי קלוריות</h2>
+                            <h2 data-i18n="calorie_metrics_title">Calorie Metrics</h2>
                             <span class="card-toggle-icon">▼</span>
                         </div>
                         <div class="card-body">
                             <div class="stats-grid">
-                                <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="calories-today">0</div></div>
-                                <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="calories-weekly">0</div></div>
-                                <div class="stat-box monthly"><h3>חודשי</h3><div class="stat-number" id="calories-monthly">0</div></div>
+                                <div class="stat-box today"><h3 data-i18n="stat_today">Today</h3><div class="stat-number" id="calories-today">0</div></div>
+                                <div class="stat-box weekly"><h3 data-i18n="stat_weekly">Weekly</h3><div class="stat-number" id="calories-weekly">0</div></div>
+                                <div class="stat-box monthly"><h3 data-i18n="stat_monthly">Monthly</h3><div class="stat-number" id="calories-monthly">0</div></div>
                             </div>
                         </div>
                     </div>
@@ -183,17 +187,17 @@
                     <!-- מד צעדים -->
                     <div class="card" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>מד צעדים יומי</h2>
+                            <h2 data-i18n="steps_title">Daily Step Counter</h2>
                             <span class="card-toggle-icon">▼</span>
                         </div>
                         <div class="card-body">
                             <div id="steps-connect-wrap">
-                                <button id="btn-connect-health" class="btn-secondary">🔗 חיבור למד בריאות</button>
-                                <p class="steps-connect-note">חיבור אוטומטי ל-Google Fit / Apple Health יתאפשר בגרסת האפליקציה הנייטיבית.</p>
+                                <button id="btn-connect-health" class="btn-secondary" data-i18n="steps_connect_btn">🔗 Connect Health Data</button>
+                                <p class="steps-connect-note" data-i18n="steps_connect_note">Automatic sync with Google Fit / Apple Health will be available in the native app version.</p>
                             </div>
                             <div class="stats-grid stats-grid-2col" style="margin-top: 10px;">
-                                <div class="stat-box today"><h3>היום</h3><div class="stat-number" id="steps-today">0</div></div>
-                                <div class="stat-box weekly"><h3>שבועי</h3><div class="stat-number" id="steps-weekly">0</div></div>
+                                <div class="stat-box today"><h3 data-i18n="stat_today">Today</h3><div class="stat-number" id="steps-today">0</div></div>
+                                <div class="stat-box weekly"><h3 data-i18n="stat_weekly">Weekly</h3><div class="stat-number" id="steps-weekly">0</div></div>
                             </div>
                         </div>
                     </div>
@@ -201,15 +205,15 @@
                     <!-- מעקב משקל -->
                     <div class="card" id="accordion-weight-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>מעקב משקל תקופתי</h2>
+                            <h2 data-i18n="weight_title">Periodic Weight Tracking</h2>
                             <span class="card-toggle-icon">▼</span>
                         </div>
                         <div class="card-body">
                             <div style="display: flex; flex-direction: column; gap: 15px;">
                                 <div class="weight-inputs-wrap">
-                                    <input type="number" step="0.1" id="new-weight-val" placeholder="משקל (ק״ג)">
+                                    <input type="number" step="0.1" id="new-weight-val" data-i18n-placeholder="weight_placeholder" placeholder="Weight (kg)">
                                     <input type="date" id="new-weight-date">
-                                    <button id="btn-save-weight" class="btn-primary">שמור</button>
+                                    <button id="btn-save-weight" class="btn-primary" data-i18n="save_generic">Save</button>
                                 </div>
                                 <ul id="weight-history-list" class="center-list"></ul>
                             </div>
@@ -221,27 +225,73 @@
                 <section class="tab-content" id="my-center-section">
                     <div class="my-center-grid">
                         <div class="card important-card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>דברים חשובים מאוד</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('important')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="important_title">Very Important Things</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('important')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                             <div class="card-body"><ul id="important-list" class="center-list"></ul></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>משימות השבוע</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="weekly_tasks_title">This Week's Tasks</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                             <div class="card-body"><ul id="weekly-list" class="center-list"></ul></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>מד התקדמות שבועי</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="progress_title">Weekly Progress Tracker</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                             <div class="card-body"><div id="progress-container" class="progress-container"></div></div>
                         </div>
                         <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2>סידורים, משימות וקניות בכללי</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Errands, Tasks & General Shopping</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                             <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- חלונית 4: הגדרות, שפה ופרימיום -->
+                <section class="tab-content" id="settings-section">
+                    <div class="card">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="settings_title">Settings</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <label class="settings-label" data-i18n="settings_language_label" for="language-select">Language</label>
+                            <select id="language-select" class="language-select"></select>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="settings_ai_quick_add_title">Smart Add (AI)</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="ai-quick-add-wrap">
+                                <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="settings_ai_quick_add_placeholder" placeholder="e.g. &quot;Pilates on Monday at 10:00&quot;, or &quot;Buy milk&quot;"></textarea>
+                                <button id="btn-ai-quick-add" class="btn-primary" data-i18n="settings_ai_quick_add_btn">Parse & Add</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="settings_premium_title">Premium Upgrades</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="premium-tier-card">
+                                <h3 data-i18n="settings_elevate_title">⭐ Elevate — Custom Icon Backgrounds</h3>
+                                <p data-i18n="settings_elevate_desc">Unlock and customize your app icon backgrounds for an extra fee.</p>
+                                <button class="btn-secondary btn-upgrade" data-i18n="settings_upgrade_btn">Upgrade — Coming soon</button>
+                            </div>
+                            <div class="premium-tier-card">
+                                <h3 data-i18n="settings_ai_title">🤖 Advanced AI</h3>
+                                <p data-i18n="settings_ai_desc">A smart AI assistant: parses free text to auto-route items to your schedule or tasks, and helps manage your nutrition tracking.</p>
+                                <button class="btn-secondary btn-upgrade" data-i18n="settings_upgrade_btn">Upgrade — Coming soon</button>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- כפתור התנתקות קבוע בתחתית האזור הנגלל -->
                 <div style="text-align: center; margin: 25px 0 10px 0;">
-                    <button id="btn-logout" class="btn-logout">🚪 התנתקות מהחשבון</button>
+                    <button id="btn-logout" class="btn-logout" data-i18n="logout_btn">🚪 Log Out</button>
                 </div>
 
                 <!-- ⚖️ שורת זכויות יוצרים מינימליסטית קטנה באנגלית -->
@@ -252,8 +302,8 @@
 
             <!-- כפתורי סיוע לגלילה אנכית, קבועים בפינה השמאלית התחתונה -->
             <div class="scroll-assist-buttons">
-                <button type="button" class="btn-scroll-assist" id="btn-scroll-up" title="גלילה למעלה">▲</button>
-                <button type="button" class="btn-scroll-assist" id="btn-scroll-down" title="גלילה למטה">▼</button>
+                <button type="button" class="btn-scroll-assist" id="btn-scroll-up" data-i18n-title="scroll_up_title" title="Scroll up">▲</button>
+                <button type="button" class="btn-scroll-assist" id="btn-scroll-down" data-i18n-title="scroll_down_title" title="Scroll down">▼</button>
             </div>
         </div>
 
@@ -263,36 +313,36 @@
         <div id="modal-add-task" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>ניהול משימה בלו"ז</h3>
+                <h3 data-i18n="modal_task_title">Manage Schedule Task</h3>
                 <div class="schedule-adder-grid">
                     <select id="add-slot-day">
-                        <option value="Sunday">יום ראשון</option><option value="Monday">יום שני</option><option value="Tuesday">יום שלישי</option><option value="Wednesday">יום רביעי</option><option value="Thursday">יום חמישי</option><option value="Friday">יום שישי</option><option value="Saturday">יום שבת</option>
+                        <option value="Sunday" data-i18n="day_sunday">Sunday</option><option value="Monday" data-i18n="day_monday">Monday</option><option value="Tuesday" data-i18n="day_tuesday">Tuesday</option><option value="Wednesday" data-i18n="day_wednesday">Wednesday</option><option value="Thursday" data-i18n="day_thursday">Thursday</option><option value="Friday" data-i18n="day_friday">Friday</option><option value="Saturday" data-i18n="day_saturday">Saturday</option>
                     </select>
                     <select id="add-slot-num">
                         <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option><option value="7">#7</option><option value="8">#8</option><option value="9">#9</option><option value="10">#10</option>
                     </select>
-                    <input type="text" id="add-slot-time" placeholder="שעה (למשל: 09:00)">
-                    <input type="text" id="add-slot-task" placeholder="שם המשימה...">
+                    <input type="text" id="add-slot-time" data-i18n-placeholder="time_placeholder" placeholder="Time (e.g. 09:00)">
+                    <input type="text" id="add-slot-task" data-i18n-placeholder="task_name_placeholder" placeholder="Task name...">
                     <div class="color-selector-wrap">
                         <div class="color-options">
-                            <label class="color-radio"><input type="radio" name="slot-color" value="pink" checked><span class="radio-custom">🔋 אקטיבי</span></label>
-                            <label class="color-radio"><input type="radio" name="slot-color" value="purple"><span class="radio-custom">📚 רגוע</span></label>
+                            <label class="color-radio"><input type="radio" name="slot-color" value="pink" checked><span class="radio-custom" data-i18n="color_active">🔋 Active</span></label>
+                            <label class="color-radio"><input type="radio" name="slot-color" value="purple"><span class="radio-custom" data-i18n="color_calm">📚 Calm</span></label>
                         </div>
                     </div>
                     <div class="reminder-fields-wrap">
                         <select id="add-slot-reminder">
-                            <option value="0">🔕 ללא תזכורת</option>
-                            <option value="5">🔔 5 דקות לפני</option>
-                            <option value="10">🔔 10 דקות לפני</option>
-                            <option value="15">🔔 15 דקות לפני</option>
+                            <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
+                            <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
+                            <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
+                            <option value="15" data-i18n="reminder_15min">🔔 15 minutes before</option>
                         </select>
-                        <input type="text" id="add-slot-reminder-text" placeholder="טקסט תזכורת מותאם אישית (אופציונלי)">
-                        <button type="button" class="btn-test-chime" onclick="testReminderChime()">🔊 בדיקת צליל</button>
+                        <input type="text" id="add-slot-reminder-text" data-i18n-placeholder="reminder_text_placeholder" placeholder="Custom reminder text (optional)">
+                        <button type="button" class="btn-test-chime" onclick="testReminderChime()" data-i18n="test_chime_btn">🔊 Test sound</button>
                     </div>
                     <div class="action-buttons-wrap">
-                        <button id="btn-save-new-slot" class="btn-primary">שמור</button>
-                        <button id="btn-delete-slot-specific" class="btn-clear-specific">נקה</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-task')">סגור</button>
+                        <button id="btn-save-new-slot" class="btn-primary" data-i18n="save_generic">Save</button>
+                        <button id="btn-delete-slot-specific" class="btn-clear-specific" data-i18n="clear_btn">Clear</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-task')" data-i18n="close_btn">Close</button>
                     </div>
                 </div>
             </div>
@@ -318,12 +368,12 @@
         <div id="modal-add-center-item" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>הוספת פריט</h3>
+                <h3 data-i18n="add_item_title">Add Item</h3>
                 <div class="preset-manager-grid">
-                    <input type="text" id="center-item-input" placeholder="הקלידו כאן...">
+                    <input type="text" id="center-item-input" data-i18n-placeholder="add_item_placeholder" placeholder="Type here...">
                     <div class="action-buttons-wrap">
-                        <button id="btn-save-center-item" class="btn-primary">הוספה</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-center-item')">ביטול</button>
+                        <button id="btn-save-center-item" class="btn-primary" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-center-item')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -333,8 +383,8 @@
         <div id="modal-settings-hours" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>שעות ברירת מחדל ללוח הזמנים</h3>
-                <p class="modal-subtitle">כך יראו המשבצות הריקות בכל יום. אפשר תמיד לשנות שעה בודדת ישירות בלוח.</p>
+                <h3 data-i18n="hours_modal_title">Default Schedule Hours</h3>
+                <p class="modal-subtitle" data-i18n="hours_modal_subtitle">This is how empty slots look each day. You can always change a single hour directly in the schedule.</p>
                 <div class="hours-settings-grid">
                     <input type="text" id="settings-hour-1" class="hours-input" placeholder="#1">
                     <input type="text" id="settings-hour-2" class="hours-input" placeholder="#2">
@@ -348,8 +398,8 @@
                     <input type="text" id="settings-hour-10" class="hours-input" placeholder="#10">
                 </div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button id="btn-save-hours" class="btn-primary">שמירת ברירת המחדל</button>
-                    <button class="btn-clear-specific" onclick="closeModal('modal-settings-hours')">ביטול</button>
+                    <button id="btn-save-hours" class="btn-primary" data-i18n="hours_save_btn">Save defaults</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-settings-hours')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -358,19 +408,19 @@
         <div id="modal-add-preset" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>הוספת ארוחה למאגר</h3>
+                <h3 data-i18n="preset_modal_title">Add Meal to Library</h3>
                 <div class="preset-manager-grid">
-                    <input type="text" id="new-preset-name" placeholder="שם הארוחה">
-                    <input type="number" id="new-preset-calories" placeholder="כמות קלוריות">
+                    <input type="text" id="new-preset-name" data-i18n-placeholder="preset_name_placeholder" placeholder="Meal name">
+                    <input type="number" id="new-preset-calories" data-i18n-placeholder="preset_calories_placeholder" placeholder="Calorie amount">
                     <select id="new-preset-category">
-                        <option value="morning">🌅 ארוחת בוקר וקלות</option><option value="noon">☀️ ארוחות עיקריות</option><option value="evening">🌙 ארוחות עיקריות</option><option value="snack">🍭 נשנושים ומתוקים</option>
+                        <option value="morning" data-i18n="preset_cat_morning">🌅 Breakfast & light meals</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals</option><option value="snack" data-i18n="preset_cat_snack">🍭 Snacks and treats</option>
                     </select>
                     <div class="action-buttons-wrap">
-                        <button id="btn-add-preset" class="btn-primary">הוסף למאגר</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-preset'); cancelPresetEdit();">ביטול</button>
+                        <button id="btn-add-preset" class="btn-primary" data-i18n="preset_add_btn">Add to library</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-preset'); cancelPresetEdit();" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
-                <h3 class="preset-manage-title">ניהול ארוחות קבועות</h3>
+                <h3 class="preset-manage-title" data-i18n="preset_manage_title">Manage Saved Meals</h3>
                 <ul id="preset-manage-list" class="center-list preset-manage-list"></ul>
             </div>
         </div>
@@ -379,13 +429,13 @@
         <div id="modal-add-progress" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>יעד התקדמות שבועי</h3>
+                <h3 data-i18n="progress_modal_title">Weekly Progress Goal</h3>
                 <div class="preset-manager-grid">
-                    <input type="text" id="progress-name-input" placeholder="שם המטרה (למשל: אימונים)">
-                    <input type="number" id="progress-target-input" placeholder="כמות יעד שבועית">
+                    <input type="text" id="progress-name-input" data-i18n-placeholder="progress_name_placeholder" placeholder="Goal name (e.g. workouts)">
+                    <input type="number" id="progress-target-input" data-i18n-placeholder="progress_target_placeholder" placeholder="Weekly target amount">
                     <div class="action-buttons-wrap">
-                        <button onclick="addProgressTarget(); closeModal('modal-add-progress');" class="btn-primary">הוסף יעד</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-progress')">ביטול</button>
+                        <button onclick="addProgressTarget(); closeModal('modal-add-progress');" class="btn-primary" data-i18n="progress_add_btn">Add goal</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-progress')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -393,6 +443,7 @@
 
     </div>
 
-    <script src="app.js?v=20"></script>
+    <script src="i18n.js?v=1"></script>
+    <script src="app.js?v=21"></script>
 </body>
 </html>

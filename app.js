@@ -1,13 +1,15 @@
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
-const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
 let defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
 let currentUsername = '';
 let currentUserId = null;
 let reminderIntervalStarted = false;
 let authMode = 'login';
+
+function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 
 function initSupabase() {
     if (window.supabase) {
@@ -18,6 +20,8 @@ function initSupabase() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    loadSavedLanguage();
+    populateLanguageDropdown();
     initSupabase();
     initCubesNavigation();
     document.addEventListener('click', unlockReminderAudio);
@@ -66,11 +70,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
     document.getElementById('btn-scroll-up').addEventListener('click', () => scrollMainBy(-300));
     document.getElementById('btn-scroll-down').addEventListener('click', () => scrollMainBy(300));
+    document.getElementById('btn-ai-quick-add').addEventListener('click', handleAIQuickAdd);
+    document.querySelectorAll('.btn-upgrade').forEach(btn => {
+        btn.addEventListener('click', () => showAppToast(t('settings_upgrade_toast'), 'error'));
+    });
 });
 
 function scrollMainBy(deltaY) {
     const area = document.querySelector('.main-scroll-area');
     if (area) area.scrollBy({ top: deltaY, behavior: 'smooth' });
+}
+
+// --- שפה: אכלוס בורר השפה, ורענון תוכן דינמי כשמחליפים שפה ---
+function populateLanguageDropdown() {
+    const select = document.getElementById('language-select');
+    if (!select) return;
+    select.innerHTML = '';
+    SUPPORTED_LANGUAGES.forEach(lang => {
+        const option = document.createElement('option');
+        option.value = lang;
+        option.textContent = LANGUAGE_NAMES[lang];
+        select.appendChild(option);
+    });
+    select.value = currentLang;
+    select.onchange = (e) => setLanguage(e.target.value);
+}
+
+function onLanguageChanged() {
+    const select = document.getElementById('language-select');
+    if (select) select.value = currentLang;
+    if (!currentUserId) return;
+    loadCustomDefaultHours();
+    buildWeeklyScheduleAccordionUI();
+    loadWeeklySchedule();
+    loadMealPresetsToSelects();
 }
 
 // --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---
@@ -110,7 +143,7 @@ function loadAllCenterItems() {
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
     const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('created_at', { ascending: true });
-    if (error) { showAppToast('שגיאה בטעינת הרשימה: ' + error.message, 'error'); return; }
+    if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
     listUl.innerHTML = '';
@@ -120,7 +153,7 @@ async function loadCenterItems(type) {
             <button class="btn-complete-item" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
-            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1; text-align: right; margin-right: 10px; font-weight: 500;">
+            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1; text-align: start; margin-inline-start: 10px; font-weight: 500;">
                 ${item.content}
             </span>
             <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
@@ -143,11 +176,11 @@ async function addCustomPreset() {
 
     if (editingPresetId) {
         await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories }).eq('id', editingPresetId);
-        showAppToast('הארוחה עודכנה בהצלחה!');
+        showAppToast(t('preset_updated_success'));
         cancelPresetEdit();
     } else {
         await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
-        showAppToast('הארוחה נוספה למאגר בהצלחה!');
+        showAppToast(t('preset_added_success'));
     }
     nameInput.value = '';
     caloriesInput.value = '';
@@ -162,14 +195,14 @@ function editPreset(id) {
     document.getElementById('new-preset-name').value = preset.food_name;
     document.getElementById('new-preset-calories').value = preset.calories;
     document.getElementById('new-preset-category').value = preset.meal_category;
-    document.getElementById('btn-add-preset').textContent = '💾 עדכון ארוחה';
+    document.getElementById('btn-add-preset').textContent = t('preset_update_btn');
 }
 
 function cancelPresetEdit() {
     editingPresetId = null;
     document.getElementById('new-preset-name').value = '';
     document.getElementById('new-preset-calories').value = '';
-    document.getElementById('btn-add-preset').textContent = 'הוסף למאגר';
+    document.getElementById('btn-add-preset').textContent = t('preset_add_btn');
 }
 
 async function deletePreset(id) {
@@ -177,7 +210,7 @@ async function deletePreset(id) {
     if (editingPresetId === id) cancelPresetEdit();
     loadMealPresetsToSelects();
     loadPresetManageList();
-    showAppToast('הארוחה נמחקה מהמאגר.');
+    showAppToast(t('preset_deleted_success'));
 }
 
 async function loadPresetManageList() {
@@ -203,10 +236,11 @@ async function loadPresetManageList() {
 async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
+    cachedPresets = data || cachedPresets;
     if (!data) return;
     document.querySelectorAll('.preset-select').forEach(select => {
         const category = select.getAttribute('data-category');
-        select.innerHTML = '<option value="">📋 ארוחה קבועה...</option>';
+        select.innerHTML = `<option value="">${t('preset_select_placeholder')}</option>`;
         const filtered = data.filter(item => {
             if (category === 'morning') return item.meal_category === 'morning';
             if (category === 'snack') return item.meal_category === 'snack';
@@ -237,15 +271,15 @@ function updateAuthUI() {
     const toggleLink = document.getElementById('auth-toggle-link');
     const messageEl = document.getElementById('auth-message');
     if (authMode === 'login') {
-        subtitle.textContent = 'התחברו לחשבון שלכם:';
-        submitBtn.textContent = 'התחברו';
-        toggleText.textContent = 'אין לכם חשבון?';
-        toggleLink.textContent = 'הרשמה';
+        subtitle.textContent = t('auth_login_subtitle');
+        submitBtn.textContent = t('auth_login_btn');
+        toggleText.textContent = t('auth_no_account');
+        toggleLink.textContent = t('auth_toggle_signup');
     } else {
-        subtitle.textContent = 'צרו חשבון חדש:';
-        submitBtn.textContent = 'הרשמה';
-        toggleText.textContent = 'כבר יש לכם חשבון?';
-        toggleLink.textContent = 'התחברות';
+        subtitle.textContent = t('auth_signup_subtitle');
+        submitBtn.textContent = t('auth_signup_btn');
+        toggleText.textContent = t('auth_have_account');
+        toggleLink.textContent = t('auth_toggle_login');
     }
     messageEl.textContent = '';
 }
@@ -255,9 +289,9 @@ async function submitAuthForm() {
     const password = document.getElementById('auth-password-input').value;
     const messageEl = document.getElementById('auth-message');
     messageEl.textContent = '';
-    if (!email || !password) { messageEl.textContent = 'נא למלא אימייל וסיסמה'; return; }
+    if (!email || !password) { messageEl.textContent = t('auth_fill_both'); return; }
     if (!supabaseClient) initSupabase();
-    if (!supabaseClient) { messageEl.textContent = 'שגיאת התחברות לשרת, נסו לרענן את הדף.'; return; }
+    if (!supabaseClient) { messageEl.textContent = t('auth_server_error'); return; }
 
     if (authMode === 'signup') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -266,13 +300,13 @@ async function submitAuthForm() {
             initAppAfterAuth(data.user);
         } else {
             messageEl.style.color = 'var(--accent-green)';
-            messageEl.textContent = 'נרשמתם בהצלחה! בדקו את המייל שלכם לאישור החשבון, ואז התחברו.';
+            messageEl.textContent = t('auth_signup_success');
             authMode = 'login';
             updateAuthUI();
         }
     } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) { messageEl.textContent = 'אימייל או סיסמה שגויים.'; return; }
+        if (error) { messageEl.textContent = t('auth_wrong_credentials'); return; }
         initAppAfterAuth(data.user);
     }
 }
@@ -296,6 +330,7 @@ async function initAppAfterAuth(user) {
     loadStats();
     loadAllCenterItems();
     loadMealPresetsToSelects();
+    loadPresetManageList();
     loadProgressTargets();
     loadWeightHistory();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
@@ -338,12 +373,12 @@ function submitCenterItem() {
 }
 
 async function insertCenterItemDirect(type, content) {
-    if (!supabaseClient || !currentUserId) { showAppToast('לא מחוברים - נסו לרענן את הדף ולהתחבר מחדש.', 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content });
-    if (error) { showAppToast('שגיאה בהוספת הפריט: ' + error.message, 'error'); return; }
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     expandCardForList(`${type}-list`);
-    showAppToast('הפריט נוסף בהצלחה!');
+    showAppToast(t('item_added_success'));
 }
 
 function expandCardForList(listId) {
@@ -359,6 +394,11 @@ function initCubesNavigation() {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
         tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
     }));
+}
+
+function switchToTab(targetId) {
+    const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
+    if (cube) cube.click();
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -414,8 +454,8 @@ function buildWeeklyScheduleAccordionUI() {
     if (!container) return;
     container.innerHTML = '';
     if (tabsStrip) tabsStrip.innerHTML = '';
-    daysOfWeek.forEach((dayName, dayIndex) => {
-        const dbDay = dbDaysMap[dayIndex];
+    dbDaysMap.forEach((dbDay, dayIndex) => {
+        const dayName = getDayName(dayIndex);
         const dateStr = getFormattedDateForDay(dayIndex);
 
         if (tabsStrip) {
@@ -436,7 +476,7 @@ function buildWeeklyScheduleAccordionUI() {
         for (let i = 1; i <= 10; i++) {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1]}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button></div>`;
         }
-        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | יום ${dayName}</div><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="שעה"><input type="text" class="day-add-task-input" placeholder="הוסיפו משימה ליום זה..."><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">➕ הוספה</button></div>`;
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="${t('schedule_add_task_row_time_placeholder')}"><input type="text" class="day-add-task-input" placeholder="${t('schedule_add_task_row_task_placeholder')}"><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">${t('schedule_add_task_row_btn')}</button></div>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
@@ -486,7 +526,7 @@ async function addTaskToDay(day) {
     for (const slotEl of slots) {
         if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
     }
-    if (!targetSlot) { showAppToast('כל המשבצות ליום זה תפוסות, נקו משבצת קיימת כדי להוסיף עוד.', 'error'); return; }
+    if (!targetSlot) { showAppToast(t('schedule_slot_full_error'), 'error'); return; }
     const slotNum = targetSlot.getAttribute('data-slot');
     targetSlot.querySelector('.slot-task').value = taskVal;
     if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
@@ -595,7 +635,7 @@ async function playReminderChime() {
 
 function testReminderChime() {
     playReminderChime();
-    showAppToast('🔊 מנגן צליל בדיקה...');
+    showAppToast(t('toast_test_chime'));
 }
 
 function reminderFiredKey(rowId) {
@@ -644,8 +684,8 @@ function requestNotificationPermission() {
 
 function showBrowserNotification(taskTitle, text) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const notification = new Notification(`⏰ תזכורת: ${taskTitle || 'משימה'}`, {
-        body: text || 'הגיע הזמן למשימה שלך!',
+    const notification = new Notification(`${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`, {
+        body: text || t('reminder_default_text'),
         icon: 'icon.png',
         tag: `weekwise-reminder-${taskTitle}`
     });
@@ -656,8 +696,8 @@ let reminderToastTimeout = null;
 function showReminderToast(taskTitle, text) {
     const toast = document.getElementById('reminder-toast');
     if (!toast) return;
-    toast.querySelector('.reminder-toast-title').textContent = `⏰ תזכורת: ${taskTitle || 'משימה'}`;
-    toast.querySelector('.reminder-toast-text').textContent = text || 'הגיע הזמן למשימה שלך!';
+    toast.querySelector('.reminder-toast-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
+    toast.querySelector('.reminder-toast-text').textContent = text || t('reminder_default_text');
     toast.classList.add('show');
     clearTimeout(reminderToastTimeout);
     reminderToastTimeout = setTimeout(dismissReminderToast, 8000);
@@ -703,7 +743,7 @@ async function saveNutrition() {
     }
     await loadDailyNutrition(date);
     loadStats();
-    showAppToast('נשמר בהצלחה!');
+    showAppToast(t('nutrition_save_success'));
 }
 
 async function copyFromYesterday() {
@@ -714,13 +754,13 @@ async function copyFromYesterday() {
     prevDateObj.setDate(prevDateObj.getDate() - 1);
     const prevDate = getLocalDateString(prevDateObj);
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', prevDate);
-    if (!data || data.length === 0) { showAppToast('לא נמצא תפריט שמור מהיום הקודם.', 'error'); return; }
+    if (!data || data.length === 0) { showAppToast(t('nutrition_copy_not_found'), 'error'); return; }
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
         if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; }
     });
     updateLiveCaloriesToday();
-    showAppToast('התפריט שוכפל מהיום הקודם! לחצו "שמור תפריט להיום" כדי לשמור.');
+    showAppToast(t('nutrition_copy_success'));
 }
 async function loadStats() {
     if (!supabaseClient || !currentUserId) return;
@@ -805,7 +845,7 @@ async function loadDailySteps(date) {
     if (!supabaseClient || !currentUserId) return;
     document.getElementById('steps-today').innerText = '0';
     const { data, error } = await supabaseClient.from('step_tracker').select('*').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
-    if (error) { showAppToast('שגיאה בטעינת מד הצעדים: ' + error.message, 'error'); return; }
+    if (error) { showAppToast(t('error_loading_steps') + error.message, 'error'); return; }
     if (data) {
         document.getElementById('steps-today').innerText = data.step_count;
     }
@@ -813,7 +853,7 @@ async function loadDailySteps(date) {
 }
 
 function connectHealthData() {
-    showAppToast('חיבור אוטומטי למד בריאות יתאפשר בגרסת האפליקציה הנייטיבית (Capacitor) - כרגע אין דרך לחבר Google Fit / Apple Health מאתר רגיל.', 'error');
+    showAppToast(t('steps_connect_toast'), 'error');
 }
 
 async function loadStepStats() {
@@ -830,4 +870,107 @@ async function loadStepStats() {
         if (item.step_date >= weekStartStr && item.step_date <= weekEndStr) weekly += Number(item.step_count) || 0;
     });
     document.getElementById('steps-weekly').innerText = weekly;
+}
+
+// --- "AI" חוקי-דטרמיניסטי: מפרש טקסט חופשי ומנתב אותו ---
+// אין מפתח API/LLM אמיתי - זיהוי יום/שעה מבוסס התאמת מילות מפתח בכל השפות
+// הנתמכות, וזיהוי ארוחה מבוסס התאמה לשם ארוחה שמורה. מוחלף בעתיד ב-AI אמיתי
+// מאחורי פרוקסי בצד שרת (מפתח לא יכול לחיות בקוד לקוח).
+function detectDayInText(text) {
+    const lower = text.toLowerCase();
+    for (let i = 0; i < dbDaysMap.length; i++) {
+        for (const lang of SUPPORTED_LANGUAGES) {
+            const name = (translations[lang][dayNameKeys[i]] || '').toLowerCase();
+            if (name && lower.includes(name)) return { dbDay: dbDaysMap[i], matchedText: name };
+        }
+    }
+    return null;
+}
+
+function detectTimeInText(text) {
+    let m = text.match(/([01]?\d|2[0-3]):([0-5]\d)/);
+    if (m) {
+        const [h, mm] = m[0].split(':');
+        return { time: `${h.padStart(2, '0')}:${mm}`, matchedText: m[0] };
+    }
+    m = text.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm|AM|PM)/);
+    if (m) {
+        let hour = parseInt(m[1]);
+        const minutes = m[3] || '00';
+        const ampm = m[4].toLowerCase();
+        if (ampm === 'pm' && hour < 12) hour += 12;
+        if (ampm === 'am' && hour === 12) hour = 0;
+        return { time: `${String(hour).padStart(2, '0')}:${minutes}`, matchedText: m[0] };
+    }
+    return null;
+}
+
+function extractTaskName(text, dayText, timeText) {
+    let cleaned = text;
+    if (dayText) cleaned = cleaned.replace(new RegExp(dayText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '');
+    if (timeText) cleaned = cleaned.replace(timeText, '');
+    cleaned = cleaned.replace(/\b(on|at|in)\b/gi, ' ');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim().replace(/^[-,،\s]+|[-,،\s]+$/g, '');
+    return cleaned || text.trim();
+}
+
+async function routeToSchedule(dbDay, time, taskName) {
+    const container = document.getElementById(`daypage-${dbDay}`);
+    if (!container) { showAppToast(t('settings_ai_no_slot'), 'error'); return; }
+    const slots = container.querySelectorAll('.slot-input-group');
+    let targetSlot = null;
+    for (const slotEl of slots) {
+        if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
+    }
+    if (!targetSlot) { showAppToast(t('settings_ai_no_slot'), 'error'); return; }
+    const slotNum = targetSlot.getAttribute('data-slot');
+    targetSlot.querySelector('.slot-task').value = taskName;
+    targetSlot.querySelector('.slot-time').value = time;
+    await saveScheduleSlot(dbDay, slotNum);
+    const dayIdx = dbDaysMap.indexOf(dbDay);
+    const dayLabel = getDayName(dayIdx);
+    showAppToast(t('settings_ai_routed_schedule').replace('{day}', dayLabel).replace('{time}', time));
+    switchToTab('schedule-section');
+    setTimeout(() => scrollToDay(dbDay), 200);
+}
+
+async function tryRouteToNutrition(text) {
+    if (!cachedPresets || cachedPresets.length === 0) return false;
+    const lower = text.toLowerCase();
+    const matched = cachedPresets.find(p => p.food_name && lower.includes(p.food_name.toLowerCase()));
+    if (!matched) return false;
+    const mealRows = document.querySelectorAll('.meal-row');
+    let targetRow = null;
+    for (const row of mealRows) {
+        if (!row.querySelector('.food-input').value.trim()) { targetRow = row; break; }
+    }
+    if (!targetRow) return false;
+    targetRow.querySelector('.food-input').value = matched.food_name;
+    targetRow.querySelector('.calories-input').value = matched.calories;
+    updateLiveCaloriesToday();
+    showAppToast(t('settings_ai_routed_nutrition').replace('{meal}', matched.food_name).replace('{calories}', matched.calories));
+    switchToTab('nutrition-section');
+    return true;
+}
+
+async function handleAIQuickAdd() {
+    const input = document.getElementById('ai-quick-add-input');
+    const text = input.value.trim();
+    if (!text) { showAppToast(t('settings_ai_empty'), 'error'); return; }
+
+    const dayMatch = detectDayInText(text);
+    const timeMatch = detectTimeInText(text);
+    if (dayMatch && timeMatch) {
+        const taskName = extractTaskName(text, dayMatch.matchedText, timeMatch.matchedText);
+        await routeToSchedule(dayMatch.dbDay, timeMatch.time, taskName);
+        input.value = '';
+        return;
+    }
+
+    const routedToNutrition = await tryRouteToNutrition(text);
+    if (routedToNutrition) { input.value = ''; return; }
+
+    await insertCenterItemDirect('weekly', text);
+    showAppToast(t('settings_ai_routed_tasks'));
+    input.value = '';
 }
