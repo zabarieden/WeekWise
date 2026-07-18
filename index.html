@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=41">
+    <link rel="stylesheet" href="theme.css?v=42">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -517,14 +517,29 @@
                     <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title...">
                     <input type="date" id="calendar-event-date-input">
                     <label class="calendar-event-recurring-toggle">
-                        <input type="checkbox" id="calendar-event-recurring-checkbox" onchange="toggleRecurringDurationVisibility()">
-                        <span data-i18n="calendar_event_recurring_label">Repeat weekly (same day each week)</span>
+                        <input type="checkbox" id="calendar-event-recurring-checkbox" onchange="toggleRecurringOptionsVisibility()">
+                        <span data-i18n="calendar_event_recurring_label">Repeat</span>
                     </label>
-                    <select id="calendar-event-duration-input" class="language-select hidden">
-                        <option value="3" data-i18n="calendar_event_duration_3m">For 3 months</option>
-                        <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
-                        <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
-                    </select>
+                    <div id="calendar-event-recurring-options" class="calendar-event-recurring-options hidden">
+                        <select id="calendar-event-recurrence-type" class="language-select" onchange="toggleCustomRecurrenceVisibility()">
+                            <option value="weekly" data-i18n="calendar_event_recurrence_weekly">Weekly</option>
+                            <option value="monthly" data-i18n="calendar_event_recurrence_monthly">Monthly</option>
+                            <option value="quarterly" data-i18n="calendar_event_recurrence_quarterly">Every 3 months</option>
+                            <option value="custom" data-i18n="calendar_event_recurrence_custom">Custom</option>
+                        </select>
+                        <div id="calendar-event-custom-recurrence" class="calendar-event-custom-recurrence hidden">
+                            <input type="number" id="calendar-event-custom-interval" min="1" value="2" data-i18n-placeholder="calendar_event_custom_interval_placeholder" placeholder="Every...">
+                            <select id="calendar-event-custom-unit" class="language-select">
+                                <option value="weeks" data-i18n="calendar_event_unit_weeks">Weeks</option>
+                                <option value="months" data-i18n="calendar_event_unit_months">Months</option>
+                            </select>
+                        </div>
+                        <select id="calendar-event-duration-input" class="language-select">
+                            <option value="3" data-i18n="calendar_event_duration_3m">For 3 months</option>
+                            <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
+                            <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
+                        </select>
+                    </div>
                     <div class="action-buttons-wrap">
                         <button onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event')" data-i18n="cancel_btn">Cancel</button>
@@ -601,7 +616,7 @@
 
     </div>
 
-    <script src="i18n.js?v=11"></script>
-    <script src="app.js?v=35"></script>
+    <script src="i18n.js?v=12"></script>
+    <script src="app.js?v=36"></script>
 </body>
 </html>

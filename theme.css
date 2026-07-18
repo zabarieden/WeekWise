@@ -252,6 +252,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .calendar-event-recurring-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; padding: 2px 0; }
 .calendar-event-recurring-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; }
+.calendar-event-recurring-options { display: flex; flex-direction: column; gap: 8px; padding: 10px; margin-top: 4px; background-color: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 12px; }
+.calendar-event-custom-recurrence { display: flex; gap: 8px; }
+.calendar-event-custom-recurrence input[type="number"] { flex: 1 1 40%; min-width: 0; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; box-sizing: border-box; }
+.calendar-event-custom-recurrence select { flex: 1 1 60%; min-width: 0; }
 
 .calendar-event-series { display: flex; flex-direction: column; }
 .calendar-event-series-header { margin-bottom: 0; }

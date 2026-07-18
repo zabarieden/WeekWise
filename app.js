@@ -582,10 +582,13 @@ async function removeDaySlot(day, slot) {
     // מחדש של כל לוח השבוע - זה גם מהיר יותר וגם לא גורם להבהוב של שורות אחרות.
     const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
     if (slotEl) {
+        // מכריחים reflow לפני הוספת המחלקה, כדי שהדפדפן יתפוס את זה כ-transition
+        // אמיתי ולא "יקפוץ" ישר למצב הסופי בלי שום אנימציה (ואז transitionend לא נורה כלל)
+        void slotEl.offsetHeight;
         slotEl.classList.add('slot-removing');
         const removeNow = () => { if (slotEl.isConnected) slotEl.remove(); };
         slotEl.addEventListener('transitionend', removeNow, { once: true });
-        setTimeout(removeNow, 350); // רשת ביטחון אם ה-transition לא נורה (למשל prefers-reduced-motion)
+        setTimeout(removeNow, 350); // רשת ביטחון מוחלטת: השורה תוסר גם אם שום transition לא נורה
     }
 
     await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
@@ -733,10 +736,16 @@ function formatEventDateBadge(dateStr) {
     return `${day}.${month}`;
 }
 
-function toggleRecurringDurationVisibility() {
+function toggleRecurringOptionsVisibility() {
     const checkbox = document.getElementById('calendar-event-recurring-checkbox');
-    const durationSelect = document.getElementById('calendar-event-duration-input');
-    durationSelect.classList.toggle('hidden', !checkbox.checked);
+    const optionsWrap = document.getElementById('calendar-event-recurring-options');
+    optionsWrap.classList.toggle('hidden', !checkbox.checked);
+}
+
+function toggleCustomRecurrenceVisibility() {
+    const typeSelect = document.getElementById('calendar-event-recurrence-type');
+    const customWrap = document.getElementById('calendar-event-custom-recurrence');
+    customWrap.classList.toggle('hidden', typeSelect.value !== 'custom');
 }
 
 async function loadCalendarEvents() {
@@ -810,7 +819,7 @@ function buildRecurringEventRow(items, groupId) {
     const titleSpan = document.createElement('span');
     titleSpan.className = 'calendar-event-title-text';
     const lastDate = formatEventDateBadge(items[items.length - 1].event_date);
-    titleSpan.textContent = `${items[0].event_title} · ${t('calendar_event_weekly_until')} ${lastDate}`;
+    titleSpan.textContent = `${items[0].event_title} · ${t('calendar_event_recurring_until')} ${lastDate}`;
 
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'calendar-event-series-toggle';
@@ -847,17 +856,32 @@ function buildRecurringEventRow(items, groupId) {
     return wrap;
 }
 
-// יוצר תאריך אחד לשבוע, מתחילת הטווח ועד סוף מספר החודשים שנבחר - זהו הבסיס
-// למחוללי "משימות חוזרות" כמו שיעור גיטרה שבועי למשך 3/6/12 חודשים
-function generateWeeklyDates(startDateStr, months) {
+// יוצר את כל תאריכי החזרה מתחילת הטווח ועד סוף מספר החודשים שנבחר, לפי סוג
+// החזרה (שבועי/חודשי/כל 3 חודשים/מותאם אישית - כל X שבועות או חודשים) - זהו
+// הבסיס למחוללי "משימות חוזרות" כמו שיעור גיטרה שבועי
+function generateRecurringDates(startDateStr, recurrenceType, customInterval, customUnit, durationMonths) {
     const dates = [];
     const start = new Date(`${startDateStr}T00:00:00`);
     const end = new Date(start);
-    end.setMonth(end.getMonth() + months);
+    end.setMonth(end.getMonth() + durationMonths);
+
+    let stepDays = null;
+    let stepMonths = null;
+    if (recurrenceType === 'weekly') stepDays = 7;
+    else if (recurrenceType === 'monthly') stepMonths = 1;
+    else if (recurrenceType === 'quarterly') stepMonths = 3;
+    else if (recurrenceType === 'custom') {
+        if (customUnit === 'months') stepMonths = Math.max(1, customInterval);
+        else stepDays = 7 * Math.max(1, customInterval);
+    } else {
+        stepDays = 7;
+    }
+
     const current = new Date(start);
     while (current <= end) {
         dates.push(getLocalDateString(current));
-        current.setDate(current.getDate() + 7);
+        if (stepMonths) current.setMonth(current.getMonth() + stepMonths);
+        else current.setDate(current.getDate() + stepDays);
     }
     return dates;
 }
@@ -866,6 +890,9 @@ async function addCalendarEvent() {
     const titleInput = document.getElementById('calendar-event-title-input');
     const dateInput = document.getElementById('calendar-event-date-input');
     const recurringCheckbox = document.getElementById('calendar-event-recurring-checkbox');
+    const recurrenceTypeSelect = document.getElementById('calendar-event-recurrence-type');
+    const customIntervalInput = document.getElementById('calendar-event-custom-interval');
+    const customUnitSelect = document.getElementById('calendar-event-custom-unit');
     const durationSelect = document.getElementById('calendar-event-duration-input');
     const title = titleInput.value.trim();
     const date = dateInput.value;
@@ -875,8 +902,11 @@ async function addCalendarEvent() {
     let rows;
     if (recurringCheckbox.checked) {
         const months = parseInt(durationSelect.value) || 3;
+        const recurrenceType = recurrenceTypeSelect.value;
+        const customInterval = parseInt(customIntervalInput.value) || 1;
+        const customUnit = customUnitSelect.value;
         const groupId = crypto.randomUUID();
-        rows = generateWeeklyDates(date, months).map(eventDate => ({
+        rows = generateRecurringDates(date, recurrenceType, customInterval, customUnit, months).map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
             event_title: title, event_date: eventDate, recurrence_group_id: groupId
         }));
@@ -889,7 +919,7 @@ async function addCalendarEvent() {
     titleInput.value = '';
     dateInput.value = '';
     recurringCheckbox.checked = false;
-    toggleRecurringDurationVisibility();
+    toggleRecurringOptionsVisibility();
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
