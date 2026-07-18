@@ -22,7 +22,7 @@ const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20
 
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
-const DEV_SUPERUSER_EMAILS = ["eden.zabari2@gmail.com"];
+const DEV_SUPERUSER_EMAILS = ["zabarieden111@gmail.com"];
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",

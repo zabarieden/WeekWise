@@ -627,6 +627,9 @@ function updateEmptyDayState(day) {
     const isEmpty = grid.children.length === 0;
     grid.classList.toggle('hidden', isEmpty);
     emptyHint.classList.toggle('hidden', !isEmpty);
+    // אם זה היום המוצג כרגע, המכל צריך לקרוס/לגדול מיד, לא רק בהחלפת יום
+    const activeTab = document.querySelector('.day-tab.active');
+    if (activeTab && activeTab.id === `daytab-${day}`) updateActiveDayPageHeight(pageDiv);
 }
 
 function addDaySlot(day) {
@@ -825,10 +828,31 @@ function setupDayScrollObserver() {
                 document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
                 const tab = document.getElementById(`daytab-${day}`);
                 if (tab) tab.classList.add('active');
+                updateActiveDayPageHeight(entry.target);
             }
         });
     }, { root: container, threshold: [0.5] });
     document.querySelectorAll('.day-page').forEach(page => dayScrollObserver.observe(page));
+    // גם היום שמוצג ראשון עם הבנייה (לפני שהמשתמש גולל בכלל) צריך גובה נכון מיד
+    updateActiveDayPageHeight();
+}
+
+// הבעיה השורשית: כל 7 עמודי הימים קיימים בו-זמנית ב-DOM בתור אחים בפריסת flex
+// (כדי לאפשר גלילה אופקית ביניהם), כך שגובה המכל תמיד נקבע לפי היום *הגבוה
+// ביותר* מביניהם - זה מובנה בפריסת flex/block הרגילה ולא ניתן לתקן רק ב-CSS.
+// לכן קובעים כאן גובה מפורש ב-JS שעוקב אחרי היום הפעיל בפועל בלבד, ומתעדכן
+// בכל מעבר בין ימים ובכל הוספה/הסרה של שורה באותו יום.
+function updateActiveDayPageHeight(activePageEl) {
+    const container = document.getElementById('accordion-container');
+    if (!container) return;
+    let pageDiv = activePageEl;
+    if (!pageDiv) {
+        const activeTab = document.querySelector('.day-tab.active');
+        const dbDay = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[0];
+        pageDiv = document.getElementById(`daypage-${dbDay}`);
+    }
+    if (!pageDiv) return;
+    container.style.height = `${pageDiv.scrollHeight}px`;
 }
 
 function toggleCardSection(headerEl) {
@@ -1418,7 +1442,7 @@ let selectedPremiumTier = 'semiannual';
 
 // עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
-const DEV_SUPERUSER_EMAILS = ['eden.zabari2@gmail.com'];
+const DEV_SUPERUSER_EMAILS = ['zabarieden111@gmail.com'];
 
 async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;

@@ -32,7 +32,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
-const DEV_SUPERUSER_EMAILS = ["eden.zabari2@gmail.com"];
+const DEV_SUPERUSER_EMAILS = ["zabarieden111@gmail.com"];
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
