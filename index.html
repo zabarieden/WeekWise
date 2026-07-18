@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=26">
+    <link rel="stylesheet" href="theme.css?v=27">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -258,19 +258,6 @@
 
                     <div class="card" style="margin-top: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="settings_ai_quick_add_title">Smart Add (AI)</h2>
-                            <span class="card-toggle-icon">▼</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="ai-quick-add-wrap">
-                                <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="settings_ai_quick_add_placeholder" placeholder="e.g. &quot;Pilates on Monday at 10:00&quot;, or &quot;Buy milk&quot;"></textarea>
-                                <button id="btn-ai-quick-add" class="btn-primary" data-i18n="settings_ai_quick_add_btn">Parse & Add</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card" style="margin-top: 16px;">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="settings_premium_title">Premium Upgrades</h2>
                             <span class="card-toggle-icon">▼</span>
                         </div>
@@ -305,6 +292,9 @@
                 <button type="button" class="btn-scroll-assist" id="btn-scroll-up" data-i18n-title="scroll_up_title" title="Scroll up">▲</button>
                 <button type="button" class="btn-scroll-assist" id="btn-scroll-down" data-i18n-title="scroll_down_title" title="Scroll down">▼</button>
             </div>
+
+            <!-- כפתור צף (FAB) להוספה חכמה, מופיע רק בלוח הזמנים ובמטרות/משימות -->
+            <button type="button" class="ai-fab" id="btn-ai-fab" onclick="openModal('modal-ai-quick-add')" data-i18n-title="settings_ai_quick_add_title" title="Smart Add (AI)">🧠</button>
         </div>
 
         <!-- ==================== חלונות צפים (Modals) ==================== -->
@@ -379,6 +369,21 @@
             </div>
         </div>
 
+        <!-- חלון צף: הוספה חכמה (AI), נפתח מהכפתור הצף בלוח הזמנים/משימות -->
+        <div id="modal-ai-quick-add" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="settings_ai_quick_add_title">Smart Add (AI)</h3>
+                <div class="ai-quick-add-wrap">
+                    <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="settings_ai_quick_add_placeholder" placeholder="e.g. &quot;Pilates on Monday at 10:00&quot;, or &quot;Buy milk&quot;"></textarea>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-ai-quick-add" class="btn-primary" data-i18n="settings_ai_quick_add_btn">Parse & Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-ai-quick-add')" data-i18n="close_btn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: התאמת שעות ברירת מחדל ללוח הזמנים -->
         <div id="modal-settings-hours" class="apple-modal">
             <div class="modal-sheet">
@@ -444,6 +449,6 @@
     </div>
 
     <script src="i18n.js?v=1"></script>
-    <script src="app.js?v=21"></script>
+    <script src="app.js?v=22"></script>
 </body>
 </html>

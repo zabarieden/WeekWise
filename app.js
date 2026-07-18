@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateLanguageDropdown();
     initSupabase();
     initCubesNavigation();
+    updateAIFabVisibility();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkReminders();
@@ -393,12 +394,24 @@ function initCubesNavigation() {
     cubes.forEach(cube => cube.addEventListener('click', () => {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
         tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
+        updateAIFabVisibility();
     }));
 }
 
 function switchToTab(targetId) {
     const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
     if (cube) cube.click();
+}
+
+// הכפתור הצף להוספה חכמה מופיע רק בלוח הזמנים ובמטרות/משימות - שם יש טעם
+// הקשרי לכפתור (הוספת משימה/פריט), לא בתזונה או בהגדרות.
+function updateAIFabVisibility() {
+    const fab = document.getElementById('btn-ai-fab');
+    if (!fab) return;
+    const activeTab = document.querySelector('.tab-content.active-tab');
+    const visibleOnTabs = ['schedule-section', 'my-center-section'];
+    if (activeTab && visibleOnTabs.includes(activeTab.id)) fab.classList.add('show');
+    else fab.classList.remove('show');
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -964,13 +977,15 @@ async function handleAIQuickAdd() {
         const taskName = extractTaskName(text, dayMatch.matchedText, timeMatch.matchedText);
         await routeToSchedule(dayMatch.dbDay, timeMatch.time, taskName);
         input.value = '';
+        closeModal('modal-ai-quick-add');
         return;
     }
 
     const routedToNutrition = await tryRouteToNutrition(text);
-    if (routedToNutrition) { input.value = ''; return; }
+    if (routedToNutrition) { input.value = ''; closeModal('modal-ai-quick-add'); return; }
 
     await insertCenterItemDirect('weekly', text);
     showAppToast(t('settings_ai_routed_tasks'));
     input.value = '';
+    closeModal('modal-ai-quick-add');
 }
