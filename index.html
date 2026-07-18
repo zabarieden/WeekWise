@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=39">
+    <link rel="stylesheet" href="theme.css?v=40">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -536,6 +536,11 @@
         <!-- חלון צף: הוספת מתכון, כולל אזור הדבקה לניתוח חוקי-דטרמיניסטי ("AI") -->
         <div id="modal-add-recipe" class="apple-modal">
             <div class="modal-sheet">
+                <!-- אנימציית טעינה ייעודית, מוצגת רק אם הסריקה לוקחת יותר מ-5 שניות -->
+                <div id="recipe-scan-loading" class="recipe-scan-loading hidden">
+                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                    <p data-i18n="recipe_scan_loading_text">Scanning your recipe...</p>
+                </div>
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="modal-add-recipe-title" data-i18n="recipe_modal_title">Add Recipe</h3>
                 <textarea id="recipe-ai-raw-input" rows="4" data-i18n-placeholder="recipe_ai_paste_placeholder" placeholder="Paste a recipe here (from a website, WhatsApp, or notes)..."></textarea>
@@ -596,7 +601,7 @@
 
     </div>
 
-    <script src="i18n.js?v=10"></script>
-    <script src="app.js?v=32"></script>
+    <script src="i18n.js?v=11"></script>
+    <script src="app.js?v=33"></script>
 </body>
 </html>

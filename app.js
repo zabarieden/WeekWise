@@ -1216,6 +1216,9 @@ async function handleRecipeImageSelected(event) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
     showAppToast(t('recipe_scan_in_progress'));
+    // אנימציית טעינה ייעודית מוצגת רק אם הסריקה לוקחת יותר מ-5 שניות, כדי לשמור
+    // על ממשק נקי בסריקות מהירות - ה-timeout מבוטל אם הסריקה מסתיימת קודם לכן.
+    const loadingTimer = setTimeout(showRecipeScanLoading, 5000);
     try {
         const { mediaType, base64 } = await fileToBase64(file);
         const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -1249,7 +1252,20 @@ async function handleRecipeImageSelected(event) {
         showAppToast(t('recipe_scan_success'));
     } catch (err) {
         showAppToast(t('recipe_scan_failed'), 'error');
+    } finally {
+        clearTimeout(loadingTimer);
+        hideRecipeScanLoading();
     }
+}
+
+function showRecipeScanLoading() {
+    const el = document.getElementById('recipe-scan-loading');
+    if (el) el.classList.remove('hidden');
+}
+
+function hideRecipeScanLoading() {
+    const el = document.getElementById('recipe-scan-loading');
+    if (el) el.classList.add('hidden');
 }
 
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
