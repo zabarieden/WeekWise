@@ -1,3 +1,9 @@
+#app-container {
+    overflow-x: hidden !important;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 :root {
     --bg-main: #000000;
     --bg-glass: rgba(30, 27, 38, 0.65);
@@ -62,11 +68,14 @@ body {
 header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5; display: none; }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     margin-bottom: 15px;
     position: relative;
     z-index: 5;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 .nav-cube {
     background-color: var(--bg-glass);
@@ -84,6 +93,9 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     cursor: pointer;
     transition: var(--transition);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 .nav-cube:active { transform: scale(0.95); }
 .nav-cube.active {
@@ -92,7 +104,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
 }
 .cube-icon { font-size: 1.2rem; }
-.cube-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+.cube-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-cube.active .cube-title { color: var(--text-primary); }
 .main-scroll-area {
     flex: 1;
@@ -192,11 +204,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .meal-inputs-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
 .food-input { flex: 1 1 120px; min-width: 0; box-sizing: border-box; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; outline:none; }
 .calories-input { flex: 0 0 60px; box-sizing: border-box; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; text-align:center; outline:none; }
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stats-grid-2col { grid-template-columns: repeat(2, 1fr); }
+.stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.stats-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #steps-connect-wrap { display: flex; flex-direction: column; gap: 8px; }
 .steps-connect-note { font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin: 0; line-height: 1.4; }
-.stat-box { background-color: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 10px 2px; text-align: center; border: 1px solid rgba(255,255,255,0.02); }
+.stat-box { background-color: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 10px 2px; text-align: center; border: 1px solid rgba(255,255,255,0.02); min-width: 0; box-sizing: border-box; overflow: hidden; }
 .stat-box h3 { margin: 0 0 2px 0; font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; }
 .stat-number { font-size: 1.25rem; font-weight: 700; }
 .today .stat-number { color: var(--accent-pink); }
@@ -261,8 +273,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
 .modal-subtitle { margin: -8px 0 14px 0; font-size: 0.75rem; color: var(--text-secondary); text-align: center; }
-.hours-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; }
+.hours-settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
 .schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 .reminder-fields-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
