@@ -183,8 +183,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-scroll-assist { width: 44px; height: 44px; border-radius: 50%; background-color: rgba(168, 85, 247, 0.28); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(168, 85, 247, 0.45); color: var(--text-primary); font-size: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); opacity: 0.88; transition: var(--transition); padding: 0; pointer-events: auto; touch-action: manipulation; }
 .btn-scroll-assist:active { transform: scale(0.9); opacity: 1; }
 
-.ai-fab { position: absolute; bottom: 90px; right: 12px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.4rem; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); z-index: 3500; padding: 0; transition: var(--transition); animation: fabPulse 2.5s ease-in-out infinite; }
-.ai-fab.show { display: flex; }
+.ai-fab { position: absolute; bottom: 90px; right: 12px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); z-index: 3500; padding: 0; transition: var(--transition); animation: fabPulse 2.5s ease-in-out infinite; }
 .ai-fab:active { transform: scale(0.9); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
@@ -205,10 +204,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; min-width: 0; box-sizing: border-box; }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
-.day-add-task-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); }
-.day-add-task-row .day-add-time { flex: 1 1 70px; min-width: 0; box-sizing: border-box; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; text-align: center; }
-.day-add-task-row .day-add-task-input { flex: 2 1 140px; min-width: 0; box-sizing: border-box; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; }
-.btn-day-add-task { flex: 1 1 100%; background-color: rgba(0, 230, 118, 0.08); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 8px; padding: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
 .meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
 .meal-header-row { display: flex; justify-content: space-between; align-items: center; }

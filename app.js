@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateLanguageDropdown();
     initSupabase();
     initCubesNavigation();
-    updateAIFabVisibility();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkReminders();
@@ -394,24 +393,12 @@ function initCubesNavigation() {
     cubes.forEach(cube => cube.addEventListener('click', () => {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
         tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
-        updateAIFabVisibility();
     }));
 }
 
 function switchToTab(targetId) {
     const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
     if (cube) cube.click();
-}
-
-// הכפתור הצף להוספה חכמה מופיע רק בלוח הזמנים ובמטרות/משימות - שם יש טעם
-// הקשרי לכפתור (הוספת משימה/פריט), לא בתזונה או בהגדרות.
-function updateAIFabVisibility() {
-    const fab = document.getElementById('btn-ai-fab');
-    if (!fab) return;
-    const activeTab = document.querySelector('.tab-content.active-tab');
-    const visibleOnTabs = ['my-center-section'];
-    if (activeTab && visibleOnTabs.includes(activeTab.id)) fab.classList.add('show');
-    else fab.classList.remove('show');
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -489,7 +476,7 @@ function buildWeeklyScheduleAccordionUI() {
         for (let i = 1; i <= 10; i++) {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">#${i}</span><input type="text" value="${defaultHours[i-1]}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="clearSingleSlot('${dbDay}', ${i})">❌</button></div>`;
         }
-        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div><div class="day-add-task-row"><input type="text" class="day-add-time" placeholder="${t('schedule_add_task_row_time_placeholder')}"><input type="text" class="day-add-task-input" placeholder="${t('schedule_add_task_row_task_placeholder')}"><button class="btn-day-add-task" onclick="addTaskToDay('${dbDay}')">${t('schedule_add_task_row_btn')}</button></div>`;
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid">${slotsHTML}</div>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
@@ -524,31 +511,6 @@ function setupDayScrollObserver() {
         });
     }, { root: container, threshold: [0.5] });
     document.querySelectorAll('.day-page').forEach(page => dayScrollObserver.observe(page));
-}
-
-async function addTaskToDay(day) {
-    const container = document.getElementById(`daypage-${day}`);
-    if (!container) return;
-    const timeInput = container.querySelector('.day-add-time');
-    const taskInput = container.querySelector('.day-add-task-input');
-    const timeVal = timeInput.value.trim();
-    const taskVal = taskInput.value.trim();
-    if (!taskVal) return;
-    const slots = container.querySelectorAll('.slot-input-group');
-    let targetSlot = null;
-    for (const slotEl of slots) {
-        if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
-    }
-    if (!targetSlot) { showAppToast(t('schedule_slot_full_error'), 'error'); return; }
-    const slotNum = targetSlot.getAttribute('data-slot');
-    targetSlot.querySelector('.slot-task').value = taskVal;
-    if (timeVal) targetSlot.querySelector('.slot-time').value = timeVal;
-    targetSlot.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-    targetSlot.classList.add('just-added');
-    setTimeout(() => targetSlot.classList.remove('just-added'), 1200);
-    await saveScheduleSlot(day, slotNum);
-    timeInput.value = '';
-    taskInput.value = '';
 }
 
 function toggleCardSection(headerEl) {
