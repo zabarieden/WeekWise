@@ -409,7 +409,7 @@ function updateAIFabVisibility() {
     const fab = document.getElementById('btn-ai-fab');
     if (!fab) return;
     const activeTab = document.querySelector('.tab-content.active-tab');
-    const visibleOnTabs = ['schedule-section', 'my-center-section'];
+    const visibleOnTabs = ['my-center-section'];
     if (activeTab && visibleOnTabs.includes(activeTab.id)) fab.classList.add('show');
     else fab.classList.remove('show');
 }
@@ -885,107 +885,16 @@ async function loadStepStats() {
     document.getElementById('steps-weekly').innerText = weekly;
 }
 
-// --- "AI" חוקי-דטרמיניסטי: מפרש טקסט חופשי ומנתב אותו ---
-// אין מפתח API/LLM אמיתי - זיהוי יום/שעה מבוסס התאמת מילות מפתח בכל השפות
-// הנתמכות, וזיהוי ארוחה מבוסס התאמה לשם ארוחה שמורה. מוחלף בעתיד ב-AI אמיתי
-// מאחורי פרוקסי בצד שרת (מפתח לא יכול לחיות בקוד לקוח).
-function detectDayInText(text) {
-    const lower = text.toLowerCase();
-    for (let i = 0; i < dbDaysMap.length; i++) {
-        for (const lang of SUPPORTED_LANGUAGES) {
-            const name = (translations[lang][dayNameKeys[i]] || '').toLowerCase();
-            if (name && lower.includes(name)) return { dbDay: dbDaysMap[i], matchedText: name };
-        }
-    }
-    return null;
-}
-
-function detectTimeInText(text) {
-    let m = text.match(/([01]?\d|2[0-3]):([0-5]\d)/);
-    if (m) {
-        const [h, mm] = m[0].split(':');
-        return { time: `${h.padStart(2, '0')}:${mm}`, matchedText: m[0] };
-    }
-    m = text.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm|AM|PM)/);
-    if (m) {
-        let hour = parseInt(m[1]);
-        const minutes = m[3] || '00';
-        const ampm = m[4].toLowerCase();
-        if (ampm === 'pm' && hour < 12) hour += 12;
-        if (ampm === 'am' && hour === 12) hour = 0;
-        return { time: `${String(hour).padStart(2, '0')}:${minutes}`, matchedText: m[0] };
-    }
-    return null;
-}
-
-function extractTaskName(text, dayText, timeText) {
-    let cleaned = text;
-    if (dayText) cleaned = cleaned.replace(new RegExp(dayText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '');
-    if (timeText) cleaned = cleaned.replace(timeText, '');
-    cleaned = cleaned.replace(/\b(on|at|in)\b/gi, ' ');
-    cleaned = cleaned.replace(/\s+/g, ' ').trim().replace(/^[-,،\s]+|[-,،\s]+$/g, '');
-    return cleaned || text.trim();
-}
-
-async function routeToSchedule(dbDay, time, taskName) {
-    const container = document.getElementById(`daypage-${dbDay}`);
-    if (!container) { showAppToast(t('settings_ai_no_slot'), 'error'); return; }
-    const slots = container.querySelectorAll('.slot-input-group');
-    let targetSlot = null;
-    for (const slotEl of slots) {
-        if (!slotEl.querySelector('.slot-task').value.trim()) { targetSlot = slotEl; break; }
-    }
-    if (!targetSlot) { showAppToast(t('settings_ai_no_slot'), 'error'); return; }
-    const slotNum = targetSlot.getAttribute('data-slot');
-    targetSlot.querySelector('.slot-task').value = taskName;
-    targetSlot.querySelector('.slot-time').value = time;
-    await saveScheduleSlot(dbDay, slotNum);
-    const dayIdx = dbDaysMap.indexOf(dbDay);
-    const dayLabel = getDayName(dayIdx);
-    showAppToast(t('settings_ai_routed_schedule').replace('{day}', dayLabel).replace('{time}', time));
-    switchToTab('schedule-section');
-    setTimeout(() => scrollToDay(dbDay), 200);
-}
-
-async function tryRouteToNutrition(text) {
-    if (!cachedPresets || cachedPresets.length === 0) return false;
-    const lower = text.toLowerCase();
-    const matched = cachedPresets.find(p => p.food_name && lower.includes(p.food_name.toLowerCase()));
-    if (!matched) return false;
-    const mealRows = document.querySelectorAll('.meal-row');
-    let targetRow = null;
-    for (const row of mealRows) {
-        if (!row.querySelector('.food-input').value.trim()) { targetRow = row; break; }
-    }
-    if (!targetRow) return false;
-    targetRow.querySelector('.food-input').value = matched.food_name;
-    targetRow.querySelector('.calories-input').value = matched.calories;
-    updateLiveCaloriesToday();
-    showAppToast(t('settings_ai_routed_nutrition').replace('{meal}', matched.food_name).replace('{calories}', matched.calories));
-    switchToTab('nutrition-section');
-    return true;
-}
-
+// --- "AI" חוקי-דטרמיניסטי: מוסיף טקסט חופשי כפתק חדש בלשונית הפתקים בלבד ---
+// אין מפתח API/LLM אמיתי - הטקסט מתווסף ישירות לרשימת הפתקים, ללא נגיעה
+// בלוח הזמנים השבועי. מוחלף בעתיד ב-AI אמיתי מאחורי פרוקסי בצד שרת.
 async function handleAIQuickAdd() {
     const input = document.getElementById('ai-quick-add-input');
     const text = input.value.trim();
-    if (!text) { showAppToast(t('settings_ai_empty'), 'error'); return; }
-
-    const dayMatch = detectDayInText(text);
-    const timeMatch = detectTimeInText(text);
-    if (dayMatch && timeMatch) {
-        const taskName = extractTaskName(text, dayMatch.matchedText, timeMatch.matchedText);
-        await routeToSchedule(dayMatch.dbDay, timeMatch.time, taskName);
-        input.value = '';
-        closeModal('modal-ai-quick-add');
-        return;
-    }
-
-    const routedToNutrition = await tryRouteToNutrition(text);
-    if (routedToNutrition) { input.value = ''; closeModal('modal-ai-quick-add'); return; }
+    if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
 
     await insertCenterItemDirect('weekly', text);
-    showAppToast(t('settings_ai_routed_tasks'));
+    showAppToast(t('notes_ai_added'));
     input.value = '';
     closeModal('modal-ai-quick-add');
 }
