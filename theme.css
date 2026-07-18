@@ -283,7 +283,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.15); }
 .apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; animation: fadeOverlay 0.2s ease-out; }
-.modal-sheet { background-color: var(--bg-sheet); border-top: 1px solid rgba(255, 0, 127, 0.2); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(100%); transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1); max-height: 85vh; overflow-y: auto; }
+.modal-sheet { background-color: var(--bg-sheet); border-top: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(100%); transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1); max-height: 85vh; overflow-y: auto; }
 .modal-header-bar { display: flex; justify-content: center; padding: 5px 0 12px 0; }
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
@@ -367,4 +367,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .date-picker-container input[type="date"] { width: 100%; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
+/* כל הגריד (dashboard-grid, stats-grid, hours-settings-grid, slot-input-group) כבר
+   בנוי עם minmax(0, 1fr), אז הרחבת .phone-wrapper בלבד מספיקה כדי לנצל את השטח
+   הנוסף בלי לשבור סימטריה. .modal-sheet מוגבל ל-520px למעלה כדי שהמגירה/הפופאפ
+   ימשיכו להיראות כמו חלון צף מרכזי ולא יימתחו על פני כל הרוחב. */
+@media (min-width: 700px) {
+    .phone-wrapper { max-width: 700px; }
+}
+@media (min-width: 1000px) {
+    .phone-wrapper { max-width: 820px; }
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
