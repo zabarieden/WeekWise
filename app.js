@@ -1417,31 +1417,43 @@ function reminderFiredKey(rowId) {
     return `weekwise_reminder_fired_${rowId}`;
 }
 
+// שומר על כך שלא יתקיימו שתי קריאות חופפות בו-זמנית: אם checkReminders() נקרא
+// שוב (למשל ה-interval של 20 שניות מתנגש עם visibilitychange) לפני שהקריאה
+// הקודמת סיימה לסמן reminderFiredKey, שתי הקריאות עלולות לראות "עדיין לא הופעל"
+// ולהציג את אותה תזכורת פעמיים - זה בדיוק מה שגרם לתזכורת "לחזור מיד" אחרי סגירה.
+let checkRemindersInProgress = false;
+
 async function checkReminders() {
+    if (checkRemindersInProgress) return;
     if (!supabaseClient || !currentUserId) return;
-    const now = new Date();
-    const todayDbDay = dbDaysMap[now.getDay()];
-    const todayStr = getLocalDateString(now);
-    const { data } = await supabaseClient.from('weekly_schedule')
-        .select('id, time_of_day, task_title, reminder_minutes, reminder_text')
-        .eq('user_id', currentUserId)
-        .eq('day_of_week', todayDbDay)
-        .gt('reminder_minutes', 0);
-    if (!data) return;
-    data.forEach(item => {
-        if (!item.time_of_day) return;
-        if (localStorage.getItem(reminderFiredKey(item.id)) === todayStr) return;
-        const [h, m] = item.time_of_day.split(':').map(Number);
-        if (isNaN(h) || isNaN(m)) return;
-        const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-        const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
-        // בכוונה בלי חסם עליון: אם האפליקציה הייתה סגורה/ברקע כשהגיע הזמן, עדיף
-        // להציג את התזכורת באיחור (פעם אחת בלבד, בזכות reminderFiredKey) מאשר לפספס אותה.
-        if (now >= triggerDate) {
-            fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
-            localStorage.setItem(reminderFiredKey(item.id), todayStr);
-        }
-    });
+    checkRemindersInProgress = true;
+    try {
+        const now = new Date();
+        const todayDbDay = dbDaysMap[now.getDay()];
+        const todayStr = getLocalDateString(now);
+        const { data } = await supabaseClient.from('weekly_schedule')
+            .select('id, time_of_day, task_title, reminder_minutes, reminder_text')
+            .eq('user_id', currentUserId)
+            .eq('day_of_week', todayDbDay)
+            .gt('reminder_minutes', 0);
+        if (!data) return;
+        data.forEach(item => {
+            if (!item.time_of_day) return;
+            if (localStorage.getItem(reminderFiredKey(item.id)) === todayStr) return;
+            const [h, m] = item.time_of_day.split(':').map(Number);
+            if (isNaN(h) || isNaN(m)) return;
+            const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+            const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
+            // בכוונה בלי חסם עליון: אם האפליקציה הייתה סגורה/ברקע כשהגיע הזמן, עדיף
+            // להציג את התזכורת באיחור (פעם אחת בלבד, בזכות reminderFiredKey) מאשר לפספס אותה.
+            if (now >= triggerDate) {
+                localStorage.setItem(reminderFiredKey(item.id), todayStr);
+                fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
+            }
+        });
+    } finally {
+        checkRemindersInProgress = false;
+    }
 }
 
 function fireReminder(rem) {
@@ -1515,9 +1527,10 @@ function showBrowserNotification(taskTitle, text) {
     const notification = new Notification(`${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`, {
         body: text || t('reminder_default_text'),
         icon: 'icon.png',
-        tag: `weekwise-reminder-${taskTitle}`
+        tag: `weekwise-reminder-${taskTitle}-${Date.now()}`
     });
     notification.onclick = () => { window.focus(); notification.close(); };
+    notification.onclose = () => {}; // סגירה מפורשת ומטופלת - לא אמורה לגרום להצגה חוזרת
 }
 
 let reminderToastTimeout = null;

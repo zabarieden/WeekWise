@@ -28,3 +28,7 @@ self.addEventListener('notificationclick', (event) => {
         })
     );
 });
+
+// טיפול מפורש בסגירה (למשל לחיצה על ה-X): לא עושה כלום מעבר לסגירה עצמה,
+// כדי לוודא שדחיית התראה לעולם לא "מפעילה" שוב משהו בטעות.
+self.addEventListener('notificationclose', () => {});
