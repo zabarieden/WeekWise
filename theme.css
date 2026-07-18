@@ -187,7 +187,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .schedule-touch-row { display: flex; width: 100%; max-width: 100%; box-sizing: border-box; }
 .vertical-scroll-track { flex: 0 0 12%; min-width: 12%; max-width: 12%; touch-action: pan-y; }
-.days-scroll-container { display: flex; flex: 1 1 88%; overflow-x: auto !important; overscroll-behavior-x: contain; min-width: 0; max-width: 88% !important; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.days-scroll-container { display: flex; align-items: flex-start; flex: 1 1 88%; overflow-x: auto !important; overscroll-behavior-x: contain; min-width: 0; max-width: 88% !important; box-sizing: border-box; scroll-snap-type: x mandatory; gap: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .days-scroll-container::-webkit-scrollbar { display: none; }
 
 
@@ -262,7 +262,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-event-series-toggle { background: transparent; border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); border-radius: 8px; width: 26px; height: 26px; font-size: 0.68rem; padding: 0; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .calendar-event-series-toggle:active { transform: scale(0.92); }
 .calendar-event-series-dates { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 10px 14px; margin-top: -4px; background-color: rgba(20, 18, 26, 0.3); border-radius: 0 0 12px 12px; border-inline-start: 3px solid var(--accent-purple); }
-.calendar-event-series-date-line { background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); color: var(--accent-purple-light); font-size: 0.72rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; }
+.calendar-event-series-date-line { display: flex; align-items: center; gap: 6px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); color: var(--accent-purple-light); font-size: 0.72rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.calendar-event-series-date-line input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--accent-purple); cursor: pointer; margin: 0; }
+.calendar-event-series-date-line.completed { opacity: 0.55; text-decoration: line-through; }
+
+.calendar-event-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; flex-shrink: 0; }
+.calendar-event-drag-handle:active { cursor: grabbing; }
+[data-reorder-id].reordering { position: relative; z-index: 20; opacity: 0.9; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); transition: none !important; }
+.calendar-event-progress-badge { flex-shrink: 0; background-color: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--accent-green); font-size: 0.7rem; font-weight: 700; border-radius: 20px; padding: 3px 9px; }
 
 /* המתכונים שלי: רשת קוביות (תמיד פתוחה, ללא חץ קיפול) + תצוגת פרטים במסך מלא */
 .recipes-main-card .card-body { max-height: none; overflow: visible; }

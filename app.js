@@ -753,7 +753,7 @@ async function loadCalendarEvents() {
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     const today = getLocalDateString();
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today).order('event_date', { ascending: true });
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today);
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
@@ -776,19 +776,37 @@ async function loadCalendarEvents() {
         }
     });
 
+    // סדר תצוגה: sort_order ידני (שנקבע ע"י גרירה) קודם, ורק לפריטים שעדיין
+    // אין להם אחד (Infinity) נופלים חזרה למיון לפי תאריך - כך אפשר לשים משימות
+    // חשובות למעלה בלי קשר לתאריך/שעה שלהן.
     const displayEntries = [];
-    singleEvents.forEach(item => displayEntries.push({ sortDate: item.event_date, render: () => buildSingleEventRow(item) }));
+    singleEvents.forEach(item => displayEntries.push({
+        sortOrder: typeof item.sort_order === 'number' ? item.sort_order : Infinity,
+        sortDate: item.event_date,
+        render: () => buildSingleEventRow(item)
+    }));
     seriesMap.forEach((items, groupId) => {
         items.sort((a, b) => a.event_date.localeCompare(b.event_date));
-        displayEntries.push({ sortDate: items[0].event_date, render: () => buildRecurringEventRow(items, groupId) });
+        displayEntries.push({
+            sortOrder: typeof items[0].sort_order === 'number' ? items[0].sort_order : Infinity,
+            sortDate: items[0].event_date,
+            render: () => buildRecurringEventRow(items, groupId)
+        });
     });
-    displayEntries.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
+    displayEntries.sort((a, b) => (a.sortOrder !== b.sortOrder ? a.sortOrder - b.sortOrder : a.sortDate.localeCompare(b.sortDate)));
     displayEntries.forEach(entry => container.appendChild(entry.render()));
+    initCalendarDragReorder();
 }
 
 function buildSingleEventRow(item) {
     const row = document.createElement('div');
     row.className = 'calendar-event-item';
+    row.setAttribute('data-reorder-id', item.id);
+    row.setAttribute('data-reorder-type', 'single');
+    const handle = document.createElement('span');
+    handle.className = 'calendar-event-drag-handle';
+    handle.textContent = '⠿';
+    handle.title = t('calendar_event_drag_handle_title');
     const dateBadge = document.createElement('span');
     dateBadge.className = 'calendar-event-date-badge';
     dateBadge.textContent = formatEventDateBadge(item.event_date);
@@ -799,6 +817,7 @@ function buildSingleEventRow(item) {
     deleteBtn.className = 'btn-delete-item';
     deleteBtn.textContent = '❌';
     deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+    row.appendChild(handle);
     row.appendChild(dateBadge);
     row.appendChild(titleSpan);
     row.appendChild(deleteBtn);
@@ -808,9 +827,16 @@ function buildSingleEventRow(item) {
 function buildRecurringEventRow(items, groupId) {
     const wrap = document.createElement('div');
     wrap.className = 'calendar-event-series';
+    wrap.setAttribute('data-reorder-id', groupId);
+    wrap.setAttribute('data-reorder-type', 'series');
 
     const header = document.createElement('div');
     header.className = 'calendar-event-item calendar-event-series-header';
+
+    const handle = document.createElement('span');
+    handle.className = 'calendar-event-drag-handle';
+    handle.textContent = '⠿';
+    handle.title = t('calendar_event_drag_handle_title');
 
     const dateBadge = document.createElement('span');
     dateBadge.className = 'calendar-event-date-badge';
@@ -820,6 +846,14 @@ function buildRecurringEventRow(items, groupId) {
     titleSpan.className = 'calendar-event-title-text';
     const lastDate = formatEventDateBadge(items[items.length - 1].event_date);
     titleSpan.textContent = `${items[0].event_title} · ${t('calendar_event_recurring_until')} ${lastDate}`;
+
+    // מונה התקדמות: כמה מהמופעים שנוצרו כבר סומנו כהושלמו מתוך הסך הכול -
+    // התכלית ("Target Count") היא פשוט מספר התאריכים שנוצרו לסדרה הזו
+    const completedCount = items.filter(i => i.is_completed).length;
+    const progressBadge = document.createElement('span');
+    progressBadge.className = 'calendar-event-progress-badge';
+    progressBadge.textContent = `${completedCount}/${items.length}`;
+    progressBadge.title = t('calendar_event_progress_title');
 
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'calendar-event-series-toggle';
@@ -831,17 +865,26 @@ function buildRecurringEventRow(items, groupId) {
     deleteBtn.textContent = '❌';
     deleteBtn.onclick = () => deleteRecurringSeries(groupId);
 
+    header.appendChild(handle);
     header.appendChild(dateBadge);
     header.appendChild(titleSpan);
+    header.appendChild(progressBadge);
     header.appendChild(toggleBtn);
     header.appendChild(deleteBtn);
 
     const datesList = document.createElement('div');
     datesList.className = 'calendar-event-series-dates hidden';
     items.forEach(occurrence => {
-        const line = document.createElement('div');
-        line.className = 'calendar-event-series-date-line';
-        line.textContent = formatEventDateBadge(occurrence.event_date);
+        const line = document.createElement('label');
+        line.className = 'calendar-event-series-date-line' + (occurrence.is_completed ? ' completed' : '');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !!occurrence.is_completed;
+        checkbox.onchange = () => toggleEventOccurrenceCompletion(occurrence.id, checkbox.checked);
+        const dateLabel = document.createElement('span');
+        dateLabel.textContent = formatEventDateBadge(occurrence.event_date);
+        line.appendChild(checkbox);
+        line.appendChild(dateLabel);
         datesList.appendChild(line);
     });
 
@@ -854,6 +897,88 @@ function buildRecurringEventRow(items, groupId) {
     wrap.appendChild(header);
     wrap.appendChild(datesList);
     return wrap;
+}
+
+async function toggleEventOccurrenceCompletion(id, isCompleted) {
+    await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
+    loadCalendarEvents();
+}
+
+// --- גרירה לסידור ידני-עצמאי (עדיפות) של פריטי מבט ליומן, בלי קשר לתאריך ---
+// גורר לפי ⠿: מזיז את הפריט חזותית עם המצביע, ומחליף מקום בפועל ב-DOM ברגע
+// שמרכז הפריט הנגרר חוצה את מרכזו של שכן - כך "מי שלמעלה" הוא סדר העדיפות.
+function initCalendarDragReorder() {
+    const container = document.getElementById('calendar-glance-list');
+    if (!container) return;
+
+    let draggedEl = null;
+    let startY = 0;
+
+    function onMove(e) {
+        if (!draggedEl) return;
+        const dy = e.clientY - startY;
+        draggedEl.style.transform = `translateY(${dy}px)`;
+
+        const draggedRect = draggedEl.getBoundingClientRect();
+        const draggedMid = draggedRect.top + draggedRect.height / 2;
+        const siblings = Array.from(container.children).filter(el => el !== draggedEl && el.hasAttribute('data-reorder-id'));
+
+        for (const sibling of siblings) {
+            const rect = sibling.getBoundingClientRect();
+            const siblingMid = rect.top + rect.height / 2;
+            const draggedIsBeforeSibling = !!(draggedEl.compareDocumentPosition(sibling) & Node.DOCUMENT_POSITION_FOLLOWING);
+            if (draggedIsBeforeSibling && draggedMid > siblingMid) {
+                container.insertBefore(draggedEl, sibling.nextSibling);
+                draggedEl.style.transform = 'translateY(0px)';
+                startY = e.clientY;
+                break;
+            } else if (!draggedIsBeforeSibling && draggedMid < siblingMid) {
+                container.insertBefore(draggedEl, sibling);
+                draggedEl.style.transform = 'translateY(0px)';
+                startY = e.clientY;
+                break;
+            }
+        }
+    }
+
+    function endDrag() {
+        if (!draggedEl) return;
+        draggedEl.classList.remove('reordering');
+        draggedEl.style.transform = '';
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', endDrag);
+        document.removeEventListener('pointercancel', endDrag);
+        persistCalendarOrder();
+        draggedEl = null;
+    }
+
+    container.querySelectorAll('.calendar-event-drag-handle').forEach(handle => {
+        handle.onpointerdown = (e) => {
+            const el = handle.closest('[data-reorder-id]');
+            if (!el) return;
+            e.preventDefault();
+            draggedEl = el;
+            startY = e.clientY;
+            draggedEl.classList.add('reordering');
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', endDrag);
+            document.addEventListener('pointercancel', endDrag);
+        };
+    });
+}
+
+async function persistCalendarOrder() {
+    const container = document.getElementById('calendar-glance-list');
+    if (!container) return;
+    const children = Array.from(container.children).filter(el => el.hasAttribute('data-reorder-id'));
+    const updates = children.map((el, index) => {
+        const order = (index + 1) * 10;
+        const type = el.getAttribute('data-reorder-type');
+        const id = el.getAttribute('data-reorder-id');
+        if (type === 'series') return supabaseClient.from('calendar_events').update({ sort_order: order }).eq('recurrence_group_id', id);
+        return supabaseClient.from('calendar_events').update({ sort_order: order }).eq('id', id);
+    });
+    await Promise.all(updates);
 }
 
 // יוצר את כל תאריכי החזרה מתחילת הטווח ועד סוף מספר החודשים שנבחר, לפי סוג
