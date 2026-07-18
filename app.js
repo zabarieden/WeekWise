@@ -333,6 +333,7 @@ async function initAppAfterAuth(user) {
     loadPresetManageList();
     loadProgressTargets();
     loadWeightHistory();
+    loadCalendarEvents();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -532,58 +533,6 @@ async function loadWeeklySchedule() {
             if (slotEl) { slotEl.querySelector('.slot-time').value = item.time_of_day; slotEl.querySelector('.slot-task').value = item.task_title || ''; }
         });
     }
-    renderCalendarGlance();
-}
-
-// --- מבט ליומן: אג'נדה קלה מתוך לוח הזמנים הקיים, מהיום והלאה לאורך השבוע ---
-function renderCalendarGlance() {
-    const container = document.getElementById('calendar-glance-list');
-    if (!container) return;
-    container.innerHTML = '';
-    const todayIdx = new Date().getDay();
-    let hasAny = false;
-    for (let offset = 0; offset < 7; offset++) {
-        const dayIndex = (todayIdx + offset) % 7;
-        const dayPage = document.getElementById(`daypage-${dbDaysMap[dayIndex]}`);
-        if (!dayPage) continue;
-        const items = [];
-        dayPage.querySelectorAll('.slot-input-group').forEach(slotEl => {
-            const task = slotEl.querySelector('.slot-task').value.trim();
-            if (!task) return;
-            items.push({ time: slotEl.querySelector('.slot-time').value.trim(), task });
-        });
-        if (!items.length) continue;
-        items.sort((a, b) => a.time.localeCompare(b.time));
-        hasAny = true;
-
-        const group = document.createElement('div');
-        group.className = 'calendar-glance-day-group';
-        const header = document.createElement('div');
-        header.className = 'calendar-glance-day-header';
-        header.textContent = `${getDayName(dayIndex)} · ${getFormattedDateForDay(dayIndex)}`;
-        group.appendChild(header);
-
-        items.forEach(it => {
-            const row = document.createElement('div');
-            row.className = 'calendar-glance-item';
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'calendar-glance-item-time';
-            timeSpan.textContent = it.time;
-            const taskSpan = document.createElement('span');
-            taskSpan.className = 'calendar-glance-item-task';
-            taskSpan.textContent = it.task;
-            row.appendChild(timeSpan);
-            row.appendChild(taskSpan);
-            group.appendChild(row);
-        });
-        container.appendChild(group);
-    }
-    if (!hasAny) {
-        const empty = document.createElement('div');
-        empty.className = 'calendar-glance-empty';
-        empty.textContent = t('calendar_glance_empty');
-        container.appendChild(empty);
-    }
 }
 
 async function saveScheduleSlot(day, slot) {
@@ -594,7 +543,67 @@ async function saveScheduleSlot(day, slot) {
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
     if (existing) await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
     else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
-    renderCalendarGlance();
+}
+
+// --- מבט ליומן: אירועים ארוכי-טווח בעלי תאריך אמיתי, נפרד מהתבנית השבועית החוזרת ---
+function formatEventDateBadge(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return `${day}.${month}`;
+}
+
+async function loadCalendarEvents() {
+    if (!supabaseClient) return;
+    const container = document.getElementById('calendar-glance-list');
+    if (!container) return;
+    const today = getLocalDateString();
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today).order('event_date', { ascending: true });
+    container.innerHTML = '';
+    if (error || !data || !data.length) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-glance-empty';
+        empty.textContent = t('calendar_glance_empty');
+        container.appendChild(empty);
+        return;
+    }
+    data.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'calendar-event-item';
+        const dateBadge = document.createElement('span');
+        dateBadge.className = 'calendar-event-date-badge';
+        dateBadge.textContent = formatEventDateBadge(item.event_date);
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'calendar-event-title-text';
+        titleSpan.textContent = item.event_title;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+        row.appendChild(dateBadge);
+        row.appendChild(titleSpan);
+        row.appendChild(deleteBtn);
+        container.appendChild(row);
+    });
+}
+
+async function addCalendarEvent() {
+    const titleInput = document.getElementById('calendar-event-title-input');
+    const dateInput = document.getElementById('calendar-event-date-input');
+    const title = titleInput.value.trim();
+    const date = dateInput.value;
+    if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    titleInput.value = '';
+    dateInput.value = '';
+    closeModal('modal-add-calendar-event');
+    showAppToast(t('item_added_success'));
+    loadCalendarEvents();
+}
+
+async function deleteCalendarEvent(id) {
+    await supabaseClient.from('calendar_events').delete().eq('id', id);
+    loadCalendarEvents();
 }
 
 async function saveScheduleSlotFromAdder() {
@@ -737,7 +746,7 @@ function dismissReminderToast() {
     if (toast) toast.classList.remove('show');
 }
 async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
-async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); renderCalendarGlance(); }
+async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); }
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;

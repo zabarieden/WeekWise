@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=32">
+    <link rel="stylesheet" href="theme.css?v=33">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -97,6 +97,9 @@
                             <div class="calendar-glance-heading">
                                 <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
                                 <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
+                            </div>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -444,9 +447,25 @@
             </div>
         </div>
 
+        <!-- חלון צף: הוספת אירוע ל"מבט ליומן" -->
+        <div id="modal-add-calendar-event" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calendar_event_modal_title">Add Event</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title...">
+                    <input type="date" id="calendar-event-date-input">
+                    <div class="action-buttons-wrap">
+                        <button onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <script src="i18n.js?v=5"></script>
-    <script src="app.js?v=25"></script>
+    <script src="i18n.js?v=6"></script>
+    <script src="app.js?v=26"></script>
 </body>
 </html>

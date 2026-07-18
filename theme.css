@@ -209,12 +209,34 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-glance-card .card-body { max-height: none; overflow: visible; }
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
-.calendar-glance-list { display: flex; flex-direction: column; gap: 10px; }
-.calendar-glance-day-group { background-color: rgba(20, 18, 26, 0.5); border: 1px solid rgba(255, 255, 255, 0.04); border-inline-start: 3px solid var(--accent-purple); border-radius: 10px; padding: 10px 12px; box-sizing: border-box; }
-.calendar-glance-day-header { font-size: 0.82rem; font-weight: 700; color: var(--accent-purple-light); margin-bottom: 6px; }
-.calendar-glance-item { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 0.85rem; }
-.calendar-glance-item-time { color: var(--accent-pink); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 46px; }
-.calendar-glance-item-task { color: var(--text-primary); flex: 1 1 auto; min-width: 0; text-align: start; }
+.calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
+.calendar-event-item {
+    background-color: rgba(20, 18, 26, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-inline-start: 3px solid var(--accent-purple);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    box-sizing: border-box;
+}
+.calendar-event-date-badge {
+    background-color: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: var(--accent-purple-light);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+.calendar-event-title-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
 .calendar-glance-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
 .meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
