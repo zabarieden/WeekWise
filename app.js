@@ -343,6 +343,7 @@ async function initAppAfterAuth(user) {
     loadAllCenterItems();
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
+    initDraggableAiFab();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -427,6 +428,91 @@ function applyPwaShortcutDeepLink() {
     const view = params.get('view');
     const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'recipes-section'];
     if (view && validTargets.includes(view)) switchToTab(view);
+}
+
+// --- בועת ה-AI הצפה ניתנת לגרירה חופשית, כדי שהמשתמש יוכל למקם אותה איפה שלא
+// תחסום תוכן. המיקום נשמר per-device (כמו defaultHours/daySlotsConfig) ונשחזר בכל טעינה. ---
+function aiFabPositionKey() {
+    return `weekwise_ai_fab_position_${currentUserId}`;
+}
+
+function initDraggableAiFab() {
+    const el = document.getElementById('btn-ai-fab');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!el || !wrapper) return;
+
+    const DRAG_THRESHOLD = 6;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    let dragged = false;
+
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function applyPosition(left, top) {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const maxLeft = Math.max(0, wrapperRect.width - elRect.width);
+        const maxTop = Math.max(0, wrapperRect.height - elRect.height);
+        const clampedLeft = clamp(left, 0, maxLeft);
+        const clampedTop = clamp(top, 0, maxTop);
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        el.style.left = `${clampedLeft}px`;
+        el.style.top = `${clampedTop}px`;
+        return { left: clampedLeft, top: clampedTop };
+    }
+
+    function restoreSavedPosition() {
+        const raw = localStorage.getItem(aiFabPositionKey());
+        if (!raw) return;
+        try {
+            const pos = JSON.parse(raw);
+            if (typeof pos.left === 'number' && typeof pos.top === 'number') applyPosition(pos.left, pos.top);
+        } catch {}
+    }
+
+    el.addEventListener('pointerdown', (e) => {
+        dragged = false;
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        startLeft = elRect.left - wrapperRect.left;
+        startTop = elRect.top - wrapperRect.top;
+        startX = e.clientX;
+        startY = e.clientY;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+    });
+
+    el.addEventListener('pointermove', (e) => {
+        if (!el.classList.contains('dragging')) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (!dragged && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) dragged = true;
+        if (dragged) applyPosition(startLeft + dx, startTop + dy);
+    });
+
+    function endDrag() {
+        if (!el.classList.contains('dragging')) return;
+        el.classList.remove('dragging');
+        if (dragged) {
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const finalPos = { left: elRect.left - wrapperRect.left, top: elRect.top - wrapperRect.top };
+            localStorage.setItem(aiFabPositionKey(), JSON.stringify(finalPos));
+        }
+    }
+
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+
+    el.addEventListener('click', () => {
+        if (dragged) { dragged = false; return; }
+        openModal('modal-ai-quick-add');
+    });
+
+    restoreSavedPosition();
+    window.addEventListener('resize', restoreSavedPosition);
 }
 
 function getLocalDateString(dateObj = new Date()) {
