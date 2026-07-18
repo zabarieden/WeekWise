@@ -444,6 +444,7 @@ function initDraggableAiFab() {
     const DRAG_THRESHOLD = 6;
     let startX = 0, startY = 0, startLeft = 0, startTop = 0;
     let dragged = false;
+    let isDown = false;
 
     function clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
@@ -472,7 +473,12 @@ function initDraggableAiFab() {
         } catch {}
     }
 
+    // בכוונה לא תלוי ב-setPointerCapture: בחלק מגרסאות Safari לנייד היא זורקת
+    // חריגה או מתנהגת בצורה לא אמינה, ואם זה קורה לפני שמוסיפים את מחלקת
+    // ה-dragging, הגרירה כולה נעצרת בשקט. האזנה על document ל-move/up במקום
+    // רק על האלמנט עצמו היא הגישה החסינה יותר - לא תלויה בזה שהמצביע "נתפס".
     el.addEventListener('pointerdown', (e) => {
+        isDown = true;
         dragged = false;
         const wrapperRect = wrapper.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
@@ -480,12 +486,13 @@ function initDraggableAiFab() {
         startTop = elRect.top - wrapperRect.top;
         startX = e.clientX;
         startY = e.clientY;
-        el.setPointerCapture(e.pointerId);
+        try { el.setPointerCapture(e.pointerId); } catch {}
         el.classList.add('dragging');
+        e.preventDefault();
     });
 
-    el.addEventListener('pointermove', (e) => {
-        if (!el.classList.contains('dragging')) return;
+    document.addEventListener('pointermove', (e) => {
+        if (!isDown) return;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
         if (!dragged && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) dragged = true;
@@ -493,7 +500,8 @@ function initDraggableAiFab() {
     });
 
     function endDrag() {
-        if (!el.classList.contains('dragging')) return;
+        if (!isDown) return;
+        isDown = false;
         el.classList.remove('dragging');
         if (dragged) {
             const wrapperRect = wrapper.getBoundingClientRect();
@@ -503,8 +511,8 @@ function initDraggableAiFab() {
         }
     }
 
-    el.addEventListener('pointerup', endDrag);
-    el.addEventListener('pointercancel', endDrag);
+    document.addEventListener('pointerup', endDrag);
+    document.addEventListener('pointercancel', endDrag);
 
     el.addEventListener('click', () => {
         if (dragged) { dragged = false; return; }
