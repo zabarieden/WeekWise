@@ -158,6 +158,7 @@ async function loadCenterItems(type) {
 // --- ניהול ארוחות (מוטמע מחדש במלואו) ---
 let editingPresetId = null;
 let cachedPresets = [];
+const MEAL_PRESET_FREE_LIMIT = 10;
 
 async function addCustomPreset() {
     const nameInput = document.getElementById('new-preset-name');
@@ -166,6 +167,14 @@ async function addCustomPreset() {
     const calories = parseInt(caloriesInput.value) || 0;
     const category = document.getElementById('new-preset-category').value;
     if (!name || calories <= 0) return;
+
+    // מגבלת חינם: עד 10 ארוחות שמורות סה"כ (לא ניתן להוספה, כן ניתן לעריכה) -
+    // מבוססת על הכמות הנוכחית במאגר, כך שמחיקת ארוחה משחררת מקום להוספה חדשה
+    if (!editingPresetId && !isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
+        showAppToast(t('preset_limit_desc'), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
 
     if (editingPresetId) {
         await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories }).eq('id', editingPresetId);
@@ -224,6 +233,14 @@ async function loadPresetManageList() {
         `;
         list.appendChild(li);
     });
+    updatePresetLimitHint();
+}
+
+function updatePresetLimitHint() {
+    const hint = document.getElementById('preset-limit-hint');
+    if (!hint) return;
+    if (isPremiumUser) { hint.textContent = ''; return; }
+    hint.textContent = `${t('preset_limit_hint_prefix')} ${cachedPresets.length}/${MEAL_PRESET_FREE_LIMIT}`;
 }
 
 async function loadMealPresetsToSelects() {
