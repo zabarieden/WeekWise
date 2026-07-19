@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=48">
+    <link rel="stylesheet" href="theme.css?v=49">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -66,21 +66,29 @@
                     <span class="home-greeting-emoji" id="home-greeting-emoji">☀️</span>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="nav-cube active" data-target="schedule-section">
+                    <div class="nav-cube nav-cube-hero active" data-target="schedule-section">
                         <span class="cube-icon">🗓️</span>
-                        <span class="cube-title">MyWeek</span>
+                        <span class="cube-text">
+                            <span class="cube-title">MyWeek</span>
+                            <span class="cube-subtitle" data-i18n="nav_myweek_subtitle">Your weekly plan</span>
+                        </span>
                     </div>
                     <div class="nav-cube" data-target="my-center-section">
                         <span class="cube-icon">📝</span>
                         <span class="cube-title" data-i18n="nav_notes">Notes</span>
+                        <span class="cube-subtitle" data-i18n="nav_notes_subtitle">Quick notes & lists</span>
                     </div>
                     <div class="nav-cube" data-target="nutrition-section">
                         <span class="cube-icon">🍎</span>
                         <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
+                        <span class="cube-subtitle" data-i18n="nav_nutrition_subtitle">Meals & metrics</span>
                     </div>
-                    <div class="nav-cube" data-target="recipes-section">
+                    <div class="nav-cube nav-cube-wide" data-target="recipes-section">
                         <span class="cube-icon">🧑‍🍳</span>
-                        <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
+                        <span class="cube-text">
+                            <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
+                            <span class="cube-subtitle" data-i18n="nav_recipes_subtitle">Saved recipes</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -709,7 +717,7 @@
 
     </div>
 
-    <script src="i18n.js?v=19"></script>
-    <script src="app.js?v=43"></script>
+    <script src="i18n.js?v=20"></script>
+    <script src="app.js?v=44"></script>
 </body>
 </html>

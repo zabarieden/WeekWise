@@ -164,6 +164,24 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .nav-cube:nth-child(4) .cube-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
 .cube-title { font-size: 0.76rem; font-weight: 700; color: var(--text-primary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-cube.active .cube-title { color: var(--text-primary); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+.cube-subtitle { font-size: 0.62rem; font-weight: 500; color: var(--text-secondary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* בנטו בסגנון Samsung Health: MyWeek והמתכונים הם בלוקים רחבים (span 2 עמודות,
+   פריסה אופקית - אייקון משמאל, טקסט מימין), פתקים ותזונה נשארים כרישות מרובעות
+   בולטות - בלי לגעת בצבעי הניאון/הזכוכית הכהה הקיימים של .nav-cube עצמו */
+.nav-cube-hero, .nav-cube-wide {
+    grid-column: span 2;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+}
+.nav-cube-hero { padding: 20px 18px; }
+.nav-cube-wide { padding: 16px 16px; }
+.nav-cube-hero .cube-icon, .nav-cube-wide .cube-icon { flex-shrink: 0; }
+.nav-cube-hero .cube-icon { width: 58px; height: 58px; font-size: 1.8rem; }
+.nav-cube-wide .cube-icon { width: 50px; height: 50px; font-size: 1.5rem; }
+.cube-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nav-cube-hero .cube-title { font-size: 1rem; }
+.nav-cube-wide .cube-title { font-size: 0.88rem; }
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
