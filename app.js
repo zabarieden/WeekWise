@@ -452,7 +452,26 @@ function initCubesNavigation() {
         // בכל מעבר בין המסכים הראשיים, כל מסך חוזר להתחיל מרשת התת-קוביות שלו
         // (ולא נשאר "תקוע" בתוך תצוגה ממוקדת שהמשתמש פתח בביקור קודם)
         tabContents.forEach(content => closeSubView(content.id));
+        // מסך הבית (רשת הקוביות הראשית) נעלם לגמרי בזמן שנמצאים בתוך מסך פנימי -
+        // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
+        const homePanel = document.querySelector('.home-hero-panel');
+        if (homePanel) homePanel.classList.add('hidden');
+        // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
+        // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
+        // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל
+        if (cube.getAttribute('data-target') === 'schedule-section') updateActiveDayPageHeight();
     }));
+}
+
+// חוזרים למסך הבית הטהור: כל המסכים הפנימיים נסגרים, קובייה אף אחת לא מסומנת
+// כפעילה, ומסך הבית (רשת הקוביות) חוזר להיות היחיד המוצג
+function goHome() {
+    const cubes = document.querySelectorAll('.nav-cube');
+    const tabContents = document.querySelectorAll('.tab-content');
+    cubes.forEach(c => c.classList.remove('active'));
+    tabContents.forEach(content => { content.classList.remove('active-tab'); closeSubView(content.id); });
+    const homePanel = document.querySelector('.home-hero-panel');
+    if (homePanel) homePanel.classList.remove('hidden');
 }
 
 function switchToTab(targetId) {
@@ -469,9 +488,6 @@ function openSubTile(sectionId, subviewId) {
     const grid = section.querySelector('.sub-tile-grid');
     if (grid) grid.classList.add('hidden');
     section.querySelectorAll('.subview-panel').forEach(p => p.classList.toggle('open', p.getAttribute('data-subview') === subviewId));
-    // ה-IntersectionObserver של לוח הימים מחשב גובה לפי scrollHeight בזמן אמת -
-    // כשהתצוגה הייתה display:none הגובה שחושב היה 0, אז מחשבים מחדש עכשיו שהיא גלויה
-    if (sectionId === 'schedule-section' && subviewId === 'myweek') updateActiveDayPageHeight();
 }
 
 function closeSubView(sectionId) {
@@ -486,7 +502,7 @@ function closeSubView(sectionId) {
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'recipes-section'];
+    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section'];
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 

@@ -113,8 +113,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .home-greeting-emoji { font-size: 1.7rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.35)); }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     position: relative;
     z-index: 5;
     width: 100%;
@@ -127,20 +127,19 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 16px 8px 14px 8px;
+    border-radius: 14px;
+    padding: 10px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 5px;
     cursor: pointer;
     transition: var(--transition);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
 }
 .nav-cube:active { transform: scale(0.95); }
 .nav-cube.active {
@@ -149,9 +148,9 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     box-shadow: 0 0 18px rgba(168, 85, 247, 0.3);
 }
 .cube-icon {
-    font-size: 1.3rem;
-    width: 46px;
-    height: 46px;
+    font-size: 1.05rem;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -163,7 +162,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .nav-cube:nth-child(2) .cube-icon { background-color: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple); box-shadow: 0 0 14px rgba(168, 85, 247, 0.4); }
 .nav-cube:nth-child(3) .cube-icon { background-color: rgba(0, 230, 118, 0.1); border-color: var(--accent-green); box-shadow: 0 0 14px rgba(0, 230, 118, 0.4); }
 .nav-cube:nth-child(4) .cube-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
-.cube-title { font-size: 0.76rem; font-weight: 700; color: var(--text-primary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cube-title { font-size: 0.66rem; font-weight: 700; color: var(--text-primary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-cube.active .cube-title { color: var(--text-primary); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
 /* רמה 2 של הניווט: בתוך כל מסך ראשי (למשל תזונה), רשת קטנה של "תת-קוביות"
    נכנסת לתצוגה ממוקדת של פיצ'ר בודד (subview-panel) - אותו דפוס show/hide
@@ -171,8 +170,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    ואותה שפת עיצוב זכוכית/ניאון כמו .nav-cube, רק בגודל קומפקטי יותר */
 .sub-tile-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     margin-bottom: 16px;
     width: 100%;
     max-width: 100%;
@@ -470,6 +469,25 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-recipe-back, .btn-subview-back { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .btn-recipe-back:active, .btn-subview-back:active { transform: scale(0.95); }
 .btn-subview-back { margin-bottom: 14px; }
+/* כפתור "חזור למסך הבית": בכוונה בולט/ניאוני יותר מ-btn-subview-back הרגיל -
+   זו החזרה מ"עולם" שלם חזרה לרשת הקוביות הראשית, לא רק חזרה לרשת תת-קוביות */
+.btn-back-home {
+    background-color: rgba(168, 85, 247, 0.1);
+    border: 1px solid var(--accent-purple);
+    color: var(--text-primary);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+    transition: var(--transition);
+    margin-bottom: 14px;
+}
+.btn-back-home:active { transform: scale(0.95); }
 .btn-recipe-edit, .btn-recipe-delete { border-radius: 20px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid; }
 .btn-recipe-edit { background-color: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: var(--accent-purple-light); }
 .btn-recipe-delete { background-color: rgba(255, 69, 58, 0.08); border-color: rgba(255, 69, 58, 0.25); color: var(--accent-red); }

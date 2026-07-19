@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=51">
+    <link rel="stylesheet" href="theme.css?v=52">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -66,7 +66,7 @@
                     <span class="home-greeting-emoji" id="home-greeting-emoji">☀️</span>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="nav-cube active" data-target="schedule-section">
+                    <div class="nav-cube" data-target="schedule-section">
                         <span class="cube-icon">🗓️</span>
                         <span class="cube-title">MyWeek</span>
                     </div>
@@ -78,31 +78,15 @@
                         <span class="cube-icon">🍎</span>
                         <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
                     </div>
-                    <div class="nav-cube" data-target="recipes-section">
-                        <span class="cube-icon">🧑‍🍳</span>
-                        <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
-                    </div>
                 </div>
             </div>
 
             <div class="main-scroll-area">
 
                 <!-- חלונית 1: MyWeek -->
-                <section class="tab-content active-tab" id="schedule-section">
-                    <div class="sub-tile-grid">
-                        <div class="sub-tile" onclick="openSubTile('schedule-section', 'myweek')">
-                            <span class="sub-tile-icon">🗓️</span>
-                            <span class="sub-tile-title">MyWeek</span>
-                        </div>
-                        <div class="sub-tile" onclick="openSubTile('schedule-section', 'calendar')">
-                            <span class="sub-tile-icon">📅</span>
-                            <span class="sub-tile-title" data-i18n="calendar_glance_title">A Glance at the Calendar</span>
-                        </div>
-                    </div>
-
-                    <div class="subview-panel" data-subview="myweek">
-                    <button class="btn-subview-back" onclick="closeSubView('schedule-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
-                    <div class="card expanded">
+                <section class="tab-content" id="schedule-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+                    <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>MyWeek</h2>
                             <div class="card-header-actions">
@@ -124,12 +108,9 @@
                             <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;" data-i18n="schedule_clear_week_btn">Clear entire weekly schedule</button>
                         </div>
                     </div>
-                    </div>
 
-                    <div class="subview-panel" data-subview="calendar">
-                    <button class="btn-subview-back" onclick="closeSubView('schedule-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מבט ליומן: תצוגת אג'נדה קבועה ותמיד פתוחה, ללא חץ קיפול -->
-                    <div class="card calendar-glance-card expanded">
+                    <div class="card calendar-glance-card">
                         <div class="card-title-row">
                             <div class="calendar-glance-heading">
                                 <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
@@ -143,11 +124,11 @@
                             <div id="calendar-glance-list" class="calendar-glance-list"></div>
                         </div>
                     </div>
-                    </div>
                 </section>
 
                 <!-- חلوנית 2: מעקב ארוחות ותזונה -->
                 <section class="tab-content" id="nutrition-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
                     <div class="sub-tile-grid">
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'meals')">
                             <span class="sub-tile-icon">🍽️</span>
@@ -156,6 +137,10 @@
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'calories')">
                             <span class="sub-tile-icon">🔥</span>
                             <span class="sub-tile-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'recipes')">
+                            <span class="sub-tile-icon">🧑‍🍳</span>
+                            <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'steps')">
                             <span class="sub-tile-icon">👟</span>
@@ -308,10 +293,38 @@
                         </div>
                     </div>
                     </div>
+
+                    <div class="subview-panel" data-subview="recipes">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card recipes-main-card expanded">
+                        <div class="card-title-row">
+                            <h2 data-i18n="recipes_title">My Recipes</h2>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="openAddRecipeForm()" data-i18n-title="recipes_add_title" title="Add recipe">➕</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- רמה 1: רשת קטגוריות קבועה -->
+                            <div id="recipes-categories-grid" class="recipes-categories-grid"></div>
+
+                            <!-- רמה 2: רשימת המתכונים בקטגוריה שנבחרה -->
+                            <div id="recipes-list-view" class="recipes-list-view">
+                                <div class="recipes-list-header">
+                                    <button class="btn-recipe-back" onclick="closeRecipeCategory()">
+                                        <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
+                                    </button>
+                                    <h3 id="recipes-list-category-title"></h3>
+                                </div>
+                                <div id="recipes-grid" class="recipes-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
                 </section>
 
                 <!-- חלונית 3: פתקים -->
                 <section class="tab-content" id="my-center-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
                     <div class="sub-tile-grid">
                         <div class="sub-tile" onclick="openSubTile('my-center-section', 'notes')">
                             <span class="sub-tile-icon">📝</span>
@@ -370,33 +383,6 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
                     </div>
-                    </div>
-                </section>
-
-                <!-- חלונית 4: המתכונים שלי -->
-                <section class="tab-content" id="recipes-section">
-                    <div class="card recipes-main-card">
-                        <div class="card-title-row">
-                            <h2 data-i18n="recipes_title">My Recipes</h2>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="openAddRecipeForm()" data-i18n-title="recipes_add_title" title="Add recipe">➕</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <!-- רמה 1: רשת קטגוריות קבועה -->
-                            <div id="recipes-categories-grid" class="recipes-categories-grid"></div>
-
-                            <!-- רמה 2: רשימת המתכונים בקטגוריה שנבחרה -->
-                            <div id="recipes-list-view" class="recipes-list-view">
-                                <div class="recipes-list-header">
-                                    <button class="btn-recipe-back" onclick="closeRecipeCategory()">
-                                        <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
-                                    </button>
-                                    <h3 id="recipes-list-category-title"></h3>
-                                </div>
-                                <div id="recipes-grid" class="recipes-grid"></div>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
@@ -789,7 +775,7 @@
 
     </div>
 
-    <script src="i18n.js?v=21"></script>
-    <script src="app.js?v=45"></script>
+    <script src="i18n.js?v=22"></script>
+    <script src="app.js?v=46"></script>
 </body>
 </html>
