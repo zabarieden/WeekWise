@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=49">
+    <link rel="stylesheet" href="theme.css?v=51">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -66,29 +66,21 @@
                     <span class="home-greeting-emoji" id="home-greeting-emoji">☀️</span>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="nav-cube nav-cube-hero active" data-target="schedule-section">
+                    <div class="nav-cube active" data-target="schedule-section">
                         <span class="cube-icon">🗓️</span>
-                        <span class="cube-text">
-                            <span class="cube-title">MyWeek</span>
-                            <span class="cube-subtitle" data-i18n="nav_myweek_subtitle">Your weekly plan</span>
-                        </span>
+                        <span class="cube-title">MyWeek</span>
                     </div>
                     <div class="nav-cube" data-target="my-center-section">
                         <span class="cube-icon">📝</span>
                         <span class="cube-title" data-i18n="nav_notes">Notes</span>
-                        <span class="cube-subtitle" data-i18n="nav_notes_subtitle">Quick notes & lists</span>
                     </div>
                     <div class="nav-cube" data-target="nutrition-section">
                         <span class="cube-icon">🍎</span>
                         <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
-                        <span class="cube-subtitle" data-i18n="nav_nutrition_subtitle">Meals & metrics</span>
                     </div>
-                    <div class="nav-cube nav-cube-wide" data-target="recipes-section">
+                    <div class="nav-cube" data-target="recipes-section">
                         <span class="cube-icon">🧑‍🍳</span>
-                        <span class="cube-text">
-                            <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
-                            <span class="cube-subtitle" data-i18n="nav_recipes_subtitle">Saved recipes</span>
-                        </span>
+                        <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
                     </div>
                 </div>
             </div>
@@ -97,7 +89,20 @@
 
                 <!-- חלונית 1: MyWeek -->
                 <section class="tab-content active-tab" id="schedule-section">
-                    <div class="card">
+                    <div class="sub-tile-grid">
+                        <div class="sub-tile" onclick="openSubTile('schedule-section', 'myweek')">
+                            <span class="sub-tile-icon">🗓️</span>
+                            <span class="sub-tile-title">MyWeek</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('schedule-section', 'calendar')">
+                            <span class="sub-tile-icon">📅</span>
+                            <span class="sub-tile-title" data-i18n="calendar_glance_title">A Glance at the Calendar</span>
+                        </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="myweek">
+                    <button class="btn-subview-back" onclick="closeSubView('schedule-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2>MyWeek</h2>
                             <div class="card-header-actions">
@@ -119,9 +124,12 @@
                             <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;" data-i18n="schedule_clear_week_btn">Clear entire weekly schedule</button>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="subview-panel" data-subview="calendar">
+                    <button class="btn-subview-back" onclick="closeSubView('schedule-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מבט ליומן: תצוגת אג'נדה קבועה ותמיד פתוחה, ללא חץ קיפול -->
-                    <div class="card calendar-glance-card">
+                    <div class="card calendar-glance-card expanded">
                         <div class="card-title-row">
                             <div class="calendar-glance-heading">
                                 <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
@@ -135,11 +143,33 @@
                             <div id="calendar-glance-list" class="calendar-glance-list"></div>
                         </div>
                     </div>
+                    </div>
                 </section>
 
                 <!-- חلوנית 2: מעקב ארוחות ותזונה -->
                 <section class="tab-content" id="nutrition-section">
-                    <div class="card" style="margin-bottom: 16px;">
+                    <div class="sub-tile-grid">
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'meals')">
+                            <span class="sub-tile-icon">🍽️</span>
+                            <span class="sub-tile-title" data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'calories')">
+                            <span class="sub-tile-icon">🔥</span>
+                            <span class="sub-tile-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'steps')">
+                            <span class="sub-tile-icon">👟</span>
+                            <span class="sub-tile-title" data-i18n="steps_title">Daily Step Counter</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'weight')">
+                            <span class="sub-tile-icon">⚖️</span>
+                            <span class="sub-tile-title" data-i18n="weight_title">Periodic Weight Tracking</span>
+                        </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="meals">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</h2>
                             <div class="card-header-actions">
@@ -217,9 +247,12 @@
                             <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;" data-i18n="nutrition_save_btn">Save today's menu</button>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="subview-panel" data-subview="calories">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מדדי קלוריות -->
-                    <div class="card" style="margin-bottom: 16px;">
+                    <div class="card expanded" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="calorie_metrics_title">Calorie Metrics</h2>
                             <span class="card-toggle-icon">▼</span>
@@ -232,9 +265,12 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="subview-panel" data-subview="steps">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מד צעדים -->
-                    <div class="card" style="margin-bottom: 16px;">
+                    <div class="card expanded" style="margin-bottom: 16px;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="steps_title">Daily Step Counter</h2>
                             <span class="card-toggle-icon">▼</span>
@@ -250,9 +286,12 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="subview-panel" data-subview="weight">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מעקב משקל -->
-                    <div class="card" id="accordion-weight-card">
+                    <div class="card expanded" id="accordion-weight-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="weight_title">Periodic Weight Tracking</h2>
                             <span class="card-toggle-icon">▼</span>
@@ -268,36 +307,69 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </section>
 
                 <!-- חלונית 3: פתקים -->
                 <section class="tab-content" id="my-center-section">
-                    <div class="my-center-grid">
-                        <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="notes_title">Notes</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                            <div class="card-body"><ul id="weekly-list" class="center-list"></ul></div>
+                    <div class="sub-tile-grid">
+                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'notes')">
+                            <span class="sub-tile-icon">📝</span>
+                            <span class="sub-tile-title" data-i18n="notes_title">Notes</span>
                         </div>
-                        <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="progress_title">Weekly Progress Tracker</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                            <div class="card-body"><div id="progress-container" class="progress-container"></div></div>
+                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'progress')">
+                            <span class="sub-tile-icon">📊</span>
+                            <span class="sub-tile-title" data-i18n="progress_title">Weekly Progress Tracker</span>
                         </div>
-                        <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                                <h2 data-i18n="monthly_goal_title">🏆 Monthly Goal (Premium)</h2>
-                                <div class="card-header-actions">
-                                    <button class="btn-floating-add" onclick="event.stopPropagation(); toggleMonthlyGoalLookback()" data-i18n-title="monthly_goal_lookback_title" title="Look back">🕓</button>
-                                    <span class="card-toggle-icon">▼</span>
-                                </div>
+                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'goal')">
+                            <span class="sub-tile-icon">🏆</span>
+                            <span class="sub-tile-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'shopping')">
+                            <span class="sub-tile-icon">🛒</span>
+                            <span class="sub-tile-title" data-i18n="general_title">Shopping List</span>
+                        </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="notes">
+                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="notes_title">Notes</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-body"><ul id="weekly-list" class="center-list"></ul></div>
+                    </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="progress">
+                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="progress_title">Weekly Progress Tracker</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-progress')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-body"><div id="progress-container" class="progress-container"></div></div>
+                    </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="goal">
+                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="monthly_goal_title">🏆 Monthly Goal (Premium)</h2>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); toggleMonthlyGoalLookback()" data-i18n-title="monthly_goal_lookback_title" title="Look back">🕓</button>
+                                <span class="card-toggle-icon">▼</span>
                             </div>
-                            <div class="card-body">
-                                <div id="monthly-goal-content"></div>
-                                <div id="monthly-goal-lookback-list" class="monthly-goal-lookback-list hidden"></div>
-                            </div>
                         </div>
-                        <div class="card">
-                            <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                            <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
+                        <div class="card-body">
+                            <div id="monthly-goal-content"></div>
+                            <div id="monthly-goal-lookback-list" class="monthly-goal-lookback-list hidden"></div>
                         </div>
+                    </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="shopping">
+                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
+                    </div>
                     </div>
                 </section>
 
@@ -717,7 +789,7 @@
 
     </div>
 
-    <script src="i18n.js?v=20"></script>
-    <script src="app.js?v=44"></script>
+    <script src="i18n.js?v=21"></script>
+    <script src="app.js?v=45"></script>
 </body>
 </html>

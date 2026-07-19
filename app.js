@@ -449,12 +449,37 @@ function initCubesNavigation() {
     cubes.forEach(cube => cube.addEventListener('click', () => {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
         tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
+        // בכל מעבר בין המסכים הראשיים, כל מסך חוזר להתחיל מרשת התת-קוביות שלו
+        // (ולא נשאר "תקוע" בתוך תצוגה ממוקדת שהמשתמש פתח בביקור קודם)
+        tabContents.forEach(content => closeSubView(content.id));
     }));
 }
 
 function switchToTab(targetId) {
     const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
     if (cube) cube.click();
+}
+
+// --- רמה 2 של הניווט: תוך כדי מסך ראשי, "תת-קוביה" פותחת תצוגה ממוקדת של
+// פיצ'ר בודד (subview-panel) ומסתירה את רשת התת-קוביות ואת שאר התצוגות -
+// אותו דפוס show/hide בדיוק כמו openRecipeCategory/closeRecipeCategory הקיימים ---
+function openSubTile(sectionId, subviewId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    const grid = section.querySelector('.sub-tile-grid');
+    if (grid) grid.classList.add('hidden');
+    section.querySelectorAll('.subview-panel').forEach(p => p.classList.toggle('open', p.getAttribute('data-subview') === subviewId));
+    // ה-IntersectionObserver של לוח הימים מחשב גובה לפי scrollHeight בזמן אמת -
+    // כשהתצוגה הייתה display:none הגובה שחושב היה 0, אז מחשבים מחדש עכשיו שהיא גלויה
+    if (sectionId === 'schedule-section' && subviewId === 'myweek') updateActiveDayPageHeight();
+}
+
+function closeSubView(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    section.querySelectorAll('.subview-panel').forEach(p => p.classList.remove('open'));
+    const grid = section.querySelector('.sub-tile-grid');
+    if (grid) grid.classList.remove('hidden');
 }
 
 // --- קיצורי דרך של ה-PWA (manifest.json shortcuts): קפיצה ישירה ללשונית מבוקשת ---

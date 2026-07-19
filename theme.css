@@ -140,6 +140,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
+    aspect-ratio: 1 / 1;
 }
 .nav-cube:active { transform: scale(0.95); }
 .nav-cube.active {
@@ -164,24 +165,60 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .nav-cube:nth-child(4) .cube-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
 .cube-title { font-size: 0.76rem; font-weight: 700; color: var(--text-primary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav-cube.active .cube-title { color: var(--text-primary); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
-.cube-subtitle { font-size: 0.62rem; font-weight: 500; color: var(--text-secondary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* בנטו בסגנון Samsung Health: MyWeek והמתכונים הם בלוקים רחבים (span 2 עמודות,
-   פריסה אופקית - אייקון משמאל, טקסט מימין), פתקים ותזונה נשארים כרישות מרובעות
-   בולטות - בלי לגעת בצבעי הניאון/הזכוכית הכהה הקיימים של .nav-cube עצמו */
-.nav-cube-hero, .nav-cube-wide {
-    grid-column: span 2;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 14px;
+/* רמה 2 של הניווט: בתוך כל מסך ראשי (למשל תזונה), רשת קטנה של "תת-קוביות"
+   נכנסת לתצוגה ממוקדת של פיצ'ר בודד (subview-panel) - אותו דפוס show/hide
+   בדיוק כמו recipes-list-view/recipe-detail-view הקיימים (class "open"),
+   ואותה שפת עיצוב זכוכית/ניאון כמו .nav-cube, רק בגודל קומפקטי יותר */
+.sub-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
-.nav-cube-hero { padding: 20px 18px; }
-.nav-cube-wide { padding: 16px 16px; }
-.nav-cube-hero .cube-icon, .nav-cube-wide .cube-icon { flex-shrink: 0; }
-.nav-cube-hero .cube-icon { width: 58px; height: 58px; font-size: 1.8rem; }
-.nav-cube-wide .cube-icon { width: 50px; height: 50px; font-size: 1.5rem; }
-.cube-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.nav-cube-hero .cube-title { font-size: 1rem; }
-.nav-cube-wide .cube-title { font-size: 0.88rem; }
+.sub-tile-grid.hidden { display: none; }
+.sub-tile {
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.sub-tile:active { transform: scale(0.95); }
+.sub-tile-icon {
+    font-size: 1.3rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sub-tile:nth-child(1) .sub-tile-icon { background-color: rgba(255, 0, 127, 0.1); border-color: var(--accent-pink); box-shadow: 0 0 14px rgba(255, 0, 127, 0.4); }
+.sub-tile:nth-child(2) .sub-tile-icon { background-color: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple); box-shadow: 0 0 14px rgba(168, 85, 247, 0.4); }
+.sub-tile:nth-child(3) .sub-tile-icon { background-color: rgba(0, 230, 118, 0.1); border-color: var(--accent-green); box-shadow: 0 0 14px rgba(0, 230, 118, 0.4); }
+.sub-tile:nth-child(4) .sub-tile-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
+.sub-tile-title { font-size: 0.72rem; font-weight: 700; color: var(--text-primary); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.subview-panel { display: none; }
+.subview-panel.open { display: block; }
 .main-scroll-area {
     flex: 1;
     overflow-y: auto;
@@ -430,8 +467,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-detail-view.open { display: flex; }
 .recipe-detail-header { padding: 16px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .recipe-detail-header-actions { display: flex; align-items: center; gap: 8px; }
-.btn-recipe-back { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.btn-recipe-back:active { transform: scale(0.95); }
+.btn-recipe-back, .btn-subview-back { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn-recipe-back:active, .btn-subview-back:active { transform: scale(0.95); }
+.btn-subview-back { margin-bottom: 14px; }
 .btn-recipe-edit, .btn-recipe-delete { border-radius: 20px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid; }
 .btn-recipe-edit { background-color: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: var(--accent-purple-light); }
 .btn-recipe-delete { background-color: rgba(255, 69, 58, 0.08); border-color: rgba(255, 69, 58, 0.25); color: var(--accent-red); }
@@ -469,7 +507,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .weight-inputs-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
-.my-center-grid { display: flex; flex-direction: column; gap: 12px; }
 .center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .center-list li {
     background-color: rgba(20, 18, 26, 0.5);
