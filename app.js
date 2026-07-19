@@ -3,7 +3,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
-let defaultHours = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '20:00', '21:00', '22:00'];
+let defaultHours = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
 let reminderIntervalStarted = false;
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateLanguageDropdown();
     initSupabase();
     initCubesNavigation();
+    renderHomeGreeting();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkReminders();
@@ -46,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         addCustomPreset();
         closeModal('modal-add-preset');
     });
-    document.getElementById('btn-save-new-slot').addEventListener('click', () => {
-        saveScheduleSlotFromAdder();
+    document.getElementById('btn-save-new-slot').addEventListener('click', async () => {
+        await saveScheduleSlotFromAdder();
         closeModal('modal-add-task');
     });
     document.getElementById('btn-delete-slot-specific').addEventListener('click', () => {
@@ -89,6 +90,7 @@ function populateLanguageDropdown() {
 function onLanguageChanged() {
     const select = document.getElementById('language-select');
     if (select) select.value = currentLang;
+    renderHomeGreeting();
     if (!currentUserId) return;
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
@@ -427,6 +429,20 @@ function expandCardForList(listId) {
     if (card) card.classList.add('expanded');
 }
 
+function renderHomeGreeting() {
+    const textEl = document.getElementById('home-greeting-text');
+    const dateEl = document.getElementById('home-greeting-date');
+    const emojiEl = document.getElementById('home-greeting-emoji');
+    if (!textEl || !dateEl || !emojiEl) return;
+    const hour = new Date().getHours();
+    let key = 'home_greeting_morning', emoji = '☀️';
+    if (hour >= 12 && hour < 18) { key = 'home_greeting_afternoon'; emoji = '🌤️'; }
+    else if (hour >= 18 || hour < 5) { key = 'home_greeting_evening'; emoji = '🌙'; }
+    textEl.textContent = t(key);
+    emojiEl.textContent = emoji;
+    dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
 function initCubesNavigation() {
     const cubes = document.querySelectorAll('.nav-cube');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -570,7 +586,7 @@ function daySlotsKey() {
 }
 
 function defaultDaySlotNumbers() {
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    return [1, 2, 3, 4, 5, 6];
 }
 
 function loadDaySlotsConfig() {
@@ -740,12 +756,12 @@ function loadCustomDefaultHours() {
     if (!raw) return;
     try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === 10) defaultHours = parsed;
+        if (Array.isArray(parsed) && parsed.length === 6) defaultHours = parsed;
     } catch {}
 }
 
 function openHoursSettingsModal() {
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 6; i++) {
         document.getElementById(`settings-hour-${i}`).value = defaultHours[i - 1] || '';
     }
     openModal('modal-settings-hours');
@@ -753,7 +769,7 @@ function openHoursSettingsModal() {
 
 function saveDefaultHours() {
     const newHours = [];
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 6; i++) {
         const val = document.getElementById(`settings-hour-${i}`).value.trim();
         newHours.push(val || defaultHours[i - 1] || '');
     }
@@ -882,8 +898,10 @@ async function saveScheduleSlot(day, slot) {
     const timeVal = slotEl.querySelector('.slot-time').value;
     const taskVal = slotEl.querySelector('.slot-task').value.trim();
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
-    if (existing) await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id);
-    else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal });
+    let error;
+    if (existing) ({ error } = await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id));
+    else ({ error } = await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal }));
+    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
 }
 
 // --- מבט ליומן: אירועים ארוכי-טווח בעלי תאריך אמיתי, נפרד מהתבנית השבועית החוזרת ---
@@ -1518,11 +1536,62 @@ function currentMonthKey() {
 }
 
 let cachedMonthlyGoal = null;
+let viewedMonthKey = null;
+let editingMonthlyGoal = false;
 
 async function loadMonthlyGoal() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('month_key', currentMonthKey()).maybeSingle();
     cachedMonthlyGoal = data || null;
+    await renderMonthlyGoal();
+}
+
+function shiftMonthKey(monthKey, delta) {
+    const [y, m] = monthKey.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthLabel(monthKey) {
+    const [y, m] = monthKey.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString(currentLang, { month: 'long', year: 'numeric' });
+}
+
+async function navigateMonthlyGoal(delta) {
+    const base = viewedMonthKey || currentMonthKey();
+    const target = shiftMonthKey(base, delta);
+    if (target > currentMonthKey()) return;
+    viewedMonthKey = target;
+    await renderMonthlyGoal();
+}
+
+function formatGoalProgressText(goal, currentValue) {
+    const cur = currentValue !== null && currentValue !== undefined ? currentValue : '—';
+    if (goal.goal_type === 'weight') {
+        return `${t('monthly_goal_current_label')}: ${cur} ${t('monthly_goal_kg_unit')}  •  ${t('monthly_goal_target_label')}: ${goal.target_value} ${t('monthly_goal_kg_unit')}`;
+    }
+    if (goal.goal_type === 'tasks') {
+        return `${cur} / ${goal.target_value} ${t('monthly_goal_tasks_unit')}`;
+    }
+    // מותאם אישית: אין המרה/עיצוב "חכם" של הטקסט - הוא חופשי לגמרי, רק מוצג
+    // לצד ההתקדמות המספרית האמיתית (current_value/target_value, שתמיד נשארים מספרים)
+    return `${goal.goal_name}: ${cur} / ${goal.target_value}`;
+}
+
+function isGoalRewardClaimed(goalId) {
+    try { return JSON.parse(localStorage.getItem('weekwise_claimed_goal_rewards') || '[]').includes(goalId); }
+    catch { return false; }
+}
+
+async function claimGoalReward(goalId) {
+    try {
+        const claimed = JSON.parse(localStorage.getItem('weekwise_claimed_goal_rewards') || '[]');
+        if (!claimed.includes(goalId)) {
+            claimed.push(goalId);
+            localStorage.setItem('weekwise_claimed_goal_rewards', JSON.stringify(claimed));
+        }
+    } catch { /* localStorage unavailable, skip persistence */ }
+    if (cachedMonthlyGoal && cachedMonthlyGoal.id === goalId) celebrateGoalAchieved(cachedMonthlyGoal);
     await renderMonthlyGoal();
 }
 
@@ -1565,41 +1634,98 @@ async function renderMonthlyGoal() {
         return;
     }
 
-    if (!cachedMonthlyGoal) {
-        container.innerHTML = `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p><button class="btn-secondary" onclick="openSetMonthlyGoalModal()">${t('monthly_goal_set_btn')}</button>`;
+    if (!viewedMonthKey) viewedMonthKey = currentMonthKey();
+    const isCurrentMonth = viewedMonthKey === currentMonthKey();
+
+    let goal = isCurrentMonth ? cachedMonthlyGoal : null;
+    if (!isCurrentMonth) {
+        const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('month_key', viewedMonthKey).maybeSingle();
+        goal = data || null;
+    }
+
+    const navHtml = `
+        <div class="monthly-goal-nav">
+            <button class="monthly-goal-nav-btn" onclick="navigateMonthlyGoal(-1)" title="${t('monthly_goal_prev_month')}">‹</button>
+            <span class="monthly-goal-month-label">${formatMonthLabel(viewedMonthKey)}</span>
+            <button class="monthly-goal-nav-btn" onclick="navigateMonthlyGoal(1)" title="${t('monthly_goal_next_month')}" ${isCurrentMonth ? 'disabled' : ''}>›</button>
+        </div>
+    `;
+
+    if (!goal) {
+        container.innerHTML = navHtml + (isCurrentMonth
+            ? `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p><button class="btn-secondary" onclick="openSetMonthlyGoalModal()">${t('monthly_goal_set_btn')}</button>`
+            : `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p>`);
         return;
     }
 
-    const goal = cachedMonthlyGoal;
-    const currentValue = await computeGoalCurrentValue(goal);
-    const achieved = isGoalAchieved(goal, currentValue);
-    const pct = goalProgressPercent(goal, currentValue);
+    let currentValue = goal.current_value;
+    let achieved = goal.achieved;
+    let pct = goalProgressPercent(goal, currentValue);
 
-    if (achieved && !goal.achieved) {
-        await supabaseClient.from('monthly_goals').update({ achieved: true, current_value: currentValue }).eq('id', goal.id);
-        cachedMonthlyGoal.achieved = true;
-        celebrateGoalAchieved(goal);
-    } else if (currentValue !== null && currentValue !== goal.current_value) {
-        await supabaseClient.from('monthly_goals').update({ current_value: currentValue }).eq('id', goal.id);
-        cachedMonthlyGoal.current_value = currentValue;
+    if (isCurrentMonth) {
+        currentValue = await computeGoalCurrentValue(goal);
+        achieved = isGoalAchieved(goal, currentValue);
+        pct = goalProgressPercent(goal, currentValue);
+
+        if (achieved && !goal.achieved) {
+            await supabaseClient.from('monthly_goals').update({ achieved: true, current_value: currentValue }).eq('id', goal.id);
+            cachedMonthlyGoal.achieved = true;
+            goal.achieved = true;
+            celebrateGoalAchieved(goal);
+        } else if (currentValue !== null && currentValue !== goal.current_value) {
+            await supabaseClient.from('monthly_goals').update({ current_value: currentValue }).eq('id', goal.id);
+            cachedMonthlyGoal.current_value = currentValue;
+        }
     }
 
-    const displayValue = currentValue !== null ? currentValue : '—';
+    const progressText = formatGoalProgressText(goal, currentValue);
+    const actionsHtml = isCurrentMonth
+        ? `<div class="monthly-goal-actions">
+                <button class="btn-edit-item" onclick="openSetMonthlyGoalModal(true)" title="${t('monthly_goal_edit_title')}">✏️</button>
+                <button class="btn-delete-item" onclick="deleteMonthlyGoal()">❌</button>
+           </div>`
+        : `<span class="monthly-goal-readonly-badge">${t('monthly_goal_viewing_past')}</span>`;
+
+    let trophyHtml = '';
+    if (achieved) {
+        const claimed = isGoalRewardClaimed(goal.id);
+        trophyHtml = `
+            <div class="monthly-goal-trophy-banner">
+                <span class="monthly-goal-trophy-icon">🏆</span>
+                <div class="monthly-goal-trophy-text">
+                    <strong>${t('monthly_goal_trophy_unlocked')}</strong>
+                    <span>${goal.goal_type === 'custom' ? progressText : `${goal.goal_name} — ${progressText}`}</span>
+                </div>
+                ${isCurrentMonth ? `<button class="btn-secondary monthly-goal-claim-btn" onclick="claimGoalReward('${goal.id}')" ${claimed ? 'disabled' : ''}>${claimed ? t('monthly_goal_reward_claimed_btn') : t('monthly_goal_claim_reward_btn')}</button>` : ''}
+            </div>`;
+    }
+
     container.innerHTML = `
+        ${navHtml}
         <div class="monthly-goal-header-row">
             <span class="monthly-goal-name">${goal.goal_name}${achieved ? ' 🏆' : ''}</span>
-            <button class="btn-delete-item" onclick="deleteMonthlyGoal()">❌</button>
+            ${actionsHtml}
         </div>
         <div class="progress-bar-bg"><div class="progress-bar-fill${achieved ? ' completed' : ''}" style="width: ${pct}%;"></div></div>
-        <div class="monthly-goal-values">${displayValue} / ${goal.target_value}</div>
-        ${goal.goal_type === 'custom' ? `<button class="btn-secondary" style="margin-top: 8px;" onclick="incrementCustomGoal()">${t('monthly_goal_increment_btn')}</button>` : ''}
+        <div class="monthly-goal-values">${progressText}</div>
+        ${trophyHtml}
+        ${isCurrentMonth && goal.goal_type === 'custom' ? `<button class="btn-secondary" style="margin-top: 8px;" onclick="incrementCustomGoal()">${t('monthly_goal_increment_btn')}</button>` : ''}
     `;
 }
 
-function openSetMonthlyGoalModal() {
-    document.getElementById('monthly-goal-name-input').value = '';
-    document.getElementById('monthly-goal-type-input').value = 'tasks';
-    document.getElementById('monthly-goal-target-input').value = '';
+function openSetMonthlyGoalModal(isEdit = false) {
+    editingMonthlyGoal = !!isEdit && !!cachedMonthlyGoal;
+    const titleKey = editingMonthlyGoal ? 'monthly_goal_edit_modal_title' : 'monthly_goal_modal_title';
+    const saveKey = editingMonthlyGoal ? 'monthly_goal_update_btn' : 'monthly_goal_save_btn';
+    const titleEl = document.getElementById('monthly-goal-modal-title');
+    const saveBtn = document.getElementById('monthly-goal-save-btn');
+    titleEl.setAttribute('data-i18n', titleKey);
+    titleEl.textContent = t(titleKey);
+    saveBtn.setAttribute('data-i18n', saveKey);
+    saveBtn.textContent = t(saveKey);
+    document.getElementById('monthly-goal-name-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_name : '';
+    document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'tasks';
+    document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
     openModal('modal-set-monthly-goal');
 }
 
@@ -1609,6 +1735,16 @@ async function saveMonthlyGoal() {
     const type = document.getElementById('monthly-goal-type-input').value;
     const target = parseFloat(document.getElementById('monthly-goal-target-input').value);
     if (!name || isNaN(target)) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+
+    if (editingMonthlyGoal && cachedMonthlyGoal) {
+        const { error } = await supabaseClient.from('monthly_goals').update({ goal_name: name, goal_type: type, target_value: target }).eq('id', cachedMonthlyGoal.id);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        editingMonthlyGoal = false;
+        closeModal('modal-set-monthly-goal');
+        showAppToast(t('item_added_success'));
+        await loadMonthlyGoal();
+        return;
+    }
 
     let startingValue = null;
     if (type === 'weight') {
@@ -1646,6 +1782,11 @@ function celebrateGoalAchieved(goal) {
     const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
     const msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
     document.getElementById('goal-celebration-text').textContent = msg;
+    const summaryEl = document.getElementById('goal-celebration-summary');
+    if (summaryEl) {
+        const progressText = formatGoalProgressText(goal, goal.current_value);
+        summaryEl.textContent = goal.goal_type === 'custom' ? progressText : `${goal.goal_name} — ${progressText}`;
+    }
     openModal('modal-goal-celebration');
 }
 
@@ -1873,6 +2014,7 @@ function parseRecipeText(raw) {
 }
 
 async function saveScheduleSlotFromAdder() {
+    if (!supabaseClient || !currentUserId) return;
     const day = document.getElementById('add-slot-day').value;
     const slot = parseInt(document.getElementById('add-slot-num').value);
     const timeVal = document.getElementById('add-slot-time').value.trim();
@@ -1886,15 +2028,36 @@ async function saveScheduleSlotFromAdder() {
         reminder_text: reminderText || null
     };
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
-    if (existing) await supabaseClient.from('weekly_schedule').update(payload).eq('id', existing.id);
-    else await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, ...payload });
-    loadWeeklySchedule();
+    let error;
+    if (existing) ({ error } = await supabaseClient.from('weekly_schedule').update(payload).eq('id', existing.id));
+    else ({ error } = await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, ...payload }));
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    await loadWeeklySchedule();
+    showAppToast(t('item_added_success'));
 }
 
 async function deleteScheduleSlotFromAdder() {
     const day = document.getElementById('add-slot-day').value;
     const slot = parseInt(document.getElementById('add-slot-num').value);
     await clearSingleSlot(day, slot);
+}
+
+// נפתח תמיד עם ברירת מחדל נקייה (היום הפעיל כרגע + השורה הריקה הראשונה שלו),
+// כדי שלא יישארו ערכים ישנים משימוש קודם שעלולים לדרוס בטעות שורה לא קשורה
+function openAddTaskModal() {
+    const activeTab = document.querySelector('.day-tab.active');
+    const day = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[0];
+    const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
+    const emptySlotEl = daySlotEls.find(el => !el.querySelector('.slot-task').value.trim());
+    const slot = emptySlotEl ? parseInt(emptySlotEl.getAttribute('data-slot')) : 1;
+
+    document.getElementById('add-slot-day').value = day;
+    document.getElementById('add-slot-num').value = String(slot);
+    document.getElementById('add-slot-time').value = '';
+    document.getElementById('add-slot-task').value = '';
+    document.getElementById('add-slot-reminder').value = '0';
+    document.getElementById('add-slot-reminder-text').value = '';
+    openModal('modal-add-task');
 }
 
 // --- מערכת תזכורות (מסונכרנת דרך Supabase) עם צליל Web Audio API ---

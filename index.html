@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=47">
+    <link rel="stylesheet" href="theme.css?v=48">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -56,23 +56,32 @@
         <!-- האפליקציה הראשית -->
         <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; flex-direction: column;">
 
-            <!-- התחלה ישירה מקוביות הניווט מזכוכית -->
-            <div class="dashboard-grid" style="margin-top: 10px;">
-                <div class="nav-cube active" data-target="schedule-section">
-                    <span class="cube-icon">🗓️</span>
-                    <span class="cube-title">MyWeek</span>
+            <!-- מסך הכניסה הראשי: פאנל בהיר פרימיום עם ברכה + רשת ניווט בסגנון Samsung Health -->
+            <div class="home-hero-panel">
+                <div class="home-greeting-row">
+                    <div>
+                        <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
+                        <p class="home-greeting-date" id="home-greeting-date"></p>
+                    </div>
+                    <span class="home-greeting-emoji" id="home-greeting-emoji">☀️</span>
                 </div>
-                <div class="nav-cube" data-target="my-center-section">
-                    <span class="cube-icon">📝</span>
-                    <span class="cube-title" data-i18n="nav_notes">Notes</span>
-                </div>
-                <div class="nav-cube" data-target="nutrition-section">
-                    <span class="cube-icon">🍎</span>
-                    <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
-                </div>
-                <div class="nav-cube" data-target="recipes-section">
-                    <span class="cube-icon">🧑‍🍳</span>
-                    <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
+                <div class="dashboard-grid">
+                    <div class="nav-cube active" data-target="schedule-section">
+                        <span class="cube-icon">🗓️</span>
+                        <span class="cube-title">MyWeek</span>
+                    </div>
+                    <div class="nav-cube" data-target="my-center-section">
+                        <span class="cube-icon">📝</span>
+                        <span class="cube-title" data-i18n="nav_notes">Notes</span>
+                    </div>
+                    <div class="nav-cube" data-target="nutrition-section">
+                        <span class="cube-icon">🍎</span>
+                        <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
+                    </div>
+                    <div class="nav-cube" data-target="recipes-section">
+                        <span class="cube-icon">🧑‍🍳</span>
+                        <span class="cube-title" data-i18n="nav_recipes">My Recipes</span>
+                    </div>
                 </div>
             </div>
 
@@ -85,7 +94,7 @@
                             <h2>MyWeek</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" data-i18n-title="schedule_hours_gear_title" title="Set default hours">⚙️</button>
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-task')">＋</button>
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openAddTaskModal()">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -369,7 +378,7 @@
                         <option value="Sunday" data-i18n="day_sunday">Sunday</option><option value="Monday" data-i18n="day_monday">Monday</option><option value="Tuesday" data-i18n="day_tuesday">Tuesday</option><option value="Wednesday" data-i18n="day_wednesday">Wednesday</option><option value="Thursday" data-i18n="day_thursday">Thursday</option><option value="Friday" data-i18n="day_friday">Friday</option><option value="Saturday" data-i18n="day_saturday">Saturday</option>
                     </select>
                     <select id="add-slot-num">
-                        <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option><option value="7">#7</option><option value="8">#8</option><option value="9">#9</option><option value="10">#10</option>
+                        <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option>
                     </select>
                     <input type="text" id="add-slot-time" data-i18n-placeholder="time_placeholder" placeholder="Time (e.g. 09:00)">
                     <input type="text" id="add-slot-task" data-i18n-placeholder="task_name_placeholder" placeholder="Task name...">
@@ -480,10 +489,6 @@
                     <input type="text" id="settings-hour-4" class="hours-input" placeholder="#4">
                     <input type="text" id="settings-hour-5" class="hours-input" placeholder="#5">
                     <input type="text" id="settings-hour-6" class="hours-input" placeholder="#6">
-                    <input type="text" id="settings-hour-7" class="hours-input" placeholder="#7">
-                    <input type="text" id="settings-hour-8" class="hours-input" placeholder="#8">
-                    <input type="text" id="settings-hour-9" class="hours-input" placeholder="#9">
-                    <input type="text" id="settings-hour-10" class="hours-input" placeholder="#10">
                 </div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button id="btn-save-hours" class="btn-primary" data-i18n="hours_save_btn">Save defaults</button>
@@ -552,7 +557,7 @@
         <div id="modal-set-monthly-goal" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
+                <h3 id="monthly-goal-modal-title" data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
                 <div class="preset-manager-grid">
                     <input type="text" id="monthly-goal-name-input" data-i18n-placeholder="monthly_goal_name_placeholder" placeholder="Goal name (e.g. Lose weight, Finish tasks)">
                     <select id="monthly-goal-type-input" class="language-select">
@@ -562,7 +567,7 @@
                     </select>
                     <input type="number" id="monthly-goal-target-input" data-i18n-placeholder="monthly_goal_target_placeholder" placeholder="Target number">
                     <div class="action-buttons-wrap">
-                        <button onclick="saveMonthlyGoal()" class="btn-primary" data-i18n="monthly_goal_save_btn">Set goal</button>
+                        <button id="monthly-goal-save-btn" onclick="saveMonthlyGoal()" class="btn-primary" data-i18n="monthly_goal_save_btn">Set goal</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-set-monthly-goal')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
@@ -573,9 +578,16 @@
         <div id="modal-goal-celebration" class="apple-modal">
             <div class="modal-sheet goal-celebration-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="confetti-container">
+                    <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                    <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                    <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                    <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                </div>
                 <div class="goal-celebration-emoji">🎉</div>
                 <h3 data-i18n="monthly_goal_achieved_title">Goal Reached!</h3>
                 <p id="goal-celebration-text" class="modal-subtitle"></p>
+                <p id="goal-celebration-summary" class="goal-celebration-summary"></p>
                 <button class="btn-primary btn-premium-cta" style="width: 100%;" onclick="closeModal('modal-goal-celebration')" data-i18n="monthly_goal_celebration_close_btn">Thank you, I earned it!</button>
             </div>
         </div>
@@ -697,7 +709,7 @@
 
     </div>
 
-    <script src="i18n.js?v=18"></script>
-    <script src="app.js?v=42"></script>
+    <script src="i18n.js?v=19"></script>
+    <script src="app.js?v=43"></script>
 </body>
 </html>
