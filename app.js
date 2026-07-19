@@ -890,6 +890,41 @@ async function loadWeeklySchedule() {
             if (slotEl) { slotEl.querySelector('.slot-time').value = item.time_of_day; slotEl.querySelector('.slot-task').value = item.task_title || ''; }
         });
     }
+    await pruneEmptyExcessSlots();
+}
+
+// שורות "יתומות" מעבר למספר שורות ברירת המחדל הנוכחי (נשארו ב-daySlotsConfig
+// המקומי מברירת מחדל ישנה עם יותר שורות, למשל 10) ושאין בהן שום טקסט משימה
+// מוסרות אוטומטית מה-DOM, מה-config המקומי וגם מהשרת. שורה עודפת שהמשתמש כן
+// מילא בה תוכן אמיתי (הוספה מכוונת דרך "+") לעולם לא נמחקת - רק כאלה שריקות לגמרי.
+async function pruneEmptyExcessSlots() {
+    if (!supabaseClient || !currentUserId) return;
+    const defaultCount = defaultDaySlotNumbers().length;
+    let anyPruned = false;
+    for (const day of dbDaysMap) {
+        const nums = daySlotsConfig[day] !== undefined ? daySlotsConfig[day] : defaultDaySlotNumbers();
+        const staleNums = [];
+        const keepNums = nums.filter(n => {
+            if (n <= defaultCount) return true;
+            const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${n}"]`);
+            const hasTask = slotEl && slotEl.querySelector('.slot-task').value.trim();
+            if (hasTask) return true;
+            staleNums.push(n);
+            return false;
+        });
+        if (!staleNums.length) continue;
+        anyPruned = true;
+        daySlotsConfig[day] = keepNums;
+        staleNums.forEach(n => {
+            const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${n}"]`);
+            if (slotEl) slotEl.remove();
+        });
+        updateEmptyDayState(day);
+        for (const n of staleNums) {
+            await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', n);
+        }
+    }
+    if (anyPruned) saveDaySlotsConfig();
 }
 
 async function saveScheduleSlot(day, slot) {
@@ -1724,7 +1759,11 @@ function openSetMonthlyGoalModal(isEdit = false) {
     saveBtn.setAttribute('data-i18n', saveKey);
     saveBtn.textContent = t(saveKey);
     document.getElementById('monthly-goal-name-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_name : '';
-    document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'tasks';
+    // ברירת המחדל היא 'custom' ולא 'tasks': 'tasks' ו-'weight' לא רק תוויות - הן
+    // מחברות את היעד למקור נתונים אחר לגמרי (משימות שהושלמו ב"מרכז שלי"/מעקב
+    // משקל בפועל), אז יעד חופשי כמו "ירידה במשקל" שנשמר כברירת מחדל כ-'tasks'
+    // עוקב בטעות אחרי משימות שהושלמו שאין להן שום קשר לשם שהמשתמש הקליד
+    document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'custom';
     document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
     openModal('modal-set-monthly-goal');
 }
