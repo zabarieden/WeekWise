@@ -113,109 +113,78 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .home-greeting-emoji { font-size: 1.7rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.35)); }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;
+    gap: 16px 8px;
     position: relative;
     z-index: 5;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
-.nav-cube {
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 10px 4px;
+/* שפת עיצוב מעגלית אחידה בכל האפליקציה: קוביית ניווט ראשית (.nav-cube) ותת-קוביה
+   בתוך מסך פנימי (.sub-tile) הן שתיהן מכל שקוף בלבד - כל העיצוב (זכוכית כהה +
+   טבעת ניאון) יושב על האייקון העגול (.cube-icon/.sub-tile-icon) עצמו, והכותרת
+   יושבת כתווית נקייה מתחתיו, בדיוק כמו אייקוני התרגילים ב-Samsung Health */
+.nav-cube, .sub-tile {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 5px;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 92px;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
-    min-width: 0;
-    box-sizing: border-box;
-    overflow: hidden;
 }
-.nav-cube:active { transform: scale(0.95); }
-.nav-cube.active {
-    background-color: rgba(168, 85, 247, 0.12);
-    border-color: var(--accent-purple);
-    box-shadow: 0 0 18px rgba(168, 85, 247, 0.3);
-}
-.cube-icon {
-    font-size: 1.05rem;
-    width: 34px;
-    height: 34px;
+.nav-cube:active, .sub-tile:active { transform: scale(0.93); }
+.cube-icon, .sub-tile-icon, .recipe-category-icon {
+    width: 84px;
+    height: 84px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 2rem;
+    flex-shrink: 0;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
 }
-.nav-cube:nth-child(1) .cube-icon { background-color: rgba(255, 0, 127, 0.1); border-color: var(--accent-pink); box-shadow: 0 0 14px rgba(255, 0, 127, 0.4); }
-.nav-cube:nth-child(2) .cube-icon { background-color: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple); box-shadow: 0 0 14px rgba(168, 85, 247, 0.4); }
-.nav-cube:nth-child(3) .cube-icon { background-color: rgba(0, 230, 118, 0.1); border-color: var(--accent-green); box-shadow: 0 0 14px rgba(0, 230, 118, 0.4); }
-.nav-cube:nth-child(4) .cube-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
-.cube-title { font-size: 0.66rem; font-weight: 700; color: var(--text-primary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-cube.active .cube-title { color: var(--text-primary); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+.nav-cube:nth-child(1) .cube-icon, .sub-tile:nth-child(1) .sub-tile-icon { border-color: var(--accent-pink); box-shadow: 0 0 18px rgba(255, 0, 127, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.nav-cube:nth-child(2) .cube-icon, .sub-tile:nth-child(2) .sub-tile-icon { border-color: var(--accent-purple); box-shadow: 0 0 18px rgba(168, 85, 247, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.nav-cube:nth-child(3) .cube-icon, .sub-tile:nth-child(3) .sub-tile-icon { border-color: var(--accent-green); box-shadow: 0 0 18px rgba(0, 230, 118, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.nav-cube:nth-child(4) .cube-icon, .sub-tile:nth-child(4) .sub-tile-icon { border-color: #00d4ff; box-shadow: 0 0 18px rgba(0, 212, 255, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.nav-cube:nth-child(5) .cube-icon, .sub-tile:nth-child(5) .sub-tile-icon { border-color: #f59e0b; box-shadow: 0 0 18px rgba(245, 158, 11, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.nav-cube.active .cube-icon { box-shadow: 0 0 22px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
+.cube-title, .sub-tile-title, .recipe-category-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 92px;
+    line-height: 1.2;
+}
+.nav-cube.active .cube-title { text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
 /* רמה 2 של הניווט: בתוך כל מסך ראשי (למשל תזונה), רשת קטנה של "תת-קוביות"
    נכנסת לתצוגה ממוקדת של פיצ'ר בודד (subview-panel) - אותו דפוס show/hide
    בדיוק כמו recipes-list-view/recipe-detail-view הקיימים (class "open"),
-   ואותה שפת עיצוב זכוכית/ניאון כמו .nav-cube, רק בגודל קומפקטי יותר */
+   ואותה שפת עיצוב מעגלית-ניאונית כמו .nav-cube, פשוט נערמת בשורות גמישות */
 .sub-tile-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px 10px;
     margin-bottom: 16px;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
 .sub-tile-grid.hidden { display: none; }
-.sub-tile {
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
-    aspect-ratio: 1 / 1;
-    min-width: 0;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-.sub-tile:active { transform: scale(0.95); }
-.sub-tile-icon {
-    font-size: 1.3rem;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.sub-tile:nth-child(1) .sub-tile-icon { background-color: rgba(255, 0, 127, 0.1); border-color: var(--accent-pink); box-shadow: 0 0 14px rgba(255, 0, 127, 0.4); }
-.sub-tile:nth-child(2) .sub-tile-icon { background-color: rgba(168, 85, 247, 0.1); border-color: var(--accent-purple); box-shadow: 0 0 14px rgba(168, 85, 247, 0.4); }
-.sub-tile:nth-child(3) .sub-tile-icon { background-color: rgba(0, 230, 118, 0.1); border-color: var(--accent-green); box-shadow: 0 0 14px rgba(0, 230, 118, 0.4); }
-.sub-tile:nth-child(4) .sub-tile-icon { background-color: rgba(0, 212, 255, 0.1); border-color: #00d4ff; box-shadow: 0 0 14px rgba(0, 212, 255, 0.4); }
-.sub-tile-title { font-size: 0.72rem; font-weight: 700; color: var(--text-primary); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .subview-panel { display: none; }
 .subview-panel.open { display: block; }
 .main-scroll-area {
@@ -378,33 +347,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipes-main-card .card-body { max-height: none; overflow: visible; }
 .hidden { display: none !important; }
 
-.recipes-categories-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; }
+.recipes-categories-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 10px; width: 100%; box-sizing: border-box; }
 .recipe-category-card {
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    aspect-ratio: 1;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    min-width: 0;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 6px;
-    text-align: center;
-    position: relative;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 92px;
+    cursor: pointer;
+    transition: var(--transition);
 }
-.recipe-category-card:active { transform: scale(0.94); }
-.recipe-category-icon { font-size: 1.6rem; }
-.recipe-category-label { font-size: 0.68rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.recipe-category-count { position: absolute; top: 6px; inset-inline-end: 6px; background-color: rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); font-size: 0.62rem; font-weight: 700; border-radius: 10px; padding: 1px 6px; min-width: 14px; }
+.recipe-category-card:active { transform: scale(0.93); }
+.recipe-category-icon { position: relative; border-color: var(--accent-purple); box-shadow: 0 0 16px rgba(168, 85, 247, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+.recipe-category-count { position: absolute; bottom: -2px; inset-inline-end: -2px; background-color: var(--accent-purple); color: #fff; font-size: 0.62rem; font-weight: 700; border-radius: 10px; padding: 1px 6px; min-width: 14px; text-align: center; border: 2px solid var(--bg-main); }
 
 .recipes-list-view { display: none; }
 .recipes-list-view.open { display: block; }
