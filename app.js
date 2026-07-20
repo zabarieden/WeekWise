@@ -405,6 +405,9 @@ async function initAppAfterAuth(user) {
         loadColorTheme(),
         loadMonthlyGoal()
     ]);
+    // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
+    // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
+    await pruneEmptyExcessSlots();
     loadAllCenterItems();
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
@@ -748,14 +751,27 @@ function updateEmptyDayState(day) {
     if (activeTab && activeTab.id === `daytab-${day}`) updateActiveDayPageHeight(pageDiv);
 }
 
-function addDaySlot(day) {
+async function addDaySlot(day) {
     if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
     const nums = daySlotsConfig[day];
     const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
     daySlotsConfig[day] = [...nums, nextNum];
     saveDaySlotsConfig();
     buildWeeklyScheduleAccordionUI();
-    loadWeeklySchedule();
+    await loadWeeklySchedule();
+    // בלי שעה עדיין, אז המיון הכרונולוגי מוריד אותה לסוף הרשימה - בלי איתות
+    // חזותי ברור זה בקלות "נעלם" מתחת לגלילה והלחיצה נראית כאילו לא עשתה כלום
+    highlightNewDaySlot(day, nextNum);
+}
+
+function highlightNewDaySlot(day, slotNum) {
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slotNum}"]`);
+    if (!slotEl) return;
+    slotEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    slotEl.classList.add('just-added');
+    setTimeout(() => slotEl.classList.remove('just-added'), 1500);
+    const taskInput = slotEl.querySelector('.slot-task');
+    if (taskInput) taskInput.focus();
 }
 
 // --- מוקד ה-AI ("המוח"): מודל אחד עם שני טאבים - תכנון לו"ז מטקסט חופשי
@@ -895,12 +911,13 @@ function stripScheduleTimePatterns(text) {
     return cleaned;
 }
 
-// מילות יחס בודדות (לא כולל "ו" - זו מטופלת בנפרד למטה כי היא נפוצה בהרבה
-// יותר הקשרים) שיכולות "להיוותר" בסוף הכותרת אחרי שהמילה שהן התחברו אליה
-// (יום/שעה) הוסרה - למשל "לשיעור" -> "ל" נשארת אחרי שהוסרנו "שיעור" בטעות
-// דרך תבנית אחרת. שם פעילות אמיתי לעולם לא מסתיים במילת יחס בודדת, אז בטוח
-// לגזור אותה מהסוף (רק מהסוף - לא מהאמצע, שם היא עדיין עשויה להיות חלק ממשפט)
-const SCHEDULE_TRAILING_PREPOSITIONS = new Set(['ב', 'ל', 'עם']);
+// מילות יחס/חיבור בודדות שיכולות "להיוותר" כטוקן שלם בפני עצמו בכל מקום
+// במשפט (לא רק בסוף) אחרי שהמילה שהן התחברו אליה (יום/שעה) הוסרה - למשל
+// "ובחמישי" -> אחרי הסרת "חמישי" נשאר "וב" מחובר, ואחרי הסרת קידומת ה-"ו"
+// (למעלה) נשארת "ב" בודדת; או "לשיעור" -> "ל" נשארת אחרי שהוסרנו "שיעור"
+// דרך תבנית אחרת. שם פעילות אמיתי לעולם לא מורכב מטוקן של אות-יחס בודדת,
+// אז בטוח להסיר את כולן בכל מקום שהן מופיעות כטוקן שלם (לא בתוך מילה אחרת)
+const SCHEDULE_STANDALONE_PREPOSITIONS = new Set(['ו', 'ב', 'ל', 'מ', 'עם']);
 
 // שעת ברירת מחדל למשפט/קטע שיש בו יום מזוהה אבל אין בו שום אזכור שעה - לא
 // "ממציאים" שעה שהמשתמש התכוון אליה, פשוט נותנים לאירוע ערך ניתן-למיון
@@ -919,18 +936,14 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     SCHEDULE_FILLER_PHRASES.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     SCHEDULE_NOISE_WORDS.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     SCHEDULE_VERB_TO_NOUN.forEach(([re, rep]) => { cleaned = cleaned.replace(re, rep); });
-    // מסירים פסיקים/נקודות, ואת מילת החיבור "ו" (וגם) רק כשהיא נשארה כטוקן
-    // בודד ומלא (למשל אחרי שהוסר יום שהייתה מחוברת אליו, כמו "ורביעי" ->
-    // "ו" בודדת) - חשוב: לא כ-regex גורף שמוחק כל אות ו בתוך מילים אחרות,
-    // כי זה בדיוק מה ששיבש "בויילר"/"הולכת"/"הופ" לאותיות מפוזרות בעבר
+    // מסירים פסיקים/נקודות, ואת מילות היחס/חיבור הבודדות (ו/ב/ל/מ/עם) רק
+    // כשהן נשארו כטוקן שלם בפני עצמו (למשל אחרי שהוסר יום/שעה שהיו מחוברים
+    // אליהן, כמו "ורביעי" -> "ו" בודדת, או "ובחמישי" -> "ב" בודדת) - חשוב:
+    // לא כ-regex גורף שמוחק את האותיות האלה בתוך מילים אחרות, כי זה בדיוק
+    // מה ששיבש "בויילר"/"הולכת"/"הופ" לאותיות מפוזרות בעבר
     let tokens = cleaned.replace(/[,.]+/g, ' ')
         .split(/\s+/)
-        .filter(tok => tok && tok !== 'ו');
-    // וגוזמים מילת יחס בודדת שנותרה תלויה בסוף (יכולה להישאר יותר מאחת ברצף,
-    // אז ממשיכים לגזור מהסוף כל עוד יש עוד אחת)
-    while (tokens.length && SCHEDULE_TRAILING_PREPOSITIONS.has(tokens[tokens.length - 1])) {
-        tokens.pop();
-    }
+        .filter(tok => tok && !SCHEDULE_STANDALONE_PREPOSITIONS.has(tok));
     cleaned = tokens.join(' ').trim();
     // חשוב: לא נופלים חזרה ל-text.trim() כשהניקוי מרוקן הכול - קטע שכולו
     // שעה בלי שום מילת פעילות ("ב12", " וב14") צריך להחזיר מחרוזת ריקה כדי
@@ -1380,7 +1393,12 @@ async function loadWeeklySchedule() {
             if (slotEl) { slotEl.querySelector('.slot-time').value = item.time_of_day; slotEl.querySelector('.slot-task').value = item.task_title || ''; }
         });
     }
-    await pruneEmptyExcessSlots();
+    // הערה: pruneEmptyExcessSlots בכוונה *לא* נקראת כאן יותר - היא רצה פעם
+    // אחת בלבד בטעינת האפליקציה (ר' initAppAfterAuth), לא בכל loadWeeklySchedule.
+    // הבעיה: loadWeeklySchedule נקראת גם מ-addDaySlot מיד אחרי הוספת שורה
+    // ריקה חדשה ביוזמת המשתמש - אם הפינוי היה רץ כאן, הוא היה מוחק את השורה
+    // הריקה החדשה הזאת מיד (מספרה מעל ברירת המחדל + אין בה עדיין טקסט),
+    // מה שגרם ל"+ הוספת שורה" להיראות כאילו הוא לא עושה כלום
     sortAllDaySlotsChronologically();
 }
 
