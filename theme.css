@@ -1032,6 +1032,42 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
+/* --- תיקון שורש לבעיית "כרטיס צר באמצע" + כפתור מחיקה שנחתך/נעלם במובייל ---
+   הסיבה האמיתית: .vertical-scroll-track (עמודת מגע שקופה לגלילה אנכית, ללא
+   תוכן חזותי, לא מקושרת לשום JS) הייתה תופסת 12% קבועים מרוחב השורה גם
+   במסכי מובייל צרים - זה דחס את .days-scroll-container (וכל מה שבתוכו,
+   כולל שורות הלו"ז) ל-88% בלבד מהרוחב, מה שגם יצר את המראה ה"צר באמצע"
+   וגם השאיר פחות מדי שטח לתג המשימה+כפתור המחיקה, עד שהמחיקה נדחקה מחוץ
+   לגבול הנראה. כאן מצמצמים את הרצועה לרצועת מגע דקה במקום 12% נוזלי, כדי
+   שהתוכן האמיתי יקבל כמעט את כל הרוחב, ומקשיחים את שורת הלו"ז עצמה
+   (flex עם !important) כדי שהזמן/התג/המחיקה תמיד ייפרשו קצה-לקצה ולעולם
+   לא ייחתכו */
+@media (max-width: 768px) {
+    .card { padding: 8px 12px; }
+    .card-body, .day-tabs-strip, .schedule-touch-row, .days-scroll-container, .day-page {
+        width: 100%;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+    .day-page { padding: 8px; }
+    .vertical-scroll-track { flex: 0 0 14px; min-width: 14px; max-width: 14px; }
+    .days-scroll-container { flex: 1 1 auto; }
+    .slot-input-group {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        padding: 8px 12px !important;
+    }
+    .slot-time { flex: 0 0 auto !important; }
+    .slot-task-wrap { flex: 1 1 auto !important; min-width: 0 !important; max-width: none !important; justify-content: center; text-align: center; }
+    .slot-task-wrap .slot-task { text-align: center; }
+    .btn-delete-slot { flex: 0 0 auto !important; visibility: visible !important; }
+}
+
 /* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
 /* מתחת ל-769px (כל טלפון) אין תקרת max-width בכלל - ראה כלל הבסיס של
    .phone-wrapper למעלה. כל הגריד (dashboard-grid, stats-grid,
