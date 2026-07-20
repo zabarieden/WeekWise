@@ -676,10 +676,40 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-test-chime { flex: 1 1 100%; background-color: rgba(168, 85, 247, 0.08); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.25); font-size: 0.8rem; padding: 8px; }
 
 .preset-manage-title { margin: 18px 0 10px 0 !important; font-size: 0.85rem !important; }
-.preset-manage-list { max-height: 220px; overflow-y: auto; }
-.preset-manage-list li { padding: 8px 12px; font-size: 0.8rem; }
+.preset-manage-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.preset-manage-empty { color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 10px 0; }
+.preset-manage-list li.preset-manage-item { padding: 8px 12px; font-size: 0.8rem; }
 .preset-manage-name { flex: 1; text-align: start; }
 .preset-manage-actions { display: flex; gap: 4px; }
+/* קבוצת קטגוריה (אקורדיון): ה-li העוטף עצמו "שקוף" - בלי הזכוכית/מסגרת/צל
+   שכל .center-list li מקבל כברירת מחדל - כדי שרק כרטיסי הארוחות הבודדים
+   בפנים (.preset-manage-item, עדיין li רגיל בתוך .center-list) ייראו ככרטיס */
+.preset-manage-list li.preset-category-group {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    display: block;
+}
+.preset-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-purple-light);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    user-select: none;
+}
+.preset-category-label { flex: 1; text-align: start; }
+.preset-category-count { flex-shrink: 0; font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); background-color: rgba(168, 85, 247, 0.1); border-radius: 10px; padding: 1px 8px; }
+.preset-category-chevron { flex-shrink: 0; font-size: 0.6rem; color: var(--text-secondary); transition: transform 0.2s ease; }
+.preset-category-group.expanded .preset-category-chevron { transform: rotate(180deg); }
+.preset-category-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
+.preset-category-group.expanded .preset-category-items { max-height: 2000px; margin-top: 8px; }
 .btn-edit-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10; }
 .btn-edit-item:hover { color: var(--accent-purple-light); transform: scale(1.1); }
 

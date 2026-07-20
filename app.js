@@ -215,6 +215,11 @@ async function deletePreset(id) {
     showAppToast(t('preset_deleted_success'));
 }
 
+// סדר קבוע של הקטגוריות (תואם לאפשרויות ב-#new-preset-category) - כך שהרשימה
+// המקובצת תמיד מוצגת באותו סדר לוגי (בוקר -> צהריים -> ערב -> נשנושים), ולא
+// לפי סדר יצירה כרונולוגי שהופך לבלגן ככל שנוספות עוד ארוחות
+const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'snack'];
+
 async function loadPresetManageList() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
@@ -222,18 +227,51 @@ async function loadPresetManageList() {
     const list = document.getElementById('preset-manage-list');
     if (!list) return;
     list.innerHTML = '';
-    cachedPresets.forEach(item => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
-            <div class="preset-manage-actions">
-                <button class="btn-edit-item" onclick="editPreset('${item.id}')">✏️</button>
-                <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
+
+    if (!cachedPresets.length) {
+        const empty = document.createElement('li');
+        empty.className = 'preset-manage-empty';
+        empty.textContent = t('preset_manage_empty');
+        list.appendChild(empty);
+        updatePresetLimitHint();
+        return;
+    }
+
+    PRESET_CATEGORY_ORDER.forEach(catKey => {
+        const items = cachedPresets.filter(p => p.meal_category === catKey);
+        if (!items.length) return;
+
+        const group = document.createElement('li');
+        group.className = 'preset-category-group expanded';
+        group.innerHTML = `
+            <div class="preset-category-header" onclick="togglePresetCategory(this)">
+                <span class="preset-category-label">${t('preset_cat_' + catKey)}</span>
+                <span class="preset-category-count">${items.length}</span>
+                <span class="preset-category-chevron">▼</span>
             </div>
+            <ul class="preset-category-items"></ul>
         `;
-        list.appendChild(li);
+        const itemsList = group.querySelector('.preset-category-items');
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'preset-manage-item';
+            li.innerHTML = `
+                <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
+                <div class="preset-manage-actions">
+                    <button class="btn-edit-item" onclick="editPreset('${item.id}')">✏️</button>
+                    <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
+                </div>
+            `;
+            itemsList.appendChild(li);
+        });
+        list.appendChild(group);
     });
     updatePresetLimitHint();
+}
+
+function togglePresetCategory(headerEl) {
+    const group = headerEl.closest('.preset-category-group');
+    if (group) group.classList.toggle('expanded');
 }
 
 function updatePresetLimitHint() {
