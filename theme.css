@@ -70,6 +70,29 @@ html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
+/* תיבות רשימה (פתקים/רשימת קניות/יומן) ותפריטים נפתחים משתמשים בגוון סגול-כהה
+   קבוע (לא במשתני הרקע) - במצב בהיר הופכים לזכוכית לבנה רכה עם טקסט כהה קריא,
+   וה-color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
+   (הפופאפ עצמו, שלא ניתן לעצב ב-CSS) ייפתח גם הוא בהיר ולא כתיבה שחורה */
+html.light-mode .center-list li,
+html.light-mode .calendar-event-item {
+    background-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+html.light-mode .calendar-event-series-dates {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+html.light-mode .language-select,
+html.light-mode .preset-select {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--accent-purple);
+    color-scheme: light;
+}
+html.light-mode input[type="date"] {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: var(--accent-purple) !important;
+    color-scheme: light;
+}
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #07060a;
