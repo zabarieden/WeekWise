@@ -32,7 +32,7 @@
         <!-- מסך כניסה למערכת: התחברות/הרשמה עם Supabase Auth -->
         <div id="login-overlay" class="login-overlay">
             <div class="login-card">
-                <h2>⚡ MyWeek</h2>
+                <h2>⚡ <span data-i18n="nav_myweek">MyWeek</span></h2>
                 <p id="auth-mode-subtitle" data-i18n="auth_login_subtitle">Log in to your account:</p>
                 <input type="email" id="auth-email-input" data-i18n-placeholder="auth_email_placeholder" placeholder="Email" autocomplete="email" autofocus>
                 <div class="password-input-wrap">
@@ -68,7 +68,7 @@
                 <div class="dashboard-grid">
                     <div class="nav-cube" data-target="schedule-section">
                         <span class="cube-icon">🗓️</span>
-                        <span class="cube-title">MyWeek</span>
+                        <span class="cube-title" data-i18n="nav_myweek">MyWeek</span>
                     </div>
                     <div class="nav-cube" data-target="my-center-section">
                         <span class="cube-icon">📝</span>
@@ -88,7 +88,7 @@
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2>MyWeek</h2>
+                            <h2 data-i18n="nav_myweek">MyWeek</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" data-i18n-title="schedule_hours_gear_title" title="Set default hours">⚙️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openAddTaskModal()">＋</button>

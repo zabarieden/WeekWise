@@ -15,6 +15,8 @@
     --accent-purple: #a855f7;
     --accent-purple-light: #c084fc;
     --accent-green: #00e676;
+    --accent-cyan: #00d4ff;
+    --accent-gold: #f59e0b;
     --accent-red: #ff453a;
     --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -107,19 +109,26 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     max-width: 100%;
     box-sizing: border-box;
 }
+/* מסך הבית הוא מסך מלא אמיתי: כשהוא גלוי (אין לו .hidden), הוא תופס את כל
+   הגובה הפנוי (אזור הגלילה הריק בכל מקרה, כי אין tab-content פעיל) ורשת
+   הקוביות ממורכזת אנכית בתוכו, במקום להישאר דחוסה למעלה עם שטח מת מתחת */
+.home-hero-panel:not(.hidden) { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
 .home-greeting-emoji { font-size: 1.7rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.35)); }
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;
-    gap: 16px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: 20px 16px;
     position: relative;
     z-index: 5;
     width: 100%;
     max-width: 100%;
+    flex: 1;
     box-sizing: border-box;
 }
 /* שפת עיצוב מעגלית אחידה בכל האפליקציה: קוביית ניווט ראשית (.nav-cube) ותת-קוביה
@@ -150,14 +159,28 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 2px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
+    border-color: var(--tile-accent, var(--accent-purple));
+    box-shadow: 0 0 18px var(--tile-glow-1, rgba(168, 85, 247, 0.5)), 0 0 26px var(--tile-glow-2, rgba(168, 85, 247, 0.2)), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
-.nav-cube:nth-child(1) .cube-icon, .sub-tile:nth-child(1) .sub-tile-icon { border-color: var(--accent-pink); box-shadow: 0 0 18px rgba(255, 0, 127, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
-.nav-cube:nth-child(2) .cube-icon, .sub-tile:nth-child(2) .sub-tile-icon { border-color: var(--accent-purple); box-shadow: 0 0 18px rgba(168, 85, 247, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
-.nav-cube:nth-child(3) .cube-icon, .sub-tile:nth-child(3) .sub-tile-icon { border-color: var(--accent-green); box-shadow: 0 0 18px rgba(0, 230, 118, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
-.nav-cube:nth-child(4) .cube-icon, .sub-tile:nth-child(4) .sub-tile-icon { border-color: #00d4ff; box-shadow: 0 0 18px rgba(0, 212, 255, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
-.nav-cube:nth-child(5) .cube-icon, .sub-tile:nth-child(5) .sub-tile-icon { border-color: #f59e0b; box-shadow: 0 0 18px rgba(245, 158, 11, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
+/* ערכת נושא ניאון ייחודית לכל "עולם" ראשי - כל תת-הקוביות והקטגוריות שבתוכו
+   (כולל קטגוריות מתכונים, המקוננות בתוך תזונה) יורשות את אותם משתני צבע,
+   כך שכל עולם נראה מאוחד: לו"ז = זהב, פתקים ומטרות = ורוד/סגול, תזונה = ירוק/ציאן */
+.nav-cube[data-target="schedule-section"], #schedule-section {
+    --tile-accent: var(--accent-gold);
+    --tile-glow-1: rgba(245, 158, 11, 0.5);
+    --tile-glow-2: rgba(255, 193, 7, 0.22);
+}
+.nav-cube[data-target="my-center-section"], #my-center-section {
+    --tile-accent: var(--accent-pink);
+    --tile-glow-1: rgba(255, 0, 127, 0.5);
+    --tile-glow-2: rgba(168, 85, 247, 0.3);
+}
+.nav-cube[data-target="nutrition-section"], #nutrition-section {
+    --tile-accent: var(--accent-green);
+    --tile-glow-1: rgba(0, 230, 118, 0.5);
+    --tile-glow-2: rgba(0, 212, 255, 0.3);
+}
 .nav-cube.active .cube-icon { box-shadow: 0 0 22px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
 .cube-title, .sub-tile-title, .recipe-category-label {
     font-size: 0.7rem;
@@ -177,11 +200,13 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .sub-tile-grid {
     display: flex;
     flex-wrap: wrap;
+    align-content: center;
     justify-content: center;
-    gap: 14px 10px;
+    gap: 20px 16px;
     margin-bottom: 16px;
     width: 100%;
     max-width: 100%;
+    flex: 1;
     box-sizing: border-box;
 }
 .sub-tile-grid.hidden { display: none; }
@@ -204,7 +229,10 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 }
 .main-scroll-area::-webkit-scrollbar { display: none; }
 .tab-content { display: none !important; }
-.tab-content.active-tab { display: block !important; animation: fadeIn 0.25s ease-out; }
+/* display:flex בעמודה כדי שרשת התת-קוביות (.sub-tile-grid, flex:1) תוכל
+   להתפרש ולהתמרכז אנכית על פני כל הגובה הפנוי כשהיא התוכן היחיד הגלוי -
+   כשתצוגה ממוקדת (.subview-panel.open) פתוחה, היא פשוט נערמת כתוכן רגיל */
+.tab-content.active-tab { display: flex !important; flex-direction: column; min-height: 100%; animation: fadeIn 0.25s ease-out; }
 .card {
     background-color: var(--bg-glass);
     backdrop-filter: blur(25px);
@@ -359,8 +387,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transition: var(--transition);
 }
 .recipe-category-card:active { transform: scale(0.93); }
-.recipe-category-icon { position: relative; border-color: var(--accent-purple); box-shadow: 0 0 16px rgba(168, 85, 247, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.1); }
-.recipe-category-count { position: absolute; bottom: -2px; inset-inline-end: -2px; background-color: var(--accent-purple); color: #fff; font-size: 0.62rem; font-weight: 700; border-radius: 10px; padding: 1px 6px; min-width: 14px; text-align: center; border: 2px solid var(--bg-main); }
+.recipe-category-icon { position: relative; }
+.recipe-category-count { position: absolute; bottom: -2px; inset-inline-end: -2px; background-color: var(--tile-accent, var(--accent-purple)); color: #fff; font-size: 0.62rem; font-weight: 700; border-radius: 10px; padding: 1px 6px; min-width: 14px; text-align: center; border: 2px solid var(--bg-main); }
 
 .recipes-list-view { display: none; }
 .recipes-list-view.open { display: block; }
@@ -422,7 +450,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-detail-view.open { display: flex; }
 .recipe-detail-header { padding: 16px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .recipe-detail-header-actions { display: flex; align-items: center; gap: 8px; }
-.btn-recipe-back, .btn-subview-back { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn-recipe-back, .btn-subview-back { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: var(--text-primary); border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; }
 .btn-recipe-back:active, .btn-subview-back:active { transform: scale(0.95); }
 .btn-subview-back { margin-bottom: 14px; }
 /* כפתור "חזור למסך הבית": בכוונה בולט/ניאוני יותר מ-btn-subview-back הרגיל -
@@ -439,6 +467,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    align-self: flex-start;
     box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
     transition: var(--transition);
     margin-bottom: 14px;
