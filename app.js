@@ -883,11 +883,20 @@ function resolveAmbiguousHour(h) {
 const SCHEDULE_TIME_PATTERNS = [
     { re: /(?:עד|until)\s*(\d{1,2}):?(\d{2})?/gi, resolve: (m) => `${SCHEDULE_NEEDS_CLARIFY_PREFIX}${m[1].padStart(2, '0')}:${m[2] || '00'}` },
     { re: /(\d{1,2}):(\d{2})/g, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2]}` },
+    // AM/PM מפורש ("10am", "10 PM", "10:30pm") - חד-משמעי מעצם הכתיבה שלו,
+    // בדיוק כמו HH:MM, אז אף פעם לא עובר דרך שאלת ההבהרה. חייב לבוא *לפני*
+    // התבנית העמומה "at N" למטה, כדי ש"at 10pm" ייתפס כאן במלואו ולא רק כ-"at 10"
+    { re: /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?\b/gi, resolve: (m) => { let h = parseInt(m[1]) % 12; if (m[3].toLowerCase() === 'p') h += 12; return `${String(h).padStart(2, '0')}:${m[2] || '00'}`; } },
     { re: /ב?-?\s*(\d{1,2})\s*(בערב|בלילה)/g, resolve: (m) => { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
     { re: /ב?-?\s*(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/g, resolve: (m) => { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
     { re: /ב?-?\s*(\d{1,2})\s*בבוקר/g, resolve: (m) => `${m[1].padStart(2, '0')}:00` },
     { re: /ב(?:שעה)?-?\s*(\d{1,2})\b/g, resolve: (m) => resolveAmbiguousHour(parseInt(m[1])) },
     { re: /\bat\s+(\d{1,2})\b/gi, resolve: (m) => resolveAmbiguousHour(parseInt(m[1])) },
+    // מספר בודד לגמרי חשוף, בלי שום מילת הקשר (לא "ב"/"at"/":"/"am"/"pm") -
+    // עדיפות הכי נמוכה (אחרונה ברשימה), כדי שכל תבנית ספציפית יותר "תזכה"
+    // תמיד קודם. עדיין עובר דרך resolveAmbiguousHour - "22" חד-משמעי (מעל 11)
+    // ומתפרש ישירות, ואילו "10" עמום ומפעיל את שאלת ההבהרה
+    { re: /\b(\d{1,2})\b/g, resolve: (m) => resolveAmbiguousHour(parseInt(m[1])) },
 ];
 
 // מוצאת את כל אזכורי השעה בטקסט (לא רק הראשון), כדי לתמוך במשפט שמתאר כמה
@@ -976,13 +985,17 @@ function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
 // אירוע עם שאלת-הבהרה ממתינה (בין אם "X עד Y" בלי שעת התחלה, ובין אם שעה
 // עמומה 1-11 בלי בוקר/ערב) - לא מנחשים, מסמנים needsClarification ומחכים
 // לשאול את המשתמש בפועל (runScheduleClarificationFlow). detail הוא
-// {kind:'until', endTime} או {kind:'ampm', hour}
+// {kind:'until', endTime} או {kind:'ampm', hour}.
+// day_of_week הוא תמיד *מערך* (גם כשיש רק יום אחד) - חשוב: אזכור עמום יחיד
+// שחל על כמה ימים ("שני ורביעי ב3") הוא עדיין שאלת-הבהרה *אחת* בעיני
+// המשתמש, לא אחת לכל יום - אחרת השאלה הייתה נשאלת פעמיים על אותה כוונה
+// בדיוק (בדיוק הבאג "השאלה נשאלת פעמיים" שדווח)
 function pushClarificationEvents(events, dayIndexes, fallbackText, title, detail) {
     const base = { needsClarification: true, task_title: title, ...detail };
     if (dayIndexes.length) {
-        dayIndexes.forEach(idx => events.push({ ...base, day_of_week: dbDaysMap[idx] }));
+        events.push({ ...base, day_of_week: dayIndexes.map(idx => dbDaysMap[idx]) });
     } else {
-        events.push({ ...base, day_of_week: dbDaysMap[new Date().getDay()], task_title: fallbackText });
+        events.push({ ...base, day_of_week: [dbDaysMap[new Date().getDay()]], task_title: fallbackText });
     }
 }
 
@@ -1195,8 +1208,12 @@ function confirmScheduleClarification() {
     if (!ev) return;
     const answer = document.getElementById('schedule-clarify-input').value.trim();
     const startTime = parseStartTimeAnswer(answer);
-    if (startTime) scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: startTime, task_title: ev.task_title });
-    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: ev.endTime, task_title: ev.task_title });
+    // ev.day_of_week הוא תמיד מערך - שאלה אחת נענית פעם אחת ומוחלת על כל
+    // הימים שהאזכור העמום חל עליהם ("שני ורביעי ב3" -> תשובה אחת, שתי שורות)
+    ev.day_of_week.forEach(day => {
+        if (startTime) scheduleClarificationResolved.push({ day_of_week: day, time: startTime, task_title: ev.task_title });
+        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title });
+    });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
 }
@@ -1205,7 +1222,9 @@ function skipScheduleClarification() {
     const ev = scheduleClarificationQueue.shift();
     if (!ev) return;
     // המשתמש דילג - לא ממציאים שעת התחלה, פשוט משתמשים בשעת הסיום שכן צוינה
-    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: ev.endTime, task_title: ev.task_title });
+    ev.day_of_week.forEach(day => {
+        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title });
+    });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
 }
@@ -1217,7 +1236,10 @@ function resolveAmpmClarification(period) {
     if (!ev) return;
     let h = parseInt(ev.hour);
     if (period === 'evening' && h <= 11) h += 12;
-    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: `${String(h).padStart(2, '0')}:00`, task_title: ev.task_title });
+    const time = `${String(h).padStart(2, '0')}:00`;
+    ev.day_of_week.forEach(day => {
+        scheduleClarificationResolved.push({ day_of_week: day, time, task_title: ev.task_title });
+    });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
 }
@@ -1510,20 +1532,21 @@ function sortAllDaySlotsChronologically() {
     dbDaysMap.forEach(day => sortDaySlotsChronologically(day));
 }
 
-// --- גרירה להעברת משימה בין משבצות שעה קבועות באותו יום (⠿ בכל שורה) ---
+// --- גרירה להעברת שורה שלמה (שעה+משימה יחד) בין משבצות קבועות באותו יום ---
 // משתמשים ב-SortableJS (ר' תג ה-script ב-index.html) במקום מאזיני מגע
 // ידניים - הספרייה בנויה וזה שנים בשימוש נרחב בדיוק בשביל הבעיה שדווחה
 // (גרירה שמתנגשת עם גלילת דף טבעית במובייל).
 //
 // חשוב: לא נותנים ל-SortableJS "לנצח" ולקבוע את סדר ה-DOM בפועל, כי כל שורה
-// כאן מייצגת משבצת-שעה קבועה (data-slot, עם onchange/onclick שכבר מוטבעים
-// עם מספר המשבצת שלהם ב-HTML) - ו-saveScheduleSlot כבר ממיין מחדש כרונולוגית
-// לפי שעה אחרי כל שמירה. אם היינו משאירים את ה-DOM במיקום החדש שSortableJS
-// זז אליו, גם המיון הכרונולוגי היה "מחזיר" את השורות למקומן וגם ה-onchange
-// המוטבע היה ממשיך להצביע על מספר המשבצת *הישן*. לכן ב-onEnd קוראים את סדר
-// *תוכן המשימות* החדש שהמשתמש גרר אליו, משחזרים מיד את סדר ה-DOM המקורי
-// לפי data-slot, ואז מחלקים מחדש את תוכן המשימות על פני המשבצות הקבועות -
-// כך שהזמנים תמיד נשארים איפה שהם, אבל המשימה עצמה "עוברת" לשעה אחרת.
+// כאן היא משבצת-DB קבועה (data-slot, עם onchange/onclick שכבר מוטבעים עם
+// מספר המשבצת שלהם ב-HTML). ב-onEnd קוראים את הסדר *החדש* שהמשתמש גרר אליו
+// (זמן+משימה כיחידה אחת - בדיוק כמו גרירת פריט שלם ברשימה רגילה), משחזרים
+// מיד את סדר ה-DOM לפי data-slot (כדי שה-onchange/onclick המוטבעים ימשיכו
+// להצביע נכון), ומחלקים את התוכן-בסדר-החדש בחזרה על פני המשבצות הקבועות.
+// saveScheduleSlot נקרא כאן עם skipSort=true בכוונה: הסדר החדש הוא *בדיוק*
+// מה שהמשתמש רצה בגרירה ידנית, ולא רוצים שהמיון הכרונולוגי האוטומטי (שרץ
+// אחרי שמירות רגילות) "יתקן" אותו בחזרה מיד - זה בדיוק מה שגרם לתחושת
+// "השורה קופצת בחזרה למקום המקורי" שדווחה.
 function initScheduleRowDragReorder(dbDay) {
     const page = document.getElementById(`daypage-${dbDay}`);
     const grid = page && page.querySelector('.slots-grid');
@@ -1537,19 +1560,27 @@ function initScheduleRowDragReorder(dbDay) {
         onEnd: function (evt) {
             if (evt.oldIndex === evt.newIndex) return;
             const rowsInNewOrder = Array.from(grid.children).filter(el => el.classList.contains('slot-input-group'));
-            const taskValuesInNewOrder = rowsInNewOrder.map(r => r.querySelector('.slot-task').value);
+            const contentInNewOrder = rowsInNewOrder.map(r => ({
+                time: r.querySelector('.slot-time').value,
+                task: r.querySelector('.slot-task').value
+            }));
 
-            // משחזרים את סדר ה-DOM המקורי לפי מספר המשבצת הקבוע
+            // משחזרים את סדר ה-DOM המקורי לפי מספר המשבצת הקבוע - *לפני* שכותבים
+            // ערכים חדשים, כדי שלא יהיה רגע-ביניים שבו סדר ה-DOM וה-onchange
+            // המוטבע לא תואמים
             const rowsBySlot = rowsInNewOrder.slice().sort((a, b) => Number(a.getAttribute('data-slot')) - Number(b.getAttribute('data-slot')));
             rowsBySlot.forEach(r => grid.appendChild(r));
 
-            // ומחלקים את סדר-המשימות-החדש (מה שהמשתמש גרר) בחזרה על פני המשבצות
+            // ומחלקים את הסדר-החדש (מה שהמשתמש גרר, שעה+משימה יחד) בחזרה על
+            // פני המשבצות הקבועות - נשמר מיידית לכל משבצת, בלי לחכות לכלום
             rowsBySlot.forEach((row, i) => {
+                const timeInput = row.querySelector('.slot-time');
                 const taskInput = row.querySelector('.slot-task');
-                taskInput.value = taskValuesInNewOrder[i];
+                timeInput.value = contentInNewOrder[i].time;
+                taskInput.value = contentInNewOrder[i].task;
                 updateSlotTaskIcon(taskInput);
                 row.classList.toggle('has-task', !!taskInput.value.trim());
-                saveScheduleSlot(dbDay, row.getAttribute('data-slot'));
+                saveScheduleSlot(dbDay, row.getAttribute('data-slot'), true);
             });
         }
     });
@@ -1595,7 +1626,11 @@ async function pruneEmptyExcessSlots() {
     await pruneDaySlotsAboveThreshold(defaultDaySlotNumbers().length);
 }
 
-async function saveScheduleSlot(day, slot) {
+// skipSort: המיון הכרונולוגי האוטומטי (בסוף) קיים כדי לסדר שורות אחרי עריכה
+// רגילה של שדה שעה/משימה - אבל אחרי גרירה ידנית (ר' initScheduleRowDragReorder)
+// הסדר החדש הוא בדיוק הכוונה של המשתמש, ולא רוצים שהמיון "יתקן" אותו בחזרה
+// מיד, מה שהיה נראה כאילו הגרירה בכלל לא עבדה
+async function saveScheduleSlot(day, slot, skipSort) {
     if (!supabaseClient) return;
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
     const timeVal = slotEl.querySelector('.slot-time').value;
@@ -1607,7 +1642,7 @@ async function saveScheduleSlot(day, slot) {
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     // ה-onchange שקרא לפונקציה הזו כבר ירה רק כש-focus עזב את השדה (blur), אז
     // מיון מחדש של סדר השורות כאן לא יפריע להקלדה פעילה של המשתמש
-    sortDaySlotsChronologically(day);
+    if (!skipSort) sortDaySlotsChronologically(day);
 }
 
 // --- מבט ליומן: אירועים ארוכי-טווח בעלי תאריך אמיתי, נפרד מהתבנית השבועית החוזרת ---
