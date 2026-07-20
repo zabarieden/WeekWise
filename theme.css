@@ -367,13 +367,36 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .days-scroll-container::-webkit-scrollbar { display: none; }
 
 
-/* כפתור "פתק מהיר" (📝) ננעל קבוע בפינה הימנית-תחתונה (אזור אגודל טבעי
-   בשימוש חד-ידני) לפי בקשה מפורשת - position:fixed ולא absolute, כדי
-   שהמיקום יישאר צמוד לפינת המסך האמיתית ולא לפינת .phone-wrapper (רלוונטי
-   בעיקר בדסקטופ/טאבלט שבו .phone-wrapper לא תמיד תופס את כל המסך). אין כאן
-   יותר גרירה בכלל (ר' initFixedAiFab ב-app.js) - cursor רגיל, בלי
-   touch-action:none שכבר לא נחוץ בלי מנגנון גרירה */
-.ai-fab { position: fixed; bottom: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); z-index: 999; padding: 0; transition: var(--transition); animation: fabPulse 2.5s ease-in-out infinite; user-select: none; -webkit-user-select: none; }
+/* כפתור "פתק מהיר" (📝) ננעל קבוע בפינה הימנית-תחתונה - הבאג בסבב הקודם:
+   position:fixed מחושב מול ה-viewport הגולמי של הדפדפן, לא מול .phone-wrapper
+   (שממדוד לפי 100dvh בכוונה בדיוק כדי להסתגל לשינויי גובה דינמיים כמו סרגל
+   הכתובת/פס המחוות במובייל אמיתי) - זה בדיוק מה שיכול "לבלוע" כפתור fixed
+   מאחורי ה-UI המערכתי (home indicator / navigation bar) ולגרום לו להיראות
+   כאילו נעלם לגמרי במכשיר אמיתי. env(safe-area-inset-bottom) מפצה על זה
+   במפורש, ו-!important מבטיח שדבר לא יוכל לדרוס את המיקום/הנראות בטעות */
+.ai-fab {
+    position: fixed !important;
+    bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 25px !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
+    padding: 0;
+    transition: var(--transition);
+    animation: fabPulse 2.5s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-select: none;
+}
 .ai-fab:active { transform: scale(0.9); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
