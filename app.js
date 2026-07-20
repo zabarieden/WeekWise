@@ -828,6 +828,11 @@ function findScheduleDaysInText(text) {
     return found;
 }
 
+// "ב" מתחבר תמיד ישירות לתחילת המילה שאחריה בעברית, בלי רווח חובה - "ב10",
+// "ב-10", "ב 10" ו-"בשעה 10" הן כולן אותה כוונה בדיוק ("בשעה" הוא ה-"שעה"
+// שבין ה-ב לרווח/למספר, לכן אופציונלי כאן ולא תבנית נפרדת)
+const SCHEDULE_TIME_PREFIX_RE = /ב(?:שעה)?-?\s*(\d{1,2})\b/;
+
 function findScheduleTimeInText(text) {
     let m = text.match(/(\d{1,2}):(\d{2})/);
     if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
@@ -837,20 +842,30 @@ function findScheduleTimeInText(text) {
     if (m) { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; }
     m = text.match(/(\d{1,2})\s*בבוקר/);
     if (m) return `${m[1].padStart(2, '0')}:00`;
-    m = text.match(/(?:ב-|בשעה\s*)(\d{1,2})\b/);
+    m = text.match(SCHEDULE_TIME_PREFIX_RE);
     if (m) return `${m[1].padStart(2, '0')}:00`;
     m = text.match(/\bat\s+(\d{1,2}):?(\d{2})?\b/i);
     if (m) return `${m[1].padStart(2, '0')}:${m[2] || '00'}`;
     return '';
 }
 
+// מילות יחס בודדות (לא כולל "ו" - זו מטופלת בנפרד למטה כי היא נפוצה בהרבה
+// יותר הקשרים) שיכולות "להיוותם" בסוף הכותרת אחרי שהמילה שהן התחברו אליה
+// (יום/שעה) הוסרה - למשל "לשיעור" -> "ל" נשארת אחרי שהוסרנו "שיעור" בטעות
+// דרך תבנית אחרת. שם פעילות אמיתי לעולם לא מסתיים במילת יחס בודדת, אז בטוח
+// לגזור אותה מהסוף (רק מהסוף - לא מהאמצע, שם היא עדיין עשויה להיות חלק ממשפט)
+const SCHEDULE_TRAILING_PREPOSITIONS = new Set(['ב', 'ל', 'עם']);
+
 function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     let cleaned = text;
     dayWords.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     if (timeStr) {
+        // התבנית של השעה עצמה (כולל "ב"/"בשעה" שלפניה, אם היו) - אותה תבנית
+        // בדיוק שחילצה את השעה למעלה, כדי שמה שחולץ תמיד יוסר גם מהכותרת
+        const timePrefixGlobal = new RegExp(SCHEDULE_TIME_PREFIX_RE.source, 'g');
         cleaned = cleaned.replace(/\d{1,2}:\d{2}/g, ' ')
             .replace(/\d{1,2}\s*(בערב|בלילה|אחר הצהריים|אחה"צ|בצהריים|בבוקר)/g, ' ')
-            .replace(/(?:ב-|בשעה\s*)\d{1,2}\b/g, ' ')
+            .replace(timePrefixGlobal, ' ')
             .replace(/\bat\s+\d{1,2}:?\d{0,2}\b/gi, ' ');
     }
     SCHEDULE_FILLER_PHRASES.forEach(w => { cleaned = cleaned.split(w).join(' '); });
@@ -860,11 +875,15 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     // בודד ומלא (למשל אחרי שהוסר יום שהייתה מחוברת אליו, כמו "ורביעי" ->
     // "ו" בודדת) - חשוב: לא כ-regex גורף שמוחק כל אות ו בתוך מילים אחרות,
     // כי זה בדיוק מה ששיבש "בויילר"/"הולכת"/"הופ" לאותיות מפוזרות בעבר
-    cleaned = cleaned.replace(/[,.]+/g, ' ')
+    let tokens = cleaned.replace(/[,.]+/g, ' ')
         .split(/\s+/)
-        .filter(tok => tok && tok !== 'ו')
-        .join(' ')
-        .trim();
+        .filter(tok => tok && tok !== 'ו');
+    // וגוזמים מילת יחס בודדת שנותרה תלויה בסוף (יכולה להישאר יותר מאחת ברצף,
+    // אז ממשיכים לגזור מהסוף כל עוד יש עוד אחת)
+    while (tokens.length && SCHEDULE_TRAILING_PREPOSITIONS.has(tokens[tokens.length - 1])) {
+        tokens.pop();
+    }
+    cleaned = tokens.join(' ').trim();
     return cleaned || text.trim();
 }
 
