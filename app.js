@@ -802,8 +802,8 @@ const ENGLISH_DAY_TOKENS = [
 ];
 const SCHEDULE_NOISE_WORDS = [
     'בימי', 'בימים', 'ביום', 'יום', 'ימי', 'בשעה', 'בשעות', 'שעה', 'בבוקר', 'בערב',
-    'בצהריים', 'בלילה', 'אחר הצהריים', 'אחה"צ', 'כל', 'תמיד', 'קבוע',
-    'and', 'at', 'on', 'in', 'every'
+    'בצהריים', 'בלילה', 'אחר הצהריים', 'אחה"צ', 'כל', 'תמיד', 'קבוע', 'עד',
+    'and', 'at', 'on', 'in', 'every', 'until'
 ];
 // ביטויי פתיחה נפוצים שאנשים מקלידים כשהם מתארים לו"ז בחופשיות, אבל הם לא
 // חלק משם הפעילות עצמה - מוסרים כביטוי שלם, מהארוך לקצר (כדי לא להשאיר
@@ -828,46 +828,69 @@ function findScheduleDaysInText(text) {
     return found;
 }
 
-// "ב" מתחבר תמיד ישירות לתחילת המילה שאחריה בעברית, בלי רווח חובה - "ב10",
-// "ב-10", "ב 10" ו-"בשעה 10" הן כולן אותה כוונה בדיוק ("בשעה" הוא ה-"שעה"
-// שבין ה-ב לרווח/למספר, לכן אופציונלי כאן ולא תבנית נפרדת)
-const SCHEDULE_TIME_PREFIX_RE = /ב(?:שעה)?-?\s*(\d{1,2})\b/;
+// כל תבניות השעה האפשריות, מהספציפית לכללית (ה"ב" המחברת בעברית לפני מספר
+// היא תמיד אופציונלית בכל תבנית - "20 בערב" ו"ב20 בערב" הן אותה כוונה) -
+// אותה רשימה משמשת גם לזיהוי השעה (findAllScheduleTimeMatches, globalRegExp)
+// וגם למחיקתה מהכותרת (cleanScheduleTaskTitle), כדי ששתי הפעולות לעולם לא
+// יתפצלו זו מזו כמו שקרה בעבר. סדר הרשימה הוא סדר עדיפות: תבנית ספציפית
+// יותר (כמו "20 בערב") "תופסת" קודם תבנית כללית יותר שחופפת לה ("ב20")
+const SCHEDULE_TIME_PATTERNS = [
+    { re: /(\d{1,2}):(\d{2})/g, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2]}` },
+    { re: /ב?-?\s*(\d{1,2})\s*(בערב|בלילה)/g, resolve: (m) => { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
+    { re: /ב?-?\s*(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/g, resolve: (m) => { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
+    { re: /ב?-?\s*(\d{1,2})\s*בבוקר/g, resolve: (m) => `${m[1].padStart(2, '0')}:00` },
+    { re: /ב(?:שעה)?-?\s*(\d{1,2})\b/g, resolve: (m) => `${m[1].padStart(2, '0')}:00` },
+    { re: /\bat\s+(\d{1,2}):?(\d{2})?\b/gi, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2] || '00'}` },
+];
 
-function findScheduleTimeInText(text) {
-    let m = text.match(/(\d{1,2}):(\d{2})/);
-    if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
-    m = text.match(/(\d{1,2})\s*(בערב|בלילה)/);
-    if (m) { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; }
-    m = text.match(/(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/);
-    if (m) { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; }
-    m = text.match(/(\d{1,2})\s*בבוקר/);
-    if (m) return `${m[1].padStart(2, '0')}:00`;
-    m = text.match(SCHEDULE_TIME_PREFIX_RE);
-    if (m) return `${m[1].padStart(2, '0')}:00`;
-    m = text.match(/\bat\s+(\d{1,2}):?(\d{2})?\b/i);
-    if (m) return `${m[1].padStart(2, '0')}:${m[2] || '00'}`;
-    return '';
+// מוצאת את כל אזכורי השעה בטקסט (לא רק הראשון), כדי לתמוך במשפט שמתאר כמה
+// אירועים ברצף עם שעות שונות ("היפ הופ ב20 בערב ובבוקר עבודה ב9"). עוברת
+// על התבניות לפי סדר העדיפות שלהן ומסמנת טווחי תווים שכבר "נתפסו" - תבנית
+// כללית יותר שמנסה לתפוס טווח שכבר שייך לתבנית ספציפית יותר פשוט מדלגת עליו
+function findAllScheduleTimeMatches(text) {
+    const claimed = [];
+    const found = [];
+    SCHEDULE_TIME_PATTERNS.forEach(({ re, resolve }) => {
+        re.lastIndex = 0;
+        let m;
+        while ((m = re.exec(text))) {
+            const start = m.index, end = start + m[0].length;
+            if (!claimed.some(([cs, ce]) => start < ce && end > cs)) {
+                claimed.push([start, end]);
+                found.push({ start, end, time: resolve(m) });
+            }
+            if (m[0].length === 0) re.lastIndex++; // מונע לולאה אינסופית בהתאמה ריקה
+        }
+    });
+    found.sort((a, b) => a.start - b.start);
+    return found;
+}
+
+function stripScheduleTimePatterns(text) {
+    let cleaned = text;
+    SCHEDULE_TIME_PATTERNS.forEach(({ re }) => {
+        re.lastIndex = 0;
+        cleaned = cleaned.replace(re, ' ');
+    });
+    return cleaned;
 }
 
 // מילות יחס בודדות (לא כולל "ו" - זו מטופלת בנפרד למטה כי היא נפוצה בהרבה
-// יותר הקשרים) שיכולות "להיוותם" בסוף הכותרת אחרי שהמילה שהן התחברו אליה
+// יותר הקשרים) שיכולות "להיוותר" בסוף הכותרת אחרי שהמילה שהן התחברו אליה
 // (יום/שעה) הוסרה - למשל "לשיעור" -> "ל" נשארת אחרי שהוסרנו "שיעור" בטעות
 // דרך תבנית אחרת. שם פעילות אמיתי לעולם לא מסתיים במילת יחס בודדת, אז בטוח
 // לגזור אותה מהסוף (רק מהסוף - לא מהאמצע, שם היא עדיין עשויה להיות חלק ממשפט)
 const SCHEDULE_TRAILING_PREPOSITIONS = new Set(['ב', 'ל', 'עם']);
 
+// שעת ברירת מחדל למשפט/קטע שיש בו יום מזוהה אבל אין בו שום אזכור שעה - לא
+// "ממציאים" שעה שהמשתמש התכוון אליה, פשוט נותנים לאירוע ערך ניתן-למיון
+// ולעריכה במקום להשאיר אותו תקוע בלי שעה בכלל (המשתמש תמיד יכול לשנות אותה)
+const SCHEDULE_DEFAULT_TIME = '09:00';
+
 function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     let cleaned = text;
     dayWords.forEach(w => { cleaned = cleaned.split(w).join(' '); });
-    if (timeStr) {
-        // התבנית של השעה עצמה (כולל "ב"/"בשעה" שלפניה, אם היו) - אותה תבנית
-        // בדיוק שחילצה את השעה למעלה, כדי שמה שחולץ תמיד יוסר גם מהכותרת
-        const timePrefixGlobal = new RegExp(SCHEDULE_TIME_PREFIX_RE.source, 'g');
-        cleaned = cleaned.replace(/\d{1,2}:\d{2}/g, ' ')
-            .replace(/\d{1,2}\s*(בערב|בלילה|אחר הצהריים|אחה"צ|בצהריים|בבוקר)/g, ' ')
-            .replace(timePrefixGlobal, ' ')
-            .replace(/\bat\s+\d{1,2}:?\d{0,2}\b/gi, ' ');
-    }
+    if (timeStr) cleaned = stripScheduleTimePatterns(cleaned);
     SCHEDULE_FILLER_PHRASES.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     SCHEDULE_NOISE_WORDS.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     SCHEDULE_VERB_TO_NOUN.forEach(([re, rep]) => { cleaned = cleaned.replace(re, rep); });
@@ -887,23 +910,47 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     return cleaned || text.trim();
 }
 
+function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
+    if (dayIndexes.length) {
+        dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], time, task_title: title }));
+    } else {
+        // אין יום מזוהה בבירור - לא מוותרים ולא מציגים שגיאה: מוסיפים כמשימה
+        // להיום עם הטקסט המקורי, בדיוק כפי שנכתב
+        events.push({ day_of_week: dbDaysMap[new Date().getDay()], time, task_title: fallbackText });
+    }
+}
+
 function parseScheduleTextLocally(text) {
     const clauses = text.split(/[\n,.]/).map(s => s.trim()).filter(Boolean);
     const events = [];
     (clauses.length ? clauses : [text]).forEach(clause => {
         const dayIndexes = findScheduleDaysInText(clause);
-        const timeStr = findScheduleTimeInText(clause);
         const dayWordsFound = [];
         HEBREW_DAY_TOKENS.forEach(({ index, words }) => { if (dayIndexes.includes(index)) dayWordsFound.push(...words); });
-        const title = cleanScheduleTaskTitle(clause, dayWordsFound, timeStr) || t('schedule_ai_fallback_task_label');
+        // מסירים את מילות היום מהמשפט לפני שמחפשים שעות/מפצלים לתת-אירועים,
+        // כדי שהן לא "יתפסו" בטעות כחלק מכותרת של אחד מהם
+        let body = clause;
+        dayWordsFound.forEach(w => { body = body.split(w).join(' '); });
 
-        if (dayIndexes.length) {
-            dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], time: timeStr, task_title: title }));
-        } else {
-            // אין יום מזוהה בבירור בקטע הזה - לא מוותרים ולא מציגים שגיאה:
-            // מוסיפים אותו כמשימה להיום עם הטקסט המקורי, בדיוק כפי שנכתב
-            events.push({ day_of_week: dbDaysMap[new Date().getDay()], time: timeStr, task_title: clause });
+        const timeMatches = findAllScheduleTimeMatches(body);
+
+        if (!timeMatches.length) {
+            const title = cleanScheduleTaskTitle(body, [], '') || t('schedule_ai_fallback_task_label');
+            pushScheduleEvents(events, dayIndexes, clause, title, SCHEDULE_DEFAULT_TIME);
+            return;
         }
+
+        // מפצלים לתת-קטע אחד לכל שעה שנמצאה - כל תת-קטע הוא הטקסט מסוף השעה
+        // הקודמת (או מתחילת הקטע, לראשונה) ועד סוף השעה הנוכחית, כך שהפעילות
+        // נשארת צמודה לשעה הקרובה אליה במשפט המקורי ("היפ הופ ב20 בערב
+        // ובבוקר עבודה ב9" -> שני אירועים נפרדים, לא אחד מעורבב)
+        let cursor = 0;
+        timeMatches.forEach(tm => {
+            const segment = body.slice(cursor, tm.end);
+            const title = cleanScheduleTaskTitle(segment, [], tm.time) || t('schedule_ai_fallback_task_label');
+            pushScheduleEvents(events, dayIndexes, clause, title, tm.time);
+            cursor = tm.end;
+        });
     });
     return events;
 }
