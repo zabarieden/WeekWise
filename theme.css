@@ -407,9 +407,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 /* flex: 1 1 0 (לא auto) + min-width קבוע - כדי שהעטיפה תמיד תתפוס את כל
    השטח הפנוי ולעולם לא תתכווץ מתחת לרוחב שמסתיר את הטקסט (הבאג שגרם לטקסט
    כמו "בויילר רום 🎶" להיעלם ולהשאיר רק את האייקון בבועה זעירה במובייל) */
-.slot-task-wrap { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; transition: var(--transition); }
+.slot-task-wrap { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; box-sizing: border-box; transition: var(--transition); }
 .slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
 .slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
+.slot-row-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+.slot-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; flex-shrink: 0; }
+.slot-drag-handle:active { cursor: grabbing; }
+.slot-input-group.reordering { position: relative; z-index: 20; opacity: 0.9; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); transition: none !important; }
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */
 .slot-input-group.has-task .slot-task-wrap {
@@ -1071,10 +1075,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         gap: 8px !important;
     }
     .slot-time { flex: none !important; }
+    /* הבאג האמיתי מאחורי "ה-X יושב מעל התג": .slot-task-wrap קיבל width:100%
+       ביחד עם padding, בלי box-sizing:border-box - כלומר הריפוד נוסף *מעל*
+       ה-100% (מודל content-box ברירת המחדל), כך שהתא בפועל היה רחב יותר
+       מעמודת ה-grid שלו ב-28px (14px משני הצדדים) וגלש ויזואלית לתוך עמודת
+       הפעולות השכנה. box-sizing:border-box מבטיח שה-100% כולל את הריפוד,
+       כך שהתג נשאר בדיוק בתוך גבולות התא שלו ולעולם לא נוגע בכפתור המחיקה */
     .slot-task-wrap {
         min-width: 0 !important;
         max-width: none !important;
         width: 100% !important;
+        box-sizing: border-box !important;
         justify-content: center;
         text-align: center;
         padding: 6px 14px !important;
@@ -1084,11 +1095,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         width: 100% !important;
         min-width: 0 !important;
         max-width: none !important;
+        box-sizing: border-box !important;
         white-space: nowrap;
         overflow: visible !important;
         text-overflow: clip !important;
         text-align: center;
     }
+    .slot-row-actions { flex: none !important; gap: 4px !important; }
+    .slot-drag-handle { font-size: 1rem !important; padding: 0 3px !important; }
     /* כפתור מחיקה עם תיבת מגע קבועה ומובטחת (26x26) - לעולם לא יכול "להיעלם"
        או להתכווץ לגודל בלתי-נראה, בניגוד להסתמכות על גודל טקסט/אמוג'י בלבד */
     .btn-delete-slot {

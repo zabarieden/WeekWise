@@ -1344,13 +1344,14 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-row-actions"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
+    dbDaysMap.forEach(dbDay => initScheduleRowDragReorder(dbDay));
 
     // משחזרים מיידית (בלי אנימציה - זו לא ניווט ביוזמת המשתמש, רק שחזור
     // המצב אחרי בנייה מחדש) את מיקום הגלילה ליום שהיה פעיל
@@ -1507,6 +1508,84 @@ function sortDaySlotsChronologically(day) {
 
 function sortAllDaySlotsChronologically() {
     dbDaysMap.forEach(day => sortDaySlotsChronologically(day));
+}
+
+// --- גרירה להעברת משימה בין משבצות שעה קבועות באותו יום (⠿ בכל שורה) ---
+// בכוונה לא מזיזים את אלמנט ה-DOM של השורה עצמה (בניגוד לגרירת "מבט ליומן"):
+// כל שורה כאן מייצגת משבצת-שעה קבועה (data-slot), ו-saveScheduleSlot כבר
+// ממיין מחדש כרונולוגית לפי שעה אחרי כל שמירה - אם היינו מזיזים את ה-DOM
+// עצמו בלי לשנות שעות, המיון הכרונולוגי היה "מחזיר" את השורות למקומן המקורי
+// מייד. לכן גוררים חזותית עם המצביע, וברגע שחוצים שורה שכנה - מחליפים בפועל
+// רק את *תוכן המשימה* (טקסט + אייקון) בין שתי המשבצות ושומרים את שתיהן,
+// כך שהמשימה עצמה "עוברת" לשעה אחרת בלי לערבב/לאבד שעות קיימות.
+function initScheduleRowDragReorder(dbDay) {
+    const page = document.getElementById(`daypage-${dbDay}`);
+    const grid = page && page.querySelector('.slots-grid');
+    if (!grid) return;
+
+    let draggedEl = null;
+    let startY = 0;
+
+    function getRows() {
+        return Array.from(grid.querySelectorAll('.slot-input-group'));
+    }
+
+    function swapTaskContent(rowA, rowB) {
+        const taskA = rowA.querySelector('.slot-task');
+        const taskB = rowB.querySelector('.slot-task');
+        const tmp = taskA.value;
+        taskA.value = taskB.value;
+        taskB.value = tmp;
+        updateSlotTaskIcon(taskA);
+        updateSlotTaskIcon(taskB);
+        rowA.classList.toggle('has-task', !!taskA.value.trim());
+        rowB.classList.toggle('has-task', !!taskB.value.trim());
+        saveScheduleSlot(dbDay, rowA.getAttribute('data-slot'));
+        saveScheduleSlot(dbDay, rowB.getAttribute('data-slot'));
+    }
+
+    function onMove(e) {
+        if (!draggedEl) return;
+        e.preventDefault();
+        const dy = e.clientY - startY;
+        draggedEl.style.transform = `translateY(${dy}px)`;
+        const draggedRect = draggedEl.getBoundingClientRect();
+        const draggedMid = draggedRect.top + draggedRect.height / 2;
+        const siblings = getRows().filter(r => r !== draggedEl);
+        for (const sibling of siblings) {
+            const rect = sibling.getBoundingClientRect();
+            if (draggedMid > rect.top && draggedMid < rect.bottom) {
+                swapTaskContent(draggedEl, sibling);
+                draggedEl.style.transform = 'translateY(0px)';
+                startY = e.clientY;
+                break;
+            }
+        }
+    }
+
+    function endDrag() {
+        if (!draggedEl) return;
+        draggedEl.classList.remove('reordering');
+        draggedEl.style.transform = '';
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', endDrag);
+        document.removeEventListener('pointercancel', endDrag);
+        draggedEl = null;
+    }
+
+    grid.querySelectorAll('.slot-drag-handle').forEach(handle => {
+        handle.onpointerdown = (e) => {
+            const el = handle.closest('.slot-input-group');
+            if (!el) return;
+            e.preventDefault();
+            draggedEl = el;
+            startY = e.clientY;
+            draggedEl.classList.add('reordering');
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', endDrag);
+            document.addEventListener('pointercancel', endDrag);
+        };
+    });
 }
 
 // מסירה מכל הימים כל משבצת שמספרה גדול מ-thresholdCount (כלומר לא חלק
