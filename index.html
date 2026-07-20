@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=55">
+    <link rel="stylesheet" href="theme.css?v=56">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -564,13 +564,8 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="hours_modal_title">Default Schedule Hours</h3>
                 <p class="modal-subtitle" data-i18n="hours_modal_subtitle">This is how empty slots look each day. You can always change a single hour directly in the schedule.</p>
-                <div class="hours-settings-grid">
-                    <input type="text" id="settings-hour-1" class="hours-input" placeholder="#1">
-                    <input type="text" id="settings-hour-2" class="hours-input" placeholder="#2">
-                    <input type="text" id="settings-hour-3" class="hours-input" placeholder="#3">
-                    <input type="text" id="settings-hour-4" class="hours-input" placeholder="#4">
-                    <input type="text" id="settings-hour-5" class="hours-input" placeholder="#5">
-                </div>
+                <div id="hours-settings-grid" class="hours-settings-grid"></div>
+                <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="addHoursSettingsRow()" data-i18n="hours_add_btn">➕ Add time slot</button>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button id="btn-save-hours" class="btn-primary" data-i18n="hours_save_btn">Save defaults</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-settings-hours')" data-i18n="cancel_btn">Cancel</button>
@@ -846,7 +841,7 @@
 
     </div>
 
-    <script src="i18n.js?v=23"></script>
-    <script src="app.js?v=47"></script>
+    <script src="i18n.js?v=24"></script>
+    <script src="app.js?v=48"></script>
 </body>
 </html>

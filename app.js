@@ -3,11 +3,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
-// עמודה אחידה של 5 שעות ברירת מחדל לכל הימים - זהה לכל יום מלכתחילה (לא
-// אקראי/שונה מיום ליום), אבל ניתנת להתאמה אישית מלאה דרך "הגדרת שעות ברירת
-// מחדל" (openHoursSettingsModal/saveDefaultHours), ששניהם משתמשים באותו
-// DEFAULT_DAY_SLOT_COUNT כדי שהמספר לעולם לא יתפצל בין המקומות ששולפים אותו
-const DEFAULT_DAY_SLOT_COUNT = 5;
+// עמודת שעות ברירת המחדל: זהה לכל יום מלכתחילה (לא אקראי/שונה מיום ליום),
+// וניתנת להתאמה אישית מלאה - כולל הוספה/הסרה של שעות שלמות, לא רק עריכת
+// ערך - דרך "הגדרת שעות ברירת מחדל" (openHoursSettingsModal/saveDefaultHours).
+// אורך המערך הזה *הוא* גודל "רשת הבסיס" בפועל (ר' defaultDaySlotNumbers) -
+// אין קבוע נפרד שיכול להתפצל ממנו
 let defaultHours = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
@@ -63,10 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
-    document.getElementById('btn-save-hours').addEventListener('click', () => {
-        saveDefaultHours();
-        closeModal('modal-settings-hours');
-    });
+    document.getElementById('btn-save-hours').addEventListener('click', saveDefaultHours);
     document.querySelectorAll('.calories-input').forEach(input => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
@@ -689,7 +686,7 @@ function daySlotsKey() {
 }
 
 function defaultDaySlotNumbers() {
-    return Array.from({ length: DEFAULT_DAY_SLOT_COUNT }, (_, i) => i + 1);
+    return Array.from({ length: defaultHours.length }, (_, i) => i + 1);
 }
 
 function loadDaySlotsConfig() {
@@ -711,8 +708,23 @@ function saveDaySlotsConfig() {
     localStorage.setItem(daySlotsKey(), JSON.stringify(daySlotsConfig));
 }
 
+// נקודת הגישה היחידה למספרי המשבצות של יום - "מטפטפת" תמיד את משבצות הבסיס
+// (1 עד defaultHours.length) לתוך daySlotsConfig[day], גם אם מה ששמור שם
+// חסר חלק מהן (מחיקה ידנית בעבר, נתונים ישנים משלב עם אורך ברירת מחדל אחר
+// וכו') - כך שהרשת הבסיסית לעולם לא "נעלמת" מיום ספציפי. שורות נוספות
+// (הוספה ידנית/AI) תמיד נשמרות, רק מתמזגות עם הבסיס ולא מוחלפות בו
+function getDaySlotNumbers(day) {
+    const baseline = defaultDaySlotNumbers();
+    const stored = daySlotsConfig[day];
+    const merged = stored === undefined
+        ? baseline
+        : Array.from(new Set([...baseline, ...stored])).sort((a, b) => a - b);
+    daySlotsConfig[day] = merged;
+    return merged;
+}
+
 async function removeDaySlot(day, slot) {
-    if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+    getDaySlotNumbers(day);
     daySlotsConfig[day] = daySlotsConfig[day].filter(n => n !== slot);
     saveDaySlotsConfig();
 
@@ -752,8 +764,7 @@ function updateEmptyDayState(day) {
 }
 
 async function addDaySlot(day) {
-    if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
-    const nums = daySlotsConfig[day];
+    const nums = getDaySlotNumbers(day);
     const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
     daySlotsConfig[day] = [...nums, nextNum];
     saveDaySlotsConfig();
@@ -1035,7 +1046,7 @@ async function applyParsedScheduleEvents(events) {
     });
 
     Object.keys(byDay).forEach(day => {
-        if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+        getDaySlotNumbers(day);
         const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
         const usedSlotNums = new Set();
         byDay[day].forEach(ev => {
@@ -1223,27 +1234,68 @@ function loadCustomDefaultHours() {
     if (!raw) return;
     try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === DEFAULT_DAY_SLOT_COUNT) defaultHours = parsed;
+        if (Array.isArray(parsed) && parsed.length) defaultHours = parsed;
     } catch {}
 }
 
+// --- מודל שעות ברירת המחדל הפך לגמרי דינמי: לא עוד 5 שדות קבועים, אלא
+// טיוטת עבודה (hoursSettingsDraft) שמשתנה בלייב בעריכת ערך/הוספת שורה/מחיקת
+// שורה בתוך המודל, ורק "שמירת ברירת המחדל" מיישמת אותה בפועל ---
+let hoursSettingsDraft = [];
+
 function openHoursSettingsModal() {
-    for (let i = 1; i <= DEFAULT_DAY_SLOT_COUNT; i++) {
-        document.getElementById(`settings-hour-${i}`).value = defaultHours[i - 1] || '';
-    }
+    hoursSettingsDraft = [...defaultHours];
+    renderHoursSettingsRows();
     openModal('modal-settings-hours');
 }
 
-function saveDefaultHours() {
-    const newHours = [];
-    for (let i = 1; i <= DEFAULT_DAY_SLOT_COUNT; i++) {
-        const val = document.getElementById(`settings-hour-${i}`).value.trim();
-        newHours.push(val || defaultHours[i - 1] || '');
-    }
+function renderHoursSettingsRows() {
+    const grid = document.getElementById('hours-settings-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    hoursSettingsDraft.forEach((val, idx) => {
+        const row = document.createElement('div');
+        row.className = 'hours-settings-row';
+        row.innerHTML = `
+            <input type="text" class="hours-input" data-index="${idx}" value="${val || ''}" placeholder="#${idx + 1}">
+            <button type="button" class="btn-delete-slot" onclick="removeHoursSettingsRow(${idx})" title="${t('schedule_remove_row_title')}">❌</button>
+        `;
+        grid.appendChild(row);
+    });
+}
+
+// לפני כל שינוי מבני (הוספה/הסרה) שגורם ל-renderHoursSettingsRows לבנות
+// מחדש את כל שדות הקלט מהטיוטה - קודם קולטים בחזרה מה שהמשתמש כבר הקליד
+// בפועל, אחרת עריכה בשדה אחד + מחיקת שורה אחרת הייתה מוחקת את מה שהוקלד
+function syncHoursSettingsDraftFromDom() {
+    const inputs = document.querySelectorAll('#hours-settings-grid .hours-input');
+    hoursSettingsDraft = Array.from(inputs).map(inp => inp.value);
+}
+
+function addHoursSettingsRow() {
+    syncHoursSettingsDraftFromDom();
+    hoursSettingsDraft.push('');
+    renderHoursSettingsRows();
+}
+
+function removeHoursSettingsRow(idx) {
+    syncHoursSettingsDraftFromDom();
+    hoursSettingsDraft.splice(idx, 1);
+    renderHoursSettingsRows();
+}
+
+async function saveDefaultHours() {
+    const inputs = document.querySelectorAll('#hours-settings-grid .hours-input');
+    const newHours = Array.from(inputs).map(inp => inp.value.trim()).filter(Boolean);
+    if (!newHours.length) { showAppToast(t('hours_empty_error'), 'error'); return; }
     defaultHours = newHours;
     localStorage.setItem(defaultHoursKey(), JSON.stringify(newHours));
+    closeModal('modal-settings-hours');
+    // אורך רשת הבסיס (defaultDaySlotNumbers) נגזר עכשיו ישירות מ-defaultHours.length,
+    // אז בנייה מחדש כאן ממלאת מיד לכל יום את משבצות הבסיס החדשות (getDaySlotNumbers)
     buildWeeklyScheduleAccordionUI();
-    loadWeeklySchedule();
+    await loadWeeklySchedule();
+    showAppToast(t('item_added_success'));
 }
 
 function buildWeeklyScheduleAccordionUI() {
@@ -1280,10 +1332,10 @@ function buildWeeklyScheduleAccordionUI() {
         pageDiv.id = `daypage-${dbDay}`;
         pageDiv.setAttribute('data-day', dbDay);
         let slotsHTML = '';
-        // חשוב: משתמשים ב-!== undefined ולא ב-truthy/length, כי מערך ריק ([])
-        // הוא falsy מבחינת .length - יום שהמשתמש מחק ממנו את כל השורות היה
-        // "נופל" בטעות בחזרה ל-10 שורות ברירת המחדל בכל בנייה מחדש של הלוח.
-        const slotNumbers = daySlotsConfig[dbDay] !== undefined ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
+        // getDaySlotNumbers תמיד מטפטפת את משבצות הבסיס פנימה, גם אם הן חסרות
+        // ב-daySlotsConfig השמור (מחיקה ידנית בעבר, אורך ברירת מחדל ישן וכו') -
+        // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
+        const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
@@ -1444,7 +1496,7 @@ async function pruneEmptyExcessSlots() {
     const defaultCount = defaultDaySlotNumbers().length;
     let anyPruned = false;
     for (const day of dbDaysMap) {
-        const nums = daySlotsConfig[day] !== undefined ? daySlotsConfig[day] : defaultDaySlotNumbers();
+        const nums = getDaySlotNumbers(day);
         const staleNums = [];
         const keepNums = nums.filter(n => {
             if (n <= defaultCount) return true;
@@ -3036,7 +3088,19 @@ function dismissReminderToast() {
     if (toast) toast.classList.remove('show');
 }
 async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
-async function clearEntireWeeklySchedule() { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId); buildWeeklyScheduleAccordionUI(); }
+// איפוס מבני מלא, לא רק ניקוי תוכן: קודם רק מחקנו את שורות ה-DB (התוכן),
+// בלי לגעת ב-daySlotsConfig עצמו - כך שאם ליום מסוים כבר חסרה משבצת בסיס
+// (מחיקה ידנית ישנה, נתונים משלב עם אורך ברירת מחדל אחר), "ניקוי" לא היה
+// מתקן את זה, רק את התוכן. עכשיו כל יום חוזר בפירוש בדיוק לרשת הבסיס הנוכחית
+// (defaultDaySlotNumbers) - גם שורות מותאמות אישית שנוספו נעלמות, וגם משבצת
+// בסיס שהייתה חסרה חוזרת - "איפוס מלא לתבנית הפריסטינה", כמו שהתבקש
+async function clearEntireWeeklySchedule() {
+    await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId);
+    dbDaysMap.forEach(day => { daySlotsConfig[day] = defaultDaySlotNumbers(); });
+    saveDaySlotsConfig();
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+}
 
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
