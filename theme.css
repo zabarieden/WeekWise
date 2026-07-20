@@ -299,7 +299,11 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     min-width: 0;
     position: relative;
     z-index: 10;
-    padding-bottom: 80px;
+    /* 80px לא הספיק לפנות מקום לכפתור ה-fixed הימני-תחתון (25px + 52px גובה
+       + safe-area-inset-bottom שנוסף בסבב הקודם) - זה בדיוק מה שגרם לשורה
+       האחרונה ב"מבט ליומן" להיראות "בולעת" את הכפתור הצף בצילום המסך. עכשיו
+       יש רווח נדיב שמכסה גם את בועת ה-AI Brain (עד bottom:90px+52px=142px) */
+    padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
     max-width: 100%;
