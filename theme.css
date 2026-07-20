@@ -382,12 +382,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .day-page-empty { text-align: center; color: var(--text-secondary); font-size: 0.78rem; padding: 16px 8px; opacity: 0.7; }
 .slots-grid { display: flex; flex-direction: column; gap: 10px; }
-.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: 60px minmax(0, 1fr) auto; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease; min-width: 0; max-width: 100%; box-sizing: border-box; max-height: 68px; opacity: 1; overflow: hidden; }
+/* flex + space-between במקום grid: שלושת החלקים (שעה/משימה/מחיקה) נפרשים
+   על פני כל רוחב השורה מקצה לקצה - הזמן ("שעה") ל-flex:0 0 auto בקצה אחד,
+   כפתור המחיקה ל-flex:0 0 auto בקצה השני, ועטיפת המשימה (flex:1) ממלאת
+   ומתפרשת על כל השטח הפנוי שביניהם, כדי שלא "יצטופפו" באמצע השורה */
+.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease; min-width: 0; max-width: 100%; box-sizing: border-box; max-height: 68px; opacity: 1; overflow: hidden; }
 .slot-input-group.slot-removing { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0; pointer-events: none; }
 .slot-input-group.just-added { background-color: rgba(0, 230, 118, 0.15); box-shadow: 0 0 0 1px var(--accent-green); }
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
 .slot-input-group.task-purple { border-right: 3px solid var(--accent-purple); }
-.slot-time { background: transparent !important; border: none !important; color: var(--text-primary) !important; font-weight: 600; text-align: center; font-size: 0.8rem; padding: 0 !important; outline: none; }
+.slot-time { flex: 0 0 60px; background: transparent !important; border: none !important; color: var(--text-primary) !important; font-weight: 600; text-align: center; font-size: 0.8rem; padding: 0 !important; outline: none; }
 .task-pink .slot-time { color: var(--accent-pink) !important; }
 .task-purple .slot-time { color: var(--accent-purple) !important; }
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; min-width: 0; box-sizing: border-box; }
@@ -395,26 +399,25 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    נשארת מלאה כשהיא בפוקוס (המשתמש מקליד בה ממש עכשיו), כדי שלא תיעלם מתחת ידיו */
 .slot-input-group:not(.has-task) { opacity: 0.5; }
 .slot-input-group:not(.has-task):focus-within { opacity: 1; }
-.slot-task-wrap { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; transition: var(--transition); }
+.slot-task-wrap { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; transition: var(--transition); }
 .slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
 .slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
-/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) (זהב ל-MyWeek) התברר
-   כבוטה/צעקני מדי בפועל על המסך; עברנו לסגול-ניאון רך קבוע (var(--accent-purple-light),
-   כבר עוקב אחרי ערכות נושא פרימיום בעצמו) על רקע זכוכית כהה שקופה - עדין
-   ופרימיום יותר, לא צורב את העין */
+/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) עוקב אחרי צבע ה"עולם"
+   (זהב ל-MyWeek/הלו"ז) - ניגודיות גבוהה יותר מול הרקע הכהה מסגול רך, ומחזיר
+   את הזוהר הצהוב-זהוב הבולט שביקשו במפורש (אחרי ניסיון קצר עם סגול) */
 .slot-input-group.has-task .slot-task-wrap {
-    background-color: rgba(168, 85, 247, 0.1);
-    border: 1px solid var(--accent-purple-light);
+    background-color: rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--tile-accent, var(--accent-gold));
     border-radius: 20px;
     padding: 5px 12px;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 10px var(--tile-glow-1, rgba(245, 158, 11, 0.5));
 }
 .slot-input-group.has-task .slot-task {
-    color: var(--accent-purple-light);
+    color: var(--tile-accent, var(--accent-gold));
     font-weight: 700;
-    text-shadow: 0 0 8px rgba(168, 85, 247, 0.45);
+    text-shadow: 0 0 8px var(--tile-glow-1, rgba(245, 158, 11, 0.6));
 }
-.btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
+.btn-delete-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .btn-add-day-slot { background-color: rgba(168, 85, 247, 0.06); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.2); font-size: 0.78rem; border-radius: 8px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 6px; }
 
@@ -1022,13 +1025,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
-/* טלפונים "רחבים" (מעל 420px אך עדיין מובייל אמיתי, לא טאבלט) לא היו מכוסים
-   על ידי אף מדיה-קווארי ונתקעו עם התקרה הצרה של 420px למטה - זה יצר שוליים
-   ריקים גדולים משני צדי המסך במובייל אמיתי במקום למלא אותו. בלי לגעת בברירת
-   המחדל (420px, נשארת נכונה לטלפונים רגילים/צרים) ובלי לגעת בנקודות המעבר
-   לטאבלט/דסקטופ למטה - רק מסירים את התקרה בטווח הביניים הצר הזה בלבד */
-@media (min-width: 421px) and (max-width: 699px) {
-    .phone-wrapper { max-width: 100vw; }
+/* טלפונים "רחבים" (מעל 420px, עד 768px - קו הגבול המקובל בין מובייל לטאבלט)
+   לא היו מכוסים על ידי אף מדיה-קווארי ונתקעו עם התקרה הצרה של 420px למטה -
+   זה יצר שוליים ריקים גדולים משני צדי המסך במובייל אמיתי במקום למלא אותו.
+   98vw ולא 100vw מלא - נשאר שוליים דק ואלגנטי במקום להידבק ממש לקצוות
+   המסך. גם ה-padding הפנימי מצטמצם כאן כדי לנצל עוד קצת רוחב שימושי.
+   בלי לגעת בברירת המחדל (420px, נשארת נכונה לטלפונים רגילים/צרים) ובלי
+   לגעת בנקודת המעבר לטאבלט/דסקטופ האמיתי למטה (עכשיו מתחילה רק ב-769px,
+   כדי שלא תתנגש עם הטווח הזה) */
+@media (min-width: 421px) and (max-width: 768px) {
+    .phone-wrapper { max-width: 98vw; padding: 10px; }
 }
 
 /* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
@@ -1036,7 +1042,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    בנוי עם minmax(0, 1fr), אז הרחבת .phone-wrapper בלבד מספיקה כדי לנצל את השטח
    הנוסף בלי לשבור סימטריה. .modal-sheet מוגבל ל-520px למעלה כדי שהמגירה/הפופאפ
    ימשיכו להיראות כמו חלון צף מרכזי ולא יימתחו על פני כל הרוחב. */
-@media (min-width: 700px) {
+@media (min-width: 769px) {
     .phone-wrapper { max-width: 700px; }
     .day-tabs-strip { justify-content: space-between; gap: 12px; }
     .day-tab { padding: 12px 18px; }
