@@ -412,12 +412,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מפורשת. position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה
    בדיוק כמו .ai-fab למעלה - כך שהוא נשאר צמוד לכרטיס הנראה בפועל גם
    בדסקטופ רחב עם שוליים, לא לחלון הדפדפן הגולמי.
-   עדכון "אישיות ידידותית": הרקע עבר מגרדיאנט קווי ציאן->סגול קר לגרדיאנט
-   רדיאלי חם (אפרסק/רוז-גולד) שמתחיל *במרכז הפנים* ונמס כלפי חוץ אל תוך
-   מסגרת ניאון ציאן-סגולה - כך שהפנים עצמן נראות חמות בעוד המסגרת נשארת
-   "ניאונית". הזוהר עצמו רוכך (alpha נמוך יותר, blur גדול יותר) והוחלף
-   ב-aiRobotBreathe: פעימה איטית ועדינה (scale זעיר + זוהר שנושם) במקום
-   ה"פעימה" הקודמת שהייתה חדה מדי לתחושת "מכשיר קר" */
+   חזרה למראה "רובוט טכני" נקי אחרי ניסיון קודם עם גוני עור אפרסק/חיוך
+   אנושי שנראה מטריד - הרקע חוזר להיות פלטת-פנים כהה/מטאלית (לא גרדיאנט
+   בגוון עור), בלי חיוך בכלל, עם שתי "נורות" LED ציאן בתוך ויזור כהה
+   במקום עיניים עגולות - זהות "AI assistant" טכנולוגית ולא פרצוף אנושי */
 .ai-brain-fab {
     position: absolute;
     top: 22px;
@@ -425,14 +423,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 42%, #ffd9c2 0%, #f5b8a0 22%, #d99bc4 45%, var(--accent-purple) 72%, var(--accent-cyan) 100%);
-    border: 1px solid rgba(255,255,255,0.25);
+    background: radial-gradient(circle at 50% 38%, #38454f 0%, #1b2328 55%, #0a0e11 100%);
+    border: 1px solid rgba(0, 212, 255, 0.35);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 0 14px rgba(0, 212, 255, 0.3), 0 0 10px rgba(255, 200, 170, 0.3), 0 6px 16px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 14px rgba(0, 212, 255, 0.4), 0 0 10px rgba(168, 85, 247, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35);
     z-index: 3500;
     padding: 0;
     transition: var(--transition);
@@ -442,19 +440,18 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .ai-brain-fab:active { transform: scale(0.9); }
 @keyframes aiRobotBreathe {
-    0%, 100% { box-shadow: 0 0 14px rgba(0, 212, 255, 0.3), 0 0 10px rgba(255, 200, 170, 0.3), 0 6px 16px rgba(0, 0, 0, 0.3); transform: scale(1); }
-    50% { box-shadow: 0 0 22px rgba(0, 212, 255, 0.45), 0 0 16px rgba(255, 200, 170, 0.45), 0 6px 18px rgba(0, 0, 0, 0.32); transform: scale(1.035); }
+    0%, 100% { box-shadow: 0 0 14px rgba(0, 212, 255, 0.4), 0 0 10px rgba(168, 85, 247, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35); transform: scale(1); }
+    50% { box-shadow: 0 0 22px rgba(0, 212, 255, 0.6), 0 0 16px rgba(168, 85, 247, 0.4), 0 6px 18px rgba(0, 0, 0, 0.4); transform: scale(1.035); }
 }
-/* פני הרובוט: עיניים עגולות עם "ניצוץ" (glint) פנימי במקום מבט שטוח, וחיוך
-   מעוגל במקום קו ישר - בשביל התחושה ה"ידידותית" שהתבקשה. קריצה עדינה כל
-   כמה שניות (רוב המחזור פקוחות, נסגרות לרגע קצר) כדי שהעוזר יראה "חי" */
+/* פני הרובוט: ויזור כהה (רצועה מוארכת) עם שתי "נורות" LED ציאן זוהרות
+   בתוכו - בלי עיניים אנושיות ובלי חיוך. פליקר עדין כל כמה שניות (כמו
+   סריקה/עיבוד) כדי שהעוזר יראה פעיל, בלי לחקות קריצה אנושית */
 .ai-robot-face { display: block; overflow: visible; }
-.ai-robot-eye { fill: #17202b; transform-box: fill-box; transform-origin: center; animation: aiRobotBlink 6.5s ease-in-out infinite; }
-.ai-robot-glint { fill: #ffffff; opacity: 0.95; transform-box: fill-box; transform-origin: center; animation: aiRobotBlink 6.5s ease-in-out infinite; }
-.ai-robot-mouth { stroke: #17202b; stroke-width: 2.6; stroke-linecap: round; }
-@keyframes aiRobotBlink {
-    0%, 92%, 100% { transform: scaleY(1); }
-    94%, 96% { transform: scaleY(0.12); }
+.ai-robot-visor { fill: rgba(0, 0, 0, 0.5); stroke: rgba(0, 212, 255, 0.4); stroke-width: 0.8; }
+.ai-robot-eye { fill: var(--accent-cyan); filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.95)); transform-box: fill-box; transform-origin: center; animation: aiRobotEyeFlicker 6.5s ease-in-out infinite; }
+@keyframes aiRobotEyeFlicker {
+    0%, 92%, 100% { opacity: 1; transform: scaleY(1); }
+    94%, 96% { opacity: 0.35; transform: scaleY(0.5); }
 }
 
 .settings-fab { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 42px; height: 42px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); z-index: 3500; padding: 0; transition: var(--transition); }
