@@ -683,6 +683,39 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-brain-target-choice { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .ai-brain-target-option { display: flex; align-items: center; gap: 8px; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer; }
 .ai-brain-target-option input[type="radio"] { accent-color: var(--accent-purple); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.ai-brain-panel { margin-top: 2px; }
+.ai-brain-panel .modal-subtitle { margin-top: 0; margin-bottom: 16px; line-height: 1.5; }
+.ai-brain-panel .action-buttons-wrap { margin-top: 16px !important; }
+/* תיבת הטקסט של תכנון הלו"ז מטקסט חופשי - לפני התיקון הזה לא הייתה לה שום
+   הגדרת CSS ייעודית, אז היא נפלה חזרה לעיצוב ברירת המחדל המכוער של הדפדפן
+   (גבול אפור, בלי עיגול פינות, בלי גובה מינימלי). עכשיו משתמשת באותם משתני
+   הרקע/הטקסט כמו כל שאר האפליקציה, אז עוקבת אוטומטית אחרי כהה/בהיר/ערכות פרימיום */
+#ai-schedule-input {
+    width: 100%;
+    min-height: 120px;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 14px;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+#ai-schedule-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
+#ai-schedule-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
+#ai-schedule-input::-webkit-scrollbar { width: 8px; }
+#ai-schedule-input::-webkit-scrollbar-track { background: transparent; }
+#ai-schedule-input::-webkit-scrollbar-thumb { background-color: rgba(168, 85, 247, 0.3); border-radius: 8px; }
+.recipe-image-preview { display: block; width: 100%; max-height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(168, 85, 247, 0.2); }
+.recipe-detail-photo { display: block; width: 100%; max-height: 220px; object-fit: cover; border-radius: 14px; margin-bottom: 14px; }
+.recipe-card-photo { display: block; width: 100%; height: 90px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
 .hours-settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }

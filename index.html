@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="theme.css?v=54">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
+         ב-app.js) - נופלת בעדינות לזיהוי טקסט מקומי כשסריקת ה-AI האמיתית בענן לא זמינה -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -423,6 +426,7 @@
                     </div>
                 </div>
                 <div class="recipe-detail-body">
+                    <img id="recipe-detail-photo" class="recipe-detail-photo hidden" alt="">
                     <h2 id="recipe-detail-title"></h2>
                     <div class="recipe-detail-meta">
                         <span id="recipe-detail-category" class="recipe-detail-badge"></span>
@@ -635,7 +639,7 @@
                     </div>
                     <p class="modal-subtitle" data-i18n="schedule_ai_modal_subtitle">Describe your recurring weekly plans in plain language and let AI fill in the schedule for you.</p>
                     <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g. I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop class on Tuesdays at 19:00"></textarea>
-                    <div class="action-buttons-wrap" style="margin-top: 10px;">
+                    <div class="action-buttons-wrap">
                         <button onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
                     </div>
@@ -655,7 +659,7 @@
                     </div>
                     <input type="file" id="ai-brain-image-input" accept="image/*" class="hidden" onchange="handleAiBrainImageSelected(event)">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('ai-brain-image-input').click()" data-i18n="ai_brain_upload_btn">📷 Upload photo</button>
-                    <div class="action-buttons-wrap" style="margin-top: 10px;">
+                    <div class="action-buttons-wrap">
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
@@ -760,6 +764,8 @@
                 <input type="file" id="recipe-image-input" accept="image/*,application/pdf" class="hidden" onchange="handleRecipeImageSelected(event)">
                 <button type="button" id="btn-recipe-scan-image" class="btn-secondary" onclick="document.getElementById('recipe-image-input').click()" data-i18n="recipe_scan_image_btn">📷 Scan or upload a file</button>
                 <div class="recipe-scan-hint" data-i18n="recipe_scan_file_hint">Photo, image, or PDF - up to 10 free scans/uploads total</div>
+                <img id="recipe-image-preview" class="recipe-image-preview hidden" alt="">
+                <input type="hidden" id="recipe-image-url-input">
                 <div class="recipe-form-grid">
                     <input type="text" id="recipe-title-input" data-i18n-placeholder="recipe_title_placeholder" placeholder="Recipe title">
                     <select id="recipe-category-input" class="language-select">

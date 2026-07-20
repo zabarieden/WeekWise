@@ -777,6 +777,135 @@ function hideScheduleAiLoading() {
     if (el) el.classList.add('hidden');
 }
 
+// --- מנתח חוקי-דטרמיניסטי ללו"ז מטקסט חופשי (בלי LLM, אותו רעיון בדיוק כמו
+// parseRecipeText הקיים למתכונים) - נפילה רכה כשקריאת ה-AI האמיתי בענן
+// (Edge Function) נכשלת/לא זמינה. שולף רק ימים/שעות שכתובים בפועל בטקסט -
+// לא מנחש ולא ממציא תוכן. הפלט באותה צורה בדיוק כמו אירועי ה-AI האמיתי
+// ({day_of_week, time, task_title}), כדי לעבור דרך אותו applyParsedScheduleEvents ---
+const HEBREW_DAY_TOKENS = [
+    { index: 0, words: ['ראשון'] },
+    { index: 1, words: ['שני'] },
+    { index: 2, words: ['שלישי'] },
+    { index: 3, words: ['רביעי'] },
+    { index: 4, words: ['חמישי'] },
+    { index: 5, words: ['שישי'] },
+    { index: 6, words: ['שבת'] },
+];
+const ENGLISH_DAY_TOKENS = [
+    { index: 0, re: /\bsun(day)?s?\b/i },
+    { index: 1, re: /\bmon(day)?s?\b/i },
+    { index: 2, re: /\btue(s|sday)?s?\b/i },
+    { index: 3, re: /\bwed(nesday)?s?\b/i },
+    { index: 4, re: /\bthu(rs|rsday)?s?\b/i },
+    { index: 5, re: /\bfri(day)?s?\b/i },
+    { index: 6, re: /\bsat(urday)?s?\b/i },
+];
+const SCHEDULE_NOISE_WORDS = [
+    'בימי', 'בימים', 'ביום', 'יום', 'ימי', 'בשעה', 'בשעות', 'שעה', 'בבוקר', 'בערב',
+    'בצהריים', 'בלילה', 'אחר הצהריים', 'אחה"צ', 'כל', 'תמיד', 'קבוע',
+    'and', 'at', 'on', 'in', 'every'
+];
+
+function findScheduleDaysInText(text) {
+    const found = [];
+    HEBREW_DAY_TOKENS.forEach(({ index, words }) => {
+        words.forEach(w => { if (text.includes(w) && !found.includes(index)) found.push(index); });
+    });
+    ENGLISH_DAY_TOKENS.forEach(({ index, re }) => { if (re.test(text) && !found.includes(index)) found.push(index); });
+    return found;
+}
+
+function findScheduleTimeInText(text) {
+    let m = text.match(/(\d{1,2}):(\d{2})/);
+    if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
+    m = text.match(/(\d{1,2})\s*(בערב|בלילה)/);
+    if (m) { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; }
+    m = text.match(/(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/);
+    if (m) { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; }
+    m = text.match(/(\d{1,2})\s*בבוקר/);
+    if (m) return `${m[1].padStart(2, '0')}:00`;
+    m = text.match(/(?:ב-|בשעה\s*)(\d{1,2})\b/);
+    if (m) return `${m[1].padStart(2, '0')}:00`;
+    m = text.match(/\bat\s+(\d{1,2}):?(\d{2})?\b/i);
+    if (m) return `${m[1].padStart(2, '0')}:${m[2] || '00'}`;
+    return '';
+}
+
+function cleanScheduleTaskTitle(text, dayWords, timeStr) {
+    let cleaned = text;
+    dayWords.forEach(w => { cleaned = cleaned.split(w).join(' '); });
+    if (timeStr) {
+        cleaned = cleaned.replace(/\d{1,2}:\d{2}/g, ' ')
+            .replace(/\d{1,2}\s*(בערב|בלילה|אחר הצהריים|אחה"צ|בצהריים|בבוקר)/g, ' ')
+            .replace(/(?:ב-|בשעה\s*)\d{1,2}\b/g, ' ')
+            .replace(/\bat\s+\d{1,2}:?\d{0,2}\b/gi, ' ');
+    }
+    SCHEDULE_NOISE_WORDS.forEach(w => { cleaned = cleaned.split(w).join(' '); });
+    cleaned = cleaned.replace(/[,.ו]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return cleaned || text.trim();
+}
+
+function parseScheduleTextLocally(text) {
+    const clauses = text.split(/[\n,.]/).map(s => s.trim()).filter(Boolean);
+    const events = [];
+    (clauses.length ? clauses : [text]).forEach(clause => {
+        const dayIndexes = findScheduleDaysInText(clause);
+        const timeStr = findScheduleTimeInText(clause);
+        const dayWordsFound = [];
+        HEBREW_DAY_TOKENS.forEach(({ index, words }) => { if (dayIndexes.includes(index)) dayWordsFound.push(...words); });
+        const title = cleanScheduleTaskTitle(clause, dayWordsFound, timeStr) || t('schedule_ai_fallback_task_label');
+
+        if (dayIndexes.length) {
+            dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], time: timeStr, task_title: title }));
+        } else {
+            // אין יום מזוהה בבירור בקטע הזה - לא מוותרים ולא מציגים שגיאה:
+            // מוסיפים אותו כמשימה להיום עם הטקסט המקורי, בדיוק כפי שנכתב
+            events.push({ day_of_week: dbDaysMap[new Date().getDay()], time: timeStr, task_title: clause });
+        }
+    });
+    return events;
+}
+
+// מקבצת את האירועים (מה-AI האמיתי או מהמנתח המקומי - אותה צורה בדיוק) לפי
+// יום, כדי להקצות משבצת פנויה (או שורה חדשה) לכל אחד בלי שיתנגשו על אותה משבצת
+async function applyParsedScheduleEvents(events) {
+    const byDay = {};
+    events.forEach(ev => {
+        if (!dbDaysMap.includes(ev.day_of_week)) return;
+        if (!byDay[ev.day_of_week]) byDay[ev.day_of_week] = [];
+        byDay[ev.day_of_week].push(ev);
+    });
+
+    Object.keys(byDay).forEach(day => {
+        if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
+        const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
+        const emptySlotNums = daySlotEls.filter(el => !el.querySelector('.slot-task').value.trim()).map(el => parseInt(el.getAttribute('data-slot')));
+        byDay[day].forEach((ev, index) => {
+            if (index < emptySlotNums.length) {
+                ev._slotNum = emptySlotNums[index];
+            } else {
+                const nums = daySlotsConfig[day];
+                const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+                daySlotsConfig[day] = [...nums, nextNum];
+                ev._slotNum = nextNum;
+            }
+        });
+    });
+    saveDaySlotsConfig();
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+
+    for (const day of Object.keys(byDay)) {
+        for (const ev of byDay[day]) {
+            const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${ev._slotNum}"]`);
+            if (!slotEl) continue;
+            slotEl.querySelector('.slot-time').value = ev.time || '';
+            slotEl.querySelector('.slot-task').value = ev.task_title;
+            await saveScheduleSlot(day, ev._slotNum);
+        }
+    }
+}
+
 async function parseScheduleWithAI() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     const input = document.getElementById('ai-schedule-input');
@@ -788,64 +917,32 @@ async function parseScheduleWithAI() {
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text })
-        });
-        const result = await res.json();
-
-        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
-        if (!res.ok || result.error || !result.events || !result.events.length) {
-            showAppToast(t('schedule_ai_failed'), 'error');
-            return;
-        }
-
-        // מקבצים את האירועים שחולצו לפי יום, כדי להקצות משבצת פנויה (או שורה
-        // חדשה) לכל אחד בלי שיתנגשו זה בזה על אותה משבצת
-        const byDay = {};
-        result.events.forEach(ev => {
-            if (!dbDaysMap.includes(ev.day_of_week)) return;
-            if (!byDay[ev.day_of_week]) byDay[ev.day_of_week] = [];
-            byDay[ev.day_of_week].push(ev);
-        });
-
-        Object.keys(byDay).forEach(day => {
-            if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
-            const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
-            const emptySlotNums = daySlotEls.filter(el => !el.querySelector('.slot-task').value.trim()).map(el => parseInt(el.getAttribute('data-slot')));
-            byDay[day].forEach((ev, index) => {
-                if (index < emptySlotNums.length) {
-                    ev._slotNum = emptySlotNums[index];
-                } else {
-                    const nums = daySlotsConfig[day];
-                    const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
-                    daySlotsConfig[day] = [...nums, nextNum];
-                    ev._slotNum = nextNum;
-                }
-            });
-        });
-        saveDaySlotsConfig();
-        buildWeeklyScheduleAccordionUI();
-        await loadWeeklySchedule();
-
-        for (const day of Object.keys(byDay)) {
-            for (const ev of byDay[day]) {
-                const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${ev._slotNum}"]`);
-                if (!slotEl) continue;
-                slotEl.querySelector('.slot-time').value = ev.time;
-                slotEl.querySelector('.slot-task').value = ev.task_title;
-                await saveScheduleSlot(day, ev._slotNum);
+        let events = null;
+        if (token) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ text })
+                });
+                const result = await res.json();
+                if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
+                if (res.ok && !result.error && result.events && result.events.length) events = result.events;
+            } catch (err) {
+                // הענן לא זמין (רשת/שרת) - ממשיכים בשקט למנתח המקומי למטה, לא מציגים שגיאה
             }
         }
+
+        // אם ה-AI האמיתי בענן לא זמין/לא החזיר כלום, נופלים בעדינות למנתח
+        // המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
+        if (!events || !events.length) events = parseScheduleTextLocally(text);
+
+        await applyParsedScheduleEvents(events);
 
         input.value = '';
         closeModal('modal-ai-brain');
         showAppToast(t('schedule_ai_success'));
-    } catch (err) {
-        showAppToast(t('schedule_ai_failed'), 'error');
     } finally {
         clearTimeout(loadingTimer);
         hideScheduleAiLoading();
@@ -1428,6 +1525,13 @@ function renderRecipeCards(list) {
         const card = document.createElement('div');
         card.className = 'recipe-card';
         card.onclick = () => openRecipeDetail(recipe.id);
+        if (recipe.image_url) {
+            const img = document.createElement('img');
+            img.className = 'recipe-card-photo';
+            img.src = recipe.image_url;
+            img.alt = '';
+            card.appendChild(img);
+        }
         const title = document.createElement('div');
         title.className = 'recipe-card-title';
         title.textContent = recipe.title;
@@ -1483,6 +1587,7 @@ function openAddRecipeForm() {
     document.getElementById('recipe-calories-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
     document.getElementById('recipe-instructions-input').value = '';
+    setRecipeImagePreview('');
     openModal('modal-add-recipe');
 }
 
@@ -1497,6 +1602,7 @@ function openEditRecipeForm() {
     document.getElementById('recipe-calories-input').value = recipe.calories || '';
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
     document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
+    setRecipeImagePreview(recipe.image_url || '');
     openModal('modal-add-recipe');
 }
 
@@ -1506,16 +1612,28 @@ async function saveRecipe() {
     const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
     const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
     const instructions = document.getElementById('recipe-instructions-input').value.trim();
+    const imageUrl = document.getElementById('recipe-image-url-input').value.trim();
     if (!title) { showAppToast(t('recipe_title_required'), 'error'); return; }
     if (!category) { showAppToast(t('recipe_category_required'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
     const payload = { title, category, calories, ingredients, instructions };
+    const payloadWithImage = imageUrl ? { ...payload, image_url: imageUrl } : payload;
     let error;
     if (editingRecipeId) {
-        ({ error } = await supabaseClient.from('recipes').update(payload).eq('id', editingRecipeId));
+        ({ error } = await supabaseClient.from('recipes').update(payloadWithImage).eq('id', editingRecipeId));
     } else {
-        ({ error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, ...payload }));
+        ({ error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, ...payloadWithImage }));
+    }
+    // image_url הוא עמודה חדשה ואופציונלית שדורשת הוספה חד-פעמית ב-DB - אם היא
+    // עדיין לא קיימת בטבלה, שומרים את המתכון בלי התמונה במקום לחסום את כל
+    // השמירה (הכי גרוע שיכול לקרות זה שהתמונה לא נשמרת, לא שהמתכון אבד)
+    if (error && imageUrl) {
+        if (editingRecipeId) {
+            ({ error } = await supabaseClient.from('recipes').update(payload).eq('id', editingRecipeId));
+        } else {
+            ({ error } = await supabaseClient.from('recipes').insert({ username: currentUsername, user_id: currentUserId, ...payload }));
+        }
     }
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
 
@@ -1532,6 +1650,9 @@ function openRecipeDetail(id) {
     const recipe = cachedRecipes.find(r => r.id === id);
     if (!recipe) return;
     currentDetailRecipeId = id;
+    const detailPhoto = document.getElementById('recipe-detail-photo');
+    if (recipe.image_url) { detailPhoto.src = recipe.image_url; detailPhoto.classList.remove('hidden'); }
+    else { detailPhoto.src = ''; detailPhoto.classList.add('hidden'); }
     document.getElementById('recipe-detail-title').textContent = recipe.title;
     document.getElementById('recipe-detail-category').textContent = t(`recipe_category_${recipe.category}`);
     document.getElementById('recipe-detail-calories').textContent = recipe.calories ? `${recipe.calories} ${t('calories_unit')}` : '';
@@ -2063,6 +2184,62 @@ async function handleRecipeImageSelected(event) {
     await runRecipeImageScan(file);
 }
 
+// מעלה את קובץ התמונה עצמו לאחסון (Supabase Storage, bucket "recipe-photos"),
+// בנפרד לגמרי מניתוח הטקסט - כך שהתמונה תמיד מצורפת ומוצגת כתצוגה מקדימה
+// מיד עם הבחירה, גם אם ניתוח ה-AI/OCR נכשל. נכשל בשקט (מחזירה null) אם
+// ה-bucket עדיין לא קיים בפרויקט Supabase - זו תוספת אופציונלית, לא חוסמת כלום
+async function uploadRecipeImage(file) {
+    if (!supabaseClient || !currentUserId || !file.type.startsWith('image/')) return null;
+    try {
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'jpg';
+        const path = `${currentUserId}/${Date.now()}.${ext}`;
+        const { error } = await supabaseClient.storage.from('recipe-photos').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) return null;
+        const { data } = supabaseClient.storage.from('recipe-photos').getPublicUrl(path);
+        return data ? data.publicUrl : null;
+    } catch {
+        return null;
+    }
+}
+
+function setRecipeImagePreview(url) {
+    const input = document.getElementById('recipe-image-url-input');
+    const preview = document.getElementById('recipe-image-preview');
+    if (input) input.value = url || '';
+    if (preview) {
+        if (url) { preview.src = url; preview.classList.remove('hidden'); }
+        else { preview.src = ''; preview.classList.add('hidden'); }
+    }
+}
+
+// נפילה רכה כש-scan-recipe-image (ה-AI האמיתי בענן) נכשל/לא זמין: OCR אמיתי
+// בצד הלקוח (Tesseract.js, לא PDF) על התמונה עצמה, ואז אותו מנתח חוקי-
+// דטרמיניסטי שכבר משמש להדבקת טקסט (parseRecipeText) על התוצר. אם ה-OCR
+// עצמו לא הצליח לחלץ כלום שימושי, מחזירה false בלי להמציא תוכן - הטופס
+// נשאר פתוח וריק לעריכה ידנית, זה תמיד עדיף על "לנחש" מה בתמונה
+async function runLocalRecipeOcrFallback(file) {
+    if (!file.type.startsWith('image/') || typeof Tesseract === 'undefined') return false;
+    try {
+        showRecipeScanLoading();
+        const { data } = await Tesseract.recognize(file, 'heb+eng');
+        const rawText = ((data && data.text) || '').trim();
+        if (!rawText) return false;
+        const parsed = parseRecipeText(rawText);
+        if (!parsed || !parsed.title) return false;
+        document.getElementById('recipe-title-input').value = parsed.title;
+        if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
+        document.getElementById('recipe-calories-input').value = parsed.calories || '';
+        document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
+        document.getElementById('recipe-instructions-input').value = parsed.instructions;
+        showAppToast(t('recipe_scan_ocr_success'));
+        return true;
+    } catch {
+        return false;
+    } finally {
+        hideRecipeScanLoading();
+    }
+}
+
 // מנותקת מ-handleRecipeImageSelected כדי שגם ה-AI Brain (שמזין קובץ שנבחר
 // דרך קלט קובץ אחר לגמרי) יוכל להריץ בדיוק את אותה לוגיקת סריקה, בלי כפילות
 async function runRecipeImageScan(file) {
@@ -2078,6 +2255,10 @@ async function runRecipeImageScan(file) {
     }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
+    // התמונה מועלית ומצורפת בנפרד ובמקביל לניתוח, כדי שתמיד תיקלט גם אם
+    // ניתוח הטקסט למטה נכשל
+    uploadRecipeImage(file).then(url => { if (url) setRecipeImagePreview(url); });
+
     showAppToast(t('recipe_scan_in_progress'));
     // אנימציית טעינה ייעודית מוצגת רק אם הסריקה לוקחת יותר מ-5 שניות, כדי לשמור
     // על ממשק נקי בסריקות מהירות - ה-timeout מבוטל אם הסריקה מסתיימת קודם לכן.
@@ -2086,35 +2267,47 @@ async function runRecipeImageScan(file) {
         const { mediaType, base64 } = await fileToBase64(file);
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType })
-        });
-        const result = await res.json();
+        let recipe = null;
+        if (token) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ imageBase64: base64, mediaType })
+                });
+                const result = await res.json();
 
-        if (res.status === 402 || result.error === 'limit_reached') {
-            showAppToast(t('recipe_scan_limit_desc'), 'error');
-            openPremiumUpgradeModal();
+                if (res.status === 402 || result.error === 'limit_reached') {
+                    showAppToast(t('recipe_scan_limit_desc'), 'error');
+                    openPremiumUpgradeModal();
+                    return;
+                }
+                if (res.ok && !result.error && result.recipe) {
+                    recipe = result.recipe;
+                    if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
+                }
+            } catch {
+                // הענן לא זמין (רשת/שרת) - ממשיכים בשקט ל-OCR המקומי למטה
+            }
+        }
+
+        if (recipe) {
+            document.getElementById('recipe-title-input').value = recipe.title || '';
+            if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
+            document.getElementById('recipe-calories-input').value = recipe.calories || '';
+            document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
+            document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
+            showAppToast(t('recipe_scan_success'));
             return;
         }
-        if (!res.ok || result.error || !result.recipe) {
-            showAppToast(t('recipe_scan_failed'), 'error');
-            return;
-        }
 
-        const recipe = result.recipe;
-        document.getElementById('recipe-title-input').value = recipe.title || '';
-        if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
-        document.getElementById('recipe-calories-input').value = recipe.calories || '';
-        document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
-        document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
-        if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
-        showAppToast(t('recipe_scan_success'));
-    } catch (err) {
-        showAppToast(t('recipe_scan_failed'), 'error');
+        // ה-AI האמיתי בענן לא זמין/לא הצליח - נופלים בעדינות ל-OCR מקומי
+        // (Tesseract.js) על אותה תמונה. אם גם הוא לא מצא כלום שימושי, לא
+        // מציגים שגיאה - פשוט משאירים את הטופס (עם התמונה שכבר צורפה) פתוח
+        // למילוי ידני, שזה בכל מקרה תמיד עובד
+        const ocrSucceeded = await runLocalRecipeOcrFallback(file);
+        if (!ocrSucceeded) showAppToast(t('recipe_scan_manual_hint'));
     } finally {
         clearTimeout(loadingTimer);
         hideRecipeScanLoading();
