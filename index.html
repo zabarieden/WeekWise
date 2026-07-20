@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=74">
+    <link rel="stylesheet" href="theme.css?v=75">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -408,8 +408,17 @@
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
-                 בלי גרירה, לפי בקשה מפורשת -->
-            <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">🤖</button>
+                 בלי גרירה, לפי בקשה מפורשת. פני "רובוט ניאון" מצוירות ב-SVG
+                 (לא אימוג'י) כדי שאפשר לעצב/להנפיש עיניים+חיוך בנפרד ב-CSS -->
+            <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">
+                <svg class="ai-robot-face" viewBox="0 0 48 48" width="26" height="26" aria-hidden="true">
+                    <circle class="ai-robot-eye" cx="16" cy="21" r="4.4"></circle>
+                    <circle class="ai-robot-eye" cx="32" cy="21" r="4.4"></circle>
+                    <circle class="ai-robot-glint" cx="14.3" cy="19.3" r="1.4"></circle>
+                    <circle class="ai-robot-glint" cx="30.3" cy="19.3" r="1.4"></circle>
+                    <path class="ai-robot-mouth" d="M15 30 Q24 37.5 33 30" fill="none"></path>
+                </svg>
+            </button>
 
             <!-- כפתור הגדרות קבוע, נשאר בכל המסכים -->
             <button type="button" class="settings-fab" id="btn-settings-fab" onclick="openModal('modal-settings-drawer')" data-i18n-title="settings_title" title="Settings">⚙️</button>
