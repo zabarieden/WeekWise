@@ -1052,23 +1052,33 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
     .day-page { padding: 8px; }
     .vertical-scroll-track { flex: 0 0 14px; min-width: 14px; max-width: 14px; }
     .days-scroll-container { flex: 1 1 auto; }
+    /* עוברים ל-CSS Grid במקום flex עבור השורה במובייל: שני סבבים קודמים עם
+       flex-grow על .slot-task-wrap נתנו תוצאות לא-עקביות (הפיל לא תפס את
+       השטח הפנוי כמצופה, וכפתור המחיקה "נעלם"). עמודת grid עם minmax(0,1fr)
+       לוקחת בדיוק את השטח הנותר אחרי שתי העמודות הקבועות (auto), בלי תלות
+       בחישובי flex-grow/flex-basis מקוננים - מנגנון פשוט וחזוי הרבה יותר.
+       סדר ה-DOM (זמן, תג-משימה, מחיקה) + dir="rtl" דינמי הופכים ויזואלית
+       לבד: עמודה ראשונה (auto=זמן) בקצה הימני, עמודה אחרונה (auto=מחיקה)
+       בקצה השמאלי, כמו שהמשתמש ביקש בדיאגרמה. */
     .slot-input-group {
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        justify-content: space-between !important;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
         align-items: center !important;
         width: 100% !important;
         max-width: 100% !important;
         overflow: visible !important;
-        padding: 8px 12px !important;
+        padding: 8px 10px !important;
+        gap: 8px !important;
     }
-    .slot-time { flex: 0 0 auto !important; }
-    /* flex: 1 1 0 (לא auto) + min-width אמיתי - שגיאה בסבב הקודם איפסה את
-       min-width ל-0 כדי "לפנות מקום" לכפתור המחיקה, אבל זה בדיוק מה שאיפשר
-       לעטיפת התג להתכווץ עד כמעט כלום ("ב 🎶" בלבד) ברגע שיש לחץ רוחב כלשהו.
-       עכשיו שהשורה כבר מקבלת רוחב מלא (תיקון vertical-scroll-track), יש
-       הרבה מקום פנוי - אז can לתת לעטיפה לגדול חופשי בלי לאבד את הרצפה */
-    .slot-task-wrap { flex: 1 1 0 !important; min-width: 90px !important; max-width: none !important; justify-content: center; text-align: center; padding: 6px 14px !important; }
+    .slot-time { flex: none !important; }
+    .slot-task-wrap {
+        min-width: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+        justify-content: center;
+        text-align: center;
+        padding: 6px 14px !important;
+    }
     .slot-task-wrap .slot-task {
         flex: 1 1 auto !important;
         width: 100% !important;
@@ -1079,7 +1089,20 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         text-overflow: clip !important;
         text-align: center;
     }
-    .btn-delete-slot { flex: 0 0 auto !important; visibility: visible !important; }
+    /* כפתור מחיקה עם תיבת מגע קבועה ומובטחת (26x26) - לעולם לא יכול "להיעלם"
+       או להתכווץ לגודל בלתי-נראה, בניגוד להסתמכות על גודל טקסט/אמוג'י בלבד */
+    .btn-delete-slot {
+        flex: none !important;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        font-size: 0.9rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
 }
 
 /* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
