@@ -3,7 +3,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
-let defaultHours = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+// עמודה אחידה של 5 שעות ברירת מחדל לכל הימים - זהה לכל יום מלכתחילה (לא
+// אקראי/שונה מיום ליום), אבל ניתנת להתאמה אישית מלאה דרך "הגדרת שעות ברירת
+// מחדל" (openHoursSettingsModal/saveDefaultHours), ששניהם משתמשים באותו
+// DEFAULT_DAY_SLOT_COUNT כדי שהמספר לעולם לא יתפצל בין המקומות ששולפים אותו
+const DEFAULT_DAY_SLOT_COUNT = 5;
+let defaultHours = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
 let reminderIntervalStarted = false;
@@ -681,7 +686,7 @@ function daySlotsKey() {
 }
 
 function defaultDaySlotNumbers() {
-    return [1, 2, 3, 4, 5, 6];
+    return Array.from({ length: DEFAULT_DAY_SLOT_COUNT }, (_, i) => i + 1);
 }
 
 function loadDaySlotsConfig() {
@@ -904,6 +909,11 @@ const SCHEDULE_DEFAULT_TIME = '09:00';
 
 function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     let cleaned = text;
+    // "ו" (וגם) מתחברת ישירות למילה שאחריה בעברית בלי רווח - "ומתאמנת",
+    // "וב18" - כשהיא יושבת ממש בתחילת הקטע (תמיד שריד חיבור מהקטע/הפסוקית
+    // הקודמים, למשל אחרי פיצול על פסיק: "X, ומתאמנת Y"), מסירים אותה כאן
+    // כקידומת - לפני שהיא מתערבבת לתוך "אימון"/"ב18" ונשארת תקועה שם
+    cleaned = cleaned.replace(/^\s*ו(?=[א-ת])/, ' ');
     dayWords.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     if (timeStr) cleaned = stripScheduleTimePatterns(cleaned);
     SCHEDULE_FILLER_PHRASES.forEach(w => { cleaned = cleaned.split(w).join(' '); });
@@ -1200,12 +1210,12 @@ function loadCustomDefaultHours() {
     if (!raw) return;
     try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === 6) defaultHours = parsed;
+        if (Array.isArray(parsed) && parsed.length === DEFAULT_DAY_SLOT_COUNT) defaultHours = parsed;
     } catch {}
 }
 
 function openHoursSettingsModal() {
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= DEFAULT_DAY_SLOT_COUNT; i++) {
         document.getElementById(`settings-hour-${i}`).value = defaultHours[i - 1] || '';
     }
     openModal('modal-settings-hours');
@@ -1213,7 +1223,7 @@ function openHoursSettingsModal() {
 
 function saveDefaultHours() {
     const newHours = [];
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= DEFAULT_DAY_SLOT_COUNT; i++) {
         const val = document.getElementById(`settings-hour-${i}`).value.trim();
         newHours.push(val || defaultHours[i - 1] || '');
     }
@@ -1227,6 +1237,14 @@ function buildWeeklyScheduleAccordionUI() {
     const container = document.getElementById('accordion-container');
     const tabsStrip = document.getElementById('day-tabs-strip');
     if (!container) return;
+    // שומרים איזה יום היה פעיל *לפני* הפירוק-והבנייה-מחדש, כדי לשחזר אותו
+    // בסוף - אחרת כל קריאה לפונקציה הזאת (כמו לחיצה על "+ הוספת שורה" באמצע
+    // הצפייה ביום חמישי) הייתה "מקפיצה" את המשתמש בחזרה ליום ראשון בטעות,
+    // מה שנראה כאילו הכפתור לא עשה כלום (השורה כן נוספה, פשוט למסך שהמשתמש
+    // כבר לא רואה)
+    const previousActiveTab = document.querySelector('.day-tab.active');
+    const activeDay = previousActiveTab ? previousActiveTab.id.replace('daytab-', '') : dbDaysMap[0];
+
     loadDaySlotsConfig();
     container.innerHTML = '';
     if (tabsStrip) tabsStrip.innerHTML = '';
@@ -1237,7 +1255,7 @@ function buildWeeklyScheduleAccordionUI() {
         if (tabsStrip) {
             const tab = document.createElement('button');
             tab.type = 'button';
-            tab.className = 'day-tab' + (dayIndex === 0 ? ' active' : '');
+            tab.className = 'day-tab' + (dbDay === activeDay ? ' active' : '');
             tab.id = `daytab-${dbDay}`;
             tab.innerHTML = `<span class="day-tab-name">${dayName}</span><span class="day-tab-date">${dateStr}</span>`;
             tab.onclick = () => scrollToDay(dbDay);
@@ -1261,6 +1279,15 @@ function buildWeeklyScheduleAccordionUI() {
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
+
+    // משחזרים מיידית (בלי אנימציה - זו לא ניווט ביוזמת המשתמש, רק שחזור
+    // המצב אחרי בנייה מחדש) את מיקום הגלילה ליום שהיה פעיל
+    const activePage = document.getElementById(`daypage-${activeDay}`);
+    if (activePage) {
+        const containerRect = container.getBoundingClientRect();
+        const pageRect = activePage.getBoundingClientRect();
+        container.scrollLeft += pageRect.left - containerRect.left;
+    }
 }
 
 function scrollToDay(dbDay) {

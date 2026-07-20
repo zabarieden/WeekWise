@@ -570,7 +570,6 @@
                     <input type="text" id="settings-hour-3" class="hours-input" placeholder="#3">
                     <input type="text" id="settings-hour-4" class="hours-input" placeholder="#4">
                     <input type="text" id="settings-hour-5" class="hours-input" placeholder="#5">
-                    <input type="text" id="settings-hour-6" class="hours-input" placeholder="#6">
                 </div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button id="btn-save-hours" class="btn-primary" data-i18n="hours_save_btn">Save defaults</button>
@@ -638,7 +637,7 @@
                         <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
                     </div>
                     <p class="modal-subtitle" data-i18n="schedule_ai_modal_subtitle">Describe your recurring weekly plans in plain language and let AI fill in the schedule for you.</p>
-                    <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g. I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop class on Tuesdays at 19:00"></textarea>
+                    <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g., Gym on Mondays at 10 AM, Hip Hop on Tuesdays at 8 PM, Work on Friday until 2 PM"></textarea>
                     <div class="action-buttons-wrap">
                         <button onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
