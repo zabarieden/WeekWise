@@ -1344,7 +1344,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-row-actions"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
@@ -1544,10 +1544,21 @@ function initScheduleRowDragReorder(dbDay) {
         saveScheduleSlot(dbDay, rowB.getAttribute('data-slot'));
     }
 
+    // אירועי מגע גולמיים (touchstart/touchmove/touchend) ולא Pointer Events:
+    // בטלפון אמיתי הגרירה לא הגיבה בכלל - ה-API הגולמי הזה הוא המכנה המשותף
+    // הכי רחב ואמין בין דפדפני מובייל, בלי להסתמך על תמיכת Pointer Events.
+    // עדיין תומכים גם בעכבר (mousedown/mousemove/mouseup) לבדיקה בדסקטופ.
+    function clientYFromEvent(e) {
+        if (e.touches && e.touches.length) return e.touches[0].clientY;
+        if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientY;
+        return e.clientY;
+    }
+
     function onMove(e) {
         if (!draggedEl) return;
         e.preventDefault();
-        const dy = e.clientY - startY;
+        const y = clientYFromEvent(e);
+        const dy = y - startY;
         draggedEl.style.transform = `translateY(${dy}px)`;
         const draggedRect = draggedEl.getBoundingClientRect();
         const draggedMid = draggedRect.top + draggedRect.height / 2;
@@ -1557,7 +1568,7 @@ function initScheduleRowDragReorder(dbDay) {
             if (draggedMid > rect.top && draggedMid < rect.bottom) {
                 swapTaskContent(draggedEl, sibling);
                 draggedEl.style.transform = 'translateY(0px)';
-                startY = e.clientY;
+                startY = y;
                 break;
             }
         }
@@ -1567,24 +1578,32 @@ function initScheduleRowDragReorder(dbDay) {
         if (!draggedEl) return;
         draggedEl.classList.remove('reordering');
         draggedEl.style.transform = '';
-        document.removeEventListener('pointermove', onMove);
-        document.removeEventListener('pointerup', endDrag);
-        document.removeEventListener('pointercancel', endDrag);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', endDrag);
+        document.removeEventListener('touchcancel', endDrag);
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', endDrag);
         draggedEl = null;
     }
 
+    function startDrag(e) {
+        const handle = e.currentTarget;
+        const el = handle.closest('.slot-input-group');
+        if (!el) return;
+        e.preventDefault();
+        draggedEl = el;
+        startY = clientYFromEvent(e);
+        draggedEl.classList.add('reordering');
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', endDrag);
+        document.addEventListener('touchcancel', endDrag);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', endDrag);
+    }
+
     grid.querySelectorAll('.slot-drag-handle').forEach(handle => {
-        handle.onpointerdown = (e) => {
-            const el = handle.closest('.slot-input-group');
-            if (!el) return;
-            e.preventDefault();
-            draggedEl = el;
-            startY = e.clientY;
-            draggedEl.classList.add('reordering');
-            document.addEventListener('pointermove', onMove);
-            document.addEventListener('pointerup', endDrag);
-            document.addEventListener('pointercancel', endDrag);
-        };
+        handle.addEventListener('touchstart', startDrag, { passive: false });
+        handle.addEventListener('mousedown', startDrag);
     });
 }
 
