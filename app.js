@@ -1291,6 +1291,11 @@ async function saveDefaultHours() {
     defaultHours = newHours;
     localStorage.setItem(defaultHoursKey(), JSON.stringify(newHours));
     closeModal('modal-settings-hours');
+    // מסנכרנים את כל הימים לרשת הבסיס החדשה: משבצת ריקה שנשארה ממספר ברירת
+    // מחדל ישן וגדול יותר (ולא חלק מהבסיס החדש) מוסרת, כדי שלא תישאר "שורת
+    // רפאים" - לפני buildWeeklyScheduleAccordionUI, כי הפונקציה הזאת בודקת
+    // את תוכן ה-DOM הקיים (.slot-task value) כדי להחליט מה עדיין ריק
+    await pruneDaySlotsAboveThreshold(defaultHours.length);
     // אורך רשת הבסיס (defaultDaySlotNumbers) נגזר עכשיו ישירות מ-defaultHours.length,
     // אז בנייה מחדש כאן ממלאת מיד לכל יום את משבצות הבסיס החדשות (getDaySlotNumbers)
     buildWeeklyScheduleAccordionUI();
@@ -1487,19 +1492,21 @@ function sortAllDaySlotsChronologically() {
     dbDaysMap.forEach(day => sortDaySlotsChronologically(day));
 }
 
-// שורות "יתומות" מעבר למספר שורות ברירת המחדל הנוכחי (נשארו ב-daySlotsConfig
-// המקומי מברירת מחדל ישנה עם יותר שורות, למשל 10) ושאין בהן שום טקסט משימה
-// מוסרות אוטומטית מה-DOM, מה-config המקומי וגם מהשרת. שורה עודפת שהמשתמש כן
-// מילא בה תוכן אמיתי (הוספה מכוונת דרך "+") לעולם לא נמחקת - רק כאלה שריקות לגמרי.
-async function pruneEmptyExcessSlots() {
+// מסירה מכל הימים כל משבצת שמספרה גדול מ-thresholdCount (כלומר לא חלק
+// מרשת הבסיס הנוכחית) ושאין בה שום טקסט משימה - מה-DOM, מה-config המקומי
+// וגם מהשרת. משבצת עודפת שהמשתמש כן מילא בה תוכן אמיתי לעולם לא נמחקת.
+// נקראת רק משתי נקודות מכוונות ומפורשות (לא בכל טעינה רגילה, כדי לא "לתפוס"
+// שורה ריקה שהמשתמש הרגע הוסיף ביודעין): טעינת האפליקציה (ניקוי שאריות
+// ישנות מול הבסיס הנוכחי) ושמירת ברירת מחדל חדשה בהגדרות (סנכרון כל הימים
+// לרשת הבסיס החדשה - "phantom rows" משעות ברירת מחדל שהוסרו נעלמות)
+async function pruneDaySlotsAboveThreshold(thresholdCount) {
     if (!supabaseClient || !currentUserId) return;
-    const defaultCount = defaultDaySlotNumbers().length;
     let anyPruned = false;
     for (const day of dbDaysMap) {
         const nums = getDaySlotNumbers(day);
         const staleNums = [];
         const keepNums = nums.filter(n => {
-            if (n <= defaultCount) return true;
+            if (n <= thresholdCount) return true;
             const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${n}"]`);
             const hasTask = slotEl && slotEl.querySelector('.slot-task').value.trim();
             if (hasTask) return true;
@@ -1519,6 +1526,10 @@ async function pruneEmptyExcessSlots() {
         }
     }
     if (anyPruned) saveDaySlotsConfig();
+}
+
+async function pruneEmptyExcessSlots() {
+    await pruneDaySlotsAboveThreshold(defaultDaySlotNumbers().length);
 }
 
 async function saveScheduleSlot(day, slot) {
