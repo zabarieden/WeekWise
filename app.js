@@ -1372,26 +1372,12 @@ function scrollToDay(dbDay) {
     const containerRect = container.getBoundingClientRect();
     const pageRect = page.getBoundingClientRect();
     const delta = pageRect.left - containerRect.left;
-    // בכוונה לא scrollBy עם behavior:'smooth' המובנה: המכל הזה הוא
-    // scroll-snap-type:x mandatory (ר' .days-scroll-container), והשילוב של
-    // גלילה חלקה מובנית עם snap חובה גורם לדפדפן "לעצור" בכל יום אמצעי בדרך
-    // (כל נקודת snap בנפרד) במקום גלילה רציפה אחת ישר אל היעד - בדיוק התחושה
-    // של "עצירה בימים שבדרך" שהמשתמש תיאר. אנימציה ידנית עוקפת את זה לגמרי.
-    animateScrollTo(container, container.scrollLeft + delta, 320);
-}
-
-function animateScrollTo(el, targetLeft, duration) {
-    const startLeft = el.scrollLeft;
-    const distance = targetLeft - startLeft;
-    if (Math.abs(distance) < 1) return;
-    const startTime = performance.now();
-    const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    function step(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        el.scrollLeft = startLeft + distance * easeInOutCubic(progress);
-        if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    // קפיצה מיידית ולא הדרגתית: כל אנימציה שמזיזה scrollLeft בהדרגה על פני
+    // המכל הזה (בין אם smooth מובנה של הדפדפן ובין אם אנימציה ידנית) "עוברת"
+    // חזותית דרך כל הימים שביניים בדרך אל היעד - בדיוק התחושה של "מדלג יום
+    // אחרי יום" שהמשתמש תיאר. קפיצה ישירה ל-scrollLeft הסופי מציגה את היום
+    // שנבחר מיד, בלי לעבור דרך הימים שבדרך.
+    container.scrollLeft += delta;
 }
 
 let dayScrollObserver = null;
