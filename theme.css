@@ -398,19 +398,21 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-task-wrap { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; transition: var(--transition); }
 .slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
 .slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
-/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) עוקב אחרי צבע ה"עולם"
-   (זהב ל-MyWeek), כך שהפיל תמיד תואם לשפת העיצוב הקיימת של הלו"ז */
+/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) (זהב ל-MyWeek) התברר
+   כבוטה/צעקני מדי בפועל על המסך; עברנו לסגול-ניאון רך קבוע (var(--accent-purple-light),
+   כבר עוקב אחרי ערכות נושא פרימיום בעצמו) על רקע זכוכית כהה שקופה - עדין
+   ופרימיום יותר, לא צורב את העין */
 .slot-input-group.has-task .slot-task-wrap {
-    background-color: rgba(0, 0, 0, 0.18);
-    border: 1px solid var(--tile-accent, var(--accent-purple));
+    background-color: rgba(168, 85, 247, 0.1);
+    border: 1px solid var(--accent-purple-light);
     border-radius: 20px;
     padding: 5px 12px;
-    box-shadow: 0 0 10px var(--tile-glow-1, rgba(168, 85, 247, 0.4));
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
 }
 .slot-input-group.has-task .slot-task {
-    color: var(--text-primary);
+    color: var(--accent-purple-light);
     font-weight: 700;
-    text-shadow: 0 0 8px var(--tile-glow-1, rgba(168, 85, 247, 0.55));
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.45);
 }
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
@@ -1019,6 +1021,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .date-picker-container input[type="date"] { width: 100%; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+/* טלפונים "רחבים" (מעל 420px אך עדיין מובייל אמיתי, לא טאבלט) לא היו מכוסים
+   על ידי אף מדיה-קווארי ונתקעו עם התקרה הצרה של 420px למטה - זה יצר שוליים
+   ריקים גדולים משני צדי המסך במובייל אמיתי במקום למלא אותו. בלי לגעת בברירת
+   המחדל (420px, נשארת נכונה לטלפונים רגילים/צרים) ובלי לגעת בנקודות המעבר
+   לטאבלט/דסקטופ למטה - רק מסירים את התקרה בטווח הביניים הצר הזה בלבד */
+@media (min-width: 421px) and (max-width: 699px) {
+    .phone-wrapper { max-width: 100vw; }
+}
 
 /* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
 /* כל הגריד (dashboard-grid, stats-grid, hours-settings-grid, slot-input-group) כבר
