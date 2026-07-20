@@ -408,7 +408,7 @@ async function initAppAfterAuth(user) {
     loadAllCenterItems();
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
-    initDraggableAiFab();
+    initFixedAiFab();
     initDraggableAiBrainFab();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
@@ -551,14 +551,10 @@ function applyPwaShortcutDeepLink() {
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
-// --- בועת ה-AI הצפה ניתנת לגרירה חופשית, כדי שהמשתמש יוכל למקם אותה איפה שלא
-// תחסום תוכן. המיקום נשמר per-device (כמו defaultHours/daySlotsConfig) ונשחזר בכל טעינה. ---
-function aiFabPositionKey() {
-    return `weekwise_ai_fab_position_${currentUserId}`;
-}
-
-// --- הופכת ל-fab צף וגם ל-bubble ה-AI Brain החדש: אותה מכניקת גרירה בדיוק,
-// רק עם מפתח מיקום ופעולת קליק שונים לכל אחד ---
+// --- בועת ה-AI Brain (🧠) נשארת ניתנת לגרירה חופשית, כדי שהמשתמש יוכל למקם
+// אותה איפה שלא תחסום תוכן - בניגוד לכפתור ה"פתק המהיר" (📝, ר' initFixedAiFab
+// למעלה) שננעל קבוע בפינה לפי בקשה מפורשת. המיקום נשמר per-device (כמו
+// defaultHours/daySlotsConfig) ונשחזר בכל טעינה. ---
 function initDraggableFab(elementId, positionKey, onClick) {
     const el = document.getElementById(elementId);
     const wrapper = document.querySelector('.phone-wrapper');
@@ -646,8 +642,14 @@ function initDraggableFab(elementId, positionKey, onClick) {
     window.addEventListener('resize', restoreSavedPosition);
 }
 
-function initDraggableAiFab() {
-    initDraggableFab('btn-ai-fab', aiFabPositionKey(), () => openModal('modal-ai-quick-add'));
+// כפתור ה"פתק המהיר" (📝) ננעל קבוע בפינה הימנית-תחתונה (אזור האגודל
+// הטבעי) לפי בקשה מפורשת - בלי שום גרירה, בניגוד לבועת ה-AI Brain (🧠)
+// שנשארת חופשית. המיקום עצמו נקבע לגמרי ב-CSS (.ai-fab, position:fixed),
+// כאן רק מחברים את הקליק - בלי לגעת ב-left/top/localStorage בכלל
+function initFixedAiFab() {
+    const el = document.getElementById('btn-ai-fab');
+    if (!el) return;
+    el.onclick = () => openModal('modal-ai-quick-add');
 }
 
 function aiBrainFabPositionKey() {
