@@ -409,7 +409,7 @@ async function initAppAfterAuth(user) {
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
     initFixedAiFab();
-    initDraggableAiBrainFab();
+    initFixedAiBrainFab();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -477,14 +477,12 @@ function expandCardForList(listId) {
 function renderHomeGreeting() {
     const textEl = document.getElementById('home-greeting-text');
     const dateEl = document.getElementById('home-greeting-date');
-    const emojiEl = document.getElementById('home-greeting-emoji');
-    if (!textEl || !dateEl || !emojiEl) return;
+    if (!textEl || !dateEl) return;
     const hour = new Date().getHours();
-    let key = 'home_greeting_morning', emoji = '☀️';
-    if (hour >= 12 && hour < 18) { key = 'home_greeting_afternoon'; emoji = '🌤️'; }
-    else if (hour >= 18 || hour < 5) { key = 'home_greeting_evening'; emoji = '🌙'; }
+    let key = 'home_greeting_morning';
+    if (hour >= 12 && hour < 18) key = 'home_greeting_afternoon';
+    else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
     textEl.textContent = t(key);
-    emojiEl.textContent = emoji;
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
@@ -551,113 +549,21 @@ function applyPwaShortcutDeepLink() {
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
-// --- בועת ה-AI Brain (🧠) נשארת ניתנת לגרירה חופשית, כדי שהמשתמש יוכל למקם
-// אותה איפה שלא תחסום תוכן - בניגוד לכפתור ה"פתק המהיר" (📝, ר' initFixedAiFab
-// למעלה) שננעל קבוע בפינה לפי בקשה מפורשת. המיקום נשמר per-device (כמו
-// defaultHours/daySlotsConfig) ונשחזר בכל טעינה. ---
-function initDraggableFab(elementId, positionKey, onClick) {
-    const el = document.getElementById(elementId);
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (!el || !wrapper) return;
-
-    const DRAG_THRESHOLD = 6;
-    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-    let dragged = false;
-    let isDown = false;
-
-    function clamp(value, min, max) {
-        return Math.min(Math.max(value, min), max);
-    }
-
-    function applyPosition(left, top) {
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        const maxLeft = Math.max(0, wrapperRect.width - elRect.width);
-        const maxTop = Math.max(0, wrapperRect.height - elRect.height);
-        const clampedLeft = clamp(left, 0, maxLeft);
-        const clampedTop = clamp(top, 0, maxTop);
-        el.style.right = 'auto';
-        el.style.bottom = 'auto';
-        el.style.left = `${clampedLeft}px`;
-        el.style.top = `${clampedTop}px`;
-        return { left: clampedLeft, top: clampedTop };
-    }
-
-    function restoreSavedPosition() {
-        const raw = localStorage.getItem(positionKey);
-        if (!raw) return;
-        try {
-            const pos = JSON.parse(raw);
-            if (typeof pos.left === 'number' && typeof pos.top === 'number') applyPosition(pos.left, pos.top);
-        } catch {}
-    }
-
-    // בכוונה לא תלוי ב-setPointerCapture: בחלק מגרסאות Safari לנייד היא זורקת
-    // חריגה או מתנהגת בצורה לא אמינה, ואם זה קורה לפני שמוסיפים את מחלקת
-    // ה-dragging, הגרירה כולה נעצרת בשקט. האזנה על document ל-move/up במקום
-    // רק על האלמנט עצמו היא הגישה החסינה יותר - לא תלויה בזה שהמצביע "נתפס".
-    el.addEventListener('pointerdown', (e) => {
-        isDown = true;
-        dragged = false;
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        startLeft = elRect.left - wrapperRect.left;
-        startTop = elRect.top - wrapperRect.top;
-        startX = e.clientX;
-        startY = e.clientY;
-        try { el.setPointerCapture(e.pointerId); } catch {}
-        el.classList.add('dragging');
-        e.preventDefault();
-    });
-
-    document.addEventListener('pointermove', (e) => {
-        if (!isDown) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (!dragged && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) dragged = true;
-        if (dragged) applyPosition(startLeft + dx, startTop + dy);
-    });
-
-    function endDrag() {
-        if (!isDown) return;
-        isDown = false;
-        el.classList.remove('dragging');
-        if (dragged) {
-            const wrapperRect = wrapper.getBoundingClientRect();
-            const elRect = el.getBoundingClientRect();
-            const finalPos = { left: elRect.left - wrapperRect.left, top: elRect.top - wrapperRect.top };
-            localStorage.setItem(positionKey, JSON.stringify(finalPos));
-        }
-    }
-
-    document.addEventListener('pointerup', endDrag);
-    document.addEventListener('pointercancel', endDrag);
-
-    el.addEventListener('click', () => {
-        if (dragged) { dragged = false; return; }
-        onClick();
-    });
-
-    restoreSavedPosition();
-    window.addEventListener('resize', restoreSavedPosition);
-}
-
-// כפתור ה"פתק המהיר" (📝) ננעל קבוע בפינה הימנית-תחתונה (אזור האגודל
-// הטבעי) לפי בקשה מפורשת - בלי שום גרירה, בניגוד לבועת ה-AI Brain (🧠)
-// שנשארת חופשית. המיקום עצמו נקבע לגמרי ב-CSS (.ai-fab, position:fixed),
-// כאן רק מחברים את הקליק - בלי לגעת ב-left/top/localStorage בכלל
+// שני כפתורי ה-FAB (📝 "פתק מהיר" בפינה הימנית-תחתונה, 🤖 עוזר ה-AI בפינה
+// השמאלית-עליונה - במקום אימוג'י הברכה שהוסר) ננעלים שניהם קבוע במקומם לפי
+// בקשה מפורשת, בלי שום גרירה. המיקום עצמו נקבע לגמרי ב-CSS (.ai-fab /
+// .ai-brain-fab, position:absolute יחסית ל-.phone-wrapper), כאן רק מחברים
+// את הקליק - בלי left/top/localStorage/pointer-events בכלל
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
     el.onclick = () => openModal('modal-ai-quick-add');
 }
 
-function aiBrainFabPositionKey() {
-    return `weekwise_ai_brain_fab_position_${currentUserId}`;
-}
-
-function initDraggableAiBrainFab() {
-    initDraggableFab('btn-ai-brain-fab', aiBrainFabPositionKey(), () => openAiBrainModal('schedule'));
+function initFixedAiBrainFab() {
+    const el = document.getElementById('btn-ai-brain-fab');
+    if (!el) return;
+    el.onclick = () => openAiBrainModal('schedule');
 }
 
 function getLocalDateString(dateObj = new Date()) {

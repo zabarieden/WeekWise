@@ -189,7 +189,6 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
-.home-greeting-emoji { font-size: 1.7rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.35)); }
 .dashboard-grid {
     display: flex;
     flex-direction: column;
@@ -408,12 +407,40 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-fab:active { transform: scale(0.9); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
-/* בועת ה-AI Brain: אותה מכניקה בדיוק כמו ai-fab (גרירה חופשית, פעימה), רק
-   בפינה ההתחלתית הנגדית כדי שלא יחפפו, וגרדיאנט הפוך כדי להבחין ביניהן -
-   שתיהן ממשיכות להישען על var(--accent-*), אז עוקבות אחרי כל ערכת נושא */
-.ai-brain-fab { position: absolute; bottom: 90px; left: 12px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: grab; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); z-index: 3500; padding: 0; transition: var(--transition); animation: fabPulse 2.5s ease-in-out infinite; touch-action: none; user-select: none; -webkit-user-select: none; }
+/* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
+   שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
+   מפורשת. זהות ניאון נפרדת (ציאן-סגול, זוהר כפול) כדי להבדיל אותו בבירור
+   מ"פתק מהיר" הוורוד-סגול. position:absolute יחסית ל-.phone-wrapper (לא
+   fixed) מאותה סיבה בדיוק כמו .ai-fab למעלה - כך שהוא נשאר צמוד לכרטיס
+   הנראה בפועל גם בדסקטופ רחב עם שוליים, לא לחלון הדפדפן הגולמי */
+.ai-brain-fab {
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.55), 0 6px 18px rgba(168, 85, 247, 0.35);
+    z-index: 3500;
+    padding: 0;
+    transition: var(--transition);
+    animation: aiRobotPulse 2.5s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-select: none;
+}
 .ai-brain-fab:active { transform: scale(0.9); }
-.ai-brain-fab.dragging { transition: none !important; animation-play-state: paused; cursor: grabbing; box-shadow: 0 10px 26px rgba(168, 85, 247, 0.55); }
+@keyframes aiRobotPulse {
+    0%, 100% { box-shadow: 0 0 16px rgba(0, 212, 255, 0.55), 0 6px 18px rgba(168, 85, 247, 0.35); }
+    50% { box-shadow: 0 0 26px rgba(0, 212, 255, 0.85), 0 6px 24px rgba(168, 85, 247, 0.6); }
+}
 
 .settings-fab { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 42px; height: 42px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); z-index: 3500; padding: 0; transition: var(--transition); }
 .settings-fab:active { transform: translateX(-50%) scale(0.9); }

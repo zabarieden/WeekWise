@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=73">
+    <link rel="stylesheet" href="theme.css?v=74">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -70,7 +70,6 @@
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                         <p class="home-greeting-date" id="home-greeting-date"></p>
                     </div>
-                    <span class="home-greeting-emoji" id="home-greeting-emoji">☀️</span>
                 </div>
                 <div class="dashboard-grid">
                     <div class="nav-cube" data-target="schedule-section">
@@ -407,9 +406,10 @@
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
 
-            <!-- בועה צפה נפרדת ל-AI Brain: תכנון לו"ז מטקסט חופשי + סריקת תמונה
-                 למתכון/ארוחה קבועה. במיקום התחלתי שונה מבועת הפתקים כדי שלא יחפפו -->
-            <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">🧠</button>
+            <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
+                 קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
+                 בלי גרירה, לפי בקשה מפורשת -->
+            <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">🤖</button>
 
             <!-- כפתור הגדרות קבוע, נשאר בכל המסכים -->
             <button type="button" class="settings-fab" id="btn-settings-fab" onclick="openModal('modal-settings-drawer')" data-i18n-title="settings_title" title="Settings">⚙️</button>
@@ -846,6 +846,6 @@
     </div>
 
     <script src="i18n.js?v=27"></script>
-    <script src="app.js?v=59"></script>
+    <script src="app.js?v=60"></script>
 </body>
 </html>
