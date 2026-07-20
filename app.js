@@ -840,14 +840,22 @@ function findScheduleDaysInText(text) {
 // חייבת לבוא ראשונה ברשימה (עדיפות עליונה) כדי לתפוס את כל "עד 14:00" כיחידה
 // אחת, לפני שהתבנית הכללית של שעה סתמית תספיק לתפוס רק את ה-14:00 בפני עצמו
 const SCHEDULE_NEEDS_CLARIFY_PREFIX = 'NEEDS_CLARIFY:';
+// שעה "עמומה": מספר בודד 1-11 בלי הקשר בוקר/ערב ובלי פורמט HH:MM מפורש -
+// יכולה להיות גם וגם, אז לא מנחשים (ר' resolveAmbiguousHour). שעה שנכתבה
+// במפורש כ-HH:MM (עם נקודתיים) או ערך מעל 12 היא חד-משמעית מעצם הכתיבה שלה
+// ולעולם לא עוברת דרך התבנית הזאת, אז אף פעם לא נשאלת
+const SCHEDULE_NEEDS_AMPM_PREFIX = 'NEEDS_AMPM:';
+function resolveAmbiguousHour(h) {
+    return (h >= 1 && h <= 11) ? `${SCHEDULE_NEEDS_AMPM_PREFIX}${h}` : `${String(h).padStart(2, '0')}:00`;
+}
 const SCHEDULE_TIME_PATTERNS = [
     { re: /(?:עד|until)\s*(\d{1,2}):?(\d{2})?/gi, resolve: (m) => `${SCHEDULE_NEEDS_CLARIFY_PREFIX}${m[1].padStart(2, '0')}:${m[2] || '00'}` },
     { re: /(\d{1,2}):(\d{2})/g, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2]}` },
     { re: /ב?-?\s*(\d{1,2})\s*(בערב|בלילה)/g, resolve: (m) => { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
     { re: /ב?-?\s*(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/g, resolve: (m) => { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
     { re: /ב?-?\s*(\d{1,2})\s*בבוקר/g, resolve: (m) => `${m[1].padStart(2, '0')}:00` },
-    { re: /ב(?:שעה)?-?\s*(\d{1,2})\b/g, resolve: (m) => `${m[1].padStart(2, '0')}:00` },
-    { re: /\bat\s+(\d{1,2}):?(\d{2})?\b/gi, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2] || '00'}` },
+    { re: /ב(?:שעה)?-?\s*(\d{1,2})\b/g, resolve: (m) => resolveAmbiguousHour(parseInt(m[1])) },
+    { re: /\bat\s+(\d{1,2})\b/gi, resolve: (m) => resolveAmbiguousHour(parseInt(m[1])) },
 ];
 
 // מוצאת את כל אזכורי השעה בטקסט (לא רק הראשון), כדי לתמוך במשפט שמתאר כמה
@@ -914,7 +922,11 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
         tokens.pop();
     }
     cleaned = tokens.join(' ').trim();
-    return cleaned || text.trim();
+    // חשוב: לא נופלים חזרה ל-text.trim() כשהניקוי מרוקן הכול - קטע שכולו
+    // שעה בלי שום מילת פעילות ("ב12", " וב14") צריך להחזיר מחרוזת ריקה כדי
+    // שהקוראת (parseScheduleTextLocally) תדע לרשת את הכותרת מהקטע הקודם
+    // באותו משפט, במקום להציג את הטקסט הגולמי הלא-מנוקה כאילו הוא הכותרת
+    return cleaned;
 }
 
 function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
@@ -927,13 +939,16 @@ function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
     }
 }
 
-// "X עד Y" בלי שעת התחלה - במקום לנחש (ר' Option B בבקשת המשתמש), מסמנים
-// needsClarification ומחכים לשאול את המשתמש בפועל (runScheduleClarificationFlow)
-function pushClarificationEvents(events, dayIndexes, fallbackText, title, endTime) {
+// אירוע עם שאלת-הבהרה ממתינה (בין אם "X עד Y" בלי שעת התחלה, ובין אם שעה
+// עמומה 1-11 בלי בוקר/ערב) - לא מנחשים, מסמנים needsClarification ומחכים
+// לשאול את המשתמש בפועל (runScheduleClarificationFlow). detail הוא
+// {kind:'until', endTime} או {kind:'ampm', hour}
+function pushClarificationEvents(events, dayIndexes, fallbackText, title, detail) {
+    const base = { needsClarification: true, task_title: title, ...detail };
     if (dayIndexes.length) {
-        dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], needsClarification: true, endTime, task_title: title }));
+        dayIndexes.forEach(idx => events.push({ ...base, day_of_week: dbDaysMap[idx] }));
     } else {
-        events.push({ day_of_week: dbDaysMap[new Date().getDay()], needsClarification: true, endTime, task_title: fallbackText });
+        events.push({ ...base, day_of_week: dbDaysMap[new Date().getDay()], task_title: fallbackText });
     }
 }
 
@@ -960,13 +975,23 @@ function parseScheduleTextLocally(text) {
         // מפצלים לתת-קטע אחד לכל שעה שנמצאה - כל תת-קטע הוא הטקסט מסוף השעה
         // הקודמת (או מתחילת הקטע, לראשונה) ועד סוף השעה הנוכחית, כך שהפעילות
         // נשארת צמודה לשעה הקרובה אליה במשפט המקורי ("היפ הופ ב20 בערב
-        // ובבוקר עבודה ב9" -> שני אירועים נפרדים, לא אחד מעורבב)
+        // ובבוקר עבודה ב9" -> שני אירועים נפרדים, לא אחד מעורבב). כשכמה שעות
+        // מתארות את אותה פעילות בלי שהיא חוזרת בכתב לפני כל שעה ("עבודה ב9
+        // ב12 וב14") - הקטעים שבין שעה לשעה מתנקים לגמרי (אין בהם עוד מילות
+        // פעילות), אז יורשים את הכותרת מהקטע הקודם במקום נופלים לתווית סתמית -
+        // כך שהתוצאה היא שלוש שורות "עבודה" נפרדות, לא טווח אחד מאוחד
         let cursor = 0;
+        let lastTitle = '';
         timeMatches.forEach(tm => {
             const segment = body.slice(cursor, tm.end);
-            const title = cleanScheduleTaskTitle(segment, [], tm.time) || t('schedule_ai_fallback_task_label');
+            let title = cleanScheduleTaskTitle(segment, [], tm.time);
+            if (title) lastTitle = title;
+            else title = lastTitle || t('schedule_ai_fallback_task_label');
+
             if (tm.time.startsWith(SCHEDULE_NEEDS_CLARIFY_PREFIX)) {
-                pushClarificationEvents(events, dayIndexes, clause, title, tm.time.slice(SCHEDULE_NEEDS_CLARIFY_PREFIX.length));
+                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'until', endTime: tm.time.slice(SCHEDULE_NEEDS_CLARIFY_PREFIX.length) });
+            } else if (tm.time.startsWith(SCHEDULE_NEEDS_AMPM_PREFIX)) {
+                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'ampm', hour: tm.time.slice(SCHEDULE_NEEDS_AMPM_PREFIX.length) });
             } else {
                 pushScheduleEvents(events, dayIndexes, clause, title, tm.time);
             }
@@ -1090,12 +1115,29 @@ function runScheduleClarificationFlow(ambiguousEvents, clearEvents) {
     showNextScheduleClarification();
 }
 
+// מציגה את שאלת ההבהרה הבאה בתור - אחת משני סוגים: "kind:'until'" (שעת
+// התחלה חסרה, קלט טקסט חופשי) או "kind:'ampm'" (שעה עמומה 1-11, שתי כפתורי
+// בחירה בוקר/ערב) - כל תור מציג רק את הפקדים הרלוונטיים לסוג שלו
 function showNextScheduleClarification() {
     if (!scheduleClarificationQueue.length) { finishScheduleClarificationFlow(); return; }
     const ev = scheduleClarificationQueue[0];
-    document.getElementById('schedule-clarify-question').textContent =
-        t('schedule_clarify_question_template').replace('{title}', ev.task_title).replace('{end}', ev.endTime);
-    document.getElementById('schedule-clarify-input').value = '';
+    const inputEl = document.getElementById('schedule-clarify-input');
+    const untilActions = document.getElementById('schedule-clarify-until-actions');
+    const ampmActions = document.getElementById('schedule-clarify-ampm-actions');
+    if (ev.kind === 'ampm') {
+        document.getElementById('schedule-clarify-question').textContent =
+            t('schedule_clarify_ampm_question_template').replace('{title}', ev.task_title).replace('{hour}', ev.hour);
+        inputEl.classList.add('hidden');
+        untilActions.classList.add('hidden');
+        ampmActions.classList.remove('hidden');
+    } else {
+        document.getElementById('schedule-clarify-question').textContent =
+            t('schedule_clarify_question_template').replace('{title}', ev.task_title).replace('{end}', ev.endTime);
+        inputEl.value = '';
+        inputEl.classList.remove('hidden');
+        untilActions.classList.remove('hidden');
+        ampmActions.classList.add('hidden');
+    }
     openModal('modal-schedule-clarify');
 }
 
@@ -1109,15 +1151,16 @@ function parseStartTimeAnswer(text) {
     return null;
 }
 
+// "X עד Y" עם תשובה: לא בונים טווח מקווקו ("09:00-14:00") - במקום זאת שתי
+// שורות נפרדות, שעת ההתחלה ושעת הסיום, כל אחת עם אותה כותרת בדיוק (בהתאם
+// לבקשה המפורשת "no time ranges... כל שעה כרשומה נפרדת")
 function confirmScheduleClarification() {
     const ev = scheduleClarificationQueue.shift();
     if (!ev) return;
     const answer = document.getElementById('schedule-clarify-input').value.trim();
     const startTime = parseStartTimeAnswer(answer);
-    ev.time = startTime ? `${startTime}-${ev.endTime}` : ev.endTime;
-    delete ev.needsClarification;
-    delete ev.endTime;
-    scheduleClarificationResolved.push(ev);
+    if (startTime) scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: startTime, task_title: ev.task_title });
+    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: ev.endTime, task_title: ev.task_title });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
 }
@@ -1126,10 +1169,19 @@ function skipScheduleClarification() {
     const ev = scheduleClarificationQueue.shift();
     if (!ev) return;
     // המשתמש דילג - לא ממציאים שעת התחלה, פשוט משתמשים בשעת הסיום שכן צוינה
-    ev.time = ev.endTime;
-    delete ev.needsClarification;
-    delete ev.endTime;
-    scheduleClarificationResolved.push(ev);
+    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: ev.endTime, task_title: ev.task_title });
+    closeModal('modal-schedule-clarify');
+    showNextScheduleClarification();
+}
+
+// שעה עמומה (1-11) עם תשובת בוקר/ערב - h<=11 מקבל +12 רק אם המשתמש בחר
+// "ערב" (בוקר משאיר את השעה כפי שהיא, למשל 5 -> 05:00)
+function resolveAmpmClarification(period) {
+    const ev = scheduleClarificationQueue.shift();
+    if (!ev) return;
+    let h = parseInt(ev.hour);
+    if (period === 'evening' && h <= 11) h += 12;
+    scheduleClarificationResolved.push({ day_of_week: ev.day_of_week, time: `${String(h).padStart(2, '0')}:00`, task_title: ev.task_title });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
 }
@@ -1221,7 +1273,26 @@ function scrollToDay(dbDay) {
     const containerRect = container.getBoundingClientRect();
     const pageRect = page.getBoundingClientRect();
     const delta = pageRect.left - containerRect.left;
-    container.scrollBy({ left: delta, behavior: 'smooth' });
+    // בכוונה לא scrollBy עם behavior:'smooth' המובנה: המכל הזה הוא
+    // scroll-snap-type:x mandatory (ר' .days-scroll-container), והשילוב של
+    // גלילה חלקה מובנית עם snap חובה גורם לדפדפן "לעצור" בכל יום אמצעי בדרך
+    // (כל נקודת snap בנפרד) במקום גלילה רציפה אחת ישר אל היעד - בדיוק התחושה
+    // של "עצירה בימים שבדרך" שהמשתמש תיאר. אנימציה ידנית עוקפת את זה לגמרי.
+    animateScrollTo(container, container.scrollLeft + delta, 320);
+}
+
+function animateScrollTo(el, targetLeft, duration) {
+    const startLeft = el.scrollLeft;
+    const distance = targetLeft - startLeft;
+    if (Math.abs(distance) < 1) return;
+    const startTime = performance.now();
+    const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        el.scrollLeft = startLeft + distance * easeInOutCubic(progress);
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
 }
 
 let dayScrollObserver = null;

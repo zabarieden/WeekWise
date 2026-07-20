@@ -666,7 +666,8 @@
             </div>
         </div>
 
-        <!-- חלון צף: שאלת הבהרה כשה-AI Brain מוצא "עד שעה" בלי שעת התחלה -
+        <!-- חלון צף: שאלת הבהרה מה-AI Brain - "עד שעה" בלי שעת התחלה (קלט
+             טקסט חופשי), או שעה עמומה 1-11 בלי בוקר/ערב (שתי כפתורי בחירה) -
              לא מנחש, שואל (ר' runScheduleClarificationFlow ב-app.js) -->
         <div id="modal-schedule-clarify" class="apple-modal">
             <div class="modal-sheet">
@@ -674,9 +675,13 @@
                 <h3 data-i18n="schedule_clarify_title">🕐 One quick question</h3>
                 <p class="modal-subtitle" id="schedule-clarify-question"></p>
                 <input type="text" id="schedule-clarify-input" data-i18n-placeholder="schedule_clarify_placeholder" placeholder="e.g. 8:00 or from 9">
-                <div class="action-buttons-wrap" style="margin-top: 14px;">
+                <div class="action-buttons-wrap" id="schedule-clarify-until-actions" style="margin-top: 14px;">
                     <button class="btn-primary" onclick="confirmScheduleClarification()" data-i18n="schedule_clarify_confirm_btn">Confirm</button>
                     <button class="btn-clear-specific" onclick="skipScheduleClarification()" data-i18n="schedule_clarify_skip_btn">Skip</button>
+                </div>
+                <div class="action-buttons-wrap hidden" id="schedule-clarify-ampm-actions" style="margin-top: 14px;">
+                    <button class="btn-secondary" onclick="resolveAmpmClarification('morning')" data-i18n="schedule_clarify_morning_btn">🌅 Morning</button>
+                    <button class="btn-secondary" onclick="resolveAmpmClarification('evening')" data-i18n="schedule_clarify_evening_btn">🌙 Evening</button>
                 </div>
             </div>
         </div>
