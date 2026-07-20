@@ -1077,7 +1077,9 @@ async function applyParsedScheduleEvents(events) {
             const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${ev._slotNum}"]`);
             if (!slotEl) continue;
             slotEl.querySelector('.slot-time').value = ev.time || '';
-            slotEl.querySelector('.slot-task').value = ev.task_title;
+            const taskInput = slotEl.querySelector('.slot-task');
+            taskInput.value = ev.task_title;
+            updateSlotTaskIcon(taskInput);
             await saveScheduleSlot(day, ev._slotNum);
         }
     }
@@ -1342,7 +1344,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
@@ -1457,6 +1459,35 @@ async function loadWeeklySchedule() {
     // הריקה החדשה הזאת מיד (מספרה מעל ברירת המחדל + אין בה עדיין טקסט),
     // מה שגרם ל"+ הוספת שורה" להיראות כאילו הוא לא עושה כלום
     sortAllDaySlotsChronologically();
+    updateAllSlotTaskIcons();
+}
+
+// --- אייקון אוטומטי לפי מילות מפתח בכותרת המשימה - קישוט חזותי בלבד, לעולם
+// לא נשמר כחלק מ-task_title עצמו (ה-DB/הערך של .slot-task נשארים טקסט נקי) ---
+function getScheduleTaskIcon(taskText) {
+    const text = (taskText || '').trim();
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    if (/עבודה|work/.test(lower)) return '💼';
+    if (/אימון|מכון כושר|כושר|gym|workout|training/.test(lower)) return '🏋️‍♀️';
+    if (/היפ הופ|ריקוד|dance|hip.?hop/.test(lower)) return '💃';
+    if (/בויילר|בוילר|מסיבה|party|boiler/.test(lower)) return '🎶';
+    return '⚡';
+}
+
+// מעדכנת את האייקון + מחלקת ה-"פיל" הניאונית של שורה בודדת - נקראת גם
+// בלייב תוך כדי הקלדה (oninput על .slot-task) וגם אחרי מילוי פרוגרמטי של
+// ערכים (טעינה מה-DB/AI), כי שינוי .value ב-JS לא מפעיל oninput מעצמו
+function updateSlotTaskIcon(taskInput) {
+    const wrap = taskInput.closest('.slot-task-wrap');
+    const iconEl = wrap && wrap.querySelector('.slot-task-icon');
+    if (iconEl) iconEl.textContent = getScheduleTaskIcon(taskInput.value);
+    const group = taskInput.closest('.slot-input-group');
+    if (group) group.classList.toggle('has-task', !!taskInput.value.trim());
+}
+
+function updateAllSlotTaskIcons() {
+    document.querySelectorAll('.slot-task').forEach(updateSlotTaskIcon);
 }
 
 // --- מיון כרונולוגי של שורות הלו"ז: מספר השורה (data-slot) הוא רק מזהה יציב

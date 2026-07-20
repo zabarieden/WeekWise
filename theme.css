@@ -391,6 +391,27 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .task-pink .slot-time { color: var(--accent-pink) !important; }
 .task-purple .slot-time { color: var(--accent-purple) !important; }
 .slot-task { background: transparent; border: none; color: var(--text-primary); padding: 2px 0; font-size: 0.85rem; text-align: center; outline: none; width: 100%; min-width: 0; box-sizing: border-box; }
+/* שורה ריקה: עדינה ולא בולטת, כדי שמשימות מאוכלסות "יקפצו" לעין מולה מיד -
+   נשארת מלאה כשהיא בפוקוס (המשתמש מקליד בה ממש עכשיו), כדי שלא תיעלם מתחת ידיו */
+.slot-input-group:not(.has-task) { opacity: 0.5; }
+.slot-input-group:not(.has-task):focus-within { opacity: 1; }
+.slot-task-wrap { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; transition: var(--transition); }
+.slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
+.slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
+/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) עוקב אחרי צבע ה"עולם"
+   (זהב ל-MyWeek), כך שהפיל תמיד תואם לשפת העיצוב הקיימת של הלו"ז */
+.slot-input-group.has-task .slot-task-wrap {
+    background-color: rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--tile-accent, var(--accent-purple));
+    border-radius: 20px;
+    padding: 5px 12px;
+    box-shadow: 0 0 10px var(--tile-glow-1, rgba(168, 85, 247, 0.4));
+}
+.slot-input-group.has-task .slot-task {
+    color: var(--text-primary);
+    font-weight: 700;
+    text-shadow: 0 0 8px var(--tile-glow-1, rgba(168, 85, 247, 0.55));
+}
 .btn-delete-slot { background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .btn-add-day-slot { background-color: rgba(168, 85, 247, 0.06); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.2); font-size: 0.78rem; border-radius: 8px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 6px; }
