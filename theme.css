@@ -421,10 +421,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-time-wrap { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
 .slot-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
 .slot-drag-handle:active { cursor: grabbing; }
-/* SortableJS: .sortable-ghost הוא ה"רווח" השקוף שנשאר במקום המקורי בזמן
-   הגרירה, .sortable-chosen הוא האלמנט הנגרר עצמו - הספרייה מטפלת בכל
-   ה-transform/אנימציה בעצמה (animation: 150 באתחול), כאן רק העיצוב */
-.sortable-ghost { opacity: 0.4; }
+/* SortableJS עם forceFallback:true (ר' app.js): .sortable-ghost הוא ה"רווח"
+   שנשאר במקום המקורי בזמן הגרירה - משותק לגמרי (opacity:0) לפי בקשה מפורשת,
+   כך שאין שום סימן חזותי במקום המקורי. .sortable-fallback הוא השכפול הצף
+   ש-SortableJS יוצר ומזיז אחרי האצבע/העכבר במצב forceFallback - מוסתר
+   לחלוטין כדי שלא תהיה שום "רוח"/צל כפול מעל האצבע, השורה עצמה מתעדכנת
+   חי בתוך הרשימה במקום זאת. .sortable-chosen נשאר גלוי (עם קנה-מידה/צל
+   עדינים) על השורה החיה עצמה, כמשוב שרואים איזו שורה פעילה */
+.sortable-ghost { opacity: 0 !important; }
+.sortable-fallback { display: none !important; }
 .sortable-chosen { position: relative; z-index: 20; opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */

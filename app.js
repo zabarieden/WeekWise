@@ -1555,6 +1555,13 @@ function initScheduleRowDragReorder(dbDay) {
     new Sortable(grid, {
         handle: '.slot-drag-handle',
         animation: 150,
+        // forceFallback: עוקף לגמרי את ה-HTML5 Drag and Drop הטבעי של הדפדפן
+        // (וה"רוח" השקופה שהוא מצייר בעצמו ברמת המערכת) ומחליף אותו בסימולציה
+        // מבוססת מגע/עכבר שנשלטת כולה על ידי SortableJS - כך שאפשר להשתיק
+        // לגמרי את השכפול הצף (.sortable-fallback) ב-CSS, כפי שהתבקש
+        forceFallback: true,
+        fallbackOnBody: false,
+        dragoverBubble: false,
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         onEnd: function (evt) {
