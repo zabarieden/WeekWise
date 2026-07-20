@@ -371,19 +371,23 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .days-scroll-container::-webkit-scrollbar { display: none; }
 
 
-/* כפתור "פתק מהיר" (📝) ננעל קבוע בפינה הימנית-תחתונה - הבאג בסבב הקודם:
-   position:fixed מחושב מול ה-viewport הגולמי של הדפדפן, לא מול .phone-wrapper
-   (שממדוד לפי 100dvh בכוונה בדיוק כדי להסתגל לשינויי גובה דינמיים כמו סרגל
-   הכתובת/פס המחוות במובייל אמיתי) - זה בדיוק מה שיכול "לבלוע" כפתור fixed
-   מאחורי ה-UI המערכתי (home indicator / navigation bar) ולגרום לו להיראות
-   כאילו נעלם לגמרי במכשיר אמיתי. env(safe-area-inset-bottom) מפצה על זה
-   במפורש, ו-!important מבטיח שדבר לא יוכל לדרוס את המיקום/הנראות בטעות */
+/* כפתור "פתק מהיר" (📝) ננעל בפינה הימנית-תחתונה של הכרטיס (.phone-wrapper),
+   לא של הדפדפן - זה ההבדל הקריטי: בדסקטופ/טאבלט רחבים, .phone-wrapper
+   ממורכז עם שוליים ריקים בשני הצדדים (ר' ה-@media למטה בקובץ), אז
+   position:fixed (יחסית לחלון הדפדפן המלא) היה שם את הכפתור רחוק מהכרטיס
+   הנראה לגמרי - בפועל מוצג, אבל "אבוד" בשוליים השחורים הריקים, מה שנראה
+   בדיוק כמו "נעלם" למשתמש שמסתכל על הכרטיס. position:absolute יחסית ל-
+   .phone-wrapper פותר את זה ועקבי עם שאר הכפתורים הצפים (ai-brain-fab,
+   settings-fab). עדיין env(safe-area-inset-bottom) לפיצוי על home indicator/
+   פס מחוות במובייל אמיתי, ו-!important לפי בקשה מפורשת שלא יידרס בטעות */
 .ai-fab {
-    position: fixed !important;
+    position: absolute !important;
     bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
     right: 25px !important;
     z-index: 99999 !important;
     display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     width: 52px;
     height: 52px;
     border-radius: 50%;
