@@ -146,7 +146,7 @@ async function loadCenterItems(type) {
             <button class="btn-complete-item" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
-            <span style="text-decoration: ${item.is_completed ? 'line-through' : 'none'}; color: ${item.is_completed ? '#666' : '#fff'}; flex: 1; text-align: start; margin-inline-start: 10px; font-weight: 500;">
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">
                 ${item.content}
             </span>
             <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>

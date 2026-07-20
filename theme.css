@@ -594,6 +594,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     width: 100%;
     box-sizing: border-box;
 }
+.center-list-item-text { flex: 1; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
+.center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 .btn-complete-item { 
