@@ -1668,9 +1668,8 @@ function formatGoalProgressText(goal, currentValue) {
     if (goal.goal_type === 'tasks') {
         return `${cur} / ${goal.target_value} ${t('monthly_goal_tasks_unit')}`;
     }
-    // מותאם אישית: אין המרה/עיצוב "חכם" של הטקסט - הוא חופשי לגמרי, רק מוצג
-    // לצד ההתקדמות המספרית האמיתית (current_value/target_value, שתמיד נשארים מספרים)
-    return `${goal.goal_name}: ${cur} / ${goal.target_value}`;
+    // ידני (מספרי): פורמט נקי בלבד, בלי לחזור על שם היעד (הוא כבר מוצג מעל בכותרת)
+    return `${cur} / ${goal.target_value}`;
 }
 
 function isGoalRewardClaimed(goalId) {
@@ -1789,7 +1788,7 @@ async function renderMonthlyGoal() {
                 <span class="monthly-goal-trophy-icon">🏆</span>
                 <div class="monthly-goal-trophy-text">
                     <strong>${t('monthly_goal_trophy_unlocked')}</strong>
-                    <span>${goal.goal_type === 'custom' ? progressText : `${goal.goal_name} — ${progressText}`}</span>
+                    <span>${goal.goal_name} — ${progressText}</span>
                 </div>
                 ${isCurrentMonth ? `<button class="btn-secondary monthly-goal-claim-btn" onclick="claimGoalReward('${goal.id}')" ${claimed ? 'disabled' : ''}>${claimed ? t('monthly_goal_reward_claimed_btn') : t('monthly_goal_claim_reward_btn')}</button>` : ''}
             </div>`;
@@ -1802,9 +1801,15 @@ async function renderMonthlyGoal() {
             ${actionsHtml}
         </div>
         <div class="progress-bar-bg"><div class="progress-bar-fill${achieved ? ' completed' : ''}" style="width: ${pct}%;"></div></div>
-        <div class="monthly-goal-values">${progressText}</div>
+        <div class="monthly-goal-values-row">
+            <span class="monthly-goal-values">${progressText}</span>
+            ${isCurrentMonth && goal.goal_type === 'custom' ? `
+                <div class="monthly-goal-quick-controls">
+                    <button class="btn-goal-step" onclick="adjustCustomGoal(-1)" ${(currentValue || 0) <= 0 ? 'disabled' : ''} title="${t('monthly_goal_decrement_btn')}">−</button>
+                    <button class="btn-goal-step" onclick="adjustCustomGoal(1)" title="${t('monthly_goal_increment_btn')}">+</button>
+                </div>` : ''}
+        </div>
         ${trophyHtml}
-        ${isCurrentMonth && goal.goal_type === 'custom' ? `<button class="btn-secondary" style="margin-top: 8px;" onclick="incrementCustomGoal()">${t('monthly_goal_increment_btn')}</button>` : ''}
     `;
 }
 
@@ -1825,7 +1830,18 @@ function openSetMonthlyGoalModal(isEdit = false) {
     // עוקב בטעות אחרי משימות שהושלמו שאין להן שום קשר לשם שהמשתמש הקליד
     document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'custom';
     document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
+    document.getElementById('monthly-goal-current-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.current_value || 0) : 0;
+    handleMonthlyGoalTypeChange();
     openModal('modal-set-monthly-goal');
+}
+
+// שדה "התקדמות נוכחית" רלוונטי רק ליעד ידני/מספרי - יעדי משימות/משקל תמיד
+// מחושבים אוטומטית ממקור הנתונים שלהם (ר' computeGoalCurrentValue), ולכן
+// אין טעם (ואף מטעה) לתת למשתמש לערוך אותם ידנית כאן
+function handleMonthlyGoalTypeChange() {
+    const type = document.getElementById('monthly-goal-type-input').value;
+    const wrap = document.getElementById('monthly-goal-current-wrap');
+    if (wrap) wrap.classList.toggle('hidden', type !== 'custom');
 }
 
 async function saveMonthlyGoal() {
@@ -1834,9 +1850,14 @@ async function saveMonthlyGoal() {
     const type = document.getElementById('monthly-goal-type-input').value;
     const target = parseFloat(document.getElementById('monthly-goal-target-input').value);
     if (!name || isNaN(target)) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    // התקדמות נוכחית ניתנת לעריכה ידנית רק ביעד מסוג 'custom' - ליעדי משימות/
+    // משקל היא תמיד מחושבת מחדש אוטומטית (ר' computeGoalCurrentValue)
+    const manualCurrent = type === 'custom' ? (parseFloat(document.getElementById('monthly-goal-current-input').value) || 0) : 0;
 
     if (editingMonthlyGoal && cachedMonthlyGoal) {
-        const { error } = await supabaseClient.from('monthly_goals').update({ goal_name: name, goal_type: type, target_value: target }).eq('id', cachedMonthlyGoal.id);
+        const updatePayload = { goal_name: name, goal_type: type, target_value: target };
+        if (type === 'custom') updatePayload.current_value = manualCurrent;
+        const { error } = await supabaseClient.from('monthly_goals').update(updatePayload).eq('id', cachedMonthlyGoal.id);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         editingMonthlyGoal = false;
         closeModal('modal-set-monthly-goal');
@@ -1853,7 +1874,7 @@ async function saveMonthlyGoal() {
 
     const { error } = await supabaseClient.from('monthly_goals').insert({
         username: currentUsername, user_id: currentUserId, goal_name: name, goal_type: type,
-        target_value: target, starting_value: startingValue, current_value: 0,
+        target_value: target, starting_value: startingValue, current_value: manualCurrent,
         month_key: currentMonthKey(), achieved: false
     });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
@@ -1869,9 +1890,9 @@ async function deleteMonthlyGoal() {
     await renderMonthlyGoal();
 }
 
-async function incrementCustomGoal() {
+async function adjustCustomGoal(delta) {
     if (!cachedMonthlyGoal) return;
-    const newValue = (cachedMonthlyGoal.current_value || 0) + 1;
+    const newValue = Math.max(0, (cachedMonthlyGoal.current_value || 0) + delta);
     await supabaseClient.from('monthly_goals').update({ current_value: newValue }).eq('id', cachedMonthlyGoal.id);
     cachedMonthlyGoal.current_value = newValue;
     await renderMonthlyGoal();
@@ -1884,7 +1905,7 @@ function celebrateGoalAchieved(goal) {
     const summaryEl = document.getElementById('goal-celebration-summary');
     if (summaryEl) {
         const progressText = formatGoalProgressText(goal, goal.current_value);
-        summaryEl.textContent = goal.goal_type === 'custom' ? progressText : `${goal.goal_name} — ${progressText}`;
+        summaryEl.textContent = `${goal.goal_name} — ${progressText}`;
     }
     openModal('modal-goal-celebration');
 }

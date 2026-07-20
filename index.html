@@ -634,12 +634,15 @@
                 <h3 id="monthly-goal-modal-title" data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
                 <div class="preset-manager-grid">
                     <input type="text" id="monthly-goal-name-input" data-i18n-placeholder="monthly_goal_name_placeholder" placeholder="Goal name (e.g. Lose weight, Finish tasks)">
-                    <select id="monthly-goal-type-input" class="language-select">
+                    <select id="monthly-goal-type-input" class="language-select" onchange="handleMonthlyGoalTypeChange()">
                         <option value="tasks" data-i18n="monthly_goal_type_tasks">Tasks completed</option>
                         <option value="weight" data-i18n="monthly_goal_type_weight">Weight target</option>
-                        <option value="custom" data-i18n="monthly_goal_type_custom">Custom (manual progress)</option>
+                        <option value="custom" data-i18n="monthly_goal_type_custom">Manual (numeric progress)</option>
                     </select>
                     <input type="number" id="monthly-goal-target-input" data-i18n-placeholder="monthly_goal_target_placeholder" placeholder="Target number">
+                    <div id="monthly-goal-current-wrap" class="hidden">
+                        <input type="number" id="monthly-goal-current-input" data-i18n-placeholder="monthly_goal_current_placeholder" placeholder="Current progress">
+                    </div>
                     <div class="action-buttons-wrap">
                         <button id="monthly-goal-save-btn" onclick="saveMonthlyGoal()" class="btn-primary" data-i18n="monthly_goal_save_btn">Set goal</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-set-monthly-goal')" data-i18n="cancel_btn">Cancel</button>
