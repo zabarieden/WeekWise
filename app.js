@@ -1525,10 +1525,15 @@ function initScheduleRowDragReorder(dbDay) {
 
     let draggedEl = null;
     let startY = 0;
-
-    function getRows() {
-        return Array.from(grid.querySelectorAll('.slot-input-group'));
-    }
+    let pendingDy = 0;
+    let rafId = null;
+    // נמדדים *פעם אחת* ב-startDrag ולא בכל touchmove: קריאה ל-getBoundingClientRect
+    // מיד אחרי כתיבת style.transform כופה על הדפדפן reflow סינכרוני (layout
+    // thrashing) - זה בדיוק מה שגרם לתחושת "התנגדות"/דביקות שדווחה. מיקומי
+    // השכנים לא משתנים תוך כדי הגרירה (רק תוכן הטקסט מוחלף, לא הגובה/המיקום),
+    // אז אפשר לחשב הכול מהמדידה הראשונית בלי לגעת ב-DOM שוב עד שהגרירה מסתיימת
+    let draggedStartRect = null;
+    let siblingRects = [];
 
     function swapTaskContent(rowA, rowB) {
         const taskA = rowA.querySelector('.slot-task');
@@ -1554,28 +1559,37 @@ function initScheduleRowDragReorder(dbDay) {
         return e.clientY;
     }
 
+    // כותב את ה-transform פעם אחת לכל פריים (לא בכל touchmove, שיכול לירות
+    // הרבה יותר מ-60 פעם בשנייה במכשירים מסוימים) - scale(1.02) ממוזג לתוך
+    // אותו transform יחד עם translateY, כמשוב חזותי עדין שהמשתמש ביקש
+    function applyTransform() {
+        rafId = null;
+        if (!draggedEl) return;
+        draggedEl.style.transform = `translateY(${pendingDy}px) scale(1.02)`;
+    }
+
     function onMove(e) {
         if (!draggedEl) return;
         e.preventDefault();
         const y = clientYFromEvent(e);
-        const dy = y - startY;
-        draggedEl.style.transform = `translateY(${dy}px)`;
-        const draggedRect = draggedEl.getBoundingClientRect();
-        const draggedMid = draggedRect.top + draggedRect.height / 2;
-        const siblings = getRows().filter(r => r !== draggedEl);
-        for (const sibling of siblings) {
-            const rect = sibling.getBoundingClientRect();
+        pendingDy = y - startY;
+
+        const draggedMid = draggedStartRect.top + pendingDy + draggedStartRect.height / 2;
+        for (const { el: sibling, rect } of siblingRects) {
             if (draggedMid > rect.top && draggedMid < rect.bottom) {
                 swapTaskContent(draggedEl, sibling);
-                draggedEl.style.transform = 'translateY(0px)';
                 startY = y;
+                pendingDy = 0;
                 break;
             }
         }
+
+        if (rafId === null) rafId = requestAnimationFrame(applyTransform);
     }
 
     function endDrag() {
         if (!draggedEl) return;
+        if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
         draggedEl.classList.remove('reordering');
         draggedEl.style.transform = '';
         document.removeEventListener('touchmove', onMove);
@@ -1584,6 +1598,8 @@ function initScheduleRowDragReorder(dbDay) {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', endDrag);
         draggedEl = null;
+        draggedStartRect = null;
+        siblingRects = [];
     }
 
     function startDrag(e) {
@@ -1593,6 +1609,11 @@ function initScheduleRowDragReorder(dbDay) {
         e.preventDefault();
         draggedEl = el;
         startY = clientYFromEvent(e);
+        pendingDy = 0;
+        draggedStartRect = draggedEl.getBoundingClientRect();
+        siblingRects = Array.from(grid.querySelectorAll('.slot-input-group'))
+            .filter(r => r !== draggedEl)
+            .map(r => ({ el: r, rect: r.getBoundingClientRect() }));
         draggedEl.classList.add('reordering');
         document.addEventListener('touchmove', onMove, { passive: false });
         document.addEventListener('touchend', endDrag);
