@@ -1063,8 +1063,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         padding: 8px 12px !important;
     }
     .slot-time { flex: 0 0 auto !important; }
-    .slot-task-wrap { flex: 1 1 auto !important; min-width: 0 !important; max-width: none !important; justify-content: center; text-align: center; }
-    .slot-task-wrap .slot-task { text-align: center; }
+    /* flex: 1 1 0 (לא auto) + min-width אמיתי - שגיאה בסבב הקודם איפסה את
+       min-width ל-0 כדי "לפנות מקום" לכפתור המחיקה, אבל זה בדיוק מה שאיפשר
+       לעטיפת התג להתכווץ עד כמעט כלום ("ב 🎶" בלבד) ברגע שיש לחץ רוחב כלשהו.
+       עכשיו שהשורה כבר מקבלת רוחב מלא (תיקון vertical-scroll-track), יש
+       הרבה מקום פנוי - אז can לתת לעטיפה לגדול חופשי בלי לאבד את הרצפה */
+    .slot-task-wrap { flex: 1 1 0 !important; min-width: 90px !important; max-width: none !important; justify-content: center; text-align: center; padding: 6px 14px !important; }
+    .slot-task-wrap .slot-task {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        white-space: nowrap;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        text-align: center;
+    }
     .btn-delete-slot { flex: 0 0 auto !important; visibility: visible !important; }
 }
 
