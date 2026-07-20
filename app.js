@@ -805,6 +805,19 @@ const SCHEDULE_NOISE_WORDS = [
     'בצהריים', 'בלילה', 'אחר הצהריים', 'אחה"צ', 'כל', 'תמיד', 'קבוע',
     'and', 'at', 'on', 'in', 'every'
 ];
+// ביטויי פתיחה נפוצים שאנשים מקלידים כשהם מתארים לו"ז בחופשיות, אבל הם לא
+// חלק משם הפעילות עצמה - מוסרים כביטוי שלם, מהארוך לקצר (כדי לא להשאיר
+// שאריות כמו "ת ל" אם רק "הולכת" הוסר בלי ה-"ל" שאחריה)
+const SCHEDULE_FILLER_PHRASES = [
+    'אני הולך ל', 'אני הולכת ל', 'אני נוסע ל', 'אני נוסעת ל',
+    'הולך ל', 'הולכת ל', 'נוסע ל', 'נוסעת ל',
+    'יש לי', 'אני',
+];
+// נרמול קל מפועל לשם-עצם לאותה פעילות בדיוק ("מתאמנת" ו"אימון" הם אותו דבר,
+// רק צורת דיבור שונה) - לא ממציא מידע חדש, רק מחליף מילה קיימת במקבילה שלה
+const SCHEDULE_VERB_TO_NOUN = [
+    [/מתאמנ(ת|ים|ות)?/g, 'אימון'],
+];
 
 function findScheduleDaysInText(text) {
     const found = [];
@@ -840,8 +853,18 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
             .replace(/(?:ב-|בשעה\s*)\d{1,2}\b/g, ' ')
             .replace(/\bat\s+\d{1,2}:?\d{0,2}\b/gi, ' ');
     }
+    SCHEDULE_FILLER_PHRASES.forEach(w => { cleaned = cleaned.split(w).join(' '); });
     SCHEDULE_NOISE_WORDS.forEach(w => { cleaned = cleaned.split(w).join(' '); });
-    cleaned = cleaned.replace(/[,.ו]+/g, ' ').replace(/\s+/g, ' ').trim();
+    SCHEDULE_VERB_TO_NOUN.forEach(([re, rep]) => { cleaned = cleaned.replace(re, rep); });
+    // מסירים פסיקים/נקודות, ואת מילת החיבור "ו" (וגם) רק כשהיא נשארה כטוקן
+    // בודד ומלא (למשל אחרי שהוסר יום שהייתה מחוברת אליו, כמו "ורביעי" ->
+    // "ו" בודדת) - חשוב: לא כ-regex גורף שמוחק כל אות ו בתוך מילים אחרות,
+    // כי זה בדיוק מה ששיבש "בויילר"/"הולכת"/"הופ" לאותיות מפוזרות בעבר
+    cleaned = cleaned.replace(/[,.]+/g, ' ')
+        .split(/\s+/)
+        .filter(tok => tok && tok !== 'ו')
+        .join(' ')
+        .trim();
     return cleaned || text.trim();
 }
 
@@ -1089,6 +1112,40 @@ async function loadWeeklySchedule() {
         });
     }
     await pruneEmptyExcessSlots();
+    sortAllDaySlotsChronologically();
+}
+
+// --- מיון כרונולוגי של שורות הלו"ז: מספר השורה (data-slot) הוא רק מזהה יציב
+// לשמירה/מחיקה מול השרת, לא סדר תצוגה - שורה #1 יכולה להכיל 19:00 ושורה #2
+// 09:00 (למשל אחרי שה-AI מוסיף אירועים למשבצות פנויות לפי הסדר שבו הן נמצאו,
+// לא לפי השעה). ממיינים מחדש את סדר ה-DOM בפועל לפי השעה בכל טעינה/שמירה,
+// בלי לגעת ב-data-slot עצמו - כך שכל הקריאה/שמירה/מחיקה הקיימת ממשיכה לעבוד ---
+function scheduleTimeToMinutes(timeStr) {
+    const m = (timeStr || '').trim().match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    return parseInt(m[1]) * 60 + parseInt(m[2]);
+}
+
+function sortDaySlotsChronologically(day) {
+    const page = document.getElementById(`daypage-${day}`);
+    const grid = page && page.querySelector('.slots-grid');
+    if (!grid) return;
+    const slotEls = Array.from(grid.querySelectorAll('.slot-input-group'));
+    slotEls.sort((a, b) => {
+        const minA = scheduleTimeToMinutes(a.querySelector('.slot-time').value);
+        const minB = scheduleTimeToMinutes(b.querySelector('.slot-time').value);
+        if (minA === null && minB === null) return 0;
+        if (minA === null) return 1; // שורות בלי שעה יורדות לסוף
+        if (minB === null) return -1;
+        return minA - minB;
+    });
+    // appendChild על אלמנט שכבר ב-DOM מזיז אותו למקום החדש בלי לשכפל/ליצור
+    // מחדש - השדות עצמם (עם ה-focus/הערכים שלהם) נשארים אותם אלמנטים בדיוק
+    slotEls.forEach(el => grid.appendChild(el));
+}
+
+function sortAllDaySlotsChronologically() {
+    dbDaysMap.forEach(day => sortDaySlotsChronologically(day));
 }
 
 // שורות "יתומות" מעבר למספר שורות ברירת המחדל הנוכחי (נשארו ב-daySlotsConfig
@@ -1134,7 +1191,10 @@ async function saveScheduleSlot(day, slot) {
     let error;
     if (existing) ({ error } = await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id));
     else ({ error } = await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: slot, time_of_day: timeVal, task_title: taskVal }));
-    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    // ה-onchange שקרא לפונקציה הזו כבר ירה רק כש-focus עזב את השדה (blur), אז
+    // מיון מחדש של סדר השורות כאן לא יפריע להקלדה פעילה של המשתמש
+    sortDaySlotsChronologically(day);
 }
 
 // --- מבט ליומן: אירועים ארוכי-טווח בעלי תאריך אמיתי, נפרד מהתבנית השבועית החוזרת ---
