@@ -34,6 +34,42 @@ html[data-color-theme="gold_red"] {
     --accent-purple: #dc2626;
     --accent-purple-light: #f87171;
 }
+/* מצב בהיר (Light Mode, חינמי): מחליף רק את משתני הרקע/הטקסט - הטבעות
+   הניאון (var(--accent-*)) נשארות זהות, כדי לשמור על הזוהר הרענן גם על רקע בהיר */
+html.light-mode {
+    --bg-main: #f0eef7;
+    --bg-glass: rgba(255, 255, 255, 0.72);
+    --bg-sheet: #ffffff;
+    --border-color: rgba(168, 85, 247, 0.2);
+    --text-primary: #17141f;
+    --text-secondary: #6b6578;
+}
+html.light-mode body { background-color: #e9e6f2; }
+/* שדות קלט/כרטיסי משנה כהים באופן קבוע (רקע rgba(0,0,0,x) + טקסט לבן) -
+   במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
+html.light-mode .day-tab,
+html.light-mode .day-page,
+html.light-mode .slot-input-group,
+html.light-mode .meal-row,
+html.light-mode .progress-row,
+html.light-mode .calendar-event-custom-recurrence input[type="number"],
+html.light-mode .recipe-form-grid input,
+html.light-mode .recipe-form-grid textarea,
+html.light-mode .recipe-form-grid select,
+html.light-mode #recipe-ai-raw-input,
+html.light-mode .food-input,
+html.light-mode .calories-input,
+html.light-mode .weight-inputs-wrap input,
+html.light-mode .hours-input,
+html.light-mode .schedule-adder-grid select,
+html.light-mode .schedule-adder-grid input,
+html.light-mode .preset-manager-grid select,
+html.light-mode .preset-manager-grid input,
+html.light-mode #ai-quick-add-input,
+html.light-mode .login-card input {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #07060a;
@@ -120,15 +156,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .home-greeting-emoji { font-size: 1.7rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.35)); }
 .dashboard-grid {
     display: flex;
-    flex-wrap: wrap;
-    align-content: center;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: 20px 16px;
+    gap: 40px;
     position: relative;
     z-index: 5;
     width: 100%;
     max-width: 100%;
     flex: 1;
+    padding: 20px 0;
     box-sizing: border-box;
 }
 /* שפת עיצוב מעגלית אחידה בכל האפליקציה: קוביית ניווט ראשית (.nav-cube) ותת-קוביה
@@ -182,6 +219,11 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     --tile-glow-2: rgba(0, 212, 255, 0.3);
 }
 .nav-cube.active .cube-icon { box-shadow: 0 0 22px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
+/* קוביות מסך הבית מעט גדולות ובולטות יותר מתת-הקוביות הפנימיות, כדי להיראות
+   פרימיום כשהן היחידות על המסך, נערמות אנכית עם מרווח נדיב ביניהן */
+.nav-cube { width: 110px; }
+.nav-cube .cube-icon { width: 106px; height: 106px; font-size: 2.3rem; }
+.nav-cube .cube-title { font-size: 0.78rem; max-width: 110px; }
 .cube-title, .sub-tile-title, .recipe-category-label {
     font-size: 0.7rem;
     font-weight: 700;
@@ -660,6 +702,15 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-blue { background: linear-gradient(135deg, #00d4ff, #0ea5e9); }
 .theme-swatch-gold { background: linear-gradient(135deg, #f59e0b, #dc2626); }
 .theme-swatch-lock { position: absolute; bottom: -4px; right: -4px; font-size: 0.7rem; background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+
+.settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.settings-toggle-row .settings-label { margin-bottom: 0; }
+.switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch-slider { position: absolute; cursor: pointer; inset: 0; background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 26px; transition: var(--transition); }
+.switch-slider::before { content: ""; position: absolute; width: 20px; height: 20px; left: 2px; top: 2px; background-color: #fff; border-radius: 50%; transition: var(--transition); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+.switch input:checked + .switch-slider { background-color: var(--accent-purple); border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+.switch input:checked + .switch-slider::before { transform: translateX(20px); }
 
 .monthly-goal-empty { color: var(--text-secondary); font-size: 0.82rem; margin: 0 0 10px 0; }
 .monthly-goal-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px; }

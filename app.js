@@ -22,6 +22,7 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', async () => {
     loadSavedLanguage();
     populateLanguageDropdown();
+    applyLightMode(isLightModeOn());
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -1564,6 +1565,24 @@ function selectPremiumTier(el) {
 function submitPremiumUpgrade() {
     closeModal('modal-premium-upgrade');
     showAppToast(t('settings_upgrade_toast'));
+}
+
+// --- מצב בהיר (Light Mode, חינמי): קלף .light-mode על ה-html מחליף רק את
+// משתני הרקע/הטקסט (ר' theme.css) - שמור מקומית, לא תלוי במשתמש/פרימיום ---
+function isLightModeOn() {
+    return localStorage.getItem('weekwise_light_mode') === 'true';
+}
+
+function applyLightMode(enabled) {
+    document.documentElement.classList.toggle('light-mode', enabled);
+    const toggle = document.getElementById('light-mode-toggle');
+    if (toggle) toggle.checked = enabled;
+}
+
+function toggleLightMode() {
+    const enabled = document.getElementById('light-mode-toggle').checked;
+    localStorage.setItem('weekwise_light_mode', enabled ? 'true' : 'false');
+    applyLightMode(enabled);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז

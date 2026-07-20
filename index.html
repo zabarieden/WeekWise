@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=53">
+    <link rel="stylesheet" href="theme.css?v=54">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -526,6 +526,14 @@
                 <h3 data-i18n="settings_title">Settings</h3>
                 <label class="settings-label" data-i18n="settings_language_label" for="language-select">Language</label>
                 <select id="language-select" class="language-select"></select>
+
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_light_mode_label" for="light-mode-toggle">Light Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="light-mode-toggle" onchange="toggleLightMode()">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
 
                 <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                 <div class="theme-picker-grid">
