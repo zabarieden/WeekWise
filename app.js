@@ -1158,6 +1158,9 @@ let scheduleClarificationResolved = [];
 let scheduleClarificationClearEvents = [];
 
 function runScheduleClarificationFlow(ambiguousEvents, clearEvents) {
+    // מנקה callback ידני ממתין (ר' openManualAmpmClarify) שאולי ננטש בלי
+    // תשובה - תור ה-AI תמיד גובר על שאלה ידנית-חד-פעמית ישנה שנשכחה
+    pendingManualAmpmResolve = null;
     scheduleClarificationQueue = ambiguousEvents;
     scheduleClarificationResolved = [];
     scheduleClarificationClearEvents = clearEvents;
@@ -1232,6 +1235,16 @@ function skipScheduleClarification() {
 // שעה עמומה (1-11) עם תשובת בוקר/ערב - h<=11 מקבל +12 רק אם המשתמש בחר
 // "ערב" (בוקר משאיר את השעה כפי שהיא, למשל 5 -> 05:00)
 function resolveAmpmClarification(period) {
+    // עריכה ידנית חד-פעמית (ר' openManualAmpmClarify) גוברת על תור ה-AI -
+    // אותו חלון/כפתורים משמשים את שני הזרמים, אז בודקים קודם אם יש callback
+    // ידני ממתין לפני שנוגעים בתור
+    if (pendingManualAmpmResolve) {
+        const resolve = pendingManualAmpmResolve;
+        pendingManualAmpmResolve = null;
+        closeModal('modal-schedule-clarify');
+        resolve(period);
+        return;
+    }
     const ev = scheduleClarificationQueue.shift();
     if (!ev) return;
     let h = parseInt(ev.hour);
@@ -1499,6 +1512,57 @@ function updateAllSlotTaskIcons() {
     document.querySelectorAll('.slot-task').forEach(updateSlotTaskIcon);
 }
 
+// --- נירמול קלט שעה גולמי (הקלדה ידנית בשדה .slot-time/add-slot-time) ---
+// לעולם לא שולחים ערך גולמי-לא-מפורמט ("8" בודד) ל-Supabase - זה בדיוק מה
+// שגרם ל"8" להישמר כמו שהוא בטבלת weekly_schedule ולשגיאת RLS/פורמט בהוספה.
+// מחזירה { time, needsAmpm, hour }: time הוא מחרוזת HH:MM תקינה, '' (השדה
+// ריק בכוונה) או null (קלט לא-תקין לגמרי, לא נשמר). needsAmpm=true אומר
+// שהמספר עמום (1-11) בהקשר אנגלית/12 שעות ויש לשאול בוקר/ערב לפני שמירה -
+// בעברית/ערבית (הקשר 24 שעות) 1-11 תמיד מתפרש ישירות כבוקר, בלי לשאול
+function normalizeScheduleTimeInput(raw) {
+    const text = (raw || '').trim();
+    if (!text) return { time: '', needsAmpm: false };
+    let m = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (m) {
+        const hh = parseInt(m[1]), mm = parseInt(m[2]);
+        if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) return { time: `${String(hh).padStart(2, '0')}:${m[2]}`, needsAmpm: false };
+        return { time: null, needsAmpm: false };
+    }
+    m = text.match(/^(\d{1,2})\s*([ap])\.?m\.?$/i);
+    if (m) {
+        let h = parseInt(m[1]);
+        if (h < 1 || h > 12) return { time: null, needsAmpm: false };
+        h = h % 12;
+        if (m[2].toLowerCase() === 'p') h += 12;
+        return { time: `${String(h).padStart(2, '0')}:00`, needsAmpm: false };
+    }
+    m = text.match(/^(\d{1,2})$/);
+    if (m) {
+        const h = parseInt(m[1]);
+        if (h < 0 || h > 23) return { time: null, needsAmpm: false };
+        if (isRTL(currentLang)) return { time: `${String(h).padStart(2, '0')}:00`, needsAmpm: false };
+        if (h >= 1 && h <= 11) return { time: '', needsAmpm: true, hour: h };
+        return { time: `${String(h).padStart(2, '0')}:00`, needsAmpm: false };
+    }
+    return { time: null, needsAmpm: false };
+}
+
+// פותחת את אותו חלון-הבהרה בוקר/ערב (modal-schedule-clarify) שה-AI Brain
+// כבר משתמש בו, אבל עבור עריכה ידנית חד-פעמית של שדה שעה בודד - לא דרך
+// תור ה-AI (scheduleClarificationQueue). onResolve נקרא עם 'morning'/'evening'
+// שהמשתמש בחר; resolveAmpmClarification (למטה) מנתב לכאן במקום לתור כשיש
+// callback ממתין
+let pendingManualAmpmResolve = null;
+function openManualAmpmClarify(hour, title, onResolve) {
+    pendingManualAmpmResolve = onResolve;
+    document.getElementById('schedule-clarify-question').textContent =
+        t('schedule_clarify_ampm_question_template').replace('{title}', title || t('schedule_ai_fallback_task_label')).replace('{hour}', hour);
+    document.getElementById('schedule-clarify-input').classList.add('hidden');
+    document.getElementById('schedule-clarify-until-actions').classList.add('hidden');
+    document.getElementById('schedule-clarify-ampm-actions').classList.remove('hidden');
+    openModal('modal-schedule-clarify');
+}
+
 // --- מיון כרונולוגי של שורות הלו"ז: מספר השורה (data-slot) הוא רק מזהה יציב
 // לשמירה/מחיקה מול השרת, לא סדר תצוגה - שורה #1 יכולה להכיל 19:00 ושורה #2
 // 09:00 (למשל אחרי שה-AI מוסיף אירועים למשבצות פנויות לפי הסדר שבו הן נמצאו,
@@ -1640,8 +1704,26 @@ async function pruneEmptyExcessSlots() {
 async function saveScheduleSlot(day, slot, skipSort) {
     if (!supabaseClient) return;
     const slotEl = document.querySelector(`[data-day="${day}"][data-slot="${slot}"]`);
-    const timeVal = slotEl.querySelector('.slot-time').value;
-    const taskVal = slotEl.querySelector('.slot-task').value.trim();
+    const timeInput = slotEl.querySelector('.slot-time');
+    const taskInput = slotEl.querySelector('.slot-task');
+    // לעולם לא שולחים את ה-.value הגולמי כמו שהוא ל-Supabase - מנרמלים
+    // קודם לפורמט HH:MM תקין (ר' normalizeScheduleTimeInput). אם השעה עמומה
+    // (1-11 בהקשר אנגלית/12 שעות) שואלים בוקר/ערב *לפני* כל כתיבה לשרת,
+    // במקום לשמור ערך גולמי לא-תקין כמו "8" בודד
+    const norm = normalizeScheduleTimeInput(timeInput.value);
+    if (norm.needsAmpm) {
+        openManualAmpmClarify(norm.hour, taskInput.value.trim(), (period) => {
+            let h = norm.hour;
+            if (period === 'evening' && h <= 11) h += 12;
+            timeInput.value = `${String(h).padStart(2, '0')}:00`;
+            saveScheduleSlot(day, slot, skipSort);
+        });
+        return;
+    }
+    if (norm.time === null) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    timeInput.value = norm.time;
+    const timeVal = norm.time;
+    const taskVal = taskInput.value.trim();
     const { data: existing } = await supabaseClient.from('weekly_schedule').select('id').eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot).maybeSingle();
     let error;
     if (existing) ({ error } = await supabaseClient.from('weekly_schedule').update({ time_of_day: timeVal, task_title: taskVal }).eq('id', existing.id));
@@ -2980,8 +3062,21 @@ async function saveScheduleSlotFromAdder() {
     if (!supabaseClient || !currentUserId) return;
     const day = document.getElementById('add-slot-day').value;
     const slot = parseInt(document.getElementById('add-slot-num').value);
-    const timeVal = document.getElementById('add-slot-time').value.trim();
+    const timeInput = document.getElementById('add-slot-time');
     const taskVal = document.getElementById('add-slot-task').value.trim();
+    const norm = normalizeScheduleTimeInput(timeInput.value);
+    if (norm.needsAmpm) {
+        openManualAmpmClarify(norm.hour, taskVal, (period) => {
+            let h = norm.hour;
+            if (period === 'evening' && h <= 11) h += 12;
+            timeInput.value = `${String(h).padStart(2, '0')}:00`;
+            saveScheduleSlotFromAdder();
+        });
+        return;
+    }
+    if (norm.time === null) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    timeInput.value = norm.time;
+    const timeVal = norm.time;
     const reminderMinutes = parseInt(document.getElementById('add-slot-reminder').value) || 0;
     const reminderText = document.getElementById('add-slot-reminder-text').value.trim();
     const payload = {
