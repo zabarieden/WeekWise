@@ -130,9 +130,14 @@ input, textarea, select {
     user-select: text;
     -webkit-touch-callout: default;
 }
+/* ברירת מחדל = מובייל תמיד מלא: בלי שום תקרת max-width מוגבלת כאן בכלל, כדי
+   שלא יהיה שום "טווח ביניים" לא-מכוסה בין הבסיס לבין המדיה-קווארי הבאה - זה
+   בדיוק מה ששבר את זה בעבר (טווח 421-768px ספציפי שלא תמיד "נתפס" נכון בכל
+   מכשיר/דפדפן). התקרה הצרה (כרטיס "סימולטור טלפון") חלה אך ורק ממש 769px+,
+   כלומר מסך שהוא כמעט בוודאות טאבלט/דסקטופ אמיתי ולא טלפון */
 .phone-wrapper {
-    width: 100vw;
-    max-width: 420px;
+    width: 100%;
+    max-width: 100vw;
     height: 100vh;
     height: 100dvh;
     background-color: var(--bg-main);
@@ -142,7 +147,7 @@ input, textarea, select {
     overflow: hidden;
     overflow-x: hidden !important;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 10px;
     border-left: 1px solid rgba(255, 255, 255, 0.02);
     border-right: 1px solid rgba(255, 255, 255, 0.02);
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
@@ -399,23 +404,25 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    נשארת מלאה כשהיא בפוקוס (המשתמש מקליד בה ממש עכשיו), כדי שלא תיעלם מתחת ידיו */
 .slot-input-group:not(.has-task) { opacity: 0.5; }
 .slot-input-group:not(.has-task):focus-within { opacity: 1; }
-.slot-task-wrap { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; transition: var(--transition); }
+/* flex: 1 1 0 (לא auto) + min-width קבוע - כדי שהעטיפה תמיד תתפוס את כל
+   השטח הפנוי ולעולם לא תתכווץ מתחת לרוחב שמסתיר את הטקסט (הבאג שגרם לטקסט
+   כמו "בויילר רום 🎶" להיעלם ולהשאיר רק את האייקון בבועה זעירה במובייל) */
+.slot-task-wrap { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; transition: var(--transition); }
 .slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
 .slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
-/* "פיל" ניאון סביב משימה מאוכלסת - var(--tile-accent) עוקב אחרי צבע ה"עולם"
-   (זהב ל-MyWeek/הלו"ז) - ניגודיות גבוהה יותר מול הרקע הכהה מסגול רך, ומחזיר
-   את הזוהר הצהוב-זהוב הבולט שביקשו במפורש (אחרי ניסיון קצר עם סגול) */
+/* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
+   קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */
 .slot-input-group.has-task .slot-task-wrap {
-    background-color: rgba(0, 0, 0, 0.18);
-    border: 1px solid var(--tile-accent, var(--accent-gold));
+    background-color: rgba(200, 162, 200, 0.15);
+    border: 1px solid #C8A2C8;
     border-radius: 20px;
     padding: 5px 12px;
-    box-shadow: 0 0 10px var(--tile-glow-1, rgba(245, 158, 11, 0.5));
+    box-shadow: 0 0 10px rgba(200, 162, 200, 0.5);
 }
 .slot-input-group.has-task .slot-task {
-    color: var(--tile-accent, var(--accent-gold));
+    color: #C8A2C8;
     font-weight: 700;
-    text-shadow: 0 0 8px var(--tile-glow-1, rgba(245, 158, 11, 0.6));
+    text-shadow: 0 0 8px rgba(200, 162, 200, 0.6);
 }
 .btn-delete-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
@@ -1025,25 +1032,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
-/* טלפונים "רחבים" (מעל 420px, עד 768px - קו הגבול המקובל בין מובייל לטאבלט)
-   לא היו מכוסים על ידי אף מדיה-קווארי ונתקעו עם התקרה הצרה של 420px למטה -
-   זה יצר שוליים ריקים גדולים משני צדי המסך במובייל אמיתי במקום למלא אותו.
-   98vw ולא 100vw מלא - נשאר שוליים דק ואלגנטי במקום להידבק ממש לקצוות
-   המסך. גם ה-padding הפנימי מצטמצם כאן כדי לנצל עוד קצת רוחב שימושי.
-   בלי לגעת בברירת המחדל (420px, נשארת נכונה לטלפונים רגילים/צרים) ובלי
-   לגעת בנקודת המעבר לטאבלט/דסקטופ האמיתי למטה (עכשיו מתחילה רק ב-769px,
-   כדי שלא תתנגש עם הטווח הזה) */
-@media (min-width: 421px) and (max-width: 768px) {
-    .phone-wrapper { max-width: 98vw; padding: 10px; }
-}
-
 /* --- התאמה לטאבלטים/iPad: הרחבת ה"כרטיס" הראשי, בלי לשבור את הגריד הגמיש --- */
-/* כל הגריד (dashboard-grid, stats-grid, hours-settings-grid, slot-input-group) כבר
-   בנוי עם minmax(0, 1fr), אז הרחבת .phone-wrapper בלבד מספיקה כדי לנצל את השטח
-   הנוסף בלי לשבור סימטריה. .modal-sheet מוגבל ל-520px למעלה כדי שהמגירה/הפופאפ
-   ימשיכו להיראות כמו חלון צף מרכזי ולא יימתחו על פני כל הרוחב. */
+/* מתחת ל-769px (כל טלפון) אין תקרת max-width בכלל - ראה כלל הבסיס של
+   .phone-wrapper למעלה. כל הגריד (dashboard-grid, stats-grid,
+   hours-settings-grid, slot-input-group) כבר בנוי עם minmax(0, 1fr), אז
+   הרחבת .phone-wrapper בלבד מספיקה כדי לנצל את השטח הנוסף בלי לשבור
+   סימטריה. .modal-sheet מוגבל ל-520px למעלה כדי שהמגירה/הפופאפ ימשיכו
+   להיראות כמו חלון צף מרכזי ולא יימתחו על פני כל הרוחב. */
 @media (min-width: 769px) {
-    .phone-wrapper { max-width: 700px; }
+    .phone-wrapper { max-width: 700px; padding: 16px; }
     .day-tabs-strip { justify-content: space-between; gap: 12px; }
     .day-tab { padding: 12px 18px; }
     .day-tab-name { font-size: 0.85rem; }
