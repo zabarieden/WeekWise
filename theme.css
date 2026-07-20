@@ -367,6 +367,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-fab.dragging { transition: none !important; animation-play-state: paused; cursor: grabbing; box-shadow: 0 10px 26px rgba(168, 85, 247, 0.55); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
+/* בועת ה-AI Brain: אותה מכניקה בדיוק כמו ai-fab (גרירה חופשית, פעימה), רק
+   בפינה ההתחלתית הנגדית כדי שלא יחפפו, וגרדיאנט הפוך כדי להבחין ביניהן -
+   שתיהן ממשיכות להישען על var(--accent-*), אז עוקבות אחרי כל ערכת נושא */
+.ai-brain-fab { position: absolute; bottom: 90px; left: 12px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: grab; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); z-index: 3500; padding: 0; transition: var(--transition); animation: fabPulse 2.5s ease-in-out infinite; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ai-brain-fab:active { transform: scale(0.9); }
+.ai-brain-fab.dragging { transition: none !important; animation-play-state: paused; cursor: grabbing; box-shadow: 0 10px 26px rgba(168, 85, 247, 0.55); }
+
 .settings-fab { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 42px; height: 42px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); z-index: 3500; padding: 0; transition: var(--transition); }
 .settings-fab:active { transform: translateX(-50%) scale(0.9); }
 .premium-drawer-title { margin-top: 18px !important; }
@@ -606,20 +613,29 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
-.btn-complete-item { 
-    background: transparent; 
-    color: var(--accent-green); 
-    border: 2px solid var(--accent-green); 
-    border-radius: 8px;
-    width: 32px; 
-    height: 32px; 
+/* קופסת סימון: var(--accent-purple) ולא צבע קבוע, כדי שתעקוב אוטומטית אחרי
+   ערכת הנושא הפעילה (כהה/בהיר וגם ערכות הצבע הפרימיום שמחליפות את המשתנה הזה) */
+.btn-complete-item {
+    background: transparent;
+    border: 2px solid var(--accent-purple);
+    border-radius: 10px;
+    width: 30px;
+    height: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer; 
-    font-size: 1.1rem; 
-    margin-left: 10px; 
-    z-index: 10; 
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-left: 10px;
+    z-index: 10;
+    transition: var(--transition);
+}
+.btn-complete-item:active { transform: scale(0.88); }
+.btn-complete-item.checked {
+    background: var(--accent-purple);
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
 .progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
@@ -661,6 +677,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink); }
 .modal-subtitle { margin: -8px 0 14px 0; font-size: 0.75rem; color: var(--text-secondary); text-align: center; }
+.ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.ai-brain-tab { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
+.ai-brain-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+.ai-brain-target-choice { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.ai-brain-target-option { display: flex; align-items: center; gap: 8px; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer; }
+.ai-brain-target-option input[type="radio"] { accent-color: var(--accent-purple); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
 .hours-settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }

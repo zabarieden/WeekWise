@@ -397,8 +397,12 @@
                 </div>
             </div>
 
-            <!-- כפתור צף (FAB) להוספת פתק ב-AI, מופיע רק בלשונית הפתקים -->
+            <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Add to Notes (AI)">📝</button>
+
+            <!-- בועה צפה נפרדת ל-AI Brain: תכנון לו"ז מטקסט חופשי + סריקת תמונה
+                 למתכון/ארוחה קבועה. במיקום התחלתי שונה מבועת הפתקים כדי שלא יחפפו -->
+            <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">🧠</button>
 
             <!-- כפתור הגדרות קבוע, נשאר בכל המסכים -->
             <button type="button" class="settings-fab" id="btn-settings-fab" onclick="openModal('modal-settings-drawer')" data-i18n-title="settings_title" title="Settings">⚙️</button>
@@ -542,7 +546,7 @@
                     <button type="button" class="theme-swatch theme-swatch-gold" data-theme="gold_red" onclick="selectColorTheme('gold_red')" title="Gold & Red"><span class="theme-swatch-lock">🔒</span></button>
                 </div>
 
-                <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiSchedulePlannerModal();" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
+                <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
 
                 <h3 class="premium-drawer-title" data-i18n="settings_premium_title">Premium Upgrades</h3>
                 <button class="btn-primary btn-premium-cta" onclick="openPremiumUpgradeModal()" data-i18n="settings_go_premium_btn">⭐ Go Premium</button>
@@ -574,6 +578,10 @@
         <!-- חלון צף: הוספת ארוחה קבועה למאגר -->
         <div id="modal-add-preset" class="apple-modal">
             <div class="modal-sheet">
+                <div id="preset-scan-loading" class="recipe-scan-loading hidden">
+                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                    <p data-i18n="meal_photo_loading_text">Analyzing your meal...</p>
+                </div>
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="preset_modal_title">Add Meal to Library</h3>
                 <div class="recipe-scan-hint" id="preset-limit-hint"></div>
@@ -609,20 +617,47 @@
             </div>
         </div>
 
-        <!-- חלון צף: מתכנן לו"ז חכם (AI אמיתי, פרימיום בלבד) -->
-        <div id="modal-ai-schedule-planner" class="apple-modal">
+        <!-- חלון צף: מוקד ה-AI Brain - שני טאבים: תכנון לו"ז מטקסט חופשי (פרימיום),
+             וסריקת תמונה למתכון/ארוחה קבועה (יש לה מכסה חינמית משלה) -->
+        <div id="modal-ai-brain" class="apple-modal">
             <div class="modal-sheet">
-                <div id="schedule-ai-loading" class="recipe-scan-loading hidden">
-                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
-                    <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
-                </div>
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="schedule_ai_modal_title">🧠 AI Schedule Planner</h3>
-                <p class="modal-subtitle" data-i18n="schedule_ai_modal_subtitle">Describe your recurring weekly plans in plain language and let AI fill in the schedule for you.</p>
-                <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g. I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop class on Tuesdays at 19:00"></textarea>
-                <div class="action-buttons-wrap" style="margin-top: 10px;">
-                    <button onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
-                    <button class="btn-clear-specific" onclick="closeModal('modal-ai-schedule-planner')" data-i18n="cancel_btn">Cancel</button>
+                <h3 data-i18n="ai_brain_modal_title">🧠 AI Assistant</h3>
+                <div class="ai-brain-tabs">
+                    <button type="button" class="ai-brain-tab active" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
+                    <button type="button" class="ai-brain-tab" data-tab="photo" onclick="switchAiBrainTab('photo')" data-i18n="ai_brain_tab_photo">📷 Photo</button>
+                </div>
+
+                <div class="ai-brain-panel" data-ai-brain-panel="schedule">
+                    <div id="schedule-ai-loading" class="recipe-scan-loading hidden">
+                        <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                        <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
+                    </div>
+                    <p class="modal-subtitle" data-i18n="schedule_ai_modal_subtitle">Describe your recurring weekly plans in plain language and let AI fill in the schedule for you.</p>
+                    <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g. I train at the gym on Mondays and Wednesdays at 8:00, and go to hip-hop class on Tuesdays at 19:00"></textarea>
+                    <div class="action-buttons-wrap" style="margin-top: 10px;">
+                        <button onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="ai-brain-panel hidden" data-ai-brain-panel="photo">
+                    <p class="modal-subtitle" data-i18n="ai_brain_photo_subtitle">Upload a meal or recipe photo and let AI fill in the details for you.</p>
+                    <div class="ai-brain-target-choice">
+                        <label class="ai-brain-target-option">
+                            <input type="radio" name="ai-brain-photo-target" value="recipe" checked>
+                            <span data-i18n="ai_brain_target_recipe">🍳 Save as Recipe</span>
+                        </label>
+                        <label class="ai-brain-target-option">
+                            <input type="radio" name="ai-brain-photo-target" value="preset">
+                            <span data-i18n="ai_brain_target_preset">🍽️ Save as Preset Meal</span>
+                        </label>
+                    </div>
+                    <input type="file" id="ai-brain-image-input" accept="image/*" class="hidden" onchange="handleAiBrainImageSelected(event)">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('ai-brain-image-input').click()" data-i18n="ai_brain_upload_btn">📷 Upload photo</button>
+                    <div class="action-buttons-wrap" style="margin-top: 10px;">
+                        <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

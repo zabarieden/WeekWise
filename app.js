@@ -143,7 +143,7 @@ async function loadCenterItems(type) {
     data.forEach(item => {
         const li = document.createElement('li');
         li.innerHTML = `
-            <button class="btn-complete-item" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
+            <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">
@@ -404,6 +404,7 @@ async function initAppAfterAuth(user) {
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
     initDraggableAiFab();
+    initDraggableAiBrainFab();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
@@ -551,8 +552,10 @@ function aiFabPositionKey() {
     return `weekwise_ai_fab_position_${currentUserId}`;
 }
 
-function initDraggableAiFab() {
-    const el = document.getElementById('btn-ai-fab');
+// --- הופכת ל-fab צף וגם ל-bubble ה-AI Brain החדש: אותה מכניקת גרירה בדיוק,
+// רק עם מפתח מיקום ופעולת קליק שונים לכל אחד ---
+function initDraggableFab(elementId, positionKey, onClick) {
+    const el = document.getElementById(elementId);
     const wrapper = document.querySelector('.phone-wrapper');
     if (!el || !wrapper) return;
 
@@ -580,7 +583,7 @@ function initDraggableAiFab() {
     }
 
     function restoreSavedPosition() {
-        const raw = localStorage.getItem(aiFabPositionKey());
+        const raw = localStorage.getItem(positionKey);
         if (!raw) return;
         try {
             const pos = JSON.parse(raw);
@@ -622,7 +625,7 @@ function initDraggableAiFab() {
             const wrapperRect = wrapper.getBoundingClientRect();
             const elRect = el.getBoundingClientRect();
             const finalPos = { left: elRect.left - wrapperRect.left, top: elRect.top - wrapperRect.top };
-            localStorage.setItem(aiFabPositionKey(), JSON.stringify(finalPos));
+            localStorage.setItem(positionKey, JSON.stringify(finalPos));
         }
     }
 
@@ -631,11 +634,23 @@ function initDraggableAiFab() {
 
     el.addEventListener('click', () => {
         if (dragged) { dragged = false; return; }
-        openModal('modal-ai-quick-add');
+        onClick();
     });
 
     restoreSavedPosition();
     window.addEventListener('resize', restoreSavedPosition);
+}
+
+function initDraggableAiFab() {
+    initDraggableFab('btn-ai-fab', aiFabPositionKey(), () => openModal('modal-ai-quick-add'));
+}
+
+function aiBrainFabPositionKey() {
+    return `weekwise_ai_brain_fab_position_${currentUserId}`;
+}
+
+function initDraggableAiBrainFab() {
+    initDraggableFab('btn-ai-brain-fab', aiBrainFabPositionKey(), () => openAiBrainModal('schedule'));
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -738,12 +753,18 @@ function addDaySlot(day) {
     loadWeeklySchedule();
 }
 
-// --- מתכנן לו"ז חכם (פרימיום בלבד): AI אמיתי מפרש תיאור חופשי לכמה אירועים
-// חוזרים בבת אחת, ומכניס כל אחד למשבצת פנויה (או שורה חדשה) ביום המתאים ---
-function openAiSchedulePlannerModal() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+// --- מוקד ה-AI ("המוח"): מודל אחד עם שני טאבים - תכנון לו"ז מטקסט חופשי
+// (פרימיום בלבד), וסריקת תמונה למתכון/ארוחה קבועה (יש לה מכסה חינמית משלה,
+// אז אין שער פרימיום גורף על פתיחת המודל - כל פעולה שוערת בנפרד בזמן האמת) ---
+function openAiBrainModal(tab = 'schedule') {
     document.getElementById('ai-schedule-input').value = '';
-    openModal('modal-ai-schedule-planner');
+    switchAiBrainTab(tab);
+    openModal('modal-ai-brain');
+}
+
+function switchAiBrainTab(tab) {
+    document.querySelectorAll('.ai-brain-tab').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tab));
+    document.querySelectorAll('.ai-brain-panel').forEach(panel => panel.classList.toggle('hidden', panel.getAttribute('data-ai-brain-panel') !== tab));
 }
 
 function showScheduleAiLoading() {
@@ -821,7 +842,7 @@ async function parseScheduleWithAI() {
         }
 
         input.value = '';
-        closeModal('modal-ai-schedule-planner');
+        closeModal('modal-ai-brain');
         showAppToast(t('schedule_ai_success'));
     } catch (err) {
         showAppToast(t('schedule_ai_failed'), 'error');
@@ -2039,7 +2060,12 @@ async function handleRecipeImageSelected(event) {
     const file = input.files && input.files[0];
     input.value = ''; // מאפשר לבחור את אותו קובץ שוב בפעם הבאה
     if (!file) return;
+    await runRecipeImageScan(file);
+}
 
+// מנותקת מ-handleRecipeImageSelected כדי שגם ה-AI Brain (שמזין קובץ שנבחר
+// דרך קלט קובץ אחר לגמרי) יוכל להריץ בדיוק את אותה לוגיקת סריקה, בלי כפילות
+async function runRecipeImageScan(file) {
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
         showAppToast(t('recipe_scan_unsupported_type'), 'error');
         return;
@@ -2093,6 +2119,77 @@ async function handleRecipeImageSelected(event) {
         clearTimeout(loadingTimer);
         hideRecipeScanLoading();
     }
+}
+
+// --- טאב "תמונה" ב-AI Brain: אותו מנוע ראייה ממש כמו סריקת מתכון/ארוחה
+// יומית (Edge Functions קיימים), רק שהתוצאה מנותבת ליעד שהמשתמש בחר -
+// מתכון מלא (scan-recipe-image) או ארוחה קבועה מהירה (scan-meal-photo,
+// אותה פונקציה בדיוק שמזינה את מעקב הארוחות היומי - כאן לוקחים רק פריט אחד) ---
+async function handleAiBrainImageSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const targetInput = document.querySelector('input[name="ai-brain-photo-target"]:checked');
+    const target = targetInput ? targetInput.value : 'recipe';
+    closeModal('modal-ai-brain');
+    if (target === 'preset') {
+        openModal('modal-add-preset');
+        loadPresetManageList();
+        await runPresetImageScan(file);
+    } else {
+        openAddRecipeForm();
+        await runRecipeImageScan(file);
+    }
+}
+
+async function runPresetImageScan(file) {
+    if (!file.type.startsWith('image/')) { showAppToast(t('meal_photo_unsupported_type'), 'error'); return; }
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    const loadingTimer = setTimeout(showPresetScanLoading, 5000);
+    try {
+        const { mediaType, base64 } = await fileToBase64(file);
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ imageBase64: base64, mediaType })
+        });
+        const result = await res.json();
+
+        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
+        if (!res.ok || result.error || !result.items || !result.items.length) {
+            showAppToast(t('meal_photo_failed'), 'error');
+            return;
+        }
+
+        // ארוחה קבועה היא פריט בודד - אם התמונה מכילה כמה פריטים, לוקחים רק
+        // את הראשון (המשתמש תמיד יכול לערוך את השם/קלוריות לפני השמירה)
+        const first = result.items[0];
+        document.getElementById('new-preset-name').value = first.food_name || '';
+        document.getElementById('new-preset-calories').value = first.calories || '';
+        showAppToast(t('preset_scan_success'));
+    } catch (err) {
+        showAppToast(t('meal_photo_failed'), 'error');
+    } finally {
+        clearTimeout(loadingTimer);
+        hidePresetScanLoading();
+    }
+}
+
+function showPresetScanLoading() {
+    const el = document.getElementById('preset-scan-loading');
+    if (el) el.classList.remove('hidden');
+}
+
+function hidePresetScanLoading() {
+    const el = document.getElementById('preset-scan-loading');
+    if (el) el.classList.add('hidden');
 }
 
 function showRecipeScanLoading() {
