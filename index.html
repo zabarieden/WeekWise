@@ -666,6 +666,21 @@
             </div>
         </div>
 
+        <!-- חלון צף: שאלת הבהרה כשה-AI Brain מוצא "עד שעה" בלי שעת התחלה -
+             לא מנחש, שואל (ר' runScheduleClarificationFlow ב-app.js) -->
+        <div id="modal-schedule-clarify" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="schedule_clarify_title">🕐 One quick question</h3>
+                <p class="modal-subtitle" id="schedule-clarify-question"></p>
+                <input type="text" id="schedule-clarify-input" data-i18n-placeholder="schedule_clarify_placeholder" placeholder="e.g. 8:00 or from 9">
+                <div class="action-buttons-wrap" style="margin-top: 14px;">
+                    <button class="btn-primary" onclick="confirmScheduleClarification()" data-i18n="schedule_clarify_confirm_btn">Confirm</button>
+                    <button class="btn-clear-specific" onclick="skipScheduleClarification()" data-i18n="schedule_clarify_skip_btn">Skip</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: הגדרת יעד חודשי (פרימיום בלבד) -->
         <div id="modal-set-monthly-goal" class="apple-modal">
             <div class="modal-sheet">

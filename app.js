@@ -834,7 +834,14 @@ function findScheduleDaysInText(text) {
 // וגם למחיקתה מהכותרת (cleanScheduleTaskTitle), כדי ששתי הפעולות לעולם לא
 // יתפצלו זו מזו כמו שקרה בעבר. סדר הרשימה הוא סדר עדיפות: תבנית ספציפית
 // יותר (כמו "20 בערב") "תופסת" קודם תבנית כללית יותר שחופפת לה ("ב20")
+// "עד" (עד/until) בלי שעת התחלה נלווית היא דו-משמעית - במקום לנחש שעת
+// התחלה, מתויגת בקידומת מיוחדת כדי ש-parseScheduleTextLocally ינתב אותה
+// לתור השאלות-הבהרה (ר' runScheduleClarificationFlow) במקום ליצור אירוע ישר.
+// חייבת לבוא ראשונה ברשימה (עדיפות עליונה) כדי לתפוס את כל "עד 14:00" כיחידה
+// אחת, לפני שהתבנית הכללית של שעה סתמית תספיק לתפוס רק את ה-14:00 בפני עצמו
+const SCHEDULE_NEEDS_CLARIFY_PREFIX = 'NEEDS_CLARIFY:';
 const SCHEDULE_TIME_PATTERNS = [
+    { re: /(?:עד|until)\s*(\d{1,2}):?(\d{2})?/gi, resolve: (m) => `${SCHEDULE_NEEDS_CLARIFY_PREFIX}${m[1].padStart(2, '0')}:${m[2] || '00'}` },
     { re: /(\d{1,2}):(\d{2})/g, resolve: (m) => `${m[1].padStart(2, '0')}:${m[2]}` },
     { re: /ב?-?\s*(\d{1,2})\s*(בערב|בלילה)/g, resolve: (m) => { let h = parseInt(m[1]); if (h <= 11) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
     { re: /ב?-?\s*(\d{1,2})\s*(אחר הצהריים|אחה"צ|בצהריים)/g, resolve: (m) => { let h = parseInt(m[1]); if (h > 0 && h <= 6) h += 12; return `${String(h).padStart(2, '0')}:00`; } },
@@ -920,6 +927,16 @@ function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
     }
 }
 
+// "X עד Y" בלי שעת התחלה - במקום לנחש (ר' Option B בבקשת המשתמש), מסמנים
+// needsClarification ומחכים לשאול את המשתמש בפועל (runScheduleClarificationFlow)
+function pushClarificationEvents(events, dayIndexes, fallbackText, title, endTime) {
+    if (dayIndexes.length) {
+        dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], needsClarification: true, endTime, task_title: title }));
+    } else {
+        events.push({ day_of_week: dbDaysMap[new Date().getDay()], needsClarification: true, endTime, task_title: fallbackText });
+    }
+}
+
 function parseScheduleTextLocally(text) {
     const clauses = text.split(/[\n,.]/).map(s => s.trim()).filter(Boolean);
     const events = [];
@@ -948,7 +965,11 @@ function parseScheduleTextLocally(text) {
         timeMatches.forEach(tm => {
             const segment = body.slice(cursor, tm.end);
             const title = cleanScheduleTaskTitle(segment, [], tm.time) || t('schedule_ai_fallback_task_label');
-            pushScheduleEvents(events, dayIndexes, clause, title, tm.time);
+            if (tm.time.startsWith(SCHEDULE_NEEDS_CLARIFY_PREFIX)) {
+                pushClarificationEvents(events, dayIndexes, clause, title, tm.time.slice(SCHEDULE_NEEDS_CLARIFY_PREFIX.length));
+            } else {
+                pushScheduleEvents(events, dayIndexes, clause, title, tm.time);
+            }
             cursor = tm.end;
         });
     });
@@ -968,15 +989,23 @@ async function applyParsedScheduleEvents(events) {
     Object.keys(byDay).forEach(day => {
         if (!daySlotsConfig[day]) daySlotsConfig[day] = defaultDaySlotNumbers();
         const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
-        const emptySlotNums = daySlotEls.filter(el => !el.querySelector('.slot-task').value.trim()).map(el => parseInt(el.getAttribute('data-slot')));
-        byDay[day].forEach((ev, index) => {
-            if (index < emptySlotNums.length) {
-                ev._slotNum = emptySlotNums[index];
+        const usedSlotNums = new Set();
+        byDay[day].forEach(ev => {
+            const isFreeSlot = (el) => !usedSlotNums.has(parseInt(el.getAttribute('data-slot'))) && !el.querySelector('.slot-task').value.trim();
+            // עדיפות ראשונה: שורת ברירת מחדל ריקה שכבר יש לה בדיוק את השעה
+            // המבוקשת - כדי לא ליצור שורה כפולה לאותה שעה כשכבר יש שורה ריקה
+            // איתה (למשל שורת ברירת מחדל #2 שכבר מוצגת כ-09:00)
+            let target = daySlotEls.find(el => isFreeSlot(el) && el.querySelector('.slot-time').value.trim() === ev.time);
+            if (!target) target = daySlotEls.find(isFreeSlot);
+            if (target) {
+                ev._slotNum = parseInt(target.getAttribute('data-slot'));
+                usedSlotNums.add(ev._slotNum);
             } else {
                 const nums = daySlotsConfig[day];
                 const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
                 daySlotsConfig[day] = [...nums, nextNum];
                 ev._slotNum = nextNum;
+                usedSlotNums.add(nextNum);
             }
         });
     });
@@ -1027,15 +1056,91 @@ async function parseScheduleWithAI() {
         // המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
         if (!events || !events.length) events = parseScheduleTextLocally(text);
 
-        await applyParsedScheduleEvents(events);
+        // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
+        // אחרי השני אם יש כמה), ורק אז שומרים הכול יחד עם שאר האירועים הברורים
+        const clearEvents = events.filter(ev => !ev.needsClarification);
+        const ambiguousEvents = events.filter(ev => ev.needsClarification);
 
         input.value = '';
         closeModal('modal-ai-brain');
-        showAppToast(t('schedule_ai_success'));
+
+        if (ambiguousEvents.length) {
+            runScheduleClarificationFlow(ambiguousEvents, clearEvents);
+        } else {
+            await applyParsedScheduleEvents(clearEvents);
+            showAppToast(t('schedule_ai_success'));
+        }
     } finally {
         clearTimeout(loadingTimer);
         hideScheduleAiLoading();
     }
+}
+
+// --- שאלת הבהרה כשיש שעת סיום בלי שעת התחלה ("עבודה עד 14:00") - שואלים
+// במקום לנחש, שאלה אחת בכל פעם אם יש כמה, ורק אחרי שכולן נענו (או דולגו)
+// מוחלים כל האירועים (הברורים + אלה שהוברהרו) יחד בפעם אחת ---
+let scheduleClarificationQueue = [];
+let scheduleClarificationResolved = [];
+let scheduleClarificationClearEvents = [];
+
+function runScheduleClarificationFlow(ambiguousEvents, clearEvents) {
+    scheduleClarificationQueue = ambiguousEvents;
+    scheduleClarificationResolved = [];
+    scheduleClarificationClearEvents = clearEvents;
+    showNextScheduleClarification();
+}
+
+function showNextScheduleClarification() {
+    if (!scheduleClarificationQueue.length) { finishScheduleClarificationFlow(); return; }
+    const ev = scheduleClarificationQueue[0];
+    document.getElementById('schedule-clarify-question').textContent =
+        t('schedule_clarify_question_template').replace('{title}', ev.task_title).replace('{end}', ev.endTime);
+    document.getElementById('schedule-clarify-input').value = '';
+    openModal('modal-schedule-clarify');
+}
+
+// מפענחת תשובה חופשית כמו "מ-8", "8:00", או סתם "9" לשעת התחלה - לא בררנית
+// לגבי הקידומת (מ/מ-/בשעה...), כי כל המספר שהמשתמש הקליד כאן נועד להיות שעה
+function parseStartTimeAnswer(text) {
+    let m = text.match(/(\d{1,2}):(\d{2})/);
+    if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
+    m = text.match(/(\d{1,2})/);
+    if (m) return `${m[1].padStart(2, '0')}:00`;
+    return null;
+}
+
+function confirmScheduleClarification() {
+    const ev = scheduleClarificationQueue.shift();
+    if (!ev) return;
+    const answer = document.getElementById('schedule-clarify-input').value.trim();
+    const startTime = parseStartTimeAnswer(answer);
+    ev.time = startTime ? `${startTime}-${ev.endTime}` : ev.endTime;
+    delete ev.needsClarification;
+    delete ev.endTime;
+    scheduleClarificationResolved.push(ev);
+    closeModal('modal-schedule-clarify');
+    showNextScheduleClarification();
+}
+
+function skipScheduleClarification() {
+    const ev = scheduleClarificationQueue.shift();
+    if (!ev) return;
+    // המשתמש דילג - לא ממציאים שעת התחלה, פשוט משתמשים בשעת הסיום שכן צוינה
+    ev.time = ev.endTime;
+    delete ev.needsClarification;
+    delete ev.endTime;
+    scheduleClarificationResolved.push(ev);
+    closeModal('modal-schedule-clarify');
+    showNextScheduleClarification();
+}
+
+async function finishScheduleClarificationFlow() {
+    const allEvents = [...scheduleClarificationClearEvents, ...scheduleClarificationResolved];
+    scheduleClarificationClearEvents = [];
+    scheduleClarificationResolved = [];
+    if (!allEvents.length) return;
+    await applyParsedScheduleEvents(allEvents);
+    showAppToast(t('schedule_ai_success'));
 }
 
 function loadCustomDefaultHours() {
@@ -1097,7 +1202,7 @@ function buildWeeklyScheduleAccordionUI() {
         // "נופל" בטעות בחזרה ל-10 שורות ברירת המחדל בכל בנייה מחדש של הלוח.
         const slotNumbers = daySlotsConfig[dbDay] !== undefined ? daySlotsConfig[dbDay] : defaultDaySlotNumbers();
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><span class="slot-num-label">${i}</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})"><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
