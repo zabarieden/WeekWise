@@ -1511,120 +1511,47 @@ function sortAllDaySlotsChronologically() {
 }
 
 // --- גרירה להעברת משימה בין משבצות שעה קבועות באותו יום (⠿ בכל שורה) ---
-// בכוונה לא מזיזים את אלמנט ה-DOM של השורה עצמה (בניגוד לגרירת "מבט ליומן"):
-// כל שורה כאן מייצגת משבצת-שעה קבועה (data-slot), ו-saveScheduleSlot כבר
-// ממיין מחדש כרונולוגית לפי שעה אחרי כל שמירה - אם היינו מזיזים את ה-DOM
-// עצמו בלי לשנות שעות, המיון הכרונולוגי היה "מחזיר" את השורות למקומן המקורי
-// מייד. לכן גוררים חזותית עם המצביע, וברגע שחוצים שורה שכנה - מחליפים בפועל
-// רק את *תוכן המשימה* (טקסט + אייקון) בין שתי המשבצות ושומרים את שתיהן,
-// כך שהמשימה עצמה "עוברת" לשעה אחרת בלי לערבב/לאבד שעות קיימות.
+// משתמשים ב-SortableJS (ר' תג ה-script ב-index.html) במקום מאזיני מגע
+// ידניים - הספרייה בנויה וזה שנים בשימוש נרחב בדיוק בשביל הבעיה שדווחה
+// (גרירה שמתנגשת עם גלילת דף טבעית במובייל).
+//
+// חשוב: לא נותנים ל-SortableJS "לנצח" ולקבוע את סדר ה-DOM בפועל, כי כל שורה
+// כאן מייצגת משבצת-שעה קבועה (data-slot, עם onchange/onclick שכבר מוטבעים
+// עם מספר המשבצת שלהם ב-HTML) - ו-saveScheduleSlot כבר ממיין מחדש כרונולוגית
+// לפי שעה אחרי כל שמירה. אם היינו משאירים את ה-DOM במיקום החדש שSortableJS
+// זז אליו, גם המיון הכרונולוגי היה "מחזיר" את השורות למקומן וגם ה-onchange
+// המוטבע היה ממשיך להצביע על מספר המשבצת *הישן*. לכן ב-onEnd קוראים את סדר
+// *תוכן המשימות* החדש שהמשתמש גרר אליו, משחזרים מיד את סדר ה-DOM המקורי
+// לפי data-slot, ואז מחלקים מחדש את תוכן המשימות על פני המשבצות הקבועות -
+// כך שהזמנים תמיד נשארים איפה שהם, אבל המשימה עצמה "עוברת" לשעה אחרת.
 function initScheduleRowDragReorder(dbDay) {
     const page = document.getElementById(`daypage-${dbDay}`);
     const grid = page && page.querySelector('.slots-grid');
-    if (!grid) return;
+    if (!grid || typeof Sortable === 'undefined') return;
 
-    let draggedEl = null;
-    let startY = 0;
-    let pendingDy = 0;
-    let rafId = null;
-    // נמדדים *פעם אחת* ב-startDrag ולא בכל touchmove: קריאה ל-getBoundingClientRect
-    // מיד אחרי כתיבת style.transform כופה על הדפדפן reflow סינכרוני (layout
-    // thrashing) - זה בדיוק מה שגרם לתחושת "התנגדות"/דביקות שדווחה. מיקומי
-    // השכנים לא משתנים תוך כדי הגרירה (רק תוכן הטקסט מוחלף, לא הגובה/המיקום),
-    // אז אפשר לחשב הכול מהמדידה הראשונית בלי לגעת ב-DOM שוב עד שהגרירה מסתיימת
-    let draggedStartRect = null;
-    let siblingRects = [];
+    new Sortable(grid, {
+        handle: '.slot-drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function (evt) {
+            if (evt.oldIndex === evt.newIndex) return;
+            const rowsInNewOrder = Array.from(grid.children).filter(el => el.classList.contains('slot-input-group'));
+            const taskValuesInNewOrder = rowsInNewOrder.map(r => r.querySelector('.slot-task').value);
 
-    function swapTaskContent(rowA, rowB) {
-        const taskA = rowA.querySelector('.slot-task');
-        const taskB = rowB.querySelector('.slot-task');
-        const tmp = taskA.value;
-        taskA.value = taskB.value;
-        taskB.value = tmp;
-        updateSlotTaskIcon(taskA);
-        updateSlotTaskIcon(taskB);
-        rowA.classList.toggle('has-task', !!taskA.value.trim());
-        rowB.classList.toggle('has-task', !!taskB.value.trim());
-        saveScheduleSlot(dbDay, rowA.getAttribute('data-slot'));
-        saveScheduleSlot(dbDay, rowB.getAttribute('data-slot'));
-    }
+            // משחזרים את סדר ה-DOM המקורי לפי מספר המשבצת הקבוע
+            const rowsBySlot = rowsInNewOrder.slice().sort((a, b) => Number(a.getAttribute('data-slot')) - Number(b.getAttribute('data-slot')));
+            rowsBySlot.forEach(r => grid.appendChild(r));
 
-    // אירועי מגע גולמיים (touchstart/touchmove/touchend) ולא Pointer Events:
-    // בטלפון אמיתי הגרירה לא הגיבה בכלל - ה-API הגולמי הזה הוא המכנה המשותף
-    // הכי רחב ואמין בין דפדפני מובייל, בלי להסתמך על תמיכת Pointer Events.
-    // עדיין תומכים גם בעכבר (mousedown/mousemove/mouseup) לבדיקה בדסקטופ.
-    function clientYFromEvent(e) {
-        if (e.touches && e.touches.length) return e.touches[0].clientY;
-        if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientY;
-        return e.clientY;
-    }
-
-    // כותב את ה-transform פעם אחת לכל פריים (לא בכל touchmove, שיכול לירות
-    // הרבה יותר מ-60 פעם בשנייה במכשירים מסוימים) - scale(1.02) ממוזג לתוך
-    // אותו transform יחד עם translateY, כמשוב חזותי עדין שהמשתמש ביקש
-    function applyTransform() {
-        rafId = null;
-        if (!draggedEl) return;
-        draggedEl.style.transform = `translateY(${pendingDy}px) scale(1.02)`;
-    }
-
-    function onMove(e) {
-        if (!draggedEl) return;
-        e.preventDefault();
-        const y = clientYFromEvent(e);
-        pendingDy = y - startY;
-
-        const draggedMid = draggedStartRect.top + pendingDy + draggedStartRect.height / 2;
-        for (const { el: sibling, rect } of siblingRects) {
-            if (draggedMid > rect.top && draggedMid < rect.bottom) {
-                swapTaskContent(draggedEl, sibling);
-                startY = y;
-                pendingDy = 0;
-                break;
-            }
+            // ומחלקים את סדר-המשימות-החדש (מה שהמשתמש גרר) בחזרה על פני המשבצות
+            rowsBySlot.forEach((row, i) => {
+                const taskInput = row.querySelector('.slot-task');
+                taskInput.value = taskValuesInNewOrder[i];
+                updateSlotTaskIcon(taskInput);
+                row.classList.toggle('has-task', !!taskInput.value.trim());
+                saveScheduleSlot(dbDay, row.getAttribute('data-slot'));
+            });
         }
-
-        if (rafId === null) rafId = requestAnimationFrame(applyTransform);
-    }
-
-    function endDrag() {
-        if (!draggedEl) return;
-        if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-        draggedEl.classList.remove('reordering');
-        draggedEl.style.transform = '';
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', endDrag);
-        document.removeEventListener('touchcancel', endDrag);
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', endDrag);
-        draggedEl = null;
-        draggedStartRect = null;
-        siblingRects = [];
-    }
-
-    function startDrag(e) {
-        const handle = e.currentTarget;
-        const el = handle.closest('.slot-input-group');
-        if (!el) return;
-        e.preventDefault();
-        draggedEl = el;
-        startY = clientYFromEvent(e);
-        pendingDy = 0;
-        draggedStartRect = draggedEl.getBoundingClientRect();
-        siblingRects = Array.from(grid.querySelectorAll('.slot-input-group'))
-            .filter(r => r !== draggedEl)
-            .map(r => ({ el: r, rect: r.getBoundingClientRect() }));
-        draggedEl.classList.add('reordering');
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', endDrag);
-        document.addEventListener('touchcancel', endDrag);
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', endDrag);
-    }
-
-    grid.querySelectorAll('.slot-drag-handle').forEach(handle => {
-        handle.addEventListener('touchstart', startDrag, { passive: false });
-        handle.addEventListener('mousedown', startDrag);
     });
 }
 

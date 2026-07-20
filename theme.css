@@ -421,12 +421,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .slot-time-wrap { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
 .slot-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
 .slot-drag-handle:active { cursor: grabbing; }
-/* will-change מעביר את השורה לשכבת compositor נפרדת לפני שהגרירה מתחילה,
-   כך שעדכוני transform במהלך הגרירה מצוירים ישירות ב-GPU בלי לגרום ל-
-   repaint של שאר הדף בכל פריים - זה חלק מהתיקון לתחושת "התנגדות" שדווחה.
-   ה-scale(1.02) עצמו נכתב ב-JS (מוזג עם ה-translateY לאותו transform אחד),
-   לא כאן ב-CSS, כדי שלא "יתאפס" ע"י ה-inline style שנכתב על כל תזוזה */
-.slot-input-group.reordering { position: relative; z-index: 20; opacity: 0.8; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); will-change: transform; transition: none !important; }
+/* SortableJS: .sortable-ghost הוא ה"רווח" השקוף שנשאר במקום המקורי בזמן
+   הגרירה, .sortable-chosen הוא האלמנט הנגרר עצמו - הספרייה מטפלת בכל
+   ה-transform/אנימציה בעצמה (animation: 150 באתחול), כאן רק העיצוב */
+.sortable-ghost { opacity: 0.4; }
+.sortable-chosen { position: relative; z-index: 20; opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */
 .slot-input-group.has-task .slot-task-wrap {
