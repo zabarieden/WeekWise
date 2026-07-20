@@ -93,6 +93,14 @@ html.light-mode input[type="date"] {
     color: var(--accent-purple) !important;
     color-scheme: light;
 }
+/* כרטיסי היתרונות במודל השדרוג לפרימיום: טקסט כהה כבר מגיע מ-var(--text-primary),
+   אבל הרקע/מסגרת הסגולים העדינים (6%/15% אלפא) כמעט נבלעים ברקע לבן - מגבירים
+   קצת את העוצמה ומוסיפים זוהר עדין כדי שהכרטיסים ייראו פרימיום גם במצב בהיר */
+html.light-mode .premium-benefits-list li {
+    background-color: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.12);
+}
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #07060a;
