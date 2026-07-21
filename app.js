@@ -1911,7 +1911,12 @@ async function renderSelectedCalendarDay() {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
-    const rows = data.map(item => `<div class="today-tasks-row"><span class="today-tasks-text">${item.event_title}</span></div>`).join('');
+    const rows = data.map(item => `
+        <div class="today-tasks-row">
+            <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
+            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
+        </div>
+    `).join('');
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}`;
 }
 
@@ -2072,6 +2077,7 @@ function buildRecurringEventRow(items, groupId) {
 async function toggleEventOccurrenceCompletion(id, isCompleted) {
     await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
     loadCalendarEvents();
+    if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
 // --- גרירה לסידור ידני-עצמאי (עדיפות) של פריטי מבט ליומן, בלי קשר לתאריך ---
