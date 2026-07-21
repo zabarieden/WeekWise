@@ -3156,7 +3156,7 @@ async function navigateFinanceMonth(delta) {
     const target = shiftMonthKey(base, delta);
     if (target > currentMonthKey()) return;
     financeSummaryMonthKey = target;
-    await renderFinanceSummary();
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
 
 async function renderFinanceSummary() {
@@ -3180,11 +3180,19 @@ async function renderFinanceSummary() {
     balanceEl.style.color = (income - expense) < 0 ? 'var(--accent-red)' : 'var(--accent-green)';
 }
 
+// ההיסטוריה מסוננת לפי אותו חודש שנבחר בסיכום החודשי (financeSummaryMonthKey,
+// עם אותם חצי ניווט <>) - כך שיש דרך אמיתית "לראות אחורה לפי בחירה", לא רק
+// רשימת "50 האחרונות" קבועה בלי שום שליטה על התאריך
 async function renderFinanceHistory() {
     const list = document.getElementById('finance-history-list');
     if (!list || !supabaseClient || !currentUserId) return;
+    const monthKey = financeSummaryMonthKey || currentMonthKey();
+    const [y, m] = monthKey.split('-').map(Number);
+    const firstStr = `${monthKey}-01`;
+    const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
     const { data } = await supabaseClient.from('budget_tracker').select('*')
-        .eq('user_id', currentUserId).order('entry_date', { ascending: false }).order('created_at', { ascending: false }).limit(50);
+        .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
+        .order('entry_date', { ascending: false }).order('created_at', { ascending: false });
     list.innerHTML = '';
     if (!data || !data.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`; return; }
     data.forEach(row => {
@@ -3194,11 +3202,12 @@ async function renderFinanceHistory() {
         const colorVar = row.entry_type === 'income' ? 'var(--accent-green)' : 'var(--accent-red)';
         const categoryKey = (FINANCE_CATEGORIES[row.entry_type] || []).find(([value]) => value === row.category);
         const categoryLabel = categoryKey ? t(categoryKey[1]) : (row.category || '');
+        const formattedDate = new Date(row.entry_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${categoryLabel}</span>
                 ${row.note ? `<span class="finance-history-note">${escapeHtmlForReport(row.note)}</span>` : ''}
-                <span class="finance-history-date">${row.entry_date}</span>
+                <span class="finance-history-date">${formattedDate}</span>
             </div>
             <span class="finance-history-amount" style="color: ${colorVar};">${sign}${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">❌</button>
