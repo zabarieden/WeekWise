@@ -1223,7 +1223,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    הגדרת CSS ייעודית, אז היא נפלה חזרה לעיצוב ברירת המחדל המכוער של הדפדפן
    (גבול אפור, בלי עיגול פינות, בלי גובה מינימלי). עכשיו משתמשת באותם משתני
    הרקע/הטקסט כמו כל שאר האפליקציה, אז עוקבת אוטומטית אחרי כהה/בהיר/ערכות פרימיום */
-#ai-schedule-input {
+#ai-schedule-input, #ai-finance-input {
     width: 100%;
     min-height: 120px;
     background-color: var(--bg-glass);
@@ -1241,11 +1241,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-sizing: border-box;
     transition: var(--transition);
 }
-#ai-schedule-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
-#ai-schedule-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
-#ai-schedule-input::-webkit-scrollbar { width: 8px; }
-#ai-schedule-input::-webkit-scrollbar-track { background: transparent; }
-#ai-schedule-input::-webkit-scrollbar-thumb { background-color: rgba(168, 85, 247, 0.3); border-radius: 8px; }
+#ai-schedule-input::placeholder, #ai-finance-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
+#ai-schedule-input:focus, #ai-finance-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
+#ai-schedule-input::-webkit-scrollbar, #ai-finance-input::-webkit-scrollbar { width: 8px; }
+#ai-schedule-input::-webkit-scrollbar-track, #ai-finance-input::-webkit-scrollbar-track { background: transparent; }
+#ai-schedule-input::-webkit-scrollbar-thumb, #ai-finance-input::-webkit-scrollbar-thumb { background-color: rgba(168, 85, 247, 0.3); border-radius: 8px; }
 #schedule-clarify-input {
     width: 100%;
     background-color: var(--bg-glass);
