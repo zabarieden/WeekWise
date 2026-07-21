@@ -912,8 +912,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-sizing: border-box;
 }
 .calendar-event-date-badge {
-    background-color: rgba(168, 85, 247, 0.12);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    /* color-mix (לא rgba קבוע) - כך שהתג של התאריך עוקב אחרי הגוון הסגול
+       האמיתי של ערכת הנושא הנבחרת, ולא נשאר בסגול ברירת המחדל הקבוע כשבוחרים
+       ערכה אחרת - זה מה שגרם לו להיראות "אפור"/לא-תואם, בעיקר במצב בהיר */
+    background-color: color-mix(in srgb, var(--accent-purple) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-purple) 32%, transparent);
     color: var(--accent-purple-light);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -1094,7 +1097,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-detail-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
 .recipe-detail-badge { background-color: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); font-size: 0.75rem; font-weight: 600; border-radius: 20px; padding: 5px 12px; }
 .recipe-detail-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.recipe-detail-list li { background-color: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; color: var(--text-primary); text-align: start; }
+.recipe-detail-list li { background-color: var(--bg-row); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; color: var(--text-primary); text-align: start; }
 .recipe-detail-instructions p { font-size: 0.88rem; color: var(--text-primary); line-height: 1.6; margin: 0 0 10px 0; text-align: start; }
 
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
@@ -1168,7 +1171,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 .progress-container { display: flex; flex-direction: column; gap: 8px; }
-.progress-row { background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
+.progress-row { background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.01); border-radius: 10px; padding: 10px; }
 .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 6px; }
 .progress-counter { display: flex; align-items: center; gap: 6px; }
 .btn-counter { background-color: rgba(255, 255, 255, 0.04); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 10;}
@@ -1419,7 +1422,9 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .monthly-calendar-cell {
     position: relative;
-    background-color: rgba(255, 255, 255, 0.03);
+    /* var(--bg-row) - לא רקע לבן/שחור קבוע - כך שגם תאי התאריך בלוח החודשי
+       מקבלים את גוון ערכת הנושא הנבחרת, במקום להישאר תמיד אפורים */
+    background-color: var(--bg-row);
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 8px;
     aspect-ratio: 1 / 1;
@@ -1434,7 +1439,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 }
 .monthly-calendar-cell.empty { visibility: hidden; cursor: default; }
 .monthly-calendar-cell.today { border-color: var(--tile-accent, var(--accent-gold)); color: var(--tile-accent, var(--accent-gold)); font-weight: 700; }
-.monthly-calendar-cell.selected { background-color: rgba(245, 158, 11, 0.15); border-color: var(--tile-accent, var(--accent-gold)); }
+.monthly-calendar-cell.selected { background-color: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 18%, transparent); border-color: var(--tile-accent, var(--accent-gold)); }
 .monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
 .monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -1466,7 +1471,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-goal-trophy-text span { font-size: 0.72rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .monthly-goal-claim-btn { flex-shrink: 0; font-size: 0.72rem; padding: 8px 12px; white-space: nowrap; }
 .monthly-goal-lookback-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
-.monthly-goal-lookback-item { display: flex; align-items: center; gap: 8px; background-color: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px; font-size: 0.75rem; color: var(--text-secondary); }
+.monthly-goal-lookback-item { display: flex; align-items: center; gap: 8px; background-color: var(--bg-row); border-radius: 8px; padding: 8px 10px; font-size: 0.75rem; color: var(--text-secondary); }
 .monthly-goal-lookback-item.achieved { color: var(--accent-green); }
 .monthly-goal-lookback-month { font-weight: 700; min-width: 54px; }
 .monthly-goal-lookback-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
