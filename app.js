@@ -1915,6 +1915,7 @@ async function renderSelectedCalendarDay() {
         <div class="today-tasks-row">
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
             <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
+            <button type="button" class="btn-delete-item" onclick="deleteCalendarEvent('${item.id}')">❌</button>
         </div>
     `).join('');
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}`;
@@ -2231,6 +2232,7 @@ async function deleteCalendarEvent(id) {
     await supabaseClient.from('calendar_events').delete().eq('id', id);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
+    if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
 async function deleteRecurringSeries(groupId) {
