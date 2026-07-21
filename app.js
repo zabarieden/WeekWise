@@ -11,6 +11,22 @@ const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday',
 let defaultHours = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
+let currentUserCreatedAt = null;
+
+// שורת מידע קטנה בראש "ניהול משתמש" בהגדרות - אימייל + "חברה מאז" - מידע
+// בסיסי שכל מסך ניהול חשבון מציג, בלי שום שאילתה נוספת (הכל כבר קיים מה-
+// session של Supabase Auth)
+function renderSettingsAccountInfo() {
+    const el = document.getElementById('settings-account-info');
+    if (!el) return;
+    if (!currentUsername) { el.textContent = ''; return; }
+    let text = currentUsername;
+    if (currentUserCreatedAt) {
+        const d = new Date(currentUserCreatedAt);
+        if (!isNaN(d)) text += ` • ${t('settings_member_since')} ${d.toLocaleDateString()}`;
+    }
+    el.textContent = text;
+}
 let reminderIntervalStarted = false;
 let authMode = 'login';
 
@@ -377,6 +393,8 @@ async function submitAuthForm() {
 async function initAppAfterAuth(user) {
     currentUserId = user.id;
     currentUsername = user.email;
+    currentUserCreatedAt = user.created_at || null;
+    renderSettingsAccountInfo();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     showAppLoadingOverlay();
@@ -2457,6 +2475,12 @@ function renderSettingsSubscriptionSection() {
     const statusEl = document.getElementById('settings-subscription-status');
     const changeBtn = document.getElementById('btn-change-plan');
     const cancelBtn = document.getElementById('btn-cancel-subscription');
+    const goPremiumSection = document.getElementById('settings-go-premium-section');
+    const activeBadge = document.getElementById('settings-premium-active-badge');
+    // ברגע שכבר יש פרימיום, אין טעם להמשיך להציג את כפתור "שדרוג לפרימיום" -
+    // מוחלף בתג עדין "פרימיום פעיל" במקומו
+    if (goPremiumSection) goPremiumSection.classList.toggle('hidden', isPremiumUser);
+    if (activeBadge) activeBadge.classList.toggle('hidden', !isPremiumUser);
     if (!section || !statusEl || !changeBtn || !cancelBtn) return;
     if (!isPremiumUser) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
