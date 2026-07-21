@@ -2542,6 +2542,70 @@ async function deleteUserAccount() {
     }
 }
 
+// שינוי סיסמה: auth.updateUser (Supabase) - אין צורך בכלום צד-שרת, המשתמשת
+// כבר מחוברת עם session תקף, וזו בדיוק הפעולה ש-updateUser נועדה לה
+async function submitChangePassword() {
+    if (!supabaseClient) return;
+    const pwInput = document.getElementById('new-password-input');
+    const confirmInput = document.getElementById('confirm-password-input');
+    const pw = pwInput.value;
+    const confirmPw = confirmInput.value;
+    if (!pw || pw.length < 6) { showAppToast(t('change_password_too_short'), 'error'); return; }
+    if (pw !== confirmPw) { showAppToast(t('change_password_mismatch'), 'error'); return; }
+    const { error } = await supabaseClient.auth.updateUser({ password: pw });
+    if (error) { showAppToast(t('change_password_failed'), 'error'); return; }
+    pwInput.value = '';
+    confirmInput.value = '';
+    closeModal('modal-change-password');
+    showAppToast(t('change_password_success'));
+}
+
+// ייצוא נתונים אישיים: קורא ישירות מכל טבלת תוכן (לא טבלאות מצב-אפליקציה
+// פנימיות כמו user_premium/user_ai_usage/push_subscriptions) ובונה קובץ JSON
+// אחד להורדה - כל השאילתות כבר עוברות דרך אותו supabaseClient עם RLS קיים,
+// כך שזה תמיד רק הנתונים של המשתמשת המחוברת עצמה
+const EXPORTABLE_USER_TABLES = [
+    'weekly_schedule', 'calendar_events', 'my_center_tasks', 'monthly_goals',
+    'weekly_progress_targets', 'recipes', 'meal_presets', 'calorie_tracker',
+    'weight_tracker', 'step_tracker',
+];
+async function exportUserData() {
+    if (!supabaseClient || !currentUserId) return;
+    showAppToast(t('settings_export_data_preparing'));
+    const exportData = { exported_at: new Date().toISOString(), email: currentUsername };
+    for (const table of EXPORTABLE_USER_TABLES) {
+        const { data } = await supabaseClient.from(table).select('*').eq('user_id', currentUserId);
+        exportData[table] = data || [];
+    }
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `weekwise-data-${getLocalDateString()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showAppToast(t('settings_export_data_done'));
+}
+
+// שיתוף האפליקציה: Web Share API כשקיים (מובייל בעיקר), אחרת מעתיקים את
+// הקישור ללוח (עם showAppToast כחיווי) - שני המסלולים לא דורשים שום שרת
+async function shareApp() {
+    const shareUrl = location.origin + location.pathname;
+    if (navigator.share) {
+        try { await navigator.share({ title: 'WeekWise', text: t('settings_share_app_text'), url: shareUrl }); }
+        catch (err) { /* המשתמשת ביטלה את חלון השיתוף - לא שגיאה אמיתית */ }
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(shareUrl);
+        showAppToast(t('settings_share_app_copied'));
+    } catch (err) {
+        showAppToast(shareUrl);
+    }
+}
+
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
 // לא פרימיום, לפי הסטטוס האמיתי מהשרת (לא נגזר מהטקס החגיגי בלבד)
 function updateHomePremiumBadgeVisibility() {
