@@ -1179,6 +1179,32 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .center-list-item-text { flex: 1; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
+/* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
+   חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
+.note-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
+.note-drag-handle:active { cursor: grabbing; }
+.note-triage-hint { font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px 0; text-align: center; }
+.note-triage-zones { display: flex; gap: 8px; margin-bottom: 12px; }
+.note-triage-zone {
+    flex: 1 1 0;
+    border: 2px dashed rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: var(--transition);
+    min-height: 30px;
+}
+.note-triage-icon { font-size: 1.3rem; }
+/* SortableJS מוסיף .sortable-ghost על הפריט המדומה בזמן גרירה מעל היעד -
+   מדגישים את האזור עצמו כשמרחפים מעליו עם פריט נגרר */
+.note-triage-zone:has(.sortable-ghost) { border-style: solid; border-color: var(--accent-purple); background-color: rgba(168, 85, 247, 0.08); color: var(--accent-purple-light); }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 /* קופסת סימון: var(--accent-purple) ולא צבע קבוע, כדי שתעקוב אוטומטית אחרי

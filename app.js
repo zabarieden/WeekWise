@@ -156,7 +156,11 @@ async function loadCenterItems(type) {
     data.forEach(item => {
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
+        // ידית גרירה רק לפתקים (weekly) - לא לרשימת קניות - כדי לגרור פתק אל
+        // אחד מ"אזורי הטריאז'" (היום/מחר) ולהפוך אותו למשימה מתוזמנת
+        const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
         li.innerHTML = `
+            ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
@@ -168,6 +172,58 @@ async function loadCenterItems(type) {
         `;
         listUl.appendChild(li);
     });
+    if (type === 'weekly') initNoteTriageDragDrop();
+}
+
+// --- גרירת פתק אל "היום"/"מחר": הופך אותו למשימה מתוזמנת אמיתית (calendar_events),
+// אותה טבלה בדיוק שכבר מזינה את "מבט ליומן", "משימות להיום" ולוח החודש - אז
+// זה "נכנס ללו"ז החודשי" אוטומטית בלי שום קוד נוסף באותם מסכים. הפתק המקורי
+// נמחק (הוא "הפך" למשימה, לא הועתק) ---
+let noteTriageSortablesInitialized = false;
+function initNoteTriageDragDrop() {
+    if (noteTriageSortablesInitialized || typeof Sortable === 'undefined') return;
+    const list = document.getElementById('weekly-list');
+    const todayZone = document.getElementById('note-triage-today');
+    const tomorrowZone = document.getElementById('note-triage-tomorrow');
+    if (!list || !todayZone || !tomorrowZone) return;
+    noteTriageSortablesInitialized = true;
+
+    new Sortable(list, {
+        group: { name: 'note-triage', pull: 'clone', put: false },
+        handle: '.note-drag-handle',
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: true,
+        sort: false,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+    });
+    [todayZone, tomorrowZone].forEach(zone => {
+        new Sortable(zone, {
+            group: { name: 'note-triage', pull: false, put: true },
+            animation: 150,
+            forceFallback: true,
+            onAdd: function (evt) {
+                const itemId = evt.item.getAttribute('data-item-id');
+                const textEl = evt.item.querySelector('.center-list-item-text');
+                const content = textEl ? textEl.textContent.trim() : '';
+                evt.item.remove();
+                handleNoteTriageDrop(itemId, zone.getAttribute('data-triage'), content);
+            },
+        });
+    });
+}
+
+async function handleNoteTriageDrop(itemId, triageType, content) {
+    if (!supabaseClient || !currentUserId || !content) return;
+    const targetDate = triageType === 'tomorrow' ? getLocalDateString(new Date(Date.now() + 86400000)) : getLocalDateString();
+    await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: content, event_date: targetDate });
+    await supabaseClient.from('my_center_tasks').delete().eq('id', itemId);
+    loadCenterItems('weekly');
+    loadTodayTasks();
+    loadMonthlyCalendarGrid();
+    loadCalendarEvents();
+    showAppToast(t(triageType === 'tomorrow' ? 'note_triage_success_tomorrow' : 'note_triage_success_today'));
 }
 
 // --- ניהול ארוחות (מוטמע מחדש במלואו) ---
