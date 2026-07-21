@@ -2995,16 +2995,36 @@ async function adjustCustomGoal(delta) {
     await renderMonthlyGoal();
 }
 
+// נשמר לשימוש כפתור השיתוף האופציונלי (shareGoalAchievement) - לא הצגה בלבד
+let lastCelebratedGoalSummary = '';
+
 function celebrateGoalAchieved(goal) {
     const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
     const msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
     document.getElementById('goal-celebration-text').textContent = msg;
     const summaryEl = document.getElementById('goal-celebration-summary');
-    if (summaryEl) {
-        const progressText = formatGoalProgressText(goal, goal.current_value);
-        summaryEl.textContent = `${goal.goal_name} — ${progressText}`;
-    }
+    const progressText = formatGoalProgressText(goal, goal.current_value);
+    lastCelebratedGoalSummary = `${goal.goal_name} — ${progressText}`;
+    if (summaryEl) summaryEl.textContent = lastCelebratedGoalSummary;
     openModal('modal-goal-celebration');
+}
+
+// שיתוף הישג - כפתור משני, לגמרי אופציונלי (ר' הדיון: מישהי בלי "מישהו
+// ספציפי" לשתף איתו לא אמורה להרגיש שמוכרחים - זו סיבה בדיוק ל-navigator.share
+// הכללי, לא ניסוח שמניח קיום חבר/ה ספציפיים, והיא תמיד ניתנת להתעלמות)
+async function shareGoalAchievement() {
+    const shareText = t('goal_share_text_template').replace('{goal}', lastCelebratedGoalSummary);
+    if (navigator.share) {
+        try { await navigator.share({ title: 'WeekWise', text: shareText }); }
+        catch (err) { /* המשתמשת ביטלה את חלון השיתוף - לא שגיאה אמיתית */ }
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(shareText);
+        showAppToast(t('settings_share_app_copied'));
+    } catch (err) {
+        showAppToast(shareText);
+    }
 }
 
 async function toggleMonthlyGoalLookback() {

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=87">
+    <link rel="stylesheet" href="theme.css?v=88">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -889,6 +889,9 @@
                 <p id="goal-celebration-text" class="modal-subtitle"></p>
                 <p id="goal-celebration-summary" class="goal-celebration-summary"></p>
                 <button class="btn-primary btn-premium-cta" style="width: 100%;" onclick="closeModal('modal-goal-celebration')" data-i18n="monthly_goal_celebration_close_btn">Thank you, I earned it!</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button type="button" class="btn-link-subtle" onclick="shareGoalAchievement()" data-i18n="monthly_goal_share_btn">Share this achievement</button>
+                </div>
             </div>
         </div>
 
@@ -1037,7 +1040,7 @@
 
     </div>
 
-    <script src="i18n.js?v=37"></script>
-    <script src="app.js?v=76"></script>
+    <script src="i18n.js?v=38"></script>
+    <script src="app.js?v=77"></script>
 </body>
 </html>

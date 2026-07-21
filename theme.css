@@ -1582,6 +1582,10 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    ויזואלית עם שאר פעולות ניהול המשתמש, אבל עדיין ברור/אדום כפעולה הרסנית */
 .btn-link-danger-small { background: transparent; border: none; color: var(--accent-red); opacity: 0.7; font-size: 0.72rem; text-decoration: underline; cursor: pointer; padding: 4px; }
 .btn-link-danger-small:active { opacity: 1; }
+/* כפתור-קישור משני עדין (למשל "שתפי את ההישג") - קטן ולא מתחרה עם הכפתור
+   הראשי, בכוונה: זו פעולה לגמרי אופציונלית שאין שום לחץ להשתמש בה */
+.btn-link-subtle { background: transparent; border: none; color: var(--text-secondary); opacity: 0.8; font-size: 0.78rem; text-decoration: underline; cursor: pointer; padding: 4px; }
+.btn-link-subtle:active { opacity: 1; }
 /* תג "פרימיום פעיל" עדין - מחליף את כפתור "שדרוג לפרימיום" ברגע שכבר יש
    פרימיום, כדי לא להמשיך להציע שדרוג למי שכבר שדרגה */
 .premium-active-badge { text-align: center; margin: 10px 0; }
