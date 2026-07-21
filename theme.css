@@ -189,6 +189,23 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
+.home-premium-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(255, 0, 127, 0.18));
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: var(--accent-gold);
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+.home-premium-badge:active { transform: scale(0.95); }
+.home-premium-badge-icon { font-size: 0.8rem; }
 .dashboard-grid {
     display: flex;
     flex-direction: column;
@@ -1229,6 +1246,48 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .premium-tier-price-sub { font-size: 0.62rem; font-weight: 500; color: var(--text-secondary); margin-top: 3px; line-height: 1.3; }
 .premium-tier-period { font-size: 0.62rem; font-weight: 500; color: var(--text-secondary); }
 .btn-premium-cta { width: 100%; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; }
+
+/* טקס פתיחת פרימיום: שכבה על-גבי-הכול עם שדה נצנצים שמהבהבים אחד-אחד
+   (עיכוב שונה לכל תו), ואז כרטיס תוכן שנכנס במרכז בהדרגה - position:absolute
+   יחסית ל-.phone-wrapper, מעל אפילו המגירה (z-index הכי גבוה באפליקציה) */
+.premium-unlock-ceremony {
+    position: absolute;
+    inset: 0;
+    z-index: 5000;
+    display: none;
+    background: radial-gradient(circle at 50% 40%, rgba(168, 85, 247, 0.25), rgba(0, 0, 0, 0.85) 70%);
+    align-items: center;
+    justify-content: center;
+}
+.premium-unlock-ceremony.open { display: flex; animation: fadeOverlay 0.3s ease-out; }
+.premium-sparkle-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.premium-sparkle {
+    position: absolute;
+    font-size: 1.3rem;
+    opacity: 0;
+    animation: premiumSparkleTwinkle 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7));
+}
+@keyframes premiumSparkleTwinkle {
+    0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.1) rotate(20deg); }
+}
+.premium-unlock-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 30px 24px;
+    max-width: 300px;
+    animation: premiumUnlockContentIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 0.2s;
+}
+@keyframes premiumUnlockContentIn {
+    0% { opacity: 0; transform: scale(0.7) translateY(10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.premium-unlock-icon { font-size: 3rem; margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6)); }
+.premium-unlock-content h2 { font-size: 1.3rem; margin: 0 0 10px 0; background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.premium-unlock-content p { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 20px 0; line-height: 1.5; }
 .action-buttons-wrap { display: flex; gap: 8px; }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; z-index: 10;}
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }

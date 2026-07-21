@@ -2416,10 +2416,19 @@ async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
         isPremiumUser = true;
+        updateHomePremiumBadgeVisibility();
         return;
     }
     const { data } = await supabaseClient.from('user_premium').select('is_premium').eq('user_id', currentUserId).maybeSingle();
     isPremiumUser = !!(data && data.is_premium);
+    updateHomePremiumBadgeVisibility();
+}
+
+// נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
+// לא פרימיום, לפי הסטטוס האמיתי מהשרת (לא נגזר מהטקס החגיגי בלבד)
+function updateHomePremiumBadgeVisibility() {
+    const badge = document.getElementById('home-premium-badge');
+    if (badge) badge.classList.toggle('hidden', isPremiumUser);
 }
 
 function openPremiumUpgradeModal() {
@@ -2435,8 +2444,24 @@ function selectPremiumTier(el) {
     el.classList.add('selected');
 }
 
+// הערה: זהו עדיין זרם הדגמה בלבד (בלי סליקה אמיתית מאחורה) - בכוונה לא
+// הופך כאן את isPremiumUser ל-true/כותב ל-user_premium, כי זה יאפשר לכל
+// אחד "לשדרג" חינם בלי שום אימות תשלום אמיתי. הטקס החגיגי הוא שיפור חזותי
+// לאותו זרם הדגמה קיים, לא הפעלה אמיתית של פרימיום - זה יידרש חיבור אמיתי
+// לספק סליקה (Stripe/IAP) בצד שרת לפני שזה יכול להיות אמיתי
 function submitPremiumUpgrade() {
     closeModal('modal-premium-upgrade');
+    celebratePremiumUnlock();
+}
+
+function celebratePremiumUnlock() {
+    const overlay = document.getElementById('premium-unlock-ceremony');
+    if (overlay) overlay.classList.add('open');
+}
+
+function closePremiumUnlockCeremony() {
+    const overlay = document.getElementById('premium-unlock-ceremony');
+    if (overlay) overlay.classList.remove('open');
     showAppToast(t('settings_upgrade_toast'));
 }
 

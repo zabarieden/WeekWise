@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=80">
+    <link rel="stylesheet" href="theme.css?v=81">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -70,6 +70,12 @@
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                         <p class="home-greeting-date" id="home-greeting-date"></p>
                     </div>
+                    <!-- מוצג רק למי שאינה פרימיום (ר' updateHomePremiumBadgeVisibility) -
+                         נקודת גילוי נוספת לשדרוג ישירות ממסך הבית, לצד ההגדרות -->
+                    <button type="button" id="home-premium-badge" class="home-premium-badge hidden" onclick="openPremiumUpgradeModal()">
+                        <span class="home-premium-badge-icon">⭐</span>
+                        <span data-i18n="home_premium_badge_label">Premium</span>
+                    </button>
                 </div>
                 <div class="dashboard-grid">
                     <div class="nav-cube" data-target="schedule-section">
@@ -950,9 +956,34 @@
             </div>
         </div>
 
+        <!-- טקס פתיחת פרימיום: מוצג פעם אחת מיד אחרי אישור השדרוג - נצנצים
+             ברגע-אחד בצבעי המותג, ואז הסבר קצר על מה שנפתח -->
+        <div id="premium-unlock-ceremony" class="premium-unlock-ceremony">
+            <div class="premium-sparkle-field">
+                <span class="premium-sparkle" style="top:8%; left:15%; animation-delay:0s;">✨</span>
+                <span class="premium-sparkle" style="top:20%; left:78%; animation-delay:0.15s;">✨</span>
+                <span class="premium-sparkle" style="top:35%; left:40%; animation-delay:0.3s;">✨</span>
+                <span class="premium-sparkle" style="top:12%; left:55%; animation-delay:0.45s;">✨</span>
+                <span class="premium-sparkle" style="top:60%; left:12%; animation-delay:0.1s;">✨</span>
+                <span class="premium-sparkle" style="top:70%; left:85%; animation-delay:0.35s;">✨</span>
+                <span class="premium-sparkle" style="top:45%; left:88%; animation-delay:0.55s;">✨</span>
+                <span class="premium-sparkle" style="top:80%; left:45%; animation-delay:0.25s;">✨</span>
+                <span class="premium-sparkle" style="top:25%; left:8%; animation-delay:0.5s;">✨</span>
+                <span class="premium-sparkle" style="top:55%; left:60%; animation-delay:0.05s;">✨</span>
+                <span class="premium-sparkle" style="top:90%; left:20%; animation-delay:0.4s;">✨</span>
+                <span class="premium-sparkle" style="top:5%; left:30%; animation-delay:0.6s;">✨</span>
+            </div>
+            <div class="premium-unlock-content">
+                <div class="premium-unlock-icon">🏆</div>
+                <h2 data-i18n="premium_unlock_title">Premium Unlocked!</h2>
+                <p data-i18n="premium_unlock_desc">Custom themes, the AI planner, monthly goals and unlimited scans are all yours now.</p>
+                <button class="btn-primary btn-premium-cta" onclick="closePremiumUnlockCeremony()" data-i18n="premium_unlock_cta">Let's go!</button>
+            </div>
+        </div>
+
     </div>
 
-    <script src="i18n.js?v=33"></script>
-    <script src="app.js?v=70"></script>
+    <script src="i18n.js?v=34"></script>
+    <script src="app.js?v=71"></script>
 </body>
 </html>
