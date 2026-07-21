@@ -2424,11 +2424,13 @@ async function loadPremiumStatus() {
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
         isPremiumUser = true;
         updateHomePremiumBadgeVisibility();
+        updateThemeSwatchLocks();
         return;
     }
     const { data } = await supabaseClient.from('user_premium').select('is_premium').eq('user_id', currentUserId).maybeSingle();
     isPremiumUser = !!(data && data.is_premium);
     updateHomePremiumBadgeVisibility();
+    updateThemeSwatchLocks();
 }
 
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
@@ -2436,6 +2438,15 @@ async function loadPremiumStatus() {
 function updateHomePremiumBadgeVisibility() {
     const badge = document.getElementById('home-premium-badge');
     if (badge) badge.classList.toggle('hidden', isPremiumUser);
+}
+
+// מסירים את אייקון המנעול 🔒 מכל ערכות הנושא ברגע שהמשתמשת פרימיום אמיתית -
+// הכפתורים עצמם כבר פועלים בלי חסימה (selectColorTheme בודק isPremiumUser),
+// אבל בלי זה המנעול הוויזואלי היה נשאר מוצג גם כשאין יותר שום חסימה בפועל
+function updateThemeSwatchLocks() {
+    document.querySelectorAll('.theme-swatch-lock').forEach(el => {
+        el.classList.toggle('hidden', isPremiumUser);
+    });
 }
 
 function openPremiumUpgradeModal() {
