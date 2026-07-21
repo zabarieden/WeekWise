@@ -578,6 +578,28 @@ function closeSubView(sectionId) {
     if (grid) grid.classList.remove('hidden');
 }
 
+// --- תפריט המבורגר: לא ניתוב חדש - קיצור-דרך מסודר-בקטגוריות שקורא בדיוק
+// לאותן switchToTab/openSubTile שרשת הריבועים של מסך הבית כבר משתמשת בהן.
+// נוסף לצד רשת הריבועים, לא מחליף אותה ---
+function openHamburgerMenu() {
+    const overlay = document.getElementById('hamburger-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+}
+
+function closeHamburgerMenu() {
+    const overlay = document.getElementById('hamburger-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+}
+
+// switchToTab מפעיל קליק אמיתי על ה-nav-cube, שמריץ סינכרונית את כל טיפול
+// ה-click הרגיל (כולל closeSubView על כל המסכים) - אז openSubTile מיד אחריו
+// כבר פועל על המצב הנקי והנכון, בלי תלות בשום דבר אסינכרוני
+function navigateFromMenu(sectionId, subviewId) {
+    closeHamburgerMenu();
+    switchToTab(sectionId);
+    if (subviewId) openSubTile(sectionId, subviewId);
+}
+
 // --- קיצורי דרך של ה-PWA (manifest.json shortcuts): קפיצה ישירה ללשונית מבוקשת ---
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);

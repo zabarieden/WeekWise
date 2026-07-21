@@ -456,6 +456,87 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .settings-fab { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 42px; height: 42px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); z-index: 3500; padding: 0; transition: var(--transition); }
 .settings-fab:active { transform: translateX(-50%) scale(0.9); }
+
+/* תפריט המבורגר: כפתור קבוע בפינה הימנית-עליונה (מול עוזר ה-AI בשמאל),
+   שפותח מגירה שקופצת מהצד עם קיצורי-דרך מסודרים בקטגוריות - לא מחליף את
+   רשת הריבועים, רק נוסף לצידה. position:absolute יחסית ל-.phone-wrapper,
+   אותה סיבה בדיוק כמו שאר ה-FAB-ים (נשאר צמוד לכרטיס גם בדסקטופ רחב) */
+.hamburger-fab {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    z-index: 3500;
+    padding: 0;
+    transition: var(--transition);
+}
+.hamburger-fab:active { transform: scale(0.9); }
+
+.hamburger-drawer-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 4000;
+    display: none;
+}
+.hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
+.hamburger-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 82%;
+    max-width: 320px;
+    background-color: var(--bg-sheet);
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
+    padding: 20px 16px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.hamburger-drawer-overlay.open .hamburger-drawer { transform: translateX(0); }
+.hamburger-drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.hamburger-drawer-header h3 { font-size: 1.05rem; margin: 0; }
+.hamburger-drawer-close { background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; padding: 4px; }
+.hamburger-drawer-section-title { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px 0; }
+.hamburger-drawer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: start;
+    transition: var(--transition);
+}
+.hamburger-drawer-item:active { transform: scale(0.98); background-color: rgba(255, 255, 255, 0.06); }
+.hamburger-drawer-item-icon { font-size: 1.1rem; flex-shrink: 0; }
+.hamburger-drawer-item-title { flex: 1 1 auto; min-width: 0; }
+
 .premium-drawer-title { margin-top: 18px !important; }
 .btn-settings-drawer-feature { width: 100%; margin-top: 4px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); }
 .day-page { flex: 0 0 100%; min-width: 0; min-height: 0; height: auto; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; align-self: flex-start; }
