@@ -1586,6 +1586,27 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    הראשי, בכוונה: זו פעולה לגמרי אופציונלית שאין שום לחץ להשתמש בה */
 .btn-link-subtle { background: transparent; border: none; color: var(--text-secondary); opacity: 0.8; font-size: 0.78rem; text-decoration: underline; cursor: pointer; padding: 4px; }
 .btn-link-subtle:active { opacity: 1; }
+/* מודל אישור מחיקת חשבון - עיצוב "רציני/עגום" ייעודי, לא ברירת המחדל
+   השמחה/הניאון של שאר האפליקציה: גוני אדום-כהה עמוקים, לא צבעי הפרימיום */
+.delete-account-confirm-sheet {
+    background: linear-gradient(165deg, var(--bg-sheet), rgba(80, 12, 12, 0.35));
+    border-top: 1px solid rgba(255, 69, 58, 0.4);
+    box-shadow: 0 -10px 40px rgba(255, 69, 58, 0.12);
+}
+.delete-account-confirm-icon { text-align: center; font-size: 2.2rem; margin-bottom: 4px; filter: drop-shadow(0 0 10px rgba(255, 69, 58, 0.55)); }
+.delete-account-confirm-title { text-align: center; color: var(--accent-red); }
+.delete-account-confirm-input {
+    display: block; width: 100%; box-sizing: border-box; background-color: rgba(255, 69, 58, 0.07);
+    border: 1px solid rgba(255, 69, 58, 0.35); color: var(--text-primary); border-radius: 10px;
+    padding: 12px; font-size: 0.9rem; outline: none; text-align: center; margin-top: 4px;
+}
+.btn-danger-solid {
+    background: linear-gradient(135deg, #ff453a, #8f1414); color: #fff; border: none; font-weight: 700;
+    box-shadow: 0 4px 16px rgba(255, 69, 58, 0.35); border-radius: 12px; padding: 12px; cursor: pointer;
+    transition: var(--transition); flex: 1 1 0;
+}
+.btn-danger-solid:disabled { opacity: 0.32; cursor: not-allowed; box-shadow: none; }
+.btn-danger-solid:not(:disabled):active { transform: scale(0.97); }
 /* תג "פרימיום פעיל" עדין - מחליף את כפתור "שדרוג לפרימיום" ברגע שכבר יש
    פרימיום, כדי לא להמשיך להציע שדרוג למי שכבר שדרגה */
 .premium-active-badge { text-align: center; margin: 10px 0; }

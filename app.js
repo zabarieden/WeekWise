@@ -13,19 +13,14 @@ let currentUsername = '';
 let currentUserId = null;
 let currentUserCreatedAt = null;
 
-// שורת מידע קטנה בראש "ניהול משתמש" בהגדרות - אימייל + "חברה מאז" - מידע
-// בסיסי שכל מסך ניהול חשבון מציג, בלי שום שאילתה נוספת (הכל כבר קיים מה-
-// session של Supabase Auth)
+// שורת מידע קטנה בראש "ניהול משתמש" בהגדרות - רק "חברה מאז", בלי המייל
+// (בכוונה - לא להציג את כתובת המייל של המשתמשת במסך הזה בכלל)
 function renderSettingsAccountInfo() {
     const el = document.getElementById('settings-account-info');
     if (!el) return;
-    if (!currentUsername) { el.textContent = ''; return; }
-    let text = currentUsername;
-    if (currentUserCreatedAt) {
-        const d = new Date(currentUserCreatedAt);
-        if (!isNaN(d)) text += ` • ${t('settings_member_since')} ${d.toLocaleDateString()}`;
-    }
-    el.textContent = text;
+    if (!currentUserCreatedAt) { el.textContent = ''; return; }
+    const d = new Date(currentUserCreatedAt);
+    el.textContent = isNaN(d) ? '' : `${t('settings_member_since')} ${d.toLocaleDateString()}`;
 }
 let reminderIntervalStarted = false;
 let authMode = 'login';
@@ -2518,10 +2513,28 @@ async function cancelPremiumSubscription() {
 // טבלה ב-DB ואז את חשבון ה-Auth עצמו (דורש service role, אז מתבצע ב-Edge
 // Function ייעודי - ר' supabase/functions/delete-account/DEPLOY.md לגבי
 // הפריסה הידנית הנדרשת). אישור כפול (confirm) בגלל חומרת הפעולה
-async function deleteUserAccount() {
+// אישור מחיקת חשבון: לא confirm() דפדפן גנרי (אפור, בלתי-עיצובי) - מודל
+// עצמו בעיצוב "רציני/עגום" תואם-אפליקציה (גוני אדום כהים, לא הצבעים
+// השמחים הרגילים), עם הקלדת מילת אישור לפני שכפתור המחיקה בכלל מופעל -
+// חסם מכוון נגד לחיצה מקרית/פזיזה על פעולה בלתי הפיכה
+function deleteUserAccount() {
+    const input = document.getElementById('delete-account-confirm-input');
+    if (input) input.value = '';
+    updateDeleteAccountConfirmButton();
+    openModal('modal-delete-account-confirm');
+}
+
+function updateDeleteAccountConfirmButton() {
+    const input = document.getElementById('delete-account-confirm-input');
+    const btn = document.getElementById('btn-confirm-delete-account');
+    if (!input || !btn) return;
+    const expected = t('delete_account_confirm_word').trim().toLowerCase();
+    btn.disabled = input.value.trim().toLowerCase() !== expected;
+}
+
+async function confirmDeleteAccountFinal() {
     if (!supabaseClient || !currentUserId) return;
-    if (!confirm(t('settings_delete_account_confirm'))) return;
-    if (!confirm(t('settings_delete_account_confirm2'))) return;
+    closeModal('modal-delete-account-confirm');
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
@@ -2569,23 +2582,68 @@ const EXPORTABLE_USER_TABLES = [
     'weekly_progress_targets', 'recipes', 'meal_presets', 'calorie_tracker',
     'weight_tracker', 'step_tracker',
 ];
-async function exportUserData() {
+const EXPORT_TABLE_LABEL_KEYS = {
+    weekly_schedule: 'data_report_label_schedule',
+    calendar_events: 'data_report_label_calendar',
+    my_center_tasks: 'data_report_label_notes',
+    monthly_goals: 'data_report_label_monthly_goals',
+    weekly_progress_targets: 'data_report_label_progress',
+    recipes: 'data_report_label_recipes',
+    meal_presets: 'data_report_label_meal_presets',
+    calorie_tracker: 'data_report_label_calories',
+    weight_tracker: 'data_report_label_weight',
+    step_tracker: 'data_report_label_steps',
+};
+// שדות פנימיים (מזהי DB, לא תוכן שהמשתמשת בעצמה הזינה) - לא מוצגים בדוח
+const EXPORT_ROW_SKIP_FIELDS = new Set(['id', 'user_id', 'username']);
+
+function escapeHtmlForReport(str) {
+    return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+// דוח נתונים אישי כ-PDF: לא jsPDF (הפונטים המובנים שלו לא תומכים בעברית -
+// היו יוצאים ריבועים ריקים) - במקום זה נבנה עמוד HTML נקי בחלון חדש ומפעילים
+// את דיאלוג ההדפסה הטבעי של הדפדפן, שבו "שמירה כ-PDF" היא אחת מהיעדים
+// הרגילים - כך התמיכה בעברית/RTL היא של הדפדפן עצמו, בלי שום האקים
+async function exportUserDataReport() {
     if (!supabaseClient || !currentUserId) return;
     showAppToast(t('settings_export_data_preparing'));
-    const exportData = { exported_at: new Date().toISOString(), email: currentUsername };
+    const sections = [];
     for (const table of EXPORTABLE_USER_TABLES) {
         const { data } = await supabaseClient.from(table).select('*').eq('user_id', currentUserId);
-        exportData[table] = data || [];
+        sections.push({ label: t(EXPORT_TABLE_LABEL_KEYS[table]), rows: data || [] });
     }
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `weekwise-data-${getLocalDateString()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
+    let bodyHtml = `<h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>`;
+    sections.forEach(section => {
+        bodyHtml += `<h2>${escapeHtmlForReport(section.label)}</h2>`;
+        if (!section.rows.length) {
+            bodyHtml += `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        } else {
+            section.rows.forEach(row => {
+                const fields = Object.entries(row).filter(([k]) => !EXPORT_ROW_SKIP_FIELDS.has(k));
+                bodyHtml += '<div class="entry">' + fields.map(([k, v]) =>
+                    `<span class="field"><b>${escapeHtmlForReport(k)}:</b> ${escapeHtmlForReport(v === null || v === undefined ? '' : v)}</span>`
+                ).join('') + '</div>';
+            });
+        }
+    });
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
+    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>WeekWise - ${escapeHtmlForReport(t('data_report_title'))}</title>
+<style>
+    body { font-family: Arial, Tahoma, sans-serif; padding: 24px; color: #222; }
+    h1 { color: #a855f7; margin-bottom: 2px; }
+    .sub { color: #666; font-size: 0.85rem; margin-top: 0; }
+    h2 { color: #ff007f; border-bottom: 2px solid #eee; padding-bottom: 4px; margin-top: 28px; }
+    .entry { border: 1px solid #eee; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem; }
+    .field { display: inline-block; margin-inline-end: 14px; }
+    .empty { color: #999; font-style: italic; }
+    @media print { body { padding: 0; } }
+</style>
+</head><body>${bodyHtml}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { try { printWindow.focus(); printWindow.print(); } catch (err) {} }, 400);
     showAppToast(t('settings_export_data_done'));
 }
 

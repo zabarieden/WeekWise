@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=88">
+    <link rel="stylesheet" href="theme.css?v=89">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -691,7 +691,7 @@
                 <p id="settings-account-info" class="modal-subtitle"></p>
 
                 <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="openModal('modal-change-password')" data-i18n="settings_change_password_btn">🔑 Change Password</button>
-                <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="exportUserData()" data-i18n="settings_export_data_btn">📤 Export My Data</button>
+                <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="exportUserDataReport()" data-i18n="settings_export_data_btn">📄 Download Personal Report (PDF)</button>
                 <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="shareApp()" data-i18n="settings_share_app_btn">💌 Share App with a Friend</button>
 
                 <!-- ניהול המנוי: מוצג רק כשבפועל פרימיום (renderSettingsSubscriptionSection) -->
@@ -724,6 +724,24 @@
                         <button id="btn-submit-change-password" class="btn-primary" onclick="submitChangePassword()" data-i18n="change_password_submit_btn">Update Password</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-change-password')" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: אישור מחיקת חשבון - עיצוב "רציני/עגום" ייעודי (לא ברירת
+             המחדל השמחה) כי זו פעולה הרסנית ובלתי הפיכה. דורש הקלדת מילת
+             אישור כדי להפעיל את כפתור המחיקה בכלל, לא רק לחיצת אישור אחת -->
+        <div id="modal-delete-account-confirm" class="apple-modal">
+            <div class="modal-sheet delete-account-confirm-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="delete-account-confirm-icon">⚠️</div>
+                <h3 class="delete-account-confirm-title" data-i18n="delete_account_confirm_title">Delete Account</h3>
+                <p class="modal-subtitle" data-i18n="settings_delete_account_confirm">This permanently deletes all your data (schedule, notes, recipes, meals, goals, everything) and cannot be undone.</p>
+                <label class="settings-label" id="delete-account-confirm-type-label" data-i18n="delete_account_confirm_type_label">Type DELETE to confirm</label>
+                <input type="text" id="delete-account-confirm-input" class="delete-account-confirm-input" autocomplete="off" oninput="updateDeleteAccountConfirmButton()">
+                <div class="action-buttons-wrap" style="margin-top: 14px;">
+                    <button id="btn-confirm-delete-account" class="btn-danger-solid" disabled onclick="confirmDeleteAccountFinal()" data-i18n="settings_delete_account_btn">Delete Account</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-delete-account-confirm')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -1040,7 +1058,7 @@
 
     </div>
 
-    <script src="i18n.js?v=38"></script>
-    <script src="app.js?v=77"></script>
+    <script src="i18n.js?v=39"></script>
+    <script src="app.js?v=78"></script>
 </body>
 </html>
