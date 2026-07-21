@@ -3,10 +3,17 @@
 Same pattern as `scan-recipe-image` and `parse-schedule-request`. Reuses the same
 `ANTHROPIC_API_KEY` secret - no new account or key needed if you've already set one up.
 
-## 1. No new database changes
+## 1. Database changes
+
+```sql
+alter table user_ai_usage add column if not exists premium_image_scans_month_key text;
+alter table user_ai_usage add column if not exists premium_image_scans_month_used integer default 0;
+```
 
 Reads `user_premium.is_premium` (already exists) and writes through the existing
-`saveNutrition()` -> `calorie_tracker` path the app already uses.
+`saveNutrition()` -> `calorie_tracker` path the app already uses. Also shares the same
+monthly image-scan quota as `scan-recipe-image` (50/month by default) - see that
+function's DEPLOY.md for the full reasoning on why premium isn't fully unlimited.
 
 ## 2. Deploy the function
 

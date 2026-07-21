@@ -9,6 +9,11 @@
 // Unlike the recipe scanner/text parser, this is gated on user_premium.is_premium alone -
 // there's no free-tier fallback count, since the whole feature is a premium perk.
 //
+// Usage limit: a monthly quota of PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT requests
+// (premium_schedule_ai_month_used/_key in user_ai_usage), separate from the image-scan
+// pool since a text-only request costs roughly 10x less than a vision request. Same
+// reasoning as the other AI Edge Functions - see DEPLOY.md.
+//
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -19,6 +24,8 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // כדאי לבדוק שהמודל הזה עדיין נתמך/מומלץ לפני הפריסה:
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
+
+const PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT = 200;
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -33,6 +40,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
 const DEV_SUPERUSER_EMAILS = ["zabarieden111@gmail.com"];
+
+function currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -60,6 +72,19 @@ Deno.serve(async (req) => {
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
         if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
+
+        const { data: usageRow } = await supabase
+            .from("user_ai_usage")
+            .select("*")
+            .eq("user_id", userId)
+            .maybeSingle();
+        const monthKey = currentMonthKey();
+        const scheduleMonthUsed = usageRow?.premium_schedule_ai_month_key === monthKey
+            ? (usageRow?.premium_schedule_ai_month_used || 0)
+            : 0;
+        if (scheduleMonthUsed >= PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: scheduleMonthUsed, limit: PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT }, 402);
+        }
 
         const body = await req.json();
         const text: string = body?.text;
@@ -123,6 +148,11 @@ Deno.serve(async (req) => {
         const anthropicJson = await anthropicRes.json();
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
+
+        await supabase.from("user_ai_usage").upsert(
+            { user_id: userId, username: userData.user.email, premium_schedule_ai_month_key: monthKey, premium_schedule_ai_month_used: scheduleMonthUsed + 1 },
+            { onConflict: "user_id" },
+        );
 
         return jsonResponse({ ok: true, events: toolUseBlock.input.events || [] });
     } catch (err) {

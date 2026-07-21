@@ -1167,7 +1167,11 @@ async function parseScheduleWithAI() {
                 });
                 const result = await res.json();
                 if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
-                if (res.ok && !result.error && result.events && result.events.length) events = result.events;
+                // מכסת ה-AI החודשית נגמרה - לא עוצרים, פשוט ממשיכים בשקט למנתח
+                // המקומי למטה (בדיוק כמו שקורה כשהענן לא זמין בכלל), רק עם
+                // הודעה מפורשת שזו הסיבה לאיכות הנמוכה יותר של התוצאה הפעם
+                if (result.error === 'limit_reached') showAppToast(t('ai_monthly_limit_reached'), 'error');
+                else if (res.ok && !result.error && result.events && result.events.length) events = result.events;
             } catch (err) {
                 // הענן לא זמין (רשת/שרת) - ממשיכים בשקט למנתח המקומי למטה, לא מציגים שגיאה
             }
@@ -3658,12 +3662,18 @@ async function runRecipeImageScan(file) {
                 });
                 const result = await res.json();
 
-                if (res.status === 402 || result.error === 'limit_reached') {
+                // limit_reached עם scope='premium_monthly' זה מישהי שכבר פרימיום שהגיעה
+                // למכסה החודשית הנדיבה - אין טעם להציע לה לשדרג (היא כבר שילמה),
+                // רק להודיע ולהמשיך בשקט ל-OCR המקומי למטה כפתרון חלופי. scope
+                // אחר (או free-tier ללא scope) זה עדיין המקרה המקורי: לא פרימיום
+                // בכלל, ואז כן הגיוני להציע שדרוג ולעצור כאן
+                if (result.error === 'limit_reached' && result.scope === 'premium_monthly') {
+                    showAppToast(t('ai_monthly_limit_reached'), 'error');
+                } else if (res.status === 402 || result.error === 'limit_reached') {
                     showAppToast(t('recipe_scan_limit_desc'), 'error');
                     openPremiumUpgradeModal();
                     return;
-                }
-                if (res.ok && !result.error && result.recipe) {
+                } else if (res.ok && !result.error && result.recipe) {
                     recipe = result.recipe;
                     if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
                 }
@@ -3737,6 +3747,7 @@ async function runPresetImageScan(file) {
         });
         const result = await res.json();
 
+        if (result.error === 'limit_reached') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
         if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
         if (!res.ok || result.error || !result.items || !result.items.length) {
             showAppToast(t('meal_photo_failed'), 'error');
@@ -4360,6 +4371,7 @@ async function handleMealPhotoSelected(event) {
         });
         const result = await res.json();
 
+        if (result.error === 'limit_reached') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
         if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
         if (!res.ok || result.error || !result.items || !result.items.length) {
             showAppToast(t('meal_photo_failed'), 'error');

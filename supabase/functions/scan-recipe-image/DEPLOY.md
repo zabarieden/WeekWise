@@ -6,15 +6,33 @@ so those specific parts need you.
 
 ## 1. Database changes
 
-Run in the Supabase SQL Editor:
+Run in the Supabase SQL Editor (already applied directly via the Supabase CLI during
+development - included here so the schema is documented and reproducible elsewhere):
 
 ```sql
--- Adds the image-scan counter alongside the existing text-parse counter.
+-- Free-tier lifetime counter (never resets) for the 10-scan free limit.
 alter table user_ai_usage add column if not exists image_scans_used integer default 0;
+-- Premium monthly quota (shared with scan-meal-photo - see below) and reset-tracking key.
+alter table user_ai_usage add column if not exists premium_image_scans_month_key text;
+alter table user_ai_usage add column if not exists premium_image_scans_month_used integer default 0;
 ```
 
 (No new table needed - this reuses `user_ai_usage` and `user_premium`, both of which
 already exist and are already gated the same way the text-parse limit is.)
+
+## Premium usage limit: why it exists and how it works
+
+Premium users are **not** unlimited - they get a shared monthly quota of
+`PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT` (currently 50) image scans, shared with
+`scan-meal-photo` since both cost roughly the same per call. This exists specifically
+because of the **lifetime** billing tier: a one-time $59 payment with truly unlimited
+AI usage forever has no natural cost ceiling - a heavy user could generate far more in
+ongoing API cost than they ever paid. A generous monthly cap (well above normal usage -
+see the cost math discussed with the user) keeps the worst case bounded and predictable
+for every billing period, monthly/semiannual/lifetime alike, without changing pricing or
+UI at all. If real-world usage data shows 50/month is too high or too low, it's a single
+constant to adjust in each of the three AI Edge Functions
+(`scan-recipe-image`, `scan-meal-photo`, `parse-schedule-request`).
 
 ## 2. Get an Anthropic API key
 

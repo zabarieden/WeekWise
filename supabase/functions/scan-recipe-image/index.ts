@@ -6,11 +6,15 @@
 // ingredients, instructions} object for the frontend to drop straight into the (still
 // fully editable) Add Recipe form.
 //
-// Enforces a single shared 10-free-scan/upload limit per user (server-side, since a
-// client-only check can be bypassed) using the same user_ai_usage.image_scans_used
-// counter regardless of whether the file is an image or a PDF - "10 uploads, 10 scans,
-// or a mix of both" all count against the same total - and skips the limit entirely for
-// users with user_premium.is_premium = true.
+// Usage limits (server-side, since a client-only check can be bypassed):
+// - Free (non-premium) users: a single lifetime cap of IMAGE_SCAN_FREE_LIMIT scans,
+//   tracked in user_ai_usage.image_scans_used (never resets).
+// - Premium users (any billing period - monthly/semiannual/lifetime alike): a shared
+//   monthly quota of PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT image scans, shared with
+//   scan-meal-photo (both count against the same premium_image_scans_month_used
+//   counter, since both cost roughly the same per call). This exists specifically so
+//   a one-time lifetime purchase can never generate unbounded ongoing AI cost with no
+//   further revenue - see the DEPLOY.md in this folder for the full reasoning.
 //
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
@@ -24,6 +28,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
 
 const IMAGE_SCAN_FREE_LIMIT = 10;
+const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
 
 const RECIPE_CATEGORIES = [
     "appetizers", "breakfast", "meat_mains", "dairy_mains",
@@ -41,6 +46,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
 const DEV_SUPERUSER_EMAILS = ["zabarieden111@gmail.com"];
+
+function currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -71,13 +81,23 @@ Deno.serve(async (req) => {
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
-            .select("image_scans_used")
+            .select("*")
             .eq("user_id", userId)
             .maybeSingle();
-        const used = usageRow?.image_scans_used || 0;
 
-        if (!isPremium && used >= IMAGE_SCAN_FREE_LIMIT) {
-            return jsonResponse({ error: "limit_reached", used, limit: IMAGE_SCAN_FREE_LIMIT }, 402);
+        const monthKey = currentMonthKey();
+        // אם ה-month_key השמור לא תואם לחודש הנוכחי, הספירה מתאפסת (0) - זה
+        // בפועל *הוא* מנגנון האיפוס החודשי, בלי צורך בשום cron job נפרד
+        const premiumMonthUsed = usageRow?.premium_image_scans_month_key === monthKey
+            ? (usageRow?.premium_image_scans_month_used || 0)
+            : 0;
+        const freeUsed = usageRow?.image_scans_used || 0;
+
+        if (isPremium && premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: premiumMonthUsed, limit: PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT }, 402);
+        }
+        if (!isPremium && freeUsed >= IMAGE_SCAN_FREE_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: freeUsed, limit: IMAGE_SCAN_FREE_LIMIT }, 402);
         }
 
         const body = await req.json();
@@ -169,13 +189,20 @@ Deno.serve(async (req) => {
         const toolInput = toolUseBlock.input;
         const recipe = { ...toolInput, calories: toolInput.estimated_total_calories ?? toolInput.calories ?? null };
 
-        if (usageRow) {
-            await supabase.from("user_ai_usage").update({ image_scans_used: used + 1 }).eq("user_id", userId);
+        // עדכון המונה המתאים בלבד: פרימיום -> מונה חודשי (עם month_key מעודכן,
+        // גם אם התאפס הרגע), חינמי -> מונה לכל-החיים כרגיל
+        if (isPremium) {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, premium_image_scans_month_key: monthKey, premium_image_scans_month_used: premiumMonthUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        } else if (usageRow) {
+            await supabase.from("user_ai_usage").update({ image_scans_used: freeUsed + 1 }).eq("user_id", userId);
         } else {
             await supabase.from("user_ai_usage").insert({ user_id: userId, image_scans_used: 1 });
         }
 
-        return jsonResponse({ ok: true, recipe, scansUsed: used + 1 });
+        return jsonResponse({ ok: true, recipe, scansUsed: freeUsed + 1 });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }

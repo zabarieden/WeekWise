@@ -4,11 +4,18 @@ Same pattern as `scan-recipe-image`. If you already set up `ANTHROPIC_API_KEY` f
 recipe scanner, you don't need a new key or a new account - just deploy this function
 and it'll reuse the same secret.
 
-## 1. No new database changes
+## 1. Database changes
 
-This feature doesn't need any new tables/columns - it only reads `user_premium.is_premium`
-(already exists) and writes to `weekly_schedule` (already exists) through the normal
-`saveScheduleSlot()` path the app already uses.
+```sql
+alter table user_ai_usage add column if not exists premium_schedule_ai_month_key text;
+alter table user_ai_usage add column if not exists premium_schedule_ai_month_used integer default 0;
+```
+
+Otherwise reads `user_premium.is_premium` (already exists) and writes to
+`weekly_schedule` (already exists) through the normal `saveScheduleSlot()` path the app
+already uses. Premium users get a monthly quota (200/month by default, separate from
+the image-scan pool since text requests cost far less per call) - see
+`scan-recipe-image`'s DEPLOY.md for why premium isn't fully unlimited.
 
 ## 2. Deploy the function
 

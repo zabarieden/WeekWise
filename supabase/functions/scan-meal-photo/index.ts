@@ -9,6 +9,12 @@
 // fallback, since reliable food identification + calorie estimation needs real vision
 // understanding a heuristic can't approximate.
 //
+// Usage limit: shares the SAME monthly image-scan quota as scan-recipe-image
+// (premium_image_scans_month_used/_key in user_ai_usage) - both cost roughly the same
+// per call, so one combined pool covers "any image sent to the vision model this
+// month" rather than tracking recipe vs. meal scans separately. This exists so a
+// one-time lifetime purchase can't generate unbounded ongoing AI cost - see DEPLOY.md.
+//
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -19,6 +25,8 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // כדאי לבדוק שהמודל הזה עדיין נתמך/מומלץ לפני הפריסה:
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
+
+const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
 
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה
@@ -31,6 +39,11 @@ const CORS_HEADERS = {
 };
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+function currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -58,6 +71,19 @@ Deno.serve(async (req) => {
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
         if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
+
+        const { data: usageRow } = await supabase
+            .from("user_ai_usage")
+            .select("*")
+            .eq("user_id", userId)
+            .maybeSingle();
+        const monthKey = currentMonthKey();
+        const premiumMonthUsed = usageRow?.premium_image_scans_month_key === monthKey
+            ? (usageRow?.premium_image_scans_month_used || 0)
+            : 0;
+        if (premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: premiumMonthUsed, limit: PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT }, 402);
+        }
 
         const body = await req.json();
         const { imageBase64, mediaType } = body;
@@ -126,6 +152,11 @@ Deno.serve(async (req) => {
         const anthropicJson = await anthropicRes.json();
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
+
+        await supabase.from("user_ai_usage").upsert(
+            { user_id: userId, username: userData.user.email, premium_image_scans_month_key: monthKey, premium_image_scans_month_used: premiumMonthUsed + 1 },
+            { onConflict: "user_id" },
+        );
 
         return jsonResponse({ ok: true, items: toolUseBlock.input.items || [] });
     } catch (err) {
