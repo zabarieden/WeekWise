@@ -398,6 +398,7 @@ async function initAppAfterAuth(user) {
         loadProgressTargets(),
         loadWeightHistory(),
         loadCalendarEvents(),
+        loadTodayTasks(),
         loadRecipes(),
         loadAiUsage(),
         loadPremiumStatus(),
@@ -1677,6 +1678,7 @@ async function saveScheduleSlot(day, slot, skipSort) {
     // ה-onchange שקרא לפונקציה הזו כבר ירה רק כש-focus עזב את השדה (blur), אז
     // מיון מחדש של סדר השורות כאן לא יפריע להקלדה פעילה של המשתמש
     if (!skipSort) sortDaySlotsChronologically(day);
+    if (day === dbDaysMap[new Date().getDay()]) loadTodayTasks();
 }
 
 // --- מבט ליומן: אירועים ארוכי-טווח בעלי תאריך אמיתי, נפרד מהתבנית השבועית החוזרת ---
@@ -1695,6 +1697,39 @@ function toggleCustomRecurrenceVisibility() {
     const typeSelect = document.getElementById('calendar-event-recurrence-type');
     const customWrap = document.getElementById('calendar-event-custom-recurrence');
     customWrap.classList.toggle('hidden', typeSelect.value !== 'custom');
+}
+
+// --- משימות להיום: תמצית מהירה של השורות המאוכלסות בלו"ז השבועי (התבנית
+// החוזרת) עבור יום-השבוע הנוכחי בלבד - כדי לראות מה מתוכנן היום בלי לצאת
+// ממבט הבית וללחוץ על לשונית "השבוע שלי". שאילתה עצמאית (לא תלויה ב-DOM
+// של loadWeeklySchedule), כי שתי הפונקציות רצות במקביל ב-Promise.all בטעינה
+async function loadTodayTasks() {
+    if (!supabaseClient || !currentUserId) return;
+    const container = document.getElementById('today-tasks-list');
+    if (!container) return;
+    const todayDbDay = dbDaysMap[new Date().getDay()];
+    const { data, error } = await supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay);
+    if (error || !data) return;
+    const populated = data
+        .filter(item => (item.task_title || '').trim())
+        .sort((a, b) => {
+            const ma = scheduleTimeToMinutes(a.time_of_day), mb = scheduleTimeToMinutes(b.time_of_day);
+            if (ma === null && mb === null) return 0;
+            if (ma === null) return 1;
+            if (mb === null) return -1;
+            return ma - mb;
+        });
+    container.innerHTML = '';
+    if (!populated.length) {
+        container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
+        return;
+    }
+    populated.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'today-tasks-row';
+        row.innerHTML = `<span class="today-tasks-time">${item.time_of_day || ''}</span><span class="today-tasks-text">${getScheduleTaskIcon(item.task_title)} ${item.task_title}</span>`;
+        container.appendChild(row);
+    });
 }
 
 async function loadCalendarEvents() {

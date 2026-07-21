@@ -558,6 +558,38 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-event-title-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
 .calendar-glance-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 
+/* "משימות להיום": אותה שפה חזותית כמו שורות מבט-ליומן, אבל בגוון הזהב של
+   עולם הלו"ז (--tile-accent) במקום סגול, כדי להבחין ביניהם בבירור */
+.today-tasks-list { display: flex; flex-direction: column; gap: 8px; }
+.today-tasks-row {
+    background-color: rgba(20, 18, 26, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-inline-start: 3px solid var(--tile-accent, var(--accent-gold));
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    box-sizing: border-box;
+}
+.today-tasks-time {
+    background-color: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: var(--tile-accent, var(--accent-gold));
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+.today-tasks-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
+.today-tasks-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
+
 .calendar-event-recurring-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; padding: 2px 0; }
 .calendar-event-recurring-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; }
 .calendar-event-recurring-options { display: flex; flex-direction: column; gap: 8px; padding: 10px; margin-top: 4px; background-color: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 12px; }
