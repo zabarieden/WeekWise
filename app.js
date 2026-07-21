@@ -2435,7 +2435,15 @@ async function computeGoalCurrentValue(goal) {
 
 function isGoalAchieved(goal, currentValue) {
     if (currentValue === null || currentValue === undefined) return false;
-    if (goal.goal_type === 'weight') return currentValue <= goal.target_value;
+    if (goal.goal_type === 'weight') {
+        // כיוון היעד נקבע לפי starting_value מול target_value בזמן היצירה, לא
+        // תמיד ירידה: אם היעד היה *מעל* המשקל ההתחלתי (יעד עלייה במשקל), "הושג"
+        // צריך להיות כשהמשקל *עלה* עד/מעל היעד - לא כשהוא עדיין נמוך ממנו,
+        // אחרת יעד עלייה היה מסומן "הושג" כבר ביום הראשון (כל משקל התחלתי
+        // נמוך הוא תמיד <= יעד גבוה יותר)
+        const start = typeof goal.starting_value === 'number' ? goal.starting_value : currentValue;
+        return start <= goal.target_value ? currentValue >= goal.target_value : currentValue <= goal.target_value;
+    }
     return currentValue >= goal.target_value;
 }
 
