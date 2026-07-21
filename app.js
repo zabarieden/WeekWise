@@ -3145,12 +3145,12 @@ function sanitizeOcrText(raw) {
         .join('\n');
 }
 
-// --- אומדן קלוריות גס לפי המצרכים המזוהים, כשלא צוין מספר קלוריות מפורש
-// בטקסט המקור - טבלת חיפוש קטנה של רכיבי אפייה/בישול נפוצים (קלוריות ל-100
-// גרם, או ליחידה בודדת עבור ביצים). לא מנחשת כמות שלא צוינה בטקסט (שורה בלי
-// גרם/מ"ל/מספר יחידות מפורש פשוט לא נכנסת לאומדן) - תמיד המלצה בלבד, לא
+// --- מסד קלוריות משותף: משמש גם לאומדן קלוריות למתכון (מצרכי מתכון) וגם
+// למילוי אוטומטי של שדה "מה אכלת" ביומן התזונה היומי (ר' autoFillMealCalories
+// למטה) - אותה טבלת חיפוש בדיוק, שני שימושים. קלוריות ל-100 גרם, או ליחידה
+// בודדת עבור ביצים. לא מנחשת כמות שלא צוינה בטקסט - תמיד המלצה בלבד, לא
 // עובדה, ולכן תמיד מוצגת עם אזהרה מפורשת בממשק (ר' recipe_calories_estimated_hint) ---
-const RECIPE_CALORIE_DB = [
+const FOOD_CALORIE_DB = [
     { re: /קקאו|cocoa/i, kcal100g: 228 },
     { re: /שוקולד|chocolate/i, kcal100g: 546 },
     { re: /קמח|flour/i, kcal100g: 364 },
@@ -3161,6 +3161,7 @@ const RECIPE_CALORIE_DB = [
     { re: /שמנת|cream/i, kcal100g: 340 },
     { re: /חלב|\bmilk\b/i, kcal100g: 42 },
     { re: /דבש|honey/i, kcal100g: 304 },
+    { re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98 },
     { re: /גבינה|cheese/i, kcal100g: 350 },
     { re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
     { re: /שמרים|yeast/i, kcal100g: 105 },
@@ -3168,22 +3169,45 @@ const RECIPE_CALORIE_DB = [
     { re: /תפוח(?!\s*הצהריים)|apple/i, kcal100g: 52 },
     { re: /בננה|banana/i, kcal100g: 89 },
     { re: /אורז|\brice\b/i, kcal100g: 130 },
+    { re: /פסטה|pasta/i, kcal100g: 131 },
+    { re: /לחם|bread/i, kcal100g: 265 },
+    { re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
+    { re: /טונה|tuna/i, kcal100g: 116 },
+    { re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61 },
+    { re: /מלפפון|cucumber/i, kcal100g: 15 },
+    { re: /עגבני|tomato/i, kcal100g: 18 },
+    { re: /חומוס|hummus/i, kcal100g: 166 },
     { re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
     { re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
     { re: /ביצ/i, kcalPerUnit: 70 },
     { re: /מים|\bwater\b/i, kcal100g: 0 },
     { re: /מלח|\bsalt\b/i, kcal100g: 0 },
 ];
+// ממירות יחידות נפח מטבחיות שכיחות (כף/כפית/כוס) לגרם משוער - כדי שאפשר
+// יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'"
+const VOLUME_UNIT_TO_GRAMS = [
+    { re: /(\d+(?:\.\d+)?)\s*(כוסות|כוס|cups?)\b/i, gramsPerUnit: 240 },
+    { re: /(\d+(?:\.\d+)?)\s*(כפות|כף|tbsp|tablespoons?)\b/i, gramsPerUnit: 15 },
+    { re: /(\d+(?:\.\d+)?)\s*(כפיות|כפית|tsp|teaspoons?)\b/i, gramsPerUnit: 5 },
+];
 function estimateIngredientLineCalories(line) {
+    let grams = null;
     const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
-    const grams = gramsMatch ? parseFloat(gramsMatch[1]) : null;
+    if (gramsMatch) {
+        grams = parseFloat(gramsMatch[1]);
+    } else {
+        for (const unit of VOLUME_UNIT_TO_GRAMS) {
+            const m = line.match(unit.re);
+            if (m) { grams = parseFloat(m[1]) * unit.gramsPerUnit; break; }
+        }
+    }
     const countMatch = line.match(/^(\d+(?:\.\d+)?)/);
     const count = countMatch ? parseFloat(countMatch[1]) : null;
-    for (const item of RECIPE_CALORIE_DB) {
+    for (const item of FOOD_CALORIE_DB) {
         if (!item.re.test(line)) continue;
         if (item.kcalPerUnit != null) return (count || 1) * item.kcalPerUnit;
         if (grams != null) return (grams / 100) * item.kcal100g;
-        return 0; // רכיב זוהה אבל בלי כמות מפורשת בגרם/מ"ל - לא מנחשים, מדלגים
+        return 0; // רכיב זוהה אבל בלי כמות מפורשת (גרם/מ"ל/כף/כפית/כוס) - לא מנחשים, מדלגים
     }
     return 0;
 }
@@ -3195,6 +3219,21 @@ function estimateRecipeCalories(ingredientsText) {
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
     return matchedAny ? Math.round(total) : null;
+}
+
+// --- יומן תזונה יומי: מילוי אוטומטי של קלוריות מתוך אותו מסד מזון, כשהמשתמש
+// מקליד חופשי בשדה "מה אכלת" (לא בוחר פריסט שמור) - למשל "2 כפות קוטג'"
+// ממלא קלוריות לבד. לעולם לא דורס ערך קלוריות שכבר קיים בשדה (גם אם הוקלד
+// ידנית וגם אם כבר נטען מפריט שמור בעריכה) - רק משדה קלוריות ריק ---
+function autoFillMealCalories(foodInput) {
+    const row = foodInput.closest('.meal-row');
+    const caloriesInput = row && row.querySelector('.calories-input');
+    if (!caloriesInput || caloriesInput.value.trim()) return;
+    const estimate = estimateIngredientLineCalories(foodInput.value.trim());
+    if (estimate > 0) {
+        caloriesInput.value = Math.round(estimate);
+        updateLiveCaloriesToday();
+    }
 }
 
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
