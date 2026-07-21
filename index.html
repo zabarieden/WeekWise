@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=85">
+    <link rel="stylesheet" href="theme.css?v=86">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -431,11 +431,6 @@
                     </div>
                 </section>
 
-                <!-- כפתור התנתקות קבוע בתחתית האזור הנגלל -->
-                <div style="text-align: center; margin: 25px 0 10px 0;">
-                    <button id="btn-logout" class="btn-logout" data-i18n="logout_btn">🚪 Log Out</button>
-                </div>
-
                 <!-- ⚖️ שורת זכויות יוצרים מינימליסטית קטנה באנגלית -->
                 <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; padding-bottom: 25px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;">
                     © 2026 all rights reserved. app developed by eden zabari.
@@ -682,6 +677,20 @@
 
                 <h3 class="premium-drawer-title" data-i18n="settings_premium_title">Premium Upgrades</h3>
                 <button class="btn-primary btn-premium-cta" onclick="openPremiumUpgradeModal()" data-i18n="settings_go_premium_btn">⭐ Go Premium</button>
+
+                <!-- ניהול המנוי: מוצג רק כשבפועל פרימיום (renderSettingsSubscriptionSection) -->
+                <div id="settings-subscription-section" class="hidden">
+                    <h3 class="premium-drawer-title" data-i18n="settings_manage_sub_title">Manage Subscription</h3>
+                    <p id="settings-subscription-status" class="modal-subtitle"></p>
+                    <button type="button" id="btn-change-plan" class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="closeModal('modal-settings-drawer'); openPremiumUpgradeModal();" data-i18n="settings_change_plan_btn">Change Plan</button>
+                    <button type="button" id="btn-cancel-subscription" class="btn-clear-specific btn-danger-outline" style="width: 100%; margin-top: 8px;" onclick="cancelPremiumSubscription()" data-i18n="settings_cancel_sub_btn">Cancel Subscription</button>
+                </div>
+
+                <!-- אזור חשבון: התנתקות + מחיקת חשבון - כאן בלבד, לא על כל מסך -->
+                <h3 class="premium-drawer-title" data-i18n="settings_account_title">Account</h3>
+                <button id="btn-logout" class="btn-secondary" style="width: 100%;" data-i18n="logout_btn">🚪 Log Out</button>
+                <button type="button" class="btn-clear-specific btn-danger-outline" style="width: 100%; margin-top: 8px;" onclick="deleteUserAccount()" data-i18n="settings_delete_account_btn">🗑️ Delete Account</button>
+
                 <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-settings-drawer')" data-i18n="close_btn">Close</button>
             </div>
         </div>
@@ -995,7 +1004,7 @@
 
     </div>
 
-    <script src="i18n.js?v=34"></script>
-    <script src="app.js?v=73"></script>
+    <script src="i18n.js?v=35"></script>
+    <script src="app.js?v=74"></script>
 </body>
 </html>

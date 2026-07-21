@@ -2414,6 +2414,11 @@ async function deleteRecipe() {
 // הכל נפתח אוטומטית בלי לשנות עוד קוד.
 let isPremiumUser = false;
 let selectedPremiumTier = 'semiannual';
+// tier שנקרא בפועל מ-user_premium.tier (אם העמודה קיימת) - null כשאין את
+// העמודה עדיין או שאין לה ערך. isDevSuperuserAccount מבדיל בין פרימיום אמיתי
+// (רשומה ב-DB, ניתן לביטול) לבין עקיפת-פיתוח קבועה (אין מה לבטל)
+let premiumTierFromDb = null;
+let isDevSuperuserAccount = false;
 
 // עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
@@ -2423,14 +2428,94 @@ async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
         isPremiumUser = true;
+        isDevSuperuserAccount = true;
+        premiumTierFromDb = null;
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
+        renderSettingsSubscriptionSection();
         return;
     }
-    const { data } = await supabaseClient.from('user_premium').select('is_premium').eq('user_id', currentUserId).maybeSingle();
+    // select('*') ולא select('is_premium') בכוונה: כך שאם עמודת tier עוד לא
+    // קיימת ב-user_premium, השאילתה לא נכשלת (data.tier פשוט יהיה undefined)
+    const { data } = await supabaseClient.from('user_premium').select('*').eq('user_id', currentUserId).maybeSingle();
     isPremiumUser = !!(data && data.is_premium);
+    isDevSuperuserAccount = false;
+    premiumTierFromDb = (data && data.tier) || null;
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
+    renderSettingsSubscriptionSection();
+}
+
+// הגדרות > "ניהול המנוי": מוצג רק כשבאמת פרימיום. חשבון-פיתוח (עקיפה קבועה
+// בקוד, לא רשומה אמיתית ב-DB) מציג הודעה בלבד בלי כפתורים - אין שום דבר
+// אמיתי לבטל/לשנות שם. מנוי "לכל החיים" (tier==='lifetime') גם מציג הודעה
+// בלבד, בלי כפתור ביטול, בדיוק לפי הבקשה - אין ממה "לבטל" תשלום חד-פעמי.
+// כל שאר המקרים (מנוי חודשי/חצי-שנתי, או tier לא ידוע) מקבלים אפשרות אמיתית
+// לבטל - ביטול עצמי הוא פעולה בטוחה (בניגוד להפעלה עצמית), אז זה מיושם באמת
+function renderSettingsSubscriptionSection() {
+    const section = document.getElementById('settings-subscription-section');
+    const statusEl = document.getElementById('settings-subscription-status');
+    const changeBtn = document.getElementById('btn-change-plan');
+    const cancelBtn = document.getElementById('btn-cancel-subscription');
+    if (!section || !statusEl || !changeBtn || !cancelBtn) return;
+    if (!isPremiumUser) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    if (isDevSuperuserAccount) {
+        statusEl.textContent = t('settings_sub_status_dev');
+        changeBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+    } else if (premiumTierFromDb === 'lifetime') {
+        statusEl.textContent = t('settings_sub_status_lifetime');
+        changeBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+    } else {
+        statusEl.textContent = t('settings_sub_status_active');
+        changeBtn.classList.remove('hidden');
+        cancelBtn.classList.remove('hidden');
+    }
+}
+
+async function cancelPremiumSubscription() {
+    if (!supabaseClient || !currentUserId) return;
+    if (!confirm(t('settings_cancel_sub_confirm'))) return;
+    await supabaseClient.from('user_premium').update({ is_premium: false }).eq('user_id', currentUserId);
+    isPremiumUser = false;
+    premiumTierFromDb = null;
+    // מאפסים לערכת ברירת המחדל - לא הגיוני להשאיר ערכה נעולה "דלוקה" אחרי
+    // שהמנוי בוטל; selectColorTheme('default') תמיד מותר גם בלי פרימיום
+    await selectColorTheme('default');
+    updateHomePremiumBadgeVisibility();
+    updateThemeSwatchLocks();
+    renderSettingsSubscriptionSection();
+    showAppToast(t('settings_cancel_sub_toast'));
+}
+
+// מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
+// טבלה ב-DB ואז את חשבון ה-Auth עצמו (דורש service role, אז מתבצע ב-Edge
+// Function ייעודי - ר' supabase/functions/delete-account/DEPLOY.md לגבי
+// הפריסה הידנית הנדרשת). אישור כפול (confirm) בגלל חומרת הפעולה
+async function deleteUserAccount() {
+    if (!supabaseClient || !currentUserId) return;
+    if (!confirm(t('settings_delete_account_confirm'))) return;
+    if (!confirm(t('settings_delete_account_confirm2'))) return;
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || result.error) {
+            showAppToast(t('settings_delete_account_failed'), 'error');
+            return;
+        }
+        await supabaseClient.auth.signOut();
+        location.reload();
+    } catch (err) {
+        showAppToast(t('settings_delete_account_failed'), 'error');
+    }
 }
 
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת

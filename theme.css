@@ -1575,6 +1575,9 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }
 .btn-secondary { background-color: rgba(255, 255, 255, 0.02); color: var(--text-primary); border: 1px solid rgba(255, 0, 127, 0.1); width: 100%; }
 .btn-clear-specific { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); }
+/* פעולות הרסניות (ביטול מנוי, מחיקת חשבון) - מודגשות באדום כדי לבלוט מכל
+   שאר כפתורי ההגדרות הרגילים */
+.btn-danger-outline { color: var(--accent-red) !important; border-color: rgba(255, 69, 58, 0.3) !important; background-color: rgba(255, 69, 58, 0.06) !important; }
 .apple-modal.open { display: flex; }
 .apple-modal.open .modal-sheet { transform: translateY(0); }
 .login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
