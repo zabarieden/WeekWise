@@ -5,7 +5,14 @@
     box-sizing: border-box;
 }
 :root {
-    --bg-main: #000000;
+    /* --bg-main מוגדר כגרדיאנט (לא צבע אחיד) עבור ערכת ברירת המחדל וכל 15
+       ערכות הנושא הפרימיום - .phone-wrapper/.app-loading-overlay משתמשים ב-
+       background (הקיצור), לא background-color, כדי שגרדיאנט יעבוד בפועל.
+       --bg-row הוא משתנה חדש: "משטח שורה" משותף לכל התוכן ברשימות (שורות
+       לו"ז, פתקים, ארוחות, אירועים וכו') - כך שכל השורות באפליקציה מקבלות
+       את גוון ערכת הנושא הנבחרת, לא רק הרקע הגדול מאחורי הכול */
+    --bg-main: linear-gradient(135deg, #0d0410, #1a0512);
+    --bg-row: rgba(40, 20, 45, 0.55);
     --bg-glass: rgba(30, 27, 38, 0.65);
     --bg-sheet: #191622;
     --border-color: rgba(255, 0, 127, 0.25);
@@ -20,104 +27,119 @@
     --accent-red: #ff453a;
     --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
-/* ערכות נושא פרימיום (15 סה"כ): מחליפות משתני צבע + רקע - כל שאר העיצוב כבר
-   משתמש ב-var(--accent-*)/var(--bg-*) בכל האפליקציה, אז ההחלפה משתקפת בכל
-   מקום אוטומטית. חלק מהערכות משתמשות בגרדיאנט עבור --bg-main (הרקע הגדול
-   של .phone-wrapper בלבד) - הכרטיסים/הגליונות עצמם (--bg-glass/--bg-sheet)
-   נשארים תמיד צבע אחיד ונקי, גם בערכות עם גרדיאנט, כדי שטקסט יישאר קריא */
+/* ערכות נושא פרימיום (15 סה"כ, כולל "ברירת מחדל" שמוגדרת ב-:root/html.light-mode
+   למעלה): כל ערכה מגדירה --bg-main כגרדיאנט (הרקע הגדול מאחורי הכול) וגם
+   --bg-row (גוון-שורה משותף לכל הרשימות - לו"ז, פתקים, ארוחות, אירועים) -
+   כך שהצבע באמת מכסה את כל המסך, לא רק פס צר שנחבא מאחורי הכרטיסים.
+   --bg-glass/--bg-sheet (כרטיסים/גליונות) נשארים תמיד צבע אחיד ונקי כדי
+   שטקסט יישאר קריא, גם כשהרקע/השורות מלאים בגרדיאנט */
 html[data-color-theme="blue_teal"] {
-    --bg-main: #00080a;
+    --bg-main: linear-gradient(135deg, #001820, #002733);
+    --bg-row: rgba(10, 45, 58, 0.55);
     --border-color: rgba(0, 212, 255, 0.25);
     --accent-pink: #00d4ff;
     --accent-purple: #0ea5e9;
     --accent-purple-light: #38bdf8;
 }
 html[data-color-theme="gold_red"] {
-    --bg-main: #0a0503;
+    --bg-main: linear-gradient(135deg, #1a0f05, #2a0808);
+    --bg-row: rgba(58, 30, 12, 0.55);
     --border-color: rgba(245, 158, 11, 0.25);
     --accent-pink: #f59e0b;
     --accent-purple: #dc2626;
     --accent-purple-light: #f87171;
 }
 html[data-color-theme="forest_emerald"] {
-    --bg-main: #000a06;
+    --bg-main: linear-gradient(135deg, #001a10, #002a1a);
+    --bg-row: rgba(10, 50, 35, 0.55);
     --border-color: rgba(16, 185, 129, 0.25);
     --accent-pink: #10b981;
     --accent-purple: #059669;
     --accent-purple-light: #34d399;
 }
 html[data-color-theme="rose_gold"] {
-    --bg-main: #0a0507;
+    --bg-main: linear-gradient(135deg, #1a0510, #2a0a18);
+    --bg-row: rgba(55, 20, 35, 0.55);
     --border-color: rgba(244, 63, 94, 0.25);
     --accent-pink: #f43f5e;
     --accent-purple: #d4af37;
     --accent-purple-light: #fbbf24;
 }
 html[data-color-theme="midnight_indigo"] {
-    --bg-main: #05040f;
+    --bg-main: linear-gradient(135deg, #0a0620, #140a30);
+    --bg-row: rgba(35, 25, 70, 0.55);
     --border-color: rgba(99, 102, 241, 0.25);
     --accent-pink: #6366f1;
     --accent-purple: #4338ca;
     --accent-purple-light: #818cf8;
 }
 html[data-color-theme="sunset_coral"] {
-    --bg-main: linear-gradient(135deg, #0d0503, #1a0810);
+    --bg-main: linear-gradient(135deg, #200a05, #350c18);
+    --bg-row: rgba(70, 30, 25, 0.55);
     --border-color: rgba(251, 113, 133, 0.25);
     --accent-pink: #fb7185;
     --accent-purple: #f97316;
     --accent-purple-light: #fdba74;
 }
 html[data-color-theme="ocean_teal"] {
-    --bg-main: linear-gradient(135deg, #020a0d, #051419);
+    --bg-main: linear-gradient(135deg, #001218, #002530);
+    --bg-row: rgba(10, 50, 60, 0.55);
     --border-color: rgba(6, 182, 212, 0.25);
     --accent-pink: #06b6d4;
     --accent-purple: #0891b2;
     --accent-purple-light: #22d3ee;
 }
 html[data-color-theme="lavender_dream"] {
-    --bg-main: #0a0710;
+    --bg-main: linear-gradient(135deg, #140a24, #200f38);
+    --bg-row: rgba(55, 35, 80, 0.55);
     --border-color: rgba(216, 180, 254, 0.3);
     --accent-pink: #d8b4fe;
     --accent-purple: #9333ea;
     --accent-purple-light: #e9d5ff;
 }
 html[data-color-theme="cherry_blossom"] {
-    --bg-main: #0a0508;
+    --bg-main: linear-gradient(135deg, #1a0510, #2a0a1c);
+    --bg-row: rgba(58, 22, 40, 0.55);
     --border-color: rgba(244, 114, 182, 0.25);
     --accent-pink: #f472b6;
     --accent-purple: #ec4899;
     --accent-purple-light: #f9a8d4;
 }
 html[data-color-theme="arctic_frost"] {
-    --bg-main: linear-gradient(135deg, #020608, #060f16);
+    --bg-main: linear-gradient(135deg, #020a10, #0a1c28);
+    --bg-row: rgba(15, 45, 60, 0.55);
     --border-color: rgba(56, 189, 248, 0.25);
     --accent-pink: #38bdf8;
     --accent-purple: #0284c7;
     --accent-purple-light: #7dd3fc;
 }
 html[data-color-theme="volcanic_ember"] {
-    --bg-main: linear-gradient(135deg, #0a0302, #170604);
+    --bg-main: linear-gradient(135deg, #170502, #2b0805);
+    --bg-row: rgba(65, 20, 15, 0.55);
     --border-color: rgba(239, 68, 68, 0.28);
     --accent-pink: #ef4444;
     --accent-purple: #991b1b;
     --accent-purple-light: #f87171;
 }
 html[data-color-theme="mint_fresh"] {
-    --bg-main: #020a08;
+    --bg-main: linear-gradient(135deg, #001a14, #002a20);
+    --bg-row: rgba(10, 55, 45, 0.55);
     --border-color: rgba(20, 184, 166, 0.25);
     --accent-pink: #5eead4;
     --accent-purple: #14b8a6;
     --accent-purple-light: #99f6e4;
 }
 html[data-color-theme="royal_amethyst"] {
-    --bg-main: linear-gradient(135deg, #08040d, #150819);
+    --bg-main: linear-gradient(135deg, #16041e, #280836);
+    --bg-row: rgba(65, 20, 80, 0.55);
     --border-color: rgba(192, 38, 211, 0.28);
     --accent-pink: #c026d3;
     --accent-purple: #7e22ce;
     --accent-purple-light: #e879f9;
 }
 html[data-color-theme="graphite_steel"] {
-    --bg-main: #0a0b0d;
+    --bg-main: linear-gradient(135deg, #0d0e10, #1a1c20);
+    --bg-row: rgba(45, 50, 58, 0.55);
     --border-color: rgba(100, 116, 139, 0.25);
     --accent-pink: #94a3b8;
     --accent-purple: #64748b;
@@ -126,18 +148,20 @@ html[data-color-theme="graphite_steel"] {
 /* מצב בהיר (Light Mode, חינמי): מחליף רק את משתני הרקע/הטקסט - הטבעות
    הניאון (var(--accent-*)) נשארות זהות, כדי לשמור על הזוהר הרענן גם על רקע בהיר */
 html.light-mode {
-    --bg-main: #f0eef7;
+    --bg-main: linear-gradient(135deg, #fdf0fa, #f3e8ff);
+    --bg-row: rgba(168, 85, 247, 0.08);
     --bg-glass: rgba(255, 255, 255, 0.72);
     --bg-sheet: #ffffff;
     --border-color: rgba(168, 85, 247, 0.2);
     --text-primary: #17141f;
     --text-secondary: #6b6578;
 }
-/* אותה ערכת-נושא פרימיום (data-color-theme, ר' למעלה) שולטת גם ברקע של מצב
-   בהיר, לא רק בצבעי הניאון של מצב כהה - כך שבחירה אחת בהגדרות נותנת גם רקע
-   תואם (כולל גרדיאנטים עדינים בחלק מהערכות) כשמצב בהיר פעיל */
+/* אותה ערכת-נושא פרימיום (data-color-theme, ר' למעלה) שולטת גם ברקע/שורות של
+   מצב בהיר, לא רק בצבעי הניאון של מצב כהה - כך שבחירה אחת בהגדרות נותנת גם
+   רקע וגם שורות בגוון תואם (כולל גרדיאנטים) כשמצב בהיר פעיל */
 html.light-mode[data-color-theme="blue_teal"] {
-    --bg-main: #e7f6fb;
+    --bg-main: linear-gradient(135deg, #d6f3fa, #b8e8f3);
+    --bg-row: rgba(14, 165, 233, 0.1);
     --bg-glass: rgba(231, 246, 251, 0.75);
     --bg-sheet: #f4fcff;
     --border-color: rgba(14, 165, 233, 0.25);
@@ -145,7 +169,8 @@ html.light-mode[data-color-theme="blue_teal"] {
     --text-secondary: #4a6b73;
 }
 html.light-mode[data-color-theme="gold_red"] {
-    --bg-main: #fdf1e7;
+    --bg-main: linear-gradient(135deg, #fde8d2, #fbd5cf);
+    --bg-row: rgba(220, 38, 38, 0.1);
     --bg-glass: rgba(253, 241, 231, 0.75);
     --bg-sheet: #fffaf3;
     --border-color: rgba(220, 38, 38, 0.2);
@@ -153,7 +178,8 @@ html.light-mode[data-color-theme="gold_red"] {
     --text-secondary: #7a5c47;
 }
 html.light-mode[data-color-theme="forest_emerald"] {
-    --bg-main: #eafaf3;
+    --bg-main: linear-gradient(135deg, #d3f7e6, #b8edd4);
+    --bg-row: rgba(16, 185, 129, 0.1);
     --bg-glass: rgba(234, 250, 243, 0.75);
     --bg-sheet: #f4fffa;
     --border-color: rgba(16, 185, 129, 0.25);
@@ -161,7 +187,8 @@ html.light-mode[data-color-theme="forest_emerald"] {
     --text-secondary: #4d7a67;
 }
 html.light-mode[data-color-theme="rose_gold"] {
-    --bg-main: #fdf1f3;
+    --bg-main: linear-gradient(135deg, #fde3ea, #fce4c4);
+    --bg-row: rgba(244, 63, 94, 0.1);
     --bg-glass: rgba(253, 241, 243, 0.75);
     --bg-sheet: #fff8f9;
     --border-color: rgba(244, 63, 94, 0.25);
@@ -169,7 +196,8 @@ html.light-mode[data-color-theme="rose_gold"] {
     --text-secondary: #7a5560;
 }
 html.light-mode[data-color-theme="midnight_indigo"] {
-    --bg-main: #eef0fd;
+    --bg-main: linear-gradient(135deg, #e0e2fb, #ccd0f7);
+    --bg-row: rgba(99, 102, 241, 0.1);
     --bg-glass: rgba(238, 240, 253, 0.75);
     --bg-sheet: #f6f7ff;
     --border-color: rgba(99, 102, 241, 0.25);
@@ -177,7 +205,8 @@ html.light-mode[data-color-theme="midnight_indigo"] {
     --text-secondary: #5c5a80;
 }
 html.light-mode[data-color-theme="sunset_coral"] {
-    --bg-main: linear-gradient(135deg, #fff1ec, #ffe8ee);
+    --bg-main: linear-gradient(135deg, #ffd9c7, #ffc2d4);
+    --bg-row: rgba(251, 113, 133, 0.12);
     --bg-glass: rgba(255, 241, 236, 0.75);
     --bg-sheet: #fff8f5;
     --border-color: rgba(251, 113, 133, 0.25);
@@ -185,7 +214,8 @@ html.light-mode[data-color-theme="sunset_coral"] {
     --text-secondary: #8a5a45;
 }
 html.light-mode[data-color-theme="ocean_teal"] {
-    --bg-main: linear-gradient(135deg, #e7fbfd, #e3f6fb);
+    --bg-main: linear-gradient(135deg, #c9f4fb, #a6e6f2);
+    --bg-row: rgba(6, 182, 212, 0.12);
     --bg-glass: rgba(231, 251, 253, 0.75);
     --bg-sheet: #f4feff;
     --border-color: rgba(6, 182, 212, 0.25);
@@ -193,7 +223,8 @@ html.light-mode[data-color-theme="ocean_teal"] {
     --text-secondary: #3f6b73;
 }
 html.light-mode[data-color-theme="lavender_dream"] {
-    --bg-main: #f6f0ff;
+    --bg-main: linear-gradient(135deg, #ede0ff, #dfc9ff);
+    --bg-row: rgba(147, 51, 234, 0.1);
     --bg-glass: rgba(246, 240, 255, 0.75);
     --bg-sheet: #fbf7ff;
     --border-color: rgba(168, 85, 247, 0.25);
@@ -201,7 +232,8 @@ html.light-mode[data-color-theme="lavender_dream"] {
     --text-secondary: #7a6a8c;
 }
 html.light-mode[data-color-theme="cherry_blossom"] {
-    --bg-main: #fff0f6;
+    --bg-main: linear-gradient(135deg, #ffe0ec, #ffd0e6);
+    --bg-row: rgba(236, 72, 153, 0.1);
     --bg-glass: rgba(255, 240, 246, 0.75);
     --bg-sheet: #fff8fb;
     --border-color: rgba(244, 114, 182, 0.25);
@@ -209,7 +241,8 @@ html.light-mode[data-color-theme="cherry_blossom"] {
     --text-secondary: #8c5a70;
 }
 html.light-mode[data-color-theme="arctic_frost"] {
-    --bg-main: linear-gradient(135deg, #f0f9ff, #e6f4fb);
+    --bg-main: linear-gradient(135deg, #dcf3ff, #c2e6fb);
+    --bg-row: rgba(56, 189, 248, 0.1);
     --bg-glass: rgba(240, 249, 255, 0.75);
     --bg-sheet: #f8fdff;
     --border-color: rgba(56, 189, 248, 0.25);
@@ -217,7 +250,8 @@ html.light-mode[data-color-theme="arctic_frost"] {
     --text-secondary: #4d7284;
 }
 html.light-mode[data-color-theme="volcanic_ember"] {
-    --bg-main: #fdecec;
+    --bg-main: linear-gradient(135deg, #ffd9d2, #ffc2ba);
+    --bg-row: rgba(239, 68, 68, 0.12);
     --bg-glass: rgba(253, 236, 236, 0.75);
     --bg-sheet: #fff5f5;
     --border-color: rgba(239, 68, 68, 0.28);
@@ -225,7 +259,8 @@ html.light-mode[data-color-theme="volcanic_ember"] {
     --text-secondary: #8a4f4f;
 }
 html.light-mode[data-color-theme="mint_fresh"] {
-    --bg-main: #eafffa;
+    --bg-main: linear-gradient(135deg, #d3fff5, #b3f5e8);
+    --bg-row: rgba(20, 184, 166, 0.1);
     --bg-glass: rgba(234, 255, 250, 0.75);
     --bg-sheet: #f4fffd;
     --border-color: rgba(20, 184, 166, 0.25);
@@ -233,7 +268,8 @@ html.light-mode[data-color-theme="mint_fresh"] {
     --text-secondary: #4d7a70;
 }
 html.light-mode[data-color-theme="royal_amethyst"] {
-    --bg-main: linear-gradient(135deg, #faf0ff, #f5e6ff);
+    --bg-main: linear-gradient(135deg, #f6def5, #ecc7f5);
+    --bg-row: rgba(192, 38, 211, 0.12);
     --bg-glass: rgba(250, 240, 255, 0.75);
     --bg-sheet: #fdf7ff;
     --border-color: rgba(192, 38, 211, 0.28);
@@ -241,7 +277,8 @@ html.light-mode[data-color-theme="royal_amethyst"] {
     --text-secondary: #6e5480;
 }
 html.light-mode[data-color-theme="graphite_steel"] {
-    --bg-main: #f1f3f5;
+    --bg-main: linear-gradient(135deg, #e4e7eb, #d3d8dd);
+    --bg-row: rgba(100, 116, 139, 0.1);
     --bg-glass: rgba(241, 243, 245, 0.75);
     --bg-sheet: #fafbfc;
     --border-color: rgba(100, 116, 139, 0.25);
@@ -251,11 +288,18 @@ html.light-mode[data-color-theme="graphite_steel"] {
 html.light-mode body { background-color: #e9e6f2; }
 /* שדות קלט/כרטיסי משנה כהים באופן קבוע (רקע rgba(0,0,0,x) + טקסט לבן) -
    במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
+/* שורות תוכן (לו"ז/ארוחות/התקדמות) משתמשות ב-var(--bg-row) - כך שגם במצב
+   בהיר, החלפת ערכת נושא פרימיום צובעת אותן בגוון התואם, ולא רק את הרקע הגדול */
 html.light-mode .day-tab,
 html.light-mode .day-page,
 html.light-mode .slot-input-group,
 html.light-mode .meal-row,
-html.light-mode .progress-row,
+html.light-mode .progress-row {
+    background-color: var(--bg-row);
+    color: var(--text-primary);
+}
+/* שדות קלט/טפסים נשארים תמיד בגוון אפור-נייטרלי קבוע, ללא קשר לערכת הנושא -
+   כדי שיישארו נראים כמו שדה הזנה פונקציונלי, לא כמו שורת תוכן צבעונית */
 html.light-mode .calendar-event-custom-recurrence input[type="number"],
 html.light-mode .recipe-form-grid input,
 html.light-mode .recipe-form-grid textarea,
@@ -274,13 +318,13 @@ html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
-/* תיבות רשימה (פתקים/רשימת קניות/יומן) ותפריטים נפתחים משתמשים בגוון סגול-כהה
-   קבוע (לא במשתני הרקע) - במצב בהיר הופכים לזכוכית לבנה רכה עם טקסט כהה קריא,
-   וה-color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
+/* תיבות רשימה (פתקים/רשימת קניות/יומן) ותפריטים נפתחים משתמשות ב-var(--bg-row)
+   כדי לקבל גם הן את גוון ערכת הנושא, עם זכוכית לבנה רכה כברירת מחדל - וה-
+   color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
    (הפופאפ עצמו, שלא ניתן לעצב ב-CSS) ייפתח גם הוא בהיר ולא כתיבה שחורה */
 html.light-mode .center-list li,
 html.light-mode .calendar-event-item {
-    background-color: rgba(255, 255, 255, 0.65);
+    background-color: var(--bg-row);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 html.light-mode .calendar-event-series-dates {
@@ -379,7 +423,10 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 18px;
-    padding: 16px 14px 14px 14px;
+    /* padding-top מוגדל (לא 16px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
+       הקבועים (עוזר AI בפינה שמאל-עליונה, המבורגר בפינה ימין-עליונה - שניהם
+       top:22px עד ~66-70px) - בלי זה שורת "שלום.../תאריך" מסתתרת מתחתיהם */
+    padding: 70px 14px 14px 14px;
     margin-bottom: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     position: relative;
@@ -583,7 +630,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-floating-add:active { transform: scale(0.9); background-color: rgba(255, 0, 127, 0.2); }
 .day-tabs-strip { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .day-tabs-strip::-webkit-scrollbar { display: none; }
-.day-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 10px; padding: 8px 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-family: inherit; }
+.day-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; background-color: var(--bg-row); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 10px; padding: 8px 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-family: inherit; }
 .day-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.15); }
 .day-tab-name { font-size: 0.75rem; font-weight: 700; }
 .day-tab-date { font-size: 0.65rem; opacity: 0.7; }
@@ -719,6 +766,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: none;
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
+/* כשהמגירה פתוחה, מסתירים בכוח את כל כפתורי ה-FAB (במיוחד .ai-fab, שיש לו
+   z-index:99999 !important - גבוה בהרבה מ-4000 של המגירה, ולכן לא מספיק
+   להסתמך על סדר שכבות; חייבים להעלים אותם ממש) כדי שלא יחפפו את תוכן המגירה
+   על מסכים צרים (מובייל) */
+.phone-wrapper.menu-open .ai-fab,
+.phone-wrapper.menu-open .ai-brain-fab,
+.phone-wrapper.menu-open .settings-fab,
+.phone-wrapper.menu-open .hamburger-fab {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
 .hamburger-drawer {
     position: absolute;
     top: 0;
@@ -763,7 +821,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .premium-drawer-title { margin-top: 18px !important; }
 .btn-settings-drawer-feature { width: 100%; margin-top: 4px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light); }
-.day-page { flex: 0 0 100%; min-width: 0; min-height: 0; height: auto; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; align-self: flex-start; }
+.day-page { flex: 0 0 100%; min-width: 0; min-height: 0; height: auto; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-color: var(--bg-row); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 10px; box-sizing: border-box; overflow: hidden; align-self: flex-start; }
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .day-page-empty { text-align: center; color: var(--text-secondary); font-size: 0.78rem; padding: 16px 8px; opacity: 0.7; }
 .slots-grid { display: flex; flex-direction: column; gap: 10px; }
@@ -771,7 +829,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    על פני כל רוחב השורה מקצה לקצה - הזמן ("שעה") ל-flex:0 0 auto בקצה אחד,
    כפתור המחיקה ל-flex:0 0 auto בקצה השני, ועטיפת המשימה (flex:1) ממלאת
    ומתפרשת על כל השטח הפנוי שביניהם, כדי שלא "יצטופפו" באמצע השורה */
-.slot-input-group { background-color: rgba(0, 0, 0, 0.4); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease; min-width: 0; max-width: 100%; box-sizing: border-box; max-height: 68px; opacity: 1; overflow: hidden; }
+.slot-input-group { background-color: var(--bg-row); border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; border: 1px solid rgba(255,255,255,0.01); transition: background-color 0.3s ease, box-shadow 0.3s ease, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease; min-width: 0; max-width: 100%; box-sizing: border-box; max-height: 68px; opacity: 1; overflow: hidden; }
 .slot-input-group.slot-removing { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0; pointer-events: none; }
 .slot-input-group.just-added { background-color: rgba(0, 230, 118, 0.15); box-shadow: 0 0 0 1px var(--accent-green); }
 .slot-input-group.task-pink { border-right: 3px solid var(--accent-pink); }
@@ -839,7 +897,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
 .calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
 .calendar-event-item {
-    background-color: rgba(20, 18, 26, 0.5);
+    background-color: var(--bg-row);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.04);
@@ -871,7 +929,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    עולם הלו"ז (--tile-accent) במקום סגול, כדי להבחין ביניהם בבירור */
 .today-tasks-list { display: flex; flex-direction: column; gap: 8px; }
 .today-tasks-row {
-    background-color: rgba(20, 18, 26, 0.5);
+    background-color: var(--bg-row);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.04);
@@ -1040,7 +1098,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-detail-instructions p { font-size: 0.88rem; color: var(--text-primary); line-height: 1.6; margin: 0 0 10px 0; text-align: start; }
 
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
-.meal-row { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
+.meal-row { background-color: var(--bg-row); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
 .meal-header-row { display: flex; justify-content: space-between; align-items: center; }
 .meal-label { font-weight: 600; font-size: 0.8rem; color: var(--accent-pink); }
 .preset-select { background-color: rgba(168, 85, 247, 0.08); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.22); border-radius: 8px; padding: 4px 8px; font-size: 0.7rem; outline: none; color-scheme: dark; cursor: pointer; transition: var(--transition); }
@@ -1064,7 +1122,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
 .center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .center-list li {
-    background-color: rgba(20, 18, 26, 0.5);
+    background-color: var(--bg-row);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.03);

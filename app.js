@@ -584,11 +584,18 @@ function closeSubView(sectionId) {
 function openHamburgerMenu() {
     const overlay = document.getElementById('hamburger-drawer-overlay');
     if (overlay) overlay.classList.add('open');
+    // .menu-open מסתיר בכוח את כל כפתורי ה-FAB (theme.css) - נדרש כי ל-.ai-fab
+    // יש z-index:99999 !important, גבוה בהרבה מהמגירה, אז הסתמכות על שכבות
+    // בלבד לא מספיקה כדי שהמגירה לא תיחסם על ידו במובייל
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('menu-open');
 }
 
 function closeHamburgerMenu() {
     const overlay = document.getElementById('hamburger-drawer-overlay');
     if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('menu-open');
 }
 
 // switchToTab מפעיל קליק אמיתי על ה-nav-cube, שמריץ סינכרונית את כל טיפול
