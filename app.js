@@ -2620,7 +2620,11 @@ async function exportUserDataReport() {
     h1 { color: #a855f7; margin: 0; font-size: 2rem; letter-spacing: 1px; }
     .sub { color: #918da3; font-size: 0.85rem; margin-top: 4px; }
     h2 { color: #ff007f; font-size: 1.15rem; margin-top: 32px; margin-bottom: 12px; border-bottom: 2px solid #ffe0f0; padding-bottom: 6px; }
-    .entry { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: linear-gradient(135deg, #fdf3ff, #fff0f7); border: 1px solid #f3d9f7; border-radius: 12px; padding: 10px 16px; margin-bottom: 8px; font-size: 0.92rem; }
+    /* direction:ltr קבוע (לא יורש מ-html dir למעלה) - כדי שהערך המספרי (למשל
+       "80 ק"ג") תמיד ייפול בצד ימין של השורה, לא יתהפך בטעות לשמאל כשה-html
+       כולו rtl (מיקום קופסת flex בשורה תלוי בכיוון, גם אם הטקסט הפנימי עצמו
+       תמיד יוצג נכון בעברית/ערבית ללא קשר לזה) */
+    .entry { display: flex; direction: ltr; justify-content: space-between; align-items: center; gap: 10px; background: linear-gradient(135deg, #fdf3ff, #fff0f7); border: 1px solid #f3d9f7; border-radius: 12px; padding: 10px 16px; margin-bottom: 8px; font-size: 0.92rem; }
     .entry-main { font-weight: 700; color: #3a2e4d; }
     .entry-value { font-weight: 700; color: #a855f7; }
     .entry-sub { color: #918da3; font-size: 0.82rem; }
