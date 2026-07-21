@@ -144,6 +144,7 @@ async function loadCenterItems(type) {
     listUl.innerHTML = '';
     data.forEach(item => {
         const li = document.createElement('li');
+        li.setAttribute('data-item-id', item.id);
         li.innerHTML = `
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
@@ -151,6 +152,7 @@ async function loadCenterItems(type) {
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">
                 ${item.content}
             </span>
+            <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">✏️</button>
             <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
         `;
         listUl.appendChild(li);
@@ -442,10 +444,31 @@ async function logoutUser() {
 function openModal(modalId) { document.getElementById(modalId).classList.add('open'); }
 function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
 let pendingCenterItemType = null;
+// editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
+// מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן
+let editingCenterItemId = null;
 function openCenterAdder(type) {
+    editingCenterItemId = null;
     pendingCenterItemType = type;
+    document.getElementById('center-item-modal-title').textContent = t('add_item_title');
     const input = document.getElementById('center-item-input');
     input.value = '';
+    openModal('modal-add-center-item');
+    setTimeout(() => input.focus(), 150);
+}
+
+// נקרא מכפתור העריכה (✏️) בכל שורת פתק/משימה - קורא את הטקסט הנוכחי ואת
+// מזהה הפריט ישירות מה-DOM (לא מוטבע ב-onclick) כדי לא להסתבך עם escaping
+// של תווים מיוחדים שהמשתמש הקליד בתוכן עצמו
+function openCenterItemEditor(btn, type) {
+    const li = btn.closest('li');
+    if (!li) return;
+    editingCenterItemId = li.getAttribute('data-item-id');
+    pendingCenterItemType = type;
+    const currentText = li.querySelector('.center-list-item-text').textContent.trim();
+    document.getElementById('center-item-modal-title').textContent = t('edit_item_title');
+    const input = document.getElementById('center-item-input');
+    input.value = currentText;
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -453,10 +476,22 @@ function openCenterAdder(type) {
 function submitCenterItem() {
     const input = document.getElementById('center-item-input');
     const text = input.value.trim();
+    const type = pendingCenterItemType;
+    const editId = editingCenterItemId;
     closeModal('modal-add-center-item');
-    if (!text || !pendingCenterItemType) return;
-    insertCenterItemDirect(pendingCenterItemType, text);
+    editingCenterItemId = null;
     pendingCenterItemType = null;
+    if (!text || !type) return;
+    if (editId) updateCenterItemDirect(editId, type, text);
+    else insertCenterItemDirect(type, text);
+}
+
+async function updateCenterItemDirect(id, type, content) {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const { error } = await supabaseClient.from('my_center_tasks').update({ content }).eq('id', id);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    await loadCenterItems(type);
+    showAppToast(t('item_added_success'));
 }
 
 async function insertCenterItemDirect(type, content) {
