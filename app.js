@@ -3584,6 +3584,16 @@ function setRecipeImagePreview(url) {
 // דטרמיניסטי שכבר משמש להדבקת טקסט (parseRecipeText) על התוצר. אם ה-OCR
 // עצמו לא הצליח לחלץ כלום שימושי, מחזירה false בלי להמציא תוכן - הטופס
 // נשאר פתוח וריק לעריכה ידנית, זה תמיד עדיף על "לנחש" מה בתמונה
+// שם מתכון לא אמור להכיל שם-חודש באנגלית או אשכול אות+ספרות מעורבב (כמו
+// "E107") - אלה כמעט תמיד שרידי תאריך/שעון מעוותים מ-OCR, לא מילה אמיתית
+// בשום שפה. עדיף להשאיר את שדה הכותרת ריק ולבקש מהמשתמשת למלא בעצמה, במקום
+// למלא בביטחון שם שגוי - בדיוק לפי הבקשה: "אם יש שאלות תשאל אותי"
+function looksLikeGarbledOcrTitle(title) {
+    if (OCR_MONTH_NAME_RE.test(title)) return true;
+    if (/[a-z][0-9]{2,}|[0-9]{2,}[a-z]/i.test(title)) return true;
+    return false;
+}
+
 async function runLocalRecipeOcrFallback(file) {
     if (!file.type.startsWith('image/') || typeof Tesseract === 'undefined') return false;
     try {
@@ -3593,14 +3603,15 @@ async function runLocalRecipeOcrFallback(file) {
         if (!rawText) return false;
         const parsed = parseRecipeText(rawText);
         if (!parsed || !parsed.title) return false;
-        document.getElementById('recipe-title-input').value = parsed.title;
+        const titleUnclear = looksLikeGarbledOcrTitle(parsed.title);
+        document.getElementById('recipe-title-input').value = titleUnclear ? '' : parsed.title;
         if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
         document.getElementById('recipe-calories-input').value = parsed.calories || '';
         document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
         document.getElementById('recipe-instructions-input').value = parsed.instructions;
         setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
         document.getElementById('recipe-ai-raw-input').value = '';
-        showAppToast(t('recipe_scan_ocr_success'));
+        showAppToast(t(titleUnclear ? 'recipe_scan_title_unclear' : 'recipe_scan_ocr_success'), titleUnclear ? 'error' : 'success');
         return true;
     } catch {
         return false;
@@ -3781,13 +3792,18 @@ const OCR_NOISE_LINE_PATTERNS = [
     /^\d{1,2}g$/i,                                       // "4G"/"5G" סטטוס רשת (לא להתבלבל עם "גרם" שתמיד עם רווח/מספר לפניו)
     /^[\d\s]{1,4}$/,                                     // שורה שהיא רק מספר/ים בודדים קצרים (מונה תגובות/לייקים וכו')
 ];
+// חודש באנגלית (מלא או מקוצר) כמעט אף פעם לא באמת חלק ממתכון בעברית - כמעט
+// תמיד שריד תאריך של הודעת צ'אט (כמו "July 16, 11:07") שה-OCR לפעמים מעוות
+// עד כדי אי-זיהוי (למשל "11:07" הופך ל"E107 5") ולכן לא נתפס באף תבנית שעון
+// מדויקת למעלה - זיהוי שם החודש עצמו הרבה יותר יציב מנחישת הספרות שאחריו
+const OCR_MONTH_NAME_RE = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i;
 function isOcrNoiseLine(line) {
     if (OCR_NOISE_LINE_PATTERNS.some(re => re.test(line))) return true;
-    // רשת ביטחון כללית: שורה קצרה (עד 5 "מילים") שמכילה שעון בתוכה איפשהו
-    // ולא מכילה אף מילת-מפתח טיפוסית של מתכון (כמות/יחידה/פועל בישול) -
-    // כמעט תמיד שריד סטטוס-בר/שעון מכשיר שלא נתפס באחת התבניות המדויקות
-    // למעלה (למשל בגלל תו מקף לא-סטנדרטי או שם מכשיר לא-צפוי)
-    if (/\d{1,2}:\d{2}/.test(line) && line.split(/\s+/).length <= 5 &&
+    // רשת ביטחון כללית: שורה קצרה (עד 6 "מילים") שמכילה שעון או שם-חודש
+    // באנגלית איפשהו בתוכה ולא מכילה אף מילת-מפתח טיפוסית של מתכון (כמות/
+    // יחידה/פועל בישול) - כמעט תמיד שריד סטטוס-בר/שעון/תאריך שלא נתפס
+    // באחת התבניות המדויקות למעלה (למשל בגלל תו מקף לא-סטנדרטי או עיוות OCR)
+    if ((/\d{1,2}:\d{2}/.test(line) || OCR_MONTH_NAME_RE.test(line)) && line.split(/\s+/).length <= 6 &&
         !RECIPE_INGREDIENT_WORD_RE.test(line) && !RECIPE_INSTRUCTION_WORD_RE.test(line)) return true;
     return false;
 }
@@ -3805,6 +3821,10 @@ const OCR_NOISE_PREFIX_PATTERNS = [
     /^[a-z0-9]+(\s+(ii|iii|iv|pro|max|plus))?\s*[-–—]\s*\d{1,2}:\d{2}\s*/i, // "SNES II -13:42 " כתחילית
     /^\d{1,2}:\d{2}\s+/,                                                    // "13:42 " כתחילית
     /^(reply|השב|השיבו)\s*[:\-–—]?\s*/i,                                    // "Reply: " כתחילית
+    // ">"/"<" בודדים הם כמעט תמיד שרידי אייקון חץ/הרחבה מצילום מסך צ'אט
+    // (כפתור "השב"/הרחב) - אף פעם לא תוכן מתכון אמיתי, גם כשמופיעים כתחילית
+    // צמודה לטקסט אמיתי (בדיוק כמו "SNES II -13:42" שתועד למעלה)
+    /^[<>]+\s*/,
 ];
 function stripOcrNoisePrefix(line) {
     let out = line;
@@ -3825,6 +3845,8 @@ function sanitizeOcrText(raw) {
         .filter(l => l && !isOcrNoiseLine(l))
         .map(l => stripOcrNoisePrefix(l))
         .map(l => l.replace(OCR_BULLET_CONFUSION_RE, '').trim())
+        // ">"/"<" בודדים בסוף שורה - אותו שריד אייקון חץ/הרחבה, בכיוון ההפוך
+        .map(l => l.replace(/\s*[<>]+$/, '').trim())
         .filter(Boolean)
         .join('\n');
 }
