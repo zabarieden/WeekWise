@@ -2656,29 +2656,55 @@ function escapeHtmlForReport(str) {
 // לא jsPDF (הפונטים המובנים שלו לא תומכים בעברית - היו יוצאים ריבועים ריקים) -
 // במקום זה נבנה עמוד HTML נקי בחלון חדש ומפעילים את דיאלוג ההדפסה הטבעי של
 // הדפדפן, שבו "שמירה כ-PDF" היא אחת מהיעדים הרגילים
+function openReportSectionPicker() {
+    openModal('modal-report-section-picker');
+}
+
 async function exportUserDataReport() {
     if (!supabaseClient || !currentUserId) return;
+    const includeWeight = document.getElementById('report-section-weight').checked;
+    const includeGoals = document.getElementById('report-section-goals').checked;
+    const includeFinance = document.getElementById('report-section-finance').checked;
+    if (!includeWeight && !includeGoals && !includeFinance) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
+    closeModal('modal-report-section-picker');
     showAppToast(t('settings_export_data_preparing'));
-    const [{ data: weightRows }, { data: goalRows }] = await Promise.all([
-        supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }),
-        supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }),
+
+    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }] = await Promise.all([
+        includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : Promise.resolve({ data: null }),
+        includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : Promise.resolve({ data: null }),
+        includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : Promise.resolve({ data: null }),
     ]);
 
-    const weightHtml = (weightRows && weightRows.length)
-        ? weightRows.map(row => `<div class="entry"><span class="entry-main">${new Date(row.weight_date).toLocaleDateString()}</span><span class="entry-value">${escapeHtmlForReport(row.weight_value)} ${escapeHtmlForReport(t('monthly_goal_kg_unit'))}</span></div>`).join('')
-        : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
-
-    const goalsHtml = (goalRows && goalRows.length)
-        ? goalRows.map(row => `<div class="entry"><span class="entry-main">${escapeHtmlForReport(row.goal_name)}</span><span class="entry-sub">${escapeHtmlForReport(formatMonthLabel(row.month_key))}</span></div>`).join('')
-        : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+    let sectionsHtml = '';
+    if (includeWeight) {
+        const weightHtml = (weightRows && weightRows.length)
+            ? weightRows.map(row => `<div class="entry"><span class="entry-main">${new Date(row.weight_date).toLocaleDateString()}</span><span class="entry-value">${escapeHtmlForReport(row.weight_value)} ${escapeHtmlForReport(t('monthly_goal_kg_unit'))}</span></div>`).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('data_report_label_weight'))}</h2>${weightHtml}`;
+    }
+    if (includeGoals) {
+        const goalsHtml = (goalRows && goalRows.length)
+            ? goalRows.map(row => `<div class="entry"><span class="entry-main">${escapeHtmlForReport(row.goal_name)}</span><span class="entry-sub">${escapeHtmlForReport(formatMonthLabel(row.month_key))}</span></div>`).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('data_report_achieved_goals'))}</h2>${goalsHtml}`;
+    }
+    if (includeFinance) {
+        const financeHtml = (financeRows && financeRows.length)
+            ? financeRows.map(row => {
+                const categoryKey = (FINANCE_CATEGORIES[row.entry_type] || []).find(([value]) => value === row.category);
+                const categoryLabel = categoryKey ? t(categoryKey[1]) : (row.category || '');
+                const sign = row.entry_type === 'income' ? '+' : '−';
+                const color = row.entry_type === 'income' ? '#16a34a' : '#a855f7';
+                return `<div class="entry"><span class="entry-main">${new Date(row.entry_date).toLocaleDateString()} · ${escapeHtmlForReport(categoryLabel)}</span><span class="entry-value" style="color: ${color};">${sign}${Number(row.amount).toLocaleString()}</span></div>`;
+            }).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_finance'))}</h2>${financeHtml}`;
+    }
 
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
     const bodyHtml = `
         <div class="header-banner"><h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p></div>
-        <h2>${escapeHtmlForReport(t('data_report_label_weight'))}</h2>
-        ${weightHtml}
-        <h2>${escapeHtmlForReport(t('data_report_achieved_goals'))}</h2>
-        ${goalsHtml}
+        ${sectionsHtml}
     `;
     const printWindow = window.open('', '_blank');
     if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
