@@ -217,7 +217,9 @@ function initNoteTriageDragDrop() {
 async function handleNoteTriageDrop(itemId, triageType, content) {
     if (!supabaseClient || !currentUserId || !content) return;
     const targetDate = triageType === 'tomorrow' ? getLocalDateString(new Date(Date.now() + 86400000)) : getLocalDateString();
-    await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: content, event_date: targetDate });
+    // source: 'note_task' - לא 'calendar' (ברירת המחדל) - כדי שזה יופיע בלוח
+    // החודשי וב"משימות להיום" (שם לא מסננים לפי source) אבל לא ב"מבט ליומן"
+    await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: content, event_date: targetDate, source: 'note_task' });
     await supabaseClient.from('my_center_tasks').delete().eq('id', itemId);
     loadCenterItems('weekly');
     loadTodayTasks();
@@ -1918,7 +1920,10 @@ async function loadCalendarEvents() {
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     const today = getLocalDateString();
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today);
+    // source='calendar' בלבד - לא משימות שהומרו מפתקים גרורים (source=
+    // 'note_task'). אלה עדיין מופיעות בלוח החודשי וב"משימות להיום" (שם לא
+    // מסננים), רק לא כאן ב"מבט ליומן" - לפי בקשה מפורשת
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar').gte('event_date', today);
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
