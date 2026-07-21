@@ -638,6 +638,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-form-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .recipe-form-grid input, .recipe-form-grid textarea, .recipe-form-grid select { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; font-family: inherit; resize: vertical; box-sizing: border-box; width: 100%; }
 #recipe-ai-raw-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(168, 85, 247, 0.2); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.85rem; outline: none; font-family: inherit; resize: vertical; box-sizing: border-box; width: 100%; margin-bottom: 8px; }
+/* אזהרה עדינה מתחת לשדה הקלוריות - מוצגת רק כשהערך שם הוא אומדן מקומי
+   (לא מספר מפורש מהטקסט ולא תוצאה מ-AI אמיתי בענן), כדי שהמשתמש ידע לבדוק */
+.recipe-calories-estimate-hint { margin: -4px 0 0 0; font-size: 0.72rem; color: var(--accent-gold); opacity: 0.85; }
 #btn-recipe-ai-parse { width: 100%; margin-bottom: 4px; }
 .recipe-scan-divider { text-align: center; font-size: 0.7rem; color: var(--text-secondary); opacity: 0.6; margin: 8px 0; text-transform: uppercase; letter-spacing: 1px; }
 .recipe-scan-hint { text-align: center; font-size: 0.68rem; color: var(--text-secondary); opacity: 0.7; margin: 4px 0 10px 0; }

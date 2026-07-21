@@ -2093,6 +2093,7 @@ function openAddRecipeForm() {
     document.getElementById('recipe-ingredients-input').value = '';
     document.getElementById('recipe-instructions-input').value = '';
     setRecipeImagePreview('');
+    setRecipeCaloriesEstimateHint(false);
     openModal('modal-add-recipe');
 }
 
@@ -2108,7 +2109,16 @@ function openEditRecipeForm() {
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
     document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
     setRecipeImagePreview(recipe.image_url || '');
+    setRecipeCaloriesEstimateHint(false);
     openModal('modal-add-recipe');
+}
+
+// מציגה/מסתירה את אזהרת "קלוריות מוערכות" ליד שדה הקלוריות - רק כשהערך
+// שם הגיע מאומדן מקומי מבוסס-מצרכים (parseRecipeText), לא ממספר מפורש
+// שהופיע בטקסט המקור ולא מה-AI האמיתי בענן (שניהם עובדה, לא הערכה)
+function setRecipeCaloriesEstimateHint(show) {
+    const hint = document.getElementById('recipe-calories-estimate-hint');
+    if (hint) hint.classList.toggle('hidden', !show);
 }
 
 async function saveRecipe() {
@@ -2659,6 +2669,7 @@ async function parseRecipeWithAI() {
     document.getElementById('recipe-calories-input').value = parsed.calories || '';
     document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
     document.getElementById('recipe-instructions-input').value = parsed.instructions;
+    setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
 
     await incrementAiUsage();
     showAppToast(t('recipe_ai_parsed_success'));
@@ -2736,6 +2747,7 @@ async function runLocalRecipeOcrFallback(file) {
         document.getElementById('recipe-calories-input').value = parsed.calories || '';
         document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
         document.getElementById('recipe-instructions-input').value = parsed.instructions;
+        setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
         showAppToast(t('recipe_scan_ocr_success'));
         return true;
     } catch {
@@ -2803,6 +2815,7 @@ async function runRecipeImageScan(file) {
             document.getElementById('recipe-calories-input').value = recipe.calories || '';
             document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
             document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
+            setRecipeCaloriesEstimateHint(false);
             showAppToast(t('recipe_scan_success'));
             return;
         }
@@ -2900,6 +2913,90 @@ function hideRecipeScanLoading() {
     if (el) el.classList.add('hidden');
 }
 
+// --- ניקוי רעש מ-OCR/הדבקה מתוך צילומי מסך של אפליקציות צ'אט (שעון, כפתור
+// "Reply", שם השולח, תאריך, סטטוס-בר) - רץ *לפני* parseRecipeText, כדי
+// ששורות רעש כאלה לא "יתפסו" בטעות ככותרת/מצרך ולא יתמזגו עם שורות תוכן
+// אמיתיות (זה בדיוק מה שגרם לכותרת שגויה כמו "SNES II -13:42" ולרשימות
+// מעורבבות מצילום מסך של שיחה) ---
+const OCR_NOISE_LINE_PATTERNS = [
+    /^\d{1,2}:\d{2}$/,                                  // שעון עצמאי, למשל "13:42"
+    /^(reply|השב|השיבו)\b/i,                             // כפתור "Reply"/"השב" בצ'אטים
+    /^you$/i,                                            // שם שולח "You" בצ'אטים
+    /^[a-z]{3,10}\s+\d{1,2}(,\s*\d{4})?$/i,               // תאריך כמו "July 16" / "July 16, 2026"
+    /^[a-z0-9]+(\s+(ii|iii|iv|pro|max|plus))?\s*-?\s*\d{1,2}:\d{2}$/i, // "SNES II -13:42" וכדומה (שם מכשיר+שעון)
+    /^\d{1,3}\s*%$/,                                     // אחוז סוללה עצמאי
+    /^\d{1,2}g$/i,                                       // "4G"/"5G" סטטוס רשת (לא להתבלבל עם "גרם" שתמיד עם רווח/מספר לפניו)
+    /^[\d\s]{1,4}$/,                                     // שורה שהיא רק מספר/ים בודדים קצרים (מונה תגובות/לייקים וכו')
+];
+function isOcrNoiseLine(line) {
+    return OCR_NOISE_LINE_PATTERNS.some(re => re.test(line));
+}
+// תווים שכיחים ש-OCR מבלבל איתם בולט חלול ("○" נקרא בטעות כ-"©"/"&" וכו') -
+// מוסרים אותם כתחילית שורה, לא ממירים לתו בולט אחר (המצרך/ההוראה כבר בשורה
+// נפרדת משלו, אין צורך בעיטור נוסף)
+const OCR_BULLET_CONFUSION_RE = /^[©®&§*°•○◦▪✦❖\-–—]\s*/;
+function sanitizeOcrText(raw) {
+    return raw
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !isOcrNoiseLine(l))
+        .map(l => l.replace(OCR_BULLET_CONFUSION_RE, '').trim())
+        .filter(Boolean)
+        .join('\n');
+}
+
+// --- אומדן קלוריות גס לפי המצרכים המזוהים, כשלא צוין מספר קלוריות מפורש
+// בטקסט המקור - טבלת חיפוש קטנה של רכיבי אפייה/בישול נפוצים (קלוריות ל-100
+// גרם, או ליחידה בודדת עבור ביצים). לא מנחשת כמות שלא צוינה בטקסט (שורה בלי
+// גרם/מ"ל/מספר יחידות מפורש פשוט לא נכנסת לאומדן) - תמיד המלצה בלבד, לא
+// עובדה, ולכן תמיד מוצגת עם אזהרה מפורשת בממשק (ר' recipe_calories_estimated_hint) ---
+const RECIPE_CALORIE_DB = [
+    { re: /קקאו|cocoa/i, kcal100g: 228 },
+    { re: /שוקולד|chocolate/i, kcal100g: 546 },
+    { re: /קמח|flour/i, kcal100g: 364 },
+    { re: /סוכר חום|brown sugar/i, kcal100g: 380 },
+    { re: /סוכר|sugar/i, kcal100g: 387 },
+    { re: /חמאה|butter/i, kcal100g: 717 },
+    { re: /שמן|\boil\b/i, kcal100g: 884 },
+    { re: /שמנת|cream/i, kcal100g: 340 },
+    { re: /חלב|\bmilk\b/i, kcal100g: 42 },
+    { re: /דבש|honey/i, kcal100g: 304 },
+    { re: /גבינה|cheese/i, kcal100g: 350 },
+    { re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
+    { re: /שמרים|yeast/i, kcal100g: 105 },
+    { re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600 },
+    { re: /תפוח(?!\s*הצהריים)|apple/i, kcal100g: 52 },
+    { re: /בננה|banana/i, kcal100g: 89 },
+    { re: /אורז|\brice\b/i, kcal100g: 130 },
+    { re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
+    { re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
+    { re: /ביצ/i, kcalPerUnit: 70 },
+    { re: /מים|\bwater\b/i, kcal100g: 0 },
+    { re: /מלח|\bsalt\b/i, kcal100g: 0 },
+];
+function estimateIngredientLineCalories(line) {
+    const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
+    const grams = gramsMatch ? parseFloat(gramsMatch[1]) : null;
+    const countMatch = line.match(/^(\d+(?:\.\d+)?)/);
+    const count = countMatch ? parseFloat(countMatch[1]) : null;
+    for (const item of RECIPE_CALORIE_DB) {
+        if (!item.re.test(line)) continue;
+        if (item.kcalPerUnit != null) return (count || 1) * item.kcalPerUnit;
+        if (grams != null) return (grams / 100) * item.kcal100g;
+        return 0; // רכיב זוהה אבל בלי כמות מפורשת בגרם/מ"ל - לא מנחשים, מדלגים
+    }
+    return 0;
+}
+function estimateRecipeCalories(ingredientsText) {
+    if (!ingredientsText) return null;
+    let total = 0, matchedAny = false;
+    ingredientsText.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+        const kcal = estimateIngredientLineCalories(line);
+        if (kcal > 0) { total += kcal; matchedAny = true; }
+    });
+    return matchedAny ? Math.round(total) : null;
+}
+
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
 // מזהה כותרות "מצרכים/הוראות" גם באמצע שורה (עם נקודתיים), מסנן שורות "רעש" טיפוסיות
 // מאתרי מתכונים (זמן הכנה, דירוג, שיתוף וכו'), ובהיעדר כותרות - ממיין כל שורה לפי
@@ -2909,15 +3006,25 @@ const RECIPE_INGREDIENT_WORD_RE = /^([\d½¼¾⅓⅔]|cup|cups|tbsp|tablespoon|t
 const RECIPE_INSTRUCTION_WORD_RE = /^(step\s*\d|\d+[.)]\s|mix|stir|bake|heat|add|pour|chop|preheat|whisk|combine|serve|cook|boil|fry|ערבבו|אפו|בשלו|הוסיפו|חממו|קצצו|טגנו|ערבבי|הכינו|קרמלו|בחשו)/i;
 
 function parseRecipeText(raw) {
-    const rawLines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const cleanedRaw = sanitizeOcrText(raw);
+    const rawLines = cleanedRaw.split('\n').map(l => l.trim()).filter(Boolean);
     const lines = rawLines.filter(l => !RECIPE_JUNK_LINE_RE.test(l));
 
     const ingredientHeaderRe = /^(ingredients?|מצרכים|מרכיבים|רכיבים|ingr[ée]dients?|المكونات)\s*:?\s*(.*)$/i;
     const instructionHeaderRe = /^(instructions?|directions?|method|preparation|הוראות(?:\s*(?:ה)?הכנה)?|אופן\s*(?:ה)?הכנה|طريقة\s*التحضير|pr[ée]paration)\s*:?\s*(.*)$/i;
 
-    const title = lines[0] || '';
-    const caloriesMatch = raw.match(/(\d{2,5})\s*(kcal|cal|calories|קלוריות|سعرة)/i);
-    const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
+    // כותרת: לא סתם השורה הראשונה (lines[0]) - שיירי רעש קצרים (2-3 תווים)
+    // שנשארו אחרי הניקוי היו עלולים עדיין להיתפס בטעות ככותרת. מחפשים את
+    // אינדקס השורה המשמעותית הראשונה (לפחות 3 תווי אותיות אמיתיים) ומסירים
+    // אימוג'י מוביל (כמו 🎂) לכותרת נקייה יותר - שומרים גם את האינדקס עצמו,
+    // כדי ש"שאר הטקסט" (bodyLines למטה) יתחיל אחרי הכותרת האמיתית ולא סתם
+    // אחרי lines[0], שעלולה להיות שריד רעש ולא הכותרת בפועל
+    const titleIndex = lines.findIndex(l => (l.match(/[\p{L}]/gu) || []).length >= 3);
+    const titleLine = titleIndex !== -1 ? lines[titleIndex] : (lines[0] || '');
+    const title = titleLine.replace(/^[\p{Extended_Pictographic}‍️\s]+/gu, '').trim() || titleLine;
+
+    const caloriesMatch = cleanedRaw.match(/(\d{2,5})\s*(kcal|cal|calories|קלוריות|سعرة)/i);
+    const explicitCalories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
 
     const ingredientStart = lines.findIndex(l => ingredientHeaderRe.test(l));
     const instructionStart = lines.findIndex(l => instructionHeaderRe.test(l));
@@ -2938,7 +3045,7 @@ function parseRecipeText(raw) {
             instructions = [...inlineFirstStep, ...lines.slice(instructionStart + 1)].join('\n');
         }
     } else {
-        const bodyLines = lines.slice(1);
+        const bodyLines = lines.slice(titleIndex !== -1 ? titleIndex + 1 : 1);
         const ingredientLines = [];
         const instructionLines = [];
         bodyLines.forEach(line => {
@@ -2951,7 +3058,7 @@ function parseRecipeText(raw) {
         instructions = instructionLines.join('\n');
     }
 
-    const lower = raw.toLowerCase();
+    const lower = cleanedRaw.toLowerCase();
     let category = '';
     if (/breakfast|ארוחת בוקר|petit.d[ée]jeuner|desayuno|فطور/i.test(lower)) category = 'breakfast';
     else if (/appetizer|starter|ראשונ|entrada|entr[ée]e|مقبلات/i.test(lower)) category = 'appetizers';
@@ -2963,7 +3070,17 @@ function parseRecipeText(raw) {
     else if (/dairy|חלבי|גבינה|fromage|queso|لبن|جبن/i.test(lower)) category = 'dairy_mains';
     else if (/meat|chicken|beef|בשר|עוף|בשרי|viande|poulet|carne|لحم|دجاج/i.test(lower)) category = 'meat_mains';
 
-    return { title, category, calories, ingredients, instructions };
+    // קלוריות: מספר מפורש שכתוב בטקסט המקור תמיד מנצח. רק כשאין כזה, מציעים
+    // אומדן מבוסס-מצרכים כברירת מחדל לעריכה - עם caloriesEstimated=true כדי
+    // שהממשק יציג אזהרה מפורשת שזו הערכה, לא עובדה מדויקת
+    let calories = explicitCalories;
+    let caloriesEstimated = false;
+    if (calories == null) {
+        const estimate = estimateRecipeCalories(ingredients);
+        if (estimate != null) { calories = estimate; caloriesEstimated = true; }
+    }
+
+    return { title, category, calories, caloriesEstimated, ingredients, instructions };
 }
 
 async function saveScheduleSlotFromAdder() {
