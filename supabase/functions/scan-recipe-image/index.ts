@@ -113,10 +113,22 @@ Deno.serve(async (req) => {
                                 type: "text",
                                 text:
                                     "This file contains a recipe - it might be a handwritten note, a screenshot, a photo " +
-                                    "of a cookbook page, or a scanned/exported PDF document. Transcribe it faithfully and " +
-                                    "extract it with the extract_recipe tool. Keep ingredients and instructions exactly " +
-                                    "as written in the file - do not invent, embellish, or add anything that isn't " +
-                                    "actually there. If a word is illegible, skip it rather than guessing.",
+                                    "of a cookbook page, or a scanned/exported PDF document. It may also be a screenshot " +
+                                    "of a chat app (e.g. WhatsApp, Gemini, Messages) showing a recipe someone sent - in " +
+                                    "that case, IGNORE everything that is phone/app chrome and not part of the recipe " +
+                                    "itself: status bar clock and date, battery/signal/carrier icons, device or app name, " +
+                                    "sender name, message timestamps, 'Reply'/reaction buttons, and any other UI element. " +
+                                    "Only transcribe the actual recipe content (title, ingredients, instructions).\n\n" +
+                                    "Transcribe the recipe faithfully and extract it with the extract_recipe tool. Keep " +
+                                    "ingredients and instructions exactly as written in the file - do not invent, " +
+                                    "embellish, or add anything that isn't actually there. If a word is illegible, skip " +
+                                    "it rather than guessing.\n\n" +
+                                    "For estimated_total_calories: if the source explicitly states a calorie count, use " +
+                                    "that. Otherwise calculate your own best estimate of the TOTAL calories for the " +
+                                    "entire recipe/dish as written (not per serving, not per single ingredient) by " +
+                                    "summing standard nutritional values for every listed ingredient at its stated " +
+                                    "quantity. Return your best numeric estimate rather than null whenever the " +
+                                    "ingredient list is legible enough to estimate from.",
                             },
                         ],
                     },
@@ -128,11 +140,11 @@ Deno.serve(async (req) => {
                         input_schema: {
                             type: "object",
                             properties: {
-                                title: { type: "string" },
+                                title: { type: "string", description: "The recipe's own title/name only - never a device name, clock, date, or other UI text" },
                                 category: { type: "string", enum: RECIPE_CATEGORIES },
-                                calories: { type: ["integer", "null"] },
-                                ingredients: { type: "string", description: "One ingredient per line, newline-separated" },
-                                instructions: { type: "string", description: "One step per line, newline-separated" },
+                                estimated_total_calories: { type: ["integer", "null"], description: "Best-effort estimated total calories for the WHOLE recipe as written, summed across all ingredients at their stated quantities - not per serving" },
+                                ingredients: { type: "string", description: "One ingredient per line, newline-separated. Ingredients only - never include instruction/method text here" },
+                                instructions: { type: "string", description: "One step per line, newline-separated. Preparation steps only - never repeat the ingredient list here" },
                             },
                             required: ["title", "category", "ingredients", "instructions"],
                         },
@@ -151,7 +163,11 @@ Deno.serve(async (req) => {
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
 
-        const recipe = toolUseBlock.input;
+        // הכלי מחזיר estimated_total_calories (שם מפורש יותר עבור המודל, ר'
+        // ההנחיה למעלה) - ממפים בחזרה ל-calories כאן כדי שהחוזה מול הלקוח
+        // (app.js, ששולף recipe.calories) יישאר בלי שינוי
+        const toolInput = toolUseBlock.input;
+        const recipe = { ...toolInput, calories: toolInput.estimated_total_calories ?? toolInput.calories ?? null };
 
         if (usageRow) {
             await supabase.from("user_ai_usage").update({ image_scans_used: used + 1 }).eq("user_id", userId);
