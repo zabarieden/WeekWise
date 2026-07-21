@@ -3111,6 +3111,46 @@ const FINANCE_CATEGORIES = {
 };
 let currentFinanceEntryType = 'expense';
 let financeSummaryMonthKey = null;
+let cachedFinanceTargetBudget = 0;
+
+// נראות כרטיסי "סיכום חודשי": העדפת תצוגה בלבד (לא נתון אמיתי), אז נשמרת רק
+// ב-localStorage לפי משתמשת, לא ב-DB - בדיוק כמו מצב בהיר/ערכת נושא מקומית
+const FINANCE_CARD_KEYS = ['income', 'expense', 'budget', 'remaining'];
+let financeCardVisibility = { income: true, expense: true, budget: true, remaining: true };
+
+function financeCardVisibilityKey() {
+    return `weekwise_finance_cards_${currentUserId}`;
+}
+
+function loadFinanceCardVisibility() {
+    try {
+        const raw = localStorage.getItem(financeCardVisibilityKey());
+        if (raw) financeCardVisibility = { ...financeCardVisibility, ...JSON.parse(raw) };
+    } catch (err) { /* localStorage פגום/חסום - ממשיכים עם ברירת המחדל (הכל מוצג) */ }
+    applyFinanceCardVisibility();
+}
+
+function applyFinanceCardVisibility() {
+    FINANCE_CARD_KEYS.forEach(key => {
+        const card = document.getElementById(`finance-card-${key}`);
+        if (card) card.classList.toggle('hidden', !financeCardVisibility[key]);
+        const checkbox = document.getElementById(`finance-card-toggle-${key}`);
+        if (checkbox) checkbox.checked = !!financeCardVisibility[key];
+    });
+}
+
+function openFinanceCardSettings() {
+    applyFinanceCardVisibility();
+    openModal('modal-finance-card-settings');
+}
+
+function toggleFinanceCardVisibility(key) {
+    const checkbox = document.getElementById(`finance-card-toggle-${key}`);
+    if (!checkbox) return;
+    financeCardVisibility[key] = checkbox.checked;
+    localStorage.setItem(financeCardVisibilityKey(), JSON.stringify(financeCardVisibility));
+    applyFinanceCardVisibility();
+}
 
 function populateFinanceCategoryOptions(type) {
     const select = document.getElementById('finance-category-select');
@@ -3130,6 +3170,7 @@ async function loadFinanceData() {
     if (!supabaseClient || !currentUserId) return;
     financeSummaryMonthKey = currentMonthKey();
     populateFinanceCategoryOptions(currentFinanceEntryType);
+    loadFinanceCardVisibility();
     const dateInput = document.getElementById('finance-date-input');
     if (dateInput) dateInput.value = getLocalDateString();
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
@@ -3167,21 +3208,51 @@ async function renderFinanceSummary() {
     const labelEl = document.getElementById('finance-summary-month-label');
     const incomeEl = document.getElementById('finance-total-income');
     const expenseEl = document.getElementById('finance-total-expense');
-    const balanceEl = document.getElementById('finance-balance');
+    const budgetInput = document.getElementById('finance-target-budget-input');
+    const remainingEl = document.getElementById('finance-remaining');
+    const overspendLabel = document.getElementById('finance-overspend-label');
     if (!labelEl || !supabaseClient || !currentUserId) return;
     const monthKey = financeSummaryMonthKey || currentMonthKey();
     labelEl.textContent = formatMonthLabel(monthKey);
     const [y, m] = monthKey.split('-').map(Number);
     const firstStr = `${monthKey}-01`;
     const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
-    const { data } = await supabaseClient.from('budget_tracker').select('entry_type, amount')
-        .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr);
+    const [{ data: entries }, { data: targetRow }] = await Promise.all([
+        supabaseClient.from('budget_tracker').select('entry_type, amount')
+            .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
+        supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).eq('month_key', monthKey).maybeSingle(),
+    ]);
     let income = 0, expense = 0;
-    (data || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
+    (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
-    balanceEl.textContent = (income - expense).toLocaleString();
-    balanceEl.style.color = (income - expense) < 0 ? 'var(--accent-red)' : 'var(--accent-green)';
+
+    cachedFinanceTargetBudget = (targetRow && targetRow.target_amount) || 0;
+    budgetInput.value = cachedFinanceTargetBudget || '';
+
+    // "כמה נשאר להוציא" = תקציב מתוכנן פחות הוצאות בפועל - אם ההוצאות עברו את
+    // התקציב, מציגים את סכום החריגה עם תווית אזהרה רכה (ענבר/אדום), לא סתם
+    // מספר שלילי סתמי
+    const remaining = cachedFinanceTargetBudget - expense;
+    remainingEl.textContent = Math.abs(remaining).toLocaleString();
+    if (remaining < 0) {
+        remainingEl.style.color = 'var(--accent-red)';
+        overspendLabel.classList.remove('hidden');
+    } else {
+        remainingEl.style.color = 'var(--accent-green)';
+        overspendLabel.classList.add('hidden');
+    }
+}
+
+async function saveFinanceTargetBudget() {
+    if (!supabaseClient || !currentUserId) return;
+    const budgetInput = document.getElementById('finance-target-budget-input');
+    const target = parseFloat(budgetInput.value) || 0;
+    const monthKey = financeSummaryMonthKey || currentMonthKey();
+    await supabaseClient.from('budget_monthly_targets')
+        .upsert({ user_id: currentUserId, username: currentUsername, month_key: monthKey, target_amount: target }, { onConflict: 'user_id,month_key' });
+    cachedFinanceTargetBudget = target;
+    await renderFinanceSummary();
 }
 
 // ההיסטוריה מסוננת לפי אותו חודש שנבחר בסיכום החודשי (financeSummaryMonthKey,

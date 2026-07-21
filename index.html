@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="MyWeek">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=91">
+    <link rel="stylesheet" href="theme.css?v=92">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -464,7 +464,10 @@
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="finance_summary_title">Monthly Summary</h2>
-                            <span class="card-toggle-icon">▼</span>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openFinanceCardSettings();" data-i18n-title="finance_card_settings_title" title="Choose visible cards">⚙️</button>
+                                <span class="card-toggle-icon">▼</span>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="monthly-goal-nav">
@@ -472,18 +475,23 @@
                                 <span class="monthly-goal-month-label" id="finance-summary-month-label"></span>
                                 <button class="monthly-goal-nav-btn" onclick="navigateFinanceMonth(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
                             </div>
-                            <div class="stats-grid">
-                                <div class="stat-box today">
+                            <div class="stats-grid stats-grid-2col">
+                                <div class="stat-box finance-stat-income" id="finance-card-income">
                                     <h3 data-i18n="finance_total_income">Income</h3>
                                     <div class="stat-number" id="finance-total-income">0</div>
                                 </div>
-                                <div class="stat-box weekly">
+                                <div class="stat-box finance-stat-expense" id="finance-card-expense">
                                     <h3 data-i18n="finance_total_expense">Expenses</h3>
                                     <div class="stat-number" id="finance-total-expense">0</div>
                                 </div>
-                                <div class="stat-box monthly">
-                                    <h3 data-i18n="finance_balance">Balance</h3>
-                                    <div class="stat-number" id="finance-balance">0</div>
+                                <div class="stat-box finance-stat-budget" id="finance-card-budget">
+                                    <h3 data-i18n="finance_target_budget">Target Budget</h3>
+                                    <input type="number" id="finance-target-budget-input" class="stat-number-input" onchange="saveFinanceTargetBudget()" placeholder="0">
+                                </div>
+                                <div class="stat-box finance-stat-remaining" id="finance-card-remaining">
+                                    <h3 data-i18n="finance_remaining_to_spend">Remaining to Spend</h3>
+                                    <div class="stat-number" id="finance-remaining">0</div>
+                                    <span id="finance-overspend-label" class="finance-overspend-label hidden" data-i18n="finance_overspend_label">Over Budget</span>
                                 </div>
                             </div>
                         </div>
@@ -835,6 +843,32 @@
             </div>
         </div>
 
+        <!-- חלון צף: בחירת אילו כרטיסי "סיכום חודשי" מוצגים - נשמר ב-localStorage,
+             לא ב-DB (זו העדפת תצוגה בלבד, לא נתון אמיתי) -->
+        <div id="modal-finance-card-settings" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="finance_card_settings_title">Choose visible cards</h3>
+                <label class="settings-toggle-row">
+                    <span data-i18n="finance_total_income">Income</span>
+                    <label class="switch"><input type="checkbox" id="finance-card-toggle-income" onchange="toggleFinanceCardVisibility('income')"><span class="switch-slider"></span></label>
+                </label>
+                <label class="settings-toggle-row">
+                    <span data-i18n="finance_total_expense">Expenses</span>
+                    <label class="switch"><input type="checkbox" id="finance-card-toggle-expense" onchange="toggleFinanceCardVisibility('expense')"><span class="switch-slider"></span></label>
+                </label>
+                <label class="settings-toggle-row">
+                    <span data-i18n="finance_target_budget">Target Budget</span>
+                    <label class="switch"><input type="checkbox" id="finance-card-toggle-budget" onchange="toggleFinanceCardVisibility('budget')"><span class="switch-slider"></span></label>
+                </label>
+                <label class="settings-toggle-row">
+                    <span data-i18n="finance_remaining_to_spend">Remaining to Spend</span>
+                    <label class="switch"><input type="checkbox" id="finance-card-toggle-remaining" onchange="toggleFinanceCardVisibility('remaining')"><span class="switch-slider"></span></label>
+                </label>
+                <button class="btn-clear-specific" style="width: 100%; margin-top: 10px;" onclick="closeModal('modal-finance-card-settings')" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+
         <!-- חלון צף: התאמת שעות ברירת מחדל ללוח הזמנים -->
         <div id="modal-settings-hours" class="apple-modal">
             <div class="modal-sheet">
@@ -1157,7 +1191,7 @@
 
     </div>
 
-    <script src="i18n.js?v=42"></script>
-    <script src="app.js?v=81"></script>
+    <script src="i18n.js?v=43"></script>
+    <script src="app.js?v=82"></script>
 </body>
 </html>

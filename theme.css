@@ -1120,6 +1120,41 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .today .stat-number { color: var(--accent-pink); }
 .weekly .stat-number { color: var(--accent-purple); }
 .monthly .stat-number { color: var(--text-primary); }
+/* 4 כרטיסי "סיכום חודשי" של הוצאות/הכנסות - כל אחד עם צבע ייעודי משלו */
+.finance-stat-income .stat-number { color: var(--accent-green); }
+.finance-stat-expense .stat-number { color: var(--accent-purple); }
+.finance-stat-budget .stat-number, .finance-stat-budget .stat-number-input { color: var(--accent-gold); }
+.finance-stat-remaining .stat-number { color: var(--accent-green); }
+/* תקציב מתוכנן ניתן לעריכה במקום (לא כפתור/מודל נפרד) - נראה בדיוק כמו
+   .stat-number הרגיל אבל הוא בפועל input, ללא מסגרת/רקע ברירת מחדל של הדפדפן */
+.stat-number-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed rgba(245, 158, 11, 0.4);
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: inherit;
+    outline: none;
+    padding: 0 0 2px 0;
+}
+.stat-number-input::placeholder { color: var(--text-secondary); opacity: 0.5; font-weight: 500; }
+.stat-number-input:focus { border-bottom-color: var(--accent-gold); }
+/* תווית "חריגה" רכה - ענבר/אדום, לא צבעק אזהרה תוקפני, כשההוצאות עברו את
+   התקציב המתוכנן */
+.finance-overspend-label {
+    display: inline-block;
+    margin-top: 3px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--accent-red);
+    background-color: rgba(255, 69, 58, 0.1);
+    border: 1px solid rgba(255, 69, 58, 0.25);
+    border-radius: 10px;
+    padding: 1px 8px;
+}
 .weight-inputs-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }

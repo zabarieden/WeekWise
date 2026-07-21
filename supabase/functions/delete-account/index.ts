@@ -24,6 +24,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // כולן עם עמודת user_id. אם תוסיפי טבלה חדשה שקושרת מידע למשתמש בעתיד,
 // תוסיפי אותה גם כאן, אחרת השורות שלה יישארו "יתומות" אחרי מחיקת החשבון
 const USER_SCOPED_TABLES = [
+    "budget_monthly_targets",
     "budget_tracker",
     "calendar_events",
     "calorie_tracker",
