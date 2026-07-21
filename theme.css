@@ -1834,4 +1834,28 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
     .day-tabs-strip { gap: 16px; }
     .day-tab { padding: 14px 22px; }
 }
+
+/* --- שכבת פריסה נוספת למחשב שולחני/טאבלט רחב (1024px+): "כמו דשבורד" רב-
+   טורי במקום עמודה בודדת צרה. הכול תוספת בלבד - media query חדש, בלי לגעת
+   באף כלל בסיס (מובייל) או בשני בלוקי ה-@media למעלה - כך שמתחת ל-1024px
+   הכול ממשיך להתנהג בדיוק כפי שהתנהג לפני השינוי הזה */
+@media (min-width: 1024px) {
+    .phone-wrapper { max-width: 1200px; }
+
+    /* רשת קוביות מסך הבית: זורמת בשורה ועוטפת (בדיוק כמו ש-.sub-tile-grid
+       כבר עושה) במקום להיערם אנכית באמצע מסך רחב */
+    .dashboard-grid { flex-direction: row; flex-wrap: wrap; }
+
+    /* כל מסך ראשי עם כמה כרטיסים ישירים (MyWeek, כספים) הופך לרשת רב-טורית -
+       כפתור "חזרה", רשת תת-קוביות, ותצוגות subview תמיד תופסים רוחב מלא (לא
+       נכנסים לרשת בעצמם, ר' .subview-panel/.sub-tile-grid), רק ה-.card-ים
+       עצמם מסתדרים זה לצד זה */
+    .tab-content.active-tab {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+    .tab-content.active-tab > *:not(.card) { grid-column: 1 / -1; }
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }

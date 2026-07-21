@@ -4,11 +4,11 @@ self.addEventListener('install', () => { self.skipWaiting(); });
 self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()); });
 
 self.addEventListener('push', (event) => {
-    let payload = { title: 'MyWeek', body: '' };
+    let payload = { title: 'WeekWise', body: '' };
     if (event.data) {
         try { payload = event.data.json(); } catch { payload.body = event.data.text(); }
     }
-    const title = payload.title || 'MyWeek';
+    const title = payload.title || 'WeekWise';
     const options = {
         body: payload.body || '',
         icon: 'icon.png',

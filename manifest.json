@@ -1,11 +1,10 @@
 {
-  "name": "MyWeek",
-  "short_name": "MyWeek",
-  "description": "Weekly schedule, nutrition, and personal goals management",
+  "name": "WeekWise",
+  "short_name": "WeekWise",
+  "description": "Weekly schedule, nutrition, expenses & income, and personal goals management",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#07060a",
   "theme_color": "#07060a",
   "lang": "en",
@@ -16,7 +15,7 @@
   ],
   "shortcuts": [
     {
-      "name": "MyWeek",
+      "name": "WeekWise",
       "short_name": "MyWeek",
       "url": "./index.html?view=schedule-section",
       "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
@@ -31,6 +30,12 @@
       "name": "Nutrition & Metrics",
       "short_name": "Nutrition",
       "url": "./index.html?view=nutrition-section",
+      "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Expenses & Income",
+      "short_name": "Finance",
+      "url": "./index.html?view=finance-section",
       "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
