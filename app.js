@@ -2670,6 +2670,9 @@ async function parseRecipeWithAI() {
     document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
     document.getElementById('recipe-instructions-input').value = parsed.instructions;
     setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
+    // מנקים את תיבת ההדבקה הגולמית אחרי פירוק מוצלח - כדי שהטקסט המקורי
+    // הלא-מנותח לא יישאר גלוי בטופס לצד השדות המפורקים שכבר מולאו
+    document.getElementById('recipe-ai-raw-input').value = '';
 
     await incrementAiUsage();
     showAppToast(t('recipe_ai_parsed_success'));
@@ -2748,6 +2751,7 @@ async function runLocalRecipeOcrFallback(file) {
         document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
         document.getElementById('recipe-instructions-input').value = parsed.instructions;
         setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
+        document.getElementById('recipe-ai-raw-input').value = '';
         showAppToast(t('recipe_scan_ocr_success'));
         return true;
     } catch {
@@ -2816,6 +2820,7 @@ async function runRecipeImageScan(file) {
             document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
             document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
             setRecipeCaloriesEstimateHint(false);
+            document.getElementById('recipe-ai-raw-input').value = '';
             showAppToast(t('recipe_scan_success'));
             return;
         }
@@ -2923,13 +2928,20 @@ const OCR_NOISE_LINE_PATTERNS = [
     /^(reply|השב|השיבו)\b/i,                             // כפתור "Reply"/"השב" בצ'אטים
     /^you$/i,                                            // שם שולח "You" בצ'אטים
     /^[a-z]{3,10}\s+\d{1,2}(,\s*\d{4})?$/i,               // תאריך כמו "July 16" / "July 16, 2026"
-    /^[a-z0-9]+(\s+(ii|iii|iv|pro|max|plus))?\s*-?\s*\d{1,2}:\d{2}$/i, // "SNES II -13:42" וכדומה (שם מכשיר+שעון)
+    /^[a-z0-9]+(\s+(ii|iii|iv|pro|max|plus))?\s*[-–—]?\s*\d{1,2}:\d{2}$/i, // "SNES II -13:42" וכדומה (שם מכשיר+שעון, כל סוגי המקף)
     /^\d{1,3}\s*%$/,                                     // אחוז סוללה עצמאי
     /^\d{1,2}g$/i,                                       // "4G"/"5G" סטטוס רשת (לא להתבלבל עם "גרם" שתמיד עם רווח/מספר לפניו)
     /^[\d\s]{1,4}$/,                                     // שורה שהיא רק מספר/ים בודדים קצרים (מונה תגובות/לייקים וכו')
 ];
 function isOcrNoiseLine(line) {
-    return OCR_NOISE_LINE_PATTERNS.some(re => re.test(line));
+    if (OCR_NOISE_LINE_PATTERNS.some(re => re.test(line))) return true;
+    // רשת ביטחון כללית: שורה קצרה (עד 5 "מילים") שמכילה שעון בתוכה איפשהו
+    // ולא מכילה אף מילת-מפתח טיפוסית של מתכון (כמות/יחידה/פועל בישול) -
+    // כמעט תמיד שריד סטטוס-בר/שעון מכשיר שלא נתפס באחת התבניות המדויקות
+    // למעלה (למשל בגלל תו מקף לא-סטנדרטי או שם מכשיר לא-צפוי)
+    if (/\d{1,2}:\d{2}/.test(line) && line.split(/\s+/).length <= 5 &&
+        !RECIPE_INGREDIENT_WORD_RE.test(line) && !RECIPE_INSTRUCTION_WORD_RE.test(line)) return true;
+    return false;
 }
 // תווים שכיחים ש-OCR מבלבל איתם בולט חלול ("○" נקרא בטעות כ-"©"/"&" וכו') -
 // מוסרים אותם כתחילית שורה, לא ממירים לתו בולט אחר (המצרך/ההוראה כבר בשורה
@@ -3021,7 +3033,12 @@ function parseRecipeText(raw) {
     // אחרי lines[0], שעלולה להיות שריד רעש ולא הכותרת בפועל
     const titleIndex = lines.findIndex(l => (l.match(/[\p{L}]/gu) || []).length >= 3);
     const titleLine = titleIndex !== -1 ? lines[titleIndex] : (lines[0] || '');
-    const title = titleLine.replace(/^[\p{Extended_Pictographic}‍️\s]+/gu, '').trim() || titleLine;
+    // מסירים אימוג'י מוביל (כמו 🎂) וגם הערה בסוגריים בסוף השורה (כמו "(מתאימה
+    // לתבנית אינגליש קייק)") - כותרת נקייה עם שם המתכון בלבד
+    const title = titleLine
+        .replace(/^[\p{Extended_Pictographic}‍️\s]+/gu, '')
+        .replace(/\s*\([^)]*\)\s*$/, '')
+        .trim() || titleLine;
 
     const caloriesMatch = cleanedRaw.match(/(\d{2,5})\s*(kcal|cal|calories|קלוריות|سعرة)/i);
     const explicitCalories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
@@ -3033,17 +3050,23 @@ function parseRecipeText(raw) {
     let instructions = '';
 
     if (ingredientStart !== -1 || instructionStart !== -1) {
-        if (ingredientStart !== -1) {
-            const headerMatch = lines[ingredientStart].match(ingredientHeaderRe);
-            const inlineFirstItem = headerMatch && headerMatch[2] ? [headerMatch[2]] : [];
-            const end = instructionStart !== -1 && instructionStart > ingredientStart ? instructionStart : lines.length;
-            ingredients = [...inlineFirstItem, ...lines.slice(ingredientStart + 1, end)].join('\n');
-        }
-        if (instructionStart !== -1) {
-            const headerMatch = lines[instructionStart].match(instructionHeaderRe);
-            const inlineFirstStep = headerMatch && headerMatch[2] ? [headerMatch[2]] : [];
-            instructions = [...inlineFirstStep, ...lines.slice(instructionStart + 1)].join('\n');
-        }
+        // ממיינים את הכותרות שנמצאו לפי המיקום *בפועל* בטקסט, בלי להניח
+        // שמצרכים תמיד באים לפני הוראות - הנחה כזאת קרסה כשרעש OCR גרם
+        // לכותרת "הוראות" להתגלות (שגוי) *לפני* כותרת "מצרכים" האמיתית,
+        // מה שגרם לאותן שורות תוכן להישלח פעמיים לשני השדות (מצרכים "בלעו"
+        // הכול עד סוף הטקסט + הוראות גם גררו את אותו טווח בעצמן)
+        const headers = [];
+        if (ingredientStart !== -1) headers.push({ type: 'ingredients', index: ingredientStart, re: ingredientHeaderRe });
+        if (instructionStart !== -1) headers.push({ type: 'instructions', index: instructionStart, re: instructionHeaderRe });
+        headers.sort((a, b) => a.index - b.index);
+        headers.forEach((h, i) => {
+            const headerMatch = lines[h.index].match(h.re);
+            const inlineFirst = headerMatch && headerMatch[2] ? [headerMatch[2]] : [];
+            const end = i + 1 < headers.length ? headers[i + 1].index : lines.length;
+            const content = [...inlineFirst, ...lines.slice(h.index + 1, end)].join('\n');
+            if (h.type === 'ingredients') ingredients = content;
+            else instructions = content;
+        });
     } else {
         const bodyLines = lines.slice(titleIndex !== -1 ? titleIndex + 1 : 1);
         const ingredientLines = [];
@@ -3056,6 +3079,14 @@ function parseRecipeText(raw) {
         });
         ingredients = ingredientLines.join('\n');
         instructions = instructionLines.join('\n');
+    }
+
+    // רשת ביטחון אחרונה: לעולם לא משאירים בהוראות שורה שכבר מופיעה במצרכים,
+    // גם אם משהו למעלה בכל זאת חפף (למשל בגלל טקסט מקור לא-תקין) - כך
+    // שהמצרכים לעולם לא "מופיעים כפול" בתיבת ההוראות
+    if (ingredients && instructions) {
+        const ingredientLineSet = new Set(ingredients.split('\n').map(l => l.trim()).filter(Boolean));
+        instructions = instructions.split('\n').map(l => l.trim()).filter(l => l && !ingredientLineSet.has(l)).join('\n');
     }
 
     const lower = cleanedRaw.toLowerCase();
