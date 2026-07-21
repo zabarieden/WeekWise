@@ -1293,7 +1293,9 @@ function buildWeeklyScheduleAccordionUI() {
     // מה שנראה כאילו הכפתור לא עשה כלום (השורה כן נוספה, פשוט למסך שהמשתמש
     // כבר לא רואה)
     const previousActiveTab = document.querySelector('.day-tab.active');
-    const activeDay = previousActiveTab ? previousActiveTab.id.replace('daytab-', '') : dbDaysMap[0];
+    // כשאין יום פעיל קודם (טעינה ראשונה של המסך, לא בנייה-מחדש תוך כדי צפייה) -
+    // ברירת המחדל היא היום *הנוכחי* לפי לוח השנה, לא תמיד יום ראשון
+    const activeDay = previousActiveTab ? previousActiveTab.id.replace('daytab-', '') : dbDaysMap[new Date().getDay()];
 
     loadDaySlotsConfig();
     container.innerHTML = '';
@@ -1391,7 +1393,7 @@ function updateActiveDayPageHeight(activePageEl) {
     let pageDiv = activePageEl;
     if (!pageDiv) {
         const activeTab = document.querySelector('.day-tab.active');
-        const dbDay = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[0];
+        const dbDay = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[new Date().getDay()];
         pageDiv = document.getElementById(`daypage-${dbDay}`);
     }
     if (!pageDiv) return;
@@ -3219,7 +3221,7 @@ async function deleteScheduleSlotFromAdder() {
 // כדי שלא יישארו ערכים ישנים משימוש קודם שעלולים לדרוס בטעות שורה לא קשורה
 function openAddTaskModal() {
     const activeTab = document.querySelector('.day-tab.active');
-    const day = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[0];
+    const day = activeTab ? activeTab.id.replace('daytab-', '') : dbDaysMap[new Date().getDay()];
     const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
     const emptySlotEl = daySlotEls.find(el => !el.querySelector('.slot-task').value.trim());
     const slot = emptySlotEl ? parseInt(emptySlotEl.getAttribute('data-slot')) : 1;
