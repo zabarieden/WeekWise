@@ -399,6 +399,7 @@ async function initAppAfterAuth(user) {
         loadWeightHistory(),
         loadCalendarEvents(),
         loadTodayTasks(),
+        loadMonthlyCalendarGrid(),
         loadRecipes(),
         loadAiUsage(),
         loadPremiumStatus(),
@@ -1732,6 +1733,86 @@ async function loadTodayTasks() {
     });
 }
 
+// --- לוח חודשי: אותו מקור נתונים בדיוק כמו "מבט ליומן" (calendar_events),
+// רק בתצוגת רשת-חודש עם נקודה על כל יום שיש בו משהו, במקום רשימה ליניארית -
+// לא נתונים חדשים, רק ויזואליזציה נוספת. שימוש חוזר ב-shiftMonthKey/
+// formatMonthLabel/currentMonthKey שכבר קיימים עבור יעד חודשי ---
+let viewedCalendarMonthKey = null;
+let selectedCalendarDay = null;
+
+async function loadMonthlyCalendarGrid() {
+    if (!supabaseClient || !currentUserId) return;
+    const grid = document.getElementById('monthly-calendar-grid');
+    const label = document.getElementById('monthly-calendar-label');
+    if (!grid || !label) return;
+    if (!viewedCalendarMonthKey) viewedCalendarMonthKey = currentMonthKey();
+    label.textContent = formatMonthLabel(viewedCalendarMonthKey);
+
+    const [y, m] = viewedCalendarMonthKey.split('-').map(Number);
+    const firstDate = new Date(y, m - 1, 1);
+    const lastDate = new Date(y, m, 0);
+    const firstStr = getLocalDateString(firstDate);
+    const lastStr = getLocalDateString(lastDate);
+    const { data } = await supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr);
+    const markedDates = new Set((data || []).map(r => r.event_date));
+
+    const todayStr = getLocalDateString();
+    const startWeekday = firstDate.getDay();
+    const daysInMonth = lastDate.getDate();
+
+    let html = '';
+    for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedCalendarDay;
+        const hasEvents = markedDates.has(dateStr);
+        html += `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
+            <span class="monthly-calendar-day-num">${day}</span>
+            ${hasEvents ? '<span class="monthly-calendar-dot"></span>' : ''}
+        </button>`;
+    }
+    grid.innerHTML = html;
+
+    if (selectedCalendarDay && (selectedCalendarDay < firstStr || selectedCalendarDay > lastStr)) {
+        selectedCalendarDay = null;
+        document.getElementById('monthly-calendar-day-detail').innerHTML = '';
+    } else if (selectedCalendarDay) {
+        await renderSelectedCalendarDay();
+    }
+}
+
+async function navigateMonthlyCalendar(delta) {
+    const base = viewedCalendarMonthKey || currentMonthKey();
+    viewedCalendarMonthKey = shiftMonthKey(base, delta);
+    selectedCalendarDay = null;
+    const detail = document.getElementById('monthly-calendar-day-detail');
+    if (detail) detail.innerHTML = '';
+    await loadMonthlyCalendarGrid();
+}
+
+async function selectCalendarDay(dateStr) {
+    selectedCalendarDay = dateStr;
+    document.querySelectorAll('.monthly-calendar-cell').forEach(cell => cell.classList.remove('selected'));
+    const cell = document.querySelector(`.monthly-calendar-cell[data-date="${dateStr}"]`);
+    if (cell) cell.classList.add('selected');
+    await renderSelectedCalendarDay();
+}
+
+async function renderSelectedCalendarDay() {
+    const detail = document.getElementById('monthly-calendar-day-detail');
+    if (!detail || !selectedCalendarDay) return;
+    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true });
+    const [y, m, d] = selectedCalendarDay.split('-').map(Number);
+    const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    if (!data || !data.length) {
+        detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
+        return;
+    }
+    const rows = data.map(item => `<div class="today-tasks-row"><span class="today-tasks-text">${item.event_title}</span></div>`).join('');
+    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}`;
+}
+
 async function loadCalendarEvents() {
     if (!supabaseClient) return;
     const container = document.getElementById('calendar-glance-list');
@@ -2032,16 +2113,19 @@ async function addCalendarEvent() {
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
+    loadMonthlyCalendarGrid();
 }
 
 async function deleteCalendarEvent(id) {
     await supabaseClient.from('calendar_events').delete().eq('id', id);
     loadCalendarEvents();
+    loadMonthlyCalendarGrid();
 }
 
 async function deleteRecurringSeries(groupId) {
     await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId);
     loadCalendarEvents();
+    loadMonthlyCalendarGrid();
 }
 
 // --- המתכונים שלי: רשת קטגוריות קבועה -> רשימת מתכונים מסוננת -> תצוגת פרטים במסך מלא ---

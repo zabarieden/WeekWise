@@ -526,6 +526,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 /* מבט ליומן: כרטיס אג'נדה קבוע, תמיד פתוח (אין collapsible-header, ולכן אין חץ) */
 .calendar-glance-card .card-body { max-height: none; overflow: visible; }
+/* משימות להיום: אותו עיקרון - כרטיס קבוע תמיד פתוח בלי חץ קיפול. בלי השורה
+   הזאת card-body היה נשאר ב-max-height:0 (ברירת המחדל של .card-body ללא
+   .expanded) והתוכן פשוט לא היה נראה בכלל */
+.today-tasks-card .card-body { max-height: none; overflow: visible; }
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
 .calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
@@ -1033,6 +1037,32 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-goal-nav-btn:hover:not(:disabled) { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); }
 .monthly-goal-nav-btn:disabled { opacity: 0.3; cursor: default; }
 .monthly-goal-month-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); min-width: 120px; text-align: center; }
+/* לוח חודשי: כותרות ימים + רשת 7 עמודות, תא לכל יום עם נקודה אם יש בו
+   אירוע/משימה - אותו גוון זהב כמו שאר עולם הלו"ז */
+.monthly-calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+.monthly-calendar-weekdays span { text-align: center; font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
+.monthly-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.monthly-calendar-cell {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition);
+}
+.monthly-calendar-cell.empty { visibility: hidden; cursor: default; }
+.monthly-calendar-cell.today { border-color: var(--tile-accent, var(--accent-gold)); color: var(--tile-accent, var(--accent-gold)); font-weight: 700; }
+.monthly-calendar-cell.selected { background-color: rgba(245, 158, 11, 0.15); border-color: var(--tile-accent, var(--accent-gold)); }
+.monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
+.monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .monthly-goal-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .monthly-goal-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
