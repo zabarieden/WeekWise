@@ -44,6 +44,26 @@ html.light-mode {
     --text-primary: #17141f;
     --text-secondary: #6b6578;
 }
+/* אותה ערכת-נושא פרימיום (data-color-theme, ר' למעלה) שולטת גם ברקע של מצב
+   בהיר, לא רק בצבעי הניאון של מצב כהה - כך שבחירה אחת בהגדרות (אותם 3
+   סווטצ'ים קיימים) נותנת גם רקע כחול-בהיר/זהב-בהיר תואם כשמצב בהיר פעיל,
+   בלי שום מסך/מנגנון בחירה נוסף */
+html.light-mode[data-color-theme="blue_teal"] {
+    --bg-main: #e7f6fb;
+    --bg-glass: rgba(231, 246, 251, 0.75);
+    --bg-sheet: #f4fcff;
+    --border-color: rgba(14, 165, 233, 0.25);
+    --text-primary: #0f2a33;
+    --text-secondary: #4a6b73;
+}
+html.light-mode[data-color-theme="gold_red"] {
+    --bg-main: #fdf1e7;
+    --bg-glass: rgba(253, 241, 231, 0.75);
+    --bg-sheet: #fffaf3;
+    --border-color: rgba(220, 38, 38, 0.2);
+    --text-primary: #2e1a0d;
+    --text-secondary: #7a5c47;
+}
 html.light-mode body { background-color: #e9e6f2; }
 /* שדות קלט/כרטיסי משנה כהים באופן קבוע (רקע rgba(0,0,0,x) + טקסט לבן) -
    במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
