@@ -2947,11 +2947,35 @@ function isOcrNoiseLine(line) {
 // מוסרים אותם כתחילית שורה, לא ממירים לתו בולט אחר (המצרך/ההוראה כבר בשורה
 // נפרדת משלו, אין צורך בעיטור נוסף)
 const OCR_BULLET_CONFUSION_RE = /^[©®&§*°•○◦▪✦❖\-–—]\s*/;
+// חלק מהרעש לא יושב כשורה נפרדת משלו - כשצילום מסך מערבב עברית (RTL)
+// ואנגלית (LTR, שעון/תאריך) ב-OCR, המנוע לפעמים "ממזג" את שורת הסטטוס עם
+// תחילת השורה האמיתית הבאה אחריה לשורה טקסט אחת (בדיוק מה שגרם ל"SNES II
+// -13:42" להישאר כתחילית כותרת גם אחרי הניקוי, כי היא לא הייתה שורה שלמה
+// בפני עצמה). התבניות האלה מוסרות רק כתחילית שורה, גם כשיש תוכן אמיתי
+// אחריהן - להבדיל מ-OCR_NOISE_LINE_PATTERNS שדורש שהשורה *כולה* תהיה רעש
+const OCR_NOISE_PREFIX_PATTERNS = [
+    /^[a-z0-9]+(\s+(ii|iii|iv|pro|max|plus))?\s*[-–—]\s*\d{1,2}:\d{2}\s*/i, // "SNES II -13:42 " כתחילית
+    /^\d{1,2}:\d{2}\s+/,                                                    // "13:42 " כתחילית
+    /^(reply|השב|השיבו)\s*[:\-–—]?\s*/i,                                    // "Reply: " כתחילית
+];
+function stripOcrNoisePrefix(line) {
+    let out = line;
+    for (let i = 0; i < 3; i++) { // כמה שכבות רעש עלולות להצטבר על אותה שורה
+        let changedThisPass = false;
+        for (const re of OCR_NOISE_PREFIX_PATTERNS) {
+            const stripped = out.replace(re, '');
+            if (stripped !== out) { out = stripped.trim(); changedThisPass = true; }
+        }
+        if (!changedThisPass) break;
+    }
+    return out;
+}
 function sanitizeOcrText(raw) {
     return raw
         .split('\n')
         .map(l => l.trim())
         .filter(l => l && !isOcrNoiseLine(l))
+        .map(l => stripOcrNoisePrefix(l))
         .map(l => l.replace(OCR_BULLET_CONFUSION_RE, '').trim())
         .filter(Boolean)
         .join('\n');
