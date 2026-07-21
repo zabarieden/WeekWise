@@ -417,7 +417,8 @@ async function initAppAfterAuth(user) {
         loadAiUsage(),
         loadPremiumStatus(),
         loadColorTheme(),
-        loadMonthlyGoal()
+        loadMonthlyGoal(),
+        loadFinanceData()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -624,7 +625,7 @@ function navigateFromMenu(sectionId, subviewId) {
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section'];
+    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'finance-section'];
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
@@ -777,6 +778,7 @@ function highlightNewDaySlot(day, slotNum) {
 // אז אין שער פרימיום גורף על פתיחת המודל - כל פעולה שוערת בנפרד בזמן האמת) ---
 function openAiBrainModal(tab = 'schedule') {
     document.getElementById('ai-schedule-input').value = '';
+    document.getElementById('ai-finance-input').value = '';
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
 }
@@ -2574,72 +2576,56 @@ async function submitChangePassword() {
 }
 
 // ייצוא נתונים אישיים: קורא ישירות מכל טבלת תוכן (לא טבלאות מצב-אפליקציה
-// פנימיות כמו user_premium/user_ai_usage/push_subscriptions) ובונה קובץ JSON
-// אחד להורדה - כל השאילתות כבר עוברות דרך אותו supabaseClient עם RLS קיים,
-// כך שזה תמיד רק הנתונים של המשתמשת המחוברת עצמה
-const EXPORTABLE_USER_TABLES = [
-    'weekly_schedule', 'calendar_events', 'my_center_tasks', 'monthly_goals',
-    'weekly_progress_targets', 'recipes', 'meal_presets', 'calorie_tracker',
-    'weight_tracker', 'step_tracker',
-];
-const EXPORT_TABLE_LABEL_KEYS = {
-    weekly_schedule: 'data_report_label_schedule',
-    calendar_events: 'data_report_label_calendar',
-    my_center_tasks: 'data_report_label_notes',
-    monthly_goals: 'data_report_label_monthly_goals',
-    weekly_progress_targets: 'data_report_label_progress',
-    recipes: 'data_report_label_recipes',
-    meal_presets: 'data_report_label_meal_presets',
-    calorie_tracker: 'data_report_label_calories',
-    weight_tracker: 'data_report_label_weight',
-    step_tracker: 'data_report_label_steps',
-};
-// שדות פנימיים (מזהי DB, לא תוכן שהמשתמשת בעצמה הזינה) - לא מוצגים בדוח
-const EXPORT_ROW_SKIP_FIELDS = new Set(['id', 'user_id', 'username']);
-
 function escapeHtmlForReport(str) {
     return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-// דוח נתונים אישי כ-PDF: לא jsPDF (הפונטים המובנים שלו לא תומכים בעברית -
-// היו יוצאים ריבועים ריקים) - במקום זה נבנה עמוד HTML נקי בחלון חדש ומפעילים
-// את דיאלוג ההדפסה הטבעי של הדפדפן, שבו "שמירה כ-PDF" היא אחת מהיעדים
-// הרגילים - כך התמיכה בעברית/RTL היא של הדפדפן עצמו, בלי שום האקים
+// דוח נתונים אישי כ-PDF: בכוונה לא דמפ גולמי של כל טבלה ב-DB (זה בדיוק מה
+// שהמשתמשת ביקשה להסיר - שמות עמודות טכניים כמו slot_number/recurrence_group_id
+// לא אומרים לה כלום) - רק שתי קטגוריות בעלות משמעות אמיתית: היסטוריית משקל
+// ויעדים חודשיים שהושגו בפועל, כל אחת מוצגת בניסוח קריא, לא key:value גולמי.
+// לא jsPDF (הפונטים המובנים שלו לא תומכים בעברית - היו יוצאים ריבועים ריקים) -
+// במקום זה נבנה עמוד HTML נקי בחלון חדש ומפעילים את דיאלוג ההדפסה הטבעי של
+// הדפדפן, שבו "שמירה כ-PDF" היא אחת מהיעדים הרגילים
 async function exportUserDataReport() {
     if (!supabaseClient || !currentUserId) return;
     showAppToast(t('settings_export_data_preparing'));
-    const sections = [];
-    for (const table of EXPORTABLE_USER_TABLES) {
-        const { data } = await supabaseClient.from(table).select('*').eq('user_id', currentUserId);
-        sections.push({ label: t(EXPORT_TABLE_LABEL_KEYS[table]), rows: data || [] });
-    }
+    const [{ data: weightRows }, { data: goalRows }] = await Promise.all([
+        supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }),
+        supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }),
+    ]);
+
+    const weightHtml = (weightRows && weightRows.length)
+        ? weightRows.map(row => `<div class="entry"><span class="entry-main">${new Date(row.weight_date).toLocaleDateString()}</span><span class="entry-value">${escapeHtmlForReport(row.weight_value)} ${escapeHtmlForReport(t('monthly_goal_kg_unit'))}</span></div>`).join('')
+        : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+
+    const goalsHtml = (goalRows && goalRows.length)
+        ? goalRows.map(row => `<div class="entry"><span class="entry-main">${escapeHtmlForReport(row.goal_name)}</span><span class="entry-sub">${escapeHtmlForReport(formatMonthLabel(row.month_key))}</span></div>`).join('')
+        : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
-    let bodyHtml = `<h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>`;
-    sections.forEach(section => {
-        bodyHtml += `<h2>${escapeHtmlForReport(section.label)}</h2>`;
-        if (!section.rows.length) {
-            bodyHtml += `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
-        } else {
-            section.rows.forEach(row => {
-                const fields = Object.entries(row).filter(([k]) => !EXPORT_ROW_SKIP_FIELDS.has(k));
-                bodyHtml += '<div class="entry">' + fields.map(([k, v]) =>
-                    `<span class="field"><b>${escapeHtmlForReport(k)}:</b> ${escapeHtmlForReport(v === null || v === undefined ? '' : v)}</span>`
-                ).join('') + '</div>';
-            });
-        }
-    });
+    const bodyHtml = `
+        <div class="header-banner"><h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p></div>
+        <h2>${escapeHtmlForReport(t('data_report_label_weight'))}</h2>
+        ${weightHtml}
+        <h2>${escapeHtmlForReport(t('data_report_achieved_goals'))}</h2>
+        ${goalsHtml}
+    `;
     const printWindow = window.open('', '_blank');
     if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
     printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>WeekWise - ${escapeHtmlForReport(t('data_report_title'))}</title>
 <style>
-    body { font-family: Arial, Tahoma, sans-serif; padding: 24px; color: #222; }
-    h1 { color: #a855f7; margin-bottom: 2px; }
-    .sub { color: #666; font-size: 0.85rem; margin-top: 0; }
-    h2 { color: #ff007f; border-bottom: 2px solid #eee; padding-bottom: 4px; margin-top: 28px; }
-    .entry { border: 1px solid #eee; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem; }
-    .field { display: inline-block; margin-inline-end: 14px; }
-    .empty { color: #999; font-style: italic; }
-    @media print { body { padding: 0; } }
+    body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; padding: 32px; color: #2b2438; background: #fff; }
+    .header-banner { text-align: center; margin-bottom: 30px; }
+    h1 { color: #a855f7; margin: 0; font-size: 2rem; letter-spacing: 1px; }
+    .sub { color: #918da3; font-size: 0.85rem; margin-top: 4px; }
+    h2 { color: #ff007f; font-size: 1.15rem; margin-top: 32px; margin-bottom: 12px; border-bottom: 2px solid #ffe0f0; padding-bottom: 6px; }
+    .entry { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: linear-gradient(135deg, #fdf3ff, #fff0f7); border: 1px solid #f3d9f7; border-radius: 12px; padding: 10px 16px; margin-bottom: 8px; font-size: 0.92rem; }
+    .entry-main { font-weight: 700; color: #3a2e4d; }
+    .entry-value { font-weight: 700; color: #a855f7; }
+    .entry-sub { color: #918da3; font-size: 0.82rem; }
+    .empty { color: #b3aec0; font-style: italic; }
+    @media print { body { padding: 10px; } }
 </style>
 </head><body>${bodyHtml}</body></html>`);
     printWindow.document.close();
@@ -2647,21 +2633,47 @@ async function exportUserDataReport() {
     showAppToast(t('settings_export_data_done'));
 }
 
-// שיתוף האפליקציה: Web Share API כשקיים (מובייל בעיקר), אחרת מעתיקים את
-// הקישור ללוח (עם showAppToast כחיווי) - שני המסלולים לא דורשים שום שרת
-async function shareApp() {
-    const shareUrl = location.origin + location.pathname;
-    if (navigator.share) {
-        try { await navigator.share({ title: 'WeekWise', text: t('settings_share_app_text'), url: shareUrl }); }
-        catch (err) { /* המשתמשת ביטלה את חלון השיתוף - לא שגיאה אמיתית */ }
-        return;
-    }
+// שיתוף - תפריט קטן משלנו (WhatsApp/מייל/העתקת קישור), לא navigator.share():
+// ה-Web Share API של הדפדפן מוסר לדיאלוג השיתוף הטבעי של מערכת ההפעלה, וזה
+// מציג את כל האפליקציות המותקנות במחשב/בטלפון (Zoom, Teams, Discord, Outlook
+// וכו') בלי שום דרך לסנן/להסיר אפליקציות ספציפיות מתוך קוד האתר - וגם איטי
+// (המערכת סורקת את כל האפליקציות המותקנות בכל פעם). תפריט משלנו נותן שליטה
+// מלאה בדיוק על מה שמוצע, ופותח את WhatsApp/המייל ישירות (wa.me / mailto),
+// בלי לעבור דרך הבורר הכבד של המערכת בכלל
+let pendingShareText = '';
+let pendingShareUrl = '';
+
+function openSharePicker(text, url) {
+    pendingShareText = text || '';
+    pendingShareUrl = url || '';
+    openModal('modal-share-picker');
+}
+
+function shareViaWhatsapp() {
+    const message = pendingShareUrl ? `${pendingShareText} ${pendingShareUrl}` : pendingShareText;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    closeModal('modal-share-picker');
+}
+
+function shareViaEmail() {
+    const body = pendingShareUrl ? `${pendingShareText}\n\n${pendingShareUrl}` : pendingShareText;
+    window.location.href = `mailto:?subject=${encodeURIComponent('WeekWise')}&body=${encodeURIComponent(body)}`;
+    closeModal('modal-share-picker');
+}
+
+async function shareViaCopyLink() {
+    const text = pendingShareUrl ? `${pendingShareText} ${pendingShareUrl}` : pendingShareText;
     try {
-        await navigator.clipboard.writeText(shareUrl);
+        await navigator.clipboard.writeText(text);
         showAppToast(t('settings_share_app_copied'));
     } catch (err) {
-        showAppToast(shareUrl);
+        showAppToast(text);
     }
+    closeModal('modal-share-picker');
+}
+
+function shareApp() {
+    openSharePicker(t('settings_share_app_text'), location.origin + location.pathname);
 }
 
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
@@ -3070,19 +3082,196 @@ function celebrateGoalAchieved(goal) {
 // שיתוף הישג - כפתור משני, לגמרי אופציונלי (ר' הדיון: מישהי בלי "מישהו
 // ספציפי" לשתף איתו לא אמורה להרגיש שמוכרחים - זו סיבה בדיוק ל-navigator.share
 // הכללי, לא ניסוח שמניח קיום חבר/ה ספציפיים, והיא תמיד ניתנת להתעלמות)
-async function shareGoalAchievement() {
+function shareGoalAchievement() {
     const shareText = t('goal_share_text_template').replace('{goal}', lastCelebratedGoalSummary);
-    if (navigator.share) {
-        try { await navigator.share({ title: 'WeekWise', text: shareText }); }
-        catch (err) { /* המשתמשת ביטלה את חלון השיתוף - לא שגיאה אמיתית */ }
-        return;
+    openSharePicker(shareText, '');
+}
+
+// --- הוצאות והכנסות (Finance): קטגוריה עצמאית במסך הבית (לא תת-קטגוריה של
+// תזונה) - טבלה חדשה budget_tracker (user_id/entry_type/amount/category/
+// note/entry_date), אותו דפוס בדיוק כמו weight_tracker/step_tracker הקיימים.
+// אין תת-קוביות (כמו MyWeek) - הוספה מהירה + סיכום חודשי + היסטוריה, שלושתם
+// גלויים ביחד במסך אחד ---
+const FINANCE_CATEGORIES = {
+    expense: [
+        ['food', 'finance_cat_food'], ['transport', 'finance_cat_transport'],
+        ['housing', 'finance_cat_housing'], ['bills', 'finance_cat_bills'],
+        ['shopping', 'finance_cat_shopping'], ['health', 'finance_cat_health'],
+        ['entertainment', 'finance_cat_entertainment'], ['other', 'finance_cat_other'],
+    ],
+    income: [
+        ['salary', 'finance_cat_salary'], ['gift', 'finance_cat_gift'],
+        ['freelance', 'finance_cat_freelance'], ['refund', 'finance_cat_refund'],
+        ['other', 'finance_cat_other'],
+    ],
+};
+let currentFinanceEntryType = 'expense';
+let financeSummaryMonthKey = null;
+
+function populateFinanceCategoryOptions(type) {
+    const select = document.getElementById('finance-category-select');
+    if (!select) return;
+    select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+}
+
+function selectFinanceEntryType(type) {
+    currentFinanceEntryType = type;
+    document.querySelectorAll('#finance-section [data-finance-type]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-finance-type') === type);
+    });
+    populateFinanceCategoryOptions(type);
+}
+
+async function loadFinanceData() {
+    if (!supabaseClient || !currentUserId) return;
+    financeSummaryMonthKey = currentMonthKey();
+    populateFinanceCategoryOptions(currentFinanceEntryType);
+    const dateInput = document.getElementById('finance-date-input');
+    if (dateInput) dateInput.value = getLocalDateString();
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+async function submitFinanceEntry() {
+    if (!supabaseClient || !currentUserId) return;
+    const amountInput = document.getElementById('finance-amount-input');
+    const noteInput = document.getElementById('finance-note-input');
+    const dateInput = document.getElementById('finance-date-input');
+    const categorySelect = document.getElementById('finance-category-select');
+    const amount = parseFloat(amountInput.value);
+    if (!amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    const { error } = await supabaseClient.from('budget_tracker').insert({
+        user_id: currentUserId, username: currentUsername, entry_type: currentFinanceEntryType,
+        amount: amount, category: categorySelect.value, note: noteInput.value.trim() || null,
+        entry_date: dateInput.value || getLocalDateString(),
+    });
+    if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
+    amountInput.value = '';
+    noteInput.value = '';
+    showAppToast(t('finance_add_success'));
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+async function navigateFinanceMonth(delta) {
+    const base = financeSummaryMonthKey || currentMonthKey();
+    const target = shiftMonthKey(base, delta);
+    if (target > currentMonthKey()) return;
+    financeSummaryMonthKey = target;
+    await renderFinanceSummary();
+}
+
+async function renderFinanceSummary() {
+    const labelEl = document.getElementById('finance-summary-month-label');
+    const incomeEl = document.getElementById('finance-total-income');
+    const expenseEl = document.getElementById('finance-total-expense');
+    const balanceEl = document.getElementById('finance-balance');
+    if (!labelEl || !supabaseClient || !currentUserId) return;
+    const monthKey = financeSummaryMonthKey || currentMonthKey();
+    labelEl.textContent = formatMonthLabel(monthKey);
+    const [y, m] = monthKey.split('-').map(Number);
+    const firstStr = `${monthKey}-01`;
+    const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
+    const { data } = await supabaseClient.from('budget_tracker').select('entry_type, amount')
+        .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr);
+    let income = 0, expense = 0;
+    (data || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
+    incomeEl.textContent = income.toLocaleString();
+    expenseEl.textContent = expense.toLocaleString();
+    balanceEl.textContent = (income - expense).toLocaleString();
+    balanceEl.style.color = (income - expense) < 0 ? 'var(--accent-red)' : 'var(--accent-green)';
+}
+
+async function renderFinanceHistory() {
+    const list = document.getElementById('finance-history-list');
+    if (!list || !supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('budget_tracker').select('*')
+        .eq('user_id', currentUserId).order('entry_date', { ascending: false }).order('created_at', { ascending: false }).limit(50);
+    list.innerHTML = '';
+    if (!data || !data.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`; return; }
+    data.forEach(row => {
+        const li = document.createElement('li');
+        li.className = 'finance-history-row';
+        const sign = row.entry_type === 'income' ? '+' : '−';
+        const colorVar = row.entry_type === 'income' ? 'var(--accent-green)' : 'var(--accent-red)';
+        const categoryKey = (FINANCE_CATEGORIES[row.entry_type] || []).find(([value]) => value === row.category);
+        const categoryLabel = categoryKey ? t(categoryKey[1]) : (row.category || '');
+        li.innerHTML = `
+            <div class="finance-history-main">
+                <span class="finance-history-category">${categoryLabel}</span>
+                ${row.note ? `<span class="finance-history-note">${escapeHtmlForReport(row.note)}</span>` : ''}
+                <span class="finance-history-date">${row.entry_date}</span>
+            </div>
+            <span class="finance-history-amount" style="color: ${colorVar};">${sign}${Number(row.amount).toLocaleString()}</span>
+            <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function deleteFinanceEntry(id) {
+    await supabaseClient.from('budget_tracker').delete().eq('id', id);
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+// --- AI Assistant > כספים (פרימיום): "כמה הוצאתי ועל מה, כמה נכנס ומאיפה"
+// בטקסט חופשי - מנתח חוקי-דטרמיניסטי מקומי (בלי LLM), אותו רעיון בדיוק כמו
+// parseScheduleTextLocally הקיים ללו"ז. לא נוסה קריאת ענן כאן (בניגוד ללו"ז) -
+// אין עדיין Edge Function/מפתח Anthropic מוגדרים לפיצ'ר הזה, אז קריאה כזו
+// תמיד הייתה נכשלת בלי תועלת; המנתח המקומי הוא המנוע האמיתי כרגע ---
+const FINANCE_AI_TYPE_KEYWORDS = {
+    income: ['קיבלתי', 'נכנס', 'משכורת', 'הכנסה', 'זכיתי', 'income', 'salary', 'received', 'got paid', 'earned'],
+    expense: ['הוצאתי', 'שילמתי', 'קניתי', 'עלה לי', 'הוצאה', 'spent', 'paid', 'bought', 'cost'],
+};
+const FINANCE_AI_CATEGORY_KEYWORDS = {
+    expense: {
+        food: ['אוכל', 'מזון', 'סופר', 'מסעדה', 'קפה', 'food', 'grocery', 'groceries', 'restaurant'],
+        transport: ['דלק', 'אוטובוס', 'מונית', 'רכבת', 'תחבורה', 'gas', 'fuel', 'taxi', 'bus', 'train'],
+        housing: ['שכירות', 'דירה', 'משכנתא', 'rent', 'mortgage'],
+        bills: ['חשמל', 'מים', 'ארנונה', 'גז', 'אינטרנט', 'סלולר', 'bill', 'electricity', 'water', 'internet'],
+        shopping: ['בגדים', 'קניות', 'shopping', 'clothes'],
+        health: ['רופא', 'תרופות', 'בריאות', 'doctor', 'medicine', 'health'],
+        entertainment: ['סרט', 'בילוי', 'entertainment', 'movie'],
+    },
+    income: {
+        salary: ['משכורת', 'שכר', 'salary'],
+        gift: ['מתנה', 'gift'],
+        freelance: ['פרילנס', 'עצמאי', 'freelance'],
+        refund: ['החזר', 'refund'],
+    },
+};
+
+function parseFinanceTextLocally(text) {
+    const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+
+    let type = 'expense';
+    if (FINANCE_AI_TYPE_KEYWORDS.income.some(w => text.includes(w))) type = 'income';
+    else if (FINANCE_AI_TYPE_KEYWORDS.expense.some(w => text.includes(w))) type = 'expense';
+
+    let category = 'other';
+    const dict = FINANCE_AI_CATEGORY_KEYWORDS[type] || {};
+    for (const [cat, words] of Object.entries(dict)) {
+        if (words.some(w => text.includes(w))) { category = cat; break; }
     }
-    try {
-        await navigator.clipboard.writeText(shareText);
-        showAppToast(t('settings_share_app_copied'));
-    } catch (err) {
-        showAppToast(shareText);
-    }
+    return { type, amount, category, note: text.trim() };
+}
+
+async function parseFinanceWithAI() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const input = document.getElementById('ai-finance-input');
+    const text = input.value.trim();
+    if (!text) { showAppToast(t('finance_ai_empty'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const parsed = parseFinanceTextLocally(text);
+    if (!parsed.amount) { showAppToast(t('finance_ai_no_amount'), 'error'); return; }
+    const { error } = await supabaseClient.from('budget_tracker').insert({
+        user_id: currentUserId, username: currentUsername, entry_type: parsed.type,
+        amount: parsed.amount, category: parsed.category, note: parsed.note, entry_date: getLocalDateString(),
+    });
+    if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
+    input.value = '';
+    closeModal('modal-ai-brain');
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+    showAppToast(t('finance_ai_success'));
 }
 
 async function toggleMonthlyGoalLookback() {
