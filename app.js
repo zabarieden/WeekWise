@@ -5685,6 +5685,18 @@ function addCustomWaterLog() {
     addWaterLog(amount);
 }
 
+// אותו רעיון בדיוק כמו addCustomWaterLog, רק מהחלון הקטן של הכפתור הצף
+// (שדה קלט נפרד) - כדי שגם מהבועה יהיה אפשר לרשום כמות מדויקת, לא רק
+// כוס/בקבוק קבועים מראש
+function addCustomWaterLogFromFab() {
+    const input = document.getElementById('water-quick-add-custom-input');
+    const amount = parseInt(input.value) || 0;
+    if (amount <= 0) { showAppToast(t('water_missing_amount'), 'error'); return; }
+    input.value = '';
+    closeModal('modal-water-quick-add');
+    addWaterLog(amount);
+}
+
 async function deleteWaterLog(id) {
     await supabaseClient.from('water_logs').delete().eq('id', id);
     loadWaterData();
@@ -5735,8 +5747,6 @@ async function loadWaterData() {
     if (todayEl) todayEl.textContent = todayTotal.toLocaleString();
     const weeklyEl = document.getElementById('water-weekly-total');
     if (weeklyEl) weeklyEl.textContent = weeklyTotal.toLocaleString();
-    const badgeEl = document.getElementById('water-fab-badge');
-    if (badgeEl) badgeEl.textContent = todayTotal.toLocaleString();
 
     const fill = document.getElementById('water-goal-progress-fill');
     if (fill) fill.style.width = `${goal > 0 ? Math.min(100, Math.round((todayTotal / goal) * 100)) : 0}%`;
