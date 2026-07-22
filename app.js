@@ -1957,8 +1957,23 @@ async function loadTodayTasks() {
         row.innerHTML = `
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
             <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
-            <button type="button" class="btn-delete-item" onclick="deleteCalendarEvent('${item.id}')">❌</button>
         `;
+        // כפתורי עריכה/מחיקה מחוברים דרך closure (לא onclick עם JSON מוטמע
+        // בתוך מחרוזת HTML) - כך שגרש בודד בכותרת האירוע (למשל "It's") לא
+        // שובר את התבנית או "בורח" מתוך המאפיין
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-edit-item';
+        editBtn.title = t('calendar_event_edit_title');
+        editBtn.textContent = '✏️';
+        editBtn.onclick = () => openEditCalendarEvent(item);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+        row.appendChild(editBtn);
+        row.appendChild(deleteBtn);
         container.appendChild(row);
     });
 }
@@ -2117,6 +2132,11 @@ function buildSingleEventRow(item) {
     const titleSpan = document.createElement('span');
     titleSpan.className = 'calendar-event-title-text';
     titleSpan.textContent = item.event_title;
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit-item';
+    editBtn.textContent = '✏️';
+    editBtn.title = t('calendar_event_edit_title');
+    editBtn.onclick = () => openEditCalendarEvent(item);
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-item';
     deleteBtn.textContent = '❌';
@@ -2124,6 +2144,7 @@ function buildSingleEventRow(item) {
     row.appendChild(handle);
     row.appendChild(dateBadge);
     row.appendChild(titleSpan);
+    row.appendChild(editBtn);
     row.appendChild(deleteBtn);
     return row;
 }
@@ -2164,6 +2185,12 @@ function buildRecurringEventRow(items, groupId) {
     toggleBtn.textContent = '▼';
     toggleBtn.title = t('calendar_event_show_dates_title');
 
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit-item';
+    editBtn.textContent = '✏️';
+    editBtn.title = t('calendar_event_edit_title');
+    editBtn.onclick = () => openEditCalendarEventSeries(groupId, items[0].event_title);
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-item';
     deleteBtn.textContent = '❌';
@@ -2174,6 +2201,7 @@ function buildRecurringEventRow(items, groupId) {
     header.appendChild(titleSpan);
     header.appendChild(progressBadge);
     header.appendChild(toggleBtn);
+    header.appendChild(editBtn);
     header.appendChild(deleteBtn);
 
     const datesList = document.createElement('div');
@@ -2317,6 +2345,50 @@ function generateRecurringDates(startDateStr, recurrenceType, customInterval, cu
     return dates;
 }
 
+// עריכה: מזהה יחיד = עריכת אירוע בודד (שם+תאריך); מזהה קבוצה = עריכת שם
+// בלבד לכל הסדרה החוזרת (שינוי תאריכים/תבנית-חזרה של סדרה קיימת הוא הרבה
+// יותר מסובך ולא התבקש - רק תיקון שם משותף לכל המופעים כבר שנוצרו)
+let editingCalendarEventId = null;
+let editingCalendarEventGroupId = null;
+
+function openEditCalendarEvent(item) {
+    editingCalendarEventId = item.id;
+    editingCalendarEventGroupId = null;
+    document.getElementById('calendar-event-title-input').value = item.event_title;
+    document.getElementById('calendar-event-date-input').value = item.event_date;
+    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
+    document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
+    document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
+    document.getElementById('calendar-event-recurring-options').classList.add('hidden');
+    openModal('modal-add-calendar-event');
+}
+
+function openEditCalendarEventSeries(groupId, currentTitle) {
+    editingCalendarEventId = null;
+    editingCalendarEventGroupId = groupId;
+    document.getElementById('calendar-event-title-input').value = currentTitle;
+    document.getElementById('calendar-event-date-input').value = '';
+    document.getElementById('calendar-event-date-input').classList.add('hidden');
+    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
+    document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
+    document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
+    document.getElementById('calendar-event-recurring-options').classList.add('hidden');
+    openModal('modal-add-calendar-event');
+}
+
+function resetCalendarEventModal() {
+    editingCalendarEventId = null;
+    editingCalendarEventGroupId = null;
+    document.getElementById('calendar-event-title-input').value = '';
+    document.getElementById('calendar-event-date-input').value = '';
+    document.getElementById('calendar-event-date-input').classList.remove('hidden');
+    document.getElementById('calendar-event-recurring-checkbox').checked = false;
+    toggleRecurringOptionsVisibility();
+    document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
+    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
+    document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_add_btn');
+}
+
 async function addCalendarEvent() {
     const titleInput = document.getElementById('calendar-event-title-input');
     const dateInput = document.getElementById('calendar-event-date-input');
@@ -2327,8 +2399,34 @@ async function addCalendarEvent() {
     const durationSelect = document.getElementById('calendar-event-duration-input');
     const title = titleInput.value.trim();
     const date = dateInput.value;
-    if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    if (editingCalendarEventGroupId) {
+        if (!title) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title }).eq('recurrence_group_id', editingCalendarEventGroupId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        resetCalendarEventModal();
+        closeModal('modal-add-calendar-event');
+        showAppToast(t('calendar_event_updated_success'));
+        loadCalendarEvents();
+        loadMonthlyCalendarGrid();
+        loadTodayTasks();
+        return;
+    }
+    if (editingCalendarEventId) {
+        if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title, event_date: date }).eq('id', editingCalendarEventId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        resetCalendarEventModal();
+        closeModal('modal-add-calendar-event');
+        showAppToast(t('calendar_event_updated_success'));
+        loadCalendarEvents();
+        loadMonthlyCalendarGrid();
+        loadTodayTasks();
+        return;
+    }
+
+    if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
 
     let rows;
     if (recurringCheckbox.checked) {

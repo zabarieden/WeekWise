@@ -111,7 +111,7 @@
                                 <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
                             </div>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
+                                <button class="btn-floating-add" onclick="resetCalendarEventModal(); openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -1323,8 +1323,8 @@
                         </select>
                     </div>
                     <div class="action-buttons-wrap">
-                        <button onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event')" data-i18n="cancel_btn">Cancel</button>
+                        <button id="btn-add-calendar-event" onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -1437,7 +1437,7 @@
 
     </div>
 
-    <script src="i18n.js?v=72"></script>
-    <script src="app.js?v=123"></script>
+    <script src="i18n.js?v=73"></script>
+    <script src="app.js?v=124"></script>
 </body>
 </html>
