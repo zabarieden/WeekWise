@@ -3020,12 +3020,13 @@ function getSavedColorFilter() {
 function applyColorFilter(filterName) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.toggle('grayscale-mode', filterName === 'grayscale');
-    document.querySelectorAll('.color-filter-option').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-filter') === filterName);
-    });
+    const toggle = document.getElementById('color-filter-toggle');
+    if (toggle) toggle.checked = filterName === 'grayscale';
 }
 
-function selectColorFilter(filterName) {
+function toggleColorFilter() {
+    const enabled = document.getElementById('color-filter-toggle').checked;
+    const filterName = enabled ? 'grayscale' : 'none';
     localStorage.setItem('weekwise_color_filter', filterName);
     applyColorFilter(filterName);
 }

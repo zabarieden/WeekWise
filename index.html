@@ -811,10 +811,12 @@
                         <span class="switch-slider"></span>
                     </label>
                 </div>
-                <label class="settings-label" data-i18n="settings_color_filter_label" style="margin-top: 10px;">Color Filter</label>
-                <div class="color-filter-picker">
-                    <button type="button" class="color-filter-option" data-filter="none" onclick="selectColorFilter('none')" data-i18n="color_filter_none">None</button>
-                    <button type="button" class="color-filter-option" data-filter="grayscale" onclick="selectColorFilter('grayscale')" data-i18n="color_filter_grayscale">Grayscale</button>
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_color_filter_label" for="color-filter-toggle">Color Filter</label>
+                    <label class="switch">
+                        <input type="checkbox" id="color-filter-toggle" onchange="toggleColorFilter()">
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
 
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
@@ -1333,6 +1335,6 @@
     </div>
 
     <script src="i18n.js?v=66"></script>
-    <script src="app.js?v=112"></script>
+    <script src="app.js?v=113"></script>
 </body>
 </html>
