@@ -1461,7 +1461,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .goal-path-track {
     position: relative;
     height: 46px;
-    margin: 0 6px;
+    /* 22px, לא 6px: זה חצי הרוחב של .goal-path-avatar (38px) - בלי שוליים
+       מספיקים, כשה-pct מתקרב ל-0% או ל-100% חצי מהאווטאר "נשפך" מעבר לגבול
+       המסלול וניחתך ע"י overflow-hidden של .phone-wrapper - בדיוק התלונה
+       "לא רואים טוב את האיש רץ" במובייל */
+    margin: 0 22px;
     transform: rotateX(28deg);
     transform-style: preserve-3d;
 }

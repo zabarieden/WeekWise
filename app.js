@@ -528,7 +528,8 @@ async function initAppAfterAuth(user) {
         loadPremiumStatus(),
         loadColorTheme(),
         loadMonthlyGoal(),
-        loadFinanceData()
+        loadFinanceData(),
+        loadSportData()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -654,30 +655,38 @@ function renderHomeGreeting() {
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-function initCubesNavigation() {
+// showTabSection: הלוגיקה המשותפת של מעבר בין מסכים ראשיים - חולצה מתוך
+// מאזין-הקליק של הקוביות התחתונות (initCubesNavigation) כדי ש-switchToTab
+// תוכל לשמש גם למסכים שאין להם כפתור קבוע בסרגל התחתון (כמו ספורט, שנגיש
+// רק מהתפריט הצדדי, לפי בקשה מפורשת) - בלי "ללחוץ" על כפתור שלא קיים בכלל
+function showTabSection(targetId) {
     const cubes = document.querySelectorAll('.bottom-tab');
     const tabContents = document.querySelectorAll('.tab-content');
-    cubes.forEach(cube => cube.addEventListener('click', () => {
-        cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
-        tabContents.forEach(content => { content.classList.remove('active-tab'); if (content.id === cube.getAttribute('data-target')) content.classList.add('active-tab'); });
-        // בכל מעבר בין המסכים הראשיים, כל מסך חוזר להתחיל מרשת התת-קוביות שלו
-        // (ולא נשאר "תקוע" בתוך תצוגה ממוקדת שהמשתמש פתח בביקור קודם)
-        tabContents.forEach(content => closeSubView(content.id));
-        // מסך הבית (רשת הקוביות הראשית) נעלם לגמרי בזמן שנמצאים בתוך מסך פנימי -
-        // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
-        const homePanel = document.querySelector('.home-hero-panel');
-        if (homePanel) homePanel.classList.add('hidden');
-        // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
-        // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
-        // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
-        // מחדש ל"השבוע שלי" ליום *הנוכחי* בפועל - לא משאירים את היום שנצפה
-        // לאחרונה (אם דפדפו קדימה ליום אחר בביקור קודם ויצאו מהמסך), כי
-        // הציפייה היא שהמסך תמיד "יפתח על היום" מחדש בכל כניסה אליו
-        if (cube.getAttribute('data-target') === 'schedule-section') {
-            scrollToDay(dbDaysMap[new Date().getDay()]);
-            updateActiveDayPageHeight();
-        }
-    }));
+    cubes.forEach(c => c.classList.toggle('active', c.getAttribute('data-target') === targetId));
+    tabContents.forEach(content => content.classList.toggle('active-tab', content.id === targetId));
+    // בכל מעבר בין המסכים הראשיים, כל מסך חוזר להתחיל מרשת התת-קוביות שלו
+    // (ולא נשאר "תקוע" בתוך תצוגה ממוקדת שהמשתמש פתח בביקור קודם)
+    tabContents.forEach(content => closeSubView(content.id));
+    // מסך הבית (רשת הקוביות הראשית) נעלם לגמרי בזמן שנמצאים בתוך מסך פנימי -
+    // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
+    const homePanel = document.querySelector('.home-hero-panel');
+    if (homePanel) homePanel.classList.add('hidden');
+    // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
+    // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
+    // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
+    // מחדש ל"השבוע שלי" ליום *הנוכחי* בפועל - לא משאירים את היום שנצפה
+    // לאחרונה (אם דפדפו קדימה ליום אחר בביקור קודם ויצאו מהמסך), כי
+    // הציפייה היא שהמסך תמיד "יפתח על היום" מחדש בכל כניסה אליו
+    if (targetId === 'schedule-section') {
+        scrollToDay(dbDaysMap[new Date().getDay()]);
+        updateActiveDayPageHeight();
+    }
+}
+
+function initCubesNavigation() {
+    document.querySelectorAll('.bottom-tab').forEach(cube => {
+        cube.addEventListener('click', () => showTabSection(cube.getAttribute('data-target')));
+    });
 }
 
 // חוזרים למסך הבית הטהור: כל המסכים הפנימיים נסגרים, קובייה אף אחת לא מסומנת
@@ -692,8 +701,7 @@ function goHome() {
 }
 
 function switchToTab(targetId) {
-    const cube = document.querySelector(`.bottom-tab[data-target="${targetId}"]`);
-    if (cube) cube.click();
+    showTabSection(targetId);
 }
 
 // --- רמה 2 של הניווט: תוך כדי מסך ראשי, "תת-קוביה" פותחת תצוגה ממוקדת של
@@ -748,7 +756,7 @@ function navigateFromMenu(sectionId, subviewId) {
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'finance-section'];
+    const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'finance-section', 'sport-section'];
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
@@ -3613,6 +3621,170 @@ async function renderFinanceHistory() {
 async function deleteFinanceEntry(id) {
     await supabaseClient.from('budget_tracker').delete().eq('id', id);
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+// --- קטגוריית ספורט: אימונים (ריצה/אופניים/שחייה/אחר חופשי) עם משך, מרחק,
+// ומוטיבציה אופציונלית - סיכום חודשי + היסטוריה + ייצוא לטבלה (CSV), נגישה
+// רק מהתפריט הצדדי (ר' showTabSection). אותו דפוס בדיוק כמו כספים למעלה ---
+let currentSportType = 'running';
+let currentSportMotivation = null;
+let sportSummaryMonthKey = null;
+
+function selectSportType(type) {
+    currentSportType = type;
+    document.querySelectorAll('#sport-type-picker [data-sport-type]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-sport-type') === type);
+    });
+    const customInput = document.getElementById('sport-custom-type-input');
+    if (customInput) customInput.classList.toggle('hidden', type !== 'custom');
+}
+
+function selectSportMotivation(button, motivation) {
+    // בחירה יחידה (לא מרובה) - לחיצה חוזרת על אותה בחירה מבטלת אותה, כי
+    // המוטיבציה היא רשות מלכתחילה ולא כל אימון חייב "סיבה" מתויגת
+    const alreadyActive = currentSportMotivation === motivation;
+    document.querySelectorAll('#sport-motivation-picker [data-motivation]').forEach(btn => btn.classList.remove('active'));
+    currentSportMotivation = alreadyActive ? null : motivation;
+    if (!alreadyActive) button.classList.add('active');
+}
+
+async function loadSportData() {
+    if (!supabaseClient || !currentUserId) return;
+    sportSummaryMonthKey = currentMonthKey();
+    selectSportType('running');
+    currentSportMotivation = null;
+    document.querySelectorAll('#sport-motivation-picker [data-motivation]').forEach(btn => btn.classList.remove('active'));
+    const dateInput = document.getElementById('sport-date-input');
+    if (dateInput) dateInput.value = getLocalDateString();
+    await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+async function submitSportSession() {
+    if (!supabaseClient || !currentUserId) return;
+    const customInput = document.getElementById('sport-custom-type-input');
+    const durationInput = document.getElementById('sport-duration-input');
+    const distanceInput = document.getElementById('sport-distance-input');
+    const dateInput = document.getElementById('sport-date-input');
+    const customName = currentSportType === 'custom' ? customInput.value.trim() : null;
+    if (currentSportType === 'custom' && !customName) { showAppToast(t('sport_missing_custom_name'), 'error'); return; }
+    const duration = parseInt(durationInput.value) || null;
+    const distance = distanceInput.value ? parseFloat(distanceInput.value) : null;
+    if (!duration) { showAppToast(t('sport_missing_duration'), 'error'); return; }
+    const { error } = await supabaseClient.from('sport_sessions').insert({
+        user_id: currentUserId, username: currentUsername, sport_type: currentSportType,
+        custom_type_name: customName, duration_minutes: duration, distance_km: distance,
+        motivation: currentSportMotivation, session_date: dateInput.value || getLocalDateString(),
+    });
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    durationInput.value = '';
+    distanceInput.value = '';
+    customInput.value = '';
+    showAppToast(t('sport_add_success'));
+    await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+async function navigateSportMonth(delta) {
+    const base = sportSummaryMonthKey || currentMonthKey();
+    const target = shiftMonthKey(base, delta);
+    if (target > currentMonthKey()) return;
+    sportSummaryMonthKey = target;
+    await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+function sportMonthRange(monthKey) {
+    const [y, m] = monthKey.split('-').map(Number);
+    const firstStr = `${monthKey}-01`;
+    const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
+    return { firstStr, lastStr };
+}
+
+function sportTypeLabel(row) {
+    if (row.sport_type === 'custom') return row.custom_type_name || t('sport_type_custom');
+    return t(`sport_type_${row.sport_type}`);
+}
+
+async function renderSportSummary() {
+    const labelEl = document.getElementById('sport-summary-month-label');
+    if (!labelEl || !supabaseClient || !currentUserId) return;
+    const monthKey = sportSummaryMonthKey || currentMonthKey();
+    labelEl.textContent = formatMonthLabel(monthKey);
+    const nextBtn = document.getElementById('sport-summary-next-btn');
+    if (nextBtn) nextBtn.disabled = monthKey === currentMonthKey();
+    const { firstStr, lastStr } = sportMonthRange(monthKey);
+    const { data } = await supabaseClient.from('sport_sessions').select('duration_minutes, distance_km')
+        .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr);
+    const rows = data || [];
+    let totalMinutes = 0, totalKm = 0;
+    rows.forEach(row => { totalMinutes += row.duration_minutes || 0; totalKm += Number(row.distance_km) || 0; });
+    document.getElementById('sport-total-sessions').textContent = rows.length;
+    document.getElementById('sport-total-minutes').textContent = totalMinutes.toLocaleString();
+    document.getElementById('sport-total-km').textContent = totalKm.toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
+
+async function renderSportHistory() {
+    const list = document.getElementById('sport-history-list');
+    if (!list || !supabaseClient || !currentUserId) return;
+    const monthKey = sportSummaryMonthKey || currentMonthKey();
+    const { firstStr, lastStr } = sportMonthRange(monthKey);
+    const { data } = await supabaseClient.from('sport_sessions').select('*')
+        .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
+        .order('session_date', { ascending: false }).order('created_at', { ascending: false });
+    list.innerHTML = '';
+    if (!data || !data.length) { list.innerHTML = `<li class="finance-history-empty">${t('sport_history_empty')}</li>`; return; }
+    data.forEach(row => {
+        const li = document.createElement('li');
+        li.className = 'finance-history-row';
+        const formattedDate = new Date(row.session_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+        const distancePart = row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '';
+        li.innerHTML = `
+            <div class="finance-history-main">
+                <span class="finance-history-category">${sportTypeLabel(row)}</span>
+                <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
+                <span class="finance-history-date">${formattedDate}</span>
+            </div>
+            <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function deleteSportSession(id) {
+    await supabaseClient.from('sport_sessions').delete().eq('id', id);
+    await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+// ייצוא לטבלה (CSV): קובץ נפרד לכל חודש שנצפה כרגע - נפתח ישירות בכל אפליקציית
+// גיליון (Excel/Google Sheets/Numbers), בלי צורך בשום ספרייה חיצונית
+async function exportSportSessionsCsv() {
+    if (!supabaseClient || !currentUserId) return;
+    const monthKey = sportSummaryMonthKey || currentMonthKey();
+    const { firstStr, lastStr } = sportMonthRange(monthKey);
+    const { data } = await supabaseClient.from('sport_sessions').select('*')
+        .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
+        .order('session_date', { ascending: true });
+    if (!data || !data.length) { showAppToast(t('sport_history_empty'), 'error'); return; }
+    const header = [t('sport_csv_date'), t('sport_csv_type'), t('sport_csv_duration'), t('sport_csv_distance'), t('sport_csv_motivation')];
+    const csvRows = data.map(row => [
+        row.session_date,
+        sportTypeLabel(row),
+        row.duration_minutes || '',
+        row.distance_km || '',
+        row.motivation ? t(`sport_motivation_${row.motivation}`) : '',
+    ]);
+    const csvContent = [header, ...csvRows]
+        .map(cols => cols.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+    // ﻿ (BOM) בתחילת הקובץ - כדי ש-Excel יזהה UTF-8 נכון ולא יהפוך את
+    // הטקסט העברי לג'יבריש כשפותחים את הקובץ (בעיה מוכרת של Excel עם CSV)
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sport-${monthKey}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 // --- AI Assistant > כספים (פרימיום): "כמה הוצאתי ועל מה, כמה נכנס ומאיפה"
