@@ -617,8 +617,14 @@ function initCubesNavigation() {
         if (homePanel) homePanel.classList.add('hidden');
         // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
         // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
-        // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל
-        if (cube.getAttribute('data-target') === 'schedule-section') updateActiveDayPageHeight();
+        // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
+        // מחדש ל"השבוע שלי" ליום *הנוכחי* בפועל - לא משאירים את היום שנצפה
+        // לאחרונה (אם דפדפו קדימה ליום אחר בביקור קודם ויצאו מהמסך), כי
+        // הציפייה היא שהמסך תמיד "יפתח על היום" מחדש בכל כניסה אליו
+        if (cube.getAttribute('data-target') === 'schedule-section') {
+            scrollToDay(dbDaysMap[new Date().getDay()]);
+            updateActiveDayPageHeight();
+        }
     }));
 }
 
