@@ -3769,12 +3769,17 @@ async function renderSportHistory() {
     data.forEach(row => {
         const li = document.createElement('li');
         li.className = 'finance-history-row';
-        const formattedDate = new Date(row.session_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+        // formatSportDayLabel (לא new Date(row.session_date) ישירות) כי
+        // "YYYY-MM-DD" מפורש כ-UTC חצות ע"י JS - יכול להזיז את היום המוצג
+        // באזורי זמן עם offset שלילי מ-UTC
+        const formattedDate = formatSportDayLabel(row.session_date);
         const distancePart = row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '';
+        const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${sportTypeLabel(row)}</span>
                 <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
+                ${motivationPart}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">❌</button>
