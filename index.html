@@ -569,11 +569,17 @@
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
                     </button>
 
-                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Notes &amp; Tasks</div>
+                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Lists</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'notes')">
                         <span class="hamburger-drawer-item-icon">📝</span>
                         <span class="hamburger-drawer-item-title" data-i18n="notes_title">Notes</span>
                     </button>
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
+                        <span class="hamburger-drawer-item-icon">🛒</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
+                    </button>
+
+                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_goals">Goals &amp; Progress</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'progress')">
                         <span class="hamburger-drawer-item-icon">📊</span>
                         <span class="hamburger-drawer-item-title" data-i18n="progress_title">Weekly Progress Tracker</span>
@@ -582,12 +588,12 @@
                         <span class="hamburger-drawer-item-icon">🏆</span>
                         <span class="hamburger-drawer-item-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
-                        <span class="hamburger-drawer-item-icon">🛒</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
-                    </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'recipes')">
+                        <span class="hamburger-drawer-item-icon">🧑‍🍳</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="nav_recipes">My Recipes</span>
+                    </button>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'meals')">
                         <span class="hamburger-drawer-item-icon">🍽️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</span>
@@ -595,10 +601,6 @@
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'calories')">
                         <span class="hamburger-drawer-item-icon">🔥</span>
                         <span class="hamburger-drawer-item-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
-                    </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'recipes')">
-                        <span class="hamburger-drawer-item-icon">🧑‍🍳</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="nav_recipes">My Recipes</span>
                     </button>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'steps')">
                         <span class="hamburger-drawer-item-icon">👟</span>
@@ -1255,7 +1257,7 @@
 
     </div>
 
-    <script src="i18n.js?v=55"></script>
+    <script src="i18n.js?v=56"></script>
     <script src="app.js?v=99"></script>
 </body>
 </html>
