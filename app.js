@@ -2803,6 +2803,18 @@ function closeRecipeDetail() {
     document.getElementById('recipe-detail-view').classList.remove('open');
 }
 
+// שיתוף מתכון - טקסט פשוט (שם, קלוריות, מצרכים, הוראות), דרך אותו תפריט
+// שיתוף קטן (וואטסאפ/מייל/העתקת קישור) שכבר משמש לשיתוף הישג יעד חודשי
+function shareRecipe() {
+    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    if (!recipe) return;
+    let text = `🍽️ ${recipe.title}`;
+    if (recipe.calories) text += ` (${recipe.calories} ${t('calories_unit')})`;
+    if (recipe.ingredients) text += `\n\n${t('recipe_ingredients_label')}:\n${recipe.ingredients}`;
+    if (recipe.instructions) text += `\n\n${t('recipe_instructions_label')}:\n${recipe.instructions}`;
+    openSharePicker(text, '');
+}
+
 async function deleteRecipe() {
     if (!currentDetailRecipeId) return;
     const idToDelete = currentDetailRecipeId;
