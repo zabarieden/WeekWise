@@ -93,8 +93,12 @@ Deno.serve(async (req) => {
 
         // הקשר של "היום" נדרש כדי שה-AI יוכל לחשב תאריך מדויק לאירועים חד-
         // פעמיים ("שבוע הבא ביום שני" הוא תאריך אחר לגמרי תלוי מתי זה נשלח) -
-        // בלעדיו אין דרך אמינה לחשב "שבוע הבא" בלי לנחש
-        const todayContext = today ? `Today's date is ${today}.` : "";
+        // בלעדיו אין דרך אמינה לחשב "שבוע הבא" בלי לנחש. גם שם היום-בשבוע
+        // מחושב כאן בקוד דטרמיניסטי (לא סומכים על ה-AI לחשב את זה בעצמו) -
+        // כך ה-AI רק צריך "לספור קדימה" מיום ידוע, לא לגזור אותו בעצמו
+        const todayContext = today
+            ? `Today's date is ${today} (a ${DAY_NAMES[new Date(`${today}T00:00:00`).getDay()]}).`
+            : "";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -114,17 +118,25 @@ Deno.serve(async (req) => {
                             "(one entry per day+activity combination - if an activity happens on multiple days, " +
                             "create a separate entry for each day). Use 24-hour HH:MM time format. Day names must be " +
                             "in English exactly as Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, or Saturday. " +
-                            "Keep task titles short and in the same language the user wrote in. Do not invent events " +
-                            "that weren't mentioned.\n\n" +
-                            "For EACH event, decide whether it is RECURRING (an ongoing weekly commitment - e.g. " +
-                            "\"on Mondays\", \"every Tuesday\", \"I go to the gym on Sundays\", no specific single " +
-                            "date implied) or a ONE-TIME occurrence (a specific single date is implied - e.g. \"next " +
-                            "week\", \"next Monday\", \"tomorrow\", \"this Friday\", an explicit date). Set " +
-                            "`recurring` accordingly. " + todayContext + " For ONE-TIME events only, compute the " +
-                            "exact calendar date it falls on and set `event_date` in YYYY-MM-DD format (use the day " +
-                            "name + today's date to work out the correct date - e.g. \"next week Monday\" means the " +
-                            "Monday of the week AFTER the current week, not this week even if today is before " +
-                            "Monday). For RECURRING events, event_date must be null.\n\nText: " + text,
+                            "Do not invent events that weren't mentioned.\n\n" +
+                            "For EACH event, decide whether it is RECURRING (an ongoing weekly commitment with no " +
+                            "specific single date - e.g. \"on Mondays\", \"every Tuesday\", \"I go to the gym on " +
+                            "Sundays\") or a ONE-TIME occurrence (any specific single date is implied, however " +
+                            "phrased - e.g. \"next week\", \"next Monday\", \"tomorrow\", \"this Friday\", an " +
+                            "explicit date). Any mention of a relative timeframe like \"next week\" ALWAYS means " +
+                            "recurring=false - never mark something recurring just because a day name was said, if a " +
+                            "timeframe word was also there.\n\n" +
+                            "task_title MUST be just the plain activity name and MUST NEVER contain timing/date " +
+                            "words (\"next week\", \"tomorrow\", \"on Mondays\", etc.) - those belong only in the " +
+                            "recurring/event_date fields, never in the title text itself. Keep it short, in the same " +
+                            "language the user wrote in.\n\n" +
+                            "Example: today is Wednesday 2026-07-22. Input: \"next week on Monday add a guitar " +
+                            "lesson\". Correct output: one event, day_of_week=Monday, recurring=false, " +
+                            "event_date=2026-07-27 (Monday of the week AFTER the current week - not this week's " +
+                            "Monday, which already passed), task_title=\"Guitar lesson\" (NOT \"next week guitar " +
+                            "lesson\").\n\n" +
+                            todayContext + " For ONE-TIME events only, compute the exact event_date in YYYY-MM-DD " +
+                            "format. For RECURRING events, event_date must be null.\n\nText: " + text,
                     },
                 ],
                 tools: [
@@ -171,7 +183,19 @@ Deno.serve(async (req) => {
             { onConflict: "user_id" },
         );
 
-        return jsonResponse({ ok: true, events: toolUseBlock.input.events || [] });
+        // רשת ביטחון נגד כפילויות: המודל לפעמים מחזיר את אותו אירוע פעמיים
+        // (למשל אם המשתמשת ניסחה אותו רעיון בשתי דרכים בטקסט אחד) - מסננים
+        // כפילויות מדויקות (אותו יום+שעה+כותרת+recurring+תאריך) לפני ההחזרה
+        const rawEvents: any[] = toolUseBlock.input.events || [];
+        const seen = new Set<string>();
+        const events = rawEvents.filter((ev) => {
+            const key = `${ev.day_of_week}|${ev.time}|${ev.task_title}|${ev.recurring}|${ev.event_date}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        return jsonResponse({ ok: true, events });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }
