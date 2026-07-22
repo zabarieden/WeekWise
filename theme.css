@@ -286,6 +286,62 @@ html.light-mode[data-color-theme="graphite_steel"] {
     --text-secondary: #5c6570;
 }
 html.light-mode body { background-color: #e9e6f2; }
+
+/* נגישות: מצב ניגודיות גבוהה - דורס כל ערכת-נושא/מצב-בהיר שנבחרו (לכן
+   !important על כל ערך), כי המטרה כאן היא קריאות מקסימלית, לא אסתטיקה.
+   כהה: לבן/צהוב על שחור מלא. בהיר (light-mode פעיל בו-זמנית): שחור על לבן -
+   שני הכיוונים עדיין "צבעים בולטים מאוד" כמו שהתבקש, לא רק היפוך גרדיאנט */
+html.high-contrast {
+    --bg-main: #000000 !important;
+    --bg-row: #000000 !important;
+    --bg-glass: #000000 !important;
+    --bg-sheet: #000000 !important;
+    --border-color: #ffffff !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: #ffff00 !important;
+    --accent-pink: #ffff00 !important;
+    --accent-purple: #00ffff !important;
+    --accent-purple-light: #00ffff !important;
+    --accent-green: #00ff00 !important;
+    --accent-cyan: #00ffff !important;
+    --accent-gold: #ffff00 !important;
+    --accent-red: #ff3b30 !important;
+}
+html.high-contrast.light-mode {
+    --bg-main: #ffffff !important;
+    --bg-row: #ffffff !important;
+    --bg-glass: #ffffff !important;
+    --bg-sheet: #ffffff !important;
+    --border-color: #000000 !important;
+    --text-primary: #000000 !important;
+    --text-secondary: #000000 !important;
+    --accent-pink: #b30000 !important;
+    --accent-purple: #0000cc !important;
+    --accent-purple-light: #0000cc !important;
+    --accent-green: #006600 !important;
+    --accent-cyan: #005580 !important;
+    --accent-gold: #806600 !important;
+}
+/* מסנן צבע (עיוורון צבעים): גווני-אפור מלאים על כל האפליקציה - הכי פשוט
+   ואמין, כי זה מוריד לגמרי הסתמכות על צבע (האפליקציה כבר לא מסתמכת רק על
+   צבע לסטטוסים - יש תמיד גם סימן/אייקון, +/- ,✓/❌ וכו') */
+.phone-wrapper.grayscale-mode { filter: grayscale(1); }
+.color-filter-picker { display: flex; gap: 8px; margin-bottom: 4px; }
+.color-filter-option {
+    flex: 1 1 0;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.color-filter-option.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.1); color: var(--accent-pink); }
+.color-filter-option:active { transform: scale(0.97); }
 /* שדות קלט/כרטיסי משנה כהים באופן קבוע (רקע rgba(0,0,0,x) + טקסט לבן) -
    במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
 /* שורות תוכן (לו"ז/ארוחות/התקדמות) משתמשות ב-var(--bg-row) - כך שגם במצב

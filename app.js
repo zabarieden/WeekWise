@@ -27,6 +27,8 @@ function initSupabase() {
 document.addEventListener('DOMContentLoaded', async () => {
     loadSavedLanguage();
     applyLightMode(isLightModeOn());
+    applyHighContrast(isHighContrastOn());
+    applyColorFilter(getSavedColorFilter());
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -2991,6 +2993,41 @@ function toggleLightMode() {
     const enabled = document.getElementById('light-mode-toggle').checked;
     localStorage.setItem('weekwise_light_mode', enabled ? 'true' : 'false');
     applyLightMode(enabled);
+}
+
+// --- נגישות: ניגודיות גבוהה + מסנן צבע (גווני-אפור) - חינמי לכולם, לא
+// תלוי פרימיום/משתמש, אותו דפוס בדיוק כמו מצב בהיר למעלה ---
+function isHighContrastOn() {
+    return localStorage.getItem('weekwise_high_contrast') === 'true';
+}
+
+function applyHighContrast(enabled) {
+    document.documentElement.classList.toggle('high-contrast', enabled);
+    const toggle = document.getElementById('high-contrast-toggle');
+    if (toggle) toggle.checked = enabled;
+}
+
+function toggleHighContrast() {
+    const enabled = document.getElementById('high-contrast-toggle').checked;
+    localStorage.setItem('weekwise_high_contrast', enabled ? 'true' : 'false');
+    applyHighContrast(enabled);
+}
+
+function getSavedColorFilter() {
+    return localStorage.getItem('weekwise_color_filter') || 'none';
+}
+
+function applyColorFilter(filterName) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.toggle('grayscale-mode', filterName === 'grayscale');
+    document.querySelectorAll('.color-filter-option').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === filterName);
+    });
+}
+
+function selectColorFilter(filterName) {
+    localStorage.setItem('weekwise_color_filter', filterName);
+    applyColorFilter(filterName);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
