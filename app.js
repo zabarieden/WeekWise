@@ -4116,6 +4116,29 @@ async function runLocalRecipeOcrFallback(file) {
     }
 }
 
+// שולח את התמונה ל-AI האמיתי בענן פעם אחת ומדווחת מה קרה - מנותקת כדי
+// שאפשר יהיה לנסות שוב אוטומטית (ר' הקריאה הכפולה ב-runRecipeImageScan
+// למטה) בלי לשכפל את כל לוגיקת הפענוח של התשובה
+async function attemptRecipeCloudScan(token, base64, mediaType) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ imageBase64: base64, mediaType })
+        });
+        const result = await res.json();
+        // limit_reached עם scope='premium_monthly' זה מישהי שכבר פרימיום שהגיעה
+        // למכסה החודשית הנדיבה - אין טעם להציע לה לשדרג (היא כבר שילמה),
+        // ואין טעם לנסות שוב (המכסה לא תשתנה) - רק להודיע ולעבור ל-OCR המקומי
+        if (result.error === 'limit_reached' && result.scope === 'premium_monthly') return { status: 'premium_limit' };
+        if (res.status === 402 || result.error === 'limit_reached') return { status: 'limit' };
+        if (res.ok && !result.error && result.recipe) return { status: 'ok', recipe: result.recipe, scansUsed: result.scansUsed };
+        return { status: 'retry' };
+    } catch {
+        return { status: 'retry' };
+    }
+}
+
 // מנותקת מ-handleRecipeImageSelected כדי שגם ה-AI Brain (שמזין קובץ שנבחר
 // דרך קלט קובץ אחר לגמרי) יוכל להריץ בדיוק את אותה לוגיקת סריקה, בלי כפילות
 async function runRecipeImageScan(file) {
@@ -4146,32 +4169,23 @@ async function runRecipeImageScan(file) {
 
         let recipe = null;
         if (token) {
-            try {
-                const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ imageBase64: base64, mediaType })
-                });
-                const result = await res.json();
+            // ניסיון שני מיידי לפני ויתור: תקלת רשת חד-פעמית (מעבר בין WiFi
+            // לסלולרי, חבילת בקשה שאבדה) היא הגורם השכיח ביותר לכישלון -
+            // וה-AI האמיתי תמיד מדויק הרבה יותר מה-OCR המקומי (בעיקר לעברית),
+            // אז שווה לתת לו הזדמנות שנייה לפני שנופלים לפתרון הפחות טוב
+            let attempt = await attemptRecipeCloudScan(token, base64, mediaType);
+            if (attempt.status === 'retry') attempt = await attemptRecipeCloudScan(token, base64, mediaType);
 
-                // limit_reached עם scope='premium_monthly' זה מישהי שכבר פרימיום שהגיעה
-                // למכסה החודשית הנדיבה - אין טעם להציע לה לשדרג (היא כבר שילמה),
-                // רק להודיע ולהמשיך בשקט ל-OCR המקומי למטה כפתרון חלופי. scope
-                // אחר (או free-tier ללא scope) זה עדיין המקרה המקורי: לא פרימיום
-                // בכלל, ואז כן הגיוני להציע שדרוג ולעצור כאן
-                if (result.error === 'limit_reached' && result.scope === 'premium_monthly') {
-                    showAppToast(t('ai_monthly_limit_reached'), 'error');
-                } else if (res.status === 402 || result.error === 'limit_reached') {
-                    showAppToast(t('recipe_scan_limit_desc'), 'error');
-                    openPremiumUpgradeModal();
-                    return;
-                } else if (res.ok && !result.error && result.recipe) {
-                    recipe = result.recipe;
-                    if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
-                    renderRecipeScanUsageHint();
-                }
-            } catch {
-                // הענן לא זמין (רשת/שרת) - ממשיכים בשקט ל-OCR המקומי למטה
+            if (attempt.status === 'premium_limit') {
+                showAppToast(t('ai_monthly_limit_reached'), 'error');
+            } else if (attempt.status === 'limit') {
+                showAppToast(t('recipe_scan_limit_desc'), 'error');
+                openPremiumUpgradeModal();
+                return;
+            } else if (attempt.status === 'ok') {
+                recipe = attempt.recipe;
+                if (typeof attempt.scansUsed === 'number') cachedImageScansUsed = attempt.scansUsed;
+                renderRecipeScanUsageHint();
             }
         }
 
