@@ -1511,9 +1511,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    האווטאר/הדגל בנויים כ"כדורי ניאון" זוהרים - בדיוק אותה שפה חזותית של
    .cube-icon/.sub-tile-icon בשאר האפליקציה (זכוכית כהה + טבעת זוהרת + הבהוק
    פנימי) - כדי שירגיש תלת-ממדי ומלוטש כמו כל שאר האייקונים, לא אימוג'י שטוח
-   מונח על קו. .goal-path-perspective נותן לכל המסלול הטיה תלת-ממדית קלה
-   (כביש שנסוג לתוך המרחק) עם perspective/rotateX אמיתיים */
-.goal-path-perspective { perspective: 300px; padding: 6px 0 34px 0; }
+   מונח על קו. הוסרה ההטיה התלת-ממדית האמיתית (perspective/rotateX/translateZ)
+   שהייתה כאן קודם - באגי חפיפה/בריחה מחוץ לכרטיס במסכים רחבים ובמובייל
+   (רכיבים עם transform תלת-ממדי לפעמים "בורחים" מ-overflow:hidden של ההורה
+   בדפדפנים מסוימים) - עדיף מסלול שטוח יציב על פני אפקט תלת-ממד שביר */
+.goal-path-perspective { padding: 6px 0 34px 0; }
 .goal-path-track {
     position: relative;
     height: 46px;
@@ -1522,8 +1524,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        המסלול וניחתך ע"י overflow-hidden של .phone-wrapper - בדיוק התלונה
        "לא רואים טוב את האיש רץ" במובייל */
     margin: 0 22px;
-    transform: rotateX(28deg);
-    transform-style: preserve-3d;
 }
 .goal-path-line {
     position: absolute;
@@ -1571,7 +1571,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border: 2px solid var(--accent-pink);
     box-shadow: 0 0 16px rgba(255, 0, 127, 0.55), 0 0 24px rgba(168, 85, 247, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 10px rgba(0, 0, 0, 0.4);
     transition: inset-inline-start 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: translateZ(20px) rotateX(-28deg);
     z-index: 2;
 }
 /* יעד ידני (custom) בלבד: אפשר לגרור את הדמות לאורך המסלול כדי לקבוע
@@ -1596,7 +1595,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-backdrop-filter: blur(10px);
     border: 2px solid var(--accent-gold);
     box-shadow: 0 0 14px rgba(245, 158, 11, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 10px rgba(0, 0, 0, 0.4);
-    transform: translateZ(20px) rotateX(-28deg);
 }
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.15); }

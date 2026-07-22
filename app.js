@@ -3501,7 +3501,7 @@ function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
                 <div class="goal-path-line"></div>
                 ${steps}
                 <div class="goal-path-avatar${draggable ? ' draggable' : ''}" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
-                <div class="goal-path-flag">🏁</div>
+                <div class="goal-path-flag">🎯</div>
             </div>
         </div>
     `;
