@@ -1201,11 +1201,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .recipe-detail-view {
     display: none;
-    /* fixed (לא absolute) + z-index מעל אפילו .ai-fab (99999 !important) -
-       תיקון לבאג שבו הכפתורים הצפים (ai-fab/ai-brain-fab/hamburger-fab)
-       ורשימת המתכונים שמאחורי התצוגה "בצבצו" מתחת/מעל תצוגת פרטי המתכון
-       במקום שהיא תכסה את כל המסך כמו שאמורה */
-    position: fixed;
+    /* absolute (לא fixed!) יחסית ל-.phone-wrapper - בדיוק כמו כל שאר החלונות
+       המלאים באפליקציה (apple-modal/login-overlay/hamburger-drawer-overlay).
+       fixed שבור בדסקטופ הרחב, כי שם .phone-wrapper הוא כרטיס ממורכז עם
+       max-width (לא כל חלון הדפדפן) - fixed היה "בורח" מגבולות הכרטיס וגם לא
+       מכסה נכון את הרוחב המלא שלו. z-index גבוה מ-.ai-fab (99999 !important)
+       זה מה שבאמת תיקן את הבעיה של הכפתור הצף שהציץ מעל תצוגת המתכון */
+    position: absolute;
     inset: 0;
     background-color: var(--bg-main);
     z-index: 100000;
