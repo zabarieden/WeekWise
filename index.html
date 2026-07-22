@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=119">
+    <link rel="stylesheet" href="theme.css?v=120">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -220,7 +220,7 @@
                                 <div class="meal-row" data-meal="meal_1">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_1">Meal 1</span>
-                                        <select class="preset-select" data-category="morning"></select>
+                                        <button type="button" class="preset-select-trigger" data-category="morning" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
                                     </div>
                                     <div class="meal-inputs-wrap">
                                         <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
@@ -232,7 +232,7 @@
                                 <div class="meal-row" data-meal="meal_2">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_2">Meal 2</span>
-                                        <select class="preset-select" data-category="noon"></select>
+                                        <button type="button" class="preset-select-trigger" data-category="noon" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
                                     </div>
                                     <div class="meal-inputs-wrap">
                                         <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
@@ -244,7 +244,7 @@
                                 <div class="meal-row" data-meal="meal_3">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_3">Meal 3</span>
-                                        <select class="preset-select" data-category="evening"></select>
+                                        <button type="button" class="preset-select-trigger" data-category="evening" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
                                     </div>
                                     <div class="meal-inputs-wrap">
                                         <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
@@ -256,7 +256,7 @@
                                 <div class="meal-row" data-meal="meal_4">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_4">Snack 1</span>
-                                        <select class="preset-select" data-category="snack"></select>
+                                        <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
                                     </div>
                                     <div class="meal-inputs-wrap">
                                         <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
@@ -268,7 +268,7 @@
                                 <div class="meal-row" data-meal="snack">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_snack">Snack 2</span>
-                                        <select class="preset-select" data-category="snack"></select>
+                                        <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
                                     </div>
                                     <div class="meal-inputs-wrap">
                                         <input type="text" data-i18n-placeholder="snack_input_placeholder" placeholder="Snacks and treats..." class="food-input" onchange="autoFillMealCalories(this)">
@@ -988,6 +988,18 @@
             </div>
         </div>
 
+        <!-- חלון צף: בחירת ארוחה קבועה שמורה - תפריט מותאם (לא <select> טבעי) כדי
+             שאפשר יהיה להציג גם את המרכיבים כטקסט קטן מתחת לשם, לא רק שם+קלוריות -->
+        <div id="modal-preset-picker" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="preset_picker_title">Choose a Saved Meal</h3>
+                <input type="text" id="preset-picker-search-input" class="language-search-input" data-i18n-placeholder="preset_picker_search_placeholder" placeholder="Search saved meals..." oninput="renderPresetPickerList(this.value)">
+                <div id="preset-picker-list" class="language-picker-list"></div>
+                <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-preset-picker')" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+
         <!-- חלון צף: שינוי סיסמה -->
         <div id="modal-change-password" class="apple-modal">
             <div class="modal-sheet">
@@ -1126,6 +1138,7 @@
                 <div class="preset-manager-grid">
                     <input type="text" id="new-preset-name" data-i18n-placeholder="preset_name_placeholder" placeholder="Meal name">
                     <input type="number" id="new-preset-calories" data-i18n-placeholder="preset_calories_placeholder" placeholder="Calorie amount">
+                    <input type="text" id="new-preset-description" data-i18n-placeholder="preset_description_placeholder" placeholder="Ingredients (optional)">
                     <select id="new-preset-category">
                         <option value="morning" data-i18n="preset_cat_morning">🌅 Breakfast & light meals</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals</option><option value="snack" data-i18n="preset_cat_snack">🍭 Snacks and treats</option>
                     </select>
@@ -1424,7 +1437,7 @@
 
     </div>
 
-    <script src="i18n.js?v=71"></script>
-    <script src="app.js?v=122"></script>
+    <script src="i18n.js?v=72"></script>
+    <script src="app.js?v=123"></script>
 </body>
 </html>

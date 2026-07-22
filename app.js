@@ -290,8 +290,10 @@ const MEAL_PRESET_FREE_LIMIT = 10;
 async function addCustomPreset() {
     const nameInput = document.getElementById('new-preset-name');
     const caloriesInput = document.getElementById('new-preset-calories');
+    const descriptionInput = document.getElementById('new-preset-description');
     const name = nameInput.value.trim();
     const calories = parseInt(caloriesInput.value) || 0;
+    const description = descriptionInput.value.trim();
     const category = document.getElementById('new-preset-category').value;
     if (!name || calories <= 0) return;
 
@@ -304,15 +306,16 @@ async function addCustomPreset() {
     }
 
     if (editingPresetId) {
-        await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories }).eq('id', editingPresetId);
+        await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories, description: description || null }).eq('id', editingPresetId);
         showAppToast(t('preset_updated_success'));
         cancelPresetEdit();
     } else {
-        await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
+        await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories, description: description || null });
         showAppToast(t('preset_added_success'));
     }
     nameInput.value = '';
     caloriesInput.value = '';
+    descriptionInput.value = '';
     loadMealPresetsToSelects();
     loadPresetManageList();
 }
@@ -323,6 +326,7 @@ function editPreset(id) {
     editingPresetId = id;
     document.getElementById('new-preset-name').value = preset.food_name;
     document.getElementById('new-preset-calories').value = preset.calories;
+    document.getElementById('new-preset-description').value = preset.description || '';
     document.getElementById('new-preset-category').value = preset.meal_category;
     document.getElementById('btn-add-preset').textContent = t('preset_update_btn');
 }
@@ -331,6 +335,7 @@ function cancelPresetEdit() {
     editingPresetId = null;
     document.getElementById('new-preset-name').value = '';
     document.getElementById('new-preset-calories').value = '';
+    document.getElementById('new-preset-description').value = '';
     document.getElementById('btn-add-preset').textContent = t('preset_add_btn');
 }
 
@@ -382,8 +387,12 @@ async function loadPresetManageList() {
         items.forEach(item => {
             const li = document.createElement('li');
             li.className = 'preset-manage-item';
+            const descriptionHtml = item.description ? `<span class="preset-picker-description">${item.description}</span>` : '';
             li.innerHTML = `
-                <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
+                <span class="preset-manage-name-wrap">
+                    <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
+                    ${descriptionHtml}
+                </span>
                 <div class="preset-manage-actions">
                     <button class="btn-edit-item" onclick="editPreset('${item.id}')">✏️</button>
                     <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
@@ -415,31 +424,53 @@ async function loadMealPresetsToSelects() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
     cachedPresets = data || cachedPresets;
-    if (!data) return;
-    document.querySelectorAll('.preset-select').forEach(select => {
-        const category = select.getAttribute('data-category');
-        select.innerHTML = `<option value="">${t('preset_select_placeholder')}</option>`;
-        const filtered = data.filter(item => {
-            if (category === 'morning') return item.meal_category === 'morning';
-            if (category === 'snack') return item.meal_category === 'snack';
-            return item.meal_category === 'noon' || item.meal_category === 'evening';
-        });
-        filtered.forEach(preset => {
-            const option = document.createElement('option');
-            option.value = preset.calories;
-            option.textContent = `${preset.food_name} (${preset.calories})`;
-            option.dataset.foodName = preset.food_name;
-            select.appendChild(option);
-        });
-        select.onchange = (e) => {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            if (!selectedOption.value) return;
-            const mealRow = e.target.closest('.meal-row');
-            mealRow.querySelector('.food-input').value = selectedOption.dataset.foodName;
-            mealRow.querySelector('.calories-input').value = selectedOption.value;
-            updateLiveCaloriesToday();
-        };
-    });
+}
+
+// --- בורר ארוחות קבועות: תפריט מותאם (לא <select> טבעי) שנפתח מהכפתור בראש
+// כל שורת ארוחה - מציג שם+קלוריות בשורה ראשית ואת המרכיבים כטקסט קטן מתחתיו,
+// משהו ש-<option> של select טבעי פשוט לא יכול להציג ---
+let presetPickerTargetRow = null;
+let presetPickerCategory = null;
+
+function presetMatchesCategory(item, category) {
+    if (category === 'morning') return item.meal_category === 'morning';
+    if (category === 'snack') return item.meal_category === 'snack';
+    return item.meal_category === 'noon' || item.meal_category === 'evening';
+}
+
+function openPresetPicker(button) {
+    presetPickerTargetRow = button.closest('.meal-row');
+    presetPickerCategory = button.getAttribute('data-category');
+    const search = document.getElementById('preset-picker-search-input');
+    if (search) search.value = '';
+    renderPresetPickerList('');
+    openModal('modal-preset-picker');
+    if (search) search.focus();
+}
+
+function renderPresetPickerList(filter) {
+    const list = document.getElementById('preset-picker-list');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const matches = cachedPresets.filter(item => presetMatchesCategory(item, presetPickerCategory) && item.food_name.toLowerCase().includes(query));
+    if (!matches.length) {
+        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        return;
+    }
+    list.innerHTML = matches.map(item => `
+        <button type="button" class="language-picker-item" onclick="selectPresetPickerItem('${item.id}')">
+            <span class="language-picker-name">${item.food_name} (${item.calories})${item.description ? `<span class="preset-picker-description">${item.description}</span>` : ''}</span>
+        </button>
+    `).join('');
+}
+
+function selectPresetPickerItem(id) {
+    const preset = cachedPresets.find(p => p.id === id);
+    if (!preset || !presetPickerTargetRow) return;
+    presetPickerTargetRow.querySelector('.food-input').value = preset.food_name;
+    presetPickerTargetRow.querySelector('.calories-input').value = preset.calories;
+    updateLiveCaloriesToday();
+    closeModal('modal-preset-picker');
 }
 
 function togglePasswordVisibility() {
@@ -4299,11 +4330,18 @@ async function runPresetImageScan(file) {
             return;
         }
 
-        // ארוחה קבועה היא פריט בודד - אם התמונה מכילה כמה פריטים, לוקחים רק
-        // את הראשון (המשתמש תמיד יכול לערוך את השם/קלוריות לפני השמירה)
-        const first = result.items[0];
-        document.getElementById('new-preset-name').value = first.food_name || '';
-        document.getElementById('new-preset-calories').value = first.calories || '';
+        // ארוחה קבועה יכולה להכיל כמה פריטים (למשל ארוחה שלמה עם אורז+ביצים+...) -
+        // מאחדים את כולם לפריט שמור אחד: השם הוא רשימת כל המרכיבים (מקוצר,
+        // "הכל"), הקלוריות הן הסכום הכולל, וה"מרכיבים" (description) הוא
+        // פירוט קלורי לכל פריט בנפרד - כדי שגם אחרי האיחוד עדיין אפשר יהיה
+        // לראות מה בדיוק מרכיב את הארוחה, לא רק את המספר הכולל
+        const items = result.items;
+        const totalCalories = items.reduce((sum, it) => sum + (it.calories || 0), 0);
+        const combinedName = items.map(it => it.food_name).filter(Boolean).join(', ');
+        const combinedDescription = items.map(it => `${it.food_name} (${it.calories})`).join(', ');
+        document.getElementById('new-preset-name').value = combinedName;
+        document.getElementById('new-preset-calories').value = totalCalories || '';
+        document.getElementById('new-preset-description').value = items.length > 1 ? combinedDescription : '';
         showAppToast(t('preset_scan_success'));
     } catch (err) {
         showAppToast(t('meal_photo_failed'), 'error');
