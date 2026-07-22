@@ -866,7 +866,18 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 /* אייקון עוזר ה-AI (ai-icon.png): ממלא את הכפתור העגלגל לגמרי, עם אותם
    פינות מעוגלות כמו הכפתור עצמו (overflow:hidden שם חותך את הפינות) */
-.ai-brain-icon { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* אימוג'י מוח עדין עם זוהר ניאון סגול/תכול - במקום תמונת PNG מותאמת אישית
+   שהייתה קודם (span, לא img יותר) */
+.ai-brain-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 1.5rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.65)) drop-shadow(0 0 3px rgba(0, 212, 255, 0.4));
+}
 
 /* תפריט המבורגר: כפתור קבוע בפינה הימנית-עליונה (מול עוזר ה-AI בשמאל),
    שפותח מגירה שקופצת מהצד עם קיצורי-דרך מסודרים בקטגוריות - לא מחליף את
