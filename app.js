@@ -897,6 +897,10 @@ async function removeDaySlot(day, slot) {
     }
 
     await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
+    // בלי זה, "לוז יומי" במסך הבית ממשיך להציג את המשימה שנמחקה עד שיוצאים
+    // ונכנסים לאפליקציה מחדש - היא נטענת פעם אחת בהתחלה ולא מקשיבה לשינויים
+    // בלוח השבועי עצמו
+    if (day === dbDaysMap[new Date().getDay()]) loadTodayTasks();
 }
 
 // אחרי שנשלפה שורה אחרונה ביום מסוים, מחביאים את .slots-grid הריק (במקום
@@ -5414,7 +5418,13 @@ function dismissReminderToast() {
     const toast = document.getElementById('reminder-toast');
     if (toast) toast.classList.remove('show');
 }
-async function clearSingleSlot(day, slot) { await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot); loadWeeklySchedule(); }
+async function clearSingleSlot(day, slot) {
+    await supabaseClient.from('weekly_schedule').delete().eq('user_id', currentUserId).eq('day_of_week', day).eq('slot_number', slot);
+    loadWeeklySchedule();
+    // בלי זה, מחיקת משימה דרך המודל היחיד הזה לא מרעננת את "לוז יומי" במסך
+    // הבית - היא נשארת מוצגת שם עד שיוצאים ונכנסים לאפליקציה מחדש (רענון דף)
+    if (day === dbDaysMap[new Date().getDay()]) loadTodayTasks();
+}
 // איפוס מבני מלא, לא רק ניקוי תוכן: קודם רק מחקנו את שורות ה-DB (התוכן),
 // בלי לגעת ב-daySlotsConfig עצמו - כך שאם ליום מסוים כבר חסרה משבצת בסיס
 // (מחיקה ידנית ישנה, נתונים משלב עם אורך ברירת מחדל אחר), "ניקוי" לא היה
@@ -5427,6 +5437,7 @@ async function clearEntireWeeklySchedule() {
     saveDaySlotsConfig();
     buildWeeklyScheduleAccordionUI();
     await loadWeeklySchedule();
+    await loadTodayTasks();
 }
 
 async function loadDailyNutrition(date) {
