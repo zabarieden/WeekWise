@@ -1842,15 +1842,22 @@ function toggleCustomRecurrenceVisibility() {
 }
 
 // --- משימות להיום: תמצית מהירה של השורות המאוכלסות בלו"ז השבועי (התבנית
-// החוזרת) עבור יום-השבוע הנוכחי בלבד - כדי לראות מה מתוכנן היום בלי לצאת
-// ממבט הבית וללחוץ על לשונית "השבוע שלי". שאילתה עצמאית (לא תלויה ב-DOM
-// של loadWeeklySchedule), כי שתי הפונקציות רצות במקביל ב-Promise.all בטעינה
+// החוזרת) עבור יום-השבוע הנוכחי, בתוספת אירועי calendar_events שתאריכם היום
+// (בעיקר משימות שנגררו מפתקים - source='note_task', אבל בלי סינון, כדי
+// שגם אירועי calendar_events "כן ליום ספציפי" של היום יופיעו כאן) - כדי
+// לראות מה מתוכנן היום בלי לצאת ממבט הבית וללחוץ על לשונית "השבוע שלי".
+// שאילתה עצמאית (לא תלויה ב-DOM של loadWeeklySchedule), כי שתי הפונקציות
+// רצות במקביל ב-Promise.all בטעינה
 async function loadTodayTasks() {
     if (!supabaseClient || !currentUserId) return;
     const container = document.getElementById('today-tasks-list');
     if (!container) return;
     const todayDbDay = dbDaysMap[new Date().getDay()];
-    const { data, error } = await supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay);
+    const todayStr = getLocalDateString();
+    const [{ data, error }, { data: eventRows }] = await Promise.all([
+        supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr),
+    ]);
     if (error || !data) return;
     const populated = data
         .filter(item => (item.task_title || '').trim())
@@ -1861,8 +1868,9 @@ async function loadTodayTasks() {
             if (mb === null) return -1;
             return ma - mb;
         });
+    const events = eventRows || [];
     container.innerHTML = '';
-    if (!populated.length) {
+    if (!populated.length && !events.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
@@ -1870,6 +1878,18 @@ async function loadTodayTasks() {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `<span class="today-tasks-time">${item.time_of_day || ''}</span><span class="today-tasks-text">${getScheduleTaskIcon(item.task_title)} ${item.task_title}</span>`;
+        container.appendChild(row);
+    });
+    // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
+    // צ'קבוקס-השלמה וכפתור מחיקה, כמו בפירוט היום בלוח החודשי
+    events.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'today-tasks-row';
+        row.innerHTML = `
+            <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
+            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
+            <button type="button" class="btn-delete-item" onclick="deleteCalendarEvent('${item.id}')">❌</button>
+        `;
         container.appendChild(row);
     });
 }
@@ -1965,10 +1985,10 @@ async function loadCalendarEvents() {
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     const today = getLocalDateString();
-    // בלי סינון לפי source: גם משימות שהומרו מפתקים גרורים (source='note_task')
-    // מוצגות כאן - לפי בקשה מפורשת, כי אלה "ממש חשובות" וזה הכרטיס התמידי-פתוח
-    // הראשון בעמוד, לא רק בלוח החודשי (ששם צריך ללחוץ על יום ספציפי כדי לראות)
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today);
+    // source='calendar' בלבד - לא משימות שהומרו מפתקים גרורים (source=
+    // 'note_task'). אלה מוצגות ב"משימות להיום" (loadTodayTasks) במקום כאן -
+    // לפי בקשה מפורשת
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar').gte('event_date', today);
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
@@ -2117,6 +2137,7 @@ function buildRecurringEventRow(items, groupId) {
 async function toggleEventOccurrenceCompletion(id, isCompleted) {
     await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
     loadCalendarEvents();
+    loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
@@ -2265,12 +2286,14 @@ async function addCalendarEvent() {
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
+    loadTodayTasks();
 }
 
 async function deleteCalendarEvent(id) {
     await supabaseClient.from('calendar_events').delete().eq('id', id);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
+    loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
@@ -2278,6 +2301,7 @@ async function deleteRecurringSeries(groupId) {
     await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
+    loadTodayTasks();
 }
 
 // --- המתכונים שלי: רשת קטגוריות קבועה -> רשימת מתכונים מסוננת -> תצוגת פרטים במסך מלא ---
