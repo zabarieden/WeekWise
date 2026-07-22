@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         // שהוא מזהה בתמונה, ובלי הנחיה מפורשת נוטה לענות באנגלית תמיד, גם
         // כשהאפליקציה כולה בעברית/ספרדית/וכו'. משם השם הנוצר תואם את שפת
         // הממשק שהמשתמשת בחרה, לא רק את שפת התמונה עצמה
-        const LANGUAGE_NAMES: Record<string, string> = { en: "English", he: "Hebrew", es: "Spanish", fr: "French", ar: "Arabic", ru: "Russian", de: "German", pt: "Portuguese", ja: "Japanese", zh: "Chinese", hi: "Hindi" };
+        const LANGUAGE_NAMES: Record<string, string> = { en: "English", he: "Hebrew", es: "Spanish", fr: "French", ar: "Arabic", ru: "Russian", de: "German", pt: "Portuguese", ja: "Japanese", zh: "Chinese", hi: "Hindi", ko: "Korean", tr: "Turkish", id: "Indonesian", it: "Italian", vi: "Vietnamese", pl: "Polish", th: "Thai", ur: "Urdu", bn: "Bengali", sw: "Swahili", uk: "Ukrainian", el: "Greek", nl: "Dutch", ca: "Catalan", ro: "Romanian", yo: "Yoruba" };
         const languageName = LANGUAGE_NAMES[language] || "English";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
