@@ -1782,7 +1782,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
     background: linear-gradient(135deg, rgba(234, 179, 8, 0.14), rgba(255, 0, 127, 0.08));
     border: 1px solid rgba(234, 179, 8, 0.3);
 }
-.monthly-goal-trophy-icon { font-size: 1.6rem; flex-shrink: 0; }
+/* width/height+flex-center מפורש (לא רק font-size) כי לגליף האימוג'י 🏆
+   עצמו יש ריפוד לא-סימטרי מובנה בפונט - בלי קופסה מרוכזת מפורשת הוא נראה
+   "לא ממורכז" יחסית לטקסט לידו, גם כשההורה עצמו flex+align-items:center */
+.monthly-goal-trophy-icon { font-size: 1.6rem; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .monthly-goal-trophy-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .monthly-goal-trophy-text strong { font-size: 0.85rem; color: var(--text-primary); }
 .monthly-goal-trophy-text span { font-size: 0.72rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

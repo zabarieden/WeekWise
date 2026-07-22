@@ -3311,6 +3311,7 @@ function openSetMonthlyGoalModal(isEdit = false) {
     document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'custom';
     document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
     document.getElementById('monthly-goal-current-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.current_value || 0) : 0;
+    document.getElementById('monthly-goal-reward-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.personal_reward || '') : '';
     handleMonthlyGoalTypeChange();
     openModal('modal-set-monthly-goal');
 }
@@ -3333,9 +3334,10 @@ async function saveMonthlyGoal() {
     // התקדמות נוכחית ניתנת לעריכה ידנית רק ביעד מסוג 'custom' - ליעדי משימות/
     // משקל היא תמיד מחושבת מחדש אוטומטית (ר' computeGoalCurrentValue)
     const manualCurrent = type === 'custom' ? (parseFloat(document.getElementById('monthly-goal-current-input').value) || 0) : 0;
+    const personalReward = document.getElementById('monthly-goal-reward-input').value.trim() || null;
 
     if (editingMonthlyGoal && cachedMonthlyGoal) {
-        const updatePayload = { goal_name: name, goal_type: type, target_value: target };
+        const updatePayload = { goal_name: name, goal_type: type, target_value: target, personal_reward: personalReward };
         if (type === 'custom') updatePayload.current_value = manualCurrent;
         const { error } = await supabaseClient.from('monthly_goals').update(updatePayload).eq('id', cachedMonthlyGoal.id);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
@@ -3355,7 +3357,7 @@ async function saveMonthlyGoal() {
     const { error } = await supabaseClient.from('monthly_goals').insert({
         username: currentUsername, user_id: currentUserId, goal_name: name, goal_type: type,
         target_value: target, starting_value: startingValue, current_value: manualCurrent,
-        month_key: currentMonthKey(), achieved: false
+        month_key: currentMonthKey(), achieved: false, personal_reward: personalReward
     });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     closeModal('modal-set-monthly-goal');
@@ -3382,8 +3384,15 @@ async function adjustCustomGoal(delta) {
 let lastCelebratedGoalSummary = '';
 
 function celebrateGoalAchieved(goal) {
-    const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
-    const msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
+    // אם המשתמשת כתבה פינוק אישי משלה בזמן הגדרת היעד - הוא מוצג במקום
+    // ההודעות הגנריות שהיו קודם (עדיין שם כברירת מחדל אם לא נכתב פינוק)
+    let msg;
+    if (goal.personal_reward) {
+        msg = `${t('monthly_goal_personal_reward_prefix')} ${goal.personal_reward}`;
+    } else {
+        const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
+        msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
+    }
     document.getElementById('goal-celebration-text').textContent = msg;
     const summaryEl = document.getElementById('goal-celebration-summary');
     const progressText = formatGoalProgressText(goal, goal.current_value);
