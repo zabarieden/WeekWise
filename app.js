@@ -11,17 +11,6 @@ const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday',
 let defaultHours = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
-let currentUserCreatedAt = null;
-
-// שורת מידע קטנה בראש "ניהול משתמש" בהגדרות - רק "חברה מאז", בלי המייל
-// (בכוונה - לא להציג את כתובת המייל של המשתמשת במסך הזה בכלל)
-function renderSettingsAccountInfo() {
-    const el = document.getElementById('settings-account-info');
-    if (!el) return;
-    if (!currentUserCreatedAt) { el.textContent = ''; return; }
-    const d = new Date(currentUserCreatedAt);
-    el.textContent = isNaN(d) ? '' : `${t('settings_member_since')} ${d.toLocaleDateString()}`;
-}
 let reminderIntervalStarted = false;
 let authMode = 'login';
 
@@ -446,8 +435,6 @@ async function submitAuthForm() {
 async function initAppAfterAuth(user) {
     currentUserId = user.id;
     currentUsername = user.email;
-    currentUserCreatedAt = user.created_at || null;
-    renderSettingsAccountInfo();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     showAppLoadingOverlay();
