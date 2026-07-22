@@ -4133,6 +4133,66 @@ const FOOD_CALORIE_DB = [
     { re: /ביצ/i, kcalPerUnit: 70 },
     { re: /מים|\bwater\b/i, kcal100g: 0 },
     { re: /מלח|\bsalt\b/i, kcal100g: 0 },
+    // הרחבה: עוד ירקות/פירות/חלבונים/דגנים/מוצרים נפוצים - לפי בקשה מפורשת
+    // ("רוב המאכלים"), עדיין אותו מסד חינמי-לוקאלי, בלי שום קריאת API
+    { re: /בטטה|sweet potato/i, kcal100g: 86 },
+    { re: /תפוח אדמה|תפו"א|potato/i, kcal100g: 77 },
+    { re: /גזר|carrot/i, kcal100g: 41 },
+    { re: /ברוקולי|broccoli/i, kcal100g: 34 },
+    { re: /כרובית|cauliflower/i, kcal100g: 25 },
+    { re: /חסה|lettuce/i, kcal100g: 15 },
+    { re: /פלפל|pepper/i, kcal100g: 31 },
+    { re: /בצל|onion/i, kcal100g: 40 },
+    // (^|[^א-ת])...(?:$|[^א-ת]) במקום lookbehind/lookahead: אותה תוצאה (גבול
+    // מילה עברי אמיתי, כי \b לא עובד על עברית ב-JS), אבל בתחביר regex בסיסי
+    // שנתמך בכל דפדפן - lookbehind (?<!...) לא נתמך ב-Safari ישן (לפני 16.4),
+    // ועלול לגרום ל-SyntaxError בזמן טעינת כל הקובץ, לא רק בביטוי הזה
+    { re: /(^|[^א-ת])שום(?:$|[^א-ת])|garlic/i, kcal100g: 149 },
+    { re: /קישוא|zucchini/i, kcal100g: 17 },
+    { re: /חציל|eggplant/i, kcal100g: 25 },
+    { re: /תירס|corn/i, kcal100g: 86 },
+    { re: /אבוקדו|avocado/i, kcal100g: 160 },
+    { re: /לימון|lemon/i, kcal100g: 29 },
+    { re: /תפוז|orange/i, kcal100g: 47 },
+    { re: /ענבים|grapes/i, kcal100g: 69 },
+    { re: /אבטיח|watermelon/i, kcal100g: 30 },
+    { re: /(^|[^א-ת])מלון(?:$|[^א-ת])|\bmelon\b/i, kcal100g: 34 },
+    { re: /תות|strawberry/i, kcal100g: 32 },
+    { re: /אננס|pineapple/i, kcal100g: 50 },
+    { re: /מנגו|mango/i, kcal100g: 60 },
+    { re: /אגס|pear/i, kcal100g: 57 },
+    { re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254 },
+    { re: /בשר בקר|beef/i, kcal100g: 250 },
+    { re: /הודו|turkey/i, kcal100g: 135 },
+    { re: /סלמון|salmon/i, kcal100g: 208 },
+    { re: /נקניקיה|sausage/i, kcal100g: 300 },
+    { re: /עדשים|lentils/i, kcal100g: 116 },
+    { re: /שעועית|beans/i, kcal100g: 127 },
+    { re: /אפונה|peas/i, kcal100g: 81 },
+    { re: /קינואה|quinoa/i, kcal100g: 120 },
+    { re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389 },
+    { re: /גרנולה|granola/i, kcal100g: 471 },
+    { re: /קורנפלקס|cornflakes/i, kcal100g: 357 },
+    { re: /פיתה|pita/i, kcal100g: 275 },
+    { re: /טופו|tofu/i, kcal100g: 76 },
+    { re: /זית(ים)?|olives/i, kcal100g: 115 },
+    { re: /טחינה|tahini/i, kcal100g: 595 },
+    { re: /מיונז|mayonnaise|mayo/i, kcal100g: 680 },
+    { re: /קטשופ|ketchup/i, kcal100g: 112 },
+    { re: /חמאת בוטנים|peanut butter/i, kcal100g: 588 },
+    { re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62 },
+    { re: /מיץ תפוזים|orange juice/i, kcal100g: 45 },
+    { re: /קולה|\bcola\b/i, kcal100g: 42 },
+    { re: /בירה|\bbeer\b/i, kcal100g: 43 },
+    { re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83 },
+    { re: /פיצה|pizza/i, kcal100g: 266 },
+    { re: /המבורגר|hamburger|burger/i, kcal100g: 295 },
+    { re: /שווארמה|shawarma/i, kcal100g: 250 },
+    { re: /פלאפל|falafel/i, kcal100g: 333 },
+    { re: /גלידה|ice cream/i, kcal100g: 207 },
+    { re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480 },
+    { re: /עוגה|\bcake\b/i, kcal100g: 350 },
+    { re: /קרואסון|croissant/i, kcal100g: 406 },
 ];
 // ממירות יחידות נפח מטבחיות שכיחות (כף/כפית/כוס) לגרם משוער - כדי שאפשר
 // יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'"
@@ -4185,6 +4245,30 @@ function autoFillMealCalories(foodInput) {
         caloriesInput.value = Math.round(estimate);
         updateLiveCaloriesToday();
     }
+}
+
+// --- שמירת מה שכבר הוקלד ביומן היומי כ"ארוחה קבועה" (meal_presets) בלחיצה
+// אחת - בלי לצאת למסך ניהול-ארוחות נפרד ולהקליד את אותו הדבר שוב.
+// data-category על ה-select הקיים בשורה כבר קובע לאיזו קטגוריה זה משתייך ---
+async function saveMealRowAsPreset(button) {
+    const row = button.closest('.meal-row');
+    if (!row) return;
+    const foodInput = row.querySelector('.food-input');
+    const caloriesInput = row.querySelector('.calories-input');
+    const categorySelect = row.querySelector('.preset-select');
+    const name = foodInput.value.trim();
+    const calories = parseInt(caloriesInput.value) || 0;
+    if (!name || calories <= 0) { showAppToast(t('meal_save_preset_missing'), 'error'); return; }
+    if (!isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
+        showAppToast(t('preset_limit_desc'), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
+    const category = categorySelect ? categorySelect.getAttribute('data-category') : 'snack';
+    await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
+    showAppToast(t('meal_save_preset_success'));
+    loadMealPresetsToSelects();
+    loadPresetManageList();
 }
 
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
