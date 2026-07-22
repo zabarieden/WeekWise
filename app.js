@@ -3005,11 +3005,13 @@ function buildGoalPathHtml(pct, achieved) {
     }).join('');
     const avatarEmoji = achieved ? '🎉' : '🚶';
     return `
-        <div class="goal-path-track">
-            <div class="goal-path-line"></div>
-            ${steps}
-            <div class="goal-path-avatar" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
-            <div class="goal-path-flag">🏁</div>
+        <div class="goal-path-perspective">
+            <div class="goal-path-track">
+                <div class="goal-path-line"></div>
+                ${steps}
+                <div class="goal-path-avatar" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
+                <div class="goal-path-flag">🏁</div>
+            </div>
         </div>
     `;
 }
