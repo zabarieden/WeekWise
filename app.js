@@ -2825,12 +2825,12 @@ async function exportUserDataReport() {
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
     const rangeLabel = isAllTime ? '' : `<p class="sub">${escapeHtmlForReport(t('data_report_period_label'))} ${escapeHtmlForReport(formatMonthLabel(selectedMonthKey))}</p>`;
     const bodyHtml = `
-        <div class="header-banner"><h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>${rangeLabel}</div>
+        <div class="header-banner"><h1>Obeko</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>${rangeLabel}</div>
         ${sectionsHtml}
     `;
     const printWindow = window.open('', '_blank');
     if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
-    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>WeekWise - ${escapeHtmlForReport(t('data_report_title'))}</title>
+    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>Obeko - ${escapeHtmlForReport(t('data_report_title'))}</title>
 <style>
     body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; padding: 32px; color: #2b2438; background: #fff; }
     .header-banner { text-align: center; margin-bottom: 30px; }
@@ -2878,7 +2878,7 @@ function shareViaWhatsapp() {
 
 function shareViaEmail() {
     const body = pendingShareUrl ? `${pendingShareText}\n\n${pendingShareUrl}` : pendingShareText;
-    window.location.href = `mailto:?subject=${encodeURIComponent('WeekWise')}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent('Obeko')}&body=${encodeURIComponent(body)}`;
     closeModal('modal-share-picker');
 }
 

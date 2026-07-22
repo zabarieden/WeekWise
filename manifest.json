@@ -1,6 +1,6 @@
 {
-  "name": "WeekWise",
-  "short_name": "WeekWise",
+  "name": "Obeko",
+  "short_name": "Obeko",
   "description": "Weekly schedule, nutrition, expenses & income, and personal goals management",
   "start_url": "./index.html",
   "scope": "./",
@@ -15,7 +15,7 @@
   ],
   "shortcuts": [
     {
-      "name": "WeekWise",
+      "name": "Obeko",
       "short_name": "MyWeek",
       "url": "./index.html?view=schedule-section",
       "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
