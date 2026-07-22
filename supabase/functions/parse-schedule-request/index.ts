@@ -136,7 +136,10 @@ Deno.serve(async (req) => {
                             "Monday, which already passed), task_title=\"Guitar lesson\" (NOT \"next week guitar " +
                             "lesson\").\n\n" +
                             todayContext + " For ONE-TIME events only, compute the exact event_date in YYYY-MM-DD " +
-                            "format. For RECURRING events, event_date must be null.\n\nText: " + text,
+                            "format. For RECURRING events, event_date must be null. If no time was mentioned for a " +
+                            "ONE-TIME event, set time to null - never guess or default to 00:00. RECURRING events " +
+                            "almost always have a time mentioned; only set time to null there too if truly none was " +
+                            "given.\n\nText: " + text,
                     },
                 ],
                 tools: [
@@ -152,7 +155,7 @@ Deno.serve(async (req) => {
                                         type: "object",
                                         properties: {
                                             day_of_week: { type: "string", enum: DAY_NAMES },
-                                            time: { type: "string", description: "24-hour HH:MM format" },
+                                            time: { type: ["string", "null"], description: "24-hour HH:MM format, or null if no time was mentioned - never guess" },
                                             task_title: { type: "string" },
                                             recurring: { type: "boolean", description: "true = repeats every week, false = a specific one-time occurrence" },
                                             event_date: { type: ["string", "null"], description: "YYYY-MM-DD - required when recurring is false, null when recurring is true" },
