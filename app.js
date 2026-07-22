@@ -4126,6 +4126,11 @@ const FOOD_CALORIE_DB = [
     { name: "לחם", re: /לחם|bread/i, kcal100g: 265 },
     { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
     { name: "טונה", re: /טונה|tuna/i, kcal100g: 116 },
+    // מותגי יוגורט ספציפיים - חייבים לבוא *לפני* הערך הכללי "יוגורט" למטה,
+    // כי הלולאה עוצרת בהתאמה הראשונה: אם הכללי היה קודם, "יוגורט פרו" היה
+    // תמיד נתפס כיוגורט רגיל ואף פעם לא מגיע לערך הספציפי והמדויק יותר
+    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 90 },
+    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 75 },
     { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61 },
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15 },
     { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18 },
@@ -4195,6 +4200,20 @@ const FOOD_CALORIE_DB = [
     { name: "עוגיות", re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480 },
     { name: "עוגה", re: /עוגה|\bcake\b/i, kcal100g: 350 },
     { name: "קרואסון", re: /קרואסון|croissant/i, kcal100g: 406 },
+    // עוד ירקות ותוספות - לפי בקשה מפורשת
+    { name: "כרוב", re: /כרוב(?!ית)|cabbage/i, kcal100g: 25 },
+    { name: "תרד", re: /תרד|spinach/i, kcal100g: 23 },
+    { name: "סלק", re: /סלק|beet(root)?/i, kcal100g: 43 },
+    { name: "צנונית", re: /צנונית|radish/i, kcal100g: 16 },
+    { name: "פטריות", re: /פטריות|mushrooms?/i, kcal100g: 22 },
+    // "שומר" (הירק) הוא גם מילה נפוצה במשמעות "שומר/מאבטח" - אותו טריק גבול-
+    // מילה עברי כמו שום/יין/לבן/מלון למעלה, לא lookbehind (תאימות Safari)
+    { name: "שומר", re: /(^|[^א-ת])שומר(?:$|[^א-ת])|fennel/i, kcal100g: 31 },
+    { name: "ארטישוק", re: /ארטישוק|artichoke/i, kcal100g: 47 },
+    { name: "אספרגוס", re: /אספרגוס|asparagus/i, kcal100g: 20 },
+    { name: "בורגול", re: /בורגול|bulgur/i, kcal100g: 83 },
+    { name: "צ'יפס", re: /צ['׳]?יפס|fries|french fries/i, kcal100g: 312 },
+    { name: "פירה", re: /פירה|mashed potato(es)?/i, kcal100g: 105 },
 ];
 // ממירות יחידות נפח מטבחיות שכיחות (כף/כפית/כוס) לגרם משוער - כדי שאפשר
 // יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'"
@@ -4278,6 +4297,8 @@ async function saveMealRowAsPreset(button) {
 // מרשימה, מזינים כמות במספר נקי, והחישוב תמיד עובד (אין תלות בניסוח חופשי) ---
 let foodPickerTargetRow = null;
 let foodPickerSelectedItem = null;
+let foodPickerUnitMultiplier = 1;
+let foodPickerUnitLabelKey = 'food_picker_unit_grams';
 
 function openFoodPicker(button) {
     foodPickerTargetRow = button.closest('.meal-row');
@@ -4288,6 +4309,15 @@ function openFoodPicker(button) {
     renderFoodPickerList('');
     openModal('modal-food-picker');
     if (search) search.focus();
+}
+
+// גרם/כף/כפית/כוס - אותם יחסי-המרה בדיוק כמו VOLUME_UNIT_TO_GRAMS (המנתח
+// החופשי-מטקסט למעלה), רק כאן כבחירת-כפתור ולא זיהוי-מילה מהטקסט
+function selectFoodPickerUnit(btn) {
+    document.querySelectorAll('.food-picker-unit-btn').forEach(b => b.classList.toggle('active', b === btn));
+    foodPickerUnitMultiplier = parseFloat(btn.getAttribute('data-multiplier')) || 1;
+    foodPickerUnitLabelKey = btn.getAttribute('data-i18n');
+    updateFoodPickerCaloriesPreview();
 }
 
 function renderFoodPickerList(filter) {
@@ -4311,8 +4341,16 @@ function renderFoodPickerList(filter) {
 function selectFoodPickerItem(index) {
     foodPickerSelectedItem = FOOD_CALORIE_DB[index];
     if (!foodPickerSelectedItem) return;
+    const isPerUnit = foodPickerSelectedItem.kcalPerUnit != null;
     document.getElementById('food-picker-selected-name').textContent = foodPickerSelectedItem.name;
-    document.getElementById('food-picker-qty-unit-label').textContent = foodPickerSelectedItem.kcalPerUnit != null ? t('food_picker_unit_count') : t('food_picker_unit_grams');
+    // יחידת "יחידות" (ביצה וכו') לא נמדדת בגרם/כף/כפית/כוס בכלל - מסתירים
+    // את שורת בורר-היחידות ומאפסים תמיד לגרם/1 כברירת מחדל לפריט הבא
+    const unitRow = document.getElementById('food-picker-unit-row');
+    unitRow.classList.toggle('hidden', isPerUnit);
+    unitRow.querySelectorAll('.food-picker-unit-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-multiplier') === '1'));
+    foodPickerUnitMultiplier = 1;
+    foodPickerUnitLabelKey = 'food_picker_unit_grams';
+    document.getElementById('food-picker-qty-unit-label').textContent = isPerUnit ? t('food_picker_unit_count') : t('food_picker_unit_grams');
     document.getElementById('food-picker-qty-input').value = '';
     document.getElementById('food-picker-calories-preview').textContent = '';
     document.getElementById('food-picker-quantity-section').classList.remove('hidden');
@@ -4321,12 +4359,15 @@ function selectFoodPickerItem(index) {
 function computeFoodPickerCalories(qty) {
     if (!foodPickerSelectedItem || !qty) return 0;
     if (foodPickerSelectedItem.kcalPerUnit != null) return qty * foodPickerSelectedItem.kcalPerUnit;
-    return (qty / 100) * foodPickerSelectedItem.kcal100g;
+    const grams = qty * foodPickerUnitMultiplier;
+    return (grams / 100) * foodPickerSelectedItem.kcal100g;
 }
 
 function updateFoodPickerCaloriesPreview() {
     const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
     const calories = Math.round(computeFoodPickerCalories(qty));
+    const unitLabel = foodPickerSelectedItem && foodPickerSelectedItem.kcalPerUnit != null ? t('food_picker_unit_count') : t(foodPickerUnitLabelKey);
+    document.getElementById('food-picker-qty-unit-label').textContent = unitLabel;
     document.getElementById('food-picker-calories-preview').textContent = qty > 0 ? `${t('food_picker_calories_label')} ${calories}` : '';
 }
 
@@ -4335,10 +4376,11 @@ function confirmFoodPickerSelection() {
     const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
     if (qty <= 0) { showAppToast(t('food_picker_missing_qty'), 'error'); return; }
     const calories = Math.round(computeFoodPickerCalories(qty));
-    const unitSuffix = foodPickerSelectedItem.kcalPerUnit != null ? '' : t('food_picker_grams_short');
+    const isPerUnit = foodPickerSelectedItem.kcalPerUnit != null;
+    const unitLabel = isPerUnit ? '' : ` ${t(foodPickerUnitLabelKey)}`;
     const foodInput = foodPickerTargetRow.querySelector('.food-input');
     const caloriesInput = foodPickerTargetRow.querySelector('.calories-input');
-    foodInput.value = `${foodPickerSelectedItem.name} - ${qty}${unitSuffix}`;
+    foodInput.value = `${foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
     caloriesInput.value = calories;
     updateLiveCaloriesToday();
     closeModal('modal-food-picker');
