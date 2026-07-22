@@ -3026,7 +3026,8 @@ async function exportUserDataReport() {
     const includeGoals = document.getElementById('report-section-goals').checked;
     const includeFinance = document.getElementById('report-section-finance').checked;
     const includeSport = document.getElementById('report-section-sport').checked;
-    if (!includeWeight && !includeGoals && !includeFinance && !includeSport) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
+    const includeWater = document.getElementById('report-section-water').checked;
+    if (!includeWeight && !includeGoals && !includeFinance && !includeSport && !includeWater) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
 
     const isAllTime = document.getElementById('report-all-time').checked;
     let selectedMonthKey = null, rangeStart = null, rangeEndExclusive = null;
@@ -3045,18 +3046,21 @@ async function exportUserDataReport() {
     let goalsQuery = includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : null;
     let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
     let sportQuery = includeSport ? supabaseClient.from('sport_sessions').select('*').eq('user_id', currentUserId).order('session_date', { ascending: false }) : null;
+    let waterQuery = includeWater ? supabaseClient.from('water_logs').select('*').eq('user_id', currentUserId).order('log_date', { ascending: false }) : null;
     if (!isAllTime) {
         if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
         if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
         if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
         if (sportQuery) sportQuery = sportQuery.gte('session_date', rangeStart).lt('session_date', rangeEndExclusive);
+        if (waterQuery) waterQuery = waterQuery.gte('log_date', rangeStart).lt('log_date', rangeEndExclusive);
     }
 
-    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }] = await Promise.all([
+    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }, { data: waterRows }] = await Promise.all([
         weightQuery || Promise.resolve({ data: null }),
         goalsQuery || Promise.resolve({ data: null }),
         financeQuery || Promise.resolve({ data: null }),
         sportQuery || Promise.resolve({ data: null }),
+        waterQuery || Promise.resolve({ data: null }),
     ]);
 
     let sectionsHtml = '';
@@ -3093,6 +3097,17 @@ async function exportUserDataReport() {
             }).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_sport'))}</h2>${sportHtml}`;
+    }
+    if (includeWater) {
+        // מקבצים לפי תאריך (סה"כ מ"ל ליום) - הדוח מיועד לסקירה יומית, לא לוג
+        // גולמי של כל כוס בנפרד לאורך היום
+        const byDate = {};
+        (waterRows || []).forEach(row => { byDate[row.log_date] = (byDate[row.log_date] || 0) + (row.amount_ml || 0); });
+        const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+        const waterHtml = dates.length
+            ? dates.map(date => `<div class="entry"><span class="entry-main">${new Date(date).toLocaleDateString()}</span><span class="entry-value">${byDate[date].toLocaleString()} ${escapeHtmlForReport(t('water_ml_unit'))}</span></div>`).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('water_title'))}</h2>${waterHtml}`;
     }
 
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
@@ -5651,6 +5666,29 @@ async function deleteWaterLog(id) {
     loadWaterData();
 }
 
+function toggleWaterHistory() {
+    const list = document.getElementById('water-history-list');
+    const chevron = document.getElementById('water-history-chevron');
+    if (!list) return;
+    const isHidden = list.classList.toggle('hidden');
+    if (chevron) chevron.textContent = isHidden ? '▶' : '▼';
+}
+
+// קונפטי חד-פעמי ביום שמגיעים ליעד - מסומן ב-localStorage (לא DB, זו רק
+// אינדיקציה UI חולפת) כדי שלא יופיע שוב ושוב בכל הוספה נוספת של מים אחרי
+// שכבר חצו את היעד היום
+function celebrateWaterGoalIfNeeded(todayTotal, goal, today) {
+    if (goal <= 0 || todayTotal < goal) return;
+    const key = `weekwise_water_celebrated_${today}`;
+    if (localStorage.getItem(key) === 'true') return;
+    localStorage.setItem(key, 'true');
+    const container = document.getElementById('water-confetti-container');
+    if (!container) return;
+    container.classList.remove('hidden');
+    setTimeout(() => container.classList.add('hidden'), 2500);
+    showAppToast(t('water_goal_reached'));
+}
+
 async function loadWaterData() {
     if (!supabaseClient || !currentUserId) return;
     const goal = getWaterDailyGoal();
@@ -5673,6 +5711,8 @@ async function loadWaterData() {
     if (todayEl) todayEl.textContent = todayTotal.toLocaleString();
     const weeklyEl = document.getElementById('water-weekly-total');
     if (weeklyEl) weeklyEl.textContent = weeklyTotal.toLocaleString();
+    const badgeEl = document.getElementById('water-fab-badge');
+    if (badgeEl) badgeEl.textContent = todayTotal.toLocaleString();
 
     const fill = document.getElementById('water-goal-progress-fill');
     if (fill) fill.style.width = `${goal > 0 ? Math.min(100, Math.round((todayTotal / goal) * 100)) : 0}%`;
@@ -5696,6 +5736,8 @@ async function loadWaterData() {
             });
         }
     }
+
+    celebrateWaterGoalIfNeeded(todayTotal, goal, today);
 }
 
 // --- "AI" חוקי-דטרמיניסטי: מוסיף טקסט חופשי כפתק חדש בלשונית הפתקים בלבד ---

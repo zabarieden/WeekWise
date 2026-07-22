@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=121">
+    <link rel="stylesheet" href="theme.css?v=122">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -350,7 +350,7 @@
                     <div class="subview-panel" data-subview="water">
                     <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <!-- מעקב מים -->
-                    <div class="card expanded">
+                    <div class="card expanded" id="water-tracking-card" style="position: relative; overflow: hidden;">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="water_title">Water Tracking</h2>
                             <span class="card-toggle-icon">▼</span>
@@ -373,8 +373,20 @@
                                 <input type="number" id="water-daily-goal-input" onchange="saveWaterDailyGoal()">
                                 <div class="progress-bar-bg" style="margin-top: 8px;"><div class="progress-bar-fill" id="water-goal-progress-fill" style="width:0%;"></div></div>
                             </div>
-                            <h3 class="preset-manage-title" data-i18n="water_history_title">Today's Log</h3>
+                            <div class="preset-category-header" onclick="toggleWaterHistory()">
+                                <span class="preset-category-label" data-i18n="water_history_title">Today's Log</span>
+                                <span class="preset-category-chevron" id="water-history-chevron">▼</span>
+                            </div>
                             <ul id="water-history-list" class="center-list"></ul>
+                            <!-- קונפטי שמופעל כשמגיעים ליעד היומי - אותה טכניקה בדיוק כמו
+                                 חגיגת היעד החודשי (modal-goal-celebration), רק בלי המודל -
+                                 מוצג ישירות בתוך הכרטיס עצמו, פעם אחת ביום -->
+                            <div class="confetti-container hidden" id="water-confetti-container">
+                                <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                                <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                                <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                                <span class="confetti-piece"></span><span class="confetti-piece"></span><span class="confetti-piece"></span>
+                            </div>
                         </div>
                     </div>
                     </div>
@@ -671,8 +683,11 @@
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
 
-            <!-- כפתור צף (FAB) להוספה מהירה של כוס מים - אפשר לכבות מההגדרות -->
-            <button type="button" class="water-fab hidden" id="btn-water-fab" onclick="addWaterLog(200)" data-i18n-title="water_quick_add_title" title="Add a cup of water">💧</button>
+            <!-- כפתור צף (FAB) להוספה מהירה של כוס מים - אפשר לכבות מההגדרות.
+                 התג הקטן מציג את סך המ״ל שנשתו היום, מתעדכן בכל הוספה/מחיקה -->
+            <button type="button" class="water-fab hidden" id="btn-water-fab" onclick="addWaterLog(200)" data-i18n-title="water_quick_add_title" title="Add a cup of water">
+                💧<span class="water-fab-badge" id="water-fab-badge">0</span>
+            </button>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
@@ -1095,6 +1110,10 @@
                     <span data-i18n="nav_sport">Sport</span>
                     <label class="switch"><input type="checkbox" id="report-section-sport" checked><span class="switch-slider"></span></label>
                 </label>
+                <label class="settings-toggle-row">
+                    <span data-i18n="water_title">Water Tracking</span>
+                    <label class="switch"><input type="checkbox" id="report-section-water" checked><span class="switch-slider"></span></label>
+                </label>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button class="btn-primary" onclick="exportUserDataReport()" data-i18n="report_picker_generate_btn">Generate Report</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-report-section-picker')" data-i18n="cancel_btn">Cancel</button>
@@ -1487,7 +1506,7 @@
 
     </div>
 
-    <script src="i18n.js?v=74"></script>
-    <script src="app.js?v=130"></script>
+    <script src="i18n.js?v=75"></script>
+    <script src="app.js?v=131"></script>
 </body>
 </html>
