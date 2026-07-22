@@ -1209,7 +1209,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        זה מה שבאמת תיקן את הבעיה של הכפתור הצף שהציץ מעל תצוגת המתכון */
     position: absolute;
     inset: 0;
-    background-color: var(--bg-main);
+    /* background (לא background-color)! חלק מהערכות הפרימיום מגדירות
+       --bg-main כגרדיאנט (ר' ההערה על .phone-wrapper למעלה) - background-color
+       מתעלם בשקט מערך גרדיאנט ומשאיר את הרקע שקוף, בדיוק מה שגרם לרשימת
+       המתכונים "לבצבץ" מתחת לתצוגה למרות המיקום/z-index התקינים */
+    background: var(--bg-main);
     z-index: 100000;
     flex-direction: column;
     overflow: hidden;
