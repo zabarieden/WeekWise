@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="WeekWise">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=104">
+    <link rel="stylesheet" href="theme.css?v=105">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -571,6 +571,7 @@
 
             <div id="hamburger-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeHamburgerMenu()">
                 <nav class="hamburger-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
                     <div class="hamburger-drawer-header">
                         <h3 data-i18n="hamburger_menu_title">Menu</h3>
                         <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
@@ -632,6 +633,7 @@
                         <span class="hamburger-drawer-item-icon">⚙️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="settings_title">Settings</span>
                     </button>
+                </div>
                 </nav>
             </div>
 
