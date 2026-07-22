@@ -603,7 +603,7 @@ function renderHomeGreeting() {
 }
 
 function initCubesNavigation() {
-    const cubes = document.querySelectorAll('.nav-cube');
+    const cubes = document.querySelectorAll('.bottom-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     cubes.forEach(cube => cube.addEventListener('click', () => {
         cubes.forEach(c => c.classList.remove('active')); cube.classList.add('active');
@@ -631,7 +631,7 @@ function initCubesNavigation() {
 // חוזרים למסך הבית הטהור: כל המסכים הפנימיים נסגרים, קובייה אף אחת לא מסומנת
 // כפעילה, ומסך הבית (רשת הקוביות) חוזר להיות היחיד המוצג
 function goHome() {
-    const cubes = document.querySelectorAll('.nav-cube');
+    const cubes = document.querySelectorAll('.bottom-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     cubes.forEach(c => c.classList.remove('active'));
     tabContents.forEach(content => { content.classList.remove('active-tab'); closeSubView(content.id); });
@@ -640,7 +640,7 @@ function goHome() {
 }
 
 function switchToTab(targetId) {
-    const cube = document.querySelector(`.nav-cube[data-target="${targetId}"]`);
+    const cube = document.querySelector(`.bottom-tab[data-target="${targetId}"]`);
     if (cube) cube.click();
 }
 
@@ -683,8 +683,8 @@ function closeHamburgerMenu() {
     if (wrapper) wrapper.classList.remove('menu-open');
 }
 
-// switchToTab מפעיל קליק אמיתי על ה-nav-cube, שמריץ סינכרונית את כל טיפול
-// ה-click הרגיל (כולל closeSubView על כל המסכים) - אז openSubTile מיד אחריו
+// switchToTab מפעיל קליק אמיתי על כפתור ה-bottom-tab, שמריץ סינכרונית את כל
+// טיפול ה-click הרגיל (כולל closeSubView על כל המסכים) - אז openSubTile מיד אחריו
 // כבר פועל על המצב הנקי והנכון, בלי תלות בשום דבר אסינכרוני
 function navigateFromMenu(sectionId, subviewId) {
     closeHamburgerMenu();

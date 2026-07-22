@@ -513,22 +513,29 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     box-shadow: 0 0 18px var(--tile-glow-1, rgba(168, 85, 247, 0.5)), 0 0 26px var(--tile-glow-2, rgba(168, 85, 247, 0.2)), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 /* ערכת נושא ניאון ייחודית לכל "עולם" ראשי - כל תת-הקוביות והקטגוריות שבתוכו
-   (כולל קטגוריות מתכונים, המקוננות בתוך תזונה) יורשות את אותם משתני צבע,
-   כך שכל עולם נראה מאוחד: לו"ז = זהב, פתקים ומטרות = ורוד/סגול, תזונה = ירוק/ציאן */
-.nav-cube[data-target="schedule-section"], #schedule-section {
+   (כולל קטגוריות מתכונים, המקוננות בתוך תזונה) יורשות את אותם משתני צבע, כך
+   שכל עולם נראה מאוחד: לו"ז = זהב, פתקים ומטרות = ורוד, כספים = סגול,
+   תזונה = טורקיז רך (לא ירוק חזק כמו קודם - לפי בקשה מפורשת, כדי שיתאים
+   לגוונים השכנים בסרגל התחתון) */
+#schedule-section {
     --tile-accent: var(--accent-gold);
     --tile-glow-1: rgba(245, 158, 11, 0.5);
     --tile-glow-2: rgba(255, 193, 7, 0.22);
 }
-.nav-cube[data-target="my-center-section"], #my-center-section {
+#my-center-section {
     --tile-accent: var(--accent-pink);
     --tile-glow-1: rgba(255, 0, 127, 0.5);
     --tile-glow-2: rgba(168, 85, 247, 0.3);
 }
-.nav-cube[data-target="nutrition-section"], #nutrition-section {
-    --tile-accent: var(--accent-green);
-    --tile-glow-1: rgba(0, 230, 118, 0.5);
-    --tile-glow-2: rgba(0, 212, 255, 0.3);
+#finance-section {
+    --tile-accent: var(--accent-purple);
+    --tile-glow-1: rgba(168, 85, 247, 0.5);
+    --tile-glow-2: rgba(255, 0, 127, 0.22);
+}
+#nutrition-section {
+    --tile-accent: #2dd4bf;
+    --tile-glow-1: rgba(45, 212, 191, 0.45);
+    --tile-glow-2: rgba(0, 212, 255, 0.22);
 }
 .nav-cube.active .cube-icon { box-shadow: 0 0 22px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15); }
 /* קוביות מסך הבית מעט גדולות ובולטות יותר מתת-הקוביות הפנימיות, כדי להיראות
@@ -575,11 +582,10 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     min-width: 0;
     position: relative;
     z-index: 10;
-    /* 80px לא הספיק לפנות מקום לכפתור ה-fixed הימני-תחתון (25px + 52px גובה
-       + safe-area-inset-bottom שנוסף בסבב הקודם) - זה בדיוק מה שגרם לשורה
-       האחרונה ב"מבט ליומן" להיראות "בולעת" את הכפתור הצף בצילום המסך. עכשיו
-       יש רווח נדיב שמכסה גם את בועת ה-AI Brain (עד bottom:90px+52px=142px) */
-    padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+    /* 150px -> 215px: ה-.ai-fab עלה מ-bottom:25px ל-88px כדי לפנות מקום מעל
+       סרגל הטאבים התחתון החדש (.bottom-tab-bar) - הריפוד כאן גדל בהתאם כדי
+       שהשורה האחרונה בכל רשימה עדיין לא תיבלע מתחת לכפתור הצף/לסרגל */
+    padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
     max-width: 100%;
@@ -647,6 +653,56 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .days-scroll-container::-webkit-scrollbar { display: none; }
 
 
+/* סרגל טאבים תחתון קבוע - הניווט הראשי בין 4 האזורים (מחליף את רשת הריבועים
+   העגולה של מסך הבית). position:absolute יחסית ל-.phone-wrapper, אותה סיבה
+   בדיוק כמו שאר האלמנטים הצפים באפליקציה - נשאר צמוד לכרטיס גם בדסקטופ רחב.
+   כל טאב מקבל את צבע ה"עולם" שלו (ר' --tile-accent למעלה) רק כשהוא פעיל */
+.bottom-tab-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: stretch;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px;
+    box-sizing: border-box;
+    z-index: 3000;
+}
+.bottom-tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    padding: 6px 2px;
+    margin: 0;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: inherit;
+    transition: var(--transition);
+}
+.bottom-tab-icon { font-size: 1.4rem; line-height: 1; opacity: 0.65; filter: grayscale(0.5); transition: var(--transition); }
+.bottom-tab-label { font-size: 0.62rem; font-weight: 700; }
+.bottom-tab.active .bottom-tab-icon { opacity: 1; filter: none; transform: translateY(-2px); }
+.bottom-tab[data-target="schedule-section"].active { color: var(--accent-gold); }
+.bottom-tab[data-target="schedule-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7)) translateY(-2px); }
+.bottom-tab[data-target="my-center-section"].active { color: var(--accent-pink); }
+.bottom-tab[data-target="my-center-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.7)) translateY(-2px); }
+.bottom-tab[data-target="finance-section"].active { color: var(--accent-purple); }
+.bottom-tab[data-target="finance-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7)) translateY(-2px); }
+.bottom-tab[data-target="nutrition-section"].active { color: #2dd4bf; }
+.bottom-tab[data-target="nutrition-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.7)) translateY(-2px); }
+.phone-wrapper.menu-open .bottom-tab-bar { opacity: 0; pointer-events: none; }
+
 /* כפתור "פתק מהיר" (📝) ננעל בפינה הימנית-תחתונה של הכרטיס (.phone-wrapper),
    לא של הדפדפן - זה ההבדל הקריטי: בדסקטופ/טאבלט רחבים, .phone-wrapper
    ממורכז עם שוליים ריקים בשני הצדדים (ר' ה-@media למטה בקובץ), אז
@@ -654,11 +710,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    הנראה לגמרי - בפועל מוצג, אבל "אבוד" בשוליים השחורים הריקים, מה שנראה
    בדיוק כמו "נעלם" למשתמש שמסתכל על הכרטיס. position:absolute יחסית ל-
    .phone-wrapper פותר את זה ועקבי עם שאר הכפתורים הצפים (ai-brain-fab,
-   settings-fab). עדיין env(safe-area-inset-bottom) לפיצוי על home indicator/
+   hamburger-fab). עדיין env(safe-area-inset-bottom) לפיצוי על home indicator/
    פס מחוות במובייל אמיתי, ו-!important לפי בקשה מפורשת שלא יידרס בטעות */
 .ai-fab {
     position: absolute !important;
-    bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
+    /* 25px -> 88px: מפנה מקום מעל סרגל הטאבים התחתון החדש (.bottom-tab-bar),
+       שלא היה קיים כשהערך המקורי נקבע */
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     right: 25px !important;
     z-index: 99999 !important;
     display: flex !important;
@@ -731,9 +789,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     94%, 96% { opacity: 0.35; transform: scaleY(0.5); }
 }
 
-.settings-fab { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 42px; height: 42px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); z-index: 3500; padding: 0; transition: var(--transition); }
-.settings-fab:active { transform: translateX(-50%) scale(0.9); }
-
 /* תפריט המבורגר: כפתור קבוע בפינה הימנית-עליונה (מול עוזר ה-AI בשמאל),
    שפותח מגירה שקופצת מהצד עם קיצורי-דרך מסודרים בקטגוריות - לא מחליף את
    רשת הריבועים, רק נוסף לצידה. position:absolute יחסית ל-.phone-wrapper,
@@ -778,7 +833,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    על מסכים צרים (מובייל) */
 .phone-wrapper.menu-open .ai-fab,
 .phone-wrapper.menu-open .ai-brain-fab,
-.phone-wrapper.menu-open .settings-fab,
 .phone-wrapper.menu-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;

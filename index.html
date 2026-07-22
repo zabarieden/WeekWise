@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="WeekWise">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=98">
+    <link rel="stylesheet" href="theme.css?v=99">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -77,25 +77,31 @@
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
                 </div>
-                <div class="dashboard-grid">
-                    <div class="nav-cube" data-target="schedule-section">
-                        <span class="cube-icon">🗓️</span>
-                        <span class="cube-title" data-i18n="nav_myweek">MyWeek</span>
-                    </div>
-                    <div class="nav-cube" data-target="my-center-section">
-                        <span class="cube-icon">📝</span>
-                        <span class="cube-title" data-i18n="nav_notes">Notes</span>
-                    </div>
-                    <div class="nav-cube" data-target="nutrition-section">
-                        <span class="cube-icon">🍎</span>
-                        <span class="cube-title" data-i18n="nav_nutrition">Nutrition & Metrics</span>
-                    </div>
-                    <div class="nav-cube" data-target="finance-section">
-                        <span class="cube-icon">💰</span>
-                        <span class="cube-title" data-i18n="nav_finance">Expenses & Income</span>
-                    </div>
-                </div>
+                <!-- מסך הבית ריק בכוונה כרגע - הניווט הראשי עבר לסרגל התחתון
+                     הקבוע (.bottom-tab-bar). עוד לא הוחלט מה יופיע כאן -->
             </div>
+
+            <!-- סרגל טאבים תחתון קבוע: הניווט הראשי בין 4 האזורים, תמיד גלוי -
+                 סדר ה-DOM (לו"ז, פתקים, כספים, תזונה) מוצג RTL אוטומטית
+                 (לו"ז מימין, תזונה בסוף משמאל), בדיוק לפי הבקשה -->
+            <nav class="bottom-tab-bar" id="bottom-tab-bar">
+                <button type="button" class="bottom-tab" data-target="schedule-section" onclick="switchToTab('schedule-section')">
+                    <span class="bottom-tab-icon">📅</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_myweek">MyWeek</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="my-center-section" onclick="switchToTab('my-center-section')">
+                    <span class="bottom-tab-icon">📝</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_notes">Notes</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="finance-section" onclick="switchToTab('finance-section')">
+                    <span class="bottom-tab-icon">💰</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_finance">Finance</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="nutrition-section" onclick="switchToTab('nutrition-section')">
+                    <span class="bottom-tab-icon">📏</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_nutrition">Nutrition</span>
+                </button>
+            </nav>
 
             <div class="main-scroll-area">
 
@@ -542,9 +548,6 @@
                     <rect class="ai-robot-eye" x="26.5" y="21" width="7.5" height="4" rx="2"></rect>
                 </svg>
             </button>
-
-            <!-- כפתור הגדרות קבוע, נשאר בכל המסכים -->
-            <button type="button" class="settings-fab" id="btn-settings-fab" onclick="openModal('modal-settings-drawer')" data-i18n-title="settings_title" title="Settings">⚙️</button>
 
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
@@ -1228,7 +1231,7 @@
 
     </div>
 
-    <script src="i18n.js?v=51"></script>
-    <script src="app.js?v=93"></script>
+    <script src="i18n.js?v=52"></script>
+    <script src="app.js?v=94"></script>
 </body>
 </html>
