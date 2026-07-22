@@ -60,7 +60,7 @@ supabase secrets set ANTHROPIC_API_KEY=<your-api-key-here>
 
 Optional - only if you want to pin a different model than the default:
 ```bash
-supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+supabase secrets set ANTHROPIC_MODEL=claude-sonnet-5
 ```
 Check https://docs.anthropic.com/en/docs/about-claude/models for the current
 recommended vision-capable model name before deploying - model names/versions do

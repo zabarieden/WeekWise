@@ -23,7 +23,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // כדאי לבדוק שהמודל הזה עדיין נתמך/מומלץ לפני הפריסה:
 // https://docs.anthropic.com/en/docs/about-claude/models
-const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
+const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT = 200;
 
