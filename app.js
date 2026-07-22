@@ -3313,12 +3313,24 @@ function applyWaterFabSetting(enabled) {
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('water-fab-toggle');
     if (toggle) toggle.checked = enabled;
+    // כפתור מקביל בתוך מסך מעקב המים עצמו (לא רק בהגדרות) - נוח יותר לגלות
+    // ולהפעיל/לכבות בלי לצאת מהמסך, לפי בקשה מפורשת. שני הכפתורים תמיד
+    // מסונכרנים - שינוי באחד מעדכן את השני (דרך applyWaterFabSetting המשותפת)
+    const shortcutBtn = document.getElementById('btn-water-fab-shortcut');
+    if (shortcutBtn) shortcutBtn.textContent = enabled ? t('water_fab_shortcut_remove_btn') : t('water_fab_shortcut_add_btn');
 }
 
 function toggleWaterFab() {
     const enabled = document.getElementById('water-fab-toggle').checked;
     localStorage.setItem('weekwise_water_fab', enabled ? 'true' : 'false');
     applyWaterFabSetting(enabled);
+}
+
+function toggleWaterFabFromCard() {
+    const enabled = !isWaterFabOn();
+    localStorage.setItem('weekwise_water_fab', enabled ? 'true' : 'false');
+    applyWaterFabSetting(enabled);
+    showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
