@@ -670,6 +670,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px;
     box-sizing: border-box;
     z-index: 3000;
