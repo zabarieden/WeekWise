@@ -3917,11 +3917,16 @@ async function runRecipeImageScan(file) {
         }
 
         if (recipe) {
-            document.getElementById('recipe-title-input').value = recipe.title || '';
+            // סינון-רעש הגנתי גם על תוצאת ה-AI (לא רק על ה-OCR המקומי): גם
+            // כשה-AI מתבקש במפורש להתעלם מכרום הצ'אט (שעון/תאריך/שם שולח),
+            // הוא לפעמים עדיין מדליף שאריות כאלה לתוך אחד השדות - אותו ניקוי
+            // בדיוק כמו ב-parseRecipeText מתמודד עם זה כרשת ביטחון נוספת
+            const cleanTitle = sanitizeOcrText(recipe.title || '');
+            document.getElementById('recipe-title-input').value = cleanTitle;
             if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
             document.getElementById('recipe-calories-input').value = recipe.calories || '';
-            document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
-            document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
+            document.getElementById('recipe-ingredients-input').value = sanitizeOcrText(recipe.ingredients || '');
+            document.getElementById('recipe-instructions-input').value = sanitizeOcrText(recipe.instructions || '');
             setRecipeCaloriesEstimateHint(false);
             document.getElementById('recipe-ai-raw-input').value = '';
             showAppToast(t('recipe_scan_success'));
