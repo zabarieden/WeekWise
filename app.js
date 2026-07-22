@@ -1199,9 +1199,38 @@ function parseScheduleTextLocally(text) {
     return events;
 }
 
+// אירועים חד-פעמיים (recurring===false, עם event_date מחושב) לא שייכים בכלל
+// ללוח השבועי החוזר - הם משהו שקורה פעם אחת בתאריך ספציפי, אז נכנסים
+// ל-calendar_events (אותה טבלה בדיוק כמו "מבט ליומן") ולא ל-weekly_schedule.
+// זה בדיוק ההבדל בין "שיעור גיטרה בימי שני" (חוזר) ל"שבוע הבא ביום שני
+// שיעור גיטרה" (פעם אחת, תאריך ספציפי) - שתי הבקשות נשמעות דומות אבל
+// אמורות לנחות במקומות שונים לגמרי באפליקציה
+async function applyOneTimeScheduleEvents(events) {
+    if (!supabaseClient || !currentUserId) return;
+    const rows = events.filter(ev => ev.event_date).map(ev => ({
+        username: currentUsername, user_id: currentUserId,
+        event_title: ev.time ? `${ev.time} ${ev.task_title}` : ev.task_title,
+        event_date: ev.event_date,
+        source: 'calendar',
+    }));
+    if (!rows.length) return;
+    await supabaseClient.from('calendar_events').insert(rows);
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+    loadTodayTasks();
+}
+
 // מקבצת את האירועים (מה-AI האמיתי או מהמנתח המקומי - אותה צורה בדיוק) לפי
-// יום, כדי להקצות משבצת פנויה (או שורה חדשה) לכל אחד בלי שיתנגשו על אותה משבצת
-async function applyParsedScheduleEvents(events) {
+// יום, כדי להקצות משבצת פנויה (או שורה חדשה) לכל אחד בלי שיתנגשו על אותה משבצת.
+// recurring==false מנותב ל-applyOneTimeScheduleEvents במקום ללוח השבועי -
+// המנתח המקומי (parseScheduleTextLocally) לא מציב בכלל recurring, ולכן
+// ברירת המחדל (!== false) שומרת על ההתנהגות הישנה שם ללא שינוי
+async function applyParsedScheduleEvents(allEvents) {
+    const oneTimeEvents = allEvents.filter(ev => ev.recurring === false);
+    if (oneTimeEvents.length) await applyOneTimeScheduleEvents(oneTimeEvents);
+    const events = allEvents.filter(ev => ev.recurring !== false);
+    if (!events.length) return;
+
     const byDay = {};
     events.forEach(ev => {
         if (!dbDaysMap.includes(ev.day_of_week)) return;
@@ -1267,7 +1296,7 @@ async function parseScheduleWithAI() {
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify({ text, today: getLocalDateString() })
                 });
                 const result = await res.json();
                 if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }

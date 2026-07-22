@@ -88,7 +88,13 @@ Deno.serve(async (req) => {
 
         const body = await req.json();
         const text: string = body?.text;
+        const today: string | undefined = body?.today;
         if (!text || !text.trim()) return jsonResponse({ error: "missing_text" }, 400);
+
+        // הקשר של "היום" נדרש כדי שה-AI יוכל לחשב תאריך מדויק לאירועים חד-
+        // פעמיים ("שבוע הבא ביום שני" הוא תאריך אחר לגמרי תלוי מתי זה נשלח) -
+        // בלעדיו אין דרך אמינה לחשב "שבוע הבא" בלי לנחש
+        const todayContext = today ? `Today's date is ${today}.` : "";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -104,18 +110,27 @@ Deno.serve(async (req) => {
                     {
                         role: "user",
                         content:
-                            "The user described their recurring weekly plans below, in any language. Extract every " +
-                            "distinct recurring event (one entry per day+activity combination - if an activity " +
-                            "happens on multiple days, create a separate entry for each day). Use 24-hour HH:MM time " +
-                            "format. Day names must be in English exactly as Sunday, Monday, Tuesday, Wednesday, " +
-                            "Thursday, Friday, or Saturday. Keep task titles short and in the same language the user " +
-                            "wrote in. Do not invent events that weren't mentioned.\n\nText: " + text,
+                            "The user described upcoming plans below, in any language. Extract every distinct event " +
+                            "(one entry per day+activity combination - if an activity happens on multiple days, " +
+                            "create a separate entry for each day). Use 24-hour HH:MM time format. Day names must be " +
+                            "in English exactly as Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, or Saturday. " +
+                            "Keep task titles short and in the same language the user wrote in. Do not invent events " +
+                            "that weren't mentioned.\n\n" +
+                            "For EACH event, decide whether it is RECURRING (an ongoing weekly commitment - e.g. " +
+                            "\"on Mondays\", \"every Tuesday\", \"I go to the gym on Sundays\", no specific single " +
+                            "date implied) or a ONE-TIME occurrence (a specific single date is implied - e.g. \"next " +
+                            "week\", \"next Monday\", \"tomorrow\", \"this Friday\", an explicit date). Set " +
+                            "`recurring` accordingly. " + todayContext + " For ONE-TIME events only, compute the " +
+                            "exact calendar date it falls on and set `event_date` in YYYY-MM-DD format (use the day " +
+                            "name + today's date to work out the correct date - e.g. \"next week Monday\" means the " +
+                            "Monday of the week AFTER the current week, not this week even if today is before " +
+                            "Monday). For RECURRING events, event_date must be null.\n\nText: " + text,
                     },
                 ],
                 tools: [
                     {
                         name: "extract_schedule_events",
-                        description: "Extract recurring weekly schedule events from natural language.",
+                        description: "Extract schedule events (recurring or one-time) from natural language.",
                         input_schema: {
                             type: "object",
                             properties: {
@@ -127,8 +142,10 @@ Deno.serve(async (req) => {
                                             day_of_week: { type: "string", enum: DAY_NAMES },
                                             time: { type: "string", description: "24-hour HH:MM format" },
                                             task_title: { type: "string" },
+                                            recurring: { type: "boolean", description: "true = repeats every week, false = a specific one-time occurrence" },
+                                            event_date: { type: ["string", "null"], description: "YYYY-MM-DD - required when recurring is false, null when recurring is true" },
                                         },
-                                        required: ["day_of_week", "time", "task_title"],
+                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date"],
                                     },
                                 },
                             },
