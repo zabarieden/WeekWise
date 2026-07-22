@@ -2460,10 +2460,12 @@ function openAddRecipeForm() {
     document.getElementById('recipe-title-input').value = '';
     document.getElementById('recipe-category-input').value = currentRecipeCategory || '';
     document.getElementById('recipe-calories-input').value = '';
+    document.getElementById('recipe-servings-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
     document.getElementById('recipe-instructions-input').value = '';
     setRecipeImagePreview('');
     setRecipeCaloriesEstimateHint(false);
+    updateRecipeCaloriesPerServingHint();
     openModal('modal-add-recipe');
 }
 
@@ -2476,10 +2478,12 @@ function openEditRecipeForm() {
     document.getElementById('recipe-title-input').value = recipe.title || '';
     document.getElementById('recipe-category-input').value = recipe.category || '';
     document.getElementById('recipe-calories-input').value = recipe.calories || '';
+    document.getElementById('recipe-servings-input').value = recipe.servings || '';
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
     document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
     setRecipeImagePreview(recipe.image_url || '');
     setRecipeCaloriesEstimateHint(false);
+    updateRecipeCaloriesPerServingHint();
     openModal('modal-add-recipe');
 }
 
@@ -2495,6 +2499,7 @@ async function saveRecipe() {
     const title = document.getElementById('recipe-title-input').value.trim();
     const category = document.getElementById('recipe-category-input').value;
     const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
+    const servings = parseInt(document.getElementById('recipe-servings-input').value) || null;
     const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
     const instructions = document.getElementById('recipe-instructions-input').value.trim();
     const imageUrl = document.getElementById('recipe-image-url-input').value.trim();
@@ -2502,7 +2507,7 @@ async function saveRecipe() {
     if (!category) { showAppToast(t('recipe_category_required'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-    const payload = { title, category, calories, ingredients, instructions };
+    const payload = { title, category, calories, servings, ingredients, instructions };
     const payloadWithImage = imageUrl ? { ...payload, image_url: imageUrl } : payload;
     let error;
     if (editingRecipeId) {
@@ -2574,7 +2579,35 @@ function openRecipeDetail(id) {
         instructionsEl.appendChild(p);
     }
 
+    // שורת סיכום קלוריות-למנה בסוף ההוראות (רק כשיש גם סך-קלוריות וגם מספר
+    // מנות) - מחושבת חיה מהשדות ולא "אפויה" לתוך טקסט ההוראות עצמו, כדי
+    // שאם המשתמשת תערוך את הכמות/הקלוריות בעתיד השורה תתעדכן לבד ולא
+    // תישאר כפולה/מיושנת בטקסט הגולמי
+    if (recipe.calories && recipe.servings) {
+        const perServing = Math.round(recipe.calories / recipe.servings);
+        const p = document.createElement('p');
+        p.className = 'recipe-detail-calories-summary';
+        p.textContent = `${t('recipe_total_calories_label')} ${recipe.calories} ${t('calories_unit')} · ${perServing} ${t('recipe_calories_per_serving_unit')}`;
+        instructionsEl.appendChild(p);
+    }
+
     document.getElementById('recipe-detail-view').classList.add('open');
+}
+
+// מחשבת ומציגה חיה "X קלוריות למנה" מתחת לשדה מספר-המנות, בזמן מילוי/עריכת
+// הטופס - לפני השמירה, כדי שהמשתמשת תראה מיד את החלוקה בלי לשמור קודם
+function updateRecipeCaloriesPerServingHint() {
+    const hint = document.getElementById('recipe-calories-per-serving-hint');
+    if (!hint) return;
+    const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
+    const servings = parseInt(document.getElementById('recipe-servings-input').value) || 0;
+    if (calories > 0 && servings > 0) {
+        hint.textContent = `≈${Math.round(calories / servings)} ${t('recipe_calories_per_serving_unit')}`;
+        hint.classList.remove('hidden');
+    } else {
+        hint.textContent = '';
+        hint.classList.add('hidden');
+    }
 }
 
 function closeRecipeDetail() {

@@ -1201,10 +1201,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 .recipe-detail-view {
     display: none;
-    position: absolute;
+    /* fixed (לא absolute) + z-index מעל אפילו .ai-fab (99999 !important) -
+       תיקון לבאג שבו הכפתורים הצפים (ai-fab/ai-brain-fab/hamburger-fab)
+       ורשימת המתכונים שמאחורי התצוגה "בצבצו" מתחת/מעל תצוגת פרטי המתכון
+       במקום שהיא תכסה את כל המסך כמו שאמורה */
+    position: fixed;
     inset: 0;
     background-color: var(--bg-main);
-    z-index: 3800;
+    z-index: 100000;
     flex-direction: column;
     overflow: hidden;
 }
@@ -1247,6 +1251,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .recipe-detail-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .recipe-detail-list li { background-color: var(--bg-row); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; color: var(--text-primary); text-align: start; }
 .recipe-detail-instructions p { font-size: 0.88rem; color: var(--text-primary); line-height: 1.6; margin: 0 0 10px 0; text-align: start; }
+.recipe-detail-calories-summary { color: var(--accent-purple-light) !important; font-weight: 600; }
 
 .meals-container { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
 .meal-row { background-color: var(--bg-row); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
