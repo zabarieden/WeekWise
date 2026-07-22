@@ -86,10 +86,18 @@ Deno.serve(async (req) => {
         }
 
         const body = await req.json();
-        const { imageBase64, mediaType } = body;
+        const { imageBase64, mediaType, language } = body;
         if (!imageBase64 || !mediaType || !mediaType.startsWith("image/")) {
             return jsonResponse({ error: "missing_image" }, 400);
         }
+
+        // בניגוד לסריקת מתכון (תמלול טקסט קיים - תמיד יוצא בשפת המקור באופן
+        // טבעי), כאן אין טקסט מקור בכלל - ה-AI "ממציא" שם לכל פריט מזון
+        // שהוא מזהה בתמונה, ובלי הנחיה מפורשת נוטה לענות באנגלית תמיד, גם
+        // כשהאפליקציה כולה בעברית/ספרדית/וכו'. משם השם הנוצר תואם את שפת
+        // הממשק שהמשתמשת בחרה, לא רק את שפת התמונה עצמה
+        const LANGUAGE_NAMES: Record<string, string> = { en: "English", he: "Hebrew", es: "Spanish", fr: "French", ar: "Arabic" };
+        const languageName = LANGUAGE_NAMES[language] || "English";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -111,7 +119,9 @@ Deno.serve(async (req) => {
                                 text:
                                     "This photo shows a meal. Identify each distinct food item visible and estimate its " +
                                     "calorie count as best you can from portion size and appearance. Combine items that " +
-                                    "are clearly part of one dish into a single entry rather than over-splitting. Extract " +
+                                    "are clearly part of one dish into a single entry rather than over-splitting. Write " +
+                                    `every food_name in ${languageName}, not English (unless ${languageName} is English) - ` +
+                                    "the app's interface language is set to this, so food names must match it. Extract " +
                                     "the results with the log_meal_items tool.",
                             },
                         ],

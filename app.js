@@ -4417,7 +4417,7 @@ async function runPresetImageScan(file) {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType })
+            body: JSON.stringify({ imageBase64: base64, mediaType, language: currentLang })
         });
         const result = await res.json();
 
@@ -5294,7 +5294,7 @@ async function handleMealPhotoSelected(event) {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType })
+            body: JSON.stringify({ imageBase64: base64, mediaType, language: currentLang })
         });
         const result = await res.json();
 
