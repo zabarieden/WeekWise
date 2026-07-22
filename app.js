@@ -515,7 +515,14 @@ async function logoutUser() {
     if (supabaseClient) await supabaseClient.auth.signOut();
     location.reload();
 }
-function openModal(modalId) { document.getElementById(modalId).classList.add('open'); }
+// כל ה-.apple-modal חולקים בדיוק אותו z-index (2000) - אם שניים פתוחים בו-
+// זמנית (כמו לחיצה על "שתפי" מתוך חלון החגיגה), סדר המקור ב-DOM קובע איזה
+// מהם למעלה, ולא תמיד זה החדש. סוגרים כל מודל אחר שפתוח לפני פתיחת החדש -
+// כך תמיד יש לכל היותר .apple-modal אחד פתוח, בלי תלות בסדר יצירה
+function openModal(modalId) {
+    document.querySelectorAll('.apple-modal.open').forEach(m => { if (m.id !== modalId) m.classList.remove('open'); });
+    document.getElementById(modalId).classList.add('open');
+}
 function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
 let pendingCenterItemType = null;
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
