@@ -1278,6 +1278,28 @@ async function applyParsedScheduleEvents(allEvents) {
     }
 }
 
+// שולחת ניסיון בודד ל-parse-schedule-request ומדווחת מה קרה - מנותקת כדי
+// שאפשר יהיה לנסות שוב אוטומטית לפני נפילה למנתח המקומי (שאין לו בכלל מושג
+// של "חד-פעמי מול חוזר" - ר' applyParsedScheduleEvents). תקלת רשת חד-פעמית
+// היא הגורם השכיח ביותר לנפילה למנתח המקומי הנחות, בדיוק כמו ב-
+// attemptRecipeCloudScan/attemptMealPhotoScan
+async function attemptScheduleParse(token, text, today) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text, today })
+        });
+        const result = await res.json();
+        if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
+        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (res.ok && !result.error && result.events && result.events.length) return { status: 'ok', events: result.events };
+        return { status: 'retry' };
+    } catch {
+        return { status: 'retry' };
+    }
+}
+
 async function parseScheduleWithAI() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     const input = document.getElementById('ai-schedule-input');
@@ -1292,26 +1314,20 @@ async function parseScheduleWithAI() {
 
         let events = null;
         if (token) {
-            try {
-                const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ text, today: getLocalDateString() })
-                });
-                const result = await res.json();
-                if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
-                // מכסת ה-AI החודשית נגמרה - לא עוצרים, פשוט ממשיכים בשקט למנתח
-                // המקומי למטה (בדיוק כמו שקורה כשהענן לא זמין בכלל), רק עם
-                // הודעה מפורשת שזו הסיבה לאיכות הנמוכה יותר של התוצאה הפעם
-                if (result.error === 'limit_reached') showAppToast(t('ai_monthly_limit_reached'), 'error');
-                else if (res.ok && !result.error && result.events && result.events.length) events = result.events;
-            } catch (err) {
-                // הענן לא זמין (רשת/שרת) - ממשיכים בשקט למנתח המקומי למטה, לא מציגים שגיאה
-            }
+            const today = getLocalDateString();
+            let attempt = await attemptScheduleParse(token, text, today);
+            if (attempt.status === 'retry') attempt = await attemptScheduleParse(token, text, today);
+
+            if (attempt.status === 'premium_required') { openPremiumUpgradeModal(); return; }
+            // מכסת ה-AI החודשית נגמרה - לא עוצרים, פשוט ממשיכים בשקט למנתח
+            // המקומי למטה (בדיוק כמו שקורה כשהענן לא זמין בכלל), רק עם
+            // הודעה מפורשת שזו הסיבה לאיכות הנמוכה יותר של התוצאה הפעם
+            if (attempt.status === 'limit') showAppToast(t('ai_monthly_limit_reached'), 'error');
+            else if (attempt.status === 'ok') events = attempt.events;
         }
 
-        // אם ה-AI האמיתי בענן לא זמין/לא החזיר כלום, נופלים בעדינות למנתח
-        // המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
+        // אם ה-AI האמיתי בענן לא זמין/לא החזיר כלום גם אחרי ניסיון חוזר, נופלים
+        // בעדינות למנתח המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
         if (!events || !events.length) events = parseScheduleTextLocally(text);
 
         // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
