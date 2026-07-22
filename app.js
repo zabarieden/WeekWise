@@ -3739,13 +3739,26 @@ async function renderSportSummary() {
     document.getElementById('sport-total-minutes').textContent = totalMinutes.toLocaleString();
     document.getElementById('sport-total-km').textContent = totalKm.toLocaleString(undefined, { maximumFractionDigits: 1 });
 
-    // ימי אימון: תאריכים ייחודיים שיש בהם לפחות אימון אחד, ממוינים כרונולוגית
+    // "ימים חזקים": לא רשימת תאריכים שטוחה - ימי-השבוע (ראשון/שני/...) שבהם
+    // יש הכי הרבה אימונים החודש, כתבנית הרגל חוזרת (יכול להיות יותר מיום
+    // אחד אם כמה ימים מתחלקים ברמת השיא)
     const trainingDaysEl = document.getElementById('sport-training-days-label');
     if (trainingDaysEl) {
-        const uniqueDays = [...new Set(rows.map(row => row.session_date))].sort();
-        trainingDaysEl.textContent = uniqueDays.length
-            ? `${t('sport_training_days_label')} ${uniqueDays.map(formatSportDayLabel).join(', ')}`
-            : '';
+        if (rows.length) {
+            const countByWeekday = [0, 0, 0, 0, 0, 0, 0];
+            rows.forEach(row => {
+                const [y, m, d] = row.session_date.split('-').map(Number);
+                countByWeekday[new Date(y, m - 1, d).getDay()]++;
+            });
+            const maxCount = Math.max(...countByWeekday);
+            const strongDays = countByWeekday
+                .map((count, idx) => ({ count, idx }))
+                .filter(({ count }) => count === maxCount && maxCount > 0)
+                .map(({ idx }) => t(dayNameKeys[idx]));
+            trainingDaysEl.textContent = strongDays.length ? `${t('sport_training_days_label')} ${strongDays.join(', ')}` : '';
+        } else {
+            trainingDaysEl.textContent = '';
+        }
     }
 
     // "הכי הרבה רצתי": יום הריצה עם המרחק הגדול ביותר (נופל חזרה למשך זמן אם
