@@ -145,9 +145,9 @@ async function loadCenterItems(type) {
     data.forEach(item => {
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
-        // ידית גרירה רק לפתקים (weekly) - לא לרשימת קניות - כדי לגרור פתק אל
-        // אחד מ"אזורי הטריאז'" (היום/מחר) ולהפוך אותו למשימה מתוזמנת
-        const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
+        // ידית גרירה גם לפתקים וגם לרשימת קניות - שתיהן יכולות להיגרר לאחד
+        // מ"אזורי הטריאז'" (היום/מחר) ולהפוך לפריט מתוזמן באותו אופן
+        const dragHandle = `<span class="note-drag-handle">⠿</span>`;
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
@@ -161,24 +161,26 @@ async function loadCenterItems(type) {
         `;
         listUl.appendChild(li);
     });
-    if (type === 'weekly') initNoteTriageDragDrop();
+    initNoteTriageDragDrop(type);
 }
 
-// --- גרירת פתק אל "היום"/"מחר": הופך אותו למשימה מתוזמנת אמיתית (calendar_events),
-// אותה טבלה בדיוק שכבר מזינה את "מבט ליומן", "משימות להיום" ולוח החודש - אז
-// זה "נכנס ללו"ז החודשי" אוטומטית בלי שום קוד נוסף באותם מסכים. הפתק המקורי
-// נמחק (הוא "הפך" למשימה, לא הועתק) ---
-let noteTriageSortablesInitialized = false;
-function initNoteTriageDragDrop() {
-    if (noteTriageSortablesInitialized || typeof Sortable === 'undefined') return;
-    const list = document.getElementById('weekly-list');
-    const todayZone = document.getElementById('note-triage-today');
-    const tomorrowZone = document.getElementById('note-triage-tomorrow');
+// --- גרירת פתק/פריט רשימת-קניות אל "היום"/"מחר": הופך אותו למשימה מתוזמנת
+// אמיתית (calendar_events), אותה טבלה בדיוק שכבר מזינה את "מבט ליומן",
+// "משימות להיום" ולוח החודש - אז זה "נכנס ללו"ז החודשי" אוטומטית בלי שום
+// קוד נוסף באותם מסכים. הפריט המקורי נמחק (הוא "הפך" למשימה, לא הועתק).
+// עובד גם לפתקים (type='weekly') וגם לרשימת קניות (type='general') - כל אחד
+// עם אזורי הטריאז' והקבוצת-Sortable הנפרדים שלו, כדי שלא "יתערבבו" ---
+const noteTriageInitialized = {};
+function initNoteTriageDragDrop(type) {
+    if (noteTriageInitialized[type] || typeof Sortable === 'undefined') return;
+    const list = document.getElementById(`${type}-list`);
+    const todayZone = document.getElementById(`note-triage-today-${type}`);
+    const tomorrowZone = document.getElementById(`note-triage-tomorrow-${type}`);
     if (!list || !todayZone || !tomorrowZone) return;
-    noteTriageSortablesInitialized = true;
+    noteTriageInitialized[type] = true;
 
     new Sortable(list, {
-        group: { name: 'note-triage', pull: 'clone', put: false },
+        group: { name: `note-triage-${type}`, pull: 'clone', put: false },
         handle: '.note-drag-handle',
         animation: 150,
         forceFallback: true,
@@ -189,7 +191,7 @@ function initNoteTriageDragDrop() {
     });
     [todayZone, tomorrowZone].forEach(zone => {
         new Sortable(zone, {
-            group: { name: 'note-triage', pull: false, put: true },
+            group: { name: `note-triage-${type}`, pull: false, put: true },
             animation: 150,
             forceFallback: true,
             onAdd: function (evt) {
@@ -197,20 +199,20 @@ function initNoteTriageDragDrop() {
                 const textEl = evt.item.querySelector('.center-list-item-text');
                 const content = textEl ? textEl.textContent.trim() : '';
                 evt.item.remove();
-                handleNoteTriageDrop(itemId, zone.getAttribute('data-triage'), content);
+                handleNoteTriageDrop(itemId, zone.getAttribute('data-triage'), content, type);
             },
         });
     });
 }
 
-async function handleNoteTriageDrop(itemId, triageType, content) {
+async function handleNoteTriageDrop(itemId, triageType, content, type) {
     if (!supabaseClient || !currentUserId || !content) return;
     const targetDate = triageType === 'tomorrow' ? getLocalDateString(new Date(Date.now() + 86400000)) : getLocalDateString();
     // source: 'note_task' - לא 'calendar' (ברירת המחדל) - כדי שזה יופיע בלוח
     // החודשי וב"משימות להיום" (שם לא מסננים לפי source) אבל לא ב"מבט ליומן"
     await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: content, event_date: targetDate, source: 'note_task' });
     await supabaseClient.from('my_center_tasks').delete().eq('id', itemId);
-    loadCenterItems('weekly');
+    loadCenterItems(type);
     loadTodayTasks();
     loadMonthlyCalendarGrid();
     loadCalendarEvents();

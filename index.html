@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="WeekWise">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=102">
+    <link rel="stylesheet" href="theme.css?v=103">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -386,11 +386,11 @@
                         <div class="card-body">
                             <p class="note-triage-hint" data-i18n="note_triage_hint">Drag a note onto a day to turn it into a scheduled task:</p>
                             <div class="note-triage-zones">
-                                <div class="note-triage-zone" id="note-triage-today" data-triage="today">
+                                <div class="note-triage-zone" id="note-triage-today-weekly" data-triage="today">
                                     <span class="note-triage-icon">📅</span>
                                     <span data-i18n="note_triage_today">Do Today</span>
                                 </div>
-                                <div class="note-triage-zone" id="note-triage-tomorrow" data-triage="tomorrow">
+                                <div class="note-triage-zone" id="note-triage-tomorrow-weekly" data-triage="tomorrow">
                                     <span class="note-triage-icon">📆</span>
                                     <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
                                 </div>
@@ -429,7 +429,20 @@
                     <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                        <div class="card-body"><ul id="general-list" class="center-list"></ul></div>
+                        <div class="card-body">
+                            <p class="note-triage-hint" data-i18n="note_triage_hint">Drag an item onto a day to turn it into a scheduled task:</p>
+                            <div class="note-triage-zones">
+                                <div class="note-triage-zone" id="note-triage-today-general" data-triage="today">
+                                    <span class="note-triage-icon">📅</span>
+                                    <span data-i18n="note_triage_today">Do Today</span>
+                                </div>
+                                <div class="note-triage-zone" id="note-triage-tomorrow-general" data-triage="tomorrow">
+                                    <span class="note-triage-icon">📆</span>
+                                    <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
+                                </div>
+                            </div>
+                            <ul id="general-list" class="center-list"></ul>
+                        </div>
                     </div>
                     </div>
                 </section>
@@ -1240,6 +1253,6 @@
     </div>
 
     <script src="i18n.js?v=52"></script>
-    <script src="app.js?v=95"></script>
+    <script src="app.js?v=96"></script>
 </body>
 </html>

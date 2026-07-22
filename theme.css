@@ -1244,11 +1244,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .note-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
 .note-drag-handle:active { cursor: grabbing; }
 .note-triage-hint { font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px 0; text-align: center; }
-.note-triage-zones { display: flex; gap: 8px; margin-bottom: 12px; }
+.note-triage-zones { display: flex; gap: 10px; margin-bottom: 12px; }
+/* כרטיס-זכוכית זוהר, לא מסגרת מקווקוות - אותה שפה חזותית כמו שאר האפליקציה
+   (stat-box/calendar-event-date-badge וכו') כדי שלא ירגיש כמו "אזור טכני" נפרד */
 .note-triage-zone {
     flex: 1 1 0;
-    border: 2px dashed rgba(168, 85, 247, 0.3);
-    border-radius: 12px;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 0, 127, 0.22);
+    border-radius: 14px;
     padding: 12px 6px;
     text-align: center;
     font-size: 0.75rem;
@@ -1257,14 +1262,31 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     transition: var(--transition);
     min-height: 30px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.06);
 }
-.note-triage-icon { font-size: 1.3rem; }
+.note-triage-icon {
+    font-size: 1.4rem;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, rgba(255, 0, 127, 0.28), rgba(168, 85, 247, 0.12));
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
 /* SortableJS מוסיף .sortable-ghost על הפריט המדומה בזמן גרירה מעל היעד -
-   מדגישים את האזור עצמו כשמרחפים מעליו עם פריט נגרר */
-.note-triage-zone:has(.sortable-ghost) { border-style: solid; border-color: var(--accent-purple); background-color: rgba(168, 85, 247, 0.08); color: var(--accent-purple-light); }
+   מדגישים את האזור עצמו כשמרחפים מעליו עם פריט נגרר, כולל הגדלה קלה */
+.note-triage-zone:has(.sortable-ghost) {
+    border-color: var(--accent-pink);
+    background-color: rgba(255, 0, 127, 0.1);
+    color: var(--accent-pink);
+    box-shadow: 0 0 20px rgba(255, 0, 127, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+    transform: scale(1.04);
+}
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
 .btn-delete-item:hover { color: var(--accent-red); transform: scale(1.1); }
 /* קופסת סימון: var(--accent-purple) ולא צבע קבוע, כדי שתעקוב אוטומטית אחרי
