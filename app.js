@@ -3482,7 +3482,11 @@ function goalProgressPercent(goal, currentValue) {
 // גסות) - inset-inline-start/margin-inline-start (לא left/transform) כדי
 // שהמסלול יתהפך נכון אוטומטית בעברית (RTL) לעומת אנגלית (LTR)
 const GOAL_PATH_STEP_COUNT = 4;
-function buildGoalPathHtml(pct, achieved) {
+// draggable=true רק ליעד ידני (custom) בחודש הנוכחי - בדיוק אותו תנאי כמו
+// כפתורי ה+/- הקיימים (adjustCustomGoal), כי weight/tasks מחושבים אוטומטית
+// ממקור נתונים אחר (computeGoalCurrentValue) - גרירה שם הייתה נדרסת מיד
+// ברענון הבא ולא הייתה משנה שום דבר בפועל, רק מבלבלת
+function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
     const clampedPct = Math.max(0, Math.min(100, pct || 0));
     const steps = Array.from({ length: GOAL_PATH_STEP_COUNT + 1 }, (_, i) => {
         const stepPct = (i / GOAL_PATH_STEP_COUNT) * 100;
@@ -3490,16 +3494,71 @@ function buildGoalPathHtml(pct, achieved) {
         return `<span class="goal-path-step${reached ? ' reached' : ''}" style="inset-inline-start: ${stepPct}%;"></span>`;
     }).join('');
     const avatarEmoji = achieved ? '🎉' : '🚶';
+    const draggableAttrs = draggable ? ` data-draggable="true" data-target-value="${targetValue}"` : '';
     return `
         <div class="goal-path-perspective">
-            <div class="goal-path-track">
+            <div class="goal-path-track"${draggableAttrs}>
                 <div class="goal-path-line"></div>
                 ${steps}
-                <div class="goal-path-avatar" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
+                <div class="goal-path-avatar${draggable ? ' draggable' : ''}" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
                 <div class="goal-path-flag">🏁</div>
             </div>
         </div>
     `;
+}
+
+// גרירת הדמות לאורך המסלול כדי לקבוע התקדמות ישירות (אלטרנטיבה מהירה
+// ל-adjustCustomGoal שדורש הרבה לחיצות עבור יעד גדול) - inset-inline-start
+// יחסי לרוחב-הטראק, עם תמיכת RTL/LTR (getComputedStyle direction, לא
+// document.dir הגלובלי - כדי שזה יעבוד נכון גם אם מוטמע במקום עם כיוון שונה)
+function initGoalPathDrag() {
+    const track = document.querySelector('.goal-path-track[data-draggable="true"]');
+    if (!track) return;
+    const targetValue = parseFloat(track.getAttribute('data-target-value')) || 0;
+    const avatar = track.querySelector('.goal-path-avatar');
+    const isRtl = getComputedStyle(track).direction === 'rtl';
+
+    const pctFromEvent = (e) => {
+        const rect = track.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const raw = isRtl ? ((rect.right - clientX) / rect.width) * 100 : ((clientX - rect.left) / rect.width) * 100;
+        return Math.max(0, Math.min(100, raw));
+    };
+
+    let dragging = false;
+    const onMove = (e) => {
+        if (!dragging) return;
+        e.preventDefault();
+        const pct = pctFromEvent(e);
+        if (avatar) avatar.style.insetInlineStart = `${pct}%`;
+    };
+    const onEnd = async (e) => {
+        if (!dragging) return;
+        dragging = false;
+        if (avatar) avatar.classList.remove('dragging');
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onEnd);
+        const pct = pctFromEvent(e);
+        const newValue = Math.round((pct / 100) * targetValue);
+        await setCustomGoalProgress(newValue);
+    };
+    track.onpointerdown = (e) => {
+        dragging = true;
+        e.preventDefault();
+        if (avatar) avatar.classList.add('dragging');
+        const pct = pctFromEvent(e);
+        if (avatar) avatar.style.insetInlineStart = `${pct}%`;
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onEnd);
+    };
+}
+
+async function setCustomGoalProgress(newValue) {
+    if (!cachedMonthlyGoal) return;
+    const clamped = Math.max(0, newValue);
+    await supabaseClient.from('monthly_goals').update({ current_value: clamped }).eq('id', cachedMonthlyGoal.id);
+    cachedMonthlyGoal.current_value = clamped;
+    await renderMonthlyGoal();
 }
 
 async function renderMonthlyGoal() {
@@ -3583,7 +3642,7 @@ async function renderMonthlyGoal() {
             <span class="monthly-goal-name">${goal.goal_name}${achieved ? ' 🏆' : ''}</span>
             ${actionsHtml}
         </div>
-        ${buildGoalPathHtml(pct, achieved)}
+        ${buildGoalPathHtml(pct, achieved, isCurrentMonth && goal.goal_type === 'custom', goal.target_value)}
         <div class="monthly-goal-values-row">
             <span class="monthly-goal-values">${progressText}</span>
             ${isCurrentMonth && goal.goal_type === 'custom' ? `
@@ -3594,6 +3653,7 @@ async function renderMonthlyGoal() {
         </div>
         ${trophyHtml}
     `;
+    initGoalPathDrag();
 }
 
 function openSetMonthlyGoalModal(isEdit = false) {
@@ -3677,10 +3737,7 @@ async function deleteMonthlyGoal() {
 
 async function adjustCustomGoal(delta) {
     if (!cachedMonthlyGoal) return;
-    const newValue = Math.max(0, (cachedMonthlyGoal.current_value || 0) + delta);
-    await supabaseClient.from('monthly_goals').update({ current_value: newValue }).eq('id', cachedMonthlyGoal.id);
-    cachedMonthlyGoal.current_value = newValue;
-    await renderMonthlyGoal();
+    await setCustomGoalProgress((cachedMonthlyGoal.current_value || 0) + delta);
 }
 
 // נשמר לשימוש כפתור השיתוף האופציונלי (shareGoalAchievement) - לא הצגה בלבד

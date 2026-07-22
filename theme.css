@@ -1563,6 +1563,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transform: translateZ(20px) rotateX(-28deg);
     z-index: 2;
 }
+/* יעד ידני (custom) בלבד: אפשר לגרור את הדמות לאורך המסלול כדי לקבוע
+   התקדמות ישירות, במקום ללחוץ הרבה פעמים על +/- ליעד גדול */
+.goal-path-track[data-draggable="true"] { cursor: pointer; touch-action: none; }
+.goal-path-avatar.draggable { cursor: grab; }
+.goal-path-avatar.dragging { transition: none; cursor: grabbing; }
 .goal-path-flag {
     position: absolute;
     top: 50%;
