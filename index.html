@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=107">
+    <link rel="stylesheet" href="theme.css?v=108">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -542,15 +542,10 @@
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
-                 בלי גרירה, לפי בקשה מפורשת. פני "רובוט ניאון" טכניות - ויזור
-                 כהה עם שתי נורות LED ציאן, לא פנים אנושיות - מצוירות ב-SVG
-                 (לא אימוג'י) כדי שאפשר לעצב/להנפיש בנפרד ב-CSS -->
+                 בלי גרירה, לפי בקשה מפורשת. אייקון ניאון מותאם אישית (ai-icon.png) -
+                 מסכת "רובוט" סגול/ורוד/כחול זוהרת, לפי בקשה מפורשת -->
             <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-title="ai_brain_fab_title" title="AI Assistant">
-                <svg class="ai-robot-face" viewBox="0 0 48 48" width="26" height="26" aria-hidden="true">
-                    <rect class="ai-robot-visor" x="9" y="17" width="30" height="12" rx="6"></rect>
-                    <rect class="ai-robot-eye" x="14" y="21" width="7.5" height="4" rx="2"></rect>
-                    <rect class="ai-robot-eye" x="26.5" y="21" width="7.5" height="4" rx="2"></rect>
-                </svg>
+                <img src="ai-icon.png" alt="" class="ai-brain-icon">
             </button>
 
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף

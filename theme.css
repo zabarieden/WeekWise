@@ -754,15 +754,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     left: 22px;
     width: 48px;
     height: 48px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 38%, #38454f 0%, #1b2328 55%, #0a0e11 100%);
-    border: 1px solid rgba(0, 212, 255, 0.35);
+    border-radius: 14px;
+    background: #05040a;
+    border: 1px solid rgba(168, 85, 247, 0.35);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 0 14px rgba(0, 212, 255, 0.4), 0 0 10px rgba(168, 85, 247, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.4), 0 0 10px rgba(0, 212, 255, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35);
     z-index: 3500;
     padding: 0;
     transition: var(--transition);
@@ -772,19 +773,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .ai-brain-fab:active { transform: scale(0.9); }
 @keyframes aiRobotBreathe {
-    0%, 100% { box-shadow: 0 0 14px rgba(0, 212, 255, 0.4), 0 0 10px rgba(168, 85, 247, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35); transform: scale(1); }
-    50% { box-shadow: 0 0 22px rgba(0, 212, 255, 0.6), 0 0 16px rgba(168, 85, 247, 0.4), 0 6px 18px rgba(0, 0, 0, 0.4); transform: scale(1.035); }
+    0%, 100% { box-shadow: 0 0 14px rgba(168, 85, 247, 0.4), 0 0 10px rgba(0, 212, 255, 0.25), 0 6px 16px rgba(0, 0, 0, 0.35); transform: scale(1); }
+    50% { box-shadow: 0 0 22px rgba(168, 85, 247, 0.6), 0 0 16px rgba(0, 212, 255, 0.4), 0 6px 18px rgba(0, 0, 0, 0.4); transform: scale(1.035); }
 }
-/* פני הרובוט: ויזור כהה (רצועה מוארכת) עם שתי "נורות" LED ציאן זוהרות
-   בתוכו - בלי עיניים אנושיות ובלי חיוך. פליקר עדין כל כמה שניות (כמו
-   סריקה/עיבוד) כדי שהעוזר יראה פעיל, בלי לחקות קריצה אנושית */
-.ai-robot-face { display: block; overflow: visible; }
-.ai-robot-visor { fill: rgba(0, 0, 0, 0.5); stroke: rgba(0, 212, 255, 0.4); stroke-width: 0.8; }
-.ai-robot-eye { fill: var(--accent-cyan); filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.95)); transform-box: fill-box; transform-origin: center; animation: aiRobotEyeFlicker 6.5s ease-in-out infinite; }
-@keyframes aiRobotEyeFlicker {
-    0%, 92%, 100% { opacity: 1; transform: scaleY(1); }
-    94%, 96% { opacity: 0.35; transform: scaleY(0.5); }
-}
+/* אייקון עוזר ה-AI (ai-icon.png): ממלא את הכפתור העגלגל לגמרי, עם אותם
+   פינות מעוגלות כמו הכפתור עצמו (overflow:hidden שם חותך את הפינות) */
+.ai-brain-icon { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* תפריט המבורגר: כפתור קבוע בפינה הימנית-עליונה (מול עוזר ה-AI בשמאל),
    שפותח מגירה שקופצת מהצד עם קיצורי-דרך מסודרים בקטגוריות - לא מחליף את
