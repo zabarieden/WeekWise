@@ -796,6 +796,33 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-fab:active { transform: scale(0.9); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
+/* כפתור צף להוספה מהירה של מים - צד שמאל-תחתון (מול ה-ai-fab בימין-תחתון),
+   מוסתר כברירת מחדל (class="hidden" ב-HTML) עד שמפעילים בהגדרות */
+.water-fab {
+    position: absolute;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    left: 25px;
+    z-index: 99999;
+    display: flex;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 114, 255, 0.4);
+    padding: 0;
+    transition: var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+}
+.water-fab:active { transform: scale(0.9); }
+.phone-wrapper.menu-open .water-fab { display: none; }
+
 /* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
    שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
    מפורשת. position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה

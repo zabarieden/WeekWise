@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=120">
+    <link rel="stylesheet" href="theme.css?v=121">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -185,6 +185,10 @@
                             <span class="sub-tile-icon">⚖️</span>
                             <span class="sub-tile-title" data-i18n="weight_title">Periodic Weight Tracking</span>
                         </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'water')">
+                            <span class="sub-tile-icon">💧</span>
+                            <span class="sub-tile-title" data-i18n="water_title">Water Tracking</span>
+                        </div>
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'recipes')">
                             <span class="sub-tile-icon">🧑‍🍳</span>
                             <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
@@ -339,6 +343,38 @@
                                 </div>
                                 <ul id="weight-history-list" class="center-list"></ul>
                             </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="subview-panel" data-subview="water">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <!-- מעקב מים -->
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="water_title">Water Tracking</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="ai-brain-tabs">
+                                <button type="button" class="ai-brain-tab" onclick="addWaterLog(200)" data-i18n="water_add_cup_btn">💧 +200ml (cup)</button>
+                                <button type="button" class="ai-brain-tab" onclick="addWaterLog(500)" data-i18n="water_add_bottle_btn">🍶 +500ml (bottle)</button>
+                            </div>
+                            <div class="preset-manager-grid" style="margin-top: 10px;">
+                                <input type="number" id="water-custom-amount-input" data-i18n-placeholder="water_custom_amount_placeholder" placeholder="Custom amount (ml)">
+                                <button type="button" class="btn-secondary" onclick="addCustomWaterLog()" data-i18n="water_add_custom_btn">Add</button>
+                            </div>
+                            <div class="stats-grid stats-grid-2col" style="margin-top: 10px;">
+                                <div class="stat-box today"><h3 data-i18n="stat_today">Today</h3><div class="stat-number" id="water-today-total">0</div></div>
+                                <div class="stat-box weekly"><h3 data-i18n="stat_weekly">Weekly</h3><div class="stat-number" id="water-weekly-total">0</div></div>
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <label class="settings-label" data-i18n="water_daily_goal_label">Daily goal (ml)</label>
+                                <input type="number" id="water-daily-goal-input" onchange="saveWaterDailyGoal()">
+                                <div class="progress-bar-bg" style="margin-top: 8px;"><div class="progress-bar-fill" id="water-goal-progress-fill" style="width:0%;"></div></div>
+                            </div>
+                            <h3 class="preset-manage-title" data-i18n="water_history_title">Today's Log</h3>
+                            <ul id="water-history-list" class="center-list"></ul>
                         </div>
                     </div>
                     </div>
@@ -635,6 +671,9 @@
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
 
+            <!-- כפתור צף (FAB) להוספה מהירה של כוס מים - אפשר לכבות מההגדרות -->
+            <button type="button" class="water-fab hidden" id="btn-water-fab" onclick="addWaterLog(200)" data-i18n-title="water_quick_add_title" title="Add a cup of water">💧</button>
+
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
                  בלי גרירה, לפי בקשה מפורשת. אייקון ניאון מותאם אישית (ai-icon.png) -
@@ -701,6 +740,10 @@
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'weight')">
                         <span class="hamburger-drawer-item-icon">⚖️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="weight_title">Periodic Weight Tracking</span>
+                    </button>
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'water')">
+                        <span class="hamburger-drawer-item-icon">💧</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="water_title">Water Tracking</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_finance">Expenses &amp; Income</div>
@@ -899,6 +942,13 @@
                     <label class="settings-label" data-i18n="settings_color_filter_label" for="color-filter-toggle">Color Filter</label>
                     <label class="switch">
                         <input type="checkbox" id="color-filter-toggle" onchange="toggleColorFilter()">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_water_fab_label" for="water-fab-toggle">Quick water-add button</label>
+                    <label class="switch">
+                        <input type="checkbox" id="water-fab-toggle" onchange="toggleWaterFab()">
                         <span class="switch-slider"></span>
                     </label>
                 </div>
@@ -1437,7 +1487,7 @@
 
     </div>
 
-    <script src="i18n.js?v=73"></script>
-    <script src="app.js?v=129"></script>
+    <script src="i18n.js?v=74"></script>
+    <script src="app.js?v=130"></script>
 </body>
 </html>

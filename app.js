@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyLightMode(isLightModeOn());
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
+    applyWaterFabSetting(isWaterFabOn());
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -560,7 +561,8 @@ async function initAppAfterAuth(user) {
         loadColorTheme(),
         loadMonthlyGoal(),
         loadFinanceData(),
-        loadSportData()
+        loadSportData(),
+        loadWaterData()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -3272,6 +3274,26 @@ function toggleColorFilter() {
     applyColorFilter(filterName);
 }
 
+// כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
+// קבוע על המסך), מוצג רק אחרי הפעלה מפורשת בהגדרות. אותו דפוס בדיוק כמו
+// high-contrast/color-filter למעלה - localStorage, לא תלוי פרימיום
+function isWaterFabOn() {
+    return localStorage.getItem('weekwise_water_fab') === 'true';
+}
+
+function applyWaterFabSetting(enabled) {
+    const fab = document.getElementById('btn-water-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
+    const toggle = document.getElementById('water-fab-toggle');
+    if (toggle) toggle.checked = enabled;
+}
+
+function toggleWaterFab() {
+    const enabled = document.getElementById('water-fab-toggle').checked;
+    localStorage.setItem('weekwise_water_fab', enabled ? 'true' : 'false');
+    applyWaterFabSetting(enabled);
+}
+
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
 // זה רק עניין של להחליף את attribute ה-data-color-theme על ה-html ---
 function colorThemeKey() {
@@ -5588,6 +5610,92 @@ async function loadStepStats() {
         if (item.step_date >= weekStartStr && item.step_date <= weekEndStr) weekly += Number(item.step_count) || 0;
     });
     document.getElementById('steps-weekly').innerText = weekly;
+}
+
+// --- מעקב מים: הוספה מהירה (כוס/בקבוק/כמות מותאמת), סך יומי+שבועי, יעד
+// יומי (מקומי בלבד - localStorage, כמו שעות ברירת מחדל ללוח הזמנים) עם
+// פס התקדמות, והיסטוריית היום עם מחיקה - אותו דפוס בדיוק כמו ספורט/משקל ---
+function waterDailyGoalKey() {
+    return `weekwise_water_goal_${currentUserId}`;
+}
+
+function getWaterDailyGoal() {
+    return parseInt(localStorage.getItem(waterDailyGoalKey())) || 2000;
+}
+
+function saveWaterDailyGoal() {
+    const val = parseInt(document.getElementById('water-daily-goal-input').value) || 2000;
+    localStorage.setItem(waterDailyGoalKey(), String(val));
+    loadWaterData();
+}
+
+async function addWaterLog(amountMl) {
+    if (!supabaseClient || !currentUserId) return;
+    const today = getLocalDateString();
+    const { error } = await supabaseClient.from('water_logs').insert({ username: currentUsername, user_id: currentUserId, amount_ml: amountMl, log_date: today });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    showAppToast(t('water_add_success'));
+    loadWaterData();
+}
+
+function addCustomWaterLog() {
+    const input = document.getElementById('water-custom-amount-input');
+    const amount = parseInt(input.value) || 0;
+    if (amount <= 0) { showAppToast(t('water_missing_amount'), 'error'); return; }
+    input.value = '';
+    addWaterLog(amount);
+}
+
+async function deleteWaterLog(id) {
+    await supabaseClient.from('water_logs').delete().eq('id', id);
+    loadWaterData();
+}
+
+async function loadWaterData() {
+    if (!supabaseClient || !currentUserId) return;
+    const goal = getWaterDailyGoal();
+    const goalInput = document.getElementById('water-daily-goal-input');
+    if (goalInput) goalInput.value = goal;
+
+    const now = new Date();
+    const sunday = new Date(now); sunday.setDate(now.getDate() - now.getDay());
+    const weekStartStr = getLocalDateString(sunday);
+    const today = getLocalDateString();
+
+    const { data } = await supabaseClient.from('water_logs').select('*').eq('user_id', currentUserId).gte('log_date', weekStartStr).order('created_at', { ascending: false });
+    const rows = data || [];
+
+    const todayRows = rows.filter(r => r.log_date === today);
+    const todayTotal = todayRows.reduce((sum, r) => sum + (r.amount_ml || 0), 0);
+    const weeklyTotal = rows.reduce((sum, r) => sum + (r.amount_ml || 0), 0);
+
+    const todayEl = document.getElementById('water-today-total');
+    if (todayEl) todayEl.textContent = todayTotal.toLocaleString();
+    const weeklyEl = document.getElementById('water-weekly-total');
+    if (weeklyEl) weeklyEl.textContent = weeklyTotal.toLocaleString();
+
+    const fill = document.getElementById('water-goal-progress-fill');
+    if (fill) fill.style.width = `${goal > 0 ? Math.min(100, Math.round((todayTotal / goal) * 100)) : 0}%`;
+
+    const list = document.getElementById('water-history-list');
+    if (list) {
+        list.innerHTML = '';
+        if (!todayRows.length) {
+            list.innerHTML = `<li class="finance-history-empty">${t('water_history_empty')}</li>`;
+        } else {
+            todayRows.forEach(row => {
+                const li = document.createElement('li');
+                li.className = 'finance-history-row';
+                li.innerHTML = `
+                    <div class="finance-history-main">
+                        <span class="finance-history-category">${row.amount_ml} ${t('water_ml_unit')}</span>
+                    </div>
+                    <button type="button" class="btn-delete-slot" onclick="deleteWaterLog('${row.id}')">❌</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+    }
 }
 
 // --- "AI" חוקי-דטרמיניסטי: מוסיף טקסט חופשי כפתק חדש בלשונית הפתקים בלבד ---
