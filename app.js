@@ -2116,8 +2116,12 @@ async function loadCalendarEvents() {
     const today = getLocalDateString();
     // source='calendar' בלבד - לא משימות שהומרו מפתקים גרורים (source=
     // 'note_task'). אלה מוצגות ב"משימות להיום" (loadTodayTasks) במקום כאן -
-    // לפי בקשה מפורשת
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar').gte('event_date', today);
+    // לפי בקשה מפורשת. שולפים גם תאריכים שכבר עברו (בלי gte כאן) - הסינון
+    // "רק עתידי" נעשה למטה, אבל *ברמת הסדרה* לא ברמת התאריך הבודד: אם סדרה
+    // חוזרת עדיין פעילה (יש לה לפחות מופע עתידי אחד), רוצים את *כל* התאריכים
+    // שלה כולל עבר, כדי שאפשר יהיה לסמן וי גם על מופעים ישנים שהושלמו בפועל -
+    // לא רק על הבא בתור. בלי זה, מופע שכבר עבר "נעלם" ואי אפשר לסמן אותו
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar');
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
@@ -2128,16 +2132,24 @@ async function loadCalendarEvents() {
     }
 
     // מקבצים אירועים חוזרים לפי recurrence_group_id, כדי להציג פריט אחד לכל סדרה
-    // (עם חץ להרחבה) במקום שורה נפרדת לכל תאריך שנוצר
+    // (עם חץ להרחבה) במקום שורה נפרדת לכל תאריך שנוצר. אירוע חד-פעמי (בלי
+    // recurrence_group_id) עדיין מסונן ל"עתידי בלבד" - הוא לא תומך בכלל
+    // בסימון וי, אז אין טעם להציג אותו אחרי שהתאריך שלו עבר
     const seriesMap = new Map();
     const singleEvents = [];
     data.forEach(item => {
         if (item.recurrence_group_id) {
             if (!seriesMap.has(item.recurrence_group_id)) seriesMap.set(item.recurrence_group_id, []);
             seriesMap.get(item.recurrence_group_id).push(item);
-        } else {
+        } else if (item.event_date >= today) {
             singleEvents.push(item);
         }
+    });
+    // סדרה שכל המופעים שלה כבר עברו - לא מציגים אותה בכלל (הסתיימה), רק
+    // סדרות עם לפחות מופע עתידי אחד ממשיכות להופיע (עם כל התאריכים, כולל עבר)
+    Array.from(seriesMap.keys()).forEach(groupId => {
+        const items = seriesMap.get(groupId);
+        if (!items.some(i => i.event_date >= today)) seriesMap.delete(groupId);
     });
 
     // סדר תצוגה: sort_order ידני (שנקבע ע"י גרירה) קודם, ורק לפריטים שעדיין
