@@ -2989,6 +2989,31 @@ function goalProgressPercent(goal, currentValue) {
     return Math.min(100, Math.max(0, Math.round((currentValue / goal.target_value) * 100)));
 }
 
+// ויזואליזציית "הליכה למטרה": דמות שמתקדמת לאורך מסלול לפי אחוז ההתקדמות,
+// עם דגל בקצה (במקום פס התקדמות רגיל) - הרעיון שעלה בשיחת ה-brainstorm
+// הראשונית על גיימיפיקציה, כאן ממומש רק ליעד החודשי (לפי בקשה מפורשת - לא
+// בכל מקום). GOAL_PATH_STEP_COUNT צעדים בדידים (כמו נקודות ציון שבועיות
+// גסות) - inset-inline-start/margin-inline-start (לא left/transform) כדי
+// שהמסלול יתהפך נכון אוטומטית בעברית (RTL) לעומת אנגלית (LTR)
+const GOAL_PATH_STEP_COUNT = 4;
+function buildGoalPathHtml(pct, achieved) {
+    const clampedPct = Math.max(0, Math.min(100, pct || 0));
+    const steps = Array.from({ length: GOAL_PATH_STEP_COUNT + 1 }, (_, i) => {
+        const stepPct = (i / GOAL_PATH_STEP_COUNT) * 100;
+        const reached = clampedPct >= stepPct - 1;
+        return `<span class="goal-path-step${reached ? ' reached' : ''}" style="inset-inline-start: ${stepPct}%;"></span>`;
+    }).join('');
+    const avatarEmoji = achieved ? '🎉' : '🚶';
+    return `
+        <div class="goal-path-track">
+            <div class="goal-path-line"></div>
+            ${steps}
+            <div class="goal-path-avatar" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
+            <div class="goal-path-flag">🏁</div>
+        </div>
+    `;
+}
+
 async function renderMonthlyGoal() {
     const container = document.getElementById('monthly-goal-content');
     if (!container) return;
@@ -3070,7 +3095,7 @@ async function renderMonthlyGoal() {
             <span class="monthly-goal-name">${goal.goal_name}${achieved ? ' 🏆' : ''}</span>
             ${actionsHtml}
         </div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill${achieved ? ' completed' : ''}" style="width: ${pct}%;"></div></div>
+        ${buildGoalPathHtml(pct, achieved)}
         <div class="monthly-goal-values-row">
             <span class="monthly-goal-values">${progressText}</span>
             ${isCurrentMonth && goal.goal_type === 'custom' ? `
