@@ -4746,42 +4746,104 @@ async function addProgressTarget() {
     loadProgressTargets();
 }
 
+// --- מד התקדמות שבועי: וי אמיתי לכל יום (לא רק מונה +/-), עם תאריך אמיתי
+// מאחורי כל סימון (progress_checkins) - כדי שאפשר יהיה לחזור אחורה ולראות
+// בדיוק אילו ימים סומנו בשבועות קודמים, אותו דפוס ניווט בדיוק כמו יעד חודשי ---
+let viewedProgressWeekStart = null;
+
+function getWeekStart(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setDate(date.getDate() - date.getDay()); // getDay(): 0=ראשון
+    return getLocalDateString(date);
+}
+
+function currentWeekStart() { return getWeekStart(getLocalDateString()); }
+
+function addDaysToDateStr(dateStr, days) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return getLocalDateString(new Date(y, m - 1, d + days));
+}
+
+function formatWeekRangeLabel(weekStartStr) {
+    const [y, m, d] = weekStartStr.split('-').map(Number);
+    const start = new Date(y, m - 1, d);
+    const end = new Date(y, m - 1, d + 6);
+    const opts = { day: 'numeric', month: 'short' };
+    return `${start.toLocaleDateString(currentLang, opts)} - ${end.toLocaleDateString(currentLang, opts)}`;
+}
+
+function navigateProgressWeek(delta) {
+    const base = viewedProgressWeekStart || currentWeekStart();
+    const target = addDaysToDateStr(base, delta * 7);
+    if (target > currentWeekStart()) return; // בלי לנווט לשבועות עתידיים
+    viewedProgressWeekStart = target;
+    loadProgressTargets();
+}
+
 async function loadProgressTargets() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('weekly_progress_targets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
-    if (!data) return;
+    if (!supabaseClient || !currentUserId) return;
+    if (!viewedProgressWeekStart) viewedProgressWeekStart = currentWeekStart();
+    const label = document.getElementById('progress-week-label');
+    if (label) label.textContent = formatWeekRangeLabel(viewedProgressWeekStart);
+    const isCurrentWeek = viewedProgressWeekStart === currentWeekStart();
+    const nextBtn = document.getElementById('progress-week-next-btn');
+    if (nextBtn) nextBtn.disabled = isCurrentWeek;
+
+    const { data: targets } = await supabaseClient.from('weekly_progress_targets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
     const container = document.getElementById('progress-container');
+    if (!targets || !container) return;
+
+    const weekEndExclusive = addDaysToDateStr(viewedProgressWeekStart, 7);
+    const { data: checkins } = await supabaseClient.from('progress_checkins').select('target_id, check_date').eq('user_id', currentUserId).gte('check_date', viewedProgressWeekStart).lt('check_date', weekEndExclusive);
+    const checkinsByTarget = {};
+    (checkins || []).forEach(c => {
+        if (!checkinsByTarget[c.target_id]) checkinsByTarget[c.target_id] = new Set();
+        checkinsByTarget[c.target_id].add(c.check_date);
+    });
+
+    const todayStr = getLocalDateString();
     container.innerHTML = '';
-    data.forEach(item => {
-        const pct = item.target_val > 0 ? Math.min(100, Math.round((item.current_val / item.target_val) * 100)) : 0;
+    targets.forEach(item => {
+        const checkedDates = checkinsByTarget[item.id] || new Set();
+        const checkedCount = checkedDates.size;
+        const pct = item.target_val > 0 ? Math.min(100, Math.round((checkedCount / item.target_val) * 100)) : 0;
+        let daysHtml = '';
+        for (let i = 0; i < 7; i++) {
+            const dayDateStr = addDaysToDateStr(viewedProgressWeekStart, i);
+            const isChecked = checkedDates.has(dayDateStr);
+            const isFuture = dayDateStr > todayStr;
+            const [dy, dm, dd] = dayDateStr.split('-').map(Number);
+            const dayLabel = new Date(dy, dm - 1, dd).toLocaleDateString(currentLang, { weekday: 'narrow' });
+            daysHtml += `<button type="button" class="progress-day-check${isChecked ? ' checked' : ''}"${isFuture ? ' disabled' : ''} onclick="toggleProgressCheckin('${item.id}', '${dayDateStr}', ${!isChecked})" title="${dayDateStr}">${isChecked ? '✓' : dayLabel}</button>`;
+        }
         const row = document.createElement('div');
         row.className = 'progress-row';
         row.innerHTML = `
             <div class="progress-info">
                 <span>${item.target_name}</span>
                 <div class="progress-counter">
-                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', -1)">-</button>
-                    <span>${item.current_val} / ${item.target_val}</span>
-                    <button class="btn-counter" onclick="changeProgressVal('${item.id}', 1)">+</button>
+                    <span>${checkedCount} / ${item.target_val}</span>
                     <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')">❌</button>
                 </div>
             </div>
+            <div class="progress-days-row">${daysHtml}</div>
             <div class="progress-bar-bg"><div class="progress-bar-fill ${pct >= 100 ? 'completed' : ''}" style="width: ${pct}%;"></div></div>
         `;
         container.appendChild(row);
     });
 }
 
-async function changeProgressVal(id, change) {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('weekly_progress_targets').select('current_val, target_val').eq('id', id).maybeSingle();
-    if (!data) return;
-    let newVal = data.current_val + change;
-    if (newVal < 0) newVal = 0;
-    if (newVal > data.target_val) newVal = data.target_val;
-    await supabaseClient.from('weekly_progress_targets').update({ current_val: newVal }).eq('id', id);
+async function toggleProgressCheckin(targetId, dateStr, shouldCheck) {
+    if (!supabaseClient || !currentUserId) return;
+    if (shouldCheck) {
+        await supabaseClient.from('progress_checkins').insert({ user_id: currentUserId, username: currentUsername, target_id: targetId, check_date: dateStr });
+    } else {
+        await supabaseClient.from('progress_checkins').delete().eq('target_id', targetId).eq('check_date', dateStr).eq('user_id', currentUserId);
+    }
     loadProgressTargets();
 }
+
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w }); loadWeightHistory(); }
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }

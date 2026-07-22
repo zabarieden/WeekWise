@@ -1423,6 +1423,28 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-shadow: 0 0 10px var(--accent-green);
 }
 @keyframes progressFlow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+/* שורת 7 ימי-השבוע (וי אמיתי לכל תאריך, לא מונה מופשט) - כל יום הוא כפתור
+   קטן ועגול, מסומן = ✓ בגוון ירוק ניאון, לא מסומן = אות ראשונה של שם היום */
+.progress-days-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.progress-day-check {
+    flex: 1 1 0;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.progress-day-check.checked { background-color: rgba(0, 230, 118, 0.18); border-color: var(--accent-green); color: var(--accent-green); box-shadow: 0 0 8px rgba(0, 230, 118, 0.4); }
+.progress-day-check:disabled { opacity: 0.35; cursor: not-allowed; }
+.progress-day-check:active:not(:disabled) { transform: scale(0.9); }
 /* ויזואליזציית "הליכה למטרה" ליעד החודשי (ר' buildGoalPathHtml ב-app.js) -
    inset-inline-start/margin-inline-start בכל מקום (לא left/right/transform)
    כדי שהמסלול יתהפך אוטומטית נכון בעברית (RTL) מול אנגלית (LTR).
