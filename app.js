@@ -2662,7 +2662,43 @@ function escapeHtmlForReport(str) {
 // לא jsPDF (הפונטים המובנים שלו לא תומכים בעברית - היו יוצאים ריבועים ריקים) -
 // במקום זה נבנה עמוד HTML נקי בחלון חדש ומפעילים את דיאלוג ההדפסה הטבעי של
 // הדפדפן, שבו "שמירה כ-PDF" היא אחת מהיעדים הרגילים
+// ממלא את בוררי החודש/שנה בפתיחת החלון - 12 חודשים בשם המקומי (לפי שפת
+// האפליקציה), ו-6 שנים אחורה מהשנה הנוכחית (כולל) - טווח סביר לדוח אישי,
+// בלי לתת רשימה אינסופית. ברירת המחדל היא "כל הזמן" (הצ'קבוקס מסומן), כדי
+// לשמר את ההתנהגות המקורית למי שרק רוצה דוח מלא כרגיל
+function populateReportMonthYearSelects() {
+    const monthSelect = document.getElementById('report-month-select');
+    const yearSelect = document.getElementById('report-year-select');
+    if (!monthSelect || !yearSelect) return;
+    const now = new Date();
+    monthSelect.innerHTML = '';
+    for (let m = 0; m < 12; m++) {
+        const label = new Date(now.getFullYear(), m, 1).toLocaleDateString(currentLang, { month: 'long' });
+        const opt = document.createElement('option');
+        opt.value = String(m + 1);
+        opt.textContent = label;
+        if (m === now.getMonth()) opt.selected = true;
+        monthSelect.appendChild(opt);
+    }
+    yearSelect.innerHTML = '';
+    const currentYear = now.getFullYear();
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+        const opt = document.createElement('option');
+        opt.value = String(y);
+        opt.textContent = String(y);
+        yearSelect.appendChild(opt);
+    }
+}
+
+function toggleReportMonthPickerVisibility() {
+    const allTime = document.getElementById('report-all-time').checked;
+    document.getElementById('report-month-year-picker').classList.toggle('hidden', allTime);
+}
+
 function openReportSectionPicker() {
+    populateReportMonthYearSelects();
+    document.getElementById('report-all-time').checked = true;
+    toggleReportMonthPickerVisibility();
     openModal('modal-report-section-picker');
 }
 
@@ -2672,13 +2708,33 @@ async function exportUserDataReport() {
     const includeGoals = document.getElementById('report-section-goals').checked;
     const includeFinance = document.getElementById('report-section-finance').checked;
     if (!includeWeight && !includeGoals && !includeFinance) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
+
+    const isAllTime = document.getElementById('report-all-time').checked;
+    let selectedMonthKey = null, rangeStart = null, rangeEndExclusive = null;
+    if (!isAllTime) {
+        const month = parseInt(document.getElementById('report-month-select').value, 10);
+        const year = parseInt(document.getElementById('report-year-select').value, 10);
+        selectedMonthKey = `${year}-${String(month).padStart(2, '0')}`;
+        rangeStart = `${selectedMonthKey}-01`;
+        const nextMonth = new Date(year, month, 1); // month כאן 1-12, אז זה כבר "החודש הבא" ב-Date (0-based)
+        rangeEndExclusive = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+    }
     closeModal('modal-report-section-picker');
     showAppToast(t('settings_export_data_preparing'));
 
+    let weightQuery = includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : null;
+    let goalsQuery = includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : null;
+    let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
+    if (!isAllTime) {
+        if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
+        if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
+        if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
+    }
+
     const [{ data: weightRows }, { data: goalRows }, { data: financeRows }] = await Promise.all([
-        includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : Promise.resolve({ data: null }),
-        includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : Promise.resolve({ data: null }),
-        includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : Promise.resolve({ data: null }),
+        weightQuery || Promise.resolve({ data: null }),
+        goalsQuery || Promise.resolve({ data: null }),
+        financeQuery || Promise.resolve({ data: null }),
     ]);
 
     let sectionsHtml = '';
@@ -2708,8 +2764,9 @@ async function exportUserDataReport() {
     }
 
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
+    const rangeLabel = isAllTime ? '' : `<p class="sub">${escapeHtmlForReport(t('data_report_period_label'))} ${escapeHtmlForReport(formatMonthLabel(selectedMonthKey))}</p>`;
     const bodyHtml = `
-        <div class="header-banner"><h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p></div>
+        <div class="header-banner"><h1>WeekWise</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>${rangeLabel}</div>
         ${sectionsHtml}
     `;
     const printWindow = window.open('', '_blank');

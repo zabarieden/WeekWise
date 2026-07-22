@@ -173,10 +173,6 @@
                             <span class="sub-tile-icon">🔥</span>
                             <span class="sub-tile-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
                         </div>
-                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'recipes')">
-                            <span class="sub-tile-icon">🧑‍🍳</span>
-                            <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
-                        </div>
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'steps')">
                             <span class="sub-tile-icon">👟</span>
                             <span class="sub-tile-title" data-i18n="steps_title">Daily Step Counter</span>
@@ -184,6 +180,10 @@
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'weight')">
                             <span class="sub-tile-icon">⚖️</span>
                             <span class="sub-tile-title" data-i18n="weight_title">Periodic Weight Tracking</span>
+                        </div>
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'recipes')">
+                            <span class="sub-tile-icon">🧑‍🍳</span>
+                            <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
                     </div>
 
@@ -364,14 +364,6 @@
                         <div class="sub-tile" onclick="openSubTile('my-center-section', 'notes')">
                             <span class="sub-tile-icon">📝</span>
                             <span class="sub-tile-title" data-i18n="notes_title">Notes</span>
-                        </div>
-                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'progress')">
-                            <span class="sub-tile-icon">📊</span>
-                            <span class="sub-tile-title" data-i18n="progress_title">Weekly Progress Tracker</span>
-                        </div>
-                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'goal')">
-                            <span class="sub-tile-icon">🏆</span>
-                            <span class="sub-tile-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
                         </div>
                         <div class="sub-tile" onclick="openSubTile('my-center-section', 'shopping')">
                             <span class="sub-tile-icon">🛒</span>
@@ -862,6 +854,14 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="report_picker_title">What would you like to include?</h3>
                 <label class="settings-toggle-row">
+                    <span data-i18n="report_picker_all_time_label">All Time</span>
+                    <label class="switch"><input type="checkbox" id="report-all-time" checked onchange="toggleReportMonthPickerVisibility()"><span class="switch-slider"></span></label>
+                </label>
+                <div id="report-month-year-picker" class="hidden" style="display: flex; gap: 8px; margin: 0 0 12px 0;">
+                    <select id="report-month-select" style="flex: 1;"></select>
+                    <select id="report-year-select" style="flex: 1;"></select>
+                </div>
+                <label class="settings-toggle-row">
                     <span data-i18n="data_report_label_weight">Weight Log</span>
                     <label class="switch"><input type="checkbox" id="report-section-weight" checked><span class="switch-slider"></span></label>
                 </label>
@@ -1260,7 +1260,7 @@
 
     </div>
 
-    <script src="i18n.js?v=53"></script>
-    <script src="app.js?v=97"></script>
+    <script src="i18n.js?v=54"></script>
+    <script src="app.js?v=98"></script>
 </body>
 </html>
