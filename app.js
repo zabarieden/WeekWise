@@ -4301,6 +4301,53 @@ async function savePushSubscription(subscription) {
     else await supabaseClient.from('push_subscriptions').insert(payload);
 }
 
+// --- כפתור מפורש בהגדרות: הפעלת ההתראות בעצמה (בנוסף לבקשה השקטה שקורית
+// אוטומטית ב-initAppAfterAuth). קליק אמיתי של המשתמשת נותן שני יתרונות על
+// פני בקשה שקטה מ-JS בטעינה: (1) בדפדפנים מסוימים חלון האישור מוצג רק
+// בתגובה למחוות משתמש אמיתית, לא מקוד שרץ אוטומטית; (2) המצב (מופעל/חסום/
+// עדיין לא הוחלט) מוצג בבירור בהגדרות, כדי שלא תישאר "עיוורת" למה שקרה ---
+async function requestNotificationPermissionFromSettings() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showAppToast(t('settings_notifications_status_unsupported'), 'error');
+        renderNotificationSettingsStatus();
+        return;
+    }
+    if (Notification.permission === 'denied') {
+        // דפדפנים לא מציגים שוב את חלון האישור לאחר דחייה - היחיד שיכול
+        // לשנות זאת הוא המשתמש עצמו, בהגדרות הדפדפן/הטלפון
+        showAppToast(t('settings_notifications_status_denied'), 'error');
+        return;
+    }
+    if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') { renderNotificationSettingsStatus(); return; }
+    }
+    await registerPushNotifications();
+    renderNotificationSettingsStatus();
+    showAppToast(t('settings_notifications_status_granted'));
+}
+
+function renderNotificationSettingsStatus() {
+    const btn = document.getElementById('btn-enable-notifications');
+    const status = document.getElementById('settings-notifications-status');
+    if (!btn || !status) return;
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        btn.textContent = t('settings_notifications_btn_blocked');
+        status.textContent = t('settings_notifications_status_unsupported');
+        return;
+    }
+    if (Notification.permission === 'granted') {
+        btn.textContent = t('settings_notifications_btn_enabled');
+        status.textContent = t('settings_notifications_status_granted');
+    } else if (Notification.permission === 'denied') {
+        btn.textContent = t('settings_notifications_btn_blocked');
+        status.textContent = t('settings_notifications_status_denied');
+    } else {
+        btn.textContent = t('settings_notifications_btn_enable');
+        status.textContent = t('settings_notifications_status_default');
+    }
+}
+
 function showBrowserNotification(taskTitle, text) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const notification = new Notification(`${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`, {

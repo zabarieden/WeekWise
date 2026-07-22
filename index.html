@@ -629,7 +629,7 @@
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_other">Other</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openModal('modal-settings-drawer');">
+                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openModal('modal-settings-drawer'); renderNotificationSettingsStatus();">
                         <span class="hamburger-drawer-item-icon">⚙️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="settings_title">Settings</span>
                     </button>
@@ -769,6 +769,12 @@
                         <span class="switch-slider"></span>
                     </label>
                 </div>
+
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_notifications_label">Reminder Notifications</label>
+                    <button type="button" id="btn-enable-notifications" class="btn-secondary" style="padding: 6px 14px; width: auto;" onclick="requestNotificationPermissionFromSettings()">🔔 Enable</button>
+                </div>
+                <p id="settings-notifications-status" class="modal-subtitle"></p>
 
                 <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                 <div class="theme-picker-grid">
@@ -1254,7 +1260,7 @@
 
     </div>
 
-    <script src="i18n.js?v=52"></script>
-    <script src="app.js?v=96"></script>
+    <script src="i18n.js?v=53"></script>
+    <script src="app.js?v=97"></script>
 </body>
 </html>
