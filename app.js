@@ -137,7 +137,9 @@ function loadAllCenterItems() {
 
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
-    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('created_at', { ascending: true });
+    // sort_order ידני (שנקבע ע"י גרירה בפתקים) קודם, ורק פריטים בלי אחד עדיין
+    // (חדשים/מלפני התכונה) נופלים לסוף לפי created_at - אותו דפוס כמו ב-calendar_events
+    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
     if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
@@ -187,7 +189,9 @@ function initNoteTriageDragDrop(type) {
         animation: 150,
         forceFallback: true,
         fallbackOnBody: true,
-        sort: false,
+        // sort:true - אפשר גם לסדר-מחדש בתוך הרשימה עצמה (לא רק לגרור החוצה
+        // אל אחד מאזורי הטריאז'), לפי בקשה מפורשת
+        sort: true,
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         // dragClass: מזהה ייחודי לשכפול הצף הזה בלבד - כי הכלל הגלובלי
@@ -196,6 +200,14 @@ function initNoteTriageDragDrop(type) {
         // אל יעד אחר לגמרי (עם pull:'clone'), אז חייבים שכפול גלוי שעוקב
         // אחרי האצבע - אחרת נראה כאילו הפריט "נעלם" עד שמשחררים
         dragClass: 'note-triage-drag-clone',
+        // onEnd (לא onSort/onUpdate) כדי לתפוס גם גרירה שמסתיימת מחוץ לרשימה
+        // (evt.from !== evt.to אז) בלי לשמור סדר מיותר - רק סידור-מחדש אמיתי
+        // בתוך אותה רשימה (evt.from === evt.to) שומר sort_order חדש
+        onEnd: function (evt) {
+            if (evt.from !== evt.to) return;
+            const ids = Array.from(evt.from.children).map(li => li.getAttribute('data-item-id'));
+            Promise.all(ids.map((id, index) => supabaseClient.from('my_center_tasks').update({ sort_order: (index + 1) * 10 }).eq('id', id)));
+        },
     });
     const zones = [todayZone, tomorrowZone];
     if (shoppingZone) zones.push(shoppingZone);
