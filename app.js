@@ -2804,7 +2804,8 @@ async function exportUserDataReport() {
     const includeWeight = document.getElementById('report-section-weight').checked;
     const includeGoals = document.getElementById('report-section-goals').checked;
     const includeFinance = document.getElementById('report-section-finance').checked;
-    if (!includeWeight && !includeGoals && !includeFinance) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
+    const includeSport = document.getElementById('report-section-sport').checked;
+    if (!includeWeight && !includeGoals && !includeFinance && !includeSport) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
 
     const isAllTime = document.getElementById('report-all-time').checked;
     let selectedMonthKey = null, rangeStart = null, rangeEndExclusive = null;
@@ -2822,16 +2823,19 @@ async function exportUserDataReport() {
     let weightQuery = includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : null;
     let goalsQuery = includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : null;
     let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
+    let sportQuery = includeSport ? supabaseClient.from('sport_sessions').select('*').eq('user_id', currentUserId).order('session_date', { ascending: false }) : null;
     if (!isAllTime) {
         if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
         if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
         if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
+        if (sportQuery) sportQuery = sportQuery.gte('session_date', rangeStart).lt('session_date', rangeEndExclusive);
     }
 
-    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }] = await Promise.all([
+    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }] = await Promise.all([
         weightQuery || Promise.resolve({ data: null }),
         goalsQuery || Promise.resolve({ data: null }),
         financeQuery || Promise.resolve({ data: null }),
+        sportQuery || Promise.resolve({ data: null }),
     ]);
 
     let sectionsHtml = '';
@@ -2858,6 +2862,16 @@ async function exportUserDataReport() {
             }).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_finance'))}</h2>${financeHtml}`;
+    }
+    if (includeSport) {
+        const sportHtml = (sportRows && sportRows.length)
+            ? sportRows.map(row => {
+                const typeLabel = row.sport_type === 'custom' ? (row.custom_type_name || t('sport_type_custom')) : t(`sport_type_${row.sport_type}`);
+                const distancePart = row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '';
+                return `<div class="entry"><span class="entry-main">${formatSportDayLabel(row.session_date)} · ${escapeHtmlForReport(typeLabel)}</span><span class="entry-value">${row.duration_minutes || 0} ${escapeHtmlForReport(t('sport_minutes_unit'))}${distancePart}</span></div>`;
+            }).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_sport'))}</h2>${sportHtml}`;
     }
 
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
