@@ -4101,98 +4101,100 @@ function sanitizeOcrText(raw) {
 // למטה) - אותה טבלת חיפוש בדיוק, שני שימושים. קלוריות ל-100 גרם, או ליחידה
 // בודדת עבור ביצים. לא מנחשת כמות שלא צוינה בטקסט - תמיד המלצה בלבד, לא
 // עובדה, ולכן תמיד מוצגת עם אזהרה מפורשת בממשק (ר' recipe_calories_estimated_hint) ---
+// name: שם תצוגה נקי (בלי תחביר regex) - משמש את בורר-המאכלים הניתן-לחיפוש
+// (openFoodPicker), בנפרד לגמרי מ-re שממשיך לשמש למילוי אוטומטי מטקסט חופשי
 const FOOD_CALORIE_DB = [
-    { re: /קקאו|cocoa/i, kcal100g: 228 },
-    { re: /שוקולד|chocolate/i, kcal100g: 546 },
-    { re: /קמח|flour/i, kcal100g: 364 },
-    { re: /סוכר חום|brown sugar/i, kcal100g: 380 },
-    { re: /סוכר|sugar/i, kcal100g: 387 },
-    { re: /חמאה|butter/i, kcal100g: 717 },
-    { re: /שמן|\boil\b/i, kcal100g: 884 },
-    { re: /שמנת|cream/i, kcal100g: 340 },
-    { re: /חלב|\bmilk\b/i, kcal100g: 42 },
-    { re: /דבש|honey/i, kcal100g: 304 },
-    { re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98 },
-    { re: /גבינה|cheese/i, kcal100g: 350 },
-    { re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
-    { re: /שמרים|yeast/i, kcal100g: 105 },
-    { re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600 },
-    { re: /תפוח(?!\s*הצהריים)|apple/i, kcal100g: 52 },
-    { re: /בננה|banana/i, kcal100g: 89 },
-    { re: /אורז|\brice\b/i, kcal100g: 130 },
-    { re: /פסטה|pasta/i, kcal100g: 131 },
-    { re: /לחם|bread/i, kcal100g: 265 },
-    { re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
-    { re: /טונה|tuna/i, kcal100g: 116 },
-    { re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61 },
-    { re: /מלפפון|cucumber/i, kcal100g: 15 },
-    { re: /עגבני|tomato/i, kcal100g: 18 },
-    { re: /חומוס|hummus/i, kcal100g: 166 },
-    { re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
-    { re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
-    { re: /ביצ/i, kcalPerUnit: 70 },
-    { re: /מים|\bwater\b/i, kcal100g: 0 },
-    { re: /מלח|\bsalt\b/i, kcal100g: 0 },
+    { name: "קקאו", re: /קקאו|cocoa/i, kcal100g: 228 },
+    { name: "שוקולד", re: /שוקולד|chocolate/i, kcal100g: 546 },
+    { name: "קמח", re: /קמח|flour/i, kcal100g: 364 },
+    { name: "סוכר חום", re: /סוכר חום|brown sugar/i, kcal100g: 380 },
+    { name: "סוכר", re: /סוכר|sugar/i, kcal100g: 387 },
+    { name: "חמאה", re: /חמאה|butter/i, kcal100g: 717 },
+    { name: "שמן", re: /שמן|\boil\b/i, kcal100g: 884 },
+    { name: "שמנת", re: /שמנת|cream/i, kcal100g: 340 },
+    { name: "חלב", re: /חלב|\bmilk\b/i, kcal100g: 42 },
+    { name: "דבש", re: /דבש|honey/i, kcal100g: 304 },
+    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98 },
+    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 350 },
+    { name: "אבקת אפייה", re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
+    { name: "שמרים", re: /שמרים|yeast/i, kcal100g: 105 },
+    { name: "אגוזים/שקדים/בוטנים", re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600 },
+    { name: "תפוח", re: /תפוח(?!\s*הצהריים)|apple/i, kcal100g: 52 },
+    { name: "בננה", re: /בננה|banana/i, kcal100g: 89 },
+    { name: "אורז", re: /אורז|\brice\b/i, kcal100g: 130 },
+    { name: "פסטה", re: /פסטה|pasta/i, kcal100g: 131 },
+    { name: "לחם", re: /לחם|bread/i, kcal100g: 265 },
+    { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
+    { name: "טונה", re: /טונה|tuna/i, kcal100g: 116 },
+    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61 },
+    { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15 },
+    { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18 },
+    { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166 },
+    { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
+    { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
+    { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
+    { name: "מים", re: /מים|\bwater\b/i, kcal100g: 0 },
+    { name: "מלח", re: /מלח|\bsalt\b/i, kcal100g: 0 },
     // הרחבה: עוד ירקות/פירות/חלבונים/דגנים/מוצרים נפוצים - לפי בקשה מפורשת
     // ("רוב המאכלים"), עדיין אותו מסד חינמי-לוקאלי, בלי שום קריאת API
-    { re: /בטטה|sweet potato/i, kcal100g: 86 },
-    { re: /תפוח אדמה|תפו"א|potato/i, kcal100g: 77 },
-    { re: /גזר|carrot/i, kcal100g: 41 },
-    { re: /ברוקולי|broccoli/i, kcal100g: 34 },
-    { re: /כרובית|cauliflower/i, kcal100g: 25 },
-    { re: /חסה|lettuce/i, kcal100g: 15 },
-    { re: /פלפל|pepper/i, kcal100g: 31 },
-    { re: /בצל|onion/i, kcal100g: 40 },
+    { name: "בטטה", re: /בטטה|sweet potato/i, kcal100g: 86 },
+    { name: "תפוח אדמה", re: /תפוח אדמה|תפו"א|potato/i, kcal100g: 77 },
+    { name: "גזר", re: /גזר|carrot/i, kcal100g: 41 },
+    { name: "ברוקולי", re: /ברוקולי|broccoli/i, kcal100g: 34 },
+    { name: "כרובית", re: /כרובית|cauliflower/i, kcal100g: 25 },
+    { name: "חסה", re: /חסה|lettuce/i, kcal100g: 15 },
+    { name: "פלפל", re: /פלפל|pepper/i, kcal100g: 31 },
+    { name: "בצל", re: /בצל|onion/i, kcal100g: 40 },
     // (^|[^א-ת])...(?:$|[^א-ת]) במקום lookbehind/lookahead: אותה תוצאה (גבול
     // מילה עברי אמיתי, כי \b לא עובד על עברית ב-JS), אבל בתחביר regex בסיסי
     // שנתמך בכל דפדפן - lookbehind (?<!...) לא נתמך ב-Safari ישן (לפני 16.4),
     // ועלול לגרום ל-SyntaxError בזמן טעינת כל הקובץ, לא רק בביטוי הזה
-    { re: /(^|[^א-ת])שום(?:$|[^א-ת])|garlic/i, kcal100g: 149 },
-    { re: /קישוא|zucchini/i, kcal100g: 17 },
-    { re: /חציל|eggplant/i, kcal100g: 25 },
-    { re: /תירס|corn/i, kcal100g: 86 },
-    { re: /אבוקדו|avocado/i, kcal100g: 160 },
-    { re: /לימון|lemon/i, kcal100g: 29 },
-    { re: /תפוז|orange/i, kcal100g: 47 },
-    { re: /ענבים|grapes/i, kcal100g: 69 },
-    { re: /אבטיח|watermelon/i, kcal100g: 30 },
-    { re: /(^|[^א-ת])מלון(?:$|[^א-ת])|\bmelon\b/i, kcal100g: 34 },
-    { re: /תות|strawberry/i, kcal100g: 32 },
-    { re: /אננס|pineapple/i, kcal100g: 50 },
-    { re: /מנגו|mango/i, kcal100g: 60 },
-    { re: /אגס|pear/i, kcal100g: 57 },
-    { re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254 },
-    { re: /בשר בקר|beef/i, kcal100g: 250 },
-    { re: /הודו|turkey/i, kcal100g: 135 },
-    { re: /סלמון|salmon/i, kcal100g: 208 },
-    { re: /נקניקיה|sausage/i, kcal100g: 300 },
-    { re: /עדשים|lentils/i, kcal100g: 116 },
-    { re: /שעועית|beans/i, kcal100g: 127 },
-    { re: /אפונה|peas/i, kcal100g: 81 },
-    { re: /קינואה|quinoa/i, kcal100g: 120 },
-    { re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389 },
-    { re: /גרנולה|granola/i, kcal100g: 471 },
-    { re: /קורנפלקס|cornflakes/i, kcal100g: 357 },
-    { re: /פיתה|pita/i, kcal100g: 275 },
-    { re: /טופו|tofu/i, kcal100g: 76 },
-    { re: /זית(ים)?|olives/i, kcal100g: 115 },
-    { re: /טחינה|tahini/i, kcal100g: 595 },
-    { re: /מיונז|mayonnaise|mayo/i, kcal100g: 680 },
-    { re: /קטשופ|ketchup/i, kcal100g: 112 },
-    { re: /חמאת בוטנים|peanut butter/i, kcal100g: 588 },
-    { re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62 },
-    { re: /מיץ תפוזים|orange juice/i, kcal100g: 45 },
-    { re: /קולה|\bcola\b/i, kcal100g: 42 },
-    { re: /בירה|\bbeer\b/i, kcal100g: 43 },
-    { re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83 },
-    { re: /פיצה|pizza/i, kcal100g: 266 },
-    { re: /המבורגר|hamburger|burger/i, kcal100g: 295 },
-    { re: /שווארמה|shawarma/i, kcal100g: 250 },
-    { re: /פלאפל|falafel/i, kcal100g: 333 },
-    { re: /גלידה|ice cream/i, kcal100g: 207 },
-    { re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480 },
-    { re: /עוגה|\bcake\b/i, kcal100g: 350 },
-    { re: /קרואסון|croissant/i, kcal100g: 406 },
+    { name: "שום", re: /(^|[^א-ת])שום(?:$|[^א-ת])|garlic/i, kcal100g: 149 },
+    { name: "קישוא", re: /קישוא|zucchini/i, kcal100g: 17 },
+    { name: "חציל", re: /חציל|eggplant/i, kcal100g: 25 },
+    { name: "תירס", re: /תירס|corn/i, kcal100g: 86 },
+    { name: "אבוקדו", re: /אבוקדו|avocado/i, kcal100g: 160 },
+    { name: "לימון", re: /לימון|lemon/i, kcal100g: 29 },
+    { name: "תפוז", re: /תפוז|orange/i, kcal100g: 47 },
+    { name: "ענבים", re: /ענבים|grapes/i, kcal100g: 69 },
+    { name: "אבטיח", re: /אבטיח|watermelon/i, kcal100g: 30 },
+    { name: "מלון", re: /(^|[^א-ת])מלון(?:$|[^א-ת])|\bmelon\b/i, kcal100g: 34 },
+    { name: "תות", re: /תות|strawberry/i, kcal100g: 32 },
+    { name: "אננס", re: /אננס|pineapple/i, kcal100g: 50 },
+    { name: "מנגו", re: /מנגו|mango/i, kcal100g: 60 },
+    { name: "אגס", re: /אגס|pear/i, kcal100g: 57 },
+    { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254 },
+    { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250 },
+    { name: "הודו", re: /הודו|turkey/i, kcal100g: 135 },
+    { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208 },
+    { name: "נקניקייה", re: /נקניקיה|sausage/i, kcal100g: 300 },
+    { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116 },
+    { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127 },
+    { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81 },
+    { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120 },
+    { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389 },
+    { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471 },
+    { name: "קורנפלקס", re: /קורנפלקס|cornflakes/i, kcal100g: 357 },
+    { name: "פיתה", re: /פיתה|pita/i, kcal100g: 275 },
+    { name: "טופו", re: /טופו|tofu/i, kcal100g: 76 },
+    { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115 },
+    { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595 },
+    { name: "מיונז", re: /מיונז|mayonnaise|mayo/i, kcal100g: 680 },
+    { name: "קטשופ", re: /קטשופ|ketchup/i, kcal100g: 112 },
+    { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588 },
+    { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62 },
+    { name: "מיץ תפוזים", re: /מיץ תפוזים|orange juice/i, kcal100g: 45 },
+    { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42 },
+    { name: "בירה", re: /בירה|\bbeer\b/i, kcal100g: 43 },
+    { name: "יין", re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83 },
+    { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266 },
+    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295 },
+    { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250 },
+    { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333 },
+    { name: "גלידה", re: /גלידה|ice cream/i, kcal100g: 207 },
+    { name: "עוגיות", re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480 },
+    { name: "עוגה", re: /עוגה|\bcake\b/i, kcal100g: 350 },
+    { name: "קרואסון", re: /קרואסון|croissant/i, kcal100g: 406 },
 ];
 // ממירות יחידות נפח מטבחיות שכיחות (כף/כפית/כוס) לגרם משוער - כדי שאפשר
 // יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'"
@@ -4269,6 +4271,77 @@ async function saveMealRowAsPreset(button) {
     showAppToast(t('meal_save_preset_success'));
     loadMealPresetsToSelects();
     loadPresetManageList();
+}
+
+// --- בורר מאכלים עם חיפוש: דרך אמינה ומדויקת יותר מהקלדה חופשית (שדורשת
+// תבנית גרם/כף/כפית מדויקת כדי בכלל להיכנס לפעולה) - כאן בוחרים מאכל מוכר
+// מרשימה, מזינים כמות במספר נקי, והחישוב תמיד עובד (אין תלות בניסוח חופשי) ---
+let foodPickerTargetRow = null;
+let foodPickerSelectedItem = null;
+
+function openFoodPicker(button) {
+    foodPickerTargetRow = button.closest('.meal-row');
+    foodPickerSelectedItem = null;
+    const search = document.getElementById('food-picker-search-input');
+    if (search) search.value = '';
+    document.getElementById('food-picker-quantity-section').classList.add('hidden');
+    renderFoodPickerList('');
+    openModal('modal-food-picker');
+    if (search) search.focus();
+}
+
+function renderFoodPickerList(filter) {
+    const list = document.getElementById('food-picker-list');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const matches = FOOD_CALORIE_DB
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => item.name.toLowerCase().includes(query));
+    if (!matches.length) {
+        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        return;
+    }
+    list.innerHTML = matches.map(({ item, index }) => `
+        <button type="button" class="language-picker-item" onclick="selectFoodPickerItem(${index})">
+            <span class="language-picker-name">${item.name}</span>
+        </button>
+    `).join('');
+}
+
+function selectFoodPickerItem(index) {
+    foodPickerSelectedItem = FOOD_CALORIE_DB[index];
+    if (!foodPickerSelectedItem) return;
+    document.getElementById('food-picker-selected-name').textContent = foodPickerSelectedItem.name;
+    document.getElementById('food-picker-qty-unit-label').textContent = foodPickerSelectedItem.kcalPerUnit != null ? t('food_picker_unit_count') : t('food_picker_unit_grams');
+    document.getElementById('food-picker-qty-input').value = '';
+    document.getElementById('food-picker-calories-preview').textContent = '';
+    document.getElementById('food-picker-quantity-section').classList.remove('hidden');
+}
+
+function computeFoodPickerCalories(qty) {
+    if (!foodPickerSelectedItem || !qty) return 0;
+    if (foodPickerSelectedItem.kcalPerUnit != null) return qty * foodPickerSelectedItem.kcalPerUnit;
+    return (qty / 100) * foodPickerSelectedItem.kcal100g;
+}
+
+function updateFoodPickerCaloriesPreview() {
+    const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
+    const calories = Math.round(computeFoodPickerCalories(qty));
+    document.getElementById('food-picker-calories-preview').textContent = qty > 0 ? `${t('food_picker_calories_label')} ${calories}` : '';
+}
+
+function confirmFoodPickerSelection() {
+    if (!foodPickerSelectedItem || !foodPickerTargetRow) return;
+    const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
+    if (qty <= 0) { showAppToast(t('food_picker_missing_qty'), 'error'); return; }
+    const calories = Math.round(computeFoodPickerCalories(qty));
+    const unitSuffix = foodPickerSelectedItem.kcalPerUnit != null ? '' : t('food_picker_grams_short');
+    const foodInput = foodPickerTargetRow.querySelector('.food-input');
+    const caloriesInput = foodPickerTargetRow.querySelector('.calories-input');
+    foodInput.value = `${foodPickerSelectedItem.name} - ${qty}${unitSuffix}`;
+    caloriesInput.value = calories;
+    updateLiveCaloriesToday();
+    closeModal('modal-food-picker');
 }
 
 // --- מנתח חוקי-דטרמיניסטי (אין LLM אמיתי): חילוץ מילולי-קפדני, ללא הוספת טקסט/הקשר משלו ---
