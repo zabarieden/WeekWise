@@ -369,6 +369,7 @@ html.light-mode .schedule-adder-grid select,
 html.light-mode .schedule-adder-grid input,
 html.light-mode .preset-manager-grid select,
 html.light-mode .preset-manager-grid input,
+html.light-mode #sport-custom-type-input,
 html.light-mode #ai-quick-add-input,
 html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
@@ -1618,7 +1619,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+/* שדה "איזה ספורט?" חי מחוץ ל-.preset-manager-grid (לא חלק מהרשת, כי הוא
+   מוצג רק תנאי כשבוחרים "אחר") - לכן צריך width מפורש, בניגוד לשדות ברשת
+   שמקבלים אותו מ-grid-template-columns של ההורה */
+#sport-custom-type-input { width: 100%; box-sizing: border-box; }
 .reminder-fields-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
 .reminder-fields-wrap select { flex: 1 1 140px; min-width: 0; box-sizing: border-box; }
 .reminder-fields-wrap input { flex: 2 1 200px; min-width: 0; box-sizing: border-box; }
