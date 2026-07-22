@@ -1953,10 +1953,10 @@ async function loadCalendarEvents() {
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     const today = getLocalDateString();
-    // source='calendar' בלבד - לא משימות שהומרו מפתקים גרורים (source=
-    // 'note_task'). אלה עדיין מופיעות בלוח החודשי וב"משימות להיום" (שם לא
-    // מסננים), רק לא כאן ב"מבט ליומן" - לפי בקשה מפורשת
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar').gte('event_date', today);
+    // בלי סינון לפי source: גם משימות שהומרו מפתקים גרורים (source='note_task')
+    // מוצגות כאן - לפי בקשה מפורשת, כי אלה "ממש חשובות" וזה הכרטיס התמידי-פתוח
+    // הראשון בעמוד, לא רק בלוח החודשי (ששם צריך ללחוץ על יום ספציפי כדי לראות)
+    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', today);
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
