@@ -3703,6 +3703,11 @@ function sportTypeLabel(row) {
     return t(`sport_type_${row.sport_type}`);
 }
 
+function formatSportDayLabel(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+}
+
 async function renderSportSummary() {
     const labelEl = document.getElementById('sport-summary-month-label');
     if (!labelEl || !supabaseClient || !currentUserId) return;
@@ -3711,7 +3716,7 @@ async function renderSportSummary() {
     const nextBtn = document.getElementById('sport-summary-next-btn');
     if (nextBtn) nextBtn.disabled = monthKey === currentMonthKey();
     const { firstStr, lastStr } = sportMonthRange(monthKey);
-    const { data } = await supabaseClient.from('sport_sessions').select('duration_minutes, distance_km')
+    const { data } = await supabaseClient.from('sport_sessions').select('session_date, sport_type, duration_minutes, distance_km')
         .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr);
     const rows = data || [];
     let totalMinutes = 0, totalKm = 0;
@@ -3719,6 +3724,36 @@ async function renderSportSummary() {
     document.getElementById('sport-total-sessions').textContent = rows.length;
     document.getElementById('sport-total-minutes').textContent = totalMinutes.toLocaleString();
     document.getElementById('sport-total-km').textContent = totalKm.toLocaleString(undefined, { maximumFractionDigits: 1 });
+
+    // ימי אימון: תאריכים ייחודיים שיש בהם לפחות אימון אחד, ממוינים כרונולוגית
+    const trainingDaysEl = document.getElementById('sport-training-days-label');
+    if (trainingDaysEl) {
+        const uniqueDays = [...new Set(rows.map(row => row.session_date))].sort();
+        trainingDaysEl.textContent = uniqueDays.length
+            ? `${t('sport_training_days_label')} ${uniqueDays.map(formatSportDayLabel).join(', ')}`
+            : '';
+    }
+
+    // "הכי הרבה רצתי": יום הריצה עם המרחק הגדול ביותר (נופל חזרה למשך זמן אם
+    // אין מרחק רשום לאף ריצה החודש) - רק בין sport_type==='running', לא ספורט אחר
+    const bestRunEl = document.getElementById('sport-best-run-label');
+    if (bestRunEl) {
+        const runs = rows.filter(row => row.sport_type === 'running');
+        let best = null;
+        runs.forEach(row => {
+            const hasDistance = row.distance_km != null;
+            const score = hasDistance ? Number(row.distance_km) : (row.duration_minutes || 0);
+            if (!best || score > best.score) best = { row, score, hasDistance };
+        });
+        if (best) {
+            const detail = best.hasDistance
+                ? `${Number(best.row.distance_km).toLocaleString()} ${t('sport_km_unit')}`
+                : `${best.row.duration_minutes} ${t('sport_minutes_unit')}`;
+            bestRunEl.textContent = `${t('sport_best_run_label')} ${formatSportDayLabel(best.row.session_date)} (${detail})`;
+        } else {
+            bestRunEl.textContent = '';
+        }
+    }
 }
 
 async function renderSportHistory() {
