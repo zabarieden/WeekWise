@@ -2580,6 +2580,7 @@ async function loadPremiumStatus() {
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
         renderSettingsSubscriptionSection();
+        renderRecipeScanUsageHint();
         return;
     }
     // select('*') ולא select('is_premium') בכוונה: כך שאם עמודת tier עוד לא
@@ -2591,6 +2592,7 @@ async function loadPremiumStatus() {
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
     renderSettingsSubscriptionSection();
+    renderRecipeScanUsageHint();
 }
 
 // הגדרות > "ניהול המנוי": מוצג רק כשבאמת פרימיום. חשבון-פיתוח (עקיפה קבועה
@@ -3628,18 +3630,32 @@ async function loadPastMonthlyGoals() {
     });
 }
 
-// --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם), נשמר ב-Supabase per-user ---
+// --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם, לכל החיים - זו לא סריקת
+// תמונה, רק ניתוח טקסט מודבק, ולכן לא הוגבל מחדש לחודשי) ---
 // חסימה זו מדולגת לחלוטין עבור משתמשי פרימיום (isPremiumUser)
 const RECIPE_AI_FREE_LIMIT = 10;
-const IMAGE_SCAN_FREE_LIMIT = 10;
+// סריקות תמונה (מתכונים) - 5 בחודש בחינם, מתאפס אוטומטית כל חודש (אותו דפוס
+// month_key בדיוק כמו המכסה החודשית של פרימיום - ר' scan-recipe-image)
+const IMAGE_SCAN_FREE_LIMIT = 5;
 let cachedAiUsage = 0;
 let cachedImageScansUsed = 0;
 
 async function loadAiUsage() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used, image_scans_used').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used, free_image_scans_month_key, free_image_scans_month_used').eq('user_id', currentUserId).maybeSingle();
     cachedAiUsage = data ? data.recipe_ai_parses_used : 0;
-    cachedImageScansUsed = data ? (data.image_scans_used || 0) : 0;
+    cachedImageScansUsed = (data && data.free_image_scans_month_key === currentMonthKey()) ? (data.free_image_scans_month_used || 0) : 0;
+    renderRecipeScanUsageHint();
+}
+
+// מציג "X/5 סריקות חינם החודש" למי שלא פרימיום, ליד כפתור סריקת המתכון -
+// כדי שהמכסה תהיה שקופה ולא תרגיש כמו "פתוח בלי הגבלה" (זו הייתה תלונה אמיתית)
+function renderRecipeScanUsageHint() {
+    const hint = document.getElementById('recipe-scan-free-hint');
+    if (!hint) return;
+    if (isPremiumUser) { hint.textContent = t('recipe_scan_file_hint_premium'); return; }
+    const remaining = Math.max(0, IMAGE_SCAN_FREE_LIMIT - cachedImageScansUsed);
+    hint.textContent = t('recipe_scan_file_hint').replace('{remaining}', remaining).replace('{limit}', IMAGE_SCAN_FREE_LIMIT);
 }
 
 async function incrementAiUsage() {
@@ -3819,6 +3835,7 @@ async function runRecipeImageScan(file) {
                 } else if (res.ok && !result.error && result.recipe) {
                     recipe = result.recipe;
                     if (typeof result.scansUsed === 'number') cachedImageScansUsed = result.scansUsed;
+                    renderRecipeScanUsageHint();
                 }
             } catch {
                 // הענן לא זמין (רשת/שרת) - ממשיכים בשקט ל-OCR המקומי למטה

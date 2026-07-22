@@ -7,8 +7,10 @@
 // fully editable) Add Recipe form.
 //
 // Usage limits (server-side, since a client-only check can be bypassed):
-// - Free (non-premium) users: a single lifetime cap of IMAGE_SCAN_FREE_LIMIT scans,
-//   tracked in user_ai_usage.image_scans_used (never resets).
+// - Free (non-premium) users: IMAGE_SCAN_FREE_LIMIT scans per calendar month, tracked
+//   in user_ai_usage.free_image_scans_month_key/_used (resets automatically whenever
+//   the stored month_key no longer matches the current one - same mechanism as the
+//   premium quota below, just a separate counter/limit).
 // - Premium users (any billing period - monthly/semiannual/lifetime alike): a shared
 //   monthly quota of PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT image scans, shared with
 //   scan-meal-photo (both count against the same premium_image_scans_month_used
@@ -27,7 +29,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5-20250929";
 
-const IMAGE_SCAN_FREE_LIMIT = 10;
+const IMAGE_SCAN_FREE_LIMIT = 5;
 const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
 
 const RECIPE_CATEGORIES = [
@@ -87,17 +89,20 @@ Deno.serve(async (req) => {
 
         const monthKey = currentMonthKey();
         // אם ה-month_key השמור לא תואם לחודש הנוכחי, הספירה מתאפסת (0) - זה
-        // בפועל *הוא* מנגנון האיפוס החודשי, בלי צורך בשום cron job נפרד
+        // בפועל *הוא* מנגנון האיפוס החודשי, בלי צורך בשום cron job נפרד -
+        // אותו דפוס בדיוק לשני המונים (פרימיום/חינמי), רק עמודות נפרדות
         const premiumMonthUsed = usageRow?.premium_image_scans_month_key === monthKey
             ? (usageRow?.premium_image_scans_month_used || 0)
             : 0;
-        const freeUsed = usageRow?.image_scans_used || 0;
+        const freeMonthUsed = usageRow?.free_image_scans_month_key === monthKey
+            ? (usageRow?.free_image_scans_month_used || 0)
+            : 0;
 
         if (isPremium && premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: premiumMonthUsed, limit: PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT }, 402);
         }
-        if (!isPremium && freeUsed >= IMAGE_SCAN_FREE_LIMIT) {
-            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: freeUsed, limit: IMAGE_SCAN_FREE_LIMIT }, 402);
+        if (!isPremium && freeMonthUsed >= IMAGE_SCAN_FREE_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_monthly", used: freeMonthUsed, limit: IMAGE_SCAN_FREE_LIMIT }, 402);
         }
 
         const body = await req.json();
@@ -189,20 +194,21 @@ Deno.serve(async (req) => {
         const toolInput = toolUseBlock.input;
         const recipe = { ...toolInput, calories: toolInput.estimated_total_calories ?? toolInput.calories ?? null };
 
-        // עדכון המונה המתאים בלבד: פרימיום -> מונה חודשי (עם month_key מעודכן,
-        // גם אם התאפס הרגע), חינמי -> מונה לכל-החיים כרגיל
+        // עדכון המונה המתאים בלבד - שניהם כותבים month_key מעודכן, גם אם
+        // התאפס הרגע (upsert בשני המקרים, כי גם מונה חינמי צריך month_key)
         if (isPremium) {
             await supabase.from("user_ai_usage").upsert(
                 { user_id: userId, username: userData.user.email, premium_image_scans_month_key: monthKey, premium_image_scans_month_used: premiumMonthUsed + 1 },
                 { onConflict: "user_id" },
             );
-        } else if (usageRow) {
-            await supabase.from("user_ai_usage").update({ image_scans_used: freeUsed + 1 }).eq("user_id", userId);
         } else {
-            await supabase.from("user_ai_usage").insert({ user_id: userId, image_scans_used: 1 });
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, free_image_scans_month_key: monthKey, free_image_scans_month_used: freeMonthUsed + 1 },
+                { onConflict: "user_id" },
+            );
         }
 
-        return jsonResponse({ ok: true, recipe, scansUsed: freeUsed + 1 });
+        return jsonResponse({ ok: true, recipe, scansUsed: isPremium ? premiumMonthUsed + 1 : freeMonthUsed + 1 });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }

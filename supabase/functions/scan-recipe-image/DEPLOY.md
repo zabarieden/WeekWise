@@ -10,8 +10,12 @@ Run in the Supabase SQL Editor (already applied directly via the Supabase CLI du
 development - included here so the schema is documented and reproducible elsewhere):
 
 ```sql
--- Free-tier lifetime counter (never resets) for the 10-scan free limit.
+-- Legacy free-tier lifetime counter (no longer read for the limit decision, kept for
+-- historical data - see free_image_scans_month_key/_used below for the current logic).
 alter table user_ai_usage add column if not exists image_scans_used integer default 0;
+-- Free-tier monthly quota (resets automatically, same mechanism as the premium one below).
+alter table user_ai_usage add column if not exists free_image_scans_month_key text;
+alter table user_ai_usage add column if not exists free_image_scans_month_used integer default 0;
 -- Premium monthly quota (shared with scan-meal-photo - see below) and reset-tracking key.
 alter table user_ai_usage add column if not exists premium_image_scans_month_key text;
 alter table user_ai_usage add column if not exists premium_image_scans_month_used integer default 0;
@@ -69,10 +73,10 @@ user taps "Scan a photo" - no `pg_cron` step required.
 
 ## Known limitations (being upfront about these)
 
-- **Cost**: every scan is a real, billed API call. The 10-free-scans limit is enforced
-  server-side (can't be bypassed by editing client code), but there's currently no
-  hard cap on total spend across all users - keep an eye on Anthropic's usage dashboard
-  early on.
+- **Cost**: every scan is a real, billed API call. The 5-free-scans-per-month limit is
+  enforced server-side (can't be bypassed by editing client code), but there's currently
+  no hard cap on total spend across all users - keep an eye on Anthropic's usage
+  dashboard early on.
 - **Accuracy**: this handles handwriting and messy photos far better than the free
   Tesseract.js route would, but it's still a best-effort transcription - the frontend
   form stays fully editable specifically because no vision model is perfect.
