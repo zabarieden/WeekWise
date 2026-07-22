@@ -941,6 +941,27 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    עדינים) על השורה החיה עצמה, כמשוב שרואים איזו שורה פעילה */
 .sortable-ghost { opacity: 0 !important; }
 .sortable-fallback { display: none !important; }
+/* חריג לגרירת-פתקים (note-triage): שם השכפול הצף *הוא* המשוב היחיד לגרירה
+   (הפריט המקורי לא זז ברשימה, כי pull:'clone') - אז חייבים לראות אותו,
+   בניגוד לסידור-מחדש של שעות/אירועים למעלה. .note-triage-drag-clone (ר'
+   dragClass ב-app.js) הופך את הכלל הגלובלי בחזרה, עם עיצוב עצמאי (לא
+   תלוי בהורה .center-list, כי הוא מצורף ישירות ל-body) */
+.sortable-fallback.note-triage-drag-clone {
+    display: flex !important;
+    opacity: 0.95 !important;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-row);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--accent-pink);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    z-index: 99999 !important;
+}
 .sortable-chosen { position: relative; z-index: 20; opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */

@@ -145,9 +145,9 @@ async function loadCenterItems(type) {
     data.forEach(item => {
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
-        // ידית גרירה גם לפתקים וגם לרשימת קניות - שתיהן יכולות להיגרר לאחד
-        // מ"אזורי הטריאז'" (היום/מחר) ולהפוך לפריט מתוזמן באותו אופן
-        const dragHandle = `<span class="note-drag-handle">⠿</span>`;
+        // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
+        // לפי בקשה מפורשת (רק פתקים נגררים - כולל אל "רשימת קניות" כיעד)
+        const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
@@ -164,18 +164,20 @@ async function loadCenterItems(type) {
     initNoteTriageDragDrop(type);
 }
 
-// --- גרירת פתק/פריט רשימת-קניות אל "היום"/"מחר": הופך אותו למשימה מתוזמנת
-// אמיתית (calendar_events), אותה טבלה בדיוק שכבר מזינה את "מבט ליומן",
-// "משימות להיום" ולוח החודש - אז זה "נכנס ללו"ז החודשי" אוטומטית בלי שום
-// קוד נוסף באותם מסכים. הפריט המקורי נמחק (הוא "הפך" למשימה, לא הועתק).
-// עובד גם לפתקים (type='weekly') וגם לרשימת קניות (type='general') - כל אחד
-// עם אזורי הטריאז' והקבוצת-Sortable הנפרדים שלו, כדי שלא "יתערבבו" ---
+// --- גרירת פתק אל "היום"/"מחר"/"רשימת קניות": ה-שניים הראשונים הופכים אותו
+// למשימה מתוזמנת אמיתית (calendar_events), אותה טבלה בדיוק שכבר מזינה את
+// "מבט ליומן", "משימות להיום" ולוח החודש - אז זה "נכנס ללו"ז החודשי" אוטומטית
+// בלי שום קוד נוסף באותם מסכים. "רשימת קניות" רק מעביר את הפתק לרשימת
+// הקניות (task_type). בכל המקרים הפתק המקורי נמחק/עובר (לא מועתק).
+// רלוונטי רק לכרטיס הפתקים (type='weekly') - לרשימת קניות עצמה אין יעדי
+// גרירה משלה, לפי בקשה מפורשת ---
 const noteTriageInitialized = {};
 function initNoteTriageDragDrop(type) {
     if (noteTriageInitialized[type] || typeof Sortable === 'undefined') return;
     const list = document.getElementById(`${type}-list`);
     const todayZone = document.getElementById(`note-triage-today-${type}`);
     const tomorrowZone = document.getElementById(`note-triage-tomorrow-${type}`);
+    const shoppingZone = document.getElementById(`note-triage-shopping-${type}`);
     if (!list || !todayZone || !tomorrowZone) return;
     noteTriageInitialized[type] = true;
 
@@ -188,8 +190,16 @@ function initNoteTriageDragDrop(type) {
         sort: false,
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
+        // dragClass: מזהה ייחודי לשכפול הצף הזה בלבד - כי הכלל הגלובלי
+        // .sortable-fallback{display:none} (עבור גרירת-סידור-מחדש של שעות/
+        // אירועים, ששם השורה החיה ברשימה היא המשוב) לא מתאים כאן: זו גרירה
+        // אל יעד אחר לגמרי (עם pull:'clone'), אז חייבים שכפול גלוי שעוקב
+        // אחרי האצבע - אחרת נראה כאילו הפריט "נעלם" עד שמשחררים
+        dragClass: 'note-triage-drag-clone',
     });
-    [todayZone, tomorrowZone].forEach(zone => {
+    const zones = [todayZone, tomorrowZone];
+    if (shoppingZone) zones.push(shoppingZone);
+    zones.forEach(zone => {
         new Sortable(zone, {
             group: { name: `note-triage-${type}`, pull: false, put: true },
             animation: 150,
@@ -207,6 +217,17 @@ function initNoteTriageDragDrop(type) {
 
 async function handleNoteTriageDrop(itemId, triageType, content, type) {
     if (!supabaseClient || !currentUserId || !content) return;
+
+    // "לרשימת קניות" הוא לא המרה לאירוע-לוח שנה כמו היום/מחר - זו רק העברה
+    // של אותה שורה בין task_type-ים ('weekly' -> 'general'), בלי מחיקה/יצירה
+    if (triageType === 'shopping') {
+        await supabaseClient.from('my_center_tasks').update({ task_type: 'general' }).eq('id', itemId);
+        loadCenterItems('weekly');
+        loadCenterItems('general');
+        showAppToast(t('note_triage_success_shopping'));
+        return;
+    }
+
     const targetDate = triageType === 'tomorrow' ? getLocalDateString(new Date(Date.now() + 86400000)) : getLocalDateString();
     // source: 'note_task' - לא 'calendar' (ברירת המחדל) - כדי שזה יופיע בלוח
     // החודשי וב"משימות להיום" (שם לא מסננים לפי source) אבל לא ב"מבט ליומן"

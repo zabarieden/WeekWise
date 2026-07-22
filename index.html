@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="WeekWise">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=105">
+    <link rel="stylesheet" href="theme.css?v=106">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -86,6 +86,24 @@
                 <!-- חלונית 1: MyWeek -->
                 <section class="tab-content" id="schedule-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+
+                    <!-- מבט ליומן: הכי חשוב, לכן ראשון בעמוד (לפני "לו"ז" עצמו) - כדי
+                         שיהיה גלוי מיד בלי לגלול, לפי בקשה מפורשת -->
+                    <div class="card calendar-glance-card">
+                        <div class="card-title-row">
+                            <div class="calendar-glance-heading">
+                                <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
+                                <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
+                            </div>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="calendar-glance-list" class="calendar-glance-list"></div>
+                        </div>
+                    </div>
+
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="nav_myweek">MyWeek</h2>
@@ -141,22 +159,6 @@
                             </div>
                             <div class="monthly-calendar-grid" id="monthly-calendar-grid"></div>
                             <div id="monthly-calendar-day-detail" class="monthly-calendar-day-detail"></div>
-                        </div>
-                    </div>
-
-                    <!-- מבט ליומן: תצוגת אג'נדה קבועה ותמיד פתוחה, ללא חץ קיפול -->
-                    <div class="card calendar-glance-card">
-                        <div class="card-title-row">
-                            <div class="calendar-glance-heading">
-                                <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
-                                <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
-                            </div>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="calendar-glance-list" class="calendar-glance-list"></div>
                         </div>
                     </div>
                 </section>
@@ -386,6 +388,10 @@
                                     <span class="note-triage-icon">📆</span>
                                     <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
                                 </div>
+                                <div class="note-triage-zone" id="note-triage-shopping-weekly" data-triage="shopping">
+                                    <span class="note-triage-icon">🛒</span>
+                                    <span data-i18n="note_triage_shopping">To Shopping List</span>
+                                </div>
                             </div>
                             <ul id="weekly-list" class="center-list"></ul>
                         </div>
@@ -422,17 +428,6 @@
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body">
-                            <p class="note-triage-hint" data-i18n="note_triage_hint">Drag an item onto a day to turn it into a scheduled task:</p>
-                            <div class="note-triage-zones">
-                                <div class="note-triage-zone" id="note-triage-today-general" data-triage="today">
-                                    <span class="note-triage-icon">📅</span>
-                                    <span data-i18n="note_triage_today">Do Today</span>
-                                </div>
-                                <div class="note-triage-zone" id="note-triage-tomorrow-general" data-triage="tomorrow">
-                                    <span class="note-triage-icon">📆</span>
-                                    <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
-                                </div>
-                            </div>
                             <ul id="general-list" class="center-list"></ul>
                         </div>
                     </div>
@@ -1260,7 +1255,7 @@
 
     </div>
 
-    <script src="i18n.js?v=54"></script>
-    <script src="app.js?v=98"></script>
+    <script src="i18n.js?v=55"></script>
+    <script src="app.js?v=99"></script>
 </body>
 </html>
