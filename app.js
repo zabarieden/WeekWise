@@ -4402,6 +4402,27 @@ async function handleAiBrainImageSelected(event) {
     }
 }
 
+// שולחת ניסיון בודד ל-scan-meal-photo ומדווחת מה קרה - מנותקת כדי שאפשר
+// יהיה לנסות שוב אוטומטית (ר' הקריאה הכפולה למטה) בלי לשכפל את כל לוגיקת
+// הפענוח. תקלת רשת חד-פעמית היא הגורם השכיח ביותר לכישלון סתמי, ורוב
+// הפעמים ניסיון חוזר מיד מצליח - בדיוק אותו דפוס כמו attemptRecipeCloudScan
+async function attemptMealPhotoScan(token, base64, mediaType) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ imageBase64: base64, mediaType, language: currentLang })
+        });
+        const result = await res.json();
+        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
+        if (res.ok && !result.error && result.items && result.items.length) return { status: 'ok', items: result.items };
+        return { status: 'retry' };
+    } catch {
+        return { status: 'retry' };
+    }
+}
+
 async function runPresetImageScan(file) {
     if (!file.type.startsWith('image/')) { showAppToast(t('meal_photo_unsupported_type'), 'error'); return; }
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
@@ -4414,26 +4435,19 @@ async function runPresetImageScan(file) {
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
         if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType, language: currentLang })
-        });
-        const result = await res.json();
+        let attempt = await attemptMealPhotoScan(token, base64, mediaType);
+        if (attempt.status === 'retry') attempt = await attemptMealPhotoScan(token, base64, mediaType);
 
-        if (result.error === 'limit_reached') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
-        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
-        if (!res.ok || result.error || !result.items || !result.items.length) {
-            showAppToast(t('meal_photo_failed'), 'error');
-            return;
-        }
+        if (attempt.status === 'limit') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
+        if (attempt.status === 'premium_required') { openPremiumUpgradeModal(); return; }
+        if (attempt.status !== 'ok') { showAppToast(t('meal_photo_failed'), 'error'); return; }
 
         // ארוחה קבועה יכולה להכיל כמה פריטים (למשל ארוחה שלמה עם אורז+ביצים+...) -
         // מאחדים את כולם לפריט שמור אחד: השם הוא רשימת כל המרכיבים (מקוצר,
         // "הכל"), הקלוריות הן הסכום הכולל, וה"מרכיבים" (description) הוא
         // פירוט קלורי לכל פריט בנפרד - כדי שגם אחרי האיחוד עדיין אפשר יהיה
         // לראות מה בדיוק מרכיב את הארוחה, לא רק את המספר הכולל
-        const items = result.items;
+        const items = attempt.items;
         const totalCalories = items.reduce((sum, it) => sum + (it.calories || 0), 0);
         const combinedName = items.map(it => it.food_name).filter(Boolean).join(', ');
         const combinedDescription = items.map(it => `${it.food_name} (${it.calories})`).join(', ');
@@ -5291,22 +5305,15 @@ async function handleMealPhotoSelected(event) {
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
         if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-meal-photo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType, language: currentLang })
-        });
-        const result = await res.json();
+        let attempt = await attemptMealPhotoScan(token, base64, mediaType);
+        if (attempt.status === 'retry') attempt = await attemptMealPhotoScan(token, base64, mediaType);
 
-        if (result.error === 'limit_reached') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
-        if (res.status === 402 || result.error === 'premium_required') { openPremiumUpgradeModal(); return; }
-        if (!res.ok || result.error || !result.items || !result.items.length) {
-            showAppToast(t('meal_photo_failed'), 'error');
-            return;
-        }
+        if (attempt.status === 'limit') { showAppToast(t('ai_monthly_limit_reached'), 'error'); return; }
+        if (attempt.status === 'premium_required') { openPremiumUpgradeModal(); return; }
+        if (attempt.status !== 'ok') { showAppToast(t('meal_photo_failed'), 'error'); return; }
 
         const emptyRows = Array.from(document.querySelectorAll('.meal-row')).filter(row => !row.querySelector('.food-input').value.trim());
-        result.items.slice(0, emptyRows.length).forEach((item, index) => {
+        attempt.items.slice(0, emptyRows.length).forEach((item, index) => {
             emptyRows[index].querySelector('.food-input').value = item.food_name || '';
             emptyRows[index].querySelector('.calories-input').value = item.calories || 0;
         });
