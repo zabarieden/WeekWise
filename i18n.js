@@ -2,6 +2,9 @@
 const SUPPORTED_LANGUAGES = ['en', 'he', 'es', 'fr', 'ar'];
 const RTL_LANGUAGES = ['he', 'ar'];
 const LANGUAGE_NAMES = { en: 'English', he: 'עברית', es: 'Español', fr: 'Français', ar: 'العربية' };
+// דגלים לבורר השפה החדש (חיפוש) - מפה נפרדת מ-LANGUAGE_NAMES כדי שהוספת שפה
+// עתידית תדרוש רק שורה אחת נוספת כאן ובתרגומים, לא שינוי מבני
+const LANGUAGE_FLAGS = { en: '🇺🇸', he: '🇮🇱', es: '🇪🇸', fr: '🇫🇷', ar: '🇸🇦' };
 
 let currentLang = 'en';
 
@@ -154,6 +157,7 @@ en: {
     error_not_connected: "Not connected - try refreshing the page and logging in again.",
     error_adding_item: "Error adding item: ", error_loading_list: "Error loading list: ", error_loading_steps: "Error loading step data: ",
     settings_title: "Settings", settings_language_label: "Language",
+    language_picker_title: "Choose Language", language_search_placeholder: "Search language...", language_no_results: "No languages found",
     settings_premium_title: "Premium Upgrades",
     settings_go_premium_btn: "⭐ Go Premium",
     settings_upgrade_btn: "Upgrade — Coming soon",
@@ -399,6 +403,7 @@ he: {
     error_not_connected: "לא מחוברים - נסו לרענן את הדף ולהתחבר מחדש.",
     error_adding_item: "שגיאה בהוספת הפריט: ", error_loading_list: "שגיאה בטעינת הרשימה: ", error_loading_steps: "שגיאה בטעינת מד הצעדים: ",
     settings_title: "הגדרות", settings_language_label: "שפה",
+    language_picker_title: "בחירת שפה", language_search_placeholder: "חיפוש שפה...", language_no_results: "לא נמצאו שפות",
     settings_premium_title: "שדרוגים פרימיום",
     settings_go_premium_btn: "⭐ שדרוג לפרימיום",
     settings_upgrade_btn: "שדרוג — בקרוב",
@@ -644,6 +649,7 @@ es: {
     error_not_connected: "No conectado - intenta recargar la página e iniciar sesión de nuevo.",
     error_adding_item: "Error al añadir elemento: ", error_loading_list: "Error al cargar la lista: ", error_loading_steps: "Error al cargar los pasos: ",
     settings_title: "Ajustes", settings_language_label: "Idioma",
+    language_picker_title: "Elegir Idioma", language_search_placeholder: "Buscar idioma...", language_no_results: "No se encontraron idiomas",
     settings_premium_title: "Mejoras Premium",
     settings_go_premium_btn: "⭐ Hazte Premium",
     settings_upgrade_btn: "Mejorar — Próximamente",
@@ -889,6 +895,7 @@ fr: {
     error_not_connected: "Non connecté - essayez de recharger la page et de vous reconnecter.",
     error_adding_item: "Erreur lors de l'ajout de l'élément : ", error_loading_list: "Erreur lors du chargement de la liste : ", error_loading_steps: "Erreur lors du chargement des pas : ",
     settings_title: "Paramètres", settings_language_label: "Langue",
+    language_picker_title: "Choisir la Langue", language_search_placeholder: "Rechercher une langue...", language_no_results: "Aucune langue trouvée",
     settings_premium_title: "Mises à Niveau Premium",
     settings_go_premium_btn: "⭐ Passer Premium",
     settings_upgrade_btn: "Mettre à niveau — Bientôt disponible",
@@ -1134,6 +1141,7 @@ ar: {
     error_not_connected: "غير متصل - حاول تحديث الصفحة وتسجيل الدخول مرة أخرى.",
     error_adding_item: "خطأ في إضافة العنصر: ", error_loading_list: "خطأ في تحميل القائمة: ", error_loading_steps: "خطأ في تحميل بيانات الخطوات: ",
     settings_title: "الإعدادات", settings_language_label: "اللغة",
+    language_picker_title: "اختيار اللغة", language_search_placeholder: "البحث عن لغة...", language_no_results: "لم يتم العثور على لغات",
     settings_premium_title: "ترقيات مميزة",
     settings_go_premium_btn: "⭐ الترقية إلى بريميوم",
     settings_upgrade_btn: "ترقية — قريبًا",

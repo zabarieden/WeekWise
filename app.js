@@ -26,7 +26,6 @@ function initSupabase() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     loadSavedLanguage();
-    populateLanguageDropdown();
     applyLightMode(isLightModeOn());
     initSupabase();
     initCubesNavigation();
@@ -75,24 +74,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-ai-quick-add').addEventListener('click', handleAIQuickAdd);
 });
 
-// --- שפה: אכלוס בורר השפה, ורענון תוכן דינמי כשמחליפים שפה ---
-function populateLanguageDropdown() {
-    const select = document.getElementById('language-select');
-    if (!select) return;
-    select.innerHTML = '';
-    SUPPORTED_LANGUAGES.forEach(lang => {
-        const option = document.createElement('option');
-        option.value = lang;
-        option.textContent = LANGUAGE_NAMES[lang];
-        select.appendChild(option);
+// --- שפה: בורר-שפה משותף עם חיפוש (נפתח גם ממסך הכניסה לפני התחברות, וגם
+// מהגדרות) - נבנה כרשימה מסוננת במקום <select> רגיל כי היעד הוא להוסיף
+// הרבה שפות בעתיד, ורשימת select ארוכה לא נוחה לחיפוש ---
+function updateLanguagePickerTriggers() {
+    const flag = LANGUAGE_FLAGS[currentLang] || '🌐';
+    const name = LANGUAGE_NAMES[currentLang] || currentLang;
+    ['login', 'settings'].forEach(scope => {
+        const flagEl = document.getElementById(`language-picker-${scope}-flag`);
+        const nameEl = document.getElementById(`language-picker-${scope}-name`);
+        if (flagEl) flagEl.textContent = flag;
+        if (nameEl) nameEl.textContent = name;
     });
-    select.value = currentLang;
-    select.onchange = (e) => setLanguage(e.target.value);
+}
+
+function openLanguagePicker() {
+    const search = document.getElementById('language-search-input');
+    if (search) search.value = '';
+    renderLanguagePickerList('');
+    openModal('modal-language-picker');
+    if (search) search.focus();
+}
+
+function renderLanguagePickerList(filter) {
+    const list = document.getElementById('language-picker-list');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const matches = SUPPORTED_LANGUAGES.filter(lang => LANGUAGE_NAMES[lang].toLowerCase().includes(query));
+    if (!matches.length) {
+        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        return;
+    }
+    list.innerHTML = matches.map(lang => `
+        <button type="button" class="language-picker-item${lang === currentLang ? ' active' : ''}" onclick="selectLanguageFromPicker('${lang}')">
+            <span class="language-picker-flag">${LANGUAGE_FLAGS[lang] || '🌐'}</span>
+            <span class="language-picker-name">${LANGUAGE_NAMES[lang]}</span>
+            ${lang === currentLang ? '<span class="language-picker-check">✓</span>' : ''}
+        </button>
+    `).join('');
+}
+
+function selectLanguageFromPicker(lang) {
+    setLanguage(lang);
+    closeModal('modal-language-picker');
 }
 
 function onLanguageChanged() {
-    const select = document.getElementById('language-select');
-    if (select) select.value = currentLang;
+    updateLanguagePickerTriggers();
     renderHomeGreeting();
     if (!currentUserId) return;
     loadCustomDefaultHours();

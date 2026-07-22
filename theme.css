@@ -1460,6 +1460,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red); border-color: rgba(255, 69, 58, 0.15); }
 .apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; animation: fadeOverlay 0.2s ease-out; }
+/* בורר השפה חייב להיפתח גם מעל מסך הכניסה (.login-overlay, z-index:3000 -
+   גבוה מ-.apple-modal הרגיל של 2000!) אז הוא צריך z-index ייעודי גבוה יותר */
+#modal-language-picker { z-index: 3500; }
 .modal-sheet { background-color: var(--bg-sheet); border-top: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(100%); transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1); max-height: 85vh; overflow-y: auto; position: relative; }
 
 .recipe-scan-loading { display: flex; position: absolute; inset: 0; background-color: rgba(7, 6, 10, 0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-direction: column; align-items: center; justify-content: center; gap: 16px; border-radius: 20px; z-index: 50; }
@@ -1900,6 +1903,69 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .auth-toggle-line { margin: 16px 0 0 0 !important; font-size: 0.8rem !important; }
 .auth-toggle-line a { color: var(--accent-purple-light); font-weight: 600; text-decoration: none; margin-right: 4px; }
 .auth-toggle-line a:hover { text-decoration: underline; }
+
+/* בורר שפה משותף (מסך כניסה + הגדרות) - "כפתור" שפותח חלון חיפוש, לא <select>
+   רגיל, כדי שיהיה נוח גם כשיתווספו הרבה עוד שפות בעתיד */
+.language-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 14px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.language-picker-trigger:active { transform: scale(0.97); }
+.language-picker-trigger-login { margin: 0 auto 14px auto; }
+.language-picker-flag { font-size: 1.05rem; line-height: 1; }
+.language-picker-chevron { color: var(--text-secondary); font-size: 0.75rem; }
+
+.language-search-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    outline: none;
+    margin-bottom: 12px;
+}
+.language-search-input:focus { border-color: var(--accent-purple); }
+
+.language-picker-list { display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.language-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 12px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: start;
+    transition: var(--transition);
+}
+.language-picker-item:active { transform: scale(0.98); }
+.language-picker-item.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.08); }
+.language-picker-item .language-picker-name { flex: 1 1 auto; }
+.language-picker-check { color: var(--accent-pink); font-weight: 700; }
+.language-no-results { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 16px 0; }
 input[type="date"] {
     background: rgba(20, 10, 30, 0.55) !important;
     color: var(--accent-purple-light) !important;
