@@ -416,29 +416,24 @@ input, textarea, select {
 .glow-pink { width: 200px; height: 200px; background-color: var(--accent-pink); top: 15%; left: -15%; }
 .glow-purple { width: 240px; height: 240px; background-color: var(--accent-purple); bottom: 20%; right: -20%; animation-delay: -4s; }
 header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5; display: none; }
+/* בלי רקע-זכוכית/מסגרת/צל - מאז שרשת הקוביות הוסרה (הניווט עבר לסרגל
+   התחתון), "כרטיס" גדול עם כמעט כלום בפנים היה נראה כמו קוביה ריקה בול
+   באמצע המסך; עכשיו זו רק שורת הברכה, שקופה על רקע האפליקציה */
 .home-hero-panel {
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px;
     /* padding-top מוגדל (לא 16px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
        הקבועים (עוזר AI בפינה שמאל-עליונה, המבורגר בפינה ימין-עליונה - שניהם
        top:22px עד ~66-70px) - בלי זה שורת "שלום.../תאריך" מסתתרת מתחתיהם */
     padding: 70px 14px 14px 14px;
     margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     position: relative;
     z-index: 5;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
-/* מסך הבית הוא מסך מלא אמיתי: כשהוא גלוי (אין לו .hidden), הוא תופס את כל
-   הגובה הפנוי (אזור הגלילה הריק בכל מקרה, כי אין tab-content פעיל) ורשת
-   הקוביות ממורכזת אנכית בתוכו, במקום להישאר דחוסה למעלה עם שטח מת מתחת */
-.home-hero-panel:not(.hidden) { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+/* לא flex:1 יותר - זה היה כדי למרכז אנכית את רשת הקוביות שכבר לא קיימת;
+   עכשיו הפאנל רק עוטף את שורת הברכה בגובה טבעי, לא נמתח למלא את כל המסך */
+.home-hero-panel:not(.hidden) { display: block; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }

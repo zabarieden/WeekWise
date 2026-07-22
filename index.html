@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="WeekWise">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=101">
+    <link rel="stylesheet" href="theme.css?v=102">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -80,28 +80,6 @@
                 <!-- מסך הבית ריק בכוונה כרגע - הניווט הראשי עבר לסרגל התחתון
                      הקבוע (.bottom-tab-bar). עוד לא הוחלט מה יופיע כאן -->
             </div>
-
-            <!-- סרגל טאבים תחתון קבוע: הניווט הראשי בין 4 האזורים, תמיד גלוי -
-                 סדר ה-DOM (לו"ז, פתקים, כספים, תזונה) מוצג RTL אוטומטית
-                 (לו"ז מימין, תזונה בסוף משמאל), בדיוק לפי הבקשה -->
-            <nav class="bottom-tab-bar" id="bottom-tab-bar">
-                <button type="button" class="bottom-tab" data-target="schedule-section" onclick="switchToTab('schedule-section')">
-                    <span class="bottom-tab-icon">📅</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_myweek">MyWeek</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="my-center-section" onclick="switchToTab('my-center-section')">
-                    <span class="bottom-tab-icon">📝</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_notes">Notes</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="finance-section" onclick="switchToTab('finance-section')">
-                    <span class="bottom-tab-icon">💰</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_finance">Finance</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="nutrition-section" onclick="switchToTab('nutrition-section')">
-                    <span class="bottom-tab-icon">📏</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_nutrition">Nutrition</span>
-                </button>
-            </nav>
 
             <div class="main-scroll-area">
 
@@ -526,12 +504,34 @@
                         </div>
                     </div>
                 </section>
-
-                <!-- ⚖️ שורת זכויות יוצרים מינימליסטית קטנה באנגלית -->
-                <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; padding-bottom: 25px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;">
-                    © 2026 all rights reserved. app developed by eden zabari.
-                </div>
             </div>
+
+            <!-- סרגל טאבים תחתון קבוע: הניווט הראשי בין 4 האזורים, תמיד גלוי -
+                 סדר ה-DOM (לו"ז, פתקים, כספים, תזונה) מוצג RTL אוטומטית
+                 (לו"ז מימין, תזונה בסוף משמאל), בדיוק לפי הבקשה. חייב לבוא
+                 *אחרי* main-scroll-area (לא ביניהם לבין home-hero-panel) כדי
+                 לא לשבור את הסלקטור .home-hero-panel:not(.hidden) + .main-scroll-area
+                 שמסתמך על שכנות-ישירה ב-DOM כדי להסתיר את main-scroll-area
+                 כשמסך הבית גלוי - מיקומו הוויזואלי לא תלוי בסדר המקור בכלל
+                 כי הוא position:absolute -->
+            <nav class="bottom-tab-bar" id="bottom-tab-bar">
+                <button type="button" class="bottom-tab" data-target="schedule-section" onclick="switchToTab('schedule-section')">
+                    <span class="bottom-tab-icon">📅</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_myweek">MyWeek</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="my-center-section" onclick="switchToTab('my-center-section')">
+                    <span class="bottom-tab-icon">📝</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_notes">Notes</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="finance-section" onclick="switchToTab('finance-section')">
+                    <span class="bottom-tab-icon">💰</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_finance">Finance</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="nutrition-section" onclick="switchToTab('nutrition-section')">
+                    <span class="bottom-tab-icon">📏</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_nutrition">Nutrition</span>
+                </button>
+            </nav>
 
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
@@ -808,6 +808,13 @@
                 </div>
 
                 <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-settings-drawer')" data-i18n="close_btn">Close</button>
+
+                <!-- ⚖️ שורת זכויות יוצרים מינימליסטית קטנה - כאן בהגדרות בלבד,
+                     לא על מסך הבית (שהיה גם מסתיר את זה בטעות בגלל באג DOM
+                     לא קשור, וגם זה לא המקום הטבעי לזה) -->
+                <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; margin-top: 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;">
+                    © 2026 all rights reserved. app developed by eden zabari.
+                </div>
             </div>
         </div>
 
