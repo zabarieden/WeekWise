@@ -5312,7 +5312,6 @@ async function loadProgressTargets() {
         checkinsByTarget[c.target_id].add(c.check_date);
     });
 
-    const todayStr = getLocalDateString();
     container.innerHTML = '';
     targets.forEach(item => {
         const checkedDates = checkinsByTarget[item.id] || new Set();
@@ -5322,10 +5321,9 @@ async function loadProgressTargets() {
         for (let i = 0; i < 7; i++) {
             const dayDateStr = addDaysToDateStr(viewedProgressWeekStart, i);
             const isChecked = checkedDates.has(dayDateStr);
-            const isFuture = dayDateStr > todayStr;
             const [dy, dm, dd] = dayDateStr.split('-').map(Number);
             const dayLabel = new Date(dy, dm - 1, dd).toLocaleDateString(currentLang, { weekday: 'narrow' });
-            daysHtml += `<button type="button" class="progress-day-check${isChecked ? ' checked' : ''}"${isFuture ? ' disabled' : ''} onclick="toggleProgressCheckin('${item.id}', '${dayDateStr}', ${!isChecked})" title="${dayDateStr}">${isChecked ? '✓' : dayLabel}</button>`;
+            daysHtml += `<button type="button" class="progress-day-check${isChecked ? ' checked' : ''}" onclick="toggleProgressCheckin('${item.id}', '${dayDateStr}', ${!isChecked})" title="${dayDateStr}">${isChecked ? '✓' : dayLabel}</button>`;
         }
         const row = document.createElement('div');
         row.className = 'progress-row';
