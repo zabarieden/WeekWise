@@ -4071,6 +4071,24 @@ function looksLikeGarbledOcrTitle(title) {
     return false;
 }
 
+// אותו רעיון כמו looksLikeGarbledOcrTitle, אבל לגוף (מצרכים/הוראות): Tesseract
+// על עברית מתוך צילום מסך צפוף (למשל שיחת AI כמו Gemini) נוטה "לבלוע" רווחים
+// בין מילים ולתעתק אייקוני ממשק (חץ נפתח, עיפרון עריכה, שתי שורות של תפריט)
+// כאותיות לטיניות מפוזרות בודדות ("NER", "am 0 4", "I O") ולפעמים אפילו הופך
+// סדר סוגריים. תווים כמו ©/®/== לעולם לא אמורים להופיע בתמלול מתכון אמיתי -
+// ומקבץ גדול של "מילים" בנות תו בודד מסגיר פירוק/רווחים שגויים. כשזה קורה
+// עדיף לא למלא כלום (רשת נגד "לך תזרוק" חצי-מתכון) - זהה בעיקרון להתנהגות
+// הקיימת ל-titleUnclear, רק שכאן כל הגוף נפסל ולא רק הכותרת
+const OCR_IMPOSSIBLE_BODY_CHARS_RE = /[©®™§¶]|==/;
+function looksLikeGarbledOcrBody(text) {
+    if (!text) return false;
+    if (OCR_IMPOSSIBLE_BODY_CHARS_RE.test(text)) return true;
+    const tokens = text.split(/\s+/).filter(Boolean);
+    if (tokens.length < 4) return false;
+    const singleCharTokens = tokens.filter(tok => tok.length === 1 && !/[\d%א-ת]/.test(tok));
+    return (singleCharTokens.length / tokens.length) > 0.12;
+}
+
 async function runLocalRecipeOcrFallback(file) {
     if (!file.type.startsWith('image/') || typeof Tesseract === 'undefined') return false;
     try {
@@ -4080,6 +4098,7 @@ async function runLocalRecipeOcrFallback(file) {
         if (!rawText) return false;
         const parsed = parseRecipeText(rawText);
         if (!parsed || !parsed.title) return false;
+        if (looksLikeGarbledOcrBody(parsed.ingredients) || looksLikeGarbledOcrBody(parsed.instructions)) return false;
         const titleUnclear = looksLikeGarbledOcrTitle(parsed.title);
         document.getElementById('recipe-title-input').value = titleUnclear ? '' : parsed.title;
         if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
