@@ -460,12 +460,18 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 }
 .home-premium-badge:active { transform: scale(0.95); }
 .home-premium-badge-icon { font-size: 0.8rem; }
+/* flex-direction:row + wrap (לא column) - עם 4 קוביות (כולל "כספים" החדשה),
+   עמודה אנכית בודדת עם gap:40px נהייתה גבוהה מדי למסך מובייל רגיל וגלשה
+   מתחת לקפל, מתנגשת עם כפתורי ה-FAB הצפים בתחתית. עוטפים ל-2 בשורה במקום -
+   נכון גם למובייל צר (2×110px נכנס בנוחות) וגם לרחב יותר */
 .dashboard-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
+    align-content: center;
     justify-content: center;
-    gap: 40px;
+    gap: 28px 24px;
     position: relative;
     z-index: 5;
     width: 100%;
@@ -1841,10 +1847,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    הכול ממשיך להתנהג בדיוק כפי שהתנהג לפני השינוי הזה */
 @media (min-width: 1024px) {
     .phone-wrapper { max-width: 1200px; }
-
-    /* רשת קוביות מסך הבית: זורמת בשורה ועוטפת (בדיוק כמו ש-.sub-tile-grid
-       כבר עושה) במקום להיערם אנכית באמצע מסך רחב */
-    .dashboard-grid { flex-direction: row; flex-wrap: wrap; }
 
     /* כל מסך ראשי עם כמה כרטיסים ישירים (MyWeek, כספים) הופך לרשת רב-טורית -
        כפתור "חזרה", רשת תת-קוביות, ותצוגות subview תמיד תופסים רוחב מלא (לא
