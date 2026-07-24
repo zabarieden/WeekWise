@@ -1912,7 +1912,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    בשום גלילה - בדיוק הבאג שדווח (רואים רק א'-ג' ותו לא) */
 .home-glance-grid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
-.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 62px); gap: 3px; min-width: max-content; }
+.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 72px); gap: 3px; min-width: max-content; }
 .home-glance-corner { }
 .home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
 .home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
@@ -1925,7 +1925,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    חזותית מהמשימות הקבועות של "השבוע שלי", אותו רמז חזותי כמו הבועות
    הלא-מתוזמנות מתחת לכותרות הימים */
 .home-glance-task-pill.is-event { border: 1px dashed rgba(255, 255, 255, 0.4); }
-.home-glance-pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+/* בלי קיצוץ בשלוש נקודות - שם המשימה יגלוש לשורה שנייה בתוך הבועה במקום
+   שייחתך (העמודה נשארת צרה בכוונה כדי שיהיה קומפקטי, אבל התוכן עצמו חייב
+   להיות קריא במלואו, לפי בקשה מפורשת) */
+.home-glance-pill-text { flex: 1; min-width: 0; white-space: normal; word-break: break-word; line-height: 1.15; }
 /* עיפרון זעיר בקצה הבועה - רק רמז חזותי שאפשר ללחוץ לעריכה; הלחיצה עצמה
    מוגדרת על כל הבועה (לא רק על העיפרון הקטנטן), כי אי-אפשר לפגוע בו במדויק
    באצבע במסך כזה קטן - לפי בקשה מפורשת ל"אייקון קטנטן", בלי לפגוע בשימושיות */
