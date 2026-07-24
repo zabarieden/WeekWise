@@ -72,8 +72,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
     document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
+    // Enter רגיל = שורה חדשה (עכשיו שזו טקסטאריה, לא input חד-שורתי) - רק
+    // Ctrl/Cmd+Enter שולח, כדי שאפשר יהיה לכתוב פתק עם כמה שורות/פסקאות
     document.getElementById('center-item-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submitCenterItem();
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitCenterItem();
     });
     document.getElementById('btn-connect-health').addEventListener('click', connectHealthData);
     document.getElementById('btn-ai-quick-add').addEventListener('click', handleAIQuickAdd);
