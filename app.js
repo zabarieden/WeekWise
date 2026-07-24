@@ -191,7 +191,7 @@ async function loadCenterItems(type) {
                 ${item.is_completed ? '✓' : ''}
             </button>
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">
-                ${item.content}
+                ${escapeHtmlForReport(item.content)}
             </span>
             <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">✏️</button>
             <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
