@@ -498,7 +498,10 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    בלי זה, גם עם גלילה פנימית, כשהתוכן לא הרבה יותר גבוה מהמסך כמעט ואין
    טווח גלילה לברוח מהבועות הצפות (שקבועות ל-.phone-wrapper, לא לתוכן הזה) -
    כל תחתית הכרטיס פשוט תמיד יושבת בדיוק באזור המסך שבו הבועות נמצאות */
-.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px)); }
+.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+/* גלילה כן פעילה, אבל בלי הפס הנראה - אותו דפוס בדיוק כמו .main-scroll-area,
+   פשוט נשכח כאן קודם */
+.home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
@@ -1924,7 +1927,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    ל-bottom, כלומר המיקום שלהן על המסך תלוי בגובה ה-viewport). עם calc()
    יחסי ל-100dvh, הרשת "יודעת" לכווץ את עצמה בחלון נמוך במקום לגלוש לאזור
    הבועות - clamp שומר גם רצפה (לא נעלם לגמרי) וגם תקרה (לא ענק במסך גבוה) */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(120px, calc(100dvh - 480px), 420px); -webkit-overflow-scrolling: touch; margin-top: 10px; }
+.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(110px, calc(100dvh - 520px), 380px); -webkit-overflow-scrolling: touch; margin-top: 10px; scrollbar-width: none; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
 /* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
    בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
