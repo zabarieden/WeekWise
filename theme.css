@@ -834,12 +834,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .water-fab:active { transform: scale(0.9); }
 .phone-wrapper.menu-open .water-fab { display: none; }
-/* מוסתר במסך הבית עצמו - כל ניסיונות המיקום לא הצליחו למנוע מהבועה הזו
-   לכסות חלק מהלוח השבועי המצומצם בגבהי מסך שונים (תלוי בגובה החלון
-   בפועל, לא ניתן לפתור באופן אמין רק במיקום CSS בלי בדיקה חיה) - במקום
-   עוד ניסיון מיקום, הפתרון הבטוח הוא פשוט להסתיר כאן; עדיין נגישה
-   דרך הכרטיס עצמו/הגדרות ושאר המסכים */
-.home-hero-panel:not(.hidden) ~ .water-fab { display: none; }
 
 /* כפתור צף להוספה מהירה של ספורט - נערם *מעל* כפתור המים, חזרה לצד ימין
    כמו במקור (ר' הערה למעלה - לא מזיזים בועות יותר, מגבילים את גובה הרשת
@@ -869,9 +863,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .sport-fab:active { transform: scale(0.9); }
 .phone-wrapper.menu-open .sport-fab { display: none; }
-/* אותו טעם בדיוק כמו water-fab למעלה - מוסתר במסך הבית כדי שלא יכסה את
-   הלוח השבועי, נגיש דרך הכרטיס/הגדרות/מסך הספורט עצמו */
-.home-hero-panel:not(.hidden) ~ .sport-fab { display: none; }
 
 /* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
    שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
@@ -1928,7 +1919,12 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 /* גובה מוגבל + גלילה אנכית פנימית משלה - כדי שהכרטיס לעולם לא יגדל מספיק
    כדי להגיע לאזור המסך שבו יושבות הבועות הצפות (שחזרו למיקום המקורי שלהן
    בצד ימין, לפי בקשה מפורשת) - במקום להזיז את הבועות, מגבילים את הרשת */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: 340px; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+/* גובה יחסי לגובה החלון בפועל (לא פיקסלים קבועים!) - זו הייתה הטעות: 340px
+   קבוע לא "יודע" שבחלון נמוך זה עדיין מגיע לאזור הבועות הצפות (שמעוגנות
+   ל-bottom, כלומר המיקום שלהן על המסך תלוי בגובה ה-viewport). עם calc()
+   יחסי ל-100dvh, הרשת "יודעת" לכווץ את עצמה בחלון נמוך במקום לגלוש לאזור
+   הבועות - clamp שומר גם רצפה (לא נעלם לגמרי) וגם תקרה (לא ענק במסך גבוה) */
+.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(70px, calc(100dvh - 620px), 320px); -webkit-overflow-scrolling: touch; margin-top: 10px; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
 .home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 72px); gap: 3px; min-width: max-content; }
 .home-glance-corner { }
