@@ -1942,21 +1942,21 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    לא לחפוף לבועות הצפות, אבל בטלפון רגיל עם גובה viewport תקין הרשת פשוט
    תתפוס את הגובה הטבעי שלה (max-height הוא תקרה, לא כפיית-גודל) - כל
    השעות ייראו בלי גלילה אנכית, רק הגלילה האופקית לימים נשארת */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: max(110px, calc(100dvh - 520px)); -webkit-overflow-scrolling: touch; margin-top: 10px; scrollbar-width: none; }
+.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: max(110px, calc(100dvh - 520px)); -webkit-overflow-scrolling: touch; margin-top: 6px; scrollbar-width: none; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
 /* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
    בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
    אמיתי), העמודות לא מתכווצות מתחת ל-58px - הרשת עצמה גולשת ומפעילה את
    הגלילה האופקית של .home-glance-grid-scroll במקום זאת */
-.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, minmax(58px, 1fr)); gap: 3px; }
+.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, minmax(58px, 1fr)); gap: 2px; }
 .home-glance-corner { }
-.home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
+.home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
 .home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
 .home-glance-day-header .home-glance-day-date { font-size: 0.6rem; font-weight: 400; opacity: 0.8; }
-.home-glance-hour-label { display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-secondary); text-align: center; padding: 2px; }
-.home-glance-cell { position: relative; background-color: var(--bg-row); border-radius: 6px; min-height: 26px; display: flex; flex-direction: column; align-items: stretch; gap: 2px; padding: 1px; }
-.home-glance-events-cell { min-height: 0; background-color: transparent; display: flex; flex-direction: column; gap: 2px; padding: 0 1px; }
-.home-glance-task-pill { width: 100%; border-radius: 5px; padding: 2px 4px; font-size: 0.62rem; font-weight: 500; color: var(--text-primary); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); display: flex; align-items: center; gap: 2px; cursor: pointer; box-sizing: border-box; }
+.home-glance-hour-label { display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-secondary); text-align: center; padding: 1px; }
+.home-glance-cell { position: relative; background-color: var(--bg-row); border-radius: 6px; min-height: 20px; display: flex; flex-direction: column; align-items: stretch; gap: 1px; padding: 1px; }
+.home-glance-events-cell { min-height: 0; background-color: transparent; display: flex; flex-direction: column; gap: 1px; padding: 0 1px; }
+.home-glance-task-pill { width: 100%; border-radius: 5px; padding: 1px 3px; font-size: 0.62rem; font-weight: 500; color: var(--text-primary); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); display: flex; align-items: center; gap: 2px; cursor: pointer; box-sizing: border-box; }
 /* אירוע מ"מבט ליומן" בתוך רשת השעות (יש לו שעה) - גבול מקווקו כדי להבדיל
    חזותית מהמשימות הקבועות של "השבוע שלי", אותו רמז חזותי כמו הבועות
    הלא-מתוזמנות מתחת לכותרות הימים */
