@@ -556,6 +556,7 @@ async function initAppAfterAuth(user) {
         loadCalendarEvents(),
         loadTodayTasks(),
         loadMonthlyCalendarGrid(),
+        renderHomeGlance(),
         loadRecipes(),
         loadAiUsage(),
         loadPremiumStatus(),
@@ -687,6 +688,163 @@ function renderHomeGreeting() {
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
     textEl.textContent = t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// --- לוח שבועי מצומצם במסך הבית: ימים כעמודות, שעות (רק אלה שבפועל בשימוש
+// בלו"ז) כשורות, בועה צבעונית לכל משימה - שילוב של weekly_schedule (התבנית
+// החוזרת, זהה בכל שבוע) עם calendar_events (אירועים חד-פעמיים בעלי תאריך
+// אמיתי, לכן היחידים שבאמת משתנים בין שבוע לשבוע כשמדפדפים עם החצים) ---
+let homeGlanceWeekStart = null; // Date - תחילת השבוע המוצג כרגע, מחושב עצלנית
+
+function weekStartsMondayKey() {
+    return `weekwise_week_starts_monday_${currentUserId}`;
+}
+
+function isWeekStartsMonday() {
+    return localStorage.getItem(weekStartsMondayKey()) === 'true';
+}
+
+function toggleWeekStartsMonday() {
+    const enabled = document.getElementById('week-start-monday-toggle').checked;
+    localStorage.setItem(weekStartsMondayKey(), enabled ? 'true' : 'false');
+    homeGlanceWeekStart = null; // מאפסים לשבוע הנוכחי במקום לנסות "לשמר" יישור ישן שכבר לא רלוונטי
+    renderHomeGlance();
+}
+
+// מחזיר תאריך חדש = היום הראשון (ראשון או שני, לפי ההגדרה) של השבוע שמכיל
+// את date - לא נוגע ב-dbDaysMap עצמו, רק קובע איך מציגים/מסדרים את העמודות
+function getHomeGlanceWeekStartAnchor(date) {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dow = d.getDay();
+    const offset = isWeekStartsMonday() ? (dow === 0 ? 6 : dow - 1) : dow;
+    d.setDate(d.getDate() - offset);
+    return d;
+}
+
+function getHomeGlanceWeekDates() {
+    if (!homeGlanceWeekStart) homeGlanceWeekStart = getHomeGlanceWeekStartAnchor(new Date());
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(homeGlanceWeekStart);
+        d.setDate(d.getDate() + i);
+        dates.push(d);
+    }
+    return dates;
+}
+
+function navigateHomeGlanceWeek(delta) {
+    getHomeGlanceWeekDates(); // מוודא ש-homeGlanceWeekStart מאותחל
+    homeGlanceWeekStart.setDate(homeGlanceWeekStart.getDate() + delta * 7);
+    renderHomeGlance();
+}
+
+function openHomeGlanceDatePicker() {
+    const input = document.getElementById('home-glance-date-input');
+    if (!input) return;
+    if (input.showPicker) { try { input.showPicker(); return; } catch { /* נופל ל-click למטה */ } }
+    input.click();
+}
+
+function jumpHomeGlanceToDate(dateStr) {
+    if (!dateStr) return;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    homeGlanceWeekStart = getHomeGlanceWeekStartAnchor(new Date(y, m - 1, d));
+    renderHomeGlance();
+}
+
+// צבע קבוע לכל משימה חוזרת (לפי hash של שם המשימה) - כך שאותה משימה תמיד
+// נראית באותו צבע, גם בין שבועות שונים, בלי שום עמודת "צבע" חדשה בטבלה
+const HOME_GLANCE_PALETTE = [
+    'rgba(56, 189, 248, 0.55)', 'rgba(217, 119, 6, 0.55)', 'rgba(45, 212, 191, 0.5)',
+    'rgba(168, 85, 247, 0.55)', 'rgba(236, 72, 153, 0.5)', 'rgba(132, 204, 22, 0.5)',
+];
+function colorForTaskTitle(title) {
+    const str = (title || '').trim();
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) | 0;
+    return HOME_GLANCE_PALETTE[Math.abs(hash) % HOME_GLANCE_PALETTE.length];
+}
+
+async function renderHomeGlance() {
+    const grid = document.getElementById('home-glance-grid');
+    if (!grid || !supabaseClient || !currentUserId) return;
+    const toggle = document.getElementById('week-start-monday-toggle');
+    if (toggle) toggle.checked = isWeekStartsMonday();
+
+    const dates = getHomeGlanceWeekDates();
+    const weekStartStr = getLocalDateString(dates[0]);
+    const weekEndStr = getLocalDateString(dates[6]);
+    const dateLabel = document.getElementById('home-glance-date-label');
+    if (dateLabel) {
+        const fmt = d => d.toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+        dateLabel.textContent = `${fmt(dates[0])} - ${fmt(dates[6])}`;
+    }
+
+    const [{ data: scheduleRows }, { data: eventRows }] = await Promise.all([
+        supabaseClient.from('weekly_schedule').select('day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
+        supabaseClient.from('calendar_events').select('event_date, event_title').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
+    ]);
+    const populatedRows = (scheduleRows || []).filter(r => (r.task_title || '').trim());
+    const events = eventRows || [];
+
+    // ציר השורות: איחוד השעות הייחודיות שבפועל מופיעות אי-שם בלו"ז (לא כל
+    // 24 השעות, ולא defaultHours - כדי שהרשת תישאר קומפקטית כמו שביקשה)
+    const timeSet = new Set();
+    populatedRows.forEach(r => { if (r.time_of_day) timeSet.add(r.time_of_day); });
+    const times = Array.from(timeSet).sort((a, b) => (scheduleTimeToMinutes(a) ?? 0) - (scheduleTimeToMinutes(b) ?? 0));
+
+    grid.innerHTML = '';
+    if (!times.length && !events.length) {
+        grid.innerHTML = `<p class="home-glance-empty-hint">${t('home_weekly_glance_empty')}</p>`;
+        return;
+    }
+    const todayStr = getLocalDateString();
+
+    grid.appendChild(document.createElement('div')).className = 'home-glance-corner';
+    dates.forEach(d => {
+        const header = document.createElement('div');
+        header.className = 'home-glance-day-header' + (getLocalDateString(d) === todayStr ? ' today' : '');
+        header.innerHTML = `<span>${t(dayNameKeys[d.getDay()]).slice(0, 3)}</span><span class="home-glance-day-date">${d.getDate()}</span>`;
+        grid.appendChild(header);
+    });
+
+    // שורת אירועים חד-פעמיים (calendar_events) - אין להם שעה, לכן מוצגים
+    // כבועות קטנות מתחת לכותרת היום ולא בתוך רשת השעות עצמה
+    const eventsByDate = {};
+    events.forEach(ev => { (eventsByDate[ev.event_date] = eventsByDate[ev.event_date] || []).push(ev); });
+    grid.appendChild(document.createElement('div'));
+    dates.forEach(d => {
+        const cell = document.createElement('div');
+        cell.className = 'home-glance-cell home-glance-events-cell';
+        (eventsByDate[getLocalDateString(d)] || []).forEach(ev => {
+            const badge = document.createElement('span');
+            badge.className = 'home-glance-event-badge';
+            badge.textContent = ev.event_title;
+            cell.appendChild(badge);
+        });
+        grid.appendChild(cell);
+    });
+
+    times.forEach(time => {
+        const label = document.createElement('div');
+        label.className = 'home-glance-hour-label';
+        label.textContent = time;
+        grid.appendChild(label);
+        dates.forEach(d => {
+            const dbDay = dbDaysMap[d.getDay()];
+            const cell = document.createElement('div');
+            cell.className = 'home-glance-cell';
+            const match = populatedRows.find(r => r.day_of_week === dbDay && r.time_of_day === time);
+            if (match) {
+                const pill = document.createElement('span');
+                pill.className = 'home-glance-task-pill';
+                pill.style.backgroundColor = colorForTaskTitle(match.task_title);
+                pill.textContent = `${getScheduleTaskIcon(match.task_title)} ${match.task_title}`;
+                cell.appendChild(pill);
+            }
+            grid.appendChild(cell);
+        });
+    });
 }
 
 // showTabSection: הלוגיקה המשותפת של מעבר בין מסכים ראשיים - חולצה מתוך

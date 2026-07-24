@@ -489,9 +489,12 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     max-width: 100%;
     box-sizing: border-box;
 }
-/* לא flex:1 יותר - זה היה כדי למרכז אנכית את רשת הקוביות שכבר לא קיימת;
-   עכשיו הפאנל רק עוטף את שורת הברכה בגובה טבעי, לא נמתח למלא את כל המסך */
-.home-hero-panel:not(.hidden) { display: block; }
+/* flex:1 + overflow-y:auto חזרו עכשיו (בניגוד להערה הישנה למעלה) - לא כדי
+   למרכז שום דבר, אלא כי נוסף כרטיס לוח-שבועי חדש שיכול לצמוח גבוה מהמסך;
+   בלי גלילה כאן, כל תוכן שחורג מהיה מוסתר לגמרי ע"י overflow:hidden של
+   .phone-wrapper בלי שום דרך להגיע אליו. אותו מתכון בדיוק כמו .main-scroll-area
+   למטה (flex:1 + min-height:0 + overflow-y:auto באותו הורה flex-column) */
+.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
@@ -1895,6 +1898,22 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
 .monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
+
+/* לוח שבועי מצומצם במסך הבית: עמודה ראשונה = תוויות שעה (44px, צר), 7
+   העמודות הבאות = ימי השבוע - ילדים נוספים בסדר-DOM שורה-אחרי-שורה, בלי
+   grid-row/column מפורש, אותה טכניקה בדיוק כמו .monthly-calendar-grid למעלה */
+.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 1fr); gap: 3px; margin-top: 10px; }
+.home-glance-corner { }
+.home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
+.home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
+.home-glance-day-header .home-glance-day-date { font-size: 0.6rem; font-weight: 400; opacity: 0.8; }
+.home-glance-hour-label { display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-secondary); text-align: center; padding: 2px; }
+.home-glance-cell { position: relative; background-color: var(--bg-row); border-radius: 6px; min-height: 26px; display: flex; align-items: stretch; padding: 1px; }
+.home-glance-events-cell { min-height: 0; background-color: transparent; display: flex; flex-direction: column; gap: 2px; padding: 0 1px; }
+.home-glance-task-pill { width: 100%; border-radius: 5px; padding: 2px 4px; font-size: 0.62rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 2px; }
+.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-glance-date-label { cursor: pointer; }
+.home-glance-empty-hint { text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 14px 0; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .monthly-goal-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .monthly-goal-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
