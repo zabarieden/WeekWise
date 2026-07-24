@@ -1440,18 +1440,19 @@ function parseScheduleTextLocally(text) {
 // שיעור גיטרה" (פעם אחת, תאריך ספציפי) - שתי הבקשות נשמעות דומות אבל
 // אמורות לנחות במקומות שונים לגמרי באפליקציה
 async function applyOneTimeScheduleEvents(events) {
-    if (!supabaseClient || !currentUserId) return;
+    if (!supabaseClient || !currentUserId) return [];
     const rows = events.filter(ev => ev.event_date).map(ev => ({
         username: currentUsername, user_id: currentUserId,
         event_title: ev.time ? `${ev.time} ${ev.task_title}` : ev.task_title,
         event_date: ev.event_date,
         source: 'calendar',
     }));
-    if (!rows.length) return;
+    if (!rows.length) return [];
     await supabaseClient.from('calendar_events').insert(rows);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
+    return rows.map(r => r.event_date);
 }
 
 // מקבצת את האירועים (מה-AI האמיתי או מהמנתח המקומי - אותה צורה בדיוק) לפי
@@ -1461,9 +1462,9 @@ async function applyOneTimeScheduleEvents(events) {
 // ברירת המחדל (!== false) שומרת על ההתנהגות הישנה שם ללא שינוי
 async function applyParsedScheduleEvents(allEvents) {
     const oneTimeEvents = allEvents.filter(ev => ev.recurring === false);
-    if (oneTimeEvents.length) await applyOneTimeScheduleEvents(oneTimeEvents);
+    const oneTimeDates = oneTimeEvents.length ? await applyOneTimeScheduleEvents(oneTimeEvents) : [];
     const events = allEvents.filter(ev => ev.recurring !== false);
-    if (!events.length) return;
+    if (!events.length) return { recurringCount: 0, oneTimeDates };
 
     const byDay = {};
     events.forEach(ev => {
@@ -1509,6 +1510,31 @@ async function applyParsedScheduleEvents(allEvents) {
             updateSlotTaskIcon(taskInput);
             await saveScheduleSlot(day, ev._slotNum);
         }
+    }
+    return { recurringCount: events.length, oneTimeDates };
+}
+
+// מציגה את הודעת ההצלחה הנכונה לפי לאן בפועל נחתו הפריטים (רוטינה שבועית
+// חוזרת מול תאריך ספציפי ביומן) - כדי שהמשתמש יידע מיד איפה למצוא את מה
+// שהוא הרגע הוסיף, במקום הודעת "עודכן" גנרית שלא אומרת כלום על זה
+function showScheduleAiSuccessToast(summary) {
+    const recurringCount = (summary && summary.recurringCount) || 0;
+    const oneTimeDates = (summary && summary.oneTimeDates) || [];
+    if (recurringCount > 0 && oneTimeDates.length > 0) {
+        showAppToast(t('schedule_ai_success_mixed'));
+    } else if (oneTimeDates.length > 0) {
+        const uniqueDates = [...new Set(oneTimeDates)];
+        if (uniqueDates.length === 1) {
+            const [y, m, d] = uniqueDates[0].split('-').map(Number);
+            const dateLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'long' });
+            showAppToast(t('schedule_ai_success_onetime_date').replace('{date}', dateLabel));
+        } else {
+            showAppToast(t('schedule_ai_success_onetime_generic'));
+        }
+    } else if (recurringCount > 0) {
+        showAppToast(t('schedule_ai_success_recurring'));
+    } else {
+        showAppToast(t('schedule_ai_success'));
     }
 }
 
@@ -1575,8 +1601,8 @@ async function parseScheduleWithAI() {
         if (ambiguousEvents.length) {
             runScheduleClarificationFlow(ambiguousEvents, clearEvents);
         } else {
-            await applyParsedScheduleEvents(clearEvents);
-            showAppToast(t('schedule_ai_success'));
+            const summary = await applyParsedScheduleEvents(clearEvents);
+            showScheduleAiSuccessToast(summary);
         }
     } finally {
         clearTimeout(loadingTimer);
@@ -1696,8 +1722,8 @@ async function finishScheduleClarificationFlow() {
     scheduleClarificationClearEvents = [];
     scheduleClarificationResolved = [];
     if (!allEvents.length) return;
-    await applyParsedScheduleEvents(allEvents);
-    showAppToast(t('schedule_ai_success'));
+    const summary = await applyParsedScheduleEvents(allEvents);
+    showScheduleAiSuccessToast(summary);
 }
 
 function loadCustomDefaultHours() {
