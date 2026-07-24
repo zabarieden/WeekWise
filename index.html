@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=130">
+    <link rel="stylesheet" href="theme.css?v=131">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1226,6 +1226,21 @@
             </div>
         </div>
 
+        <!-- חלון צף: עריכה מהירה של משימה ישירות מלוח השבועי המצומצם במסך
+             הבית (בלי לעבור למסך "השבוע שלי" המלא) - כותרת + שעה בלבד, לא כל
+             שדות המודל המלא (יום/מספר-שורה/תזכורת) שכבר ידועים/לא רלוונטיים -->
+        <div id="modal-edit-glance-task" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="glance_edit_task_title">Edit Task</h3>
+                <input type="text" id="glance-edit-task-title-input" data-i18n-placeholder="task_name_placeholder" placeholder="Task name...">
+                <input type="text" id="glance-edit-task-time-input" style="margin-top: 8px;" data-i18n-placeholder="time_placeholder" placeholder="Time (e.g. 09:00)">
+                <button type="button" class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="saveGlanceTaskEdit()" data-i18n="save_generic">Save</button>
+                <button type="button" class="btn-clear-week" style="margin-top: 8px;" onclick="deleteGlanceTaskEdit()" data-i18n="glance_edit_task_delete_btn">Delete task</button>
+                <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-edit-glance-task')" data-i18n="cancel_btn">Cancel</button>
+            </div>
+        </div>
+
         <!-- חלון צף: בחירת אילו כרטיסי "סיכום חודשי" מוצגים - נשמר ב-localStorage,
              לא ב-DB (זו העדפת תצוגה בלבד, לא נתון אמיתי) -->
         <div id="modal-finance-card-settings" class="apple-modal">
@@ -1579,7 +1594,7 @@
 
     </div>
 
-    <script src="i18n.js?v=82"></script>
-    <script src="app.js?v=139"></script>
+    <script src="i18n.js?v=83"></script>
+    <script src="app.js?v=140"></script>
 </body>
 </html>

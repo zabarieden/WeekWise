@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
 const dbDaysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const dayNameKeys = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
+const weekdayShortKeys = ['weekday_short_sun', 'weekday_short_mon', 'weekday_short_tue', 'weekday_short_wed', 'weekday_short_thu', 'weekday_short_fri', 'weekday_short_sat'];
 // עמודת שעות ברירת המחדל: זהה לכל יום מלכתחילה (לא אקראי/שונה מיום ליום),
 // וניתנת להתאמה אישית מלאה - כולל הוספה/הסרה של שעות שלמות, לא רק עריכת
 // ערך - דרך "הגדרת שעות ברירת מחדל" (openHoursSettingsModal/saveDefaultHours).
@@ -753,10 +754,17 @@ function jumpHomeGlanceToDate(dateStr) {
 }
 
 // צבע קבוע לכל משימה חוזרת (לפי hash של שם המשימה) - כך שאותה משימה תמיד
-// נראית באותו צבע, גם בין שבועות שונים, בלי שום עמודת "צבע" חדשה בטבלה
+// נראית באותו צבע, גם בין שבועות שונים, בלי שום עמודת "צבע" חדשה בטבלה.
+// הצבעים עצמם הם משתני ה-CSS של ערכת הנושא הנבחרת (לא rgba קבוע) - כך
+// שהבועות תמיד "מתאימות" לערכת הצבעים שהמשתמשת בחרה בהגדרות, במקום צבעים
+// שרירותיים שלא בהכרח מתאימים לרקע שהיא בחרה (לפי בקשה מפורשת)
 const HOME_GLANCE_PALETTE = [
-    'rgba(56, 189, 248, 0.55)', 'rgba(217, 119, 6, 0.55)', 'rgba(45, 212, 191, 0.5)',
-    'rgba(168, 85, 247, 0.55)', 'rgba(236, 72, 153, 0.5)', 'rgba(132, 204, 22, 0.5)',
+    'color-mix(in srgb, var(--accent-purple) 55%, transparent)',
+    'color-mix(in srgb, var(--accent-pink) 50%, transparent)',
+    'color-mix(in srgb, var(--accent-cyan) 50%, transparent)',
+    'color-mix(in srgb, var(--accent-gold) 50%, transparent)',
+    'color-mix(in srgb, var(--accent-green) 45%, transparent)',
+    'color-mix(in srgb, var(--accent-purple-light) 50%, transparent)',
 ];
 function colorForTaskTitle(title) {
     const str = (title || '').trim();
@@ -781,7 +789,7 @@ async function renderHomeGlance() {
     }
 
     const [{ data: scheduleRows }, { data: eventRows }] = await Promise.all([
-        supabaseClient.from('weekly_schedule').select('day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
+        supabaseClient.from('weekly_schedule').select('id, day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
         supabaseClient.from('calendar_events').select('event_date, event_title').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
     ]);
     const populatedRows = (scheduleRows || []).filter(r => (r.task_title || '').trim());
@@ -804,7 +812,7 @@ async function renderHomeGlance() {
     dates.forEach(d => {
         const header = document.createElement('div');
         header.className = 'home-glance-day-header' + (getLocalDateString(d) === todayStr ? ' today' : '');
-        header.innerHTML = `<span>${t(dayNameKeys[d.getDay()]).slice(0, 3)}</span><span class="home-glance-day-date">${d.getDate()}</span>`;
+        header.innerHTML = `<span>${t(weekdayShortKeys[d.getDay()])}</span><span class="home-glance-day-date">${d.getDate()}</span>`;
         grid.appendChild(header);
     });
 
@@ -839,12 +847,45 @@ async function renderHomeGlance() {
                 const pill = document.createElement('span');
                 pill.className = 'home-glance-task-pill';
                 pill.style.backgroundColor = colorForTaskTitle(match.task_title);
-                pill.textContent = `${getScheduleTaskIcon(match.task_title)} ${match.task_title}`;
+                pill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(match.task_title)} ${match.task_title}</span><span class="home-glance-pill-edit-icon">✏️</span>`;
+                pill.onclick = () => openGlanceTaskEditor(match.id, match.task_title, match.time_of_day);
                 cell.appendChild(pill);
             }
             grid.appendChild(cell);
         });
     });
+}
+
+// עריכה מהירה של משימה ישירות מהלוח השבועי המצומצם - בלי לעבור למסך "השבוע
+// שלי" המלא, רק כותרת+שעה (יום/מספר-שורה כבר ידועים מהעריכה עצמה, לא רלוונטיים כאן)
+let editingGlanceTaskId = null;
+
+function openGlanceTaskEditor(id, title, time) {
+    editingGlanceTaskId = id;
+    document.getElementById('glance-edit-task-title-input').value = title || '';
+    document.getElementById('glance-edit-task-time-input').value = time || '';
+    openModal('modal-edit-glance-task');
+}
+
+async function saveGlanceTaskEdit() {
+    if (!editingGlanceTaskId || !supabaseClient) return;
+    const title = document.getElementById('glance-edit-task-title-input').value.trim();
+    if (!title) { showAppToast(t('glance_edit_task_missing_title'), 'error'); return; }
+    const timeInput = document.getElementById('glance-edit-task-time-input');
+    const norm = normalizeScheduleTimeInput(timeInput.value);
+    if (norm.time === null || norm.needsAmpm) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    const { error } = await supabaseClient.from('weekly_schedule').update({ task_title: title, time_of_day: norm.time }).eq('id', editingGlanceTaskId);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    closeModal('modal-edit-glance-task');
+    showAppToast(t('glance_edit_task_saved'));
+    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
+}
+
+async function deleteGlanceTaskEdit() {
+    if (!editingGlanceTaskId || !supabaseClient) return;
+    await supabaseClient.from('weekly_schedule').delete().eq('id', editingGlanceTaskId);
+    closeModal('modal-edit-glance-task');
+    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
 // showTabSection: הלוגיקה המשותפת של מעבר בין מסכים ראשיים - חולצה מתוך
