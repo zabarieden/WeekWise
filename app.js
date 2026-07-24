@@ -2766,8 +2766,12 @@ async function deleteCalendarEvent(id) {
     if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
+// מוחקים רק מהיום והלאה - לא את כל הסדרה, כדי שהיסטוריית העבר (כולל מה
+// שכבר סומן כהושלם) תישאר נגישה בלוח החודשי גם אחרי שמפסיקים סדרה חוזרת,
+// לפי בקשה מפורשת ("שאוכל לראות שעשיתי את זה בעבר" גם אחרי מחיקה)
 async function deleteRecurringSeries(groupId) {
-    await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId);
+    const todayStr = getLocalDateString();
+    await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId).gte('event_date', todayStr);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
