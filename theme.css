@@ -1949,6 +1949,13 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    תתפוס את הגובה הטבעי שלה (max-height הוא תקרה, לא כפיית-גודל) - כל
    השעות ייראו בלי גלילה אנכית, רק הגלילה האופקית לימים נשארת */
 .home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: max(110px, calc(100dvh - 520px)); -webkit-overflow-scrolling: touch; margin-top: 6px; scrollbar-width: none; }
+/* בטלפון אמיתי (לא כרטיס "סימולטור" רחב בדסקטופ - אותה נקודת-שבירה 769px
+   בדיוק כמו שאר האפליקציה) אין בעיית "חלון נמוך במיוחד" שדרשה את הנוסחה
+   למעלה מלכתחילה - טלפון לאורך תמיד גבוה מספיק, אז בלי שום תקרת גובה
+   בכלל: כל שעות השבוע נראות בבת אחת, נשארת רק הגלילה הצדדית בין הימים */
+@media (max-width: 768px) {
+    .home-glance-grid-scroll { max-height: none; }
+}
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
 /* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
    בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
