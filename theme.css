@@ -1935,7 +1935,14 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    ל-bottom, כלומר המיקום שלהן על המסך תלוי בגובה ה-viewport). עם calc()
    יחסי ל-100dvh, הרשת "יודעת" לכווץ את עצמה בחלון נמוך במקום לגלוש לאזור
    הבועות - clamp שומר גם רצפה (לא נעלם לגמרי) וגם תקרה (לא ענק במסך גבוה) */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(110px, calc(100dvh - 520px), 380px); -webkit-overflow-scrolling: touch; margin-top: 10px; scrollbar-width: none; }
+/* בלי תקרה עליונה (היה clamp עם 380px) - זו הייתה הבעיה: בטלפון רגיל עם
+   הרבה גובה זמין, התקרה השרירותית קטמה את הרשת גם כשהיה מקום להראות הכל
+   בלי גלילה אנכית בכלל. max() בלי clamp שומר רק את הרצפה (לא נעלם בחלון
+   קצר במיוחד) - calc(100dvh - 520px) עדיין מכווץ אוטומטית בחלון נמוך כדי
+   לא לחפוף לבועות הצפות, אבל בטלפון רגיל עם גובה viewport תקין הרשת פשוט
+   תתפוס את הגובה הטבעי שלה (max-height הוא תקרה, לא כפיית-גודל) - כל
+   השעות ייראו בלי גלילה אנכית, רק הגלילה האופקית לימים נשארת */
+.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: max(110px, calc(100dvh - 520px)); -webkit-overflow-scrolling: touch; margin-top: 10px; scrollbar-width: none; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
 /* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
    בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
