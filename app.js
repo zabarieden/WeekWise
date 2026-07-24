@@ -739,6 +739,11 @@ function navigateHomeGlanceWeek(delta) {
     renderHomeGlance();
 }
 
+function resetHomeGlanceToToday() {
+    homeGlanceWeekStart = null; // getHomeGlanceWeekDates יחשב מחדש את השבוע של היום
+    renderHomeGlance();
+}
+
 function openHomeGlanceDatePicker() {
     const input = document.getElementById('home-glance-date-input');
     if (!input) return;

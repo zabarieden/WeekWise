@@ -1869,6 +1869,9 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 }
 .monthly-goal-nav-btn:hover:not(:disabled) { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); }
 .monthly-goal-nav-btn:disabled { opacity: 0.3; cursor: default; }
+/* כפתור "חזרה לשבוע הנוכחי" - קטנטן ועדין בכוונה, לא עוד חץ ניווט רגיל
+   (לפי בקשה מפורשת ל"כפתור קטן קטן") */
+.home-glance-today-btn { width: 16px; height: 16px; font-size: 0.55rem; color: var(--tile-accent, var(--accent-gold)); }
 .monthly-goal-month-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); min-width: 120px; text-align: center; }
 /* לוח חודשי: כותרות ימים + רשת 7 עמודות, תא לכל יום עם נקודה אם יש בו
    אירוע/משימה - אותו גוון זהב כמו שאר עולם הלו"ז */
