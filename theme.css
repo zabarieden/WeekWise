@@ -1417,7 +1417,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: flex;
     flex-direction: row; /* הצ'קבוקס בצד ימין, כפתור המחיקה בצד שמאל */
     justify-content: space-between;
-    align-items: center;
+    /* flex-start ולא center - פתק עם טקסט ארוך שגולש להרבה שורות "מותח" את
+       השורה לגובה ענק, ועם align-items:center כפתורי העריכה/מחיקה מתמרכזים
+       אי-שם באמצע גוש הטקסט העצום, כמעט בלתי-נראים; עם flex-start הם תמיד
+       צמודים לשורה הראשונה של הטקסט, בלי קשר לכמה הפתק ארוך */
+    align-items: flex-start;
     font-size: 0.9rem;
     color: var(--text-primary);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
