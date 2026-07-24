@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=135">
+    <link rel="stylesheet" href="theme.css?v=136">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -98,7 +98,9 @@
                             <button class="monthly-goal-nav-btn" onclick="navigateHomeGlanceWeek(1)">›</button>
                         </div>
                         <input type="date" id="home-glance-date-input" class="hidden" onchange="jumpHomeGlanceToDate(this.value)">
-                        <div class="home-glance-grid" id="home-glance-grid"></div>
+                        <div class="home-glance-grid-scroll">
+                            <div class="home-glance-grid" id="home-glance-grid"></div>
+                        </div>
                     </div>
                 </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + לוח שבועי מצומצם - הניווט

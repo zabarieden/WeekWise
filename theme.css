@@ -1906,7 +1906,13 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 /* לוח שבועי מצומצם במסך הבית: עמודה ראשונה = תוויות שעה (44px, צר), 7
    העמודות הבאות = ימי השבוע - ילדים נוספים בסדר-DOM שורה-אחרי-שורה, בלי
    grid-row/column מפורש, אותה טכניקה בדיוק כמו .monthly-calendar-grid למעלה */
-.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 1fr); gap: 3px; margin-top: 10px; }
+/* בטלפון צר, 7 עמודות + עמודת שעות פשוט לא נכנסות ברוחב בלי להיחתך לבלי-קריא -
+   ההורים (.phone-wrapper/.home-hero-panel) הם overflow-x:hidden, אז בלי עטיפה
+   עם גלילה אופקית משלה כאן, כל מה שחורג מהרוחב הזמין נחתך לגמרי ולא נגיש
+   בשום גלילה - בדיוק הבאג שדווח (רואים רק א'-ג' ותו לא) */
+.home-glance-grid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+.home-glance-grid-scroll::-webkit-scrollbar { display: none; }
+.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 62px); gap: 3px; min-width: max-content; }
 .home-glance-corner { }
 .home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
 .home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
