@@ -1935,7 +1935,9 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    מוגדרת על כל הבועה (לא רק על העיפרון הקטנטן), כי אי-אפשר לפגוע בו במדויק
    באצבע במסך כזה קטן - לפי בקשה מפורשת ל"אייקון קטנטן", בלי לפגוע בשימושיות */
 .home-glance-pill-edit-icon { flex-shrink: 0; font-size: 0.55rem; opacity: 0.75; }
-.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+/* בלי קיצוץ בשלוש נקודות כאן גם - אותו תיקון בדיוק כמו בבועות המשימה
+   בשעות (word-wrap במקום ellipsis), כדי שכותרות אירועים ארוכות יהיו קריאות במלואן */
+.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); white-space: normal; word-break: break-word; line-height: 1.2; cursor: pointer; }
 .home-glance-date-label { cursor: pointer; }
 .home-glance-empty-hint { text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 14px 0; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
