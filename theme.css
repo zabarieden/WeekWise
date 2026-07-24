@@ -494,7 +494,11 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    בלי גלילה כאן, כל תוכן שחורג מהיה מוסתר לגמרי ע"י overflow:hidden של
    .phone-wrapper בלי שום דרך להגיע אליו. אותו מתכון בדיוק כמו .main-scroll-area
    למטה (flex:1 + min-height:0 + overflow-y:auto באותו הורה flex-column) */
-.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; }
+/* padding-bottom זהה בדיוק ל-.main-scroll-area למטה - זה מה שבאמת חסר קודם.
+   בלי זה, גם עם גלילה פנימית, כשהתוכן לא הרבה יותר גבוה מהמסך כמעט ואין
+   טווח גלילה לברוח מהבועות הצפות (שקבועות ל-.phone-wrapper, לא לתוכן הזה) -
+   כל תחתית הכרטיס פשוט תמיד יושבת בדיוק באזור המסך שבו הבועות נמצאות */
+.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px)); }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
