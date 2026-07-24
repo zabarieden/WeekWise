@@ -1924,9 +1924,13 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    ל-bottom, כלומר המיקום שלהן על המסך תלוי בגובה ה-viewport). עם calc()
    יחסי ל-100dvh, הרשת "יודעת" לכווץ את עצמה בחלון נמוך במקום לגלוש לאזור
    הבועות - clamp שומר גם רצפה (לא נעלם לגמרי) וגם תקרה (לא ענק במסך גבוה) */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(70px, calc(100dvh - 620px), 320px); -webkit-overflow-scrolling: touch; margin-top: 10px; }
+.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: clamp(120px, calc(100dvh - 480px), 420px); -webkit-overflow-scrolling: touch; margin-top: 10px; }
 .home-glance-grid-scroll::-webkit-scrollbar { display: none; }
-.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, 72px); gap: 3px; min-width: max-content; }
+/* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
+   בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
+   אמיתי), העמודות לא מתכווצות מתחת ל-58px - הרשת עצמה גולשת ומפעילה את
+   הגלילה האופקית של .home-glance-grid-scroll במקום זאת */
+.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, minmax(58px, 1fr)); gap: 3px; }
 .home-glance-corner { }
 .home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
 .home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
