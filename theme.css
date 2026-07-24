@@ -827,6 +827,34 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .water-fab:active { transform: scale(0.9); }
 .phone-wrapper.menu-open .water-fab { display: none; }
 
+/* כפתור צף להוספה מהירה של ספורט - נערם *מעל* כפתור המים (עוד 52px גובה +
+   16px רווח כלפי מעלה), אותו דפוס בדיוק. לוחצים וקופצים ישר למסך ספורט
+   המלא (לא מודל מהיר - משך האימון משתנה בכל פעם, בניגוד לכמות מים קבועה) */
+.sport-fab {
+    position: absolute;
+    bottom: calc(88px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    right: 25px;
+    z-index: 99999;
+    display: flex;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
+    padding: 0;
+    transition: var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+}
+.sport-fab:active { transform: scale(0.9); }
+.phone-wrapper.menu-open .sport-fab { display: none; }
+
 /* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
    שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
    מפורשת. position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה
@@ -1621,6 +1649,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .ai-brain-tab { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-brain-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+/* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
+   במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
+   המשותף שמשמש גם במקומות אחרים באפליקציה */
+#sport-type-picker { flex-wrap: wrap; }
+#sport-type-picker .ai-brain-tab { flex: 0 0 auto; }
+.sport-type-bubble-delete { margin-inline-start: 6px; opacity: 0.7; cursor: pointer; }
+.sport-history-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
 .ai-brain-target-choice { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .ai-brain-target-option { display: flex; align-items: center; gap: 8px; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer; }
 .ai-brain-target-option input[type="radio"] { accent-color: var(--accent-purple); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }

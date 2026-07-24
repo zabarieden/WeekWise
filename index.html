@@ -591,6 +591,14 @@
                                 <button type="button" class="ai-brain-tab" data-sport-type="cycling" onclick="selectSportType('cycling')" data-i18n="sport_type_cycling">🚴 Cycling</button>
                                 <button type="button" class="ai-brain-tab" data-sport-type="swimming" onclick="selectSportType('swimming')" data-i18n="sport_type_swimming">🏊 Swimming</button>
                                 <button type="button" class="ai-brain-tab" data-sport-type="custom" onclick="selectSportType('custom')" data-i18n="sport_type_custom">✨ Other</button>
+                                <!-- custom bubbles + "+" injected by renderCustomSportTypeBubbles() -->
+                            </div>
+                            <div class="preset-manager-grid" id="sport-add-type-row" style="margin-top: 10px;" hidden>
+                                <input type="text" id="new-sport-type-name" data-i18n-placeholder="sport_new_type_placeholder" placeholder="Sport name (e.g. Yoga, Tennis)">
+                                <div class="action-buttons-wrap">
+                                    <button type="button" class="btn-primary" onclick="addCustomSportType()" data-i18n="sport_new_type_save_btn">Add</button>
+                                    <button type="button" class="btn-clear-specific" onclick="hideAddSportTypeRow()" data-i18n="cancel_btn">Cancel</button>
+                                </div>
                             </div>
                             <input type="text" id="sport-custom-type-input" class="hidden" style="margin-top: 10px;" data-i18n-placeholder="sport_custom_type_placeholder" placeholder="What sport? (e.g. Yoga, Tennis)">
                             <div class="preset-manager-grid" style="margin-top: 10px;">
@@ -598,6 +606,11 @@
                                 <input type="number" id="sport-distance-input" data-i18n-placeholder="sport_distance_placeholder" placeholder="Distance (km) - optional">
                                 <input type="date" id="sport-date-input">
                             </div>
+                            <textarea id="sport-notes-input" rows="2" style="margin-top: 10px;" data-i18n-placeholder="sport_notes_placeholder" placeholder="Notes (optional)"></textarea>
+                            <input type="file" id="sport-photo-input" accept="image/*" class="hidden" onchange="handleSportPhotoSelected(event)">
+                            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('sport-photo-input').click()" data-i18n="sport_add_photo_btn">📷 Add a photo</button>
+                            <img id="sport-photo-preview" class="recipe-image-preview hidden" alt="">
+                            <input type="hidden" id="sport-photo-url-input">
                             <label class="settings-label" data-i18n="sport_motivation_label" style="margin-top: 10px;">Why are you doing this? (optional)</label>
                             <div class="color-filter-picker" id="sport-motivation-picker">
                                 <button type="button" class="color-filter-option" data-motivation="fitness" onclick="selectSportMotivation(this, 'fitness')" data-i18n="sport_motivation_fitness">Fitness</button>
@@ -606,6 +619,7 @@
                                 <button type="button" class="color-filter-option" data-motivation="confidence" onclick="selectSportMotivation(this, 'confidence')" data-i18n="sport_motivation_confidence">Confidence</button>
                             </div>
                             <button id="btn-add-sport-session" class="btn-primary" style="width: 100%; margin-top: 12px;" onclick="submitSportSession()" data-i18n="sport_add_btn">Save Workout</button>
+                            <button type="button" class="btn-secondary" id="btn-sport-fab-shortcut" style="width: 100%; margin-top: 10px;" onclick="toggleSportFabFromCard()"></button>
                         </div>
                     </div>
 
@@ -688,6 +702,11 @@
                  נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
                  לבחירת כמות (כוס/בקבוק/מותאם אישית), לא מוסיף אוטומטית 200 מ״ל -->
             <button type="button" class="water-fab hidden" id="btn-water-fab" onclick="openModal('modal-water-quick-add')" data-i18n-title="water_quick_add_title" title="Add water">💧</button>
+
+            <!-- כפתור צף (FAB) להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
+                 דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
+                 לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם -->
+            <button type="button" class="sport-fab hidden" id="btn-sport-fab" onclick="switchToTab('sport-section')" data-i18n-title="sport_add_title" title="Log a Workout">⚡</button>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
@@ -986,6 +1005,13 @@
                     <label class="settings-label" data-i18n="settings_water_fab_label" for="water-fab-toggle">Quick water-add button</label>
                     <label class="switch">
                         <input type="checkbox" id="water-fab-toggle" onchange="toggleWaterFab()">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_sport_fab_label" for="sport-fab-toggle">Quick sport-add button</label>
+                    <label class="switch">
+                        <input type="checkbox" id="sport-fab-toggle" onchange="toggleSportFab()">
                         <span class="switch-slider"></span>
                     </label>
                 </div>

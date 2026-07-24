@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
     applyWaterFabSetting(isWaterFabOn());
+    applySportFabSetting(isSportFabOn());
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -3337,6 +3338,33 @@ function toggleWaterFabFromCard() {
     showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
+// כפתור צף להוספה מהירה של ספורט - אותו דפוס בדיוק כמו כפתור המים למעלה
+function isSportFabOn() {
+    return localStorage.getItem('weekwise_sport_fab') === 'true';
+}
+
+function applySportFabSetting(enabled) {
+    const fab = document.getElementById('btn-sport-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
+    const toggle = document.getElementById('sport-fab-toggle');
+    if (toggle) toggle.checked = enabled;
+    const shortcutBtn = document.getElementById('btn-sport-fab-shortcut');
+    if (shortcutBtn) shortcutBtn.textContent = enabled ? t('sport_fab_shortcut_remove_btn') : t('sport_fab_shortcut_add_btn');
+}
+
+function toggleSportFab() {
+    const enabled = document.getElementById('sport-fab-toggle').checked;
+    localStorage.setItem('weekwise_sport_fab', enabled ? 'true' : 'false');
+    applySportFabSetting(enabled);
+}
+
+function toggleSportFabFromCard() {
+    const enabled = !isSportFabOn();
+    localStorage.setItem('weekwise_sport_fab', enabled ? 'true' : 'false');
+    applySportFabSetting(enabled);
+    showAppToast(t(enabled ? 'sport_fab_shortcut_added_toast' : 'sport_fab_shortcut_removed_toast'));
+}
+
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
 // זה רק עניין של להחליף את attribute ה-data-color-theme על ה-html ---
 function colorThemeKey() {
@@ -3984,6 +4012,11 @@ async function deleteFinanceEntry(id) {
 let currentSportType = 'running';
 let currentSportMotivation = null;
 let sportSummaryMonthKey = null;
+let cachedCustomSportTypes = []; // [{id, name}] הבועות השמורות של המשתמש הזה
+
+function sportLastTypeKey() {
+    return `weekwise_sport_last_type_${currentUserId}`;
+}
 
 function selectSportType(type) {
     currentSportType = type;
@@ -3992,6 +4025,82 @@ function selectSportType(type) {
     });
     const customInput = document.getElementById('sport-custom-type-input');
     if (customInput) customInput.classList.toggle('hidden', type !== 'custom');
+    if (currentUserId) localStorage.setItem(sportLastTypeKey(), type);
+}
+
+// שם התצוגה עבור בחירה מותאמת-אישית: טקסט חופשי ("אחר") או בועה שמורה
+// (custom_<id>) - null אם הבחירה הנוכחית אינה מותאמת-אישית כלל
+function currentSportCustomName() {
+    if (currentSportType === 'custom') {
+        const input = document.getElementById('sport-custom-type-input');
+        return input ? input.value.trim() : '';
+    }
+    if (currentSportType.startsWith('custom_')) {
+        const id = currentSportType.slice('custom_'.length);
+        const preset = cachedCustomSportTypes.find(p => p.id === id);
+        return preset ? preset.name : '';
+    }
+    return null;
+}
+
+async function loadCustomSportTypes() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('custom_sport_types').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+    cachedCustomSportTypes = data || [];
+    renderCustomSportTypeBubbles();
+}
+
+function renderCustomSportTypeBubbles() {
+    const picker = document.getElementById('sport-type-picker');
+    if (!picker) return;
+    picker.querySelectorAll('.sport-type-custom-bubble, .btn-add-sport-type').forEach(el => el.remove());
+    cachedCustomSportTypes.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ai-brain-tab sport-type-custom-bubble';
+        btn.setAttribute('data-sport-type', `custom_${item.id}`);
+        btn.innerHTML = `<span class="sport-type-bubble-label">${escapeHtmlForReport(item.name)}</span><span class="sport-type-bubble-delete" onclick="event.stopPropagation(); deleteCustomSportType('${item.id}')">×</span>`;
+        btn.addEventListener('click', (e) => { if (!e.target.closest('.sport-type-bubble-delete')) selectSportType(`custom_${item.id}`); });
+        picker.appendChild(btn);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ai-brain-tab btn-add-sport-type';
+    addBtn.textContent = '+';
+    addBtn.onclick = showAddSportTypeRow;
+    picker.appendChild(addBtn);
+}
+
+function showAddSportTypeRow() {
+    const row = document.getElementById('sport-add-type-row');
+    if (row) { row.hidden = false; document.getElementById('new-sport-type-name').focus(); }
+}
+
+function hideAddSportTypeRow() {
+    const row = document.getElementById('sport-add-type-row');
+    if (row) row.hidden = true;
+    const input = document.getElementById('new-sport-type-name');
+    if (input) input.value = '';
+}
+
+async function addCustomSportType() {
+    const input = document.getElementById('new-sport-type-name');
+    const name = input.value.trim();
+    if (!name) return;
+    if (!supabaseClient || !currentUserId) return;
+    const { error } = await supabaseClient.from('custom_sport_types').insert({ user_id: currentUserId, username: currentUsername, name });
+    if (error) { showAppToast(t('sport_new_type_add_failed'), 'error'); return; }
+    hideAddSportTypeRow();
+    showAppToast(t('sport_new_type_add_success'));
+    await loadCustomSportTypes();
+}
+
+async function deleteCustomSportType(id) {
+    await supabaseClient.from('custom_sport_types').delete().eq('id', id);
+    // אם הבועה שנמחקה הייתה הנבחרת כרגע, נופלים חזרה ל"ריצה" - לא משאירים
+    // את הממשק תקוע על בחירה שכבר לא קיימת
+    if (currentSportType === `custom_${id}`) selectSportType('running');
+    await loadCustomSportTypes();
 }
 
 function selectSportMotivation(button, motivation) {
@@ -4006,7 +4115,12 @@ function selectSportMotivation(button, motivation) {
 async function loadSportData() {
     if (!supabaseClient || !currentUserId) return;
     sportSummaryMonthKey = currentMonthKey();
-    selectSportType('running');
+    await loadCustomSportTypes();
+    // ברירת המחדל היא הבחירה האחרונה של המשתמש (אם עדיין קיימת), לא תמיד "ריצה"
+    const saved = localStorage.getItem(sportLastTypeKey());
+    const builtIns = ['running', 'cycling', 'swimming', 'custom'];
+    const savedIsValid = saved && (builtIns.includes(saved) || cachedCustomSportTypes.some(p => `custom_${p.id}` === saved));
+    selectSportType(savedIsValid ? saved : 'running');
     currentSportMotivation = null;
     document.querySelectorAll('#sport-motivation-picker [data-motivation]').forEach(btn => btn.classList.remove('active'));
     const dateInput = document.getElementById('sport-date-input');
@@ -4016,26 +4130,70 @@ async function loadSportData() {
 
 async function submitSportSession() {
     if (!supabaseClient || !currentUserId) return;
-    const customInput = document.getElementById('sport-custom-type-input');
     const durationInput = document.getElementById('sport-duration-input');
     const distanceInput = document.getElementById('sport-distance-input');
     const dateInput = document.getElementById('sport-date-input');
-    const customName = currentSportType === 'custom' ? customInput.value.trim() : null;
-    if (currentSportType === 'custom' && !customName) { showAppToast(t('sport_missing_custom_name'), 'error'); return; }
+    const notesInput = document.getElementById('sport-notes-input');
+    const photoUrlInput = document.getElementById('sport-photo-url-input');
+    const isCustom = currentSportType === 'custom' || currentSportType.startsWith('custom_');
+    const customName = isCustom ? currentSportCustomName() : null;
+    if (isCustom && !customName) { showAppToast(t('sport_missing_custom_name'), 'error'); return; }
     const duration = parseInt(durationInput.value) || null;
     const distance = distanceInput.value ? parseFloat(distanceInput.value) : null;
     if (!duration) { showAppToast(t('sport_missing_duration'), 'error'); return; }
     const { error } = await supabaseClient.from('sport_sessions').insert({
-        user_id: currentUserId, username: currentUsername, sport_type: currentSportType,
+        user_id: currentUserId, username: currentUsername, sport_type: isCustom ? 'custom' : currentSportType,
         custom_type_name: customName, duration_minutes: duration, distance_km: distance,
         motivation: currentSportMotivation, session_date: dateInput.value || getLocalDateString(),
+        notes: notesInput.value.trim() || null, photo_url: photoUrlInput.value || null,
     });
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
     durationInput.value = '';
     distanceInput.value = '';
-    customInput.value = '';
+    document.getElementById('sport-custom-type-input').value = '';
+    notesInput.value = '';
+    photoUrlInput.value = '';
+    setSportPhotoPreview(null);
     showAppToast(t('sport_add_success'));
     await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+async function handleSportPhotoSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    // תצוגה מקדימה מיידית מקומית, לפני שהעלאה לענן מסתיימת
+    setSportPhotoPreview(URL.createObjectURL(file));
+    const url = await uploadSportPhoto(file);
+    if (url) {
+        document.getElementById('sport-photo-url-input').value = url;
+        setSportPhotoPreview(url);
+    } else {
+        showAppToast(t('sport_photo_upload_failed'), 'error');
+        setSportPhotoPreview(null);
+    }
+}
+
+async function uploadSportPhoto(file) {
+    if (!supabaseClient || !currentUserId) return null;
+    try {
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'jpg';
+        const path = `${currentUserId}/${Date.now()}.${ext}`;
+        const { error } = await supabaseClient.storage.from('sport-photos').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) return null;
+        const { data } = supabaseClient.storage.from('sport-photos').getPublicUrl(path);
+        return data ? data.publicUrl : null;
+    } catch {
+        return null;
+    }
+}
+
+function setSportPhotoPreview(url) {
+    const preview = document.getElementById('sport-photo-preview');
+    if (!preview) return;
+    if (url) { preview.src = url; preview.classList.remove('hidden'); }
+    else { preview.src = ''; preview.classList.add('hidden'); }
 }
 
 async function navigateSportMonth(delta) {
@@ -4143,13 +4301,18 @@ async function renderSportHistory() {
         const formattedDate = formatSportDayLabel(row.session_date);
         const distancePart = row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '';
         const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
+        const notesPart = row.notes ? `<span class="finance-history-note">${escapeHtmlForReport(row.notes)}</span>` : '';
+        const photoPart = row.photo_url ? `<img src="${row.photo_url}" class="sport-history-thumb" alt="">` : '';
         li.innerHTML = `
+            ${photoPart}
             <div class="finance-history-main">
                 <span class="finance-history-category">${sportTypeLabel(row)}</span>
                 <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
                 ${motivationPart}
+                ${notesPart}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
+            <button type="button" class="btn-delete-slot" onclick="shareSportSession('${row.id}')">📤</button>
             <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">❌</button>
         `;
         list.appendChild(li);
@@ -4159,6 +4322,16 @@ async function renderSportHistory() {
 async function deleteSportSession(id) {
     await supabaseClient.from('sport_sessions').delete().eq('id', id);
     await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+async function shareSportSession(id) {
+    const { data: row } = await supabaseClient.from('sport_sessions').select('*').eq('id', id).maybeSingle();
+    if (!row) return;
+    let text = `${sportTypeLabel(row)} · ${row.duration_minutes} ${t('sport_minutes_unit')}`;
+    if (row.distance_km) text += ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}`;
+    text += ` (${formatSportDayLabel(row.session_date)})`;
+    if (row.notes) text += `\n\n${row.notes}`;
+    openSharePicker(text, row.photo_url || '');
 }
 
 // ייצוא לטבלה (CSV): קובץ נפרד לכל חודש שנצפה כרגע - נפתח ישירות בכל אפליקציית
@@ -4171,13 +4344,14 @@ async function exportSportSessionsCsv() {
         .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
         .order('session_date', { ascending: true });
     if (!data || !data.length) { showAppToast(t('sport_history_empty'), 'error'); return; }
-    const header = [t('sport_csv_date'), t('sport_csv_type'), t('sport_csv_duration'), t('sport_csv_distance'), t('sport_csv_motivation')];
+    const header = [t('sport_csv_date'), t('sport_csv_type'), t('sport_csv_duration'), t('sport_csv_distance'), t('sport_csv_motivation'), t('sport_csv_notes')];
     const csvRows = data.map(row => [
         row.session_date,
         sportTypeLabel(row),
         row.duration_minutes || '',
         row.distance_km || '',
         row.motivation ? t(`sport_motivation_${row.motivation}`) : '',
+        row.notes || '',
     ]);
     const csvContent = [header, ...csvRows]
         .map(cols => cols.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
