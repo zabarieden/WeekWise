@@ -1930,14 +1930,17 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 /* בלי קיצוץ בשלוש נקודות - שם המשימה יגלוש לשורה שנייה בתוך הבועה במקום
    שייחתך (העמודה נשארת צרה בכוונה כדי שיהיה קומפקטי, אבל התוכן עצמו חייב
    להיות קריא במלואו, לפי בקשה מפורשת) */
-.home-glance-pill-text { flex: 1; min-width: 0; white-space: normal; word-break: break-word; line-height: 1.15; }
+/* עד 2 שורות, לא בלתי-מוגבל - כותרת ארוכה במיוחד (למשל פתק שנגרר עם טקסט
+   ארוך) לא תשבור את הרשת לגובה ענק; אחרי 2 שורות נחתך עם "..." (line-clamp,
+   נתמך בכל הדפדפנים הרלוונטיים) */
+.home-glance-pill-text { flex: 1; min-width: 0; white-space: normal; word-break: break-word; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* עיפרון זעיר בקצה הבועה - רק רמז חזותי שאפשר ללחוץ לעריכה; הלחיצה עצמה
    מוגדרת על כל הבועה (לא רק על העיפרון הקטנטן), כי אי-אפשר לפגוע בו במדויק
    באצבע במסך כזה קטן - לפי בקשה מפורשת ל"אייקון קטנטן", בלי לפגוע בשימושיות */
 .home-glance-pill-edit-icon { flex-shrink: 0; font-size: 0.55rem; opacity: 0.75; }
 /* בלי קיצוץ בשלוש נקודות כאן גם - אותו תיקון בדיוק כמו בבועות המשימה
    בשעות (word-wrap במקום ellipsis), כדי שכותרות אירועים ארוכות יהיו קריאות במלואן */
-.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); white-space: normal; word-break: break-word; line-height: 1.2; cursor: pointer; }
+.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); white-space: normal; word-break: break-word; line-height: 1.2; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .home-glance-date-label { cursor: pointer; }
 .home-glance-empty-hint { text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 14px 0; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
