@@ -795,19 +795,26 @@ async function renderHomeGlance() {
 
     const [{ data: scheduleRows }, { data: eventRows }] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('id, day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
-        supabaseClient.from('calendar_events').select('event_date, event_title').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
+        supabaseClient.from('calendar_events').select('id, event_date, event_title, event_time').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
     ]);
     const populatedRows = (scheduleRows || []).filter(r => (r.task_title || '').trim());
-    const events = eventRows || [];
+    const allEvents = eventRows || [];
+    // אירועים עם שעה (רשות, שדה חדש) נכנסים לרשת השעות עצמה כמו משימות
+    // הלו"ז; אירועים בלי שעה (רוב האירועים - למשל יום הולדת) נשארים כבועה
+    // קטנה מתחת לכותרת היום, כי אין להם לאן "להיכנס" בציר השעות
+    const timedEvents = allEvents.filter(ev => ev.event_time);
+    const untimedEvents = allEvents.filter(ev => !ev.event_time);
 
-    // ציר השורות: איחוד השעות הייחודיות שבפועל מופיעות אי-שם בלו"ז (לא כל
-    // 24 השעות, ולא defaultHours - כדי שהרשת תישאר קומפקטית כמו שביקשה)
+    // ציר השורות: איחוד השעות הייחודיות שבפועל מופיעות אי-שם בלו"ז + באירועי
+    // היומן המתוזמנים של השבוע הזה (לא כל 24 השעות, ולא defaultHours - כדי
+    // שהרשת תישאר קומפקטית כמו שביקשה)
     const timeSet = new Set();
     populatedRows.forEach(r => { if (r.time_of_day) timeSet.add(r.time_of_day); });
+    timedEvents.forEach(ev => timeSet.add(ev.event_time));
     const times = Array.from(timeSet).sort((a, b) => (scheduleTimeToMinutes(a) ?? 0) - (scheduleTimeToMinutes(b) ?? 0));
 
     grid.innerHTML = '';
-    if (!times.length && !events.length) {
+    if (!times.length && !untimedEvents.length) {
         grid.innerHTML = `<p class="home-glance-empty-hint">${t('home_weekly_glance_empty')}</p>`;
         return;
     }
@@ -821,18 +828,19 @@ async function renderHomeGlance() {
         grid.appendChild(header);
     });
 
-    // שורת אירועים חד-פעמיים (calendar_events) - אין להם שעה, לכן מוצגים
-    // כבועות קטנות מתחת לכותרת היום ולא בתוך רשת השעות עצמה
-    const eventsByDate = {};
-    events.forEach(ev => { (eventsByDate[ev.event_date] = eventsByDate[ev.event_date] || []).push(ev); });
+    // שורת אירועים חד-פעמיים ללא שעה (calendar_events) - מוצגים כבועות קטנות
+    // מתחת לכותרת היום ולא בתוך רשת השעות עצמה
+    const untimedEventsByDate = {};
+    untimedEvents.forEach(ev => { (untimedEventsByDate[ev.event_date] = untimedEventsByDate[ev.event_date] || []).push(ev); });
     grid.appendChild(document.createElement('div'));
     dates.forEach(d => {
         const cell = document.createElement('div');
         cell.className = 'home-glance-cell home-glance-events-cell';
-        (eventsByDate[getLocalDateString(d)] || []).forEach(ev => {
+        (untimedEventsByDate[getLocalDateString(d)] || []).forEach(ev => {
             const badge = document.createElement('span');
             badge.className = 'home-glance-event-badge';
             badge.textContent = ev.event_title;
+            badge.onclick = () => openEditCalendarEvent(ev);
             cell.appendChild(badge);
         });
         grid.appendChild(cell);
@@ -845,6 +853,7 @@ async function renderHomeGlance() {
         grid.appendChild(label);
         dates.forEach(d => {
             const dbDay = dbDaysMap[d.getDay()];
+            const dStr = getLocalDateString(d);
             const cell = document.createElement('div');
             cell.className = 'home-glance-cell';
             const match = populatedRows.find(r => r.day_of_week === dbDay && r.time_of_day === time);
@@ -855,6 +864,18 @@ async function renderHomeGlance() {
                 pill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(match.task_title)} ${match.task_title}</span><span class="home-glance-pill-edit-icon">✏️</span>`;
                 pill.onclick = () => openGlanceTaskEditor(match.id, match.task_title, match.time_of_day);
                 cell.appendChild(pill);
+            }
+            // אירוע מתוזמן מ"מבט ליומן" לתאריך+שעה האלה - בועה נוספת (לא
+            // תחליף למשימת הלו"ז אם יש) עם גבול מקווקו כדי שיהיה ברור
+            // שזה אירוע ליומן ולא משימה חוזרת, בסגנון הבועות הלא-מתוזמנות
+            const eventMatch = timedEvents.find(ev => ev.event_date === dStr && ev.event_time === time);
+            if (eventMatch) {
+                const eventPill = document.createElement('span');
+                eventPill.className = 'home-glance-task-pill is-event';
+                eventPill.style.background = colorForTaskTitle(eventMatch.event_title);
+                eventPill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(eventMatch.event_title)} ${eventMatch.event_title}</span>`;
+                eventPill.onclick = () => openEditCalendarEvent(eventMatch);
+                cell.appendChild(eventPill);
             }
             grid.appendChild(cell);
         });
@@ -2624,6 +2645,7 @@ function openEditCalendarEvent(item) {
     editingCalendarEventGroupId = null;
     document.getElementById('calendar-event-title-input').value = item.event_title;
     document.getElementById('calendar-event-date-input').value = item.event_date;
+    document.getElementById('calendar-event-time-input').value = item.event_time || '';
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
@@ -2637,6 +2659,8 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     document.getElementById('calendar-event-title-input').value = currentTitle;
     document.getElementById('calendar-event-date-input').value = '';
     document.getElementById('calendar-event-date-input').classList.add('hidden');
+    document.getElementById('calendar-event-time-input').value = '';
+    document.getElementById('calendar-event-time-input').classList.add('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
@@ -2650,6 +2674,8 @@ function resetCalendarEventModal() {
     document.getElementById('calendar-event-title-input').value = '';
     document.getElementById('calendar-event-date-input').value = '';
     document.getElementById('calendar-event-date-input').classList.remove('hidden');
+    document.getElementById('calendar-event-time-input').value = '';
+    document.getElementById('calendar-event-time-input').classList.remove('hidden');
     document.getElementById('calendar-event-recurring-checkbox').checked = false;
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
@@ -2665,8 +2691,13 @@ async function addCalendarEvent() {
     const customIntervalInput = document.getElementById('calendar-event-custom-interval');
     const customUnitSelect = document.getElementById('calendar-event-custom-unit');
     const durationSelect = document.getElementById('calendar-event-duration-input');
+    const timeInput = document.getElementById('calendar-event-time-input');
     const title = titleInput.value.trim();
     const date = dateInput.value;
+    // הזמן רשות לגמרי - לא כל אירוע ביומן הוא "בשעה מסוימת" (למשל יום הולדת)
+    const timeNorm = normalizeScheduleTimeInput(timeInput.value);
+    if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    const eventTime = timeNorm.time || null;
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
     if (editingCalendarEventGroupId) {
@@ -2683,7 +2714,7 @@ async function addCalendarEvent() {
     }
     if (editingCalendarEventId) {
         if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title, event_date: date }).eq('id', editingCalendarEventId);
+        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title, event_date: date, event_time: eventTime }).eq('id', editingCalendarEventId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         resetCalendarEventModal();
         closeModal('modal-add-calendar-event');
@@ -2705,16 +2736,17 @@ async function addCalendarEvent() {
         const groupId = crypto.randomUUID();
         rows = generateRecurringDates(date, recurrenceType, customInterval, customUnit, months).map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
-            event_title: title, event_date: eventDate, recurrence_group_id: groupId
+            event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId
         }));
     } else {
-        rows = [{ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, recurrence_group_id: null }];
+        rows = [{ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null }];
     }
 
     const { error } = await supabaseClient.from('calendar_events').insert(rows);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     titleInput.value = '';
     dateInput.value = '';
+    timeInput.value = '';
     recurringCheckbox.checked = false;
     toggleRecurringOptionsVisibility();
     closeModal('modal-add-calendar-event');
