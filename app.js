@@ -755,16 +755,16 @@ function jumpHomeGlanceToDate(dateStr) {
 
 // צבע קבוע לכל משימה חוזרת (לפי hash של שם המשימה) - כך שאותה משימה תמיד
 // נראית באותו צבע, גם בין שבועות שונים, בלי שום עמודת "צבע" חדשה בטבלה.
-// הצבעים עצמם הם משתני ה-CSS של ערכת הנושא הנבחרת (לא rgba קבוע) - כך
-// שהבועות תמיד "מתאימות" לערכת הצבעים שהמשתמשת בחרה בהגדרות, במקום צבעים
-// שרירותיים שלא בהכרח מתאימים לרקע שהיא בחרה (לפי בקשה מפורשת)
+// גרדיאנטים עדינים ושקופים (לא צבע שטוח חזק) מבין משתני ה-CSS של ערכת
+// הנושא הנבחרת - אותם זוגות גרדיאנט בדיוק שכבר משמשים בכפתורים/כפתורי-FAB
+// באפליקציה (למשל .btn-primary: pink->purple), רק בשקיפות נמוכה יותר לעדינות
 const HOME_GLANCE_PALETTE = [
-    'color-mix(in srgb, var(--accent-purple) 55%, transparent)',
-    'color-mix(in srgb, var(--accent-pink) 50%, transparent)',
-    'color-mix(in srgb, var(--accent-cyan) 50%, transparent)',
-    'color-mix(in srgb, var(--accent-gold) 50%, transparent)',
-    'color-mix(in srgb, var(--accent-green) 45%, transparent)',
-    'color-mix(in srgb, var(--accent-purple-light) 50%, transparent)',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 32%, transparent), color-mix(in srgb, var(--accent-purple) 32%, transparent))',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 30%, transparent), color-mix(in srgb, var(--accent-cyan) 30%, transparent))',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-gold) 30%, transparent), color-mix(in srgb, var(--accent-pink) 30%, transparent))',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-green) 28%, transparent), color-mix(in srgb, var(--accent-cyan) 28%, transparent))',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-purple-light) 30%, transparent), color-mix(in srgb, var(--accent-purple) 30%, transparent))',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent-cyan) 28%, transparent), color-mix(in srgb, var(--accent-purple-light) 28%, transparent))',
 ];
 function colorForTaskTitle(title) {
     const str = (title || '').trim();
@@ -846,7 +846,7 @@ async function renderHomeGlance() {
             if (match) {
                 const pill = document.createElement('span');
                 pill.className = 'home-glance-task-pill';
-                pill.style.backgroundColor = colorForTaskTitle(match.task_title);
+                pill.style.background = colorForTaskTitle(match.task_title);
                 pill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(match.task_title)} ${match.task_title}</span><span class="home-glance-pill-edit-icon">✏️</span>`;
                 pill.onclick = () => openGlanceTaskEditor(match.id, match.task_title, match.time_of_day);
                 cell.appendChild(pill);
