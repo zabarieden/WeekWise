@@ -392,10 +392,10 @@ async function loadPresetManageList() {
         items.forEach(item => {
             const li = document.createElement('li');
             li.className = 'preset-manage-item';
-            const descriptionHtml = item.description ? `<span class="preset-picker-description">${item.description}</span>` : '';
+            const descriptionHtml = item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : '';
             li.innerHTML = `
                 <span class="preset-manage-name-wrap">
-                    <span class="preset-manage-name">${item.food_name} (${item.calories})</span>
+                    <span class="preset-manage-name">${escapeHtmlForReport(item.food_name)} (${item.calories})</span>
                     ${descriptionHtml}
                 </span>
                 <div class="preset-manage-actions">
@@ -464,7 +464,7 @@ function renderPresetPickerList(filter) {
     }
     list.innerHTML = matches.map(item => `
         <button type="button" class="language-picker-item" onclick="selectPresetPickerItem('${item.id}')">
-            <span class="language-picker-name">${item.food_name} (${item.calories})${item.description ? `<span class="preset-picker-description">${item.description}</span>` : ''}</span>
+            <span class="language-picker-name">${escapeHtmlForReport(item.food_name)} (${item.calories})${item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : ''}</span>
         </button>
     `).join('');
 }
@@ -2225,7 +2225,7 @@ async function loadTodayTasks() {
     populated.forEach(item => {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
-        row.innerHTML = `<span class="today-tasks-time">${item.time_of_day || ''}</span><span class="today-tasks-text">${getScheduleTaskIcon(item.task_title)} ${item.task_title}</span>`;
+        row.innerHTML = `<span class="today-tasks-time">${item.time_of_day || ''}</span><span class="today-tasks-text">${getScheduleTaskIcon(item.task_title)} ${escapeHtmlForReport(item.task_title)}</span>`;
         container.appendChild(row);
     });
     // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
@@ -2235,7 +2235,7 @@ async function loadTodayTasks() {
         row.className = 'today-tasks-row';
         row.innerHTML = `
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
+            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
         `;
         // כפתורי עריכה/מחיקה מחוברים דרך closure (לא onclick עם JSON מוטמע
         // בתוך מחרוזת HTML) - כך שגרש בודד בכותרת האירוע (למשל "It's") לא
@@ -2336,7 +2336,7 @@ async function renderSelectedCalendarDay() {
     const rows = data.map(item => `
         <div class="today-tasks-row">
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${item.event_title}</span>
+            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
             <button type="button" class="btn-delete-item" onclick="deleteCalendarEvent('${item.id}')">❌</button>
         </div>
     `).join('');

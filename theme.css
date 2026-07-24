@@ -1428,7 +1428,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     width: 100%;
     box-sizing: border-box;
 }
-.center-list-item-text { flex: 1; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
+/* min-width:0 + overflow-wrap - פתק עם "מילה" ארוכה בלי רווחים בכלל (למשל
+   שורת קווים תחתונים "____...." שהוקלדה כמפריד חזותי) היא בלתי-שבירה
+   כברירת מחדל; פריט flex לא מתכווץ מתחת ל-min-content שלו (min-width:auto
+   כברירת מחדל), אז המילה הענקית "דחפה" את כל השורה לרוחב ענק והוציאה את
+   כפתורי העריכה/מחיקה (שבאים אחריה ב-flex) הרחק מחוץ לתחום הנראה - בדיוק
+   מה שנראה כמו "קו" עם כפתורים חסרים */
+.center-list-item-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
 /* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
    חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
