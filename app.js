@@ -1877,6 +1877,14 @@ async function parseScheduleWithAI() {
         return;
     }
 
+    // מגן מפני שליחה כפולה: אין שום חיווי חזותי מיידי (showScheduleAiLoading
+    // מתעכב בכוונה 5 שניות, ר' למטה), אז טאפ כפול מהיר לפני שרואים משהו
+    // קורה בפועל היה יוצר שתי בקשות AI עצמאיות - כל אחת מוסיפה את האירועים
+    // בנפרד, כפילות אמיתית בנתונים (בדיוק מה שדווח: אותה בקשה נחתה פעמיים)
+    const submitBtn = document.getElementById('btn-schedule-ai-parse');
+    if (submitBtn && submitBtn.disabled) return;
+    if (submitBtn) submitBtn.disabled = true;
+
     const loadingTimer = setTimeout(showScheduleAiLoading, 5000);
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -1917,6 +1925,7 @@ async function parseScheduleWithAI() {
     } finally {
         clearTimeout(loadingTimer);
         hideScheduleAiLoading();
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
 

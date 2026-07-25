@@ -118,7 +118,13 @@ Deno.serve(async (req) => {
                             "(one entry per day+activity combination - if an activity happens on multiple days, " +
                             "create a separate entry for each day). Use 24-hour HH:MM time format. Day names must be " +
                             "in English exactly as Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, or Saturday. " +
-                            "Do not invent events that weren't mentioned.\n\n" +
+                            "Do not invent events that weren't mentioned - if only one day/date is stated, output " +
+                            "exactly one event for it, never an extra copy on a different day 'just in case'.\n\n" +
+                            "A phrase like \"after homework\"/\"אחרי שיעורי הבית\", \"after work\", \"once I'm done " +
+                            "with X\" describes WHEN LATER TODAY (or on whatever single day was stated) the task " +
+                            "happens - it is NOT a reference to the next day/tomorrow. Never create a second event on " +
+                            "the following day for phrasing like this unless the user separately and explicitly also " +
+                            "named another day or date.\n\n" +
                             "For EACH event, decide whether it is RECURRING (an ongoing weekly commitment with no " +
                             "specific single date - e.g. \"on Mondays\", \"every Tuesday\", \"I go to the gym on " +
                             "Sundays\") or a ONE-TIME occurrence (any specific single date is implied, however " +
