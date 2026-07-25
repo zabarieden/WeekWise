@@ -1452,7 +1452,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     font-weight: 700;
     color: var(--text-secondary);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 8px;
     cursor: default;
 }
