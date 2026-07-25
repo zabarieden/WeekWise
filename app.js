@@ -3829,6 +3829,129 @@ function setUiScale(scale) {
     applyUiScale(scale);
 }
 
+// --- עזרה ושאלות נפוצות: רשימה סטטית מקובצת לפי קטגוריה, מהקל למורכב
+// (לפי בקשה מפורשת). כל שאלה/תשובה היא מפתח i18n משלה (faq_q_<id>/
+// faq_a_<id>) - לא טקסט קבוע - כדי שיתורגם כמו כל שאר האפליקציה. בכל
+// פיצ'ר/תיקון חדש שנוסף לאפליקציה, אמור להתווסף גם ערך מתאים כאן ---
+const HELP_FAQ_ENTRIES = [
+    { id: 'welcome', category: 'general' },
+    { id: 'change_language', category: 'general' },
+    { id: 'light_dark', category: 'general' },
+    { id: 'app_size', category: 'general' },
+    { id: 'notes_vs_shopping', category: 'notes' },
+    { id: 'drag_note_to_schedule', category: 'notes' },
+    { id: 'someday_section', category: 'notes' },
+    { id: 'restore_deleted_note', category: 'notes' },
+    { id: 'empty_archive', category: 'notes' },
+    { id: 'myweek_vs_glance', category: 'myweek' },
+    { id: 'add_myweek_task', category: 'myweek' },
+    { id: 'myweek_reminder', category: 'myweek' },
+    { id: 'delete_myweek_row', category: 'myweek' },
+    { id: 'what_is_glance', category: 'glance' },
+    { id: 'add_onetime_event', category: 'glance' },
+    { id: 'add_bounded_recurring', category: 'glance' },
+    { id: 'delete_series_history', category: 'glance' },
+    { id: 'home_glance_widget', category: 'glance' },
+    { id: 'which_ai_button', category: 'ai' },
+    { id: 'ai_phrasing_tips', category: 'ai' },
+    { id: 'ai_mixed_request', category: 'ai' },
+    { id: 'ai_bounded_duration', category: 'ai' },
+    { id: 'ai_delete_support', category: 'ai' },
+    { id: 'ai_local_fallback', category: 'ai' },
+    { id: 'custom_sport_type', category: 'sport_water' },
+    { id: 'sport_photo', category: 'sport_water' },
+    { id: 'water_fab', category: 'sport_water' },
+    { id: 'save_meal_preset', category: 'nutrition' },
+    { id: 'photo_scan_recipe', category: 'nutrition' },
+    { id: 'finance_ai_add', category: 'finance' },
+    { id: 'monthly_goal_explain', category: 'goals' },
+    { id: 'high_contrast_filter', category: 'settings_a11y' },
+    { id: 'toggle_fabs', category: 'settings_a11y' },
+    { id: 'week_start_day', category: 'settings_a11y' },
+    { id: 'premium_benefits', category: 'premium' },
+    { id: 'cancel_subscription', category: 'premium' },
+    { id: 'delete_account', category: 'account' },
+];
+
+function renderHelpFaqList() {
+    const list = document.getElementById('help-faq-list');
+    if (!list) return;
+    list.innerHTML = '';
+    let currentCategory = null;
+    HELP_FAQ_ENTRIES.forEach(entry => {
+        if (entry.category !== currentCategory) {
+            currentCategory = entry.category;
+            const header = document.createElement('div');
+            header.className = 'help-faq-category-header';
+            header.textContent = t(`faq_cat_${currentCategory}`);
+            list.appendChild(header);
+        }
+        const item = document.createElement('div');
+        item.className = 'help-faq-item';
+        item.setAttribute('data-faq-id', entry.id);
+        const qBtn = document.createElement('button');
+        qBtn.type = 'button';
+        qBtn.className = 'help-faq-question';
+        const qText = document.createElement('span');
+        qText.textContent = t(`faq_q_${entry.id}`);
+        const arrow = document.createElement('span');
+        arrow.className = 'help-faq-arrow';
+        arrow.textContent = '▾';
+        qBtn.appendChild(qText);
+        qBtn.appendChild(arrow);
+        qBtn.onclick = () => item.classList.toggle('open');
+        const answer = document.createElement('div');
+        answer.className = 'help-faq-answer';
+        answer.textContent = t(`faq_a_${entry.id}`);
+        item.appendChild(qBtn);
+        item.appendChild(answer);
+        list.appendChild(item);
+    });
+}
+
+function openHelpFaqModal() {
+    renderHelpFaqList();
+    const search = document.getElementById('help-faq-search');
+    if (search) search.value = '';
+    filterHelpFaq();
+    openModal('modal-help-faq');
+}
+
+// חיפוש חופשי בטקסט השאלה *וגם* התשובה (לא רק הכותרת) - כדי שמישהו
+// שמחפש מילה שמופיעה רק בתוך התשובה עדיין ימצא אותה. תוצאה תואמת נפתחת
+// אוטומטית (בלי צורך ללחוץ שוב), וקטגוריה שאין בה אף תוצאה תואמת מוסתרת כולה
+function filterHelpFaq() {
+    const searchInput = document.getElementById('help-faq-search');
+    const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const list = document.getElementById('help-faq-list');
+    if (!list) return;
+    let anyVisible = false;
+    list.querySelectorAll('.help-faq-item').forEach(item => {
+        const id = item.getAttribute('data-faq-id');
+        const q = t(`faq_q_${id}`).toLowerCase();
+        const a = t(`faq_a_${id}`).toLowerCase();
+        const match = !term || q.includes(term) || a.includes(term);
+        item.classList.toggle('hidden', !match);
+        item.classList.toggle('open', !!term && match);
+        if (!term) item.classList.remove('open');
+        if (match) anyVisible = true;
+    });
+    let currentHeader = null;
+    let currentHeaderHasVisible = false;
+    Array.from(list.children).forEach(child => {
+        if (child.classList.contains('help-faq-category-header')) {
+            if (currentHeader) currentHeader.classList.toggle('hidden', !currentHeaderHasVisible);
+            currentHeader = child;
+            currentHeaderHasVisible = false;
+        } else if (!child.classList.contains('hidden')) {
+            currentHeaderHasVisible = true;
+        }
+    });
+    if (currentHeader) currentHeader.classList.toggle('hidden', !currentHeaderHasVisible);
+    const emptyHint = document.getElementById('help-faq-empty');
+    if (emptyHint) emptyHint.classList.toggle('hidden', anyVisible);
+}
+
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
 // קבוע על המסך), מוצג רק אחרי הפעלה מפורשת בהגדרות. אותו דפוס בדיוק כמו
 // high-contrast/color-filter למעלה - localStorage, לא תלוי פרימיום

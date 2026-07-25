@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=163">
+    <link rel="stylesheet" href="theme.css?v=164">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -966,6 +966,19 @@
             </div>
         </div>
 
+        <!-- חלון צף: עזרה ושאלות נפוצות - חיפוש חופשי + רשימת שאלות/תשובות מקובצות
+             לפי קטגוריה, מהקל למורכב (ר' HELP_FAQ_ENTRIES ב-app.js) -->
+        <div id="modal-help-faq" class="apple-modal">
+            <div class="modal-sheet help-faq-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="settings_help_faq_btn">❓ Help &amp; FAQ</h3>
+                <input type="text" id="help-faq-search" class="help-faq-search-input" oninput="filterHelpFaq()" data-i18n-placeholder="help_faq_search_placeholder" placeholder="Search a word...">
+                <div id="help-faq-list" class="help-faq-list"></div>
+                <p id="help-faq-empty" class="today-tasks-empty hidden" data-i18n="help_faq_no_results">No results found</p>
+                <button type="button" class="btn-clear-specific" onclick="closeModal('modal-help-faq')" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+
         <!-- חלון צף: הוספת מים מהירה מהכפתור הצף - כוס/בקבוק/כמות מותאמת אישית -->
         <div id="modal-water-quick-add" class="apple-modal">
             <div class="modal-sheet">
@@ -1077,6 +1090,7 @@
                 </div>
 
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
+                <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openHelpFaqModal();" data-i18n="settings_help_faq_btn">❓ Help &amp; FAQ</button>
 
                 <!-- מוצג רק כשעדיין לא פרימיום (renderSettingsSubscriptionSection) -
                      ברגע שיש פרימיום, זה מוחלף בתג "פרימיום פעיל" עדין למטה -->
@@ -1631,7 +1645,7 @@
 
     </div>
 
-    <script src="i18n.js?v=93"></script>
-    <script src="app.js?v=163"></script>
+    <script src="i18n.js?v=94"></script>
+    <script src="app.js?v=164"></script>
 </body>
 </html>

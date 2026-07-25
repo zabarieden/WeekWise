@@ -1482,6 +1482,19 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    לשימוש שוטף" בלי להיעלם לגמרי */
 .archive-item { opacity: 0.7; border-style: dashed; }
 .archive-item .center-list-item-text { color: var(--text-secondary); }
+/* עזרה ושאלות נפוצות - גיליון גבוה יותר מהרגיל (85vh->92vh) כי יש הרבה
+   תוכן; החיפוש תמיד גלוי למעלה, מחוץ לרשימה הגוללת עצמה */
+.help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }
+#help-faq-search { width: 100%; box-sizing: border-box; margin-bottom: 10px; flex-shrink: 0; }
+.help-faq-list { overflow-y: auto; }
+.help-faq-category-header { font-size: 0.72rem; font-weight: 700; color: var(--tile-accent, var(--accent-gold)); text-transform: uppercase; letter-spacing: 0.03em; margin: 16px 0 6px; }
+.help-faq-category-header:first-child { margin-top: 0; }
+.help-faq-item { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.help-faq-question { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-align: start; cursor: pointer; }
+.help-faq-arrow { flex-shrink: 0; color: var(--text-secondary); font-size: 0.7rem; transition: transform 0.2s ease; }
+.help-faq-item.open .help-faq-arrow { transform: rotate(180deg); }
+.help-faq-answer { max-height: 0; overflow: hidden; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; transition: max-height 0.25s ease-out; }
+.help-faq-item.open .help-faq-answer { max-height: 400px; padding-bottom: 12px; }
 .note-drag-handle:active { cursor: grabbing; }
 .note-triage-hint { font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px 0; text-align: center; }
 .note-triage-zones { display: flex; gap: 10px; margin-bottom: 12px; }
@@ -1779,7 +1792,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 /* היה input חד-שורתי, שהפך פתק ארוך לבלתי-ניתן-לעריכה בפועל (אין דרך
    לראות/לגלול בתוכו) - עכשיו טקסטאריה עם כמה שורות גובה וגלילה/שינוי-גודל
    פנימיים משלה, בלי לגעת ב-JS בכלל (textarea.value עובד זהה ל-input.value) */
