@@ -380,7 +380,7 @@ html.light-mode .login-card input {
    כדי לקבל גם הן את גוון ערכת הנושא, עם זכוכית לבנה רכה כברירת מחדל - וה-
    color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
    (הפופאפ עצמו, שלא ניתן לעצב ב-CSS) ייפתח גם הוא בהיר ולא כתיבה שחורה */
-html.light-mode .center-list li,
+html.light-mode .center-list li:not(.center-list-divider),
 html.light-mode .calendar-event-item {
     background-color: var(--bg-row);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
@@ -1440,6 +1440,28 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מה שנראה כמו "קו" עם כפתורים חסרים */
 .center-list-item-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
+/* מפריד "להגיע לזה" בתוך רשימת הפתקים - לא כרטיס פתק (מבטל את הרקע/מסגרת/
+   צל של .center-list li), רק תווית עדינה עם קו משני הצדדים, כדי שיהיה ברור
+   שזה קטע נפרד ברשימה ולא פתק שאפשר ללחוץ/לערוך/למחוק */
+.center-list-divider {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 2px 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: default;
+}
+.center-list-divider::before, .center-list-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
 /* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
    חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
 .note-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }

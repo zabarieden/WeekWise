@@ -172,14 +172,25 @@ function loadAllCenterItems() {
 
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
-    // sort_order ידני (שנקבע ע"י גרירה בפתקים) קודם, ורק פריטים בלי אחד עדיין
-    // (חדשים/מלפני התכונה) נופלים לסוף לפי created_at - אותו דפוס כמו ב-calendar_events
-    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
+    // is_someday קודם (false לפני true) כדי שקטע "להגיע לזה" תמיד ייפול בסוף
+    // הרשימה; בתוך כל קבוצה - sort_order ידני (שנקבע ע"י גרירה בפתקים), ורק
+    // פריטים בלי אחד עדיין (חדשים/מלפני התכונה) נופלים לסוף לפי created_at -
+    // אותו דפוס כמו ב-calendar_events
+    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).order('is_someday', { ascending: true }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
     if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
     listUl.innerHTML = '';
+    // קטע "להגיע לזה" (רק לפתקים, לא לרשימת קניות) - לא תיבת גרירה נפרדת
+    // כמו "היום"/"מחר", אלא שורת מפריד בתוך אותה רשימה בדיוק; גוררים פתק
+    // מעליה למטה כדי לסמן "לא דחוף", לפי בקשה מפורשת. מוצגת תמיד (גם בלי
+    // אף פתק "להגיע לזה" עדיין) כדי שיהיה תמיד יעד גרירה ברור בתחתית
+    let dividerInserted = false;
     data.forEach(item => {
+        if (type === 'weekly' && item.is_someday && !dividerInserted) {
+            listUl.appendChild(buildNoteSomedayDivider());
+            dividerInserted = true;
+        }
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
         // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
@@ -198,7 +209,15 @@ async function loadCenterItems(type) {
         `;
         listUl.appendChild(li);
     });
+    if (type === 'weekly' && !dividerInserted) listUl.appendChild(buildNoteSomedayDivider());
     initNoteTriageDragDrop(type);
+}
+
+function buildNoteSomedayDivider() {
+    const li = document.createElement('li');
+    li.className = 'center-list-divider';
+    li.textContent = t('note_someday_section_label');
+    return li;
 }
 
 // --- גרירת פתק אל "היום"/"מחר"/"רשימת קניות": ה-שניים הראשונים הופכים אותו
@@ -221,6 +240,9 @@ function initNoteTriageDragDrop(type) {
     new Sortable(list, {
         group: { name: `note-triage-${type}`, pull: 'clone', put: false },
         handle: '.note-drag-handle',
+        // מפריד "להגיע לזה" הוא לא פתק - אי אפשר "לתפוס" אותו ולגרור אותו
+        // בעצמו, רק פתקים נגררים מעליו/מתחתיו
+        filter: '.center-list-divider',
         animation: 150,
         forceFallback: true,
         fallbackOnBody: true,
@@ -237,11 +259,25 @@ function initNoteTriageDragDrop(type) {
         dragClass: 'note-triage-drag-clone',
         // onEnd (לא onSort/onUpdate) כדי לתפוס גם גרירה שמסתיימת מחוץ לרשימה
         // (evt.from !== evt.to אז) בלי לשמור סדר מיותר - רק סידור-מחדש אמיתי
-        // בתוך אותה רשימה (evt.from === evt.to) שומר sort_order חדש
+        // בתוך אותה רשימה (evt.from === evt.to) שומר sort_order חדש. עובר על
+        // כל הילדים כולל המפריד עצמו כדי לדעת אילו פתקים נמצאים אחריו (=
+        // "להגיע לזה", is_someday=true) ואילו לפניו - נקבע מחדש בכל גרירה,
+        // לא רק כשהמפריד עצמו "זז" (הוא לא זז - הפתקים זזים סביבו)
         onEnd: function (evt) {
             if (evt.from !== evt.to) return;
-            const ids = Array.from(evt.from.children).map(li => li.getAttribute('data-item-id'));
-            Promise.all(ids.map((id, index) => supabaseClient.from('my_center_tasks').update({ sort_order: (index + 1) * 10 }).eq('id', id)));
+            let isSomeday = false;
+            let sortIndex = 0;
+            const updates = [];
+            Array.from(evt.from.children).forEach(child => {
+                if (child.classList.contains('center-list-divider')) { isSomeday = true; return; }
+                const id = child.getAttribute('data-item-id');
+                if (!id) return;
+                sortIndex += 1;
+                const payload = { sort_order: sortIndex * 10 };
+                if (type === 'weekly') payload.is_someday = isSomeday;
+                updates.push(supabaseClient.from('my_center_tasks').update(payload).eq('id', id));
+            });
+            Promise.all(updates);
         },
     });
     const zones = [todayZone, tomorrowZone];
