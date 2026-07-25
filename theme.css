@@ -32,7 +32,7 @@
    בנפרד. "small" (ברירת מחדל, בלי attribute) = 16px הרגיל של הדפדפן */
 html[data-ui-scale="medium"] { font-size: 18px; }
 html[data-ui-scale="large"] { font-size: 20px; }
-/* ערכות נושא פרימיום (15 סה"כ, כולל "ברירת מחדל" שמוגדרת ב-:root/html.light-mode
+/* ערכות נושא פרימיום (18 סה"כ, כולל "ברירת מחדל" שמוגדרת ב-:root/html.light-mode
    למעלה): כל ערכה מגדירה --bg-main כגרדיאנט (הרקע הגדול מאחורי הכול) וגם
    --bg-row (גוון-שורה משותף לכל הרשימות - לו"ז, פתקים, ארוחות, אירועים) -
    כך שהצבע באמת מכסה את כל המסך, לא רק פס צר שנחבא מאחורי הכרטיסים.
@@ -149,6 +149,30 @@ html[data-color-theme="graphite_steel"] {
     --accent-pink: #94a3b8;
     --accent-purple: #64748b;
     --accent-purple-light: #cbd5e1;
+}
+html[data-color-theme="citrus_lime"] {
+    --bg-main: linear-gradient(135deg, #0f1400, #1a2400);
+    --bg-row: rgba(60, 70, 10, 0.55);
+    --border-color: rgba(202, 138, 4, 0.25);
+    --accent-pink: #84cc16;
+    --accent-purple: #ca8a04;
+    --accent-purple-light: #facc15;
+}
+html[data-color-theme="copper_bronze"] {
+    --bg-main: linear-gradient(135deg, #1a0f02, #2a1505);
+    --bg-row: rgba(70, 40, 10, 0.55);
+    --border-color: rgba(217, 119, 6, 0.25);
+    --accent-pink: #d97706;
+    --accent-purple: #92400e;
+    --accent-purple-light: #fbbf24;
+}
+html[data-color-theme="navy_sapphire"] {
+    --bg-main: linear-gradient(135deg, #020817, #050f2a);
+    --bg-row: rgba(15, 30, 70, 0.55);
+    --border-color: rgba(59, 130, 246, 0.25);
+    --accent-pink: #3b82f6;
+    --accent-purple: #1e3a8a;
+    --accent-purple-light: #60a5fa;
 }
 /* מצב בהיר (Light Mode, חינמי): מחליף רק את משתני הרקע/הטקסט - הטבעות
    הניאון (var(--accent-*)) נשארות זהות, כדי לשמור על הזוהר הרענן גם על רקע בהיר */
@@ -280,6 +304,33 @@ html.light-mode[data-color-theme="royal_amethyst"] {
     --border-color: rgba(192, 38, 211, 0.28);
     --text-primary: #210b33;
     --text-secondary: #6e5480;
+}
+html.light-mode[data-color-theme="citrus_lime"] {
+    --bg-main: linear-gradient(135deg, #f7fbd0, #eef7b0);
+    --bg-row: rgba(202, 138, 4, 0.1);
+    --bg-glass: rgba(250, 253, 235, 0.75);
+    --bg-sheet: #fdfef0;
+    --border-color: rgba(202, 138, 4, 0.25);
+    --text-primary: #2a2e05;
+    --text-secondary: #6e7530;
+}
+html.light-mode[data-color-theme="copper_bronze"] {
+    --bg-main: linear-gradient(135deg, #fde9cf, #f6d9ad);
+    --bg-row: rgba(146, 64, 14, 0.1);
+    --bg-glass: rgba(253, 244, 231, 0.75);
+    --bg-sheet: #fffaf2;
+    --border-color: rgba(217, 119, 6, 0.25);
+    --text-primary: #2e1a05;
+    --text-secondary: #7a5a35;
+}
+html.light-mode[data-color-theme="navy_sapphire"] {
+    --bg-main: linear-gradient(135deg, #dbe7ff, #c2d6fb);
+    --bg-row: rgba(30, 58, 138, 0.1);
+    --bg-glass: rgba(236, 243, 255, 0.75);
+    --bg-sheet: #f5f9ff;
+    --border-color: rgba(59, 130, 246, 0.25);
+    --text-primary: #0a1530;
+    --text-secondary: #4a5a80;
 }
 html.light-mode[data-color-theme="graphite_steel"] {
     --bg-main: linear-gradient(135deg, #e4e7eb, #d3d8dd);
@@ -1933,6 +1984,9 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-mint { background: linear-gradient(135deg, #5eead4, #14b8a6); }
 .theme-swatch-amethyst { background: linear-gradient(135deg, #c026d3, #7e22ce); }
 .theme-swatch-graphite { background: linear-gradient(135deg, #94a3b8, #64748b); }
+.theme-swatch-citrus { background: linear-gradient(135deg, #84cc16, #ca8a04); }
+.theme-swatch-copper { background: linear-gradient(135deg, #d97706, #92400e); }
+.theme-swatch-navy { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
 .theme-swatch-lock { position: absolute; bottom: -4px; right: -4px; font-size: 0.7rem; background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
 
 .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
