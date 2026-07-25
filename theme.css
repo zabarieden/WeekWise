@@ -1124,6 +1124,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    כמו "בויילר רום 🎶" להיעלם ולהשאיר רק את האייקון בבועה זעירה במובייל) */
 .slot-task-wrap { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; box-sizing: border-box; transition: var(--transition); }
 .slot-task-wrap .slot-task { flex: 1 1 auto; width: auto; min-width: 0; }
+/* עוטפת את כל כפתורי הפעולה (העברה/שכפול/מחיקה) כילד-גריד/פלקס *אחד*, לא
+   שלושה נפרדים - קריטי במובייל (ר' המדיה-קווארי למטה): .slot-input-group שם
+   הוא grid עם 3 עמודות בדיוק, אז כל כפתור נוסף כילד ישיר חמישי היה "גולש"
+   לשורת grid נסתרת נוספת (grid-auto-flow: row כברירת מחדל) במקום להצטרף
+   לעמודת ה-auto השלישית - בדיוק מה שגרם לכפתור השכפול (ולפעמים גם למחיקה/
+   העברה) להיעלם לגמרי מתחת ל-overflow/גובה השורה */
+.slot-actions-wrap { flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
 .slot-task-icon { flex-shrink: 0; font-size: 0.85rem; line-height: 1; }
 /* ידית הגרירה מקובצת עם השעה (קצה ימני ב-RTL), לא עם כפתור המחיקה -
    כדי שכפתור המחיקה יישאר לבד בקצה השמאלי, כמו שהמשתמש ביקש בדיאגרמה */
