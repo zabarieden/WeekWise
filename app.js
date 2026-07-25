@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyLightMode(isLightModeOn());
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
+    applyUiScale(getUiScale());
     applyWaterFabSetting(isWaterFabOn());
     applySportFabSetting(isSportFabOn());
     initSupabase();
@@ -3691,6 +3692,25 @@ function toggleColorFilter() {
     const filterName = enabled ? 'grayscale' : 'none';
     localStorage.setItem('weekwise_color_filter', filterName);
     applyColorFilter(filterName);
+}
+
+// --- גודל האפליקציה: 3 רמות (קטן/ברירת המחדל, בינוני, גדול) - קובעות את
+// font-size של html, וכל האפליקציה (בנויה כמעט כולה ב-rem) גדלה/קטנה
+// באופן יחסי בעקבות זה, בלי לגעת בכל רכיב בנפרד. אותו דפוס בדיוק כמו
+// high-contrast/color-filter למעלה - חינמי, לא תלוי משתמש/פרימיום ---
+function getUiScale() {
+    return localStorage.getItem('weekwise_ui_scale') || 'small';
+}
+
+function applyUiScale(scale) {
+    document.documentElement.setAttribute('data-ui-scale', scale);
+    const select = document.getElementById('ui-scale-select');
+    if (select) select.value = scale;
+}
+
+function setUiScale(scale) {
+    localStorage.setItem('weekwise_ui_scale', scale);
+    applyUiScale(scale);
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
