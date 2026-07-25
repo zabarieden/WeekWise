@@ -1275,7 +1275,13 @@ const SCHEDULE_VERB_TO_NOUN = [
     [/מתאמנ(ת|ים|ות)?/g, 'אימון'],
 ];
 
+// "כל יום"/"every day" - בלי הבדיקה הזו, קטע כזה לא מזהה אף יום ספציפי
+// ונופל ל-pushScheduleEvents שממציא ברירת מחדל של "היום" בלבד (יום אחד,
+// לא כל 7) - בדיוק הבאג שדווח (בקשה ל"כל יום בשבוע" נחתה רק בשבת, כי זה
+// היה היום שבו זה נשלח)
+const EVERY_DAY_PATTERNS = [/כל\s*(ה)?ימ(ים|ות)/, /כל\s*יום/, /\bevery\s*day\b/i, /\bdaily\b/i, /\beach\s*day\b/i];
 function findScheduleDaysInText(text) {
+    if (EVERY_DAY_PATTERNS.some(re => re.test(text))) return [0, 1, 2, 3, 4, 5, 6];
     const found = [];
     HEBREW_DAY_TOKENS.forEach(({ index, words }) => {
         words.forEach(w => { if (text.includes(w) && !found.includes(index)) found.push(index); });
@@ -1385,7 +1391,9 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     // אליהן, כמו "ורביעי" -> "ו" בודדת, או "ובחמישי" -> "ב" בודדת) - חשוב:
     // לא כ-regex גורף שמוחק את האותיות האלה בתוך מילים אחרות, כי זה בדיוק
     // מה ששיבש "בויילר"/"הולכת"/"הופ" לאותיות מפוזרות בעבר
-    let tokens = cleaned.replace(/[,.]+/g, ' ')
+    // מרכאות/גרשיים (רגילות, בודדות, וגרשיים עבריים ״/׳) שהמשתמש הקליד סביב
+    // שם הפעילות ("תרגיל נשימות") הן עיצוב, לא חלק מהשם עצמו
+    let tokens = cleaned.replace(/[,."'׳״]+/g, ' ')
         .split(/\s+/)
         .filter(tok => tok && !SCHEDULE_STANDALONE_PREPOSITIONS.has(tok));
     cleaned = tokens.join(' ').trim();
@@ -1451,11 +1459,18 @@ function parseScheduleTextLocally(text) {
         // ב12 וב14") - הקטעים שבין שעה לשעה מתנקים לגמרי (אין בהם עוד מילות
         // פעילות), אז יורשים את הכותרת מהקטע הקודם במקום נופלים לתווית סתמית -
         // כך שהתוצאה היא שלוש שורות "עבודה" נפרדות, לא טווח אחד מאוחד
+        // "פעם ב7 בבוקר ופעם ב22 בלילה, תרגיל נשימות" - כל השעות מופיעות
+        // ברצף בתחילת הקטע, ושם הפעילות מגיע פעם אחת בסוף, אחרי כולן (לא
+        // צמוד לאף שעה בודדת). אם יש טקסט משמעותי אחרי *כל* השעות בקטע, זו
+        // כותרת משותפת לכולן - עדיפות עליונה על פני הכותרת הנגזרת מכל תת-קטע
+        // (שנועדה למקרה ההפוך: "היפ הופ ב20 ועבודה ב9", שם כל שעה כן צמודה
+        // לפעילות שלה, ואין בכלל טקסט אחרי השעה האחרונה)
+        const sharedTrailingTitle = cleanScheduleTaskTitle(body.slice(timeMatches[timeMatches.length - 1].end), [], '');
         let cursor = 0;
         let lastTitle = '';
         timeMatches.forEach(tm => {
             const segment = body.slice(cursor, tm.end);
-            let title = cleanScheduleTaskTitle(segment, [], tm.time);
+            let title = sharedTrailingTitle || cleanScheduleTaskTitle(segment, [], tm.time);
             if (title) lastTitle = title;
             else title = lastTitle || t('schedule_ai_fallback_task_label');
 
