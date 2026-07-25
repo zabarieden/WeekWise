@@ -3702,26 +3702,19 @@ function getUiScale() {
     return localStorage.getItem('weekwise_ui_scale') || 'small';
 }
 
+// כפתורים רגילים במקום select נייטיבי - חוץ מזה שזה יפה יותר, זה גם עוקף
+// לגמרי את הבאג שהיה עם ה-picker הנייטיבי בנייד (שינוי font-size הגלובלי
+// באמצע הסגירה שלו גרם לו להיעלם חזותית) - אין יותר שום picker מערכת מעורב
 function applyUiScale(scale) {
     document.documentElement.setAttribute('data-ui-scale', scale);
-    const select = document.getElementById('ui-scale-select');
-    if (select) select.value = scale;
+    document.querySelectorAll('.ui-scale-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-scale') === scale);
+    });
 }
 
 function setUiScale(scale) {
     localStorage.setItem('weekwise_ui_scale', scale);
-    const select = document.getElementById('ui-scale-select');
-    // מנתקים פוקוס מהבורר לפני שמשנים את font-size הגלובלי - בנייד, ה-select
-    // הנייטיבי (ה-picker של מערכת ההפעלה) עוד "באמצע" סגירה כשה-onchange
-    // נורה, ושינוי גודל הטקסט הגלובלי בדיוק באותו רגע גרם לו להיעלם חזותית
-    // עד כניסה מחדש לאפליקציה. ה-blur קורה מיד; שינוי הגודל עצמו נדחה לטיק
-    // הבא (setTimeout) כדי לתת לדפדפן לסיים לגמרי לטפל באירוע המקורי לפני
-    // שהפריסה הגלובלית משתנה מתחתיו - ורק אז מחזירים את הבורר לתוך התצוגה
-    if (select) select.blur();
-    setTimeout(() => {
-        applyUiScale(scale);
-        if (select) select.scrollIntoView({ block: 'nearest' });
-    }, 50);
+    applyUiScale(scale);
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור

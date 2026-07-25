@@ -1897,6 +1897,11 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 
 .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .settings-toggle-row .settings-label { margin-bottom: 0; }
+/* גודל האפליקציה (הגדרות) - שלושה כפתורים צמודים במקום select נייטיבי,
+   באותה שורה בדיוק כמו שאר הגדרות ה-toggle */
+.ui-scale-btn-group { display: flex; gap: 3px; background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 3px; flex-shrink: 0; }
+.ui-scale-btn { background: none; border: none; color: var(--text-secondary); font-size: 0.7rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: var(--transition); }
+.ui-scale-btn.active { background-color: var(--accent-purple); color: #fff; }
 .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .switch-slider { position: absolute; cursor: pointer; inset: 0; background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 26px; transition: var(--transition); }
