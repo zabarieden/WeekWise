@@ -3953,17 +3953,49 @@ function setUiScale(scale) {
     applyUiScale(scale);
 }
 
-// --- דיווח באג / הצעת פיצ'ר: אין עדיין מערכת פניות/תמיכה אמיתית עם
-// שרת/מסד נתונים משלה - הפתרון הפשוט והאמין ביותר לאפליקציה בקנה מידה כזה
-// הוא לפתוח את אפליקציית המייל של המשתמשת עם כתובת+נושא ממולאים מראש
-// (mailto:), כדי שהיא תוכל גם לצרף צילום מסך/קובץ ישירות שם (לא ניתן
-// לצרף קובץ מראש דרך mailto מטעמי אבטחת דפדפן - זו מגבלה של הדפדפן, לא שלנו) ---
-const SUPPORT_EMAIL = 'zabarieden111@gmail.com';
-function reportBugByEmail() {
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t('support_bug_email_subject'))}&body=${encodeURIComponent(t('support_bug_email_body'))}`;
+// --- צור קשר: טופס בתוך האפליקציה שנשלח ל-send-feedback (Edge Function) -
+// נשמר ב-feedback_messages (service-role בלבד, ר' feedback_schema.sql) וגם
+// נשלח כמייל אמיתי בזמן אמת לתיבת התמיכה, בלי להסתמך על אפליקציית מייל
+// מותקנת במכשיר של המשתמשת (mailto: לא עובד באמינות בכל מכשיר/דפדפן) ---
+function openContactUsModal() {
+    const textarea = document.getElementById('contact-us-message');
+    const select = document.getElementById('contact-us-category');
+    if (textarea) textarea.value = '';
+    if (select) select.value = 'bug';
+    openModal('modal-contact-us');
 }
-function suggestFeatureByEmail() {
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t('support_feature_email_subject'))}&body=${encodeURIComponent(t('support_feature_email_body'))}`;
+
+async function submitContactUs() {
+    const select = document.getElementById('contact-us-category');
+    const textarea = document.getElementById('contact-us-message');
+    const category = select ? select.value : 'bug';
+    const message = textarea ? textarea.value.trim() : '';
+    if (!message) {
+        showAppToast(t('contact_us_missing_message'));
+        return;
+    }
+    const btn = document.getElementById('btn-contact-us-submit');
+    if (btn) btn.disabled = true;
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/send-feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ category, message })
+        });
+        const result = await res.json();
+        if (res.ok && !result.error) {
+            closeModal('modal-contact-us');
+            showAppToast(t('contact_us_sent'));
+        } else {
+            showAppToast(t('contact_us_error'));
+        }
+    } catch {
+        showAppToast(t('contact_us_error'));
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 }
 
 // --- עזרה ושאלות נפוצות: רשימה סטטית מקובצת לפי קטגוריה, מהקל למורכב
