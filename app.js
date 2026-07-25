@@ -44,12 +44,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) initAppAfterAuth(session.user);
+        // "שכחתי סיסמה": הקישור שנשלח במייל (resetPasswordForEmail) מחזיר את
+        // המשתמשת לכתובת האפליקציה עם session תקף מסוג recovery ב-URL -
+        // ה-SDK של Supabase מזהה את זה אוטומטית ויורה את האירוע הזה. פותחים
+        // אותה בדיוק כמו התחברות רגילה (יש כבר session אמיתי) ואז ישר את
+        // חלון "שינוי סיסמה" הקיים - אין צורך במסך/לוגיקה נפרדים לגמרי
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' && session) {
+                initAppAfterAuth(session.user);
+                openModal('modal-change-password');
+            }
+        });
     }
 
     updateAuthUI();
     document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
         e.preventDefault();
         authMode = authMode === 'login' ? 'signup' : 'login';
+        updateAuthUI();
+    });
+    document.getElementById('auth-forgot-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        authMode = 'forgot';
+        updateAuthUI();
+    });
+    document.getElementById('auth-back-to-login-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        authMode = 'login';
         updateAuthUI();
     });
     document.getElementById('btn-auth-submit').addEventListener('click', submitAuthForm);
@@ -532,16 +553,38 @@ function updateAuthUI() {
     const toggleText = document.getElementById('auth-toggle-text');
     const toggleLink = document.getElementById('auth-toggle-link');
     const messageEl = document.getElementById('auth-message');
-    if (authMode === 'login') {
+    const passwordWrap = document.getElementById('auth-password-wrap');
+    const forgotLine = document.getElementById('auth-forgot-line');
+    const toggleLine = document.getElementById('auth-toggle-line');
+    const backToLoginLine = document.getElementById('auth-back-to-login-line');
+    if (authMode === 'forgot') {
+        // מצב "שכחתי סיסמה" - אין שדה סיסמה בכלל כאן (רק אימייל), אין החלפת
+        // login/signup, רק קישור חזרה. אותו submitBtn משותף, רק הפעולה
+        // שקוראים לה ב-submitAuthForm משתנה לפי authMode
+        subtitle.textContent = t('auth_forgot_subtitle');
+        submitBtn.textContent = t('auth_forgot_submit_btn');
+        passwordWrap.classList.add('hidden');
+        forgotLine.classList.add('hidden');
+        toggleLine.classList.add('hidden');
+        backToLoginLine.classList.remove('hidden');
+    } else if (authMode === 'login') {
         subtitle.textContent = t('auth_login_subtitle');
         submitBtn.textContent = t('auth_login_btn');
         toggleText.textContent = t('auth_no_account');
         toggleLink.textContent = t('auth_toggle_signup');
+        passwordWrap.classList.remove('hidden');
+        forgotLine.classList.remove('hidden');
+        toggleLine.classList.remove('hidden');
+        backToLoginLine.classList.add('hidden');
     } else {
         subtitle.textContent = t('auth_signup_subtitle');
         submitBtn.textContent = t('auth_signup_btn');
         toggleText.textContent = t('auth_have_account');
         toggleLink.textContent = t('auth_toggle_login');
+        passwordWrap.classList.remove('hidden');
+        forgotLine.classList.add('hidden');
+        toggleLine.classList.remove('hidden');
+        backToLoginLine.classList.add('hidden');
     }
     messageEl.textContent = '';
 }
@@ -551,9 +594,19 @@ async function submitAuthForm() {
     const password = document.getElementById('auth-password-input').value;
     const messageEl = document.getElementById('auth-message');
     messageEl.textContent = '';
-    if (!email || !password) { messageEl.textContent = t('auth_fill_both'); return; }
+    messageEl.style.color = '';
     if (!supabaseClient) initSupabase();
     if (!supabaseClient) { messageEl.textContent = t('auth_server_error'); return; }
+
+    if (authMode === 'forgot') {
+        if (!email) { messageEl.textContent = t('auth_fill_email'); return; }
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] });
+        if (error) { messageEl.textContent = error.message; return; }
+        messageEl.style.color = 'var(--accent-green)';
+        messageEl.textContent = t('auth_forgot_success');
+        return;
+    }
+    if (!email || !password) { messageEl.textContent = t('auth_fill_both'); return; }
 
     if (authMode === 'signup') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -3858,6 +3911,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'week_start_day', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
+    { id: 'forgot_password', category: 'account' },
     { id: 'delete_account', category: 'account' },
 ];
 
