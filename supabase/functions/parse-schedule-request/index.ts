@@ -126,6 +126,15 @@ Deno.serve(async (req) => {
                             "explicit date). Any mention of a relative timeframe like \"next week\" ALWAYS means " +
                             "recurring=false - never mark something recurring just because a day name was said, if a " +
                             "timeframe word was also there.\n\n" +
+                            "If a RECURRING event also has an explicit bounded duration (e.g. \"for 2 months\", " +
+                            "\"for the next 3 months\", \"לחודשיים הקרובים\", \"לשלושה חודשים\") - meaning it should " +
+                            "stop repeating after that period rather than continue forever - set " +
+                            "recurring_duration_months to that number of months. Leave it null when recurring is an " +
+                            "open-ended ongoing routine with no mentioned end point (the common case), and always " +
+                            "null when recurring=false.\n\n" +
+                            "\"Every day\"/\"every day of the week\" (Hebrew: \"כל יום\", \"כל יום בשבוע\") means " +
+                            "create one recurring event per weekday (7 entries, one per day_of_week) with the same " +
+                            "time/title/duration - never a single event with no day_of_week or a made-up day.\n\n" +
                             "task_title MUST be just the plain activity name and MUST NEVER contain timing/date " +
                             "words (\"next week\", \"tomorrow\", \"on Mondays\", etc.) - those belong only in the " +
                             "recurring/event_date fields, never in the title text itself. Keep it short, in the same " +
@@ -159,8 +168,9 @@ Deno.serve(async (req) => {
                                             task_title: { type: "string" },
                                             recurring: { type: "boolean", description: "true = repeats every week, false = a specific one-time occurrence" },
                                             event_date: { type: ["string", "null"], description: "YYYY-MM-DD - required when recurring is false, null when recurring is true" },
+                                            recurring_duration_months: { type: ["number", "null"], description: "Only set when recurring=true AND an explicit end point/duration was mentioned (e.g. 'for 2 months'). Null for open-ended recurring routines and always null when recurring=false." },
                                         },
-                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date"],
+                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date", "recurring_duration_months"],
                                     },
                                 },
                             },
@@ -192,7 +202,7 @@ Deno.serve(async (req) => {
         const rawEvents: any[] = toolUseBlock.input.events || [];
         const seen = new Set<string>();
         const events = rawEvents.filter((ev) => {
-            const key = `${ev.day_of_week}|${ev.time}|${ev.task_title}|${ev.recurring}|${ev.event_date}`;
+            const key = `${ev.day_of_week}|${ev.time}|${ev.task_title}|${ev.recurring}|${ev.event_date}|${ev.recurring_duration_months}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;

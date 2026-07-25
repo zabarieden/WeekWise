@@ -1259,7 +1259,13 @@ const ENGLISH_DAY_TOKENS = [
 const SCHEDULE_NOISE_WORDS = [
     'בימי', 'בימים', 'ביום', 'יום', 'ימי', 'בשעה', 'בשעות', 'שעה', 'בבוקר', 'בערב',
     'בצהריים', 'בלילה', 'אחר הצהריים', 'אחה"צ', 'כל', 'תמיד', 'קבוע', 'עד',
-    'and', 'at', 'on', 'in', 'every', 'until'
+    // מילות משך-זמן ("לחודשיים הקרובים") - נבדקות/מוסרות במפורש (ר'
+    // findScheduleDurationMonths) לפני שהתזמון עצמו נבנה, אז לא אמורות
+    // להישאר כשאריות בכותרת הפעילות עצמה. 'חודשיים'/'חודשים' חייבות לבוא
+    // *לפני* 'חודש' ברשימה - אחרת 'חודש' (תת-מחרוזת שלהן) היה נתפס קודם
+    // ומשאיר שארית מיותמת ("יים"/"ים")
+    'חודשיים', 'חודשים', 'חודש', 'הקרובים', 'הקרוב', 'נגיד',
+    'and', 'at', 'on', 'in', 'every', 'until', 'months', 'month', 'next', 'for'
 ];
 // ביטויי פתיחה נפוצים שאנשים מקלידים כשהם מתארים לו"ז בחופשיות, אבל הם לא
 // חלק משם הפעילות עצמה - מוסרים כביטוי שלם, מהארוך לקצר (כדי לא להשאיר
@@ -1404,13 +1410,32 @@ function cleanScheduleTaskTitle(text, dayWords, timeStr) {
     return cleaned;
 }
 
-function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
+// זיהוי משך זמן מוגבל לרוטינה חוזרת ("לחודשיים הקרובים", "לשלושה חודשים",
+// "for 2 months", "for the next 3 months") - כשיש כזה, האירוע לא הופך
+// לרוטינה קבועה-לתמיד ב-weekly_schedule (שאין לה בכלל מושג של "משך זמן"),
+// אלא לסדרה חוזרת מוגבלת ב-calendar_events (ר' applyBoundedRecurringScheduleEvents/
+// generateRecurringDates - אותה טכניקה בדיוק כמו ההוספה הידנית עם "חזרה").
+// "חודשיים" נבדק *לפני* "חודש" בכוונה - "חודש" הוא תת-מחרוזת של "חודשיים",
+// אז הסדר הפוך היה תמיד "תופס" 1 גם כשנכתב 2
+function findScheduleDurationMonths(text) {
+    if (/חודשיים/.test(text)) return 2;
+    const numMatch = text.match(/(?:ל-?|for\s+(?:the\s+next\s+)?)\s*(\d+)\s*(?:חודשים|months?)\b/i);
+    if (numMatch) return parseInt(numMatch[1], 10);
+    if (/שלושה חודשים|שלושת החודשים/.test(text)) return 3;
+    if (/ארבעה חודשים/.test(text)) return 4;
+    if (/חמישה חודשים/.test(text)) return 5;
+    if (/שישה חודשים|חצי שנה/.test(text)) return 6;
+    if (/\bחודש\b/.test(text)) return 1;
+    return null;
+}
+
+function pushScheduleEvents(events, dayIndexes, fallbackText, title, time, durationMonths) {
     if (dayIndexes.length) {
-        dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], time, task_title: title }));
+        dayIndexes.forEach(idx => events.push({ day_of_week: dbDaysMap[idx], time, task_title: title, recurring_duration_months: durationMonths || null }));
     } else {
         // אין יום מזוהה בבירור - לא מוותרים ולא מציגים שגיאה: מוסיפים כמשימה
         // להיום עם הטקסט המקורי, בדיוק כפי שנכתב
-        events.push({ day_of_week: dbDaysMap[new Date().getDay()], time, task_title: fallbackText });
+        events.push({ day_of_week: dbDaysMap[new Date().getDay()], time, task_title: fallbackText, recurring_duration_months: durationMonths || null });
     }
 }
 
@@ -1422,8 +1447,8 @@ function pushScheduleEvents(events, dayIndexes, fallbackText, title, time) {
 // שחל על כמה ימים ("שני ורביעי ב3") הוא עדיין שאלת-הבהרה *אחת* בעיני
 // המשתמש, לא אחת לכל יום - אחרת השאלה הייתה נשאלת פעמיים על אותה כוונה
 // בדיוק (בדיוק הבאג "השאלה נשאלת פעמיים" שדווח)
-function pushClarificationEvents(events, dayIndexes, fallbackText, title, detail) {
-    const base = { needsClarification: true, task_title: title, ...detail };
+function pushClarificationEvents(events, dayIndexes, fallbackText, title, detail, durationMonths) {
+    const base = { needsClarification: true, task_title: title, recurring_duration_months: durationMonths || null, ...detail };
     if (dayIndexes.length) {
         events.push({ ...base, day_of_week: dayIndexes.map(idx => dbDaysMap[idx]) });
     } else {
@@ -1435,7 +1460,14 @@ function parseScheduleTextLocally(text) {
     const clauses = text.split(/[\n,.]/).map(s => s.trim()).filter(Boolean);
     const events = [];
     (clauses.length ? clauses : [text]).forEach(clause => {
+        // "כל יום" (ולא שם יום מפורש) הופך את הקטע ל-7 ימים (ר' findScheduleDaysInText).
+        // חשוב לדעת אם זו הסיבה שדווקא הקטע *הזה* קיבל ימים, כדי לזהות למטה
+        // מתי קטע כזה הוא בעצם רק הקדמה/הקשר לקטע הבא ("להוסיף לכל יום...
+        // נגיד" ואז בקטע הבא בפועל "פעם ב7... תרגיל נשימות") ולא בקשה בפני
+        // עצמה - לא הופכים אותו למשימה גנרית ריקה
+        const matchedEveryDay = EVERY_DAY_PATTERNS.some(re => re.test(clause));
         const dayIndexes = findScheduleDaysInText(clause);
+        const durationMonths = findScheduleDurationMonths(clause);
         const dayWordsFound = [];
         HEBREW_DAY_TOKENS.forEach(({ index, words }) => { if (dayIndexes.includes(index)) dayWordsFound.push(...words); });
         // מסירים את מילות היום מהמשפט לפני שמחפשים שעות/מפצלים לתת-אירועים,
@@ -1446,8 +1478,10 @@ function parseScheduleTextLocally(text) {
         const timeMatches = findAllScheduleTimeMatches(body);
 
         if (!timeMatches.length) {
-            const title = cleanScheduleTaskTitle(body, [], '') || t('schedule_ai_fallback_task_label');
-            pushScheduleEvents(events, dayIndexes, clause, title, SCHEDULE_DEFAULT_TIME);
+            const cleanedTitle = cleanScheduleTaskTitle(body, [], '');
+            if (matchedEveryDay && !cleanedTitle) return;
+            const title = cleanedTitle || t('schedule_ai_fallback_task_label');
+            pushScheduleEvents(events, dayIndexes, clause, title, SCHEDULE_DEFAULT_TIME, durationMonths);
             return;
         }
 
@@ -1475,11 +1509,11 @@ function parseScheduleTextLocally(text) {
             else title = lastTitle || t('schedule_ai_fallback_task_label');
 
             if (tm.time.startsWith(SCHEDULE_NEEDS_CLARIFY_PREFIX)) {
-                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'until', endTime: tm.time.slice(SCHEDULE_NEEDS_CLARIFY_PREFIX.length) });
+                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'until', endTime: tm.time.slice(SCHEDULE_NEEDS_CLARIFY_PREFIX.length) }, durationMonths);
             } else if (tm.time.startsWith(SCHEDULE_NEEDS_AMPM_PREFIX)) {
-                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'ampm', hour: tm.time.slice(SCHEDULE_NEEDS_AMPM_PREFIX.length) });
+                pushClarificationEvents(events, dayIndexes, clause, title, { kind: 'ampm', hour: tm.time.slice(SCHEDULE_NEEDS_AMPM_PREFIX.length) }, durationMonths);
             } else {
-                pushScheduleEvents(events, dayIndexes, clause, title, tm.time);
+                pushScheduleEvents(events, dayIndexes, clause, title, tm.time, durationMonths);
             }
             cursor = tm.end;
         });
@@ -1509,16 +1543,71 @@ async function applyOneTimeScheduleEvents(events) {
     return rows.map(r => r.event_date);
 }
 
+// התאריך הקרוב ביותר (כולל היום עצמו) שחל בו יום-השבוע הנתון - נקודת
+// ההתחלה הדרושה ל-generateRecurringDates, שעובדת עם תאריך התחלה קונקרטי
+// ולא עם שם יום (בניגוד ל-weekly_schedule)
+function nextDateForDayOfWeek(dayName) {
+    const targetIdx = dbDaysMap.indexOf(dayName);
+    if (targetIdx < 0) return getLocalDateString();
+    const today = new Date();
+    const diff = (targetIdx - today.getDay() + 7) % 7;
+    const result = new Date(today);
+    result.setDate(result.getDate() + diff);
+    return getLocalDateString(result);
+}
+
+// רוטינה חוזרת *מוגבלת בזמן* ("כל יום, לחודשיים, תרגיל נשימות") - בניגוד
+// לרוטינה קבועה-לתמיד (weekly_schedule, שאין לה מושג של "עד מתי"), זו
+// נכנסת ל-calendar_events בדיוק כמו סדרה חוזרת שנוצרה ידנית דרך "חזרה" -
+// אותה generateRecurringDates בדיוק, רק שנקודת ההתחלה מחושבת מ-day_of_week
+// במקום להיבחר בטופס. מקובצת לפי כותרת+שעה+משך (לא לפי יום) כדי שבקשה
+// אחת כמו "כל יום תרגיל נשימות" (7 אירועים, יום לכל אחד) תשתף recurrence_group_id
+// אחד ותימחק/תיערך כיחידה אחת, לא כ-7 סדרות נפרדות
+async function applyBoundedRecurringScheduleEvents(events) {
+    if (!supabaseClient || !currentUserId) return [];
+    const groups = new Map();
+    events.forEach(ev => {
+        const key = `${ev.task_title}|${ev.time || ''}|${ev.recurring_duration_months}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(ev);
+    });
+    const rows = [];
+    groups.forEach(groupEvents => {
+        const groupId = crypto.randomUUID();
+        groupEvents.forEach(ev => {
+            const startDate = nextDateForDayOfWeek(ev.day_of_week);
+            generateRecurringDates(startDate, 'weekly', 1, 'weeks', ev.recurring_duration_months).forEach(eventDate => {
+                rows.push({
+                    username: currentUsername, user_id: currentUserId,
+                    event_title: ev.task_title, event_date: eventDate, event_time: ev.time || null,
+                    recurrence_group_id: groupId, source: 'calendar',
+                });
+            });
+        });
+    });
+    if (!rows.length) return [];
+    await supabaseClient.from('calendar_events').insert(rows);
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+    loadTodayTasks();
+    return rows.map(r => r.event_date);
+}
+
 // מקבצת את האירועים (מה-AI האמיתי או מהמנתח המקומי - אותה צורה בדיוק) לפי
 // יום, כדי להקצות משבצת פנויה (או שורה חדשה) לכל אחד בלי שיתנגשו על אותה משבצת.
 // recurring==false מנותב ל-applyOneTimeScheduleEvents במקום ללוח השבועי -
 // המנתח המקומי (parseScheduleTextLocally) לא מציב בכלל recurring, ולכן
-// ברירת המחדל (!== false) שומרת על ההתנהגות הישנה שם ללא שינוי
+// ברירת המחדל (!== false) שומרת על ההתנהגות הישנה שם ללא שינוי. אירוע חוזר
+// עם recurring_duration_months מנותב ל-applyBoundedRecurringScheduleEvents
+// (מוגבל בזמן, ל-calendar_events) במקום ל-weekly_schedule (קבוע לתמיד)
 async function applyParsedScheduleEvents(allEvents) {
     const oneTimeEvents = allEvents.filter(ev => ev.recurring === false);
     const oneTimeDates = oneTimeEvents.length ? await applyOneTimeScheduleEvents(oneTimeEvents) : [];
-    const events = allEvents.filter(ev => ev.recurring !== false);
-    if (!events.length) return { recurringCount: 0, oneTimeDates };
+    const boundedRecurringEvents = allEvents.filter(ev => ev.recurring !== false && ev.recurring_duration_months);
+    const boundedDates = boundedRecurringEvents.length ? await applyBoundedRecurringScheduleEvents(boundedRecurringEvents) : [];
+    const allOneTimeDates = [...oneTimeDates, ...boundedDates];
+    const events = allEvents.filter(ev => ev.recurring !== false && !ev.recurring_duration_months);
+    if (!events.length) return { recurringCount: 0, oneTimeDates: allOneTimeDates };
 
     const byDay = {};
     events.forEach(ev => {
@@ -1565,7 +1654,7 @@ async function applyParsedScheduleEvents(allEvents) {
             await saveScheduleSlot(day, ev._slotNum);
         }
     }
-    return { recurringCount: events.length, oneTimeDates };
+    return { recurringCount: events.length, oneTimeDates: allOneTimeDates };
 }
 
 // מציגה את הודעת ההצלחה הנכונה לפי לאן בפועל נחתו הפריטים (רוטינה שבועית
@@ -1757,8 +1846,8 @@ function confirmScheduleClarification() {
     // ev.day_of_week הוא תמיד מערך - שאלה אחת נענית פעם אחת ומוחלת על כל
     // הימים שהאזכור העמום חל עליהם ("שני ורביעי ב3" -> תשובה אחת, שתי שורות)
     ev.day_of_week.forEach(day => {
-        if (startTime) scheduleClarificationResolved.push({ day_of_week: day, time: startTime, task_title: ev.task_title });
-        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title });
+        if (startTime) scheduleClarificationResolved.push({ day_of_week: day, time: startTime, task_title: ev.task_title, recurring_duration_months: ev.recurring_duration_months });
+        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title, recurring_duration_months: ev.recurring_duration_months });
     });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
@@ -1769,7 +1858,7 @@ function skipScheduleClarification() {
     if (!ev) return;
     // המשתמש דילג - לא ממציאים שעת התחלה, פשוט משתמשים בשעת הסיום שכן צוינה
     ev.day_of_week.forEach(day => {
-        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title });
+        scheduleClarificationResolved.push({ day_of_week: day, time: ev.endTime, task_title: ev.task_title, recurring_duration_months: ev.recurring_duration_months });
     });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
@@ -1794,7 +1883,7 @@ function resolveAmpmClarification(period) {
     if (period === 'evening' && h <= 11) h += 12;
     const time = `${String(h).padStart(2, '0')}:00`;
     ev.day_of_week.forEach(day => {
-        scheduleClarificationResolved.push({ day_of_week: day, time, task_title: ev.task_title });
+        scheduleClarificationResolved.push({ day_of_week: day, time, task_title: ev.task_title, recurring_duration_months: ev.recurring_duration_months });
     });
     closeModal('modal-schedule-clarify');
     showNextScheduleClarification();
