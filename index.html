@@ -130,23 +130,6 @@
                         </div>
                     </div>
 
-                    <!-- מבט ליומן: אחרי משימות להיום, כעת נסגר/נפתח כמו כל כרטיס אחר -->
-                    <div class="card calendar-glance-card">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <div class="calendar-glance-heading">
-                                <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
-                                <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
-                            </div>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); resetCalendarEventModal(); openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
-                                <span class="card-toggle-icon">▼</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="calendar-glance-list" class="calendar-glance-list"></div>
-                        </div>
-                    </div>
-
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="nav_myweek">MyWeek</h2>
@@ -167,6 +150,23 @@
                                 <div class="vertical-scroll-track" aria-hidden="true"></div>
                             </div>
                             <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;" data-i18n="schedule_clear_week_btn">Clear entire weekly schedule</button>
+                        </div>
+                    </div>
+
+                    <!-- מבט ליומן: אחרי השבוע שלי, כעת נסגר/נפתח כמו כל כרטיס אחר -->
+                    <div class="card calendar-glance-card">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <div class="calendar-glance-heading">
+                                <h2 data-i18n="calendar_glance_title">A Glance at the Calendar</h2>
+                                <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
+                            </div>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); resetCalendarEventModal(); openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
+                                <span class="card-toggle-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="calendar-glance-list" class="calendar-glance-list"></div>
                         </div>
                     </div>
 
