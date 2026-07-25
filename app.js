@@ -2752,6 +2752,11 @@ function openEditCalendarEvent(item) {
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
+    // עריכת אירוע בודד (למשל לחיצה על בועת אירוע ברשת השבועית במסך הבית) -
+    // הייתה נקודת קצה שבה אין שום דרך למחוק בכלל, כי הכפתור הזה לא היה קיים
+    // עד עכשיו. במצב עריכת סדרה (openEditCalendarEventSeries) הוא נשאר מוסתר
+    // בכוונה - מחיקת סדרה שלמה היא פעולה נפרדת עם הכפתור הייעודי שלה ברשימה
+    document.getElementById('btn-delete-calendar-event').classList.remove('hidden');
     openModal('modal-add-calendar-event');
 }
 
@@ -2767,6 +2772,7 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
+    document.getElementById('btn-delete-calendar-event').classList.add('hidden');
     openModal('modal-add-calendar-event');
 }
 
@@ -2783,6 +2789,7 @@ function resetCalendarEventModal() {
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_add_btn');
+    document.getElementById('btn-delete-calendar-event').classList.add('hidden');
 }
 
 async function addCalendarEvent() {

@@ -1484,6 +1484,7 @@
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
                         </select>
                     </div>
+                    <button type="button" id="btn-delete-calendar-event" class="btn-clear-week hidden" style="margin-bottom: 8px;" onclick="deleteCalendarEvent(editingCalendarEventId); closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="glance_edit_task_delete_btn">Delete task</button>
                     <div class="action-buttons-wrap">
                         <button id="btn-add-calendar-event" onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="cancel_btn">Cancel</button>
@@ -1600,6 +1601,6 @@
     </div>
 
     <script src="i18n.js?v=88"></script>
-    <script src="app.js?v=150"></script>
+    <script src="app.js?v=151"></script>
 </body>
 </html>
