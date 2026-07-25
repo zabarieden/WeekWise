@@ -1346,14 +1346,90 @@ async function confirmMoveSlotToDay() {
     showAppToast(t('schedule_move_slot_success'));
 }
 
+// שכפול משימה ליום *הבא* (לא בחירת יום - הכיוון תמיד ידוע וקבוע, בניגוד
+// ל"העברה" למעלה) - המקור נשאר במקומו, רק נוסף עותק זהה (כותרת+שעה) ביום
+// שאחריו. אותה לוגיקת "חיפוש שורה פנויה" בדיוק כמו confirmMoveSlotToDay,
+// רק בלי removeDaySlot בסוף כי זה שכפול ולא העברה
+async function duplicateSlotToNextDay(day, slot) {
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
+    if (!slotEl) return;
+    const title = slotEl.querySelector('.slot-task').value.trim();
+    if (!title) { showAppToast(t('schedule_move_slot_empty'), 'error'); return; }
+    const time = slotEl.querySelector('.slot-time').value.trim();
+    const toDay = dbDaysMap[(dbDaysMap.indexOf(day) + 1) % 7];
+
+    getDaySlotNumbers(toDay);
+    const targetSlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${toDay}"]`));
+    let target = targetSlotEls.find(el => !el.querySelector('.slot-task').value.trim() && el.querySelector('.slot-time').value.trim() === time);
+    if (!target) target = targetSlotEls.find(el => !el.querySelector('.slot-task').value.trim());
+    let targetSlotNum;
+    if (target) {
+        targetSlotNum = parseInt(target.getAttribute('data-slot'));
+    } else {
+        const nums = daySlotsConfig[toDay];
+        targetSlotNum = nums.length ? Math.max(...nums) + 1 : 1;
+        daySlotsConfig[toDay] = [...nums, targetSlotNum];
+    }
+
+    saveDaySlotsConfig();
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+
+    const newSlotEl = document.querySelector(`.slot-input-group[data-day="${toDay}"][data-slot="${targetSlotNum}"]`);
+    if (newSlotEl) {
+        newSlotEl.querySelector('.slot-time').value = time;
+        const taskInput = newSlotEl.querySelector('.slot-task');
+        taskInput.value = title;
+        updateSlotTaskIcon(taskInput);
+        await saveScheduleSlot(toDay, targetSlotNum);
+    }
+    showAppToast(t('schedule_duplicate_slot_success'));
+}
+
 // --- מוקד ה-AI ("המוח"): מודל אחד עם שני טאבים - תכנון לו"ז מטקסט חופשי
 // (פרימיום בלבד), וסריקת תמונה למתכון/ארוחה קבועה (יש לה מכסה חינמית משלה,
 // אז אין שער פרימיום גורף על פתיחת המודל - כל פעולה שוערת בנפרד בזמן האמת) ---
 function openAiBrainModal(tab = 'schedule') {
     document.getElementById('ai-schedule-input').value = '';
     document.getElementById('ai-finance-input').value = '';
+    setScheduleAiMode('recurring');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
+}
+
+// בררה מפורשת חד-פעמי/חוזר מעל תיבת הטקסט של תכנון הלו"ז - דורסת את מה
+// שה-AI/המנתח המקומי מחליטים על סמך הניסוח (ר' applyExplicitScheduleMode
+// למטה, שקוראת לפונקציה הזו בפועל). ברירת המחדל "חוזר" כי זו הבקשה השכיחה
+let scheduleAiMode = 'recurring';
+function setScheduleAiMode(mode) {
+    scheduleAiMode = mode;
+    document.querySelectorAll('.ai-schedule-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+    });
+    const durationInput = document.getElementById('ai-schedule-duration-months');
+    if (durationInput) {
+        durationInput.classList.toggle('hidden', mode !== 'recurring');
+        if (mode !== 'recurring') durationInput.value = '';
+    }
+}
+
+// כופה את מצב חד-פעמי/חוזר שנבחר מפורשות על כל אירוע שחזר מה-AI/המנתח
+// המקומי - בלי זה, ניסוחים מעורפלים ("אחרי שיעורי הבית") יכולים להטעות את
+// הפרשנות האוטומטית (ר' התיקון בפרומפט של parse-schedule-request), אבל
+// כשהמשתמשת בחרה מפורשות אין שום צורך לנחש בכלל. אירועים שממתינים
+// להבהרה (needsClarification) נשארים כמו שהם - השאלה עצמה (עד/עמום-שעה)
+// לא קשורה לחד-פעמי/חוזר
+function applyExplicitScheduleMode(ev, mode, durationMonths) {
+    if (ev.needsClarification) return ev;
+    if (mode === 'recurring') {
+        return { ...ev, recurring: true, event_date: null, recurring_duration_months: durationMonths || null };
+    }
+    let eventDate = ev.event_date;
+    if (!eventDate) {
+        const dayRef = Array.isArray(ev.day_of_week) ? ev.day_of_week[0] : ev.day_of_week;
+        eventDate = dayRef ? nextDateForDayOfWeek(dayRef) : getLocalDateString();
+    }
+    return { ...ev, recurring: false, event_date: eventDate, recurring_duration_months: null };
 }
 
 function switchAiBrainTab(tab) {
@@ -1908,6 +1984,12 @@ async function parseScheduleWithAI() {
         // בעדינות למנתח המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
         if (!events || !events.length) events = parseScheduleTextLocally(text);
 
+        // כפיית הבחירה המפורשת (חד-פעמי/חוזר) שנבחרה בכפתורים מעל תיבת הטקסט -
+        // דורסת כל ניחוש אוטומטי, ר' applyExplicitScheduleMode
+        const durationMonthsInput = document.getElementById('ai-schedule-duration-months');
+        const explicitDurationMonths = durationMonthsInput ? parseInt(durationMonthsInput.value) || null : null;
+        events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
+
         // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
         // אחרי השני אם יש כמה), ורק אז שומרים הכול יחד עם שאר האירועים הברורים
         const clearEvents = events.filter(ev => !ev.needsClarification);
@@ -2160,7 +2242,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
@@ -2843,6 +2925,13 @@ function buildRecurringEventRow(items, groupId) {
     wrap.setAttribute('data-reorder-id', groupId);
     wrap.setAttribute('data-reorder-type', 'series');
 
+    // התאריך המוצג הוא תמיד המופע הקרוב ביותר *מהיום והלאה* - לא המופע
+    // הראשון של הסדרה, שכבר יכול היה לעבור מזמן. items תמיד ממוין עולה לפי
+    // תאריך (ר' loadCalendarEvents), אז items[0] הוא הראשון עם תאריך>=היום -
+    // הסדרה מוצגת כאן רק אם יש לה לפחות מופע עתידי אחד (ר' סינון seriesMap)
+    const todayStr = getLocalDateString();
+    const nearestOccurrence = items.find(i => i.event_date >= todayStr) || items[items.length - 1];
+
     const header = document.createElement('div');
     header.className = 'calendar-event-item calendar-event-series-header';
 
@@ -2853,7 +2942,18 @@ function buildRecurringEventRow(items, groupId) {
 
     const dateBadge = document.createElement('span');
     dateBadge.className = 'calendar-event-date-badge';
-    dateBadge.textContent = formatEventDateBadge(items[0].event_date);
+    dateBadge.textContent = formatEventDateBadge(nearestOccurrence.event_date);
+
+    // וי ישיר על המופע הקרוב ביותר, בלי צורך לפתוח את הרשימה המורחבת -
+    // בדיוק בשביל זה יש כבר וי לכל מופע בנפרד ברשימה הפתוחה, רק שהיה קשה
+    // למצוא/לא נגיש מספיק בלי להרחיב קודם
+    const nearestCheckbox = document.createElement('input');
+    nearestCheckbox.type = 'checkbox';
+    nearestCheckbox.className = 'calendar-event-series-nearest-checkbox';
+    nearestCheckbox.title = t('calendar_event_check_nearest_title');
+    nearestCheckbox.checked = !!nearestOccurrence.is_completed;
+    nearestCheckbox.onclick = (e) => e.stopPropagation();
+    nearestCheckbox.onchange = () => toggleEventOccurrenceCompletion(nearestOccurrence.id, nearestCheckbox.checked);
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'calendar-event-title-text';
@@ -2886,6 +2986,7 @@ function buildRecurringEventRow(items, groupId) {
 
     header.appendChild(handle);
     header.appendChild(dateBadge);
+    header.appendChild(nearestCheckbox);
     header.appendChild(titleSpan);
     header.appendChild(progressBadge);
     header.appendChild(toggleBtn);
@@ -2903,8 +3004,18 @@ function buildRecurringEventRow(items, groupId) {
         checkbox.onchange = () => toggleEventOccurrenceCompletion(occurrence.id, checkbox.checked);
         const dateLabel = document.createElement('span');
         dateLabel.textContent = formatEventDateBadge(occurrence.event_date);
+        // מחיקת מופע בודד זה בלבד - להבדיל מ-❌ של כל הסדרה למעלה, שמפסיקה
+        // את כל המופעים העתידיים (ר' deleteRecurringSeries). כאן נשארים כל
+        // שאר המופעים העתידיים במקום, נמחק רק התאריך הספציפי הזה
+        const deleteSingleBtn = document.createElement('button');
+        deleteSingleBtn.type = 'button';
+        deleteSingleBtn.className = 'calendar-event-series-date-delete';
+        deleteSingleBtn.textContent = '❌';
+        deleteSingleBtn.title = t('calendar_event_delete_occurrence_title');
+        deleteSingleBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteSingleSeriesOccurrence(occurrence.id); };
         line.appendChild(checkbox);
         line.appendChild(dateLabel);
+        line.appendChild(deleteSingleBtn);
         datesList.appendChild(line);
     });
 
@@ -3179,6 +3290,16 @@ async function deleteRecurringSeries(groupId) {
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
+}
+
+// מוחקת מופע ספציפי אחד בלבד מתוך סדרה חוזרת - כל שאר המופעים (כולל עתידיים)
+// נשארים במקום, בניגוד ל-deleteRecurringSeries שמפסיקה את כולם מהיום והלאה
+async function deleteSingleSeriesOccurrence(id) {
+    await supabaseClient.from('calendar_events').delete().eq('id', id);
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+    loadTodayTasks();
+    if (selectedCalendarDay) renderSelectedCalendarDay();
 }
 
 // --- המתכונים שלי: רשת קטגוריות קבועה -> רשימת מתכונים מסוננת -> תצוגת פרטים במסך מלא ---

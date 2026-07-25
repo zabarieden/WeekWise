@@ -431,6 +431,7 @@ html.light-mode #calorie-daily-goal-input,
 html.light-mode #protein-daily-goal-input,
 html.light-mode #habit-name-input,
 html.light-mode #contact-us-message,
+html.light-mode #ai-schedule-duration-months,
 html.light-mode #ai-quick-add-input,
 html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
@@ -1177,6 +1178,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-delete-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; }
 .btn-move-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; opacity: 0.7; }
 .btn-move-slot:hover { opacity: 1; }
+.btn-duplicate-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; opacity: 0.7; }
+.btn-duplicate-slot:hover { opacity: 1; }
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .btn-add-day-slot { background-color: rgba(168, 85, 247, 0.06); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.2); font-size: 0.78rem; border-radius: 8px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 6px; }
 
@@ -1275,6 +1278,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .calendar-event-series-date-line { display: flex; align-items: center; gap: 6px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); color: var(--accent-purple-light); font-size: 0.72rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; cursor: pointer; }
 .calendar-event-series-date-line input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--accent-purple); cursor: pointer; margin: 0; }
 .calendar-event-series-date-line.completed { opacity: 0.55; text-decoration: line-through; }
+/* מחיקת מופע בודד מתוך סדרה חוזרת - קטן ועדין, כדי לא להתחרות ויזואלית עם
+   ה-❌ הראשי של הסדרה כולה בכותרת (deleteRecurringSeries, שמפסיקה את כולם) */
+.calendar-event-series-date-delete { background: transparent; border: none; color: var(--text-secondary); font-size: 0.62rem; padding: 0; margin-inline-start: 2px; cursor: pointer; opacity: 0.7; flex-shrink: 0; }
+.calendar-event-series-date-delete:hover { opacity: 1; }
+/* וי ישיר על המופע הקרוב ביותר בכותרת המצומצמת - בדיוק כמו הוי של כל מופע
+   ברשימה הפתוחה למטה, רק נגיש בלי צורך ללחוץ על החץ ולהרחיב קודם */
+.calendar-event-series-nearest-checkbox { width: 15px; height: 15px; accent-color: var(--accent-purple); cursor: pointer; margin: 0; flex-shrink: 0; }
 
 .calendar-event-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; flex-shrink: 0; }
 .calendar-event-drag-handle:active { cursor: grabbing; }
@@ -1800,6 +1810,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .ai-brain-tab { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-brain-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+/* בררת חד-פעמי/חוזר מעל תיבת הטקסט של תכנון הלו"ז - אותה שפה חזותית בדיוק
+   כמו .ai-brain-tab, רק קטן יותר כי זו בחירה משנית בתוך טאב אחד, לא מעבר טאבים */
+.ai-schedule-mode-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+.ai-schedule-mode-btn { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
+.ai-schedule-mode-btn.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+#ai-schedule-duration-months { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 /* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
    במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
    המשותף שמשמש גם במקומות אחרים באפליקציה */
@@ -1865,7 +1881,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 #habit-name-input { width: 100%; box-sizing: border-box; }
 #contact-us-message { width: 100%; box-sizing: border-box; font-family: inherit; resize: vertical; margin-bottom: 10px; }
 #contact-us-category { margin-bottom: 10px; }
@@ -2521,7 +2537,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
     }
     /* כפתור מחיקה עם תיבת מגע קבועה ומובטחת (26x26) - לעולם לא יכול "להיעלם"
        או להתכווץ לגודל בלתי-נראה, בניגוד להסתמכות על גודל טקסט/אמוג'י בלבד */
-    .btn-delete-slot, .btn-move-slot {
+    .btn-delete-slot, .btn-move-slot, .btn-duplicate-slot {
         flex: none !important;
         width: 26px !important;
         height: 26px !important;
