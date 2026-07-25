@@ -1114,8 +1114,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .btn-add-day-slot { background-color: rgba(168, 85, 247, 0.06); color: var(--accent-purple-light); border: 1px solid rgba(168, 85, 247, 0.2); font-size: 0.78rem; border-radius: 8px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 6px; }
 
-/* מבט ליומן: כרטיס אג'נדה קבוע, תמיד פתוח (אין collapsible-header, ולכן אין חץ) */
-.calendar-glance-card .card-body { max-height: none; overflow: visible; }
+/* מבט ליומן: עכשיו כן ניתן לקיפול כמו כל כרטיס אחר (collapsible-header +
+   .expanded) - לפי בקשה מפורשת. בלי override של max-height כאן, הקיפול/
+   פתיחה הרגיל של .card-body מהכללים הכלליים למעלה עובד ישירות */
 /* משימות להיום: אותו עיקרון - כרטיס קבוע תמיד פתוח בלי חץ קיפול. בלי השורה
    הזאת card-body היה נשאר ב-max-height:0 (ברירת המחדל של .card-body ללא
    .expanded) והתוכן פשוט לא היה נראה בכלל */
@@ -1189,6 +1190,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .today-tasks-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 /* צ'קבוקס קטן מאוד (לפי בקשה מפורשת) לסימון "בוצע" בפירוט היום בלוח החודשי */
 .day-detail-checkbox { width: 13px; height: 13px; flex-shrink: 0; accent-color: var(--tile-accent, var(--accent-gold)); cursor: pointer; margin: 0; }
+/* אייקון "חוזר" קטן בפירוט היום בלוח החודשי - מבדיל חזותית משימה קבועה
+   מהלו"ז השבועי מאירוע חד-פעמי (שאין לו את האייקון הזה) */
+.today-tasks-recurring-icon { flex-shrink: 0; font-size: 0.8rem; opacity: 0.75; }
 
 .calendar-event-recurring-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; padding: 2px 0; }
 .calendar-event-recurring-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; }

@@ -906,14 +906,14 @@ async function saveGlanceTaskEdit() {
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     closeModal('modal-edit-glance-task');
     showAppToast(t('glance_edit_task_saved'));
-    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
+    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
 }
 
 async function deleteGlanceTaskEdit() {
     if (!editingGlanceTaskId || !supabaseClient) return;
     await supabaseClient.from('weekly_schedule').delete().eq('id', editingGlanceTaskId);
     closeModal('modal-edit-glance-task');
-    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
+    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
 }
 
 // showTabSection: הלוגיקה המשותפת של מעבר בין מסכים ראשיים - חולצה מתוך
@@ -2332,8 +2332,16 @@ async function loadMonthlyCalendarGrid() {
     const lastDate = new Date(y, m, 0);
     const firstStr = getLocalDateString(firstDate);
     const lastStr = getLocalDateString(lastDate);
-    const { data } = await supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr);
+    // "יש דברים שאני מוסיפה בלוז והם לא במבט ליומן החודשי" - הלוח הזה הביט
+    // במקור רק ב-calendar_events; עכשיו מוסיפים גם את הימים שיש בהם משימה
+    // קבועה מהלו"ז השבועי (weekly_schedule), כדי שנקודה תופיע גם על יום כזה,
+    // בדיוק כמו שכבר קורה בווידג'ט השבועי החדש במסך הבית
+    const [{ data }, { data: recurringData }] = await Promise.all([
+        supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr),
+        supabaseClient.from('weekly_schedule').select('day_of_week').eq('user_id', currentUserId),
+    ]);
     const markedDates = new Set((data || []).map(r => r.event_date));
+    const recurringDays = new Set((recurringData || []).map(r => r.day_of_week));
 
     const todayStr = getLocalDateString();
     const startWeekday = firstDate.getDay();
@@ -2345,7 +2353,7 @@ async function loadMonthlyCalendarGrid() {
         const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
         const isSelected = dateStr === selectedCalendarDay;
-        const hasEvents = markedDates.has(dateStr);
+        const hasEvents = markedDates.has(dateStr) || recurringDays.has(dbDaysMap[new Date(y, m - 1, day).getDay()]);
         html += `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
             <span class="monthly-calendar-day-num">${day}</span>
             ${hasEvents ? '<span class="monthly-calendar-dot"></span>' : ''}
@@ -2381,14 +2389,18 @@ async function selectCalendarDay(dateStr) {
 async function renderSelectedCalendarDay() {
     const detail = document.getElementById('monthly-calendar-day-detail');
     if (!detail || !selectedCalendarDay) return;
-    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true });
     const [y, m, d] = selectedCalendarDay.split('-').map(Number);
+    const dayOfWeek = dbDaysMap[new Date(y, m - 1, d).getDay()];
+    const [{ data }, { data: recurringData }] = await Promise.all([
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true }),
+        supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
+    ]);
     const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
-    if (!data || !data.length) {
+    if ((!data || !data.length) && (!recurringData || !recurringData.length)) {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
-    const rows = data.map(item => `
+    const rows = (data || []).map(item => `
         <div class="today-tasks-row">
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
             <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
@@ -2396,6 +2408,39 @@ async function renderSelectedCalendarDay() {
         </div>
     `).join('');
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}`;
+
+    // המשימות הקבועות מהלו"ז השבועי מוצגות כאן בלי צ'קבוקס השלמה (הטבלה שלהן
+    // לא עוקבת אחרי השלמה של מופע ספציפי, בניגוד ל-calendar_events) - רק
+    // עריכה/מחיקה, דרך אותו מודל עריכה בדיוק כמו בווידג'ט השבועי במסך הבית.
+    // בנוי עם closures (לא onclick עם מחרוזת מוטמעת) מאותה סיבה בדיוק כמו
+    // ב-loadTodayTasks - כותרת משימה עם גרש בודד לא תשבור כלום כך
+    (recurringData || []).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'today-tasks-row';
+        row.innerHTML = `
+            <span class="today-tasks-recurring-icon" title="${escapeHtmlForReport(t('home_weekly_glance_title'))}">🔁</span>
+            <span class="today-tasks-text">${escapeHtmlForReport(item.task_title)}</span>
+        `;
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-edit-item';
+        editBtn.textContent = '✏️';
+        editBtn.onclick = () => openGlanceTaskEditor(item.id, item.task_title, item.time_of_day);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = () => deleteRecurringScheduleItem(item.id);
+        row.appendChild(editBtn);
+        row.appendChild(deleteBtn);
+        detail.appendChild(row);
+    });
+}
+
+async function deleteRecurringScheduleItem(id) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('weekly_schedule').delete().eq('id', id);
+    await Promise.all([loadMonthlyCalendarGrid(), renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
 async function loadCalendarEvents() {
