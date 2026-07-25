@@ -3710,18 +3710,18 @@ function applyUiScale(scale) {
 
 function setUiScale(scale) {
     localStorage.setItem('weekwise_ui_scale', scale);
-    applyUiScale(scale);
-    // גדילת ה-font-size של html באמצע האינטראקציה עם ה-select הנייטיבי גורמת
-    // בחלק מהדפדפנים לקפיצת גלילה שדוחפת את הבורר עצמו מחוץ לתחום הנראה של
-    // מגירת ההגדרות (max-height:85vh, overflow-y:auto) - עד עכשיו רק סגירה
-    // ופתיחה מחדש של האפליקציה איפסו את הגלילה ופתרו את זה. במקום זה, אחרי
-    // שהדפדפן מסיים לצייר מחדש את הפריסה החדשה (requestAnimationFrame),
-    // מחזירים את הבורר עצמו לתוך התצוגה בפועל
     const select = document.getElementById('ui-scale-select');
-    if (select) {
-        select.blur();
-        requestAnimationFrame(() => select.scrollIntoView({ block: 'nearest' }));
-    }
+    // מנתקים פוקוס מהבורר לפני שמשנים את font-size הגלובלי - בנייד, ה-select
+    // הנייטיבי (ה-picker של מערכת ההפעלה) עוד "באמצע" סגירה כשה-onchange
+    // נורה, ושינוי גודל הטקסט הגלובלי בדיוק באותו רגע גרם לו להיעלם חזותית
+    // עד כניסה מחדש לאפליקציה. ה-blur קורה מיד; שינוי הגודל עצמו נדחה לטיק
+    // הבא (setTimeout) כדי לתת לדפדפן לסיים לגמרי לטפל באירוע המקורי לפני
+    // שהפריסה הגלובלית משתנה מתחתיו - ורק אז מחזירים את הבורר לתוך התצוגה
+    if (select) select.blur();
+    setTimeout(() => {
+        applyUiScale(scale);
+        if (select) select.scrollIntoView({ block: 'nearest' });
+    }, 50);
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
