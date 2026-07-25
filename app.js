@@ -6280,29 +6280,31 @@ async function deleteCenterItem(id, type) {
 // פתקים" בארכיון לא אמורים להכביד על הרשימה הרגילה. שחזור מחזיר is_deleted
 // ל-false, מחיקה-לצמיתות היא delete() אמיתי. כל האלמנטים/הפונקציות
 // מזוהים לפי type ('weekly'/'general') כדי שלשתי הרשימות יהיה ארכיון נפרד ---
-const notesArchiveOpen = { weekly: false, general: false };
+// currentArchiveType - איזה ארכיון (פתקים/רשימת קניות) פתוח כרגע במודל
+// המשותף (ר' modal-notes-archive) - נקרא גם ישירות מתוך onclick ב-HTML
+// (כפתור "רוקן ארכיון" בתוך המודל), אז זו לא קבועה מקומית לפונקציה
+let currentArchiveType = null;
 
 async function refreshNotesArchiveCount(type) {
     if (!supabaseClient || !currentUserId) return;
     const countEl = document.getElementById(`archive-count-${type}`);
     if (!countEl) return;
     const { count } = await supabaseClient.from('my_center_tasks').select('id', { count: 'exact', head: true }).eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true);
-    countEl.textContent = count || 0;
+    countEl.textContent = count || '';
     document.getElementById(`archive-toggle-${type}`).classList.toggle('hidden', !count);
 }
 
-async function toggleNotesArchive(type) {
-    notesArchiveOpen[type] = !notesArchiveOpen[type];
-    const open = notesArchiveOpen[type];
-    document.getElementById(`archive-list-${type}`).classList.toggle('hidden', !open);
-    document.getElementById(`archive-empty-btn-${type}`).classList.toggle('hidden', !open);
-    document.getElementById(`archive-arrow-${type}`).textContent = open ? '▲' : '▼';
-    if (open) await loadNotesArchiveList(type);
+// לא מתקפל בתוך הרשימה (בלי חץ, בלי אנימציית-הרחבה) - נכנס כמודל נפרד
+// לגמרי, לפי בקשה מפורשת ("כמו לעולם חדש כזה")
+async function openNotesArchiveModal(type) {
+    currentArchiveType = type;
+    await loadNotesArchiveList(type);
+    openModal('modal-notes-archive');
 }
 
 async function loadNotesArchiveList(type) {
     if (!supabaseClient || !currentUserId) return;
-    const listEl = document.getElementById(`archive-list-${type}`);
+    const listEl = document.getElementById('notes-archive-modal-list');
     const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true).order('deleted_at', { ascending: false });
     listEl.innerHTML = '';
     if (!data || !data.length) {

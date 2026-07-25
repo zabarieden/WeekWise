@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=162">
+    <link rel="stylesheet" href="theme.css?v=163">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -478,15 +478,11 @@
                             </div>
                             <ul id="weekly-list" class="center-list"></ul>
 
-                            <!-- ארכיון פתקים מחוקים - מעומעם ומתקפל, מוצג רק כשיש בו משהו (ר' refreshNotesArchiveCount) -->
-                            <div class="notes-archive-toggle hidden" id="archive-toggle-weekly" onclick="toggleNotesArchive('weekly')">
-                                <span aria-hidden="true">🗑️</span>
-                                <span id="archive-arrow-weekly">▼</span>
-                                <span data-i18n="notes_archive_toggle_label">Archive</span>
-                                <span class="notes-archive-count-badge">(<span id="archive-count-weekly">0</span>)</span>
-                            </div>
-                            <ul id="archive-list-weekly" class="center-list notes-archive-list hidden"></ul>
-                            <button type="button" class="btn-clear-week hidden" id="archive-empty-btn-weekly" onclick="emptyNotesArchive('weekly')" data-i18n="notes_archive_empty_btn">Empty archive</button>
+                            <!-- ארכיון פתקים מחוקים - אייקון קטן ומעומעם, מוצג רק כשיש בו משהו (ר'
+                                 refreshNotesArchiveCount); לחיצה פותחת מודל נפרד (לא מתקפל בתוך הרשימה) -->
+                            <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-weekly" onclick="openNotesArchiveModal('weekly')" data-i18n-title="notes_archive_toggle_label" title="Archive">
+                                <span aria-hidden="true">🗑️</span><span id="archive-count-weekly" class="notes-archive-count-badge"></span>
+                            </button>
                         </div>
                     </div>
                     </div>
@@ -531,14 +527,9 @@
                             <ul id="general-list" class="center-list"></ul>
 
                             <!-- ארכיון פריטים מחוקים ברשימת קניות - אותו מנגנון בדיוק כמו בפתקים -->
-                            <div class="notes-archive-toggle hidden" id="archive-toggle-general" onclick="toggleNotesArchive('general')">
-                                <span aria-hidden="true">🗑️</span>
-                                <span id="archive-arrow-general">▼</span>
-                                <span data-i18n="notes_archive_toggle_label">Archive</span>
-                                <span class="notes-archive-count-badge">(<span id="archive-count-general">0</span>)</span>
-                            </div>
-                            <ul id="archive-list-general" class="center-list notes-archive-list hidden"></ul>
-                            <button type="button" class="btn-clear-week hidden" id="archive-empty-btn-general" onclick="emptyNotesArchive('general')" data-i18n="notes_archive_empty_btn">Empty archive</button>
+                            <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-general" onclick="openNotesArchiveModal('general')" data-i18n-title="notes_archive_toggle_label" title="Archive">
+                                <span aria-hidden="true">🗑️</span><span id="archive-count-general" class="notes-archive-count-badge"></span>
+                            </button>
                         </div>
                     </div>
                     </div>
@@ -960,6 +951,18 @@
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-quick-add')" data-i18n="close_btn">Close</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: ארכיון פריטים מחוקים (פתקים/רשימת קניות, לפי currentArchiveType) -
+             לא מתקפל בתוך הרשימה, אלא נכנס כמסך/עולם נפרד לגמרי, לפי בקשה מפורשת -->
+        <div id="modal-notes-archive" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="notes_archive_toggle_label">Archive</h3>
+                <ul id="notes-archive-modal-list" class="center-list notes-archive-list"></ul>
+                <button type="button" class="btn-clear-week" onclick="emptyNotesArchive(currentArchiveType)" data-i18n="notes_archive_empty_btn">Empty archive</button>
+                <button type="button" class="btn-clear-specific" onclick="closeModal('modal-notes-archive')" data-i18n="close_btn">Close</button>
             </div>
         </div>
 
@@ -1629,6 +1632,6 @@
     </div>
 
     <script src="i18n.js?v=92"></script>
-    <script src="app.js?v=162"></script>
+    <script src="app.js?v=163"></script>
 </body>
 </html>
