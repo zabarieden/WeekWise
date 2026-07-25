@@ -475,10 +475,6 @@
                             <span class="sub-tile-icon">🛒</span>
                             <span class="sub-tile-title" data-i18n="general_title">Shopping List</span>
                         </div>
-                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'habits')">
-                            <span class="sub-tile-icon">🔥</span>
-                            <span class="sub-tile-title" data-i18n="habits_title">Habits</span>
-                        </div>
                     </div>
 
                     <div class="subview-panel" data-subview="notes">
@@ -508,17 +504,6 @@
                             <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-weekly" onclick="openNotesArchiveModal('weekly')" data-i18n-title="notes_archive_toggle_label" title="Archive">
                                 <span aria-hidden="true">🗑️</span><span id="archive-count-weekly" class="notes-archive-count-badge"></span>
                             </button>
-                        </div>
-                    </div>
-                    </div>
-
-                    <div class="subview-panel" data-subview="habits">
-                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
-                    <div class="card expanded">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="habits_title">Habits</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openAddHabitModal()">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                        <div class="card-body">
-                            <ul id="habits-list" class="center-list habits-list"></ul>
-                            <p id="habits-empty-hint" class="today-tasks-empty hidden" data-i18n="habits_empty_hint">No habits yet - add one to start tracking your streak.</p>
                         </div>
                     </div>
                     </div>
@@ -735,6 +720,19 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- חלונית: הרגלים ורצף - כמו ספורט, נגישה רק מהתפריט הצדדי (☰), לא
+                     מטאב קבוע בסרגל התחתון ולא מקוננת בתוך "פתקים" (לפי בקשה מפורשת) -->
+                <section class="tab-content" id="habits-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="habits_title">Habits</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openAddHabitModal()">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-body">
+                            <ul id="habits-list" class="center-list habits-list"></ul>
+                            <p id="habits-empty-hint" class="today-tasks-empty hidden" data-i18n="habits_empty_hint">No habits yet - add one to start tracking your streak.</p>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- סרגל טאבים תחתון קבוע: הניווט הראשי בין 4 האזורים, תמיד גלוי -
@@ -812,7 +810,7 @@
                         <span class="hamburger-drawer-item-icon">🛒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'habits')">
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('habits-section')">
                         <span class="hamburger-drawer-item-icon">🔥</span>
                         <span class="hamburger-drawer-item-title" data-i18n="habits_title">Habits</span>
                     </button>
