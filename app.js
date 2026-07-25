@@ -212,7 +212,7 @@ async function loadCenterItems(type) {
     });
     if (type === 'weekly' && !dividerInserted) listUl.appendChild(buildNoteSomedayDivider());
     initNoteTriageDragDrop(type);
-    if (type === 'weekly') refreshNotesArchiveCount();
+    refreshNotesArchiveCount(type);
 }
 
 function buildNoteSomedayDivider() {
@@ -6268,44 +6268,42 @@ async function loadStats() {
     document.getElementById('calories-weekly').innerText = weekly;
     document.getElementById('calories-monthly').innerText = monthly;
 }
-// פתקים (type='weekly') - מחיקה רכה (is_deleted=true) כדי שאפשר יהיה לשחזר
-// מהארכיון, לפי בקשה מפורשת. רשימת קניות (type='general') ממשיכה להימחק
-// לצמיתות מיד, כמו קודם - הארכיון רלוונטי רק לפתקים
+// מחיקה רכה (is_deleted=true) בשני הסוגים (פתקים ורשימת קניות) כדי שאפשר
+// יהיה לשחזר מהארכיון, לפי בקשה מפורשת
 async function deleteCenterItem(id, type) {
-    if (type === 'weekly') {
-        await supabaseClient.from('my_center_tasks').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', id);
-    } else {
-        await supabaseClient.from('my_center_tasks').delete().eq('id', id);
-    }
+    await supabaseClient.from('my_center_tasks').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', id);
     loadCenterItems(type);
 }
 
-// --- ארכיון פתקים מחוקים: קישור מעומעם ומתקפל בתחתית רשימת הפתקים (לא
-// קוביה שתמיד מוצגת - "אלפי פתקים" בארכיון לא אמורים להכביד על הרשימה
-// הרגילה) - שחזור מחזיר is_deleted ל-false, מחיקה-לצמיתות היא delete() אמיתי ---
-let notesArchiveOpen = false;
+// --- ארכיון פריטים מחוקים: קישור מעומעם ומתקפל בתחתית כל רשימה (פתקים
+// ורשימת קניות, כל אחת עם הארכיון שלה) - לא קוביה שתמיד מוצגת, "אלפי
+// פתקים" בארכיון לא אמורים להכביד על הרשימה הרגילה. שחזור מחזיר is_deleted
+// ל-false, מחיקה-לצמיתות היא delete() אמיתי. כל האלמנטים/הפונקציות
+// מזוהים לפי type ('weekly'/'general') כדי שלשתי הרשימות יהיה ארכיון נפרד ---
+const notesArchiveOpen = { weekly: false, general: false };
 
-async function refreshNotesArchiveCount() {
+async function refreshNotesArchiveCount(type) {
     if (!supabaseClient || !currentUserId) return;
-    const countEl = document.getElementById('notes-archive-count');
+    const countEl = document.getElementById(`archive-count-${type}`);
     if (!countEl) return;
-    const { count } = await supabaseClient.from('my_center_tasks').select('id', { count: 'exact', head: true }).eq('user_id', currentUserId).eq('task_type', 'weekly').eq('is_deleted', true);
+    const { count } = await supabaseClient.from('my_center_tasks').select('id', { count: 'exact', head: true }).eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true);
     countEl.textContent = count || 0;
-    document.getElementById('notes-archive-toggle').classList.toggle('hidden', !count);
+    document.getElementById(`archive-toggle-${type}`).classList.toggle('hidden', !count);
 }
 
-async function toggleNotesArchive() {
-    notesArchiveOpen = !notesArchiveOpen;
-    document.getElementById('notes-archive-list').classList.toggle('hidden', !notesArchiveOpen);
-    document.getElementById('notes-archive-empty-btn').classList.toggle('hidden', !notesArchiveOpen);
-    document.getElementById('notes-archive-arrow').textContent = notesArchiveOpen ? '▲' : '▼';
-    if (notesArchiveOpen) await loadNotesArchiveList();
+async function toggleNotesArchive(type) {
+    notesArchiveOpen[type] = !notesArchiveOpen[type];
+    const open = notesArchiveOpen[type];
+    document.getElementById(`archive-list-${type}`).classList.toggle('hidden', !open);
+    document.getElementById(`archive-empty-btn-${type}`).classList.toggle('hidden', !open);
+    document.getElementById(`archive-arrow-${type}`).textContent = open ? '▲' : '▼';
+    if (open) await loadNotesArchiveList(type);
 }
 
-async function loadNotesArchiveList() {
+async function loadNotesArchiveList(type) {
     if (!supabaseClient || !currentUserId) return;
-    const listEl = document.getElementById('notes-archive-list');
-    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', 'weekly').eq('is_deleted', true).order('deleted_at', { ascending: false });
+    const listEl = document.getElementById(`archive-list-${type}`);
+    const { data } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true).order('deleted_at', { ascending: false });
     listEl.innerHTML = '';
     if (!data || !data.length) {
         listEl.innerHTML = `<p class="today-tasks-empty">${t('notes_archive_empty_hint')}</p>`;
@@ -6322,12 +6320,12 @@ async function loadNotesArchiveList() {
         restoreBtn.className = 'btn-edit-item';
         restoreBtn.title = t('notes_archive_restore_btn');
         restoreBtn.textContent = '↩️';
-        restoreBtn.onclick = () => restoreArchivedNote(item.id);
+        restoreBtn.onclick = () => restoreArchivedNote(item.id, type);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
         deleteBtn.textContent = '❌';
-        deleteBtn.onclick = () => permanentlyDeleteArchivedNote(item.id);
+        deleteBtn.onclick = () => permanentlyDeleteArchivedNote(item.id, type);
         li.appendChild(textSpan);
         li.appendChild(restoreBtn);
         li.appendChild(deleteBtn);
@@ -6335,25 +6333,25 @@ async function loadNotesArchiveList() {
     });
 }
 
-async function restoreArchivedNote(id) {
+async function restoreArchivedNote(id, type) {
     await supabaseClient.from('my_center_tasks').update({ is_deleted: false, deleted_at: null }).eq('id', id);
-    await loadNotesArchiveList();
-    await refreshNotesArchiveCount();
-    await loadCenterItems('weekly');
+    await loadNotesArchiveList(type);
+    await refreshNotesArchiveCount(type);
+    await loadCenterItems(type);
     showAppToast(t('notes_archive_restored'));
 }
 
-async function permanentlyDeleteArchivedNote(id) {
+async function permanentlyDeleteArchivedNote(id, type) {
     await supabaseClient.from('my_center_tasks').delete().eq('id', id);
-    await loadNotesArchiveList();
-    await refreshNotesArchiveCount();
+    await loadNotesArchiveList(type);
+    await refreshNotesArchiveCount(type);
 }
 
-async function emptyNotesArchive() {
+async function emptyNotesArchive(type) {
     if (!confirm(t('notes_archive_empty_confirm'))) return;
-    await supabaseClient.from('my_center_tasks').delete().eq('user_id', currentUserId).eq('task_type', 'weekly').eq('is_deleted', true);
-    await loadNotesArchiveList();
-    await refreshNotesArchiveCount();
+    await supabaseClient.from('my_center_tasks').delete().eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true);
+    await loadNotesArchiveList(type);
+    await refreshNotesArchiveCount(type);
 }
 async function addProgressTarget() {
     if (!supabaseClient) return;
