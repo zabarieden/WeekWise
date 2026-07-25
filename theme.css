@@ -506,6 +506,10 @@ input, textarea, select {
     max-width: 100vw;
     height: 100vh;
     height: 100dvh;
+    /* var(--app-height) מוגדר ב-JS (setAppHeightVar, app.js) מ-window.innerHeight
+       בפועל - עוקף מקרים באנדרואיד שבהם 100vh/100dvh לא מחריגים נכון את סרגל
+       הניווט התחתון של המערכת, מה שגרם לסרגל הטאבים שלנו להיחתך מתחתיו */
+    height: var(--app-height, 100dvh);
     /* background (לא background-color): --bg-main יכול להחזיק גם גרדיאנט
        בחלק מערכות הנושא הפרימיום (ר' data-color-theme למטה) - background-color
        פשוט מתעלם מערך גרדיאנט, ואילו background (הקיצור) מקבל את שניהם */

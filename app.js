@@ -1,3 +1,16 @@
+// תיקון גובה-מסך לאנדרואיד: על חלק ממכשירי/דפדפני אנדרואיד (בעיקר WebView
+// מותקן כ-PWA), 100vh/100dvh לא תמיד מחריגים נכון את סרגל הניווט התחתון של
+// המערכת (שלוש הנקודות/עיגול/חץ) - מה שגורם לתחתית האפליקציה (סרגל
+// הטאבים) להיחתך מתחתיו. window.innerHeight תמיד מדויק לגובה הנראה בפועל,
+// אז שומרים אותו כמשתנה CSS ומשתמשים בו כברירת המחדל האמינה ביותר
+// (var(--app-height, 100dvh) ב-.phone-wrapper) - עדיין מתעדכן live בסיבוב/שינוי גודל
+function setAppHeightVar() {
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+}
+setAppHeightVar();
+window.addEventListener('resize', setAppHeightVar);
+window.addEventListener('orientationchange', setAppHeightVar);
+
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
