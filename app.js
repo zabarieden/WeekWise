@@ -1560,12 +1560,41 @@ async function attemptScheduleParse(token, text, today) {
     }
 }
 
+// בועת ה-AI יודעת רק "להוסיף" - אין לה שום מושג של מחיקה/הסרה, לא בענן ולא
+// במנתח המקומי. בלי הבדיקה הזו, בקשת מחיקה בטקסט חופשי ("תמחקי את הריצה
+// בשבת") הייתה נופלת דרך אותו נתיב ADD כמו כל בקשה אחרת, ומחלצת מהטקסט עוד
+// אירוע במקום למחוק כלום - כפילות שקטה במקום מחיקה, בדיוק מה שגילינו בפועל
+// (שתי כפילויות "ריצת 10 קילומטר" שנוצרו מניסיונות מחיקה). עדיף להודיע
+// במפורש שזה עדיין לא נתמך מאשר ליצור נתונים שגויים בשקט
+const SCHEDULE_DELETE_INTENT_WORDS = [
+    'delete', 'remove', 'cancel', 'מחק', 'תמחק', 'מחיקה', 'למחוק', 'הסר', 'תסיר', 'בטל', 'תבטל',
+    'eliminar', 'borrar', 'quitar', 'cancelar', 'supprimer', 'effacer', 'annuler', 'retirer',
+    'احذف', 'حذف', 'ألغ', 'إلغاء', 'امسح', 'удали', 'убрать', 'отмени',
+    'löschen', 'entfernen', 'streichen', 'excluir', 'apagar', 'remover',
+    '削除', 'キャンセル', '删除', '取消', 'हटाओ', 'हटाना', 'मिटाओ', 'रद्द',
+    '삭제', '취소', '제거', 'sil', 'iptal', 'kaldır', 'hapus', 'batalkan',
+    'elimina', 'cancella', 'rimuovi', 'annulla', 'xóa', 'hủy', 'usuń', 'skasuj', 'anuluj',
+    'ลบ', 'ยกเลิก', 'مٹا', 'منسوخ', 'মুছে', 'বাতিল', 'futa', 'ondoa', 'ghairi',
+    'видали', 'скасувати', 'διαγραφή', 'διέγραψε', 'ακύρωσε', 'verwijder', 'annuleer',
+    'esborra', 'cancel·la', 'șterge', 'anulează', 'parẹ́', 'fagilé',
+    'ta bort', 'radera', 'avboka', 'slett', 'fjern', 'avbryt', 'slet', 'annuller',
+    'smaž', 'odstraň', 'zruš', 'töröl', 'mégse', 'poista', 'peruuta',
+];
+function looksLikeScheduleDeleteRequest(text) {
+    const lower = text.toLowerCase();
+    return SCHEDULE_DELETE_INTENT_WORDS.some(word => lower.includes(word.toLowerCase()));
+}
+
 async function parseScheduleWithAI() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     const input = document.getElementById('ai-schedule-input');
     const text = input.value.trim();
     if (!text) { showAppToast(t('schedule_ai_empty'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    if (looksLikeScheduleDeleteRequest(text)) {
+        showAppToast(t('schedule_ai_delete_not_supported'), 'error');
+        return;
+    }
 
     const loadingTimer = setTimeout(showScheduleAiLoading, 5000);
     try {
