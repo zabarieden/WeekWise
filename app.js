@@ -216,7 +216,9 @@ async function loadCenterItems(type) {
 function buildNoteSomedayDivider() {
     const li = document.createElement('li');
     li.className = 'center-list-divider';
-    li.textContent = t('note_someday_section_label');
+    const label = document.createElement('span');
+    label.textContent = t('note_someday_section_label');
+    li.appendChild(label);
     return li;
 }
 

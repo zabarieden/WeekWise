@@ -1441,26 +1441,26 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .center-list-item-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
 /* מפריד "להגיע לזה" בתוך רשימת הפתקים - לא כרטיס פתק (מבטל את הרקע/מסגרת/
-   צל של .center-list li), רק תווית עדינה עם קו משני הצדדים, כדי שיהיה ברור
-   שזה קטע נפרד ברשימה ולא פתק שאפשר ללחוץ/לערוך/למחוק */
+   צל של .center-list li), תגית קטנה בצד במקום קו - אותה שפה חזותית כמו
+   today-tasks-time, כדי שיהיה ברור שזה קטע נפרד ברשימה ולא פתק שאפשר
+   ללחוץ/לערוך/למחוק */
 .center-list-divider {
     background: none;
     border: none;
     box-shadow: none;
-    padding: 2px 0;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--text-secondary);
+    padding: 0;
     display: flex;
-    align-items: flex-end;
-    gap: 8px;
+    justify-content: flex-start;
     cursor: default;
 }
-.center-list-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+.center-list-divider span {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 3px 10px;
 }
 /* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
    חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
