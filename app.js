@@ -4078,7 +4078,11 @@ function toggleColorFilter() {
 // באופן יחסי בעקבות זה, בלי לגעת בכל רכיב בנפרד. אותו דפוס בדיוק כמו
 // high-contrast/color-filter למעלה - חינמי, לא תלוי משתמש/פרימיום ---
 function getUiScale() {
-    return localStorage.getItem('weekwise_ui_scale') || 'small';
+    // ברירת המחדל היא "בינוני" (16px, בלי CSS override) - זו התנהגות ההגדרה
+    // המקורית שכולם שלא נגעו בזה מעולם כבר רגילים אליה. "קטן" הפך עכשיו
+    // לבחירה קטנה יותר בפועל (ר' theme.css), אז הוא כבר לא יכול להיות ברירת
+    // המחדל - אחרת כולם היו רואים טקסט קטן יותר מבלי לבחור בזה בכלל
+    return localStorage.getItem('weekwise_ui_scale') || 'medium';
 }
 
 // כפתורים רגילים במקום select נייטיבי - חוץ מזה שזה יפה יותר, זה גם עוקף
