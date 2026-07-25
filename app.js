@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
     document.getElementById('btn-save-hours').addEventListener('click', saveDefaultHours);
-    document.querySelectorAll('.calories-input').forEach(input => {
+    document.querySelectorAll('.calories-input, .protein-input').forEach(input => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
     document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
@@ -179,6 +179,13 @@ function updateLiveCaloriesToday() {
         total += parseInt(input.value) || 0;
     });
     document.getElementById('calories-today').innerText = total;
+    let proteinTotal = 0;
+    document.querySelectorAll('.protein-input').forEach(input => {
+        proteinTotal += parseFloat(input.value) || 0;
+    });
+    todayCaloriesTotal = total;
+    todayProteinTotal = proteinTotal;
+    updateNutritionGoalProgress();
 }
 
 // --- הלוגיקה לסימון V מצד ימין ---
@@ -660,7 +667,8 @@ async function initAppAfterAuth(user) {
         loadMonthlyGoal(),
         loadFinanceData(),
         loadSportData(),
-        loadWaterData()
+        loadWaterData(),
+        loadHabits()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -1260,6 +1268,69 @@ function highlightNewDaySlot(day, slotNum) {
     setTimeout(() => slotEl.classList.remove('just-added'), 1500);
     const taskInput = slotEl.querySelector('.slot-task');
     if (taskInput) taskInput.focus();
+}
+
+// --- העברת משימה מיום אחד ליום אחר בלו"ז השבועי - אין דרך לגרור-ולזרוק בין
+// שתי לשוניות ימים נפרדות (הן עמודים שונים לגמרי בגלילה האופקית), אז זו
+// בחירת יום קטנה במקום: מוחקים מהיום המקורי, ומוצאים/יוצרים שורה פנויה
+// ביום היעד עם אותה שעה+כותרת בדיוק - אותה לוגיקת "חיפוש שורה פנויה" כמו
+// applyParsedScheduleEvents, כדי לא ליצור כפילות מיותרת אם כבר יש שורה
+// ריקה עם אותה שעה ביום היעד ---
+let movingSlotContext = null;
+
+function openMoveSlotToDay(day, slot) {
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
+    if (!slotEl) return;
+    const title = slotEl.querySelector('.slot-task').value.trim();
+    if (!title) { showAppToast(t('schedule_move_slot_empty'), 'error'); return; }
+    movingSlotContext = { day, slot };
+    const select = document.getElementById('move-slot-day-select');
+    select.innerHTML = dbDaysMap
+        .filter(d => d !== day)
+        .map(d => `<option value="${d}">${getDayName(dbDaysMap.indexOf(d))}</option>`)
+        .join('');
+    openModal('modal-move-slot-day');
+}
+
+async function confirmMoveSlotToDay() {
+    if (!movingSlotContext) return;
+    const { day, slot } = movingSlotContext;
+    const toDay = document.getElementById('move-slot-day-select').value;
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
+    if (!slotEl) { closeModal('modal-move-slot-day'); movingSlotContext = null; return; }
+    const title = slotEl.querySelector('.slot-task').value.trim();
+    const time = slotEl.querySelector('.slot-time').value.trim();
+
+    getDaySlotNumbers(toDay);
+    const targetSlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${toDay}"]`));
+    let target = targetSlotEls.find(el => !el.querySelector('.slot-task').value.trim() && el.querySelector('.slot-time').value.trim() === time);
+    if (!target) target = targetSlotEls.find(el => !el.querySelector('.slot-task').value.trim());
+    let targetSlotNum;
+    if (target) {
+        targetSlotNum = parseInt(target.getAttribute('data-slot'));
+    } else {
+        const nums = daySlotsConfig[toDay];
+        targetSlotNum = nums.length ? Math.max(...nums) + 1 : 1;
+        daySlotsConfig[toDay] = [...nums, targetSlotNum];
+    }
+
+    await removeDaySlot(day, slot);
+    saveDaySlotsConfig();
+    buildWeeklyScheduleAccordionUI();
+    await loadWeeklySchedule();
+
+    const newSlotEl = document.querySelector(`.slot-input-group[data-day="${toDay}"][data-slot="${targetSlotNum}"]`);
+    if (newSlotEl) {
+        newSlotEl.querySelector('.slot-time').value = time;
+        const taskInput = newSlotEl.querySelector('.slot-task');
+        taskInput.value = title;
+        updateSlotTaskIcon(taskInput);
+        await saveScheduleSlot(toDay, targetSlotNum);
+    }
+    movingSlotContext = null;
+    closeModal('modal-move-slot-day');
+    scrollToDay(toDay);
+    showAppToast(t('schedule_move_slot_success'));
 }
 
 // --- מוקד ה-AI ("המוח"): מודל אחד עם שני טאבים - תכנון לו"ז מטקסט חופשי
@@ -2067,7 +2138,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
@@ -3882,6 +3953,19 @@ function setUiScale(scale) {
     applyUiScale(scale);
 }
 
+// --- דיווח באג / הצעת פיצ'ר: אין עדיין מערכת פניות/תמיכה אמיתית עם
+// שרת/מסד נתונים משלה - הפתרון הפשוט והאמין ביותר לאפליקציה בקנה מידה כזה
+// הוא לפתוח את אפליקציית המייל של המשתמשת עם כתובת+נושא ממולאים מראש
+// (mailto:), כדי שהיא תוכל גם לצרף צילום מסך/קובץ ישירות שם (לא ניתן
+// לצרף קובץ מראש דרך mailto מטעמי אבטחת דפדפן - זו מגבלה של הדפדפן, לא שלנו) ---
+const SUPPORT_EMAIL = 'zabarieden111@gmail.com';
+function reportBugByEmail() {
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t('support_bug_email_subject'))}&body=${encodeURIComponent(t('support_bug_email_body'))}`;
+}
+function suggestFeatureByEmail() {
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t('support_feature_email_subject'))}&body=${encodeURIComponent(t('support_feature_email_body'))}`;
+}
+
 // --- עזרה ושאלות נפוצות: רשימה סטטית מקובצת לפי קטגוריה, מהקל למורכב
 // (לפי בקשה מפורשת). כל שאלה/תשובה היא מפתח i18n משלה (faq_q_<id>/
 // faq_a_<id>) - לא טקסט קבוע - כדי שיתורגם כמו כל שאר האפליקציה. בכל
@@ -3889,10 +3973,16 @@ function setUiScale(scale) {
 const HELP_FAQ_ENTRIES = [
     { id: 'welcome', category: 'general' },
     { id: 'change_language', category: 'general' },
+    { id: 'switch_daily_weekly_monthly', category: 'general' },
+    { id: 'multi_device_login', category: 'general' },
+    { id: 'app_stuck_loading', category: 'general' },
+    { id: 'refresh_data', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
+    { id: 'move_task_between_days', category: 'myweek' },
+    { id: 'task_not_done_by_eod', category: 'myweek' },
     { id: 'what_is_glance', category: 'glance' },
     { id: 'add_onetime_event', category: 'glance' },
     { id: 'delete_series_history', category: 'glance' },
@@ -3905,13 +3995,19 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'save_meal_preset', category: 'nutrition' },
     { id: 'photo_scan_recipe', category: 'nutrition' },
+    { id: 'edit_delete_nutrition_entry', category: 'nutrition' },
+    { id: 'daily_nutrition_goals', category: 'nutrition' },
+    { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
+    { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'toggle_fabs', category: 'settings_a11y' },
     { id: 'week_start_day', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'forgot_password', category: 'account' },
+    { id: 'report_bug_feature', category: 'account' },
+    { id: 'contact_support', category: 'account' },
     { id: 'delete_account', category: 'account' },
 ];
 
@@ -6302,21 +6398,61 @@ async function clearEntireWeeklySchedule() {
     await loadTodayTasks();
 }
 
+// --- יעדים יומיים לתזונה (קלוריות/חלבון) - מקומי בלבד (localStorage), אותו
+// דפוס בדיוק כמו יעד המים היומי (waterDailyGoalKey) ---
+function calorieDailyGoalKey() { return `weekwise_calorie_goal_${currentUserId}`; }
+function getCalorieDailyGoal() { return parseInt(localStorage.getItem(calorieDailyGoalKey())) || 2000; }
+function saveCalorieDailyGoal() {
+    const val = parseInt(document.getElementById('calorie-daily-goal-input').value) || 2000;
+    localStorage.setItem(calorieDailyGoalKey(), String(val));
+    updateNutritionGoalProgress();
+}
+function proteinDailyGoalKey() { return `weekwise_protein_goal_${currentUserId}`; }
+function getProteinDailyGoal() { return parseInt(localStorage.getItem(proteinDailyGoalKey())) || 100; }
+function saveProteinDailyGoal() {
+    const val = parseInt(document.getElementById('protein-daily-goal-input').value) || 100;
+    localStorage.setItem(proteinDailyGoalKey(), String(val));
+    updateNutritionGoalProgress();
+}
+let todayCaloriesTotal = 0, todayProteinTotal = 0;
+function updateNutritionGoalProgress() {
+    const calorieGoal = getCalorieDailyGoal();
+    const calorieFill = document.getElementById('calorie-goal-progress-fill');
+    if (calorieFill) calorieFill.style.width = `${calorieGoal > 0 ? Math.min(100, Math.round((todayCaloriesTotal / calorieGoal) * 100)) : 0}%`;
+    const proteinGoal = getProteinDailyGoal();
+    const proteinFill = document.getElementById('protein-goal-progress-fill');
+    if (proteinFill) proteinFill.style.width = `${proteinGoal > 0 ? Math.min(100, Math.round((todayProteinTotal / proteinGoal) * 100)) : 0}%`;
+}
+
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
+    const calorieGoalInput = document.getElementById('calorie-daily-goal-input');
+    if (calorieGoalInput) calorieGoalInput.value = getCalorieDailyGoal();
+    const proteinGoalInput = document.getElementById('protein-daily-goal-input');
+    if (proteinGoalInput) proteinGoalInput.value = getProteinDailyGoal();
     document.querySelectorAll('.meal-row').forEach(row => {
         row.querySelector('.food-input').value = '';
         row.querySelector('.calories-input').value = '';
+        row.querySelector('.protein-input').value = '';
     });
     document.getElementById('calories-today').innerText = '0';
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', date);
     if (!data) return;
-    let total = 0;
+    let total = 0, proteinTotal = 0;
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
-        if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; total += item.calories; }
+        if (row) {
+            row.querySelector('.food-input').value = item.food_description;
+            row.querySelector('.calories-input').value = item.calories;
+            row.querySelector('.protein-input').value = item.protein_grams || '';
+            total += item.calories;
+            proteinTotal += Number(item.protein_grams) || 0;
+        }
     });
     document.getElementById('calories-today').innerText = total;
+    todayCaloriesTotal = total;
+    todayProteinTotal = proteinTotal;
+    updateNutritionGoalProgress();
 }
 
 // --- זיהוי ארוחה מתמונה (פרימיום בלבד): AI אמיתי בעל יכולת ראייה, דרך אותו
@@ -6383,11 +6519,12 @@ async function saveNutrition() {
         const type = row.getAttribute('data-meal');
         const food = row.querySelector('.food-input').value;
         const cals = parseInt(row.querySelector('.calories-input').value) || 0;
+        const protein = parseFloat(row.querySelector('.protein-input').value) || null;
         const { data: existing } = await supabaseClient.from('calorie_tracker').select('id').eq('user_id', currentUserId).eq('date', date).eq('meal_type', type).maybeSingle();
         if (existing) {
-            await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals }).eq('id', existing.id);
+            await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals, protein_grams: protein }).eq('id', existing.id);
         } else {
-            await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals });
+            await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals, protein_grams: protein });
         }
     }
     await loadDailyNutrition(date);
@@ -6406,7 +6543,11 @@ async function copyFromYesterday() {
     if (!data || data.length === 0) { showAppToast(t('nutrition_copy_not_found'), 'error'); return; }
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
-        if (row) { row.querySelector('.food-input').value = item.food_description; row.querySelector('.calories-input').value = item.calories; }
+        if (row) {
+            row.querySelector('.food-input').value = item.food_description;
+            row.querySelector('.calories-input').value = item.calories;
+            row.querySelector('.protein-input').value = item.protein_grams || '';
+        }
     });
     updateLiveCaloriesToday();
     showAppToast(t('nutrition_copy_success'));
@@ -6519,6 +6660,104 @@ async function emptyNotesArchive(type) {
     await supabaseClient.from('my_center_tasks').delete().eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', true);
     await loadNotesArchiveList(type);
     await refreshNotesArchiveCount(type);
+}
+
+// --- הרגלים ורצף (streak): רשימת הרגלים אישיים, כל אחד עם סימון "בוצע
+// היום" ורצף ימים רצופים. הרצף מחושב בצד הלקוח מתוך תאריכי הסימונים (לא
+// עמודה נפרדת שצריך לתחזק) - כך שהוא תמיד עקבי עם הנתונים בפועל ---
+function computeHabitStreak(dateSet, todayStr) {
+    let streak = 0;
+    const cursor = new Date(`${todayStr}T00:00:00`);
+    // אם היום עצמו עוד לא סומן, לא "שוברים" את הרצף רק בגלל זה - מתחילים
+    // לספור מאתמול; הרצף המוצג הוא "עד כמה ימים רצופים זה עדיין חי"
+    if (!dateSet.has(getLocalDateString(cursor))) cursor.setDate(cursor.getDate() - 1);
+    while (dateSet.has(getLocalDateString(cursor))) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+}
+
+async function loadHabits() {
+    if (!supabaseClient || !currentUserId) return;
+    const list = document.getElementById('habits-list');
+    const emptyHint = document.getElementById('habits-empty-hint');
+    if (!list) return;
+    const [{ data: habits }, { data: checkins }] = await Promise.all([
+        supabaseClient.from('habits').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
+        supabaseClient.from('habit_checkins').select('habit_id, checkin_date').eq('user_id', currentUserId),
+    ]);
+    list.innerHTML = '';
+    if (!habits || !habits.length) {
+        emptyHint.classList.remove('hidden');
+        return;
+    }
+    emptyHint.classList.add('hidden');
+    const todayStr = getLocalDateString();
+    const checkinsByHabit = {};
+    (checkins || []).forEach(c => {
+        if (!checkinsByHabit[c.habit_id]) checkinsByHabit[c.habit_id] = new Set();
+        checkinsByHabit[c.habit_id].add(c.checkin_date);
+    });
+    habits.forEach(habit => {
+        const dates = checkinsByHabit[habit.id] || new Set();
+        const streak = computeHabitStreak(dates, todayStr);
+        const doneToday = dates.has(todayStr);
+
+        const li = document.createElement('li');
+        li.className = 'habit-item';
+        const checkBtn = document.createElement('button');
+        checkBtn.type = 'button';
+        checkBtn.className = 'btn-complete-item' + (doneToday ? ' checked' : '');
+        checkBtn.textContent = doneToday ? '✓' : '';
+        checkBtn.onclick = () => toggleHabitCheckin(habit.id, todayStr, !doneToday);
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'center-list-item-text';
+        nameSpan.textContent = habit.name;
+        const streakBadge = document.createElement('span');
+        streakBadge.className = 'habit-streak-badge';
+        streakBadge.textContent = streak > 0 ? `🔥 ${streak}` : '–';
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = () => deleteHabit(habit.id);
+
+        li.appendChild(checkBtn);
+        li.appendChild(nameSpan);
+        li.appendChild(streakBadge);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+    });
+}
+
+function openAddHabitModal() {
+    document.getElementById('habit-name-input').value = '';
+    openModal('modal-add-habit');
+}
+
+async function addHabit() {
+    const input = document.getElementById('habit-name-input');
+    const name = input.value.trim();
+    if (!name) { showAppToast(t('habits_missing_name'), 'error'); return; }
+    await supabaseClient.from('habits').insert({ user_id: currentUserId, username: currentUsername, name });
+    input.value = '';
+    closeModal('modal-add-habit');
+    await loadHabits();
+}
+
+async function deleteHabit(id) {
+    await supabaseClient.from('habits').delete().eq('id', id);
+    await loadHabits();
+}
+
+async function toggleHabitCheckin(habitId, dateStr, checked) {
+    if (checked) {
+        await supabaseClient.from('habit_checkins').insert({ habit_id: habitId, user_id: currentUserId, checkin_date: dateStr });
+    } else {
+        await supabaseClient.from('habit_checkins').delete().eq('habit_id', habitId).eq('checkin_date', dateStr);
+    }
+    await loadHabits();
 }
 async function addProgressTarget() {
     if (!supabaseClient) return;
