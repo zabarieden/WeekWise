@@ -1456,7 +1456,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     gap: 8px;
     cursor: default;
 }
-.center-list-divider::before, .center-list-divider::after {
+.center-list-divider::after {
     content: '';
     flex: 1;
     height: 1px;
