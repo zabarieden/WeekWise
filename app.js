@@ -3711,6 +3711,17 @@ function applyUiScale(scale) {
 function setUiScale(scale) {
     localStorage.setItem('weekwise_ui_scale', scale);
     applyUiScale(scale);
+    // גדילת ה-font-size של html באמצע האינטראקציה עם ה-select הנייטיבי גורמת
+    // בחלק מהדפדפנים לקפיצת גלילה שדוחפת את הבורר עצמו מחוץ לתחום הנראה של
+    // מגירת ההגדרות (max-height:85vh, overflow-y:auto) - עד עכשיו רק סגירה
+    // ופתיחה מחדש של האפליקציה איפסו את הגלילה ופתרו את זה. במקום זה, אחרי
+    // שהדפדפן מסיים לצייר מחדש את הפריסה החדשה (requestAnimationFrame),
+    // מחזירים את הבורר עצמו לתוך התצוגה בפועל
+    const select = document.getElementById('ui-scale-select');
+    if (select) {
+        select.blur();
+        requestAnimationFrame(() => select.scrollIntoView({ block: 'nearest' }));
+    }
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
