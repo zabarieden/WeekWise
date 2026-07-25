@@ -1373,7 +1373,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .btn-recipe-back:active, .btn-subview-back:active { transform: scale(0.95); }
 .btn-subview-back { margin-bottom: 14px; }
 /* כפתור "חזור למסך הבית": בכוונה בולט/ניאוני יותר מ-btn-subview-back הרגיל -
-   זו החזרה מ"עולם" שלם חזרה לרשת הקוביות הראשית, לא רק חזרה לרשת תת-קוביות */
+   זו החזרה מ"עולם" שלם חזרה לרשת הקוביות הראשית, לא רק חזרה לרשת תת-קוביות.
+   margin-top: אותה סיבה בדיוק כמו padding-top:70px של .home-hero-panel - מפנה
+   מקום קבוע מתחת לשני כפתורי ה-FAB (עוזר AI בפינה שמאל-עליונה, המבורגר
+   בפינה ימין-עליונה, שניהם top:22px עד ~70px) כדי שכותרת הכרטיס הראשון בעמוד
+   (עם החץ לקיפול/פלוס, שיושבים בדיוק בפינה שמאלית ב-RTL) לא תיחבא מתחתיהם -
+   בלי זה החץ/פלוס כמעט בלתי לחיצים בעמודים כמו הרגלים/ספורט */
 .btn-back-home {
     background-color: rgba(168, 85, 247, 0.1);
     border: 1px solid var(--accent-purple);
@@ -1389,6 +1394,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     align-self: flex-start;
     box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
     transition: var(--transition);
+    margin-top: 14px;
     margin-bottom: 14px;
 }
 .btn-back-home:active { transform: scale(0.95); }
