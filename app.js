@@ -2377,10 +2377,14 @@ async function loadMonthlyCalendarGrid() {
     // בדיוק כמו שכבר קורה בווידג'ט השבועי החדש במסך הבית
     const [{ data }, { data: recurringData }] = await Promise.all([
         supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr),
-        supabaseClient.from('weekly_schedule').select('day_of_week').eq('user_id', currentUserId),
+        supabaseClient.from('weekly_schedule').select('day_of_week, task_title').eq('user_id', currentUserId),
     ]);
     const markedDates = new Set((data || []).map(r => r.event_date));
-    const recurringDays = new Set((recurringData || []).map(r => r.day_of_week));
+    // כל יום מקבל מראש כמה "משבצות בסיס" ריקות (task_title:"") כדי שהרשת
+    // הבסיסית בלו"ז השבועי תמיד תוצג - בלי הסינון הזה, הנקודה במבט החודשי
+    // הייתה מופיעה על כל יום שכבר "בוקר" ב-MyWeek (יש לו משבצות ריקות
+    // בשרת) גם אם אף פעם לא הוזנה בו משימה אמיתית, לא לפי מה שיש בפועל
+    const recurringDays = new Set((recurringData || []).filter(r => (r.task_title || '').trim()).map(r => r.day_of_week));
 
     const todayStr = getLocalDateString();
     const startWeekday = firstDate.getDay();
@@ -2430,10 +2434,13 @@ async function renderSelectedCalendarDay() {
     if (!detail || !selectedCalendarDay) return;
     const [y, m, d] = selectedCalendarDay.split('-').map(Number);
     const dayOfWeek = dbDaysMap[new Date(y, m - 1, d).getDay()];
-    const [{ data }, { data: recurringData }] = await Promise.all([
+    const [{ data }, { data: recurringDataRaw }] = await Promise.all([
         supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true }),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
     ]);
+    // אותו סינון בדיוק כמו renderHomeGlance - משבצות בסיס ריקות (task_title
+    // "") הן פנימיות בלבד, לא משימות אמיתיות, ולא אמורות להופיע כאן כשורות ריקות
+    const recurringData = (recurringDataRaw || []).filter(r => (r.task_title || '').trim());
     const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
     if ((!data || !data.length) && (!recurringData || !recurringData.length)) {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
