@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyUiScale(getUiScale());
     applyWaterFabSetting(isWaterFabOn());
     applySportFabSetting(isSportFabOn());
+    applyPresetFabSetting(isPresetFabOn());
+    applyFoodFabSetting(isFoodFabOn());
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -557,6 +559,91 @@ function selectPresetPickerItem(id) {
     presetPickerTargetRow.querySelector('.calories-input').value = preset.calories;
     updateLiveCaloriesToday();
     closeModal('modal-preset-picker');
+}
+
+// --- הוספה מהירה (מהכפתורים הצפים): ארוחה קבועה שמורה, או מזון בטקסט חופשי -
+// שתיהן נכנסות ישירות למשבצת הפנויה הבאה של calorie_tracker להיום, בלי לעבור
+// דרך מסך התזונה בכלל. סדר קבוע (לא כרונולוגי) כדי שהתוצאה תמיד עקבית ---
+const MEAL_TYPE_ORDER = ['meal_1', 'meal_2', 'meal_3', 'meal_4', 'snack'];
+
+async function getTodayEmptyMealSlot() {
+    const today = getLocalDateString();
+    const { data } = await supabaseClient.from('calorie_tracker').select('meal_type').eq('user_id', currentUserId).eq('date', today);
+    const used = new Set((data || []).map(r => r.meal_type));
+    return MEAL_TYPE_ORDER.find(mt => !used.has(mt)) || null;
+}
+
+// אחרי הוספה מהירה - אם מסך התזונה היומי כבר פתוח על תאריך היום, מרעננים
+// אותו מיד כדי שהשורה החדשה תיראה שם בלי צורך לצאת ולהיכנס מחדש
+function refreshTodayNutritionViewIfOpen() {
+    const dateInput = document.getElementById('selected-date');
+    if (dateInput && dateInput.value === getLocalDateString()) loadDailyNutrition(dateInput.value);
+}
+
+async function openPresetQuickAddModal() {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
+    cachedPresets = data || [];
+    const search = document.getElementById('preset-quick-add-search');
+    if (search) search.value = '';
+    renderPresetQuickAddList('');
+    openModal('modal-preset-quick-add');
+}
+
+function renderPresetQuickAddList(filter) {
+    const list = document.getElementById('preset-quick-add-list');
+    const emptyHint = document.getElementById('preset-quick-add-empty');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const matches = cachedPresets.filter(item => item.food_name.toLowerCase().includes(query));
+    if (emptyHint) emptyHint.classList.toggle('hidden', cachedPresets.length > 0);
+    list.innerHTML = matches.map(item => `
+        <button type="button" class="preset-quick-add-item" onclick="logPresetQuickAdd('${item.id}')">
+            <span>${escapeHtmlForReport(item.food_name)}</span>
+            <span class="preset-quick-add-item-cal">${item.calories} ${t('calories_unit')}</span>
+        </button>
+    `).join('');
+}
+
+async function logPresetQuickAdd(id) {
+    const preset = cachedPresets.find(p => p.id === id);
+    if (!preset) return;
+    const slot = await getTodayEmptyMealSlot();
+    if (!slot) { showAppToast(t('quick_add_no_slots'), 'error'); return; }
+    const today = getLocalDateString();
+    await supabaseClient.from('calorie_tracker').insert({
+        username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
+        food_description: preset.food_name, calories: preset.calories, protein_grams: null,
+    });
+    closeModal('modal-preset-quick-add');
+    showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
+    refreshTodayNutritionViewIfOpen();
+}
+
+function openFoodQuickAddModal() {
+    const input = document.getElementById('food-quick-add-input');
+    if (input) input.value = '';
+    openModal('modal-food-quick-add');
+}
+
+async function logFoodQuickAdd() {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const input = document.getElementById('food-quick-add-input');
+    const text = input ? input.value.trim() : '';
+    if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+    const estimate = estimateIngredientLineCalories(text);
+    if (!estimate || estimate <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
+    const slot = await getTodayEmptyMealSlot();
+    if (!slot) { showAppToast(t('quick_add_no_slots'), 'error'); return; }
+    const calories = Math.round(estimate);
+    const today = getLocalDateString();
+    await supabaseClient.from('calorie_tracker').insert({
+        username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
+        food_description: text, calories: calories, protein_grams: null,
+    });
+    closeModal('modal-food-quick-add');
+    showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
+    refreshTodayNutritionViewIfOpen();
 }
 
 function togglePasswordVisibility() {
@@ -4173,6 +4260,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'save_meal_preset', category: 'nutrition' },
+    { id: 'quick_add_preset_fab', category: 'nutrition' },
+    { id: 'quick_add_food_fab', category: 'nutrition' },
     { id: 'photo_scan_recipe', category: 'nutrition' },
     { id: 'edit_delete_nutrition_entry', category: 'nutrition' },
     { id: 'daily_nutrition_goals', category: 'nutrition' },
@@ -4326,6 +4415,42 @@ function toggleSportFabFromCard() {
     localStorage.setItem('weekwise_sport_fab', enabled ? 'true' : 'false');
     applySportFabSetting(enabled);
     showAppToast(t(enabled ? 'sport_fab_shortcut_added_toast' : 'sport_fab_shortcut_removed_toast'));
+}
+
+// כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אותו דפוס בדיוק כמו כפתורי המים/ספורט
+function isPresetFabOn() {
+    return localStorage.getItem('weekwise_preset_fab') === 'true';
+}
+
+function applyPresetFabSetting(enabled) {
+    const fab = document.getElementById('btn-preset-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
+    const toggle = document.getElementById('preset-fab-toggle');
+    if (toggle) toggle.checked = enabled;
+}
+
+function togglePresetFab() {
+    const enabled = document.getElementById('preset-fab-toggle').checked;
+    localStorage.setItem('weekwise_preset_fab', enabled ? 'true' : 'false');
+    applyPresetFabSetting(enabled);
+}
+
+// כפתור צף להוספת מזון מהיר בטקסט חופשי - אותו דפוס בדיוק כמו כפתורי המים/ספורט
+function isFoodFabOn() {
+    return localStorage.getItem('weekwise_food_fab') === 'true';
+}
+
+function applyFoodFabSetting(enabled) {
+    const fab = document.getElementById('btn-food-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
+    const toggle = document.getElementById('food-fab-toggle');
+    if (toggle) toggle.checked = enabled;
+}
+
+function toggleFoodFab() {
+    const enabled = document.getElementById('food-fab-toggle').checked;
+    localStorage.setItem('weekwise_food_fab', enabled ? 'true' : 'false');
+    applyFoodFabSetting(enabled);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז

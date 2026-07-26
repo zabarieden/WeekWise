@@ -437,6 +437,8 @@ html.light-mode #protein-daily-goal-input,
 html.light-mode #habit-name-input,
 html.light-mode #contact-us-message,
 html.light-mode #ai-schedule-duration-months,
+html.light-mode #preset-quick-add-search,
+html.light-mode #food-quick-add-input,
 html.light-mode #ai-quick-add-input,
 html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
@@ -936,6 +938,58 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .sport-fab:active { transform: scale(0.9); }
 .phone-wrapper.menu-open .sport-fab { display: none; }
+
+/* כפתור צף להוספה מהירה של ארוחה קבועה - נערם *מעל* כפתור הספורט, אותו
+   דפוס מיקום/עיצוב בדיוק */
+.preset-fab {
+    position: absolute;
+    bottom: calc(88px + 52px + 16px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    right: 25px;
+    z-index: 99999;
+    display: flex;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
+    padding: 0;
+    transition: var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+}
+.phone-wrapper.menu-open .preset-fab { display: none; }
+
+/* כפתור צף להוספת מזון מהיר בטקסט חופשי - נערם *מעל* כפתור הארוחה הקבועה,
+   אותו דפוס מיקום/עיצוב בדיוק */
+.food-fab {
+    position: absolute;
+    bottom: calc(88px + 52px + 16px + 52px + 16px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    right: 25px;
+    z-index: 99999;
+    display: flex;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
+    padding: 0;
+    transition: var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+}
+.phone-wrapper.menu-open .food-fab { display: none; }
 
 /* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
    שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
@@ -1893,7 +1947,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+#preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+.preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
+.preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
+.preset-quick-add-item:active { transform: scale(0.98); }
+.preset-quick-add-item-cal { color: var(--text-secondary); font-size: 0.8rem; flex-shrink: 0; }
 #habit-name-input { width: 100%; box-sizing: border-box; }
 #contact-us-message { width: 100%; box-sizing: border-box; font-family: inherit; resize: vertical; margin-bottom: 10px; }
 #contact-us-category { margin-bottom: 10px; }
