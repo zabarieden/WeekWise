@@ -605,16 +605,39 @@ function renderPresetQuickAddList(filter) {
     `).join('');
 }
 
+// כל 5 המשבצות (meal_1..meal_4, snack) הן "משבצת אחת = שורה אחת" בכל שאר האפליקציה
+// (ר' loadMealForm - כשעורכים משבצת קיימת דרך מסך התזונה, זה מעדכן את השורה
+// הקיימת, לא מוסיף שורה נוספת). כשכולן תפוסות, אין אפשרות ליצור משבצת שישית -
+// אז במקום לחסום עם שגיאה (שהייתה כאן קודם), מצרפים את התוספת למשבצת ה"נשנוש"
+// הקיימת (מחברים קלוריות + מוסיפים לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד
+async function addQuickLogEntry(foodDescription, calories) {
+    const today = getLocalDateString();
+    const slot = await getTodayEmptyMealSlot();
+    if (slot) {
+        await supabaseClient.from('calorie_tracker').insert({
+            username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
+            food_description: foodDescription, calories: calories, protein_grams: null,
+        });
+        return;
+    }
+    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories').eq('user_id', currentUserId).eq('date', today).eq('meal_type', 'snack').maybeSingle();
+    if (existing) {
+        await supabaseClient.from('calorie_tracker').update({
+            food_description: `${existing.food_description} + ${foodDescription}`,
+            calories: (existing.calories || 0) + calories,
+        }).eq('id', existing.id);
+    } else {
+        await supabaseClient.from('calorie_tracker').insert({
+            username: currentUsername, user_id: currentUserId, date: today, meal_type: 'snack',
+            food_description: foodDescription, calories: calories, protein_grams: null,
+        });
+    }
+}
+
 async function logPresetQuickAdd(id) {
     const preset = cachedPresets.find(p => p.id === id);
     if (!preset) return;
-    const slot = await getTodayEmptyMealSlot();
-    if (!slot) { showAppToast(t('quick_add_no_slots'), 'error'); return; }
-    const today = getLocalDateString();
-    await supabaseClient.from('calorie_tracker').insert({
-        username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
-        food_description: preset.food_name, calories: preset.calories, protein_grams: null,
-    });
+    await addQuickLogEntry(preset.food_name, preset.calories);
     closeModal('modal-preset-quick-add');
     showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
     refreshTodayNutritionViewIfOpen();
@@ -633,14 +656,8 @@ async function logFoodQuickAdd() {
     if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
     const estimate = estimateIngredientLineCalories(text);
     if (!estimate || estimate <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
-    const slot = await getTodayEmptyMealSlot();
-    if (!slot) { showAppToast(t('quick_add_no_slots'), 'error'); return; }
     const calories = Math.round(estimate);
-    const today = getLocalDateString();
-    await supabaseClient.from('calorie_tracker').insert({
-        username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
-        food_description: text, calories: calories, protein_grams: null,
-    });
+    await addQuickLogEntry(text, calories);
     closeModal('modal-food-quick-add');
     showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
     refreshTodayNutritionViewIfOpen();
@@ -4375,6 +4392,21 @@ function applyWaterFabSetting(enabled) {
     // מסונכרנים - שינוי באחד מעדכן את השני (דרך applyWaterFabSetting המשותפת)
     const shortcutBtn = document.getElementById('btn-water-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('water_fab_shortcut_remove_btn') : t('water_fab_shortcut_add_btn');
+    restackFabs();
+}
+
+// מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי) כך שכפתורים
+// כבויים לא משאירים "חור" ריק בערימה - כל בועה דלוקה מקבלת את המקום הבא בתור
+// במקום מיקום קבוע לפי שם. נקרא מחדש מכל applyXFabSetting אחרי כל שינוי הפעלה/כיבוי
+function restackFabs() {
+    const stackOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab'];
+    let stackIndex = 1; // 0 שמור ל-ai-fab (הפתק המהיר), שתמיד דלוק ולא ניתן לכיבוי
+    stackOrder.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.classList.contains('hidden')) return;
+        el.style.setProperty('--fab-stack-index', stackIndex);
+        stackIndex++;
+    });
 }
 
 function toggleWaterFab() {
@@ -4402,6 +4434,7 @@ function applySportFabSetting(enabled) {
     if (toggle) toggle.checked = enabled;
     const shortcutBtn = document.getElementById('btn-sport-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('sport_fab_shortcut_remove_btn') : t('sport_fab_shortcut_add_btn');
+    restackFabs();
 }
 
 function toggleSportFab() {
@@ -4427,6 +4460,7 @@ function applyPresetFabSetting(enabled) {
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('preset-fab-toggle');
     if (toggle) toggle.checked = enabled;
+    restackFabs();
 }
 
 function togglePresetFab() {
@@ -4445,6 +4479,7 @@ function applyFoodFabSetting(enabled) {
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('food-fab-toggle');
     if (toggle) toggle.checked = enabled;
+    restackFabs();
 }
 
 function toggleFoodFab() {

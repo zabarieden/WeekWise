@@ -887,7 +887,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מוסתר כברירת מחדל (class="hidden" ב-HTML) עד שמפעילים בהגדרות */
 .water-fab {
     position: absolute;
-    bottom: calc(88px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(88px + (var(--fab-stack-index, 1) * 68px) + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;
@@ -916,7 +916,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    משתנה בכל פעם, בניגוד לכמות מים קבועה) */
 .sport-fab {
     position: absolute;
-    bottom: calc(88px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(88px + (var(--fab-stack-index, 2) * 68px) + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;
@@ -943,7 +943,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    דפוס מיקום/עיצוב בדיוק */
 .preset-fab {
     position: absolute;
-    bottom: calc(88px + 52px + 16px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(88px + (var(--fab-stack-index, 3) * 68px) + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;
@@ -969,7 +969,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    אותו דפוס מיקום/עיצוב בדיוק */
 .food-fab {
     position: absolute;
-    bottom: calc(88px + 52px + 16px + 52px + 16px + 52px + 16px + 52px + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(88px + (var(--fab-stack-index, 4) * 68px) + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;
