@@ -6102,6 +6102,20 @@ const FOOD_CALORIE_DB = [
     { name: "לחם דגנים", re: /לחם דגנים|לחם מלא|לחם מחיטה מלאה|whole\s*(grain|wheat)\s*bread/i, kcal100g: 247, unitGrams: 30 },
     { name: "לחם שיפון", re: /לחם שיפון|rye bread/i, kcal100g: 259, unitGrams: 32 },
     { name: "לחם קל", re: /לחם קל|לחם דיאט|diet bread|light bread/i, kcal100g: 210, unitGrams: 20 },
+    // עוד ממרחים - לפי בקשה מפורשת ("כל סוגי הממרחים"). כולם למעלה כי כמעט
+    // כולם מכילים מרכיב-בסיס קיים כתת-מחרוזת (חצילים/טונה/ביצה/זיתים/חלב/
+    // שמנת), ובלי הסדר הזה כל אחד מהם היה תמיד נתפס כמרכיב הבסיס הפשוט שלו
+    // ולא כממרח המורכב (בד"כ עם מיונז/שמן/עוד רכיבים, ולכן קלורי יותר)
+    { name: "מרגרינה", re: /מרגרינה|margarine/i, kcal100g: 717, unitGrams: 10 },
+    { name: "שמנת חמוצה", re: /שמנת חמוצה|sour cream/i, kcal100g: 198, unitGrams: 20 },
+    { name: "מטבוחה", re: /מטבוחה|matbucha/i, kcal100g: 90, unitGrams: 50 },
+    { name: "סלט חצילים", re: /סלט חצילים|חצילים בטחינה|eggplant salad|eggplant dip/i, kcal100g: 150, unitGrams: 50 },
+    { name: "גואקמולי", re: /גואקמולי|guacamole/i, kcal100g: 150, unitGrams: 50 },
+    { name: "לבנה/לאבנה", re: /לבנה|לאבנה|labn[ae]h/i, kcal100g: 280, unitGrams: 30 },
+    { name: "ריבת חלב", re: /ריבת חלב|dulce de leche/i, kcal100g: 315, unitGrams: 20 },
+    { name: "סלט טונה", re: /סלט טונה|tuna salad/i, kcal100g: 200, unitGrams: 60 },
+    { name: "סלט ביצים", re: /סלט ביצים|egg salad/i, kcal100g: 215, unitGrams: 60 },
+    { name: "ממרח זיתים", re: /ממרח זיתים|olive tapenade/i, kcal100g: 230, unitGrams: 20 },
     { name: "קקאו", re: /קקאו|cocoa/i, kcal100g: 228 },
     { name: "שוקולד", re: /שוקולד|chocolate/i, kcal100g: 546 },
     { name: "קמח", re: /קמח|flour/i, kcal100g: 364 },
