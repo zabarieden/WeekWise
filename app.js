@@ -590,19 +590,39 @@ async function openPresetQuickAddModal() {
     openModal('modal-preset-quick-add');
 }
 
+// מקובצת לפי קטגוריה (בוקר/צהריים/ערב/נשנוש), אקורדיון מתקפל - אותו דפוס
+// בדיוק כמו preset-category-group במסך "ניהול ארוחות קבועות" (ר' loadPresetManageList
+// למעלה), כדי שרשימה ארוכה של ארוחות שמורות לא תיראה כמו בלגן שטוח אחד
+// כשפותחים את הבועה הצפה. בברירת מחדל מכווצות (בניגוד למסך הניהול, ששם
+// ה-ברירת מחדל מורחבת) - כאן המטרה מהירות, לא עריכה; כשמחפשים, קטגוריה
+// עם תוצאה נפתחת אוטומטית כדי שהתוצאה תיראה מיד בלי צורך ללחוץ
 function renderPresetQuickAddList(filter) {
     const list = document.getElementById('preset-quick-add-list');
     const emptyHint = document.getElementById('preset-quick-add-empty');
     if (!list) return;
     const query = (filter || '').trim().toLowerCase();
-    const matches = cachedPresets.filter(item => item.food_name.toLowerCase().includes(query));
     if (emptyHint) emptyHint.classList.toggle('hidden', cachedPresets.length > 0);
-    list.innerHTML = matches.map(item => `
-        <button type="button" class="preset-quick-add-item" onclick="logPresetQuickAdd('${item.id}')">
-            <span>${escapeHtmlForReport(item.food_name)}</span>
-            <span class="preset-quick-add-item-cal">${item.calories} ${t('calories_unit')}</span>
-        </button>
-    `).join('');
+    list.innerHTML = PRESET_CATEGORY_ORDER.map(catKey => {
+        const items = cachedPresets.filter(item => item.meal_category === catKey && item.food_name.toLowerCase().includes(query));
+        if (!items.length) return '';
+        return `
+            <div class="preset-category-group${query ? ' expanded' : ''}">
+                <div class="preset-category-header" onclick="togglePresetCategory(this)">
+                    <span class="preset-category-label">${t('preset_cat_' + catKey)}</span>
+                    <span class="preset-category-count">${items.length}</span>
+                    <span class="preset-category-chevron">▼</span>
+                </div>
+                <div class="preset-category-items">
+                    ${items.map(item => `
+                        <button type="button" class="preset-quick-add-item" onclick="logPresetQuickAdd('${item.id}')">
+                            <span>${escapeHtmlForReport(item.food_name)}</span>
+                            <span class="preset-quick-add-item-cal">${item.calories} ${t('calories_unit')}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // כל 5 המשבצות (meal_1..meal_4, snack) הן "משבצת אחת = שורה אחת" בכל שאר האפליקציה
