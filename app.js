@@ -6078,6 +6078,7 @@ const FOOD_CALORIE_DB = [
     { name: "מרק עגבניות", re: /מרק עגבניות|tomato soup/i, kcal100g: 35, unitGrams: 250 },
     { name: "מרק דלעת", re: /מרק דלעת|pumpkin soup|squash soup/i, kcal100g: 45, unitGrams: 250 },
     { name: "מרק בצל", re: /מרק בצל|onion soup/i, kcal100g: 50, unitGrams: 250 },
+    { name: "מרק מיסו", re: /מרק מיסו|miso soup/i, kcal100g: 40, unitGrams: 200 },
     // מרק כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה
     { name: "מרק", re: /מרק|\bsoup\b/i, kcal100g: 45, unitGrams: 250 },
     // קינוחים נוספים - לפי בקשה מפורשת. "מוס" גם כאן למעלה (לא ליד עוגה/עוגיות
@@ -6179,6 +6180,9 @@ const FOOD_CALORIE_DB = [
     // נפרד ומדויק יותר בהמשך הרשימה) היה תמיד נתפס כתפוח עץ רגיל (52 קל')
     { name: "תפוח", re: /תפוח(?!\s*(הצהריים|אדמה))|apple/i, kcal100g: 52, unitGrams: 182 },
     { name: "בננה", re: /בננה|banana/i, kcal100g: 89, unitGrams: 118 },
+    // אורז מטוגן חייב לבוא *לפני* אורז - מכיל "אורז" כתת-מחרוזת, וטיגון בשמן
+    // משנה משמעותית את הקלוריות (200 מול 130 ל-100 גרם)
+    { name: "אורז מטוגן", re: /אורז מטוגן|fried rice/i, kcal100g: 200, unitGrams: 200 },
     { name: "אורז", re: /אורז|\brice\b/i, kcal100g: 130, unitGrams: 150 },
     { name: "פסטה", re: /פסטה|pasta/i, kcal100g: 131, unitGrams: 200 },
     { name: "לחם", re: /לחם|bread/i, kcal100g: 265, unitGrams: 30 },
@@ -6381,6 +6385,23 @@ const FOOD_CALORIE_DB = [
     { name: "חמין/צ'ולנט", re: /חמין|צ['׳]?ולנט|cholent/i, kcal100g: 200, unitGrams: 300 },
     { name: "מלאווח", re: /מלאווח|malawach/i, kcal100g: 380, unitGrams: 100 },
     { name: "ג'חנון", re: /ג['׳]?חנון|jachnun/i, kcal100g: 350, unitGrams: 150 },
+    // מטבח עולמי - לפי בקשה מפורשת ("לא רק ישראלי, עולמי")
+    { name: "שקשוקה", re: /שקשוקה|shakshuka/i, kcal100g: 150, unitGrams: 250 },
+    { name: "לזניה", re: /לזניה|lasagn[ae]/i, kcal100g: 135, unitGrams: 250 },
+    { name: "ריזוטו", re: /ריזוטו|risotto/i, kcal100g: 166, unitGrams: 200 },
+    { name: "טאקו", re: /טאקו|\btaco\b/i, kcal100g: 150, unitGrams: 70 },
+    { name: "בוריטו", re: /בוריטו|burrito/i, kcal100g: 220, unitGrams: 250 },
+    { name: "נאצ'וס", re: /נאצ['׳]?וס|nachos/i, kcal100g: 330, unitGrams: 150 },
+    { name: "קארי", re: /קארי|\bcurry\b/i, kcal100g: 150, unitGrams: 250 },
+    { name: "נודלס/רמן", re: /נודלס|ראמן|רמן|noodles?|ramen/i, kcal100g: 190, unitGrams: 300 },
+    { name: "נאן", re: /(^|[^א-ת])נאן(?:$|[^א-ת])|\bnaan\b/i, kcal100g: 310, unitGrams: 90 },
+    { name: "סמוסה", re: /סמוסה|samosa/i, kcal100g: 260, unitGrams: 50 },
+    { name: "ספרינג רולס", re: /ספרינג רולס|spring rolls?/i, kcal100g: 180, unitGrams: 80 },
+    { name: "דים סאם", re: /דים סאם|dim sum/i, kcal100g: 200, unitGrams: 100 },
+    { name: "סלט יווני", re: /סלט יווני|greek salad/i, kcal100g: 85, unitGrams: 200 },
+    { name: "קרפ", re: /קרפ|\bcr[eê]pe\b/i, kcal100g: 230, unitGrams: 60 },
+    // (?!וא) כדי ש"קיש" לא יתפוס את "קישוא" (קישוא מתחיל באותן 3 אותיות בדיוק)
+    { name: "קיש", re: /קיש(?!וא)|\bquiche\b/i, kcal100g: 280, unitGrams: 120 },
     // עוד חטיפים - לפי בקשה מפורשת
     { name: "במבה", re: /במבה|bamba/i, kcal100g: 536, unitGrams: 25 },
     { name: "ביסלי", re: /ביסלי|bissli/i, kcal100g: 490, unitGrams: 25 },
