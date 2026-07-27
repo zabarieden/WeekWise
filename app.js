@@ -6071,33 +6071,33 @@ const FOOD_CALORIE_DB = [
     // מכילים מרכיב קיים (למשל "מרק עוף" מכיל "עוף", "מרק בצל" מכיל "בצל",
     // "מרק עגבניות" מכיל "עגבני") שמוגדר בהמשך הרשימה למטה - בלי סדר הפוך,
     // "מרק עוף" היה תמיד נתפס כחזה עוף רגיל (165 קל') במקום מרק (40 קל')
-    { name: "מרק עוף", re: /מרק עוף|chicken soup/i, kcal100g: 40 },
-    { name: "מרק ירקות", re: /מרק ירקות|vegetable soup/i, kcal100g: 35 },
-    { name: "מרק עדשים", re: /מרק עדשים|lentil soup/i, kcal100g: 80 },
-    { name: "מרק פטריות", re: /מרק פטריות|mushroom soup/i, kcal100g: 60 },
-    { name: "מרק עגבניות", re: /מרק עגבניות|tomato soup/i, kcal100g: 35 },
-    { name: "מרק דלעת", re: /מרק דלעת|pumpkin soup|squash soup/i, kcal100g: 45 },
-    { name: "מרק בצל", re: /מרק בצל|onion soup/i, kcal100g: 50 },
+    { name: "מרק עוף", re: /מרק עוף|chicken soup/i, kcal100g: 40, unitGrams: 250 },
+    { name: "מרק ירקות", re: /מרק ירקות|vegetable soup/i, kcal100g: 35, unitGrams: 250 },
+    { name: "מרק עדשים", re: /מרק עדשים|lentil soup/i, kcal100g: 80, unitGrams: 250 },
+    { name: "מרק פטריות", re: /מרק פטריות|mushroom soup/i, kcal100g: 60, unitGrams: 250 },
+    { name: "מרק עגבניות", re: /מרק עגבניות|tomato soup/i, kcal100g: 35, unitGrams: 250 },
+    { name: "מרק דלעת", re: /מרק דלעת|pumpkin soup|squash soup/i, kcal100g: 45, unitGrams: 250 },
+    { name: "מרק בצל", re: /מרק בצל|onion soup/i, kcal100g: 50, unitGrams: 250 },
     // מרק כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה
-    { name: "מרק", re: /מרק|\bsoup\b/i, kcal100g: 45 },
+    { name: "מרק", re: /מרק|\bsoup\b/i, kcal100g: 45, unitGrams: 250 },
     // קינוחים נוספים - לפי בקשה מפורשת. "מוס" גם כאן למעלה (לא ליד עוגה/עוגיות
     // בהמשך הרשימה) מאותה סיבה בדיוק כמו המרקים: "מוס שוקולד" מכיל "שוקולד",
     // שמוגדר בהמשך הרשימה - בלי סדר הפוך היה תמיד נתפס כשוקולד רגיל (546 קל')
-    { name: "פודינג", re: /פודינג|pudding/i, kcal100g: 140 },
-    { name: "מוס", re: /מוס(?!ד)|mousse/i, kcal100g: 250 },
-    { name: "וופל", re: /וופל|waffle/i, kcal100g: 291 },
-    { name: "חלבה", re: /חלבה|halva/i, kcal100g: 520 },
-    { name: "קרם קרמל/פלאן", re: /קרם קרמל|פלאן|crème caramel|creme caramel|\bflan\b/i, kcal100g: 120 },
-    { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466 },
-    { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283 },
+    { name: "פודינג", re: /פודינג|pudding/i, kcal100g: 140, unitGrams: 120 },
+    { name: "מוס", re: /מוס(?!ד)|mousse/i, kcal100g: 250, unitGrams: 100 },
+    { name: "וופל", re: /וופל|waffle/i, kcal100g: 291, unitGrams: 75 },
+    { name: "חלבה", re: /חלבה|halva/i, kcal100g: 520, unitGrams: 30 },
+    { name: "קרם קרמל/פלאן", re: /קרם קרמל|פלאן|crème caramel|creme caramel|\bflan\b/i, kcal100g: 120, unitGrams: 100 },
+    { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466, unitGrams: 40 },
+    { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283, unitGrams: 120 },
     // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
     // סיבה בדיוק: "מיץ תפוחים"/"מיץ ענבים"/"רוטב עגבניות" מכילים "תפוח"/
     // "ענבים"/"עגבני" בהתאמה, ו"לחם X" מכיל גם "לחם" (הערך הכללי בהמשך
     // הרשימה) וגם, במקרה של "לחם לבן" ספציפית, את "לבן" (מוצר חלב מוגן-גבול
     // בהמשך) - כל אלה חייבים לבוא ראשונים כדי לא להיתפס כמרכיב הבודד שבתוכם
-    { name: "מיץ תפוחים", re: /מיץ תפוחים|apple juice/i, kcal100g: 46 },
-    { name: "מיץ ענבים", re: /מיץ ענבים|grape juice/i, kcal100g: 60 },
-    { name: "רוטב עגבניות", re: /רוטב עגבניות|tomato sauce|marinara/i, kcal100g: 35 },
+    { name: "מיץ תפוחים", re: /מיץ תפוחים|apple juice/i, kcal100g: 46, unitGrams: 200 },
+    { name: "מיץ ענבים", re: /מיץ ענבים|grape juice/i, kcal100g: 60, unitGrams: 200 },
+    { name: "רוטב עגבניות", re: /רוטב עגבניות|tomato sauce|marinara/i, kcal100g: 35, unitGrams: 60 },
     { name: "לחם לבן", re: /לחם לבן|white bread/i, kcal100g: 265, unitGrams: 30 },
     { name: "לחם דגנים", re: /לחם דגנים|לחם מלא|לחם מחיטה מלאה|whole\s*(grain|wheat)\s*bread/i, kcal100g: 247, unitGrams: 30 },
     { name: "לחם שיפון", re: /לחם שיפון|rye bread/i, kcal100g: 259, unitGrams: 32 },
@@ -6116,44 +6116,48 @@ const FOOD_CALORIE_DB = [
     // (^|[^א-ת])...(?:$|[^א-ת]) כדי ש"חלבון" (חלבון ביצה/אבקת חלבון) לא ייתפס
     // כ"חלב" (חלב מתחיל באותן 3 אותיות בדיוק) - בלי זה, כל הזכרה של "חלבון"
     // הייתה תמיד נתפסת כחלב רגיל ולעולם לא מגיעה לערך המדויק יותר של ביצה/חלבון
-    { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42 },
-    { name: "דבש", re: /דבש|honey/i, kcal100g: 304 },
-    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98 },
-    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 350 },
+    { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42, unitGrams: 200 },
+    { name: "דבש", re: /דבש|honey/i, kcal100g: 304, unitGrams: 20 },
+    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98, unitGrams: 250 },
+    // גבינה לבנה חייבת לבוא *לפני* גבינה - "גבינה לבנה" מכילה את "גבינה" כתת-
+    // מחרוזת, ומדובר במוצר שונה לגמרי בערכים (רך/משוח, לא גבינה קשה) - בלי
+    // סדר הפוך זה תמיד היה נתפס כגבינה קשה רגילה (350 קל') במקום 120
+    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 120, unitGrams: 100 },
+    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 350, unitGrams: 25 },
     { name: "אבקת אפייה", re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
     { name: "שמרים", re: /שמרים|yeast/i, kcal100g: 105 },
-    { name: "אגוזים/שקדים/בוטנים", re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600 },
+    { name: "אגוזים/שקדים/בוטנים", re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600, unitGrams: 30 },
     // גם (?!אדמה) חוץ מ-(?!הצהריים) - בלי זה, "תפוח אדמה" (תפוח-אדמה, ערך
     // נפרד ומדויק יותר בהמשך הרשימה) היה תמיד נתפס כתפוח עץ רגיל (52 קל')
     { name: "תפוח", re: /תפוח(?!\s*(הצהריים|אדמה))|apple/i, kcal100g: 52, unitGrams: 182 },
     { name: "בננה", re: /בננה|banana/i, kcal100g: 89, unitGrams: 118 },
-    { name: "אורז", re: /אורז|\brice\b/i, kcal100g: 130 },
-    { name: "פסטה", re: /פסטה|pasta/i, kcal100g: 131 },
+    { name: "אורז", re: /אורז|\brice\b/i, kcal100g: 130, unitGrams: 150 },
+    { name: "פסטה", re: /פסטה|pasta/i, kcal100g: 131, unitGrams: 200 },
     { name: "לחם", re: /לחם|bread/i, kcal100g: 265, unitGrams: 30 },
     { name: "חלה", re: /חלה|challah/i, kcal100g: 332, unitGrams: 40 },
     { name: "בגט", re: /בגט|baguette/i, kcal100g: 270, unitGrams: 25 },
     { name: "לחמניה", re: /לחמני(ה|ות)|\bbun\b|dinner roll/i, kcal100g: 280, unitGrams: 50 },
     { name: "פוקצ'ה", re: /פוקצ['׳]?ה|focaccia/i, kcal100g: 249, unitGrams: 50 },
-    { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
-    { name: "טונה", re: /טונה|tuna/i, kcal100g: 116 },
+    { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165, unitGrams: 150 },
+    { name: "טונה", re: /טונה|tuna/i, kcal100g: 116, unitGrams: 100 },
     // עוד דגים נפוצים - לפי בקשה מפורשת ("דגים"), אותו מסד חינמי-לוקאלי
-    { name: "בקלה", re: /בקלה|\bcod\b/i, kcal100g: 105 },
-    { name: "מושט/טילפיה", re: /מושט|טילפיה|tilapia/i, kcal100g: 128 },
-    { name: "דניס/לברק", re: /דניס|לברק|sea bream|branzino/i, kcal100g: 120 },
-    { name: "פורל", re: /פורל|trout/i, kcal100g: 168 },
-    { name: "הרינג", re: /הרינג|herring/i, kcal100g: 158 },
-    { name: "סרדינים", re: /סרדינ(ים)?|sardines?/i, kcal100g: 208 },
-    { name: "שרימפס/חסילון", re: /שרימפס|חסילונ(ים)?|shrimp|prawns?/i, kcal100g: 99 },
-    { name: "קלמארי/דיונון", re: /קלמארי|דיונון|calamari|squid/i, kcal100g: 92 },
+    { name: "בקלה", re: /בקלה|\bcod\b/i, kcal100g: 105, unitGrams: 150 },
+    { name: "מושט/טילפיה", re: /מושט|טילפיה|tilapia/i, kcal100g: 128, unitGrams: 150 },
+    { name: "דניס/לברק", re: /דניס|לברק|sea bream|branzino/i, kcal100g: 120, unitGrams: 150 },
+    { name: "פורל", re: /פורל|trout/i, kcal100g: 168, unitGrams: 150 },
+    { name: "הרינג", re: /הרינג|herring/i, kcal100g: 158, unitGrams: 80 },
+    { name: "סרדינים", re: /סרדינ(ים)?|sardines?/i, kcal100g: 208, unitGrams: 50 },
+    { name: "שרימפס/חסילון", re: /שרימפס|חסילונ(ים)?|shrimp|prawns?/i, kcal100g: 99, unitGrams: 100 },
+    { name: "קלמארי/דיונון", re: /קלמארי|דיונון|calamari|squid/i, kcal100g: 92, unitGrams: 100 },
     // מותגי יוגורט ספציפיים - חייבים לבוא *לפני* הערך הכללי "יוגורט" למטה,
     // כי הלולאה עוצרת בהתאמה הראשונה: אם הכללי היה קודם, "יוגורט פרו" היה
     // תמיד נתפס כיוגורט רגיל ואף פעם לא מגיע לערך הספציפי והמדויק יותר
-    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 90 },
-    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 75 },
-    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61 },
+    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 90, unitGrams: 200 },
+    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 75, unitGrams: 200 },
+    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61, unitGrams: 150 },
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15, unitGrams: 301 },
     { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18, unitGrams: 123 },
-    { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166 },
+    { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166, unitGrams: 50 },
     { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
     { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
     { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
@@ -6164,9 +6168,9 @@ const FOOD_CALORIE_DB = [
     { name: "בטטה", re: /בטטה|sweet potato/i, kcal100g: 86, unitGrams: 130 },
     { name: "תפוח אדמה", re: /תפוח אדמה|תפו"א|potato/i, kcal100g: 77, unitGrams: 173 },
     { name: "גזר", re: /גזר|carrot/i, kcal100g: 41, unitGrams: 61 },
-    { name: "ברוקולי", re: /ברוקולי|broccoli/i, kcal100g: 34 },
-    { name: "כרובית", re: /כרובית|cauliflower/i, kcal100g: 25 },
-    { name: "חסה", re: /חסה|lettuce/i, kcal100g: 15 },
+    { name: "ברוקולי", re: /ברוקולי|broccoli/i, kcal100g: 34, unitGrams: 80 },
+    { name: "כרובית", re: /כרובית|cauliflower/i, kcal100g: 25, unitGrams: 80 },
+    { name: "חסה", re: /חסה|lettuce/i, kcal100g: 15, unitGrams: 30 },
     { name: "פלפל", re: /פלפל|pepper/i, kcal100g: 31, unitGrams: 119 },
     { name: "בצל", re: /בצל|onion/i, kcal100g: 40, unitGrams: 110 },
     // (^|[^א-ת])...(?:$|[^א-ת]) במקום lookbehind/lookahead: אותה תוצאה (גבול
@@ -6174,102 +6178,110 @@ const FOOD_CALORIE_DB = [
     // שנתמך בכל דפדפן - lookbehind (?<!...) לא נתמך ב-Safari ישן (לפני 16.4),
     // ועלול לגרום ל-SyntaxError בזמן טעינת כל הקובץ, לא רק בביטוי הזה
     { name: "שום", re: /(^|[^א-ת])שום(?:$|[^א-ת])|garlic/i, kcal100g: 149 },
-    { name: "קישוא", re: /קישוא|zucchini/i, kcal100g: 17 },
-    { name: "חציל", re: /חציל|eggplant/i, kcal100g: 25 },
-    { name: "תירס", re: /תירס|corn/i, kcal100g: 86 },
+    { name: "קישוא", re: /קישוא|zucchini/i, kcal100g: 17, unitGrams: 100 },
+    { name: "חציל", re: /חציל|eggplant/i, kcal100g: 25, unitGrams: 200 },
+    { name: "תירס", re: /תירס|corn/i, kcal100g: 86, unitGrams: 80 },
     { name: "אבוקדו", re: /אבוקדו|avocado/i, kcal100g: 160, unitGrams: 201 },
     { name: "לימון", re: /לימון|lemon/i, kcal100g: 29, unitGrams: 58 },
     // מיץ תפוזים חייב לבוא *לפני* תפוז - "מיץ תפוזים" מכיל את "תפוז" כתת-מחרוזת
     // (ריבוי "תפוזים" מתחיל באותן אותיות), אז בלי סדר הפוך זה תמיד היה נתפס
     // כתפוז בודד (עם unitGrams, לא הגיוני לכוס מיץ) במקום ערך המיץ המדויק
-    { name: "מיץ תפוזים", re: /מיץ תפוזים|orange juice/i, kcal100g: 45 },
+    { name: "מיץ תפוזים", re: /מיץ תפוזים|orange juice/i, kcal100g: 45, unitGrams: 200 },
     { name: "תפוז", re: /תפוז|orange/i, kcal100g: 47, unitGrams: 131 },
-    { name: "ענבים", re: /ענבים|grapes/i, kcal100g: 69 },
-    { name: "אבטיח", re: /אבטיח|watermelon/i, kcal100g: 30 },
-    { name: "מלון", re: /(^|[^א-ת])מלון(?:$|[^א-ת])|\bmelon\b/i, kcal100g: 34 },
+    { name: "ענבים", re: /ענבים|grapes/i, kcal100g: 69, unitGrams: 80 },
+    { name: "אבטיח", re: /אבטיח|watermelon/i, kcal100g: 30, unitGrams: 150 },
+    { name: "מלון", re: /(^|[^א-ת])מלון(?:$|[^א-ת])|\bmelon\b/i, kcal100g: 34, unitGrams: 150 },
     { name: "תות", re: /תות|strawberry/i, kcal100g: 32, unitGrams: 12 },
-    { name: "אננס", re: /אננס|pineapple/i, kcal100g: 50 },
+    { name: "אננס", re: /אננס|pineapple/i, kcal100g: 50, unitGrams: 80 },
     { name: "מנגו", re: /מנגו|mango/i, kcal100g: 60, unitGrams: 207 },
     { name: "אגס", re: /אגס|pear/i, kcal100g: 57, unitGrams: 178 },
-    { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254 },
-    { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250 },
-    { name: "הודו", re: /הודו|turkey/i, kcal100g: 135 },
-    { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208 },
-    { name: "נקניקייה", re: /נקניקיה|sausage/i, kcal100g: 300 },
-    { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116 },
-    { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127 },
-    { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81 },
-    { name: "פול", re: /(^|[^א-ת])פול(?:$|[^א-ת])|fava/i, kcal100g: 110 },
+    { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254, unitGrams: 150 },
+    { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250, unitGrams: 150 },
+    { name: "הודו", re: /הודו|turkey/i, kcal100g: 135, unitGrams: 150 },
+    { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208, unitGrams: 150 },
+    { name: "נקניקייה", re: /נקניקיה|sausage/i, kcal100g: 300, unitGrams: 50 },
+    { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116, unitGrams: 150 },
+    { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127, unitGrams: 150 },
+    { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81, unitGrams: 80 },
+    { name: "פול", re: /(^|[^א-ת])פול(?:$|[^א-ת])|fava/i, kcal100g: 110, unitGrams: 100 },
     // קטניות כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה
-    { name: "קטניות", re: /קטניות|legumes/i, kcal100g: 120 },
-    { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120 },
-    { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389 },
-    { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471 },
-    { name: "קורנפלקס", re: /קורנפלקס|cornflakes/i, kcal100g: 357 },
+    { name: "קטניות", re: /קטניות|legumes/i, kcal100g: 120, unitGrams: 150 },
+    { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120, unitGrams: 150 },
+    { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389, unitGrams: 40 },
+    { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471, unitGrams: 40 },
+    { name: "קורנפלקס", re: /קורנפלקס|cornflakes/i, kcal100g: 357, unitGrams: 30 },
     { name: "פיתה", re: /פיתה|pita/i, kcal100g: 275, unitGrams: 60 },
-    { name: "טופו", re: /טופו|tofu/i, kcal100g: 76 },
-    { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115 },
-    { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595 },
-    { name: "מיונז", re: /מיונז|mayonnaise|mayo/i, kcal100g: 680 },
-    { name: "קטשופ", re: /קטשופ|ketchup/i, kcal100g: 112 },
-    { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588 },
+    { name: "טופו", re: /טופו|tofu/i, kcal100g: 76, unitGrams: 100 },
+    { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115, unitGrams: 15 },
+    { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595, unitGrams: 20 },
+    { name: "מיונז", re: /מיונז|mayonnaise|mayo/i, kcal100g: 680, unitGrams: 15 },
+    { name: "קטשופ", re: /קטשופ|ketchup/i, kcal100g: 112, unitGrams: 15 },
+    { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588, unitGrams: 20 },
     // עוד רטבים - לפי בקשה מפורשת (רוטב עגבניות כבר למעלה, ליד שאר המרכיבים
     // המכילים מרכיב קיים - ר' ההערה שם)
-    { name: "חרדל", re: /חרדל|mustard/i, kcal100g: 66 },
-    { name: "רוטב סויה", re: /רוטב סויה|soy sauce/i, kcal100g: 53 },
-    { name: "רוטב טרטר", re: /רוטב טרטר|tartar sauce/i, kcal100g: 300 },
-    { name: "ויניגרט", re: /ויניגרט|vinaigrette/i, kcal100g: 200 },
-    { name: "רוטב פסטו", re: /רוטב פסטו|\bpesto\b/i, kcal100g: 303 },
-    { name: "רוטב ברביקיו", re: /רוטב ברביקיו|barbecue sauce|bbq sauce/i, kcal100g: 172 },
-    { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62 },
-    { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42 },
-    { name: "בירה", re: /בירה|\bbeer\b/i, kcal100g: 43 },
-    { name: "יין", re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83 },
+    { name: "חרדל", re: /חרדל|mustard/i, kcal100g: 66, unitGrams: 10 },
+    { name: "רוטב סויה", re: /רוטב סויה|soy sauce/i, kcal100g: 53, unitGrams: 15 },
+    { name: "רוטב טרטר", re: /רוטב טרטר|tartar sauce/i, kcal100g: 300, unitGrams: 20 },
+    { name: "ויניגרט", re: /ויניגרט|vinaigrette/i, kcal100g: 200, unitGrams: 15 },
+    { name: "רוטב פסטו", re: /רוטב פסטו|\bpesto\b/i, kcal100g: 303, unitGrams: 20 },
+    { name: "רוטב ברביקיו", re: /רוטב ברביקיו|barbecue sauce|bbq sauce/i, kcal100g: 172, unitGrams: 20 },
+    { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62, unitGrams: 200 },
+    { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42, unitGrams: 330 },
+    { name: "בירה", re: /בירה|\bbeer\b/i, kcal100g: 43, unitGrams: 330 },
+    { name: "יין", re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83, unitGrams: 150 },
     // עוד משקאות - לפי בקשה מפורשת
-    { name: "קפה", re: /קפה|\bcoffee\b/i, kcal100g: 2 },
+    { name: "קפה", re: /קפה|\bcoffee\b/i, kcal100g: 2, unitGrams: 200 },
     // (^|[^א-ת])...(?:$|[^א-ת]) כמו לבן/יין למעלה - בלי זה "אתה"/"שתה" (מילים
     // עבריות נפוצות ביותר) היו נתפסים כ"תה" בגלל ש-\b לא עובד על עברית
-    { name: "תה", re: /(^|[^א-ת])תה(?:$|[^א-ת])|\btea\b/i, kcal100g: 1 },
+    { name: "תה", re: /(^|[^א-ת])תה(?:$|[^א-ת])|\btea\b/i, kcal100g: 1, unitGrams: 200 },
     // (?!לד) כדי ש"שוקו" לא יתפוס את "שוקולד" (שמתחיל באותן 4 אותיות בדיוק)
-    { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 75 },
-    { name: "לימונדה", re: /לימונדה|lemonade/i, kcal100g: 40 },
-    { name: "משקה אנרגיה", re: /משקה אנרגיה|energy drink/i, kcal100g: 45 },
-    { name: "אלכוהול חזק", re: /וודקה|וויסקי|ג'ין|רום|vodka|whisk[e]?y|\bgin\b|\brum\b/i, kcal100g: 231 },
+    { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 75, unitGrams: 200 },
+    { name: "לימונדה", re: /לימונדה|lemonade/i, kcal100g: 40, unitGrams: 200 },
+    { name: "משקה אנרגיה", re: /משקה אנרגיה|energy drink/i, kcal100g: 45, unitGrams: 250 },
+    { name: "אלכוהול חזק", re: /וודקה|וויסקי|ג'ין|רום|vodka|whisk[e]?y|\bgin\b|\brum\b/i, kcal100g: 231, unitGrams: 40 },
     // מיץ כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל סוגי המיץ הספציפיים למעלה
-    { name: "מיץ", re: /מיץ|\bjuice\b/i, kcal100g: 45 },
-    { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266 },
-    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295 },
-    { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250 },
-    { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333 },
-    { name: "גלידה", re: /גלידה|ice cream/i, kcal100g: 207 },
-    { name: "עוגיות", re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480 },
-    { name: "עוגה", re: /עוגה|\bcake\b/i, kcal100g: 350 },
+    { name: "מיץ", re: /מיץ|\bjuice\b/i, kcal100g: 45, unitGrams: 200 },
+    { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266, unitGrams: 120 },
+    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295, unitGrams: 150 },
+    { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250, unitGrams: 250 },
+    { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333, unitGrams: 150 },
+    { name: "גלידה", re: /גלידה|ice cream/i, kcal100g: 207, unitGrams: 60 },
+    { name: "עוגיות", re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480, unitGrams: 15 },
+    { name: "עוגה", re: /עוגה|\bcake\b/i, kcal100g: 350, unitGrams: 80 },
     { name: "קרואסון", re: /קרואסון|croissant/i, kcal100g: 406, unitGrams: 60 },
     // עוד ירקות ותוספות - לפי בקשה מפורשת
-    { name: "כרוב", re: /כרוב(?!ית)|cabbage/i, kcal100g: 25 },
-    { name: "תרד", re: /תרד|spinach/i, kcal100g: 23 },
-    { name: "סלק", re: /סלק|beet(root)?/i, kcal100g: 43 },
-    { name: "צנונית", re: /צנונית|radish/i, kcal100g: 16 },
-    { name: "פטריות", re: /פטריות|mushrooms?/i, kcal100g: 22 },
+    { name: "כרוב", re: /כרוב(?!ית)|cabbage/i, kcal100g: 25, unitGrams: 80 },
+    { name: "תרד", re: /תרד|spinach/i, kcal100g: 23, unitGrams: 50 },
+    { name: "סלק", re: /סלק|beet(root)?/i, kcal100g: 43, unitGrams: 80 },
+    { name: "צנונית", re: /צנונית|radish/i, kcal100g: 16, unitGrams: 50 },
+    { name: "פטריות", re: /פטריות|mushrooms?/i, kcal100g: 22, unitGrams: 70 },
     // "שומר" (הירק) הוא גם מילה נפוצה במשמעות "שומר/מאבטח" - אותו טריק גבול-
     // מילה עברי כמו שום/יין/לבן/מלון למעלה, לא lookbehind (תאימות Safari)
-    { name: "שומר", re: /(^|[^א-ת])שומר(?:$|[^א-ת])|fennel/i, kcal100g: 31 },
-    { name: "ארטישוק", re: /ארטישוק|artichoke/i, kcal100g: 47 },
-    { name: "אספרגוס", re: /אספרגוס|asparagus/i, kcal100g: 20 },
-    { name: "בורגול", re: /בורגול|bulgur/i, kcal100g: 83 },
-    { name: "צ'יפס", re: /צ['׳]?יפס|fries|french fries/i, kcal100g: 312 },
-    { name: "פירה", re: /פירה|mashed potato(es)?/i, kcal100g: 105 },
+    { name: "שומר", re: /(^|[^א-ת])שומר(?:$|[^א-ת])|fennel/i, kcal100g: 31, unitGrams: 100 },
+    { name: "ארטישוק", re: /ארטישוק|artichoke/i, kcal100g: 47, unitGrams: 120 },
+    { name: "אספרגוס", re: /אספרגוס|asparagus/i, kcal100g: 20, unitGrams: 100 },
+    { name: "בורגול", re: /בורגול|bulgur/i, kcal100g: 83, unitGrams: 150 },
+    { name: "צ'יפס", re: /צ['׳]?יפס|fries|french fries/i, kcal100g: 312, unitGrams: 150 },
+    { name: "פירה", re: /פירה|mashed potato(es)?/i, kcal100g: 105, unitGrams: 150 },
 ];
-// ממירות יחידות נפח מטבחיות שכיחות (כף/כפית/כוס) לגרם משוער - כדי שאפשר
-// יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'"
+// ממירות יחידות נפח/מיכל שכיחות (כף/כפית/כוס/גביע/חופן) לגרם משוער - כדי
+// שאפשר יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'". הרגקס
+// כאן רק מזהה *איזו* יחידה נכתבה - לא מכיל יותר את הספרה בעצמו (הייתה כאן
+// קודם דרישה ל-(\d+...) בתחילת הביטוי, שבגללה "חצי גביע"/"חצי כוס" נכשלו
+// לגמרי כי אין שם ספרה בכלל, רק מילת שבר) - הכמות (ספרה/שבר/ברירת מחדל 1)
+// מחושבת בנפרד ב-parseQuantityCount ומוכפלת ב-gramsPerUnit ב-estimateIngredientLineCalories
 // (?![א-תA-Za-z0-9_]) במקום \b בסוף - \b לא עובד אחרי מילה עברית ב-JS (אותיות
 // עבריות אינן "תו מילה"), אז "כוס"/"כף"/"כפית" עם \b בסופן לא היו תופסים כלום
 // בפועל כשמדובר בעברית (רק cups/tbsp/tsp האנגליים היו עובדים). לוקהד יחיד
 // שעובד לשני הכיוונים: הבא לא יכול להיות לא אות עברית ולא תו-מילה לטיני
 const VOLUME_UNIT_TO_GRAMS = [
-    { re: /(\d+(?:\.\d+)?)\s*(?:כוסות|כוס|cups?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 240 },
-    { re: /(\d+(?:\.\d+)?)\s*(?:כפות|כף|tbsp|tablespoons?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 15 },
-    { re: /(\d+(?:\.\d+)?)\s*(?:כפיות|כפית|tsp|teaspoons?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 5 },
+    { re: /(?:כוסות|כוס|cups?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 240 },
+    { re: /(?:כפות|כף|tbsp|tablespoons?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 15 },
+    { re: /(?:כפיות|כפית|tsp|teaspoons?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 5 },
+    // גביע/קופסה/אריזה - יחידת אריזה נפוצה למוצרי חלב (קוטג'/גבינה לבנה/יוגורט)
+    // וגם למוצרים אחרים (חומוס וכו') - גודל ממוצע גס, לא מדויק לכל מוצר ספציפי
+    { re: /(?:גביעים|גביע|קופסאות|קופסה|אריזות|אריזה|tubs?|containers?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 250 },
+    { re: /(?:חופנים|חופן|handfuls?)(?![א-תA-Za-z0-9_])/i, gramsPerUnit: 30 },
 ];
 // מזהה כמות גם כשאין מספר בתחילת השורה - מילות שבר כמו "חצי"/"רבע" (למשל
 // "חצי בננה בינונית"), לא רק ספרה מפורשת. ברירת מחדל: יחידה אחת (1) כשלא
@@ -6290,15 +6302,25 @@ function parseQuantityCount(line) {
     return numMatch ? parseFloat(numMatch[1]) : 1;
 }
 
+// "גדול"/"קטן" (או large/small באנגלית) - מתאם גס על משקל-יחידה ממוצע (unitGrams)
+// כשלא צוין משקל מפורש בגרם - לא מדויק כמו לשקול, אבל עדיף מלהתעלם מזה לגמרי
+function parseSizeMultiplier(line) {
+    if (/(^|[^א-ת])גדול(ה)?(?:$|[^א-ת])|\blarge\b|\bbig\b/i.test(line)) return 1.3;
+    if (/(^|[^א-ת])קטן(ה)?(?:$|[^א-ת])|\bsmall\b/i.test(line)) return 0.7;
+    return 1;
+}
+
 function estimateIngredientLineCalories(line) {
     let grams = null;
     const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
     if (gramsMatch) {
         grams = parseFloat(gramsMatch[1]);
     } else {
+        // הכמות (ספרה/מילת שבר כמו "חצי"/ברירת מחדל 1) מחושבת בנפרד מזיהוי
+        // *איזו* יחידה נכתבה (כוס/כף/כפית/גביע/חופן) - כדי ש"חצי גביע"/"חצי
+        // כוס" יעבדו, לא רק "2 כוסות" עם ספרה מפורשת (ר' ההערה על VOLUME_UNIT_TO_GRAMS)
         for (const unit of VOLUME_UNIT_TO_GRAMS) {
-            const m = line.match(unit.re);
-            if (m) { grams = parseFloat(m[1]) * unit.gramsPerUnit; break; }
+            if (unit.re.test(line)) { grams = parseQuantityCount(line) * unit.gramsPerUnit; break; }
         }
     }
     const count = parseQuantityCount(line);
@@ -6306,9 +6328,10 @@ function estimateIngredientLineCalories(line) {
         if (!item.re.test(line)) continue;
         if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
         if (grams != null) return (grams / 100) * item.kcal100g;
-        // בלי גרם/מ"ל/כף/כפית/כוס מפורש - אם למאכל יש משקל-יחידה ממוצע ידוע
-        // (פרי/ירק/מוצר נספר, למשל בננה=118 גרם), מחשבים לפי זה * הכמות שזוהתה
-        if (item.unitGrams != null) return (count * item.unitGrams / 100) * item.kcal100g;
+        // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
+        // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
+        // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה
+        if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(line) / 100) * item.kcal100g;
         return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
     }
     return 0;
