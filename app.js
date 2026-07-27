@@ -6382,13 +6382,16 @@ const FOOD_CALORIE_DB = [
     { name: "ליקר", re: /ליקר|liqueur/i, kcal100g: 300, unitGrams: 30 },
     // מיץ כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל סוגי המיץ הספציפיים למעלה
     { name: "מיץ", re: /מיץ|\bjuice\b/i, kcal100g: 45, unitGrams: 200 },
-    { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266, unitGrams: 120 },
-    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295, unitGrams: 150 },
+    // unitGrams תוקנו לפי חיפוש - פרוסת פיצה ביתית רגילה 70-100 גרם (לא 120),
+    // והמבורגר שלם (עם הלחמנייה, לא רק הקציצה) קרוב יותר ל-200 גרם
+    { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266, unitGrams: 100 },
+    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295, unitGrams: 200 },
     { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250, unitGrams: 250 },
     { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333, unitGrams: 150 },
     { name: "בורקס", re: /בורקס|bourekas?/i, kcal100g: 330, unitGrams: 80 },
     // עוד מנות - ישראלי (חמין/מלאווח/ג'חנון) ועולמי (סושי)
-    { name: "סושי", re: /סושי|sushi/i, kcal100g: 150, unitGrams: 200 },
+    // unitGrams תוקן ל-160 (רול ממוצע של 8 חתיכות, לפי חיפוש) במקום 200
+    { name: "סושי", re: /סושי|sushi/i, kcal100g: 150, unitGrams: 160 },
     { name: "חמין/צ'ולנט", re: /חמין|צ['׳]?ולנט|cholent/i, kcal100g: 200, unitGrams: 300 },
     { name: "מלאווח", re: /מלאווח|malawach/i, kcal100g: 380, unitGrams: 100 },
     { name: "ג'חנון", re: /ג['׳]?חנון|jachnun/i, kcal100g: 350, unitGrams: 150 },
