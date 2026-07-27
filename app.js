@@ -6070,6 +6070,18 @@ const FOOD_CALORIE_DB = [
     { name: "קרם קרמל/פלאן", re: /קרם קרמל|פלאן|crème caramel|creme caramel|\bflan\b/i, kcal100g: 120 },
     { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466 },
     { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283 },
+    // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
+    // סיבה בדיוק: "מיץ תפוחים"/"מיץ ענבים"/"רוטב עגבניות" מכילים "תפוח"/
+    // "ענבים"/"עגבני" בהתאמה, ו"לחם X" מכיל גם "לחם" (הערך הכללי בהמשך
+    // הרשימה) וגם, במקרה של "לחם לבן" ספציפית, את "לבן" (מוצר חלב מוגן-גבול
+    // בהמשך) - כל אלה חייבים לבוא ראשונים כדי לא להיתפס כמרכיב הבודד שבתוכם
+    { name: "מיץ תפוחים", re: /מיץ תפוחים|apple juice/i, kcal100g: 46 },
+    { name: "מיץ ענבים", re: /מיץ ענבים|grape juice/i, kcal100g: 60 },
+    { name: "רוטב עגבניות", re: /רוטב עגבניות|tomato sauce|marinara/i, kcal100g: 35 },
+    { name: "לחם לבן", re: /לחם לבן|white bread/i, kcal100g: 265, unitGrams: 30 },
+    { name: "לחם דגנים", re: /לחם דגנים|לחם מלא|לחם מחיטה מלאה|whole\s*(grain|wheat)\s*bread/i, kcal100g: 247, unitGrams: 30 },
+    { name: "לחם שיפון", re: /לחם שיפון|rye bread/i, kcal100g: 259, unitGrams: 32 },
+    { name: "לחם קל", re: /לחם קל|לחם דיאט|diet bread|light bread/i, kcal100g: 210, unitGrams: 20 },
     { name: "קקאו", re: /קקאו|cocoa/i, kcal100g: 228 },
     { name: "שוקולד", re: /שוקולד|chocolate/i, kcal100g: 546 },
     { name: "קמח", re: /קמח|flour/i, kcal100g: 364 },
@@ -6097,7 +6109,11 @@ const FOOD_CALORIE_DB = [
     { name: "בננה", re: /בננה|banana/i, kcal100g: 89, unitGrams: 118 },
     { name: "אורז", re: /אורז|\brice\b/i, kcal100g: 130 },
     { name: "פסטה", re: /פסטה|pasta/i, kcal100g: 131 },
-    { name: "לחם", re: /לחם|bread/i, kcal100g: 265 },
+    { name: "לחם", re: /לחם|bread/i, kcal100g: 265, unitGrams: 30 },
+    { name: "חלה", re: /חלה|challah/i, kcal100g: 332, unitGrams: 40 },
+    { name: "בגט", re: /בגט|baguette/i, kcal100g: 270, unitGrams: 25 },
+    { name: "לחמניה", re: /לחמני(ה|ות)|\bbun\b|dinner roll/i, kcal100g: 280, unitGrams: 50 },
+    { name: "פוקצ'ה", re: /פוקצ['׳]?ה|focaccia/i, kcal100g: 249, unitGrams: 50 },
     { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165 },
     { name: "טונה", re: /טונה|tuna/i, kcal100g: 116 },
     // עוד דגים נפוצים - לפי בקשה מפורשת ("דגים"), אותו מסד חינמי-לוקאלי
@@ -6163,6 +6179,9 @@ const FOOD_CALORIE_DB = [
     { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116 },
     { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127 },
     { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81 },
+    { name: "פול", re: /(^|[^א-ת])פול(?:$|[^א-ת])|fava/i, kcal100g: 110 },
+    // קטניות כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה
+    { name: "קטניות", re: /קטניות|legumes/i, kcal100g: 120 },
     { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120 },
     { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389 },
     { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471 },
@@ -6174,10 +6193,30 @@ const FOOD_CALORIE_DB = [
     { name: "מיונז", re: /מיונז|mayonnaise|mayo/i, kcal100g: 680 },
     { name: "קטשופ", re: /קטשופ|ketchup/i, kcal100g: 112 },
     { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588 },
+    // עוד רטבים - לפי בקשה מפורשת (רוטב עגבניות כבר למעלה, ליד שאר המרכיבים
+    // המכילים מרכיב קיים - ר' ההערה שם)
+    { name: "חרדל", re: /חרדל|mustard/i, kcal100g: 66 },
+    { name: "רוטב סויה", re: /רוטב סויה|soy sauce/i, kcal100g: 53 },
+    { name: "רוטב טרטר", re: /רוטב טרטר|tartar sauce/i, kcal100g: 300 },
+    { name: "ויניגרט", re: /ויניגרט|vinaigrette/i, kcal100g: 200 },
+    { name: "רוטב פסטו", re: /רוטב פסטו|\bpesto\b/i, kcal100g: 303 },
+    { name: "רוטב ברביקיו", re: /רוטב ברביקיו|barbecue sauce|bbq sauce/i, kcal100g: 172 },
     { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62 },
     { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42 },
     { name: "בירה", re: /בירה|\bbeer\b/i, kcal100g: 43 },
     { name: "יין", re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83 },
+    // עוד משקאות - לפי בקשה מפורשת
+    { name: "קפה", re: /קפה|\bcoffee\b/i, kcal100g: 2 },
+    // (^|[^א-ת])...(?:$|[^א-ת]) כמו לבן/יין למעלה - בלי זה "אתה"/"שתה" (מילים
+    // עבריות נפוצות ביותר) היו נתפסים כ"תה" בגלל ש-\b לא עובד על עברית
+    { name: "תה", re: /(^|[^א-ת])תה(?:$|[^א-ת])|\btea\b/i, kcal100g: 1 },
+    // (?!לד) כדי ש"שוקו" לא יתפוס את "שוקולד" (שמתחיל באותן 4 אותיות בדיוק)
+    { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 75 },
+    { name: "לימונדה", re: /לימונדה|lemonade/i, kcal100g: 40 },
+    { name: "משקה אנרגיה", re: /משקה אנרגיה|energy drink/i, kcal100g: 45 },
+    { name: "אלכוהול חזק", re: /וודקה|וויסקי|ג'ין|רום|vodka|whisk[e]?y|\bgin\b|\brum\b/i, kcal100g: 231 },
+    // מיץ כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל סוגי המיץ הספציפיים למעלה
+    { name: "מיץ", re: /מיץ|\bjuice\b/i, kcal100g: 45 },
     { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266 },
     { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295 },
     { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250 },
