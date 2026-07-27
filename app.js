@@ -654,7 +654,7 @@ async function logFoodQuickAdd() {
     const input = document.getElementById('food-quick-add-input');
     const text = input ? input.value.trim() : '';
     if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
-    const estimate = estimateIngredientLineCalories(text);
+    const estimate = estimateFreeTextCalories(text);
     if (!estimate || estimate <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
     const calories = Math.round(estimate);
     await addQuickLogEntry(text, calories);
@@ -6293,11 +6293,38 @@ function estimateIngredientLineCalories(line) {
     }
     return 0;
 }
+
+// מפצלת שורה חופשית אחת שמתארת כמה מאכלים יחד (למשל "חצי בננה וכוס יוגורט")
+// למקטעים נפרדים, כל אחד עם ההערכה שלו - בלי זה, estimateIngredientLineCalories
+// הייתה מזהה רק את המאכל *הראשון* שנמצא (לפי סדר המסד, לא סדר הטקסט) ומתעלמת
+// לגמרי מכל שאר מה שכתוב. ה"ו" בעברית מחוברת כקידומת למילה הבאה בלי רווח
+// (לא מילה נפרדת כמו "and" באנגלית), אז מפצלים לפי רווח שאחריו "ו"+אות עברית
+// (lookahead, לא צורך את ה-ו עצמה - היא נשארת חלק מהמקטע הבא, וזה בסדר כי
+// ההתאמה ב-FOOD_CALORIE_DB היא תת-מחרוזת ולא דורשת גבול מילה בהתחלה)
+function splitFreeTextFoodSegments(text) {
+    return text
+        .split(/,|\+|\s+עם\s+|\s+גם\s+|\band\b|\s+(?=ו[א-ת])/i)
+        .map(s => s.trim())
+        .filter(Boolean);
+}
+
+// כמו estimateIngredientLineCalories, אבל למשפט חופשי שעשוי לתאר כמה מאכלים
+// יחד - מפצלת קודם (ר' splitFreeTextFoodSegments) ומסכמת את ההערכה של כל מקטע
+function estimateFreeTextCalories(text) {
+    if (!text) return 0;
+    let total = 0, matchedAny = false;
+    splitFreeTextFoodSegments(text).forEach(segment => {
+        const kcal = estimateIngredientLineCalories(segment);
+        if (kcal > 0) { total += kcal; matchedAny = true; }
+    });
+    return matchedAny ? total : 0;
+}
+
 function estimateRecipeCalories(ingredientsText) {
     if (!ingredientsText) return null;
     let total = 0, matchedAny = false;
     ingredientsText.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
-        const kcal = estimateIngredientLineCalories(line);
+        const kcal = estimateFreeTextCalories(line);
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
     return matchedAny ? Math.round(total) : null;
@@ -6311,7 +6338,7 @@ function autoFillMealCalories(foodInput) {
     const row = foodInput.closest('.meal-row');
     const caloriesInput = row && row.querySelector('.calories-input');
     if (!caloriesInput || caloriesInput.value.trim()) return;
-    const estimate = estimateIngredientLineCalories(foodInput.value.trim());
+    const estimate = estimateFreeTextCalories(foodInput.value.trim());
     if (estimate > 0) {
         caloriesInput.value = Math.round(estimate);
         updateLiveCaloriesToday();
