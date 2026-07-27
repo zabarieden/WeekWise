@@ -6125,9 +6125,15 @@ const FOOD_CALORIE_DB = [
     // "חלב סויה" מכיל "חלב" כתת-מחרוזת עם רווח אחריה, שעונה גם על ההגנה
     // (^|[^א-ת])...(?:$|[^א-ת]) של חלב - בלי סדר הפוך זה תמיד היה נתפס כחלב
     // פרה רגיל (42 קל') במקום הערך הצמחי המדויק יותר - לפי בקשה מפורשת ("צמחוניים")
-    { name: "חלב סויה", re: /חלב סויה|soy milk/i, kcal100g: 33, unitGrams: 200 },
-    { name: "חלב שקדים", re: /חלב שקדים|almond milk/i, kcal100g: 17, unitGrams: 200 },
-    { name: "חלב שיבולת שועל", re: /חלב שיבולת שועל|oat milk/i, kcal100g: 47, unitGrams: 200 },
+    // sweetenedKcal100g: גרסה ממותקת ("עם סוכר"/"ממותק") שונה משמעותית מהגרסה
+    // הלא-ממותקת (kcal100g הרגיל, שהוא גם ברירת המחדל) - ר' findSweetenedCalories
+    { name: "חלב סויה", re: /חלב סויה|soy milk/i, kcal100g: 33, sweetenedKcal100g: 54, unitGrams: 200 },
+    { name: "חלב שקדים", re: /חלב שקדים|almond milk/i, kcal100g: 17, sweetenedKcal100g: 30, unitGrams: 200 },
+    { name: "חלב שיבולת שועל", re: /חלב שיבולת שועל|oat milk/i, kcal100g: 47, sweetenedKcal100g: 58, unitGrams: 200 },
+    // אבקת חלב חייבת לבוא *לפני* חלב - "אבקת חלב" מכילה "חלב" עם רווח לפני
+    // וסוף-מחרוזת אחרי, שעונה על הגנת הגבול של חלב - בלי סדר הפוך זה תמיד
+    // היה נתפס כחלב נוזלי רגיל (42) במקום אבקה מרוכזת בהרבה (496)
+    { name: "אבקת חלב", re: /אבקת חלב|milk powder/i, kcal100g: 496, unitGrams: 30 },
     { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42, unitGrams: 200 },
     { name: "דבש", re: /דבש|honey/i, kcal100g: 304, unitGrams: 20 },
     // percentTable: אחוזי שומן נפוצים על אריזות ישראליות - אם המשתמש כתב אחוז
@@ -6189,6 +6195,11 @@ const FOOD_CALORIE_DB = [
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15, unitGrams: 301 },
     { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18, unitGrams: 123 },
     { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166, unitGrams: 50 },
+    // אבקת חלבון חייבת לבוא *לפני* חלבון ביצה - ל"חלבון ביצה" יש קבוצה
+    // אופציונלית (ה?ביצה)? שמזהה גם "חלבון" סתם (כללי, לא דווקא ביצה), אז
+    // בלי סדר הפוך "אבקת חלבון" (אבקת חלבון כושר, לא ביצה) הייתה תמיד נתפסת
+    // כחלבון-ביצה-בודד (17 קל' ליחידה) במקום אבקה (380 ל-100 גרם)
+    { name: "אבקת חלבון", re: /אבקת חלבון|protein powder/i, kcal100g: 380, unitGrams: 30 },
     { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
     { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
     { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
@@ -6274,11 +6285,26 @@ const FOOD_CALORIE_DB = [
     { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42, unitGrams: 330 },
     { name: "בירה", re: /בירה|\bbeer\b/i, kcal100g: 43, unitGrams: 330 },
     { name: "יין", re: /(^|[^א-ת])יין(?:$|[^א-ת])|\bwine\b/i, kcal100g: 83, unitGrams: 150 },
-    // עוד משקאות - לפי בקשה מפורשת
+    // עוד משקאות - לפי בקשה מפורשת (חמים וקרים)
+    // קפה הפוך/קר חייבים לבוא *לפני* קפה הכללי - שניהם מכילים "קפה" כתת-
+    // מחרוזת, וההרכב (חלב/קצף, או משקה קר מתוק מבוסס-קפה) שונה משמעותית
+    // בקלוריות מקפה שחור פשוט (2 קל' בלבד) - בלי סדר הפוך היו תמיד נתפסים ככה
+    { name: "קפה הפוך", re: /קפה הפוך|cappuccino|latte/i, kcal100g: 60, unitGrams: 200 },
+    // "קפה קר" בישראל הוא לרוב משקה מבוסס גלידה/חלב וסוכר, לא סתם קפה עם קרח -
+    // קלורי משמעותית יותר מקפה שחור קר
+    { name: "קפה קר", re: /קפה קר|iced coffee/i, kcal100g: 90, unitGrams: 250 },
     { name: "קפה", re: /קפה|\bcoffee\b/i, kcal100g: 2, unitGrams: 200 },
+    // תה קר חייב לבוא *לפני* תה הכללי - "תה קר" (ממותק, כמו נסטי) שונה
+    // משמעותית מתה חם רגיל (כמעט 0 קלוריות) - מכיל "תה" עם רווח אחריו, שעונה
+    // גם על הגנת הגבול (^|[^א-ת])...(?:$|[^א-ת]) של תה הכללי
+    { name: "תה קר", re: /תה קר|iced tea/i, kcal100g: 35, unitGrams: 200 },
     // (^|[^א-ת])...(?:$|[^א-ת]) כמו לבן/יין למעלה - בלי זה "אתה"/"שתה" (מילים
     // עבריות נפוצות ביותר) היו נתפסים כ"תה" בגלל ש-\b לא עובד על עברית
     { name: "תה", re: /(^|[^א-ת])תה(?:$|[^א-ת])|\btea\b/i, kcal100g: 1, unitGrams: 200 },
+    // אבקת שוקו חייבת לבוא *לפני* שוקו - "אבקת שוקו" (אבקה מתוקה להוספה לחלב,
+    // כמו אבקת שוקו למיניה) מכילה "שוקו" כמילה שלמה, וריכוזה (אבקה יבשה) שונה
+    // לגמרי מהמשקה המוכן (שוקו נוזלי) - בלי סדר הפוך היה תמיד נתפס כמשקה מוכן
+    { name: "אבקת שוקו", re: /אבקת שוקו|chocolate (drink )?powder|hot chocolate powder/i, kcal100g: 380, unitGrams: 20 },
     // (?!לד) כדי ש"שוקו" לא יתפוס את "שוקולד" (שמתחיל באותן 4 אותיות בדיוק)
     { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 75, unitGrams: 200 },
     { name: "לימונדה", re: /לימונדה|lemonade/i, kcal100g: 40, unitGrams: 200 },
@@ -6371,6 +6397,15 @@ function findFatPercentCalories(line, percentTable) {
     return closest;
 }
 
+// "עם סוכר"/"ממותק" מול "ללא סוכר" (שהוא ממילא ברירת המחדל, kcal100g הרגיל)
+// - למשקאות צמחיים (סויה/שקדים/שיבולת שועל) שיש להם גרסה ממותקת שונה
+// משמעותית בקלוריות מהגרסה הרגילה
+function findSweetenedCalories(line, sweetenedKcal100g) {
+    if (sweetenedKcal100g == null) return null;
+    if (/(^|[^א-ת])(עם סוכר|ממותק(ה)?)(?:$|[^א-ת])|\bsweetened\b|\bwith sugar\b/i.test(line)) return sweetenedKcal100g;
+    return null;
+}
+
 function estimateIngredientLineCalories(line) {
     let grams = null;
     const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
@@ -6388,7 +6423,8 @@ function estimateIngredientLineCalories(line) {
     for (const item of FOOD_CALORIE_DB) {
         if (!item.re.test(line)) continue;
         const pctKcal = item.percentTable ? findFatPercentCalories(line, item.percentTable) : null;
-        const kcal100g = pctKcal != null ? pctKcal : item.kcal100g;
+        const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(line, item.sweetenedKcal100g) : null;
+        const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
         if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
         if (grams != null) return (grams / 100) * kcal100g;
         // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
