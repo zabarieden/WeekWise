@@ -6218,8 +6218,14 @@ const FOOD_CALORIE_DB = [
     // בלי סדר הפוך "אבקת חלבון" (אבקת חלבון כושר, לא ביצה) הייתה תמיד נתפסת
     // כחלבון-ביצה-בודד (17 קל' ליחידה) במקום אבקה (380 ל-100 גרם)
     { name: "אבקת חלבון", re: /אבקת חלבון|protein powder/i, kcal100g: 380, unitGrams: 30 },
+    // חטיף חלבון גם כאן, מאותה סיבה בדיוק - מכיל "חלבון"
+    { name: "חטיף חלבון", re: /חטיף חלבון|protein bar/i, kcal100g: 380, unitGrams: 50 },
     { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
     { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
+    // ביצה מטוגנת/חביתה חייבות לבוא *לפני* ביצה - "ביצה מטוגנת" מכילה "ביצ"
+    // (הרגקס הרחב של ביצה סתם), וטיגון בשמן משנה משמעותית את הקלוריות ליחידה
+    { name: "ביצה מטוגנת", re: /ביצה מטוגנת|fried egg/i, kcalPerUnit: 90 },
+    { name: "חביתה", re: /חביתה|omelet|omelette/i, kcal100g: 150, unitGrams: 120 },
     { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
     { name: "מים", re: /מים|\bwater\b/i, kcal100g: 0 },
     { name: "מלח", re: /מלח|\bsalt\b/i, kcal100g: 0 },
@@ -6233,6 +6239,9 @@ const FOOD_CALORIE_DB = [
     { name: "חסה", re: /חסה|lettuce/i, kcal100g: 15, unitGrams: 30 },
     { name: "פלפל", re: /פלפל|pepper/i, kcal100g: 31, unitGrams: 119 },
     { name: "בצל", re: /בצל|onion/i, kcal100g: 40, unitGrams: 110 },
+    { name: "כרישה", re: /כרישה|\bleek\b/i, kcal100g: 61, unitGrams: 100 },
+    { name: "במיה", re: /במיה|okra/i, kcal100g: 33, unitGrams: 100 },
+    { name: "לפת", re: /לפת|turnip/i, kcal100g: 28, unitGrams: 122 },
     // (^|[^א-ת])...(?:$|[^א-ת]) במקום lookbehind/lookahead: אותה תוצאה (גבול
     // מילה עברי אמיתי, כי \b לא עובד על עברית ב-JS), אבל בתחביר regex בסיסי
     // שנתמך בכל דפדפן - lookbehind (?<!...) לא נתמך ב-Safari ישן (לפני 16.4),
@@ -6294,7 +6303,9 @@ const FOOD_CALORIE_DB = [
     { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120, unitGrams: 150 },
     { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389, unitGrams: 40 },
     { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471, unitGrams: 40 },
+    { name: "מוזלי", re: /מוזלי|muesli/i, kcal100g: 360, unitGrams: 40 },
     { name: "קורנפלקס", re: /קורנפלקס|cornflakes/i, kcal100g: 357, unitGrams: 30 },
+    { name: "קרקר/ביסקוויט", re: /קרקר|ביסקוויט|crackers?|biscuits?/i, kcal100g: 440, unitGrams: 20 },
     { name: "פיתה", re: /פיתה|pita/i, kcal100g: 275, unitGrams: 60 },
     { name: "טופו", re: /טופו|tofu/i, kcal100g: 76, unitGrams: 100 },
     { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115, unitGrams: 15 },
@@ -6365,11 +6376,17 @@ const FOOD_CALORIE_DB = [
     { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250, unitGrams: 250 },
     { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333, unitGrams: 150 },
     { name: "בורקס", re: /בורקס|bourekas?/i, kcal100g: 330, unitGrams: 80 },
+    // עוד מנות - ישראלי (חמין/מלאווח/ג'חנון) ועולמי (סושי)
+    { name: "סושי", re: /סושי|sushi/i, kcal100g: 150, unitGrams: 200 },
+    { name: "חמין/צ'ולנט", re: /חמין|צ['׳]?ולנט|cholent/i, kcal100g: 200, unitGrams: 300 },
+    { name: "מלאווח", re: /מלאווח|malawach/i, kcal100g: 380, unitGrams: 100 },
+    { name: "ג'חנון", re: /ג['׳]?חנון|jachnun/i, kcal100g: 350, unitGrams: 150 },
     // עוד חטיפים - לפי בקשה מפורשת
     { name: "במבה", re: /במבה|bamba/i, kcal100g: 536, unitGrams: 25 },
     { name: "ביסלי", re: /ביסלי|bissli/i, kcal100g: 490, unitGrams: 25 },
     { name: "פופקורן", re: /פופקורן|popcorn/i, kcal100g: 400, unitGrams: 30 },
     { name: "בייגלה", re: /בייגלה|bagele/i, kcal100g: 450, unitGrams: 30 },
+    { name: "ארטיק/קרטיב", re: /ארטיק|קרטיב|popsicle|ice pop/i, kcal100g: 70, unitGrams: 60 },
     { name: "גלידה", re: /גלידה|ice cream/i, kcal100g: 207, unitGrams: 60 },
     { name: "עוגיות", re: /עוגי(ות|ה)|cookies?/i, kcal100g: 480, unitGrams: 15 },
     { name: "עוגה", re: /עוגה|\bcake\b/i, kcal100g: 350, unitGrams: 80 },
