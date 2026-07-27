@@ -6176,6 +6176,10 @@ const FOOD_CALORIE_DB = [
     { name: "סייטן", re: /סייטן|seitan/i, kcal100g: 370, unitGrams: 100 },
     { name: "טמפה", re: /טמפה|tempeh/i, kcal100g: 193, unitGrams: 100 },
     { name: "שניצל צמחוני", re: /שניצל (צמחוני|טבעוני|סויה)|vegan schnitzel|veggie schnitzel/i, kcal100g: 250, unitGrams: 100 },
+    // שניצל (עוף) רגיל - חייב לבוא *אחרי* שניצל צמחוני למעלה, כדי שהמילים
+    // הספציפיות (צמחוני/טבעוני/סויה) עדיין ייתפסו נכון קודם
+    { name: "שניצל", re: /שניצל|schnitzel/i, kcal100g: 250, unitGrams: 150 },
+    { name: "קציצות בשר", re: /קציצ(ה|ות)( בשר)?|meatballs?/i, kcal100g: 215, unitGrams: 100 },
     // גם (?!אדמה) חוץ מ-(?!הצהריים) - בלי זה, "תפוח אדמה" (תפוח-אדמה, ערך
     // נפרד ומדויק יותר בהמשך הרשימה) היה תמיד נתפס כתפוח עץ רגיל (52 קל')
     { name: "תפוח", re: /תפוח(?!\s*(הצהריים|אדמה))|apple/i, kcal100g: 52, unitGrams: 182 },
@@ -6231,6 +6235,7 @@ const FOOD_CALORIE_DB = [
     { name: "ביצה מטוגנת", re: /ביצה מטוגנת|fried egg/i, kcalPerUnit: 90 },
     { name: "חביתה", re: /חביתה|omelet|omelette/i, kcal100g: 150, unitGrams: 120 },
     { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
+    { name: "מים מוגזים", re: /מים מוגזים|sparkling water|soda water/i, kcal100g: 0 },
     { name: "מים", re: /מים|\bwater\b/i, kcal100g: 0 },
     { name: "מלח", re: /מלח|\bsalt\b/i, kcal100g: 0 },
     // הרחבה: עוד ירקות/פירות/חלבונים/דגנים/מוצרים נפוצים - לפי בקשה מפורשת
@@ -6399,6 +6404,8 @@ const FOOD_CALORIE_DB = [
     { name: "ספרינג רולס", re: /ספרינג רולס|spring rolls?/i, kcal100g: 180, unitGrams: 80 },
     { name: "דים סאם", re: /דים סאם|dim sum/i, kcal100g: 200, unitGrams: 100 },
     { name: "סלט יווני", re: /סלט יווני|greek salad/i, kcal100g: 85, unitGrams: 200 },
+    { name: "סלט ירקות", re: /סלט ירקות|vegetable salad|chopped salad/i, kcal100g: 50, unitGrams: 150 },
+    { name: "פנקייק", re: /פנקייק|pancakes?/i, kcal100g: 227, unitGrams: 40 },
     { name: "קרפ", re: /קרפ|\bcr[eê]pe\b/i, kcal100g: 230, unitGrams: 60 },
     // (?!וא) כדי ש"קיש" לא יתפוס את "קישוא" (קישוא מתחיל באותן 3 אותיות בדיוק)
     { name: "קיש", re: /קיש(?!וא)|\bquiche\b/i, kcal100g: 280, unitGrams: 120 },
