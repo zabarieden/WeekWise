@@ -6108,6 +6108,11 @@ const FOOD_CALORIE_DB = [
     { name: "סוכר חום", re: /סוכר חום|brown sugar/i, kcal100g: 380 },
     { name: "סוכר", re: /סוכר|sugar/i, kcal100g: 387 },
     { name: "חמאה", re: /חמאה|butter/i, kcal100g: 717 },
+    // גבינת שמנת חייבת לבוא *לפני* שמנת - "גבינת שמנת" מכילה "שמנת" כמילה
+    // נפרדת (בניגוד ל"חמאת בוטנים" למעלה, שהצורה הנסמכת "חמאת" מסתיימת ב-ת
+    // ולא ב-ה כמו "חמאה" ולכן לא מתנגשת - כאן "שמנת" עצמה כתובה מלא, לא נסמך)
+    // - בלי סדר הפוך זה תמיד היה נתפס כשמנת נוזלית (340) במקום גבינת שמנת (342)
+    { name: "גבינת שמנת", re: /גבינת שמנת|cream cheese/i, kcal100g: 342, unitGrams: 30 },
     // שמנת חייבת לבוא *לפני* שמן - "שמנת" מתחילה באותן 3 אותיות בדיוק כמו
     // "שמן" (ש-מ-ן), אז בלי סדר הפוך, "שמנת" הייתה תמיד נתפסת כשמן (884 קל'
     // ל-100 גרם) במקום שמנת (340) - אותה בעיה בדיוק כמו יוגורט פרו/סוכר חום למעלה
@@ -6116,17 +6121,37 @@ const FOOD_CALORIE_DB = [
     // (^|[^א-ת])...(?:$|[^א-ת]) כדי ש"חלבון" (חלבון ביצה/אבקת חלבון) לא ייתפס
     // כ"חלב" (חלב מתחיל באותן 3 אותיות בדיוק) - בלי זה, כל הזכרה של "חלבון"
     // הייתה תמיד נתפסת כחלב רגיל ולעולם לא מגיעה לערך המדויק יותר של ביצה/חלבון
+    // חלב סויה/שקדים/שיבולת שועל (תחליפי חלב צמחיים) חייבים לבוא *לפני* חלב -
+    // "חלב סויה" מכיל "חלב" כתת-מחרוזת עם רווח אחריה, שעונה גם על ההגנה
+    // (^|[^א-ת])...(?:$|[^א-ת]) של חלב - בלי סדר הפוך זה תמיד היה נתפס כחלב
+    // פרה רגיל (42 קל') במקום הערך הצמחי המדויק יותר - לפי בקשה מפורשת ("צמחוניים")
+    { name: "חלב סויה", re: /חלב סויה|soy milk/i, kcal100g: 33, unitGrams: 200 },
+    { name: "חלב שקדים", re: /חלב שקדים|almond milk/i, kcal100g: 17, unitGrams: 200 },
+    { name: "חלב שיבולת שועל", re: /חלב שיבולת שועל|oat milk/i, kcal100g: 47, unitGrams: 200 },
     { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42, unitGrams: 200 },
     { name: "דבש", re: /דבש|honey/i, kcal100g: 304, unitGrams: 20 },
-    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98, unitGrams: 250 },
-    // גבינה לבנה חייבת לבוא *לפני* גבינה - "גבינה לבנה" מכילה את "גבינה" כתת-
-    // מחרוזת, ומדובר במוצר שונה לגמרי בערכים (רך/משוח, לא גבינה קשה) - בלי
-    // סדר הפוך זה תמיד היה נתפס כגבינה קשה רגילה (350 קל') במקום 120
-    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 120, unitGrams: 100 },
-    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 350, unitGrams: 25 },
+    // percentTable: אחוזי שומן נפוצים על אריזות ישראליות - אם המשתמש כתב אחוז
+    // מפורש (למשל "קוטג' 9%"), findFatPercentCalories משתמש בערך הקרוב ביותר
+    // בטבלה במקום ב-kcal100g הכללי; קוטג'/גבינה לבנה/גבינה חייבים גם לבוא
+    // *לפני* גבינה (ראו ההערה הקיימת למטה)
+    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98, unitGrams: 250, percentTable: { 0: 72, 5: 98, 9: 135 } },
+    // גבינה לבנה/מוצרלה/פטה/פרמזן/גבינת עיזים חייבות לבוא *לפני* גבינה -
+    // "גבינה לבנה" מכילה את "גבינה" כתת-מחרוזת, ומדובר במוצר שונה לגמרי בערכים
+    // (רך/משוח, לא גבינה קשה) - בלי סדר הפוך זה תמיד היה נתפס כגבינה קשה
+    // רגילה (350 קל') במקום 95 (5%, הכי נפוץ)
+    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 95, unitGrams: 100, percentTable: { 3: 80, 5: 95, 9: 135, 20: 220 } },
+    { name: "מוצרלה", re: /מוצרלה|mozzarella/i, kcal100g: 280, unitGrams: 100 },
+    { name: "פטה", re: /פטה|\bfeta\b/i, kcal100g: 264, unitGrams: 50 },
+    { name: "פרמזן", re: /פרמזן|parmesan/i, kcal100g: 431, unitGrams: 10 },
+    { name: "גבינת עיזים", re: /גבינת עיזים|goat cheese/i, kcal100g: 364, unitGrams: 30 },
+    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 300, unitGrams: 25, percentTable: { 9: 220, 28: 300, 45: 400 } },
     { name: "אבקת אפייה", re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
     { name: "שמרים", re: /שמרים|yeast/i, kcal100g: 105 },
     { name: "אגוזים/שקדים/בוטנים", re: /אגוז|walnut|almond|שקד|בוטן|peanut/i, kcal100g: 600, unitGrams: 30 },
+    // עוד חלבון צמחוני/טבעוני - לפי בקשה מפורשת
+    { name: "סייטן", re: /סייטן|seitan/i, kcal100g: 370, unitGrams: 100 },
+    { name: "טמפה", re: /טמפה|tempeh/i, kcal100g: 193, unitGrams: 100 },
+    { name: "שניצל צמחוני", re: /שניצל (צמחוני|טבעוני|סויה)|vegan schnitzel|veggie schnitzel/i, kcal100g: 250, unitGrams: 100 },
     // גם (?!אדמה) חוץ מ-(?!הצהריים) - בלי זה, "תפוח אדמה" (תפוח-אדמה, ערך
     // נפרד ומדויק יותר בהמשך הרשימה) היה תמיד נתפס כתפוח עץ רגיל (52 קל')
     { name: "תפוח", re: /תפוח(?!\s*(הצהריים|אדמה))|apple/i, kcal100g: 52, unitGrams: 182 },
@@ -6138,6 +6163,11 @@ const FOOD_CALORIE_DB = [
     { name: "בגט", re: /בגט|baguette/i, kcal100g: 270, unitGrams: 25 },
     { name: "לחמניה", re: /לחמני(ה|ות)|\bbun\b|dinner roll/i, kcal100g: 280, unitGrams: 50 },
     { name: "פוקצ'ה", re: /פוקצ['׳]?ה|focaccia/i, kcal100g: 249, unitGrams: 50 },
+    // שוקי/כנפי עוף חייבים לבוא *לפני* עוף (חזה) - שניהם מכילים "עוף" כתת-
+    // מחרוזת, וזה בשר כהה/שומני יותר מחזה עוף - בלי סדר הפוך היה תמיד נתפס
+    // כחזה עוף רגיל (165 קל')
+    { name: "שוקי עוף", re: /שוקי עוף|chicken thigh/i, kcal100g: 209, unitGrams: 150 },
+    { name: "כנפי עוף", re: /כנפי עוף|chicken wings?/i, kcal100g: 203, unitGrams: 100 },
     { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165, unitGrams: 150 },
     { name: "טונה", re: /טונה|tuna/i, kcal100g: 116, unitGrams: 100 },
     // עוד דגים נפוצים - לפי בקשה מפורשת ("דגים"), אותו מסד חינמי-לוקאלי
@@ -6154,7 +6184,8 @@ const FOOD_CALORIE_DB = [
     // תמיד נתפס כיוגורט רגיל ואף פעם לא מגיע לערך הספציפי והמדויק יותר
     { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 90, unitGrams: 200 },
     { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 75, unitGrams: 200 },
-    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 61, unitGrams: 150 },
+    { name: "יוגורט יווני", re: /יוגורט יווני|greek yogurt/i, kcal100g: 97, unitGrams: 170 },
+    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 66, unitGrams: 150, percentTable: { 0: 45, 3: 66, 10: 110 } },
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15, unitGrams: 301 },
     { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18, unitGrams: 123 },
     { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166, unitGrams: 50 },
@@ -6197,9 +6228,23 @@ const FOOD_CALORIE_DB = [
     { name: "אגס", re: /אגס|pear/i, kcal100g: 57, unitGrams: 178 },
     { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254, unitGrams: 150 },
     { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250, unitGrams: 150 },
+    // עוד סוגי בשר - לפי בקשה מפורשת
+    { name: "כבש/טלה", re: /כבש|טלה|lamb/i, kcal100g: 294, unitGrams: 150 },
+    { name: "חזיר", re: /חזיר|\bpork\b/i, kcal100g: 242, unitGrams: 150 },
+    { name: "כבד", re: /כבד|liver/i, kcal100g: 170, unitGrams: 100 },
+    // פסטרמה חייבת לבוא *לפני* פסטה - "פסטרמה" מתחילה כמעט באותן אותיות
+    // (פ-ס-ט), אבל האות ה-4 שונה (ר מול ה) אז זה כן בטוח בלי סדר מיוחד -
+    // ההערה כאן רק להסביר למה זה לא נראה כמו התנגשות שנשכחה
+    { name: "פסטרמה", re: /פסטרמה|pastrami/i, kcal100g: 147, unitGrams: 30 },
     { name: "הודו", re: /הודו|turkey/i, kcal100g: 135, unitGrams: 150 },
     { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208, unitGrams: 150 },
-    { name: "נקניקייה", re: /נקניקיה|sausage/i, kcal100g: 300, unitGrams: 50 },
+    // (?!י) כדי ש"נקניק" (סלמי/נקניק מעושן) לא יתפוס את "נקניקייה" (נקניקיית
+    // פרנקפורטר) - "נקניק" הוא תת-מחרוזת/קידומת מדויקת של "נקניקייה"
+    { name: "נקניק", re: /נקניק(?!י)|salami|cured sausage/i, kcal100g: 336, unitGrams: 30 },
+    // נקניקיי?ה - כתיב מלא (עם יו"ד כפולה, "נקניקייה") וגם כתיב חסר (יו"ד
+    // אחת, "נקניקיה") - השורש היה בעייתי (רק כתיב חסר) ומעולם לא היה תואם
+    // בפועל את הכתיב המלא, הנפוץ/הרשמי יותר היום
+    { name: "נקניקייה", re: /נקניקיי?ה|sausage/i, kcal100g: 300, unitGrams: 50 },
     { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116, unitGrams: 150 },
     { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127, unitGrams: 150 },
     { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81, unitGrams: 80 },
@@ -6310,6 +6355,22 @@ function parseSizeMultiplier(line) {
     return 1;
 }
 
+// מוצרי חלב רבים (קוטג'/גבינה לבנה/גבינה/יוגורט) מתויגים על גבי האריזה לפי
+// אחוז שומן, וזה משפיע משמעותית על הקלוריות - אם המשתמש כתב אחוז מפורש
+// (למשל "קוטג' 9%"), מוצאים את האחוז הקרוב ביותר בטבלת המאכל ומשתמשים בערך
+// המדויק יותר שלו במקום ב-kcal100g הכללי (שנשאר ברירת המחדל כשלא צוין אחוז)
+function findFatPercentCalories(line, percentTable) {
+    const m = line.match(/(\d+(?:\.\d+)?)\s*%/);
+    if (!m || !percentTable) return null;
+    const pct = parseFloat(m[1]);
+    let closest = null, closestDiff = Infinity;
+    Object.keys(percentTable).forEach(key => {
+        const diff = Math.abs(parseFloat(key) - pct);
+        if (diff < closestDiff) { closestDiff = diff; closest = percentTable[key]; }
+    });
+    return closest;
+}
+
 function estimateIngredientLineCalories(line) {
     let grams = null;
     const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
@@ -6326,12 +6387,14 @@ function estimateIngredientLineCalories(line) {
     const count = parseQuantityCount(line);
     for (const item of FOOD_CALORIE_DB) {
         if (!item.re.test(line)) continue;
+        const pctKcal = item.percentTable ? findFatPercentCalories(line, item.percentTable) : null;
+        const kcal100g = pctKcal != null ? pctKcal : item.kcal100g;
         if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
-        if (grams != null) return (grams / 100) * item.kcal100g;
+        if (grams != null) return (grams / 100) * kcal100g;
         // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
         // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
         // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה
-        if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(line) / 100) * item.kcal100g;
+        if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(line) / 100) * kcal100g;
         return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
     }
     return 0;
