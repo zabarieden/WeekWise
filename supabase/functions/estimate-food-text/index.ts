@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
         // של חלב/תחליף-חלב או של מזון מוצק נפרד - אז זו נשארת שאלת הבהרה
         // *חובה* (לא רק "אם זה נראה מעורפל"), כדי לא לנחש ולפספס כמו קודם
         // (120 קלוריות שיצאו במקום כ-70 לפי גוגל, בלי שהוא שאל בכלל)
-        const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) - even if a quantity like \"a quarter cup\" is already given - you STILL don't know if that quantity is milk/a milk-substitute mixed into the drink versus a separate solid-food serving. Do not silently guess one or the other, and do not treat this as merely optional extra precision - always ask that clarifying question directly (e.g. confirm \"a quarter cup of milk?\" in the user's language) before estimating. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
+        const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) - even if a quantity like \"a quarter cup\" is already given - you STILL don't know if that quantity is milk/a milk-substitute mixed into the drink versus a separate solid-food serving. Do not silently guess one or the other, and do not treat this as merely optional extra precision - always ask that clarifying question directly (e.g. confirm \"a quarter cup of milk?\" in the user's language) before estimating. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. When a fraction or quantity word is given (quarter, half, a tablespoon, etc.), apply it precisely and literally to your calculation - do not round it up to a full/larger serving or ignore it. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
         const promptText = isFollowUp
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
             : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
@@ -154,6 +154,11 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 model: ANTHROPIC_MODEL,
                 max_tokens: 500,
+                // temperature=0: בלי זה, אותה שאלה בדיוק (ואותה תשובת הבהרה
+                // בדיוק) יכלה לתת מספר שונה בכל קריאה (ראינו בפועל 120/140/180
+                // לאותו קלט) - זה מקטין את השונות האקראית בין קריאות זהות,
+                // חשוב במיוחד כשהתשובה היא מספר ולא טקסט יצירתי
+                temperature: 0,
                 messages: [{ role: "user", content: promptText }],
                 tools: [isFollowUp ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL],
                 tool_choice: { type: "tool", name: "estimate_or_clarify" },
