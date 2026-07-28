@@ -134,13 +134,12 @@ Deno.serve(async (req) => {
         }
 
         const languageName = LANGUAGE_NAMES[language] || "English";
-        // הנחיה חוזרת בשתי הקריאות: לפי בקשה מפורשת - במקום רק "להניח" בעדינות
-        // (הגרסה הקודמת של ההנחיה) שכמות מסוימת היא רכיב בתוך משקה, ה-AI
-        // מונחה עכשיו *לשאול במפורש* שאלה כזו כשיש עמימות אמיתית - למשל "האם
-        // זה משקה חלב-שיבולת-שועל, או שיבולת שועל כמזון נפרד?" - זו בדיוק
-        // הטעות שראינו הן במנוע המקומי (ר' garnishGrams לבצל) והן ב-AI עצמו
-        // כשהיה צריך לפרש "רבע כוס שיבולת שועל" כתוספת קפה, לא כדייסה שלמה
-        const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) and it's unclear whether it means a milk-substitute drink (e.g. oat-milk) mixed into that drink versus a separate solid-food serving, don't guess - ask exactly that clarifying question in the user's language. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
+        // הנחיה חוזרת בשתי הקריאות: לפי בקשה מפורשת נוספת - גם כשהמשתמשת כבר
+        // ציינה כמות (כמו "רבע כוס"), זה עדיין לא אומר שה-AI יודע אם זו כמות
+        // של חלב/תחליף-חלב או של מזון מוצק נפרד - אז זו נשארת שאלת הבהרה
+        // *חובה* (לא רק "אם זה נראה מעורפל"), כדי לא לנחש ולפספס כמו קודם
+        // (120 קלוריות שיצאו במקום כ-70 לפי גוגל, בלי שהוא שאל בכלל)
+        const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) - even if a quantity like \"a quarter cup\" is already given - you STILL don't know if that quantity is milk/a milk-substitute mixed into the drink versus a separate solid-food serving. Do not silently guess one or the other, and do not treat this as merely optional extra precision - always ask that clarifying question directly (e.g. confirm \"a quarter cup of milk?\" in the user's language) before estimating. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
         const promptText = isFollowUp
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
             : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
