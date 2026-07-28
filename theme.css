@@ -2218,6 +2218,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 /* בלי קיצוץ בשלוש נקודות כאן גם - אותו תיקון בדיוק כמו בבועות המשימה
    בשעות (word-wrap במקום ellipsis), כדי שכותרות אירועים ארוכות יהיו קריאות במלואן */
 .home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); white-space: normal; word-break: break-word; line-height: 1.2; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+/* אירוע חד-פעמי שכבר סומן כ"בוצע" - קו חוצה + דהייה, אותו רמז חזותי כמו
+   סימון השלמה במקומות אחרים באפליקציה (רלוונטי רק ל-calendar_events, כי
+   למשימות הלו"ז הקבוע (.home-glance-task-pill ללא is-event) אין מצב בוצע/לא) */
+.home-glance-task-pill.is-event.is-completed, .home-glance-event-badge.is-completed { text-decoration: line-through; opacity: 0.55; }
 .home-glance-date-label { cursor: pointer; }
 .home-glance-empty-hint { text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 14px 0; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }

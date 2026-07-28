@@ -1035,7 +1035,7 @@ async function renderHomeGlance() {
 
     const [{ data: scheduleRows }, { data: eventRows }] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('id, day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
-        supabaseClient.from('calendar_events').select('id, event_date, event_title, event_time').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
+        supabaseClient.from('calendar_events').select('id, event_date, event_title, event_time, is_completed').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
     ]);
     const populatedRows = (scheduleRows || []).filter(r => (r.task_title || '').trim());
     const allEvents = eventRows || [];
@@ -1078,7 +1078,7 @@ async function renderHomeGlance() {
         cell.className = 'home-glance-cell home-glance-events-cell';
         (untimedEventsByDate[getLocalDateString(d)] || []).forEach(ev => {
             const badge = document.createElement('span');
-            badge.className = 'home-glance-event-badge';
+            badge.className = 'home-glance-event-badge' + (ev.is_completed ? ' is-completed' : '');
             badge.textContent = ev.event_title;
             badge.onclick = () => openEditCalendarEvent(ev);
             cell.appendChild(badge);
@@ -1111,7 +1111,7 @@ async function renderHomeGlance() {
             const eventMatch = timedEvents.find(ev => ev.event_date === dStr && ev.event_time === time);
             if (eventMatch) {
                 const eventPill = document.createElement('span');
-                eventPill.className = 'home-glance-task-pill is-event';
+                eventPill.className = 'home-glance-task-pill is-event' + (eventMatch.is_completed ? ' is-completed' : '');
                 eventPill.style.background = colorForTaskTitle(eventMatch.event_title);
                 eventPill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(eventMatch.event_title)} ${eventMatch.event_title}</span>`;
                 eventPill.onclick = () => openEditCalendarEvent(eventMatch);
