@@ -6252,7 +6252,10 @@ const FOOD_CALORIE_DB = [
     { name: "כרובית", re: /כרובית|cauliflower/i, kcal100g: 25, unitGrams: 80 },
     { name: "חסה", re: /חסה|lettuce/i, kcal100g: 15, unitGrams: 30 },
     { name: "פלפל", re: /פלפל|pepper/i, kcal100g: 31, unitGrams: 119 },
-    { name: "בצל", re: /בצל|onion/i, kcal100g: 40, unitGrams: 110 },
+    // unitGrams=110 זה בצל שלם (למתכון/מנה שבה בצל הוא הרכיב היחיד שמוזכר) -
+    // אבל כשבצל מוזכר כאחד מכמה מאכלים ברשימה (כמו תוספת לטורטיה/כריך), זו
+    // כמעט תמיד כמות-תוספת קטנה, לא בצל שלם. ר' garnishGrams ב-computeItemCalories
+    { name: "בצל", re: /בצל|onion/i, kcal100g: 40, unitGrams: 110, garnishGrams: 30 },
     { name: "כרישה", re: /כרישה|\bleek\b/i, kcal100g: 61, unitGrams: 100 },
     { name: "במיה", re: /במיה|okra/i, kcal100g: 33, unitGrams: 100 },
     { name: "לפת", re: /לפת|turnip/i, kcal100g: 28, unitGrams: 122 },
@@ -6526,7 +6529,7 @@ function findSweetenedCalories(line, sweetenedKcal100g) {
 // מופרד מהחיפוש-איזה-מאכל-זה (findAllFoodMatches/estimateIngredientLineCalories)
 // כדי שאפשר יהיה להשתמש באותה לוגיקת חישוב גם כשכבר יודעים איזה פריט מתאים
 // (ר' estimateFreeTextCalories) בלי לסכן זיהוי שגוי מחדש על קטע טקסט חלקי
-function computeItemCalories(item, contextText) {
+function computeItemCalories(item, contextText, isMultiFood) {
     let grams = null;
     const gramsMatch = contextText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
     if (gramsMatch) {
@@ -6547,8 +6550,12 @@ function computeItemCalories(item, contextText) {
     if (grams != null) return (grams / 100) * kcal100g;
     // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
     // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
-    // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה
-    if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(contextText) / 100) * kcal100g;
+    // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה. למאכלי-תוספת כמו בצל/שום -
+    // כשהם חלק מרשימה של כמה מאכלים (isMultiFood), משתמשים ב-garnishGrams
+    // (כמות-תוספת קטנה) במקום unitGrams (יחידה שלמה), כי ברוב המקרים "בצל"
+    // ברשימת מאכלים הוא תוספת קצוצה, לא בצל שלם
+    const baseGrams = (isMultiFood && item.garnishGrams != null) ? item.garnishGrams : item.unitGrams;
+    if (baseGrams != null) return (count * baseGrams * parseSizeMultiplier(contextText) / 100) * kcal100g;
     return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
 }
 
@@ -6635,13 +6642,14 @@ function estimateFreeTextCalories(text) {
     if (!text) return 0;
     const matches = findAllFoodMatches(text);
     if (!matches.length) return 0;
+    const isMultiFood = matches.length > 1;
     let total = 0, matchedAny = false;
     matches.forEach((match, i) => {
         const prevEnd = i > 0 ? matches[i - 1].end : 0;
         const nextStart = i < matches.length - 1 ? matches[i + 1].start : text.length;
         const windowStart = findGapSplitPoint(text, prevEnd, match.start);
         const windowEnd = findGapSplitPoint(text, match.end, nextStart);
-        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd));
+        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd), isMultiFood);
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
     return matchedAny ? total : 0;
