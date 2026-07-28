@@ -4494,9 +4494,12 @@ function togglePresetFab() {
     applyPresetFabSetting(enabled);
 }
 
-// כפתור צף להוספת מזון מהיר בטקסט חופשי - אותו דפוס בדיוק כמו כפתורי המים/ספורט
+// כפתור צף להוספת מזון מהיר בטקסט חופשי - בניגוד לשאר כפתורי ה-FAB (כבויים
+// כברירת מחדל, opt-in), זה דלוק כברירת מחדל לפי בקשה מפורשת - "!== 'false'"
+// במקום "=== 'true'" הופך את זה ל-opt-out: כל מי שלא נגע בהגדרה בכלל (משתמשת
+// חדשה או ותיקה) רואה את הכפתור מיד; רק מי שכיבתה אותו במפורש לא תראה אותו
 function isFoodFabOn() {
-    return localStorage.getItem('weekwise_food_fab') === 'true';
+    return localStorage.getItem('weekwise_food_fab') !== 'false';
 }
 
 function applyFoodFabSetting(enabled) {
