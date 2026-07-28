@@ -1,5 +1,7 @@
 // --- מנוע תרגום ורב-לשוניות: מילון + לוגיקת RTL/LTR דינמית ---
-const SUPPORTED_LANGUAGES = ['en', 'he', 'es', 'fr', 'ar', 'ru', 'de', 'pt', 'ja', 'zh', 'hi', 'ko', 'tr', 'id', 'it', 'vi', 'pl', 'th', 'ur', 'bn', 'sw', 'uk', 'el', 'nl', 'ca', 'ro', 'yo', 'sv', 'nb', 'da', 'cs', 'hu', 'fi'];
+// סדר אלפביתי לפי שם השפה באנגלית (Arabic, Bengali, Catalan...) - כדי שרשימת
+// בורר השפה תוצג לפי סדר א"ב יציב, ולא לפי סדר ההוספה ההיסטורי של כל שפה
+const SUPPORTED_LANGUAGES = ['ar', 'bn', 'ca', 'zh', 'cs', 'da', 'nl', 'en', 'fi', 'fr', 'de', 'el', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ko', 'nb', 'pl', 'pt', 'ro', 'ru', 'es', 'sw', 'sv', 'th', 'tr', 'uk', 'ur', 'vi', 'yo'];
 const RTL_LANGUAGES = ['he', 'ar', 'ur'];
 const LANGUAGE_NAMES = { en: 'English', he: 'עברית', es: 'Español', fr: 'Français', ar: 'العربية', ru: 'Русский', de: 'Deutsch', pt: 'Português', ja: '日本語', zh: '中文', hi: 'हिन्दी', ko: '한국어', tr: 'Türkçe', id: 'Bahasa Indonesia', it: 'Italiano', vi: 'Tiếng Việt', pl: 'Polski', th: 'ไทย', ur: 'اردو', bn: 'বাংলা', sw: 'Kiswahili', uk: 'Українська', el: 'Ελληνικά', nl: 'Nederlands', ca: 'Català', ro: 'Română', yo: 'Yorùbá', sv: 'Svenska', nb: 'Norsk', da: 'Dansk', cs: 'Čeština', hu: 'Magyar', fi: 'Suomi' };
 // דגלים לבורר השפה החדש (חיפוש) - מפה נפרדת מ-LANGUAGE_NAMES כדי שהוספת שפה
