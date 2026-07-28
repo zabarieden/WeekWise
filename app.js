@@ -6321,6 +6321,7 @@ const FOOD_CALORIE_DB = [
     { name: "קורנפלקס", re: /קורנפלקס|cornflakes/i, kcal100g: 357, unitGrams: 30 },
     { name: "קרקר/ביסקוויט", re: /קרקר|ביסקוויט|crackers?|biscuits?/i, kcal100g: 440, unitGrams: 20 },
     { name: "פיתה", re: /פיתה|pita/i, kcal100g: 275, unitGrams: 60 },
+    { name: "טורטיה", re: /טורטיה|tortilla/i, kcal100g: 300, unitGrams: 50 },
     { name: "טופו", re: /טופו|tofu/i, kcal100g: 76, unitGrams: 100 },
     { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115, unitGrams: 15 },
     { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595, unitGrams: 20 },
@@ -6516,9 +6517,14 @@ function findSweetenedCalories(line, sweetenedKcal100g) {
     return null;
 }
 
-function estimateIngredientLineCalories(line) {
+// מחשבת קלוריות למאכל *ידוע מראש* (item), לפי טקסט הקשר מקומי (contextText) -
+// רק ממנו נגזרות הכמות/יחידה/אחוז/גודל, לא איזה מאכל זה (זה כבר נקבע קודם).
+// מופרד מהחיפוש-איזה-מאכל-זה (findAllFoodMatches/estimateIngredientLineCalories)
+// כדי שאפשר יהיה להשתמש באותה לוגיקת חישוב גם כשכבר יודעים איזה פריט מתאים
+// (ר' estimateFreeTextCalories) בלי לסכן זיהוי שגוי מחדש על קטע טקסט חלקי
+function computeItemCalories(item, contextText) {
     let grams = null;
-    const gramsMatch = line.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
+    const gramsMatch = contextText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
     if (gramsMatch) {
         grams = parseFloat(gramsMatch[1]);
     } else {
@@ -6526,50 +6532,86 @@ function estimateIngredientLineCalories(line) {
         // *איזו* יחידה נכתבה (כוס/כף/כפית/גביע/חופן) - כדי ש"חצי גביע"/"חצי
         // כוס" יעבדו, לא רק "2 כוסות" עם ספרה מפורשת (ר' ההערה על VOLUME_UNIT_TO_GRAMS)
         for (const unit of VOLUME_UNIT_TO_GRAMS) {
-            if (unit.re.test(line)) { grams = parseQuantityCount(line) * unit.gramsPerUnit; break; }
+            if (unit.re.test(contextText)) { grams = parseQuantityCount(contextText) * unit.gramsPerUnit; break; }
         }
     }
-    const count = parseQuantityCount(line);
+    const count = parseQuantityCount(contextText);
+    const pctKcal = item.percentTable ? findFatPercentCalories(contextText, item.percentTable) : null;
+    const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(contextText, item.sweetenedKcal100g) : null;
+    const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
+    if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
+    if (grams != null) return (grams / 100) * kcal100g;
+    // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
+    // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
+    // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה
+    if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(contextText) / 100) * kcal100g;
+    return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
+}
+
+function estimateIngredientLineCalories(line) {
     for (const item of FOOD_CALORIE_DB) {
-        if (!item.re.test(line)) continue;
-        const pctKcal = item.percentTable ? findFatPercentCalories(line, item.percentTable) : null;
-        const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(line, item.sweetenedKcal100g) : null;
-        const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
-        if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
-        if (grams != null) return (grams / 100) * kcal100g;
-        // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
-        // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
-        // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה
-        if (item.unitGrams != null) return (count * item.unitGrams * parseSizeMultiplier(line) / 100) * kcal100g;
-        return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
+        if (item.re.test(line)) return computeItemCalories(item, line);
     }
     return 0;
 }
 
-// מפצלת שורה חופשית אחת שמתארת כמה מאכלים יחד (למשל "חצי בננה וכוס יוגורט",
-// או "שניצל 2 בינוני ו3 כפות פירה") למקטעים נפרדים, כל אחד עם ההערכה שלו -
-// בלי זה, estimateIngredientLineCalories הייתה מזהה רק את המאכל *הראשון*
-// שנמצא (לפי סדר המסד, לא סדר הטקסט), ומתעלמת לגמרי מכל שאר מה שכתוב, ואף
-// גרוע מזה - כמות/יחידה ששייכת למאכל השני (כמו "3 כפות") הייתה "נדבקת" בטעות
-// למאכל הראשון. ה"ו" בעברית מחוברת כקידומת למילה (או למספר) הבאה בלי רווח
-// (לא מילה נפרדת כמו "and" באנגלית), אז מפצלים לפי רווח שאחריו "ו"+אות עברית
-// *או ספרה* (כמו "ו3") - lookahead, לא צורך את ה-ו עצמה - היא נשארת חלק
-// מהמקטע הבא, וזה בסדר כי ההתאמה ב-FOOD_CALORIE_DB היא תת-מחרוזת ולא דורשת
-// גבול מילה בהתחלה
-function splitFreeTextFoodSegments(text) {
-    return text
-        .split(/,|\+|\s+עם\s+|\s+גם\s+|\band\b|\s+(?=ו[א-ת0-9])/i)
-        .map(s => s.trim())
-        .filter(Boolean);
+// מוצאת את *כל* המאכלים שמופיעים בשורה (לא רק את הראשון) לפי הסדר שבו הם
+// מופיעים בטקסט, עם המיקום המדויק של כל התאמה. עוברים על FOOD_CALORIE_DB
+// לפי סדר העדיפות הרגיל (ספציפי לפני כללי), ומדלגים על התאמה שחופפת לטווח
+// שכבר תפוס - כדי ש"גבינה לבנה" לא תיספר גם בתור "גבינה" על אותו טקסט ממש
+function findAllFoodMatches(line) {
+    const matches = [];
+    for (const item of FOOD_CALORIE_DB) {
+        const m = item.re.exec(line);
+        if (!m) continue;
+        const start = m.index, end = m.index + m[0].length;
+        const overlaps = matches.some(existing => start < existing.end && end > existing.start);
+        if (!overlaps) matches.push({ item, start, end });
+    }
+    return matches.sort((a, b) => a.start - b.start);
+}
+
+// מוצאת את נקודת הפיצול בין שני מאכלים בתוך "הפער" ביניהם (gapStart..gapEnd) -
+// הכי קרוב לאמצע הפער, אבל תמיד *על רווח* (לא באמצע מילה) - כדי שמילת כמות
+// כמו "חצי" לא תיחתך לשניים (מה שהיה מונע זיהוי שלה בשני הצדדים)
+function findGapSplitPoint(text, gapStart, gapEnd) {
+    if (gapEnd <= gapStart) return gapStart;
+    const rawMid = Math.floor((gapStart + gapEnd) / 2);
+    let best = rawMid, bestDist = Infinity;
+    for (let i = gapStart; i <= gapEnd; i++) {
+        if (text[i] === ' ') {
+            const dist = Math.abs(i - rawMid);
+            if (dist < bestDist) { bestDist = dist; best = i; }
+        }
+    }
+    return best;
 }
 
 // כמו estimateIngredientLineCalories, אבל למשפט חופשי שעשוי לתאר כמה מאכלים
-// יחד - מפצלת קודם (ר' splitFreeTextFoodSegments) ומסכמת את ההערכה של כל מקטע
+// יחד - גם עם מילות חיבור ("חצי בננה וכוס יוגורט") וגם סתם ברצף בלי אף מילת
+// חיבור ("ביצה אחת חצי עגבניה בצל גבינה", איך שאנשים בדרך כלל מתארים מה
+// שאכלו). בלי זה, estimateIngredientLineCalories הייתה מזהה רק את המאכל
+// *הראשון* שנמצא (לפי סדר המסד, לא סדר הטקסט), ומתעלמת לגמרי מכל שאר מה
+// שכתוב, ואף גרוע מזה - כמות ששייכת למאכל אחר בהמשך המשפט (כמו "3 כפות")
+// הייתה "נדבקת" בטעות למאכל הראשון שנמצא.
+//
+// הגישה: מוצאים את *מיקום* כל מאכל בטקסט (findAllFoodMatches), ואז לכל מאכל
+// לוקחים "חלון הקשר" מהרווח הכי קרוב לאמצע שבינו לבין המאכל הקודם, עד הרווח
+// הכי קרוב לאמצע שבינו לבין המאכל הבא - כך שמילת כמות שנמצאת *בין* שני
+// מאכלים (כמו "אחת חצי" בין "ביצה" ל"עגבניה") מתחלקת בערך שווה בשווה ביניהם.
+// זה לא מושלם (אין הבנה דקדוקית אמיתית של למי בדיוק שייכת כל מילה), אבל
+// מילת כמות כמעט תמיד צמודה למאכל שהיא מתארת, אז ברוב המקרים זה נופל נכון
 function estimateFreeTextCalories(text) {
     if (!text) return 0;
+    const matches = findAllFoodMatches(text);
+    if (!matches.length) return 0;
     let total = 0, matchedAny = false;
-    splitFreeTextFoodSegments(text).forEach(segment => {
-        const kcal = estimateIngredientLineCalories(segment);
+    matches.forEach((match, i) => {
+        const prevEnd = i > 0 ? matches[i - 1].end : 0;
+        const nextStart = i < matches.length - 1 ? matches[i + 1].start : text.length;
+        const windowStart = findGapSplitPoint(text, prevEnd, match.start);
+        const windowEnd = findGapSplitPoint(text, match.end, nextStart);
+        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd));
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
     return matchedAny ? total : 0;
