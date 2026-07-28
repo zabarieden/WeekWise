@@ -1938,6 +1938,25 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 #schedule-clarify-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
 #schedule-clarify-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18); }
+/* אותו סגנון בדיוק כמו #schedule-clarify-input - שני המודלים הם אותו דפוס
+   "שאלת הבהרה יחידה", רק אחד ל-AI לוח זמנים והשני ל-AI הוספת מזון מהירה.
+   בלי זה, השדה נשאר בעיצוב ברירת המחדל הלבן של הדפדפן ולא תואם את שאר האפליקציה */
+#food-clarify-input {
+    width: 100%;
+    background-color: var(--bg-glass);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+    transition: var(--transition);
+}
+#food-clarify-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
+#food-clarify-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18); }
 .recipe-image-preview { display: block; width: 100%; max-height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(168, 85, 247, 0.2); }
 .recipe-detail-photo { display: block; width: 100%; max-height: 220px; object-fit: cover; border-radius: 14px; margin-bottom: 14px; }
 .recipe-card-photo { display: block; width: 100%; height: 90px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }

@@ -134,9 +134,15 @@ Deno.serve(async (req) => {
         }
 
         const languageName = LANGUAGE_NAMES[language] || "English";
+        // הנחיה חוזרת בשתי הקריאות: תיאור כמות של רכיב שהוא בדרך כלל "בתוך"
+        // פריט אחר (חלב/שיבולת שועל/קצפת בתוך קפה, לא כוסות/קערות בפני עצמן)
+        // צריך להתפרש לפי התפקיד הקטן הזה, לא כמנה מוצקה שלמה - זו בדיוק
+        // הטעות שראינו הן במנוע המקומי (ר' garnishGrams לבצל) והן ב-AI עצמו
+        // כשהיה צריך לפרש "רבע כוס שיבולת שועל" כתוספת קפה, לא כדייסה שלמה
+        const realismNote = "Use realistic everyday serving sizes - if a quantity describes something that's typically an ingredient inside another item (like milk, creamer, or oats added to coffee), treat it as that smaller role (a splash/serving mixed into the drink), not as a large standalone solid-food portion, unless the description clearly says otherwise.";
         const promptText = isFollowUp
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
