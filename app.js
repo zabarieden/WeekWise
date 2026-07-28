@@ -6575,11 +6575,37 @@ function findAllFoodMatches(line) {
     return matches.sort((a, b) => a.start - b.start);
 }
 
-// מוצאת את נקודת הפיצול בין שני מאכלים בתוך "הפער" ביניהם (gapStart..gapEnd) -
-// הכי קרוב לאמצע הפער, אבל תמיד *על רווח* (לא באמצע מילה) - כדי שמילת כמות
-// כמו "חצי" לא תיחתך לשניים (מה שהיה מונע זיהוי שלה בשני הצדדים)
+// מילות-יחידה (פרוסה/כוס/כף/וכו') שתמיד מתארות את המאכל שבא *אחריהן* בטקסט
+// ("חצי פרוסת גבינה", "3 כפות פירה") - בניגוד למילות גודל כמו "גדול/קטן"
+// שיכולות לתאר גם את המאכל שבא *לפניהן* ("שניצל 2 בינוני"). ההבחנה הזו קריטית
+// לפיצול פער נכון בין שני מאכלים
+const GAP_UNIT_NOUN_RE = /^(פרוסות|פרוסת|פרוסה|כוסות|כוס|כפות|כף|כפיות|כפית|גביעים|גביע|קופסאות|קופסה|אריזות|אריזה|חופנים|חופן)$/;
+const GAP_QUANTITY_TOKEN_RE = /^ו?(?:\d+(?:\.\d+)?|חצי|רבע|שליש)$/;
+
+// מוצאת את נקודת הפיצול בין שני מאכלים בתוך "הפער" ביניהם (gapStart..gapEnd).
+// קודם בודקים אם בפער יש מילת-יחידה (כמו "פרוסת"/"כפות") - אם כן, כל צירוף
+// הכמות שמוביל אליה (המספר/מילת השבר הצמודים לפניה, כולל "ו" מחבר) שייך
+// כולו למאכל *הבא*, לא מתחלק - כי "בצל וחצי פרוסת גבינה" מתאר חצי פרוסה של
+// הגבינה, לא חצי בצל, למרות שהמילים קרובות יותר (במספר תווים) לבצל.
+// אם אין מילת-יחידה כזו בפער, חוזרים לחלוקה הכי קרובה לאמצע הפער - אבל תמיד
+// *על רווח* (לא באמצע מילה), כדי שמילת כמות כמו "חצי" לא תיחתך לשניים (מה
+// שהיה מונע זיהוי שלה בשני הצדדים)
 function findGapSplitPoint(text, gapStart, gapEnd) {
     if (gapEnd <= gapStart) return gapStart;
+    const gapText = text.slice(gapStart, gapEnd);
+    const tokens = [];
+    const tokenRe = /\S+/g;
+    let tm;
+    while ((tm = tokenRe.exec(gapText))) tokens.push({ text: tm[0].replace(/[,.!?;:]+$/, ''), start: tm.index });
+    const unitTokenIdx = tokens.findIndex(t => GAP_UNIT_NOUN_RE.test(t.text));
+    if (unitTokenIdx !== -1) {
+        let cutTokenIdx = unitTokenIdx;
+        for (let i = unitTokenIdx - 1; i >= 0; i--) {
+            if (GAP_QUANTITY_TOKEN_RE.test(tokens[i].text)) cutTokenIdx = i;
+            else break;
+        }
+        return gapStart + tokens[cutTokenIdx].start;
+    }
     const rawMid = Math.floor((gapStart + gapEnd) / 2);
     let best = rawMid, bestDist = Infinity;
     for (let i = gapStart; i <= gapEnd; i++) {
