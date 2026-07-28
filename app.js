@@ -6478,9 +6478,10 @@ function parseQuantityCount(line) {
         if (f.re.test(line)) return f.value;
     }
     // בלי ^ בהתחלה - מספר יכול לבוא *אחרי* שם המאכל (למשל "שניצל 2 בינוני"),
-    // לא רק לפניו ("2 שניצלים"). (?!\s*%) כדי לא לבלבל בין כמות לאחוז שומן
-    // (למשל "קוטג' 9%" - ה-9 שם הוא אחוז, לא כמות של 9 יחידות)
-    const numMatch = line.match(/(\d+(?:\.\d+)?)(?!\s*%)/);
+    // לא רק לפניו ("2 שניצלים"). (?!\s*(?:%|אחוז)) כדי לא לבלבל בין כמות לאחוז
+    // שומן (למשל "קוטג' 9%" או "גבינה 28 אחוז" - המספר שם הוא אחוז, לא כמות
+    // יחידות) - גם כשהאחוז נכתב במילה ("אחוז"/"אחוזים") ולא בסימן %
+    const numMatch = line.match(/(\d+(?:\.\d+)?)(?!\s*(?:%|אחוז))/);
     return numMatch ? parseFloat(numMatch[1]) : 1;
 }
 
@@ -6497,7 +6498,10 @@ function parseSizeMultiplier(line) {
 // (למשל "קוטג' 9%"), מוצאים את האחוז הקרוב ביותר בטבלת המאכל ומשתמשים בערך
 // המדויק יותר שלו במקום ב-kcal100g הכללי (שנשאר ברירת המחדל כשלא צוין אחוז)
 function findFatPercentCalories(line, percentTable) {
-    const m = line.match(/(\d+(?:\.\d+)?)\s*%/);
+    // תופס גם אחוז שנכתב במילה ("28 אחוז"/"28 אחוזים"), לא רק בסימן % -
+    // בלי זה, "אחוז" לא זוהה בכלל כאחוז, והמספר עצמו נתפס (בטעות) ככמות
+    // ע"י parseQuantityCount במקום כאחוז שומן
+    const m = line.match(/(\d+(?:\.\d+)?)\s*(?:%|אחוזים?)/);
     if (!m || !percentTable) return null;
     const pct = parseFloat(m[1]);
     let closest = null, closestDiff = Infinity;
