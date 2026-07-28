@@ -134,12 +134,13 @@ Deno.serve(async (req) => {
         }
 
         const languageName = LANGUAGE_NAMES[language] || "English";
-        // הנחיה חוזרת בשתי הקריאות: תיאור כמות של רכיב שהוא בדרך כלל "בתוך"
-        // פריט אחר (חלב/שיבולת שועל/קצפת בתוך קפה, לא כוסות/קערות בפני עצמן)
-        // צריך להתפרש לפי התפקיד הקטן הזה, לא כמנה מוצקה שלמה - זו בדיוק
+        // הנחיה חוזרת בשתי הקריאות: לפי בקשה מפורשת - במקום רק "להניח" בעדינות
+        // (הגרסה הקודמת של ההנחיה) שכמות מסוימת היא רכיב בתוך משקה, ה-AI
+        // מונחה עכשיו *לשאול במפורש* שאלה כזו כשיש עמימות אמיתית - למשל "האם
+        // זה משקה חלב-שיבולת-שועל, או שיבולת שועל כמזון נפרד?" - זו בדיוק
         // הטעות שראינו הן במנוע המקומי (ר' garnishGrams לבצל) והן ב-AI עצמו
         // כשהיה צריך לפרש "רבע כוס שיבולת שועל" כתוספת קפה, לא כדייסה שלמה
-        const realismNote = "Use realistic everyday serving sizes - if a quantity describes something that's typically an ingredient inside another item (like milk, creamer, or oats added to coffee), treat it as that smaller role (a splash/serving mixed into the drink), not as a large standalone solid-food portion, unless the description clearly says otherwise.";
+        const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) and it's unclear whether it means a milk-substitute drink (e.g. oat-milk) mixed into that drink versus a separate solid-food serving, don't guess - ask exactly that clarifying question (e.g. \"Is this oat-milk in the coffee, or oats as a separate food?\") in the user's language. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
         const promptText = isFollowUp
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
             : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
