@@ -669,18 +669,136 @@ function openFoodQuickAddModal() {
     openModal('modal-food-quick-add');
 }
 
+// שומרים את הטקסט המקורי + שאלת ההבהרה בזמן שממתינים לתשובת המשתמשת (פרימיום
+// בלבד) - כדי לשלוח קריאת המשך ל-AI עם טקסט+שאלה+תשובה יחד, ר' confirmFoodClarify
+let pendingFoodQuickAddText = '';
+let pendingFoodClarifyQuestion = '';
+
+// חינמי: מיד לחישוב המקומי החינמי, בדיוק כמו קודם, בלי שום שינוי התנהגות.
+// פרימיום: קריאה אמיתית ל-AI (יכולה לשאול שאלת הבהרה אחת) - ר' logFoodQuickAddViaAI
 async function logFoodQuickAdd() {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const input = document.getElementById('food-quick-add-input');
     const text = input ? input.value.trim() : '';
     if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
-    const estimate = estimateFreeTextCalories(text);
-    if (!estimate || estimate <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
-    const calories = Math.round(estimate);
+
+    if (isPremiumUser) {
+        await logFoodQuickAddViaAI(text);
+        return;
+    }
+    await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+}
+
+// נופלת חזרה בשקט לחישוב המקומי החינמי בכל מקרה של תקלה/מכסה חודשית שנגמרה -
+// משתמשת פרימיום לעולם לא אמורה "להיתקע" בלי אפשרות לרשום בכלל
+async function logFoodQuickAddViaAI(text) {
+    setFoodQuickAddLoading(true);
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
+
+        let attempt = await estimateFoodTextViaAI(token, text);
+        if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
+
+        if (attempt.status === 'limit') {
+            showAppToast(t('quick_add_ai_limit_toast'), 'error');
+            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            return;
+        }
+        if (attempt.status === 'clarify') {
+            pendingFoodQuickAddText = text;
+            pendingFoodClarifyQuestion = attempt.question;
+            openFoodClarifyModal(attempt.question);
+            return;
+        }
+        if (attempt.status === 'estimate') {
+            await finishFoodQuickAdd(text, attempt.calories);
+            return;
+        }
+        // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי בלי הודעת שגיאה מפחידה
+        await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+    } finally {
+        setFoodQuickAddLoading(false);
+    }
+}
+
+async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarificationAnswer) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, language: currentLang })
+        });
+        const result = await res.json();
+        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
+        if (res.ok && result.status === 'clarify' && result.question) return { status: 'clarify', question: result.question };
+        if (res.ok && result.status === 'estimate' && typeof result.calories === 'number') return { status: 'estimate', calories: result.calories };
+        return { status: 'retry' };
+    } catch {
+        return { status: 'retry' };
+    }
+}
+
+// מכבה/מדליקה את כפתור "הוספה" בזמן קריאת ה-AI (יש כעת השהיית רשת אמיתית,
+// בניגוד לחישוב המקומי המיידי) - שומר את הטקסט המקורי שלו כדי לשחזר אחרי
+function setFoodQuickAddLoading(isLoading) {
+    const btn = document.getElementById('btn-food-quick-add-submit');
+    if (!btn) return;
+    if (isLoading) {
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = t('food_ai_estimating');
+    } else if (btn.dataset.originalText) {
+        btn.textContent = btn.dataset.originalText;
+    }
+    btn.disabled = isLoading;
+}
+
+async function finishFoodQuickAdd(text, estimate) {
+    const calories = Math.round(estimate || 0);
+    if (!calories || calories <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
     await addQuickLogEntry(text, calories);
     closeModal('modal-food-quick-add');
     showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
     refreshTodayNutritionViewIfOpen();
+}
+
+// מודל מזערי לשאלת הבהרה אחת מה-AI (פרימיום) - לא תור של כמה שאלות כמו
+// modal-schedule-clarify, כי כאן תמיד יש לכל היותר שאלה אחת בודדת
+function openFoodClarifyModal(question) {
+    const questionEl = document.getElementById('food-clarify-question');
+    if (questionEl) questionEl.textContent = question;
+    const input = document.getElementById('food-clarify-input');
+    if (input) input.value = '';
+    openModal('modal-food-clarify');
+}
+
+function cancelFoodClarify() {
+    pendingFoodQuickAddText = '';
+    pendingFoodClarifyQuestion = '';
+    closeModal('modal-food-clarify');
+}
+
+async function confirmFoodClarify() {
+    const answerInput = document.getElementById('food-clarify-input');
+    const answer = answerInput ? answerInput.value.trim() : '';
+    if (!answer) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+    const text = pendingFoodQuickAddText;
+    const question = pendingFoodClarifyQuestion;
+    closeModal('modal-food-clarify');
+    setFoodQuickAddLoading(true);
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
+        const attempt = await estimateFoodTextViaAI(token, text, question, answer);
+        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories); return; }
+        // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
+        await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+    } finally {
+        setFoodQuickAddLoading(false);
+    }
 }
 
 function togglePasswordVisibility() {
