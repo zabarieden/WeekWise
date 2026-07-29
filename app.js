@@ -663,9 +663,16 @@ async function logPresetQuickAdd(id) {
     refreshTodayNutritionViewIfOpen();
 }
 
+// כותרת נוצצת "AI תזונה" רק לפרימיום (שבאמת מקבלת AI אמיתי) - לא לכל אחת,
+// כדי לא להטעות משתמשות חינמיות שעדיין מקבלות רק את החישוב המקומי הרגיל
 function openFoodQuickAddModal() {
     const input = document.getElementById('food-quick-add-input');
     if (input) input.value = '';
+    const title = document.getElementById('food-quick-add-title');
+    if (title) {
+        title.classList.toggle('ai-brain-modal-title', isPremiumUser);
+        title.textContent = isPremiumUser ? t('food_quick_add_ai_title') : t('food_fab_title');
+    }
     openModal('modal-food-quick-add');
 }
 
