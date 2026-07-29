@@ -60,6 +60,10 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 const LANGUAGE_NAMES: Record<string, string> = { en: "English", he: "Hebrew", es: "Spanish", fr: "French", ar: "Arabic", ru: "Russian", de: "German", pt: "Portuguese", ja: "Japanese", zh: "Chinese", hi: "Hindi", ko: "Korean", tr: "Turkish", id: "Indonesian", it: "Italian", vi: "Vietnamese", pl: "Polish", th: "Thai", ur: "Urdu", bn: "Bengali", sw: "Swahili", uk: "Ukrainian", el: "Greek", nl: "Dutch", ca: "Catalan", ro: "Romanian", yo: "Yoruba" };
+// המדינה שהמשתמשת בחרה בהגדרות (לא ניחוש לפי שפה) - כדי שאם ה-AI צריך להעריך
+// מנת רשת בעצמו (לא נמצאה במאגר המקומי), הוא לפחות ידע על איזו גרסה-ארצית
+// לחשוב (מתכון/מנה יכולים להיות שונים באמריקה מול ישראל)
+const COUNTRY_NAMES: Record<string, string> = { il: "Israel", us: "the United States" };
 
 const ESTIMATE_OR_CLARIFY_TOOL = {
     name: "estimate_or_clarify",
@@ -112,7 +116,7 @@ Deno.serve(async (req) => {
         if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const body = await req.json();
-        const { text, clarificationQuestion, clarificationAnswer, isLocalClarify, language } = body;
+        const { text, clarificationQuestion, clarificationAnswer, isLocalClarify, language, country } = body;
         if (!text || !String(text).trim()) return jsonResponse({ error: "missing_text" }, 400);
         const hasAnswer = !!(clarificationQuestion && clarificationAnswer);
         // שני סוגי "יש תשובה לשאלת הבהרה": מה-AI (שכבר שאל וכבר חויב על זה -
@@ -142,6 +146,8 @@ Deno.serve(async (req) => {
         }
 
         const languageName = LANGUAGE_NAMES[language] || "English";
+        const countryName = COUNTRY_NAMES[country] || "Israel";
+        const countryNote = `If this describes a dish from a specific chain restaurant or brand, use the version/recipe/portion size typical for that chain in ${countryName}, since the same chain's dish can differ meaningfully by country.`;
         // הנחיה חוזרת בשתי הקריאות: לפי בקשה מפורשת נוספת - גם כשהמשתמשת כבר
         // ציינה כמות (כמו "רבע כוס"), זה עדיין לא אומר שה-AI יודע אם זו כמות
         // של חלב/תחליף-חלב או של מזון מוצק נפרד - אז זו נשארת שאלת הבהרה
@@ -149,8 +155,8 @@ Deno.serve(async (req) => {
         // (120 קלוריות שיצאו במקום כ-70 לפי גוגל, בלי שהוא שאל בכלל)
         const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) - even if a quantity like \"a quarter cup\" is already given - you STILL don't know if that quantity is milk/a milk-substitute mixed into the drink versus a separate solid-food serving. Do not silently guess one or the other, and do not treat this as merely optional extra precision - always ask that clarifying question directly (e.g. confirm \"a quarter cup of milk?\" in the user's language) before estimating. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. When a fraction or quantity word is given (quarter, half, a tablespoon, etc.), apply it precisely and literally to your calculation - do not round it up to a full/larger serving or ignore it. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${countryNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${countryNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",

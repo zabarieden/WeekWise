@@ -763,7 +763,7 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
         const res = await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, isLocalClarify, language: currentLang })
+            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, isLocalClarify, language: currentLang, country: getUserCountry() })
         });
         const result = await res.json();
         if (result.error === 'limit_reached') return { status: 'limit' };
@@ -942,6 +942,7 @@ async function initAppAfterAuth(user) {
 
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
+    applyUserCountrySetting();
     await Promise.all([
         loadWeeklySchedule(),
         loadStats(),
@@ -4678,6 +4679,23 @@ function colorThemeKey() {
     return `weekwise_color_theme_${currentUserId}`;
 }
 
+// מדינה - נבחרת מפורשות בהגדרות (לא ניחוש לפי שפת הממשק) - כדי שערכי קלוריות
+// של רשתות מזון (ר' kcalPerUnitByCountry ב-FOOD_CALORIE_DB) יידעו איזה מדינה
+// להשתמש בה. ברירת מחדל ישראל, תואם לברירת המחדל הכללית של האפליקציה
+function userCountryKey() {
+    return `weekwise_user_country_${currentUserId}`;
+}
+function getUserCountry() {
+    return localStorage.getItem(userCountryKey()) || 'il';
+}
+function setUserCountry(code) {
+    localStorage.setItem(userCountryKey(), code);
+}
+function applyUserCountrySetting() {
+    const select = document.getElementById('user-country-select');
+    if (select) select.value = getUserCountry();
+}
+
 function applyColorTheme(themeName) {
     if (!themeName || themeName === 'default') document.documentElement.removeAttribute('data-color-theme');
     else document.documentElement.setAttribute('data-color-theme', themeName);
@@ -6945,6 +6963,15 @@ function computeItemCalories(item, contextText, isMultiFood) {
     const pctKcal = item.percentTable ? findFatPercentCalories(contextText, item.percentTable) : null;
     const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(contextText, item.sweetenedKcal100g) : null;
     const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
+    // מאכלי רשתות מזון - לפעמים יש ערך שונה למדינה (למשל "ביג מק" בישראל מול
+    // ארה"ב) - נבחר לפי הגדרת "מדינה" בהגדרות (לא ניחוש לפי שפה), עם נפילה
+    // חזרה לישראל ואז לכל ערך זמין אחר, כדי שלעולם לא ייצא 0 סתם כי המדינה
+    // שנבחרה עוד לא קיימת בטבלה למאכל הזה
+    if (item.kcalPerUnitByCountry) {
+        const byCountry = item.kcalPerUnitByCountry;
+        const chosen = byCountry[getUserCountry()] ?? byCountry.il ?? Object.values(byCountry)[0];
+        return count * chosen;
+    }
     if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
     if (grams != null) return (grams / 100) * kcal100g;
     // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
