@@ -163,8 +163,19 @@ function selectLanguageFromPicker(lang) {
     closeModal('modal-language-picker');
 }
 
+// עמודי המשפטי (תנאי שימוש/מדיניות פרטיות/הצהרת נגישות) קיימים רק בעברית,
+// אנגלית וספרדית (לא ב-33 השפות - מסמכים משפטיים ארוכים, לא שווה לתרגם
+// לכולן) - עברית לעברית, ספרדית לספרדית, וכל שפה אחרת נופלת לאנגלית
+function updateLegalLinksForLanguage() {
+    const suffix = currentLang === 'he' ? '' : (currentLang === 'es' ? '-es' : '-en');
+    document.querySelectorAll('.legal-link-terms').forEach(a => a.href = `terms${suffix}.html`);
+    document.querySelectorAll('.legal-link-privacy').forEach(a => a.href = `privacy${suffix}.html`);
+    document.querySelectorAll('.legal-link-accessibility').forEach(a => a.href = `accessibility${suffix}.html`);
+}
+
 function onLanguageChanged() {
     updateLanguagePickerTriggers();
+    updateLegalLinksForLanguage();
     renderHomeGreeting();
     if (!currentUserId) return;
     loadCustomDefaultHours();
