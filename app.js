@@ -971,7 +971,6 @@ async function initAppAfterAuth(user) {
         loadCalendarEvents(),
         loadTodayTasks(),
         loadMonthlyCalendarGrid(),
-        renderHomeGlance(),
         loadRecipes(),
         loadAiUsage(),
         loadPremiumStatus(),
@@ -1106,199 +1105,8 @@ function renderHomeGreeting() {
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-// --- לוח שבועי מצומצם במסך הבית: ימים כעמודות, שעות (רק אלה שבפועל בשימוש
-// בלו"ז) כשורות, בועה צבעונית לכל משימה - שילוב של weekly_schedule (התבנית
-// החוזרת, זהה בכל שבוע) עם calendar_events (אירועים חד-פעמיים בעלי תאריך
-// אמיתי, לכן היחידים שבאמת משתנים בין שבוע לשבוע כשמדפדפים עם החצים) ---
-let homeGlanceWeekStart = null; // Date - תחילת השבוע המוצג כרגע, מחושב עצלנית
-
-function weekStartsMondayKey() {
-    return `weekwise_week_starts_monday_${currentUserId}`;
-}
-
-function isWeekStartsMonday() {
-    return localStorage.getItem(weekStartsMondayKey()) === 'true';
-}
-
-function toggleWeekStartsMonday() {
-    const enabled = document.getElementById('week-start-monday-toggle').checked;
-    localStorage.setItem(weekStartsMondayKey(), enabled ? 'true' : 'false');
-    homeGlanceWeekStart = null; // מאפסים לשבוע הנוכחי במקום לנסות "לשמר" יישור ישן שכבר לא רלוונטי
-    renderHomeGlance();
-}
-
-// מחזיר תאריך חדש = היום הראשון (ראשון או שני, לפי ההגדרה) של השבוע שמכיל
-// את date - לא נוגע ב-dbDaysMap עצמו, רק קובע איך מציגים/מסדרים את העמודות
-function getHomeGlanceWeekStartAnchor(date) {
-    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const dow = d.getDay();
-    const offset = isWeekStartsMonday() ? (dow === 0 ? 6 : dow - 1) : dow;
-    d.setDate(d.getDate() - offset);
-    return d;
-}
-
-function getHomeGlanceWeekDates() {
-    if (!homeGlanceWeekStart) homeGlanceWeekStart = getHomeGlanceWeekStartAnchor(new Date());
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(homeGlanceWeekStart);
-        d.setDate(d.getDate() + i);
-        dates.push(d);
-    }
-    return dates;
-}
-
-function navigateHomeGlanceWeek(delta) {
-    getHomeGlanceWeekDates(); // מוודא ש-homeGlanceWeekStart מאותחל
-    homeGlanceWeekStart.setDate(homeGlanceWeekStart.getDate() + delta * 7);
-    renderHomeGlance();
-}
-
-function resetHomeGlanceToToday() {
-    homeGlanceWeekStart = null; // getHomeGlanceWeekDates יחשב מחדש את השבוע של היום
-    renderHomeGlance();
-}
-
-function openHomeGlanceDatePicker() {
-    const input = document.getElementById('home-glance-date-input');
-    if (!input) return;
-    if (input.showPicker) { try { input.showPicker(); return; } catch { /* נופל ל-click למטה */ } }
-    input.click();
-}
-
-function jumpHomeGlanceToDate(dateStr) {
-    if (!dateStr) return;
-    const [y, m, d] = dateStr.split('-').map(Number);
-    homeGlanceWeekStart = getHomeGlanceWeekStartAnchor(new Date(y, m - 1, d));
-    renderHomeGlance();
-}
-
-// צבע קבוע לכל משימה חוזרת (לפי hash של שם המשימה) - כך שאותה משימה תמיד
-// נראית באותו צבע, גם בין שבועות שונים, בלי שום עמודת "צבע" חדשה בטבלה.
-// גרדיאנטים עדינים ושקופים (לא צבע שטוח חזק) מבין משתני ה-CSS של ערכת
-// הנושא הנבחרת - אותם זוגות גרדיאנט בדיוק שכבר משמשים בכפתורים/כפתורי-FAB
-// באפליקציה (למשל .btn-primary: pink->purple), רק בשקיפות נמוכה יותר לעדינות
-const HOME_GLANCE_PALETTE = [
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 32%, transparent), color-mix(in srgb, var(--accent-purple) 32%, transparent))',
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 30%, transparent), color-mix(in srgb, var(--accent-cyan) 30%, transparent))',
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-gold) 30%, transparent), color-mix(in srgb, var(--accent-pink) 30%, transparent))',
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-green) 28%, transparent), color-mix(in srgb, var(--accent-cyan) 28%, transparent))',
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-purple-light) 30%, transparent), color-mix(in srgb, var(--accent-purple) 30%, transparent))',
-    'linear-gradient(135deg, color-mix(in srgb, var(--accent-cyan) 28%, transparent), color-mix(in srgb, var(--accent-purple-light) 28%, transparent))',
-];
-function colorForTaskTitle(title) {
-    const str = (title || '').trim();
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) | 0;
-    return HOME_GLANCE_PALETTE[Math.abs(hash) % HOME_GLANCE_PALETTE.length];
-}
-
-async function renderHomeGlance() {
-    const grid = document.getElementById('home-glance-grid');
-    if (!grid || !supabaseClient || !currentUserId) return;
-    const toggle = document.getElementById('week-start-monday-toggle');
-    if (toggle) toggle.checked = isWeekStartsMonday();
-
-    const dates = getHomeGlanceWeekDates();
-    const weekStartStr = getLocalDateString(dates[0]);
-    const weekEndStr = getLocalDateString(dates[6]);
-    const dateLabel = document.getElementById('home-glance-date-label');
-    if (dateLabel) {
-        const fmt = d => d.toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
-        dateLabel.textContent = `${fmt(dates[0])} - ${fmt(dates[6])}`;
-    }
-
-    const [{ data: scheduleRows }, { data: eventRows }] = await Promise.all([
-        supabaseClient.from('weekly_schedule').select('id, day_of_week, time_of_day, task_title').eq('user_id', currentUserId),
-        supabaseClient.from('calendar_events').select('id, event_date, event_title, event_time, is_completed').eq('user_id', currentUserId).gte('event_date', weekStartStr).lte('event_date', weekEndStr),
-    ]);
-    const populatedRows = (scheduleRows || []).filter(r => (r.task_title || '').trim());
-    const allEvents = eventRows || [];
-    // אירועים עם שעה (רשות, שדה חדש) נכנסים לרשת השעות עצמה כמו משימות
-    // הלו"ז; אירועים בלי שעה (רוב האירועים - למשל יום הולדת) נשארים כבועה
-    // קטנה מתחת לכותרת היום, כי אין להם לאן "להיכנס" בציר השעות
-    const timedEvents = allEvents.filter(ev => ev.event_time);
-    const untimedEvents = allEvents.filter(ev => !ev.event_time);
-
-    // ציר השורות: איחוד השעות הייחודיות שבפועל מופיעות אי-שם בלו"ז + באירועי
-    // היומן המתוזמנים של השבוע הזה (לא כל 24 השעות, ולא defaultHours - כדי
-    // שהרשת תישאר קומפקטית כמו שביקשה)
-    const timeSet = new Set();
-    populatedRows.forEach(r => { if (r.time_of_day) timeSet.add(r.time_of_day); });
-    timedEvents.forEach(ev => timeSet.add(ev.event_time));
-    const times = Array.from(timeSet).sort((a, b) => (scheduleTimeToMinutes(a) ?? 0) - (scheduleTimeToMinutes(b) ?? 0));
-
-    grid.innerHTML = '';
-    if (!times.length && !untimedEvents.length) {
-        grid.innerHTML = `<p class="home-glance-empty-hint">${t('home_weekly_glance_empty')}</p>`;
-        return;
-    }
-    const todayStr = getLocalDateString();
-
-    grid.appendChild(document.createElement('div')).className = 'home-glance-corner';
-    dates.forEach(d => {
-        const header = document.createElement('div');
-        header.className = 'home-glance-day-header' + (getLocalDateString(d) === todayStr ? ' today' : '');
-        header.innerHTML = `<span>${t(weekdayShortKeys[d.getDay()])}</span><span class="home-glance-day-date">${d.getDate()}</span>`;
-        grid.appendChild(header);
-    });
-
-    // שורת אירועים חד-פעמיים ללא שעה (calendar_events) - מוצגים כבועות קטנות
-    // מתחת לכותרת היום ולא בתוך רשת השעות עצמה
-    const untimedEventsByDate = {};
-    untimedEvents.forEach(ev => { (untimedEventsByDate[ev.event_date] = untimedEventsByDate[ev.event_date] || []).push(ev); });
-    grid.appendChild(document.createElement('div'));
-    dates.forEach(d => {
-        const cell = document.createElement('div');
-        cell.className = 'home-glance-cell home-glance-events-cell';
-        (untimedEventsByDate[getLocalDateString(d)] || []).forEach(ev => {
-            const badge = document.createElement('span');
-            badge.className = 'home-glance-event-badge' + (ev.is_completed ? ' is-completed' : '');
-            badge.textContent = ev.event_title;
-            badge.onclick = () => openEditCalendarEvent(ev);
-            cell.appendChild(badge);
-        });
-        grid.appendChild(cell);
-    });
-
-    times.forEach(time => {
-        const label = document.createElement('div');
-        label.className = 'home-glance-hour-label';
-        label.textContent = time;
-        grid.appendChild(label);
-        dates.forEach(d => {
-            const dbDay = dbDaysMap[d.getDay()];
-            const dStr = getLocalDateString(d);
-            const cell = document.createElement('div');
-            cell.className = 'home-glance-cell';
-            const match = populatedRows.find(r => r.day_of_week === dbDay && r.time_of_day === time);
-            if (match) {
-                const pill = document.createElement('span');
-                pill.className = 'home-glance-task-pill';
-                pill.style.background = colorForTaskTitle(match.task_title);
-                pill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(match.task_title)} ${match.task_title}</span><span class="home-glance-pill-edit-icon">✏️</span>`;
-                pill.onclick = () => openGlanceTaskEditor(match.id, match.task_title, match.time_of_day);
-                cell.appendChild(pill);
-            }
-            // אירוע מתוזמן מ"מבט ליומן" לתאריך+שעה האלה - בועה נוספת (לא
-            // תחליף למשימת הלו"ז אם יש) עם גבול מקווקו כדי שיהיה ברור
-            // שזה אירוע ליומן ולא משימה חוזרת, בסגנון הבועות הלא-מתוזמנות
-            const eventMatch = timedEvents.find(ev => ev.event_date === dStr && ev.event_time === time);
-            if (eventMatch) {
-                const eventPill = document.createElement('span');
-                eventPill.className = 'home-glance-task-pill is-event' + (eventMatch.is_completed ? ' is-completed' : '');
-                eventPill.style.background = colorForTaskTitle(eventMatch.event_title);
-                eventPill.innerHTML = `<span class="home-glance-pill-text">${getScheduleTaskIcon(eventMatch.event_title)} ${eventMatch.event_title}</span>`;
-                eventPill.onclick = () => openEditCalendarEvent(eventMatch);
-                cell.appendChild(eventPill);
-            }
-            grid.appendChild(cell);
-        });
-    });
-}
-
-// עריכה מהירה של משימה ישירות מהלוח השבועי המצומצם - בלי לעבור למסך "השבוע
-// שלי" המלא, רק כותרת+שעה (יום/מספר-שורה כבר ידועים מהעריכה עצמה, לא רלוונטיים כאן)
+// עריכה מהירה של משימה קבועה מהלו"ז - נפתחת גם מ"הצצה ליום" (בעתיד, אם
+// ייווסף קישור עריכה שם) וגם מפירוט היום בלוח החודשי (renderSelectedCalendarDay)
 let editingGlanceTaskId = null;
 
 function openGlanceTaskEditor(id, title, time) {
@@ -1319,14 +1127,14 @@ async function saveGlanceTaskEdit() {
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     closeModal('modal-edit-glance-task');
     showAppToast(t('glance_edit_task_saved'));
-    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
+    await Promise.all([loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
 }
 
 async function deleteGlanceTaskEdit() {
     if (!editingGlanceTaskId || !supabaseClient) return;
     await supabaseClient.from('weekly_schedule').delete().eq('id', editingGlanceTaskId);
     closeModal('modal-edit-glance-task');
-    await Promise.all([renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
+    await Promise.all([loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
 }
 
 // showTabSection: הלוגיקה המשותפת של מעבר בין מסכים ראשיים - חולצה מתוך
@@ -2933,9 +2741,10 @@ async function loadTodayTasks() {
     if (!container) return;
     const todayDbDay = dbDaysMap[new Date().getDay()];
     const todayStr = getLocalDateString();
-    const [{ data, error }, { data: eventRows }] = await Promise.all([
+    const [{ data, error }, { data: eventRows }, completedScheduleIds] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
         supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr),
+        getScheduleCompletionsForDate(todayStr),
     ]);
     if (error || !data) return;
     const populated = data
@@ -2953,10 +2762,18 @@ async function loadTodayTasks() {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
+    // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
+    // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
+    // מוחקת ולא משנה את הלו"ז החוזר עצמו, ומתאפסת מאליה במופע הבא של אותו יום
     populated.forEach(item => {
+        const isDone = completedScheduleIds.has(item.id);
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
-        row.innerHTML = `<span class="today-tasks-time">${item.time_of_day || ''}</span><span class="today-tasks-text">${getScheduleTaskIcon(item.task_title)} ${escapeHtmlForReport(item.task_title)}</span>`;
+        row.innerHTML = `
+            <input type="checkbox" class="day-detail-checkbox"${isDone ? ' checked' : ''} onchange="toggleScheduleCompletion('${item.id}', '${todayStr}', this.checked)">
+            <span class="today-tasks-time">${item.time_of_day || ''}</span>
+            <span class="today-tasks-text${isDone ? ' completed' : ''}">${getScheduleTaskIcon(item.task_title)} ${escapeHtmlForReport(item.task_title)}</span>
+        `;
         container.appendChild(row);
     });
     // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
@@ -3075,7 +2892,7 @@ async function renderSelectedCalendarDay() {
         supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true }),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
     ]);
-    // אותו סינון בדיוק כמו renderHomeGlance - משבצות בסיס ריקות (task_title
+    // אותו סינון בדיוק כמו ב-loadTodayTasks - משבצות בסיס ריקות (task_title
     // "") הן פנימיות בלבד, לא משימות אמיתיות, ולא אמורות להופיע כאן כשורות ריקות
     const recurringData = (recurringDataRaw || []).filter(r => (r.task_title || '').trim());
     const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -3101,7 +2918,7 @@ async function renderSelectedCalendarDay() {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
-            <span class="today-tasks-recurring-icon" title="${escapeHtmlForReport(t('home_weekly_glance_title'))}">🔁</span>
+            <span class="today-tasks-recurring-icon" title="${escapeHtmlForReport(t('recurring_task_tooltip'))}">🔁</span>
             <span class="today-tasks-text">${escapeHtmlForReport(item.task_title)}</span>
         `;
         const editBtn = document.createElement('button');
@@ -3123,7 +2940,7 @@ async function renderSelectedCalendarDay() {
 async function deleteRecurringScheduleItem(id) {
     if (!supabaseClient) return;
     await supabaseClient.from('weekly_schedule').delete().eq('id', id);
-    await Promise.all([loadMonthlyCalendarGrid(), renderHomeGlance(), loadWeeklySchedule(), loadTodayTasks()]);
+    await Promise.all([loadMonthlyCalendarGrid(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
 async function loadCalendarEvents() {
@@ -3339,6 +3156,30 @@ async function toggleEventOccurrenceCompletion(id, isCompleted) {
     loadCalendarEvents();
     loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
+}
+
+// השלמה של משימה קבועה מהלו"ז השבועי, ליום ספציפי בלבד - בניגוד ל-calendar_events
+// שיש להן עמודת is_completed על השורה עצמה, weekly_schedule מייצג משבצת חוזרת
+// ללא תאריך, אז ההשלמה חייבת להתקיים בטבלה נפרדת עם מפתח (schedule_id, תאריך)
+async function getScheduleCompletionsForDate(dateStr) {
+    if (!supabaseClient || !currentUserId) return new Set();
+    const { data } = await supabaseClient.from('schedule_completions')
+        .select('schedule_id').eq('user_id', currentUserId).eq('completion_date', dateStr);
+    return new Set((data || []).map(r => r.schedule_id));
+}
+
+async function toggleScheduleCompletion(scheduleId, dateStr, isCompleted) {
+    if (!supabaseClient || !currentUserId) return;
+    if (isCompleted) {
+        await supabaseClient.from('schedule_completions').upsert(
+            { user_id: currentUserId, username: currentUsername, schedule_id: scheduleId, completion_date: dateStr },
+            { onConflict: 'schedule_id,completion_date' }
+        );
+    } else {
+        await supabaseClient.from('schedule_completions').delete()
+            .eq('schedule_id', scheduleId).eq('completion_date', dateStr);
+    }
+    loadTodayTasks();
 }
 
 // --- גרירה לסידור ידני-עצמאי (עדיפות) של פריטי מבט ליומן, בלי קשר לתאריך ---

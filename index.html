@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=180">
+    <link rel="stylesheet" href="theme.css?v=181">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -95,28 +95,20 @@
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
                 </div>
-                <!-- לוח שבועי מצומצם: ימים כעמודות, שעות כשורות, בועות צבעוניות
-                     לכל משימה - תצוגה חדשה, נפרדת מ"השבוע שלי" המלא. ר'
-                     renderHomeGlance ב-app.js -->
-                <div class="card home-glance-card">
-                    <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                        <h2 data-i18n="home_weekly_glance_title">Weekly Schedule</h2>
-                        <span class="card-toggle-icon">▼</span>
+                <!-- הצצה ליום: הועבר לכאן ממסך "השבוע שלי" (היה today-tasks-card
+                     בראש schedule-section) - במקום הרשת השבועית המלאה שהוסרה,
+                     כרטיס יומי בלבד, פחות "לוחץ". שעות הלו"ז + משימות
+                     מ-calendar_events (בעיקר פתקים גרורים) שתאריכן היום, יחד -
+                     ר' loadTodayTasks ב-app.js -->
+                <div class="card today-tasks-card">
+                    <div class="card-title-row">
+                        <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
                     </div>
                     <div class="card-body">
-                        <div class="monthly-goal-nav">
-                            <button class="monthly-goal-nav-btn" onclick="navigateHomeGlanceWeek(-1)">‹</button>
-                            <span class="monthly-goal-month-label home-glance-date-label" id="home-glance-date-label" onclick="openHomeGlanceDatePicker()"></span>
-                            <button class="monthly-goal-nav-btn home-glance-today-btn" onclick="resetHomeGlanceToToday()" data-i18n-title="home_weekly_glance_today_title" title="Back to this week">⦿</button>
-                            <button class="monthly-goal-nav-btn" onclick="navigateHomeGlanceWeek(1)">›</button>
-                        </div>
-                        <input type="date" id="home-glance-date-input" class="hidden" onchange="jumpHomeGlanceToDate(this.value)">
-                        <div class="home-glance-grid-scroll">
-                            <div class="home-glance-grid" id="home-glance-grid"></div>
-                        </div>
+                        <div id="today-tasks-list" class="today-tasks-list"></div>
                     </div>
                 </div>
-                <!-- מסך הבית מכיל כרגע רק ברכה + לוח שבועי מצומצם - הניווט
+                <!-- מסך הבית מכיל כרגע רק ברכה + הצצה ליום - הניווט
                      הראשי עבר לסרגל התחתון הקבוע (.bottom-tab-bar) -->
             </div>
 
@@ -125,17 +117,6 @@
                 <!-- חלונית 1: MyWeek -->
                 <section class="tab-content" id="schedule-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-
-                    <!-- משימות להיום: הכי חשוב, לכן ראשון בעמוד - שעות הלו"ז + משימות
-                         מ-calendar_events (בעיקר פתקים גרורים) שתאריכן היום, יחד -->
-                    <div class="card today-tasks-card">
-                        <div class="card-title-row">
-                            <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                        </div>
-                        <div class="card-body">
-                            <div id="today-tasks-list" class="today-tasks-list"></div>
-                        </div>
-                    </div>
 
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
@@ -1246,13 +1227,6 @@
                         <span class="switch-slider"></span>
                     </label>
                 </div>
-                <div class="settings-toggle-row">
-                    <label class="settings-label" data-i18n="settings_week_start_monday_label" for="week-start-monday-toggle">Week starts on Monday</label>
-                    <label class="switch">
-                        <input type="checkbox" id="week-start-monday-toggle" onchange="toggleWeekStartsMonday()">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
 
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openHelpFaqModal();" data-i18n="settings_help_faq_btn">❓ Help &amp; FAQ</button>
@@ -1815,7 +1789,7 @@
 
     </div>
 
-    <script src="i18n.js?v=128"></script>
-    <script src="app.js?v=211"></script>
+    <script src="i18n.js?v=129"></script>
+    <script src="app.js?v=212"></script>
 </body>
 </html>

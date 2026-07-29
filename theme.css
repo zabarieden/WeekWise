@@ -880,10 +880,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
 /* כפתור צף להוספה מהירה של מים - מוערם *מעל* כפתור הפתק המהיר (ai-fab),
-   אותו צד (ימין-תחתון) כמו במקור - חזרה לפי בקשה מפורשת. הפתרון לכיסוי
-   הלוח השבועי הוא עכשיו גובה מוגבל+גלילה אנכית פנימית על הרשת עצמה
-   (ר' .home-glance-grid-scroll), לא הזזת הבועות. גרדיאנט סגול->ציאן (לא
-   כחול סתמי) כדי שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה.
+   אותו צד (ימין-תחתון) כמו במקור - חזרה לפי בקשה מפורשת. גרדיאנט סגול->ציאן
+   (לא כחול סתמי) כדי שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה.
    מוסתר כברירת מחדל (class="hidden" ב-HTML) עד שמפעילים בהגדרות */
 .water-fab {
     position: absolute;
@@ -2142,9 +2140,6 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 }
 .monthly-goal-nav-btn:hover:not(:disabled) { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); }
 .monthly-goal-nav-btn:disabled { opacity: 0.3; cursor: default; }
-/* כפתור "חזרה לשבוע הנוכחי" - קטנטן ועדין בכוונה, לא עוד חץ ניווט רגיל
-   (לפי בקשה מפורשת ל"כפתור קטן קטן") */
-.home-glance-today-btn { width: 16px; height: 16px; font-size: 0.55rem; color: var(--tile-accent, var(--accent-gold)); }
 .monthly-goal-month-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); min-width: 120px; text-align: center; }
 /* לוח חודשי: כותרות ימים + רשת 7 עמודות, תא לכל יום עם נקודה אם יש בו
    אירוע/משימה - אותו גוון זהב כמו שאר עולם הלו"ז */
@@ -2175,77 +2170,6 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
 
-/* לוח שבועי מצומצם במסך הבית: עמודה ראשונה = תוויות שעה (44px, צר), 7
-   העמודות הבאות = ימי השבוע - ילדים נוספים בסדר-DOM שורה-אחרי-שורה, בלי
-   grid-row/column מפורש, אותה טכניקה בדיוק כמו .monthly-calendar-grid למעלה */
-/* בטלפון צר, 7 עמודות + עמודת שעות פשוט לא נכנסות ברוחב בלי להיחתך לבלי-קריא -
-   ההורים (.phone-wrapper/.home-hero-panel) הם overflow-x:hidden, אז בלי עטיפה
-   עם גלילה אופקית משלה כאן, כל מה שחורג מהרוחב הזמין נחתך לגמרי ולא נגיש
-   בשום גלילה - בדיוק הבאג שדווח (רואים רק א'-ג' ותו לא) */
-/* גובה מוגבל + גלילה אנכית פנימית משלה - כדי שהכרטיס לעולם לא יגדל מספיק
-   כדי להגיע לאזור המסך שבו יושבות הבועות הצפות (שחזרו למיקום המקורי שלהן
-   בצד ימין, לפי בקשה מפורשת) - במקום להזיז את הבועות, מגבילים את הרשת */
-/* גובה יחסי לגובה החלון בפועל (לא פיקסלים קבועים!) - זו הייתה הטעות: 340px
-   קבוע לא "יודע" שבחלון נמוך זה עדיין מגיע לאזור הבועות הצפות (שמעוגנות
-   ל-bottom, כלומר המיקום שלהן על המסך תלוי בגובה ה-viewport). עם calc()
-   יחסי ל-100dvh, הרשת "יודעת" לכווץ את עצמה בחלון נמוך במקום לגלוש לאזור
-   הבועות - clamp שומר גם רצפה (לא נעלם לגמרי) וגם תקרה (לא ענק במסך גבוה) */
-/* בלי תקרה עליונה (היה clamp עם 380px) - זו הייתה הבעיה: בטלפון רגיל עם
-   הרבה גובה זמין, התקרה השרירותית קטמה את הרשת גם כשהיה מקום להראות הכל
-   בלי גלילה אנכית בכלל. max() בלי clamp שומר רק את הרצפה (לא נעלם בחלון
-   קצר במיוחד) - calc(100dvh - 520px) עדיין מכווץ אוטומטית בחלון נמוך כדי
-   לא לחפוף לבועות הצפות, אבל בטלפון רגיל עם גובה viewport תקין הרשת פשוט
-   תתפוס את הגובה הטבעי שלה (max-height הוא תקרה, לא כפיית-גודל) - כל
-   השעות ייראו בלי גלילה אנכית, רק הגלילה האופקית לימים נשארת */
-.home-glance-grid-scroll { overflow-x: auto; overflow-y: auto; max-height: max(110px, calc(100dvh - 520px)); -webkit-overflow-scrolling: touch; margin-top: 6px; scrollbar-width: none; }
-/* בטלפון אמיתי (לא כרטיס "סימולטור" רחב בדסקטופ - אותה נקודת-שבירה 769px
-   בדיוק כמו שאר האפליקציה) אין בעיית "חלון נמוך במיוחד" שדרשה את הנוסחה
-   למעלה מלכתחילה - טלפון לאורך תמיד גבוה מספיק, אז בלי שום תקרת גובה
-   בכלל: כל שעות השבוע נראות בבת אחת, נשארת רק הגלילה הצדדית בין הימים */
-@media (max-width: 768px) {
-    .home-glance-grid-scroll { max-height: none; }
-}
-.home-glance-grid-scroll::-webkit-scrollbar { display: none; }
-/* minmax(58px, 1fr) - לא רוחב קבוע: כשהכרטיס רחב (כרטיס "סימולטור טלפון"
-   בדסקטופ), העמודות נמתחות וממלאות את כל הרוחב הזמין; כשהכרטיס צר (טלפון
-   אמיתי), העמודות לא מתכווצות מתחת ל-58px - הרשת עצמה גולשת ומפעילה את
-   הגלילה האופקית של .home-glance-grid-scroll במקום זאת */
-.home-glance-grid { display: grid; grid-template-columns: 40px repeat(7, minmax(58px, 1fr)); gap: 2px; }
-.home-glance-corner { }
-.home-glance-day-header { display: flex; flex-direction: column; align-items: center; padding: 2px; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
-.home-glance-day-header.today { color: var(--tile-accent, var(--accent-gold)); }
-.home-glance-day-header .home-glance-day-date { font-size: 0.6rem; font-weight: 400; opacity: 0.8; }
-.home-glance-hour-label { display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-secondary); text-align: center; padding: 1px; }
-.home-glance-cell { position: relative; background-color: var(--bg-row); border-radius: 6px; min-height: 20px; display: flex; flex-direction: column; align-items: stretch; gap: 1px; padding: 1px; }
-.home-glance-events-cell { min-height: 0; background-color: transparent; display: flex; flex-direction: column; gap: 1px; padding: 0 1px; }
-.home-glance-task-pill { width: 100%; border-radius: 5px; padding: 1px 3px; font-size: 0.62rem; font-weight: 500; color: var(--text-primary); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); display: flex; align-items: center; gap: 2px; cursor: pointer; box-sizing: border-box; }
-/* אירוע מ"מבט ליומן" בתוך רשת השעות (יש לו שעה) - גבול מקווקו כדי להבדיל
-   חזותית מהמשימות הקבועות של "השבוע שלי", אותו רמז חזותי כמו הבועות
-   הלא-מתוזמנות מתחת לכותרות הימים */
-/* אין יותר מקווקוו כאן בכוונה - לפי בקשה מפורשת: אם לאירוע יש שעה, הוא
-   "בתוך הלו"ז" ממש, אז נראה בדיוק כמו בועת משימה רגילה (מוצקה). מקווקוו
-   נשאר שמור אך ורק לבועות הלא-מתוזמנות מעל כותרת היום (.home-glance-event-badge) */
-/* בלי קיצוץ בשלוש נקודות - שם המשימה יגלוש לשורה שנייה בתוך הבועה במקום
-   שייחתך (העמודה נשארת צרה בכוונה כדי שיהיה קומפקטי, אבל התוכן עצמו חייב
-   להיות קריא במלואו, לפי בקשה מפורשת) */
-/* עד 3 שורות, לא בלתי-מוגבל - כותרת ארוכה במיוחד (למשל פתק שנגרר עם טקסט
-   ארוך) לא תשבור את הרשת לגובה ענק; אחרי 3 שורות נחתך עם "..." (line-clamp,
-   נתמך בכל הדפדפנים הרלוונטיים). הועלה מ-2 ל-3 כי כותרות קצרות לגמרי כמו
-   "ריצת 10 קילומטר" כבר נחתכו ב-2 שורות בעמודה הצרה הזו */
-.home-glance-pill-text { flex: 1; min-width: 0; white-space: normal; word-break: break-word; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-/* עיפרון זעיר בקצה הבועה - רק רמז חזותי שאפשר ללחוץ לעריכה; הלחיצה עצמה
-   מוגדרת על כל הבועה (לא רק על העיפרון הקטנטן), כי אי-אפשר לפגוע בו במדויק
-   באצבע במסך כזה קטן - לפי בקשה מפורשת ל"אייקון קטנטן", בלי לפגוע בשימושיות */
-.home-glance-pill-edit-icon { flex-shrink: 0; font-size: 0.55rem; opacity: 0.75; }
-/* בלי קיצוץ בשלוש נקודות כאן גם - אותו תיקון בדיוק כמו בבועות המשימה
-   בשעות (word-wrap במקום ellipsis), כדי שכותרות אירועים ארוכות יהיו קריאות במלואן */
-.home-glance-event-badge { border-radius: 4px; padding: 1px 4px; font-size: 0.58rem; font-weight: 600; color: var(--text-primary); background-color: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.25); white-space: normal; word-break: break-word; line-height: 1.2; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-/* אירוע חד-פעמי שכבר סומן כ"בוצע" - קו חוצה + דהייה, אותו רמז חזותי כמו
-   סימון השלמה במקומות אחרים באפליקציה (רלוונטי רק ל-calendar_events, כי
-   למשימות הלו"ז הקבוע (.home-glance-task-pill ללא is-event) אין מצב בוצע/לא) */
-.home-glance-task-pill.is-event.is-completed, .home-glance-event-badge.is-completed { text-decoration: line-through; opacity: 0.55; }
-.home-glance-date-label { cursor: pointer; }
-.home-glance-empty-hint { text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 14px 0; }
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .monthly-goal-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .monthly-goal-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
