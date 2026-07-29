@@ -673,6 +673,30 @@ function openFoodQuickAddModal() {
 // בלבד) - כדי לשלוח קריאת המשך ל-AI עם טקסט+שאלה+תשובה יחד, ר' confirmFoodClarify
 let pendingFoodQuickAddText = '';
 let pendingFoodClarifyQuestion = '';
+// true כששאלת ההבהרה זוהתה מקומית (detectAmbiguousPlantMilk) ולא נשאלה ע"י
+// ה-AI - צריך להעביר את זה לשרת כדי שהוא ידע שזו עדיין הקריאה הראשונה
+// המחויבת במכסה (לא "קריאת המשך חינמית" אחרי שה-AI כבר שאל וכבר חויב)
+let pendingFoodClarifyIsLocal = false;
+
+// זיהוי דטרמיניסטי (לא תלוי בשיקול הדעת של ה-AI!) של המקרה שגרם לחוסר-דיוק
+// חוזר: משקה (קפה/שייק) + מרכיב שיכול להיות גם "חלב" צמחי וגם מזון מוצק
+// (שיבולת שועל/שקדים/סויה), בלי שהמשתמשת כבר פירטה איזה מהשניים. גילינו
+// בפועל שההנחיה "תמיד תשאל" ל-AI לא נאכפת ב-100% מהמקרים (זו מגבלה אמיתית
+// של מודלי שפה - הנחיה בטקסט היא לא אכיפה מובטחת כמו קוד) - אז כדי להבטיח
+// שהשאלה **תמיד** תישאל במקרה הזה הספציפי, הבדיקה עצמה זזה מהפרומפט לקוד:
+// אם הביטוי מזוהה, פותחים את חלון ההבהרה ישירות בלי לפנות ל-AI בכלל בשלב
+// הזה - ורק אחרי שיש תשובה, פונים ל-AI (מוגבל לתשובה סופית בלבד, לא עוד שאלה)
+const FOOD_CLARIFY_DRINK_RE = /(קפה|שייק|smoothie|\bcoffee\b)/i;
+const FOOD_CLARIFY_PLANT_MILK_RE = /(שיבולת שועל|שקדים|סויה|קוקוס|\boats?\b|\balmonds?\b|\bsoy\b|\bcoconut\b)/i;
+const FOOD_CLARIFY_EXPLICIT_MILK_RE = /(חלב\s*(שיבולת שועל|שקדים|סויה|קוקוס)|oat.?milk|almond.?milk|soy.?milk|coconut.?milk)/i;
+const FOOD_CLARIFY_EXPLICIT_SOLID_RE = /(קערת|קערה של|מנה נפרדת|כמזון נפרד|bowl of|separately|as a side)/i;
+
+function detectAmbiguousPlantMilk(text) {
+    if (!FOOD_CLARIFY_DRINK_RE.test(text)) return null;
+    if (FOOD_CLARIFY_EXPLICIT_MILK_RE.test(text) || FOOD_CLARIFY_EXPLICIT_SOLID_RE.test(text)) return null;
+    const m = text.match(FOOD_CLARIFY_PLANT_MILK_RE);
+    return m ? m[0] : null;
+}
 
 // חינמי: מיד לחישוב המקומי החינמי, בדיוק כמו קודם, בלי שום שינוי התנהגות.
 // פרימיום: קריאה אמיתית ל-AI (יכולה לשאול שאלת הבהרה אחת) - ר' logFoodQuickAddViaAI
@@ -692,6 +716,16 @@ async function logFoodQuickAdd() {
 // נופלת חזרה בשקט לחישוב המקומי החינמי בכל מקרה של תקלה/מכסה חודשית שנגמרה -
 // משתמשת פרימיום לעולם לא אמורה "להיתקע" בלי אפשרות לרשום בכלל
 async function logFoodQuickAddViaAI(text) {
+    // בדיקה דטרמיניסטית לפני שפונים ל-AI בכלל - ר' הערה על detectAmbiguousPlantMilk
+    const ambiguousIngredient = detectAmbiguousPlantMilk(text);
+    if (ambiguousIngredient) {
+        pendingFoodQuickAddText = text;
+        pendingFoodClarifyIsLocal = true;
+        pendingFoodClarifyQuestion = t('food_clarify_milk_question').replace('{ingredient}', ambiguousIngredient);
+        openFoodClarifyModal(pendingFoodClarifyQuestion);
+        return;
+    }
+
     setFoodQuickAddLoading(true);
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -709,6 +743,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'clarify') {
             pendingFoodQuickAddText = text;
             pendingFoodClarifyQuestion = attempt.question;
+            pendingFoodClarifyIsLocal = false;
             openFoodClarifyModal(attempt.question);
             return;
         }
@@ -723,12 +758,12 @@ async function logFoodQuickAddViaAI(text) {
     }
 }
 
-async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarificationAnswer) {
+async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarificationAnswer, isLocalClarify) {
     try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, language: currentLang })
+            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, isLocalClarify, language: currentLang })
         });
         const result = await res.json();
         if (result.error === 'limit_reached') return { status: 'limit' };
@@ -777,6 +812,7 @@ function openFoodClarifyModal(question) {
 function cancelFoodClarify() {
     pendingFoodQuickAddText = '';
     pendingFoodClarifyQuestion = '';
+    pendingFoodClarifyIsLocal = false;
     closeModal('modal-food-clarify');
 }
 
@@ -786,13 +822,15 @@ async function confirmFoodClarify() {
     if (!answer) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
     const text = pendingFoodQuickAddText;
     const question = pendingFoodClarifyQuestion;
+    const isLocalClarify = pendingFoodClarifyIsLocal;
+    pendingFoodClarifyIsLocal = false;
     closeModal('modal-food-clarify');
     setFoodQuickAddLoading(true);
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
         if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
-        const attempt = await estimateFoodTextViaAI(token, text, question, answer);
+        const attempt = await estimateFoodTextViaAI(token, text, question, answer, isLocalClarify);
         if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories); return; }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
         await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
