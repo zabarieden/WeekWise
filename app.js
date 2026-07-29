@@ -6999,10 +6999,14 @@ function estimateFreeTextCalories(text) {
     const isMultiFood = matches.length > 1;
     let total = 0, matchedAny = false;
     matches.forEach((match, i) => {
-        const prevEnd = i > 0 ? matches[i - 1].end : 0;
-        const nextStart = i < matches.length - 1 ? matches[i + 1].start : text.length;
-        const windowStart = findGapSplitPoint(text, prevEnd, match.start);
-        const windowEnd = findGapSplitPoint(text, match.end, nextStart);
+        // לפני המאכל *הראשון* ואחרי המאכל *האחרון* אין שום מאכל מתחרה על
+        // הטקסט - כל הקידומת/סיומת שייכת במלואה למאכל היחיד הזה, לא צריך
+        // לפצל באמצע. בלי התיקון הזה, "חצי בננה" (בלי מאכל נוסף בטקסט) היה
+        // מפצל את "חצי" באמצע הפער-מתחילת-המחרוזת ולעיתים מאבד אותו לגמרי -
+        // וגם "חצי בננה" וגם "בננה" סתם יצאו באותו מספר (105 קלוריות), בלי
+        // שה"חצי" הועיל בכלל
+        const windowStart = i > 0 ? findGapSplitPoint(text, matches[i - 1].end, match.start) : 0;
+        const windowEnd = i < matches.length - 1 ? findGapSplitPoint(text, match.end, matches[i + 1].start) : text.length;
         const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd), isMultiFood);
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
