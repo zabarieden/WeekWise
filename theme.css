@@ -2442,7 +2442,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .auth-legal-links { margin: 18px 0 0 0 !important; font-size: 0.7rem !important; opacity: 0.6; text-align: center; }
 .auth-legal-links a { color: var(--text-secondary); text-decoration: underline; }
 .auth-legal-links span { margin: 0 6px; }
-.settings-legal-links { display: flex; justify-content: center; gap: 16px; margin: 10px 0 4px; font-size: 0.75rem; }
+.settings-legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 16px; margin: 10px 0 4px; font-size: 0.75rem; }
 .settings-legal-links a { color: var(--text-secondary); text-decoration: underline; }
 /* "שכחתי סיסמה" - קישור קטן וצנוע מתחת לשדה הסיסמה, לא כפתור בולט */
 .auth-forgot-line { margin: 6px 0 0 0 !important; font-size: 0.75rem !important; text-align: end; }
