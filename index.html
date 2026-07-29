@@ -241,14 +241,6 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <input type="file" id="meal-photo-input" accept="image/*" class="hidden" onchange="handleMealPhotoSelected(event)">
-                            <button type="button" class="btn-secondary btn-meal-photo-scan" onclick="openMealPhotoScan()" data-i18n-title="meal_photo_scan_title" title="Scan meal photo (Premium)">
-                                📷 <span data-i18n="meal_photo_scan_btn">Scan meal photo (Premium)</span>
-                            </button>
-                            <div id="meal-photo-loading" class="meal-photo-loading hidden">
-                                <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
-                                <p data-i18n="meal_photo_loading_text">Analyzing your meal...</p>
-                            </div>
                             <div class="date-picker-container" style="width: 100%;">
                                 <input type="date" id="selected-date">
                             </div>
@@ -1517,10 +1509,6 @@
         <!-- חלון צף: הוספת ארוחה קבועה למאגר -->
         <div id="modal-add-preset" class="apple-modal">
             <div class="modal-sheet">
-                <div id="preset-scan-loading" class="recipe-scan-loading hidden">
-                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
-                    <p data-i18n="meal_photo_loading_text">Analyzing your meal...</p>
-                </div>
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="preset_modal_title">Add Meal to Library</h3>
                 <div class="recipe-scan-hint" id="preset-limit-hint"></div>
@@ -1592,17 +1580,7 @@
                 </div>
 
                 <div class="ai-brain-panel hidden" data-ai-brain-panel="photo">
-                    <p class="modal-subtitle" data-i18n="ai_brain_photo_subtitle">Upload a meal or recipe photo and let AI fill in the details for you.</p>
-                    <div class="ai-brain-target-choice">
-                        <label class="ai-brain-target-option">
-                            <input type="radio" name="ai-brain-photo-target" value="recipe" checked>
-                            <span data-i18n="ai_brain_target_recipe">🍳 Save as Recipe</span>
-                        </label>
-                        <label class="ai-brain-target-option">
-                            <input type="radio" name="ai-brain-photo-target" value="preset">
-                            <span data-i18n="ai_brain_target_preset">🍽️ Save as Preset Meal</span>
-                        </label>
-                    </div>
+                    <p class="modal-subtitle" data-i18n="ai_brain_photo_subtitle">Upload a photo of a written recipe (a recipe card, cookbook page, or note) and let AI fill in the details for you.</p>
                     <input type="file" id="ai-brain-image-input" accept="image/*" class="hidden" onchange="handleAiBrainImageSelected(event)">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('ai-brain-image-input').click()" data-i18n="ai_brain_upload_btn">📷 Upload photo</button>
                     <div class="action-buttons-wrap">
@@ -1838,6 +1816,6 @@
     </div>
 
     <script src="i18n.js?v=126"></script>
-    <script src="app.js?v=207"></script>
+    <script src="app.js?v=208"></script>
 </body>
 </html>
