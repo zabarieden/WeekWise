@@ -44,7 +44,7 @@
                     <span id="language-picker-login-name" class="language-picker-name">English</span>
                     <span class="language-picker-chevron">▾</span>
                 </button>
-                <h2>⚡ Obeko</h2>
+                <h2>Obeko</h2>
                 <p id="auth-mode-subtitle" data-i18n="auth_login_subtitle">Log in to your account:</p>
                 <input type="email" id="auth-email-input" data-i18n-placeholder="auth_email_placeholder" placeholder="Email" autocomplete="email" autofocus>
                 <div class="password-input-wrap" id="auth-password-wrap">
@@ -95,20 +95,22 @@
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
                 </div>
-                <!-- הצצה ליום: הועבר לכאן ממסך "השבוע שלי" (היה today-tasks-card
+                <!-- הצצה להיום: הועבר לכאן ממסך "השבוע שלי" (היה today-tasks-card
                      בראש schedule-section) - במקום הרשת השבועית המלאה שהוסרה,
                      כרטיס יומי בלבד, פחות "לוחץ". שעות הלו"ז + משימות
                      מ-calendar_events (בעיקר פתקים גרורים) שתאריכן היום, יחד -
-                     ר' loadTodayTasks ב-app.js -->
+                     ר' loadTodayTasks ב-app.js. מקופל כברירת מחדל, כמו שאר
+                     הכרטיסים - מי שרוצה פותח (ר' toggleCardSection) -->
                 <div class="card today-tasks-card">
-                    <div class="card-title-row">
+                    <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                         <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
+                        <span class="card-toggle-icon">▼</span>
                     </div>
                     <div class="card-body">
                         <div id="today-tasks-list" class="today-tasks-list"></div>
                     </div>
                 </div>
-                <!-- מסך הבית מכיל כרגע רק ברכה + הצצה ליום - הניווט
+                <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
                      הראשי עבר לסרגל התחתון הקבוע (.bottom-tab-bar) -->
             </div>
 
@@ -975,7 +977,7 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="notes_ai_title">Quick Note</h3>
                 <div class="ai-quick-add-wrap">
-                    <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="e.g. &quot;Buy milk&quot;, or &quot;Call the doctor&quot;"></textarea>
+                    <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="A thought, a reminder, or an idea"></textarea>
                     <div class="action-buttons-wrap">
                         <button id="btn-ai-quick-add" class="btn-primary" data-i18n="notes_ai_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-quick-add')" data-i18n="close_btn">Close</button>

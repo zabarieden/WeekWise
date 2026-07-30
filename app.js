@@ -1324,6 +1324,15 @@ function getDaySlotNumbers(day) {
     return merged;
 }
 
+// שאלת אישור לפני מחיקת שורה מהלו"ז השבועי - רק אם יש בה משימה בפועל (שורה
+// ריקה אין מה לאבד ממנה, אז שם לא מציקים עם חלון אישור מיותר)
+function confirmRemoveDaySlot(day, slot) {
+    const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${slot}"]`);
+    const hasTask = slotEl && slotEl.querySelector('.slot-task').value.trim();
+    if (hasTask && !confirm(t('schedule_remove_row_confirm'))) return;
+    removeDaySlot(day, slot);
+}
+
 async function removeDaySlot(day, slot) {
     getDaySlotNumbers(day);
     daySlotsConfig[day] = daySlotsConfig[day].filter(n => n !== slot);
@@ -2354,7 +2363,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-actions-wrap"><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="removeDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-actions-wrap"><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="confirmRemoveDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;

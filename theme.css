@@ -1250,10 +1250,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 /* מבט ליומן: עכשיו כן ניתן לקיפול כמו כל כרטיס אחר (collapsible-header +
    .expanded) - לפי בקשה מפורשת. בלי override של max-height כאן, הקיפול/
    פתיחה הרגיל של .card-body מהכללים הכלליים למעלה עובד ישירות */
-/* משימות להיום: אותו עיקרון - כרטיס קבוע תמיד פתוח בלי חץ קיפול. בלי השורה
-   הזאת card-body היה נשאר ב-max-height:0 (ברירת המחדל של .card-body ללא
-   .expanded) והתוכן פשוט לא היה נראה בכלל */
-.today-tasks-card .card-body { max-height: none; overflow: visible; }
+/* הצצה להיום: ניתן לקיפול כמו כל כרטיס אחר, מקופל כברירת מחדל (בלי class
+   expanded בהתחלה ב-HTML) - לפי בקשה מפורשת */
+.today-tasks-card.expanded .card-body { max-height: none; overflow: visible; }
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
 .calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
