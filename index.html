@@ -102,7 +102,7 @@
                      ר' loadTodayTasks ב-app.js. מקופל כברירת מחדל, כמו שאר
                      הכרטיסים - מי שרוצה פותח (ר' toggleCardSection) -->
                 <div class="card today-tasks-card">
-                    <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                    <div class="card-title-row collapsible-header" onclick="toggleCardSection(this); trackTodayCardExpandView(this)">
                         <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
                         <span class="card-toggle-icon">▼</span>
                     </div>

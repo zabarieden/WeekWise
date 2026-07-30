@@ -2958,13 +2958,35 @@ async function loadTodayTasks() {
         container.appendChild(row);
     });
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
-    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל
+    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל. מהפתיחה השנייה
+    // של הכרטיס באותו יום ואילך (ר' trackTodayCardExpandView) מוצגת הודעה
+    // שונה, כדי שזה לא ירגיש כמו תקליט שבור בכל ביקור חוזר
     if (allDone) {
         const celebration = document.createElement('p');
         celebration.className = 'today-tasks-celebration';
-        celebration.textContent = t('today_tasks_all_done_message');
+        celebration.textContent = t(getTodayCardViewCount() >= 2 ? 'today_tasks_all_done_message_repeat' : 'today_tasks_all_done_message');
         container.appendChild(celebration);
     }
+}
+
+// סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
+// מאליו כל יום, בלי מנגנון איפוס נפרד) - נקראת רק מלחיצה ממשית על הכותרת
+// (לא מכל loadTodayTasks שרץ מסיבות אחרות ברקע), כדי שההודעה החוזרת תרגיש
+// כמו תגובה לביקור חוזר אמיתי של המשתמשת
+function getTodayCardViewCount() {
+    return parseInt(localStorage.getItem(`weekwise_today_card_views_${getLocalDateString()}`)) || 0;
+}
+
+function trackTodayCardExpandView(headerEl) {
+    const card = headerEl.closest('.card');
+    // toggleCardSection כבר הפך את המחלקה *לפני* שהקריאה הזו רצה (שתי
+    // הקריאות ב-onclick, בסדר הזה) - אז אפשר לבדוק כאן אם הכרטיס נפתח או
+    // נסגר; סופרים רק פתיחה בפועל, לא סגירה
+    if (!card || !card.classList.contains('expanded')) return;
+    const key = `weekwise_today_card_views_${getLocalDateString()}`;
+    localStorage.setItem(key, String(getTodayCardViewCount() + 1));
+    const celebration = document.querySelector('.today-tasks-celebration');
+    if (celebration) celebration.textContent = t(getTodayCardViewCount() >= 2 ? 'today_tasks_all_done_message_repeat' : 'today_tasks_all_done_message');
 }
 
 // --- לוח חודשי: אותו מקור נתונים בדיוק כמו "מבט ליומן" (calendar_events),
