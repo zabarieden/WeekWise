@@ -2249,6 +2249,82 @@ async function finishScheduleClarificationFlow() {
     showScheduleAiSuccessToast(summary);
 }
 
+// --- פריסה חכמה (Smart Split, פרימיום בלבד): מפצלת משימה עם תאריך יעד
+// לחלקים יומיים, פרוסים על הימים שנשארו עד (ולא כולל) תאריך היעד עצמו.
+// שני שלבים: (1) תיאור המשימה + תאריך יעד, (2) שאלת הבהרה קבועה על ימים
+// פנויים - שתי התשובות נשלחות יחד בקריאת AI אחת ל-split-task-ai (לא שתי
+// קריאות נפרדות), ואז מוחלות כאירועי calendar_events חד-פעמיים בדיוק כמו
+// applyOneTimeScheduleEvents - עריכה/מחיקה דרך אותם כפתורי X/✏️ הרגילים ---
+let pendingSmartSplitTask = null;
+
+function openSmartSplitModal() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    document.getElementById('smart-split-task-input').value = '';
+    document.getElementById('smart-split-due-date-input').value = '';
+    pendingSmartSplitTask = null;
+    openModal('modal-smart-split-input');
+}
+
+function submitSmartSplitTaskStep() {
+    const text = document.getElementById('smart-split-task-input').value.trim();
+    const dueDate = document.getElementById('smart-split-due-date-input').value;
+    if (!text) { showAppToast(t('smart_split_empty_error'), 'error'); return; }
+    if (!dueDate) { showAppToast(t('smart_split_due_date_required_error'), 'error'); return; }
+    if (dueDate <= getLocalDateString()) { showAppToast(t('smart_split_due_date_past_error'), 'error'); return; }
+
+    pendingSmartSplitTask = { text, dueDate };
+    document.getElementById('smart-split-clarify-input').value = '';
+    closeModal('modal-smart-split-input');
+    openModal('modal-smart-split-clarify');
+}
+
+async function attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/split-task-ai`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text, dueDate, today, freeDaysAnswer })
+        });
+        const result = await res.json();
+        if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
+        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (res.ok && !result.error && result.chunks && result.chunks.length) return { status: 'ok', chunks: result.chunks };
+        return { status: 'error' };
+    } catch {
+        return { status: 'error' };
+    }
+}
+
+async function submitSmartSplitClarify() {
+    if (!pendingSmartSplitTask || !supabaseClient || !currentUserId) return;
+    const freeDaysAnswer = document.getElementById('smart-split-clarify-input').value.trim();
+
+    const submitBtn = document.getElementById('btn-smart-split-clarify-submit');
+    if (submitBtn && submitBtn.disabled) return;
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        const { text, dueDate } = pendingSmartSplitTask;
+        const today = getLocalDateString();
+        const attempt = await attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer);
+
+        if (attempt.status === 'premium_required') { closeModal('modal-smart-split-clarify'); openPremiumUpgradeModal(); return; }
+        if (attempt.status === 'limit') { showAppToast(t('smart_split_limit_reached'), 'error'); return; }
+        if (attempt.status !== 'ok') { showAppToast(t('smart_split_error'), 'error'); return; }
+
+        pendingSmartSplitTask = null;
+        closeModal('modal-smart-split-clarify');
+        const dates = await applyOneTimeScheduleEvents(attempt.chunks.map(c => ({ event_date: c.event_date, task_title: c.task_title })));
+        showAppToast(t('smart_split_success_toast').replace('{count}', String(dates.length)));
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
 function loadCustomDefaultHours() {
     const raw = localStorage.getItem(defaultHoursKey());
     if (!raw) return;
@@ -4313,6 +4389,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'refresh_data', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
+    { id: 'smart_split', category: 'notes' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },

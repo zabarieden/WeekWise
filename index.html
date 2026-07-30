@@ -453,6 +453,12 @@
                             <span class="sub-tile-icon">📝</span>
                             <span class="sub-tile-title" data-i18n="notes_title">Notes</span>
                         </div>
+                        <!-- פריסה חכמה: מפצלת משימה עם תאריך יעד לחלקים יומיים, ר' openSmartSplitModal
+                             ב-app.js - פרימיום בלבד, לפי בקשה מפורשת -->
+                        <div class="sub-tile" onclick="openSmartSplitModal()">
+                            <span class="sub-tile-icon">🪄</span>
+                            <span class="sub-tile-title" data-i18n="smart_split_tile_title">Smart Split</span>
+                        </div>
                         <div class="sub-tile" onclick="openSubTile('my-center-section', 'shopping')">
                             <span class="sub-tile-icon">🛒</span>
                             <span class="sub-tile-title" data-i18n="general_title">Shopping List</span>
@@ -1599,6 +1605,38 @@
                 <div class="action-buttons-wrap hidden" id="schedule-clarify-ampm-actions" style="margin-top: 14px;">
                     <button class="btn-secondary" onclick="resolveAmpmClarification('morning')" data-i18n="schedule_clarify_morning_btn">🌅 Morning</button>
                     <button class="btn-secondary" onclick="resolveAmpmClarification('evening')" data-i18n="schedule_clarify_evening_btn">🌙 Evening</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: פריסה חכמה שלב 1 - תיאור המשימה + תאריך יעד (פרימיום בלבד,
+             ר' openSmartSplitModal/submitSmartSplitTaskStep ב-app.js) -->
+        <div id="modal-smart-split-input" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="smart_split_modal_title">🪄 Smart Split</h3>
+                <p class="modal-subtitle" data-i18n="smart_split_modal_subtitle">Write a task, and leave it to Obeko to figure out the right pace for you.</p>
+                <textarea id="smart-split-task-input" rows="3" data-i18n-placeholder="smart_split_task_placeholder" placeholder="e.g. Homework: math worksheet + history reading"></textarea>
+                <label class="settings-label" data-i18n="smart_split_due_date_label" for="smart-split-due-date-input">Due by</label>
+                <input type="date" id="smart-split-due-date-input">
+                <div class="action-buttons-wrap">
+                    <button id="btn-smart-split-continue" class="btn-primary" onclick="submitSmartSplitTaskStep()" data-i18n="smart_split_submit_btn">Split it</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-smart-split-input')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: פריסה חכמה שלב 2 - שאלת הבהרה קבועה על ימים פנויים, נשלחת
+             יחד עם המשימה בקריאת AI אחת (ר' submitSmartSplitClarify ב-app.js) -->
+        <div id="modal-smart-split-clarify" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="smart_split_clarify_title">🪄 One more thing</h3>
+                <p class="modal-subtitle" data-i18n="smart_split_clarify_question">Which days are you more free until then? (or just say "all of them")</p>
+                <input type="text" id="smart-split-clarify-input" data-i18n-placeholder="smart_split_clarify_placeholder" placeholder="e.g. not Tuesday, busy in the evenings">
+                <div class="action-buttons-wrap">
+                    <button id="btn-smart-split-clarify-submit" class="btn-primary" onclick="submitSmartSplitClarify()" data-i18n="smart_split_clarify_submit_btn">Done</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-smart-split-clarify')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
