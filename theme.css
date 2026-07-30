@@ -1258,17 +1258,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .today-tasks-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
 .today-tasks-text.completed { text-decoration: line-through; color: var(--text-secondary); opacity: 0.7; }
 .today-tasks-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
-/* הודעת עידוד כשכל המשימות של היום בוצעו - ר' loadTodayTasks ב-app.js */
+/* הודעת עידוד כשכל המשימות של היום בוצעו (או "יש עוד זמן") - ר' loadTodayTasks
+   ב-app.js. גרדיאנט סגול->ורוד ניאון, אותה פלטה כמו שאר כפתורי/תגי ה"הצלחה"
+   באפליקציה (ai-fab, פרימיום) - לא זהב/כתום שיצא עמום ולא מתאים */
 .today-tasks-celebration {
     text-align: center;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--accent-gold);
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(255, 0, 127, 0.1));
-    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #fff;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(255, 0, 127, 0.3));
+    border: 1px solid rgba(255, 0, 127, 0.35);
     border-radius: 12px;
     padding: 10px 14px;
     margin: 10px 0 0 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 /* צ'קבוקס קטן מאוד (לפי בקשה מפורשת) לסימון "בוצע" בפירוט היום בלוח החודשי */
 .day-detail-checkbox { width: 13px; height: 13px; flex-shrink: 0; accent-color: var(--tile-accent, var(--accent-gold)); cursor: pointer; margin: 0; }
