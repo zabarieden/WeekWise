@@ -195,6 +195,12 @@
                             <span class="sub-tile-icon">🔥</span>
                             <span class="sub-tile-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
                         </div>
+                        <!-- מעקב משקל: מדד גוף, לא פעילות - נשאר נגיש גם כאן וגם תחת
+                             ספורט בהמבורגר (לא בלעדי לאף אחד מהם), לפי בקשה מפורשת -->
+                        <div class="sub-tile" onclick="openSubTile('nutrition-section', 'weight')">
+                            <span class="sub-tile-icon">⚖️</span>
+                            <span class="sub-tile-title" data-i18n="weight_title">Periodic Weight Tracking</span>
+                        </div>
                         <div class="sub-tile" onclick="openSubTile('nutrition-section', 'water')">
                             <span class="sub-tile-icon">💧</span>
                             <span class="sub-tile-title" data-i18n="water_title">Water Tracking</span>
@@ -848,6 +854,10 @@
                         <span class="hamburger-drawer-item-icon">🔥</span>
                         <span class="hamburger-drawer-item-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
                     </button>
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'weight')">
+                        <span class="hamburger-drawer-item-icon">⚖️</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="weight_title">Periodic Weight Tracking</span>
+                    </button>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'water')">
                         <span class="hamburger-drawer-item-icon">💧</span>
                         <span class="hamburger-drawer-item-title" data-i18n="water_title">Water Tracking</span>
@@ -864,8 +874,9 @@
                         <span class="hamburger-drawer-item-icon">🏃</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_sport">Sport</span>
                     </button>
-                    <!-- מד צעדים ומעקב משקל: הועברו לכאן (מ"תזונה ומדדים") - לא קשורים
-                         לתזונה, ורק כאן בתפריט ההמבורגר, לפי בקשה מפורשת -->
+                    <!-- מד צעדים: זו פעילות, לא תזונה - רק כאן בתפריט ההמבורגר, לפי בקשה
+                         מפורשת. מעקב משקל, לעומתו, נשאר נגיש גם כאן וגם ב"תזונה ומדדים"
+                         למעלה - הוא מדד גוף, לא בלעדי לספורט -->
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'steps')">
                         <span class="hamburger-drawer-item-icon">👟</span>
                         <span class="hamburger-drawer-item-title" data-i18n="steps_title">Daily Step Counter</span>
