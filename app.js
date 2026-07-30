@@ -6451,6 +6451,21 @@ const FOOD_CALORIE_DB = [
     { name: "Cherry Ripe", re: /cherry ripe/i, kcal100g: 450, unitGrams: 52 },
     { name: "Yan Yan", re: /\byan yan\b/i, kcal100g: 500, unitGrams: 50 },
     { name: "Market O Real Brownie", re: /market o (real )?brownie/i, kcal100g: 500, unitGrams: 20 },
+    { name: "Doritos Cool Ranch", re: /doritos cool ranch|cool ranch doritos/i, kcal100g: 535, unitGrams: 28 },
+    { name: "Cheetos Flamin' Hot", re: /cheetos flamin'? hot|flamin'? hot cheetos/i, kcal100g: 607, unitGrams: 28 },
+    { name: "Rold Gold Pretzel Twists", re: /rold gold/i, kcal100g: 392, unitGrams: 28 },
+    { name: "Calbee Pizza Potato Chips", re: /calbee pizza/i, kcal100g: 560, unitGrams: 30 },
+    { name: "Want Want Senbei", re: /want want|senbei/i, kcal100g: 500, unitGrams: 12 },
+    { name: "Whatchamacallit Bar", re: /whatchamacallit/i, kcal100g: 489, unitGrams: 49 },
+    { name: "Almond Joy", re: /almond joy/i, kcal100g: 488, unitGrams: 45 },
+    { name: "Sour Patch Kids", re: /sour patch kids/i, kcal100g: 350, unitGrams: 40 },
+    { name: "Kinder Bueno White", re: /kinder bueno white/i, kcal100g: 571, unitGrams: 19.5 },
+    { name: "Ritter Sport Marzipan", re: /ritter sport marzipan/i, kcal100g: 493, unitGrams: 6.25 },
+    { name: "Nimm2 Smilegummi", re: /nimm2/i, kcal100g: 333, unitGrams: 30 },
+    { name: "Jaffa Cakes", re: /jaffa cakes?/i, kcal100g: 383, unitGrams: 12 },
+    { name: "Violet Crumble", re: /violet crumble/i, kcal100g: 464, unitGrams: 50 },
+    { name: "Kancho Choco Biscuits", re: /\bkancho\b/i, kcal100g: 488, unitGrams: 42 },
+    { name: "Hello Panda", re: /hello panda/i, kcal100g: 533, unitGrams: 30 },
     { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466, unitGrams: 40 },
     { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283, unitGrams: 120 },
     // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
@@ -6501,7 +6516,9 @@ const FOOD_CALORIE_DB = [
     { name: "ממרחית", re: /ממרחית/i, kcal100g: 554, unitGrams: 20 },
     { name: "ממרח חלווה השחר", re: /חלוו?ה השחר|ממרח חלווה/i, kcal100g: 540, unitGrams: 20 },
     { name: "ממרח לוטוס", re: /ממרח לוטוס|לוטוס ממרח|biscoff/i, kcal100g: 584, unitGrams: 20 },
-    { name: "ממרח קינדר בואנו", re: /קינדר בואנו|kinder bueno/i, kcal100g: 570, unitGrams: 20 },
+    // דורש "ממרח" מפורש - בלעדיו "Kinder Bueno White" (החטיף עצמו, למעלה)
+    // היה תמיד נתפס כממרח (570) במקום החטיף
+    { name: "ממרח קינדר בואנו", re: /ממרח קינדר בואנו|kinder bueno spread/i, kcal100g: 570, unitGrams: 20 },
     // דורש "ממרח" מפורש - בלעדיו "Hershey's" היה תמיד נתפס כממרח (540) במקום
     // חטיף השוקולד עצמו (ר' "הרשיז שוקולד חלב" למעלה, ליד שאר החטיפים הבינ"ל)
     { name: "ממרח הרשיז", re: /ממרח הרשיז|hershey'?s spread/i, kcal100g: 540, unitGrams: 20 },
