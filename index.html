@@ -863,22 +863,24 @@
                         <span class="hamburger-drawer-item-title" data-i18n="weight_title">Periodic Weight Tracking</span>
                     </button>
 
-                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_finance">Expenses &amp; Income</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('finance-section')">
-                        <span class="hamburger-drawer-item-icon">💰</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="nav_finance">Expenses & Income</span>
-                    </button>
-
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_sport">Sport</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('sport-section')">
                         <span class="hamburger-drawer-item-icon">🏃</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="nav_sport">Sport</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="hamburger_sport_tracking_label">Workout Tracking</span>
                     </button>
                     <!-- מד צעדים: זו פעילות, לא תזונה - רק כאן בתפריט ההמבורגר, לפי בקשה
                          מפורשת. מעקב משקל הוסר מכאן - נשאר רק ב"תזונה ומדדים" למעלה -->
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'steps')">
                         <span class="hamburger-drawer-item-icon">👟</span>
                         <span class="hamburger-drawer-item-title" data-i18n="steps_title">Daily Step Counter</span>
+                    </button>
+
+                    <!-- קטגוריית הכספים: השם "הוצאות והכנסות" נשאר, אבל האייקון הבודד
+                         בתוכה שונה ל"תקציב" 📊, תואם לשינוי בטאב התחתון/עוזר ה-AI -->
+                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_finance">Expenses &amp; Income</div>
+                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('finance-section')">
+                        <span class="hamburger-drawer-item-icon">📊</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="bottom_tab_finance">Budget</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_other">Other</div>
