@@ -1050,14 +1050,15 @@ function triggerDailyGreetingSparkles() {
     overlay.className = 'all-done-sparkles';
     wrapper.appendChild(overlay);
 
-    const emojis = ['✨', '💫', '⭐', '💜'];
+    // רק כוכבים קטנים - לפי בקשה מפורשת ("רציתי כוכבים קטנים בלבד"), לא
+    // התערובת המלאה שמשמשת את נצנצי ה"הכל בוצע"
     const spawnSparkle = () => {
         const sparkle = document.createElement('span');
         sparkle.className = 'all-done-sparkle';
-        sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        sparkle.textContent = '⭐';
         sparkle.style.left = `${Math.random() * 100}%`;
         sparkle.style.animationDuration = `${3 + Math.random() * 2.5}s`;
-        sparkle.style.fontSize = `${0.7 + Math.random() * 1}rem`;
+        sparkle.style.fontSize = `${0.5 + Math.random() * 0.4}rem`;
         overlay.appendChild(sparkle);
         sparkle.addEventListener('animationend', () => sparkle.remove());
     };

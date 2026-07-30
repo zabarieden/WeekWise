@@ -1266,8 +1266,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     font-size: 0.82rem;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(255, 0, 127, 0.3));
-    border: 1px solid rgba(255, 0, 127, 0.35);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 30%, transparent), color-mix(in srgb, var(--accent-pink) 30%, transparent));
+    border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent);
     border-radius: 12px;
     padding: 10px 14px;
     margin: 10px 0 0 0;
@@ -1284,7 +1284,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     animation-name: allDoneSparkleFall;
     animation-timing-function: ease-in;
     animation-fill-mode: forwards;
-    filter: drop-shadow(0 0 4px rgba(255, 0, 127, 0.6));
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-pink) 60%, transparent));
 }
 @keyframes allDoneSparkleFall {
     0% { transform: translateY(0) rotate(0deg); opacity: 0; }
@@ -1304,7 +1304,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 700;
     color: #fff;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.92), rgba(255, 0, 127, 0.92));
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 16px;
     padding: 12px 20px;
