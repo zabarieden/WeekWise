@@ -211,6 +211,12 @@
                             <span class="sub-tile-icon">🧑‍🍳</span>
                             <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
+                        <!-- דגשי תזונה: לא תת-תצוגה עם מעקב נתונים כמו שאר המעגלים - רק
+                             מודל תוכן קבוע בסגנון מגזין/עיתון, ר' modal-nutrition-daily -->
+                        <div class="sub-tile" onclick="openModal('modal-nutrition-daily')">
+                            <span class="sub-tile-icon">📰</span>
+                            <span class="sub-tile-title" data-i18n="nutrition_daily_tile_title">Nutrition Highlights</span>
+                        </div>
                     </div>
 
                     <div class="subview-panel" data-subview="meals">
@@ -1658,6 +1664,45 @@
                     <button id="btn-smart-split-clarify-submit" class="btn-primary" onclick="submitSmartSplitClarify()" data-i18n="smart_split_clarify_submit_btn">Done</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-smart-split-clarify')" data-i18n="cancel_btn">Cancel</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: "דגשי תזונה" - תוכן קבוע בסגנון מגזין/עיתון דיגיטלי, לא נתונים
+             של המשתמשת. שלוש "כתבות" קצרות, כל אחת עם data-i18n נפרד לכל אלמנט
+             (לא בלוק טקסט אחד ארוך) כדי לשמור על מבנה HTML נקי (כותרת/פסקה/רשימה)
+             בלי להזדקק ל-HTML בתוך מחרוזות התרגום עצמן -->
+        <div id="modal-nutrition-daily" class="apple-modal">
+            <div class="modal-sheet nutrition-daily-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="nutrition-daily-masthead">
+                    <h3 class="nutrition-daily-title" data-i18n="nutrition_daily_masthead_title">📰 THE NUTRITION DAILY</h3>
+                    <p class="nutrition-daily-subtitle" data-i18n="nutrition_daily_masthead_subtitle">Your daily magazine for nutrition, precision, and lifestyle</p>
+                </div>
+                <article class="nutrition-daily-article">
+                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article1_title">📰 The Scale Mystery – When Do You Weigh What?</h4>
+                    <p data-i18n="nutrition_daily_article1_intro">One of the most talked-about questions in nutrition is when to put food on the scale. Here's the simple rule to sort out your plate:</p>
+                    <ul class="nutrition-daily-list">
+                        <li data-i18n="nutrition_daily_article1_before">Before cooking (raw): fish, vegetables, potatoes, and meat.</li>
+                        <li data-i18n="nutrition_daily_article1_after">After cooking (ready to eat): rice, pasta, couscous-style grains, legumes, and everything else!</li>
+                    </ul>
+                    <p class="nutrition-daily-tip" data-i18n="nutrition_daily_article1_tip">💡 Small tip: when picking a food from the database, just make sure you pick the state you weighed it in (like "cooked white rice" vs "dry rice").</p>
+                </article>
+                <div class="nutrition-daily-divider"></div>
+                <article class="nutrition-daily-article">
+                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article2_title">📰 Went Over Today's Goal? No Stress!</h4>
+                    <p data-i18n="nutrition_daily_article2_body">Went over your goal? Ate a bit too little on a weight-gain journey, or a bit too much on a weight-loss one? Take a breath - it's all fine. Your body isn't a daily calculator - it works on a weekly average over time. One off day is a completely natural part of the process. There's no need to "make up for it," starve yourself, or force-compensate at the next meal. Just carry on with your normal routine. Consistency over time is the real secret.</p>
+                </article>
+                <div class="nutrition-daily-divider"></div>
+                <article class="nutrition-daily-article">
+                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article3_title">📰 Eating Out? Report Like a Pro</h4>
+                    <p data-i18n="nutrition_daily_article3_intro">Restaurants, pizzerias, and burger joints are always a fun experience - but how do you log a dish you didn't make yourself?</p>
+                    <ul class="nutrition-daily-list">
+                        <li data-i18n="nutrition_daily_article3_breakdown">The breakdown method: split the dish into its base components (e.g. noodles + chicken breast + a tablespoon of oil + sauce).</li>
+                        <li data-i18n="nutrition_daily_article3_estimate">The estimate method: not sure? Pick a similar dish from the "eating out" category in the database for a solid average estimate.</li>
+                        <li data-i18n="nutrition_daily_article3_control">Full control: want maximum accuracy? Make the meal at home from your exact ingredients, and save it as a preset meal in the app! 🎯</li>
+                    </ul>
+                </article>
+                <button type="button" class="btn-clear-specific nutrition-daily-close" onclick="closeModal('modal-nutrition-daily')" data-i18n="close_btn">Close</button>
             </div>
         </div>
 

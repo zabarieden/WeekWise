@@ -1808,6 +1808,40 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 /* כותרת "עוזר AI" זוהרת - ניאון סגול/ורוד, לפי בקשה מפורשת */
 .ai-brain-modal-title { text-shadow: 0 0 10px rgba(255, 0, 127, 0.65), 0 0 18px rgba(168, 85, 247, 0.5); }
 .modal-subtitle { margin: -8px 0 14px 0; font-size: 0.75rem; color: var(--text-secondary); text-align: center; }
+
+/* "דגשי תזונה" - מודל בסגנון מגזין/עיתון דיגיטלי: פונט serif לכותרות (תחושת
+   עיתון, לא ה-sans-serif הרגיל של שאר האפליקציה), מסת'הד עם קו כפול, וכותרות
+   כתבה עם גרדיאנט זהב->ורוד כמו premium-unlock-content. תוכן קבוע בלבד -
+   בלי מעקב נתונים, אז אין צורך בשום JS מעבר לפתיחת/סגירת המודל הרגילה */
+.nutrition-daily-sheet { max-width: 560px; }
+.nutrition-daily-masthead { text-align: center; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 3px double rgba(245, 158, 11, 0.35); }
+.nutrition-daily-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin: 0 0 6px 0;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.nutrition-daily-subtitle { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 0.78rem; color: var(--text-secondary); margin: 0; }
+.nutrition-daily-article { margin-bottom: 4px; }
+.nutrition-daily-headline {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+.nutrition-daily-article p { font-size: 0.85rem; line-height: 1.6; color: var(--text-primary); margin: 0 0 10px 0; }
+.nutrition-daily-list { margin: 0 0 10px 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; }
+.nutrition-daily-list li { font-size: 0.85rem; line-height: 1.5; color: var(--text-primary); }
+.nutrition-daily-tip { background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 10px; padding: 10px 12px; font-size: 0.8rem !important; color: var(--text-secondary) !important; }
+.nutrition-daily-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent); margin: 18px 0; }
+.nutrition-daily-close { width: 100%; margin-top: 8px; }
 .ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .ai-brain-tab { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-brain-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
