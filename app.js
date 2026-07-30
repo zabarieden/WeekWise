@@ -6422,6 +6422,25 @@ const FOOD_CALORIE_DB = [
     { name: "סלט טונה", re: /סלט טונה|tuna salad/i, kcal100g: 200, unitGrams: 60 },
     { name: "סלט ביצים", re: /סלט ביצים|egg salad/i, kcal100g: 215, unitGrams: 60 },
     { name: "ממרח זיתים", re: /ממרח זיתים|olive tapenade/i, kcal100g: 230, unitGrams: 20 },
+    // ממרחי שוקולד/ניוטלה-סטייל - כולם חייבים לבוא *לפני* "שוקולד" הכללי
+    // למטה, כי כמעט כולם מכילים "שוקולד" כתת-מחרוזת ובלי הסדר הזה תמיד היו
+    // נתפסים כטבלית שוקולד רגילה (546/5 גרם) במקום ממרח (נתונים מדויקים
+    // מהמשתמשת, כפית גדושה/כף גדושה/100 גרם)
+    { name: "ממרח השחר העולה", re: /שחר העולה/i, kcal100g: 504, unitGrams: 20 },
+    { name: "ממרח השחר בד\"ץ", re: /שחר בד"?ץ/i, kcal100g: 547, unitGrams: 20 },
+    { name: "ממרח שוקולד פרה", re: /שוקולד פרה/i, kcal100g: 553, unitGrams: 20 },
+    { name: "ממרחית", re: /ממרחית/i, kcal100g: 554, unitGrams: 20 },
+    { name: "ממרח חלווה השחר", re: /חלוו?ה השחר|ממרח חלווה/i, kcal100g: 540, unitGrams: 20 },
+    { name: "ממרח לוטוס", re: /ממרח לוטוס|לוטוס ממרח|biscoff/i, kcal100g: 584, unitGrams: 20 },
+    { name: "ממרח קינדר בואנו", re: /קינדר בואנו|kinder bueno/i, kcal100g: 570, unitGrams: 20 },
+    { name: "ממרח הרשיז", re: /הרשיז|hershey/i, kcal100g: 540, unitGrams: 20 },
+    { name: "ממרח מלטזרס", re: /מלטיזרס|מלטזרס|maltesers/i, kcal100g: 545, unitGrams: 20 },
+    { name: "ממרח טוויקס/באונטי/מילקי ווי", re: /טוויקס|באונטי|מילקי ו[ו]?אי|milky way|twix|bounty/i, kcal100g: 560, unitGrams: 20 },
+    { name: "ממרח אוראו", re: /ממרח אוראו|oreo spread/i, kcal100g: 535, unitGrams: 20 },
+    { name: "ממרח ריסז", re: /ריסז|ריסיז|reese/i, kcal100g: 547, unitGrams: 20 },
+    { name: "ממרח שוקולד ללא תוספת סוכר", re: /שוקולד ללא תוספת סוכר|שוקולד דיאט/i, kcal100g: 420, unitGrams: 20 },
+    { name: "ממרח חמאת אגוזים וקקאו טבעי", re: /חמאת אגוזים וקקאו|אגוזים וקקאו טבעי/i, kcal100g: 460, unitGrams: 20 },
+    { name: "ממרח שוקולד חלבון", re: /ממרח שוקולד חלבון|protein (chocolate )?spread/i, kcal100g: 500, unitGrams: 20 },
     { name: "קקאו", re: /קקאו|cocoa/i, kcal100g: 228 },
     // unitGrams נוסף (קובייה אחת, ~5 גרם) לפי נתון מדויק מהמשתמשת (~27 קל')
     { name: "שוקולד", re: /שוקולד|chocolate/i, kcal100g: 546, unitGrams: 5 },
