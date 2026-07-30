@@ -753,27 +753,39 @@
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
 
-            <!-- כפתור צף (FAB) להוספה מהירה של מים - אפשר לכבות מההגדרות. בועה
-                 נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
-                 לבחירת כמות (כוס/בקבוק/מותאם אישית), לא מוסיף אוטומטית 200 מ״ל -->
-            <button type="button" class="water-fab hidden" id="btn-water-fab" onclick="openModal('modal-water-quick-add')" data-i18n-title="water_quick_add_title" title="Add water">💧</button>
+            <!-- ערימת הבועות הצפות הניתנות להפעלה/כיבוי - כולן ילדים ישירים של
+                 מכל flex-column אחד (#fab-stack), כדי שגרירה ישירה על הבועות
+                 עצמן (ר' initFabOrderDragReorder ב-app.js) תזיז אותן בפועל בסדר
+                 ה-DOM, לא רק חזותית. בועה עם class="hidden" פשוט לא תופסת מקום -
+                 אין יותר "חור" לחשב עבורו ידנית -->
+            <div id="fab-stack" class="fab-stack">
+                <!-- כפתור צף להוספה מהירה של מים - אפשר לכבות מההגדרות. בועה
+                     נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
+                     לבחירת כמות (כוס/בקבוק/מותאם אישית), לא מוסיף אוטומטית 200 מ״ל -->
+                <button type="button" class="stack-fab hidden" id="btn-water-fab" onclick="openModal('modal-water-quick-add')" data-i18n-title="water_quick_add_title" title="Add water">💧</button>
 
-            <!-- כפתור צף (FAB) להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
-                 דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
-                 לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם -->
-            <button type="button" class="sport-fab hidden" id="btn-sport-fab" onclick="switchToTab('sport-section')" data-i18n-title="sport_add_title" title="Log a Workout">⚡</button>
+                <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
+                     דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
+                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם -->
+                <button type="button" class="stack-fab hidden" id="btn-sport-fab" onclick="switchToTab('sport-section')" data-i18n-title="sport_add_title" title="Log a Workout">⚡</button>
 
-            <!-- כפתור צף (FAB) להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
-                 מההגדרות, אותו דפוס בדיוק כמו כפתורי המים/ספורט. לוחצים, בוחרים
-                 ארוחה שמורה מהרשימה, וזה נכנס ישר למשבצת הפנויה הבאה של היום -
-                 בלי לעבור דרך מסך התזונה בכלל -->
-            <button type="button" class="preset-fab hidden" id="btn-preset-fab" onclick="openPresetQuickAddModal()" data-i18n-title="preset_fab_title" title="Quick add saved meal">📋</button>
+                <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
+                     מההגדרות, אותו דפוס בדיוק כמו כפתורי המים/ספורט. לוחצים, בוחרים
+                     ארוחה שמורה מהרשימה, וזה נכנס ישר למשבצת הפנויה הבאה של היום -
+                     בלי לעבור דרך מסך התזונה בכלל -->
+                <button type="button" class="stack-fab hidden" id="btn-preset-fab" onclick="openPresetQuickAddModal()" data-i18n-title="preset_fab_title" title="Quick add saved meal">📋</button>
 
-            <!-- כפתור צף (FAB) להוספת מזון מהירה בטקסט חופשי - משתמש באותו מנוע
-                 הערכת-קלוריות מקומי שכבר קיים בשדה "מה אכלת" הרגיל
-                 (estimateIngredientLineCalories), רק נגיש מכל מסך בלי לפתוח
-                 את מסך התזונה -->
-            <button type="button" class="food-fab hidden" id="btn-food-fab" onclick="openFoodQuickAddModal()" data-i18n-title="food_fab_title" title="Quick log food">🍎</button>
+                <!-- כפתור צף להוספת מזון מהירה בטקסט חופשי - משתמש באותו מנוע
+                     הערכת-קלוריות מקומי שכבר קיים בשדה "מה אכלת" הרגיל
+                     (estimateIngredientLineCalories), רק נגיש מכל מסך בלי לפתוח
+                     את מסך התזונה -->
+                <button type="button" class="stack-fab hidden" id="btn-food-fab" onclick="openFoodQuickAddModal()" data-i18n-title="food_fab_title" title="Quick log food">🍎</button>
+
+                <!-- כפתור צף לפתיחה מהירה של "פריסה חכמה" (פרימיום) - אפשר לכבות
+                     מההגדרות, אותו דפוס בדיוק כמו שאר הבועות. לוחצים ונפתח ישר
+                     המודל של תיאור המשימה, בלי לעבור דרך לשונית הפתקים בכלל -->
+                <button type="button" class="stack-fab hidden" id="btn-smart-split-fab" onclick="openSmartSplitModal()" data-i18n-title="smart_split_fab_title" title="Smart Split">🪄</button>
+            </div>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
@@ -1239,6 +1251,14 @@
                         <label class="settings-label" data-i18n="settings_food_fab_label" for="food-fab-toggle">Quick food-log button</label>
                         <label class="switch">
                             <input type="checkbox" id="food-fab-toggle" onchange="toggleFoodFab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row" data-fab-id="btn-smart-split-fab">
+                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
+                        <label class="settings-label" data-i18n="settings_smart_split_fab_label" for="smart-split-fab-toggle">Smart Split button</label>
+                        <label class="switch">
+                            <input type="checkbox" id="smart-split-fab-toggle" onchange="toggleSmartSplitFab()">
                             <span class="switch-slider"></span>
                         </label>
                     </div>

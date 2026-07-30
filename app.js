@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
     applyFoodFabSetting(isFoodFabOn());
+    applySmartSplitFabSetting(isSmartSplitFabOn());
     initFabOrderDragReorder();
     initSupabase();
     initCubesNavigation();
@@ -4523,13 +4524,16 @@ function applyWaterFabSetting(enabled) {
     restackFabs();
 }
 
-// מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי) כך שכפתורים
-// כבויים לא משאירים "חור" ריק בערימה - כל בועה דלוקה מקבלת את המקום הבא בתור.
-// סדר הבועות עצמו ניתן לגרירה בהגדרות (ר' initFabOrderDragReorder) ונשמר
-// ב-localStorage; בועת ה-AI (הפתק המהיר) תמיד קבועה במקום 0 ולא משתתפת בסדר
-// הזה. נקרא מחדש מכל applyXFabSetting אחרי כל שינוי הפעלה/כיבוי
+// מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי/פריסה חכמה) -
+// הסדר עצמו ניתן לגרירה משני מקומות: ישירות על הבועות במסך הבית (#fab-stack)
+// או משורות ההגדרות (#fab-order-list) - שניהם ר' initFabOrderDragReorder,
+// ושניהם כותבים לאותו localStorage ומסתנכרנים דרך applyFabOrder. בועת ה-AI
+// (הפתק המהיר) לא נמצאת בכלל בתוך #fab-stack - היא קבועה במקום שלה תמיד ולא
+// משתתפת בסדר הזה. "כבוי לא משאיר חור" עכשיו קורה אוטומטית: #fab-stack הוא
+// flex column, ובועה עם class="hidden" (display:none) פשוט לא תופסת מקום -
+// אין יותר צורך בחישוב אינדקס ידני (--fab-stack-index הישן הוסר לגמרי)
 function getFabOrder() {
-    const defaultOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab'];
+    const defaultOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -4537,35 +4541,70 @@ function getFabOrder() {
     return defaultOrder;
 }
 
-function restackFabs() {
-    let stackIndex = 1; // 0 שמור ל-ai-fab (הפתק המהיר), שתמיד דלוק ולא ניתן לכיבוי
-    getFabOrder().forEach(id => {
-        const el = document.getElementById(id);
-        if (!el || el.classList.contains('hidden')) return;
-        el.style.setProperty('--fab-stack-index', stackIndex);
-        stackIndex++;
+// מיישמת את הסדר השמור על שני המקומות גם יחד (סדר ה-DOM בפועל, לא רק CSS) -
+// כך ששני ה-Sortable (הבועות עצמן + שורות ההגדרות) תמיד מוצגים מסונכרנים
+function applyFabOrder() {
+    const order = getFabOrder();
+    const stack = document.getElementById('fab-stack');
+    const settingsList = document.getElementById('fab-order-list');
+    order.forEach(id => {
+        if (stack) {
+            const el = document.getElementById(id);
+            if (el) stack.appendChild(el);
+        }
+        if (settingsList) {
+            const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
+            if (row) settingsList.appendChild(row);
+        }
     });
 }
 
-// גרירת שורות ה-FAB בהגדרות כדי לשנות את סדר הבועות הצפות בפועל על המסך -
-// אותו דפוס בדיוק כמו initScheduleRowDragReorder (SortableJS, handle ייעודי)
+function restackFabs() {
+    applyFabOrder();
+}
+
+// גרירה לשינוי סדר הבועות הצפות - שני יעדים אפשריים: ישירות על הבועות
+// במסך הבית (#fab-stack, כל הבועה עצמה היא ידית - delay קצר במגע כדי
+// שטאפ רגיל לפתיחה עדיין יעבוד בלי "להיתפס" בטעות כתחילת גרירה), או שורות
+// ה-FAB בהגדרות (#fab-order-list, ידית ⠿ ייעודית, אותו דפוס בדיוק כמו
+// initScheduleRowDragReorder). שתי הרשימות כותבות לאותו localStorage
+// ומסתנכרנות מיד דרך applyFabOrder אחרי כל גרירה, מאיזה מהן שלא תגיע
 function initFabOrderDragReorder() {
-    const list = document.getElementById('fab-order-list');
-    if (!list || typeof Sortable === 'undefined') return;
-    new Sortable(list, {
-        handle: '.fab-order-drag-handle',
-        animation: 150,
-        forceFallback: true,
-        fallbackOnBody: false,
-        dragoverBubble: false,
-        ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
-        onEnd: function () {
-            const newOrder = Array.from(list.children).map(row => row.getAttribute('data-fab-id'));
-            localStorage.setItem('weekwise_fab_order', JSON.stringify(newOrder));
-            restackFabs();
-        }
-    });
+    if (typeof Sortable === 'undefined') return;
+    const onReorder = (container) => {
+        const order = Array.from(container.children).map(el => el.getAttribute('data-fab-id') || el.id);
+        localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
+        applyFabOrder();
+    };
+
+    const settingsList = document.getElementById('fab-order-list');
+    if (settingsList) {
+        new Sortable(settingsList, {
+            handle: '.fab-order-drag-handle',
+            animation: 150,
+            forceFallback: true,
+            fallbackOnBody: false,
+            dragoverBubble: false,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            onEnd: () => onReorder(settingsList),
+        });
+    }
+
+    const stack = document.getElementById('fab-stack');
+    if (stack) {
+        new Sortable(stack, {
+            animation: 150,
+            forceFallback: true,
+            fallbackOnBody: false,
+            dragoverBubble: false,
+            delay: 150,
+            delayOnTouchOnly: true,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            onEnd: () => onReorder(stack),
+        });
+    }
 }
 
 function toggleWaterFab() {
@@ -4648,6 +4687,26 @@ function toggleFoodFab() {
     const enabled = document.getElementById('food-fab-toggle').checked;
     localStorage.setItem('weekwise_food_fab', enabled ? 'true' : 'false');
     applyFoodFabSetting(enabled);
+}
+
+// כפתור צף לפתיחה מהירה של "פריסה חכמה" - אותו דפוס בדיוק כמו כפתורי
+// המים/ספורט/ארוחה קבועה, כבוי כברירת מחדל (opt-in, לא כולם צריכים עוד בועה)
+function isSmartSplitFabOn() {
+    return localStorage.getItem('weekwise_smart_split_fab') === 'true';
+}
+
+function applySmartSplitFabSetting(enabled) {
+    const fab = document.getElementById('btn-smart-split-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
+    const toggle = document.getElementById('smart-split-fab-toggle');
+    if (toggle) toggle.checked = enabled;
+    restackFabs();
+}
+
+function toggleSmartSplitFab() {
+    const enabled = document.getElementById('smart-split-fab-toggle').checked;
+    localStorage.setItem('weekwise_smart_split_fab', enabled ? 'true' : 'false');
+    applySmartSplitFabSetting(enabled);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז

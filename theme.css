@@ -879,45 +879,28 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-fab:active { transform: scale(0.9); }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
-/* כפתור צף להוספה מהירה של מים - מוערם *מעל* כפתור הפתק המהיר (ai-fab),
-   אותו צד (ימין-תחתון) כמו במקור - חזרה לפי בקשה מפורשת. גרדיאנט סגול->ציאן
-   (לא כחול סתמי) כדי שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה.
-   מוסתר כברירת מחדל (class="hidden" ב-HTML) עד שמפעילים בהגדרות */
-.water-fab {
+/* מכל הבועות הצפות הניתנות להפעלה/כיבוי (מים/ספורט/ארוחה קבועה/מזון חופשי/
+   פריסה חכמה) - flex column אחד שמעליו הבועה הראשונה יושבת בדיוק במקום שה-
+   אינדקס הישן "1" היה, וכל בועה נוספת נערמת מעליה לפי gap. בועה כבויה
+   (class="hidden") לא תופסת מקום כלל - אין יותר "חור" לחשב עבורו ידנית.
+   סדר הילדים בפועל (ר' initFabOrderDragReorder/applyFabOrder ב-app.js) הוא
+   מה שקובע את סדר הערימה - גרירה ישירה על בועה מזיזה אותה ממש ב-DOM */
+.fab-stack {
     position: absolute;
-    bottom: calc(88px + (var(--fab-stack-index, 1) * 68px) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(88px + 68px + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 1.4rem;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
-    padding: 0;
-    transition: var(--transition);
-    user-select: none;
-    -webkit-user-select: none;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 16px;
 }
-.water-fab:active { transform: scale(0.9); }
-.phone-wrapper.menu-open .water-fab { display: none; }
+.phone-wrapper.menu-open .fab-stack { display: none; }
 
-/* כפתור צף להוספה מהירה של ספורט - נערם *מעל* כפתור המים, חזרה לצד ימין
-   כמו במקור (ר' הערה למעלה - לא מזיזים בועות יותר, מגבילים את גובה הרשת
-   במקום). לוחצים וקופצים ישר למסך ספורט המלא (לא מודל מהיר - משך האימון
-   משתנה בכל פעם, בניגוד לכמות מים קבועה) */
-.sport-fab {
-    position: absolute;
-    bottom: calc(88px + (var(--fab-stack-index, 2) * 68px) + env(safe-area-inset-bottom, 0px));
-    right: 25px;
-    z-index: 99999;
-    display: flex;
+/* עיצוב משותף לכל בועה בערימה - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
+   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:none
+   כדי שגרירה במגע לא "תגלוש" לגלילת הדף במקום להזיז את הבועה */
+.stack-fab {
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -925,69 +908,19 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border: 1px solid rgba(255,255,255,0.15);
     color: #fff;
     font-size: 1.4rem;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
-    padding: 0;
-    transition: var(--transition);
-    user-select: none;
-    -webkit-user-select: none;
-}
-.sport-fab:active { transform: scale(0.9); }
-.phone-wrapper.menu-open .sport-fab { display: none; }
-
-/* כפתור צף להוספה מהירה של ארוחה קבועה - נערם *מעל* כפתור הספורט, אותו
-   דפוס מיקום/עיצוב בדיוק */
-.preset-fab {
-    position: absolute;
-    bottom: calc(88px + (var(--fab-stack-index, 3) * 68px) + env(safe-area-inset-bottom, 0px));
-    right: 25px;
-    z-index: 99999;
     display: flex;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 1.4rem;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
     padding: 0;
+    flex-shrink: 0;
     transition: var(--transition);
+    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
 }
-.phone-wrapper.menu-open .preset-fab { display: none; }
-
-/* כפתור צף להוספת מזון מהיר בטקסט חופשי - נערם *מעל* כפתור הארוחה הקבועה,
-   אותו דפוס מיקום/עיצוב בדיוק */
-.food-fab {
-    position: absolute;
-    bottom: calc(88px + (var(--fab-stack-index, 4) * 68px) + env(safe-area-inset-bottom, 0px));
-    right: 25px;
-    z-index: 99999;
-    display: flex;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 1.4rem;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
-    padding: 0;
-    transition: var(--transition);
-    user-select: none;
-    -webkit-user-select: none;
-}
-.phone-wrapper.menu-open .food-fab { display: none; }
+.stack-fab:active { transform: scale(0.9); }
 
 /* עוזר ה-AI (🤖 "רובוט ניאון"): ננעל בפינה השמאלית-עליונה - בדיוק המקום
    שאימוג'י הברכה ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה
