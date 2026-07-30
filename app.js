@@ -2958,21 +2958,28 @@ async function loadTodayTasks() {
         container.appendChild(row);
     });
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
-    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל. מהפתיחה השנייה
-    // של הכרטיס באותו יום ואילך (ר' trackTodayCardExpandView) מוצגת הודעה
-    // שונה, כדי שזה לא ירגיש כמו תקליט שבור בכל ביקור חוזר
+    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל
     if (allDone) {
         const celebration = document.createElement('p');
         celebration.className = 'today-tasks-celebration';
-        celebration.textContent = t(getTodayCardViewCount() >= 2 ? 'today_tasks_all_done_message_repeat' : 'today_tasks_all_done_message');
+        celebration.textContent = t('today_tasks_all_done_message');
         container.appendChild(celebration);
+    // עוד לא הכל בוצע, אבל זו כבר הפתיחה השנייה (או יותר) של הכרטיס היום -
+    // הודעת עידוד עדינה שיש עוד זמן להשלים, בלי לחץ - מוצגת *לצד* רשימת
+    // המשימות שנשארו (לא במקומה, עדיין רוצים לראות מה נשאר)
+    } else if (populated.length + events.length > 0 && getTodayCardViewCount() >= 2) {
+        const encouragement = document.createElement('p');
+        encouragement.className = 'today-tasks-celebration';
+        encouragement.textContent = t('today_tasks_still_time_message');
+        container.appendChild(encouragement);
     }
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
 // מאליו כל יום, בלי מנגנון איפוס נפרד) - נקראת רק מלחיצה ממשית על הכותרת
-// (לא מכל loadTodayTasks שרץ מסיבות אחרות ברקע), כדי שההודעה החוזרת תרגיש
-// כמו תגובה לביקור חוזר אמיתי של המשתמשת
+// (לא מכל loadTodayTasks שרץ מסיבות אחרות ברקע), כדי שהודעת "יש לך עוד זמן"
+// (ר' loadTodayTasks) תרגיש כמו תגובה לביקור חוזר אמיתי של המשתמשת, לא
+// לכל טעינה טכנית ברקע
 function getTodayCardViewCount() {
     return parseInt(localStorage.getItem(`weekwise_today_card_views_${getLocalDateString()}`)) || 0;
 }
@@ -2985,8 +2992,7 @@ function trackTodayCardExpandView(headerEl) {
     if (!card || !card.classList.contains('expanded')) return;
     const key = `weekwise_today_card_views_${getLocalDateString()}`;
     localStorage.setItem(key, String(getTodayCardViewCount() + 1));
-    const celebration = document.querySelector('.today-tasks-celebration');
-    if (celebration) celebration.textContent = t(getTodayCardViewCount() >= 2 ? 'today_tasks_all_done_message_repeat' : 'today_tasks_all_done_message');
+    loadTodayTasks();
 }
 
 // --- לוח חודשי: אותו מקור נתונים בדיוק כמו "מבט ליומן" (calendar_events),
