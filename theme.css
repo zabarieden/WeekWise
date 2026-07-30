@@ -1086,6 +1086,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .day-page-header { font-weight: 600; color: var(--text-primary); font-size: 0.85rem; text-align: center; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .day-page-empty { text-align: center; color: var(--text-secondary); font-size: 0.78rem; padding: 16px 8px; opacity: 0.7; }
 .slots-grid { display: flex; flex-direction: column; gap: 10px; }
+/* אירועים חד-פעמיים (calendar_events) שחלים על היום הספציפי הזה השבוע -
+   ר' loadWeekOneTimeEvents ב-app.js. :not(:empty) כדי שלא יישאר מרווח ריק
+   מיותר בימים בלי שום אירוע כזה */
+.day-page-onetime { display: flex; flex-direction: column; gap: 10px; }
+.day-page-onetime:not(:empty) { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.04); }
 /* flex + space-between במקום grid: שלושת החלקים (שעה/משימה/מחיקה) נפרשים
    על פני כל רוחב השורה מקצה לקצה - הזמן ("שעה") ל-flex:0 0 auto בקצה אחד,
    כפתור המחיקה ל-flex:0 0 auto בקצה השני, ועטיפת המשימה (flex:1) ממלאת

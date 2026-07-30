@@ -1275,6 +1275,60 @@ function getFormattedDateForDay(dayIndex) {
     return `${targetDate.getDate()}.${targetDate.getMonth() + 1}`;
 }
 
+// אותו חישוב בדיוק כמו getFormattedDateForDay, רק בפורמט ISO (YYYY-MM-DD) -
+// דרוש כדי לשלוף calendar_events לפי event_date, לא רק לתצוגה
+function getIsoDateForDayThisWeek(dayIndex) {
+    const current = new Date();
+    const sundayDate = new Date(current); sundayDate.setDate(current.getDate() - current.getDay());
+    const targetDate = new Date(sundayDate); targetDate.setDate(sundayDate.getDate() + dayIndex);
+    return getLocalDateString(targetDate);
+}
+
+// אירועים חד-פעמיים (calendar_events) שחלים על השבוע הנוכחי, מוצגים בתוך
+// "השבוע שלי" עצמו - לא רק ב"מבט ליומן"/"הצצה להיום"/לוח החודשי כמו קודם.
+// אותו דפוס עריכה/מחיקה/השלמה בדיוק כמו ב-loadTodayTasks (closures, לא
+// onclick עם מחרוזת מוטבעת, כדי שגרש בודד בכותרת לא ישבור כלום). נקראת מתוך
+// loadTodayTasks עצמה (לא מפוזרת בין כל נקודת mutation של calendar_events
+// בנפרד) כדי שתמיד תישאר מסונכרנת בלי לצוד כל call site בנפרד
+async function loadWeekOneTimeEvents() {
+    if (!supabaseClient || !currentUserId) return;
+    const weekStart = getIsoDateForDayThisWeek(0);
+    const weekEnd = getIsoDateForDayThisWeek(6);
+    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', weekStart).lte('event_date', weekEnd);
+    const byDate = new Map();
+    (data || []).forEach(item => {
+        if (!byDate.has(item.event_date)) byDate.set(item.event_date, []);
+        byDate.get(item.event_date).push(item);
+    });
+    dbDaysMap.forEach((dbDay, dayIndex) => {
+        const container = document.getElementById(`daypage-onetime-${dbDay}`);
+        if (!container) return;
+        const items = byDate.get(getIsoDateForDayThisWeek(dayIndex)) || [];
+        container.innerHTML = '';
+        items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'today-tasks-row';
+            row.innerHTML = `
+                <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
+                <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">📅 ${escapeHtmlForReport(item.event_title)}</span>
+            `;
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'btn-edit-item';
+            editBtn.textContent = '✏️';
+            editBtn.onclick = () => openEditCalendarEvent(item);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn-delete-item';
+            deleteBtn.textContent = '❌';
+            deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+            row.appendChild(editBtn);
+            row.appendChild(deleteBtn);
+            container.appendChild(row);
+        });
+    });
+}
+
 // --- שעות ברירת מחדל מותאמות אישית (נשמר מקומית per-device, זו העדפת תצוגה בלבד) ---
 function defaultHoursKey() {
     return `weekwise_default_hours_${currentUserId}`;
@@ -2444,7 +2498,12 @@ function buildWeeklyScheduleAccordionUI() {
             slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-actions-wrap"><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="confirmRemoveDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
-        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
+        // day-page-onetime: אירועים חד-פעמיים (calendar_events, כולל תוצרי "פריסה
+        // חכמה") שחלים על התאריך הספציפי הזה השבוע - ממולא בנפרד ע"י
+        // loadWeekOneTimeEvents, לא כאן (בניית ה-DOM כאן סינכרונית, בלי רשת) -
+        // בלעדיו הם היו מופיעים רק ב"מבט ליומן"/"הצצה להיום", לא כשמסתכלים על
+        // היום הספציפי הזה בתוך "השבוע שלי" עצמו, לפי בקשה מפורשת
+        pageDiv.innerHTML = `<div class="day-page-header">${dateStr} | ${dayName}</div><div class="slots-grid${gridHiddenClass}">${slotsHTML}</div><div class="day-page-empty${slotNumbers.length ? ' hidden' : ''}">${t('schedule_day_empty_hint')}</div><div class="day-page-onetime" id="daypage-onetime-${dbDay}"></div><button type="button" class="btn-add-day-slot" onclick="addDaySlot('${dbDay}')">➕ ${t('schedule_add_row_btn')}</button>`;
         container.appendChild(pageDiv);
     });
     setupDayScrollObserver();
@@ -2824,6 +2883,11 @@ function toggleCustomRecurrenceVisibility() {
 // רצות במקביל ב-Promise.all בטעינה
 async function loadTodayTasks() {
     if (!supabaseClient || !currentUserId) return;
+    // נקראת מכאן (לא מכל call site שנוגע ב-calendar_events בנפרד) כדי
+    // ש"השבוע שלי" תמיד יישאר מסונכרן בלי לצוד כל מקום כזה ידנית - ר' ההערה
+    // על loadWeekOneTimeEvents עצמה. לפני ה-return המוקדם למטה (שתלוי בקיום
+    // #today-tasks-list, לא רלוונטי כאן) כדי שתמיד תרוץ
+    loadWeekOneTimeEvents();
     const container = document.getElementById('today-tasks-list');
     if (!container) return;
     const todayDbDay = dbDaysMap[new Date().getDay()];
