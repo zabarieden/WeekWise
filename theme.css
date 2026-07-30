@@ -1935,6 +1935,47 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 #schedule-clarify-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
 #schedule-clarify-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18); }
+/* פריסה חכמה: אותו סגנון בדיוק כמו #ai-schedule-input (תיאור המשימה) ו-
+   #schedule-clarify-input (שאלת ההבהרה על ימים פנויים) - בלי זה השדות האלה
+   היו נופלים לעיצוב ברירת המחדל הלבן/מכוער של הדפדפן */
+#smart-split-task-input {
+    width: 100%;
+    min-height: 100px;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 14px;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: var(--transition);
+    margin-bottom: 10px;
+}
+#smart-split-task-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
+#smart-split-task-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
+#smart-split-due-date-input { width: 100%; margin-top: 6px; }
+#smart-split-clarify-input {
+    width: 100%;
+    background-color: var(--bg-glass);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+    transition: var(--transition);
+}
+#smart-split-clarify-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
+#smart-split-clarify-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18); }
 /* אותו סגנון בדיוק כמו #schedule-clarify-input - שני המודלים הם אותו דפוס
    "שאלת הבהרה יחידה", רק אחד ל-AI לוח זמנים והשני ל-AI הוספת מזון מהירה.
    בלי זה, השדה נשאר בעיצוב ברירת המחדל הלבן של הדפדפן ולא תואם את שאר האפליקציה */
