@@ -2986,8 +2986,8 @@ async function loadTodayTasks() {
     }
 }
 
-// נצנצים חוגגים לרגע ✨ - נזרקים בהדרגה על פני דקה שלמה (לא כל הכמות בבת
-// אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
+// נצנצים חוגגים לרגע ✨ - נזרקים בהדרגה על פני שתי דקות שלמות (לא כל הכמות
+// בבת אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
 // (position:relative + overflow:hidden כבר קיימים שם) כדי שלא יגלשו החוצה
 // על מסכי דסקטופ רחבים
 function triggerAllDoneSparkles() {
@@ -3014,7 +3014,7 @@ function triggerAllDoneSparkles() {
     setTimeout(() => {
         clearInterval(spawnTimer);
         setTimeout(() => overlay.remove(), 6000);
-    }, 60000);
+    }, 120000);
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
