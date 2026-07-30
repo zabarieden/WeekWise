@@ -7457,7 +7457,8 @@ const FOOD_CALORIE_DB = [
     { name: "משקה סויה וניל", re: /משקה סויה.*וניל|וניל.*משקה סויה|soy.*vanilla.*milk/i, kcal100g: 57, unitGrams: 200 },
     { name: "משקה שקדים שוקולד", re: /משקה שקדים.*שוקולד|שקדים.*שוקולד.*משקה|almond.*chocolate.*milk/i, kcal100g: 47, unitGrams: 200 },
     { name: "משקה שיבולת שועל שוקולד", re: /משקה שיבולת שועל.*שוקולד|שיבולת שועל.*שוקולד|oat.*chocolate.*milk/i, kcal100g: 61, unitGrams: 200 },
-    { name: "חלב סויה", re: /חלב סויה|משקה סויה|soy.?milk/i, kcal100g: 44, sweetenedKcal100g: 67, unitGrams: 200 },
+    // עודכן ל-33 (מ-44) לפי נתון מדויק מהמשתמשת (משקה סויה ללא סוכר)
+    { name: "חלב סויה", re: /חלב סויה|משקה סויה|soy.?milk/i, kcal100g: 33, sweetenedKcal100g: 67, unitGrams: 200 },
     { name: "חלב שקדים", re: /חלב שקדים|משקה שקדים|almond.?milk/i, kcal100g: 14, sweetenedKcal100g: 31, unitGrams: 200 },
     { name: "חלב שיבולת שועל", re: /חלב שיבולת שועל|משקה שיבולת שועל|oat.?milk/i, kcal100g: 45, sweetenedKcal100g: 58, unitGrams: 200 },
     // קוקוס: שלושה מוצרים שונים מאוד - משקה קוקוס לשתייה (הכי דליל), חלב קוקוס
