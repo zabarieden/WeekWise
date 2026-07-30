@@ -7180,7 +7180,9 @@ const FOOD_CALORIE_DB = [
     { name: "קוקטייל פירות בסירופ", re: /קוקטייל פירות/i, kcal100g: 70, unitGrams: 100 },
     { name: "ליצ'י בסירופ", re: /ליצ'י/i, kcal100g: 90, unitGrams: 50 },
     { name: "דובדבנים בסירופ", re: /דובדבנים.*סירופ|דובדבנים חמוצים/i, kcal100g: 116, unitGrams: 30 },
-    { name: "סלמון בשימורים", re: /סלמון בשימורים|canned salmon/i, kcal100g: 153, unitGrams: 85 },
+    // דורש "בשימורים" בלי "במים" אחריה - "סלמון בשימורים במים" (למטה, בין
+    // דגים אחרים) הוא ערך שונה וצריך להיתפס לפני הערך הכללי הזה
+    { name: "סלמון בשימורים", re: /סלמון בשימורים(?! במים)|canned salmon(?! .*water)/i, kcal100g: 153, unitGrams: 85 },
     { name: "לוף/Spam", re: /\bלוף\b|\bspam\b/i, kcal100g: 300, unitGrams: 50 },
     { name: "מולים/צדפות בשימורים", re: /מולים בשימורים|צדפות בשימורים|canned mussels/i, kcal100g: 200, unitGrams: 85 },
     { name: "תמנון בשמן זית", re: /תמנון(ים)?.*שמן זית|\bpulpo\b/i, kcal100g: 165, unitGrams: 85 },
@@ -7198,7 +7200,9 @@ const FOOD_CALORIE_DB = [
     { name: "תערובת קטניות בשימורים", re: /תערובת קטניות/i, kcal100g: 87, unitGrams: 120 },
     { name: "אנשובי כבוש בחומץ", re: /אנשובי כבוש|boquerones/i, kcal100g: 150, unitGrams: 20 },
     { name: "כבד דג בשימורים", re: /כבד דג|cod liver/i, kcal100g: 600, unitGrams: 30 },
-    { name: "מקרל בשימורים", re: /מקרל|mackerel/i, kcal100g: 233, unitGrams: 90 },
+    // דורש שלא יופיע "אפוי"/"מעושן" אחריו - הגרסה הטרייה (למטה, בין דגים
+    // אחרים) שונה בערך ומטופלת בנפרד
+    { name: "מקרל בשימורים", re: /מקרל(?! (אפוי|מעושן))|mackerel(?! (baked|smoked))/i, kcal100g: 233, unitGrams: 90 },
     { name: "פורל מעושן בשימורים", re: /פורל מעושן/i, kcal100g: 188, unitGrams: 85 },
     { name: "שזיפים בסירופ", re: /שזיפים.*סירופ/i, kcal100g: 93, unitGrams: 70 },
     { name: "תאנים בסירופ", re: /תאנים.*סירופ/i, kcal100g: 183, unitGrams: 60 },
@@ -7692,15 +7696,37 @@ const FOOD_CALORIE_DB = [
     // טונה בשמן חייבת לבוא *לפני* טונה הכללית (במים, בסמוך למטה) - מכילה
     // "טונה" כתת-מחרוזת, וקלורית בהרבה מטונה במים
     { name: "טונה בשמן", re: /טונה בשמן|טונה שמן זית|tuna in oil/i, kcal100g: 195, unitGrams: 100 },
-    { name: "טונה", re: /טונה|tuna/i, kcal100g: 116, unitGrams: 100 },
+    // דורש שלא יופיע "אדומה"/"טרייה"/"steak" - גרסת הסטייק הטרי (למעלה, בין
+    // דגים אחרים) שונה בערך ומטופלת בנפרד
+    { name: "טונה", re: /טונה(?! (אדומה|טרי(ה)?))|tuna(?! steak)/i, kcal100g: 116, unitGrams: 100 },
     // עוד דגים נפוצים - לפי בקשה מפורשת ("דגים"), אותו מסד חינמי-לוקאלי
     { name: "בקלה", re: /בקלה|\bcod\b/i, kcal100g: 105, unitGrams: 150 },
     { name: "מושט/טילפיה", re: /מושט|טילפיה|tilapia/i, kcal100g: 128, unitGrams: 150 },
+    // פוצל לפי מין (לברק/דניס/אמנון) עם ערכים מדויקים מהמשתמשת - כל אחד
+    // חייב לבוא *לפני* ה"אמנון" הכללי, ו"דניס" לבדה כי "sea bream"/"branzino"
+    // כבר לא חופפים
+    { name: "פילה לברק (Sea Bass)", re: /לברק|sea bass/i, kcal100g: 124, unitGrams: 150 },
+    { name: "פילה דניס/צ'פורה (Sea Bream)", re: /דניס|צ'פורה|sea bream/i, kcal100g: 135, unitGrams: 150 },
+    { name: "פילה נסיכת הנילוס", re: /נסיכת הנילוס|נסיכה אפוי|nile perch/i, kcal100g: 92, unitGrams: 150 },
+    { name: "פילה הליבוט (Halibut)", re: /הליבוט|halibut/i, kcal100g: 110, unitGrams: 150 },
+    { name: "פילה סול/פלנדר (Sole)", re: /\bסול\b|פלנדר|\bsole\b|flounder/i, kcal100g: 90, unitGrams: 150 },
+    { name: "פילה קוד/באסה אפוי", re: /קוד.*אפוי|באסה|\bbasa\b/i, kcal100g: 82, unitGrams: 150 },
+    { name: "טונה אדומה/סטייק צרוב", re: /טונה אדומה|טונה טרי(ה)?|tuna steak/i, kcal100g: 130, unitGrams: 150 },
+    { name: "מקרל אפוי/מעושן טרי", re: /מקרל אפוי|מקרל מעושן/i, kcal100g: 262, unitGrams: 120 },
+    { name: "הרינג/דג מלוח", re: /הרינג|herring/i, kcal100g: 260, unitGrams: 50 },
+    { name: "סלמון בשימורים במים", re: /סלמון בשימורים במים|canned salmon.*water/i, kcal100g: 136, unitGrams: 120 },
+    { name: "קציצות/אצבעות דג אפויות", re: /קציצות דג|אצבעות דג|fish fingers?/i, kcal100g: 200, unitGrams: 90 },
+    { name: "איקרה/ממרח ביצי דגים", re: /איקרה|fish roe spread/i, kcal100g: 450, unitGrams: 20 },
+    { name: "סורימי", re: /סורימי|surimi/i, kcal100g: 100, unitGrams: 50 },
+    { name: "בורי", re: /בורי|grey mullet/i, kcal100g: 150, unitGrams: 150 },
+    { name: "קרפיון", re: /קרפיון|\bcarp\b/i, kcal100g: 127, unitGrams: 150 },
+    { name: "סטייק דג חרב", re: /דג חרב|swordfish/i, kcal100g: 172, unitGrams: 150 },
     { name: "אמנון/דניס/לברק", re: /אמנון|דניס|לברק|sea bream|branzino/i, kcal100g: 120, unitGrams: 150 },
     // סלמון מעושן חייב לבוא *לפני* סלמון הכללי (בסמוך למטה) - מכיל "סלמון"
     // כתת-מחרוזת, ופחות קלורי (170 מול 208 ל-100 גרם, לפי נתון מהמשתמשת)
     { name: "סלמון מעושן", re: /סלמון מעושן|smoked salmon/i, kcal100g: 170, unitGrams: 19 },
-    { name: "פורל", re: /פורל|trout/i, kcal100g: 168, unitGrams: 150 },
+    // עודכן ל-148 (מ-168) לפי נתון מדויק מהמשתמשת (פורל בתנור אחרי בישול)
+    { name: "פורל", re: /פורל|trout/i, kcal100g: 148, unitGrams: 150 },
     { name: "הרינג", re: /הרינג|herring/i, kcal100g: 158, unitGrams: 80 },
     { name: "סרדינים", re: /סרדינ(ים)?|sardines?/i, kcal100g: 208, unitGrams: 50 },
     { name: "שרימפס/חסילון", re: /שרימפס|חסילונ(ים)?|shrimp|prawns?/i, kcal100g: 99, unitGrams: 100 },
