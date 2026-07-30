@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
     applyFoodFabSetting(isFoodFabOn());
+    initFabOrderDragReorder();
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -1508,15 +1509,15 @@ async function duplicateSlotToNextDay(day, slot) {
 function openAiBrainModal(tab = 'schedule') {
     document.getElementById('ai-schedule-input').value = '';
     document.getElementById('ai-finance-input').value = '';
-    setScheduleAiMode('recurring');
+    setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
 }
 
 // בררה מפורשת חד-פעמי/חוזר מעל תיבת הטקסט של תכנון הלו"ז - דורסת את מה
 // שה-AI/המנתח המקומי מחליטים על סמך הניסוח (ר' applyExplicitScheduleMode
-// למטה, שקוראת לפונקציה הזו בפועל). ברירת המחדל "חוזר" כי זו הבקשה השכיחה
-let scheduleAiMode = 'recurring';
+// למטה, שקוראת לפונקציה הזו בפועל). ברירת המחדל "חד-פעמי", לפי בקשה מפורשת
+let scheduleAiMode = 'onetime';
 function setScheduleAiMode(mode) {
     scheduleAiMode = mode;
     document.querySelectorAll('.ai-schedule-mode-btn').forEach(btn => {
@@ -4446,16 +4447,47 @@ function applyWaterFabSetting(enabled) {
 }
 
 // מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי) כך שכפתורים
-// כבויים לא משאירים "חור" ריק בערימה - כל בועה דלוקה מקבלת את המקום הבא בתור
-// במקום מיקום קבוע לפי שם. נקרא מחדש מכל applyXFabSetting אחרי כל שינוי הפעלה/כיבוי
+// כבויים לא משאירים "חור" ריק בערימה - כל בועה דלוקה מקבלת את המקום הבא בתור.
+// סדר הבועות עצמו ניתן לגרירה בהגדרות (ר' initFabOrderDragReorder) ונשמר
+// ב-localStorage; בועת ה-AI (הפתק המהיר) תמיד קבועה במקום 0 ולא משתתפת בסדר
+// הזה. נקרא מחדש מכל applyXFabSetting אחרי כל שינוי הפעלה/כיבוי
+function getFabOrder() {
+    const defaultOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab'];
+    try {
+        const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
+        if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
+    } catch { /* אין סדר שמור/פגום - נופלים לברירת המחדל */ }
+    return defaultOrder;
+}
+
 function restackFabs() {
-    const stackOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab'];
     let stackIndex = 1; // 0 שמור ל-ai-fab (הפתק המהיר), שתמיד דלוק ולא ניתן לכיבוי
-    stackOrder.forEach(id => {
+    getFabOrder().forEach(id => {
         const el = document.getElementById(id);
         if (!el || el.classList.contains('hidden')) return;
         el.style.setProperty('--fab-stack-index', stackIndex);
         stackIndex++;
+    });
+}
+
+// גרירת שורות ה-FAB בהגדרות כדי לשנות את סדר הבועות הצפות בפועל על המסך -
+// אותו דפוס בדיוק כמו initScheduleRowDragReorder (SortableJS, handle ייעודי)
+function initFabOrderDragReorder() {
+    const list = document.getElementById('fab-order-list');
+    if (!list || typeof Sortable === 'undefined') return;
+    new Sortable(list, {
+        handle: '.fab-order-drag-handle',
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: false,
+        dragoverBubble: false,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function () {
+            const newOrder = Array.from(list.children).map(row => row.getAttribute('data-fab-id'));
+            localStorage.setItem('weekwise_fab_order', JSON.stringify(newOrder));
+            restackFabs();
+        }
     });
 }
 

@@ -1201,33 +1201,41 @@
                         <option value="us" data-i18n="settings_country_usa">USA</option>
                     </select>
                 </div>
-                <div class="settings-toggle-row">
-                    <label class="settings-label" data-i18n="settings_water_fab_label" for="water-fab-toggle">Quick water-add button</label>
-                    <label class="switch">
-                        <input type="checkbox" id="water-fab-toggle" onchange="toggleWaterFab()">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-toggle-row">
-                    <label class="settings-label" data-i18n="settings_sport_fab_label" for="sport-fab-toggle">Quick sport-add button</label>
-                    <label class="switch">
-                        <input type="checkbox" id="sport-fab-toggle" onchange="toggleSportFab()">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-toggle-row">
-                    <label class="settings-label" data-i18n="settings_preset_fab_label" for="preset-fab-toggle">Quick preset-meal button</label>
-                    <label class="switch">
-                        <input type="checkbox" id="preset-fab-toggle" onchange="togglePresetFab()">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-toggle-row">
-                    <label class="settings-label" data-i18n="settings_food_fab_label" for="food-fab-toggle">Quick food-log button</label>
-                    <label class="switch">
-                        <input type="checkbox" id="food-fab-toggle" onchange="toggleFoodFab()">
-                        <span class="switch-slider"></span>
-                    </label>
+                <!-- סדר הכפתורים הצפים ניתן לגרירה (לא כולל בועת ה-AI, שנשארת קבועה
+                     למעלה) - ר' initFabOrderDragReorder/restackFabs ב-app.js -->
+                <div id="fab-order-list">
+                    <div class="settings-toggle-row" data-fab-id="btn-water-fab">
+                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
+                        <label class="settings-label" data-i18n="settings_water_fab_label" for="water-fab-toggle">Quick water-add button</label>
+                        <label class="switch">
+                            <input type="checkbox" id="water-fab-toggle" onchange="toggleWaterFab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row" data-fab-id="btn-sport-fab">
+                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
+                        <label class="settings-label" data-i18n="settings_sport_fab_label" for="sport-fab-toggle">Quick sport-add button</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sport-fab-toggle" onchange="toggleSportFab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row" data-fab-id="btn-preset-fab">
+                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
+                        <label class="settings-label" data-i18n="settings_preset_fab_label" for="preset-fab-toggle">Quick preset-meal button</label>
+                        <label class="switch">
+                            <input type="checkbox" id="preset-fab-toggle" onchange="togglePresetFab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-toggle-row" data-fab-id="btn-food-fab">
+                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
+                        <label class="settings-label" data-i18n="settings_food_fab_label" for="food-fab-toggle">Quick food-log button</label>
+                        <label class="switch">
+                            <input type="checkbox" id="food-fab-toggle" onchange="toggleFoodFab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
@@ -1544,8 +1552,8 @@
                          כ"מחר") - הבחירה כאן דורסת את מה שה-AI/המנתח המקומי
                          מחליטים, ר' applyExplicitScheduleMode -->
                     <div class="ai-schedule-mode-toggle">
-                        <button type="button" class="ai-schedule-mode-btn" data-mode="onetime" onclick="setScheduleAiMode('onetime')" data-i18n="schedule_ai_mode_onetime">📅 One-time</button>
-                        <button type="button" class="ai-schedule-mode-btn active" data-mode="recurring" onclick="setScheduleAiMode('recurring')" data-i18n="schedule_ai_mode_recurring">🔁 Recurring</button>
+                        <button type="button" class="ai-schedule-mode-btn active" data-mode="onetime" onclick="setScheduleAiMode('onetime')" data-i18n="schedule_ai_mode_onetime">📅 One-time</button>
+                        <button type="button" class="ai-schedule-mode-btn" data-mode="recurring" onclick="setScheduleAiMode('recurring')" data-i18n="schedule_ai_mode_recurring">🔁 Recurring</button>
                     </div>
                     <input type="number" id="ai-schedule-duration-months" min="1" data-i18n-placeholder="schedule_ai_duration_placeholder" placeholder="For how many months? (optional - leave empty for ongoing)">
                     <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g., Gym on Mondays at 10 AM, Hip Hop on Tuesdays at 8 PM, Work on Friday until 2 PM"></textarea>
