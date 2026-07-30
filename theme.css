@@ -1292,6 +1292,33 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     85% { opacity: 1; }
     100% { transform: translateY(115vh) rotate(360deg); opacity: 0; }
 }
+/* ברכה יומית (בוקר טוב/ערב טוב וכו') - ר' checkDailyGreeting ב-app.js.
+   fixed+centered למעלה, מעל הכל, נעלמת בהדרגה אחרי כמה שניות */
+.daily-greeting-banner {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.92), rgba(255, 0, 127, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    animation: dailyGreetingIn 0.4s ease-out;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.daily-greeting-banner-hide { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+@keyframes dailyGreetingIn {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-14px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
 /* צ'קבוקס קטן מאוד (לפי בקשה מפורשת) לסימון "בוצע" בפירוט היום בלוח החודשי */
 .day-detail-checkbox { width: 13px; height: 13px; flex-shrink: 0; accent-color: var(--tile-accent, var(--accent-gold)); cursor: pointer; margin: 0; }
 /* אייקון "חוזר" קטן בפירוט היום בלוח החודשי - מבדיל חזותית משימה קבועה

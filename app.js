@@ -1004,6 +1004,68 @@ async function initAppAfterAuth(user) {
         reminderIntervalStarted = true;
         setInterval(checkReminders, 20000);
     }
+    checkDailyGreeting();
+}
+
+// ברכה יומית עם נצנצים - לפי בקשה מפורשת ("בפעם הראשונה ביום, עם נצנצים
+// שיורדים מהתקרה ובוקר טוב/ערב טוב"). פעם אחת בלבד ביום, בפעם הראשונה
+// שהאפליקציה נטענת לאחר התחברות - לא בכל טעינה חוזרת (ר' הדגל ב-localStorage,
+// אותו דפוס כמו weekwise_today_celebrated_${todayStr})
+function checkDailyGreeting() {
+    const todayStr = getLocalDateString();
+    if (localStorage.getItem(`weekwise_daily_greeting_${todayStr}`) === 'true') return;
+    localStorage.setItem(`weekwise_daily_greeting_${todayStr}`, 'true');
+    const hour = new Date().getHours();
+    let key, emoji;
+    if (hour >= 5 && hour < 12) { key = 'daily_greeting_morning'; emoji = '☀️'; }
+    else if (hour >= 12 && hour < 17) { key = 'daily_greeting_afternoon'; emoji = '🌤️'; }
+    else if (hour >= 17 && hour < 21) { key = 'daily_greeting_evening'; emoji = '🌆'; }
+    else { key = 'daily_greeting_night'; emoji = '🌙'; }
+    showDailyGreetingBanner(`${emoji} ${t(key)}`);
+    triggerDailyGreetingSparkles();
+}
+
+function showDailyGreetingBanner(text) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    const banner = document.createElement('div');
+    banner.className = 'daily-greeting-banner';
+    banner.textContent = text;
+    wrapper.appendChild(banner);
+    // נעלם בהדרגה (fade-out) לפני ההסרה מה-DOM, לא נעלם פתאומי
+    setTimeout(() => banner.classList.add('daily-greeting-banner-hide'), 3800);
+    setTimeout(() => banner.remove(), 4400);
+}
+
+// נצנצים קלילים לכ-20 שניות (בניגוד ל-triggerAllDoneSparkles שרץ 2 דקות שלמות
+// לרגע ה"הכל בוצע") - משתמשת באותן מחלקות CSS בדיוק (all-done-sparkles/
+// all-done-sparkle), רק overlay נפרד כדי שלא יתנגש עם נצנצי ה"הכל בוצע"
+// אם שניהם קורים באותו יום
+function triggerDailyGreetingSparkles() {
+    if (document.getElementById('daily-greeting-sparkles')) return;
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'daily-greeting-sparkles';
+    overlay.className = 'all-done-sparkles';
+    wrapper.appendChild(overlay);
+
+    const emojis = ['✨', '💫', '⭐', '💜'];
+    const spawnSparkle = () => {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'all-done-sparkle';
+        sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        sparkle.style.left = `${Math.random() * 100}%`;
+        sparkle.style.animationDuration = `${3 + Math.random() * 2.5}s`;
+        sparkle.style.fontSize = `${0.7 + Math.random() * 1}rem`;
+        overlay.appendChild(sparkle);
+        sparkle.addEventListener('animationend', () => sparkle.remove());
+    };
+    const spawnTimer = setInterval(spawnSparkle, 250);
+    setTimeout(() => {
+        clearInterval(spawnTimer);
+        setTimeout(() => overlay.remove(), 6000);
+    }, 20000);
 }
 
 function showAppLoadingOverlay() {
