@@ -6890,7 +6890,8 @@ const FOOD_CALORIE_DB = [
     { name: "יוגורט מולר", re: /יוגורט מולר|müller/i, kcal100g: 96, unitGrams: 150 },
     { name: "יוגורט דנון מולטי", re: /דנון מולטי/i, kcal100g: 125, unitGrams: 140 },
     { name: "Hellmann's", re: /hellmann'?s/i, kcal100g: 642, unitGrams: 14 },
-    { name: "מיונז לייט", re: /מיונז לייט|מיונז מופחת/i, kcal100g: 285, unitGrams: 14 },
+    // עודכן ל-133 (מ-285, שהיה שגוי) לפי נתון מדויק מהמשתמשת (מיונז לייט 9% שומן)
+    { name: "מיונז לייט", re: /מיונז לייט|מיונז מופחת/i, kcal100g: 133, unitGrams: 15 },
     { name: "Sweet Baby Ray's", re: /sweet baby ray'?s/i, kcal100g: 194, unitGrams: 18 },
     { name: "Sriracha", re: /שריראצ'ה|sriracha/i, kcal100g: 100, unitGrams: 5 },
     { name: "רוטב אלף האיים", re: /אלף האיים|thousand island/i, kcal100g: 366, unitGrams: 15 },
@@ -7315,6 +7316,14 @@ const FOOD_CALORIE_DB = [
     { name: "שיבולת שועל מבושלת", re: /שיבולת שועל מבושלת|oatmeal cooked/i, kcal100g: 72, unitGrams: 230 },
     { name: "חלבון ביצה נוזלי", re: /חלבון ביצה נוזלי|liquid egg whites?/i, kcal100g: 52, unitGrams: 100 },
     { name: "אורז יבש (לפני בישול)", re: /אורז.*(יבש|לפני בישול)/i, kcal100g: 355, unitGrams: 100 },
+    { name: "בקר טחון רזה מבושל", re: /בקר טחון.*מבושל|בקר טחון רזה 5%/i, kcal100g: 170, unitGrams: 150 },
+    { name: "פילה דג לבן ללא שמן בתנור", re: /(אמנון|מושט).*ללא שמן|פילה דג לבן.*תנור/i, kcal100g: 96, unitGrams: 150 },
+    { name: "עדשים יבשות (לפני בישול)", re: /עדשים (יבשות|לפני בישול)/i, kcal100g: 352, unitGrams: 100 },
+    { name: "חומוס גרגרים יבשים (לפני בישול)", re: /חומוס.*(יבשים|לפני בישול)/i, kcal100g: 364, unitGrams: 100 },
+    { name: "חומוס גרגרים מבושלים במים", re: /חומוס.*מבושלים במים/i, kcal100g: 164, unitGrams: 164 },
+    { name: "שעועית לבנה מבושלת", re: /שעועית לבנה מבושלת/i, kcal100g: 144, unitGrams: 170 },
+    { name: "רוטב סויה דל נתרן", re: /רוטב סויה דל נתרן|low sodium soy sauce/i, kcal100g: 66, unitGrams: 15 },
+    { name: "מיונז הולנדי קלאסי", re: /מיונז הולנדי/i, kcal100g: 666, unitGrams: 15 },
     { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466, unitGrams: 40 },
     { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283, unitGrams: 120 },
     // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
@@ -7800,6 +7809,7 @@ const FOOD_CALORIE_DB = [
     // ההערה כאן רק להסביר למה זה לא נראה כמו התנגשות שנשכחה
     // עודכן ל-100/18 (מ-147/30) לפי נתון מדויק מהמשתמשת (פסטרמת הודו, פרוסה)
     { name: "פסטרמה", re: /פסטרמה|pastrami/i, kcal100g: 100, unitGrams: 18 },
+    { name: "חזה הודו פרוסות דל שומן", re: /חזה הודו (נקניק|פרוסות)/i, kcal100g: 100, unitGrams: 40 },
     { name: "הודו", re: /הודו|turkey/i, kcal100g: 135, unitGrams: 150 },
     { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208, unitGrams: 150 },
     // (?!י) כדי ש"נקניק" (סלמי/נקניק מעושן) לא יתפוס את "נקניקייה" (נקניקיית
