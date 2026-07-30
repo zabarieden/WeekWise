@@ -1707,6 +1707,40 @@
         </div>
 
         <!-- חלון צף: הגדרת יעד חודשי (פרימיום בלבד) -->
+        <!-- חלון צף: היסטוריית הרגל - לוח חודשי עם הדגשה על כל יום שסומן, אותם
+             רכיבי CSS בדיוק כמו הלוח החודשי הכללי (monthly-calendar-grid), ר'
+             openHabitHistoryModal/renderHabitHistory ב-app.js -->
+        <div id="modal-habit-history" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="habit-history-title">Habit name</h3>
+                <div class="habit-history-stats">
+                    <div class="habit-history-stat">
+                        <span class="habit-history-stat-value" id="habit-history-stat-current">0</span>
+                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_current">🔥 Current</span>
+                    </div>
+                    <div class="habit-history-stat">
+                        <span class="habit-history-stat-value" id="habit-history-stat-best">0</span>
+                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_best">🏆 Best</span>
+                    </div>
+                    <div class="habit-history-stat">
+                        <span class="habit-history-stat-value" id="habit-history-stat-total">0</span>
+                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_total">✅ Total</span>
+                    </div>
+                </div>
+                <div class="monthly-goal-nav">
+                    <button class="monthly-goal-nav-btn" onclick="navigateHabitHistory(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
+                    <span class="monthly-goal-month-label" id="habit-history-month-label"></span>
+                    <button class="monthly-goal-nav-btn" onclick="navigateHabitHistory(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
+                </div>
+                <div class="monthly-calendar-weekdays">
+                    <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
+                </div>
+                <div class="monthly-calendar-grid habit-history-grid" id="habit-history-grid"></div>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 14px;" onclick="closeModal('modal-habit-history')" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+
         <div id="modal-set-monthly-goal" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>

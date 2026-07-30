@@ -7974,7 +7974,7 @@ async function loadHabits() {
         const doneToday = dates.has(todayStr);
 
         const li = document.createElement('li');
-        li.className = 'habit-item';
+        li.className = 'habit-item' + (doneToday ? ' habit-done' : '');
         const checkBtn = document.createElement('button');
         checkBtn.type = 'button';
         checkBtn.className = 'btn-complete-item' + (doneToday ? ' checked' : '');
@@ -7984,8 +7984,16 @@ async function loadHabits() {
         nameSpan.className = 'center-list-item-text';
         nameSpan.textContent = habit.name;
         const streakBadge = document.createElement('span');
-        streakBadge.className = 'habit-streak-badge';
+        streakBadge.className = 'habit-streak-badge' + (streak > 0 ? ' habit-streak-active' : '');
         streakBadge.textContent = streak > 0 ? `🔥 ${streak}` : '–';
+        // כפתור היסטוריה: לוח חודשי לכל הרגל בנפרד, ר' openHabitHistoryModal -
+        // בלי זה אין שום דרך לראות מה כבר סומן בעבר, רק את הרצף הנוכחי
+        const historyBtn = document.createElement('button');
+        historyBtn.type = 'button';
+        historyBtn.className = 'btn-habit-history';
+        historyBtn.title = t('habit_history_btn_title');
+        historyBtn.textContent = '📅';
+        historyBtn.onclick = () => openHabitHistoryModal(habit.id, habit.name);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
@@ -7995,9 +8003,78 @@ async function loadHabits() {
         li.appendChild(checkBtn);
         li.appendChild(nameSpan);
         li.appendChild(streakBadge);
+        li.appendChild(historyBtn);
         li.appendChild(deleteBtn);
         list.appendChild(li);
     });
+}
+
+// --- היסטוריית הרגל: לוח חודשי עם הדגשה על כל יום שסומן + סטטיסטיקות
+// (רצף נוכחי/הכי ארוך אי-פעם/סה"כ ימים) - נשלף ישירות מ-habit_checkins בכל
+// פתיחה (לא ממטמון loadHabits), כדי שתמיד יהיה עדכני. אותם רכיבי CSS/HTML
+// בדיוק כמו הלוח החודשי הכללי (monthly-calendar-grid), לעקביות חזותית ---
+let viewedHabitHistory = null;
+
+async function openHabitHistoryModal(habitId, habitName) {
+    viewedHabitHistory = { habitId, monthKey: currentMonthKey() };
+    document.getElementById('habit-history-title').textContent = habitName;
+    openModal('modal-habit-history');
+    await renderHabitHistory();
+}
+
+async function navigateHabitHistory(delta) {
+    if (!viewedHabitHistory) return;
+    viewedHabitHistory.monthKey = shiftMonthKey(viewedHabitHistory.monthKey, delta);
+    await renderHabitHistory();
+}
+
+// הרצף ההיסטורי הכי ארוך אי-פעם (לא רק הנוכחי, ר' computeHabitStreak) - סורק
+// את כל התאריכים הידועים ומוצא את אורך הרצף הרציף הארוך ביותר ביניהם
+function computeLongestHabitStreak(dateSet) {
+    if (!dateSet.size) return 0;
+    const sortedDates = Array.from(dateSet).sort();
+    let longest = 1, current = 1;
+    for (let i = 1; i < sortedDates.length; i++) {
+        const diffDays = Math.round((new Date(`${sortedDates[i]}T00:00:00`) - new Date(`${sortedDates[i - 1]}T00:00:00`)) / 86400000);
+        current = diffDays === 1 ? current + 1 : 1;
+        longest = Math.max(longest, current);
+    }
+    return longest;
+}
+
+async function renderHabitHistory() {
+    if (!viewedHabitHistory || !supabaseClient) return;
+    const { habitId, monthKey } = viewedHabitHistory;
+    const label = document.getElementById('habit-history-month-label');
+    const grid = document.getElementById('habit-history-grid');
+    if (!label || !grid) return;
+    label.textContent = formatMonthLabel(monthKey);
+
+    const { data: allCheckins } = await supabaseClient.from('habit_checkins').select('checkin_date').eq('user_id', currentUserId).eq('habit_id', habitId);
+    const dateSet = new Set((allCheckins || []).map(c => c.checkin_date));
+    const todayStr = getLocalDateString();
+
+    document.getElementById('habit-history-stat-current').textContent = computeHabitStreak(dateSet, todayStr);
+    document.getElementById('habit-history-stat-best').textContent = computeLongestHabitStreak(dateSet);
+    document.getElementById('habit-history-stat-total').textContent = dateSet.size;
+
+    const [y, m] = monthKey.split('-').map(Number);
+    const firstDate = new Date(y, m - 1, 1);
+    const lastDate = new Date(y, m, 0);
+    const startWeekday = firstDate.getDay();
+    const daysInMonth = lastDate.getDate();
+
+    let html = '';
+    for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isDone = dateSet.has(dateStr);
+        html += `<div class="monthly-calendar-cell${dateStr === todayStr ? ' today' : ''}${isDone ? ' habit-history-done' : ''}">
+            <span class="monthly-calendar-day-num">${day}</span>
+            ${isDone ? '<span class="monthly-calendar-dot"></span>' : ''}
+        </div>`;
+    }
+    grid.innerHTML = html;
 }
 
 function openAddHabitModal() {

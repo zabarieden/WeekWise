@@ -1572,8 +1572,49 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 /* הרגלים ורצף - שורה עם כפתור סימון-יומי, שם, תגית רצף וכפתור מחיקה, לפי
    סדר קבוע (לא space-between כמו .center-list li הרגיל, כדי שלא "יתפזרו"
    עם 4 ילדים) */
-.habit-item { display: flex; align-items: center; gap: 10px; }
-.habit-streak-badge { flex-shrink: 0; font-size: 0.8rem; font-weight: 700; color: var(--tile-accent, var(--accent-gold)); font-variant-numeric: tabular-nums; }
+.habit-item { display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
+/* פס גרדיאנט בצד ההתחלה הלוגי (RTL-safe) - זוהר כשההרגל בוצע היום, עמום
+   כשלא, כדי שהעין תתפוס מיד מה כבר נעשה בלי לקרוא כל שורה. לפי בקשה מפורשת
+   לעיצוב יותר "יפה" - לא היה שום דבר חזותי שמבדיל בין שורות בעבר */
+.habit-item::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--accent-gold), var(--accent-pink));
+    opacity: 0.2;
+    transition: var(--transition);
+}
+.habit-item.habit-done::before { opacity: 1; box-shadow: 0 0 10px rgba(245, 158, 11, 0.55); }
+.habit-streak-badge {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-variant-numeric: tabular-nums;
+}
+.habit-streak-badge.habit-streak-active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.btn-habit-history { flex-shrink: 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.95rem; cursor: pointer; padding: 4px; opacity: 0.8; transition: var(--transition); }
+.btn-habit-history:hover { opacity: 1; transform: scale(1.1); }
+/* מודל היסטוריית הרגל - שלושת השבבים העגולים (רצף נוכחי/שיא/סה"כ) מעל
+   הלוח החודשי, ואותם רכיבי monthly-calendar-* בדיוק כמו הלוח הכללי */
+.habit-history-stats { display: flex; justify-content: space-around; margin-bottom: 16px; }
+.habit-history-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.habit-history-stat-value { font-size: 1.3rem; font-weight: 800; color: var(--accent-gold); font-variant-numeric: tabular-nums; }
+.habit-history-stat-label { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
+.habit-history-grid .monthly-calendar-cell { cursor: default; }
+.habit-history-grid .monthly-calendar-cell.habit-history-done { background-color: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); }
 /* עזרה ושאלות נפוצות - גיליון גבוה יותר מהרגיל (85vh->92vh) כי יש הרבה
    תוכן; החיפוש תמיד גלוי למעלה, מחוץ לרשימה הגוללת עצמה */
 .help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }
