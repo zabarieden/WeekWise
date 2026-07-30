@@ -2916,8 +2916,10 @@ async function loadTodayTasks() {
     // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
     // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
     // מוחקת ולא משנה את הלו"ז החוזר עצמו, ומתאפסת מאליה במופע הבא של אותו יום
+    let allDone = true;
     populated.forEach(item => {
         const isDone = completedScheduleIds.has(item.id);
+        if (!isDone) allDone = false;
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -2930,6 +2932,7 @@ async function loadTodayTasks() {
     // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
     // צ'קבוקס-השלמה וכפתור מחיקה, כמו בפירוט היום בלוח החודשי
     events.forEach(item => {
+        if (!item.is_completed) allDone = false;
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -2954,6 +2957,14 @@ async function loadTodayTasks() {
         row.appendChild(deleteBtn);
         container.appendChild(row);
     });
+    // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
+    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל
+    if (allDone) {
+        const celebration = document.createElement('p');
+        celebration.className = 'today-tasks-celebration';
+        celebration.textContent = t('today_tasks_all_done_message');
+        container.appendChild(celebration);
+    }
 }
 
 // --- לוח חודשי: אותו מקור נתונים בדיוק כמו "מבט ליומן" (calendar_events),
