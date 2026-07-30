@@ -1546,6 +1546,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border-radius: 8px;
     padding: 3px 10px;
 }
+/* פתקי "להגיע לזה" - מהמפריד עצמו ועד סוף הרשימה (~ תופס את כל האחים
+   שאחריו, לא רק את הבא) - מקבלים סטייל בהיר/שקוף יותר כדי שלא ישתלטו
+   חזותית על הפתקים הרגילים מעליהם, לפי בקשה מפורשת. opacity ולא rgba קבוע,
+   כדי שזה יעבוד אוטומטית בכל ערכת נושא/מצב בהיר-כהה בלי לשכפל צבעים */
+.center-list-divider,
+.center-list-divider ~ li {
+    opacity: 0.6;
+}
 /* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
    חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
 .note-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
