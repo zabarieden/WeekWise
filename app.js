@@ -2964,15 +2964,57 @@ async function loadTodayTasks() {
         celebration.className = 'today-tasks-celebration';
         celebration.textContent = t('today_tasks_all_done_message');
         container.appendChild(celebration);
+        // נצנצים על פני כל האפליקציה לרגע החגיגה - רק בפעם הראשונה שמגיעים
+        // ל"הכל בוצע" ביום הזה (לא בכל טעינה חוזרת כל עוד זה עדיין כולו
+        // מסומן), אז מאפסים את הדגל ברגע שמשהו כבר לא מסומן, כדי שסבב השלמה
+        // חדש באותו יום (אחרי ביטול סימון) יחגוג שוב
+        if (populated.length + events.length > 0 && localStorage.getItem(`weekwise_today_celebrated_${todayStr}`) !== 'true') {
+            localStorage.setItem(`weekwise_today_celebrated_${todayStr}`, 'true');
+            triggerAllDoneSparkles();
+        }
     // עוד לא הכל בוצע, אבל זו כבר הפתיחה השנייה (או יותר) של הכרטיס היום -
     // הודעת עידוד עדינה שיש עוד זמן להשלים, בלי לחץ - מוצגת *לצד* רשימת
     // המשימות שנשארו (לא במקומה, עדיין רוצים לראות מה נשאר)
-    } else if (populated.length + events.length > 0 && getTodayCardViewCount() >= 2) {
-        const encouragement = document.createElement('p');
-        encouragement.className = 'today-tasks-celebration';
-        encouragement.textContent = t('today_tasks_still_time_message');
-        container.appendChild(encouragement);
+    } else {
+        localStorage.removeItem(`weekwise_today_celebrated_${todayStr}`);
+        if (populated.length + events.length > 0 && getTodayCardViewCount() >= 2) {
+            const encouragement = document.createElement('p');
+            encouragement.className = 'today-tasks-celebration';
+            encouragement.textContent = t('today_tasks_still_time_message');
+            container.appendChild(encouragement);
+        }
     }
+}
+
+// נצנצים חוגגים לרגע ✨ - נזרקים בהדרגה על פני דקה שלמה (לא כל הכמות בבת
+// אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
+// (position:relative + overflow:hidden כבר קיימים שם) כדי שלא יגלשו החוצה
+// על מסכי דסקטופ רחבים
+function triggerAllDoneSparkles() {
+    if (document.getElementById('all-done-sparkles')) return;
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'all-done-sparkles';
+    overlay.className = 'all-done-sparkles';
+    wrapper.appendChild(overlay);
+
+    const emojis = ['✨', '💫', '⭐', '💜'];
+    const spawnSparkle = () => {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'all-done-sparkle';
+        sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        sparkle.style.left = `${Math.random() * 100}%`;
+        sparkle.style.animationDuration = `${3 + Math.random() * 2.5}s`;
+        sparkle.style.fontSize = `${0.7 + Math.random() * 1}rem`;
+        overlay.appendChild(sparkle);
+        sparkle.addEventListener('animationend', () => sparkle.remove());
+    };
+    const spawnTimer = setInterval(spawnSparkle, 250);
+    setTimeout(() => {
+        clearInterval(spawnTimer);
+        setTimeout(() => overlay.remove(), 6000);
+    }, 60000);
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
