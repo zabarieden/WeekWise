@@ -7305,6 +7305,16 @@ const FOOD_CALORIE_DB = [
     { name: "שניצל תירס/חלבון צמחי", re: /שניצל תירס|שניצל חלבון צמחי/i, kcal100g: 188, unitGrams: 85 },
     { name: "גרנולה דלת סוכר עשירת חלבון", re: /גרנולה דלת סוכר|גרנולה.*חלבון/i, kcal100g: 411, unitGrams: 45 },
     { name: "תערובת פנקייק חלבון", re: /פנקייק חלבון|kodiak cakes/i, kcal100g: 380, unitGrams: 50 },
+    { name: "יוגורט יווני 0%", re: /יוגורט יווני 0%|fage total 0/i, kcal100g: 54, unitGrams: 170 },
+    { name: "גבינת סקי", re: /גבינת סקי/i, kcal100g: 57, unitGrams: 250 },
+    { name: "מעדן חלבון פרו/GO", re: /מעדן חלבון (פרו|go)/i, kcal100g: 62, unitGrams: 200 },
+    { name: "שבבי סויה יבשים (TVP)", re: /שבבי סויה|בונזו סויה|\btvp\b/i, kcal100g: 340, unitGrams: 30 },
+    { name: "חמאת בוטנים באבקה (PB2)", re: /\bpb2\b|חמאת בוטנים באבקה/i, kcal100g: 500, unitGrams: 12 },
+    { name: "שמן קוקוס", re: /שמן קוקוס|coconut oil/i, kcal100g: 862, unitGrams: 10 },
+    { name: "פופקורן 100 קלוריות", re: /פופקורן 100 קלוריות/i, kcal100g: 333, unitGrams: 30 },
+    { name: "שיבולת שועל מבושלת", re: /שיבולת שועל מבושלת|oatmeal cooked/i, kcal100g: 72, unitGrams: 230 },
+    { name: "חלבון ביצה נוזלי", re: /חלבון ביצה נוזלי|liquid egg whites?/i, kcal100g: 52, unitGrams: 100 },
+    { name: "אורז יבש (לפני בישול)", re: /אורז.*(יבש|לפני בישול)/i, kcal100g: 355, unitGrams: 100 },
     { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466, unitGrams: 40 },
     { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283, unitGrams: 120 },
     // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
@@ -7511,13 +7521,15 @@ const FOOD_CALORIE_DB = [
     // מפורש (למשל "קוטג' 9%"), findFatPercentCalories משתמש בערך הקרוב ביותר
     // בטבלה במקום ב-kcal100g הכללי; קוטג'/גבינה לבנה/גבינה חייבים גם לבוא
     // *לפני* גבינה (ראו ההערה הקיימת למטה)
-    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 98, unitGrams: 250, percentTable: { 0: 72, 5: 98, 9: 135 } },
+    // עודכן percentTable (0.5%=70, 3%=95, 5%=105) לפי נתון מדויק מהמשתמשת
+    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 95, unitGrams: 250, percentTable: { 0.5: 70, 3: 95, 5: 105, 9: 135 } },
     // גבינה לבנה/מוצרלה/פטה/פרמזן/גבינת עיזים חייבות לבוא *לפני* גבינה -
     // "גבינה לבנה" מכילה את "גבינה" כתת-מחרוזת, ומדובר במוצר שונה לגמרי בערכים
     // (רך/משוח, לא גבינה קשה) - בלי סדר הפוך זה תמיד היה נתפס כגבינה קשה
     // רגילה (350 קל') במקום 95 (5%, הכי נפוץ)
     // עודכן ל-5%=73 (מ-95) לפי נתון מדויק מהמשתמשת
-    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 73, unitGrams: 100, percentTable: { 3: 80, 5: 73, 9: 135, 20: 220 } },
+    // עודכן 5%=96 (מ-73) לפי נתון מדויק מהמשתמשת
+    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 96, unitGrams: 100, percentTable: { 3: 80, 5: 96, 9: 135, 20: 220 } },
     { name: "מוצרלה", re: /מוצרלה|mozzarella/i, kcal100g: 280, unitGrams: 100 },
     { name: "פטה", re: /פטה|\bfeta\b/i, kcal100g: 264, unitGrams: 50 },
     // עודכן ל-392 (מ-431) לפי נתון מדויק מהמשתמשת (Parmigiano Reggiano)
@@ -7833,7 +7845,8 @@ const FOOD_CALORIE_DB = [
     { name: "טורטיה מקמח מלא/כוסמין", re: /טורטיה (מקמח )?(מלאה|כוסמין)|whole\s*wheat\s*tortilla/i, kcal100g: 265, unitGrams: 45 },
     { name: "טורטיה", re: /טורטיה|tortilla/i, kcal100g: 290, unitGrams: 45 },
     // עודכן מ-76 ל-133 לפי נתון מדויק מהמשתמשת (טופו טבעי קשה, לא רך)
-    { name: "טופו", re: /טופו|tofu/i, kcal100g: 133, unitGrams: 100 },
+    // עודכן ל-120 (מ-133) לפי נתון מדויק מהמשתמשת (טופו קשה)
+    { name: "טופו", re: /טופו|tofu/i, kcal100g: 120, unitGrams: 100 },
     { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115, unitGrams: 15 },
     { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595, unitGrams: 20 },
     // מיונז לייט חייב לבוא *לפני* מיונז הכללי (מכיל "מיונז" כתת-מחרוזת)
