@@ -6440,7 +6440,9 @@ const FOOD_CALORIE_DB = [
     { name: "ממרח קינדר בואנו", re: /קינדר בואנו|kinder bueno/i, kcal100g: 570, unitGrams: 20 },
     { name: "ממרח הרשיז", re: /הרשיז|hershey/i, kcal100g: 540, unitGrams: 20 },
     { name: "ממרח מלטזרס", re: /מלטיזרס|מלטזרס|maltesers/i, kcal100g: 545, unitGrams: 20 },
-    { name: "ממרח טוויקס/באונטי/מילקי ווי", re: /טוויקס|באונטי|מילקי ו[ו]?אי|milky way|twix|bounty/i, kcal100g: 560, unitGrams: 20 },
+    // דורש "ממרח" מפורש - בלעדיו "Milky Way" היה תמיד נתפס כממרח (560) במקום
+    // חטיף השוקולד עצמו (ר' "מילקי ווי" למטה, ליד שאר החטיפים המותגיים)
+    { name: "ממרח טוויקס/באונטי/מילקי ווי", re: /ממרח טוויקס|ממרח באונטי|ממרח מילקי ו[ו]?אי|twix spread|bounty spread|milky way spread/i, kcal100g: 560, unitGrams: 20 },
     { name: "ממרח אוראו", re: /ממרח אוראו|oreo spread/i, kcal100g: 535, unitGrams: 20 },
     { name: "ממרח ריסז", re: /ריסז|ריסיז|reese/i, kcal100g: 547, unitGrams: 20 },
     { name: "ממרח שוקולד ללא תוספת סוכר", re: /שוקולד ללא תוספת סוכר|שוקולד דיאט/i, kcal100g: 420, unitGrams: 20 },
@@ -6457,6 +6459,13 @@ const FOOD_CALORIE_DB = [
     { name: "פררו רושה", re: /פררו רושה|ferrero rocher/i, kcal100g: 598, unitGrams: 12.5 },
     { name: "רפאלו", re: /רפאלו|raffaello/i, kcal100g: 628, unitGrams: 10 },
     { name: "טבלת שוקולד פרה", re: /טבלת (שוקולד )?פרה|שוקולד פרה חלב/i, kcal100g: 535, unitGrams: 6 },
+    { name: "לינדט", re: /לינדט|lindt/i, kcal100g: 566, unitGrams: 10 },
+    { name: "ריטר ספורט", re: /ריטר ספורט|ritter sport/i, kcal100g: 575, unitGrams: 6.25 },
+    { name: "גודיבה", re: /גודיבה|godiva/i, kcal100g: 540, unitGrams: 7 },
+    { name: "מילקי ווי", re: /מילקי ו[ו]?אי|milky way/i, kcal100g: 441, unitGrams: 43 },
+    { name: "סקיטלס", re: /סקיטלס|skittles/i, kcal100g: 405, unitGrams: 45 },
+    { name: "מנטוס", re: /מנטוס|mentos/i, kcalPerUnit: 10 },
+    { name: "אפרופו", re: /אפרופו|afropo|apropo/i, kcal100g: 531, unitGrams: 50 },
     // unitGrams נוסף (קובייה אחת, ~5 גרם) לפי נתון מדויק מהמשתמשת (~27 קל')
     { name: "שוקולד", re: /שוקולד|chocolate/i, kcal100g: 546, unitGrams: 5 },
     { name: "קמח", re: /קמח|flour/i, kcal100g: 364 },
@@ -6684,8 +6693,9 @@ const FOOD_CALORIE_DB = [
     // מותגי יוגורט ספציפיים - חייבים לבוא *לפני* הערך הכללי "יוגורט" למטה,
     // כי הלולאה עוצרת בהתאמה הראשונה: אם הכללי היה קודם, "יוגורט פרו" היה
     // תמיד נתפס כיוגורט רגיל ואף פעם לא מגיע לערך הספציפי והמדויק יותר
-    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 90, unitGrams: 200 },
-    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 75, unitGrams: 200 },
+    // עודכן ל-70/68 (מ-90/75) לפי נתון מדויק מהמשתמשת (שטראוס PRO / תנובה GO)
+    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 70, unitGrams: 200 },
+    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 68, unitGrams: 200 },
     { name: "יוגורט יווני", re: /יוגורט יווני|greek yogurt/i, kcal100g: 97, unitGrams: 170 },
     { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 66, unitGrams: 150, percentTable: { 0: 45, 3: 66, 10: 110 } },
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15, unitGrams: 301 },
@@ -6697,6 +6707,11 @@ const FOOD_CALORIE_DB = [
     // בלי סדר הפוך "אבקת חלבון" (אבקת חלבון כושר, לא ביצה) הייתה תמיד נתפסת
     // כחלבון-ביצה-בודד (17 קל' ליחידה) במקום אבקה (380 ל-100 גרם)
     { name: "אבקת חלבון", re: /אבקת חלבון|protein powder/i, kcal100g: 380, unitGrams: 30 },
+    // מותגי חטיפי חלבון ספציפיים - חייבים לבוא *לפני* "חטיף חלבון" הכללי
+    // למטה (מכילים "חלבון"/protein bar כתת-מחרוזת), נתונים מדויקים מהמשתמשת
+    { name: "חטיף חלבון גרנייד", re: /גרנייד|carb killa|grenade/i, kcal100g: 356, unitGrams: 60 },
+    { name: "חטיף חלבון קווסט", re: /קווסט|\bquest\b/i, kcal100g: 333, unitGrams: 60 },
+    { name: "חטיף חלבון אולין", re: /אולין|\ballin\b/i, kcal100g: 350, unitGrams: 60 },
     // חטיף חלבון גם כאן, מאותה סיבה בדיוק - מכיל "חלבון"
     // unitGrams עודכן מ-50 ל-60 לפי נתון מדויק מהמשתמשת (חטיף ~60 גרם, 200-230 קל')
     { name: "חטיף חלבון", re: /חטיף חלבון|protein bar/i, kcal100g: 380, unitGrams: 60 },
@@ -6882,7 +6897,8 @@ const FOOD_CALORIE_DB = [
     // לגמרי מהמשקה המוכן (שוקו נוזלי) - בלי סדר הפוך היה תמיד נתפס כמשקה מוכן
     { name: "אבקת שוקו", re: /אבקת שוקו|chocolate (drink )?powder|hot chocolate powder/i, kcal100g: 380, unitGrams: 20 },
     // (?!לד) כדי ש"שוקו" לא יתפוס את "שוקולד" (שמתחיל באותן 4 אותיות בדיוק)
-    { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 75, unitGrams: 200 },
+    // עודכן ל-72 (מ-75) לפי נתון מדויק מהמשתמשת (שוקו יוטבתה)
+    { name: "שוקו", re: /שוקו(?!לד)|chocolate milk/i, kcal100g: 72, unitGrams: 200 },
     { name: "לימונדה", re: /לימונדה|lemonade/i, kcal100g: 40, unitGrams: 200 },
     { name: "משקה אנרגיה", re: /משקה אנרגיה|energy drink/i, kcal100g: 45, unitGrams: 250 },
     // unitGrams עודכן מ-40 ל-50 (שוט, 50 מ"ל) לפי נתון מדויק מהמשתמשת (~112 קל' לשוט)
@@ -6992,10 +7008,15 @@ const FOOD_CALORIE_DB = [
     // (?!וא) כדי ש"קיש" לא יתפוס את "קישוא" (קישוא מתחיל באותן 3 אותיות בדיוק)
     { name: "קיש", re: /קיש(?!וא)|\bquiche\b/i, kcal100g: 280, unitGrams: 120 },
     // עוד חטיפים - לפי בקשה מפורשת
+    // "במבה ממולאת נוגט" חייבת לבוא *לפני* במבה הרגילה - מכילה "במבה" כתת-מחרוזת
+    { name: "במבה ממולאת נוגט", re: /במבה ממולאת נוגט|nougat bamba/i, kcal100g: 531, unitGrams: 60 },
     // עודכן ל-533 (מ-536) לפי נתון מדויק מהמשתמשת
     { name: "במבה", re: /במבה|bamba/i, kcal100g: 533, unitGrams: 25 },
     // unitGrams עודכן ל-35 (מ-25, שקית אישית אמיתית) לפי נתון מדויק מהמשתמשת
     { name: "ביסלי", re: /ביסלי|bissli/i, kcal100g: 490, unitGrams: 35 },
+    // פופקורן למיקרוגל (חמאה) חייב לבוא *לפני* פופקורן הכללי - מכיל "פופקורן"
+    // כתת-מחרוזת ומדובר במוצר קלורי יותר לגרם (נתון מדויק מהמשתמשת)
+    { name: "פופקורן למיקרוגל", re: /פופקורן למיקרוגל|מיקרוגל.*פופקורן|microwave popcorn/i, kcal100g: 450, unitGrams: 10 },
     { name: "פופקורן", re: /פופקורן|popcorn/i, kcal100g: 400, unitGrams: 30 },
     { name: "קרמבו", re: /קרמבו|krembo/i, kcal100g: 460, unitGrams: 25 },
     { name: "טורטית", re: /טורטית|tortit/i, kcal100g: 525, unitGrams: 40 },
