@@ -149,11 +149,12 @@ Deno.serve(async (req) => {
                             "order (if the task lists distinct sub-items, keep their original order; if it's a single " +
                             "unit of work like reading pages or practicing, divide it proportionally). Never invent " +
                             "content that wasn't implied by the task description. Each chunk's task_title must be " +
-                            "short, written in the SAME language as the task description, and start with a part " +
-                            "indicator like \"[1/3]\" before the actual content. Every event_date you return MUST be " +
-                            "one of the exact candidate dates listed above - never invent a different date. Use at " +
-                            "least one chunk; it's fine to use only some of the candidate dates (skip busy ones) but " +
-                            "never fewer than what's needed to cover the whole task.",
+                            "short and written in the SAME language as the task description - just the plain content " +
+                            "for that day (e.g. the sub-item name, or 'pages 10-20'), with NO part counter, numbering, " +
+                            "or bracket prefix of any kind. Every event_date you return MUST be one of the exact " +
+                            "candidate dates listed above - never invent a different date. Use at least one chunk; " +
+                            "it's fine to use only some of the candidate dates (skip busy ones) but never fewer than " +
+                            "what's needed to cover the whole task.",
                     },
                 ],
                 tools: [
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
                                         type: "object",
                                         properties: {
                                             event_date: { type: "string", description: "YYYY-MM-DD, must be one of the provided candidate dates" },
-                                            task_title: { type: "string", description: "Short label for this day's portion, starting with a part indicator like '[1/3]', in the same language as the task" },
+                                            task_title: { type: "string", description: "Short plain label for this day's portion, in the same language as the task - no part counter, numbering, or bracket prefix" },
                                         },
                                         required: ["event_date", "task_title"],
                                     },
