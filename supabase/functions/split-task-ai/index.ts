@@ -31,6 +31,8 @@ const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const PREMIUM_SMART_SPLIT_MONTHLY_LIMIT = 5;
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -75,6 +77,16 @@ function computeCandidateDates(todayStr: string, dueDateStr: string): string[] {
         dates.push(tomorrow.toISOString().slice(0, 10));
     }
     return dates;
+}
+
+// ה-AI לא אמין בחישוב "איזה יום בשבוע זה תאריך X" בעצמו (בדיוק מה שגרם ל-
+// "לא ביום שישי" להתעלם בפועל - המודל קיבל רק תאריכים גולמיים בלי שם יום,
+// וניחש לא נכון איזה מהם שישי) - מחשבים כאן בקוד דטרמיניסטי ומצרפים לכל
+// תאריך את שם היום שלו במפורש בפרומפט, כדי שהתאמת "לא ביום X" תהיה ודאית
+function formatCandidateDatesWithWeekday(dates: string[]): string {
+    return dates
+        .map((d) => `${d} (${DAY_NAMES[new Date(`${d}T00:00:00`).getDay()]})`)
+        .join(", ");
 }
 
 Deno.serve(async (req) => {
@@ -137,14 +149,18 @@ Deno.serve(async (req) => {
                             "The user needs to finish the following task by " + dueDate + " (that date itself is NOT " +
                             "available for work - the task must be complete by the day before it):\n\n" +
                             "\"" + text + "\"\n\n" +
-                            "Today is " + today + ". The candidate dates available to work on it are exactly: " +
-                            candidateDates.join(", ") + ".\n\n" +
+                            "Today is " + today + " (" + DAY_NAMES[new Date(`${today}T00:00:00`).getDay()] + "). " +
+                            "The candidate dates available to work on it, each with its day of the week, are exactly: " +
+                            formatCandidateDatesWithWeekday(candidateDates) + ".\n\n" +
                             "The user was asked which of these days they're more free on, and answered: \"" +
-                            (freeDaysAnswer || "(no answer given)") + "\". Use this to decide which of the candidate " +
-                            "dates should actually be used - skip/reduce days the user says they're busy or " +
-                            "unavailable on, and favor the ones they say are free. If the answer gives no useful " +
-                            "signal (empty, or something like \"all of them\"/\"כל הימים\"), just spread evenly " +
-                            "across all candidate dates.\n\n" +
+                            (freeDaysAnswer || "(no answer given)") + "\". Match weekday names/dates in that answer " +
+                            "against the day-of-week labels given above - never compute or guess a weekday yourself, " +
+                            "always use the labels provided. If the user names a day as busy/unavailable (e.g. \"not " +
+                            "Friday\", \"not on the 5th\", \"לא ביום שישי\"), that date is HARD EXCLUDED - it must " +
+                            "never appear in your output, even if that leaves fewer chunks than candidate dates. " +
+                            "Favor/prioritize days they explicitly say are free. If the answer gives no useful signal " +
+                            "(empty, or something like \"all of them\"/\"כל הימים\"), just spread evenly across all " +
+                            "candidate dates.\n\n" +
                             "Split the task's content into logical daily chunks, one per chosen date, in a sensible " +
                             "order (if the task lists distinct sub-items, keep their original order; if it's a single " +
                             "unit of work like reading pages or practicing, divide it proportionally). Never invent " +
