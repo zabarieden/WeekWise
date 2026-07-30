@@ -6559,6 +6559,23 @@ const FOOD_CALORIE_DB = [
     { name: "טילון אקסטרים מיני", re: /טילון אקסטרים מיני|מיני טילון אקסטרים/i, kcalPerUnit: 90 },
     { name: "טילון אקסטרים", re: /טילון אקסטרים/i, kcalPerUnit: 225 },
     { name: "שלגון קקטוס/לה קוקרצ'ה", re: /שלגון קקטוס|לה קוקרצ'ה/i, kcalPerUnit: 60 },
+    { name: "גלידת שמנת (אניטה/קצפת/דליקטס)", re: /גלידת? שמנת|אניטה|דליקטס/i, kcal100g: 240, unitGrams: 100 },
+    { name: "גלידת יוגורט טבעי", re: /גלידת? יוגורט טבעי|סושיאל יוגורט|יוגורט.*תמרה|תמרה.*יוגורט/i, kcal100g: 110, unitGrams: 150 },
+    { name: "שלגון שוקובו", re: /שוקובו/i, kcalPerUnit: 220 },
+    { name: "שלגון שוקו-שוקו/וניל", re: /שוקו.?שוקו/i, kcalPerUnit: 135 },
+    { name: "טילון/שלגון חלבון", re: /(טילון|שלגון) חלבון|pro ice cream|go ice cream/i, kcalPerUnit: 140 },
+    { name: "Baskin-Robbins", re: /baskin.?robbins/i, kcal100g: 250, unitGrams: 100 },
+    { name: "Melona Ice Bar", re: /melona/i, kcal100g: 185, unitGrams: 70 },
+    { name: "Samanco", re: /samanco/i, kcal100g: 146, unitGrams: 150 },
+    { name: "Bingsu", re: /bingsu|פתיתי שלג/i, kcal100g: 150, unitGrams: 200 },
+    { name: "קראנצ' בראוניז/בלונדי", re: /קראנצ'? (בראוניז|בלונדי)/i, kcalPerUnit: 240 },
+    { name: "שלגון קוקילידה", re: /קוקילידה/i, kcalPerUnit: 230 },
+    { name: "שלגון במבה", re: /שלגון במבה/i, kcalPerUnit: 210 },
+    { name: "שלגון קופיקו/סנוקר", re: /קופיקו|שלגון סנוקר/i, kcalPerUnit: 140 },
+    { name: "Magnum Ego", re: /magnum ego/i, kcalPerUnit: 310 },
+    { name: "Dove Ice Cream Bar", re: /\bdove\b.*ice cream|ice cream.*\bdove\b/i, kcalPerUnit: 250 },
+    { name: "M&M's Ice Cream", re: /m&m'?s ice cream/i, kcalPerUnit: 240 },
+    { name: "עוגת גלידה", re: /עוגת גלידה|ice cream cake/i, kcal100g: 260, unitGrams: 100 },
     { name: "בראוני", re: /בראוני|brownie/i, kcal100g: 466, unitGrams: 40 },
     { name: "טירמיסו", re: /טירמיסו|tiramisu/i, kcal100g: 283, unitGrams: 120 },
     // מיצים ספציפיים + לחמים ספציפיים + רוטב עגבניות - גם כאן למעלה מאותה
@@ -7280,7 +7297,9 @@ const FOOD_CALORIE_DB = [
     // הרגילה מאותו גודל מאותה סיבה
     { name: "מגנום מיני דאבל", re: /מגנום מיני דאבל|מיני מגנום דאבל/i, kcalPerUnit: 165 },
     { name: "מגנום מיני שקדים/פצפוצים", re: /מגנום מיני (שקדים|פצפוצים)|מיני מגנום (שקדים|פצפוצים)/i, kcalPerUnit: 155 },
-    { name: "מגנום מיני", re: /מגנום מיני|מיני מגנום|שלגון מיני/i, kcalPerUnit: 145 },
+    // עודכן ל-148 (מ-145) לפי נתון מדויק מהמשתמשת (Magnum Mini, טווח 140-155)
+    { name: "מגנום מיני", re: /מגנום מיני|מיני מגנום|שלגון מיני/i, kcalPerUnit: 148 },
+    { name: "מגנום דאבל קרמל/שוקולד", re: /magnum double (caramel|chocolate)|מגנום דאבל.*(קרמל|שוקולד)/i, kcalPerUnit: 329 },
     { name: "מגנום דאבל", re: /מגנום דאבל|double magnum/i, kcalPerUnit: 295 },
     { name: "מגנום טבעוני", re: /מגנום טבעוני|vegan magnum/i, kcalPerUnit: 250 },
     { name: "מגנום שקדים", re: /מגנום שקדים|almond magnum/i, kcalPerUnit: 275 },
@@ -7291,14 +7310,16 @@ const FOOD_CALORIE_DB = [
     { name: "מיני טילון", re: /מיני טילון|טילון מיני/i, kcalPerUnit: 95 },
     { name: "טילון", re: /טילון/i, kcalPerUnit: 205 },
     { name: "קוקי גלידה", re: /קוקי גלידה|סנדוויץ' גלידה ענקי/i, kcalPerUnit: 400 },
-    { name: "קסטה", re: /קסטה/i, kcalPerUnit: 200 },
+    // עודכן ל-190 (מ-200) לפי נתון מדויק מהמשתמשת
+    { name: "קסטה", re: /קסטה/i, kcalPerUnit: 190 },
     { name: "ארטיק דיאט", re: /ארטיק (דיאט|0% סוכר|ללא סוכר)|קרטיב דיאט/i, kcalPerUnit: 9 },
     { name: "ארטיק פרי טבעי", re: /ארטיק (פרי טבעי|100% פרי)|פריגת|פולי קראנץ/i, kcalPerUnit: 90 },
     { name: "יוגורט קפוא", re: /יוגורט קפוא|frozen yogurt|יוגורטיה/i, kcal100g: 120, unitGrams: 200 },
     { name: "גביע גלידה", re: /גביע (גלידה|שוט)/i, kcalPerUnit: 18 },
     { name: "סירופ לגלידה", re: /סירופ (שוקולד|מייפל|תות).*גלידה|סירופ לגלידה/i, kcal100g: 300 },
     { name: "סוכריות לזרייה על גלידה", re: /סוכריות (צבעוניות )?לזריי(ה|ת)|ספרינקלס|sprinkles/i, kcal100g: 360 },
-    { name: "מוצ'י גלידה", re: /מוצ'י גלידה|\bmochi\b/i, kcalPerUnit: 95 },
+    // עודכן ל-85 (מ-95) לפי נתון מדויק מהמשתמשת
+    { name: "מוצ'י גלידה", re: /מוצ'י גלידה|\bmochi\b/i, kcalPerUnit: 85 },
     // עודכן ל-78/70 (מ-70/60) לפי נתון מדויק מהמשתמשת (ארטיק קרח דובדבן/לימון)
     { name: "ארטיק/קרטיב", re: /ארטיק|קרטיב|popsicle|ice pop/i, kcal100g: 78, unitGrams: 70 },
     // גלידת גולדה (רשת ישראלית) חייבת לבוא *לפני* גלידה הכללית - קלורית יותר
