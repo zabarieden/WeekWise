@@ -4993,6 +4993,16 @@ function restackFabs() {
 // מפורשת) - אותו דפוס בדיוק כמו filter:'.center-list-divider' בגרירת הפתקים
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
+    // רשת ביטחון גלובלית: אם מסיבה כלשהי pointerup/pointercancel לא מגיע
+    // ליעד המקורי שלו (למשל שני pointerdown חופפים על אותה בועה, או המגע/
+    // העכבר משתחרר מחוץ לחלון) - עיגולי-הרמז (ר' showFabParkHints) יכולים
+    // "להיתקע" מוצגים לצמיתות בלי שאף גרירה ממשית פעילה. מאזין גלובלי כאן
+    // מבטיח שהם תמיד יעלמו בסוף כל מחווה, בלי קשר לאיזה handler ספציפי טיפל
+    // (או לא טיפל) בה - hideFabParkHints לא עושה כלום אם כבר מוסתרים, אז
+    // אין עלות בקריאה לו "סתם" בכל pointerup/pointercancel באפליקציה כולה
+    document.addEventListener('pointerup', hideFabParkHints);
+    document.addEventListener('pointercancel', hideFabParkHints);
+
     const onReorder = (container) => {
         const order = Array.from(container.children)
             .map(el => el.getAttribute('data-fab-id') || el.id)
