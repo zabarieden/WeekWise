@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyPresetFabSetting(isPresetFabOn());
     applyFoodFabSetting(isFoodFabOn());
     applySmartSplitFabSetting(isSmartSplitFabOn());
+    applyFabPositions();
     initFabOrderDragReorder();
     initSupabase();
     initCubesNavigation();
@@ -5027,9 +5028,240 @@ function initFabOrderDragReorder() {
             filter: '.dock-fab-notes',
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
-            onEnd: () => onReorder(stack),
+            // אחרי סידור-מחדש רגיל, בודקים גם אם נקודת השחרור בפועל (לא איפה
+            // ש-Sortable "החליט" להשאיר את האלמנט בתוך הרשימה) יצאה מחוץ
+            // לגבולות ה-Dock - אם כן, זו "גרירה החוצה" למיקום חופשי, לא סידור-
+            // מחדש רגיל (ר' settleFreeFab למטה)
+            onEnd: (evt) => {
+                onReorder(stack);
+                const point = getPointerEventCoords(evt.originalEvent);
+                if (point && evt.item && evt.item.id !== 'btn-ai-fab' && isPointOutsideDock(point.x, point.y)) {
+                    settleFreeFab(evt.item, point.x, point.y);
+                }
+            },
         });
     }
+
+    // הגרירה החופשית (הוצאה מה-Dock למיקום כלשהו על המסך, וחזרה) לא בנויה על
+    // SortableJS בכלל - שכבת pointer events קטנה ונפרדת, כדי לא להריץ שני
+    // "מנועי גרירה" שמתחרים על אותו מגע/עכבר בו-זמנית (בדיוק כמו שקרה לאתר
+    // הזה פעם אחת כבר עם שגיאת syntax לא-קשורה שקרסה את כל האפליקציה - עדיף
+    // פשטות ויציבות על תחכום). לבועת הפתקים (מסוננת החוצה מ-Sortable למעלה)
+    // זו הדרך היחידה שלה בכלל להיגרר; לבועה שכבר במצב חופשי (dock-fab-free)
+    // זו גם הדרך היחידה, כי היא כבר לא ילד של #fab-dock ול-Sortable אין עליה
+    // שליטה. בועה עגינה רגילה (לא פתקים, לא חופשית) - הפונקציה יוצאת מיד
+    // ומשאירה את הגרירה כולה ל-Sortable, ר' onEnd למעלה שמטפל ב"גרירה החוצה"
+    // שלה בסוף המחווה
+    ['btn-ai-fab', 'btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) initFreeDockFabDrag(el);
+    });
+}
+
+function getPointerEventCoords(evt) {
+    if (!evt) return null;
+    if (evt.changedTouches && evt.changedTouches.length) {
+        return { x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY };
+    }
+    if (typeof evt.clientX === 'number') return { x: evt.clientX, y: evt.clientY };
+    return null;
+}
+
+function isPointOutsideDock(x, y) {
+    const dock = document.getElementById('fab-dock');
+    if (!dock) return true;
+    const rect = dock.getBoundingClientRect();
+    return x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
+}
+
+function positionFreeFab(el, xPercent, yPercent) {
+    el.style.left = `${xPercent}%`;
+    el.style.top = `${yPercent}%`;
+}
+
+// שומרת בועה במצב "חופשי" (מחוץ ל-Dock, position:absolute יחסית ל-
+// .phone-wrapper) בנקודת שחרור נתונה - קלואמפ ל-4%-92% כדי שלא תיתקע ממש
+// בקצה/מחוץ למסך. אחוזים (לא px) כדי לשרוד את שינויי max-width של
+// .phone-wrapper בין breakpoints (768/1000/1024px, ר' תחתית הקובץ) - px
+// גולמי היה "נודד" כשגודל המסך משתנה. המיקום נשמר לצמיתות (לפי בקשה מפורשת)
+function settleFreeFab(el, clientX, clientY) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    const wrapperRect = wrapper.getBoundingClientRect();
+    let xPercent = ((clientX - wrapperRect.left) / wrapperRect.width) * 100;
+    let yPercent = ((clientY - wrapperRect.top) / wrapperRect.height) * 100;
+    xPercent = Math.min(92, Math.max(4, xPercent));
+    yPercent = Math.min(92, Math.max(4, yPercent));
+    el.classList.remove('dock-fab-dragging');
+    el.classList.add('dock-fab-free');
+    wrapper.appendChild(el);
+    el.style.order = '';
+    positionFreeFab(el, xPercent, yPercent);
+    const positions = getFabPositions();
+    positions[el.id] = { mode: 'free', xPercent, yPercent };
+    saveFabPositions(positions);
+}
+
+// מחזירה בועה חופשית בחזרה ל-Dock (נגרר לתוכו) - לבועת הפתקים זה תמיד
+// order:0 קבוע (ר' theme.css), לשאר הבועות מוצאים איפה בדיוק להכניס אותה
+// למערך הסדר הקיים לפי מיקום ה-X בפועל של שאר הבועות באותו רגע
+function dockifyFreeFab(el, clientX) {
+    const dock = document.getElementById('fab-dock');
+    if (!dock) return;
+    el.classList.remove('dock-fab-free', 'dock-fab-dragging');
+    el.style.left = '';
+    el.style.top = '';
+    if (el.id === 'btn-ai-fab') {
+        dock.appendChild(el);
+    } else {
+        const order = getFabOrder().filter(id => id !== el.id);
+        const others = order.map(id => document.getElementById(id)).filter(Boolean);
+        let insertIndex = others.length;
+        for (let i = 0; i < others.length; i++) {
+            const r = others[i].getBoundingClientRect();
+            if (clientX < r.left + r.width / 2) { insertIndex = i; break; }
+        }
+        order.splice(insertIndex, 0, el.id);
+        localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
+        dock.appendChild(el);
+        applyFabOrder();
+        applyDockOrder();
+    }
+    const positions = getFabPositions();
+    delete positions[el.id];
+    saveFabPositions(positions);
+}
+
+// שכבת הגרירה החופשית של בועה בודדת (ר' ההערה ב-initFabOrderDragReorder
+// להסבר למה זו שכבה נפרדת מ-Sortable, לא הרחבה שלו). סף תזוזה (8px) לפני
+// שנחשב "גרירה" בפועל - כדי שטאפ רגיל (בלי תזוזה) עדיין יפתח את המודל של
+// הבועה כרגיל, בדיוק כמו delay:150 ב-Sortable למעלה עבור אותה מטרה
+function initFreeDockFabDrag(el) {
+    let startX = 0, startY = 0, dragging = false, pointerId = null;
+
+    function onPointerMove(e) {
+        if (e.pointerId !== pointerId) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (!dragging && Math.hypot(dx, dy) > 8) {
+            dragging = true;
+            beginFreeDragVisual(el);
+        }
+        if (dragging) {
+            e.preventDefault();
+            followPointerDrag(el, e.clientX, e.clientY);
+        }
+    }
+
+    function onPointerUp(e) {
+        if (e.pointerId !== pointerId) return;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+        if (dragging) {
+            if (isPointOutsideDock(e.clientX, e.clientY)) {
+                settleFreeFab(el, e.clientX, e.clientY);
+            } else {
+                dockifyFreeFab(el, e.clientX);
+            }
+        }
+        dragging = false;
+        pointerId = null;
+    }
+
+    el.addEventListener('pointerdown', (e) => {
+        // בועת עגינה רגילה (לא פתקים, לא כבר חופשית) - יוצאים מיד, Sortable
+        // מטפל בגרירה שלה, ר' initFabOrderDragReorder למעלה
+        if (!el.classList.contains('dock-fab-free') && !el.classList.contains('dock-fab-notes')) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        startX = e.clientX;
+        startY = e.clientY;
+        pointerId = e.pointerId;
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
+    });
+}
+
+// ממירה בועה שעדיין "עגונה" ויזואלית (בועת הפתקים, לפני שהוצאה פעם ראשונה)
+// ל-position:absolute במיקום המדויק הנוכחי שלה על המסך - כדי שלא "תקפוץ"
+// ברגע שהגרירה החופשית מתחילה לעקוב אחרי האצבע/סמן
+function beginFreeDragVisual(el) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    el.classList.add('dock-fab-dragging');
+    if (!el.classList.contains('dock-fab-free')) {
+        const rect = el.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+        el.classList.add('dock-fab-free');
+        wrapper.appendChild(el);
+        const xPercent = ((rect.left + rect.width / 2 - wrapperRect.left) / wrapperRect.width) * 100;
+        const yPercent = ((rect.top + rect.height / 2 - wrapperRect.top) / wrapperRect.height) * 100;
+        positionFreeFab(el, xPercent, yPercent);
+    }
+}
+
+function followPointerDrag(el, clientX, clientY) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return;
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const xPercent = ((clientX - wrapperRect.left) / wrapperRect.width) * 100;
+    const yPercent = ((clientY - wrapperRect.top) / wrapperRect.height) * 100;
+    positionFreeFab(el, xPercent, yPercent);
+}
+
+// --- שמירת מיקומים חופשיים (לצמיתות, לפי בקשה מפורשת) - נפרד לגמרי מ-
+// weekwise_fab_order (סדר) ומדגלי ההפעלה/כיבוי - בועה שלא מופיעה כאן כלל
+// (כולל כל המשתמשות הקיימות בטעינה הראשונה אחרי השדרוג) נשארת בברירת המחדל
+// "בתוך ה-Dock", בלי צורך במיגרציה כלשהי ---
+function getFabPositions() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('weekwise_fab_positions'));
+        if (saved && typeof saved === 'object' && !Array.isArray(saved)) return saved;
+    } catch { /* אין נתונים שמורים/פגומים - נופלים לאובייקט ריק */ }
+    return {};
+}
+
+function saveFabPositions(positions) {
+    localStorage.setItem('weekwise_fab_positions', JSON.stringify(positions));
+}
+
+// מריצים אחרי restackFabs (עגינה/סדר רגילים) בכל טעינה - לכל בועה שסומנה
+// "חופשית" בעבר, מוציאים אותה מה-Dock ומציבים במיקום השמור
+function applyFabPositions() {
+    const positions = getFabPositions();
+    ['btn-ai-fab', 'btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'].forEach(id => {
+        const pos = positions[id];
+        const el = document.getElementById(id);
+        const wrapper = document.querySelector('.phone-wrapper');
+        if (!el || !wrapper || !pos || pos.mode !== 'free') return;
+        if (typeof pos.xPercent !== 'number' || typeof pos.yPercent !== 'number') return;
+        el.classList.add('dock-fab-free');
+        el.style.order = '';
+        wrapper.appendChild(el);
+        positionFreeFab(el, pos.xPercent, pos.yPercent);
+    });
+}
+
+// רשת ביטחון: מיקום חופשי הוא קבוע (נשמר לצמיתות), אז זו הדרך היחידה
+// שמשתמשת שגררה בועה למקום לא-נוח (למשל מאחורי תוכן, או שהמסך שלה השתנה
+// אחר-כך) יכולה להתאושש בעצמה - ר' כפתור בהגדרות
+function resetFabLayout() {
+    localStorage.removeItem('weekwise_fab_positions');
+    const dock = document.getElementById('fab-dock');
+    // מחזירים כל בועה חופשית פיזית לתוך ה-Dock (לא רק מנקים סטייל/מחלקות) -
+    // restackFabs/applyFabOrder לא נוגעות בבועת הפתקים בכלל (היא לא במערך
+    // הסדר), אז בלי השורה הזו היא הייתה נשארת "תקועה" כילד רגיל של
+    // .phone-wrapper במקום לחזור להיות חלק מה-Dock
+    ['btn-ai-fab', 'btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('dock-fab-free', 'dock-fab-dragging');
+        el.style.left = '';
+        el.style.top = '';
+        if (dock) dock.appendChild(el);
+    });
+    restackFabs();
+    showAppToast(t('settings_reset_fab_layout_done'));
 }
 
 function toggleWaterFab() {

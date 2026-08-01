@@ -861,6 +861,23 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
+/* בועה שנגררה מחוץ ל-Dock למיקום חופשי על המסך (ר' initFreeDockFabDrag/
+   settleFreeFab ב-app.js) - position:absolute יחסית ל-.phone-wrapper,
+   left/top באחוזים (לא px, כדי לשרוד שינויי max-width בין breakpoints).
+   translate(-50%,-50%) קבוע ממרכז את הבועה סביב נקודת ה-left/top עצמה, כך
+   ש-left/top תמיד מייצגים את המרכז שלה (איפה שהאצבע/הסמן היה בפועל) -
+   transition:var(--transition) שכבר יורש מ-.dock-fab עושה את אנימציית
+   ה"שיכוך" (ease-out) על שינוי left/top בלי הגדרה נוספת */
+.dock-fab-free {
+    position: absolute;
+    z-index: 99998;
+    transform: translate(-50%, -50%);
+}
+.dock-fab-free:active { transform: translate(-50%, -50%) scale(0.9); }
+/* בזמן גרירה פעילה מבטלים את ה-transition כדי שהבועה תעקוב אחרי האצבע/הסמן
+   מיידית בלי "לגרור רגליים" - חוזר ל-transition הרגיל ברגע שהגרירה נגמרת */
+.dock-fab.dock-fab-dragging { transition: none; }
+
 /* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
    ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה מפורשת.
    position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה בדיוק כמו
@@ -1375,7 +1392,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        המלאים באפליקציה (apple-modal/login-overlay/hamburger-drawer-overlay).
        fixed שבור בדסקטופ הרחב, כי שם .phone-wrapper הוא כרטיס ממורכז עם
        max-width (לא כל חלון הדפדפן) - fixed היה "בורח" מגבולות הכרטיס וגם לא
-       מכסה נכון את הרוחב המלא שלו. z-index גבוה מ-.ai-fab (99999 !important)
+       מכסה נכון את הרוחב המלא שלו. z-index גבוה מ-.fab-dock (99999 !important)
        זה מה שבאמת תיקן את הבעיה של הכפתור הצף שהציץ מעל תצוגת המתכון */
     position: absolute;
     inset: 0;
