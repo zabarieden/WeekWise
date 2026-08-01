@@ -4993,16 +4993,6 @@ function restackFabs() {
 // מפורשת) - אותו דפוס בדיוק כמו filter:'.center-list-divider' בגרירת הפתקים
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
-    // רשת ביטחון גלובלית: אם מסיבה כלשהי pointerup/pointercancel לא מגיע
-    // ליעד המקורי שלו (למשל שני pointerdown חופפים על אותה בועה, או המגע/
-    // העכבר משתחרר מחוץ לחלון) - עיגולי-הרמז (ר' showFabParkHints) יכולים
-    // "להיתקע" מוצגים לצמיתות בלי שאף גרירה ממשית פעילה. מאזין גלובלי כאן
-    // מבטיח שהם תמיד יעלמו בסוף כל מחווה, בלי קשר לאיזה handler ספציפי טיפל
-    // (או לא טיפל) בה - hideFabParkHints לא עושה כלום אם כבר מוסתרים, אז
-    // אין עלות בקריאה לו "סתם" בכל pointerup/pointercancel באפליקציה כולה
-    document.addEventListener('pointerup', hideFabParkHints);
-    document.addEventListener('pointercancel', hideFabParkHints);
-
     const onReorder = (container) => {
         const order = Array.from(container.children)
             .map(el => el.getAttribute('data-fab-id') || el.id)
@@ -5038,13 +5028,11 @@ function initFabOrderDragReorder() {
             filter: '.dock-fab-notes',
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
-            onStart: (evt) => showFabParkHints(evt.item && evt.item.id),
             // אחרי סידור-מחדש רגיל, בודקים גם אם נקודת השחרור בפועל (לא איפה
             // ש-Sortable "החליט" להשאיר את האלמנט בתוך הרשימה) יצאה מחוץ
             // לגבולות ה-Dock - אם כן, זו "גרירה החוצה" למיקום חופשי, לא סידור-
             // מחדש רגיל (ר' settleFreeFab למטה)
             onEnd: (evt) => {
-                hideFabParkHints();
                 onReorder(stack);
                 const point = getPointerEventCoords(evt.originalEvent);
                 if (point && evt.item && evt.item.id !== 'btn-ai-fab' && isPointOutsideDock(point.x, point.y)) {
@@ -5095,39 +5083,18 @@ function positionFreeFab(el, xPercent, yPercent) {
 // באג אמיתי שהתגלה בבדיקה: שתי בועות שנגררו לאזור דומה על המסך "בלעו" זו
 // את זו חזותית (או את ה-Dock עצמו), כי כל בועה נחתה בדיוק איפה שהאצבע/הסמן
 // היה בלי מודעות לבועות אחרות. הפתרון: מספר קבוע וקטן של משבצות מוגדרות-
-// מראש בשוליים (רחוק משני כפתורי ה-FAB בפינות העליונות, top:22-70px, ורחוק
-// מה-Dock בתחתית) - כל גרירה-החוצה "קופצת" תמיד למשבצת הפנויה הקרובה ביותר
+// מראש בשוליים - כל גרירה-החוצה "קופצת" תמיד למשבצת הפנויה הקרובה ביותר
 // לנקודת השחרור, לעולם לא לקואורדינטה גולמית - כך שחפיפה פשוט לא יכולה
-// לקרות במבנה הזה. אחוזים (לא px) כדי לשרוד שינויי max-width של .phone-wrapper
-// בין breakpoints (ר' תחתית הקובץ) */
+// לקרות במבנה הזה. yPercent 30/60 (לא 16/46) כדי להישאר מתחת לאזור הכותרת/
+// "הצצה להיום" למעלה ומעל ה-Dock בתחתית לגמרי, לא רק מתחת לשני כפתורי ה-FAB
+// בפינות. אחוזים (לא px) כדי לשרוד שינויי max-width של .phone-wrapper בין
+// breakpoints (ר' תחתית הקובץ) */
 const FAB_PARK_SLOTS = [
-    { xPercent: 88, yPercent: 16 },
-    { xPercent: 12, yPercent: 16 },
-    { xPercent: 88, yPercent: 46 },
-    { xPercent: 12, yPercent: 46 },
+    { xPercent: 90, yPercent: 30 },
+    { xPercent: 10, yPercent: 30 },
+    { xPercent: 90, yPercent: 60 },
+    { xPercent: 10, yPercent: 60 },
 ];
-
-// מציגה/מסתירה 4 עיגולי-רמז עדינים במיקומי FAB_PARK_SLOTS בזמן גרירה פעילה
-// בלבד - כדי שיהיה ברור מראש איפה בועה "תנחת" אם משחררים אותה עכשיו, במקום
-// שהיא פשוט תופיע במקום לא-צפוי אחרי השחרור (בדיוק החוויה המבלבלת שדווחה)
-let fabParkHintEls = [];
-function showFabParkHints(excludeId) {
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (!wrapper || fabParkHintEls.length) return;
-    const used = getOccupiedSlotIndexes(excludeId);
-    fabParkHintEls = FAB_PARK_SLOTS.map((slot, i) => {
-        const hint = document.createElement('div');
-        hint.className = 'fab-park-slot-hint' + (used.has(i) ? ' fab-park-slot-hint-taken' : '');
-        hint.style.left = `${slot.xPercent}%`;
-        hint.style.top = `${slot.yPercent}%`;
-        wrapper.appendChild(hint);
-        return hint;
-    });
-}
-function hideFabParkHints() {
-    fabParkHintEls.forEach(el => el.remove());
-    fabParkHintEls = [];
-}
 
 function getOccupiedSlotIndexes(excludeId) {
     const positions = getFabPositions();
@@ -5236,7 +5203,6 @@ function initFreeDockFabDrag(el) {
         document.removeEventListener('pointerup', onPointerUp);
         document.removeEventListener('pointercancel', onPointerUp);
         if (dragging) {
-            hideFabParkHints();
             if (isPointOutsideDock(e.clientX, e.clientY)) {
                 settleFreeFab(el, e.clientX, e.clientY);
             } else {
@@ -5268,7 +5234,6 @@ function beginFreeDragVisual(el) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (!wrapper) return;
     el.classList.add('dock-fab-dragging');
-    showFabParkHints(el.id);
     if (!el.classList.contains('dock-fab-free')) {
         const rect = el.getBoundingClientRect();
         const wrapperRect = wrapper.getBoundingClientRect();
