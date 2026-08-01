@@ -1207,6 +1207,18 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     z-index: 99999 !important;
 }
 .sortable-chosen { position: relative; z-index: 20; opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
+/* חריג לסידור-מחדש בתוך ה-Dock: כמו note-triage-drag-clone למעלה, אבל כאן
+   השכפול הצף כבר יורש את כל העיצוב שלו מ-.dock-fab עצמו (עיגול/גרדיאנט/צל) -
+   רק צריך להחזיר לו display (הכלל הגלובלי מסתיר אותו) ולבטל transition,
+   אחרת השכפול "נגרר ברגליים" אחרי האצבע/העכבר במקום לעקוב מיידית, בגלל
+   transition:var(--transition) הרגיל של .dock-fab - זה בדיוק מה שגרם
+   לגרירה בתוך הסרגל להרגיש פחות חלקה מהגרירה החופשית מחוץ לו */
+.sortable-fallback.dock-fab-drag-clone {
+    display: flex !important;
+    opacity: 0.92 !important;
+    transition: none !important;
+    z-index: 100000 !important;
+}
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */
 .slot-input-group.has-task .slot-task-wrap {
