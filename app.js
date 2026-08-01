@@ -1360,10 +1360,56 @@ function applyPwaShortcutDeepLink() {
 // מחדש של שאר הבועות (ר' initFabOrderDragReorder למטה). כאן רק מחברים את
 // הקליק לפתיחת המודל - בלי left/top/localStorage בכלל, המיקום עצמו נקבע
 // לגמרי ב-CSS (.fab-dock, position:absolute יחסית ל-.phone-wrapper)
+// בועת הפתקים היא הכפתור היחיד ב-Dock שאין לו שום מנגנון גרירה קיים
+// (מסוננת החוצה מ-Sortable, filter:'.dock-fab-notes') - לכן היא המקום
+// הבטוח להוסיף עליו את מחוות "הסיבוב" (ר' rotateFabRow למעלה) בלי שום סיכון
+// להתנגשות עם גרירת-הסידור-מחדש של שאר הבועות. טאפ רגיל (בלי תזוזה אופקית
+// משמעותית) עדיין פותח את המודל כרגיל - לא בנוי על onclick נפרד (שהיה עלול
+// "לירות" גם על טאפ וגם בסוף גרירה) אלא כל ההחלטה טאפ/סיבוב קורית כאן במקום
+// אחד, ב-pointerup
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
-    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
+    const openNotes = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
+    const SWIPE_THRESHOLD = 28;
+    let startX = 0, startY = 0, dragging = false, pointerId = null;
+
+    function onPointerMove(e) {
+        if (e.pointerId !== pointerId) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (!dragging && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) dragging = true;
+    }
+    function cleanup() {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerCancel);
+        pointerId = null;
+    }
+    function onPointerUp(e) {
+        if (e.pointerId !== pointerId) return;
+        const dx = e.clientX - startX;
+        cleanup();
+        if (dragging) {
+            rotateFabRow(dx < 0 ? 1 : -1);
+        } else {
+            openNotes();
+        }
+        dragging = false;
+    }
+    function onPointerCancel(e) {
+        if (e.pointerId !== pointerId) return;
+        cleanup();
+        dragging = false;
+    }
+    el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        startX = e.clientX;
+        startY = e.clientY;
+        pointerId = e.pointerId;
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerCancel);
+    });
 }
 
 // יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
@@ -4986,25 +5032,24 @@ function applyFabOrder() {
     });
 }
 
-// היסטים קבועים (לא מחושבים בטריגונומטריה על מעגל אחיד) - מרחקים וזוויות
-// שונים במכוון בין בועה לבועה, כדי לקבל פיזור "קונסטלציה" אורגני סביב הפתק
-// ולא מעגל מדויק, לפי בקשה מפורשת ("לא אוהבת את הנראות של הסיבוב הזה").
-// סדר המערך = מרחק ההיסט מהמרכז לפי סדר הבועות הפעילות (getFabOrder) -
-// בועה ראשונה בסדר תמיד מקבלת את ההיסט הראשון וכו', כך שגרירה-לסידור-מחדש
-// (ר' initFabOrderDragReorder) פשוט "מחליפה משבצות" בין ההיסטים הקבועים
-const FAB_ORBIT_OFFSETS = [
-    { x: 14, y: -96 },
-    { x: 92, y: -32 },
-    { x: 66, y: 76 },
-    { x: -62, y: 82 },
-    { x: -88, y: -22 },
+// היסטים קבועים לשורה אחת סביב הפתק (לא מעגל/פיזור - לפי בקשה מפורשת
+// "כמו שזה נראה בתמונה", תמונת-סגנון שהראתה שורה אופקית אחת). אינדקס זוגי
+// (0,2,4) הולך ימינה, אינדקס אי-זוגי (1,3) הולך שמאלה - כך שהבועה הראשונה
+// בסדר (getFabOrder) יושבת הכי קרוב למרכז מימין, השנייה הכי קרוב משמאל וכו',
+// ותמיד נשאר מאוזן בין הצדדים גם כשלא כל 5 הבועות פעילות
+const FAB_ROW_OFFSETS = [
+    { x: 92, y: 0 },
+    { x: -92, y: 0 },
+    { x: 174, y: 0 },
+    { x: -174, y: 0 },
+    { x: 256, y: 0 },
 ];
 
 // קובעת את המיקום החזותי (left/top בפיקסלים, ר' ההערה על .dock-fab ב-
-// theme.css) של הבועות סביב בועת הפתקים הקבועה בדיוק במרכז - בהשראת תמונות-
-// סגנון ששלחה המשתמשת (פודיום זכוכית מרכזי, שאר הבועות מפוזרות סביבו
-// אסימטרית). הבועות הפעילות (עד 5, מדלגים על מוסתרות/toggle כבוי) מקבלות
-// היסט קבוע לפי FAB_ORBIT_OFFSETS
+// theme.css) של הבועות בשורה סביב בועת הפתקים הקבועה בדיוק במרכז, בהשראת
+// תמונת-סגנון ששלחה המשתמשת. הבועות הפעילות (עד 5, מדלגים על מוסתרות/toggle
+// כבוי) מקבלות היסט קבוע לפי FAB_ROW_OFFSETS - "סיבוב" (ר' rotateFabRow
+// למטה) פשוט מזיז כל בועה למשבצת הבאה במערך הזה
 function applyDockOrder() {
     const order = getFabOrder();
     const active = order.filter(id => {
@@ -5013,7 +5058,7 @@ function applyDockOrder() {
     });
     active.forEach((id, i) => {
         const el = document.getElementById(id);
-        const offset = FAB_ORBIT_OFFSETS[i];
+        const offset = FAB_ROW_OFFSETS[i];
         if (!el || !offset) return;
         el.style.left = `${offset.x}px`;
         el.style.top = `${offset.y}px`;
@@ -5028,6 +5073,22 @@ function applyDockOrder() {
 }
 
 function restackFabs() {
+    applyFabOrder();
+    applyDockOrder();
+}
+
+// "מסובבים" את סדר הבועות בשורה - כמו קרוסלה, לפי בקשה מפורשת ("כמו משחק
+// יהיה אפשר לסובב וכל פעם שמסובבים אחד אחר מגיע קדימה"). מסתמכת על אותו
+// weekwise_fab_order בדיוק כמו גרירה-לסידור-מחדש הרגילה (ר' initFabOrderDragReorder)
+// - "סיבוב" הוא בעצם shift מעגלי של המערך, לא מנגנון נפרד
+function rotateFabRow(direction) {
+    const order = getFabOrder();
+    if (direction > 0) {
+        order.push(order.shift());
+    } else {
+        order.unshift(order.pop());
+    }
+    localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
     applyFabOrder();
     applyDockOrder();
 }
