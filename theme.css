@@ -794,59 +794,51 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* Dock מאוחד: קפסולת זכוכית אחת במרכז-תחתית המסך (לא של הדפדפן - position:
-   absolute יחסית ל-.phone-wrapper, אותה סיבה בדיוק כמו שאר הכפתורים הצפים -
-   בדסקטופ/טאבלט רחבים .phone-wrapper ממורכז עם שוליים ריקים, אז position:fixed
-   היה שם את ה-Dock רחוק מהכרטיס הנראה, "אבוד" בשוליים). !important על
-   bottom/z-index נשמר מה-.ai-fab הישן לפי אותה בקשה מפורשת שלא יידרס בטעות.
-   שתי שורות (display:grid, לא flex בשורה אחת) - לפי בקשה מפורשת: 5-6 בועות
-   ב-76px לא נכנסות ברוחב מסך טלפון בשורה אחת, וגלילה אופקית (הניסיון הקודם)
-   התבררה כלא נוחה מספיק. בועת הפתקים (Notes) ננעלת ב-grid-column קבוע וגדול
-   (ר' NOTES_GRID_COL ב-applyDockOrder ב-app.js) שפורש על שתי השורות
-   (grid-row:1/span 2) - עמודות הביניים הריקות בין שאר הבועות לעמודה הזו
-   מתכווצות אוטומטית ל-0 (אין תוכן בהן), כך שהיא נשארת קבועה במרכז בלי
-   position:absolute/spacer ידני. שאר הבועות מקבלות grid-column/row מפורשים
-   דרך JS (לא CSS order - order לא קובע פיצול לשתי שורות בפועל), מפוצלות
-   חצי-חצי ימין/שמאל וזוגות-זוגות מלמעלה-למטה, הכי קרוב למרכז קודם */
+/* אשכול-מעגל: בלי קופסת-זכוכית מאחור בכלל (לפי בקשה מפורשת - "כמו המוח
+   בלי רקע"), בלי תיבת דיאלוג/סרגל - בהשראת תמונת-סגנון ששלחה המשתמשת (עיגול
+   מרכזי לפתקים, מוקף בבועות קטנות יותר במרחק שווה, טבעת דקורטיבית דקה מסביב).
+   .fab-dock עצמו הוא נקודת-עיגון בגודל 0 (position:absolute, בלי width/height) -
+   ממוקם ב-left:50% (למרכז אופקית) ו-top (למרכז אנכית, "קצת למטה" מהאמצע
+   הליטרלי לפי בקשה מפורשת), לא באמצעות translate(-50%) כי לקופסה בגודל 0 זה
+   ממילא no-op. כל בועה (כולל הפתקים) ממוקמת סביב הנקודה הזו ב-JS
+   (ר' applyDockOrder ב-app.js) עם left:0;top:0 קבוע ו-transform:translate()
+   שמערבב אחוזים (למרכז את הבועה על עצמה) ופיקסלים (ההיסט הרדיאלי) - כך
+   שאין תלות כלל בגודל תיבה של ה-Dock. ::before מצייר את טבעת-האורביט
+   הדקורטיבית ברדיוס FAB_ORBIT_RADIUS (חייב להיות זהה לערך ב-app.js) */
 .fab-dock {
     position: absolute !important;
-    bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
     left: 50%;
-    transform: translateX(-50%);
+    top: 56%;
     z-index: 99999 !important;
-    display: grid;
-    grid-template-rows: repeat(2, auto);
-    align-items: center;
-    justify-items: center;
-    gap: 10px 14px;
-    max-width: calc(100% - 12px);
-    overflow-x: auto;
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 40px;
-    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
-    padding: 14px 18px;
-    box-sizing: border-box;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
-/* פס גלילה דק וגלוי - נשאר רק כרשת ביטחון (מסך צר בצורה חריגה שבו גם 2
-   שורות לא מספיקות); בשימוש רגיל אין גלילה בכלל, אז זה כמעט אף פעם לא נראה */
-.fab-dock::-webkit-scrollbar { height: 5px; }
-.fab-dock::-webkit-scrollbar-track { background: transparent; }
-.fab-dock::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.35); border-radius: 999px; }
+.fab-dock::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 190px;
+    height: 190px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
 .phone-wrapper.menu-open .fab-dock, .phone-wrapper.modal-open .fab-dock { display: none; }
 
 /* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
-   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:pan-x
-   (לא none) - כך שטאפ-והחלקה מהירה על בועה עצמה עדיין גוללת את ה-Dock
-   באופן טבעי (רלוונטי רק ברשת-הביטחון הצרה למעלה); Sortable מפעיל
-   preventDefault בעצמו ברגע שגרירה-לסידור-מחדש אמיתית מתחילה (אחרי delay),
-   כך ששני הצרכים לא מתנגשים */
+   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. position:absolute
+   קבוע (לא רק לבועות שנגררו החוצה - זה כבר לא קיים) כי כל בועה ממוקמת סביב
+   נקודת העיגון של .fab-dock ב-JS, ר' ההערה למעלה */
 .dock-fab {
-    position: relative;
+    position: absolute;
+    /* left/top (לא transform!) הם מה ש-JS קובע לכל בועה (ר' applyDockOrder
+       ב-app.js) - ערכי פיקסלים ביחס לנקודת העיגון של .fab-dock (שגודלה 0,
+       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים). transform נשאר
+       פנוי וקבוע (רק ממרכז את הבועה על הנקודה של עצמה) כדי שאפקט הלחיצה
+       (:active) יוכל להוסיף scale בלי "לבלוע" את מיקום ה-JS */
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
     width: 76px;
     height: 76px;
     border-radius: 50%;
@@ -861,14 +853,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
     padding: 0;
     flex-shrink: 0;
-    transition: var(--transition);
+    transition: var(--transition), left 0.35s ease, top 0.35s ease;
     touch-action: pan-x;
     user-select: none;
     -webkit-user-select: none;
 }
-.dock-fab:active { transform: scale(0.9); }
+.dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
 @media (max-width: 420px) {
-    .fab-dock { gap: 8px 12px; padding: 10px 14px; }
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 5.2rem; }
     /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (112px, קצה תחתון ב-top:22px+112px=134px)
@@ -877,12 +868,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     .home-hero-panel { padding-top: 150px; }
     .main-scroll-area { padding-top: 150px; }
 }
-/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock,
-   פרושה על שתי השורות (grid-column/grid-row קבועים - ר' applyDockOrder
-   ב-app.js, לפי בקשה מפורשת). גרדיאנט ורוד/סגול ופעימה משלה (במקום הגרדיאנט
-   הכללי של שאר הבועות) כדי שתמשיך לבלוט כעוגן המרכזי, בדיוק כמו שהייתה
-   כשהיא הכפתור הנפרד .ai-fab הישן */
+/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד במרכז המעגל בדיוק
+   (0,0 ב-applyDockOrder). קצת יותר גדולה משאר הבועות כדי לבלוט כעוגן, גרדיאנט
+   ורוד/סגול ופעימה משלה (במקום הגרדיאנט הכללי של שאר הבועות) */
 .dock-fab-notes {
+    width: 92px;
+    height: 92px;
+    font-size: 2.4rem;
     background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
     box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
     animation: fabPulse 2.5s ease-in-out infinite;

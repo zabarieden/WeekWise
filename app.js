@@ -4976,44 +4976,34 @@ function applyFabOrder() {
     });
 }
 
-// קובעת את המיקום החזותי (grid-column/grid-row) של הבועות סביב בועת הפתקים
-// הקבועה במרכז - ה-Dock עכשיו רשת של 2 שורות (ר' .fab-dock ב-theme.css),
-// אז order בלבד (כמו בגרסה הקודמת החד-שורתית) לא מספיק כדי לקבוע גם לאיזו
-// שורה בועה שייכת. בועת הפתקים ננעלת תמיד ב-NOTES_GRID_COL, פרושה על שתי
-// השורות (grid-row:1/span 2) - עמודות ריקות בין שאר הבועות לעמודה הזו
-// מתכווצות אוטומטית ל-0 (grid לא "מבזבז" מקום על עמודה בלי תוכן), כך שהיא
-// תמיד יוצאת ויזואלית במרכז בלי position:absolute/spacer ידני.
-// שאר הבועות (עד 5, לא כולן בהכרח פעילות) מתחלקות חצי-חצי שמאל/ימין לפי
-// אותו עקרון כמו הגרסה הקודמת (מי שקרוב יותר למרכז במערך - קרוב יותר
-// ויזואלית), ובתוך כל צד מזווגות זוגות-זוגות מלמעלה-למטה (הזוג הכי קרוב
-// למרכז ראשון) כדי למלא את שתי השורות בצורה מאוזנת. מדלגים על בועות מוסתרות
-// (toggle כבוי) כדי שלא "יחסרו" עמודות ריקות באמצע
+// קובעת את המיקום החזותי (left/top בפיקסלים, ר' ההערה על .dock-fab ב-
+// theme.css) של הבועות סביב בועת הפתקים הקבועה בדיוק במרכז - עיצוב "מעגל
+// אורביט" בהשראת תמונת-סגנון ששלחה המשתמשת, לא סרגל/רשת. FAB_ORBIT_RADIUS
+// חייב להתאים בדיוק לרדיוס טבעת-הקישוט (.fab-dock::before ב-theme.css,
+// 190px קוטר = 95px רדיוס) כדי שהבועות "יישבו" חזותית על הטבעת. הבועות
+// הפעילות (עד 5, מדלגים על מוסתרות/toggle כבוי) מתפזרות במרחקים שווים
+// מסביב למעגל - זווית ראשונה מלמעלה (-90°), ומשם בכיוון השעון
 function applyDockOrder() {
-    const NOTES_GRID_COL = 100;
+    const FAB_ORBIT_RADIUS = 95;
     const order = getFabOrder();
     const active = order.filter(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
     });
-    const mid = Math.ceil(active.length / 2);
-    const placeHalf = (ids, sign) => {
-        ids.forEach((id, i) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const pairIndex = Math.floor(i / 2) + 1;
-            el.style.gridColumn = String(NOTES_GRID_COL + sign * pairIndex);
-            el.style.gridRow = (i % 2 === 0) ? '1' : '2';
-        });
-    };
-    placeHalf(active.slice(0, mid).reverse(), -1);
-    placeHalf(active.slice(mid), 1);
+    active.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const angle = (-90 + i * (360 / active.length)) * (Math.PI / 180);
+        el.style.left = `${Math.round(FAB_ORBIT_RADIUS * Math.cos(angle))}px`;
+        el.style.top = `${Math.round(FAB_ORBIT_RADIUS * Math.sin(angle))}px`;
+    });
     order.forEach(id => {
         if (active.includes(id)) return;
         const el = document.getElementById(id);
-        if (el) { el.style.gridColumn = ''; el.style.gridRow = ''; }
+        if (el) { el.style.left = ''; el.style.top = ''; }
     });
     const notes = document.getElementById('btn-ai-fab');
-    if (notes) { notes.style.gridColumn = String(NOTES_GRID_COL); notes.style.gridRow = '1 / span 2'; }
+    if (notes) { notes.style.left = '0px'; notes.style.top = '0px'; }
 }
 
 function restackFabs() {
