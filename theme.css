@@ -737,16 +737,27 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    להתפרש ולהתמרכז אנכית על פני כל הגובה הפנוי כשהיא התוכן היחיד הגלוי -
    כשתצוגה ממוקדת (.subview-panel.open) פתוחה, היא פשוט נערמת כתוכן רגיל */
 .tab-content.active-tab { display: flex !important; flex-direction: column; min-height: 100%; animation: fadeIn 0.25s ease-out; }
+/* כרטיסים היו כבר "זכוכיתיים" חלקית (bg-glass שקוף-חלקית + blur), רק בלי
+   ברק/הדגשה - לפי בקשה מפורשת ("רוצה שהכל יראה ככה, איזו זכוכית יפה")
+   מוסיפים את אותה שפה חזותית כמו בועות ה-Dock/עוזר ה-AI: מסגרת עליונה
+   בהירה יותר לתפוס אור, והילת-ברק פנימית (inset box-shadow עם blur גדול
+   ו-spread שלילי, לא ::before+overflow:hidden) - כדי לא לגעת ב-overflow של
+   .card (רכיב נפוץ מאוד באפליקציה, "+.btn-floating-add" למשל נשען על
+   overflow:visible כדי לבלוט מעל הכרטיס בפינה) */
 .card {
     background-color: var(--bg-glass);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 16px;
     padding: 16px;
     margin-bottom: 14px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 34px 40px -30px rgba(255, 255, 255, 0.07),
+        inset 0 -30px 40px -28px rgba(0, 0, 0, 0.18);
     position: relative;
     z-index: 5;
     width: 100%;
