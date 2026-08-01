@@ -1121,11 +1121,26 @@ async function logoutUser() {
 // זמנית (כמו לחיצה על "שתפי" מתוך חלון החגיגה), סדר המקור ב-DOM קובע איזה
 // מהם למעלה, ולא תמיד זה החדש. סוגרים כל מודל אחר שפתוח לפני פתיחת החדש -
 // כך תמיד יש לכל היותר .apple-modal אחד פתוח, בלי תלות בסדר יצירה
+// .modal-open על .phone-wrapper (אותו דפוס בדיוק כמו .menu-open של תפריט
+// ההמבורגר) - חייב כדי להסתיר את ה-Dock (ושני כפתורי ה-FAB בפינות) בזמן
+// שמודל פתוח: לכולם z-index:99999 !important, גבוה בהרבה מ-2000 של
+// .apple-modal, אז בלי זה הם ממשיכים "לצוף" מעל תוכן המודל - לא רק נראים
+// מוזר, אלא גם תופסים לחיצות/מגע שאמורות להגיע לכפתורים מתחתיהם (זה בדיוק
+// מה שגרם לכפתור "איפוס פריסת הקיצורים" להיראות כאילו "לא עושה כלום")
 function openModal(modalId) {
     document.querySelectorAll('.apple-modal.open').forEach(m => { if (m.id !== modalId) m.classList.remove('open'); });
     document.getElementById(modalId).classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('modal-open');
 }
-function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('open');
+    // תמיד מותר להסיר בלי תנאי - openModal כבר דואגת שלכל היותר מודל אחד
+    // פתוח בו-זמנית (ר' ההערה למעלה), אז סגירת "המודל הפתוח" תמיד אומרת
+    // שאף מודל אחר לא נשאר פתוח
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('modal-open');
+}
 let pendingCenterItemType = null;
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
 // מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן

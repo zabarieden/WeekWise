@@ -822,7 +822,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     scrollbar-width: none;
 }
 .fab-dock::-webkit-scrollbar { display: none; }
-.phone-wrapper.menu-open .fab-dock { display: none; }
+.phone-wrapper.menu-open .fab-dock, .phone-wrapper.modal-open .fab-dock { display: none; }
 
 /* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
    שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:none
@@ -1031,12 +1031,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: none;
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
-/* כשהמגירה פתוחה, מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock המאוחד
-   כבר מוסתר לגמרי דרך .phone-wrapper.menu-open .fab-dock למעלה) - חייבים
-   להעלים אותם ממש (לא רק סדר שכבות), כי z-index:99999 !important שלהם גבוה
-   בהרבה מ-4000 של המגירה, כדי שלא יחפפו את תוכן המגירה על מסכים צרים (מובייל) */
+/* כשהמגירה פתוחה (menu-open) או כל מודל אחר (modal-open, ר' openModal/
+   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock
+   המאוחד כבר מוסתר לגמרי דרך .fab-dock למעלה). חייבים להעלים אותם ממש (לא
+   רק סדר שכבות), כי z-index:99999 !important שלהם גבוה בהרבה מ-4000/2000 של
+   המגירה/המודלים, אחרת הם ממשיכים לצוף מעל התוכן ואף לתפוס לחיצות/מגע
+   שאמורות להגיע לכפתורים מתחתיהם - זה גרם בפועל לכפתור "איפוס פריסת
+   הקיצורים" בהגדרות להיראות כאילו לא עושה כלום במובייל */
 .phone-wrapper.menu-open .ai-brain-fab,
-.phone-wrapper.menu-open .hamburger-fab {
+.phone-wrapper.menu-open .hamburger-fab,
+.phone-wrapper.modal-open .ai-brain-fab,
+.phone-wrapper.modal-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
