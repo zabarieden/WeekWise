@@ -858,6 +858,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    לסמוך על גילוי גלילה סמוי */
 @media (max-width: 420px) {
     .fab-dock { gap: 8px; padding: 8px 10px; }
+    .dock-fab { width: 50px; height: 50px; font-size: 1.3rem; }
+    .ai-brain-fab { width: 58px; height: 58px; }
+    .ai-brain-icon { font-size: 2.5rem; }
+}
+/* בטיחות נוספת: מתחת ל-360px (טלפונים צרים יותר) חוזרים לגודל הקודם -
+   50px × עד 6 בועות (5 + הפתק) לא תמיד נכנס ברוחב בלי גלילה על המסכים
+   הצרים ביותר, וגלילה כאן לא ניתנת לגילוי בכוונה (ר' ההערה למעלה) - עדיף
+   בועות קצת יותר קטנות שתמיד נכנסות על הסיכון שהן "יברחו" מהסרגל */
+@media (max-width: 360px) {
     .dock-fab { width: 44px; height: 44px; font-size: 1.15rem; }
 }
 /* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock
