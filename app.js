@@ -4920,13 +4920,15 @@ function applyWaterFabSetting(enabled) {
 }
 
 // מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי/פריסה חכמה) -
-// הסדר עצמו ניתן לגרירה משני מקומות: ישירות על הבועות במסך הבית (#fab-stack)
+// הסדר עצמו ניתן לגרירה משני מקומות: ישירות על הבועות במסך הבית (#fab-dock)
 // או משורות ההגדרות (#fab-order-list) - שניהם ר' initFabOrderDragReorder,
 // ושניהם כותבים לאותו localStorage ומסתנכרנים דרך applyFabOrder. בועת ה-AI
-// (הפתק המהיר) לא נמצאת בכלל בתוך #fab-stack - היא קבועה במקום שלה תמיד ולא
-// משתתפת בסדר הזה. "כבוי לא משאיר חור" עכשיו קורה אוטומטית: #fab-stack הוא
-// flex column, ובועה עם class="hidden" (display:none) פשוט לא תופסת מקום -
-// אין יותר צורך בחישוב אינדקס ידני (--fab-stack-index הישן הוסר לגמרי)
+// (הפתק המהיר, btn-ai-fab) נמצאת פיזית בתוך #fab-dock (עוגן מרכזי קבוע), אבל
+// לא משתתפת במערך הסדר הזה בכלל - היא מסוננת החוצה מה-Sortable (filter,
+// ר' initFabOrderDragReorder) ותמיד order:0 קבוע ב-CSS (.dock-fab-notes).
+// "כבוי לא משאיר חור" עכשיו קורה אוטומטית: #fab-dock הוא flex row, ובועה עם
+// class="hidden" (display:none) פשוט לא תופסת מקום - אין צורך בחישוב אינדקס
+// ידני (--fab-stack-index הישן הוסר לגמרי)
 function getFabOrder() {
     const defaultOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'];
     try {
@@ -4954,22 +4956,49 @@ function applyFabOrder() {
     });
 }
 
+// קובעת את ה-order החזותי (CSS) של 5 הבועות הניתנות-לגרירה סביב בועת הפתקים
+// הקבועה (order:0 ב-CSS) - חצי הראשון של המערך מקבל ערכים שליליים (הכי רחוק
+// מהמרכז ראשון, הכי קרוב אחרון), החצי השני מקבל ערכים חיוביים, כך שסדר
+// הקריאה משמאל לימין תואם בדיוק לסדר במערך למרות שהפתק "חוצה" אותו באמצע.
+// לא נוגעת בסדר ה-DOM בפועל (זה תפקידה של applyFabOrder) - רק בעמדה החזותית
+function applyDockOrder() {
+    const order = getFabOrder();
+    const mid = Math.ceil(order.length / 2);
+    const left = order.slice(0, mid);
+    const right = order.slice(mid);
+    left.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.style.order = String(-(left.length - i));
+    });
+    right.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.style.order = String(i + 1);
+    });
+}
+
 function restackFabs() {
     applyFabOrder();
+    applyDockOrder();
 }
 
 // גרירה לשינוי סדר הבועות הצפות - שני יעדים אפשריים: ישירות על הבועות
-// במסך הבית (#fab-stack, כל הבועה עצמה היא ידית - delay קצר במגע כדי
+// במסך הבית (#fab-dock, כל הבועה עצמה היא ידית - delay קצר במגע כדי
 // שטאפ רגיל לפתיחה עדיין יעבוד בלי "להיתפס" בטעות כתחילת גרירה), או שורות
 // ה-FAB בהגדרות (#fab-order-list, ידית ⠿ ייעודית, אותו דפוס בדיוק כמו
 // initScheduleRowDragReorder). שתי הרשימות כותבות לאותו localStorage
-// ומסתנכרנות מיד דרך applyFabOrder אחרי כל גרירה, מאיזה מהן שלא תגיע
+// ומסתנכרנות מיד דרך applyFabOrder+applyDockOrder אחרי כל גרירה, מאיזה מהן
+// שלא תגיע. filter:'.dock-fab-notes' על ה-Sortable של #fab-dock מונע את
+// אפשרות הגרירה-לסידור-מחדש מבועת הפתקים לגמרי (היא תמיד באמצע, לפי בקשה
+// מפורשת) - אותו דפוס בדיוק כמו filter:'.center-list-divider' בגרירת הפתקים
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
     const onReorder = (container) => {
-        const order = Array.from(container.children).map(el => el.getAttribute('data-fab-id') || el.id);
+        const order = Array.from(container.children)
+            .map(el => el.getAttribute('data-fab-id') || el.id)
+            .filter(id => id !== 'btn-ai-fab');
         localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
         applyFabOrder();
+        applyDockOrder();
     };
 
     const settingsList = document.getElementById('fab-order-list');
@@ -4995,6 +5024,7 @@ function initFabOrderDragReorder() {
             dragoverBubble: false,
             delay: 150,
             delayOnTouchOnly: true,
+            filter: '.dock-fab-notes',
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
             onEnd: () => onReorder(stack),
