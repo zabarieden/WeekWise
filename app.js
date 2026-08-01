@@ -1364,14 +1364,7 @@ function applyPwaShortcutDeepLink() {
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
-    // עכשיו div (לא button אמיתי) כי הוא מכיל שני כפתורי-מיני משלו (קניות/
-    // פתקים) - HTML לא מרשה button מקונן בתוך button. role="button"+tabindex
-    // כבר ב-HTML, אבל הפעלה מהמקלדת (Enter/רווח) דורשת חיווט ידני כאן
-    const trigger = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
-    el.onclick = trigger;
-    el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); trigger(); }
-    });
+    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
 }
 
 // יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
@@ -4805,7 +4798,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'refresh_data', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
-    { id: 'notes_bubble_mini_shortcuts', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
     { id: 'add_myweek_task', category: 'myweek' },
@@ -5255,10 +5247,6 @@ function initFreeDockFabDrag(el) {
         // בועת עגינה רגילה (לא פתקים, לא כבר חופשית) - יוצאים מיד, Sortable
         // מטפל בגרירה שלה, ר' initFabOrderDragReorder למעלה
         if (!el.classList.contains('dock-fab-free') && !el.classList.contains('dock-fab-notes')) return;
-        // התחלת לחיצה על אחד מכפתורי-המיני של אשכול הפתקים (קניות/רשימה) -
-        // לא מתחילים מעקב גרירה בכלל, כדי שלחיצה+גרירה קלה בטעות על כפתור-
-        // מיני קטן לא "תגרור" בטעות את כל האשכול במקום לפעול על הכפתור עצמו
-        if (e.target.closest && e.target.closest('.dock-fab-notes-mini')) return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         startX = e.clientX;
         startY = e.clientY;
