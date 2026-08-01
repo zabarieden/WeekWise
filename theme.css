@@ -810,6 +810,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     left: 50%;
     top: 56%;
     z-index: 99999 !important;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 .fab-dock::before {
     content: '';
@@ -824,9 +826,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     pointer-events: none;
 }
 .phone-wrapper.menu-open .fab-dock,
-.phone-wrapper.modal-open .fab-dock,
-.phone-wrapper.today-preview-open .fab-dock {
+.phone-wrapper.modal-open .fab-dock {
     display: none;
+}
+/* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
+   פתאומית, לפי בקשה מפורשת. opacity+pointer-events (לא display:none) כדי
+   שה-transition על .fab-dock למעלה יוכל לרוץ בפועל */
+.phone-wrapper.today-preview-open .fab-dock {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* עיצוב משותף לכל בועה ב-Dock - זכוכיתי (glassmorphism, לפי בקשה מפורשת
