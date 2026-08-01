@@ -550,10 +550,9 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    התחתון), "כרטיס" גדול עם כמעט כלום בפנים היה נראה כמו קוביה ריקה בול
    באמצע המסך; עכשיו זו רק שורת הברכה, שקופה על רקע האפליקציה */
 .home-hero-panel {
-    /* padding-top מוגדל (לא 16px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
-       הקבועים (עוזר AI בפינה שמאל-עליונה, המבורגר בפינה ימין-עליונה - שניהם
-       top:22px עד ~66-70px) - בלי זה שורת "שלום.../תאריך" מסתתרת מתחתיהם */
-    padding: 70px 14px 14px 14px;
+    /* פינוי מקום משני כפתורי ה-FAB הקבועים (עוזר AI/המבורגר) כבר לא נחוץ כאן -
+       .bottom-tab-bar עכשיו יושב מעליו בזרימה הרגילה ועושה את זה (margin-top:70px) */
+    padding: 14px;
     margin-bottom: 16px;
     position: relative;
     z-index: 5;
@@ -570,7 +569,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    בלי זה, גם עם גלילה פנימית, כשהתוכן לא הרבה יותר גבוה מהמסך כמעט ואין
    טווח גלילה לברוח מהבועות הצפות (שקבועות ל-.phone-wrapper, לא לתוכן הזה) -
    כל תחתית הכרטיס פשוט תמיד יושבת בדיוק באזור המסך שבו הבועות נמצאות */
-.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
 /* גלילה כן פעילה, אבל בלי הפס הנראה - אותו דפוס בדיוק כמו .main-scroll-area,
    פשוט נשכח כאן קודם */
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
@@ -717,10 +716,9 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     min-width: 0;
     position: relative;
     z-index: 10;
-    /* 150px -> 215px: ה-.ai-fab עלה מ-bottom:25px ל-88px כדי לפנות מקום מעל
-       סרגל הטאבים התחתון החדש (.bottom-tab-bar) - הריפוד כאן גדל בהתאם כדי
-       שהשורה האחרונה בכל רשימה עדיין לא תיבלע מתחת לכפתור הצף/לסרגל */
-    padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px));
+    /* מפנה מקום רק מתחת ל-.ai-fab הצף (bottom:25px) כדי שהשורה האחרונה בכל
+       רשימה לא תיבלע מתחתיו - .bottom-tab-bar עבר למעלה ואינו יושב כאן יותר */
+    padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
     max-width: 100%;
@@ -788,29 +786,34 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .days-scroll-container::-webkit-scrollbar { display: none; }
 
 
-/* סרגל טאבים תחתון קבוע - הניווט הראשי בין 4 האזורים (מחליף את רשת הריבועים
-   העגולה של מסך הבית). position:absolute יחסית ל-.phone-wrapper, אותה סיבה
-   בדיוק כמו שאר האלמנטים הצפים באפליקציה - נשאר צמוד לכרטיס גם בדסקטופ רחב.
-   כל טאב מקבל את צבע ה"עולם" שלו (ר' --tile-accent למעלה) רק כשהוא פעיל */
+/* סרגל טאבים - הניווט הראשי בין 4 האזורים (מחליף את רשת הריבועים העגולה של
+   מסך הבית). הועבר מלמטה למעלה - עכשיו שורה קבועה בזרימה הרגילה, ישר מתחת
+   לשני כפתורי ה-FAB בפינות (עוזר AI/המבורגר, top:22px עד ~70px - margin-top
+   כאן מפנה בדיוק את המקום הזה), ומעל "הצצה להיום" במסך הבית, כמו רצועת
+   טאבים עליונה בסגנון אייפון. overflow-x:auto לגלילה/"החלקה" צידה אם אי-פעם
+   ייווספו עוד טאבים ולא כל 4 ייכנסו ברוחב אחד. כל טאב מקבל את צבע ה"עולם"
+   שלו (ר' --tile-accent למעלה) רק כשהוא פעיל */
 .bottom-tab-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
+    margin: 70px 6px 14px 6px;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: stretch;
+    overflow-x: auto;
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 22px;
-    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
-    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+    padding: 8px 4px;
     box-sizing: border-box;
     z-index: 3000;
+    flex-shrink: 0;
+    scrollbar-width: none;
 }
+.bottom-tab-bar::-webkit-scrollbar { display: none; }
 .bottom-tab {
     flex: 1 1 0;
     display: flex;
@@ -851,9 +854,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    פס מחוות במובייל אמיתי, ו-!important לפי בקשה מפורשת שלא יידרס בטעות */
 .ai-fab {
     position: absolute !important;
-    /* 25px -> 88px: מפנה מקום מעל סרגל הטאבים התחתון החדש (.bottom-tab-bar),
-       שלא היה קיים כשהערך המקורי נקבע */
-    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
     right: 25px !important;
     z-index: 99999 !important;
     display: flex !important;
@@ -887,7 +888,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מה שקובע את סדר הערימה - גרירה ישירה על בועה מזיזה אותה ממש ב-DOM */
 .fab-stack {
     position: absolute;
-    bottom: calc(88px + 68px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(25px + 68px + env(safe-area-inset-bottom, 0px));
     right: 25px;
     z-index: 99999;
     display: flex;

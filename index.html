@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=183">
+    <link rel="stylesheet" href="theme.css?v=184">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -80,6 +80,32 @@
 
         <!-- האפליקציה הראשית -->
         <div id="app-container" style="display: none; width: 100%; height: 100%; position: relative; z-index: 5; flex-direction: column;">
+
+            <!-- סרגל טאבים - הניווט הראשי בין 4 האזורים, תמיד גלוי (גם במסך
+                 הבית וגם בתוך כל טאב). ילד ראשון וקבוע של app-container (לא
+                 בתוך home-hero-panel/main-scroll-area, שמתחלפים ביניהם) כדי
+                 שיישאר נגיש מכל מסך ולא ייעלם כשעוברים לטאב - ר' theme.css
+                 ל-margin-top:70px שמפנה מקום משני כפתורי ה-FAB בפינות.
+                 סדר ה-DOM (לו"ז, פתקים, כספים, תזונה) מוצג RTL אוטומטית
+                 (לו"ז מימין, תזונה בסוף משמאל), בדיוק לפי הבקשה -->
+            <nav class="bottom-tab-bar" id="bottom-tab-bar">
+                <button type="button" class="bottom-tab" data-target="schedule-section" onclick="switchToTab('schedule-section')">
+                    <span class="bottom-tab-icon">📅</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_myweek">MyWeek</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="my-center-section" onclick="switchToTab('my-center-section')">
+                    <span class="bottom-tab-icon">📝</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_notes">Notes</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="finance-section" onclick="switchToTab('finance-section')">
+                    <span class="bottom-tab-icon">📊</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_finance">Budget</span>
+                </button>
+                <button type="button" class="bottom-tab" data-target="nutrition-section" onclick="switchToTab('nutrition-section')">
+                    <span class="bottom-tab-icon">📏</span>
+                    <span class="bottom-tab-label" data-i18n="bottom_tab_nutrition">Nutrition</span>
+                </button>
+            </nav>
 
             <!-- מסך הכניסה הראשי: פאנל בהיר פרימיום עם ברכה + רשת ניווט בסגנון Samsung Health -->
             <div class="home-hero-panel">
@@ -726,33 +752,6 @@
                     </div>
                 </section>
             </div>
-
-            <!-- סרגל טאבים תחתון קבוע: הניווט הראשי בין 4 האזורים, תמיד גלוי -
-                 סדר ה-DOM (לו"ז, פתקים, כספים, תזונה) מוצג RTL אוטומטית
-                 (לו"ז מימין, תזונה בסוף משמאל), בדיוק לפי הבקשה. חייב לבוא
-                 *אחרי* main-scroll-area (לא ביניהם לבין home-hero-panel) כדי
-                 לא לשבור את הסלקטור .home-hero-panel:not(.hidden) + .main-scroll-area
-                 שמסתמך על שכנות-ישירה ב-DOM כדי להסתיר את main-scroll-area
-                 כשמסך הבית גלוי - מיקומו הוויזואלי לא תלוי בסדר המקור בכלל
-                 כי הוא position:absolute -->
-            <nav class="bottom-tab-bar" id="bottom-tab-bar">
-                <button type="button" class="bottom-tab" data-target="schedule-section" onclick="switchToTab('schedule-section')">
-                    <span class="bottom-tab-icon">📅</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_myweek">MyWeek</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="my-center-section" onclick="switchToTab('my-center-section')">
-                    <span class="bottom-tab-icon">📝</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_notes">Notes</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="finance-section" onclick="switchToTab('finance-section')">
-                    <span class="bottom-tab-icon">📊</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_finance">Budget</span>
-                </button>
-                <button type="button" class="bottom-tab" data-target="nutrition-section" onclick="switchToTab('nutrition-section')">
-                    <span class="bottom-tab-icon">📏</span>
-                    <span class="bottom-tab-label" data-i18n="bottom_tab_nutrition">Nutrition</span>
-                </button>
-            </nav>
 
             <!-- כפתור צף (FAB) להוספת פתק ב-AI -->
             <button type="button" class="ai-fab" id="btn-ai-fab" data-i18n-title="notes_ai_title" title="Quick Note">📝</button>
