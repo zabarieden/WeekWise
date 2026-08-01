@@ -2468,9 +2468,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .premium-unlock-content h2 { font-size: 1.3rem; margin: 0 0 10px 0; background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .premium-unlock-content p { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 20px 0; line-height: 1.5; }
 .action-buttons-wrap { display: flex; gap: 8px; }
-/* בורר יעד "פתק מהיר" (פתקים/רשימת קניות) - זוג עיגולים קטנים ליד "הוספה"
-   במקום שני כפתורים גדולים עם טקסט (ר' index.html) - "מכוער" לפי בקשה
-   מפורשת */
+/* קיצורי דרך ליד "הוספה" בתוך מודל "פתק מהיר" - לא בורר יעד (זה חזר להיות
+   הבורר הגדול עם הטקסט למעלה, ר' .ai-schedule-mode-toggle) אלא ניווט אמיתי:
+   סוגר את המודל וקופץ ישר לרשימה המלאה (פתקים/רשימת קניות), לפי בקשה
+   מפורשת - אין להם מצב "active" כי הם לא toggle, כל לחיצה פשוט מנווטת */
 .quick-note-dest-mini-row { display: flex; gap: 6px; flex-shrink: 0; }
 .quick-note-dest-mini {
     width: 40px;
@@ -2487,11 +2488,6 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition);
-}
-.quick-note-dest-mini.active {
-    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
-    border-color: transparent;
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
 }
 .quick-note-dest-mini:active { transform: scale(0.9); }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; z-index: 10;}

@@ -1374,7 +1374,7 @@ function initFixedAiFab() {
 let quickNoteDestination = 'weekly';
 function setQuickNoteDestination(type) {
     quickNoteDestination = type;
-    document.querySelectorAll('#quick-note-dest-toggle .quick-note-dest-mini').forEach(btn => {
+    document.querySelectorAll('#quick-note-dest-toggle .ai-schedule-mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-mode') === type);
     });
     const input = document.getElementById('ai-quick-add-input');
@@ -4798,6 +4798,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'refresh_data', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
+    { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
     { id: 'add_myweek_task', category: 'myweek' },
