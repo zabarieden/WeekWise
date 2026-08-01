@@ -5094,17 +5094,17 @@ function positionFreeFab(el, xPercent, yPercent) {
 // היה בלי מודעות לבועות אחרות. הפתרון: מספר קבוע וקטן של משבצות מוגדרות-
 // מראש - כל גרירה-החוצה "קופצת" תמיד למשבצת הפנויה הקרובה ביותר לנקודת
 // השחרור, לעולם לא לקואורדינטה גולמית - כך שחפיפה פשוט לא יכולה לקרות
-// במבנה הזה. 5 משבצות בשורה אחת ממורכזת מעל ה-Dock (לא מפוזרות בפינות),
-// באותו יישור אופקי בדיוק כמו הסרגל עצמו - yPercent=78 משאיר מרווח בטוח
-// מעל ה-Dock (שהחלק העליון שלו יושב סביב y≈86%) בלי לגעת בו. אחוזים (לא
-// px) כדי לשרוד שינויי max-width של .phone-wrapper בין breakpoints (ר'
-// תחתית הקובץ) */
+// במבנה הזה. 5 משבצות בטור אנכי צר, ממורכזות באותו X בדיוק כמו הפתק/ה-Dock
+// (xPercent:50 קבוע, לא מתפזרות לצדדים בכלל) ונערמות מלמטה למעלה - הקרובה
+// ביותר (yPercent=72) ישר מעל ה-Dock (שהחלק העליון שלו יושב סביב y≈86%),
+// וכל משבצת נוספת עוד קצת מעל הקודמת. אחוזים (לא px) כדי לשרוד שינויי
+// max-width של .phone-wrapper בין breakpoints (ר' תחתית הקובץ) */
 const FAB_PARK_SLOTS = [
-    { xPercent: 15, yPercent: 78 },
-    { xPercent: 32.5, yPercent: 78 },
-    { xPercent: 50, yPercent: 78 },
-    { xPercent: 67.5, yPercent: 78 },
-    { xPercent: 85, yPercent: 78 },
+    { xPercent: 50, yPercent: 72 },
+    { xPercent: 50, yPercent: 62 },
+    { xPercent: 50, yPercent: 52 },
+    { xPercent: 50, yPercent: 42 },
+    { xPercent: 50, yPercent: 32 },
 ];
 
 function getOccupiedSlotIndexes(excludeId) {
