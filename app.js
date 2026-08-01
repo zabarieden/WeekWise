@@ -4760,6 +4760,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'photo_scan_recipe', category: 'nutrition' },
     { id: 'edit_delete_nutrition_entry', category: 'nutrition' },
     { id: 'daily_nutrition_goals', category: 'nutrition' },
+    { id: 'calorie_monthly_view', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
