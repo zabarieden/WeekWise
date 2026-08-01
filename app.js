@@ -4940,7 +4940,14 @@ function getFabOrder() {
 }
 
 // מיישמת את הסדר השמור על שני המקומות גם יחד (סדר ה-DOM בפועל, לא רק CSS) -
-// כך ששני ה-Sortable (הבועות עצמן + שורות ההגדרות) תמיד מוצגים מסונכרנים
+// כך ששני ה-Sortable (הבועות עצמן + שורות ההגדרות) תמיד מוצגים מסונכרנים.
+// דילוג מפורש על בועה במצב "חופשי" (dock-fab-free) - זה היה הבאג האמיתי
+// שגרם לבועות "להתחפף": appendChild היה מחזיר בכוח בועה שנגררה החוצה בחזרה
+// לתוך ה-Dock (כל קריאה ל-applyFabOrder, למשל מגרירה/כיבוי-הפעלה של בועה
+// *אחרת* לגמרי, נגעה בכל 5 הבועות כולל אלה שבמצב חופשי) - בלי לנקות את ה-
+// left/top הישנים שלה, אז position:absolute שלה המשיך לחול אבל יחסית
+// לקופסה הקטנה של #fab-dock עצמו (שהיא עכשיו ההורה הממוקם הקרוב) במקום
+// ל-.phone-wrapper, מה שגרם לה "לנחות" בטעות בתוך/ליד שאר בועות ה-Dock
 function applyFabOrder() {
     const order = getFabOrder();
     const stack = document.getElementById('fab-dock');
@@ -4948,7 +4955,7 @@ function applyFabOrder() {
     order.forEach(id => {
         if (stack) {
             const el = document.getElementById(id);
-            if (el) stack.appendChild(el);
+            if (el && !el.classList.contains('dock-fab-free')) stack.appendChild(el);
         }
         if (settingsList) {
             const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
@@ -4961,7 +4968,9 @@ function applyFabOrder() {
 // הקבועה (order:0 ב-CSS) - חצי הראשון של המערך מקבל ערכים שליליים (הכי רחוק
 // מהמרכז ראשון, הכי קרוב אחרון), החצי השני מקבל ערכים חיוביים, כך שסדר
 // הקריאה משמאל לימין תואם בדיוק לסדר במערך למרות שהפתק "חוצה" אותו באמצע.
-// לא נוגעת בסדר ה-DOM בפועל (זה תפקידה של applyFabOrder) - רק בעמדה החזותית
+// לא נוגעת בסדר ה-DOM בפועל (זה תפקידה של applyFabOrder) - רק בעמדה החזותית.
+// גם כאן מדלגים על בועה חופשית - order לא משפיע על position:absolute בכל
+// מקרה, אבל אין סיבה לגעת בסטייל שלה כשהיא לא בכלל בזרימת ה-flex
 function applyDockOrder() {
     const order = getFabOrder();
     const mid = Math.ceil(order.length / 2);
@@ -4969,11 +4978,11 @@ function applyDockOrder() {
     const right = order.slice(mid);
     left.forEach((id, i) => {
         const el = document.getElementById(id);
-        if (el) el.style.order = String(-(left.length - i));
+        if (el && !el.classList.contains('dock-fab-free')) el.style.order = String(-(left.length - i));
     });
     right.forEach((id, i) => {
         const el = document.getElementById(id);
-        if (el) el.style.order = String(i + 1);
+        if (el && !el.classList.contains('dock-fab-free')) el.style.order = String(i + 1);
     });
 }
 
