@@ -531,9 +531,9 @@
                                     <span class="note-triage-icon">📆</span>
                                     <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
                                 </div>
-                                <div class="note-triage-zone" id="note-triage-shopping-weekly" data-triage="shopping">
-                                    <span class="note-triage-icon">🛒</span>
-                                    <span data-i18n="note_triage_shopping">To Shopping List</span>
+                                <div class="note-triage-zone" id="note-triage-otherdate-weekly" data-triage="otherdate">
+                                    <span class="note-triage-icon">🗓️</span>
+                                    <span data-i18n="note_triage_otherdate">Other Date</span>
                                 </div>
                             </div>
                             <ul id="weekly-list" class="center-list"></ul>
@@ -1031,6 +1031,23 @@
                     <div class="action-buttons-wrap">
                         <button id="btn-ai-quick-add" class="btn-primary" data-i18n="notes_ai_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-quick-add')" data-i18n="close_btn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: בחירת "תאריך אחר" לפתק שנגרר לאזור הטריאז' השלישי (ר'
+             handleNoteTriageDrop/confirmNoteTriageOtherDate ב-app.js) - נפתח
+             במקום ביצוע מיידי (בניגוד להיום/מחר), כי כאן צריך לבחור תאריך קודם -->
+        <div id="modal-note-triage-otherdate" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="note_triage_otherdate_modal_title">Choose a date</h3>
+                <div class="preset-manager-grid">
+                    <input type="date" id="note-triage-otherdate-input">
+                    <div class="action-buttons-wrap">
+                        <button class="btn-primary" onclick="confirmNoteTriageOtherDate()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="cancelNoteTriageOtherDate()" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -1964,7 +1981,7 @@
 
     </div>
 
-    <script src="i18n.js?v=134"></script>
-    <script src="app.js?v=218"></script>
+    <script src="i18n.js?v=135"></script>
+    <script src="app.js?v=219"></script>
 </body>
 </html>

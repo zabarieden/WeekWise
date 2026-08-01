@@ -280,20 +280,21 @@ function buildNoteSomedayDivider() {
     return li;
 }
 
-// --- גרירת פתק אל "היום"/"מחר"/"רשימת קניות": ה-שניים הראשונים הופכים אותו
-// למשימה מתוזמנת אמיתית (calendar_events), אותה טבלה בדיוק שכבר מזינה את
-// "מבט ליומן", "משימות להיום" ולוח החודש - אז זה "נכנס ללו"ז החודשי" אוטומטית
-// בלי שום קוד נוסף באותם מסכים. "רשימת קניות" רק מעביר את הפתק לרשימת
-// הקניות (task_type). בכל המקרים הפתק המקורי נמחק/עובר (לא מועתק).
-// רלוונטי רק לכרטיס הפתקים (type='weekly') - לרשימת קניות עצמה אין יעדי
-// גרירה משלה, לפי בקשה מפורשת ---
+// --- גרירת פתק אל "היום"/"מחר"/"תאריך אחר": כל השלושה הופכים אותו למשימה
+// מתוזמנת אמיתית (calendar_events), אותה טבלה בדיוק שכבר מזינה את "מבט
+// ליומן", "משימות להיום" ולוח החודש - אז זה "נכנס ללו"ז החודשי" אוטומטית
+// בלי שום קוד נוסף באותם מסכים. "תאריך אחר" פותח מודל בחירת תאריך במקום
+// לפעול מיד (ר' handleNoteTriageDrop/confirmNoteTriageOtherDate למטה) -
+// יעד "לרשימת קניות" הוסר מכאן (פתק מהיר כבר מכסה הוספה ישירה לרשימת
+// קניות). בכל המקרים הפתק המקורי נמחק (לא מועתק). רלוונטי רק לכרטיס
+// הפתקים (type='weekly') - לרשימת קניות עצמה אין יעדי גרירה משלה ---
 const noteTriageInitialized = {};
 function initNoteTriageDragDrop(type) {
     if (noteTriageInitialized[type] || typeof Sortable === 'undefined') return;
     const list = document.getElementById(`${type}-list`);
     const todayZone = document.getElementById(`note-triage-today-${type}`);
     const tomorrowZone = document.getElementById(`note-triage-tomorrow-${type}`);
-    const shoppingZone = document.getElementById(`note-triage-shopping-${type}`);
+    const otherDateZone = document.getElementById(`note-triage-otherdate-${type}`);
     if (!list || !todayZone || !tomorrowZone) return;
     noteTriageInitialized[type] = true;
 
@@ -341,7 +342,7 @@ function initNoteTriageDragDrop(type) {
         },
     });
     const zones = [todayZone, tomorrowZone];
-    if (shoppingZone) zones.push(shoppingZone);
+    if (otherDateZone) zones.push(otherDateZone);
     zones.forEach(zone => {
         new Sortable(zone, {
             group: { name: `note-triage-${type}`, pull: false, put: true },
@@ -358,16 +359,20 @@ function initNoteTriageDragDrop(type) {
     });
 }
 
+// גרירה לאזור "תאריך אחר" לא יכולה לבצע מיד (בניגוד להיום/מחר) - צריך קודם
+// לבחור תאריך במודל נפרד. השורה כבר הוסרה חזותית מה-DOM ע"י Sortable
+// (onAdd) לפני שהגענו לכאן, אבל עדיין קיימת ב-DB עד לאישור בפועל - אם
+// מבטלים, מרעננים את הרשימה כדי שהפתק "יחזור" למקומו (ר' cancelNoteTriageOtherDate)
+let pendingNoteOtherDate = null;
+
 async function handleNoteTriageDrop(itemId, triageType, content, type) {
     if (!supabaseClient || !currentUserId || !content) return;
 
-    // "לרשימת קניות" הוא לא המרה לאירוע-לוח שנה כמו היום/מחר - זו רק העברה
-    // של אותה שורה בין task_type-ים ('weekly' -> 'general'), בלי מחיקה/יצירה
-    if (triageType === 'shopping') {
-        await supabaseClient.from('my_center_tasks').update({ task_type: 'general' }).eq('id', itemId);
-        loadCenterItems('weekly');
-        loadCenterItems('general');
-        showAppToast(t('note_triage_success_shopping'));
+    if (triageType === 'otherdate') {
+        pendingNoteOtherDate = { itemId, content, type };
+        const dateInput = document.getElementById('note-triage-otherdate-input');
+        if (dateInput) dateInput.value = getLocalDateString();
+        openModal('modal-note-triage-otherdate');
         return;
     }
 
@@ -381,6 +386,32 @@ async function handleNoteTriageDrop(itemId, triageType, content, type) {
     loadMonthlyCalendarGrid();
     loadCalendarEvents();
     showAppToast(t(triageType === 'tomorrow' ? 'note_triage_success_tomorrow' : 'note_triage_success_today'));
+}
+
+async function confirmNoteTriageOtherDate() {
+    if (!pendingNoteOtherDate || !supabaseClient || !currentUserId) return;
+    const dateInput = document.getElementById('note-triage-otherdate-input');
+    const targetDate = dateInput ? dateInput.value : '';
+    if (!targetDate) { showAppToast(t('note_triage_otherdate_missing'), 'error'); return; }
+    const { itemId, content, type } = pendingNoteOtherDate;
+    await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: content, event_date: targetDate, source: 'note_task' });
+    await supabaseClient.from('my_center_tasks').delete().eq('id', itemId);
+    pendingNoteOtherDate = null;
+    closeModal('modal-note-triage-otherdate');
+    loadCenterItems(type);
+    loadTodayTasks();
+    loadMonthlyCalendarGrid();
+    loadCalendarEvents();
+    showAppToast(t('note_triage_success_otherdate'));
+}
+
+function cancelNoteTriageOtherDate() {
+    const type = pendingNoteOtherDate ? pendingNoteOtherDate.type : 'weekly';
+    pendingNoteOtherDate = null;
+    closeModal('modal-note-triage-otherdate');
+    // הפתק הוסר חזותית מה-DOM כשנגרר (ר' ההערה למעלה) בלי שנמחק בפועל -
+    // מרעננים מה-DB כדי שהוא "יחזור" למקום, כאילו הגרירה מעולם לא קרתה
+    loadCenterItems(type);
 }
 
 // --- ניהול ארוחות (מוטמע מחדש במלואו) ---
@@ -1330,6 +1361,8 @@ function setQuickNoteDestination(type) {
     document.querySelectorAll('#quick-note-dest-toggle .ai-schedule-mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-mode') === type);
     });
+    const input = document.getElementById('ai-quick-add-input');
+    if (input) input.placeholder = t(type === 'general' ? 'notes_ai_placeholder_shopping' : 'notes_ai_placeholder');
 }
 
 function initFixedAiBrainFab() {
