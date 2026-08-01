@@ -4779,7 +4779,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'toggle_fabs', category: 'settings_a11y' },
-    { id: 'week_start_day', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'forgot_password', category: 'account' },
