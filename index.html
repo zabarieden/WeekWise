@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=204">
+    <link rel="stylesheet" href="theme.css?v=205">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1303,10 +1303,8 @@
                     </div>
                 </div>
 
-                <!-- רשת ביטחון: מיקום חופשי של בועה (ר' settleFreeFab ב-app.js) נשמר
-                     לצמיתות - אם בועה מסתיימת במקום לא-נוח (למשל מאחורי תוכן, או אחרי
-                     שינוי גודל מסך מאוחר יותר), זו הדרך היחידה של המשתמשת להתאושש
-                     בעצמה בלי לאבד את שאר ההגדרות (סדר/הפעלה-כיבוי לא נוגעים בזה) -->
+                <!-- מאפסת את סדר הגרירה של בועות ה-Dock לברירת המחדל - לא נוגעת בהפעלה/
+                     כיבוי של בועות בודדות (זה נשלט בנפרד, ר' הטוגלים למעלה) -->
                 <button type="button" class="btn-secondary" onclick="resetFabLayout()" data-i18n="settings_reset_fab_layout_btn">↺ Reset shortcut layout</button>
 
                 <button type="button" class="btn-secondary btn-settings-drawer-feature" onclick="closeModal('modal-settings-drawer'); openAiBrainModal('schedule');" data-i18n="schedule_ai_planner_drawer_btn">🧠 AI Schedule Planner (Premium)</button>
@@ -1977,7 +1975,7 @@
 
     </div>
 
-    <script src="i18n.js?v=143"></script>
-    <script src="app.js?v=237"></script>
+    <script src="i18n.js?v=144"></script>
+    <script src="app.js?v=238"></script>
 </body>
 </html>

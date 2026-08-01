@@ -889,22 +889,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
-/* בועה שנגררה מחוץ ל-Dock למיקום חופשי על המסך (ר' initFreeDockFabDrag/
-   settleFreeFab ב-app.js) - position:absolute יחסית ל-.phone-wrapper,
-   left/top באחוזים (לא px, כדי לשרוד שינויי max-width בין breakpoints).
-   translate(-50%,-50%) קבוע ממרכז את הבועה סביב נקודת ה-left/top עצמה, כך
-   ש-left/top תמיד מייצגים את המרכז שלה (איפה שהאצבע/הסמן היה בפועל) -
-   transition:var(--transition) שכבר יורש מ-.dock-fab עושה את אנימציית
-   ה"שיכוך" (ease-out) על שינוי left/top בלי הגדרה נוספת */
-.dock-fab-free {
-    position: absolute;
-    z-index: 99998;
-    transform: translate(-50%, -50%);
-}
-.dock-fab-free:active { transform: translate(-50%, -50%) scale(0.9); }
-/* בזמן גרירה פעילה מבטלים את ה-transition כדי שהבועה תעקוב אחרי האצבע/הסמן
-   מיידית בלי "לגרור רגליים" - חוזר ל-transition הרגיל ברגע שהגרירה נגמרת */
-.dock-fab.dock-fab-dragging { transition: none; }
 
 /* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
    ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה מפורשת.
@@ -1062,20 +1046,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
 /* כשהמגירה פתוחה (menu-open) או כל מודל אחר (modal-open, ר' openModal/
-   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים ואת בועות
-   ה-Dock שנגררו החוצה למיקום חופשי (dock-fab-free - אלו מנותקות מ-.fab-dock
-   ולכן לא מוסתרות איתו למעלה, גם אחרי שנגררו יושבות ישירות בתוך .phone-wrapper
-   וצפות מעל מודלים אם לא מטפלים בהן בנפרד). חייבים להעלים אותם ממש (לא
+   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock
+   המאוחד כבר מוסתר לגמרי דרך .fab-dock למעלה). חייבים להעלים אותם ממש (לא
    רק סדר שכבות), כי z-index:99999 !important שלהם גבוה בהרבה מ-4000/2000 של
    המגירה/המודלים, אחרת הם ממשיכים לצוף מעל התוכן ואף לתפוס לחיצות/מגע
    שאמורות להגיע לכפתורים מתחתיהם - זה גרם בפועל לכפתור "איפוס פריסת
    הקיצורים" בהגדרות להיראות כאילו לא עושה כלום במובייל */
 .phone-wrapper.menu-open .ai-brain-fab,
 .phone-wrapper.menu-open .hamburger-fab,
-.phone-wrapper.menu-open .dock-fab-free,
 .phone-wrapper.modal-open .ai-brain-fab,
-.phone-wrapper.modal-open .hamburger-fab,
-.phone-wrapper.modal-open .dock-fab-free {
+.phone-wrapper.modal-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
