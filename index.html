@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=194">
+    <link rel="stylesheet" href="theme.css?v=195">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -761,7 +761,20 @@
                  סימטרית מסביבה לפי applyDockOrder. בועה עם class="hidden"
                  פשוט לא תופסת מקום - אין צורך בחישוב "חור" ידני -->
             <div id="fab-dock" class="fab-dock">
-                <button type="button" class="dock-fab dock-fab-notes" id="btn-ai-fab" data-i18n-tooltip="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">📝</button>
+                <!-- בועת הפתקים: אשכול קטן, לא רק כפתור בודד - לחיצה על המרכז
+                     (או על עצם ה-div, ה-id נשאר btn-ai-fab כדי שכל מנגנון
+                     הגרירה/עגינה הקיים ימשיך להזיז את כל האשכול כיחידה אחת)
+                     פותחת פתק מהיר כרגיל; שני כפתורי-מיני קטנים בפינות, בתוך
+                     גבולות אותו עיגול בדיוק (לא בולטים החוצה, כדי לא להתנגש
+                     בבועה השכנה כשה-Dock צפוף במובייל) - קיצור דרך ישיר
+                     לרשימת הקניות ולפתקים עצמם, לפי בקשה מפורשת ("לאמהות
+                     הממהרות"). role/tabindex/keydown (ר' initFixedAiFab
+                     ב-app.js) כי זה עכשיו div ולא button אמיתי -->
+                <div class="dock-fab dock-fab-notes" id="btn-ai-fab" role="button" tabindex="0" data-i18n-tooltip="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">
+                    <span class="dock-fab-notes-icon">📝</span>
+                    <button type="button" class="dock-fab-notes-mini dock-fab-notes-mini-shopping" onclick="event.stopPropagation(); navigateFromMenu('my-center-section', 'shopping')" data-i18n-tooltip="general_title" data-i18n-aria-label="general_title" aria-label="Shopping List">🛒</button>
+                    <button type="button" class="dock-fab-notes-mini dock-fab-notes-mini-list" onclick="event.stopPropagation(); navigateFromMenu('my-center-section', 'notes')" data-i18n-tooltip="notes_title" data-i18n-aria-label="notes_title" aria-label="Notes">📋</button>
+                </div>
 
                 <!-- כפתור צף להוספה מהירה של מים - אפשר לכבות מההגדרות. בועה
                      נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
@@ -1968,7 +1981,7 @@
 
     </div>
 
-    <script src="i18n.js?v=140"></script>
-    <script src="app.js?v=231"></script>
+    <script src="i18n.js?v=141"></script>
+    <script src="app.js?v=232"></script>
 </body>
 </html>

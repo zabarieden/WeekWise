@@ -859,6 +859,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 @media (max-width: 420px) {
     .fab-dock { gap: 8px; padding: 8px 10px; }
     .dock-fab { width: 44px; height: 44px; font-size: 1.15rem; }
+    .dock-fab-notes-mini { width: 16px; height: 16px; font-size: 0.55rem; }
 }
 /* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock
    (order:0 בטוח - כל בועה אחרת מקבלת ערך order שלילי/חיובי דרך applyDockOrder
@@ -872,6 +873,35 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     animation: fabPulse 2.5s ease-in-out infinite;
 }
 @keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
+/* אייקון הפתק עצמו - span רגיל (לא button, ר' index.html) שממלא את מרכז
+   האשכול בדיוק כמו שהטקסט הבודד מילא את .dock-fab לפני שהפכה לאשכול */
+.dock-fab-notes-icon { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
+/* שני כפתורי-המיני (רשימת קניות/פתקים) - קיצור דרך ישיר לתוך גבולות אותו
+   עיגול בדיוק כמו הפתק המהיר עצמו, בפינות מנוגדות, בלי לבלוט החוצה - כדי
+   שלא יתנגשו בבועה השכנה כשה-Dock צפוף (במיוחד במובייל, ר' המדיה-קווארי
+   למטה). stopPropagation ב-onclick (index.html) מונע מהלחיצה "לטפס" לאשכול
+   ולפתוח בטעות גם את פתק מהיר */
+.dock-fab-notes-mini {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(5, 4, 10, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+    touch-action: manipulation;
+}
+.dock-fab-notes-mini:active { transform: scale(0.85); }
+.dock-fab-notes-mini-shopping { top: 1px; right: 1px; }
+.dock-fab-notes-mini-list { bottom: 1px; left: 1px; }
 
 /* בועה שנגררה מחוץ ל-Dock למיקום חופשי על המסך (ר' initFreeDockFabDrag/
    settleFreeFab ב-app.js) - position:absolute יחסית ל-.phone-wrapper,
@@ -981,6 +1011,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transform: translateX(-50%);
 }
 .dock-fab[data-tooltip]:hover::after, .dock-fab[data-tooltip]:focus-visible::after {
+    opacity: 1;
+}
+/* כפתורי-המיני על אשכול הפתקים - אין להם class="dock-fab" (ר' index.html),
+   אז צריך כלל מיקום נפרד; אותו רעיון (קופץ מעליהם, ממורכז), רק עם מרווח
+   קטן יותר שמתאים לגודל הזעיר שלהם */
+.dock-fab-notes-mini[data-tooltip]::after {
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+.dock-fab-notes-mini[data-tooltip]:hover::after, .dock-fab-notes-mini[data-tooltip]:focus-visible::after {
     opacity: 1;
 }
 /* עוזר ה-AI יושב בפינה העליונה - רמז שיקפוץ מעליו היה נחתך מחוץ למסך,
