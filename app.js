@@ -2701,9 +2701,19 @@ function updateActiveDayPageHeight(activePageEl) {
     container.style.height = `${pageDiv.scrollHeight}px`;
 }
 
+// "הצצה להיום" (today-tasks-card) יושבת על מסך הבית ממש באזור שבו אשכול
+// הבועות עכשיו צף (top:56%, ר' .fab-dock ב-theme.css) - כשהיא נפתחת היא
+// מתרחבת בדיוק לשם ומתנגשת חזותית איתו, לפי בקשה מפורשת מסתירים את האשכול
+// כל עוד היא פתוחה (מחלקה על .phone-wrapper, אותו דפוס בדיוק כמו menu-open/
+// modal-open) - שאר הכרטיסים המתקפלים באפליקציה לא נוגעים בזה, רק זו
 function toggleCardSection(headerEl) {
     const card = headerEl.closest('.card');
-    if (card) card.classList.toggle('expanded');
+    if (!card) return;
+    card.classList.toggle('expanded');
+    if (card.classList.contains('today-tasks-card')) {
+        const wrapper = document.querySelector('.phone-wrapper');
+        if (wrapper) wrapper.classList.toggle('today-preview-open', card.classList.contains('expanded'));
+    }
 }
 
 async function loadWeeklySchedule() {

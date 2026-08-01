@@ -823,12 +823,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border: 1px solid rgba(255, 255, 255, 0.08);
     pointer-events: none;
 }
-.phone-wrapper.menu-open .fab-dock, .phone-wrapper.modal-open .fab-dock { display: none; }
+.phone-wrapper.menu-open .fab-dock,
+.phone-wrapper.modal-open .fab-dock,
+.phone-wrapper.today-preview-open .fab-dock {
+    display: none;
+}
 
-/* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
-   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. position:absolute
-   קבוע (לא רק לבועות שנגררו החוצה - זה כבר לא קיים) כי כל בועה ממוקמת סביב
-   נקודת העיגון של .fab-dock ב-JS, ר' ההערה למעלה */
+/* עיצוב משותף לכל בועה ב-Dock - זכוכיתי (glassmorphism, לפי בקשה מפורשת
+   "יותר זכוכיתי"): גרדיאנט שקוף-חלקית (לא אטום) + backdrop-filter:blur כדי
+   שהרקע מאחורי הבועה יתבהב דרכה, וברק עגלגל (::before) בפינה השמאלית-
+   עליונה של כל בועה שמדמה השתקפות אור על משטח זכוכית/כדור מבריק - בהשראת
+   תמונת-הסגנון ששלחה המשתמשת. overflow:hidden קוצץ את הברק למעגל עצמו בלי
+   לפגוע ב-box-shadow (זה לא מושפע מ-overflow, נצבע כחלק מהקופסה עצמה, לא
+   כתוכן חורג). position:absolute קבוע (לא רק לבועות שנגררו החוצה - זה כבר
+   לא קיים) כי כל בועה ממוקמת סביב נקודת העיגון של .fab-dock ב-JS */
 .dock-fab {
     position: absolute;
     /* left/top (לא transform!) הם מה ש-JS קובע לכל בועה (ר' applyDockOrder
@@ -842,21 +850,35 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     width: 76px;
     height: 76px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
-    border: 1px solid rgba(255,255,255,0.15);
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(56, 189, 248, 0.4));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: #fff;
     font-size: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18);
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.22), 0 0 10px rgba(168, 85, 247, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -8px 12px rgba(0, 0, 0, 0.12);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition), left 0.35s ease, top 0.35s ease;
     touch-action: pan-x;
     user-select: none;
     -webkit-user-select: none;
+}
+.dock-fab::before {
+    content: '';
+    position: absolute;
+    top: 9%;
+    left: 16%;
+    width: 46%;
+    height: 32%;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }
 .dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
 @media (max-width: 420px) {
@@ -870,16 +892,21 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 /* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד במרכז המעגל בדיוק
    (0,0 ב-applyDockOrder). קצת יותר גדולה משאר הבועות כדי לבלוט כעוגן, גרדיאנט
-   ורוד/סגול ופעימה משלה (במקום הגרדיאנט הכללי של שאר הבועות) */
+   ורוד/סגול ופעימה משלה (במקום הגרדיאנט הכללי של שאר הבועות) - color-mix
+   (לא rgba קשיח) כי --accent-pink/--accent-purple משתנים בין ערכות נושא,
+   וצריך גם כאן שקיפות-זכוכית עקבית עם שאר הבועות */
 .dock-fab-notes {
     width: 92px;
     height: 92px;
     font-size: 2.4rem;
-    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
-    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 55%, transparent), color-mix(in srgb, var(--accent-purple) 55%, transparent));
+    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -8px 12px rgba(0, 0, 0, 0.12);
     animation: fabPulse 2.5s ease-in-out infinite;
 }
-@keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
+@keyframes fabPulse {
+    0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -8px 12px rgba(0, 0, 0, 0.12); }
+    50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -8px 12px rgba(0, 0, 0, 0.12); }
+}
 
 
 /* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
