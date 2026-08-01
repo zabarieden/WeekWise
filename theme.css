@@ -790,16 +790,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מסך הבית). הועבר מלמטה למעלה - עכשיו שורה קבועה בזרימה הרגילה, ישר מתחת
    לשני כפתורי ה-FAB בפינות (עוזר AI/המבורגר, top:22px עד ~70px - margin-top
    כאן מפנה בדיוק את המקום הזה), ומעל "הצצה להיום" במסך הבית, כמו רצועת
-   טאבים עליונה בסגנון אייפון. overflow-x:auto לגלילה/"החלקה" צידה אם אי-פעם
-   ייווספו עוד טאבים ולא כל 4 ייכנסו ברוחב אחד. כל טאב מקבל את צבע ה"עולם"
-   שלו (ר' --tile-accent למעלה) רק כשהוא פעיל */
+   טאבים עליונה בסגנון אייפון. width:fit-content (לא נמתח לרוחב מלא) + טאבים
+   ברוחב קבוע (לא flex:1) - כדי שהרקע יתאים בדיוק ל-3 הטאבים בפועל ולא יישאר
+   רחב/ריק מהתקופה שהיו כאן 4 (טאב "פתקים" הוסר, ר' ההערה למעלה ב-index.html).
+   כל טאב מקבל את צבע ה"עולם" שלו (ר' --tile-accent למעלה) רק כשהוא פעיל */
 .bottom-tab-bar {
     position: relative;
-    margin: 70px 6px 14px 6px;
+    margin: 70px auto 14px auto;
+    width: fit-content;
+    max-width: calc(100% - 12px);
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: center;
     align-items: stretch;
+    gap: 4px;
     overflow-x: auto;
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);
@@ -815,7 +819,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .bottom-tab-bar::-webkit-scrollbar { display: none; }
 .bottom-tab {
-    flex: 1 1 0;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -823,7 +827,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     gap: 3px;
     background: transparent;
     border: none;
-    padding: 6px 2px;
+    padding: 6px 22px;
     margin: 0;
     cursor: pointer;
     color: var(--text-secondary);
@@ -835,8 +839,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .bottom-tab.active .bottom-tab-icon { opacity: 1; filter: none; transform: translateY(-2px); }
 .bottom-tab[data-target="schedule-section"].active { color: var(--accent-gold); }
 .bottom-tab[data-target="schedule-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7)) translateY(-2px); }
-.bottom-tab[data-target="my-center-section"].active { color: var(--accent-pink); }
-.bottom-tab[data-target="my-center-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.7)) translateY(-2px); }
 .bottom-tab[data-target="finance-section"].active { color: var(--accent-purple); }
 .bottom-tab[data-target="finance-section"].active .bottom-tab-icon { filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7)) translateY(-2px); }
 .bottom-tab[data-target="nutrition-section"].active { color: #2dd4bf; }
