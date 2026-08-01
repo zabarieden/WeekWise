@@ -578,6 +578,7 @@ function selectPresetPickerItem(id) {
 // שתיהן נכנסות ישירות למשבצת הפנויה הבאה של calorie_tracker להיום, בלי לעבור
 // דרך מסך התזונה בכלל. סדר קבוע (לא כרונולוגי) כדי שהתוצאה תמיד עקבית ---
 const MEAL_TYPE_ORDER = ['meal_1', 'meal_2', 'meal_3', 'meal_4', 'snack'];
+const MEAL_TYPE_LABEL_KEYS = { meal_1: 'meal_label_1', meal_2: 'meal_label_2', meal_3: 'meal_label_3', meal_4: 'meal_label_4', snack: 'meal_label_snack' };
 
 async function getTodayEmptyMealSlot() {
     const today = getLocalDateString();
@@ -973,6 +974,7 @@ async function initAppAfterAuth(user) {
         loadCalendarEvents(),
         loadTodayTasks(),
         loadMonthlyCalendarGrid(),
+        loadCalorieMonthlyCalendar(),
         loadRecipes(),
         loadAiUsage(),
         loadPremiumStatus(),
@@ -3238,6 +3240,109 @@ async function deleteRecurringScheduleItem(id) {
     await Promise.all([loadMonthlyCalendarGrid(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
+// --- מבט חודשי לקלוריות: אותו דפוס בדיוק כמו הלוח החודשי הכללי למעלה
+// (loadMonthlyCalendarGrid/navigateMonthlyCalendar/selectCalendarDay), רק
+// שמקור הנתונים הוא calorie_tracker - נקודה על כל יום שיש בו רישום, ולחיצה
+// על יום פותחת פירוט מה נאכל בו (כל הארוחות + סה"כ). הממוצע היומי מוצג
+// מעל הלוח ומחושב רק לפי ימים שבאמת נרשמו (לא כל ימי החודש - אחרת מי
+// שמתחילה לעקוב באמצע החודש הייתה רואה ממוצע נמוך ומטעה) ---
+let viewedCalorieMonthKey = null;
+let selectedCalorieDay = null;
+
+async function loadCalorieMonthlyCalendar() {
+    if (!supabaseClient || !currentUserId) return;
+    const grid = document.getElementById('calorie-monthly-calendar-grid');
+    const label = document.getElementById('calorie-monthly-calendar-label');
+    if (!grid || !label) return;
+    if (!viewedCalorieMonthKey) viewedCalorieMonthKey = currentMonthKey();
+    label.textContent = formatMonthLabel(viewedCalorieMonthKey);
+
+    const [y, m] = viewedCalorieMonthKey.split('-').map(Number);
+    const firstDate = new Date(y, m - 1, 1);
+    const lastDate = new Date(y, m, 0);
+    const firstStr = getLocalDateString(firstDate);
+    const lastStr = getLocalDateString(lastDate);
+    const { data } = await supabaseClient.from('calorie_tracker').select('date, calories').eq('user_id', currentUserId).gte('date', firstStr).lte('date', lastStr);
+
+    const byDate = {};
+    (data || []).forEach(row => { byDate[row.date] = (byDate[row.date] || 0) + (Number(row.calories) || 0); });
+    const trackedDates = Object.keys(byDate);
+    const avgEl = document.getElementById('calorie-monthly-avg');
+    if (avgEl) {
+        if (trackedDates.length) {
+            const total = trackedDates.reduce((sum, d) => sum + byDate[d], 0);
+            const avg = Math.round(total / trackedDates.length);
+            avgEl.innerHTML = `${escapeHtmlForReport(t('calorie_monthly_avg_label'))} <strong>${avg}</strong>`;
+        } else {
+            avgEl.textContent = t('calorie_monthly_avg_empty');
+        }
+    }
+
+    const todayStr = getLocalDateString();
+    const startWeekday = firstDate.getDay();
+    const daysInMonth = lastDate.getDate();
+
+    let html = '';
+    for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedCalorieDay;
+        const hasData = Object.prototype.hasOwnProperty.call(byDate, dateStr);
+        html += `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalorieCalendarDay('${dateStr}')">
+            <span class="monthly-calendar-day-num">${day}</span>
+            ${hasData ? '<span class="monthly-calendar-dot"></span>' : ''}
+        </button>`;
+    }
+    grid.innerHTML = html;
+
+    if (selectedCalorieDay && (selectedCalorieDay < firstStr || selectedCalorieDay > lastStr)) {
+        selectedCalorieDay = null;
+        const detail = document.getElementById('calorie-monthly-calendar-day-detail');
+        if (detail) detail.innerHTML = '';
+    } else if (selectedCalorieDay) {
+        await renderSelectedCalorieDay();
+    }
+}
+
+async function navigateCalorieMonthlyCalendar(delta) {
+    const base = viewedCalorieMonthKey || currentMonthKey();
+    viewedCalorieMonthKey = shiftMonthKey(base, delta);
+    selectedCalorieDay = null;
+    const detail = document.getElementById('calorie-monthly-calendar-day-detail');
+    if (detail) detail.innerHTML = '';
+    await loadCalorieMonthlyCalendar();
+}
+
+async function selectCalorieCalendarDay(dateStr) {
+    selectedCalorieDay = dateStr;
+    document.querySelectorAll('#calorie-monthly-calendar-grid .monthly-calendar-cell').forEach(cell => cell.classList.remove('selected'));
+    const cell = document.querySelector(`#calorie-monthly-calendar-grid .monthly-calendar-cell[data-date="${dateStr}"]`);
+    if (cell) cell.classList.add('selected');
+    await renderSelectedCalorieDay();
+}
+
+async function renderSelectedCalorieDay() {
+    const detail = document.getElementById('calorie-monthly-calendar-day-detail');
+    if (!detail || !selectedCalorieDay) return;
+    const [y, m, d] = selectedCalorieDay.split('-').map(Number);
+    const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', selectedCalorieDay);
+    if (!data || !data.length) {
+        detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
+        return;
+    }
+    const sorted = [...data].sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type));
+    let dayTotal = 0;
+    const rows = sorted.map(item => {
+        dayTotal += Number(item.calories) || 0;
+        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type];
+        const mealLabel = labelKey ? t(labelKey) : item.meal_type;
+        return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}</span></div>`;
+    }).join('');
+    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}<div class="monthly-calendar-day-total">${escapeHtmlForReport(t('calorie_monthly_day_total_label'))} ${dayTotal}</div>`;
+}
+
 async function loadCalendarEvents() {
     if (!supabaseClient) return;
     const container = document.getElementById('calendar-glance-list');
@@ -4251,7 +4356,8 @@ async function exportUserDataReport() {
     const includeFinance = document.getElementById('report-section-finance').checked;
     const includeSport = document.getElementById('report-section-sport').checked;
     const includeWater = document.getElementById('report-section-water').checked;
-    if (!includeWeight && !includeGoals && !includeFinance && !includeSport && !includeWater) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
+    const includeCalories = document.getElementById('report-section-calories').checked;
+    if (!includeWeight && !includeGoals && !includeFinance && !includeSport && !includeWater && !includeCalories) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
 
     const isAllTime = document.getElementById('report-all-time').checked;
     let selectedMonthKey = null, rangeStart = null, rangeEndExclusive = null;
@@ -4271,20 +4377,23 @@ async function exportUserDataReport() {
     let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
     let sportQuery = includeSport ? supabaseClient.from('sport_sessions').select('*').eq('user_id', currentUserId).order('session_date', { ascending: false }) : null;
     let waterQuery = includeWater ? supabaseClient.from('water_logs').select('*').eq('user_id', currentUserId).order('log_date', { ascending: false }) : null;
+    let calorieQuery = includeCalories ? supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).order('date', { ascending: false }) : null;
     if (!isAllTime) {
         if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
         if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
         if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
         if (sportQuery) sportQuery = sportQuery.gte('session_date', rangeStart).lt('session_date', rangeEndExclusive);
         if (waterQuery) waterQuery = waterQuery.gte('log_date', rangeStart).lt('log_date', rangeEndExclusive);
+        if (calorieQuery) calorieQuery = calorieQuery.gte('date', rangeStart).lt('date', rangeEndExclusive);
     }
 
-    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }, { data: waterRows }] = await Promise.all([
+    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }, { data: waterRows }, { data: calorieRows }] = await Promise.all([
         weightQuery || Promise.resolve({ data: null }),
         goalsQuery || Promise.resolve({ data: null }),
         financeQuery || Promise.resolve({ data: null }),
         sportQuery || Promise.resolve({ data: null }),
         waterQuery || Promise.resolve({ data: null }),
+        calorieQuery || Promise.resolve({ data: null }),
     ]);
 
     let sectionsHtml = '';
@@ -4333,6 +4442,32 @@ async function exportUserDataReport() {
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('water_title'))}</h2>${waterHtml}`;
     }
+    if (includeCalories) {
+        // מקובצת לפי תאריך (סה"כ ליום + פירוט כל ארוחה מתחתיו) - אותו רעיון
+        // בדיוק כמו המבט החודשי החדש (renderSelectedCalorieDay), רק שכאן
+        // הכל בזה אחר זה ברשימה שטוחה במקום לוח-חודש אינטראקטיבי
+        const byDate = {};
+        (calorieRows || []).forEach(row => {
+            if (!byDate[row.date]) byDate[row.date] = { total: 0, meals: [] };
+            byDate[row.date].total += Number(row.calories) || 0;
+            byDate[row.date].meals.push(row);
+        });
+        const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+        const calorieHtml = dates.length
+            ? dates.map(date => {
+                const dayData = byDate[date];
+                const mealsHtml = dayData.meals
+                    .sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type))
+                    .map(meal => {
+                        const labelKey = MEAL_TYPE_LABEL_KEYS[meal.meal_type];
+                        const mealLabel = labelKey ? t(labelKey) : (meal.meal_type || '');
+                        return `<div class="entry-meal-line">${escapeHtmlForReport(mealLabel)}: ${escapeHtmlForReport(meal.food_description || '')} — ${Number(meal.calories) || 0}</div>`;
+                    }).join('');
+                return `<div class="entry"><span class="entry-main">${new Date(date).toLocaleDateString()}</span><span class="entry-value">${dayData.total}</span></div><div class="entry-meals-wrap">${mealsHtml}</div>`;
+            }).join('')
+            : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('calorie_metrics_title'))}</h2>${calorieHtml}`;
+    }
 
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
     const rangeLabel = isAllTime ? '' : `<p class="sub">${escapeHtmlForReport(t('data_report_period_label'))} ${escapeHtmlForReport(formatMonthLabel(selectedMonthKey))}</p>`;
@@ -4357,6 +4492,10 @@ async function exportUserDataReport() {
     .entry-main { font-weight: 700; color: #3a2e4d; }
     .entry-value { font-weight: 700; color: #a855f7; }
     .entry-sub { color: #918da3; font-size: 0.82rem; }
+    /* פירוט הארוחות מתחת לשורת הסה"כ היומי (border-inline-start מתאים
+       אוטומטית לכיוון LTR/RTL, בלי צורך בכלל תנאי) */
+    .entry-meals-wrap { margin: -3px 0 10px 0; padding: 2px 14px; border-inline-start: 2px solid #f3d9f7; }
+    .entry-meal-line { color: #6b6478; font-size: 0.82rem; padding: 3px 0; }
     .empty { color: #b3aec0; font-style: italic; }
     @media print { body { padding: 10px; } }
 </style>
@@ -9120,6 +9259,7 @@ async function saveNutrition() {
     }
     await loadDailyNutrition(date);
     loadStats();
+    loadCalorieMonthlyCalendar();
     showAppToast(t('nutrition_save_success'));
 }
 

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=184">
+    <link rel="stylesheet" href="theme.css?v=185">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -356,6 +356,29 @@
                                 <input type="number" id="protein-daily-goal-input" onchange="saveProteinDailyGoal()">
                                 <div class="progress-bar-bg" style="margin-top: 8px;"><div class="progress-bar-fill" id="protein-goal-progress-fill" style="width:0%;"></div></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- מבט חודשי לקלוריות: לוח חודש עם נקודה על כל יום שיש בו רישום,
+                         ממוצע יומי מוצג מעל הלוח, ולחיצה על יום פותחת פירוט מה נאכל בו
+                         (ר' loadCalorieMonthlyCalendar ב-app.js) -->
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="calorie_monthly_view_title">Monthly View</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="monthly-goal-nav">
+                                <button class="monthly-goal-nav-btn" onclick="navigateCalorieMonthlyCalendar(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
+                                <span class="monthly-goal-month-label" id="calorie-monthly-calendar-label"></span>
+                                <button class="monthly-goal-nav-btn" onclick="navigateCalorieMonthlyCalendar(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
+                            </div>
+                            <div class="monthly-calendar-avg-line" id="calorie-monthly-avg"></div>
+                            <div class="monthly-calendar-weekdays">
+                                <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
+                            </div>
+                            <div class="monthly-calendar-grid" id="calorie-monthly-calendar-grid"></div>
+                            <div id="calorie-monthly-calendar-day-detail" class="monthly-calendar-day-detail"></div>
                         </div>
                     </div>
                     </div>
@@ -1428,6 +1451,10 @@
                     <span data-i18n="water_title">Water Tracking</span>
                     <label class="switch"><input type="checkbox" id="report-section-water" checked><span class="switch-slider"></span></label>
                 </label>
+                <label class="settings-toggle-row">
+                    <span data-i18n="calorie_metrics_title">Calorie Metrics</span>
+                    <label class="switch"><input type="checkbox" id="report-section-calories" checked><span class="switch-slider"></span></label>
+                </label>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button class="btn-primary" onclick="exportUserDataReport()" data-i18n="report_picker_generate_btn">Generate Report</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-report-section-picker')" data-i18n="cancel_btn">Cancel</button>
@@ -1935,7 +1962,7 @@
 
     </div>
 
-    <script src="i18n.js?v=130"></script>
-    <script src="app.js?v=214"></script>
+    <script src="i18n.js?v=131"></script>
+    <script src="app.js?v=215"></script>
 </body>
 </html>

@@ -2298,6 +2298,11 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
 .monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
+/* ממוצע יומי מעל לוח החודש של הקלוריות (calorie-monthly-avg) - אותה שפה
+   ויזואלית כמו כותרות משנה אחרות (calendar-glance-subtitle) */
+.monthly-calendar-avg-line { text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
+.monthly-calendar-avg-line strong { color: var(--tile-accent, var(--accent-purple)); font-size: 1rem; }
+.monthly-calendar-day-total { text-align: end; font-weight: 700; font-size: 0.88rem; color: var(--tile-accent, var(--accent-purple)); padding: 4px 6px 0 6px; }
 
 .monthly-goal-header-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
 .monthly-goal-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
