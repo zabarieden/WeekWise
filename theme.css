@@ -571,7 +571,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    בלי זה, גם עם גלילה פנימית, כשהתוכן לא הרבה יותר גבוה מהמסך כמעט ואין
    טווח גלילה לברוח מהבועות הצפות (שקבועות ל-.phone-wrapper, לא לתוכן הזה) -
    כל תחתית הכרטיס פשוט תמיד יושבת בדיוק באזור המסך שבו הבועות נמצאות */
-.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+.home-hero-panel:not(.hidden) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden !important; padding-bottom: calc(165px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
 /* גלילה כן פעילה, אבל בלי הפס הנראה - אותו דפוס בדיוק כמו .main-scroll-area,
    פשוט נשכח כאן קודם */
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
@@ -720,7 +720,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     z-index: 10;
     /* מפנה מקום רק מתחת ל-.ai-fab הצף (bottom:25px) כדי שהשורה האחרונה בכל
        רשימה לא תיבלע מתחתיו */
-    padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(165px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
     max-width: 100%;
@@ -808,7 +808,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     max-width: calc(100% - 24px);
     overflow-x: auto;
     background-color: var(--bg-glass);
@@ -817,7 +817,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 999px;
     box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
-    padding: 8px 12px;
+    padding: 10px 16px;
     box-sizing: border-box;
     scrollbar-width: none;
 }
@@ -828,13 +828,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:none
    כדי שגרירה במגע לא "תגלוש" לגלילת הדף במקום להזיז את הבועה */
 .dock-fab {
-    width: 50px;
-    height: 50px;
+    position: relative;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
     border: 1px solid rgba(255,255,255,0.15);
     color: #fff;
-    font-size: 1.35rem;
+    font-size: 1.7rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -936,6 +937,49 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     animation: none;
     transform: translateY(-4px);
     filter: hue-rotate(230deg) saturate(1.7) brightness(1.25) drop-shadow(0 0 14px rgba(168, 85, 247, 0.85)) drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
+}
+
+/* תגית-רמז (tooltip) בעיצוב האפליקציה במקום ה-title הדפדפני הגנרי (שאי
+   אפשר לעצב עם CSS בכלל) - על בועות ה-Dock ועל עוזר ה-AI כאחד (ר'
+   data-i18n-tooltip/data-tooltip ב-i18n.js). ::after עם content מ-attr()
+   כדי שהתוכן יגיע ישירות מה-HTML בלי JS נוסף לבניית/הצמדת אלמנט. מוסתרת
+   כברירת מחדל (opacity:0 + pointer-events:none) ומופיעה רק ב-hover/focus */
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    white-space: nowrap;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--accent-purple);
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 100000;
+}
+/* בועות ה-Dock יושבות בתחתית המסך - הרמז קופץ מעליהן, ממורכז */
+.dock-fab[data-tooltip]::after {
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+.dock-fab[data-tooltip]:hover::after, .dock-fab[data-tooltip]:focus-visible::after {
+    opacity: 1;
+}
+/* עוזר ה-AI יושב בפינה העליונה - רמז שיקפוץ מעליו היה נחתך מחוץ למסך,
+   אז כאן דווקא מתחתיו, מיושר לשמאל (לא ממורכז, כי הכפתור צמוד לקצה) */
+.ai-brain-fab[data-tooltip]::after {
+    top: calc(100% + 10px);
+    left: 0;
+}
+.ai-brain-fab[data-tooltip]:hover::after, .ai-brain-fab[data-tooltip]:focus-visible::after {
+    opacity: 1;
 }
 
 /* תפריט המבורגר: כפתור קבוע בפינה הימנית-עליונה (מול עוזר ה-AI בשמאל),

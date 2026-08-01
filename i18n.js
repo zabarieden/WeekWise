@@ -43,6 +43,16 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         el.title = t(el.getAttribute('data-i18n-title'));
     });
+    // data-i18n-tooltip: מזין תוכן לתגית עצמאית (::after ב-theme.css, ר'
+    // [data-tooltip]) בעיצוב האפליקציה, במקום ה-title הדפדפני הגנרי (לא ניתן
+    // לעצב עם CSS בכלל). data-i18n-aria-label נפרד (לא title) לנגישות בלבד -
+    // לא מציג תגית ויזואלית משלו, כדי לא ליצור שתי תגיות-רמז כפולות בו-זמנית
+    document.querySelectorAll('[data-i18n-tooltip]').forEach(el => {
+        el.setAttribute('data-tooltip', t(el.getAttribute('data-i18n-tooltip')));
+    });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+    });
     const langSelect = document.getElementById('language-select');
     if (langSelect) langSelect.value = currentLang;
 }
