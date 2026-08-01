@@ -4986,15 +4986,26 @@ function applyFabOrder() {
     });
 }
 
+// היסטים קבועים (לא מחושבים בטריגונומטריה על מעגל אחיד) - מרחקים וזוויות
+// שונים במכוון בין בועה לבועה, כדי לקבל פיזור "קונסטלציה" אורגני סביב הפתק
+// ולא מעגל מדויק, לפי בקשה מפורשת ("לא אוהבת את הנראות של הסיבוב הזה").
+// סדר המערך = מרחק ההיסט מהמרכז לפי סדר הבועות הפעילות (getFabOrder) -
+// בועה ראשונה בסדר תמיד מקבלת את ההיסט הראשון וכו', כך שגרירה-לסידור-מחדש
+// (ר' initFabOrderDragReorder) פשוט "מחליפה משבצות" בין ההיסטים הקבועים
+const FAB_ORBIT_OFFSETS = [
+    { x: 14, y: -96 },
+    { x: 92, y: -32 },
+    { x: 66, y: 76 },
+    { x: -62, y: 82 },
+    { x: -88, y: -22 },
+];
+
 // קובעת את המיקום החזותי (left/top בפיקסלים, ר' ההערה על .dock-fab ב-
-// theme.css) של הבועות סביב בועת הפתקים הקבועה בדיוק במרכז - עיצוב "מעגל
-// אורביט" בהשראת תמונת-סגנון ששלחה המשתמשת, לא סרגל/רשת. FAB_ORBIT_RADIUS
-// חייב להתאים בדיוק לרדיוס טבעת-הקישוט (.fab-dock::before ב-theme.css,
-// 190px קוטר = 95px רדיוס) כדי שהבועות "יישבו" חזותית על הטבעת. הבועות
-// הפעילות (עד 5, מדלגים על מוסתרות/toggle כבוי) מתפזרות במרחקים שווים
-// מסביב למעגל - זווית ראשונה מלמעלה (-90°), ומשם בכיוון השעון
+// theme.css) של הבועות סביב בועת הפתקים הקבועה בדיוק במרכז - בהשראת תמונות-
+// סגנון ששלחה המשתמשת (פודיום זכוכית מרכזי, שאר הבועות מפוזרות סביבו
+// אסימטרית). הבועות הפעילות (עד 5, מדלגים על מוסתרות/toggle כבוי) מקבלות
+// היסט קבוע לפי FAB_ORBIT_OFFSETS
 function applyDockOrder() {
-    const FAB_ORBIT_RADIUS = 95;
     const order = getFabOrder();
     const active = order.filter(id => {
         const el = document.getElementById(id);
@@ -5002,10 +5013,10 @@ function applyDockOrder() {
     });
     active.forEach((id, i) => {
         const el = document.getElementById(id);
-        if (!el) return;
-        const angle = (-90 + i * (360 / active.length)) * (Math.PI / 180);
-        el.style.left = `${Math.round(FAB_ORBIT_RADIUS * Math.cos(angle))}px`;
-        el.style.top = `${Math.round(FAB_ORBIT_RADIUS * Math.sin(angle))}px`;
+        const offset = FAB_ORBIT_OFFSETS[i];
+        if (!el || !offset) return;
+        el.style.left = `${offset.x}px`;
+        el.style.top = `${offset.y}px`;
     });
     order.forEach(id => {
         if (active.includes(id)) return;
@@ -5036,9 +5047,11 @@ function restackFabs() {
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
     const onReorder = (container) => {
+        // filter(Boolean) מוציא גם אלמנטים דקורטיביים בלי id (כמו .fab-shelf
+        // ב-#fab-dock) שהם ילדים ישירים של הרשימה אבל לא בועות אמיתיות
         const order = Array.from(container.children)
             .map(el => el.getAttribute('data-fab-id') || el.id)
-            .filter(id => id !== 'btn-ai-fab');
+            .filter(id => id && id !== 'btn-ai-fab');
         localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
         applyFabOrder();
         applyDockOrder();
@@ -5067,7 +5080,7 @@ function initFabOrderDragReorder() {
             dragoverBubble: false,
             delay: 150,
             delayOnTouchOnly: true,
-            filter: '.dock-fab-notes',
+            filter: '.dock-fab-notes, .fab-shelf',
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
             // dragClass: בלי זה השכפול הצף שעוקב אחרי האצבע/העכבר מוסתר
