@@ -1366,18 +1366,33 @@ function applyPwaShortcutDeepLink() {
 // להתנגשות עם גרירת-הסידור-מחדש של שאר הבועות. טאפ רגיל (בלי תזוזה אופקית
 // משמעותית) עדיין פותח את המודל כרגיל - לא בנוי על onclick נפרד (שהיה עלול
 // "לירות" גם על טאפ וגם בסוף גרירה) אלא כל ההחלטה טאפ/סיבוב קורית כאן במקום
-// אחד, ב-pointerup
+// אחד, ב-pointerup.
+// גרירה חיה (לא רק swipe-then-snap) - לפי בקשה מפורשת ("ממש אפשרות של גרירה
+// של תנועה סיבובית, כרגע זה קופץ לאמצע פשוט"): בזמן התזוזה מעדכנים את
+// --fab-drag-x על #fab-dock (ר' .dock-fab ב-theme.css) בכל pointermove, כך
+// שכל הבועות (חוץ מהפתקים עצמן, שמאפסות את המשתנה לעצמן) עוקבות אחרי האצבע
+// בזמן אמת. בשחרור, מחשבים כמה "משבצות" (FAB_ROW_STEP) בפועל זזה האצבע
+// ומסובבים בהתאם, במקום צעד בודד קבוע
+const FAB_ROW_STEP = 92; // חייב להתאים בדיוק ל-FAB_ROW_OFFSETS[0]/[1] ב-app.js
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
-    if (!el) return;
+    const dock = document.getElementById('fab-dock');
+    if (!el || !dock) return;
     const openNotes = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
-    const SWIPE_THRESHOLD = 28;
+    const TAP_THRESHOLD = 10;
     let startX = 0, startY = 0, dragging = false, pointerId = null;
 
     function onPointerMove(e) {
         if (e.pointerId !== pointerId) return;
         const dx = e.clientX - startX, dy = e.clientY - startY;
-        if (!dragging && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) dragging = true;
+        if (!dragging && Math.abs(dx) > TAP_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+            dragging = true;
+            dock.classList.add('fab-row-dragging');
+        }
+        if (dragging) {
+            e.preventDefault();
+            dock.style.setProperty('--fab-drag-x', `${dx}px`);
+        }
     }
     function cleanup() {
         document.removeEventListener('pointermove', onPointerMove);
@@ -1385,20 +1400,34 @@ function initFixedAiFab() {
         document.removeEventListener('pointercancel', onPointerCancel);
         pointerId = null;
     }
+    // מחזירה למנוחה ומסובבת בפועל - ב-requestAnimationFrame כדי שהסרת
+    // fab-row-dragging (מחזירה transition) "תתפוס" ברנדר לפני שה-left/top
+    // הסופיים נכתבים ב-rotateFabRow/applyDockOrder, אחרת המעבר מ--fab-drag-x
+    // הזמני לערך הסופי לפעמים לא נראה חלק
+    function settle(dx) {
+        dock.classList.remove('fab-row-dragging');
+        dock.style.setProperty('--fab-drag-x', '0px');
+        const steps = Math.round(dx / FAB_ROW_STEP);
+        requestAnimationFrame(() => {
+            for (let i = 0; i < Math.abs(steps); i++) rotateFabRow(steps > 0 ? -1 : 1);
+        });
+    }
     function onPointerUp(e) {
         if (e.pointerId !== pointerId) return;
         const dx = e.clientX - startX;
+        const wasDragging = dragging;
         cleanup();
-        if (dragging) {
-            rotateFabRow(dx < 0 ? 1 : -1);
+        dragging = false;
+        if (wasDragging) {
+            settle(dx);
         } else {
             openNotes();
         }
-        dragging = false;
     }
     function onPointerCancel(e) {
         if (e.pointerId !== pointerId) return;
         cleanup();
+        if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.setProperty('--fab-drag-x', '0px'); }
         dragging = false;
     }
     el.addEventListener('pointerdown', (e) => {
@@ -5044,12 +5073,15 @@ const FAB_ROW_OFFSETS = [
     { x: -174, y: 0 },
     { x: 256, y: 0 },
 ];
+// רמת-עומק מקבילה למערך ההיסטים - ככל שרחוק יותר מהמרכז, "יותר מאחורה"
+// (קטן/עמום יותר, ר' .fab-tier-2/.fab-tier-3 ב-theme.css), לפי בקשה מפורשת
+const FAB_ROW_TIERS = [1, 1, 2, 2, 3];
 
 // קובעת את המיקום החזותי (left/top בפיקסלים, ר' ההערה על .dock-fab ב-
-// theme.css) של הבועות בשורה סביב בועת הפתקים הקבועה בדיוק במרכז, בהשראת
-// תמונת-סגנון ששלחה המשתמשת. הבועות הפעילות (עד 5, מדלגים על מוסתרות/toggle
-// כבוי) מקבלות היסט קבוע לפי FAB_ROW_OFFSETS - "סיבוב" (ר' rotateFabRow
-// למטה) פשוט מזיז כל בועה למשבצת הבאה במערך הזה
+// theme.css) והעומק (fab-tier-N) של הבועות בשורה סביב בועת הפתקים הקבועה
+// בדיוק במרכז, בהשראת תמונת-סגנון ששלחה המשתמשת. הבועות הפעילות (עד 5,
+// מדלגים על מוסתרות/toggle כבוי) מקבלות היסט קבוע לפי FAB_ROW_OFFSETS -
+// "סיבוב" (ר' rotateFabRow למטה) פשוט מזיז כל בועה למשבצת הבאה במערך הזה
 function applyDockOrder() {
     const order = getFabOrder();
     const active = order.filter(id => {
@@ -5062,11 +5094,13 @@ function applyDockOrder() {
         if (!el || !offset) return;
         el.style.left = `${offset.x}px`;
         el.style.top = `${offset.y}px`;
+        el.classList.toggle('fab-tier-2', FAB_ROW_TIERS[i] === 2);
+        el.classList.toggle('fab-tier-3', FAB_ROW_TIERS[i] === 3);
     });
     order.forEach(id => {
         if (active.includes(id)) return;
         const el = document.getElementById(id);
-        if (el) { el.style.left = ''; el.style.top = ''; }
+        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-2', 'fab-tier-3'); }
     });
     const notes = document.getElementById('btn-ai-fab');
     if (notes) { notes.style.left = '0px'; notes.style.top = '0px'; }

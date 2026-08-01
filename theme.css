@@ -864,12 +864,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     position: absolute;
     /* left/top (לא transform!) הם מה ש-JS קובע לכל בועה (ר' applyDockOrder
        ב-app.js) - ערכי פיקסלים ביחס לנקודת העיגון של .fab-dock (שגודלה 0,
-       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים). transform נשאר
-       פנוי וקבוע (רק ממרכז את הבועה על הנקודה של עצמה) כדי שאפקט הלחיצה
-       (:active) יוכל להוסיף scale בלי "לבלוע" את מיקום ה-JS */
+       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים).
+       transform: מרכז את הבועה על הנקודה של עצמה, ובנוסף מוסיף --fab-drag-x -
+       היסט זמני בפיקסלים שנקבע ב-JS על #fab-dock עצמו (לא כל בועה בנפרד)
+       בזמן גרירה חיה של הפתק (ר' initFixedAiFab), כדי שכל הבועות "יזוזו עם
+       האצבע" ברגע אמת ולא רק יקפצו למקום החדש בסוף המחווה. .dock-fab-notes
+       מאפסת את המשתנה לעצמה (0px) כי היא לא אמורה לזוז בכלל בזמן הגרירה */
     left: 0;
     top: 0;
-    transform: translate(-50%, -50%);
+    transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%);
     width: 76px;
     height: 76px;
     border-radius: 50%;
@@ -891,7 +894,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 22px -2px rgba(200, 215, 255, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -10px 16px rgba(0, 0, 0, 0.18);
     padding: 0;
     flex-shrink: 0;
-    transition: var(--transition), left 0.35s ease, top 0.35s ease;
+    transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease, opacity 0.3s ease;
     touch-action: pan-x;
     user-select: none;
     -webkit-user-select: none;
@@ -907,7 +910,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     border-radius: 50%;
     pointer-events: none;
 }
-.dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
+.dock-fab:active { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) scale(0.9); }
+/* בזמן גרירה חיה (ר' initFixedAiFab ב-app.js) מבטלים transition על left/top/
+   transform כדי שהבועות יעקבו אחרי האצבע מיידית בלי "לגרור רגליים" - חוזר
+   ברגע שהגרירה נגמרת כדי שההשתקעות למשבצת הסופית (ר' rotateFabRow) תהיה
+   אנימציה חלקה, לא קפיצה */
+.fab-dock.fab-row-dragging .dock-fab { transition: none; }
+/* עומק - בועות רחוקות יותר מהמרכז קטנות ועמומות יותר ("יותר מאחורה"), לפי
+   בקשה מפורשת. נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא
+   קבוע לבועה ספציפית - כל בועה יכולה לעבור דרך כל הרמות כשמסובבים */
+.dock-fab.fab-tier-2 { width: 58px; height: 58px; font-size: 1.5rem; opacity: 0.82; }
+.dock-fab.fab-tier-3 { width: 46px; height: 46px; font-size: 1.15rem; opacity: 0.62; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 4rem; }
@@ -931,6 +944,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        סיבוב מותאמת-אישית (ר' initFixedAiFab ב-app.js), לא בתוך אזור גלילה
        בכלל, אז pan-x רק מפריע ל-pointermove לרוץ חלק */
     touch-action: none;
+    /* מאפסת לעצמה את היסט-הגרירה הזמני (ר' .dock-fab למעלה) - היא הבועה
+       שגוררים ממנה, אבל היא עצמה נשארת קבועה במרכז, לא זזה עם שאר הבועות */
+    --fab-drag-x: 0px;
 }
 @keyframes fabPulse {
     0%, 100% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px -2px rgba(168, 85, 247, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -10px 16px rgba(0, 0, 0, 0.18); }
