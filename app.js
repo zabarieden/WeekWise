@@ -5028,11 +5028,13 @@ function initFabOrderDragReorder() {
             filter: '.dock-fab-notes',
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
+            onStart: (evt) => showFabParkHints(evt.item && evt.item.id),
             // אחרי סידור-מחדש רגיל, בודקים גם אם נקודת השחרור בפועל (לא איפה
             // ש-Sortable "החליט" להשאיר את האלמנט בתוך הרשימה) יצאה מחוץ
             // לגבולות ה-Dock - אם כן, זו "גרירה החוצה" למיקום חופשי, לא סידור-
             // מחדש רגיל (ר' settleFreeFab למטה)
             onEnd: (evt) => {
+                hideFabParkHints();
                 onReorder(stack);
                 const point = getPointerEventCoords(evt.originalEvent);
                 if (point && evt.item && evt.item.id !== 'btn-ai-fab' && isPointOutsideDock(point.x, point.y)) {
@@ -5079,26 +5081,92 @@ function positionFreeFab(el, xPercent, yPercent) {
     el.style.top = `${yPercent}%`;
 }
 
-// שומרת בועה במצב "חופשי" (מחוץ ל-Dock, position:absolute יחסית ל-
-// .phone-wrapper) בנקודת שחרור נתונה - קלואמפ ל-4%-92% כדי שלא תיתקע ממש
-// בקצה/מחוץ למסך. אחוזים (לא px) כדי לשרוד את שינויי max-width של
-// .phone-wrapper בין breakpoints (768/1000/1024px, ר' תחתית הקובץ) - px
-// גולמי היה "נודד" כשגודל המסך משתנה. המיקום נשמר לצמיתות (לפי בקשה מפורשת)
+// --- משבצות "בצד" קבועות לבועות חופשיות - לא קואורדינטת-שחרור גולמית.
+// באג אמיתי שהתגלה בבדיקה: שתי בועות שנגררו לאזור דומה על המסך "בלעו" זו
+// את זו חזותית (או את ה-Dock עצמו), כי כל בועה נחתה בדיוק איפה שהאצבע/הסמן
+// היה בלי מודעות לבועות אחרות. הפתרון: מספר קבוע וקטן של משבצות מוגדרות-
+// מראש בשוליים (רחוק משני כפתורי ה-FAB בפינות העליונות, top:22-70px, ורחוק
+// מה-Dock בתחתית) - כל גרירה-החוצה "קופצת" תמיד למשבצת הפנויה הקרובה ביותר
+// לנקודת השחרור, לעולם לא לקואורדינטה גולמית - כך שחפיפה פשוט לא יכולה
+// לקרות במבנה הזה. אחוזים (לא px) כדי לשרוד שינויי max-width של .phone-wrapper
+// בין breakpoints (ר' תחתית הקובץ) */
+const FAB_PARK_SLOTS = [
+    { xPercent: 88, yPercent: 16 },
+    { xPercent: 12, yPercent: 16 },
+    { xPercent: 88, yPercent: 46 },
+    { xPercent: 12, yPercent: 46 },
+];
+
+// מציגה/מסתירה 4 עיגולי-רמז עדינים במיקומי FAB_PARK_SLOTS בזמן גרירה פעילה
+// בלבד - כדי שיהיה ברור מראש איפה בועה "תנחת" אם משחררים אותה עכשיו, במקום
+// שהיא פשוט תופיע במקום לא-צפוי אחרי השחרור (בדיוק החוויה המבלבלת שדווחה)
+let fabParkHintEls = [];
+function showFabParkHints(excludeId) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper || fabParkHintEls.length) return;
+    const used = getOccupiedSlotIndexes(excludeId);
+    fabParkHintEls = FAB_PARK_SLOTS.map((slot, i) => {
+        const hint = document.createElement('div');
+        hint.className = 'fab-park-slot-hint' + (used.has(i) ? ' fab-park-slot-hint-taken' : '');
+        hint.style.left = `${slot.xPercent}%`;
+        hint.style.top = `${slot.yPercent}%`;
+        wrapper.appendChild(hint);
+        return hint;
+    });
+}
+function hideFabParkHints() {
+    fabParkHintEls.forEach(el => el.remove());
+    fabParkHintEls = [];
+}
+
+function getOccupiedSlotIndexes(excludeId) {
+    const positions = getFabPositions();
+    const used = new Set();
+    Object.keys(positions).forEach(id => {
+        if (id === excludeId) return;
+        const pos = positions[id];
+        if (pos && pos.mode === 'free' && typeof pos.slotIndex === 'number') used.add(pos.slotIndex);
+    });
+    return used;
+}
+
+// המשבצת הפנויה הקרובה ביותר לנקודת שחרור נתונה - null אם כולן תפוסות
+function findNearestFreeSlot(clientX, clientY, excludeId) {
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!wrapper) return null;
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const used = getOccupiedSlotIndexes(excludeId);
+    let best = null, bestDist = Infinity;
+    FAB_PARK_SLOTS.forEach((slot, i) => {
+        if (used.has(i)) return;
+        const slotX = wrapperRect.left + (slot.xPercent / 100) * wrapperRect.width;
+        const slotY = wrapperRect.top + (slot.yPercent / 100) * wrapperRect.height;
+        const dist = Math.hypot(clientX - slotX, clientY - slotY);
+        if (dist < bestDist) { bestDist = dist; best = i; }
+    });
+    return best;
+}
+
+// שומרת בועה במשבצת "בצד" פנויה (לא בקואורדינטת השחרור הגולמית, ר' ההערה
+// למעלה) - נשמר לצמיתות (לפי בקשה מפורשת). אם כל המשבצות תפוסות, אין לאן
+// "לשים בצד" את הבועה - מחזירים אותה ל-Dock במקום, עם הסבר קצר למה
 function settleFreeFab(el, clientX, clientY) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (!wrapper) return;
-    const wrapperRect = wrapper.getBoundingClientRect();
-    let xPercent = ((clientX - wrapperRect.left) / wrapperRect.width) * 100;
-    let yPercent = ((clientY - wrapperRect.top) / wrapperRect.height) * 100;
-    xPercent = Math.min(92, Math.max(4, xPercent));
-    yPercent = Math.min(92, Math.max(4, yPercent));
+    const slotIndex = findNearestFreeSlot(clientX, clientY, el.id);
+    if (slotIndex === null) {
+        showAppToast(t('fab_park_slots_full'), 'error');
+        dockifyFreeFab(el, clientX);
+        return;
+    }
+    const slot = FAB_PARK_SLOTS[slotIndex];
     el.classList.remove('dock-fab-dragging');
     el.classList.add('dock-fab-free');
     wrapper.appendChild(el);
     el.style.order = '';
-    positionFreeFab(el, xPercent, yPercent);
+    positionFreeFab(el, slot.xPercent, slot.yPercent);
     const positions = getFabPositions();
-    positions[el.id] = { mode: 'free', xPercent, yPercent };
+    positions[el.id] = { mode: 'free', slotIndex };
     saveFabPositions(positions);
 }
 
@@ -5158,6 +5226,7 @@ function initFreeDockFabDrag(el) {
         document.removeEventListener('pointerup', onPointerUp);
         document.removeEventListener('pointercancel', onPointerUp);
         if (dragging) {
+            hideFabParkHints();
             if (isPointOutsideDock(e.clientX, e.clientY)) {
                 settleFreeFab(el, e.clientX, e.clientY);
             } else {
@@ -5189,6 +5258,7 @@ function beginFreeDragVisual(el) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (!wrapper) return;
     el.classList.add('dock-fab-dragging');
+    showFabParkHints(el.id);
     if (!el.classList.contains('dock-fab-free')) {
         const rect = el.getBoundingClientRect();
         const wrapperRect = wrapper.getBoundingClientRect();
@@ -5234,11 +5304,15 @@ function applyFabPositions() {
         const el = document.getElementById(id);
         const wrapper = document.querySelector('.phone-wrapper');
         if (!el || !wrapper || !pos || pos.mode !== 'free') return;
-        if (typeof pos.xPercent !== 'number' || typeof pos.yPercent !== 'number') return;
+        const slot = FAB_PARK_SLOTS[pos.slotIndex];
+        // אין slotIndex תקין (למשל נתונים ישנים מגרסה קודמת שעדיין שמרה
+        // קואורדינטות גולמיות) - פשוט לא מציבים במצב חופשי, הבועה נשארת
+        // עגונה כרגיל מ-restackFabs שכבר רץ קודם, בלי צורך במיגרציה מפורשת
+        if (!slot) return;
         el.classList.add('dock-fab-free');
         el.style.order = '';
         wrapper.appendChild(el);
-        positionFreeFab(el, pos.xPercent, pos.yPercent);
+        positionFreeFab(el, slot.xPercent, slot.yPercent);
     });
 }
 

@@ -879,6 +879,24 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מיידית בלי "לגרור רגליים" - חוזר ל-transition הרגיל ברגע שהגרירה נגמרת */
 .dock-fab.dock-fab-dragging { transition: none; }
 
+/* 4 עיגולי-רמז עדינים במיקומי FAB_PARK_SLOTS (ר' app.js) - מוצגים רק בזמן
+   גרירה פעילה של בועה כלשהי, כדי שיהיה ברור מראש איפה היא "תנחת" אם
+   משחררים עכשיו, במקום הפתעה אחרי השחרור */
+.fab-park-slot-hint {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    transform: translate(-50%, -50%);
+    z-index: 99997;
+    pointer-events: none;
+    animation: fabParkHintPulse 1.2s ease-in-out infinite;
+}
+.fab-park-slot-hint-taken { border-color: rgba(255, 0, 127, 0.35); background: rgba(255, 0, 127, 0.06); }
+@keyframes fabParkHintPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+
 /* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
    ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה מפורשת.
    position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה בדיוק כמו
