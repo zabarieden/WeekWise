@@ -1309,7 +1309,7 @@ function closeSubView(sectionId) {
 function openHamburgerMenu() {
     const overlay = document.getElementById('hamburger-drawer-overlay');
     if (overlay) overlay.classList.add('open');
-    // .menu-open מסתיר בכוח את כל כפתורי ה-FAB (theme.css) - נדרש כי ל-.ai-fab
+    // .menu-open מסתיר בכוח את כל כפתורי ה-FAB (theme.css) - נדרש כי ל-.fab-dock
     // יש z-index:99999 !important, גבוה בהרבה מהמגירה, אז הסתמכות על שכבות
     // בלבד לא מספיקה כדי שהמגירה לא תיחסם על ידו במובייל
     const wrapper = document.querySelector('.phone-wrapper');
@@ -1340,11 +1340,11 @@ function applyPwaShortcutDeepLink() {
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
-// שני כפתורי ה-FAB (📝 "פתק מהיר" בפינה הימנית-תחתונה, 🤖 עוזר ה-AI בפינה
-// השמאלית-עליונה - במקום אימוג'י הברכה שהוסר) ננעלים שניהם קבוע במקומם לפי
-// בקשה מפורשת, בלי שום גרירה. המיקום עצמו נקבע לגמרי ב-CSS (.ai-fab /
-// .ai-brain-fab, position:absolute יחסית ל-.phone-wrapper), כאן רק מחברים
-// את הקליק - בלי left/top/localStorage/pointer-events בכלל
+// כפתור "פתק מהיר" (📝) יושב כעת בתוך ה-Dock המאוחד (#fab-dock, ר' theme.css
+// .dock-fab-notes) כעוגן מרכזי קבוע - לא ניתן להסרה, לא משתתף בגרירת-הסידור-
+// מחדש של שאר הבועות (ר' initFabOrderDragReorder למטה). כאן רק מחברים את
+// הקליק לפתיחת המודל - בלי left/top/localStorage בכלל, המיקום עצמו נקבע
+// לגמרי ב-CSS (.fab-dock, position:absolute יחסית ל-.phone-wrapper)
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
@@ -4940,7 +4940,7 @@ function getFabOrder() {
 // כך ששני ה-Sortable (הבועות עצמן + שורות ההגדרות) תמיד מוצגים מסונכרנים
 function applyFabOrder() {
     const order = getFabOrder();
-    const stack = document.getElementById('fab-stack');
+    const stack = document.getElementById('fab-dock');
     const settingsList = document.getElementById('fab-order-list');
     order.forEach(id => {
         if (stack) {
@@ -4986,7 +4986,7 @@ function initFabOrderDragReorder() {
         });
     }
 
-    const stack = document.getElementById('fab-stack');
+    const stack = document.getElementById('fab-dock');
     if (stack) {
         new Sortable(stack, {
             animation: 150,

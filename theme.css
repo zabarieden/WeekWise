@@ -789,72 +789,52 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* כפתור "פתק מהיר" (📝) ננעל בפינה הימנית-תחתונה של הכרטיס (.phone-wrapper),
-   לא של הדפדפן - זה ההבדל הקריטי: בדסקטופ/טאבלט רחבים, .phone-wrapper
-   ממורכז עם שוליים ריקים בשני הצדדים (ר' ה-@media למטה בקובץ), אז
-   position:fixed (יחסית לחלון הדפדפן המלא) היה שם את הכפתור רחוק מהכרטיס
-   הנראה לגמרי - בפועל מוצג, אבל "אבוד" בשוליים השחורים הריקים, מה שנראה
-   בדיוק כמו "נעלם" למשתמש שמסתכל על הכרטיס. position:absolute יחסית ל-
-   .phone-wrapper פותר את זה ועקבי עם שאר הכפתורים הצפים (ai-brain-fab,
-   hamburger-fab). עדיין env(safe-area-inset-bottom) לפיצוי על home indicator/
-   פס מחוות במובייל אמיתי, ו-!important לפי בקשה מפורשת שלא יידרס בטעות */
-.ai-fab {
+/* Dock מאוחד: קפסולת זכוכית אופקית אחת במרכז-תחתית המסך (לא של הדפדפן -
+   position:absolute יחסית ל-.phone-wrapper, אותה סיבה בדיוק כמו שאר הכפתורים
+   הצפים - בדסקטופ/טאבלט רחבים .phone-wrapper ממורכז עם שוליים ריקים, אז
+   position:fixed היה שם את ה-Dock רחוק מהכרטיס הנראה, "אבוד" בשוליים).
+   width:auto - הקפסולה מתרחבת/מתכווצת אוטומטית לפי כמות הבועות הפעילות
+   (בועה עם class="hidden" לא תופסת מקום, אין "חור" לחשב ידנית); gap+padding
+   נותנים לה מעבר-רוחב חלק בלי transition ייעודי על width (auto-width לא
+   ניתן ל-tween ישירות ב-CSS, אבל שינוי המספר בפועל של flex items מספיק
+   ליצור את תחושת ה"התאמה" המבוקשת). !important על bottom/z-index נשמר
+   מה-.ai-fab הישן לפי אותה בקשה מפורשת שלא יידרס בטעות */
+.fab-dock {
     position: absolute !important;
     bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
-    right: 25px !important;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 99999 !important;
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 1.4rem;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
-    padding: 0;
-    transition: var(--transition);
-    animation: fabPulse 2.5s ease-in-out infinite;
-    user-select: none;
-    -webkit-user-select: none;
-}
-.ai-fab:active { transform: scale(0.9); }
-@keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
-
-/* מכל הבועות הצפות הניתנות להפעלה/כיבוי (מים/ספורט/ארוחה קבועה/מזון חופשי/
-   פריסה חכמה) - flex column אחד שמעליו הבועה הראשונה יושבת בדיוק במקום שה-
-   אינדקס הישן "1" היה, וכל בועה נוספת נערמת מעליה לפי gap. בועה כבויה
-   (class="hidden") לא תופסת מקום כלל - אין יותר "חור" לחשב עבורו ידנית.
-   סדר הילדים בפועל (ר' initFabOrderDragReorder/applyFabOrder ב-app.js) הוא
-   מה שקובע את סדר הערימה - גרירה ישירה על בועה מזיזה אותה ממש ב-DOM */
-.fab-stack {
-    position: absolute;
-    bottom: calc(25px + 68px + env(safe-area-inset-bottom, 0px));
-    right: 25px;
-    z-index: 99999;
     display: flex;
-    flex-direction: column-reverse;
-    align-items: flex-end;
-    gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+    padding: 8px 12px;
+    box-sizing: border-box;
+    scrollbar-width: none;
 }
-.phone-wrapper.menu-open .fab-stack { display: none; }
+.fab-dock::-webkit-scrollbar { display: none; }
+.phone-wrapper.menu-open .fab-dock { display: none; }
 
-/* עיצוב משותף לכל בועה בערימה - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
+/* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
    שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:none
    כדי שגרירה במגע לא "תגלוש" לגלילת הדף במקום להזיז את הבועה */
-.stack-fab {
-    width: 52px;
-    height: 52px;
+.dock-fab {
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
     border: 1px solid rgba(255,255,255,0.15);
     color: #fff;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -867,7 +847,19 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     user-select: none;
     -webkit-user-select: none;
 }
-.stack-fab:active { transform: scale(0.9); }
+.dock-fab:active { transform: scale(0.9); }
+/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock
+   (order:0 בטוח - כל בועה אחרת מקבלת ערך order שלילי/חיובי דרך applyDockOrder
+   ב-app.js, לפי בקשה מפורשת). גרדיאנט ורוד/סגול ופעימה משלה (במקום הגרדיאנט
+   הכללי של שאר הבועות) כדי שתמשיך לבלוט כעוגן המרכזי, בדיוק כמו שהייתה
+   כשהיא הכפתור הנפרד .ai-fab הישן */
+.dock-fab-notes {
+    order: 0;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
+    animation: fabPulse 2.5s ease-in-out infinite;
+}
+@keyframes fabPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4); } 50% { box-shadow: 0 6px 24px rgba(255, 0, 127, 0.55); } }
 
 /* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
    ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה מפורשת.
@@ -967,11 +959,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     display: none;
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
-/* כשהמגירה פתוחה, מסתירים בכוח את כל כפתורי ה-FAB (במיוחד .ai-fab, שיש לו
-   z-index:99999 !important - גבוה בהרבה מ-4000 של המגירה, ולכן לא מספיק
-   להסתמך על סדר שכבות; חייבים להעלים אותם ממש) כדי שלא יחפפו את תוכן המגירה
-   על מסכים צרים (מובייל) */
-.phone-wrapper.menu-open .ai-fab,
+/* כשהמגירה פתוחה, מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock המאוחד
+   כבר מוסתר לגמרי דרך .phone-wrapper.menu-open .fab-dock למעלה) - חייבים
+   להעלים אותם ממש (לא רק סדר שכבות), כי z-index:99999 !important שלהם גבוה
+   בהרבה מ-4000 של המגירה, כדי שלא יחפפו את תוכן המגירה על מסכים צרים (מובייל) */
 .phone-wrapper.menu-open .ai-brain-fab,
 .phone-wrapper.menu-open .hamburger-fab {
     opacity: 0 !important;
