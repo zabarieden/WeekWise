@@ -4984,26 +4984,45 @@ function applyFabOrder() {
     });
 }
 
-// קובעת את ה-order החזותי (CSS) של 5 הבועות הניתנות-לגרירה סביב בועת הפתקים
-// הקבועה (order:0 ב-CSS) - חצי הראשון של המערך מקבל ערכים שליליים (הכי רחוק
-// מהמרכז ראשון, הכי קרוב אחרון), החצי השני מקבל ערכים חיוביים, כך שסדר
-// הקריאה משמאל לימין תואם בדיוק לסדר במערך למרות שהפתק "חוצה" אותו באמצע.
-// לא נוגעת בסדר ה-DOM בפועל (זה תפקידה של applyFabOrder) - רק בעמדה החזותית.
-// גם כאן מדלגים על בועה חופשית - order לא משפיע על position:absolute בכל
-// מקרה, אבל אין סיבה לגעת בסטייל שלה כשהיא לא בכלל בזרימת ה-flex
+// קובעת את המיקום החזותי (grid-column/grid-row) של הבועות סביב בועת הפתקים
+// הקבועה במרכז - ה-Dock עכשיו רשת של 2 שורות (ר' .fab-dock ב-theme.css),
+// אז order בלבד (כמו בגרסה הקודמת החד-שורתית) לא מספיק כדי לקבוע גם לאיזו
+// שורה בועה שייכת. בועת הפתקים ננעלת תמיד ב-NOTES_GRID_COL, פרושה על שתי
+// השורות (grid-row:1/span 2) - עמודות ריקות בין שאר הבועות לעמודה הזו
+// מתכווצות אוטומטית ל-0 (grid לא "מבזבז" מקום על עמודה בלי תוכן), כך שהיא
+// תמיד יוצאת ויזואלית במרכז בלי position:absolute/spacer ידני.
+// שאר הבועות (עד 5, לא כולן בהכרח פעילות) מתחלקות חצי-חצי שמאל/ימין לפי
+// אותו עקרון כמו הגרסה הקודמת (מי שקרוב יותר למרכז במערך - קרוב יותר
+// ויזואלית), ובתוך כל צד מזווגות זוגות-זוגות מלמעלה-למטה (הזוג הכי קרוב
+// למרכז ראשון) כדי למלא את שתי השורות בצורה מאוזנת. מדלגים על בועות מוסתרות
+// (toggle כבוי) כדי שלא "יחסרו" עמודות ריקות באמצע, וגם על בועה חופשית
+// (dock-fab-free) - היא כבר לא ילד של ה-grid בכלל אחרי שנגררה החוצה
 function applyDockOrder() {
+    const NOTES_GRID_COL = 100;
     const order = getFabOrder();
-    const mid = Math.ceil(order.length / 2);
-    const left = order.slice(0, mid);
-    const right = order.slice(mid);
-    left.forEach((id, i) => {
+    const active = order.filter(id => {
         const el = document.getElementById(id);
-        if (el && !el.classList.contains('dock-fab-free')) el.style.order = String(-(left.length - i));
+        return el && !el.classList.contains('hidden') && !el.classList.contains('dock-fab-free');
     });
-    right.forEach((id, i) => {
+    const mid = Math.ceil(active.length / 2);
+    const placeHalf = (ids, sign) => {
+        ids.forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const pairIndex = Math.floor(i / 2) + 1;
+            el.style.gridColumn = String(NOTES_GRID_COL + sign * pairIndex);
+            el.style.gridRow = (i % 2 === 0) ? '1' : '2';
+        });
+    };
+    placeHalf(active.slice(0, mid).reverse(), -1);
+    placeHalf(active.slice(mid), 1);
+    order.forEach(id => {
+        if (active.includes(id)) return;
         const el = document.getElementById(id);
-        if (el && !el.classList.contains('dock-fab-free')) el.style.order = String(i + 1);
+        if (el) { el.style.gridColumn = ''; el.style.gridRow = ''; }
     });
+    const notes = document.getElementById('btn-ai-fab');
+    if (notes) { notes.style.gridColumn = String(NOTES_GRID_COL); notes.style.gridRow = '1 / span 2'; }
 }
 
 function restackFabs() {
@@ -5177,7 +5196,8 @@ function settleFreeFab(el, clientX, clientY) {
     el.classList.remove('dock-fab-dragging');
     el.classList.add('dock-fab-free');
     wrapper.appendChild(el);
-    el.style.order = '';
+    el.style.gridColumn = '';
+    el.style.gridRow = '';
     positionFreeFab(el, slot.xPercent, slot.yPercent);
     const positions = getFabPositions();
     positions[el.id] = { mode: 'free', slotIndex };
@@ -5195,6 +5215,7 @@ function dockifyFreeFab(el, clientX) {
     el.style.top = '';
     if (el.id === 'btn-ai-fab') {
         dock.appendChild(el);
+        applyDockOrder();
     } else {
         const order = getFabOrder().filter(id => id !== el.id);
         const others = order.map(id => document.getElementById(id)).filter(Boolean);
@@ -5322,10 +5343,15 @@ function applyFabPositions() {
         // עגונה כרגיל מ-restackFabs שכבר רץ קודם, בלי צורך במיגרציה מפורשת
         if (!slot) return;
         el.classList.add('dock-fab-free');
-        el.style.order = '';
+        el.style.gridColumn = '';
+        el.style.gridRow = '';
         wrapper.appendChild(el);
         positionFreeFab(el, slot.xPercent, slot.yPercent);
     });
+    // מריצים שוב אחרי שהבועות החופשיות כבר יצאו פיזית מה-Dock - כדי שזיווג
+    // העמודות/שורות של מי שנשאר יחושב לפי המצב הסופי בפועל, לא לפי החישוב
+    // הקודם (מ-restackFabs שרץ לפני applyFabPositions) שעדיין הניח שכולן עגונות
+    applyDockOrder();
 }
 
 // רשת ביטחון: מיקום חופשי הוא קבוע (נשמר לצמיתות), אז זו הדרך היחידה

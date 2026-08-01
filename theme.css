@@ -551,10 +551,11 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    באמצע המסך; עכשיו זו רק שורת הברכה, שקופה על רקע האפליקציה */
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
-       הקבועים (עוזר AI בפינה שמאל-עליונה, המבורגר בפינה ימין-עליונה - שניהם
-       top:22px עד ~66-70px) - בלי זה שורת "שלום.../תאריך" מסתתרת מתחתיהם.
-       הסרגל העליון (.bottom-tab-bar) שסיפק את הפינוי הזה הוסר לגמרי */
-    padding: 70px 14px 14px 14px;
+       הקבועים (עוזר AI בפינה שמאל-עליונה - top:22px עד 122px אחרי שהוגדל
+       ("גדול פי כמה"), המבורגר בפינה ימין-עליונה, קטן בהרבה) - בלי זה שורת
+       "שלום.../תאריך" מסתתרת מתחתיהם. הסרגל העליון (.bottom-tab-bar) שסיפק
+       את הפינוי הזה הוסר לגמרי */
+    padding: 140px 14px 14px 14px;
     margin-bottom: 16px;
     position: relative;
     z-index: 5;
@@ -718,8 +719,12 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     min-width: 0;
     position: relative;
     z-index: 10;
-    /* מפנה מקום רק מתחת ל-.ai-fab הצף (bottom:25px) כדי שהשורה האחרונה בכל
-       רשימה לא תיבלע מתחתיו */
+    /* padding-top זהה לזה של .home-hero-panel למעלה, מאותה סיבה בדיוק - עוזר
+       ה-AI גדל משמעותית ("גדול פי כמה") ובלי זה השורה הראשונה של כל תצוגת
+       תת-מסך (רשת קוביות/רשימה) הייתה מתחילה ממש מתחת לפינה השמאלית-עליונה
+       ומתנגשת איתו. padding-bottom - מפנה מקום רק מתחת ל-.ai-fab הצף
+       (bottom:25px) כדי שהשורה האחרונה בכל רשימה לא תיבלע מתחתיו */
+    padding-top: 140px;
     padding-bottom: calc(165px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
@@ -789,51 +794,57 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* Dock מאוחד: קפסולת זכוכית אופקית אחת במרכז-תחתית המסך (לא של הדפדפן -
-   position:absolute יחסית ל-.phone-wrapper, אותה סיבה בדיוק כמו שאר הכפתורים
-   הצפים - בדסקטופ/טאבלט רחבים .phone-wrapper ממורכז עם שוליים ריקים, אז
-   position:fixed היה שם את ה-Dock רחוק מהכרטיס הנראה, "אבוד" בשוליים).
-   width:auto - הקפסולה מתרחבת/מתכווצת אוטומטית לפי כמות הבועות הפעילות
-   (בועה עם class="hidden" לא תופסת מקום, אין "חור" לחשב ידנית); gap+padding
-   נותנים לה מעבר-רוחב חלק בלי transition ייעודי על width (auto-width לא
-   ניתן ל-tween ישירות ב-CSS, אבל שינוי המספר בפועל של flex items מספיק
-   ליצור את תחושת ה"התאמה" המבוקשת). !important על bottom/z-index נשמר
-   מה-.ai-fab הישן לפי אותה בקשה מפורשת שלא יידרס בטעות */
+/* Dock מאוחד: קפסולת זכוכית אחת במרכז-תחתית המסך (לא של הדפדפן - position:
+   absolute יחסית ל-.phone-wrapper, אותה סיבה בדיוק כמו שאר הכפתורים הצפים -
+   בדסקטופ/טאבלט רחבים .phone-wrapper ממורכז עם שוליים ריקים, אז position:fixed
+   היה שם את ה-Dock רחוק מהכרטיס הנראה, "אבוד" בשוליים). !important על
+   bottom/z-index נשמר מה-.ai-fab הישן לפי אותה בקשה מפורשת שלא יידרס בטעות.
+   שתי שורות (display:grid, לא flex בשורה אחת) - לפי בקשה מפורשת: 5-6 בועות
+   ב-76px לא נכנסות ברוחב מסך טלפון בשורה אחת, וגלילה אופקית (הניסיון הקודם)
+   התבררה כלא נוחה מספיק. בועת הפתקים (Notes) ננעלת ב-grid-column קבוע וגדול
+   (ר' NOTES_GRID_COL ב-applyDockOrder ב-app.js) שפורש על שתי השורות
+   (grid-row:1/span 2) - עמודות הביניים הריקות בין שאר הבועות לעמודה הזו
+   מתכווצות אוטומטית ל-0 (אין תוכן בהן), כך שהיא נשארת קבועה במרכז בלי
+   position:absolute/spacer ידני. שאר הבועות מקבלות grid-column/row מפורשים
+   דרך JS (לא CSS order - order לא קובע פיצול לשתי שורות בפועל), מפוצלות
+   חצי-חצי ימין/שמאל וזוגות-זוגות מלמעלה-למטה, הכי קרוב למרכז קודם */
 .fab-dock {
     position: absolute !important;
     bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
     left: 50%;
     transform: translateX(-50%);
     z-index: 99999 !important;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-rows: repeat(2, auto);
     align-items: center;
-    gap: 16px;
+    justify-items: center;
+    gap: 10px 14px;
     max-width: calc(100% - 12px);
     overflow-x: auto;
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 999px;
+    border-radius: 40px;
     box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
-    padding: 10px 16px;
+    padding: 14px 18px;
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
-/* בעבר הפסים הוסתרו לגמרי (scrollbar-width:none) והתבססנו רק על מסכת
-   הגרדיאנט/בועה-נחתכת-בקצה כרמז לגלילה - בפועל זה לא הספיק: משתמשת דיווחה
-   שבועות "נעלמות"/"מוסתרות" כי לא היה שום רמז מוחשי שיש עוד תוכן בצד.
-   פס גלילה דק וגלוי (לא הפס המערכתי המכוער - מעוצב ידנית) פותר את זה ישירות */
+/* פס גלילה דק וגלוי - נשאר רק כרשת ביטחון (מסך צר בצורה חריגה שבו גם 2
+   שורות לא מספיקות); בשימוש רגיל אין גלילה בכלל, אז זה כמעט אף פעם לא נראה */
 .fab-dock::-webkit-scrollbar { height: 5px; }
 .fab-dock::-webkit-scrollbar-track { background: transparent; }
 .fab-dock::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.35); border-radius: 999px; }
 .phone-wrapper.menu-open .fab-dock, .phone-wrapper.modal-open .fab-dock { display: none; }
 
 /* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
-   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:none
-   כדי שגרירה במגע לא "תגלוש" לגלילת הדף במקום להזיז את הבועה */
+   שיתאים לפלטת הניאון סגול/ורוד/ציאן של שאר האפליקציה. touch-action:pan-x
+   (לא none) - כך שטאפ-והחלקה מהירה על בועה עצמה עדיין גוללת את ה-Dock
+   באופן טבעי (רלוונטי רק ברשת-הביטחון הצרה למעלה); Sortable מפעיל
+   preventDefault בעצמו ברגע שגרירה-לסידור-מחדש אמיתית מתחילה (אחרי delay),
+   כך ששני הצרכים לא מתנגשים */
 .dock-fab {
     position: relative;
     width: 76px;
@@ -851,40 +862,27 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition);
-    touch-action: none;
+    touch-action: pan-x;
     user-select: none;
     -webkit-user-select: none;
 }
 .dock-fab:active { transform: scale(0.9); }
-/* בועות ה-Dock ועוזר ה-AI גדולים משמעותית במובייל, לפי בקשה מפורשת ("תגדיל
-   פי 2") - כבר לא מקטינים את הבועות לעומת הדסקטופ (64px), רק מצמצמים את
-   המרווח/הריפוד כדי לפנות להן כמה שיותר מקום. חמש-שש בועות ב-64px פשוט
-   לא תמיד נכנסות ברוחב מסך טלפון בלי גלילה, לא משנה כמה מצמצמים מרווחים -
-   זו מגבלה פיזית, לא באג. הפתרון: לא נלחמים בזה עם בועות זעירות (מה
-   שתוקן בעבר), אלא הופכים את הגלילה האופקית לגלויה בעצמה - מסכת גרדיאנט
-   בקצוות (ר' .fab-dock) ובועה חלקית שנחתכת בקצה מרמזות שיש עוד תוכן בצד,
-   ופס גלילה דק וגלוי (ר' scrollbar-color/::-webkit-scrollbar-thumb למעלה)
-   מספר בבירור ומוחשית "יש עוד, תחליקי" */
-.fab-dock {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
-}
 @media (max-width: 420px) {
-    .fab-dock { gap: 8px; padding: 6px 10px; }
-    .ai-brain-fab { width: 68px; height: 68px; }
-    .ai-brain-icon { font-size: 3rem; }
-    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (68px, קצה תחתון ב-top:22px+68px=90px)
-       - הערך הבסיסי (70px, ר' .home-hero-panel למעלה) מחושב לפי הגרסה הרגילה
-       (48px) ולא מספיק יותר במובייל */
-    .home-hero-panel { padding-top: 96px; }
+    .fab-dock { gap: 8px 12px; padding: 10px 14px; }
+    .ai-brain-fab { width: 112px; height: 112px; }
+    .ai-brain-icon { font-size: 5.2rem; }
+    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (112px, קצה תחתון ב-top:22px+112px=134px)
+       - הערך הבסיסי (140px, ר' .home-hero-panel/.main-scroll-area למעלה)
+       מחושב לפי הגרסה הרגילה (100px) ולא מספיק יותר במובייל */
+    .home-hero-panel { padding-top: 150px; }
+    .main-scroll-area { padding-top: 150px; }
 }
-/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock
-   (order:0 בטוח - כל בועה אחרת מקבלת ערך order שלילי/חיובי דרך applyDockOrder
+/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד באמצע ה-Dock,
+   פרושה על שתי השורות (grid-column/grid-row קבועים - ר' applyDockOrder
    ב-app.js, לפי בקשה מפורשת). גרדיאנט ורוד/סגול ופעימה משלה (במקום הגרדיאנט
    הכללי של שאר הבועות) כדי שתמשיך לבלוט כעוגן המרכזי, בדיוק כמו שהייתה
    כשהיא הכפתור הנפרד .ai-fab הישן */
 .dock-fab-notes {
-    order: 0;
     background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
     box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
     animation: fabPulse 2.5s ease-in-out infinite;
@@ -922,8 +920,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     position: absolute;
     top: 22px;
     left: 22px;
-    width: 48px;
-    height: 48px;
+    width: 100px;
+    height: 100px;
     background: transparent;
     border: none;
     color: #fff;
@@ -938,26 +936,29 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-user-select: none;
 }
 .ai-brain-fab:active { transform: scale(0.9); }
-/* אימוג'י מוח - גדול יותר וסגנון-צבע מוסט (hue-rotate/saturate) מהוורוד-
-   אדמדם הטבעי-אנטומי שלו לכיוון סגול/תכול ניאון, כדי שירגיש כמו אייקון AI
-   מעוצב-סגנונית ולא "מוח אמיתי" (פחות מפחיד, יותר תואם לאסתטיקה של
-   האפליקציה). translateY עדין ואיטי (לא scale/box-shadow) כדי שה"נשימה"
-   תרגיש כמו ריחוף חופשי על הרקע, לא כמו כפתור שמהבהב */
+/* אימוג'י מוח - גדול משמעותית (לפי בקשה מפורשת "גדול פי כמה") וסגנון-צבע
+   מוסט (hue-rotate/saturate) מהוורוד-אדמדם הטבעי-אנטומי שלו לכיוון סגול
+   ניאון מובהק (לא כחול/תכול, לפי בקשה מפורשת "בצבע סגול") - hue-rotate(285)
+   נבחר במקום 230 הישן כדי לנחות בדיוק על גוון הסגול, לא לחצות אותו לכיוון
+   כחול. הזוהר (drop-shadow) עבר להיות חד-גוני סגול (168,85,247 / 126,34,206)
+   במקום הזוג הישן סגול+ציאן, כדי שהזהות הצבעונית תישאר סגולה גם בהילה.
+   translateY עדין ואיטי (לא scale/box-shadow) כדי שה"נשימה" תרגיש כמו ריחוף
+   חופשי על הרקע, לא כמו כפתור שמהבהב */
 .ai-brain-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    font-size: 2.1rem;
+    font-size: 4.6rem;
     line-height: 1;
-    filter: hue-rotate(230deg) saturate(1.5) brightness(1.15) drop-shadow(0 0 6px rgba(168, 85, 247, 0.65)) drop-shadow(0 0 3px rgba(0, 212, 255, 0.45));
+    filter: hue-rotate(285deg) saturate(2.2) brightness(0.95) drop-shadow(0 0 12px rgba(168, 85, 247, 0.85)) drop-shadow(0 0 6px rgba(126, 34, 206, 0.55));
     animation: aiBrainFloat 5.5s ease-in-out infinite;
     transition: filter 0.25s ease;
 }
 @keyframes aiBrainFloat {
-    0%, 100% { transform: translateY(0); filter: hue-rotate(230deg) saturate(1.5) brightness(1.15) drop-shadow(0 0 6px rgba(168, 85, 247, 0.65)) drop-shadow(0 0 3px rgba(0, 212, 255, 0.45)); }
-    50% { transform: translateY(-6px); filter: hue-rotate(230deg) saturate(1.5) brightness(1.15) drop-shadow(0 0 9px rgba(168, 85, 247, 0.55)) drop-shadow(0 0 5px rgba(0, 212, 255, 0.35)); }
+    0%, 100% { transform: translateY(0); filter: hue-rotate(285deg) saturate(2.2) brightness(0.95) drop-shadow(0 0 12px rgba(168, 85, 247, 0.85)) drop-shadow(0 0 6px rgba(126, 34, 206, 0.55)); }
+    50% { transform: translateY(-6px); filter: hue-rotate(285deg) saturate(2.2) brightness(0.95) drop-shadow(0 0 16px rgba(168, 85, 247, 0.7)) drop-shadow(0 0 8px rgba(126, 34, 206, 0.45)); }
 }
 /* ההילה מתחזקת במעבר עכבר/לחיצה, לאותת על פעילות - animation:none חובה כאן
    (לא רק filter) כי אנימציית CSS פעילה "מנצחת" בקאסקייד על ערך filter רגיל
@@ -965,7 +966,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-brain-fab:hover .ai-brain-icon, .ai-brain-fab:active .ai-brain-icon {
     animation: none;
     transform: translateY(-4px);
-    filter: hue-rotate(230deg) saturate(1.7) brightness(1.25) drop-shadow(0 0 14px rgba(168, 85, 247, 0.85)) drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
+    filter: hue-rotate(285deg) saturate(2.4) brightness(1.05) drop-shadow(0 0 22px rgba(168, 85, 247, 0.95)) drop-shadow(0 0 10px rgba(126, 34, 206, 0.75));
 }
 
 /* תגית-רמז (tooltip) בעיצוב האפליקציה במקום ה-title הדפדפני הגנרי (שאי
