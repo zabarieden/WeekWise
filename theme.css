@@ -809,7 +809,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     flex-direction: row;
     align-items: center;
     gap: 16px;
-    max-width: calc(100% - 24px);
+    max-width: calc(100% - 12px);
     overflow-x: auto;
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);
@@ -819,9 +819,16 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
     padding: 10px 16px;
     box-sizing: border-box;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
-.fab-dock::-webkit-scrollbar { display: none; }
+/* בעבר הפסים הוסתרו לגמרי (scrollbar-width:none) והתבססנו רק על מסכת
+   הגרדיאנט/בועה-נחתכת-בקצה כרמז לגלילה - בפועל זה לא הספיק: משתמשת דיווחה
+   שבועות "נעלמות"/"מוסתרות" כי לא היה שום רמז מוחשי שיש עוד תוכן בצד.
+   פס גלילה דק וגלוי (לא הפס המערכתי המכוער - מעוצב ידנית) פותר את זה ישירות */
+.fab-dock::-webkit-scrollbar { height: 5px; }
+.fab-dock::-webkit-scrollbar-track { background: transparent; }
+.fab-dock::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.35); border-radius: 999px; }
 .phone-wrapper.menu-open .fab-dock, .phone-wrapper.modal-open .fab-dock { display: none; }
 
 /* עיצוב משותף לכל בועה ב-Dock - גרדיאנט סגול->ציאן (לא כחול סתמי) כדי
@@ -855,14 +862,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    לא תמיד נכנסות ברוחב מסך טלפון בלי גלילה, לא משנה כמה מצמצמים מרווחים -
    זו מגבלה פיזית, לא באג. הפתרון: לא נלחמים בזה עם בועות זעירות (מה
    שתוקן בעבר), אלא הופכים את הגלילה האופקית לגלויה בעצמה - מסכת גרדיאנט
-   בקצוות (ר' .fab-dock) תמיד מרמזת שיכול להיות עוד תוכן בצד, ובועה חלקית
-   שנחתכת בקצה (במקום שהיא תיעלם לגמרי) מספרת בבירור "יש עוד, תחליקי" */
+   בקצוות (ר' .fab-dock) ובועה חלקית שנחתכת בקצה מרמזות שיש עוד תוכן בצד,
+   ופס גלילה דק וגלוי (ר' scrollbar-color/::-webkit-scrollbar-thumb למעלה)
+   מספר בבירור ומוחשית "יש עוד, תחליקי" */
 .fab-dock {
     -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
     mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
 }
 @media (max-width: 420px) {
-    .fab-dock { gap: 10px; padding: 8px 12px; }
+    .fab-dock { gap: 8px; padding: 6px 10px; }
     .ai-brain-fab { width: 68px; height: 68px; }
     .ai-brain-icon { font-size: 3rem; }
     /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (68px, קצה תחתון ב-top:22px+68px=90px)
@@ -1053,16 +1061,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
 /* כשהמגירה פתוחה (menu-open) או כל מודל אחר (modal-open, ר' openModal/
-   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock
-   המאוחד כבר מוסתר לגמרי דרך .fab-dock למעלה). חייבים להעלים אותם ממש (לא
+   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים ואת בועות
+   ה-Dock שנגררו החוצה למיקום חופשי (dock-fab-free - אלו מנותקות מ-.fab-dock
+   ולכן לא מוסתרות איתו למעלה, גם אחרי שנגררו יושבות ישירות בתוך .phone-wrapper
+   וצפות מעל מודלים אם לא מטפלים בהן בנפרד). חייבים להעלים אותם ממש (לא
    רק סדר שכבות), כי z-index:99999 !important שלהם גבוה בהרבה מ-4000/2000 של
    המגירה/המודלים, אחרת הם ממשיכים לצוף מעל התוכן ואף לתפוס לחיצות/מגע
    שאמורות להגיע לכפתורים מתחתיהם - זה גרם בפועל לכפתור "איפוס פריסת
    הקיצורים" בהגדרות להיראות כאילו לא עושה כלום במובייל */
 .phone-wrapper.menu-open .ai-brain-fab,
 .phone-wrapper.menu-open .hamburger-fab,
+.phone-wrapper.menu-open .dock-fab-free,
 .phone-wrapper.modal-open .ai-brain-fab,
-.phone-wrapper.modal-open .hamburger-fab {
+.phone-wrapper.modal-open .hamburger-fab,
+.phone-wrapper.modal-open .dock-fab-free {
     opacity: 0 !important;
     pointer-events: none !important;
 }
