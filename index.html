@@ -1025,6 +1025,10 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="notes_ai_title">Quick Note</h3>
                 <div class="ai-quick-add-wrap">
+                    <div class="ai-schedule-mode-toggle" id="quick-note-dest-toggle">
+                        <button type="button" class="ai-schedule-mode-btn active" data-mode="weekly" onclick="setQuickNoteDestination('weekly')" data-i18n="quick_note_dest_notes">📝 Notes</button>
+                        <button type="button" class="ai-schedule-mode-btn" data-mode="general" onclick="setQuickNoteDestination('general')" data-i18n="quick_note_dest_shopping">🛒 Shopping List</button>
+                    </div>
                     <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="A thought, a reminder, or an idea"></textarea>
                     <div class="action-buttons-wrap">
                         <button id="btn-ai-quick-add" class="btn-primary" data-i18n="notes_ai_btn">Add</button>
@@ -1962,7 +1966,7 @@
 
     </div>
 
-    <script src="i18n.js?v=132"></script>
-    <script src="app.js?v=216"></script>
+    <script src="i18n.js?v=133"></script>
+    <script src="app.js?v=217"></script>
 </body>
 </html>

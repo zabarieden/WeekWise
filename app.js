@@ -1317,7 +1317,19 @@ function applyPwaShortcutDeepLink() {
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
-    el.onclick = () => openModal('modal-ai-quick-add');
+    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
+}
+
+// יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
+// המודל, אותו דפוס בדיוק כמו ai-schedule-mode-toggle (חד-פעמי/חוזר) שכבר
+// קיים במסך הלו"ז, לעקביות ויזואלית. חוזר לברירת המחדל "פתקים" בכל פתיחה
+// מחדש של המודל (ר' initFixedAiFab) כדי שלא "ייתקע" על רשימת קניות בטעות
+let quickNoteDestination = 'weekly';
+function setQuickNoteDestination(type) {
+    quickNoteDestination = type;
+    document.querySelectorAll('#quick-note-dest-toggle .ai-schedule-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-mode') === type);
+    });
 }
 
 function initFixedAiBrainFab() {
@@ -4736,6 +4748,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'app_stuck_loading', category: 'general' },
     { id: 'refresh_data', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
+    { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
     { id: 'add_myweek_task', category: 'myweek' },
@@ -9846,8 +9859,8 @@ async function handleAIQuickAdd() {
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
 
-    await insertCenterItemDirect('weekly', text);
-    showAppToast(t('notes_ai_added'));
+    await insertCenterItemDirect(quickNoteDestination, text);
+    showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
     input.value = '';
     closeModal('modal-ai-quick-add');
 }
