@@ -1381,7 +1381,7 @@ function initFixedAiFab() {
 let quickNoteDestination = 'weekly';
 function setQuickNoteDestination(type) {
     quickNoteDestination = type;
-    document.querySelectorAll('#quick-note-dest-toggle .ai-schedule-mode-btn').forEach(btn => {
+    document.querySelectorAll('#quick-note-dest-toggle .quick-note-dest-mini').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-mode') === type);
     });
     const input = document.getElementById('ai-quick-add-input');
