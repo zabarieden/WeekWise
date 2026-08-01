@@ -4900,11 +4900,11 @@ function filterHelpFaq() {
     if (emptyHint) emptyHint.classList.toggle('hidden', anyVisible);
 }
 
-// כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (לא כולם רוצים עוד כפתור
-// קבוע על המסך), מוצג רק אחרי הפעלה מפורשת בהגדרות. אותו דפוס בדיוק כמו
-// high-contrast/color-filter למעלה - localStorage, לא תלוי פרימיום
+// כפתור צף להוספה מהירה של מים - דלוק כברירת מחדל (opt-out, לא opt-in) לפי
+// בקשה מפורשת: כל מי שלא נגע בהגדרה בכלל רואה את הכפתור מיד, בדיוק כמו
+// btn-food-fab למטה - "!== 'false'" ולא "=== 'true'"
 function isWaterFabOn() {
-    return localStorage.getItem('weekwise_water_fab') === 'true';
+    return localStorage.getItem('weekwise_water_fab') !== 'false';
 }
 
 function applyWaterFabSetting(enabled) {
@@ -4931,7 +4931,10 @@ function applyWaterFabSetting(enabled) {
 // class="hidden" (display:none) פשוט לא תופסת מקום - אין צורך בחישוב אינדקס
 // ידני (--fab-stack-index הישן הוסר לגמרי)
 function getFabOrder() {
-    const defaultOrder = ['btn-water-fab', 'btn-sport-fab', 'btn-preset-fab', 'btn-food-fab', 'btn-smart-split-fab'];
+    // הסדר הזה נבחר כדי שהתצוגה הוויזואלית (אחרי applyDockOrder, שממרכזת
+    // את הפתק ומפזרת את השאר סימטרית סביבו) תצא בדיוק: פריסה חכמה, מזון -
+    // הפתק (במרכז) - מים, ארוחה קבועה - משמאל לימין, לפי בקשה מפורשת
+    const defaultOrder = ['btn-smart-split-fab', 'btn-sport-fab', 'btn-food-fab', 'btn-water-fab', 'btn-preset-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -5365,9 +5368,10 @@ function toggleSportFabFromCard() {
     showAppToast(t(enabled ? 'sport_fab_shortcut_added_toast' : 'sport_fab_shortcut_removed_toast'));
 }
 
-// כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אותו דפוס בדיוק כמו כפתורי המים/ספורט
+// כפתור צף להוספה מהירה של ארוחה קבועה שמורה - דלוק כברירת מחדל (opt-out),
+// אותה סיבה בדיוק כמו btn-water-fab/btn-food-fab למעלה
 function isPresetFabOn() {
-    return localStorage.getItem('weekwise_preset_fab') === 'true';
+    return localStorage.getItem('weekwise_preset_fab') !== 'false';
 }
 
 function applyPresetFabSetting(enabled) {
@@ -5384,10 +5388,10 @@ function togglePresetFab() {
     applyPresetFabSetting(enabled);
 }
 
-// כפתור צף להוספת מזון מהיר בטקסט חופשי - בניגוד לשאר כפתורי ה-FAB (כבויים
-// כברירת מחדל, opt-in), זה דלוק כברירת מחדל לפי בקשה מפורשת - "!== 'false'"
-// במקום "=== 'true'" הופך את זה ל-opt-out: כל מי שלא נגע בהגדרה בכלל (משתמשת
-// חדשה או ותיקה) רואה את הכפתור מיד; רק מי שכיבתה אותו במפורש לא תראה אותו
+// כפתור צף להוספת מזון מהיר בטקסט חופשי - דלוק כברירת מחדל (opt-out, לא
+// opt-in), "!== 'false'" במקום "=== 'true'": כל מי שלא נגע בהגדרה בכלל
+// (משתמשת חדשה או ותיקה) רואה את הכפתור מיד; רק מי שכיבתה אותו במפורש לא
+// תראה אותו. כל בועות ה-Dock עכשיו opt-out חוץ מספורט, שנשאר opt-in
 function isFoodFabOn() {
     return localStorage.getItem('weekwise_food_fab') !== 'false';
 }
@@ -5406,10 +5410,11 @@ function toggleFoodFab() {
     applyFoodFabSetting(enabled);
 }
 
-// כפתור צף לפתיחה מהירה של "פריסה חכמה" - אותו דפוס בדיוק כמו כפתורי
-// המים/ספורט/ארוחה קבועה, כבוי כברירת מחדל (opt-in, לא כולם צריכים עוד בועה)
+// כפתור צף לפתיחה מהירה של "פריסה חכמה" - דלוק כברירת מחדל (opt-out), אותה
+// סיבה בדיוק כמו שאר בועות ה-Dock למעלה - חוץ מספורט, שנשאר כבוי כברירת
+// מחדל (opt-in) לפי בקשה מפורשת
 function isSmartSplitFabOn() {
-    return localStorage.getItem('weekwise_smart_split_fab') === 'true';
+    return localStorage.getItem('weekwise_smart_split_fab') !== 'false';
 }
 
 function applySmartSplitFabSetting(enabled) {
