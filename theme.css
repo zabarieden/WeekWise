@@ -829,13 +829,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    כדי שגרירה במגע לא "תגלוש" לגלילת הדף במקום להזיז את הבועה */
 .dock-fab {
     position: relative;
-    width: 64px;
-    height: 64px;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.75), rgba(56, 189, 248, 0.75));
     border: 1px solid rgba(255,255,255,0.15);
     color: #fff;
-    font-size: 1.7rem;
+    font-size: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
