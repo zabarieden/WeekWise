@@ -5001,6 +5001,12 @@ let fabCarouselOrder = null;
 // fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
+    // רשת ביטחון: אם מסיבה כלשהי מחווה קודמת לא סיימה לנקות אחריה (למשל
+    // pointercancel לא-צפוי), --fab-drag-x היה יכול להישאר "תקוע" על ערך
+    // לא-אפס ולהזיז את כל השורה בקביעות - מאפסים כאן בכל קריאה, בלי תלות
+    // בזה שהמחווה עצמה תנקה נכון
+    const dock = document.getElementById('fab-dock');
+    if (dock) dock.style.setProperty('--fab-drag-x', '0px');
     const allIds = ['btn-ai-fab', ...getFabOrder()];
     const active = allIds.filter(id => {
         const el = document.getElementById(id);
@@ -5012,36 +5018,28 @@ function applyDockOrder() {
         fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
         active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
     }
-    // מספר בועות זוגי (למשל 6, כשגם ספורט פעיל) לא נותן משבצת-אמצע יחידה -
-    // (n-1)/2 יוצא ".5", ואם קובעים "קדמי" לפי סף-מרחק (absDist<0.6) שתי
-    // הבועות הקרובות ביותר נכנסות לסף גם יחד = שתי בועות "קדמיות" גדולות
-    // בו-זמנית (באג אמיתי שדווח: "רואים 2 בועות גדולות באמצע"). Math.round
-    // בוחר תמיד משבצת יחידה מוגדרת-מראש, גם כשהמרכז "בין" שתי משבצות
+    // הבועה ה"קדמית" (הגדולה) חייבת לשבת בדיוק ב-x=0 תמיד - לא "איפה שיוצא
+    // הכי קרוב למרכז המתמטי" (dist=0.5 עם מספר זוגי, כמו קודם). לפי בקשה
+    // מפורשת חוזרת: "אני רוצה שזה יהיה באמצע... הבועה האמצעית" - בדסקטופ
+    // (מספר אי-זוגי, יש משבצת-אמצע אמיתית) זה כבר יצא נכון מעצמו, אבל
+    // במובייל (מספר זוגי, למשל 4) המרכז ה"מתמטי" נופל *בין* שתי משבצות -
+    // מרכוז לפי תיבה-חוסמת (הגרסה הקודמת) ריכז את השורה כולה נכון, אבל לא
+    // את הבועה הגדולה עצמה, שזה בדיוק מה שדווח כבאג. הפתרון: קובעים קודם
+    // איזו בועה קדמית (המשבצת הכי קרובה למרכז), ואז מודדים מרחק של *כל*
+    // בועה אחרת ממנה (לא מהמרכז המתמטי) - כך שהיא, לא המרכז התאורטי, תמיד
+    // ב-0 בדיוק. במספר זוגי זה יוצא א-סימטרי (יותר בועות בצד אחד) - זה
+    // מחיר סביר כדי שהבועה החשובה ביותר תהיה תמיד באמת במרכז המסך
     const centerIndex = (fabCarouselOrder.length - 1) / 2;
     const frontIndex = Math.round(centerIndex);
-    const FRONT_W = 92, SIDE_W = 58; // חייב להתאים ל-.fab-tier-front/.fab-tier-side ב-theme.css
-    // עם מספר זוגי, הבועה ה"קדמית" (הגדולה) לא בדיוק ב-x=0 (dist=0.5 ולא 0),
-    // אז השורה כולה יוצאת מוסטת אחרי סימטריית-המשבצות הרגילה - בפרט
-    // ברוחב מסך צר (מובייל) זה גרם לשורה שלמה "לברוח" הצידה (באג אמיתי
-    // שדווח: "אני רוצה שזה יהיה באמצע", מול דסקטופ עם מספר אי-זוגי שיצא
-    // ממורכז נכון בלי הבעיה הזו בכלל). מחשבים את התיבה החוסמת האמיתית
-    // (כולל רוחב כל בועה, לא רק מרכזי-הבועות) וממרכזים אותה בעצמנו,
-    // במקום לסמוך על סימטריה "אוטומטית" שנשברת כשהגדלים שונים
-    const positions = fabCarouselOrder.map((id, i) => {
-        const dist = i - centerIndex;
-        const isFront = i === frontIndex;
-        return { id, dist, isFront, x: dist * FAB_ROW_STEP, width: isFront ? FRONT_W : SIDE_W };
-    });
-    const minEdge = Math.min(...positions.map(p => p.x - p.width / 2));
-    const maxEdge = Math.max(...positions.map(p => p.x + p.width / 2));
-    const centerOffset = (minEdge + maxEdge) / 2;
-    positions.forEach(p => {
-        const el = document.getElementById(p.id);
+    fabCarouselOrder.forEach((id, i) => {
+        const el = document.getElementById(id);
         if (!el) return;
-        el.style.left = `${Math.round(p.x - centerOffset)}px`;
-        el.style.top = `${Math.round(-Math.min(Math.abs(p.dist) * 9, 30))}px`;
-        el.classList.toggle('fab-tier-front', p.isFront);
-        el.classList.toggle('fab-tier-side', !p.isFront);
+        const dist = i - frontIndex; // 0 בדיוק עבור הבועה הקדמית עצמה
+        const absDist = Math.abs(dist);
+        el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
+        el.style.top = `${Math.round(-Math.min(absDist * 9, 30))}px`;
+        el.classList.toggle('fab-tier-front', i === frontIndex);
+        el.classList.toggle('fab-tier-side', i !== frontIndex);
     });
     allIds.forEach(id => {
         if (active.includes(id)) return;
