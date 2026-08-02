@@ -1058,14 +1058,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transition: opacity 0.15s ease;
     z-index: 100000;
 }
-/* בועות ה-Dock יושבות בתחתית המסך - הרמז קופץ מעליהן, ממורכז */
+/* בטלנו את תגית-הרמז על בועות ה-Dock (במחשב, hover) - overflow:hidden של
+   .dock-fab (נחוץ לקיצוץ הברק/highlight-ים לעיגול, ר' .dock-fab למעלה)
+   קוצץ גם אותה בטעות, כך שבמקום לצוף מעל הבועה היא נראית כטקסט מקוטע
+   "בתוך" הבועה עצמה - דווח במפורש עם צילום מסך. הכי בטוח פשוט לכבות אותה
+   לגמרי כאן, לפי בקשה מפורשת ("תמחוק את המילים") */
 .dock-fab[data-tooltip]::after {
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
-}
-.dock-fab[data-tooltip]:hover::after, .dock-fab[data-tooltip]:focus-visible::after {
-    opacity: 1;
+    display: none;
 }
 /* בורר יעד "פתק מהיר" (quick-note-dest-mini, ר' index.html) - אין לו
    class="dock-fab", אז צריך כלל מיקום נפרד; אותו רעיון (קופץ מעליו, ממורכז),
