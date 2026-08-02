@@ -865,11 +865,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     height: 76px;
     border-radius: 50%;
     overflow: hidden;
-    /* גרדיאנט עם ניגודיות חזקה יותר בין הבהיר לכהה (לא רק גוון אחיד חלש) -
-       זכוכית/כדור אמיתיים מבריקים כי יש הבדל חד בין אזור מואר לאזור מוצל,
-       לא "ערפול" אחיד. saturate גבוה יותר ב-backdrop-filter מגביר את תחושת
-       ה"קריסטל" של הרקע הנראה מבעד לבועה */
-    background: linear-gradient(150deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.03) 60%, rgba(255, 255, 255, 0.14) 100%);
+    /* בועת-סבון אמיתית (לפי בקשה מפורשת + תמונת-סגנון): גוף כחלחל-שקוף עם
+       ניגודיות חזקה, לא גוון אחיד חלש. saturate גבוה ב-backdrop-filter
+       מגביר את תחושת ה"קריסטל" של הרקע הנראה מבעד לבועה */
+    background: linear-gradient(150deg, rgba(210, 235, 255, 0.45) 0%, rgba(180, 220, 255, 0.15) 45%, rgba(200, 230, 255, 0.04) 60%, rgba(190, 225, 255, 0.18) 100%);
     backdrop-filter: blur(16px) saturate(1.6);
     -webkit-backdrop-filter: blur(16px) saturate(1.6);
     border: 1.5px solid rgba(255, 255, 255, 0.55);
@@ -879,21 +878,21 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    /* מודל-אור עקבי: "אור ישר מלמעלה" בלבד (לא באלכסון) - לפי בקשה מפורשת
-       ("הצל אמור להיות מתחת לבועות... כאילו אור מלמעלה") - כל ה-inset-ים
-       וה-x-offset של הצל עצמו הם 0 (בלי היסט אופקי), רק אנכי. 0 0 24px:
-       הילת-זוהר רכה שנפרשת מסביב לבועה (לא כיוונית, שכבה נפרדת). 0 16px
-       12px -6px: צל-מגע נפרד לכל בועה (לא צל-רצפה משותף אחד שנדחה במפורש) -
-       כהה, ישר מתחת לבועה בלבד, כאילו היא באמת מטילה צל על "רצפה" מתחתיה;
-       זז ומתעדכן איתה אוטומטית כי הוא חלק מהבועה עצמה. inset 0 3px:
-       הדגשת-אור ישר בקצה העליון. inset 0 -10px: צל ישר בתחתית הכדור פנימה
-       (לא בפינה). box-shadow לא מושפע מ-overflow:hidden של הבועה עצמה
-       (זה חל רק על תוכן, לא על הצל של הקופסה) */
+    /* מודל-אור עקבי: "אור ישר מלמעלה" - inset-ים/צל-המגע בלי היסט אופקי,
+       רק אנכי. 0 22px 14px -8px: צל-מגע *מנותק* מהבועה (offset+blur גדולים
+       יותר מגרסה קודמת) כדי שיראה כאילו היא באמת מרחפת מעליו, כמו בתמונה -
+       לא נוגע בבועה חזותית. 0 0 24px: הילת-זוהר רכה כללית מסביב.
+       שלוש שכבות rgba נוספות (סגול/ציאן/ורוד עדינים, כל אחת בהיסט קטן שונה)
+       מדמות קשת אירידסנטית ("קשת בענן" עדינה על שולי הזכוכית) בלי conic-
+       gradient/border-image מורכבים - בדיוק התחושה מתמונת-הסגנון */
     box-shadow:
-        0 16px 12px -6px rgba(0, 0, 0, 0.5),
-        0 0 24px -2px rgba(200, 215, 255, 0.5),
+        0 22px 14px -8px rgba(0, 0, 0, 0.45),
+        0 0 24px -2px rgba(200, 225, 255, 0.55),
+        1px -2px 5px -1px rgba(168, 85, 247, 0.3),
+        -2px 1px 5px -1px rgba(56, 189, 248, 0.3),
+        0 3px 5px -1px rgba(255, 130, 190, 0.22),
         inset 0 3px 3px rgba(255, 255, 255, 0.75),
-        inset 0 -10px 14px rgba(0, 0, 0, 0.22);
+        inset 0 -10px 14px rgba(0, 0, 0, 0.18);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
@@ -909,9 +908,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     0%, 100% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(0); }
     50% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(-5px); }
 }
-/* שני highlight-ים - רך וגדול (השתקפות כללית) וקטן/חד (נקודת-אור ישירה,
-   "ספקולר") - כדור/זכוכית אמיתיים כמעט תמיד מראים את שניהם ביחד, לא רק כתם
-   רך אחד; זה מה שהיה חסר כדי שזה יראה "זכוכיתי" ולא סתם "מעומעם" */
+/* highlight-ים - רך וגדול למעלה (השתקפות כללית), חד/קטן למעלה (נקודת-אור
+   ישירה, "ספקולר"), ועוד נקודת-אור שנייה קטנה יותר למטה (כמו בתמונת-
+   הסגנון - בועת סבון אמיתית כמעט תמיד מראה גם השתקפות משנית בתחתית).
+   שתי שכבות radial-gradient על ::after (לא עוד pseudo-element - לאלמנט יש
+   רק before/after) - זה מה שהיה חסר כדי שזה יראה "זכוכיתי" ולא רק "מעומעם" */
 .dock-fab::before {
     content: '';
     position: absolute;
@@ -926,11 +927,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .dock-fab::after {
     content: '';
     position: absolute;
-    top: 14%;
-    left: 22%;
-    width: 14%;
-    height: 10%;
-    background: rgba(255, 255, 255, 0.95);
+    inset: 0;
+    background:
+        radial-gradient(ellipse 14% 10% at 32% 20%, rgba(255, 255, 255, 0.95), transparent 100%),
+        radial-gradient(ellipse 18% 12% at 55% 82%, rgba(255, 255, 255, 0.55), transparent 100%);
     border-radius: 50%;
     filter: blur(0.5px);
     pointer-events: none;
