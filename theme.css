@@ -850,17 +850,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     position: absolute;
     /* left/top (לא transform!) הם מה ש-JS קובע לכל בועה (ר' applyDockOrder
        ב-app.js) - ערכי פיקסלים ביחס לנקודת העיגון של .fab-dock (שגודלה 0,
-       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים).
-       transform: מרכז את הבועה על הנקודה של עצמה, ובנוסף מוסיף --fab-drag-x -
-       היסט זמני בפיקסלים שנקבע ב-JS על #fab-dock עצמו (לא כל בועה בנפרד)
-       בזמן גרירה חיה (ר' initDockCarouselGestures), כדי שכל הבועות "יזוזו עם
-       האצבע" ברגע אמת ולא רק יקפצו למקום החדש בסוף המחווה - הבועה הנגררת
-       עצמה מאפסת את המשתנה לעצמה (0px) כי היא לא אמורה לזוז. אנימציית הריחוף
-       (ר' dockFabFloat למטה) חוזרת על אותו ביטוי transform בדיוק, כדי לא
-       "לבלוע" את היסט הגרירה תוך כדי תנועה */
+       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים). transform
+       ממרכז את הבועה על הנקודה של עצמה בלבד - היסט הגרירה החיה כבר לא כאן
+       (ר' ההערה על #fab-dock ב-.fab-dock עצמו) כדי לא "להתנגש" עם אנימציית
+       הריחוף (dockFabFloat) שגם היא כותבת ל-transform של הבועה הזו - שתי
+       אנימציות/עדכונים על אותה תכונה, על אותו אלמנט, בו-זמנית, זה מה שגרם
+       לגרירה "לקפוץ" במקום לזוז חלק */
     left: 0;
     top: 0;
-    transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%);
+    transform: translate(-50%, -50%);
     width: 76px;
     height: 76px;
     border-radius: 50%;
@@ -901,8 +899,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    מפורשת "שהבועות ירחפו קצת כמו המוח". משך שונה מעט לכל רמת-עומק (ר'
    .fab-tier-* למטה) כדי שלא כולן "ינשמו" בדיוק ביחד - מרגיש יותר אורגני */
 @keyframes dockFabFloat {
-    0%, 100% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(0); }
-    50% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(-5px); }
+    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-5px); }
 }
 /* highlight-ים - רך וגדול למעלה (השתקפות כללית), חד/קטן למעלה (נקודת-אור
    ישירה, "ספקולר"), ועוד נקודת-אור שנייה קטנה יותר למטה (כמו בתמונת-
@@ -931,12 +929,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     filter: blur(0.5px);
     pointer-events: none;
 }
-.dock-fab:active { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) scale(0.9); }
-/* בזמן גרירה חיה (ר' initFixedAiFab ב-app.js) מבטלים transition על left/top/
-   transform כדי שהבועות יעקבו אחרי האצבע מיידית בלי "לגרור רגליים" - חוזר
-   ברגע שהגרירה נגמרת כדי שההשתקעות למשבצת הסופית (ר' rotateFabRow) תהיה
-   אנימציה חלקה, לא קפיצה */
-.fab-dock.fab-row-dragging .dock-fab { transition: none; }
+.dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
+/* בזמן גרירה חיה (ר' initDockCarouselGestures ב-app.js) מבטלים transition
+   על left/top כדי שהבועות "יתייצבו" מיידית במשבצת הסופית בלי לגרור רגליים
+   ברגע שהגרירה מסתיימת - ומקפיאים גם את אנימציית הריחוף (animation-play-
+   state) כדי שלא תתחרה על transform עם ההיסט של #fab-dock עצמו תוך כדי
+   הגרירה החיה */
+.fab-dock.fab-row-dragging .dock-fab { transition: none; animation-play-state: paused; }
 /* שתי רמות גודל בלבד (לא מדורג) - האמצעית גדולה (fab-tier-front), כל
    השאר קטנות באופן אחיד (fab-tier-side), לפי בקשה מפורשת. בלי opacity/
    עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.

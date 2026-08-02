@@ -5002,11 +5002,11 @@ let fabCarouselOrder = null;
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
     // רשת ביטחון: אם מסיבה כלשהי מחווה קודמת לא סיימה לנקות אחריה (למשל
-    // pointercancel לא-צפוי), --fab-drag-x היה יכול להישאר "תקוע" על ערך
-    // לא-אפס ולהזיז את כל השורה בקביעות - מאפסים כאן בכל קריאה, בלי תלות
-    // בזה שהמחווה עצמה תנקה נכון
+    // pointercancel לא-צפוי), ה-transform הזמני על #fab-dock היה יכול
+    // להישאר "תקוע" ולהזיז את כל השורה בקביעות - מאפסים כאן בכל קריאה,
+    // בלי תלות בזה שהמחווה עצמה תנקה נכון
     const dock = document.getElementById('fab-dock');
-    if (dock) dock.style.setProperty('--fab-drag-x', '0px');
+    if (dock) dock.style.transform = '';
     const allIds = ['btn-ai-fab', ...getFabOrder()];
     const active = allIds.filter(id => {
         const el = document.getElementById(id);
@@ -5069,8 +5069,12 @@ function rotateFabRow(direction) {
 
 // גרירה חיה לסיבוב הקרוסלה - על כל בועה בעגלה (כולל הפתק, לא רק היא) לפי
 // בקשה מפורשת ("אני לא מצליחה לגרור אותם") - קודם זה עבד רק מבועת הפתקים
-// ספציפית, מה שהיה לא אינטואיטיבי. כל הבועות זזות ביחד בזמן אמת עם האצבע
-// (ר' --fab-drag-x ב-.dock-fab ב-theme.css) דרך משתנה CSS משותף על #fab-dock,
+// ספציפית, מה שהיה לא אינטואיטיבי. ההיסט הזמני נכתב כ-transform ישירות על
+// #fab-dock עצמו (לא משתנה CSS משותף שכל בועה קראה בתוך ה-transform שלה) -
+// גרסה קודמת עם --fab-drag-x "התנגשה" עם אנימציית הריחוף (dockFabFloat) של
+// כל בועה, ששתיהן כתבו ל-transform של אותו אלמנט בו-זמנית וגרמו לגרירה
+// להיראות כאילו היא "קופצת" במקום לזוז חלק עם האצבע (דווח במפורש). הזזת
+// ההורה כולו במקום כל בועה בנפרד היא גם פשוטה יותר ובלי שום התנגשות אפשרית.
 // לא Sortable - לא רוצים שתי מערכות גרירה נפרדות מתחרות על אותה בועה, ואין
 // יותר "סידור-מחדש" נפרד מ"סיבוב" - הסיבוב הוא כל מנגנון הסידור-מחדש עכשיו.
 // טאפ רגיל (בלי גרירה) עדיין מפעיל את הפעולה הרגילה של הבועה הספציפית הזו
@@ -5092,7 +5096,7 @@ function initDockCarouselGestures() {
             }
             if (dragging) {
                 e.preventDefault();
-                dock.style.setProperty('--fab-drag-x', `${dx}px`);
+                dock.style.transform = `translateX(${dx}px)`;
             }
         }
         function cleanup() {
@@ -5103,7 +5107,7 @@ function initDockCarouselGestures() {
         }
         function settle(dx) {
             dock.classList.remove('fab-row-dragging');
-            dock.style.setProperty('--fab-drag-x', '0px');
+            dock.style.transform = '';
             const steps = Math.round(dx / FAB_ROW_STEP);
             requestAnimationFrame(() => {
                 for (let i = 0; i < Math.abs(steps); i++) rotateFabRow(steps > 0 ? -1 : 1);
@@ -5124,7 +5128,7 @@ function initDockCarouselGestures() {
         function onPointerCancel(e) {
             if (e.pointerId !== pointerId) return;
             cleanup();
-            if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.setProperty('--fab-drag-x', '0px'); }
+            if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.transform = ''; }
             dragging = false;
         }
         el.addEventListener('pointerdown', (e) => {
