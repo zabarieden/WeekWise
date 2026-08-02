@@ -886,7 +886,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        מספיק. blur קטן (6px) ו-spread שלילי (-6px) שומרים על קצה חד/מוגדר
        ואליפסה קטנה מהבועה עצמה, לא עיגול מטושטש ברוחב זהה */
     box-shadow:
-        0 32px 6px -6px rgba(0, 0, 0, 0.75),
+        0 32px 6px -9px rgba(0, 0, 0, 0.75),
         0 0 20px -4px rgba(200, 225, 255, 0.5),
         inset 0 3px 3px rgba(255, 255, 255, 0.75),
         inset 0 -10px 14px rgba(0, 0, 0, 0.18);
@@ -970,9 +970,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        התנגשות */
     animation: dockFabFloat 6s ease-in-out infinite, fabPulse 2.5s ease-in-out infinite;
 }
+/* עד עכשיו לא כללה בכלל את שכבת הצל ה"מרחפת/מנותקת" ששאר הבועות מקבלות
+   מ-.dock-fab (הפעימה - animation - היא shorthand, אז היא דורסת את כל
+   box-shadow, כולל השכבה הזו) - זה כנראה מה שגרם לצל של הבועה הקדמית
+   להרגיש שונה/צמוד יחסית לשכנות שלה, לפי בקשה מפורשת. עכשיו כוללת גם אותה
+   (עם spread שלילי יותר, -14 במקום -6, כי הבועה הקדמית גדולה יותר ופיזית
+   קרובה יותר לשכנות - כדי שהצל לא "יגע" בהן) וגם את זוהר-הפעימה הסגול מעליה */
 @keyframes fabPulse {
-    0%, 100% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px -2px rgba(168, 85, 247, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -10px 16px rgba(0, 0, 0, 0.18); }
-    50% { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4), 0 0 42px 0px rgba(168, 85, 247, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -10px 16px rgba(0, 0, 0, 0.18); }
+    0%, 100% { box-shadow: 0 32px 6px -14px rgba(0, 0, 0, 0.75), 0 0 30px -2px rgba(168, 85, 247, 0.45), inset 0 3px 3px rgba(255, 255, 255, 0.75), inset 0 -10px 14px rgba(0, 0, 0, 0.18); }
+    50% { box-shadow: 0 32px 6px -14px rgba(0, 0, 0, 0.75), 0 0 42px 0px rgba(168, 85, 247, 0.6), inset 0 3px 3px rgba(255, 255, 255, 0.75), inset 0 -10px 14px rgba(0, 0, 0, 0.18); }
 }
 
 

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=223">
+    <link rel="stylesheet" href="theme.css?v=224">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -767,21 +767,18 @@
 
                 <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
                      דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
-                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם -->
-                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="switchToTab('sport-section')" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">⚡</button>
+                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. אימוג'י משקולת
+                     (לא ברק) - לפי בקשה מפורשת -->
+                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="switchToTab('sport-section')" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">🏋️</button>
 
                 <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
-                     מההגדרות, אותו דפוס בדיוק כמו כפתורי המים/ספורט. לוחצים, בוחרים
+                     מההגדרות, אותו דפוס בדיוק כמו כפתור המים/ספורט. לוחצים, בוחרים
                      ארוחה שמורה מהרשימה, וזה נכנס ישר למשבצת הפנויה הבאה של היום -
-                     בלי לעבור דרך מסך התזונה בכלל. אימוג'י בנטו (לא לוח קליפ-בורד) -
-                     לפי בקשה מפורשת, כי קליפ-בורד היה נראה דומה מדי לפתק (📝) בדוק -->
-                <button type="button" class="dock-fab hidden" id="btn-preset-fab" onclick="openPresetQuickAddModal()" data-i18n-tooltip="preset_fab_title" data-i18n-aria-label="preset_fab_title" aria-label="Quick add saved meal">🍱</button>
-
-                <!-- כפתור צף להוספת מזון מהירה בטקסט חופשי - משתמש באותו מנוע
-                     הערכת-קלוריות מקומי שכבר קיים בשדה "מה אכלת" הרגיל
-                     (estimateIngredientLineCalories), רק נגיש מכל מסך בלי לפתוח
-                     את מסך התזונה -->
-                <button type="button" class="dock-fab hidden" id="btn-food-fab" onclick="openFoodQuickAddModal()" data-i18n-tooltip="food_fab_title" data-i18n-aria-label="food_fab_title" aria-label="Quick log food">🍎</button>
+                     בלי לעבור דרך מסך התזונה בכלל. אימוג'י תפוח (לא בנטו) - ירש את
+                     האימוג'י מכפתור ההוספה-המהירה-בטקסט (btn-food-fab) שהוסר לגמרי;
+                     ההוספה המהירה בטקסט חופשי עברה לטאב הראשון במוח ה-AI (ר'
+                     modal-ai-brain למטה), לפי בקשה מפורשת -->
+                <button type="button" class="dock-fab hidden" id="btn-preset-fab" onclick="openPresetQuickAddModal()" data-i18n-tooltip="preset_fab_title" data-i18n-aria-label="preset_fab_title" aria-label="Quick add saved meal">🍎</button>
 
                 <!-- כפתור צף לפתיחה מהירה של "פריסה חכמה" (פרימיום) - אפשר לכבות
                      מההגדרות, אותו דפוס בדיוק כמו שאר הבועות. לוחצים ונפתח ישר
@@ -1143,21 +1140,6 @@
             </div>
         </div>
 
-        <!-- חלון צף: הוספת מזון מהירה בטקסט חופשי, מהכפתור הצף - אותו מנוע
-             הערכת-קלוריות מקומי כמו שדה "מה אכלת" הרגיל -->
-        <div id="modal-food-quick-add" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 id="food-quick-add-title" data-i18n="food_fab_title">Quick log food</h3>
-                <p class="modal-subtitle" data-i18n="food_quick_add_subtitle">Describe what you ate with a quantity (e.g. "1 cup cottage cheese" or "100g rice") and we'll estimate the calories.</p>
-                <input type="text" id="food-quick-add-input" data-i18n-placeholder="food_quick_add_placeholder" placeholder="e.g. half a cup of cottage cheese">
-                <div class="action-buttons-wrap">
-                    <button type="button" id="btn-food-quick-add-submit" class="btn-primary" onclick="logFoodQuickAdd()" data-i18n="food_quick_add_btn">Log it</button>
-                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-food-quick-add')" data-i18n="cancel_btn">Cancel</button>
-                </div>
-            </div>
-        </div>
-
         <!-- חלון צף: שאלת הבהרה אחת מה-AI (פרימיום בלבד) כשהתיאור החופשי
              מעורפל מדי להערכה בטוחה - ר' openFoodClarifyModal/confirmFoodClarify -->
         <div id="modal-food-clarify" class="apple-modal">
@@ -1279,14 +1261,6 @@
                         <label class="settings-label" data-i18n="settings_preset_fab_label" for="preset-fab-toggle">Quick preset-meal button</label>
                         <label class="switch">
                             <input type="checkbox" id="preset-fab-toggle" onchange="togglePresetFab()">
-                            <span class="switch-slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-toggle-row" data-fab-id="btn-food-fab">
-                        <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
-                        <label class="settings-label" data-i18n="settings_food_fab_label" for="food-fab-toggle">Quick food-log button</label>
-                        <label class="switch">
-                            <input type="checkbox" id="food-fab-toggle" onchange="toggleFoodFab()">
                             <span class="switch-slider"></span>
                         </label>
                     </div>
@@ -1606,12 +1580,28 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 class="ai-brain-modal-title" data-i18n="ai_brain_modal_title">✨ AI Assistant ✨</h3>
                 <div class="ai-brain-tabs">
-                    <button type="button" class="ai-brain-tab active" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
+                    <button type="button" class="ai-brain-tab active" data-tab="food" onclick="switchAiBrainTab('food')" data-i18n="ai_brain_tab_food">🍎 Food</button>
+                    <button type="button" class="ai-brain-tab" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
                     <button type="button" class="ai-brain-tab" data-tab="photo" onclick="switchAiBrainTab('photo')" data-i18n="ai_brain_tab_photo">📷 Photo</button>
                     <button type="button" class="ai-brain-tab" data-tab="finance" onclick="switchAiBrainTab('finance')" data-i18n="ai_brain_tab_finance">📊 Budget</button>
                 </div>
 
-                <div class="ai-brain-panel" data-ai-brain-panel="schedule">
+                <!-- הועבר לכאן מ-modal-food-quick-add העצמאי שהיה קודם, לפי בקשה מפורשת
+                     ("כפתור ההוספה המהירה של האוכל שיהיה הראשון בתוך ה-AI ולהוריד את
+                     הבועה") - אותם IDs בדיוק (food-quick-add-input,
+                     btn-food-quick-add-submit) כדי ש-logFoodQuickAdd/setFoodQuickAddLoading
+                     וכו' ב-app.js ימשיכו לעבוד בלי שינוי לוגיקה, רק openFoodQuickAddModal
+                     ו-finishFoodQuickAdd עודכנו לפתוח/לסגור את modal-ai-brain במקום -->
+                <div class="ai-brain-panel" data-ai-brain-panel="food">
+                    <p class="modal-subtitle" data-i18n="food_quick_add_subtitle">Describe what you ate with a quantity (e.g. "1 cup cottage cheese" or "100g rice") and we'll estimate the calories.</p>
+                    <input type="text" id="food-quick-add-input" data-i18n-placeholder="food_quick_add_placeholder" placeholder="e.g. half a cup of cottage cheese">
+                    <div class="action-buttons-wrap">
+                        <button type="button" id="btn-food-quick-add-submit" class="btn-primary" onclick="logFoodQuickAdd()" data-i18n="food_quick_add_btn">Log it</button>
+                        <button type="button" class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="ai-brain-panel hidden" data-ai-brain-panel="schedule">
                     <div id="schedule-ai-loading" class="recipe-scan-loading hidden">
                         <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
                         <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
@@ -1972,7 +1962,7 @@
 
     </div>
 
-    <script src="i18n.js?v=144"></script>
-    <script src="app.js?v=250"></script>
+    <script src="i18n.js?v=145"></script>
+    <script src="app.js?v=252"></script>
 </body>
 </html>

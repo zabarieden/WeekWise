@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyWaterFabSetting(isWaterFabOn());
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
-    applyFoodFabSetting(isFoodFabOn());
     applySmartSplitFabSetting(isSmartSplitFabOn());
     initFabOrderDragReorder();
     initDockCarouselGestures();
@@ -709,17 +708,14 @@ async function logPresetQuickAdd(id) {
     refreshTodayNutritionViewIfOpen();
 }
 
-// כותרת נוצצת "AI תזונה" רק לפרימיום (שבאמת מקבלת AI אמיתי) - לא לכל אחת,
-// כדי לא להטעות משתמשות חינמיות שעדיין מקבלות רק את החישוב המקומי הרגיל
+// עברה מלהיות מודל עצמאי משלה לטאב ראשון בתוך מוח ה-AI (modal-ai-brain) -
+// לפי בקשה מפורשת ("כפתור ההוספה המהירה של האוכל שיהיה הראשון בתוך ה-AI").
+// כותרת המודל עצמו קבועה עכשיו ("✨ AI Assistant ✨") ולא מתחלפת יותר לפי
+// סטטוס פרימיום (כפי שהיה למודל העצמאי הקודם) - הטאב עצמו כבר נמצא בתוך
+// מוקד ה-AI, כך שאין צורך יותר להבחין ויזואלית בין "מזון רגיל" ל"מזון AI".
+// ניקוי השדה מתבצע כבר בתוך openAiBrainModal עצמה
 function openFoodQuickAddModal() {
-    const input = document.getElementById('food-quick-add-input');
-    if (input) input.value = '';
-    const title = document.getElementById('food-quick-add-title');
-    if (title) {
-        title.classList.toggle('ai-brain-modal-title', isPremiumUser);
-        title.textContent = isPremiumUser ? t('food_quick_add_ai_title') : t('food_fab_title');
-    }
-    openModal('modal-food-quick-add');
+    openAiBrainModal('food');
 }
 
 // שומרים את הטקסט המקורי + שאלת ההבהרה בזמן שממתינים לתשובת המשתמשת (פרימיום
@@ -847,7 +843,7 @@ async function finishFoodQuickAdd(text, estimate) {
     const calories = Math.round(estimate || 0);
     if (!calories || calories <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
     await addQuickLogEntry(text, calories);
-    closeModal('modal-food-quick-add');
+    closeModal('modal-ai-brain');
     showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
     refreshTodayNutritionViewIfOpen();
 }
@@ -1387,10 +1383,12 @@ function setQuickNoteDestination(type) {
     if (input) input.placeholder = t(type === 'general' ? 'notes_ai_placeholder_shopping' : 'notes_ai_placeholder');
 }
 
+// ברירת המחדל בפתיחת המוח היא הטאב "מזון" (לא "לו"ז" כמו קודם) - לפי בקשה
+// מפורשת שההוספה המהירה של אוכל תהיה "הראשונה בתוך ה-AI"
 function initFixedAiBrainFab() {
     const el = document.getElementById('btn-ai-brain-fab');
     if (!el) return;
-    el.onclick = () => openAiBrainModal('schedule');
+    el.onclick = () => openAiBrainModal('food');
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -1693,9 +1691,13 @@ async function duplicateSlotToNextDay(day, slot) {
 // --- מוקד ה-AI ("המוח"): מודל אחד עם שני טאבים - תכנון לו"ז מטקסט חופשי
 // (פרימיום בלבד), וסריקת תמונה למתכון/ארוחה קבועה (יש לה מכסה חינמית משלה,
 // אז אין שער פרימיום גורף על פתיחת המודל - כל פעולה שוערת בנפרד בזמן האמת) ---
-function openAiBrainModal(tab = 'schedule') {
+// ברירת המחדל היא הטאב "מזון" - לפי בקשה מפורשת שההוספה המהירה של אוכל
+// תהיה "הראשונה בתוך ה-AI" (ר' initFixedAiBrainFab/openFoodQuickAddModal)
+function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-schedule-input').value = '';
     document.getElementById('ai-finance-input').value = '';
+    const foodInput = document.getElementById('food-quick-add-input');
+    if (foodInput) foodInput.value = '';
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
@@ -4940,7 +4942,7 @@ function filterHelpFaq() {
 
 // כפתור צף להוספה מהירה של מים - דלוק כברירת מחדל (opt-out, לא opt-in) לפי
 // בקשה מפורשת: כל מי שלא נגע בהגדרה בכלל רואה את הכפתור מיד, בדיוק כמו
-// btn-food-fab למטה - "!== 'false'" ולא "=== 'true'"
+// btn-preset-fab למטה - "!== 'false'" ולא "=== 'true'"
 function isWaterFabOn() {
     return localStorage.getItem('weekwise_water_fab') !== 'false';
 }
@@ -4958,12 +4960,14 @@ function applyWaterFabSetting(enabled) {
     restackFabs();
 }
 
-// הסדר הבסיסי של 5 הבועות הניתנות-לכיבוי (לא כולל הפתק - ר' fabCarouselOrder
-// למטה, שהוא-זה שקובע את הסדר/מי-במרכז בפועל בעגלה). עדיין ניתן לגרירה
-// בהגדרות (#fab-order-list, ר' initFabOrderDragReorder) - קובע רק את הסדר
-// היחסי-ביניהן כשהן נכנסות לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
+// הסדר הבסיסי של 4 הבועות הניתנות-לכיבוי (לא כולל הפתק - ר' fabCarouselOrder
+// למטה, שהוא-זה שקובע את הסדר/מי-במרכז בפועל בעגלה). btn-food-fab הוסרה
+// לגמרי מהרשימה - ההוספה המהירה בטקסט חופשי עברה לטאב הראשון במוח ה-AI, לפי
+// בקשה מפורשת. עדיין ניתן לגרירה בהגדרות (#fab-order-list, ר'
+// initFabOrderDragReorder) - קובע רק את הסדר היחסי-ביניהן כשהן נכנסות
+// לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
 function getFabOrder() {
-    const defaultOrder = ['btn-smart-split-fab', 'btn-sport-fab', 'btn-food-fab', 'btn-water-fab', 'btn-preset-fab'];
+    const defaultOrder = ['btn-smart-split-fab', 'btn-sport-fab', 'btn-water-fab', 'btn-preset-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -4990,9 +4994,10 @@ function applyFabOrder() {
 const FAB_ROW_STEP = 74;
 
 // --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
-// לא נשמר ב-localStorage בכוונה - "מי במרכז" הוא מצב זמני של המחווה
-// (סיבוב), לא העדפה קבועה; כל טעינה מתחילה מחדש עם הפתק בחזית, לפי בקשה
-// מפורשת "הפתקים יהיה ראשון" (כברירת מחדל, לא נעולה)
+// לא נשמר ב-localStorage בעצמו (מתאפס ל-null בכל טעינה) - אבל מי שהיה
+// בחזית כן נשמר בנפרד (weekwise_fab_front_id) ומוחזר לחזית בבנייה מחדש של
+// המערך, ר' applyDockOrder - לפי בקשה מפורשת "שהברירת מחדל תהיה מה
+// שהמשתמשת בחרה לאחרונה" (דורס החלטה קודמת שהתחילה תמיד עם הפתק בחזית)
 let fabCarouselOrder = null;
 
 // קובעת את המיקום החזותי (left/top בפיקסלים) והגודל (fab-tier-front/
@@ -5013,6 +5018,21 @@ function applyDockOrder() {
     });
     if (!fabCarouselOrder) {
         fabCarouselOrder = active.slice();
+        // בטעינה ראשונה: לפי בקשה מפורשת ("שהברירת מחדל תהיה מה שהמשתמשת
+        // בחרה לאחרונה"), לא משאירים את מי-שיוצא-בחזית לגמרי במקרה (תלוי רק
+        // בסדר הבועות במערך) - במקום זה מציבים את הבועה שהייתה בחזית
+        // בפעם הקודמת (נשמרה ב-weekwise_fab_front_id, ר' השמירה בסוף
+        // הפונקציה) ממש במשבצת החזית, בדיוק כמו שסיום-גרירה עושה. זה דורס
+        // את ההחלטה הישנה יותר ("כל טעינה מתחילה עם הפתק בחזית") - עדיין
+        // עובד גם אם הבועה שנשמרה כובתה בינתיים (פשוט נופל חזרה למקום
+        // הטבעי שלה במערך)
+        const savedFrontId = localStorage.getItem('weekwise_fab_front_id');
+        if (savedFrontId && fabCarouselOrder.includes(savedFrontId)) {
+            const targetIndex = Math.round((fabCarouselOrder.length - 1) / 2);
+            const idx = fabCarouselOrder.indexOf(savedFrontId);
+            fabCarouselOrder.splice(idx, 1);
+            fabCarouselOrder.splice(targetIndex, 0, savedFrontId);
+        }
     } else {
         fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
         active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
@@ -5035,16 +5055,26 @@ function applyDockOrder() {
         if (!el) return;
         const dist = i - frontIndex; // 0 בדיוק עבור הבועה הקדמית עצמה
         const absDist = Math.abs(dist);
+        const isFront = i === frontIndex;
+        // הבועה הקדמית קיבלה עד עכשיו הרמה 0 (הכי "נמוכה" מכולן, כי הקשת
+        // מתחילה ב-0 ועולה כלפי הצדדים) - לפי בקשה מפורשת ("שהבועה המרכזית
+        // תהיה קצת יותר למעלה") היא מקבלת הרמה קבועה משלה, פחותה מהמקסימום
+        // שהבועות הרחוקות מגיעות אליו כדי לשמור על צורת-קשת כללית
+        const lift = isFront ? 14 : Math.min(absDist * 9, 30);
         el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
-        el.style.top = `${Math.round(-Math.min(absDist * 9, 30))}px`;
-        el.classList.toggle('fab-tier-front', i === frontIndex);
-        el.classList.toggle('fab-tier-side', i !== frontIndex);
+        el.style.top = `${Math.round(-lift)}px`;
+        el.classList.toggle('fab-tier-front', isFront);
+        el.classList.toggle('fab-tier-side', !isFront);
     });
     allIds.forEach(id => {
         if (active.includes(id)) return;
         const el = document.getElementById(id);
         if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-front', 'fab-tier-side'); }
     });
+    // שומרים מי בחזית עכשיו כדי שהטעינה הבאה תזכור (ר' השחזור למעלה) - לא
+    // רק אחרי גרירה, גם אחרי סיבוב או שינוי הגדרות שהזיז את מי שבחזית
+    const currentFrontId = fabCarouselOrder[frontIndex];
+    if (currentFrontId) localStorage.setItem('weekwise_fab_front_id', currentFrontId);
 }
 
 function restackFabs() {
@@ -5107,8 +5137,10 @@ function initDockCarouselGestures() {
             el.classList.remove('dock-fab-active-drag');
             el.style.zIndex = '';
             // "קרוב מספיק למרכז" - המיקום הסופי (לא רק תזוזה מהמקום המקורי)
-            // חייב להיות בטווח חצי-צעד מ-x=0 כדי לזכות במקום הקדמי
-            if (Math.abs(baseLeft + lastDx) < FAB_ROW_STEP / 2) {
+            // חייב להיות בטווח הזה מ-x=0 כדי לזכות במקום הקדמי. הורחב מ-חצי
+            // צעד (37px) ל-65% ממנו (~48px) לפי בקשה מפורשת - היה קשה מדי
+            // לפגוע בול במרכז ("קשה להחליף בינהם... בקושי מתחלף")
+            if (Math.abs(baseLeft + lastDx) < FAB_ROW_STEP * 0.65) {
                 const centerIndex = (fabCarouselOrder.length - 1) / 2;
                 const frontIndex = Math.round(centerIndex);
                 const idx = fabCarouselOrder.indexOf(id);
@@ -5232,7 +5264,7 @@ function toggleSportFabFromCard() {
 }
 
 // כפתור צף להוספה מהירה של ארוחה קבועה שמורה - דלוק כברירת מחדל (opt-out),
-// אותה סיבה בדיוק כמו btn-water-fab/btn-food-fab למעלה
+// אותה סיבה בדיוק כמו btn-water-fab למעלה
 function isPresetFabOn() {
     return localStorage.getItem('weekwise_preset_fab') !== 'false';
 }
@@ -5249,28 +5281,6 @@ function togglePresetFab() {
     const enabled = document.getElementById('preset-fab-toggle').checked;
     localStorage.setItem('weekwise_preset_fab', enabled ? 'true' : 'false');
     applyPresetFabSetting(enabled);
-}
-
-// כפתור צף להוספת מזון מהיר בטקסט חופשי - דלוק כברירת מחדל (opt-out, לא
-// opt-in), "!== 'false'" במקום "=== 'true'": כל מי שלא נגע בהגדרה בכלל
-// (משתמשת חדשה או ותיקה) רואה את הכפתור מיד; רק מי שכיבתה אותו במפורש לא
-// תראה אותו. כל בועות ה-Dock עכשיו opt-out חוץ מספורט, שנשאר opt-in
-function isFoodFabOn() {
-    return localStorage.getItem('weekwise_food_fab') !== 'false';
-}
-
-function applyFoodFabSetting(enabled) {
-    const fab = document.getElementById('btn-food-fab');
-    if (fab) fab.classList.toggle('hidden', !enabled);
-    const toggle = document.getElementById('food-fab-toggle');
-    if (toggle) toggle.checked = enabled;
-    restackFabs();
-}
-
-function toggleFoodFab() {
-    const enabled = document.getElementById('food-fab-toggle').checked;
-    localStorage.setItem('weekwise_food_fab', enabled ? 'true' : 'false');
-    applyFoodFabSetting(enabled);
 }
 
 // כפתור צף לפתיחה מהירה של "פריסה חכמה" - דלוק כברירת מחדל (opt-out), אותה

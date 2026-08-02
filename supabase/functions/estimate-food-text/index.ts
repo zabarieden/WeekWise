@@ -67,7 +67,7 @@ const COUNTRY_NAMES: Record<string, string> = { il: "Israel", us: "the United St
 
 const ESTIMATE_OR_CLARIFY_TOOL = {
     name: "estimate_or_clarify",
-    description: "Either give a final calorie estimate, or ask one clarifying question if the description is genuinely ambiguous about what was eaten or how much.",
+    description: "Either give a final calorie estimate, or ask one clarifying question if the description is genuinely ambiguous about what was eaten or how much. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
     input_schema: {
         type: "object",
         properties: {
@@ -84,7 +84,7 @@ const ESTIMATE_OR_CLARIFY_TOOL = {
 // מבנית (הכלי עצמו לא מאפשר את זה), לא רק הנחיה במילים שה-AI יכול "לשכוח"
 const ESTIMATE_ONLY_TOOL = {
     name: "estimate_or_clarify",
-    description: "Give a final calorie estimate using the original description plus the clarifying answer given.",
+    description: "Give a final calorie estimate using the original description plus the clarifying answer given. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
     input_schema: {
         type: "object",
         properties: {
@@ -94,6 +94,14 @@ const ESTIMATE_ONLY_TOOL = {
         required: ["status", "calories"],
     },
 };
+
+// כלי חיפוש בשרת (server-side) - רץ על תשתית Anthropic, לא דורש כלום מאיתנו
+// חוץ מלהצהיר עליו. משמש רק כשהתיאור מזכיר רשת/מותג ספציפי (ר' searchNote
+// למטה) - כדי שמידע תזונתי על מנות רשת יהיה מבוסס על נתונים אמיתיים ועדכניים
+// במקום על ידע מהאימון של המודל בלבד, שיכול להיות לא מדויק או לא ספציפי
+// למדינה. max_uses מגביל את מספר החיפושים בקריאה אחת כדי לשמור על עלות/זמן
+// תגובה סבירים לפיצ'ר "הוספה מהירה"
+const WEB_SEARCH_TOOL = { type: "web_search_20260209", name: "web_search", max_uses: 3 };
 
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
@@ -154,38 +162,51 @@ Deno.serve(async (req) => {
         // *חובה* (לא רק "אם זה נראה מעורפל"), כדי לא לנחש ולפספס כמו קודם
         // (120 קלוריות שיצאו במקום כ-70 לפי גוגל, בלי שהוא שאל בכלל)
         const realismNote = "If an ingredient like oats, almonds, soy, or milk is mentioned alongside a drink (coffee, smoothie, etc.) - even if a quantity like \"a quarter cup\" is already given - you STILL don't know if that quantity is milk/a milk-substitute mixed into the drink versus a separate solid-food serving. Do not silently guess one or the other, and do not treat this as merely optional extra precision - always ask that clarifying question directly (e.g. confirm \"a quarter cup of milk?\" in the user's language) before estimating. Use the correct native/established food terminology in that language (e.g. in Hebrew, oat-milk is \"חלב שיבולת שועל\") - do NOT phonetically transliterate the English term into the other language's alphabet. When a fraction or quantity word is given (quarter, half, a tablespoon, etc.), apply it precisely and literally to your calculation - do not round it up to a full/larger serving or ignore it. More generally, use realistic everyday serving sizes: something that's typically an ingredient inside another item should be treated as that smaller role, not a large standalone portion, unless clearly stated otherwise.";
+        // מנחה שימוש ב-web_search רק כשבאמת יש שם רשת/מותג ספציפי במשפט - לא
+        // לכל תיאור מזון (זה היה מבזבז זמן ועלות על "תפוח" או "אורז לבן").
+        // הכלי עצמו רץ בצד השרת של Anthropic - אין כאן שום לוגיקה נוספת
+        // מהצד שלנו, רק הצהרה עליו ב-tools (ר' WEB_SEARCH_TOOL למעלה)
+        const searchNote = `If (and only if) this describes a dish from a specific chain restaurant or branded product (e.g. "מקדונלד'ס ביג מק", "Domino's medium pizza"), use the web_search tool first to find that chain's actual current nutrition info for ${countryName} before estimating - don't rely on memory alone for branded items, since menus and recipes change and often differ by country. For generic home-cooked or unbranded food, do NOT search - just estimate directly, it's faster and just as accurate.`;
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${countryNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. Use the estimate_or_clarify tool.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${countryNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. Use the estimate_or_clarify tool.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${countryNote} ${searchNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${countryNote} ${searchNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
-        const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            body: JSON.stringify({
-                model: ANTHROPIC_MODEL,
-                max_tokens: 500,
-                // temperature=0: בלי זה, אותה שאלה בדיוק (ואותה תשובת הבהרה
-                // בדיוק) יכלה לתת מספר שונה בכל קריאה (ראינו בפועל 120/140/180
-                // לאותו קלט) - זה מקטין את השונות האקראית בין קריאות זהות,
-                // חשוב במיוחד כשהתשובה היא מספר ולא טקסט יצירתי
-                temperature: 0,
-                messages: [{ role: "user", content: promptText }],
-                tools: [useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL],
-                tool_choice: { type: "tool", name: "estimate_or_clarify" },
-            }),
-        });
+        const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
+        const messages: any[] = [{ role: "user", content: promptText }];
+        let anthropicJson: any = null;
+        // עד 3 סבבי "המשך" אם המודל נעצר עם pause_turn (מגבלת ברירת המחדל של
+        // 10 סבבי כלי-שרת בקריאה אחת - עם max_uses:3 על החיפוש כמעט ולא
+        // אמור לקרות, אבל זו הדרך התקנית להתמודד איתו אם כן)
+        for (let attempt = 0; attempt < 4; attempt++) {
+            const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: ANTHROPIC_MODEL,
+                    max_tokens: 1000,
+                    messages,
+                    tools: [WEB_SEARCH_TOOL, estimateTool],
+                    // לא ניתן לכפות tool_choice על "estimate_or_clarify" בלבד כאן
+                    // כי אז המודל לא יוכל להשתמש ב-web_search קודם - ההנחיה
+                    // ל"תמיד לסיים בקריאה לכלי" נמצאת בפרומפט ובתיאור הכלי עצמו
+                }),
+            });
 
-        if (!anthropicRes.ok) {
-            const errText = await anthropicRes.text();
-            return jsonResponse({ error: "ai_provider_error", detail: errText }, 502);
+            if (!anthropicRes.ok) {
+                const errText = await anthropicRes.text();
+                return jsonResponse({ error: "ai_provider_error", detail: errText }, 502);
+            }
+
+            anthropicJson = await anthropicRes.json();
+            if (anthropicJson.stop_reason !== "pause_turn") break;
+            messages.push({ role: "assistant", content: anthropicJson.content });
         }
 
-        const anthropicJson = await anthropicRes.json();
-        const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
+        const toolUseBlock = (anthropicJson?.content || []).find((b: any) => b.type === "tool_use" && b.name === "estimate_or_clarify");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
         const result = toolUseBlock.input || {};
 
