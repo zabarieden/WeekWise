@@ -5019,15 +5019,29 @@ function applyDockOrder() {
     // בוחר תמיד משבצת יחידה מוגדרת-מראש, גם כשהמרכז "בין" שתי משבצות
     const centerIndex = (fabCarouselOrder.length - 1) / 2;
     const frontIndex = Math.round(centerIndex);
-    fabCarouselOrder.forEach((id, i) => {
-        const el = document.getElementById(id);
+    const FRONT_W = 92, SIDE_W = 58; // חייב להתאים ל-.fab-tier-front/.fab-tier-side ב-theme.css
+    // עם מספר זוגי, הבועה ה"קדמית" (הגדולה) לא בדיוק ב-x=0 (dist=0.5 ולא 0),
+    // אז השורה כולה יוצאת מוסטת אחרי סימטריית-המשבצות הרגילה - בפרט
+    // ברוחב מסך צר (מובייל) זה גרם לשורה שלמה "לברוח" הצידה (באג אמיתי
+    // שדווח: "אני רוצה שזה יהיה באמצע", מול דסקטופ עם מספר אי-זוגי שיצא
+    // ממורכז נכון בלי הבעיה הזו בכלל). מחשבים את התיבה החוסמת האמיתית
+    // (כולל רוחב כל בועה, לא רק מרכזי-הבועות) וממרכזים אותה בעצמנו,
+    // במקום לסמוך על סימטריה "אוטומטית" שנשברת כשהגדלים שונים
+    const positions = fabCarouselOrder.map((id, i) => {
+        const dist = i - centerIndex;
+        const isFront = i === frontIndex;
+        return { id, dist, isFront, x: dist * FAB_ROW_STEP, width: isFront ? FRONT_W : SIDE_W };
+    });
+    const minEdge = Math.min(...positions.map(p => p.x - p.width / 2));
+    const maxEdge = Math.max(...positions.map(p => p.x + p.width / 2));
+    const centerOffset = (minEdge + maxEdge) / 2;
+    positions.forEach(p => {
+        const el = document.getElementById(p.id);
         if (!el) return;
-        const dist = i - centerIndex; // שלילי=שמאל, חיובי=ימין, 0=בדיוק במרכז
-        const absDist = Math.abs(dist);
-        el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
-        el.style.top = `${Math.round(-Math.min(absDist * 9, 30))}px`;
-        el.classList.toggle('fab-tier-front', i === frontIndex);
-        el.classList.toggle('fab-tier-side', i !== frontIndex);
+        el.style.left = `${Math.round(p.x - centerOffset)}px`;
+        el.style.top = `${Math.round(-Math.min(Math.abs(p.dist) * 9, 30))}px`;
+        el.classList.toggle('fab-tier-front', p.isFront);
+        el.classList.toggle('fab-tier-side', !p.isFront);
     });
     allIds.forEach(id => {
         if (active.includes(id)) return;
