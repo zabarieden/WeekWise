@@ -827,7 +827,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transition: opacity 0.3s ease;
 }
 .phone-wrapper.menu-open .fab-dock,
-.phone-wrapper.modal-open .fab-dock {
+.phone-wrapper.modal-open .fab-dock,
+.phone-wrapper.subview-open .fab-dock {
     display: none;
 }
 /* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
@@ -932,12 +933,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     pointer-events: none;
 }
 .dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
-/* בזמן גרירה חיה (ר' initDockCarouselGestures ב-app.js) מבטלים transition
-   על left/top כדי שהבועות "יתייצבו" מיידית במשבצת הסופית בלי לגרור רגליים
-   ברגע שהגרירה מסתיימת - ומקפיאים גם את אנימציית הריחוף (animation-play-
-   state) כדי שלא תתחרה על transform עם ההיסט של #fab-dock עצמו תוך כדי
-   הגרירה החיה */
-.fab-dock.fab-row-dragging .dock-fab { transition: none; animation-play-state: paused; }
+/* גרירה ישירה של בועה ספציפית (ר' initDockCarouselGestures ב-app.js) -
+   רק היא זזה, לא כל השורה. מבטלים transition על left/top כדי שהיא תעקוב
+   מיידית אחרי האצבע (לא "תגרור רגליים"), ומקפיאים את אנימציית הריחוף
+   (animation-play-state) כדי שלא תתחרה על transform עם ה-scale/מיקום שלה
+   באותו רגע. z-index (נקבע ב-JS, לא כאן) מרים אותה מעל שכנותיה תוך כדי
+   הגרירה כדי שלא "תיבלע" מתחתן */
+.dock-fab.dock-fab-active-drag { transition: none; animation-play-state: paused; }
 /* שתי רמות גודל בלבד (לא מדורג) - האמצעית גדולה (fab-tier-front), כל
    השאר קטנות באופן אחיד (fab-tier-side), לפי בקשה מפורשת. בלי opacity/
    עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.

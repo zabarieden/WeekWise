@@ -1267,6 +1267,12 @@ function showTabSection(targetId) {
     // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.add('hidden');
+    // אשכול הבועות (#fab-dock) שייך למסך הבית בלבד עכשיו - לא כפתור-פינה
+    // צנוע כמו עוזר ה-AI, אלא אשכול גדול וממורכז שצף ממש מעל תוכן במסכים
+    // פנימיים (דווח במפורש עם צילום מסך: "אני נכנסת לפתקים... זה לא נעלם").
+    // עוזר ה-AI (המוח) נשאר צף בכל מסך כרגיל - זה נוגע רק ל-Dock עצמו
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('subview-open');
     // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
     // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
     // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
@@ -1294,6 +1300,8 @@ function goHome() {
     tabContents.forEach(content => { content.classList.remove('active-tab'); closeSubView(content.id); });
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.remove('hidden');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('subview-open');
 }
 
 function switchToTab(targetId) {
@@ -4976,13 +4984,10 @@ function applyFabOrder() {
     });
 }
 
-// מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה (לא "קדמי
-// במרכז + רדיאלי מסביבו"), לפי בקשה מפורשת ("אני רוצה שהסיבוב יהיה מצד אחד
-// לצד השני") - כדי שסיבוב יזיז כל בועה בדיוק צעד אחד לאורך אותו קו, לא
-// יקפיץ אותה בין "טבעות" שונות. בזכות זה גם --fab-drag-x (הגרירה החיה,
-// ר' initDockCarouselGestures) הופך למדויק: הזזה אחידה של כל הבועות ב-dx
-// פיקסלים היא בדיוק מה שסיבוב-אמיתי-של-משבצת-אחת נראה כמוהו
-const FAB_ROW_STEP = 85;
+// מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה. צומצם (74,
+// לא 85) כדי שהשורה כולה תיכנס ברוחב מסך מובייל בלי לגלוש - לפי בקשה
+// מפורשת שחוזרת ("זה עוד פעם טיפה יוצא מהמסך")
+const FAB_ROW_STEP = 74;
 
 // --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
 // לא נשמר ב-localStorage בכוונה - "מי במרכז" הוא מצב זמני של המחווה
@@ -5001,12 +5006,6 @@ let fabCarouselOrder = null;
 // fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
-    // רשת ביטחון: אם מסיבה כלשהי מחווה קודמת לא סיימה לנקות אחריה (למשל
-    // pointercancel לא-צפוי), ה-transform הזמני על #fab-dock היה יכול
-    // להישאר "תקוע" ולהזיז את כל השורה בקביעות - מאפסים כאן בכל קריאה,
-    // בלי תלות בזה שהמחווה עצמה תנקה נכון
-    const dock = document.getElementById('fab-dock');
-    if (dock) dock.style.transform = '';
     const allIds = ['btn-ai-fab', ...getFabOrder()];
     const active = allIds.filter(id => {
         const el = document.getElementById(id);
@@ -5067,36 +5066,35 @@ function rotateFabRow(direction) {
     applyDockOrder();
 }
 
-// גרירה חיה לסיבוב הקרוסלה - על כל בועה בעגלה (כולל הפתק, לא רק היא) לפי
-// בקשה מפורשת ("אני לא מצליחה לגרור אותם") - קודם זה עבד רק מבועת הפתקים
-// ספציפית, מה שהיה לא אינטואיטיבי. ההיסט הזמני נכתב כ-transform ישירות על
-// #fab-dock עצמו (לא משתנה CSS משותף שכל בועה קראה בתוך ה-transform שלה) -
-// גרסה קודמת עם --fab-drag-x "התנגשה" עם אנימציית הריחוף (dockFabFloat) של
-// כל בועה, ששתיהן כתבו ל-transform של אותו אלמנט בו-זמנית וגרמו לגרירה
-// להיראות כאילו היא "קופצת" במקום לזוז חלק עם האצבע (דווח במפורש). הזזת
-// ההורה כולו במקום כל בועה בנפרד היא גם פשוטה יותר ובלי שום התנגשות אפשרית.
-// לא Sortable - לא רוצים שתי מערכות גרירה נפרדות מתחרות על אותה בועה, ואין
-// יותר "סידור-מחדש" נפרד מ"סיבוב" - הסיבוב הוא כל מנגנון הסידור-מחדש עכשיו.
-// טאפ רגיל (בלי גרירה) עדיין מפעיל את הפעולה הרגילה של הבועה הספציפית הזו
-// (onclick הקיים ב-HTML/הפתק) - לא נוגעים בו כלל, רק מונעים אותו אם ממש
-// הייתה גרירה (dataset.justSwiped, ר' למטה) כדי שטאפ וסיבוב לא "יתנגשו"
+// גרירה ישירה - "לוקחים" בועה ספציפית וגוררים אותה בעצמה (לא את כל השורה
+// יחד) ממש עם האצבע, לפי בקשה מפורשת ("אני רוצה לבחור בועה ולגרור אותה ממש
+// עם האצבע שלי לאמצע - שיבוא ביחד איתי, ושלא יתחלף רנדומלית"). גרסה קודמת
+// הזיזה את כל השורה יחד לפי מרחק-הגרירה הכולל וסיבבה לפי כמה "צעדים" זה
+// יצא - זה לא תאם למה שהמשתמשת בפועל תפסה/גררה, ולכן הרגיש "רנדומלי".
+// עכשיו: רק הבועה שנגררת בפועל זזה (בשני צירים, ממש עם האצבע), ורק אם
+// היא משתחררת קרוב מספיק למרכז (FAB_ROW_STEP/2) היא הופכת לבועה הקדמית -
+// אחרת היא פשוט חוזרת למקומה. תוצאה תמיד צפויה: "מה שגררתי זה מה שזז"
 function initDockCarouselGestures() {
-    const dock = document.getElementById('fab-dock');
-    if (!dock) return;
     const TAP_THRESHOLD = 10;
     document.querySelectorAll('.dock-fab').forEach(el => {
-        let startX = 0, startY = 0, dragging = false, pointerId = null;
+        let startX = 0, startY = 0, baseLeft = 0, baseTop = 0, dragging = false, pointerId = null, lastDx = 0, lastDy = 0;
 
         function onPointerMove(e) {
             if (e.pointerId !== pointerId) return;
             const dx = e.clientX - startX, dy = e.clientY - startY;
-            if (!dragging && Math.abs(dx) > TAP_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+            if (!dragging && Math.hypot(dx, dy) > TAP_THRESHOLD) {
                 dragging = true;
-                dock.classList.add('fab-row-dragging');
+                el.classList.add('dock-fab-active-drag');
+                el.style.zIndex = '10';
+                baseLeft = parseFloat(el.style.left) || 0;
+                baseTop = parseFloat(el.style.top) || 0;
             }
             if (dragging) {
                 e.preventDefault();
-                dock.style.transform = `translateX(${dx}px)`;
+                lastDx = dx;
+                lastDy = dy;
+                el.style.left = `${baseLeft + dx}px`;
+                el.style.top = `${baseTop + dy}px`;
             }
         }
         function cleanup() {
@@ -5105,30 +5103,40 @@ function initDockCarouselGestures() {
             document.removeEventListener('pointercancel', onPointerCancel);
             pointerId = null;
         }
-        function settle(dx) {
-            dock.classList.remove('fab-row-dragging');
-            dock.style.transform = '';
-            const steps = Math.round(dx / FAB_ROW_STEP);
-            requestAnimationFrame(() => {
-                for (let i = 0; i < Math.abs(steps); i++) rotateFabRow(steps > 0 ? -1 : 1);
-            });
+        function settle(id) {
+            el.classList.remove('dock-fab-active-drag');
+            el.style.zIndex = '';
+            // "קרוב מספיק למרכז" - המיקום הסופי (לא רק תזוזה מהמקום המקורי)
+            // חייב להיות בטווח חצי-צעד מ-x=0 כדי לזכות במקום הקדמי
+            if (Math.abs(baseLeft + lastDx) < FAB_ROW_STEP / 2) {
+                const centerIndex = (fabCarouselOrder.length - 1) / 2;
+                const frontIndex = Math.round(centerIndex);
+                const idx = fabCarouselOrder.indexOf(id);
+                if (idx > -1) {
+                    fabCarouselOrder.splice(idx, 1);
+                    fabCarouselOrder.splice(frontIndex, 0, id);
+                }
+            }
+            // בלי requestAnimationFrame - הבועה הזאת כבר יצאה מ-dock-fab-active-drag
+            // (transition חזר לה), אז applyDockOrder יכול לכתוב left/top חדשים
+            // מיד והמעבר יהיה חלק מעצמו
+            applyDockOrder();
         }
         function onPointerUp(e) {
             if (e.pointerId !== pointerId) return;
-            const dx = e.clientX - startX;
             const wasDragging = dragging;
             cleanup();
             dragging = false;
             if (wasDragging) {
                 el.dataset.justSwiped = '1';
                 setTimeout(() => { delete el.dataset.justSwiped; }, 150);
-                settle(dx);
+                settle(el.id);
             }
         }
         function onPointerCancel(e) {
             if (e.pointerId !== pointerId) return;
             cleanup();
-            if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.transform = ''; }
+            if (dragging) { el.classList.remove('dock-fab-active-drag'); el.style.zIndex = ''; applyDockOrder(); }
             dragging = false;
         }
         el.addEventListener('pointerdown', (e) => {
