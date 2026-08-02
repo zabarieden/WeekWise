@@ -5012,7 +5012,13 @@ function applyDockOrder() {
         fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
         active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
     }
+    // מספר בועות זוגי (למשל 6, כשגם ספורט פעיל) לא נותן משבצת-אמצע יחידה -
+    // (n-1)/2 יוצא ".5", ואם קובעים "קדמי" לפי סף-מרחק (absDist<0.6) שתי
+    // הבועות הקרובות ביותר נכנסות לסף גם יחד = שתי בועות "קדמיות" גדולות
+    // בו-זמנית (באג אמיתי שדווח: "רואים 2 בועות גדולות באמצע"). Math.round
+    // בוחר תמיד משבצת יחידה מוגדרת-מראש, גם כשהמרכז "בין" שתי משבצות
     const centerIndex = (fabCarouselOrder.length - 1) / 2;
+    const frontIndex = Math.round(centerIndex);
     fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -5020,8 +5026,8 @@ function applyDockOrder() {
         const absDist = Math.abs(dist);
         el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
         el.style.top = `${Math.round(-Math.min(absDist * 9, 30))}px`;
-        el.classList.toggle('fab-tier-front', absDist < 0.6);
-        el.classList.toggle('fab-tier-side', absDist >= 0.6);
+        el.classList.toggle('fab-tier-front', i === frontIndex);
+        el.classList.toggle('fab-tier-side', i !== frontIndex);
     });
     allIds.forEach(id => {
         if (active.includes(id)) return;
