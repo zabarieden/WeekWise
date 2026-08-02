@@ -1148,9 +1148,19 @@
                 <h3 data-i18n="food_clarify_title">One quick question</h3>
                 <p class="modal-subtitle" id="food-clarify-question"></p>
                 <input type="text" id="food-clarify-input" data-i18n-placeholder="food_clarify_placeholder" placeholder="Type your answer...">
-                <div class="action-buttons-wrap">
+                <div class="action-buttons-wrap" id="food-clarify-actions">
                     <button type="button" class="btn-primary" onclick="confirmFoodClarify()" data-i18n="schedule_clarify_confirm_btn">Confirm</button>
                     <button type="button" class="btn-clear-specific" onclick="cancelFoodClarify()" data-i18n="cancel_btn">Cancel</button>
+                </div>
+                <!-- נשאר בתוך אותו מודל (לא נסגר!) עד שיש תשובה בפועל - כי סגירתו
+                     מיד (כמו קודם) השאירה את המסך ריק לגמרי בזמן ההמתנה לרשת
+                     (במיוחד עכשיו עם web_search שיכול לקחת יותר זמן), מה שנראה
+                     כאילו זה "לא עבד" ומעודד יציאה מוקדמת - ר' confirmFoodClarify.
+                     חיווי מתעכב 5 שניות (לא מיידי), אותו דפוס בדיוק כמו
+                     schedule-ai-loading -->
+                <div id="food-clarify-loading" class="recipe-scan-loading hidden">
+                    <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                    <p data-i18n="food_ai_estimating">Estimating...</p>
                 </div>
             </div>
         </div>
@@ -1599,6 +1609,12 @@
                         <button type="button" id="btn-food-quick-add-submit" class="btn-primary" onclick="logFoodQuickAdd()" data-i18n="food_quick_add_btn">Log it</button>
                         <button type="button" class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                    <!-- חיווי ברור לזמן המתנה ארוך יותר (חיפוש ברשת יכול לקחת זמן) -
+                         מתעכב 5 שניות, אותו דפוס בדיוק כמו schedule-ai-loading -->
+                    <div id="food-quick-add-loading" class="recipe-scan-loading hidden">
+                        <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
+                        <p data-i18n="food_ai_estimating">Estimating...</p>
+                    </div>
                 </div>
 
                 <div class="ai-brain-panel hidden" data-ai-brain-panel="schedule">
@@ -1963,6 +1979,6 @@
     </div>
 
     <script src="i18n.js?v=145"></script>
-    <script src="app.js?v=252"></script>
+    <script src="app.js?v=253"></script>
 </body>
 </html>

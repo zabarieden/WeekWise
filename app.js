@@ -826,17 +826,30 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
 }
 
 // מכבה/מדליקה את כפתור "הוספה" בזמן קריאת ה-AI (יש כעת השהיית רשת אמיתית,
-// בניגוד לחישוב המקומי המיידי) - שומר את הטקסט המקורי שלו כדי לשחזר אחרי
+// בניגוד לחישוב המקומי המיידי) - שומר את הטקסט המקורי שלו כדי לשחזר אחרי.
+// בנוסף (חדש): חיווי-טעינה נפרד עם עיגולים קופצים (food-quick-add-loading),
+// מתעכב 5 שניות במקום מיידי - אותו דפוס בדיוק כמו schedule-ai-loading -
+// כדי שהמתנה ארוכה (חיפוש ברשת יכול לקחת זמן) תיראה ברור כ"עוד עובד" ולא
+// כאילו זה נתקע, לפי בקשה מפורשת
+let foodQuickAddLoadingTimer = null;
 function setFoodQuickAddLoading(isLoading) {
     const btn = document.getElementById('btn-food-quick-add-submit');
-    if (!btn) return;
-    if (isLoading) {
-        btn.dataset.originalText = btn.textContent;
-        btn.textContent = t('food_ai_estimating');
-    } else if (btn.dataset.originalText) {
-        btn.textContent = btn.dataset.originalText;
+    if (btn) {
+        if (isLoading) {
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = t('food_ai_estimating');
+        } else if (btn.dataset.originalText) {
+            btn.textContent = btn.dataset.originalText;
+        }
+        btn.disabled = isLoading;
     }
-    btn.disabled = isLoading;
+    const loadingEl = document.getElementById('food-quick-add-loading');
+    clearTimeout(foodQuickAddLoadingTimer);
+    if (isLoading) {
+        foodQuickAddLoadingTimer = setTimeout(() => { if (loadingEl) loadingEl.classList.remove('hidden'); }, 5000);
+    } else if (loadingEl) {
+        loadingEl.classList.add('hidden');
+    }
 }
 
 async function finishFoodQuickAdd(text, estimate) {
@@ -865,6 +878,16 @@ function cancelFoodClarify() {
     closeModal('modal-food-clarify');
 }
 
+function showFoodClarifyLoading() {
+    const el = document.getElementById('food-clarify-loading');
+    if (el) el.classList.remove('hidden');
+}
+
+function hideFoodClarifyLoading() {
+    const el = document.getElementById('food-clarify-loading');
+    if (el) el.classList.add('hidden');
+}
+
 async function confirmFoodClarify() {
     const answerInput = document.getElementById('food-clarify-input');
     const answer = answerInput ? answerInput.value.trim() : '';
@@ -873,18 +896,27 @@ async function confirmFoodClarify() {
     const question = pendingFoodClarifyQuestion;
     const isLocalClarify = pendingFoodClarifyIsLocal;
     pendingFoodClarifyIsLocal = false;
-    closeModal('modal-food-clarify');
-    setFoodQuickAddLoading(true);
+    // לא סוגרים את המודל כאן! (בניגוד לקודם) - סגירה מיידית לפני קריאת
+    // הרשת השאירה את המסך ריק לגמרי בזמן ההמתנה (יכולה לקחת זמן, במיוחד
+    // עכשיו עם web_search) - נראה כאילו זה "לא עבד" ומעודד יציאה מוקדמת,
+    // בדיוק מה שדווח. במקום זה: משביתים את הכפתורים ומראים חיווי בתוך אותו
+    // מודל, ורק אז סוגרים בפועל (finishFoodQuickAdd דואגת לזה)
+    const actionsEl = document.getElementById('food-clarify-actions');
+    if (actionsEl) actionsEl.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+    const loadingTimer = setTimeout(showFoodClarifyLoading, 5000);
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
+        if (!token) { closeModal('modal-food-clarify'); await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
         const attempt = await estimateFoodTextViaAI(token, text, question, answer, isLocalClarify);
+        closeModal('modal-food-clarify');
         if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories); return; }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
         await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
     } finally {
-        setFoodQuickAddLoading(false);
+        clearTimeout(loadingTimer);
+        hideFoodClarifyLoading();
+        if (actionsEl) actionsEl.querySelectorAll('button').forEach(btn => { btn.disabled = false; });
     }
 }
 
