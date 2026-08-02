@@ -806,13 +806,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 /* אשכול-שורה: בלי קופסת-זכוכית מלבנית מאחור בכלל (לפי בקשה מפורשת - "כמו
-   המוח בלי רקע"), בהשראת תמונת-סגנון ששלחה המשתמשת - שורה אחת אופקית,
-   הפתק במרכז/גדול יותר, שאר הבועות משני הצדדים עם זוהר סביב כל אחת (ר'
-   .dock-fab למטה) וצל-רצפה רך מתחת (ר' .fab-shelf). .fab-dock עצמו הוא
-   נקודת-עיגון בגודל 0 (position:absolute, בלי width/height) - ממוקם
-   ב-left:50% (למרכז אופקית) ו-top (למרכז אנכית, "קצת למטה" מהאמצע הליטרלי
-   לפי בקשה מפורשת), לא באמצעות translate(-50%) כי לקופסה בגודל 0 זה ממילא
-   no-op. כל בועה (כולל הפתק) ממוקמת סביב הנקודה הזו ב-JS
+   המוח בלי רקע"), בהשראת תמונת-סגנון ששלחה המשתמשת - שורה אחת אופקית עם
+   קשת עדינה כלפי מעלה ככל שמתרחקים מהמרכז (ר' FAB_ROW_OFFSETS ב-app.js) -
+   מי שבמרכז ("קדמי") גדול/בולט יותר, לא בהכרח הפתק - כל בועה יכולה להגיע
+   לשם דרך סיבוב (ר' .fab-tier-front למטה). צל נפרד לכל בועה (לא צל-רצפה
+   משותף אחד - נדחה במפורש: "סתם עיגול שחור") נמצא בתוך box-shadow של
+   .dock-fab עצמה. .fab-dock עצמו הוא נקודת-עיגון בגודל 0 (position:absolute,
+   בלי width/height) - ממוקם ב-left:50% (למרכז אופקית) ו-top (למרכז אנכית,
+   "קצת למטה" מהאמצע הליטרלי לפי בקשה מפורשת), לא באמצעות translate(-50%)
+   כי לקופסה בגודל 0 זה ממילא no-op. כל בועה ממוקמת סביב הנקודה הזו ב-JS
    (ר' applyDockOrder/FAB_ROW_OFFSETS ב-app.js) עם left:0;top:0 קבוע
    ו-transform:translate() שמערבב אחוזים (למרכז את הבועה על עצמה) ופיקסלים
    (ההיסט מהמרכז) - כך שאין תלות כלל בגודל תיבה של ה-Dock */
@@ -823,22 +825,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     z-index: 99999 !important;
     opacity: 1;
     transition: opacity 0.3s ease;
-}
-/* צל-רצפה רך מתחת לשורת הבועות - קישוט בלבד, לא כפתור (מסונן החוצה מ-
-   Sortable, ר' initFabOrderDragReorder ב-app.js), בהשראת תמונת-הסגנון
-   הפשוטה יותר ששלחה המשתמשת (שורה אחת + צל אליפסה רך מתחת, לא "פודיום"
-   זכוכית עם מסגרת/highlight נפרד - זה נדחה בגרסה קודמת). רדיאל-גרדיאנט
-   מטושטש, בלי רקע/מסגרת עצמאיים. חייב לשבת לפני שאר הבועות ב-DOM
-   (ר' index.html) כדי לצייר מתחתיהן, לא מעליהן */
-.fab-shelf {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 420px;
-    height: 46px;
-    transform: translate(-50%, 66px);
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5), transparent 72%);
-    pointer-events: none;
 }
 .phone-wrapper.menu-open .fab-dock,
 .phone-wrapper.modal-open .fab-dock {
@@ -867,9 +853,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים).
        transform: מרכז את הבועה על הנקודה של עצמה, ובנוסף מוסיף --fab-drag-x -
        היסט זמני בפיקסלים שנקבע ב-JS על #fab-dock עצמו (לא כל בועה בנפרד)
-       בזמן גרירה חיה של הפתק (ר' initFixedAiFab), כדי שכל הבועות "יזוזו עם
-       האצבע" ברגע אמת ולא רק יקפצו למקום החדש בסוף המחווה. .dock-fab-notes
-       מאפסת את המשתנה לעצמה (0px) כי היא לא אמורה לזוז בכלל בזמן הגרירה */
+       בזמן גרירה חיה (ר' initDockCarouselGestures), כדי שכל הבועות "יזוזו עם
+       האצבע" ברגע אמת ולא רק יקפצו למקום החדש בסוף המחווה - הבועה הנגררת
+       עצמה מאפסת את המשתנה לעצמה (0px) כי היא לא אמורה לזוז. אנימציית הריחוף
+       (ר' dockFabFloat למטה) חוזרת על אותו ביטוי transform בדיוק, כדי לא
+       "לבלוע" את היסט הגרירה תוך כדי תנועה */
     left: 0;
     top: 0;
     transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%);
@@ -893,12 +881,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     cursor: pointer;
     /* 0 0 22px/-2px: הילת-זוהר רכה שנפרשת מסביב לבועה. שתי שכבות inset
        נוספות (rim-light) יוצרות "מסגרת אור" חדה יותר בקצה העליון-שמאלי
-       ו"מסגרת צל" בתחתון-ימני, כמו כדור זכוכית שמואר מלמעלה-שמאל - לפי
-       בקשה מפורשת שזה יראה יותר כמו התמונה ששלחה. box-shadow לא מושפע
-       מ-overflow:hidden של הבועה עצמה (זה חל רק על תוכן, לא על הצל של
-       הקופסה), אז אין צורך באלמנט/שכבה נפרדת בשביל זה */
+       ו"מסגרת צל" בתחתון-ימני, כמו כדור זכוכית שמואר מלמעלה-שמאל.
+       0 14px 10px -6px: צל-מגע נפרד לכל בועה (לא צל-רצפה משותף אחד שנדחה
+       במפורש) - כהה, קרוב וממוקד ישר מתחת לבועה, כאילו היא באמת מטילה צל
+       על "רצפה" מתחתיה; זז ומתעדכן איתה אוטומטית כי הוא חלק מהבועה עצמה
+       (לא אלמנט נפרד שצריך למקם ידנית). box-shadow לא מושפע מ-overflow:hidden
+       של הבועה עצמה (זה חל רק על תוכן, לא על הצל של הקופסה) */
     box-shadow:
         0 10px 22px rgba(0, 0, 0, 0.45),
+        0 14px 10px -6px rgba(0, 0, 0, 0.5),
         0 0 24px -2px rgba(200, 215, 255, 0.5),
         inset 0 2px 2px rgba(255, 255, 255, 0.85),
         inset 2px 0 3px rgba(255, 255, 255, 0.25),
@@ -906,9 +897,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
-    touch-action: pan-x;
+    animation: dockFabFloat 5s ease-in-out infinite;
+    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+}
+/* ריחוף עדין - אותו רעיון בדיוק כמו aiBrainFloat (עוזר ה-AI), לפי בקשה
+   מפורשת "שהבועות ירחפו קצת כמו המוח". משך שונה מעט לכל רמת-עומק (ר'
+   .fab-tier-* למטה) כדי שלא כולן "ינשמו" בדיוק ביחד - מרגיש יותר אורגני */
+@keyframes dockFabFloat {
+    0%, 100% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(0); }
+    50% { transform: translate(calc(-50% + var(--fab-drag-x, 0px)), -50%) translateY(-5px); }
 }
 /* שני highlight-ים - רך וגדול (השתקפות כללית) וקטן/חד (נקודת-אור ישירה,
    "ספקולר") - כדור/זכוכית אמיתיים כמעט תמיד מראים את שניהם ביחד, לא רק כתם
@@ -945,9 +944,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 /* עומק - בועות רחוקות יותר מהמרכז קטנות יותר ("יותר מאחורה"), לפי בקשה
    מפורשת. בלי opacity/עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות,
    רק הגודל משדר מרחק. נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת
-   מהמרכז, לא קבוע לבועה ספציפית - כל בועה יכולה לעבור דרך כל הרמות כשמסובבים */
-.dock-fab.fab-tier-2 { width: 58px; height: 58px; font-size: 1.5rem; }
-.dock-fab.fab-tier-3 { width: 46px; height: 46px; font-size: 1.15rem; }
+   מהמרכז, לא קבוע לבועה ספציפית - כל בועה יכולה לעבור דרך כל הרמות כשמסובבים.
+   משכי ריחוף (dockFabFloat) שונים מעט לכל רמה כדי שלא יזוזו בדיוק ביחד */
+.dock-fab.fab-tier-2 { width: 58px; height: 58px; font-size: 1.5rem; animation-duration: 4.4s; }
+.dock-fab.fab-tier-3 { width: 46px; height: 46px; font-size: 1.15rem; animation-duration: 3.8s; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 4rem; }
@@ -957,23 +957,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     .home-hero-panel { padding-top: 150px; }
     .main-scroll-area { padding-top: 150px; }
 }
-/* בועת הפתקים - ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד במרכז המעגל בדיוק
-   (0,0 ב-applyDockOrder). אותה זכוכית שקופה/צלולה בדיוק כמו שאר הבועות (לא
-   ורוד-סגול יותר - לפי בקשה מפורשת "אותו הצבע") - קצת יותר גדולה ופעימה
-   עדינה משלה (זוהר לבן-רך, לא צבעוני) כדי שתמשיך לבלוט כעוגן המרכזי בלי
-   לשבור את אחידות הצבע */
-.dock-fab-notes {
+/* מי שבמרכז (עמדת "קדמי") - לא בהכרח הפתק! לפי בקשה מפורשת ("אני רוצה
+   שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב") כל בועה יכולה להגיע
+   לעמדה הזו דרך סיבוב (ר' fabCarouselOrder/applyDockOrder ב-app.js) -
+   fab-tier-front נקבעת דינמית לפי מיקום, לא ID קבוע. גדולה יותר ופעימה
+   עדינה (זוהר לבן-רך, לא צבעוני) כדי שתמיד תבלוט כעוגן המרכזי */
+.dock-fab.fab-tier-front {
     width: 92px;
     height: 92px;
     font-size: 2.4rem;
-    animation: fabPulse 2.5s ease-in-out infinite;
-    /* touch-action:none (לא pan-x שיורש מ-.dock-fab) - היא היחידה עם מחוות
-       סיבוב מותאמת-אישית (ר' initFixedAiFab ב-app.js), לא בתוך אזור גלילה
-       בכלל, אז pan-x רק מפריע ל-pointermove לרוץ חלק */
-    touch-action: none;
-    /* מאפסת לעצמה את היסט-הגרירה הזמני (ר' .dock-fab למעלה) - היא הבועה
-       שגוררים ממנה, אבל היא עצמה נשארת קבועה במרכז, לא זזה עם שאר הבועות */
-    --fab-drag-x: 0px;
+    /* שתי אנימציות בו-זמנית (לא רק fabPulse שהיה מחליף/מוחק את dockFabFloat
+       שיורשת מ-.dock-fab - animation הוא shorthand, לא מצטבר בין כללים) -
+       הריחוף (transform) והפעימה (box-shadow) על שתי תכונות שונות, אין ביניהן
+       התנגשות */
+    animation: dockFabFloat 6s ease-in-out infinite, fabPulse 2.5s ease-in-out infinite;
 }
 @keyframes fabPulse {
     0%, 100% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px -2px rgba(168, 85, 247, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -10px 16px rgba(0, 0, 0, 0.18); }
@@ -1028,7 +1025,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 @keyframes aiBrainFloat {
     0%, 100% { transform: translateY(0); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px rgba(210, 225, 255, 0.55)) drop-shadow(0 0 32px rgba(168, 85, 247, 0.35)); }
-    50% { transform: translateY(-6px); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 22px rgba(210, 225, 255, 0.4)) drop-shadow(0 0 40px rgba(168, 85, 247, 0.25)); }
+    50% { transform: translateY(-14px); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 22px rgba(210, 225, 255, 0.4)) drop-shadow(0 0 40px rgba(168, 85, 247, 0.25)); }
 }
 /* ההילה מתחזקת במעבר עכבר/לחיצה, לאותת על פעילות - animation:none חובה כאן
    (לא רק filter) כי אנימציית CSS פעילה "מנצחת" בקאסקייד על ערך filter רגיל
@@ -1286,18 +1283,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     z-index: 99999 !important;
 }
 .sortable-chosen { position: relative; z-index: 20; opacity: 0.9; transform: scale(1.02); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
-/* חריג לסידור-מחדש בתוך ה-Dock: כמו note-triage-drag-clone למעלה, אבל כאן
-   השכפול הצף כבר יורש את כל העיצוב שלו מ-.dock-fab עצמו (עיגול/גרדיאנט/צל) -
-   רק צריך להחזיר לו display (הכלל הגלובלי מסתיר אותו) ולבטל transition,
-   אחרת השכפול "נגרר ברגליים" אחרי האצבע/העכבר במקום לעקוב מיידית, בגלל
-   transition:var(--transition) הרגיל של .dock-fab - זה בדיוק מה שגרם
-   לגרירה בתוך הסרגל להרגיש פחות חלקה מהגרירה החופשית מחוץ לו */
-.sortable-fallback.dock-fab-drag-clone {
-    display: flex !important;
-    opacity: 0.92 !important;
-    transition: none !important;
-    z-index: 100000 !important;
-}
 /* "פיל" ניאון סביב משימה מאוכלסת - לילך/לבנדר רך ליתר קונטרסט על רקע כהה,
    קריא ואסתטי בלי להיות תוקפני מדי (אחרי ניסיונות קודמים עם זהב/סגול) */
 .slot-input-group.has-task .slot-task-wrap {

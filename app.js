@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFoodFabSetting(isFoodFabOn());
     applySmartSplitFabSetting(isSmartSplitFabOn());
     initFabOrderDragReorder();
+    initDockCarouselGestures();
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -1355,90 +1356,13 @@ function applyPwaShortcutDeepLink() {
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
-// כפתור "פתק מהיר" (📝) יושב כעת בתוך ה-Dock המאוחד (#fab-dock, ר' theme.css
-// .dock-fab-notes) כעוגן מרכזי קבוע - לא ניתן להסרה, לא משתתף בגרירת-הסידור-
-// מחדש של שאר הבועות (ר' initFabOrderDragReorder למטה). כאן רק מחברים את
-// הקליק לפתיחת המודל - בלי left/top/localStorage בכלל, המיקום עצמו נקבע
-// לגמרי ב-CSS (.fab-dock, position:absolute יחסית ל-.phone-wrapper)
-// בועת הפתקים היא הכפתור היחיד ב-Dock שאין לו שום מנגנון גרירה קיים
-// (מסוננת החוצה מ-Sortable, filter:'.dock-fab-notes') - לכן היא המקום
-// הבטוח להוסיף עליו את מחוות "הסיבוב" (ר' rotateFabRow למעלה) בלי שום סיכון
-// להתנגשות עם גרירת-הסידור-מחדש של שאר הבועות. טאפ רגיל (בלי תזוזה אופקית
-// משמעותית) עדיין פותח את המודל כרגיל - לא בנוי על onclick נפרד (שהיה עלול
-// "לירות" גם על טאפ וגם בסוף גרירה) אלא כל ההחלטה טאפ/סיבוב קורית כאן במקום
-// אחד, ב-pointerup.
-// גרירה חיה (לא רק swipe-then-snap) - לפי בקשה מפורשת ("ממש אפשרות של גרירה
-// של תנועה סיבובית, כרגע זה קופץ לאמצע פשוט"): בזמן התזוזה מעדכנים את
-// --fab-drag-x על #fab-dock (ר' .dock-fab ב-theme.css) בכל pointermove, כך
-// שכל הבועות (חוץ מהפתקים עצמן, שמאפסות את המשתנה לעצמן) עוקבות אחרי האצבע
-// בזמן אמת. בשחרור, מחשבים כמה "משבצות" (FAB_ROW_STEP) בפועל זזה האצבע
-// ומסובבים בהתאם, במקום צעד בודד קבוע
-const FAB_ROW_STEP = 92; // חייב להתאים בדיוק ל-FAB_ROW_OFFSETS[0]/[1] ב-app.js
+// בועת הפתקים היא בועה רגילה ב-Dock עכשיו (לא נעולה יותר למרכז) - מחוות
+// הטאפ/סיבוב המשותפת לכל הבועות נמצאת ב-initDockCarouselGestures (ר' למטה
+// ב-app.js), כאן רק מחברים את הקליק הרגיל לפתיחת המודל
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
-    const dock = document.getElementById('fab-dock');
-    if (!el || !dock) return;
-    const openNotes = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
-    const TAP_THRESHOLD = 10;
-    let startX = 0, startY = 0, dragging = false, pointerId = null;
-
-    function onPointerMove(e) {
-        if (e.pointerId !== pointerId) return;
-        const dx = e.clientX - startX, dy = e.clientY - startY;
-        if (!dragging && Math.abs(dx) > TAP_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-            dragging = true;
-            dock.classList.add('fab-row-dragging');
-        }
-        if (dragging) {
-            e.preventDefault();
-            dock.style.setProperty('--fab-drag-x', `${dx}px`);
-        }
-    }
-    function cleanup() {
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-        document.removeEventListener('pointercancel', onPointerCancel);
-        pointerId = null;
-    }
-    // מחזירה למנוחה ומסובבת בפועל - ב-requestAnimationFrame כדי שהסרת
-    // fab-row-dragging (מחזירה transition) "תתפוס" ברנדר לפני שה-left/top
-    // הסופיים נכתבים ב-rotateFabRow/applyDockOrder, אחרת המעבר מ--fab-drag-x
-    // הזמני לערך הסופי לפעמים לא נראה חלק
-    function settle(dx) {
-        dock.classList.remove('fab-row-dragging');
-        dock.style.setProperty('--fab-drag-x', '0px');
-        const steps = Math.round(dx / FAB_ROW_STEP);
-        requestAnimationFrame(() => {
-            for (let i = 0; i < Math.abs(steps); i++) rotateFabRow(steps > 0 ? -1 : 1);
-        });
-    }
-    function onPointerUp(e) {
-        if (e.pointerId !== pointerId) return;
-        const dx = e.clientX - startX;
-        const wasDragging = dragging;
-        cleanup();
-        dragging = false;
-        if (wasDragging) {
-            settle(dx);
-        } else {
-            openNotes();
-        }
-    }
-    function onPointerCancel(e) {
-        if (e.pointerId !== pointerId) return;
-        cleanup();
-        if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.setProperty('--fab-drag-x', '0px'); }
-        dragging = false;
-    }
-    el.addEventListener('pointerdown', (e) => {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        startX = e.clientX;
-        startY = e.clientY;
-        pointerId = e.pointerId;
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp);
-        document.addEventListener('pointercancel', onPointerCancel);
-    });
+    if (!el) return;
+    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
 }
 
 // יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
@@ -4744,9 +4668,14 @@ function closePremiumUnlockCeremony() {
 }
 
 // --- מצב בהיר (Light Mode, חינמי): קלף .light-mode על ה-html מחליף רק את
-// משתני הרקע/הטקסט (ר' theme.css) - שמור מקומית, לא תלוי במשתמש/פרימיום ---
+// משתני הרקע/הטקסט (ר' theme.css) - שמור מקומית, לא תלוי במשתמש/פרימיום.
+// ברירת מחדל בהיר (לא כהה) - לפי בקשה מפורשת: הזכוכית של אשכול הבועות
+// נראית הרבה יותר משכנעת/דומה לתמונת-הסגנון על רקע בהיר. "!== 'false'"
+// (לא "=== 'true'") - opt-out, לא opt-in - כדי שמי שלא נגעה בהגדרה בכלל
+// (כולל כל מי שכבר משתמשת באפליקציה) תראה בהיר כברירת מחדל, רק מי שכיבתה
+// את זה במפורש תישאר בכהה
 function isLightModeOn() {
-    return localStorage.getItem('weekwise_light_mode') === 'true';
+    return localStorage.getItem('weekwise_light_mode') !== 'false';
 }
 
 function applyLightMode(enabled) {
@@ -5021,20 +4950,11 @@ function applyWaterFabSetting(enabled) {
     restackFabs();
 }
 
-// מסדר מחדש את הבועות הצפות (מים/ספורט/ארוחה קבועה/מזון חופשי/פריסה חכמה) -
-// הסדר עצמו ניתן לגרירה משני מקומות: ישירות על הבועות במסך הבית (#fab-dock)
-// או משורות ההגדרות (#fab-order-list) - שניהם ר' initFabOrderDragReorder,
-// ושניהם כותבים לאותו localStorage ומסתנכרנים דרך applyFabOrder. בועת ה-AI
-// (הפתק המהיר, btn-ai-fab) נמצאת פיזית בתוך #fab-dock (עוגן מרכזי קבוע), אבל
-// לא משתתפת במערך הסדר הזה בכלל - היא מסוננת החוצה מה-Sortable (filter,
-// ר' initFabOrderDragReorder) ותמיד order:0 קבוע ב-CSS (.dock-fab-notes).
-// "כבוי לא משאיר חור" עכשיו קורה אוטומטית: #fab-dock הוא flex row, ובועה עם
-// class="hidden" (display:none) פשוט לא תופסת מקום - אין צורך בחישוב אינדקס
-// ידני (--fab-stack-index הישן הוסר לגמרי)
+// הסדר הבסיסי של 5 הבועות הניתנות-לכיבוי (לא כולל הפתק - ר' fabCarouselOrder
+// למטה, שהוא-זה שקובע את הסדר/מי-במרכז בפועל בעגלה). עדיין ניתן לגרירה
+// בהגדרות (#fab-order-list, ר' initFabOrderDragReorder) - קובע רק את הסדר
+// היחסי-ביניהן כשהן נכנסות לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
 function getFabOrder() {
-    // הסדר הזה נבחר כדי שהתצוגה הוויזואלית (אחרי applyDockOrder, שממרכזת
-    // את הפתק ומפזרת את השאר סימטרית סביבו) תצא בדיוק: פריסה חכמה, מזון -
-    // הפתק (במרכז) - מים, ארוחה קבועה - משמאל לימין, לפי בקשה מפורשת
     const defaultOrder = ['btn-smart-split-fab', 'btn-sport-fab', 'btn-food-fab', 'btn-water-fab', 'btn-preset-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
@@ -5043,67 +4963,77 @@ function getFabOrder() {
     return defaultOrder;
 }
 
-// מיישמת את הסדר השמור על שני המקומות גם יחד (סדר ה-DOM בפועל, לא רק CSS) -
-// כך ששני ה-Sortable (הבועות עצמן + שורות ההגדרות) תמיד מוצגים מסונכרנים
+// מיישמת את הסדר על שורות ההגדרות (#fab-order-list) - הדרך היחידה שנשארה
+// להשפיע על הסדר הבסיסי; ה-Dock עצמו (fabCarouselOrder) לא תלוי בסדר ה-DOM
+// יותר בכלל, רק ב-left/top שנקבעים ישירות ב-applyDockOrder
 function applyFabOrder() {
     const order = getFabOrder();
-    const stack = document.getElementById('fab-dock');
     const settingsList = document.getElementById('fab-order-list');
+    if (!settingsList) return;
     order.forEach(id => {
-        if (stack) {
-            const el = document.getElementById(id);
-            if (el) stack.appendChild(el);
-        }
-        if (settingsList) {
-            const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
-            if (row) settingsList.appendChild(row);
-        }
+        const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
+        if (row) settingsList.appendChild(row);
     });
 }
 
-// היסטים קבועים לשורה אחת סביב הפתק (לא מעגל/פיזור - לפי בקשה מפורשת
-// "כמו שזה נראה בתמונה", תמונת-סגנון שהראתה שורה אופקית אחת). אינדקס זוגי
-// (0,2,4) הולך ימינה, אינדקס אי-זוגי (1,3) הולך שמאלה - כך שהבועה הראשונה
-// בסדר (getFabOrder) יושבת הכי קרוב למרכז מימין, השנייה הכי קרוב משמאל וכו',
-// ותמיד נשאר מאוזן בין הצדדים גם כשלא כל 5 הבועות פעילות
+// היסטים קבועים לשורה אחת - אינדקס 0 הוא "קדמי" (במרכז, גדול, ר' fab-tier-
+// front ב-theme.css), 1/2 הכי קרובים מימין/משמאל, 3/4 רחוקים יותר עם קשת
+// עדינה כלפי מעלה (y שלילי) כדי לצמצם רוחב-בפועל בלי לגעת בגובה-ראש (לפי
+// בקשה מפורשת - "שיראה את האייקונים מאחורה טיפה יותר למעלה"), 5 רחוק ביותר
+// (רק אם כל 5 הבועות + הפתק פעילים בו-זמנית - נדיר, ספורט כבוי כברירת מחדל)
+const FAB_ROW_STEP = 82; // חייב להתאים בדיוק ל-FAB_ROW_OFFSETS[1]/[2] למטה
 const FAB_ROW_OFFSETS = [
-    { x: 92, y: 0 },
-    { x: -92, y: 0 },
-    { x: 174, y: 0 },
-    { x: -174, y: 0 },
-    { x: 256, y: 0 },
+    { x: 0, y: 0 },
+    { x: FAB_ROW_STEP, y: 0 },
+    { x: -FAB_ROW_STEP, y: 0 },
+    { x: 148, y: -16 },
+    { x: -148, y: -16 },
+    { x: 202, y: -30 },
 ];
-// רמת-עומק מקבילה למערך ההיסטים - ככל שרחוק יותר מהמרכז, "יותר מאחורה"
-// (קטן/עמום יותר, ר' .fab-tier-2/.fab-tier-3 ב-theme.css), לפי בקשה מפורשת
-const FAB_ROW_TIERS = [1, 1, 2, 2, 3];
+// רמת-עומק מקבילה למערך ההיסטים - 0=קדמי (fab-tier-front), 1=גודל רגיל
+// (בלי מחלקת tier נוספת), 2/3="יותר מאחורה" (קטן יותר, ר' .fab-tier-2/
+// .fab-tier-3 ב-theme.css), לפי בקשה מפורשת
+const FAB_ROW_TIERS = [0, 1, 1, 2, 2, 3];
 
-// קובעת את המיקום החזותי (left/top בפיקסלים, ר' ההערה על .dock-fab ב-
-// theme.css) והעומק (fab-tier-N) של הבועות בשורה סביב בועת הפתקים הקבועה
-// בדיוק במרכז, בהשראת תמונת-סגנון ששלחה המשתמשת. הבועות הפעילות (עד 5,
-// מדלגים על מוסתרות/toggle כבוי) מקבלות היסט קבוע לפי FAB_ROW_OFFSETS -
-// "סיבוב" (ר' rotateFabRow למטה) פשוט מזיז כל בועה למשבצת הבאה במערך הזה
+// --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
+// לא נשמר ב-localStorage בכוונה - "מי במרכז" הוא מצב זמני של המחווה
+// (סיבוב), לא העדפה קבועה; כל טעינה מתחילה מחדש עם הפתק בחזית, לפי בקשה
+// מפורשת "הפתקים יהיה ראשון" (כברירת מחדל, לא נעולה)
+let fabCarouselOrder = null;
+
+// קובעת את המיקום החזותי (left/top בפיקסלים) והעומק (fab-tier-N/fab-tier-
+// front) של כל הבועות בעגלה - כולל הפתק, שכבר לא נעולה תמיד במרכז (לפי
+// בקשה מפורשת: "לא הפתקים לא חייבים להיות שם כל הזמן, אני רוצה שהמשתמש
+// יבחר לעצמו מה יהיה באמצע על ידי סיבוב"). מתאמת מחדש בכל קריאה את
+// fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
+// בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
-    const order = getFabOrder();
-    const active = order.filter(id => {
+    const allIds = ['btn-ai-fab', ...getFabOrder()];
+    const active = allIds.filter(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
     });
-    active.forEach((id, i) => {
+    if (!fabCarouselOrder) {
+        fabCarouselOrder = active.slice();
+    } else {
+        fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
+        active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
+    }
+    fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
         const offset = FAB_ROW_OFFSETS[i];
         if (!el || !offset) return;
         el.style.left = `${offset.x}px`;
         el.style.top = `${offset.y}px`;
+        el.classList.toggle('fab-tier-front', FAB_ROW_TIERS[i] === 0);
         el.classList.toggle('fab-tier-2', FAB_ROW_TIERS[i] === 2);
         el.classList.toggle('fab-tier-3', FAB_ROW_TIERS[i] === 3);
     });
-    order.forEach(id => {
+    allIds.forEach(id => {
         if (active.includes(id)) return;
         const el = document.getElementById(id);
-        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-2', 'fab-tier-3'); }
+        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-front', 'fab-tier-2', 'fab-tier-3'); }
     });
-    const notes = document.getElementById('btn-ai-fab');
-    if (notes) { notes.style.left = '0px'; notes.style.top = '0px'; }
 }
 
 function restackFabs() {
@@ -5111,47 +5041,101 @@ function restackFabs() {
     applyDockOrder();
 }
 
-// "מסובבים" את סדר הבועות בשורה - כמו קרוסלה, לפי בקשה מפורשת ("כמו משחק
-// יהיה אפשר לסובב וכל פעם שמסובבים אחד אחר מגיע קדימה"). מסתמכת על אותו
-// weekwise_fab_order בדיוק כמו גרירה-לסידור-מחדש הרגילה (ר' initFabOrderDragReorder)
-// - "סיבוב" הוא בעצם shift מעגלי של המערך, לא מנגנון נפרד
+// "מסובבים" את סדר הבועות בעגלה - לפי בקשה מפורשת ("כמו משחק יהיה אפשר
+// לסובב וכל פעם שמסובבים אחד אחר מגיע קדימה"). מסובב את fabCarouselOrder
+// עצמו (לא weekwise_fab_order - זה כבר לא הבעלים של סדר ה-Dock, ר' ההערה
+// למעלה) - כל בועה, כולל הפתק, יכולה לעבור דרך משבצת 0 (קדמי)
 function rotateFabRow(direction) {
-    const order = getFabOrder();
+    if (!fabCarouselOrder || fabCarouselOrder.length < 2) return;
     if (direction > 0) {
-        order.push(order.shift());
+        fabCarouselOrder.push(fabCarouselOrder.shift());
     } else {
-        order.unshift(order.pop());
+        fabCarouselOrder.unshift(fabCarouselOrder.pop());
     }
-    localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
-    applyFabOrder();
     applyDockOrder();
 }
 
-// גרירה לשינוי סדר הבועות - שני יעדים אפשריים: ישירות על הבועות במסך הבית
-// (#fab-dock, כל הבועה עצמה היא ידית - delay קצר במגע כדי שטאפ רגיל לפתיחה
-// עדיין יעבוד בלי "להיתפס" בטעות כתחילת גרירה), או שורות ה-FAB בהגדרות
-// (#fab-order-list, ידית ⠿ ייעודית, אותו דפוס בדיוק כמו initScheduleRowDragReorder).
-// שתי הרשימות כותבות לאותו localStorage ומסתנכרנות מיד דרך
-// applyFabOrder+applyDockOrder אחרי כל גרירה, מאיזה מהן שלא תגיע.
-// filter:'.dock-fab-notes' על ה-Sortable של #fab-dock מונע את אפשרות
-// הגרירה-לסידור-מחדש מבועת הפתקים לגמרי (היא תמיד באמצע, לפי בקשה מפורשת) -
-// אותו דפוס בדיוק כמו filter:'.center-list-divider' בגרירת הפתקים.
-// אין יותר אפשרות לגרור בועה החוצה מה-Dock למיקום חופשי על המסך - הוסרה
-// לגמרי לפי בקשה מפורשת ("שיהיה אפשר לסדר אותם רק בסרגל"); כל גרירה נשארת
-// תמיד סידור-מחדש בתוך ה-Dock עצמו
+// גרירה חיה לסיבוב הקרוסלה - על כל בועה בעגלה (כולל הפתק, לא רק היא) לפי
+// בקשה מפורשת ("אני לא מצליחה לגרור אותם") - קודם זה עבד רק מבועת הפתקים
+// ספציפית, מה שהיה לא אינטואיטיבי. כל הבועות זזות ביחד בזמן אמת עם האצבע
+// (ר' --fab-drag-x ב-.dock-fab ב-theme.css) דרך משתנה CSS משותף על #fab-dock,
+// לא Sortable - לא רוצים שתי מערכות גרירה נפרדות מתחרות על אותה בועה, ואין
+// יותר "סידור-מחדש" נפרד מ"סיבוב" - הסיבוב הוא כל מנגנון הסידור-מחדש עכשיו.
+// טאפ רגיל (בלי גרירה) עדיין מפעיל את הפעולה הרגילה של הבועה הספציפית הזו
+// (onclick הקיים ב-HTML/הפתק) - לא נוגעים בו כלל, רק מונעים אותו אם ממש
+// הייתה גרירה (dataset.justSwiped, ר' למטה) כדי שטאפ וסיבוב לא "יתנגשו"
+function initDockCarouselGestures() {
+    const dock = document.getElementById('fab-dock');
+    if (!dock) return;
+    const TAP_THRESHOLD = 10;
+    document.querySelectorAll('.dock-fab').forEach(el => {
+        let startX = 0, startY = 0, dragging = false, pointerId = null;
+
+        function onPointerMove(e) {
+            if (e.pointerId !== pointerId) return;
+            const dx = e.clientX - startX, dy = e.clientY - startY;
+            if (!dragging && Math.abs(dx) > TAP_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+                dragging = true;
+                dock.classList.add('fab-row-dragging');
+            }
+            if (dragging) {
+                e.preventDefault();
+                dock.style.setProperty('--fab-drag-x', `${dx}px`);
+            }
+        }
+        function cleanup() {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            document.removeEventListener('pointercancel', onPointerCancel);
+            pointerId = null;
+        }
+        function settle(dx) {
+            dock.classList.remove('fab-row-dragging');
+            dock.style.setProperty('--fab-drag-x', '0px');
+            const steps = Math.round(dx / FAB_ROW_STEP);
+            requestAnimationFrame(() => {
+                for (let i = 0; i < Math.abs(steps); i++) rotateFabRow(steps > 0 ? -1 : 1);
+            });
+        }
+        function onPointerUp(e) {
+            if (e.pointerId !== pointerId) return;
+            const dx = e.clientX - startX;
+            const wasDragging = dragging;
+            cleanup();
+            dragging = false;
+            if (wasDragging) {
+                el.dataset.justSwiped = '1';
+                setTimeout(() => { delete el.dataset.justSwiped; }, 150);
+                settle(dx);
+            }
+        }
+        function onPointerCancel(e) {
+            if (e.pointerId !== pointerId) return;
+            cleanup();
+            if (dragging) { dock.classList.remove('fab-row-dragging'); dock.style.setProperty('--fab-drag-x', '0px'); }
+            dragging = false;
+        }
+        el.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            startX = e.clientX;
+            startY = e.clientY;
+            pointerId = e.pointerId;
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+            document.addEventListener('pointercancel', onPointerCancel);
+        });
+        // חוסם רק את ה-click שמגיע מיד אחרי גרירה אמיתית - טאפ רגיל תמיד עובר
+        el.addEventListener('click', (e) => {
+            if (el.dataset.justSwiped) { e.preventDefault(); e.stopImmediatePropagation(); }
+        }, true);
+    });
+}
+
+// גרירה-לסידור-מחדש בהגדרות (#fab-order-list, ידית ⠿ ייעודית) - היחידה
+// שנשארה מבוססת-Sortable; ה-Dock עצמו עבר כולו למחוות-סיבוב (ר'
+// initDockCarouselGestures למעלה), בלי Sortable בכלל
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
-    const onReorder = (container) => {
-        // filter(Boolean) מוציא גם אלמנטים דקורטיביים בלי id (כמו .fab-shelf
-        // ב-#fab-dock) שהם ילדים ישירים של הרשימה אבל לא בועות אמיתיות
-        const order = Array.from(container.children)
-            .map(el => el.getAttribute('data-fab-id') || el.id)
-            .filter(id => id && id !== 'btn-ai-fab');
-        localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
-        applyFabOrder();
-        applyDockOrder();
-    };
-
     const settingsList = document.getElementById('fab-order-list');
     if (settingsList) {
         new Sortable(settingsList, {
@@ -5162,38 +5146,22 @@ function initFabOrderDragReorder() {
             dragoverBubble: false,
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
-            onEnd: () => onReorder(settingsList),
-        });
-    }
-
-    const stack = document.getElementById('fab-dock');
-    if (stack) {
-        new Sortable(stack, {
-            animation: 150,
-            forceFallback: true,
-            fallbackOnBody: false,
-            dragoverBubble: false,
-            delay: 150,
-            delayOnTouchOnly: true,
-            filter: '.dock-fab-notes, .fab-shelf',
-            ghostClass: 'sortable-ghost',
-            chosenClass: 'sortable-chosen',
-            // dragClass: בלי זה השכפול הצף שעוקב אחרי האצבע/העכבר מוסתר
-            // לגמרי (ר' הכלל הגלובלי .sortable-fallback ב-theme.css, שנועד
-            // לרשימות שבהן רק השורה החיה זזה) - כאן רוצים לראות את הבועה
-            // עצמה עוקבת חלק אחרי האצבע, לא רק "רווח" סטטי במקום המקורי
-            dragClass: 'dock-fab-drag-clone',
-            onEnd: () => onReorder(stack),
+            onEnd: () => {
+                const order = Array.from(settingsList.children)
+                    .map(el => el.getAttribute('data-fab-id') || el.id)
+                    .filter(Boolean);
+                localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
+                applyFabOrder();
+            },
         });
     }
 }
 
-// מאפסת את סדר הבועות בסרגל לברירת המחדל - לפני שהוסרה האפשרות לגרור בועה
-// החוצה מה-Dock, זו הייתה גם הדרך היחידה להתאושש מבועה שנתקעה במקום לא-נוח;
-// עכשיו שכל גרירה היא רק סידור-מחדש בתוך הסרגל, זו פשוט אפשרות נוחה לחזור
-// לסדר המקורי בלי לגרור כל בועה בנפרד
+// מאפסת גם את סדר הבועות בהגדרות וגם את מצב הקרוסלה בפועל (מי במרכז עכשיו)
+// - חוזרת לפתק בחזית, בדיוק כמו בטעינה ראשונה
 function resetFabLayout() {
     localStorage.removeItem('weekwise_fab_order');
+    fabCarouselOrder = null;
     restackFabs();
     showAppToast(t('settings_reset_fab_layout_done'));
 }

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=214">
+    <link rel="stylesheet" href="theme.css?v=215">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -750,21 +750,15 @@
                 </section>
             </div>
 
-            <!-- Dock מאוחד: קפסולת זכוכית אופקית אחת בתחתית המרכז, מחליפה את
-                 הכפתור הנפרד לפתק מהיר (btn-ai-fab) + ערימת הבועות האנכית
-                 שהיו קודם (#fab-stack). כל הבועות ילדים ישירים של #fab-dock,
-                 כדי שגרירה ישירה על בועה (ר' initFabOrderDragReorder/
-                 applyDockOrder ב-app.js) תזיז אותה בפועל בסדר ה-DOM, לא רק
-                 חזותית. הפתק (btn-ai-fab, ה-id נשאר כפי שהיה - initFixedAiFab
-                 מסתמך עליו) הוא ברירת מחדל קבועה שאינה ניתנת להסרה, תמיד
-                 במרכז המדויק של ה-Dock - שאר הבועות מתפזרות סביבה במרחקים/
-                 זוויות לא-אחידים לפי applyDockOrder (בהשראת תמונת-סגנון,
-                 "קונסטלציה" ולא מעגל מדויק). בועה עם class="hidden" פשוט לא
-                 מוצגת - fab-shelf הוא אלמנט קישוט בלבד (לא כפתור), "מדף
-                 זכוכית" דק מתחת לפתק, ר' .fab-shelf ב-theme.css -->
+            <!-- Dock מאוחד: קרוסלת-שורה זכוכיתית אחת בתחתית המרכז. כל הבועות
+                 (כולל הפתק, btn-ai-fab) הן ילדים ישירים של #fab-dock ומתמקמות
+                 ב-left/top לפי fabCarouselOrder (ר' applyDockOrder/
+                 initDockCarouselGestures ב-app.js) - מי שנמצא/ת במשבצת
+                 המרכזית ("קדמי") גדולה/בולטת יותר (fab-tier-front), לא בהכרח
+                 הפתק - המשתמשת בוחרת מי שם דרך גרירה-סיבובית על כל בועה.
+                 בועה עם class="hidden" פשוט לא מוצגת -->
             <div id="fab-dock" class="fab-dock">
-                <div class="fab-shelf"></div>
-                <button type="button" class="dock-fab dock-fab-notes" id="btn-ai-fab" data-i18n-tooltip="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">📝</button>
+                <button type="button" class="dock-fab" id="btn-ai-fab" data-i18n-tooltip="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">📝</button>
 
                 <!-- כפתור צף להוספה מהירה של מים - אפשר לכבות מההגדרות. בועה
                      נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
@@ -1979,6 +1973,6 @@
     </div>
 
     <script src="i18n.js?v=144"></script>
-    <script src="app.js?v=243"></script>
+    <script src="app.js?v=244"></script>
 </body>
 </html>
