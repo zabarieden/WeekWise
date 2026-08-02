@@ -4976,24 +4976,13 @@ function applyFabOrder() {
     });
 }
 
-// היסטים קבועים לשורה אחת - אינדקס 0 הוא "קדמי" (במרכז, גדול, ר' fab-tier-
-// front ב-theme.css), 1/2 הכי קרובים מימין/משמאל, 3/4 רחוקים יותר עם קשת
-// עדינה כלפי מעלה (y שלילי) כדי לצמצם רוחב-בפועל בלי לגעת בגובה-ראש (לפי
-// בקשה מפורשת - "שיראה את האייקונים מאחורה טיפה יותר למעלה"), 5 רחוק ביותר
-// (רק אם כל 5 הבועות + הפתק פעילים בו-זמנית - נדיר, ספורט כבוי כברירת מחדל)
-const FAB_ROW_STEP = 82; // חייב להתאים בדיוק ל-FAB_ROW_OFFSETS[1]/[2] למטה
-const FAB_ROW_OFFSETS = [
-    { x: 0, y: 0 },
-    { x: FAB_ROW_STEP, y: 0 },
-    { x: -FAB_ROW_STEP, y: 0 },
-    { x: 148, y: -16 },
-    { x: -148, y: -16 },
-    { x: 202, y: -30 },
-];
-// רמת-עומק מקבילה למערך ההיסטים - 0=קדמי (fab-tier-front), 1=גודל רגיל
-// (בלי מחלקת tier נוספת), 2/3="יותר מאחורה" (קטן יותר, ר' .fab-tier-2/
-// .fab-tier-3 ב-theme.css), לפי בקשה מפורשת
-const FAB_ROW_TIERS = [0, 1, 1, 2, 2, 3];
+// מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה (לא "קדמי
+// במרכז + רדיאלי מסביבו"), לפי בקשה מפורשת ("אני רוצה שהסיבוב יהיה מצד אחד
+// לצד השני") - כדי שסיבוב יזיז כל בועה בדיוק צעד אחד לאורך אותו קו, לא
+// יקפיץ אותה בין "טבעות" שונות. בזכות זה גם --fab-drag-x (הגרירה החיה,
+// ר' initDockCarouselGestures) הופך למדויק: הזזה אחידה של כל הבועות ב-dx
+// פיקסלים היא בדיוק מה שסיבוב-אמיתי-של-משבצת-אחת נראה כמוהו
+const FAB_ROW_STEP = 85;
 
 // --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
 // לא נשמר ב-localStorage בכוונה - "מי במרכז" הוא מצב זמני של המחווה
@@ -5001,10 +4990,14 @@ const FAB_ROW_TIERS = [0, 1, 1, 2, 2, 3];
 // מפורשת "הפתקים יהיה ראשון" (כברירת מחדל, לא נעולה)
 let fabCarouselOrder = null;
 
-// קובעת את המיקום החזותי (left/top בפיקסלים) והעומק (fab-tier-N/fab-tier-
-// front) של כל הבועות בעגלה - כולל הפתק, שכבר לא נעולה תמיד במרכז (לפי
-// בקשה מפורשת: "לא הפתקים לא חייבים להיות שם כל הזמן, אני רוצה שהמשתמש
-// יבחר לעצמו מה יהיה באמצע על ידי סיבוב"). מתאמת מחדש בכל קריאה את
+// קובעת את המיקום החזותי (left/top בפיקסלים) והגודל (fab-tier-front/
+// fab-tier-side - שתי רמות בלבד, לא מדורג, לפי בקשה מפורשת "שהבועה
+// האמצעית תהיה פשוט יותר גדולה וכל מה שמצדדיה יהיו יותר קטנות") של כל
+// הבועות בעגלה - כולל הפתק, שכבר לא נעולה תמיד במרכז (לפי בקשה מפורשת:
+// "אני רוצה שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב"). כל בועה
+// ממוקמת לפי המרחק (במשבצות, לא בפיקסלים) בינה לבין אמצע-המערך בפועל -
+// כך שכולן על אותו קו ישר, וסיבוב (ר' rotateFabRow) פשוט מזיז את כולן
+// משבצת אחת שמאלה/ימינה במקום קפיצה. מתאמת מחדש בכל קריאה את
 // fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
@@ -5019,20 +5012,21 @@ function applyDockOrder() {
         fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
         active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
     }
+    const centerIndex = (fabCarouselOrder.length - 1) / 2;
     fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
-        const offset = FAB_ROW_OFFSETS[i];
-        if (!el || !offset) return;
-        el.style.left = `${offset.x}px`;
-        el.style.top = `${offset.y}px`;
-        el.classList.toggle('fab-tier-front', FAB_ROW_TIERS[i] === 0);
-        el.classList.toggle('fab-tier-2', FAB_ROW_TIERS[i] === 2);
-        el.classList.toggle('fab-tier-3', FAB_ROW_TIERS[i] === 3);
+        if (!el) return;
+        const dist = i - centerIndex; // שלילי=שמאל, חיובי=ימין, 0=בדיוק במרכז
+        const absDist = Math.abs(dist);
+        el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
+        el.style.top = `${Math.round(-Math.min(absDist * 9, 30))}px`;
+        el.classList.toggle('fab-tier-front', absDist < 0.6);
+        el.classList.toggle('fab-tier-side', absDist >= 0.6);
     });
     allIds.forEach(id => {
         if (active.includes(id)) return;
         const el = document.getElementById(id);
-        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-front', 'fab-tier-2', 'fab-tier-3'); }
+        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-front', 'fab-tier-side'); }
     });
 }
 

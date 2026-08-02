@@ -879,21 +879,21 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    /* 0 0 22px/-2px: הילת-זוהר רכה שנפרשת מסביב לבועה. שתי שכבות inset
-       נוספות (rim-light) יוצרות "מסגרת אור" חדה יותר בקצה העליון-שמאלי
-       ו"מסגרת צל" בתחתון-ימני, כמו כדור זכוכית שמואר מלמעלה-שמאל.
-       0 14px 10px -6px: צל-מגע נפרד לכל בועה (לא צל-רצפה משותף אחד שנדחה
-       במפורש) - כהה, קרוב וממוקד ישר מתחת לבועה, כאילו היא באמת מטילה צל
-       על "רצפה" מתחתיה; זז ומתעדכן איתה אוטומטית כי הוא חלק מהבועה עצמה
-       (לא אלמנט נפרד שצריך למקם ידנית). box-shadow לא מושפע מ-overflow:hidden
-       של הבועה עצמה (זה חל רק על תוכן, לא על הצל של הקופסה) */
+    /* מודל-אור עקבי: "אור ישר מלמעלה" בלבד (לא באלכסון) - לפי בקשה מפורשת
+       ("הצל אמור להיות מתחת לבועות... כאילו אור מלמעלה") - כל ה-inset-ים
+       וה-x-offset של הצל עצמו הם 0 (בלי היסט אופקי), רק אנכי. 0 0 24px:
+       הילת-זוהר רכה שנפרשת מסביב לבועה (לא כיוונית, שכבה נפרדת). 0 16px
+       12px -6px: צל-מגע נפרד לכל בועה (לא צל-רצפה משותף אחד שנדחה במפורש) -
+       כהה, ישר מתחת לבועה בלבד, כאילו היא באמת מטילה צל על "רצפה" מתחתיה;
+       זז ומתעדכן איתה אוטומטית כי הוא חלק מהבועה עצמה. inset 0 3px:
+       הדגשת-אור ישר בקצה העליון. inset 0 -10px: צל ישר בתחתית הכדור פנימה
+       (לא בפינה). box-shadow לא מושפע מ-overflow:hidden של הבועה עצמה
+       (זה חל רק על תוכן, לא על הצל של הקופסה) */
     box-shadow:
-        0 10px 22px rgba(0, 0, 0, 0.45),
-        0 14px 10px -6px rgba(0, 0, 0, 0.5),
+        0 16px 12px -6px rgba(0, 0, 0, 0.5),
         0 0 24px -2px rgba(200, 215, 255, 0.5),
-        inset 0 2px 2px rgba(255, 255, 255, 0.85),
-        inset 2px 0 3px rgba(255, 255, 255, 0.25),
-        inset -3px -6px 10px rgba(0, 0, 0, 0.22);
+        inset 0 3px 3px rgba(255, 255, 255, 0.75),
+        inset 0 -10px 14px rgba(0, 0, 0, 0.22);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
@@ -941,13 +941,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    ברגע שהגרירה נגמרת כדי שההשתקעות למשבצת הסופית (ר' rotateFabRow) תהיה
    אנימציה חלקה, לא קפיצה */
 .fab-dock.fab-row-dragging .dock-fab { transition: none; }
-/* עומק - בועות רחוקות יותר מהמרכז קטנות יותר ("יותר מאחורה"), לפי בקשה
-   מפורשת. בלי opacity/עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות,
-   רק הגודל משדר מרחק. נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת
-   מהמרכז, לא קבוע לבועה ספציפית - כל בועה יכולה לעבור דרך כל הרמות כשמסובבים.
-   משכי ריחוף (dockFabFloat) שונים מעט לכל רמה כדי שלא יזוזו בדיוק ביחד */
-.dock-fab.fab-tier-2 { width: 58px; height: 58px; font-size: 1.5rem; animation-duration: 4.4s; }
-.dock-fab.fab-tier-3 { width: 46px; height: 46px; font-size: 1.15rem; animation-duration: 3.8s; }
+/* שתי רמות גודל בלבד (לא מדורג) - האמצעית גדולה (fab-tier-front), כל
+   השאר קטנות באופן אחיד (fab-tier-side), לפי בקשה מפורשת. בלי opacity/
+   עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.
+   נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא קבוע לבועה
+   ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
+.dock-fab.fab-tier-side { width: 58px; height: 58px; font-size: 1.5rem; animation-duration: 4.4s; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 4rem; }
