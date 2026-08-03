@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyPresetFabSetting(isPresetFabOn());
     applySmartSplitFabSetting(isSmartSplitFabOn());
     applyMealRowCounts();
+    applyFinanceCycleSetting();
     initFabOrderDragReorder();
     initDockCarouselGestures();
     initSupabase();
@@ -5910,6 +5911,53 @@ let currentFinanceEntryType = 'expense';
 let financeSummaryMonthKey = null;
 let cachedFinanceTargetBudget = 0;
 
+// --- מחזור פיננסי מותאם אישית: יום ההתחלה של "החודש" לצורך סיכום/היסטוריה -
+// ברירת מחדל 1 (= חודש קלנדרי רגיל, בלי שינוי התנהגות למי שלא נגע בזה) -
+// לפי בקשה מפורשת ("מי שרוצה... לפי ה-10 לחודש... לפי בחירתם, למשל יום
+// המשכורת"). כל שאר הלוגיקה (currentMonthKey/shiftMonthKey הכלליים,
+// שמשמשים גם תכונות אחרות כמו יעד חודשי) לא משתנה בכלל - רק 4 הפונקציות
+// הספציפיות לפייננס למטה (loadFinanceData/navigateFinanceMonth/
+// renderFinanceSummary/renderFinanceHistory/saveFinanceTargetBudget)
+// עברו להשתמש במפתח-תקופה (period key) במקום currentMonthKey ישירות
+function getFinanceCycleStartDay() {
+    const n = parseInt(localStorage.getItem('weekwise_finance_cycle_start_day'));
+    return n >= 1 && n <= 28 ? n : 1;
+}
+function setFinanceCycleStartDay(day) {
+    localStorage.setItem('weekwise_finance_cycle_start_day', String(day));
+    financeSummaryMonthKey = null; // חוזרים לתקופה הנוכחית לפי ההגדרה החדשה
+    Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+function applyFinanceCycleSetting() {
+    const select = document.getElementById('finance-cycle-day-select');
+    if (select) select.value = String(getFinanceCycleStartDay());
+}
+// מפתח-תקופה = "YYYY-MM" של החודש שבו התקופה *מתחילה* - זהה למפתח-חודש
+// רגיל כש-cycleStartDay===1. אם היום בחודש עדיין לפני יום ההתחלה, התקופה
+// הנוכחית התחילה בפועל בחודש הקודם
+function currentFinancePeriodKey() {
+    const day = getFinanceCycleStartDay();
+    const now = new Date();
+    if (now.getDate() < day) {
+        const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+    }
+    return currentMonthKey();
+}
+// טווח התאריכים בפועל של תקופה נתונה - זהה לחלוטין לחודש קלנדרי (1 עד סוף
+// החודש) כש-cycleStartDay===1, אחרת רץ מיום ההתחלה שנבחר עד יום לפניו בחודש הבא
+function getFinancePeriodRange(periodKey) {
+    const day = getFinanceCycleStartDay();
+    const [y, m] = periodKey.split('-').map(Number);
+    return { start: getLocalDateString(new Date(y, m - 1, day)), end: getLocalDateString(new Date(y, m, day - 1)) };
+}
+function formatFinancePeriodLabel(periodKey) {
+    if (getFinanceCycleStartDay() === 1) return formatMonthLabel(periodKey);
+    const { start, end } = getFinancePeriodRange(periodKey);
+    const fmt = (s) => new Date(`${s}T00:00:00`).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+    return `${fmt(start)} - ${fmt(end)}`;
+}
+
 // נראות כרטיסי "סיכום חודשי": העדפת תצוגה בלבד (לא נתון אמיתי), אז נשמרת רק
 // ב-localStorage לפי משתמשת, לא ב-DB - בדיוק כמו מצב בהיר/ערכת נושא מקומית
 const FINANCE_CARD_KEYS = ['income', 'expense', 'budget', 'remaining'];
@@ -5965,7 +6013,7 @@ function selectFinanceEntryType(type) {
 
 async function loadFinanceData() {
     if (!supabaseClient || !currentUserId) return;
-    financeSummaryMonthKey = currentMonthKey();
+    financeSummaryMonthKey = currentFinancePeriodKey();
     populateFinanceCategoryOptions(currentFinanceEntryType);
     loadFinanceCardVisibility();
     const dateInput = document.getElementById('finance-date-input');
@@ -5994,9 +6042,9 @@ async function submitFinanceEntry() {
 }
 
 async function navigateFinanceMonth(delta) {
-    const base = financeSummaryMonthKey || currentMonthKey();
+    const base = financeSummaryMonthKey || currentFinancePeriodKey();
     const target = shiftMonthKey(base, delta);
-    if (target > currentMonthKey()) return;
+    if (target > currentFinancePeriodKey()) return;
     financeSummaryMonthKey = target;
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
@@ -6009,11 +6057,9 @@ async function renderFinanceSummary() {
     const remainingEl = document.getElementById('finance-remaining');
     const overspendLabel = document.getElementById('finance-overspend-label');
     if (!labelEl || !supabaseClient || !currentUserId) return;
-    const monthKey = financeSummaryMonthKey || currentMonthKey();
-    labelEl.textContent = formatMonthLabel(monthKey);
-    const [y, m] = monthKey.split('-').map(Number);
-    const firstStr = `${monthKey}-01`;
-    const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
+    const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
+    labelEl.textContent = formatFinancePeriodLabel(monthKey);
+    const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
     const [{ data: entries }, { data: targetRow }] = await Promise.all([
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
@@ -6045,7 +6091,7 @@ async function saveFinanceTargetBudget() {
     if (!supabaseClient || !currentUserId) return;
     const budgetInput = document.getElementById('finance-target-budget-input');
     const target = parseFloat(budgetInput.value) || 0;
-    const monthKey = financeSummaryMonthKey || currentMonthKey();
+    const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
     await supabaseClient.from('budget_monthly_targets')
         .upsert({ user_id: currentUserId, username: currentUsername, month_key: monthKey, target_amount: target }, { onConflict: 'user_id,month_key' });
     cachedFinanceTargetBudget = target;
@@ -6058,10 +6104,8 @@ async function saveFinanceTargetBudget() {
 async function renderFinanceHistory() {
     const list = document.getElementById('finance-history-list');
     if (!list || !supabaseClient || !currentUserId) return;
-    const monthKey = financeSummaryMonthKey || currentMonthKey();
-    const [y, m] = monthKey.split('-').map(Number);
-    const firstStr = `${monthKey}-01`;
-    const lastStr = new Date(y, m, 0).toISOString().slice(0, 10);
+    const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
+    const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
     const { data } = await supabaseClient.from('budget_tracker').select('*')
         .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
         .order('entry_date', { ascending: false }).order('created_at', { ascending: false });
