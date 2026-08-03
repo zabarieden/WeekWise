@@ -2911,10 +2911,16 @@ function buildWeeklyScheduleAccordionUI() {
     [tabsStrip, container].forEach(el => {
         if (!el || el.dataset.wheelScrollBound) return;
         el.dataset.wheelScrollBound = 'true';
+        // ב-RTL, scrollLeft "הפוך": 0 הוא הקצה הימני (ההתחלה), וגלילה קדימה
+        // (לעבר ימים מאוחרים יותר) *מקטינה* אותו למספרים שליליים - בניגוד
+        // ל-LTR שבו הוא רק גדל. בלי ההיפוך הזה, גלגול "קדימה" ב-RTL היה מנסה
+        // לדחוף את scrollLeft לכיוון החיובי, שכבר תקוע ב-0 (הקצה) - בדיוק
+        // התסמין שדווח ("לא רואה מעבר ליום חמישי", שום דבר לא זז בכלל)
+        const isRtlDir = getComputedStyle(el).direction === 'rtl';
         el.addEventListener('wheel', (e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
                 e.preventDefault();
-                el.scrollLeft += e.deltaY;
+                el.scrollLeft += (isRtlDir ? -1 : 1) * e.deltaY;
             }
         }, { passive: false });
     });
