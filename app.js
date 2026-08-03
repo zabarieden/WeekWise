@@ -5947,7 +5947,8 @@ const FINANCE_CATEGORIES = {
         ['food', 'finance_cat_food'], ['transport', 'finance_cat_transport'],
         ['housing', 'finance_cat_housing'], ['bills', 'finance_cat_bills'],
         ['shopping', 'finance_cat_shopping'], ['health', 'finance_cat_health'],
-        ['entertainment', 'finance_cat_entertainment'], ['other', 'finance_cat_other'],
+        ['entertainment', 'finance_cat_entertainment'], ['work', 'finance_cat_work'],
+        ['other', 'finance_cat_other'],
     ],
     income: [
         ['salary', 'finance_cat_salary'], ['gift', 'finance_cat_gift'],
@@ -9153,6 +9154,57 @@ function autoFillMealCalories(foodInput) {
     const estimate = estimateFreeTextCalories(newText);
     caloriesInput.value = estimate > 0 ? Math.round(estimate) : '';
     updateLiveCaloriesToday();
+    // אם נשאר בטקסט חלק משמעותי שהמנוע המקומי לא זיהה בכלל (למשל שם פריט
+    // ממותג/מסעדה כמו "מק ריאל") - למשתמשת פרימיום מנסים ברקע גם את אותו
+    // AI עם חיפוש אמיתי באינטרנט שמשמש את הוספה-מהירה-עם-AI, בלי לחסום את
+    // ההקלדה ובלי לפתוח מודל שאלה שלא התבקשה כאן - לפי בקשה מפורשת
+    // ("שגם בשורות האלה יהיה AI שצריך")
+    if (isPremiumUser && newText && hasUnmatchedFoodText(newText)) {
+        escalateMealRowToAI(foodInput, caloriesInput, newText);
+    }
+}
+
+// מילות/יחידות שכיחות שנשארות "יתומות" אחרי שהמאכל שהן מתארות כבר הוסר
+// מהטקסט (כמות/גודל/מילות חיבור) - לא סימן לפריט לא-מזוהה
+const FOOD_LEFTOVER_IGNORE_RE = /^(עם|וגם|גם|ו|חצי|רבע|שליש|כפית|כפיות|כף|כפות|כוס|כוסות|גרם|גראם|מ["״]?ל|יחידה|יחידות|קטן|קטנה|גדול|גדולה|בינוני|בינונית|מנה|מנת|פרוסה|פרוסת|פרוסות|של|עוד|קצת|בערך)$/;
+// יש בטקסט מילה משמעותית (2+ תווים, לא מספר/יחידה/מילת-כמות) שלא נתפסה ע"י
+// אף רשומה ב-FOOD_CALORIE_DB - סימן שההערכה המקומית עלולה להיות חסרה (לא
+// בהכרח שגויה - יכול גם להיות תיאור/שם שלא משפיע על הקלוריות, אבל עדיף
+// לבדוק מול AI מאשר לפספס פריט שלם בשקט)
+function hasUnmatchedFoodText(text) {
+    const matches = findAllFoodMatches(text);
+    let leftover = text;
+    [...matches].sort((a, b) => b.start - a.start).forEach(m => {
+        leftover = leftover.slice(0, m.start) + ' ' + leftover.slice(m.end);
+    });
+    const tokens = leftover.replace(/[,.!?;:+\-"'׳״]+/g, ' ').split(/\s+/).filter(Boolean);
+    return tokens.some(tok => !/^\d+$/.test(tok) && !FOOD_LEFTOVER_IGNORE_RE.test(tok) && tok.length >= 2);
+}
+
+// קריאת AI ברקע לשורת ארוחה רגילה (לא מודל ה-AI הייעודי) - אותה
+// estimateFoodTextViaAI בדיוק כמו בהוספה המהירה, אבל בלי לפתוח שום מודל:
+// 'clarify'/'unknown'/'limit'/כישלון כפול פשוט משאירים את ההערכה המקומית
+// שכבר מולאה, כי זו שדרוג-רקע אופציונלי ולא פעולה שהמשתמשת חיכתה לה
+// במפורש. בודקים בסוף שהטקסט בשדה לא השתנה בינתיים (המשתמשת המשיכה
+// לערוך) - כדי לא לדרוס עריכה חדשה עם תוצאה מאוחרת של הטקסט הישן
+async function escalateMealRowToAI(foodInput, caloriesInput, text) {
+    caloriesInput.classList.add('ai-estimating');
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) return;
+        let attempt = await estimateFoodTextViaAI(token, text);
+        if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
+        if (foodInput.value.trim() !== text) return;
+        if (attempt.status === 'estimate' && attempt.calories > 0) {
+            caloriesInput.value = Math.round(attempt.calories);
+            updateLiveCaloriesToday();
+        }
+    } catch (e) {
+        // שקט בכוונה - שדרוג-רקע אופציונלי, לא פעולה יזומה של המשתמשת
+    } finally {
+        caloriesInput.classList.remove('ai-estimating');
+    }
 }
 
 // --- שמירת מה שכבר הוקלד ביומן היומי כ"ארוחה קבועה" (meal_presets) בלחיצה
