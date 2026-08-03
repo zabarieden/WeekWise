@@ -6270,6 +6270,44 @@ async function submitFinanceEntry() {
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
 
+// --- הוספת הוצאה/הכנסה מהירה מהכפתור הצף (modal-sport... לא, modal-finance-
+// quick-add) - state ואלמנטים נפרדים לגמרי מהמסך המלא (currentFinanceEntryType/
+// finance-amount-input וכו') כדי שלא יתנגשו איתם, לפי בקשה מפורשת ("בועות
+// לא יעבירו לחלון אחר... בחלון קטן לרשום כמה פרטים וזהו שישלח") ---
+let currentFinanceQuickType = 'expense';
+function selectFinanceQuickType(type) {
+    currentFinanceQuickType = type;
+    document.querySelectorAll('#modal-finance-quick-add [data-finance-quick-type]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-finance-quick-type') === type);
+    });
+    const select = document.getElementById('finance-quick-category-select');
+    if (select) select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+}
+
+function openFinanceQuickAddModal() {
+    const amountInput = document.getElementById('finance-quick-amount-input');
+    if (amountInput) amountInput.value = '';
+    selectFinanceQuickType('expense');
+    openModal('modal-finance-quick-add');
+}
+
+async function submitFinanceQuickAdd() {
+    if (!supabaseClient || !currentUserId) return;
+    const amountInput = document.getElementById('finance-quick-amount-input');
+    const categorySelect = document.getElementById('finance-quick-category-select');
+    const amount = parseFloat(amountInput.value);
+    if (!amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    const { error } = await supabaseClient.from('budget_tracker').insert({
+        user_id: currentUserId, username: currentUsername, entry_type: currentFinanceQuickType,
+        amount: amount, category: categorySelect.value, note: null, entry_date: getLocalDateString(),
+    });
+    if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
+    amountInput.value = '';
+    closeModal('modal-finance-quick-add');
+    showAppToast(t('finance_add_success'));
+    if (document.getElementById('finance-summary-month-label')) await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
 async function navigateFinanceMonth(delta) {
     const base = financeSummaryMonthKey || currentFinancePeriodKey();
     const target = shiftMonthKey(base, delta);
@@ -6516,6 +6554,49 @@ async function submitSportSession() {
     setSportPhotoPreview(null);
     showAppToast(t('sport_add_success'));
     await Promise.all([renderSportSummary(), renderSportHistory()]);
+}
+
+// --- רישום אימון מהיר מהכפתור הצף - סוג+משך בלבד, בלי מרחק/הערות/תמונה/
+// מוטיבציה. state ואלמנטים נפרדים לגמרי מהמסך המלא (currentSportType/
+// sport-duration-input וכו') כדי שלא יתנגשו איתם - אותה סיבה בדיוק כמו
+// submitFinanceQuickAdd למעלה ---
+let currentSportQuickType = 'running';
+function selectSportQuickType(type) {
+    currentSportQuickType = type;
+    document.querySelectorAll('#sport-quick-type-picker [data-sport-quick-type]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-sport-quick-type') === type);
+    });
+    const customInput = document.getElementById('sport-quick-custom-type-input');
+    if (customInput) customInput.classList.toggle('hidden', type !== 'custom');
+}
+
+function openSportQuickAddModal() {
+    const durationInput = document.getElementById('sport-quick-duration-input');
+    if (durationInput) durationInput.value = '';
+    const customInput = document.getElementById('sport-quick-custom-type-input');
+    if (customInput) customInput.value = '';
+    selectSportQuickType('running');
+    openModal('modal-sport-quick-add');
+}
+
+async function submitSportQuickAdd() {
+    if (!supabaseClient || !currentUserId) return;
+    const durationInput = document.getElementById('sport-quick-duration-input');
+    const customInput = document.getElementById('sport-quick-custom-type-input');
+    const isCustom = currentSportQuickType === 'custom';
+    const customName = isCustom ? customInput.value.trim() : null;
+    if (isCustom && !customName) { showAppToast(t('sport_missing_custom_name'), 'error'); return; }
+    const duration = parseInt(durationInput.value) || null;
+    if (!duration) { showAppToast(t('sport_missing_duration'), 'error'); return; }
+    const { error } = await supabaseClient.from('sport_sessions').insert({
+        user_id: currentUserId, username: currentUsername, sport_type: currentSportQuickType,
+        custom_type_name: customName, duration_minutes: duration, distance_km: null,
+        motivation: null, session_date: getLocalDateString(), notes: null, photo_url: null,
+    });
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    closeModal('modal-sport-quick-add');
+    showAppToast(t('sport_add_success'));
+    if (document.getElementById('sport-summary-next-btn')) await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 
 async function handleSportPhotoSelected(event) {
