@@ -5399,9 +5399,11 @@ function toggleWaterFabFromCard() {
     showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
-// כפתור צף להוספה מהירה של ספורט - אותו דפוס בדיוק כמו כפתור המים למעלה
+// כפתור צף להוספה מהירה של ספורט - דלוק כברירת מחדל (opt-out) עכשיו, לפי
+// בקשה מפורשת - "!== 'false'" ולא "=== 'true'", אותו דפוס בדיוק כמו שאר
+// בועות ה-Dock (בעבר זו הייתה היחידה שנשארה opt-in במפורש, זה השתנה)
 function isSportFabOn() {
-    return localStorage.getItem('weekwise_sport_fab') === 'true';
+    return localStorage.getItem('weekwise_sport_fab') !== 'false';
 }
 
 function applySportFabSetting(enabled) {
@@ -5448,8 +5450,8 @@ function togglePresetFab() {
 }
 
 // כפתור צף לפתיחה מהירה של "פריסה חכמה" - דלוק כברירת מחדל (opt-out), אותה
-// סיבה בדיוק כמו שאר בועות ה-Dock למעלה - חוץ מספורט, שנשאר כבוי כברירת
-// מחדל (opt-in) לפי בקשה מפורשת
+// סיבה בדיוק כמו שאר בועות ה-Dock למעלה (כולל ספורט, שהיה opt-in בעבר ושונה
+// לפי בקשה מפורשת)
 function isSmartSplitFabOn() {
     return localStorage.getItem('weekwise_smart_split_fab') !== 'false';
 }
