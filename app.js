@@ -5225,10 +5225,15 @@ function applyDockOrder() {
     // מחיר סביר כדי שהבועה החשובה ביותר תהיה תמיד באמת במרכז המסך
     const centerIndex = (fabCarouselOrder.length - 1) / 2;
     const frontIndex = Math.round(centerIndex);
+    // style.left הוא ערך פיזי תמיד (לא הופך לפי dir כמו left/right לוגיים) -
+    // בעברית/RTL אינדקס-0 (הראשון בסדר) צריך לשבת פיזית *מימין* (שם קריאה
+    // מתחילה ב-RTL), ובאנגלית/LTR דווקא *משמאל* - אחרת סדר-הקריאה הסמנטי
+    // ("פריסה, פתקים, תפוח, מים, ספורט") היה מתהפך בפועל כשעוברים לאנגלית
+    const dirSign = document.documentElement.dir === 'ltr' ? -1 : 1;
     fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
         if (!el) return;
-        const dist = i - frontIndex; // 0 בדיוק עבור הבועה הקדמית עצמה
+        const dist = (i - frontIndex) * dirSign; // 0 בדיוק עבור הבועה הקדמית עצמה
         const absDist = Math.abs(dist);
         const isFront = i === frontIndex;
         // הבועה הקדמית קיבלה עד עכשיו הרמה 0 (הכי "נמוכה" מכולן, כי הקשת
