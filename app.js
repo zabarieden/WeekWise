@@ -2852,6 +2852,25 @@ function buildWeeklyScheduleAccordionUI() {
     });
     setupDayScrollObserver();
     dbDaysMap.forEach(dbDay => initScheduleRowDragReorder(dbDay));
+    // גלילה אופקית בין הימים (גם רצועת הטאבים וגם עמודי הימים עצמם) עובדת
+    // באופן טבעי במגע (swipe), אבל במחשב עם עכבר אין שום דרך להגיע לימים
+    // שלא נכנסים בלי scroll אופקי מפורש (הפס עצמו מוסתר בכוונה, ר' scrollbar-width:none
+    // ב-theme.css) - ממירים כאן גלילת עכבר אנכית רגילה לגלילה אופקית על שני
+    // המכלים, לפי דיווח מפורש ("במחשב רואים עד חמישי וזהו"). מחוברת פעם אחת
+    // בלבד (דגל data-wheel-scroll-bound) כי הפונקציה הזו רצה שוב בכל בנייה
+    // מחדש של האקורדיון, אבל האלמנטים עצמם (רק ה-innerHTML שלהם) נשארים אותו
+    // דבר - בלי הדגל היו מצטברים כמה listeners על אותו אלמנט וכל גלגול היה
+    // גולל כפול/משולש
+    [tabsStrip, container].forEach(el => {
+        if (!el || el.dataset.wheelScrollBound) return;
+        el.dataset.wheelScrollBound = 'true';
+        el.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+                e.preventDefault();
+                el.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    });
 
     // משחזרים מיידית (בלי אנימציה - זו לא ניווט ביוזמת המשתמש, רק שחזור
     // המצב אחרי בנייה מחדש) את מיקום הגלילה ליום שהיה פעיל
