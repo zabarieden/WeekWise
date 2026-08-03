@@ -7462,8 +7462,12 @@ const FOOD_CALORIE_DB = [
     { name: "Calbee Green Pea Crisps", re: /green pea crisps?|snapea/i, kcal100g: 464, unitGrams: 28 },
     { name: "Oishi Pillows", re: /oishi pillows/i, kcal100g: 500, unitGrams: 38 },
     { name: "Nissin Crisp Pizza", re: /nissin crisp/i, kcal100g: 516, unitGrams: 30 },
-    { name: "בייגלה שמיניות", re: /בייגלה שמיניות/i, kcal100g: 383, unitGrams: 30 },
-    { name: "בייגלה שטוחים", re: /בייגלה שטוחים/i, kcal100g: 393, unitGrams: 30 },
+    // unitGrams תוקן מ-30 (שגוי - זה היה מחשב "4 בייגלה" כאילו 120 גרם) ל-1.35
+    // - בייגלה הוא חטיף זעיר, לא חטיף בגודל-30-גרם ליחידה. אושר מול נתון
+    // אמיתי: "4 יחידות בייגלה ≈ 5.4 גרם" (כ-1.35 גרם ליחידה) - דיווח אמיתי
+    // הראה "4 בייגלה שטוחים" יוצא כ-472 קלוריות בעצמו במקום כ-20-30 האמיתיים
+    { name: "בייגלה שמיניות", re: /בייגלה שמיניות/i, kcal100g: 383, unitGrams: 1.35 },
+    { name: "בייגלה שטוחים", re: /בייגלה שטוחים/i, kcal100g: 393, unitGrams: 1.35 },
     { name: "Toblerone Dark", re: /toblerone dark/i, kcal100g: 528, unitGrams: 12.5 },
     { name: "Toblerone White", re: /toblerone white/i, kcal100g: 535, unitGrams: 12.5 },
     { name: "Lindt Excellence Sea Salt", re: /lindt.*sea salt/i, kcal100g: 526, unitGrams: 10 },
@@ -7571,7 +7575,7 @@ const FOOD_CALORIE_DB = [
     { name: "Nerds Candy", re: /\bnerds\b/i, kcal100g: 400, unitGrams: 15 },
     { name: "Swedish Fish", re: /swedish fish/i, kcal100g: 366, unitGrams: 30 },
     { name: "Starburst", re: /starburst/i, kcal100g: 416, unitGrams: 18 },
-    { name: "בייגלה שמיניות כוסמין", re: /בייגלה שמיניות.*כוסמין/i, kcal100g: 366, unitGrams: 30 },
+    { name: "בייגלה שמיניות כוסמין", re: /בייגלה שמיניות.*כוסמין/i, kcal100g: 366, unitGrams: 1.35 },
     { name: "Kasugai Fruit Gummies", re: /kasugai/i, kcal100g: 330, unitGrams: 20 },
     { name: "פאי אגוזי לוז ושוקולד", re: /פאי אגוזי לוז/i, kcal100g: 438, unitGrams: 90 },
     { name: "עוגת קראנץ' שוקולד וחלבה", re: /עוגת קראנץ'? שוקולד וחלבה/i, kcal100g: 400, unitGrams: 60 },
@@ -8767,7 +8771,7 @@ const FOOD_CALORIE_DB = [
     // מכיל "בייגלה" כתת-מחרוזת, ומדובר במוצר שונה לגמרי (רוטב לגלידה, לא חטיף)
     { name: "רוטב בייגלה מלוח", re: /רוטב בייגלה|ממרח בייגלה מלוח|golda bagel sauce/i, kcal100g: 550, unitGrams: 16 },
     // עודכן מ-450 ל-380 לפי נתון מדויק מהמשתמשת
-    { name: "בייגלה", re: /בייגלה|bagele/i, kcal100g: 380, unitGrams: 30 },
+    { name: "בייגלה", re: /בייגלה|bagele/i, kcal100g: 380, unitGrams: 1.35 },
     // --- משפחת גלידות/קפואים מפורטת (לפי בקשה מפורשת, ערכים קבועים ולא AI) -
     // כל הסוגים הספציפיים חייבים לבוא *לפני* "גלידה"/"ארטיק/קרטיב" הכלליים
     // בהמשך, אחרת כל תיאור ספציפי היה תמיד נתפס כערך הכללי. הערכים שנשלחו
