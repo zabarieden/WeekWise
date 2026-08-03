@@ -782,6 +782,8 @@ async function logFoodQuickAddViaAI(text) {
         if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
 
         let attempt = await estimateFoodTextViaAI(token, text);
+        // רק 'retry' (תקלת רשת/פרסור) מנסה שוב - 'timeout' לא, כדי לא להכפיל
+        // את ההמתנה המקסימלית לדקתיים, ר' ההערה על estimateFoodTextViaAI
         if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
 
         if (attempt.status === 'limit') {
@@ -807,12 +809,25 @@ async function logFoodQuickAddViaAI(text) {
     }
 }
 
+// תקרת זמן קשיחה - לפי בקשה מפורשת ("לא רוצה שיחשוב יותר מדקה"). עכשיו
+// שיש web_search זה יכול לפעמים לקחת הרבה זמן (כמה סבבי חיפוש ברצף) בלי
+// שום תקרה קודם. AbortController מבטל את הבקשה בפועל (לא רק מפסיק לחכות
+// לה בצד שלנו) כדי לא להשאיר קריאה תקועה ברקע
+const FOOD_AI_TIMEOUT_MS = 60000;
+
+// status: 'timeout' נבדל בכוונה מ-'retry' הרגיל - קריאה שנעצרה כי לקח לה
+// יותר מדי זמן לא אמורה "לנסות שוב" עם עוד דקה שלמה (זה יכפיל את ההמתנה
+// המקסימלית לשתי דקות בפועל, בדיוק ההפך ממה שהתבקש) - היא צריכה לרדת ישר
+// לחישוב המקומי, ר' logFoodQuickAddViaAI/confirmFoodClarify
 async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarificationAnswer, isLocalClarify) {
+    const controller = new AbortController();
+    const timeoutTimer = setTimeout(() => controller.abort(), FOOD_AI_TIMEOUT_MS);
     try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, isLocalClarify, language: currentLang, country: getUserCountry() })
+            body: JSON.stringify({ text, clarificationQuestion, clarificationAnswer, isLocalClarify, language: currentLang, country: getUserCountry() }),
+            signal: controller.signal
         });
         const result = await res.json();
         if (result.error === 'limit_reached') return { status: 'limit' };
@@ -820,8 +835,10 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
         if (res.ok && result.status === 'clarify' && result.question) return { status: 'clarify', question: result.question };
         if (res.ok && result.status === 'estimate' && typeof result.calories === 'number') return { status: 'estimate', calories: result.calories };
         return { status: 'retry' };
-    } catch {
-        return { status: 'retry' };
+    } catch (err) {
+        return { status: err && err.name === 'AbortError' ? 'timeout' : 'retry' };
+    } finally {
+        clearTimeout(timeoutTimer);
     }
 }
 
