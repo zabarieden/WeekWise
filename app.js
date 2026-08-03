@@ -607,11 +607,20 @@ function renderPresetPickerList(filter) {
     `).join('');
 }
 
+// אם בשורה כבר יש תוכן, בוחרים ארוחה קבועה נוספת *מוסיפים* אליה (טקסט
+// מחובר ב-"+", קלוריות מצטברות) במקום לדרוס אותה - לפי בקשה מפורשת
+// ("כשאני בוחרת עוד ארוחה... שיוסיף אותה ליד... אם אני ארצה אני אמחק ידנית").
+// אותו רעיון בדיוק כמו המיזוג בהוספה המהירה (addQuickLogEntry)
 function selectPresetPickerItem(id) {
     const preset = cachedPresets.find(p => p.id === id);
     if (!preset || !presetPickerTargetRow) return;
-    presetPickerTargetRow.querySelector('.food-input').value = preset.food_name;
-    presetPickerTargetRow.querySelector('.calories-input').value = preset.calories;
+    const foodInput = presetPickerTargetRow.querySelector('.food-input');
+    const caloriesInput = presetPickerTargetRow.querySelector('.calories-input');
+    const existingFood = foodInput.value.trim();
+    const existingCalories = parseInt(caloriesInput.value) || 0;
+    foodInput.value = existingFood ? `${existingFood} + ${preset.food_name}` : preset.food_name;
+    caloriesInput.value = existingCalories + (parseInt(preset.calories) || 0);
+    presetPickerTargetRow.dataset.touched = 'true';
     updateLiveCaloriesToday();
     closeModal('modal-preset-picker');
 }
@@ -9074,12 +9083,7 @@ function estimateRecipeCalories(ingredientsText) {
 
 // --- יומן תזונה יומי: מילוי אוטומטי של קלוריות מתוך אותו מסד מזון, כשהמשתמש
 // מקליד חופשי בשדה "מה אכלת" (לא בוחר פריסט שמור) - למשל "2 כפות קוטג'"
-// ממלא קלוריות לבד. לעולם לא דורס ערך קלוריות שהמשתמשת קבעה בעצמה (הוקלד
-// ידנית, או נטען מפריט שמור/פריסט) - רק ערך ריק, או ערך שהוא-עצמו מילוי
-// אוטומטי קודם (dataset.autofilled) שעוד לא נערך ידנית מאז. כך שאם משנים
-// את הטקסט אחרי שהמערכת כבר מילאה קלוריות לבד, הקלוריות מתעדכנות יחד איתו -
-// לפי בקשה מפורשת ("שמשנים את הטקסט זה משתנה בהתאם") - אבל ברגע שנוגעים
-// ידנית במספר הקלוריות עצמו, זה "ננעל" ולא נדרס יותר, ר' ה-listener למעלה ---
+// ממלא קלוריות לבד.
 // שינוי טקסט המזון תמיד מעדכן את הקלוריות בהתאם - בלי תנאים, לפי בקשה
 // מפורשת וחוזרת ("שמשנים את הטקסט זה משתנה בהתאם"). ניסיון קודם ל"זכור" אם
 // המספר הגיע ממילוי אוטומטי לעומת הקלדה ידנית (dataset.autofilled) לא
@@ -9205,10 +9209,16 @@ function confirmFoodPickerSelection() {
     const calories = Math.round(computeFoodPickerCalories(qty));
     const isPerUnit = foodPickerSelectedItem.kcalPerUnit != null;
     const unitLabel = isPerUnit ? '' : ` ${t(foodPickerUnitLabelKey)}`;
+    // מוסיפים למה שכבר יש בשורה (אם יש) במקום לדרוס - אותה הנהגה בדיוק כמו
+    // selectPresetPickerItem (בורר "ארוחה קבועה"), לפי בקשה מפורשת
     const foodInput = foodPickerTargetRow.querySelector('.food-input');
     const caloriesInput = foodPickerTargetRow.querySelector('.calories-input');
-    foodInput.value = `${foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
-    caloriesInput.value = calories;
+    const existingFood = foodInput.value.trim();
+    const existingCalories = parseInt(caloriesInput.value) || 0;
+    const newEntry = `${foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
+    foodInput.value = existingFood ? `${existingFood} + ${newEntry}` : newEntry;
+    caloriesInput.value = existingCalories + calories;
+    foodPickerTargetRow.dataset.touched = 'true';
     updateLiveCaloriesToday();
     closeModal('modal-food-picker');
 }
