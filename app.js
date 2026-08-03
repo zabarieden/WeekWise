@@ -219,6 +219,14 @@ function showAppToast(message, type = 'success') {
     appToastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// מאגר המשפטים המתחלפים מ-7 פתיחות ואילך (ר' loadTodayTasks) - כל הכתיבה
+// אימפרסונלית/גוף שני ניטרלי-מגדרית בכוונה (שם פועל, "אפשר", "צריך" וכו'
+// - לא נטיית פועל בגוף שני נקבה/זכר), לפי בקשה מפורשת
+const TODAY_TASKS_ROTATING_MESSAGE_KEYS = [
+    'today_tasks_rotate_1', 'today_tasks_rotate_2', 'today_tasks_rotate_3', 'today_tasks_rotate_4',
+    'today_tasks_rotate_5', 'today_tasks_rotate_6', 'today_tasks_rotate_7',
+];
+
 function updateLiveCaloriesToday() {
     let total = 0;
     document.querySelectorAll('.calories-input').forEach(input => {
@@ -3276,17 +3284,22 @@ async function loadTodayTasks() {
             localStorage.setItem(`weekwise_today_celebrated_${todayStr}`, 'true');
             triggerAllDoneSparkles();
         }
-    // עוד לא הכל בוצע - שתי דרגות של הודעת עידוד לפי כמה פעמים נפתחה הכרטיס
-    // היום, מוצגות *לצד* רשימת המשימות שנשארו (לא במקומה, עדיין רוצים לראות
-    // מה נשאר): מ-5 פתיחות "בלי לחץ" עדינה, ומ-7 פתיחות (עוד 2 אחרי זה)
-    // הודעה יותר "דוחפת" - לפי בקשה מפורשת
+    // עוד לא הכל בוצע - הודעת עידוד לפי כמה פעמים נפתחה הכרטיס היום, מוצגת
+    // *לצד* רשימת המשימות שנשארו (לא במקומה): מ-5 פתיחות "בלי לחץ" עדינה,
+    // ומ-7 פתיחות ואילך מתחלפת כל 2 פתיחות למשפט הבא במאגר (חוזרת מההתחלה
+    // כשנגמר) - עד שהיום נגמר (הספירה מתאפסת מאליה למחרת) או שכל המשימות
+    // מסומנות (הענף הזה כבר לא רץ בכלל, ר' if(allDone) למעלה) - לפי בקשה
+    // מפורשת
     } else {
         localStorage.removeItem(`weekwise_today_celebrated_${todayStr}`);
         const viewCount = getTodayCardViewCount();
         if (populated.length + events.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
             encouragement.className = 'today-tasks-celebration';
-            encouragement.textContent = t(viewCount >= 7 ? 'today_tasks_push_message' : 'today_tasks_still_time_message');
+            const messageKey = viewCount >= 7
+                ? TODAY_TASKS_ROTATING_MESSAGE_KEYS[Math.floor((viewCount - 7) / 2) % TODAY_TASKS_ROTATING_MESSAGE_KEYS.length]
+                : 'today_tasks_still_time_message';
+            encouragement.textContent = t(messageKey);
             container.appendChild(encouragement);
         }
     }
