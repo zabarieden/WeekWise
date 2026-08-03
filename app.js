@@ -692,11 +692,21 @@ function setSnackCount(count) {
     applyMealRowCounts();
 }
 
-async function getTodayEmptyMealSlot() {
+// preferredSlotKeys (MEAL_SLOT_KEYS/SNACK_SLOT_KEYS, אופציונלי) - כשידוע
+// שהתוספת שייכת למאכל/נשנוש (לפי הקטגוריה של הפריסט), מחפשים קודם משבצת
+// ריקה *מאותה קבוצה* לפני שנופלים לכל משבצת ריקה אחרת - כדי ש"אורז וחזה
+// עוף" (פריסט של ארוחה) לא ינחת בטעות בשורת נשנוש רק כי היא נמצאת קודם
+// בסדר-התצוגה הכללי (הלגאסי) של החמש שורות המקוריות
+async function getTodayEmptyMealSlot(preferredSlotKeys) {
     const today = getLocalDateString();
     const { data } = await supabaseClient.from('calorie_tracker').select('meal_type').eq('user_id', currentUserId).eq('date', today);
     const used = new Set((data || []).map(r => r.meal_type));
-    return getVisibleMealTypeOrder().find(mt => !used.has(mt)) || null;
+    const visible = getVisibleMealTypeOrder();
+    if (preferredSlotKeys) {
+        const preferredEmpty = visible.find(mt => preferredSlotKeys.includes(mt) && !used.has(mt));
+        if (preferredEmpty) return preferredEmpty;
+    }
+    return visible.find(mt => !used.has(mt)) || null;
 }
 
 // אחרי הוספה מהירה - אם מסך התזונה היומי כבר פתוח על תאריך היום, מרעננים
@@ -758,9 +768,10 @@ function renderPresetQuickAddList(filter) {
 // מצרפים את התוספת למשבצת-הנשנוש *הנראית האחרונה* (מחברים קלוריות + מוסיפים
 // לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד. לא 'snack' קבוע יותר - תלוי
 // כמה נשנושים המשתמשת בחרה להציג (ר' getSnackCount)
-async function addQuickLogEntry(foodDescription, calories) {
+async function addQuickLogEntry(foodDescription, calories, presetCategory) {
     const today = getLocalDateString();
-    const slot = await getTodayEmptyMealSlot();
+    const preferredSlotKeys = presetCategory ? (presetCategory === 'snack' ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
+    const slot = await getTodayEmptyMealSlot(preferredSlotKeys);
     if (slot) {
         await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
@@ -786,7 +797,7 @@ async function addQuickLogEntry(foodDescription, calories) {
 async function logPresetQuickAdd(id) {
     const preset = cachedPresets.find(p => p.id === id);
     if (!preset) return;
-    await addQuickLogEntry(preset.food_name, preset.calories);
+    await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category);
     closeModal('modal-preset-quick-add');
     showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
     refreshTodayNutritionViewIfOpen();
