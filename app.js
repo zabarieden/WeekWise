@@ -5010,6 +5010,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'edit_delete_nutrition_entry', category: 'nutrition' },
     { id: 'daily_nutrition_goals', category: 'nutrition' },
     { id: 'calorie_monthly_view', category: 'nutrition' },
+    { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
@@ -9885,14 +9886,23 @@ async function loadStats() {
     const weekEndStr = getLocalDateString(saturday);
     const monthPrefix = todayStr.slice(0, 7);
 
+    // ממוצע-יומי לצד הסה"כ - לפי בקשה מפורשת ("יותר טוב לדעת אם אפשר לרדת
+    // או לעלות"). מחושב רק על הימים שבאמת נרשם בהם משהו (לא חלקי 7/חלקי כל
+    // ימי החודש) - יום שלא נרשם בו כלום פשוט לא נכנס למכנה, אותה עקרון
+    // בדיוק כמו הסה"כ עצמו
     let weekly = 0, monthly = 0;
+    const weekDates = new Set(), monthDates = new Set();
     data.forEach(item => {
         const cals = Number(item.calories) || 0;
-        if (item.date >= weekStartStr && item.date <= weekEndStr) weekly += cals;
-        if (item.date && item.date.startsWith(monthPrefix)) monthly += cals;
+        if (item.date >= weekStartStr && item.date <= weekEndStr) { weekly += cals; weekDates.add(item.date); }
+        if (item.date && item.date.startsWith(monthPrefix)) { monthly += cals; monthDates.add(item.date); }
     });
     document.getElementById('calories-weekly').innerText = weekly;
     document.getElementById('calories-monthly').innerText = monthly;
+    const weeklyAvgEl = document.getElementById('calories-weekly-avg');
+    if (weeklyAvgEl) weeklyAvgEl.innerText = weekDates.size > 0 ? t('calorie_stat_avg_label').replace('{amount}', Math.round(weekly / weekDates.size)) : '';
+    const monthlyAvgEl = document.getElementById('calories-monthly-avg');
+    if (monthlyAvgEl) monthlyAvgEl.innerText = monthDates.size > 0 ? t('calorie_stat_avg_label').replace('{amount}', Math.round(monthly / monthDates.size)) : '';
 }
 // מחיקה רכה (is_deleted=true) בשני הסוגים (פתקים ורשימת קניות) כדי שאפשר
 // יהיה לשחזר מהארכיון, לפי בקשה מפורשת

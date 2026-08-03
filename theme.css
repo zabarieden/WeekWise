@@ -1643,6 +1643,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .today .stat-number { color: var(--accent-pink); }
 .weekly .stat-number { color: var(--accent-purple); }
 .monthly .stat-number { color: var(--text-primary); }
+.stat-avg { font-size: 0.62rem; color: var(--text-secondary); margin-top: 1px; }
 /* 4 כרטיסי "סיכום חודשי" של הוצאות/הכנסות - כל אחד עם צבע ייעודי משלו */
 .finance-stat-income .stat-number { color: var(--accent-green); }
 .finance-stat-expense .stat-number { color: var(--accent-purple); }
