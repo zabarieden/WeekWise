@@ -555,7 +555,7 @@ he: {
     today_tasks_title: "הצצה להיום", today_tasks_empty_hint: "אין שום דבר מתוכנן להיום", recurring_task_tooltip: "משימה קבועה שבועית",
     today_tasks_all_done_message: "כל הכבוד, סיימת את כל המשימות להיום! זמן להירגע 💜",
     today_tasks_still_time_message: "בלי לחץ - יש לך עוד זמן היום להספיק את זה 💜",
-    today_tasks_push_message: "אתה על זה - קדימה, תעשה את הצעד הראשון 💪",
+    today_tasks_push_message: "קדימה - הצעד הראשון הכי חשוב, אפשר להתחיל עכשיו 💪",
     daily_greeting_morning: "בוקר טוב!", daily_greeting_afternoon: "צהריים טובים!", daily_greeting_evening: "ערב טוב!", daily_greeting_night: "לילה טוב!",
     calendar_glance_empty: "אין אירועים קרובים עדיין",
     calendar_event_add_title: "הוספת אירוע", calendar_event_modal_title: "הוספת אירוע",
