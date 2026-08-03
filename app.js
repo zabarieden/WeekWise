@@ -121,6 +121,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (row) row.dataset.touched = 'true';
         });
     });
+    // לוכדים את הערך *לפני* עריכה (focus) כדי שנוכל להשוות מול הערך אחרי
+    // (onchange) - ר' autoFillMealCalories, שמזהה "הוספת מספר לפני טקסט
+    // קיים" ו"הוספת תוכן בסוף" כמקרים מיוחדים במקום להריץ את המנוע הכללי
+    // מחדש על כל הטקסט המאוחד (לא אמין לזה - ר' ההערה שם)
+    document.querySelectorAll('.meal-row .food-input').forEach(input => {
+        input.addEventListener('focus', () => { input.dataset.valueBeforeEdit = input.value.trim(); });
+    });
     document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
     // Enter רגיל = שורה חדשה (עכשיו שזו טקסטאריה, לא input חד-שורתי) - רק
     // Ctrl/Cmd+Enter שולח, כדי שאפשר יהיה לכתוב פתק עם כמה שורות/פסקאות
@@ -9083,18 +9090,47 @@ function estimateRecipeCalories(ingredientsText) {
 
 // --- יומן תזונה יומי: מילוי אוטומטי של קלוריות מתוך אותו מסד מזון, כשהמשתמש
 // מקליד חופשי בשדה "מה אכלת" (לא בוחר פריסט שמור) - למשל "2 כפות קוטג'"
-// ממלא קלוריות לבד.
-// שינוי טקסט המזון תמיד מעדכן את הקלוריות בהתאם - בלי תנאים, לפי בקשה
-// מפורשת וחוזרת ("שמשנים את הטקסט זה משתנה בהתאם"). ניסיון קודם ל"זכור" אם
-// המספר הגיע ממילוי אוטומטי לעומת הקלדה ידנית (dataset.autofilled) לא
-// עבד בפועל - הזיכרון הזה נמחק בכל טעינה/רענון מחדש מהשרת (ר'
-// loadDailyNutrition, שקובעת value ישירות בלי לסמן dataset), כך שכמעט כל
-// שורה שנטענה מהמסד נחשבה "מוגנת" ולעולם לא התעדכנה בפועל
+// ממלא קלוריות לבד. שינוי טקסט המזון מעדכן את הקלוריות בהתאם, לפי בקשה
+// מפורשת ("שמשנים את הטקסט זה משתנה בהתאם") - אבל *לא* תמיד ע"י הרצת המנוע
+// הכללי מחדש על כל הטקסט: דיווח אמיתי הראה שהמנוע (שמכוון לתיאורי-מרכיב
+// פשוטים כמו "2 כפות קוטג'") לא אמין בכלל לטקסט ארוך/מחובר של כמה
+// פריטים+פריסטים ("פיתה+שוקולד+פופקורן+ערגלית+בייגלה" יצא 796 במקום כ-
+// 280-320 האמיתיים) - ושהוספת מספר לפני טקסט קיים ("2 " + מה שהיה) גרמה לו
+// "לתפוס" התאמה שגויה לגמרי (50 הפך ל-450). שני המקרים האלה מזוהים במפורש
+// ומטופלים בלי לגעת במנוע הכללי בכלל - רק "ברירת המחדל" (טקסט חדש/מוקטן)
+// עדיין מריצה אותו מחדש
 function autoFillMealCalories(foodInput) {
     const row = foodInput.closest('.meal-row');
     const caloriesInput = row && row.querySelector('.calories-input');
     if (!caloriesInput) return;
-    const estimate = estimateFreeTextCalories(foodInput.value.trim());
+    const newText = foodInput.value.trim();
+    const prevText = foodInput.dataset.valueBeforeEdit || '';
+    const prevCalories = parseInt(caloriesInput.value) || 0;
+
+    // מקרה 1: "N " לפני בדיוק אותו טקסט שהיה - כוונה ברורה של "עוד N יחידות
+    // מאותו הדבר", לא תיאור חדש. מכפילים את מה שכבר היה
+    const prefixMatch = prevText && newText.match(/^(\d+)\s+([\s\S]+)$/);
+    if (prefixMatch && prefixMatch[2] === prevText && prevCalories > 0) {
+        caloriesInput.value = Math.round(prevCalories * parseInt(prefixMatch[1], 10));
+        updateLiveCaloriesToday();
+        return;
+    }
+    // מקרה 2: תוספת בסוף הטקסט הקיים (למשל "+ עוד פריט") - מחשבים קלוריות
+    // רק על התוספת החדשה ומוסיפים לקיים, בדיוק כמו שבוררי-הפריסטים עצמם
+    // עושים (ר' selectPresetPickerItem/confirmFoodPickerSelection) - לא
+    // מריצים את המנוע מחדש על הטקסט המאוחד כולו
+    if (prevText && prevCalories > 0 && newText.startsWith(prevText) && newText.length > prevText.length) {
+        const addedText = newText.slice(prevText.length).replace(/^[\s+]+/, '');
+        const addedEstimate = estimateFreeTextCalories(addedText);
+        if (addedEstimate > 0) {
+            caloriesInput.value = Math.round(prevCalories + addedEstimate);
+            updateLiveCaloriesToday();
+            return;
+        }
+    }
+    // ברירת מחדל: טקסט חדש לגמרי, או שהוקטן (הוסר ממנו חלק) - מריצים את
+    // המנוע הכללי מחדש על כל הטקסט
+    const estimate = estimateFreeTextCalories(newText);
     caloriesInput.value = estimate > 0 ? Math.round(estimate) : '';
     updateLiveCaloriesToday();
 }
