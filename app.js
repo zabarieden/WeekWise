@@ -802,6 +802,15 @@ async function logFoodQuickAddViaAI(text) {
             await finishFoodQuickAdd(text, attempt.calories);
             return;
         }
+        // status "unknown" - ה-AI עצמו אמר בפירוש שהוא לא מזהה את הפריט, לפי
+        // בקשה מפורשת ("אם הוא לא מכיר משהו שיגיד"). עדיין נופלים להערכה
+        // המקומית (לא משאירים בלי לרשום כלום), רק עם הודעה כנה שהמערכת לא
+        // הייתה בטוחה - כדי שהמשתמשת תדע לבדוק/לנסח אחרת אם היא רוצה דיוק
+        if (attempt.status === 'unknown') {
+            showAppToast(t('food_ai_unknown_toast'), 'error');
+            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            return;
+        }
         // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי בלי הודעת שגיאה מפחידה
         await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
     } finally {
@@ -834,6 +843,7 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
         if (res.ok && result.status === 'clarify' && result.question) return { status: 'clarify', question: result.question };
         if (res.ok && result.status === 'estimate' && typeof result.calories === 'number') return { status: 'estimate', calories: result.calories };
+        if (res.ok && result.status === 'unknown') return { status: 'unknown' };
         return { status: 'retry' };
     } catch (err) {
         return { status: err && err.name === 'AbortError' ? 'timeout' : 'retry' };
@@ -928,6 +938,12 @@ async function confirmFoodClarify() {
         const attempt = await estimateFoodTextViaAI(token, text, question, answer, isLocalClarify);
         closeModal('modal-food-clarify');
         if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories); return; }
+        // status "unknown" - ר' ההערה המקבילה ב-logFoodQuickAddViaAI
+        if (attempt.status === 'unknown') {
+            showAppToast(t('food_ai_unknown_toast'), 'error');
+            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            return;
+        }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
         await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
     } finally {

@@ -65,13 +65,19 @@ const LANGUAGE_NAMES: Record<string, string> = { en: "English", he: "Hebrew", es
 // לחשוב (מתכון/מנה יכולים להיות שונים באמריקה מול ישראל)
 const COUNTRY_NAMES: Record<string, string> = { il: "Israel", us: "the United States" };
 
+// status "unknown" (חדש): לפי בקשה מפורשת - כשה-AI באמת לא מזהה את הפריט
+// ולא בטוח בהערכה כלשהי (גם אחרי חיפוש/הבהרה), שיגיד את זה בפירוש במקום
+// לנחש בביטחון מזויף. הצד שלנו (app.js) עדיין נופל להערכה המקומית במקרה
+// כזה (אף פעם לא משאיר את המשתמשת בלי לרשום כלום - עיקרון קבוע באפליקציה),
+// אבל מציג הודעה כנה שהמערכת לא הייתה בטוחה, כדי שהמשתמשת תדע לבדוק/לנסח
+// אחרת אם היא רוצה דיוק גבוה יותר
 const ESTIMATE_OR_CLARIFY_TOOL = {
     name: "estimate_or_clarify",
-    description: "Either give a final calorie estimate, or ask one clarifying question if the description is genuinely ambiguous about what was eaten or how much. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
+    description: "Give a final calorie estimate, ask one clarifying question if the description is genuinely ambiguous about what was eaten or how much, or report that you genuinely don't know. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
     input_schema: {
         type: "object",
         properties: {
-            status: { type: "string", enum: ["estimate", "clarify"] },
+            status: { type: "string", enum: ["estimate", "clarify", "unknown"] },
             calories: { type: "integer", description: "Total estimated calories. Required when status is 'estimate'." },
             question: { type: "string", description: "A short clarifying question, in the user's language. Required when status is 'clarify'." },
         },
@@ -81,17 +87,19 @@ const ESTIMATE_OR_CLARIFY_TOOL = {
 
 // זהה לכלי למעלה, אבל בלי "clarify" באפשרויות בכלל - נועד לשיחת ההמשך אחרי
 // שהמשתמשת כבר ענתה על שאלת ההבהרה, כדי שלא יהיה סבב שני של שאלות. זו אכיפה
-// מבנית (הכלי עצמו לא מאפשר את זה), לא רק הנחיה במילים שה-AI יכול "לשכוח"
+// מבנית (הכלי עצמו לא מאפשר את זה), לא רק הנחיה במילים שה-AI יכול "לשכוח".
+// "unknown" עדיין נשאר אפשרי כאן - גם אחרי תשובת הבהרה יכול להתברר שעדיין
+// אין מספיק מידע לזהות את הפריט בביטחון
 const ESTIMATE_ONLY_TOOL = {
     name: "estimate_or_clarify",
-    description: "Give a final calorie estimate using the original description plus the clarifying answer given. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
+    description: "Give a final calorie estimate using the original description plus the clarifying answer given, or report that you genuinely don't know. This must always be your LAST tool call - after any web searches, call this one to actually report the result.",
     input_schema: {
         type: "object",
         properties: {
-            status: { type: "string", enum: ["estimate"] },
-            calories: { type: "integer", description: "Total estimated calories." },
+            status: { type: "string", enum: ["estimate", "unknown"] },
+            calories: { type: "integer", description: "Total estimated calories. Required when status is 'estimate'." },
         },
-        required: ["status", "calories"],
+        required: ["status"],
     },
 };
 
@@ -181,9 +189,15 @@ Deno.serve(async (req) => {
         // כאן שום לוגיקה נוספת מהצד שלנו, רק הצהרה עליו ב-tools (ר'
         // WEB_SEARCH_TOOL למעלה)
         const searchNote = `If this description names any specific restaurant, cafe, chain, or branded food business - international (e.g. "מקדונלד'ס", "Domino's") OR local/small (e.g. "בית הפנקייק", "קפה קפית", any Israeli chain or independent restaurant you don't instantly recognize) - use the web_search tool first to find that place's actual current nutrition info for ${countryName} before estimating. Do NOT skip the search just because the name sounds generic or unfamiliar to you, or because you're not fully sure it's a real chain - a name that reads like a plain description (e.g. a Hebrew name that literally translates to "the pancake house") can still be a specific real business with its own menu and calorie counts; when in doubt, search rather than guess. Only skip the search for genuinely generic home-cooked or unbranded food with no place name at all (e.g. "an apple", "white rice").`;
+        // status "unknown" (חדש) - לפי בקשה מפורשת: אם ה-AI באמת לא מזהה את
+        // הפריט/המקום ולא הצליח למצוא מידע רלוונטי גם אחרי חיפוש, שיגיד את
+        // זה בפירוש במקום להמציא מספר. חשוב: זה נדיר ומכוון - לא תירוץ
+        // לוותר בקלות. הצד שלנו עדיין נופל להערכה מקומית במקרה כזה (ר'
+        // handling ב-app.js), רק עם הודעה כנה למשתמשת
+        const unknownNote = `If, even after a web search when relevant, you genuinely cannot identify this food/place at all or have no reasonable basis for any calorie estimate (e.g. a completely unfamiliar name with no search results and no similar known food to reason from) - use status "unknown" instead of inventing a number. This should be rare: a vague or unfamiliar-sounding description is USUALLY still estimable (e.g. from ingredients, food type, or similar known dishes) and does not by itself justify "unknown" - reserve it for cases where you truly have nothing to go on.`;
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${countryNote} ${searchNote} Using all of this, give your best final total calorie estimate now - you must give a number, do not ask anything else. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${countryNote} ${searchNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${countryNote} ${searchNote} ${unknownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${countryNote} ${searchNote} ${unknownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
@@ -238,6 +252,12 @@ Deno.serve(async (req) => {
         }
         if (typeof result.calories === "number") {
             return jsonResponse({ ok: true, status: "estimate", calories: Math.round(result.calories) });
+        }
+        // status "unknown" - ר' unknownNote למעלה. הצד שלנו (app.js) עדיין
+        // נופל להערכה מקומית במקרה כזה, רק עם הודעה כנה שהמערכת לא הייתה
+        // בטוחה - לא משאיר את המשתמשת בלי לרשום כלום
+        if (result.status === "unknown") {
+            return jsonResponse({ ok: true, status: "unknown" });
         }
         return jsonResponse({ error: "no_extraction" }, 502);
     } catch (err) {
