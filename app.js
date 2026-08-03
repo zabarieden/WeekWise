@@ -2951,6 +2951,41 @@ function scrollToDay(dbDay) {
     // אחרי יום" שהמשתמש תיאר. קפיצה ישירה ל-scrollLeft הסופי מציגה את היום
     // שנבחר מיד, בלי לעבור דרך הימים שבדרך.
     container.scrollLeft += delta;
+
+    // רצועת הטאבים עצמה - כדי שהטאב הפעיל תמיד יהיה בתוך התחום הנראה, לא
+    // רק תוכן היום. אותה טכניקה גיאומטרית בדיוק (הפרש בין ה-rect בפועל של
+    // הטאב לזה של הרצועה) - לא scrollLeft גולמי, כדי שתעבוד נכון גם ב-RTL
+    // (שם scrollLeft מתחיל מ-0 בקצה הימני והולך *ופוחת* לכיוון שלילי ככל
+    // שגוללים ימינה-לשמאלה, הפוך מ-LTR)
+    const tabsStrip = document.getElementById('day-tabs-strip');
+    const tab = document.getElementById(`daytab-${dbDay}`);
+    if (tabsStrip && tab) {
+        const stripRect = tabsStrip.getBoundingClientRect();
+        const tabRect = tab.getBoundingClientRect();
+        if (tabRect.left < stripRect.left) tabsStrip.scrollLeft += (tabRect.left - stripRect.left);
+        else if (tabRect.right > stripRect.right) tabsStrip.scrollLeft += (tabRect.right - stripRect.right);
+    }
+}
+
+// שני חצים גלויים משני צידי רצועת הטאבים (ר' day-tabs-strip-row ב-index.html) -
+// physicalDir הוא צד *פיזי* (-1=שמאלה, 1=ימינה), לא "יום קודם/הבא" סמנטית
+// (שהיה מתחלף כיוון בין RTL ל-LTR ומסבך). מוצאים את הטאב הראשון שחלקית
+// מוסתר באותו צד, וגוללים בדיוק כמות שצריך כדי לחשוף אותו במלואו - לפי
+// הפרש rect אמיתי, לא scrollLeft גולמי, כדי לעבוד נכון גם ב-RTL
+function stepDayTabsStrip(physicalDir) {
+    const tabsStrip = document.getElementById('day-tabs-strip');
+    if (!tabsStrip) return;
+    const stripRect = tabsStrip.getBoundingClientRect();
+    const tabs = Array.from(tabsStrip.querySelectorAll('.day-tab'));
+    let target;
+    if (physicalDir < 0) {
+        target = tabs.filter(tab => tab.getBoundingClientRect().left < stripRect.left - 1).pop();
+    } else {
+        target = tabs.find(tab => tab.getBoundingClientRect().right > stripRect.right + 1);
+    }
+    if (!target) return;
+    const targetRect = target.getBoundingClientRect();
+    tabsStrip.scrollLeft += physicalDir < 0 ? (targetRect.left - stripRect.left) : (targetRect.right - stripRect.right);
 }
 
 let dayScrollObserver = null;
