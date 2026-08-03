@@ -1241,13 +1241,20 @@ function checkDailyGreeting() {
 // לפתוח ולראות אותה (ר' initFixedAiBrainFab) - לפי בקשה מפורשת ("בא לי
 // שיהיה מספר 1 כזה כמו הודעה ממנו ואני אפתח"). dailyFocusPending נשאר true
 // עד שבאמת עונים (saveDailyFocus) - סגירה עם ✕ רק מסתירה את הבועה בחזרה,
-// התג חוזר להופיע כדי שאפשר יהיה לפתוח שוב מאוחר יותר. אותו דפוס דגל-יומי
-// בדיוק כמו checkDailyGreeting - מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד
+// התג חוזר להופיע כדי שאפשר יהיה לפתוח שוב מאוחר יותר.
+//
+// הבדיקה אם כבר נענה היום מתבססת על Supabase (calendar_events, אותה שורה
+// בדיוק שנשמרת ב-saveDailyFocus) - לא localStorage: דווח שהתג ממשיך לקפוץ
+// מחדש למרות שכבר נענתה השאלה, וזה קורה כשמשתמשים גם באפליקציה המותקנת וגם
+// בדפדפן הרגיל על אותו מחשב - לשניהם יכול להיות אחסון-דפדפן נפרד לגמרי, אז
+// דגל ב-localStorage לא בהכרח מסונכרן ביניהם. Supabase כן משותף (אותו
+// חשבון), אז זה המקור האמין היחיד ל"האם כבר נענה היום"
 let dailyFocusPending = false;
-function checkDailyFocusPrompt() {
-    if (!currentUserId) return;
+async function checkDailyFocusPrompt() {
+    if (!currentUserId || !supabaseClient) return;
     const todayStr = getLocalDateString();
-    dailyFocusPending = localStorage.getItem(`weekwise_daily_focus_shown_${todayStr}`) !== 'true';
+    const { data } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'daily_focus').limit(1);
+    dailyFocusPending = !(data && data.length > 0);
     const badge = document.getElementById('ai-brain-fab-badge');
     if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
 }
@@ -1274,9 +1281,11 @@ function expandDailyFocusBubble() {
     if (input) input.focus();
 }
 
+// עדכון מיידי של המצב-בזיכרון בלבד (בלי לחכות לשאילתה חוזרת ל-Supabase) -
+// המקור האמין עצמו הוא השורה שכבר נשמרה ב-calendar_events, ר' ההערה על
+// checkDailyFocusPrompt
 function markDailyFocusPromptShown() {
     dailyFocusPending = false;
-    localStorage.setItem(`weekwise_daily_focus_shown_${getLocalDateString()}`, 'true');
 }
 
 // סגירה עם ה-✕ (משני המצבים - מכווץ ומורחב) היא "לא עכשיו, תזכיר לי אחר
