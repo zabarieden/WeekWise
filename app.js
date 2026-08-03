@@ -1191,6 +1191,7 @@ async function initAppAfterAuth(user) {
     initFixedAiBrainFab();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
+    document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
     selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
 
     // טעינת תזונה וצעדים להיום אוטומטית (אם קיים)
@@ -1203,6 +1204,7 @@ async function initAppAfterAuth(user) {
         setInterval(checkReminders, 20000);
     }
     checkDailyGreeting();
+    checkDailyFocusPrompt();
 }
 
 // ברכה יומית עם נצנצים - לפי בקשה מפורשת ("בפעם הראשונה ביום, עם נצנצים
@@ -1221,6 +1223,46 @@ function checkDailyGreeting() {
     else { key = 'daily_greeting_night'; emoji = '🌙'; }
     showDailyGreetingBanner(`${emoji} ${t(key)}`);
     triggerDailyGreetingSparkles();
+}
+
+// "פתק" יומי שקופץ פעם אחת ביום (אחרי ברכת היום, עם עיכוב קטן כדי לא
+// להתנגש איתה ויזואלית) עם שאלה "מה הכי חשוב לך לעשות היום" - עונים, והתשובה
+// נוספת כמשימה חד-פעמית ללו"ז של היום (calendar_events). אותו דפוס דגל-יומי
+// בדיוק כמו checkDailyGreeting - מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד -
+// לפי בקשה מפורשת
+function checkDailyFocusPrompt() {
+    if (!currentUserId) return;
+    const todayStr = getLocalDateString();
+    if (localStorage.getItem(`weekwise_daily_focus_shown_${todayStr}`) === 'true') return;
+    setTimeout(() => {
+        const input = document.getElementById('daily-focus-input');
+        if (input) input.value = '';
+        openModal('modal-daily-focus');
+    }, 900);
+}
+
+function markDailyFocusPromptShown() {
+    localStorage.setItem(`weekwise_daily_focus_shown_${getLocalDateString()}`, 'true');
+}
+
+function dismissDailyFocusModal() {
+    markDailyFocusPromptShown();
+    closeModal('modal-daily-focus');
+}
+
+async function saveDailyFocus() {
+    const input = document.getElementById('daily-focus-input');
+    const text = input ? input.value.trim() : '';
+    if (!text) { showAppToast(t('daily_focus_missing_text'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    await supabaseClient.from('calendar_events').insert({
+        username: currentUsername, user_id: currentUserId, event_title: text,
+        event_date: getLocalDateString(), source: 'daily_focus',
+    });
+    markDailyFocusPromptShown();
+    closeModal('modal-daily-focus');
+    showAppToast(t('daily_focus_added_toast'));
+    loadTodayTasks();
 }
 
 function showDailyGreetingBanner(text) {
@@ -5003,6 +5045,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
     { id: 'task_not_done_by_eod', category: 'myweek' },
+    { id: 'daily_focus_prompt', category: 'glance' },
     { id: 'what_is_glance', category: 'glance' },
     { id: 'add_onetime_event', category: 'glance' },
     { id: 'delete_series_history', category: 'glance' },
