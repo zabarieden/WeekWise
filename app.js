@@ -111,11 +111,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.calories-input, .protein-input').forEach(input => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
-    // עריכה ידנית ישירה של שדה הקלוריות תמיד "מנתקת" אותו מהמילוי האוטומטי
-    // (ר' autoFillMealCalories) - כדי שעריכה מאוחרת יותר של הטקסט לא תדרוס
-    // מספר שהמשתמשת בעצמה קבעה במפורש
-    document.querySelectorAll('.calories-input').forEach(input => {
-        input.addEventListener('input', () => { delete input.dataset.autofilled; });
+    // מסמנת שהשורה נערכה בפועל בסשן הזה (data-touched על ה-.meal-row) - ר'
+    // saveNutrition, שמשתמשת בזה כדי לא לדרוס נתון קיים במסד עם שורה שנראית
+    // ריקה רק כי היא מעולם לא נטענה, לא כי המשתמשת התכוונה לרוקן אותה
+    document.querySelectorAll('.meal-row .food-input, .meal-row .calories-input, .meal-row .protein-input').forEach(input => {
+        input.addEventListener('input', () => {
+            const row = input.closest('.meal-row');
+            if (row) row.dataset.touched = 'true';
+        });
     });
     document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
     // Enter רגיל = שורה חדשה (עכשיו שזו טקסטאריה, לא input חד-שורתי) - רק
@@ -9017,23 +9020,19 @@ function estimateRecipeCalories(ingredientsText) {
 // את הטקסט אחרי שהמערכת כבר מילאה קלוריות לבד, הקלוריות מתעדכנות יחד איתו -
 // לפי בקשה מפורשת ("שמשנים את הטקסט זה משתנה בהתאם") - אבל ברגע שנוגעים
 // ידנית במספר הקלוריות עצמו, זה "ננעל" ולא נדרס יותר, ר' ה-listener למעלה ---
+// שינוי טקסט המזון תמיד מעדכן את הקלוריות בהתאם - בלי תנאים, לפי בקשה
+// מפורשת וחוזרת ("שמשנים את הטקסט זה משתנה בהתאם"). ניסיון קודם ל"זכור" אם
+// המספר הגיע ממילוי אוטומטי לעומת הקלדה ידנית (dataset.autofilled) לא
+// עבד בפועל - הזיכרון הזה נמחק בכל טעינה/רענון מחדש מהשרת (ר'
+// loadDailyNutrition, שקובעת value ישירות בלי לסמן dataset), כך שכמעט כל
+// שורה שנטענה מהמסד נחשבה "מוגנת" ולעולם לא התעדכנה בפועל
 function autoFillMealCalories(foodInput) {
     const row = foodInput.closest('.meal-row');
     const caloriesInput = row && row.querySelector('.calories-input');
     if (!caloriesInput) return;
-    if (caloriesInput.value.trim() && caloriesInput.dataset.autofilled !== 'true') return;
     const estimate = estimateFreeTextCalories(foodInput.value.trim());
-    if (estimate > 0) {
-        caloriesInput.value = Math.round(estimate);
-        caloriesInput.dataset.autofilled = 'true';
-        updateLiveCaloriesToday();
-    } else if (caloriesInput.dataset.autofilled === 'true') {
-        // הטקסט כבר לא מזוהה בכלל (למשל נמחק לגמרי) - מנקים גם את הקלוריות
-        // שמולאו אוטומטית בעבר, לא משאירים מספר יתום מטקסט שכבר לא קיים
-        caloriesInput.value = '';
-        delete caloriesInput.dataset.autofilled;
-        updateLiveCaloriesToday();
-    }
+    caloriesInput.value = estimate > 0 ? Math.round(estimate) : '';
+    updateLiveCaloriesToday();
 }
 
 // --- שמירת מה שכבר הוקלד ביומן היומי כ"ארוחה קבועה" (meal_presets) בלחיצה
@@ -9604,6 +9603,10 @@ async function loadDailyNutrition(date) {
         row.querySelector('.food-input').value = '';
         row.querySelector('.calories-input').value = '';
         row.querySelector('.protein-input').value = '';
+        // מאפסים גם את סימון ה"נגעו בשורה" הישן - הוא שייך לתאריך/טעינה
+        // הקודמים, לא לתאריך שנטען עכשיו (ר' ה-listener ב-DOMContentLoaded
+        // וה-guard ב-saveNutrition)
+        delete row.dataset.touched;
     });
     document.getElementById('calories-today').innerText = '0';
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', date);
@@ -9637,9 +9640,17 @@ async function saveNutrition() {
         const cals = parseInt(row.querySelector('.calories-input').value) || 0;
         const protein = parseFloat(row.querySelector('.protein-input').value) || null;
         const { data: existing } = await supabaseClient.from('calorie_tracker').select('id').eq('user_id', currentUserId).eq('date', date).eq('meal_type', type).maybeSingle();
+        // הגנה קריטית: אם השורה נראית ריקה בדף אבל *לא נגעו בה בכלל* בסשן
+        // הזה (data-touched, ר' ה-listener ב-DOMContentLoaded), אין לדרוס
+        // איתה נתון קיים במסד - זה כמעט תמיד סימן שהשורה פשוט לא נטענה
+        // (למשל נוספה דרך ההוספה המהירה בזמן שהמסך הזה לא היה פתוח), לא
+        // שהמשתמשת התכוונה למחוק אותה. דיווח אמיתי: נתונים שנוספו קודם
+        // באותו יום נעלמו אחרי לחיצה על "שמור" בגלל בדיוק זה
+        const isEmpty = !food.trim() && !cals;
         if (existing) {
+            if (isEmpty && row.dataset.touched !== 'true') continue;
             await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals, protein_grams: protein }).eq('id', existing.id);
-        } else {
+        } else if (!isEmpty) {
             await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals, protein_grams: protein });
         }
     }
