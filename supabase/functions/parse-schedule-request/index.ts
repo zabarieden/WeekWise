@@ -143,8 +143,11 @@ Deno.serve(async (req) => {
                             "time/title/duration - never a single event with no day_of_week or a made-up day.\n\n" +
                             "task_title MUST be just the plain activity name and MUST NEVER contain timing/date " +
                             "words (\"next week\", \"tomorrow\", \"on Mondays\", etc.) - those belong only in the " +
-                            "recurring/event_date fields, never in the title text itself. Keep it short, in the same " +
-                            "language the user wrote in.\n\n" +
+                            "recurring/event_date fields, never in the title text itself. Only remove day/date/time " +
+                            "words from the title - do NOT otherwise summarize, shorten, or reduce it to a single " +
+                            "word. Keep every other word the user actually wrote about the activity itself, in the " +
+                            "same language and phrasing they used (e.g. \"עוד דק על הקלידים\" -> task_title=\"עוד " +
+                            "דק על הקלידים\", NOT just \"קלידים\").\n\n" +
                             "Example: today is Wednesday 2026-07-22. Input: \"next week on Monday add a guitar " +
                             "lesson\". Correct output: one event, day_of_week=Monday, recurring=false, " +
                             "event_date=2026-07-27 (Monday of the week AFTER the current week - not this week's " +

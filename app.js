@@ -248,10 +248,11 @@ function loadAllCenterItems() {
 async function loadCenterItems(type) {
     if (!supabaseClient) return;
     // is_someday קודם (false לפני true) כדי שקטע "להגיע לזה" תמיד ייפול בסוף
-    // הרשימה; בתוך כל קבוצה - sort_order ידני (שנקבע ע"י גרירה בפתקים), ורק
-    // פריטים בלי אחד עדיין (חדשים/מלפני התכונה) נופלים לסוף לפי created_at -
-    // אותו דפוס כמו ב-calendar_events
-    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', false).order('is_someday', { ascending: true }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
+    // הרשימה; בתוך כל קבוצה - sort_order ידני (שנקבע ע"י גרירה בפתקים) קודם;
+    // פריטים בלי אחד עדיין (חדשים/מלפני התכונה) נופלים אחריהם, ממויינים לפי
+    // created_at יורד כדי שמשימה חדשה שנרשמת תופיע ראשונה בתוך הקבוצה הזו -
+    // לפי בקשה מפורשת ("שכל משימה שאני רושמת תבוא ראשונה")
+    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', false).order('is_someday', { ascending: true }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false });
     if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
@@ -9703,6 +9704,20 @@ function updateNutritionGoalProgress() {
     const proteinGoal = getProteinDailyGoal();
     const proteinFill = document.getElementById('protein-goal-progress-fill');
     if (proteinFill) proteinFill.style.width = `${proteinGoal > 0 ? Math.min(100, Math.round((todayProteinTotal / proteinGoal) * 100)) : 0}%`;
+    updateMiniCalorieIndicator();
+}
+
+// --- אינדיקציה קטנה בתחתית כרטיס "מעקב ארוחות יומי" (לא כרטיס "מדדי
+// קלוריות" הנפרד) - כדי שהמשתמשת תראה איפה היא עומדת בלי לצאת מהמסך הזה ---
+function updateMiniCalorieIndicator() {
+    const el = document.getElementById('daily-calorie-mini-indicator');
+    if (!el) return;
+    const goal = getCalorieDailyGoal();
+    const remaining = goal - todayCaloriesTotal;
+    const remainingText = remaining >= 0
+        ? t('daily_calorie_mini_remaining').replace('{amount}', remaining)
+        : t('daily_calorie_mini_over').replace('{amount}', Math.abs(remaining));
+    el.textContent = t('daily_calorie_mini_summary').replace('{total}', todayCaloriesTotal).replace('{goal}', goal) + ' · ' + remainingText;
 }
 
 async function loadDailyNutrition(date) {
