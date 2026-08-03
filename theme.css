@@ -1516,6 +1516,32 @@ html[dir="ltr"] .daily-focus-bubble::before {
 .daily-focus-bubble-close:hover { opacity: 1; }
 .daily-focus-bubble-expanded { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px 14px; }
 .daily-focus-bubble-expanded.hidden { display: none; }
+.daily-focus-bubble-expanded-header { display: flex; justify-content: flex-end; margin-top: 6px; }
+/* תג "1" קטן על אייקון המוח כשיש שאלה יומית שעוד לא נענתה - כמו הודעה
+   שלא נקראה. יושב על .ai-brain-fab עצמו (לא נע עם ה"נשימה" של האייקון
+   הפנימי) כדי שלא יזוז/יקפוץ */
+.ai-brain-fab-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ff3b6a, #ff5e3a);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+    animation: aiBrainBadgePulse 1.8s ease-in-out infinite;
+}
+.ai-brain-fab-badge.hidden { display: none; }
+@keyframes aiBrainBadgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 .daily-focus-bubble-expanded textarea {
     resize: none;
     background-color: rgba(255, 255, 255, 0.06);

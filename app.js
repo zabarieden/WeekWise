@@ -1236,23 +1236,33 @@ function checkDailyGreeting() {
     triggerDailyGreetingSparkles();
 }
 
-// בועת-צ'אט יומית (לא מודל) שקופצת פעם אחת ביום (אחרי ברכת היום, עם עיכוב
-// קטן כדי לא להתנגש איתה ויזואלית) עם שאלה "מה הכי חשוב לך לעשות היום" -
-// לוחצים עליה כדי לענות, והתשובה נוספת כמשימה חד-פעמית ללו"ז של היום
-// (calendar_events). אותו דפוס דגל-יומי בדיוק כמו checkDailyGreeting -
-// מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד - לפי בקשה מפורשת
+// שאלה יומית "מה הכי חשוב לך לעשות היום" - לא קופצת מעצמה יותר: מציגים רק
+// תג "1" קטן על אייקון המוח (כמו הודעה שלא נקראה), ולוחצים על המוח כדי
+// לפתוח ולראות אותה (ר' initFixedAiBrainFab) - לפי בקשה מפורשת ("בא לי
+// שיהיה מספר 1 כזה כמו הודעה ממנו ואני אפתח"). dailyFocusPending נשאר true
+// עד שבאמת עונים (saveDailyFocus) - סגירה עם ✕ רק מסתירה את הבועה בחזרה,
+// התג חוזר להופיע כדי שאפשר יהיה לפתוח שוב מאוחר יותר. אותו דפוס דגל-יומי
+// בדיוק כמו checkDailyGreeting - מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד
+let dailyFocusPending = false;
 function checkDailyFocusPrompt() {
     if (!currentUserId) return;
     const todayStr = getLocalDateString();
-    if (localStorage.getItem(`weekwise_daily_focus_shown_${todayStr}`) === 'true') return;
-    setTimeout(() => {
-        const bubble = document.getElementById('daily-focus-bubble');
-        const input = document.getElementById('daily-focus-input');
-        if (input) input.value = '';
-        document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
-        document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
-        if (bubble) bubble.classList.remove('hidden');
-    }, 900);
+    dailyFocusPending = localStorage.getItem(`weekwise_daily_focus_shown_${todayStr}`) !== 'true';
+    const badge = document.getElementById('ai-brain-fab-badge');
+    if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
+}
+
+// לחיצה על אייקון המוח כשיש שאלה ממתינה (ר' initFixedAiBrainFab) - פותחת את
+// הבועה במצב המכווץ (השאלה בלבד) ומסתירה את התג בזמן שהיא פתוחה
+function openDailyFocusBubble() {
+    const bubble = document.getElementById('daily-focus-bubble');
+    const input = document.getElementById('daily-focus-input');
+    if (input) input.value = '';
+    document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
+    document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
+    if (bubble) bubble.classList.remove('hidden');
+    const badge = document.getElementById('ai-brain-fab-badge');
+    if (badge) badge.classList.add('hidden');
 }
 
 // לחיצה על הבועה עצמה (המצב המכווץ) - נפתחת למצב הזנת טקסט, במקום לעבור
@@ -1265,17 +1275,19 @@ function expandDailyFocusBubble() {
 }
 
 function markDailyFocusPromptShown() {
+    dailyFocusPending = false;
     localStorage.setItem(`weekwise_daily_focus_shown_${getLocalDateString()}`, 'true');
 }
 
-// סגירה עם ה-✕ היא "לא עכשיו, תזכיר לי אחר כך" - לא "אל תראה לי את זה שוב
-// היום" - לפי בקשה מפורשת ("שיהיה אפשרות לאחר כך"). בכוונה *לא* קוראת
-// ל-markDailyFocusPromptShown: הדגל היומי נשמר רק כשבאמת עונים (saveDailyFocus),
-// אז הבועה פשוט תופיע שוב בפעם הבאה שהאפליקציה נטענת מחדש, כל עוד עוד לא
-// ענו עליה היום
+// סגירה עם ה-✕ (משני המצבים - מכווץ ומורחב) היא "לא עכשיו, תזכיר לי אחר
+// כך" - לא "אל תראה לי את זה שוב היום" - לפי בקשה מפורשת. בכוונה *לא* קוראת
+// ל-markDailyFocusPromptShown: dailyFocusPending נשאר true, אז התג על המוח
+// חוזר להופיע מיד, ואפשר לפתוח שוב מתי שנוח
 function dismissDailyFocusModal() {
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
+    const badge = document.getElementById('ai-brain-fab-badge');
+    if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
 }
 
 async function saveDailyFocus() {
@@ -1627,7 +1639,13 @@ function setQuickNoteDestination(type) {
 function initFixedAiBrainFab() {
     const el = document.getElementById('btn-ai-brain-fab');
     if (!el) return;
-    el.onclick = () => openAiBrainModal('food');
+    // כל עוד יש שאלה יומית שעוד לא נענתה (תג "1" מוצג) - לחיצה על המוח
+    // פותחת אותה במקום את מודל ה-AI הרגיל, לפי בקשה מפורשת ("אני אפתח ואז
+    // אראה את ההודעה")
+    el.onclick = () => {
+        if (dailyFocusPending) { openDailyFocusBubble(); return; }
+        openAiBrainModal('food');
+    };
 }
 
 function getLocalDateString(dateObj = new Date()) {
