@@ -1460,17 +1460,20 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 }
 
 /* בועת "מה הכי חשוב לך היום" (ר' checkDailyFocusPrompt ב-app.js) - לא מודל,
-   בועת-צ'אט שנראית כאילו קפצה מה-AI (זכוכית שקופה + זוהר סגול, כמו עוזר
-   ה-AI עצמו, לא הצבעים הוורוד-סגול הרגילים של כפתורי CTA) - לפי בקשה מפורשת
-   ("שיהיה כזה כמו הודעה קופצת מתוך הAI... בועה") */
+   בועת-צ'אט בסגנון הודעת וואטסאפ שיוצאת ישירות מעוזר ה-AI (זכוכית שקופה +
+   זוהר סגול, לא הצבעים הוורוד-סגול הרגילים של כפתורי CTA) - צמודה לצד של
+   אייקון המוח (לא ממורכזת במסך) עם "זנב" בצד הפונה אליו, לפי בקשה מפורשת
+   ("כמו הודעה כזו כמו בוואטסאפ אבל רק מהמוח"). עוזר ה-AI יושב ב-left:22px
+   ב-RTL (ברירת המחדל) ו-right:22px ב-LTR (ר' html[dir="ltr"] .ai-brain-fab
+   למעלה) - הבועה מוצמדת לצד השני בדיוק באותה לוגיקה */
 .daily-focus-bubble {
     position: absolute;
-    top: 132px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 46px;
+    left: 130px;
+    right: auto;
     z-index: 3200;
-    width: 84%;
-    max-width: 320px;
+    width: 250px;
+    max-width: calc(100% - 150px);
     box-sizing: border-box;
     background-color: var(--bg-glass);
     backdrop-filter: blur(16px);
@@ -1481,22 +1484,31 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     animation: dailyFocusBubbleIn 0.4s ease-out;
 }
 .daily-focus-bubble.hidden { display: none; }
-/* זנב-בועה קטן שמצביע כלפי מעלה - תחושת "בועת דיבור" שנפתחת מלמעלה */
+/* זנב-בועה קטן שמצביע שמאלה, לעבר אייקון המוח - תחושת "בועת דיבור" שיוצאת
+   ממנו, כמו הודעה שהתקבלה בוואטסאפ */
 .daily-focus-bubble::before {
     content: "";
     position: absolute;
-    top: -8px;
-    left: 50%;
-    width: 16px;
-    height: 16px;
-    transform: translateX(-50%) rotate(45deg);
+    top: 26px;
+    left: -7px;
+    width: 14px;
+    height: 14px;
+    transform: rotate(45deg);
     background-color: var(--bg-glass);
-    border-top: 1px solid var(--accent-purple);
+    border-bottom: 1px solid var(--accent-purple);
     border-left: 1px solid var(--accent-purple);
 }
 @keyframes dailyFocusBubbleIn {
-    0% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
-    100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    0% { opacity: 0; transform: translateY(-6px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* אותו היפוך פינות בדיוק כמו עוזר ה-AI עצמו - הבועה עוברת לצד השני, עם
+   הזנב מצביע ימינה אליו במקום שמאלה */
+html[dir="ltr"] .daily-focus-bubble { left: auto; right: 130px; }
+html[dir="ltr"] .daily-focus-bubble::before {
+    left: auto;
+    right: -7px;
+    transform: rotate(-135deg);
 }
 .daily-focus-bubble-collapsed { display: flex; align-items: center; gap: 8px; padding: 14px 14px 14px 16px; cursor: pointer; }
 .daily-focus-bubble-text { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); line-height: 1.35; }

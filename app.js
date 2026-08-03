@@ -1268,8 +1268,12 @@ function markDailyFocusPromptShown() {
     localStorage.setItem(`weekwise_daily_focus_shown_${getLocalDateString()}`, 'true');
 }
 
+// סגירה עם ה-✕ היא "לא עכשיו, תזכיר לי אחר כך" - לא "אל תראה לי את זה שוב
+// היום" - לפי בקשה מפורשת ("שיהיה אפשרות לאחר כך"). בכוונה *לא* קוראת
+// ל-markDailyFocusPromptShown: הדגל היומי נשמר רק כשבאמת עונים (saveDailyFocus),
+// אז הבועה פשוט תופיע שוב בפעם הבאה שהאפליקציה נטענת מחדש, כל עוד עוד לא
+// ענו עליה היום
 function dismissDailyFocusModal() {
-    markDailyFocusPromptShown();
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
 }
