@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=232">
+    <link rel="stylesheet" href="theme.css?v=233">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1761,11 +1761,20 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 class="ai-brain-modal-title" data-i18n="ai_brain_modal_title">✨ AI Assistant ✨</h3>
-                <div class="ai-brain-tabs">
+                <!-- "תאי מוח" - כל קטגוריה היא תא זוהר בסגנון נוירון, עם "סינפסות"
+                     (קווי-חיבור מהבהבים) בין תא לתא - לפי בקשה מפורשת ("תעצב לי
+                     מגניב... כמו תאי מוח"). לא כל תא פותח פאנל AI מלא בתוך המודל -
+                     תקציב/ספורט/פריסה חכמה הם קיצורי-דרך "בקצרה" שסוגרים את המודל
+                     הזה ומנווטים ישר למסך המהיר שלהם, לפי בקשה מפורשת ("לשים את
+                     זה מהר ולהמשיך ביום") - בניגוד למזון/לו"ז/תמונה שנשארים פאנלים
+                     אמיתיים כאן, כי שם דווקא רוצים את השיחה החופשית עם ה-AI -->
+                <div class="ai-brain-tabs ai-brain-cell-row">
                     <button type="button" class="ai-brain-tab active" data-tab="food" onclick="switchAiBrainTab('food')" data-i18n="ai_brain_tab_food">🍎 Food</button>
                     <button type="button" class="ai-brain-tab" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
                     <button type="button" class="ai-brain-tab" data-tab="photo" onclick="switchAiBrainTab('photo')" data-i18n="ai_brain_tab_photo">📷 Photo</button>
-                    <button type="button" class="ai-brain-tab" data-tab="finance" onclick="switchAiBrainTab('finance')" data-i18n="ai_brain_tab_finance">📊 Budget</button>
+                    <button type="button" class="ai-brain-tab" onclick="closeModal('modal-ai-brain'); switchToTab('finance-section');" data-i18n="ai_brain_tab_finance">📊 Budget</button>
+                    <button type="button" class="ai-brain-tab" onclick="closeModal('modal-ai-brain'); switchToTab('sport-section');">🏋️ <span data-i18n="nav_sport">Sport</span></button>
+                    <button type="button" class="ai-brain-tab" onclick="closeModal('modal-ai-brain'); openSmartSplitModal();">🪄 <span data-i18n="smart_split_fab_title">Smart Split</span></button>
                 </div>
 
                 <!-- הועבר לכאן מ-modal-food-quick-add העצמאי שהיה קודם, לפי בקשה מפורשת
@@ -2150,7 +2159,7 @@
 
     </div>
 
-    <script src="i18n.js?v=160"></script>
+    <script src="i18n.js?v=161"></script>
     <script src="app.js?v=281"></script>
 </body>
 </html>

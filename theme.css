@@ -2244,6 +2244,56 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .ai-brain-tab { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-brain-tab.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+/* "תאי מוח" - רק בשורת הקטגוריות של modal-ai-brain עצמו (לא ב-.ai-brain-tab
+   הכללי, שמשמש גם בוררי מים/תקציב/ספורט אחרים) - כל קטגוריה נראית כמו נוירון
+   זוהר אורגני, עם "סינפסות" (קווי-חיבור מהבהבים) לתא הבא בתור - לפי בקשה
+   מפורשת ("תעצב לי מגניב... כמו תאי מוח") */
+.ai-brain-cell-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 0;
+    padding: 6px 10px 22px 10px;
+}
+.ai-brain-cell-row .ai-brain-tab {
+    flex: 0 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: radial-gradient(circle at 32% 28%, rgba(233, 213, 255, 0.22), rgba(88, 28, 135, 0.22) 55%, rgba(20, 6, 36, 0.35) 100%);
+    border: 1px solid rgba(216, 180, 254, 0.35);
+    border-radius: 46% 54% 53% 47% / 58% 47% 53% 42%;
+    color: var(--text-secondary);
+    padding: 9px 13px;
+    margin: 0 6px;
+    font-size: 0.72rem;
+    animation: aiCellBreathe 3.4s ease-in-out infinite;
+}
+.ai-brain-cell-row .ai-brain-tab:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    inset-inline-end: -12px;
+    width: 12px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(216, 180, 254, 0.65), rgba(216, 180, 254, 0.1));
+    transform: translateY(-50%);
+    animation: aiCellSynapsePulse 2.2s ease-in-out infinite;
+}
+@keyframes aiCellBreathe {
+    0%, 100% { box-shadow: 0 0 9px rgba(168, 85, 247, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05); }
+    50% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.38), inset 0 0 8px rgba(255, 255, 255, 0.09); }
+}
+@keyframes aiCellSynapsePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.ai-brain-cell-row .ai-brain-tab.active {
+    animation: none;
+    background: radial-gradient(circle at 32% 28%, rgba(249, 168, 212, 0.55), rgba(168, 85, 247, 0.5) 55%, rgba(20, 6, 36, 0.5) 100%);
+    border-color: var(--accent-pink);
+    color: var(--text-primary);
+    box-shadow: 0 0 16px rgba(236, 72, 153, 0.5), 0 0 30px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.12);
+    transform: scale(1.08);
+}
+.ai-brain-cell-row .ai-brain-tab:active { transform: scale(0.94); }
 /* בררת חד-פעמי/חוזר מעל תיבת הטקסט של תכנון הלו"ז - אותה שפה חזותית בדיוק
    כמו .ai-brain-tab, רק קטן יותר כי זו בחירה משנית בתוך טאב אחד, לא מעבר טאבים */
 .ai-schedule-mode-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
