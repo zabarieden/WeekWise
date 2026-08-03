@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
     applySmartSplitFabSetting(isSmartSplitFabOn());
+    applyMealRowCounts();
     initFabOrderDragReorder();
     initDockCarouselGestures();
     initSupabase();
@@ -614,14 +615,67 @@ function selectPresetPickerItem(id) {
 // --- הוספה מהירה (מהכפתורים הצפים): ארוחה קבועה שמורה, או מזון בטקסט חופשי -
 // שתיהן נכנסות ישירות למשבצת הפנויה הבאה של calorie_tracker להיום, בלי לעבור
 // דרך מסך התזונה בכלל. סדר קבוע (לא כרונולוגי) כדי שהתוצאה תמיד עקבית ---
-const MEAL_TYPE_ORDER = ['meal_1', 'meal_2', 'meal_3', 'meal_4', 'snack'];
-const MEAL_TYPE_LABEL_KEYS = { meal_1: 'meal_label_1', meal_2: 'meal_label_2', meal_3: 'meal_label_3', meal_4: 'meal_label_4', snack: 'meal_label_snack' };
+// meal_4/snack הם שמות-מפתח היסטוריים ("ארוחה 4"/"נשנוש") שכבר קיימים
+// בנתונים שמורים אצל משתמשות - לא ניתן לשנות אותם בלי "לאבד" נתונים קיימים,
+// אז המשבצות החדשות (meal_extra1/2, snack_extra1/2/3) מקבלות מפתחות חדשים
+// שלא מתנגשים, גם אם המספור הפנימי כבר לא תואם 1:1 לתווית המוצגת - ר'
+// MEAL_SLOT_KEYS/SNACK_SLOT_KEYS למטה (בהם סדר התפקיד/ordinal אכן תואם)
+const MEAL_TYPE_ORDER = ['meal_1', 'meal_2', 'meal_3', 'meal_extra1', 'meal_extra2', 'meal_4', 'snack', 'snack_extra1', 'snack_extra2', 'snack_extra3'];
+const MEAL_TYPE_LABEL_KEYS = { meal_1: 'meal_label_1', meal_2: 'meal_label_2', meal_3: 'meal_label_3', meal_extra1: 'meal_label_meal_4', meal_extra2: 'meal_label_meal_5', meal_4: 'meal_label_4', snack: 'meal_label_snack', snack_extra1: 'meal_label_snack_3', snack_extra2: 'meal_label_snack_4', snack_extra3: 'meal_label_snack_5' };
+// סדר-תפקיד (לא מפתח ה-DB!) - משבצת ראשונה/שנייה/... מכל סוג, בשימוש
+// לתרגום "כמה ארוחות/נשנושים להציג" (ר' getMealCount/getSnackCount/
+// applyMealRowCounts) להצג/הסתר בפועל. עד 5 מכל סוג, לפי בקשה מפורשת
+const MEAL_SLOT_KEYS = ['meal_1', 'meal_2', 'meal_3', 'meal_extra1', 'meal_extra2'];
+const SNACK_SLOT_KEYS = ['meal_4', 'snack', 'snack_extra1', 'snack_extra2', 'snack_extra3'];
+
+// כמה משבצות ארוחה/נשנוש להציג בפועל - נשמר בנפרד (לא רק "מוסתר/מוצג" per
+// slot כמו הבועות הצפות) כי כאן זה תמיד "ה-N הראשונות בסדר קבוע", לא בחירה
+// חופשית איזה משבצת ספציפית. ברירת מחדל: 3 ארוחות (ללא שינוי), 3 נשנושים
+// (במקום 2) - לפי בקשה מפורשת. clamp 1-5 מגן מפני ערך פגום ב-localStorage
+function getMealCount() {
+    const n = parseInt(localStorage.getItem('weekwise_meal_count'));
+    return n >= 1 && n <= MEAL_SLOT_KEYS.length ? n : 3;
+}
+function getSnackCount() {
+    const n = parseInt(localStorage.getItem('weekwise_snack_count'));
+    return n >= 1 && n <= SNACK_SLOT_KEYS.length ? n : 3;
+}
+// מחזירה את סדר-המפתחות של המשבצות *הנראות בלבד* לפי ההגדרות - ר'
+// getTodayEmptyMealSlot למטה, שמשתמשת בזה כדי לא "לכתוב" נתונים למשבצת
+// שהמשתמשת בחרה להסתיר (הם היו נעלמים לה בלי שום סימן שמשהו נרשם)
+function getVisibleMealTypeOrder() {
+    return [...MEAL_SLOT_KEYS.slice(0, getMealCount()), ...SNACK_SLOT_KEYS.slice(0, getSnackCount())];
+}
+function applyMealRowCounts() {
+    const mealCount = getMealCount();
+    const snackCount = getSnackCount();
+    MEAL_SLOT_KEYS.forEach((key, i) => {
+        const row = document.querySelector(`.meal-row[data-meal="${key}"]`);
+        if (row) row.classList.toggle('hidden', i >= mealCount);
+    });
+    SNACK_SLOT_KEYS.forEach((key, i) => {
+        const row = document.querySelector(`.meal-row[data-meal="${key}"]`);
+        if (row) row.classList.toggle('hidden', i >= snackCount);
+    });
+    const mealSelect = document.getElementById('meal-count-select');
+    if (mealSelect) mealSelect.value = String(mealCount);
+    const snackSelect = document.getElementById('snack-count-select');
+    if (snackSelect) snackSelect.value = String(snackCount);
+}
+function setMealCount(count) {
+    localStorage.setItem('weekwise_meal_count', String(count));
+    applyMealRowCounts();
+}
+function setSnackCount(count) {
+    localStorage.setItem('weekwise_snack_count', String(count));
+    applyMealRowCounts();
+}
 
 async function getTodayEmptyMealSlot() {
     const today = getLocalDateString();
     const { data } = await supabaseClient.from('calorie_tracker').select('meal_type').eq('user_id', currentUserId).eq('date', today);
     const used = new Set((data || []).map(r => r.meal_type));
-    return MEAL_TYPE_ORDER.find(mt => !used.has(mt)) || null;
+    return getVisibleMealTypeOrder().find(mt => !used.has(mt)) || null;
 }
 
 // אחרי הוספה מהירה - אם מסך התזונה היומי כבר פתוח על תאריך היום, מרעננים
@@ -676,11 +730,13 @@ function renderPresetQuickAddList(filter) {
     }).join('');
 }
 
-// כל 5 המשבצות (meal_1..meal_4, snack) הן "משבצת אחת = שורה אחת" בכל שאר האפליקציה
-// (ר' loadMealForm - כשעורכים משבצת קיימת דרך מסך התזונה, זה מעדכן את השורה
-// הקיימת, לא מוסיף שורה נוספת). כשכולן תפוסות, אין אפשרות ליצור משבצת שישית -
-// אז במקום לחסום עם שגיאה (שהייתה כאן קודם), מצרפים את התוספת למשבצת ה"נשנוש"
-// הקיימת (מחברים קלוריות + מוסיפים לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד
+// כל המשבצות ה*נראות* (ר' getVisibleMealTypeOrder) הן "משבצת אחת = שורה
+// אחת" בכל שאר האפליקציה (ר' loadMealForm - כשעורכים משבצת קיימת דרך מסך
+// התזונה, זה מעדכן את השורה הקיימת, לא מוסיף שורה נוספת). כשכולן תפוסות,
+// אין אפשרות ליצור משבצת נוספת - אז במקום לחסום עם שגיאה (שהייתה כאן קודם),
+// מצרפים את התוספת למשבצת-הנשנוש *הנראית האחרונה* (מחברים קלוריות + מוסיפים
+// לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד. לא 'snack' קבוע יותר - תלוי
+// כמה נשנושים המשתמשת בחרה להציג (ר' getSnackCount)
 async function addQuickLogEntry(foodDescription, calories) {
     const today = getLocalDateString();
     const slot = await getTodayEmptyMealSlot();
@@ -691,7 +747,8 @@ async function addQuickLogEntry(foodDescription, calories) {
         });
         return;
     }
-    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories').eq('user_id', currentUserId).eq('date', today).eq('meal_type', 'snack').maybeSingle();
+    const mergeSlot = SNACK_SLOT_KEYS[getSnackCount() - 1];
+    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mergeSlot).maybeSingle();
     if (existing) {
         await supabaseClient.from('calorie_tracker').update({
             food_description: `${existing.food_description} + ${foodDescription}`,
@@ -699,7 +756,7 @@ async function addQuickLogEntry(foodDescription, calories) {
         }).eq('id', existing.id);
     } else {
         await supabaseClient.from('calorie_tracker').insert({
-            username: currentUsername, user_id: currentUserId, date: today, meal_type: 'snack',
+            username: currentUsername, user_id: currentUserId, date: today, meal_type: mergeSlot,
             food_description: foodDescription, calories: calories, protein_grams: null,
         });
     }

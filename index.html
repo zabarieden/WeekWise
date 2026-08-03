@@ -300,6 +300,75 @@
                                         <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
                                     </div>
                                 </div>
+                                <!-- 5 משבצות חדשות (מוסתרות כברירת מחדל חוץ מ-snack_extra1) - כמה מהן
+                                     מוצגות נקבע ע"י applyMealRowCounts (ר' app.js), לפי הגדרה בתפריט
+                                     ההגדרות. מפתחות ה-data-meal חדשים ולא מתנגשים בנתונים היסטוריים -
+                                     ר' ההערה על MEAL_TYPE_ORDER ב-app.js -->
+                                <div class="meal-row hidden" data-meal="meal_extra1">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label" data-i18n="meal_label_meal_4">Meal 4</span>
+                                        <button type="button" class="preset-select-trigger" data-category="evening" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
+                                        <input type="number" data-i18n-placeholder="protein_input_placeholder" placeholder="Protein (g)" class="protein-input">
+                                        <button type="button" class="btn-save-as-preset" onclick="openFoodPicker(this)" data-i18n-title="food_picker_open_title" title="Choose from food list">🔍</button>
+                                        <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
+                                    </div>
+                                </div>
+                                <div class="meal-row hidden" data-meal="meal_extra2">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label" data-i18n="meal_label_meal_5">Meal 5</span>
+                                        <button type="button" class="preset-select-trigger" data-category="evening" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" data-i18n-placeholder="food_input_placeholder" placeholder="What did you eat?" class="food-input" onchange="autoFillMealCalories(this)">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
+                                        <input type="number" data-i18n-placeholder="protein_input_placeholder" placeholder="Protein (g)" class="protein-input">
+                                        <button type="button" class="btn-save-as-preset" onclick="openFoodPicker(this)" data-i18n-title="food_picker_open_title" title="Choose from food list">🔍</button>
+                                        <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
+                                    </div>
+                                </div>
+                                <div class="meal-row" data-meal="snack_extra1">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label" data-i18n="meal_label_snack_3">Snack 3</span>
+                                        <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" data-i18n-placeholder="snack_input_placeholder" placeholder="Snacks and treats..." class="food-input" onchange="autoFillMealCalories(this)">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
+                                        <input type="number" data-i18n-placeholder="protein_input_placeholder" placeholder="Protein (g)" class="protein-input">
+                                        <button type="button" class="btn-save-as-preset" onclick="openFoodPicker(this)" data-i18n-title="food_picker_open_title" title="Choose from food list">🔍</button>
+                                        <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
+                                    </div>
+                                </div>
+                                <div class="meal-row hidden" data-meal="snack_extra2">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label" data-i18n="meal_label_snack_4">Snack 4</span>
+                                        <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" data-i18n-placeholder="snack_input_placeholder" placeholder="Snacks and treats..." class="food-input" onchange="autoFillMealCalories(this)">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
+                                        <input type="number" data-i18n-placeholder="protein_input_placeholder" placeholder="Protein (g)" class="protein-input">
+                                        <button type="button" class="btn-save-as-preset" onclick="openFoodPicker(this)" data-i18n-title="food_picker_open_title" title="Choose from food list">🔍</button>
+                                        <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
+                                    </div>
+                                </div>
+                                <div class="meal-row hidden" data-meal="snack_extra3">
+                                    <div class="meal-header-row">
+                                        <span class="meal-label" data-i18n="meal_label_snack_5">Snack 5</span>
+                                        <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
+                                    </div>
+                                    <div class="meal-inputs-wrap">
+                                        <input type="text" data-i18n-placeholder="snack_input_placeholder" placeholder="Snacks and treats..." class="food-input" onchange="autoFillMealCalories(this)">
+                                        <input type="number" data-i18n-placeholder="calories_input_placeholder" placeholder="Calories" class="calories-input">
+                                        <input type="number" data-i18n-placeholder="protein_input_placeholder" placeholder="Protein (g)" class="protein-input">
+                                        <button type="button" class="btn-save-as-preset" onclick="openFoodPicker(this)" data-i18n-title="food_picker_open_title" title="Choose from food list">🔍</button>
+                                        <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
+                                    </div>
+                                </div>
                             </div>
                             <button id="btn-save-nutrition" class="btn-primary" style="margin-top: 15px;" data-i18n="nutrition_save_btn">Save today's menu</button>
                         </div>
@@ -1247,6 +1316,29 @@
                         <option value="us" data-i18n="settings_country_usa">USA</option>
                     </select>
                 </div>
+                <!-- כמה משבצות ארוחה/נשנוש להציג במסך התזונה היומי - עד 5 מכל סוג
+                     (ר' applyMealRowCounts/MEAL_SLOT_KEYS/SNACK_SLOT_KEYS ב-app.js),
+                     לפי בקשה מפורשת -->
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_meal_count_label" for="meal-count-select">How many meals?</label>
+                    <select id="meal-count-select" onchange="setMealCount(this.value)">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="settings-toggle-row">
+                    <label class="settings-label" data-i18n="settings_snack_count_label" for="snack-count-select">How many snacks?</label>
+                    <select id="snack-count-select" onchange="setSnackCount(this.value)">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
                 <!-- סדר הכפתורים הצפים ניתן לגרירה (לא כולל בועת ה-AI, שנשארת קבועה
                      למעלה) - ר' initFabOrderDragReorder/restackFabs ב-app.js -->
                 <div id="fab-order-list">
@@ -1978,7 +2070,7 @@
 
     </div>
 
-    <script src="i18n.js?v=147"></script>
-    <script src="app.js?v=256"></script>
+    <script src="i18n.js?v=148"></script>
+    <script src="app.js?v=257"></script>
 </body>
 </html>
