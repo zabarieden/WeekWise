@@ -110,6 +110,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.calories-input, .protein-input').forEach(input => {
         input.addEventListener('input', updateLiveCaloriesToday);
     });
+    // עריכה ידנית ישירה של שדה הקלוריות תמיד "מנתקת" אותו מהמילוי האוטומטי
+    // (ר' autoFillMealCalories) - כדי שעריכה מאוחרת יותר של הטקסט לא תדרוס
+    // מספר שהמשתמשת בעצמה קבעה במפורש
+    document.querySelectorAll('.calories-input').forEach(input => {
+        input.addEventListener('input', () => { delete input.dataset.autofilled; });
+    });
     document.getElementById('btn-save-center-item').addEventListener('click', submitCenterItem);
     // Enter רגיל = שורה חדשה (עכשיו שזו טקסטאריה, לא input חד-שורתי) - רק
     // Ctrl/Cmd+Enter שולח, כדי שאפשר יהיה לכתוב פתק עם כמה שורות/פסקאות
@@ -8948,15 +8954,27 @@ function estimateRecipeCalories(ingredientsText) {
 
 // --- יומן תזונה יומי: מילוי אוטומטי של קלוריות מתוך אותו מסד מזון, כשהמשתמש
 // מקליד חופשי בשדה "מה אכלת" (לא בוחר פריסט שמור) - למשל "2 כפות קוטג'"
-// ממלא קלוריות לבד. לעולם לא דורס ערך קלוריות שכבר קיים בשדה (גם אם הוקלד
-// ידנית וגם אם כבר נטען מפריט שמור בעריכה) - רק משדה קלוריות ריק ---
+// ממלא קלוריות לבד. לעולם לא דורס ערך קלוריות שהמשתמשת קבעה בעצמה (הוקלד
+// ידנית, או נטען מפריט שמור/פריסט) - רק ערך ריק, או ערך שהוא-עצמו מילוי
+// אוטומטי קודם (dataset.autofilled) שעוד לא נערך ידנית מאז. כך שאם משנים
+// את הטקסט אחרי שהמערכת כבר מילאה קלוריות לבד, הקלוריות מתעדכנות יחד איתו -
+// לפי בקשה מפורשת ("שמשנים את הטקסט זה משתנה בהתאם") - אבל ברגע שנוגעים
+// ידנית במספר הקלוריות עצמו, זה "ננעל" ולא נדרס יותר, ר' ה-listener למעלה ---
 function autoFillMealCalories(foodInput) {
     const row = foodInput.closest('.meal-row');
     const caloriesInput = row && row.querySelector('.calories-input');
-    if (!caloriesInput || caloriesInput.value.trim()) return;
+    if (!caloriesInput) return;
+    if (caloriesInput.value.trim() && caloriesInput.dataset.autofilled !== 'true') return;
     const estimate = estimateFreeTextCalories(foodInput.value.trim());
     if (estimate > 0) {
         caloriesInput.value = Math.round(estimate);
+        caloriesInput.dataset.autofilled = 'true';
+        updateLiveCaloriesToday();
+    } else if (caloriesInput.dataset.autofilled === 'true') {
+        // הטקסט כבר לא מזוהה בכלל (למשל נמחק לגמרי) - מנקים גם את הקלוריות
+        // שמולאו אוטומטית בעבר, לא משאירים מספר יתום מטקסט שכבר לא קיים
+        caloriesInput.value = '';
+        delete caloriesInput.dataset.autofilled;
         updateLiveCaloriesToday();
     }
 }
