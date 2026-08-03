@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyWaterFabSetting(isWaterFabOn(), true);
     applySportFabSetting(isSportFabOn(), true);
     applyPresetFabSetting(isPresetFabOn(), true);
-    applySmartSplitFabSetting(isSmartSplitFabOn(), true);
+    applyFinanceFabSetting(isFinanceFabOn(), true);
     restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
@@ -5306,7 +5306,7 @@ function getFabOrder() {
     // פריסה, פתקים, תפוח באמצע, מים, ספורט) - ר' ההערה על allIds ב-
     // applyDockOrder למטה, ששם בפועל מוכנס btn-ai-fab (הפתק) מיד אחרי
     // btn-preset-fab (התפוח) כדי לשחזר בדיוק את הסדר הזה
-    const defaultOrder = ['btn-sport-fab', 'btn-water-fab', 'btn-preset-fab', 'btn-smart-split-fab'];
+    const defaultOrder = ['btn-sport-fab', 'btn-water-fab', 'btn-preset-fab', 'btn-finance-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -5641,25 +5641,27 @@ function togglePresetFab() {
     applyPresetFabSetting(enabled);
 }
 
-// כפתור צף לפתיחה מהירה של "פריסה חכמה" - דלוק כברירת מחדל (opt-out), אותה
-// סיבה בדיוק כמו שאר בועות ה-Dock למעלה (כולל ספורט, שהיה opt-in בעבר ושונה
-// לפי בקשה מפורשת)
-function isSmartSplitFabOn() {
-    return localStorage.getItem('weekwise_smart_split_fab') !== 'false';
+// כפתור צף למעבר מהיר למסך התקציב - היה "פריסה חכמה" (מבוססת-AI, ר' ההערה
+// ב-index.html) והוחלף בבועה הזו בתקציב, לפי בקשה מפורשת: תקציב נבדק בפועל
+// הרבה יותר ולא צריך AI בכלל, בעוד שפריסה חכמה עדיין נגישה דרך הקובייה שלה
+// במסך הראשי. דלוק כברירת מחדל (opt-out), אותה סיבה בדיוק כמו שאר בועות
+// ה-Dock (כולל ספורט, שהיה opt-in בעבר ושונה לפי בקשה מפורשת)
+function isFinanceFabOn() {
+    return localStorage.getItem('weekwise_finance_fab') !== 'false';
 }
 
-function applySmartSplitFabSetting(enabled, skipRestack) {
-    const fab = document.getElementById('btn-smart-split-fab');
+function applyFinanceFabSetting(enabled, skipRestack) {
+    const fab = document.getElementById('btn-finance-fab');
     if (fab) fab.classList.toggle('hidden', !enabled);
-    const toggle = document.getElementById('smart-split-fab-toggle');
+    const toggle = document.getElementById('finance-fab-toggle');
     if (toggle) toggle.checked = enabled;
     if (!skipRestack) restackFabs();
 }
 
-function toggleSmartSplitFab() {
-    const enabled = document.getElementById('smart-split-fab-toggle').checked;
-    localStorage.setItem('weekwise_smart_split_fab', enabled ? 'true' : 'false');
-    applySmartSplitFabSetting(enabled);
+function toggleFinanceFab() {
+    const enabled = document.getElementById('finance-fab-toggle').checked;
+    localStorage.setItem('weekwise_finance_fab', enabled ? 'true' : 'false');
+    applyFinanceFabSetting(enabled);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז

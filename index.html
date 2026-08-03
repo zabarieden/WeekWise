@@ -853,10 +853,13 @@
                      modal-ai-brain למטה), לפי בקשה מפורשת -->
                 <button type="button" class="dock-fab hidden" id="btn-preset-fab" onclick="openPresetQuickAddModal()" data-i18n-tooltip="preset_fab_title" data-i18n-aria-label="preset_fab_title" aria-label="Quick add saved meal">🍎</button>
 
-                <!-- כפתור צף לפתיחה מהירה של "פריסה חכמה" (פרימיום) - אפשר לכבות
-                     מההגדרות, אותו דפוס בדיוק כמו שאר הבועות. לוחצים ונפתח ישר
-                     המודל של תיאור המשימה, בלי לעבור דרך לשונית הפתקים בכלל -->
-                <button type="button" class="dock-fab hidden" id="btn-smart-split-fab" onclick="openSmartSplitModal()" data-i18n-tooltip="smart_split_fab_title" data-i18n-aria-label="smart_split_fab_title" aria-label="Smart Split">🪄</button>
+                <!-- כפתור צף למעבר מהיר למסך התקציב - הוחלף עם "פריסה חכמה" בבועה
+                     הזו (ר' ההערה על defaultOrder ב-app.js): פריסה חכמה מבוססת-AI
+                     ונשארת נגישה דרך הקובייה שלה במסך הראשי, ואילו תקציב נבדק
+                     בפועל הרבה יותר ולא קשור ל-AI בכלל, אז מגיע לו מקום קבוע
+                     בדוק - לפי בקשה מפורשת. אותו דפוס בדיוק כמו btn-sport-fab:
+                     ניווט ישיר למסך, בלי מודל נפרד -->
+                <button type="button" class="dock-fab hidden" id="btn-finance-fab" onclick="switchToTab('finance-section')" data-i18n-tooltip="finance_fab_title" data-i18n-aria-label="finance_fab_title" aria-label="Add expense/income">💰</button>
             </div>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
@@ -1443,11 +1446,11 @@
                             <span class="switch-slider"></span>
                         </label>
                     </div>
-                    <div class="settings-toggle-row" data-fab-id="btn-smart-split-fab">
+                    <div class="settings-toggle-row" data-fab-id="btn-finance-fab">
                         <span class="fab-order-drag-handle" data-i18n-title="fab_order_drag_handle_title" title="Drag to reorder">⠿</span>
-                        <label class="settings-label" data-i18n="settings_smart_split_fab_label" for="smart-split-fab-toggle">Smart Split button</label>
+                        <label class="settings-label" data-i18n="settings_finance_fab_label" for="finance-fab-toggle">Budget button</label>
                         <label class="switch">
-                            <input type="checkbox" id="smart-split-fab-toggle" onchange="toggleSmartSplitFab()">
+                            <input type="checkbox" id="finance-fab-toggle" onchange="toggleFinanceFab()">
                             <span class="switch-slider"></span>
                         </label>
                     </div>
@@ -2147,7 +2150,7 @@
 
     </div>
 
-    <script src="i18n.js?v=159"></script>
-    <script src="app.js?v=280"></script>
+    <script src="i18n.js?v=160"></script>
+    <script src="app.js?v=281"></script>
 </body>
 </html>
