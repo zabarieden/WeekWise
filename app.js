@@ -3265,15 +3265,17 @@ async function loadTodayTasks() {
             localStorage.setItem(`weekwise_today_celebrated_${todayStr}`, 'true');
             triggerAllDoneSparkles();
         }
-    // עוד לא הכל בוצע, אבל זו כבר הפתיחה השנייה (או יותר) של הכרטיס היום -
-    // הודעת עידוד עדינה שיש עוד זמן להשלים, בלי לחץ - מוצגת *לצד* רשימת
-    // המשימות שנשארו (לא במקומה, עדיין רוצים לראות מה נשאר)
+    // עוד לא הכל בוצע - שתי דרגות של הודעת עידוד לפי כמה פעמים נפתחה הכרטיס
+    // היום, מוצגות *לצד* רשימת המשימות שנשארו (לא במקומה, עדיין רוצים לראות
+    // מה נשאר): מ-5 פתיחות "בלי לחץ" עדינה, ומ-7 פתיחות (עוד 2 אחרי זה)
+    // הודעה יותר "דוחפת" - לפי בקשה מפורשת
     } else {
         localStorage.removeItem(`weekwise_today_celebrated_${todayStr}`);
-        if (populated.length + events.length > 0 && getTodayCardViewCount() >= 2) {
+        const viewCount = getTodayCardViewCount();
+        if (populated.length + events.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
             encouragement.className = 'today-tasks-celebration';
-            encouragement.textContent = t('today_tasks_still_time_message');
+            encouragement.textContent = t(viewCount >= 7 ? 'today_tasks_push_message' : 'today_tasks_still_time_message');
             container.appendChild(encouragement);
         }
     }
