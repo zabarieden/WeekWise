@@ -5099,7 +5099,11 @@ function applyWaterFabSetting(enabled) {
 // initFabOrderDragReorder) - קובע רק את הסדר היחסי-ביניהן כשהן נכנסות
 // לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
 function getFabOrder() {
-    const defaultOrder = ['btn-smart-split-fab', 'btn-sport-fab', 'btn-water-fab', 'btn-preset-fab'];
+    // סדר-ברירת-מחדל עודכן לפי בקשה מפורשת עם תמונת-ייחוס (מימין לשמאל:
+    // פריסה, פתקים, תפוח באמצע, מים, ספורט) - ר' ההערה על allIds ב-
+    // applyDockOrder למטה, ששם בפועל מוכנס btn-ai-fab (הפתק) מיד אחרי
+    // btn-preset-fab (התפוח) כדי לשחזר בדיוק את הסדר הזה
+    const defaultOrder = ['btn-sport-fab', 'btn-water-fab', 'btn-preset-fab', 'btn-smart-split-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -5143,7 +5147,15 @@ let fabCarouselOrder = null;
 // fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
-    const allIds = ['btn-ai-fab', ...getFabOrder()];
+    // btn-ai-fab (הפתק) מוכנס מיד אחרי btn-preset-fab (התפוח) בסדר - לא
+    // תמיד ראשון כמו קודם - כדי שסדר-ברירת-המחדל הטבעי (לפני כל גרירה/סיבוב)
+    // יצא בדיוק "פריסה, פתקים, תפוח באמצע, מים, ספורט" לפי בקשה מפורשת עם
+    // תמונת-ייחוס. לפי מיקום התפוח בפועל (לא אינדקס קבוע) כדי שזה יישאר
+    // הגיוני גם אם המשתמשת משנה את סדר ה-4 הבועות הניתנות-לכיבוי בהגדרות
+    const order = getFabOrder();
+    const presetIdx = order.indexOf('btn-preset-fab');
+    const insertAt = presetIdx === -1 ? order.length : presetIdx + 1;
+    const allIds = [...order.slice(0, insertAt), 'btn-ai-fab', ...order.slice(insertAt)];
     const active = allIds.filter(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
@@ -5349,6 +5361,10 @@ function initFabOrderDragReorder() {
 // - חוזרת לפתק בחזית, בדיוק כמו בטעינה ראשונה
 function resetFabLayout() {
     localStorage.removeItem('weekwise_fab_order');
+    // גם מוחקים את הבועה-האחרונה-שהייתה-בחזית שנשמרת בנפרד (ר'
+    // weekwise_fab_front_id ב-applyDockOrder) - בלי זה "איפוס" היה עדיין
+    // מחזיר את הבועה האישית שהייתה שם קודם, לא ממש חוזר לברירת המחדל הטהורה
+    localStorage.removeItem('weekwise_fab_front_id');
     fabCarouselOrder = null;
     restackFabs();
     showAppToast(t('settings_reset_fab_layout_done'));
