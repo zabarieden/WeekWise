@@ -44,10 +44,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
     applyUiScale(getUiScale());
-    applyWaterFabSetting(isWaterFabOn());
-    applySportFabSetting(isSportFabOn());
-    applyPresetFabSetting(isPresetFabOn());
-    applySmartSplitFabSetting(isSmartSplitFabOn());
+    // הבאג השורשי (דווח חוזר: "האימון תמיד באמצע"): כל אחת מארבע הפונקציות
+    // האלה קראה בעבר ל-restackFabs()/applyDockOrder() בעצמה - אז הקריאה
+    // הראשונה (אחרי applyWaterFabSetting בלבד) רצה כשעדיין רק כפתור המים
+    // עצמו קיבל את מצב ה-hidden הנכון שלו, ושלושת האחרים עדיין במצב ברירת
+    // המחדל הגולמי של ה-HTML. applyDockOrder בונה את fabCarouselOrder
+    // (ומשחזר את הבועה-הקדמית-השמורה לתוכו) בקריאה הראשונה הזו בלבד - כך
+    // שהמערך שנבנה תמיד התבסס על מצב-נראות חלקי/שגוי, וכל קריאה נוספת רק
+    // "מסדרת" אותו סביב הטעות הזו במקום לתקן אותה. עכשיו מיישמים את כל
+    // הנראות קודם (skipRestack=true, בלי restack באמצע), ומסדרים את ה-Dock
+    // פעם אחת בסוף כשכל ארבעת המצבים כבר נכונים
+    applyWaterFabSetting(isWaterFabOn(), true);
+    applySportFabSetting(isSportFabOn(), true);
+    applyPresetFabSetting(isPresetFabOn(), true);
+    applySmartSplitFabSetting(isSmartSplitFabOn(), true);
+    restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
     initFabOrderDragReorder();
@@ -5199,7 +5210,7 @@ function isWaterFabOn() {
     return localStorage.getItem('weekwise_water_fab') !== 'false';
 }
 
-function applyWaterFabSetting(enabled) {
+function applyWaterFabSetting(enabled, skipRestack) {
     const fab = document.getElementById('btn-water-fab');
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('water-fab-toggle');
@@ -5209,7 +5220,7 @@ function applyWaterFabSetting(enabled) {
     // מסונכרנים - שינוי באחד מעדכן את השני (דרך applyWaterFabSetting המשותפת)
     const shortcutBtn = document.getElementById('btn-water-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('water_fab_shortcut_remove_btn') : t('water_fab_shortcut_add_btn');
-    restackFabs();
+    if (!skipRestack) restackFabs();
 }
 
 // הסדר הבסיסי של 4 הבועות הניתנות-לכיבוי (לא כולל הפתק - ר' fabCarouselOrder
@@ -5515,14 +5526,14 @@ function isSportFabOn() {
     return localStorage.getItem('weekwise_sport_fab') !== 'false';
 }
 
-function applySportFabSetting(enabled) {
+function applySportFabSetting(enabled, skipRestack) {
     const fab = document.getElementById('btn-sport-fab');
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('sport-fab-toggle');
     if (toggle) toggle.checked = enabled;
     const shortcutBtn = document.getElementById('btn-sport-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('sport_fab_shortcut_remove_btn') : t('sport_fab_shortcut_add_btn');
-    restackFabs();
+    if (!skipRestack) restackFabs();
 }
 
 function toggleSportFab() {
@@ -5544,12 +5555,12 @@ function isPresetFabOn() {
     return localStorage.getItem('weekwise_preset_fab') !== 'false';
 }
 
-function applyPresetFabSetting(enabled) {
+function applyPresetFabSetting(enabled, skipRestack) {
     const fab = document.getElementById('btn-preset-fab');
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('preset-fab-toggle');
     if (toggle) toggle.checked = enabled;
-    restackFabs();
+    if (!skipRestack) restackFabs();
 }
 
 function togglePresetFab() {
@@ -5565,12 +5576,12 @@ function isSmartSplitFabOn() {
     return localStorage.getItem('weekwise_smart_split_fab') !== 'false';
 }
 
-function applySmartSplitFabSetting(enabled) {
+function applySmartSplitFabSetting(enabled, skipRestack) {
     const fab = document.getElementById('btn-smart-split-fab');
     if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('smart-split-fab-toggle');
     if (toggle) toggle.checked = enabled;
-    restackFabs();
+    if (!skipRestack) restackFabs();
 }
 
 function toggleSmartSplitFab() {
