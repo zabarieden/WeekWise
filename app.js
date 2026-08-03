@@ -1225,20 +1225,32 @@ function checkDailyGreeting() {
     triggerDailyGreetingSparkles();
 }
 
-// "פתק" יומי שקופץ פעם אחת ביום (אחרי ברכת היום, עם עיכוב קטן כדי לא
-// להתנגש איתה ויזואלית) עם שאלה "מה הכי חשוב לך לעשות היום" - עונים, והתשובה
-// נוספת כמשימה חד-פעמית ללו"ז של היום (calendar_events). אותו דפוס דגל-יומי
-// בדיוק כמו checkDailyGreeting - מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד -
-// לפי בקשה מפורשת
+// בועת-צ'אט יומית (לא מודל) שקופצת פעם אחת ביום (אחרי ברכת היום, עם עיכוב
+// קטן כדי לא להתנגש איתה ויזואלית) עם שאלה "מה הכי חשוב לך לעשות היום" -
+// לוחצים עליה כדי לענות, והתשובה נוספת כמשימה חד-פעמית ללו"ז של היום
+// (calendar_events). אותו דפוס דגל-יומי בדיוק כמו checkDailyGreeting -
+// מתאפס מאליו כל יום, בלי מנגנון איפוס נפרד - לפי בקשה מפורשת
 function checkDailyFocusPrompt() {
     if (!currentUserId) return;
     const todayStr = getLocalDateString();
     if (localStorage.getItem(`weekwise_daily_focus_shown_${todayStr}`) === 'true') return;
     setTimeout(() => {
+        const bubble = document.getElementById('daily-focus-bubble');
         const input = document.getElementById('daily-focus-input');
         if (input) input.value = '';
-        openModal('modal-daily-focus');
+        document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
+        document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
+        if (bubble) bubble.classList.remove('hidden');
     }, 900);
+}
+
+// לחיצה על הבועה עצמה (המצב המכווץ) - נפתחת למצב הזנת טקסט, במקום לעבור
+// למודל נפרד - לפי בקשה מפורשת ("שאפשר יהיה ללחוץ עליה")
+function expandDailyFocusBubble() {
+    document.getElementById('daily-focus-bubble-collapsed').classList.add('hidden');
+    document.getElementById('daily-focus-bubble-expanded').classList.remove('hidden');
+    const input = document.getElementById('daily-focus-input');
+    if (input) input.focus();
 }
 
 function markDailyFocusPromptShown() {
@@ -1247,7 +1259,8 @@ function markDailyFocusPromptShown() {
 
 function dismissDailyFocusModal() {
     markDailyFocusPromptShown();
-    closeModal('modal-daily-focus');
+    const bubble = document.getElementById('daily-focus-bubble');
+    if (bubble) bubble.classList.add('hidden');
 }
 
 async function saveDailyFocus() {
@@ -1260,7 +1273,8 @@ async function saveDailyFocus() {
         event_date: getLocalDateString(), source: 'daily_focus',
     });
     markDailyFocusPromptShown();
-    closeModal('modal-daily-focus');
+    const bubble = document.getElementById('daily-focus-bubble');
+    if (bubble) bubble.classList.add('hidden');
     showAppToast(t('daily_focus_added_toast'));
     loadTodayTasks();
 }
