@@ -2361,7 +2361,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .ui-scale-btn-group { display: flex; gap: 3px; background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 3px; flex-shrink: 0; }
 /* קומפקטי - יושב באותה שורת הגדרות (settings-toggle-row) לצד תווית, לא תופס
    רוחב מלא כמו .language-select (שנועד למסך התחברות, הקשר שונה) */
-#user-country-select { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-primary); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; outline: none; cursor: pointer; flex-shrink: 0; }
+/* אותו עיצוב בדיוק כמו #user-country-select - שלוש ה-select-ים החדשים
+   (כמה ארוחות/נשנושים להציג, יום התחלת מחזור פיננסי) נשארו עם עיצוב
+   הדפדפן הגולמי/מרובע כי לא הוספתי להם CSS כשיצרתי אותם - לפי בקשה מפורשת */
+#user-country-select, #meal-count-select, #snack-count-select, #finance-cycle-day-select { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-primary); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; outline: none; cursor: pointer; flex-shrink: 0; }
 .ui-scale-btn { background: none; border: none; color: var(--text-secondary); font-size: 0.7rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: var(--transition); }
 .ui-scale-btn.active { background-color: var(--accent-purple); color: #fff; }
 .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
