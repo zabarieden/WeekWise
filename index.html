@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=241">
+    <link rel="stylesheet" href="theme.css?v=242">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2089,7 +2089,8 @@
         <div id="modal-daily-board" class="apple-modal">
             <div class="modal-sheet daily-board-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="daily_board_title">Daily Board</h3>
+                <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-daily-board')" aria-label="Close">✕</button>
+                <h3 data-i18n="daily_board_title">Daily Agenda</h3>
                 <div class="daily-board-tabs-row">
                     <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
                     <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
@@ -2318,7 +2319,7 @@
 
     </div>
 
-    <script src="i18n.js?v=184"></script>
+    <script src="i18n.js?v=185"></script>
     <script src="app.js?v=292"></script>
 </body>
 </html>
