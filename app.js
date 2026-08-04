@@ -5726,10 +5726,48 @@ function getUserCountry() {
 }
 function setUserCountry(code) {
     localStorage.setItem(userCountryKey(), code);
+    applyUserCountrySetting();
 }
 function applyUserCountrySetting() {
-    const select = document.getElementById('user-country-select');
-    if (select) select.value = getUserCountry();
+    const code = getUserCountry();
+    const flagEl = document.getElementById('country-picker-flag');
+    const nameEl = document.getElementById('country-picker-name');
+    if (flagEl) flagEl.textContent = COUNTRY_FLAGS[code] || '🌐';
+    if (nameEl) nameEl.textContent = COUNTRY_NAMES[code] || code;
+}
+
+// בורר-חיפוש למדינה - אותו דפוס בדיוק כמו openLanguagePicker/renderLanguagePickerList
+// (ר' i18n.js), לפי דיווח מפורש שרשימת ה-<select> הטבעית לא קריאה
+function openCountryPicker() {
+    const search = document.getElementById('country-search-input');
+    if (search) search.value = '';
+    renderCountryPickerList('');
+    openModal('modal-country-picker');
+    if (search) search.focus();
+}
+
+function renderCountryPickerList(filter) {
+    const list = document.getElementById('country-picker-list');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const current = getUserCountry();
+    const matches = COUNTRY_LIST.filter(code => COUNTRY_NAMES[code].toLowerCase().includes(query));
+    if (!matches.length) {
+        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        return;
+    }
+    list.innerHTML = matches.map(code => `
+        <button type="button" class="language-picker-item${code === current ? ' active' : ''}" onclick="selectCountryFromPicker('${code}')">
+            <span class="language-picker-flag">${COUNTRY_FLAGS[code] || '🌐'}</span>
+            <span class="language-picker-name">${COUNTRY_NAMES[code]}</span>
+            ${code === current ? '<span class="language-picker-check">✓</span>' : ''}
+        </button>
+    `).join('');
+}
+
+function selectCountryFromPicker(code) {
+    setUserCountry(code);
+    closeModal('modal-country-picker');
 }
 
 function applyColorTheme(themeName) {

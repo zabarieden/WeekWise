@@ -8,6 +8,15 @@ const LANGUAGE_NAMES = { en: 'English', he: 'עברית', es: 'Español', fr: 'F
 // עתידית תדרוש רק שורה אחת נוספת כאן ובתרגומים, לא שינוי מבני
 const LANGUAGE_FLAGS = { en: '🇺🇸', he: '🇮🇱', es: '🇪🇸', fr: '🇫🇷', ar: '🇸🇦', ru: '🇷🇺', de: '🇩🇪', pt: '🇧🇷', ja: '🇯🇵', zh: '🇨🇳', hi: '🇮🇳', ko: '🇰🇷', tr: '🇹🇷', id: '🇮🇩', it: '🇮🇹', vi: '🇻🇳', pl: '🇵🇱', th: '🇹🇭', ur: '🇵🇰', bn: '🇧🇩', sw: '🇰🇪', uk: '🇺🇦', el: '🇬🇷', nl: '🇳🇱', ca: '🇪🇸', ro: '🇷🇴', yo: '🇳🇬', sv: '🇸🇪', nb: '🇳🇴', da: '🇩🇰', cs: '🇨🇿', hu: '🇭🇺', fi: '🇫🇮' };
 
+// בורר-חיפוש המדינה (openCountryPicker ב-app.js) - אותו רעיון בדיוק כמו
+// LANGUAGE_NAMES/LANGUAGE_FLAGS למעלה. שמות המדינות נשארים באנגלית בכל שפת
+// ממשק (לא מתורגמים) - כמו LANGUAGE_NAMES עצמו, כדי לא להוסיף עוד ~30 מפתחות
+// תרגום פר-שפה רק בשביל שם מדינה בבורר. il/us ראשונות ברשימה (ברירת המחדל
+// הוותיקה), השאר לפי סדר א"ב של השם האנגלי
+const COUNTRY_LIST = ['il', 'us', 'bd', 'br', 'cn', 'cz', 'dk', 'fi', 'fr', 'de', 'gr', 'hu', 'in', 'id', 'it', 'jp', 'ke', 'nl', 'ng', 'no', 'pk', 'pl', 'ro', 'ru', 'sa', 'kr', 'es', 'se', 'th', 'tr', 'ua', 'vn'];
+const COUNTRY_NAMES = { il: 'Israel', us: 'United States', bd: 'Bangladesh', br: 'Brazil', cn: 'China', cz: 'Czechia', dk: 'Denmark', fi: 'Finland', fr: 'France', de: 'Germany', gr: 'Greece', hu: 'Hungary', in: 'India', id: 'Indonesia', it: 'Italy', jp: 'Japan', ke: 'Kenya', nl: 'Netherlands', ng: 'Nigeria', no: 'Norway', pk: 'Pakistan', pl: 'Poland', ro: 'Romania', ru: 'Russia', sa: 'Saudi Arabia', kr: 'South Korea', es: 'Spain', se: 'Sweden', th: 'Thailand', tr: 'Turkey', ua: 'Ukraine', vn: 'Vietnam' };
+const COUNTRY_FLAGS = { il: '🇮🇱', us: '🇺🇸', bd: '🇧🇩', br: '🇧🇷', cn: '🇨🇳', cz: '🇨🇿', dk: '🇩🇰', fi: '🇫🇮', fr: '🇫🇷', de: '🇩🇪', gr: '🇬🇷', hu: '🇭🇺', in: '🇮🇳', id: '🇮🇩', it: '🇮🇹', jp: '🇯🇵', ke: '🇰🇪', nl: '🇳🇱', ng: '🇳🇬', no: '🇳🇴', pk: '🇵🇰', pl: '🇵🇱', ro: '🇷🇴', ru: '🇷🇺', sa: '🇸🇦', kr: '🇰🇷', es: '🇪🇸', se: '🇸🇪', th: '🇹🇭', tr: '🇹🇷', ua: '🇺🇦', vn: '🇻🇳' };
+
 let currentLang = 'en';
 
 function isRTL(lang) { return RTL_LANGUAGES.includes(lang); }
@@ -250,6 +259,7 @@ en: {
     error_adding_item: "Error adding item: ", error_loading_list: "Error loading list: ", error_loading_steps: "Error loading step data: ",
     settings_title: "Settings", settings_language_label: "Language",
     language_picker_title: "Choose Language", language_search_placeholder: "Search language...", language_no_results: "No languages found",
+    country_search_placeholder: "Search country...",
     settings_premium_title: "Premium Upgrades",
     settings_go_premium_btn: "⭐ Go Premium",
     settings_upgrade_btn: "Upgrade — Coming soon",
@@ -658,6 +668,7 @@ he: {
     error_adding_item: "שגיאה בהוספת הפריט: ", error_loading_list: "שגיאה בטעינת הרשימה: ", error_loading_steps: "שגיאה בטעינת מד הצעדים: ",
     settings_title: "הגדרות", settings_language_label: "שפה",
     language_picker_title: "בחירת שפה", language_search_placeholder: "חיפוש שפה...", language_no_results: "לא נמצאו שפות",
+    country_search_placeholder: "חיפוש מדינה...",
     settings_premium_title: "שדרוגים פרימיום",
     settings_go_premium_btn: "⭐ שדרוג לפרימיום",
     settings_upgrade_btn: "שדרוג — בקרוב",
