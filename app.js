@@ -2013,8 +2013,9 @@ function setScheduleAiMode(mode) {
     });
     const durationInput = document.getElementById('ai-schedule-duration-months');
     if (durationInput) {
-        durationInput.classList.toggle('hidden', mode !== 'recurring');
-        if (mode !== 'recurring') durationInput.value = '';
+        const showDuration = mode === 'recurring' || mode === 'recurring-daily';
+        durationInput.classList.toggle('hidden', !showDuration);
+        if (!showDuration) durationInput.value = '';
     }
 }
 
@@ -2594,11 +2595,22 @@ async function parseScheduleWithAI() {
         // בעדינות למנתח המקומי - המשתמש תמיד מקבל תוצאה, אף פעם לא מסך שגיאה
         if (!events || !events.length) events = parseScheduleTextLocally(text);
 
-        // כפיית הבחירה המפורשת (חד-פעמי/חוזר) שנבחרה בכפתורים מעל תיבת הטקסט -
-        // דורסת כל ניחוש אוטומטי, ר' applyExplicitScheduleMode
+        // כפיית הבחירה המפורשת (חד-פעמי/חוזר/חוזר-כל-יום) שנבחרה בכפתורים מעל
+        // תיבת הטקסט - דורסת כל ניחוש אוטומטי, ר' applyExplicitScheduleMode.
+        // "חוזר כל יום" שונה במהותו מהשניים האחרים - הוא לא רק קובע recurring
+        // true/false על האירוע כמות שהוא, אלא *מכפיל* כל אירוע ל-7 (אחד לכל
+        // יום בשבוע), בלי קשר לאיזה יום הוזכר בפועל בטקסט - לפי בקשה מפורשת
+        // ("כפתור נוסף חוזר כל יום")
         const durationMonthsInput = document.getElementById('ai-schedule-duration-months');
         const explicitDurationMonths = durationMonthsInput ? parseInt(durationMonthsInput.value) || null : null;
-        events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
+        if (scheduleAiMode === 'recurring-daily') {
+            events = events.flatMap(ev => ev.needsClarification ? [ev] : dbDaysMap.map(day => ({
+                ...ev, day_of_week: day, recurring: true, event_date: null,
+                recurring_duration_months: explicitDurationMonths || null,
+            })));
+        } else {
+            events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
+        }
 
         // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
         // אחרי השני אם יש כמה), ורק אז שומרים הכול יחד עם שאר האירועים הברורים

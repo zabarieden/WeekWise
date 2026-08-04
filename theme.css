@@ -2303,6 +2303,19 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .ai-schedule-mode-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
 .ai-schedule-mode-btn { flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-schedule-mode-btn.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+/* אייקון "מידע" קטן ליד "חוזר כל יום" - מסביר את ההבדל מ"חוזר" הרגיל
+   (שמכבד את היום/ים שהוזכרו בטקסט) בלי לתפוס מקום קבוע כמו שאר הכפתורים */
+.ai-schedule-mode-info { position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; cursor: help; font-size: 0.95rem; opacity: 0.75; padding: 0 2px; }
+.ai-schedule-mode-info:hover, .ai-schedule-mode-info:focus-visible { opacity: 1; }
+.ai-schedule-mode-info[data-tooltip]::after {
+    bottom: calc(100% + 8px);
+    inset-inline-end: -10px;
+    width: 190px;
+    white-space: normal;
+    text-align: start;
+    font-weight: 500;
+}
+.ai-schedule-mode-info[data-tooltip]:hover::after, .ai-schedule-mode-info[data-tooltip]:focus-visible::after { opacity: 1; }
 #ai-schedule-duration-months { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 /* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
    במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
