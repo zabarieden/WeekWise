@@ -4932,6 +4932,11 @@ async function exportUserDataReport() {
         // הכל בזה אחר זה ברשימה שטוחה במקום לוח-חודש אינטראקטיבי
         const byDate = {};
         (calorieRows || []).forEach(row => {
+            // מדלגים על שורות-גדם ריקות (בלי תיאור ובלי קלוריות) - נשארו
+            // בעבר במסד בגלל באג ב-saveNutrition שעודכן במקום להימחק (ר'
+            // התיקון שם), ובלעדי הסינון הזה יום כזה מופיע בדוח כ"0" מוזר
+            // גם אחרי שהבאג עצמו כבר תוקן, כל עוד השורות הישנות עדיין קיימות
+            if (!(row.food_description || '').trim() && !Number(row.calories)) return;
             if (!byDate[row.date]) byDate[row.date] = { total: 0, meals: [] };
             byDate[row.date].total += Number(row.calories) || 0;
             byDate[row.date].meals.push(row);
@@ -10267,7 +10272,14 @@ async function saveNutrition() {
         // באותו יום נעלמו אחרי לחיצה על "שמור" בגלל בדיוק זה
         const isEmpty = !food.trim() && !cals;
         if (existing) {
-            if (isEmpty && row.dataset.touched !== 'true') continue;
+            if (isEmpty) {
+                // אם באמת נגעו בשורה (לא סתם נראית ריקה כי לא נטענה) וריקנו
+                // אותה בכוונה - מוחקים את הרשומה לגמרי, לא משאירים "גדם" עם
+                // 0 קלוריות. דיווח אמיתי: דוח ה-PDF הראה ימים עם "0" מוזר -
+                // אלה היו בדיוק שורות-גדם כאלה שנשמרו ריקות במקום להימחק
+                if (row.dataset.touched === 'true') await supabaseClient.from('calorie_tracker').delete().eq('id', existing.id);
+                continue;
+            }
             await supabaseClient.from('calorie_tracker').update({ food_description: food, calories: cals, protein_grams: protein }).eq('id', existing.id);
         } else if (!isEmpty) {
             await supabaseClient.from('calorie_tracker').insert({ username: currentUsername, user_id: currentUserId, date: date, meal_type: type, food_description: food, calories: cals, protein_grams: protein });
