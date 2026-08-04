@@ -2021,6 +2021,8 @@ async function duplicateSlotToNextDay(day, slot) {
 // תהיה "הראשונה בתוך ה-AI" (ר' initFixedAiBrainFab/openFoodQuickAddModal)
 function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-schedule-input').value = '';
+    const titlePrefixInput = document.getElementById('ai-schedule-title-prefix');
+    if (titlePrefixInput) titlePrefixInput.value = '';
     document.getElementById('ai-finance-input').value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
@@ -2637,6 +2639,16 @@ async function parseScheduleWithAI() {
             })));
         } else {
             events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
+        }
+
+        // תווית קבועה (אופציונלי) שנוספת בוודאות לכותרת של *כל* אירוע - לא
+        // תלויה בניחוש של ה-AI אם מילת-הקשר שייכת לכל אירוע בנפרד, לפי בקשה
+        // מפורשת. מוחלת גם על אירועים עם needsClarification (task_title שלהם
+        // עובר כמות שהוא דרך runScheduleClarificationFlow, ר' שם)
+        const titlePrefixInput = document.getElementById('ai-schedule-title-prefix');
+        const titlePrefix = titlePrefixInput ? titlePrefixInput.value.trim() : '';
+        if (titlePrefix) {
+            events = events.map(ev => ({ ...ev, task_title: `${titlePrefix} - ${ev.task_title}` }));
         }
 
         // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
