@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=239">
+    <link rel="stylesheet" href="theme.css?v=240">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -871,6 +871,13 @@
                 <span id="ai-brain-fab-badge" class="ai-brain-fab-badge hidden">1</span>
             </button>
 
+            <!-- כפתור "לוח היום" - עוגן ויזואלי קבוע למסך הבית (לא בדוק, לפי בקשה
+                 מפורשת - "אני רוצה שהוא יהיה בתוך מסך הבית כמו המוח רק לחצן אחר"),
+                 יושב מתחת לבועת ה-AI Brain, אותו דפוס עמדה קבועה בלי גרירה -->
+            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-tooltip="daily_board_fab_title" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board">
+                <span class="ai-brain-icon daily-board-icon">🧭</span>
+            </button>
+
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
@@ -1521,6 +1528,28 @@
                     <!-- מאפסת את סדר הגרירה של בועות ה-Dock לברירת המחדל - לא נוגעת בהפעלה/
                          כיבוי של בועות בודדות (זה נשלט בנפרד, ר' הטוגלים למעלה) -->
                     <button type="button" class="btn-secondary" onclick="resetFabLayout()" data-i18n="settings_reset_fab_layout_btn">↺ Reset shortcut layout</button>
+
+                    <!-- גבולות בלוקי-השעה בלוח היום (🧭) - שעת ההתחלה של כל בלוק, ר'
+                         getDailyBoardBucketHours/setDailyBoardBucketHour ב-app.js -->
+                    <label class="settings-label" data-i18n="daily_board_bucket_hours_label">Daily Board time blocks start at...</label>
+                    <div class="daily-board-bucket-hours-grid">
+                        <div class="daily-board-bucket-hour-item">
+                            <span data-i18n="daily_board_bucket_morning">🌅 Morning</span>
+                            <input type="number" min="0" max="23" id="board-bucket-morning-input" onchange="setDailyBoardBucketHour('morning', this.value)">
+                        </div>
+                        <div class="daily-board-bucket-hour-item">
+                            <span data-i18n="daily_board_bucket_noon">☀️ Noon</span>
+                            <input type="number" min="0" max="23" id="board-bucket-noon-input" onchange="setDailyBoardBucketHour('noon', this.value)">
+                        </div>
+                        <div class="daily-board-bucket-hour-item">
+                            <span data-i18n="daily_board_bucket_afternoon">🌤️ Afternoon</span>
+                            <input type="number" min="0" max="23" id="board-bucket-afternoon-input" onchange="setDailyBoardBucketHour('afternoon', this.value)">
+                        </div>
+                        <div class="daily-board-bucket-hour-item">
+                            <span data-i18n="daily_board_bucket_evening">🌙 Evening</span>
+                            <input type="number" min="0" max="23" id="board-bucket-evening-input" onchange="setDailyBoardBucketHour('evening', this.value)">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 🔔 התראות -->
@@ -2073,6 +2102,55 @@
             </div>
         </div>
 
+        <!-- "לוח היום" - עוגן ויזואלי שמראה מה לעשות עכשיו. טאבים מותאמים-אישית
+             (routine_tabs) - ברירת מחדל 2: "שגרה יומית" ו"לימודים", ניתן לשנות
+             שם/למחוק/להוסיף עוד (למשל "לוז ילדים"/"לוז הורים" וכו', לפי בקשה
+             מפורשת). כל טאב מציג את הפריטים שלו (routine_items) שסומנו לפעול
+             היום, מקובצים לפי בלוק-שעה (בוקר/צהריים/אחה"צ/ערב - גבולות
+             מותאמים אישית, ר' getDailyBoardBucketHours ב-app.js) -->
+        <div id="modal-daily-board" class="apple-modal">
+            <div class="modal-sheet daily-board-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="daily_board_title">Daily Board</h3>
+                <div class="daily-board-tabs-row">
+                    <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
+                    <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
+                </div>
+                <div class="daily-board-tab-actions">
+                    <button type="button" class="btn-link-action" id="daily-board-rename-tab-btn" onclick="renameActiveRoutineTab()">✏️ <span data-i18n="daily_board_rename_tab_btn">Rename</span></button>
+                    <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
+                </div>
+                <div class="daily-board-body" id="daily-board-body"></div>
+                <button type="button" class="btn-secondary daily-board-add-item-btn" onclick="openAddRoutineItemModal()">➕ <span data-i18n="daily_board_add_item_btn">Add item</span></button>
+            </div>
+        </div>
+
+        <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - שעה + כותרת + באילו ימים
+             הוא חוזר (routine-item-days-row, ר' toggleRoutineItemDay ב-app.js) -->
+        <div id="modal-add-routine-item" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
+                <input type="text" id="routine-item-title-input" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Math homework">
+                <input type="time" id="routine-item-time-input">
+                <label class="settings-label" data-i18n="daily_board_item_days_label">Which days?</label>
+                <div class="routine-item-days-row" id="routine-item-days-row">
+                    <button type="button" class="day-chip" data-day="0" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_sun">Sun</button>
+                    <button type="button" class="day-chip" data-day="1" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_mon">Mon</button>
+                    <button type="button" class="day-chip" data-day="2" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_tue">Tue</button>
+                    <button type="button" class="day-chip" data-day="3" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_wed">Wed</button>
+                    <button type="button" class="day-chip" data-day="4" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_thu">Thu</button>
+                    <button type="button" class="day-chip" data-day="5" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_fri">Fri</button>
+                    <button type="button" class="day-chip" data-day="6" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_sat">Sat</button>
+                </div>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
+                    <button type="button" class="btn-clear-specific hidden" id="routine-item-delete-btn" onclick="deleteRoutineItemFromModal()" data-i18n="daily_board_delete_item_btn">Delete</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-add-routine-item')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <div id="modal-set-monthly-goal" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
@@ -2268,7 +2346,7 @@
 
     </div>
 
-    <script src="i18n.js?v=182"></script>
-    <script src="app.js?v=290"></script>
+    <script src="i18n.js?v=183"></script>
+    <script src="app.js?v=291"></script>
 </body>
 </html>

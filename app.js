@@ -1441,6 +1441,7 @@ function openSettingsDrawer() {
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
+    applyDailyBoardBucketSettings();
 }
 
 function openSettingsSubscreen(name) {
@@ -5241,6 +5242,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'multi_device_login', category: 'general' },
     { id: 'app_stuck_loading', category: 'general' },
     { id: 'refresh_data', category: 'general' },
+    { id: 'daily_board', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -10606,6 +10608,235 @@ async function addHabit() {
 async function deleteHabit(id) {
     await supabaseClient.from('habits').delete().eq('id', id);
     await loadHabits();
+}
+
+// --- "לוח היום" (🧭): טאבים מותאמים-אישית (routine_tabs, ברירת מחדל 2 -
+// "שגרה יומית"/"לימודים", ניתנות לשינוי שם/מחיקה/הוספה) שכל אחד מציג את
+// הפריטים שלו (routine_items) שסומנו לפעול היום (days_of_week), מקובצים
+// לפי בלוק-שעה (בוקר/צהריים/אחה"צ/ערב - גבולות מותאמים אישית, ר'
+// getDailyBoardBucketHours). עוגן ויזואלי נפרד לגמרי מהלו"ז הרגיל
+// (weekly_schedule/calendar_events) - לא נשלף משם, לפי בקשה מפורשת ---
+let dailyBoardTabs = [];
+let activeDailyBoardTabId = null;
+let editingRoutineItemId = null;
+
+function getDailyBoardBucketHours() {
+    const defaults = { morning: 5, noon: 12, afternoon: 16, evening: 20 };
+    const raw = localStorage.getItem('weekwise_board_bucket_hours');
+    if (!raw) return defaults;
+    try { return { ...defaults, ...JSON.parse(raw) }; } catch (e) { return defaults; }
+}
+
+function setDailyBoardBucketHour(bucket, value) {
+    const hour = Math.max(0, Math.min(23, parseInt(value) || 0));
+    const hours = getDailyBoardBucketHours();
+    hours[bucket] = hour;
+    localStorage.setItem('weekwise_board_bucket_hours', JSON.stringify(hours));
+    renderDailyBoard();
+}
+
+function applyDailyBoardBucketSettings() {
+    const hours = getDailyBoardBucketHours();
+    const ids = { morning: 'board-bucket-morning-input', noon: 'board-bucket-noon-input', afternoon: 'board-bucket-afternoon-input', evening: 'board-bucket-evening-input' };
+    Object.keys(ids).forEach(key => {
+        const input = document.getElementById(ids[key]);
+        if (input) input.value = hours[key];
+    });
+}
+
+function bucketForHour(hour, hours) {
+    if (hour >= hours.evening || hour < hours.morning) return 'evening';
+    if (hour >= hours.afternoon) return 'afternoon';
+    if (hour >= hours.noon) return 'noon';
+    return 'morning';
+}
+
+async function openDailyBoardModal() {
+    if (!supabaseClient || !currentUserId) return;
+    openModal('modal-daily-board');
+    await loadRoutineTabs();
+}
+
+async function loadRoutineTabs() {
+    const { data } = await supabaseClient.from('routine_tabs').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+    dailyBoardTabs = data || [];
+    if (!dailyBoardTabs.length) {
+        const seeded = [
+            { user_id: currentUserId, username: currentUsername, name: t('daily_board_default_tab_daily'), sort_order: 0 },
+            { user_id: currentUserId, username: currentUsername, name: t('daily_board_default_tab_study'), sort_order: 1 },
+        ];
+        const { data: inserted } = await supabaseClient.from('routine_tabs').insert(seeded).select('*');
+        dailyBoardTabs = inserted || [];
+    }
+    if (!activeDailyBoardTabId || !dailyBoardTabs.some(tb => tb.id === activeDailyBoardTabId)) {
+        activeDailyBoardTabId = dailyBoardTabs[0] ? dailyBoardTabs[0].id : null;
+    }
+    renderRoutineTabsBar();
+    await renderDailyBoard();
+}
+
+function renderRoutineTabsBar() {
+    const wrap = document.getElementById('daily-board-tabs-list');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    dailyBoardTabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'daily-board-tab-pill' + (tab.id === activeDailyBoardTabId ? ' active' : '');
+        btn.textContent = tab.name;
+        btn.onclick = () => switchRoutineTab(tab.id);
+        wrap.appendChild(btn);
+    });
+    const deleteBtn = document.getElementById('daily-board-delete-tab-btn');
+    if (deleteBtn) deleteBtn.classList.toggle('hidden', dailyBoardTabs.length <= 1);
+}
+
+async function switchRoutineTab(tabId) {
+    activeDailyBoardTabId = tabId;
+    renderRoutineTabsBar();
+    await renderDailyBoard();
+}
+
+function openAddRoutineTabPrompt() {
+    const name = prompt(t('daily_board_add_tab_prompt'));
+    if (!name || !name.trim()) return;
+    addRoutineTab(name.trim());
+}
+
+async function addRoutineTab(name) {
+    const sortOrder = dailyBoardTabs.length;
+    const { data } = await supabaseClient.from('routine_tabs').insert({ user_id: currentUserId, username: currentUsername, name, sort_order: sortOrder }).select('*').single();
+    if (data) {
+        dailyBoardTabs.push(data);
+        activeDailyBoardTabId = data.id;
+        renderRoutineTabsBar();
+        await renderDailyBoard();
+    }
+}
+
+function renameActiveRoutineTab() {
+    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    if (!tab) return;
+    const name = prompt(t('daily_board_add_tab_prompt'), tab.name);
+    if (!name || !name.trim()) return;
+    renameRoutineTab(tab.id, name.trim());
+}
+
+async function renameRoutineTab(tabId, name) {
+    await supabaseClient.from('routine_tabs').update({ name }).eq('id', tabId);
+    const tab = dailyBoardTabs.find(tb => tb.id === tabId);
+    if (tab) tab.name = name;
+    renderRoutineTabsBar();
+}
+
+async function deleteActiveRoutineTab() {
+    if (dailyBoardTabs.length <= 1) return;
+    if (!confirm(t('daily_board_delete_tab_confirm'))) return;
+    const tabId = activeDailyBoardTabId;
+    await supabaseClient.from('routine_tabs').delete().eq('id', tabId);
+    dailyBoardTabs = dailyBoardTabs.filter(tb => tb.id !== tabId);
+    activeDailyBoardTabId = dailyBoardTabs[0] ? dailyBoardTabs[0].id : null;
+    renderRoutineTabsBar();
+    await renderDailyBoard();
+}
+
+async function renderDailyBoard() {
+    const body = document.getElementById('daily-board-body');
+    if (!body) return;
+    if (!activeDailyBoardTabId) { body.innerHTML = ''; return; }
+    const { data: items } = await supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId);
+    const todayDow = new Date().getDay();
+    const todayItems = (items || []).filter(it => (it.days_of_week || '').split(',').map(s => parseInt(s.trim())).includes(todayDow));
+    const hours = getDailyBoardBucketHours();
+    const buckets = { morning: [], noon: [], afternoon: [], evening: [] };
+    todayItems.forEach(it => {
+        const hour = parseInt((it.time || '0:0').split(':')[0]) || 0;
+        buckets[bucketForHour(hour, hours)].push(it);
+    });
+    const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
+    const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
+    body.innerHTML = '';
+    bucketOrder.forEach(key => {
+        const list = buckets[key];
+        if (!list.length) return;
+        list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        const section = document.createElement('div');
+        section.className = `daily-board-bucket-section daily-board-bucket-${key}`;
+        const header = document.createElement('div');
+        header.className = 'daily-board-bucket-header';
+        header.textContent = t(bucketLabelKeys[key]);
+        section.appendChild(header);
+        list.forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'daily-board-item-row';
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'daily-board-item-time';
+            timeSpan.textContent = (it.time || '').slice(0, 5);
+            const titleBtn = document.createElement('button');
+            titleBtn.type = 'button';
+            titleBtn.className = 'daily-board-item-title';
+            titleBtn.textContent = it.title;
+            titleBtn.onclick = () => openEditRoutineItemModal(it);
+            row.appendChild(timeSpan);
+            row.appendChild(titleBtn);
+            section.appendChild(row);
+        });
+        body.appendChild(section);
+    });
+    if (!body.children.length) {
+        body.innerHTML = `<p class="daily-board-empty-hint">${t('daily_board_empty_hint')}</p>`;
+    }
+}
+
+function openAddRoutineItemModal() {
+    if (!activeDailyBoardTabId) return;
+    editingRoutineItemId = null;
+    document.getElementById('routine-item-modal-title').textContent = t('daily_board_add_item_title');
+    document.getElementById('routine-item-title-input').value = '';
+    document.getElementById('routine-item-time-input').value = '';
+    document.querySelectorAll('#routine-item-days-row .day-chip').forEach(chip => chip.classList.add('active'));
+    document.getElementById('routine-item-delete-btn').classList.add('hidden');
+    openModal('modal-add-routine-item');
+}
+
+function openEditRoutineItemModal(item) {
+    editingRoutineItemId = item.id;
+    document.getElementById('routine-item-modal-title').textContent = t('daily_board_edit_item_title');
+    document.getElementById('routine-item-title-input').value = item.title;
+    document.getElementById('routine-item-time-input').value = (item.time || '').slice(0, 5);
+    const activeDays = (item.days_of_week || '').split(',').map(s => s.trim());
+    document.querySelectorAll('#routine-item-days-row .day-chip').forEach(chip => {
+        chip.classList.toggle('active', activeDays.includes(chip.dataset.day));
+    });
+    document.getElementById('routine-item-delete-btn').classList.remove('hidden');
+    openModal('modal-add-routine-item');
+}
+
+function toggleRoutineItemDay(chip) {
+    chip.classList.toggle('active');
+}
+
+async function saveRoutineItem() {
+    const title = document.getElementById('routine-item-title-input').value.trim();
+    const time = document.getElementById('routine-item-time-input').value;
+    if (!title || !time) { showAppToast(t('daily_board_item_missing_fields'), 'error'); return; }
+    const days = Array.from(document.querySelectorAll('#routine-item-days-row .day-chip.active')).map(chip => chip.dataset.day);
+    if (!days.length) { showAppToast(t('daily_board_item_missing_days'), 'error'); return; }
+    const payload = { title, time, days_of_week: days.join(',') };
+    if (editingRoutineItemId) {
+        await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
+    } else {
+        await supabaseClient.from('routine_items').insert({ ...payload, tab_id: activeDailyBoardTabId, user_id: currentUserId });
+    }
+    closeModal('modal-add-routine-item');
+    await renderDailyBoard();
+}
+
+async function deleteRoutineItemFromModal() {
+    if (!editingRoutineItemId) return;
+    await supabaseClient.from('routine_items').delete().eq('id', editingRoutineItemId);
+    closeModal('modal-add-routine-item');
+    await renderDailyBoard();
 }
 
 async function toggleHabitCheckin(habitId, dateStr, checked) {
