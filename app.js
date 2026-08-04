@@ -1430,6 +1430,33 @@ function closeModal(modalId) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.remove('modal-open');
 }
+
+// --- ניווט מסך ההגדרות: מסך-ראשי (5 קטגוריות) + מסכי-משנה, בסגנון הגדרות
+// וואטסאפ/iOS - לפי בקשה מפורשת. לא מודל נפרד לכל קטגוריה (היה מסבך את כל
+// שאר האתר שכבר סומך על getElementById ישיר לכל שדה/כפתור בהגדרות) - אותו
+// modal-settings-drawer בדיוק, רק עם div.settings-subscreen שמוסתרים/נחשפים
+// ב-JS במקום גלילה ארוכה אחת ---
+function openSettingsDrawer() {
+    document.getElementById('settings-main-menu').classList.remove('hidden');
+    document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
+    openModal('modal-settings-drawer');
+    renderNotificationSettingsStatus();
+}
+
+function openSettingsSubscreen(name) {
+    document.getElementById('settings-main-menu').classList.add('hidden');
+    document.querySelectorAll('.settings-subscreen').forEach(el => {
+        el.classList.toggle('hidden', el.id !== `settings-subscreen-${name}`);
+    });
+    const sheet = document.querySelector('#modal-settings-drawer .modal-sheet');
+    if (sheet) sheet.scrollTop = 0;
+}
+
+function backToSettingsMain() {
+    document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
+    document.getElementById('settings-main-menu').classList.remove('hidden');
+}
+
 let pendingCenterItemType = null;
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
 // מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן

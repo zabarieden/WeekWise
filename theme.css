@@ -2589,6 +2589,51 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .settings-toggle-row[data-fab-id] .settings-label { flex: 1; }
 .fab-order-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; flex-shrink: 0; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .fab-order-drag-handle:active { cursor: grabbing; }
+
+/* מסך-ראשי של ההגדרות: 5 שורות-קטגוריה קומפקטיות במקום גלילה ארוכה אחת -
+   בסגנון הגדרות וואטסאפ/iOS, לפי בקשה מפורשת */
+#settings-main-menu h3 { margin-bottom: 14px; }
+.settings-category-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background-color: var(--bg-row);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.settings-category-row:hover, .settings-category-row:active { border-color: var(--accent-purple); background-color: rgba(168, 85, 247, 0.08); }
+.settings-category-icon { font-size: 1.2rem; flex-shrink: 0; }
+.settings-category-label { flex: 1; text-align: start; font-size: 0.9rem; font-weight: 600; }
+.settings-category-chevron { color: var(--text-secondary); font-size: 1.1rem; flex-shrink: 0; }
+/* המשתמשת ביקשה במפורש את הגליף ‹ הזה (בלי קשר לכיוון RTL/LTR של שאר
+   האפליקציה) - נשאר קבוע, לא מתהפך */
+
+/* מסכי-משנה: כותרת חזרה קבועה למעלה, אותו תוכן שהיה קודם בשורה ארוכה אחת -
+   רק מחולק עכשיו לפי קטגוריה ומוסתר/נחשף (ר' openSettingsSubscreen ב-app.js) */
+.settings-subscreen.hidden { display: none; }
+.settings-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--accent-purple);
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 0 14px 0;
+    margin: 0;
+}
+.settings-back-btn:hover { opacity: 0.8; }
+.settings-subscreen h3 { margin-bottom: 14px; }
 /* גודל האפליקציה (הגדרות) - שלושה כפתורים צמודים במקום select נייטיבי,
    באותה שורה בדיוק כמו שאר הגדרות ה-toggle */
 .ui-scale-btn-group { display: flex; gap: 3px; background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 3px; flex-shrink: 0; }
