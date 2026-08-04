@@ -9926,6 +9926,7 @@ let checkRemindersInProgress = false;
 async function checkReminders() {
     if (checkRemindersInProgress) return;
     if (!supabaseClient || !currentUserId) return;
+    if (!isNotificationsEnabled()) return;
     checkRemindersInProgress = true;
     try {
         const now = new Date();
@@ -9968,7 +9969,11 @@ function requestNotificationPermission() {
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') registerPushNotifications();
         });
-    } else if (Notification.permission === 'granted') {
+    } else if (Notification.permission === 'granted' && isNotificationsEnabled()) {
+        // בלי הבדיקה הזו, טעינה חוזרת הייתה תמיד רושמת-מחדש למנוי ה-push גם
+        // אחרי שהמשתמשת כיבתה אותו במפורש במתג בהגדרות (הרשאת הדפדפן עצמה
+        // כבר "granted" ולא ניתנת לביטול מקוד, אז זה היה עוקף את הכיבוי בכל
+        // כניסה מחדש לאפליקציה)
         registerPushNotifications();
     }
 }
@@ -10050,22 +10055,72 @@ async function requestNotificationPermissionFromSettings() {
 
 function renderNotificationSettingsStatus() {
     const btn = document.getElementById('btn-enable-notifications');
+    const switchWrap = document.getElementById('notifications-enabled-switch-wrap');
+    const toggle = document.getElementById('notifications-enabled-toggle');
     const status = document.getElementById('settings-notifications-status');
     if (!btn || !status) return;
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        btn.classList.remove('hidden');
+        if (switchWrap) switchWrap.classList.add('hidden');
         btn.textContent = t('settings_notifications_btn_blocked');
         status.textContent = t('settings_notifications_status_unsupported');
         return;
     }
+    // ברגע שיש הרשאת דפדפן, מציגים את המתג ברמת-האפליקציה (פתוח/סגור) במקום
+    // כפתור "Enable" - ההרשאה עצמה כבר ניתנה ואי אפשר לבטל אותה מקוד, אבל
+    // המתג שולט אם בפועל שולחים תזכורות, ר' toggleNotificationsEnabled
     if (Notification.permission === 'granted') {
-        btn.textContent = t('settings_notifications_btn_enabled');
-        status.textContent = t('settings_notifications_status_granted');
+        btn.classList.add('hidden');
+        if (switchWrap) switchWrap.classList.remove('hidden');
+        if (toggle) toggle.checked = isNotificationsEnabled();
+        status.textContent = isNotificationsEnabled() ? t('settings_notifications_status_granted') : t('settings_notifications_status_muted');
     } else if (Notification.permission === 'denied') {
+        btn.classList.remove('hidden');
+        if (switchWrap) switchWrap.classList.add('hidden');
         btn.textContent = t('settings_notifications_btn_blocked');
         status.textContent = t('settings_notifications_status_denied');
     } else {
+        btn.classList.remove('hidden');
+        if (switchWrap) switchWrap.classList.add('hidden');
         btn.textContent = t('settings_notifications_btn_enable');
         status.textContent = t('settings_notifications_status_default');
+    }
+}
+
+// מתג ברמת-האפליקציה (לא הרשאת הדפדפן עצמה, שהיא חד-כיוונית) - לפי בקשה
+// מפורשת ("אפשרות לבחור אם זה פתוח או סגור"). פתוח: מרשמת/משחזרת את מנוי
+// ה-push האמיתי. סגור: מבטלת את המנוי בפועל (גם מהדפדפן וגם מהטבלה בשרת)
+// כדי שלא יגיעו תזכורות רקע גם כשהאפליקציה סגורה - לא רק משתיקה תצוגה
+function isNotificationsEnabled() {
+    return localStorage.getItem('weekwise_notifications_enabled') !== 'false';
+}
+
+async function toggleNotificationsEnabled() {
+    const toggle = document.getElementById('notifications-enabled-toggle');
+    const enabled = toggle ? toggle.checked : !isNotificationsEnabled();
+    localStorage.setItem('weekwise_notifications_enabled', enabled ? 'true' : 'false');
+    if (enabled) {
+        await registerPushNotifications();
+        showAppToast(t('settings_notifications_status_granted'));
+    } else {
+        await unsubscribePushNotifications();
+        showAppToast(t('settings_notifications_status_muted'));
+    }
+    renderNotificationSettingsStatus();
+}
+
+async function unsubscribePushNotifications() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) return;
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return;
+        const endpoint = subscription.endpoint;
+        await subscription.unsubscribe();
+        if (supabaseClient) await supabaseClient.from('push_subscriptions').delete().eq('endpoint', endpoint);
+    } catch (err) {
+        console.error('Push unsubscribe failed:', err);
     }
 }
 

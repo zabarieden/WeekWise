@@ -1151,6 +1151,7 @@
         <div id="modal-help-faq" class="apple-modal">
             <div class="modal-sheet help-faq-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <button type="button" class="settings-back-btn" onclick="closeModal('modal-help-faq'); openModal('modal-settings-drawer'); openSettingsSubscreen('support');">🔙 <span data-i18n="settings_back_btn">Back</span></button>
                 <h3 data-i18n="settings_help_faq_btn">❓ Help &amp; FAQ</h3>
                 <input type="text" id="help-faq-search" class="help-faq-search-input" oninput="filterHelpFaq()" data-i18n-placeholder="help_faq_search_placeholder" placeholder="Search a word...">
                 <div id="help-faq-list" class="help-faq-list"></div>
@@ -1164,6 +1165,7 @@
         <div id="modal-contact-us" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <button type="button" class="settings-back-btn" onclick="closeModal('modal-contact-us'); openModal('modal-settings-drawer'); openSettingsSubscreen('support');">🔙 <span data-i18n="settings_back_btn">Back</span></button>
                 <h3 data-i18n="settings_contact_us_btn">📬 Contact Us</h3>
                 <select id="contact-us-category" class="language-select">
                     <option value="bug" data-i18n="contact_us_category_bug">🐛 Bug Report</option>
@@ -1528,6 +1530,15 @@
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_notifications_label">Reminder Notifications</label>
                         <button type="button" id="btn-enable-notifications" class="btn-secondary" style="padding: 6px 14px; width: auto;" onclick="requestNotificationPermissionFromSettings()">🔔 Enable</button>
+                        <!-- מוצג רק אחרי שכבר יש הרשאת דפדפן (Notification.permission==='granted') -
+                             ההרשאה עצמה חד-כיוונית (לא ניתן לבטל אותה מקוד, רק המשתמשת דרך
+                             הגדרות הדפדפן/הטלפון), אבל המתג הזה הוא ברמת האפליקציה בלבד -
+                             מבטל/משחזר את מנוי ה-push בפועל, לפי בקשה מפורשת ("אפשרות לבחור
+                             אם זה פתוח או סגור") -->
+                        <label class="switch hidden" id="notifications-enabled-switch-wrap">
+                            <input type="checkbox" id="notifications-enabled-toggle" onchange="toggleNotificationsEnabled()">
+                            <span class="switch-slider"></span>
+                        </label>
                     </div>
                     <p id="settings-notifications-status" class="modal-subtitle"></p>
                 </div>
@@ -2251,7 +2262,7 @@
 
     </div>
 
-    <script src="i18n.js?v=174"></script>
-    <script src="app.js?v=287"></script>
+    <script src="i18n.js?v=175"></script>
+    <script src="app.js?v=288"></script>
 </body>
 </html>
