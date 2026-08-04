@@ -5257,6 +5257,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
+    { id: 'finance_cycle_day', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'toggle_fabs', category: 'settings_a11y' },
