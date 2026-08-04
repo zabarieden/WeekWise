@@ -509,6 +509,39 @@ function cancelPresetEdit() {
     document.getElementById('btn-add-preset').textContent = t('preset_add_btn');
 }
 
+// הערכת קלוריות עם AI בטופס "הוספת ארוחה למאגר" - אותה בדיוק לוגיקה כמו
+// הוספה-מהירה-עם-AI (estimateFoodTextViaAI, פרימיום עם חיפוש אמיתי / נופל
+// להערכה המקומית) - רק על שם+מרכיבים במקום תיאור-ארוחה חופשי, לפי בקשה
+// מפורשת ("גם פה שיהיה AI")
+async function estimatePresetCaloriesWithAI() {
+    const nameInput = document.getElementById('new-preset-name');
+    const descInput = document.getElementById('new-preset-description');
+    const caloriesInput = document.getElementById('new-preset-calories');
+    const text = [nameInput.value.trim(), descInput.value.trim()].filter(Boolean).join(', ');
+    if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+    const btn = document.getElementById('btn-estimate-preset-calories');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('food_ai_estimating');
+    try {
+        let estimate = estimateFreeTextCalories(text);
+        if (isPremiumUser && supabaseClient) {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+            if (token) {
+                let attempt = await estimateFoodTextViaAI(token, text);
+                if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
+                if (attempt.status === 'estimate' && attempt.calories > 0) estimate = attempt.calories;
+            }
+        }
+        if (estimate > 0) caloriesInput.value = Math.round(estimate);
+        else showAppToast(t('quick_add_cant_estimate'), 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+    }
+}
+
 async function deletePreset(id) {
     await supabaseClient.from('meal_presets').delete().eq('id', id);
     if (editingPresetId === id) cancelPresetEdit();
