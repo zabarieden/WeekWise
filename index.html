@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=240">
+    <link rel="stylesheet" href="theme.css?v=241">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1528,28 +1528,6 @@
                     <!-- מאפסת את סדר הגרירה של בועות ה-Dock לברירת המחדל - לא נוגעת בהפעלה/
                          כיבוי של בועות בודדות (זה נשלט בנפרד, ר' הטוגלים למעלה) -->
                     <button type="button" class="btn-secondary" onclick="resetFabLayout()" data-i18n="settings_reset_fab_layout_btn">↺ Reset shortcut layout</button>
-
-                    <!-- גבולות בלוקי-השעה בלוח היום (🧭) - שעת ההתחלה של כל בלוק, ר'
-                         getDailyBoardBucketHours/setDailyBoardBucketHour ב-app.js -->
-                    <label class="settings-label" data-i18n="daily_board_bucket_hours_label">Daily Board time blocks start at...</label>
-                    <div class="daily-board-bucket-hours-grid">
-                        <div class="daily-board-bucket-hour-item">
-                            <span data-i18n="daily_board_bucket_morning">🌅 Morning</span>
-                            <input type="number" min="0" max="23" id="board-bucket-morning-input" onchange="setDailyBoardBucketHour('morning', this.value)">
-                        </div>
-                        <div class="daily-board-bucket-hour-item">
-                            <span data-i18n="daily_board_bucket_noon">☀️ Noon</span>
-                            <input type="number" min="0" max="23" id="board-bucket-noon-input" onchange="setDailyBoardBucketHour('noon', this.value)">
-                        </div>
-                        <div class="daily-board-bucket-hour-item">
-                            <span data-i18n="daily_board_bucket_afternoon">🌤️ Afternoon</span>
-                            <input type="number" min="0" max="23" id="board-bucket-afternoon-input" onchange="setDailyBoardBucketHour('afternoon', this.value)">
-                        </div>
-                        <div class="daily-board-bucket-hour-item">
-                            <span data-i18n="daily_board_bucket_evening">🌙 Evening</span>
-                            <input type="number" min="0" max="23" id="board-bucket-evening-input" onchange="setDailyBoardBucketHour('evening', this.value)">
-                        </div>
-                    </div>
                 </div>
 
                 <!-- 🔔 התראות -->
@@ -2121,28 +2099,22 @@
                     <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                 </div>
                 <div class="daily-board-body" id="daily-board-body"></div>
-                <button type="button" class="btn-secondary daily-board-add-item-btn" onclick="openAddRoutineItemModal()">➕ <span data-i18n="daily_board_add_item_btn">Add item</span></button>
             </div>
         </div>
 
-        <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - שעה + כותרת + באילו ימים
-             הוא חוזר (routine-item-days-row, ר' toggleRoutineItemDay ב-app.js) -->
+        <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - כותרת + באילו ימים הוא
+             חוזר בדיוק אותו דבר כל יום (בלי בחירת ימים - לפי בקשה מפורשת:
+             "כל הקטע של הלו״ז היומי שזה שגרה שחוזר על עצמה"). השעה עצמה
+             קבועה לפי השורה שנלחצה בלוח (routine-item-time-label, לא input
+             לבחירה חופשית) - לפי בקשה מפורשת: שורות ברירת המחדל קבועות (ר'
+             DAILY_BOARD_BUCKET_HOURS ב-app.js), לא שעה חופשית שממילא נפתחת
+             עם בורר-השעה הלבן/לא-מעוצב של הדפדפן -->
         <div id="modal-add-routine-item" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
-                <input type="text" id="routine-item-title-input" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Math homework">
-                <input type="time" id="routine-item-time-input">
-                <label class="settings-label" data-i18n="daily_board_item_days_label">Which days?</label>
-                <div class="routine-item-days-row" id="routine-item-days-row">
-                    <button type="button" class="day-chip" data-day="0" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_sun">Sun</button>
-                    <button type="button" class="day-chip" data-day="1" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_mon">Mon</button>
-                    <button type="button" class="day-chip" data-day="2" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_tue">Tue</button>
-                    <button type="button" class="day-chip" data-day="3" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_wed">Wed</button>
-                    <button type="button" class="day-chip" data-day="4" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_thu">Thu</button>
-                    <button type="button" class="day-chip" data-day="5" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_fri">Fri</button>
-                    <button type="button" class="day-chip" data-day="6" onclick="toggleRoutineItemDay(this)" data-i18n="weekday_short_sat">Sat</button>
-                </div>
+                <p class="daily-board-item-time-label" id="routine-item-time-label"></p>
+                <input type="text" id="routine-item-title-input" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific hidden" id="routine-item-delete-btn" onclick="deleteRoutineItemFromModal()" data-i18n="daily_board_delete_item_btn">Delete</button>
@@ -2346,7 +2318,7 @@
 
     </div>
 
-    <script src="i18n.js?v=183"></script>
-    <script src="app.js?v=291"></script>
+    <script src="i18n.js?v=184"></script>
+    <script src="app.js?v=292"></script>
 </body>
 </html>

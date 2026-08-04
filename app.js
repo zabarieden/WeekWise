@@ -958,7 +958,12 @@ async function logFoodQuickAddViaAI(text) {
             await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
             return;
         }
-        // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי בלי הודעת שגיאה מפחידה
+        // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי. בעבר בלי
+        // שום הודעה ("בלי הודעת שגיאה מפחידה"), אבל זה גרם למשתמשת פרימיום
+        // לחשוב שקיבלה הערכת AI מדויקת בזמן שבפועל קיבלה את החישוב המקומי הגס
+        // (מבוסס-מאגר, בלי הבנת אופן הכנה) בלי שום דרך לדעת את זה - לפי דיווח
+        // מפורש על פער של כ-100 קלוריות מול הערכה חיצונית לאותה ארוחה בדיוק
+        showAppToast(t('food_ai_fallback_toast'), 'error');
         await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
     } finally {
         setFoodQuickAddLoading(false);
@@ -1223,7 +1228,8 @@ async function initAppAfterAuth(user) {
         loadFinanceData(),
         loadSportData(),
         loadWaterData(),
-        loadHabits()
+        loadHabits(),
+        loadNutritionGoals()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -1441,7 +1447,6 @@ function openSettingsDrawer() {
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
-    applyDailyBoardBucketSettings();
 }
 
 function openSettingsSubscreen(name) {
@@ -10191,21 +10196,64 @@ async function clearEntireWeeklySchedule() {
     await loadTodayTasks();
 }
 
-// --- יעדים יומיים לתזונה (קלוריות/חלבון) - מקומי בלבד (localStorage), אותו
-// דפוס בדיוק כמו יעד המים היומי (waterDailyGoalKey) ---
+// --- יעדים יומיים לתזונה (קלוריות/חלבון) - נשמרים ב-Supabase (טבלת
+// nutrition_goals, שורה אחת לכל משתמשת), לא רק ב-localStorage כמו קודם.
+// localStorage-בלבד גרם ליעד "להתאפס" חזרה לברירת המחדל (2000) - בין השאר
+// בגלל שבספארי ב-iOS יש מחיקה אוטומטית (ITP) של אחסון מקומי לאתרים שלא
+// נפתחו כמה ימים, וגם במעבר בין מכשירים - לפי דיווח מפורש ("תבדוק שזה
+// משאיר את השינוי האחרון"). cachedCalorieGoal/cachedProteinGoal נטענים פעם
+// אחת מ-Supabase ב-loadNutritionGoals (נקרא באתחול), וה-getters הסינכרוניים
+// הקיימים (נקראים מהמון מקומות בקוד) ממשיכים לעבוד בלי שינוי - הם רק קוראים
+// מהמטמון במקום מ-localStorage ישירות. localStorage עדיין מתעדכן כגיבוי/
+// מטמון-קריאה-ראשונית מהיר, אבל Supabase הוא מקור האמת בכל טעינה ---
+let cachedCalorieGoal = null, cachedProteinGoal = null;
 function calorieDailyGoalKey() { return `weekwise_calorie_goal_${currentUserId}`; }
-function getCalorieDailyGoal() { return parseInt(localStorage.getItem(calorieDailyGoalKey())) || 2000; }
-function saveCalorieDailyGoal() {
-    const val = parseInt(document.getElementById('calorie-daily-goal-input').value) || 2000;
-    localStorage.setItem(calorieDailyGoalKey(), String(val));
-    updateNutritionGoalProgress();
+function getCalorieDailyGoal() {
+    if (cachedCalorieGoal != null) return cachedCalorieGoal;
+    return parseInt(localStorage.getItem(calorieDailyGoalKey())) || 2000;
 }
 function proteinDailyGoalKey() { return `weekwise_protein_goal_${currentUserId}`; }
-function getProteinDailyGoal() { return parseInt(localStorage.getItem(proteinDailyGoalKey())) || 100; }
-function saveProteinDailyGoal() {
+function getProteinDailyGoal() {
+    if (cachedProteinGoal != null) return cachedProteinGoal;
+    return parseInt(localStorage.getItem(proteinDailyGoalKey())) || 100;
+}
+
+async function loadNutritionGoals() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('nutrition_goals').select('*').eq('user_id', currentUserId).maybeSingle();
+    if (data) {
+        cachedCalorieGoal = data.calorie_goal;
+        cachedProteinGoal = data.protein_goal;
+    } else {
+        // אין עדיין שורה ב-Supabase (משתמשת ותיקה, לפני המעבר) - שולפים ערך
+        // ישן מ-localStorage אם קיים, כדי לא לאבד יעד שכבר הוגדר, ומיד כותבים
+        // אותו ל-Supabase כדי שמעכשיו יהיה מסונכרן
+        cachedCalorieGoal = parseInt(localStorage.getItem(calorieDailyGoalKey())) || 2000;
+        cachedProteinGoal = parseInt(localStorage.getItem(proteinDailyGoalKey())) || 100;
+        await supabaseClient.from('nutrition_goals').upsert({ user_id: currentUserId, username: currentUsername, calorie_goal: cachedCalorieGoal, protein_goal: cachedProteinGoal }, { onConflict: 'user_id' });
+    }
+    localStorage.setItem(calorieDailyGoalKey(), String(cachedCalorieGoal));
+    localStorage.setItem(proteinDailyGoalKey(), String(cachedProteinGoal));
+    const calorieGoalInput = document.getElementById('calorie-daily-goal-input');
+    if (calorieGoalInput) calorieGoalInput.value = cachedCalorieGoal;
+    const proteinGoalInput = document.getElementById('protein-daily-goal-input');
+    if (proteinGoalInput) proteinGoalInput.value = cachedProteinGoal;
+    updateNutritionGoalProgress();
+}
+
+async function saveCalorieDailyGoal() {
+    const val = parseInt(document.getElementById('calorie-daily-goal-input').value) || 2000;
+    cachedCalorieGoal = val;
+    localStorage.setItem(calorieDailyGoalKey(), String(val));
+    updateNutritionGoalProgress();
+    await supabaseClient.from('nutrition_goals').upsert({ user_id: currentUserId, username: currentUsername, calorie_goal: val, protein_goal: getProteinDailyGoal() }, { onConflict: 'user_id' });
+}
+async function saveProteinDailyGoal() {
     const val = parseInt(document.getElementById('protein-daily-goal-input').value) || 100;
+    cachedProteinGoal = val;
     localStorage.setItem(proteinDailyGoalKey(), String(val));
     updateNutritionGoalProgress();
+    await supabaseClient.from('nutrition_goals').upsert({ user_id: currentUserId, username: currentUsername, calorie_goal: getCalorieDailyGoal(), protein_goal: val }, { onConflict: 'user_id' });
 }
 let todayCaloriesTotal = 0, todayProteinTotal = 0;
 function updateNutritionGoalProgress() {
@@ -10611,45 +10659,24 @@ async function deleteHabit(id) {
 }
 
 // --- "לוח היום" (🧭): טאבים מותאמים-אישית (routine_tabs, ברירת מחדל 2 -
-// "שגרה יומית"/"לימודים", ניתנות לשינוי שם/מחיקה/הוספה) שכל אחד מציג את
-// הפריטים שלו (routine_items) שסומנו לפעול היום (days_of_week), מקובצים
-// לפי בלוק-שעה (בוקר/צהריים/אחה"צ/ערב - גבולות מותאמים אישית, ר'
-// getDailyBoardBucketHours). עוגן ויזואלי נפרד לגמרי מהלו"ז הרגיל
-// (weekly_schedule/calendar_events) - לא נשלף משם, לפי בקשה מפורשת ---
+// "שגרה יומית"/"לימודים", ניתנות לשינוי שם/מחיקה/הוספה) שכל אחד מציג שורות-שעה
+// קבועות (DAILY_BOARD_BUCKET_HOURS, לא ניתנות להתאמה אישית - רשימה מפורשת
+// שנתנה המשתמשת), מקובצות לפי בלוק (בוקר/צהריים/אחה"צ/ערב). כל שורה קיימת
+// תמיד (גם ריקה, לחיצה עליה פותחת הוספה) - זו שגרה שחוזרת על עצמה בדיוק
+// אותו הדבר כל יום, בלי בחירת ימים (הוסרה לפי בקשה מפורשת: "כל הקטע של
+// הלו״ז היומי שזה שגרה שחוזרת על עצמה"). עוגן ויזואלי נפרד לגמרי מהלו"ז
+// הרגיל (weekly_schedule/calendar_events) - לא נשלף משם, לפי בקשה מפורשת ---
 let dailyBoardTabs = [];
 let activeDailyBoardTabId = null;
 let editingRoutineItemId = null;
+let pendingRoutineItemTime = null;
 
-function getDailyBoardBucketHours() {
-    const defaults = { morning: 5, noon: 12, afternoon: 16, evening: 20 };
-    const raw = localStorage.getItem('weekwise_board_bucket_hours');
-    if (!raw) return defaults;
-    try { return { ...defaults, ...JSON.parse(raw) }; } catch (e) { return defaults; }
-}
-
-function setDailyBoardBucketHour(bucket, value) {
-    const hour = Math.max(0, Math.min(23, parseInt(value) || 0));
-    const hours = getDailyBoardBucketHours();
-    hours[bucket] = hour;
-    localStorage.setItem('weekwise_board_bucket_hours', JSON.stringify(hours));
-    renderDailyBoard();
-}
-
-function applyDailyBoardBucketSettings() {
-    const hours = getDailyBoardBucketHours();
-    const ids = { morning: 'board-bucket-morning-input', noon: 'board-bucket-noon-input', afternoon: 'board-bucket-afternoon-input', evening: 'board-bucket-evening-input' };
-    Object.keys(ids).forEach(key => {
-        const input = document.getElementById(ids[key]);
-        if (input) input.value = hours[key];
-    });
-}
-
-function bucketForHour(hour, hours) {
-    if (hour >= hours.evening || hour < hours.morning) return 'evening';
-    if (hour >= hours.afternoon) return 'afternoon';
-    if (hour >= hours.noon) return 'noon';
-    return 'morning';
-}
+const DAILY_BOARD_BUCKET_HOURS = {
+    morning: [7, 8, 10, 11],
+    noon: [12, 14, 15],
+    afternoon: [16, 17, 19],
+    evening: [20, 21, 22],
+};
 
 async function openDailyBoardModal() {
     if (!supabaseClient || !currentUserId) return;
@@ -10745,84 +10772,64 @@ async function renderDailyBoard() {
     if (!body) return;
     if (!activeDailyBoardTabId) { body.innerHTML = ''; return; }
     const { data: items } = await supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId);
-    const todayDow = new Date().getDay();
-    const todayItems = (items || []).filter(it => (it.days_of_week || '').split(',').map(s => parseInt(s.trim())).includes(todayDow));
-    const hours = getDailyBoardBucketHours();
-    const buckets = { morning: [], noon: [], afternoon: [], evening: [] };
-    todayItems.forEach(it => {
-        const hour = parseInt((it.time || '0:0').split(':')[0]) || 0;
-        buckets[bucketForHour(hour, hours)].push(it);
-    });
+    const itemsByTime = {};
+    (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     body.innerHTML = '';
     bucketOrder.forEach(key => {
-        const list = buckets[key];
-        if (!list.length) return;
-        list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         const section = document.createElement('div');
         section.className = `daily-board-bucket-section daily-board-bucket-${key}`;
         const header = document.createElement('div');
         header.className = 'daily-board-bucket-header';
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
-        list.forEach(it => {
+        DAILY_BOARD_BUCKET_HOURS[key].forEach(hour => {
+            const timeStr = `${String(hour).padStart(2, '0')}:00`;
+            const item = itemsByTime[timeStr];
             const row = document.createElement('div');
-            row.className = 'daily-board-item-row';
+            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty');
             const timeSpan = document.createElement('span');
             timeSpan.className = 'daily-board-item-time';
-            timeSpan.textContent = (it.time || '').slice(0, 5);
+            timeSpan.textContent = timeStr;
             const titleBtn = document.createElement('button');
             titleBtn.type = 'button';
             titleBtn.className = 'daily-board-item-title';
-            titleBtn.textContent = it.title;
-            titleBtn.onclick = () => openEditRoutineItemModal(it);
+            titleBtn.textContent = item ? item.title : t('daily_board_item_add_placeholder');
+            titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
             row.appendChild(timeSpan);
             row.appendChild(titleBtn);
             section.appendChild(row);
         });
         body.appendChild(section);
     });
-    if (!body.children.length) {
-        body.innerHTML = `<p class="daily-board-empty-hint">${t('daily_board_empty_hint')}</p>`;
-    }
 }
 
-function openAddRoutineItemModal() {
+function openAddRoutineItemModal(time) {
     if (!activeDailyBoardTabId) return;
     editingRoutineItemId = null;
+    pendingRoutineItemTime = time;
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_add_item_title');
+    document.getElementById('routine-item-time-label').textContent = time;
     document.getElementById('routine-item-title-input').value = '';
-    document.getElementById('routine-item-time-input').value = '';
-    document.querySelectorAll('#routine-item-days-row .day-chip').forEach(chip => chip.classList.add('active'));
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
     openModal('modal-add-routine-item');
 }
 
 function openEditRoutineItemModal(item) {
     editingRoutineItemId = item.id;
+    pendingRoutineItemTime = (item.time || '').slice(0, 5);
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_edit_item_title');
+    document.getElementById('routine-item-time-label').textContent = pendingRoutineItemTime;
     document.getElementById('routine-item-title-input').value = item.title;
-    document.getElementById('routine-item-time-input').value = (item.time || '').slice(0, 5);
-    const activeDays = (item.days_of_week || '').split(',').map(s => s.trim());
-    document.querySelectorAll('#routine-item-days-row .day-chip').forEach(chip => {
-        chip.classList.toggle('active', activeDays.includes(chip.dataset.day));
-    });
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
     openModal('modal-add-routine-item');
 }
 
-function toggleRoutineItemDay(chip) {
-    chip.classList.toggle('active');
-}
-
 async function saveRoutineItem() {
     const title = document.getElementById('routine-item-title-input').value.trim();
-    const time = document.getElementById('routine-item-time-input').value;
-    if (!title || !time) { showAppToast(t('daily_board_item_missing_fields'), 'error'); return; }
-    const days = Array.from(document.querySelectorAll('#routine-item-days-row .day-chip.active')).map(chip => chip.dataset.day);
-    if (!days.length) { showAppToast(t('daily_board_item_missing_days'), 'error'); return; }
-    const payload = { title, time, days_of_week: days.join(',') };
+    if (!title) { showAppToast(t('daily_board_item_missing_fields'), 'error'); return; }
+    const payload = { title, time: pendingRoutineItemTime };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
     } else {

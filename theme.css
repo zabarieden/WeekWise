@@ -442,11 +442,6 @@ html.light-mode #ai-schedule-title-prefix,
 html.light-mode #preset-quick-add-search,
 html.light-mode #food-quick-add-input,
 html.light-mode #routine-item-title-input,
-html.light-mode #routine-item-time-input,
-html.light-mode #board-bucket-morning-input,
-html.light-mode #board-bucket-noon-input,
-html.light-mode #board-bucket-afternoon-input,
-html.light-mode #board-bucket-evening-input,
 html.light-mode #ai-quick-add-input,
 html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
@@ -784,7 +779,7 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .daily-board-tabs-scroll { display: flex; gap: 8px; overflow-x: auto; flex: 1; min-width: 0; padding-bottom: 2px; }
 .daily-board-tab-pill { flex-shrink: 0; padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); background-color: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 0.85rem; font-family: inherit; cursor: pointer; white-space: nowrap; transition: var(--transition); }
 .daily-board-tab-pill.active { background: linear-gradient(135deg, rgba(168,85,247,0.35), rgba(236,72,153,0.35)); border-color: rgba(168,85,247,0.5); color: #fff; font-weight: 600; }
-.daily-board-tab-add { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1rem; cursor: pointer; }
+.daily-board-tab-add { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
 .daily-board-tab-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 6px; }
 .btn-link-action { background: none; border: none; padding: 4px 2px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
 .daily-board-delete-tab-btn { color: #f87171; }
@@ -794,19 +789,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .daily-board-bucket-noon { background: linear-gradient(135deg, rgba(74,222,128,0.16), rgba(74,222,128,0.04)); }
 .daily-board-bucket-afternoon { background: linear-gradient(135deg, rgba(96,165,250,0.16), rgba(96,165,250,0.04)); }
 .daily-board-bucket-evening { background: linear-gradient(135deg, rgba(167,139,250,0.16), rgba(167,139,250,0.04)); }
-.daily-board-bucket-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-.daily-board-item-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+.daily-board-bucket-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); text-shadow: 0 0 10px rgba(255,255,255,0.25); }
+.daily-board-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); }
 .daily-board-item-row:first-of-type { border-top: none; }
-.daily-board-item-time { font-size: 0.78rem; color: var(--text-secondary); min-width: 46px; }
-.daily-board-item-title { flex: 1; font-size: 0.88rem; color: var(--text-primary); text-align: start; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; }
-.daily-board-empty-hint { text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 20px 10px; }
-.daily-board-add-item-btn { margin-top: 12px; width: 100%; }
-.routine-item-days-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
-.day-chip { padding: 7px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background-color: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 0.78rem; font-family: inherit; cursor: pointer; }
-.day-chip.active { background: linear-gradient(135deg, rgba(168,85,247,0.4), rgba(236,72,153,0.4)); border-color: rgba(168,85,247,0.55); color: #fff; }
-.daily-board-bucket-hours-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.daily-board-bucket-hour-item { display: flex; align-items: center; justify-content: space-between; gap: 6px; background-color: var(--bg-row); border-radius: 10px; padding: 8px 10px; font-size: 0.82rem; }
-.daily-board-bucket-hour-item input { width: 52px; text-align: center; padding: 6px; }
+.daily-board-item-time { font-size: 0.78rem; color: var(--text-secondary); min-width: 46px; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
+/* "זוהר" בפנים - טקסט הפריט מקבל drop-shadow-כפול עדין (לא רק צבע) בסגנון
+   הזוהר של ai-brain-icon, לפי בקשה מפורשת ("שהכל בפנים יהיה זוהר") -
+   שורה ריקה (טרם מולאה) מקבלת זוהר עמום/סגול-ורוד במקום, כהזמנה לגעת בה */
+.daily-board-item-title { flex: 1; font-size: 0.88rem; color: var(--text-primary); text-align: start; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-shadow: 0 0 8px rgba(255,255,255,0.35), 0 0 16px rgba(168,85,247,0.25); }
+.daily-board-item-row-empty .daily-board-item-title { color: var(--text-secondary); text-shadow: 0 0 8px rgba(168,85,247,0.3); }
+.daily-board-item-time-label { text-align: center; font-size: 1.3rem; font-weight: 700; color: #fff; margin: 4px 0 12px; text-shadow: 0 0 12px rgba(168,85,247,0.55), 0 0 22px rgba(236,72,153,0.35); }
 .card-title-row.collapsible-header { cursor: pointer; user-select: none; }
 .card-header-actions { display: flex; align-items: center; gap: 8px; }
 .card-toggle-icon { font-size: 0.7rem; color: var(--text-secondary); transition: transform 0.2s ease; }
@@ -1081,10 +1073,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    פיזי בלי קשר לכיוון השפה, מה שדווח כבאג ויזואלי מפורש) */
 html[dir="ltr"] .ai-brain-fab { left: auto; right: 22px; }
 html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
-/* כפתור "לוח היום" - יורש את מיקום/עיצוב עוזר ה-AI (שקוף, בלי קופסה, אותה
-   פינה) אבל קטן יותר ויושב מתחתיו, לא תופס עמדה בדוק כלל - לפי בקשה מפורשת */
-.daily-board-fab { top: 130px; width: 58px; height: 58px; }
-.daily-board-icon { font-size: 2.1rem; }
+/* כפתור "לוח היום" - יורש את העיצוב השקוף/בלי-קופסה של עוזר ה-AI, אבל לא
+   את מיקומו: נעוץ ממש בתחתית המסך (מתחת לדוק כולו), קטן, במרכז אופקית -
+   לא בפינה העליונה יחד עם המוח, ולא תופס עמדה בתוך הדוק עצמו, לפי בקשה
+   מפורשת ("יותר קטן, ודווקא למטה... הכי הכי למטה שיש") */
+.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 10px; transform: translateX(-50%); width: 46px; height: 46px; }
+html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
+.daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
+.daily-board-icon { font-size: 1.7rem; }
 /* אימוג'י מוח - "חופשי" בלי קופסה/עיגול מסביב, אבל "זכוכיתי וזוהר" (לפי
    בקשה מפורשת) - זוהר לבן-קריר חזק ורב-שכבתי (כמה drop-shadow ברדיוסים
    שונים יוצרים "בלום" רך, כמו הילה סביב זכוכית מוארת, לא רק קו זוהר דק
@@ -2362,7 +2358,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 .ai-schedule-mode-info[data-tooltip]:hover::after, .ai-schedule-mode-info[data-tooltip]:focus-visible::after { opacity: 1; }
 #ai-schedule-duration-months, #ai-schedule-title-prefix { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-#routine-item-title-input, #routine-item-time-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+#routine-item-title-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 /* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
    במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
    המשותף שמשמש גם במקומות אחרים באפליקציה */
@@ -2488,7 +2484,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #ai-schedule-title-prefix, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-item-time-input, #board-bucket-morning-input, #board-bucket-noon-input, #board-bucket-afternoon-input, #board-bucket-evening-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #ai-schedule-title-prefix, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
