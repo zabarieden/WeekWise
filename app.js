@@ -1714,16 +1714,15 @@ function setQuickNoteDestination(type) {
 
 // ברירת המחדל בפתיחת המוח היא הטאב "מזון" (לא "לו"ז" כמו קודם) - לפי בקשה
 // מפורשת שההוספה המהירה של אוכל תהיה "הראשונה בתוך ה-AI"
+// לחיצה על אייקון המוח תמיד פותחת את מודל ה-AI הרגיל - התזכורת היומית
+// ("מה חשוב היום") לא חוסמת את זה יותר, לפי בקשה מפורשת ("תפריד בינהם...
+// לפעמים אני רוצה שההודעה תישמר עד שאחליט מה לרשום, ובמקביל תהיה לי
+// האפשרות להיכנס למוח"). לפתיחת התזכורת עצמה יש עכשיו נקודת-כניסה נפרדת -
+// לחיצה על תג ה-"1" עצמו (ר' ה-onclick הנפרד שלו ב-index.html)
 function initFixedAiBrainFab() {
     const el = document.getElementById('btn-ai-brain-fab');
     if (!el) return;
-    // כל עוד יש שאלה יומית שעוד לא נענתה (תג "1" מוצג) - לחיצה על המוח
-    // פותחת אותה במקום את מודל ה-AI הרגיל, לפי בקשה מפורשת ("אני אפתח ואז
-    // אראה את ההודעה")
-    el.onclick = () => {
-        if (dailyFocusPending) { openDailyFocusBubble(); return; }
-        openAiBrainModal('food');
-    };
+    el.onclick = () => openAiBrainModal('food');
 }
 
 function getLocalDateString(dateObj = new Date()) {

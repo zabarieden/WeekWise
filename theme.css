@@ -1649,6 +1649,7 @@ html[dir="ltr"] .daily-focus-bubble::before {
     color: #fff;
     font-size: 0.7rem;
     font-weight: 800;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
