@@ -553,7 +553,7 @@ async function deletePreset(id) {
 // סדר קבוע של הקטגוריות (תואם לאפשרויות ב-#new-preset-category) - כך שהרשימה
 // המקובצת תמיד מוצגת באותו סדר לוגי (בוקר -> צהריים -> ערב -> נשנושים), ולא
 // לפי סדר יצירה כרונולוגי שהופך לבלגן ככל שנוספות עוד ארוחות
-const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'snack'];
+const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'snack', 'drinks'];
 
 async function loadPresetManageList() {
     if (!supabaseClient || !currentUserId) return;
