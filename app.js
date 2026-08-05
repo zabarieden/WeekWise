@@ -1447,6 +1447,7 @@ function openSettingsDrawer() {
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
+    renderDailyBoardHourSettings();
 }
 
 function openSettingsSubscreen(name) {
@@ -4839,15 +4840,21 @@ function populateReportMonthYearSelects() {
     }
 }
 
-function toggleReportMonthPickerVisibility() {
-    const allTime = document.getElementById('report-all-time').checked;
-    document.getElementById('report-month-year-picker').classList.toggle('hidden', allTime);
+let reportRangeMode = 'all';
+function setReportRangeMode(mode) {
+    reportRangeMode = mode;
+    document.querySelectorAll('#report-range-mode-toggle .ai-schedule-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    document.getElementById('report-month-year-picker').classList.toggle('hidden', mode !== 'month');
+    document.getElementById('report-day-picker').classList.toggle('hidden', mode !== 'day');
 }
 
 function openReportSectionPicker() {
     populateReportMonthYearSelects();
-    document.getElementById('report-all-time').checked = true;
-    toggleReportMonthPickerVisibility();
+    const dayInput = document.getElementById('report-day-select');
+    if (dayInput) dayInput.value = getLocalDateString();
+    setReportRangeMode('all');
     openModal('modal-report-section-picker');
 }
 
@@ -4861,15 +4868,26 @@ async function exportUserDataReport() {
     const includeCalories = document.getElementById('report-section-calories').checked;
     if (!includeWeight && !includeGoals && !includeFinance && !includeSport && !includeWater && !includeCalories) { showAppToast(t('report_picker_none_selected'), 'error'); return; }
 
-    const isAllTime = document.getElementById('report-all-time').checked;
+    const isAllTime = reportRangeMode === 'all';
     let selectedMonthKey = null, rangeStart = null, rangeEndExclusive = null;
-    if (!isAllTime) {
+    if (reportRangeMode === 'month') {
         const month = parseInt(document.getElementById('report-month-select').value, 10);
         const year = parseInt(document.getElementById('report-year-select').value, 10);
         selectedMonthKey = `${year}-${String(month).padStart(2, '0')}`;
         rangeStart = `${selectedMonthKey}-01`;
         const nextMonth = new Date(year, month, 1); // month כאן 1-12, אז זה כבר "החודש הבא" ב-Date (0-based)
         rangeEndExclusive = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+    } else if (reportRangeMode === 'day') {
+        const dayStr = document.getElementById('report-day-select').value;
+        if (!dayStr) { showAppToast(t('report_picker_missing_day'), 'error'); return; }
+        rangeStart = dayStr;
+        const [y, m, d] = dayStr.split('-').map(Number);
+        // חודש "הושג" רלוונטי ליום הזה - סעיף היעדים החודשיים תמיד ברמת-חודש
+        // (achieved goals אין להם תאריך יומי משלהם), אז ביום ספציפי מציגים
+        // את יעדי החודש שהיום הזה נמצא בו, לא מסננים ליום בודד שאין לו משמעות שם
+        selectedMonthKey = `${y}-${String(m).padStart(2, '0')}`;
+        const nextDay = new Date(y, m - 1, d + 1);
+        rangeEndExclusive = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
     }
     closeModal('modal-report-section-picker');
     showAppToast(t('settings_export_data_preparing'));
@@ -5248,6 +5266,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'app_stuck_loading', category: 'general' },
     { id: 'refresh_data', category: 'general' },
     { id: 'daily_board', category: 'general' },
+    { id: 'data_export_report', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -10660,23 +10679,79 @@ async function deleteHabit(id) {
 
 // --- "לוח היום" (🧭): טאבים מותאמים-אישית (routine_tabs, ברירת מחדל 2 -
 // "שגרה יומית"/"לימודים", ניתנות לשינוי שם/מחיקה/הוספה) שכל אחד מציג שורות-שעה
-// קבועות (DAILY_BOARD_BUCKET_HOURS, לא ניתנות להתאמה אישית - רשימה מפורשת
-// שנתנה המשתמשת), מקובצות לפי בלוק (בוקר/צהריים/אחה"צ/ערב). כל שורה קיימת
-// תמיד (גם ריקה, לחיצה עליה פותחת הוספה) - זו שגרה שחוזרת על עצמה בדיוק
-// אותו הדבר כל יום, בלי בחירת ימים (הוסרה לפי בקשה מפורשת: "כל הקטע של
-// הלו״ז היומי שזה שגרה שחוזרת על עצמה"). עוגן ויזואלי נפרד לגמרי מהלו"ז
-// הרגיל (weekly_schedule/calendar_events) - לא נשלף משם, לפי בקשה מפורשת ---
+// קבועות (getDailyBoardCustomHours - ברירת מחדל DAILY_BOARD_DEFAULT_HOURS,
+// אבל ניתנות להוספה/הסרה חופשית מהגדרות > התאמה ויומן, ר' toggleDailyBoardHour
+// למטה - לפי בקשה מפורשת "לסדר את השעות, למחוק ולהוסיף"), מקובצות לפי בלוק
+// (בוקר/צהריים/אחה"צ/ערב). כל שורה קיימת תמיד (גם ריקה, לחיצה עליה פותחת
+// הוספה) - זו שגרה שחוזרת על עצמה בדיוק אותו הדבר כל יום, בלי בחירת ימים
+// (הוסרה לפי בקשה מפורשת: "כל הקטע של הלו״ז היומי שזה שגרה שחוזרת על
+// עצמה"). עוגן ויזואלי נפרד לגמרי מהלו"ז הרגיל (weekly_schedule/
+// calendar_events) - לא נשלף משם, לפי בקשה מפורשת ---
 let dailyBoardTabs = [];
 let activeDailyBoardTabId = null;
 let editingRoutineItemId = null;
 let pendingRoutineItemTime = null;
 
-const DAILY_BOARD_BUCKET_HOURS = {
+// טווח-השעות הטבעי שכל בלוק מציע לבחירה בהגדרות (לא כל 24 השעות בכל בלוק -
+// זה היה הופך לרשימה ארוכה ובלתי-שימושית) - השעות שמחוץ לטווח הזה (00:00-
+// 04:00) פשוט לא רלוונטיות ל"סדר יום" ולכן לא מוצעות כלל
+const DAILY_BOARD_BUCKET_RANGES = {
+    morning: [5, 6, 7, 8, 9, 10, 11],
+    noon: [12, 13, 14, 15],
+    afternoon: [16, 17, 18, 19],
+    evening: [20, 21, 22, 23],
+};
+const DAILY_BOARD_DEFAULT_HOURS = {
     morning: [7, 8, 10, 11],
     noon: [12, 14, 15],
     afternoon: [16, 17, 19],
     evening: [20, 21, 22],
 };
+
+function getDailyBoardCustomHours() {
+    const raw = localStorage.getItem(`weekwise_board_hours_${currentUserId}`);
+    if (!raw) return DAILY_BOARD_DEFAULT_HOURS;
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            morning: Array.isArray(parsed.morning) ? parsed.morning : DAILY_BOARD_DEFAULT_HOURS.morning,
+            noon: Array.isArray(parsed.noon) ? parsed.noon : DAILY_BOARD_DEFAULT_HOURS.noon,
+            afternoon: Array.isArray(parsed.afternoon) ? parsed.afternoon : DAILY_BOARD_DEFAULT_HOURS.afternoon,
+            evening: Array.isArray(parsed.evening) ? parsed.evening : DAILY_BOARD_DEFAULT_HOURS.evening,
+        };
+    } catch (e) { return DAILY_BOARD_DEFAULT_HOURS; }
+}
+
+function toggleDailyBoardHour(bucket, hour) {
+    const hours = getDailyBoardCustomHours();
+    const list = (hours[bucket] || []).slice();
+    const idx = list.indexOf(hour);
+    if (idx === -1) list.push(hour); else list.splice(idx, 1);
+    list.sort((a, b) => a - b);
+    hours[bucket] = list;
+    localStorage.setItem(`weekwise_board_hours_${currentUserId}`, JSON.stringify(hours));
+    renderDailyBoardHourSettings();
+    const modal = document.getElementById('modal-daily-board');
+    if (modal && modal.classList.contains('open')) renderDailyBoard();
+}
+
+function renderDailyBoardHourSettings() {
+    const hours = getDailyBoardCustomHours();
+    Object.keys(DAILY_BOARD_BUCKET_RANGES).forEach(bucket => {
+        const wrap = document.getElementById(`board-hours-${bucket}`);
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        DAILY_BOARD_BUCKET_RANGES[bucket].forEach(hour => {
+            const active = (hours[bucket] || []).includes(hour);
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'board-hour-chip' + (active ? ' active' : '');
+            chip.textContent = `${String(hour).padStart(2, '0')}:00`;
+            chip.onclick = () => toggleDailyBoardHour(bucket, hour);
+            wrap.appendChild(chip);
+        });
+    });
+}
 
 async function openDailyBoardModal() {
     if (!supabaseClient || !currentUserId) return;
@@ -10776,15 +10851,18 @@ async function renderDailyBoard() {
     (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
+    const customHours = getDailyBoardCustomHours();
     body.innerHTML = '';
     bucketOrder.forEach(key => {
+        const bucketHours = customHours[key] || [];
+        if (!bucketHours.length) return;
         const section = document.createElement('div');
         section.className = `daily-board-bucket-section daily-board-bucket-${key}`;
         const header = document.createElement('div');
         header.className = 'daily-board-bucket-header';
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
-        DAILY_BOARD_BUCKET_HOURS[key].forEach(hour => {
+        bucketHours.forEach(hour => {
             const timeStr = `${String(hour).padStart(2, '0')}:00`;
             const item = itemsByTime[timeStr];
             const row = document.createElement('div');

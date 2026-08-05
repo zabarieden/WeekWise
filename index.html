@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=244">
+    <link rel="stylesheet" href="theme.css?v=245">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1528,6 +1528,30 @@
                     <!-- מאפסת את סדר הגרירה של בועות ה-Dock לברירת המחדל - לא נוגעת בהפעלה/
                          כיבוי של בועות בודדות (זה נשלט בנפרד, ר' הטוגלים למעלה) -->
                     <button type="button" class="btn-secondary" onclick="resetFabLayout()" data-i18n="settings_reset_fab_layout_btn">↺ Reset shortcut layout</button>
+
+                    <!-- אילו שעות מופיעות בכל בלוק ב"סדר היום" (🧭) - צ'יפים לבחירה/הסרה
+                         חופשית בתוך טווח-שעות טבעי לכל בלוק, ר' toggleDailyBoardHour/
+                         DAILY_BOARD_BUCKET_RANGES ב-app.js. לא היה קיים בגרסה הקודמת -
+                         נוסף לפי בקשה מפורשת ("לסדר את השעות, למחוק ולהוסיף") -->
+                    <label class="settings-label" data-i18n="daily_board_hours_settings_label">Daily Agenda hours</label>
+                    <div class="daily-board-hours-settings">
+                        <div class="daily-board-hours-settings-group">
+                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_morning">🌅 Morning</span>
+                            <div class="daily-board-hours-chips" id="board-hours-morning"></div>
+                        </div>
+                        <div class="daily-board-hours-settings-group">
+                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_noon">☀️ Noon</span>
+                            <div class="daily-board-hours-chips" id="board-hours-noon"></div>
+                        </div>
+                        <div class="daily-board-hours-settings-group">
+                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_afternoon">🌤️ Afternoon</span>
+                            <div class="daily-board-hours-chips" id="board-hours-afternoon"></div>
+                        </div>
+                        <div class="daily-board-hours-settings-group">
+                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_evening">🌙 Evening</span>
+                            <div class="daily-board-hours-chips" id="board-hours-evening"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 🔔 התראות -->
@@ -1695,13 +1719,19 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="report_picker_title">What would you like to include?</h3>
-                <label class="settings-toggle-row">
-                    <span data-i18n="report_picker_all_time_label">All Time</span>
-                    <label class="switch"><input type="checkbox" id="report-all-time" checked onchange="toggleReportMonthPickerVisibility()"><span class="switch-slider"></span></label>
-                </label>
+                <!-- טווח הדוח: כל הזמן / חודש מסוים / יום מסוים - שלושה מצבים, לא
+                     צ'קבוקס בינארי כמו קודם, לפי בקשה מפורשת ("או אולי יום מסוים") -->
+                <div class="ai-schedule-mode-toggle" id="report-range-mode-toggle">
+                    <button type="button" class="ai-schedule-mode-btn active" data-mode="all" onclick="setReportRangeMode('all')" data-i18n="report_picker_all_time_label">All Time</button>
+                    <button type="button" class="ai-schedule-mode-btn" data-mode="month" onclick="setReportRangeMode('month')" data-i18n="report_picker_month_label">Specific Month</button>
+                    <button type="button" class="ai-schedule-mode-btn" data-mode="day" onclick="setReportRangeMode('day')" data-i18n="report_picker_day_label">Specific Day</button>
+                </div>
                 <div id="report-month-year-picker" class="hidden" style="display: flex; gap: 8px; margin: 0 0 12px 0;">
                     <select id="report-month-select" style="flex: 1;"></select>
                     <select id="report-year-select" style="flex: 1;"></select>
+                </div>
+                <div id="report-day-picker" class="hidden" style="margin: 0 0 12px 0;">
+                    <input type="date" id="report-day-select" style="width: 100%; box-sizing: border-box;">
                 </div>
                 <label class="settings-toggle-row">
                     <span data-i18n="data_report_label_weight">Weight Log</span>
@@ -2319,7 +2349,7 @@
 
     </div>
 
-    <script src="i18n.js?v=187"></script>
-    <script src="app.js?v=293"></script>
+    <script src="i18n.js?v=188"></script>
+    <script src="app.js?v=294"></script>
 </body>
 </html>

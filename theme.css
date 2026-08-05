@@ -812,6 +812,14 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 .daily-board-item-title { flex: 1; font-size: 0.88rem; color: var(--text-primary); text-align: start; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-shadow: 0 0 8px rgba(255,255,255,0.35), 0 0 16px rgba(168,85,247,0.25); }
 .daily-board-item-row-empty .daily-board-item-title { color: var(--text-secondary); text-shadow: 0 0 8px rgba(168,85,247,0.3); }
 .daily-board-item-time-label { text-align: center; font-size: 1.3rem; font-weight: 700; color: #fff; margin: 4px 0 12px; text-shadow: 0 0 12px rgba(168,85,247,0.55), 0 0 22px rgba(236,72,153,0.35); }
+/* התאמה אישית של שעות "סדר היום" בהגדרות - ר' renderDailyBoardHourSettings/
+   toggleDailyBoardHour ב-app.js */
+.daily-board-hours-settings { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.daily-board-hours-settings-group { background-color: var(--bg-row); border-radius: 12px; padding: 10px 12px; }
+.daily-board-hours-settings-group-label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 8px; }
+.daily-board-hours-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.board-hour-chip { padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background-color: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 0.78rem; font-family: inherit; cursor: pointer; }
+.board-hour-chip.active { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); border-color: var(--accent-purple); color: #fff; font-weight: 600; }
 .card-title-row.collapsible-header { cursor: pointer; user-select: none; }
 .card-header-actions { display: flex; align-items: center; gap: 8px; }
 .card-toggle-icon { font-size: 0.7rem; color: var(--text-secondary); transition: transform 0.2s ease; }
