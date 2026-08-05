@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=245">
+    <link rel="stylesheet" href="theme.css?v=246">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -878,6 +878,13 @@
                 <span class="ai-brain-icon daily-board-icon">🧭</span>
             </button>
 
+            <!-- תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                 updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות מספר על כל
+                 המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
+            <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                🔥 <span id="home-calorie-badge-value">0</span>
+            </button>
+
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
@@ -1528,6 +1535,16 @@
                     <!-- מאפסת את סדר הגרירה של בועות ה-Dock לברירת המחדל - לא נוגעת בהפעלה/
                          כיבוי של בועות בודדות (זה נשלט בנפרד, ר' הטוגלים למעלה) -->
                     <button type="button" class="btn-secondary" onclick="resetFabLayout()" data-i18n="settings_reset_fab_layout_btn">↺ Reset shortcut layout</button>
+
+                    <!-- תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל, לפי בקשה מפורשת
+                         (עלול להיות לא נעים למי שרגישה למספרי קלוריות תמידיים) -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="home_calorie_badge_label" for="home-calorie-badge-toggle">Show today's calories on the home screen</label>
+                        <label class="switch">
+                            <input type="checkbox" id="home-calorie-badge-toggle" onchange="toggleHomeCalorieBadge()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
 
                     <!-- אילו שעות מופיעות בכל בלוק ב"סדר היום" (🧭) - צ'יפים לבחירה/הסרה
                          חופשית בתוך טווח-שעות טבעי לכל בלוק, ר' toggleDailyBoardHour/
@@ -2349,7 +2366,7 @@
 
     </div>
 
-    <script src="i18n.js?v=189"></script>
-    <script src="app.js?v=294"></script>
+    <script src="i18n.js?v=190"></script>
+    <script src="app.js?v=295"></script>
 </body>
 </html>

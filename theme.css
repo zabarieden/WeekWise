@@ -1025,8 +1025,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 @media (max-width: 420px) {
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 4rem; }
-    .daily-board-fab { top: 144px; width: 64px; height: 64px; }
+    .daily-board-fab { width: 64px; height: 64px; }
     .daily-board-icon { font-size: 2.3rem; }
+    .home-calorie-badge { left: calc(50% - 88px); }
+    html[dir="ltr"] .home-calorie-badge { right: calc(50% - 88px); }
     /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (112px, קצה תחתון ב-top:22px+112px=134px)
        - הערך הבסיסי (140px, ר' .home-hero-panel/.main-scroll-area למעלה)
        מחושב לפי הגרסה הרגילה (100px) ולא מספיק יותר במובייל */
@@ -1102,6 +1104,33 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
 .daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
 .daily-board-icon { font-size: 1.7rem; }
+/* תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' isHomeCalorieBadgeOn
+   ב-app.js), אפשרות למי שרוצה לראות מספר קלוריות תמידי במסך הבית. יושב
+   באותה שורה תחתונה, קצת בצד, לא מרכזי כמו המצפן - לפי בקשה מפורשת
+   ("עדין... ליד המצפן מימין או שמאל") */
+.home-calorie-badge {
+    position: absolute;
+    bottom: 14px;
+    left: calc(50% - 76px);
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 3400;
+    text-shadow: 0 0 8px rgba(255, 140, 0, 0.35);
+}
+.home-calorie-badge.hidden { display: none; }
+html[dir="ltr"] .home-calorie-badge { left: auto; right: calc(50% - 76px); transform: translateX(50%); }
 /* אימוג'י מוח - "חופשי" בלי קופסה/עיגול מסביב, אבל "זכוכיתי וזוהר" (לפי
    בקשה מפורשת) - זוהר לבן-קריר חזק ורב-שכבתי (כמה drop-shadow ברדיוסים
    שונים יוצרים "בלום" רך, כמו הילה סביב זכוכית מוארת, לא רק קו זוהר דק

@@ -1448,6 +1448,8 @@ function openSettingsDrawer() {
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
     renderDailyBoardHourSettings();
+    const badgeToggle = document.getElementById('home-calorie-badge-toggle');
+    if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
 }
 
 function openSettingsSubscreen(name) {
@@ -5267,6 +5269,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'refresh_data', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'data_export_report', category: 'general' },
+    { id: 'home_calorie_badge', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -10296,6 +10299,27 @@ function updateMiniCalorieIndicator() {
         ? t('daily_calorie_mini_remaining').replace('{amount}', remaining)
         : t('daily_calorie_mini_over').replace('{amount}', Math.abs(remaining));
     el.textContent = t('daily_calorie_mini_summary').replace('{total}', todayCaloriesTotal).replace('{goal}', goal) + ' · ' + remainingText;
+    updateHomeCalorieBadge();
+}
+
+// --- תג קלוריות עדין במסך הבית, ליד כפתור "סדר היום" - כבוי כברירת מחדל
+// (לא כפוי על כולן, זה יכול להיות לא נעים למי שרגישה למספרי קלוריות
+// קבועים מול העיניים - לפי שיקול מפורש "או שזה אכזרי?"), מי שרוצה מדליקה
+// בהגדרות ומקבלת מספר קטן שמתעדכן בזמן אמת. לוחצים עליו כדי לקפוץ ישר
+// למסך התזונה, לא רק תצוגה ---
+function isHomeCalorieBadgeOn() { return localStorage.getItem('weekwise_home_calorie_badge') === 'true'; }
+function toggleHomeCalorieBadge() {
+    const enabled = document.getElementById('home-calorie-badge-toggle').checked;
+    localStorage.setItem('weekwise_home_calorie_badge', String(enabled));
+    updateHomeCalorieBadge();
+}
+function updateHomeCalorieBadge() {
+    const badge = document.getElementById('home-calorie-badge');
+    if (!badge) return;
+    const enabled = isHomeCalorieBadgeOn();
+    badge.classList.toggle('hidden', !enabled);
+    if (!enabled) return;
+    document.getElementById('home-calorie-badge-value').textContent = todayCaloriesTotal;
 }
 
 async function loadDailyNutrition(date) {
