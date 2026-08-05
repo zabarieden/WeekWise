@@ -10982,15 +10982,26 @@ async function renameRoutineTab(tabId, name) {
     renderRoutineTabsBar();
 }
 
+function showDangerConfirm(titleText, messageText, onConfirm) {
+    document.getElementById('danger-confirm-title').textContent = titleText;
+    document.getElementById('danger-confirm-message').textContent = messageText;
+    const btn = document.getElementById('btn-danger-confirm-proceed');
+    const freshBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(freshBtn, btn);
+    freshBtn.addEventListener('click', () => { closeModal('modal-danger-confirm'); onConfirm(); });
+    openModal('modal-danger-confirm');
+}
+
 async function deleteActiveRoutineTab() {
     if (dailyBoardTabs.length <= 1) return;
-    if (!confirm(t('daily_board_delete_tab_confirm'))) return;
     const tabId = activeDailyBoardTabId;
-    await supabaseClient.from('routine_tabs').delete().eq('id', tabId);
-    dailyBoardTabs = dailyBoardTabs.filter(tb => tb.id !== tabId);
-    activeDailyBoardTabId = dailyBoardTabs[0] ? dailyBoardTabs[0].id : null;
-    renderRoutineTabsBar();
-    await renderDailyBoard();
+    showDangerConfirm(t('daily_board_delete_tab_title'), t('daily_board_delete_tab_confirm'), async () => {
+        await supabaseClient.from('routine_tabs').delete().eq('id', tabId);
+        dailyBoardTabs = dailyBoardTabs.filter(tb => tb.id !== tabId);
+        activeDailyBoardTabId = dailyBoardTabs[0] ? dailyBoardTabs[0].id : null;
+        renderRoutineTabsBar();
+        await renderDailyBoard();
+    });
 }
 
 async function renderDailyBoard() {

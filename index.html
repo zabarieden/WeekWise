@@ -1758,6 +1758,19 @@
             </div>
         </div>
 
+        <div id="modal-danger-confirm" class="apple-modal">
+            <div class="modal-sheet delete-account-confirm-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="delete-account-confirm-icon">⚠️</div>
+                <h3 class="delete-account-confirm-title" id="danger-confirm-title"></h3>
+                <p class="modal-subtitle" id="danger-confirm-message"></p>
+                <div class="action-buttons-wrap" style="margin-top: 14px;">
+                    <button id="btn-danger-confirm-proceed" class="btn-danger-solid" data-i18n="daily_board_delete_tab_btn">Delete</button>
+                    <button class="btn-clear-specific" onclick="closeModal('modal-danger-confirm')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: תפריט שיתוף קטן משלנו - לא dialog השיתוף הטבעי של המערכת
              (זה מציג כל אפליקציה מותקנת - Zoom/Teams/Discord/Outlook - בלי
              שליטה, ואיטי). כאן רק שלושה יעדים ברורים ומהירים -->
@@ -2392,7 +2405,7 @@
 
     </div>
 
-    <script src="i18n.js?v=203"></script>
-    <script src="app.js?v=300"></script>
+    <script src="i18n.js?v=204"></script>
+    <script src="app.js?v=301"></script>
 </body>
 </html>
