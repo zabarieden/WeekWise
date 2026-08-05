@@ -3953,7 +3953,21 @@ async function loadCalendarEvents() {
         });
     });
     displayEntries.sort((a, b) => (a.sortOrder !== b.sortOrder ? a.sortOrder - b.sortOrder : a.sortDate.localeCompare(b.sortDate)));
-    displayEntries.forEach(entry => container.appendChild(entry.render()));
+    // כותרת-חודש קטנה לפני כל קבוצת אירועים של אותו חודש - לפי בקשה מפורשת.
+    // מבוססת על sortDate (התאריך שקבע את המיקום במיון), אז גם פריטים שגררו
+    // ידנית קדימה עדיין מקבלים כותרת-חודש הגיונית לפי התאריך שלהם עצמם
+    let lastMonthKey = null;
+    displayEntries.forEach(entry => {
+        const monthKey = entry.sortDate.slice(0, 7);
+        if (monthKey !== lastMonthKey) {
+            const monthHeader = document.createElement('div');
+            monthHeader.className = 'calendar-glance-month-header';
+            monthHeader.textContent = formatMonthLabel(monthKey);
+            container.appendChild(monthHeader);
+            lastMonthKey = monthKey;
+        }
+        container.appendChild(entry.render());
+    });
     initCalendarDragReorder();
 }
 

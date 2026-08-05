@@ -1454,6 +1454,11 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
 .calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
+/* "כל האירועים" קצת דהוי יותר מ"מבט חודשי" *רק* כשהכרטיס מקופל - כדי
+   שיהיה קל להבדיל ביניהם מבלי לפתוח - לפי בקשה מפורשת. לאחר פתיחה
+   (expanded) הכול חוזר לצבע/עוצמה רגילים כרגיל */
+.calendar-glance-card:not(.expanded) .card-title-row { opacity: 0.68; }
+.calendar-glance-month-header { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); padding: 4px 4px 0; }
 .calendar-event-item {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
