@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=249">
+    <link rel="stylesheet" href="theme.css?v=250">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1977,8 +1977,12 @@
                     <!-- תווית אופציונלית שנוספת בוודאות לכותרת של *כל* אירוע שנוצר מהבקשה
                          הזו (למשל "עבודה") - לא תלויה בניחוש של ה-AI אם מילת-הקשר כללית
                          כזו שייכת לכל אירוע בנפרד או לא, לפי בקשה מפורשת ("רשמתי בהתחלה
-                         שזה עבודה וזה לא הוסיף את המילה הזו לכל יום") -->
-                    <input type="text" id="ai-schedule-title-prefix" data-i18n-placeholder="schedule_ai_title_prefix_placeholder" placeholder="Label for all events (optional) - e.g. Work">
+                         שזה עבודה וזה לא הוסיף את המילה הזו לכל יום"). מוסיפים אייקון ℹ️
+                         שמבהיר שזה חל בכל שלושת המצבים (כולל חד-פעמי) - דווח כלא ברור -->
+                    <div class="ai-schedule-title-prefix-row">
+                        <input type="text" id="ai-schedule-title-prefix" data-i18n-placeholder="schedule_ai_title_prefix_placeholder" placeholder="Label for all events (optional) - e.g. Work">
+                        <span class="ai-schedule-mode-info" tabindex="0" data-i18n-tooltip="schedule_ai_title_prefix_info" data-tooltip="Added to the start of every event's title created from this request - works the same way in all three modes above, one-time included.">ℹ️</span>
+                    </div>
                     <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g., Gym on Mondays at 10 AM, Hip Hop on Tuesdays at 8 PM, Work on Friday until 2 PM"></textarea>
                     <div class="action-buttons-wrap">
                         <button id="btn-schedule-ai-parse" onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
@@ -2390,7 +2394,7 @@
 
     </div>
 
-    <script src="i18n.js?v=196"></script>
+    <script src="i18n.js?v=197"></script>
     <script src="app.js?v=298"></script>
 </body>
 </html>

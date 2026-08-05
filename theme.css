@@ -2413,6 +2413,8 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 .ai-schedule-mode-info[data-tooltip]:hover::after, .ai-schedule-mode-info[data-tooltip]:focus-visible::after { opacity: 1; }
 #ai-schedule-duration-months, #ai-schedule-title-prefix { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+.ai-schedule-title-prefix-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ai-schedule-title-prefix-row #ai-schedule-title-prefix { width: auto; flex: 1; min-width: 0; margin-bottom: 0; }
 #routine-item-title-input, #routine-tab-name-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 /* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
    במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
