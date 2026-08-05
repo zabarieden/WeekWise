@@ -2159,7 +2159,7 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="routine-tab-name-modal-title" data-i18n="daily_board_add_tab_title">Add tab</h3>
-                <input type="text" id="routine-tab-name-input" data-i18n-placeholder="daily_board_add_tab_prompt" placeholder="Tab name (e.g. Kids' schedule, Study routine, Parents...)">
+                <input type="text" id="routine-tab-name-input" autocomplete="off" data-i18n-placeholder="daily_board_add_tab_prompt" placeholder="Tab name (e.g. Kids' schedule, Study routine, Parents...)">
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineTabName()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-tab-name')" data-i18n="cancel_btn">Cancel</button>
@@ -2179,7 +2179,7 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
                 <p class="daily-board-item-time-label" id="routine-item-time-label"></p>
-                <input type="text" id="routine-item-title-input" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
+                <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific hidden" id="routine-item-delete-btn" onclick="deleteRoutineItemFromModal()" data-i18n="daily_board_delete_item_btn">Delete</button>
