@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         deleteScheduleSlotFromAdder();
         closeModal('modal-add-task');
     });
-    document.getElementById('btn-clear-entire-week').addEventListener('click', clearEntireWeeklySchedule);
     document.getElementById('btn-save-weight').addEventListener('click', saveNewWeightRecord);
     document.getElementById('btn-save-hours').addEventListener('click', saveDefaultHours);
     document.querySelectorAll('.calories-input, .protein-input').forEach(input => {
@@ -1548,10 +1547,24 @@ function renderHomeGreeting() {
 // ייווסף קישור עריכה שם) וגם מפירוט היום בלוח החודשי (renderSelectedCalendarDay)
 let editingGlanceTaskId = null;
 
-function openGlanceTaskEditor(id, title, time) {
+// בורר היום (glance-edit-task-day-select) לא היה קיים עד היום - נוסף לפי
+// בקשה מפורשת, כך שגם "עדכון" יכול להעביר משימה קבועה ליום אחר (לא רק
+// לשנות כותרת/שעה), וגם "שכפול" (duplicateGlanceTask למטה) יודע לאיזה יום
+function populateGlanceTaskDaySelect(selectedDay) {
+    const select = document.getElementById('glance-edit-task-day-select');
+    if (!select) return;
+    select.innerHTML = dbDaysMap.map((dbDay, i) => `<option value="${dbDay}"${dbDay === selectedDay ? ' selected' : ''}>${t(dayNameKeys[i])}</option>`).join('');
+}
+
+// שדות תזכורת - לא היו זמינים כאן עד היום (רק בטופס ההוספה הישן של הטבלה
+// השבועית שהוסרה) - נוספו כדי לא לאבד את היכולת, לפי בקשה מפורשת
+function openGlanceTaskEditor(id, title, time, day, reminderMinutes, reminderText) {
     editingGlanceTaskId = id;
     document.getElementById('glance-edit-task-title-input').value = title || '';
     document.getElementById('glance-edit-task-time-input').value = time || '';
+    document.getElementById('glance-edit-task-reminder').value = String(reminderMinutes || 0);
+    document.getElementById('glance-edit-task-reminder-text').value = reminderText || '';
+    populateGlanceTaskDaySelect(day);
     openModal('modal-edit-glance-task');
 }
 
@@ -1562,10 +1575,35 @@ async function saveGlanceTaskEdit() {
     const timeInput = document.getElementById('glance-edit-task-time-input');
     const norm = normalizeScheduleTimeInput(timeInput.value);
     if (norm.time === null || norm.needsAmpm) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
-    const { error } = await supabaseClient.from('weekly_schedule').update({ task_title: title, time_of_day: norm.time }).eq('id', editingGlanceTaskId);
+    const day = document.getElementById('glance-edit-task-day-select').value;
+    const reminderMinutes = parseInt(document.getElementById('glance-edit-task-reminder').value) || 0;
+    const reminderText = document.getElementById('glance-edit-task-reminder-text').value.trim();
+    const { error } = await supabaseClient.from('weekly_schedule').update({ task_title: title, time_of_day: norm.time, day_of_week: day, reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText }).eq('id', editingGlanceTaskId);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     closeModal('modal-edit-glance-task');
     showAppToast(t('glance_edit_task_saved'));
+    await Promise.all([loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
+}
+
+// שכפול - יוצר משימה קבועה חדשה עם הכותרת/שעה/יום שרשומים כרגע בטופס, בלי
+// לגעת במקורית - לפי בקשה מפורשת ("שכפול ליום אחר"). slot_number מחושב
+// כ"הבא בתור" עבור אותו יום, כדי לא להתנגש עם משבצות קיימות
+async function duplicateGlanceTask() {
+    if (!supabaseClient || !currentUserId) return;
+    const title = document.getElementById('glance-edit-task-title-input').value.trim();
+    if (!title) { showAppToast(t('glance_edit_task_missing_title'), 'error'); return; }
+    const timeInput = document.getElementById('glance-edit-task-time-input');
+    const norm = normalizeScheduleTimeInput(timeInput.value);
+    if (norm.time === null || norm.needsAmpm) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    const day = document.getElementById('glance-edit-task-day-select').value;
+    const reminderMinutes = parseInt(document.getElementById('glance-edit-task-reminder').value) || 0;
+    const reminderText = document.getElementById('glance-edit-task-reminder-text').value.trim();
+    const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', day);
+    const nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
+    const { error } = await supabaseClient.from('weekly_schedule').insert({ username: currentUsername, user_id: currentUserId, day_of_week: day, slot_number: nextSlot, task_title: title, time_of_day: norm.time, reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    closeModal('modal-edit-glance-task');
+    showAppToast(t('calendar_event_duplicated_success'));
     await Promise.all([loadWeeklySchedule(), loadTodayTasks(), loadMonthlyCalendarGrid()]);
 }
 
@@ -2471,6 +2509,9 @@ async function applyParsedScheduleEvents(allEvents) {
     const events = allEvents.filter(ev => ev.recurring !== false && !ev.recurring_duration_months);
     if (!events.length) return { recurringCount: 0, oneTimeDates: allOneTimeDates };
 
+    // כותבים ישירות ל-Supabase (בלי לעבור דרך הרשת הוויזואלית של "השבוע שלי",
+    // שהוסרה לגמרי) - כל אירוע מקבל slot_number פנוי הבא בתור עבור אותו יום,
+    // נשלף ישירות מהשרת, לא מ-DOM שכבר לא קיים
     const byDay = {};
     events.forEach(ev => {
         if (!dbDaysMap.includes(ev.day_of_week)) return;
@@ -2478,44 +2519,16 @@ async function applyParsedScheduleEvents(allEvents) {
         byDay[ev.day_of_week].push(ev);
     });
 
-    Object.keys(byDay).forEach(day => {
-        getDaySlotNumbers(day);
-        const daySlotEls = Array.from(document.querySelectorAll(`.slot-input-group[data-day="${day}"]`));
-        const usedSlotNums = new Set();
-        byDay[day].forEach(ev => {
-            const isFreeSlot = (el) => !usedSlotNums.has(parseInt(el.getAttribute('data-slot'))) && !el.querySelector('.slot-task').value.trim();
-            // עדיפות ראשונה: שורת ברירת מחדל ריקה שכבר יש לה בדיוק את השעה
-            // המבוקשת - כדי לא ליצור שורה כפולה לאותה שעה כשכבר יש שורה ריקה
-            // איתה (למשל שורת ברירת מחדל #2 שכבר מוצגת כ-09:00)
-            let target = daySlotEls.find(el => isFreeSlot(el) && el.querySelector('.slot-time').value.trim() === ev.time);
-            if (!target) target = daySlotEls.find(isFreeSlot);
-            if (target) {
-                ev._slotNum = parseInt(target.getAttribute('data-slot'));
-                usedSlotNums.add(ev._slotNum);
-            } else {
-                const nums = daySlotsConfig[day];
-                const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
-                daySlotsConfig[day] = [...nums, nextNum];
-                ev._slotNum = nextNum;
-                usedSlotNums.add(nextNum);
-            }
-        });
-    });
-    saveDaySlotsConfig();
-    buildWeeklyScheduleAccordionUI();
-    await loadWeeklySchedule();
-
     for (const day of Object.keys(byDay)) {
-        for (const ev of byDay[day]) {
-            const slotEl = document.querySelector(`.slot-input-group[data-day="${day}"][data-slot="${ev._slotNum}"]`);
-            if (!slotEl) continue;
-            slotEl.querySelector('.slot-time').value = ev.time || '';
-            const taskInput = slotEl.querySelector('.slot-task');
-            taskInput.value = ev.task_title;
-            updateSlotTaskIcon(taskInput);
-            await saveScheduleSlot(day, ev._slotNum);
-        }
+        const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', day);
+        let nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
+        const rows = byDay[day].map(ev => ({
+            username: currentUsername, user_id: currentUserId, day_of_week: day,
+            slot_number: nextSlot++, time_of_day: ev.time || null, task_title: ev.task_title,
+        }));
+        await supabaseClient.from('weekly_schedule').insert(rows);
     }
+    await loadWeeklySchedule();
     return { recurringCount: events.length, oneTimeDates: allOneTimeDates };
 }
 
@@ -3613,6 +3626,15 @@ function trackTodayCardExpandView(headerEl) {
 let viewedCalendarMonthKey = null;
 let selectedCalendarDay = null;
 
+// ה-+ שהיה על כרטיס "השבוע שלי" (שהוסר) - פותח את אותו חלון הוספת אירוע כמו
+// ב"כל האירועים", רק ממולא מראש עם היום שנבחר בלוח (או היום אם עדיין לא
+// נבחר יום) - לפי בקשה מפורשת
+function openAddEventForSelectedDay() {
+    resetCalendarEventModal();
+    document.getElementById('calendar-event-date-input').value = selectedCalendarDay || getLocalDateString();
+    openModal('modal-add-calendar-event');
+}
+
 async function loadMonthlyCalendarGrid() {
     if (!supabaseClient || !currentUserId) return;
     const grid = document.getElementById('monthly-calendar-grid');
@@ -3701,14 +3723,38 @@ async function renderSelectedCalendarDay() {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
-    const rows = (data || []).map(item => `
-        <div class="today-tasks-row">
-            <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
-            <button type="button" class="btn-delete-item" onclick="deleteCalendarEvent('${item.id}')">❌</button>
-        </div>
-    `).join('');
-    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}`;
+    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>`;
+
+    // בנוי עם closures (לא onclick עם מחרוזת מוטמעת) כדי ש-openEditCalendarEvent
+    // תקבל את האובייקט המלא (לא רק id) - נוסף כפתור ✏️ עריכה שלא היה קיים כאן
+    // עד היום (היה רק ❌ מחיקה), לפי בקשה מפורשת
+    (data || []).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'today-tasks-row';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'day-detail-checkbox';
+        checkbox.checked = !!item.is_completed;
+        checkbox.onchange = () => toggleEventOccurrenceCompletion(item.id, checkbox.checked);
+        const textSpan = document.createElement('span');
+        textSpan.className = 'today-tasks-text' + (item.is_completed ? ' completed' : '');
+        textSpan.textContent = item.event_title;
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-edit-item';
+        editBtn.textContent = '✏️';
+        editBtn.onclick = () => openEditCalendarEvent(item);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+        row.appendChild(checkbox);
+        row.appendChild(textSpan);
+        row.appendChild(editBtn);
+        row.appendChild(deleteBtn);
+        detail.appendChild(row);
+    });
 
     // המשימות הקבועות מהלו"ז השבועי מוצגות כאן בלי צ'קבוקס השלמה (הטבלה שלהן
     // לא עוקבת אחרי השלמה של מופע ספציפי, בניגוד ל-calendar_events) - רק
@@ -3726,7 +3772,7 @@ async function renderSelectedCalendarDay() {
         editBtn.type = 'button';
         editBtn.className = 'btn-edit-item';
         editBtn.textContent = '✏️';
-        editBtn.onclick = () => openGlanceTaskEditor(item.id, item.task_title, item.time_of_day);
+        editBtn.onclick = () => openGlanceTaskEditor(item.id, item.task_title, item.time_of_day, item.day_of_week, item.reminder_minutes, item.reminder_text);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
@@ -4214,6 +4260,7 @@ function openEditCalendarEvent(item) {
     // עד עכשיו. במצב עריכת סדרה (openEditCalendarEventSeries) הוא נשאר מוסתר
     // בכוונה - מחיקת סדרה שלמה היא פעולה נפרדת עם הכפתור הייעודי שלה ברשימה
     document.getElementById('btn-delete-calendar-event').classList.remove('hidden');
+    document.getElementById('btn-duplicate-calendar-event').classList.remove('hidden');
     openModal('modal-add-calendar-event');
 }
 
@@ -4230,6 +4277,7 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
+    document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
     openModal('modal-add-calendar-event');
 }
 
@@ -4247,6 +4295,7 @@ function resetCalendarEventModal() {
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_add_btn');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
+    document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
 }
 
 async function addCalendarEvent() {
@@ -4317,6 +4366,30 @@ async function addCalendarEvent() {
     toggleRecurringOptionsVisibility();
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+    loadTodayTasks();
+}
+
+// שכפול - יוצר אירוע חד-פעמי חדש בתאריך שרשום בטופס כרגע, בלי לגעת/למחוק
+// את האירוע המקורי שנפתח לעריכה - לפי בקשה מפורשת ("שכפול ליום אחר").
+// תמיד חד-פעמי (לא מכבד את תיבת ה"חזרה" - היא ממילא מוסתרת במצב עריכה)
+async function duplicateCalendarEvent() {
+    const titleInput = document.getElementById('calendar-event-title-input');
+    const dateInput = document.getElementById('calendar-event-date-input');
+    const timeInput = document.getElementById('calendar-event-time-input');
+    const title = titleInput.value.trim();
+    const date = dateInput.value;
+    const timeNorm = normalizeScheduleTimeInput(timeInput.value);
+    if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    const eventTime = timeNorm.time || null;
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    resetCalendarEventModal();
+    closeModal('modal-add-calendar-event');
+    showAppToast(t('calendar_event_duplicated_success'));
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=248">
+    <link rel="stylesheet" href="theme.css?v=249">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -116,38 +116,29 @@
 
             <div class="main-scroll-area">
 
-                <!-- חלונית 1: MyWeek -->
+                <!-- "מבט ליומן" (לשעבר "השבוע שלי" - הטבלה השבועית עם משבצות-שעה
+                     לפי יום הוסרה לגמרי, לפי בקשה מפורשת: "מרגיש לי שזה מבולגן
+                     מידי". מה שנשאר: כרטיס "כל האירועים" (לשעבר "מבט ליומן") +
+                     "מבט חודשי" (שקיבל את כפתור ה-+ שהיה בטבלה, ועריכה/שכפול
+                     מלאים בפירוט היום, ר' renderSelectedCalendarDay ב-app.js) -->
                 <section class="tab-content" id="schedule-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
 
-                    <div class="card">
+                    <div class="card calendar-glance-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="nav_myweek">MyWeek</h2>
+                            <div class="calendar-glance-heading">
+                                <h2 data-i18n="calendar_glance_title">All Events</h2>
+                                <span class="calendar-glance-subtitle" data-i18n="calendar_glance_subtitle">(Upcoming dates & events)</span>
+                            </div>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add btn-settings-gear" onclick="event.stopPropagation(); openHoursSettingsModal()" data-i18n-title="schedule_hours_gear_title" title="Set default hours">⚙️</button>
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); openAddTaskModal()">＋</button>
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); resetCalendarEventModal(); openModal('modal-add-calendar-event')" data-i18n-title="calendar_event_add_title" title="Add event">➕</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="day-tabs-strip-row">
-                                <button type="button" class="day-tabs-nav-btn" onclick="stepDayTabsStrip(-1)" data-i18n-aria-label="schedule_scroll_left_title" aria-label="Scroll left">‹</button>
-                                <div class="day-tabs-strip" id="day-tabs-strip">
-                                    <!-- לשוניות ניווט מהיר בין הימים, יווצרו כאן דינמית -->
-                                </div>
-                                <button type="button" class="day-tabs-nav-btn" onclick="stepDayTabsStrip(1)" data-i18n-aria-label="schedule_scroll_right_title" aria-label="Scroll right">›</button>
-                            </div>
-                            <div class="schedule-touch-row">
-                                <div class="days-scroll-container" id="accordion-container">
-                                    <!-- ימי השבוע יווצרו כאן דינמית, כל יום עמוד מלא לגלילה אופקית -->
-                                </div>
-                                <div class="vertical-scroll-track" aria-hidden="true"></div>
-                            </div>
-                            <button id="btn-clear-entire-week" class="btn-clear-week" style="margin-top: 20px;" data-i18n="schedule_clear_week_btn">Clear entire weekly schedule</button>
+                            <div id="calendar-glance-list" class="calendar-glance-list"></div>
                         </div>
                     </div>
-
-                    <!-- מבט ליומן: אחרי השבוע שלי, כעת נסגר/נפתח כמו כל כרטיס אחר -->
                     <div class="card calendar-glance-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <div class="calendar-glance-heading">
@@ -170,7 +161,13 @@
                     <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="monthly_calendar_title">Monthly Overview</h2>
-                            <span class="card-toggle-icon">▼</span>
+                            <div class="card-header-actions">
+                                <!-- ה-+ שהיה ב"השבוע שלי" (שהוסר) עבר לכאן - פותח את אותו חלון
+                                     הוספה כמו ב"כל האירועים", ממולא מראש עם היום שנבחר בלוח
+                                     (או היום אם לא נבחר יום), לפי בקשה מפורשת -->
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openAddEventForSelectedDay()" data-i18n-title="calendar_event_add_title" title="Add event">＋</button>
+                                <span class="card-toggle-icon">▼</span>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="monthly-goal-nav">
@@ -1825,7 +1822,25 @@
                 <h3 data-i18n="glance_edit_task_title">Edit Task</h3>
                 <input type="text" id="glance-edit-task-title-input" data-i18n-placeholder="task_name_placeholder" placeholder="Task name...">
                 <input type="text" id="glance-edit-task-time-input" style="margin-top: 8px;" data-i18n-placeholder="time_placeholder" placeholder="Time (e.g. 09:00)">
+                <!-- בורר יום - לא היה קיים עד היום (רק כותרת+שעה ניתנות לעריכה) - נוסף
+                     לפי בקשה מפורשת, כך ש"עדכון" יכול גם להעביר משימה קבועה ליום
+                     אחר, לא רק לשנות כותרת/שעה -->
+                <select id="glance-edit-task-day-select" class="language-select" style="margin-top: 8px;"></select>
+                <!-- תזכורת - לא הייתה זמינה כאן עד היום (רק בטופס ההוספה הישן של הטבלה
+                     השבועית שהוסרה) - נוספה כאן כדי לא לאבד את היכולת, לפי בקשה מפורשת -->
+                <div class="reminder-fields-wrap" style="margin-top: 8px;">
+                    <select id="glance-edit-task-reminder">
+                        <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
+                        <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
+                        <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
+                        <option value="15" data-i18n="reminder_15min">🔔 15 minutes before</option>
+                    </select>
+                    <input type="text" id="glance-edit-task-reminder-text" data-i18n-placeholder="reminder_text_placeholder" placeholder="Custom reminder text (optional)">
+                </div>
                 <button type="button" class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="saveGlanceTaskEdit()" data-i18n="save_generic">Save</button>
+                <!-- שכפול - יוצר משימה קבועה חדשה עם הכותרת/שעה/יום שרשומים כרגע,
+                     בלי לגעת במקורית - לפי בקשה מפורשת ("שכפול ליום אחר") -->
+                <button type="button" class="btn-secondary" style="margin-top: 8px;" onclick="duplicateGlanceTask()" data-i18n="glance_edit_task_duplicate_btn">Duplicate</button>
                 <button type="button" class="btn-clear-week" style="margin-top: 8px;" onclick="deleteGlanceTaskEdit()" data-i18n="glance_edit_task_delete_btn">Delete task</button>
                 <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-edit-glance-task')" data-i18n="cancel_btn">Cancel</button>
             </div>
@@ -2270,6 +2285,10 @@
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
                         </select>
                     </div>
+                    <!-- שכפול - יוצר אירוע חדש בתאריך שרשום בשדה כרגע, בלי לגעת במקורי -
+                         מוצג רק במצב עריכה (כמו כפתור המחיקה), לפי בקשה מפורשת
+                         ("שכפול ליום אחר") -->
+                    <button type="button" id="btn-duplicate-calendar-event" class="btn-secondary hidden" style="margin-bottom: 8px;" onclick="duplicateCalendarEvent()" data-i18n="glance_edit_task_duplicate_btn">Duplicate</button>
                     <button type="button" id="btn-delete-calendar-event" class="btn-clear-week hidden" style="margin-bottom: 8px;" onclick="deleteCalendarEvent(editingCalendarEventId); closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="glance_edit_task_delete_btn">Delete task</button>
                     <div class="action-buttons-wrap">
                         <button id="btn-add-calendar-event" onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
@@ -2386,7 +2405,7 @@
 
     </div>
 
-    <script src="i18n.js?v=194"></script>
-    <script src="app.js?v=297"></script>
+    <script src="i18n.js?v=195"></script>
+    <script src="app.js?v=298"></script>
 </body>
 </html>
