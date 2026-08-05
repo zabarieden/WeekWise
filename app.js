@@ -10817,16 +10817,48 @@ function renderRoutineTabsBar() {
     if (deleteBtn) deleteBtn.classList.toggle('hidden', dailyBoardTabs.length <= 1);
 }
 
+// לחיצה על טאב שכבר פעיל פותחת שינוי-שם (במקום כפתור "✏️ שינוי שם" נפרד
+// שהוסר) - לפי בקשה מפורשת "שלוחצים על השגרה היומית תהיה אפשרות לשנות
+// את השם". לחיצה על טאב לא-פעיל ממשיכה להחליף טאב כרגיל
 async function switchRoutineTab(tabId) {
+    if (tabId === activeDailyBoardTabId) {
+        openRenameRoutineTabModal(tabId);
+        return;
+    }
     activeDailyBoardTabId = tabId;
     renderRoutineTabsBar();
     await renderDailyBoard();
 }
 
+// מודל מעוצב במקום prompt()/window.prompt הנייטיבי של הדפדפן (הראה "האתר
+// ... אומר" מכוער ולא תואם את עיצוב האפליקציה) - לפי בקשה מפורשת. אותו
+// מודל לשני המצבים (הוספה/שינוי שם), routineTabNameMode קובע מה saveRoutineTabName עושה
+let routineTabNameMode = 'add';
 function openAddRoutineTabPrompt() {
-    const name = prompt(t('daily_board_add_tab_prompt'));
-    if (!name || !name.trim()) return;
-    addRoutineTab(name.trim());
+    routineTabNameMode = 'add';
+    document.getElementById('routine-tab-name-modal-title').textContent = t('daily_board_add_tab_title');
+    document.getElementById('routine-tab-name-input').value = '';
+    openModal('modal-routine-tab-name');
+}
+
+function openRenameRoutineTabModal(tabId) {
+    const tab = dailyBoardTabs.find(tb => tb.id === tabId);
+    if (!tab) return;
+    routineTabNameMode = 'rename';
+    document.getElementById('routine-tab-name-modal-title').textContent = t('daily_board_rename_tab_btn');
+    document.getElementById('routine-tab-name-input').value = tab.name;
+    openModal('modal-routine-tab-name');
+}
+
+async function saveRoutineTabName() {
+    const name = document.getElementById('routine-tab-name-input').value.trim();
+    if (!name) return;
+    closeModal('modal-routine-tab-name');
+    if (routineTabNameMode === 'add') {
+        await addRoutineTab(name);
+    } else {
+        await renameRoutineTab(activeDailyBoardTabId, name);
+    }
 }
 
 async function addRoutineTab(name) {
@@ -10838,14 +10870,6 @@ async function addRoutineTab(name) {
         renderRoutineTabsBar();
         await renderDailyBoard();
     }
-}
-
-function renameActiveRoutineTab() {
-    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
-    if (!tab) return;
-    const name = prompt(t('daily_board_add_tab_prompt'), tab.name);
-    if (!name || !name.trim()) return;
-    renameRoutineTab(tab.id, name.trim());
 }
 
 async function renameRoutineTab(tabId, name) {
