@@ -26,6 +26,13 @@
     --accent-gold: #f59e0b;
     --accent-red: #ff453a;
     --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    /* חשוב שזה יוגדר גם ברמת המסמך (לא רק על כל input[type=date] בנפרד,
+       ר' למטה) - בכמה גרסאות WebView באנדרואיד הלוח השנה/הבורר הנייטיבי של
+       המערכת (לא רכיב HTML רגיל שאפשר לעצב) מכבד את color-scheme של המסמך
+       כולו, לא את זה שמוגדר רק על ה-input הבודד שפתח אותו - לפי דיווח מפורש
+       על בורר תאריך שנפתח לבן/בהיר על אף ה-color-scheme:dark שכבר יש
+       על ה-input עצמו */
+    color-scheme: dark;
 }
 /* גודל האפליקציה (הגדרות > App Size): כמעט כל האפליקציה בנויה ב-rem, אז
    שינוי font-size של html מגדיל/מקטין הכול באופן יחסי בלי לגעת ברכיבים
@@ -182,6 +189,7 @@ html[data-color-theme="navy_sapphire"] {
 /* מצב בהיר (Light Mode, חינמי): מחליף רק את משתני הרקע/הטקסט - הטבעות
    הניאון (var(--accent-*)) נשארות זהות, כדי לשמור על הזוהר הרענן גם על רקע בהיר */
 html.light-mode {
+    color-scheme: light;
     --bg-main: linear-gradient(135deg, #fdf0fa, #f3e8ff);
     --bg-row: rgba(168, 85, 247, 0.08);
     --bg-glass: rgba(255, 255, 255, 0.72);
