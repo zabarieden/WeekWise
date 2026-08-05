@@ -1106,7 +1106,7 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
    את מיקומו: נעוץ ממש בתחתית המסך (מתחת לדוק כולו), קטן, במרכז אופקית -
    לא בפינה העליונה יחד עם המוח, ולא תופס עמדה בתוך הדוק עצמו, לפי בקשה
    מפורשת ("יותר קטן, ודווקא למטה... הכי הכי למטה שיש") */
-.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 10px; transform: translateX(-50%); width: 46px; height: 46px; }
+.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 26px; transform: translateX(-50%); width: 46px; height: 46px; }
 html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
 .daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
 .daily-board-icon { font-size: 1.7rem; }
@@ -1116,7 +1116,7 @@ html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX
    ("עדין... ליד המצפן מימין או שמאל") */
 .home-calorie-badge {
     position: absolute;
-    bottom: 14px;
+    bottom: 30px;
     left: calc(50% - 76px);
     transform: translateX(-50%);
     display: flex;
