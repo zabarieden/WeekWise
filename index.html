@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=250">
+    <link rel="stylesheet" href="theme.css?v=251">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1531,29 +1531,6 @@
                         </label>
                     </div>
 
-                    <!-- אילו שעות מופיעות בכל בלוק ב"סדר היום" (🧭) - צ'יפים לבחירה/הסרה
-                         חופשית בתוך טווח-שעות טבעי לכל בלוק, ר' toggleDailyBoardHour/
-                         DAILY_BOARD_BUCKET_RANGES ב-app.js. לא היה קיים בגרסה הקודמת -
-                         נוסף לפי בקשה מפורשת ("לסדר את השעות, למחוק ולהוסיף") -->
-                    <label class="settings-label" data-i18n="daily_board_hours_settings_label">Daily Agenda hours</label>
-                    <div class="daily-board-hours-settings">
-                        <div class="daily-board-hours-settings-group">
-                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_morning">🌅 Morning</span>
-                            <div class="daily-board-hours-chips" id="board-hours-morning"></div>
-                        </div>
-                        <div class="daily-board-hours-settings-group">
-                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_noon">☀️ Noon</span>
-                            <div class="daily-board-hours-chips" id="board-hours-noon"></div>
-                        </div>
-                        <div class="daily-board-hours-settings-group">
-                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_afternoon">🌤️ Afternoon</span>
-                            <div class="daily-board-hours-chips" id="board-hours-afternoon"></div>
-                        </div>
-                        <div class="daily-board-hours-settings-group">
-                            <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_evening">🌙 Evening</span>
-                            <div class="daily-board-hours-chips" id="board-hours-evening"></div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- 🔔 התראות -->
@@ -2147,10 +2124,34 @@
                 <h3 data-i18n="daily_board_title">Daily Agenda</h3>
                 <div class="daily-board-tabs-row">
                     <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
+                    <!-- שעות הבלוקים הן עכשיו לכל טאב בנפרד (לא גלובלי לכולם) - לפי
+                         בקשה מפורשת ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות
+                         ולשנות לכל טאב שונה"). גם עברו לכאן מהגדרות הכלליות, כי שם
+                         לא היה ברור לאיזה טאב הן מתייחסות -->
+                    <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
                 <div class="daily-board-tab-actions">
                     <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
+                </div>
+                <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
+                    <p class="daily-board-hours-panel-hint" data-i18n="daily_board_hours_settings_hint">These hours apply only to the tab currently selected above.</p>
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_morning">🌅 Morning</span>
+                        <div class="daily-board-hours-chips" id="board-hours-morning"></div>
+                    </div>
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_noon">☀️ Noon</span>
+                        <div class="daily-board-hours-chips" id="board-hours-noon"></div>
+                    </div>
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_afternoon">🌤️ Afternoon</span>
+                        <div class="daily-board-hours-chips" id="board-hours-afternoon"></div>
+                    </div>
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_evening">🌙 Evening</span>
+                        <div class="daily-board-hours-chips" id="board-hours-evening"></div>
+                    </div>
                 </div>
                 <div class="daily-board-body" id="daily-board-body"></div>
             </div>
@@ -2394,7 +2395,7 @@
 
     </div>
 
-    <script src="i18n.js?v=199"></script>
-    <script src="app.js?v=298"></script>
+    <script src="i18n.js?v=200"></script>
+    <script src="app.js?v=299"></script>
 </body>
 </html>

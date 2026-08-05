@@ -1446,7 +1446,6 @@ function openSettingsDrawer() {
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
-    renderDailyBoardHourSettings();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
 }
@@ -10804,8 +10803,10 @@ const DAILY_BOARD_DEFAULT_HOURS = {
     evening: [20, 21, 22],
 };
 
-function getDailyBoardCustomHours() {
-    const raw = localStorage.getItem(`weekwise_board_hours_${currentUserId}`);
+// לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
+// ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות ולשנות לכל טאב שונה")
+function getDailyBoardCustomHours(tabId) {
+    const raw = tabId ? localStorage.getItem(`weekwise_board_hours_${currentUserId}_${tabId}`) : null;
     if (!raw) return DAILY_BOARD_DEFAULT_HOURS;
     try {
         const parsed = JSON.parse(raw);
@@ -10819,20 +10820,32 @@ function getDailyBoardCustomHours() {
 }
 
 function toggleDailyBoardHour(bucket, hour) {
-    const hours = getDailyBoardCustomHours();
+    if (!activeDailyBoardTabId) return;
+    const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
     const list = (hours[bucket] || []).slice();
     const idx = list.indexOf(hour);
     if (idx === -1) list.push(hour); else list.splice(idx, 1);
     list.sort((a, b) => a - b);
     hours[bucket] = list;
-    localStorage.setItem(`weekwise_board_hours_${currentUserId}`, JSON.stringify(hours));
+    localStorage.setItem(`weekwise_board_hours_${currentUserId}_${activeDailyBoardTabId}`, JSON.stringify(hours));
     renderDailyBoardHourSettings();
-    const modal = document.getElementById('modal-daily-board');
-    if (modal && modal.classList.contains('open')) renderDailyBoard();
+    renderDailyBoard();
+}
+
+// פאנל השעות פתוח/סגור בתוך מודל "סדר היום" עצמו (לא בהגדרות הכלליות -
+// שם לא היה ברור לאיזה טאב הן מתייחסות), ליד כפתור הוספת הטאב
+function toggleDailyBoardHoursPanel() {
+    const panel = document.getElementById('daily-board-hours-panel');
+    if (!panel) return;
+    const willShow = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', !willShow);
+    if (willShow) renderDailyBoardHourSettings();
 }
 
 function renderDailyBoardHourSettings() {
-    const hours = getDailyBoardCustomHours();
+    const panel = document.getElementById('daily-board-hours-panel');
+    if (!panel || panel.classList.contains('hidden')) return;
+    const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
     Object.keys(DAILY_BOARD_BUCKET_RANGES).forEach(bucket => {
         const wrap = document.getElementById(`board-hours-${bucket}`);
         if (!wrap) return;
@@ -10851,6 +10864,8 @@ function renderDailyBoardHourSettings() {
 
 async function openDailyBoardModal() {
     if (!supabaseClient || !currentUserId) return;
+    const hoursPanel = document.getElementById('daily-board-hours-panel');
+    if (hoursPanel) hoursPanel.classList.add('hidden');
     openModal('modal-daily-board');
     await loadRoutineTabs();
 }
@@ -10899,6 +10914,7 @@ async function switchRoutineTab(tabId) {
     }
     activeDailyBoardTabId = tabId;
     renderRoutineTabsBar();
+    renderDailyBoardHourSettings();
     await renderDailyBoard();
 }
 
@@ -10940,6 +10956,7 @@ async function addRoutineTab(name) {
         dailyBoardTabs.push(data);
         activeDailyBoardTabId = data.id;
         renderRoutineTabsBar();
+        renderDailyBoardHourSettings();
         await renderDailyBoard();
     }
 }
@@ -10971,7 +10988,7 @@ async function renderDailyBoard() {
     (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
-    const customHours = getDailyBoardCustomHours();
+    const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
     body.innerHTML = '';
     bucketOrder.forEach(key => {
         const bucketHours = customHours[key] || [];
