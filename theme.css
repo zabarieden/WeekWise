@@ -1580,6 +1580,12 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 /* "משימות להיום": אותה שפה חזותית כמו שורות מבט-ליומן, אבל בגוון הזהב של
    עולם הלו"ז (--tile-accent) במקום סגול, כדי להבחין ביניהם בבירור */
 .today-tasks-list { display: flex; flex-direction: column; gap: 8px; }
+/* פירוט היום הנבחר במבט חודשי משתמש באותה מחלקה (today-tasks-row) אבל
+   בהקשר שונה לגמרי - כאן דורסים בחזרה לגוון סגול (במקום הזהב של
+   "משימות להיום" בבית), לפי בקשה מפורשת ("צבע... שיותר מתאים לסגול") */
+#monthly-calendar-day-detail .today-tasks-row { border-inline-start-color: var(--accent-purple); }
+#monthly-calendar-day-detail .today-tasks-time,
+#monthly-calendar-day-detail .day-detail-checkbox { accent-color: var(--accent-purple); color: var(--accent-purple-text); }
 .today-tasks-row {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
