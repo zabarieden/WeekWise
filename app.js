@@ -1725,13 +1725,20 @@ async function updateCenterItemDirect(id, type, content, textColor, glowColor, b
     showAppToast(t('item_added_success'));
 }
 
-async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor) {
-    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+// מחזירה true/false (הצלחה/כישלון) - קריטי לקוראים כמו handleAIQuickAdd
+// שצריכים לדעת אם באמת להמשיך (לנקות שדה קלט, לסגור מודל, להראות טוסט
+// "נוסף" משלהם) - בעבר תמיד המשיכו בלי קשר לתוצאה בפועל, מה שגרם לפתק
+// להיעלם בשקט כשההוספה נכשלה (למשל עמודה חסרה בטבלה): הקריאה הראתה טוסט
+// שגיאה, אבל מיד אחריה הקוד הממשיך הראה טוסט "נוסף בהצלחה" שדרס אותו
+// חזותית - נראה כאילו הכול תקין בזמן שבפועל שום דבר לא נשמר
+async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor, skipSuccessToast) {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return false; }
     const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor, glow_color: glowColor, bg_color: bgColor });
-    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return false; }
     await loadCenterItems(type);
     expandCardForList(`${type}-list`);
-    showAppToast(t('item_added_success'));
+    if (!skipSuccessToast) showAppToast(t('item_added_success'));
+    return true;
 }
 
 function expandCardForList(listId) {
@@ -11853,7 +11860,8 @@ async function handleAIQuickAdd() {
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
 
-    await insertCenterItemDirect(quickNoteDestination, text, pendingCenterItemColor, pendingCenterItemGlow, pendingCenterItemBg);
+    const ok = await insertCenterItemDirect(quickNoteDestination, text, pendingCenterItemColor, pendingCenterItemGlow, pendingCenterItemBg, true);
+    if (!ok) return;
     showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
     input.value = '';
     closeModal('modal-ai-quick-add');
