@@ -4301,7 +4301,7 @@ function buildSingleEventRow(item) {
     row.className = 'calendar-event-item';
     const starBtn = document.createElement('button');
     starBtn.className = 'calendar-event-star-btn' + (item.is_starred ? ' starred' : '');
-    starBtn.textContent = item.is_starred ? '⭐' : '☆';
+    starBtn.textContent = item.is_starred ? '★' : '☆';
     starBtn.title = t('calendar_event_star_title');
     starBtn.onclick = () => toggleEventStar(item.id, false, !item.is_starred);
     const dateBadge = document.createElement('span');

@@ -1835,7 +1835,7 @@ html[dir="ltr"] .daily-focus-bubble::before {
 
 /* כוכב - מחליף את ידית הגרירה הישנה (הוסרה) כדרך לקבוע עדיפות ב"כל
    האירועים" - לפי בקשה מפורשת, כדי שהסדר יהיה לפי תאריך + כוכב בלבד */
-.calendar-event-star-btn { background: none; border: none; padding: 0 2px; font-size: 1rem; cursor: pointer; flex-shrink: 0; color: var(--accent-gold); transition: var(--transition); }
+.calendar-event-star-btn { background: none; border: none; padding: 0 2px; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; color: var(--accent-purple-text); transition: var(--transition); }
 .calendar-event-star-btn:active { transform: scale(0.9); }
 .calendar-event-progress-badge { flex-shrink: 0; background-color: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--accent-green-text); font-size: 0.7rem; font-weight: 700; border-radius: 20px; padding: 3px 9px; }
 
@@ -2633,7 +2633,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    לפי בקשה מפורשת. showPicker() נקרא על ה-input האמיתי, שרק מוסתר-ויזואלית */
 .date-picker-icon-only {
     display: block;
-    margin: 6px 0 0;
+    margin: 6px auto 0;
     width: 48px;
     height: 48px;
     background: rgba(20, 10, 30, 0.55);
@@ -2642,6 +2642,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     font-size: 1.3rem;
     cursor: pointer;
     transition: var(--transition);
+    /* אותו פילטר בדיוק כמו input[type=date]::-webkit-calendar-picker-indicator
+       למעלה - הופך את אימוג'י 📅 הצבעוני-במקור לגוון סגול/ורוד, לפי בקשה מפורשת */
+    filter: invert(46%) sepia(84%) saturate(2661%) hue-rotate(295deg) brightness(100%) contrast(101%);
 }
 .date-picker-icon-only:active { transform: scale(0.94); }
 .date-picker-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
