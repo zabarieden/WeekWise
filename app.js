@@ -4206,6 +4206,10 @@ async function loadCalendarEvents() {
     if (!supabaseClient) return;
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
+    // השנה מוצגת פעם אחת בקטן ליד הכותרת (לא בכל כותרת-חודש בנפרד למטה) -
+    // לפי בקשה מפורשת ("לא צריך את השנה... אפשר לשים רק בקטן למעלה")
+    const yearEl = document.getElementById('calendar-glance-year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
     const today = getLocalDateString();
     // source='calendar' בלבד - לא משימות שהומרו מפתקים גרורים (source=
     // 'note_task'). אלה מוצגות ב"משימות להיום" (loadTodayTasks) במקום כאן -
@@ -4272,7 +4276,7 @@ async function loadCalendarEvents() {
         if (monthKey !== lastMonthKey) {
             const monthHeader = document.createElement('div');
             monthHeader.className = 'calendar-glance-month-header';
-            monthHeader.textContent = formatMonthLabel(monthKey);
+            monthHeader.textContent = formatMonthNameOnly(monthKey);
             container.appendChild(monthHeader);
             lastMonthKey = monthKey;
         }
@@ -6482,6 +6486,15 @@ function shiftMonthKey(monthKey, delta) {
 function formatMonthLabel(monthKey) {
     const [y, m] = monthKey.split('-').map(Number);
     return new Date(y, m - 1, 1).toLocaleDateString(currentLang, { month: 'long', year: 'numeric' });
+}
+
+// בלי שנה - רק לכותרות-החודש בתוך "כל האירועים" (ר' loadCalendarEvents),
+// לא לשאר השימושים ב-formatMonthLabel (ניווט חודשי/דוחות ספורט/הרגלים
+// וכו', ששם השנה כן נחוצה) - השנה מוצגת פעם אחת בלבד ליד כותרת הכרטיס
+// עצמה (ר' #calendar-glance-year ב-index.html), לפי בקשה מפורשת
+function formatMonthNameOnly(monthKey) {
+    const [y, m] = monthKey.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString(currentLang, { month: 'long' });
 }
 
 async function navigateMonthlyGoal(delta) {

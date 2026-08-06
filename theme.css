@@ -1537,6 +1537,8 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    expanded בהתחלה ב-HTML) - לפי בקשה מפורשת */
 .today-tasks-card.expanded .card-body { max-height: none; overflow: visible; }
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
+.calendar-glance-title-row { display: flex; align-items: baseline; gap: 6px; }
+.calendar-glance-year { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); }
 .calendar-glance-subtitle { font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); opacity: 0.85; }
 .calendar-glance-list { display: flex; flex-direction: column; gap: 8px; }
 /* "כל האירועים" קצת דהוי יותר מ"מבט חודשי" *רק* כשהכרטיס מקופל - כדי
