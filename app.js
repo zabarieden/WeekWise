@@ -11,6 +11,10 @@ setAppHeightVar();
 window.addEventListener('resize', setAppHeightVar);
 window.addEventListener('orientationchange', setAppHeightVar);
 
+// אייקון עיפרון (SVG, לא אימוג'י) - כדי שיהיה ניתן לצבוע בסגול דרך currentColor;
+// אימוג'י ✏️ מגיע עם צבע קבוע משלו ולא ניתן לצביעה ב-CSS (כמו שקרה עם ⭐)
+const EDIT_ICON_SVG = '<svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
 let supabaseClient;
@@ -309,7 +313,7 @@ async function loadCenterItems(type) {
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}"${colorStyle}>
                 ${escapeHtmlForReport(item.content)}
             </span>
-            <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">✏️</button>
+            <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">${EDIT_ICON_SVG}</button>
             <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
         `;
         listUl.appendChild(li);
@@ -617,7 +621,7 @@ async function loadPresetManageList() {
                     ${descriptionHtml}
                 </span>
                 <div class="preset-manage-actions">
-                    <button class="btn-edit-item" onclick="editPreset('${item.id}')">✏️</button>
+                    <button class="btn-edit-item" onclick="editPreset('${item.id}')">${EDIT_ICON_SVG}</button>
                     <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
                 </div>
             `;
@@ -2045,7 +2049,7 @@ async function loadWeekOneTimeEvents() {
             const editBtn = document.createElement('button');
             editBtn.type = 'button';
             editBtn.className = 'btn-edit-item';
-            editBtn.textContent = '✏️';
+            editBtn.innerHTML = EDIT_ICON_SVG;
             editBtn.onclick = () => openEditCalendarEvent(item);
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
@@ -3659,12 +3663,6 @@ function toggleRecurringOptionsVisibility() {
     optionsWrap.classList.toggle('hidden', !checkbox.checked);
 }
 
-function toggleCustomRecurrenceVisibility() {
-    const typeSelect = document.getElementById('calendar-event-recurrence-type');
-    const customWrap = document.getElementById('calendar-event-custom-recurrence');
-    customWrap.classList.toggle('hidden', typeSelect.value !== 'custom');
-}
-
 // --- משימות להיום: תמצית מהירה של השורות המאוכלסות בלו"ז השבועי (התבנית
 // החוזרת) עבור יום-השבוע הנוכחי, בתוספת אירועי calendar_events שתאריכם היום
 // (בעיקר משימות שנגררו מפתקים - source='note_task', אבל בלי סינון, כדי
@@ -3737,7 +3735,7 @@ async function loadTodayTasks() {
         editBtn.type = 'button';
         editBtn.className = 'btn-edit-item';
         editBtn.title = t('calendar_event_edit_title');
-        editBtn.textContent = '✏️';
+        editBtn.innerHTML = EDIT_ICON_SVG;
         editBtn.onclick = () => openEditCalendarEvent(item);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -3965,7 +3963,7 @@ async function renderSelectedCalendarDay() {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'btn-edit-item';
-        editBtn.textContent = '✏️';
+        editBtn.innerHTML = EDIT_ICON_SVG;
         editBtn.onclick = () => openEditCalendarEvent(item);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -3998,7 +3996,7 @@ async function renderSelectedCalendarDay() {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'btn-edit-item';
-        editBtn.textContent = '✏️';
+        editBtn.innerHTML = EDIT_ICON_SVG;
         editBtn.onclick = () => openGlanceTaskEditor(item.id, item.task_title, item.time_of_day, item.day_of_week, item.reminder_minutes, item.reminder_text);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -4309,7 +4307,7 @@ function buildSingleEventRow(item) {
     titleSpan.textContent = item.event_title;
     const editBtn = document.createElement('button');
     editBtn.className = 'btn-edit-item';
-    editBtn.textContent = '✏️';
+    editBtn.innerHTML = EDIT_ICON_SVG;
     editBtn.title = t('calendar_event_edit_title');
     editBtn.onclick = () => openEditCalendarEvent(item);
     const deleteBtn = document.createElement('button');
@@ -4392,7 +4390,7 @@ function buildRecurringEventRow(items, groupId) {
 
     const editBtn = document.createElement('button');
     editBtn.className = 'btn-edit-item';
-    editBtn.textContent = '✏️';
+    editBtn.innerHTML = EDIT_ICON_SVG;
     editBtn.title = t('calendar_event_edit_title');
     editBtn.onclick = () => openEditCalendarEventSeries(groupId, items[0].event_title);
 
@@ -4479,32 +4477,22 @@ async function toggleScheduleCompletion(scheduleId, dateStr, isCompleted) {
 }
 
 
-// יוצר את כל תאריכי החזרה מתחילת הטווח ועד סוף מספר החודשים שנבחר, לפי סוג
-// החזרה (שבועי/חודשי/כל 3 חודשים/מותאם אישית - כל X שבועות או חודשים) - זהו
+// יוצר את כל תאריכי החזרה מתחילת הטווח ועד סוף מספר החודשים שנבחר, לפי יחידת
+// חזרה אחידה (ימים/שבועות/חודשים) ומרווח - "כל X ימים/שבועות/חודשים" - זהו
 // הבסיס למחוללי "משימות חוזרות" כמו שיעור גיטרה שבועי
-function generateRecurringDates(startDateStr, recurrenceType, customInterval, customUnit, durationMonths) {
+function generateRecurringDates(startDateStr, unit, interval, durationMonths) {
     const dates = [];
     const start = new Date(`${startDateStr}T00:00:00`);
     const end = new Date(start);
     end.setMonth(end.getMonth() + durationMonths);
 
-    let stepDays = null;
-    let stepMonths = null;
-    if (recurrenceType === 'weekly') stepDays = 7;
-    else if (recurrenceType === 'monthly') stepMonths = 1;
-    else if (recurrenceType === 'quarterly') stepMonths = 3;
-    else if (recurrenceType === 'custom') {
-        if (customUnit === 'months') stepMonths = Math.max(1, customInterval);
-        else stepDays = 7 * Math.max(1, customInterval);
-    } else {
-        stepDays = 7;
-    }
-
+    const step = Math.max(1, interval);
     const current = new Date(start);
     while (current <= end) {
         dates.push(getLocalDateString(current));
-        if (stepMonths) current.setMonth(current.getMonth() + stepMonths);
-        else current.setDate(current.getDate() + stepDays);
+        if (unit === 'months') current.setMonth(current.getMonth() + step);
+        else if (unit === 'days') current.setDate(current.getDate() + step);
+        else current.setDate(current.getDate() + step * 7);
     }
     return dates;
 }
@@ -4562,6 +4550,8 @@ function resetCalendarEventModal() {
     document.getElementById('calendar-event-time-input').value = '';
     document.getElementById('calendar-event-time-input').classList.remove('hidden');
     document.getElementById('calendar-event-recurring-checkbox').checked = false;
+    document.getElementById('calendar-event-recur-interval').value = '1';
+    document.getElementById('calendar-event-recur-unit').value = 'weeks';
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
@@ -4574,9 +4564,8 @@ async function addCalendarEvent() {
     const titleInput = document.getElementById('calendar-event-title-input');
     const dateInput = document.getElementById('calendar-event-date-input');
     const recurringCheckbox = document.getElementById('calendar-event-recurring-checkbox');
-    const recurrenceTypeSelect = document.getElementById('calendar-event-recurrence-type');
-    const customIntervalInput = document.getElementById('calendar-event-custom-interval');
-    const customUnitSelect = document.getElementById('calendar-event-custom-unit');
+    const recurIntervalInput = document.getElementById('calendar-event-recur-interval');
+    const recurUnitSelect = document.getElementById('calendar-event-recur-unit');
     const durationSelect = document.getElementById('calendar-event-duration-input');
     const timeInput = document.getElementById('calendar-event-time-input');
     const title = titleInput.value.trim();
@@ -4617,11 +4606,10 @@ async function addCalendarEvent() {
     let rows;
     if (recurringCheckbox.checked) {
         const months = parseInt(durationSelect.value) || 3;
-        const recurrenceType = recurrenceTypeSelect.value;
-        const customInterval = parseInt(customIntervalInput.value) || 1;
-        const customUnit = customUnitSelect.value;
+        const recurUnit = recurUnitSelect.value;
+        const recurInterval = parseInt(recurIntervalInput.value) || 1;
         const groupId = crypto.randomUUID();
-        rows = generateRecurringDates(date, recurrenceType, customInterval, customUnit, months).map(eventDate => ({
+        rows = generateRecurringDates(date, recurUnit, recurInterval, months).map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
             event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId
         }));
@@ -6745,7 +6733,7 @@ async function renderMonthlyGoal() {
     const progressText = formatGoalProgressText(goal, currentValue);
     const actionsHtml = isCurrentMonth
         ? `<div class="monthly-goal-actions">
-                <button class="btn-edit-item" onclick="openSetMonthlyGoalModal(true)" title="${t('monthly_goal_edit_title')}">✏️</button>
+                <button class="btn-edit-item" onclick="openSetMonthlyGoalModal(true)" title="${t('monthly_goal_edit_title')}">${EDIT_ICON_SVG}</button>
                 <button class="btn-delete-item" onclick="deleteMonthlyGoal()">❌</button>
            </div>`
         : `<span class="monthly-goal-readonly-badge">${t('monthly_goal_viewing_past')}</span>`;

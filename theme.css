@@ -508,7 +508,7 @@ html.light-mode .progress-row {
 }
 /* שדות קלט/טפסים נשארים תמיד בגוון אפור-נייטרלי קבוע, ללא קשר לערכת הנושא -
    כדי שיישארו נראים כמו שדה הזנה פונקציונלי, לא כמו שורת תוכן צבעונית */
-html.light-mode .calendar-event-custom-recurrence input[type="number"],
+html.light-mode .calendar-event-recur-interval-input,
 html.light-mode .recipe-form-grid input,
 html.light-mode .recipe-form-grid textarea,
 html.light-mode .recipe-form-grid select,
@@ -1813,9 +1813,12 @@ html[dir="ltr"] .daily-focus-bubble::before {
 .calendar-event-recurring-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; padding: 2px 0; }
 .calendar-event-recurring-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; }
 .calendar-event-recurring-options { display: flex; flex-direction: column; gap: 8px; padding: 10px; margin-top: 4px; background-color: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 12px; }
-.calendar-event-custom-recurrence { display: flex; gap: 8px; }
-.calendar-event-custom-recurrence input[type="number"] { flex: 1 1 40%; min-width: 0; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; box-sizing: border-box; }
-.calendar-event-custom-recurrence select { flex: 1 1 60%; min-width: 0; }
+.calendar-event-recurring-options .language-select { padding: 10px 10px 10px 32px; font-size: 0.85rem; background-size: 12px; }
+html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10px 32px 10px 10px; }
+.calendar-event-repeat-interval-row { display: flex; align-items: center; gap: 8px; }
+.calendar-event-repeat-every-label { flex-shrink: 0; font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; }
+.calendar-event-recur-interval-input { flex: 0 0 54px; width: 54px; min-width: 0; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px 4px; font-size: 0.85rem; text-align: center; outline: none; box-sizing: border-box; }
+.calendar-event-repeat-interval-row .language-select { flex: 1 1 auto; min-width: 0; }
 
 .calendar-event-series { display: flex; flex-direction: column; }
 .calendar-event-series-header { margin-bottom: 0; }
@@ -2770,8 +2773,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .preset-category-group.expanded .preset-category-chevron { transform: rotate(180deg); }
 .preset-category-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
 .preset-category-group.expanded .preset-category-items { max-height: 2000px; margin-top: 8px; }
-.btn-edit-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10; }
-.btn-edit-item:hover { color: var(--accent-purple-light-text); transform: scale(1.1); }
+.btn-edit-item { background: transparent; color: var(--accent-purple-light-text); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10; display: inline-flex; align-items: center; }
+.btn-edit-item:hover { color: var(--accent-purple-text); transform: scale(1.1); }
+.btn-edit-icon { width: 15px; height: 15px; flex-shrink: 0; }
 
 .settings-label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; }
 .language-select {
