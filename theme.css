@@ -9,7 +9,13 @@ html {
     overflow: hidden;
 }
 #app-container {
-    overflow-x: hidden !important;
+    /* overflow-x היה מוגדר בלי overflow-y - לפי כלל תקן ה-CSS, כשציר אחד
+       non-visible והשני visible (ברירת המחדל, כי לא הוצהר), הדפדפן "מקדם"
+       אוטומטית את הציר הלא-מוצהר ל-auto (כדי שלא יהיה שילוב לא-הגיוני של
+       חיתוך בציר אחד וגלישה חופשית בשני) - זה בדיוק מה שיצר את פס-הגלילה
+       הבלתי-נראה-בקוד שדווח שוב ושוב ("עדיין יש גלילה"), אימות דרך
+       getComputedStyle(...).overflowY === 'auto' בקונסול בפועל */
+    overflow: hidden !important;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
