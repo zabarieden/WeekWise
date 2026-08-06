@@ -1678,6 +1678,15 @@ html[dir="ltr"] .daily-focus-bubble::before {
     animation: aiBrainBadgePulse 1.8s ease-in-out infinite;
 }
 .ai-brain-fab-badge.hidden { display: none; }
+/* התג עצמו קטן (20px) - אזור לחיצה שקוף ומוגדל סביבו (48px, בהתאם להמלצת
+   מינימום מגע) כדי שלחיצה קרובה עדיין תפגע בתג ולא "תפול" דרכו לכפתור
+   המוח שמתחתיו - זה בדיוק מה שדווח ("לחיצה על ההודעה הקטנה נלחצת על
+   המוח") */
+.ai-brain-fab-badge::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+}
 @keyframes aiBrainBadgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 .daily-focus-bubble-expanded textarea {
     resize: none;
