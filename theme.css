@@ -1543,7 +1543,8 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    שיהיה קל להבדיל ביניהם מבלי לפתוח - לפי בקשה מפורשת. לאחר פתיחה
    (expanded) הכול חוזר לצבע/עוצמה רגילים כרגיל */
 .calendar-glance-card:not(.expanded) .card-title-row { opacity: 0.68; }
-.calendar-glance-month-header { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); padding: 4px 4px 0; }
+/* זוהר עדין על כותרות החודש ב"כל האירועים" - לפי בקשה מפורשת ("ממש יפה") */
+.calendar-glance-month-header { font-size: 0.78rem; font-weight: 700; color: var(--accent-purple-light-text); text-shadow: 0 0 8px rgba(168, 85, 247, 0.5); padding: 4px 4px 0; }
 .calendar-event-item {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
@@ -2044,7 +2045,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .weight-inputs-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
-.center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+/* max-width+margin:auto (לא width:100% גורף) - כדי שברוחב מסך גדול (דסקטופ)
+   הרשימה לא תימתח לכל הרוחב אלא תישאר קומפקטית וממורכזת, לפי בקשה מפורשת */
+.center-list { list-style: none; padding: 0; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 640px; }
 .center-list li {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
@@ -2073,7 +2076,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    כברירת מחדל), אז המילה הענקית "דחפה" את כל השורה לרוחב ענק והוציאה את
    כפתורי העריכה/מחיקה (שבאים אחריה ב-flex) הרחק מחוץ לתחום הנראה - בדיוק
    מה שנראה כמו "קו" עם כפתורים חסרים */
-.center-list-item-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); }
+/* line-clamp ל-3 שורות - פתק ארוך מאוד מצטמצם עם "..." במקום למתוח את
+   השורה לגובה ענק, לפי בקשה מפורשת. הטקסט המלא עדיין נגיש דרך העריכה (✏️) */
+.center-list-item-text { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; text-align: start; margin-inline-start: 10px; font-weight: 500; color: var(--text-primary); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
 .center-list-item-text.completed { text-decoration: line-through; color: var(--text-secondary); }
 /* מפריד "להגיע לזה" בתוך רשימת הפתקים - לא כרטיס פתק (מבטל את הרקע/מסגרת/
    צל של .center-list li), תגית קטנה בצד במקום קו - אותה שפה חזותית כמו
@@ -2086,9 +2091,11 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     padding: 0;
     display: flex;
     justify-content: flex-start;
-    cursor: default;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
-.center-list-divider span {
+.center-list-divider-label {
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-secondary);
@@ -2097,6 +2104,12 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     border-radius: 8px;
     padding: 3px 10px;
 }
+/* מתקפל, מכווץ כברירת מחדל - .expanded (מתווסף/מוסר ב-onclick, ר'
+   buildNoteSomedayDivider ב-app.js) חושף את הפתקים; ה-› מסתובב 90 מעלות
+   כשפתוח, אותו דפוס בדיוק כמו שאר הכפתרים המתקפלים באפליקציה */
+.center-list-divider-chevron { color: var(--text-secondary); font-size: 0.85rem; transition: transform 0.2s ease; }
+.center-list-divider.expanded .center-list-divider-chevron { transform: rotate(90deg); }
+.center-list-divider:not(.expanded) ~ li { display: none; }
 /* פתקי "להגיע לזה" - מהמפריד עצמו ועד סוף הרשימה (~ תופס את כל האחים
    שאחריו, לא רק את הבא) - מקבלים סטייל בהיר/שקוף יותר כדי שלא ישתלטו
    חזותית על הפתקים הרגילים מעליהם, לפי בקשה מפורשת. opacity ולא rgba קבוע,
@@ -2184,30 +2197,31 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .note-triage-zones { display: flex; gap: 10px; margin-bottom: 12px; }
 /* כרטיס-זכוכית זוהר, לא מסגרת מקווקוות - אותה שפה חזותית כמו שאר האפליקציה
    (stat-box/calendar-event-date-badge וכו') כדי שלא ירגיש כמו "אזור טכני" נפרד */
+/* מוקטן (padding/font/אייקון) - לפי בקשה מפורשת ("סתם תופסים מקום") */
 .note-triage-zone {
     flex: 1 1 0;
     background-color: var(--bg-glass);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 0, 127, 0.22);
-    border-radius: 14px;
-    padding: 12px 6px;
+    border-radius: 12px;
+    padding: 7px 6px;
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 700;
     color: var(--text-secondary);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 3px;
     transition: var(--transition);
-    min-height: 30px;
+    min-height: 20px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.06);
 }
 .note-triage-icon {
-    font-size: 1.4rem;
-    width: 38px;
-    height: 38px;
+    font-size: 1rem;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;

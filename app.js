@@ -319,12 +319,22 @@ async function loadCenterItems(type) {
     refreshNotesArchiveCount(type);
 }
 
+// מתקפל, מכווץ כברירת מחדל (לא פתוח) - לפי בקשה מפורשת. כל הפתקים
+// שאחריו מוסתרים לגמרי (display:none, לא רק דהויים) כל עוד אין קלאס
+// expanded על ה-li של המפריד עצמו - נשלט לגמרי ב-CSS (ר' .center-list-
+// divider:not(.expanded) ~ li) כדי שלא צריך לגעת בכל פתק בנפרד ב-JS
 function buildNoteSomedayDivider() {
     const li = document.createElement('li');
     li.className = 'center-list-divider';
+    li.onclick = () => li.classList.toggle('expanded');
     const label = document.createElement('span');
+    label.className = 'center-list-divider-label';
     label.textContent = t('note_someday_section_label');
+    const chevron = document.createElement('span');
+    chevron.className = 'center-list-divider-chevron';
+    chevron.textContent = '›';
     li.appendChild(label);
+    li.appendChild(chevron);
     return li;
 }
 
