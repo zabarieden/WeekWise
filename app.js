@@ -287,15 +287,17 @@ async function loadCenterItems(type) {
         }
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
+        if (item.text_color) li.setAttribute('data-text-color', item.text_color);
         // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
         // לפי בקשה מפורשת (רק פתקים נגררים - כולל אל "רשימת קניות" כיעד)
         const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
+        const colorStyle = item.text_color ? ` style="color: ${item.text_color};"` : '';
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
-            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}"${colorStyle}>
                 ${escapeHtmlForReport(item.content)}
             </span>
             <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">✏️</button>
@@ -1475,6 +1477,39 @@ function backToSettingsMain() {
 }
 
 let pendingCenterItemType = null;
+// עיצוב טקסט לפתק/משימה בודדים - פלטת צבעים קבועה (לא var(--accent-*),
+// כדי שהבחירה של המשתמשת תישאר בדיוק אותו גוון גם אם היא מחליפה אחר כך
+// ערכת נושא פרימיום - זו העדפה אישית על התוכן, לא צבע-נושא) - לפי בקשה
+// מפורשת ("אפשר צבע שונה למילים פה בפתקים? ובכל האפליקציה?")
+const CENTER_ITEM_COLOR_PRESETS = ['#ff453a', '#ff9500', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
+let pendingCenterItemColor = null;
+
+function renderCenterItemColorSwatches() {
+    const wrap = document.getElementById('center-item-color-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemColor ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = 'A';
+    defaultBtn.onclick = () => selectCenterItemColor(null);
+    wrap.appendChild(defaultBtn);
+    CENTER_ITEM_COLOR_PRESETS.forEach(color => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'note-color-swatch' + (pendingCenterItemColor === color ? ' selected' : '');
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectCenterItemColor(color);
+        wrap.appendChild(btn);
+    });
+}
+
+function selectCenterItemColor(color) {
+    pendingCenterItemColor = color;
+    renderCenterItemColorSwatches();
+}
+
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
 // מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן
 let editingCenterItemId = null;
@@ -1484,13 +1519,16 @@ function openCenterAdder(type) {
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
     const input = document.getElementById('center-item-input');
     input.value = '';
+    pendingCenterItemColor = null;
+    renderCenterItemColorSwatches();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
 
 // נקרא מכפתור העריכה (✏️) בכל שורת פתק/משימה - קורא את הטקסט הנוכחי ואת
 // מזהה הפריט ישירות מה-DOM (לא מוטבע ב-onclick) כדי לא להסתבך עם escaping
-// של תווים מיוחדים שהמשתמש הקליד בתוכן עצמו
+// של תווים מיוחדים שהמשתמש הקליד בתוכן עצמו. צבע הטקסט הנוכחי נקרא מ-
+// data-text-color על ה-li עצמו (ר' loadCenterItems) מאותה סיבה בדיוק
 function openCenterItemEditor(btn, type) {
     const li = btn.closest('li');
     if (!li) return;
@@ -1500,6 +1538,8 @@ function openCenterItemEditor(btn, type) {
     document.getElementById('center-item-modal-title').textContent = t('edit_item_title');
     const input = document.getElementById('center-item-input');
     input.value = currentText;
+    pendingCenterItemColor = li.getAttribute('data-text-color') || null;
+    renderCenterItemColorSwatches();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -1509,25 +1549,27 @@ function submitCenterItem() {
     const text = input.value.trim();
     const type = pendingCenterItemType;
     const editId = editingCenterItemId;
+    const color = pendingCenterItemColor;
     closeModal('modal-add-center-item');
     editingCenterItemId = null;
     pendingCenterItemType = null;
+    pendingCenterItemColor = null;
     if (!text || !type) return;
-    if (editId) updateCenterItemDirect(editId, type, text);
-    else insertCenterItemDirect(type, text);
+    if (editId) updateCenterItemDirect(editId, type, text, color);
+    else insertCenterItemDirect(type, text, color);
 }
 
-async function updateCenterItemDirect(id, type, content) {
+async function updateCenterItemDirect(id, type, content, textColor) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').update({ content }).eq('id', id);
+    const { error } = await supabaseClient.from('my_center_tasks').update({ content, text_color: textColor }).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     showAppToast(t('item_added_success'));
 }
 
-async function insertCenterItemDirect(type, content) {
+async function insertCenterItemDirect(type, content, textColor) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content });
+    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     expandCardForList(`${type}-list`);

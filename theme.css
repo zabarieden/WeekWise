@@ -453,6 +453,23 @@ html.high-contrast.light-mode {
 }
 .color-filter-option.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.1); color: var(--accent-pink-text); }
 .color-filter-option:active { transform: scale(0.97); }
+/* עיגולי-צבע לבחירת צבע טקסט לפתק/משימה בודדים (ר' CENTER_ITEM_COLOR_PRESETS
+   ב-app.js) - "ברירת מחדל" (חזרה לצבע הטקסט הרגיל של הנושא) הוא עיגול עם
+   קו-מתאר בלבד ואות A, לא צבע מוצק, כדי שיהיה ברור שהוא "ללא צבע נבחר" */
+.note-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 4px; }
+.note-color-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+.note-color-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.3); transform: scale(1.08); }
+.note-color-swatch-default { background-color: transparent; border: 2px dashed var(--text-secondary); color: var(--text-secondary); font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.note-color-swatch-default.selected { border-style: solid; border-color: var(--accent-purple); color: var(--accent-purple-text); }
 /* שדות קלט/כרטיסי משנה כהים באופן קבוע (רקע rgba(0,0,0,x) + טקסט לבן) -
    במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
 /* שורות תוכן (לו"ז/ארוחות/התקדמות) משתמשות ב-var(--bg-row) - כך שגם במצב
