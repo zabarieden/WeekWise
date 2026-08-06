@@ -1102,6 +1102,12 @@
                         <button type="button" class="ai-schedule-mode-btn" data-mode="general" onclick="setQuickNoteDestination('general')" data-i18n="quick_note_dest_shopping">🛒 Shopping List</button>
                     </div>
                     <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="A thought, a reminder, or an idea"></textarea>
+                    <p class="settings-label" data-i18n="note_text_color_label">Text color</p>
+                    <div id="quick-add-color-swatches" class="note-color-swatches"></div>
+                    <p class="settings-label" data-i18n="note_glow_color_label">Glow</p>
+                    <div id="quick-add-glow-swatches" class="note-color-swatches"></div>
+                    <p class="settings-label" data-i18n="note_bg_color_label">Background</p>
+                    <div id="quick-add-bg-swatches" class="note-color-swatches"></div>
                     <div class="action-buttons-wrap">
                         <button id="btn-ai-quick-add" class="btn-primary" data-i18n="notes_ai_btn">Add</button>
                         <!-- קיצור דרך אמיתי (לא בחירת יעד) - סוגר את המודל ומנווט ישר
@@ -2441,6 +2447,6 @@
     </div>
 
     <script src="i18n.js?v=214"></script>
-    <script src="app.js?v=308"></script>
+    <script src="app.js?v=309"></script>
 </body>
 </html>

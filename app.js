@@ -1507,28 +1507,48 @@ function hexToRgba(hex, alpha) {
 }
 let pendingCenterItemColor = null;
 
-function renderCenterItemColorSwatches() {
-    const wrap = document.getElementById('center-item-color-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const defaultBtn = document.createElement('button');
-    defaultBtn.type = 'button';
-    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemColor ? ' selected' : '');
-    defaultBtn.title = t('note_text_color_default');
-    defaultBtn.textContent = 'A';
-    defaultBtn.onclick = () => selectCenterItemColor(null);
-    wrap.appendChild(defaultBtn);
-    CENTER_ITEM_COLOR_PRESETS.forEach(color => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'note-color-swatch' + (pendingCenterItemColor === color ? ' selected' : '');
-        btn.style.backgroundColor = color;
-        btn.onclick = () => selectCenterItemColor(color);
-        wrap.appendChild(btn);
+// כל שלושת הבוררים (טקסט/זוהר/רקע) מוצגים גם במודל ההוספה/עריכה המלא
+// (modal-add-center-item) וגם במודל "פתק מהיר" (modal-ai-quick-add, ר'
+// handleAIQuickAdd) - לפי בקשה מפורשת "שיהיו גם בקיצורי דרך בפתקים וגם
+// ברשימת קניות" ("קיצור דרך" הוא השם בקוד למודל ההוספה-המהירה עצמו).
+// מציירים לתוך כל ה-container-ים שקיימים כרגע (בפועל רק אחד גלוי בו-זמנית,
+// כי רק מודל אחד פתוח בכל רגע נתון) כדי לא לשכפל state נפרד לכל מודל
+function renderIntoAll(ids, buildFn) {
+    ids.forEach(id => {
+        const wrap = document.getElementById(id);
+        if (wrap) buildFn(wrap);
     });
 }
 
+const CENTER_ITEM_COLOR_CONTAINER_IDS = ['center-item-color-swatches', 'quick-add-color-swatches'];
+const CENTER_ITEM_GLOW_CONTAINER_IDS = ['center-item-glow-swatches', 'quick-add-glow-swatches'];
+const CENTER_ITEM_BG_CONTAINER_IDS = ['center-item-bg-swatches', 'quick-add-bg-swatches'];
+
+function renderCenterItemColorSwatches() {
+    renderIntoAll(CENTER_ITEM_COLOR_CONTAINER_IDS, wrap => {
+        wrap.innerHTML = '';
+        const defaultBtn = document.createElement('button');
+        defaultBtn.type = 'button';
+        defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemColor ? ' selected' : '');
+        defaultBtn.title = t('note_text_color_default');
+        defaultBtn.textContent = 'A';
+        defaultBtn.onclick = () => selectCenterItemColor(null);
+        wrap.appendChild(defaultBtn);
+        CENTER_ITEM_COLOR_PRESETS.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'note-color-swatch' + (pendingCenterItemColor === color ? ' selected' : '');
+            btn.style.backgroundColor = color;
+            btn.onclick = () => selectCenterItemColor(color);
+            wrap.appendChild(btn);
+        });
+    });
+}
+
+// שלושת הבוררים נעולים לפרימיום (לא רק בחירת הפונט/ערכת הנושא) - לפי
+// בקשה מפורשת "שכל הבחירת צבעים בפרימיום גם הזוהרים"
 function selectCenterItemColor(color) {
+    if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemColor = color;
     renderCenterItemColorSwatches();
 }
@@ -1541,28 +1561,29 @@ const GLOW_COLOR_PRESETS = ['#ff007f', '#a855f7', '#00d4ff', '#00e676', '#f59e0b
 let pendingCenterItemGlow = null;
 
 function renderCenterItemGlowSwatches() {
-    const wrap = document.getElementById('center-item-glow-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const defaultBtn = document.createElement('button');
-    defaultBtn.type = 'button';
-    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemGlow ? ' selected' : '');
-    defaultBtn.title = t('note_text_color_default');
-    defaultBtn.textContent = 'A';
-    defaultBtn.onclick = () => selectCenterItemGlow(null);
-    wrap.appendChild(defaultBtn);
-    GLOW_COLOR_PRESETS.forEach(color => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'note-color-swatch' + (pendingCenterItemGlow === color ? ' selected' : '');
-        btn.style.backgroundColor = color;
-        btn.style.boxShadow = `0 0 10px ${color}`;
-        btn.onclick = () => selectCenterItemGlow(color);
-        wrap.appendChild(btn);
+    renderIntoAll(CENTER_ITEM_GLOW_CONTAINER_IDS, wrap => {
+        wrap.innerHTML = '';
+        const defaultBtn = document.createElement('button');
+        defaultBtn.type = 'button';
+        defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemGlow ? ' selected' : '');
+        defaultBtn.title = t('note_text_color_default');
+        defaultBtn.textContent = 'A';
+        defaultBtn.onclick = () => selectCenterItemGlow(null);
+        wrap.appendChild(defaultBtn);
+        GLOW_COLOR_PRESETS.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'note-color-swatch' + (pendingCenterItemGlow === color ? ' selected' : '');
+            btn.style.backgroundColor = color;
+            btn.style.boxShadow = `0 0 10px ${color}`;
+            btn.onclick = () => selectCenterItemGlow(color);
+            wrap.appendChild(btn);
+        });
     });
 }
 
 function selectCenterItemGlow(color) {
+    if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemGlow = color;
     renderCenterItemGlowSwatches();
 }
@@ -1574,28 +1595,40 @@ function selectCenterItemGlow(color) {
 let pendingCenterItemBg = null;
 
 function renderCenterItemBgSwatches() {
-    const wrap = document.getElementById('center-item-bg-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const defaultBtn = document.createElement('button');
-    defaultBtn.type = 'button';
-    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemBg ? ' selected' : '');
-    defaultBtn.title = t('note_text_color_default');
-    defaultBtn.textContent = 'A';
-    defaultBtn.onclick = () => selectCenterItemBg(null);
-    wrap.appendChild(defaultBtn);
-    CENTER_ITEM_COLOR_PRESETS.forEach(color => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'note-color-swatch' + (pendingCenterItemBg === color ? ' selected' : '');
-        btn.style.backgroundColor = color;
-        btn.onclick = () => selectCenterItemBg(color);
-        wrap.appendChild(btn);
+    renderIntoAll(CENTER_ITEM_BG_CONTAINER_IDS, wrap => {
+        wrap.innerHTML = '';
+        const defaultBtn = document.createElement('button');
+        defaultBtn.type = 'button';
+        defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemBg ? ' selected' : '');
+        defaultBtn.title = t('note_text_color_default');
+        defaultBtn.textContent = 'A';
+        defaultBtn.onclick = () => selectCenterItemBg(null);
+        wrap.appendChild(defaultBtn);
+        CENTER_ITEM_COLOR_PRESETS.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'note-color-swatch' + (pendingCenterItemBg === color ? ' selected' : '');
+            btn.style.backgroundColor = color;
+            btn.onclick = () => selectCenterItemBg(color);
+            wrap.appendChild(btn);
+        });
     });
 }
 
 function selectCenterItemBg(color) {
+    if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemBg = color;
+    renderCenterItemBgSwatches();
+}
+
+// איפוס+ציור ראשוני של שלושת הבוררים לפני פתיחת מודל - נקרא גם מ-
+// openCenterAdder וגם מפתיחת "פתק מהיר" (ר' initFixedAiFab)
+function resetCenterItemColorPickers() {
+    pendingCenterItemColor = null;
+    pendingCenterItemGlow = null;
+    pendingCenterItemBg = null;
+    renderCenterItemColorSwatches();
+    renderCenterItemGlowSwatches();
     renderCenterItemBgSwatches();
 }
 
@@ -1608,12 +1641,7 @@ function openCenterAdder(type) {
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
     const input = document.getElementById('center-item-input');
     input.value = '';
-    pendingCenterItemColor = null;
-    pendingCenterItemGlow = null;
-    pendingCenterItemBg = null;
-    renderCenterItemColorSwatches();
-    renderCenterItemGlowSwatches();
-    renderCenterItemBgSwatches();
+    resetCenterItemColorPickers();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -1886,7 +1914,7 @@ function applyPwaShortcutDeepLink() {
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
-    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
+    el.onclick = () => { setQuickNoteDestination('weekly'); resetCenterItemColorPickers(); openModal('modal-ai-quick-add'); };
 }
 
 // יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
@@ -11229,18 +11257,26 @@ const DAILY_BOARD_DEFAULT_HOURS = {
 
 // לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
 // ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות ולשנות לכל טאב שונה")
+// קריטי להחזיר עותק טרי בכל קריאה (לא רפרנס משותף ל-DAILY_BOARD_DEFAULT_HOURS
+// הקבוע) - toggleDailyBoardHour עושה hours[bucket] = list על מה שמוחזר כאן
+// ישירות; אם היה מוחזר הרפרנס המשותף עצמו, מוטציה כזו הייתה משנה את הקבוע
+// הגלובלי לצמיתות עבור *כל* הטאבים שעדיין אין להם התאמה אישית משלהם - בדיוק
+// הבאג שדווח ("הוספתי שעה בלימודים וזה התווסף גם לשגרה היומית"), שאומת דרך
+// הקונסול: שני הטאבים הראו את אותה שעה מותאמת, כשלטאב שלא נגעו בו כלל לא
+// הייתה בכלל רשומת localStorage משלו - סימן שהוא פשוט ירש את הקבוע המזוהם
 function getDailyBoardCustomHours(tabId) {
     const raw = tabId ? localStorage.getItem(`weekwise_board_hours_${currentUserId}_${tabId}`) : null;
-    if (!raw) return DAILY_BOARD_DEFAULT_HOURS;
+    if (!raw) return { morning: [...DAILY_BOARD_DEFAULT_HOURS.morning], noon: [...DAILY_BOARD_DEFAULT_HOURS.noon], afternoon: [...DAILY_BOARD_DEFAULT_HOURS.afternoon], evening: [...DAILY_BOARD_DEFAULT_HOURS.evening] };
     try {
         const parsed = JSON.parse(raw);
         return {
-            morning: Array.isArray(parsed.morning) ? parsed.morning : DAILY_BOARD_DEFAULT_HOURS.morning,
-            noon: Array.isArray(parsed.noon) ? parsed.noon : DAILY_BOARD_DEFAULT_HOURS.noon,
-            afternoon: Array.isArray(parsed.afternoon) ? parsed.afternoon : DAILY_BOARD_DEFAULT_HOURS.afternoon,
-            evening: Array.isArray(parsed.evening) ? parsed.evening : DAILY_BOARD_DEFAULT_HOURS.evening,
+            morning: Array.isArray(parsed.morning) ? parsed.morning : [...DAILY_BOARD_DEFAULT_HOURS.morning],
+            noon: Array.isArray(parsed.noon) ? parsed.noon : [...DAILY_BOARD_DEFAULT_HOURS.noon],
+            afternoon: Array.isArray(parsed.afternoon) ? parsed.afternoon : [...DAILY_BOARD_DEFAULT_HOURS.afternoon],
+            evening: Array.isArray(parsed.evening) ? parsed.evening : [...DAILY_BOARD_DEFAULT_HOURS.evening],
         };
-    } catch (e) { return DAILY_BOARD_DEFAULT_HOURS; }
+    } catch (e) { return { morning: [...DAILY_BOARD_DEFAULT_HOURS.morning], noon: [...DAILY_BOARD_DEFAULT_HOURS.noon], afternoon: [...DAILY_BOARD_DEFAULT_HOURS.afternoon], evening: [...DAILY_BOARD_DEFAULT_HOURS.evening] };
+    }
 }
 
 function toggleDailyBoardHour(bucket, hour) {
@@ -11782,7 +11818,7 @@ async function handleAIQuickAdd() {
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
 
-    await insertCenterItemDirect(quickNoteDestination, text);
+    await insertCenterItemDirect(quickNoteDestination, text, pendingCenterItemColor, pendingCenterItemGlow, pendingCenterItemBg);
     showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
     input.value = '';
     closeModal('modal-ai-quick-add');
