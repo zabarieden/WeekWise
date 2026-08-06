@@ -3849,6 +3849,9 @@ async function moveCalendarTaskToDate(itemId, itemType, targetDateStr) {
     } else if (itemType === 'recurring') {
         const [ty, tm, td] = targetDateStr.split('-').map(Number);
         const targetDay = dbDaysMap[new Date(ty, tm - 1, td).getDay()];
+        const [sy, sm, sd] = (selectedCalendarDay || '').split('-').map(Number);
+        const sourceDay = selectedCalendarDay ? dbDaysMap[new Date(sy, sm - 1, sd).getDay()] : null;
+        if (targetDay === sourceDay) return;
         const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', targetDay);
         const nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
         await supabaseClient.from('weekly_schedule').update({ day_of_week: targetDay, slot_number: nextSlot }).eq('id', itemId);
