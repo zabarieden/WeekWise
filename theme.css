@@ -3159,7 +3159,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .premium-active-badge { text-align: center; margin: 10px 0; }
 .premium-active-badge span { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-text); background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
 .apple-modal.open { display: flex; }
-.apple-modal.open .modal-sheet { transform: translateY(0); }
+.apple-modal.open .modal-sheet { transform: translateY(0); opacity: 1; }
 .login-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #050505; display: flex; justify-content: center; align-items: center; z-index: 3000; }
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 .login-card p { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 14px 0; }
