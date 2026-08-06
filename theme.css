@@ -555,7 +555,10 @@ html.light-mode .premium-benefits-list li {
     box-shadow: 0 0 12px rgba(168, 85, 247, 0.12);
 }
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* var(--user-font) - נקבע ב-JS (applyGlobalFont) כשנבחר פונט פרימיום
+       מותאם אישית מ-Google Fonts; לא מוגדר כברירת מחדל, אז נופל תמיד
+       לערימת פונטי המערכת הרגילה */
+    font-family: var(--user-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     background-color: #07060a;
     color: var(--text-primary);
     margin: 0;

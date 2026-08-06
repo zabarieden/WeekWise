@@ -1219,6 +1219,12 @@ async function initAppAfterAuth(user) {
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     applyUserCountrySetting();
+    // loadPremiumStatus מחוץ ל-Promise.all שלמטה ומחכה לו קודם: loadGlobalFont
+    // צריך לדעת כבר את isPremiumUser הסופי כדי לאכוף את הנעילה שלו כראוי
+    // (בניגוד ל-loadColorTheme, ששם הנעילה נאכפת רק בבחירה עצמה, לא בטעינה) -
+    // אם שניהם היו רצים במקביל בתוך אותו Promise.all, היה מרוץ-תזמון שבו
+    // isPremiumUser עוד false (הערך ההתחלתי) כש-loadGlobalFont כבר קורא אותו
+    await loadPremiumStatus();
     await Promise.all([
         loadWeeklySchedule(),
         loadStats(),
@@ -1232,10 +1238,10 @@ async function initAppAfterAuth(user) {
         loadCalorieMonthlyCalendar(),
         loadRecipes(),
         loadAiUsage(),
-        loadPremiumStatus(),
         loadColorTheme(),
         loadLightModeSetting(),
         loadGlobalTextColor(),
+        loadGlobalFont(),
         loadMonthlyGoal(),
         loadFinanceData(),
         loadSportData(),
@@ -6168,6 +6174,106 @@ async function loadGlobalTextColor() {
         if (local) color = local;
     }
     applyGlobalTextColor(color);
+}
+
+// --- פונט מותאם אישית לכל האפליקציה (פרימיום): רשימה אוצרת בלבד (לא כל
+// Google Fonts) - כל פונט ברשימה נבדק שתומך גם בעברית וגם בלטינית, כי
+// הרוב הגדול של Google Fonts (Roboto, Poppins, Montserrat וכו') כלל לא
+// כולל גליפים בעברית, מה שהיה גורם לטקסט עברי "ליפול" לפונט גיבוי בשקט
+// בלי שום שגיאה - מסוכן מדי לאפליקציה שרוב השימוש בה בעברית. אותו דפוס
+// בדיוק כמו openLanguagePicker/renderLanguagePickerList (חיפוש + רשימה
+// מסוננת), ואותו דפוס sync כמו selectColorTheme/selectGlobalTextColor -
+// synced ל-user_premium.font_family כדי שיתחבר בין מכשירים
+const CURATED_FONTS = [
+    'Rubik', 'Heebo', 'Assistant', 'Alef', 'Frank Ruhl Libre', 'David Libre',
+    'Miriam Libre', 'Secular One', 'Suez One', 'Varela Round', 'Tinos',
+    'Arimo', 'Cardo', 'Amatic SC', 'Bellefair', 'Cousine',
+    'Noto Sans Hebrew', 'Noto Serif Hebrew',
+];
+let fontStylesheetsLoaded = false;
+let currentFontFamily = null;
+
+function loadCuratedFontStylesheets() {
+    if (fontStylesheetsLoaded) return;
+    fontStylesheetsLoaded = true;
+    const families = CURATED_FONTS.map(f => `family=${encodeURIComponent(f)}:wght@400;600;700`).join('&');
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    document.head.appendChild(link);
+}
+
+function applyGlobalFont(fontName) {
+    currentFontFamily = fontName;
+    if (fontName) {
+        loadCuratedFontStylesheets();
+        document.documentElement.style.setProperty('--user-font', `'${fontName}', sans-serif`);
+    } else {
+        document.documentElement.style.removeProperty('--user-font');
+    }
+    const nameEl = document.getElementById('font-picker-settings-name');
+    if (nameEl) nameEl.textContent = fontName || t('font_picker_default_option');
+}
+
+function openFontPicker() {
+    loadCuratedFontStylesheets();
+    const search = document.getElementById('font-search-input');
+    if (search) search.value = '';
+    renderFontPickerList('');
+    openModal('modal-font-picker');
+    if (search) search.focus();
+}
+
+function renderFontPickerList(filter) {
+    const list = document.getElementById('font-picker-list');
+    if (!list) return;
+    const query = (filter || '').trim().toLowerCase();
+    const matches = CURATED_FONTS.filter(f => f.toLowerCase().includes(query));
+    let html = '';
+    if (!query) {
+        html += `
+        <button type="button" class="language-picker-item${!currentFontFamily ? ' active' : ''}" onclick="selectFontFromPicker(null)">
+            <span class="language-picker-name">${t('font_picker_default_option')}</span>
+            ${!currentFontFamily ? '<span class="language-picker-check">✓</span>' : ''}
+        </button>`;
+    }
+    if (!matches.length) {
+        list.innerHTML = html || `<p class="language-no-results">${t('language_no_results')}</p>`;
+        return;
+    }
+    html += matches.map(f => `
+        <button type="button" class="language-picker-item${currentFontFamily === f ? ' active' : ''}" onclick="selectFontFromPicker('${f}')">
+            <span class="language-picker-name" style="font-family: '${f}', sans-serif;">${f}</span>
+            ${currentFontFamily === f ? '<span class="language-picker-check">✓</span>' : ''}
+        </button>
+    `).join('');
+    list.innerHTML = html;
+}
+
+async function selectFontFromPicker(fontName) {
+    if (fontName && !isPremiumUser) { closeModal('modal-font-picker'); openPremiumUpgradeModal(); return; }
+    applyGlobalFont(fontName);
+    localStorage.setItem('weekwise_global_font', fontName || '');
+    closeModal('modal-font-picker');
+    if (supabaseClient && currentUserId) {
+        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (existing) await supabaseClient.from('user_premium').update({ font_family: fontName }).eq('user_id', currentUserId);
+        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, font_family: fontName });
+    }
+}
+
+async function loadGlobalFont() {
+    let fontName = null;
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('user_premium').select('font_family').eq('user_id', currentUserId).maybeSingle();
+        if (data && data.font_family) fontName = data.font_family;
+    }
+    if (!fontName) {
+        const local = localStorage.getItem('weekwise_global_font');
+        if (local) fontName = local;
+    }
+    if (fontName && !isPremiumUser) fontName = null;
+    applyGlobalFont(fontName);
 }
 
 // --- יעדים חודשיים + מערכת פרס עצמי (פרימיום): מתחבר לנתונים קיימים
