@@ -10023,7 +10023,16 @@ function findSweetenedCalories(line, sweetenedKcal100g) {
 // מופרד מהחיפוש-איזה-מאכל-זה (findAllFoodMatches/estimateIngredientLineCalories)
 // כדי שאפשר יהיה להשתמש באותה לוגיקת חישוב גם כשכבר יודעים איזה פריט מתאים
 // (ר' estimateFreeTextCalories) בלי לסכן זיהוי שגוי מחדש על קטע טקסט חלקי
+// מספר קלוריות מפורש שכתוב ליד המאכל (למשל "טונה 50 קלוריות") - לפי בקשה
+// מפורשת ("אם רשום מספר וקלוריות אז זה המספר"). בודקים את זה *לפני* הכל -
+// כשהמשתמשת כבר אמרה בדיוק כמה קלוריות זה, אין טעם לנחש לפי גרם/כמות/משקל-
+// יחידה, ובלי הבדיקה הזו אותו המספר (50) היה נתפס בטעות ע"י parseQuantityCount
+// ככמות-יחידות (50 טונות טונה!) - זו בדיוק התקלה שדווחה בפועל
+const EXPLICIT_CALORIES_RE = /(\d{1,5}(?:\.\d+)?)\s*(kcal\b|cal\b|calories?\b|קלוריות|سعرة)/i;
+
 function computeItemCalories(item, contextText, isMultiFood) {
+    const explicitCaloriesMatch = contextText.match(EXPLICIT_CALORIES_RE);
+    if (explicitCaloriesMatch) return parseFloat(explicitCaloriesMatch[1]);
     let grams = null;
     const gramsMatch = contextText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
     if (gramsMatch) {
