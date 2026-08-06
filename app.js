@@ -288,6 +288,14 @@ async function loadCenterItems(type) {
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
         if (item.text_color) li.setAttribute('data-text-color', item.text_color);
+        if (item.glow_color) li.setAttribute('data-glow-color', item.glow_color);
+        if (item.bg_color) li.setAttribute('data-bg-color', item.bg_color);
+        // רקע/זוהר על ה-li כולו (לא רק הטקסט) - רקע בעמעום 18% (hexToRgba)
+        // כדי שהטקסט/הכפתורים בשורה יישארו קריאים מעליו, לא צבע אטום
+        const liStyleParts = [];
+        if (item.bg_color) liStyleParts.push(`background-color: ${hexToRgba(item.bg_color, 0.18)}`);
+        if (item.glow_color) liStyleParts.push(`box-shadow: 0 0 12px ${item.glow_color}`);
+        if (liStyleParts.length) li.setAttribute('style', liStyleParts.join('; '));
         // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
         // לפי בקשה מפורשת (רק פתקים נגררים - כולל אל "רשימת קניות" כיעד)
         const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
@@ -1489,6 +1497,14 @@ let pendingCenterItemType = null;
 // ערכת נושא פרימיום - זו העדפה אישית על התוכן, לא צבע-נושא) - לפי בקשה
 // מפורשת ("אפשר צבע שונה למילים פה בפתקים? ובכל האפליקציה?")
 const CENTER_ITEM_COLOR_PRESETS = ['#ff453a', '#ff9500', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
+
+function hexToRgba(hex, alpha) {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 let pendingCenterItemColor = null;
 
 function renderCenterItemColorSwatches() {
@@ -1517,6 +1533,72 @@ function selectCenterItemColor(color) {
     renderCenterItemColorSwatches();
 }
 
+// זוהר ניאון סביב הפתק/משימה (box-shadow) - 6 אפשרויות בלבד, בכוונה מתוך
+// 6 צבעי-הדגל של האפליקציה עצמה (ר' --accent-* ב-theme.css), לא אותה
+// פלטת 8 של צבע הטקסט - שני אפקטים שונים לגמרי (זוהר מסביב מול צבע
+// אותיות), לפי בקשה מפורשת ("צבעים שיהיו זוהרים איזה 6 אפשרויות")
+const GLOW_COLOR_PRESETS = ['#ff007f', '#a855f7', '#00d4ff', '#00e676', '#f59e0b', '#ff453a'];
+let pendingCenterItemGlow = null;
+
+function renderCenterItemGlowSwatches() {
+    const wrap = document.getElementById('center-item-glow-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemGlow ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = 'A';
+    defaultBtn.onclick = () => selectCenterItemGlow(null);
+    wrap.appendChild(defaultBtn);
+    GLOW_COLOR_PRESETS.forEach(color => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'note-color-swatch' + (pendingCenterItemGlow === color ? ' selected' : '');
+        btn.style.backgroundColor = color;
+        btn.style.boxShadow = `0 0 10px ${color}`;
+        btn.onclick = () => selectCenterItemGlow(color);
+        wrap.appendChild(btn);
+    });
+}
+
+function selectCenterItemGlow(color) {
+    pendingCenterItemGlow = color;
+    renderCenterItemGlowSwatches();
+}
+
+// רקע צבעוני לשורה כולה (לא רק הטקסט) - אותה פלטת 8 בדיוק כמו צבע הטקסט
+// (אותם עיגולים, לפי בקשה מפורשת "גם הכל שיהיה בעיגולים"), עמעום ל-18%
+// באמצעות rgba כשמוחל בפועל (ר' loadCenterItems) כדי שהטקסט/כפתורים
+// בשורה יישארו קריאים מעל הרקע, לא צבע אטום שמכסה הכול
+let pendingCenterItemBg = null;
+
+function renderCenterItemBgSwatches() {
+    const wrap = document.getElementById('center-item-bg-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!pendingCenterItemBg ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = 'A';
+    defaultBtn.onclick = () => selectCenterItemBg(null);
+    wrap.appendChild(defaultBtn);
+    CENTER_ITEM_COLOR_PRESETS.forEach(color => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'note-color-swatch' + (pendingCenterItemBg === color ? ' selected' : '');
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectCenterItemBg(color);
+        wrap.appendChild(btn);
+    });
+}
+
+function selectCenterItemBg(color) {
+    pendingCenterItemBg = color;
+    renderCenterItemBgSwatches();
+}
+
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
 // מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן
 let editingCenterItemId = null;
@@ -1527,15 +1609,20 @@ function openCenterAdder(type) {
     const input = document.getElementById('center-item-input');
     input.value = '';
     pendingCenterItemColor = null;
+    pendingCenterItemGlow = null;
+    pendingCenterItemBg = null;
     renderCenterItemColorSwatches();
+    renderCenterItemGlowSwatches();
+    renderCenterItemBgSwatches();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
 
 // נקרא מכפתור העריכה (✏️) בכל שורת פתק/משימה - קורא את הטקסט הנוכחי ואת
 // מזהה הפריט ישירות מה-DOM (לא מוטבע ב-onclick) כדי לא להסתבך עם escaping
-// של תווים מיוחדים שהמשתמש הקליד בתוכן עצמו. צבע הטקסט הנוכחי נקרא מ-
-// data-text-color על ה-li עצמו (ר' loadCenterItems) מאותה סיבה בדיוק
+// של תווים מיוחדים שהמשתמש הקליד בתוכן עצמו. צבעי הפתק הנוכחיים נקראים מ-
+// data-text-color/data-glow-color/data-bg-color על ה-li עצמו (ר'
+// loadCenterItems) מאותה סיבה בדיוק
 function openCenterItemEditor(btn, type) {
     const li = btn.closest('li');
     if (!li) return;
@@ -1546,7 +1633,11 @@ function openCenterItemEditor(btn, type) {
     const input = document.getElementById('center-item-input');
     input.value = currentText;
     pendingCenterItemColor = li.getAttribute('data-text-color') || null;
+    pendingCenterItemGlow = li.getAttribute('data-glow-color') || null;
+    pendingCenterItemBg = li.getAttribute('data-bg-color') || null;
     renderCenterItemColorSwatches();
+    renderCenterItemGlowSwatches();
+    renderCenterItemBgSwatches();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -1557,26 +1648,30 @@ function submitCenterItem() {
     const type = pendingCenterItemType;
     const editId = editingCenterItemId;
     const color = pendingCenterItemColor;
+    const glow = pendingCenterItemGlow;
+    const bg = pendingCenterItemBg;
     closeModal('modal-add-center-item');
     editingCenterItemId = null;
     pendingCenterItemType = null;
     pendingCenterItemColor = null;
+    pendingCenterItemGlow = null;
+    pendingCenterItemBg = null;
     if (!text || !type) return;
-    if (editId) updateCenterItemDirect(editId, type, text, color);
-    else insertCenterItemDirect(type, text, color);
+    if (editId) updateCenterItemDirect(editId, type, text, color, glow, bg);
+    else insertCenterItemDirect(type, text, color, glow, bg);
 }
 
-async function updateCenterItemDirect(id, type, content, textColor) {
+async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').update({ content, text_color: textColor }).eq('id', id);
+    const { error } = await supabaseClient.from('my_center_tasks').update({ content, text_color: textColor, glow_color: glowColor, bg_color: bgColor }).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     showAppToast(t('item_added_success'));
 }
 
-async function insertCenterItemDirect(type, content, textColor) {
+async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor });
+    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor, glow_color: glowColor, bg_color: bgColor });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     expandCardForList(`${type}-list`);
