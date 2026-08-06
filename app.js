@@ -1235,6 +1235,7 @@ async function initAppAfterAuth(user) {
         loadPremiumStatus(),
         loadColorTheme(),
         loadLightModeSetting(),
+        loadGlobalTextColor(),
         loadMonthlyGoal(),
         loadFinanceData(),
         loadSportData(),
@@ -6109,6 +6110,64 @@ async function loadColorTheme() {
         if (local) themeName = local;
     }
     applyColorTheme(themeName);
+}
+
+// --- צבע טקסט אישי לכל האפליקציה (חינמי, נפרד מערכת הנושא הפרימיום למעלה):
+// דורס רק --user-accent (ר' theme.css - נכנס לגדרות --accent-pink/purple/
+// purple-light-text בלבד, לא לצבעים הסמנטיים כמו ירוק/אדום/זהב), כך שבחירת
+// צבע אישית לא שוברת משמעות (הכנסה/הוצאה וכו'). אותו דפוס בדיוק כמו
+// selectColorTheme/loadColorTheme למעלה - synced ל-user_premium כדי שתתחבר
+// בין מכשירים לאותו משתמש, לפי בקשה מפורשת
+let currentGlobalTextColor = null;
+function applyGlobalTextColor(color) {
+    currentGlobalTextColor = color;
+    if (color) document.documentElement.style.setProperty('--user-accent', color);
+    else document.documentElement.style.removeProperty('--user-accent');
+    renderGlobalTextColorSwatches();
+}
+
+function renderGlobalTextColorSwatches() {
+    const wrap = document.getElementById('global-text-color-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!currentGlobalTextColor ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = 'A';
+    defaultBtn.onclick = () => selectGlobalTextColor(null);
+    wrap.appendChild(defaultBtn);
+    CENTER_ITEM_COLOR_PRESETS.forEach(color => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'note-color-swatch' + (currentGlobalTextColor === color ? ' selected' : '');
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectGlobalTextColor(color);
+        wrap.appendChild(btn);
+    });
+}
+
+async function selectGlobalTextColor(color) {
+    applyGlobalTextColor(color);
+    localStorage.setItem('weekwise_global_text_color', color || '');
+    if (supabaseClient && currentUserId) {
+        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (existing) await supabaseClient.from('user_premium').update({ custom_text_color: color }).eq('user_id', currentUserId);
+        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, custom_text_color: color });
+    }
+}
+
+async function loadGlobalTextColor() {
+    let color = null;
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('user_premium').select('custom_text_color').eq('user_id', currentUserId).maybeSingle();
+        if (data && data.custom_text_color) color = data.custom_text_color;
+    }
+    if (!color) {
+        const local = localStorage.getItem('weekwise_global_text_color');
+        if (local) color = local;
+    }
+    applyGlobalTextColor(color);
 }
 
 // --- יעדים חודשיים + מערכת פרס עצמי (פרימיום): מתחבר לנתונים קיימים

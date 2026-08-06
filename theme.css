@@ -46,10 +46,15 @@ html {
        למטה דורס אותן בגרסה מוכהית יותר, כי אותו גוון פסטלי בהיר שמאיר יפה
        על רקע כהה כמעט בלתי-קריא כטקסט על הרקע הבהיר של מצב בהיר ("בקושי
        רואים את הסגול") - כל שימושי color (לא border/background) בכל
-       הקובץ עברו לגרסת -text כדי שהתיקון יחול על כל הצבעים בכל האפליקציה */
-    --accent-pink-text: var(--accent-pink);
-    --accent-purple-text: var(--accent-purple);
-    --accent-purple-light-text: var(--accent-purple-light);
+       הקובץ עברו לגרסת -text כדי שהתיקון יחול על כל הצבעים בכל האפליקציה.
+       --user-accent (לא מוגדר כברירת מחדל - ר' applyGlobalTextColor ב-
+       app.js שקובעת אותו כ-inline style על ה-html כשנבחר צבע טקסט אישי
+       בהגדרות) דורס רק את שלושת הגוונים ה"מותגיים" (ורוד/סגול/סגול-בהיר),
+       לא את הצבעים המשמעותיים סמנטית (ירוק=הכנסה/הצלחה, אדום=הוצאה/מחיקה,
+       זהב=תקציב) - כדי שבחירת צבע אישית לא תשבור את המשמעות שלהם */
+    --accent-pink-text: var(--user-accent, var(--accent-pink));
+    --accent-purple-text: var(--user-accent, var(--accent-purple));
+    --accent-purple-light-text: var(--user-accent, var(--accent-purple-light));
     --accent-green-text: var(--accent-green);
     --accent-cyan-text: var(--accent-cyan);
     --accent-gold-text: var(--accent-gold);
@@ -232,9 +237,9 @@ html.light-mode {
     --border-color: rgba(168, 85, 247, 0.2);
     --text-primary: #17141f;
     --text-secondary: #6b6578;
-    --accent-pink-text: color-mix(in srgb, var(--accent-pink) 60%, black 40%);
-    --accent-purple-text: color-mix(in srgb, var(--accent-purple) 65%, black 35%);
-    --accent-purple-light-text: color-mix(in srgb, var(--accent-purple-light) 50%, black 50%);
+    --accent-pink-text: color-mix(in srgb, var(--user-accent, var(--accent-pink)) 60%, black 40%);
+    --accent-purple-text: color-mix(in srgb, var(--user-accent, var(--accent-purple)) 65%, black 35%);
+    --accent-purple-light-text: color-mix(in srgb, var(--user-accent, var(--accent-purple-light)) 50%, black 50%);
     --accent-green-text: color-mix(in srgb, var(--accent-green) 55%, black 45%);
     --accent-cyan-text: color-mix(in srgb, var(--accent-cyan) 55%, black 45%);
     --accent-gold-text: color-mix(in srgb, var(--accent-gold) 65%, black 35%);
