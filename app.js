@@ -3679,6 +3679,7 @@ async function loadMonthlyCalendarGrid() {
         </button>`;
     }
     grid.innerHTML = html;
+    initCalendarGridDropTargets();
 
     if (selectedCalendarDay && (selectedCalendarDay < firstStr || selectedCalendarDay > lastStr)) {
         selectedCalendarDay = null;
@@ -3730,6 +3731,11 @@ async function renderSelectedCalendarDay() {
     (data || []).forEach(item => {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
+        row.setAttribute('data-item-id', item.id);
+        row.setAttribute('data-item-type', 'event');
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'calendar-task-drag-handle';
+        dragHandle.textContent = '⠿';
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'day-detail-checkbox';
@@ -3748,6 +3754,7 @@ async function renderSelectedCalendarDay() {
         deleteBtn.className = 'btn-delete-item';
         deleteBtn.textContent = '❌';
         deleteBtn.onclick = () => deleteCalendarEvent(item.id);
+        row.appendChild(dragHandle);
         row.appendChild(checkbox);
         row.appendChild(textSpan);
         row.appendChild(editBtn);
@@ -3763,7 +3770,10 @@ async function renderSelectedCalendarDay() {
     (recurringData || []).forEach(item => {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
+        row.setAttribute('data-item-id', item.id);
+        row.setAttribute('data-item-type', 'recurring');
         row.innerHTML = `
+            <span class="calendar-task-drag-handle">⠿</span>
             <span class="today-tasks-recurring-icon" title="${escapeHtmlForReport(t('recurring_task_tooltip'))}">🔁</span>
             <span class="today-tasks-text">${escapeHtmlForReport(item.task_title)}</span>
         `;
@@ -3781,6 +3791,72 @@ async function renderSelectedCalendarDay() {
         row.appendChild(deleteBtn);
         detail.appendChild(row);
     });
+    initCalendarTaskDragSource();
+}
+
+// --- גרירת משימה מרשימת הפירוט של היום הנבחר אל תא אחר בלוח החודשי, כדי
+// להעביר אותה לתאריך אחר - אותו דפוס בדיוק כמו initNoteTriageDragDrop
+// למעלה (Sortable עם group משותף, pull:'clone' על המקור, put:true על כל
+// יעד, onAdd מסיר מיד את האלמנט שהוזרק ומפעיל עדכון משלנו ב-DB). המקור
+// (#monthly-calendar-day-detail) מאותחל פעם אחת בלבד (sort:false - אין
+// סידור-מחדש בתוך הרשימה עצמה, רק גרירה החוצה); תאי הלוח נבנים מחדש בכל
+// ניווט בין חודשים אז חייבים להשמיד ולבנות מחדש את מופעי ה-Sortable שלהם
+// בכל render (calendarGridSortables)
+let calendarTaskDragSourceInitialized = false;
+function initCalendarTaskDragSource() {
+    if (calendarTaskDragSourceInitialized || typeof Sortable === 'undefined') return;
+    const list = document.getElementById('monthly-calendar-day-detail');
+    if (!list) return;
+    calendarTaskDragSourceInitialized = true;
+    new Sortable(list, {
+        group: { name: 'calendar-task-move', pull: 'clone', put: false },
+        handle: '.calendar-task-drag-handle',
+        sort: false,
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: true,
+        dragClass: 'note-triage-drag-clone',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+    });
+}
+
+let calendarGridSortables = [];
+function initCalendarGridDropTargets() {
+    if (typeof Sortable === 'undefined') return;
+    calendarGridSortables.forEach(s => s.destroy());
+    calendarGridSortables = [];
+    document.querySelectorAll('#monthly-calendar-grid .monthly-calendar-cell[data-date]').forEach(cell => {
+        calendarGridSortables.push(new Sortable(cell, {
+            group: { name: 'calendar-task-move', pull: false, put: true },
+            animation: 150,
+            forceFallback: true,
+            onAdd: function (evt) {
+                const itemId = evt.item.getAttribute('data-item-id');
+                const itemType = evt.item.getAttribute('data-item-type');
+                evt.item.remove();
+                moveCalendarTaskToDate(itemId, itemType, cell.getAttribute('data-date'));
+            },
+        }));
+    });
+}
+
+async function moveCalendarTaskToDate(itemId, itemType, targetDateStr) {
+    if (!supabaseClient || !itemId || !targetDateStr) return;
+    if (itemType === 'event') {
+        if (targetDateStr === selectedCalendarDay) return;
+        await supabaseClient.from('calendar_events').update({ event_date: targetDateStr }).eq('id', itemId);
+    } else if (itemType === 'recurring') {
+        const [ty, tm, td] = targetDateStr.split('-').map(Number);
+        const targetDay = dbDaysMap[new Date(ty, tm - 1, td).getDay()];
+        const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', targetDay);
+        const nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
+        await supabaseClient.from('weekly_schedule').update({ day_of_week: targetDay, slot_number: nextSlot }).eq('id', itemId);
+    } else {
+        return;
+    }
+    showAppToast(t('calendar_task_moved_success'));
+    await Promise.all([loadMonthlyCalendarGrid(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
 async function deleteRecurringScheduleItem(id) {

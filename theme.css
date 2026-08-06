@@ -2821,6 +2821,16 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .monthly-calendar-cell.today { border-color: var(--tile-accent, var(--accent-gold)); color: var(--tile-accent, var(--accent-gold)); font-weight: 700; }
 .monthly-calendar-cell.selected { background-color: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 18%, transparent); border-color: var(--tile-accent, var(--accent-gold)); }
 .monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
+/* SortableJS מוסיף .sortable-ghost על התא בזמן שגוררים משימה מעליו (ר'
+   initCalendarGridDropTargets ב-app.js) - מדגישים את התא עצמו כמו
+   note-triage-zone:has(.sortable-ghost), כך שברור לאן המשימה תעבור */
+.monthly-calendar-cell:has(.sortable-ghost) {
+    border-color: var(--accent-pink);
+    background-color: rgba(255, 0, 127, 0.16);
+    transform: scale(1.08);
+}
+.calendar-task-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
+.calendar-task-drag-handle:active { cursor: grabbing; }
 .monthly-calendar-day-detail { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .monthly-calendar-day-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
 /* ממוצע יומי מעל לוח החודש של הקלוריות (calorie-monthly-avg) - אותה שפה
