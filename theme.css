@@ -2798,16 +2798,21 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    קצוות מעוגלים באותה מידה משני הצדדים, בסגנון btn-back-home (כפתור "חזור
    למסך הבית") שהובא כדוגמה - כולל אותו זוהר עדין קבוע (לא רק ב-hover),
    שמתחזק קלות במגע/ריחוף. קומפקטי יותר מהגרסה הקודמת (padding מוקטן) */
+/* width:fit-content + margin:auto (לא width:100%) - הטקסט קצר, אין צורך
+   שהפס יימתח לכל רוחב המסך, לפי בקשה מפורשת ("הכתב לא כזה ארוך... ושיהיה
+   באמצע") - min-width שומר על יעד-מגע סביר גם לתוויות קצרות מאוד */
 .settings-category-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
+    width: fit-content;
+    min-width: 240px;
+    max-width: 100%;
+    margin: 0 auto 8px auto;
     background-color: var(--bg-row);
     border: 1px solid rgba(168, 85, 247, 0.3);
     border-radius: 999px;
     padding: 8px 14px;
-    margin-bottom: 8px;
     color: var(--text-primary);
     font-family: inherit;
     cursor: pointer;

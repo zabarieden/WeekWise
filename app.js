@@ -6340,6 +6340,13 @@ const CURATED_FONTS = [
     'Miriam Libre', 'Secular One', 'Suez One', 'Varela Round', 'Tinos',
     'Arimo', 'Cardo', 'Amatic SC', 'Bellefair', 'Cousine',
     'Noto Sans Hebrew', 'Noto Serif Hebrew',
+    // שני פונטים "מסולסלים"/דקורטיביים נוספים, נבדקו שתומכים בעברית - לפי
+    // בקשה מפורשת ("עוד כ-3 פונטים מסולסלים - גם בעברית"). פונטים עבריים
+    // מסולסלים אמיתיים נדירים ב-Google Fonts (הרוב Latin-only, כולל Amiri
+    // שנבדק ונפסל - Arabic בלבד, בלי שום תמיכת עברית) - אלה השניים
+    // שאומתו בפועל: Noto Rashi Hebrew (חצי-מחובר, בהשראת כתב יד ספרדי),
+    // Playpen Sans Hebrew (סגנון כתב-יד משוחרר)
+    'Noto Rashi Hebrew', 'Playpen Sans Hebrew',
 ];
 let fontStylesheetsLoaded = false;
 let currentFontFamily = null;
