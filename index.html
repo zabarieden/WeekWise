@@ -293,11 +293,12 @@
                                         <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
                                     </div>
                                 </div>
-                                <!-- 5 משבצות חדשות (מוסתרות כברירת מחדל חוץ מ-snack_extra1) - כמה מהן
+                                <!-- 5 משבצות חדשות (מוסתרות כברירת מחדל חוץ מ-meal_extra1/snack_extra1/
+                                     snack_extra2, שתואמות לברירת המחדל של 4 ארוחות+4 נשנושים) - כמה מהן
                                      מוצגות נקבע ע"י applyMealRowCounts (ר' app.js), לפי הגדרה בתפריט
                                      ההגדרות. מפתחות ה-data-meal חדשים ולא מתנגשים בנתונים היסטוריים -
                                      ר' ההערה על MEAL_TYPE_ORDER ב-app.js -->
-                                <div class="meal-row hidden" data-meal="meal_extra1">
+                                <div class="meal-row" data-meal="meal_extra1">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_meal_4">Meal 4</span>
                                         <button type="button" class="preset-select-trigger" data-category="evening" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
@@ -336,7 +337,7 @@
                                         <button type="button" class="btn-save-as-preset" onclick="saveMealRowAsPreset(this)" data-i18n-title="meal_save_preset_title" title="Save as preset meal">💾</button>
                                     </div>
                                 </div>
-                                <div class="meal-row hidden" data-meal="snack_extra2">
+                                <div class="meal-row" data-meal="snack_extra2">
                                     <div class="meal-header-row">
                                         <span class="meal-label" data-i18n="meal_label_snack_4">Snack 4</span>
                                         <button type="button" class="preset-select-trigger" data-category="snack" onclick="openPresetPicker(this)"><span data-i18n="preset_select_placeholder">Choose a saved meal...</span> ▾</button>
@@ -2499,6 +2500,6 @@
     </div>
 
     <script src="i18n.js?v=223"></script>
-    <script src="app.js?v=326"></script>
+    <script src="app.js?v=327"></script>
 </body>
 </html>

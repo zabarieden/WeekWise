@@ -747,15 +747,15 @@ const SNACK_SLOT_KEYS = ['meal_4', 'snack', 'snack_extra1', 'snack_extra2', 'sna
 
 // כמה משבצות ארוחה/נשנוש להציג בפועל - נשמר בנפרד (לא רק "מוסתר/מוצג" per
 // slot כמו הבועות הצפות) כי כאן זה תמיד "ה-N הראשונות בסדר קבוע", לא בחירה
-// חופשית איזה משבצת ספציפית. ברירת מחדל: 3 ארוחות (ללא שינוי), 3 נשנושים
-// (במקום 2) - לפי בקשה מפורשת. clamp 1-5 מגן מפני ערך פגום ב-localStorage
+// חופשית איזה משבצת ספציפית. ברירת מחדל: 4 ארוחות, 4 נשנושים (לפי בקשה
+// מפורשת, במקום 3/3 הקודם) - clamp 1-5 מגן מפני ערך פגום ב-localStorage
 function getMealCount() {
     const n = parseInt(localStorage.getItem('weekwise_meal_count'));
-    return n >= 1 && n <= MEAL_SLOT_KEYS.length ? n : 3;
+    return n >= 1 && n <= MEAL_SLOT_KEYS.length ? n : 4;
 }
 function getSnackCount() {
     const n = parseInt(localStorage.getItem('weekwise_snack_count'));
-    return n >= 1 && n <= SNACK_SLOT_KEYS.length ? n : 3;
+    return n >= 1 && n <= SNACK_SLOT_KEYS.length ? n : 4;
 }
 // מחזירה את סדר-המפתחות של המשבצות *הנראות בלבד* לפי ההגדרות - ר'
 // getTodayEmptyMealSlot למטה, שמשתמשת בזה כדי לא "לכתוב" נתונים למשבצת
