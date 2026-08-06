@@ -461,7 +461,26 @@ html.high-contrast.light-mode {
 /* עיגולי-צבע לבחירת צבע טקסט לפתק/משימה בודדים (ר' CENTER_ITEM_COLOR_PRESETS
    ב-app.js) - "ברירת מחדל" (חזרה לצבע הטקסט הרגיל של הנושא) הוא עיגול עם
    קו-מתאר בלבד ואות A, לא צבע מוצק, כדי שיהיה ברור שהוא "ללא צבע נבחר" */
-.note-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 4px; }
+.note-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 10px; }
+/* תצוגה מקדימה חיה של הפתק/משימה במודל ההוספה/עריכה (ר' updateCenterItemPreview
+   ב-app.js) - אותו עיצוב-בסיס בדיוק כמו שורה אמיתית ברשימה (.center-list li),
+   רק בלי הכפתורים, כדי שמה שרואים כאן יהיה בדיוק מה שיתקבל בפועל - לפי בקשה
+   מפורשת ("שתהיה ממש דוגמא לאיך זה יראה") */
+.center-list-item-preview {
+    background-color: var(--bg-row);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    margin: 4px 0 12px;
+    min-height: 20px;
+    transition: var(--transition);
+}
+.center-list-item-preview .center-list-item-text { margin-inline-start: 0; }
 .note-color-swatch {
     width: 30px;
     height: 30px;

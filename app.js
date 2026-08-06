@@ -290,16 +290,17 @@ async function loadCenterItems(type) {
         if (item.text_color) li.setAttribute('data-text-color', item.text_color);
         if (item.glow_color) li.setAttribute('data-glow-color', item.glow_color);
         if (item.bg_color) li.setAttribute('data-bg-color', item.bg_color);
-        // רקע/זוהר על ה-li כולו (לא רק הטקסט) - רקע בעמעום 18% (hexToRgba)
-        // כדי שהטקסט/הכפתורים בשורה יישארו קריאים מעליו, לא צבע אטום
-        const liStyleParts = [];
-        if (item.bg_color) liStyleParts.push(`background-color: ${hexToRgba(item.bg_color, 0.18)}`);
-        if (item.glow_color) liStyleParts.push(`box-shadow: 0 0 12px ${item.glow_color}`);
-        if (liStyleParts.length) li.setAttribute('style', liStyleParts.join('; '));
+        // רקע על ה-li כולו (עמעום 18% דרך hexToRgba כדי שהטקסט/הכפתורים
+        // יישארו קריאים) - אבל הזוהר על הטקסט עצמו (text-shadow), לא box-
+        // shadow על כל השורה, לפי בקשה מפורשת ("הזוהר תחבר לטקסט")
+        if (item.bg_color) li.setAttribute('style', `background-color: ${hexToRgba(item.bg_color, 0.18)}`);
         // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
         // לפי בקשה מפורשת (רק פתקים נגררים - כולל אל "רשימת קניות" כיעד)
         const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
-        const colorStyle = item.text_color ? ` style="color: ${item.text_color};"` : '';
+        const textStyleParts = [];
+        if (item.text_color) textStyleParts.push(`color: ${item.text_color}`);
+        if (item.glow_color) textStyleParts.push(`text-shadow: 0 0 4px ${item.glow_color}, 0 0 10px ${item.glow_color}, 0 0 18px ${item.glow_color}`);
+        const colorStyle = textStyleParts.length ? ` style="${textStyleParts.join('; ')};"` : '';
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
@@ -1551,6 +1552,7 @@ function selectCenterItemColor(color) {
     if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemColor = color;
     renderCenterItemColorSwatches();
+    updateCenterItemPreview();
 }
 
 // זוהר ניאון סביב הפתק/משימה (box-shadow) - 6 אפשרויות בלבד, בכוונה מתוך
@@ -1586,6 +1588,7 @@ function selectCenterItemGlow(color) {
     if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemGlow = color;
     renderCenterItemGlowSwatches();
+    updateCenterItemPreview();
 }
 
 // רקע צבעוני לשורה כולה (לא רק הטקסט) - אותה פלטת 8 בדיוק כמו צבע הטקסט
@@ -1619,6 +1622,7 @@ function selectCenterItemBg(color) {
     if (color && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     pendingCenterItemBg = color;
     renderCenterItemBgSwatches();
+    updateCenterItemPreview();
 }
 
 // איפוס+ציור ראשוני של שלושת הבוררים לפני פתיחת מודל - נקרא גם מ-
@@ -1630,6 +1634,29 @@ function resetCenterItemColorPickers() {
     renderCenterItemColorSwatches();
     renderCenterItemGlowSwatches();
     renderCenterItemBgSwatches();
+    updateCenterItemPreview();
+}
+
+// תצוגה מקדימה חיה - מתעדכנת גם בהקלדה (oninput על שני שדות הטקסט) וגם
+// בבחירת צבע (ר' selectCenterItemColor/Glow/Bg) - "שרושמים יש ממש דוגמא
+// לאיך זה יראה", לפי בקשה מפורשת. הזוהר מוצג כ-text-shadow על הטקסט עצמו
+// (לא box-shadow על כל השורה) - "הזוהר תחבר לטקסט" - בדיוק כמו שהוא באמת
+// נשמר ומוצג ברשימה עצמה (ר' loadCenterItems)
+const CENTER_ITEM_PREVIEW_PAIRS = [
+    { input: 'center-item-input', row: 'center-item-preview-row', text: 'center-item-preview-text' },
+    { input: 'ai-quick-add-input', row: 'quick-add-preview-row', text: 'quick-add-preview-text' },
+];
+function updateCenterItemPreview() {
+    CENTER_ITEM_PREVIEW_PAIRS.forEach(pair => {
+        const input = document.getElementById(pair.input);
+        const row = document.getElementById(pair.row);
+        const textEl = document.getElementById(pair.text);
+        if (!input || !row || !textEl) return;
+        textEl.textContent = input.value.trim() || t('note_preview_placeholder');
+        textEl.style.color = pendingCenterItemColor || '';
+        textEl.style.textShadow = pendingCenterItemGlow ? `0 0 4px ${pendingCenterItemGlow}, 0 0 10px ${pendingCenterItemGlow}, 0 0 18px ${pendingCenterItemGlow}` : '';
+        row.style.backgroundColor = pendingCenterItemBg ? hexToRgba(pendingCenterItemBg, 0.18) : '';
+    });
 }
 
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
@@ -1666,6 +1693,7 @@ function openCenterItemEditor(btn, type) {
     renderCenterItemColorSwatches();
     renderCenterItemGlowSwatches();
     renderCenterItemBgSwatches();
+    updateCenterItemPreview();
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
