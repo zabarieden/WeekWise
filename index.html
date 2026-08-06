@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=270">
+    <link rel="stylesheet" href="theme.css?v=271">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -856,7 +856,7 @@
             <!-- כפתור "לוח היום" - עוגן ויזואלי קבוע למסך הבית (לא בדוק, לפי בקשה
                  מפורשת - "אני רוצה שהוא יהיה בתוך מסך הבית כמו המוח רק לחצן אחר"),
                  יושב מתחת לבועת ה-AI Brain, אותו דפוס עמדה קבועה בלי גרירה -->
-            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-tooltip="daily_board_fab_title" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board">
+            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board">
                 <span class="ai-brain-icon daily-board-icon">🧭</span>
             </button>
 
@@ -2062,8 +2062,16 @@
                 <h3 data-i18n="smart_split_modal_title">🪄 Smart Split</h3>
                 <p class="modal-subtitle" data-i18n="smart_split_modal_subtitle">Write a task, and leave it to Obeko to figure out the right pace for you.</p>
                 <textarea id="smart-split-task-input" rows="3" data-i18n-placeholder="smart_split_task_placeholder" placeholder="e.g. Prepare a presentation + summarize a report for the meeting"></textarea>
-                <label class="settings-label" data-i18n="smart_split_due_date_label" for="smart-split-due-date-input">Due by</label>
-                <input type="date" id="smart-split-due-date-input">
+                <!-- כפתור "חמוד" עם אייקון לוח שנה במקום תווית + שדה טקסט dd/mm/yyyy
+                     רגיל - לוחצים והלוח השנה הטבעי נפתח (showPicker), התאריך
+                     שנבחר מוצג בתוך הכפתור עצמו - לפי בקשה מפורשת -->
+                <div class="date-picker-trigger-wrap">
+                    <button type="button" class="date-picker-trigger" onclick="document.getElementById('smart-split-due-date-input').showPicker()">
+                        <span class="date-picker-icon">📅</span>
+                        <span id="smart-split-due-date-display" data-i18n="smart_split_due_date_label">Due by</span>
+                    </button>
+                    <input type="date" id="smart-split-due-date-input" class="date-picker-hidden-input" oninput="updateDatePickerDisplay(this, 'smart-split-due-date-display')">
+                </div>
                 <div class="action-buttons-wrap">
                     <button id="btn-smart-split-continue" class="btn-primary" onclick="submitSmartSplitTaskStep()" data-i18n="smart_split_submit_btn">Split it</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-smart-split-input')" data-i18n="cancel_btn">Cancel</button>
@@ -2445,6 +2453,6 @@
     </div>
 
     <script src="i18n.js?v=216"></script>
-    <script src="app.js?v=316"></script>
+    <script src="app.js?v=317"></script>
 </body>
 </html>

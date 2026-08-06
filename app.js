@@ -3035,8 +3035,19 @@ function openSmartSplitModal() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     document.getElementById('smart-split-task-input').value = '';
     document.getElementById('smart-split-due-date-input').value = '';
+    document.getElementById('smart-split-due-date-display').textContent = t('smart_split_due_date_label');
     pendingSmartSplitTask = null;
     openModal('modal-smart-split-input');
+}
+
+// מציג את התאריך הנבחר בתוך הכפתור-החמוד עצמו (ר' date-picker-trigger ב-
+// index.html) - קריא לפי currentLang, לא ISO גולמי (yyyy-mm-dd)
+function updateDatePickerDisplay(inputEl, displaySpanId) {
+    const displayEl = document.getElementById(displaySpanId);
+    if (!displayEl) return;
+    if (!inputEl.value) { displayEl.textContent = t('smart_split_due_date_label'); return; }
+    const [y, m, d] = inputEl.value.split('-').map(Number);
+    displayEl.textContent = new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function submitSmartSplitTaskStep() {

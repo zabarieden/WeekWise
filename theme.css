@@ -2622,7 +2622,31 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 #smart-split-task-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
 #smart-split-task-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
-#smart-split-due-date-input { width: 100%; margin-top: 6px; }
+/* כפתור "חמוד" עם אייקון לוח שנה - עוטף input[type=date] אמיתי אבל
+   מוסתר-ויזואלית (עדיין פעיל, showPicker() נקרא עליו ישירות מהכפתור) -
+   לפי בקשה מפורשת ("לא שהאותיות האלה... שיהיה רק כפתור חמוד עם הסמל") */
+.date-picker-trigger-wrap { position: relative; margin: 6px 0 10px; }
+.date-picker-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--bg-glass);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 999px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+    transition: var(--transition);
+}
+.date-picker-trigger:active { transform: scale(0.97); }
+.date-picker-icon { font-size: 1.1rem; }
+.date-picker-hidden-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; width: 100%; height: 100%; }
 #smart-split-clarify-input {
     width: 100%;
     background-color: var(--bg-glass);
