@@ -2175,9 +2175,6 @@
                     <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
-                <div class="daily-board-tab-actions">
-                    <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
-                </div>
                 <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
                     <p class="daily-board-hours-panel-hint" data-i18n="daily_board_hours_settings_hint">These hours apply only to the tab currently selected above.</p>
                     <div class="daily-board-hours-settings-group">
@@ -2195,6 +2192,11 @@
                     <div class="daily-board-hours-settings-group">
                         <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_evening">🌙 Evening</span>
                         <div class="daily-board-hours-chips" id="board-hours-evening"></div>
+                    </div>
+                    <!-- מחיקת טאב הועברה לתוך פאנל ההגדרות (⚙️) - לא מוצגת קבוע
+                         מתחת לשורת הטאבים - לפי בקשה מפורשת ("שיהיה יותר נקי") -->
+                    <div class="daily-board-tab-actions">
+                        <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                     </div>
                 </div>
                 <div class="daily-board-body" id="daily-board-body"></div>
