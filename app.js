@@ -5670,6 +5670,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'food_variety', category: 'nutrition' },
+    { id: 'multi_food_separator', category: 'nutrition' },
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
     { id: 'chain_data_source', category: 'nutrition' },
     { id: 'save_meal_preset', category: 'nutrition' },
