@@ -1656,13 +1656,19 @@ const CENTER_ITEM_PREVIEW_PAIRS = [
     { input: 'center-item-input', row: 'center-item-preview-row', text: 'center-item-preview-text' },
     { input: 'ai-quick-add-input', row: 'quick-add-preview-row', text: 'quick-add-preview-text' },
 ];
+// התצוגה המקדימה מוצגת רק כשיש בפועל טקסט/צבע לתצוגה - לפי בקשה מפורשת
+// ("רק תצוגה מקדימה ברגע שרושמים משהו ומנסים"), לא תמיד עם משפט "ככה
+// ייראה הטקסט שלך" ריק כשעוד לא הוקלד כלום
 function updateCenterItemPreview() {
     CENTER_ITEM_PREVIEW_PAIRS.forEach(pair => {
         const input = document.getElementById(pair.input);
         const row = document.getElementById(pair.row);
         const textEl = document.getElementById(pair.text);
         if (!input || !row || !textEl) return;
-        textEl.textContent = input.value.trim() || t('note_preview_placeholder');
+        const text = input.value.trim();
+        if (!text) { row.style.display = 'none'; return; }
+        row.style.display = '';
+        textEl.textContent = text;
         textEl.style.color = pendingCenterItemColor || '';
         textEl.style.textShadow = pendingCenterItemGlow ? `0 0 4px ${pendingCenterItemGlow}, 0 0 10px ${pendingCenterItemGlow}, 0 0 18px ${pendingCenterItemGlow}` : '';
         row.style.backgroundColor = pendingCenterItemBg ? hexToRgba(pendingCenterItemBg, 0.18) : '';
@@ -3035,19 +3041,8 @@ function openSmartSplitModal() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     document.getElementById('smart-split-task-input').value = '';
     document.getElementById('smart-split-due-date-input').value = '';
-    document.getElementById('smart-split-due-date-display').textContent = t('smart_split_due_date_label');
     pendingSmartSplitTask = null;
     openModal('modal-smart-split-input');
-}
-
-// מציג את התאריך הנבחר בתוך הכפתור-החמוד עצמו (ר' date-picker-trigger ב-
-// index.html) - קריא לפי currentLang, לא ISO גולמי (yyyy-mm-dd)
-function updateDatePickerDisplay(inputEl, displaySpanId) {
-    const displayEl = document.getElementById(displaySpanId);
-    if (!displayEl) return;
-    if (!inputEl.value) { displayEl.textContent = t('smart_split_due_date_label'); return; }
-    const [y, m, d] = inputEl.value.split('-').map(Number);
-    displayEl.textContent = new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function submitSmartSplitTaskStep() {
@@ -4271,9 +4266,16 @@ async function loadCalendarEvents() {
     }));
     seriesMap.forEach((items, groupId) => {
         items.sort((a, b) => a.event_date.localeCompare(b.event_date));
+        // הסדרה כוללת גם מופעים שכבר עברו (כדי לסמן וי על ישנים, ר' ההערה
+        // למעלה) - אז items[0] יכול להיות מלפני חודשים, ואם היה משמש כ-
+        // sortDate היה "תוקע" את כל השורה המאוחדת של הסדרה בחודש עבר, עם
+        // כותרת-חודש בודדת ושגויה שם (בדיוק הבאג שדווח: "אוגוסט/יוני/אוגוסט").
+        // הסדר בפועל של השורה המאוחדת נקבע לפי המופע העתידי/הקרוב ביותר -
+        // ככה שהמשתמשת רואה אותו איפה שהיא מצפה, לפי המועד הרלוונטי הבא
+        const nextItem = items.find(i => i.event_date >= today) || items[items.length - 1];
         displayEntries.push({
             sortOrder: typeof items[0].sort_order === 'number' ? items[0].sort_order : Infinity,
-            sortDate: items[0].event_date,
+            sortDate: nextItem.event_date,
             render: () => buildRecurringEventRow(items, groupId)
         });
     });

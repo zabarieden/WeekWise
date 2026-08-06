@@ -2055,15 +2055,18 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
 /* max-width+margin:auto (לא width:100% גורף) - כדי שברוחב מסך גדול (דסקטופ)
    הרשימה לא תימתח לכל הרוחב אלא תישאר קומפקטית וממורכזת, לפי בקשה מפורשת */
-.center-list { list-style: none; padding: 0; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 640px; }
+/* חזרה ל-width:100% מלא (בלי תקרת max-width) - לפי בקשה מפורשת שהרוחב
+   המלא "נראה יותר טוב"; הריבועים עצמם עגולים ומצומצמים יותר במקום זה
+   (border-radius/padding למטה), לפי בקשה מפורשת "יותר עגולה... ויותר קטנה" */
+.center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .center-list li {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: 20px;
+    padding: 8px 14px;
     display: flex;
     flex-direction: row; /* הצ'קבוקס בצד ימין, כפתור המחיקה בצד שמאל */
     justify-content: space-between;
@@ -2132,7 +2135,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* ארכיון פתקים מחוקים - אייקון קטן ומעומעם, תמיד בצד שמאל הפיזי (לא לפי
    כיוון הכתיבה - בקשה מפורשת), לא קישור-טקסט עם חץ ולא מתקפל בתוך הרשימה -
    לחיצה עליו פותחת מודל נפרד (modal-notes-archive), "כמו לעולם חדש" */
-.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-inline-end: auto; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
+/* margin-right (פיזי, לא margin-inline-end לוגי) - תמיד בצד שמאל הפיזי
+   של המסך בלי קשר לכיוון הכתיבה של השפה הנוכחית (RTL/LTR), לפי בקשה מפורשת */
+.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-right: auto; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
 .notes-archive-icon-btn:hover { opacity: 1; }
 .notes-archive-count-badge { font-size: 0.65rem; font-variant-numeric: tabular-nums; }
 .notes-archive-list { margin-top: 6px; opacity: 0.85; }
@@ -2622,31 +2627,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 #smart-split-task-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
 #smart-split-task-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
-/* כפתור "חמוד" עם אייקון לוח שנה - עוטף input[type=date] אמיתי אבל
-   מוסתר-ויזואלית (עדיין פעיל, showPicker() נקרא עליו ישירות מהכפתור) -
-   לפי בקשה מפורשת ("לא שהאותיות האלה... שיהיה רק כפתור חמוד עם הסמל") */
-.date-picker-trigger-wrap { position: relative; margin: 6px 0 10px; }
-.date-picker-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background-color: var(--bg-glass);
-    border: 1px solid rgba(168, 85, 247, 0.3);
-    border-radius: 999px;
-    padding: 10px 16px;
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
-    transition: var(--transition);
-}
-.date-picker-trigger:active { transform: scale(0.97); }
-.date-picker-icon { font-size: 1.1rem; }
-.date-picker-hidden-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; width: 100%; height: 100%; }
+#smart-split-due-date-input { width: 100%; margin-top: 6px; }
 #smart-split-clarify-input {
     width: 100%;
     background-color: var(--bg-glass);
