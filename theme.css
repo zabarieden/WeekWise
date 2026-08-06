@@ -2631,22 +2631,23 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* קוביה סגולה עם אייקון בלבד - אותם צבעים בדיוק כמו input[type=date] הרגיל
    (רקע/מסגרת סגולים) כדי שתישאר אותה שפה חזותית, בלי טקסט dd/mm/yyyy גלוי -
    לפי בקשה מפורשת. showPicker() נקרא על ה-input האמיתי, שרק מוסתר-ויזואלית */
+/* בלי רקע/מסגרת - רק ה-SVG הסגול עצמו על הרקע הרגיל של המודל, לפי בקשה
+   מפורשת ("נקי... רקע רגיל") - stroke="currentColor" ב-SVG עצמו יורש את
+   ה-color כאן, כך שהצבע נשלט ממש מ-CSS (לא פילטר על אימוג'י) */
 .date-picker-icon-only {
-    display: block;
-    margin: 6px auto 0;
-    width: 48px;
-    height: 48px;
-    background: rgba(20, 10, 30, 0.55);
-    border: 1px solid var(--accent-purple);
-    border-radius: 10px;
-    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: var(--accent-purple-light-text);
     cursor: pointer;
     transition: var(--transition);
-    /* אותו פילטר בדיוק כמו input[type=date]::-webkit-calendar-picker-indicator
-       למעלה - הופך את אימוג'י 📅 הצבעוני-במקור לגוון סגול/ורוד, לפי בקשה מפורשת */
-    filter: invert(46%) sepia(84%) saturate(2661%) hue-rotate(295deg) brightness(100%) contrast(101%);
 }
-.date-picker-icon-only:active { transform: scale(0.94); }
+.date-picker-icon-only:active { transform: scale(0.9); }
 .date-picker-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 #smart-split-clarify-input {
     width: 100%;

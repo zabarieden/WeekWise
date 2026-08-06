@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=274">
+    <link rel="stylesheet" href="theme.css?v=275">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2062,9 +2062,17 @@
                 <h3 data-i18n="smart_split_modal_title">🪄 Smart Split</h3>
                 <p class="modal-subtitle" data-i18n="smart_split_modal_subtitle">Write a task, and leave it to Obeko to figure out the right pace for you.</p>
                 <textarea id="smart-split-task-input" rows="3" data-i18n-placeholder="smart_split_task_placeholder" placeholder="e.g. Prepare a presentation + summarize a report for the meeting"></textarea>
-                <!-- קוביה סגולה עם אייקון בלבד - בלי טקסט "dd/mm/yyyy" גלוי (input
-                     תאריך אמיתי מוסתר-ויזואלית מתחתיה) - לפי בקשה מפורשת -->
-                <button type="button" class="date-picker-icon-only" onclick="document.getElementById('smart-split-due-date-input').showPicker()" data-i18n-title="smart_split_due_date_label" title="Due by">📅</button>
+                <!-- SVG סגול נקי (לא אימוג'י מסונן - filter על 📅 הרב-צבעוני יצר
+                     כתם ורוד מכוער) - בלי רקע/מסגרת, רק האייקון עצמו במרכז,
+                     בלי טקסט "dd/mm/yyyy" גלוי - לפי בקשה מפורשת -->
+                <button type="button" class="date-picker-icon-only" onclick="document.getElementById('smart-split-due-date-input').showPicker()" data-i18n-title="smart_split_due_date_label" title="Due by">
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="5" width="18" height="16" rx="3"></rect>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                    </svg>
+                </button>
                 <input type="date" id="smart-split-due-date-input" class="date-picker-hidden-input">
                 <div class="action-buttons-wrap">
                     <button id="btn-smart-split-continue" class="btn-primary" onclick="submitSmartSplitTaskStep()" data-i18n="smart_split_submit_btn">Split it</button>
