@@ -1105,14 +1105,11 @@
                         <button type="button" class="ai-schedule-mode-btn active" data-mode="weekly" onclick="setQuickNoteDestination('weekly')" data-i18n="quick_note_dest_notes">📝 Notes</button>
                         <button type="button" class="ai-schedule-mode-btn" data-mode="general" onclick="setQuickNoteDestination('general')" data-i18n="quick_note_dest_shopping">🛒 Shopping List</button>
                     </div>
-                    <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="A thought, a reminder, or an idea" oninput="updateCenterItemPreview()"></textarea>
-                    <p class="settings-label" data-i18n="note_preview_label">Preview</p>
-                    <div id="quick-add-preview-row" class="center-list-item-preview">
-                        <span id="quick-add-preview-text" class="center-list-item-text"></span>
-                    </div>
-                    <div id="quick-add-color-swatches" class="note-color-swatches"></div>
-                    <div id="quick-add-glow-swatches" class="note-color-swatches"></div>
-                    <div id="quick-add-bg-swatches" class="note-color-swatches"></div>
+                    <!-- בכוונה בלי צבע/זוהר/רקע/תצוגה-מקדימה כאן - זה קיים במלואו
+                         במודל ההוספה/עריכה הרגיל (הפלוס בתוך מסך הפתקים). "פתק
+                         מהיר" נשאר פשוט וקצר, לפי בקשה מפורשת ("אמור להיות מהיר
+                         בלי שטויות") -->
+                    <textarea id="ai-quick-add-input" rows="2" data-i18n-placeholder="notes_ai_placeholder" placeholder="A thought, a reminder, or an idea"></textarea>
                     <div class="action-buttons-wrap">
                         <button id="btn-ai-quick-add" class="btn-primary" data-i18n="notes_ai_btn">Add</button>
                         <!-- קיצור דרך אמיתי (לא בחירת יעד) - סוגר את המודל ומנווט ישר
@@ -2455,6 +2452,6 @@
     </div>
 
     <script src="i18n.js?v=217"></script>
-    <script src="app.js?v=320"></script>
+    <script src="app.js?v=321"></script>
 </body>
 </html>

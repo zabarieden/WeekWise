@@ -1518,12 +1518,9 @@ function hexToRgba(hex, alpha) {
 }
 let pendingCenterItemColor = null;
 
-// כל שלושת הבוררים (טקסט/זוהר/רקע) מוצגים גם במודל ההוספה/עריכה המלא
-// (modal-add-center-item) וגם במודל "פתק מהיר" (modal-ai-quick-add, ר'
-// handleAIQuickAdd) - לפי בקשה מפורשת "שיהיו גם בקיצורי דרך בפתקים וגם
-// ברשימת קניות" ("קיצור דרך" הוא השם בקוד למודל ההוספה-המהירה עצמו).
-// מציירים לתוך כל ה-container-ים שקיימים כרגע (בפועל רק אחד גלוי בו-זמנית,
-// כי רק מודל אחד פתוח בכל רגע נתון) כדי לא לשכפל state נפרד לכל מודל
+// שלושת הבוררים (טקסט/זוהר/רקע) מוצגים רק במודל ההוספה/עריכה המלא
+// (modal-add-center-item) - בכוונה לא ב"פתק מהיר" (modal-ai-quick-add),
+// לפי בקשה מפורשת: "פתק מהיר" נשאר פשוט וקצר, בלי בוררי צבע
 function renderIntoAll(ids, buildFn) {
     ids.forEach(id => {
         const wrap = document.getElementById(id);
@@ -1531,9 +1528,9 @@ function renderIntoAll(ids, buildFn) {
     });
 }
 
-const CENTER_ITEM_COLOR_CONTAINER_IDS = ['center-item-color-swatches', 'quick-add-color-swatches'];
-const CENTER_ITEM_GLOW_CONTAINER_IDS = ['center-item-glow-swatches', 'quick-add-glow-swatches'];
-const CENTER_ITEM_BG_CONTAINER_IDS = ['center-item-bg-swatches', 'quick-add-bg-swatches'];
+const CENTER_ITEM_COLOR_CONTAINER_IDS = ['center-item-color-swatches'];
+const CENTER_ITEM_GLOW_CONTAINER_IDS = ['center-item-glow-swatches'];
+const CENTER_ITEM_BG_CONTAINER_IDS = ['center-item-bg-swatches'];
 
 function renderCenterItemColorSwatches() {
     renderIntoAll(CENTER_ITEM_COLOR_CONTAINER_IDS, wrap => {
@@ -1654,7 +1651,6 @@ function resetCenterItemColorPickers() {
 // נשמר ומוצג ברשימה עצמה (ר' loadCenterItems)
 const CENTER_ITEM_PREVIEW_PAIRS = [
     { input: 'center-item-input', row: 'center-item-preview-row', text: 'center-item-preview-text' },
-    { input: 'ai-quick-add-input', row: 'quick-add-preview-row', text: 'quick-add-preview-text' },
 ];
 // התצוגה המקדימה מוצגת רק כשיש בפועל טקסט/צבע לתצוגה - לפי בקשה מפורשת
 // ("רק תצוגה מקדימה ברגע שרושמים משהו ומנסים"), לא תמיד עם משפט "ככה
@@ -1965,7 +1961,7 @@ function applyPwaShortcutDeepLink() {
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
-    el.onclick = () => { setQuickNoteDestination('weekly'); resetCenterItemColorPickers(); openModal('modal-ai-quick-add'); };
+    el.onclick = () => { setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add'); };
 }
 
 // יעד "פתק מהיר": פתקים (weekly) או רשימת קניות (general) - בורר קטן בראש
@@ -11833,7 +11829,7 @@ async function handleAIQuickAdd() {
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
 
-    const ok = await insertCenterItemDirect(quickNoteDestination, text, pendingCenterItemColor, pendingCenterItemGlow, pendingCenterItemBg, true);
+    const ok = await insertCenterItemDirect(quickNoteDestination, text, null, null, null, true);
     if (!ok) return;
     showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
     input.value = '';
