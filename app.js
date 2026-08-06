@@ -1176,6 +1176,15 @@ async function submitAuthForm() {
     if (authMode === 'signup') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) { messageEl.textContent = error.message; return; }
+        // חותמת ברירת מחדל להרשמה חדשה: ערכת נושא ברירת מחדל (theme לא
+        // מוגדר בכוונה - loadColorTheme כבר מטפל בזה כ"default") + מצב
+        // כהה (light_mode:false) - לפי בקשה מפורשת שכל משתמשת חדשה תתחיל
+        // מהערכה הראשונה על רקע כהה, ואחר כך תשנה איך שבא לה. נכתב כאן,
+        // ברגע ההרשמה עצמה, ולא כברירת מחדל כללית ב-isLightModeOn, כדי
+        // לא לשנות בטעות משתמשות ותיקות שכבר סומכות על ברירת המחדל הישנה
+        if (data.user) {
+            await supabaseClient.from('user_premium').insert({ user_id: data.user.id, username: email, light_mode: false });
+        }
         if (data.session) {
             initAppAfterAuth(data.user);
         } else {
@@ -1223,6 +1232,7 @@ async function initAppAfterAuth(user) {
         loadAiUsage(),
         loadPremiumStatus(),
         loadColorTheme(),
+        loadLightModeSetting(),
         loadMonthlyGoal(),
         loadFinanceData(),
         loadSportData(),
@@ -5290,12 +5300,18 @@ function closePremiumUnlockCeremony() {
 }
 
 // --- מצב בהיר (Light Mode, חינמי): קלף .light-mode על ה-html מחליף רק את
-// משתני הרקע/הטקסט (ר' theme.css) - שמור מקומית, לא תלוי במשתמש/פרימיום.
-// ברירת מחדל בהיר (לא כהה) - לפי בקשה מפורשת: הזכוכית של אשכול הבועות
-// נראית הרבה יותר משכנעת/דומה לתמונת-הסגנון על רקע בהיר. "!== 'false'"
-// (לא "=== 'true'") - opt-out, לא opt-in - כדי שמי שלא נגעה בהגדרה בכלל
-// (כולל כל מי שכבר משתמשת באפליקציה) תראה בהיר כברירת מחדל, רק מי שכיבתה
-// את זה במפורש תישאר בכהה
+// משתני הרקע/הטקסט (ר' theme.css). מוחל קודם מיידית מ-localStorage (מטמון
+// מקומי, כדי שלא יהיה "הבזק" של הצבע הלא-נכון לפני שההתחברות/הטעינה
+// מה-שרת מסתיימת - ר' הקריאה הסינכרונית ב-DOMContentLoaded), ואז מסונכרן
+// עם user_premium.light_mode (ר' loadLightModeSetting/toggleLightMode) כדי
+// שהבחירה תעבור בין מכשירים לאותו משתמש ("משנה בנייד, במחשב לא מתחבר") -
+// בדיוק אותו דפוס כמו selectColorTheme/loadColorTheme למטה.
+// "!== 'false'" (לא "=== 'true'") ב-isLightModeOn - opt-out, לא opt-in -
+// כדי שמשתמשות ותיקות שמעולם לא נגעו בהגדרה (ואין להן שורת user_premium
+// עם light_mode מפורש) יישארו על ברירת המחדל ההיסטורית (בהיר), בלי שינוי
+// בלתי-צפוי. לעומת זאת הרשמה חדשה (ר' handleAuthSubmit) כותבת light_mode:
+// false במפורש ל-user_premium כבר ברגע ההרשמה - לפי בקשה מפורשת שמשתמשות
+// חדשות יתחילו בערכת הנושא הראשונה על רקע כהה, ואז ישנו איך שבא להן
 function isLightModeOn() {
     return localStorage.getItem('weekwise_light_mode') !== 'false';
 }
@@ -5306,10 +5322,23 @@ function applyLightMode(enabled) {
     if (toggle) toggle.checked = enabled;
 }
 
-function toggleLightMode() {
+async function loadLightModeSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('light_mode').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.light_mode === null || data.light_mode === undefined) return;
+    localStorage.setItem('weekwise_light_mode', data.light_mode ? 'true' : 'false');
+    applyLightMode(data.light_mode);
+}
+
+async function toggleLightMode() {
     const enabled = document.getElementById('light-mode-toggle').checked;
     localStorage.setItem('weekwise_light_mode', enabled ? 'true' : 'false');
     applyLightMode(enabled);
+    if (supabaseClient && currentUserId) {
+        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (existing) await supabaseClient.from('user_premium').update({ light_mode: enabled }).eq('user_id', currentUserId);
+        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, light_mode: enabled });
+    }
 }
 
 // --- נגישות: ניגודיות גבוהה + מסנן צבע (גווני-אפור) - חינמי לכולם, לא
