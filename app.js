@@ -429,7 +429,7 @@ async function handleNoteTriageDrop(itemId, triageType, content, type) {
     if (triageType === 'otherdate') {
         pendingNoteOtherDate = { itemId, content, type };
         const dateInput = document.getElementById('note-triage-otherdate-input');
-        if (dateInput) dateInput.value = getLocalDateString();
+        if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('note-triage-otherdate-input'); }
         openModal('modal-note-triage-otherdate');
         return;
     }
@@ -1231,9 +1231,9 @@ async function initAppAfterAuth(user) {
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
     const selectedDateInput = document.getElementById('selected-date');
-    if(selectedDateInput) selectedDateInput.value = today;
+    if(selectedDateInput) { selectedDateInput.value = today; updateDateFieldDisplay('selected-date'); }
     const weightDateInput = document.getElementById('new-weight-date');
-    if(weightDateInput) weightDateInput.value = today;
+    if(weightDateInput) { weightDateInput.value = today; updateDateFieldDisplay('new-weight-date'); }
 
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
@@ -3848,6 +3848,7 @@ let selectedCalendarDay = null;
 function openAddEventForSelectedDay() {
     resetCalendarEventModal();
     document.getElementById('calendar-event-date-input').value = selectedCalendarDay || getLocalDateString();
+    updateDateFieldDisplay('calendar-event-date-input');
     openModal('modal-add-calendar-event');
 }
 
@@ -4519,6 +4520,7 @@ function openEditCalendarEvent(item) {
     editingCalendarEventGroupId = null;
     document.getElementById('calendar-event-title-input').value = item.event_title;
     document.getElementById('calendar-event-date-input').value = item.event_date;
+    updateDateFieldDisplay('calendar-event-date-input');
     document.getElementById('calendar-event-time-input').value = item.event_time || '';
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
@@ -4538,7 +4540,7 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     editingCalendarEventGroupId = groupId;
     document.getElementById('calendar-event-title-input').value = currentTitle;
     document.getElementById('calendar-event-date-input').value = '';
-    document.getElementById('calendar-event-date-input').classList.add('hidden');
+    document.getElementById('calendar-event-date-trigger').classList.add('hidden');
     document.getElementById('calendar-event-time-input').value = '';
     document.getElementById('calendar-event-time-input').classList.add('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
@@ -4555,7 +4557,8 @@ function resetCalendarEventModal() {
     editingCalendarEventGroupId = null;
     document.getElementById('calendar-event-title-input').value = '';
     document.getElementById('calendar-event-date-input').value = '';
-    document.getElementById('calendar-event-date-input').classList.remove('hidden');
+    updateDateFieldDisplay('calendar-event-date-input');
+    document.getElementById('calendar-event-date-trigger').classList.remove('hidden');
     document.getElementById('calendar-event-time-input').value = '';
     document.getElementById('calendar-event-time-input').classList.remove('hidden');
     document.getElementById('calendar-event-recurring-checkbox').checked = false;
@@ -5196,7 +5199,7 @@ function setReportRangeMode(mode) {
 function openReportSectionPicker() {
     populateReportMonthYearSelects();
     const dayInput = document.getElementById('report-day-select');
-    if (dayInput) dayInput.value = getLocalDateString();
+    if (dayInput) { dayInput.value = getLocalDateString(); updateDateFieldDisplay('report-day-select'); }
     setReportRangeMode('all');
     openModal('modal-report-section-picker');
 }
@@ -6439,6 +6442,92 @@ function formatMonthNameOnly(monthKey) {
     return new Date(y, m - 1, 1).toLocaleDateString(currentLang, { month: 'long' });
 }
 
+// --- לוח שנה מותאם-אישית, בעיצוב האפליקציה - מחליף את כל שדות
+// <input type="date"> באפליקציה (שהפופ-אפ הטבעי שלהם הוא UI של הדפדפן/
+// מערכת ההפעלה, בלתי-אפשרי לעצב ב-CSS בכלל) - לפי בקשה מפורשת ("אני רוצה
+// את זה לכל לוחות השנה"). אותו מתכון-רשת בדיוק כמו loadMonthlyCalendarGrid
+// (monthly-calendar-grid/weekdays), רק כאן בוחרים תאריך במקום לצפות באירועים -
+// customDatePickerCallback נקרא עם התאריך הנבחר (yyyy-mm-dd) או '' בניקוי
+let customDatePickerCallback = null;
+let customDatePickerViewMonth = null;
+let customDatePickerSelected = null;
+
+function openCustomDatePicker(currentValue, onSelect) {
+    customDatePickerCallback = onSelect;
+    customDatePickerSelected = currentValue || null;
+    customDatePickerViewMonth = currentValue ? currentValue.slice(0, 7) : currentMonthKey();
+    renderCustomDatePickerGrid();
+    openModal('modal-custom-date-picker');
+}
+
+function navigateCustomDatePicker(delta) {
+    customDatePickerViewMonth = shiftMonthKey(customDatePickerViewMonth, delta);
+    renderCustomDatePickerGrid();
+}
+
+function renderCustomDatePickerGrid() {
+    const grid = document.getElementById('custom-date-picker-grid');
+    const label = document.getElementById('custom-date-picker-label');
+    if (!grid || !label) return;
+    label.textContent = formatMonthLabel(customDatePickerViewMonth);
+    const [y, m] = customDatePickerViewMonth.split('-').map(Number);
+    const firstDate = new Date(y, m - 1, 1);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const startWeekday = firstDate.getDay();
+    const todayStr = getLocalDateString();
+    let html = '';
+    for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === customDatePickerSelected;
+        html += `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="selectCustomDate('${dateStr}')">
+            <span class="monthly-calendar-day-num">${day}</span>
+        </button>`;
+    }
+    grid.innerHTML = html;
+}
+
+function selectCustomDate(dateStr) {
+    closeModal('modal-custom-date-picker');
+    if (customDatePickerCallback) customDatePickerCallback(dateStr);
+}
+
+function customDatePickerToday() {
+    selectCustomDate(getLocalDateString());
+}
+
+function customDatePickerClear() {
+    closeModal('modal-custom-date-picker');
+    if (customDatePickerCallback) customDatePickerCallback('');
+}
+
+// עוזר גנרי לחיבור כל שדה <input type="date"> קיים ללוח השנה המותאם-אישית -
+// ה-input עצמו נשאר בדיוק כפי שהיה (מוסתר-ויזואלית), כך שכל קוד קיים
+// שקורא/כותב .value שלו ממשיך לעבוד בלי שינוי; רק דרך הבחירה משתנה.
+// מפעיל גם 'change' אמיתי על ה-input, למקרה שקוד קיים מאזין לו
+function openDateFieldPicker(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    openCustomDatePicker(input.value, (date) => {
+        input.value = date;
+        updateDateFieldDisplay(inputId);
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+}
+
+// מציג את התאריך הנבחר כטקסט קריא (לא ISO גולמי) בתוך span עם id
+// `${inputId}-display`, אם קיים - נקרא גם בטעינה הראשונית של מודל שמכיל
+// שדה כזה, כדי שערך קיים (בעריכה) יוצג נכון מיד כשהמודל נפתח
+function updateDateFieldDisplay(inputId) {
+    const input = document.getElementById(inputId);
+    const display = document.getElementById(`${inputId}-display`);
+    if (!input || !display) return;
+    if (!input.value) { display.textContent = display.getAttribute('data-placeholder') || ''; return; }
+    const [y, m, d] = input.value.split('-').map(Number);
+    display.textContent = new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 async function navigateMonthlyGoal(delta) {
     const base = viewedMonthKey || currentMonthKey();
     const target = shiftMonthKey(base, delta);
@@ -6937,7 +7026,7 @@ async function loadFinanceData() {
     populateFinanceCategoryOptions(currentFinanceEntryType);
     loadFinanceCardVisibility();
     const dateInput = document.getElementById('finance-date-input');
-    if (dateInput) dateInput.value = getLocalDateString();
+    if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('finance-date-input'); }
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
 
@@ -7213,7 +7302,7 @@ async function loadSportData() {
     currentSportMotivation = null;
     document.querySelectorAll('#sport-motivation-picker [data-motivation]').forEach(btn => btn.classList.remove('active'));
     const dateInput = document.getElementById('sport-date-input');
-    if (dateInput) dateInput.value = getLocalDateString();
+    if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('sport-date-input'); }
     await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 

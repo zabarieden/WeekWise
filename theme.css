@@ -2053,6 +2053,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 .weight-inputs-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
+.weight-inputs-wrap .date-picker-field-trigger { flex: 1 1 110px; min-width: 0; padding: 8px; font-size: 0.8rem; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
 /* max-width+margin:auto (לא width:100% גורף) - כדי שברוחב מסך גדול (דסקטופ)
    הרשימה לא תימתח לכל הרוחב אלא תישאר קומפקטית וממורכזת, לפי בקשה מפורשת */
@@ -3339,6 +3340,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .date-picker-container input[type="date"] { width: 100%; }
+/* כפתור-שדה ללוח השנה המותאם-אישית - מחליף input[type=date] רגיל, אותה שפה
+   חזותית (רקע/מסגרת/צבע סגולים) אבל עם SVG נקי במקום אייקון-הדפדפן, ועם
+   הערך הנבחר כטקסט קריא - ר' openDateFieldPicker/updateDateFieldDisplay ב-app.js */
+.date-picker-field-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: rgba(20, 10, 30, 0.55);
+    color: var(--accent-purple-light-text);
+    border: 1px solid var(--accent-purple);
+    border-radius: 10px;
+    padding: 9px 10px;
+    font-weight: bold;
+    font-family: inherit;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.date-picker-field-trigger:active { transform: scale(0.98); }
+.date-picker-field-icon { flex-shrink: 0; width: 18px; height: 18px; }
+.date-picker-field-trigger span { flex: 1; text-align: start; }
 @keyframes floatingGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, 30px) scale(1.1); } }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
