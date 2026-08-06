@@ -1833,9 +1833,10 @@ html[dir="ltr"] .daily-focus-bubble::before {
    ברשימה הפתוחה למטה, רק נגיש בלי צורך ללחוץ על החץ ולהרחיב קודם */
 .calendar-event-series-nearest-checkbox { width: 15px; height: 15px; accent-color: var(--accent-purple); cursor: pointer; margin: 0; flex-shrink: 0; }
 
-.calendar-event-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; flex-shrink: 0; }
-.calendar-event-drag-handle:active { cursor: grabbing; }
-[data-reorder-id].reordering { position: relative; z-index: 20; opacity: 0.9; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); transition: none !important; }
+/* כוכב - מחליף את ידית הגרירה הישנה (הוסרה) כדרך לקבוע עדיפות ב"כל
+   האירועים" - לפי בקשה מפורשת, כדי שהסדר יהיה לפי תאריך + כוכב בלבד */
+.calendar-event-star-btn { background: none; border: none; padding: 0 2px; font-size: 1rem; cursor: pointer; flex-shrink: 0; color: var(--accent-gold); transition: var(--transition); }
+.calendar-event-star-btn:active { transform: scale(0.9); }
 .calendar-event-progress-badge { flex-shrink: 0; background-color: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--accent-green-text); font-size: 0.7rem; font-weight: 700; border-radius: 20px; padding: 3px 9px; }
 
 /* המתכונים שלי: רשת קוביות (תמיד פתוחה, ללא חץ קיפול) + תצוגת פרטים במסך מלא */
@@ -2627,7 +2628,23 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 #smart-split-task-input::placeholder { color: var(--text-secondary); opacity: 0.75; }
 #smart-split-task-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 16px rgba(168, 85, 247, 0.15); }
-#smart-split-due-date-input { width: 100%; margin-top: 6px; }
+/* קוביה סגולה עם אייקון בלבד - אותם צבעים בדיוק כמו input[type=date] הרגיל
+   (רקע/מסגרת סגולים) כדי שתישאר אותה שפה חזותית, בלי טקסט dd/mm/yyyy גלוי -
+   לפי בקשה מפורשת. showPicker() נקרא על ה-input האמיתי, שרק מוסתר-ויזואלית */
+.date-picker-icon-only {
+    display: block;
+    margin: 6px 0 0;
+    width: 48px;
+    height: 48px;
+    background: rgba(20, 10, 30, 0.55);
+    border: 1px solid var(--accent-purple);
+    border-radius: 10px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.date-picker-icon-only:active { transform: scale(0.94); }
+.date-picker-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 #smart-split-clarify-input {
     width: 100%;
     background-color: var(--bg-glass);

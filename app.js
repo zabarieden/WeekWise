@@ -4255,31 +4255,30 @@ async function loadCalendarEvents() {
         if (!items.some(i => i.event_date >= today)) seriesMap.delete(groupId);
     });
 
-    // סדר תצוגה: sort_order ידני (שנקבע ע"י גרירה) קודם, ורק לפריטים שעדיין
-    // אין להם אחד (Infinity) נופלים חזרה למיון לפי תאריך - כך אפשר לשים משימות
-    // חשובות למעלה בלי קשר לתאריך/שעה שלהן.
+    // סדר תצוגה: כוכב (⭐) קודם, אחר כך לפי תאריך בלבד - לא עוד גרירה-ידנית/
+    // sort_order (שהוסרה כאן, נשארת רק במבט החודשי) - לפי בקשה מפורשת אחרי
+    // שדווח שהסדר "לא לפי יום": גרירה ישנה השאירה sort_order שקבע סדר-על
+    // מעל התאריך בלי שהיה ברור למה. כוכב הוא עכשיו הדרך המפורשת היחידה
+    // לקבוע "הכי חשוב למעלה" בלי קשר לתאריך
     const displayEntries = [];
     singleEvents.forEach(item => displayEntries.push({
-        sortOrder: typeof item.sort_order === 'number' ? item.sort_order : Infinity,
+        isStarred: !!item.is_starred,
         sortDate: item.event_date,
         render: () => buildSingleEventRow(item)
     }));
     seriesMap.forEach((items, groupId) => {
         items.sort((a, b) => a.event_date.localeCompare(b.event_date));
         // הסדרה כוללת גם מופעים שכבר עברו (כדי לסמן וי על ישנים, ר' ההערה
-        // למעלה) - אז items[0] יכול להיות מלפני חודשים, ואם היה משמש כ-
-        // sortDate היה "תוקע" את כל השורה המאוחדת של הסדרה בחודש עבר, עם
-        // כותרת-חודש בודדת ושגויה שם (בדיוק הבאג שדווח: "אוגוסט/יוני/אוגוסט").
-        // הסדר בפועל של השורה המאוחדת נקבע לפי המופע העתידי/הקרוב ביותר -
-        // ככה שהמשתמשת רואה אותו איפה שהיא מצפה, לפי המועד הרלוונטי הבא
+        // למעלה) - אז items[0] יכול להיות מלפני חודשים; הסדר בפועל של השורה
+        // המאוחדת נקבע לפי המופע העתידי/הקרוב ביותר, לא הראשון-אי-פעם
         const nextItem = items.find(i => i.event_date >= today) || items[items.length - 1];
         displayEntries.push({
-            sortOrder: typeof items[0].sort_order === 'number' ? items[0].sort_order : Infinity,
+            isStarred: items.some(i => i.is_starred),
             sortDate: nextItem.event_date,
             render: () => buildRecurringEventRow(items, groupId)
         });
     });
-    displayEntries.sort((a, b) => (a.sortOrder !== b.sortOrder ? a.sortOrder - b.sortOrder : a.sortDate.localeCompare(b.sortDate)));
+    displayEntries.sort((a, b) => (a.isStarred !== b.isStarred ? (b.isStarred ? 1 : -1) : a.sortDate.localeCompare(b.sortDate)));
     // כותרת-חודש קטנה לפני כל קבוצת אירועים של אותו חודש - לפי בקשה מפורשת.
     // מבוססת על sortDate (התאריך שקבע את המיקום במיון), אז גם פריטים שגררו
     // ידנית קדימה עדיין מקבלים כותרת-חודש הגיונית לפי התאריך שלהם עצמם
@@ -4295,18 +4294,16 @@ async function loadCalendarEvents() {
         }
         container.appendChild(entry.render());
     });
-    initCalendarDragReorder();
 }
 
 function buildSingleEventRow(item) {
     const row = document.createElement('div');
     row.className = 'calendar-event-item';
-    row.setAttribute('data-reorder-id', item.id);
-    row.setAttribute('data-reorder-type', 'single');
-    const handle = document.createElement('span');
-    handle.className = 'calendar-event-drag-handle';
-    handle.textContent = '⠿';
-    handle.title = t('calendar_event_drag_handle_title');
+    const starBtn = document.createElement('button');
+    starBtn.className = 'calendar-event-star-btn' + (item.is_starred ? ' starred' : '');
+    starBtn.textContent = item.is_starred ? '⭐' : '☆';
+    starBtn.title = t('calendar_event_star_title');
+    starBtn.onclick = () => toggleEventStar(item.id, false, !item.is_starred);
     const dateBadge = document.createElement('span');
     dateBadge.className = 'calendar-event-date-badge';
     dateBadge.textContent = formatEventDateBadge(item.event_date);
@@ -4322,7 +4319,7 @@ function buildSingleEventRow(item) {
     deleteBtn.className = 'btn-delete-item';
     deleteBtn.textContent = '❌';
     deleteBtn.onclick = () => deleteCalendarEvent(item.id);
-    row.appendChild(handle);
+    row.appendChild(starBtn);
     row.appendChild(dateBadge);
     row.appendChild(titleSpan);
     row.appendChild(editBtn);
@@ -4330,11 +4327,21 @@ function buildSingleEventRow(item) {
     return row;
 }
 
+// הכוכב מחליף לגמרי את הגרירה-הידנית הישנה (sort_order/initCalendarDragReorder,
+// הוסרו) - לפי בקשה מפורשת: "הסדר לא לפי תאריך" (בעיה שדווחה) קרה כי גרירה
+// ישנה השאירה sort_order ידני שקבע סדר-על מעל התאריך; עכשיו הממוין היחיד
+// הוא תאריך, וכוכב הוא הדרך היחידה לקבוע "הכי חשוב" למעלה בלי קשר לתאריך.
+// עבור סדרה חוזרת מסמנים בכוכב את *כל* המופעים (recurrence_group_id), לא
+// רק את הקרוב - כך שהשורה המאוחדת כולה "כוכבית" בעקביות
+async function toggleEventStar(id, isSeries, newValue) {
+    if (isSeries) await supabaseClient.from('calendar_events').update({ is_starred: newValue }).eq('recurrence_group_id', id);
+    else await supabaseClient.from('calendar_events').update({ is_starred: newValue }).eq('id', id);
+    await loadCalendarEvents();
+}
+
 function buildRecurringEventRow(items, groupId) {
     const wrap = document.createElement('div');
     wrap.className = 'calendar-event-series';
-    wrap.setAttribute('data-reorder-id', groupId);
-    wrap.setAttribute('data-reorder-type', 'series');
 
     // התאריך המוצג הוא תמיד המופע הקרוב ביותר *מהיום והלאה* - לא המופע
     // הראשון של הסדרה, שכבר יכול היה לעבור מזמן. items תמיד ממוין עולה לפי
@@ -4346,10 +4353,12 @@ function buildRecurringEventRow(items, groupId) {
     const header = document.createElement('div');
     header.className = 'calendar-event-item calendar-event-series-header';
 
-    const handle = document.createElement('span');
-    handle.className = 'calendar-event-drag-handle';
-    handle.textContent = '⠿';
-    handle.title = t('calendar_event_drag_handle_title');
+    const isStarred = items.some(i => i.is_starred);
+    const starBtn = document.createElement('button');
+    starBtn.className = 'calendar-event-star-btn' + (isStarred ? ' starred' : '');
+    starBtn.textContent = isStarred ? '⭐' : '☆';
+    starBtn.title = t('calendar_event_star_title');
+    starBtn.onclick = (e) => { e.stopPropagation(); toggleEventStar(groupId, true, !isStarred); };
 
     const dateBadge = document.createElement('span');
     dateBadge.className = 'calendar-event-date-badge';
@@ -4395,7 +4404,7 @@ function buildRecurringEventRow(items, groupId) {
     deleteBtn.textContent = '❌';
     deleteBtn.onclick = () => deleteRecurringSeries(groupId);
 
-    header.appendChild(handle);
+    header.appendChild(starBtn);
     header.appendChild(dateBadge);
     header.appendChild(nearestCheckbox);
     header.appendChild(titleSpan);
@@ -4472,82 +4481,6 @@ async function toggleScheduleCompletion(scheduleId, dateStr, isCompleted) {
     loadTodayTasks();
 }
 
-// --- גרירה לסידור ידני-עצמאי (עדיפות) של פריטי מבט ליומן, בלי קשר לתאריך ---
-// גורר לפי ⠿: מזיז את הפריט חזותית עם המצביע, ומחליף מקום בפועל ב-DOM ברגע
-// שמרכז הפריט הנגרר חוצה את מרכזו של שכן - כך "מי שלמעלה" הוא סדר העדיפות.
-function initCalendarDragReorder() {
-    const container = document.getElementById('calendar-glance-list');
-    if (!container) return;
-
-    let draggedEl = null;
-    let startY = 0;
-
-    function onMove(e) {
-        if (!draggedEl) return;
-        const dy = e.clientY - startY;
-        draggedEl.style.transform = `translateY(${dy}px)`;
-
-        const draggedRect = draggedEl.getBoundingClientRect();
-        const draggedMid = draggedRect.top + draggedRect.height / 2;
-        const siblings = Array.from(container.children).filter(el => el !== draggedEl && el.hasAttribute('data-reorder-id'));
-
-        for (const sibling of siblings) {
-            const rect = sibling.getBoundingClientRect();
-            const siblingMid = rect.top + rect.height / 2;
-            const draggedIsBeforeSibling = !!(draggedEl.compareDocumentPosition(sibling) & Node.DOCUMENT_POSITION_FOLLOWING);
-            if (draggedIsBeforeSibling && draggedMid > siblingMid) {
-                container.insertBefore(draggedEl, sibling.nextSibling);
-                draggedEl.style.transform = 'translateY(0px)';
-                startY = e.clientY;
-                break;
-            } else if (!draggedIsBeforeSibling && draggedMid < siblingMid) {
-                container.insertBefore(draggedEl, sibling);
-                draggedEl.style.transform = 'translateY(0px)';
-                startY = e.clientY;
-                break;
-            }
-        }
-    }
-
-    function endDrag() {
-        if (!draggedEl) return;
-        draggedEl.classList.remove('reordering');
-        draggedEl.style.transform = '';
-        document.removeEventListener('pointermove', onMove);
-        document.removeEventListener('pointerup', endDrag);
-        document.removeEventListener('pointercancel', endDrag);
-        persistCalendarOrder();
-        draggedEl = null;
-    }
-
-    container.querySelectorAll('.calendar-event-drag-handle').forEach(handle => {
-        handle.onpointerdown = (e) => {
-            const el = handle.closest('[data-reorder-id]');
-            if (!el) return;
-            e.preventDefault();
-            draggedEl = el;
-            startY = e.clientY;
-            draggedEl.classList.add('reordering');
-            document.addEventListener('pointermove', onMove);
-            document.addEventListener('pointerup', endDrag);
-            document.addEventListener('pointercancel', endDrag);
-        };
-    });
-}
-
-async function persistCalendarOrder() {
-    const container = document.getElementById('calendar-glance-list');
-    if (!container) return;
-    const children = Array.from(container.children).filter(el => el.hasAttribute('data-reorder-id'));
-    const updates = children.map((el, index) => {
-        const order = (index + 1) * 10;
-        const type = el.getAttribute('data-reorder-type');
-        const id = el.getAttribute('data-reorder-id');
-        if (type === 'series') return supabaseClient.from('calendar_events').update({ sort_order: order }).eq('recurrence_group_id', id);
-        return supabaseClient.from('calendar_events').update({ sort_order: order }).eq('id', id);
-    });
-    await Promise.all(updates);
-}
 
 // יוצר את כל תאריכי החזרה מתחילת הטווח ועד סוף מספר החודשים שנבחר, לפי סוג
 // החזרה (שבועי/חודשי/כל 3 חודשים/מותאם אישית - כל X שבועות או חודשים) - זהו
