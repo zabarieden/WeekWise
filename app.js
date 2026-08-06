@@ -3927,7 +3927,7 @@ async function renderSelectedCalendarDay() {
     const [y, m, d] = selectedCalendarDay.split('-').map(Number);
     const dayOfWeek = dbDaysMap[new Date(y, m - 1, d).getDay()];
     const [{ data }, { data: recurringDataRaw }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('sort_order', { ascending: true }),
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('day_sort_order', { ascending: true, nullsFirst: false }),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
     ]);
     // אותו סינון בדיוק כמו ב-loadTodayTasks - משבצות בסיס ריקות (task_title
@@ -4018,6 +4018,16 @@ async function renderSelectedCalendarDay() {
 // ניווט בין חודשים אז חייבים להשמיד ולבנות מחדש את מופעי ה-Sortable שלהם
 // בכל render (calendarGridSortables)
 let calendarTaskDragSourceInitialized = false;
+// sort:true (היה false) - מאפשר גם סידור-מחדש בתוך רשימת היום עצמה (גרירה
+// למעלה/למטה), לא רק גרירה החוצה לתא של יום אחר - לפי בקשה מפורשת. onEnd
+// מטפל רק בסידור-מחדש (evt.from===evt.to - גרירה החוצה כבר מטופלת ב-onAdd
+// של תאי הלוח, ר' initCalendarGridDropTargets). day_sort_order הוא עמודה
+// נפרדת מ-sort_order (המשמש את "כל האירועים" כמפתח מיון *ראשי* וגלובלי
+// חוצה-תאריכים - ר' ההערה ליד displayEntries.sort) - שימוש חוזר ב-sort_order
+// כאן היה "מזנק" את פריטי היום הזה לראש כל הרשימה הגלובלית, לא רק מסדר
+// אותם בתוך היום. רק אירועים חד-פעמיים (data-item-type="event") נשמרים -
+// משימות קבועות (recurring) עדיין ניתנות לגרירה-החוצה אבל לא לסידור-מחדש
+// כאן (יחזרו למקומן היחסי אחרי הרענון), כדי לא לגעת בסמנטיקה של slot_number
 function initCalendarTaskDragSource() {
     if (calendarTaskDragSourceInitialized || typeof Sortable === 'undefined') return;
     const list = document.getElementById('monthly-calendar-day-detail');
@@ -4026,13 +4036,19 @@ function initCalendarTaskDragSource() {
     new Sortable(list, {
         group: { name: 'calendar-task-move', pull: 'clone', put: false },
         handle: '.calendar-task-drag-handle',
-        sort: false,
+        sort: true,
         animation: 150,
         forceFallback: true,
         fallbackOnBody: true,
         dragClass: 'note-triage-drag-clone',
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
+        onEnd: function (evt) {
+            if (evt.from !== evt.to) return;
+            const eventRows = Array.from(list.children).filter(el => el.getAttribute('data-item-type') === 'event');
+            const updates = eventRows.map((el, index) => supabaseClient.from('calendar_events').update({ day_sort_order: (index + 1) * 10 }).eq('id', el.getAttribute('data-item-id')));
+            Promise.all(updates);
+        },
     });
 }
 
