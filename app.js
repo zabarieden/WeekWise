@@ -241,10 +241,30 @@ const TODAY_TASKS_ROTATING_MESSAGE_KEYS = [
     'today_tasks_rotate_5', 'today_tasks_rotate_6', 'today_tasks_rotate_7',
 ];
 
+// סף-סבירות למנה/פריט בודד - לא חוסם שמירה, רק מסמן ויזואלית + טוסט חד-פעמי
+// בכניסה למצב-אזהרה. נועד לתפוס בדיוק את סוג התקלה שהתגלתה בפועל (פירוט-
+// מרכיבים שהתפרש לא נכון וניפח מספר בודד ל-23,200+ קלוריות) - לפי בקשה מפורשת
+const IMPLAUSIBLE_SINGLE_MEAL_CALORIES = 2000;
+
+// מסמנת ויזואלית (מסגרת אדומה) שדה-קלוריות שחרג מהסף, ומציגה טוסט אזהרה *רק*
+// ברגע המעבר למצב-אזהרה (לא בכל קריאה חוזרת - updateLiveCaloriesToday רצה על
+// כל הקשה) כדי לא להציף בטוסטים חוזרים על אותה שורה
+function flagImplausibleCalories(input, calories) {
+    const isImplausible = calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES;
+    const wasImplausible = input.classList.contains('calories-implausible');
+    input.classList.toggle('calories-implausible', isImplausible);
+    input.title = isImplausible ? t('calories_implausible_tooltip').replace('{calories}', calories) : '';
+    if (isImplausible && !wasImplausible) {
+        showAppToast(t('calories_implausible_toast').replace('{calories}', calories), 'error');
+    }
+}
+
 function updateLiveCaloriesToday() {
     let total = 0;
     document.querySelectorAll('.calories-input').forEach(input => {
-        total += parseInt(input.value) || 0;
+        const calories = parseInt(input.value) || 0;
+        total += calories;
+        flagImplausibleCalories(input, calories);
     });
     document.getElementById('calories-today').innerText = total;
     let proteinTotal = 0;
@@ -875,7 +895,11 @@ async function logPresetQuickAdd(id) {
     if (!preset) return;
     await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category);
     closeModal('modal-preset-quick-add');
-    showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
+    if (preset.calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
+        showAppToast(t('calories_implausible_toast').replace('{calories}', preset.calories), 'error');
+    } else {
+        showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
+    }
     refreshTodayNutritionViewIfOpen();
 }
 
@@ -1060,7 +1084,11 @@ async function finishFoodQuickAdd(text, estimate) {
     if (!calories || calories <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
     await addQuickLogEntry(text, calories);
     closeModal('modal-ai-brain');
-    showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
+    if (calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
+        showAppToast(t('calories_implausible_toast').replace('{calories}', calories), 'error');
+    } else {
+        showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
+    }
     refreshTodayNutritionViewIfOpen();
 }
 
@@ -10072,9 +10100,12 @@ const GAP_QUANTITY_TOKEN_RE = /^ו?(?:\d+(?:\.\d+)?|חצי|רבע|שליש)$/;
 // הכמות שמוביל אליה (המספר/מילת השבר הצמודים לפניה, כולל "ו" מחבר) שייך
 // כולו למאכל *הבא*, לא מתחלק - כי "בצל וחצי פרוסת גבינה" מתאר חצי פרוסה של
 // הגבינה, לא חצי בצל, למרות שהמילים קרובות יותר (במספר תווים) לבצל.
-// אם אין מילת-יחידה כזו בפער, חוזרים לחלוקה הכי קרובה לאמצע הפער - אבל תמיד
-// *על רווח* (לא באמצע מילה), כדי שמילת כמות כמו "חצי" לא תיחתך לשניים (מה
-// שהיה מונע זיהוי שלה בשני הצדדים)
+// אחר כך, אם יש "+" או "," בפער - אלה גבול-מאכל מפורש וודאי (המשתמשת כותבת
+// אותם בכוונה כדי להפריד בין פריטים, לפי בקשה מפורשת) - הכל אחרי הסימן הזה
+// (כולל כמות צמודה אליו, כמו "3" ב"+ 3 בננות") שייך למאכל הבא בוודאות, בלי
+// להסתמך על ניחוש-אמצע שעלול לטעות. רק אם אין גם מילת-יחידה וגם אין +/,
+// חוזרים לחלוקה הכי קרובה לאמצע הפער - אבל תמיד *על רווח* (לא באמצע מילה),
+// כדי שמילת כמות כמו "חצי" לא תיחתך לשניים (מה שהיה מונע זיהוי שלה בשני הצדדים)
 function findGapSplitPoint(text, gapStart, gapEnd) {
     if (gapEnd <= gapStart) return gapStart;
     const gapText = text.slice(gapStart, gapEnd);
@@ -10091,6 +10122,11 @@ function findGapSplitPoint(text, gapStart, gapEnd) {
         }
         return gapStart + tokens[cutTokenIdx].start;
     }
+    let lastSepEnd = -1;
+    const sepRe = /[+,]/g;
+    let sm;
+    while ((sm = sepRe.exec(gapText))) lastSepEnd = sm.index + 1;
+    if (lastSepEnd !== -1) return gapStart + lastSepEnd;
     const rawMid = Math.floor((gapStart + gapEnd) / 2);
     let best = rawMid, bestDist = Infinity;
     for (let i = gapStart; i <= gapEnd; i++) {
