@@ -2908,7 +2908,13 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .monthly-calendar-dot { position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
 /* SortableJS מוסיף .sortable-ghost על התא בזמן שגוררים משימה מעליו (ר'
    initCalendarGridDropTargets ב-app.js) - מדגישים את התא עצמו כמו
-   note-triage-zone:has(.sortable-ghost), כך שברור לאן המשימה תעבור */
+   note-triage-zone:has(.sortable-ghost), כך שברור לאן המשימה תעבור.
+   הכלל הגלובלי .sortable-ghost{opacity:0} (למעלה) רק מסתיר אותו - הוא
+   עדיין תופס מקום בפועל בפריסה, וכאן זה אסון: השורה הנגררת (עם ידית+
+   טקסט+כפתורים) הרבה יותר רחבה מתא-יומן ריבועי, אז הריבוע "מתנפח" סביבה
+   (דווח: "זה מגדיל את הריבועים לממש גדול") - display:none מוציא אותו
+   לגמרי מהפריסה, לא רק שקוף, כך שהתא נשאר בגודלו הקבוע */
+.monthly-calendar-cell .sortable-ghost { display: none !important; }
 .monthly-calendar-cell:has(.sortable-ghost) {
     border-color: var(--accent-pink);
     background-color: rgba(255, 0, 127, 0.16);
