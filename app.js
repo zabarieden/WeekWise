@@ -1497,7 +1497,7 @@ let pendingCenterItemType = null;
 // כדי שהבחירה של המשתמשת תישאר בדיוק אותו גוון גם אם היא מחליפה אחר כך
 // ערכת נושא פרימיום - זו העדפה אישית על התוכן, לא צבע-נושא) - לפי בקשה
 // מפורשת ("אפשר צבע שונה למילים פה בפתקים? ובכל האפליקציה?")
-const CENTER_ITEM_COLOR_PRESETS = ['#ff453a', '#ff9500', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
+const CENTER_ITEM_COLOR_PRESETS = ['#ff453a', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
 
 function hexToRgba(hex, alpha) {
     const clean = hex.replace('#', '');
@@ -1559,7 +1559,7 @@ function selectCenterItemColor(color) {
 // 6 צבעי-הדגל של האפליקציה עצמה (ר' --accent-* ב-theme.css), לא אותה
 // פלטת 8 של צבע הטקסט - שני אפקטים שונים לגמרי (זוהר מסביב מול צבע
 // אותיות), לפי בקשה מפורשת ("צבעים שיהיו זוהרים איזה 6 אפשרויות")
-const GLOW_COLOR_PRESETS = ['#ff007f', '#a855f7', '#00d4ff', '#00e676', '#f59e0b', '#ff453a'];
+const GLOW_COLOR_PRESETS = ['#ff007f', '#a855f7', '#00d4ff', '#00e676', '#f59e0b', '#ff453a', '#d2a679'];
 let pendingCenterItemGlow = null;
 
 function renderCenterItemGlowSwatches() {
@@ -2283,8 +2283,6 @@ async function duplicateSlotToNextDay(day, slot) {
 // תהיה "הראשונה בתוך ה-AI" (ר' initFixedAiBrainFab/openFoodQuickAddModal)
 function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-schedule-input').value = '';
-    const titlePrefixInput = document.getElementById('ai-schedule-title-prefix');
-    if (titlePrefixInput) titlePrefixInput.value = '';
     document.getElementById('ai-finance-input').value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
@@ -2876,16 +2874,6 @@ async function parseScheduleWithAI() {
             })));
         } else {
             events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
-        }
-
-        // תווית קבועה (אופציונלי) שנוספת בוודאות לכותרת של *כל* אירוע - לא
-        // תלויה בניחוש של ה-AI אם מילת-הקשר שייכת לכל אירוע בנפרד, לפי בקשה
-        // מפורשת. מוחלת גם על אירועים עם needsClarification (task_title שלהם
-        // עובר כמות שהוא דרך runScheduleClarificationFlow, ר' שם)
-        const titlePrefixInput = document.getElementById('ai-schedule-title-prefix');
-        const titlePrefix = titlePrefixInput ? titlePrefixInput.value.trim() : '';
-        if (titlePrefix) {
-            events = events.map(ev => ({ ...ev, task_title: `${titlePrefix} - ${ev.task_title}` }));
         }
 
         // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד

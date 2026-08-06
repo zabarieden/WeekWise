@@ -529,7 +529,6 @@ html.light-mode #protein-daily-goal-input,
 html.light-mode #habit-name-input,
 html.light-mode #contact-us-message,
 html.light-mode #ai-schedule-duration-months,
-html.light-mode #ai-schedule-title-prefix,
 html.light-mode #preset-quick-add-search,
 html.light-mode #food-quick-add-input,
 html.light-mode #routine-item-title-input,
@@ -2389,11 +2388,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red-text); border-color: rgba(255, 69, 58, 0.15); }
-.apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; animation: fadeOverlay 0.2s ease-out; }
+/* align-items:center (לא flex-end) - כל המודלים באפליקציה מרוכזים אנכית
+   באמצע המסך במקום להיצמד לתחתית כ"בוטום-שיט", לפי בקשה מפורשת ("שיהיה
+   באמצע המסך... גם במחשב וגם בנייד, בכל המודלים") */
+.apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeOverlay 0.2s ease-out; padding: 20px; box-sizing: border-box; }
 /* בורר השפה חייב להיפתח גם מעל מסך הכניסה (.login-overlay, z-index:3000 -
    גבוה מ-.apple-modal הרגיל של 2000!) אז הוא צריך z-index ייעודי גבוה יותר */
 #modal-language-picker { z-index: 3500; }
-.modal-sheet { background-color: var(--bg-sheet); border-top: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(100%); transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1); max-height: 85vh; overflow-y: auto; position: relative; }
+/* border-radius מלא בכל הפינות (לא רק העליונות) + צל סימטרי - כרטיס
+   צף במרכז המסך, לא "בוטום-שיט" צמוד לתחתית */
+.modal-sheet { background-color: var(--bg-sheet); border: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(40px); opacity: 0; transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.23s ease-out; max-height: 85vh; overflow-y: auto; position: relative; }
 
 .recipe-scan-loading { display: flex; position: absolute; inset: 0; background-color: rgba(7, 6, 10, 0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-direction: column; align-items: center; justify-content: center; gap: 16px; border-radius: 20px; z-index: 50; }
 .recipe-scan-loading p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; font-weight: 500; }
@@ -2514,9 +2518,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     font-weight: 500;
 }
 .ai-schedule-mode-info[data-tooltip]:hover::after, .ai-schedule-mode-info[data-tooltip]:focus-visible::after { opacity: 1; }
-#ai-schedule-duration-months, #ai-schedule-title-prefix { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-.ai-schedule-title-prefix-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.ai-schedule-title-prefix-row #ai-schedule-title-prefix { width: auto; flex: 1; min-width: 0; margin-bottom: 0; }
+#ai-schedule-duration-months { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 #routine-item-title-input, #routine-tab-name-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 /* בועות ספורט מותאמות-אישית: אין הגבלת כמות, אז הבועות עוטפות לשורה חדשה
    במקום להידחס - בהיקף מזהה #sport-type-picker בלבד, לא נוגע ב-.ai-brain-tab
@@ -2643,7 +2645,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #ai-schedule-title-prefix, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
