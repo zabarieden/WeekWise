@@ -383,6 +383,206 @@ html[data-color-theme="kids_sky_grass"] {
     --accent-purple: #4ade80;
     --accent-purple-light: #93c5fd;
 }
+html[data-color-theme="rainbow_balloons"] {
+    --bg-main: linear-gradient(135deg, #1a1030, #2b1a45);
+    --bg-row: rgba(60, 30, 80, 0.4);
+    --border-color: rgba(244, 63, 94, 0.3);
+    --accent-pink: #f43f5e;
+    --accent-purple: #a855f7;
+    --accent-purple-light: #fbbf24;
+}
+html[data-color-theme="underwater_ocean"] {
+    --bg-main: linear-gradient(135deg, #001a2e, #003049);
+    --bg-row: rgba(0, 60, 90, 0.4);
+    --border-color: rgba(56, 189, 248, 0.3);
+    --accent-pink: #f97316;
+    --accent-purple: #38bdf8;
+    --accent-purple-light: #5eead4;
+}
+html[data-color-theme="dino_jungle"] {
+    --bg-main: linear-gradient(135deg, #0a1f0a, #142f14);
+    --bg-row: rgba(20, 60, 20, 0.4);
+    --border-color: rgba(132, 204, 22, 0.3);
+    --accent-pink: #f97316;
+    --accent-purple: #84cc16;
+    --accent-purple-light: #facc15;
+}
+html[data-color-theme="space_rocket"] {
+    --bg-main: linear-gradient(135deg, #04051a, #0a0d2e);
+    --bg-row: rgba(20, 20, 60, 0.4);
+    --border-color: rgba(250, 204, 21, 0.3);
+    --accent-pink: #f43f5e;
+    --accent-purple: #818cf8;
+    --accent-purple-light: #fde68a;
+}
+html[data-color-theme="bull_run"] {
+    --bg-main: linear-gradient(135deg, #001a08, #002e12);
+    --bg-row: rgba(0, 60, 20, 0.5);
+    --border-color: rgba(74, 222, 128, 0.35);
+    --accent-pink: #4ade80;
+    --accent-purple: #16a34a;
+    --accent-purple-light: #bbf7d0;
+}
+html[data-color-theme="bear_crash"] {
+    --bg-main: linear-gradient(135deg, #1a0000, #2e0008);
+    --bg-row: rgba(60, 0, 10, 0.5);
+    --border-color: rgba(248, 113, 113, 0.35);
+    --accent-pink: #f87171;
+    --accent-purple: #991b1b;
+    --accent-purple-light: #fecaca;
+}
+html[data-color-theme="multi_ticker_grid"] {
+    --bg-main: linear-gradient(135deg, #05070a, #0a0e14);
+    --bg-row: rgba(20, 25, 35, 0.5);
+    --border-color: rgba(148, 163, 184, 0.3);
+    --accent-pink: #22c55e;
+    --accent-purple: #ef4444;
+    --accent-purple-light: #38bdf8;
+}
+html[data-color-theme="teddy_bear"] {
+    --bg-main: linear-gradient(135deg, #2b1a0a, #3d2410);
+    --bg-row: rgba(90, 60, 30, 0.4);
+    --border-color: rgba(217, 119, 6, 0.3);
+    --accent-pink: #d97706;
+    --accent-purple: #92400e;
+    --accent-purple-light: #fbbf24;
+}
+html[data-color-theme="wooden_blocks"] {
+    --bg-main: linear-gradient(135deg, #1f1408, #2b1c0e);
+    --bg-row: rgba(90, 60, 30, 0.4);
+    --border-color: rgba(180, 120, 60, 0.3);
+    --accent-pink: #ef4444;
+    --accent-purple: #3b82f6;
+    --accent-purple-light: #fbbf24;
+}
+html[data-color-theme="board_game_dice"] {
+    --bg-main: linear-gradient(135deg, #1a0a10, #2b0f1a);
+    --bg-row: rgba(80, 20, 40, 0.4);
+    --border-color: rgba(244, 63, 94, 0.3);
+    --accent-pink: #f43f5e;
+    --accent-purple: #facc15;
+    --accent-purple-light: #fda4af;
+}
+html[data-color-theme="arcade_neon"] {
+    --bg-main: linear-gradient(135deg, #0a0014, #14001f);
+    --bg-row: rgba(40, 0, 60, 0.5);
+    --border-color: rgba(217, 70, 239, 0.35);
+    --accent-pink: #d946ef;
+    --accent-purple: #06b6d4;
+    --accent-purple-light: #fde047;
+}
+html[data-color-theme="kite_pinwheel"] {
+    --bg-main: linear-gradient(135deg, #001a33, #002b52);
+    --bg-row: rgba(0, 60, 100, 0.4);
+    --border-color: rgba(56, 189, 248, 0.3);
+    --accent-pink: #f43f5e;
+    --accent-purple: #38bdf8;
+    --accent-purple-light: #fde047;
+}
+html[data-color-theme="tropical_leaves"] {
+    --bg-main: linear-gradient(135deg, #021a0e, #042b18);
+    --bg-row: rgba(10, 60, 30, 0.4);
+    --border-color: rgba(22, 163, 74, 0.3);
+    --accent-pink: #facc15;
+    --accent-purple: #16a34a;
+    --accent-purple-light: #86efac;
+}
+html[data-color-theme="autumn_forest"] {
+    --bg-main: linear-gradient(135deg, #2b1405, #3d1c08);
+    --bg-row: rgba(90, 40, 10, 0.4);
+    --border-color: rgba(249, 115, 22, 0.3);
+    --accent-pink: #f97316;
+    --accent-purple: #dc2626;
+    --accent-purple-light: #fde047;
+}
+html[data-color-theme="wildflower_meadow"] {
+    --bg-main: linear-gradient(135deg, #0a1f0a, #142f10);
+    --bg-row: rgba(20, 60, 20, 0.4);
+    --border-color: rgba(236, 72, 153, 0.3);
+    --accent-pink: #ec4899;
+    --accent-purple: #84cc16;
+    --accent-purple-light: #fde047;
+}
+html[data-color-theme="race_car"] {
+    --bg-main: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    --bg-row: rgba(40, 40, 40, 0.4);
+    --border-color: rgba(239, 68, 68, 0.35);
+    --accent-pink: #ef4444;
+    --accent-purple: #18181b;
+    --accent-purple-light: #f5f5f5;
+}
+html[data-color-theme="train_journey"] {
+    --bg-main: linear-gradient(135deg, #1a1005, #2b1c0a);
+    --bg-row: rgba(80, 50, 20, 0.4);
+    --border-color: rgba(180, 120, 60, 0.3);
+    --accent-pink: #dc2626;
+    --accent-purple: #525252;
+    --accent-purple-light: #e8dcc0;
+}
+html[data-color-theme="airplane_sky"] {
+    --bg-main: linear-gradient(135deg, #001a3d, #002b5c);
+    --bg-row: rgba(0, 50, 90, 0.4);
+    --border-color: rgba(147, 197, 253, 0.3);
+    --accent-pink: #f97316;
+    --accent-purple: #3b82f6;
+    --accent-purple-light: #dbeafe;
+}
+html[data-color-theme="sailboat_waves"] {
+    --bg-main: linear-gradient(135deg, #001a26, #00303f);
+    --bg-row: rgba(0, 50, 70, 0.4);
+    --border-color: rgba(56, 189, 248, 0.3);
+    --accent-pink: #f8fafc;
+    --accent-purple: #0ea5e9;
+    --accent-purple-light: #7dd3fc;
+}
+html[data-color-theme="motorcycle_speed"] {
+    --bg-main: linear-gradient(135deg, #0a0a0a, #1f1005);
+    --bg-row: rgba(60, 30, 10, 0.4);
+    --border-color: rgba(249, 115, 22, 0.35);
+    --accent-pink: #f97316;
+    --accent-purple: #18181b;
+    --accent-purple-light: #fdba74;
+}
+html[data-color-theme="hot_air_balloon"] {
+    --bg-main: linear-gradient(135deg, #1a0a30, #2b1245);
+    --bg-row: rgba(60, 20, 80, 0.4);
+    --border-color: rgba(251, 191, 36, 0.3);
+    --accent-pink: #f43f5e;
+    --accent-purple: #fbbf24;
+    --accent-purple-light: #a78bfa;
+}
+html[data-color-theme="bicycle_ride"] {
+    --bg-main: linear-gradient(135deg, #001a0a, #002b12);
+    --bg-row: rgba(10, 60, 25, 0.4);
+    --border-color: rgba(34, 197, 94, 0.3);
+    --accent-pink: #22c55e;
+    --accent-purple: #15803d;
+    --accent-purple-light: #bbf7d0;
+}
+html[data-color-theme="submarine_deep"] {
+    --bg-main: linear-gradient(135deg, #00050f, #001529);
+    --bg-row: rgba(0, 30, 60, 0.4);
+    --border-color: rgba(56, 189, 248, 0.25);
+    --accent-pink: #facc15;
+    --accent-purple: #0369a1;
+    --accent-purple-light: #7dd3fc;
+}
+html[data-color-theme="helicopter_rotor"] {
+    --bg-main: linear-gradient(135deg, #14161a, #1f2229);
+    --bg-row: rgba(40, 45, 55, 0.4);
+    --border-color: rgba(250, 204, 21, 0.3);
+    --accent-pink: #facc15;
+    --accent-purple: #64748b;
+    --accent-purple-light: #e2e8f0;
+}
+html[data-color-theme="rocket_ship"] {
+    --bg-main: linear-gradient(135deg, #05010f, #0a0320);
+    --bg-row: rgba(20, 10, 50, 0.4);
+    --border-color: rgba(148, 163, 184, 0.3);
+    --accent-pink: #e2e8f0;
+    --accent-purple: #6366f1;
+    --accent-purple-light: #fb923c;
+}
 /* מצב בהיר (Light Mode, חינמי): מחליף את משתני הרקע/הטקסט - צבעי הניאון
    עצמם (var(--accent-*), לשימוש ברקעים/מסגרות/צללים עדינים) נשארות זהות,
    כדי לשמור על הזוהר הרענן גם על רקע בהיר. אבל var(--accent-*-text) (טקסט
@@ -734,6 +934,231 @@ html.light-mode[data-color-theme="kids_sky_grass"] {
     --border-color: rgba(250, 204, 21, 0.35);
     --text-primary: #0a1a3d;
     --text-secondary: #3a5a80;
+}
+html.light-mode[data-color-theme="rainbow_balloons"] {
+    --bg-main: linear-gradient(135deg, #fff5e0, #e0f0ff);
+    --bg-row: rgba(244, 63, 94, 0.1);
+    --bg-glass: rgba(255, 250, 240, 0.75);
+    --bg-sheet: #fffdf5;
+    --border-color: rgba(244, 63, 94, 0.25);
+    --text-primary: #2b1a10;
+    --text-secondary: #7a5a50;
+}
+html.light-mode[data-color-theme="underwater_ocean"] {
+    --bg-main: linear-gradient(135deg, #d0f0ff, #b0e0f5);
+    --bg-row: rgba(56, 189, 248, 0.12);
+    --bg-glass: rgba(235, 251, 255, 0.75);
+    --bg-sheet: #f0fbff;
+    --border-color: rgba(56, 189, 248, 0.3);
+    --text-primary: #001a2e;
+    --text-secondary: #3f6b80;
+}
+html.light-mode[data-color-theme="dino_jungle"] {
+    --bg-main: linear-gradient(135deg, #e0f5d0, #c8ecb0);
+    --bg-row: rgba(132, 204, 22, 0.12);
+    --bg-glass: rgba(240, 253, 232, 0.75);
+    --bg-sheet: #f5fff0;
+    --border-color: rgba(132, 204, 22, 0.3);
+    --text-primary: #0a1f0a;
+    --text-secondary: #4a6b3a;
+}
+html.light-mode[data-color-theme="space_rocket"] {
+    --bg-main: linear-gradient(135deg, #e0e0fb, #c8c8f5);
+    --bg-row: rgba(129, 140, 248, 0.12);
+    --bg-glass: rgba(240, 240, 253, 0.75);
+    --bg-sheet: #f5f5ff;
+    --border-color: rgba(250, 204, 21, 0.35);
+    --text-primary: #04051a;
+    --text-secondary: #4a4a7a;
+}
+html.light-mode[data-color-theme="bull_run"] {
+    --bg-main: linear-gradient(135deg, #e0fae6, #c0f0cc);
+    --bg-row: rgba(74, 222, 128, 0.12);
+    --bg-glass: rgba(240, 253, 244, 0.75);
+    --bg-sheet: #f5fff8;
+    --border-color: rgba(74, 222, 128, 0.3);
+    --text-primary: #001a08;
+    --text-secondary: #4a7a58;
+}
+html.light-mode[data-color-theme="bear_crash"] {
+    --bg-main: linear-gradient(135deg, #ffe0e0, #ffc2c2);
+    --bg-row: rgba(248, 113, 113, 0.12);
+    --bg-glass: rgba(255, 240, 240, 0.75);
+    --bg-sheet: #fff5f5;
+    --border-color: rgba(248, 113, 113, 0.3);
+    --text-primary: #1a0000;
+    --text-secondary: #7a4040;
+}
+html.light-mode[data-color-theme="multi_ticker_grid"] {
+    --bg-main: linear-gradient(135deg, #e8eef5, #d0dce8);
+    --bg-row: rgba(148, 163, 184, 0.12);
+    --bg-glass: rgba(245, 248, 251, 0.75);
+    --bg-sheet: #f8fafc;
+    --border-color: rgba(148, 163, 184, 0.3);
+    --text-primary: #05070a;
+    --text-secondary: #4a5568;
+}
+html.light-mode[data-color-theme="teddy_bear"] {
+    --bg-main: linear-gradient(135deg, #fdf0dc, #f5deb8);
+    --bg-row: rgba(217, 119, 6, 0.12);
+    --bg-glass: rgba(253, 246, 234, 0.75);
+    --bg-sheet: #fffaf0;
+    --border-color: rgba(217, 119, 6, 0.25);
+    --text-primary: #2b1a0a;
+    --text-secondary: #7a5a35;
+}
+html.light-mode[data-color-theme="wooden_blocks"] {
+    --bg-main: linear-gradient(135deg, #fdf0d8, #f5e0b0);
+    --bg-row: rgba(180, 120, 60, 0.12);
+    --bg-glass: rgba(253, 247, 234, 0.75);
+    --bg-sheet: #fffaf0;
+    --border-color: rgba(180, 120, 60, 0.3);
+    --text-primary: #1f1408;
+    --text-secondary: #7a5a35;
+}
+html.light-mode[data-color-theme="board_game_dice"] {
+    --bg-main: linear-gradient(135deg, #ffe8ee, #fff0d0);
+    --bg-row: rgba(244, 63, 94, 0.1);
+    --bg-glass: rgba(255, 245, 248, 0.75);
+    --bg-sheet: #fffafb;
+    --border-color: rgba(244, 63, 94, 0.25);
+    --text-primary: #1a0a10;
+    --text-secondary: #7a4a58;
+}
+html.light-mode[data-color-theme="arcade_neon"] {
+    --bg-main: linear-gradient(135deg, #f5e0ff, #dcfaff);
+    --bg-row: rgba(217, 70, 239, 0.1);
+    --bg-glass: rgba(250, 240, 255, 0.75);
+    --bg-sheet: #fdf5ff;
+    --border-color: rgba(217, 70, 239, 0.25);
+    --text-primary: #0a0014;
+    --text-secondary: #6e4a80;
+}
+html.light-mode[data-color-theme="kite_pinwheel"] {
+    --bg-main: linear-gradient(135deg, #d0f0ff, #bfe8ff);
+    --bg-row: rgba(56, 189, 248, 0.12);
+    --bg-glass: rgba(235, 251, 255, 0.75);
+    --bg-sheet: #f0fbff;
+    --border-color: rgba(56, 189, 248, 0.3);
+    --text-primary: #001a33;
+    --text-secondary: #3f6b80;
+}
+html.light-mode[data-color-theme="tropical_leaves"] {
+    --bg-main: linear-gradient(135deg, #d8fae0, #b8f0c8);
+    --bg-row: rgba(22, 163, 74, 0.1);
+    --bg-glass: rgba(235, 253, 240, 0.75);
+    --bg-sheet: #f5fff8;
+    --border-color: rgba(22, 163, 74, 0.25);
+    --text-primary: #021a0e;
+    --text-secondary: #4a7a58;
+}
+html.light-mode[data-color-theme="autumn_forest"] {
+    --bg-main: linear-gradient(135deg, #ffe8d0, #ffd0a8);
+    --bg-row: rgba(249, 115, 22, 0.12);
+    --bg-glass: rgba(255, 246, 234, 0.75);
+    --bg-sheet: #fffaf3;
+    --border-color: rgba(249, 115, 22, 0.25);
+    --text-primary: #2b1405;
+    --text-secondary: #7a5030;
+}
+html.light-mode[data-color-theme="wildflower_meadow"] {
+    --bg-main: linear-gradient(135deg, #e8f5d0, #d0ecc8);
+    --bg-row: rgba(132, 204, 22, 0.1);
+    --bg-glass: rgba(240, 253, 232, 0.75);
+    --bg-sheet: #f5fff0;
+    --border-color: rgba(236, 72, 153, 0.25);
+    --text-primary: #0a1f0a;
+    --text-secondary: #4a6b3a;
+}
+html.light-mode[data-color-theme="race_car"] {
+    --bg-main: linear-gradient(135deg, #f0f0f0, #d8d8d8);
+    --bg-row: rgba(239, 68, 68, 0.1);
+    --bg-glass: rgba(248, 248, 248, 0.75);
+    --bg-sheet: #fafafa;
+    --border-color: rgba(239, 68, 68, 0.25);
+    --text-primary: #0a0a0a;
+    --text-secondary: #525252;
+}
+html.light-mode[data-color-theme="train_journey"] {
+    --bg-main: linear-gradient(135deg, #f0e6d0, #e0d0b0);
+    --bg-row: rgba(180, 120, 60, 0.1);
+    --bg-glass: rgba(250, 244, 232, 0.75);
+    --bg-sheet: #fdf8ef;
+    --border-color: rgba(180, 120, 60, 0.25);
+    --text-primary: #1a1005;
+    --text-secondary: #7a5a35;
+}
+html.light-mode[data-color-theme="airplane_sky"] {
+    --bg-main: linear-gradient(135deg, #d0e8ff, #b8daff);
+    --bg-row: rgba(59, 130, 246, 0.1);
+    --bg-glass: rgba(235, 246, 255, 0.75);
+    --bg-sheet: #f0f8ff;
+    --border-color: rgba(59, 130, 246, 0.25);
+    --text-primary: #001a3d;
+    --text-secondary: #3f5a80;
+}
+html.light-mode[data-color-theme="sailboat_waves"] {
+    --bg-main: linear-gradient(135deg, #d0f0fb, #b0e4f5);
+    --bg-row: rgba(14, 165, 233, 0.1);
+    --bg-glass: rgba(235, 251, 255, 0.75);
+    --bg-sheet: #f0fbff;
+    --border-color: rgba(14, 165, 233, 0.25);
+    --text-primary: #001a26;
+    --text-secondary: #3f6b7a;
+}
+html.light-mode[data-color-theme="motorcycle_speed"] {
+    --bg-main: linear-gradient(135deg, #f5e8d8, #e8d0b0);
+    --bg-row: rgba(249, 115, 22, 0.12);
+    --bg-glass: rgba(253, 247, 240, 0.75);
+    --bg-sheet: #fffaf3;
+    --border-color: rgba(249, 115, 22, 0.3);
+    --text-primary: #0a0a0a;
+    --text-secondary: #7a5030;
+}
+html.light-mode[data-color-theme="hot_air_balloon"] {
+    --bg-main: linear-gradient(135deg, #ffe0f0, #fff0d0);
+    --bg-row: rgba(251, 191, 36, 0.1);
+    --bg-glass: rgba(255, 248, 240, 0.75);
+    --bg-sheet: #fffaf5;
+    --border-color: rgba(251, 191, 36, 0.25);
+    --text-primary: #1a0a30;
+    --text-secondary: #7a5a60;
+}
+html.light-mode[data-color-theme="bicycle_ride"] {
+    --bg-main: linear-gradient(135deg, #e0fae6, #c0f0cc);
+    --bg-row: rgba(34, 197, 94, 0.1);
+    --bg-glass: rgba(240, 253, 244, 0.75);
+    --bg-sheet: #f5fff8;
+    --border-color: rgba(34, 197, 94, 0.25);
+    --text-primary: #001a0a;
+    --text-secondary: #4a7a58;
+}
+html.light-mode[data-color-theme="submarine_deep"] {
+    --bg-main: linear-gradient(135deg, #d0e8fb, #b0d4f0);
+    --bg-row: rgba(3, 105, 161, 0.1);
+    --bg-glass: rgba(235, 246, 253, 0.75);
+    --bg-sheet: #f0f9ff;
+    --border-color: rgba(3, 105, 161, 0.25);
+    --text-primary: #00050f;
+    --text-secondary: #3f5a70;
+}
+html.light-mode[data-color-theme="helicopter_rotor"] {
+    --bg-main: linear-gradient(135deg, #eef1f5, #dbe1e8);
+    --bg-row: rgba(100, 116, 139, 0.1);
+    --bg-glass: rgba(245, 247, 250, 0.75);
+    --bg-sheet: #f8fafb;
+    --border-color: rgba(250, 204, 21, 0.3);
+    --text-primary: #14161a;
+    --text-secondary: #525a68;
+}
+html.light-mode[data-color-theme="rocket_ship"] {
+    --bg-main: linear-gradient(135deg, #e0e0fb, #c8c8f0);
+    --bg-row: rgba(99, 102, 241, 0.1);
+    --bg-glass: rgba(240, 240, 253, 0.75);
+    --bg-sheet: #f5f5ff;
+    --border-color: rgba(99, 102, 241, 0.25);
+    --text-primary: #05010f;
+    --text-secondary: #4a4a7a;
 }
 html.light-mode[data-color-theme="graphite_steel"] {
     --bg-main: linear-gradient(135deg, #e4e7eb, #d3d8dd);
@@ -1155,6 +1580,203 @@ html[data-color-theme="kids_sky_grass"] .home-theme-pattern {
         radial-gradient(ellipse 22px 10px at 45% 12%, rgba(255, 255, 255, 0.4), transparent),
         linear-gradient(180deg, transparent 0%, transparent 62%, rgba(74, 222, 128, 0.35) 63%, rgba(74, 222, 128, 0.5) 100%);
     background-size: 100% 100%;
+}
+/* קשת ובלונים - קשת מצוירת כטבעות מקוננות עולות מהתחתית + שני בלונים צפים */
+html[data-color-theme="rainbow_balloons"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 50% 130%, transparent 55%, rgba(244, 63, 94, 0.35) 56% 60%, transparent 61%),
+        radial-gradient(circle at 50% 130%, transparent 61%, rgba(251, 191, 36, 0.35) 62% 66%, transparent 67%),
+        radial-gradient(circle at 50% 130%, transparent 67%, rgba(34, 197, 94, 0.35) 68% 72%, transparent 73%),
+        radial-gradient(circle at 50% 130%, transparent 73%, rgba(59, 130, 246, 0.35) 74% 78%, transparent 79%),
+        radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.6) 0 14px, transparent 15px),
+        radial-gradient(circle at 75% 15%, rgba(244, 63, 94, 0.6) 0 12px, transparent 13px);
+    background-size: 100% 100%;
+}
+/* עולם מתחת למים - בועות עולות + אדוות אור גלי */
+html[data-color-theme="underwater_ocean"] .home-theme-pattern {
+    background-image:
+        radial-gradient(3px 3px at 30px 200px, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(2px 2px at 90px 150px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(4px 4px at 150px 250px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(2px 2px at 60px 100px, rgba(255, 255, 255, 0.4), transparent),
+        repeating-radial-gradient(ellipse 300px 40px at 50% 0%, rgba(94, 234, 212, 0.15) 0 10px, transparent 10px 40px);
+    background-size: 200px 300px, 200px 300px, 200px 300px, 200px 300px, 100% 100%;
+    background-repeat: repeat, repeat, repeat, repeat, no-repeat;
+}
+/* עולם הדינוזאורים - נקודות עור-דינוזאור + עלי ג'ונגל מפוזרים */
+html[data-color-theme="dino_jungle"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 25px 25px, rgba(250, 204, 21, 0.3) 0 5px, transparent 6px),
+        radial-gradient(ellipse 14px 6px at 100px 60px, rgba(132, 204, 22, 0.35), transparent),
+        radial-gradient(ellipse 16px 7px at 160px 130px, rgba(132, 204, 22, 0.3), transparent),
+        radial-gradient(circle at 140px 30px, rgba(250, 204, 21, 0.25) 0 4px, transparent 5px);
+    background-size: 90px 90px, 200px 200px, 200px 200px, 90px 90px;
+}
+/* טיסה לחלל - ירח בפינה + כוכבים מפוזרים + שובל רקטה אלכסוני */
+html[data-color-theme="space_rocket"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 82% 12%, rgba(253, 230, 138, 0.9) 0 16px, rgba(253, 230, 138, 0.25) 17px 20px, transparent 21px),
+        radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
+        radial-gradient(1px 1px at 60px 80px, #fff, transparent),
+        radial-gradient(2px 2px at 120px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 160px 110px, #fff, transparent),
+        linear-gradient(35deg, transparent 40%, rgba(244, 63, 94, 0.3) 48%, rgba(253, 230, 138, 0.4) 50%, transparent 58%);
+    background-size: 100% 100%, 180px 180px, 180px 180px, 180px 180px, 180px 180px, 100% 100%;
+    background-repeat: no-repeat, repeat, repeat, repeat, repeat, no-repeat;
+}
+html[data-color-theme="bull_run"] .home-theme-pattern {
+    background-image:
+        repeating-linear-gradient(90deg, rgba(74, 222, 128, 0.4) 0 4px, transparent 4px 8px, rgba(22, 163, 74, 0.35) 8px 10px, transparent 10px 16px),
+        linear-gradient(20deg, transparent 45%, rgba(74, 222, 128, 0.3) 52%, transparent 60%);
+    background-size: 32px 100%, 100% 100%;
+    background-repeat: repeat-x, no-repeat;
+}
+html[data-color-theme="bear_crash"] .home-theme-pattern {
+    background-image:
+        repeating-linear-gradient(90deg, rgba(248, 113, 113, 0.4) 0 4px, transparent 4px 8px, rgba(153, 27, 27, 0.35) 8px 10px, transparent 10px 16px),
+        linear-gradient(-20deg, transparent 45%, rgba(248, 113, 113, 0.3) 52%, transparent 60%);
+    background-size: 32px 100%, 100% 100%;
+    background-repeat: repeat-x, no-repeat;
+}
+html[data-color-theme="multi_ticker_grid"] .home-theme-pattern {
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
+        repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.3) 0 3px, transparent 3px 6px, rgba(239, 68, 68, 0.3) 6px 9px, transparent 9px 12px);
+    background-size: 60px 60px, 60px 60px, 12px 60px;
+}
+html[data-color-theme="teddy_bear"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 30px 30px, rgba(251, 191, 36, 0.4) 0 4px, transparent 5px),
+        repeating-linear-gradient(45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px),
+        repeating-linear-gradient(-45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px);
+    background-size: 70px 70px, 20px 20px, 20px 20px;
+}
+html[data-color-theme="wooden_blocks"] .home-theme-pattern {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 2px, transparent 2px),
+        linear-gradient(45deg, rgba(239, 68, 68, 0.2) 25%, transparent 25%, transparent 75%, rgba(59, 130, 246, 0.2) 75%);
+    background-size: 44px 44px, 44px 44px, 44px 44px;
+}
+html[data-color-theme="board_game_dice"] .home-theme-pattern {
+    background-image:
+        linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
+        linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
+        radial-gradient(circle at 10px 10px, rgba(250, 204, 21, 0.6) 0 3px, transparent 4px);
+    background-size: 40px 40px, 40px 40px, 20px 20px;
+    background-position: 0 0, 20px 20px, 0 0;
+}
+html[data-color-theme="arcade_neon"] .home-theme-pattern {
+    background-image:
+        linear-gradient(rgba(217, 70, 239, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, 0.15) 1px, transparent 1px),
+        radial-gradient(circle at 20px 20px, rgba(253, 224, 71, 0.5) 0 5px, transparent 6px);
+    background-size: 30px 30px, 30px 30px, 60px 60px;
+}
+html[data-color-theme="kite_pinwheel"] .home-theme-pattern {
+    background-image:
+        linear-gradient(45deg, rgba(244, 63, 94, 0.3) 25%, transparent 25.5%),
+        linear-gradient(45deg, rgba(253, 224, 71, 0.3) 25%, transparent 25.5%),
+        linear-gradient(45deg, rgba(56, 189, 248, 0.25) 25%, transparent 25.5%);
+    background-size: 90px 90px, 90px 90px, 90px 90px;
+    background-position: 0 0, 45px 20px, 20px 55px;
+}
+html[data-color-theme="tropical_leaves"] .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 40px 20px at 30px 40px, rgba(22, 163, 74, 0.3), transparent),
+        radial-gradient(ellipse 34px 16px at 130px 100px, rgba(134, 239, 172, 0.25), transparent),
+        radial-gradient(ellipse 44px 22px at 60px 160px, rgba(22, 163, 74, 0.28), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html[data-color-theme="autumn_forest"] .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 6px 4px at 30px 40px, rgba(249, 115, 22, 0.6), transparent),
+        radial-gradient(ellipse 5px 3px at 100px 90px, rgba(220, 38, 38, 0.5), transparent),
+        radial-gradient(ellipse 6px 4px at 160px 30px, rgba(253, 224, 71, 0.55), transparent),
+        radial-gradient(ellipse 5px 3px at 60px 140px, rgba(249, 115, 22, 0.5), transparent),
+        radial-gradient(ellipse 6px 4px at 140px 160px, rgba(220, 38, 38, 0.45), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html[data-color-theme="wildflower_meadow"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 30px 30px, rgba(236, 72, 153, 0.6) 0 3px, transparent 4px),
+        radial-gradient(circle at 90px 70px, rgba(253, 224, 71, 0.6) 0 3px, transparent 4px),
+        radial-gradient(circle at 150px 40px, rgba(236, 72, 153, 0.5) 0 3px, transparent 4px),
+        radial-gradient(circle at 60px 130px, rgba(253, 224, 71, 0.55) 0 3px, transparent 4px),
+        linear-gradient(rgba(132, 204, 22, 0.06) 1px, transparent 1px);
+    background-size: 180px 180px, 180px 180px, 180px 180px, 180px 180px, 8px 8px;
+}
+html[data-color-theme="race_car"] .home-theme-pattern {
+    background-image:
+        linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
+        repeating-linear-gradient(100deg, rgba(239, 68, 68, 0.15) 0 2px, transparent 2px 20px);
+    background-size: 24px 24px, 24px 24px, 100% 40px;
+    background-position: 0 0, 12px 12px, 0 0;
+}
+html[data-color-theme="train_journey"] .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 12px 8px at 40px 30px, rgba(232, 220, 192, 0.3), transparent),
+        radial-gradient(ellipse 16px 10px at 90px 15px, rgba(232, 220, 192, 0.25), transparent),
+        repeating-linear-gradient(90deg, rgba(180, 120, 60, 0.35) 0 4px, transparent 4px 20px),
+        linear-gradient(180deg, transparent 83%, rgba(180, 120, 60, 0.4) 84%, transparent 85%, transparent 91%, rgba(180, 120, 60, 0.4) 92%, transparent 93%);
+    background-size: 150px 150px, 150px 150px, 100% 16px, 100% 100%;
+    background-repeat: repeat, repeat, repeat-x, no-repeat;
+}
+html[data-color-theme="airplane_sky"] .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 28px 12px at 40px 40px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(ellipse 22px 10px at 130px 90px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(ellipse 24px 11px at 80px 150px, rgba(255, 255, 255, 0.45), transparent),
+        repeating-linear-gradient(-15deg, rgba(249, 115, 22, 0.4) 0 8px, transparent 8px 22px);
+    background-size: 200px 200px, 200px 200px, 200px 200px, 100% 100%;
+    background-repeat: repeat, repeat, repeat, no-repeat;
+}
+html[data-color-theme="sailboat_waves"] .home-theme-pattern {
+    background-image:
+        linear-gradient(45deg, rgba(248, 250, 252, 0.25) 25%, transparent 25.5%),
+        repeating-radial-gradient(ellipse 260px 30px at 50% 100%, rgba(56, 189, 248, 0.15) 0 8px, transparent 8px 30px);
+    background-size: 60px 60px, 100% 100%;
+    background-position: 20px 30px, 0 0;
+}
+html[data-color-theme="motorcycle_speed"] .home-theme-pattern {
+    background-image: repeating-linear-gradient(92deg, rgba(249, 115, 22, 0.3) 0 3px, transparent 3px 26px, rgba(249, 115, 22, 0.15) 26px 28px, transparent 28px 50px);
+}
+html[data-color-theme="hot_air_balloon"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.15) 0 40px, transparent 41px),
+        repeating-linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0 10px, rgba(167, 139, 250, 0.25) 10px 20px);
+    background-size: 100px 100px, 40px 100%;
+    background-repeat: repeat, repeat-x;
+}
+html[data-color-theme="bicycle_ride"] .home-theme-pattern {
+    background-image: repeating-conic-gradient(from 0deg, rgba(34, 197, 94, 0.25) 0deg 4deg, transparent 4deg 30deg);
+    background-size: 80px 80px;
+    background-position: 40px 40px;
+}
+html[data-color-theme="submarine_deep"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 40px 40px, transparent 0 14px, rgba(125, 211, 252, 0.3) 15px 17px, transparent 18px),
+        radial-gradient(2px 2px at 90px 100px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(3px 3px at 150px 60px, rgba(255, 255, 255, 0.35), transparent);
+    background-size: 160px 160px, 160px 160px, 160px 160px;
+}
+html[data-color-theme="helicopter_rotor"] .home-theme-pattern {
+    background-image: repeating-conic-gradient(from 0deg, rgba(226, 232, 240, 0.15) 0deg 2deg, transparent 2deg 8deg);
+    background-size: 140px 140px;
+    background-position: 70px 70px;
+}
+html[data-color-theme="rocket_ship"] .home-theme-pattern {
+    background-image:
+        radial-gradient(1.5px 1.5px at 30px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 90px 90px, #fff, transparent),
+        radial-gradient(2px 2px at 150px 30px, #fff, transparent),
+        linear-gradient(50deg, transparent 42%, rgba(251, 146, 60, 0.4) 48%, rgba(226, 232, 240, 0.3) 50%, transparent 56%);
+    background-size: 180px 180px, 180px 180px, 180px 180px, 100% 100%;
+    background-repeat: repeat, repeat, repeat, no-repeat;
 }
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
@@ -3506,6 +4128,31 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-chemistry { background: linear-gradient(135deg, #2dd4bf, #a3e635); }
 .theme-swatch-greenhouse { background: linear-gradient(135deg, #4ade80, #16a34a); }
 .theme-swatch-kidsart { background: linear-gradient(135deg, #93c5fd, #4ade80, #facc15); }
+.theme-swatch-rainbow { background: linear-gradient(135deg, #f43f5e, #fbbf24, #22c55e, #3b82f6, #a855f7); }
+.theme-swatch-oceankids { background: linear-gradient(135deg, #38bdf8, #001a2e); }
+.theme-swatch-dino { background: linear-gradient(135deg, #84cc16, #f97316); }
+.theme-swatch-rocket { background: linear-gradient(135deg, #818cf8, #f43f5e); }
+.theme-swatch-bullrun { background: linear-gradient(135deg, #4ade80, #001a08); }
+.theme-swatch-bearcrash { background: linear-gradient(135deg, #f87171, #1a0000); }
+.theme-swatch-tickergrid { background: linear-gradient(135deg, #22c55e, #ef4444, #38bdf8); }
+.theme-swatch-teddy { background: linear-gradient(135deg, #d97706, #fbbf24); }
+.theme-swatch-woodblocks { background: linear-gradient(135deg, #ef4444, #3b82f6, #fbbf24); }
+.theme-swatch-boardgame { background: linear-gradient(135deg, #f43f5e, #facc15); }
+.theme-swatch-arcade { background: linear-gradient(135deg, #d946ef, #06b6d4); }
+.theme-swatch-kite { background: linear-gradient(135deg, #f43f5e, #38bdf8, #fde047); }
+.theme-swatch-tropical { background: linear-gradient(135deg, #16a34a, #facc15); }
+.theme-swatch-autumn { background: linear-gradient(135deg, #f97316, #dc2626, #fde047); }
+.theme-swatch-wildflower { background: linear-gradient(135deg, #ec4899, #84cc16, #fde047); }
+.theme-swatch-racecar { background: linear-gradient(135deg, #ef4444, #0a0a0a); }
+.theme-swatch-train { background: linear-gradient(135deg, #dc2626, #525252); }
+.theme-swatch-airplane { background: linear-gradient(135deg, #3b82f6, #dbeafe); }
+.theme-swatch-sailboat { background: linear-gradient(135deg, #0ea5e9, #f8fafc); }
+.theme-swatch-motorcycle { background: linear-gradient(135deg, #f97316, #0a0a0a); }
+.theme-swatch-balloon { background: linear-gradient(135deg, #f43f5e, #fbbf24, #a78bfa); }
+.theme-swatch-bicycle { background: linear-gradient(135deg, #22c55e, #15803d); }
+.theme-swatch-submarine { background: linear-gradient(135deg, #0369a1, #00050f); }
+.theme-swatch-helicopter { background: linear-gradient(135deg, #facc15, #64748b); }
+.theme-swatch-rocketship { background: linear-gradient(135deg, #6366f1, #fb923c); }
 /* "ערכות נושא מיוחדות" - קבוצה נפרדת מתחת לערכות הצבע הרגילות, לפי בקשה
    מפורשת ("לפי קטגוריות שלא יהיה מבולגן"). כל קטגוריה עכשיו מתקפלת
    (accordion) - כותרת לחיצה שפותחת/סוגרת את שורת הצ'יפים שלה, כי עם 50+

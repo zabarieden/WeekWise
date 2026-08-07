@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=299">
+    <link rel="stylesheet" href="theme.css?v=300">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1494,7 +1494,13 @@
                         </button>
                         <div class="theme-picker-grid">
                             <button type="button" class="theme-swatch theme-swatch-lego" data-theme="lego_bricks" onclick="selectColorTheme('lego_bricks')" title="Lego"><span class="theme-swatch-lock">🔒</span></button>
-                            <button type="button" class="theme-swatch theme-swatch-barbie" data-theme="barbie_dream" onclick="selectColorTheme('barbie_dream')" title="Barbie"><span class="theme-swatch-lock">🔒</span></button>                        </div>
+                            <button type="button" class="theme-swatch theme-swatch-barbie" data-theme="barbie_dream" onclick="selectColorTheme('barbie_dream')" title="Barbie"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-teddy" data-theme="teddy_bear" onclick="selectColorTheme('teddy_bear')" title="Teddy Bear"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-woodblocks" data-theme="wooden_blocks" onclick="selectColorTheme('wooden_blocks')" title="Wooden Blocks"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-boardgame" data-theme="board_game_dice" onclick="selectColorTheme('board_game_dice')" title="Board Game &amp; Dice"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-arcade" data-theme="arcade_neon" onclick="selectColorTheme('arcade_neon')" title="Arcade Neon"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-kite" data-theme="kite_pinwheel" onclick="selectColorTheme('kite_pinwheel')" title="Kite &amp; Pinwheel"><span class="theme-swatch-lock">🔒</span></button>
+                        </div>
                     </div>
                     <div class="theme-category-group">
                         <button type="button" class="theme-category-toggle" onclick="this.parentElement.classList.toggle('open')">
@@ -1535,6 +1541,9 @@
                             <button type="button" class="theme-swatch theme-swatch-neonchart" data-theme="neon_trading_chart" onclick="selectColorTheme('neon_trading_chart')" title="Neon Trading Chart"><span class="theme-swatch-lock">🔒</span></button>
                             <button type="button" class="theme-swatch theme-swatch-candlestick" data-theme="candlestick_bands" onclick="selectColorTheme('candlestick_bands')" title="Candlestick &amp; Bands"><span class="theme-swatch-lock">🔒</span></button>
                             <button type="button" class="theme-swatch theme-swatch-datadash" data-theme="market_data_glow" onclick="selectColorTheme('market_data_glow')" title="Market Data Glow"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-bullrun" data-theme="bull_run" onclick="selectColorTheme('bull_run')" title="Bull Run"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-bearcrash" data-theme="bear_crash" onclick="selectColorTheme('bear_crash')" title="Bear Crash"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-tickergrid" data-theme="multi_ticker_grid" onclick="selectColorTheme('multi_ticker_grid')" title="Multi-Ticker Grid"><span class="theme-swatch-lock">🔒</span></button>
                         </div>
                     </div>
                     <div class="theme-category-group">
@@ -1567,6 +1576,9 @@
                         <div class="theme-picker-grid">
                             <button type="button" class="theme-swatch theme-swatch-chemistry" data-theme="chemistry_lab" onclick="selectColorTheme('chemistry_lab')" title="Chemistry Lab"><span class="theme-swatch-lock">🔒</span></button>
                             <button type="button" class="theme-swatch theme-swatch-greenhouse" data-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" title="Botanical Greenhouse"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-tropical" data-theme="tropical_leaves" onclick="selectColorTheme('tropical_leaves')" title="Tropical Leaves"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-autumn" data-theme="autumn_forest" onclick="selectColorTheme('autumn_forest')" title="Autumn Forest"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-wildflower" data-theme="wildflower_meadow" onclick="selectColorTheme('wildflower_meadow')" title="Wildflower Meadow"><span class="theme-swatch-lock">🔒</span></button>
                         </div>
                     </div>
                     <div class="theme-category-group">
@@ -1576,6 +1588,28 @@
                         </button>
                         <div class="theme-picker-grid">
                             <button type="button" class="theme-swatch theme-swatch-kidsart" data-theme="kids_sky_grass" onclick="selectColorTheme('kids_sky_grass')" title="Sky &amp; Grass"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-rainbow" data-theme="rainbow_balloons" onclick="selectColorTheme('rainbow_balloons')" title="Rainbow &amp; Balloons"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-oceankids" data-theme="underwater_ocean" onclick="selectColorTheme('underwater_ocean')" title="Underwater Ocean"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-dino" data-theme="dino_jungle" onclick="selectColorTheme('dino_jungle')" title="Dino Jungle"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-rocket" data-theme="space_rocket" onclick="selectColorTheme('space_rocket')" title="Space Rocket"><span class="theme-swatch-lock">🔒</span></button>
+                        </div>
+                    </div>
+                    <div class="theme-category-group">
+                        <button type="button" class="theme-category-toggle" onclick="this.parentElement.classList.toggle('open')">
+                            <span data-i18n="theme_category_transport">Moving Things</span>
+                            <span class="theme-category-arrow">▾</span>
+                        </button>
+                        <div class="theme-picker-grid">
+                            <button type="button" class="theme-swatch theme-swatch-racecar" data-theme="race_car" onclick="selectColorTheme('race_car')" title="Race Car"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-train" data-theme="train_journey" onclick="selectColorTheme('train_journey')" title="Train Journey"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-airplane" data-theme="airplane_sky" onclick="selectColorTheme('airplane_sky')" title="Airplane Sky"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-sailboat" data-theme="sailboat_waves" onclick="selectColorTheme('sailboat_waves')" title="Sailboat Waves"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-motorcycle" data-theme="motorcycle_speed" onclick="selectColorTheme('motorcycle_speed')" title="Motorcycle Speed"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-balloon" data-theme="hot_air_balloon" onclick="selectColorTheme('hot_air_balloon')" title="Hot Air Balloon"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-bicycle" data-theme="bicycle_ride" onclick="selectColorTheme('bicycle_ride')" title="Bicycle Ride"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-submarine" data-theme="submarine_deep" onclick="selectColorTheme('submarine_deep')" title="Submarine Deep"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-helicopter" data-theme="helicopter_rotor" onclick="selectColorTheme('helicopter_rotor')" title="Helicopter Rotor"><span class="theme-swatch-lock">🔒</span></button>
+                            <button type="button" class="theme-swatch theme-swatch-rocketship" data-theme="rocket_ship" onclick="selectColorTheme('rocket_ship')" title="Rocket Ship"><span class="theme-swatch-lock">🔒</span></button>
                         </div>
                     </div>
 
@@ -2714,7 +2748,7 @@
 
     </div>
 
-    <script src="i18n.js?v=238"></script>
+    <script src="i18n.js?v=239"></script>
     <script src="app.js?v=337"></script>
 </body>
 </html>
