@@ -650,6 +650,41 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 /* בלי רקע-זכוכית/מסגרת/צל - מאז שרשת הקוביות הוסרה (הניווט עבר לסרגל
    התחתון), "כרטיס" גדול עם כמעט כלום בפנים היה נראה כמו קוביה ריקה בול
    באמצע המסך; עכשיו זו רק שורת הברכה, שקופה על רקע האפליקציה */
+/* רקע "שמיים+דשא+במה" למסך הבית בלבד, לפי בקשה מפורשת ("הרקע יהיה עם שמיים
+   מאחורה ודשא, והבועות יהיו על מין במה קטנה על דשא שיראה תלת-מימדי").
+   z-index:-1 בתוך .home-hero-panel (שכבר יוצר הקשר-ערימה משלו בזכות
+   position:relative+z-index:5) יושב מתחת לתוכן הפאנל (הברכה/הכרטיסים) אבל
+   עדיין מעל רקע ה-phone-wrapper הכללי - כך שרק מסך הבית מושפע, שאר המסכים
+   (שמוסתרים מאחורי home-hero-panel.hidden) נשארים בערכת הנושא הכהה הרגילה */
+.home-sky-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.home-sky {
+    position: absolute; inset: 0;
+    background:
+        linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 22%, transparent 42%),
+        linear-gradient(180deg, #4a8fd1 0%, #7ec8e3 35%, #bfe3ef 60%, #e8f6e0 100%);
+}
+/* ענן פשוט (שני "בועות" ענן חופפות) - קישוט קל, לא צריך תמונה */
+.home-sky::before {
+    content: ""; position: absolute; top: 12%; left: 12%; width: 64px; height: 24px;
+    background: rgba(255,255,255,0.8); border-radius: 50px;
+    box-shadow: 36px 6px 0 -3px rgba(255,255,255,0.65), 70px 1px 0 -6px rgba(255,255,255,0.5);
+}
+.home-grass {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
+    background: linear-gradient(180deg, #6fbf5a 0%, #4f9e3f 50%, #3a7a30 100%);
+    border-radius: 50% 50% 0 0 / 14% 14% 0 0;
+    box-shadow: 0 -10px 24px rgba(0,0,0,0.18) inset;
+}
+/* "הבמה" שעליה יושבות בועות הקיצור הצפות (.fab-dock, שממוקמות בנפרד ב-
+   top:56% של phone-wrapper) - גרדיאנט רדיאלי + צל חזק נותנים מראה תלת-מימדי
+   (פלטפורמה עגולה עם נפח), בלי צורך ב-3D אמיתי */
+.home-stage {
+    position: absolute; left: 50%; bottom: 27%; width: 210px; height: 66px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 38%, #c99a52 0%, #8a5a2e 55%, #5c3a1c 100%);
+    border-radius: 50%;
+    box-shadow: 0 16px 24px rgba(0,0,0,0.4), 0 0 0 5px rgba(255,255,255,0.1) inset, 0 -4px 10px rgba(255,255,255,0.18) inset;
+}
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
        הקבועים (עוזר AI בפינה שמאל-עליונה - top:22px עד 122px אחרי שהוגדל
