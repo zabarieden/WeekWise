@@ -2009,20 +2009,24 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
     flex-direction: column; gap: 18px;
     z-index: 0;
 }
-.book-welcome-text { font-size: 1.25rem; font-weight: 800; color: var(--accent-purple-light-text); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px rgba(168, 85, 247, 0.5); }
-.book-welcome-subtext { font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); margin: -10px 0 0 0; text-align: center; padding: 0 24px; }
+.book-welcome-text { font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
+.book-final-page .book-welcome-subtext { font-size: 1.1rem; font-weight: 700; color: var(--accent-purple-light-text); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px rgba(168, 85, 247, 0.5); }
 .book-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
-/* דפדוף מהיר ומיידי, לפי בקשה מפורשת ("שהדפים ידפדפו ממש מהר") - כל הדפים
-   מסיימים להתהפך תוך פחות משנייה, ואז עמוד הסיום (עם ברכת הפתיחה) נשאר
-   גלוי לשארית BOOK_LOADING_ANIMATION_MS (ר' app.js) */
-.book-page { animation-name: bookPageTurn; animation-duration: 0.28s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
-.book-page-1 { background: linear-gradient(160deg, #d8b4fe, #c084fc); z-index: 7; animation-delay: 0.05s; }
-.book-page-2 { background: linear-gradient(160deg, #c084fc, #a855f7); z-index: 6; animation-delay: 0.22s; }
-.book-page-3 { background: linear-gradient(160deg, #a855f7, #9333ea); z-index: 5; animation-delay: 0.39s; }
-.book-page-4 { background: linear-gradient(160deg, #9333ea, #7e22ce); z-index: 4; animation-delay: 0.56s; }
-.book-page-5 { background: linear-gradient(160deg, #7e22ce, #6d28d9); z-index: 3; animation-delay: 0.73s; }
-.book-page-6 { background: linear-gradient(160deg, #6d28d9, #581c87); z-index: 2; animation-delay: 0.90s; }
-.book-page-7 { background: linear-gradient(160deg, #581c87, #3b0764); z-index: 1; animation-delay: 9.3s; }
+.book-title-page { flex-direction: column; gap: 14px; }
+.book-logo-small { font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.85); letter-spacing: 0.5px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+/* דף הכותרת (page-1: "ברוכים הבאים לסיפור שלכם") נשאר גלוי כמה שניות כדי
+   שאפשר לקרוא אותו *לפני* שהדפדוף המהיר מתחיל, ועמוד הסיום (עם "שתהפכו
+   למציאות") מקבל כמה שניות משלו בסוף - ר' BOOK_LOADING_ANIMATION_MS ב-app.js
+   ששומר את כל הרצף פתוח מספיק זמן. הדפדוף עצמו (עמודים 2-7) מהיר מאוד, לפי
+   בקשה מפורשת ("שהדפים ידפדפו ממש מהר") */
+.book-page { animation-name: bookPageTurn; animation-duration: 0.3s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+.book-page-1 { background: linear-gradient(160deg, #d8b4fe, #c084fc); z-index: 7; animation-delay: 2.8s; }
+.book-page-2 { background: linear-gradient(160deg, #c084fc, #a855f7); z-index: 6; animation-delay: 3.1s; }
+.book-page-3 { background: linear-gradient(160deg, #a855f7, #9333ea); z-index: 5; animation-delay: 3.35s; }
+.book-page-4 { background: linear-gradient(160deg, #9333ea, #7e22ce); z-index: 4; animation-delay: 3.6s; }
+.book-page-5 { background: linear-gradient(160deg, #7e22ce, #6d28d9); z-index: 3; animation-delay: 3.85s; }
+.book-page-6 { background: linear-gradient(160deg, #6d28d9, #581c87); z-index: 2; animation-delay: 4.1s; }
+.book-page-7 { background: linear-gradient(160deg, #581c87, #3b0764); z-index: 1; animation-delay: 4.35s; }
 @keyframes bookPageTurn { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-180deg); } }
 /* ספרים בעברית נפתחים/מדפדפים מימין לשמאל - מראה של הציר וכיוון הסיבוב,
    כדי שזה יראה כמו דפדוף אמיתי גם ב-RTL, לא רק פליפ מוזר בכיוון ההפוך */

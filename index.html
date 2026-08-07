@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=288">
+    <link rel="stylesheet" href="theme.css?v=289">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -82,7 +82,10 @@
              מיד (ר' initAppAfterAuth ב-app.js), גם באמצע רצף ההפיכה -->
         <div id="app-loading-overlay" class="app-loading-overlay">
             <div class="book-fullscreen">
-                <div class="book-page book-page-1"><span class="book-logo">Obeko</span></div>
+                <div class="book-page book-page-1 book-title-page">
+                    <span class="book-logo-small">Obeko</span>
+                    <h2 class="book-welcome-text" data-i18n="app_loading_welcome">Welcome to your story</h2>
+                </div>
                 <div class="book-page book-page-2"></div>
                 <div class="book-page book-page-3"></div>
                 <div class="book-page book-page-4"></div>
@@ -90,7 +93,6 @@
                 <div class="book-page book-page-6"></div>
                 <div class="book-page book-page-7"></div>
                 <div class="book-final-page">
-                    <h2 class="book-welcome-text" data-i18n="app_loading_welcome">Welcome to your story</h2>
                     <p class="book-welcome-subtext" data-i18n="app_loading_welcome_sub">That's about to become real</p>
                     <div class="app-loading-spinner"></div>
                 </div>
