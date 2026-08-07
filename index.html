@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=280">
+    <link rel="stylesheet" href="theme.css?v=281">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -652,7 +652,8 @@
                             </div>
                             <div class="preset-manager-grid" style="margin-top: 10px;">
                                 <input type="number" id="finance-amount-input" data-i18n-placeholder="finance_amount_placeholder" placeholder="Amount">
-                                <select id="finance-category-select" class="language-select"></select>
+                                <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('finance-category-select')"><span id="finance-category-select-display"></span></button>
+                                <select id="finance-category-select" class="hidden"></select>
                                 <input type="text" id="finance-note-input" data-i18n-placeholder="finance_note_placeholder" placeholder="Note (optional)">
                                 <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('finance-date-input')">
                                     <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
@@ -1043,10 +1044,12 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="modal_task_title">Manage Schedule Task</h3>
                 <div class="schedule-adder-grid">
-                    <select id="add-slot-day">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('add-slot-day')"><span id="add-slot-day-display"></span></button>
+                    <select id="add-slot-day" class="hidden">
                         <option value="Sunday" data-i18n="day_sunday">Sunday</option><option value="Monday" data-i18n="day_monday">Monday</option><option value="Tuesday" data-i18n="day_tuesday">Tuesday</option><option value="Wednesday" data-i18n="day_wednesday">Wednesday</option><option value="Thursday" data-i18n="day_thursday">Thursday</option><option value="Friday" data-i18n="day_friday">Friday</option><option value="Saturday" data-i18n="day_saturday">Saturday</option>
                     </select>
-                    <select id="add-slot-num">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('add-slot-num')"><span id="add-slot-num-display"></span></button>
+                    <select id="add-slot-num" class="hidden">
                         <option value="1">#1</option><option value="2">#2</option><option value="3">#3</option><option value="4">#4</option><option value="5">#5</option><option value="6">#6</option>
                     </select>
                     <input type="text" id="add-slot-time" data-i18n-placeholder="time_placeholder" placeholder="Time (e.g. 09:00)">
@@ -1058,7 +1061,8 @@
                         </div>
                     </div>
                     <div class="reminder-fields-wrap">
-                        <select id="add-slot-reminder">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('add-slot-reminder')"><span id="add-slot-reminder-display"></span></button>
+                        <select id="add-slot-reminder" class="hidden">
                             <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
                             <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
                             <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
@@ -1223,7 +1227,8 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <button type="button" class="settings-back-btn" onclick="closeModal('modal-contact-us'); openModal('modal-settings-drawer'); openSettingsSubscreen('support');">🔙 <span data-i18n="settings_back_btn">Back</span></button>
                 <h3 data-i18n="settings_contact_us_btn">📬 Contact Us</h3>
-                <select id="contact-us-category" class="language-select">
+                <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('contact-us-category')"><span id="contact-us-category-display"></span></button>
+                <select id="contact-us-category" class="hidden">
                     <option value="bug" data-i18n="contact_us_category_bug">🐛 Bug Report</option>
                     <option value="feature" data-i18n="contact_us_category_feature">💡 Feature Suggestion</option>
                     <option value="help" data-i18n="contact_us_category_help">❓ Help Using the App</option>
@@ -1242,7 +1247,8 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="schedule_move_slot_title">Move to another day</h3>
-                <select id="move-slot-day-select" class="language-select"></select>
+                <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('move-slot-day-select')"><span id="move-slot-day-select-display"></span></button>
+                <select id="move-slot-day-select" class="hidden"></select>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="confirmMoveSlotToDay()" data-i18n="schedule_move_slot_confirm_btn">Move</button>
                     <button type="button" class="btn-clear-specific" onclick="closeModal('modal-move-slot-day')" data-i18n="cancel_btn">Cancel</button>
@@ -1322,7 +1328,8 @@
                 </div>
                 <div class="preset-manager-grid" style="margin-top: 10px;">
                     <input type="number" id="finance-quick-amount-input" data-i18n-placeholder="finance_amount_placeholder" placeholder="Amount">
-                    <select id="finance-quick-category-select"></select>
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('finance-quick-category-select')"><span id="finance-quick-category-select-display"></span></button>
+                    <select id="finance-quick-category-select" class="hidden"></select>
                     <div class="action-buttons-wrap">
                         <button class="btn-primary" onclick="submitFinanceQuickAdd()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-finance-quick-add')" data-i18n="close_btn">Close</button>
@@ -1517,7 +1524,8 @@
                          לפי בקשה מפורשת -->
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_meal_count_label" for="meal-count-select">How many meals?</label>
-                        <select id="meal-count-select" onchange="setMealCount(this.value)">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('meal-count-select')"><span id="meal-count-select-display"></span></button>
+                        <select id="meal-count-select" class="hidden" onchange="setMealCount(this.value)">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -1527,7 +1535,8 @@
                     </div>
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_snack_count_label" for="snack-count-select">How many snacks?</label>
-                        <select id="snack-count-select" onchange="setSnackCount(this.value)">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('snack-count-select')"><span id="snack-count-select-display"></span></button>
+                        <select id="snack-count-select" class="hidden" onchange="setSnackCount(this.value)">
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -1540,7 +1549,8 @@
                          getFinanceCycleStartDay/getFinancePeriodRange ב-app.js -->
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_finance_cycle_label" for="finance-cycle-day-select">Financial month starts on day...</label>
-                        <select id="finance-cycle-day-select" onchange="setFinanceCycleStartDay(this.value)">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('finance-cycle-day-select')"><span id="finance-cycle-day-select-display"></span></button>
+                        <select id="finance-cycle-day-select" class="hidden" onchange="setFinanceCycleStartDay(this.value)">
                             <option value="1">1 (📅)</option>
                             <option value="2">2</option><option value="3">3</option><option value="4">4</option>
                             <option value="5">5</option><option value="6">6</option><option value="7">7</option>
@@ -1792,8 +1802,10 @@
                     <button type="button" class="ai-schedule-mode-btn" data-mode="day" onclick="setReportRangeMode('day')" data-i18n="report_picker_day_label">Specific Day</button>
                 </div>
                 <div id="report-month-year-picker" class="hidden" style="display: flex; gap: 8px; margin: 0 0 12px 0;">
-                    <select id="report-month-select" style="flex: 1;"></select>
-                    <select id="report-year-select" style="flex: 1;"></select>
+                    <button type="button" class="language-select custom-select-trigger" style="flex: 1;" onclick="openCustomSelectPicker('report-month-select')"><span id="report-month-select-display"></span></button>
+                    <select id="report-month-select" class="hidden"></select>
+                    <button type="button" class="language-select custom-select-trigger" style="flex: 1;" onclick="openCustomSelectPicker('report-year-select')"><span id="report-year-select-display"></span></button>
+                    <select id="report-year-select" class="hidden"></select>
                 </div>
                 <div id="report-day-picker" class="hidden" style="margin: 0 0 12px 0;">
                     <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('report-day-select')">
@@ -1890,11 +1902,13 @@
                 <!-- בורר יום - לא היה קיים עד היום (רק כותרת+שעה ניתנות לעריכה) - נוסף
                      לפי בקשה מפורשת, כך ש"עדכון" יכול גם להעביר משימה קבועה ליום
                      אחר, לא רק לשנות כותרת/שעה -->
-                <select id="glance-edit-task-day-select" class="language-select" style="margin-top: 8px;"></select>
+                <button type="button" class="language-select custom-select-trigger" style="margin-top: 8px;" onclick="openCustomSelectPicker('glance-edit-task-day-select')"><span id="glance-edit-task-day-select-display"></span></button>
+                <select id="glance-edit-task-day-select" class="hidden"></select>
                 <!-- תזכורת - לא הייתה זמינה כאן עד היום (רק בטופס ההוספה הישן של הטבלה
                      השבועית שהוסרה) - נוספה כאן כדי לא לאבד את היכולת, לפי בקשה מפורשת -->
                 <div class="reminder-fields-wrap" style="margin-top: 8px;">
-                    <select id="glance-edit-task-reminder">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('glance-edit-task-reminder')"><span id="glance-edit-task-reminder-display"></span></button>
+                    <select id="glance-edit-task-reminder" class="hidden">
                         <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
                         <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
                         <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
@@ -1963,7 +1977,8 @@
                     <input type="number" id="new-preset-calories" data-i18n-placeholder="preset_calories_placeholder" placeholder="Calorie amount">
                     <input type="text" id="new-preset-description" data-i18n-placeholder="preset_description_placeholder" placeholder="Ingredients (optional)">
                     <button type="button" id="btn-estimate-preset-calories" class="btn-secondary" onclick="estimatePresetCaloriesWithAI()" data-i18n="preset_estimate_ai_btn">✨ Estimate calories with AI</button>
-                    <select id="new-preset-category">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('new-preset-category')"><span id="new-preset-category-display"></span></button>
+                    <select id="new-preset-category" class="hidden">
                         <option value="morning" data-i18n="preset_cat_morning">🌅 Breakfast & light meals</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals</option><option value="snack" data-i18n="preset_cat_snack">🍭 Snacks and treats</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option>
                     </select>
                     <div class="action-buttons-wrap">
@@ -2308,7 +2323,8 @@
                 <h3 id="monthly-goal-modal-title" data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
                 <div class="preset-manager-grid">
                     <input type="text" id="monthly-goal-name-input" data-i18n-placeholder="monthly_goal_name_placeholder" placeholder="Goal name (e.g. Lose weight, Finish tasks)">
-                    <select id="monthly-goal-type-input" class="language-select" onchange="handleMonthlyGoalTypeChange()">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('monthly-goal-type-input')"><span id="monthly-goal-type-input-display"></span></button>
+                    <select id="monthly-goal-type-input" class="hidden" onchange="handleMonthlyGoalTypeChange()">
                         <option value="tasks" data-i18n="monthly_goal_type_tasks">Tasks completed</option>
                         <option value="weight" data-i18n="monthly_goal_type_weight">Weight target</option>
                         <option value="custom" data-i18n="monthly_goal_type_custom">Manual (numeric progress)</option>
@@ -2371,6 +2387,22 @@
             </div>
         </div>
 
+        <!-- תפריט-נפתח מותאם אישית (custom select) - מחליף את חלון-הבחירה הטבעי
+             (שאינו ניתן לעיצוב בדפדפן דסקטופ, בעיקר ב-Windows - הפס הכחול של
+             שורה נבחרת תמיד נשאר צבע המערכת). אותו רעיון בדיוק כמו לוח השנה
+             המותאם: ה-<select> המקורי נשאר בדף (מוסתר), כך שכל קוד קיים
+             שממלא/קורא אותו ממשיך לעבוד בלי שינוי - רק שיטת הבחירה משתנה,
+             דרך openCustomSelectPicker/updateCustomSelectDisplay ב-app.js -->
+        <div id="modal-custom-select-picker" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div id="custom-select-picker-list" class="preset-quick-add-list custom-select-picker-list"></div>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-custom-select-picker')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: הוספת אירוע ל"מבט ליומן" -->
         <div id="modal-add-calendar-event" class="apple-modal">
             <div class="modal-sheet">
@@ -2392,13 +2424,15 @@
                         <div class="calendar-event-repeat-interval-row">
                             <span class="calendar-event-repeat-every-label" data-i18n="calendar_event_repeat_every_label">Every</span>
                             <input type="number" id="calendar-event-recur-interval" min="1" value="1" class="calendar-event-recur-interval-input">
-                            <select id="calendar-event-recur-unit" class="language-select">
+                            <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-recur-unit')"><span id="calendar-event-recur-unit-display"></span></button>
+                            <select id="calendar-event-recur-unit" class="hidden">
                                 <option value="days" data-i18n="calendar_event_unit_days">Days</option>
                                 <option value="weeks" selected data-i18n="calendar_event_unit_weeks">Weeks</option>
                                 <option value="months" data-i18n="calendar_event_unit_months">Months</option>
                             </select>
                         </div>
-                        <select id="calendar-event-duration-input" class="language-select">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-duration-input')"><span id="calendar-event-duration-input-display"></span></button>
+                        <select id="calendar-event-duration-input" class="hidden">
                             <option value="3" data-i18n="calendar_event_duration_3m">For 3 months</option>
                             <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
@@ -2471,7 +2505,8 @@
                 <input type="hidden" id="recipe-image-url-input">
                 <div class="recipe-form-grid">
                     <input type="text" id="recipe-title-input" data-i18n-placeholder="recipe_title_placeholder" placeholder="Recipe title">
-                    <select id="recipe-category-input" class="language-select">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('recipe-category-input')"><span id="recipe-category-input-display"></span></button>
+                    <select id="recipe-category-input" class="hidden">
                         <option value="" data-i18n="recipe_category_select_placeholder">Select category...</option>
                         <option value="appetizers" data-i18n="recipe_category_appetizers">Appetizers</option>
                         <option value="breakfast" data-i18n="recipe_category_breakfast">Breakfast</option>
@@ -2559,6 +2594,6 @@
     </div>
 
     <script src="i18n.js?v=227"></script>
-    <script src="app.js?v=330"></script>
+    <script src="app.js?v=331"></script>
 </body>
 </html>

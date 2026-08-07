@@ -2878,6 +2878,12 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     transition: var(--transition);
 }
 .language-select:focus, .language-select:hover { border-color: var(--accent-pink); box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+/* כפתור-טריגר לתפריט-נפתח מותאם (custom-select-trigger) - משתמש ב-.language-select
+   הקיים לעיצוב הבסיסי (מסגרת/צבע/חץ), רק צריך לוודא שטקסט ארוך נחתך יפה
+   כמו ב-<select> טבעי, ושהיישור/הצבע תמיד תואמים גם כשלא נבחר עדיין ערך */
+.custom-select-trigger { display: block; text-align: start; }
+.custom-select-trigger span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.custom-select-picker-row.selected { border-color: var(--accent-purple); background-color: rgba(168, 85, 247, 0.12); color: var(--accent-purple-light-text); font-weight: 700; }
 .language-select option { background-color: var(--bg-sheet); color: var(--text-primary); }
 html[dir="rtl"] .language-select { background-position: right 12px center; padding: 12px 36px 12px 12px; }
 .ai-quick-add-wrap { display: flex; flex-direction: column; gap: 10px; }

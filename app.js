@@ -65,6 +65,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
+    // אתחול חד-פעמי של התצוגה בכל תפריטי-הבחירה המותאמים (custom-select) -
+    // רשימות סטטיות (שלעולם לא מתמלאות מחדש דינמית) מקבלות כאן את הטקסט
+    // הנכון (מתורגם, אחרי loadSavedLanguage למעלה) פעם אחת; רשימות דינמיות
+    // (עדיין ריקות בשלב הזה, לפני התחברות/טעינת נתונים) פשוט מקבלות תצוגה
+    // ריקה זמנית - ומתעדכנות נכון כשהפונקציה שממלאת אותן רצה בהמשך
+    document.querySelectorAll('select').forEach(select => { if (select.id) updateCustomSelectDisplay(select.id); });
     initFabOrderDragReorder();
     initDockCarouselGestures();
     initSupabase();
@@ -542,6 +548,7 @@ function editPreset(id) {
     document.getElementById('new-preset-calories').value = preset.calories;
     document.getElementById('new-preset-description').value = preset.description || '';
     document.getElementById('new-preset-category').value = preset.meal_category;
+    updateCustomSelectDisplay('new-preset-category');
     document.getElementById('btn-add-preset').textContent = t('preset_update_btn');
 }
 
@@ -1814,6 +1821,7 @@ function populateGlanceTaskDaySelect(selectedDay) {
     const select = document.getElementById('glance-edit-task-day-select');
     if (!select) return;
     select.innerHTML = dbDaysMap.map((dbDay, i) => `<option value="${dbDay}"${dbDay === selectedDay ? ' selected' : ''}>${t(dayNameKeys[i])}</option>`).join('');
+    updateCustomSelectDisplay('glance-edit-task-day-select');
 }
 
 // שדות תזכורת - לא היו זמינים כאן עד היום (רק בטופס ההוספה הישן של הטבלה
@@ -1823,6 +1831,7 @@ function openGlanceTaskEditor(id, title, time, day, reminderMinutes, reminderTex
     document.getElementById('glance-edit-task-title-input').value = title || '';
     document.getElementById('glance-edit-task-time-input').value = time || '';
     document.getElementById('glance-edit-task-reminder').value = String(reminderMinutes || 0);
+    updateCustomSelectDisplay('glance-edit-task-reminder');
     document.getElementById('glance-edit-task-reminder-text').value = reminderText || '';
     populateGlanceTaskDaySelect(day);
     openModal('modal-edit-glance-task');
@@ -2236,6 +2245,7 @@ function openMoveSlotToDay(day, slot) {
         .filter(d => d !== day)
         .map(d => `<option value="${d}">${getDayName(dbDaysMap.indexOf(d))}</option>`)
         .join('');
+    updateCustomSelectDisplay('move-slot-day-select');
     openModal('modal-move-slot-day');
 }
 
@@ -4580,6 +4590,8 @@ function resetCalendarEventModal() {
     document.getElementById('calendar-event-recurring-checkbox').checked = false;
     document.getElementById('calendar-event-recur-interval').value = '1';
     document.getElementById('calendar-event-recur-unit').value = 'weeks';
+    updateCustomSelectDisplay('calendar-event-recur-unit');
+    updateCustomSelectDisplay('calendar-event-duration-input');
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
@@ -4829,6 +4841,7 @@ function openAddRecipeForm() {
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = '';
     document.getElementById('recipe-category-input').value = currentRecipeCategory || '';
+    updateCustomSelectDisplay('recipe-category-input');
     document.getElementById('recipe-calories-input').value = '';
     document.getElementById('recipe-servings-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
@@ -4847,6 +4860,7 @@ function openEditRecipeForm() {
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = recipe.title || '';
     document.getElementById('recipe-category-input').value = recipe.category || '';
+    updateCustomSelectDisplay('recipe-category-input');
     document.getElementById('recipe-calories-input').value = recipe.calories || '';
     document.getElementById('recipe-servings-input').value = recipe.servings || '';
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
@@ -5200,6 +5214,8 @@ function populateReportMonthYearSelects() {
         opt.textContent = String(y);
         yearSelect.appendChild(opt);
     }
+    updateCustomSelectDisplay('report-month-select');
+    updateCustomSelectDisplay('report-year-select');
 }
 
 let reportRangeMode = 'all';
@@ -6545,6 +6561,52 @@ function updateDateFieldDisplay(inputId) {
     display.textContent = new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// תפריט-נפתח מותאם אישית - מחליף את הרשימה הטבעית של <select> (לא ניתנת
+// לעיצוב מלא בדפדפן דסקטופ, בעיקר Windows - שורת הבחירה תמיד בצבע המערכת),
+// לפי בקשה מפורשת ("שכל אחד יהיה בערכת נושא שלו"). אותה תבנית בדיוק כמו
+// openDateFieldPicker: ה-<select> המקורי נשאר בדף (מוסתר), קורא את רשימת
+// ה-<option> הקיימת שלו כמו שהיא (בלי לגעת בקוד שממלא אותה - סטטי או דינמי
+// כאחד), כך שכל לוגיקת מילוי/קריאה קיימת ממשיכה לעבוד בלי שום שינוי
+let customSelectPickerTargetId = null;
+
+function openCustomSelectPicker(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    customSelectPickerTargetId = selectId;
+    const list = document.getElementById('custom-select-picker-list');
+    list.innerHTML = '';
+    Array.from(select.options).forEach(opt => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'preset-quick-add-item custom-select-picker-row' + (opt.value === select.value ? ' selected' : '');
+        row.textContent = opt.textContent;
+        row.onclick = () => selectCustomSelectOption(opt.value);
+        list.appendChild(row);
+    });
+    openModal('modal-custom-select-picker');
+}
+
+function selectCustomSelectOption(value) {
+    const select = document.getElementById(customSelectPickerTargetId);
+    if (select) {
+        select.value = value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        updateCustomSelectDisplay(customSelectPickerTargetId);
+    }
+    closeModal('modal-custom-select-picker');
+}
+
+// מציג את הטקסט של האפשרות הנבחרת כרגע בתוך span עם id `${selectId}-display` -
+// נקרא גם אחרי כל מילוי/שינוי דינמי של הרשימה (כמו populate מחדש מה-DB),
+// כדי שהתצוגה תמיד תואמת את הערך האמיתי של ה-<select> המוסתר
+function updateCustomSelectDisplay(selectId) {
+    const select = document.getElementById(selectId);
+    const display = document.getElementById(`${selectId}-display`);
+    if (!select || !display) return;
+    const opt = select.options[select.selectedIndex];
+    display.textContent = opt ? opt.textContent : '';
+}
+
 async function navigateMonthlyGoal(delta) {
     const base = viewedMonthKey || currentMonthKey();
     const target = shiftMonthKey(base, delta);
@@ -6817,6 +6879,7 @@ function openSetMonthlyGoalModal(isEdit = false) {
     // משקל בפועל), אז יעד חופשי כמו "ירידה במשקל" שנשמר כברירת מחדל כ-'tasks'
     // עוקב בטעות אחרי משימות שהושלמו שאין להן שום קשר לשם שהמשתמש הקליד
     document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'custom';
+    updateCustomSelectDisplay('monthly-goal-type-input');
     document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
     document.getElementById('monthly-goal-current-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.current_value || 0) : 0;
     document.getElementById('monthly-goal-reward-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.personal_reward || '') : '';
@@ -7027,6 +7090,7 @@ function populateFinanceCategoryOptions(type) {
     const select = document.getElementById('finance-category-select');
     if (!select) return;
     select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    updateCustomSelectDisplay('finance-category-select');
 }
 
 function selectFinanceEntryType(type) {
@@ -7079,6 +7143,7 @@ function selectFinanceQuickType(type) {
     });
     const select = document.getElementById('finance-quick-category-select');
     if (select) select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    updateCustomSelectDisplay('finance-quick-category-select');
 }
 
 function openFinanceQuickAddModal() {
@@ -7744,6 +7809,7 @@ async function parseRecipeWithAI() {
     const parsed = parseRecipeText(raw);
     document.getElementById('recipe-title-input').value = parsed.title;
     if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
+    updateCustomSelectDisplay('recipe-category-input');
     document.getElementById('recipe-calories-input').value = parsed.calories || '';
     document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
     document.getElementById('recipe-instructions-input').value = parsed.instructions;
@@ -7855,6 +7921,7 @@ async function runLocalRecipeOcrFallback(file) {
         const titleUnclear = looksLikeGarbledOcrTitle(parsed.title);
         document.getElementById('recipe-title-input').value = titleUnclear ? '' : parsed.title;
         if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
+        updateCustomSelectDisplay('recipe-category-input');
         document.getElementById('recipe-calories-input').value = parsed.calories || '';
         document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
         document.getElementById('recipe-instructions-input').value = parsed.instructions;
@@ -7950,6 +8017,7 @@ async function runRecipeImageScan(file) {
             const cleanTitle = sanitizeOcrText(recipe.title || '');
             document.getElementById('recipe-title-input').value = cleanTitle;
             if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
+            updateCustomSelectDisplay('recipe-category-input');
             document.getElementById('recipe-calories-input').value = recipe.calories || '';
             document.getElementById('recipe-ingredients-input').value = sanitizeOcrText(recipe.ingredients || '');
             document.getElementById('recipe-instructions-input').value = sanitizeOcrText(recipe.instructions || '');
@@ -10577,6 +10645,9 @@ function openAddTaskModal() {
     document.getElementById('add-slot-task').value = '';
     document.getElementById('add-slot-reminder').value = '0';
     document.getElementById('add-slot-reminder-text').value = '';
+    updateCustomSelectDisplay('add-slot-day');
+    updateCustomSelectDisplay('add-slot-num');
+    updateCustomSelectDisplay('add-slot-reminder');
     openModal('modal-add-task');
 }
 
