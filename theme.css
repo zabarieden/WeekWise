@@ -1957,7 +1957,7 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    כמו כרטיסי-החזון המתהפכים) וחושפות "עמודים" עם ספינר הטעינה הרגיל בפנים */
 .book-loading-scene { position: relative; width: 220px; height: 160px; perspective: 1200px; }
 .book-pages {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(160deg, var(--bg-sheet), #241830);
     border-radius: 10px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
@@ -1965,8 +1965,11 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
     border: 1px solid rgba(168, 85, 247, 0.3);
 }
 .book-loading-text { font-size: 0.8rem; color: var(--text-secondary); margin: 0; text-align: center; padding: 0 16px; }
+/* z-index מפורש הכרחי: בלי זה, .book-pages (אחרון ב-DOM) היה יושב מעל
+   הכריכות בברירת המחדל וחוסם אותן לגמרי מלכתחילה - זו הייתה הסיבה
+   שהאנימציה "לא נראתה" בכלל (לא בעיית תזמון/מהירות טעינה) */
 .book-cover {
-    position: absolute; top: 0; width: 50%; height: 100%;
+    position: absolute; top: 0; width: 50%; height: 100%; z-index: 2;
     background: linear-gradient(135deg, #a855f7, #6d28d9);
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -1981,7 +1984,7 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
     display: flex; align-items: center; justify-content: center;
     font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: 0.5px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-    z-index: 2;
+    z-index: 3;
     animation: bookLogoFade 0.5s 0.15s ease-out forwards;
 }
 @keyframes bookLogoFade { 0% { opacity: 1; } 100% { opacity: 0; } }
