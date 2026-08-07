@@ -1444,8 +1444,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .vision-goal-card.flipped .vision-card-inner { transform: rotateY(180deg); }
 .vision-card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-sizing: border-box; }
 .vision-card-front {
-    background-size: cover;
-    background-position: center;
+    background-color: #1a0f2e;
+    background-size: cover, contain;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
