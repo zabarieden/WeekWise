@@ -6500,12 +6500,21 @@ let customDatePickerCallback = null;
 let customDatePickerViewMonth = null;
 let customDatePickerSelected = null;
 
+// פותחת/סוגרת ישירות (לא דרך openModal/closeModal הגנריים בכוונה!) - openModal
+// סוגר כל .apple-modal פתוח אחר, מה שהיה סוגר בשקט את המודל שממנו נפתח שדה
+// התאריך (למשל modal-note-triage-otherdate) בלי לפתוח אותו מחדש אחרי הבחירה -
+// המשתמשת בחרה תאריך אבל הפתק לא זז כי המודל שהיה אמור לאשר את זה כבר נעלם.
+// לוח השנה המותאם צריך רק להצטייר *מעל* המודל הקיים (z-index גבוה יותר,
+// ר' .apple-modal.nested-picker-modal ב-theme.css), לא להחליף אותו
 function openCustomDatePicker(currentValue, onSelect) {
     customDatePickerCallback = onSelect;
     customDatePickerSelected = currentValue || null;
     customDatePickerViewMonth = currentValue ? currentValue.slice(0, 7) : currentMonthKey();
     renderCustomDatePickerGrid();
-    openModal('modal-custom-date-picker');
+    document.getElementById('modal-custom-date-picker').classList.add('open');
+}
+function closeCustomDatePickerOnly() {
+    document.getElementById('modal-custom-date-picker').classList.remove('open');
 }
 
 function navigateCustomDatePicker(delta) {
@@ -6537,7 +6546,7 @@ function renderCustomDatePickerGrid() {
 }
 
 function selectCustomDate(dateStr) {
-    closeModal('modal-custom-date-picker');
+    closeCustomDatePickerOnly();
     if (customDatePickerCallback) customDatePickerCallback(dateStr);
 }
 
@@ -6546,7 +6555,7 @@ function customDatePickerToday() {
 }
 
 function customDatePickerClear() {
-    closeModal('modal-custom-date-picker');
+    closeCustomDatePickerOnly();
     if (customDatePickerCallback) customDatePickerCallback('');
 }
 
@@ -6598,7 +6607,11 @@ function openCustomSelectPicker(selectId) {
         row.onclick = () => selectCustomSelectOption(opt.value);
         list.appendChild(row);
     });
-    openModal('modal-custom-select-picker');
+    // ישירות, לא דרך openModal - אותה בעיה בדיוק כמו openCustomDatePicker
+    // (ר' ההערה שם): openModal סוגר כל מודל אחר שפתוח, ואם ה-select נמצא
+    // בתוך מודל קיים (כמו קטגוריית מתכון בתוך modal-add-recipe), הוא היה
+    // נעלם בלי לחזור אחרי הבחירה
+    document.getElementById('modal-custom-select-picker').classList.add('open');
 }
 
 function selectCustomSelectOption(value) {
@@ -6608,7 +6621,7 @@ function selectCustomSelectOption(value) {
         select.dispatchEvent(new Event('change', { bubbles: true }));
         updateCustomSelectDisplay(customSelectPickerTargetId);
     }
-    closeModal('modal-custom-select-picker');
+    document.getElementById('modal-custom-select-picker').classList.remove('open');
 }
 
 // מציג את הטקסט של האפשרות הנבחרת כרגע בתוך span עם id `${selectId}-display` -

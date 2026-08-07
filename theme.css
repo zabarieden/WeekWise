@@ -2612,6 +2612,12 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    באמצע המסך במקום להיצמד לתחתית כ"בוטום-שיט", לפי בקשה מפורשת ("שיהיה
    באמצע המסך... גם במחשב וגם בנייד, בכל המודלים") */
 .apple-modal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeOverlay 0.2s ease-out; padding: 20px; box-sizing: border-box; }
+/* לוח-שנה/תפריט-נפתח מותאמים (modal-custom-date-picker / modal-custom-select-
+   picker) נפתחים/נסגרים *ישירות* (לא דרך openModal/closeModal) בדיוק כדי
+   שלא יסגרו מודל-הורה שהם נפתחו מתוכו (ר' ההערה על openCustomDatePicker
+   ב-app.js) - z-index גבוה יותר מבטיח שהם תמיד יצטיירו *מעל* אותו מודל-הורה
+   שנשאר פתוח מתחתיהם, בלי תלות בסדר ה-DOM */
+#modal-custom-date-picker, #modal-custom-select-picker { z-index: 2500; }
 /* בורר השפה חייב להיפתח גם מעל מסך הכניסה (.login-overlay, z-index:3000 -
    גבוה מ-.apple-modal הרגיל של 2000!) אז הוא צריך z-index ייעודי גבוה יותר */
 #modal-language-picker { z-index: 3500; }
