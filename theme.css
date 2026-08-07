@@ -537,6 +537,7 @@ html.light-mode #glance-edit-task-day-select,
 html.light-mode #glance-edit-task-reminder,
 html.light-mode #glance-edit-task-reminder-text,
 html.light-mode #ai-quick-add-input,
+html.light-mode .vision-card-back-add-row input,
 html.light-mode .login-card input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
@@ -1354,7 +1355,9 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .phone-wrapper.menu-open .ai-brain-fab,
 .phone-wrapper.menu-open .hamburger-fab,
 .phone-wrapper.modal-open .ai-brain-fab,
-.phone-wrapper.modal-open .hamburger-fab {
+.phone-wrapper.modal-open .hamburger-fab,
+.phone-wrapper.vision-open .ai-brain-fab,
+.phone-wrapper.vision-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -1424,6 +1427,77 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .hamburger-drawer-item:active { transform: scale(0.98); background-color: rgba(255, 255, 255, 0.06); }
 .hamburger-drawer-item-icon { font-size: 1.1rem; flex-shrink: 0; }
 .hamburger-drawer-item-title { flex: 1 1 auto; min-width: 0; }
+
+/* לוח החזון (Vision Board) - כפתור "+" בכותרת המגירה מקובץ יחד עם ה-✕
+   (justify-content:space-between עם 3 ילדים ישיר אותם למרחקים שווים, לא
+   צמודים זה לזה) */
+.hamburger-drawer-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.vision-drawer-add-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(168, 85, 247, 0.3); background-color: rgba(168, 85, 247, 0.1); color: var(--accent-purple-light-text); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; transition: var(--transition); }
+.vision-drawer-add-btn:active { transform: scale(0.88); }
+.vision-goals-empty { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 24px; padding: 0 10px; }
+
+/* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
+   בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
+   ארוכה לגלול בלי לשבור את מכניקת ההיפוך */
+.vision-goal-card { position: relative; height: 190px; margin-bottom: 16px; perspective: 1000px; cursor: pointer; }
+.vision-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
+.vision-goal-card.flipped .vision-card-inner { transform: rotateY(180deg); }
+.vision-card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-sizing: border-box; }
+.vision-card-front {
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px;
+    box-sizing: border-box;
+    color: #fff;
+}
+.vision-card-front-name { font-size: 1rem; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.6); margin-bottom: 6px; }
+.vision-card-category-tag { display: inline-block; align-self: flex-start; border-radius: 999px; padding: 3px 10px; font-size: 0.7rem; font-weight: 600; background: rgba(168, 85, 247, 0.35); border: 1px solid rgba(168, 85, 247, 0.5); margin-bottom: 8px; }
+.vision-card-progress-row { display: flex; align-items: center; gap: 8px; }
+.vision-card-progress-row .progress-bar-bg { flex: 1 1 auto; }
+.vision-card-progress-pct { font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.vision-card-back {
+    transform: rotateY(180deg);
+    background-color: var(--bg-row);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.22);
+    padding: 12px 14px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.vision-card-back-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-shrink: 0; gap: 8px; }
+.vision-card-back-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vision-card-flip-back-btn { background: transparent; border: none; color: var(--accent-purple-light-text); font-size: 1rem; cursor: pointer; padding: 2px 6px; flex-shrink: 0; }
+.vision-card-back-actions { display: flex; gap: 10px; margin-top: 8px; flex-shrink: 0; }
+.vision-milestone-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.vision-milestone-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; flex-shrink: 0; }
+.vision-milestone-row span { flex: 1 1 auto; min-width: 0; font-size: 0.82rem; color: var(--text-primary); word-break: break-word; }
+.vision-milestone-row span.completed { color: var(--text-secondary); text-decoration: line-through; }
+.vision-milestone-add-today-btn { background: transparent; border: none; color: var(--accent-purple-light-text); font-size: 0.85rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; transition: var(--transition); }
+.vision-milestone-add-today-btn:active { transform: scale(0.9); }
+.vision-card-no-milestones { font-size: 0.78rem; color: var(--text-secondary); text-align: center; padding: 10px 0; }
+.vision-card-back-add-row { display: flex; gap: 6px; margin-top: 8px; flex-shrink: 0; }
+.vision-card-back-add-row input { flex: 1 1 auto; min-width: 0; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; padding: 7px 8px; font-size: 0.78rem; outline: none; box-sizing: border-box; }
+
+/* צ'יפים לבחירת קטגוריה (מודל הוספה/עריכה) - אותה שפה כמו סוואצ'ים אחרים
+   באפליקציה, רק עם אייקון+טקסט במקום עיגול צבע בלבד */
+.vision-goal-category-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.vision-goal-category-chip { display: flex; align-items: center; gap: 5px; border-radius: 999px; padding: 6px 12px; font-size: 0.78rem; font-weight: 600; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+.vision-goal-category-chip.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); color: var(--accent-purple-light-text); }
+.vision-goal-category-chip:active { transform: scale(0.95); }
+
+.vision-goal-image-preview { display: block; width: 100%; max-height: 160px; object-fit: cover; border-radius: 12px; margin: 8px 0; border: 1px solid rgba(168, 85, 247, 0.2); }
+
+.vision-goal-pending-milestones-list { display: flex; flex-direction: column; gap: 6px; }
+.vision-goal-pending-milestone-row { display: flex; align-items: center; gap: 8px; background-color: rgba(255,255,255,0.03); border-radius: 10px; padding: 7px 10px; }
+.vision-goal-pending-milestone-row span { flex: 1 1 auto; min-width: 0; font-size: 0.82rem; word-break: break-word; }
+.vision-goal-pending-milestone-remove { background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; flex-shrink: 0; padding: 2px; }
+.vision-goal-milestone-add-row { display: flex; gap: 8px; margin-top: 4px; }
+.vision-goal-milestone-add-row input { flex: 1 1 auto; min-width: 0; }
 
 .premium-drawer-title { margin-top: 18px !important; }
 .btn-settings-drawer-feature { width: 100%; margin-top: 4px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light-text); }

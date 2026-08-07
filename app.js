@@ -11581,6 +11581,448 @@ function showDangerConfirm(titleText, messageText, onConfirm) {
     openModal('modal-danger-confirm');
 }
 
+// --- לוח החזון (Vision Board) - מגירה שנייה מהצד (אותה תבנית בדיוק כמו
+// hamburger-drawer-overlay) עם כרטיסי-יעד שמתהפכים (CSS 3D flip) לרשימת
+// תחנות-ביניים. אחוז ההתקדמות *נגזר* ממספר התחנות שסומנו כבוצעו (done/total),
+// לא ערך נפרד שנשמר - כדי שלא יהיה מקור-אמת כפול שיכול לסטות מרשימת התחנות ---
+const VISION_GOAL_CATEGORY_PRESETS = [
+    { key: 'career', icon: '💼' },
+    { key: 'health', icon: '💪' },
+    { key: 'finance', icon: '💰' },
+    { key: 'relationships', icon: '❤️' },
+    { key: 'learning', icon: '📚' },
+    { key: 'travel', icon: '✈️' },
+    { key: 'personal', icon: '🌱' },
+    { key: 'other', icon: '🎯' },
+];
+
+let visionGoalsCache = [];
+let visionMilestonesCache = [];
+
+function openGoalsVisionDrawer() {
+    const overlay = document.getElementById('vision-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('vision-open');
+    loadVisionGoals();
+}
+function closeGoalsVisionDrawer() {
+    const overlay = document.getElementById('vision-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('vision-open');
+}
+
+async function loadVisionGoals() {
+    if (!supabaseClient || !currentUserId) return;
+    const [goalsRes, milestonesRes] = await Promise.all([
+        supabaseClient.from('vision_goals').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
+        supabaseClient.from('vision_goal_milestones').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }),
+    ]);
+    visionGoalsCache = goalsRes.data || [];
+    visionMilestonesCache = milestonesRes.data || [];
+    renderVisionGoalsList();
+}
+
+function renderVisionGoalsList() {
+    const list = document.getElementById('vision-goals-list');
+    const empty = document.getElementById('vision-goals-empty');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!visionGoalsCache.length) {
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+    if (empty) empty.classList.add('hidden');
+    visionGoalsCache.forEach(goal => {
+        const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+        list.appendChild(renderVisionGoalCard(goal, milestones));
+    });
+}
+
+// שורת תחנת-ביניים בודדת (גב הכרטיס) - פונקציה משותפת לבנייה הראשונית ולהוספה
+// חיה מגב הכרטיס (addMilestoneToGoalFromCardBack), כדי לא לשכפל את אותה
+// לוגיקה פעמיים. נבנה ב-createElement+closures (לא onclick="..." עם טקסט
+// המשתמשת משורשר) כדי שכותרות עם גרש/מירכאות לא ישברו את ה-HTML
+function buildVisionMilestoneRow(goalId, goalTitle, milestone) {
+    const row = document.createElement('div');
+    row.className = 'vision-milestone-row';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = !!milestone.is_done;
+
+    const span = document.createElement('span');
+    span.textContent = milestone.title;
+    if (milestone.is_done) span.classList.add('completed');
+
+    checkbox.onchange = () => {
+        span.classList.toggle('completed', checkbox.checked);
+        toggleVisionMilestoneDone(milestone.id, goalId, checkbox.checked);
+    };
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'vision-milestone-add-today-btn';
+    addBtn.title = t('vision_milestone_add_today_btn_title');
+    addBtn.textContent = '➕';
+    addBtn.onclick = () => addMilestoneTaskToToday(goalTitle, milestone.title);
+
+    row.appendChild(checkbox);
+    row.appendChild(span);
+    row.appendChild(addBtn);
+    return row;
+}
+
+function renderVisionGoalCard(goal, milestones) {
+    const total = milestones.length;
+    const done = milestones.filter(m => m.is_done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'vision-goal-card';
+    card.dataset.goalId = goal.id;
+
+    const inner = document.createElement('div');
+    inner.className = 'vision-card-inner';
+
+    const front = document.createElement('div');
+    front.className = 'vision-card-face vision-card-front';
+    const imgUrl = goal.image_url || '';
+    front.style.backgroundImage = imgUrl
+        ? `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%), url("${imgUrl.replace(/"/g, '%22')}")`
+        : 'linear-gradient(160deg, rgba(168,85,247,0.35), rgba(0,0,0,0.6))';
+    front.onclick = () => flipVisionCard(goal.id);
+
+    const categoryPreset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === goal.category);
+    if (categoryPreset) {
+        const tag = document.createElement('div');
+        tag.className = 'vision-card-category-tag';
+        tag.textContent = `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}`;
+        front.appendChild(tag);
+    }
+    const nameEl = document.createElement('div');
+    nameEl.className = 'vision-card-front-name';
+    nameEl.textContent = goal.title;
+    front.appendChild(nameEl);
+
+    const progressRow = document.createElement('div');
+    progressRow.className = 'vision-card-progress-row';
+    progressRow.innerHTML = `<div class="progress-bar-bg"><div class="progress-bar-fill${pct >= 100 ? ' completed' : ''}" style="width:${pct}%"></div></div><span class="vision-card-progress-pct">${pct}%</span>`;
+    front.appendChild(progressRow);
+
+    const back = document.createElement('div');
+    back.className = 'vision-card-face vision-card-back';
+
+    const backHeader = document.createElement('div');
+    backHeader.className = 'vision-card-back-header';
+    const backTitle = document.createElement('h4');
+    backTitle.className = 'vision-card-back-title';
+    backTitle.textContent = goal.title;
+    const flipBackBtn = document.createElement('button');
+    flipBackBtn.type = 'button';
+    flipBackBtn.className = 'vision-card-flip-back-btn';
+    flipBackBtn.title = t('vision_card_flip_back_btn_title');
+    flipBackBtn.textContent = '↩';
+    flipBackBtn.onclick = () => flipVisionCard(goal.id);
+    backHeader.appendChild(backTitle);
+    backHeader.appendChild(flipBackBtn);
+    back.appendChild(backHeader);
+
+    if (!milestones.length) {
+        const hint = document.createElement('p');
+        hint.className = 'vision-card-no-milestones';
+        hint.textContent = t('vision_goal_no_milestones_hint');
+        back.appendChild(hint);
+    } else {
+        milestones.forEach(m => back.appendChild(buildVisionMilestoneRow(goal.id, goal.title, m)));
+    }
+
+    const addRow = document.createElement('div');
+    addRow.className = 'vision-card-back-add-row';
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = t('vision_goal_milestone_input_placeholder');
+    const addRowBtn = document.createElement('button');
+    addRowBtn.type = 'button';
+    addRowBtn.className = 'btn-secondary';
+    addRowBtn.textContent = t('vision_goal_milestone_add_btn');
+    addRowBtn.onclick = () => addMilestoneToGoalFromCardBack(goal.id, addInput);
+    addInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addMilestoneToGoalFromCardBack(goal.id, addInput); } };
+    addRow.appendChild(addInput);
+    addRow.appendChild(addRowBtn);
+    back.appendChild(addRow);
+
+    const backActions = document.createElement('div');
+    backActions.className = 'vision-card-back-actions';
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'btn-edit-item';
+    editBtn.innerHTML = EDIT_ICON_SVG;
+    editBtn.title = t('edit_btn');
+    editBtn.onclick = () => openVisionGoalModal(goal.id);
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn-delete-item';
+    deleteBtn.textContent = '❌';
+    deleteBtn.onclick = () => deleteVisionGoal(goal.id);
+    backActions.appendChild(editBtn);
+    backActions.appendChild(deleteBtn);
+    back.appendChild(backActions);
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
+    return card;
+}
+
+function flipVisionCard(goalId) {
+    const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"]`);
+    if (card) card.classList.toggle('flipped');
+}
+
+function updateVisionCardProgressDisplay(goalId) {
+    const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"]`);
+    if (!card) return;
+    const milestones = visionMilestonesCache.filter(m => m.goal_id === goalId);
+    const total = milestones.length;
+    const done = milestones.filter(m => m.is_done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const fill = card.querySelector('.progress-bar-fill');
+    if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('completed', pct >= 100); }
+    const pctLabel = card.querySelector('.vision-card-progress-pct');
+    if (pctLabel) pctLabel.textContent = pct + '%';
+}
+
+async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
+    if (!supabaseClient || !currentUserId) return;
+    await supabaseClient.from('vision_goal_milestones').update({ is_done: checked }).eq('id', milestoneId);
+    const m = visionMilestonesCache.find(x => x.id === milestoneId);
+    if (m) m.is_done = checked;
+    updateVisionCardProgressDisplay(goalId);
+}
+
+// מזריקה תחנת-ביניים בודדת ליומן כאירוע חד-פעמי להיום - בדיוק כמו "מבט
+// ליומן" רגיל (source:'calendar', לא daily board/לו"ז שבועי), לפי בקשה
+// מפורשת של המשתמשת. שם היעד מוצג כקידומת לתחנה כדי שברשימה שטוחה (מבט
+// ליומן) יהיה ברור מתוך איזה יעד זה הגיע, בלי לפתוח את המגירה
+async function addMilestoneTaskToToday(goalTitle, milestoneTitle) {
+    if (!supabaseClient || !currentUserId) return;
+    const { error } = await supabaseClient.from('calendar_events').insert({
+        username: currentUsername, user_id: currentUserId,
+        event_title: `🎯 ${goalTitle}: ${milestoneTitle}`,
+        event_date: getLocalDateString(),
+        source: 'calendar', recurrence_group_id: null,
+    });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    showAppToast(t('item_added_success'));
+    loadTodayTasks();
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+}
+
+async function addMilestoneToGoalFromCardBack(goalId, inputEl) {
+    const title = inputEl.value.trim();
+    if (!title || !supabaseClient || !currentUserId) return;
+    const existing = visionMilestonesCache.filter(m => m.goal_id === goalId);
+    const maxOrder = existing.reduce((max, m) => Math.max(max, m.sort_order || 0), 0);
+    const goal = visionGoalsCache.find(g => g.id === goalId);
+    const { data, error } = await supabaseClient.from('vision_goal_milestones')
+        .insert({ goal_id: goalId, user_id: currentUserId, title, is_done: false, sort_order: maxOrder + 10 })
+        .select().single();
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    visionMilestonesCache.push(data);
+    inputEl.value = '';
+    const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"]`);
+    if (card) {
+        const back = card.querySelector('.vision-card-back');
+        const noMilestonesHint = back.querySelector('.vision-card-no-milestones');
+        if (noMilestonesHint) noMilestonesHint.remove();
+        const addRow = back.querySelector('.vision-card-back-add-row');
+        back.insertBefore(buildVisionMilestoneRow(goalId, goal ? goal.title : '', data), addRow);
+    }
+    updateVisionCardProgressDisplay(goalId);
+}
+
+// --- הוספה/עריכה של יעד: מודל רגיל (apple-modal), עם רשימת תחנות-ביניים
+// שנבנית בזיכרון (pendingVisionMilestones) ונשמרת כולה בלחיצה על "שמירה".
+// במצב עריכה שומרים גם את ה-id וה-is_done של כל תחנה קיימת (לא רק הטקסט),
+// כדי שסימוני "בוצע" לא יימחקו סתם כי המשתמשת רק שינתה את שם היעד ---
+let editingVisionGoalId = null;
+let pendingVisionMilestones = [];
+let originalVisionMilestoneIds = [];
+let selectedVisionGoalCategory = null;
+
+function openVisionGoalModal(goalId = null) {
+    editingVisionGoalId = goalId;
+    const titleEl = document.getElementById('vision-goal-modal-title');
+    const deleteBtn = document.getElementById('btn-delete-vision-goal');
+    if (goalId) {
+        const goal = visionGoalsCache.find(g => g.id === goalId);
+        if (!goal) return;
+        if (titleEl) titleEl.textContent = t('vision_goal_modal_title_edit');
+        document.getElementById('vision-goal-title-input').value = goal.title || '';
+        selectedVisionGoalCategory = goal.category || null;
+        setVisionGoalImagePreview(goal.image_url || '');
+        const existing = visionMilestonesCache.filter(m => m.goal_id === goalId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        pendingVisionMilestones = existing.map(m => ({ id: m.id, title: m.title, is_done: m.is_done }));
+        originalVisionMilestoneIds = existing.map(m => m.id);
+        if (deleteBtn) deleteBtn.classList.remove('hidden');
+    } else {
+        if (titleEl) titleEl.textContent = t('vision_goal_modal_title_add');
+        document.getElementById('vision-goal-title-input').value = '';
+        selectedVisionGoalCategory = null;
+        setVisionGoalImagePreview('');
+        pendingVisionMilestones = [];
+        originalVisionMilestoneIds = [];
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+    }
+    renderVisionGoalCategoryChips();
+    renderPendingVisionMilestones();
+    openModal('modal-add-vision-goal');
+}
+
+function resetVisionGoalModal() {
+    editingVisionGoalId = null;
+    pendingVisionMilestones = [];
+    originalVisionMilestoneIds = [];
+    selectedVisionGoalCategory = null;
+    document.getElementById('vision-goal-title-input').value = '';
+    document.getElementById('vision-goal-milestone-input').value = '';
+    setVisionGoalImagePreview('');
+}
+
+function renderVisionGoalCategoryChips() {
+    const container = document.getElementById('vision-goal-category-chips');
+    if (!container) return;
+    container.innerHTML = '';
+    VISION_GOAL_CATEGORY_PRESETS.forEach(preset => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'vision-goal-category-chip' + (selectedVisionGoalCategory === preset.key ? ' selected' : '');
+        chip.textContent = `${preset.icon} ${t('vision_goal_category_' + preset.key)}`;
+        chip.onclick = () => selectVisionGoalCategory(preset.key);
+        container.appendChild(chip);
+    });
+}
+function selectVisionGoalCategory(key) {
+    selectedVisionGoalCategory = selectedVisionGoalCategory === key ? null : key;
+    renderVisionGoalCategoryChips();
+}
+
+// מעלה את קובץ תמונת-החזון עצמה ל-Supabase Storage (bucket "goal-vision-photos") -
+// אותו דפוס בדיוק כמו uploadRecipeImage, נכשלת בשקט (מחזירה null) אם ה-
+// bucket עדיין לא קיים - זו תוספת אופציונלית, לא חוסמת יצירת יעד בלי תמונה
+async function handleVisionGoalImageSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    const url = await uploadVisionGoalImage(file);
+    if (url) setVisionGoalImagePreview(url);
+}
+
+async function uploadVisionGoalImage(file) {
+    if (!supabaseClient || !currentUserId || !file.type.startsWith('image/')) return null;
+    try {
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'jpg';
+        const path = `${currentUserId}/${Date.now()}.${ext}`;
+        const { error } = await supabaseClient.storage.from('goal-vision-photos').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) return null;
+        const { data } = supabaseClient.storage.from('goal-vision-photos').getPublicUrl(path);
+        return data ? data.publicUrl : null;
+    } catch {
+        return null;
+    }
+}
+
+function setVisionGoalImagePreview(url) {
+    const input = document.getElementById('vision-goal-image-url-input');
+    const preview = document.getElementById('vision-goal-image-preview');
+    if (input) input.value = url || '';
+    if (preview) {
+        if (url) { preview.src = url; preview.classList.remove('hidden'); }
+        else { preview.src = ''; preview.classList.add('hidden'); }
+    }
+}
+
+function addPendingVisionMilestoneRow() {
+    const input = document.getElementById('vision-goal-milestone-input');
+    const title = input.value.trim();
+    if (!title) return;
+    pendingVisionMilestones.push({ id: null, title, is_done: false });
+    input.value = '';
+    renderPendingVisionMilestones();
+}
+function removePendingVisionMilestoneRow(index) {
+    pendingVisionMilestones.splice(index, 1);
+    renderPendingVisionMilestones();
+}
+function renderPendingVisionMilestones() {
+    const list = document.getElementById('vision-goal-pending-milestones-list');
+    if (!list) return;
+    list.innerHTML = '';
+    pendingVisionMilestones.forEach((m, index) => {
+        const row = document.createElement('div');
+        row.className = 'vision-goal-pending-milestone-row';
+        const span = document.createElement('span');
+        span.textContent = m.title;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'vision-goal-pending-milestone-remove';
+        removeBtn.title = t('vision_goal_milestone_remove_title');
+        removeBtn.textContent = '✕';
+        removeBtn.onclick = () => removePendingVisionMilestoneRow(index);
+        row.appendChild(span);
+        row.appendChild(removeBtn);
+        list.appendChild(row);
+    });
+}
+
+async function saveVisionGoal() {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const title = document.getElementById('vision-goal-title-input').value.trim();
+    if (!title) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    const imageUrl = document.getElementById('vision-goal-image-url-input').value || null;
+    const payload = { title, category: selectedVisionGoalCategory, image_url: imageUrl };
+
+    let goalId = editingVisionGoalId;
+    if (goalId) {
+        const { error } = await supabaseClient.from('vision_goals').update(payload).eq('id', goalId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        const keptIds = pendingVisionMilestones.filter(m => m.id).map(m => m.id);
+        const toDelete = originalVisionMilestoneIds.filter(id => !keptIds.includes(id));
+        if (toDelete.length) await supabaseClient.from('vision_goal_milestones').delete().in('id', toDelete);
+        for (let i = 0; i < pendingVisionMilestones.length; i++) {
+            const m = pendingVisionMilestones[i];
+            if (m.id) {
+                await supabaseClient.from('vision_goal_milestones').update({ title: m.title, sort_order: (i + 1) * 10 }).eq('id', m.id);
+            } else {
+                await supabaseClient.from('vision_goal_milestones').insert({ goal_id: goalId, user_id: currentUserId, title: m.title, is_done: false, sort_order: (i + 1) * 10 });
+            }
+        }
+    } else {
+        const { data, error } = await supabaseClient.from('vision_goals').insert({ ...payload, user_id: currentUserId }).select().single();
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        goalId = data.id;
+        if (pendingVisionMilestones.length) {
+            const rows = pendingVisionMilestones.map((m, i) => ({ goal_id: goalId, user_id: currentUserId, title: m.title, is_done: false, sort_order: (i + 1) * 10 }));
+            await supabaseClient.from('vision_goal_milestones').insert(rows);
+        }
+    }
+    closeModal('modal-add-vision-goal');
+    resetVisionGoalModal();
+    showAppToast(t('item_added_success'));
+    loadVisionGoals();
+}
+
+function deleteVisionGoal(goalId) {
+    showDangerConfirm(t('vision_goal_delete_title'), t('vision_goal_delete_confirm'), async () => {
+        await supabaseClient.from('vision_goals').delete().eq('id', goalId);
+        loadVisionGoals();
+    });
+}
+
 async function deleteActiveRoutineTab() {
     if (dailyBoardTabs.length <= 1) return;
     const tabId = activeDailyBoardTabId;

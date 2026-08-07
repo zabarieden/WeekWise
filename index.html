@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=279">
+    <link rel="stylesheet" href="theme.css?v=280">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -927,6 +927,10 @@
                         <span class="hamburger-drawer-item-icon">🏆</span>
                         <span class="hamburger-drawer-item-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
                     </button>
+                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openGoalsVisionDrawer();">
+                        <span class="hamburger-drawer-item-icon">🖼️</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">Vision Board</span>
+                    </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'recipes')">
@@ -975,6 +979,25 @@
                         <span class="hamburger-drawer-item-icon">⚙️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="settings_title">Settings</span>
                     </button>
+                </div>
+                </nav>
+            </div>
+
+            <!-- מגירת "לוח החזון" - יעדים ככרטיסי-חזון עם תמונת רקע, שמתהפכים ללוח
+                 תחנות-ביניים בלחיצה. מגירה שנייה מהצד (אותה תבנית בדיוק כמו
+                 hamburger-drawer-overlay) - לא תפריט ניווט, אלא פאנל עצמאי -->
+            <div id="vision-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeGoalsVisionDrawer()">
+                <nav class="hamburger-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
+                    <div class="hamburger-drawer-header">
+                        <h3 data-i18n="vision_board_title">Vision Board</h3>
+                        <div class="hamburger-drawer-header-actions">
+                            <button type="button" class="vision-drawer-add-btn" onclick="openVisionGoalModal()" data-i18n-title="vision_goal_add_btn_title" title="Add a goal">＋</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeGoalsVisionDrawer()">✕</button>
+                        </div>
+                    </div>
+                    <div id="vision-goals-list"></div>
+                    <p id="vision-goals-empty" class="vision-goals-empty hidden" data-i18n="vision_board_empty_hint">No goals yet - tap + to add your first one.</p>
                 </div>
                 </nav>
             </div>
@@ -2394,6 +2417,40 @@
             </div>
         </div>
 
+        <!-- חלון צף: הוספה/עריכה של יעד בלוח החזון (Vision Board) - שם, קטגוריה,
+             תמונת חזון, ורשימת תחנות-ביניים שנבנית בזיכרון (pendingVisionMilestones)
+             ונשמרת כולה יחד עם לחיצה על "שמירה" -->
+        <div id="modal-add-vision-goal" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="vision-goal-modal-title" data-i18n="vision_goal_modal_title_add">Add a goal</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="vision-goal-title-input" data-i18n-placeholder="vision_goal_title_placeholder" placeholder="Goal name...">
+
+                    <p class="settings-label" data-i18n="vision_goal_category_label">Category</p>
+                    <div id="vision-goal-category-chips" class="vision-goal-category-chips"></div>
+
+                    <input type="file" id="vision-goal-image-input" accept="image/*" class="hidden" onchange="handleVisionGoalImageSelected(event)">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('vision-goal-image-input').click()" data-i18n="vision_goal_image_upload_btn">📷 Upload a vision image</button>
+                    <img id="vision-goal-image-preview" class="vision-goal-image-preview hidden" alt="">
+                    <input type="hidden" id="vision-goal-image-url-input">
+
+                    <p class="settings-label" data-i18n="vision_goal_milestones_section_title">Milestones</p>
+                    <div id="vision-goal-pending-milestones-list" class="vision-goal-pending-milestones-list"></div>
+                    <div class="vision-goal-milestone-add-row">
+                        <input type="text" id="vision-goal-milestone-input" data-i18n-placeholder="vision_goal_milestone_input_placeholder" placeholder="Add a milestone..." onkeydown="if(event.key==='Enter'){event.preventDefault();addPendingVisionMilestoneRow();}">
+                        <button type="button" class="btn-secondary" onclick="addPendingVisionMilestoneRow()" data-i18n="vision_goal_milestone_add_btn">Add</button>
+                    </div>
+
+                    <button type="button" id="btn-delete-vision-goal" class="btn-clear-week hidden" style="margin-top: 8px;" data-i18n="vision_goal_delete_btn_title">Delete goal</button>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-vision-goal" onclick="saveVisionGoal()" class="btn-primary" data-i18n="vision_goal_save_btn">Save</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-vision-goal'); resetVisionGoalModal();" data-i18n="vision_goal_cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: הוספת מתכון, כולל אזור הדבקה לניתוח חוקי-דטרמיניסטי ("AI") -->
         <div id="modal-add-recipe" class="apple-modal">
             <div class="modal-sheet">
@@ -2501,7 +2558,7 @@
 
     </div>
 
-    <script src="i18n.js?v=225"></script>
-    <script src="app.js?v=329"></script>
+    <script src="i18n.js?v=226"></script>
+    <script src="app.js?v=330"></script>
 </body>
 </html>
