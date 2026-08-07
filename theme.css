@@ -255,6 +255,118 @@ html[data-color-theme="vaporwave_neon"] {
     --accent-purple: #00fff2;
     --accent-purple-light: #7afcff;
 }
+html[data-color-theme="barbie_dream"] {
+    --bg-main: linear-gradient(135deg, #3d0026, #5c0038);
+    --bg-row: rgba(219, 39, 119, 0.4);
+    --border-color: rgba(255, 105, 180, 0.3);
+    --accent-pink: #ff69b4;
+    --accent-purple: #d6006d;
+    --accent-purple-light: #ffb6c9;
+}
+html[data-color-theme="rubiks_cube"] {
+    --bg-main: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    --bg-row: rgba(40, 40, 40, 0.5);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --accent-pink: #ef4444;
+    --accent-purple: #3b82f6;
+    --accent-purple-light: #facc15;
+}
+html[data-color-theme="aurora_borealis"] {
+    --bg-main: linear-gradient(135deg, #00050f, #001a1a);
+    --bg-row: rgba(0, 40, 40, 0.4);
+    --border-color: rgba(74, 222, 190, 0.3);
+    --accent-pink: #4ade80;
+    --accent-purple: #a78bfa;
+    --accent-purple-light: #67e8f9;
+}
+html[data-color-theme="pixel_art"] {
+    --bg-main: linear-gradient(135deg, #0f0326, #1a0a3d);
+    --bg-row: rgba(40, 15, 70, 0.5);
+    --border-color: rgba(0, 255, 136, 0.3);
+    --accent-pink: #ff3864;
+    --accent-purple: #2de2e6;
+    --accent-purple-light: #f9c80e;
+}
+html[data-color-theme="stock_market"] {
+    --bg-main: linear-gradient(135deg, #001a0d, #002912);
+    --bg-row: rgba(0, 60, 30, 0.5);
+    --border-color: rgba(34, 197, 94, 0.3);
+    --accent-pink: #22c55e;
+    --accent-purple: #ef4444;
+    --accent-purple-light: #86efac;
+}
+html[data-color-theme="steampunk_brass"] {
+    --bg-main: linear-gradient(135deg, #1a1006, #2b1a0a);
+    --bg-row: rgba(80, 50, 20, 0.5);
+    --border-color: rgba(184, 115, 51, 0.35);
+    --accent-pink: #cd7f32;
+    --accent-purple: #8a6438;
+    --accent-purple-light: #e8b878;
+}
+html[data-color-theme="vintage_newspaper"] {
+    --bg-main: linear-gradient(135deg, #1a1610, #2b241a);
+    --bg-row: rgba(60, 50, 35, 0.4);
+    --border-color: rgba(180, 160, 120, 0.3);
+    --accent-pink: #b8a078;
+    --accent-purple: #8a7a5c;
+    --accent-purple-light: #e8dcc0;
+}
+html[data-color-theme="film_noir"] {
+    --bg-main: linear-gradient(135deg, #000000, #1a1a1a);
+    --bg-row: rgba(255, 255, 255, 0.06);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --accent-pink: #d4d4d4;
+    --accent-purple: #a3a3a3;
+    --accent-purple-light: #f5f5f5;
+}
+html[data-color-theme="pop_art_comics"] {
+    --bg-main: linear-gradient(135deg, #1a0000, #000814);
+    --bg-row: rgba(20, 20, 20, 0.5);
+    --border-color: rgba(255, 221, 0, 0.35);
+    --accent-pink: #ff1744;
+    --accent-purple: #2979ff;
+    --accent-purple-light: #ffdd00;
+}
+html[data-color-theme="origami_paper"] {
+    --bg-main: linear-gradient(135deg, #1f1410, #2b1c14);
+    --bg-row: rgba(80, 50, 35, 0.4);
+    --border-color: rgba(251, 146, 60, 0.3);
+    --accent-pink: #fb923c;
+    --accent-purple: #f472b6;
+    --accent-purple-light: #fde68a;
+}
+html[data-color-theme="watercolor_wash"] {
+    --bg-main: linear-gradient(135deg, #1a0f2e, #2b1a3d);
+    --bg-row: rgba(80, 50, 100, 0.35);
+    --border-color: rgba(196, 145, 255, 0.25);
+    --accent-pink: #f9a8d4;
+    --accent-purple: #c4b5fd;
+    --accent-purple-light: #a5f3fc;
+}
+html[data-color-theme="chemistry_lab"] {
+    --bg-main: linear-gradient(135deg, #001a1a, #002b2b);
+    --bg-row: rgba(0, 60, 60, 0.5);
+    --border-color: rgba(45, 212, 191, 0.3);
+    --accent-pink: #2dd4bf;
+    --accent-purple: #a3e635;
+    --accent-purple-light: #67e8f9;
+}
+html[data-color-theme="botanical_greenhouse"] {
+    --bg-main: linear-gradient(135deg, #041a0a, #0a2b14);
+    --bg-row: rgba(10, 60, 25, 0.5);
+    --border-color: rgba(74, 222, 128, 0.3);
+    --accent-pink: #4ade80;
+    --accent-purple: #16a34a;
+    --accent-purple-light: #bbf7d0;
+}
+html[data-color-theme="kids_sky_grass"] {
+    --bg-main: linear-gradient(135deg, #0a1a3d, #1a2b5c);
+    --bg-row: rgba(30, 50, 100, 0.45);
+    --border-color: rgba(250, 204, 21, 0.3);
+    --accent-pink: #facc15;
+    --accent-purple: #4ade80;
+    --accent-purple-light: #93c5fd;
+}
 /* מצב בהיר (Light Mode, חינמי): מחליף את משתני הרקע/הטקסט - צבעי הניאון
    עצמם (var(--accent-*), לשימוש ברקעים/מסגרות/צללים עדינים) נשארות זהות,
    כדי לשמור על הזוהר הרענן גם על רקע בהיר. אבל var(--accent-*-text) (טקסט
@@ -462,6 +574,132 @@ html.light-mode[data-color-theme="vaporwave_neon"] {
     --border-color: rgba(255, 46, 230, 0.25);
     --text-primary: #2a0a30;
     --text-secondary: #7a4a70;
+}
+html.light-mode[data-color-theme="barbie_dream"] {
+    --bg-main: linear-gradient(135deg, #ffe0f0, #ffc2e0);
+    --bg-row: rgba(255, 105, 180, 0.12);
+    --bg-glass: rgba(255, 245, 250, 0.75);
+    --bg-sheet: #fff8fb;
+    --border-color: rgba(219, 39, 119, 0.25);
+    --text-primary: #3d0026;
+    --text-secondary: #8c4a6a;
+}
+html.light-mode[data-color-theme="rubiks_cube"] {
+    --bg-main: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+    --bg-row: rgba(0, 0, 0, 0.06);
+    --bg-glass: rgba(250, 250, 250, 0.75);
+    --bg-sheet: #fafafa;
+    --border-color: rgba(0, 0, 0, 0.15);
+    --text-primary: #0a0a0a;
+    --text-secondary: #5a5a5a;
+}
+html.light-mode[data-color-theme="aurora_borealis"] {
+    --bg-main: linear-gradient(135deg, #d0f5ea, #e0d5fb);
+    --bg-row: rgba(74, 222, 190, 0.1);
+    --bg-glass: rgba(240, 253, 250, 0.75);
+    --bg-sheet: #f5fffc;
+    --border-color: rgba(167, 139, 250, 0.25);
+    --text-primary: #000a1a;
+    --text-secondary: #4a5a7a;
+}
+html.light-mode[data-color-theme="pixel_art"] {
+    --bg-main: linear-gradient(135deg, #e0faff, #fff0d0);
+    --bg-row: rgba(45, 226, 230, 0.12);
+    --bg-glass: rgba(240, 253, 255, 0.75);
+    --bg-sheet: #f5feff;
+    --border-color: rgba(45, 226, 230, 0.3);
+    --text-primary: #0f0326;
+    --text-secondary: #4a4a7a;
+}
+html.light-mode[data-color-theme="stock_market"] {
+    --bg-main: linear-gradient(135deg, #e3fbe9, #c9f5d4);
+    --bg-row: rgba(34, 197, 94, 0.1);
+    --bg-glass: rgba(240, 253, 244, 0.75);
+    --bg-sheet: #f5fff8;
+    --border-color: rgba(34, 197, 94, 0.25);
+    --text-primary: #00250f;
+    --text-secondary: #4a7a5c;
+}
+html.light-mode[data-color-theme="steampunk_brass"] {
+    --bg-main: linear-gradient(135deg, #f5e6d0, #e8d0a8);
+    --bg-row: rgba(184, 115, 51, 0.12);
+    --bg-glass: rgba(250, 244, 232, 0.75);
+    --bg-sheet: #fdf8ef;
+    --border-color: rgba(184, 115, 51, 0.3);
+    --text-primary: #2b1a0a;
+    --text-secondary: #7a5a35;
+}
+html.light-mode[data-color-theme="vintage_newspaper"] {
+    --bg-main: linear-gradient(135deg, #f0e6d0, #e8dcc0);
+    --bg-row: rgba(180, 160, 120, 0.15);
+    --bg-glass: rgba(248, 243, 232, 0.75);
+    --bg-sheet: #faf5e8;
+    --border-color: rgba(140, 120, 90, 0.3);
+    --text-primary: #2b241a;
+    --text-secondary: #6b5f48;
+}
+html.light-mode[data-color-theme="film_noir"] {
+    --bg-main: linear-gradient(135deg, #f0f0f0, #d4d4d4);
+    --bg-row: rgba(0, 0, 0, 0.08);
+    --bg-glass: rgba(248, 248, 248, 0.75);
+    --bg-sheet: #fafafa;
+    --border-color: rgba(0, 0, 0, 0.2);
+    --text-primary: #0a0a0a;
+    --text-secondary: #525252;
+}
+html.light-mode[data-color-theme="pop_art_comics"] {
+    --bg-main: linear-gradient(135deg, #fff4cc, #ffe0e0);
+    --bg-row: rgba(255, 23, 68, 0.1);
+    --bg-glass: rgba(255, 250, 235, 0.75);
+    --bg-sheet: #fffdf5;
+    --border-color: rgba(255, 221, 0, 0.35);
+    --text-primary: #1a0000;
+    --text-secondary: #7a3a3a;
+}
+html.light-mode[data-color-theme="origami_paper"] {
+    --bg-main: linear-gradient(135deg, #fff0e0, #ffe8d0);
+    --bg-row: rgba(251, 146, 60, 0.1);
+    --bg-glass: rgba(255, 248, 240, 0.75);
+    --bg-sheet: #fffaf3;
+    --border-color: rgba(251, 146, 60, 0.25);
+    --text-primary: #2b1c14;
+    --text-secondary: #8a6a50;
+}
+html.light-mode[data-color-theme="watercolor_wash"] {
+    --bg-main: linear-gradient(135deg, #fce7f3, #e0e7ff);
+    --bg-row: rgba(196, 145, 255, 0.1);
+    --bg-glass: rgba(253, 245, 255, 0.75);
+    --bg-sheet: #fefaff;
+    --border-color: rgba(196, 145, 255, 0.25);
+    --text-primary: #241830;
+    --text-secondary: #6e5a80;
+}
+html.light-mode[data-color-theme="chemistry_lab"] {
+    --bg-main: linear-gradient(135deg, #e0fbfa, #d0f5e8);
+    --bg-row: rgba(45, 212, 191, 0.12);
+    --bg-glass: rgba(240, 253, 252, 0.75);
+    --bg-sheet: #f5fffd;
+    --border-color: rgba(45, 212, 191, 0.3);
+    --text-primary: #001a1a;
+    --text-secondary: #3f6b6b;
+}
+html.light-mode[data-color-theme="botanical_greenhouse"] {
+    --bg-main: linear-gradient(135deg, #e0fae6, #c5f2d0);
+    --bg-row: rgba(74, 222, 128, 0.1);
+    --bg-glass: rgba(240, 253, 244, 0.75);
+    --bg-sheet: #f5fff8;
+    --border-color: rgba(74, 222, 128, 0.25);
+    --text-primary: #04220c;
+    --text-secondary: #4a7a58;
+}
+html.light-mode[data-color-theme="kids_sky_grass"] {
+    --bg-main: linear-gradient(135deg, #bfe3ff, #d4f5c3);
+    --bg-row: rgba(74, 222, 128, 0.12);
+    --bg-glass: rgba(240, 250, 255, 0.75);
+    --bg-sheet: #f5fcff;
+    --border-color: rgba(250, 204, 21, 0.35);
+    --text-primary: #0a1a3d;
+    --text-secondary: #3a5a80;
 }
 html.light-mode[data-color-theme="graphite_steel"] {
     --bg-main: linear-gradient(135deg, #e4e7eb, #d3d8dd);
@@ -765,6 +1003,109 @@ html[data-color-theme="vaporwave_neon"] .home-theme-pattern {
         linear-gradient(rgba(255, 0, 230, 0.18) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 255, 242, 0.18) 1px, transparent 1px);
     background-size: 100% 100%, 34px 34px, 34px 34px;
+}
+html[data-color-theme="barbie_dream"] .home-theme-pattern {
+    background-image:
+        radial-gradient(2px 2px at 30px 40px, rgba(255, 215, 0, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 100px 90px, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255, 105, 180, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 60px 140px, rgba(255, 215, 0, 0.7), transparent),
+        radial-gradient(2px 2px at 140px 160px, rgba(255, 255, 255, 0.85), transparent);
+    background-size: 180px 180px;
+    background-repeat: repeat;
+}
+html[data-color-theme="rubiks_cube"] .home-theme-pattern {
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.3) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.3) 2px, transparent 2px),
+        linear-gradient(45deg, rgba(239, 68, 68, 0.25) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(59, 130, 246, 0.2) 25%, transparent 25%);
+    background-size: 34px 34px, 34px 34px, 68px 68px, 68px 68px;
+}
+html[data-color-theme="aurora_borealis"] .home-theme-pattern {
+    background-image:
+        linear-gradient(100deg, transparent 30%, rgba(74, 222, 128, 0.18) 40%, transparent 55%),
+        linear-gradient(110deg, transparent 45%, rgba(167, 139, 250, 0.15) 55%, transparent 68%),
+        linear-gradient(95deg, transparent 60%, rgba(103, 232, 249, 0.15) 68%, transparent 80%);
+    background-size: 100% 100%;
+}
+html[data-color-theme="pixel_art"] .home-theme-pattern {
+    background-image:
+        repeating-conic-gradient(rgba(255, 255, 255, 0.05) 0% 25%, transparent 0% 50%),
+        radial-gradient(rgba(255, 56, 100, 0.5) 40%, transparent 40%),
+        radial-gradient(rgba(45, 226, 230, 0.5) 40%, transparent 40%);
+    background-size: 24px 24px, 96px 96px, 96px 96px;
+    background-position: 0 0, 0 0, 48px 48px;
+}
+html[data-color-theme="stock_market"] .home-theme-pattern {
+    background-image:
+        linear-gradient(rgba(34, 197, 94, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.12) 1px, transparent 1px),
+        linear-gradient(45deg, transparent 48%, rgba(34, 197, 94, 0.5) 49%, rgba(34, 197, 94, 0.5) 51%, transparent 52%);
+    background-size: 40px 40px, 40px 40px, 80px 80px;
+}
+html[data-color-theme="steampunk_brass"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 25px 25px, rgba(232, 184, 120, 0.35) 0 3px, transparent 4px, transparent 10px, rgba(232, 184, 120, 0.15) 11px, transparent 12px),
+        linear-gradient(rgba(232, 184, 120, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 184, 120, 0.06) 1px, transparent 1px);
+    background-size: 50px 50px, 50px 50px, 50px 50px;
+}
+html[data-color-theme="vintage_newspaper"] .home-theme-pattern {
+    background-image:
+        linear-gradient(90deg, rgba(74, 64, 48, 0.15) 1px, transparent 1px),
+        radial-gradient(circle at 4px 4px, rgba(74, 64, 48, 0.2) 0 1.5px, transparent 2px);
+    background-size: 90px 100%, 8px 8px;
+}
+html[data-color-theme="film_noir"] .home-theme-pattern {
+    background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.06) 0 10px, transparent 10px 26px);
+}
+html[data-color-theme="pop_art_comics"] .home-theme-pattern {
+    background-image: radial-gradient(circle at 6px 6px, rgba(255, 221, 0, 0.5) 0 3px, transparent 3.5px);
+    background-size: 14px 14px;
+}
+html[data-color-theme="origami_paper"] .home-theme-pattern {
+    background-image:
+        linear-gradient(45deg, rgba(251, 146, 60, 0.12) 25%, transparent 25%, transparent 75%, rgba(251, 146, 60, 0.12) 75%),
+        linear-gradient(-45deg, rgba(244, 114, 182, 0.1) 25%, transparent 25%, transparent 75%, rgba(244, 114, 182, 0.1) 75%);
+    background-size: 60px 60px, 60px 60px;
+}
+html[data-color-theme="watercolor_wash"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 25% 30%, rgba(249, 168, 212, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(196, 181, 253, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 45% 80%, rgba(165, 243, 252, 0.22) 0%, transparent 45%);
+    background-size: 100% 100%;
+}
+html[data-color-theme="chemistry_lab"] .home-theme-pattern {
+    background-image:
+        radial-gradient(3px 3px at 30px 40px, rgba(45, 212, 191, 0.5), transparent),
+        radial-gradient(2px 2px at 90px 20px, rgba(163, 230, 53, 0.5), transparent),
+        radial-gradient(4px 4px at 140px 90px, rgba(45, 212, 191, 0.4), transparent),
+        radial-gradient(2px 2px at 60px 120px, rgba(103, 232, 249, 0.5), transparent),
+        radial-gradient(3px 3px at 170px 150px, rgba(163, 230, 53, 0.45), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html[data-color-theme="botanical_greenhouse"] .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 10px 4px at 30px 30px, rgba(74, 222, 128, 0.35), transparent),
+        radial-gradient(ellipse 8px 3px at 100px 60px, rgba(187, 247, 208, 0.3), transparent),
+        radial-gradient(ellipse 12px 5px at 160px 20px, rgba(22, 163, 74, 0.3), transparent),
+        radial-gradient(ellipse 9px 4px at 50px 130px, rgba(74, 222, 128, 0.3), transparent),
+        radial-gradient(ellipse 10px 4px at 140px 150px, rgba(187, 247, 208, 0.28), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+/* היחיד עם מוטיב מלא (שמש + עננים + אופק דשא) ולא רק דוגמה חוזרת - לפי בקשה
+   מפורשת "אפילו עם צריך עננים ושמיים ודשא אז תשקיע" */
+html[data-color-theme="kids_sky_grass"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 80% 15%, rgba(250, 204, 21, 0.8) 0 18px, rgba(250, 204, 21, 0.3) 19px 22px, transparent 23px),
+        radial-gradient(ellipse 30px 12px at 20% 20%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(ellipse 22px 10px at 45% 12%, rgba(255, 255, 255, 0.4), transparent),
+        linear-gradient(180deg, transparent 0%, transparent 62%, rgba(74, 222, 128, 0.35) 63%, rgba(74, 222, 128, 0.5) 100%);
+    background-size: 100% 100%;
 }
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
@@ -3100,10 +3441,36 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-blueprint { background: linear-gradient(135deg, #e0f2ff, #4fc3f7); }
 .theme-swatch-starmap { background: linear-gradient(135deg, #ffd166, #7c83fd); }
 .theme-swatch-vaporwave { background: linear-gradient(135deg, #ff2ee6, #00fff2); }
+.theme-swatch-barbie { background: linear-gradient(135deg, #ff69b4, #ffd700); }
+.theme-swatch-rubiks { background: linear-gradient(135deg, #ef4444, #3b82f6, #facc15); }
+.theme-swatch-aurora { background: linear-gradient(135deg, #4ade80, #a78bfa, #67e8f9); }
+.theme-swatch-pixelart { background: linear-gradient(135deg, #ff3864, #2de2e6); }
+.theme-swatch-stockmarket { background: linear-gradient(135deg, #22c55e, #0f172a); }
+.theme-swatch-steampunk { background: linear-gradient(135deg, #cd7f32, #4a3520); }
+.theme-swatch-newspaper { background: linear-gradient(135deg, #e8dcc0, #4a4030); }
+.theme-swatch-filmnoir { background: linear-gradient(135deg, #f5f5f5, #000000); }
+.theme-swatch-popart { background: linear-gradient(135deg, #ff1744, #2979ff); }
+.theme-swatch-origami { background: linear-gradient(135deg, #fb923c, #f472b6); }
+.theme-swatch-watercolor { background: linear-gradient(135deg, #f9a8d4, #a5f3fc); }
+.theme-swatch-chemistry { background: linear-gradient(135deg, #2dd4bf, #a3e635); }
+.theme-swatch-greenhouse { background: linear-gradient(135deg, #4ade80, #16a34a); }
+.theme-swatch-kidsart { background: linear-gradient(135deg, #93c5fd, #4ade80, #facc15); }
 /* "ערכות נושא מיוחדות" - קבוצה נפרדת מתחת לערכות הצבע הרגילות, לפי בקשה
-   מפורשת ("לפי קטגוריות שלא יהיה מבולגן") - כותרת-קטגוריה קטנה מעל כל שורת
-   צ'יפים, כדי שכש-50+ יתווספו זה יישאר קריא ולא ערימה אחת ארוכה */
-.theme-category-title { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px 0; }
+   מפורשת ("לפי קטגוריות שלא יהיה מבולגן"). כל קטגוריה עכשיו מתקפלת
+   (accordion) - כותרת לחיצה שפותחת/סוגרת את שורת הצ'יפים שלה, כי עם 50+
+   ערכות זה היה נהיה גלילה ארוכה מדי בלי זה. אותו דפוס בדיוק כמו
+   .help-faq-item/.help-faq-question (classList.toggle('open')) */
+.theme-category-group { margin-top: 4px; }
+.theme-category-toggle {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: none; border: none; padding: 10px 2px; cursor: pointer;
+    font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.theme-category-arrow { font-size: 0.8rem; transition: transform 0.2s ease; }
+.theme-category-group.open .theme-category-arrow { transform: rotate(180deg); }
+.theme-category-group .theme-picker-grid { display: none; }
+.theme-category-group.open .theme-picker-grid { display: flex; }
 
 .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .settings-toggle-row .settings-label { margin-bottom: 0; }

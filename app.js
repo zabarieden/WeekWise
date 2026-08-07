@@ -6258,7 +6258,12 @@ function applyColorTheme(themeName) {
     if (!themeName || themeName === 'default') document.documentElement.removeAttribute('data-color-theme');
     else document.documentElement.setAttribute('data-color-theme', themeName);
     document.querySelectorAll('.theme-swatch').forEach(el => {
-        el.classList.toggle('selected', el.getAttribute('data-theme') === (themeName || 'default'));
+        const isSelected = el.getAttribute('data-theme') === (themeName || 'default');
+        el.classList.toggle('selected', isSelected);
+        if (isSelected) {
+            const group = el.closest('.theme-category-group');
+            if (group) group.classList.add('open');
+        }
     });
 }
 
