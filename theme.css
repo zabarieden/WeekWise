@@ -287,6 +287,30 @@ html[data-color-theme="stock_market"] {
     --accent-purple: #ef4444;
     --accent-purple-light: #86efac;
 }
+html[data-color-theme="neon_trading_chart"] {
+    --bg-main: linear-gradient(135deg, #05010f, #0a0518);
+    --bg-row: rgba(30, 10, 50, 0.5);
+    --border-color: rgba(236, 72, 153, 0.3);
+    --accent-pink: #ec4899;
+    --accent-purple: #6366f1;
+    --accent-purple-light: #c084fc;
+}
+html[data-color-theme="candlestick_bands"] {
+    --bg-main: linear-gradient(135deg, #050b14, #0a1420);
+    --bg-row: rgba(15, 30, 50, 0.5);
+    --border-color: rgba(56, 189, 248, 0.25);
+    --accent-pink: #22d3a8;
+    --accent-purple: #f43f5e;
+    --accent-purple-light: #fb923c;
+}
+html[data-color-theme="market_data_glow"] {
+    --bg-main: linear-gradient(135deg, #0a0420, #150a35);
+    --bg-row: rgba(40, 20, 80, 0.4);
+    --border-color: rgba(251, 146, 60, 0.3);
+    --accent-pink: #fb923c;
+    --accent-purple: #818cf8;
+    --accent-purple-light: #f472b6;
+}
 html[data-color-theme="steampunk_brass"] {
     --bg-main: linear-gradient(135deg, #1a1006, #2b1a0a);
     --bg-row: rgba(80, 50, 20, 0.5);
@@ -602,6 +626,33 @@ html.light-mode[data-color-theme="stock_market"] {
     --border-color: rgba(34, 197, 94, 0.25);
     --text-primary: #00250f;
     --text-secondary: #4a7a5c;
+}
+html.light-mode[data-color-theme="neon_trading_chart"] {
+    --bg-main: linear-gradient(135deg, #fde8f5, #e8e0fb);
+    --bg-row: rgba(236, 72, 153, 0.1);
+    --bg-glass: rgba(253, 245, 253, 0.75);
+    --bg-sheet: #fffafd;
+    --border-color: rgba(236, 72, 153, 0.25);
+    --text-primary: #1a0520;
+    --text-secondary: #6e4a70;
+}
+html.light-mode[data-color-theme="candlestick_bands"] {
+    --bg-main: linear-gradient(135deg, #e0f7ff, #d0ecff);
+    --bg-row: rgba(56, 189, 248, 0.1);
+    --bg-glass: rgba(240, 251, 255, 0.75);
+    --bg-sheet: #f5fdff;
+    --border-color: rgba(56, 189, 248, 0.25);
+    --text-primary: #04101a;
+    --text-secondary: #3f5a70;
+}
+html.light-mode[data-color-theme="market_data_glow"] {
+    --bg-main: linear-gradient(135deg, #fde8d8, #e0e0fb);
+    --bg-row: rgba(251, 146, 60, 0.1);
+    --bg-glass: rgba(253, 247, 240, 0.75);
+    --bg-sheet: #fffaf5;
+    --border-color: rgba(129, 140, 248, 0.25);
+    --text-primary: #150a35;
+    --text-secondary: #5a4a80;
 }
 html.light-mode[data-color-theme="steampunk_brass"] {
     --bg-main: linear-gradient(135deg, #f5e6d0, #e8d0a8);
@@ -1018,6 +1069,29 @@ html[data-color-theme="stock_market"] .home-theme-pattern {
         linear-gradient(90deg, rgba(34, 197, 94, 0.12) 1px, transparent 1px),
         linear-gradient(45deg, transparent 48%, rgba(34, 197, 94, 0.5) 49%, rgba(34, 197, 94, 0.5) 51%, transparent 52%);
     background-size: 40px 40px, 40px 40px, 80px 80px;
+}
+html[data-color-theme="neon_trading_chart"] .home-theme-pattern {
+    background-image:
+        linear-gradient(105deg, transparent 20%, rgba(236, 72, 153, 0.22) 35%, transparent 50%),
+        linear-gradient(75deg, transparent 40%, rgba(99, 102, 241, 0.2) 55%, transparent 70%),
+        repeating-linear-gradient(90deg, rgba(192, 132, 252, 0.3) 0 3px, transparent 3px 9px);
+    background-size: 100% 100%, 100% 100%, 100% 36px;
+    background-repeat: no-repeat, no-repeat, repeat-x;
+    background-position: 0 0, 0 0, 0 100%;
+}
+html[data-color-theme="candlestick_bands"] .home-theme-pattern {
+    background-image:
+        repeating-linear-gradient(90deg, rgba(34, 211, 168, 0.35) 0 4px, transparent 4px 8px, rgba(244, 63, 94, 0.3) 8px 12px, transparent 12px 16px),
+        linear-gradient(180deg, transparent 35%, rgba(56, 189, 248, 0.12) 45%, rgba(56, 189, 248, 0.12) 65%, transparent 75%);
+    background-size: 32px 100%, 100% 100%;
+    background-repeat: repeat-x, no-repeat;
+}
+html[data-color-theme="market_data_glow"] .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 50% 100%, rgba(129, 140, 248, 0.35), transparent 60%),
+        repeating-linear-gradient(90deg, rgba(251, 146, 60, 0.3) 0 8px, transparent 8px 20px),
+        linear-gradient(0deg, rgba(244, 114, 182, 0.25) 0%, transparent 45%);
+    background-size: 100% 100%, 100% 100%, 100% 100%;
 }
 html[data-color-theme="steampunk_brass"] .home-theme-pattern {
     background-image:
@@ -3420,6 +3494,9 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-aurora { background: linear-gradient(135deg, #4ade80, #a78bfa, #67e8f9); }
 .theme-swatch-pixelart { background: linear-gradient(135deg, #ff3864, #2de2e6); }
 .theme-swatch-stockmarket { background: linear-gradient(135deg, #22c55e, #0f172a); }
+.theme-swatch-neonchart { background: linear-gradient(135deg, #ec4899, #6366f1); }
+.theme-swatch-candlestick { background: linear-gradient(135deg, #22d3a8, #f43f5e); }
+.theme-swatch-datadash { background: linear-gradient(135deg, #fb923c, #818cf8, #f472b6); }
 .theme-swatch-steampunk { background: linear-gradient(135deg, #cd7f32, #4a3520); }
 .theme-swatch-newspaper { background: linear-gradient(135deg, #e8dcc0, #4a4030); }
 .theme-swatch-filmnoir { background: linear-gradient(135deg, #f5f5f5, #000000); }
