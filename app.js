@@ -1266,6 +1266,7 @@ async function initAppAfterAuth(user) {
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     showAppLoadingOverlay();
+    const loadingStartedAt = Date.now();
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -1311,6 +1312,14 @@ async function initAppAfterAuth(user) {
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
     await pruneEmptyExcessSlots();
     loadAllCenterItems();
+    // מחכים שאנימציית "הספר" תסיים לרוץ במלואה לפני שמסתירים את מסך הטעינה -
+    // בלי זה, כשהטעינה האמיתית מהירה (רשת טובה/מטמון), האנימציה נקטעת אחרי
+    // חלק שנייה ("נראה כאילו זה נפתח ומיד נסגר") - לפי בקשה מפורשת. אם הטעינה
+    // בפועל לקחה יותר זמן מהאנימציה, אין המתנה נוספת בכלל (הפרש שלילי/0)
+    const loadingElapsedMs = Date.now() - loadingStartedAt;
+    if (loadingElapsedMs < BOOK_LOADING_ANIMATION_MS) {
+        await new Promise(resolve => setTimeout(resolve, BOOK_LOADING_ANIMATION_MS - loadingElapsedMs));
+    }
     hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
     initFixedAiFab();
@@ -1473,6 +1482,11 @@ function triggerDailyGreetingSparkles() {
         setTimeout(() => overlay.remove(), 6000);
     }, 20000);
 }
+
+// משך אנימציית "הספר" המלאה (7 דפים, ר' theme.css: עמוד אחרון עם delay 9.3s
+// + משך הפיכה 1.1s = 10.4s, + מרווח ביטחון קטן) - initAppAfterAuth מחכה
+// לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה, כדי שהאנימציה תמיד תושלם
+const BOOK_LOADING_ANIMATION_MS = 10600;
 
 function showAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
