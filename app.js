@@ -1306,7 +1306,8 @@ async function initAppAfterAuth(user) {
         loadSportData(),
         loadWaterData(),
         loadHabits(),
-        loadNutritionGoals()
+        loadNutritionGoals(),
+        loadUserAvatar()
     ]);
     // ניקוי שורות "יתומות" (שנשארו מברירת מחדל ישנה עם יותר שורות) רץ פעם
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
@@ -12119,6 +12120,224 @@ function deleteVisionGoal(goalId) {
         await supabaseClient.from('vision_goals').delete().eq('id', goalId);
         loadVisionGoals();
     });
+}
+
+// --- בונה-אווטאר (Avatar Builder) - אווטאר שטוח, גיאומטרי, מקורי לגמרי (לא
+// מבוסס/מחקה סגנון של משחק קיים - נמנעים במפורש מסיכון זכויות יוצרים, לפי
+// שיחה מפורשת עם המשתמשת). כל השכבות (גוף/שיער/בגד) הן צורות SVG בסיסיות
+// (עיגולים/אליפסות/מלבנים/paths פשוטים), לא איור אמיתי. התוצאה מוצגת בכל 5
+// הבועות הצפות (fab-dock) במקום האימוג'י הקבוע שהיה שם, כל אחת עם תג-זיהוי
+// קטן משלה בפינה (badgeKey) כדי שהאווטאר "יתאים" להקשר בלי לצייר 5 תלבושות
+// נפרדות - ר' AVATAR_BADGE_SHAPES/FAB_AVATAR_BADGE_MAP למטה
+const AVATAR_SKIN_TONE = '#e0a978';
+
+const AVATAR_HAIR_COLOR_PRESETS = ['#1c1310', '#4a2e1c', '#7a4a24', '#c99a5b', '#e8e0d5', '#a855f7', '#ef4444', '#22d3ee'];
+
+// {c} מוחלף בפועל בצבע השיער שנבחר (ר' buildAvatarSvg) - כל הצורות מעוגנות
+// סביב עיגול הראש המשותף (cx=50 cy=38 r=18), בלי תלות במגדר בכלל
+const AVATAR_HAIR_SHAPES = {
+    short: '<ellipse cx="50" cy="27" rx="19" ry="14" fill="{c}"/>',
+    long: '<ellipse cx="50" cy="27" rx="19" ry="14" fill="{c}"/><rect x="28" y="30" width="10" height="40" rx="5" fill="{c}"/><rect x="62" y="30" width="10" height="40" rx="5" fill="{c}"/>',
+    bun: '<ellipse cx="50" cy="28" rx="17" ry="12" fill="{c}"/><circle cx="50" cy="12" r="8" fill="{c}"/>',
+    curly: '<circle cx="38" cy="26" r="10" fill="{c}"/><circle cx="50" cy="20" r="11" fill="{c}"/><circle cx="62" cy="26" r="10" fill="{c}"/><circle cx="50" cy="32" r="10" fill="{c}"/>',
+    bald: '',
+};
+const AVATAR_HAIR_STYLE_KEYS = ['short', 'long', 'bun', 'curly', 'bald'];
+
+// אוברליי עיטורי-בלבד (צווארון/רוכסן/פס) מעל הגוף, לא תלבושת שלמה נפרדת -
+// ככה זה עובד על שני בסיסי-הגוף (גבר/אישה) בלי לצייר אותו כפול
+const AVATAR_OUTFIT_OVERLAYS = {
+    style1: '<path d="M40,66 L50,78 L60,66" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
+    style2: '<path d="M40,68 Q50,80 60,68" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>',
+    style3: '<rect x="47" y="66" width="6" height="30" fill="#ffffff" opacity="0.85"/><circle cx="50" cy="72" r="1.5" fill="#333"/><circle cx="50" cy="80" r="1.5" fill="#333"/><circle cx="50" cy="88" r="1.5" fill="#333"/>',
+    style4: '<path d="M42,66 Q50,72 58,66" fill="none" stroke="#ffffff" stroke-width="2"/><line x1="46" y1="70" x2="45" y2="82" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="54" y1="70" x2="55" y2="82" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>',
+    style5: '<rect x="30" y="70" width="40" height="6" fill="#ffffff" opacity="0.7"/>',
+};
+const AVATAR_OUTFIT_STYLE_KEYS = ['style1', 'style2', 'style3', 'style4', 'style5'];
+
+const AVATAR_GENDER_OPTIONS = [
+    { key: 'fem', icon: '♀' },
+    { key: 'masc', icon: '♂' },
+];
+
+// תג קטן בפינה הימנית-תחתונה שמזהה כל בועה - אותו אווטאר בדיוק, רק תג שונה,
+// לפי בקשה מפורשת (לא לצייר 5 תלבושות/תנוחות נפרדות)
+const AVATAR_BADGE_SHAPES = {
+    sport: '<circle cx="78" cy="78" r="14" fill="#ef4444"/><rect x="68" y="76" width="20" height="4" rx="2" fill="#fff"/><rect x="70" y="72" width="4" height="12" rx="2" fill="#fff"/><rect x="82" y="72" width="4" height="12" rx="2" fill="#fff"/>',
+    water: '<circle cx="78" cy="78" r="14" fill="#0ea5e9"/><path d="M78,70 C83,78 83,84 78,86 C73,84 73,78 78,70 Z" fill="#fff"/>',
+    preset: '<circle cx="78" cy="78" r="14" fill="#22c55e"/><path d="M73,85 C71,76 80,71 85,73 C85,80 78,86 73,85 Z" fill="#fff"/>',
+    note: '<circle cx="78" cy="78" r="14" fill="#f59e0b"/><path d="M72,84 L83,73 L86,76 L75,87 Z" fill="#fff"/>',
+    finance: '<circle cx="78" cy="78" r="14" fill="#a855f7"/><text x="78" y="83" font-size="14" font-weight="700" text-anchor="middle" fill="#fff">$</text>',
+};
+const FAB_AVATAR_BADGE_MAP = {
+    'btn-sport-fab': 'sport',
+    'btn-water-fab': 'water',
+    'btn-preset-fab': 'preset',
+    'btn-ai-fab': 'note',
+    'btn-finance-fab': 'finance',
+};
+
+const AVATAR_DEFAULT_CONFIG = { gender: 'fem', hairStyle: 'short', hairColor: '#4a2e1c', outfitStyle: 'style1', outfitColor: '#4f46e5' };
+
+// מרכיבה SVG אחד משכבות (גוף → אוברליי-בגד → צוואר → ראש → שיער → תג), בסדר
+// הזה בדיוק (מאחור לפנים) - badgeKey אופציונלי (null בתצוגה-מקדימה/צ'יפים,
+// מוגדר רק כשמציגים בפועל בתוך אחת מ-5 בועות ה-fab-dock)
+function buildAvatarSvg(config, badgeKey) {
+    const cfg = config || AVATAR_DEFAULT_CONFIG;
+    const torso = cfg.gender === 'masc'
+        ? `<path d="M18,100 Q18,68 50,64 Q82,68 82,100 Z" fill="${cfg.outfitColor}"/>`
+        : `<path d="M28,100 Q28,74 50,70 Q72,74 72,100 Z" fill="${cfg.outfitColor}"/>`;
+    const outfitOverlay = AVATAR_OUTFIT_OVERLAYS[cfg.outfitStyle] || '';
+    const neck = `<rect x="44" y="52" width="12" height="12" fill="${AVATAR_SKIN_TONE}"/>`;
+    const head = `<circle cx="50" cy="38" r="18" fill="${AVATAR_SKIN_TONE}"/>`;
+    const hairTemplate = AVATAR_HAIR_SHAPES[cfg.hairStyle] || '';
+    const hair = hairTemplate.split('{c}').join(cfg.hairColor);
+    const badge = badgeKey ? (AVATAR_BADGE_SHAPES[badgeKey] || '') : '';
+    return `<svg class="avatar-svg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${torso}${outfitOverlay}${neck}${head}${hair}${badge}</svg>`;
+}
+
+let currentAvatarConfig = null;
+let pendingAvatarConfig = null;
+
+async function loadUserAvatar() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_avatars').select('*').eq('user_id', currentUserId).maybeSingle();
+    currentAvatarConfig = data ? {
+        gender: data.gender, hairStyle: data.hair_style, hairColor: data.hair_color,
+        outfitStyle: data.outfit_style, outfitColor: data.outfit_color,
+    } : { ...AVATAR_DEFAULT_CONFIG };
+    renderAllFabAvatars();
+}
+
+function renderAllFabAvatars() {
+    Object.keys(FAB_AVATAR_BADGE_MAP).forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.innerHTML = buildAvatarSvg(currentAvatarConfig, FAB_AVATAR_BADGE_MAP[id]);
+    });
+}
+
+function openAvatarDrawer() {
+    pendingAvatarConfig = { ...(currentAvatarConfig || AVATAR_DEFAULT_CONFIG) };
+    const overlay = document.getElementById('avatar-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('avatar-open');
+    renderAvatarGenderOptions();
+    renderAvatarHairStyleChips();
+    renderAvatarColorSwatches('hairColor', 'avatar-hair-color-swatches', AVATAR_HAIR_COLOR_PRESETS);
+    renderAvatarOutfitStyleChips();
+    renderAvatarColorSwatches('outfitColor', 'avatar-outfit-color-swatches', CENTER_ITEM_COLOR_PRESETS);
+    renderAvatarBuilderPreview();
+}
+function closeAvatarDrawer() {
+    const overlay = document.getElementById('avatar-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('avatar-open');
+}
+
+function renderAvatarGenderOptions() {
+    const container = document.getElementById('avatar-gender-options');
+    if (!container) return;
+    container.innerHTML = '';
+    AVATAR_GENDER_OPTIONS.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'avatar-gender-option' + (pendingAvatarConfig.gender === opt.key ? ' selected' : '');
+        btn.textContent = `${opt.icon} ${t('avatar_gender_' + opt.key)}`;
+        btn.onclick = () => selectAvatarGender(opt.key);
+        container.appendChild(btn);
+    });
+}
+function selectAvatarGender(key) {
+    pendingAvatarConfig.gender = key;
+    renderAvatarGenderOptions();
+    renderAvatarBuilderPreview();
+}
+
+function renderAvatarHairStyleChips() {
+    const container = document.getElementById('avatar-hair-style-chips');
+    if (!container) return;
+    container.innerHTML = '';
+    AVATAR_HAIR_STYLE_KEYS.forEach(key => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'avatar-part-chip' + (pendingAvatarConfig.hairStyle === key ? ' selected' : '');
+        chip.title = t('avatar_hair_style_' + key);
+        chip.innerHTML = buildAvatarSvg({ ...pendingAvatarConfig, hairStyle: key }, null);
+        chip.onclick = () => selectAvatarHairStyle(key);
+        container.appendChild(chip);
+    });
+}
+function selectAvatarHairStyle(key) {
+    pendingAvatarConfig.hairStyle = key;
+    renderAvatarHairStyleChips();
+    renderAvatarBuilderPreview();
+}
+
+function renderAvatarOutfitStyleChips() {
+    const container = document.getElementById('avatar-outfit-style-chips');
+    if (!container) return;
+    container.innerHTML = '';
+    AVATAR_OUTFIT_STYLE_KEYS.forEach((key, i) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'avatar-part-chip' + (pendingAvatarConfig.outfitStyle === key ? ' selected' : '');
+        chip.title = t('avatar_outfit_style_' + (i + 1));
+        chip.innerHTML = buildAvatarSvg({ ...pendingAvatarConfig, outfitStyle: key }, null);
+        chip.onclick = () => selectAvatarOutfitStyle(key);
+        container.appendChild(chip);
+    });
+}
+function selectAvatarOutfitStyle(key) {
+    pendingAvatarConfig.outfitStyle = key;
+    renderAvatarOutfitStyleChips();
+    renderAvatarBuilderPreview();
+}
+
+// פונקציה משותפת אחת לשני סווצ'י-הצבע (שיער/בגד) - מקבלת את שם השדה
+// ב-pendingAvatarConfig שהיא כותבת אליו, כדי לא לשכפל את אותה לוגיקה פעמיים
+function renderAvatarColorSwatches(field, containerId, presets) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    presets.forEach(color => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'note-color-swatch' + (pendingAvatarConfig[field] === color ? ' selected' : '');
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectAvatarColor(field, color, containerId, presets);
+        container.appendChild(btn);
+    });
+}
+function selectAvatarColor(field, color, containerId, presets) {
+    pendingAvatarConfig[field] = color;
+    renderAvatarColorSwatches(field, containerId, presets);
+    renderAvatarBuilderPreview();
+}
+
+function renderAvatarBuilderPreview() {
+    const preview = document.getElementById('avatar-builder-preview');
+    if (preview) preview.innerHTML = buildAvatarSvg(pendingAvatarConfig, null);
+}
+
+async function saveAvatarBuilder() {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const payload = {
+        user_id: currentUserId,
+        gender: pendingAvatarConfig.gender,
+        hair_style: pendingAvatarConfig.hairStyle,
+        hair_color: pendingAvatarConfig.hairColor,
+        outfit_style: pendingAvatarConfig.outfitStyle,
+        outfit_color: pendingAvatarConfig.outfitColor,
+        updated_at: new Date().toISOString(),
+    };
+    const { error } = await supabaseClient.from('user_avatars').upsert(payload, { onConflict: 'user_id' });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    currentAvatarConfig = { ...pendingAvatarConfig };
+    renderAllFabAvatars();
+    closeAvatarDrawer();
+    showAppToast(t('item_added_success'));
 }
 
 async function deleteActiveRoutineTab() {

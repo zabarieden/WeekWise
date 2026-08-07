@@ -1032,7 +1032,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .phone-wrapper.menu-open .fab-dock,
 .phone-wrapper.modal-open .fab-dock,
 .phone-wrapper.subview-open .fab-dock,
-.phone-wrapper.vision-open .fab-dock {
+.phone-wrapper.vision-open .fab-dock,
+.phone-wrapper.avatar-open .fab-dock {
     display: none;
 }
 /* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
@@ -1393,7 +1394,9 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .phone-wrapper.modal-open .ai-brain-fab,
 .phone-wrapper.modal-open .hamburger-fab,
 .phone-wrapper.vision-open .ai-brain-fab,
-.phone-wrapper.vision-open .hamburger-fab {
+.phone-wrapper.vision-open .hamburger-fab,
+.phone-wrapper.avatar-open .ai-brain-fab,
+.phone-wrapper.avatar-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -1536,6 +1539,24 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .vision-goal-pending-milestone-remove { background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; flex-shrink: 0; padding: 2px; }
 .vision-goal-milestone-add-row { display: flex; gap: 8px; margin-top: 4px; }
 .vision-goal-milestone-add-row input { flex: 1 1 auto; min-width: 0; }
+
+/* בונה-האווטאר - תצוגה מקדימה מרכזית + שורת מגדר + צ'יפים לבחירת סגנון (עם
+   תצוגה מקדימה SVG בתוך כל צ'יפ, לא אימוג'י) + סווצ'ים לצבע (משתמשים חוזרים
+   ב-.note-color-swatch הקיים). ר' buildAvatarSvg/renderAvatar* ב-app.js */
+.avatar-builder-preview { width: 140px; height: 140px; margin: 4px auto 14px auto; border-radius: 50%; background: radial-gradient(circle at 50% 35%, rgba(168,85,247,0.18), rgba(0,0,0,0.25)); border: 1px solid rgba(168, 85, 247, 0.3); overflow: hidden; }
+.avatar-builder-preview svg { width: 100%; height: 100%; display: block; }
+.avatar-gender-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+.avatar-gender-option { border-radius: 999px; padding: 8px 18px; font-size: 0.85rem; font-weight: 700; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+.avatar-gender-option.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); color: var(--accent-purple-light-text); }
+.avatar-part-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.avatar-part-chip { width: 56px; height: 56px; padding: 4px; border-radius: 14px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: var(--transition); flex-shrink: 0; }
+.avatar-part-chip svg { width: 100%; height: 100%; display: block; }
+.avatar-part-chip.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+.avatar-part-chip:active { transform: scale(0.94); }
+.avatar-drawer-save-btn { width: 100%; margin-top: 14px; }
+/* חובה: בלי זה ה-SVG ב-.dock-fab (שהחליף את האימוג'י) לא מקבל מידה בכלל -
+   אימוג'י מתחייס לפי font-size, אבל SVG לא, אז צריך כלל נפרד */
+.dock-fab .avatar-svg-icon { width: 100%; height: 100%; display: block; border-radius: 50%; }
 
 .premium-drawer-title { margin-top: 18px !important; }
 .btn-settings-drawer-feature { width: 100%; margin-top: 4px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light-text); }
@@ -1913,7 +1934,8 @@ html[dir="ltr"] .daily-focus-bubble::before {
    המגירה/המודלים ומשאיר אותה צפה מעליהם */
 .phone-wrapper.menu-open .daily-focus-bubble,
 .phone-wrapper.modal-open .daily-focus-bubble,
-.phone-wrapper.vision-open .daily-focus-bubble {
+.phone-wrapper.vision-open .daily-focus-bubble,
+.phone-wrapper.avatar-open .daily-focus-bubble {
     opacity: 0 !important;
     pointer-events: none !important;
 }
