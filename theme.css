@@ -728,28 +728,19 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
    משלו בזכות position:relative+z-index:5) יושב מתחת לתוכן הפאנל אבל עדיין
    מעל רקע ה-phone-wrapper הכללי - כך שרק מסך הבית מושפע */
 .home-sky-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-/* שורות עדינות-עבות בסגנון דף-מחברת, כל אחת עם זוהר סגול רך - ליבת קו בהירה
-   יותר עטופה בשתי "הילות" חצי-שקופות משני צדדיה, חוזר כל 44px */
+/* שורות דקיקות בסגנון דף-מחברת, בקושי נראות אבל עם זוהר סגול רך - ליבה
+   חדה של 1px עטופה בהילת זוהר עדינה, חוזר כל 88px (רווח כפול מהגרסה
+   הקודמת - פחות שורות, מרווח גדול יותר ביניהן) */
 .home-notebook-lines {
     position: absolute; inset: 0;
     background-image: repeating-linear-gradient(
         180deg,
-        transparent 0px, transparent 34px,
-        rgba(168, 85, 247, 0.16) 34px, rgba(168, 85, 247, 0.16) 36px,
-        rgba(168, 85, 247, 0.55) 36px, rgba(168, 85, 247, 0.55) 38px,
-        rgba(168, 85, 247, 0.16) 38px, rgba(168, 85, 247, 0.16) 40px,
-        transparent 40px, transparent 44px
+        transparent 0px, transparent 82px,
+        rgba(192, 132, 252, 0) 82px, rgba(192, 132, 252, 0.4) 83px,
+        rgba(196, 145, 255, 0.95) 84px,
+        rgba(192, 132, 252, 0.4) 85px, rgba(192, 132, 252, 0) 86px,
+        transparent 86px, transparent 88px
     );
-}
-/* "הבמה" שעליה יושבות בועות הקיצור הצפות (.fab-dock, שממוקמות בנפרד ב-
-   top:56% של phone-wrapper) - גרדיאנט רדיאלי + צל חזק נותנים מראה תלת-מימדי
-   (פלטפורמה עגולה עם נפח), בלי צורך ב-3D אמיתי */
-.home-stage {
-    position: absolute; left: 50%; bottom: 27%; width: 210px; height: 66px;
-    transform: translateX(-50%);
-    background: radial-gradient(ellipse at 50% 38%, #c99a52 0%, #8a5a2e 55%, #5c3a1c 100%);
-    border-radius: 50%;
-    box-shadow: 0 16px 24px rgba(0,0,0,0.4), 0 0 0 5px rgba(255,255,255,0.1) inset, 0 -4px 10px rgba(255,255,255,0.18) inset;
 }
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
