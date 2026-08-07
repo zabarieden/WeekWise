@@ -2003,8 +2003,13 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
     transform-origin: left center;
     display: flex; align-items: center; justify-content: center;
 }
+/* ממשיך את גרדיאנט הסגול של הדפים עצמם (במקום החזרה הפתאומית לרקע האפליקציה
+   הכהה/שחור-כמעט, שנראה מנותק ו"מכוער" ליד הדפים הצבעוניים שלפניו) + זוהר
+   רדיאלי עדין מאחורי הטקסט לתחושת עומק, לא ריבוע שטוח */
 .book-final-page {
-    background: linear-gradient(160deg, var(--bg-sheet), #241830);
+    background:
+        radial-gradient(ellipse at 50% 45%, rgba(168, 85, 247, 0.35), transparent 60%),
+        linear-gradient(160deg, #3b0764, #1e0a3c);
     border: 1px solid rgba(168, 85, 247, 0.3);
     flex-direction: column; gap: 18px;
     z-index: 0;
