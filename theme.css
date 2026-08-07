@@ -650,30 +650,25 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 /* בלי רקע-זכוכית/מסגרת/צל - מאז שרשת הקוביות הוסרה (הניווט עבר לסרגל
    התחתון), "כרטיס" גדול עם כמעט כלום בפנים היה נראה כמו קוביה ריקה בול
    באמצע המסך; עכשיו זו רק שורת הברכה, שקופה על רקע האפליקציה */
-/* רקע "שמיים+דשא+במה" למסך הבית בלבד, לפי בקשה מפורשת ("הרקע יהיה עם שמיים
-   מאחורה ודשא, והבועות יהיו על מין במה קטנה על דשא שיראה תלת-מימדי").
-   z-index:-1 בתוך .home-hero-panel (שכבר יוצר הקשר-ערימה משלו בזכות
-   position:relative+z-index:5) יושב מתחת לתוכן הפאנל (הברכה/הכרטיסים) אבל
-   עדיין מעל רקע ה-phone-wrapper הכללי - כך שרק מסך הבית מושפע, שאר המסכים
-   (שמוסתרים מאחורי home-hero-panel.hidden) נשארים בערכת הנושא הכהה הרגילה */
+/* רקע מסך הבית בלבד: חוזר לערכת הנושא הכהה הרגילה (לא שמיים+דשא - בוטל לפי
+   בקשה מפורשת, "לא אהבתי את זה"), עם שתי תוספות עדינות שכן נשמרו: שורות
+   דמויות-מחברת עם זוהר עדין (ר' .home-notebook-lines), ו"הבמה" מתחת לבועות
+   הצפות שכן אהבה. z-index:-1 בתוך .home-hero-panel (שכבר יוצר הקשר-ערימה
+   משלו בזכות position:relative+z-index:5) יושב מתחת לתוכן הפאנל אבל עדיין
+   מעל רקע ה-phone-wrapper הכללי - כך שרק מסך הבית מושפע */
 .home-sky-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.home-sky {
+/* שורות עדינות-עבות בסגנון דף-מחברת, כל אחת עם זוהר סגול רך - ליבת קו בהירה
+   יותר עטופה בשתי "הילות" חצי-שקופות משני צדדיה, חוזר כל 44px */
+.home-notebook-lines {
     position: absolute; inset: 0;
-    background:
-        linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 22%, transparent 42%),
-        linear-gradient(180deg, #4a8fd1 0%, #7ec8e3 35%, #bfe3ef 60%, #e8f6e0 100%);
-}
-/* ענן פשוט (שני "בועות" ענן חופפות) - קישוט קל, לא צריך תמונה */
-.home-sky::before {
-    content: ""; position: absolute; top: 12%; left: 12%; width: 64px; height: 24px;
-    background: rgba(255,255,255,0.8); border-radius: 50px;
-    box-shadow: 36px 6px 0 -3px rgba(255,255,255,0.65), 70px 1px 0 -6px rgba(255,255,255,0.5);
-}
-.home-grass {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
-    background: linear-gradient(180deg, #6fbf5a 0%, #4f9e3f 50%, #3a7a30 100%);
-    border-radius: 50% 50% 0 0 / 14% 14% 0 0;
-    box-shadow: 0 -10px 24px rgba(0,0,0,0.18) inset;
+    background-image: repeating-linear-gradient(
+        180deg,
+        transparent 0px, transparent 34px,
+        rgba(168, 85, 247, 0.16) 34px, rgba(168, 85, 247, 0.16) 36px,
+        rgba(168, 85, 247, 0.55) 36px, rgba(168, 85, 247, 0.55) 38px,
+        rgba(168, 85, 247, 0.16) 38px, rgba(168, 85, 247, 0.16) 40px,
+        transparent 40px, transparent 44px
+    );
 }
 /* "הבמה" שעליה יושבות בועות הקיצור הצפות (.fab-dock, שממוקמות בנפרד ב-
    top:56% של phone-wrapper) - גרדיאנט רדיאלי + צל חזק נותנים מראה תלת-מימדי
@@ -1032,8 +1027,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .phone-wrapper.menu-open .fab-dock,
 .phone-wrapper.modal-open .fab-dock,
 .phone-wrapper.subview-open .fab-dock,
-.phone-wrapper.vision-open .fab-dock,
-.phone-wrapper.avatar-open .fab-dock {
+.phone-wrapper.vision-open .fab-dock {
     display: none;
 }
 /* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
@@ -1394,9 +1388,7 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .phone-wrapper.modal-open .ai-brain-fab,
 .phone-wrapper.modal-open .hamburger-fab,
 .phone-wrapper.vision-open .ai-brain-fab,
-.phone-wrapper.vision-open .hamburger-fab,
-.phone-wrapper.avatar-open .ai-brain-fab,
-.phone-wrapper.avatar-open .hamburger-fab {
+.phone-wrapper.vision-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -1540,23 +1532,6 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .vision-goal-milestone-add-row { display: flex; gap: 8px; margin-top: 4px; }
 .vision-goal-milestone-add-row input { flex: 1 1 auto; min-width: 0; }
 
-/* בונה-האווטאר - תצוגה מקדימה מרכזית + שורת מגדר + צ'יפים לבחירת סגנון (עם
-   תצוגה מקדימה SVG בתוך כל צ'יפ, לא אימוג'י) + סווצ'ים לצבע (משתמשים חוזרים
-   ב-.note-color-swatch הקיים). ר' buildAvatarSvg/renderAvatar* ב-app.js */
-.avatar-builder-preview { width: 140px; height: 140px; margin: 4px auto 14px auto; border-radius: 50%; background: radial-gradient(circle at 50% 35%, rgba(168,85,247,0.18), rgba(0,0,0,0.25)); border: 1px solid rgba(168, 85, 247, 0.3); overflow: hidden; }
-.avatar-builder-preview svg { width: 100%; height: 100%; display: block; }
-.avatar-gender-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
-.avatar-gender-option { border-radius: 999px; padding: 8px 18px; font-size: 0.85rem; font-weight: 700; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
-.avatar-gender-option.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); color: var(--accent-purple-light-text); }
-.avatar-part-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-.avatar-part-chip { width: 56px; height: 56px; padding: 4px; border-radius: 14px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: var(--transition); flex-shrink: 0; }
-.avatar-part-chip svg { width: 100%; height: 100%; display: block; }
-.avatar-part-chip.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
-.avatar-part-chip:active { transform: scale(0.94); }
-.avatar-drawer-save-btn { width: 100%; margin-top: 14px; }
-/* חובה: בלי זה ה-SVG ב-.dock-fab (שהחליף את האימוג'י) לא מקבל מידה בכלל -
-   אימוג'י מתחייס לפי font-size, אבל SVG לא, אז צריך כלל נפרד */
-.dock-fab .avatar-svg-icon { width: 100%; height: 100%; display: block; border-radius: 50%; }
 
 .premium-drawer-title { margin-top: 18px !important; }
 .btn-settings-drawer-feature { width: 100%; margin-top: 4px; background-color: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--accent-purple-light-text); }
@@ -1934,8 +1909,7 @@ html[dir="ltr"] .daily-focus-bubble::before {
    המגירה/המודלים ומשאיר אותה צפה מעליהם */
 .phone-wrapper.menu-open .daily-focus-bubble,
 .phone-wrapper.modal-open .daily-focus-bubble,
-.phone-wrapper.vision-open .daily-focus-bubble,
-.phone-wrapper.avatar-open .daily-focus-bubble {
+.phone-wrapper.vision-open .daily-focus-bubble {
     opacity: 0 !important;
     pointer-events: none !important;
 }

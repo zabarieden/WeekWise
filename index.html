@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=292">
+    <link rel="stylesheet" href="theme.css?v=293">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -109,8 +109,7 @@
                      (הברכה/הכרטיסים), אבל עדיין מעל רקע ה-phone-wrapper הכללי -
                      ר' ההערה על stacking-context ב-theme.css -->
                 <div class="home-sky-scene">
-                    <div class="home-sky"></div>
-                    <div class="home-grass"></div>
+                    <div class="home-notebook-lines"></div>
                     <div class="home-stage"></div>
                 </div>
                 <div class="home-greeting-row">
@@ -938,10 +937,6 @@
                         <span class="hamburger-drawer-item-icon">🖼️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">Vision Board</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openAvatarDrawer();">
-                        <span class="hamburger-drawer-item-icon">🧑‍🎨</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="avatar_builder_menu_label">Avatar</span>
-                    </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Lists</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'notes')">
@@ -958,10 +953,6 @@
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_goals">Goals &amp; Progress</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'progress')">
-                        <span class="hamburger-drawer-item-icon">📊</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="progress_title">Weekly Progress Tracker</span>
-                    </button>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'goal')">
                         <span class="hamburger-drawer-item-icon">🏆</span>
                         <span class="hamburger-drawer-item-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
@@ -1033,30 +1024,6 @@
                     </div>
                     <div id="vision-goals-list"></div>
                     <p id="vision-goals-empty" class="vision-goals-empty hidden" data-i18n="vision_board_empty_hint">No goals yet - tap + to add your first one.</p>
-                </div>
-                </nav>
-            </div>
-
-            <!-- מגירת בונה-האווטאר - אווטאר שטוח מקורי (לא מבוסס משחק קיים, לפי שיחה
-                 מפורשת על זכויות יוצרים), שמורכב מ-SVG שכבות (גוף/שיער/בגד). התוצאה
-                 מוצגת בכל 5 הבועות הצפות (fab-dock), כל אחת עם תג קטן משלה בפינה -
-                 ר' buildAvatarSvg/renderAllFabAvatars ב-app.js -->
-            <div id="avatar-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeAvatarDrawer()">
-                <nav class="hamburger-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <h3 data-i18n="avatar_builder_title">Avatar</h3>
-                        <button type="button" class="hamburger-drawer-close" onclick="closeAvatarDrawer()">✕</button>
-                    </div>
-                    <div id="avatar-builder-preview" class="avatar-builder-preview"></div>
-                    <div class="avatar-gender-row" id="avatar-gender-options"></div>
-                    <p class="settings-label" data-i18n="avatar_hair_section_label">Hair</p>
-                    <div class="avatar-part-chips" id="avatar-hair-style-chips"></div>
-                    <div class="note-color-swatches" id="avatar-hair-color-swatches"></div>
-                    <p class="settings-label" data-i18n="avatar_outfit_section_label">Outfit</p>
-                    <div class="avatar-part-chips" id="avatar-outfit-style-chips"></div>
-                    <div class="note-color-swatches" id="avatar-outfit-color-swatches"></div>
-                    <button type="button" class="btn-primary avatar-drawer-save-btn" onclick="saveAvatarBuilder()" data-i18n="avatar_save_btn">Save</button>
                 </div>
                 </nav>
             </div>
@@ -2652,6 +2619,6 @@
     </div>
 
     <script src="i18n.js?v=234"></script>
-    <script src="app.js?v=335"></script>
+    <script src="app.js?v=336"></script>
 </body>
 </html>
