@@ -3814,11 +3814,16 @@ async function loadTodayTasks() {
         // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
         // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח
         if (populated.length + events.length > 0 && !alreadyCelebratedToday) {
-            supabaseClient.from('calendar_events').insert({
+            const { error: celebrateError } = await supabaseClient.from('calendar_events').insert({
                 username: currentUsername, user_id: currentUserId,
                 event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
             });
-            triggerAllDoneSparkles();
+            // דווח: החגיגה חוזרת בכל רענון - אם ה-insert נכשל בשקט (למשל CHECK
+            // constraint על source שלא מכיר את הערך החדש), הדגל אף פעם לא
+            // נשמר בפועל, וכל טעינה חדשה חושבת מחדש שעוד לא חגגו. עכשיו
+            // נרשם ל-console כדי שהשגיאה האמיתית תהיה גלויה אם זה קורה שוב
+            if (celebrateError) console.error('today_celebrated insert failed:', celebrateError);
+            else triggerAllDoneSparkles();
         }
     // עוד לא הכל בוצע - הודעת עידוד לפי כמה פעמים נפתחה הכרטיס היום, מוצגת
     // *לצד* רשימת המשימות שנשארו (לא במקומה): מ-5 פתיחות "בלי לחץ" עדינה,
