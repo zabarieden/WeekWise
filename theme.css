@@ -2878,17 +2878,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    השורות ולא יושב עליהן */
 #study-drawer-overlay .hamburger-drawer {
     background-color: var(--bg-sheet);
-    /* קו השוליים ב-54px מהקצה (לא 38px) - .hamburger-drawer-scroll מוסיף עוד
-       16px padding מעבר לזה שכבר חושב, אז ה-checkbox (30px, מתחיל אחרי ~18px
-       padding מצטבר) היה יושב ממש על הקו. דווח: "הריבוע... שלא יהיה על הקו" */
-    background-image:
-        linear-gradient(160deg, var(--border-color), transparent 55%),
-        linear-gradient(90deg, transparent calc(100% - 54px), rgba(230, 90, 90, 0.4) calc(100% - 54px), rgba(230, 90, 90, 0.4) calc(100% - 53px), transparent calc(100% - 53px));
-}
-html[dir="ltr"] #study-drawer-overlay .hamburger-drawer {
-    background-image:
-        linear-gradient(160deg, var(--border-color), transparent 55%),
-        linear-gradient(90deg, transparent 54px, rgba(230, 90, 90, 0.4) 54px, rgba(230, 90, 90, 0.4) 55px, transparent 55px);
+    background-image: linear-gradient(160deg, var(--border-color), transparent 55%);
 }
 #study-drawer-overlay .hamburger-drawer::after {
     content: "";
@@ -2899,11 +2889,27 @@ html[dir="ltr"] #study-drawer-overlay .hamburger-drawer {
 }
 /* השורות עצמן על הרשימה, לא על הורה רחוק - כל שורה (32px) מתאימה בדיוק
    לגובה .study-task-item, כך שהטקסט והוי תמיד יושבים בדיוק על קו. min-height
-   נותנת "עמוד מחברת" מלא-שורות גם כשיש מעט פריטים או אף לא אחד */
+   נותנת "עמוד מחברת" מלא-שורות גם כשיש מעט פריטים או אף לא אחד.
+   קו-השוליים (::before) עבר לכאן, על הרשימה עצמה, ולא על .hamburger-drawer
+   החיצוני - בפעם הקודמת הוא היה במרחב-קואורדינטות נפרד (הדרישה חושבה ידנית
+   נגד ריפוד ה-.hamburger-drawer-scroll), ותמיד יצא לא מדויק. עכשיו הוא
+   ילד ישיר של אותו אלמנט שמכיל בפועל את השורות/ה-checkbox - "40px" מחושב
+   רק נגד ריפוד .study-task-item (2px) + רוחב ה-checkbox (30px), בלי שכבות
+   ריפוד נוספות באמצע - דווח פעמיים ("הריבוע... על הקו") לפני שהתוקן ככה */
 .study-tasks-list {
+    position: relative;
     list-style: none; margin: 0; padding: 0; min-height: 320px;
     background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(140, 170, 255, 0.22) 31px 32px);
     background-size: 100% 32px;
+}
+.study-tasks-list::before {
+    content: "";
+    /* inset-inline-start (לא end): ה-checkbox יושב בקצה ה"start" של הזרימה
+       (ימין ב-RTL, שמאל ב-LTR - הוא הילד הראשון ב-flex) - הקו חייב להיות
+       באותו קצה כדי בכלל להיות רלוונטי לחישוב המרחק ממנו */
+    position: absolute; top: 0; bottom: 0; inset-inline-start: 40px; width: 1px;
+    background: rgba(230, 90, 90, 0.5);
+    pointer-events: none;
 }
 .study-task-item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 2px; }
 .study-task-item .center-list-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
