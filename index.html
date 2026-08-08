@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=312">
+    <link rel="stylesheet" href="theme.css?v=313">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1049,7 +1049,7 @@
                  כרוכה בטאב "לימודים" הגנרי בלוח היום (routine_tabs), לפי בקשה
                  מפורשת ("משהו נפרד וחדש לגמרי... בתפריט הראשי בהמבורגר") -->
             <div id="study-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeStudyDrawer()">
-                <nav class="hamburger-drawer study-drawer" onclick="event.stopPropagation()">
+                <nav class="hamburger-drawer study-drawer notebook-paper-drawer" onclick="event.stopPropagation()">
                 <div class="hamburger-drawer-scroll">
                     <div class="hamburger-drawer-header">
                         <h3 data-i18n="study_title">Study</h3>
@@ -1060,6 +1060,67 @@
                     </div>
                     <ul id="study-tasks-list" class="study-tasks-list"></ul>
                     <p id="study-tasks-empty" class="vision-goals-empty hidden" data-i18n="study_empty_hint">No homework yet - tap + to add your first task.</p>
+                    <!-- כניסה ל"הפרויקטים שלי" - תכונה נפרדת ועוצמתית יותר (מחברות מרובות
+                         בתוך פרויקטים), לפי בקשה מפורשת - "לימודים" עצמו נשאר פשוט כמו
+                         שהוא, זו רק דרך להיכנס למשהו נוסף למי שרוצה יותר מבנה -->
+                    <button type="button" class="study-drawer-footer-link" onclick="openMyProjectsEntry()">
+                        <span class="study-drawer-footer-link-icon">📁</span>
+                        <span data-i18n="my_projects_footer_label">Want more structure? Try My Projects</span>
+                    </button>
+                </div>
+                </nav>
+            </div>
+
+            <!-- "הפרויקטים שלי" - תכונה נפרדת ועוצמתית יותר: פרויקטים > מחברות > שורות
+                 (מחברת = בדיוק כמו "לימודים", דף מחברת עם קווים ווי) - 3 מגירות
+                 drill-down (סוגר-הורה/פותח-ילד + כפתור חזרה מפורש, אותו דפוס בדיוק
+                 כמו .settings-back-btn) - פרימיום בלבד -->
+            <div id="projects-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeProjectsDrawer()">
+                <nav class="hamburger-drawer projects-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
+                    <div class="hamburger-drawer-header">
+                        <h3 data-i18n="projects_title">My Projects</h3>
+                        <div class="hamburger-drawer-header-actions">
+                            <button type="button" class="vision-drawer-add-btn" onclick="openAddProjectModal()" data-i18n-title="projects_add_btn_title" title="Add project">＋</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeProjectsDrawer()">✕</button>
+                        </div>
+                    </div>
+                    <ul id="projects-list" class="projects-list"></ul>
+                    <p id="projects-empty" class="vision-goals-empty hidden" data-i18n="projects_empty_hint">No projects yet - tap + to create your first one.</p>
+                </div>
+                </nav>
+            </div>
+
+            <div id="notebooks-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeNotebooksDrawer()">
+                <nav class="hamburger-drawer notebooks-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
+                    <div class="hamburger-drawer-header">
+                        <button type="button" class="settings-back-btn" onclick="closeNotebooksDrawer(); openProjectsDrawer();">🔙</button>
+                        <h3 id="notebooks-drawer-title"></h3>
+                        <div class="hamburger-drawer-header-actions">
+                            <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookModal()" data-i18n-title="notebooks_add_btn_title" title="Add notebook">＋</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeNotebooksDrawer()">✕</button>
+                        </div>
+                    </div>
+                    <ul id="notebooks-list" class="projects-list"></ul>
+                    <p id="notebooks-empty" class="vision-goals-empty hidden" data-i18n="notebooks_empty_hint">No notebooks yet - tap + to create your first one.</p>
+                </div>
+                </nav>
+            </div>
+
+            <div id="notebook-detail-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeNotebookDetailDrawer()">
+                <nav class="hamburger-drawer notebook-detail-drawer notebook-paper-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
+                    <div class="hamburger-drawer-header">
+                        <button type="button" class="settings-back-btn" onclick="closeNotebookDetailDrawer(); openNotebooksDrawer();">🔙</button>
+                        <h3 id="notebook-detail-title"></h3>
+                        <div class="hamburger-drawer-header-actions">
+                            <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeNotebookDetailDrawer()">✕</button>
+                        </div>
+                    </div>
+                    <ul id="notebook-items-list" class="study-tasks-list"></ul>
+                    <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
                 </div>
                 </nav>
             </div>
@@ -1206,6 +1267,50 @@
                     <div class="action-buttons-wrap">
                         <button id="btn-save-study-item" class="btn-primary" onclick="submitStudyItem()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-study-item')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלונות צפים: "הפרויקטים שלי" - הוספת/עריכת פרויקט/מחברה/שורה, אותה
+             תבנית מינימלית בדיוק כמו modal-add-study-item (שדה כותרת יחיד) -->
+        <div id="modal-add-project" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="project-modal-title" data-i18n="projects_add_item_title">New Project</h3>
+                <div class="preset-manager-grid">
+                    <textarea id="project-item-input" rows="2" data-i18n-placeholder="projects_add_placeholder" placeholder="Project name..."></textarea>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-project" class="btn-primary" onclick="submitProject()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-project')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-add-notebook" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="notebook-modal-title" data-i18n="notebooks_add_item_title">New Notebook</h3>
+                <div class="preset-manager-grid">
+                    <textarea id="notebook-item-input" rows="2" data-i18n-placeholder="notebooks_add_placeholder" placeholder="Notebook name..."></textarea>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-notebook" class="btn-primary" onclick="submitNotebook()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-notebook')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-add-notebook-item" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="notebook-item-modal-title" data-i18n="notebook_item_add_title">Add Line</h3>
+                <div class="preset-manager-grid">
+                    <textarea id="notebook-item-text-input" rows="3" data-i18n-placeholder="notebook_item_add_placeholder" placeholder="Write something..."></textarea>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-notebook-item" class="btn-primary" onclick="submitNotebookItem()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-notebook-item')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -2790,7 +2895,7 @@
 
     </div>
 
-    <script src="i18n.js?v=249"></script>
-    <script src="app.js?v=350"></script>
+    <script src="i18n.js?v=250"></script>
+    <script src="app.js?v=351"></script>
 </body>
 </html>

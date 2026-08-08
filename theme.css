@@ -2427,7 +2427,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .phone-wrapper.modal-open .fab-dock,
 .phone-wrapper.subview-open .fab-dock,
 .phone-wrapper.vision-open .fab-dock,
-.phone-wrapper.study-open .fab-dock {
+.phone-wrapper.study-open .fab-dock,
+.phone-wrapper.projects-open .fab-dock {
     display: none;
 }
 /* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
@@ -2790,7 +2791,9 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .phone-wrapper.vision-open .ai-brain-fab,
 .phone-wrapper.vision-open .hamburger-fab,
 .phone-wrapper.study-open .ai-brain-fab,
-.phone-wrapper.study-open .hamburger-fab {
+.phone-wrapper.study-open .hamburger-fab,
+.phone-wrapper.projects-open .ai-brain-fab,
+.phone-wrapper.projects-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -2876,11 +2879,14 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    מכאן לרשימה עצמה - כשהן היו על .hamburger-drawer (הורה רחוק), לא היה שום
    ערבות שהן יתיישרו עם הגובה האמיתי של כל פריט, ודווח שהטקסט "צף" מעל
    השורות ולא יושב עליהן */
-#study-drawer-overlay .hamburger-drawer {
+/* "מראה דף-מחברת" משותף - לא רק ל"לימודים" יותר, גם ל"הפרויקטים שלי" (מחברת
+   בודקה בתוך פרויקט) - מפתח-class משותף (לא ID-scoped כמו קודם) כדי שדף
+   מחברת חדש יוכל להשתמש באותו מראה בדיוק בלי לשכפל כלום */
+.notebook-paper-drawer {
     background-color: var(--bg-sheet);
     background-image: linear-gradient(160deg, var(--border-color), transparent 55%);
 }
-#study-drawer-overlay .hamburger-drawer::after {
+.notebook-paper-drawer::after {
     content: "";
     position: absolute; top: 0; inset-inline-start: 0; width: 26px; height: 26px;
     background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
@@ -2913,6 +2919,17 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 }
 .study-task-item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 2px; }
 .study-task-item .center-list-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* כפתור-כניסה שקט בתחתית מגירת "לימודים" ל"הפרויקטים שלי" - גבול מקווקו כדי
+   שיהיה ברור שזו הזמנה לתכונה נפרדת, לא עוד שורה ברשימה שמעליו */
+.study-drawer-footer-link { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; padding: 10px 12px; background: transparent; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; }
+.study-drawer-footer-link:active { transform: scale(0.98); }
+.study-drawer-footer-link-icon { font-size: 1rem; }
+/* כרטיסי פרויקט/מחברה - רשימת-תיקיות רגילה, לא דף-מחברת (זה רק לתוכן בפועל
+   בתוך מחברת ספציפית, ר' .study-tasks-list) */
+.project-card, .notebook-card { display: flex; align-items: center; gap: 12px; width: 100%; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; box-sizing: border-box; }
+.project-card-main, .notebook-card-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+.project-card-actions, .notebook-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.projects-list { list-style: none; margin: 0; padding: 0; }
 
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
@@ -3393,7 +3410,8 @@ html[dir="ltr"] .daily-focus-bubble::before {
 .phone-wrapper.menu-open .daily-focus-bubble,
 .phone-wrapper.modal-open .daily-focus-bubble,
 .phone-wrapper.vision-open .daily-focus-bubble,
-.phone-wrapper.study-open .daily-focus-bubble {
+.phone-wrapper.study-open .daily-focus-bubble,
+.phone-wrapper.projects-open .daily-focus-bubble {
     opacity: 0 !important;
     pointer-events: none !important;
 }

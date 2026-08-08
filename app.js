@@ -12088,6 +12088,297 @@ async function deleteStudyTask(id) {
     loadStudyTasks();
 }
 
+// --- "הפרויקטים שלי" - תכונה נפרדת ועוצמתית יותר מ"לימודים" (פרויקטים >
+// מחברות > שורות, כל מחברת נראית בדיוק כמו לימודים), נגישה רק דרך כפתור
+// בתחתית מגירת לימודים - לפי בקשה מפורשת ("אני רוצה שהלימודים עצמם ישארו
+// ככה"). פרימיום בלבד, אותו דפוס נעילה בדיוק כמו openSmartSplitModal ---
+let projectsCache = [];
+let notebooksCache = [];
+let notebookItemsCache = [];
+let currentOpenProjectId = null;
+let currentOpenNotebookId = null;
+let editingProjectId = null;
+let editingNotebookId = null;
+let editingNotebookItemId = null;
+
+function openMyProjectsEntry() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    closeStudyDrawer();
+    openProjectsDrawer();
+}
+
+// --- מגירה 1: רשימת פרויקטים ---
+function openProjectsDrawer() {
+    const overlay = document.getElementById('projects-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('projects-open');
+    loadProjects();
+}
+function closeProjectsDrawer() {
+    const overlay = document.getElementById('projects-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('projects-open');
+}
+
+async function loadProjects() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data, error } = await supabaseClient.from('projects').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
+    if (error) return;
+    projectsCache = data || [];
+    renderProjectsList();
+}
+
+function renderProjectsList() {
+    const listEl = document.getElementById('projects-list');
+    const emptyEl = document.getElementById('projects-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.toggle('hidden', projectsCache.length > 0);
+    projectsCache.forEach(project => {
+        const li = document.createElement('li');
+        li.className = 'project-card';
+        li.innerHTML = `
+            <span class="project-card-main" onclick="openProjectDetail('${project.id}')">${escapeHtmlForReport(project.title)}</span>
+            <span class="project-card-actions">
+                <button type="button" class="btn-edit-item" onclick="openEditProjectModal('${project.id}')">${EDIT_ICON_SVG}</button>
+                <button type="button" class="btn-delete-item" onclick="deleteProject('${project.id}')">❌</button>
+            </span>
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+function openAddProjectModal() {
+    editingProjectId = null;
+    document.getElementById('project-modal-title').textContent = t('projects_add_item_title');
+    document.getElementById('project-item-input').value = '';
+    openModal('modal-add-project');
+    setTimeout(() => document.getElementById('project-item-input').focus(), 150);
+}
+
+function openEditProjectModal(id) {
+    const project = projectsCache.find(p => p.id === id);
+    if (!project) return;
+    editingProjectId = id;
+    document.getElementById('project-modal-title').textContent = t('edit_item_title');
+    document.getElementById('project-item-input').value = project.title;
+    openModal('modal-add-project');
+}
+
+async function submitProject() {
+    const input = document.getElementById('project-item-input');
+    const title = input.value.trim();
+    const editId = editingProjectId;
+    closeModal('modal-add-project');
+    editingProjectId = null;
+    if (!title || !supabaseClient || !currentUserId) return;
+    if (editId) {
+        await supabaseClient.from('projects').update({ title }).eq('id', editId);
+    } else {
+        await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title });
+    }
+    await loadProjects();
+    showAppToast(t('item_added_success'));
+}
+
+function deleteProject(id) {
+    showDangerConfirm(t('project_delete_title'), t('project_delete_confirm'), async () => {
+        await supabaseClient.from('projects').delete().eq('id', id);
+        loadProjects();
+    });
+}
+
+// --- מגירה 2: מחברות בתוך פרויקט אחד (currentOpenProjectId) ---
+function openProjectDetail(projectId) {
+    currentOpenProjectId = projectId;
+    closeProjectsDrawer();
+    openNotebooksDrawer();
+}
+
+function openNotebooksDrawer() {
+    const overlay = document.getElementById('notebooks-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('projects-open');
+    const project = projectsCache.find(p => p.id === currentOpenProjectId);
+    const titleEl = document.getElementById('notebooks-drawer-title');
+    if (titleEl) titleEl.textContent = project ? project.title : '';
+    loadProjectNotebooks(currentOpenProjectId);
+}
+function closeNotebooksDrawer() {
+    const overlay = document.getElementById('notebooks-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('projects-open');
+}
+
+async function loadProjectNotebooks(projectId) {
+    if (!supabaseClient || !currentUserId || !projectId) return;
+    const { data, error } = await supabaseClient.from('project_notebooks').select('*').eq('project_id', projectId).eq('user_id', currentUserId).order('created_at', { ascending: false });
+    if (error) return;
+    notebooksCache = data || [];
+    renderNotebooksList();
+}
+
+function renderNotebooksList() {
+    const listEl = document.getElementById('notebooks-list');
+    const emptyEl = document.getElementById('notebooks-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.toggle('hidden', notebooksCache.length > 0);
+    notebooksCache.forEach(notebook => {
+        const li = document.createElement('li');
+        li.className = 'notebook-card';
+        li.innerHTML = `
+            <span class="notebook-card-main" onclick="openNotebookDetail('${notebook.id}')">📓 ${escapeHtmlForReport(notebook.title)}</span>
+            <span class="notebook-card-actions">
+                <button type="button" class="btn-edit-item" onclick="openEditNotebookModal('${notebook.id}')">${EDIT_ICON_SVG}</button>
+                <button type="button" class="btn-delete-item" onclick="deleteNotebook('${notebook.id}')">❌</button>
+            </span>
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+function openAddNotebookModal() {
+    editingNotebookId = null;
+    document.getElementById('notebook-modal-title').textContent = t('notebooks_add_item_title');
+    document.getElementById('notebook-item-input').value = '';
+    openModal('modal-add-notebook');
+    setTimeout(() => document.getElementById('notebook-item-input').focus(), 150);
+}
+
+function openEditNotebookModal(id) {
+    const notebook = notebooksCache.find(n => n.id === id);
+    if (!notebook) return;
+    editingNotebookId = id;
+    document.getElementById('notebook-modal-title').textContent = t('edit_item_title');
+    document.getElementById('notebook-item-input').value = notebook.title;
+    openModal('modal-add-notebook');
+}
+
+async function submitNotebook() {
+    const input = document.getElementById('notebook-item-input');
+    const title = input.value.trim();
+    const editId = editingNotebookId;
+    closeModal('modal-add-notebook');
+    editingNotebookId = null;
+    if (!title || !supabaseClient || !currentUserId || !currentOpenProjectId) return;
+    if (editId) {
+        await supabaseClient.from('project_notebooks').update({ title }).eq('id', editId);
+    } else {
+        await supabaseClient.from('project_notebooks').insert({ project_id: currentOpenProjectId, user_id: currentUserId, username: currentUsername, title });
+    }
+    await loadProjectNotebooks(currentOpenProjectId);
+    showAppToast(t('item_added_success'));
+}
+
+function deleteNotebook(id) {
+    showDangerConfirm(t('notebook_delete_title'), t('notebook_delete_confirm'), async () => {
+        await supabaseClient.from('project_notebooks').delete().eq('id', id);
+        loadProjectNotebooks(currentOpenProjectId);
+    });
+}
+
+// --- מגירה 3: דף-מחברת בפועל (currentOpenNotebookId) - זהה חזותית ללימודים,
+// ר' renderStudyTasksList - אותה תבנית בדיוק (checkbox/טקסט/עריכה/מחיקה) ---
+function openNotebookDetail(notebookId) {
+    currentOpenNotebookId = notebookId;
+    closeNotebooksDrawer();
+    openNotebookDetailDrawer();
+}
+
+function openNotebookDetailDrawer() {
+    const overlay = document.getElementById('notebook-detail-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('projects-open');
+    const notebook = notebooksCache.find(n => n.id === currentOpenNotebookId);
+    const titleEl = document.getElementById('notebook-detail-title');
+    if (titleEl) titleEl.textContent = notebook ? notebook.title : '';
+    loadNotebookItems(currentOpenNotebookId);
+}
+function closeNotebookDetailDrawer() {
+    const overlay = document.getElementById('notebook-detail-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('projects-open');
+}
+
+async function loadNotebookItems(notebookId) {
+    if (!supabaseClient || !currentUserId || !notebookId) return;
+    const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('notebook_id', notebookId).eq('user_id', currentUserId).order('created_at', { ascending: false });
+    if (error) return;
+    notebookItemsCache = data || [];
+    renderNotebookItemsList();
+}
+
+function renderNotebookItemsList() {
+    const listEl = document.getElementById('notebook-items-list');
+    const emptyEl = document.getElementById('notebook-items-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.toggle('hidden', notebookItemsCache.length > 0);
+    notebookItemsCache.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'study-task-item';
+        li.innerHTML = `
+            <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleNotebookItemStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.title)}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditNotebookItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-item" onclick="deleteNotebookItem('${item.id}')">❌</button>
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+async function toggleNotebookItemStatus(id, currentStatus) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('notebook_items').update({ is_completed: !currentStatus }).eq('id', id);
+    loadNotebookItems(currentOpenNotebookId);
+}
+
+function openAddNotebookItemModal() {
+    editingNotebookItemId = null;
+    document.getElementById('notebook-item-modal-title').textContent = t('notebook_item_add_title');
+    document.getElementById('notebook-item-text-input').value = '';
+    openModal('modal-add-notebook-item');
+    setTimeout(() => document.getElementById('notebook-item-text-input').focus(), 150);
+}
+
+function openEditNotebookItemModal(id) {
+    const item = notebookItemsCache.find(x => x.id === id);
+    if (!item) return;
+    editingNotebookItemId = id;
+    document.getElementById('notebook-item-modal-title').textContent = t('edit_item_title');
+    document.getElementById('notebook-item-text-input').value = item.title;
+    openModal('modal-add-notebook-item');
+}
+
+async function submitNotebookItem() {
+    const input = document.getElementById('notebook-item-text-input');
+    const title = input.value.trim();
+    const editId = editingNotebookItemId;
+    closeModal('modal-add-notebook-item');
+    editingNotebookItemId = null;
+    if (!title || !supabaseClient || !currentUserId || !currentOpenNotebookId) return;
+    if (editId) {
+        await supabaseClient.from('notebook_items').update({ title }).eq('id', editId);
+    } else {
+        await supabaseClient.from('notebook_items').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title });
+    }
+    await loadNotebookItems(currentOpenNotebookId);
+    showAppToast(t('item_added_success'));
+}
+
+async function deleteNotebookItem(id) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('notebook_items').delete().eq('id', id);
+    loadNotebookItems(currentOpenNotebookId);
+}
+
 async function loadVisionGoals() {
     if (!supabaseClient || !currentUserId) return;
     const [goalsRes, milestonesRes] = await Promise.all([
