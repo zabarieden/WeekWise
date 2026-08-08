@@ -263,6 +263,46 @@ html[data-ui-scale="large"] { font-size: 22px; }
     --accent-purple: #d6006d;
     --accent-purple-light: #ffb6c9;
 }
+[data-color-theme="gold_sparkle"] {
+    --bg-main: linear-gradient(135deg, #1a1000, #2b1d00);
+    --bg-row: rgba(80, 60, 0, 0.4);
+    --border-color: rgba(251, 191, 36, 0.35);
+    --accent-pink: #fbbf24;
+    --accent-purple: #f59e0b;
+    --accent-purple-light: #fef08a;
+}
+[data-color-theme="pink_sparkle"] {
+    --bg-main: linear-gradient(135deg, #2b0018, #40002b);
+    --bg-row: rgba(80, 0, 55, 0.4);
+    --border-color: rgba(236, 72, 153, 0.35);
+    --accent-pink: #ec4899;
+    --accent-purple: #f472b6;
+    --accent-purple-light: #fbcfe8;
+}
+[data-color-theme="silver_sparkle"] {
+    --bg-main: linear-gradient(135deg, #14161a, #202328);
+    --bg-row: rgba(60, 65, 75, 0.4);
+    --border-color: rgba(203, 213, 225, 0.3);
+    --accent-pink: #e5e7eb;
+    --accent-purple: #94a3b8;
+    --accent-purple-light: #f8fafc;
+}
+[data-color-theme="starlight_glam"] {
+    --bg-main: linear-gradient(135deg, #0a0020, #1a0040);
+    --bg-row: rgba(40, 0, 80, 0.4);
+    --border-color: rgba(244, 114, 182, 0.3);
+    --accent-pink: #f472b6;
+    --accent-purple: #a78bfa;
+    --accent-purple-light: #fef08a;
+}
+[data-color-theme="diamond_sparkle"] {
+    --bg-main: linear-gradient(135deg, #0a1420, #14202e);
+    --bg-row: rgba(20, 50, 70, 0.4);
+    --border-color: rgba(125, 211, 252, 0.35);
+    --accent-pink: #e0f2fe;
+    --accent-purple: #7dd3fc;
+    --accent-purple-light: #ffffff;
+}
 [data-color-theme="aurora_borealis"] {
     --bg-main: linear-gradient(135deg, #00050f, #001a1a);
     --bg-row: rgba(0, 40, 40, 0.4);
@@ -502,6 +542,38 @@ html[data-ui-scale="large"] { font-size: 22px; }
     --accent-pink: #ec4899;
     --accent-purple: #84cc16;
     --accent-purple-light: #fde047;
+}
+[data-color-theme="flower_garden"] {
+    --bg-main: linear-gradient(135deg, #1a0a1a, #2b1428);
+    --bg-row: rgba(80, 30, 70, 0.4);
+    --border-color: rgba(236, 72, 153, 0.3);
+    --accent-pink: #ec4899;
+    --accent-purple: #a855f7;
+    --accent-purple-light: #fde68a;
+}
+[data-color-theme="ocean_waves"] {
+    --bg-main: linear-gradient(135deg, #001220, #002840);
+    --bg-row: rgba(0, 50, 80, 0.4);
+    --border-color: rgba(56, 189, 248, 0.3);
+    --accent-pink: #38bdf8;
+    --accent-purple: #0ea5e9;
+    --accent-purple-light: #a5f3fc;
+}
+[data-color-theme="coral_reef"] {
+    --bg-main: linear-gradient(135deg, #001a20, #002e30);
+    --bg-row: rgba(0, 50, 60, 0.4);
+    --border-color: rgba(251, 146, 60, 0.3);
+    --accent-pink: #fb7185;
+    --accent-purple: #2dd4bf;
+    --accent-purple-light: #fdba74;
+}
+[data-color-theme="cherry_blossom_garden"] {
+    --bg-main: linear-gradient(135deg, #1f0a14, #2e1420);
+    --bg-row: rgba(90, 30, 55, 0.4);
+    --border-color: rgba(244, 114, 182, 0.3);
+    --accent-pink: #f9a8d4;
+    --accent-purple: #f472b6;
+    --accent-purple-light: #fce7f3;
 }
 [data-color-theme="race_car"] {
     --bg-main: linear-gradient(135deg, #0a0a0a, #1a1a1a);
@@ -800,6 +872,51 @@ html.light-mode[data-color-theme="barbie_dream"] {
     --text-primary: #3d0026;
     --text-secondary: #8c4a6a;
 }
+html.light-mode[data-color-theme="gold_sparkle"] {
+    --bg-main: linear-gradient(135deg, #fff8e0, #ffedb8);
+    --bg-row: rgba(251, 191, 36, 0.12);
+    --bg-glass: rgba(255, 251, 235, 0.75);
+    --bg-sheet: #fffdf5;
+    --border-color: rgba(251, 191, 36, 0.3);
+    --text-primary: #2b1d00;
+    --text-secondary: #7a5c1a;
+}
+html.light-mode[data-color-theme="pink_sparkle"] {
+    --bg-main: linear-gradient(135deg, #ffe0f0, #ffd0e8);
+    --bg-row: rgba(236, 72, 153, 0.12);
+    --bg-glass: rgba(255, 245, 250, 0.75);
+    --bg-sheet: #fff8fb;
+    --border-color: rgba(236, 72, 153, 0.25);
+    --text-primary: #2b0018;
+    --text-secondary: #8c4a6a;
+}
+html.light-mode[data-color-theme="silver_sparkle"] {
+    --bg-main: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    --bg-row: rgba(148, 163, 184, 0.12);
+    --bg-glass: rgba(248, 250, 252, 0.75);
+    --bg-sheet: #fafcfe;
+    --border-color: rgba(148, 163, 184, 0.3);
+    --text-primary: #14161a;
+    --text-secondary: #525a68;
+}
+html.light-mode[data-color-theme="starlight_glam"] {
+    --bg-main: linear-gradient(135deg, #ede0ff, #e0d5fb);
+    --bg-row: rgba(167, 139, 250, 0.12);
+    --bg-glass: rgba(246, 240, 255, 0.75);
+    --bg-sheet: #fbf7ff;
+    --border-color: rgba(244, 114, 182, 0.3);
+    --text-primary: #0a0020;
+    --text-secondary: #6e5a80;
+}
+html.light-mode[data-color-theme="diamond_sparkle"] {
+    --bg-main: linear-gradient(135deg, #e0f4ff, #d0ecff);
+    --bg-row: rgba(125, 211, 252, 0.12);
+    --bg-glass: rgba(240, 251, 255, 0.75);
+    --bg-sheet: #f5fdff;
+    --border-color: rgba(125, 211, 252, 0.3);
+    --text-primary: #0a1420;
+    --text-secondary: #3f6b7a;
+}
 html.light-mode[data-color-theme="aurora_borealis"] {
     --bg-main: linear-gradient(135deg, #d0f5ea, #e0d5fb);
     --bg-row: rgba(74, 222, 190, 0.1);
@@ -1069,6 +1186,42 @@ html.light-mode[data-color-theme="wildflower_meadow"] {
     --border-color: rgba(236, 72, 153, 0.25);
     --text-primary: #0a1f0a;
     --text-secondary: #4a6b3a;
+}
+html.light-mode[data-color-theme="flower_garden"] {
+    --bg-main: linear-gradient(135deg, #ffe0f5, #f5d0ff);
+    --bg-row: rgba(236, 72, 153, 0.1);
+    --bg-glass: rgba(255, 245, 253, 0.75);
+    --bg-sheet: #fffafd;
+    --border-color: rgba(236, 72, 153, 0.25);
+    --text-primary: #1a0a1a;
+    --text-secondary: #7a4a70;
+}
+html.light-mode[data-color-theme="ocean_waves"] {
+    --bg-main: linear-gradient(135deg, #d0eeff, #b0dcf5);
+    --bg-row: rgba(56, 189, 248, 0.1);
+    --bg-glass: rgba(235, 250, 255, 0.75);
+    --bg-sheet: #f0faff;
+    --border-color: rgba(56, 189, 248, 0.25);
+    --text-primary: #001220;
+    --text-secondary: #3f6b80;
+}
+html.light-mode[data-color-theme="coral_reef"] {
+    --bg-main: linear-gradient(135deg, #d0f5f0, #ffe0d8);
+    --bg-row: rgba(45, 212, 191, 0.1);
+    --bg-glass: rgba(240, 253, 250, 0.75);
+    --bg-sheet: #f5fffc;
+    --border-color: rgba(251, 146, 60, 0.25);
+    --text-primary: #001a20;
+    --text-secondary: #3f6b60;
+}
+html.light-mode[data-color-theme="cherry_blossom_garden"] {
+    --bg-main: linear-gradient(135deg, #ffeaf3, #ffd9e8);
+    --bg-row: rgba(244, 114, 182, 0.1);
+    --bg-glass: rgba(255, 246, 250, 0.75);
+    --bg-sheet: #fffafc;
+    --border-color: rgba(244, 114, 182, 0.25);
+    --text-primary: #1f0a14;
+    --text-secondary: #7a4a60;
 }
 html.light-mode[data-color-theme="race_car"] {
     --bg-main: linear-gradient(135deg, #f0f0f0, #d8d8d8);
@@ -1822,6 +1975,109 @@ html[data-color-theme="rocket_ship"] .home-sky-scene .home-theme-pattern,
         linear-gradient(50deg, transparent 42%, rgba(251, 146, 60, 0.4) 48%, rgba(226, 232, 240, 0.3) 50%, transparent 56%);
     background-size: 180px 180px, 180px 180px, 180px 180px, 100% 100%;
     background-repeat: repeat, repeat, repeat, no-repeat;
+}
+html[data-color-theme="gold_sparkle"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="gold_sparkle"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(251, 191, 36, 0.9), transparent),
+        radial-gradient(1px 1px at 60px 80px, rgba(254, 240, 138, 0.8), transparent),
+        radial-gradient(2px 2px at 120px 40px, rgba(251, 191, 36, 0.85), transparent),
+        radial-gradient(1px 1px at 160px 110px, rgba(254, 240, 138, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 40px 140px, rgba(251, 191, 36, 0.75), transparent),
+        radial-gradient(1px 1px at 100px 165px, rgba(254, 240, 138, 0.65), transparent),
+        radial-gradient(2px 2px at 175px 175px, rgba(251, 191, 36, 0.8), transparent);
+    background-size: 190px 190px;
+    background-repeat: repeat;
+}
+html[data-color-theme="pink_sparkle"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="pink_sparkle"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(236, 72, 153, 0.9), transparent),
+        radial-gradient(1px 1px at 60px 80px, rgba(251, 207, 232, 0.85), transparent),
+        radial-gradient(2px 2px at 120px 40px, rgba(244, 114, 182, 0.85), transparent),
+        radial-gradient(1px 1px at 160px 110px, rgba(251, 207, 232, 0.75), transparent),
+        radial-gradient(1.5px 1.5px at 40px 140px, rgba(236, 72, 153, 0.75), transparent),
+        radial-gradient(1px 1px at 100px 165px, rgba(251, 207, 232, 0.7), transparent),
+        radial-gradient(2px 2px at 175px 175px, rgba(244, 114, 182, 0.8), transparent);
+    background-size: 190px 190px;
+    background-repeat: repeat;
+}
+html[data-color-theme="silver_sparkle"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="silver_sparkle"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(248, 250, 252, 0.9), transparent),
+        radial-gradient(1px 1px at 60px 80px, rgba(203, 213, 225, 0.8), transparent),
+        radial-gradient(2px 2px at 120px 40px, rgba(248, 250, 252, 0.85), transparent),
+        radial-gradient(1px 1px at 160px 110px, rgba(203, 213, 225, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 40px 140px, rgba(248, 250, 252, 0.75), transparent),
+        radial-gradient(1px 1px at 100px 165px, rgba(203, 213, 225, 0.65), transparent),
+        radial-gradient(2px 2px at 175px 175px, rgba(248, 250, 252, 0.8), transparent);
+    background-size: 190px 190px;
+    background-repeat: repeat;
+}
+html[data-color-theme="starlight_glam"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="starlight_glam"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(2px 2px at 25px 35px, rgba(254, 240, 138, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 70px 90px, rgba(244, 114, 182, 0.85), transparent),
+        radial-gradient(2.5px 2.5px at 130px 45px, rgba(167, 139, 250, 0.85), transparent),
+        radial-gradient(1.5px 1.5px at 170px 120px, rgba(254, 240, 138, 0.75), transparent),
+        radial-gradient(2px 2px at 45px 150px, rgba(244, 114, 182, 0.75), transparent),
+        radial-gradient(1.5px 1.5px at 110px 175px, rgba(167, 139, 250, 0.7), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html[data-color-theme="diamond_sparkle"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="diamond_sparkle"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 50% 20%, rgba(224, 242, 254, 0.25), transparent 55%),
+        radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 70px 80px, rgba(125, 211, 252, 0.9), transparent),
+        radial-gradient(2px 2px at 130px 40px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 170px 120px, rgba(125, 211, 252, 0.85), transparent),
+        radial-gradient(2px 2px at 45px 150px, #fff, transparent);
+    background-size: 100% 100%, 190px 190px, 190px 190px, 190px 190px, 190px 190px, 190px 190px;
+    background-repeat: no-repeat, repeat, repeat, repeat, repeat, repeat;
+}
+html[data-color-theme="flower_garden"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="flower_garden"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 25px 25px, rgba(236, 72, 153, 0.5) 0 5px, transparent 6px),
+        radial-gradient(circle at 85px 60px, rgba(168, 85, 247, 0.45) 0 5px, transparent 6px),
+        radial-gradient(circle at 140px 20px, rgba(253, 230, 138, 0.5) 0 4px, transparent 5px),
+        radial-gradient(circle at 55px 130px, rgba(236, 72, 153, 0.4) 0 4px, transparent 5px),
+        radial-gradient(circle at 155px 140px, rgba(168, 85, 247, 0.4) 0 5px, transparent 6px);
+    background-size: 190px 190px;
+    background-repeat: repeat;
+}
+html[data-color-theme="ocean_waves"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="ocean_waves"] > .home-theme-pattern {
+    background-image:
+        repeating-radial-gradient(ellipse 280px 26px at 50% 0%, rgba(56, 189, 248, 0.18) 0 8px, transparent 8px 34px),
+        repeating-radial-gradient(ellipse 220px 20px at 50% 100%, rgba(165, 243, 252, 0.15) 0 6px, transparent 6px 28px);
+    background-size: 100% 100%;
+}
+html[data-color-theme="coral_reef"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="coral_reef"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 10px 16px at 30px 40px, rgba(251, 146, 60, 0.4), transparent),
+        radial-gradient(ellipse 8px 14px at 100px 90px, rgba(45, 212, 191, 0.4), transparent),
+        radial-gradient(ellipse 12px 18px at 160px 30px, rgba(251, 113, 133, 0.35), transparent),
+        radial-gradient(ellipse 9px 15px at 60px 140px, rgba(45, 212, 191, 0.35), transparent),
+        radial-gradient(2px 2px at 140px 160px, rgba(255, 255, 255, 0.5), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="cherry_blossom_garden"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(ellipse 7px 5px at 30px 40px, rgba(249, 168, 212, 0.6), transparent),
+        radial-gradient(ellipse 6px 4px at 100px 90px, rgba(244, 114, 182, 0.5), transparent),
+        radial-gradient(ellipse 7px 5px at 160px 30px, rgba(252, 231, 243, 0.55), transparent),
+        radial-gradient(ellipse 6px 4px at 60px 140px, rgba(244, 114, 182, 0.45), transparent),
+        radial-gradient(ellipse 7px 5px at 140px 160px, rgba(249, 168, 212, 0.5), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
 }
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
