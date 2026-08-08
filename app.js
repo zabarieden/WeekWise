@@ -1376,51 +1376,52 @@ function checkDailyGreeting() {
 // שאלה יומית "מה הכי חשוב לך לעשות היום" - לא קופצת מעצמה יותר: מציגים רק
 // תג "1" קטן על אייקון המוח (כמו הודעה שלא נקראה), ולוחצים על המוח כדי
 // לפתוח ולראות אותה (ר' initFixedAiBrainFab) - לפי בקשה מפורשת ("בא לי
-// שיהיה מספר 1 כזה כמו הודעה ממנו ואני אפתח"). dailyFocusPending נשאר true
-// עד שנצפה היום בפועל - גם שמירה (saveDailyFocus) וגם סגירה בלי לבחור
-// (dismissDailyFocusModal) מכבות אותו כעת, לפי בקשה מפורשת מעודכנת: התג
-// נעלם אחרי צפייה, אבל האייקון עצמו נשאר דוהה-אך-לחיץ (ר' applyDailyFocusIconState)
-// כל היום, לא נעלם/מתאפס עד חצות.
+// שיהיה מספר 1 כזה כמו הודעה ממנו ואני אפתח"). ר' dailyFocusState למטה
+// למצבים המדויקים (בולט/דהוי/נעלם).
 //
 // הבדיקה אם כבר נענה/נצפה היום מתבססת על Supabase (calendar_events) - לא
 // localStorage: דווח שהתג ממשיך לקפוץ מחדש למרות שכבר נענתה השאלה, וזה קורה
 // כשמשתמשים גם באפליקציה המותקנת וגם בדפדפן הרגיל על אותו מחשב - לשניהם
 // יכול להיות אחסון-דפדפן נפרד לגמרי, אז דגל ב-localStorage לא בהכרח מסונכרן
 // ביניהם. Supabase כן משותף (אותו חשבון), אז זה המקור האמין היחיד
-let dailyFocusPending = false;
 // יום אחרון שנבדק (ר' תת-הפרק על איפוס בחצות בתוך initAppAfterAuth) - כדי
 // לדעת מתי getLocalDateString() התקדם ליום חדש בזמן שהאפליקציה עדיין פתוחה
 let lastCheckedDailyFocusDate = null;
 
-// כל הפרימיום נעול, כולל "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה
-// חסום"). הנעילה כאן במקור (התג "1" עצמו אף פעם לא נדלק) ולא רק בפתיחת
-// הבועה, כדי שלא יהיה שום רמז/פיתוי למי שאין לה גישה. הבדיקה כוללת גם
-// daily_focus_dismissed (סגירה עם X/קליק מחוץ לבועה, בלי לבחור תגית) - לפי
-// בקשה מפורשת ("לאחר פתיחה וסגירה... הבאדג' נעלם"), לא רק daily_focus עצמו
+// שלושה מצבים לתג "1" עצמו (לא לאייקון המוח - הוא תמיד נשאר בשקיפות מלאה,
+// ר' ההערה על applyDailyFocusIconState): 'unseen' - עוד לא נצפה היום, תג
+// בולט. 'dismissed' - נסגר עם X/קליק מחוץ בלי לבחור תגית - התג *נשאר*, רק
+// חלש/דהוי יותר, כדי לא להטריד אבל גם לא להיעלם לגמרי - לפי בקשה מפורשת
+// ("שיהיה שם אבל פשוט פחות חזק שלא יציק"). 'answered' - נשמרה לפחות תגית
+// אחת בפועל - התג נעלם לגמרי, אין יותר מה להזכיר. כל הפרימיום נעול, כולל
+// "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה חסום") - לא-פרימיום
+// מקבל 'answered' (תג מוסתר) בלי שום רמז/פיתוי
+let dailyFocusState = 'unseen';
 async function checkDailyFocusPrompt() {
     if (!currentUserId || !supabaseClient) return;
     if (!isPremiumUser) {
-        dailyFocusPending = false;
+        dailyFocusState = 'answered';
         applyDailyFocusIconState();
         return;
     }
     const todayStr = getLocalDateString();
     lastCheckedDailyFocusDate = todayStr;
-    const { data } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']).limit(1);
-    dailyFocusPending = !(data && data.length > 0);
+    const { data } = await supabaseClient.from('calendar_events').select('source').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    if (data && data.some(row => row.source === 'daily_focus')) dailyFocusState = 'answered';
+    else if (data && data.some(row => row.source === 'daily_focus_dismissed')) dailyFocusState = 'dismissed';
+    else dailyFocusState = 'unseen';
     applyDailyFocusIconState();
 }
 
-// שלושה מצבים ויזואליים לאייקון המוח: (1) עוד לא נצפה היום - תג "1" בולט,
-// אייקון רגיל. (2) נצפה היום (נשמרה תגית או שנסגר בלי לבחור) - תג נעלם,
-// אייקון דוהה (opacity) אבל עדיין לחיץ ופותח את הבועה מחדש. (3) לא פרימיום -
-// לא תג ולא דהייה, כאילו התכונה לא קיימת בכלל - לפי בקשה מפורשת (הספציפיקציה
-// המלאה שנשלחה: "האיקון נשאר לחיץ ונגיש... דהוי / בלתי מציק ~30-40%")
+// רק התג "1" עצמו מגיב למצב (בולט/דהוי/נעלם) - אייקון המוח עצמו תמיד נשאר
+// בשקיפות מלאה ולחיץ. תוקן: דהייה הוחלה בטעות על כל אייקון המוח (.ai-brain-fab)
+// במקום רק על ההודעה הקופצת - דווח: "למה עשית את כל המוח דהוי??? זה היה
+// אמור להיות רק על המספר 1"
 function applyDailyFocusIconState() {
     const badge = document.getElementById('ai-brain-fab-badge');
-    const icon = document.getElementById('btn-ai-brain-fab');
-    if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
-    if (icon) icon.classList.toggle('daily-focus-faded', isPremiumUser && !dailyFocusPending);
+    if (!badge) return;
+    badge.classList.toggle('hidden', dailyFocusState === 'answered');
+    badge.classList.toggle('daily-focus-badge-dim', dailyFocusState === 'dismissed');
 }
 
 // "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6), בעברית בלבד (תוכן אישי/
@@ -1527,24 +1528,24 @@ function expandDailyFocusBubble() {
 // המקור האמין עצמו הוא השורה שכבר נשמרה ב-calendar_events, ר' ההערה על
 // checkDailyFocusPrompt
 function markDailyFocusPromptShown() {
-    dailyFocusPending = false;
+    dailyFocusState = 'answered';
 }
 
 // סגירה עם ה-✕ (משני המצבים - מכווץ ומורחב) או קליק מחוץ לבועה - "נצפה
-// היום" (התג נעלם, האייקון דוהה אבל עדיין לחיץ) - *לא* "תזכיר לי אחר כך"
-// כמו קודם, לפי בקשה מפורשת ("לאחר פתיחה וסגירה... הבאדג' נעלם"). נשמר
-// כשורת calendar_events (source:'daily_focus_dismissed') כדי שהמצב יישאר
-// עקבי גם אחרי רענון/במכשיר אחר, בדיוק כמו daily_focus עצמו
+// אבל לא נענה": התג *לא* נעלם לגמרי, רק נהיה חלש/דהוי - לפי בקשה מפורשת
+// ("שיהיה שם אבל פשוט פחות חזק שלא יציק למשתמש"), לא "תזכיר לי אחר כך" כמו
+// המקור. נשמר כשורת calendar_events (source:'daily_focus_dismissed') כדי
+// שהמצב יישאר עקבי גם אחרי רענון/במכשיר אחר, בדיוק כמו daily_focus עצמו
 async function dismissDailyFocusModal() {
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
-    if (dailyFocusPending && isPremiumUser && supabaseClient && currentUserId) {
+    if (dailyFocusState === 'unseen' && isPremiumUser && supabaseClient && currentUserId) {
         await supabaseClient.from('calendar_events').insert({
             username: currentUsername, user_id: currentUserId, event_title: 'daily_focus_dismissed',
             event_date: getLocalDateString(), source: 'daily_focus_dismissed',
         });
     }
-    dailyFocusPending = false;
+    if (dailyFocusState !== 'answered') dailyFocusState = 'dismissed';
     applyDailyFocusIconState();
 }
 

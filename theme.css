@@ -2613,10 +2613,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-user-select: none;
 }
 .ai-brain-fab:active { transform: scale(0.9); }
-/* "נצפה היום" - דהוי אבל עדיין לחיץ (לא display:none), לפי בקשה מפורשת
-   ("האיקון נשאר לחיץ ונגיש... דהוי / בלתי מציק ~30-40%"). ר' applyDailyFocusIconState
-   ב-app.js */
-.ai-brain-fab.daily-focus-faded { opacity: 0.35; }
 /* עוזר ה-AI/תפריט ההמבורגר יושבים בשתי פינות מנוגדות (ר' ההערות עליהם
    למעלה) - בעברית/RTL עוזר ה-AI בשמאל וההמבורגר בימין; באנגלית/LTR הן
    צריכות להתחלף כדי שהפריסה תישאר "מראה" נכונה (לא נשארת קבועה לפי צד
@@ -3330,6 +3326,10 @@ html[dir="ltr"] .daily-focus-bubble::before {
     animation: aiBrainBadgePulse 1.8s ease-in-out infinite;
 }
 .ai-brain-fab-badge.hidden { display: none; }
+/* "נצפה אבל לא נענה" - התג נשאר (לא נעלם), רק חלש/דהוי ובלי הפעימה הבולטת -
+   לפי בקשה מפורשת ("שיהיה שם אבל פשוט פחות חזק שלא יציק"). האייקון עצמו
+   (.ai-brain-fab) לא משתנה בכלל - רק התג הקטן הזה */
+.ai-brain-fab-badge.daily-focus-badge-dim { opacity: 0.4; animation: none; }
 /* התג עצמו קטן (20px) - אזור לחיצה שקוף ומוגדל סביבו (48px, בהתאם להמלצת
    מינימום מגע) כדי שלחיצה קרובה עדיין תפגע בתג ולא "תפול" דרכו לכפתור
    המוח שמתחתיו - זה בדיוק מה שדווח ("לחיצה על ההודעה הקטנה נלחצת על
