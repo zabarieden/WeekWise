@@ -6261,9 +6261,18 @@ function applyColorTheme(themeName) {
         const isSelected = el.getAttribute('data-theme') === (themeName || 'default');
         el.classList.toggle('selected', isSelected);
         if (isSelected) {
-            const group = el.closest('.theme-category-group');
-            if (group) group.classList.add('open');
+            const grid = el.closest('.theme-cat-grid');
+            if (grid) selectThemeCategory(grid.id.replace('theme-cat-grid-', ''));
         }
+    });
+}
+
+function selectThemeCategory(catId) {
+    document.querySelectorAll('.theme-category-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.getAttribute('data-cat') === catId);
+    });
+    document.querySelectorAll('.theme-cat-grid').forEach(grid => {
+        grid.classList.toggle('active', grid.id === `theme-cat-grid-${catId}`);
     });
 }
 

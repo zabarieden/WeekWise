@@ -84,7 +84,7 @@ html[data-ui-scale="large"] { font-size: 22px; }
    כך שהצבע באמת מכסה את כל המסך, לא רק פס צר שנחבא מאחורי הכרטיסים.
    --bg-glass/--bg-sheet (כרטיסים/גליונות) נשארים תמיד צבע אחיד ונקי כדי
    שטקסט יישאר קריא, גם כשהרקע/השורות מלאים בגרדיאנט */
-html[data-color-theme="blue_teal"] {
+[data-color-theme="blue_teal"] {
     --bg-main: linear-gradient(135deg, #001820, #002733);
     --bg-row: rgba(10, 45, 58, 0.55);
     --border-color: rgba(0, 212, 255, 0.25);
@@ -92,7 +92,7 @@ html[data-color-theme="blue_teal"] {
     --accent-purple: #0ea5e9;
     --accent-purple-light: #38bdf8;
 }
-html[data-color-theme="gold_red"] {
+[data-color-theme="gold_red"] {
     --bg-main: linear-gradient(135deg, #1a0f05, #2a0808);
     --bg-row: rgba(58, 30, 12, 0.55);
     --border-color: rgba(245, 158, 11, 0.25);
@@ -100,7 +100,7 @@ html[data-color-theme="gold_red"] {
     --accent-purple: #dc2626;
     --accent-purple-light: #f87171;
 }
-html[data-color-theme="forest_emerald"] {
+[data-color-theme="forest_emerald"] {
     --bg-main: linear-gradient(135deg, #001a10, #002a1a);
     --bg-row: rgba(10, 50, 35, 0.55);
     --border-color: rgba(16, 185, 129, 0.25);
@@ -108,7 +108,7 @@ html[data-color-theme="forest_emerald"] {
     --accent-purple: #059669;
     --accent-purple-light: #34d399;
 }
-html[data-color-theme="rose_gold"] {
+[data-color-theme="rose_gold"] {
     --bg-main: linear-gradient(135deg, #1a0510, #2a0a18);
     --bg-row: rgba(55, 20, 35, 0.55);
     --border-color: rgba(244, 63, 94, 0.25);
@@ -116,7 +116,7 @@ html[data-color-theme="rose_gold"] {
     --accent-purple: #d4af37;
     --accent-purple-light: #fbbf24;
 }
-html[data-color-theme="midnight_indigo"] {
+[data-color-theme="midnight_indigo"] {
     --bg-main: linear-gradient(135deg, #0a0620, #140a30);
     --bg-row: rgba(35, 25, 70, 0.55);
     --border-color: rgba(99, 102, 241, 0.25);
@@ -124,7 +124,7 @@ html[data-color-theme="midnight_indigo"] {
     --accent-purple: #4338ca;
     --accent-purple-light: #818cf8;
 }
-html[data-color-theme="sunset_coral"] {
+[data-color-theme="sunset_coral"] {
     --bg-main: linear-gradient(135deg, #200a05, #350c18);
     --bg-row: rgba(70, 30, 25, 0.55);
     --border-color: rgba(251, 113, 133, 0.25);
@@ -132,7 +132,7 @@ html[data-color-theme="sunset_coral"] {
     --accent-purple: #f97316;
     --accent-purple-light: #fdba74;
 }
-html[data-color-theme="ocean_teal"] {
+[data-color-theme="ocean_teal"] {
     --bg-main: linear-gradient(135deg, #001218, #002530);
     --bg-row: rgba(10, 50, 60, 0.55);
     --border-color: rgba(6, 182, 212, 0.25);
@@ -140,7 +140,7 @@ html[data-color-theme="ocean_teal"] {
     --accent-purple: #0891b2;
     --accent-purple-light: #22d3ee;
 }
-html[data-color-theme="lavender_dream"] {
+[data-color-theme="lavender_dream"] {
     --bg-main: linear-gradient(135deg, #140a24, #200f38);
     --bg-row: rgba(55, 35, 80, 0.55);
     --border-color: rgba(216, 180, 254, 0.3);
@@ -148,7 +148,7 @@ html[data-color-theme="lavender_dream"] {
     --accent-purple: #9333ea;
     --accent-purple-light: #e9d5ff;
 }
-html[data-color-theme="cherry_blossom"] {
+[data-color-theme="cherry_blossom"] {
     --bg-main: linear-gradient(135deg, #1a0510, #2a0a1c);
     --bg-row: rgba(58, 22, 40, 0.55);
     --border-color: rgba(244, 114, 182, 0.25);
@@ -156,7 +156,7 @@ html[data-color-theme="cherry_blossom"] {
     --accent-purple: #ec4899;
     --accent-purple-light: #f9a8d4;
 }
-html[data-color-theme="arctic_frost"] {
+[data-color-theme="arctic_frost"] {
     --bg-main: linear-gradient(135deg, #020a10, #0a1c28);
     --bg-row: rgba(15, 45, 60, 0.55);
     --border-color: rgba(56, 189, 248, 0.25);
@@ -164,7 +164,7 @@ html[data-color-theme="arctic_frost"] {
     --accent-purple: #0284c7;
     --accent-purple-light: #7dd3fc;
 }
-html[data-color-theme="volcanic_ember"] {
+[data-color-theme="volcanic_ember"] {
     --bg-main: linear-gradient(135deg, #170502, #2b0805);
     --bg-row: rgba(65, 20, 15, 0.55);
     --border-color: rgba(239, 68, 68, 0.28);
@@ -172,7 +172,7 @@ html[data-color-theme="volcanic_ember"] {
     --accent-purple: #991b1b;
     --accent-purple-light: #f87171;
 }
-html[data-color-theme="mint_fresh"] {
+[data-color-theme="mint_fresh"] {
     --bg-main: linear-gradient(135deg, #001a14, #002a20);
     --bg-row: rgba(10, 55, 45, 0.55);
     --border-color: rgba(20, 184, 166, 0.25);
@@ -180,7 +180,7 @@ html[data-color-theme="mint_fresh"] {
     --accent-purple: #14b8a6;
     --accent-purple-light: #99f6e4;
 }
-html[data-color-theme="royal_amethyst"] {
+[data-color-theme="royal_amethyst"] {
     --bg-main: linear-gradient(135deg, #16041e, #280836);
     --bg-row: rgba(65, 20, 80, 0.55);
     --border-color: rgba(192, 38, 211, 0.28);
@@ -188,7 +188,7 @@ html[data-color-theme="royal_amethyst"] {
     --accent-purple: #7e22ce;
     --accent-purple-light: #e879f9;
 }
-html[data-color-theme="graphite_steel"] {
+[data-color-theme="graphite_steel"] {
     --bg-main: linear-gradient(135deg, #0d0e10, #1a1c20);
     --bg-row: rgba(45, 50, 58, 0.55);
     --border-color: rgba(100, 116, 139, 0.25);
@@ -196,7 +196,7 @@ html[data-color-theme="graphite_steel"] {
     --accent-purple: #64748b;
     --accent-purple-light: #cbd5e1;
 }
-html[data-color-theme="citrus_lime"] {
+[data-color-theme="citrus_lime"] {
     --bg-main: linear-gradient(135deg, #0f1400, #1a2400);
     --bg-row: rgba(60, 70, 10, 0.55);
     --border-color: rgba(202, 138, 4, 0.25);
@@ -204,7 +204,7 @@ html[data-color-theme="citrus_lime"] {
     --accent-purple: #ca8a04;
     --accent-purple-light: #facc15;
 }
-html[data-color-theme="copper_bronze"] {
+[data-color-theme="copper_bronze"] {
     --bg-main: linear-gradient(135deg, #1a0f02, #2a1505);
     --bg-row: rgba(70, 40, 10, 0.55);
     --border-color: rgba(217, 119, 6, 0.25);
@@ -212,7 +212,7 @@ html[data-color-theme="copper_bronze"] {
     --accent-purple: #92400e;
     --accent-purple-light: #fbbf24;
 }
-html[data-color-theme="navy_sapphire"] {
+[data-color-theme="navy_sapphire"] {
     --bg-main: linear-gradient(135deg, #020817, #050f2a);
     --bg-row: rgba(15, 30, 70, 0.55);
     --border-color: rgba(59, 130, 246, 0.25);
@@ -223,7 +223,7 @@ html[data-color-theme="navy_sapphire"] {
 /* "ערכות נושא מיוחדות" - קבוצה ראשונה (טעימה) לפני שמרחיבים ל-50+, לפי בקשה
    מפורשת. אותו מנגנון בדיוק כמו ערכות הצבע הרגילות למעלה (data-color-theme +
    6 המשתנים הקבועים) - רק עם השראה קונספטואלית במקום שם-צבע גנרי */
-html[data-color-theme="lego_bricks"] {
+[data-color-theme="lego_bricks"] {
     --bg-main: linear-gradient(135deg, #1a0000, #2b0a00);
     --bg-row: rgba(60, 15, 10, 0.55);
     --border-color: rgba(255, 204, 0, 0.3);
@@ -231,7 +231,7 @@ html[data-color-theme="lego_bricks"] {
     --accent-purple: #d01012;
     --accent-purple-light: #ff6b35;
 }
-html[data-color-theme="blueprint_draft"] {
+[data-color-theme="blueprint_draft"] {
     --bg-main: linear-gradient(135deg, #001233, #002255);
     --bg-row: rgba(0, 40, 80, 0.55);
     --border-color: rgba(255, 255, 255, 0.22);
@@ -239,7 +239,7 @@ html[data-color-theme="blueprint_draft"] {
     --accent-purple: #4fc3f7;
     --accent-purple-light: #81d4fa;
 }
-html[data-color-theme="star_map"] {
+[data-color-theme="star_map"] {
     --bg-main: linear-gradient(135deg, #000010, #05051a);
     --bg-row: rgba(10, 10, 40, 0.55);
     --border-color: rgba(255, 215, 130, 0.25);
@@ -247,7 +247,7 @@ html[data-color-theme="star_map"] {
     --accent-purple: #7c83fd;
     --accent-purple-light: #b5b9ff;
 }
-html[data-color-theme="vaporwave_neon"] {
+[data-color-theme="vaporwave_neon"] {
     --bg-main: linear-gradient(135deg, #0d0221, #1a0538);
     --bg-row: rgba(40, 10, 60, 0.55);
     --border-color: rgba(255, 0, 200, 0.3);
@@ -255,7 +255,7 @@ html[data-color-theme="vaporwave_neon"] {
     --accent-purple: #00fff2;
     --accent-purple-light: #7afcff;
 }
-html[data-color-theme="barbie_dream"] {
+[data-color-theme="barbie_dream"] {
     --bg-main: linear-gradient(135deg, #3d0026, #5c0038);
     --bg-row: rgba(219, 39, 119, 0.4);
     --border-color: rgba(255, 105, 180, 0.3);
@@ -263,7 +263,7 @@ html[data-color-theme="barbie_dream"] {
     --accent-purple: #d6006d;
     --accent-purple-light: #ffb6c9;
 }
-html[data-color-theme="aurora_borealis"] {
+[data-color-theme="aurora_borealis"] {
     --bg-main: linear-gradient(135deg, #00050f, #001a1a);
     --bg-row: rgba(0, 40, 40, 0.4);
     --border-color: rgba(74, 222, 190, 0.3);
@@ -271,7 +271,7 @@ html[data-color-theme="aurora_borealis"] {
     --accent-purple: #a78bfa;
     --accent-purple-light: #67e8f9;
 }
-html[data-color-theme="pixel_art"] {
+[data-color-theme="pixel_art"] {
     --bg-main: linear-gradient(135deg, #0f0326, #1a0a3d);
     --bg-row: rgba(40, 15, 70, 0.5);
     --border-color: rgba(0, 255, 136, 0.3);
@@ -279,7 +279,7 @@ html[data-color-theme="pixel_art"] {
     --accent-purple: #2de2e6;
     --accent-purple-light: #f9c80e;
 }
-html[data-color-theme="stock_market"] {
+[data-color-theme="stock_market"] {
     --bg-main: linear-gradient(135deg, #001a0d, #002912);
     --bg-row: rgba(0, 60, 30, 0.5);
     --border-color: rgba(34, 197, 94, 0.3);
@@ -287,7 +287,7 @@ html[data-color-theme="stock_market"] {
     --accent-purple: #ef4444;
     --accent-purple-light: #86efac;
 }
-html[data-color-theme="neon_trading_chart"] {
+[data-color-theme="neon_trading_chart"] {
     --bg-main: linear-gradient(135deg, #05010f, #0a0518);
     --bg-row: rgba(30, 10, 50, 0.5);
     --border-color: rgba(236, 72, 153, 0.3);
@@ -295,7 +295,7 @@ html[data-color-theme="neon_trading_chart"] {
     --accent-purple: #6366f1;
     --accent-purple-light: #c084fc;
 }
-html[data-color-theme="candlestick_bands"] {
+[data-color-theme="candlestick_bands"] {
     --bg-main: linear-gradient(135deg, #050b14, #0a1420);
     --bg-row: rgba(15, 30, 50, 0.5);
     --border-color: rgba(56, 189, 248, 0.25);
@@ -303,7 +303,7 @@ html[data-color-theme="candlestick_bands"] {
     --accent-purple: #f43f5e;
     --accent-purple-light: #fb923c;
 }
-html[data-color-theme="market_data_glow"] {
+[data-color-theme="market_data_glow"] {
     --bg-main: linear-gradient(135deg, #0a0420, #150a35);
     --bg-row: rgba(40, 20, 80, 0.4);
     --border-color: rgba(251, 146, 60, 0.3);
@@ -311,7 +311,7 @@ html[data-color-theme="market_data_glow"] {
     --accent-purple: #818cf8;
     --accent-purple-light: #f472b6;
 }
-html[data-color-theme="steampunk_brass"] {
+[data-color-theme="steampunk_brass"] {
     --bg-main: linear-gradient(135deg, #1a1006, #2b1a0a);
     --bg-row: rgba(80, 50, 20, 0.5);
     --border-color: rgba(184, 115, 51, 0.35);
@@ -319,7 +319,7 @@ html[data-color-theme="steampunk_brass"] {
     --accent-purple: #8a6438;
     --accent-purple-light: #e8b878;
 }
-html[data-color-theme="vintage_newspaper"] {
+[data-color-theme="vintage_newspaper"] {
     --bg-main: linear-gradient(135deg, #1a1610, #2b241a);
     --bg-row: rgba(60, 50, 35, 0.4);
     --border-color: rgba(180, 160, 120, 0.3);
@@ -327,7 +327,7 @@ html[data-color-theme="vintage_newspaper"] {
     --accent-purple: #8a7a5c;
     --accent-purple-light: #e8dcc0;
 }
-html[data-color-theme="film_noir"] {
+[data-color-theme="film_noir"] {
     --bg-main: linear-gradient(135deg, #000000, #1a1a1a);
     --bg-row: rgba(255, 255, 255, 0.06);
     --border-color: rgba(255, 255, 255, 0.2);
@@ -335,7 +335,7 @@ html[data-color-theme="film_noir"] {
     --accent-purple: #a3a3a3;
     --accent-purple-light: #f5f5f5;
 }
-html[data-color-theme="pop_art_comics"] {
+[data-color-theme="pop_art_comics"] {
     --bg-main: linear-gradient(135deg, #1a0000, #000814);
     --bg-row: rgba(20, 20, 20, 0.5);
     --border-color: rgba(255, 221, 0, 0.35);
@@ -343,7 +343,7 @@ html[data-color-theme="pop_art_comics"] {
     --accent-purple: #2979ff;
     --accent-purple-light: #ffdd00;
 }
-html[data-color-theme="origami_paper"] {
+[data-color-theme="origami_paper"] {
     --bg-main: linear-gradient(135deg, #1f1410, #2b1c14);
     --bg-row: rgba(80, 50, 35, 0.4);
     --border-color: rgba(251, 146, 60, 0.3);
@@ -351,7 +351,7 @@ html[data-color-theme="origami_paper"] {
     --accent-purple: #f472b6;
     --accent-purple-light: #fde68a;
 }
-html[data-color-theme="watercolor_wash"] {
+[data-color-theme="watercolor_wash"] {
     --bg-main: linear-gradient(135deg, #1a0f2e, #2b1a3d);
     --bg-row: rgba(80, 50, 100, 0.35);
     --border-color: rgba(196, 145, 255, 0.25);
@@ -359,7 +359,7 @@ html[data-color-theme="watercolor_wash"] {
     --accent-purple: #c4b5fd;
     --accent-purple-light: #a5f3fc;
 }
-html[data-color-theme="chemistry_lab"] {
+[data-color-theme="chemistry_lab"] {
     --bg-main: linear-gradient(135deg, #001a1a, #002b2b);
     --bg-row: rgba(0, 60, 60, 0.5);
     --border-color: rgba(45, 212, 191, 0.3);
@@ -367,7 +367,7 @@ html[data-color-theme="chemistry_lab"] {
     --accent-purple: #a3e635;
     --accent-purple-light: #67e8f9;
 }
-html[data-color-theme="botanical_greenhouse"] {
+[data-color-theme="botanical_greenhouse"] {
     --bg-main: linear-gradient(135deg, #041a0a, #0a2b14);
     --bg-row: rgba(10, 60, 25, 0.5);
     --border-color: rgba(74, 222, 128, 0.3);
@@ -375,7 +375,7 @@ html[data-color-theme="botanical_greenhouse"] {
     --accent-purple: #16a34a;
     --accent-purple-light: #bbf7d0;
 }
-html[data-color-theme="kids_sky_grass"] {
+[data-color-theme="kids_sky_grass"] {
     --bg-main: linear-gradient(135deg, #0a1a3d, #1a2b5c);
     --bg-row: rgba(30, 50, 100, 0.45);
     --border-color: rgba(250, 204, 21, 0.3);
@@ -383,7 +383,7 @@ html[data-color-theme="kids_sky_grass"] {
     --accent-purple: #4ade80;
     --accent-purple-light: #93c5fd;
 }
-html[data-color-theme="rainbow_balloons"] {
+[data-color-theme="rainbow_balloons"] {
     --bg-main: linear-gradient(135deg, #1a1030, #2b1a45);
     --bg-row: rgba(60, 30, 80, 0.4);
     --border-color: rgba(244, 63, 94, 0.3);
@@ -391,7 +391,7 @@ html[data-color-theme="rainbow_balloons"] {
     --accent-purple: #a855f7;
     --accent-purple-light: #fbbf24;
 }
-html[data-color-theme="underwater_ocean"] {
+[data-color-theme="underwater_ocean"] {
     --bg-main: linear-gradient(135deg, #001a2e, #003049);
     --bg-row: rgba(0, 60, 90, 0.4);
     --border-color: rgba(56, 189, 248, 0.3);
@@ -399,7 +399,7 @@ html[data-color-theme="underwater_ocean"] {
     --accent-purple: #38bdf8;
     --accent-purple-light: #5eead4;
 }
-html[data-color-theme="dino_jungle"] {
+[data-color-theme="dino_jungle"] {
     --bg-main: linear-gradient(135deg, #0a1f0a, #142f14);
     --bg-row: rgba(20, 60, 20, 0.4);
     --border-color: rgba(132, 204, 22, 0.3);
@@ -407,7 +407,7 @@ html[data-color-theme="dino_jungle"] {
     --accent-purple: #84cc16;
     --accent-purple-light: #facc15;
 }
-html[data-color-theme="space_rocket"] {
+[data-color-theme="space_rocket"] {
     --bg-main: linear-gradient(135deg, #04051a, #0a0d2e);
     --bg-row: rgba(20, 20, 60, 0.4);
     --border-color: rgba(250, 204, 21, 0.3);
@@ -415,7 +415,7 @@ html[data-color-theme="space_rocket"] {
     --accent-purple: #818cf8;
     --accent-purple-light: #fde68a;
 }
-html[data-color-theme="bull_run"] {
+[data-color-theme="bull_run"] {
     --bg-main: linear-gradient(135deg, #001a08, #002e12);
     --bg-row: rgba(0, 60, 20, 0.5);
     --border-color: rgba(74, 222, 128, 0.35);
@@ -423,7 +423,7 @@ html[data-color-theme="bull_run"] {
     --accent-purple: #16a34a;
     --accent-purple-light: #bbf7d0;
 }
-html[data-color-theme="bear_crash"] {
+[data-color-theme="bear_crash"] {
     --bg-main: linear-gradient(135deg, #1a0000, #2e0008);
     --bg-row: rgba(60, 0, 10, 0.5);
     --border-color: rgba(248, 113, 113, 0.35);
@@ -431,7 +431,7 @@ html[data-color-theme="bear_crash"] {
     --accent-purple: #991b1b;
     --accent-purple-light: #fecaca;
 }
-html[data-color-theme="multi_ticker_grid"] {
+[data-color-theme="multi_ticker_grid"] {
     --bg-main: linear-gradient(135deg, #05070a, #0a0e14);
     --bg-row: rgba(20, 25, 35, 0.5);
     --border-color: rgba(148, 163, 184, 0.3);
@@ -439,7 +439,7 @@ html[data-color-theme="multi_ticker_grid"] {
     --accent-purple: #ef4444;
     --accent-purple-light: #38bdf8;
 }
-html[data-color-theme="teddy_bear"] {
+[data-color-theme="teddy_bear"] {
     --bg-main: linear-gradient(135deg, #2b1a0a, #3d2410);
     --bg-row: rgba(90, 60, 30, 0.4);
     --border-color: rgba(217, 119, 6, 0.3);
@@ -447,7 +447,7 @@ html[data-color-theme="teddy_bear"] {
     --accent-purple: #92400e;
     --accent-purple-light: #fbbf24;
 }
-html[data-color-theme="wooden_blocks"] {
+[data-color-theme="wooden_blocks"] {
     --bg-main: linear-gradient(135deg, #1f1408, #2b1c0e);
     --bg-row: rgba(90, 60, 30, 0.4);
     --border-color: rgba(180, 120, 60, 0.3);
@@ -455,7 +455,7 @@ html[data-color-theme="wooden_blocks"] {
     --accent-purple: #3b82f6;
     --accent-purple-light: #fbbf24;
 }
-html[data-color-theme="board_game_dice"] {
+[data-color-theme="board_game_dice"] {
     --bg-main: linear-gradient(135deg, #1a0a10, #2b0f1a);
     --bg-row: rgba(80, 20, 40, 0.4);
     --border-color: rgba(244, 63, 94, 0.3);
@@ -463,7 +463,7 @@ html[data-color-theme="board_game_dice"] {
     --accent-purple: #facc15;
     --accent-purple-light: #fda4af;
 }
-html[data-color-theme="arcade_neon"] {
+[data-color-theme="arcade_neon"] {
     --bg-main: linear-gradient(135deg, #0a0014, #14001f);
     --bg-row: rgba(40, 0, 60, 0.5);
     --border-color: rgba(217, 70, 239, 0.35);
@@ -471,7 +471,7 @@ html[data-color-theme="arcade_neon"] {
     --accent-purple: #06b6d4;
     --accent-purple-light: #fde047;
 }
-html[data-color-theme="kite_pinwheel"] {
+[data-color-theme="kite_pinwheel"] {
     --bg-main: linear-gradient(135deg, #001a33, #002b52);
     --bg-row: rgba(0, 60, 100, 0.4);
     --border-color: rgba(56, 189, 248, 0.3);
@@ -479,7 +479,7 @@ html[data-color-theme="kite_pinwheel"] {
     --accent-purple: #38bdf8;
     --accent-purple-light: #fde047;
 }
-html[data-color-theme="tropical_leaves"] {
+[data-color-theme="tropical_leaves"] {
     --bg-main: linear-gradient(135deg, #021a0e, #042b18);
     --bg-row: rgba(10, 60, 30, 0.4);
     --border-color: rgba(22, 163, 74, 0.3);
@@ -487,7 +487,7 @@ html[data-color-theme="tropical_leaves"] {
     --accent-purple: #16a34a;
     --accent-purple-light: #86efac;
 }
-html[data-color-theme="autumn_forest"] {
+[data-color-theme="autumn_forest"] {
     --bg-main: linear-gradient(135deg, #2b1405, #3d1c08);
     --bg-row: rgba(90, 40, 10, 0.4);
     --border-color: rgba(249, 115, 22, 0.3);
@@ -495,7 +495,7 @@ html[data-color-theme="autumn_forest"] {
     --accent-purple: #dc2626;
     --accent-purple-light: #fde047;
 }
-html[data-color-theme="wildflower_meadow"] {
+[data-color-theme="wildflower_meadow"] {
     --bg-main: linear-gradient(135deg, #0a1f0a, #142f10);
     --bg-row: rgba(20, 60, 20, 0.4);
     --border-color: rgba(236, 72, 153, 0.3);
@@ -503,7 +503,7 @@ html[data-color-theme="wildflower_meadow"] {
     --accent-purple: #84cc16;
     --accent-purple-light: #fde047;
 }
-html[data-color-theme="race_car"] {
+[data-color-theme="race_car"] {
     --bg-main: linear-gradient(135deg, #0a0a0a, #1a1a1a);
     --bg-row: rgba(40, 40, 40, 0.4);
     --border-color: rgba(239, 68, 68, 0.35);
@@ -511,7 +511,7 @@ html[data-color-theme="race_car"] {
     --accent-purple: #18181b;
     --accent-purple-light: #f5f5f5;
 }
-html[data-color-theme="train_journey"] {
+[data-color-theme="train_journey"] {
     --bg-main: linear-gradient(135deg, #1a1005, #2b1c0a);
     --bg-row: rgba(80, 50, 20, 0.4);
     --border-color: rgba(180, 120, 60, 0.3);
@@ -519,7 +519,7 @@ html[data-color-theme="train_journey"] {
     --accent-purple: #525252;
     --accent-purple-light: #e8dcc0;
 }
-html[data-color-theme="airplane_sky"] {
+[data-color-theme="airplane_sky"] {
     --bg-main: linear-gradient(135deg, #001a3d, #002b5c);
     --bg-row: rgba(0, 50, 90, 0.4);
     --border-color: rgba(147, 197, 253, 0.3);
@@ -527,7 +527,7 @@ html[data-color-theme="airplane_sky"] {
     --accent-purple: #3b82f6;
     --accent-purple-light: #dbeafe;
 }
-html[data-color-theme="sailboat_waves"] {
+[data-color-theme="sailboat_waves"] {
     --bg-main: linear-gradient(135deg, #001a26, #00303f);
     --bg-row: rgba(0, 50, 70, 0.4);
     --border-color: rgba(56, 189, 248, 0.3);
@@ -535,7 +535,7 @@ html[data-color-theme="sailboat_waves"] {
     --accent-purple: #0ea5e9;
     --accent-purple-light: #7dd3fc;
 }
-html[data-color-theme="motorcycle_speed"] {
+[data-color-theme="motorcycle_speed"] {
     --bg-main: linear-gradient(135deg, #0a0a0a, #1f1005);
     --bg-row: rgba(60, 30, 10, 0.4);
     --border-color: rgba(249, 115, 22, 0.35);
@@ -543,7 +543,7 @@ html[data-color-theme="motorcycle_speed"] {
     --accent-purple: #18181b;
     --accent-purple-light: #fdba74;
 }
-html[data-color-theme="hot_air_balloon"] {
+[data-color-theme="hot_air_balloon"] {
     --bg-main: linear-gradient(135deg, #1a0a30, #2b1245);
     --bg-row: rgba(60, 20, 80, 0.4);
     --border-color: rgba(251, 191, 36, 0.3);
@@ -551,7 +551,7 @@ html[data-color-theme="hot_air_balloon"] {
     --accent-purple: #fbbf24;
     --accent-purple-light: #a78bfa;
 }
-html[data-color-theme="bicycle_ride"] {
+[data-color-theme="bicycle_ride"] {
     --bg-main: linear-gradient(135deg, #001a0a, #002b12);
     --bg-row: rgba(10, 60, 25, 0.4);
     --border-color: rgba(34, 197, 94, 0.3);
@@ -559,7 +559,7 @@ html[data-color-theme="bicycle_ride"] {
     --accent-purple: #15803d;
     --accent-purple-light: #bbf7d0;
 }
-html[data-color-theme="submarine_deep"] {
+[data-color-theme="submarine_deep"] {
     --bg-main: linear-gradient(135deg, #00050f, #001529);
     --bg-row: rgba(0, 30, 60, 0.4);
     --border-color: rgba(56, 189, 248, 0.25);
@@ -567,7 +567,7 @@ html[data-color-theme="submarine_deep"] {
     --accent-purple: #0369a1;
     --accent-purple-light: #7dd3fc;
 }
-html[data-color-theme="helicopter_rotor"] {
+[data-color-theme="helicopter_rotor"] {
     --bg-main: linear-gradient(135deg, #14161a, #1f2229);
     --bg-row: rgba(40, 45, 55, 0.4);
     --border-color: rgba(250, 204, 21, 0.3);
@@ -575,7 +575,7 @@ html[data-color-theme="helicopter_rotor"] {
     --accent-purple: #64748b;
     --accent-purple-light: #e2e8f0;
 }
-html[data-color-theme="rocket_ship"] {
+[data-color-theme="rocket_ship"] {
     --bg-main: linear-gradient(135deg, #05010f, #0a0320);
     --bg-row: rgba(20, 10, 50, 0.4);
     --border-color: rgba(148, 163, 184, 0.3);
@@ -1429,14 +1429,14 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 /* דוגמאות רקע ייחודיות לכל ערכת נושא מיוחדת - לא רק צבעים, אלא מוטיב אמיתי
    שמזכיר את הנושא (משטח לגו עם פטמות, נייר שרטוט, שמיים זרועי כוכבים,
    רשת ניאון) - כל השכבות ב-CSS טהור (גרדיאנטים חוזרים), בלי תמונות */
-html[data-color-theme="lego_bricks"] .home-theme-pattern {
+[data-color-theme="lego_bricks"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 20px 20px, rgba(255, 214, 51, 0.55) 0 6px, transparent 7px),
         linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 40px 40px, 40px 40px, 40px 40px;
 }
-html[data-color-theme="blueprint_draft"] .home-theme-pattern {
+[data-color-theme="blueprint_draft"] .home-theme-pattern {
     background-image:
         linear-gradient(rgba(120, 190, 255, 0.14) 1px, transparent 1px),
         linear-gradient(90deg, rgba(120, 190, 255, 0.14) 1px, transparent 1px),
@@ -1444,7 +1444,7 @@ html[data-color-theme="blueprint_draft"] .home-theme-pattern {
         linear-gradient(90deg, rgba(120, 190, 255, 0.3) 1px, transparent 1px);
     background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
 }
-html[data-color-theme="star_map"] .home-theme-pattern {
+[data-color-theme="star_map"] .home-theme-pattern {
     background-image:
         radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
         radial-gradient(1px 1px at 90px 70px, rgba(255, 255, 255, 0.7), transparent),
@@ -1456,14 +1456,14 @@ html[data-color-theme="star_map"] .home-theme-pattern {
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-html[data-color-theme="vaporwave_neon"] .home-theme-pattern {
+[data-color-theme="vaporwave_neon"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 100%, rgba(255, 110, 255, 0.35), transparent 60%),
         linear-gradient(rgba(255, 0, 230, 0.18) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 255, 242, 0.18) 1px, transparent 1px);
     background-size: 100% 100%, 34px 34px, 34px 34px;
 }
-html[data-color-theme="barbie_dream"] .home-theme-pattern {
+[data-color-theme="barbie_dream"] .home-theme-pattern {
     background-image:
         radial-gradient(2px 2px at 30px 40px, rgba(255, 215, 0, 0.9), transparent),
         radial-gradient(1.5px 1.5px at 100px 90px, rgba(255, 255, 255, 0.8), transparent),
@@ -1473,14 +1473,14 @@ html[data-color-theme="barbie_dream"] .home-theme-pattern {
     background-size: 180px 180px;
     background-repeat: repeat;
 }
-html[data-color-theme="aurora_borealis"] .home-theme-pattern {
+[data-color-theme="aurora_borealis"] .home-theme-pattern {
     background-image:
         linear-gradient(100deg, transparent 30%, rgba(74, 222, 128, 0.18) 40%, transparent 55%),
         linear-gradient(110deg, transparent 45%, rgba(167, 139, 250, 0.15) 55%, transparent 68%),
         linear-gradient(95deg, transparent 60%, rgba(103, 232, 249, 0.15) 68%, transparent 80%);
     background-size: 100% 100%;
 }
-html[data-color-theme="pixel_art"] .home-theme-pattern {
+[data-color-theme="pixel_art"] .home-theme-pattern {
     background-image:
         repeating-conic-gradient(rgba(255, 255, 255, 0.05) 0% 25%, transparent 0% 50%),
         radial-gradient(rgba(255, 56, 100, 0.5) 40%, transparent 40%),
@@ -1488,14 +1488,14 @@ html[data-color-theme="pixel_art"] .home-theme-pattern {
     background-size: 24px 24px, 96px 96px, 96px 96px;
     background-position: 0 0, 0 0, 48px 48px;
 }
-html[data-color-theme="stock_market"] .home-theme-pattern {
+[data-color-theme="stock_market"] .home-theme-pattern {
     background-image:
         linear-gradient(rgba(34, 197, 94, 0.12) 1px, transparent 1px),
         linear-gradient(90deg, rgba(34, 197, 94, 0.12) 1px, transparent 1px),
         linear-gradient(45deg, transparent 48%, rgba(34, 197, 94, 0.5) 49%, rgba(34, 197, 94, 0.5) 51%, transparent 52%);
     background-size: 40px 40px, 40px 40px, 80px 80px;
 }
-html[data-color-theme="neon_trading_chart"] .home-theme-pattern {
+[data-color-theme="neon_trading_chart"] .home-theme-pattern {
     background-image:
         linear-gradient(105deg, transparent 20%, rgba(236, 72, 153, 0.22) 35%, transparent 50%),
         linear-gradient(75deg, transparent 40%, rgba(99, 102, 241, 0.2) 55%, transparent 70%),
@@ -1504,54 +1504,54 @@ html[data-color-theme="neon_trading_chart"] .home-theme-pattern {
     background-repeat: no-repeat, no-repeat, repeat-x;
     background-position: 0 0, 0 0, 0 100%;
 }
-html[data-color-theme="candlestick_bands"] .home-theme-pattern {
+[data-color-theme="candlestick_bands"] .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(34, 211, 168, 0.35) 0 4px, transparent 4px 8px, rgba(244, 63, 94, 0.3) 8px 12px, transparent 12px 16px),
         linear-gradient(180deg, transparent 35%, rgba(56, 189, 248, 0.12) 45%, rgba(56, 189, 248, 0.12) 65%, transparent 75%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-html[data-color-theme="market_data_glow"] .home-theme-pattern {
+[data-color-theme="market_data_glow"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 100%, rgba(129, 140, 248, 0.35), transparent 60%),
         repeating-linear-gradient(90deg, rgba(251, 146, 60, 0.3) 0 8px, transparent 8px 20px),
         linear-gradient(0deg, rgba(244, 114, 182, 0.25) 0%, transparent 45%);
     background-size: 100% 100%, 100% 100%, 100% 100%;
 }
-html[data-color-theme="steampunk_brass"] .home-theme-pattern {
+[data-color-theme="steampunk_brass"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25px 25px, rgba(232, 184, 120, 0.35) 0 3px, transparent 4px, transparent 10px, rgba(232, 184, 120, 0.15) 11px, transparent 12px),
         linear-gradient(rgba(232, 184, 120, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(232, 184, 120, 0.06) 1px, transparent 1px);
     background-size: 50px 50px, 50px 50px, 50px 50px;
 }
-html[data-color-theme="vintage_newspaper"] .home-theme-pattern {
+[data-color-theme="vintage_newspaper"] .home-theme-pattern {
     background-image:
         linear-gradient(90deg, rgba(74, 64, 48, 0.15) 1px, transparent 1px),
         radial-gradient(circle at 4px 4px, rgba(74, 64, 48, 0.2) 0 1.5px, transparent 2px);
     background-size: 90px 100%, 8px 8px;
 }
-html[data-color-theme="film_noir"] .home-theme-pattern {
+[data-color-theme="film_noir"] .home-theme-pattern {
     background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.06) 0 10px, transparent 10px 26px);
 }
-html[data-color-theme="pop_art_comics"] .home-theme-pattern {
+[data-color-theme="pop_art_comics"] .home-theme-pattern {
     background-image: radial-gradient(circle at 6px 6px, rgba(255, 221, 0, 0.5) 0 3px, transparent 3.5px);
     background-size: 14px 14px;
 }
-html[data-color-theme="origami_paper"] .home-theme-pattern {
+[data-color-theme="origami_paper"] .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(251, 146, 60, 0.12) 25%, transparent 25%, transparent 75%, rgba(251, 146, 60, 0.12) 75%),
         linear-gradient(-45deg, rgba(244, 114, 182, 0.1) 25%, transparent 25%, transparent 75%, rgba(244, 114, 182, 0.1) 75%);
     background-size: 60px 60px, 60px 60px;
 }
-html[data-color-theme="watercolor_wash"] .home-theme-pattern {
+[data-color-theme="watercolor_wash"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25% 30%, rgba(249, 168, 212, 0.25) 0%, transparent 45%),
         radial-gradient(circle at 70% 60%, rgba(196, 181, 253, 0.25) 0%, transparent 45%),
         radial-gradient(circle at 45% 80%, rgba(165, 243, 252, 0.22) 0%, transparent 45%);
     background-size: 100% 100%;
 }
-html[data-color-theme="chemistry_lab"] .home-theme-pattern {
+[data-color-theme="chemistry_lab"] .home-theme-pattern {
     background-image:
         radial-gradient(3px 3px at 30px 40px, rgba(45, 212, 191, 0.5), transparent),
         radial-gradient(2px 2px at 90px 20px, rgba(163, 230, 53, 0.5), transparent),
@@ -1561,7 +1561,7 @@ html[data-color-theme="chemistry_lab"] .home-theme-pattern {
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-html[data-color-theme="botanical_greenhouse"] .home-theme-pattern {
+[data-color-theme="botanical_greenhouse"] .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 10px 4px at 30px 30px, rgba(74, 222, 128, 0.35), transparent),
         radial-gradient(ellipse 8px 3px at 100px 60px, rgba(187, 247, 208, 0.3), transparent),
@@ -1573,7 +1573,7 @@ html[data-color-theme="botanical_greenhouse"] .home-theme-pattern {
 }
 /* היחיד עם מוטיב מלא (שמש + עננים + אופק דשא) ולא רק דוגמה חוזרת - לפי בקשה
    מפורשת "אפילו עם צריך עננים ושמיים ודשא אז תשקיע" */
-html[data-color-theme="kids_sky_grass"] .home-theme-pattern {
+[data-color-theme="kids_sky_grass"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 80% 15%, rgba(250, 204, 21, 0.8) 0 18px, rgba(250, 204, 21, 0.3) 19px 22px, transparent 23px),
         radial-gradient(ellipse 30px 12px at 20% 20%, rgba(255, 255, 255, 0.5), transparent),
@@ -1582,7 +1582,7 @@ html[data-color-theme="kids_sky_grass"] .home-theme-pattern {
     background-size: 100% 100%;
 }
 /* קשת ובלונים - קשת מצוירת כטבעות מקוננות עולות מהתחתית + שני בלונים צפים */
-html[data-color-theme="rainbow_balloons"] .home-theme-pattern {
+[data-color-theme="rainbow_balloons"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 130%, transparent 55%, rgba(244, 63, 94, 0.35) 56% 60%, transparent 61%),
         radial-gradient(circle at 50% 130%, transparent 61%, rgba(251, 191, 36, 0.35) 62% 66%, transparent 67%),
@@ -1593,7 +1593,7 @@ html[data-color-theme="rainbow_balloons"] .home-theme-pattern {
     background-size: 100% 100%;
 }
 /* עולם מתחת למים - בועות עולות + אדוות אור גלי */
-html[data-color-theme="underwater_ocean"] .home-theme-pattern {
+[data-color-theme="underwater_ocean"] .home-theme-pattern {
     background-image:
         radial-gradient(3px 3px at 30px 200px, rgba(255, 255, 255, 0.6), transparent),
         radial-gradient(2px 2px at 90px 150px, rgba(255, 255, 255, 0.5), transparent),
@@ -1604,7 +1604,7 @@ html[data-color-theme="underwater_ocean"] .home-theme-pattern {
     background-repeat: repeat, repeat, repeat, repeat, no-repeat;
 }
 /* עולם הדינוזאורים - נקודות עור-דינוזאור + עלי ג'ונגל מפוזרים */
-html[data-color-theme="dino_jungle"] .home-theme-pattern {
+[data-color-theme="dino_jungle"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25px 25px, rgba(250, 204, 21, 0.3) 0 5px, transparent 6px),
         radial-gradient(ellipse 14px 6px at 100px 60px, rgba(132, 204, 22, 0.35), transparent),
@@ -1613,7 +1613,7 @@ html[data-color-theme="dino_jungle"] .home-theme-pattern {
     background-size: 90px 90px, 200px 200px, 200px 200px, 90px 90px;
 }
 /* טיסה לחלל - ירח בפינה + כוכבים מפוזרים + שובל רקטה אלכסוני */
-html[data-color-theme="space_rocket"] .home-theme-pattern {
+[data-color-theme="space_rocket"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 82% 12%, rgba(253, 230, 138, 0.9) 0 16px, rgba(253, 230, 138, 0.25) 17px 20px, transparent 21px),
         radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
@@ -1624,42 +1624,42 @@ html[data-color-theme="space_rocket"] .home-theme-pattern {
     background-size: 100% 100%, 180px 180px, 180px 180px, 180px 180px, 180px 180px, 100% 100%;
     background-repeat: no-repeat, repeat, repeat, repeat, repeat, no-repeat;
 }
-html[data-color-theme="bull_run"] .home-theme-pattern {
+[data-color-theme="bull_run"] .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(74, 222, 128, 0.4) 0 4px, transparent 4px 8px, rgba(22, 163, 74, 0.35) 8px 10px, transparent 10px 16px),
         linear-gradient(20deg, transparent 45%, rgba(74, 222, 128, 0.3) 52%, transparent 60%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-html[data-color-theme="bear_crash"] .home-theme-pattern {
+[data-color-theme="bear_crash"] .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(248, 113, 113, 0.4) 0 4px, transparent 4px 8px, rgba(153, 27, 27, 0.35) 8px 10px, transparent 10px 16px),
         linear-gradient(-20deg, transparent 45%, rgba(248, 113, 113, 0.3) 52%, transparent 60%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-html[data-color-theme="multi_ticker_grid"] .home-theme-pattern {
+[data-color-theme="multi_ticker_grid"] .home-theme-pattern {
     background-image:
         linear-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px),
         linear-gradient(90deg, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
         repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.3) 0 3px, transparent 3px 6px, rgba(239, 68, 68, 0.3) 6px 9px, transparent 9px 12px);
     background-size: 60px 60px, 60px 60px, 12px 60px;
 }
-html[data-color-theme="teddy_bear"] .home-theme-pattern {
+[data-color-theme="teddy_bear"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 30px 30px, rgba(251, 191, 36, 0.4) 0 4px, transparent 5px),
         repeating-linear-gradient(45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px),
         repeating-linear-gradient(-45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px);
     background-size: 70px 70px, 20px 20px, 20px 20px;
 }
-html[data-color-theme="wooden_blocks"] .home-theme-pattern {
+[data-color-theme="wooden_blocks"] .home-theme-pattern {
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 2px, transparent 2px),
         linear-gradient(45deg, rgba(239, 68, 68, 0.2) 25%, transparent 25%, transparent 75%, rgba(59, 130, 246, 0.2) 75%);
     background-size: 44px 44px, 44px 44px, 44px 44px;
 }
-html[data-color-theme="board_game_dice"] .home-theme-pattern {
+[data-color-theme="board_game_dice"] .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
         linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
@@ -1667,14 +1667,14 @@ html[data-color-theme="board_game_dice"] .home-theme-pattern {
     background-size: 40px 40px, 40px 40px, 20px 20px;
     background-position: 0 0, 20px 20px, 0 0;
 }
-html[data-color-theme="arcade_neon"] .home-theme-pattern {
+[data-color-theme="arcade_neon"] .home-theme-pattern {
     background-image:
         linear-gradient(rgba(217, 70, 239, 0.15) 1px, transparent 1px),
         linear-gradient(90deg, rgba(6, 182, 212, 0.15) 1px, transparent 1px),
         radial-gradient(circle at 20px 20px, rgba(253, 224, 71, 0.5) 0 5px, transparent 6px);
     background-size: 30px 30px, 30px 30px, 60px 60px;
 }
-html[data-color-theme="kite_pinwheel"] .home-theme-pattern {
+[data-color-theme="kite_pinwheel"] .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(244, 63, 94, 0.3) 25%, transparent 25.5%),
         linear-gradient(45deg, rgba(253, 224, 71, 0.3) 25%, transparent 25.5%),
@@ -1682,7 +1682,7 @@ html[data-color-theme="kite_pinwheel"] .home-theme-pattern {
     background-size: 90px 90px, 90px 90px, 90px 90px;
     background-position: 0 0, 45px 20px, 20px 55px;
 }
-html[data-color-theme="tropical_leaves"] .home-theme-pattern {
+[data-color-theme="tropical_leaves"] .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 40px 20px at 30px 40px, rgba(22, 163, 74, 0.3), transparent),
         radial-gradient(ellipse 34px 16px at 130px 100px, rgba(134, 239, 172, 0.25), transparent),
@@ -1690,7 +1690,7 @@ html[data-color-theme="tropical_leaves"] .home-theme-pattern {
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-html[data-color-theme="autumn_forest"] .home-theme-pattern {
+[data-color-theme="autumn_forest"] .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 6px 4px at 30px 40px, rgba(249, 115, 22, 0.6), transparent),
         radial-gradient(ellipse 5px 3px at 100px 90px, rgba(220, 38, 38, 0.5), transparent),
@@ -1700,7 +1700,7 @@ html[data-color-theme="autumn_forest"] .home-theme-pattern {
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-html[data-color-theme="wildflower_meadow"] .home-theme-pattern {
+[data-color-theme="wildflower_meadow"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 30px 30px, rgba(236, 72, 153, 0.6) 0 3px, transparent 4px),
         radial-gradient(circle at 90px 70px, rgba(253, 224, 71, 0.6) 0 3px, transparent 4px),
@@ -1709,7 +1709,7 @@ html[data-color-theme="wildflower_meadow"] .home-theme-pattern {
         linear-gradient(rgba(132, 204, 22, 0.06) 1px, transparent 1px);
     background-size: 180px 180px, 180px 180px, 180px 180px, 180px 180px, 8px 8px;
 }
-html[data-color-theme="race_car"] .home-theme-pattern {
+[data-color-theme="race_car"] .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
         linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
@@ -1717,7 +1717,7 @@ html[data-color-theme="race_car"] .home-theme-pattern {
     background-size: 24px 24px, 24px 24px, 100% 40px;
     background-position: 0 0, 12px 12px, 0 0;
 }
-html[data-color-theme="train_journey"] .home-theme-pattern {
+[data-color-theme="train_journey"] .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 12px 8px at 40px 30px, rgba(232, 220, 192, 0.3), transparent),
         radial-gradient(ellipse 16px 10px at 90px 15px, rgba(232, 220, 192, 0.25), transparent),
@@ -1726,7 +1726,7 @@ html[data-color-theme="train_journey"] .home-theme-pattern {
     background-size: 150px 150px, 150px 150px, 100% 16px, 100% 100%;
     background-repeat: repeat, repeat, repeat-x, no-repeat;
 }
-html[data-color-theme="airplane_sky"] .home-theme-pattern {
+[data-color-theme="airplane_sky"] .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 28px 12px at 40px 40px, rgba(255, 255, 255, 0.5), transparent),
         radial-gradient(ellipse 22px 10px at 130px 90px, rgba(255, 255, 255, 0.4), transparent),
@@ -1735,41 +1735,41 @@ html[data-color-theme="airplane_sky"] .home-theme-pattern {
     background-size: 200px 200px, 200px 200px, 200px 200px, 100% 100%;
     background-repeat: repeat, repeat, repeat, no-repeat;
 }
-html[data-color-theme="sailboat_waves"] .home-theme-pattern {
+[data-color-theme="sailboat_waves"] .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(248, 250, 252, 0.25) 25%, transparent 25.5%),
         repeating-radial-gradient(ellipse 260px 30px at 50% 100%, rgba(56, 189, 248, 0.15) 0 8px, transparent 8px 30px);
     background-size: 60px 60px, 100% 100%;
     background-position: 20px 30px, 0 0;
 }
-html[data-color-theme="motorcycle_speed"] .home-theme-pattern {
+[data-color-theme="motorcycle_speed"] .home-theme-pattern {
     background-image: repeating-linear-gradient(92deg, rgba(249, 115, 22, 0.3) 0 3px, transparent 3px 26px, rgba(249, 115, 22, 0.15) 26px 28px, transparent 28px 50px);
 }
-html[data-color-theme="hot_air_balloon"] .home-theme-pattern {
+[data-color-theme="hot_air_balloon"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.15) 0 40px, transparent 41px),
         repeating-linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0 10px, rgba(167, 139, 250, 0.25) 10px 20px);
     background-size: 100px 100px, 40px 100%;
     background-repeat: repeat, repeat-x;
 }
-html[data-color-theme="bicycle_ride"] .home-theme-pattern {
+[data-color-theme="bicycle_ride"] .home-theme-pattern {
     background-image: repeating-conic-gradient(from 0deg, rgba(34, 197, 94, 0.25) 0deg 4deg, transparent 4deg 30deg);
     background-size: 80px 80px;
     background-position: 40px 40px;
 }
-html[data-color-theme="submarine_deep"] .home-theme-pattern {
+[data-color-theme="submarine_deep"] .home-theme-pattern {
     background-image:
         radial-gradient(circle at 40px 40px, transparent 0 14px, rgba(125, 211, 252, 0.3) 15px 17px, transparent 18px),
         radial-gradient(2px 2px at 90px 100px, rgba(255, 255, 255, 0.4), transparent),
         radial-gradient(3px 3px at 150px 60px, rgba(255, 255, 255, 0.35), transparent);
     background-size: 160px 160px, 160px 160px, 160px 160px;
 }
-html[data-color-theme="helicopter_rotor"] .home-theme-pattern {
+[data-color-theme="helicopter_rotor"] .home-theme-pattern {
     background-image: repeating-conic-gradient(from 0deg, rgba(226, 232, 240, 0.15) 0deg 2deg, transparent 2deg 8deg);
     background-size: 140px 140px;
     background-position: 70px 70px;
 }
-html[data-color-theme="rocket_ship"] .home-theme-pattern {
+[data-color-theme="rocket_ship"] .home-theme-pattern {
     background-image:
         radial-gradient(1.5px 1.5px at 30px 40px, #fff, transparent),
         radial-gradient(1px 1px at 90px 90px, #fff, transparent),
@@ -4108,67 +4108,34 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-copper { background: linear-gradient(135deg, #d97706, #92400e); }
 .theme-swatch-navy { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
 .theme-swatch-lock { position: absolute; bottom: -4px; inset-inline-end: -4px; font-size: 0.7rem; background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
-.theme-swatch-lego { background: linear-gradient(135deg, #ffcc00, #d01012); }
-.theme-swatch-blueprint { background: linear-gradient(135deg, #e0f2ff, #4fc3f7); }
-.theme-swatch-starmap { background: linear-gradient(135deg, #ffd166, #7c83fd); }
-.theme-swatch-vaporwave { background: linear-gradient(135deg, #ff2ee6, #00fff2); }
-.theme-swatch-barbie { background: linear-gradient(135deg, #ff69b4, #ffd700); }
-.theme-swatch-aurora { background: linear-gradient(135deg, #4ade80, #a78bfa, #67e8f9); }
-.theme-swatch-pixelart { background: linear-gradient(135deg, #ff3864, #2de2e6); }
-.theme-swatch-stockmarket { background: linear-gradient(135deg, #22c55e, #0f172a); }
-.theme-swatch-neonchart { background: linear-gradient(135deg, #ec4899, #6366f1); }
-.theme-swatch-candlestick { background: linear-gradient(135deg, #22d3a8, #f43f5e); }
-.theme-swatch-datadash { background: linear-gradient(135deg, #fb923c, #818cf8, #f472b6); }
-.theme-swatch-steampunk { background: linear-gradient(135deg, #cd7f32, #4a3520); }
-.theme-swatch-newspaper { background: linear-gradient(135deg, #e8dcc0, #4a4030); }
-.theme-swatch-filmnoir { background: linear-gradient(135deg, #f5f5f5, #000000); }
-.theme-swatch-popart { background: linear-gradient(135deg, #ff1744, #2979ff); }
-.theme-swatch-origami { background: linear-gradient(135deg, #fb923c, #f472b6); }
-.theme-swatch-watercolor { background: linear-gradient(135deg, #f9a8d4, #a5f3fc); }
-.theme-swatch-chemistry { background: linear-gradient(135deg, #2dd4bf, #a3e635); }
-.theme-swatch-greenhouse { background: linear-gradient(135deg, #4ade80, #16a34a); }
-.theme-swatch-kidsart { background: linear-gradient(135deg, #93c5fd, #4ade80, #facc15); }
-.theme-swatch-rainbow { background: linear-gradient(135deg, #f43f5e, #fbbf24, #22c55e, #3b82f6, #a855f7); }
-.theme-swatch-oceankids { background: linear-gradient(135deg, #38bdf8, #001a2e); }
-.theme-swatch-dino { background: linear-gradient(135deg, #84cc16, #f97316); }
-.theme-swatch-rocket { background: linear-gradient(135deg, #818cf8, #f43f5e); }
-.theme-swatch-bullrun { background: linear-gradient(135deg, #4ade80, #001a08); }
-.theme-swatch-bearcrash { background: linear-gradient(135deg, #f87171, #1a0000); }
-.theme-swatch-tickergrid { background: linear-gradient(135deg, #22c55e, #ef4444, #38bdf8); }
-.theme-swatch-teddy { background: linear-gradient(135deg, #d97706, #fbbf24); }
-.theme-swatch-woodblocks { background: linear-gradient(135deg, #ef4444, #3b82f6, #fbbf24); }
-.theme-swatch-boardgame { background: linear-gradient(135deg, #f43f5e, #facc15); }
-.theme-swatch-arcade { background: linear-gradient(135deg, #d946ef, #06b6d4); }
-.theme-swatch-kite { background: linear-gradient(135deg, #f43f5e, #38bdf8, #fde047); }
-.theme-swatch-tropical { background: linear-gradient(135deg, #16a34a, #facc15); }
-.theme-swatch-autumn { background: linear-gradient(135deg, #f97316, #dc2626, #fde047); }
-.theme-swatch-wildflower { background: linear-gradient(135deg, #ec4899, #84cc16, #fde047); }
-.theme-swatch-racecar { background: linear-gradient(135deg, #ef4444, #0a0a0a); }
-.theme-swatch-train { background: linear-gradient(135deg, #dc2626, #525252); }
-.theme-swatch-airplane { background: linear-gradient(135deg, #3b82f6, #dbeafe); }
-.theme-swatch-sailboat { background: linear-gradient(135deg, #0ea5e9, #f8fafc); }
-.theme-swatch-motorcycle { background: linear-gradient(135deg, #f97316, #0a0a0a); }
-.theme-swatch-balloon { background: linear-gradient(135deg, #f43f5e, #fbbf24, #a78bfa); }
-.theme-swatch-bicycle { background: linear-gradient(135deg, #22c55e, #15803d); }
-.theme-swatch-submarine { background: linear-gradient(135deg, #0369a1, #00050f); }
-.theme-swatch-helicopter { background: linear-gradient(135deg, #facc15, #64748b); }
-.theme-swatch-rocketship { background: linear-gradient(135deg, #6366f1, #fb923c); }
 /* "ערכות נושא מיוחדות" - קבוצה נפרדת מתחת לערכות הצבע הרגילות, לפי בקשה
-   מפורשת ("לפי קטגוריות שלא יהיה מבולגן"). כל קטגוריה עכשיו מתקפלת
-   (accordion) - כותרת לחיצה שפותחת/סוגרת את שורת הצ'יפים שלה, כי עם 50+
-   ערכות זה היה נהיה גלילה ארוכה מדי בלי זה. אותו דפוס בדיוק כמו
-   .help-faq-item/.help-faq-question (classList.toggle('open')) */
-.theme-category-group { margin-top: 4px; }
-.theme-category-toggle {
-    width: 100%; display: flex; align-items: center; justify-content: space-between;
-    background: none; border: none; padding: 10px 2px; cursor: pointer;
-    font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);
-    text-transform: uppercase; letter-spacing: 0.5px;
+   מפורשת ("לפי קטגוריות שלא יהיה מבולגן"). הוחלף מ-accordion (10 שורות
+   מלאות מתקפלות שכל אחת עדיין תופסת שורה גם סגורה - "תופס מלא מקום") ל-
+   שורת צ'יפים קומפקטית שעוטפת (flex-wrap) + כרטיסיית-גריד אחת בכל פעם
+   (רק הקטגוריה הפעילה מוצגת, לא כמה accordions פתוחים בו-זמנית) -
+   selectThemeCategory() ב-app.js */
+.theme-category-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 8px 0; }
+.theme-category-chip {
+    padding: 6px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap;
+    background: var(--bg-row); border: 1px solid var(--border-color);
+    font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.3px;
 }
-.theme-category-arrow { font-size: 0.8rem; transition: transform 0.2s ease; }
-.theme-category-group.open .theme-category-arrow { transform: rotate(180deg); }
-.theme-category-group .theme-picker-grid { display: none; }
-.theme-category-group.open .theme-picker-grid { display: flex; }
+.theme-category-chip.active { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+.theme-cat-grid { display: none; margin-bottom: 12px; }
+.theme-cat-grid.active { display: flex; }
+/* תצוגה מקדימה חיה: כל אריח מציג את דוגמת הרקע האמיתית של הערכה (לא רק
+   גרדיאנט צבעים) - האריח עצמו נושא data-color-theme, שבזכות הכללת ה-
+   selector-ים למעלה ([data-color-theme="X"] בלי דרישת תג html) גם מזין
+   את המשתנים (--bg-main וכו') וגם את .home-theme-pattern הפנימי שלו, בלי
+   לשכפל אף שורת CSS - "תצוגה מקדימה בתוך זה מאוד חשוב" */
+.theme-preview-tile {
+    position: relative; width: 68px; height: 68px; border-radius: 16px;
+    border: 2px solid rgba(255,255,255,0.12); cursor: pointer; padding: 0;
+    flex-shrink: 0; overflow: hidden; background: var(--bg-main);
+}
+.theme-preview-tile .home-theme-pattern { position: absolute; inset: 0; }
+.theme-preview-tile.selected { border-color: var(--accent-purple); box-shadow: 0 0 0 2px var(--accent-purple); }
 
 .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .settings-toggle-row .settings-label { margin-bottom: 0; }
