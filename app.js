@@ -29,6 +29,7 @@ const weekdayShortKeys = ['weekday_short_sun', 'weekday_short_mon', 'weekday_sho
 let defaultHours = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 let currentUsername = '';
 let currentUserId = null;
+let currentUserCreatedAt = null;
 let reminderIntervalStarted = false;
 let authMode = 'login';
 
@@ -1263,6 +1264,7 @@ async function submitAuthForm() {
 async function initAppAfterAuth(user) {
     currentUserId = user.id;
     currentUsername = user.email;
+    currentUserCreatedAt = user.created_at;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     showAppLoadingOverlay();
@@ -1374,8 +1376,17 @@ function checkDailyGreeting() {
 // דגל ב-localStorage לא בהכרח מסונכרן ביניהם. Supabase כן משותף (אותו
 // חשבון), אז זה המקור האמין היחיד ל"האם כבר נענה היום"
 let dailyFocusPending = false;
+// כל הפרימיום נעול, כולל "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה
+// חסום"). הנעילה כאן במקור (התג "1" עצמו אף פעם לא נדלק) ולא רק בפתיחת
+// הבועה, כדי שלא יהיה שום רמז/פיתוי למי שאין לה גישה
 async function checkDailyFocusPrompt() {
     if (!currentUserId || !supabaseClient) return;
+    if (!isPremiumUser) {
+        dailyFocusPending = false;
+        const badge = document.getElementById('ai-brain-fab-badge');
+        if (badge) badge.classList.add('hidden');
+        return;
+    }
     const todayStr = getLocalDateString();
     const { data } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'daily_focus').limit(1);
     dailyFocusPending = !(data && data.length > 0);
@@ -5130,7 +5141,14 @@ async function deleteRecipe() {
 // בלבד, בדיוק כמו כרטיסי הפרימיום הקיימים בהגדרות. הלוגיקה כאן היא ה"מנעול"
 // המוכן: ברגע שיחובר תשלום אמיתי, מספיק לעדכן is_premium=true בטבלה ותכף
 // הכל נפתח אוטומטית בלי לשנות עוד קוד.
+// isPremiumUser הוא הדגל המשולב שכל בדיקת-נעילה קיימת באפליקציה כבר בודקת -
+// כך ש"שבוע ניסיון חינם של הכל" (לפי בקשה מפורשת) נכנס אוטומטית לכל נעילה
+// קיימת בלי לגעת בעשרות מקומות; isRealPremiumUser הוא המנוי האמיתי-בתשלום
+// בלבד, לשימוש רק היכן שצריך להבדיל בין "פרימיום אמיתי" ל"בתוך תקופת ניסיון"
+// (הגדרות > ניהול מנוי, כדי לא להציג כפתור "בטל מנוי" למי שאין לו בפועל מה
+// לבטל)
 let isPremiumUser = false;
+let isRealPremiumUser = false;
 let selectedPremiumTier = 'semiannual';
 // tier שנקרא בפועל מ-user_premium.tier (אם העמודה קיימת) - null כשאין את
 // העמודה עדיין או שאין לה ערך. isDevSuperuserAccount מבדיל בין פרימיום אמיתי
@@ -5142,10 +5160,24 @@ let isDevSuperuserAccount = false;
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
 const DEV_SUPERUSER_EMAILS = ['zabarieden111@gmail.com'];
 
+// שבוע ניסיון חינם מלא - מבוסס על תאריך יצירת החשבון עצמו (auth.users.created_at,
+// לא עמודה נפרדת) כדי שלא יהיה ניתן "לאפס" אותו, ולא דורש שום מיגרציה - לפי
+// בקשה מפורשת ("ניתן להם לחוות שבוע חינם של הכל")
+const FREE_TRIAL_DAYS = 7;
+function getFreeTrialDaysLeft() {
+    if (!currentUserCreatedAt) return 0;
+    const trialEndMs = new Date(currentUserCreatedAt).getTime() + FREE_TRIAL_DAYS * 86400000;
+    return Math.max(0, Math.ceil((trialEndMs - Date.now()) / 86400000));
+}
+function isInFreeTrial() {
+    return getFreeTrialDaysLeft() > 0;
+}
+
 async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
         isPremiumUser = true;
+        isRealPremiumUser = true;
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
         updateHomePremiumBadgeVisibility();
@@ -5157,7 +5189,8 @@ async function loadPremiumStatus() {
     // select('*') ולא select('is_premium') בכוונה: כך שאם עמודת tier עוד לא
     // קיימת ב-user_premium, השאילתה לא נכשלת (data.tier פשוט יהיה undefined)
     const { data } = await supabaseClient.from('user_premium').select('*').eq('user_id', currentUserId).maybeSingle();
-    isPremiumUser = !!(data && data.is_premium);
+    isRealPremiumUser = !!(data && data.is_premium);
+    isPremiumUser = isRealPremiumUser || isInFreeTrial();
     isDevSuperuserAccount = false;
     premiumTierFromDb = (data && data.tier) || null;
     updateHomePremiumBadgeVisibility();
@@ -5179,12 +5212,20 @@ function renderSettingsSubscriptionSection() {
     const cancelBtn = document.getElementById('btn-cancel-subscription');
     const goPremiumSection = document.getElementById('settings-go-premium-section');
     const activeBadge = document.getElementById('settings-premium-active-badge');
-    // ברגע שכבר יש פרימיום, אין טעם להמשיך להציג את כפתור "שדרוג לפרימיום" -
-    // מוחלף בתג עדין "פרימיום פעיל" במקומו
-    if (goPremiumSection) goPremiumSection.classList.toggle('hidden', isPremiumUser);
-    if (activeBadge) activeBadge.classList.toggle('hidden', !isPremiumUser);
+    const trialBanner = document.getElementById('settings-trial-banner');
+    // ברגע שכבר יש פרימיום *אמיתי*, אין טעם להמשיך להציג את כפתור "שדרוג
+    // לפרימיום" - מוחלף בתג עדין "פרימיום פעיל" במקומו. isRealPremiumUser
+    // ולא isPremiumUser בכוונה - מי שנמצא בתוך תקופת הניסיון עדיין רואה את
+    // אפשרות השדרוג האמיתית (ותג ניסיון נפרד, לא תג "פעיל" מטעה)
+    if (goPremiumSection) goPremiumSection.classList.toggle('hidden', isRealPremiumUser);
+    if (activeBadge) activeBadge.classList.toggle('hidden', !isRealPremiumUser);
+    if (trialBanner) {
+        const inTrial = isPremiumUser && !isRealPremiumUser;
+        trialBanner.classList.toggle('hidden', !inTrial);
+        if (inTrial) trialBanner.textContent = t('settings_trial_banner').replace('{days}', String(getFreeTrialDaysLeft()));
+    }
     if (!section || !statusEl || !changeBtn || !cancelBtn) return;
-    if (!isPremiumUser) { section.classList.add('hidden'); return; }
+    if (!isRealPremiumUser) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     if (isDevSuperuserAccount) {
         statusEl.textContent = t('settings_sub_status_dev');
@@ -5205,7 +5246,8 @@ async function cancelPremiumSubscription() {
     if (!supabaseClient || !currentUserId) return;
     if (!confirm(t('settings_cancel_sub_confirm'))) return;
     await supabaseClient.from('user_premium').update({ is_premium: false }).eq('user_id', currentUserId);
-    isPremiumUser = false;
+    isRealPremiumUser = false;
+    isPremiumUser = isInFreeTrial();
     premiumTierFromDb = null;
     // מאפסים לערכת ברירת המחדל - לא הגיוני להשאיר ערכה נעולה "דלוקה" אחרי
     // שהמנוי בוטל; selectColorTheme('default') תמיד מותר גם בלי פרימיום
