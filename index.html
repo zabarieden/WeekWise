@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=301">
+    <link rel="stylesheet" href="theme.css?v=302">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -939,6 +939,10 @@
                         <span class="hamburger-drawer-item-icon">🖼️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">Vision Board</span>
                     </button>
+                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openStudyDrawer();">
+                        <span class="hamburger-drawer-item-icon">📓</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="study_menu_label">Study</span>
+                    </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Lists</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'notes')">
@@ -1026,6 +1030,26 @@
                     </div>
                     <div id="vision-goals-list"></div>
                     <p id="vision-goals-empty" class="vision-goals-empty hidden" data-i18n="vision_board_empty_hint">No goals yet - tap + to add your first one.</p>
+                </div>
+                </nav>
+            </div>
+
+            <!-- מגירת "לימודים" - יומן שיעורי בית עצמאי, מגירה שלישית מהצד (אותה
+                 תבנית בדיוק כמו לוח החזון) - קטגוריה נפרדת לגמרי בתפריט, לא
+                 כרוכה בטאב "לימודים" הגנרי בלוח היום (routine_tabs), לפי בקשה
+                 מפורשת ("משהו נפרד וחדש לגמרי... בתפריט הראשי בהמבורגר") -->
+            <div id="study-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeStudyDrawer()">
+                <nav class="hamburger-drawer study-drawer" onclick="event.stopPropagation()">
+                <div class="hamburger-drawer-scroll">
+                    <div class="hamburger-drawer-header">
+                        <h3 data-i18n="study_title">Study</h3>
+                        <div class="hamburger-drawer-header-actions">
+                            <button type="button" class="vision-drawer-add-btn" onclick="openAddStudyItemModal()" data-i18n-title="study_add_btn_title" title="Add homework">＋</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeStudyDrawer()">✕</button>
+                        </div>
+                    </div>
+                    <ul id="study-tasks-list" class="study-tasks-list"></ul>
+                    <p id="study-tasks-empty" class="vision-goals-empty hidden" data-i18n="study_empty_hint">No homework yet - tap + to add your first task.</p>
                 </div>
                 </nav>
             </div>
@@ -1140,6 +1164,23 @@
                     <div class="action-buttons-wrap">
                         <button id="btn-save-center-item" class="btn-primary" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-center-item')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- חלון צף: הוספת/עריכת משימת "לימודים" - שדה כותרת יחיד, בלי צבעים/
+             תצוגה מקדימה (שלא כמו modal-add-center-item המשותף לפתקים/קניות,
+             שלא רלוונטי לרשימת שיעורי-בית פשוטה) -->
+        <div id="modal-add-study-item" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="study-item-modal-title" data-i18n="study_add_item_title">Add Homework</h3>
+                <div class="preset-manager-grid">
+                    <textarea id="study-item-input" rows="3" data-i18n-placeholder="study_add_placeholder" placeholder="What do you need to do?"></textarea>
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-study-item" class="btn-primary" onclick="submitStudyItem()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-study-item')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -2704,7 +2745,7 @@
 
     </div>
 
-    <script src="i18n.js?v=241"></script>
-    <script src="app.js?v=339"></script>
+    <script src="i18n.js?v=242"></script>
+    <script src="app.js?v=340"></script>
 </body>
 </html>

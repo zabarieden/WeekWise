@@ -10430,7 +10430,13 @@ async function saveMealRowAsPreset(button) {
     if (!row) return;
     const foodInput = row.querySelector('.food-input');
     const caloriesInput = row.querySelector('.calories-input');
-    const categorySelect = row.querySelector('.preset-select');
+    // תיקון: category-select הישן (native <select class="preset-select">) הוחלף
+    // בזמנו ב-.preset-select-trigger (הכפתור הקבוע-מותאם-אישית), אבל הקריאה
+    // כאן עדיין חיפשה .preset-select שכבר לא קיים בשורה - התוצאה הייתה שכל
+    // ארוחה שנשמרת מקבלת קטגוריה "snack" בשקט, ללא קשר לשורה שממנה נשמרה.
+    // עכשיו נקרא ה-data-category ישירות מהכפתור, שכבר נכון לכל שורה (morning/
+    // noon/evening/snack) - דווח: "זה לא שאל באיזה קטגוריה לשים את זה"
+    const categoryTrigger = row.querySelector('.preset-select-trigger');
     const name = foodInput.value.trim();
     const calories = parseInt(caloriesInput.value) || 0;
     if (!name || calories <= 0) { showAppToast(t('meal_save_preset_missing'), 'error'); return; }
@@ -10439,7 +10445,7 @@ async function saveMealRowAsPreset(button) {
         openPremiumUpgradeModal();
         return;
     }
-    const category = categorySelect ? categorySelect.getAttribute('data-category') : 'snack';
+    const category = categoryTrigger ? categoryTrigger.getAttribute('data-category') : 'snack';
     await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
     showAppToast(t('meal_save_preset_success'));
     loadMealPresetsToSelects();
@@ -11745,6 +11751,100 @@ function closeGoalsVisionDrawer() {
     if (overlay) overlay.classList.remove('open');
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.remove('vision-open');
+}
+
+// --- "לימודים" - יומן שיעורי בית עצמאי, מגירה שלישית מהצד (אותה תבנית
+// בדיוק כמו openGoalsVisionDrawer/closeGoalsVisionDrawer) - טבלה נפרדת
+// (study_tasks) ולא my_center_tasks, כי כאן אין צבעים/"להגיע לזה"/גרירה -
+// רק כותרת + וי, לפי בקשה מפורשת ("משהו נפרד וחדש לגמרי") ---
+let studyTasksCache = [];
+let editingStudyItemId = null;
+
+function openStudyDrawer() {
+    const overlay = document.getElementById('study-drawer-overlay');
+    if (overlay) overlay.classList.add('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('study-open');
+    loadStudyTasks();
+}
+function closeStudyDrawer() {
+    const overlay = document.getElementById('study-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('study-open');
+}
+
+async function loadStudyTasks() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data, error } = await supabaseClient.from('study_tasks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
+    if (error) return;
+    studyTasksCache = data || [];
+    renderStudyTasksList();
+}
+
+function renderStudyTasksList() {
+    const listEl = document.getElementById('study-tasks-list');
+    const emptyEl = document.getElementById('study-tasks-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.toggle('hidden', studyTasksCache.length > 0);
+    studyTasksCache.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'study-task-item';
+        li.innerHTML = `
+            <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleStudyTaskStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.title)}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditStudyItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-item" onclick="deleteStudyTask('${item.id}')">❌</button>
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+async function toggleStudyTaskStatus(id, currentStatus) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('study_tasks').update({ is_completed: !currentStatus }).eq('id', id);
+    loadStudyTasks();
+}
+
+function openAddStudyItemModal() {
+    editingStudyItemId = null;
+    document.getElementById('study-item-modal-title').textContent = t('study_add_item_title');
+    document.getElementById('study-item-input').value = '';
+    openModal('modal-add-study-item');
+    setTimeout(() => document.getElementById('study-item-input').focus(), 150);
+}
+
+function openEditStudyItemModal(id) {
+    const item = studyTasksCache.find(x => x.id === id);
+    if (!item) return;
+    editingStudyItemId = id;
+    document.getElementById('study-item-modal-title').textContent = t('edit_item_title');
+    document.getElementById('study-item-input').value = item.title;
+    openModal('modal-add-study-item');
+    setTimeout(() => document.getElementById('study-item-input').focus(), 150);
+}
+
+async function submitStudyItem() {
+    const input = document.getElementById('study-item-input');
+    const title = input.value.trim();
+    const editId = editingStudyItemId;
+    closeModal('modal-add-study-item');
+    editingStudyItemId = null;
+    if (!title || !supabaseClient || !currentUserId) return;
+    if (editId) {
+        await supabaseClient.from('study_tasks').update({ title }).eq('id', editId);
+    } else {
+        await supabaseClient.from('study_tasks').insert({ user_id: currentUserId, username: currentUsername, title });
+    }
+    await loadStudyTasks();
+    showAppToast(t('item_added_success'));
+}
+
+async function deleteStudyTask(id) {
+    if (!supabaseClient) return;
+    await supabaseClient.from('study_tasks').delete().eq('id', id);
+    loadStudyTasks();
 }
 
 async function loadVisionGoals() {

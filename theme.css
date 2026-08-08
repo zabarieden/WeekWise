@@ -2125,7 +2125,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .phone-wrapper.menu-open .fab-dock,
 .phone-wrapper.modal-open .fab-dock,
 .phone-wrapper.subview-open .fab-dock,
-.phone-wrapper.vision-open .fab-dock {
+.phone-wrapper.vision-open .fab-dock,
+.phone-wrapper.study-open .fab-dock {
     display: none;
 }
 /* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
@@ -2486,7 +2487,9 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .phone-wrapper.modal-open .ai-brain-fab,
 .phone-wrapper.modal-open .hamburger-fab,
 .phone-wrapper.vision-open .ai-brain-fab,
-.phone-wrapper.vision-open .hamburger-fab {
+.phone-wrapper.vision-open .hamburger-fab,
+.phone-wrapper.study-open .ai-brain-fab,
+.phone-wrapper.study-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -2564,6 +2567,34 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .vision-drawer-add-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(168, 85, 247, 0.3); background-color: rgba(168, 85, 247, 0.1); color: var(--accent-purple-light-text); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; transition: var(--transition); }
 .vision-drawer-add-btn:active { transform: scale(0.88); }
 .vision-goals-empty { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 24px; padding: 0 10px; }
+
+/* מגירת "לימודים" - עיצוב "יומן פתוח": שורות משורטטות (repeating-linear-
+   gradient אופקי) + קו שוליים אדום אנכי + פינה מקופלת, כמו דף מחברת אמיתי -
+   לפי בקשה מפורשת ("יכול להראות כמו יומן"). מוגבל ל-#study-drawer-overlay
+   בלבד כדי שהפתקים/לוח החזון יישארו בעיצוב הרשימה השטוח הרגיל שלהם */
+#study-drawer-overlay .hamburger-drawer {
+    background-color: var(--bg-sheet);
+    background-image:
+        linear-gradient(160deg, var(--border-color), transparent 55%),
+        repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(140, 170, 255, 0.18) 27px, rgba(140, 170, 255, 0.18) 28px),
+        linear-gradient(90deg, transparent calc(100% - 38px), rgba(230, 90, 90, 0.4) calc(100% - 38px), rgba(230, 90, 90, 0.4) calc(100% - 37px), transparent calc(100% - 37px));
+    background-position: 0 0, 0 58px, 0 0;
+}
+html[dir="ltr"] #study-drawer-overlay .hamburger-drawer {
+    background-image:
+        linear-gradient(160deg, var(--border-color), transparent 55%),
+        repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(140, 170, 255, 0.18) 27px, rgba(140, 170, 255, 0.18) 28px),
+        linear-gradient(90deg, transparent 38px, rgba(230, 90, 90, 0.4) 38px, rgba(230, 90, 90, 0.4) 39px, transparent 39px);
+}
+#study-drawer-overlay .hamburger-drawer::after {
+    content: "";
+    position: absolute; top: 0; inset-inline-start: 0; width: 26px; height: 26px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%);
+    border-radius: 0 0 22px 0;
+    pointer-events: none;
+}
+.study-tasks-list { list-style: none; margin: 0; padding: 0; }
+.study-task-item { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 2px; }
 
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
@@ -3007,7 +3038,8 @@ html[dir="ltr"] .daily-focus-bubble::before {
    המגירה/המודלים ומשאיר אותה צפה מעליהם */
 .phone-wrapper.menu-open .daily-focus-bubble,
 .phone-wrapper.modal-open .daily-focus-bubble,
-.phone-wrapper.vision-open .daily-focus-bubble {
+.phone-wrapper.vision-open .daily-focus-bubble,
+.phone-wrapper.study-open .daily-focus-bubble {
     opacity: 0 !important;
     pointer-events: none !important;
 }
