@@ -31,6 +31,7 @@ let currentUsername = '';
 let currentUserId = null;
 let currentUserCreatedAt = null;
 let reminderIntervalStarted = false;
+let dailyFocusMidnightCheckStarted = false;
 let authMode = 'login';
 
 function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
@@ -1342,6 +1343,16 @@ async function initAppAfterAuth(user) {
     }
     checkDailyGreeting();
     checkDailyFocusPrompt();
+    // איפוס בחצות: אם האפליקציה נשארת פתוחה על פני חצות, בודקים כל דקה אם
+    // התאריך המקומי התקדם, ואם כן מריצים מחדש את הבדיקה כדי שהאייקון יחזור
+    // למצב הבולט ליום החדש בלי צורך ברענון ידני - לפי בקשה מפורשת ("איפוס
+    // בחצות: המערכת מרעננת... ומחזירה את האיקון לסטייט הבולט")
+    if (!dailyFocusMidnightCheckStarted) {
+        dailyFocusMidnightCheckStarted = true;
+        setInterval(() => {
+            if (getLocalDateString() !== lastCheckedDailyFocusDate) checkDailyFocusPrompt();
+        }, 60000);
+    }
 }
 
 // ברכה יומית עם נצנצים - לפי בקשה מפורשת ("בפעם הראשונה ביום, עם נצנצים
@@ -1366,32 +1377,50 @@ function checkDailyGreeting() {
 // תג "1" קטן על אייקון המוח (כמו הודעה שלא נקראה), ולוחצים על המוח כדי
 // לפתוח ולראות אותה (ר' initFixedAiBrainFab) - לפי בקשה מפורשת ("בא לי
 // שיהיה מספר 1 כזה כמו הודעה ממנו ואני אפתח"). dailyFocusPending נשאר true
-// עד שבאמת עונים (saveDailyFocus) - סגירה עם ✕ רק מסתירה את הבועה בחזרה,
-// התג חוזר להופיע כדי שאפשר יהיה לפתוח שוב מאוחר יותר.
+// עד שנצפה היום בפועל - גם שמירה (saveDailyFocus) וגם סגירה בלי לבחור
+// (dismissDailyFocusModal) מכבות אותו כעת, לפי בקשה מפורשת מעודכנת: התג
+// נעלם אחרי צפייה, אבל האייקון עצמו נשאר דוהה-אך-לחיץ (ר' applyDailyFocusIconState)
+// כל היום, לא נעלם/מתאפס עד חצות.
 //
-// הבדיקה אם כבר נענה היום מתבססת על Supabase (calendar_events, אותה שורה
-// בדיוק שנשמרת ב-saveDailyFocus) - לא localStorage: דווח שהתג ממשיך לקפוץ
-// מחדש למרות שכבר נענתה השאלה, וזה קורה כשמשתמשים גם באפליקציה המותקנת וגם
-// בדפדפן הרגיל על אותו מחשב - לשניהם יכול להיות אחסון-דפדפן נפרד לגמרי, אז
-// דגל ב-localStorage לא בהכרח מסונכרן ביניהם. Supabase כן משותף (אותו
-// חשבון), אז זה המקור האמין היחיד ל"האם כבר נענה היום"
+// הבדיקה אם כבר נענה/נצפה היום מתבססת על Supabase (calendar_events) - לא
+// localStorage: דווח שהתג ממשיך לקפוץ מחדש למרות שכבר נענתה השאלה, וזה קורה
+// כשמשתמשים גם באפליקציה המותקנת וגם בדפדפן הרגיל על אותו מחשב - לשניהם
+// יכול להיות אחסון-דפדפן נפרד לגמרי, אז דגל ב-localStorage לא בהכרח מסונכרן
+// ביניהם. Supabase כן משותף (אותו חשבון), אז זה המקור האמין היחיד
 let dailyFocusPending = false;
+// יום אחרון שנבדק (ר' תת-הפרק על איפוס בחצות בתוך initAppAfterAuth) - כדי
+// לדעת מתי getLocalDateString() התקדם ליום חדש בזמן שהאפליקציה עדיין פתוחה
+let lastCheckedDailyFocusDate = null;
+
 // כל הפרימיום נעול, כולל "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה
 // חסום"). הנעילה כאן במקור (התג "1" עצמו אף פעם לא נדלק) ולא רק בפתיחת
-// הבועה, כדי שלא יהיה שום רמז/פיתוי למי שאין לה גישה
+// הבועה, כדי שלא יהיה שום רמז/פיתוי למי שאין לה גישה. הבדיקה כוללת גם
+// daily_focus_dismissed (סגירה עם X/קליק מחוץ לבועה, בלי לבחור תגית) - לפי
+// בקשה מפורשת ("לאחר פתיחה וסגירה... הבאדג' נעלם"), לא רק daily_focus עצמו
 async function checkDailyFocusPrompt() {
     if (!currentUserId || !supabaseClient) return;
     if (!isPremiumUser) {
         dailyFocusPending = false;
-        const badge = document.getElementById('ai-brain-fab-badge');
-        if (badge) badge.classList.add('hidden');
+        applyDailyFocusIconState();
         return;
     }
     const todayStr = getLocalDateString();
-    const { data } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'daily_focus').limit(1);
+    lastCheckedDailyFocusDate = todayStr;
+    const { data } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']).limit(1);
     dailyFocusPending = !(data && data.length > 0);
+    applyDailyFocusIconState();
+}
+
+// שלושה מצבים ויזואליים לאייקון המוח: (1) עוד לא נצפה היום - תג "1" בולט,
+// אייקון רגיל. (2) נצפה היום (נשמרה תגית או שנסגר בלי לבחור) - תג נעלם,
+// אייקון דוהה (opacity) אבל עדיין לחיץ ופותח את הבועה מחדש. (3) לא פרימיום -
+// לא תג ולא דהייה, כאילו התכונה לא קיימת בכלל - לפי בקשה מפורשת (הספציפיקציה
+// המלאה שנשלחה: "האיקון נשאר לחיץ ונגיש... דהוי / בלתי מציק ~30-40%")
+function applyDailyFocusIconState() {
     const badge = document.getElementById('ai-brain-fab-badge');
+    const icon = document.getElementById('btn-ai-brain-fab');
     if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
+    if (icon) icon.classList.toggle('daily-focus-faded', isPremiumUser && !dailyFocusPending);
 }
 
 // "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6), בעברית בלבד (תוכן אישי/
@@ -1475,6 +1504,17 @@ function openDailyFocusBubble() {
     if (badge) badge.classList.add('hidden');
 }
 
+// קליק מחוץ לבועה סוגר אותה בדיוק כמו X - לפי בקשה מפורשת ("בלחיצה על X או
+// מחוץ לחלון"). רשום פעם אחת בלבד (ר' initFixedAiBrainFab) - בודק ב-early
+// return אם הבועה בכלל פתוחה, אז זול גם כשלא רלוונטי. stopPropagation על
+// כפתור התג עצמו כבר מונע מהקליק-שפותח את הבועה להגיע לכאן ולסגור אותה מיד
+function handleDailyFocusOutsideClick(e) {
+    const bubble = document.getElementById('daily-focus-bubble');
+    if (!bubble || bubble.classList.contains('hidden')) return;
+    if (bubble.contains(e.target)) return;
+    dismissDailyFocusModal();
+}
+
 // לחיצה על הבועה עצמה (המצב המכווץ) - נפתחת למצב בחירת התגיות, במקום לעבור
 // למודל נפרד - לפי בקשה מפורשת ("שאפשר יהיה ללחוץ עליה")
 function expandDailyFocusBubble() {
@@ -1490,15 +1530,22 @@ function markDailyFocusPromptShown() {
     dailyFocusPending = false;
 }
 
-// סגירה עם ה-✕ (משני המצבים - מכווץ ומורחב) היא "לא עכשיו, תזכיר לי אחר
-// כך" - לא "אל תראה לי את זה שוב היום" - לפי בקשה מפורשת. בכוונה *לא* קוראת
-// ל-markDailyFocusPromptShown: dailyFocusPending נשאר true, אז התג על המוח
-// חוזר להופיע מיד, ואפשר לפתוח שוב מתי שנוח
-function dismissDailyFocusModal() {
+// סגירה עם ה-✕ (משני המצבים - מכווץ ומורחב) או קליק מחוץ לבועה - "נצפה
+// היום" (התג נעלם, האייקון דוהה אבל עדיין לחיץ) - *לא* "תזכיר לי אחר כך"
+// כמו קודם, לפי בקשה מפורשת ("לאחר פתיחה וסגירה... הבאדג' נעלם"). נשמר
+// כשורת calendar_events (source:'daily_focus_dismissed') כדי שהמצב יישאר
+// עקבי גם אחרי רענון/במכשיר אחר, בדיוק כמו daily_focus עצמו
+async function dismissDailyFocusModal() {
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
-    const badge = document.getElementById('ai-brain-fab-badge');
-    if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
+    if (dailyFocusPending && isPremiumUser && supabaseClient && currentUserId) {
+        await supabaseClient.from('calendar_events').insert({
+            username: currentUsername, user_id: currentUserId, event_title: 'daily_focus_dismissed',
+            event_date: getLocalDateString(), source: 'daily_focus_dismissed',
+        });
+    }
+    dailyFocusPending = false;
+    applyDailyFocusIconState();
 }
 
 // בחירה מרובה - כל תגית שנבחרה (+ הטקסט החופשי מ"אחר", אם הוזן) הופכת לשורת
@@ -1518,6 +1565,7 @@ async function saveDailyFocus() {
     }));
     await supabaseClient.from('calendar_events').insert(rows);
     markDailyFocusPromptShown();
+    applyDailyFocusIconState();
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
     showAppToast(t('daily_focus_added_toast'));
@@ -2130,6 +2178,9 @@ function initFixedAiBrainFab() {
     const el = document.getElementById('btn-ai-brain-fab');
     if (!el) return;
     el.onclick = () => openAiBrainModal('food');
+    // רשום פעם אחת בלבד (initFixedAiBrainFab נקראת פעם אחת ב-initAppAfterAuth) -
+    // ר' ההערה על handleDailyFocusOutsideClick עצמה
+    document.addEventListener('click', handleDailyFocusOutsideClick);
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -3821,7 +3872,7 @@ async function loadTodayTasks() {
     const todayStr = getLocalDateString();
     const [{ data, error }, { data: eventRows }, completedScheduleIds, { data: celebratedRows }] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr).neq('source', 'today_celebrated'),
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr).not('source', 'in', '(today_celebrated,daily_focus_dismissed)'),
         getScheduleCompletionsForDate(todayStr),
         supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated').limit(1),
     ]);
