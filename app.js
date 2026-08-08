@@ -1383,12 +1383,80 @@ async function checkDailyFocusPrompt() {
     if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
 }
 
+// "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6), בעברית בלבד (תוכן אישי/
+// מנוסח, לא מחרוזת ממשק - לא עובר דרך i18n.js כמו שאר האפליקציה) - לפי בקשה
+// מפורשת, כולל התוכן המדויק שנשלח
+const DAILY_FOCUS_TAG_BANK = [
+    ["לשמור על המרחב השקט שלי מול העומס מסביב", "להציב גבולות ברורים באהבה ובלי רגשות אשמה", "להישאר בעוגן שלי גם כשמסביב יש סערה", "לשמור על השלווה והאנרגיה שלי כעדיפות עליונה", "לא לקחת על עצמי רגשות ומצבי רוח של אחרים", "לא לאפשר למילים של אחרים לערער את הערך שלי"],
+    ["להקשיב למה שהגוף והנפש שלי צריכים", "ליהנות מהדברים הקטנים בדרך", "להאט ולהיות בקשב נקי לעצמי", "לתת לעצמי מקום לנשום באמצע העשייה", "להרגיש בבית ובשקט בתוך עצמי", "להתמקד במה שקורה עכשיו, בלי לרוץ קדימה"],
+    ["לשמור על דיבור מקדם, סבלני ומבין", "לא לקחת שום דבר באופן אישי", "לא להניח הנחות – פשוט לשאול או לשחרר", "לסמוך על הקצב שלי ועל הדרך", "לשחרר את השלמות ולבחור בהתקדמות", "להיות בסבלנות כלפי התהליך שלי"],
+    ["לסיים את היום בתחושת גאווה וסיפוק", "לראות את ההתקדמות שלי, גם בצעדים קטנים", "להתמקד במשימה אחת בכל פעם", "לעשות סדר במשימות ולפעול ברוגע", "לקבל את עצמי בדיוק כמו שאני היום", "לדעת מתי לפעול ומתי להניח"],
+    ["להביא חיוך וקלילות לכל מה שאעשה", "לפתוח את היום באנרגיה טובה ומחודשת", "לתת לעצמי יום אחד רגוע, בלי ציפיות מוגזמות", "להכניס שמחה פשוטה לתוך השגרה", "לפתוח את הלב להפתעות טובות היום", "להתחיל את היום בהודיה ובחיוך"],
+    ["להקשיב באמת ולא רק לחכות לענות", "לזכור שכל אחד עובר משהו שלא רואים", "להפיץ אנרגיה טובה ומקרבת סביבי", "לשמור על פתיחות וכבוד בתקשורת שלי", "לראות את הטוב באנשים שמסביבי", "לתת מילה טובה למי שצריך היום"],
+    ["לזכור את מה שיש ולא רק את מה שחסר", "לשחרר את מה שלא בשליטתי", "להעריך את הלמידה גם כשדברים לא מתוכננים", "לעצור לרגע ולהגיד תודה על מה שיש", "לבטוח בעצמי וביכולת שלי להתמודד", "להחזיר לעצמי פרופורציה בריאה על הדברים"],
+];
+// לא רנדומלי - סבב קבוע לפי אינדקס-יום: יום 1 = משפט #1 מכל קטגוריה, יום 2 =
+// משפט #2 וכו', חוזר כל 6 ימים - לפי בקשה מפורשת ("את הדוגמא הראשונה מכל
+// קטגוריה ליום ה-1... את הדוגמא ה-2 לסבב השני"). מבוסס על תאריך (לא על
+// localStorage/מונה-פתיחות) כדי שכל המכשירים של אותה משתמשת יראו את אותה
+// תערובת באותו יום קלנדרי
+function getDailyFocusRotationIndex() {
+    const epoch = new Date(2024, 0, 1).getTime();
+    const daysSinceEpoch = Math.floor((Date.now() - epoch) / 86400000);
+    return ((daysSinceEpoch % 6) + 6) % 6;
+}
+
+let selectedDailyFocusTags = [];
+
+// בונה את 7 התגיות של היום (משפט אחד מכל קטגוריה, לפי הסבב) + תגית "אחר"
+// חופשית בסוף. בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags
+function renderDailyFocusTags() {
+    const container = document.getElementById('daily-focus-tags-list');
+    if (!container) return;
+    container.innerHTML = '';
+    selectedDailyFocusTags = [];
+    const idx = getDailyFocusRotationIndex();
+    DAILY_FOCUS_TAG_BANK.forEach(category => {
+        const text = category[idx];
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'daily-focus-tag-chip';
+        chip.textContent = text;
+        chip.onclick = () => toggleDailyFocusTag(text, chip);
+        container.appendChild(chip);
+    });
+    const otherChip = document.createElement('button');
+    otherChip.type = 'button';
+    otherChip.className = 'daily-focus-tag-chip daily-focus-tag-chip-other';
+    otherChip.textContent = t('daily_focus_other_option');
+    otherChip.onclick = () => toggleDailyFocusOther(otherChip);
+    container.appendChild(otherChip);
+}
+
+function toggleDailyFocusTag(text, chipEl) {
+    const idx = selectedDailyFocusTags.indexOf(text);
+    if (idx === -1) { selectedDailyFocusTags.push(text); chipEl.classList.add('selected'); }
+    else { selectedDailyFocusTags.splice(idx, 1); chipEl.classList.remove('selected'); }
+}
+
+// תגית "אחר" חופשית - לא נספרת עם selectedDailyFocusTags (יש לה טקסט חופשי
+// משלה), רק מציגה/מסתירה את שדה הטקסט; התוכן שלה נקרא ישירות ב-saveDailyFocus
+function toggleDailyFocusOther(chipEl) {
+    const input = document.getElementById('daily-focus-input');
+    const nowSelected = chipEl.classList.toggle('selected');
+    if (input) {
+        input.classList.toggle('hidden', !nowSelected);
+        if (nowSelected) input.focus();
+        else input.value = '';
+    }
+}
+
 // לחיצה על אייקון המוח כשיש שאלה ממתינה (ר' initFixedAiBrainFab) - פותחת את
 // הבועה במצב המכווץ (השאלה בלבד) ומסתירה את התג בזמן שהיא פתוחה
 function openDailyFocusBubble() {
     const bubble = document.getElementById('daily-focus-bubble');
     const input = document.getElementById('daily-focus-input');
-    if (input) input.value = '';
+    if (input) { input.value = ''; input.classList.add('hidden'); }
     document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
     document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
     if (bubble) bubble.classList.remove('hidden');
@@ -1396,13 +1464,12 @@ function openDailyFocusBubble() {
     if (badge) badge.classList.add('hidden');
 }
 
-// לחיצה על הבועה עצמה (המצב המכווץ) - נפתחת למצב הזנת טקסט, במקום לעבור
+// לחיצה על הבועה עצמה (המצב המכווץ) - נפתחת למצב בחירת התגיות, במקום לעבור
 // למודל נפרד - לפי בקשה מפורשת ("שאפשר יהיה ללחוץ עליה")
 function expandDailyFocusBubble() {
     document.getElementById('daily-focus-bubble-collapsed').classList.add('hidden');
     document.getElementById('daily-focus-bubble-expanded').classList.remove('hidden');
-    const input = document.getElementById('daily-focus-input');
-    if (input) input.focus();
+    renderDailyFocusTags();
 }
 
 // עדכון מיידי של המצב-בזיכרון בלבד (בלי לחכות לשאילתה חוזרת ל-Supabase) -
@@ -1423,20 +1490,28 @@ function dismissDailyFocusModal() {
     if (badge) badge.classList.toggle('hidden', !dailyFocusPending);
 }
 
+// בחירה מרובה - כל תגית שנבחרה (+ הטקסט החופשי מ"אחר", אם הוזן) הופכת לשורת
+// calendar_events נפרדת משלה, לפי בקשה מפורשת ("כל תגית שנבחרת... הופכת
+// באופן אוטומטי להצצה יומית")
 async function saveDailyFocus() {
     const input = document.getElementById('daily-focus-input');
-    const text = input ? input.value.trim() : '';
-    if (!text) { showAppToast(t('daily_focus_missing_text'), 'error'); return; }
+    const freeText = input && !input.classList.contains('hidden') ? input.value.trim() : '';
+    const allTexts = [...selectedDailyFocusTags];
+    if (freeText) allTexts.push(freeText);
+    if (!allTexts.length) { showAppToast(t('daily_focus_missing_text'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    await supabaseClient.from('calendar_events').insert({
+    const todayStr = getLocalDateString();
+    const rows = allTexts.map(text => ({
         username: currentUsername, user_id: currentUserId, event_title: text,
-        event_date: getLocalDateString(), source: 'daily_focus',
-    });
+        event_date: todayStr, source: 'daily_focus',
+    }));
+    await supabaseClient.from('calendar_events').insert(rows);
     markDailyFocusPromptShown();
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
     showAppToast(t('daily_focus_added_toast'));
     loadTodayTasks();
+    selectedDailyFocusTags = [];
 }
 
 function showDailyGreetingBanner(text) {

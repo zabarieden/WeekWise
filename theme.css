@@ -3347,6 +3347,23 @@ html[dir="ltr"] .daily-focus-bubble::before {
     font-family: inherit;
     outline: none;
 }
+/* תגיות "Daily Mix" - בחירה מרובה, ר' renderDailyFocusTags/toggleDailyFocusTag
+   ב-app.js. תגית "אחר" מסומנת שונה (איטלי) כדי להבדיל אותה מהתגיות הקבועות */
+.daily-focus-tags-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.daily-focus-tag-chip {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-primary);
+    border-radius: 14px;
+    padding: 6px 12px;
+    font-size: 0.76rem;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: start;
+    transition: var(--transition);
+}
+.daily-focus-tag-chip.selected { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+.daily-focus-tag-chip-other { font-style: italic; }
 .daily-focus-bubble-submit-row { display: flex; justify-content: flex-end; }
 .daily-focus-bubble-submit {
     background: transparent;
