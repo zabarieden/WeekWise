@@ -11827,20 +11827,52 @@ async function toggleStudyTaskStatus(id, currentStatus) {
 // תחנות שעוד לא בוצעו (אין טעם לקשר למשהו שכבר מסומן). אם המגירה של לוח
 // החזון עוד לא נפתחה בסשן הזה, ה-cache ריק - טוענים אותו כאן במפורש כדי
 // שהבורר לא יהיה ריק סתם
-async function renderStudyMilestoneOptions(selectedId) {
+// שני שלבים - קודם בוחרים יעד, ואז רק התחנות של אותו יעד - לא רשימה שטוחה
+// אחת עם כל התחנות מכל היעדים מעורבבות יחד, לפי בקשה מפורשת ("אם יהיו כמה
+// חזונים... שתבדוק קודם על איזה חזון מדובר")
+async function renderStudyMilestoneOptions(selectedMilestoneId) {
     if (!visionGoalsCache.length && !visionMilestonesCache.length) await loadVisionGoals();
-    const select = document.getElementById('study-item-milestone');
+    let selectedGoalId = '';
+    if (selectedMilestoneId) {
+        const m = visionMilestonesCache.find(x => x.id === selectedMilestoneId);
+        if (m) selectedGoalId = m.goal_id;
+    }
+    renderStudyGoalOptions(selectedGoalId);
+    renderStudyMilestoneOptionsForGoal(selectedGoalId, selectedMilestoneId);
+}
+
+function renderStudyGoalOptions(selectedGoalId) {
+    const select = document.getElementById('study-item-goal');
     if (!select) return;
     select.innerHTML = `<option value="" data-i18n="study_milestone_none_option">${t('study_milestone_none_option')}</option>`;
-    visionMilestonesCache.filter(m => !m.is_done).forEach(m => {
-        const goal = visionGoalsCache.find(g => g.id === m.goal_id);
+    // רק יעדים עם לפחות תחנה אחת שעוד לא בוצעה - אין טעם להציע יעד שאין לו
+    // אליו מה לקשר (או שכבר הושג לגמרי)
+    visionGoalsCache.filter(g => visionMilestonesCache.some(m => m.goal_id === g.id && !m.is_done)).forEach(g => {
         const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = goal ? `${goal.title}: ${m.title}` : m.title;
+        opt.value = g.id;
+        opt.textContent = g.title;
         select.appendChild(opt);
     });
-    select.value = selectedId || '';
+    select.value = selectedGoalId || '';
+    updateCustomSelectDisplay('study-item-goal');
+}
+
+function renderStudyMilestoneOptionsForGoal(goalId, selectedMilestoneId) {
+    const select = document.getElementById('study-item-milestone');
+    const trigger = document.getElementById('study-item-milestone-trigger');
+    if (!select) return;
+    select.innerHTML = `<option value="" data-i18n="study_milestone_none_option">${t('study_milestone_none_option')}</option>`;
+    if (goalId) {
+        visionMilestonesCache.filter(m => m.goal_id === goalId && !m.is_done).forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.title;
+            select.appendChild(opt);
+        });
+    }
+    select.value = selectedMilestoneId || '';
     updateCustomSelectDisplay('study-item-milestone');
+    if (trigger) trigger.classList.toggle('hidden', !goalId);
 }
 
 async function openAddStudyItemModal() {

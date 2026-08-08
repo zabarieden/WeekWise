@@ -1190,9 +1190,16 @@
                     <textarea id="study-item-input" rows="3" data-i18n-placeholder="study_add_placeholder" placeholder="What do you need to do?"></textarea>
                     <!-- קישור אופציונלי לתחנת-ביניים בלוח החזון - כשמסמנים משימה כזו
                          כבוצעה, התחנה המקושרת מסומנת אוטומטית גם היא (checkAndMarkGoalAchieved
-                         ב-app.js), לפי בקשה מפורשת -->
+                         ב-app.js), לפי בקשה מפורשת. שני שלבים (יעד ואז תחנה) ולא רשימה
+                         שטוחה אחת - לפי בקשה מפורשת ("אם יהיו כמה חזונים... שתבדוק קודם
+                         על איזה חזון מדובר"), כדי שרשימת התחנות לא תהיה ארוכה ומעורבת
+                         בין כמה יעדים שונים -->
                     <p class="settings-label" data-i18n="study_milestone_link_label">Link to a Vision Board milestone (optional)</p>
-                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('study-item-milestone')"><span id="study-item-milestone-display"></span></button>
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('study-item-goal')"><span id="study-item-goal-display"></span></button>
+                    <select id="study-item-goal" class="hidden" onchange="renderStudyMilestoneOptionsForGoal(this.value)">
+                        <option value="" data-i18n="study_milestone_none_option">None</option>
+                    </select>
+                    <button type="button" class="language-select custom-select-trigger hidden" id="study-item-milestone-trigger" onclick="openCustomSelectPicker('study-item-milestone')"><span id="study-item-milestone-display"></span></button>
                     <select id="study-item-milestone" class="hidden">
                         <option value="" data-i18n="study_milestone_none_option">None</option>
                     </select>
@@ -2773,6 +2780,6 @@
     </div>
 
     <script src="i18n.js?v=245"></script>
-    <script src="app.js?v=344"></script>
+    <script src="app.js?v=345"></script>
 </body>
 </html>
