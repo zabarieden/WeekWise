@@ -11809,26 +11809,56 @@ function renderStudyTasksList() {
     });
 }
 
+// אם יש תחנת-ביניים מקושרת ("קישור אופציונלי ללוח החזון"), מסמנים אותה
+// באותה פעולה, ואז בודקים אם זה משלים את כל היעד - לפי בקשה מפורשת
 async function toggleStudyTaskStatus(id, currentStatus) {
     if (!supabaseClient) return;
-    await supabaseClient.from('study_tasks').update({ is_completed: !currentStatus }).eq('id', id);
+    const newStatus = !currentStatus;
+    await supabaseClient.from('study_tasks').update({ is_completed: newStatus }).eq('id', id);
+    const item = studyTasksCache.find(x => x.id === id);
+    if (item && item.linked_milestone_id) {
+        const { data: milestoneRow } = await supabaseClient.from('vision_goal_milestones').update({ is_done: newStatus }).eq('id', item.linked_milestone_id).select('goal_id').maybeSingle();
+        if (milestoneRow) await checkAndMarkGoalAchieved(milestoneRow.goal_id);
+    }
     loadStudyTasks();
 }
 
-function openAddStudyItemModal() {
+// בונה את אפשרויות בורר "קישור לתחנת-ביניים" מ-visionMilestonesCache - רק
+// תחנות שעוד לא בוצעו (אין טעם לקשר למשהו שכבר מסומן). אם המגירה של לוח
+// החזון עוד לא נפתחה בסשן הזה, ה-cache ריק - טוענים אותו כאן במפורש כדי
+// שהבורר לא יהיה ריק סתם
+async function renderStudyMilestoneOptions(selectedId) {
+    if (!visionGoalsCache.length && !visionMilestonesCache.length) await loadVisionGoals();
+    const select = document.getElementById('study-item-milestone');
+    if (!select) return;
+    select.innerHTML = `<option value="" data-i18n="study_milestone_none_option">${t('study_milestone_none_option')}</option>`;
+    visionMilestonesCache.filter(m => !m.is_done).forEach(m => {
+        const goal = visionGoalsCache.find(g => g.id === m.goal_id);
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = goal ? `${goal.title}: ${m.title}` : m.title;
+        select.appendChild(opt);
+    });
+    select.value = selectedId || '';
+    updateCustomSelectDisplay('study-item-milestone');
+}
+
+async function openAddStudyItemModal() {
     editingStudyItemId = null;
     document.getElementById('study-item-modal-title').textContent = t('study_add_item_title');
     document.getElementById('study-item-input').value = '';
+    await renderStudyMilestoneOptions(null);
     openModal('modal-add-study-item');
     setTimeout(() => document.getElementById('study-item-input').focus(), 150);
 }
 
-function openEditStudyItemModal(id) {
+async function openEditStudyItemModal(id) {
     const item = studyTasksCache.find(x => x.id === id);
     if (!item) return;
     editingStudyItemId = id;
     document.getElementById('study-item-modal-title').textContent = t('edit_item_title');
     document.getElementById('study-item-input').value = item.title;
+    await renderStudyMilestoneOptions(item.linked_milestone_id);
     openModal('modal-add-study-item');
     setTimeout(() => document.getElementById('study-item-input').focus(), 150);
 }
@@ -11836,14 +11866,16 @@ function openEditStudyItemModal(id) {
 async function submitStudyItem() {
     const input = document.getElementById('study-item-input');
     const title = input.value.trim();
+    const milestoneSelect = document.getElementById('study-item-milestone');
+    const linkedMilestoneId = milestoneSelect && milestoneSelect.value ? milestoneSelect.value : null;
     const editId = editingStudyItemId;
     closeModal('modal-add-study-item');
     editingStudyItemId = null;
     if (!title || !supabaseClient || !currentUserId) return;
     if (editId) {
-        await supabaseClient.from('study_tasks').update({ title }).eq('id', editId);
+        await supabaseClient.from('study_tasks').update({ title, linked_milestone_id: linkedMilestoneId }).eq('id', editId);
     } else {
-        await supabaseClient.from('study_tasks').insert({ user_id: currentUserId, username: currentUsername, title });
+        await supabaseClient.from('study_tasks').insert({ user_id: currentUserId, username: currentUsername, title, linked_milestone_id: linkedMilestoneId });
     }
     await loadStudyTasks();
     showAppToast(t('item_added_success'));
@@ -11869,17 +11901,34 @@ async function loadVisionGoals() {
 function renderVisionGoalsList() {
     const list = document.getElementById('vision-goals-list');
     const empty = document.getElementById('vision-goals-empty');
+    const achievedSection = document.getElementById('vision-goals-achieved-section');
+    const achievedList = document.getElementById('vision-goals-achieved-list');
     if (!list) return;
     list.innerHTML = '';
-    if (!visionGoalsCache.length) {
+    if (achievedList) achievedList.innerHTML = '';
+
+    const activeGoals = visionGoalsCache.filter(g => !g.is_achieved);
+    const achievedGoals = visionGoalsCache.filter(g => g.is_achieved);
+
+    if (!activeGoals.length) {
         if (empty) empty.classList.remove('hidden');
-        return;
+    } else {
+        if (empty) empty.classList.add('hidden');
+        activeGoals.forEach(goal => {
+            const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+            list.appendChild(renderVisionGoalCard(goal, milestones));
+        });
     }
-    if (empty) empty.classList.add('hidden');
-    visionGoalsCache.forEach(goal => {
-        const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
-        list.appendChild(renderVisionGoalCard(goal, milestones));
-    });
+
+    // "יעדים שכבשתי" - קבועים כאן לצמיתות, לא נעלמים אוטומטית לעולם (ר' ההערה
+    // ב-index.html) - הסקשן עצמו מוצג רק כשיש לפחות הישג אחד
+    if (achievedSection) achievedSection.classList.toggle('hidden', achievedGoals.length === 0);
+    if (achievedList) {
+        achievedGoals.forEach(goal => {
+            const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+            achievedList.appendChild(renderVisionGoalCard(goal, milestones));
+        });
+    }
 }
 
 // שורת תחנת-ביניים בודדת (גב הכרטיס) - פונקציה משותפת לבנייה הראשונית ולהוספה
@@ -11942,6 +11991,15 @@ function renderVisionGoalCard(goal, milestones) {
         tag.className = 'vision-card-category-tag';
         tag.textContent = `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}`;
         front.appendChild(tag);
+    }
+    // גביע נוצץ-וזוהר על יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים במה
+    // שעשו")
+    if (goal.is_achieved) {
+        const trophy = document.createElement('div');
+        trophy.className = 'vision-card-trophy-badge';
+        trophy.title = t('vision_goal_achieved_badge_title');
+        trophy.textContent = '🏆';
+        front.appendChild(trophy);
     }
     const nameEl = document.createElement('div');
     nameEl.className = 'vision-card-front-name';
@@ -12042,6 +12100,26 @@ async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
     const m = visionMilestonesCache.find(x => x.id === milestoneId);
     if (m) m.is_done = checked;
     updateVisionCardProgressDisplay(goalId);
+    await checkAndMarkGoalAchieved(goalId);
+}
+
+// כשכל התחנות של יעד מסומנות בוצע, היעד עצמו מסומן "הושג" לצמיתות - לא
+// מתאפס אוטומטית אם תחנה מבוטלת אחר כך (לפי בקשה מפורשת, "תמיד שם"). נקראת
+// גם מ-toggleVisionMilestoneDone (סימון ישיר בלוח החזון) וגם מ-
+// toggleStudyTaskStatus (סימון משימת "לימודים" מקושרת) - שני נתיבים שונים
+// לאותה תוצאה, אז הבדיקה מרוכזת כאן במקום אחד
+async function checkAndMarkGoalAchieved(goalId) {
+    if (!supabaseClient || !goalId) return;
+    const { data: milestones } = await supabaseClient.from('vision_goal_milestones').select('is_done').eq('goal_id', goalId);
+    if (!milestones || !milestones.length) return;
+    if (!milestones.every(m => m.is_done)) return;
+    const { data: goal } = await supabaseClient.from('vision_goals').select('is_achieved').eq('id', goalId).maybeSingle();
+    if (!goal || goal.is_achieved) return;
+    await supabaseClient.from('vision_goals').update({ is_achieved: true, achieved_at: new Date().toISOString() }).eq('id', goalId);
+    const cached = visionGoalsCache.find(g => g.id === goalId);
+    if (cached) cached.is_achieved = true;
+    renderVisionGoalsList();
+    showAppToast(t('vision_goal_achieved_toast'));
 }
 
 // מזריקה תחנת-ביניים בודדת ליומן כאירוע חד-פעמי להיום - בדיוק כמו "מבט
