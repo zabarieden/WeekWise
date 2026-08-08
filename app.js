@@ -7501,6 +7501,7 @@ async function deleteFinanceEntry(id) {
 // פרימיום, לפי בקשה מפורשת ("everything premium locked") ---
 let cachedRecurringExpenses = [];
 let editingRecurringExpenseId = null;
+let rawRecurringImportRows = null;
 let pendingRecurringImportRows = null;
 
 async function loadRecurringExpenses() {
@@ -7669,13 +7670,29 @@ function deleteRecurringExpense(id) {
 // עם כל קובץ ייצוא, לא רק פורמטים שכבר ראינו. SheetJS (XLSX) מטפל גם ב-.csv
 // דרך אותו API, כך שכל שלושת סוגי הקבצים המקובלים עוברים באותו נתיב קוד ---
 function openImportRecurringExpensesModal() {
+    rawRecurringImportRows = null;
     pendingRecurringImportRows = null;
     document.getElementById('recurring-import-file-input').value = '';
     document.getElementById('recurring-import-step1').classList.remove('hidden');
     document.getElementById('recurring-import-step2').classList.add('hidden');
     document.getElementById('recurring-import-source-input').value = '';
     document.getElementById('recurring-import-has-header').checked = true;
+    document.getElementById('recurring-import-skip-rows').value = 0;
     openModal('modal-import-recurring-expenses');
+}
+
+// דוחות ייצוא מבנקים/כרטיסי אשראי כוללים לעיתים קרובות שורת כותרת-דוח ו/או
+// שורת סיכום לפני טבלת הנתונים האמיתית (למשל "פירוט הוראות קבע לחשבון...")
+// - שורות כאלה בד"כ ממלאות רק תא אחד מתוך הרבה, בניגוד לשורות הטבלה האמיתית
+// שממלאות כמעט את כל העמודות. מנחשים כמה שורות כאלה לדלג עליהן כברירת מחדל
+// (ניתנת לשינוי ידני) - לפי בעיה שנתגלתה בבדיקה בפועל עם קובץ אמיתי מהבנק
+function guessRecurringImportSkipRows(rows) {
+    if (!rows.length) return 0;
+    const widths = rows.map(r => r.filter(c => c !== undefined && c !== '').length);
+    const maxWidth = Math.max(...widths);
+    let skip = 0;
+    while (skip < rows.length - 1 && widths[skip] < Math.max(2, maxWidth * 0.5)) skip++;
+    return skip;
 }
 
 async function handleRecurringImportFileSelected(event) {
@@ -7687,14 +7704,35 @@ async function handleRecurringImportFileSelected(event) {
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
-        pendingRecurringImportRows = rows.filter(row => row && row.length && row.some(cell => cell !== undefined && cell !== ''));
-        if (!pendingRecurringImportRows.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+        rawRecurringImportRows = rows.filter(row => row && row.length && row.some(cell => cell !== undefined && cell !== ''));
+        if (!rawRecurringImportRows.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+        document.getElementById('recurring-import-skip-rows').value = guessRecurringImportSkipRows(rawRecurringImportRows);
         document.getElementById('recurring-import-step1').classList.add('hidden');
         document.getElementById('recurring-import-step2').classList.remove('hidden');
-        rebuildRecurringImportMapping();
+        applyRecurringImportSkipRows();
     } catch (e) {
         showAppToast(t('finance_recurring_import_failed'), 'error');
     }
+}
+
+function applyRecurringImportSkipRows() {
+    if (!rawRecurringImportRows) return;
+    const skipInput = document.getElementById('recurring-import-skip-rows');
+    let skip = parseInt(skipInput.value) || 0;
+    if (skip < 0) skip = 0;
+    if (skip > rawRecurringImportRows.length - 1) skip = rawRecurringImportRows.length - 1;
+    skipInput.value = skip;
+    pendingRecurringImportRows = rawRecurringImportRows.slice(skip);
+    rebuildRecurringImportMapping();
+}
+
+// תא שהוא תאריך (Date אמיתי, בזכות cellDates:true בקריאת הקובץ) מוצג בתצוגה
+// המקדימה בפורמט קצר וקריא (YYYY-MM-DD) במקום Date.toString() הגולמי - שעל
+// חלק מהדפדפנים מוצג עם שם יום/חודש בעברית ואזור-זמן מלא, בלתי קריא לחלוטין
+function formatCellForPreview(cell) {
+    if (cell === undefined || cell === null || cell === '') return '';
+    if (cell instanceof Date && !isNaN(cell)) return getLocalDateString(cell);
+    return String(cell);
 }
 
 function rebuildRecurringImportMapping() {
@@ -7704,7 +7742,8 @@ function rebuildRecurringImportMapping() {
     const columnCount = Math.max(...pendingRecurringImportRows.map(r => r.length));
     const labels = [];
     for (let i = 0; i < columnCount; i++) {
-        labels.push(hasHeader && headerRow[i] !== undefined && headerRow[i] !== '' ? String(headerRow[i]) : `${t('finance_recurring_import_column_label')} ${i + 1}`);
+        const headerText = hasHeader ? formatCellForPreview(headerRow[i]) : '';
+        labels.push(headerText || `${t('finance_recurring_import_column_label')} ${i + 1}`);
     }
     const optionsHtml = `<option value="">-</option>` + labels.map((label, i) => `<option value="${i}">${escapeHtmlForReport(label)}</option>`).join('');
     ['recurring-import-map-name', 'recurring-import-map-amount', 'recurring-import-map-start', 'recurring-import-map-end'].forEach(id => {
@@ -7729,8 +7768,8 @@ function rebuildRecurringImportMapping() {
 function renderRecurringImportPreviewTable() {
     const table = document.getElementById('recurring-import-preview-table');
     if (!table || !pendingRecurringImportRows) return;
-    const previewRows = pendingRecurringImportRows.slice(0, 5);
-    table.innerHTML = previewRows.map(row => `<tr>${row.map(cell => `<td>${escapeHtmlForReport(cell === undefined || cell === null ? '' : String(cell))}</td>`).join('')}</tr>`).join('');
+    const previewRows = pendingRecurringImportRows.slice(0, 8);
+    table.innerHTML = previewRows.map(row => `<tr>${row.map(cell => `<td>${escapeHtmlForReport(formatCellForPreview(cell))}</td>`).join('')}</tr>`).join('');
 }
 
 function parseFlexibleAmount(raw) {

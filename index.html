@@ -1336,6 +1336,10 @@
                         <div class="import-preview-table-wrap">
                             <table class="import-preview-table" id="recurring-import-preview-table"></table>
                         </div>
+                        <div class="import-column-mapper-row">
+                            <span data-i18n="finance_recurring_import_skip_rows_label">Skip rows at the top of the file (report title, if any)</span>
+                            <input type="number" id="recurring-import-skip-rows" min="0" value="0" style="width: 60px;" onchange="applyRecurringImportSkipRows()">
+                        </div>
                         <label class="settings-checkbox-row">
                             <input type="checkbox" id="recurring-import-has-header" checked onchange="rebuildRecurringImportMapping()">
                             <span data-i18n="finance_recurring_import_has_header_label">First row is headers</span>
@@ -2993,7 +2997,7 @@
 
     </div>
 
-    <script src="i18n.js?v=253"></script>
-    <script src="app.js?v=353"></script>
+    <script src="i18n.js?v=254"></script>
+    <script src="app.js?v=354"></script>
 </body>
 </html>
