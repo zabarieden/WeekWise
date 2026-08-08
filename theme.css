@@ -2930,6 +2930,11 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .project-card-main, .notebook-card-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
 .project-card-actions, .notebook-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .projects-list { list-style: none; margin: 0; padding: 0; }
+/* בורר אייקון לפרויקט - אותו דפוס בדיוק כמו .vision-goal-category-chip, רק
+   ריבועי (אמוג'י בלבד, בלי תווית טקסט) */
+.icon-picker-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.icon-picker-chip { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.1rem; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: var(--transition); padding: 0; }
+.icon-picker-chip.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
 
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
@@ -4367,7 +4372,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .hours-settings-row .btn-delete-slot { flex-shrink: 0; }
 .hours-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 10px; padding: 10px; font-size: 0.85rem; outline: none; text-align: center; box-sizing: border-box; min-width: 0; }
 .schedule-adder-grid, .preset-manager-grid { display: flex; flex-direction: column; gap: 10px; }
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 14px; padding: 12px; font-size: 0.9rem; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input { background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }

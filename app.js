@@ -12101,6 +12101,30 @@ let editingProjectId = null;
 let editingNotebookId = null;
 let editingNotebookItemId = null;
 
+// אייקון לכל פרויקט - כדי להבחין במבט חטוף בין פרויקטים (למשל "מתמטיקה" מול
+// "היסטוריה" אצל ילד/ה) - לפי בקשה מפורשת. דפוס זהה ל-VISION_GOAL_CATEGORY_PRESETS/
+// selectVisionGoalCategory, רק שכאן האמוג'י עצמו הוא גם המזהה וגם התצוגה
+const PROJECT_ICON_PRESETS = ['📁', '📚', '💼', '🎨', '🔬', '🏋️', '🎵', '💻', '🌱', '⚽', '🧮', '🌍'];
+let selectedProjectIcon = '📁';
+
+function renderProjectIconPicker() {
+    const container = document.getElementById('project-icon-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    PROJECT_ICON_PRESETS.forEach(icon => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'icon-picker-chip' + (selectedProjectIcon === icon ? ' selected' : '');
+        chip.textContent = icon;
+        chip.onclick = () => selectProjectIcon(icon);
+        container.appendChild(chip);
+    });
+}
+function selectProjectIcon(icon) {
+    selectedProjectIcon = icon;
+    renderProjectIconPicker();
+}
+
 function openMyProjectsEntry() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     closeStudyDrawer();
@@ -12140,7 +12164,7 @@ function renderProjectsList() {
         const li = document.createElement('li');
         li.className = 'project-card';
         li.innerHTML = `
-            <span class="project-card-main" onclick="openProjectDetail('${project.id}')">${escapeHtmlForReport(project.title)}</span>
+            <span class="project-card-main" onclick="openProjectDetail('${project.id}')">${project.icon || '📁'} ${escapeHtmlForReport(project.title)}</span>
             <span class="project-card-actions">
                 <button type="button" class="btn-edit-item" onclick="openEditProjectModal('${project.id}')">${EDIT_ICON_SVG}</button>
                 <button type="button" class="btn-delete-item" onclick="deleteProject('${project.id}')">❌</button>
@@ -12154,6 +12178,8 @@ function openAddProjectModal() {
     editingProjectId = null;
     document.getElementById('project-modal-title').textContent = t('projects_add_item_title');
     document.getElementById('project-item-input').value = '';
+    selectedProjectIcon = PROJECT_ICON_PRESETS[0];
+    renderProjectIconPicker();
     openModal('modal-add-project');
     setTimeout(() => document.getElementById('project-item-input').focus(), 150);
 }
@@ -12164,20 +12190,23 @@ function openEditProjectModal(id) {
     editingProjectId = id;
     document.getElementById('project-modal-title').textContent = t('edit_item_title');
     document.getElementById('project-item-input').value = project.title;
+    selectedProjectIcon = project.icon || PROJECT_ICON_PRESETS[0];
+    renderProjectIconPicker();
     openModal('modal-add-project');
 }
 
 async function submitProject() {
     const input = document.getElementById('project-item-input');
     const title = input.value.trim();
+    const icon = selectedProjectIcon;
     const editId = editingProjectId;
     closeModal('modal-add-project');
     editingProjectId = null;
     if (!title || !supabaseClient || !currentUserId) return;
     if (editId) {
-        await supabaseClient.from('projects').update({ title }).eq('id', editId);
+        await supabaseClient.from('projects').update({ title, icon }).eq('id', editId);
     } else {
-        await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title });
+        await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title, icon });
     }
     await loadProjects();
     showAppToast(t('item_added_success'));
@@ -12204,7 +12233,7 @@ function openNotebooksDrawer() {
     if (wrapper) wrapper.classList.add('projects-open');
     const project = projectsCache.find(p => p.id === currentOpenProjectId);
     const titleEl = document.getElementById('notebooks-drawer-title');
-    if (titleEl) titleEl.textContent = project ? project.title : '';
+    if (titleEl) titleEl.textContent = project ? `${project.icon || '📁'} ${project.title}` : '';
     loadProjectNotebooks(currentOpenProjectId);
 }
 function closeNotebooksDrawer() {
