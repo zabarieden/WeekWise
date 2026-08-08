@@ -3733,12 +3733,14 @@ async function loadTodayTasks() {
     if (!container) return;
     const todayDbDay = dbDaysMap[new Date().getDay()];
     const todayStr = getLocalDateString();
-    const [{ data, error }, { data: eventRows }, completedScheduleIds] = await Promise.all([
+    const [{ data, error }, { data: eventRows }, completedScheduleIds, { data: celebratedRows }] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr),
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr).neq('source', 'today_celebrated'),
         getScheduleCompletionsForDate(todayStr),
+        supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated').limit(1),
     ]);
     if (error || !data) return;
+    const alreadyCelebratedToday = !!(celebratedRows && celebratedRows.length > 0);
     const populated = data
         .filter(item => (item.task_title || '').trim())
         .sort((a, b) => {
@@ -3808,9 +3810,14 @@ async function loadTodayTasks() {
         // נצנצים על פני כל האפליקציה לרגע החגיגה - רק בפעם הראשונה שמגיעים
         // ל"הכל בוצע" ביום הזה (לא בכל טעינה חוזרת כל עוד זה עדיין כולו
         // מסומן), אז מאפסים את הדגל ברגע שמשהו כבר לא מסומן, כדי שסבב השלמה
-        // חדש באותו יום (אחרי ביטול סימון) יחגוג שוב
-        if (populated.length + events.length > 0 && localStorage.getItem(`weekwise_today_celebrated_${todayStr}`) !== 'true') {
-            localStorage.setItem(`weekwise_today_celebrated_${todayStr}`, 'true');
+        // חדש באותו יום (אחרי ביטול סימון) יחגוג שוב. הדגל ב-Supabase (לא
+        // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
+        // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח
+        if (populated.length + events.length > 0 && !alreadyCelebratedToday) {
+            supabaseClient.from('calendar_events').insert({
+                username: currentUsername, user_id: currentUserId,
+                event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
+            });
             triggerAllDoneSparkles();
         }
     // עוד לא הכל בוצע - הודעת עידוד לפי כמה פעמים נפתחה הכרטיס היום, מוצגת
@@ -3820,7 +3827,9 @@ async function loadTodayTasks() {
     // מסומנות (הענף הזה כבר לא רץ בכלל, ר' if(allDone) למעלה) - לפי בקשה
     // מפורשת
     } else {
-        localStorage.removeItem(`weekwise_today_celebrated_${todayStr}`);
+        if (alreadyCelebratedToday) {
+            supabaseClient.from('calendar_events').delete().eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated');
+        }
         const viewCount = getTodayCardViewCount();
         if (populated.length + events.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
