@@ -11940,7 +11940,9 @@ function renderVisionGoalsList() {
     if (achievedList) achievedList.innerHTML = '';
 
     const activeGoals = visionGoalsCache.filter(g => !g.is_achieved);
-    const achievedGoals = visionGoalsCache.filter(g => g.is_achieved);
+    // ההישג האחרון קודם (לא סדר-יצירה מקורי) - לפי בקשה מפורשת ("כל חזון
+    // חדש יהיה בשורה למעלה"), כך שהטרופיאה הכי טרייה תמיד הכי בולטת
+    const achievedGoals = visionGoalsCache.filter(g => g.is_achieved).sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at));
 
     if (!activeGoals.length) {
         if (empty) empty.classList.remove('hidden');
