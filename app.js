@@ -10425,17 +10425,11 @@ async function escalateMealRowToAI(foodInput, caloriesInput, text) {
 // --- שמירת מה שכבר הוקלד ביומן היומי כ"ארוחה קבועה" (meal_presets) בלחיצה
 // אחת - בלי לצאת למסך ניהול-ארוחות נפרד ולהקליד את אותו הדבר שוב.
 // data-category על ה-select הקיים בשורה כבר קובע לאיזו קטגוריה זה משתייך ---
-async function saveMealRowAsPreset(button) {
+function saveMealRowAsPreset(button) {
     const row = button.closest('.meal-row');
     if (!row) return;
     const foodInput = row.querySelector('.food-input');
     const caloriesInput = row.querySelector('.calories-input');
-    // תיקון: category-select הישן (native <select class="preset-select">) הוחלף
-    // בזמנו ב-.preset-select-trigger (הכפתור הקבוע-מותאם-אישית), אבל הקריאה
-    // כאן עדיין חיפשה .preset-select שכבר לא קיים בשורה - התוצאה הייתה שכל
-    // ארוחה שנשמרת מקבלת קטגוריה "snack" בשקט, ללא קשר לשורה שממנה נשמרה.
-    // עכשיו נקרא ה-data-category ישירות מהכפתור, שכבר נכון לכל שורה (morning/
-    // noon/evening/snack) - דווח: "זה לא שאל באיזה קטגוריה לשים את זה"
     const categoryTrigger = row.querySelector('.preset-select-trigger');
     const name = foodInput.value.trim();
     const calories = parseInt(caloriesInput.value) || 0;
@@ -10445,10 +10439,18 @@ async function saveMealRowAsPreset(button) {
         openPremiumUpgradeModal();
         return;
     }
-    const category = categoryTrigger ? categoryTrigger.getAttribute('data-category') : 'snack';
-    await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories });
-    showAppToast(t('meal_save_preset_success'));
-    loadMealPresetsToSelects();
+    // לא שומרים ישירות בשקט תחת קטגוריה מנוחשת - פותחים את "הוספת ארוחה
+    // למאגר" עם שם+קלוריות כבר ממולאים ובורר-קטגוריה מוצג, כדי שהמשתמשת
+    // תבחר/תאשר בעצמה איפה לשמור - לפי בקשה מפורשת ("שישאל באיזה קטגוריה
+    // לשמור, והמשתמש ישמור איפה שהוא רוצה"). קטגוריית השורה עצמה (data-category
+    // על .preset-select-trigger) רק ממלאת ברירת מחדל סבירה בבורר, לא קובעת
+    cancelPresetEdit();
+    document.getElementById('new-preset-name').value = name;
+    document.getElementById('new-preset-calories').value = calories;
+    const defaultCategory = categoryTrigger ? categoryTrigger.getAttribute('data-category') : 'snack';
+    document.getElementById('new-preset-category').value = defaultCategory;
+    updateCustomSelectDisplay('new-preset-category');
+    openModal('modal-add-preset');
     loadPresetManageList();
 }
 
