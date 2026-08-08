@@ -2918,7 +2918,12 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     pointer-events: none;
 }
 .study-task-item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 2px; }
-.study-task-item .center-list-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.study-task-item .center-list-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+/* לחיצה על טקסט ארוך (שנחתך בשלוש נקודות) מרחיבה את השורה במקום - height:auto
+   ו-align-items:flex-start כדי שהצ'קבוקס/כפתורים יישארו למעלה כשהטקסט גולש
+   לכמה שורות, במקום להתמרכז אנכית מול טקסט ארוך */
+.study-task-item.expanded { height: auto; align-items: flex-start; padding-top: 6px; padding-bottom: 6px; }
+.study-task-item.expanded .center-list-item-text { overflow: visible; text-overflow: clip; white-space: normal; }
 /* כפתור-כניסה שקט בתחתית מגירת "לימודים" ל"הפרויקטים שלי" - גבול מקווקו כדי
    שיהיה ברור שזו הזמנה לתכונה נפרדת, לא עוד שורה ברשימה שמעליו */
 .study-drawer-footer-link { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; padding: 10px 12px; background: transparent; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; }
@@ -4916,6 +4921,17 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .finance-history-date { font-size: 0.68rem; color: var(--text-secondary); opacity: 0.8; }
 .finance-history-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
 .finance-history-empty { color: var(--text-secondary); text-align: center; padding: 10px 0; background: transparent !important; box-shadow: none !important; border: none !important; }
+/* הוצאות קבועות: תג "מקור" (כרטיס/בנק) קטן ליד השם - עוזר להבדיל בין כמה
+   ייבואים ממקורות שונים, ר' confirmRecurringExpenseImport ב-app.js */
+.recurring-expense-source-tag { display: inline-block; align-self: flex-start; font-size: 0.65rem; font-weight: 600; padding: 1px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); }
+.finance-history-row.recurring-expense-ended { opacity: 0.55; }
+/* ייבוא הוצאות קבועות מאקסל/CSV: תצוגה מקדימה גוללת אופקית (טבלה יכולה
+   להיות רחבה מהמסך) + מיפוי עמודות (בורר לכל שדה) */
+.import-preview-table-wrap { overflow-x: auto; max-width: 100%; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--border-color); }
+.import-preview-table { border-collapse: collapse; font-size: 0.72rem; white-space: nowrap; }
+.import-preview-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+.import-column-mapper-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px; font-size: 0.82rem; color: var(--text-secondary); }
+.import-column-mapper-row select { flex: 0 0 auto; max-width: 55%; }
 /* תג "פרימיום פעיל" עדין - מחליף את כפתור "שדרוג לפרימיום" ברגע שכבר יש
    פרימיום, כדי לא להמשיך להציע שדרוג למי שכבר שדרגה */
 .premium-active-badge { text-align: center; margin: 10px 0; }

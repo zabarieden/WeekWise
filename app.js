@@ -5898,6 +5898,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'finance_cycle_day', category: 'finance' },
+    { id: 'finance_recurring', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'toggle_fabs', category: 'settings_a11y' },
@@ -7333,7 +7334,7 @@ async function loadFinanceData() {
     loadFinanceCardVisibility();
     const dateInput = document.getElementById('finance-date-input');
     if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('finance-date-input'); }
-    await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+    await Promise.all([renderFinanceSummary(), renderFinanceHistory(), loadRecurringExpenses()]);
 }
 
 async function submitFinanceEntry() {
@@ -7489,6 +7490,293 @@ async function renderFinanceHistory() {
 async function deleteFinanceEntry(id) {
     await supabaseClient.from('budget_tracker').delete().eq('id', id);
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+// --- הוצאות קבועות / הוראות קבע: טבלת תכנון נפרדת מהיסטוריית ההכנסות/הוצאות
+// למעלה (budget_tracker) - לא נכנסת אליה בכלל, כדי לא לספור פעמיים הוצאה
+// שגם נרשמת ידנית בכל חודש (אין כאן cron בצד שרת ש"יחייב" אוטומטית מדי חודש).
+// הוספה ידנית או ייבוא מקובץ אקסל/CSV מהבנק/כרטיס אשראי, עם מיפוי עמודות ידני
+// (אין דרך לדעת מראש את פורמט הייצוא של כל בנק) ותווית "מקור" אחת שחלה על כל
+// הפריטים בייבוא אחד, כדי להבדיל בין כמה כרטיסים/בנקים - לפי בקשה מפורשת.
+// פרימיום, לפי בקשה מפורשת ("everything premium locked") ---
+let cachedRecurringExpenses = [];
+let editingRecurringExpenseId = null;
+let pendingRecurringImportRows = null;
+
+async function loadRecurringExpenses() {
+    if (!supabaseClient || !currentUserId) return;
+    if (!isPremiumUser) { renderRecurringExpensesSection(); return; }
+    const { data } = await supabaseClient.from('recurring_expenses').select('*').eq('user_id', currentUserId).order('start_date', { ascending: false });
+    cachedRecurringExpenses = data || [];
+    renderRecurringExpensesSection();
+}
+
+function isRecurringExpenseActive(item) {
+    const today = getLocalDateString();
+    if (item.start_date > today) return false;
+    if (item.end_date && item.end_date < today) return false;
+    return true;
+}
+
+function renderRecurringExpensesSection() {
+    const container = document.getElementById('recurring-expenses-content');
+    if (!container) return;
+    if (!isPremiumUser) {
+        container.innerHTML = `<p class="monthly-goal-empty">${t('finance_recurring_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
+        return;
+    }
+    const activeItems = cachedRecurringExpenses.filter(isRecurringExpenseActive);
+    const monthlyTotal = activeItems.reduce((sum, item) => sum + Number(item.amount), 0);
+    container.innerHTML = `
+        <div class="stats-grid stats-grid-2col">
+            <div class="stat-box">
+                <h3>${t('finance_recurring_active_count')}</h3>
+                <div class="stat-number">${activeItems.length}</div>
+            </div>
+            <div class="stat-box">
+                <h3>${t('finance_recurring_monthly_total')}</h3>
+                <div class="stat-number">${monthlyTotal.toLocaleString()}</div>
+            </div>
+        </div>
+        <div class="preset-manager-grid" style="margin-top:10px;">
+            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal()">${t('finance_recurring_add_btn')}</button>
+            <button type="button" class="btn-secondary" onclick="openImportRecurringExpensesModal()">${t('finance_recurring_import_btn')}</button>
+        </div>
+        <ul id="recurring-expenses-list" class="center-list" style="margin-top:10px;"></ul>
+    `;
+    renderRecurringExpensesList();
+}
+
+function formatShortMonthYear(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(currentLang, { month: 'short', year: 'numeric' });
+}
+
+function renderRecurringExpensesList() {
+    const list = document.getElementById('recurring-expenses-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!cachedRecurringExpenses.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
+    const today = getLocalDateString();
+    cachedRecurringExpenses.forEach(item => {
+        const ended = item.end_date && item.end_date < today;
+        let badgeText;
+        if (!item.end_date) badgeText = t('finance_recurring_ongoing');
+        else if (ended) badgeText = t('finance_recurring_ended_on', { date: formatShortMonthYear(item.end_date) });
+        else badgeText = t('finance_recurring_ends_on', { date: formatShortMonthYear(item.end_date) });
+        const li = document.createElement('li');
+        li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
+        li.innerHTML = `
+            <div class="finance-history-main">
+                <span class="finance-history-category">${escapeHtmlForReport(item.name)}</span>
+                ${item.source ? `<span class="recurring-expense-source-tag">${escapeHtmlForReport(item.source)}</span>` : ''}
+                <span class="finance-history-date">${badgeText}</span>
+            </div>
+            <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${item.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-item" onclick="deleteRecurringExpense('${item.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+function populateRecurringCategoryOptions() {
+    const select = document.getElementById('recurring-category-select');
+    if (!select) return;
+    select.innerHTML = FINANCE_CATEGORIES.expense.map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+}
+
+function toggleRecurringEndDateField() {
+    const noEnd = document.getElementById('recurring-no-end-date-toggle').checked;
+    const trigger = document.getElementById('recurring-end-date-trigger');
+    trigger.classList.toggle('hidden', noEnd);
+    if (noEnd) document.getElementById('recurring-end-date-input').value = '';
+}
+
+function openAddRecurringExpenseModal() {
+    editingRecurringExpenseId = null;
+    document.getElementById('recurring-expense-modal-title').textContent = t('finance_recurring_add_btn');
+    document.getElementById('recurring-name-input').value = '';
+    document.getElementById('recurring-amount-input').value = '';
+    document.getElementById('recurring-source-input').value = '';
+    populateRecurringCategoryOptions();
+    updateCustomSelectDisplay('recurring-category-select');
+    const startInput = document.getElementById('recurring-start-date-input');
+    startInput.value = getLocalDateString();
+    updateDateFieldDisplay('recurring-start-date-input');
+    document.getElementById('recurring-end-date-input').value = '';
+    updateDateFieldDisplay('recurring-end-date-input');
+    document.getElementById('recurring-no-end-date-toggle').checked = true;
+    toggleRecurringEndDateField();
+    openModal('modal-add-recurring-expense');
+}
+
+function openEditRecurringExpenseModal(id) {
+    const item = cachedRecurringExpenses.find(x => x.id === id);
+    if (!item) return;
+    editingRecurringExpenseId = id;
+    document.getElementById('recurring-expense-modal-title').textContent = t('edit_item_title');
+    document.getElementById('recurring-name-input').value = item.name;
+    document.getElementById('recurring-amount-input').value = item.amount;
+    document.getElementById('recurring-source-input').value = item.source || '';
+    populateRecurringCategoryOptions();
+    document.getElementById('recurring-category-select').value = item.category || FINANCE_CATEGORIES.expense[0][0];
+    updateCustomSelectDisplay('recurring-category-select');
+    const startInput = document.getElementById('recurring-start-date-input');
+    startInput.value = item.start_date;
+    updateDateFieldDisplay('recurring-start-date-input');
+    const noEnd = !item.end_date;
+    document.getElementById('recurring-no-end-date-toggle').checked = noEnd;
+    document.getElementById('recurring-end-date-input').value = item.end_date || '';
+    updateDateFieldDisplay('recurring-end-date-input');
+    toggleRecurringEndDateField();
+    openModal('modal-add-recurring-expense');
+}
+
+async function submitRecurringExpense() {
+    const name = document.getElementById('recurring-name-input').value.trim();
+    const amount = parseFloat(document.getElementById('recurring-amount-input').value);
+    const category = document.getElementById('recurring-category-select').value || null;
+    const source = document.getElementById('recurring-source-input').value.trim() || null;
+    const startDate = document.getElementById('recurring-start-date-input').value || getLocalDateString();
+    const noEndDate = document.getElementById('recurring-no-end-date-toggle').checked;
+    const endDate = noEndDate ? null : (document.getElementById('recurring-end-date-input').value || null);
+    if (!name || !amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    const editId = editingRecurringExpenseId;
+    closeModal('modal-add-recurring-expense');
+    editingRecurringExpenseId = null;
+    if (!supabaseClient || !currentUserId) return;
+    const payload = { name, amount, category, source, start_date: startDate, end_date: endDate };
+    let error;
+    if (editId) {
+        ({ error } = await supabaseClient.from('recurring_expenses').update(payload).eq('id', editId));
+    } else {
+        ({ error } = await supabaseClient.from('recurring_expenses').insert({ user_id: currentUserId, username: currentUsername, ...payload }));
+    }
+    if (error) { showAppToast(t('finance_recurring_add_failed'), 'error'); return; }
+    showAppToast(t('finance_recurring_add_success'));
+    await loadRecurringExpenses();
+}
+
+function deleteRecurringExpense(id) {
+    showDangerConfirm(t('finance_recurring_delete_title'), t('finance_recurring_delete_confirm'), async () => {
+        await supabaseClient.from('recurring_expenses').delete().eq('id', id);
+        await loadRecurringExpenses();
+    });
+}
+
+// --- ייבוא מאקסל/CSV: מיפוי עמודות ידני (לא ניחוש פורמט בנק ספציפי) - עובד
+// עם כל קובץ ייצוא, לא רק פורמטים שכבר ראינו. SheetJS (XLSX) מטפל גם ב-.csv
+// דרך אותו API, כך שכל שלושת סוגי הקבצים המקובלים עוברים באותו נתיב קוד ---
+function openImportRecurringExpensesModal() {
+    pendingRecurringImportRows = null;
+    document.getElementById('recurring-import-file-input').value = '';
+    document.getElementById('recurring-import-step1').classList.remove('hidden');
+    document.getElementById('recurring-import-step2').classList.add('hidden');
+    document.getElementById('recurring-import-source-input').value = '';
+    document.getElementById('recurring-import-has-header').checked = true;
+    openModal('modal-import-recurring-expenses');
+}
+
+async function handleRecurringImportFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
+        pendingRecurringImportRows = rows.filter(row => row && row.length && row.some(cell => cell !== undefined && cell !== ''));
+        if (!pendingRecurringImportRows.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+        document.getElementById('recurring-import-step1').classList.add('hidden');
+        document.getElementById('recurring-import-step2').classList.remove('hidden');
+        rebuildRecurringImportMapping();
+    } catch (e) {
+        showAppToast(t('finance_recurring_import_failed'), 'error');
+    }
+}
+
+function rebuildRecurringImportMapping() {
+    if (!pendingRecurringImportRows || !pendingRecurringImportRows.length) return;
+    const hasHeader = document.getElementById('recurring-import-has-header').checked;
+    const headerRow = pendingRecurringImportRows[0];
+    const columnCount = Math.max(...pendingRecurringImportRows.map(r => r.length));
+    const labels = [];
+    for (let i = 0; i < columnCount; i++) {
+        labels.push(hasHeader && headerRow[i] !== undefined && headerRow[i] !== '' ? String(headerRow[i]) : `${t('finance_recurring_import_column_label')} ${i + 1}`);
+    }
+    const optionsHtml = `<option value="">-</option>` + labels.map((label, i) => `<option value="${i}">${escapeHtmlForReport(label)}</option>`).join('');
+    ['recurring-import-map-name', 'recurring-import-map-amount', 'recurring-import-map-start', 'recurring-import-map-end'].forEach(id => {
+        document.getElementById(id).innerHTML = optionsHtml;
+    });
+    // ניחוש התחלתי עדין לפי שמות עמודות נפוצים - רק הצעת ברירת מחדל, אפשר
+    // תמיד לשנות ידנית; רלוונטי רק כשיש כותרות אמיתיות בקובץ
+    if (hasHeader) {
+        const guess = (patterns) => labels.findIndex(l => patterns.some(p => l.toString().includes(p)));
+        const nameIdx = guess(['שם', 'תיאור', 'name', 'desc']);
+        const amountIdx = guess(['סכום', 'amount', 'שקל', '₪']);
+        const startIdx = guess(['התחלה', 'start', 'מתאריך']);
+        const endIdx = guess(['סיום', 'end', 'עד']);
+        if (nameIdx >= 0) document.getElementById('recurring-import-map-name').value = nameIdx;
+        if (amountIdx >= 0) document.getElementById('recurring-import-map-amount').value = amountIdx;
+        if (startIdx >= 0) document.getElementById('recurring-import-map-start').value = startIdx;
+        if (endIdx >= 0) document.getElementById('recurring-import-map-end').value = endIdx;
+    }
+    renderRecurringImportPreviewTable();
+}
+
+function renderRecurringImportPreviewTable() {
+    const table = document.getElementById('recurring-import-preview-table');
+    if (!table || !pendingRecurringImportRows) return;
+    const previewRows = pendingRecurringImportRows.slice(0, 5);
+    table.innerHTML = previewRows.map(row => `<tr>${row.map(cell => `<td>${escapeHtmlForReport(cell === undefined || cell === null ? '' : String(cell))}</td>`).join('')}</tr>`).join('');
+}
+
+function parseFlexibleAmount(raw) {
+    if (raw === undefined || raw === null || raw === '') return null;
+    if (typeof raw === 'number') return raw;
+    const cleaned = String(raw).replace(/[^\d.\-]/g, '');
+    const value = parseFloat(cleaned);
+    return isNaN(value) ? null : Math.abs(value);
+}
+
+function parseFlexibleDate(raw) {
+    if (raw === undefined || raw === null || raw === '') return null;
+    if (raw instanceof Date && !isNaN(raw)) return getLocalDateString(raw);
+    const str = String(raw).trim();
+    let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    m = str.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; // DD/MM/YYYY - הפורמט הנפוץ בייצוא בנקים/כרטיסים ישראליים
+    return null;
+}
+
+async function confirmRecurringExpenseImport() {
+    if (!pendingRecurringImportRows || !supabaseClient || !currentUserId) return;
+    const hasHeader = document.getElementById('recurring-import-has-header').checked;
+    const nameCol = document.getElementById('recurring-import-map-name').value;
+    const amountCol = document.getElementById('recurring-import-map-amount').value;
+    const startCol = document.getElementById('recurring-import-map-start').value;
+    const endCol = document.getElementById('recurring-import-map-end').value;
+    const source = document.getElementById('recurring-import-source-input').value.trim() || null;
+    if (nameCol === '' || amountCol === '') { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    const dataRows = hasHeader ? pendingRecurringImportRows.slice(1) : pendingRecurringImportRows;
+    const payloads = [];
+    dataRows.forEach(row => {
+        const name = row[nameCol] !== undefined ? String(row[nameCol]).trim() : '';
+        const amount = parseFlexibleAmount(row[amountCol]);
+        if (!name || !amount) return;
+        const startDate = (startCol !== '' ? parseFlexibleDate(row[startCol]) : null) || getLocalDateString();
+        const endDate = endCol !== '' ? parseFlexibleDate(row[endCol]) : null;
+        payloads.push({ user_id: currentUserId, username: currentUsername, name, amount, category: null, source, start_date: startDate, end_date: endDate });
+    });
+    if (!payloads.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    const { error } = await supabaseClient.from('recurring_expenses').insert(payloads);
+    if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    closeModal('modal-import-recurring-expenses');
+    showAppToast(t('finance_recurring_import_success', { count: payloads.length }));
+    await loadRecurringExpenses();
 }
 
 // --- קטגוריית ספורט: אימונים (ריצה/אופניים/שחייה/אחר חופשי) עם משך, מרחק,
@@ -11959,6 +12247,13 @@ async function loadStudyTasks() {
     renderStudyTasksList();
 }
 
+// לחיצה על הטקסט (לא הצ'קבוקס/עריכה/מחיקה) מרחיבה את השורה במקום, במקום
+// חיתוך בשלוש נקודות - "hover" לא רלוונטי באפליקציית מובייל, לפי בקשה מפורשת
+function toggleStudyItemExpand(el) {
+    const row = el.closest('.study-task-item');
+    if (row) row.classList.toggle('expanded');
+}
+
 function renderStudyTasksList() {
     const listEl = document.getElementById('study-tasks-list');
     const emptyEl = document.getElementById('study-tasks-empty');
@@ -11970,7 +12265,7 @@ function renderStudyTasksList() {
         li.className = 'study-task-item';
         li.innerHTML = `
             <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleStudyTaskStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
-            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.title)}</span>
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}" onclick="toggleStudyItemExpand(this)">${escapeHtmlForReport(item.title)}</span>
             <button type="button" class="btn-edit-item" onclick="openEditStudyItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
             <button type="button" class="btn-delete-item" onclick="deleteStudyTask('${item.id}')">❌</button>
         `;
@@ -12355,7 +12650,7 @@ function renderNotebookItemsList() {
         li.className = 'study-task-item';
         li.innerHTML = `
             <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleNotebookItemStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
-            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.title)}</span>
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}" onclick="toggleStudyItemExpand(this)">${escapeHtmlForReport(item.title)}</span>
             <button type="button" class="btn-edit-item" onclick="openEditNotebookItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
             <button type="button" class="btn-delete-item" onclick="deleteNotebookItem('${item.id}')">❌</button>
         `;

@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=314">
+    <link rel="stylesheet" href="theme.css?v=315">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -26,6 +26,9 @@
          initScheduleRowDragReorder ב-app.js) - גרסה מוצמדת (לא @latest) כדי
          שהאתר לא "יישבר" בשקט משדרוג עתידי לא-צפוי בספרייה -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <!-- SheetJS (xlsx): פענוח קבצי Excel/CSV בצד לקוח לייבוא הוצאות קבועות (ר'
+         handleRecurringImportFileSelected ב-app.js) - גרסה מוצמדת מאותה סיבה -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -741,6 +744,18 @@
                             <ul id="finance-history-list" class="center-list"></ul>
                         </div>
                     </div>
+
+                    <!-- הוצאות קבועות / הוראות קבע - טבלה נפרדת מהיסטוריית ההכנסות/הוצאות
+                         למעלה (לא נכנס ל-budget_tracker בעצמו, כדי לא לספור פעמיים) - רשימת
+                         תכנון/מעקב בלבד: הוספה ידנית או ייבוא מקובץ אקסל/CSV מהבנק/כרטיס
+                         אשראי. פרימיום, לפי בקשה מפורשת -->
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="finance_recurring_title">🔁 Recurring Expenses</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body" id="recurring-expenses-content"></div>
+                    </div>
                 </section>
 
                 <!-- קטגוריית ספורט: נגישה רק מהתפריט הצדדי (בלי כפתור קבוע בסרגל
@@ -1267,6 +1282,85 @@
                     <div class="action-buttons-wrap">
                         <button id="btn-save-study-item" class="btn-primary" onclick="submitStudyItem()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-study-item')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- הוצאות קבועות: הוספה/עריכה ידנית -->
+        <div id="modal-add-recurring-expense" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="recurring-expense-modal-title" data-i18n="finance_recurring_add_btn">Add Manually</h3>
+                <div class="preset-manager-grid">
+                    <input type="text" id="recurring-name-input" data-i18n-placeholder="finance_recurring_name_placeholder" placeholder="Name (e.g. Netflix)">
+                    <input type="number" id="recurring-amount-input" data-i18n-placeholder="finance_recurring_amount_placeholder" placeholder="Monthly amount">
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('recurring-category-select')"><span id="recurring-category-select-display"></span></button>
+                    <select id="recurring-category-select" class="hidden"></select>
+                    <input type="text" id="recurring-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
+                    <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('recurring-start-date-input')">
+                        <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                        <span id="recurring-start-date-input-display" data-placeholder=""></span>
+                    </button>
+                    <input type="date" id="recurring-start-date-input" class="date-picker-hidden-input">
+                    <label class="settings-checkbox-row">
+                        <input type="checkbox" id="recurring-no-end-date-toggle" checked onchange="toggleRecurringEndDateField()">
+                        <span data-i18n="finance_recurring_no_end_date_label">No end date (ongoing)</span>
+                    </label>
+                    <button type="button" class="date-picker-field-trigger hidden" id="recurring-end-date-trigger" onclick="openDateFieldPicker('recurring-end-date-input')">
+                        <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                        <span id="recurring-end-date-input-display" data-placeholder=""></span>
+                    </button>
+                    <input type="date" id="recurring-end-date-input" class="date-picker-hidden-input">
+                    <div class="action-buttons-wrap">
+                        <button id="btn-save-recurring-expense" class="btn-primary" onclick="submitRecurringExpense()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-add-recurring-expense')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- הוצאות קבועות: ייבוא מקובץ אקסל/CSV - שני שלבים באותו מודל (בחירת קובץ,
+             ואז מיפוי עמודות + תווית מקור אחת לכל הפריטים בקובץ), כדי לתמוך בכל פורמט
+             ייצוא בלי לנחש עמודות ספציפיות של בנק/כרטיס מסוים - לפי בקשה מפורשת -->
+        <div id="modal-import-recurring-expenses" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="finance_recurring_import_title">Import from Excel</h3>
+                <div class="preset-manager-grid">
+                    <div id="recurring-import-step1">
+                        <input type="file" id="recurring-import-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleRecurringImportFileSelected(event)">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('recurring-import-file-input').click()" data-i18n="finance_recurring_import_choose_file_btn">Choose File</button>
+                    </div>
+                    <div id="recurring-import-step2" class="hidden">
+                        <div class="import-preview-table-wrap">
+                            <table class="import-preview-table" id="recurring-import-preview-table"></table>
+                        </div>
+                        <label class="settings-checkbox-row">
+                            <input type="checkbox" id="recurring-import-has-header" checked onchange="rebuildRecurringImportMapping()">
+                            <span data-i18n="finance_recurring_import_has_header_label">First row is headers</span>
+                        </label>
+                        <div class="import-column-mapper-row">
+                            <span data-i18n="finance_recurring_import_map_name">Name column</span>
+                            <select id="recurring-import-map-name"></select>
+                        </div>
+                        <div class="import-column-mapper-row">
+                            <span data-i18n="finance_recurring_import_map_amount">Amount column</span>
+                            <select id="recurring-import-map-amount"></select>
+                        </div>
+                        <div class="import-column-mapper-row">
+                            <span data-i18n="finance_recurring_import_map_start">Start date column (optional)</span>
+                            <select id="recurring-import-map-start"></select>
+                        </div>
+                        <div class="import-column-mapper-row">
+                            <span data-i18n="finance_recurring_import_map_end">End date column (optional)</span>
+                            <select id="recurring-import-map-end"></select>
+                        </div>
+                        <input type="text" id="recurring-import-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
+                        <div class="action-buttons-wrap">
+                            <button class="btn-primary" onclick="confirmRecurringExpenseImport()" data-i18n="finance_recurring_import_confirm_btn">Import</button>
+                            <button class="btn-clear-specific" onclick="closeModal('modal-import-recurring-expenses')" data-i18n="cancel_btn">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2899,7 +2993,7 @@
 
     </div>
 
-    <script src="i18n.js?v=252"></script>
-    <script src="app.js?v=352"></script>
+    <script src="i18n.js?v=253"></script>
+    <script src="app.js?v=353"></script>
 </body>
 </html>
