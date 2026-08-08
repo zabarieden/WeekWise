@@ -7502,7 +7502,6 @@ async function deleteFinanceEntry(id) {
 let cachedRecurringExpenses = [];
 let editingRecurringExpenseId = null;
 let rawRecurringImportRows = null;
-let pendingRecurringImportRows = null;
 
 async function loadRecurringExpenses() {
     if (!supabaseClient || !currentUserId) return;
@@ -7666,18 +7665,26 @@ function deleteRecurringExpense(id) {
     });
 }
 
-// --- ייבוא מאקסל/CSV: מיפוי עמודות ידני (לא ניחוש פורמט בנק ספציפי) - עובד
-// עם כל קובץ ייצוא, לא רק פורמטים שכבר ראינו. SheetJS (XLSX) מטפל גם ב-.csv
-// דרך אותו API, כך שכל שלושת סוגי הקבצים המקובלים עוברים באותו נתיב קוד ---
+// --- ייבוא מאקסל/CSV: במקום טופס בוררים מנותק מהנתונים (בלבל בבדיקה בפועל
+// - "הכל נורא מבלבל"), הממשק עכשיו הוא הקשה ישירה על הטבלה עצמה: בוחרים
+// "תפקיד" (שם/סכום/התחלה/סיום) ואז מקישים על העמודה המתאימה בתצוגה החיה,
+// ומקישים ▶ ליד השורה שבה מתחילים הנתונים האמיתיים (כדי לדלג על כותרת דוח,
+// אם יש) - הכל מול הנתונים עצמם, בלי בורר בפינה אחרת של המסך ---
+const RECURRING_IMPORT_ROLES = ['name', 'amount', 'start', 'end'];
+const RECURRING_IMPORT_ROLE_ICON = { name: '🏷️', amount: '💰', start: '📅▶', end: '📅⏹' };
+let recurringImportStartRow = 0;
+let recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
+let recurringImportSelectedRole = null;
+
 function openImportRecurringExpensesModal() {
     rawRecurringImportRows = null;
-    pendingRecurringImportRows = null;
+    recurringImportStartRow = 0;
+    recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
+    recurringImportSelectedRole = null;
     document.getElementById('recurring-import-file-input').value = '';
     document.getElementById('recurring-import-step1').classList.remove('hidden');
     document.getElementById('recurring-import-step2').classList.add('hidden');
     document.getElementById('recurring-import-source-input').value = '';
-    document.getElementById('recurring-import-has-header').checked = true;
-    document.getElementById('recurring-import-skip-rows').value = 0;
     openModal('modal-import-recurring-expenses');
 }
 
@@ -7685,7 +7692,7 @@ function openImportRecurringExpensesModal() {
 // שורת סיכום לפני טבלת הנתונים האמיתית (למשל "פירוט הוראות קבע לחשבון...")
 // - שורות כאלה בד"כ ממלאות רק תא אחד מתוך הרבה, בניגוד לשורות הטבלה האמיתית
 // שממלאות כמעט את כל העמודות. מנחשים כמה שורות כאלה לדלג עליהן כברירת מחדל
-// (ניתנת לשינוי ידני) - לפי בעיה שנתגלתה בבדיקה בפועל עם קובץ אמיתי מהבנק
+// (ניתנת לשינוי בהקשה על ▶ ליד שורה אחרת) - לפי בעיה שנתגלתה בבדיקה בפועל
 function guessRecurringImportSkipRows(rows) {
     if (!rows.length) return 0;
     const widths = rows.map(r => r.filter(c => c !== undefined && c !== '').length);
@@ -7706,24 +7713,16 @@ async function handleRecurringImportFileSelected(event) {
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
         rawRecurringImportRows = rows.filter(row => row && row.length && row.some(cell => cell !== undefined && cell !== ''));
         if (!rawRecurringImportRows.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-        document.getElementById('recurring-import-skip-rows').value = guessRecurringImportSkipRows(rawRecurringImportRows);
+        recurringImportStartRow = guessRecurringImportSkipRows(rawRecurringImportRows);
+        recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
+        recurringImportSelectedRole = null;
         document.getElementById('recurring-import-step1').classList.add('hidden');
         document.getElementById('recurring-import-step2').classList.remove('hidden');
-        applyRecurringImportSkipRows();
+        renderRecurringImportRoleChips();
+        renderRecurringImportPreviewTable();
     } catch (e) {
         showAppToast(t('finance_recurring_import_failed'), 'error');
     }
-}
-
-function applyRecurringImportSkipRows() {
-    if (!rawRecurringImportRows) return;
-    const skipInput = document.getElementById('recurring-import-skip-rows');
-    let skip = parseInt(skipInput.value) || 0;
-    if (skip < 0) skip = 0;
-    if (skip > rawRecurringImportRows.length - 1) skip = rawRecurringImportRows.length - 1;
-    skipInput.value = skip;
-    pendingRecurringImportRows = rawRecurringImportRows.slice(skip);
-    rebuildRecurringImportMapping();
 }
 
 // תא שהוא תאריך (Date אמיתי, בזכות cellDates:true בקריאת הקובץ) מוצג בתצוגה
@@ -7735,41 +7734,54 @@ function formatCellForPreview(cell) {
     return String(cell);
 }
 
-function rebuildRecurringImportMapping() {
-    if (!pendingRecurringImportRows || !pendingRecurringImportRows.length) return;
-    const hasHeader = document.getElementById('recurring-import-has-header').checked;
-    const headerRow = pendingRecurringImportRows[0];
-    const columnCount = Math.max(...pendingRecurringImportRows.map(r => r.length));
-    const labels = [];
-    for (let i = 0; i < columnCount; i++) {
-        const headerText = hasHeader ? formatCellForPreview(headerRow[i]) : '';
-        labels.push(headerText || `${t('finance_recurring_import_column_label')} ${i + 1}`);
-    }
-    const optionsHtml = `<option value="">-</option>` + labels.map((label, i) => `<option value="${i}">${escapeHtmlForReport(label)}</option>`).join('');
-    ['recurring-import-map-name', 'recurring-import-map-amount', 'recurring-import-map-start', 'recurring-import-map-end'].forEach(id => {
-        document.getElementById(id).innerHTML = optionsHtml;
+function selectRecurringImportRole(role) {
+    recurringImportSelectedRole = (recurringImportSelectedRole === role) ? null : role;
+    renderRecurringImportRoleChips();
+}
+
+function renderRecurringImportRoleChips() {
+    RECURRING_IMPORT_ROLES.forEach(role => {
+        const chip = document.querySelector(`.import-role-chip[data-role="${role}"]`);
+        if (!chip) return;
+        chip.classList.toggle('active', recurringImportSelectedRole === role);
+        chip.classList.toggle('mapped', recurringImportColumnMap[role] !== null);
     });
-    // ניחוש התחלתי עדין לפי שמות עמודות נפוצים - רק הצעת ברירת מחדל, אפשר
-    // תמיד לשנות ידנית; רלוונטי רק כשיש כותרות אמיתיות בקובץ
-    if (hasHeader) {
-        const guess = (patterns) => labels.findIndex(l => patterns.some(p => l.toString().includes(p)));
-        const nameIdx = guess(['שם', 'תיאור', 'name', 'desc']);
-        const amountIdx = guess(['סכום', 'amount', 'שקל', '₪']);
-        const startIdx = guess(['התחלה', 'start', 'מתאריך']);
-        const endIdx = guess(['סיום', 'end', 'עד']);
-        if (nameIdx >= 0) document.getElementById('recurring-import-map-name').value = nameIdx;
-        if (amountIdx >= 0) document.getElementById('recurring-import-map-amount').value = amountIdx;
-        if (startIdx >= 0) document.getElementById('recurring-import-map-start').value = startIdx;
-        if (endIdx >= 0) document.getElementById('recurring-import-map-end').value = endIdx;
-    }
+}
+
+function selectRecurringImportStartRow(rowIndex) {
+    recurringImportStartRow = rowIndex;
+    renderRecurringImportPreviewTable();
+}
+
+function assignRecurringImportColumn(colIndex) {
+    if (!recurringImportSelectedRole) return;
+    recurringImportColumnMap[recurringImportSelectedRole] = colIndex;
+    recurringImportSelectedRole = null;
+    renderRecurringImportRoleChips();
     renderRecurringImportPreviewTable();
 }
 
 function renderRecurringImportPreviewTable() {
     const table = document.getElementById('recurring-import-preview-table');
-    if (!table || !pendingRecurringImportRows) return;
-    const previewRows = pendingRecurringImportRows.slice(0, 8);
-    table.innerHTML = previewRows.map(row => `<tr>${row.map(cell => `<td>${escapeHtmlForReport(formatCellForPreview(cell))}</td>`).join('')}</tr>`).join('');
+    if (!table || !rawRecurringImportRows) return;
+    const roleByColumn = {};
+    RECURRING_IMPORT_ROLES.forEach(role => {
+        const col = recurringImportColumnMap[role];
+        if (col !== null) roleByColumn[col] = role;
+    });
+    const rowsToShow = rawRecurringImportRows.slice(0, 10);
+    table.innerHTML = rowsToShow.map((row, i) => {
+        const skipped = i < recurringImportStartRow;
+        const isStart = i === recurringImportStartRow;
+        const startCell = `<td class="import-row-start-cell" onclick="selectRecurringImportStartRow(${i})">${isStart ? '▶' : ''}</td>`;
+        const dataCells = row.map((cell, colIndex) => {
+            const role = roleByColumn[colIndex];
+            const cls = role ? ` class="import-col-role-${role}"` : '';
+            const badge = role ? `<span class="import-col-role-badge">${RECURRING_IMPORT_ROLE_ICON[role]}</span>` : '';
+            return `<td${cls} onclick="assignRecurringImportColumn(${colIndex})">${badge}${escapeHtmlForReport(formatCellForPreview(cell))}</td>`;
+        }).join('');
+        return `<tr class="${skipped ? 'import-row-skipped' : ''}${isStart ? ' import-row-start-marker' : ''}">${startCell}${dataCells}</tr>`;
+    }).join('');
 }
 
 function parseFlexibleAmount(raw) {
@@ -7792,22 +7804,18 @@ function parseFlexibleDate(raw) {
 }
 
 async function confirmRecurringExpenseImport() {
-    if (!pendingRecurringImportRows || !supabaseClient || !currentUserId) return;
-    const hasHeader = document.getElementById('recurring-import-has-header').checked;
-    const nameCol = document.getElementById('recurring-import-map-name').value;
-    const amountCol = document.getElementById('recurring-import-map-amount').value;
-    const startCol = document.getElementById('recurring-import-map-start').value;
-    const endCol = document.getElementById('recurring-import-map-end').value;
+    if (!rawRecurringImportRows || !supabaseClient || !currentUserId) return;
+    const { name: nameCol, amount: amountCol, start: startCol, end: endCol } = recurringImportColumnMap;
     const source = document.getElementById('recurring-import-source-input').value.trim() || null;
-    if (nameCol === '' || amountCol === '') { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-    const dataRows = hasHeader ? pendingRecurringImportRows.slice(1) : pendingRecurringImportRows;
+    if (nameCol === null || amountCol === null) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    const dataRows = rawRecurringImportRows.slice(recurringImportStartRow);
     const payloads = [];
     dataRows.forEach(row => {
         const name = row[nameCol] !== undefined ? String(row[nameCol]).trim() : '';
         const amount = parseFlexibleAmount(row[amountCol]);
         if (!name || !amount) return;
-        const startDate = (startCol !== '' ? parseFlexibleDate(row[startCol]) : null) || getLocalDateString();
-        const endDate = endCol !== '' ? parseFlexibleDate(row[endCol]) : null;
+        const startDate = (startCol !== null ? parseFlexibleDate(row[startCol]) : null) || getLocalDateString();
+        const endDate = endCol !== null ? parseFlexibleDate(row[endCol]) : null;
         payloads.push({ user_id: currentUserId, username: currentUsername, name, amount, category: null, source, start_date: startDate, end_date: endDate });
     });
     if (!payloads.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
