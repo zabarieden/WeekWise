@@ -1429,14 +1429,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 /* דוגמאות רקע ייחודיות לכל ערכת נושא מיוחדת - לא רק צבעים, אלא מוטיב אמיתי
    שמזכיר את הנושא (משטח לגו עם פטמות, נייר שרטוט, שמיים זרועי כוכבים,
    רשת ניאון) - כל השכבות ב-CSS טהור (גרדיאנטים חוזרים), בלי תמונות */
-[data-color-theme="lego_bricks"] .home-theme-pattern {
+html[data-color-theme="lego_bricks"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="lego_bricks"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 20px 20px, rgba(255, 214, 51, 0.55) 0 6px, transparent 7px),
         linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 40px 40px, 40px 40px, 40px 40px;
 }
-[data-color-theme="blueprint_draft"] .home-theme-pattern {
+html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="blueprint_draft"] > .home-theme-pattern {
     background-image:
         linear-gradient(rgba(120, 190, 255, 0.14) 1px, transparent 1px),
         linear-gradient(90deg, rgba(120, 190, 255, 0.14) 1px, transparent 1px),
@@ -1444,7 +1446,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
         linear-gradient(90deg, rgba(120, 190, 255, 0.3) 1px, transparent 1px);
     background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
 }
-[data-color-theme="star_map"] .home-theme-pattern {
+html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="star_map"] > .home-theme-pattern {
     background-image:
         radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
         radial-gradient(1px 1px at 90px 70px, rgba(255, 255, 255, 0.7), transparent),
@@ -1456,14 +1459,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-[data-color-theme="vaporwave_neon"] .home-theme-pattern {
+html[data-color-theme="vaporwave_neon"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="vaporwave_neon"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 100%, rgba(255, 110, 255, 0.35), transparent 60%),
         linear-gradient(rgba(255, 0, 230, 0.18) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 255, 242, 0.18) 1px, transparent 1px);
     background-size: 100% 100%, 34px 34px, 34px 34px;
 }
-[data-color-theme="barbie_dream"] .home-theme-pattern {
+html[data-color-theme="barbie_dream"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="barbie_dream"] > .home-theme-pattern {
     background-image:
         radial-gradient(2px 2px at 30px 40px, rgba(255, 215, 0, 0.9), transparent),
         radial-gradient(1.5px 1.5px at 100px 90px, rgba(255, 255, 255, 0.8), transparent),
@@ -1473,14 +1478,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 180px 180px;
     background-repeat: repeat;
 }
-[data-color-theme="aurora_borealis"] .home-theme-pattern {
+html[data-color-theme="aurora_borealis"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="aurora_borealis"] > .home-theme-pattern {
     background-image:
         linear-gradient(100deg, transparent 30%, rgba(74, 222, 128, 0.18) 40%, transparent 55%),
         linear-gradient(110deg, transparent 45%, rgba(167, 139, 250, 0.15) 55%, transparent 68%),
         linear-gradient(95deg, transparent 60%, rgba(103, 232, 249, 0.15) 68%, transparent 80%);
     background-size: 100% 100%;
 }
-[data-color-theme="pixel_art"] .home-theme-pattern {
+html[data-color-theme="pixel_art"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="pixel_art"] > .home-theme-pattern {
     background-image:
         repeating-conic-gradient(rgba(255, 255, 255, 0.05) 0% 25%, transparent 0% 50%),
         radial-gradient(rgba(255, 56, 100, 0.5) 40%, transparent 40%),
@@ -1488,14 +1495,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 24px 24px, 96px 96px, 96px 96px;
     background-position: 0 0, 0 0, 48px 48px;
 }
-[data-color-theme="stock_market"] .home-theme-pattern {
+html[data-color-theme="stock_market"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="stock_market"] > .home-theme-pattern {
     background-image:
         linear-gradient(rgba(34, 197, 94, 0.12) 1px, transparent 1px),
         linear-gradient(90deg, rgba(34, 197, 94, 0.12) 1px, transparent 1px),
         linear-gradient(45deg, transparent 48%, rgba(34, 197, 94, 0.5) 49%, rgba(34, 197, 94, 0.5) 51%, transparent 52%);
     background-size: 40px 40px, 40px 40px, 80px 80px;
 }
-[data-color-theme="neon_trading_chart"] .home-theme-pattern {
+html[data-color-theme="neon_trading_chart"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="neon_trading_chart"] > .home-theme-pattern {
     background-image:
         linear-gradient(105deg, transparent 20%, rgba(236, 72, 153, 0.22) 35%, transparent 50%),
         linear-gradient(75deg, transparent 40%, rgba(99, 102, 241, 0.2) 55%, transparent 70%),
@@ -1504,54 +1513,63 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-repeat: no-repeat, no-repeat, repeat-x;
     background-position: 0 0, 0 0, 0 100%;
 }
-[data-color-theme="candlestick_bands"] .home-theme-pattern {
+html[data-color-theme="candlestick_bands"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="candlestick_bands"] > .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(34, 211, 168, 0.35) 0 4px, transparent 4px 8px, rgba(244, 63, 94, 0.3) 8px 12px, transparent 12px 16px),
         linear-gradient(180deg, transparent 35%, rgba(56, 189, 248, 0.12) 45%, rgba(56, 189, 248, 0.12) 65%, transparent 75%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-[data-color-theme="market_data_glow"] .home-theme-pattern {
+html[data-color-theme="market_data_glow"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="market_data_glow"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 100%, rgba(129, 140, 248, 0.35), transparent 60%),
         repeating-linear-gradient(90deg, rgba(251, 146, 60, 0.3) 0 8px, transparent 8px 20px),
         linear-gradient(0deg, rgba(244, 114, 182, 0.25) 0%, transparent 45%);
     background-size: 100% 100%, 100% 100%, 100% 100%;
 }
-[data-color-theme="steampunk_brass"] .home-theme-pattern {
+html[data-color-theme="steampunk_brass"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="steampunk_brass"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25px 25px, rgba(232, 184, 120, 0.35) 0 3px, transparent 4px, transparent 10px, rgba(232, 184, 120, 0.15) 11px, transparent 12px),
         linear-gradient(rgba(232, 184, 120, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(232, 184, 120, 0.06) 1px, transparent 1px);
     background-size: 50px 50px, 50px 50px, 50px 50px;
 }
-[data-color-theme="vintage_newspaper"] .home-theme-pattern {
+html[data-color-theme="vintage_newspaper"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="vintage_newspaper"] > .home-theme-pattern {
     background-image:
         linear-gradient(90deg, rgba(74, 64, 48, 0.15) 1px, transparent 1px),
         radial-gradient(circle at 4px 4px, rgba(74, 64, 48, 0.2) 0 1.5px, transparent 2px);
     background-size: 90px 100%, 8px 8px;
 }
-[data-color-theme="film_noir"] .home-theme-pattern {
+html[data-color-theme="film_noir"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="film_noir"] > .home-theme-pattern {
     background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.06) 0 10px, transparent 10px 26px);
 }
-[data-color-theme="pop_art_comics"] .home-theme-pattern {
+html[data-color-theme="pop_art_comics"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="pop_art_comics"] > .home-theme-pattern {
     background-image: radial-gradient(circle at 6px 6px, rgba(255, 221, 0, 0.5) 0 3px, transparent 3.5px);
     background-size: 14px 14px;
 }
-[data-color-theme="origami_paper"] .home-theme-pattern {
+html[data-color-theme="origami_paper"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="origami_paper"] > .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(251, 146, 60, 0.12) 25%, transparent 25%, transparent 75%, rgba(251, 146, 60, 0.12) 75%),
         linear-gradient(-45deg, rgba(244, 114, 182, 0.1) 25%, transparent 25%, transparent 75%, rgba(244, 114, 182, 0.1) 75%);
     background-size: 60px 60px, 60px 60px;
 }
-[data-color-theme="watercolor_wash"] .home-theme-pattern {
+html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="watercolor_wash"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25% 30%, rgba(249, 168, 212, 0.25) 0%, transparent 45%),
         radial-gradient(circle at 70% 60%, rgba(196, 181, 253, 0.25) 0%, transparent 45%),
         radial-gradient(circle at 45% 80%, rgba(165, 243, 252, 0.22) 0%, transparent 45%);
     background-size: 100% 100%;
 }
-[data-color-theme="chemistry_lab"] .home-theme-pattern {
+html[data-color-theme="chemistry_lab"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="chemistry_lab"] > .home-theme-pattern {
     background-image:
         radial-gradient(3px 3px at 30px 40px, rgba(45, 212, 191, 0.5), transparent),
         radial-gradient(2px 2px at 90px 20px, rgba(163, 230, 53, 0.5), transparent),
@@ -1561,7 +1579,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-[data-color-theme="botanical_greenhouse"] .home-theme-pattern {
+html[data-color-theme="botanical_greenhouse"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="botanical_greenhouse"] > .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 10px 4px at 30px 30px, rgba(74, 222, 128, 0.35), transparent),
         radial-gradient(ellipse 8px 3px at 100px 60px, rgba(187, 247, 208, 0.3), transparent),
@@ -1573,7 +1592,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
 }
 /* היחיד עם מוטיב מלא (שמש + עננים + אופק דשא) ולא רק דוגמה חוזרת - לפי בקשה
    מפורשת "אפילו עם צריך עננים ושמיים ודשא אז תשקיע" */
-[data-color-theme="kids_sky_grass"] .home-theme-pattern {
+html[data-color-theme="kids_sky_grass"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="kids_sky_grass"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 80% 15%, rgba(250, 204, 21, 0.8) 0 18px, rgba(250, 204, 21, 0.3) 19px 22px, transparent 23px),
         radial-gradient(ellipse 30px 12px at 20% 20%, rgba(255, 255, 255, 0.5), transparent),
@@ -1582,7 +1602,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 100% 100%;
 }
 /* קשת ובלונים - קשת מצוירת כטבעות מקוננות עולות מהתחתית + שני בלונים צפים */
-[data-color-theme="rainbow_balloons"] .home-theme-pattern {
+html[data-color-theme="rainbow_balloons"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="rainbow_balloons"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 130%, transparent 55%, rgba(244, 63, 94, 0.35) 56% 60%, transparent 61%),
         radial-gradient(circle at 50% 130%, transparent 61%, rgba(251, 191, 36, 0.35) 62% 66%, transparent 67%),
@@ -1593,7 +1614,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 100% 100%;
 }
 /* עולם מתחת למים - בועות עולות + אדוות אור גלי */
-[data-color-theme="underwater_ocean"] .home-theme-pattern {
+html[data-color-theme="underwater_ocean"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="underwater_ocean"] > .home-theme-pattern {
     background-image:
         radial-gradient(3px 3px at 30px 200px, rgba(255, 255, 255, 0.6), transparent),
         radial-gradient(2px 2px at 90px 150px, rgba(255, 255, 255, 0.5), transparent),
@@ -1604,7 +1626,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-repeat: repeat, repeat, repeat, repeat, no-repeat;
 }
 /* עולם הדינוזאורים - נקודות עור-דינוזאור + עלי ג'ונגל מפוזרים */
-[data-color-theme="dino_jungle"] .home-theme-pattern {
+html[data-color-theme="dino_jungle"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="dino_jungle"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 25px 25px, rgba(250, 204, 21, 0.3) 0 5px, transparent 6px),
         radial-gradient(ellipse 14px 6px at 100px 60px, rgba(132, 204, 22, 0.35), transparent),
@@ -1613,7 +1636,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 90px 90px, 200px 200px, 200px 200px, 90px 90px;
 }
 /* טיסה לחלל - ירח בפינה + כוכבים מפוזרים + שובל רקטה אלכסוני */
-[data-color-theme="space_rocket"] .home-theme-pattern {
+html[data-color-theme="space_rocket"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="space_rocket"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 82% 12%, rgba(253, 230, 138, 0.9) 0 16px, rgba(253, 230, 138, 0.25) 17px 20px, transparent 21px),
         radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
@@ -1624,42 +1648,48 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 100% 100%, 180px 180px, 180px 180px, 180px 180px, 180px 180px, 100% 100%;
     background-repeat: no-repeat, repeat, repeat, repeat, repeat, no-repeat;
 }
-[data-color-theme="bull_run"] .home-theme-pattern {
+html[data-color-theme="bull_run"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="bull_run"] > .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(74, 222, 128, 0.4) 0 4px, transparent 4px 8px, rgba(22, 163, 74, 0.35) 8px 10px, transparent 10px 16px),
         linear-gradient(20deg, transparent 45%, rgba(74, 222, 128, 0.3) 52%, transparent 60%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-[data-color-theme="bear_crash"] .home-theme-pattern {
+html[data-color-theme="bear_crash"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="bear_crash"] > .home-theme-pattern {
     background-image:
         repeating-linear-gradient(90deg, rgba(248, 113, 113, 0.4) 0 4px, transparent 4px 8px, rgba(153, 27, 27, 0.35) 8px 10px, transparent 10px 16px),
         linear-gradient(-20deg, transparent 45%, rgba(248, 113, 113, 0.3) 52%, transparent 60%);
     background-size: 32px 100%, 100% 100%;
     background-repeat: repeat-x, no-repeat;
 }
-[data-color-theme="multi_ticker_grid"] .home-theme-pattern {
+html[data-color-theme="multi_ticker_grid"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="multi_ticker_grid"] > .home-theme-pattern {
     background-image:
         linear-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px),
         linear-gradient(90deg, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
         repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.3) 0 3px, transparent 3px 6px, rgba(239, 68, 68, 0.3) 6px 9px, transparent 9px 12px);
     background-size: 60px 60px, 60px 60px, 12px 60px;
 }
-[data-color-theme="teddy_bear"] .home-theme-pattern {
+html[data-color-theme="teddy_bear"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="teddy_bear"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 30px 30px, rgba(251, 191, 36, 0.4) 0 4px, transparent 5px),
         repeating-linear-gradient(45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px),
         repeating-linear-gradient(-45deg, rgba(251, 191, 36, 0.12) 0 2px, transparent 2px 10px);
     background-size: 70px 70px, 20px 20px, 20px 20px;
 }
-[data-color-theme="wooden_blocks"] .home-theme-pattern {
+html[data-color-theme="wooden_blocks"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="wooden_blocks"] > .home-theme-pattern {
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 2px, transparent 2px),
         linear-gradient(45deg, rgba(239, 68, 68, 0.2) 25%, transparent 25%, transparent 75%, rgba(59, 130, 246, 0.2) 75%);
     background-size: 44px 44px, 44px 44px, 44px 44px;
 }
-[data-color-theme="board_game_dice"] .home-theme-pattern {
+html[data-color-theme="board_game_dice"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="board_game_dice"] > .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
         linear-gradient(45deg, rgba(244, 63, 94, 0.15) 25%, transparent 25%, transparent 75%, rgba(244, 63, 94, 0.15) 75%),
@@ -1667,14 +1697,16 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 40px 40px, 40px 40px, 20px 20px;
     background-position: 0 0, 20px 20px, 0 0;
 }
-[data-color-theme="arcade_neon"] .home-theme-pattern {
+html[data-color-theme="arcade_neon"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="arcade_neon"] > .home-theme-pattern {
     background-image:
         linear-gradient(rgba(217, 70, 239, 0.15) 1px, transparent 1px),
         linear-gradient(90deg, rgba(6, 182, 212, 0.15) 1px, transparent 1px),
         radial-gradient(circle at 20px 20px, rgba(253, 224, 71, 0.5) 0 5px, transparent 6px);
     background-size: 30px 30px, 30px 30px, 60px 60px;
 }
-[data-color-theme="kite_pinwheel"] .home-theme-pattern {
+html[data-color-theme="kite_pinwheel"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="kite_pinwheel"] > .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(244, 63, 94, 0.3) 25%, transparent 25.5%),
         linear-gradient(45deg, rgba(253, 224, 71, 0.3) 25%, transparent 25.5%),
@@ -1682,7 +1714,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 90px 90px, 90px 90px, 90px 90px;
     background-position: 0 0, 45px 20px, 20px 55px;
 }
-[data-color-theme="tropical_leaves"] .home-theme-pattern {
+html[data-color-theme="tropical_leaves"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="tropical_leaves"] > .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 40px 20px at 30px 40px, rgba(22, 163, 74, 0.3), transparent),
         radial-gradient(ellipse 34px 16px at 130px 100px, rgba(134, 239, 172, 0.25), transparent),
@@ -1690,7 +1723,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-[data-color-theme="autumn_forest"] .home-theme-pattern {
+html[data-color-theme="autumn_forest"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="autumn_forest"] > .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 6px 4px at 30px 40px, rgba(249, 115, 22, 0.6), transparent),
         radial-gradient(ellipse 5px 3px at 100px 90px, rgba(220, 38, 38, 0.5), transparent),
@@ -1700,7 +1734,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 200px 200px;
     background-repeat: repeat;
 }
-[data-color-theme="wildflower_meadow"] .home-theme-pattern {
+html[data-color-theme="wildflower_meadow"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="wildflower_meadow"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 30px 30px, rgba(236, 72, 153, 0.6) 0 3px, transparent 4px),
         radial-gradient(circle at 90px 70px, rgba(253, 224, 71, 0.6) 0 3px, transparent 4px),
@@ -1709,7 +1744,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
         linear-gradient(rgba(132, 204, 22, 0.06) 1px, transparent 1px);
     background-size: 180px 180px, 180px 180px, 180px 180px, 180px 180px, 8px 8px;
 }
-[data-color-theme="race_car"] .home-theme-pattern {
+html[data-color-theme="race_car"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="race_car"] > .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
         linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%),
@@ -1717,7 +1753,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 24px 24px, 24px 24px, 100% 40px;
     background-position: 0 0, 12px 12px, 0 0;
 }
-[data-color-theme="train_journey"] .home-theme-pattern {
+html[data-color-theme="train_journey"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="train_journey"] > .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 12px 8px at 40px 30px, rgba(232, 220, 192, 0.3), transparent),
         radial-gradient(ellipse 16px 10px at 90px 15px, rgba(232, 220, 192, 0.25), transparent),
@@ -1726,7 +1763,8 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 150px 150px, 150px 150px, 100% 16px, 100% 100%;
     background-repeat: repeat, repeat, repeat-x, no-repeat;
 }
-[data-color-theme="airplane_sky"] .home-theme-pattern {
+html[data-color-theme="airplane_sky"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="airplane_sky"] > .home-theme-pattern {
     background-image:
         radial-gradient(ellipse 28px 12px at 40px 40px, rgba(255, 255, 255, 0.5), transparent),
         radial-gradient(ellipse 22px 10px at 130px 90px, rgba(255, 255, 255, 0.4), transparent),
@@ -1735,41 +1773,48 @@ header { text-align: center; margin-bottom: 15px; position: relative; z-index: 5
     background-size: 200px 200px, 200px 200px, 200px 200px, 100% 100%;
     background-repeat: repeat, repeat, repeat, no-repeat;
 }
-[data-color-theme="sailboat_waves"] .home-theme-pattern {
+html[data-color-theme="sailboat_waves"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="sailboat_waves"] > .home-theme-pattern {
     background-image:
         linear-gradient(45deg, rgba(248, 250, 252, 0.25) 25%, transparent 25.5%),
         repeating-radial-gradient(ellipse 260px 30px at 50% 100%, rgba(56, 189, 248, 0.15) 0 8px, transparent 8px 30px);
     background-size: 60px 60px, 100% 100%;
     background-position: 20px 30px, 0 0;
 }
-[data-color-theme="motorcycle_speed"] .home-theme-pattern {
+html[data-color-theme="motorcycle_speed"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="motorcycle_speed"] > .home-theme-pattern {
     background-image: repeating-linear-gradient(92deg, rgba(249, 115, 22, 0.3) 0 3px, transparent 3px 26px, rgba(249, 115, 22, 0.15) 26px 28px, transparent 28px 50px);
 }
-[data-color-theme="hot_air_balloon"] .home-theme-pattern {
+html[data-color-theme="hot_air_balloon"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="hot_air_balloon"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.15) 0 40px, transparent 41px),
         repeating-linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0 10px, rgba(167, 139, 250, 0.25) 10px 20px);
     background-size: 100px 100px, 40px 100%;
     background-repeat: repeat, repeat-x;
 }
-[data-color-theme="bicycle_ride"] .home-theme-pattern {
+html[data-color-theme="bicycle_ride"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="bicycle_ride"] > .home-theme-pattern {
     background-image: repeating-conic-gradient(from 0deg, rgba(34, 197, 94, 0.25) 0deg 4deg, transparent 4deg 30deg);
     background-size: 80px 80px;
     background-position: 40px 40px;
 }
-[data-color-theme="submarine_deep"] .home-theme-pattern {
+html[data-color-theme="submarine_deep"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="submarine_deep"] > .home-theme-pattern {
     background-image:
         radial-gradient(circle at 40px 40px, transparent 0 14px, rgba(125, 211, 252, 0.3) 15px 17px, transparent 18px),
         radial-gradient(2px 2px at 90px 100px, rgba(255, 255, 255, 0.4), transparent),
         radial-gradient(3px 3px at 150px 60px, rgba(255, 255, 255, 0.35), transparent);
     background-size: 160px 160px, 160px 160px, 160px 160px;
 }
-[data-color-theme="helicopter_rotor"] .home-theme-pattern {
+html[data-color-theme="helicopter_rotor"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="helicopter_rotor"] > .home-theme-pattern {
     background-image: repeating-conic-gradient(from 0deg, rgba(226, 232, 240, 0.15) 0deg 2deg, transparent 2deg 8deg);
     background-size: 140px 140px;
     background-position: 70px 70px;
 }
-[data-color-theme="rocket_ship"] .home-theme-pattern {
+html[data-color-theme="rocket_ship"] .home-sky-scene .home-theme-pattern,
+[data-color-theme="rocket_ship"] > .home-theme-pattern {
     background-image:
         radial-gradient(1.5px 1.5px at 30px 40px, #fff, transparent),
         radial-gradient(1px 1px at 90px 90px, #fff, transparent),
