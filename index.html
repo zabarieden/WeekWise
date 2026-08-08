@@ -240,6 +240,7 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</h2>
                             <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openPresetQuickAddModal();" data-i18n-title="preset_fab_title" title="Quick add saved meal">🍽️</button>
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset'); loadPresetManageList();">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
