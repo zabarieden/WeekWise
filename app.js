@@ -3808,20 +3808,24 @@ async function loadTodayTasks() {
         celebration.textContent = t('today_tasks_all_done_message');
         container.appendChild(celebration);
         // נצנצים על פני כל האפליקציה לרגע החגיגה - רק בפעם הראשונה שמגיעים
-        // ל"הכל בוצע" ביום הזה (לא בכל טעינה חוזרת כל עוד זה עדיין כולו
-        // מסומן), אז מאפסים את הדגל ברגע שמשהו כבר לא מסומן, כדי שסבב השלמה
-        // חדש באותו יום (אחרי ביטול סימון) יחגוג שוב. הדגל ב-Supabase (לא
-        // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
-        // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח
+        // ל"הכל בוצע" ביום הזה. הדגל ב-Supabase (לא localStorage) - דווח
+        // שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה בנייד, אותו דפוס בדיוק
+        // כמו checkDailyFocusPrompt/דגל ה-"1" על המוח.
+        //
+        // בעבר היה כאן גם איפוס-הדגל (מחיקה) כל פעם שנקרא עם allDone=false,
+        // כדי שסבב השלמה חדש אחרי ביטול-סימון יחגוג שוב. אבל loadTodayTasks
+        // נקראת מהמון מקומות באפליקציה (ר' ההערה למעלה) - כשקריאה אחת מוצאת
+        // allDone=true ומכניסה את הדגל, וקריאה אחרת כמעט-בו-זמנית (על נתונים
+        // מעט שונים/לא-מסונכרנים עדיין) מוצאת allDone=false ומוחקת אותו מיד -
+        // הדגל אף פעם לא נשאר שמור בפועל, וכל רענון-דף חדש חוגג מחדש. הוסר
+        // לגמרי כדי לחסל את התחרות הזו - המחיר: השלמה חוזרת באותו יום אחרי
+        // ביטול-סימון לא תחגוג שוב, מחיר קטן מול הבאג שדווח ("כל פעם שאני
+        // מרעננת זה עושה את הנצנצים")
         if (populated.length + events.length > 0 && !alreadyCelebratedToday) {
             const { error: celebrateError } = await supabaseClient.from('calendar_events').insert({
                 username: currentUsername, user_id: currentUserId,
                 event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
             });
-            // דווח: החגיגה חוזרת בכל רענון - אם ה-insert נכשל בשקט (למשל CHECK
-            // constraint על source שלא מכיר את הערך החדש), הדגל אף פעם לא
-            // נשמר בפועל, וכל טעינה חדשה חושבת מחדש שעוד לא חגגו. עכשיו
-            // נרשם ל-console כדי שהשגיאה האמיתית תהיה גלויה אם זה קורה שוב
             if (celebrateError) console.error('today_celebrated insert failed:', celebrateError);
             else triggerAllDoneSparkles();
         }
@@ -3832,9 +3836,6 @@ async function loadTodayTasks() {
     // מסומנות (הענף הזה כבר לא רץ בכלל, ר' if(allDone) למעלה) - לפי בקשה
     // מפורשת
     } else {
-        if (alreadyCelebratedToday) {
-            supabaseClient.from('calendar_events').delete().eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated');
-        }
         const viewCount = getTodayCardViewCount();
         if (populated.length + events.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
