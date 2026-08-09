@@ -7635,8 +7635,8 @@ function renderRecurringExpensesList() {
         const ended = item.end_date && item.end_date < today;
         let badgeText;
         if (!item.end_date) badgeText = t('finance_recurring_ongoing');
-        else if (ended) badgeText = t('finance_recurring_ended_on', { date: formatShortMonthYear(item.end_date) });
-        else badgeText = t('finance_recurring_ends_on', { date: formatShortMonthYear(item.end_date) });
+        else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
+        else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
         const li = document.createElement('li');
         li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
         li.innerHTML = `
@@ -7837,7 +7837,7 @@ function renderRecurringImportReviewList() {
             <input type="checkbox" class="import-review-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRecurringImportCandidate(${i}, this.checked)">
             <div class="finance-history-main">
                 <input type="text" class="import-review-name-input" value="${escapeHtmlForReport(item.name)}" onchange="updateRecurringImportCandidateName(${i}, this.value)">
-                ${item.endDate ? `<span class="finance-history-date">${t('finance_recurring_import_end_detected', { date: formatShortMonthYear(item.endDate) })}</span>` : ''}
+                ${item.endDate ? `<span class="finance-history-date">${t('finance_recurring_import_end_detected').replace('{date}', formatShortMonthYear(item.endDate))}</span>` : ''}
             </div>
             <input type="number" class="import-review-amount-input" value="${item.amount}" onchange="updateRecurringImportCandidateAmount(${i}, this.value)">
         </li>
@@ -7874,7 +7874,7 @@ async function confirmRecurringExpenseImport() {
     const { error } = await supabaseClient.from('recurring_expenses').insert(payloads);
     if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
     closeModal('modal-import-recurring-expenses');
-    showAppToast(t('finance_recurring_import_success', { count: payloads.length }));
+    showAppToast(t('finance_recurring_import_success').replace('{count}', String(payloads.length)));
     await loadRecurringExpenses();
 }
 
