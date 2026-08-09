@@ -7767,6 +7767,22 @@ function parseFlexibleAmount(raw) {
 // בד"כ "סכום עסקה"/"סכום חיוב" קרובים זה לזה וגדולים משדות אחרים כמו קוד
 // ענף), כל שאר הטקסט (לא תאריכים) מצטרף יחד כ"שם". לא מושלם, אבל זה בסדר -
 // יש שלב סקירה אחריו שבו אפשר לתקן/לבטל סימון בקלות
+// זיהוי "תשלום X מתוך Y" (או "X/Y", "X of Y") בטקסט - פורמט נפוץ מאוד בתיאורי
+// עסקאות פריסה בכרטיסי אשראי ישראליים. אם נמצא, מחשבים תאריך סיום משוער
+// (היום + מספר התשלומים שנשארו) - כדי שהסכום החודשי הכולל לא ימשיך לספור
+// תשלום שכבר הסתיים בפועל, לפי בקשה מפורשת ("הסה\"כ לחודש... זה לא נכון")
+function extractInstallmentEndDate(text) {
+    const m = text.match(/(\d{1,2})\s*(?:מתוך|\/|out of|of)\s*(\d{1,2})/i);
+    if (!m) return null;
+    const current = parseInt(m[1]), total = parseInt(m[2]);
+    if (!(current >= 1 && total >= current && total <= 60)) return null;
+    const remaining = total - current;
+    if (remaining <= 0) return null;
+    const d = new Date();
+    d.setMonth(d.getMonth() + remaining);
+    return getLocalDateString(d);
+}
+
 function autoExtractRecurringRow(row) {
     let amount = null;
     const textParts = [];
@@ -7784,7 +7800,8 @@ function autoExtractRecurringRow(row) {
         }
         textParts.push(str);
     });
-    return { name: textParts.join(' ').trim(), amount };
+    const name = textParts.join(' ').trim();
+    return { name, amount, endDate: extractInstallmentEndDate(name) };
 }
 
 async function handleRecurringImportFileSelected(event) {
@@ -7800,7 +7817,7 @@ async function handleRecurringImportFileSelected(event) {
         rows.forEach(row => {
             if (!row || !row.length) return;
             const extracted = autoExtractRecurringRow(row);
-            if (extracted.name && extracted.amount) candidates.push({ name: extracted.name, amount: extracted.amount, checked: true });
+            if (extracted.name && extracted.amount) candidates.push({ name: extracted.name, amount: extracted.amount, endDate: extracted.endDate, checked: true });
         });
         if (!candidates.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
         recurringImportCandidates = candidates;
@@ -7818,7 +7835,10 @@ function renderRecurringImportReviewList() {
     list.innerHTML = recurringImportCandidates.map((item, i) => `
         <li class="finance-history-row">
             <input type="checkbox" class="import-review-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRecurringImportCandidate(${i}, this.checked)">
-            <input type="text" class="import-review-name-input" value="${escapeHtmlForReport(item.name)}" onchange="updateRecurringImportCandidateName(${i}, this.value)">
+            <div class="finance-history-main">
+                <input type="text" class="import-review-name-input" value="${escapeHtmlForReport(item.name)}" onchange="updateRecurringImportCandidateName(${i}, this.value)">
+                ${item.endDate ? `<span class="finance-history-date">${t('finance_recurring_import_end_detected', { date: formatShortMonthYear(item.endDate) })}</span>` : ''}
+            </div>
             <input type="number" class="import-review-amount-input" value="${item.amount}" onchange="updateRecurringImportCandidateAmount(${i}, this.value)">
         </li>
     `).join('');
@@ -7850,7 +7870,7 @@ async function confirmRecurringExpenseImport() {
     const source = document.getElementById('recurring-import-source-input').value.trim() || null;
     const selected = recurringImportCandidates.filter(c => c.checked && c.name && c.amount > 0);
     if (!selected.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-    const payloads = selected.map(c => ({ user_id: currentUserId, username: currentUsername, name: c.name, amount: c.amount, category: null, source, start_date: getLocalDateString(), end_date: null }));
+    const payloads = selected.map(c => ({ user_id: currentUserId, username: currentUsername, name: c.name, amount: c.amount, category: null, source, start_date: getLocalDateString(), end_date: c.endDate || null }));
     const { error } = await supabaseClient.from('recurring_expenses').insert(payloads);
     if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
     closeModal('modal-import-recurring-expenses');

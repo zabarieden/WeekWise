@@ -4930,7 +4930,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    מוותרת לגמרי על מושג "עמודות" - ניחוש אוטומטי מלא + רשימת סימון פשוטה
    לתיקון/ביטול, בדיוק כמו רשימת מטלות רגילה */
 .import-review-checkbox { flex-shrink: 0; width: 20px; height: 20px; margin: 0; }
-.import-review-name-input { flex: 1 1 auto; min-width: 0; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-weight: 600; padding: 4px; }
+.import-review-name-input { width: 100%; min-width: 0; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-weight: 600; padding: 4px; }
 .import-review-amount-input { flex: 0 0 72px; width: 72px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: var(--text-primary); text-align: end; font-variant-numeric: tabular-nums; padding: 4px; }
 .import-review-name-input:focus, .import-review-amount-input:focus { outline: none; border-bottom: 1px solid var(--accent-purple); }
 /* תג "פרימיום פעיל" עדין - מחליף את כפתור "שדרוג לפרימיום" ברגע שכבר יש
