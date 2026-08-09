@@ -7502,19 +7502,22 @@ async function renderFinanceSummary() {
     const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
     // ההוצאות הקבועות (recurring_expenses) נספרות עכשיו גם כאן, בנוסף להיסטוריה
     // הרגילה - לא כפילות, כי הן בכלל לא נכנסות ל-budget_tracker בעצמו (ר' ההערה
-    // למעלה על הטבלה) - לפי בקשה מפורשת ("שתוסיף את זה לסיכום החודשי כהוצאה
-    // לכל דבר"). נספרת רק הוצאה קבועה שפעילה-בחלקה בטווח התקופה המוצגת (לא
-    // רק "פעילה היום"), כדי שגם ניווט לחודשים אחרים יציג סכום נכון
+    // למעלה על הטבלה). אבל רק "תשלומים" (installment_total מוגדר - יש להם סוף
+    // ברור) נספרים בפועל בהוצאות - "הוראת קבע" (בלי installment_total, כמו
+    // מנוי חודשי רגיל) נשארת בצד: מוצגת בהיסטוריה ובהוצאות הקבועות בלבד, לא
+    // מתווספת לסה"כ - לפי בקשה מפורשת. נספרת רק הוצאה קבועה שפעילה-בחלקה
+    // בטווח התקופה המוצגת (לא רק "פעילה היום"), כדי שגם ניווט לחודשים אחרים
+    // יציג סכום נכון
     const [{ data: entries }, { data: targetRow }, { data: recurringRows }] = await Promise.all([
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
         supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).eq('month_key', monthKey).maybeSingle(),
-        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date')
+        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, installment_total')
             .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     let income = 0, expense = 0;
     (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
-    (recurringRows || []).forEach(row => { expense += Number(row.amount); });
+    (recurringRows || []).forEach(row => { if (row.installment_total) expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
 
@@ -7600,7 +7603,7 @@ async function renderFinanceHistory() {
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
-                <span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_badge')}</span>
+                ${buildRecurringExpenseTypeBadgesHtml(row, getLocalDateString())}
             </div>
             <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${row.id}')">${EDIT_ICON_SVG}</button>
@@ -7682,6 +7685,24 @@ function monthsBetweenDateStrings(fromStr, toStr) {
     return (ty - fy) * 12 + (tm - fm);
 }
 
+// שתי "עמודות" נפרדות בתוך הוצאות קבועות, לפי בקשה מפורשת: "תשלומים" (יש
+// installment_total - פריסה עם מספר תשלומים ידוע, לכן יש לה סוף ברור) לעומת
+// "הוראת קבע" (בלי installment_total - מנוי/חיוב חוזר בלי תאריך סיום טבעי).
+// רק "תשלומים" נספרים בפועל ב"סה\"כ לחודש" בסיכום (ר' renderFinanceSummary) -
+// "הוראת קבע" נשארת בצד, מוצגת רק כאן ובהיסטוריה. משתמשים בפונקציה הזו גם
+// כאן וגם ב-renderFinanceHistory, כדי לא לשכפל את הלוגיקה
+function buildRecurringExpenseTypeBadgesHtml(item, today) {
+    if (!item.installment_total) {
+        return `<span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_standing_order_badge')}</span>`;
+    }
+    const monthsElapsed = Math.max(0, monthsBetweenDateStrings(item.start_date, today));
+    const liveCurrent = Math.min((item.installment_current || 1) + monthsElapsed, item.installment_total);
+    const progress = t('finance_recurring_installment_progress').replace('{current}', liveCurrent).replace('{total}', item.installment_total);
+    const totalPaid = Number(item.amount) * item.installment_total;
+    const totalBadge = t('finance_recurring_total_paid').replace('{total}', totalPaid.toLocaleString());
+    return `<span class="recurring-expense-source-tag">💳 ${progress}</span><span class="recurring-expense-source-tag">${totalBadge}</span>`;
+}
+
 function renderRecurringExpensesList() {
     const list = document.getElementById('recurring-expenses-list');
     if (!list) return;
@@ -7694,21 +7715,13 @@ function renderRecurringExpensesList() {
         if (!item.end_date) badgeText = t('finance_recurring_ongoing');
         else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
         else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
-        // "תשלום X מתוך Y" חי - מתקדם לבד מדי חודש מאז הייבוא, בלי לגעת בטקסט
-        // השם המקורי (item.name) שהמשתמשת עשויה כבר לערוך בעצמה
-        let installmentBadge = '';
-        if (item.installment_total) {
-            const monthsElapsed = Math.max(0, monthsBetweenDateStrings(item.start_date, today));
-            const liveCurrent = Math.min((item.installment_current || 1) + monthsElapsed, item.installment_total);
-            installmentBadge = `<span class="recurring-expense-source-tag">${t('finance_recurring_installment_progress').replace('{current}', liveCurrent).replace('{total}', item.installment_total)}</span>`;
-        }
         const li = document.createElement('li');
         li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${escapeHtmlForReport(item.name)}</span>
                 ${item.source ? `<span class="recurring-expense-source-tag">${escapeHtmlForReport(item.source)}</span>` : ''}
-                ${installmentBadge}
+                ${buildRecurringExpenseTypeBadgesHtml(item, today)}
                 <span class="finance-history-date">${badgeText}</span>
             </div>
             <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
