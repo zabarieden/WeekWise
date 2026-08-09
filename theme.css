@@ -3502,7 +3502,10 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    עם עיכוב מדורג, וחושף את הדף שמתחתיו - כך שזה נראה כמו דפדוף אמיתי מדף
    לדף, לא רק פתיחת כריכה בודדת. הדף האחרון (book-final-page) הוא "עמוד
    הסיום" הקבוע עם ברכת הפתיחה+ספינר, ונשאר גלוי עד שהטעינה האמיתית מסתיימת */
-.book-fullscreen { position: relative; width: 92%; max-width: 520px; height: 82%; max-height: 780px; perspective: 2200px; }
+/* perspective נמוך יותר (היה 2200px) = זווית תלת-ממדית הרבה יותר דרמטית
+   ונראית-אמיתית בזמן ההיפוך, לא שטוחה - לפי בקשה מפורשת ("שיראה כמו דפדוף
+   אמיתי לא שיראה ישר") */
+.book-fullscreen { position: relative; width: 92%; max-width: 520px; height: 82%; max-height: 780px; perspective: 1000px; }
 .book-page, .book-final-page {
     position: absolute; inset: 0;
     border-radius: 16px;
@@ -3527,25 +3530,29 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
 .book-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
 .book-title-page { flex-direction: column; gap: 14px; }
 .book-logo-small { font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.85); letter-spacing: 0.5px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
-/* דף הכותרת (page-1: "ברוכים הבאים לסיפור שלכם") נשאר גלוי כמה שניות כדי
-   שאפשר לקרוא אותו *לפני* שהדפדוף המהיר מתחיל, ועמוד הסיום (עם "שתהפכו
-   למציאות") מקבל כמה שניות משלו בסוף - ר' BOOK_LOADING_ANIMATION_MS ב-app.js
-   ששומר את כל הרצף פתוח מספיק זמן. הדפדוף עצמו (עמודים 2-7) מהיר מאוד, לפי
-   בקשה מפורשת ("שהדפים ידפדפו ממש מהר") */
-.book-page { animation-name: bookPageTurn; animation-duration: 0.3s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
-.book-page-1 { background: linear-gradient(160deg, #d8b4fe, #c084fc); z-index: 7; animation-delay: 2.8s; }
-.book-page-2 { background: linear-gradient(160deg, #c084fc, #a855f7); z-index: 6; animation-delay: 3.1s; }
-.book-page-3 { background: linear-gradient(160deg, #a855f7, #9333ea); z-index: 5; animation-delay: 3.35s; }
-.book-page-4 { background: linear-gradient(160deg, #9333ea, #7e22ce); z-index: 4; animation-delay: 3.6s; }
-.book-page-5 { background: linear-gradient(160deg, #7e22ce, #6d28d9); z-index: 3; animation-delay: 3.85s; }
-.book-page-6 { background: linear-gradient(160deg, #6d28d9, #581c87); z-index: 2; animation-delay: 4.1s; }
-.book-page-7 { background: linear-gradient(160deg, #581c87, #3b0764); z-index: 1; animation-delay: 4.35s; }
-@keyframes bookPageTurn { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-180deg); } }
+/* דף הכותרת (page-1: "ברוכים הבאים לסיפור שלכם") נשאר גלוי קצרות כדי
+   שאפשר לקרוא אותו *לפני* שהדפדוף מתחיל, ועמוד הסיום (עם "שתהפכו למציאות")
+   מקבל קצת זמן משלו בסוף - ר' BOOK_LOADING_ANIMATION_MS ב-app.js ששומר את
+   כל הרצף פתוח מספיק זמן. כל הרצף קוצר משמעותית (עד כה ~4.65s רק לדפדוף
+   עצמו + עוד ~6s המתנה קבועה בסוף) - לפי בקשה מפורשת שנייה ("שידפדף מהר") -
+   דלתא של 0.12s בין דף לדף במקום 0.25s, ומשך היפוך קצר יותר (0.22s) */
+.book-page { animation-name: bookPageTurn; animation-duration: 0.22s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+.book-page-1 { background: linear-gradient(160deg, #d8b4fe, #c084fc); z-index: 7; animation-delay: 0.6s; }
+.book-page-2 { background: linear-gradient(160deg, #c084fc, #a855f7); z-index: 6; animation-delay: 0.72s; }
+.book-page-3 { background: linear-gradient(160deg, #a855f7, #9333ea); z-index: 5; animation-delay: 0.84s; }
+.book-page-4 { background: linear-gradient(160deg, #9333ea, #7e22ce); z-index: 4; animation-delay: 0.96s; }
+.book-page-5 { background: linear-gradient(160deg, #7e22ce, #6d28d9); z-index: 3; animation-delay: 1.08s; }
+.book-page-6 { background: linear-gradient(160deg, #6d28d9, #581c87); z-index: 2; animation-delay: 1.2s; }
+.book-page-7 { background: linear-gradient(160deg, #581c87, #3b0764); z-index: 1; animation-delay: 1.32s; }
+/* brightness יורד ועולה סביב אמצע ההיפוך (הדף "בפרופיל", כמעט בלי רוחב) -
+   מדמה איך דף אמיתי כמעט לא מחזיר אור ברגע שהוא ניצב לצופה, לפי בקשה
+   מפורשת שהדפדוף ייראה אמיתי ולא שטוח */
+@keyframes bookPageTurn { 0% { transform: rotateY(0deg); filter: brightness(1); } 50% { filter: brightness(0.55); } 100% { transform: rotateY(-180deg); filter: brightness(1); } }
 /* ספרים בעברית נפתחים/מדפדפים מימין לשמאל - מראה של הציר וכיוון הסיבוב,
    כדי שזה יראה כמו דפדוף אמיתי גם ב-RTL, לא רק פליפ מוזר בכיוון ההפוך */
 html[dir="rtl"] .book-page, html[dir="rtl"] .book-final-page { transform-origin: right center; }
 html[dir="rtl"] .book-page { animation-name: bookPageTurnRtl; }
-@keyframes bookPageTurnRtl { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(180deg); } }
+@keyframes bookPageTurnRtl { 0% { transform: rotateY(0deg); filter: brightness(1); } 50% { filter: brightness(0.55); } 100% { transform: rotateY(180deg); filter: brightness(1); } }
 .recipe-card {
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);

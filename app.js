@@ -1624,10 +1624,11 @@ function triggerDailyGreetingSparkles() {
     }, 20000);
 }
 
-// משך אנימציית "הספר" המלאה (7 דפים, ר' theme.css: עמוד אחרון עם delay 9.3s
-// + משך הפיכה 1.1s = 10.4s, + מרווח ביטחון קטן) - initAppAfterAuth מחכה
-// לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה, כדי שהאנימציה תמיד תושלם
-const BOOK_LOADING_ANIMATION_MS = 10600;
+// משך אנימציית "הספר" המלאה (7 דפים, ר' theme.css: עמוד אחרון עם delay 1.32s
+// + משך הפיכה 0.22s = 1.54s, + מרווח ביטחון קטן) - initAppAfterAuth מחכה
+// לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה, כדי שהאנימציה תמיד תושלם.
+// קוצר משמעותית מ-10600 המקורי - לפי בקשה מפורשת ("שידפדף מהר")
+const BOOK_LOADING_ANIMATION_MS = 2200;
 
 function showAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
@@ -7541,13 +7542,39 @@ async function renderFinanceHistory() {
     if (!list || !supabaseClient || !currentUserId) return;
     const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
     const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
-    const { data } = await supabaseClient.from('budget_tracker').select('*')
-        .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
-        .order('entry_date', { ascending: false }).order('created_at', { ascending: false });
+    // ההוצאות הקבועות שפעילות בתקופה הזו מוצגות גם כאן כשורות משלהן (מסומנות
+    // ב-🔁), לא רק נספרות בשקט בסיכום למעלה - לפי בקשה מפורשת ("נקרא לזה
+    // בהיסטוריה"). עריכה/מחיקה של שורה כזו פותחת את אותה עריכת הוצאה-קבועה
+    // עצמה (openEditRecurringExpenseModal/deleteRecurringExpense) - אין כאן
+    // שורת budget_tracker אמיתית, רק תצוגה, כדי לא להכפיל את הנתון
+    const [{ data }, { data: recurringRows }] = await Promise.all([
+        supabaseClient.from('budget_tracker').select('*')
+            .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
+            .order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
+        supabaseClient.from('recurring_expenses').select('*')
+            .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
+    ]);
     list.innerHTML = '';
     cachedFinanceHistoryRows = data || [];
-    if (!data || !data.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`; return; }
-    data.forEach(row => {
+    if ((!data || !data.length) && (!recurringRows || !recurringRows.length)) {
+        list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`;
+        return;
+    }
+    (recurringRows || []).forEach(row => {
+        const li = document.createElement('li');
+        li.className = 'finance-history-row';
+        li.innerHTML = `
+            <div class="finance-history-main">
+                <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
+                <span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_badge')}</span>
+            </div>
+            <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(row.amount).toLocaleString()}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${row.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteRecurringExpense('${row.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+    (data || []).forEach(row => {
         const li = document.createElement('li');
         li.className = 'finance-history-row';
         const sign = row.entry_type === 'income' ? '+' : '−';
@@ -7815,6 +7842,11 @@ function extractInstallmentInfo(text) {
     return { current, total, endDate };
 }
 
+// כשיש כמה תאים מספריים באותה שורה (למשל בעסקת תשלומים: גם "סכום עסקה" -
+// המחיר הכולל של הרכישה - וגם "סכום חיוב" - מה שבפועל יורד החודש), בוחרים
+// את המספר *הקטן* מביניהם כ"סכום", לא הגדול - כי בעסקאות תשלומים הסכום הכולל
+// כמעט תמיד גדול מהחיוב החודשי הבודד, וזה מה שרוצים כאן (הוצאה חודשית, לא
+// מחיר הרכישה הכולל) - לפי דיווח מפורש שהסכום שהתקבל היה "סה\"כ ולא לחודש"
 function autoExtractRecurringRow(row) {
     let amount = null;
     const textParts = [];
@@ -7822,13 +7854,13 @@ function autoExtractRecurringRow(row) {
         if (cell === undefined || cell === null || cell === '') return;
         if (cell instanceof Date) return;
         if (typeof cell === 'number') {
-            if (amount === null || Math.abs(cell) > amount) amount = Math.abs(cell);
+            if (amount === null || Math.abs(cell) < amount) amount = Math.abs(cell);
             return;
         }
         const str = String(cell).trim();
         if (/^[\d,.\s₪$]+$/.test(str) && /\d/.test(str)) {
             const val = parseFlexibleAmount(str);
-            if (val !== null) { if (amount === null || val > amount) amount = val; return; }
+            if (val !== null) { if (amount === null || val < amount) amount = val; return; }
         }
         textParts.push(str);
     });
