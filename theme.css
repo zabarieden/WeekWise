@@ -4925,30 +4925,14 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    ייבואים ממקורות שונים, ר' confirmRecurringExpenseImport ב-app.js */
 .recurring-expense-source-tag { display: inline-block; align-self: flex-start; font-size: 0.65rem; font-weight: 600; padding: 1px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); }
 .finance-history-row.recurring-expense-ended { opacity: 0.55; }
-/* ייבוא הוצאות קבועות מאקסל/CSV: תצוגה מקדימה גוללת אופקית (טבלה יכולה
-   להיות רחבה מהמסך) + מיפוי עמודות (בורר לכל שדה) */
-.import-preview-table-wrap { overflow-x: auto; max-width: 100%; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--border-color); }
-.import-preview-table { border-collapse: collapse; font-size: 0.72rem; white-space: nowrap; }
-.import-preview-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
-.import-column-mapper-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px; font-size: 0.82rem; color: var(--text-secondary); }
-.import-column-mapper-row select { flex: 0 0 auto; max-width: 55%; }
-/* ייבוא הוצאות קבועות - גרסה 2: הקשה ישירה על הטבלה במקום בוררים מנותקים
-   מהנתונים (לפי בקשה מפורשת "מבלבל, למה לא לעשות את זה יותר פשוט") -
-   בוחרים "תפקיד" (שם/סכום/התחלה/סיום) ומקישים על העמודה המתאימה בטבלה
-   עצמה, ומקישים ▶ ליד השורה שבה מתחילים הנתונים האמיתיים */
-.import-role-picker-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.import-role-chip { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 0.76rem; cursor: pointer; white-space: nowrap; }
-.import-role-chip.active { border-color: var(--accent-purple); color: var(--text-primary); background: rgba(139, 92, 246, 0.18); }
-.import-role-chip.mapped::after { content: " ✓"; }
-.import-preview-table tr.import-row-skipped { opacity: 0.32; }
-.import-preview-table tr.import-row-start-marker td { border-top: 2px solid var(--accent-purple); }
-.import-row-start-cell { cursor: pointer; text-align: center; color: var(--accent-purple); font-weight: 700; width: 26px; }
-.import-preview-table td { cursor: pointer; }
-.import-col-role-name { background: rgba(139, 92, 246, 0.18) !important; }
-.import-col-role-amount { background: rgba(34, 197, 94, 0.18) !important; }
-.import-col-role-start { background: rgba(245, 158, 11, 0.18) !important; }
-.import-col-role-end { background: rgba(239, 68, 68, 0.18) !important; }
-.import-col-role-badge { display: block; font-size: 0.6rem; opacity: 0.85; }
+/* ייבוא הוצאות קבועות מאקסל/CSV: אחרי שתי גרסאות קודמות (מיפוי-עמודות-
+   בבוררים, ואז הקשה-ישירה-על-הטבלה) שגם הן בלבלו בבדיקה בפועל, גרסה זו
+   מוותרת לגמרי על מושג "עמודות" - ניחוש אוטומטי מלא + רשימת סימון פשוטה
+   לתיקון/ביטול, בדיוק כמו רשימת מטלות רגילה */
+.import-review-checkbox { flex-shrink: 0; width: 20px; height: 20px; margin: 0; }
+.import-review-name-input { flex: 1 1 auto; min-width: 0; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-weight: 600; padding: 4px; }
+.import-review-amount-input { flex: 0 0 72px; width: 72px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: var(--text-primary); text-align: end; font-variant-numeric: tabular-nums; padding: 4px; }
+.import-review-name-input:focus, .import-review-amount-input:focus { outline: none; border-bottom: 1px solid var(--accent-purple); }
 /* תג "פרימיום פעיל" עדין - מחליף את כפתור "שדרוג לפרימיום" ברגע שכבר יש
    פרימיום, כדי לא להמשיך להציע שדרוג למי שכבר שדרגה */
 .premium-active-badge { text-align: center; margin: 10px 0; }

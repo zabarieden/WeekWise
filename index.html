@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=316">
+    <link rel="stylesheet" href="theme.css?v=317">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1333,19 +1333,11 @@
                         <button type="button" class="btn-secondary" onclick="document.getElementById('recurring-import-file-input').click()" data-i18n="finance_recurring_import_choose_file_btn">Choose File</button>
                     </div>
                     <div id="recurring-import-step2" class="hidden">
-                        <p class="settings-label" data-i18n="finance_recurring_import_instructions">Tap 🏷️ Name / 💰 Amount / 📅 Start / 📅 End, then tap the matching column below. Tap ▶ next to the row where the real data starts (to skip a report title, if any).</p>
-                        <div class="import-role-picker-row">
-                            <button type="button" class="import-role-chip" data-role="name" onclick="selectRecurringImportRole('name')">🏷️ <span data-i18n="finance_recurring_import_map_name">Name column</span></button>
-                            <button type="button" class="import-role-chip" data-role="amount" onclick="selectRecurringImportRole('amount')">💰 <span data-i18n="finance_recurring_import_map_amount">Amount column</span></button>
-                            <button type="button" class="import-role-chip" data-role="start" onclick="selectRecurringImportRole('start')">📅 <span data-i18n="finance_recurring_import_map_start">Start date column (optional)</span></button>
-                            <button type="button" class="import-role-chip" data-role="end" onclick="selectRecurringImportRole('end')">📅 <span data-i18n="finance_recurring_import_map_end">End date column (optional)</span></button>
-                        </div>
-                        <div class="import-preview-table-wrap">
-                            <table class="import-preview-table" id="recurring-import-preview-table"></table>
-                        </div>
+                        <p class="settings-label" data-i18n="finance_recurring_import_review_hint">Here's what we found - uncheck anything you don't want, or fix the name/amount directly.</p>
+                        <ul id="recurring-import-review-list" class="center-list"></ul>
                         <input type="text" id="recurring-import-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
                         <div class="action-buttons-wrap">
-                            <button class="btn-primary" onclick="confirmRecurringExpenseImport()" data-i18n="finance_recurring_import_confirm_btn">Import</button>
+                            <button id="btn-confirm-recurring-import" class="btn-primary" onclick="confirmRecurringExpenseImport()" data-i18n="finance_recurring_import_confirm_btn">Import</button>
                             <button class="btn-clear-specific" onclick="closeModal('modal-import-recurring-expenses')" data-i18n="cancel_btn">Cancel</button>
                         </div>
                     </div>
@@ -2980,7 +2972,7 @@
 
     </div>
 
-    <script src="i18n.js?v=255"></script>
-    <script src="app.js?v=355"></script>
+    <script src="i18n.js?v=256"></script>
+    <script src="app.js?v=356"></script>
 </body>
 </html>

@@ -7501,7 +7501,6 @@ async function deleteFinanceEntry(id) {
 // פרימיום, לפי בקשה מפורשת ("everything premium locked") ---
 let cachedRecurringExpenses = [];
 let editingRecurringExpenseId = null;
-let rawRecurringImportRows = null;
 
 async function loadRecurringExpenses() {
     if (!supabaseClient || !currentUserId) return;
@@ -7665,22 +7664,16 @@ function deleteRecurringExpense(id) {
     });
 }
 
-// --- ייבוא מאקסל/CSV: במקום טופס בוררים מנותק מהנתונים (בלבל בבדיקה בפועל
-// - "הכל נורא מבלבל"), הממשק עכשיו הוא הקשה ישירה על הטבלה עצמה: בוחרים
-// "תפקיד" (שם/סכום/התחלה/סיום) ואז מקישים על העמודה המתאימה בתצוגה החיה,
-// ומקישים ▶ ליד השורה שבה מתחילים הנתונים האמיתיים (כדי לדלג על כותרת דוח,
-// אם יש) - הכל מול הנתונים עצמם, בלי בורר בפינה אחרת של המסך ---
-const RECURRING_IMPORT_ROLES = ['name', 'amount', 'start', 'end'];
-const RECURRING_IMPORT_ROLE_ICON = { name: '🏷️', amount: '💰', start: '📅▶', end: '📅⏹' };
-let recurringImportStartRow = 0;
-let recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
-let recurringImportSelectedRole = null;
+// --- ייבוא מאקסל/CSV: אחרי שגם מיפוי-עמודות-בהקשה בלבל בבדיקה בפועל ("זה
+// לא מובן, תעשה את זה הרבה יותר פשוט"), הוסר לגמרי הצורך להבין "עמודות"/
+// "שורות" - התוכנה מנחשת אוטומטית שם+סכום לכל שורה (המספר הגדול ביותר
+// בשורה = הסכום, שאר הטקסט = השם), ומציגה רשימת סימון פשוטה: מבטלים סימון
+// למה שלא רוצים, אפשר לתקן שם/סכום ישירות בשורה, ומקישים "ייבוא". שורות בלי
+// שם או בלי מספר תקין (כמו כותרת דוח) נופלות אוטומטית ולא מוצגות בכלל ---
+let recurringImportCandidates = []; // [{name, amount, checked}]
 
 function openImportRecurringExpensesModal() {
-    rawRecurringImportRows = null;
-    recurringImportStartRow = 0;
-    recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
-    recurringImportSelectedRole = null;
+    recurringImportCandidates = [];
     document.getElementById('recurring-import-file-input').value = '';
     document.getElementById('recurring-import-step1').classList.remove('hidden');
     document.getElementById('recurring-import-step2').classList.add('hidden');
@@ -7688,18 +7681,36 @@ function openImportRecurringExpensesModal() {
     openModal('modal-import-recurring-expenses');
 }
 
-// דוחות ייצוא מבנקים/כרטיסי אשראי כוללים לעיתים קרובות שורת כותרת-דוח ו/או
-// שורת סיכום לפני טבלת הנתונים האמיתית (למשל "פירוט הוראות קבע לחשבון...")
-// - שורות כאלה בד"כ ממלאות רק תא אחד מתוך הרבה, בניגוד לשורות הטבלה האמיתית
-// שממלאות כמעט את כל העמודות. מנחשים כמה שורות כאלה לדלג עליהן כברירת מחדל
-// (ניתנת לשינוי בהקשה על ▶ ליד שורה אחרת) - לפי בעיה שנתגלתה בבדיקה בפועל
-function guessRecurringImportSkipRows(rows) {
-    if (!rows.length) return 0;
-    const widths = rows.map(r => r.filter(c => c !== undefined && c !== '').length);
-    const maxWidth = Math.max(...widths);
-    let skip = 0;
-    while (skip < rows.length - 1 && widths[skip] < Math.max(2, maxWidth * 0.5)) skip++;
-    return skip;
+function parseFlexibleAmount(raw) {
+    if (raw === undefined || raw === null || raw === '') return null;
+    if (typeof raw === 'number') return raw;
+    const cleaned = String(raw).replace(/[^\d.\-]/g, '');
+    const value = parseFloat(cleaned);
+    return isNaN(value) ? null : Math.abs(value);
+}
+
+// ניחוש אוטומטי לשורה בודדת מהקובץ: התא המספרי הגדול ביותר הוא "הסכום" (כי
+// בד"כ "סכום עסקה"/"סכום חיוב" קרובים זה לזה וגדולים משדות אחרים כמו קוד
+// ענף), כל שאר הטקסט (לא תאריכים) מצטרף יחד כ"שם". לא מושלם, אבל זה בסדר -
+// יש שלב סקירה אחריו שבו אפשר לתקן/לבטל סימון בקלות
+function autoExtractRecurringRow(row) {
+    let amount = null;
+    const textParts = [];
+    row.forEach(cell => {
+        if (cell === undefined || cell === null || cell === '') return;
+        if (cell instanceof Date) return;
+        if (typeof cell === 'number') {
+            if (amount === null || Math.abs(cell) > amount) amount = Math.abs(cell);
+            return;
+        }
+        const str = String(cell).trim();
+        if (/^[\d,.\s₪$]+$/.test(str) && /\d/.test(str)) {
+            const val = parseFlexibleAmount(str);
+            if (val !== null) { if (amount === null || val > amount) amount = val; return; }
+        }
+        textParts.push(str);
+    });
+    return { name: textParts.join(' ').trim(), amount };
 }
 
 async function handleRecurringImportFileSelected(event) {
@@ -7711,114 +7722,61 @@ async function handleRecurringImportFileSelected(event) {
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
-        rawRecurringImportRows = rows.filter(row => row && row.length && row.some(cell => cell !== undefined && cell !== ''));
-        if (!rawRecurringImportRows.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-        recurringImportStartRow = guessRecurringImportSkipRows(rawRecurringImportRows);
-        recurringImportColumnMap = { name: null, amount: null, start: null, end: null };
-        recurringImportSelectedRole = null;
+        const candidates = [];
+        rows.forEach(row => {
+            if (!row || !row.length) return;
+            const extracted = autoExtractRecurringRow(row);
+            if (extracted.name && extracted.amount) candidates.push({ name: extracted.name, amount: extracted.amount, checked: true });
+        });
+        if (!candidates.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+        recurringImportCandidates = candidates;
         document.getElementById('recurring-import-step1').classList.add('hidden');
         document.getElementById('recurring-import-step2').classList.remove('hidden');
-        renderRecurringImportRoleChips();
-        renderRecurringImportPreviewTable();
+        renderRecurringImportReviewList();
     } catch (e) {
         showAppToast(t('finance_recurring_import_failed'), 'error');
     }
 }
 
-// תא שהוא תאריך (Date אמיתי, בזכות cellDates:true בקריאת הקובץ) מוצג בתצוגה
-// המקדימה בפורמט קצר וקריא (YYYY-MM-DD) במקום Date.toString() הגולמי - שעל
-// חלק מהדפדפנים מוצג עם שם יום/חודש בעברית ואזור-זמן מלא, בלתי קריא לחלוטין
-function formatCellForPreview(cell) {
-    if (cell === undefined || cell === null || cell === '') return '';
-    if (cell instanceof Date && !isNaN(cell)) return getLocalDateString(cell);
-    return String(cell);
+function renderRecurringImportReviewList() {
+    const list = document.getElementById('recurring-import-review-list');
+    if (!list) return;
+    list.innerHTML = recurringImportCandidates.map((item, i) => `
+        <li class="finance-history-row">
+            <input type="checkbox" class="import-review-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRecurringImportCandidate(${i}, this.checked)">
+            <input type="text" class="import-review-name-input" value="${escapeHtmlForReport(item.name)}" onchange="updateRecurringImportCandidateName(${i}, this.value)">
+            <input type="number" class="import-review-amount-input" value="${item.amount}" onchange="updateRecurringImportCandidateAmount(${i}, this.value)">
+        </li>
+    `).join('');
+    updateRecurringImportConfirmLabel();
 }
 
-function selectRecurringImportRole(role) {
-    recurringImportSelectedRole = (recurringImportSelectedRole === role) ? null : role;
-    renderRecurringImportRoleChips();
+function toggleRecurringImportCandidate(i, checked) {
+    recurringImportCandidates[i].checked = checked;
+    updateRecurringImportConfirmLabel();
 }
 
-function renderRecurringImportRoleChips() {
-    RECURRING_IMPORT_ROLES.forEach(role => {
-        const chip = document.querySelector(`.import-role-chip[data-role="${role}"]`);
-        if (!chip) return;
-        chip.classList.toggle('active', recurringImportSelectedRole === role);
-        chip.classList.toggle('mapped', recurringImportColumnMap[role] !== null);
-    });
+function updateRecurringImportCandidateName(i, val) {
+    recurringImportCandidates[i].name = val.trim();
 }
 
-function selectRecurringImportStartRow(rowIndex) {
-    recurringImportStartRow = rowIndex;
-    renderRecurringImportPreviewTable();
+function updateRecurringImportCandidateAmount(i, val) {
+    recurringImportCandidates[i].amount = parseFloat(val) || 0;
 }
 
-function assignRecurringImportColumn(colIndex) {
-    if (!recurringImportSelectedRole) return;
-    recurringImportColumnMap[recurringImportSelectedRole] = colIndex;
-    recurringImportSelectedRole = null;
-    renderRecurringImportRoleChips();
-    renderRecurringImportPreviewTable();
-}
-
-function renderRecurringImportPreviewTable() {
-    const table = document.getElementById('recurring-import-preview-table');
-    if (!table || !rawRecurringImportRows) return;
-    const roleByColumn = {};
-    RECURRING_IMPORT_ROLES.forEach(role => {
-        const col = recurringImportColumnMap[role];
-        if (col !== null) roleByColumn[col] = role;
-    });
-    const rowsToShow = rawRecurringImportRows.slice(0, 10);
-    table.innerHTML = rowsToShow.map((row, i) => {
-        const skipped = i < recurringImportStartRow;
-        const isStart = i === recurringImportStartRow;
-        const startCell = `<td class="import-row-start-cell" onclick="selectRecurringImportStartRow(${i})">${isStart ? '▶' : ''}</td>`;
-        const dataCells = row.map((cell, colIndex) => {
-            const role = roleByColumn[colIndex];
-            const cls = role ? ` class="import-col-role-${role}"` : '';
-            const badge = role ? `<span class="import-col-role-badge">${RECURRING_IMPORT_ROLE_ICON[role]}</span>` : '';
-            return `<td${cls} onclick="assignRecurringImportColumn(${colIndex})">${badge}${escapeHtmlForReport(formatCellForPreview(cell))}</td>`;
-        }).join('');
-        return `<tr class="${skipped ? 'import-row-skipped' : ''}${isStart ? ' import-row-start-marker' : ''}">${startCell}${dataCells}</tr>`;
-    }).join('');
-}
-
-function parseFlexibleAmount(raw) {
-    if (raw === undefined || raw === null || raw === '') return null;
-    if (typeof raw === 'number') return raw;
-    const cleaned = String(raw).replace(/[^\d.\-]/g, '');
-    const value = parseFloat(cleaned);
-    return isNaN(value) ? null : Math.abs(value);
-}
-
-function parseFlexibleDate(raw) {
-    if (raw === undefined || raw === null || raw === '') return null;
-    if (raw instanceof Date && !isNaN(raw)) return getLocalDateString(raw);
-    const str = String(raw).trim();
-    let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-    m = str.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/);
-    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; // DD/MM/YYYY - הפורמט הנפוץ בייצוא בנקים/כרטיסים ישראליים
-    return null;
+function updateRecurringImportConfirmLabel() {
+    const btn = document.getElementById('btn-confirm-recurring-import');
+    if (!btn) return;
+    const count = recurringImportCandidates.filter(c => c.checked).length;
+    btn.textContent = `${t('finance_recurring_import_confirm_btn')} (${count})`;
 }
 
 async function confirmRecurringExpenseImport() {
-    if (!rawRecurringImportRows || !supabaseClient || !currentUserId) return;
-    const { name: nameCol, amount: amountCol, start: startCol, end: endCol } = recurringImportColumnMap;
+    if (!supabaseClient || !currentUserId) return;
     const source = document.getElementById('recurring-import-source-input').value.trim() || null;
-    if (nameCol === null || amountCol === null) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-    const dataRows = rawRecurringImportRows.slice(recurringImportStartRow);
-    const payloads = [];
-    dataRows.forEach(row => {
-        const name = row[nameCol] !== undefined ? String(row[nameCol]).trim() : '';
-        const amount = parseFlexibleAmount(row[amountCol]);
-        if (!name || !amount) return;
-        const startDate = (startCol !== null ? parseFlexibleDate(row[startCol]) : null) || getLocalDateString();
-        const endDate = endCol !== null ? parseFlexibleDate(row[endCol]) : null;
-        payloads.push({ user_id: currentUserId, username: currentUsername, name, amount, category: null, source, start_date: startDate, end_date: endDate });
-    });
-    if (!payloads.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    const selected = recurringImportCandidates.filter(c => c.checked && c.name && c.amount > 0);
+    if (!selected.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
+    const payloads = selected.map(c => ({ user_id: currentUserId, username: currentUsername, name: c.name, amount: c.amount, category: null, source, start_date: getLocalDateString(), end_date: null }));
     const { error } = await supabaseClient.from('recurring_expenses').insert(payloads);
     if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
     closeModal('modal-import-recurring-expenses');
