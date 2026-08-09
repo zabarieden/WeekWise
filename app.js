@@ -1624,11 +1624,12 @@ function triggerDailyGreetingSparkles() {
     }, 20000);
 }
 
-// משך אנימציית "הספר" המלאה (7 דפים, ר' theme.css: עמוד אחרון עם delay 1.32s
-// + משך הפיכה 0.22s = 1.54s, + מרווח ביטחון קטן) - initAppAfterAuth מחכה
-// לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה, כדי שהאנימציה תמיד תושלם.
-// קוצר משמעותית מ-10600 המקורי - לפי בקשה מפורשת ("שידפדף מהר")
-const BOOK_LOADING_ANIMATION_MS = 2200;
+// משך אנימציית "הספר" (רק 2 דפים עכשיו, ר' theme.css): דף 1 גלוי 5s, היפוך
+// 0.3s, ועוד 5s על דף הסיום = 10.3s, + מרווח ביטחון קטן - initAppAfterAuth
+// מחכה לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה. הוארך בחזרה מ-2200
+// (התברר כמהיר מדי לקריאה) - לפי בקשה מפורשת "רק הדף הראשון והאחרון...
+// תן לזה לשבת... אפילו 5 [שניות]"
+const BOOK_LOADING_ANIMATION_MS = 10500;
 
 function showAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
