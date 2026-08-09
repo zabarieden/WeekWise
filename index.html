@@ -1296,6 +1296,10 @@
                 <div class="preset-manager-grid">
                     <input type="text" id="recurring-name-input" data-i18n-placeholder="finance_recurring_name_placeholder" placeholder="Name (e.g. Netflix)">
                     <input type="number" id="recurring-amount-input" data-i18n-placeholder="finance_recurring_amount_placeholder" placeholder="Monthly amount">
+                    <p class="settings-label" data-i18n="finance_recurring_installment_calc_label">Or: total purchase + number of payments</p>
+                    <input type="number" id="recurring-total-input" data-i18n-placeholder="finance_recurring_total_placeholder" placeholder="Total purchase amount (optional)">
+                    <input type="number" id="recurring-installments-count-input" data-i18n-placeholder="finance_recurring_installments_count_placeholder" placeholder="Number of payments (optional)" onchange="updateRecurringManualInstallmentTotal(this.value)">
+                    <button type="button" class="btn-secondary" onclick="calculateRecurringMonthlyFromTotal()" data-i18n="finance_recurring_calc_btn">Calculate monthly amount</button>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('recurring-category-select')"><span id="recurring-category-select-display"></span></button>
                     <select id="recurring-category-select" class="hidden"></select>
                     <input type="text" id="recurring-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
@@ -2973,7 +2977,7 @@
 
     </div>
 
-    <script src="i18n.js?v=260"></script>
-    <script src="app.js?v=361"></script>
+    <script src="i18n.js?v=261"></script>
+    <script src="app.js?v=362"></script>
 </body>
 </html>

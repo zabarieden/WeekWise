@@ -5478,6 +5478,10 @@ async function exportUserDataReport() {
     let weightQuery = includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : null;
     let goalsQuery = includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : null;
     let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
+    // הוצאות קבועות נכללות בדוח הכספי - לפי בקשה מפורשת ("זה חשוב לPDF") -
+    // לא לפי entry_date (אין להן), אלא לפי חפיפה עם הטווח שנבחר (כמו בסיכום/
+    // בהיסטוריה למעלה); בטווח "כל הזמן" מוצגות כל ההוצאות הקבועות בלי סינון
+    let recurringQuery = includeFinance ? supabaseClient.from('recurring_expenses').select('*').eq('user_id', currentUserId).order('start_date', { ascending: false }) : null;
     let sportQuery = includeSport ? supabaseClient.from('sport_sessions').select('*').eq('user_id', currentUserId).order('session_date', { ascending: false }) : null;
     let waterQuery = includeWater ? supabaseClient.from('water_logs').select('*').eq('user_id', currentUserId).order('log_date', { ascending: false }) : null;
     let calorieQuery = includeCalories ? supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).order('date', { ascending: false }) : null;
@@ -5485,15 +5489,17 @@ async function exportUserDataReport() {
         if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
         if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
         if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
+        if (recurringQuery) recurringQuery = recurringQuery.lt('start_date', rangeEndExclusive).or(`end_date.is.null,end_date.gte.${rangeStart}`);
         if (sportQuery) sportQuery = sportQuery.gte('session_date', rangeStart).lt('session_date', rangeEndExclusive);
         if (waterQuery) waterQuery = waterQuery.gte('log_date', rangeStart).lt('log_date', rangeEndExclusive);
         if (calorieQuery) calorieQuery = calorieQuery.gte('date', rangeStart).lt('date', rangeEndExclusive);
     }
 
-    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: sportRows }, { data: waterRows }, { data: calorieRows }] = await Promise.all([
+    const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: recurringRows }, { data: sportRows }, { data: waterRows }, { data: calorieRows }] = await Promise.all([
         weightQuery || Promise.resolve({ data: null }),
         goalsQuery || Promise.resolve({ data: null }),
         financeQuery || Promise.resolve({ data: null }),
+        recurringQuery || Promise.resolve({ data: null }),
         sportQuery || Promise.resolve({ data: null }),
         waterQuery || Promise.resolve({ data: null }),
         calorieQuery || Promise.resolve({ data: null }),
@@ -5523,6 +5529,12 @@ async function exportUserDataReport() {
             }).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_finance'))}</h2>${financeHtml}`;
+        if (recurringRows && recurringRows.length) {
+            const recurringHtml = recurringRows.map(row =>
+                `<div class="entry"><span class="entry-main">🔁 ${escapeHtmlForReport(row.name)}</span><span class="entry-value" style="color: #a855f7;">−${Number(row.amount).toLocaleString()}</span></div>`
+            ).join('');
+            sectionsHtml += `<h2>${escapeHtmlForReport(t('finance_recurring_title'))}</h2>${recurringHtml}`;
+        }
     }
     if (includeSport) {
         const sportHtml = (sportRows && sportRows.length)
@@ -7560,20 +7572,6 @@ async function renderFinanceHistory() {
         list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`;
         return;
     }
-    (recurringRows || []).forEach(row => {
-        const li = document.createElement('li');
-        li.className = 'finance-history-row';
-        li.innerHTML = `
-            <div class="finance-history-main">
-                <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
-                <span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_badge')}</span>
-            </div>
-            <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(row.amount).toLocaleString()}</span>
-            <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${row.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-slot" onclick="deleteRecurringExpense('${row.id}')">❌</button>
-        `;
-        list.appendChild(li);
-    });
     (data || []).forEach(row => {
         const li = document.createElement('li');
         li.className = 'finance-history-row';
@@ -7591,6 +7589,22 @@ async function renderFinanceHistory() {
             <span class="finance-history-amount" style="color: ${colorVar};">${sign}${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-edit-item" onclick="editFinanceEntry('${row.id}')">${EDIT_ICON_SVG}</button>
             <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+    // הוצאות קבועות דבוקות בתחתית הרשימה (לא מעורבבות בין העסקאות הרגילות) -
+    // לפי בקשה מפורשת
+    (recurringRows || []).forEach(row => {
+        const li = document.createElement('li');
+        li.className = 'finance-history-row';
+        li.innerHTML = `
+            <div class="finance-history-main">
+                <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
+                <span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_badge')}</span>
+            </div>
+            <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(row.amount).toLocaleString()}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${row.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteRecurringExpense('${row.id}')">❌</button>
         `;
         list.appendChild(li);
     });
@@ -7718,11 +7732,36 @@ function toggleRecurringEndDateField() {
     if (noEnd) document.getElementById('recurring-end-date-input').value = '';
 }
 
+// מחשבון "סה\"כ + מספר תשלומים" בהוספה/עריכה ידנית - אותה נוסחה בדיוק כמו
+// בייבוא (autoExtractRecurringRow), רק ביוזמת המשתמשת עם כפתור מפורש במקום
+// ניחוש אוטומטי - לפי בקשה מפורשת ("תוסיף סה\"כ + סכום חודשי... פריסה כזה")
+let pendingRecurringInstallmentCurrent = null;
+let pendingRecurringInstallmentTotal = null;
+
+function updateRecurringManualInstallmentTotal(val) {
+    pendingRecurringInstallmentTotal = parseInt(val) || null;
+}
+
+function calculateRecurringMonthlyFromTotal() {
+    const total = parseFloat(document.getElementById('recurring-total-input').value);
+    const count = parseInt(document.getElementById('recurring-installments-count-input').value);
+    if (!total || !count || count < 1) { showAppToast(t('finance_recurring_calc_missing'), 'error'); return; }
+    const monthly = Math.round((total / count) * 100) / 100;
+    document.getElementById('recurring-amount-input').value = monthly;
+    pendingRecurringInstallmentCurrent = 1;
+    pendingRecurringInstallmentTotal = count;
+    showAppToast(t('finance_recurring_calc_success').replace('{amount}', monthly.toLocaleString()));
+}
+
 function openAddRecurringExpenseModal() {
     editingRecurringExpenseId = null;
+    pendingRecurringInstallmentCurrent = null;
+    pendingRecurringInstallmentTotal = null;
     document.getElementById('recurring-expense-modal-title').textContent = t('finance_recurring_add_btn');
     document.getElementById('recurring-name-input').value = '';
     document.getElementById('recurring-amount-input').value = '';
+    document.getElementById('recurring-total-input').value = '';
+    document.getElementById('recurring-installments-count-input').value = '';
     document.getElementById('recurring-source-input').value = '';
     populateRecurringCategoryOptions();
     updateCustomSelectDisplay('recurring-category-select');
@@ -7740,9 +7779,13 @@ function openEditRecurringExpenseModal(id) {
     const item = cachedRecurringExpenses.find(x => x.id === id);
     if (!item) return;
     editingRecurringExpenseId = id;
+    pendingRecurringInstallmentCurrent = item.installment_current || null;
+    pendingRecurringInstallmentTotal = item.installment_total || null;
     document.getElementById('recurring-expense-modal-title').textContent = t('edit_item_title');
     document.getElementById('recurring-name-input').value = item.name;
     document.getElementById('recurring-amount-input').value = item.amount;
+    document.getElementById('recurring-total-input').value = '';
+    document.getElementById('recurring-installments-count-input').value = item.installment_total || '';
     document.getElementById('recurring-source-input').value = item.source || '';
     populateRecurringCategoryOptions();
     document.getElementById('recurring-category-select').value = item.category || FINANCE_CATEGORIES.expense[0][0];
@@ -7771,7 +7814,10 @@ async function submitRecurringExpense() {
     closeModal('modal-add-recurring-expense');
     editingRecurringExpenseId = null;
     if (!supabaseClient || !currentUserId) return;
-    const payload = { name, amount, category, source, start_date: startDate, end_date: endDate };
+    const payload = {
+        name, amount, category, source, start_date: startDate, end_date: endDate,
+        installment_current: pendingRecurringInstallmentCurrent, installment_total: pendingRecurringInstallmentTotal,
+    };
     let error;
     if (editId) {
         ({ error } = await supabaseClient.from('recurring_expenses').update(payload).eq('id', editId));
@@ -7842,11 +7888,11 @@ function extractInstallmentInfo(text) {
     return { current, total, endDate };
 }
 
-// כשיש כמה תאים מספריים באותה שורה (למשל בעסקת תשלומים: גם "סכום עסקה" -
-// המחיר הכולל של הרכישה - וגם "סכום חיוב" - מה שבפועל יורד החודש), בוחרים
-// את המספר *הקטן* מביניהם כ"סכום", לא הגדול - כי בעסקאות תשלומים הסכום הכולל
-// כמעט תמיד גדול מהחיוב החודשי הבודד, וזה מה שרוצים כאן (הוצאה חודשית, לא
-// מחיר הרכישה הכולל) - לפי דיווח מפורש שהסכום שהתקבל היה "סה\"כ ולא לחודש"
+// בין כמה תאים מספריים באותה שורה בוחרים את הגדול ביותר כ"סכום" - בעסקת
+// תשלומים זה כמעט תמיד "סכום עסקה" (המחיר הכולל של הרכישה), לא "סכום חיוב"
+// הקטן יותר. אם זוהתה תבנית "X מתוך Y" (ר' extractInstallmentInfo), מחלקים
+// את הסכום הזה ב-Y כדי לקבל את החיוב החודשי בפועל - לפי בקשה מפורשת: "אם
+// לדוגמא תשלום 1 מתוך 4 והסה\"כ שרשום זה 1800, פשוט תחלק את זה ב-4"
 function autoExtractRecurringRow(row) {
     let amount = null;
     const textParts = [];
@@ -7854,20 +7900,21 @@ function autoExtractRecurringRow(row) {
         if (cell === undefined || cell === null || cell === '') return;
         if (cell instanceof Date) return;
         if (typeof cell === 'number') {
-            if (amount === null || Math.abs(cell) < amount) amount = Math.abs(cell);
+            if (amount === null || Math.abs(cell) > amount) amount = Math.abs(cell);
             return;
         }
         const str = String(cell).trim();
         if (/^[\d,.\s₪$]+$/.test(str) && /\d/.test(str)) {
             const val = parseFlexibleAmount(str);
-            if (val !== null) { if (amount === null || val < amount) amount = val; return; }
+            if (val !== null) { if (amount === null || val > amount) amount = val; return; }
         }
         textParts.push(str);
     });
     const name = textParts.join(' ').trim();
     const installment = extractInstallmentInfo(name);
+    const monthlyAmount = (installment && amount !== null) ? Math.round((amount / installment.total) * 100) / 100 : amount;
     return {
-        name, amount,
+        name, amount: monthlyAmount,
         endDate: installment ? installment.endDate : null,
         installmentCurrent: installment ? installment.current : null,
         installmentTotal: installment ? installment.total : null,
