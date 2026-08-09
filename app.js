@@ -7631,10 +7631,11 @@ let editingRecurringExpenseId = null;
 
 async function loadRecurringExpenses() {
     if (!supabaseClient || !currentUserId) return;
-    if (!isPremiumUser) { renderRecurringExpensesSection(); return; }
+    if (!isPremiumUser) { renderRecurringInstallmentsSection(); renderRecurringStandingOrdersSection(); return; }
     const { data } = await supabaseClient.from('recurring_expenses').select('*').eq('user_id', currentUserId).order('start_date', { ascending: false });
     cachedRecurringExpenses = data || [];
-    renderRecurringExpensesSection();
+    renderRecurringInstallmentsSection();
+    renderRecurringStandingOrdersSection();
 }
 
 function isRecurringExpenseActive(item) {
@@ -7644,20 +7645,26 @@ function isRecurringExpenseActive(item) {
     return true;
 }
 
-function renderRecurringExpensesSection() {
-    const container = document.getElementById('recurring-expenses-content');
+function renderRecurringPremiumHint(container) {
+    container.innerHTML = `<p class="monthly-goal-empty">${t('finance_recurring_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
+}
+
+// "תשלומים" (installment_total מוגדר) - טבלה נפרדת לגמרי מ"הוראות קבע", לא
+// שתי רשימות בתוך אותו כרטיס - לפי בקשה מפורשת ("עוד טבלה נפרדת לגמרי").
+// כפתור הייבוא מהאקסל נשאר כאן (במקום להיות משוכפל בשני הכרטיסים), כי קובץ
+// ייבוא אחד עשוי ליצור גם תשלומים וגם הוראות קבע בבת אחת - כל פריט שיובא
+// ינחת בטבלה הנכונה לפי הסוג שזוהה לו אוטומטית
+function renderRecurringInstallmentsSection() {
+    const container = document.getElementById('recurring-installments-content');
     if (!container) return;
-    if (!isPremiumUser) {
-        container.innerHTML = `<p class="monthly-goal-empty">${t('finance_recurring_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
-        return;
-    }
-    const activeItems = cachedRecurringExpenses.filter(isRecurringExpenseActive);
-    const monthlyTotal = activeItems.reduce((sum, item) => sum + Number(item.amount), 0);
+    if (!isPremiumUser) { renderRecurringPremiumHint(container); return; }
+    const items = cachedRecurringExpenses.filter(item => item.installment_total && isRecurringExpenseActive(item));
+    const monthlyTotal = items.reduce((sum, item) => sum + Number(item.amount), 0);
     container.innerHTML = `
         <div class="stats-grid stats-grid-2col">
             <div class="stat-box">
                 <h3>${t('finance_recurring_active_count')}</h3>
-                <div class="stat-number">${activeItems.length}</div>
+                <div class="stat-number">${items.length}</div>
             </div>
             <div class="stat-box">
                 <h3>${t('finance_recurring_monthly_total')}</h3>
@@ -7668,9 +7675,37 @@ function renderRecurringExpensesSection() {
             <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal()">${t('finance_recurring_add_btn')}</button>
             <button type="button" class="btn-secondary" onclick="openImportRecurringExpensesModal()">${t('finance_recurring_import_btn')}</button>
         </div>
-        <ul id="recurring-expenses-list" class="center-list" style="margin-top:10px;"></ul>
+        <ul id="recurring-installments-list" class="center-list" style="margin-top:10px;"></ul>
     `;
-    renderRecurringExpensesList();
+    renderRecurringExpensesList('recurring-installments-list', item => !!item.installment_total);
+}
+
+// "הוראות קבע" (בלי installment_total) - הסכום כאן מוצג רק כמידע ("כמה
+// מחויב חודשי בהוראות קבע"), לא נספר בסה"כ ההוצאות בסיכום החודשי - לפי
+// בקשה מפורשת
+function renderRecurringStandingOrdersSection() {
+    const container = document.getElementById('recurring-standing-content');
+    if (!container) return;
+    if (!isPremiumUser) { renderRecurringPremiumHint(container); return; }
+    const items = cachedRecurringExpenses.filter(item => !item.installment_total && isRecurringExpenseActive(item));
+    const monthlyTotal = items.reduce((sum, item) => sum + Number(item.amount), 0);
+    container.innerHTML = `
+        <div class="stats-grid stats-grid-2col">
+            <div class="stat-box">
+                <h3>${t('finance_recurring_active_count')}</h3>
+                <div class="stat-number">${items.length}</div>
+            </div>
+            <div class="stat-box">
+                <h3>${t('finance_recurring_monthly_total')}</h3>
+                <div class="stat-number">${monthlyTotal.toLocaleString()}</div>
+            </div>
+        </div>
+        <div class="preset-manager-grid" style="margin-top:10px;">
+            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal()">${t('finance_recurring_add_btn')}</button>
+        </div>
+        <ul id="recurring-standing-list" class="center-list" style="margin-top:10px;"></ul>
+    `;
+    renderRecurringExpensesList('recurring-standing-list', item => !item.installment_total);
 }
 
 function formatShortMonthYear(dateStr) {
@@ -7704,13 +7739,14 @@ function buildRecurringExpenseTypeBadgesHtml(item, today) {
     return `<span class="recurring-expense-source-tag">💳 ${progress}</span><span class="recurring-expense-source-tag">${totalBadge}</span>`;
 }
 
-function renderRecurringExpensesList() {
-    const list = document.getElementById('recurring-expenses-list');
+function renderRecurringExpensesList(listId, filterFn) {
+    const list = document.getElementById(listId);
     if (!list) return;
     list.innerHTML = '';
-    if (!cachedRecurringExpenses.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
+    const items = cachedRecurringExpenses.filter(filterFn);
+    if (!items.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
     const today = getLocalDateString();
-    cachedRecurringExpenses.forEach(item => {
+    items.forEach(item => {
         const ended = item.end_date && item.end_date < today;
         let badgeText;
         if (!item.end_date) badgeText = t('finance_recurring_ongoing');

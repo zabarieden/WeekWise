@@ -744,12 +744,24 @@
                          למעלה (לא נכנס ל-budget_tracker בעצמו, כדי לא לספור פעמיים) - רשימת
                          תכנון/מעקב בלבד: הוספה ידנית או ייבוא מקובץ אקסל/CSV מהבנק/כרטיס
                          אשראי. פרימיום, לפי בקשה מפורשת -->
+                    <!-- שתי טבלאות נפרדות לגמרי - "תשלומים" (פריסות עם מספר תשלומים ידוע,
+                         נספרים בסיכום החודשי) ו"הוראות קבע" (מנויים/חיובים בלי תאריך סיום
+                         טבעי, לא נספרים בסיכום) - לא כרטיס אחד עם שתי רשימות פנימיות, לפי
+                         בקשה מפורשת ("עוד טבלה נפרדת לגמרי") -->
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="finance_recurring_title">🔁 Recurring Expenses</h2>
+                            <h2 data-i18n="finance_installments_title">💳 Installments</h2>
                             <span class="card-toggle-icon">▼</span>
                         </div>
-                        <div class="card-body" id="recurring-expenses-content"></div>
+                        <div class="card-body" id="recurring-installments-content"></div>
+                    </div>
+
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="finance_standing_orders_title">🔁 Standing Orders</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body" id="recurring-standing-content"></div>
                     </div>
                 </section>
 
@@ -2971,7 +2983,7 @@
 
     </div>
 
-    <script src="i18n.js?v=262"></script>
-    <script src="app.js?v=364"></script>
+    <script src="i18n.js?v=263"></script>
+    <script src="app.js?v=365"></script>
 </body>
 </html>
