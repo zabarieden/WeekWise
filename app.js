@@ -7487,13 +7487,21 @@ async function renderFinanceSummary() {
     const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
     labelEl.textContent = formatFinancePeriodLabel(monthKey);
     const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
-    const [{ data: entries }, { data: targetRow }] = await Promise.all([
+    // ההוצאות הקבועות (recurring_expenses) נספרות עכשיו גם כאן, בנוסף להיסטוריה
+    // הרגילה - לא כפילות, כי הן בכלל לא נכנסות ל-budget_tracker בעצמו (ר' ההערה
+    // למעלה על הטבלה) - לפי בקשה מפורשת ("שתוסיף את זה לסיכום החודשי כהוצאה
+    // לכל דבר"). נספרת רק הוצאה קבועה שפעילה-בחלקה בטווח התקופה המוצגת (לא
+    // רק "פעילה היום"), כדי שגם ניווט לחודשים אחרים יציג סכום נכון
+    const [{ data: entries }, { data: targetRow }, { data: recurringRows }] = await Promise.all([
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
         supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).eq('month_key', monthKey).maybeSingle(),
+        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date')
+            .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     let income = 0, expense = 0;
     (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
+    (recurringRows || []).forEach(row => { expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
 
@@ -7625,6 +7633,14 @@ function formatShortMonthYear(dateStr) {
     return new Date(y, m - 1, d).toLocaleDateString(currentLang, { month: 'short', year: 'numeric' });
 }
 
+// הפרש בחודשים שלמים בין שני תאריכי YYYY-MM-DD (לא מדויק ליום בחודש, רק
+// לחישוב "כמה תשלומים עברו מאז הייבוא") - ר' renderRecurringExpensesList
+function monthsBetweenDateStrings(fromStr, toStr) {
+    const [fy, fm] = fromStr.split('-').map(Number);
+    const [ty, tm] = toStr.split('-').map(Number);
+    return (ty - fy) * 12 + (tm - fm);
+}
+
 function renderRecurringExpensesList() {
     const list = document.getElementById('recurring-expenses-list');
     if (!list) return;
@@ -7637,12 +7653,21 @@ function renderRecurringExpensesList() {
         if (!item.end_date) badgeText = t('finance_recurring_ongoing');
         else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
         else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
+        // "תשלום X מתוך Y" חי - מתקדם לבד מדי חודש מאז הייבוא, בלי לגעת בטקסט
+        // השם המקורי (item.name) שהמשתמשת עשויה כבר לערוך בעצמה
+        let installmentBadge = '';
+        if (item.installment_total) {
+            const monthsElapsed = Math.max(0, monthsBetweenDateStrings(item.start_date, today));
+            const liveCurrent = Math.min((item.installment_current || 1) + monthsElapsed, item.installment_total);
+            installmentBadge = `<span class="recurring-expense-source-tag">${t('finance_recurring_installment_progress').replace('{current}', liveCurrent).replace('{total}', item.installment_total)}</span>`;
+        }
         const li = document.createElement('li');
         li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${escapeHtmlForReport(item.name)}</span>
                 ${item.source ? `<span class="recurring-expense-source-tag">${escapeHtmlForReport(item.source)}</span>` : ''}
+                ${installmentBadge}
                 <span class="finance-history-date">${badgeText}</span>
             </div>
             <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
@@ -7771,16 +7796,23 @@ function parseFlexibleAmount(raw) {
 // עסקאות פריסה בכרטיסי אשראי ישראליים. אם נמצא, מחשבים תאריך סיום משוער
 // (היום + מספר התשלומים שנשארו) - כדי שהסכום החודשי הכולל לא ימשיך לספור
 // תשלום שכבר הסתיים בפועל, לפי בקשה מפורשת ("הסה\"כ לחודש... זה לא נכון")
-function extractInstallmentEndDate(text) {
+// שומרים גם את המונים הגולמיים (current/total) בנוסף לתאריך הסיום, כדי
+// שאפשר יהיה להציג "תשלום X מתוך Y" *חי* שמתקדם לבד מדי חודש (ר.
+// renderRecurringExpensesList) - בלי לגעת בטקסט השם המקורי, שהמשתמשת
+// עשויה לערוך בעצמה - לפי בקשה מפורשת ("אני מקווה שבכל חודש זה מוריד אחד")
+function extractInstallmentInfo(text) {
     const m = text.match(/(\d{1,2})\s*(?:מתוך|\/|out of|of)\s*(\d{1,2})/i);
     if (!m) return null;
     const current = parseInt(m[1]), total = parseInt(m[2]);
     if (!(current >= 1 && total >= current && total <= 60)) return null;
     const remaining = total - current;
-    if (remaining <= 0) return null;
-    const d = new Date();
-    d.setMonth(d.getMonth() + remaining);
-    return getLocalDateString(d);
+    let endDate = null;
+    if (remaining > 0) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + remaining);
+        endDate = getLocalDateString(d);
+    }
+    return { current, total, endDate };
 }
 
 function autoExtractRecurringRow(row) {
@@ -7801,7 +7833,13 @@ function autoExtractRecurringRow(row) {
         textParts.push(str);
     });
     const name = textParts.join(' ').trim();
-    return { name, amount, endDate: extractInstallmentEndDate(name) };
+    const installment = extractInstallmentInfo(name);
+    return {
+        name, amount,
+        endDate: installment ? installment.endDate : null,
+        installmentCurrent: installment ? installment.current : null,
+        installmentTotal: installment ? installment.total : null,
+    };
 }
 
 async function handleRecurringImportFileSelected(event) {
@@ -7817,7 +7855,7 @@ async function handleRecurringImportFileSelected(event) {
         rows.forEach(row => {
             if (!row || !row.length) return;
             const extracted = autoExtractRecurringRow(row);
-            if (extracted.name && extracted.amount) candidates.push({ name: extracted.name, amount: extracted.amount, endDate: extracted.endDate, checked: true });
+            if (extracted.name && extracted.amount) candidates.push({ name: extracted.name, amount: extracted.amount, endDate: extracted.endDate, installmentCurrent: extracted.installmentCurrent, installmentTotal: extracted.installmentTotal, checked: true });
         });
         if (!candidates.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
         recurringImportCandidates = candidates;
@@ -7870,7 +7908,11 @@ async function confirmRecurringExpenseImport() {
     const source = document.getElementById('recurring-import-source-input').value.trim() || null;
     const selected = recurringImportCandidates.filter(c => c.checked && c.name && c.amount > 0);
     if (!selected.length) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
-    const payloads = selected.map(c => ({ user_id: currentUserId, username: currentUsername, name: c.name, amount: c.amount, category: null, source, start_date: getLocalDateString(), end_date: c.endDate || null }));
+    const payloads = selected.map(c => ({
+        user_id: currentUserId, username: currentUsername, name: c.name, amount: c.amount, category: null, source,
+        start_date: getLocalDateString(), end_date: c.endDate || null,
+        installment_current: c.installmentCurrent || null, installment_total: c.installmentTotal || null,
+    }));
     const { error } = await supabaseClient.from('recurring_expenses').insert(payloads);
     if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
     closeModal('modal-import-recurring-expenses');
