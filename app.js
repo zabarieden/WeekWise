@@ -1287,6 +1287,12 @@ async function initAppAfterAuth(user) {
     // אם שניהם היו רצים במקביל בתוך אותו Promise.all, היה מרוץ-תזמון שבו
     // isPremiumUser עוד false (הערך ההתחלתי) כש-loadGlobalFont כבר קורא אותו
     await loadPremiumStatus();
+    // loadFinanceCycleSetting מחוץ ל-Promise.all שלמטה ומחכה לו קודם: loadFinanceData
+    // (בפנים ה-Promise.all) קורא ל-getFinanceCycleStartDay באופן סינכרוני כדי לחשב
+    // את טווח התאריכים - אם שניהם היו רצים במקביל, היה מרוץ-תזמון שבו הערך עדיין
+    // ברירת המחדל (1) כש-loadFinanceData כבר קורא אותו, בדיוק כמו ההערה למעלה על
+    // loadPremiumStatus/loadGlobalFont
+    await loadFinanceCycleSetting();
     await Promise.all([
         loadWeeklySchedule(),
         loadStats(),
@@ -7234,18 +7240,44 @@ let cachedFinanceTargetBudget = 0;
 // הספציפיות לפייננס למטה (loadFinanceData/navigateFinanceMonth/
 // renderFinanceSummary/renderFinanceHistory/saveFinanceTargetBudget)
 // עברו להשתמש במפתח-תקופה (period key) במקום currentMonthKey ישירות
+// בעבר ההגדרה הזו נשמרה רק ב-localStorage - כלומר לא סונכרנה בין מכשירים
+// בכלל (למשל בין המחשב לנייד), אז בכל מכשיר "חדש" היא חזרה לברירת המחדל (1)
+// גם אם כבר נבחר יום אחר במכשיר אחר - בדיוק הבאג שדווח ("תמיד מתאפס ל-1").
+// עכשיו נשמרת גם ב-user_premium (כמו theme/font_family למעלה), עם localStorage
+// רק בתור מטמון-מהיר לפני שהטעינה מהשרת מסתיימת. cachedFinanceCycleStartDay
+// מאפשר ל-getFinanceCycleStartDay להישאר סינכרוני (נקרא מכמה פונקציות רגילות)
+let cachedFinanceCycleStartDay = 1;
 function getFinanceCycleStartDay() {
-    const n = parseInt(localStorage.getItem('weekwise_finance_cycle_start_day'));
-    return n >= 1 && n <= 28 ? n : 1;
+    return cachedFinanceCycleStartDay;
 }
-function setFinanceCycleStartDay(day) {
+async function loadFinanceCycleSetting() {
+    let day = 1;
+    const local = parseInt(localStorage.getItem('weekwise_finance_cycle_start_day'));
+    if (local >= 1 && local <= 28) day = local;
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('user_premium').select('finance_cycle_start_day').eq('user_id', currentUserId).maybeSingle();
+        if (data && data.finance_cycle_start_day >= 1 && data.finance_cycle_start_day <= 28) day = data.finance_cycle_start_day;
+    }
+    cachedFinanceCycleStartDay = day;
+    applyFinanceCycleSetting();
+}
+async function setFinanceCycleStartDay(day) {
+    day = parseInt(day) || 1;
+    cachedFinanceCycleStartDay = day;
     localStorage.setItem('weekwise_finance_cycle_start_day', String(day));
     financeSummaryMonthKey = null; // חוזרים לתקופה הנוכחית לפי ההגדרה החדשה
     Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+    if (supabaseClient && currentUserId) {
+        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (existing) await supabaseClient.from('user_premium').update({ finance_cycle_start_day: day }).eq('user_id', currentUserId);
+        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, finance_cycle_start_day: day });
+    }
 }
 function applyFinanceCycleSetting() {
     const select = document.getElementById('finance-cycle-day-select');
-    if (select) select.value = String(getFinanceCycleStartDay());
+    if (!select) return;
+    select.value = String(getFinanceCycleStartDay());
+    updateCustomSelectDisplay('finance-cycle-day-select');
 }
 // מפתח-תקופה = "YYYY-MM" של החודש שבו התקופה *מתחילה* - זהה למפתח-חודש
 // רגיל כש-cycleStartDay===1. אם היום בחודש עדיין לפני יום ההתחלה, התקופה
@@ -7337,6 +7369,12 @@ async function loadFinanceData() {
     await Promise.all([renderFinanceSummary(), renderFinanceHistory(), loadRecurringExpenses()]);
 }
 
+// עריכת רשומה קיימת (לא רק הוספה) - אותו טופס בדיוק "הוספת הוצאה/הכנסה"
+// עובר למצב עריכה (editingFinanceEntryId), בדיוק כמו editPreset/cancelPresetEdit
+// למעלה בקובץ - לפי דיווח מפורש שלא הייתה בכלל אפשרות לעדכן רשומה קיימת
+let editingFinanceEntryId = null;
+let cachedFinanceHistoryRows = [];
+
 async function submitFinanceEntry() {
     if (!supabaseClient || !currentUserId) return;
     const amountInput = document.getElementById('finance-amount-input');
@@ -7345,16 +7383,50 @@ async function submitFinanceEntry() {
     const categorySelect = document.getElementById('finance-category-select');
     const amount = parseFloat(amountInput.value);
     if (!amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
-    const { error } = await supabaseClient.from('budget_tracker').insert({
-        user_id: currentUserId, username: currentUsername, entry_type: currentFinanceEntryType,
-        amount: amount, category: categorySelect.value, note: noteInput.value.trim() || null,
-        entry_date: dateInput.value || getLocalDateString(),
-    });
+    const payload = {
+        entry_type: currentFinanceEntryType, amount: amount, category: categorySelect.value,
+        note: noteInput.value.trim() || null, entry_date: dateInput.value || getLocalDateString(),
+    };
+    let error;
+    if (editingFinanceEntryId) {
+        ({ error } = await supabaseClient.from('budget_tracker').update(payload).eq('id', editingFinanceEntryId));
+    } else {
+        ({ error } = await supabaseClient.from('budget_tracker').insert({ user_id: currentUserId, username: currentUsername, ...payload }));
+    }
     if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
-    amountInput.value = '';
-    noteInput.value = '';
-    showAppToast(t('finance_add_success'));
+    const wasEditing = !!editingFinanceEntryId;
+    if (wasEditing) {
+        cancelFinanceEntryEdit();
+    } else {
+        amountInput.value = '';
+        noteInput.value = '';
+    }
+    showAppToast(wasEditing ? t('finance_update_success') : t('finance_add_success'));
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+function editFinanceEntry(id) {
+    const row = cachedFinanceHistoryRows.find(r => r.id === id);
+    if (!row) return;
+    editingFinanceEntryId = id;
+    selectFinanceEntryType(row.entry_type);
+    document.getElementById('finance-amount-input').value = row.amount;
+    document.getElementById('finance-category-select').value = row.category;
+    updateCustomSelectDisplay('finance-category-select');
+    document.getElementById('finance-note-input').value = row.note || '';
+    const dateInput = document.getElementById('finance-date-input');
+    dateInput.value = row.entry_date;
+    updateDateFieldDisplay('finance-date-input');
+    document.getElementById('btn-add-finance-entry').textContent = t('finance_update_btn');
+    document.getElementById('btn-cancel-finance-edit').classList.remove('hidden');
+}
+
+function cancelFinanceEntryEdit() {
+    editingFinanceEntryId = null;
+    document.getElementById('finance-amount-input').value = '';
+    document.getElementById('finance-note-input').value = '';
+    document.getElementById('btn-add-finance-entry').textContent = t('finance_add_btn');
+    document.getElementById('btn-cancel-finance-edit').classList.add('hidden');
 }
 
 // --- הוספת הוצאה/הכנסה מהירה מהכפתור הצף (modal-sport... לא, modal-finance-
@@ -7465,6 +7537,7 @@ async function renderFinanceHistory() {
         .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
         .order('entry_date', { ascending: false }).order('created_at', { ascending: false });
     list.innerHTML = '';
+    cachedFinanceHistoryRows = data || [];
     if (!data || !data.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_history_empty')}</li>`; return; }
     data.forEach(row => {
         const li = document.createElement('li');
@@ -7481,6 +7554,7 @@ async function renderFinanceHistory() {
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <span class="finance-history-amount" style="color: ${colorVar};">${sign}${Number(row.amount).toLocaleString()}</span>
+            <button type="button" class="btn-edit-item" onclick="editFinanceEntry('${row.id}')">${EDIT_ICON_SVG}</button>
             <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">❌</button>
         `;
         list.appendChild(li);
