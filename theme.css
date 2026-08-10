@@ -1608,10 +1608,12 @@ html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
    html:not([data-color-theme]) ולא [data-color-theme="default"] - כי
    applyColorTheme מסיר את התכונה לגמרי כשבוחרים 'default' (ר' app.js),
    לא מגדיר אותה לערך "default".
-   mask-image מגביל את הכוכבים/שמש רק לרצועה העליונה (מעל "הצצה להיום") -
-   לא כל המסך - לפי בקשה מפורשת ("רק מעל ההצצה להיום רק שם"), עם דעיכה
-   רכה (לא קו חד) לרקע הרגיל למטה */
-html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-theme-pattern.sky-night {
+   .home-sky-topstrip - אלמנט נפרד עם גובה קבוע (לא mask-image על
+   home-theme-pattern המשותף - לא עבד באמינות בבדיקה בפועל, גם בנייד וגם
+   במחשב) - פשוט position:absolute + height קבוע + overflow:hidden, בלי
+   שום תלות בתמיכת mask-image בדפדפן - לפי בקשה מפורשת "תחשוב על דרך אחרת" */
+.home-sky-topstrip { position: absolute; top: 0; inset-inline: 0; height: 220px; overflow: hidden; }
+html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-night {
     background-image:
         radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
         radial-gradient(1px 1px at 90px 70px, rgba(255, 255, 255, 0.7), transparent),
@@ -1622,14 +1624,10 @@ html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-theme-patter
         radial-gradient(1.5px 1.5px at 175px 110px, rgba(255, 255, 255, 0.75), transparent);
     background-size: 200px 200px;
     background-repeat: repeat;
-    mask-image: linear-gradient(to bottom, black 0px, black 130px, transparent 220px);
-    -webkit-mask-image: linear-gradient(to bottom, black 0px, black 130px, transparent 220px);
 }
-html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-theme-pattern.sky-day {
+html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-day {
     background-image: radial-gradient(circle at 82% 14%, rgba(255, 224, 130, 0.95) 0 22px, rgba(255, 200, 90, 0.4) 23px 40px, rgba(255, 200, 90, 0.15) 41px 60px, transparent 61px);
     background-repeat: no-repeat;
-    mask-image: linear-gradient(to bottom, black 0px, black 130px, transparent 220px);
-    -webkit-mask-image: linear-gradient(to bottom, black 0px, black 130px, transparent 220px);
 }
 html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="star_map"] > .home-theme-pattern {

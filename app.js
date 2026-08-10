@@ -6486,12 +6486,12 @@ function applyColorTheme(themeName) {
 // לבד אם האפליקציה נשארת פתוחה מעבר לזריחה/שקיעה, לפי בקשה מפורשת
 let homeSkyDayNightIntervalStarted = false;
 function updateHomeSkyDayNight() {
-    const pattern = document.querySelector('.home-sky-scene .home-theme-pattern');
-    if (!pattern) return;
+    const strip = document.querySelector('.home-sky-scene .home-sky-topstrip');
+    if (!strip) return;
     const hour = new Date().getHours();
     const isDay = hour >= 6 && hour < 18;
-    pattern.classList.toggle('sky-day', isDay);
-    pattern.classList.toggle('sky-night', !isDay);
+    strip.classList.toggle('sky-day', isDay);
+    strip.classList.toggle('sky-night', !isDay);
 }
 
 function selectThemeCategory(catId) {
