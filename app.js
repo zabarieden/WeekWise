@@ -1688,6 +1688,8 @@ function openSettingsDrawer() {
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
     renderFinanceCategoryManageList();
+    renderFinanceCategoryIconPicker();
+    initFinanceCategoryDragReorder();
 }
 
 function openSettingsSubscreen(name) {
@@ -5924,6 +5926,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'finance_cycle_day', category: 'finance' },
     { id: 'finance_recurring', category: 'finance' },
+    { id: 'finance_custom_categories', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'toggle_fabs', category: 'settings_a11y' },
@@ -7379,13 +7382,24 @@ function toggleFinanceCardVisibility(key) {
 
 // קטגוריות כספים מותאמות אישית - אותו דפוס בדיוק כמו custom_sport_types
 // (טבלה נפרדת, הוספה/מחיקה, בלי עריכה) - ערך האפשרות הוא "custom_<id>" כדי
-// שלא יתנגש עם ערכי הקטגוריות המובנות ("other" וכו') - לפי בקשה מפורשת
-let cachedCustomFinanceCategories = []; // [{id, entry_type, name}]
+// שלא יתנגש עם ערכי הקטגוריות המובנות ("other" וכו') - לפי בקשה מפורשת.
+// אייקון (מתוך FINANCE_CATEGORY_ICON_PRESETS) ו-sort_order (סדר גרירה ידני,
+// custom בלבד - קטגוריות מובנות קבועות במקום) נוספו בעקבות בקשה מפורשת
+// שנייה ("50 אימוג'ים... ושאפשר להזיז אותם")
+let cachedCustomFinanceCategories = []; // [{id, entry_type, name, icon, sort_order}]
 let currentFinanceCategoryManageType = 'expense';
+const FINANCE_CATEGORY_ICON_PRESETS = [
+    '💰', '💵', '💴', '💶', '💷', '💳', '🏦', '🧾', '📊', '📈',
+    '📉', '🪙', '💸', '🎯', '🏷️', '🛍️', '🛒', '🍔', '🍕', '☕',
+    '🍎', '🏠', '🔧', '🚗', '⛽', '🚌', '✈️', '🏖️', '🎓', '📚',
+    '💊', '🏥', '🩺', '🎬', '🎮', '🎵', '📱', '💻', '👕', '👶',
+    '🐾', '🎁', '🎉', '💼', '📦', '🔌', '🧴', '💇', '🏋️', '🌱',
+];
+let selectedFinanceCategoryIcon = '🏷️';
 
 async function loadCustomFinanceCategories() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('custom_finance_categories').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+    const { data } = await supabaseClient.from('custom_finance_categories').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
     cachedCustomFinanceCategories = data || [];
 }
 
@@ -7402,7 +7416,7 @@ function financeCategoryLabel(entryType, categoryValue) {
     if (categoryValue && categoryValue.startsWith('custom_')) {
         const id = categoryValue.slice('custom_'.length);
         const custom = cachedCustomFinanceCategories.find(c => c.id === id);
-        if (custom) return custom.name;
+        if (custom) return `${custom.icon || '🏷️'} ${custom.name}`;
     }
     return categoryValue || '';
 }
@@ -7415,21 +7429,73 @@ function selectFinanceCategoryManageType(type) {
     renderFinanceCategoryManageList();
 }
 
+function renderFinanceCategoryIconPicker() {
+    const container = document.getElementById('finance-category-icon-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    FINANCE_CATEGORY_ICON_PRESETS.forEach(icon => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'icon-picker-chip' + (selectedFinanceCategoryIcon === icon ? ' selected' : '');
+        chip.textContent = icon;
+        chip.onclick = () => selectFinanceCategoryIcon(icon);
+        container.appendChild(chip);
+    });
+}
+
+function selectFinanceCategoryIcon(icon) {
+    selectedFinanceCategoryIcon = icon;
+    renderFinanceCategoryIconPicker();
+}
+
 function renderFinanceCategoryManageList() {
     const list = document.getElementById('finance-category-manage-list');
     if (!list) return;
     list.innerHTML = '';
     FINANCE_CATEGORIES[currentFinanceCategoryManageType].forEach(([, key]) => {
         const chip = document.createElement('span');
-        chip.className = 'ai-brain-tab';
+        chip.className = 'ai-brain-tab finance-category-builtin';
         chip.textContent = t(key);
         list.appendChild(chip);
     });
     getCustomFinanceCategoriesForType(currentFinanceCategoryManageType).forEach(cat => {
         const chip = document.createElement('span');
         chip.className = 'ai-brain-tab sport-type-custom-bubble';
-        chip.innerHTML = `<span class="sport-type-bubble-label">${escapeHtmlForReport(cat.name)}</span><span class="sport-type-bubble-delete" onclick="deleteCustomFinanceCategory('${cat.id}')">×</span>`;
+        chip.setAttribute('data-custom-id', cat.id);
+        chip.innerHTML = `<span class="sport-type-bubble-label">${cat.icon || '🏷️'} ${escapeHtmlForReport(cat.name)}</span><span class="sport-type-bubble-delete" onclick="deleteCustomFinanceCategory('${cat.id}')">×</span>`;
         list.appendChild(chip);
+    });
+}
+
+// גרירה-ושחרור לסידור מחדש של הקטגוריות המותאמות אישית בלבד (filter מונע
+// גרירה של קטגוריה מובנית) - אותו דפוס בדיוק כמו initFabOrderDragReorder,
+// עם sort_order נשמר ב-DB במקום localStorage כי זה נתון per-user בשרת -
+// לפי בקשה מפורשת ("שתהיה האפשרות כאן להזיז אותם")
+let financeCategorySortableInitialized = false;
+function initFinanceCategoryDragReorder() {
+    if (typeof Sortable === 'undefined' || financeCategorySortableInitialized) return;
+    const list = document.getElementById('finance-category-manage-list');
+    if (!list) return;
+    financeCategorySortableInitialized = true;
+    new Sortable(list, {
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: false,
+        dragoverBubble: false,
+        filter: '.finance-category-builtin',
+        preventOnFilter: true,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: () => {
+            const customChips = Array.from(list.children).filter(el => el.hasAttribute('data-custom-id'));
+            const updates = customChips.map((el, index) =>
+                supabaseClient.from('custom_finance_categories').update({ sort_order: (index + 1) * 10 }).eq('id', el.getAttribute('data-custom-id'))
+            );
+            Promise.all(updates).then(async () => {
+                await loadCustomFinanceCategories();
+                populateFinanceCategoryOptions(currentFinanceEntryType);
+            });
+        },
     });
 }
 
@@ -7437,9 +7503,14 @@ async function addCustomFinanceCategory() {
     const input = document.getElementById('new-finance-category-name');
     const name = input.value.trim();
     if (!name || !supabaseClient || !currentUserId) return;
-    const { error } = await supabaseClient.from('custom_finance_categories').insert({ user_id: currentUserId, username: currentUsername, entry_type: currentFinanceCategoryManageType, name });
+    const { error } = await supabaseClient.from('custom_finance_categories').insert({
+        user_id: currentUserId, username: currentUsername, entry_type: currentFinanceCategoryManageType,
+        name, icon: selectedFinanceCategoryIcon, sort_order: Date.now(),
+    });
     if (error) { showAppToast(t('finance_category_add_failed'), 'error'); return; }
     input.value = '';
+    selectedFinanceCategoryIcon = '🏷️';
+    renderFinanceCategoryIconPicker();
     showAppToast(t('finance_category_add_success'));
     await loadCustomFinanceCategories();
     renderFinanceCategoryManageList();
@@ -7457,7 +7528,7 @@ function populateFinanceCategoryOptions(type) {
     const select = document.getElementById('finance-category-select');
     if (!select) return;
     const builtInHtml = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
-    const customHtml = getCustomFinanceCategoriesForType(type).map(c => `<option value="custom_${c.id}">${escapeHtmlForReport(c.name)}</option>`).join('');
+    const customHtml = getCustomFinanceCategoriesForType(type).map(c => `<option value="custom_${c.id}">${c.icon || '🏷️'} ${escapeHtmlForReport(c.name)}</option>`).join('');
     select.innerHTML = builtInHtml + customHtml;
     updateCustomSelectDisplay('finance-category-select');
 }
