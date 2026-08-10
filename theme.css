@@ -3588,9 +3588,9 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    רדיאלי עדין מאחורי הטקסט לתחושת עומק, לא ריבוע שטוח */
 .book-final-page {
     background:
-        radial-gradient(ellipse at 50% 45%, rgba(168, 85, 247, 0.35), transparent 60%),
-        linear-gradient(160deg, #3b0764, #1e0a3c);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+        radial-gradient(ellipse at 50% 45%, rgba(59, 130, 246, 0.35), transparent 60%),
+        linear-gradient(160deg, #0a1128, #04070f);
+    border: 1px solid rgba(59, 130, 246, 0.3);
     flex-direction: column; gap: 18px;
     z-index: 0;
 }
@@ -3609,7 +3609,9 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    לקריאה, לפי בקשה מפורשת "אפילו 5" שניות) - ר' BOOK_LOADING_ANIMATION_MS
    ב-app.js ששומר את כל הרצף פתוח מספיק זמן */
 .book-page { animation-name: bookPageTurn; animation-duration: 0.3s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
-.book-page-1 { background: linear-gradient(160deg, #d8b4fe, #c084fc); z-index: 7; animation-delay: 5s; }
+/* כחול כהה (היה סגול-לילך בהיר) - לפי בקשה מפורשת שהכניסה בהירה מדי מול
+   ה-Default הכחול-חלל החדש */
+.book-page-1 { background: linear-gradient(160deg, #2a3f7a, #16213e); z-index: 7; animation-delay: 5s; }
 /* brightness יורד ועולה סביב אמצע ההיפוך (הדף "בפרופיל", כמעט בלי רוחב) -
    מדמה איך דף אמיתי כמעט לא מחזיר אור ברגע שהוא ניצב לצופה, לפי בקשה
    מפורשת שהדפדוף ייראה אמיתי ולא שטוח */
