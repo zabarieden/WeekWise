@@ -7503,22 +7503,23 @@ async function renderFinanceSummary() {
     const { start: firstStr, end: lastStr } = getFinancePeriodRange(monthKey);
     // ההוצאות הקבועות (recurring_expenses) נספרות עכשיו גם כאן, בנוסף להיסטוריה
     // הרגילה - לא כפילות, כי הן בכלל לא נכנסות ל-budget_tracker בעצמו (ר' ההערה
-    // למעלה על הטבלה). אבל רק "תשלומים" (installment_total מוגדר - יש להם סוף
-    // ברור) נספרים בפועל בהוצאות - "הוראת קבע" (בלי installment_total, כמו
-    // מנוי חודשי רגיל) נשארת בצד: מוצגת בהיסטוריה ובהוצאות הקבועות בלבד, לא
-    // מתווספת לסה"כ - לפי בקשה מפורשת. נספרת רק הוצאה קבועה שפעילה-בחלקה
-    // בטווח התקופה המוצגת (לא רק "פעילה היום"), כדי שגם ניווט לחודשים אחרים
-    // יציג סכום נכון
+    // למעלה על הטבלה). גם "תשלומים" וגם "הוראות קבע" נספרים בהוצאות - לפי
+    // בקשה מפורשת ("גם ההוראות קבע וגם התשלומים יהיו... גם בסיכום החודשי").
+    // נספרת רק הוצאה קבועה שפעילה-בחלקה בטווח התקופה המוצגת (לא רק "פעילה
+    // היום"), כדי שגם ניווט לחודשים אחרים יציג סכום נכון.
+    // התקציב המתוכנן "מתחדש" אוטומטית לחודשים חדשים במקום להתאפס ל-0 - לוקחים
+    // את הרשומה העדכנית ביותר עד (וכולל) החודש המוצג, לא רק התאמה מדויקת
+    // לחודש הזה, לפי בקשה מפורשת ("שיתחדש לאותו המספר אלא אם כן משנים אותו")
     const [{ data: entries }, { data: targetRow }, { data: recurringRows }] = await Promise.all([
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
-        supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).eq('month_key', monthKey).maybeSingle(),
-        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, installment_total')
+        supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).lte('month_key', monthKey).order('month_key', { ascending: false }).limit(1).maybeSingle(),
+        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date')
             .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     let income = 0, expense = 0;
     (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
-    (recurringRows || []).forEach(row => { if (row.installment_total) expense += Number(row.amount); });
+    (recurringRows || []).forEach(row => { expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
 
