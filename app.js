@@ -1687,6 +1687,7 @@ function openSettingsDrawer() {
     renderNotificationSettingsStatus();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
+    renderFinanceCategoryManageList();
 }
 
 function openSettingsSubscreen(name) {
@@ -5527,8 +5528,7 @@ async function exportUserDataReport() {
     if (includeFinance) {
         const financeHtml = (financeRows && financeRows.length)
             ? financeRows.map(row => {
-                const categoryKey = (FINANCE_CATEGORIES[row.entry_type] || []).find(([value]) => value === row.category);
-                const categoryLabel = categoryKey ? t(categoryKey[1]) : (row.category || '');
+                const categoryLabel = financeCategoryLabel(row.entry_type, row.category);
                 const sign = row.entry_type === 'income' ? '+' : '−';
                 const color = row.entry_type === 'income' ? '#16a34a' : '#a855f7';
                 return `<div class="entry"><span class="entry-main">${new Date(row.entry_date).toLocaleDateString()} · ${escapeHtmlForReport(categoryLabel)}</span><span class="entry-value" style="color: ${color};">${sign}${Number(row.amount).toLocaleString()}</span></div>`;
@@ -7377,10 +7377,88 @@ function toggleFinanceCardVisibility(key) {
     applyFinanceCardVisibility();
 }
 
+// קטגוריות כספים מותאמות אישית - אותו דפוס בדיוק כמו custom_sport_types
+// (טבלה נפרדת, הוספה/מחיקה, בלי עריכה) - ערך האפשרות הוא "custom_<id>" כדי
+// שלא יתנגש עם ערכי הקטגוריות המובנות ("other" וכו') - לפי בקשה מפורשת
+let cachedCustomFinanceCategories = []; // [{id, entry_type, name}]
+let currentFinanceCategoryManageType = 'expense';
+
+async function loadCustomFinanceCategories() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('custom_finance_categories').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+    cachedCustomFinanceCategories = data || [];
+}
+
+function getCustomFinanceCategoriesForType(type) {
+    return cachedCustomFinanceCategories.filter(c => c.entry_type === type);
+}
+
+// מציאת התווית להצגה לקטגוריה - קודם ברשימה המובנית (FINANCE_CATEGORIES),
+// ואם לא נמצא (ערך "custom_<id>") מחפשים בקטגוריות המותאמות אישית - נדרש
+// בכל מקום שמציג קטגוריה בפועל (היסטוריה וכו'), לא רק בבורר ההוספה
+function financeCategoryLabel(entryType, categoryValue) {
+    const builtIn = (FINANCE_CATEGORIES[entryType] || []).find(([value]) => value === categoryValue);
+    if (builtIn) return t(builtIn[1]);
+    if (categoryValue && categoryValue.startsWith('custom_')) {
+        const id = categoryValue.slice('custom_'.length);
+        const custom = cachedCustomFinanceCategories.find(c => c.id === id);
+        if (custom) return custom.name;
+    }
+    return categoryValue || '';
+}
+
+function selectFinanceCategoryManageType(type) {
+    currentFinanceCategoryManageType = type;
+    document.querySelectorAll('#finance-category-manage-type-picker [data-finance-manage-type]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-finance-manage-type') === type);
+    });
+    renderFinanceCategoryManageList();
+}
+
+function renderFinanceCategoryManageList() {
+    const list = document.getElementById('finance-category-manage-list');
+    if (!list) return;
+    list.innerHTML = '';
+    FINANCE_CATEGORIES[currentFinanceCategoryManageType].forEach(([, key]) => {
+        const chip = document.createElement('span');
+        chip.className = 'ai-brain-tab';
+        chip.textContent = t(key);
+        list.appendChild(chip);
+    });
+    getCustomFinanceCategoriesForType(currentFinanceCategoryManageType).forEach(cat => {
+        const chip = document.createElement('span');
+        chip.className = 'ai-brain-tab sport-type-custom-bubble';
+        chip.innerHTML = `<span class="sport-type-bubble-label">${escapeHtmlForReport(cat.name)}</span><span class="sport-type-bubble-delete" onclick="deleteCustomFinanceCategory('${cat.id}')">×</span>`;
+        list.appendChild(chip);
+    });
+}
+
+async function addCustomFinanceCategory() {
+    const input = document.getElementById('new-finance-category-name');
+    const name = input.value.trim();
+    if (!name || !supabaseClient || !currentUserId) return;
+    const { error } = await supabaseClient.from('custom_finance_categories').insert({ user_id: currentUserId, username: currentUsername, entry_type: currentFinanceCategoryManageType, name });
+    if (error) { showAppToast(t('finance_category_add_failed'), 'error'); return; }
+    input.value = '';
+    showAppToast(t('finance_category_add_success'));
+    await loadCustomFinanceCategories();
+    renderFinanceCategoryManageList();
+    populateFinanceCategoryOptions(currentFinanceEntryType);
+}
+
+async function deleteCustomFinanceCategory(id) {
+    await supabaseClient.from('custom_finance_categories').delete().eq('id', id);
+    await loadCustomFinanceCategories();
+    renderFinanceCategoryManageList();
+    populateFinanceCategoryOptions(currentFinanceEntryType);
+}
+
 function populateFinanceCategoryOptions(type) {
     const select = document.getElementById('finance-category-select');
     if (!select) return;
-    select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    const builtInHtml = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    const customHtml = getCustomFinanceCategoriesForType(type).map(c => `<option value="custom_${c.id}">${escapeHtmlForReport(c.name)}</option>`).join('');
+    select.innerHTML = builtInHtml + customHtml;
     updateCustomSelectDisplay('finance-category-select');
 }
 
@@ -7395,6 +7473,9 @@ function selectFinanceEntryType(type) {
 async function loadFinanceData() {
     if (!supabaseClient || !currentUserId) return;
     financeSummaryMonthKey = currentFinancePeriodKey();
+    // חייב לחכות לקטגוריות המותאמות אישית *לפני* שממלאים את הבורר - אחרת
+    // מרוץ-תזמון שבו populateFinanceCategoryOptions עוד רץ עם מטמון ריק
+    await loadCustomFinanceCategories();
     populateFinanceCategoryOptions(currentFinanceEntryType);
     loadFinanceCardVisibility();
     const dateInput = document.getElementById('finance-date-input');
@@ -7601,8 +7682,7 @@ async function renderFinanceHistory() {
         li.className = 'finance-history-row';
         const sign = row.entry_type === 'income' ? '+' : '−';
         const colorVar = row.entry_type === 'income' ? 'var(--accent-green)' : 'var(--accent-red)';
-        const categoryKey = (FINANCE_CATEGORIES[row.entry_type] || []).find(([value]) => value === row.category);
-        const categoryLabel = categoryKey ? t(categoryKey[1]) : (row.category || '');
+        const categoryLabel = financeCategoryLabel(row.entry_type, row.category);
         const formattedDate = new Date(row.entry_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
         li.innerHTML = `
             <div class="finance-history-main">
