@@ -67,6 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
+    updateHomeSkyDayNight();
+    if (!homeSkyDayNightIntervalStarted) {
+        homeSkyDayNightIntervalStarted = true;
+        setInterval(updateHomeSkyDayNight, 15 * 60000);
+    }
     // אתחול חד-פעמי של התצוגה בכל תפריטי-הבחירה המותאמים (custom-select) -
     // רשימות סטטיות (שלעולם לא מתמלאות מחדש דינמית) מקבלות כאן את הטקסט
     // הנכון (מתורגם, אחרי loadSavedLanguage למעלה) פעם אחת; רשימות דינמיות
@@ -6470,6 +6475,20 @@ function applyColorTheme(themeName) {
             if (grid) selectThemeCategory(grid.id.replace('theme-cat-grid-', ''));
         }
     });
+}
+
+// שמיים דינמיים במסך הבית לברירת המחדל בלבד (06:00-18:00 = יום/שמש, אחרת
+// לילה/כוכבים) - ר' theme.css ".home-theme-pattern.sky-day/.sky-night"
+// תחת html:not([data-color-theme]) - נבדק שוב כל 15 דקות כדי שזה יתעדכן
+// לבד אם האפליקציה נשארת פתוחה מעבר לזריחה/שקיעה, לפי בקשה מפורשת
+let homeSkyDayNightIntervalStarted = false;
+function updateHomeSkyDayNight() {
+    const pattern = document.querySelector('.home-sky-scene .home-theme-pattern');
+    if (!pattern) return;
+    const hour = new Date().getHours();
+    const isDay = hour >= 6 && hour < 18;
+    pattern.classList.toggle('sky-day', isDay);
+    pattern.classList.toggle('sky-night', !isDay);
 }
 
 function selectThemeCategory(catId) {

@@ -1599,6 +1599,31 @@ html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
         linear-gradient(90deg, rgba(120, 190, 255, 0.3) 1px, transparent 1px);
     background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
 }
+/* ברירת המחדל האמיתית (data-theme="default" - כבר הראשונה ברשימה וחינמית
+   ממילא): שמיים דינמיים לפי שעה - כוכבים בלילה (אותה תבנית בדיוק כמו
+   star_map למטה) או שמש קטנה ביום, מעל ה---bg-main הרגיל (בלי גרדיאנט
+   נפרד משלה). sky-day/sky-night מתווספות ע"י updateHomeSkyDayNight ב-
+   app.js לפי השעה המקומית - זו ברירת המחדל עצמה, לא ערכת-נושא נפרדת
+   שצריך לבחור - לפי בקשה מפורשת ("שהצבע הראשון בתור גם לא לפרימיום").
+   html:not([data-color-theme]) ולא [data-color-theme="default"] - כי
+   applyColorTheme מסיר את התכונה לגמרי כשבוחרים 'default' (ר' app.js),
+   לא מגדיר אותה לערך "default" */
+html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-theme-pattern.sky-night {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1px 1px at 90px 70px, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(2px 2px at 150px 20px, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(1px 1px at 50px 120px, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1.5px 1.5px at 130px 150px, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(1px 1px at 10px 170px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1.5px 1.5px at 175px 110px, rgba(255, 255, 255, 0.75), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-theme-pattern.sky-day {
+    background-image: radial-gradient(circle at 82% 14%, rgba(255, 224, 130, 0.95) 0 22px, rgba(255, 200, 90, 0.4) 23px 40px, rgba(255, 200, 90, 0.15) 41px 60px, transparent 61px);
+    background-repeat: no-repeat;
+}
 html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="star_map"] > .home-theme-pattern {
     background-image:
