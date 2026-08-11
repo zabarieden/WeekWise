@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=329">
+    <link rel="stylesheet" href="theme.css?v=330">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2791,9 +2791,11 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <div class="monthly-goal-nav">
+                    <button class="monthly-goal-nav-btn custom-date-picker-year-nav" onclick="navigateCustomDatePicker(-12)">‹‹</button>
                     <button class="monthly-goal-nav-btn" onclick="navigateCustomDatePicker(-1)">‹</button>
                     <span class="monthly-goal-month-label" id="custom-date-picker-label"></span>
                     <button class="monthly-goal-nav-btn" onclick="navigateCustomDatePicker(1)">›</button>
+                    <button class="monthly-goal-nav-btn custom-date-picker-year-nav" onclick="navigateCustomDatePicker(12)">››</button>
                 </div>
                 <div class="monthly-calendar-weekdays">
                     <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>

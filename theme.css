@@ -4749,6 +4749,10 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .monthly-goal-nav-btn:hover:not(:disabled) { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); }
 .monthly-goal-nav-btn:disabled { opacity: 0.3; cursor: default; }
 .monthly-goal-month-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); min-width: 120px; text-align: center; }
+/* קפיצה של שנה שלמה בלוח השנה המותאם (navigateCustomDatePicker(±12) ב-app.js) -
+   כפתור צר יותר עם גופן קטן יותר כדי שסימן הכפול (‹‹/››) ייכנס בנוחות בלי
+   לגלוש, לפי בקשה מפורשת אחרי שדפדוף שנה-שנה בחיצי החודש הרגילים היה מעצבן */
+.custom-date-picker-year-nav { width: 22px; font-size: 0.75rem; }
 /* לוח חודשי: כותרות ימים + רשת 7 עמודות, תא לכל יום עם נקודה אם יש בו
    אירוע/משימה - אותו גוון זהב כמו שאר עולם הלו"ז */
 .monthly-calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
