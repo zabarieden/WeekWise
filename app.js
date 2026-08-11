@@ -7843,7 +7843,7 @@ function renderRecurringInstallmentsSection() {
             </div>
         </div>
         <div class="preset-manager-grid" style="margin-top:10px;">
-            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal()">${t('finance_recurring_add_btn')}</button>
+            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal('installment')">${t('finance_recurring_add_btn')}</button>
             <button type="button" class="btn-secondary" onclick="openImportRecurringExpensesModal()">${t('finance_recurring_import_btn')}</button>
         </div>
         <ul id="recurring-installments-list" class="center-list" style="margin-top:10px;"></ul>
@@ -7872,7 +7872,7 @@ function renderRecurringStandingOrdersSection() {
             </div>
         </div>
         <div class="preset-manager-grid" style="margin-top:10px;">
-            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal()">${t('finance_recurring_add_btn')}</button>
+            <button type="button" class="btn-secondary" onclick="openAddRecurringExpenseModal('standing')">${t('finance_recurring_add_btn')}</button>
         </div>
         <ul id="recurring-standing-list" class="center-list" style="margin-top:10px;"></ul>
     `;
@@ -7953,6 +7953,29 @@ function toggleRecurringEndDateField() {
     if (noEnd) document.getElementById('recurring-end-date-input').value = '';
 }
 
+// תשלום (מספר תשלומים ידוע) לעומת הוראת קבע (בלי מספר ידוע) הוא עכשיו בחירה
+// מפורשת עם צ'קבוקס, לא תוצר-לוואי של מילוי שדה המחשבון - לפי בקשה מפורשת
+// אחרי שפריטים שנוספו מ"הוראות קבע" נחתו בטעות ב"תשלומים" כי המחשבון היה
+// גלוי תמיד. כשזה תשלום - תאריך הסיום מחושב אוטומטית מתאריך ההתחלה + מספר
+// התשלומים, ושדה תאריך הסיום הידני מוסתר לגמרי (למניעת סתירה בין "תשלום 1
+// מתוך 24" לבין "מתמשך")
+function toggleRecurringInstallmentFields() {
+    const isInstallment = document.getElementById('recurring-is-installment-toggle').checked;
+    document.getElementById('recurring-installment-fields').classList.toggle('hidden', !isInstallment);
+    document.getElementById('recurring-end-date-fields').classList.toggle('hidden', isInstallment);
+    if (!isInstallment) {
+        pendingRecurringInstallmentCurrent = null;
+        pendingRecurringInstallmentTotal = null;
+        document.getElementById('recurring-total-input').value = '';
+        document.getElementById('recurring-installments-count-input').value = '';
+    }
+}
+
+function addMonthsToDateString(dateStr, months) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return getLocalDateString(new Date(y, m - 1 + months, d));
+}
+
 // מחשבון "סה\"כ + מספר תשלומים" בהוספה/עריכה ידנית - אותה נוסחה בדיוק כמו
 // בייבוא (autoExtractRecurringRow), רק ביוזמת המשתמשת עם כפתור מפורש במקום
 // ניחוש אוטומטי - לפי בקשה מפורשת ("תוסיף סה\"כ + סכום חודשי... פריסה כזה")
@@ -7974,7 +7997,7 @@ function calculateRecurringMonthlyFromTotal() {
     showAppToast(t('finance_recurring_calc_success').replace('{amount}', monthly.toLocaleString()));
 }
 
-function openAddRecurringExpenseModal() {
+function openAddRecurringExpenseModal(type) {
     editingRecurringExpenseId = null;
     pendingRecurringInstallmentCurrent = null;
     pendingRecurringInstallmentTotal = null;
@@ -7993,6 +8016,8 @@ function openAddRecurringExpenseModal() {
     updateDateFieldDisplay('recurring-end-date-input');
     document.getElementById('recurring-no-end-date-toggle').checked = true;
     toggleRecurringEndDateField();
+    document.getElementById('recurring-is-installment-toggle').checked = (type === 'installment');
+    toggleRecurringInstallmentFields();
     openModal('modal-add-recurring-expense');
 }
 
@@ -8019,6 +8044,8 @@ function openEditRecurringExpenseModal(id) {
     document.getElementById('recurring-end-date-input').value = item.end_date || '';
     updateDateFieldDisplay('recurring-end-date-input');
     toggleRecurringEndDateField();
+    document.getElementById('recurring-is-installment-toggle').checked = !!item.installment_total;
+    toggleRecurringInstallmentFields();
     openModal('modal-add-recurring-expense');
 }
 
@@ -8028,16 +8055,27 @@ async function submitRecurringExpense() {
     const category = document.getElementById('recurring-category-select').value || null;
     const source = document.getElementById('recurring-source-input').value.trim() || null;
     const startDate = document.getElementById('recurring-start-date-input').value || getLocalDateString();
-    const noEndDate = document.getElementById('recurring-no-end-date-toggle').checked;
-    const endDate = noEndDate ? null : (document.getElementById('recurring-end-date-input').value || null);
+    const isInstallment = document.getElementById('recurring-is-installment-toggle').checked;
     if (!name || !amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    if (isInstallment && !pendingRecurringInstallmentTotal) { showAppToast(t('finance_recurring_installment_count_required'), 'error'); return; }
+    let endDate, installmentCurrent, installmentTotal;
+    if (isInstallment) {
+        installmentCurrent = pendingRecurringInstallmentCurrent || 1;
+        installmentTotal = pendingRecurringInstallmentTotal;
+        endDate = addMonthsToDateString(startDate, installmentTotal - installmentCurrent);
+    } else {
+        const noEndDate = document.getElementById('recurring-no-end-date-toggle').checked;
+        endDate = noEndDate ? null : (document.getElementById('recurring-end-date-input').value || null);
+        installmentCurrent = null;
+        installmentTotal = null;
+    }
     const editId = editingRecurringExpenseId;
     closeModal('modal-add-recurring-expense');
     editingRecurringExpenseId = null;
     if (!supabaseClient || !currentUserId) return;
     const payload = {
         name, amount, category, source, start_date: startDate, end_date: endDate,
-        installment_current: pendingRecurringInstallmentCurrent, installment_total: pendingRecurringInstallmentTotal,
+        installment_current: installmentCurrent, installment_total: installmentTotal,
     };
     let error;
     if (editId) {

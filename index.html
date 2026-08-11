@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=328">
+    <link rel="stylesheet" href="theme.css?v=329">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1305,10 +1305,16 @@
                 <div class="preset-manager-grid">
                     <input type="text" id="recurring-name-input" data-i18n-placeholder="finance_recurring_name_placeholder" placeholder="Name (e.g. Netflix)">
                     <input type="number" id="recurring-amount-input" data-i18n-placeholder="finance_recurring_amount_placeholder" placeholder="Monthly amount">
-                    <p class="settings-label" data-i18n="finance_recurring_installment_calc_label">Or: total purchase + number of payments</p>
-                    <input type="number" id="recurring-total-input" data-i18n-placeholder="finance_recurring_total_placeholder" placeholder="Total purchase amount (optional)">
-                    <input type="number" id="recurring-installments-count-input" data-i18n-placeholder="finance_recurring_installments_count_placeholder" placeholder="Number of payments (optional)" onchange="updateRecurringManualInstallmentTotal(this.value)">
-                    <button type="button" class="btn-secondary" onclick="calculateRecurringMonthlyFromTotal()" data-i18n="finance_recurring_calc_btn">Calculate monthly amount</button>
+                    <label class="settings-checkbox-row">
+                        <input type="checkbox" id="recurring-is-installment-toggle" onchange="toggleRecurringInstallmentFields()">
+                        <span data-i18n="finance_recurring_is_installment_label">This has a fixed number of payments (installment, not a standing order)</span>
+                    </label>
+                    <div id="recurring-installment-fields" class="hidden">
+                        <p class="settings-label" data-i18n="finance_recurring_installment_calc_label">Or: total purchase + number of payments</p>
+                        <input type="number" id="recurring-total-input" data-i18n-placeholder="finance_recurring_total_placeholder" placeholder="Total purchase amount (optional)">
+                        <input type="number" id="recurring-installments-count-input" data-i18n-placeholder="finance_recurring_installments_count_placeholder" placeholder="Number of payments (optional)" onchange="updateRecurringManualInstallmentTotal(this.value)">
+                        <button type="button" class="btn-secondary" onclick="calculateRecurringMonthlyFromTotal()" data-i18n="finance_recurring_calc_btn">Calculate monthly amount</button>
+                    </div>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('recurring-category-select')"><span id="recurring-category-select-display"></span></button>
                     <select id="recurring-category-select" class="hidden"></select>
                     <input type="text" id="recurring-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
@@ -1317,15 +1323,17 @@
                         <span id="recurring-start-date-input-display" data-placeholder=""></span>
                     </button>
                     <input type="date" id="recurring-start-date-input" class="date-picker-hidden-input">
-                    <label class="settings-checkbox-row">
-                        <input type="checkbox" id="recurring-no-end-date-toggle" checked onchange="toggleRecurringEndDateField()">
-                        <span data-i18n="finance_recurring_no_end_date_label">No end date (ongoing)</span>
-                    </label>
-                    <button type="button" class="date-picker-field-trigger hidden" id="recurring-end-date-trigger" onclick="openDateFieldPicker('recurring-end-date-input')">
-                        <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
-                        <span id="recurring-end-date-input-display" data-placeholder=""></span>
-                    </button>
-                    <input type="date" id="recurring-end-date-input" class="date-picker-hidden-input">
+                    <div id="recurring-end-date-fields">
+                        <label class="settings-checkbox-row">
+                            <input type="checkbox" id="recurring-no-end-date-toggle" checked onchange="toggleRecurringEndDateField()">
+                            <span data-i18n="finance_recurring_no_end_date_label">No end date (ongoing)</span>
+                        </label>
+                        <button type="button" class="date-picker-field-trigger hidden" id="recurring-end-date-trigger" onclick="openDateFieldPicker('recurring-end-date-input')">
+                            <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                            <span id="recurring-end-date-input-display" data-placeholder=""></span>
+                        </button>
+                        <input type="date" id="recurring-end-date-input" class="date-picker-hidden-input">
+                    </div>
                     <div class="action-buttons-wrap">
                         <button id="btn-save-recurring-expense" class="btn-primary" onclick="submitRecurringExpense()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-recurring-expense')" data-i18n="cancel_btn">Cancel</button>
@@ -3005,7 +3013,7 @@
 
     </div>
 
-    <script src="i18n.js?v=265"></script>
-    <script src="app.js?v=370"></script>
+    <script src="i18n.js?v=266"></script>
+    <script src="app.js?v=371"></script>
 </body>
 </html>
