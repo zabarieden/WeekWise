@@ -7685,12 +7685,13 @@ async function renderFinanceSummary() {
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
         supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).lte('month_key', monthKey).order('month_key', { ascending: false }).limit(1).maybeSingle(),
-        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date')
+        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, is_paused')
             .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     let income = 0, expense = 0;
     (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
-    (recurringRows || []).forEach(row => { expense += Number(row.amount); });
+    // הוראת קבע מוקפאת לא נכנסת לסה"כ ההוצאות - זו בדיוק המשמעות של "הקפאה"
+    (recurringRows || []).forEach(row => { if (!row.is_paused) expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
 
@@ -7740,7 +7741,7 @@ async function renderFinanceHistory() {
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr)
             .order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
         supabaseClient.from('recurring_expenses').select('*')
-            .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
+            .eq('user_id', currentUserId).eq('is_paused', false).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     list.innerHTML = '';
     cachedFinanceHistoryRows = data || [];
@@ -7854,11 +7855,18 @@ function renderRecurringInstallmentsSection() {
 // "הוראות קבע" (בלי installment_total) - הסכום כאן מוצג רק כמידע ("כמה
 // מחויב חודשי בהוראות קבע"), לא נספר בסה"כ ההוצאות בסיכום החודשי - לפי
 // בקשה מפורשת
+// הוראת קבע "מוקפאת" (is_paused) לא נספרת בסטטיסטיקות ולא בסה"כ ההוצאות
+// (ר' renderFinanceSummary), אבל לא נעלמת - היא יורדת לתחתית הרשימה מתחת
+// למפריד מתקפל ומעומעם (opacity 0.6), בדיוק אותה תבנית ויזואלית כמו קטע
+// "להגיע לזה" בפתקים (buildNoteSomedayDivider/.center-list-divider ~ li ב-
+// theme.css) - לפי בקשה מפורשת ("כמו ה'להגיע לזה'... כן בדיוק דהוי")
 function renderRecurringStandingOrdersSection() {
     const container = document.getElementById('recurring-standing-content');
     if (!container) return;
     if (!isPremiumUser) { renderRecurringPremiumHint(container); return; }
-    const items = cachedRecurringExpenses.filter(item => !item.installment_total && isRecurringExpenseActive(item));
+    const dateActive = cachedRecurringExpenses.filter(item => !item.installment_total && isRecurringExpenseActive(item));
+    const items = dateActive.filter(item => !item.is_paused);
+    const pausedItems = dateActive.filter(item => item.is_paused);
     const monthlyTotal = items.reduce((sum, item) => sum + Number(item.amount), 0);
     container.innerHTML = `
         <div class="stats-grid stats-grid-2col">
@@ -7876,7 +7884,42 @@ function renderRecurringStandingOrdersSection() {
         </div>
         <ul id="recurring-standing-list" class="center-list" style="margin-top:10px;"></ul>
     `;
-    renderRecurringExpensesList('recurring-standing-list', item => !item.installment_total);
+    renderRecurringStandingOrdersList(items, pausedItems);
+}
+
+function buildRecurringPausedDivider() {
+    const li = document.createElement('li');
+    li.className = 'center-list-divider';
+    li.onclick = () => li.classList.toggle('expanded');
+    const label = document.createElement('span');
+    label.className = 'center-list-divider-label';
+    label.textContent = t('finance_recurring_paused_section_label');
+    const chevron = document.createElement('span');
+    chevron.className = 'center-list-divider-chevron';
+    chevron.textContent = '›';
+    li.appendChild(label);
+    li.appendChild(chevron);
+    return li;
+}
+
+function renderRecurringStandingOrdersList(items, pausedItems) {
+    const list = document.getElementById('recurring-standing-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!items.length && !pausedItems.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
+    const today = getLocalDateString();
+    items.forEach(item => list.appendChild(buildRecurringExpenseRowEl(item, today)));
+    if (pausedItems.length) {
+        list.appendChild(buildRecurringPausedDivider());
+        pausedItems.forEach(item => list.appendChild(buildRecurringExpenseRowEl(item, today)));
+    }
+}
+
+async function toggleRecurringExpensePause(id, currentlyPaused) {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.from('recurring_expenses').update({ is_paused: !currentlyPaused }).eq('id', id);
+    if (error) { showAppToast(t('finance_recurring_add_failed'), 'error'); return; }
+    await loadRecurringExpenses();
 }
 
 function formatShortMonthYear(dateStr) {
@@ -7910,6 +7953,34 @@ function buildRecurringExpenseTypeBadgesHtml(item, today) {
     return `<span class="recurring-expense-source-tag">💳 ${progress}</span><span class="recurring-expense-source-tag">${totalBadge}</span>`;
 }
 
+function buildRecurringExpenseRowEl(item, today) {
+    const ended = item.end_date && item.end_date < today;
+    let badgeText;
+    if (!item.end_date) badgeText = t('finance_recurring_ongoing');
+    else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
+    else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
+    const li = document.createElement('li');
+    li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
+    // כפתור הקפאה/הפשרה רק להוראות קבע (בלי installment_total) - לתשלומים
+    // אין משמעות ל"הקפאה", יש להם תאריך סיום ידוע ממילא
+    const pauseBtn = !item.installment_total
+        ? `<button type="button" class="btn-edit-item" title="${item.is_paused ? t('finance_recurring_unpause_btn') : t('finance_recurring_pause_btn')}" onclick="toggleRecurringExpensePause('${item.id}', ${!!item.is_paused})">${item.is_paused ? '▶️' : '❄️'}</button>`
+        : '';
+    li.innerHTML = `
+        <div class="finance-history-main">
+            <span class="finance-history-category">${escapeHtmlForReport(item.name)}</span>
+            ${item.source ? `<span class="recurring-expense-source-tag">${escapeHtmlForReport(item.source)}</span>` : ''}
+            ${buildRecurringExpenseTypeBadgesHtml(item, today)}
+            <span class="finance-history-date">${badgeText}</span>
+        </div>
+        <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
+        ${pauseBtn}
+        <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${item.id}')">${EDIT_ICON_SVG}</button>
+        <button type="button" class="btn-delete-item" onclick="deleteRecurringExpense('${item.id}')">❌</button>
+    `;
+    return li;
+}
+
 function renderRecurringExpensesList(listId, filterFn) {
     const list = document.getElementById(listId);
     if (!list) return;
@@ -7917,27 +7988,7 @@ function renderRecurringExpensesList(listId, filterFn) {
     const items = cachedRecurringExpenses.filter(filterFn);
     if (!items.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
     const today = getLocalDateString();
-    items.forEach(item => {
-        const ended = item.end_date && item.end_date < today;
-        let badgeText;
-        if (!item.end_date) badgeText = t('finance_recurring_ongoing');
-        else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
-        else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
-        const li = document.createElement('li');
-        li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
-        li.innerHTML = `
-            <div class="finance-history-main">
-                <span class="finance-history-category">${escapeHtmlForReport(item.name)}</span>
-                ${item.source ? `<span class="recurring-expense-source-tag">${escapeHtmlForReport(item.source)}</span>` : ''}
-                ${buildRecurringExpenseTypeBadgesHtml(item, today)}
-                <span class="finance-history-date">${badgeText}</span>
-            </div>
-            <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
-            <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${item.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-item" onclick="deleteRecurringExpense('${item.id}')">❌</button>
-        `;
-        list.appendChild(li);
-    });
+    items.forEach(item => list.appendChild(buildRecurringExpenseRowEl(item, today)));
 }
 
 function populateRecurringCategoryOptions() {
