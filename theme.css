@@ -1665,8 +1665,16 @@ html:not(.light-mode)[data-color-theme="graphite_steel"] .home-sky-scene .home-s
 html:not(.light-mode)[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-day,
 html:not(.light-mode)[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-day,
 html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day {
-    background-image: radial-gradient(circle at 82% 14%, rgba(255, 224, 130, 0.95) 0 22px, rgba(255, 200, 90, 0.4) 23px 40px, rgba(255, 200, 90, 0.15) 41px 60px, transparent 61px);
+    /* זמנית - "הילה עם קרני אור עדינות" (אפשרות 39 בהשוואת השמשות) עד
+       שנבחר עיצוב סופי - גרעין קטן מוקף בקרניים דקיקות ומטושטשות, לפי
+       בקשה מפורשת. ה-mask-image מגביל את הקרניים (שאחרת ממלאות אינסופית
+       את כל הרצועה, מהותה של conic-gradient) לעיגול רך סביב נקודת השמש */
+    background-image:
+        repeating-conic-gradient(from 0deg at 82% 14%, rgba(255, 210, 140, 0.28) 0deg 2deg, transparent 2deg 45deg),
+        radial-gradient(circle at 82% 14%, #fff6d8 0 8px, #ffc35c 8px 14px, rgba(255, 195, 92, 0.4) 14px 24px, transparent 25px);
     background-repeat: no-repeat;
+    -webkit-mask-image: radial-gradient(circle 55px at 82% 14%, black 55%, transparent 100%);
+    mask-image: radial-gradient(circle 55px at 82% 14%, black 55%, transparent 100%);
 }
 html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="star_map"] > .home-theme-pattern {
