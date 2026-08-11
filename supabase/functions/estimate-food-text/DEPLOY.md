@@ -9,12 +9,28 @@ you've already set one up.
 ```sql
 alter table user_ai_usage add column if not exists premium_food_text_month_key text;
 alter table user_ai_usage add column if not exists premium_food_text_month_used integer default 0;
+
+create table if not exists food_text_cache (
+    id uuid primary key default gen_random_uuid(),
+    cache_key text not null unique,
+    calories integer not null,
+    created_at timestamptz not null default now()
+);
+create index if not exists food_text_cache_key_idx on food_text_cache(cache_key);
 ```
 
 Own dedicated quota, not shared with the image-scan pool (text-only calls are
 much cheaper than vision calls, so they get their own 100/month pool instead
 of eating into the image quota - matches how `parse-schedule-request` also
 has its own pool).
+
+`food_text_cache` is a global (all-users) cache of past "estimate" results,
+keyed on `language|country|normalized-text`. A repeat/identical description
+(after trivial whitespace/case normalization - not fuzzy matching) returns
+instantly with no AI call, no web search, and no quota cost. New/different
+descriptions are completely unaffected - same AI+web-search pipeline as
+before, same accuracy. Entries expire after 180 days so a chain's menu
+change eventually gets re-estimated rather than staying cached forever.
 
 ## 2. Deploy the function
 

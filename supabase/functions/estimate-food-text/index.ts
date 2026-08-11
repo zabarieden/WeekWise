@@ -33,6 +33,20 @@ const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const FOOD_TEXT_MONTHLY_LIMIT = 100;
 
+// מטמון גלובלי (משותף לכל המשתמשות) של תוצאות "estimate" בלבד - לא clarify/
+// unknown, ולא קריאות המשך אחרי הבהרה (אלה תלויות-הקשר, לא ניתנות למטמון
+// לפי טקסט בלבד). תיאור מזון שכבר נשאל בעבר (זהה אחרי נירמול טריוויאלי -
+// חיתוך רווחים + lowercase, לא fuzzy matching) חוזר מיידית בלי לפנות ל-AI
+// או לחיפוש-רשת בכלל, ובלי לצרוך מהמכסה החודשית - לפי בקשה מפורשת "שיהיה
+// מהיר יותר בלי לפגוע באיך שהוא מחשב ומחפש". תיאור חדש/שונה עדיין עובר את
+// כל התהליך הרגיל בלי שום שינוי. פג-תוקף אחרי 180 יום כדי לא "לנעול" לתמיד
+// הערכה של מנת-רשת שהמתכון שלה עשוי להשתנות עם הזמן
+const CACHE_MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
+
+function normalizeCacheText(text: string): string {
+    return text.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 // עוקף בדיקת פרימיום למפתחת בלבד - חייב להיות זהה לרשימה בצד הלקוח (app.js) וגם
 // בכל שאר ה-Edge Functions, כי בדיקת לקוח בלבד ניתנת לעקיפה. שימו לב: זה עוקף
 // רק את שער הפרימיום - לא את בדיקת המכסה החודשית עצמה (ר' למטה), אותו דבר
@@ -144,6 +158,21 @@ Deno.serve(async (req) => {
         const useEstimateOnlyTool = hasAnswer;
         const shouldIncrementQuota = !hasAiFollowUp;
 
+        // בדיקת מטמון - רק על הקריאה הראשונה (לא קריאת-הבהרה, שתלוית-הקשר),
+        // ולפני בדיקת המכסה בכוונה: פגיעה במטמון לא אמורה לעלות למשתמשת כלום,
+        // גם אם המכסה החודשית שלה כבר נגמרה
+        if (!hasAnswer) {
+            const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
+            const { data: cacheRow } = await supabase
+                .from("food_text_cache")
+                .select("calories, created_at")
+                .eq("cache_key", cacheKey)
+                .maybeSingle();
+            if (cacheRow && Date.now() - new Date(cacheRow.created_at).getTime() < CACHE_MAX_AGE_MS) {
+                return jsonResponse({ ok: true, status: "estimate", calories: cacheRow.calories, cached: true });
+            }
+        }
+
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
             .select("*")
@@ -251,7 +280,18 @@ Deno.serve(async (req) => {
             return jsonResponse({ ok: true, status: "clarify", question: result.question });
         }
         if (typeof result.calories === "number") {
-            return jsonResponse({ ok: true, status: "estimate", calories: Math.round(result.calories) });
+            const calories = Math.round(result.calories);
+            // שומרים במטמון רק תוצאות מהקריאה הראשונה הרגילה (לא קריאת-הבהרה,
+            // שתלוית-תשובה ולא ניתנת למטמון לפי הטקסט המקורי בלבד) - ר' בדיקת
+            // המטמון למעלה. upsert כדי לרענן גם תיאור שכבר קיים אך פג-תוקף
+            if (!hasAnswer) {
+                const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
+                await supabase.from("food_text_cache").upsert(
+                    { cache_key: cacheKey, calories, created_at: new Date().toISOString() },
+                    { onConflict: "cache_key" },
+                );
+            }
+            return jsonResponse({ ok: true, status: "estimate", calories });
         }
         // status "unknown" - ר' unknownNote למעלה. הצד שלנו (app.js) עדיין
         // נופל להערכה מקומית במקרה כזה, רק עם הודעה כנה שהמערכת לא הייתה
