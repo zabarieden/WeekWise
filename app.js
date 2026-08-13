@@ -10014,7 +10014,11 @@ const FOOD_CALORIE_DB = [
     { name: "קרוטונים", re: /קרוטונים|croutons?/i, kcal100g: 450, unitGrams: 20 },
     { name: "שקדי מרק", re: /שקדי מרק|soup nuts?/i, kcal100g: 530, unitGrams: 10 },
     { name: "טונה בשמן זית איכותי", re: /טונה בשמן זית איכותי|rio mare/i, kcal100g: 200, unitGrams: 80 },
-    { name: "טונה בשמן צמחי", re: /טונה בשמן( צמחי)?/i, kcal100g: 170, unitGrams: 112 },
+    // "צמחי" עכשיו חובה (לא אופציונלי) - בלעדיה זה "בלע" גם "טונה בשמן"
+    // סתם (שאמורה להגיע לערך הייעודי בהמשך הקובץ, ר' ההערה שם), כי הרשומה
+    // הזו מוקדמת יותר בקובץ ותמיד "זוכה" בהתאמה כשהיא כללית מדי - לפי דיווח
+    // מפורש על חישוב שיצא גבוה משמעותית מהצפוי לטונה בשמן רגילה
+    { name: "טונה בשמן צמחי", re: /טונה בשמן צמחי/i, kcal100g: 170, unitGrams: 112 },
     { name: "טונה במים", re: /טונה במים/i, kcal100g: 107, unitGrams: 112 },
     { name: "טונה מעושנת", re: /טונה מעושנת/i, kcal100g: 165, unitGrams: 112 },
     { name: "אנשובי בשמן זית", re: /אנשובי|anchov(y|ies)/i, kcal100g: 213, unitGrams: 15 },
@@ -10227,6 +10231,11 @@ const FOOD_CALORIE_DB = [
     { name: "מיץ תפוחים", re: /מיץ תפוחים|apple juice/i, kcal100g: 46, unitGrams: 200 },
     { name: "מיץ ענבים", re: /מיץ ענבים|grape juice/i, kcal100g: 60, unitGrams: 200 },
     { name: "רוטב עגבניות", re: /רוטב עגבניות|tomato sauce|marinara/i, kcal100g: 35, unitGrams: 60 },
+    // רסק עגבניות (מרוכז יותר מרוטב) - היה חסר לגמרי מהמאגר (לא נספר בכלל,
+    // 0 קלוריות בשקט) - לפי דיווח מפורש. unitGrams כברירת מחדל ל"כף" בלי
+    // ציון יחידה מפורש - אם כן מצוין "כף"/"כפית" זה נדרס כרגיל דרך
+    // VOLUME_UNIT_TO_GRAMS ב-computeItemCalories
+    { name: "רסק עגבניות", re: /רסק עגבניות|tomato paste/i, kcal100g: 82, unitGrams: 17 },
     { name: "לחם לבן", re: /לחם לבן|white bread/i, kcal100g: 240, unitGrams: 30 },
     // "לחם חיטה מלאה" (100% חיטה מלאה) ו"לחם דגנים" (מולטיגריין, עם זרעים)
     // הם שני מוצרים שונים בפועל עם ערכים שונים - נתונים מדויקים מהמשתמשת,
@@ -10478,6 +10487,13 @@ const FOOD_CALORIE_DB = [
     // unitGrams תוקן מ-150 ל-120 - 150 גרם זו יותר מנה גדולה של מסעדה; שניצל
     // ביתי בגודל בינוני שוקל בערך 100-120 גרם מבושל
     { name: "שניצל", re: /שניצל|schnitzel/i, kcal100g: 250, unitGrams: 120 },
+    // קציצת תפוח-אדמה/בטטה חייבת לבוא *לפני* קציצות בשר הכללית (מכילה
+    // "קציצה" כתת-מחרוזת) - בלעדיה "קציצה של תפוח אדמה" הייתה נופלת לערך
+    // הבשרי (215 קל'/100 גר', מיועד לבשר טחון) *וגם* "תפוח אדמה" היה נספר
+    // בנפרד כתוספת שלמה (173 גר' גולמי) על אותו משפט - כפל-ספירה שגוי לגמרי
+    // למנה אחת שהיא בעיקר תפוח אדמה מרוסק+ביצה, לא בשר - לפי דיווח מפורש
+    // (חצי קציצה אפויה יצאה 90 קל' באפליקציה מול "עד 50" בגוגל)
+    { name: "קציצת תפוח אדמה/בטטה", re: /קציצ(ה|ת|ות) (של )?(תפוח(י)? אדמה|תפו"א|בטטה|בטטות)|potato (patty|patties|cutlet)/i, kcal100g: 150, unitGrams: 65 },
     { name: "קציצות בשר", re: /קציצ(ה|ות)( בשר)?|meatballs?/i, kcal100g: 215, unitGrams: 100 },
     // סלטים/ממרחים קנויים נוספים - נתונים מדויקים מהמשתמשת. חייבים לבוא
     // *לפני* חצילים/תפוח (אדמה)/כרוב/גזר הכלליים בהמשך - אותה סיבה כמו כל
@@ -10757,11 +10773,14 @@ const FOOD_CALORIE_DB = [
     // מחרוזת) - בלעדיהן "פיתה קטנה כוסמין" הייתה נופלת לערך הרגיל/גדול
     // (261 קל' במקום ~80, בדיוק הבאג שדווח). נתונים מדויקים מהמשתמשת -
     // בכל סוג דגן, ה-kcal100g זהה בין הגרסה הרגילה ל"ביס", רק המשקל שונה
-    { name: "פיתה ביס ללא גלוטן", re: /פיתה (ביס|קטנה|מיני) ללא גלוטן|gluten.?free (mini|small) pita/i, kcal100g: 250, unitGrams: 30 },
-    { name: "פיתה ביס קלה", re: /פיתה (ביס|קטנה|מיני) קלה|mini light pita/i, kcal100g: 160, unitGrams: 25 },
-    { name: "פיתה ביס כוסמין", re: /פיתה (ביס|קטנה|מיני) כוסמין( מלא)?/i, kcal100g: 225, unitGrams: 35 },
-    { name: "פיתה ביס חיטה מלאה", re: /פיתה (ביס|קטנה|מיני) (חיטה מלאה|מקמח מלא)/i, kcal100g: 220, unitGrams: 35 },
-    { name: "פיתה ביס דגנים", re: /פיתה (ביס|קטנה|מיני) דגנים/i, kcal100g: 235, unitGrams: 35 },
+    { name: "פיתה ביס ללא גלוטן", re: /פיתה (ביס|קטנה|מיני) ללא גלוטן|פיתה ללא גלוטן (ביס|קטנה|מיני)|gluten.?free (mini|small) pita/i, kcal100g: 250, unitGrams: 30 },
+    { name: "פיתה ביס קלה", re: /פיתה (ביס|קטנה|מיני) קלה|פיתה קלה (ביס|קטנה|מיני)|mini light pita/i, kcal100g: 160, unitGrams: 25 },
+    // שני סדרי מילים אפשריים - "פיתה ביס כוסמין" וגם "פיתה כוסמין ביס" (סוג-
+    // הדגן יכול לבוא לפני או אחרי "ביס"/"קטנה"/"מיני") - לפי דיווח מפורש על
+    // "פיתה כוסמין ביס" שנפל לגרסה הגדולה (80 גרם במקום 35, כפול המשקל)
+    { name: "פיתה ביס כוסמין", re: /פיתה (ביס|קטנה|מיני) כוסמין( מלא)?|פיתה כוסמין (ביס|קטנה|מיני)( מלא)?/i, kcal100g: 225, unitGrams: 35 },
+    { name: "פיתה ביס חיטה מלאה", re: /פיתה (ביס|קטנה|מיני) (חיטה מלאה|מקמח מלא)|פיתה (חיטה מלאה|מקמח מלא) (ביס|קטנה|מיני)/i, kcal100g: 220, unitGrams: 35 },
+    { name: "פיתה ביס דגנים", re: /פיתה (ביס|קטנה|מיני) דגנים|פיתה דגנים (ביס|קטנה|מיני)/i, kcal100g: 235, unitGrams: 35 },
     // "ביס" כללי (לבנה/לא מזוהה) - אחרי כל גרסאות הדגן הספציפיות, כדי שהן
     // ייתפסו קודם. כולל גם ניסוחים בסדר מילים הפוך ("מיני פיתה"/"פיתת מיני")
     { name: "פיתה ביס", re: /פיתה (ביס|קטנה)( לבנה)?|מיני פיתה|פיתת מיני|mini pita|small pita/i, kcal100g: 245, unitGrams: 35 },
@@ -11163,11 +11182,21 @@ function findSweetenedCalories(line, sweetenedKcal100g) {
 // ככמות-יחידות (50 טונות טונה!) - זו בדיוק התקלה שדווחה בפועל
 const EXPLICIT_CALORIES_RE = /(\d{1,5}(?:\.\d+)?)\s*(kcal\b|cal\b|calories?\b|קלוריות|سعرة)/i;
 
-function computeItemCalories(item, contextText, isMultiFood) {
+// quantityScopeEnd (אופציונלי - ברירת מחדל: כל ה-contextText, כמו קודם):
+// גבול חיפוש הכמות/יחידה (גרם/כף/כוס/מספר/חצי) - *לא* חל על אחוז-שומן/
+// המתקה, שכן באים אחרי שם המאכל ("גבינה צהובה 9 אחוז"). בלי הגבלה הזו,
+// כשכמה מאכלים באותו משפט (isMultiFood) והאחרון בהם לא זוהה בכלל (למשל
+// "רסק עגבניות"), ה"חלון" של המאכל *שלפניו* נמתח עד סוף המשפט ובולע יחידה
+// שלא שייכת לו בכלל ("...גבינה צהובה 9 אחוז וכף רסק עגבניות" - ה"כף" תפס
+// את ה"3 פרוסות" של הגבינה והחליף אותו ב-3 כפות!) - לפי דיווח מפורש עם
+// חישוב שיצא כפול מהצפוי. הכמות/יחידה כמעט תמיד *לפני* שם המאכל בעברית,
+// אז מגבילים את החיפוש שלהן לטקסט עד סוף שם המאכל עצמו בלבד
+function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
     const explicitCaloriesMatch = contextText.match(EXPLICIT_CALORIES_RE);
     if (explicitCaloriesMatch) return parseFloat(explicitCaloriesMatch[1]);
+    const quantityText = quantityScopeEnd != null ? contextText.slice(0, quantityScopeEnd) : contextText;
     let grams = null;
-    const gramsMatch = contextText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
+    const gramsMatch = quantityText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
     if (gramsMatch) {
         grams = parseFloat(gramsMatch[1]);
     } else {
@@ -11175,10 +11204,10 @@ function computeItemCalories(item, contextText, isMultiFood) {
         // *איזו* יחידה נכתבה (כוס/כף/כפית/גביע/חופן) - כדי ש"חצי גביע"/"חצי
         // כוס" יעבדו, לא רק "2 כוסות" עם ספרה מפורשת (ר' ההערה על VOLUME_UNIT_TO_GRAMS)
         for (const unit of VOLUME_UNIT_TO_GRAMS) {
-            if (unit.re.test(contextText)) { grams = parseQuantityCount(contextText) * unit.gramsPerUnit; break; }
+            if (unit.re.test(quantityText)) { grams = parseQuantityCount(quantityText) * unit.gramsPerUnit; break; }
         }
     }
-    const count = parseQuantityCount(contextText);
+    const count = parseQuantityCount(quantityText);
     const pctKcal = item.percentTable ? findFatPercentCalories(contextText, item.percentTable) : null;
     const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(contextText, item.sweetenedKcal100g) : null;
     const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
@@ -11310,7 +11339,7 @@ function estimateFreeTextCalories(text) {
         // שה"חצי" הועיל בכלל
         const windowStart = i > 0 ? findGapSplitPoint(text, matches[i - 1].end, match.start) : 0;
         const windowEnd = i < matches.length - 1 ? findGapSplitPoint(text, match.end, matches[i + 1].start) : text.length;
-        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd), isMultiFood);
+        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd), isMultiFood, match.end - windowStart);
         if (kcal > 0) { total += kcal; matchedAny = true; }
     });
     return matchedAny ? total : 0;
