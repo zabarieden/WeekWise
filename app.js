@@ -13206,6 +13206,28 @@ let editingProjectId = null;
 let editingNotebookId = null;
 let editingNotebookItemId = null;
 
+// --- מחברת רב-דפים (notebook_pages, בין project_notebooks ל-notebook_items) -
+// כל דף מכיל גם רשימת שורות-טקסט (notebook_items, כמו קודם, רק page_id
+// במקום notebook_id) וגם ציור-יד חופשי (canvas_data, ר' שכבת הקנבס למטה) -
+// לפי בקשה מפורשת ("גם ידנית אם זה באייפד וגם בתור טקסט... דף אינסופי...
+// אפשרות לעבור בין הדפים ולכל דף לקרוא בשם... לחפש בדפים")
+let notebookPagesCache = [];
+let currentOpenPageId = null;
+let editingPageId = null;
+let notebookAllItemsCache = []; // כל הפריטים מכל דפי המחברה הפתוחה - לחיפוש בלבד
+let notebookPagesSearchFilterIds = null; // null = בלי סינון פעיל בפאנל הדפים
+
+// --- שכבת הציור החופשי על כל דף - ללא תקדים בקוד הזה, נבנה מאפס. כל קו
+// נשמר כמערך נקודות מנורמל 0-1 (יחסי לגודל הקנבס בפועל), כך שדף שצויר
+// באייפד (קנבס רחב) ישוחזר נכון גם בטלפון (קנבס צר) בלי מידע נוסף על גודל
+// המכשיר. ר' redrawCanvasFromStrokes/saveCanvasData למטה ---
+let canvasStrokes = [];
+let currentStroke = null;
+let penColor = '#2b2b2b';
+let isEraserMode = false;
+let notebookCanvasPointerBound = false;
+const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','❌','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
+
 // אייקון לכל פרויקט - כדי להבחין במבט חטוף בין פרויקטים (למשל "מתמטיקה" מול
 // "היסטוריה" אצל ילד/ה) - לפי בקשה מפורשת. דפוס זהה ל-VISION_GOAL_CATEGORY_PRESETS/
 // selectVisionGoalCategory, רק שכאן האמוג'י עצמו הוא גם המזהה וגם התצוגה
@@ -13416,15 +13438,17 @@ function deleteNotebook(id) {
     });
 }
 
-// --- מגירה 3: דף-מחברת בפועל (currentOpenNotebookId) - זהה חזותית ללימודים,
-// ר' renderStudyTasksList - אותה תבנית בדיוק (checkbox/טקסט/עריכה/מחיקה) ---
+// --- מגירה 3: מחברת רב-דפים (currentOpenNotebookId > currentOpenPageId) -
+// כל דף זהה חזותית ל"לימודים" (ר' renderStudyTasksList) עבור הטקסט שבו, ובנוסף
+// מכיל שכבת ציור חופשי משלו - לפי בקשה מפורשת לתכונה גדולה (ר' ההערה על
+// notebookPagesCache למעלה) ---
 function openNotebookDetail(notebookId) {
     currentOpenNotebookId = notebookId;
     closeNotebooksDrawer();
     openNotebookDetailDrawer();
 }
 
-function openNotebookDetailDrawer() {
+async function openNotebookDetailDrawer() {
     const overlay = document.getElementById('notebook-detail-drawer-overlay');
     if (overlay) overlay.classList.add('open');
     const wrapper = document.querySelector('.phone-wrapper');
@@ -13432,7 +13456,8 @@ function openNotebookDetailDrawer() {
     const notebook = notebooksCache.find(n => n.id === currentOpenNotebookId);
     const titleEl = document.getElementById('notebook-detail-title');
     if (titleEl) titleEl.textContent = notebook ? notebook.title : '';
-    loadNotebookItems(currentOpenNotebookId);
+    await loadNotebookPages(currentOpenNotebookId);
+    if (notebookPagesCache.length) openNotebookPage(notebookPagesCache[0].id);
 }
 function closeNotebookDetailDrawer() {
     const overlay = document.getElementById('notebook-detail-drawer-overlay');
@@ -13441,9 +13466,157 @@ function closeNotebookDetailDrawer() {
     if (wrapper) wrapper.classList.remove('projects-open');
 }
 
-async function loadNotebookItems(notebookId) {
+// טוענת את כל הדפים של המחברה + (לצורך חיפוש) את כל הפריטים מכל הדפים ביחד -
+// שאילתה אחת נוספת, לא פר-דף, כדי שהחיפוש יהיה מיידי בלי לפנות לשרת על כל
+// הקלדה. אם למחברה אין אף דף (לא אמור לקרות אחרי המיגרציה, אבל מכסה מחברת
+// חדשה-לגמרי) - נוצר "דף 1" ריק אוטומטית
+async function loadNotebookPages(notebookId) {
     if (!supabaseClient || !currentUserId || !notebookId) return;
-    const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('notebook_id', notebookId).eq('user_id', currentUserId).order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient.from('notebook_pages').select('*').eq('notebook_id', notebookId).eq('user_id', currentUserId).order('sort_order', { ascending: true });
+    if (error) return;
+    notebookPagesCache = data || [];
+    if (!notebookPagesCache.length) {
+        const { data: created } = await supabaseClient.from('notebook_pages').insert({ notebook_id: notebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} 1`, sort_order: 0, canvas_data: [] }).select().maybeSingle();
+        if (created) notebookPagesCache = [created];
+    }
+    if (notebookPagesCache.length) {
+        const { data: itemsData } = await supabaseClient.from('notebook_items').select('*').eq('user_id', currentUserId).in('page_id', notebookPagesCache.map(p => p.id));
+        notebookAllItemsCache = itemsData || [];
+    } else {
+        notebookAllItemsCache = [];
+    }
+}
+
+function openNotebookPage(pageId) {
+    const page = notebookPagesCache.find(p => p.id === pageId);
+    if (!page) return;
+    currentOpenPageId = pageId;
+    canvasStrokes = Array.isArray(page.canvas_data) ? page.canvas_data.slice() : [];
+    notebookPagesSearchFilterIds = null;
+    const searchInput = document.getElementById('notebook-pages-search-input');
+    if (searchInput) searchInput.value = '';
+    loadNotebookItems(pageId);
+    renderPageNavHeader();
+    renderPageTabsList();
+    initNotebookCanvas();
+}
+
+function renderPageNavHeader() {
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    const titleEl = document.getElementById('notebook-page-title-text');
+    if (titleEl) titleEl.textContent = page ? page.title : '';
+    const counterEl = document.getElementById('notebook-page-counter');
+    if (counterEl) counterEl.textContent = t('notebook_page_counter_label').replace('{current}', idx + 1).replace('{total}', notebookPagesCache.length);
+    const prevBtn = document.getElementById('notebook-page-prev-btn');
+    const nextBtn = document.getElementById('notebook-page-next-btn');
+    if (prevBtn) prevBtn.disabled = idx <= 0;
+    if (nextBtn) nextBtn.disabled = idx === -1 || idx >= notebookPagesCache.length - 1;
+}
+
+function goToPrevPage() {
+    const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    if (idx > 0) openNotebookPage(notebookPagesCache[idx - 1].id);
+}
+function goToNextPage() {
+    const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    if (idx !== -1 && idx < notebookPagesCache.length - 1) openNotebookPage(notebookPagesCache[idx + 1].id);
+}
+
+// "+" יוצר דף חדש וריק ועוברת אליו מיד, בלי חלון-דיאלוג ביניים (אפשר לשנות שם
+// אח"כ דרך כותרת הדף) - לפי בקשה מפורשת ("נוצר מיד דף ריק, אפשר לשנות שם אחר
+// כך"), כדי שההוספה תהיה מהירה ("דף אינסופי" - בלי הגבלת כמות בכלל)
+async function addNotebookPage() {
+    if (!supabaseClient || !currentUserId || !currentOpenNotebookId) return;
+    const nextOrder = notebookPagesCache.length ? Math.max(...notebookPagesCache.map(p => p.sort_order)) + 1 : 0;
+    const { data, error } = await supabaseClient.from('notebook_pages').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} ${nextOrder + 1}`, sort_order: nextOrder, canvas_data: [] }).select().maybeSingle();
+    if (error || !data) return;
+    notebookPagesCache.push(data);
+    openNotebookPage(data.id);
+}
+
+function openRenamePageModal() {
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    if (!page) return;
+    editingPageId = page.id;
+    document.getElementById('notebook-page-rename-input').value = page.title;
+    openModal('modal-rename-notebook-page');
+    setTimeout(() => document.getElementById('notebook-page-rename-input').focus(), 150);
+}
+
+async function submitRenamePage() {
+    const input = document.getElementById('notebook-page-rename-input');
+    const title = input.value.trim();
+    const pageId = editingPageId;
+    closeModal('modal-rename-notebook-page');
+    editingPageId = null;
+    if (!title || !pageId || !supabaseClient) return;
+    await supabaseClient.from('notebook_pages').update({ title }).eq('id', pageId);
+    const page = notebookPagesCache.find(p => p.id === pageId);
+    if (page) page.title = title;
+    renderPageNavHeader();
+    renderPageTabsList();
+}
+
+// מוחקת דף; אם היה הדף האחרון היחיד - נוצר מיד "דף 1" ריק חדש (מחברת לא
+// אמורה להישאר בלי אף דף), ואם היה הדף הפתוח - עוברת לדף שכן אחריו
+function deleteNotebookPage(pageId) {
+    showDangerConfirm(t('notebook_page_delete_title'), t('notebook_page_delete_confirm'), async () => {
+        await supabaseClient.from('notebook_pages').delete().eq('id', pageId);
+        notebookPagesCache = notebookPagesCache.filter(p => p.id !== pageId);
+        if (!notebookPagesCache.length) {
+            await loadNotebookPages(currentOpenNotebookId);
+            if (notebookPagesCache.length) openNotebookPage(notebookPagesCache[0].id);
+            return;
+        }
+        if (currentOpenPageId === pageId) {
+            openNotebookPage(notebookPagesCache[0].id);
+        } else {
+            renderPageTabsList();
+        }
+    });
+}
+
+function renderPageTabsList() {
+    const listEl = document.getElementById('notebook-page-tabs-list');
+    if (!listEl) return;
+    const pages = notebookPagesSearchFilterIds ? notebookPagesCache.filter(p => notebookPagesSearchFilterIds.has(p.id)) : notebookPagesCache;
+    if (!pages.length) {
+        listEl.innerHTML = `<p class="language-no-results">${t('notebook_pages_no_results')}</p>`;
+        return;
+    }
+    listEl.innerHTML = pages.map(page => `
+        <li class="notebook-page-tab-item${page.id === currentOpenPageId ? ' active' : ''}">
+            <span class="notebook-page-tab-item-main" onclick="openNotebookPage('${page.id}')">${notebookPagesCache.indexOf(page) + 1}. ${escapeHtmlForReport(page.title)}</span>
+            <button type="button" class="btn-delete-item" onclick="deleteNotebookPage('${page.id}')">❌</button>
+        </li>
+    `).join('');
+}
+
+function togglePagesListPanel() {
+    const panel = document.getElementById('notebook-page-tabs-panel');
+    const arrow = document.getElementById('notebook-page-tabs-arrow');
+    if (!panel) return;
+    const nowOpen = panel.classList.toggle('open');
+    if (arrow) arrow.classList.toggle('open', nowOpen);
+    if (nowOpen) setTimeout(() => document.getElementById('notebook-pages-search-input')?.focus(), 150);
+}
+
+// מחפשת גם בשמות הדפים וגם בטקסט הפריטים שבתוכם (לא בציור החופשי - אין OCR,
+// לפי בקשה מפורשת), אותו דפוס בדיוק כמו renderLanguagePickerList
+function searchNotebookPages(filter) {
+    const query = (filter || '').trim().toLowerCase();
+    if (!query) { notebookPagesSearchFilterIds = null; renderPageTabsList(); return; }
+    const ids = new Set();
+    notebookPagesCache.forEach(p => { if (p.title.toLowerCase().includes(query)) ids.add(p.id); });
+    notebookAllItemsCache.forEach(item => { if (item.title.toLowerCase().includes(query)) ids.add(item.page_id); });
+    notebookPagesSearchFilterIds = ids;
+    renderPageTabsList();
+}
+
+async function loadNotebookItems(pageId) {
+    if (!supabaseClient || !currentUserId || !pageId) return;
+    const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('page_id', pageId).eq('user_id', currentUserId).order('created_at', { ascending: false });
     if (error) return;
     notebookItemsCache = data || [];
     renderNotebookItemsList();
@@ -13471,7 +13644,7 @@ function renderNotebookItemsList() {
 async function toggleNotebookItemStatus(id, currentStatus) {
     if (!supabaseClient) return;
     await supabaseClient.from('notebook_items').update({ is_completed: !currentStatus }).eq('id', id);
-    loadNotebookItems(currentOpenNotebookId);
+    loadNotebookItems(currentOpenPageId);
 }
 
 function openAddNotebookItemModal() {
@@ -13497,20 +13670,181 @@ async function submitNotebookItem() {
     const editId = editingNotebookItemId;
     closeModal('modal-add-notebook-item');
     editingNotebookItemId = null;
-    if (!title || !supabaseClient || !currentUserId || !currentOpenNotebookId) return;
+    if (!title || !supabaseClient || !currentUserId || !currentOpenPageId) return;
     if (editId) {
         await supabaseClient.from('notebook_items').update({ title }).eq('id', editId);
     } else {
-        await supabaseClient.from('notebook_items').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title });
+        await supabaseClient.from('notebook_items').insert({ page_id: currentOpenPageId, user_id: currentUserId, username: currentUsername, title });
     }
-    await loadNotebookItems(currentOpenNotebookId);
+    await loadNotebookItems(currentOpenPageId);
+    // מרענן גם את מטמון-החיפוש הכולל (כל הפריטים מכל הדפים), כדי שפריט חדש/
+    // מעודכן יהיה מיד בר-חיפוש בלי לצאת ולהיכנס שוב למחברת
+    const { data: itemsData } = await supabaseClient.from('notebook_items').select('*').eq('user_id', currentUserId).in('page_id', notebookPagesCache.map(p => p.id));
+    notebookAllItemsCache = itemsData || [];
     showAppToast(t('item_added_success'));
 }
 
 async function deleteNotebookItem(id) {
     if (!supabaseClient) return;
     await supabaseClient.from('notebook_items').delete().eq('id', id);
-    loadNotebookItems(currentOpenNotebookId);
+    loadNotebookItems(currentOpenPageId);
+    notebookAllItemsCache = notebookAllItemsCache.filter(i => i.id !== id);
+}
+
+// --- שכבת הציור החופשי (קנבס) לכל דף - נבנתה מאפס, אין תקדים בקוד הקיים.
+// דפוס אירועי המצביע (pointerdown על הקנבס + מאזיני document ל-pointermove/up
+// שמתווספים/מוסרים דינמית) תואם את הסגנון הקיים באפליקציה (ר' גרירת-אווטאר
+// במסלול-היעדים) - לא setPointerCapture. touch-action:none על הקנבס (ב-CSS)
+// הוא קריטי כדי שציור באצבע/Apple Pencil לא "יגנוב" גלילה של הדף ---
+function initNotebookCanvas() {
+    const canvas = document.getElementById('notebook-page-canvas');
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    if (!notebookCanvasPointerBound) {
+        notebookCanvasPointerBound = true;
+        canvas.addEventListener('pointerdown', startStroke);
+    }
+    redrawCanvasFromStrokes();
+}
+
+function redrawCanvasFromStrokes() {
+    const canvas = document.getElementById('notebook-page-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvasStrokes.forEach(entry => drawStrokeEntry(ctx, canvas, entry));
+}
+
+function drawStrokeEntry(ctx, canvas, entry) {
+    if (entry.t === 'emoji') {
+        ctx.font = `${entry.size}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(entry.ch, entry.x * canvas.width, entry.y * canvas.height);
+        return;
+    }
+    if (!entry.pts || entry.pts.length < 2) return;
+    ctx.globalCompositeOperation = entry.t === 'e' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = entry.c || '#000';
+    ctx.lineWidth = entry.w || 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(entry.pts[0][0] * canvas.width, entry.pts[0][1] * canvas.height);
+    for (let i = 1; i < entry.pts.length; i++) ctx.lineTo(entry.pts[i][0] * canvas.width, entry.pts[i][1] * canvas.height);
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+}
+
+function getNotebookCanvasPoint(canvas, e) {
+    const rect = canvas.getBoundingClientRect();
+    return [(e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height];
+}
+
+function startStroke(e) {
+    const canvas = document.getElementById('notebook-page-canvas');
+    if (!canvas) return;
+    e.preventDefault();
+    currentStroke = { t: isEraserMode ? 'e' : 's', c: penColor, w: isEraserMode ? 18 : 3, pts: [getNotebookCanvasPoint(canvas, e)] };
+    document.addEventListener('pointermove', continueStroke);
+    document.addEventListener('pointerup', endStroke);
+}
+
+function continueStroke(e) {
+    const canvas = document.getElementById('notebook-page-canvas');
+    if (!canvas || !currentStroke) return;
+    currentStroke.pts.push(getNotebookCanvasPoint(canvas, e));
+    const ctx = canvas.getContext('2d');
+    const pts = currentStroke.pts;
+    ctx.globalCompositeOperation = currentStroke.t === 'e' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = currentStroke.c;
+    ctx.lineWidth = currentStroke.w;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[pts.length - 2][0] * canvas.width, pts[pts.length - 2][1] * canvas.height);
+    ctx.lineTo(pts[pts.length - 1][0] * canvas.width, pts[pts.length - 1][1] * canvas.height);
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+}
+
+function endStroke() {
+    document.removeEventListener('pointermove', continueStroke);
+    document.removeEventListener('pointerup', endStroke);
+    if (!currentStroke) return;
+    if (currentStroke.pts.length > 1) canvasStrokes.push(currentStroke);
+    currentStroke = null;
+    saveCanvasData();
+}
+
+function undoLastStroke() {
+    canvasStrokes.pop();
+    redrawCanvasFromStrokes();
+    saveCanvasData();
+}
+
+function clearCanvas() {
+    showDangerConfirm(t('notebook_canvas_clear_confirm_title'), t('notebook_canvas_clear_confirm_msg'), () => {
+        canvasStrokes = [];
+        redrawCanvasFromStrokes();
+        saveCanvasData();
+    });
+}
+
+function setPenColor(color, btnEl) {
+    penColor = color;
+    isEraserMode = false;
+    document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    const eraserBtn = document.getElementById('notebook-eraser-btn');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+}
+
+function setEraserMode(on) {
+    isEraserMode = on;
+    const eraserBtn = document.getElementById('notebook-eraser-btn');
+    if (eraserBtn) eraserBtn.classList.toggle('active', on);
+    if (on) document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
+}
+
+async function saveCanvasData() {
+    if (!supabaseClient || !currentOpenPageId) return;
+    await supabaseClient.from('notebook_pages').update({ canvas_data: canvasStrokes }).eq('id', currentOpenPageId);
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    if (page) page.canvas_data = canvasStrokes;
+}
+
+// --- בוחר אימוג'ים - נוחת כמדבקה על הקנבס (לא נכנס לשדה טקסט), לפי בקשה
+// מפורשת ("להוסיף אימוגים בדף... נחת על הדף כמו מדבקה/ציור") ---
+function renderEmojiPicker() {
+    const container = document.getElementById('notebook-emoji-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    NOTEBOOK_EMOJI_PRESETS.forEach(emoji => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'icon-picker-chip';
+        chip.textContent = emoji;
+        chip.onclick = () => stampEmojiOnCanvas(emoji);
+        container.appendChild(chip);
+    });
+}
+
+function toggleEmojiPickerPanel() {
+    const panel = document.getElementById('notebook-emoji-picker');
+    if (!panel) return;
+    const nowHidden = panel.classList.toggle('hidden');
+    if (!nowHidden && !panel.children.length) renderEmojiPicker();
+}
+
+function stampEmojiOnCanvas(emoji) {
+    canvasStrokes.push({ t: 'emoji', ch: emoji, x: 0.5, y: 0.4, size: 32 });
+    redrawCanvasFromStrokes();
+    saveCanvasData();
+    document.getElementById('notebook-emoji-picker')?.classList.add('hidden');
 }
 
 async function loadVisionGoals() {

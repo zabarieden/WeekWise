@@ -3125,6 +3125,38 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .icon-picker-chip { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.1rem; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: var(--transition); padding: 0; }
 .icon-picker-chip.selected { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
 
+/* מחברת רב-דפים - ניווט/פאנל-דפים/כלי-ציור/קנבס/בוחר-אימוג'ים, כולם בתוך
+   #notebook-detail-drawer-overlay (ר' index.html). הפאנל ורשימת התוצאות
+   משתמשים ב-.language-search-input/.language-no-results הקיימים כדי לשמור
+   על אותה שפה חזותית כמו שאר בוררי-החיפוש באפליקציה */
+.notebook-page-header-nav { display: flex; align-items: center; gap: 6px; margin: 10px 0 6px 0; }
+.notebook-page-nav-btn { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1.1rem; cursor: pointer; }
+.notebook-page-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.notebook-page-title-btn { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; border: none; color: var(--text-primary); font-weight: 600; font-size: 0.95rem; cursor: pointer; overflow: hidden; }
+.notebook-page-title-btn span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notebook-page-title-edit-icon { font-size: 0.75rem; opacity: 0.6; flex-shrink: 0; }
+.notebook-page-counter { font-size: 0.72rem; color: var(--text-secondary); flex-shrink: 0; white-space: nowrap; }
+.notebook-page-tabs-arrow { flex-shrink: 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; transition: transform 0.2s; padding: 4px; }
+.notebook-page-tabs-arrow.open { transform: rotate(180deg); }
+.notebook-page-tabs-panel { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+.notebook-page-tabs-panel.open { max-height: 50vh; overflow-y: auto; margin-bottom: 8px; }
+.notebook-page-tabs-list { list-style: none; margin: 6px 0 0 0; padding: 0; }
+.notebook-page-tab-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; }
+.notebook-page-tab-item.active { color: var(--accent-purple-text); font-weight: 700; }
+.notebook-page-tab-item-main { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.notebook-page-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.notebook-color-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-sizing: border-box; }
+.notebook-color-swatch.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-sheet); }
+.notebook-toolbar-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); font-size: 0.95rem; cursor: pointer; }
+.notebook-toolbar-btn.active { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
+/* touch-action:none קריטי - בלעדיו ציור באצבע/Apple Pencil "גונב" את הגלילה
+   של הדף במקום לצייר, במיוחד באייפד/מובייל */
+.notebook-page-canvas { display: block; width: 100%; height: 220px; border-radius: 12px; background-color: var(--bg-glass); border: 1px solid var(--border-color); touch-action: none; margin-bottom: 8px; }
+/* בוחר-אימוג'ים משותף חזותית ל-.icon-picker-row/.icon-picker-chip, אבל בלי
+   מצב .selected קבוע - כל לחיצה כאן היא הנחתה חד-פעמית על הקנבס, לא בחירה */
+.notebook-emoji-picker { max-height: 160px; overflow-y: auto; margin-bottom: 8px; }
+.notebook-items-section-header { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
    ארוכה לגלול בלי לשבור את מכניקת ההיפוך */
