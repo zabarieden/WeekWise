@@ -220,6 +220,14 @@ function updateLegalLinksForLanguage() {
     document.querySelectorAll('.legal-link-accessibility').forEach(a => a.href = `accessibility${suffix}.html`);
 }
 
+// עד עכשיו רק כמה מסכים ספציפיים התרעננו כשמחליפים שפה - כל שאר התוכן
+// הדינמי (פתקים, היסטוריית כספים, ספורט, יעדים וכו') נבנה ב-JS עם t()
+// בזמן הטעינה המקורית בלבד, אז הוא נשאר "תקוע" בשפה הישנה עד שמשהו אחר
+// גורם לו להיטען מחדש - לפי דיווח מפורש (מפריד "להגיע לזה" בפתקים נשאר
+// בעברית אחרי מעבר לאנגלית). הפתרון הפשוט והאמין ביותר - לא לנסות לזכור
+// ידנית כל פונקציית-רינדור בודדת באפליקציה (בדיוק הבאג שכבר קרה) - הוא
+// להריץ מחדש את *אותה* רשימת הטעינה המלאה שרצה בכניסה הרגילה לאפליקציה
+// (ר' initAppAfterAuth), כך שכל מסך מתעדכן גם בנתונים וגם בשפה יחד
 function onLanguageChanged() {
     updateLanguagePickerTriggers();
     updateLegalLinksForLanguage();
@@ -227,8 +235,27 @@ function onLanguageChanged() {
     if (!currentUserId) return;
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
-    loadWeeklySchedule();
-    loadMealPresetsToSelects();
+    Promise.all([
+        loadWeeklySchedule(),
+        loadStats(),
+        loadMealPresetsToSelects(),
+        loadPresetManageList(),
+        loadProgressTargets(),
+        loadWeightHistory(),
+        loadCalendarEvents(),
+        loadTodayTasks(),
+        loadMonthlyCalendarGrid(),
+        loadCalorieMonthlyCalendar(),
+        loadRecipes(),
+        loadAiUsage(),
+        loadMonthlyGoal(),
+        loadFinanceData(),
+        loadSportData(),
+        loadWaterData(),
+        loadHabits(),
+        loadNutritionGoals(),
+    ]);
+    loadAllCenterItems();
 }
 
 // --- הודעת מערכת כללית ויפה, במקום alert() הדפדפן ---

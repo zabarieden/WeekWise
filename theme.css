@@ -1703,6 +1703,80 @@ html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sk
     -webkit-mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
     mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
 }
+/* אותו אפקט יום/לילה, גרסת מצב בהיר - היה חסר לגמרי (הכוכבים הלבנים
+   מהמצב הכהה פשוט לא נראים על רקע בהיר) לפי בקשה מפורשת. אותה גאומטריה
+   בדיוק כמו למעלה, רק בגוונים כהים/רוויים יותר שנראים על פסטל בהיר -
+   כוכבי לילה בגוון אינדיגו-מעומעם במקום לבן, ושמש-יום בגוון ענבר עמוק
+   יותר במקום קרם-לבן */
+html.light-mode:not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="blue_teal"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="gold_red"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="forest_emerald"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="rose_gold"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="midnight_indigo"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="sunset_coral"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="ocean_teal"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="lavender_dream"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="cherry_blossom"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="arctic_frost"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="volcanic_ember"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="mint_fresh"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="royal_amethyst"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-night {
+    background-image:
+        radial-gradient(1.5px 1.5px at 20px 30px, rgba(71, 60, 130, 0.5), transparent),
+        radial-gradient(1px 1px at 90px 70px, rgba(71, 60, 130, 0.38), transparent),
+        radial-gradient(2px 2px at 150px 20px, rgba(71, 60, 130, 0.45), transparent),
+        radial-gradient(1px 1px at 50px 120px, rgba(71, 60, 130, 0.32), transparent),
+        radial-gradient(1.5px 1.5px at 130px 150px, rgba(71, 60, 130, 0.45), transparent),
+        radial-gradient(1px 1px at 10px 170px, rgba(71, 60, 130, 0.28), transparent),
+        radial-gradient(1.5px 1.5px at 175px 110px, rgba(71, 60, 130, 0.4), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+html.light-mode:not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="blue_teal"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="gold_red"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="forest_emerald"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="rose_gold"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="midnight_indigo"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="sunset_coral"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="ocean_teal"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="lavender_dream"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="cherry_blossom"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="arctic_frost"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="volcanic_ember"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="mint_fresh"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="royal_amethyst"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day {
+    background-image:
+        repeating-conic-gradient(from 0deg at var(--sky-sun-x) var(--sky-sun-y), rgba(154, 100, 30, 0.55) 0deg 2deg, transparent 2deg 30deg),
+        radial-gradient(circle at var(--sky-sun-x) var(--sky-sun-y), #fff0d0 0 4px, #c9822a 4px 8px, rgba(154, 100, 30, 0.4) 8px 14px, transparent 15px),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) - 29px) calc(var(--sky-sun-y) - 37px), rgba(140, 90, 20, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) - 39px) calc(var(--sky-sun-y) - 23px), rgba(140, 90, 20, 0.6), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) + 37px) calc(var(--sky-sun-y) - 1px), rgba(140, 90, 20, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) - 33px) calc(var(--sky-sun-y) + 23px), rgba(140, 90, 20, 0.6), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) + 15px) calc(var(--sky-sun-y) + 35px), rgba(140, 90, 20, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) + 35px) calc(var(--sky-sun-y) - 29px), rgba(140, 90, 20, 0.6), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) - 41px) calc(var(--sky-sun-y) + 11px), rgba(140, 90, 20, 0.7), transparent),
+        radial-gradient(1.5px 6px at calc(var(--sky-sun-x) + 7px) calc(var(--sky-sun-y) - 43px), rgba(130, 85, 20, 0.65), transparent),
+        radial-gradient(6px 1.5px at calc(var(--sky-sun-x) + 7px) calc(var(--sky-sun-y) - 43px), rgba(130, 85, 20, 0.65), transparent),
+        radial-gradient(1.2px 5px at calc(var(--sky-sun-x) - 45px) calc(var(--sky-sun-y) - 7px), rgba(130, 85, 20, 0.6), transparent),
+        radial-gradient(5px 1.2px at calc(var(--sky-sun-x) - 45px) calc(var(--sky-sun-y) - 7px), rgba(130, 85, 20, 0.6), transparent),
+        radial-gradient(1.4px 5.5px at calc(var(--sky-sun-x) + 33px) calc(var(--sky-sun-y) + 27px), rgba(130, 85, 20, 0.62), transparent),
+        radial-gradient(5.5px 1.4px at calc(var(--sky-sun-x) + 33px) calc(var(--sky-sun-y) + 27px), rgba(130, 85, 20, 0.62), transparent),
+        radial-gradient(1.1px 4.5px at calc(var(--sky-sun-x) + 31px) calc(var(--sky-sun-y) - 39px), rgba(130, 85, 20, 0.55), transparent),
+        radial-gradient(4.5px 1.1px at calc(var(--sky-sun-x) + 31px) calc(var(--sky-sun-y) - 39px), rgba(130, 85, 20, 0.55), transparent);
+    background-repeat: no-repeat;
+    -webkit-mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
+    mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
+}
 html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="star_map"] > .home-theme-pattern {
     background-image:
@@ -4668,8 +4742,10 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
    selector-ים למעלה ([data-color-theme="X"] בלי דרישת תג html) גם מזין
    את המשתנים (--bg-main וכו') וגם את .home-theme-pattern הפנימי שלו, בלי
    לשכפל אף שורת CSS - "תצוגה מקדימה בתוך זה מאוד חשוב" */
+/* עיגול קטן (42px) כמו .theme-swatch הרגילות, לא ריבוע מעוגל גדול (68px) -
+   לפי בקשה מפורשת ("בעיגולים קטנים כמו הלמעלה") אחרי שהרשימה צומצמה */
 .theme-preview-tile {
-    position: relative; width: 68px; height: 68px; border-radius: 16px;
+    position: relative; width: 42px; height: 42px; border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.12); cursor: pointer; padding: 0;
     flex-shrink: 0; overflow: hidden; background: var(--bg-main);
 }
