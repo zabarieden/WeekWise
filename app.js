@@ -12114,7 +12114,7 @@ function requestNotificationPermission() {
 // --- Push ברקע: מנוי Web Push אמיתי, כדי שתזכורות יתריעו גם כשהאפליקציה סגורה ---
 // מפתח VAPID ציבורי בלבד - המפתח הפרטי חי אך ורק כ-secret בפונקציית ה-Edge
 // בצד שרת (ראו supabase/functions/send-due-reminders), לעולם לא בקוד לקוח.
-const VAPID_PUBLIC_KEY = 'BFSnO1uByNjAM_704-SH7BPRsZGeguMolXHpwAeLISjya09iN5wS4l6UBY-AjBTapVg63kAzOGX6jWoi91DldSo';
+const VAPID_PUBLIC_KEY = 'BABt7imCNGNn3BOL7q8Nv6bzRTNPDAaNraCZ5K3d88PKNkDOtXIRI8AXBGHw9JvD6xutr-qEXTs8geWq5zwZG18';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
