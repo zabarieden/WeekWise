@@ -5764,10 +5764,17 @@ async function toggleLightMode() {
     const enabled = document.getElementById('light-mode-toggle').checked;
     localStorage.setItem('weekwise_light_mode', enabled ? 'true' : 'false');
     applyLightMode(enabled);
+    // upsert אחד אטומי, לא select-ואז-insert/update - הגרסה הקודמת הייתה
+    // תחרותית מול שמירות אחרות לאותה שורת user_premium (למשל בחירת ערכת
+    // נושא כמעט באותו רגע): שתי קריאות "אין שורה קיימת עדיין" יכולות
+    // לרוץ במקביל ולנסות שתיהן insert, אחת נכשלת בשקט (אין בדיקת error)
+    // והבחירה שלה פשוט לא נשמרת - בדיוק התסמין שדווח ("שמרתי לבהיר, אחרי
+    // רענון זה חזר לכהה")
     if (supabaseClient && currentUserId) {
-        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
-        if (existing) await supabaseClient.from('user_premium').update({ light_mode: enabled }).eq('user_id', currentUserId);
-        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, light_mode: enabled });
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, light_mode: enabled },
+            { onConflict: 'user_id' },
+        );
     }
 }
 
@@ -6500,10 +6507,13 @@ async function selectColorTheme(themeName) {
     // index.html כדי שמסך הטעינה הראשוני (לפני שהתחברות ל-Supabase מסתיימת)
     // כבר ידע איזו ערכת נושא להראות, ר' ההערה שם
     localStorage.setItem('weekwise_last_color_theme', themeName);
+    // upsert אחד אטומי - לא select-ואז-insert/update, ר' אותה הערה ב-
+    // toggleLightMode (אותה תבנית תחרותית בדיוק, אותו באג פוטנציאלי)
     if (supabaseClient && currentUserId) {
-        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
-        if (existing) await supabaseClient.from('user_premium').update({ theme: themeName }).eq('user_id', currentUserId);
-        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, theme: themeName });
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, theme: themeName },
+            { onConflict: 'user_id' },
+        );
     }
 }
 
@@ -6559,10 +6569,14 @@ function renderGlobalTextColorSwatches() {
 async function selectGlobalTextColor(color) {
     applyGlobalTextColor(color);
     localStorage.setItem('weekwise_global_text_color', color || '');
+    // upsert אטומי - ר' ההערה ב-toggleLightMode על התחרות בין select-ואז-
+    // insert/update כשכמה הגדרות לאותה שורת user_premium נשמרות כמעט
+    // בו-זמנית
     if (supabaseClient && currentUserId) {
-        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
-        if (existing) await supabaseClient.from('user_premium').update({ custom_text_color: color }).eq('user_id', currentUserId);
-        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, custom_text_color: color });
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, custom_text_color: color },
+            { onConflict: 'user_id' },
+        );
     }
 }
 
@@ -6665,10 +6679,12 @@ async function selectFontFromPicker(fontName) {
     applyGlobalFont(fontName);
     localStorage.setItem('weekwise_global_font', fontName || '');
     closeModal('modal-font-picker');
+    // upsert אטומי - ר' ההערה ב-toggleLightMode
     if (supabaseClient && currentUserId) {
-        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
-        if (existing) await supabaseClient.from('user_premium').update({ font_family: fontName }).eq('user_id', currentUserId);
-        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, font_family: fontName });
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, font_family: fontName },
+            { onConflict: 'user_id' },
+        );
     }
 }
 
@@ -7297,10 +7313,12 @@ async function setFinanceCycleStartDay(day) {
     localStorage.setItem('weekwise_finance_cycle_start_day', String(day));
     financeSummaryMonthKey = null; // חוזרים לתקופה הנוכחית לפי ההגדרה החדשה
     Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+    // upsert אטומי - ר' ההערה ב-toggleLightMode
     if (supabaseClient && currentUserId) {
-        const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
-        if (existing) await supabaseClient.from('user_premium').update({ finance_cycle_start_day: day }).eq('user_id', currentUserId);
-        else await supabaseClient.from('user_premium').insert({ user_id: currentUserId, username: currentUsername, finance_cycle_start_day: day });
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, finance_cycle_start_day: day },
+            { onConflict: 'user_id' },
+        );
     }
 }
 function applyFinanceCycleSetting() {
