@@ -1634,7 +1634,10 @@ function triggerDailyGreetingSparkles() {
 // מחכה לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה. הוארך בחזרה מ-2200
 // (התברר כמהיר מדי לקריאה) - לפי בקשה מפורשת "רק הדף הראשון והאחרון...
 // תן לזה לשבת... אפילו 5 [שניות]"
-const BOOK_LOADING_ANIMATION_MS = 10500;
+// 3.5 שניות לדף הראשון + 0.3 שניות דפדוף + 3.5 שניות לדף הסיום = 7.3 שניות
+// (היה 10.5) - קוצר לפי בקשה מפורשת ("שתהפכו למציאות יהיה קריא אבל יותר
+// מהיר") - ר' ההערה ליד .book-page-1/.book-final-page ב-theme.css
+const BOOK_LOADING_ANIMATION_MS = 7300;
 
 function showAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
@@ -6507,6 +6510,10 @@ async function selectColorTheme(themeName) {
     if (themeName !== 'default' && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     applyColorTheme(themeName);
     localStorage.setItem(colorThemeKey(), themeName);
+    // מפתח נוסף בלי תלות במשתמשת מחוברת - נקרא סינכרונית ומוקדם מאוד ב-
+    // index.html כדי שמסך הטעינה הראשוני (לפני שהתחברות ל-Supabase מסתיימת)
+    // כבר ידע איזו ערכת נושא להראות, ר' ההערה שם
+    localStorage.setItem('weekwise_last_color_theme', themeName);
     if (supabaseClient && currentUserId) {
         const { data: existing } = await supabaseClient.from('user_premium').select('user_id').eq('user_id', currentUserId).maybeSingle();
         if (existing) await supabaseClient.from('user_premium').update({ theme: themeName }).eq('user_id', currentUserId);
@@ -6525,6 +6532,7 @@ async function loadColorTheme() {
         if (local) themeName = local;
     }
     applyColorTheme(themeName);
+    localStorage.setItem('weekwise_last_color_theme', themeName);
 }
 
 // --- צבע טקסט אישי לכל האפליקציה (חינמי, נפרד מערכת הנושא הפרימיום למעלה):

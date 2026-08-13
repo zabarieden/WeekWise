@@ -3589,7 +3589,12 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
 
 .app-loading-overlay { display: none; position: absolute; inset: 0; background: var(--bg-main); z-index: 4000; align-items: center; justify-content: center; }
 .app-loading-overlay.open { display: flex; }
-.app-loading-spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid rgba(59, 130, 246, 0.15); border-top-color: #3b82f6; animation: appSpinnerRotate 0.8s linear infinite; }
+.app-loading-spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid color-mix(in srgb, var(--accent-purple) 15%, transparent); border-top-color: var(--accent-purple); animation: appSpinnerRotate 0.8s linear infinite; }
+/* אותו override ממוקד לברירת המחדל כמו book-welcome-subtext למעלה - ר' שם */
+html:not(.light-mode):not([data-color-theme]) .app-loading-spinner {
+    border-color: rgba(59, 130, 246, 0.15);
+    border-top-color: #3b82f6;
+}
 @keyframes appSpinnerRotate { to { transform: rotate(360deg); } }
 /* אנימציית "ספר" על כל המסך במסך הטעינה - 7 "דפים" ערוכים בערימה (position:
    absolute, z-index יורד), כל אחד הופך (rotateY, perspective תלת-ממדי) בתורו
@@ -3608,14 +3613,22 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
     transform-origin: left center;
     display: flex; align-items: center; justify-content: center;
 }
-/* ממשיך את גרדיאנט הסגול של הדפים עצמם (במקום החזרה הפתאומית לרקע האפליקציה
+/* ממשיך את גרדיאנט הרקע של הדפים עצמם (במקום החזרה הפתאומית לרקע האפליקציה
    הכהה/שחור-כמעט, שנראה מנותק ו"מכוער" ליד הדפים הצבעוניים שלפניו) + זוהר
-   רדיאלי עדין מאחורי הטקסט לתחושת עומק, לא ריבוע שטוח */
+   רדיאלי עדין מאחורי הטקסט לתחושת עומק, לא ריבוע שטוח. var(--bg-main)/
+   var(--accent-purple) במקום צבעים קבועים - כך שמסך הכניסה משתנה אוטומטית
+   לפי ערכת הנושא שנבחרה (לא תמיד כחול קבוע), לפי בקשה מפורשת. index.html
+   מיישם את data-color-theme סינכרונית ומוקדם מאוד כדי שזה כבר נכון בציור
+   הראשון, ר' ההערה שם */
 .book-final-page {
+    /* var(--border-color) - לא var(--accent-purple) - כי רק צבעי הרקע/משטחים
+       (כולל border-color) עודכנו לכחול בזמן הצביעה-מחדש של ברירת המחדל,
+       ולא צבעי ה-accent (ר' ההערה למעלה ב-:root); כך זה כבר נכון גם
+       בברירת המחדל וגם בכל ערכה פרימיום בלי override נפרד */
     background:
-        radial-gradient(ellipse at 50% 45%, rgba(59, 130, 246, 0.35), transparent 60%),
-        linear-gradient(160deg, #0a1128, #04070f);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+        radial-gradient(ellipse at 50% 45%, var(--border-color), transparent 60%),
+        var(--bg-main);
+    border: 1px solid var(--border-color);
     flex-direction: column; gap: 18px;
     z-index: 0;
 }
@@ -3624,19 +3637,23 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    הפונט הזמני לפונט הסופי כמה מאות מילישניות אחרי - לפי דיווח מפורש
    ("יש שם בפונט שונה את המשפט הראשון ואז הוא משתנה") */
 .book-welcome-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
-.book-final-page .book-welcome-subtext { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.1rem; font-weight: 700; color: #93c5fd; margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px rgba(59, 130, 246, 0.5); }
+.book-final-page .book-welcome-subtext { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent-purple-light); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px color-mix(in srgb, var(--accent-purple) 50%, transparent); }
+/* בברירת המחדל --accent-purple-light נשאר הסגול-הישן (לא עודכן בצביעה-
+   מחדש, ר' ההערה ב-:root) - override ממוקד רק לברירת המחדל האמיתית כדי
+   שהטקסט יישאר כחול כמו שנבחר במפורש, בלי להשפיע על אף ערכה פרימיום */
+html:not(.light-mode):not([data-color-theme]) .book-final-page .book-welcome-subtext {
+    color: #93c5fd;
+    text-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+}
 .book-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
 .book-title-page { flex-direction: column; gap: 14px; }
 .book-logo-small { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.85); letter-spacing: 0.5px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
 /* רק שני "דפים" (לא 7) - הדף הראשון (כותרת) ודף הסיום (עם הספינר) - לפי
-   בקשה מפורשת ("רק הדף הראשון והאחרון"). כל דף נשאר גלוי כ-5 שניות כדי
-   שאפשר לקרוא אותו בנוחות (לא "שידפדף מהר" כמו קודם - זה התברר כמהיר מדי
-   לקריאה, לפי בקשה מפורשת "אפילו 5" שניות) - ר' BOOK_LOADING_ANIMATION_MS
-   ב-app.js ששומר את כל הרצף פתוח מספיק זמן */
+   בקשה מפורשת ("רק הדף הראשון והאחרון"). כל דף נשאר גלוי כ-3.5 שניות (היה
+   5) - קוצר לפי בקשה מפורשת ("יותר מהיר, אבל קריא") - ר'
+   BOOK_LOADING_ANIMATION_MS ב-app.js ששומר את כל הרצף פתוח מספיק זמן */
 .book-page { animation-name: bookPageTurn; animation-duration: 0.3s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
-/* כחול כהה (היה סגול-לילך בהיר) - לפי בקשה מפורשת שהכניסה בהירה מדי מול
-   ה-Default הכחול-חלל החדש */
-.book-page-1 { background: linear-gradient(160deg, #2a3f7a, #16213e); z-index: 7; animation-delay: 5s; }
+.book-page-1 { background: var(--bg-main); z-index: 7; animation-delay: 3.5s; }
 /* brightness יורד ועולה סביב אמצע ההיפוך (הדף "בפרופיל", כמעט בלי רוחב) -
    מדמה איך דף אמיתי כמעט לא מחזיר אור ברגע שהוא ניצב לצופה, לפי בקשה
    מפורשת שהדפדוף ייראה אמיתי ולא שטוח */
