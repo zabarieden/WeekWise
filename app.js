@@ -1277,10 +1277,13 @@ async function submitAuthForm() {
         // ברגע ההרשמה עצמה, ולא כברירת מחדל כללית ב-isLightModeOn, כדי
         // לא לשנות בטעות משתמשות ותיקות שכבר סומכות על ברירת המחדל הישנה
         if (data.user) {
-            await supabaseClient.from('user_premium').insert({ user_id: data.user.id, username: email, light_mode: false });
+            // onboarding_completed: false במפורש - ר' ההערה המלאה ליד
+            // openOnboarding על ההבדל בין הרשמה חדשה (עוברת את האשף) מול
+            // התחברות רגילה (לא, גם אם עדיין false משום מה ברשומה ישנה)
+            await supabaseClient.from('user_premium').insert({ user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false });
         }
         if (data.session) {
-            initAppAfterAuth(data.user);
+            openOnboarding(data.user);
         } else {
             messageEl.style.color = 'var(--accent-green)';
             messageEl.textContent = t('auth_signup_success');
@@ -1292,6 +1295,192 @@ async function submitAuthForm() {
         if (error) { messageEl.textContent = t('auth_wrong_credentials'); return; }
         initAppAfterAuth(data.user);
     }
+}
+
+// --- אשף הרשמה: מוצג פעם אחת בלבד, מיד אחרי הרשמה מוצלחת (לא אחרי
+// התחברות רגילה - גם משתמשת ותיקה עם onboarding_completed=false ברשומה
+// עדיין לא מקבלת אותו, כי submitAuthForm בכלל לא קורא ל-openOnboarding
+// מהענף של login) - לפי בקשה מפורשת ("רק משתמשות חדשות מעכשיו").
+// כל שלב הוא רשומה קטנה ב-ONBOARDING_STEPS; renderOnboardingStep מציירת
+// לתוך onboarding-step-body לפי step.key, כדי שהוספת/שינוי שלב יהיה שינוי
+// מקומי אחד ב-JS בלבד, בלי לגעת ב-HTML. אפשר לדלג בכל שלב (הקישור הקבוע
+// למעלה) - קופץ ישר לסיום, כמו "לא תודה" בשלב האחרון
+let onboardingStep = 0;
+let onboardingUser = null;
+let onboardingPendingPhone = null;
+let onboardingPendingGoalTitle = null;
+const ONBOARDING_STEPS = ['welcome', 'country', 'phone', 'goal', 'tour_offer'];
+
+function openOnboarding(user) {
+    onboardingUser = user;
+    onboardingStep = 0;
+    onboardingPendingPhone = null;
+    onboardingPendingGoalTitle = null;
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+    renderOnboardingStep();
+    openModal('modal-onboarding');
+}
+
+function renderOnboardingDots(containerId, total, current) {
+    document.getElementById(containerId).innerHTML = Array.from({ length: total }, (_, i) =>
+        `<span class="onboarding-dot${i === current ? ' active' : ''}"></span>`
+    ).join('');
+}
+
+function renderOnboardingStep() {
+    const key = ONBOARDING_STEPS[onboardingStep];
+    const body = document.getElementById('onboarding-step-body');
+    const nextBtn = document.getElementById('btn-onboarding-next');
+    renderOnboardingDots('onboarding-dots', ONBOARDING_STEPS.length, onboardingStep);
+    nextBtn.classList.remove('hidden');
+    if (key === 'welcome') {
+        body.innerHTML = `
+            <div class="onboarding-icon">👋</div>
+            <h2 class="onboarding-title">${t('onboarding_welcome_title')}</h2>
+            <p class="onboarding-subtitle">${t('onboarding_welcome_subtitle')}</p>
+        `;
+        nextBtn.textContent = t('onboarding_welcome_btn');
+    } else if (key === 'country') {
+        const code = getUserCountry();
+        body.innerHTML = `
+            <div class="onboarding-icon">🌍</div>
+            <h2 class="onboarding-title">${t('onboarding_country_title')}</h2>
+            <button type="button" class="language-select custom-select-trigger" style="max-width:280px;" onclick="openCountryPicker()">
+                <span class="language-picker-flag" id="onboarding-country-flag">${COUNTRY_FLAGS[code] || '🌐'}</span>
+                <span id="onboarding-country-name">${COUNTRY_NAMES[code] || ''}</span>
+            </button>
+        `;
+        nextBtn.textContent = t('onboarding_next_btn');
+    } else if (key === 'phone') {
+        body.innerHTML = `
+            <div class="onboarding-icon">📱</div>
+            <h2 class="onboarding-title">${t('onboarding_phone_title')}</h2>
+            <p class="onboarding-subtitle">${t('onboarding_phone_subtitle')}</p>
+            <input type="tel" id="onboarding-phone-input" placeholder="${t('onboarding_phone_placeholder')}" value="${onboardingPendingPhone || ''}">
+        `;
+        nextBtn.textContent = t('onboarding_next_btn');
+    } else if (key === 'goal') {
+        body.innerHTML = `
+            <div class="onboarding-icon">🎯</div>
+            <h2 class="onboarding-title">${t('onboarding_goal_title')}</h2>
+            <input type="text" id="onboarding-goal-input" placeholder="${t('onboarding_goal_placeholder')}" value="${onboardingPendingGoalTitle || ''}">
+            <p class="onboarding-hint">${t('onboarding_goal_hint')}</p>
+        `;
+        nextBtn.textContent = t('onboarding_next_btn');
+    } else if (key === 'tour_offer') {
+        body.innerHTML = `
+            <div class="onboarding-icon">🧭</div>
+            <h2 class="onboarding-title">${t('onboarding_tour_offer_title')}</h2>
+            <p class="onboarding-subtitle">${t('onboarding_tour_offer_subtitle')}</p>
+            <div class="onboarding-tour-offer-buttons">
+                <button type="button" class="btn-primary" onclick="finishOnboarding(true)">${t('onboarding_tour_offer_yes')}</button>
+                <button type="button" class="btn-secondary" onclick="finishOnboarding(false)">${t('onboarding_tour_offer_no')}</button>
+            </div>
+        `;
+        nextBtn.classList.add('hidden');
+    }
+}
+
+// updateCustomSelectDisplay-style עדכון תצוגה אחרי בחירה בבורר-המדינה
+// המשותף (openCountryPicker/selectCountryFromPicker) - לא צריך שינוי
+// באותם פונקציות עצמן, רק קורא להן מחדש לרענן את שני ה-span-ים כאן
+function refreshOnboardingCountryDisplay() {
+    const flagEl = document.getElementById('onboarding-country-flag');
+    const nameEl = document.getElementById('onboarding-country-name');
+    if (!flagEl) return;
+    const code = getUserCountry();
+    flagEl.textContent = COUNTRY_FLAGS[code] || '🌐';
+    nameEl.textContent = COUNTRY_NAMES[code] || '';
+}
+
+function nextOnboardingStep() {
+    const key = ONBOARDING_STEPS[onboardingStep];
+    if (key === 'phone') {
+        onboardingPendingPhone = document.getElementById('onboarding-phone-input').value.trim() || null;
+    } else if (key === 'goal') {
+        onboardingPendingGoalTitle = document.getElementById('onboarding-goal-input').value.trim() || null;
+    }
+    if (onboardingStep < ONBOARDING_STEPS.length - 1) {
+        onboardingStep++;
+        renderOnboardingStep();
+    }
+}
+
+function skipOnboarding() {
+    finishOnboarding(false);
+}
+
+async function finishOnboarding(startTour) {
+    closeModal('modal-onboarding');
+    const user = onboardingUser;
+    if (supabaseClient && user) {
+        const updates = { onboarding_completed: true };
+        if (onboardingPendingPhone) updates.phone = onboardingPendingPhone;
+        await supabaseClient.from('user_premium').update(updates).eq('user_id', user.id);
+        if (onboardingPendingGoalTitle) {
+            await supabaseClient.from('vision_goals').insert({ title: onboardingPendingGoalTitle, category: 'personal', user_id: user.id });
+        }
+    }
+    if (startTour) openAppTour(false, () => initAppAfterAuth(user));
+    else initAppAfterAuth(user);
+}
+
+// --- סיור קצר באפליקציה: אותו מנגנון-שלבים גנרי בדיוק כמו אשף ההרשמה
+// למעלה, נגיש גם מסוף האשף ("כן, בואי נראה!") וגם מההגדרות (תמיכה ומידע
+// > סיור באפליקציה) לצפייה חוזרת בכל עת - fromSettings קובע אם לקרוא ל-
+// onFinish בסיום (רק בהקשר-הרשמה, לא כשנפתח מההגדרות של אפליקציה שכבר
+// טעונה) ---
+let tourStep = 0;
+let tourOnFinish = null;
+const TOUR_STEPS = ['notes', 'calendar', 'nutrition', 'finance', 'sport', 'vision', 'done'];
+const TOUR_STEP_CONTENT = {
+    notes: { icon: '📝', titleKey: 'tour_notes_title', subtitleKey: 'tour_notes_subtitle' },
+    calendar: { icon: '📅', titleKey: 'tour_calendar_title', subtitleKey: 'tour_calendar_subtitle' },
+    nutrition: { icon: '🍎', titleKey: 'tour_nutrition_title', subtitleKey: 'tour_nutrition_subtitle' },
+    finance: { icon: '💰', titleKey: 'tour_finance_title', subtitleKey: 'tour_finance_subtitle' },
+    sport: { icon: '🏋️', titleKey: 'tour_sport_title', subtitleKey: 'tour_sport_subtitle' },
+    vision: { icon: '🎯', titleKey: 'tour_vision_title', subtitleKey: 'tour_vision_subtitle' },
+};
+
+function openAppTour(fromSettings, onFinish) {
+    tourStep = 0;
+    tourOnFinish = fromSettings ? null : (onFinish || null);
+    renderTourStep();
+    openModal('modal-app-tour');
+}
+
+function renderTourStep() {
+    const key = TOUR_STEPS[tourStep];
+    const body = document.getElementById('tour-step-body');
+    const nextBtn = document.getElementById('btn-tour-next');
+    renderOnboardingDots('tour-dots', TOUR_STEPS.length, tourStep);
+    if (key === 'done') {
+        body.innerHTML = `
+            <div class="onboarding-icon">🎉</div>
+            <h2 class="onboarding-title">${t('tour_done_title')}</h2>
+            <p class="onboarding-subtitle">${t('tour_done_subtitle')}</p>
+        `;
+        nextBtn.textContent = t('tour_done_btn');
+    } else {
+        const c = TOUR_STEP_CONTENT[key];
+        body.innerHTML = `
+            <div class="onboarding-icon">${c.icon}</div>
+            <h2 class="onboarding-title">${t(c.titleKey)}</h2>
+            <p class="onboarding-subtitle">${t(c.subtitleKey)}</p>
+        `;
+        nextBtn.textContent = t('onboarding_next_btn');
+    }
+}
+
+function nextTourStep() {
+    if (tourStep < TOUR_STEPS.length - 1) { tourStep++; renderTourStep(); return; }
+    closeAppTour();
+}
+
+function closeAppTour() {
+    closeModal('modal-app-tour');
+    if (tourOnFinish) { const fn = tourOnFinish; tourOnFinish = null; fn(); }
 }
 
 async function initAppAfterAuth(user) {
@@ -6502,6 +6691,13 @@ function renderCountryPickerList(filter) {
 function selectCountryFromPicker(code) {
     setUserCountry(code);
     closeModal('modal-country-picker');
+    // openModal (שקורא לו openCountryPicker) סוגר כל מודל אחר פתוח, כולל
+    // אשף ההרשמה אם המדינה נבחרה מתוכו - פותחים אותו מחדש עם התצוגה
+    // המעודכנת, כדי שהאשף לא "ייעלם" באמצע
+    if (onboardingUser && ONBOARDING_STEPS[onboardingStep] === 'country') {
+        refreshOnboardingCountryDisplay();
+        openModal('modal-onboarding');
+    }
 }
 
 function applyColorTheme(themeName) {
@@ -10809,9 +11005,13 @@ const FOOD_CALORIE_DB = [
     // שני סדרי מילים אפשריים - "פיתה ביס כוסמין" וגם "פיתה כוסמין ביס" (סוג-
     // הדגן יכול לבוא לפני או אחרי "ביס"/"קטנה"/"מיני") - לפי דיווח מפורש על
     // "פיתה כוסמין ביס" שנפל לגרסה הגדולה (80 גרם במקום 35, כפול המשקל)
-    { name: "פיתה ביס כוסמין", re: /פיתה (ביס|קטנה|מיני) כוסמין( מלא)?|פיתה כוסמין (ביס|קטנה|מיני)( מלא)?/i, kcal100g: 225, unitGrams: 35 },
-    { name: "פיתה ביס חיטה מלאה", re: /פיתה (ביס|קטנה|מיני) (חיטה מלאה|מקמח מלא)|פיתה (חיטה מלאה|מקמח מלא) (ביס|קטנה|מיני)/i, kcal100g: 220, unitGrams: 35 },
-    { name: "פיתה ביס דגנים", re: /פיתה (ביס|קטנה|מיני) דגנים|פיתה דגנים (ביס|קטנה|מיני)/i, kcal100g: 235, unitGrams: 35 },
+    // תרגום אנגלי היה חסר לגמרי לשלוש הרשומות האלה (רק "gluten-free"/"light"
+    // היו מכוסות) - לפי דיווח מפורש: "2 mini spelt pitas" חושב לפי הערך הגדול
+    // (unitGrams 90 מהרשומה הכללית "פיתה"/"pita" בהמשך) כי "mini pita" סתם
+    // (בלי "spelt") לא תפס את "mini spelt pita" - פער של פי 2.5 במשקל
+    { name: "פיתה ביס כוסמין", re: /פיתה (ביס|קטנה|מיני) כוסמין( מלא)?|פיתה כוסמין (ביס|קטנה|מיני)( מלא)?|mini spelt pita|spelt mini pita/i, kcal100g: 225, unitGrams: 35 },
+    { name: "פיתה ביס חיטה מלאה", re: /פיתה (ביס|קטנה|מיני) (חיטה מלאה|מקמח מלא)|פיתה (חיטה מלאה|מקמח מלא) (ביס|קטנה|מיני)|mini whole.?wheat pita|whole.?wheat mini pita/i, kcal100g: 220, unitGrams: 35 },
+    { name: "פיתה ביס דגנים", re: /פיתה (ביס|קטנה|מיני) דגנים|פיתה דגנים (ביס|קטנה|מיני)|mini (grain|multigrain) pita|(grain|multigrain) mini pita/i, kcal100g: 235, unitGrams: 35 },
     // "ביס" כללי (לבנה/לא מזוהה) - אחרי כל גרסאות הדגן הספציפיות, כדי שהן
     // ייתפסו קודם. כולל גם ניסוחים בסדר מילים הפוך ("מיני פיתה"/"פיתת מיני")
     { name: "פיתה ביס", re: /פיתה (ביס|קטנה)( לבנה)?|מיני פיתה|פיתת מיני|mini pita|small pita/i, kcal100g: 245, unitGrams: 35 },
@@ -11149,10 +11349,16 @@ function parseQuantityCount(line) {
     // (^|[^א-ת])...(?:$|[^א-ת]) במקום \b סביב המילה העברית - \b לא עובד על
     // עברית ב-JS (אותיות עבריות אינן "תו מילה"/\w), אז \bחצי\b לא היה תופס
     // כלום בפועל וחצי בננה חושב כבננה שלמה. \b נשאר על הגרסה האנגלית, שם זה תקין
+    // תווי שבר-יוניקוד בודדים (½¼¾⅓⅔) - נוספו לפי דיווח מפורש: "½ Baked
+    // Potato Patty" חושב כיחידה שלמה (₪80-90 במקום ~49) כי אף אחד מהתבניות
+    // הקודמות (מילה/1\/2) לא תופס תו יחיד כזה - קלט לגיטימי, מקלדות רבות
+    // (כולל iOS) מציעות את התו הזה ישירות בלי שהמשתמשת "בחרה" בכוונה בפורמט הזה
     const fractionWords = [
-        { re: /(^|[^א-ת])חצי(?:$|[^א-ת])|\bhalf\b|1\s*\/\s*2/i, value: 0.5 },
-        { re: /(^|[^א-ת])רבע(?:$|[^א-ת])|\bquarter\b|1\s*\/\s*4/i, value: 0.25 },
-        { re: /(^|[^א-ת])שליש(?:$|[^א-ת])|\bthird\b|1\s*\/\s*3/i, value: 1 / 3 },
+        { re: /(^|[^א-ת])חצי(?:$|[^א-ת])|\bhalf\b|1\s*\/\s*2|½/i, value: 0.5 },
+        { re: /(^|[^א-ת])רבע(?:$|[^א-ת])|\bquarter\b|1\s*\/\s*4|¼/i, value: 0.25 },
+        { re: /(^|[^א-ת])שליש(?:$|[^א-ת])|\bthird\b|1\s*\/\s*3|⅓/i, value: 1 / 3 },
+        { re: /¾/, value: 0.75 },
+        { re: /⅔/, value: 2 / 3 },
     ];
     for (const f of fractionWords) {
         if (f.re.test(line)) return f.value;
