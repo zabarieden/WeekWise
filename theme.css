@@ -3096,7 +3096,12 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     pointer-events: none;
 }
 .study-task-item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 2px; }
-.study-task-item .center-list-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+/* display:block כדי לבטל את display:-webkit-box + -webkit-line-clamp:3 של
+   הכלל הכללי (.center-list-item-text) - בלעדיו הדפדפן ניסה בכל זאת לעטוף
+   עד 3 שורות בתוך span שגובהו לא מוגבל, למרות ה-white-space:nowrap, וזה
+   גלש מחוץ לגובה הקבוע (32px) של .study-task-item וכיסה את הפריט הבא -
+   דווח כ"זה עולה עליו" */
+.study-task-item .center-list-item-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 /* לחיצה על טקסט ארוך (שנחתך בשלוש נקודות) מרחיבה את השורה במקום - height:auto
    ו-align-items:flex-start כדי שהצ'קבוקס/כפתורים יישארו למעלה כשהטקסט גולש
    לכמה שורות, במקום להתמרכז אנכית מול טקסט ארוך */
