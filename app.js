@@ -1651,17 +1651,20 @@ function applyDailyFocusIconState() {
     badge.classList.toggle('daily-focus-badge-dim', dailyFocusState === 'dismissed');
 }
 
-// "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6), בעברית בלבד (תוכן אישי/
-// מנוסח, לא מחרוזת ממשק - לא עובר דרך i18n.js כמו שאר האפליקציה) - לפי בקשה
-// מפורשת, כולל התוכן המדויק שנשלח
+// "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6) - עברו למפתחות i18n (היו
+// בעברית בלבד עד עכשיו, במכוון, לפי בקשה מפורשת קודמת: "תוכן אישי/מנוסח,
+// לא מחרוזת ממשק" - שונה לפי בקשה מפורשת נוספת שרצתה שגם התוכן הזה יתאים
+// לשפה הנבחרת ("כל שפה בשפה שלו"), אחרי שדווח שהוא נשאר בעברית גם באנגלית.
+// המערך מחזיק עכשיו *מפתחות* (daily_focus_c<קטגוריה>_d<יום-בסבב>), לא את
+// הטקסט עצמו - renderDailyFocusTags קוראת ל-t() על כל מפתח
 const DAILY_FOCUS_TAG_BANK = [
-    ["לשמור על המרחב השקט שלי מול העומס מסביב", "להציב גבולות ברורים באהבה ובלי רגשות אשמה", "להישאר בעוגן שלי גם כשמסביב יש סערה", "לשמור על השלווה והאנרגיה שלי כעדיפות עליונה", "לא לקחת על עצמי רגשות ומצבי רוח של אחרים", "לא לאפשר למילים של אחרים לערער את הערך שלי"],
-    ["להקשיב למה שהגוף והנפש שלי צריכים", "ליהנות מהדברים הקטנים בדרך", "להאט ולהיות בקשב נקי לעצמי", "לתת לעצמי מקום לנשום באמצע העשייה", "להרגיש בבית ובשקט בתוך עצמי", "להתמקד במה שקורה עכשיו, בלי לרוץ קדימה"],
-    ["לשמור על דיבור מקדם, סבלני ומבין", "לא לקחת שום דבר באופן אישי", "לא להניח הנחות – פשוט לשאול או לשחרר", "לסמוך על הקצב שלי ועל הדרך", "לשחרר את השלמות ולבחור בהתקדמות", "להיות בסבלנות כלפי התהליך שלי"],
-    ["לסיים את היום בתחושת גאווה וסיפוק", "לראות את ההתקדמות שלי, גם בצעדים קטנים", "להתמקד במשימה אחת בכל פעם", "לעשות סדר במשימות ולפעול ברוגע", "לקבל את עצמי בדיוק כמו שאני היום", "לדעת מתי לפעול ומתי להניח"],
-    ["להביא חיוך וקלילות לכל מה שאעשה", "לפתוח את היום באנרגיה טובה ומחודשת", "לתת לעצמי יום אחד רגוע, בלי ציפיות מוגזמות", "להכניס שמחה פשוטה לתוך השגרה", "לפתוח את הלב להפתעות טובות היום", "להתחיל את היום בהודיה ובחיוך"],
-    ["להקשיב באמת ולא רק לחכות לענות", "לזכור שכל אחד עובר משהו שלא רואים", "להפיץ אנרגיה טובה ומקרבת סביבי", "לשמור על פתיחות וכבוד בתקשורת שלי", "לראות את הטוב באנשים שמסביבי", "לתת מילה טובה למי שצריך היום"],
-    ["לזכור את מה שיש ולא רק את מה שחסר", "לשחרר את מה שלא בשליטתי", "להעריך את הלמידה גם כשדברים לא מתוכננים", "לעצור לרגע ולהגיד תודה על מה שיש", "לבטוח בעצמי וביכולת שלי להתמודד", "להחזיר לעצמי פרופורציה בריאה על הדברים"],
+    ['daily_focus_c1_d0', 'daily_focus_c1_d1', 'daily_focus_c1_d2', 'daily_focus_c1_d3', 'daily_focus_c1_d4', 'daily_focus_c1_d5'],
+    ['daily_focus_c2_d0', 'daily_focus_c2_d1', 'daily_focus_c2_d2', 'daily_focus_c2_d3', 'daily_focus_c2_d4', 'daily_focus_c2_d5'],
+    ['daily_focus_c3_d0', 'daily_focus_c3_d1', 'daily_focus_c3_d2', 'daily_focus_c3_d3', 'daily_focus_c3_d4', 'daily_focus_c3_d5'],
+    ['daily_focus_c4_d0', 'daily_focus_c4_d1', 'daily_focus_c4_d2', 'daily_focus_c4_d3', 'daily_focus_c4_d4', 'daily_focus_c4_d5'],
+    ['daily_focus_c5_d0', 'daily_focus_c5_d1', 'daily_focus_c5_d2', 'daily_focus_c5_d3', 'daily_focus_c5_d4', 'daily_focus_c5_d5'],
+    ['daily_focus_c6_d0', 'daily_focus_c6_d1', 'daily_focus_c6_d2', 'daily_focus_c6_d3', 'daily_focus_c6_d4', 'daily_focus_c6_d5'],
+    ['daily_focus_c7_d0', 'daily_focus_c7_d1', 'daily_focus_c7_d2', 'daily_focus_c7_d3', 'daily_focus_c7_d4', 'daily_focus_c7_d5'],
 ];
 // לא רנדומלי - סבב קבוע לפי אינדקס-יום: יום 1 = משפט #1 מכל קטגוריה, יום 2 =
 // משפט #2 וכו', חוזר כל 6 ימים - לפי בקשה מפורשת ("את הדוגמא הראשונה מכל
@@ -1685,7 +1688,7 @@ function renderDailyFocusTags() {
     selectedDailyFocusTags = [];
     const idx = getDailyFocusRotationIndex();
     DAILY_FOCUS_TAG_BANK.forEach(category => {
-        const text = category[idx];
+        const text = t(category[idx]);
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'daily-focus-tag-chip';
@@ -1767,10 +1770,11 @@ async function dismissDailyFocusModal() {
     const bubble = document.getElementById('daily-focus-bubble');
     if (bubble) bubble.classList.add('hidden');
     if (dailyFocusState === 'unseen' && isPremiumUser && supabaseClient && currentUserId) {
-        await supabaseClient.from('calendar_events').insert({
+        const { error } = await supabaseClient.from('calendar_events').insert({
             username: currentUsername, user_id: currentUserId, event_title: 'daily_focus_dismissed',
             event_date: getLocalDateString(), source: 'daily_focus_dismissed',
         });
+        if (error) console.error('daily_focus_dismissed insert failed:', error.message);
     }
     if (dailyFocusState !== 'answered') dailyFocusState = 'dismissed';
     applyDailyFocusIconState();
@@ -1791,7 +1795,8 @@ async function saveDailyFocus() {
         username: currentUsername, user_id: currentUserId, event_title: text,
         event_date: todayStr, source: 'daily_focus',
     }));
-    await supabaseClient.from('calendar_events').insert(rows);
+    const { error } = await supabaseClient.from('calendar_events').insert(rows);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     markDailyFocusPromptShown();
     applyDailyFocusIconState();
     const bubble = document.getElementById('daily-focus-bubble');
@@ -5819,12 +5824,12 @@ async function exportUserDataReport() {
     const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
     const rangeLabel = isAllTime ? '' : `<p class="sub">${escapeHtmlForReport(t('data_report_period_label'))} ${escapeHtmlForReport(formatMonthLabel(selectedMonthKey))}</p>`;
     const bodyHtml = `
-        <div class="header-banner"><h1>Obeko</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>${rangeLabel}</div>
+        <div class="header-banner"><h1>NOT10.ai</h1><p class="sub">${escapeHtmlForReport(t('data_report_generated_on'))} ${new Date().toLocaleDateString()}</p>${rangeLabel}</div>
         ${sectionsHtml}
     `;
     const printWindow = window.open('', '_blank');
     if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
-    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>Obeko - ${escapeHtmlForReport(t('data_report_title'))}</title>
+    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>NOT10.ai - ${escapeHtmlForReport(t('data_report_title'))}</title>
 <style>
     body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; padding: 32px; color: #2b2438; background: #fff; }
     .header-banner { text-align: center; margin-bottom: 30px; }
@@ -5876,7 +5881,7 @@ function shareViaWhatsapp() {
 
 function shareViaEmail() {
     const body = pendingShareUrl ? `${pendingShareText}\n\n${pendingShareUrl}` : pendingShareText;
-    window.location.href = `mailto:?subject=${encodeURIComponent('Obeko')}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent('NOT10.ai')}&body=${encodeURIComponent(body)}`;
     closeModal('modal-share-picker');
 }
 

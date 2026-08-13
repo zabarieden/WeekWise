@@ -3104,7 +3104,8 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .study-task-item.expanded .center-list-item-text { overflow: visible; text-overflow: clip; white-space: normal; }
 /* כפתור-כניסה שקט בתחתית מגירת "לימודים" ל"הפרויקטים שלי" - גבול מקווקו כדי
    שיהיה ברור שזו הזמנה לתכונה נפרדת, לא עוד שורה ברשימה שמעליו */
-.study-drawer-footer-link { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; padding: 10px 12px; background: transparent; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; }
+.study-drawer-footer-link { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; padding: 10px 12px; background: transparent; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, color 0.2s; }
+.study-drawer-footer-link:hover { border-color: var(--accent-pink-text); border-style: solid; color: var(--text-primary); box-shadow: 0 0 14px var(--tile-glow-1, rgba(255, 0, 127, 0.5)), 0 0 22px var(--tile-glow-2, rgba(168, 85, 247, 0.3)); }
 .study-drawer-footer-link:active { transform: scale(0.98); }
 .study-drawer-footer-link-icon { font-size: 1rem; }
 /* כרטיסי פרויקט/מחברה - רשימת-תיקיות רגילה, לא דף-מחברת (זה רק לתוכן בפועל
@@ -4591,7 +4592,26 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* היה input חד-שורתי, שהפך פתק ארוך לבלתי-ניתן-לעריכה בפועל (אין דרך
    לראות/לגלול בתוכו) - עכשיו טקסטאריה עם כמה שורות גובה וגלילה/שינוי-גודל
    פנימיים משלה, בלי לגעת ב-JS בכלל (textarea.value עובד זהה ל-input.value) */
-#center-item-input, #study-item-input { width: 100%; box-sizing: border-box; font-family: inherit; resize: vertical; }
+/* לפני זה לא היה שום עיצוב מפורש לטקסטאריות האלה - הן הוצגו בעיצוב הדפדפן
+   ברירת-המחדל (color-scheme של הדפדפן/מערכת, לא של האפליקציה), מה שגרם
+   לתיבה אפורה כהה על רקע לבן במצב בהיר ("לשנות את האפור הזה במצב הבהיר") */
+#center-item-input, #study-item-input, #project-item-input, #notebook-item-input, #contact-us-message {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+    background-color: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 12px;
+    font-size: 0.95rem;
+    outline: none;
+}
+#center-item-input:focus, #study-item-input:focus, #project-item-input:focus, #notebook-item-input:focus, #contact-us-message:focus {
+    border-color: var(--accent-pink);
+    box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18);
+}
 #glance-edit-task-title-input, #glance-edit-task-time-input { width: 100%; box-sizing: border-box; }
 #water-daily-goal-input, #calorie-daily-goal-input, #protein-daily-goal-input { width: 100%; box-sizing: border-box; }
 /* שדה "איזה ספורט?" חי מחוץ ל-.preset-manager-grid (לא חלק מהרשת, כי הוא

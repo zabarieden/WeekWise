@@ -67,10 +67,9 @@ blocks or delays the actual feedback from reaching the inbox.
 
 - **Sender address**: emails are sent from Resend's shared `onboarding@resend.dev`
   sender since no custom domain is verified yet on the Resend account. This works fine
-  for delivery, it just won't show "Obeko" as the sending domain in the recipient's
-  email client - once a custom domain (e.g. `obeko.app`) is purchased and verified in
-  Resend, switch the `from` address in `index.ts` to something like
-  `Obeko Support <support@obeko.app>`.
+  for delivery, it just won't show "NOT10.ai" as the sending domain in the recipient's
+  email client - once `not10.ai` (already purchased) is verified in Resend, switch the
+  `from` address in `index.ts` to something like `NOT10.ai Support <support@not10.ai>`.
 - **Reply-To**: each email sets `reply_to` to the submitting user's own email, so
   replying from Gmail goes straight back to them even though the `from` address is
   Resend's shared one.

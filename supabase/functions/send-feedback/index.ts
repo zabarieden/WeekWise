@@ -129,10 +129,10 @@ Deno.serve(async (req) => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    from: "Obeko Feedback <onboarding@resend.dev>",
+                    from: "NOT10.ai Feedback <onboarding@resend.dev>",
                     to: [SUPPORT_EMAIL],
                     reply_to: userEmail || undefined,
-                    subject: `[Obeko] ${categoryLabel}`,
+                    subject: `[NOT10.ai] ${categoryLabel}`,
                     html:
                         `<p><b>From:</b> ${escapeHtml(userEmail || "unknown")}</p>` +
                         `<p><b>Category:</b> ${escapeHtml(categoryLabel)}</p>` +
