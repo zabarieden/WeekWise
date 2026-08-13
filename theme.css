@@ -4640,22 +4640,19 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-copper { background: linear-gradient(135deg, #d97706, #92400e); }
 .theme-swatch-navy { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
 .theme-swatch-lock { position: absolute; bottom: -4px; inset-inline-end: -4px; font-size: 0.7rem; background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
-/* "ערכות נושא מיוחדות" - קבוצה נפרדת מתחת לערכות הצבע הרגילות, לפי בקשה
-   מפורשת ("לפי קטגוריות שלא יהיה מבולגן"). הוחלף מ-accordion (10 שורות
-   מלאות מתקפלות שכל אחת עדיין תופסת שורה גם סגורה - "תופס מלא מקום") ל-
-   שורת צ'יפים קומפקטית שעוטפת (flex-wrap) + כרטיסיית-גריד אחת בכל פעם
-   (רק הקטגוריה הפעילה מוצגת, לא כמה accordions פתוחים בו-זמנית) -
-   selectThemeCategory() ב-app.js */
-.theme-category-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 8px 0; }
-.theme-category-chip {
-    padding: 6px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap;
-    background: var(--bg-row); border: 1px solid var(--border-color);
-    font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
-    text-transform: uppercase; letter-spacing: 0.3px;
+/* "ערכות נושא מיוחדות" - היה מחולק ל-10 קטגוריות עם שורת צ'יפים לניווט
+   ביניהן + כרטיסיית-גריד אחת מוצגת בכל פעם - הוחלף בגריד רציף אחד עם קו-
+   מפריד עדין (לא accordion, לא צ'יפים) לפי בקשה מפורשת ("בלי יותר מידי
+   כרטיסיות... בשורה ביחד"). קו דק משני צדי התווית ("── ✨ ערכות מיוחדות ──")
+   כדי להבדיל בעדינות מהערכות הרגילות מעליו, בלי חלוקה כבדה */
+.theme-special-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 14px 0 10px; color: var(--text-secondary);
+    font-size: 0.78rem; font-weight: 700;
 }
-.theme-category-chip.active { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
-.theme-cat-grid { display: none; margin-bottom: 12px; }
-.theme-cat-grid.active { display: flex; }
+.theme-special-divider::before, .theme-special-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--border-color);
+}
 /* תצוגה מקדימה חיה: כל אריח מציג את דוגמת הרקע האמיתית של הערכה (לא רק
    גרדיאנט צבעים) - האריח עצמו נושא data-color-theme, שבזכות הכללת ה-
    selector-ים למעלה ([data-color-theme="X"] בלי דרישת תג html) גם מזין

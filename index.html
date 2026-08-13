@@ -32,7 +32,7 @@
     <meta name="apple-mobile-web-app-title" content="Obeko">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=333">
+    <link rel="stylesheet" href="theme.css?v=334">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1778,24 +1778,13 @@
                     </div>
 
                     <!-- ערכות נושא מיוחדות - קונספטואליות (לא רק שם-צבע, ר' .home-theme-pattern
-                         ב-theme.css לדוגמת-הרקע הייחודית של כל אחת), מקובצות לפי קטגוריה.
-                         שורת צ'יפים קומפקטית (לא accordion - "תופס מלא מקום" בגרסה הקודמת) +
-                         כרטיסיית-גריד אחת מוצגת בכל פעם (selectThemeCategory ב-app.js). כל
-                         אריח הוא .theme-preview-tile עם data-color-theme משלו - מציג את דוגמת
-                         הרקע האמיתית של הערכה, לא רק גרדיאנט צבעים ("תצוגה מקדימה מאוד חשוב") -->
-                    <div class="theme-category-chips">
-                        <button type="button" class="theme-category-chip" data-cat="toys" onclick="selectThemeCategory('toys')" data-i18n="theme_category_toys">Toys &amp; Games</button>
-                        <button type="button" class="theme-category-chip" data-cat="design" onclick="selectThemeCategory('design')" data-i18n="theme_category_design">Architecture &amp; Design</button>
-                        <button type="button" class="theme-category-chip" data-cat="space" onclick="selectThemeCategory('space')" data-i18n="theme_category_space">Space &amp; Astronomy</button>
-                        <button type="button" class="theme-category-chip" data-cat="retro" onclick="selectThemeCategory('retro')" data-i18n="theme_category_retro">Retro &amp; Digital</button>
-                        <button type="button" class="theme-category-chip" data-cat="finance" onclick="selectThemeCategory('finance')" data-i18n="theme_category_finance">Finance &amp; Markets</button>
-                        <button type="button" class="theme-category-chip" data-cat="industrial" onclick="selectThemeCategory('industrial')" data-i18n="theme_category_industrial">Industrial &amp; Vintage</button>
-                        <button type="button" class="theme-category-chip" data-cat="art" onclick="selectThemeCategory('art')" data-i18n="theme_category_art">Art &amp; Illustration</button>
-                        <button type="button" class="theme-category-chip" data-cat="nature" onclick="selectThemeCategory('nature')" data-i18n="theme_category_nature">Science &amp; Nature</button>
-                        <button type="button" class="theme-category-chip" data-cat="kids" onclick="selectThemeCategory('kids')" data-i18n="theme_category_kids">Kids' Art</button>
-                        <button type="button" class="theme-category-chip" data-cat="transport" onclick="selectThemeCategory('transport')" data-i18n="theme_category_transport">Moving Things</button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-toys">
+                         ב-theme.css לדוגמת-הרקע הייחודית של כל אחת). היה מקובץ ל-10 קטגוריות עם
+                         שורת צ'יפים לניווט ביניהן - הוחלף בגריד אחד רציף עם קו-מפריד עדין וכותרת
+                         קטנה, לפי בקשה מפורשת ("בלי יותר מידי כרטיסיות... בשורה ביחד"). כל אריח
+                         הוא .theme-preview-tile עם data-color-theme משלו - מציג את דוגמת הרקע
+                         האמיתית של הערכה, לא רק גרדיאנט צבעים -->
+                    <div class="theme-special-divider" data-i18n="theme_special_section_label">✨ Special Themes</div>
+                    <div class="theme-picker-grid">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="lego_bricks" data-color-theme="lego_bricks" onclick="selectColorTheme('lego_bricks')" title="Lego"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="barbie_dream" data-color-theme="barbie_dream" onclick="selectColorTheme('barbie_dream')" title="Barbie"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="teddy_bear" data-color-theme="teddy_bear" onclick="selectColorTheme('teddy_bear')" title="Teddy Bear"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -1808,19 +1797,11 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="silver_sparkle" data-color-theme="silver_sparkle" onclick="selectColorTheme('silver_sparkle')" title="Silver Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="starlight_glam" data-color-theme="starlight_glam" onclick="selectColorTheme('starlight_glam')" title="Starlight Glam"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="diamond_sparkle" data-color-theme="diamond_sparkle" onclick="selectColorTheme('diamond_sparkle')" title="Diamond Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-design">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="blueprint_draft" data-color-theme="blueprint_draft" onclick="selectColorTheme('blueprint_draft')" title="Blueprint"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-space">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="star_map" data-color-theme="star_map" onclick="selectColorTheme('star_map')" title="Star Map"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="aurora_borealis" data-color-theme="aurora_borealis" onclick="selectColorTheme('aurora_borealis')" title="Aurora Borealis"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-retro">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="vaporwave_neon" data-color-theme="vaporwave_neon" onclick="selectColorTheme('vaporwave_neon')" title="Vaporwave Neon"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="pixel_art" data-color-theme="pixel_art" onclick="selectColorTheme('pixel_art')" title="Pixel Art"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-finance">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="stock_market" data-color-theme="stock_market" onclick="selectColorTheme('stock_market')" title="Stock Market"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="neon_trading_chart" data-color-theme="neon_trading_chart" onclick="selectColorTheme('neon_trading_chart')" title="Neon Trading Chart"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="candlestick_bands" data-color-theme="candlestick_bands" onclick="selectColorTheme('candlestick_bands')" title="Candlestick &amp; Bands"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -1828,18 +1809,12 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="bull_run" data-color-theme="bull_run" onclick="selectColorTheme('bull_run')" title="Bull Run"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="bear_crash" data-color-theme="bear_crash" onclick="selectColorTheme('bear_crash')" title="Bear Crash"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="multi_ticker_grid" data-color-theme="multi_ticker_grid" onclick="selectColorTheme('multi_ticker_grid')" title="Multi-Ticker Grid"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-industrial">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="steampunk_brass" data-color-theme="steampunk_brass" onclick="selectColorTheme('steampunk_brass')" title="Steampunk"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="vintage_newspaper" data-color-theme="vintage_newspaper" onclick="selectColorTheme('vintage_newspaper')" title="Vintage Newspaper"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="film_noir" data-color-theme="film_noir" onclick="selectColorTheme('film_noir')" title="Film Noir"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-art">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="pop_art_comics" data-color-theme="pop_art_comics" onclick="selectColorTheme('pop_art_comics')" title="Pop Art &amp; Comics"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="origami_paper" data-color-theme="origami_paper" onclick="selectColorTheme('origami_paper')" title="Origami"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="watercolor_wash" data-color-theme="watercolor_wash" onclick="selectColorTheme('watercolor_wash')" title="Watercolor"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-nature">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="chemistry_lab" data-color-theme="chemistry_lab" onclick="selectColorTheme('chemistry_lab')" title="Chemistry Lab"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="botanical_greenhouse" data-color-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" title="Botanical Greenhouse"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="tropical_leaves" data-color-theme="tropical_leaves" onclick="selectColorTheme('tropical_leaves')" title="Tropical Leaves"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -1849,15 +1824,11 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="ocean_waves" data-color-theme="ocean_waves" onclick="selectColorTheme('ocean_waves')" title="Ocean Waves"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="coral_reef" data-color-theme="coral_reef" onclick="selectColorTheme('coral_reef')" title="Coral Reef"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="cherry_blossom_garden" data-color-theme="cherry_blossom_garden" onclick="selectColorTheme('cherry_blossom_garden')" title="Cherry Blossom Garden"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-kids">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="kids_sky_grass" data-color-theme="kids_sky_grass" onclick="selectColorTheme('kids_sky_grass')" title="Sky &amp; Grass"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="rainbow_balloons" data-color-theme="rainbow_balloons" onclick="selectColorTheme('rainbow_balloons')" title="Rainbow &amp; Balloons"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="underwater_ocean" data-color-theme="underwater_ocean" onclick="selectColorTheme('underwater_ocean')" title="Underwater Ocean"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="dino_jungle" data-color-theme="dino_jungle" onclick="selectColorTheme('dino_jungle')" title="Dino Jungle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="space_rocket" data-color-theme="space_rocket" onclick="selectColorTheme('space_rocket')" title="Space Rocket"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                    </div>
-                    <div class="theme-picker-grid theme-cat-grid" id="theme-cat-grid-transport">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="race_car" data-color-theme="race_car" onclick="selectColorTheme('race_car')" title="Race Car"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="train_journey" data-color-theme="train_journey" onclick="selectColorTheme('train_journey')" title="Train Journey"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="airplane_sky" data-color-theme="airplane_sky" onclick="selectColorTheme('airplane_sky')" title="Airplane Sky"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -3031,7 +3002,7 @@
 
     </div>
 
-    <script src="i18n.js?v=269"></script>
-    <script src="app.js?v=374"></script>
+    <script src="i18n.js?v=270"></script>
+    <script src="app.js?v=375"></script>
 </body>
 </html>

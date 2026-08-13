@@ -6474,12 +6474,7 @@ function applyColorTheme(themeName) {
     if (!themeName || themeName === 'default') document.documentElement.removeAttribute('data-color-theme');
     else document.documentElement.setAttribute('data-color-theme', themeName);
     document.querySelectorAll('.theme-swatch').forEach(el => {
-        const isSelected = el.getAttribute('data-theme') === (themeName || 'default');
-        el.classList.toggle('selected', isSelected);
-        if (isSelected) {
-            const grid = el.closest('.theme-cat-grid');
-            if (grid) selectThemeCategory(grid.id.replace('theme-cat-grid-', ''));
-        }
+        el.classList.toggle('selected', el.getAttribute('data-theme') === (themeName || 'default'));
     });
 }
 
@@ -6495,15 +6490,6 @@ function updateHomeSkyDayNight() {
     const isDay = hour >= 6 && hour < 18;
     strip.classList.toggle('sky-day', isDay);
     strip.classList.toggle('sky-night', !isDay);
-}
-
-function selectThemeCategory(catId) {
-    document.querySelectorAll('.theme-category-chip').forEach(chip => {
-        chip.classList.toggle('active', chip.getAttribute('data-cat') === catId);
-    });
-    document.querySelectorAll('.theme-cat-grid').forEach(grid => {
-        grid.classList.toggle('active', grid.id === `theme-cat-grid-${catId}`);
-    });
 }
 
 async function selectColorTheme(themeName) {
