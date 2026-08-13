@@ -1633,7 +1633,12 @@ async function checkDailyFocusPrompt() {
     }
     const todayStr = getLocalDateString();
     lastCheckedDailyFocusDate = todayStr;
-    const { data } = await supabaseClient.from('calendar_events').select('source').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    const { data, error } = await supabaseClient.from('calendar_events').select('source').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    // לוג אבחוני זמני - דווח שהתג "1" חוזר לפעמים באותו יום למרות שנענה בפועל
+    // (בחרו תגיות ולחצו הוספה), בלי הודעת שגיאה גלויה. לא נמצא הסבר לוגי דרך
+    // קריאת הקוד בלבד (upsert/RLS/אזור-זמן/service-worker כולם נבדקו ונשללו) -
+    // הלוג הזה יאפשר לראות מה בפועל חוזר מהשאילתה בפעם הבאה שזה קורה
+    console.log('[daily-focus-check]', { todayStr, currentUserId, error, data });
     if (data && data.some(row => row.source === 'daily_focus')) dailyFocusState = 'answered';
     else if (data && data.some(row => row.source === 'daily_focus_dismissed')) dailyFocusState = 'dismissed';
     else dailyFocusState = 'unseen';
@@ -1796,6 +1801,7 @@ async function saveDailyFocus() {
         event_date: todayStr, source: 'daily_focus',
     }));
     const { error } = await supabaseClient.from('calendar_events').insert(rows);
+    console.log('[daily-focus-save]', { rows, error });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     markDailyFocusPromptShown();
     applyDailyFocusIconState();
