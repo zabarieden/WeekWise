@@ -1617,7 +1617,17 @@ html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
    home-theme-pattern המשותף - לא עבד באמינות בבדיקה בפועל, גם בנייד וגם
    במחשב) - פשוט position:absolute + height קבוע + overflow:hidden, בלי
    שום תלות בתמיכת mask-image בדפדפן - לפי בקשה מפורשת "תחשוב על דרך אחרת" */
-.home-sky-topstrip { position: absolute; top: 0; inset-inline: 0; height: 220px; overflow: hidden; }
+/* --sky-sun-x/--sky-sun-y - נקודת העיגון של השמש (יום בלבד, לא נוגע
+   בכוכבי הלילה שממורכזים כתבנית-אריחים חוזרת ולא בנקודה בודדת) - ברירת
+   המחדל קרובה לכותרת "בוקר טוב", עם דריסה למובייל/דסקטופ למטה, לפי בקשה
+   מפורשת ("השמש קרובה יותר לבוקר טוב"/"במובייל היא מאחורי כפתור התפריט") */
+.home-sky-topstrip { position: absolute; top: 0; inset-inline: 0; height: 220px; overflow: hidden; --sky-sun-x: 82%; --sky-sun-y: 14%; }
+@media (max-width: 480px) {
+    .home-sky-topstrip { --sky-sun-x: 62%; }
+}
+@media (min-width: 1024px) {
+    .home-sky-topstrip { --sky-sun-x: 92%; --sky-sun-y: 10%; }
+}
 html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-night,
 html:not(.light-mode)[data-color-theme="blue_teal"] .home-sky-scene .home-sky-topstrip.sky-night,
 html:not(.light-mode)[data-color-theme="gold_red"] .home-sky-scene .home-sky-topstrip.sky-night,
@@ -1672,26 +1682,26 @@ html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sk
        מגביל את הקרניים האינסופיות-מטבען של conic-gradient לעיגול סביב
        נקודת השמש בלבד - שייך רק ל-.sky-day, לא נוגע בכוכבי הלילה */
     background-image:
-        repeating-conic-gradient(from 0deg at 82% 14%, rgba(232, 192, 125, 0.65) 0deg 2deg, transparent 2deg 30deg),
-        radial-gradient(circle at 82% 14%, #fff6e0 0 4px, #e8c07d 4px 8px, rgba(232, 192, 125, 0.4) 8px 14px, transparent 15px),
-        radial-gradient(2px 2px at calc(82% - 29px) calc(14% - 37px), rgba(255, 246, 224, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at calc(82% - 39px) calc(14% - 23px), rgba(255, 246, 224, 0.85), transparent),
-        radial-gradient(2px 2px at calc(82% + 37px) calc(14% - 1px), rgba(255, 246, 224, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at calc(82% - 33px) calc(14% + 23px), rgba(255, 246, 224, 0.85), transparent),
-        radial-gradient(2px 2px at calc(82% + 15px) calc(14% + 35px), rgba(255, 246, 224, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at calc(82% + 35px) calc(14% - 29px), rgba(255, 246, 224, 0.85), transparent),
-        radial-gradient(2px 2px at calc(82% - 41px) calc(14% + 11px), rgba(255, 246, 224, 0.9), transparent),
-        radial-gradient(1.5px 6px at calc(82% + 7px) calc(14% - 43px), rgba(255, 240, 210, 0.9), transparent),
-        radial-gradient(6px 1.5px at calc(82% + 7px) calc(14% - 43px), rgba(255, 240, 210, 0.9), transparent),
-        radial-gradient(1.2px 5px at calc(82% - 45px) calc(14% - 7px), rgba(255, 240, 210, 0.85), transparent),
-        radial-gradient(5px 1.2px at calc(82% - 45px) calc(14% - 7px), rgba(255, 240, 210, 0.85), transparent),
-        radial-gradient(1.4px 5.5px at calc(82% + 33px) calc(14% + 27px), rgba(255, 240, 210, 0.88), transparent),
-        radial-gradient(5.5px 1.4px at calc(82% + 33px) calc(14% + 27px), rgba(255, 240, 210, 0.88), transparent),
-        radial-gradient(1.1px 4.5px at calc(82% + 31px) calc(14% - 39px), rgba(255, 240, 210, 0.8), transparent),
-        radial-gradient(4.5px 1.1px at calc(82% + 31px) calc(14% - 39px), rgba(255, 240, 210, 0.8), transparent);
+        repeating-conic-gradient(from 0deg at var(--sky-sun-x) var(--sky-sun-y), rgba(232, 192, 125, 0.65) 0deg 2deg, transparent 2deg 30deg),
+        radial-gradient(circle at var(--sky-sun-x) var(--sky-sun-y), #fff6e0 0 4px, #e8c07d 4px 8px, rgba(232, 192, 125, 0.4) 8px 14px, transparent 15px),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) - 29px) calc(var(--sky-sun-y) - 37px), rgba(255, 246, 224, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) - 39px) calc(var(--sky-sun-y) - 23px), rgba(255, 246, 224, 0.85), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) + 37px) calc(var(--sky-sun-y) - 1px), rgba(255, 246, 224, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) - 33px) calc(var(--sky-sun-y) + 23px), rgba(255, 246, 224, 0.85), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) + 15px) calc(var(--sky-sun-y) + 35px), rgba(255, 246, 224, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at calc(var(--sky-sun-x) + 35px) calc(var(--sky-sun-y) - 29px), rgba(255, 246, 224, 0.85), transparent),
+        radial-gradient(2px 2px at calc(var(--sky-sun-x) - 41px) calc(var(--sky-sun-y) + 11px), rgba(255, 246, 224, 0.9), transparent),
+        radial-gradient(1.5px 6px at calc(var(--sky-sun-x) + 7px) calc(var(--sky-sun-y) - 43px), rgba(255, 240, 210, 0.9), transparent),
+        radial-gradient(6px 1.5px at calc(var(--sky-sun-x) + 7px) calc(var(--sky-sun-y) - 43px), rgba(255, 240, 210, 0.9), transparent),
+        radial-gradient(1.2px 5px at calc(var(--sky-sun-x) - 45px) calc(var(--sky-sun-y) - 7px), rgba(255, 240, 210, 0.85), transparent),
+        radial-gradient(5px 1.2px at calc(var(--sky-sun-x) - 45px) calc(var(--sky-sun-y) - 7px), rgba(255, 240, 210, 0.85), transparent),
+        radial-gradient(1.4px 5.5px at calc(var(--sky-sun-x) + 33px) calc(var(--sky-sun-y) + 27px), rgba(255, 240, 210, 0.88), transparent),
+        radial-gradient(5.5px 1.4px at calc(var(--sky-sun-x) + 33px) calc(var(--sky-sun-y) + 27px), rgba(255, 240, 210, 0.88), transparent),
+        radial-gradient(1.1px 4.5px at calc(var(--sky-sun-x) + 31px) calc(var(--sky-sun-y) - 39px), rgba(255, 240, 210, 0.8), transparent),
+        radial-gradient(4.5px 1.1px at calc(var(--sky-sun-x) + 31px) calc(var(--sky-sun-y) - 39px), rgba(255, 240, 210, 0.8), transparent);
     background-repeat: no-repeat;
-    -webkit-mask-image: radial-gradient(circle 52px at 82% 14%, black 55%, transparent 100%);
-    mask-image: radial-gradient(circle 52px at 82% 14%, black 55%, transparent 100%);
+    -webkit-mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
+    mask-image: radial-gradient(circle 52px at var(--sky-sun-x) var(--sky-sun-y), black 55%, transparent 100%);
 }
 html[data-color-theme="star_map"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="star_map"] > .home-theme-pattern {
