@@ -31,21 +31,20 @@ alter table weekly_schedule add column if not exists last_notified_date date;
 
 ## 2. VAPID keys
 
-I generated a real, ready-to-use VAPID key pair for this app (P-256, same format the
-`web-push` library produces) so you don't have to install anything to get one:
+Generate a real VAPID key pair (P-256, same format the `web-push` library produces) with:
 
-```
-VAPID_PUBLIC_KEY=BFSnO1uByNjAM_704-SH7BPRsZGeguMolXHpwAeLISjya09iN5wS4l6UBY-AjBTapVg63kAzOGX6jWoi91DldSo
-VAPID_PRIVATE_KEY=9hT2eqX0UmYb2284Z4V3bgGqpiWZ7iueTWd7N9DoiLg
+```bash
+npx web-push generate-vapid-keys
 ```
 
-The public key is already hard-coded in `app.js` (`VAPID_PUBLIC_KEY` constant) — it's not
+The public key gets hard-coded into `app.js` (`VAPID_PUBLIC_KEY` constant) — it's not
 secret. The private key must **only** live as an Edge Function secret (step 4) — never put
 it in any file in this repo.
 
-If you'd rather generate your own pair instead of using the one above (e.g. for a
-production launch under your own control), run `npx web-push generate-vapid-keys` and
-swap both the constant in `app.js` and the secret in step 4.
+If a VAPID key pair was ever committed to this file in the past, treat it as compromised:
+generate a fresh pair with the command above, update the constant in `app.js`, and update
+the secret in step 4 - a leaked VAPID private key lets someone send fake push notifications
+to this project's subscribers, though it can't access any other data.
 
 ## 3. Deploy the function
 
@@ -59,8 +58,8 @@ supabase functions deploy send-due-reminders
 ## 4. Set the function's secrets
 
 ```bash
-supabase secrets set VAPID_PUBLIC_KEY=BFSnO1uByNjAM_704-SH7BPRsZGeguMolXHpwAeLISjya09iN5wS4l6UBY-AjBTapVg63kAzOGX6jWoi91DldSo
-supabase secrets set VAPID_PRIVATE_KEY=9hT2eqX0UmYb2284Z4V3bgGqpiWZ7iueTWd7N9DoiLg
+supabase secrets set VAPID_PUBLIC_KEY=<your public key>
+supabase secrets set VAPID_PRIVATE_KEY=<your private key>
 supabase secrets set VAPID_CONTACT_EMAIL=mailto:you@yourdomain.com
 ```
 
