@@ -4904,6 +4904,23 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .onboarding-dot.active { background: var(--accent-purple); border-color: var(--accent-purple); width: 20px; border-radius: 4px; }
 .onboarding-tour-offer-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 10px; }
 
+/* טאב מקופל קליל בתוך מסך ההגדרות (לא ה-.card הכבד של מסכי האפליקציה
+   הראשיים) - לבלוקים ארוכים כמו ניהול קטגוריות כספים מותאמות אישית, שאם
+   מוצגים תמיד-פתוחים בולטים/גולשים מול שאר שורות ההגדרות הקצרות - לפי
+   בקשה מפורשת ("טאב סגור כברירת מחדל") */
+.settings-subsection { margin-bottom: 16px; }
+.settings-subsection-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.settings-subsection-header .settings-label { margin-bottom: 0; }
+.settings-subsection-body { display: none; margin-top: 12px; }
+.settings-subsection.expanded .settings-subsection-body { display: block; }
+.settings-subsection.expanded .card-toggle-icon { transform: rotate(180deg); }
+/* תיקון גלישה אופקית: קטגוריות כספים מותאמות-אישית (בועות .ai-brain-tab עם
+   flex:1 שלא עוטף כברירת מחדל) גלשו מחוץ למסך במובייל כשיש הרבה קטגוריות -
+   לפי בקשה מפורשת ("שלא ילך ימינה שמאלה רק למטה למעלה"). flex:0 0 auto
+   מבטל את ה-flex:1 המשותף כדי שכל בועה תישאר בגודל-תוכן ותעטוף לשורה
+   הבאה, במקום להידחס/לגלוש */
+#finance-category-manage-list { flex-wrap: wrap; }
+#finance-category-manage-list .ai-brain-tab { flex: 0 0 auto; }
 .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .settings-toggle-row .settings-label { margin-bottom: 0; }
 /* שורות סדר-הכפתורים-הצפים (עם ידית גרירה) - מפרישים מ-space-between
