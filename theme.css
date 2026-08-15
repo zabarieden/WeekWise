@@ -3733,11 +3733,11 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    טעינה גנרי, לפי בקשה מפורשת ("טעינה אחרת כמו נצנצים שיורדים מתוך המשפט").
    אותו רעיון בדיוק כמו all-done-sparkle/allDoneSparkleFall (ר' startLoadingSparkles
    ב-app.js), רק בתוך אזור קטן ומוגבל מתחת לטקסט, לא על פני כל המסך */
-.loading-sparkles-wrap { position: relative; width: 100%; max-width: 220px; height: 60px; margin: 4px auto 0; overflow: hidden; }
+.loading-sparkles-wrap { position: relative; width: 100%; max-width: 220px; height: 60px; margin: -14px auto 0; overflow: hidden; }
 .loading-sparkles { position: absolute; inset: 0; pointer-events: none; }
 .loading-sparkle {
     position: absolute;
-    top: -18px;
+    top: -4px;
     animation-name: loadingSparkleFall;
     animation-timing-function: ease-in;
     animation-fill-mode: forwards;
