@@ -2822,27 +2822,31 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
    את מיקומו: נעוץ ממש בתחתית המסך (מתחת לדוק כולו), קטן, במרכז אופקית -
    לא בפינה העליונה יחד עם המוח, ולא תופס עמדה בתוך הדוק עצמו, לפי בקשה
    מפורשת ("יותר קטן, ודווקא למטה... הכי הכי למטה שיש") */
-/* פס דק זוהר במקום אייקון מצפן - לפי בקשה מפורשת ("פס דק נקי בלי כלום
-   זוהר כל ערכת נושא בצבע שלה"). התג הריק תופס עדיין שטח-מגע נוח (44px
-   גובה), אבל רק הפס הפנימי הקטן (::after) נראה בפועל */
-/* פס לאורך כל הרוחב (לא רק כדור-גלולה קטן במרכז) - לפי בקשה מפורשת
-   ("קצת מכוער... תעשה פס לאורך הכל, גם מובייל וגם במחשב") */
-.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 26px; transform: translateX(-50%); width: calc(100% - 40px); max-width: 500px; height: 44px; }
-html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
-.daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
+/* "Pulse Dot" - עיגול קטן ומדויק עם הילה פועמת שמזמינה ללחוץ, בפינה
+   ימין-למטה - לפי בקשה מפורשת ("לא אוהבת את הקו... תעיגול קטן ומדויק...
+   אנימציית Pulse עדינה (הילה מתרחבת)... מצד ימין למטה"), במקום הפס
+   המלא-רוחב הקודם */
+.daily-board-fab { top: auto; left: auto; right: 24px; bottom: 30px; transform: none; width: 44px; height: 44px; }
+html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
+.daily-board-fab:active { transform: scale(0.85); }
 /* var(--accent-pink)/var(--accent-purple-light) בלי סיומת -text בכוונה - גרסת
-   ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), מה שגרם לפס
-   הזוהר להיראות כהה/עמום דווקא במצב הבהיר - לפי בקשה מפורשת ("בבהיר אני
-   רוצה שהסרגל... יהיה בהיר"). הגוונים המקוריים נשארים בהירים/זוהרים בשני
-   המצבים כי הם לא תלויי-ניגודיות-טקסט */
+   ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), וזה גרם לנקודה
+   להיראות כהה/עמומה דווקא במצב הבהיר - לפי בקשה קודמת ("בבהיר אני רוצה
+   שזה יהיה בהיר"). הגוונים המקוריים נשארים בהירים/זוהרים בשני המצבים */
 .daily-board-fab::after {
     content: "";
     display: block;
-    width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple-light));
-    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-pink) 70%, transparent), 0 0 18px color-mix(in srgb, var(--accent-purple-light) 50%, transparent);
+    width: 12px;
+    height: 12px;
+    margin: auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple-light));
+    animation: dailyBoardPulse 2.2s ease-out infinite;
+}
+@keyframes dailyBoardPulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 55%, transparent); }
+    70% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--accent-pink) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 0%, transparent); }
 }
 /* תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' isHomeCalorieBadgeOn
    ב-app.js), אפשרות למי שרוצה לראות מספר קלוריות תמידי במסך הבית. יושב
@@ -4177,7 +4181,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .help-faq-question { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-align: start; cursor: pointer; }
 .help-faq-arrow { flex-shrink: 0; color: var(--text-secondary); font-size: 0.7rem; transition: transform 0.2s ease; }
 .help-faq-item.open .help-faq-arrow { transform: rotate(180deg); }
-.help-faq-answer { max-height: 0; overflow: hidden; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; transition: max-height 0.25s ease-out; }
+/* white-space:pre-line - כדי שתשובה ארוכה תוכל להיחלק לכמה פסקאות עם \n\n
+   בטקסט (למשל תשובת "סדר היום" המורחבת) בלי לאבד את הגלישה הרגילה */
+.help-faq-answer { max-height: 0; overflow: hidden; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; white-space: pre-line; transition: max-height 0.25s ease-out; }
 .help-faq-item.open .help-faq-answer { max-height: 400px; padding-bottom: 12px; }
 .note-drag-handle:active { cursor: grabbing; }
 .note-triage-hint { font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px 0; text-align: center; }
