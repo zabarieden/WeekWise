@@ -1480,8 +1480,7 @@ html.light-mode #glance-edit-task-day-select,
 html.light-mode #glance-edit-task-reminder,
 html.light-mode #glance-edit-task-reminder-text,
 html.light-mode #ai-quick-add-input,
-html.light-mode .vision-card-back-add-row input,
-html.light-mode .login-card input {
+html.light-mode .vision-card-back-add-row input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
@@ -2513,10 +2512,15 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .daily-board-delete-tab-btn { color: #f87171; }
 .daily-board-body { flex: 1; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 14px; }
 .daily-board-bucket-section { border-radius: 14px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.06); }
-.daily-board-bucket-morning { background: linear-gradient(135deg, rgba(251,146,60,0.16), rgba(251,146,60,0.04)); }
-.daily-board-bucket-noon { background: linear-gradient(135deg, rgba(74,222,128,0.16), rgba(74,222,128,0.04)); }
-.daily-board-bucket-afternoon { background: linear-gradient(135deg, rgba(96,165,250,0.16), rgba(96,165,250,0.04)); }
-.daily-board-bucket-evening { background: linear-gradient(135deg, rgba(167,139,250,0.16), rgba(167,139,250,0.04)); }
+/* היו 4 גוונים קבועים (כתום/ירוק/כחול/סגול) בלי קשר לערכת הנושא הנבחרת -
+   עכשיו נגזרים משלושת צבעי-המותג של הערכה עצמה (ורוד/סגול/סגול-בהיר, אלה
+   שכן משתנים לפי ערכת נושא) ב-color-mix, כדי שגם 4 הפרקים יזוזו יחד עם
+   הערכה שנבחרה, ועדיין יישארו מובחנים אחד מהשני - לפי בקשה מפורשת ("תשנה
+   צבעים לפי ערכת נושא") */
+.daily-board-bucket-morning { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-pink-text) 20%, transparent), color-mix(in srgb, var(--accent-pink-text) 5%, transparent)); }
+.daily-board-bucket-noon { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple-light-text) 20%, transparent), color-mix(in srgb, var(--accent-purple-light-text) 5%, transparent)); }
+.daily-board-bucket-afternoon { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple-text) 20%, transparent), color-mix(in srgb, var(--accent-purple-text) 5%, transparent)); }
+.daily-board-bucket-evening { background: linear-gradient(135deg, color-mix(in srgb, color-mix(in srgb, var(--accent-purple-text) 50%, var(--accent-pink-text) 50%) 20%, transparent), color-mix(in srgb, color-mix(in srgb, var(--accent-purple-text) 50%, var(--accent-pink-text) 50%) 5%, transparent)); }
 .daily-board-bucket-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); text-shadow: 0 0 10px rgba(255,255,255,0.25); }
 .daily-board-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); }
 .daily-board-item-row:first-of-type { border-top: none; }
@@ -5287,7 +5291,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    וכו') על אף text-align:center, כי זה יצר ניגוד בין כיוון הקונטיינר לכיוון
    התווים בפועל. עכשיו יורש dir מ-html (נקבע דינמית ב-setLanguage) - לפי
    בקשה מפורשת ("שיהיה ככה בכל השפות") */
-.login-card input { display: block; width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; }
+.login-card input { display: block; width: 100%; box-sizing: border-box; background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; }
 .login-card input:focus { border-color: var(--accent-purple); }
 .password-input-wrap { position: relative; margin-bottom: 10px; }
 /* padding-inline-start תואם (לא רק end) - כדי שהריפוד יהיה סימטרי משני
