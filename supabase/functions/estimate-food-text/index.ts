@@ -212,7 +212,12 @@ Deno.serve(async (req) => {
         // זעירה) ולתת הערכה נמוכה משמעותית ממה שבאמת נאכל - נוסף אחרי בקשה
         // מפורשת בעקבות פער שהתגלה בפועל (365 מול כ-610 בגוגל, כשהתיאור
         // כלל "פיתה ביס כוסמין")
-        const breadTermNote = `In Hebrew, the word "ביס" attached to a bread/pita name (e.g. "פיתת ביס", "פיתה ביס", "לחם ביס") is a real bakery product name for a specific smaller/snack-size bread item - it does NOT mean "a bite" or "a nibble" taken out of a regular-size bread. Treat it as one whole small bread item at its typical product size and calorie count (use web_search if you're unsure of the exact size/calories for ${countryName}), not as a tiny fraction of a larger item.`;
+        // הוסר "use web_search if unsure" מכאן בכוונה - זה לא עסק בשם, ואין
+        // צורך אמיתי בחיפוש-רשת בשביל מוצר-מאפייה גנרי. גילינו בפועל (ר'
+        // FOOD_AI_TIMEOUT_MS ב-app.js) שכל חיפוש נוסף שלא הכרחי מגדיל את
+        // הסיכוי שהקריאה כולה תיחתך בגלל תקרת הזמן ותיפול בשקט לגיבוי הגס -
+        // לפי בקשה מפורשת לצמצם זמן תגובה
+        const breadTermNote = `In Hebrew, the word "ביס" attached to a bread/pita name (e.g. "פיתת ביס", "פיתה ביס", "לחם ביס") is a real bakery product name for a specific smaller/snack-size bread item - it does NOT mean "a bite" or "a nibble" taken out of a regular-size bread. Treat it as one whole small bread item at its typical product size and calorie count (based on your own knowledge, no need to search for this specific term), not as a tiny fraction of a larger item.`;
         // הנחיה חדשה שנייה: כשתיאור המנה כולל כמה רכיבים שכל אחד מהם בנפרד
         // עמום באופן-הכנה (לא רק בכמות) - כמו תפוח אדמה (מבושל/מאודה לעומת
         // אפוי/מטוגן בשמן) או יוגורט (רזה/דיאטטי לעומת רגיל/מתוק) - ה-AI נטה
