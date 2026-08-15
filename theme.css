@@ -2821,13 +2821,15 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 /* פס דק זוהר במקום אייקון מצפן - לפי בקשה מפורשת ("פס דק נקי בלי כלום
    זוהר כל ערכת נושא בצבע שלה"). התג הריק תופס עדיין שטח-מגע נוח (44px
    גובה), אבל רק הפס הפנימי הקטן (::after) נראה בפועל */
-.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 26px; transform: translateX(-50%); width: 70px; height: 44px; }
+/* פס לאורך כל הרוחב (לא רק כדור-גלולה קטן במרכז) - לפי בקשה מפורשת
+   ("קצת מכוער... תעשה פס לאורך הכל, גם מובייל וגם במחשב") */
+.daily-board-fab { top: auto; left: 50%; right: auto; bottom: 26px; transform: translateX(-50%); width: calc(100% - 40px); max-width: 500px; height: 44px; }
 html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
 .daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
 .daily-board-fab::after {
     content: "";
     display: block;
-    width: 56px;
+    width: 100%;
     height: 6px;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--accent-pink-text), var(--accent-purple-light-text));
