@@ -226,8 +226,12 @@ Deno.serve(async (req) => {
         // "יוגורט גביע 150 גרם" בלי לציין אופן הכנה/סוג, יחד עם הפריט הקודם -
         // תוצאה שנשארה נמוכה משמעותית גם אחרי התיקון על "ביס" בלבד). זו
         // הרחבה של realismNote (שם העמימות הייתה "ingredient בתוך drink") -
-        // כאן העמימות היא "שיטת-הכנה" של פריט עצמאי, לא תפקידו בתוך פריט אחר
-        const prepMethodNote = `When a food's preparation method or type isn't stated but meaningfully changes its calories (e.g. potato: boiled/steamed vs. roasted/fried with oil; yogurt: plain/low-fat vs. regular/sweetened; rice: plain vs. cooked with oil), do NOT default to the leanest/lowest-calorie version - use the preparation that's actually most common as a home-cooked side dish or everyday product in ${countryName} (e.g. oven-roasted potato wedges with some oil, not steamed plain potato; regular 3% yogurt, not diet 0%, unless the description implies otherwise). This matters most when a meal description lists several such unspecified items together - defaulting to the leanest assumption on each one individually compounds into a large, consistent underestimate for the whole meal, which is exactly the systematic bias this feature must avoid.`;
+        // כאן העמימות היא "שיטת-הכנה" של פריט עצמאי, לא תפקידו בתוך פריט אחר.
+        // רוכך אחרי בדיקה בפועל: הניסוח הראשון ("ניחוש הכי דל אסור, תניחי
+        // הכנה עשירה בשמן") גרם לתוצאה גבוהה מדי בכיוון ההפוך (830 מול 650-
+        // 710 בגוגל, שהניח דווקא תפוח אדמה *בלי* שמן) - הכיוון הנכון הוא
+        // אמצע ריאלי, לא הטיה שיטתית לאף צד, בדיוק כמו ב-realismNote למעלה
+        const prepMethodNote = `When a food's preparation method or type isn't stated but meaningfully changes its calories (e.g. potato: boiled/steamed vs. roasted/fried with oil; yogurt: plain/low-fat vs. regular/sweetened; rice: plain vs. cooked with oil), do not anchor on either extreme - not the leanest/lowest-calorie version, and not the richest/highest-oil version either. Use the single most statistically typical preparation as an everyday home-cooked side dish or product in ${countryName} (for potato specifically, a plain baked/roasted potato with at most a light amount of oil - not deep-fried, not fully dry-steamed; for yogurt, a standard/regular-fat plain yogurt, not diet 0% and not a heavily sweetened dessert yogurt, unless the description implies otherwise). This matters most when a meal description lists several such unspecified items together - anchoring on either extreme on each one individually compounds into a large, consistent bias for the whole meal in that direction, which is exactly the systematic bias this feature must avoid in both directions.`;
         // מנחה שימוש ב-web_search כשיש שם מקום/רשת/מותג במשפט - לא לכל תיאור
         // מזון (זה היה מבזבז זמן ועלות על "תפוח" או "אורז לבן"). תוקן אחרי
         // בדיקה בפועל: הניסוח הקודם (רק "רשת ידועה" עם דוגמאות מקדונלד'ס/
