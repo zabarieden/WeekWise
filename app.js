@@ -1882,7 +1882,8 @@ function triggerDailyGreetingSparkles() {
     wrapper.appendChild(overlay);
 
     // רק כוכבים קטנים - לפי בקשה מפורשת ("רציתי כוכבים קטנים בלבד"), לא
-    // התערובת המלאה שמשמשת את נצנצי ה"הכל בוצע"
+    // התערובת המלאה שמשמשת את נצנצי ה"הכל בוצע". משך כולל פחות מ-10 שניות -
+    // לפי בקשה מפורשת נוספת (היה 20+ שניות)
     const spawnSparkle = () => {
         const sparkle = document.createElement('span');
         sparkle.className = 'all-done-sparkle';
@@ -1896,8 +1897,8 @@ function triggerDailyGreetingSparkles() {
     const spawnTimer = setInterval(spawnSparkle, 250);
     setTimeout(() => {
         clearInterval(spawnTimer);
-        setTimeout(() => overlay.remove(), 6000);
-    }, 20000);
+        setTimeout(() => overlay.remove(), 5500);
+    }, 4000);
 }
 
 // משך אנימציית "הספר" (רק 2 דפים עכשיו, ר' theme.css): דף 1 גלוי 5s, היפוך
