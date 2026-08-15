@@ -1639,11 +1639,21 @@ html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
    המחדל קרובה לכותרת "בוקר טוב", עם דריסה למובייל/דסקטופ למטה, לפי בקשה
    מפורשת ("השמש קרובה יותר לבוקר טוב"/"במובייל היא מאחורי כפתור התפריט") */
 .home-sky-topstrip { position: absolute; top: 0; inset-inline: 0; height: 220px; overflow: hidden; --sky-sun-x: 82%; --sky-sun-y: 14%; }
+/* --sky-sun-x הוא ערך פיזי (משמש בתוך radial-gradient/conic-gradient, לא
+   הופך אוטומטית לפי dir כמו inset-inline) - לכן צריך מראה מפורש ל-LTR בכל
+   אחד מהערכים למטה, כדי שהשמש תישאר צמודה לכפתור ההמבורגר (שגם הוא הופך
+   צד ב-LTR, ר' html[dir="ltr"] .hamburger-fab) בכל שפה/כיוון - לפי בקשה
+   מפורשת. במובייל: קרוב לקצה הפנימי של הכפתור (לא בדיוק מתחתיו) כדי
+   שהקרניים ייראו לצד הכפתור ולא ייבלעו לגמרי מתחתיו - לפי בקשה מפורשת
+   שנייה ("לא ממש מאחורי התפריט אלא ממש צמוד אליו") */
+html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 18%; }
 @media (max-width: 480px) {
-    .home-sky-topstrip { --sky-sun-x: 62%; }
+    .home-sky-topstrip { --sky-sun-x: 85%; }
+    html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 15%; }
 }
 @media (min-width: 1024px) {
     .home-sky-topstrip { --sky-sun-x: 92%; --sky-sun-y: 10%; }
+    html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 8%; }
 }
 html:not(.light-mode):not([data-color-theme]) .home-sky-scene .home-sky-topstrip.sky-night,
 html:not(.light-mode)[data-color-theme="blue_teal"] .home-sky-scene .home-sky-topstrip.sky-night,
