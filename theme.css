@@ -5269,10 +5269,14 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 /* לוגו "NOT10.ai" - פונט ייעודי (Poppins, ר' index.html) רק לשם המותג עצמו,
    לא לכל הטקסט באפליקציה - לפי בקשה מפורשת ("פונט יותר יפה") */
-.brand-wordmark { font-family: 'Poppins', -apple-system, sans-serif; font-weight: 800; letter-spacing: 0.3px; background: linear-gradient(135deg, var(--accent-pink-text), var(--accent-purple-light-text)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-wordmark { font-family: 'Poppins', -apple-system, sans-serif; font-weight: 600; letter-spacing: 0.3px; background: linear-gradient(135deg, var(--accent-pink-text), var(--accent-purple-light-text)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .login-card h2.brand-wordmark { font-size: 1.4rem; }
 .login-card p { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 14px 0; }
-.login-card input { display: block; width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; direction: ltr; }
+/* direction:ltr הוסר - הוא הפיל את המרכוז של טקסט ה-placeholder (עברית/ערבית
+   וכו') על אף text-align:center, כי זה יצר ניגוד בין כיוון הקונטיינר לכיוון
+   התווים בפועל. עכשיו יורש dir מ-html (נקבע דינמית ב-setLanguage) - לפי
+   בקשה מפורשת ("שיהיה ככה בכל השפות") */
+.login-card input { display: block; width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; }
 .login-card input:focus { border-color: var(--accent-purple); }
 .password-input-wrap { position: relative; margin-bottom: 10px; }
 .password-input-wrap input { margin-bottom: 0; padding-inline-end: 42px; }
