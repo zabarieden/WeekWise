@@ -3812,7 +3812,12 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
    שהפונט המותאם-אישית נטען מהשרת (async), ובלעדי זה הטקסט "מהבהב" בין
    הפונט הזמני לפונט הסופי כמה מאות מילישניות אחרי - לפי דיווח מפורש
    ("יש שם בפונט שונה את המשפט הראשון ואז הוא משתנה") */
-.book-welcome-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
+/* var(--text-primary) היה כמעט תמיד לבן/כמעט-לבן בכל ערכות הנושא (במצב כהה,
+   מטעמי קריאות על רקע כהה) - זה בדיוק מה ש"עדיין לבן" מתאר. עכשיו צבוע
+   באותו גוון-מותג של הערכה הנבחרת (accent-purple-light-text), כמו הכיתוב
+   השני "That's about to become real" בעמוד הבא - לפי בקשה מפורשת ("לכל
+   ערכות נושא כל אחת בצבע שלה") */
+.book-welcome-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--accent-purple-light-text); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
 .book-final-page .book-welcome-subtext { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent-purple-light); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px color-mix(in srgb, var(--accent-purple) 50%, transparent); }
 [data-color-theme="deep_space"] .book-final-page .book-welcome-subtext {
     color: #93c5fd;
