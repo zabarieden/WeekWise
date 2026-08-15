@@ -2830,14 +2830,19 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 .daily-board-fab { top: auto; left: 50%; right: auto; bottom: 26px; transform: translateX(-50%); width: calc(100% - 40px); max-width: 500px; height: 44px; }
 html[dir="ltr"] .daily-board-fab { left: 50%; right: auto; transform: translateX(-50%); }
 .daily-board-fab:active { transform: translateX(-50%) scale(0.9); }
+/* var(--accent-pink)/var(--accent-purple-light) בלי סיומת -text בכוונה - גרסת
+   ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), מה שגרם לפס
+   הזוהר להיראות כהה/עמום דווקא במצב הבהיר - לפי בקשה מפורשת ("בבהיר אני
+   רוצה שהסרגל... יהיה בהיר"). הגוונים המקוריים נשארים בהירים/זוהרים בשני
+   המצבים כי הם לא תלויי-ניגודיות-טקסט */
 .daily-board-fab::after {
     content: "";
     display: block;
     width: 100%;
     height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent-pink-text), var(--accent-purple-light-text));
-    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-pink-text) 70%, transparent), 0 0 18px color-mix(in srgb, var(--accent-purple-light-text) 50%, transparent);
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple-light));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-pink) 70%, transparent), 0 0 18px color-mix(in srgb, var(--accent-purple-light) 50%, transparent);
 }
 /* תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' isHomeCalorieBadgeOn
    ב-app.js), אפשרות למי שרוצה לראות מספר קלוריות תמידי במסך הבית. יושב
