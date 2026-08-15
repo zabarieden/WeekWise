@@ -5293,6 +5293,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    בקשה מפורשת ("שיהיה ככה בכל השפות") */
 .login-card input { display: block; width: 100%; box-sizing: border-box; background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; }
 .login-card input:focus { border-color: var(--accent-purple); }
+.login-card .h-captcha { display: flex; justify-content: center; margin-bottom: 14px; }
 .password-input-wrap { position: relative; margin-bottom: 10px; }
 /* padding-inline-start תואם (לא רק end) - כדי שהריפוד יהיה סימטרי משני
    הצדדים, כך שהטקסט הממורכז (text-align:center) יראה ממורכז בפועל למרות

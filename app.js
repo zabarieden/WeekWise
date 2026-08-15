@@ -1288,9 +1288,17 @@ async function submitAuthForm() {
     if (!supabaseClient) initSupabase();
     if (!supabaseClient) { messageEl.textContent = t('auth_server_error'); return; }
 
+    // טוקן CAPTCHA (hCaptcha) - נדרש בכל שלוש הקריאות (לא רק הרשמה), כי
+    // "Enable Captcha protection" ב-Supabase חל על כל נקודות הקצה של Auth.
+    // חד-פעמי - מתאפס בסוף הפונקציה (גם בהצלחה וגם בכישלון) כדי שניסיון הבא
+    // ידרוש פתרון CAPTCHA חדש
+    const captchaToken = (typeof hcaptcha !== 'undefined') ? hcaptcha.getResponse() : undefined;
+    const resetCaptcha = () => { if (typeof hcaptcha !== 'undefined') hcaptcha.reset(); };
+
     if (authMode === 'forgot') {
         if (!email) { messageEl.textContent = t('auth_fill_email'); return; }
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] });
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0], captchaToken });
+        resetCaptcha();
         if (error) { messageEl.textContent = error.message; return; }
         messageEl.style.color = 'var(--accent-green)';
         messageEl.textContent = t('auth_forgot_success');
@@ -1299,7 +1307,8 @@ async function submitAuthForm() {
     if (!email || !password) { messageEl.textContent = t('auth_fill_both'); return; }
 
     if (authMode === 'signup') {
-        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { captchaToken } });
+        resetCaptcha();
         if (error) { messageEl.textContent = error.message; return; }
         // חותמת ברירת מחדל להרשמה חדשה: ערכת נושא ברירת מחדל (theme לא
         // מוגדר בכוונה - loadColorTheme כבר מטפל בזה כ"default") + מצב
@@ -1322,7 +1331,8 @@ async function submitAuthForm() {
             updateAuthUI();
         }
     } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password, options: { captchaToken } });
+        resetCaptcha();
         if (error) { messageEl.textContent = t('auth_wrong_credentials'); return; }
         initAppAfterAuth(data.user);
     }
