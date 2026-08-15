@@ -213,6 +213,16 @@ Deno.serve(async (req) => {
         // מפורשת בעקבות פער שהתגלה בפועל (365 מול כ-610 בגוגל, כשהתיאור
         // כלל "פיתה ביס כוסמין")
         const breadTermNote = `In Hebrew, the word "ביס" attached to a bread/pita name (e.g. "פיתת ביס", "פיתה ביס", "לחם ביס") is a real bakery product name for a specific smaller/snack-size bread item - it does NOT mean "a bite" or "a nibble" taken out of a regular-size bread. Treat it as one whole small bread item at its typical product size and calorie count (use web_search if you're unsure of the exact size/calories for ${countryName}), not as a tiny fraction of a larger item.`;
+        // הנחיה חדשה שנייה: כשתיאור המנה כולל כמה רכיבים שכל אחד מהם בנפרד
+        // עמום באופן-הכנה (לא רק בכמות) - כמו תפוח אדמה (מבושל/מאודה לעומת
+        // אפוי/מטוגן בשמן) או יוגורט (רזה/דיאטטי לעומת רגיל/מתוק) - ה-AI נטה
+        // להניח את אופן-ההכנה הכי דל-קלוריות בכל רכיב כזה בנפרד, וזה מצטבר
+        // לפער גדול על פני הארוחה כולה (נבדק בפועל: "200 גרם תפוח אדמה" +
+        // "יוגורט גביע 150 גרם" בלי לציין אופן הכנה/סוג, יחד עם הפריט הקודם -
+        // תוצאה שנשארה נמוכה משמעותית גם אחרי התיקון על "ביס" בלבד). זו
+        // הרחבה של realismNote (שם העמימות הייתה "ingredient בתוך drink") -
+        // כאן העמימות היא "שיטת-הכנה" של פריט עצמאי, לא תפקידו בתוך פריט אחר
+        const prepMethodNote = `When a food's preparation method or type isn't stated but meaningfully changes its calories (e.g. potato: boiled/steamed vs. roasted/fried with oil; yogurt: plain/low-fat vs. regular/sweetened; rice: plain vs. cooked with oil), do NOT default to the leanest/lowest-calorie version - use the preparation that's actually most common as a home-cooked side dish or everyday product in ${countryName} (e.g. oven-roasted potato wedges with some oil, not steamed plain potato; regular 3% yogurt, not diet 0%, unless the description implies otherwise). This matters most when a meal description lists several such unspecified items together - defaulting to the leanest assumption on each one individually compounds into a large, consistent underestimate for the whole meal, which is exactly the systematic bias this feature must avoid.`;
         // מנחה שימוש ב-web_search כשיש שם מקום/רשת/מותג במשפט - לא לכל תיאור
         // מזון (זה היה מבזבז זמן ועלות על "תפוח" או "אורז לבן"). תוקן אחרי
         // בדיקה בפועל: הניסוח הקודם (רק "רשת ידועה" עם דוגמאות מקדונלד'ס/
@@ -232,8 +242,8 @@ Deno.serve(async (req) => {
         // handling ב-app.js), רק עם הודעה כנה למשתמשת
         const unknownNote = `If, even after a web search when relevant, you genuinely cannot identify this food/place at all or have no reasonable basis for any calorie estimate (e.g. a completely unfamiliar name with no search results and no similar known food to reason from) - use status "unknown" instead of inventing a number. This should be rare: a vague or unfamiliar-sounding description is USUALLY still estimable (e.g. from ingredients, food type, or similar known dishes) and does not by itself justify "unknown" - reserve it for cases where you truly have nothing to go on.`;
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${countryNote} ${searchNote} ${unknownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${countryNote} ${searchNote} ${unknownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
