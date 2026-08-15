@@ -278,7 +278,11 @@ Deno.serve(async (req) => {
                 },
                 body: JSON.stringify({
                     model: ANTHROPIC_MODEL,
-                    max_tokens: 1500,
+                    // הועלה מ-1500 ל-3000: מאז breakdownNote (חשיבה-בקול לפני קריאת
+                    // הכלי) התגלו בפועל שגיאות 502 "no_extraction" לסירוגין - כנראה
+                    // stop_reason:"max_tokens" חתך את התשובה באמצע החשיבה-הכתובה,
+                    // לפני שהמודל הספיק בכלל להגיע לקריאת הכלי עצמה
+                    max_tokens: 3000,
                     messages,
                     tools: [WEB_SEARCH_TOOL, estimateTool],
                     // לא ניתן לכפות tool_choice על "estimate_or_clarify" בלבד כאן
@@ -298,7 +302,9 @@ Deno.serve(async (req) => {
         }
 
         const toolUseBlock = (anthropicJson?.content || []).find((b: any) => b.type === "tool_use" && b.name === "estimate_or_clarify");
-        if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
+        // stop_reason מצורף לאבחון עתידי (למשל "max_tokens" = נחתך באמצע לפני
+        // שהגיע לקריאת הכלי) - לא נועד להיות מוצג למשתמשת, רק ל-Network tab
+        if (!toolUseBlock) return jsonResponse({ error: "no_extraction", stop_reason: anthropicJson?.stop_reason }, 502);
         const result = toolUseBlock.input || {};
 
         // המכסה עולה רק בקריאה הראשונה בפועל (כולל שיחת-הבהרה מקומית שלא
