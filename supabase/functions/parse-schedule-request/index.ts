@@ -25,7 +25,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
-const PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT = 200;
+const PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT = 60;
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 

@@ -13,7 +13,7 @@ alter table user_ai_usage add column if not exists premium_schedule_ai_month_use
 
 Otherwise reads `user_premium.is_premium` (already exists) and writes to
 `weekly_schedule` (already exists) through the normal `saveScheduleSlot()` path the app
-already uses. Premium users get a monthly quota (200/month by default, separate from
+already uses. Premium users get a monthly quota (60/month by default, separate from
 the image-scan pool since text requests cost far less per call) - see
 `scan-recipe-image`'s DEPLOY.md for why premium isn't fully unlimited.
 
