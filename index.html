@@ -45,7 +45,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=347">
+    <link rel="stylesheet" href="theme.css?v=348">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -961,9 +961,7 @@
             <!-- כפתור "לוח היום" - עוגן ויזואלי קבוע למסך הבית (לא בדוק, לפי בקשה
                  מפורשת - "אני רוצה שהוא יהיה בתוך מסך הבית כמו המוח רק לחצן אחר"),
                  יושב מתחת לבועת ה-AI Brain, אותו דפוס עמדה קבועה בלי גרירה -->
-            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board">
-                <span class="ai-brain-icon daily-board-icon">🧭</span>
-            </button>
+            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board"></button>
 
             <!-- תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
                  updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות מספר על כל
