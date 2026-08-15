@@ -208,6 +208,30 @@ function renderLanguagePickerList(filter) {
 function selectLanguageFromPicker(lang) {
     setLanguage(lang);
     closeModal('modal-language-picker');
+    // upsert אחד אטומי, אותו דפוס בדיוק כמו selectColorTheme/toggleLightMode -
+    // עד עכשיו השפה נשמרה רק ב-localStorage (מכשיר-לוקאלי בלבד), אז שינוי
+    // שפה במחשב לא היה משפיע בכלל על הנייד (וגם לא שרד התקנה מחדש של ה-PWA,
+    // כי אז ה-localStorage מתאפס) - דווח: "החלפתי במחשב לעברית, למה הכל
+    // עדיין באנגלית בנייד? חשבתי שזה מסונכרן"
+    if (supabaseClient && currentUserId) {
+        supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, language: lang },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+
+// נטענת לפני ה-Promise.all הגדול ב-initAppAfterAuth (לא בתוכו) - אותה סיבה
+// בדיוק כמו loadPremiumStatus/loadFinanceCycleSetting שם: אם השפה השרתית
+// שונה מזו שכבר הוחלה מ-localStorage/ברירת המחדל של הדפדפן, setLanguage
+// מפעילה מחדש גם את onLanguageChanged (רענון כל התוכן הדינמי) - עדיף שזה
+// יקרה *לפני* שהתוכן נטען פעם ראשונה בשפה הלא-נכונה, לא אחריו
+async function loadUserLanguage() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('language').eq('user_id', currentUserId).maybeSingle();
+    if (data && data.language && translations[data.language] && data.language !== currentLang) {
+        setLanguage(data.language);
+    }
 }
 
 // עמודי המשפטי (תנאי שימוש/מדיניות פרטיות/הצהרת נגישות) קיימים רק בעברית,
@@ -1514,6 +1538,9 @@ async function initAppAfterAuth(user) {
     // ברירת המחדל (1) כש-loadFinanceData כבר קורא אותו, בדיוק כמו ההערה למעלה על
     // loadPremiumStatus/loadGlobalFont
     await loadFinanceCycleSetting();
+    // אותה סיבה - loadUserLanguage עלולה להפעיל setLanguage/onLanguageChanged
+    // (רענון כל התוכן), עדיף לפני שה-Promise.all שלמטה טוען הכל בשפה הישנה
+    await loadUserLanguage();
     await Promise.all([
         loadWeeklySchedule(),
         loadStats(),
@@ -1869,11 +1896,41 @@ const BOOK_LOADING_ANIMATION_MS = 7300;
 function showAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
     if (overlay) overlay.classList.add('open');
+    startLoadingSparkles();
 }
 
 function hideAppLoadingOverlay() {
     const overlay = document.getElementById('app-loading-overlay');
     if (overlay) overlay.classList.remove('open');
+    stopLoadingSparkles();
+}
+
+// נצנצים שיורדים מתחת למשפט במסך הטעינה, במקום עיגול-טעינה גנרי - לפי בקשה
+// מפורשת. אותו רעיון בדיוק כמו triggerDailyGreetingSparkles, רק בתוך אזור
+// קטן (ר' .loading-sparkles-wrap ב-theme.css), לא על פני כל המסך, ורץ כל עוד
+// מסך הטעינה פתוח (לא מוגבל בזמן כמו נצנצי הברכה היומית)
+let loadingSparklesTimer = null;
+function startLoadingSparkles() {
+    if (loadingSparklesTimer) return;
+    const container = document.getElementById('loading-sparkles');
+    if (!container) return;
+    const spawnSparkle = () => {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'loading-sparkle';
+        sparkle.textContent = '✨';
+        sparkle.style.left = `${Math.random() * 100}%`;
+        sparkle.style.animationDuration = `${1.2 + Math.random() * 0.8}s`;
+        sparkle.style.fontSize = `${0.5 + Math.random() * 0.35}rem`;
+        container.appendChild(sparkle);
+        sparkle.addEventListener('animationend', () => sparkle.remove());
+    };
+    loadingSparklesTimer = setInterval(spawnSparkle, 180);
+    spawnSparkle();
+}
+function stopLoadingSparkles() {
+    if (loadingSparklesTimer) { clearInterval(loadingSparklesTimer); loadingSparklesTimer = null; }
+    const container = document.getElementById('loading-sparkles');
+    if (container) container.innerHTML = '';
 }
 
 async function logoutUser() {

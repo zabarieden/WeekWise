@@ -3729,13 +3729,29 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
 
 .app-loading-overlay { display: none; position: absolute; inset: 0; background: var(--bg-main); z-index: 4000; align-items: center; justify-content: center; }
 .app-loading-overlay.open { display: flex; }
-.app-loading-spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid color-mix(in srgb, var(--accent-purple) 15%, transparent); border-top-color: var(--accent-purple); animation: appSpinnerRotate 0.8s linear infinite; }
-/* אותו override ממוקד לברירת המחדל כמו book-welcome-subtext למעלה - ר' שם */
-html:not(.light-mode):not([data-color-theme]) .app-loading-spinner {
-    border-color: rgba(59, 130, 246, 0.15);
-    border-top-color: #3b82f6;
+/* נצנצים שיורדים מתחת למשפט "That's about to become real" - במקום עיגול
+   טעינה גנרי, לפי בקשה מפורשת ("טעינה אחרת כמו נצנצים שיורדים מתוך המשפט").
+   אותו רעיון בדיוק כמו all-done-sparkle/allDoneSparkleFall (ר' startLoadingSparkles
+   ב-app.js), רק בתוך אזור קטן ומוגבל מתחת לטקסט, לא על פני כל המסך */
+.loading-sparkles-wrap { position: relative; width: 100%; max-width: 220px; height: 60px; margin: 4px auto 0; overflow: hidden; }
+.loading-sparkles { position: absolute; inset: 0; pointer-events: none; }
+.loading-sparkle {
+    position: absolute;
+    top: -18px;
+    animation-name: loadingSparkleFall;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-purple-light) 60%, transparent));
 }
-@keyframes appSpinnerRotate { to { transform: rotate(360deg); } }
+[data-color-theme="deep_space"] .loading-sparkle {
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+}
+@keyframes loadingSparkleFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    15% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(60px) rotate(200deg); opacity: 0; }
+}
 /* אנימציית "ספר" על כל המסך במסך הטעינה - 7 "דפים" ערוכים בערימה (position:
    absolute, z-index יורד), כל אחד הופך (rotateY, perspective תלת-ממדי) בתורו
    עם עיכוב מדורג, וחושף את הדף שמתחתיו - כך שזה נראה כמו דפדוף אמיתי מדף
@@ -3778,10 +3794,7 @@ html:not(.light-mode):not([data-color-theme]) .app-loading-spinner {
    ("יש שם בפונט שונה את המשפט הראשון ואז הוא משתנה") */
 .book-welcome-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
 .book-final-page .book-welcome-subtext { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent-purple-light); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px color-mix(in srgb, var(--accent-purple) 50%, transparent); }
-/* בברירת המחדל --accent-purple-light נשאר הסגול-הישן (לא עודכן בצביעה-
-   מחדש, ר' ההערה ב-:root) - override ממוקד רק לברירת המחדל האמיתית כדי
-   שהטקסט יישאר כחול כמו שנבחר במפורש, בלי להשפיע על אף ערכה פרימיום */
-html:not(.light-mode):not([data-color-theme]) .book-final-page .book-welcome-subtext {
+[data-color-theme="deep_space"] .book-final-page .book-welcome-subtext {
     color: #93c5fd;
     text-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
 }
