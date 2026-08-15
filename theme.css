@@ -1648,8 +1648,12 @@ html[data-color-theme="blueprint_draft"] .home-sky-scene .home-theme-pattern,
    שנייה ("לא ממש מאחורי התפריט אלא ממש צמוד אליו") */
 html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 18%; }
 @media (max-width: 480px) {
-    .home-sky-topstrip { --sky-sun-x: 85%; }
-    html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 15%; }
+    /* 72%: קוטר השמש+הקרניים הוא כ-104px (מסכת radial-gradient ברדיוס 52px
+       למעלה) - צמוד ממש מתחת לכפתור ההמבורגר (44px, right:22px) מסתיר
+       אותה כמעט לגמרי מתחתיו (נבדק בפועל, "בקושי רואים אותה") - 72% משאיר
+       אותה נוגעת בקצה הכפתור אבל גלויה לגמרי לידו, לא מתחתיו */
+    .home-sky-topstrip { --sky-sun-x: 72%; }
+    html[dir="ltr"] .home-sky-topstrip { --sky-sun-x: 28%; }
 }
 @media (min-width: 1024px) {
     .home-sky-topstrip { --sky-sun-x: 92%; --sky-sun-y: 10%; }
