@@ -27,15 +27,14 @@ html {
        --bg-row הוא משתנה חדש: "משטח שורה" משותף לכל התוכן ברשימות (שורות
        לו"ז, פתקים, ארוחות, אירועים וכו') - כך שכל השורות באפליקציה מקבלות
        את גוון ערכת הנושא הנבחרת, לא רק הרקע הגדול מאחורי הכול */
-    /* כחול-חלל כהה (היה סגול-ורוד) - לפי בקשה מפורשת ("רציתי שהיא תהיה בצבע
-       של הכחול של החלל... הראשון מהמם ופשוט יותר") - רק צבעי הרקע/משטחים
-       השתנו, לא צבעי ה-accent (pink/purple וכו') שמשמשים בכל האפליקציה,
-       כדי לא לשנות דברים מעבר למה שהתבקש */
-    --bg-main: linear-gradient(135deg, #04070f, #0a1128);
-    --bg-row: rgba(20, 30, 55, 0.55);
-    --bg-glass: rgba(18, 24, 40, 0.65);
-    --bg-sheet: #10162a;
-    --border-color: rgba(100, 140, 255, 0.25);
+    /* חזרה לסגול-ורוד המקורי - הכחול-חלל (שהיה כאן זמנית) עבר לערכת-נושא
+       נפרדת בסוף רשימת הערכות ("Deep Space"), לפי בקשה מפורשת ("הכחול
+       תשאיר בסוף הרשימה"), במקום להיעלם לגמרי */
+    --bg-main: linear-gradient(135deg, #1a0412, #2b0a30);
+    --bg-row: rgba(70, 15, 55, 0.55);
+    --bg-glass: rgba(40, 10, 35, 0.65);
+    --bg-sheet: #1f0a1c;
+    --border-color: rgba(255, 0, 127, 0.25);
     --text-primary: #f5f5f7;
     --text-secondary: #a1a1a6;
     --accent-pink: #ff007f;
@@ -223,6 +222,16 @@ html[data-ui-scale="large"] { font-size: 22px; }
     --accent-pink: #3b82f6;
     --accent-purple: #1e3a8a;
     --accent-purple-light: #60a5fa;
+}
+/* "Deep Space" - הערכה שהייתה ה-Default זמנית (כחול-חלל כהה), עברה לכאן
+   בסוף הרשימה כשה-Default חזר לסגול-ורוד המקורי - לפי בקשה מפורשת ("הכחול
+   תשאיר בסוף הרשימה") */
+/* בכוונה בלי דריסת accent-pink/purple - בדיוק כמו כשזו הייתה ה-Default,
+   הצבעים הניאון (ורוד/סגול) נשארים הרגילים, רק הרקע היה כחול-חלל */
+[data-color-theme="deep_space"] {
+    --bg-main: linear-gradient(135deg, #04070f, #0a1128);
+    --bg-row: rgba(20, 30, 55, 0.55);
+    --border-color: rgba(100, 140, 255, 0.25);
 }
 /* "ערכות נושא מיוחדות" - קבוצה ראשונה (טעימה) לפני שמרחיבים ל-50+, לפי בקשה
    מפורשת. אותו מנגנון בדיוק כמו ערכות הצבע הרגילות למעלה (data-color-theme +
@@ -830,6 +839,15 @@ html.light-mode[data-color-theme="navy_sapphire"] {
     --border-color: rgba(59, 130, 246, 0.25);
     --text-primary: #0a1530;
     --text-secondary: #4a5a80;
+}
+html.light-mode[data-color-theme="deep_space"] {
+    --bg-main: linear-gradient(135deg, #e6ecff, #d2ddfa);
+    --bg-row: rgba(30, 58, 138, 0.08);
+    --bg-glass: rgba(240, 244, 255, 0.75);
+    --bg-sheet: #f6f8ff;
+    --border-color: rgba(100, 140, 255, 0.25);
+    --text-primary: #0d1330;
+    --text-secondary: #4d5878;
 }
 html.light-mode[data-color-theme="lego_bricks"] {
     --bg-main: linear-gradient(135deg, #fff8e1, #ffe0b2);
@@ -4783,6 +4801,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-citrus { background: linear-gradient(135deg, #84cc16, #ca8a04); }
 .theme-swatch-copper { background: linear-gradient(135deg, #d97706, #92400e); }
 .theme-swatch-navy { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
+.theme-swatch-deepspace { background: linear-gradient(135deg, #0a1128, #04070f); }
 .theme-swatch-lock { position: absolute; bottom: -4px; inset-inline-end: -4px; font-size: 0.7rem; background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
 /* "ערכות נושא מיוחדות" - היה מחולק ל-10 קטגוריות עם שורת צ'יפים לניווט
    ביניהן + כרטיסיית-גריד אחת מוצגת בכל פעם - הוחלף בגריד רציף אחד עם קו-
