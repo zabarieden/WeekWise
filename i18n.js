@@ -72,7 +72,7 @@ function applyTranslations() {
 const translations = {
 en: {
     auth_login_subtitle: "Log in to your account:", auth_signup_subtitle: "Create a new account:",
-    auth_email_placeholder: "Email", auth_password_placeholder: "Password (at least 6 characters)",
+    auth_email_placeholder: "Email", auth_password_placeholder: "Password (at least 6 characters)", auth_password_placeholder_login: "Password",
     toggle_password_title: "Show/hide password",
     auth_login_btn: "Log In", auth_signup_btn: "Sign Up",
     auth_no_account: "Don't have an account?", auth_have_account: "Already have an account?",
@@ -528,7 +528,7 @@ en: {
 },
 he: {
     auth_login_subtitle: "התחברו לחשבון שלכם:", auth_signup_subtitle: "צרו חשבון חדש:",
-    auth_email_placeholder: "אימייל", auth_password_placeholder: "סיסמה (לפחות 6 תווים)",
+    auth_email_placeholder: "אימייל", auth_password_placeholder: "סיסמה (לפחות 6 תווים)", auth_password_placeholder_login: "סיסמה",
     toggle_password_title: "הצג/הסתר סיסמה",
     auth_login_btn: "התחברו", auth_signup_btn: "הרשמה",
     auth_no_account: "אין לכם חשבון?", auth_have_account: "כבר יש לכם חשבון?",

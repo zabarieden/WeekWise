@@ -1227,7 +1227,9 @@ function togglePasswordVisibility() {
     const btn = document.getElementById('btn-toggle-password');
     const showing = input.type === 'text';
     input.type = showing ? 'password' : 'text';
-    btn.textContent = showing ? '👁️' : '🙈';
+    // קוף שמכסה עיניים (🙈) = הסיסמה מוסתרת (ברירת המחדל) - עין פקוחה (👁️) =
+    // הסיסמה גלויה כרגע. לפי בקשה מפורשת ("שהעין תהיה קוף... כמו שהיה לפני כן")
+    btn.textContent = showing ? '🙈' : '👁️';
 }
 
 function updateAuthUI() {
@@ -1240,6 +1242,11 @@ function updateAuthUI() {
     const forgotLine = document.getElementById('auth-forgot-line');
     const toggleLine = document.getElementById('auth-toggle-line');
     const backToLoginLine = document.getElementById('auth-back-to-login-line');
+    const passwordInput = document.getElementById('auth-password-input');
+    // "לפחות 6 תווים" רלוונטי רק בהרשמה (יצירת סיסמה חדשה) - במסך התחברות
+    // זה סתם מבלבל, כי כבר יש סיסמה קיימת שיכולה להיות בכל אורך - דווח:
+    // "אין צורך לרשום את זה, זה רק במסך ההרשמה"
+    if (passwordInput) passwordInput.placeholder = t(authMode === 'signup' ? 'auth_password_placeholder' : 'auth_password_placeholder_login');
     if (authMode === 'forgot') {
         // מצב "שכחתי סיסמה" - אין שדה סיסמה בכלל כאן (רק אימייל), אין החלפת
         // login/signup, רק קישור חזרה. אותו submitBtn משותף, רק הפעולה
