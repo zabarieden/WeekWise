@@ -241,9 +241,17 @@ Deno.serve(async (req) => {
         // לוותר בקלות. הצד שלנו עדיין נופל להערכה מקומית במקרה כזה (ר'
         // handling ב-app.js), רק עם הודעה כנה למשתמשת
         const unknownNote = `If, even after a web search when relevant, you genuinely cannot identify this food/place at all or have no reasonable basis for any calorie estimate (e.g. a completely unfamiliar name with no search results and no similar known food to reason from) - use status "unknown" instead of inventing a number. This should be rare: a vague or unfamiliar-sounding description is USUALLY still estimable (e.g. from ingredients, food type, or similar known dishes) and does not by itself justify "unknown" - reserve it for cases where you truly have nothing to go on.`;
+        // הנחיה חדשה שלישית: כפיית "חשיבה בקול" - פירוק לרכיבים בטקסט חופשי
+        // *לפני* קריאת הכלי (לא בתוך input הכלי עצמו) - נוסף אחרי שגם breadTermNote
+        // וגם prepMethodNote לא הזיזו כמעט כלום בפועל למנה מרובת-רכיבים אמיתית
+        // (356-367 קלוריות מה-AI מול 650-710 בגוגל, גם אחרי שני התיקונים
+        // הקודמים). ההשערה: הערכה הוליסטית-אינטואיטיבית של מנה שלמה נוטה
+        // להטיה-כלפי-מטה חזקה יותר מסכימת קלוריות מפורשת פריט-אחר-פריט -
+        // לפי בקשה מפורשת "חייב לתקן"
+        const breakdownNote = `Before calling the tool, think step by step in plain text (not inside the tool call): list every distinct food item in the description separately, and for each one write your best calorie estimate for the stated (or inferred, per the notes above) quantity. Then explicitly add these numbers together and state the sum. Only after that, call the tool with that summed total as "calories". Do not skip straight to a single holistic guess for the whole meal - a multi-item meal estimated item-by-item and then summed is measurably more accurate than one intuitive total, and this step is required even when it feels obvious.`;
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
@@ -261,7 +269,7 @@ Deno.serve(async (req) => {
                 },
                 body: JSON.stringify({
                     model: ANTHROPIC_MODEL,
-                    max_tokens: 1000,
+                    max_tokens: 1500,
                     messages,
                     tools: [WEB_SEARCH_TOOL, estimateTool],
                     // לא ניתן לכפות tool_choice על "estimate_or_clarify" בלבד כאן
