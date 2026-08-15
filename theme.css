@@ -5301,7 +5301,6 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 /* לוגו "NOT10.ai" - פונט ייעודי (Poppins, ר' index.html) רק לשם המותג עצמו,
    לא לכל הטקסט באפליקציה - לפי בקשה מפורשת ("פונט יותר יפה") */
 .brand-wordmark { font-family: 'Poppins', -apple-system, sans-serif; font-weight: 600; letter-spacing: 0.3px; background: linear-gradient(135deg, var(--accent-pink-text), var(--accent-purple-light-text)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.login-card h2.brand-wordmark { font-size: 1.4rem; }
 .login-card p { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 14px 0; }
 /* direction:ltr הוסר - הוא הפיל את המרכוז של טקסט ה-placeholder (עברית/ערבית
    וכו') על אף text-align:center, כי זה יצר ניגוד בין כיוון הקונטיינר לכיוון
