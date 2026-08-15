@@ -5279,7 +5279,10 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .login-card input { display: block; width: 100%; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 12px; font-size: 0.9rem; outline: none; margin-bottom: 10px; text-align: center; }
 .login-card input:focus { border-color: var(--accent-purple); }
 .password-input-wrap { position: relative; margin-bottom: 10px; }
-.password-input-wrap input { margin-bottom: 0; padding-inline-end: 42px; }
+/* padding-inline-start תואם (לא רק end) - כדי שהריפוד יהיה סימטרי משני
+   הצדדים, כך שהטקסט הממורכז (text-align:center) יראה ממורכז בפועל למרות
+   שכפתור העין/קוף תופס מקום רק בצד אחד - לפי בקשה מפורשת ("עדיין לא ממורכז") */
+.password-input-wrap input { margin-bottom: 0; padding-inline-end: 42px; padding-inline-start: 42px; }
 .btn-toggle-password { position: absolute; top: 50%; inset-inline-end: 10px; transform: translateY(-50%); background: transparent; border: none; padding: 4px; font-size: 1rem; cursor: pointer; opacity: 0.75; }
 .btn-toggle-password:active { opacity: 1; }
 .login-card .btn-primary { margin-top: 4px; }
