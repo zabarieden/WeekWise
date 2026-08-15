@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=357">
+    <link rel="stylesheet" href="theme.css?v=358">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -170,7 +170,16 @@
                 <div class="card today-tasks-card">
                     <div class="card-title-row collapsible-header" onclick="toggleCardSection(this); trackTodayCardExpandView(this)">
                         <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                        <span class="card-toggle-icon">▼</span>
+                        <div class="card-title-row-end">
+                            <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                                 updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
+                                 מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות. יושב בתוך
+                                 שורת הכותרת של "הצצה להיום" (לא צף בנפרד) - לפי בקשה מפורשת -->
+                            <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                                🔥 <span id="home-calorie-badge-value">0</span>
+                            </button>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div id="today-tasks-list" class="today-tasks-list"></div>
@@ -969,13 +978,6 @@
                  מפורשת - "אני רוצה שהוא יהיה בתוך מסך הבית כמו המוח רק לחצן אחר"),
                  יושב מתחת לבועת ה-AI Brain, אותו דפוס עמדה קבועה בלי גרירה -->
             <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board"></button>
-
-            <!-- תג קלוריות עדין ליד "סדר היום" - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
-                 updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות מספר על כל
-                 המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-            <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
-                🔥 <span id="home-calorie-badge-value">0</span>
-            </button>
 
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
