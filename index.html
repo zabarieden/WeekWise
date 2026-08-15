@@ -2019,18 +2019,27 @@
                          addCustomFinanceCategory/deleteCustomFinanceCategory/
                          initFinanceCategoryDragReorder ב-app.js. אייקון נבחר מ-
                          icon-picker-row (אותו דפוס בדיוק כמו אייקון פרויקט ב"הפרויקטים
-                         שלי") - לפי בקשה מפורשת ("50 אימוג'ים... ושאפשר להזיז אותם") -->
-                    <label class="settings-label" data-i18n="settings_finance_categories_label">Custom finance categories</label>
-                    <div class="ai-brain-tabs" id="finance-category-manage-type-picker">
-                        <button type="button" class="ai-brain-tab active" data-finance-manage-type="expense" onclick="selectFinanceCategoryManageType('expense')" data-i18n="finance_type_expense">💸 Expense</button>
-                        <button type="button" class="ai-brain-tab" data-finance-manage-type="income" onclick="selectFinanceCategoryManageType('income')" data-i18n="finance_type_income">💵 Income</button>
-                    </div>
-                    <div class="ai-brain-tabs" id="finance-category-manage-list" style="margin-top: 8px;"></div>
-                    <p class="settings-label" data-i18n="finance_category_icon_label">Icon</p>
-                    <div id="finance-category-icon-picker" class="icon-picker-row"></div>
-                    <div class="preset-manager-grid" style="margin-top: 10px;">
-                        <input type="text" id="new-finance-category-name" data-i18n-placeholder="finance_category_new_placeholder" placeholder="Category name (e.g. Miscellaneous)">
-                        <button type="button" class="btn-secondary" onclick="addCustomFinanceCategory()" data-i18n="finance_category_add_btn">Add Category</button>
+                         שלי") - לפי בקשה מפורשת ("50 אימוג'ים... ושאפשר להזיז אותם").
+                         עטוף בטאב מקופל משלו (סגור כברירת מחדל) - לפי בקשה מפורשת: זה
+                         בלוק ארוך שגלש/בלט מיד מול שאר הגדרות ההתאמה האישית -->
+                    <div class="settings-subsection" id="finance-categories-subsection">
+                        <div class="settings-subsection-header collapsible-header" onclick="this.closest('.settings-subsection').classList.toggle('expanded')">
+                            <label class="settings-label" data-i18n="settings_finance_categories_label">Custom finance categories</label>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="settings-subsection-body">
+                            <div class="ai-brain-tabs" id="finance-category-manage-type-picker">
+                                <button type="button" class="ai-brain-tab active" data-finance-manage-type="expense" onclick="selectFinanceCategoryManageType('expense')" data-i18n="finance_type_expense">💸 Expense</button>
+                                <button type="button" class="ai-brain-tab" data-finance-manage-type="income" onclick="selectFinanceCategoryManageType('income')" data-i18n="finance_type_income">💵 Income</button>
+                            </div>
+                            <div class="ai-brain-tabs" id="finance-category-manage-list" style="margin-top: 8px;"></div>
+                            <p class="settings-label" data-i18n="finance_category_icon_label">Icon</p>
+                            <div id="finance-category-icon-picker" class="icon-picker-row"></div>
+                            <div class="preset-manager-grid" style="margin-top: 10px;">
+                                <input type="text" id="new-finance-category-name" data-i18n-placeholder="finance_category_new_placeholder" placeholder="Category name (e.g. Miscellaneous)">
+                                <button type="button" class="btn-secondary" onclick="addCustomFinanceCategory()" data-i18n="finance_category_add_btn">Add Category</button>
+                            </div>
+                        </div>
                     </div>
                     <!-- סדר הכפתורים הצפים ניתן לגרירה (לא כולל בועת ה-AI, שנשארת קבועה
                          למעלה) - ר' initFabOrderDragReorder/restackFabs ב-app.js -->
@@ -3070,7 +3079,7 @@
 
     </div>
 
-    <script src="i18n.js?v=276"></script>
+    <script src="i18n.js?v=277"></script>
     <script src="app.js?v=386"></script>
 </body>
 </html>
