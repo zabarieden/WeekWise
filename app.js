@@ -5605,10 +5605,8 @@ async function loadPremiumStatus() {
 
 // הגדרות > "ניהול המנוי": מוצג רק כשבאמת פרימיום. חשבון-פיתוח (עקיפה קבועה
 // בקוד, לא רשומה אמיתית ב-DB) מציג הודעה בלבד בלי כפתורים - אין שום דבר
-// אמיתי לבטל/לשנות שם. מנוי "לכל החיים" (tier==='lifetime') גם מציג הודעה
-// בלבד, בלי כפתור ביטול, בדיוק לפי הבקשה - אין ממה "לבטל" תשלום חד-פעמי.
-// כל שאר המקרים (מנוי חודשי/חצי-שנתי, או tier לא ידוע) מקבלים אפשרות אמיתית
-// לבטל - ביטול עצמי הוא פעולה בטוחה (בניגוד להפעלה עצמית), אז זה מיושם באמת
+// אמיתי לבטל/לשנות שם. כל שאר המקרים (מנוי חודשי/חצי-שנתי) מקבלים אפשרות
+// אמיתית לבטל - ביטול עצמי הוא פעולה בטוחה (בניגוד להפעלה עצמית), אז זה מיושם באמת
 function renderSettingsSubscriptionSection() {
     const section = document.getElementById('settings-subscription-section');
     const statusEl = document.getElementById('settings-subscription-status');
@@ -5633,10 +5631,6 @@ function renderSettingsSubscriptionSection() {
     section.classList.remove('hidden');
     if (isDevSuperuserAccount) {
         statusEl.textContent = t('settings_sub_status_dev');
-        changeBtn.classList.add('hidden');
-        cancelBtn.classList.add('hidden');
-    } else if (premiumTierFromDb === 'lifetime') {
-        statusEl.textContent = t('settings_sub_status_lifetime');
         changeBtn.classList.add('hidden');
         cancelBtn.classList.add('hidden');
     } else {
