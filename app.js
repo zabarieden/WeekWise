@@ -1947,10 +1947,9 @@ function showDailyGreetingBanner(text) {
     setTimeout(() => banner.remove(), 4400);
 }
 
-// נצנצים קלילים לכ-20 שניות (בניגוד ל-triggerAllDoneSparkles שרץ 2 דקות שלמות
-// לרגע ה"הכל בוצע") - משתמשת באותן מחלקות CSS בדיוק (all-done-sparkles/
-// all-done-sparkle), רק overlay נפרד כדי שלא יתנגש עם נצנצי ה"הכל בוצע"
-// אם שניהם קורים באותו יום
+// נצנצים קלילים, אותו משך בדיוק כמו triggerAllDoneSparkles (~9.5 שניות) -
+// משתמשת באותן מחלקות CSS בדיוק (all-done-sparkles/all-done-sparkle), רק
+// overlay נפרד כדי שלא יתנגש עם נצנצי ה"הכל בוצע" אם שניהם קורים באותו יום
 function triggerDailyGreetingSparkles() {
     if (document.getElementById('daily-greeting-sparkles')) return;
     const wrapper = document.querySelector('.phone-wrapper');
@@ -4362,10 +4361,14 @@ function triggerAllDoneSparkles() {
         sparkle.addEventListener('animationend', () => sparkle.remove());
     };
     const spawnTimer = setInterval(spawnSparkle, 250);
+    // היה 2 דקות שלמות - נצנצים שנשארים על גבי כל מסך שעוברים אליו (העוגן
+    // הוא .phone-wrapper הגלובלי, לא תלוי-מסך) במשך כל כך הרבה זמן זה מטריד
+    // ולא חגיגה - לפי בקשה מפורשת ("אמור להיות יותר מהר"), קוצר לאותו משך
+    // כמו triggerDailyGreetingSparkles הסמוכה (כ-9.5 שניות בסה"כ)
     setTimeout(() => {
         clearInterval(spawnTimer);
-        setTimeout(() => overlay.remove(), 6000);
-    }, 120000);
+        setTimeout(() => overlay.remove(), 5500);
+    }, 4000);
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
@@ -6247,6 +6250,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'ai_mixed_request', category: 'ai' },
     { id: 'ai_bounded_duration', category: 'ai' },
     { id: 'ai_local_fallback', category: 'ai' },
+    { id: 'ai_monthly_limits', category: 'ai' },
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'food_variety', category: 'nutrition' },
@@ -10070,6 +10074,13 @@ const FOOD_CALORIE_DB = [
     { name: "לחמניית המבורגר/נקניקייה", re: /לחמניית (המבורגר|נקניקיה)/i, kcal100g: 278, unitGrams: 70 },
     { name: "Wasa Crispbread", re: /\bwasa\b/i, kcal100g: 366, unitGrams: 9 },
     { name: "Ritz Crackers", re: /\britz\b/i, kcal100g: 500, unitGrams: 16 },
+    // "קרקר לחמית" - מוצר קראקר פריך, שונה לגמרי מ"לחמית" הרכה (16 קל'
+    // ליחידה) וגם שונה מהוריאציות הרכות-הספציפיות למטה (כפרית/חיטה מלאה/
+    // כוסמין/שיפון) - חייב לבוא *לפניהן* בסדר המערך, כי גם אם המשתמשת
+    // מוסיפה סוג ("קרקר לחמית חיטה מלאה") זה עדיין הקראקר הפריך ולא הלחמית
+    // הרכה, אז "קרקר" חייב לגבור על מילת-הסוג שאחריו - נוסף אחרי בדיקה
+    // בפועל מול גוגל (371 קל'/26.4 גרם חלבון למנה מול 320/20.5 שיצא לפני כן)
+    { name: "קרקר לחמית", re: /קר?קר\s*לחמית|לחמית\s*קר?קר/i, kcal100g: 400, unitGrams: 10.5, protein100g: 12.4 },
     { name: "לחמית כפרית", re: /לחמית\s*(?:\d+\s*יחיד(?:ה|ות))?\s*כפרית/i, kcal100g: 400, unitGrams: 7 },
     { name: "קרקר זהב", re: /קרקר זהב/i, kcal100g: 475, unitGrams: 20 },
     { name: "פיטנס קרקר", re: /פיטנס קרקר/i, kcal100g: 416, unitGrams: 18 },
@@ -10794,7 +10805,7 @@ const FOOD_CALORIE_DB = [
     // רגילה (350 קל') במקום 95 (5%, הכי נפוץ)
     // עודכן ל-5%=73 (מ-95) לפי נתון מדויק מהמשתמשת
     // עודכן 5%=96 (מ-73) לפי נתון מדויק מהמשתמשת
-    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 96, unitGrams: 100, percentTable: { 3: 80, 5: 96, 9: 135, 20: 220 }, protein100g: 7 },
+    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 96, unitGrams: 100, percentTable: { 3: 80, 5: 96, 9: 135, 20: 220 }, protein100g: 9 },
     { name: "מוצרלה", re: /מוצרלה|mozzarella/i, kcal100g: 280, unitGrams: 100, protein100g: 22 },
     { name: "פטה", re: /פטה|\bfeta\b/i, kcal100g: 264, unitGrams: 50, protein100g: 14 },
     // עודכן ל-392 (מ-431) לפי נתון מדויק מהמשתמשת (Parmigiano Reggiano)
@@ -14131,8 +14142,21 @@ function renderEmojiOverlay() {
         span.style.fontSize = `${entry.size}px`;
         span.dataset.strokeIndex = idx;
         span.addEventListener('pointerdown', startEmojiDrag);
+        span.addEventListener('dblclick', deleteEmojiFromCanvas);
         overlay.appendChild(span);
     });
+}
+
+// לחיצה כפולה על אימוג'י על הקנבס מוחקת אותו - לפי בקשה מפורשת, אחרי שהתברר
+// שאין דרך למחוק אימוג'י בודד (Undo מסיר רק את הפעולה האחרונה, וניקוי-דף
+// מוחק הכל) - אותה תבנית מוכרת כמו מחיקת פריט ברשימות אחרות באפליקציה
+function deleteEmojiFromCanvas(e) {
+    e.stopPropagation();
+    const idx = parseInt(e.currentTarget.dataset.strokeIndex, 10);
+    if (Number.isNaN(idx)) return;
+    canvasStrokes.splice(idx, 1);
+    renderEmojiOverlay();
+    saveCanvasData();
 }
 
 let draggingEmojiEl = null, draggingEmojiIndex = null;
