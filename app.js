@@ -8267,7 +8267,10 @@ async function toggleRecurringExpensePause(id, currentlyPaused) {
     if (!supabaseClient) return;
     const { error } = await supabaseClient.from('recurring_expenses').update({ is_paused: !currentlyPaused }).eq('id', id);
     if (error) { showAppToast(t('finance_recurring_add_failed'), 'error'); return; }
-    await loadRecurringExpenses();
+    // הקפאה/הפשרה משנה את סה"כ ההוצאות בסיכום החודשי (ר' renderFinanceSummary),
+    // אז חייבים לרענן גם אותו כאן, לא רק את רשימת ההוראות-קבע - אחרת הכרטיס
+    // נשאר עם מספר ישן עד שיוצאים ונכנסים מחדש ללשונית
+    await Promise.all([loadRecurringExpenses(), renderFinanceSummary()]);
 }
 
 function formatShortMonthYear(dateStr) {
@@ -8485,13 +8488,13 @@ async function submitRecurringExpense() {
     }
     if (error) { showAppToast(t('finance_recurring_add_failed'), 'error'); return; }
     showAppToast(t('finance_recurring_add_success'));
-    await loadRecurringExpenses();
+    await Promise.all([loadRecurringExpenses(), renderFinanceSummary()]);
 }
 
 function deleteRecurringExpense(id) {
     showDangerConfirm(t('finance_recurring_delete_title'), t('finance_recurring_delete_confirm'), async () => {
         await supabaseClient.from('recurring_expenses').delete().eq('id', id);
-        await loadRecurringExpenses();
+        await Promise.all([loadRecurringExpenses(), renderFinanceSummary()]);
     });
 }
 
@@ -8655,7 +8658,7 @@ async function confirmRecurringExpenseImport() {
     if (error) { showAppToast(t('finance_recurring_import_failed'), 'error'); return; }
     closeModal('modal-import-recurring-expenses');
     showAppToast(t('finance_recurring_import_success').replace('{count}', String(payloads.length)));
-    await loadRecurringExpenses();
+    await Promise.all([loadRecurringExpenses(), renderFinanceSummary()]);
 }
 
 // --- קטגוריית ספורט: אימונים (ריצה/אופניים/שחייה/אחר חופשי) עם משך, מרחק,
