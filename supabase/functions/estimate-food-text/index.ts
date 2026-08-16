@@ -161,6 +161,44 @@ async function lookupOpenFoodFacts(text: string): Promise<string | null> {
     }
 }
 
+// TZAMERET (מאגר התזונה הלאומי של משרד הבריאות, כ-4,624 פריטים בעברית כולל
+// מנות מוכנות/מסורתיות כמו חמין ומג'דרה) ו-USDA FoodData Central (Foundation
+// Foods + SR Legacy, כמה אלפי מרכיבים גנריים באנגלית) - שני מאגרים רשמיים
+// וחינמיים שהוטענו מראש לטבלאות Postgres (ר' DEPLOY.md). אותה פילוסופיה
+// בדיוק כמו lookupOpenFoodFacts למעלה - נתון-רקע מייעץ שה-AI שופט את
+// הרלוונטיות שלו בעצמו, ריק/כשלון לא משנה שום התנהגות קיימת. tsquery בנוי
+// עם "|" (OR) בין מילים, לא AND - plainto_tsquery/websearch_to_tsquery
+// היו דורשים שכל המילים יופיעו יחד באותה שורה, וזה כמעט אף פעם לא נכון
+// כששורה במאגר היא שם-מוצר בודד אבל התיאור של המשתמשת כולל כמה פריטים
+function buildOrTsQuery(text: string): string | null {
+    const tokens = text
+        .normalize("NFKC")
+        .split(/[^\p{L}\p{N}]+/gu)
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2)
+        .slice(0, 12);
+    return tokens.length ? tokens.join(" | ") : null;
+}
+
+async function lookupNutritionReference(text: string): Promise<{ tzameret: string | null; usda: string | null }> {
+    const query = buildOrTsQuery(text);
+    if (!query) return { tzameret: null, usda: null };
+    try {
+        const [tz, usda] = await Promise.all([
+            supabase.rpc("search_tzameret_foods", { query_text: query, max_rows: 3 }),
+            supabase.rpc("search_usda_foods", { query_text: query, max_rows: 3 }),
+        ]);
+        const format = (rows: any[] | null | undefined) =>
+            !rows?.length ? null : rows
+                .filter((r: any) => r.kcal_100g != null)
+                .map((r: any) => `"${r.name}": ${Math.round(r.kcal_100g)} kcal/100g${r.protein_100g != null ? `, ${Math.round(r.protein_100g * 10) / 10}g protein/100g` : ""}${r.fat_100g != null ? `, ${Math.round(r.fat_100g * 10) / 10}g fat/100g` : ""}${r.carbs_100g != null ? `, ${Math.round(r.carbs_100g * 10) / 10}g carbs/100g` : ""}`)
+                .join("; ") || null;
+        return { tzameret: format(tz.data), usda: format(usda.data) };
+    } catch {
+        return { tzameret: null, usda: null };
+    }
+}
+
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
     if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -231,8 +269,11 @@ Deno.serve(async (req) => {
         }
 
         // רק בקריאה הראשונה (לא שיחת-הבהרה) - שם כבר יש תשובה של המשתמשת
-        // לשען עליה, לא צריך חיפוש מוצר נוסף
-        const offData = !hasAnswer ? await lookupOpenFoodFacts(String(text)) : null;
+        // לשען עליה, לא צריך חיפוש מוצר נוסף. שלוש הקריאות רצות במקביל
+        // (Promise.all) ולא ברצף, כדי שלא יצטברו זמני-המתנה זו על גבי זו
+        const [offData, nutritionRef] = !hasAnswer
+            ? await Promise.all([lookupOpenFoodFacts(String(text)), lookupNutritionReference(String(text))])
+            : [null, { tzameret: null, usda: null }];
 
         const languageName = LANGUAGE_NAMES[language] || "English";
         const countryName = COUNTRY_NAMES[country] || "Israel";
@@ -315,11 +356,18 @@ Deno.serve(async (req) => {
         // "להתחשב" במספר שלה בלי ממש להישען עליו, ולתת עדיין הערכה עצמאית -
         // בדיוק ההפך ממטרת מנגנון האישור/דחייה כולו - לפי בקשה מפורשת
         const trustUserNumberNote = `If the user's answer states or implies a specific calorie count (for the whole item, or per unit/piece - e.g. "each one is about 16 calories" or "the whole plate is 400 calories"), treat that as ground truth from someone who actually knows what they're eating, not as one more data point to weigh against your own independent guess. Just do the arithmetic (e.g. multiply their per-unit number by the quantity already given) and use that as your calorie total for that item, instead of re-estimating it yourself.`;
-        // נתון-רקע ממאגר מוצרים אמיתי (Open Food Facts) - ר' lookupOpenFoodFacts
-        // למעלה. ריק ("") כשלא נמצא כלום/תקלה, כדי שהטקסט הכללי לא ישתנה בכלל
-        // באותם מקרים
-        const offDataNote = offData
-            ? `A food product database search for this description returned these real products with verified nutrition data: ${offData}. If one of these plausibly matches what the user described (same product, similar name/brand), prefer its exact kcal/protein-per-100g figures over your own memory or estimate for that item - it's real label data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.`
+        // נתון-רקע משלושה מאגרים אמיתיים - Open Food Facts (מוצרים ממותגים,
+        // ר' lookupOpenFoodFacts למעלה), TZAMERET (מאגר משרד הבריאות, מנות
+        // ישראליות/ביתיות) ו-USDA (מרכיבים גנריים באנגלית, ר'
+        // lookupNutritionReference למעלה). ריק ("") כשלא נמצא כלום מאף אחד
+        // מהשלושה, כדי שהטקסט הכללי לא ישתנה בכלל באותם מקרים - שם המשתנה
+        // offDataNote נשאר כפי שהוא כדי לצמצם את השינוי בשאר הקובץ
+        const referenceParts: string[] = [];
+        if (offData) referenceParts.push(`packaged/branded products: ${offData}`);
+        if (nutritionRef.tzameret) referenceParts.push(`Israeli national nutrition database (TZAMERET) entries: ${nutritionRef.tzameret}`);
+        if (nutritionRef.usda) referenceParts.push(`USDA generic-ingredient entries: ${nutritionRef.usda}`);
+        const offDataNote = referenceParts.length
+            ? `A nutrition database search for this description returned these real reference items with verified nutrition data - ${referenceParts.join("; also ")}. If one of these plausibly matches an item the user described (same food/product, similar name), prefer its exact kcal/protein/fat/carbs-per-100g figures over your own memory or estimate for that item - it's real reference data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.`
             : "";
         const promptText = hasAnswer
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
