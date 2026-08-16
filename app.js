@@ -1048,11 +1048,15 @@ async function logFoodQuickAdd() {
     // לפי בקשה מפורשת אחרי שהתגלה בפועל שה-AI נתן 480 ואז 270 לאותה מנה
     // (3 לחמיות) שהמאגר המקומי מחשב במדויק ל-93 קלוריות. hasUnmatchedFoodText
     // כבר קיימת בדיוק בשביל השיקול ההפוך (ר' autoFillMealCalories) - כאן
-    // משתמשים בה כדי לוודא שבאמת *כל* התיאור כוסה, לא רק חלק ממנו
+    // משתמשים בה כדי לוודא שבאמת *כל* התיאור כוסה, לא רק חלק ממנו.
+    // isAiSourced:true גם כאן בכוונה - למרות שהמספר לא הגיע מה-AI: גם המאגר
+    // המקומי יכול לטעות (התגלה בפועל, כולל חלבון חסר), אז גם התוצאה שלו
+    // עוברת דרך כרטיס האישור, ואם דוחים אותה, "לא נראה לי נכון" מסלים
+    // לבדיקה אמיתית מול ה-AI (ר' rejectFoodEstimate) - לפי בקשה מפורשת
     if (isPremiumUser && !hasUnmatchedFoodText(text)) {
         const confidentMacros = estimateFreeTextMacros(text);
         if (confidentMacros.calories > 0) {
-            await finishFoodQuickAdd(text, confidentMacros.calories, confidentMacros.protein);
+            await finishFoodQuickAdd(text, confidentMacros.calories, confidentMacros.protein, true, t('food_estimate_local_db_reasoning'));
             return;
         }
     }
