@@ -4457,6 +4457,11 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .ai-brain-panel { margin-top: 2px; }
 .ai-brain-panel .modal-subtitle { margin-top: 0; margin-bottom: 16px; line-height: 1.5; }
 .ai-brain-panel .action-buttons-wrap { margin-top: 16px !important; }
+/* כרטיס אישור/דחייה של הערכת AI - יושב בתוך הזרימה הרגילה של הפאנל (לא
+   overlay צף כמו .recipe-scan-loading, שנועד לספינר-טעינה זמני) - מציג את
+   ההערכה + הנמקת ה-AI לפני שנשמר בפועל, ר' finishFoodQuickAdd ב-app.js */
+#food-estimate-confirm-summary { font-weight: 700; color: var(--text-primary); }
+#food-estimate-confirm-reasoning { white-space: pre-line; max-height: 160px; overflow-y: auto; text-align: start; }
 /* תיבת הטקסט של תכנון הלו"ז מטקסט חופשי - לפני התיקון הזה לא הייתה לה שום
    הגדרת CSS ייעודית, אז היא נפלה חזרה לעיצוב ברירת המחדל המכוער של הדפדפן
    (גבול אפור, בלי עיגול פינות, בלי גובה מינימלי). עכשיו משתמשת באותם משתני

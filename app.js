@@ -335,6 +335,8 @@ function updateLiveCaloriesToday() {
     document.querySelectorAll('.protein-input').forEach(input => {
         proteinTotal += parseFloat(input.value) || 0;
     });
+    const proteinTodayEl = document.getElementById('protein-today');
+    if (proteinTodayEl) proteinTodayEl.innerText = Math.round(proteinTotal * 10) / 10;
     todayCaloriesTotal = total;
     todayProteinTotal = proteinTotal;
     updateNutritionGoalProgress();
@@ -568,9 +570,11 @@ const MEAL_PRESET_FREE_LIMIT = 10;
 async function addCustomPreset() {
     const nameInput = document.getElementById('new-preset-name');
     const caloriesInput = document.getElementById('new-preset-calories');
+    const proteinInput = document.getElementById('new-preset-protein');
     const descriptionInput = document.getElementById('new-preset-description');
     const name = nameInput.value.trim();
     const calories = parseInt(caloriesInput.value) || 0;
+    const protein = proteinInput.value.trim() ? parseFloat(proteinInput.value) : null;
     const description = descriptionInput.value.trim();
     const category = document.getElementById('new-preset-category').value;
     if (!name || calories <= 0) return;
@@ -584,15 +588,16 @@ async function addCustomPreset() {
     }
 
     if (editingPresetId) {
-        await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories, description: description || null }).eq('id', editingPresetId);
+        await supabaseClient.from('meal_presets').update({ meal_category: category, food_name: name, calories: calories, protein_grams: protein, description: description || null }).eq('id', editingPresetId);
         showAppToast(t('preset_updated_success'));
         cancelPresetEdit();
     } else {
-        await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories, description: description || null });
+        await supabaseClient.from('meal_presets').insert({ username: currentUsername, user_id: currentUserId, meal_category: category, food_name: name, calories: calories, protein_grams: protein, description: description || null });
         showAppToast(t('preset_added_success'));
     }
     nameInput.value = '';
     caloriesInput.value = '';
+    proteinInput.value = '';
     descriptionInput.value = '';
     loadMealPresetsToSelects();
     loadPresetManageList();
@@ -604,6 +609,7 @@ function editPreset(id) {
     editingPresetId = id;
     document.getElementById('new-preset-name').value = preset.food_name;
     document.getElementById('new-preset-calories').value = preset.calories;
+    document.getElementById('new-preset-protein').value = preset.protein_grams != null ? preset.protein_grams : '';
     document.getElementById('new-preset-description').value = preset.description || '';
     document.getElementById('new-preset-category').value = preset.meal_category;
     updateCustomSelectDisplay('new-preset-category');
@@ -614,6 +620,7 @@ function cancelPresetEdit() {
     editingPresetId = null;
     document.getElementById('new-preset-name').value = '';
     document.getElementById('new-preset-calories').value = '';
+    document.getElementById('new-preset-protein').value = '';
     document.getElementById('new-preset-description').value = '';
     document.getElementById('btn-add-preset').textContent = t('preset_add_btn');
 }
@@ -626,6 +633,7 @@ async function estimatePresetCaloriesWithAI() {
     const nameInput = document.getElementById('new-preset-name');
     const descInput = document.getElementById('new-preset-description');
     const caloriesInput = document.getElementById('new-preset-calories');
+    const proteinInput = document.getElementById('new-preset-protein');
     const text = [nameInput.value.trim(), descInput.value.trim()].filter(Boolean).join(', ');
     if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
     const btn = document.getElementById('btn-estimate-preset-calories');
@@ -633,18 +641,27 @@ async function estimatePresetCaloriesWithAI() {
     btn.disabled = true;
     btn.textContent = t('food_ai_estimating');
     try {
-        let estimate = estimateFreeTextCalories(text);
+        const localMacros = estimateFreeTextMacros(text);
+        let estimate = localMacros.calories;
+        let protein = localMacros.protein;
         if (isPremiumUser && supabaseClient) {
             const { data: sessionData } = await supabaseClient.auth.getSession();
             const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
             if (token) {
                 let attempt = await estimateFoodTextViaAI(token, text);
                 if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
-                if (attempt.status === 'estimate' && attempt.calories > 0) estimate = attempt.calories;
+                // אין כאן כרטיס אישור/דחייה (בניגוד להוספה-מהירה) - טופס "הוספת
+                // ארוחה למאגר" הוא כבר בעצמו שדה עריכה שהמשתמשת בודקת/מתקנת
+                // לפני שמירה, לפי ההחלטה בתכנון
+                if (attempt.status === 'estimate' && attempt.calories > 0) { estimate = attempt.calories; protein = attempt.proteinGrams; }
             }
         }
-        if (estimate > 0) caloriesInput.value = Math.round(estimate);
-        else showAppToast(t('quick_add_cant_estimate'), 'error');
+        if (estimate > 0) {
+            caloriesInput.value = Math.round(estimate);
+            if (protein != null) proteinInput.value = protein;
+        } else {
+            showAppToast(t('quick_add_cant_estimate'), 'error');
+        }
     } finally {
         btn.disabled = false;
         btn.textContent = originalLabel;
@@ -702,7 +719,7 @@ async function loadPresetManageList() {
             const descriptionHtml = item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : '';
             li.innerHTML = `
                 <span class="preset-manage-name-wrap">
-                    <span class="preset-manage-name">${escapeHtmlForReport(item.food_name)} (${item.calories})</span>
+                    <span class="preset-manage-name">${escapeHtmlForReport(item.food_name)} (${item.calories}${item.protein_grams != null ? ` · ${item.protein_grams}g` : ''})</span>
                     ${descriptionHtml}
                 </span>
                 <div class="preset-manage-actions">
@@ -771,7 +788,7 @@ function renderPresetPickerList(filter) {
     }
     list.innerHTML = matches.map(item => `
         <button type="button" class="language-picker-item" onclick="selectPresetPickerItem('${item.id}')">
-            <span class="language-picker-name">${escapeHtmlForReport(item.food_name)} (${item.calories})${item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : ''}</span>
+            <span class="language-picker-name">${escapeHtmlForReport(item.food_name)} (${item.calories}${item.protein_grams != null ? ` · ${item.protein_grams}g` : ''})${item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : ''}</span>
         </button>
     `).join('');
 }
@@ -785,10 +802,15 @@ function selectPresetPickerItem(id) {
     if (!preset || !presetPickerTargetRow) return;
     const foodInput = presetPickerTargetRow.querySelector('.food-input');
     const caloriesInput = presetPickerTargetRow.querySelector('.calories-input');
+    const proteinInput = presetPickerTargetRow.querySelector('.protein-input');
     const existingFood = foodInput.value.trim();
     const existingCalories = parseInt(caloriesInput.value) || 0;
     foodInput.value = existingFood ? `${existingFood} + ${preset.food_name}` : preset.food_name;
     caloriesInput.value = existingCalories + (parseInt(preset.calories) || 0);
+    if (proteinInput && preset.protein_grams != null) {
+        const existingProtein = parseFloat(proteinInput.value) || 0;
+        proteinInput.value = existingProtein + (parseFloat(preset.protein_grams) || 0);
+    }
     presetPickerTargetRow.dataset.touched = 'true';
     updateLiveCaloriesToday();
     closeModal('modal-preset-picker');
@@ -929,28 +951,31 @@ function renderPresetQuickAddList(filter) {
 // מצרפים את התוספת למשבצת-הנשנוש *הנראית האחרונה* (מחברים קלוריות + מוסיפים
 // לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד. לא 'snack' קבוע יותר - תלוי
 // כמה נשנושים המשתמשת בחרה להציג (ר' getSnackCount)
-async function addQuickLogEntry(foodDescription, calories, presetCategory) {
+async function addQuickLogEntry(foodDescription, calories, presetCategory, proteinGrams) {
     const today = getLocalDateString();
     const preferredSlotKeys = presetCategory ? (presetCategory === 'snack' ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
     const slot = await getTodayEmptyMealSlot(preferredSlotKeys);
     if (slot) {
         await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
-            food_description: foodDescription, calories: calories, protein_grams: null,
+            food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
         });
         return;
     }
     const mergeSlot = SNACK_SLOT_KEYS[getSnackCount() - 1];
-    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mergeSlot).maybeSingle();
+    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories, protein_grams').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mergeSlot).maybeSingle();
     if (existing) {
         await supabaseClient.from('calorie_tracker').update({
             food_description: `${existing.food_description} + ${foodDescription}`,
             calories: (existing.calories || 0) + calories,
+            // protein_grams הקיים יכול להיות null (רשומה ישנה/לא ידוע) - מתייחסים
+            // אליו כ-0 רק לצורך החיבור עצמו, לא הופכים "לא ידוע" לתקלה
+            protein_grams: (Number(existing.protein_grams) || 0) + (proteinGrams != null ? proteinGrams : 0),
         }).eq('id', existing.id);
     } else {
         await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: mergeSlot,
-            food_description: foodDescription, calories: calories, protein_grams: null,
+            food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
         });
     }
 }
@@ -958,7 +983,7 @@ async function addQuickLogEntry(foodDescription, calories, presetCategory) {
 async function logPresetQuickAdd(id) {
     const preset = cachedPresets.find(p => p.id === id);
     if (!preset) return;
-    await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category);
+    await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category, preset.protein_grams);
     closeModal('modal-preset-quick-add');
     if (preset.calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
         showAppToast(t('calories_implausible_toast').replace('{calories}', preset.calories), 'error');
@@ -1019,7 +1044,8 @@ async function logFoodQuickAdd() {
         await logFoodQuickAddViaAI(text);
         return;
     }
-    await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+    const localMacros = estimateFreeTextMacros(text);
+    await finishFoodQuickAdd(text, localMacros.calories, localMacros.protein);
 }
 
 // נופלת חזרה בשקט לחישוב המקומי החינמי בכל מקרה של תקלה/מכסה חודשית שנגמרה -
@@ -1039,7 +1065,7 @@ async function logFoodQuickAddViaAI(text) {
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
+        if (!token) { const m = estimateFreeTextMacros(text); await finishFoodQuickAdd(text, m.calories, m.protein); return; }
 
         let attempt = await estimateFoodTextViaAI(token, text);
         // רק 'retry' (תקלת רשת/פרסור) מנסה שוב - 'timeout' לא, כדי לא להכפיל
@@ -1048,7 +1074,8 @@ async function logFoodQuickAddViaAI(text) {
 
         if (attempt.status === 'limit') {
             showAppToast(t('quick_add_ai_limit_toast'), 'error');
-            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            const localLimit = estimateFreeTextMacros(text);
+            await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein);
             return;
         }
         if (attempt.status === 'clarify') {
@@ -1059,7 +1086,9 @@ async function logFoodQuickAddViaAI(text) {
             return;
         }
         if (attempt.status === 'estimate') {
-            await finishFoodQuickAdd(text, attempt.calories);
+            // isAiSourced:true - זו הערכה אמיתית של ה-AI, לא הערכה מקומית -
+            // לכן עוברת דרך כרטיס האישור/דחייה (ר' finishFoodQuickAdd)
+            await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning);
             return;
         }
         // status "unknown" - ה-AI עצמו אמר בפירוש שהוא לא מזהה את הפריט, לפי
@@ -1068,7 +1097,8 @@ async function logFoodQuickAddViaAI(text) {
         // הייתה בטוחה - כדי שהמשתמשת תדע לבדוק/לנסח אחרת אם היא רוצה דיוק
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
-            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            const localUnknown = estimateFreeTextMacros(text);
+            await finishFoodQuickAdd(text, localUnknown.calories, localUnknown.protein);
             return;
         }
         // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי. בעבר בלי
@@ -1077,7 +1107,8 @@ async function logFoodQuickAddViaAI(text) {
         // (מבוסס-מאגר, בלי הבנת אופן הכנה) בלי שום דרך לדעת את זה - לפי דיווח
         // מפורש על פער של כ-100 קלוריות מול הערכה חיצונית לאותה ארוחה בדיוק
         showAppToast(t('food_ai_fallback_toast'), 'error');
-        await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+        const localFallback = estimateFreeTextMacros(text);
+        await finishFoodQuickAdd(text, localFallback.calories, localFallback.protein);
     } finally {
         setFoodQuickAddLoading(false);
     }
@@ -1110,7 +1141,9 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
         if (result.error === 'limit_reached') return { status: 'limit' };
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
         if (res.ok && result.status === 'clarify' && result.question) return { status: 'clarify', question: result.question };
-        if (res.ok && result.status === 'estimate' && typeof result.calories === 'number') return { status: 'estimate', calories: result.calories };
+        // protein_grams/reasoning יכולים להיות null (מטמון ישן/AI לא החזיר) -
+        // נשארים null, לא הופכים ל-0 - ר' ההערה ב-estimateFreeTextMacros
+        if (res.ok && result.status === 'estimate' && typeof result.calories === 'number') return { status: 'estimate', calories: result.calories, proteinGrams: typeof result.protein_grams === 'number' ? result.protein_grams : null, reasoning: result.reasoning || null };
         if (res.ok && result.status === 'unknown') return { status: 'unknown' };
         return { status: 'retry' };
     } catch (err) {
@@ -1147,10 +1180,22 @@ function setFoodQuickAddLoading(isLoading) {
     }
 }
 
-async function finishFoodQuickAdd(text, estimate) {
+// isAiSourced/reasoning: רק הערכה אמיתית של ה-AI (לא החישוב המקומי החינמי,
+// ששם אין הנמקה לערער עליה) עוברת דרך כרטיס אישור/דחייה לפני שנשמרת בפועל -
+// לפי בקשה מפורשת אחרי שהתגלה פער ענק (1290 מול כ-390 קלוריות אמיתיות
+// לאותה ארוחה) שנשמר בשקט בלי שהמשתמשת קיבלה הזדמנות לחלוק עליו
+async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning) {
     const calories = Math.round(estimate || 0);
     if (!calories || calories <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
-    await addQuickLogEntry(text, calories);
+    if (isAiSourced) {
+        showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning);
+        return;
+    }
+    await commitFoodQuickAdd(text, calories, proteinGrams);
+}
+
+async function commitFoodQuickAdd(text, calories, proteinGrams) {
+    await addQuickLogEntry(text, calories, undefined, proteinGrams);
     closeModal('modal-ai-brain');
     if (calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
         showAppToast(t('calories_implausible_toast').replace('{calories}', calories), 'error');
@@ -1158,6 +1203,56 @@ async function finishFoodQuickAdd(text, estimate) {
         showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
     }
     refreshTodayNutritionViewIfOpen();
+}
+
+// --- כרטיס אישור/דחייה של הערכת AI (ר' finishFoodQuickAdd) ---
+let pendingConfirmText = '';
+let pendingConfirmCalories = 0;
+let pendingConfirmProtein = null;
+
+function showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning) {
+    pendingConfirmText = text;
+    pendingConfirmCalories = calories;
+    pendingConfirmProtein = proteinGrams;
+    const formFields = document.getElementById('food-quick-add-form-fields');
+    if (formFields) formFields.classList.add('hidden');
+    const summaryEl = document.getElementById('food-estimate-confirm-summary');
+    if (summaryEl) {
+        summaryEl.textContent = proteinGrams != null
+            ? t('food_estimate_confirm_summary').replace('{calories}', calories).replace('{protein}', proteinGrams)
+            : `${calories} ${t('calories_unit')}`;
+    }
+    const reasoningEl = document.getElementById('food-estimate-confirm-reasoning');
+    if (reasoningEl) reasoningEl.textContent = reasoning || '';
+    const card = document.getElementById('food-estimate-confirm-card');
+    if (card) card.classList.remove('hidden');
+}
+
+function hideFoodEstimateConfirmCard() {
+    const formFields = document.getElementById('food-quick-add-form-fields');
+    if (formFields) formFields.classList.remove('hidden');
+    const card = document.getElementById('food-estimate-confirm-card');
+    if (card) card.classList.add('hidden');
+}
+
+async function acceptFoodEstimate() {
+    const text = pendingConfirmText, calories = pendingConfirmCalories, protein = pendingConfirmProtein;
+    hideFoodEstimateConfirmCard();
+    await commitFoodQuickAdd(text, calories, protein);
+}
+
+// דוחים את ההערכה ופותחים את אותה תיבת-הבהרה שה-AI עצמו כבר משתמש בה
+// (openFoodClarifyModal/confirmFoodClarify) - רק שהפעם *המשתמשת* יוזמת את
+// השאלה, לא ה-AI. isLocalClarify:false נכון כאן באותה מידה כמו בתשובה
+// לשאלת-הבהרה שה-AI שאל: זו בהכרח קריאת-המשך אחרי קריאה ראשונה שכבר חויבה
+// במכסה (יש כבר pendingConfirmCalories אמיתי מה-AI) - לא מוסיפים דגל-שרת
+// חדש בשביל זה, רק משתמשים באותה סמנטיקה הקיימת ("לא זוהתה מקומית")
+function rejectFoodEstimate() {
+    pendingFoodQuickAddText = pendingConfirmText;
+    pendingFoodClarifyQuestion = t('food_estimate_reject_question');
+    pendingFoodClarifyIsLocal = false;
+    hideFoodEstimateConfirmCard();
+    openFoodClarifyModal(pendingFoodClarifyQuestion);
 }
 
 // מודל מזערי לשאלת הבהרה אחת מה-AI (פרימיום) - לא תור של כמה שאלות כמו
@@ -1175,6 +1270,13 @@ function cancelFoodClarify() {
     pendingFoodClarifyQuestion = '';
     pendingFoodClarifyIsLocal = false;
     closeModal('modal-food-clarify');
+    // אם ההבהרה נפתחה מ"לא נראה לי נכון" (ר' rejectFoodEstimate), כרטיס
+    // האישור/דחייה כבר הוסתר ושדות הטופס הוסתרו יחד איתו - ביטול צריך
+    // להחזיר את הטופס הרגיל לתצוגה, אחרת פאנל המזון נשאר ריק לגמרי
+    const formFields = document.getElementById('food-quick-add-form-fields');
+    if (formFields) formFields.classList.remove('hidden');
+    const card = document.getElementById('food-estimate-confirm-card');
+    if (card) card.classList.add('hidden');
 }
 
 function showFoodClarifyLoading() {
@@ -1206,18 +1308,22 @@ async function confirmFoodClarify() {
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { closeModal('modal-food-clarify'); await finishFoodQuickAdd(text, estimateFreeTextCalories(text)); return; }
+        if (!token) { closeModal('modal-food-clarify'); const m = estimateFreeTextMacros(text); await finishFoodQuickAdd(text, m.calories, m.protein); return; }
         const attempt = await estimateFoodTextViaAI(token, text, question, answer, isLocalClarify);
         closeModal('modal-food-clarify');
-        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories); return; }
+        // isAiSourced:true - כאן גם: אם ההערכה המחודשת עדיין לא נראית נכון,
+        // כרטיס האישור/דחייה יעלה שוב (לא שמירה-אוטומטית של הניסיון השני)
+        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning); return; }
         // status "unknown" - ר' ההערה המקבילה ב-logFoodQuickAddViaAI
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
-            await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+            const localUnknown2 = estimateFreeTextMacros(text);
+            await finishFoodQuickAdd(text, localUnknown2.calories, localUnknown2.protein);
             return;
         }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
-        await finishFoodQuickAdd(text, estimateFreeTextCalories(text));
+        const localErr = estimateFreeTextMacros(text);
+        await finishFoodQuickAdd(text, localErr.calories, localErr.protein);
     } finally {
         clearTimeout(loadingTimer);
         hideFoodClarifyLoading();
@@ -2755,6 +2861,9 @@ function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-finance-input').value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
+    // איפוס כרטיס אישור/דחייה (ר' finishFoodQuickAdd) - למקרה שנשאר גלוי
+    // מפתיחה קודמת שנסגרה באמצע (כפתור Cancel/X) בלי אישור/דחייה בפועל
+    hideFoodEstimateConfirmCard();
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
@@ -4661,14 +4770,16 @@ async function renderSelectedCalorieDay() {
         return;
     }
     const sorted = [...data].sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type));
-    let dayTotal = 0;
+    let dayTotal = 0, dayProteinTotal = 0;
     const rows = sorted.map(item => {
         dayTotal += Number(item.calories) || 0;
+        dayProteinTotal += Number(item.protein_grams) || 0;
         const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type];
         const mealLabel = labelKey ? t(labelKey) : item.meal_type;
-        return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}</span></div>`;
+        const proteinPart = item.protein_grams != null ? ` · ${Number(item.protein_grams)}g` : '';
+        return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}${proteinPart}</span></div>`;
     }).join('');
-    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}<div class="monthly-calendar-day-total">${escapeHtmlForReport(t('calorie_monthly_day_total_label'))} ${dayTotal}</div>`;
+    detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}<div class="monthly-calendar-day-total">${escapeHtmlForReport(t('calorie_monthly_day_total_label'))} ${dayTotal} · ${escapeHtmlForReport(t('calorie_monthly_day_total_protein_label'))} ${Math.round(dayProteinTotal * 10) / 10}g</div>`;
 }
 
 async function loadCalendarEvents() {
@@ -5823,8 +5934,9 @@ async function exportUserDataReport() {
             // התיקון שם), ובלעדי הסינון הזה יום כזה מופיע בדוח כ"0" מוזר
             // גם אחרי שהבאג עצמו כבר תוקן, כל עוד השורות הישנות עדיין קיימות
             if (!(row.food_description || '').trim() && !Number(row.calories)) return;
-            if (!byDate[row.date]) byDate[row.date] = { total: 0, meals: [] };
+            if (!byDate[row.date]) byDate[row.date] = { total: 0, proteinTotal: 0, meals: [] };
             byDate[row.date].total += Number(row.calories) || 0;
+            byDate[row.date].proteinTotal += Number(row.protein_grams) || 0;
             byDate[row.date].meals.push(row);
         });
         const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
@@ -5836,9 +5948,10 @@ async function exportUserDataReport() {
                     .map(meal => {
                         const labelKey = MEAL_TYPE_LABEL_KEYS[meal.meal_type];
                         const mealLabel = labelKey ? t(labelKey) : (meal.meal_type || '');
-                        return `<div class="entry-meal-line">${escapeHtmlForReport(mealLabel)}: ${escapeHtmlForReport(meal.food_description || '')} — ${Number(meal.calories) || 0}</div>`;
+                        const proteinPart = meal.protein_grams != null ? `, ${Number(meal.protein_grams)}g ${escapeHtmlForReport(t('food_picker_protein_label'))}` : '';
+                        return `<div class="entry-meal-line">${escapeHtmlForReport(mealLabel)}: ${escapeHtmlForReport(meal.food_description || '')} — ${Number(meal.calories) || 0}${proteinPart}</div>`;
                     }).join('');
-                return `<div class="entry"><span class="entry-main">${new Date(date).toLocaleDateString()}</span><span class="entry-value">${dayData.total}</span></div><div class="entry-meals-wrap">${mealsHtml}</div>`;
+                return `<div class="entry"><span class="entry-main">${new Date(date).toLocaleDateString()}</span><span class="entry-value">${dayData.total} · ${Math.round(dayData.proteinTotal * 10) / 10}g</span></div><div class="entry-meals-wrap">${mealsHtml}</div>`;
             }).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('calorie_metrics_title'))}</h2>${calorieHtml}`;
@@ -9891,13 +10004,13 @@ const FOOD_CALORIE_DB = [
     { name: "עוגת סנט אונורה", re: /סנט אונורה|saint.?honor[ée]/i, kcal100g: 340, unitGrams: 100 },
     // אגוזים/פיצוחים - כמה מהם חדשים לגמרי (לא היו במאגר), אחרים (בוטנים
     // מצופים/קוקטייל) חייבים לבוא *לפני* בוטנים הכללי בהמשך
-    { name: "פיסטוק", re: /פיסטוק(ים)?|pistachios?/i, kcal100g: 560, unitGrams: 30 },
-    { name: "אגוזי לוז", re: /אגוזי לוז|hazelnuts?/i, kcal100g: 628, unitGrams: 30 },
-    { name: "אגוזי ברזיל", re: /אגוזי ברזיל|brazil nuts?/i, kcal100g: 656, unitGrams: 30 },
-    { name: "אגוזי מקדמיה", re: /אגוזי מקדמיה|macadamia nuts?/i, kcal100g: 718, unitGrams: 30 },
-    { name: "גרעיני חמניה", re: /גרעיני חמניה|sunflower seeds?/i, kcal100g: 584, unitGrams: 30 },
-    { name: "בוטנים מצופים/קוקטייל", re: /בוטנים (אמריקאים|קוקטייל)|בוטנים מצופים/i, kcal100g: 516, unitGrams: 30 },
-    { name: "תערובת פיצוחים קלויה", re: /תערובת פיצוחים|שקדיה|קליית גת/i, kcal100g: 583, unitGrams: 30 },
+    { name: "פיסטוק", re: /פיסטוק(ים)?|pistachios?/i, kcal100g: 560, unitGrams: 30, protein100g: 20 },
+    { name: "אגוזי לוז", re: /אגוזי לוז|hazelnuts?/i, kcal100g: 628, unitGrams: 30, protein100g: 15 },
+    { name: "אגוזי ברזיל", re: /אגוזי ברזיל|brazil nuts?/i, kcal100g: 656, unitGrams: 30, protein100g: 14 },
+    { name: "אגוזי מקדמיה", re: /אגוזי מקדמיה|macadamia nuts?/i, kcal100g: 718, unitGrams: 30, protein100g: 8 },
+    { name: "גרעיני חמניה", re: /גרעיני חמניה|sunflower seeds?/i, kcal100g: 584, unitGrams: 30, protein100g: 21 },
+    { name: "בוטנים מצופים/קוקטייל", re: /בוטנים (אמריקאים|קוקטייל)|בוטנים מצופים/i, kcal100g: 516, unitGrams: 30, protein100g: 20 },
+    { name: "תערובת פיצוחים קלויה", re: /תערובת פיצוחים|שקדיה|קליית גת/i, kcal100g: 583, unitGrams: 30, protein100g: 18 },
     { name: "Ruffles Cheddar & Sour Cream", re: /ruffles.*cheddar/i, kcal100g: 571, unitGrams: 28 },
     { name: "Pringles Pizza", re: /pringles pizza/i, kcal100g: 525, unitGrams: 20 },
     { name: "Combos", re: /\bcombos\b/i, kcal100g: 479, unitGrams: 48 },
@@ -9949,7 +10062,7 @@ const FOOD_CALORIE_DB = [
     { name: "Starbucks Doubleshot", re: /doubleshot espresso/i, kcal100g: 70, unitGrams: 200 },
     { name: "קפה קר יוטבתה", re: /קפה קר יוטבתה/i, kcal100g: 65, unitGrams: 250 },
     { name: "שוקו מילקה/קאקאו אירופה", re: /שוקו מילקה|שוקו קאקד/i, kcal100g: 76, unitGrams: 250 },
-    { name: "משקה חלבון Pro קפה", re: /משקה חלבון.*קפה|pro.*coffee protein/i, kcal100g: 60, unitGrams: 300 },
+    { name: "משקה חלבון Pro קפה", re: /משקה חלבון.*קפה|pro.*coffee protein/i, kcal100g: 60, unitGrams: 300, protein100g: 8 },
     { name: "AriZona Iced Tea", re: /arizona iced tea/i, kcal100g: 35, unitGrams: 680 },
     { name: "Fuze Tea", re: /fuze tea/i, kcal100g: 36, unitGrams: 200 },
     { name: "פריגת תפוזים טבעי", re: /פריגת תפוזים/i, kcal100g: 45, unitGrams: 200 },
@@ -9971,13 +10084,13 @@ const FOOD_CALORIE_DB = [
     { name: "Cheerios Multigrain", re: /cheerio'?s? multigrain/i, kcal100g: 350, unitGrams: 30 },
     { name: "שוגי/עוגי", re: /שוגי|עוגי דגני בוקר/i, kcal100g: 393, unitGrams: 30 },
     { name: "פלקס שוקולד/קורנפלקס צהוב", re: /פלקס שוקולד|קורנפלקס צהוב/i, kcal100g: 380, unitGrams: 30 },
-    { name: "Nature Valley Protein Peanut Butter", re: /nature valley protein.*peanut/i, kcal100g: 475, unitGrams: 40 },
+    { name: "Nature Valley Protein Peanut Butter", re: /nature valley protein.*peanut/i, kcal100g: 475, unitGrams: 40, protein100g: 15 },
     { name: "Nature Valley Peanut Butter", re: /nature valley.*peanut/i, kcal100g: 452, unitGrams: 42 },
     { name: "Nature Valley Oats & Honey", re: /nature valley/i, kcal100g: 452, unitGrams: 42 },
     { name: "Corny Big Banana Chocolate", re: /corny.*banana/i, kcal100g: 430, unitGrams: 50 },
     { name: "Corny Big Coconut Chocolate", re: /corny.*coconut/i, kcal100g: 460, unitGrams: 50 },
     { name: "Corny Big Chocolate", re: /\bcorny\b/i, kcal100g: 440, unitGrams: 50 },
-    { name: "Barebells", re: /barebells/i, kcal100g: 370, unitGrams: 55 },
+    { name: "Barebells", re: /barebells/i, kcal100g: 370, unitGrams: 55, protein100g: 36 },
     { name: "Freezly", re: /freezly/i, kcal100g: 391, unitGrams: 23.5 },
     { name: "לחמניית המבורגר/נקניקייה", re: /לחמניית (המבורגר|נקניקיה)/i, kcal100g: 278, unitGrams: 70 },
     { name: "Wasa Crispbread", re: /\bwasa\b/i, kcal100g: 366, unitGrams: 9 },
@@ -9985,9 +10098,9 @@ const FOOD_CALORIE_DB = [
     { name: "לחמית כפרית", re: /לחמית כפרית/i, kcal100g: 400, unitGrams: 7 },
     { name: "קרקר זהב", re: /קרקר זהב/i, kcal100g: 475, unitGrams: 20 },
     { name: "פיטנס קרקר", re: /פיטנס קרקר/i, kcal100g: 416, unitGrams: 18 },
-    { name: "Skippy Super Chunk", re: /skippy super chunk/i, kcal100g: 600, unitGrams: 20 },
-    { name: "Skippy Creamy", re: /skippy/i, kcal100g: 590, unitGrams: 20 },
-    { name: "חמאת בוטנים טבעית 100%", re: /חמאת בוטנים טבעית|natural (100%)? peanut butter/i, kcal100g: 610, unitGrams: 20 },
+    { name: "Skippy Super Chunk", re: /skippy super chunk/i, kcal100g: 600, unitGrams: 20, protein100g: 25 },
+    { name: "Skippy Creamy", re: /skippy/i, kcal100g: 590, unitGrams: 20, protein100g: 25 },
+    { name: "חמאת בוטנים טבעית 100%", re: /חמאת בוטנים טבעית|natural (100%)? peanut butter/i, kcal100g: 610, unitGrams: 20, protein100g: 25 },
     { name: "ממרח קינדר/קרם חלב ואגוזים", re: /ממרח קינדר|קרם חלב ואגוזים/i, kcal100g: 560, unitGrams: 20 },
     { name: "מילקי TOP", re: /מילקי top|מילקי טופ/i, kcal100g: 191, unitGrams: 120 },
     { name: "מילקי וניל/קצפת", re: /מילקי (וניל|קצפת)/i, kcal100g: 146, unitGrams: 133 },
@@ -9996,8 +10109,8 @@ const FOOD_CALORIE_DB = [
     { name: "מעדן קרלו", re: /מעדן קרלו/i, kcal100g: 104, unitGrams: 125 },
     { name: "Danette", re: /danette|דנט שוקולד/i, kcal100g: 112, unitGrams: 125 },
     { name: "גמדאים/גמדים", re: /גמדאים|גמדים תות/i, kcal100g: 95, unitGrams: 100 },
-    { name: "יוגורט מולר", re: /יוגורט מולר|müller/i, kcal100g: 96, unitGrams: 150 },
-    { name: "יוגורט דנון מולטי", re: /דנון מולטי/i, kcal100g: 125, unitGrams: 140 },
+    { name: "יוגורט מולר", re: /יוגורט מולר|müller/i, kcal100g: 96, unitGrams: 150, protein100g: 3.5 },
+    { name: "יוגורט דנון מולטי", re: /דנון מולטי/i, kcal100g: 125, unitGrams: 140, protein100g: 3.5 },
     { name: "Hellmann's", re: /hellmann'?s/i, kcal100g: 642, unitGrams: 14 },
     // עודכן ל-133 (מ-285, שהיה שגוי) לפי נתון מדויק מהמשתמשת (מיונז לייט 9% שומן)
     { name: "מיונז לייט", re: /מיונז לייט|מיונז מופחת/i, kcal100g: 133, unitGrams: 15 },
@@ -10019,9 +10132,9 @@ const FOOD_CALORIE_DB = [
     { name: "עוגת מוס גבינה ופירורים", re: /עוגת מוס גבינה/i, kcal100g: 309, unitGrams: 110 },
     { name: "פאי שוקולד ולוז אישי", re: /פאי שוקולד ולוז/i, kcal100g: 433, unitGrams: 90 },
     { name: "טארטלט פירות יער/לימון", re: /טארטלט/i, kcal100g: 312, unitGrams: 80 },
-    { name: "Clif Bar", re: /clif bar/i, kcal100g: 367, unitGrams: 68 },
-    { name: "RXBAR", re: /rxbar/i, kcal100g: 403, unitGrams: 52 },
-    { name: "Kind Bar", re: /\bkind bar\b/i, kcal100g: 500, unitGrams: 40 },
+    { name: "Clif Bar", re: /clif bar/i, kcal100g: 367, unitGrams: 68, protein100g: 13 },
+    { name: "RXBAR", re: /rxbar/i, kcal100g: 403, unitGrams: 52, protein100g: 46 },
+    { name: "Kind Bar", re: /\bkind bar\b/i, kcal100g: 500, unitGrams: 40, protein100g: 15 },
     { name: "Nerds Candy", re: /\bnerds\b/i, kcal100g: 400, unitGrams: 15 },
     { name: "Swedish Fish", re: /swedish fish/i, kcal100g: 366, unitGrams: 30 },
     { name: "Starburst", re: /starburst/i, kcal100g: 416, unitGrams: 18 },
@@ -10031,7 +10144,7 @@ const FOOD_CALORIE_DB = [
     { name: "עוגת קראנץ' שוקולד וחלבה", re: /עוגת קראנץ'? שוקולד וחלבה/i, kcal100g: 400, unitGrams: 60 },
     { name: "עוגת בבקה פרג ושקדים", re: /בבקה פרג/i, kcal100g: 375, unitGrams: 60 },
     { name: "מאפה דניש קינמון", re: /דניש קינמון|danish pastry/i, kcal100g: 388, unitGrams: 85 },
-    { name: "Fulfil Protein Bar", re: /fulfil/i, kcal100g: 367, unitGrams: 55 },
+    { name: "Fulfil Protein Bar", re: /fulfil/i, kcal100g: 367, unitGrams: 55, protein100g: 36 },
     { name: "ערמונים קלויים", re: /ערמונים קלויים|roasted chestnuts?/i, kcal100g: 181, unitGrams: 80 },
     { name: "פירות יער קפואים", re: /פירות יער קפואים|frozen berries/i, kcal100g: 50, unitGrams: 100 },
     { name: "Toxic Waste", re: /toxic waste/i, kcal100g: 388, unitGrams: 9 },
@@ -10046,8 +10159,8 @@ const FOOD_CALORIE_DB = [
     { name: "מאפה שבלול שוקולד ולוז", re: /שבלול שוקולד/i, kcal100g: 400, unitGrams: 90 },
     { name: "עוגת בראוניז חמאת פיסטוק", re: /בראוניז.*חמאת פיסטוק|בראוני.*חמאת פיסטוק/i, kcal100g: 484, unitGrams: 65 },
     { name: "טארט אגסים ושקדים", re: /טארט אגסים|frangipane/i, kcal100g: 320, unitGrams: 100 },
-    { name: "BSN Syntha-6 Bar", re: /syntha.?6/i, kcal100g: 383, unitGrams: 60 },
-    { name: "Warrior CRUNCH", re: /warrior crunch/i, kcal100g: 373, unitGrams: 64 },
+    { name: "BSN Syntha-6 Bar", re: /syntha.?6/i, kcal100g: 383, unitGrams: 60, protein100g: 33 },
+    { name: "Warrior CRUNCH", re: /warrior crunch/i, kcal100g: 373, unitGrams: 64, protein100g: 31 },
     { name: "ערמונים מסוכרים", re: /ערמונים מסוכרים|marron glac[ée]/i, kcal100g: 325, unitGrams: 20 },
     { name: "ממרח פסק זמן", re: /ממרח פסק זמן/i, kcal100g: 550, unitGrams: 20 },
     { name: "קשיו מצופה דבש/סוכר", re: /קשיו מצופה/i, kcal100g: 550, unitGrams: 30 },
@@ -10124,14 +10237,14 @@ const FOOD_CALORIE_DB = [
     { name: "ריבה ללא תוספת סוכר", re: /ריבת? .*ללא תוספת סוכר|ריבה דיאט/i, kcal100g: 155, unitGrams: 20 },
     { name: "ריבת St Dalfour/100% פרי", re: /st\.? ?dalfour|ריבת? .*100% פרי/i, kcal100g: 210, unitGrams: 20 },
     { name: "ריבת גויאבה/חבושים מוצקה", re: /ריבת גויאבה|guava paste|ריבת חבושים מוצקה|dulce de membrillo/i, kcal100g: 275, unitGrams: 30 },
-    { name: "טחינה גולמית איכותית", re: /טחינה (גולמית|משומשום מלא)/i, kcal100g: 640, unitGrams: 15 },
-    { name: "חמאת שקדים", re: /חמאת שקדים|almond butter/i, kcal100g: 620, unitGrams: 20 },
-    { name: "חמאת אגוזי לוז", re: /חמאת אגוזי לוז|hazelnut butter/i, kcal100g: 650, unitGrams: 20 },
-    { name: "חמאת קשיו", re: /חמאת קשיו|cashew butter/i, kcal100g: 580, unitGrams: 20 },
-    { name: "חמאת מקדמיה", re: /חמאת מקדמיה|macadamia butter/i, kcal100g: 718, unitGrams: 20 },
-    { name: "חמאת אגוזי מלך", re: /חמאת אגוזי מלך|walnut butter/i, kcal100g: 654, unitGrams: 20 },
-    { name: "חמאת גרעיני דלעת", re: /חמאת גרעיני דלעת|pumpkin seed butter/i, kcal100g: 574, unitGrams: 20 },
-    { name: "חמאת גרעיני חמניה", re: /חמאת גרעיני חמניה|sunflower seed butter|sunbutter/i, kcal100g: 600, unitGrams: 20 },
+    { name: "טחינה גולמית איכותית", re: /טחינה (גולמית|משומשום מלא)/i, kcal100g: 640, unitGrams: 15, protein100g: 17 },
+    { name: "חמאת שקדים", re: /חמאת שקדים|almond butter/i, kcal100g: 620, unitGrams: 20, protein100g: 21 },
+    { name: "חמאת אגוזי לוז", re: /חמאת אגוזי לוז|hazelnut butter/i, kcal100g: 650, unitGrams: 20, protein100g: 13 },
+    { name: "חמאת קשיו", re: /חמאת קשיו|cashew butter/i, kcal100g: 580, unitGrams: 20, protein100g: 18 },
+    { name: "חמאת מקדמיה", re: /חמאת מקדמיה|macadamia butter/i, kcal100g: 718, unitGrams: 20, protein100g: 8 },
+    { name: "חמאת אגוזי מלך", re: /חמאת אגוזי מלך|walnut butter/i, kcal100g: 654, unitGrams: 20, protein100g: 14 },
+    { name: "חמאת גרעיני דלעת", re: /חמאת גרעיני דלעת|pumpkin seed butter/i, kcal100g: 574, unitGrams: 20, protein100g: 19 },
+    { name: "חמאת גרעיני חמניה", re: /חמאת גרעיני חמניה|sunflower seed butter|sunbutter/i, kcal100g: 600, unitGrams: 20, protein100g: 17 },
     { name: "ממרח שקדים וקקאו ללא סוכר", re: /שקדים וקקאו ללא סוכר/i, kcal100g: 550, unitGrams: 20 },
     { name: "ממרח פסטו", re: /פסטו|pesto/i, kcal100g: 450, unitGrams: 15 },
     { name: "ממרח עגבניות מיובשות", re: /עגבניות מיובשות.*ממרח|ממרח עגבניות מיובשות|sun.?dried tomato spread/i, kcal100g: 433, unitGrams: 15 },
@@ -10219,7 +10332,7 @@ const FOOD_CALORIE_DB = [
     { name: "Fish Sauce", re: /fish sauce/i, kcal100g: 66, unitGrams: 15 },
     { name: "Gentleman's Relish", re: /gentleman'?s relish/i, kcal100g: 360, unitGrams: 5 },
     { name: "Mojo Picón", re: /mojo pic[oó]n/i, kcal100g: 300, unitGrams: 15 },
-    { name: "חמאת מקדמיה 100%", re: /חמאת מקדמיה 100%/i, kcal100g: 718, unitGrams: 20 },
+    { name: "חמאת מקדמיה 100%", re: /חמאת מקדמיה 100%/i, kcal100g: 718, unitGrams: 20, protein100g: 8 },
     { name: "Caesar Dressing Light", re: /caesar.*light/i, kcal100g: 233, unitGrams: 15 },
     { name: "Caesar Dressing", re: /caesar dressing/i, kcal100g: 486, unitGrams: 15 },
     { name: "Italian Dressing", re: /italian dressing/i, kcal100g: 286, unitGrams: 15 },
@@ -10230,10 +10343,10 @@ const FOOD_CALORIE_DB = [
     { name: "Alfredo Sauce", re: /alfredo/i, kcal100g: 166, unitGrams: 60 },
     { name: "Worcestershire Sauce", re: /worcestershire/i, kcal100g: 96, unitGrams: 5 },
     { name: "רוטב פריאני/מקני באטר הודי", re: /פריאני.*הודי|makhani|korma sauce/i, kcal100g: 116, unitGrams: 120 },
-    { name: "Petit Suisse", re: /petit suisse/i, kcal100g: 90, unitGrams: 60 },
-    { name: "Skyr", re: /\bskyr\b/i, kcal100g: 80, unitGrams: 150 },
-    { name: "Quark", re: /\bquark\b/i, kcal100g: 90, unitGrams: 150 },
-    { name: "Muller Corner", re: /muller corner/i, kcal100g: 107, unitGrams: 130 },
+    { name: "Petit Suisse", re: /petit suisse/i, kcal100g: 90, unitGrams: 60, protein100g: 7 },
+    { name: "Skyr", re: /\bskyr\b/i, kcal100g: 80, unitGrams: 150, protein100g: 11 },
+    { name: "Quark", re: /\bquark\b/i, kcal100g: 90, unitGrams: 150, protein100g: 12 },
+    { name: "Muller Corner", re: /muller corner/i, kcal100g: 107, unitGrams: 130, protein100g: 4 },
     { name: "מעדן סויה שוקולד טבעוני", re: /מעדן סויה שוקולד/i, kcal100g: 80, unitGrams: 125 },
     { name: "אבקת קקאו הולנדי", re: /אבקת קקאו|dutch cocoa|cocoa powder/i, kcal100g: 320, unitGrams: 10 },
     { name: "אבקת מאצ'ה", re: /אבקת מאצ'ה|matcha powder/i, kcal100g: 300, unitGrams: 3 },
@@ -10260,30 +10373,30 @@ const FOOD_CALORIE_DB = [
     // בהמשך, ושאר הפריטים שכאן חייבים לבוא *לפני* הגרסאות הטריות/כלליות
     // שלהם (טונה, סרדינים, תירס, אפונה, חומוס, שעועית, זיתים, חציל, אננס,
     // מנגו, אגס, ארטישוק, רוטב עגבניות) - נתונים מדויקים מהמשתמשת
-    { name: "חלב מרוכז ממותק", re: /חלב מרוכז ממותק|condensed milk/i, kcal100g: 320, unitGrams: 20 },
-    { name: "חלב מרוכז לא ממותק", re: /חלב מרוכז לא ממותק|evaporated milk/i, kcal100g: 135, unitGrams: 20 },
+    { name: "חלב מרוכז ממותק", re: /חלב מרוכז ממותק|condensed milk/i, kcal100g: 320, unitGrams: 20, protein100g: 7.5 },
+    { name: "חלב מרוכז לא ממותק", re: /חלב מרוכז לא ממותק|evaporated milk/i, kcal100g: 135, unitGrams: 20, protein100g: 6.8 },
     { name: "תרכיז פטל/ענבים למהילה", re: /תרכיז (פטל|ענבים).*מהיל|עסיס|פרימור/i, kcal100g: 35, unitGrams: 200 },
     { name: "אבקת סחלב", re: /אבקת סחלב|sahlab/i, kcal100g: 63, unitGrams: 150 },
     // עודכן ל-620 (מ-586, ממוצע עם נתון נוסף מהמשתמשת) לפי נתון מדויק
     { name: "בצל מטוגן פריך", re: /בצל מטוגן|crispy fried onions?/i, kcal100g: 620, unitGrams: 15 },
     { name: "קרוטונים", re: /קרוטונים|croutons?/i, kcal100g: 450, unitGrams: 20 },
     { name: "שקדי מרק", re: /שקדי מרק|soup nuts?/i, kcal100g: 530, unitGrams: 10 },
-    { name: "טונה בשמן זית איכותי", re: /טונה בשמן זית איכותי|rio mare/i, kcal100g: 200, unitGrams: 80 },
+    { name: "טונה בשמן זית איכותי", re: /טונה בשמן זית איכותי|rio mare/i, kcal100g: 200, unitGrams: 80, protein100g: 25 },
     // "צמחי" עכשיו חובה (לא אופציונלי) - בלעדיה זה "בלע" גם "טונה בשמן"
     // סתם (שאמורה להגיע לערך הייעודי בהמשך הקובץ, ר' ההערה שם), כי הרשומה
     // הזו מוקדמת יותר בקובץ ותמיד "זוכה" בהתאמה כשהיא כללית מדי - לפי דיווח
     // מפורש על חישוב שיצא גבוה משמעותית מהצפוי לטונה בשמן רגילה
-    { name: "טונה בשמן צמחי", re: /טונה בשמן צמחי/i, kcal100g: 170, unitGrams: 112 },
-    { name: "טונה במים", re: /טונה במים/i, kcal100g: 107, unitGrams: 112 },
-    { name: "טונה מעושנת", re: /טונה מעושנת/i, kcal100g: 165, unitGrams: 112 },
-    { name: "אנשובי בשמן זית", re: /אנשובי|anchov(y|ies)/i, kcal100g: 213, unitGrams: 15 },
-    { name: "סרדינים בשמן זית", re: /סרדינ(ים)?.*שמן זית|king oscar/i, kcal100g: 216, unitGrams: 90 },
+    { name: "טונה בשמן צמחי", re: /טונה בשמן צמחי/i, kcal100g: 170, unitGrams: 112, protein100g: 25 },
+    { name: "טונה במים", re: /טונה במים/i, kcal100g: 107, unitGrams: 112, protein100g: 26 },
+    { name: "טונה מעושנת", re: /טונה מעושנת/i, kcal100g: 165, unitGrams: 112, protein100g: 26 },
+    { name: "אנשובי בשמן זית", re: /אנשובי|anchov(y|ies)/i, kcal100g: 213, unitGrams: 15, protein100g: 25 },
+    { name: "סרדינים בשמן זית", re: /סרדינ(ים)?.*שמן זית|king oscar/i, kcal100g: 216, unitGrams: 90, protein100g: 25 },
     { name: "לבבות דקל", re: /לבבות דקל|hearts? of palm/i, kcal100g: 28, unitGrams: 50 },
     { name: "ערמונים בוואקום", re: /ערמונים.*ואקום/i, kcal100g: 180, unitGrams: 100 },
     { name: "תירס גמדי", re: /תירס גמדי|baby corn/i, kcal100g: 30, unitGrams: 50 },
     { name: "אפונה עדינה בשימורים", re: /אפונה (עדינה|ירוקה עדינה)/i, kcal100g: 70, unitGrams: 60 },
-    { name: "חומוס גרגרים בשימורים", re: /חומוס גרגרים|חומוס.*בשימורים|canned chickpeas/i, kcal100g: 120, unitGrams: 60 },
-    { name: "שעועית ברוטב עגבניות", re: /שעועית.*רוטב עגבניות|baked beans/i, kcal100g: 91, unitGrams: 120 },
+    { name: "חומוס גרגרים בשימורים", re: /חומוס גרגרים|חומוס.*בשימורים|canned chickpeas/i, kcal100g: 120, unitGrams: 60, protein100g: 7 },
+    { name: "שעועית ברוטב עגבניות", re: /שעועית.*רוטב עגבניות|baked beans/i, kcal100g: 91, unitGrams: 120, protein100g: 5 },
     { name: "שעועית ירוקה בשימורים", re: /שעועית ירוקה/i, kcal100g: 25, unitGrams: 60 },
     // עודכן ל-150 (מ-115) לפי נתון מדויק מהמשתמשת
     { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 150, unitGrams: 15 },
@@ -10295,11 +10408,11 @@ const FOOD_CALORIE_DB = [
     { name: "דובדבנים בסירופ", re: /דובדבנים.*סירופ|דובדבנים חמוצים/i, kcal100g: 116, unitGrams: 30 },
     // דורש "בשימורים" בלי "במים" אחריה - "סלמון בשימורים במים" (למטה, בין
     // דגים אחרים) הוא ערך שונה וצריך להיתפס לפני הערך הכללי הזה
-    { name: "סלמון בשימורים", re: /סלמון בשימורים(?! במים)|canned salmon(?! .*water)/i, kcal100g: 153, unitGrams: 85 },
-    { name: "לוף/Spam", re: /\bלוף\b|\bspam\b/i, kcal100g: 300, unitGrams: 50 },
-    { name: "מולים/צדפות בשימורים", re: /מולים בשימורים|צדפות בשימורים|canned mussels/i, kcal100g: 200, unitGrams: 85 },
-    { name: "תמנון בשמן זית", re: /תמנון(ים)?.*שמן זית|\bpulpo\b/i, kcal100g: 165, unitGrams: 85 },
-    { name: "סרטנים משומרים", re: /סרטנים משומרים|crab meat/i, kcal100g: 83, unitGrams: 60 },
+    { name: "סלמון בשימורים", re: /סלמון בשימורים(?! במים)|canned salmon(?! .*water)/i, kcal100g: 153, unitGrams: 85, protein100g: 20 },
+    { name: "לוף/Spam", re: /\bלוף\b|\bspam\b/i, kcal100g: 300, unitGrams: 50, protein100g: 13 },
+    { name: "מולים/צדפות בשימורים", re: /מולים בשימורים|צדפות בשימורים|canned mussels/i, kcal100g: 200, unitGrams: 85, protein100g: 12 },
+    { name: "תמנון בשמן זית", re: /תמנון(ים)?.*שמן זית|\bpulpo\b/i, kcal100g: 165, unitGrams: 85, protein100g: 18 },
+    { name: "סרטנים משומרים", re: /סרטנים משומרים|crab meat/i, kcal100g: 83, unitGrams: 60, protein100g: 18 },
     { name: "עגבניות מרוסקות (Passata)", re: /עגבניות מרוסקות|passata/i, kcal100g: 32, unitGrams: 125 },
     { name: "עגבניות שלמות מקולפות", re: /עגבניות (תמר )?שלמות מקולפות|san marzano/i, kcal100g: 23, unitGrams: 120 },
     { name: "ארטישוק בשמן זית", re: /ארטישוק בשמן זית/i, kcal100g: 87, unitGrams: 80 },
@@ -10309,29 +10422,29 @@ const FOOD_CALORIE_DB = [
     { name: "מנגו בסירופ", re: /מנגו.*סירופ/i, kcal100g: 75, unitGrams: 100 },
     { name: "במיה ברוטב עגבניות", re: /במיה.*רוטב עגבניות/i, kcal100g: 55, unitGrams: 100 },
     { name: "דלעת מרוסקת", re: /דלעת מרוסקת|pumpkin pur[ée]e/i, kcal100g: 41, unitGrams: 120 },
-    { name: "שעועית שחורה בשימורים", re: /שעועית שחורה/i, kcal100g: 91, unitGrams: 120 },
-    { name: "תערובת קטניות בשימורים", re: /תערובת קטניות/i, kcal100g: 87, unitGrams: 120 },
-    { name: "אנשובי כבוש בחומץ", re: /אנשובי כבוש|boquerones/i, kcal100g: 150, unitGrams: 20 },
-    { name: "כבד דג בשימורים", re: /כבד דג|cod liver/i, kcal100g: 600, unitGrams: 30 },
+    { name: "שעועית שחורה בשימורים", re: /שעועית שחורה/i, kcal100g: 91, unitGrams: 120, protein100g: 7 },
+    { name: "תערובת קטניות בשימורים", re: /תערובת קטניות/i, kcal100g: 87, unitGrams: 120, protein100g: 6 },
+    { name: "אנשובי כבוש בחומץ", re: /אנשובי כבוש|boquerones/i, kcal100g: 150, unitGrams: 20, protein100g: 20 },
+    { name: "כבד דג בשימורים", re: /כבד דג|cod liver/i, kcal100g: 600, unitGrams: 30, protein100g: 8 },
     // דורש שלא יופיע "אפוי"/"מעושן" אחריו - הגרסה הטרייה (למטה, בין דגים
     // אחרים) שונה בערך ומטופלת בנפרד
-    { name: "מקרל בשימורים", re: /מקרל(?! (אפוי|מעושן))|mackerel(?! (baked|smoked))/i, kcal100g: 233, unitGrams: 90 },
-    { name: "פורל מעושן בשימורים", re: /פורל מעושן/i, kcal100g: 188, unitGrams: 85 },
+    { name: "מקרל בשימורים", re: /מקרל(?! (אפוי|מעושן))|mackerel(?! (baked|smoked))/i, kcal100g: 233, unitGrams: 90, protein100g: 20 },
+    { name: "פורל מעושן בשימורים", re: /פורל מעושן/i, kcal100g: 188, unitGrams: 85, protein100g: 24 },
     { name: "שזיפים בסירופ", re: /שזיפים.*סירופ/i, kcal100g: 93, unitGrams: 70 },
     { name: "תאנים בסירופ", re: /תאנים.*סירופ/i, kcal100g: 183, unitGrams: 60 },
     { name: "תפוחים מרוסקים למילוי פאי", re: /תפוחים (אפויים|מרוסקים).*פאי/i, kcal100g: 96, unitGrams: 125 },
-    { name: "Stilton Cheese", re: /stilton/i, kcal100g: 410, unitGrams: 30 },
-    { name: "סלמון מעושן/Lox", re: /סלמון מעושן|\blox\b|smoked salmon/i, kcal100g: 170, unitGrams: 50 },
+    { name: "Stilton Cheese", re: /stilton/i, kcal100g: 410, unitGrams: 30, protein100g: 23 },
+    { name: "סלמון מעושן/Lox", re: /סלמון מעושן|\blox\b|smoked salmon/i, kcal100g: 170, unitGrams: 50, protein100g: 20 },
     { name: "Kimchi", re: /kimchi|קימצ'י/i, kcal100g: 19, unitGrams: 80 },
     { name: "Sauerkraut", re: /sauerkraut|כרוב כבוש/i, kcal100g: 18, unitGrams: 100 },
-    { name: "Pickled Eggs", re: /pickled eggs?/i, kcal100g: 160, unitGrams: 50 },
-    { name: "Caviar", re: /caviar|קוויאר/i, kcal100g: 267, unitGrams: 15 },
+    { name: "Pickled Eggs", re: /pickled eggs?/i, kcal100g: 160, unitGrams: 50, protein100g: 13 },
+    { name: "Caviar", re: /caviar|קוויאר/i, kcal100g: 267, unitGrams: 15, protein100g: 25 },
     { name: "Mochi Sweet Rice Cakes", re: /mochi (sweet )?rice cakes?/i, kcal100g: 320, unitGrams: 30 },
     { name: "Turkish Delight", re: /turkish delight|לוקום/i, kcal100g: 380, unitGrams: 25 },
-    { name: "Pâté de Campagne", re: /p[âa]t[ée] de campagne/i, kcal100g: 350, unitGrams: 30 },
-    { name: "Duck Confit", re: /duck confit/i, kcal100g: 240, unitGrams: 150 },
+    { name: "Pâté de Campagne", re: /p[âa]t[ée] de campagne/i, kcal100g: 350, unitGrams: 30, protein100g: 14 },
+    { name: "Duck Confit", re: /duck confit/i, kcal100g: 240, unitGrams: 150, protein100g: 19 },
     { name: "HP Sauce", re: /\bhp sauce\b/i, kcal100g: 120, unitGrams: 15 },
-    { name: "Brown Cheese/Brunost", re: /brunost|brown cheese/i, kcal100g: 465, unitGrams: 20 },
+    { name: "Brown Cheese/Brunost", re: /brunost|brown cheese/i, kcal100g: 465, unitGrams: 20, protein100g: 10 },
     { name: "Kewpie Mayonnaise", re: /kewpie mayo/i, kcal100g: 666, unitGrams: 15 },
     { name: "Umeboshi", re: /umeboshi/i, kcal100g: 40, unitGrams: 10 },
     { name: "Gherkins in Vinegar", re: /gherkins?/i, kcal100g: 30, unitGrams: 40 },
@@ -10367,19 +10480,19 @@ const FOOD_CALORIE_DB = [
     { name: "גריסיני", re: /גריסיני|grissini/i, kcal100g: 400, unitGrams: 15 },
     { name: "קרקר ללא גלוטן", re: /קרקר.*ללא גלוטן/i, kcal100g: 450, unitGrams: 10 },
     { name: "קרוסטיני", re: /קרוסטיני|crostini/i, kcal100g: 433, unitGrams: 15 },
-    { name: "זרעי צ'יה", re: /זרעי צ'יה|chia seeds?/i, kcal100g: 486, unitGrams: 12 },
-    { name: "אבקת ספירולינה", re: /ספירולינה|spirulina/i, kcal100g: 290, unitGrams: 5 },
+    { name: "זרעי צ'יה", re: /זרעי צ'יה|chia seeds?/i, kcal100g: 486, unitGrams: 12, protein100g: 17 },
+    { name: "אבקת ספירולינה", re: /ספירולינה|spirulina/i, kcal100g: 290, unitGrams: 5, protein100g: 57 },
     { name: "גוג'י ברי", re: /גוג'י|goji/i, kcal100g: 333, unitGrams: 15 },
-    { name: "אדממה", re: /אדממה|edamame/i, kcal100g: 120, unitGrams: 75 },
-    { name: "שמרי בירה", re: /שמרי בירה|nutritional yeast/i, kcal100g: 350, unitGrams: 10 },
+    { name: "אדממה", re: /אדממה|edamame/i, kcal100g: 120, unitGrams: 75, protein100g: 11 },
+    { name: "שמרי בירה", re: /שמרי בירה|nutritional yeast/i, kcal100g: 350, unitGrams: 10, protein100g: 50 },
     { name: "קומבוצ'ה", re: /קומבוצ'ה|kombucha/i, kcal100g: 15, unitGrams: 200 },
-    { name: "נאטו", re: /נאטו|\bnatto\b/i, kcal100g: 212, unitGrams: 40 },
+    { name: "נאטו", re: /נאטו|\bnatto\b/i, kcal100g: 212, unitGrams: 40, protein100g: 18 },
     { name: "פסטה כוסמין מלא", re: /פסטה.*כוסמין/i, kcal100g: 128, unitGrams: 140 },
     { name: "איטריות קונג'אק/שירטאקי", re: /קונג'אק|שירטאקי|konjac|shirataki/i, kcal100g: 9, unitGrams: 200 },
     { name: "אורז בר שחור", re: /אורז בר|wild (black )?rice/i, kcal100g: 106, unitGrams: 150 },
     { name: "אטריות כוסמת/Soba", re: /אטריות כוסמת|soba noodles?/i, kcal100g: 98, unitGrams: 140 },
-    { name: "זרעי פשתן טחונים", re: /זרעי פשתן|flax(seed)?/i, kcal100g: 534, unitGrams: 10 },
-    { name: "זרעי המפ", re: /זרעי המפ|hemp hearts?/i, kcal100g: 553, unitGrams: 10 },
+    { name: "זרעי פשתן טחונים", re: /זרעי פשתן|flax(seed)?/i, kcal100g: 534, unitGrams: 10, protein100g: 18 },
+    { name: "זרעי המפ", re: /זרעי המפ|hemp hearts?/i, kcal100g: 553, unitGrams: 10, protein100g: 31 },
     { name: "אבקת אקאי", re: /אקאי|a[cç]a[ií]/i, kcal100g: 400, unitGrams: 5 },
     { name: "אבקת מאקה", re: /מאקה|maca powder/i, kcal100g: 325, unitGrams: 5 },
     { name: "אבקת חרוב", re: /אבקת חרוב|carob powder/i, kcal100g: 222, unitGrams: 10 },
@@ -10397,15 +10510,15 @@ const FOOD_CALORIE_DB = [
     { name: "סיבי פסיליום", re: /פסיליום|psyllium/i, kcal100g: 180, unitGrams: 10 },
     { name: "אינולין", re: /אינולין|inulin/i, kcal100g: 200, unitGrams: 5 },
     { name: "אבקת אשווגנדה", re: /אשוו?גנדה|ashwagandha/i, kcal100g: 266, unitGrams: 3 },
-    { name: "גרגירי חומוס קלויים פריכים", re: /חומוס קלוי|roasted chickpeas?/i, kcal100g: 400, unitGrams: 30 },
+    { name: "גרגירי חומוס קלויים פריכים", re: /חומוס קלוי|roasted chickpeas?/i, kcal100g: 400, unitGrams: 30, protein100g: 20 },
     { name: "פריכוניות תפוח עץ וקינמון", re: /פריכוניות תפוח/i, kcal100g: 375, unitGrams: 20 },
     { name: "שייק ירוק בריאות", re: /שייק ירוק/i, kcal100g: 37, unitGrams: 350 },
-    { name: "שייק פירות יער וחלבון", re: /שייק פירות יער.*חלבון/i, kcal100g: 60, unitGrams: 350 },
+    { name: "שייק פירות יער וחלבון", re: /שייק פירות יער.*חלבון/i, kcal100g: 60, unitGrams: 350, protein100g: 6 },
     { name: "שייק תמר בננה חמאת בוטנים", re: /שייק תמר.*בננה/i, kcal100g: 106, unitGrams: 300 },
     { name: "שייק אקאי", re: /שייק אקאי|acai smoothie/i, kcal100g: 80, unitGrams: 300 },
     { name: "שייק מנגו פסיפלורה", re: /שייק מנגו.*פסיפלורה/i, kcal100g: 53, unitGrams: 300 },
     { name: "שייק ספירולינה ירוק", re: /שייק ספירולינה/i, kcal100g: 41, unitGrams: 350 },
-    { name: "כדור גלידת חלבון לשייק", re: /כדור גלידת חלבון/i, kcal100g: 120, unitGrams: 50 },
+    { name: "כדור גלידת חלבון לשייק", re: /כדור גלידת חלבון/i, kcal100g: 120, unitGrams: 50, protein100g: 15 },
     { name: "תערובת פירות יער קפואים לשייק", re: /פירות יער קפואים/i, kcal100g: 50, unitGrams: 100 },
     { name: "תערובת מנגו אננס פפאיה קפואים", re: /מנגו.*אננס.*פפאיה|טרופי קפוא/i, kcal100g: 60, unitGrams: 100 },
     { name: "אבקת עשב חיטה", re: /עשב חיטה|wheatgrass/i, kcal100g: 300, unitGrams: 5 },
@@ -10415,38 +10528,38 @@ const FOOD_CALORIE_DB = [
     { name: "רוטב ברבקיו 0 קלוריות", re: /ברבקיו 0 קלוריות|walden farms.*bbq|zero.?cal.*bbq/i, kcal100g: 16, unitGrams: 15 },
     { name: "סירופ מייפל 0 קלוריות", re: /מייפל 0 קלוריות|walden farms.*maple|zero.?cal.*maple/i, kcal100g: 13, unitGrams: 15 },
     { name: "ספריי שמן לבישול", re: /ספריי שמן|cooking oil spray|\bpam\b spray/i, kcal100g: 800, unitGrams: 0.5 },
-    { name: "Protein Cookie", re: /protein cookie|lenny.*larry/i, kcal100g: 366, unitGrams: 60 },
-    { name: "Halo Top", re: /halo\s?top/i, kcal100g: 80, unitGrams: 125 },
-    { name: "פריכונית שוקולד חלבון", re: /פריכונית.*חלבון/i, kcal100g: 433, unitGrams: 12 },
+    { name: "Protein Cookie", re: /protein cookie|lenny.*larry/i, kcal100g: 366, unitGrams: 60, protein100g: 14 },
+    { name: "Halo Top", re: /halo\s?top/i, kcal100g: 80, unitGrams: 125, protein100g: 6 },
+    { name: "פריכונית שוקולד חלבון", re: /פריכונית.*חלבון/i, kcal100g: 433, unitGrams: 12, protein100g: 25 },
     { name: "קערת בוריטו", re: /קערת בוריטו|burrito bowl/i, kcal100g: 128, unitGrams: 350 },
     { name: "לקט ירקות מוקפצים קפואים", re: /לקט ירקות מוקפצים|ירקות מוקפצים קפואים/i, kcal100g: 33, unitGrams: 150 },
-    { name: "שניצל תירס/חלבון צמחי", re: /שניצל תירס|שניצל חלבון צמחי/i, kcal100g: 188, unitGrams: 85 },
-    { name: "גרנולה דלת סוכר עשירת חלבון", re: /גרנולה דלת סוכר|גרנולה.*חלבון/i, kcal100g: 411, unitGrams: 45 },
-    { name: "תערובת פנקייק חלבון", re: /פנקייק חלבון|kodiak cakes/i, kcal100g: 380, unitGrams: 50 },
-    { name: "יוגורט יווני 0%", re: /יוגורט יווני 0%|fage total 0/i, kcal100g: 54, unitGrams: 170 },
-    { name: "גבינת סקי", re: /גבינת סקי/i, kcal100g: 57, unitGrams: 250 },
-    { name: "מעדן חלבון פרו/GO", re: /מעדן חלבון (פרו|go)/i, kcal100g: 62, unitGrams: 200 },
-    { name: "שבבי סויה יבשים (TVP)", re: /שבבי סויה|בונזו סויה|\btvp\b/i, kcal100g: 340, unitGrams: 30 },
-    { name: "חמאת בוטנים באבקה (PB2)", re: /\bpb2\b|חמאת בוטנים באבקה/i, kcal100g: 500, unitGrams: 12 },
+    { name: "שניצל תירס/חלבון צמחי", re: /שניצל תירס|שניצל חלבון צמחי/i, kcal100g: 188, unitGrams: 85, protein100g: 12 },
+    { name: "גרנולה דלת סוכר עשירת חלבון", re: /גרנולה דלת סוכר|גרנולה.*חלבון/i, kcal100g: 411, unitGrams: 45, protein100g: 15 },
+    { name: "תערובת פנקייק חלבון", re: /פנקייק חלבון|kodiak cakes/i, kcal100g: 380, unitGrams: 50, protein100g: 20 },
+    { name: "יוגורט יווני 0%", re: /יוגורט יווני 0%|fage total 0/i, kcal100g: 54, unitGrams: 170, protein100g: 10 },
+    { name: "גבינת סקי", re: /גבינת סקי/i, kcal100g: 57, unitGrams: 250, protein100g: 3.5 },
+    { name: "מעדן חלבון פרו/GO", re: /מעדן חלבון (פרו|go)/i, kcal100g: 62, unitGrams: 200, protein100g: 6 },
+    { name: "שבבי סויה יבשים (TVP)", re: /שבבי סויה|בונזו סויה|\btvp\b/i, kcal100g: 340, unitGrams: 30, protein100g: 50 },
+    { name: "חמאת בוטנים באבקה (PB2)", re: /\bpb2\b|חמאת בוטנים באבקה/i, kcal100g: 500, unitGrams: 12, protein100g: 40 },
     { name: "שמן קוקוס", re: /שמן קוקוס|coconut oil/i, kcal100g: 862, unitGrams: 10 },
     { name: "פופקורן 100 קלוריות", re: /פופקורן 100 קלוריות/i, kcal100g: 333, unitGrams: 30 },
     { name: "שיבולת שועל מבושלת", re: /שיבולת שועל מבושלת|oatmeal cooked/i, kcal100g: 72, unitGrams: 230 },
-    { name: "חלבון ביצה נוזלי", re: /חלבון ביצה נוזלי|liquid egg whites?/i, kcal100g: 52, unitGrams: 100 },
+    { name: "חלבון ביצה נוזלי", re: /חלבון ביצה נוזלי|liquid egg whites?/i, kcal100g: 52, unitGrams: 100, protein100g: 11 },
     { name: "אורז יבש (לפני בישול)", re: /אורז.*(יבש|לפני בישול)/i, kcal100g: 355, unitGrams: 100 },
-    { name: "בקר טחון רזה מבושל", re: /בקר טחון.*מבושל|בקר טחון רזה 5%/i, kcal100g: 170, unitGrams: 150 },
-    { name: "פילה דג לבן ללא שמן בתנור", re: /(אמנון|מושט).*ללא שמן|פילה דג לבן.*תנור/i, kcal100g: 96, unitGrams: 150 },
-    { name: "עדשים יבשות (לפני בישול)", re: /עדשים (יבשות|לפני בישול)/i, kcal100g: 352, unitGrams: 100 },
-    { name: "חומוס גרגרים יבשים (לפני בישול)", re: /חומוס.*(יבשים|לפני בישול)/i, kcal100g: 364, unitGrams: 100 },
-    { name: "חומוס גרגרים מבושלים במים", re: /חומוס.*מבושלים במים/i, kcal100g: 164, unitGrams: 164 },
-    { name: "שעועית לבנה מבושלת", re: /שעועית לבנה מבושלת/i, kcal100g: 144, unitGrams: 170 },
+    { name: "בקר טחון רזה מבושל", re: /בקר טחון.*מבושל|בקר טחון רזה 5%/i, kcal100g: 170, unitGrams: 150, protein100g: 26 },
+    { name: "פילה דג לבן ללא שמן בתנור", re: /(אמנון|מושט).*ללא שמן|פילה דג לבן.*תנור/i, kcal100g: 96, unitGrams: 150, protein100g: 20 },
+    { name: "עדשים יבשות (לפני בישול)", re: /עדשים (יבשות|לפני בישול)/i, kcal100g: 352, unitGrams: 100, protein100g: 24 },
+    { name: "חומוס גרגרים יבשים (לפני בישול)", re: /חומוס.*(יבשים|לפני בישול)/i, kcal100g: 364, unitGrams: 100, protein100g: 19 },
+    { name: "חומוס גרגרים מבושלים במים", re: /חומוס.*מבושלים במים/i, kcal100g: 164, unitGrams: 164, protein100g: 9 },
+    { name: "שעועית לבנה מבושלת", re: /שעועית לבנה מבושלת/i, kcal100g: 144, unitGrams: 170, protein100g: 9 },
     { name: "רוטב סויה דל נתרן", re: /רוטב סויה דל נתרן|low sodium soy sauce/i, kcal100g: 66, unitGrams: 15 },
     { name: "מיונז הולנדי קלאסי", re: /מיונז הולנדי/i, kcal100g: 666, unitGrams: 15 },
-    { name: "אבקת חלבון מי גבינה (Whey)", re: /אבקת חלבון|whey protein/i, kcal100g: 400, unitGrams: 30 },
-    { name: "קולגן פפטידים", re: /קולגן|collagen/i, kcal100g: 350, unitGrams: 10 },
+    { name: "אבקת חלבון מי גבינה (Whey)", re: /אבקת חלבון|whey protein/i, kcal100g: 400, unitGrams: 30, protein100g: 80 },
+    { name: "קולגן פפטידים", re: /קולגן|collagen/i, kcal100g: 350, unitGrams: 10, protein100g: 90 },
     { name: "אבקת אלקטרוליטים ללא סוכר", re: /אבקת אלקטרוליטים|electrolyte powder/i, kcal100g: 100, unitGrams: 5 },
     { name: "מי קוקוס", re: /מי קוקוס|coconut water/i, kcal100g: 19, unitGrams: 200 },
-    { name: "אגוזי פקאן קלויים", re: /אגוזי פקאן|pecans?/i, kcal100g: 690, unitGrams: 20 },
-    { name: "פולי סויה קלויים יבשים", re: /פולי סויה קלויים|dry roasted edamame/i, kcal100g: 433, unitGrams: 30 },
+    { name: "אגוזי פקאן קלויים", re: /אגוזי פקאן|pecans?/i, kcal100g: 690, unitGrams: 20, protein100g: 9 },
+    { name: "פולי סויה קלויים יבשים", re: /פולי סויה קלויים|dry roasted edamame/i, kcal100g: 433, unitGrams: 30, protein100g: 38 },
     { name: "קייל צ'יפס", re: /קייל צ'יפס|kale chips/i, kcal100g: 425, unitGrams: 20 },
     { name: "סובין חיטה", re: /סובין חיטה|wheat bran/i, kcal100g: 213, unitGrams: 15 },
     { name: "סובין שיבולת שועל", re: /סובין שיבולת שועל|oat bran/i, kcal100g: 246, unitGrams: 20 },
@@ -10616,7 +10729,7 @@ const FOOD_CALORIE_DB = [
     // נפרדת (בניגוד ל"חמאת בוטנים" למעלה, שהצורה הנסמכת "חמאת" מסתיימת ב-ת
     // ולא ב-ה כמו "חמאה" ולכן לא מתנגשת - כאן "שמנת" עצמה כתובה מלא, לא נסמך)
     // - בלי סדר הפוך זה תמיד היה נתפס כשמנת נוזלית (340) במקום גבינת שמנת (342)
-    { name: "גבינת שמנת", re: /גבינת שמנת|cream cheese/i, kcal100g: 342, unitGrams: 30 },
+    { name: "גבינת שמנת", re: /גבינת שמנת|cream cheese/i, kcal100g: 342, unitGrams: 30, protein100g: 6 },
     // שמנת חייבת לבוא *לפני* שמן - "שמנת" מתחילה באותן 3 אותיות בדיוק כמו
     // "שמן" (ש-מ-ן), אז בלי סדר הפוך, "שמנת" הייתה תמיד נתפסת כשמן (884 קל'
     // ל-100 גרם) במקום שמנת (340) - אותה בעיה בדיוק כמו יוגורט פרו/סוכר חום למעלה
@@ -10635,19 +10748,19 @@ const FOOD_CALORIE_DB = [
     // הגרסה הבסיסית של אותו משקה, אחרת "משקה שיבולת שועל בריסטה" תמיד היה
     // נתפס כגרסה הרגילה (ומפספס את הקלוריות הגבוהות יותר של הבריסטה)
     { name: "משקה שיבולת שועל בריסטה", re: /(חלב|משקה) שיבולת שועל.*בריסטה|בריסטה.*שיבולת שועל|oat.?milk.*barista|barista.*oat/i, kcal100g: 60, unitGrams: 200 },
-    { name: "משקה סויה בריסטה", re: /(חלב|משקה) סויה.*בריסטה|בריסטה.*סויה/i, kcal100g: 54, unitGrams: 200 },
+    { name: "משקה סויה בריסטה", re: /(חלב|משקה) סויה.*בריסטה|בריסטה.*סויה/i, kcal100g: 54, unitGrams: 200, protein100g: 3.5 },
     { name: "משקה שקדים בריסטה", re: /(חלב|משקה) שקדים.*בריסטה|בריסטה.*שקדים/i, kcal100g: 44, unitGrams: 200 },
     // גם "חלב X" וגם "משקה X" - לפי בקשה מפורשת, אנשים כותבים את שני הניסוחים
     // גרסאות בטעמים (שוקולד/וניל) חייבות לבוא *לפני* הגרסאות הכלליות למטה -
     // מכילות "משקה סויה"/"משקה שקדים"/"משקה שיבולת שועל" כתת-מחרוזת, ובלי
     // הסדר הזה היו נתפסות כערך הממותק הכללי (sweetenedKcal100g) במקום הטעם
     // הספציפי (נתונים מדויקים מהמשתמשת)
-    { name: "משקה סויה שוקולד", re: /משקה סויה.*שוקולד|סויה.*שוקולד.*משקה|soy.*chocolate.*milk/i, kcal100g: 61, unitGrams: 200 },
-    { name: "משקה סויה וניל", re: /משקה סויה.*וניל|וניל.*משקה סויה|soy.*vanilla.*milk/i, kcal100g: 57, unitGrams: 200 },
+    { name: "משקה סויה שוקולד", re: /משקה סויה.*שוקולד|סויה.*שוקולד.*משקה|soy.*chocolate.*milk/i, kcal100g: 61, unitGrams: 200, protein100g: 3 },
+    { name: "משקה סויה וניל", re: /משקה סויה.*וניל|וניל.*משקה סויה|soy.*vanilla.*milk/i, kcal100g: 57, unitGrams: 200, protein100g: 3 },
     { name: "משקה שקדים שוקולד", re: /משקה שקדים.*שוקולד|שקדים.*שוקולד.*משקה|almond.*chocolate.*milk/i, kcal100g: 47, unitGrams: 200 },
     { name: "משקה שיבולת שועל שוקולד", re: /משקה שיבולת שועל.*שוקולד|שיבולת שועל.*שוקולד|oat.*chocolate.*milk/i, kcal100g: 61, unitGrams: 200 },
     // עודכן ל-33 (מ-44) לפי נתון מדויק מהמשתמשת (משקה סויה ללא סוכר)
-    { name: "חלב סויה", re: /חלב סויה|משקה סויה|soy.?milk/i, kcal100g: 33, sweetenedKcal100g: 67, unitGrams: 200 },
+    { name: "חלב סויה", re: /חלב סויה|משקה סויה|soy.?milk/i, kcal100g: 33, sweetenedKcal100g: 67, unitGrams: 200, protein100g: 3.3 },
     { name: "חלב שקדים", re: /חלב שקדים|משקה שקדים|almond.?milk/i, kcal100g: 14, sweetenedKcal100g: 31, unitGrams: 200 },
     { name: "חלב שיבולת שועל", re: /חלב שיבולת שועל|משקה שיבולת שועל|oat.?milk/i, kcal100g: 45, sweetenedKcal100g: 58, unitGrams: 200 },
     // קוקוס: שלושה מוצרים שונים מאוד - משקה קוקוס לשתייה (הכי דליל), חלב קוקוס
@@ -10662,23 +10775,23 @@ const FOOD_CALORIE_DB = [
     { name: "משקה אורז", re: /משקה אורז|rice milk/i, kcal100g: 49, unitGrams: 200 },
     { name: "משקה אגוזי לוז", re: /משקה אגוזי לוז|hazelnut milk/i, kcal100g: 32, sweetenedKcal100g: 50, unitGrams: 200 },
     { name: "משקה קשיו", re: /משקה קשיו|cashew milk/i, kcal100g: 25, sweetenedKcal100g: 44, unitGrams: 200 },
-    { name: "משקה אפונה", re: /משקה אפונה|pea milk/i, kcal100g: 45, unitGrams: 200 },
+    { name: "משקה אפונה", re: /משקה אפונה|pea milk/i, kcal100g: 45, unitGrams: 200, protein100g: 3.3 },
     { name: "משקה כוסמין", re: /משקה כוסמין|spelt milk/i, kcal100g: 43, unitGrams: 200 },
     // אבקת חלב חייבת לבוא *לפני* חלב - "אבקת חלב" מכילה "חלב" עם רווח לפני
     // וסוף-מחרוזת אחרי, שעונה על הגנת הגבול של חלב - בלי סדר הפוך זה תמיד
     // היה נתפס כחלב נוזלי רגיל (42) במקום אבקה מרוכזת בהרבה (496)
-    { name: "אבקת חלב", re: /אבקת חלב|milk powder/i, kcal100g: 496, unitGrams: 30 },
+    { name: "אבקת חלב", re: /אבקת חלב|milk powder/i, kcal100g: 496, unitGrams: 30, protein100g: 26 },
     // משקאות חלב בטעמים ומותגים - חייבים לבוא *לפני* חלב הכללי למטה, מכילים
     // "חלב" כתת-מחרוזת עם גבול תקין (נתונים מדויקים מהמשתמשת)
-    { name: "משקה חלב וניל", re: /משקה חלב.*וניל|חלב בטעם וניל/i, kcal100g: 70, unitGrams: 200 },
-    { name: "משקה חלב בננה", re: /משקה חלב.*בננה|חלב בטעם בננה/i, kcal100g: 71, unitGrams: 200 },
-    { name: "משקה חלב אייס קפה", re: /משקה חלב.*אייס קפה|חלב בטעם אייס קפה|iced coffee milk/i, kcal100g: 68, unitGrams: 200 },
-    { name: "משקה חלב מוכפל חלבון שוקולד", re: /מוכפל חלבון.*שוקולד|חלבון כפול.*שוקולד/i, kcal100g: 58, unitGrams: 350 },
-    { name: "משקה חלב מוכפל חלבון וניל", re: /מוכפל חלבון.*וניל|חלבון כפול.*וניל/i, kcal100g: 56, unitGrams: 350 },
-    { name: "יזו", re: /יזו|yazoo/i, kcal100g: 60, unitGrams: 400 },
-    { name: "נסקוויק", re: /נסקוויק|nesquik/i, kcal100g: 75, unitGrams: 200 },
-    { name: "פיירלייף", re: /פיירלייף|fairlife/i, kcal100g: 58, unitGrams: 200 },
-    { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42, unitGrams: 200, percentTable: { 1: 42, 3: 58 } },
+    { name: "משקה חלב וניל", re: /משקה חלב.*וניל|חלב בטעם וניל/i, kcal100g: 70, unitGrams: 200, protein100g: 3.2 },
+    { name: "משקה חלב בננה", re: /משקה חלב.*בננה|חלב בטעם בננה/i, kcal100g: 71, unitGrams: 200, protein100g: 3.2 },
+    { name: "משקה חלב אייס קפה", re: /משקה חלב.*אייס קפה|חלב בטעם אייס קפה|iced coffee milk/i, kcal100g: 68, unitGrams: 200, protein100g: 3.2 },
+    { name: "משקה חלב מוכפל חלבון שוקולד", re: /מוכפל חלבון.*שוקולד|חלבון כפול.*שוקולד/i, kcal100g: 58, unitGrams: 350, protein100g: 7 },
+    { name: "משקה חלב מוכפל חלבון וניל", re: /מוכפל חלבון.*וניל|חלבון כפול.*וניל/i, kcal100g: 56, unitGrams: 350, protein100g: 7 },
+    { name: "יזו", re: /יזו|yazoo/i, kcal100g: 60, unitGrams: 400, protein100g: 3.5 },
+    { name: "נסקוויק", re: /נסקוויק|nesquik/i, kcal100g: 75, unitGrams: 200, protein100g: 3.2 },
+    { name: "פיירלייף", re: /פיירלייף|fairlife/i, kcal100g: 58, unitGrams: 200, protein100g: 5.4 },
+    { name: "חלב", re: /(^|[^א-ת])חלב(?:$|[^א-ת])|\bmilk\b/i, kcal100g: 42, unitGrams: 200, percentTable: { 1: 42, 3: 58 }, protein100g: 3.4 },
     { name: "דבש", re: /דבש|honey/i, kcal100g: 304, unitGrams: 20 },
     { name: "סילאן", re: /סילאן|date honey|\bsilan\b/i, kcal100g: 315, unitGrams: 20 },
     { name: "נוטלה", re: /נוטלה|nutella/i, kcal100g: 539, unitGrams: 20 },
@@ -10688,60 +10801,60 @@ const FOOD_CALORIE_DB = [
     // בטבלה במקום ב-kcal100g הכללי; קוטג'/גבינה לבנה/גבינה חייבים גם לבוא
     // *לפני* גבינה (ראו ההערה הקיימת למטה)
     // עודכן percentTable (0.5%=70, 3%=95, 5%=105) לפי נתון מדויק מהמשתמשת
-    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 95, unitGrams: 250, percentTable: { 0.5: 70, 3: 95, 5: 105, 9: 135 } },
+    { name: "קוטג'", re: /קוטג['׳]?|cottage cheese/i, kcal100g: 95, unitGrams: 250, percentTable: { 0.5: 70, 3: 95, 5: 105, 9: 135 }, protein100g: 11 },
     // גבינה לבנה/מוצרלה/פטה/פרמזן/גבינת עיזים חייבות לבוא *לפני* גבינה -
     // "גבינה לבנה" מכילה את "גבינה" כתת-מחרוזת, ומדובר במוצר שונה לגמרי בערכים
     // (רך/משוח, לא גבינה קשה) - בלי סדר הפוך זה תמיד היה נתפס כגבינה קשה
     // רגילה (350 קל') במקום 95 (5%, הכי נפוץ)
     // עודכן ל-5%=73 (מ-95) לפי נתון מדויק מהמשתמשת
     // עודכן 5%=96 (מ-73) לפי נתון מדויק מהמשתמשת
-    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 96, unitGrams: 100, percentTable: { 3: 80, 5: 96, 9: 135, 20: 220 } },
-    { name: "מוצרלה", re: /מוצרלה|mozzarella/i, kcal100g: 280, unitGrams: 100 },
-    { name: "פטה", re: /פטה|\bfeta\b/i, kcal100g: 264, unitGrams: 50 },
+    { name: "גבינה לבנה", re: /גבינה לבנה|white cheese/i, kcal100g: 96, unitGrams: 100, percentTable: { 3: 80, 5: 96, 9: 135, 20: 220 }, protein100g: 7 },
+    { name: "מוצרלה", re: /מוצרלה|mozzarella/i, kcal100g: 280, unitGrams: 100, protein100g: 22 },
+    { name: "פטה", re: /פטה|\bfeta\b/i, kcal100g: 264, unitGrams: 50, protein100g: 14 },
     // עודכן ל-392 (מ-431) לפי נתון מדויק מהמשתמשת (Parmigiano Reggiano)
-    { name: "פרמזן", re: /פרמזן|parmesan/i, kcal100g: 392, unitGrams: 10 },
-    { name: "Manchego", re: /manchego/i, kcal100g: 400, unitGrams: 28 },
-    { name: "Gouda Aged", re: /gouda( aged)?/i, kcal100g: 393, unitGrams: 28 },
-    { name: "Roquefort", re: /roquefort|גבינה כחולה/i, kcal100g: 369, unitGrams: 28 },
-    { name: "Halloumi", re: /halloumi|חלומי/i, kcal100g: 316, unitGrams: 30 },
+    { name: "פרמזן", re: /פרמזן|parmesan/i, kcal100g: 392, unitGrams: 10, protein100g: 38 },
+    { name: "Manchego", re: /manchego/i, kcal100g: 400, unitGrams: 28, protein100g: 26 },
+    { name: "Gouda Aged", re: /gouda( aged)?/i, kcal100g: 393, unitGrams: 28, protein100g: 25 },
+    { name: "Roquefort", re: /roquefort|גבינה כחולה/i, kcal100g: 369, unitGrams: 28, protein100g: 21 },
+    { name: "Halloumi", re: /halloumi|חלומי/i, kcal100g: 316, unitGrams: 30, protein100g: 21 },
     { name: "Dumpling Wrappers", re: /dumpling wrappers?/i, kcal100g: 280, unitGrams: 10 },
     { name: "Bao Buns", re: /bao buns?/i, kcal100g: 260, unitGrams: 50 },
-    { name: "גבינת עיזים", re: /גבינת עיזים|goat cheese/i, kcal100g: 364, unitGrams: 30 },
+    { name: "גבינת עיזים", re: /גבינת עיזים|goat cheese/i, kcal100g: 364, unitGrams: 30, protein100g: 21 },
     // גבינה בולגרית חייבת לבוא *לפני* גבינה הכללית (מכילה "גבינה" כתת-מחרוזת)
-    { name: "גבינה בולגרית", re: /גבינה בולגרית|bulgarian cheese/i, kcal100g: 120, unitGrams: 50, percentTable: { 5: 120, 16: 240 } },
+    { name: "גבינה בולגרית", re: /גבינה בולגרית|bulgarian cheese/i, kcal100g: 120, unitGrams: 50, percentTable: { 5: 120, 16: 240 }, protein100g: 15 },
     // percentTable[28] עודכן מ-300 ל-340 לפי נתון מדויק מהמשתמשת (330-350 קל')
-    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 300, unitGrams: 25, percentTable: { 9: 220, 28: 340, 45: 400 } },
+    { name: "גבינה", re: /גבינה|cheese/i, kcal100g: 300, unitGrams: 25, percentTable: { 9: 220, 28: 340, 45: 400 }, protein100g: 25 },
     { name: "אבקת אפייה", re: /אבקת אפייה|baking powder|סודה לשתייה|baking soda/i, kcal100g: 53 },
     { name: "שמרים", re: /שמרים|yeast/i, kcal100g: 105 },
     // פירוט אגוזים/זרעים/פיצוחים לפי סוג - ר' האשכול המפורט בהמשך הרשימה, אחרי
     // חמאת בוטנים (חייב לבוא *אחריה*, כי "בוטנים" תת-מחרוזת של "חמאת בוטנים")
     // עוד חלבון צמחוני/טבעוני - לפי בקשה מפורשת
     // עודכן מ-370 ל-150 לפי נתון מדויק מהמשתמשת (סייטן מוכן, לא אבקת גלוטן יבשה)
-    { name: "סייטן", re: /סייטן|seitan/i, kcal100g: 150, unitGrams: 100 },
-    { name: "טמפה", re: /טמפה|tempeh/i, kcal100g: 193, unitGrams: 100 },
+    { name: "סייטן", re: /סייטן|seitan/i, kcal100g: 150, unitGrams: 100, protein100g: 25 },
+    { name: "טמפה", re: /טמפה|tempeh/i, kcal100g: 193, unitGrams: 100, protein100g: 19 },
     // עודכן ל-200 (מ-250) לפי נתון מדויק מהמשתמשת (שניצל צמחוני/טבעוני דמוי
     // עוף, יחידה אחת - 180-220 קל')
-    { name: "שניצל צמחוני", re: /שניצל (צמחוני|טבעוני|סויה)|vegan schnitzel|veggie schnitzel/i, kcalPerUnit: 200 },
+    { name: "שניצל צמחוני", re: /שניצל (צמחוני|טבעוני|סויה)|vegan schnitzel|veggie schnitzel/i, kcalPerUnit: 200, proteinPerUnit: 10 },
     // עוד סוגי שניצל (ביתי/קנוי/וינאי/תירס/בגט) - נתונים מדויקים מהמשתמשת.
     // כולם חייבים לבוא *לפני* שניצל הכללי בהמשך - כל אחד מהם מכיל "שניצל"
     // כתת-מחרוזת, ובלי הסדר הזה תמיד היו נתפסים כשניצל הכללי (300 קל')
-    { name: "שניצל עוף אפוי", re: /שניצל (עוף )?אפוי( בתנור)?|baked (chicken )?schnitzel/i, kcalPerUnit: 175 },
-    { name: "שניצל עוף מטוגן", re: /שניצל (עוף )?מטוגן( במחבת)?|pan.?fried (chicken )?schnitzel/i, kcalPerUnit: 265 },
-    { name: "שניצל וינאי", re: /שניצל וינאי|wiener schnitzel|viennese schnitzel/i, kcalPerUnit: 450 },
-    { name: "שניצל תירס קפוא", re: /שניצל תירס|corn schnitzel/i, kcalPerUnit: 175 },
+    { name: "שניצל עוף אפוי", re: /שניצל (עוף )?אפוי( בתנור)?|baked (chicken )?schnitzel/i, kcalPerUnit: 175, proteinPerUnit: 25 },
+    { name: "שניצל עוף מטוגן", re: /שניצל (עוף )?מטוגן( במחבת)?|pan.?fried (chicken )?schnitzel/i, kcalPerUnit: 265, proteinPerUnit: 25 },
+    { name: "שניצל וינאי", re: /שניצל וינאי|wiener schnitzel|viennese schnitzel/i, kcalPerUnit: 450, proteinPerUnit: 35 },
+    { name: "שניצל תירס קפוא", re: /שניצל תירס|corn schnitzel/i, kcalPerUnit: 175, proteinPerUnit: 6 },
     // "שניצל עוף קפוא" חייב לבוא *אחרי* "שניצל עוף אפוי"/"שניצל עוף מטוגן"
     // למעלה - כדי שהתיאורים הספציפיים יותר (אפוי/מטוגן) עדיין ייתפסו קודם
-    { name: "שניצל עוף קפוא", re: /שניצל עוף קפוא|frozen chicken schnitzel/i, kcalPerUnit: 240 },
-    { name: "נאגטס", re: /נאגטס|chicken nuggets?/i, kcalPerUnit: 52 },
+    { name: "שניצל עוף קפוא", re: /שניצל עוף קפוא|frozen chicken schnitzel/i, kcalPerUnit: 240, proteinPerUnit: 22 },
+    { name: "נאגטס", re: /נאגטס|chicken nuggets?/i, kcalPerUnit: 52, proteinPerUnit: 2.5 },
     // שניצל בבגט (מנת סנדוויצ'רייה שלמה - בגט + 2 שניצלים + רטבים/סלטים) -
     // ממוקם כאן, *לפני* "בגט" הכללי בהמשך הקובץ, כדי שלא יישבר לשניים
-    { name: "שניצל בבגט", re: /שניצל בבגט|schnitzel baguette sandwich/i, kcalPerUnit: 1025 },
+    { name: "שניצל בבגט", re: /שניצל בבגט|schnitzel baguette sandwich/i, kcalPerUnit: 1025, proteinPerUnit: 45 },
     // שניצל (עוף) רגיל - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה, כדי
     // שהמילים הספציפיות (צמחוני/אפוי/מטוגן/וינאי/תירס/קפוא/בבגט) עדיין
     // ייתפסו נכון קודם. נשאר כברירת מחדל סבירה לתיאור לא-ספציפי
     // unitGrams תוקן מ-150 ל-120 - 150 גרם זו יותר מנה גדולה של מסעדה; שניצל
     // ביתי בגודל בינוני שוקל בערך 100-120 גרם מבושל
-    { name: "שניצל", re: /שניצל|schnitzel/i, kcal100g: 250, unitGrams: 120 },
+    { name: "שניצל", re: /שניצל|schnitzel/i, kcal100g: 250, unitGrams: 120, protein100g: 25 },
     // קציצת תפוח-אדמה/בטטה חייבת לבוא *לפני* קציצות בשר הכללית (מכילה
     // "קציצה" כתת-מחרוזת) - בלעדיה "קציצה של תפוח אדמה" הייתה נופלת לערך
     // הבשרי (215 קל'/100 גר', מיועד לבשר טחון) *וגם* "תפוח אדמה" היה נספר
@@ -10749,7 +10862,7 @@ const FOOD_CALORIE_DB = [
     // למנה אחת שהיא בעיקר תפוח אדמה מרוסק+ביצה, לא בשר - לפי דיווח מפורש
     // (חצי קציצה אפויה יצאה 90 קל' באפליקציה מול "עד 50" בגוגל)
     { name: "קציצת תפוח אדמה/בטטה", re: /קציצ(ה|ת|ות) (של )?(תפוח(י)? אדמה|תפו"א|בטטה|בטטות)|potato (patty|patties|cutlet)/i, kcal100g: 150, unitGrams: 65 },
-    { name: "קציצות בשר", re: /קציצ(ה|ות)( בשר)?|meatballs?/i, kcal100g: 215, unitGrams: 100 },
+    { name: "קציצות בשר", re: /קציצ(ה|ות)( בשר)?|meatballs?/i, kcal100g: 215, unitGrams: 100, protein100g: 17 },
     // סלטים/ממרחים קנויים נוספים - נתונים מדויקים מהמשתמשת. חייבים לבוא
     // *לפני* חצילים/תפוח (אדמה)/כרוב/גזר הכלליים בהמשך - אותה סיבה כמו כל
     // שאר "חייב לבוא לפני" בקובץ: כל אחד מהם מכיל מרכיב-בסיס קיים כתת-מחרוזת
@@ -10847,88 +10960,88 @@ const FOOD_CALORIE_DB = [
     // קציצת עוף/הודו להמבורגר - נתון מדויק מהמשתמשת. חייבת לבוא *כאן*,
     // *לפני* עוף (ו*לפני* הודו בהמשך הקובץ) - מכילה "עוף"/"הודו" כתת-
     // מחרוזת, ובלי הסדר הזה תמיד הייתה נתפסת כחזה עוף/הודו רגיל
-    { name: "קציצת עוף/הודו להמבורגר", re: /קציצת (עוף|הודו)( להמבורגר)?|chicken burger patty|turkey burger patty/i, kcalPerUnit: 205 },
-    { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165, unitGrams: 150 },
-    { name: "פרגית", re: /פרגית|chicken thigh fillet/i, kcal100g: 180, unitGrams: 150 },
+    { name: "קציצת עוף/הודו להמבורגר", re: /קציצת (עוף|הודו)( להמבורגר)?|chicken burger patty|turkey burger patty/i, kcalPerUnit: 205, proteinPerUnit: 20 },
+    { name: "עוף", re: /חזה עוף|עוף|chicken/i, kcal100g: 165, unitGrams: 150, protein100g: 31 },
+    { name: "פרגית", re: /פרגית|chicken thigh fillet/i, kcal100g: 180, unitGrams: 150, protein100g: 26 },
     // טונה בשמן חייבת לבוא *לפני* טונה הכללית (במים, בסמוך למטה) - מכילה
     // "טונה" כתת-מחרוזת, וקלורית בהרבה מטונה במים
-    { name: "טונה בשמן", re: /טונה בשמן|טונה שמן זית|tuna in oil/i, kcal100g: 195, unitGrams: 100 },
+    { name: "טונה בשמן", re: /טונה בשמן|טונה שמן זית|tuna in oil/i, kcal100g: 195, unitGrams: 100, protein100g: 25 },
     // דורש שלא יופיע "אדומה"/"טרייה"/"steak" - גרסת הסטייק הטרי (למעלה, בין
     // דגים אחרים) שונה בערך ומטופלת בנפרד
-    { name: "טונה", re: /טונה(?! (אדומה|טרי(ה)?))|tuna(?! steak)/i, kcal100g: 116, unitGrams: 100 },
+    { name: "טונה", re: /טונה(?! (אדומה|טרי(ה)?))|tuna(?! steak)/i, kcal100g: 116, unitGrams: 100, protein100g: 26 },
     // עוד דגים נפוצים - לפי בקשה מפורשת ("דגים"), אותו מסד חינמי-לוקאלי
-    { name: "בקלה", re: /בקלה|\bcod\b/i, kcal100g: 105, unitGrams: 150 },
-    { name: "מושט/טילפיה", re: /מושט|טילפיה|tilapia/i, kcal100g: 128, unitGrams: 150 },
+    { name: "בקלה", re: /בקלה|\bcod\b/i, kcal100g: 105, unitGrams: 150, protein100g: 22 },
+    { name: "מושט/טילפיה", re: /מושט|טילפיה|tilapia/i, kcal100g: 128, unitGrams: 150, protein100g: 26 },
     // פוצל לפי מין (לברק/דניס/אמנון) עם ערכים מדויקים מהמשתמשת - כל אחד
     // חייב לבוא *לפני* ה"אמנון" הכללי, ו"דניס" לבדה כי "sea bream"/"branzino"
     // כבר לא חופפים
-    { name: "פילה לברק (Sea Bass)", re: /לברק|sea bass/i, kcal100g: 124, unitGrams: 150 },
-    { name: "פילה דניס/צ'פורה (Sea Bream)", re: /דניס|צ'פורה|sea bream/i, kcal100g: 135, unitGrams: 150 },
-    { name: "פילה נסיכת הנילוס", re: /נסיכת הנילוס|נסיכה אפוי|nile perch/i, kcal100g: 92, unitGrams: 150 },
-    { name: "פילה הליבוט (Halibut)", re: /הליבוט|halibut/i, kcal100g: 110, unitGrams: 150 },
-    { name: "פילה סול/פלנדר (Sole)", re: /\bסול\b|פלנדר|\bsole\b|flounder/i, kcal100g: 90, unitGrams: 150 },
-    { name: "פילה קוד/באסה אפוי", re: /קוד.*אפוי|באסה|\bbasa\b/i, kcal100g: 82, unitGrams: 150 },
-    { name: "טונה אדומה/סטייק צרוב", re: /טונה אדומה|טונה טרי(ה)?|tuna steak/i, kcal100g: 130, unitGrams: 150 },
-    { name: "מקרל אפוי/מעושן טרי", re: /מקרל אפוי|מקרל מעושן/i, kcal100g: 262, unitGrams: 120 },
-    { name: "הרינג/דג מלוח", re: /הרינג|herring/i, kcal100g: 260, unitGrams: 50 },
-    { name: "סלמון בשימורים במים", re: /סלמון בשימורים במים|canned salmon.*water/i, kcal100g: 136, unitGrams: 120 },
-    { name: "קציצות/אצבעות דג אפויות", re: /קציצות דג|אצבעות דג|fish fingers?/i, kcal100g: 200, unitGrams: 90 },
-    { name: "איקרה/ממרח ביצי דגים", re: /איקרה|fish roe spread/i, kcal100g: 450, unitGrams: 20 },
-    { name: "סורימי", re: /סורימי|surimi/i, kcal100g: 100, unitGrams: 50 },
-    { name: "בורי", re: /בורי|grey mullet/i, kcal100g: 150, unitGrams: 150 },
-    { name: "קרפיון", re: /קרפיון|\bcarp\b/i, kcal100g: 127, unitGrams: 150 },
-    { name: "סטייק דג חרב", re: /דג חרב|swordfish/i, kcal100g: 172, unitGrams: 150 },
-    { name: "אמנון/דניס/לברק", re: /אמנון|דניס|לברק|sea bream|branzino/i, kcal100g: 120, unitGrams: 150 },
+    { name: "פילה לברק (Sea Bass)", re: /לברק|sea bass/i, kcal100g: 124, unitGrams: 150, protein100g: 24 },
+    { name: "פילה דניס/צ'פורה (Sea Bream)", re: /דניס|צ'פורה|sea bream/i, kcal100g: 135, unitGrams: 150, protein100g: 24 },
+    { name: "פילה נסיכת הנילוס", re: /נסיכת הנילוס|נסיכה אפוי|nile perch/i, kcal100g: 92, unitGrams: 150, protein100g: 20 },
+    { name: "פילה הליבוט (Halibut)", re: /הליבוט|halibut/i, kcal100g: 110, unitGrams: 150, protein100g: 23 },
+    { name: "פילה סול/פלנדר (Sole)", re: /\bסול\b|פלנדר|\bsole\b|flounder/i, kcal100g: 90, unitGrams: 150, protein100g: 19 },
+    { name: "פילה קוד/באסה אפוי", re: /קוד.*אפוי|באסה|\bbasa\b/i, kcal100g: 82, unitGrams: 150, protein100g: 18 },
+    { name: "טונה אדומה/סטייק צרוב", re: /טונה אדומה|טונה טרי(ה)?|tuna steak/i, kcal100g: 130, unitGrams: 150, protein100g: 27 },
+    { name: "מקרל אפוי/מעושן טרי", re: /מקרל אפוי|מקרל מעושן/i, kcal100g: 262, unitGrams: 120, protein100g: 24 },
+    { name: "הרינג/דג מלוח", re: /הרינג|herring/i, kcal100g: 260, unitGrams: 50, protein100g: 18 },
+    { name: "סלמון בשימורים במים", re: /סלמון בשימורים במים|canned salmon.*water/i, kcal100g: 136, unitGrams: 120, protein100g: 21 },
+    { name: "קציצות/אצבעות דג אפויות", re: /קציצות דג|אצבעות דג|fish fingers?/i, kcal100g: 200, unitGrams: 90, protein100g: 13 },
+    { name: "איקרה/ממרח ביצי דגים", re: /איקרה|fish roe spread/i, kcal100g: 450, unitGrams: 20, protein100g: 15 },
+    { name: "סורימי", re: /סורימי|surimi/i, kcal100g: 100, unitGrams: 50, protein100g: 12 },
+    { name: "בורי", re: /בורי|grey mullet/i, kcal100g: 150, unitGrams: 150, protein100g: 19 },
+    { name: "קרפיון", re: /קרפיון|\bcarp\b/i, kcal100g: 127, unitGrams: 150, protein100g: 18 },
+    { name: "סטייק דג חרב", re: /דג חרב|swordfish/i, kcal100g: 172, unitGrams: 150, protein100g: 20 },
+    { name: "אמנון/דניס/לברק", re: /אמנון|דניס|לברק|sea bream|branzino/i, kcal100g: 120, unitGrams: 150, protein100g: 21 },
     // סלמון מעושן חייב לבוא *לפני* סלמון הכללי (בסמוך למטה) - מכיל "סלמון"
     // כתת-מחרוזת, ופחות קלורי (170 מול 208 ל-100 גרם, לפי נתון מהמשתמשת)
-    { name: "סלמון מעושן", re: /סלמון מעושן|smoked salmon/i, kcal100g: 170, unitGrams: 19 },
+    { name: "סלמון מעושן", re: /סלמון מעושן|smoked salmon/i, kcal100g: 170, unitGrams: 19, protein100g: 20 },
     // עודכן ל-148 (מ-168) לפי נתון מדויק מהמשתמשת (פורל בתנור אחרי בישול)
-    { name: "פורל", re: /פורל|trout/i, kcal100g: 148, unitGrams: 150 },
-    { name: "הרינג", re: /הרינג|herring/i, kcal100g: 158, unitGrams: 80 },
-    { name: "סרדינים", re: /סרדינ(ים)?|sardines?/i, kcal100g: 208, unitGrams: 50 },
-    { name: "שרימפס/חסילון", re: /שרימפס|חסילונ(ים)?|shrimp|prawns?/i, kcal100g: 99, unitGrams: 100 },
-    { name: "קלמארי/דיונון", re: /קלמארי|דיונון|calamari|squid/i, kcal100g: 92, unitGrams: 100 },
+    { name: "פורל", re: /פורל|trout/i, kcal100g: 148, unitGrams: 150, protein100g: 21 },
+    { name: "הרינג", re: /הרינג|herring/i, kcal100g: 158, unitGrams: 80, protein100g: 18 },
+    { name: "סרדינים", re: /סרדינ(ים)?|sardines?/i, kcal100g: 208, unitGrams: 50, protein100g: 21 },
+    { name: "שרימפס/חסילון", re: /שרימפס|חסילונ(ים)?|shrimp|prawns?/i, kcal100g: 99, unitGrams: 100, protein100g: 20 },
+    { name: "קלמארי/דיונון", re: /קלמארי|דיונון|calamari|squid/i, kcal100g: 92, unitGrams: 100, protein100g: 16 },
     // מותגי יוגורט ספציפיים - חייבים לבוא *לפני* הערך הכללי "יוגורט" למטה,
     // כי הלולאה עוצרת בהתאמה הראשונה: אם הכללי היה קודם, "יוגורט פרו" היה
     // תמיד נתפס כיוגורט רגיל ואף פעם לא מגיע לערך הספציפי והמדויק יותר
     // עודכן ל-70/68 (מ-90/75) לפי נתון מדויק מהמשתמשת (שטראוס PRO / תנובה GO)
-    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 70, unitGrams: 200 },
-    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 68, unitGrams: 200 },
-    { name: "יוגורט יווני", re: /יוגורט יווני|greek yogurt/i, kcal100g: 97, unitGrams: 170 },
+    { name: "יוגורט פרו", re: /יוגורט פרו|yo\s*pro/i, kcal100g: 70, unitGrams: 200, protein100g: 8 },
+    { name: "יוגורט גו", re: /יוגורט גו|yogurt go/i, kcal100g: 68, unitGrams: 200, protein100g: 8 },
+    { name: "יוגורט יווני", re: /יוגורט יווני|greek yogurt/i, kcal100g: 97, unitGrams: 170, protein100g: 9 },
     // משקאות יוגורט - חלק מכילים "יוגורט" כתת-מחרוזת וחייבים לבוא *לפני*
     // יוגורט הכללי למטה (נתונים מדויקים מהמשתמשת). אקטימל 0% חייב לבוא
     // *לפני* אקטימל הרגיל מאותה סיבה (מכיל "אקטימל" כתת-מחרוזת)
-    { name: "אקטימל 0%", re: /אקטימל 0%|אקטימל דל שומן|actimel 0/i, kcal100g: 27, unitGrams: 100 },
-    { name: "אקטימל", re: /אקטימל|actimel/i, kcal100g: 71, unitGrams: 100 },
-    { name: "משקה יוגורט עיזים", re: /משקה יוגורט עיזים|יוגורט עיזים לשתייה|goat yogurt drink/i, kcal100g: 60, unitGrams: 200 },
-    { name: "משקה יוגורט פרי", re: /משקה יוגורט פרי|יופלה|דנונה משקה|yoplait|danone drink/i, kcal100g: 74, unitGrams: 250 },
-    { name: "קפיר", re: /קפיר|kefir/i, kcal100g: 52, unitGrams: 200 },
-    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 66, unitGrams: 150, percentTable: { 0: 45, 3: 66, 10: 110 } },
+    { name: "אקטימל 0%", re: /אקטימל 0%|אקטימל דל שומן|actimel 0/i, kcal100g: 27, unitGrams: 100, protein100g: 3 },
+    { name: "אקטימל", re: /אקטימל|actimel/i, kcal100g: 71, unitGrams: 100, protein100g: 3 },
+    { name: "משקה יוגורט עיזים", re: /משקה יוגורט עיזים|יוגורט עיזים לשתייה|goat yogurt drink/i, kcal100g: 60, unitGrams: 200, protein100g: 3.5 },
+    { name: "משקה יוגורט פרי", re: /משקה יוגורט פרי|יופלה|דנונה משקה|yoplait|danone drink/i, kcal100g: 74, unitGrams: 250, protein100g: 3 },
+    { name: "קפיר", re: /קפיר|kefir/i, kcal100g: 52, unitGrams: 200, protein100g: 3.5 },
+    { name: "יוגורט", re: /יוגורט|yogurt|yoghurt/i, kcal100g: 66, unitGrams: 150, percentTable: { 0: 45, 3: 66, 10: 110 }, protein100g: 4 },
     { name: "מלפפון", re: /מלפפון|cucumber/i, kcal100g: 15, unitGrams: 301 },
     // עודכן ל-16 (מ-11) לפי נתון מדויק מהמשתמשת
     { name: "חמוצים", re: /חמוצ(ים)?|pickles?/i, kcal100g: 16, unitGrams: 30 },
     { name: "עגבנייה", re: /עגבני|tomato/i, kcal100g: 18, unitGrams: 123 },
-    { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166, unitGrams: 50 },
+    { name: "חומוס", re: /חומוס|hummus/i, kcal100g: 166, unitGrams: 50, protein100g: 8 },
     // אבקת חלבון חייבת לבוא *לפני* חלבון ביצה - ל"חלבון ביצה" יש קבוצה
     // אופציונלית (ה?ביצה)? שמזהה גם "חלבון" סתם (כללי, לא דווקא ביצה), אז
     // בלי סדר הפוך "אבקת חלבון" (אבקת חלבון כושר, לא ביצה) הייתה תמיד נתפסת
     // כחלבון-ביצה-בודד (17 קל' ליחידה) במקום אבקה (380 ל-100 גרם)
-    { name: "אבקת חלבון", re: /אבקת חלבון|protein powder/i, kcal100g: 380, unitGrams: 30 },
+    { name: "אבקת חלבון", re: /אבקת חלבון|protein powder/i, kcal100g: 380, unitGrams: 30, protein100g: 75 },
     // מותגי חטיפי חלבון ספציפיים - חייבים לבוא *לפני* "חטיף חלבון" הכללי
     // למטה (מכילים "חלבון"/protein bar כתת-מחרוזת), נתונים מדויקים מהמשתמשת
-    { name: "חטיף חלבון גרנייד", re: /גרנייד|carb killa|grenade/i, kcal100g: 356, unitGrams: 60 },
-    { name: "חטיף חלבון קווסט", re: /קווסט|\bquest\b/i, kcal100g: 333, unitGrams: 60 },
-    { name: "חטיף חלבון אולין", re: /אולין|\ballin\b/i, kcal100g: 350, unitGrams: 60 },
+    { name: "חטיף חלבון גרנייד", re: /גרנייד|carb killa|grenade/i, kcal100g: 356, unitGrams: 60, protein100g: 33 },
+    { name: "חטיף חלבון קווסט", re: /קווסט|\bquest\b/i, kcal100g: 333, unitGrams: 60, protein100g: 35 },
+    { name: "חטיף חלבון אולין", re: /אולין|\ballin\b/i, kcal100g: 350, unitGrams: 60, protein100g: 30 },
     // חטיף חלבון גם כאן, מאותה סיבה בדיוק - מכיל "חלבון"
     // unitGrams עודכן מ-50 ל-60 לפי נתון מדויק מהמשתמשת (חטיף ~60 גרם, 200-230 קל')
-    { name: "חטיף חלבון", re: /חטיף חלבון|protein bar/i, kcal100g: 380, unitGrams: 60 },
-    { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17 },
-    { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55 },
+    { name: "חטיף חלבון", re: /חטיף חלבון|protein bar/i, kcal100g: 380, unitGrams: 60, protein100g: 30 },
+    { name: "חלבון ביצה", re: /חלבון (ה?ביצה)?|egg white/i, kcalPerUnit: 17, proteinPerUnit: 3.6 },
+    { name: "חלמון ביצה", re: /חלמון|egg yolk/i, kcalPerUnit: 55, proteinPerUnit: 2.7 },
     // ביצה מטוגנת/חביתה חייבות לבוא *לפני* ביצה - "ביצה מטוגנת" מכילה "ביצ"
     // (הרגקס הרחב של ביצה סתם), וטיגון בשמן משנה משמעותית את הקלוריות ליחידה
-    { name: "ביצה מטוגנת", re: /ביצה מטוגנת|fried egg/i, kcalPerUnit: 90 },
-    { name: "חביתה", re: /חביתה|omelet|omelette/i, kcal100g: 150, unitGrams: 120 },
-    { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70 },
+    { name: "ביצה מטוגנת", re: /ביצה מטוגנת|fried egg/i, kcalPerUnit: 90, proteinPerUnit: 6.3 },
+    { name: "חביתה", re: /חביתה|omelet|omelette/i, kcal100g: 150, unitGrams: 120, protein100g: 11 },
+    { name: "ביצה", re: /ביצ/i, kcalPerUnit: 70, proteinPerUnit: 6.3 },
     { name: "מים מוגזים", re: /מים מוגזים|sparkling water|soda water/i, kcal100g: 0 },
     { name: "מים", re: /מים|\bwater\b/i, kcal100g: 0 },
     { name: "מלח", re: /מלח|\bsalt\b/i, kcal100g: 0 },
@@ -10989,34 +11102,34 @@ const FOOD_CALORIE_DB = [
     { name: "רימון", re: /רימון|pomegranate/i, kcal100g: 83, unitGrams: 100 },
     { name: "תאנה", re: /תאנה|\bfig\b/i, kcal100g: 74, unitGrams: 50 },
     // percentTable נוסף לפי נתון מדויק מהמשתמשת - רזה (10% שומן) מול שמן (20%)
-    { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254, unitGrams: 150, percentTable: { 10: 176, 20: 254 } },
-    { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250, unitGrams: 150 },
-    { name: "אנטריקוט", re: /אנטריקוט|entrecote|ribeye/i, kcal100g: 275, unitGrams: 150 },
+    { name: "בשר טחון", re: /בשר טחון|ground beef|minced meat/i, kcal100g: 254, unitGrams: 150, percentTable: { 10: 176, 20: 254 }, protein100g: 22 },
+    { name: "בשר בקר", re: /בשר בקר|beef/i, kcal100g: 250, unitGrams: 150, protein100g: 26 },
+    { name: "אנטריקוט", re: /אנטריקוט|entrecote|ribeye/i, kcal100g: 275, unitGrams: 150, protein100g: 25 },
     // עוד סוגי בשר - לפי בקשה מפורשת
-    { name: "כבש/טלה", re: /כבש|טלה|lamb/i, kcal100g: 294, unitGrams: 150 },
-    { name: "חזיר", re: /חזיר|\bpork\b/i, kcal100g: 242, unitGrams: 150 },
-    { name: "כבד", re: /כבד|liver/i, kcal100g: 170, unitGrams: 100 },
+    { name: "כבש/טלה", re: /כבש|טלה|lamb/i, kcal100g: 294, unitGrams: 150, protein100g: 25 },
+    { name: "חזיר", re: /חזיר|\bpork\b/i, kcal100g: 242, unitGrams: 150, protein100g: 27 },
+    { name: "כבד", re: /כבד|liver/i, kcal100g: 170, unitGrams: 100, protein100g: 26 },
     // פסטרמה חייבת לבוא *לפני* פסטה - "פסטרמה" מתחילה כמעט באותן אותיות
     // (פ-ס-ט), אבל האות ה-4 שונה (ר מול ה) אז זה כן בטוח בלי סדר מיוחד -
     // ההערה כאן רק להסביר למה זה לא נראה כמו התנגשות שנשכחה
     // עודכן ל-100/18 (מ-147/30) לפי נתון מדויק מהמשתמשת (פסטרמת הודו, פרוסה)
-    { name: "פסטרמה", re: /פסטרמה|pastrami/i, kcal100g: 100, unitGrams: 18 },
-    { name: "חזה הודו פרוסות דל שומן", re: /חזה הודו (נקניק|פרוסות)/i, kcal100g: 100, unitGrams: 40 },
-    { name: "הודו", re: /הודו|turkey/i, kcal100g: 135, unitGrams: 150 },
-    { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208, unitGrams: 150 },
+    { name: "פסטרמה", re: /פסטרמה|pastrami/i, kcal100g: 100, unitGrams: 18, protein100g: 18 },
+    { name: "חזה הודו פרוסות דל שומן", re: /חזה הודו (נקניק|פרוסות)/i, kcal100g: 100, unitGrams: 40, protein100g: 18 },
+    { name: "הודו", re: /הודו|turkey/i, kcal100g: 135, unitGrams: 150, protein100g: 29 },
+    { name: "סלמון", re: /סלמון|salmon/i, kcal100g: 208, unitGrams: 150, protein100g: 20 },
     // (?!י) כדי ש"נקניק" (סלמי/נקניק מעושן) לא יתפוס את "נקניקייה" (נקניקיית
     // פרנקפורטר) - "נקניק" הוא תת-מחרוזת/קידומת מדויקת של "נקניקייה"
-    { name: "נקניק", re: /נקניק(?!י)|salami|cured sausage/i, kcal100g: 336, unitGrams: 30 },
+    { name: "נקניק", re: /נקניק(?!י)|salami|cured sausage/i, kcal100g: 336, unitGrams: 30, protein100g: 20 },
     // נקניקיי?ה - כתיב מלא (עם יו"ד כפולה, "נקניקייה") וגם כתיב חסר (יו"ד
     // אחת, "נקניקיה") - השורש היה בעייתי (רק כתיב חסר) ומעולם לא היה תואם
     // בפועל את הכתיב המלא, הנפוץ/הרשמי יותר היום
-    { name: "נקניקייה", re: /נקניקיי?ה|sausage/i, kcal100g: 300, unitGrams: 50 },
-    { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116, unitGrams: 150 },
-    { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127, unitGrams: 150 },
-    { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81, unitGrams: 80 },
-    { name: "פול", re: /(^|[^א-ת])פול(?:$|[^א-ת])|fava/i, kcal100g: 110, unitGrams: 100 },
+    { name: "נקניקייה", re: /נקניקיי?ה|sausage/i, kcal100g: 300, unitGrams: 50, protein100g: 12 },
+    { name: "עדשים", re: /עדשים|lentils/i, kcal100g: 116, unitGrams: 150, protein100g: 9 },
+    { name: "שעועית", re: /שעועית|beans/i, kcal100g: 127, unitGrams: 150, protein100g: 9 },
+    { name: "אפונה", re: /אפונה|peas/i, kcal100g: 81, unitGrams: 80, protein100g: 5 },
+    { name: "פול", re: /(^|[^א-ת])פול(?:$|[^א-ת])|fava/i, kcal100g: 110, unitGrams: 100, protein100g: 8 },
     // קטניות כללי (סוג לא מזוהה) - חייב לבוא *אחרי* כל הסוגים הספציפיים למעלה
-    { name: "קטניות", re: /קטניות|legumes/i, kcal100g: 120, unitGrams: 150 },
+    { name: "קטניות", re: /קטניות|legumes/i, kcal100g: 120, unitGrams: 150, protein100g: 8 },
     { name: "קינואה", re: /קינואה|quinoa/i, kcal100g: 120, unitGrams: 150 },
     { name: "שיבולת שועל", re: /שיבולת שועל|קוואקר|oats|oatmeal/i, kcal100g: 389, unitGrams: 40 },
     { name: "גרנולה", re: /גרנולה|granola/i, kcal100g: 471, unitGrams: 40 },
@@ -11055,30 +11168,30 @@ const FOOD_CALORIE_DB = [
     { name: "טורטיה", re: /טורטיה|tortilla/i, kcal100g: 290, unitGrams: 45 },
     // עודכן מ-76 ל-133 לפי נתון מדויק מהמשתמשת (טופו טבעי קשה, לא רך)
     // עודכן ל-120 (מ-133) לפי נתון מדויק מהמשתמשת (טופו קשה)
-    { name: "טופו", re: /טופו|tofu/i, kcal100g: 120, unitGrams: 100 },
+    { name: "טופו", re: /טופו|tofu/i, kcal100g: 120, unitGrams: 100, protein100g: 13 },
     { name: "זיתים", re: /זית(ים)?|olives/i, kcal100g: 115, unitGrams: 15 },
-    { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595, unitGrams: 20 },
+    { name: "טחינה", re: /טחינה|tahini/i, kcal100g: 595, unitGrams: 20, protein100g: 17 },
     // מיונז לייט חייב לבוא *לפני* מיונז הכללי (מכיל "מיונז" כתת-מחרוזת)
     { name: "מיונז לייט", re: /מיונז לייט|light mayo|mayo light/i, kcal100g: 125, unitGrams: 15 },
     { name: "מיונז", re: /מיונז|mayonnaise|mayo/i, kcal100g: 680, unitGrams: 15 },
     { name: "קטשופ", re: /קטשופ|ketchup/i, kcal100g: 112, unitGrams: 15 },
-    { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588, unitGrams: 20 },
+    { name: "חמאת בוטנים", re: /חמאת בוטנים|peanut butter/i, kcal100g: 588, unitGrams: 20, protein100g: 25 },
     // כל סוגי הפיצוחים (אגוזים/זרעים) בנפרד, כל אחד עם ערך משלו - לפי בקשה
     // מפורשת. חייבים לבוא *אחרי* חמאת בוטנים למעלה - "בוטנים" תת-מחרוזת של
     // "חמאת בוטנים", ובלי הסדר הזה חמאת בוטנים הייתה תמיד נתפסת כבוטנים רגילים
     // (567 קל') במקום הממרח (588). "אגוזי לוז"/בונדוק חייב לבוא *לפני* אגוזי
     // מלך - "אגוזי" משותף לשניהם, ואגוזי מלך הוא ברירת המחדל הכללית של "אגוז" סתם
-    { name: "בונדוק/אגוזי לוז", re: /בונדוק|אגוזי לוז|hazelnuts?/i, kcal100g: 628, unitGrams: 30 },
-    { name: "אגוזי מלך", re: /אגוזי מלך|אגוז(ים)?|walnuts?/i, kcal100g: 654, unitGrams: 30 },
-    { name: "שקדים", re: /שקד(ים)?|almonds?/i, kcal100g: 579, unitGrams: 30 },
-    { name: "בוטנים", re: /בוטנ(ים)?|peanuts?/i, kcal100g: 567, unitGrams: 30 },
-    { name: "קשיו", re: /קשיו|cashews?/i, kcal100g: 553, unitGrams: 30 },
-    { name: "פיסטוקים", re: /פיסטוק(ים)?|pistachios?/i, kcal100g: 560, unitGrams: 30 },
-    { name: "שומשום", re: /שומשום|sesame/i, kcal100g: 573, unitGrams: 15 },
-    { name: "גרעיני חמנייה", re: /גרעיני חמניה|גרעיני חמנייה|sunflower seeds?/i, kcal100g: 584, unitGrams: 30 },
-    { name: "גרעיני דלעת", re: /גרעיני דלעת|pumpkin seeds?/i, kcal100g: 559, unitGrams: 30 },
+    { name: "בונדוק/אגוזי לוז", re: /בונדוק|אגוזי לוז|hazelnuts?/i, kcal100g: 628, unitGrams: 30, protein100g: 15 },
+    { name: "אגוזי מלך", re: /אגוזי מלך|אגוז(ים)?|walnuts?/i, kcal100g: 654, unitGrams: 30, protein100g: 15 },
+    { name: "שקדים", re: /שקד(ים)?|almonds?/i, kcal100g: 579, unitGrams: 30, protein100g: 21 },
+    { name: "בוטנים", re: /בוטנ(ים)?|peanuts?/i, kcal100g: 567, unitGrams: 30, protein100g: 25 },
+    { name: "קשיו", re: /קשיו|cashews?/i, kcal100g: 553, unitGrams: 30, protein100g: 18 },
+    { name: "פיסטוקים", re: /פיסטוק(ים)?|pistachios?/i, kcal100g: 560, unitGrams: 30, protein100g: 20 },
+    { name: "שומשום", re: /שומשום|sesame/i, kcal100g: 573, unitGrams: 15, protein100g: 18 },
+    { name: "גרעיני חמנייה", re: /גרעיני חמניה|גרעיני חמנייה|sunflower seeds?/i, kcal100g: 584, unitGrams: 30, protein100g: 21 },
+    { name: "גרעיני דלעת", re: /גרעיני דלעת|pumpkin seeds?/i, kcal100g: 559, unitGrams: 30, protein100g: 19 },
     // גרעינים כללי (סוג לא מזוהה) - חייב לבוא *אחרי* הסוגים הספציפיים למעלה
-    { name: "גרעינים", re: /גרעינ(ים)?|seeds/i, kcal100g: 580, unitGrams: 30 },
+    { name: "גרעינים", re: /גרעינ(ים)?|seeds/i, kcal100g: 580, unitGrams: 30, protein100g: 19 },
     // עוד רטבים - לפי בקשה מפורשת (רוטב עגבניות כבר למעלה, ליד שאר המרכיבים
     // המכילים מרכיב קיים - ר' ההערה שם)
     { name: "חרדל", re: /חרדל|mustard/i, kcal100g: 66, unitGrams: 10 },
@@ -11088,7 +11201,7 @@ const FOOD_CALORIE_DB = [
     { name: "רוטב פסטו", re: /רוטב פסטו|\bpesto\b/i, kcal100g: 303, unitGrams: 20 },
     { name: "רוטב ברביקיו", re: /רוטב ברביקיו|barbecue sauce|bbq sauce/i, kcal100g: 172, unitGrams: 20 },
     { name: "רוטב צ'ילי מתוק", re: /רוטב צ['׳]?ילי מתוק|sweet chili sauce/i, kcal100g: 190, unitGrams: 15 },
-    { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62, unitGrams: 200 },
+    { name: "לבן", re: /(^|[^א-ת])לבן(?:$|[^א-ת])|labaneh|leben/i, kcal100g: 62, unitGrams: 200, protein100g: 3.3 },
     // קולה זירו/דיאט חייבת לבוא *לפני* קולה הרגילה (מכילה "קולה" כתת-מחרוזת)
     { name: "קולה זירו", re: /קולה זירו|קולה דיאט|דיאט קולה|coke zero|diet coke|cola zero|zero cola/i, kcal100g: 0, unitGrams: 330 },
     { name: "קולה", re: /קולה|\bcola\b/i, kcal100g: 42, unitGrams: 330 },
@@ -11151,44 +11264,44 @@ const FOOD_CALORIE_DB = [
     { name: "פיצה", re: /פיצה|pizza/i, kcal100g: 266, unitGrams: 100 },
     // עוד רכיבי/גרסאות המבורגר (קציצות ביתיות/קנויות/מסעדה, לחמניות, בייקון,
     // וגרסת מסעדה/פאסט פוד למנה שלמה) - נתונים מדויקים מהמשתמשת
-    { name: "קציצת בקר רזה להמבורגר", re: /קציצת בקר רז(ה)?( להמבורגר)?|lean beef burger patty/i, kcalPerUnit: 305 },
+    { name: "קציצת בקר רזה להמבורגר", re: /קציצת בקר רז(ה)?( להמבורגר)?|lean beef burger patty/i, kcalPerUnit: 305, proteinPerUnit: 30 },
     // קציצת בקר קלאסית (20% שומן, ברירת המחדל) - חייבת לבוא *אחרי* קציצת
     // בקר רזה למעלה - מכילה "קציצת בקר" כתת-מחרוזת
-    { name: "קציצת בקר להמבורגר", re: /קציצת בקר( קלאסי(ת)?)?( להמבורגר)?|classic beef burger patty/i, kcalPerUnit: 430 },
-    { name: "קציצה טבעונית ביתית להמבורגר", re: /המבורגר (צמחוני|טבעוני) ביתי|homemade (veggie|vegan) burger/i, kcalPerUnit: 175 },
-    { name: "קציצת המבורגר קפואה", re: /קציצת (המבורגר )?קפוא(ה)?|frozen burger patty/i, kcalPerUnit: 320 },
+    { name: "קציצת בקר להמבורגר", re: /קציצת בקר( קלאסי(ת)?)?( להמבורגר)?|classic beef burger patty/i, kcalPerUnit: 430, proteinPerUnit: 28 },
+    { name: "קציצה טבעונית ביתית להמבורגר", re: /המבורגר (צמחוני|טבעוני) ביתי|homemade (veggie|vegan) burger/i, kcalPerUnit: 175, proteinPerUnit: 8 },
+    { name: "קציצת המבורגר קפואה", re: /קציצת (המבורגר )?קפוא(ה)?|frozen burger patty/i, kcalPerUnit: 320, proteinPerUnit: 20 },
     // קציצת המבורגר במסעדה (הקציצה בלבד) - חייבת לבוא *לפני* המבורגר מסעדה/
     // פאסט פוד בהמשך (המנה השלמה) - מכילה "המבורגר מסעדה" כתת-מחרוזת
-    { name: "קציצת המבורגר מסעדה", re: /קציצת המבורגר (מסעדה|מסעדתית)|restaurant burger patty/i, kcalPerUnit: 500 },
+    { name: "קציצת המבורגר מסעדה", re: /קציצת המבורגר (מסעדה|מסעדתית)|restaurant burger patty/i, kcalPerUnit: 500, proteinPerUnit: 35 },
     { name: "לחמנית בריוש", re: /לחמנית בריוש|brioche bun/i, kcalPerUnit: 300 },
     // עודכן מ-180 ל-230 לפי נתון מדויק מהמשתמשת (290 קל'/100 גרם, ~80 גרם ליחידה)
     { name: "לחמנית להמבורגר", re: /לחמנית (קלאסית )?להמבורגר|לחמניית (ה)?המבורגר|classic burger bun/i, kcalPerUnit: 230 },
-    { name: "Bacon Bits", re: /bacon bits/i, kcal100g: 428, unitGrams: 7 },
-    { name: "בייקון", re: /בייקון|bacon/i, kcalPerUnit: 60 },
+    { name: "Bacon Bits", re: /bacon bits/i, kcal100g: 428, unitGrams: 7, protein100g: 35 },
+    { name: "בייקון", re: /בייקון|bacon/i, kcalPerUnit: 60, proteinPerUnit: 4 },
     // המבורגר צמחי חייב לבוא *לפני* המבורגר הכללי - הרגקס הכללי רחב (תופס גם
     // "burger" סתם), ובלי סדר הפוך תמיד היה נתפס כהמבורגר בשר רגיל
-    { name: "המבורגר צמחי", re: /המבורגר צמחי|beyond burger|impossible burger|vegan burger|veggie burger/i, kcalPerUnit: 250 },
+    { name: "המבורגר צמחי", re: /המבורגר צמחי|beyond burger|impossible burger|vegan burger|veggie burger/i, kcalPerUnit: 250, proteinPerUnit: 20 },
     // המבורגר מסעדה/פאסט פוד (מנה שלמה: קציצה+לחמנייה+רטבים+גבינה) - נתון
     // מדויק מהמשתמשת. חייב לבוא *לפני* המבורגר הכללי בהמשך - מכיל "המבורגר"
     // כתת-מחרוזת. ברירת המחדל הכללית (590 קל') כבר תואמת לגרסה הביתית הקלה
     // (500-650 קל' לפי נתון קודם של המשתמשת) ולכן לא שונתה
-    { name: "המבורגר מסעדה", re: /המבורגר (מסעדה|מסעדתי|פאסט פוד)|burger (restaurant|fast food)|fast food burger/i, kcalPerUnit: 1000 },
-    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295, unitGrams: 200 },
+    { name: "המבורגר מסעדה", re: /המבורגר (מסעדה|מסעדתי|פאסט פוד)|burger (restaurant|fast food)|fast food burger/i, kcalPerUnit: 1000, proteinPerUnit: 40 },
+    { name: "המבורגר", re: /המבורגר|hamburger|burger/i, kcal100g: 295, unitGrams: 200, protein100g: 15 },
     // בשר שווארמה (100 גרם, בלי פיתה/לאפה) ותפריטי מנה ספציפיים (פיתה/לאפה/
     // צלחת) - נתונים מדויקים מהמשתמשת. חייבים לבוא *לפני* שווארמה הכללית
     // בהמשך - מכילים "שווארמה" כתת-מחרוזת. ברירת המחדל הכללית (625 קל')
     // נשארת כברירת מחדל סבירה לתיאור לא-ספציפי
-    { name: "בשר שווארמה", re: /בשר שווארמה|shawarma meat/i, kcal100g: 275, unitGrams: 100 },
-    { name: "שווארמה בפיתה", re: /שווארמה בפיתה|shawarma (in )?pita/i, kcalPerUnit: 800 },
-    { name: "שווארמה בלאפה", re: /שווארמה בלאפה|shawarma (in )?laffa/i, kcalPerUnit: 1300 },
-    { name: "צלחת שווארמה", re: /צלחת שווארמה|shawarma plate/i, kcalPerUnit: 950 },
-    { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250, unitGrams: 250 },
+    { name: "בשר שווארמה", re: /בשר שווארמה|shawarma meat/i, kcal100g: 275, unitGrams: 100, protein100g: 24 },
+    { name: "שווארמה בפיתה", re: /שווארמה בפיתה|shawarma (in )?pita/i, kcalPerUnit: 800, proteinPerUnit: 35 },
+    { name: "שווארמה בלאפה", re: /שווארמה בלאפה|shawarma (in )?laffa/i, kcalPerUnit: 1300, proteinPerUnit: 45 },
+    { name: "צלחת שווארמה", re: /צלחת שווארמה|shawarma plate/i, kcalPerUnit: 950, proteinPerUnit: 45 },
+    { name: "שווארמה", re: /שווארמה|shawarma/i, kcal100g: 250, unitGrams: 250, protein100g: 20 },
     // כדור פלאפל בודד - חייב לבוא *לפני* פלאפל הכללי בהמשך - מכיל "פלאפל"
     // כתת-מחרוזת
-    { name: "כדור פלאפל", re: /כדור(ים)? פלאפל|falafel ball/i, kcalPerUnit: 58 },
+    { name: "כדור פלאפל", re: /כדור(ים)? פלאפל|falafel ball/i, kcalPerUnit: 58, proteinPerUnit: 2.4 },
     // עודכן ל-188 (מ-150) לפי נתון מדויק מהמשתמשת - מנת פלאפל בפיתה (5-6
     // כדורים + חומוס/טחינה/סלט) 550-700 קל' (188*333/100≈625)
-    { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333, unitGrams: 188 },
+    { name: "פלאפל", re: /פלאפל|falafel/i, kcal100g: 333, unitGrams: 188, protein100g: 13 },
     { name: "בורקס", re: /בורקס|bourekas?/i, kcal100g: 330, unitGrams: 80 },
     // עוד מנות - ישראלי (חמין/מלאווח/ג'חנון) ועולמי (סושי)
     // unitGrams תוקן ל-160 (רול ממוצע של 8 חתיכות, לפי חיפוש) במקום 200
@@ -11203,7 +11316,7 @@ const FOOD_CALORIE_DB = [
     { name: "ג'חנון", re: /ג['׳]?חנון|jachnun/i, kcalPerUnit: 415 },
     { name: "זיווה", re: /זיווה|zivda/i, kcalPerUnit: 750 },
     // מטבח עולמי - לפי בקשה מפורשת ("לא רק ישראלי, עולמי")
-    { name: "שקשוקה", re: /שקשוקה|shakshuka/i, kcal100g: 150, unitGrams: 250 },
+    { name: "שקשוקה", re: /שקשוקה|shakshuka/i, kcal100g: 150, unitGrams: 250, protein100g: 7 },
     { name: "לזניה", re: /לזניה|lasagn[ae]/i, kcal100g: 135, unitGrams: 250 },
     { name: "ריזוטו", re: /ריזוטו|risotto/i, kcal100g: 166, unitGrams: 200 },
     { name: "טאקו", re: /טאקו|\btaco\b/i, kcal100g: 150, unitGrams: 70 },
@@ -11257,7 +11370,7 @@ const FOOD_CALORIE_DB = [
     // היו טווחים (למשל "250-300 קל'") - נלקחה נקודת האמצע של כל טווח
     { name: "גלידת פרימיום", re: /גלידת? פרימיום|בן\s?(אנד|ו)?\s?ג'ריס|האגן\s?דאז|haagen.?dazs|ben.?(and|&).?jerry/i, kcal100g: 275, unitGrams: 70 },
     { name: "גלידה משפחתית", re: /גלידה משפחתית|גלידת חלב קלאסית/i, kcal100g: 200, unitGrams: 70 },
-    { name: "גלידת חלבון", re: /גלידת חלבון|הילו\s?טופ|האלו\s?טופ|halo\s?top|סו\s?גוד|so\s?good|גלידה מופחתת קלוריות/i, kcal100g: 110, unitGrams: 70 },
+    { name: "גלידת חלבון", re: /גלידת חלבון|הילו\s?טופ|האלו\s?טופ|halo\s?top|סו\s?גוד|so\s?good|גלידה מופחתת קלוריות/i, kcal100g: 110, unitGrams: 70, protein100g: 7.5 },
     { name: "גלידה אמריקאית", re: /גלידה אמריקאית|soft serve/i, kcal100g: 175, unitGrams: 117 },
     { name: "גלידה טבעונית קוקוס", re: /גלידה טבעונית.*קוקוס|גלידת קוקוס טבעונית/i, kcal100g: 240, unitGrams: 69 },
     { name: "גלידה טבעונית שיבולת שועל/סויה", re: /גלידה טבעונית.*(שיבולת שועל|סויה)|גלידת (סויה|שיבולת שועל) טבעונית/i, kcal100g: 180, unitGrams: 69 },
@@ -11285,7 +11398,7 @@ const FOOD_CALORIE_DB = [
     { name: "קסטה", re: /קסטה/i, kcalPerUnit: 190 },
     { name: "ארטיק דיאט", re: /ארטיק (דיאט|0% סוכר|ללא סוכר)|קרטיב דיאט/i, kcalPerUnit: 9 },
     { name: "ארטיק פרי טבעי", re: /ארטיק (פרי טבעי|100% פרי)|פריגת|פולי קראנץ/i, kcalPerUnit: 90 },
-    { name: "יוגורט קפוא", re: /יוגורט קפוא|frozen yogurt|יוגורטיה/i, kcal100g: 120, unitGrams: 200 },
+    { name: "יוגורט קפוא", re: /יוגורט קפוא|frozen yogurt|יוגורטיה/i, kcal100g: 120, unitGrams: 200, protein100g: 3.5 },
     { name: "גביע גלידה", re: /גביע (גלידה|שוט)/i, kcalPerUnit: 18 },
     { name: "סירופ לגלידה", re: /סירופ (שוקולד|מייפל|תות).*גלידה|סירופ לגלידה/i, kcal100g: 300 },
     { name: "סוכריות לזרייה על גלידה", re: /סוכריות (צבעוניות )?לזריי(ה|ת)|ספרינקלס|sprinkles/i, kcal100g: 360 },
@@ -11344,7 +11457,7 @@ const FOOD_CALORIE_DB = [
     // במחבת" לא זוהה בכלל וקפץ לאומדן AI פחות מדויק
     // (?!ן) חוסם התנגשות עם "דגן"/"דגנים"/"דגני בוקר" (כולם מכילים "דג" כתת-
     // מחרוזת, אבל אלה תבואות/דגני-בוקר, לא דג בכלל)
-    { name: "דג", re: /דג(?!ן)/i, kcal100g: 180, unitGrams: 120 },
+    { name: "דג", re: /דג(?!ן)/i, kcal100g: 180, unitGrams: 120, protein100g: 22 },
 ];
 // ממירות יחידות נפח/מיכל שכיחות (כף/כפית/כוס/גביע/חופן) לגרם משוער - כדי
 // שאפשר יהיה לחשב גם בלי משקל מדויק בגרם/מ"ל, למשל "2 כפות קוטג'". הרגקס
@@ -11456,9 +11569,42 @@ const EXPLICIT_CALORIES_RE = /(\d{1,5}(?:\.\d+)?)\s*(kcal\b|cal\b|calories?\b|ק
 // את ה"3 פרוסות" של הגבינה והחליף אותו ב-3 כפות!) - לפי דיווח מפורש עם
 // חישוב שיצא כפול מהצפוי. הכמות/יחידה כמעט תמיד *לפני* שם המאכל בעברית,
 // אז מגבילים את החיפוש שלהן לטקסט עד סוף שם המאכל עצמו בלבד
-function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
+// חלבון לכל 100 גרם עבור פריט שאין לו protein100g/proteinPerUnit מפורש (רוב
+// המסד - רק ~236 פריטים "רלוונטי-חלבון" קיבלו ערך מפורש, ר' ההערות ליד
+// FOOD_CALORIE_DB) - טבלת נפילה-חזרה גסה לפי קטגוריה, מותאמת כנגד שם הפריט
+// (item.name, לא טקסט המשתמשת) - לא מדויקת כמו ערך מפורש, אבל עדיפה על 0
+// סתמי לכל דבר שלא סווג ידנית. סדר חשוב: קטגוריות ספציפיות יותר (דגים/בשר)
+// לפני כלליות (ירק/פרי) כדי שלא ייבלעו בטעות
+const PROTEIN_CATEGORY_FALLBACK = [
+    { re: /דג|סלמון|טונה|טילפיה|בקלה|הליבוט|פורל|סרדינים|הרינג|מקרל|לברק|דניס|fish|salmon|tuna|tilapia|cod|halibut|trout|sardine|herring|mackerel|bream|bass/i, protein100g: 20 },
+    { re: /שרימפס|קלמארי|סרטן|צדפות|תמנון|shrimp|calamari|crab|mussel|octopus|prawn/i, protein100g: 19 },
+    { re: /בשר|עוף|הודו|בקר|כבש|פרגית|חזה|שוק|כרעי|נקניק|סלמי|פסטרמה|קבב|המבורגר|קציצ|שניצל|meat|chicken|turkey|beef|lamb|pork|sausage|salami|kebab|burger|schnitzel|meatball/i, protein100g: 22 },
+    { re: /ביצ|egg/i, protein100g: 13 },
+    { re: /גבינה|cheese/i, protein100g: 18 },
+    { re: /חלב|יוגורט|קוטג|לבן|קפיר|milk|yogurt|cottage|kefir|labneh/i, protein100g: 5 },
+    { re: /טופו|סייטן|טמפה|tofu|seitan|tempeh/i, protein100g: 12 },
+    { re: /קטני|עדשים|חומוס|שעועית|אפונה|edamame|legume|lentil|chickpea|bean|pea\b/i, protein100g: 8 },
+    { re: /אגוז|שקד|גרעין|טחינה|nut|almond|seed|tahini/i, protein100g: 18 },
+    { re: /אבקת חלבון|חטיף חלבון|משקה חלבון|protein powder|protein bar|protein shake|whey/i, protein100g: 25 },
+    { re: /לחם|פיתה|לחמני|פסטה|אורז|קינואה|קוסקוס|bread|pita|pasta|rice|quinoa|couscous/i, protein100g: 8 },
+    { re: /ירק|vegetable/i, protein100g: 2 },
+    { re: /פרי|fruit/i, protein100g: 0.7 },
+];
+function resolveProtein100g(item) {
+    if (item.protein100g != null) return item.protein100g;
+    const fallback = PROTEIN_CATEGORY_FALLBACK.find(c => c.re.test(item.name));
+    return fallback ? fallback.protein100g : null;
+}
+
+// גרסה מורחבת של computeItemCalories - מחזירה גם protein (גרם), לא רק
+// calories, לפי אותו חישוב-כמות/יחידה בדיוק. protein: null כשאין שום בסיס
+// לחישוב (לא 0!) - ר' ההערה ב-estimateFreeTextMacros על ההבדל בין "לא ידוע"
+// ל"אפס בפועל"
+function computeItemMacros(item, contextText, isMultiFood, quantityScopeEnd) {
     const explicitCaloriesMatch = contextText.match(EXPLICIT_CALORIES_RE);
-    if (explicitCaloriesMatch) return parseFloat(explicitCaloriesMatch[1]);
+    // כשהמשתמשת כותבת קלוריות מפורשות (עוקפות את המסד) אין לנו שום בסיס
+    // אמין לחלבון - לא מנחשים, מחזירים null (="לא ידוע", לא "אפס")
+    if (explicitCaloriesMatch) return { calories: parseFloat(explicitCaloriesMatch[1]), protein: null };
     const quantityText = quantityScopeEnd != null ? contextText.slice(0, quantityScopeEnd) : contextText;
     let grams = null;
     const gramsMatch = quantityText.match(/(\d+(?:\.\d+)?)\s*(גרם|ג['׳]|g\b|gram|grams|מ"ל|ml)/i);
@@ -11476,6 +11622,7 @@ function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
     const pctKcal = item.percentTable ? findFatPercentCalories(contextText, item.percentTable) : null;
     const sweetKcal = item.sweetenedKcal100g ? findSweetenedCalories(contextText, item.sweetenedKcal100g) : null;
     const kcal100g = pctKcal != null ? pctKcal : (sweetKcal != null ? sweetKcal : item.kcal100g);
+    const protein100g = resolveProtein100g(item);
     // מאכלי רשתות מזון - לפעמים יש ערך שונה למדינה (למשל "ביג מק" בישראל מול
     // ארה"ב) - נבחר לפי הגדרת "מדינה" בהגדרות (לא ניחוש לפי שפה), עם נפילה
     // חזרה לישראל ואז לכל ערך זמין אחר, כדי שלעולם לא ייצא 0 סתם כי המדינה
@@ -11483,10 +11630,12 @@ function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
     if (item.kcalPerUnitByCountry) {
         const byCountry = item.kcalPerUnitByCountry;
         const chosen = byCountry[getUserCountry()] ?? byCountry.il ?? Object.values(byCountry)[0];
-        return count * chosen;
+        return { calories: count * chosen, protein: item.proteinPerUnit != null ? count * item.proteinPerUnit : null };
     }
-    if (item.kcalPerUnit != null) return count * item.kcalPerUnit;
-    if (grams != null) return (grams / 100) * kcal100g;
+    if (item.kcalPerUnit != null) {
+        return { calories: count * item.kcalPerUnit, protein: item.proteinPerUnit != null ? count * item.proteinPerUnit : null };
+    }
+    if (grams != null) return { calories: (grams / 100) * kcal100g, protein: protein100g != null ? (grams / 100) * protein100g : null };
     // בלי גרם/מ"ל/כף/כפית/כוס/גביע/חופן מפורש - אם למאכל יש משקל-יחידה
     // ממוצע ידוע (פרי/מנה טיפוסית, למשל בננה=118 גרם), מחשבים לפי זה *
     // הכמות שזוהתה, עם התאמת גדול/קטן אם צוינה. למאכלי-תוספת כמו בצל/שום -
@@ -11494,8 +11643,16 @@ function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
     // (כמות-תוספת קטנה) במקום unitGrams (יחידה שלמה), כי ברוב המקרים "בצל"
     // ברשימת מאכלים הוא תוספת קצוצה, לא בצל שלם
     const baseGrams = (isMultiFood && item.garnishGrams != null) ? item.garnishGrams : item.unitGrams;
-    if (baseGrams != null) return (count * baseGrams * parseSizeMultiplier(contextText) / 100) * kcal100g;
-    return 0; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
+    if (baseGrams != null) {
+        const effectiveGrams = count * baseGrams * parseSizeMultiplier(contextText);
+        return { calories: (effectiveGrams / 100) * kcal100g, protein: protein100g != null ? (effectiveGrams / 100) * protein100g : null };
+    }
+    return { calories: 0, protein: null }; // רכיב זוהה אבל בלי כמות מפורשת ובלי משקל-יחידה ידוע - לא מנחשים, מדלגים
+}
+
+// wrapper דק - נשאר בשביל קריאות שרוצות רק קלוריות (רוב המסד)
+function computeItemCalories(item, contextText, isMultiFood, quantityScopeEnd) {
+    return computeItemMacros(item, contextText, isMultiFood, quantityScopeEnd).calories;
 }
 
 function estimateIngredientLineCalories(line) {
@@ -11589,12 +11746,17 @@ function findGapSplitPoint(text, gapStart, gapEnd) {
 // מאכלים (כמו "אחת חצי" בין "ביצה" ל"עגבניה") מתחלקת בערך שווה בשווה ביניהם.
 // זה לא מושלם (אין הבנה דקדוקית אמיתית של למי בדיוק שייכת כל מילה), אבל
 // מילת כמות כמעט תמיד צמודה למאכל שהיא מתארת, אז ברוב המקרים זה נופל נכון
-function estimateFreeTextCalories(text) {
-    if (!text) return 0;
+// כמו estimateFreeTextCalories (למטה, wrapper דק סביבה עכשיו), אבל מחזירה
+// גם protein - סיכום פר-פריט (ר' computeItemMacros), לא רק calories. protein
+// נשאר "לא ידוע" (null בכל פריט) לא הופך ל-0 בסכימה - רק פריטים עם בסיס
+// אמיתי לחישוב (protein != null) נכנסים לסכום; matchedAny על calories בלבד
+// (כמו קודם), protein פשוט 0 אם אף פריט לא תרם ערך ידוע
+function estimateFreeTextMacros(text) {
+    if (!text) return { calories: 0, protein: 0 };
     const matches = findAllFoodMatches(text);
-    if (!matches.length) return 0;
+    if (!matches.length) return { calories: 0, protein: 0 };
     const isMultiFood = matches.length > 1;
-    let total = 0, matchedAny = false;
+    let totalCalories = 0, totalProtein = 0, matchedAny = false;
     matches.forEach((match, i) => {
         // לפני המאכל *הראשון* ואחרי המאכל *האחרון* אין שום מאכל מתחרה על
         // הטקסט - כל הקידומת/סיומת שייכת במלואה למאכל היחיד הזה, לא צריך
@@ -11604,10 +11766,16 @@ function estimateFreeTextCalories(text) {
         // שה"חצי" הועיל בכלל
         const windowStart = i > 0 ? findGapSplitPoint(text, matches[i - 1].end, match.start) : 0;
         const windowEnd = i < matches.length - 1 ? findGapSplitPoint(text, match.end, matches[i + 1].start) : text.length;
-        const kcal = computeItemCalories(match.item, text.slice(windowStart, windowEnd), isMultiFood, match.end - windowStart);
-        if (kcal > 0) { total += kcal; matchedAny = true; }
+        const macros = computeItemMacros(match.item, text.slice(windowStart, windowEnd), isMultiFood, match.end - windowStart);
+        if (macros.calories > 0) { totalCalories += macros.calories; matchedAny = true; }
+        if (macros.protein != null) totalProtein += macros.protein;
     });
-    return matchedAny ? total : 0;
+    return matchedAny ? { calories: totalCalories, protein: Math.round(totalProtein * 10) / 10 } : { calories: 0, protein: 0 };
+}
+
+// wrapper דק - נשאר בשביל ~6 קריאות קיימות שרוצות רק קלוריות
+function estimateFreeTextCalories(text) {
+    return estimateFreeTextMacros(text).calories;
 }
 
 function estimateRecipeCalories(ingredientsText) {
@@ -11634,16 +11802,20 @@ function estimateRecipeCalories(ingredientsText) {
 function autoFillMealCalories(foodInput) {
     const row = foodInput.closest('.meal-row');
     const caloriesInput = row && row.querySelector('.calories-input');
+    const proteinInput = row && row.querySelector('.protein-input');
     if (!caloriesInput) return;
     const newText = foodInput.value.trim();
     const prevText = foodInput.dataset.valueBeforeEdit || '';
     const prevCalories = parseInt(caloriesInput.value) || 0;
+    const prevProtein = proteinInput ? (parseFloat(proteinInput.value) || 0) : 0;
 
     // מקרה 1: "N " לפני בדיוק אותו טקסט שהיה - כוונה ברורה של "עוד N יחידות
     // מאותו הדבר", לא תיאור חדש. מכפילים את מה שכבר היה
     const prefixMatch = prevText && newText.match(/^(\d+)\s+([\s\S]+)$/);
     if (prefixMatch && prefixMatch[2] === prevText && prevCalories > 0) {
-        caloriesInput.value = Math.round(prevCalories * parseInt(prefixMatch[1], 10));
+        const n = parseInt(prefixMatch[1], 10);
+        caloriesInput.value = Math.round(prevCalories * n);
+        if (proteinInput && prevProtein > 0) proteinInput.value = Math.round(prevProtein * n * 10) / 10;
         updateLiveCaloriesToday();
         return;
     }
@@ -11653,17 +11825,19 @@ function autoFillMealCalories(foodInput) {
     // מריצים את המנוע מחדש על הטקסט המאוחד כולו
     if (prevText && prevCalories > 0 && newText.startsWith(prevText) && newText.length > prevText.length) {
         const addedText = newText.slice(prevText.length).replace(/^[\s+]+/, '');
-        const addedEstimate = estimateFreeTextCalories(addedText);
-        if (addedEstimate > 0) {
-            caloriesInput.value = Math.round(prevCalories + addedEstimate);
+        const addedMacros = estimateFreeTextMacros(addedText);
+        if (addedMacros.calories > 0) {
+            caloriesInput.value = Math.round(prevCalories + addedMacros.calories);
+            if (proteinInput) proteinInput.value = Math.round((prevProtein + (addedMacros.protein || 0)) * 10) / 10;
             updateLiveCaloriesToday();
             return;
         }
     }
     // ברירת מחדל: טקסט חדש לגמרי, או שהוקטן (הוסר ממנו חלק) - מריצים את
     // המנוע הכללי מחדש על כל הטקסט
-    const estimate = estimateFreeTextCalories(newText);
-    caloriesInput.value = estimate > 0 ? Math.round(estimate) : '';
+    const macros = estimateFreeTextMacros(newText);
+    caloriesInput.value = macros.calories > 0 ? Math.round(macros.calories) : '';
+    if (proteinInput) proteinInput.value = macros.calories > 0 ? Math.round(macros.protein * 10) / 10 : '';
     updateLiveCaloriesToday();
     // אם נשאר בטקסט חלק משמעותי שהמנוע המקומי לא זיהה בכלל (למשל שם פריט
     // ממותג/מסעדה כמו "מק ריאל") - למשתמשת פרימיום מנסים ברקע גם את אותו
@@ -11709,6 +11883,9 @@ async function escalateMealRowToAI(foodInput, caloriesInput, text) {
         if (foodInput.value.trim() !== text) return;
         if (attempt.status === 'estimate' && attempt.calories > 0) {
             caloriesInput.value = Math.round(attempt.calories);
+            const row = foodInput.closest('.meal-row');
+            const proteinInput = row && row.querySelector('.protein-input');
+            if (proteinInput && attempt.proteinGrams != null) proteinInput.value = attempt.proteinGrams;
             updateLiveCaloriesToday();
         }
     } catch (e) {
@@ -11726,9 +11903,11 @@ function saveMealRowAsPreset(button) {
     if (!row) return;
     const foodInput = row.querySelector('.food-input');
     const caloriesInput = row.querySelector('.calories-input');
+    const proteinInput = row.querySelector('.protein-input');
     const categoryTrigger = row.querySelector('.preset-select-trigger');
     const name = foodInput.value.trim();
     const calories = parseInt(caloriesInput.value) || 0;
+    const protein = proteinInput && proteinInput.value.trim() ? parseFloat(proteinInput.value) : null;
     if (!name || calories <= 0) { showAppToast(t('meal_save_preset_missing'), 'error'); return; }
     if (!isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
         showAppToast(t('preset_limit_desc'), 'error');
@@ -11743,6 +11922,7 @@ function saveMealRowAsPreset(button) {
     cancelPresetEdit();
     document.getElementById('new-preset-name').value = name;
     document.getElementById('new-preset-calories').value = calories;
+    document.getElementById('new-preset-protein').value = protein != null ? protein : '';
     const defaultCategory = categoryTrigger ? categoryTrigger.getAttribute('data-category') : 'snack';
     document.getElementById('new-preset-category').value = defaultCategory;
     updateCustomSelectDisplay('new-preset-category');
@@ -11821,12 +12001,26 @@ function computeFoodPickerCalories(qty) {
     return (grams / 100) * foodPickerSelectedItem.kcal100g;
 }
 
+// מחזירה null (לא 0) כשאין שום בסיס לחישוב - ר' ההערה המקבילה ב-computeItemMacros
+function computeFoodPickerProtein(qty) {
+    if (!foodPickerSelectedItem || !qty) return null;
+    if (foodPickerSelectedItem.kcalPerUnit != null) {
+        return foodPickerSelectedItem.proteinPerUnit != null ? qty * foodPickerSelectedItem.proteinPerUnit : null;
+    }
+    const protein100g = resolveProtein100g(foodPickerSelectedItem);
+    if (protein100g == null) return null;
+    const grams = qty * foodPickerUnitMultiplier;
+    return (grams / 100) * protein100g;
+}
+
 function updateFoodPickerCaloriesPreview() {
     const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
     const calories = Math.round(computeFoodPickerCalories(qty));
+    const protein = computeFoodPickerProtein(qty);
     const unitLabel = foodPickerSelectedItem && foodPickerSelectedItem.kcalPerUnit != null ? t('food_picker_unit_count') : t(foodPickerUnitLabelKey);
     document.getElementById('food-picker-qty-unit-label').textContent = unitLabel;
-    document.getElementById('food-picker-calories-preview').textContent = qty > 0 ? `${t('food_picker_calories_label')} ${calories}` : '';
+    const proteinText = protein != null ? ` · ${t('food_picker_protein_label')} ${Math.round(protein * 10) / 10}g` : '';
+    document.getElementById('food-picker-calories-preview').textContent = qty > 0 ? `${t('food_picker_calories_label')} ${calories}${proteinText}` : '';
 }
 
 function confirmFoodPickerSelection() {
@@ -11834,17 +12028,23 @@ function confirmFoodPickerSelection() {
     const qty = parseFloat(document.getElementById('food-picker-qty-input').value) || 0;
     if (qty <= 0) { showAppToast(t('food_picker_missing_qty'), 'error'); return; }
     const calories = Math.round(computeFoodPickerCalories(qty));
+    const protein = computeFoodPickerProtein(qty);
     const isPerUnit = foodPickerSelectedItem.kcalPerUnit != null;
     const unitLabel = isPerUnit ? '' : ` ${t(foodPickerUnitLabelKey)}`;
     // מוסיפים למה שכבר יש בשורה (אם יש) במקום לדרוס - אותה הנהגה בדיוק כמו
     // selectPresetPickerItem (בורר "ארוחה קבועה"), לפי בקשה מפורשת
     const foodInput = foodPickerTargetRow.querySelector('.food-input');
     const caloriesInput = foodPickerTargetRow.querySelector('.calories-input');
+    const proteinInput = foodPickerTargetRow.querySelector('.protein-input');
     const existingFood = foodInput.value.trim();
     const existingCalories = parseInt(caloriesInput.value) || 0;
     const newEntry = `${foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
     foodInput.value = existingFood ? `${existingFood} + ${newEntry}` : newEntry;
     caloriesInput.value = existingCalories + calories;
+    if (proteinInput && protein != null) {
+        const existingProtein = parseFloat(proteinInput.value) || 0;
+        proteinInput.value = Math.round((existingProtein + protein) * 10) / 10;
+    }
     foodPickerTargetRow.dataset.touched = 'true';
     updateLiveCaloriesToday();
     closeModal('modal-food-picker');
@@ -12442,6 +12642,8 @@ async function loadDailyNutrition(date) {
         delete row.dataset.touched;
     });
     document.getElementById('calories-today').innerText = '0';
+    const resetProteinTodayEl = document.getElementById('protein-today');
+    if (resetProteinTodayEl) resetProteinTodayEl.innerText = '0';
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', date);
     if (!data) return;
     let total = 0, proteinTotal = 0;
@@ -12456,6 +12658,8 @@ async function loadDailyNutrition(date) {
         }
     });
     document.getElementById('calories-today').innerText = total;
+    const proteinTodayEl = document.getElementById('protein-today');
+    if (proteinTodayEl) proteinTodayEl.innerText = Math.round(proteinTotal * 10) / 10;
     todayCaloriesTotal = total;
     todayProteinTotal = proteinTotal;
     updateNutritionGoalProgress();
@@ -12522,7 +12726,7 @@ async function copyFromYesterday() {
 }
 async function loadStats() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('calorie_tracker').select('date, calories').eq('user_id', currentUserId);
+    const { data } = await supabaseClient.from('calorie_tracker').select('date, calories, protein_grams').eq('user_id', currentUserId);
     if (!data) return;
 
     const now = new Date();
@@ -12537,12 +12741,13 @@ async function loadStats() {
     // או לעלות"). מחושב רק על הימים שבאמת נרשם בהם משהו (לא חלקי 7/חלקי כל
     // ימי החודש) - יום שלא נרשם בו כלום פשוט לא נכנס למכנה, אותה עקרון
     // בדיוק כמו הסה"כ עצמו
-    let weekly = 0, monthly = 0;
+    let weekly = 0, monthly = 0, weeklyProtein = 0, monthlyProtein = 0;
     const weekDates = new Set(), monthDates = new Set();
     data.forEach(item => {
         const cals = Number(item.calories) || 0;
-        if (item.date >= weekStartStr && item.date <= weekEndStr) { weekly += cals; weekDates.add(item.date); }
-        if (item.date && item.date.startsWith(monthPrefix)) { monthly += cals; monthDates.add(item.date); }
+        const protein = Number(item.protein_grams) || 0;
+        if (item.date >= weekStartStr && item.date <= weekEndStr) { weekly += cals; weeklyProtein += protein; weekDates.add(item.date); }
+        if (item.date && item.date.startsWith(monthPrefix)) { monthly += cals; monthlyProtein += protein; monthDates.add(item.date); }
     });
     document.getElementById('calories-weekly').innerText = weekly;
     document.getElementById('calories-monthly').innerText = monthly;
@@ -12550,6 +12755,15 @@ async function loadStats() {
     if (weeklyAvgEl) weeklyAvgEl.innerText = weekDates.size > 0 ? t('calorie_stat_avg_label').replace('{amount}', Math.round(weekly / weekDates.size)) : '';
     const monthlyAvgEl = document.getElementById('calories-monthly-avg');
     if (monthlyAvgEl) monthlyAvgEl.innerText = monthDates.size > 0 ? t('calorie_stat_avg_label').replace('{amount}', Math.round(monthly / monthDates.size)) : '';
+
+    const proteinWeeklyEl = document.getElementById('protein-weekly');
+    if (proteinWeeklyEl) proteinWeeklyEl.innerText = Math.round(weeklyProtein * 10) / 10;
+    const proteinMonthlyEl = document.getElementById('protein-monthly');
+    if (proteinMonthlyEl) proteinMonthlyEl.innerText = Math.round(monthlyProtein * 10) / 10;
+    const proteinWeeklyAvgEl = document.getElementById('protein-weekly-avg');
+    if (proteinWeeklyAvgEl) proteinWeeklyAvgEl.innerText = weekDates.size > 0 ? t('protein_stat_avg_label').replace('{amount}', Math.round(weeklyProtein / weekDates.size)) : '';
+    const proteinMonthlyAvgEl = document.getElementById('protein-monthly-avg');
+    if (proteinMonthlyAvgEl) proteinMonthlyAvgEl.innerText = monthDates.size > 0 ? t('protein_stat_avg_label').replace('{amount}', Math.round(monthlyProtein / monthDates.size)) : '';
 }
 // מחיקה רכה (is_deleted=true) בשני הסוגים (פתקים ורשימת קניות) כדי שאפשר
 // יהיה לשחזר מהארכיון, לפי בקשה מפורשת

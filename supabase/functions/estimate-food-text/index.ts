@@ -93,6 +93,7 @@ const ESTIMATE_OR_CLARIFY_TOOL = {
         properties: {
             status: { type: "string", enum: ["estimate", "clarify", "unknown"] },
             calories: { type: "integer", description: "Total estimated calories. Required when status is 'estimate'." },
+            protein_grams: { type: "number", description: "Total estimated protein in grams, summed across all items. Required when status is 'estimate'. Use 0 (not null/omitted) if the food genuinely has negligible protein, e.g. a plain apple." },
             question: { type: "string", description: "A short clarifying question, in the user's language. Required when status is 'clarify'." },
         },
         required: ["status"],
@@ -112,6 +113,7 @@ const ESTIMATE_ONLY_TOOL = {
         properties: {
             status: { type: "string", enum: ["estimate", "unknown"] },
             calories: { type: "integer", description: "Total estimated calories. Required when status is 'estimate'." },
+            protein_grams: { type: "number", description: "Total estimated protein in grams, summed across all items. Required when status is 'estimate'. Use 0 (not null/omitted) if the food genuinely has negligible protein, e.g. a plain apple." },
         },
         required: ["status"],
     },
@@ -165,11 +167,14 @@ Deno.serve(async (req) => {
             const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
             const { data: cacheRow } = await supabase
                 .from("food_text_cache")
-                .select("calories, created_at")
+                .select("calories, protein_grams, created_at")
                 .eq("cache_key", cacheKey)
                 .maybeSingle();
             if (cacheRow && Date.now() - new Date(cacheRow.created_at).getTime() < CACHE_MAX_AGE_MS) {
-                return jsonResponse({ ok: true, status: "estimate", calories: cacheRow.calories, cached: true });
+                // protein_grams יכול להיות null בשורות-מטמון ישנות (לפני שהעמודה
+                // נוספה) - נשאר null בתגובה (="לא ידוע"), הצד שלנו לא הופך את זה
+                // ל-0 (ר' ההערה המקבילה ב-computeItemMacros/estimateFreeTextMacros)
+                return jsonResponse({ ok: true, status: "estimate", calories: cacheRow.calories, protein_grams: cacheRow.protein_grams ?? null, cached: true });
             }
         }
 
@@ -257,7 +262,12 @@ Deno.serve(async (req) => {
         // הקודמים). ההשערה: הערכה הוליסטית-אינטואיטיבית של מנה שלמה נוטה
         // להטיה-כלפי-מטה חזקה יותר מסכימת קלוריות מפורשת פריט-אחר-פריט -
         // לפי בקשה מפורשת "חייב לתקן"
-        const breakdownNote = `Before calling the tool, think step by step in plain text (not inside the tool call): list every distinct food item in the description separately, and for each one write your best calorie estimate for the stated (or inferred, per the notes above) quantity. Then explicitly add these numbers together and state the sum. Only after that, call the tool with that summed total as "calories". Do not skip straight to a single holistic guess for the whole meal - a multi-item meal estimated item-by-item and then summed is measurably more accurate than one intuitive total, and this step is required even when it feels obvious.`;
+        // עודכן: גם חלבון, לא רק קלוריות - לפי בקשה מפורשת ("להוסיף חלבון לכל
+        // מאכל"). אותה חשיבה-בקול פר-פריט, עכשיו עם שני מספרים לכל פריט. הטקסט
+        // הזה (לפני קריאת הכלי) מוחזר ללקוח כ"reasoning" ומוצג בכרטיס האישור/
+        // דחייה החדש (ר' extractReasoningText למטה) - כדי שמשתמשת שרואה מספר
+        // שנראה לא הגיוני תוכל לראות *למה* בלי לנחש
+        const breakdownNote = `Before calling the tool, think step by step in plain text (not inside the tool call): list every distinct food item in the description separately, and for each one write your best calorie estimate AND your best protein-in-grams estimate for the stated (or inferred, per the notes above) quantity. Then explicitly add both sets of numbers together and state both sums. Only after that, call the tool with the summed calories as "calories" and the summed protein as "protein_grams" (use 0, not null, for items with negligible protein). Do not skip straight to a single holistic guess for the whole meal - a multi-item meal estimated item-by-item and then summed is measurably more accurate than one intuitive total, and this step is required even when it feels obvious.`;
         const promptText = hasAnswer
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
             : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
@@ -306,6 +316,14 @@ Deno.serve(async (req) => {
         // שהגיע לקריאת הכלי) - לא נועד להיות מוצג למשתמשת, רק ל-Network tab
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction", stop_reason: anthropicJson?.stop_reason }, 502);
         const result = toolUseBlock.input || {};
+        // חילוץ טקסט-החשיבה החופשי (breakdownNote) שקדם לקריאת הכלי - מוחזר
+        // ללקוח ומוצג בכרטיס האישור/דחייה, כדי שמספר שנראה לא הגיוני יהיה
+        // אפשר לבדוק *למה* בלי לנחש (ר' ההערה ליד breakdownNote למעלה)
+        const reasoning = (anthropicJson?.content || [])
+            .filter((b: any) => b.type === "text" && b.text)
+            .map((b: any) => b.text.trim())
+            .join("\n\n")
+            .trim() || null;
 
         // המכסה עולה רק בקריאה הראשונה בפועל (כולל שיחת-הבהרה מקומית שלא
         // עברה דרך ה-AI קודם) - ר' חישוב shouldIncrementQuota למעלה
@@ -321,17 +339,19 @@ Deno.serve(async (req) => {
         }
         if (typeof result.calories === "number") {
             const calories = Math.round(result.calories);
+            const proteinGrams = typeof result.protein_grams === "number" ? Math.round(result.protein_grams * 10) / 10 : null;
             // שומרים במטמון רק תוצאות מהקריאה הראשונה הרגילה (לא קריאת-הבהרה,
             // שתלוית-תשובה ולא ניתנת למטמון לפי הטקסט המקורי בלבד) - ר' בדיקת
-            // המטמון למעלה. upsert כדי לרענן גם תיאור שכבר קיים אך פג-תוקף
+            // המטמון למעלה. upsert כדי לרענן גם תיאור שכבר קיים אך פג-תוקף.
+            // reasoning לא נשמר במטמון בכוונה - זו קריאה חדשה לגמרי בכל פעם
             if (!hasAnswer) {
                 const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
                 await supabase.from("food_text_cache").upsert(
-                    { cache_key: cacheKey, calories, created_at: new Date().toISOString() },
+                    { cache_key: cacheKey, calories, protein_grams: proteinGrams, created_at: new Date().toISOString() },
                     { onConflict: "cache_key" },
                 );
             }
-            return jsonResponse({ ok: true, status: "estimate", calories });
+            return jsonResponse({ ok: true, status: "estimate", calories, protein_grams: proteinGrams, reasoning });
         }
         // status "unknown" - ר' unknownNote למעלה. הצד שלנו (app.js) עדיין
         // נופל להערכה מקומית במקרה כזה, רק עם הודעה כנה שהמערכת לא הייתה
