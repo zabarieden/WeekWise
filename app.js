@@ -1075,7 +1075,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'limit') {
             showAppToast(t('quick_add_ai_limit_toast'), 'error');
             const localLimit = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein);
+            await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein, false, null, true);
             return;
         }
         if (attempt.status === 'clarify') {
@@ -1098,7 +1098,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
             const localUnknown = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localUnknown.calories, localUnknown.protein);
+            await finishFoodQuickAdd(text, localUnknown.calories, localUnknown.protein, false, null, true);
             return;
         }
         // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי. בעבר בלי
@@ -1108,7 +1108,7 @@ async function logFoodQuickAddViaAI(text) {
         // מפורש על פער של כ-100 קלוריות מול הערכה חיצונית לאותה ארוחה בדיוק
         showAppToast(t('food_ai_fallback_toast'), 'error');
         const localFallback = estimateFreeTextMacros(text);
-        await finishFoodQuickAdd(text, localFallback.calories, localFallback.protein);
+        await finishFoodQuickAdd(text, localFallback.calories, localFallback.protein, false, null, true);
     } finally {
         setFoodQuickAddLoading(false);
     }
@@ -1184,9 +1184,16 @@ function setFoodQuickAddLoading(isLoading) {
 // ששם אין הנמקה לערער עליה) עוברת דרך כרטיס אישור/דחייה לפני שנשמרת בפועל -
 // לפי בקשה מפורשת אחרי שהתגלה פער ענק (1290 מול כ-390 קלוריות אמיתיות
 // לאותה ארוחה) שנשמר בשקט בלי שהמשתמשת קיבלה הזדמנות לחלוק עליו
-async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning) {
+// alreadyNotified: כשהקוראת כבר הראתה הודעה ספציפית יותר (כמו "נגמרה
+// המכסה") - לא מציגים גם את ה-toast הגנרי "לא הצלחנו להעריך" מעליה, כי הוא
+// מיד דורס אותה ומשאיר את המשתמשת עם ההודעה הפחות-מדויקת בלבד על המסך -
+// לפי דיווח מפורש שראתה רק "לא הצלחנו להעריך" בלי לדעת שזו בעצם מכסה
+async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning, alreadyNotified) {
     const calories = Math.round(estimate || 0);
-    if (!calories || calories <= 0) { showAppToast(t('quick_add_cant_estimate'), 'error'); return; }
+    if (!calories || calories <= 0) {
+        if (!alreadyNotified) showAppToast(t('quick_add_cant_estimate'), 'error');
+        return;
+    }
     if (isAiSourced) {
         showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning);
         return;
@@ -1318,12 +1325,24 @@ async function confirmFoodClarify() {
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
             const localUnknown2 = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localUnknown2.calories, localUnknown2.protein);
+            await finishFoodQuickAdd(text, localUnknown2.calories, localUnknown2.protein, false, null, true);
+            return;
+        }
+        // status "limit" - היה חסר טיפול מפורש כאן (בניגוד ל-logFoodQuickAddViaAI) -
+        // נפל בשקט לענף הכללי למטה בלי שום הודעה, ואם גם הגיבוי המקומי לא זיהה
+        // כלום (למשל תיקון-טקסט חופשי כמו "16 קלוריות ליחידה" שהמנוע המקומי לא
+        // יודע לפרש כהוראה) - זה נראה כאילו "לא קרה כלום" בלי שום הסבר - לפי
+        // דיווח מפורש
+        if (attempt.status === 'limit') {
+            showAppToast(t('quick_add_ai_limit_toast'), 'error');
+            const localLimit2 = estimateFreeTextMacros(text);
+            await finishFoodQuickAdd(text, localLimit2.calories, localLimit2.protein, false, null, true);
             return;
         }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
+        showAppToast(t('food_ai_fallback_toast'), 'error');
         const localErr = estimateFreeTextMacros(text);
-        await finishFoodQuickAdd(text, localErr.calories, localErr.protein);
+        await finishFoodQuickAdd(text, localErr.calories, localErr.protein, false, null, true);
     } finally {
         clearTimeout(loadingTimer);
         hideFoodClarifyLoading();
@@ -10472,6 +10491,13 @@ const FOOD_CALORIE_DB = [
     { name: "לחמית כוסמין עם זרעים", re: /לחמית כוסמין/i, kcal100g: 411, unitGrams: 9 },
     { name: "לחמית שיפון וקצח", re: /לחמית שיפון/i, kcal100g: 375, unitGrams: 8 },
     { name: "לחמית ללא גלוטן", re: /לחמית ללא גלוטן/i, kcal100g: 371, unitGrams: 7 },
+    // "לחמית" כללית (בלי סוג ספציפי) - חייבת לבוא *אחרי* כל הסוגים הספציפיים
+    // למעלה (כפרית/חיטה מלאה/כוסמין/שיפון/ללא גלוטן), אחרת הייתה בולעת אותם
+    // בטעות. ערך kcalPerUnit מבוסס על תיקון מפורש מהמשתמשת ("כל יחידה בערך
+    // 16 קלוריות") - נתון אמיתי מאריזה בפועל, לא ניחוש - עקבי עם טווח
+    // הסוגים הספציפיים למעלה (kcal100g 371-411 ל-7-9 גרם ≈ 26-37 קל' ליחידה,
+    // אבל לחמית קטנה/דקה יותר יכולה להיות נמוכה יותר כמו 16)
+    { name: "לחמית", re: /לחמית/i, kcalPerUnit: 16, proteinPerUnit: 0.4 },
     { name: "פתית קלאסי", re: /פתית קלאסי|\bfatit\b/i, kcal100g: 380, unitGrams: 5 },
     { name: "Wasa Crispbread", re: /wasa/i, kcal100g: 350, unitGrams: 13 },
     { name: "Graze Crisp", re: /graze crisp/i, kcal100g: 433, unitGrams: 12 },

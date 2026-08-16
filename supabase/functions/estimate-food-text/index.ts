@@ -31,7 +31,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
-const FOOD_TEXT_MONTHLY_LIMIT = 100;
+const FOOD_TEXT_MONTHLY_LIMIT = 50;
 
 // מטמון גלובלי (משותף לכל המשתמשות) של תוצאות "estimate" בלבד - לא clarify/
 // unknown, ולא קריאות המשך אחרי הבהרה (אלה תלויות-הקשר, לא ניתנות למטמון
