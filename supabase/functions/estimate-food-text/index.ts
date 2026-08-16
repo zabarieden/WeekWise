@@ -170,6 +170,25 @@ Deno.serve(async (req) => {
         const userEmail = (userData.user.email || "").toLowerCase();
         const userId = userData.user.id;
 
+        // מטמון נכתב *רק* כאן, אחרי שהמשתמשת בפועל אישרה את התוצאה בכרטיס
+        // האישור/דחייה (ר' acceptFoodEstimate ב-app.js) - לא בזמן ההערכה
+        // עצמה, כדי שתוצאה שגויה (שנדחתה/תוקנה) לעולם לא תישאר במטמון
+        // ל-180 יום. פעולה קלה - בלי AI, בלי בדיקת פרימיום/מכסה (לא צורכת
+        // כלום, רק שומרת מספר שהמשתמשת כבר ראתה ואישרה) - לפי בקשה מפורשת
+        // אחרי שהתגלה שהמטמון החזיק ערך שגוי גם אחרי שתוקן
+        const body0 = await req.json();
+        if (body0.action === "confirmCache") {
+            const { text: cacheText, calories: cacheCalories, protein_grams: cacheProtein, language: cacheLang, country: cacheCountry } = body0;
+            if (!cacheText || typeof cacheCalories !== "number") return jsonResponse({ error: "missing_fields" }, 400);
+            const cacheKey = `${cacheLang}|${cacheCountry}|${normalizeCacheText(String(cacheText))}`;
+            await supabase.from("food_text_cache").upsert(
+                { cache_key: cacheKey, calories: Math.round(cacheCalories), protein_grams: typeof cacheProtein === "number" ? cacheProtein : null, created_at: new Date().toISOString() },
+                { onConflict: "cache_key" },
+            );
+            return jsonResponse({ ok: true });
+        }
+        const body = body0;
+
         const { data: premiumRow } = await supabase
             .from("user_premium")
             .select("is_premium")
@@ -178,7 +197,6 @@ Deno.serve(async (req) => {
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
         if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
-        const body = await req.json();
         const { text, clarificationQuestion, clarificationAnswer, isLocalClarify, language, country } = body;
         if (!text || !String(text).trim()) return jsonResponse({ error: "missing_text" }, 400);
         const hasAnswer = !!(clarificationQuestion && clarificationAnswer);
@@ -389,17 +407,9 @@ Deno.serve(async (req) => {
         if (typeof result.calories === "number") {
             const calories = Math.round(result.calories);
             const proteinGrams = typeof result.protein_grams === "number" ? Math.round(result.protein_grams * 10) / 10 : null;
-            // שומרים במטמון רק תוצאות מהקריאה הראשונה הרגילה (לא קריאת-הבהרה,
-            // שתלוית-תשובה ולא ניתנת למטמון לפי הטקסט המקורי בלבד) - ר' בדיקת
-            // המטמון למעלה. upsert כדי לרענן גם תיאור שכבר קיים אך פג-תוקף.
-            // reasoning לא נשמר במטמון בכוונה - זו קריאה חדשה לגמרי בכל פעם
-            if (!hasAnswer) {
-                const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
-                await supabase.from("food_text_cache").upsert(
-                    { cache_key: cacheKey, calories, protein_grams: proteinGrams, created_at: new Date().toISOString() },
-                    { onConflict: "cache_key" },
-                );
-            }
+            // לא כותבים למטמון כאן יותר - רק אחרי שהמשתמשת בפועל מאשרת בכרטיס
+            // האישור/דחייה (ר' action:"confirmCache" למעלה) - כדי שתוצאה
+            // שנדחתה/עדיין לא אושרה לעולם לא תיכנס למטמון ל-180 יום
             return jsonResponse({ ok: true, status: "estimate", calories, protein_grams: proteinGrams, reasoning });
         }
         // status "unknown" - ר' unknownNote למעלה. הצד שלנו (app.js) עדיין

@@ -1108,7 +1108,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'estimate') {
             // isAiSourced:true - זו הערכה אמיתית של ה-AI, לא הערכה מקומית -
             // לכן עוברת דרך כרטיס האישור/דחייה (ר' finishFoodQuickAdd)
-            await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning);
+            await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning, false, true);
             return;
         }
         // status "unknown" - ה-AI עצמו אמר בפירוש שהוא לא מזהה את הפריט, לפי
@@ -1208,14 +1208,17 @@ function setFoodQuickAddLoading(isLoading) {
 // המכסה") - לא מציגים גם את ה-toast הגנרי "לא הצלחנו להעריך" מעליה, כי הוא
 // מיד דורס אותה ומשאיר את המשתמשת עם ההודעה הפחות-מדויקת בלבד על המסך -
 // לפי דיווח מפורש שראתה רק "לא הצלחנו להעריך" בלי לדעת שזו בעצם מכסה
-async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning, alreadyNotified) {
+// shouldCacheOnAccept: רק תוצאה שבאמת עברה דרך ה-AI (לא המאגר המקומי, שלא
+// נוגע במטמון בכלל) נשמרת למטמון אחרי אישור - ר' showFoodEstimateConfirmCard/
+// acceptFoodEstimate
+async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning, alreadyNotified, shouldCacheOnAccept) {
     const calories = Math.round(estimate || 0);
     if (!calories || calories <= 0) {
         if (!alreadyNotified) showAppToast(t('quick_add_cant_estimate'), 'error');
         return;
     }
     if (isAiSourced) {
-        showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning);
+        showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning, shouldCacheOnAccept);
         return;
     }
     await commitFoodQuickAdd(text, calories, proteinGrams);
@@ -1236,11 +1239,13 @@ async function commitFoodQuickAdd(text, calories, proteinGrams) {
 let pendingConfirmText = '';
 let pendingConfirmCalories = 0;
 let pendingConfirmProtein = null;
+let pendingConfirmShouldCache = false;
 
-function showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning) {
+function showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning, shouldCacheOnAccept) {
     pendingConfirmText = text;
     pendingConfirmCalories = calories;
     pendingConfirmProtein = proteinGrams;
+    pendingConfirmShouldCache = !!shouldCacheOnAccept;
     const formFields = document.getElementById('food-quick-add-form-fields');
     if (formFields) formFields.classList.add('hidden');
     const summaryEl = document.getElementById('food-estimate-confirm-summary');
@@ -1263,9 +1268,29 @@ function hideFoodEstimateConfirmCard() {
 }
 
 async function acceptFoodEstimate() {
-    const text = pendingConfirmText, calories = pendingConfirmCalories, protein = pendingConfirmProtein;
+    const text = pendingConfirmText, calories = pendingConfirmCalories, protein = pendingConfirmProtein, shouldCache = pendingConfirmShouldCache;
     hideFoodEstimateConfirmCard();
     await commitFoodQuickAdd(text, calories, protein);
+    if (shouldCache) confirmFoodEstimateCache(text, calories, protein);
+}
+
+// שולחת ברקע (לא חוסמת/לא מחכה) בקשה קלה לשמור את התוצאה *המאושרת* במטמון -
+// ר' action:"confirmCache" ב-estimate-food-text/index.ts. לפי בקשה מפורשת:
+// המטמון לא אמור להחזיק תוצאה ששלא אושרה - כישלון כאן לא צריך להפריע
+// למשתמשת בשום צורה (השמירה בפועל כבר קרתה, זה רק אופטימיזציה למטמון)
+async function confirmFoodEstimateCache(text, calories, protein) {
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) return;
+        await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ action: 'confirmCache', text, calories, protein_grams: protein, language: currentLang, country: getUserCountry() }),
+        });
+    } catch (e) {
+        // שקט בכוונה - אופטימיזציית מטמון בלבד, לא פעולה שהמשתמשת מחכה לה
+    }
 }
 
 // דוחים את ההערכה ופותחים את אותה תיבת-הבהרה שה-AI עצמו כבר משתמש בה
@@ -1340,7 +1365,7 @@ async function confirmFoodClarify() {
         closeModal('modal-food-clarify');
         // isAiSourced:true - כאן גם: אם ההערכה המחודשת עדיין לא נראית נכון,
         // כרטיס האישור/דחייה יעלה שוב (לא שמירה-אוטומטית של הניסיון השני)
-        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning); return; }
+        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning, false, true); return; }
         // status "unknown" - ר' ההערה המקבילה ב-logFoodQuickAddViaAI
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
@@ -13995,7 +14020,25 @@ function initNotebookCanvas() {
         canvas.addEventListener('pointerdown', startStroke);
     }
     redrawCanvasFromStrokes();
+    renderEmojiOverlay();
 }
+
+// initNotebookCanvas מתאים DPR-מדויק לגודל ה-CSS בזמן הפתיחה בלבד - בלי
+// listener, שינוי גודל חלון (רלוונטי הרבה יותר עכשיו עם הרוחב-המלא בדסקטופ,
+// ר' .notebook-detail-drawer) היה משאיר את הקנבס מטושטש/לא מסונכרן עד
+// שהדף נפתח מחדש. פעיל רק כשהמגירה פתוחה בפועל (בדיקה זולה), מבוזר (debounce)
+// כדי לא להריץ redraw מלא על כל פיקסל תזוזה באמצע גרירת-חלון
+let notebookResizeDebounceTimer = null;
+function handleNotebookViewportResize() {
+    const overlay = document.getElementById('notebook-detail-drawer-overlay');
+    if (!overlay || !overlay.classList.contains('open')) return;
+    clearTimeout(notebookResizeDebounceTimer);
+    notebookResizeDebounceTimer = setTimeout(() => {
+        initNotebookCanvas();
+    }, 150);
+}
+window.addEventListener('resize', handleNotebookViewportResize);
+window.addEventListener('orientationchange', handleNotebookViewportResize);
 
 function redrawCanvasFromStrokes() {
     const canvas = document.getElementById('notebook-page-canvas');
@@ -14005,14 +14048,10 @@ function redrawCanvasFromStrokes() {
     canvasStrokes.forEach(entry => drawStrokeEntry(ctx, canvas, entry));
 }
 
+// t:'emoji' כבר לא מטופל כאן - עבר לשכבת DOM נפרדת (ר' renderEmojiOverlay)
+// כדי שאפשר יהיה לגרור אימוג'ים אחרי ההנחתה, לפי בקשה מפורשת ("שיהיה אפשר
+// להזיז את האימוג'י ידנית"). דיו בלבד מכאן ואילך
 function drawStrokeEntry(ctx, canvas, entry) {
-    if (entry.t === 'emoji') {
-        ctx.font = `${entry.size}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(entry.ch, entry.x * canvas.width, entry.y * canvas.height);
-        return;
-    }
     if (!entry.pts || entry.pts.length < 2) return;
     ctx.globalCompositeOperation = entry.t === 'e' ? 'destination-out' : 'source-over';
     ctx.strokeStyle = entry.c || '#000';
@@ -14020,8 +14059,22 @@ function drawStrokeEntry(ctx, canvas, entry) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
+    // עקומה חלקה דרך נקודות-אמצע (quadratic-curve-through-midpoints) במקום
+    // lineTo גס נקודה-לנקודה - "כמו Procreate", לפי בקשה מפורשת. הקטע
+    // האחרון נשאר lineTo פשוט (אין עוד נקודה להתאמצע איתה)
     ctx.moveTo(entry.pts[0][0] * canvas.width, entry.pts[0][1] * canvas.height);
-    for (let i = 1; i < entry.pts.length; i++) ctx.lineTo(entry.pts[i][0] * canvas.width, entry.pts[i][1] * canvas.height);
+    if (entry.pts.length === 2) {
+        ctx.lineTo(entry.pts[1][0] * canvas.width, entry.pts[1][1] * canvas.height);
+    } else {
+        for (let i = 1; i < entry.pts.length - 1; i++) {
+            const p = entry.pts[i], pNext = entry.pts[i + 1];
+            const midX = (p[0] + pNext[0]) / 2 * canvas.width;
+            const midY = (p[1] + pNext[1]) / 2 * canvas.height;
+            ctx.quadraticCurveTo(p[0] * canvas.width, p[1] * canvas.height, midX, midY);
+        }
+        const last = entry.pts[entry.pts.length - 1];
+        ctx.lineTo(last[0] * canvas.width, last[1] * canvas.height);
+    }
     ctx.stroke();
     ctx.globalCompositeOperation = 'source-over';
 }
@@ -14040,6 +14093,10 @@ function startStroke(e) {
     document.addEventListener('pointerup', endStroke);
 }
 
+// גרסת-חי (per pointermove) של אותה עקומת-אמצעים כמו drawStrokeEntry - כל
+// קריאה מציירת רק את קטע-האמצעים המקומי החדש (לא מציירת מחדש את כל השורטוק
+// עד כה), כדי שלא יהיה הבהוב/עלות ביצועים. שני קטעים עוקבים תמיד נפגשים
+// בדיוק בנקודת-אמצע משותפת, אז זה נותן בדיוק את אותה עקומה כמו redraw מלא
 function continueStroke(e) {
     const canvas = document.getElementById('notebook-page-canvas');
     if (!canvas || !currentStroke) return;
@@ -14052,8 +14109,17 @@ function continueStroke(e) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(pts[pts.length - 2][0] * canvas.width, pts[pts.length - 2][1] * canvas.height);
-    ctx.lineTo(pts[pts.length - 1][0] * canvas.width, pts[pts.length - 1][1] * canvas.height);
+    if (pts.length < 3) {
+        // קטע ראשון - אין עוד נקודת-אמצע קודמת, קו פשוט
+        ctx.moveTo(pts[pts.length - 2][0] * canvas.width, pts[pts.length - 2][1] * canvas.height);
+        ctx.lineTo(pts[pts.length - 1][0] * canvas.width, pts[pts.length - 1][1] * canvas.height);
+    } else {
+        const p0 = pts[pts.length - 3], p1 = pts[pts.length - 2], p2 = pts[pts.length - 1];
+        const startMidX = (p0[0] + p1[0]) / 2 * canvas.width, startMidY = (p0[1] + p1[1]) / 2 * canvas.height;
+        const endMidX = (p1[0] + p2[0]) / 2 * canvas.width, endMidY = (p1[1] + p2[1]) / 2 * canvas.height;
+        ctx.moveTo(startMidX, startMidY);
+        ctx.quadraticCurveTo(p1[0] * canvas.width, p1[1] * canvas.height, endMidX, endMidY);
+    }
     ctx.stroke();
     ctx.globalCompositeOperation = 'source-over';
 }
@@ -14070,6 +14136,7 @@ function endStroke() {
 function undoLastStroke() {
     canvasStrokes.pop();
     redrawCanvasFromStrokes();
+    renderEmojiOverlay();
     saveCanvasData();
 }
 
@@ -14077,6 +14144,7 @@ function clearCanvas() {
     showDangerConfirm(t('notebook_canvas_clear_confirm_title'), t('notebook_canvas_clear_confirm_msg'), () => {
         canvasStrokes = [];
         redrawCanvasFromStrokes();
+        renderEmojiOverlay();
         saveCanvasData();
     });
 }
@@ -14129,9 +14197,65 @@ function toggleEmojiPickerPanel() {
 
 function stampEmojiOnCanvas(emoji) {
     canvasStrokes.push({ t: 'emoji', ch: emoji, x: 0.5, y: 0.4, size: 32 });
-    redrawCanvasFromStrokes();
+    renderEmojiOverlay();
     saveCanvasData();
     document.getElementById('notebook-emoji-picker')?.classList.add('hidden');
+}
+
+// --- שכבת-DOM נפרדת לאימוג'ים על הקנבס (לא מצוירים לתוך הביטמאפ) - כדי
+// שאפשר יהיה לגרור כל אחד למקום אחר אחרי ההנחתה, לפי בקשה מפורשת. תופעת-לוואי
+// מקובלת: אימוג'י תמיד יושב מעל כל הדיו (גם דיו שצויר אחריו) - כמו מדבקה
+// אמיתית, לא שווה את המורכבות לשמר סדר-כרונולוגי מדויק בין שתי שכבות נפרדות ---
+function renderEmojiOverlay() {
+    const overlay = document.getElementById('notebook-emoji-overlay');
+    if (!overlay) return;
+    overlay.innerHTML = '';
+    canvasStrokes.forEach((entry, idx) => {
+        if (entry.t !== 'emoji') return;
+        const span = document.createElement('span');
+        span.className = 'notebook-emoji-item';
+        span.textContent = entry.ch;
+        span.style.left = `${entry.x * 100}%`;
+        span.style.top = `${entry.y * 100}%`;
+        span.style.fontSize = `${entry.size}px`;
+        span.dataset.strokeIndex = idx;
+        span.addEventListener('pointerdown', startEmojiDrag);
+        overlay.appendChild(span);
+    });
+}
+
+let draggingEmojiEl = null, draggingEmojiIndex = null;
+function startEmojiDrag(e) {
+    e.preventDefault();
+    e.stopPropagation(); // לא מבעבע לקנבס שמתחת - לא רוצים שזה יתחיל גם שורטוק
+    draggingEmojiEl = e.currentTarget;
+    draggingEmojiIndex = parseInt(draggingEmojiEl.dataset.strokeIndex, 10);
+    draggingEmojiEl.classList.add('dragging');
+    document.addEventListener('pointermove', continueEmojiDrag);
+    document.addEventListener('pointerup', endEmojiDrag);
+}
+function continueEmojiDrag(e) {
+    if (!draggingEmojiEl) return;
+    const overlay = document.getElementById('notebook-emoji-overlay');
+    if (!overlay) return;
+    const rect = overlay.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    if (canvasStrokes[draggingEmojiIndex]) {
+        canvasStrokes[draggingEmojiIndex].x = x;
+        canvasStrokes[draggingEmojiIndex].y = y;
+    }
+    draggingEmojiEl.style.left = `${x * 100}%`;
+    draggingEmojiEl.style.top = `${y * 100}%`;
+}
+function endEmojiDrag() {
+    document.removeEventListener('pointermove', continueEmojiDrag);
+    document.removeEventListener('pointerup', endEmojiDrag);
+    if (draggingEmojiEl) draggingEmojiEl.classList.remove('dragging');
+    const didDrag = draggingEmojiEl != null;
+    draggingEmojiEl = null;
+    draggingEmojiIndex = null;
+    if (didDrag) saveCanvasData(); // פעם אחת בשחרור - לא בכל pointermove
 }
 
 async function loadVisionGoals() {

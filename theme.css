@@ -3052,6 +3052,14 @@ html[dir="ltr"] .hamburger-drawer {
     transform: translateX(-100%);
 }
 html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: translateX(0); }
+/* מגירת המחברת (לא שאר 5 המגירות שחולקות .hamburger-drawer) מתרחבת
+   כמעט-למסך-מלא בדסקטופ - קנבס ציור נהנה משטח גדול ("כמו Procreate"), לפי
+   בקשה מפורשת. נשארת overlay מלא-מסך (לא פאנל בתוך העמוד) - שומר על מקסימום
+   שטח ציור ולא דורש שינוי ללוגיקת הפתיחה/סגירה הקיימת */
+@media (min-width: 1024px) {
+    .notebook-detail-drawer { width: calc(100% - 64px); max-width: 1100px; top: 24px; bottom: 24px; right: 24px; }
+    html[dir="ltr"] .notebook-detail-drawer { left: 24px; right: auto; }
+}
 /* הגלילה בפועל קורית כאן, לא ב-.hamburger-drawer עצמו - כך שפס הגלילה נשאר
    בתוך הקצוות המעוגלים (שנחתכים ע"י overflow:hidden בהורה) ולא "בורח" מהם
    למעלה/למטה */
@@ -3198,7 +3206,18 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .notebook-toolbar-btn.active { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
 /* touch-action:none קריטי - בלעדיו ציור באצבע/Apple Pencil "גונב" את הגלילה
    של הדף במקום לצייר, במיוחד באייפד/מובייל */
-.notebook-page-canvas { display: block; width: 100%; height: 220px; border-radius: 12px; background-color: var(--bg-glass); border: 1px solid var(--border-color); touch-action: none; margin-bottom: 8px; }
+.notebook-page-canvas-wrap { position: relative; margin-bottom: 8px; }
+.notebook-page-canvas { display: block; width: 100%; height: min(60vh, 500px); border-radius: 12px; background-color: var(--bg-glass); border: 1px solid var(--border-color); touch-action: none; }
+@media (min-width: 1024px) {
+    .notebook-page-canvas { height: min(65vh, 640px); }
+}
+/* שכבת-אימוג'ים נפרדת מעל הקנבס (לא מצוירת לתוך הביטמאפ) - כדי שאפשר יהיה
+   לגרור אותם אחרי ההנחתה, ר' renderEmojiOverlay/startEmojiDrag ב-app.js.
+   pointer-events:none על המעטפת עצמה (לא לחסום ציור-דיו מתחתיה), auto רק
+   על כל אימוג'י בנפרד */
+.notebook-emoji-overlay { position: absolute; inset: 0; pointer-events: none; }
+.notebook-emoji-item { position: absolute; transform: translate(-50%, -50%); cursor: grab; pointer-events: auto; touch-action: none; user-select: none; line-height: 1; }
+.notebook-emoji-item.dragging { cursor: grabbing; z-index: 10; }
 /* בוחר-אימוג'ים משותף חזותית ל-.icon-picker-row/.icon-picker-chip, אבל בלי
    מצב .selected קבוע - כל לחיצה כאן היא הנחתה חד-פעמית על הקנבס, לא בחירה */
 .notebook-emoji-picker { max-height: 160px; overflow-y: auto; margin-bottom: 8px; }
