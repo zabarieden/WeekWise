@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=364">
+    <link rel="stylesheet" href="theme.css?v=365">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1169,48 +1169,58 @@
                             <button type="button" class="hamburger-drawer-close" onclick="closeNotebookDetailDrawer()">✕</button>
                         </div>
                     </div>
-                    <!-- ניווט בין דפי המחברה: כותרת-דף לחיצה (פותחת שינוי-שם), חצי
-                         הקודם/הבא, מונה "N / סה"כ", וחץ שפותח/סוגר את פאנל כל הדפים -
-                         לפי בקשה מפורשת ("אפשרות לעבור בין הדפים ולכל דף לקרוא בשם...
-                         אפשרות לפתוח ולסגור חץ עם כל השמות של הדפים או המספרים") -->
-                    <div class="notebook-page-header-nav">
-                        <button type="button" class="notebook-page-nav-btn" id="notebook-page-prev-btn" onclick="goToPrevPage()" aria-label="Previous page">‹</button>
-                        <button type="button" class="notebook-page-title-btn" onclick="openRenamePageModal()">
-                            <span id="notebook-page-title-text"></span>
-                            <span class="notebook-page-title-edit-icon">✏️</span>
-                        </button>
-                        <button type="button" class="notebook-page-nav-btn" id="notebook-page-next-btn" onclick="goToNextPage()" aria-label="Next page">›</button>
-                        <span id="notebook-page-counter" class="notebook-page-counter"></span>
-                        <button type="button" class="notebook-page-tabs-arrow" id="notebook-page-tabs-arrow" onclick="togglePagesListPanel()" data-i18n-title="notebook_pages_panel_toggle_title" title="Show all pages">▾</button>
+                    <!-- מבנה דו-עמודתי בדסקטופ: פאנל-הדפים כסרגל-צד קבוע ליד עמודת
+                         התוכן, במקום פאנל-נגלל שמכסה הכל - לפי בקשה מפורשת ("חלונית
+                         שאפשר לפתוח ולפתוח לי דף ספציפי, ממש בצד"). במובייל (מתחת
+                         ל-1024px) שני האלמנטים חוזרים לזרימה רגילה מלמעלה-למטה,
+                         והחץ/הפאנל-הנגלל נשארים בדיוק כמו קודם - ר' .notebook-detail-body
+                         ב-theme.css -->
+                    <div class="notebook-detail-body">
+                        <div class="notebook-page-tabs-panel" id="notebook-page-tabs-panel">
+                            <input type="text" id="notebook-pages-search-input" class="language-search-input" oninput="searchNotebookPages(this.value)" data-i18n-placeholder="notebook_pages_search_placeholder" placeholder="Search pages...">
+                            <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list"></ul>
+                        </div>
+                        <div class="notebook-detail-main-col">
+                            <!-- ניווט בין דפי המחברה: כותרת-דף לחיצה (פותחת שינוי-שם), חצי
+                                 הקודם/הבא, מונה "N / סה"כ", וחץ שפותח/סוגר את פאנל כל הדפים
+                                 (מובייל בלבד - בדסקטופ הפאנל תמיד גלוי בצד) - לפי בקשה מפורשת
+                                 ("אפשרות לעבור בין הדפים ולכל דף לקרוא בשם...") -->
+                            <div class="notebook-page-header-nav">
+                                <button type="button" class="notebook-page-nav-btn" id="notebook-page-prev-btn" onclick="goToPrevPage()" aria-label="Previous page">‹</button>
+                                <button type="button" class="notebook-page-title-btn" onclick="openRenamePageModal()">
+                                    <span id="notebook-page-title-text"></span>
+                                    <span class="notebook-page-title-edit-icon">✏️</span>
+                                </button>
+                                <button type="button" class="notebook-page-nav-btn" id="notebook-page-next-btn" onclick="goToNextPage()" aria-label="Next page">›</button>
+                                <span id="notebook-page-counter" class="notebook-page-counter"></span>
+                                <button type="button" class="notebook-page-tabs-arrow" id="notebook-page-tabs-arrow" onclick="togglePagesListPanel()" data-i18n-title="notebook_pages_panel_toggle_title" title="Show all pages">▾</button>
+                            </div>
+                            <!-- כלי-כתיבה חופשית (עט/מוחק/ביטול/ניקוי) + בוחר אימוג'ים שנוחת
+                                 כמדבקה על הקנבס - לפי בקשה מפורשת ("גם ידנית אם זה באייפד...
+                                 אפשר להוסיף אימוגים בדף") -->
+                            <div class="notebook-page-toolbar">
+                                <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-toolbar-btn" id="notebook-eraser-btn" onclick="setEraserMode(!isEraserMode)" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">🧽</button>
+                                <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
+                                <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
+                                <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
+                            </div>
+                            <div id="notebook-emoji-picker" class="icon-picker-row notebook-emoji-picker hidden"></div>
+                            <div class="notebook-page-canvas-wrap">
+                                <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
+                                <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
+                            </div>
+                            <div class="notebook-items-section-header">
+                                <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
+                            </div>
+                            <ul id="notebook-items-list" class="study-tasks-list"></ul>
+                            <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
+                        </div>
                     </div>
-                    <div class="notebook-page-tabs-panel" id="notebook-page-tabs-panel">
-                        <input type="text" id="notebook-pages-search-input" class="language-search-input" oninput="searchNotebookPages(this.value)" data-i18n-placeholder="notebook_pages_search_placeholder" placeholder="Search pages...">
-                        <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list"></ul>
-                    </div>
-                    <!-- כלי-כתיבה חופשית (עט/מוחק/ביטול/ניקוי) + בוחר אימוג'ים שנוחת
-                         כמדבקה על הקנבס - לפי בקשה מפורשת ("גם ידנית אם זה באייפד...
-                         אפשר להוסיף אימוגים בדף") -->
-                    <div class="notebook-page-toolbar">
-                        <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                        <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                        <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                        <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                        <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                        <button type="button" class="notebook-toolbar-btn" id="notebook-eraser-btn" onclick="setEraserMode(!isEraserMode)" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">🧽</button>
-                        <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
-                        <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
-                        <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
-                    </div>
-                    <div id="notebook-emoji-picker" class="icon-picker-row notebook-emoji-picker hidden"></div>
-                    <div class="notebook-page-canvas-wrap">
-                        <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
-                        <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
-                    </div>
-                    <div class="notebook-items-section-header">
-                        <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
-                    </div>
-                    <ul id="notebook-items-list" class="study-tasks-list"></ul>
-                    <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
                 </div>
                 </nav>
             </div>

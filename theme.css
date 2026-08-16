@@ -3195,6 +3195,24 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 .notebook-page-tabs-arrow.open { transform: rotate(180deg); }
 .notebook-page-tabs-panel { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
 .notebook-page-tabs-panel.open { max-height: 50vh; overflow-y: auto; margin-bottom: 8px; }
+/* בדסקטופ: פאנל-הדפים הופך מ"נגלל-על-גבי-התוכן" לסרגל-צד קבוע ליד עמודת
+   התוכן - לפי בקשה מפורשת ("חלונית שאפשר לפתוח... ממש בצד"). מוגבל ל-
+   .notebook-detail-drawer בלבד (לא לכל .hamburger-drawer) - מגירות אחרות
+   לא משתמשות ב-.notebook-detail-body בכלל, אז אין סיכון חפיפה */
+@media (min-width: 1024px) {
+    .notebook-detail-drawer .notebook-detail-body { display: flex; flex-direction: row-reverse; align-items: stretch; gap: 16px; }
+    html[dir="ltr"] .notebook-detail-drawer .notebook-detail-body { flex-direction: row; }
+    .notebook-detail-drawer .notebook-detail-main-col { flex: 1 1 auto; min-width: 0; }
+    .notebook-detail-drawer .notebook-page-tabs-panel {
+        max-height: none !important;
+        overflow-y: auto !important;
+        flex: 0 0 240px;
+        margin-bottom: 0;
+        border-inline-end: 1px solid var(--border-color);
+        padding-inline-end: 12px;
+    }
+    .notebook-detail-drawer .notebook-page-tabs-arrow { display: none; }
+}
 .notebook-page-tabs-list { list-style: none; margin: 6px 0 0 0; padding: 0; }
 .notebook-page-tab-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; }
 .notebook-page-tab-item.active { color: var(--accent-purple-text); font-weight: 700; }
