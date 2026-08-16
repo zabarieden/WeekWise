@@ -1040,6 +1040,22 @@ async function logFoodQuickAdd() {
     const text = input ? input.value.trim() : '';
     if (!text) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
 
+    // אם המאגר המקומי כבר מזהה את כל התיאור בביטחון (כל הטקסט מכוסה ע"י
+    // מאכל/ים ידועים, לא נשאר שום מילה לא-מזוהה) - משתמשים בו ישירות, גם
+    // למשתמשת פרימיום, בלי לפנות ל-AI בכלל. נתון מדויק ממוצר-מותג אמיתי
+    // (כמו "לחמית חיטה מלאה" - 8 גרם, 387 קל'/100 גרם, נתון תזונתי אמיתי)
+    // עדיף על ניחוש כללי של AI שלא בהכרח מכיר את המוצר הישראלי הספציפי הזה -
+    // לפי בקשה מפורשת אחרי שהתגלה בפועל שה-AI נתן 480 ואז 270 לאותה מנה
+    // (3 לחמיות) שהמאגר המקומי מחשב במדויק ל-93 קלוריות. hasUnmatchedFoodText
+    // כבר קיימת בדיוק בשביל השיקול ההפוך (ר' autoFillMealCalories) - כאן
+    // משתמשים בה כדי לוודא שבאמת *כל* התיאור כוסה, לא רק חלק ממנו
+    if (isPremiumUser && !hasUnmatchedFoodText(text)) {
+        const confidentMacros = estimateFreeTextMacros(text);
+        if (confidentMacros.calories > 0) {
+            await finishFoodQuickAdd(text, confidentMacros.calories, confidentMacros.protein);
+            return;
+        }
+    }
     if (isPremiumUser) {
         await logFoodQuickAddViaAI(text);
         return;
