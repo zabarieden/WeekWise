@@ -22,8 +22,8 @@ html {
 }
 :root {
     /* --bg-main מוגדר כגרדיאנט (לא צבע אחיד) עבור ערכת ברירת המחדל וכל 15
-       ערכות הנושא הפרימיום - .phone-wrapper/.app-loading-overlay משתמשים ב-
-       background (הקיצור), לא background-color, כדי שגרדיאנט יעבוד בפועל.
+       ערכות הנושא הפרימיום - .phone-wrapper משתמש ב-background (הקיצור),
+       לא background-color, כדי שגרדיאנט יעבוד בפועל.
        --bg-row הוא משתנה חדש: "משטח שורה" משותף לכל התוכן ברשימות (שורות
        לו"ז, פתקים, ארוחות, אירועים וכו') - כך שכל השורות באפליקציה מקבלות
        את גוון ערכת הנושא הנבחרת, לא רק הרקע הגדול מאחורי הכול */
@@ -3756,99 +3756,6 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
 .skeleton-card { aspect-ratio: 1; border-radius: 14px; background: linear-gradient(110deg, rgba(255,255,255,0.03) 8%, rgba(255,255,255,0.08) 18%, rgba(255,255,255,0.03) 33%); background-size: 200% 100%; animation: skeletonShimmer 1.4s ease-in-out infinite; }
 @keyframes skeletonShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-.app-loading-overlay { display: none; position: absolute; inset: 0; background: var(--bg-main); z-index: 4000; align-items: center; justify-content: center; }
-.app-loading-overlay.open { display: flex; }
-/* נצנצים שיורדים מתחת למשפט "That's about to become real" - במקום עיגול
-   טעינה גנרי, לפי בקשה מפורשת ("טעינה אחרת כמו נצנצים שיורדים מתוך המשפט").
-   אותו רעיון בדיוק כמו all-done-sparkle/allDoneSparkleFall (ר' startLoadingSparkles
-   ב-app.js), רק בתוך אזור קטן ומוגבל מתחת לטקסט, לא על פני כל המסך */
-.loading-sparkles-wrap { position: relative; width: 100%; max-width: 220px; height: 60px; margin: -14px auto 0; overflow: hidden; }
-.loading-sparkles { position: absolute; inset: 0; pointer-events: none; }
-.loading-sparkle {
-    position: absolute;
-    top: -4px;
-    animation-name: loadingSparkleFall;
-    animation-timing-function: ease-in;
-    animation-fill-mode: forwards;
-    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-purple-light) 60%, transparent));
-}
-[data-color-theme="deep_space"] .loading-sparkle {
-    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
-}
-@keyframes loadingSparkleFall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-    15% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translateY(60px) rotate(200deg); opacity: 0; }
-}
-/* אנימציית "ספר" על כל המסך במסך הטעינה - 7 "דפים" ערוכים בערימה (position:
-   absolute, z-index יורד), כל אחד הופך (rotateY, perspective תלת-ממדי) בתורו
-   עם עיכוב מדורג, וחושף את הדף שמתחתיו - כך שזה נראה כמו דפדוף אמיתי מדף
-   לדף, לא רק פתיחת כריכה בודדת. הדף האחרון (book-final-page) הוא "עמוד
-   הסיום" הקבוע עם ברכת הפתיחה+ספינר, ונשאר גלוי עד שהטעינה האמיתית מסתיימת */
-/* perspective נמוך יותר (היה 2200px) = זווית תלת-ממדית הרבה יותר דרמטית
-   ונראית-אמיתית בזמן ההיפוך, לא שטוחה - לפי בקשה מפורשת ("שיראה כמו דפדוף
-   אמיתי לא שיראה ישר") */
-.book-fullscreen { position: relative; width: 92%; max-width: 520px; height: 82%; max-height: 780px; perspective: 1000px; }
-.book-page, .book-final-page {
-    position: absolute; inset: 0;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
-    backface-visibility: hidden; -webkit-backface-visibility: hidden;
-    transform-origin: left center;
-    display: flex; align-items: center; justify-content: center;
-}
-/* ממשיך את גרדיאנט הרקע של הדפים עצמם (במקום החזרה הפתאומית לרקע האפליקציה
-   הכהה/שחור-כמעט, שנראה מנותק ו"מכוער" ליד הדפים הצבעוניים שלפניו) + זוהר
-   רדיאלי עדין מאחורי הטקסט לתחושת עומק, לא ריבוע שטוח. var(--bg-main)/
-   var(--accent-purple) במקום צבעים קבועים - כך שמסך הכניסה משתנה אוטומטית
-   לפי ערכת הנושא שנבחרה (לא תמיד כחול קבוע), לפי בקשה מפורשת. index.html
-   מיישם את data-color-theme סינכרונית ומוקדם מאוד כדי שזה כבר נכון בציור
-   הראשון, ר' ההערה שם */
-.book-final-page {
-    /* var(--border-color) - לא var(--accent-purple) - כי רק צבעי הרקע/משטחים
-       (כולל border-color) עודכנו לכחול בזמן הצביעה-מחדש של ברירת המחדל,
-       ולא צבעי ה-accent (ר' ההערה למעלה ב-:root); כך זה כבר נכון גם
-       בברירת המחדל וגם בכל ערכה פרימיום בלי override נפרד */
-    background:
-        radial-gradient(ellipse at 50% 45%, var(--border-color), transparent 60%),
-        var(--bg-main);
-    border: 1px solid var(--border-color);
-    flex-direction: column; gap: 18px;
-    z-index: 0;
-}
-/* font-family קבוע (לא var(--user-font)) בכוונה - מסך הטעינה מוצג לפני
-   שהפונט המותאם-אישית נטען מהשרת (async), ובלעדי זה הטקסט "מהבהב" בין
-   הפונט הזמני לפונט הסופי כמה מאות מילישניות אחרי - לפי דיווח מפורש
-   ("יש שם בפונט שונה את המשפט הראשון ואז הוא משתנה") */
-/* var(--text-primary) היה כמעט תמיד לבן/כמעט-לבן בכל ערכות הנושא (במצב כהה,
-   מטעמי קריאות על רקע כהה) - זה בדיוק מה ש"עדיין לבן" מתאר. עכשיו צבוע
-   באותו גוון-מותג של הערכה הנבחרת (accent-purple-light-text), כמו הכיתוב
-   השני "That's about to become real" בעמוד הבא - לפי בקשה מפורשת ("לכל
-   ערכות נושא כל אחת בצבע שלה") */
-.book-welcome-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--accent-purple-light-text); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
-.book-final-page .book-welcome-subtext { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent-purple-light); margin: 0; text-align: center; padding: 0 24px; text-shadow: 0 0 16px color-mix(in srgb, var(--accent-purple) 50%, transparent); }
-[data-color-theme="deep_space"] .book-final-page .book-welcome-subtext {
-    color: #93c5fd;
-    text-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
-}
-.book-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); }
-.book-title-page { flex-direction: column; gap: 14px; }
-/* רק שני "דפים" (לא 7) - הדף הראשון (כותרת) ודף הסיום (עם הספינר) - לפי
-   בקשה מפורשת ("רק הדף הראשון והאחרון"). כל דף נשאר גלוי כ-3.5 שניות (היה
-   5) - קוצר לפי בקשה מפורשת ("יותר מהיר, אבל קריא") - ר'
-   BOOK_LOADING_ANIMATION_MS ב-app.js ששומר את כל הרצף פתוח מספיק זמן */
-.book-page { animation-name: bookPageTurn; animation-duration: 0.3s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
-.book-page-1 { background: var(--bg-main); z-index: 7; animation-delay: 3.5s; }
-/* brightness יורד ועולה סביב אמצע ההיפוך (הדף "בפרופיל", כמעט בלי רוחב) -
-   מדמה איך דף אמיתי כמעט לא מחזיר אור ברגע שהוא ניצב לצופה, לפי בקשה
-   מפורשת שהדפדוף ייראה אמיתי ולא שטוח */
-@keyframes bookPageTurn { 0% { transform: rotateY(0deg); filter: brightness(1); } 50% { filter: brightness(0.55); } 100% { transform: rotateY(-180deg); filter: brightness(1); } }
-/* ספרים בעברית נפתחים/מדפדפים מימין לשמאל - מראה של הציר וכיוון הסיבוב,
-   כדי שזה יראה כמו דפדוף אמיתי גם ב-RTL, לא רק פליפ מוזר בכיוון ההפוך */
-html[dir="rtl"] .book-page, html[dir="rtl"] .book-final-page { transform-origin: right center; }
-html[dir="rtl"] .book-page { animation-name: bookPageTurnRtl; }
-@keyframes bookPageTurnRtl { 0% { transform: rotateY(0deg); filter: brightness(1); } 50% { filter: brightness(0.55); } 100% { transform: rotateY(180deg); filter: brightness(1); } }
 .recipe-card {
     background-color: var(--bg-glass);
     backdrop-filter: blur(20px);

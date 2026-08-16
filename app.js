@@ -1533,8 +1533,6 @@ async function initAppAfterAuth(user) {
     currentUserCreatedAt = user.created_at;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    showAppLoadingOverlay();
-    const loadingStartedAt = Date.now();
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -1589,15 +1587,6 @@ async function initAppAfterAuth(user) {
     // אחת בלבד כאן, בטעינת האפליקציה - לא בכל loadWeeklySchedule (ר' ההערה שם)
     await pruneEmptyExcessSlots();
     loadAllCenterItems();
-    // מחכים שאנימציית "הספר" תסיים לרוץ במלואה לפני שמסתירים את מסך הטעינה -
-    // בלי זה, כשהטעינה האמיתית מהירה (רשת טובה/מטמון), האנימציה נקטעת אחרי
-    // חלק שנייה ("נראה כאילו זה נפתח ומיד נסגר") - לפי בקשה מפורשת. אם הטעינה
-    // בפועל לקחה יותר זמן מהאנימציה, אין המתנה נוספת בכלל (הפרש שלילי/0)
-    const loadingElapsedMs = Date.now() - loadingStartedAt;
-    if (loadingElapsedMs < BOOK_LOADING_ANIMATION_MS) {
-        await new Promise(resolve => setTimeout(resolve, BOOK_LOADING_ANIMATION_MS - loadingElapsedMs));
-    }
-    hideAppLoadingOverlay();
     applyPwaShortcutDeepLink();
     initFixedAiFab();
     initFixedAiBrainFab();
@@ -1902,56 +1891,6 @@ function triggerDailyGreetingSparkles() {
         clearInterval(spawnTimer);
         setTimeout(() => overlay.remove(), 5500);
     }, 4000);
-}
-
-// משך אנימציית "הספר" (רק 2 דפים עכשיו, ר' theme.css): דף 1 גלוי 5s, היפוך
-// 0.3s, ועוד 5s על דף הסיום = 10.3s, + מרווח ביטחון קטן - initAppAfterAuth
-// מחכה לפחות עד למשך הזה לפני שמסתיר את מסך הטעינה. הוארך בחזרה מ-2200
-// (התברר כמהיר מדי לקריאה) - לפי בקשה מפורשת "רק הדף הראשון והאחרון...
-// תן לזה לשבת... אפילו 5 [שניות]"
-// 3.5 שניות לדף הראשון + 0.3 שניות דפדוף + 3.5 שניות לדף הסיום = 7.3 שניות
-// (היה 10.5) - קוצר לפי בקשה מפורשת ("שתהפכו למציאות יהיה קריא אבל יותר
-// מהיר") - ר' ההערה ליד .book-page-1/.book-final-page ב-theme.css
-const BOOK_LOADING_ANIMATION_MS = 7300;
-
-function showAppLoadingOverlay() {
-    const overlay = document.getElementById('app-loading-overlay');
-    if (overlay) overlay.classList.add('open');
-    startLoadingSparkles();
-}
-
-function hideAppLoadingOverlay() {
-    const overlay = document.getElementById('app-loading-overlay');
-    if (overlay) overlay.classList.remove('open');
-    stopLoadingSparkles();
-}
-
-// נצנצים שיורדים מתחת למשפט במסך הטעינה, במקום עיגול-טעינה גנרי - לפי בקשה
-// מפורשת. אותו רעיון בדיוק כמו triggerDailyGreetingSparkles, רק בתוך אזור
-// קטן (ר' .loading-sparkles-wrap ב-theme.css), לא על פני כל המסך, ורץ כל עוד
-// מסך הטעינה פתוח (לא מוגבל בזמן כמו נצנצי הברכה היומית)
-let loadingSparklesTimer = null;
-function startLoadingSparkles() {
-    if (loadingSparklesTimer) return;
-    const container = document.getElementById('loading-sparkles');
-    if (!container) return;
-    const spawnSparkle = () => {
-        const sparkle = document.createElement('span');
-        sparkle.className = 'loading-sparkle';
-        sparkle.textContent = '✨';
-        sparkle.style.left = `${Math.random() * 100}%`;
-        sparkle.style.animationDuration = `${1.2 + Math.random() * 0.8}s`;
-        sparkle.style.fontSize = `${0.5 + Math.random() * 0.35}rem`;
-        container.appendChild(sparkle);
-        sparkle.addEventListener('animationend', () => sparkle.remove());
-    };
-    loadingSparklesTimer = setInterval(spawnSparkle, 180);
-    spawnSparkle();
-}
-function stopLoadingSparkles() {
-    if (loadingSparklesTimer) { clearInterval(loadingSparklesTimer); loadingSparklesTimer = null; }
-    const container = document.getElementById('loading-sparkles');
-    if (container) container.innerHTML = '';
 }
 
 async function logoutUser() {
