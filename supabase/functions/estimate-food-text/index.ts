@@ -127,6 +127,37 @@ const ESTIMATE_ONLY_TOOL = {
 // תגובה סבירים לפיצ'ר "הוספה מהירה"
 const WEB_SEARCH_TOOL = { type: "web_search_20260209", name: "web_search", max_uses: 3 };
 
+// Open Food Facts - מאגר נתונים תזונתי חינמי ופתוח (ODbL, בלי API key), כולל
+// כיסוי טוב למוצרים ישראליים ממותגים (נבדק בפועל: "לחמית" החזיר 4 מוצרי
+// אוסם/אסם עם kcal/protein מדויקים ל-100 גרם). נתונים אמיתיים ממוצר עדיפים
+// על ניחוש-AI - נוסף אחרי שהתגלה בפועל שה-AI נתן 480 ואז 270 קלוריות למנת
+// לחמיות שבפועל שוות ~93 קלוריות (נתון מוצר אמיתי), וגם פספס לגמרי את תכולת
+// החלבון האמיתית (13-16 גרם/100 גרם, לא כמעט-0 כמו שהמאגר המקומי הניח).
+// לא מחליף את קריאת ה-AI - רק מוסיף לה נתון-רקע אמין, בדיוק כמו web_search -
+// ה-AI עדיין שופט אם המוצר שחזר רלוונטי בכלל למה שהמשתמשת תיארה
+async function lookupOpenFoodFacts(text: string): Promise<string | null> {
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(
+            `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(text)}&search_simple=1&action=process&json=1&page_size=3`,
+            { headers: { "User-Agent": "NOT10ai/1.0 (contact: obeko.support@gmail.com)" }, signal: controller.signal },
+        );
+        clearTimeout(timeout);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const products = (data?.products || [])
+            .filter((p: any) => p?.nutriments?.["energy-kcal_100g"] != null)
+            .slice(0, 3);
+        if (!products.length) return null;
+        return products
+            .map((p: any) => `"${p.product_name || p.product_name_he || "?"}" (brand: ${p.brands || "unknown"}): ${Math.round(p.nutriments["energy-kcal_100g"])} kcal/100g${p.nutriments.proteins_100g != null ? `, ${Math.round(p.nutriments.proteins_100g * 10) / 10}g protein/100g` : ""}`)
+            .join("; ");
+    } catch {
+        return null; // תקלת רשת/timeout - נופלים בשקט, בלי שינוי התנהגות
+    }
+}
+
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
     if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -194,6 +225,10 @@ Deno.serve(async (req) => {
         if (foodTextMonthUsed >= FOOD_TEXT_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: foodTextMonthUsed, limit: FOOD_TEXT_MONTHLY_LIMIT }, 402);
         }
+
+        // רק בקריאה הראשונה (לא שיחת-הבהרה) - שם כבר יש תשובה של המשתמשת
+        // לשען עליה, לא צריך חיפוש מוצר נוסף
+        const offData = !hasAnswer ? await lookupOpenFoodFacts(String(text)) : null;
 
         const languageName = LANGUAGE_NAMES[language] || "English";
         const countryName = COUNTRY_NAMES[country] || "Israel";
@@ -276,9 +311,15 @@ Deno.serve(async (req) => {
         // "להתחשב" במספר שלה בלי ממש להישען עליו, ולתת עדיין הערכה עצמאית -
         // בדיוק ההפך ממטרת מנגנון האישור/דחייה כולו - לפי בקשה מפורשת
         const trustUserNumberNote = `If the user's answer states or implies a specific calorie count (for the whole item, or per unit/piece - e.g. "each one is about 16 calories" or "the whole plate is 400 calories"), treat that as ground truth from someone who actually knows what they're eating, not as one more data point to weigh against your own independent guess. Just do the arithmetic (e.g. multiply their per-unit number by the quantity already given) and use that as your calorie total for that item, instead of re-estimating it yourself.`;
+        // נתון-רקע ממאגר מוצרים אמיתי (Open Food Facts) - ר' lookupOpenFoodFacts
+        // למעלה. ריק ("") כשלא נמצא כלום/תקלה, כדי שהטקסט הכללי לא ישתנה בכלל
+        // באותם מקרים
+        const offDataNote = offData
+            ? `A food product database search for this description returned these real products with verified nutrition data: ${offData}. If one of these plausibly matches what the user described (same product, similar name/brand), prefer its exact kcal/protein-per-100g figures over your own memory or estimate for that item - it's real label data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.`
+            : "";
         const promptText = hasAnswer
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${offDataNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
