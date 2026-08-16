@@ -951,7 +951,10 @@ function renderPresetQuickAddList(filter) {
 // מצרפים את התוספת למשבצת-הנשנוש *הנראית האחרונה* (מחברים קלוריות + מוסיפים
 // לתיאור) כדי שתמיד תהיה אפשרות להוסיף עוד. לא 'snack' קבוע יותר - תלוי
 // כמה נשנושים המשתמשת בחרה להציג (ר' getSnackCount)
-async function addQuickLogEntry(foodDescription, calories, presetCategory, proteinGrams) {
+// reasoning: נימוק ה-AI (פר-פריט, לפני הסיכום) נשמר לצד הרשומה - לא מוצג
+// בממשק הרגיל, רק כדי שיהיה אפשר לבדוק בדיעבד אם מספר נראה לא הגיוני, בלי
+// לחסום את השמירה עצמה בשום כרטיס-אישור - לפי בקשה מפורשת
+async function addQuickLogEntry(foodDescription, calories, presetCategory, proteinGrams, reasoning) {
     const today = getLocalDateString();
     const preferredSlotKeys = presetCategory ? (presetCategory === 'snack' ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
     const slot = await getTodayEmptyMealSlot(preferredSlotKeys);
@@ -959,11 +962,12 @@ async function addQuickLogEntry(foodDescription, calories, presetCategory, prote
         await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
             food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
+            ai_reasoning: reasoning || null,
         });
         return;
     }
     const mergeSlot = SNACK_SLOT_KEYS[getSnackCount() - 1];
-    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories, protein_grams').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mergeSlot).maybeSingle();
+    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories, protein_grams, ai_reasoning').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mergeSlot).maybeSingle();
     if (existing) {
         await supabaseClient.from('calorie_tracker').update({
             food_description: `${existing.food_description} + ${foodDescription}`,
@@ -971,11 +975,13 @@ async function addQuickLogEntry(foodDescription, calories, presetCategory, prote
             // protein_grams הקיים יכול להיות null (רשומה ישנה/לא ידוע) - מתייחסים
             // אליו כ-0 רק לצורך החיבור עצמו, לא הופכים "לא ידוע" לתקלה
             protein_grams: (Number(existing.protein_grams) || 0) + (proteinGrams != null ? proteinGrams : 0),
+            ai_reasoning: reasoning ? `${existing.ai_reasoning ? existing.ai_reasoning + '\n\n---\n\n' : ''}${reasoning}` : existing.ai_reasoning,
         }).eq('id', existing.id);
     } else {
         await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: mergeSlot,
             food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
+            ai_reasoning: reasoning || null,
         });
     }
 }
@@ -1049,14 +1055,10 @@ async function logFoodQuickAdd() {
     // (3 לחמיות) שהמאגר המקומי מחשב במדויק ל-93 קלוריות. hasUnmatchedFoodText
     // כבר קיימת בדיוק בשביל השיקול ההפוך (ר' autoFillMealCalories) - כאן
     // משתמשים בה כדי לוודא שבאמת *כל* התיאור כוסה, לא רק חלק ממנו.
-    // isAiSourced:true גם כאן בכוונה - למרות שהמספר לא הגיע מה-AI: גם המאגר
-    // המקומי יכול לטעות (התגלה בפועל, כולל חלבון חסר), אז גם התוצאה שלו
-    // עוברת דרך כרטיס האישור, ואם דוחים אותה, "לא נראה לי נכון" מסלים
-    // לבדיקה אמיתית מול ה-AI (ר' rejectFoodEstimate) - לפי בקשה מפורשת
     if (isPremiumUser && !hasUnmatchedFoodText(text)) {
         const confidentMacros = estimateFreeTextMacros(text);
         if (confidentMacros.calories > 0) {
-            await finishFoodQuickAdd(text, confidentMacros.calories, confidentMacros.protein, true, t('food_estimate_local_db_reasoning'));
+            await finishFoodQuickAdd(text, confidentMacros.calories, confidentMacros.protein, t('food_estimate_local_db_reasoning'));
             return;
         }
     }
@@ -1095,7 +1097,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'limit') {
             showAppToast(t('quick_add_ai_limit_toast'), 'error');
             const localLimit = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein, false, null, true);
+            await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein, null, true);
             return;
         }
         if (attempt.status === 'clarify') {
@@ -1106,9 +1108,7 @@ async function logFoodQuickAddViaAI(text) {
             return;
         }
         if (attempt.status === 'estimate') {
-            // isAiSourced:true - זו הערכה אמיתית של ה-AI, לא הערכה מקומית -
-            // לכן עוברת דרך כרטיס האישור/דחייה (ר' finishFoodQuickAdd)
-            await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning, false, true);
+            await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, attempt.reasoning);
             return;
         }
         // status "unknown" - ה-AI עצמו אמר בפירוש שהוא לא מזהה את הפריט, לפי
@@ -1118,7 +1118,7 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
             const localUnknown = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localUnknown.calories, localUnknown.protein, false, null, true);
+            await finishFoodQuickAdd(text, localUnknown.calories, localUnknown.protein, null, true);
             return;
         }
         // 'premium_required'/'retry' שני פעמים - נופלים לחישוב המקומי. בעבר בלי
@@ -1128,7 +1128,7 @@ async function logFoodQuickAddViaAI(text) {
         // מפורש על פער של כ-100 קלוריות מול הערכה חיצונית לאותה ארוחה בדיוק
         showAppToast(t('food_ai_fallback_toast'), 'error');
         const localFallback = estimateFreeTextMacros(text);
-        await finishFoodQuickAdd(text, localFallback.calories, localFallback.protein, false, null, true);
+        await finishFoodQuickAdd(text, localFallback.calories, localFallback.protein, null, true);
     } finally {
         setFoodQuickAddLoading(false);
     }
@@ -1200,111 +1200,38 @@ function setFoodQuickAddLoading(isLoading) {
     }
 }
 
-// isAiSourced/reasoning: רק הערכה אמיתית של ה-AI (לא החישוב המקומי החינמי,
-// ששם אין הנמקה לערער עליה) עוברת דרך כרטיס אישור/דחייה לפני שנשמרת בפועל -
-// לפי בקשה מפורשת אחרי שהתגלה פער ענק (1290 מול כ-390 קלוריות אמיתיות
-// לאותה ארוחה) שנשמר בשקט בלי שהמשתמשת קיבלה הזדמנות לחלוק עליו
+// הוסר כרטיס אישור/דחייה (היה כאן קודם) - לפי בקשה מפורשת ("אני לא אוהבת
+// את הנראה טוב לא נראה טוב, זה אמור להביא תוצאה וזהו"). שומרים ישר, בלי
+// לעצור לאישור - הדיוק עצמו משתפר במקום (Open Food Facts, מאגר מקומי,
+// הנחיות מכוילות). ה-reasoning עדיין מוצג ב-toast ונשמר ב-DB (ר'
+// commitFoodQuickAdd/addQuickLogEntry) כדי שאפשר יהיה לבדוק בדיעבד בלי
+// שזה חוסם את הזרימה - "לגוגל טועה אין בעיה כי זה מידע פסיבי, אבל אם
+// האפליקציה טועה זה כבר נשמר" - צריך רשת-ביטחון שלא עוצרת
 // alreadyNotified: כשהקוראת כבר הראתה הודעה ספציפית יותר (כמו "נגמרה
 // המכסה") - לא מציגים גם את ה-toast הגנרי "לא הצלחנו להעריך" מעליה, כי הוא
 // מיד דורס אותה ומשאיר את המשתמשת עם ההודעה הפחות-מדויקת בלבד על המסך -
 // לפי דיווח מפורש שראתה רק "לא הצלחנו להעריך" בלי לדעת שזו בעצם מכסה
-// shouldCacheOnAccept: רק תוצאה שבאמת עברה דרך ה-AI (לא המאגר המקומי, שלא
-// נוגע במטמון בכלל) נשמרת למטמון אחרי אישור - ר' showFoodEstimateConfirmCard/
-// acceptFoodEstimate
-async function finishFoodQuickAdd(text, estimate, proteinGrams, isAiSourced, reasoning, alreadyNotified, shouldCacheOnAccept) {
+async function finishFoodQuickAdd(text, estimate, proteinGrams, reasoning, alreadyNotified) {
     const calories = Math.round(estimate || 0);
     if (!calories || calories <= 0) {
         if (!alreadyNotified) showAppToast(t('quick_add_cant_estimate'), 'error');
         return;
     }
-    if (isAiSourced) {
-        showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning, shouldCacheOnAccept);
-        return;
-    }
-    await commitFoodQuickAdd(text, calories, proteinGrams);
+    await commitFoodQuickAdd(text, calories, proteinGrams, reasoning);
 }
 
-async function commitFoodQuickAdd(text, calories, proteinGrams) {
-    await addQuickLogEntry(text, calories, undefined, proteinGrams);
+async function commitFoodQuickAdd(text, calories, proteinGrams, reasoning) {
+    await addQuickLogEntry(text, calories, undefined, proteinGrams, reasoning);
     closeModal('modal-ai-brain');
     if (calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
         showAppToast(t('calories_implausible_toast').replace('{calories}', calories), 'error');
     } else {
-        showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})`);
+        // נימוק קצר (אם יש) מתווסף לטוסט - כדי שאפשר יהיה להעיף מבט ולתפוס
+        // משהו לא הגיוני בלי שזה חוסם את השמירה עצמה
+        const reasoningSuffix = reasoning ? ` — ${reasoning.split('\n')[0].slice(0, 120)}` : '';
+        showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})${reasoningSuffix}`);
     }
     refreshTodayNutritionViewIfOpen();
-}
-
-// --- כרטיס אישור/דחייה של הערכת AI (ר' finishFoodQuickAdd) ---
-let pendingConfirmText = '';
-let pendingConfirmCalories = 0;
-let pendingConfirmProtein = null;
-let pendingConfirmShouldCache = false;
-
-function showFoodEstimateConfirmCard(text, calories, proteinGrams, reasoning, shouldCacheOnAccept) {
-    pendingConfirmText = text;
-    pendingConfirmCalories = calories;
-    pendingConfirmProtein = proteinGrams;
-    pendingConfirmShouldCache = !!shouldCacheOnAccept;
-    const formFields = document.getElementById('food-quick-add-form-fields');
-    if (formFields) formFields.classList.add('hidden');
-    const summaryEl = document.getElementById('food-estimate-confirm-summary');
-    if (summaryEl) {
-        summaryEl.textContent = proteinGrams != null
-            ? t('food_estimate_confirm_summary').replace('{calories}', calories).replace('{protein}', proteinGrams)
-            : `${calories} ${t('calories_unit')}`;
-    }
-    const reasoningEl = document.getElementById('food-estimate-confirm-reasoning');
-    if (reasoningEl) reasoningEl.textContent = reasoning || '';
-    const card = document.getElementById('food-estimate-confirm-card');
-    if (card) card.classList.remove('hidden');
-}
-
-function hideFoodEstimateConfirmCard() {
-    const formFields = document.getElementById('food-quick-add-form-fields');
-    if (formFields) formFields.classList.remove('hidden');
-    const card = document.getElementById('food-estimate-confirm-card');
-    if (card) card.classList.add('hidden');
-}
-
-async function acceptFoodEstimate() {
-    const text = pendingConfirmText, calories = pendingConfirmCalories, protein = pendingConfirmProtein, shouldCache = pendingConfirmShouldCache;
-    hideFoodEstimateConfirmCard();
-    await commitFoodQuickAdd(text, calories, protein);
-    if (shouldCache) confirmFoodEstimateCache(text, calories, protein);
-}
-
-// שולחת ברקע (לא חוסמת/לא מחכה) בקשה קלה לשמור את התוצאה *המאושרת* במטמון -
-// ר' action:"confirmCache" ב-estimate-food-text/index.ts. לפי בקשה מפורשת:
-// המטמון לא אמור להחזיק תוצאה ששלא אושרה - כישלון כאן לא צריך להפריע
-// למשתמשת בשום צורה (השמירה בפועל כבר קרתה, זה רק אופטימיזציה למטמון)
-async function confirmFoodEstimateCache(text, calories, protein) {
-    try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) return;
-        await fetch(`${SUPABASE_URL}/functions/v1/estimate-food-text`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ action: 'confirmCache', text, calories, protein_grams: protein, language: currentLang, country: getUserCountry() }),
-        });
-    } catch (e) {
-        // שקט בכוונה - אופטימיזציית מטמון בלבד, לא פעולה שהמשתמשת מחכה לה
-    }
-}
-
-// דוחים את ההערכה ופותחים את אותה תיבת-הבהרה שה-AI עצמו כבר משתמש בה
-// (openFoodClarifyModal/confirmFoodClarify) - רק שהפעם *המשתמשת* יוזמת את
-// השאלה, לא ה-AI. isLocalClarify:false נכון כאן באותה מידה כמו בתשובה
-// לשאלת-הבהרה שה-AI שאל: זו בהכרח קריאת-המשך אחרי קריאה ראשונה שכבר חויבה
-// במכסה (יש כבר pendingConfirmCalories אמיתי מה-AI) - לא מוסיפים דגל-שרת
-// חדש בשביל זה, רק משתמשים באותה סמנטיקה הקיימת ("לא זוהתה מקומית")
-function rejectFoodEstimate() {
-    pendingFoodQuickAddText = pendingConfirmText;
-    pendingFoodClarifyQuestion = t('food_estimate_reject_question');
-    pendingFoodClarifyIsLocal = false;
-    hideFoodEstimateConfirmCard();
-    openFoodClarifyModal(pendingFoodClarifyQuestion);
 }
 
 // מודל מזערי לשאלת הבהרה אחת מה-AI (פרימיום) - לא תור של כמה שאלות כמו
@@ -1322,13 +1249,6 @@ function cancelFoodClarify() {
     pendingFoodClarifyQuestion = '';
     pendingFoodClarifyIsLocal = false;
     closeModal('modal-food-clarify');
-    // אם ההבהרה נפתחה מ"לא נראה לי נכון" (ר' rejectFoodEstimate), כרטיס
-    // האישור/דחייה כבר הוסתר ושדות הטופס הוסתרו יחד איתו - ביטול צריך
-    // להחזיר את הטופס הרגיל לתצוגה, אחרת פאנל המזון נשאר ריק לגמרי
-    const formFields = document.getElementById('food-quick-add-form-fields');
-    if (formFields) formFields.classList.remove('hidden');
-    const card = document.getElementById('food-estimate-confirm-card');
-    if (card) card.classList.add('hidden');
 }
 
 function showFoodClarifyLoading() {
@@ -1363,31 +1283,28 @@ async function confirmFoodClarify() {
         if (!token) { closeModal('modal-food-clarify'); const m = estimateFreeTextMacros(text); await finishFoodQuickAdd(text, m.calories, m.protein); return; }
         const attempt = await estimateFoodTextViaAI(token, text, question, answer, isLocalClarify);
         closeModal('modal-food-clarify');
-        // isAiSourced:true - כאן גם: אם ההערכה המחודשת עדיין לא נראית נכון,
-        // כרטיס האישור/דחייה יעלה שוב (לא שמירה-אוטומטית של הניסיון השני)
-        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, true, attempt.reasoning, false, true); return; }
+        if (attempt.status === 'estimate') { await finishFoodQuickAdd(text, attempt.calories, attempt.proteinGrams, attempt.reasoning); return; }
         // status "unknown" - ר' ההערה המקבילה ב-logFoodQuickAddViaAI
         if (attempt.status === 'unknown') {
             showAppToast(t('food_ai_unknown_toast'), 'error');
             const localUnknown2 = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localUnknown2.calories, localUnknown2.protein, false, null, true);
+            await finishFoodQuickAdd(text, localUnknown2.calories, localUnknown2.protein, null, true);
             return;
         }
         // status "limit" - היה חסר טיפול מפורש כאן (בניגוד ל-logFoodQuickAddViaAI) -
         // נפל בשקט לענף הכללי למטה בלי שום הודעה, ואם גם הגיבוי המקומי לא זיהה
-        // כלום (למשל תיקון-טקסט חופשי כמו "16 קלוריות ליחידה" שהמנוע המקומי לא
-        // יודע לפרש כהוראה) - זה נראה כאילו "לא קרה כלום" בלי שום הסבר - לפי
-        // דיווח מפורש
+        // כלום (למשל תיקון-טקסט חופשי שהמנוע המקומי לא יודע לפרש כהוראה) -
+        // זה נראה כאילו "לא קרה כלום" בלי שום הסבר - לפי דיווח מפורש
         if (attempt.status === 'limit') {
             showAppToast(t('quick_add_ai_limit_toast'), 'error');
             const localLimit2 = estimateFreeTextMacros(text);
-            await finishFoodQuickAdd(text, localLimit2.calories, localLimit2.protein, false, null, true);
+            await finishFoodQuickAdd(text, localLimit2.calories, localLimit2.protein, null, true);
             return;
         }
         // תקלה כלשהי בשיחת ההמשך - נופלים לחישוב המקומי במקום להשאיר תקוע בלי לרשום כלום
         showAppToast(t('food_ai_fallback_toast'), 'error');
         const localErr = estimateFreeTextMacros(text);
-        await finishFoodQuickAdd(text, localErr.calories, localErr.protein, false, null, true);
+        await finishFoodQuickAdd(text, localErr.calories, localErr.protein, null, true);
     } finally {
         clearTimeout(loadingTimer);
         hideFoodClarifyLoading();
@@ -2925,9 +2842,6 @@ function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-finance-input').value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
-    // איפוס כרטיס אישור/דחייה (ר' finishFoodQuickAdd) - למקרה שנשאר גלוי
-    // מפתיחה קודמת שנסגרה באמצע (כפתור Cancel/X) בלי אישור/דחייה בפועל
-    hideFoodEstimateConfirmCard();
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');

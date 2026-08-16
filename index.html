@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=365">
+    <link rel="stylesheet" href="theme.css?v=366">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2538,21 +2538,6 @@
                         <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
                         <p data-i18n="food_ai_estimating">Estimating...</p>
                     </div>
-                    <!-- כרטיס אישור/דחייה אחרי הערכת AI אמיתית (לא הערכה מקומית חינמית -
-                         שם אין הנמקה לערער עליה) - לפי בקשה מפורשת: אחרי שנתגלה בפועל
-                         פער ענק (1290 מול כ-390 קלוריות אמיתיות לאותה ארוחה), לא לשמור
-                         בשקט את מה שה-AI אומר, אלא לתת למשתמשת הזדמנות לדחות ולתקן.
-                         חוסם (לא Toast עם טיימר) - אותו עיקרון בדיוק כמו modal-food-clarify
-                         (ר' ההערה שם) - רגע ריכוז נמוך (הוספה מהירה) הוא בדיוק הרגע שבו
-                         שמירה-אוטומטית-אחרי-כמה-שניות הייתה הכי מזיקה -->
-                    <div id="food-estimate-confirm-card" class="hidden">
-                        <p class="modal-subtitle" id="food-estimate-confirm-summary"></p>
-                        <p class="settings-label" id="food-estimate-confirm-reasoning"></p>
-                        <div class="action-buttons-wrap">
-                            <button type="button" class="btn-primary" onclick="acceptFoodEstimate()" data-i18n="food_estimate_confirm_btn">✓ Looks good, continue</button>
-                            <button type="button" class="btn-clear-specific" onclick="rejectFoodEstimate()" data-i18n="food_estimate_reject_btn">✗ Doesn't look right</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="ai-brain-panel hidden" data-ai-brain-panel="schedule">
@@ -3100,6 +3085,6 @@
     </div>
 
     <script src="i18n.js?v=282"></script>
-    <script src="app.js?v=394"></script>
+    <script src="app.js?v=395"></script>
 </body>
 </html>

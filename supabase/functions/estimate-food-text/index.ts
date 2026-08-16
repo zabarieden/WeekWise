@@ -31,7 +31,10 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
-const FOOD_TEXT_MONTHLY_LIMIT = 50;
+// הועלה מ-50 ל-180 (~6 ארוחות ביום) - לפי בקשה מפורשת, אחרי חישוב עלות/רווח
+// מלא (עלות AI+Google worst-case מול מחיר המנוי שהועלה בהתאם - ר' premium
+// pricing ב-index.html/i18n.js)
+const FOOD_TEXT_MONTHLY_LIMIT = 180;
 
 // מטמון גלובלי (משותף לכל המשתמשות) של תוצאות "estimate" בלבד - לא clarify/
 // unknown, ולא קריאות המשך אחרי הבהרה (אלה תלויות-הקשר, לא ניתנות למטמון
@@ -170,24 +173,7 @@ Deno.serve(async (req) => {
         const userEmail = (userData.user.email || "").toLowerCase();
         const userId = userData.user.id;
 
-        // מטמון נכתב *רק* כאן, אחרי שהמשתמשת בפועל אישרה את התוצאה בכרטיס
-        // האישור/דחייה (ר' acceptFoodEstimate ב-app.js) - לא בזמן ההערכה
-        // עצמה, כדי שתוצאה שגויה (שנדחתה/תוקנה) לעולם לא תישאר במטמון
-        // ל-180 יום. פעולה קלה - בלי AI, בלי בדיקת פרימיום/מכסה (לא צורכת
-        // כלום, רק שומרת מספר שהמשתמשת כבר ראתה ואישרה) - לפי בקשה מפורשת
-        // אחרי שהתגלה שהמטמון החזיק ערך שגוי גם אחרי שתוקן
-        const body0 = await req.json();
-        if (body0.action === "confirmCache") {
-            const { text: cacheText, calories: cacheCalories, protein_grams: cacheProtein, language: cacheLang, country: cacheCountry } = body0;
-            if (!cacheText || typeof cacheCalories !== "number") return jsonResponse({ error: "missing_fields" }, 400);
-            const cacheKey = `${cacheLang}|${cacheCountry}|${normalizeCacheText(String(cacheText))}`;
-            await supabase.from("food_text_cache").upsert(
-                { cache_key: cacheKey, calories: Math.round(cacheCalories), protein_grams: typeof cacheProtein === "number" ? cacheProtein : null, created_at: new Date().toISOString() },
-                { onConflict: "cache_key" },
-            );
-            return jsonResponse({ ok: true });
-        }
-        const body = body0;
+        const body = await req.json();
 
         const { data: premiumRow } = await supabase
             .from("user_premium")
@@ -407,9 +393,19 @@ Deno.serve(async (req) => {
         if (typeof result.calories === "number") {
             const calories = Math.round(result.calories);
             const proteinGrams = typeof result.protein_grams === "number" ? Math.round(result.protein_grams * 10) / 10 : null;
-            // לא כותבים למטמון כאן יותר - רק אחרי שהמשתמשת בפועל מאשרת בכרטיס
-            // האישור/דחייה (ר' action:"confirmCache" למעלה) - כדי שתוצאה
-            // שנדחתה/עדיין לא אושרה לעולם לא תיכנס למטמון ל-180 יום
+            // חוזר לכתיבה מיידית למטמון (כמו לפני כרטיס האישור/דחייה, שהוסר
+            // לפי בקשה מפורשת - "זה אמור להביא תוצאה וזהו") - שומרים רק
+            // תוצאות מהקריאה הראשונה הרגילה (לא קריאת-הבהרה, שתלוית-תשובה
+            // ולא ניתנת למטמון לפי הטקסט המקורי בלבד). upsert כדי לרענן גם
+            // תיאור שכבר קיים אך פג-תוקף. reasoning לא נשמר במטמון בכוונה -
+            // זו קריאה חדשה לגמרי בכל פעם
+            if (!hasAnswer) {
+                const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
+                await supabase.from("food_text_cache").upsert(
+                    { cache_key: cacheKey, calories, protein_grams: proteinGrams, created_at: new Date().toISOString() },
+                    { onConflict: "cache_key" },
+                );
+            }
             return jsonResponse({ ok: true, status: "estimate", calories, protein_grams: proteinGrams, reasoning });
         }
         // status "unknown" - ר' unknownNote למעלה. הצד שלנו (app.js) עדיין
