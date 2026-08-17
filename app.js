@@ -1062,7 +1062,9 @@ async function logFoodQuickAdd() {
             return;
         }
     }
-    if (isPremiumUser) {
+    // פרימיום תמיד עובר ל-AI; מי שלא פרימיום עדיין מקבלת עד 5 שימושים חינמיים
+    // *לכל החיים* לפני שהיא נופלת חזרה להערכה המקומית - ר' loadAiUsage למעלה
+    if (isPremiumUser || cachedFoodTextLifetimeUsed < FOOD_TEXT_FREE_LIFETIME_LIMIT) {
         await logFoodQuickAddViaAI(text);
         return;
     }
@@ -1095,7 +1097,12 @@ async function logFoodQuickAddViaAI(text) {
         if (attempt.status === 'retry') attempt = await estimateFoodTextViaAI(token, text);
 
         if (attempt.status === 'limit') {
-            showAppToast(t('quick_add_ai_limit_toast'), 'error');
+            if (attempt.scope === 'free_lifetime') {
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_food_text')), 'error');
+                openPremiumUpgradeModal();
+            } else {
+                showAppToast(t('quick_add_ai_limit_toast'), 'error');
+            }
             const localLimit = estimateFreeTextMacros(text);
             await finishFoodQuickAdd(text, localLimit.calories, localLimit.protein, null, true);
             return;
@@ -1158,7 +1165,7 @@ async function estimateFoodTextViaAI(token, text, clarificationQuestion, clarifi
             signal: controller.signal
         });
         const result = await res.json();
-        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (result.error === 'limit_reached') return { status: 'limit', scope: result.scope };
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
         if (res.ok && result.status === 'clarify' && result.question) return { status: 'clarify', question: result.question };
         // protein_grams/reasoning יכולים להיות null (מטמון ישן/AI לא החזיר) -
@@ -3339,7 +3346,7 @@ async function attemptScheduleParse(token, text, today) {
         });
         const result = await res.json();
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
-        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (result.error === 'limit_reached') return { status: 'limit', scope: result.scope };
         if (res.ok && !result.error && result.events && result.events.length) return { status: 'ok', events: result.events };
         return { status: 'retry' };
     } catch {
@@ -3373,7 +3380,12 @@ function looksLikeScheduleDeleteRequest(text) {
 }
 
 async function parseScheduleWithAI() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    // לא פרימיום עדיין מקבלת עד 5 שימושים חינמיים לכל החיים - ר' loadAiUsage
+    if (!isPremiumUser && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
     const input = document.getElementById('ai-schedule-input');
     const text = input.value.trim();
     if (!text) { showAppToast(t('schedule_ai_empty'), 'error'); return; }
@@ -3403,10 +3415,20 @@ async function parseScheduleWithAI() {
             if (attempt.status === 'retry') attempt = await attemptScheduleParse(token, text, today);
 
             if (attempt.status === 'premium_required') { openPremiumUpgradeModal(); return; }
-            // מכסת ה-AI החודשית נגמרה - לא עוצרים, פשוט ממשיכים בשקט למנתח
-            // המקומי למטה (בדיוק כמו שקורה כשהענן לא זמין בכלל), רק עם
-            // הודעה מפורשת שזו הסיבה לאיכות הנמוכה יותר של התוצאה הפעם
-            if (attempt.status === 'limit') showAppToast(t('ai_monthly_limit_reached'), 'error');
+            // מכסת ה-AI (חודשית לפרימיום, או לכל-החיים לחינמית) נגמרה - לא
+            // עוצרים, פשוט ממשיכים בשקט למנתח המקומי למטה (בדיוק כמו שקורה
+            // כשהענן לא זמין בכלל), רק עם הודעה מפורשת שזו הסיבה לאיכות
+            // הנמוכה יותר של התוצאה הפעם. מכסה-לכל-החיים שנגמרה גם פותחת
+            // הצעת שדרוג - זה הרגע הטבעי להציע, בניגוד למכסה חודשית שכבר
+            // משלמת עליה
+            if (attempt.status === 'limit') {
+                if (attempt.scope === 'free_lifetime') {
+                    showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+                    openPremiumUpgradeModal();
+                } else {
+                    showAppToast(t('ai_monthly_limit_reached'), 'error');
+                }
+            }
             else if (attempt.status === 'ok') events = attempt.events;
         }
 
@@ -3577,7 +3599,12 @@ async function finishScheduleClarificationFlow() {
 let pendingSmartSplitTask = null;
 
 function openSmartSplitModal() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    // לא פרימיום עדיין מקבלת עד 5 שימושים חינמיים לכל החיים - ר' loadAiUsage
+    if (!isPremiumUser && cachedSmartSplitLifetimeUsed >= SMART_SPLIT_FREE_LIFETIME_LIMIT) {
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_smart_split')), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
     document.getElementById('smart-split-task-input').value = '';
     document.getElementById('smart-split-due-date-input').value = '';
     pendingSmartSplitTask = null;
@@ -3606,7 +3633,7 @@ async function attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer) {
         });
         const result = await res.json();
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
-        if (result.error === 'limit_reached') return { status: 'limit' };
+        if (result.error === 'limit_reached') return { status: 'limit', scope: result.scope };
         if (res.ok && !result.error && result.chunks && result.chunks.length) return { status: 'ok', chunks: result.chunks };
         return { status: 'error' };
     } catch {
@@ -3632,7 +3659,16 @@ async function submitSmartSplitClarify() {
         const attempt = await attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer);
 
         if (attempt.status === 'premium_required') { closeModal('modal-smart-split-clarify'); openPremiumUpgradeModal(); return; }
-        if (attempt.status === 'limit') { showAppToast(t('smart_split_limit_reached'), 'error'); return; }
+        if (attempt.status === 'limit') {
+            if (attempt.scope === 'free_lifetime') {
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_smart_split')), 'error');
+                closeModal('modal-smart-split-clarify');
+                openPremiumUpgradeModal();
+            } else {
+                showAppToast(t('smart_split_limit_reached'), 'error');
+            }
+            return;
+        }
         if (attempt.status !== 'ok') { showAppToast(t('smart_split_error'), 'error'); return; }
 
         pendingSmartSplitTask = null;
@@ -9165,28 +9201,51 @@ async function loadPastMonthlyGoals() {
 // תמונה, רק ניתוח טקסט מודבק, ולכן לא הוגבל מחדש לחודשי) ---
 // חסימה זו מדולגת לחלוטין עבור משתמשי פרימיום (isPremiumUser)
 const RECIPE_AI_FREE_LIMIT = 10;
-// סריקות תמונה (מתכונים) - 5 בחודש בחינם, מתאפס אוטומטית כל חודש (אותו דפוס
-// month_key בדיוק כמו המכסה החודשית של פרימיום - ר' scan-recipe-image)
+// 5 שימושים חינמיים *לכל החיים* (לא מתאפס) לכל תכונת AI בפרימיום - מדיניות
+// אחידה בין כל חמש התכונות (טקסט-אוכל/סריקת-מתכון/סריקת-ארוחה/פיצול-חכם/
+// AI-ללוח-זמנים). סריקת מתכון (IMAGE_SCAN_FREE_LIMIT) הייתה בעבר מכסה
+// *חודשית* - הוחלפה כדי להתאים לשאר התכונות (ר' scan-recipe-image/DEPLOY.md)
 const IMAGE_SCAN_FREE_LIMIT = 5;
+const FOOD_TEXT_FREE_LIFETIME_LIMIT = 5;
+const SMART_SPLIT_FREE_LIFETIME_LIMIT = 5;
+const SCHEDULE_AI_FREE_LIFETIME_LIMIT = 5;
 let cachedAiUsage = 0;
-let cachedImageScansUsed = 0;
+let cachedImageScansUsed = 0; // recipe_image_scan_lifetime_used - לא חודשי יותר
+let cachedFoodTextLifetimeUsed = 0;
+let cachedSmartSplitLifetimeUsed = 0;
+let cachedScheduleAiLifetimeUsed = 0;
 
 async function loadAiUsage() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_ai_usage').select('recipe_ai_parses_used, free_image_scans_month_key, free_image_scans_month_used').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_ai_usage')
+        .select('recipe_ai_parses_used, recipe_image_scan_lifetime_used, food_text_lifetime_used, smart_split_lifetime_used, schedule_ai_lifetime_used')
+        .eq('user_id', currentUserId).maybeSingle();
     cachedAiUsage = data ? data.recipe_ai_parses_used : 0;
-    cachedImageScansUsed = (data && data.free_image_scans_month_key === currentMonthKey()) ? (data.free_image_scans_month_used || 0) : 0;
+    cachedImageScansUsed = data ? (data.recipe_image_scan_lifetime_used || 0) : 0;
+    cachedFoodTextLifetimeUsed = data ? (data.food_text_lifetime_used || 0) : 0;
+    cachedSmartSplitLifetimeUsed = data ? (data.smart_split_lifetime_used || 0) : 0;
+    cachedScheduleAiLifetimeUsed = data ? (data.schedule_ai_lifetime_used || 0) : 0;
     renderRecipeScanUsageHint();
 }
 
-// מציג "X/5 סריקות חינם החודש" למי שלא פרימיום, ליד כפתור סריקת המתכון -
-// כדי שהמכסה תהיה שקופה ולא תרגיש כמו "פתוח בלי הגבלה" (זו הייתה תלונה אמיתית)
-function renderRecipeScanUsageHint() {
-    const hint = document.getElementById('recipe-scan-free-hint');
+// מציג "X/5 שימושים חינמיים נשארו" למי שלא פרימיום, ליד כפתור התכונה - כדי
+// שהמכסה תהיה שקופה ולא תרגיש כמו "פתוח בלי הגבלה" (זו הייתה תלונה אמיתית).
+// helper משותף - נעשה שימוש חוזר לכל ארבע התכונות (לא רק סריקת מתכון)
+function renderFreeLifetimeHint(elId, used, limit, premiumHintKey) {
+    const hint = document.getElementById(elId);
     if (!hint) return;
-    if (isPremiumUser) { hint.textContent = t('recipe_scan_file_hint_premium'); return; }
-    const remaining = Math.max(0, IMAGE_SCAN_FREE_LIMIT - cachedImageScansUsed);
-    hint.textContent = t('recipe_scan_file_hint').replace('{remaining}', remaining).replace('{limit}', IMAGE_SCAN_FREE_LIMIT);
+    if (isPremiumUser) {
+        // אין תג טקסט ייעודי לפרימיום לכל תכונה (המספר החודשי שונה בכל אחת) -
+        // אם לא סופק key ספציפי, פשוט לא מציגים כלום למשתמשת פרימיום
+        hint.textContent = premiumHintKey ? t(premiumHintKey) : '';
+        return;
+    }
+    const remaining = Math.max(0, limit - used);
+    hint.textContent = t('ai_free_lifetime_hint').replace('{remaining}', remaining).replace('{limit}', limit);
+}
+
+function renderRecipeScanUsageHint() {
+    renderFreeLifetimeHint('recipe-scan-free-hint', cachedImageScansUsed, IMAGE_SCAN_FREE_LIMIT, 'recipe_scan_file_hint_premium');
 }
 
 async function incrementAiUsage() {

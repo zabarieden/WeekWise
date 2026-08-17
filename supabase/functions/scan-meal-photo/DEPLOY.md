@@ -8,6 +8,7 @@ Same pattern as `scan-recipe-image` and `parse-schedule-request`. Reuses the sam
 ```sql
 alter table user_ai_usage add column if not exists premium_image_scans_month_key text;
 alter table user_ai_usage add column if not exists premium_image_scans_month_used integer default 0;
+alter table user_ai_usage add column if not exists meal_photo_scan_lifetime_used integer default 0;
 ```
 
 Reads `user_premium.is_premium` (already exists) and writes through the existing
@@ -31,8 +32,11 @@ supabase secrets set ANTHROPIC_API_KEY=<your-api-key-here>
 
 ## Known limitations
 
-- **Premium-only, no free tier** - same reasoning as the schedule planner: reliable food
-  identification needs real vision understanding.
+- **5 free lifetime uses for non-premium users** (`meal_photo_scan_lifetime_used`,
+  never resets), same policy as every other AI feature - though note this function
+  isn't actually called from the client yet (see app.js's `handleAiBrainImageSelected`,
+  which currently routes every photo to `scan-recipe-image` regardless of intent); this
+  gating is here for correctness whenever that gets wired up.
 - **Estimates, not measurements**: calorie counts are AI estimates from visual portion
   size - they will be off for some foods, especially mixed dishes or unusual angles.
   Users can always edit the auto-filled rows before saving (saveNutrition() runs

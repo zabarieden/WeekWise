@@ -70,18 +70,26 @@ Deno.serve(async (req) => {
             .eq("user_id", userId)
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
-        if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
+        // משתמשת שאינה פרימיום מקבלת 5 שימושים חינמיים לכל החיים לפני שהיא
+        // נחסמת - מחליף את חסימת ה-402 הגורפת שהייתה כאן קודם. הפונקציה הזו
+        // עדיין לא מחוברת מהלקוח בפועל (ר' handleAiBrainImageSelected ב-app.js
+        // שמנתב הכל ל-scan-recipe-image כרגע) - זה כאן להגנה-בעומק כשזה יחובר
+        const MEAL_PHOTO_SCAN_FREE_LIFETIME_LIMIT = 5;
+        const mealScanLifetimeUsed = usageRow?.meal_photo_scan_lifetime_used || 0;
+        if (!isPremium && mealScanLifetimeUsed >= MEAL_PHOTO_SCAN_FREE_LIFETIME_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: mealScanLifetimeUsed, limit: MEAL_PHOTO_SCAN_FREE_LIFETIME_LIMIT }, 402);
+        }
         const monthKey = currentMonthKey();
         const premiumMonthUsed = usageRow?.premium_image_scans_month_key === monthKey
             ? (usageRow?.premium_image_scans_month_used || 0)
             : 0;
-        if (premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
+        if (isPremium && premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: premiumMonthUsed, limit: PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT }, 402);
         }
 
@@ -163,10 +171,17 @@ Deno.serve(async (req) => {
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
 
-        await supabase.from("user_ai_usage").upsert(
-            { user_id: userId, username: userData.user.email, premium_image_scans_month_key: monthKey, premium_image_scans_month_used: premiumMonthUsed + 1 },
-            { onConflict: "user_id" },
-        );
+        if (isPremium) {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, premium_image_scans_month_key: monthKey, premium_image_scans_month_used: premiumMonthUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        } else {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, meal_photo_scan_lifetime_used: mealScanLifetimeUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        }
 
         return jsonResponse({ ok: true, items: toolUseBlock.input.items || [] });
     } catch (err) {

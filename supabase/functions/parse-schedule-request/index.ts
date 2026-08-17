@@ -71,18 +71,24 @@ Deno.serve(async (req) => {
             .eq("user_id", userId)
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
-        if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
+        // משתמשת שאינה פרימיום מקבלת 5 שימושים חינמיים לכל החיים לפני שהיא
+        // נחסמת - מחליף את חסימת ה-402 הגורפת שהייתה כאן קודם
+        const SCHEDULE_AI_FREE_LIFETIME_LIMIT = 5;
+        const scheduleLifetimeUsed = usageRow?.schedule_ai_lifetime_used || 0;
+        if (!isPremium && scheduleLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: scheduleLifetimeUsed, limit: SCHEDULE_AI_FREE_LIFETIME_LIMIT }, 402);
+        }
         const monthKey = currentMonthKey();
         const scheduleMonthUsed = usageRow?.premium_schedule_ai_month_key === monthKey
             ? (usageRow?.premium_schedule_ai_month_used || 0)
             : 0;
-        if (scheduleMonthUsed >= PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT) {
+        if (isPremium && scheduleMonthUsed >= PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: scheduleMonthUsed, limit: PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT }, 402);
         }
 
@@ -200,10 +206,17 @@ Deno.serve(async (req) => {
         const toolUseBlock = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");
         if (!toolUseBlock) return jsonResponse({ error: "no_extraction" }, 502);
 
-        await supabase.from("user_ai_usage").upsert(
-            { user_id: userId, username: userData.user.email, premium_schedule_ai_month_key: monthKey, premium_schedule_ai_month_used: scheduleMonthUsed + 1 },
-            { onConflict: "user_id" },
-        );
+        if (isPremium) {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, premium_schedule_ai_month_key: monthKey, premium_schedule_ai_month_used: scheduleMonthUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        } else {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, schedule_ai_lifetime_used: scheduleLifetimeUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        }
 
         // רשת ביטחון נגד כפילויות: המודל לפעמים מחזיר את אותו אירוע פעמיים
         // (למשל אם המשתמשת ניסחה אותו רעיון בשתי דרכים בטקסט אחד) - מסננים

@@ -219,7 +219,6 @@ Deno.serve(async (req) => {
             .eq("user_id", userId)
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
-        if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const { text, clarificationQuestion, clarificationAnswer, isLocalClarify, language, country } = body;
         if (!text || !String(text).trim()) return jsonResponse({ error: "missing_text" }, 400);
@@ -256,6 +255,15 @@ Deno.serve(async (req) => {
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
+        // משתמשת שאינה פרימיום (ולא dev-superuser) מקבלת 5 שימושים חינמיים
+        // *לכל החיים* (לא מתאפס בכל חודש) לפני שהיא נחסמת - מחליף את חסימת
+        // ה-402 הגורפת שהייתה כאן קודם. נבדק תמיד (גם בשיחת המשך), כמו המכסה
+        // החודשית למטה, לפי אותו טעם בדיוק - ר' ההערה שם
+        const FOOD_TEXT_FREE_LIFETIME_LIMIT = 5;
+        const foodTextLifetimeUsed = usageRow?.food_text_lifetime_used || 0;
+        if (!isPremium && foodTextLifetimeUsed >= FOOD_TEXT_FREE_LIFETIME_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: foodTextLifetimeUsed, limit: FOOD_TEXT_FREE_LIFETIME_LIMIT }, 402);
+        }
         const monthKey = currentMonthKey();
         const foodTextMonthUsed = usageRow?.premium_food_text_month_key === monthKey
             ? (usageRow?.premium_food_text_month_used || 0)
@@ -263,8 +271,9 @@ Deno.serve(async (req) => {
         // המכסה נבדקת תמיד (גם בשיחת ההמשך) כדי לא לאפשר קריאה בלי שער בכלל,
         // אבל רק הקריאה הראשונה (לא שיחת ההמשך) *מגדילה* את המונה - ר' הערה
         // בראש הקובץ. אם המכסה כבר נגמרה, גם שיחת המשך לא תעבור (לא אמור
-        // לקרות בפועל - הלקוח לא פותח שיחת המשך בלי שהקריאה הראשונה הצליחה)
-        if (foodTextMonthUsed >= FOOD_TEXT_MONTHLY_LIMIT) {
+        // לקרות בפועל - הלקוח לא פותח שיחת המשך בלי שהקריאה הראשונה הצליחה).
+        // רלוונטי רק לפרימיום - משתמשת חינמית נשערת ע"י המכסה-לכל-החיים למעלה
+        if (isPremium && foodTextMonthUsed >= FOOD_TEXT_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: foodTextMonthUsed, limit: FOOD_TEXT_MONTHLY_LIMIT }, 402);
         }
 
@@ -427,12 +436,21 @@ Deno.serve(async (req) => {
             .trim() || null;
 
         // המכסה עולה רק בקריאה הראשונה בפועל (כולל שיחת-הבהרה מקומית שלא
-        // עברה דרך ה-AI קודם) - ר' חישוב shouldIncrementQuota למעלה
+        // עברה דרך ה-AI קודם) - ר' חישוב shouldIncrementQuota למעלה. פרימיום
+        // ממשיך למכסה החודשית הרגילה; משתמשת חינמית (שהגיעה עד לכאן, כלומר
+        // עדיין בתוך 5 השימושים החינמיים) מעלה את המונה-לכל-החיים במקום
         if (shouldIncrementQuota) {
-            await supabase.from("user_ai_usage").upsert(
-                { user_id: userId, username: userData.user.email, premium_food_text_month_key: monthKey, premium_food_text_month_used: foodTextMonthUsed + 1 },
-                { onConflict: "user_id" },
-            );
+            if (isPremium) {
+                await supabase.from("user_ai_usage").upsert(
+                    { user_id: userId, username: userData.user.email, premium_food_text_month_key: monthKey, premium_food_text_month_used: foodTextMonthUsed + 1 },
+                    { onConflict: "user_id" },
+                );
+            } else {
+                await supabase.from("user_ai_usage").upsert(
+                    { user_id: userId, username: userData.user.email, food_text_lifetime_used: foodTextLifetimeUsed + 1 },
+                    { onConflict: "user_id" },
+                );
+            }
         }
 
         if (result.status === "clarify" && result.question) {

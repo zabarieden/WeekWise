@@ -7,10 +7,10 @@
 // fully editable) Add Recipe form.
 //
 // Usage limits (server-side, since a client-only check can be bypassed):
-// - Free (non-premium) users: IMAGE_SCAN_FREE_LIMIT scans per calendar month, tracked
-//   in user_ai_usage.free_image_scans_month_key/_used (resets automatically whenever
-//   the stored month_key no longer matches the current one - same mechanism as the
-//   premium quota below, just a separate counter/limit).
+// - Free (non-premium) users: RECIPE_SCAN_FREE_LIFETIME_LIMIT scans EVER (not monthly -
+//   tracked in user_ai_usage.recipe_image_scan_lifetime_used, never resets), matching
+//   the same "5 free lifetime uses" policy shared by every other AI feature. The older
+//   free_image_scans_month_key/_used columns are retired/no longer read.
 // - Premium users (any billing period - monthly/semiannual/lifetime alike): a shared
 //   monthly quota of PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT image scans, shared with
 //   scan-meal-photo (both count against the same premium_image_scans_month_used
@@ -29,7 +29,6 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
-const IMAGE_SCAN_FREE_LIMIT = 5;
 const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
 
 const RECIPE_CATEGORIES = [
@@ -94,15 +93,18 @@ Deno.serve(async (req) => {
         const premiumMonthUsed = usageRow?.premium_image_scans_month_key === monthKey
             ? (usageRow?.premium_image_scans_month_used || 0)
             : 0;
-        const freeMonthUsed = usageRow?.free_image_scans_month_key === monthKey
-            ? (usageRow?.free_image_scans_month_used || 0)
-            : 0;
+        // הוחלף: היה מונה חודשי-מתאפס (free_image_scans_month_key/_used) -
+        // עכשיו 5 שימושים חינמיים *לכל החיים*, כמו שאר תכונות ה-AI (מדיניות
+        // אחידה). העמודות הישנות נשארות בטבלה (לא נקראות יותר), בדיוק כמו
+        // image_scans_used הישן למעלה
+        const RECIPE_SCAN_FREE_LIFETIME_LIMIT = 5;
+        const recipeScanLifetimeUsed = usageRow?.recipe_image_scan_lifetime_used || 0;
 
         if (isPremium && premiumMonthUsed >= PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: premiumMonthUsed, limit: PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT }, 402);
         }
-        if (!isPremium && freeMonthUsed >= IMAGE_SCAN_FREE_LIMIT) {
-            return jsonResponse({ error: "limit_reached", scope: "free_monthly", used: freeMonthUsed, limit: IMAGE_SCAN_FREE_LIMIT }, 402);
+        if (!isPremium && recipeScanLifetimeUsed >= RECIPE_SCAN_FREE_LIFETIME_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: recipeScanLifetimeUsed, limit: RECIPE_SCAN_FREE_LIFETIME_LIMIT }, 402);
         }
 
         const body = await req.json();
@@ -203,12 +205,12 @@ Deno.serve(async (req) => {
             );
         } else {
             await supabase.from("user_ai_usage").upsert(
-                { user_id: userId, username: userData.user.email, free_image_scans_month_key: monthKey, free_image_scans_month_used: freeMonthUsed + 1 },
+                { user_id: userId, username: userData.user.email, recipe_image_scan_lifetime_used: recipeScanLifetimeUsed + 1 },
                 { onConflict: "user_id" },
             );
         }
 
-        return jsonResponse({ ok: true, recipe, scansUsed: isPremium ? premiumMonthUsed + 1 : freeMonthUsed + 1 });
+        return jsonResponse({ ok: true, recipe, scansUsed: isPremium ? premiumMonthUsed + 1 : recipeScanLifetimeUsed + 1 });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }

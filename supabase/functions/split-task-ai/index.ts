@@ -107,18 +107,24 @@ Deno.serve(async (req) => {
             .eq("user_id", userId)
             .maybeSingle();
         const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
-        if (!isPremium) return jsonResponse({ error: "premium_required" }, 402);
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
+        // משתמשת שאינה פרימיום מקבלת 5 שימושים חינמיים לכל החיים לפני שהיא
+        // נחסמת - מחליף את חסימת ה-402 הגורפת שהייתה כאן קודם
+        const SMART_SPLIT_FREE_LIFETIME_LIMIT = 5;
+        const splitLifetimeUsed = usageRow?.smart_split_lifetime_used || 0;
+        if (!isPremium && splitLifetimeUsed >= SMART_SPLIT_FREE_LIFETIME_LIMIT) {
+            return jsonResponse({ error: "limit_reached", scope: "free_lifetime", used: splitLifetimeUsed, limit: SMART_SPLIT_FREE_LIFETIME_LIMIT }, 402);
+        }
         const monthKey = currentMonthKey();
         const splitMonthUsed = usageRow?.premium_smart_split_month_key === monthKey
             ? (usageRow?.premium_smart_split_month_used || 0)
             : 0;
-        if (splitMonthUsed >= PREMIUM_SMART_SPLIT_MONTHLY_LIMIT) {
+        if (isPremium && splitMonthUsed >= PREMIUM_SMART_SPLIT_MONTHLY_LIMIT) {
             return jsonResponse({ error: "limit_reached", scope: "premium_monthly", used: splitMonthUsed, limit: PREMIUM_SMART_SPLIT_MONTHLY_LIMIT }, 402);
         }
 
@@ -216,10 +222,17 @@ Deno.serve(async (req) => {
         const chunks = rawChunks.filter((c) => candidateSet.has(c.event_date));
         if (!chunks.length) return jsonResponse({ error: "no_extraction" }, 502);
 
-        await supabase.from("user_ai_usage").upsert(
-            { user_id: userId, username: userData.user.email, premium_smart_split_month_key: monthKey, premium_smart_split_month_used: splitMonthUsed + 1 },
-            { onConflict: "user_id" },
-        );
+        if (isPremium) {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, premium_smart_split_month_key: monthKey, premium_smart_split_month_used: splitMonthUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        } else {
+            await supabase.from("user_ai_usage").upsert(
+                { user_id: userId, username: userData.user.email, smart_split_lifetime_used: splitLifetimeUsed + 1 },
+                { onConflict: "user_id" },
+            );
+        }
 
         return jsonResponse({ ok: true, chunks });
     } catch (err) {

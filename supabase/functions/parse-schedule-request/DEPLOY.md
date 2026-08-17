@@ -9,6 +9,7 @@ and it'll reuse the same secret.
 ```sql
 alter table user_ai_usage add column if not exists premium_schedule_ai_month_key text;
 alter table user_ai_usage add column if not exists premium_schedule_ai_month_used integer default 0;
+alter table user_ai_usage add column if not exists schedule_ai_lifetime_used integer default 0;
 ```
 
 Otherwise reads `user_premium.is_premium` (already exists) and writes to
@@ -40,9 +41,9 @@ No cron, no extra tables. This is purely called on-demand when a premium user ta
 
 ## Known limitations
 
-- **Premium-only, no free tier**: unlike the recipe scanner, this returns `402` for any
-  non-premium user - there's no rule-based fallback, since the whole point is genuine
-  multi-event natural-language understanding that a heuristic parser can't do reliably.
+- **5 free lifetime uses for non-premium users** (`schedule_ai_lifetime_used`, never
+  resets) - after that, non-premium users fall back to the local rule-based parser
+  (`parseScheduleTextLocally` in app.js), same as when this call fails for any reason.
 - **Slot collisions**: if the AI parses two events onto the same day and there aren't
   enough empty slots, the frontend adds new rows automatically (same mechanism as the
   "+ Add row" button) rather than overwriting anything.

@@ -11,11 +11,15 @@ development - included here so the schema is documented and reproducible elsewhe
 
 ```sql
 -- Legacy free-tier lifetime counter (no longer read for the limit decision, kept for
--- historical data - see free_image_scans_month_key/_used below for the current logic).
+-- historical data).
 alter table user_ai_usage add column if not exists image_scans_used integer default 0;
--- Free-tier monthly quota (resets automatically, same mechanism as the premium one below).
+-- Legacy free-tier MONTHLY quota - also retired/no longer read, replaced by
+-- recipe_image_scan_lifetime_used below (one consistent "5 free forever" policy
+-- across every AI feature, not just this one).
 alter table user_ai_usage add column if not exists free_image_scans_month_key text;
 alter table user_ai_usage add column if not exists free_image_scans_month_used integer default 0;
+-- Current free-tier counter: 5 uses EVER, never resets.
+alter table user_ai_usage add column if not exists recipe_image_scan_lifetime_used integer default 0;
 -- Premium monthly quota (shared with scan-meal-photo - see below) and reset-tracking key.
 alter table user_ai_usage add column if not exists premium_image_scans_month_key text;
 alter table user_ai_usage add column if not exists premium_image_scans_month_used integer default 0;
@@ -73,7 +77,7 @@ user taps "Scan a photo" - no `pg_cron` step required.
 
 ## Known limitations (being upfront about these)
 
-- **Cost**: every scan is a real, billed API call. The 5-free-scans-per-month limit is
+- **Cost**: every scan is a real, billed API call. The 5-free-lifetime-scans limit is
   enforced server-side (can't be bypassed by editing client code), but there's currently
   no hard cap on total spend across all users - keep an eye on Anthropic's usage
   dashboard early on.

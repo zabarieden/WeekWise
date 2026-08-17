@@ -9,6 +9,7 @@ you've already set one up.
 ```sql
 alter table user_ai_usage add column if not exists premium_food_text_month_key text;
 alter table user_ai_usage add column if not exists premium_food_text_month_used integer default 0;
+alter table user_ai_usage add column if not exists food_text_lifetime_used integer default 0;
 
 create table if not exists food_text_cache (
     id uuid primary key default gen_random_uuid(),
@@ -48,15 +49,17 @@ supabase secrets set ANTHROPIC_API_KEY=<your-api-key-here>
 
 ## Known limitations
 
-- **Premium-only, no free tier** - free users keep the existing instant local
-  heuristic (`estimateFreeTextCalories` in app.js) unchanged; this function is
-  never called for them.
+- **5 free lifetime uses for non-premium users** (`food_text_lifetime_used`,
+  never resets) - after that, non-premium users fall back to the existing
+  instant local heuristic (`estimateFreeTextMacros` in app.js). Premium users
+  are governed only by the monthly quota below and never touch this counter.
 - **At most one clarifying question per entry** - enforced by swapping to a
   tool schema that has no "clarify" option at all on the follow-up call, not
   just by prompt wording, so there's no risk of an endless back-and-forth.
-- **100/month cap**: once reached, the app silently falls back to the local
-  heuristic (with a toast noting it's less precise) rather than blocking
-  logging entirely - a paying user should never be unable to log a meal.
+- **180/month cap for premium**: once reached, the app silently falls back to
+  the local heuristic (with a toast noting it's less precise) rather than
+  blocking logging entirely - a paying user should never be unable to log a
+  meal.
 - **Estimates, not measurements**: like every AI calorie estimate in this
   app, this is a best-effort guess, not a lab measurement.
 

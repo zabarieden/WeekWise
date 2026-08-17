@@ -14,7 +14,8 @@ before deploying:
 ```sql
 alter table user_ai_usage
     add column if not exists premium_smart_split_month_key text,
-    add column if not exists premium_smart_split_month_used integer default 0;
+    add column if not exists premium_smart_split_month_used integer default 0,
+    add column if not exists smart_split_lifetime_used integer default 0;
 ```
 
 ## 2. Deploy the function
@@ -25,8 +26,9 @@ supabase functions deploy split-task-ai
 
 ## What it does
 
-1. Verifies the caller is premium (`user_premium.is_premium`) - there is no free-tier
-   fallback for this feature, same as `parse-schedule-request`.
+1. Checks `user_premium.is_premium`. Non-premium users get 5 free lifetime uses
+   (`smart_split_lifetime_used`, never resets) before a `free_lifetime` 402 - same
+   policy as every other AI feature in this project.
 2. Checks the monthly quota (`PREMIUM_SMART_SPLIT_MONTHLY_LIMIT` = 5/month, tunable at
    the top of `index.ts`), separate from the image-scan and schedule-planner pools.
 3. Computes the candidate dates deterministically in code (tomorrow through the day
