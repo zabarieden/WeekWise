@@ -1644,6 +1644,7 @@ async function initAppAfterAuth(user) {
     // אם שניהם היו רצים במקביל בתוך אותו Promise.all, היה מרוץ-תזמון שבו
     // isPremiumUser עוד false (הערך ההתחלתי) כש-loadGlobalFont כבר קורא אותו
     await loadPremiumStatus();
+    handleCheckoutReturn();
     // loadFinanceCycleSetting מחוץ ל-Promise.all שלמטה ומחכה לו קודם: loadFinanceData
     // (בפנים ה-Promise.all) קורא ל-getFinanceCycleStartDay באופן סינכרוני כדי לחשב
     // את טווח התאריכים - אם שניהם היו רצים במקביל, היה מרוץ-תזמון שבו הערך עדיין
@@ -5679,20 +5680,32 @@ function renderSettingsSubscriptionSection() {
     }
 }
 
-async function cancelPremiumSubscription() {
+// "שינוי מסלול" ו"ביטול מנוי" שולחים שניהם ל-Portal האמיתי של Lemon Squeezy
+// (create-billing-portal-session) - הוא כבר יודע להציע גם מעבר בין מסלולים
+// וגם ביטול, אין צורך לבנות שתי מסכי-ניהול נפרדים. הביטול/השינוי בפועל
+// קורה שם, וחוזר לאפליקציה דרך lemonsqueezy-webhook כשהמצב באמת משתנה -
+// לא מיידית כאן כמו הזרם ההדגמתי הקודם
+async function openLemonSqueezyPortal() {
     if (!supabaseClient || !currentUserId) return;
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+    if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-billing-portal-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        const result = await res.json();
+        if (!res.ok || !result.url) { showAppToast(t('settings_billing_error_toast'), 'error'); return; }
+        window.location.href = result.url;
+    } catch {
+        showAppToast(t('settings_billing_error_toast'), 'error');
+    }
+}
+
+function cancelPremiumSubscription() {
     if (!confirm(t('settings_cancel_sub_confirm'))) return;
-    await supabaseClient.from('user_premium').update({ is_premium: false }).eq('user_id', currentUserId);
-    isRealPremiumUser = false;
-    isPremiumUser = isInFreeTrial();
-    premiumTierFromDb = null;
-    // מאפסים לערכת ברירת המחדל - לא הגיוני להשאיר ערכה נעולה "דלוקה" אחרי
-    // שהמנוי בוטל; selectColorTheme('default') תמיד מותר גם בלי פרימיום
-    await selectColorTheme('default');
-    updateHomePremiumBadgeVisibility();
-    updateThemeSwatchLocks();
-    renderSettingsSubscriptionSection();
-    showAppToast(t('settings_cancel_sub_toast'));
+    openLemonSqueezyPortal();
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
@@ -6076,13 +6089,45 @@ function selectPremiumTier(el) {
     el.classList.add('selected');
 }
 
-// הערה: זהו עדיין זרם הדגמה בלבד (בלי סליקה אמיתית מאחורה) - בכוונה לא
-// הופך כאן את isPremiumUser ל-true/כותב ל-user_premium, כי זה יאפשר לכל
-// אחד "לשדרג" חינם בלי שום אימות תשלום אמיתי. הטקס החגיגי הוא שיפור חזותי
-// לאותו זרם הדגמה קיים, לא הפעלה אמיתית של פרימיום - זה יידרש חיבור אמיתי
-// לספק סליקה (Stripe/IAP) בצד שרת לפני שזה יכול להיות אמיתי
-function submitPremiumUpgrade() {
-    closeModal('modal-premium-upgrade');
+// שולחת ל-checkout אמיתי של Lemon Squeezy (create-checkout-session) - לא
+// הופכת isPremiumUser ל-true כאן בכלל, זה קורה רק אחרי תשלום אמיתי דרך
+// lemonsqueezy-webhook. הטקס החגיגי (celebratePremiumUnlock) זז מכאן לרגע
+// החזרה עם ?checkout=success אחרי אימות שרת אמיתי - ר' handleCheckoutReturn
+async function submitPremiumUpgrade(btn) {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const originalText = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = t('food_ai_estimating'); }
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ tier: selectedPremiumTier }),
+        });
+        const result = await res.json();
+        if (!res.ok || !result.url) { showAppToast(t('settings_billing_error_toast'), 'error'); return; }
+        window.location.href = result.url;
+    } catch {
+        showAppToast(t('settings_billing_error_toast'), 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    }
+}
+
+// חוזרים מה-checkout האמיתי של Lemon Squeezy עם ?checkout=success ב-URL -
+// נקרא אחרי ש-loadPremiumStatus כבר רץ (ר' initAppAfterAuth), אז isRealPremiumUser
+// כבר משקף את המצב האמיתי מה-DB. מנקים את הפרמטר מה-URL כדי שרענון-דף לא
+// יראה שוב את הטקס. לא בודקים isRealPremiumUser כתנאי להצגה - גם אם ה-webhook
+// עוד לא הספיק לרוץ (מרוץ-תזמון נדיר), עדיף לחגוג ואז שהמשתמשת תראה את
+// הפרימיום בפועל ברענון הבא, מאשר לא לחגוג בכלל אחרי תשלום אמיתי שהצליח
+function handleCheckoutReturn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') !== 'success') return;
+    params.delete('checkout');
+    const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '') + window.location.hash;
+    window.history.replaceState({}, '', newUrl);
     celebratePremiumUnlock();
 }
 

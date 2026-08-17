@@ -1,20 +1,22 @@
 // Supabase Edge Function: create-billing-portal-session
 //
-// Creates a Stripe Customer Portal session for the logged-in user and returns
-// its hosted URL. Backs both "Change Plan" and "Cancel Subscription" in
-// Settings - the Portal itself handles plan switching, cancellation timing,
-// payment-method updates, and invoice history, so this app doesn't need to
-// build any of that itself.
+// Returns the logged-in user's Lemon Squeezy customer-portal URL. Backs both
+// "Change Plan" and "Cancel Subscription" in Settings - the portal itself
+// handles plan switching, cancellation, and payment-method updates, so this
+// app doesn't need to build any of that itself.
+//
+// Unlike Stripe, Lemon Squeezy has no separate "create a portal session" API
+// call - the portal URL is just a field (urls.customer_portal) on the
+// subscription object itself, pre-signed and valid for 24h from the moment
+// it's fetched. So this function is a straightforward GET + field extraction.
 //
 // Deploy this via the Supabase CLI - see DEPLOY.md in this folder.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import Stripe from "npm:stripe@17";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
-const SITE_URL = Deno.env.get("SITE_URL")!;
+const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY")!;
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -23,7 +25,6 @@ const CORS_HEADERS = {
 };
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const stripe = new Stripe(STRIPE_SECRET_KEY, { httpClient: Stripe.createFetchHttpClient() });
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -43,21 +44,32 @@ Deno.serve(async (req) => {
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
         const userId = userData.user.id;
 
+        // stripe_subscription_id הוא שם עמודה היסטורי - מחזיק היום את מזהה
+        // המנוי של Lemon Squeezy (ר' lemonsqueezy-webhook)
         const { data: premiumRow } = await supabase
             .from("user_premium")
-            .select("stripe_customer_id")
+            .select("stripe_subscription_id")
             .eq("user_id", userId)
             .maybeSingle();
 
-        const customerId = premiumRow?.stripe_customer_id as string | undefined;
-        if (!customerId) return jsonResponse({ error: "no_subscription" }, 404);
+        const subscriptionId = premiumRow?.stripe_subscription_id as string | undefined;
+        if (!subscriptionId) return jsonResponse({ error: "no_subscription" }, 404);
 
-        const session = await stripe.billingPortal.sessions.create({
-            customer: customerId,
-            return_url: `${SITE_URL}/index.html`,
+        const response = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`, {
+            headers: {
+                "Accept": "application/vnd.api+json",
+                "Authorization": `Bearer ${LEMONSQUEEZY_API_KEY}`,
+            },
         });
+        if (!response.ok) {
+            const detail = await response.text();
+            return jsonResponse({ error: "lemonsqueezy_error", detail }, 502);
+        }
+        const result = await response.json();
+        const portalUrl = result?.data?.attributes?.urls?.customer_portal;
+        if (!portalUrl) return jsonResponse({ error: "no_portal_url" }, 502);
 
-        return jsonResponse({ url: session.url });
+        return jsonResponse({ url: portalUrl });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);
     }

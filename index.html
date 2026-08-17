@@ -2145,7 +2145,7 @@
                     <div id="settings-subscription-section" class="hidden">
                         <label class="settings-label" data-i18n="settings_manage_sub_title">Manage Subscription</label>
                         <p id="settings-subscription-status" class="modal-subtitle"></p>
-                        <button type="button" id="btn-change-plan" class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="closeModal('modal-settings-drawer'); openPremiumUpgradeModal();" data-i18n="settings_change_plan_btn">Change Plan</button>
+                        <button type="button" id="btn-change-plan" class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="openLemonSqueezyPortal()" data-i18n="settings_change_plan_btn">Change Plan</button>
                         <button type="button" id="btn-cancel-subscription" class="btn-clear-specific btn-danger-outline" style="width: 100%; margin-top: 8px;" onclick="cancelPremiumSubscription()" data-i18n="settings_cancel_sub_btn">Cancel Subscription</button>
                     </div>
 
@@ -3047,7 +3047,7 @@
                         <div class="premium-tier-price-sub" data-i18n="premium_tier_semiannual_billed">Billed $39.99 every 6 months</div>
                     </div>
                 </div>
-                <button class="btn-primary btn-premium-cta" onclick="submitPremiumUpgrade()" data-i18n="premium_upgrade_cta">Upgrade Now</button>
+                <button class="btn-primary btn-premium-cta" onclick="submitPremiumUpgrade(this)" data-i18n="premium_upgrade_cta">Upgrade Now</button>
                 <button class="btn-clear-specific" style="width: 100%; margin-top: 8px;" onclick="closeModal('modal-premium-upgrade')" data-i18n="close_btn">Close</button>
             </div>
         </div>
@@ -3079,7 +3079,7 @@
 
     </div>
 
-    <script src="i18n.js?v=285"></script>
-    <script src="app.js?v=400"></script>
+    <script src="i18n.js?v=286"></script>
+    <script src="app.js?v=401"></script>
 </body>
 </html>

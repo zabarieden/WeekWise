@@ -1,20 +1,13 @@
 # Deploying the billing-portal function
 
-Creates a Stripe Customer Portal session so "Change Plan" and "Cancel Subscription"
-in Settings both redirect to one Stripe-hosted page that handles proration,
-cancellation timing, payment methods, and invoice history for you.
+Returns the logged-in user's Lemon Squeezy customer-portal URL, so "Change
+Plan" and "Cancel Subscription" in Settings both redirect to one
+Lemon-Squeezy-hosted page that handles plan switching, cancellation timing,
+and payment-method updates for you - no custom UI needed on our side.
 
-## 0. Stripe Dashboard setup (one-time, before deploying)
-
-Settings → Billing → Customer portal:
-
-1. Enable the portal.
-2. Under "Products", add both the Monthly and Semiannual Prices as switchable
-   options, so a customer can move between them from the portal.
-3. Under "Cancellation", choose **"Cancel at end of billing period"** (not
-   immediately) - this is what makes `cancel_at_period_end` meaningful in the app's
-   Settings screen ("Access ends {date}" vs "Renews {date}").
-4. Allow payment-method updates.
+Unlike Stripe, there's no dashboard setup step here - the portal is built
+into every Lemon Squeezy store automatically, and the URL is just a field
+returned on the subscription object itself.
 
 ## 1. Deploy the function
 
@@ -25,23 +18,30 @@ supabase functions deploy create-billing-portal-session
 ## 2. Set secrets
 
 ```bash
-supabase secrets set STRIPE_SECRET_KEY=sk_test_...
+supabase secrets set LEMONSQUEEZY_API_KEY=<your-lemon-squeezy-api-key>
 supabase secrets set SITE_URL=https://app.not10.ai
 ```
 
-(Same `STRIPE_SECRET_KEY`/`SITE_URL` as `create-checkout-session` - only needs
+(Shared with `create-checkout-session`/`lemonsqueezy-webhook` - only needs
 setting once per project.)
 
 ## What it does
 
 1. Verifies the caller's identity from their own auth token.
-2. Looks up their `stripe_customer_id` from `user_premium` - returns
-   `{ error: "no_subscription" }` (404) if they've never checked out.
-3. Creates a Billing Portal session for that customer and returns `{ url }`.
+2. Looks up their subscription ID (`user_premium.stripe_subscription_id` -
+   historical column name, holds the Lemon Squeezy subscription ID since the
+   Stripe→Lemon Squeezy migration) - returns `{ error: "no_subscription" }`
+   (404) if they've never checked out.
+3. Fetches that subscription from Lemon Squeezy's API and returns its
+   `urls.customer_portal` field as `{ url }`.
 
 ## Known limitations
 
-- If a user was never a Stripe customer (no successful checkout ever started), this
-  correctly refuses rather than creating a customer on the fly - "Manage Billing"
-  should only ever be shown/clickable when `isRealPremiumUser` is true, which implies
-  a `stripe_customer_id` already exists.
+- If a user was never a paying customer (no successful checkout ever
+  completed), this correctly refuses rather than fabricating a URL -
+  "Manage Billing"/"Change Plan"/"Cancel" should only ever be shown/clickable
+  when `isRealPremiumUser` is true, which implies a subscription ID already
+  exists (set by `lemonsqueezy-webhook` on the first successful payment).
+- The returned portal URL is pre-signed and expires after 24 hours - this
+  function must be called fresh every time the user clicks one of these
+  buttons, never cached client-side across sessions.
