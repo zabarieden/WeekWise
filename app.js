@@ -1233,10 +1233,15 @@ async function commitFoodQuickAdd(text, calories, proteinGrams, reasoning) {
     if (calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
         showAppToast(t('calories_implausible_toast').replace('{calories}', calories), 'error');
     } else {
-        // נימוק קצר (אם יש) מתווסף לטוסט - כדי שאפשר יהיה להעיף מבט ולתפוס
-        // משהו לא הגיוני בלי שזה חוסם את השמירה עצמה
-        const reasoningSuffix = reasoning ? ` — ${reasoning.split('\n')[0].slice(0, 120)}` : '';
-        showAppToast(`${t('quick_add_logged_toast')} ${text} (${calories} ${t('calories_unit')})${reasoningSuffix}`);
+        // הטוסט מציג רק מספרים (קלוריות + חלבון אם ידוע) - בלי שום נימוק/הסבר
+        // טקסטואלי מה-AI (גם באנגלית וגם בעברית) - לפי בקשה מפורשת, אחרי
+        // שהתברר שהנימוק (כולל "נמצא במאגר שלנו, לא ניחוש AI") מפריע ולפעמים
+        // יוצא באנגלית גם למשתמשת עברית. ה-reasoning עצמו עדיין נשמר ב-DB
+        // (ר' addQuickLogEntry) לביקורת מאוחרת - רק לא מוצג יותר בטוסט
+        const summary = proteinGrams != null
+            ? t('food_estimate_confirm_summary').replace('{calories}', calories).replace('{protein}', Math.round(proteinGrams))
+            : `${calories} ${t('calories_unit')}`;
+        showAppToast(`${t('quick_add_logged_toast')} ${text} (${summary})`);
     }
     refreshTodayNutritionViewIfOpen();
 }
