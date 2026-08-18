@@ -375,8 +375,19 @@ Deno.serve(async (req) => {
         if (offData) referenceParts.push(`packaged/branded products: ${offData}`);
         if (nutritionRef.tzameret) referenceParts.push(`Israeli national nutrition database (TZAMERET) entries: ${nutritionRef.tzameret}`);
         if (nutritionRef.usda) referenceParts.push(`USDA generic-ingredient entries: ${nutritionRef.usda}`);
+        // אזהרה נוספת בתוך offDataNote: נבדק בפועל ש"חזה עוף" (בקשה גנרית,
+        // בישול ביתי) נטתה להתאים למוצרי נקניק/פסטרמה/דלי ארוזים (למשל "חזה
+        // פרוס בגריל, עוף העמק" - שם מותג אמיתי של נקניק) שהערכים שלהם נמוכים
+        // משמעותית ממנת בשר ביתית טרייה (מים/ריפוד/עיבוד), כי הם עדיין
+        // "מכילים את המילים הנכונות". גרם ל-109 קל'/22 גרם חלבון במקום כ-165/31
+        // האמיתיים לחזה עוף מבושל ביתי רגיל - פער של יותר מ-50% על שני הצירים,
+        // ר' בדיקה בפועל. ההנחיה הכללית "אם זה לא באמת מתאים, תתעלמי" כבר
+        // הייתה שם אבל לא מספיק חזקה בפועל למקרה הזה - נוספה אזהרה קונקרטית
+        const referenceProductMatchCaution = referenceParts.length
+            ? " Be especially careful with deli/processed/cured/packaged meat or cheese products (e.g. sliced lunch meat, pastrami, branded pre-packaged items) - these often share the same generic name as a fresh home-cooked version of the same food (e.g. \"chicken breast\") but have meaningfully different calories/protein per gram due to added water, curing, or processing. A plain, unbranded home-cooking description (just an ingredient name and a weight/quantity, no brand or \"deli\"/\"sliced\"/\"packaged\" wording) almost always means the fresh, simply-cooked version - do not silently substitute a deli/processed reference entry's numbers for it just because the name matches; only use such an entry when the user's own description actually points to a packaged/deli/branded product."
+            : "";
         const offDataNote = referenceParts.length
-            ? `A nutrition database search for this description returned these real reference items with verified nutrition data - ${referenceParts.join("; also ")}. If one of these plausibly matches an item the user described (same food/product, similar name), prefer its exact kcal/protein/fat/carbs-per-100g figures over your own memory or estimate for that item - it's real reference data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.`
+            ? `A nutrition database search for this description returned these real reference items with verified nutrition data - ${referenceParts.join("; also ")}. If one of these plausibly matches an item the user described (same food/product, similar name), prefer its exact kcal/protein/fat/carbs-per-100g figures over your own memory or estimate for that item - it's real reference data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.${referenceProductMatchCaution}`
             : "";
         const promptText = hasAnswer
             ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
