@@ -4391,26 +4391,24 @@ function triggerAllDoneSparkles() {
     overlay.className = 'all-done-sparkles';
     wrapper.appendChild(overlay);
 
-    const emojis = ['✨', '💫', '⭐', '💜'];
-    const spawnSparkle = () => {
-        const sparkle = document.createElement('span');
-        sparkle.className = 'all-done-sparkle';
-        sparkle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        sparkle.style.left = `${Math.random() * 100}%`;
-        sparkle.style.animationDuration = `${3 + Math.random() * 2.5}s`;
-        sparkle.style.fontSize = `${0.7 + Math.random() * 1}rem`;
-        overlay.appendChild(sparkle);
-        sparkle.addEventListener('animationend', () => sparkle.remove());
+    // קונפטי עדין (מלבנים קטנים בצבעי המותג) במקום כוכבים/אימוג'ים - לפי
+    // בקשה מפורשת. משך כולל כ-15 שניות (לא 9.5 כמו קודם), קצב ספאון איטי
+    // יותר (450 לא 250) לתחושה רגועה יותר, לא "מבול" של חלקיקים
+    const confettiColors = ['var(--accent-pink)', 'var(--accent-purple)', 'var(--accent-green)', '#eab308'];
+    const spawnConfetti = () => {
+        const piece = document.createElement('span');
+        piece.className = 'gentle-confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        piece.style.animationDuration = `${4 + Math.random() * 3}s`;
+        overlay.appendChild(piece);
+        piece.addEventListener('animationend', () => piece.remove());
     };
-    const spawnTimer = setInterval(spawnSparkle, 250);
-    // היה 2 דקות שלמות - נצנצים שנשארים על גבי כל מסך שעוברים אליו (העוגן
-    // הוא .phone-wrapper הגלובלי, לא תלוי-מסך) במשך כל כך הרבה זמן זה מטריד
-    // ולא חגיגה - לפי בקשה מפורשת ("אמור להיות יותר מהר"), קוצר לאותו משך
-    // כמו triggerDailyGreetingSparkles הסמוכה (כ-9.5 שניות בסה"כ)
+    const spawnTimer = setInterval(spawnConfetti, 450);
     setTimeout(() => {
         clearInterval(spawnTimer);
-        setTimeout(() => overlay.remove(), 5500);
-    }, 4000);
+        setTimeout(() => overlay.remove(), 7000);
+    }, 15000);
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
