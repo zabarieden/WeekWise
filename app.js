@@ -4277,17 +4277,15 @@ async function loadTodayTasks() {
     container.innerHTML = '';
     if (!populated.length && !events.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
-        updateTodayPeekTabCount(0);
         return;
     }
     // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
     // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
     // מוחקת ולא משנה את הלו"ז החוזר עצמו, ומתאפסת מאליה במופע הבא של אותו יום
     let allDone = true;
-    let remainingCount = 0;
     populated.forEach(item => {
         const isDone = completedScheduleIds.has(item.id);
-        if (!isDone) { allDone = false; remainingCount++; }
+        if (!isDone) allDone = false;
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -4300,7 +4298,7 @@ async function loadTodayTasks() {
     // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
     // צ'קבוקס-השלמה וכפתור מחיקה, כמו בפירוט היום בלוח החודשי
     events.forEach(item => {
-        if (!item.is_completed) { allDone = false; remainingCount++; }
+        if (!item.is_completed) allDone = false;
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -4371,20 +4369,6 @@ async function loadTodayTasks() {
             encouragement.textContent = t(messageKey);
             container.appendChild(encouragement);
         }
-    }
-    updateTodayPeekTabCount(remainingCount);
-}
-
-// מספר המשימות שנותרו היום, מוצג כתג קטן על "הלשונית" הצרה (הפאנל-צד) - כדי
-// שיהיה אפשר לדעת אם יש עוד משהו להיום גם בלי לפתוח בכלל
-function updateTodayPeekTabCount(remainingCount) {
-    const badge = document.getElementById('today-peek-tab-count');
-    if (!badge) return;
-    if (remainingCount > 0) {
-        badge.textContent = remainingCount > 99 ? '99+' : String(remainingCount);
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
     }
 }
 
