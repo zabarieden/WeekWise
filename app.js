@@ -4382,6 +4382,27 @@ async function loadTodayTasks() {
 // בבת אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
 // (position:relative + overflow:hidden כבר קיימים שם) כדי שלא יגלשו החוצה
 // על מסכי דסקטופ רחבים
+// קונפטי עדין (מלבנים קטנים בצבעי המותג) - כל חלקיק "קופץ" ממש ממרכז ה-
+// container שהתקבל, לכיוון/מרחק אקראיים (--tx/--ty/--rot). משותפת בין חגיגת
+// "הכל בוצע" (פעמיים, ר' triggerAllDoneSparkles) לבין פופאפ התזכורת החדש -
+// לפי בקשה מפורשת ("שיקפוץ פעמיים בצורה יפה, לא צריך לפי שניות")
+function spawnGentleConfettiBurst(container, count) {
+    const confettiColors = ['var(--accent-pink)', 'var(--accent-purple)', 'var(--accent-green)', '#eab308'];
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'gentle-confetti-piece';
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 110 + Math.random() * 220;
+        piece.style.setProperty('--tx', `${Math.round(Math.cos(angle) * distance)}px`);
+        piece.style.setProperty('--ty', `${Math.round(Math.sin(angle) * distance)}px`);
+        piece.style.setProperty('--rot', `${Math.round(Math.random() * 360)}deg`);
+        piece.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        piece.style.animationDuration = `${1.6 + Math.random() * 1.2}s`;
+        container.appendChild(piece);
+        piece.addEventListener('animationend', () => piece.remove());
+    }
+}
+
 function triggerAllDoneSparkles() {
     if (document.getElementById('all-done-sparkles')) return;
     const wrapper = document.querySelector('.phone-wrapper');
@@ -4391,24 +4412,9 @@ function triggerAllDoneSparkles() {
     overlay.className = 'all-done-sparkles';
     wrapper.appendChild(overlay);
 
-    // קונפטי עדין (מלבנים קטנים בצבעי המותג) במקום כוכבים/אימוג'ים - לפי
-    // בקשה מפורשת. משך כולל כ-15 שניות (לא 9.5 כמו קודם), קצב ספאון איטי
-    // יותר (450 לא 250) לתחושה רגועה יותר, לא "מבול" של חלקיקים
-    const confettiColors = ['var(--accent-pink)', 'var(--accent-purple)', 'var(--accent-green)', '#eab308'];
-    const spawnConfetti = () => {
-        const piece = document.createElement('span');
-        piece.className = 'gentle-confetti-piece';
-        piece.style.left = `${Math.random() * 100}%`;
-        piece.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
-        piece.style.animationDuration = `${4 + Math.random() * 3}s`;
-        overlay.appendChild(piece);
-        piece.addEventListener('animationend', () => piece.remove());
-    };
-    const spawnTimer = setInterval(spawnConfetti, 450);
-    setTimeout(() => {
-        clearInterval(spawnTimer);
-        setTimeout(() => overlay.remove(), 7000);
-    }, 15000);
+    spawnGentleConfettiBurst(overlay, 16);
+    setTimeout(() => spawnGentleConfettiBurst(overlay, 16), 350);
+    setTimeout(() => overlay.remove(), 3200);
 }
 
 // סופרת כמה פעמים "הצצה להיום" נפתחה היום בפועל (מפתח כולל תאריך - מתאפס
