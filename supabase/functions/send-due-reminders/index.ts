@@ -120,9 +120,14 @@ async function handleRequest(): Promise<Response> {
             let anySucceeded = false;
             for (const sub of userSubs) {
                 try {
+                    // urgency: 'high' - בלי זה FCM/הדפדפן מרשים לעצמם לדחות מסרים "רגילים"
+                    // כשהמכשיר ב-Doze/חיסכון סוללה, מה שדווח בפועל כתזכורת שהגיעה
+                    // באיחור ניכר. TTL קצר יחסית (10 דק') - תזכורת שלא הגיעה תוך זמן
+                    // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
                         JSON.stringify({ title, body }),
+                        { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;
                     sent++;
@@ -166,9 +171,14 @@ async function handleRequest(): Promise<Response> {
             let anySucceeded = false;
             for (const sub of userSubs) {
                 try {
+                    // urgency: 'high' - בלי זה FCM/הדפדפן מרשים לעצמם לדחות מסרים "רגילים"
+                    // כשהמכשיר ב-Doze/חיסכון סוללה, מה שדווח בפועל כתזכורת שהגיעה
+                    // באיחור ניכר. TTL קצר יחסית (10 דק') - תזכורת שלא הגיעה תוך זמן
+                    // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
                         JSON.stringify({ title, body }),
+                        { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;
                     sent++;
