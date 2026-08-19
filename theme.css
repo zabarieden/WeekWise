@@ -3065,6 +3065,108 @@ html[dir="ltr"] .hamburger-drawer {
     transform: translateX(-100%);
 }
 html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: translateX(0); }
+
+/* "הצצה להיום" - פאנל-צד צר, לא משתמש ב-.hamburger-drawer הרגילה כי כאן,
+   בניגוד לכל שאר המגירות, נדרשת "לשונית" שנשארת גלויה תמיד גם במצב סגור
+   (ר' index.html). ממוקם אנכית במרכז (לא top:10/bottom:10 כמו שאר המגירות)
+   כדי לא להתנגש עם בועת ה-AI (פינה שמאלית-עליונה) או תפריט ההמבורגר (פינה
+   ימנית-עליונה) - לפי בקשה מפורשת */
+.today-peek-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 3500;
+    display: none;
+}
+.today-peek-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
+
+/* --today-peek-width: רוחב "הלשונית" הגלויה תמיד (~20-25% מהמסך, לפי בקשה
+   מפורשת) - clamp עם vw כדי לעקוב אחרי הרוחב האמיתי של .phone-wrapper בכל
+   breakpoint בלי לשכפל מדיה-קוארי נפרדת לכל אחד (700/820/1200px) */
+:root {
+    --today-peek-width: clamp(60px, 22vw, 260px);
+}
+.today-peek-panel {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 82%;
+    max-width: 320px;
+    max-height: 70vh;
+    background-color: var(--bg-sheet);
+    background-image: linear-gradient(160deg, var(--border-color), transparent 55%);
+    border: 1px solid var(--border-color);
+    border-radius: 22px 0 0 22px;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+    display: flex;
+    z-index: 3510;
+    /* המצב הסגור: לא translateX(100%) מלא (כמו hamburger-drawer) אלא רק עד
+       שנשאר בדיוק --today-peek-width גלוי - הלשונית אחרונה ב-DOM (ר'
+       index.html) כדי שתנחת בדיוק בפס הגלוי הזה, ב-RTL וב-LTR כאחד */
+    transform: translateY(-50%) translateX(calc(100% - var(--today-peek-width)));
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.today-peek-panel.open { transform: translateY(-50%) translateX(0); }
+/* בזמן גרירה (ר' initTodayPeekDrag ב-app.js) - בלי transition כדי שהפאנל
+   יעקוב מיידית אחרי האצבע, אותו רעיון בדיוק כמו dock-fab-active-drag */
+.today-peek-panel.dragging { transition: none; }
+html[dir="ltr"] .today-peek-panel {
+    right: auto;
+    left: 0;
+    border-radius: 0 22px 22px 0;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
+    transform: translateY(-50%) translateX(calc(-100% + var(--today-peek-width)));
+}
+html[dir="ltr"] .today-peek-panel.open { transform: translateY(-50%) translateX(0); }
+
+.today-peek-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 16px;
+    overflow-y: auto;
+}
+.today-peek-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.today-peek-content-header h2 { margin: 0; font-size: 1.05rem; }
+
+.today-peek-tab {
+    flex: 0 0 var(--today-peek-width);
+    width: var(--today-peek-width);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    border-inline-start: 1px solid var(--border-color);
+    cursor: pointer;
+    padding: 12px 4px;
+    touch-action: pan-y;
+}
+.today-peek-tab-icon { font-size: 1.5rem; }
+.today-peek-tab-count {
+    background-color: var(--accent-gold);
+    color: #1a1200;
+    font-weight: 700;
+    font-size: 0.75rem;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
 /* מגירת המחברת (לא שאר 5 המגירות שחולקות .hamburger-drawer) מתרחבת
    כמעט-למסך-מלא בדסקטופ - קנבס ציור נהנה משטח גדול ("כמו Procreate"), לפי
    בקשה מפורשת. נשארת overlay מלא-מסך (לא פאנל בתוך העמוד) - שומר על מקסימום
@@ -3443,9 +3545,6 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 /* מבט ליומן: עכשיו כן ניתן לקיפול כמו כל כרטיס אחר (collapsible-header +
    .expanded) - לפי בקשה מפורשת. בלי override של max-height כאן, הקיפול/
    פתיחה הרגיל של .card-body מהכללים הכלליים למעלה עובד ישירות */
-/* הצצה להיום: ניתן לקיפול כמו כל כרטיס אחר, מקופל כברירת מחדל (בלי class
-   expanded בהתחלה ב-HTML) - לפי בקשה מפורשת */
-.today-tasks-card.expanded .card-body { max-height: none; overflow: visible; }
 .calendar-glance-heading { display: flex; flex-direction: column; gap: 2px; }
 .calendar-glance-title-row { display: flex; align-items: baseline; gap: 6px; }
 .calendar-glance-year { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); }
@@ -3524,7 +3623,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     padding: 4px 8px;
     white-space: nowrap;
 }
-.today-tasks-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; }
+/* חיתוך עם "..." - לא לתת לכותרת ארוכה לגלוש מחוץ למסך בתוך הפאנל הצר, לפי
+   בקשה מפורשת ("חשוב") - אותה מוסכמה כמו .monthly-goal-name/
+   .notebook-page-tab-item-main */
+.today-tasks-text { color: var(--text-primary); font-weight: 500; font-size: 0.9rem; flex: 1 1 auto; min-width: 0; text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .today-tasks-text.completed { text-decoration: line-through; color: var(--text-secondary); opacity: 0.7; }
 .today-tasks-empty { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 10px 0; }
 /* הודעת עידוד כשכל המשימות של היום בוצעו (או "יש עוד זמן") - ר' loadTodayTasks

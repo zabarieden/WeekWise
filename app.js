@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('select').forEach(select => { if (select.id) updateCustomSelectDisplay(select.id); });
     initFabOrderDragReorder();
     initDockCarouselGestures();
+    initTodayPeekDrag();
     initSupabase();
     initCubesNavigation();
     renderHomeGreeting();
@@ -3942,19 +3943,12 @@ function updateActiveDayPageHeight(activePageEl) {
     container.style.height = `${pageDiv.scrollHeight}px`;
 }
 
-// "הצצה להיום" (today-tasks-card) יושבת על מסך הבית ממש באזור שבו אשכול
-// הבועות עכשיו צף (top:56%, ר' .fab-dock ב-theme.css) - כשהיא נפתחת היא
-// מתרחבת בדיוק לשם ומתנגשת חזותית איתו, לפי בקשה מפורשת מסתירים את האשכול
-// כל עוד היא פתוחה (מחלקה על .phone-wrapper, אותו דפוס בדיוק כמו menu-open/
-// modal-open) - שאר הכרטיסים המתקפלים באפליקציה לא נוגעים בזה, רק זו
+// "הצצה להיום" הפכה לפאנל-צד נפרד (ר' openTodayPeekPanel/closeTodayPeekPanel
+// למטה) - כבר לא .card רגיל, אז אין לה יותר טיפול מיוחד כאן
 function toggleCardSection(headerEl) {
     const card = headerEl.closest('.card');
     if (!card) return;
     card.classList.toggle('expanded');
-    if (card.classList.contains('today-tasks-card')) {
-        const wrapper = document.querySelector('.phone-wrapper');
-        if (wrapper) wrapper.classList.toggle('today-preview-open', card.classList.contains('expanded'));
-    }
 }
 
 async function loadWeeklySchedule() {
@@ -4283,15 +4277,17 @@ async function loadTodayTasks() {
     container.innerHTML = '';
     if (!populated.length && !events.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
+        updateTodayPeekTabCount(0);
         return;
     }
     // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
     // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
     // מוחקת ולא משנה את הלו"ז החוזר עצמו, ומתאפסת מאליה במופע הבא של אותו יום
     let allDone = true;
+    let remainingCount = 0;
     populated.forEach(item => {
         const isDone = completedScheduleIds.has(item.id);
-        if (!isDone) allDone = false;
+        if (!isDone) { allDone = false; remainingCount++; }
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -4304,7 +4300,7 @@ async function loadTodayTasks() {
     // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
     // צ'קבוקס-השלמה וכפתור מחיקה, כמו בפירוט היום בלוח החודשי
     events.forEach(item => {
-        if (!item.is_completed) allDone = false;
+        if (!item.is_completed) { allDone = false; remainingCount++; }
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.innerHTML = `
@@ -4375,6 +4371,20 @@ async function loadTodayTasks() {
             encouragement.textContent = t(messageKey);
             container.appendChild(encouragement);
         }
+    }
+    updateTodayPeekTabCount(remainingCount);
+}
+
+// מספר המשימות שנותרו היום, מוצג כתג קטן על "הלשונית" הצרה (הפאנל-צד) - כדי
+// שיהיה אפשר לדעת אם יש עוד משהו להיום גם בלי לפתוח בכלל
+function updateTodayPeekTabCount(remainingCount) {
+    const badge = document.getElementById('today-peek-tab-count');
+    if (!badge) return;
+    if (remainingCount > 0) {
+        badge.textContent = remainingCount > 99 ? '99+' : String(remainingCount);
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
     }
 }
 
@@ -4458,15 +4468,100 @@ function getTodayCardViewCount() {
     return parseInt(localStorage.getItem(`weekwise_today_card_views_${getLocalDateString()}`)) || 0;
 }
 
-function trackTodayCardExpandView(headerEl) {
-    const card = headerEl.closest('.card');
-    // toggleCardSection כבר הפך את המחלקה *לפני* שהקריאה הזו רצה (שתי
-    // הקריאות ב-onclick, בסדר הזה) - אז אפשר לבדוק כאן אם הכרטיס נפתח או
-    // נסגר; סופרים רק פתיחה בפועל, לא סגירה
-    if (!card || !card.classList.contains('expanded')) return;
+// פתיחה/סגירה של פאנל-הצד "הצצה להיום" - אותו דפוס בדיוק כמו שאר המגירות
+// (openHamburgerMenu/closeHamburgerMenu וכו'), רק עם today-preview-open (לא
+// מחלקת state חדשה) כדי לשמור על הישן: מסתיר את אשכול הבועות (fab-dock) כל
+// עוד היא פתוחה, בדיוק כמו שהיה על today-tasks-card הישנה
+function openTodayPeekPanel() {
+    const panel = document.getElementById('today-peek-panel');
+    const overlay = document.getElementById('today-peek-overlay');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (panel) panel.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+    if (wrapper) wrapper.classList.add('today-preview-open');
+    // סופרים פתיחה בפועל בלבד (לא כל loadTodayTasks שרץ מסיבות אחרות ברקע) -
+    // כדי שהודעת "יש לך עוד זמן" (ר' loadTodayTasks) תרגיש כמו תגובה לביקור
+    // חוזר אמיתי, לא לכל טעינה טכנית
     const key = `weekwise_today_card_views_${getLocalDateString()}`;
     localStorage.setItem(key, String(getTodayCardViewCount() + 1));
     loadTodayTasks();
+}
+function closeTodayPeekPanel() {
+    const panel = document.getElementById('today-peek-panel');
+    const overlay = document.getElementById('today-peek-overlay');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    if (wrapper) wrapper.classList.remove('today-preview-open');
+}
+function toggleTodayPeekPanel() {
+    const panel = document.getElementById('today-peek-panel');
+    if (panel && panel.classList.contains('open')) closeTodayPeekPanel();
+    else openTodayPeekPanel();
+}
+
+// גרירה ישירה של הלשונית לפתיחה/סגירה ("נפתח למשיכה", לפי בקשה מפורשת) -
+// אותו רעיון בדיוק כמו initDockCarouselGestures/initGoalPathDrag: מבטלים
+// transition כדי שהפאנל יעקוב מיידית אחרי האצבע, וב-pointerup קובעים מצב
+// סופי (פתוח/סגור) לפי סף מרחק, לא לפי מהירות - טאפ בלי גרירה משמעותית
+// (מתחת לסף) עדיין מטפל דרך toggleTodayPeekPanel הרגיל (click), לא כאן
+function initTodayPeekDrag() {
+    const tab = document.getElementById('today-peek-tab');
+    const panel = document.getElementById('today-peek-panel');
+    if (!tab || !panel) return;
+    let startX = 0;
+    let dragging = false;
+    let panelWidthPx = 0;
+
+    tab.addEventListener('click', () => { if (!dragging) toggleTodayPeekPanel(); });
+
+    tab.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        dragging = false;
+        panelWidthPx = panel.getBoundingClientRect().width;
+        tab.setPointerCapture(e.pointerId);
+    });
+    tab.addEventListener('pointermove', (e) => {
+        if (e.buttons !== 1 || !panelWidthPx) return;
+        const deltaX = e.clientX - startX;
+        if (!dragging && Math.abs(deltaX) > 6) {
+            dragging = true;
+            panel.classList.add('dragging');
+        }
+        if (!dragging) return;
+        const isLtr = document.documentElement.dir === 'ltr';
+        const isOpen = panel.classList.contains('open');
+        // אחוז ה"סגירה" הנוכחי (0 = פתוח לגמרי, 1 = סגור לגמרי/רק הלשונית
+        // גלויה) - מתחיל מהמצב שבו הייתה הגרירה כשהתחילה, ונע לפי הגרירה
+        // בפועל, ביחס לרוחב הפאנל עצמו (לא רוחב המסך)
+        const peekWidthPx = parseFloat(getComputedStyle(panel).getPropertyValue('--today-peek-width')) || 72;
+        const maxClosedFraction = 1 - (peekWidthPx / panelWidthPx);
+        const dragFraction = deltaX / panelWidthPx;
+        // ב-RTL הפאנל נפתח שמאלה (translateX שלילי), ב-LTR ימינה (חיובי) -
+        // ר' html[dir="ltr"] .today-peek-panel ב-theme.css
+        let closedFraction = isOpen ? 0 : maxClosedFraction;
+        closedFraction += isLtr ? dragFraction : -dragFraction;
+        closedFraction = Math.max(0, Math.min(maxClosedFraction, closedFraction));
+        const pxOffset = closedFraction * panelWidthPx * (isLtr ? -1 : 1);
+        panel.style.transform = `translateY(-50%) translateX(${pxOffset}px)`;
+    });
+    const finishDrag = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        panel.classList.remove('dragging');
+        panel.style.transform = '';
+        const isLtr = document.documentElement.dir === 'ltr';
+        const deltaX = e.clientX - startX;
+        // סף: יותר מ-40% מרוחב הפאנל בכיוון הנכון = משנה מצב
+        const openedEnough = (isLtr ? deltaX : -deltaX) > panelWidthPx * 0.25;
+        const closedEnough = (isLtr ? -deltaX : deltaX) > panelWidthPx * 0.25;
+        const wasOpen = panel.classList.contains('open');
+        if (wasOpen && closedEnough) closeTodayPeekPanel();
+        else if (!wasOpen && openedEnough) openTodayPeekPanel();
+        // אחרת - נשאר במצב שהיה (חוזר עם ה-transition הרגיל כי panel.style.transform אופס למעלה)
+    };
+    tab.addEventListener('pointerup', finishDrag);
+    tab.addEventListener('pointercancel', finishDrag);
 }
 
 // --- לוח חודשי: אותו מקור נתונים בדיוק כמו "מבט ליומן" (calendar_events),
