@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=380">
+    <link rel="stylesheet" href="theme.css?v=381">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -142,10 +142,54 @@
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
                 </div>
-                <!-- הצצה להיום: עברה מכרטיס מלא-רוחב בזרימת המסך לפאנל-צד צר שנפתח
-                     במשיכה/לחיצה (ר' #today-peek-content-panel ו-#today-peek-tab,
-                     שוכנים ליד שאר המגירות בסוף #app-container - לא כאן) - לפי
-                     בקשה מפורשת -->
+                <!-- הצצה להיום: פאנל-צד צר, בזרימה רגילה ממש אחרי שורת הברכה (לא
+                     position קבוע ביחס ל-#app-container) - כך שהיא גוללת יחד עם
+                     הברכה בדיוק, ולא "נשארת מאחור"/זזה כשגוללים - לפי בקשה מפורשת.
+                     .today-peek-anchor היא נקודת-עיגון עם גובה 0 (position:relative,
+                     לא תופסת מקום בזרימה) - הלשונית/הפאנל בתוכה הם position:absolute
+                     ביחס אליה, מעוגנים לקצה הפועל (ימין ב-RTL/שמאל ב-LTR) עם "לשונית"
+                     צרה שנשארת תמיד גלויה, ופאנל שנגלל 100% פנימה/החוצה (ר'
+                     .today-peek-tab/.today-peek-content-panel ב-theme.css). לחיצה/
+                     משיכה על הלשונית (ר' initTodayPeekDrag ב-app.js) פותחת את הפאנל
+                     המלא עם הרשימה - לפי בקשה מפורשת. מחליף לגמרי את today-tasks-card
+                     הישן (היה כרטיס מלא-רוחב בזרימת המסך) -->
+                <!-- ה-overlay חייב לשבת כאן, כאחות של הלשונית/הפאנל בתוך
+                     .home-hero-panel (לא כילד ישיר של #app-container כמו קודם) -
+                     .home-hero-panel יוצרת הקשר-שכבות משלה (position:relative +
+                     z-index:5), אז z-index גבוה על אלמנט מחוץ לה (למשל 3500)
+                     היה מצייר אותו מעל *כל* התוכן הפנימי כאן, כולל הלשונית/הפאנל
+                     עצמם (z-index:3510/3520, אבל "כלוא" בהקשר הפנימי) - מה שהיה
+                     גורם לעמעום לכסות אותם. position:fixed (לא absolute) כדי
+                     שבכל זאת יכסה את כל המסך, לא רק את הגובה הנמוך של
+                     .home-hero-panel עצמה -->
+                <div id="today-peek-overlay" class="today-peek-overlay" onclick="closeTodayPeekPanel()"></div>
+                <div class="today-peek-anchor">
+                    <div id="today-peek-content-panel" class="today-peek-content-panel">
+                        <div class="today-peek-content-header">
+                            <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
+                            <div class="hamburger-drawer-header-actions">
+                                <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                                     updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
+                                     מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
+                                <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                                    🔥 <span id="home-calorie-badge-value">0</span>
+                                </button>
+                                <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
+                                     זה"): הלשונית עצמה נעלמת כשפתוח (ר' theme.css), ואזור
+                                     הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
+                                     92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
+                                     בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
+                                <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
+                            </div>
+                        </div>
+                        <div id="today-tasks-list" class="today-tasks-list"></div>
+                    </div>
+                    <!-- טקסט אנכי (writing-mode) במקום אייקון+תג-מספר - לפי בקשה מפורשת
+                         ("בלי התמונה והמספר") - נשאר קריא גם ברצועה צרה מאוד -->
+                    <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
+                        <span class="today-peek-tab-label" data-i18n="today_tasks_title">A Peek at Today</span>
+                    </button>
+                </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
                      הראשי עבר לסרגל התחתון הקבוע (.bottom-tab-bar) -->
             </div>
@@ -935,10 +979,16 @@
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
                  קבועה - ננעל בפינה השמאלית-עליונה (במקום אימוג'י הברכה שהוסר),
-                 בלי גרירה, לפי בקשה מפורשת. הוחלף מתמונת "רובוט" מותאמת
-                 אישית לאימוג'י מוח 🧠 עדין עם זוהר ניאון (lucide/emoji, לא PNG) -->
+                 בלי גרירה, לפי בקשה מפורשת. ברירת המחדל עברה מאימוג'י מוח 🧠
+                 לתמונת "רובוט אישי" (robot-fab-icon.png, בלי רקע) - "רובוט אישי
+                 שעוזר בכל מה שצריך" - וניתן לבחירה מכמה אפשרויות בפרימיום (ר'
+                 AI_ICON_OPTIONS ב-app.js/applyAiIcon) - שני אלמנטים (img+span),
+                 רק אחד מוצג בכל רגע לפי הבחירה, כי לא ניתן לשים גם תמונה וגם
+                 טקסט-אימוג'י באותו אלמנט -->
             <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-tooltip="ai_brain_fab_title" data-i18n-aria-label="ai_brain_fab_title" aria-label="AI Assistant">
-                <span class="ai-brain-icon">🧠</span>
+                <img class="ai-brain-icon" id="ai-brain-icon-img" src="robot-fab-icon.png?v=1" alt="">
+                <span class="ai-brain-icon ai-brain-icon-emoji hidden" id="ai-brain-icon-emoji"></span>
+
                 <!-- לחיצה על התג עצמו (לא כל הכפתור) פותחת את תזכורת "מה חשוב היום" -
                      כדי שהיא לא תחסום גישה למוח עצמו, לפי בקשה מפורשת ("תפריד
                      בינהם... שההודעה תישמר... ובמקביל תהיה לי האפשרות להיכנס למוח") -->
@@ -954,50 +1004,6 @@
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
             <button type="button" class="hamburger-fab" id="btn-hamburger-menu" onclick="openHamburgerMenu()" data-i18n-title="hamburger_menu_btn_title" title="Menu">☰</button>
-
-            <!-- הצצה להיום: פאנל-צד צר, מעוגן לקצה הפועל (ימין בעברית/RTL, שמאל
-                 באנגלית/LTR - ר' html[dir="ltr"] ב-theme.css), עם "לשונית" צרה
-                 (~20-25% מרוחב המסך, ר' --today-peek-width) שנשארת תמיד גלויה
-                 ומציגה אייקון + מספר משימות שנותרו - לכן היא *לא* בתוך overlay
-                 עם display:none (כמו hamburger-drawer-overlay), אלא אלמנט נפרד
-                 ותמיד-מוצג, עם מצב פתוח/סגור דרך transform בלבד (ר' .today-peek-tab/
-                 .today-peek-content-panel ב-theme.css). ה-overlay (עמעום הרקע) הוא
-                 רכיב-אחות נפרד, מוצג רק
-                 כשפתוח, ללחיצה-בחוץ-לסגירה. לחיצה/משיכה על הלשונית (ר'
-                 initTodayPeekDrag ב-app.js) פותחת את הפאנל המלא עם הרשימה - לפי
-                 בקשה מפורשת. מחליף לגמרי את today-tasks-card הישן (היה כרטיס
-                 מלא-רוחב בזרימת המסך) -->
-            <div id="today-peek-overlay" class="today-peek-overlay" onclick="closeTodayPeekPanel()"></div>
-            <!-- שני אלמנטים עצמאיים לגמרי (לא flex-child אחד בתוך השני) - הלשונית
-                 תמיד באותו מקום הפשוט (position קבוע, בלי transform מותנה),
-                 והפאנל נגלל 100% מלא פנימה/החוצה (בלי חישוב "כמה להשאיר גלוי")
-                 - ר' ההסבר המלא ב-.today-peek-tab/.today-peek-content-panel
-                 ב-theme.css -->
-            <div id="today-peek-content-panel" class="today-peek-content-panel">
-                <div class="today-peek-content-header">
-                    <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                    <div class="hamburger-drawer-header-actions">
-                        <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
-                             updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
-                             מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
-                            🔥 <span id="home-calorie-badge-value">0</span>
-                        </button>
-                        <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
-                             זה"): הלשונית עצמה נעלמת כשפתוח (ר' theme.css), ואזור
-                             הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
-                             92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
-                             בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
-                        <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
-                    </div>
-                </div>
-                <div id="today-tasks-list" class="today-tasks-list"></div>
-            </div>
-            <!-- טקסט אנכי (writing-mode) במקום אייקון+תג-מספר - לפי בקשה מפורשת
-                 ("בלי התמונה והמספר") - נשאר קריא גם ברצועה צרה מאוד -->
-            <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
-                <span class="today-peek-tab-label" data-i18n="today_tasks_title">A Peek at Today</span>
-            </button>
 
             <div id="hamburger-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeHamburgerMenu()">
                 <nav class="hamburger-drawer" onclick="event.stopPropagation()">
@@ -1887,6 +1893,11 @@
 
                     <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                     <div class="theme-picker-grid">
+                        <!-- 4 רקעים ניטרליים - לפני כל שאר האפשרויות, לפי בקשה מפורשת -->
+                        <button type="button" class="theme-swatch theme-swatch-bg-white" data-theme="bg_white" onclick="selectColorTheme('bg_white')" title="White"><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-black" data-theme="bg_black" onclick="selectColorTheme('bg_black')" title="Black"><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-beige" data-theme="bg_beige" onclick="selectColorTheme('bg_beige')" title="Beige"><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-dark-grey" data-theme="bg_dark_grey" onclick="selectColorTheme('bg_dark_grey')" title="Dark Grey"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-default" data-theme="default" onclick="selectColorTheme('default')" title="Default"></button>
                         <button type="button" class="theme-swatch theme-swatch-blue" data-theme="blue_teal" onclick="selectColorTheme('blue_teal')" title="Blue & Teal"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-gold" data-theme="gold_red" onclick="selectColorTheme('gold_red')" title="Gold & Red"><span class="theme-swatch-lock">🔒</span></button>
@@ -1934,6 +1945,17 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="botanical_greenhouse" data-color-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" title="Botanical Greenhouse"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="space_rocket" data-color-theme="space_rocket" onclick="selectColorTheme('space_rocket')" title="Space Rocket"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="rocket_ship" data-color-theme="rocket_ship" onclick="selectColorTheme('rocket_ship')" title="Rocket Ship"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
+                    </div>
+
+                    <!-- בורר אייקון עוזר ה-AI (פרימיום, חוץ מברירת המחדל) - אותו דפוס
+                         בדיוק כמו בורר ערכת הנושא למעלה (theme-swatch + theme-swatch-lock),
+                         ר' AI_ICON_OPTIONS/selectAiIcon ב-app.js - לפי בקשה מפורשת -->
+                    <label class="settings-label" data-i18n="settings_ai_icon_label">AI Assistant Icon (Premium)</label>
+                    <div class="theme-picker-grid" id="ai-icon-picker-grid">
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="default" onclick="selectAiIcon('default')" title="Default"><img src="robot-fab-icon.png?v=1" alt=""></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="brain" onclick="selectAiIcon('brain')" title="Brain">🧠<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="sparkles" onclick="selectAiIcon('sparkles')" title="Sparkles">✨<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="crystal_ball" onclick="selectAiIcon('crystal_ball')" title="Crystal Ball">🔮<span class="theme-swatch-lock">🔒</span></button>
                     </div>
 
                     <!-- צבע טקסט אישי: חינמי, נפרד מערכת הנושא הפרימיום למעלה - דורס
@@ -2585,6 +2607,20 @@
                     </div>
                     <input type="number" id="ai-schedule-duration-months" min="1" data-i18n-placeholder="schedule_ai_duration_placeholder" placeholder="For how many months? (optional - leave empty for ongoing)">
                     <textarea id="ai-schedule-input" rows="4" data-i18n-placeholder="schedule_ai_placeholder" placeholder="e.g., Gym on Mondays at 10 AM, Hip Hop on Tuesdays at 8 PM, Work on Friday until 2 PM"></textarea>
+                    <!-- תזכורת אחת משותפת לכל המשימות שייווצרו מהניתוח הזה (לא לכל
+                         משימה בנפרד - אין כאן מסך-סקירה שבו אפשר להגדיר פר-משימה,
+                         ר' applyParsedScheduleEvents) - אותו דפוס בדיוק כמו
+                         reminder-fields-wrap בטופס ההוספה הידני, לפי בקשה מפורשת -->
+                    <div class="reminder-fields-wrap">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('ai-schedule-reminder')"><span id="ai-schedule-reminder-display"></span></button>
+                        <select id="ai-schedule-reminder" class="hidden">
+                            <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
+                            <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
+                            <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
+                            <option value="15" data-i18n="reminder_15min">🔔 15 minutes before</option>
+                        </select>
+                        <input type="text" id="ai-schedule-reminder-text" data-i18n-placeholder="reminder_text_placeholder" placeholder="Custom reminder text (optional)">
+                    </div>
                     <div class="action-buttons-wrap">
                         <button id="btn-schedule-ai-parse" onclick="parseScheduleWithAI()" class="btn-primary" data-i18n="schedule_ai_parse_btn">Parse & Add to Schedule</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
@@ -3129,7 +3165,7 @@
 
     </div>
 
-    <script src="i18n.js?v=289"></script>
-    <script src="app.js?v=415"></script>
+    <script src="i18n.js?v=290"></script>
+    <script src="app.js?v=416"></script>
 </body>
 </html>

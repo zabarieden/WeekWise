@@ -87,6 +87,52 @@ html[data-ui-scale="large"] { font-size: 22px; }
    כך שהצבע באמת מכסה את כל המסך, לא רק פס צר שנחבא מאחורי הכרטיסים.
    --bg-glass/--bg-sheet (כרטיסים/גליונות) נשארים תמיד צבע אחיד ונקי כדי
    שטקסט יישאר קריא, גם כשהרקע/השורות מלאים בגרדיאנט */
+/* 4 ערכות "רקע ניטרלי" (לבן/שחור/בז'/אפור כהה) - לפי בקשה מפורשת, לפני כל
+   שאר האפשרויות הצבעוניות. שונות משאר 17 הערכות בכך שלבן/בז' דורסות גם
+   --bg-glass/--bg-sheet/--text-primary/--text-secondary כבר בסלקטור
+   הבסיסי (לא רק בגרסת light-mode כמו כל שאר הערכות) - כי המטרה שלהן היא
+   רקע בהיר תמיד, לא תלוי במתג light-mode הנפרד; שחור/אפור-כהה נשארות
+   בדפוס המינימלי הרגיל (כהה מטבעו כבר דרך ברירות המחדל ב-:root) */
+[data-color-theme="bg_white"] {
+    --bg-main: linear-gradient(135deg, #ffffff, #f0f0f3);
+    --bg-row: rgba(0, 0, 0, 0.04);
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --bg-sheet: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1c1c1e;
+    --text-secondary: #6e6e73;
+    --accent-pink: #ff007f;
+    --accent-purple: #a855f7;
+    --accent-purple-light: #c084fc;
+}
+[data-color-theme="bg_black"] {
+    --bg-main: linear-gradient(135deg, #000000, #0d0d0d);
+    --bg-row: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --accent-pink: #ff007f;
+    --accent-purple: #a855f7;
+    --accent-purple-light: #c084fc;
+}
+[data-color-theme="bg_beige"] {
+    --bg-main: linear-gradient(135deg, #f5efe2, #ece0cb);
+    --bg-row: rgba(90, 70, 40, 0.06);
+    --bg-glass: rgba(255, 252, 245, 0.75);
+    --bg-sheet: #faf6ec;
+    --border-color: rgba(120, 100, 70, 0.18);
+    --text-primary: #2b2318;
+    --text-secondary: #7a6d58;
+    --accent-pink: #d4527a;
+    --accent-purple: #9c6b3f;
+    --accent-purple-light: #c08e5e;
+}
+[data-color-theme="bg_dark_grey"] {
+    --bg-main: linear-gradient(135deg, #1c1c1e, #29292b);
+    --bg-row: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --accent-pink: #ff007f;
+    --accent-purple: #a855f7;
+    --accent-purple-light: #c084fc;
+}
 [data-color-theme="blue_teal"] {
     --bg-main: linear-gradient(135deg, #001820, #002733);
     --bg-row: rgba(10, 45, 58, 0.55);
@@ -696,6 +742,42 @@ html.light-mode {
 /* אותה ערכת-נושא פרימיום (data-color-theme, ר' למעלה) שולטת גם ברקע/שורות של
    מצב בהיר, לא רק בצבעי הניאון של מצב כהה - כך שבחירה אחת בהגדרות נותנת גם
    רקע וגם שורות בגוון תואם (כולל גרדיאנטים) כשמצב בהיר פעיל */
+html.light-mode[data-color-theme="bg_white"] {
+    --bg-main: linear-gradient(135deg, #ffffff, #f0f0f3);
+    --bg-row: rgba(0, 0, 0, 0.04);
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --bg-sheet: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1c1c1e;
+    --text-secondary: #6e6e73;
+}
+html.light-mode[data-color-theme="bg_black"] {
+    --bg-main: linear-gradient(135deg, #f2f2f2, #e4e4e4);
+    --bg-row: rgba(0, 0, 0, 0.05);
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --bg-sheet: #fafafa;
+    --border-color: rgba(0, 0, 0, 0.12);
+    --text-primary: #1c1c1e;
+    --text-secondary: #5a5a5e;
+}
+html.light-mode[data-color-theme="bg_beige"] {
+    --bg-main: linear-gradient(135deg, #f5efe2, #ece0cb);
+    --bg-row: rgba(90, 70, 40, 0.06);
+    --bg-glass: rgba(255, 252, 245, 0.75);
+    --bg-sheet: #faf6ec;
+    --border-color: rgba(120, 100, 70, 0.18);
+    --text-primary: #2b2318;
+    --text-secondary: #7a6d58;
+}
+html.light-mode[data-color-theme="bg_dark_grey"] {
+    --bg-main: linear-gradient(135deg, #ececec, #dcdcdc);
+    --bg-row: rgba(0, 0, 0, 0.05);
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --bg-sheet: #f7f7f7;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1c1c1e;
+    --text-secondary: #5a5a5e;
+}
 html.light-mode[data-color-theme="blue_teal"] {
     --bg-main: linear-gradient(135deg, #d6f3fa, #b8e8f3);
     --bg-row: rgba(14, 165, 233, 0.1);
@@ -2732,7 +2814,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
        השטח - לפי בקשה מפורשת ("שזה יראה כמו התפוח"). לא מבטלים יותר את
        backdrop-filter - הזכוכית הרגילה של .dock-fab צריכה להישאר גלויה
        מסביב לתמונה, אותו רקע בדיוק כמו שאר הבועות (מים/כסף/תפוח) */
-    background-size: 56%;
+    background-size: 70%;
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -2915,6 +2997,9 @@ html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
     justify-content: center;
     width: 100%;
     height: 100%;
+    /* רלוונטי רק ל-img (לא ל-span האימוג'י) - שהתמונה תוצג שלמה, יחסית,
+       בלי מתיחה/עיוות, לא ממלאת/נחתכת לתוך הריבוע */
+    object-fit: contain;
     font-size: 3.6rem;
     line-height: 1;
     filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px rgba(210, 225, 255, 0.55)) drop-shadow(0 0 32px rgba(168, 85, 247, 0.35));
@@ -3083,7 +3168,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    כדי לא להתנגש עם בועת ה-AI (פינה שמאלית-עליונה) או תפריט ההמבורגר (פינה
    ימנית-עליונה) - לפי בקשה מפורשת */
 .today-peek-overlay {
-    position: absolute;
+    /* fixed (לא absolute) - הכרחי כי היא יושבת בתוך .home-hero-panel (לצורך
+       הקשר-שכבות משותף עם הלשונית/הפאנל, ר' ההערה ב-index.html), אבל
+       .home-hero-panel עצמה קצרה (רק גובה הברכה+העיגון), לא גובה כל המסך */
+    position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
@@ -3100,18 +3188,20 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    פנימה/החוצה (translateX(100%)<->translateX(0), בדיוק כמו .hamburger-drawer)
    - בלי שום חישוב "כמה בדיוק להשאיר גלוי", כי הלשונית העצמאית היא זו שנשארת
    גלויה ממילא (z-index גבוה יותר, מונחת מעל קצה הפאנל) */
-/* ממוקם קבוע ממש מתחת לשורת הברכה/תאריך (לא במרכז האנכי של המסך יותר - לפי
-   בקשה מפורשת) - .home-greeting-row יושבת ב-140px (padding-top של
-   .home-hero-panel) + מחסנית הטקסט שלה, כ-195px מתחת לראש #app-container.
-   קבוע מוחלט (לא top:50%/translateY) כדי שגם הלשונית וגם הפאנל הפתוח לעולם
-   לא יתחילו מעל הברכה ולא יסתירו אותה - לפי בקשה מפורשת */
+/* .today-peek-anchor: נקודת-עיגון בגובה 0 (position:relative, לא תופסת מקום
+   בזרימה) ממוקמת ב-index.html ממש אחרי .home-greeting-row, בתוך אותו הורה
+   גולל בדיוק (.home-hero-panel) - כך שהלשונית/הפאנל (position:absolute
+   ביחסית אליה) גוללים יחד עם הברכה תמיד, בלי תלות בגלילה. הגרסה הקודמת
+   (top מחושב פעם אחת ב-JS ביחס ל-#app-container, שלא גולל בעצמו) יצאה נכונה
+   רק בגלילה=0 - ברגע שגוללים, הברכה זזה אבל הפאנל (מחוץ לאזור הגלילה) נשאר
+   במקומו, בדיוק כמו שדווח ("זזה אחרי גלילה") */
+.today-peek-anchor { position: relative; height: 0; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
-    --today-peek-top: 195px;
 }
 .today-peek-tab {
     position: absolute;
-    top: var(--today-peek-top);
+    top: 14px;
     right: 0;
     width: var(--today-peek-width);
     min-height: 84px;
@@ -3161,7 +3251,7 @@ html[dir="ltr"] .today-peek-tab {
 
 .today-peek-content-panel {
     position: absolute;
-    top: var(--today-peek-top);
+    top: 14px;
     right: 0;
     /* רחב יותר מבעבר (היה 82%/320px) - לפי בקשה מפורשת ("במובייל שיפתח יותר")
        כדי שמשפטים ארוכים (עכשיו עוטפים, לא נחתכים - ר' .today-tasks-text)
@@ -4966,6 +5056,14 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-picker-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
 .theme-swatch { position: relative; width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; padding: 0; flex-shrink: 0; }
 .theme-swatch.selected { border-color: #fff; box-shadow: 0 0 0 2px var(--accent-purple); }
+/* בורר אייקון עוזר ה-AI - משתמש באותה בועת .theme-swatch, רק עם תוכן שונה
+   (אימוג'י כטקסט רגיל בתוך הכפתור, או img לברירת המחדל) - לא גרדיאנט צבע */
+.ai-icon-swatch { display: flex; align-items: center; justify-content: center; font-size: 1.3rem; background-color: rgba(255, 255, 255, 0.05); overflow: hidden; }
+.ai-icon-swatch img { width: 100%; height: 100%; object-fit: contain; }
+.theme-swatch-bg-white { background: linear-gradient(135deg, #ffffff, #e8e8ec); }
+.theme-swatch-bg-black { background: linear-gradient(135deg, #1a1a1a, #000000); }
+.theme-swatch-bg-beige { background: linear-gradient(135deg, #f5efe2, #d9c9a8); }
+.theme-swatch-bg-dark-grey { background: linear-gradient(135deg, #3a3a3c, #1c1c1e); }
 .theme-swatch-default { background: linear-gradient(135deg, #ff007f, #a855f7); }
 .theme-swatch-blue { background: linear-gradient(135deg, #00d4ff, #0ea5e9); }
 .theme-swatch-gold { background: linear-gradient(135deg, #f59e0b, #dc2626); }

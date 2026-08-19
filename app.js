@@ -1686,6 +1686,7 @@ async function initAppAfterAuth(user) {
         loadRecipes(),
         loadAiUsage(),
         loadColorTheme(),
+        loadAiIconSetting(),
         loadLightModeSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
@@ -2332,25 +2333,7 @@ function renderHomeGreeting() {
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
     textEl.textContent = t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
-    positionTodayPeekPanel();
 }
-
-// ממקם את "הצצה ליום" (ר' --today-peek-top ב-theme.css) ממש מתחת לשורת
-// הברכה/תאריך בפועל - נמדד חי (getBoundingClientRect), לא פיקסל קבוע
-// שהיה מחושב פעם אחת עבור עברית/מובייל בלבד ואז דווח כ"נבלע" מתחת לברכה
-// באנגלית (טקסט שונה, רוחב/breakpoint שונה) - לפי בקשה מפורשת "לא רק
-// באנגלית, בכל שפה". נקראת מ-renderHomeGreeting (כל טעינה + כל החלפת שפה,
-// ר' onLanguageChanged) וגם ב-resize, כך שהיא תמיד עדכנית
-function positionTodayPeekPanel() {
-    const greetingRow = document.querySelector('.home-greeting-row');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (!greetingRow || !wrapper) return;
-    const rowRect = greetingRow.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
-    const topPx = Math.round(rowRect.bottom - wrapperRect.top) + 14;
-    document.documentElement.style.setProperty('--today-peek-top', `${topPx}px`);
-}
-window.addEventListener('resize', positionTodayPeekPanel);
 
 // עריכה מהירה של משימה קבועה מהלו"ז - נפתחת גם מ"הצצה ליום" (בעתיד, אם
 // ייווסף קישור עריכה שם) וגם מפירוט היום בלוח החודשי (renderSelectedCalendarDay)
@@ -2885,6 +2868,9 @@ function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-finance-input').value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
+    document.getElementById('ai-schedule-reminder').value = '0';
+    updateCustomSelectDisplay('ai-schedule-reminder');
+    document.getElementById('ai-schedule-reminder-text').value = '';
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
     openModal('modal-ai-brain');
@@ -3332,12 +3318,20 @@ async function applyParsedScheduleEvents(allEvents) {
         byDay[ev.day_of_week].push(ev);
     });
 
+    // תזכורת אחת משותפת לכל האירועים החוזרים שנוצרים מהניתוח הזה (ר'
+    // reminder-fields-wrap במסך "לוז" של מוח ה-AI, index.html) - לא פר-אירוע,
+    // כי אין כאן מסך-סקירה שמאפשר להגדיר תזכורת נפרדת לכל משימה, לפי בקשה
+    // מפורשת ("AI התראות רק ללוז")
+    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     for (const day of Object.keys(byDay)) {
         const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', day);
         let nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
         const rows = byDay[day].map(ev => ({
             username: currentUsername, user_id: currentUserId, day_of_week: day,
             slot_number: nextSlot++, time_of_day: ev.time || null, task_title: ev.task_title,
+            reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+            reminder_text: aiReminderText || null,
         }));
         await supabaseClient.from('weekly_schedule').insert(rows);
     }
@@ -7150,6 +7144,66 @@ async function loadColorTheme() {
     }
     applyColorTheme(themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);
+}
+
+// אייקון עוזר ה-AI (הכפתור בפינה) - אותו דפוס בדיוק כמו applyColorTheme/
+// selectColorTheme/loadColorTheme למעלה, על עמודה נפרדת (user_premium.ai_icon).
+// כל אפשרות היא או תמונה (img#ai-brain-icon-img) או אימוג'י
+// (span#ai-brain-icon-emoji) - שני אלמנטים נפרדים ב-index.html כי לא ניתן
+// לשים גם src וגם טקסט באותו אלמנט - לפי בקשה מפורשת
+const AI_ICON_OPTIONS = {
+    default: { type: 'image', src: 'robot-fab-icon.png?v=1' },
+    brain: { type: 'emoji', glyph: '🧠' },
+    sparkles: { type: 'emoji', glyph: '✨' },
+    crystal_ball: { type: 'emoji', glyph: '🔮' },
+};
+
+function applyAiIcon(iconId) {
+    const option = AI_ICON_OPTIONS[iconId] || AI_ICON_OPTIONS.default;
+    const img = document.getElementById('ai-brain-icon-img');
+    const emoji = document.getElementById('ai-brain-icon-emoji');
+    if (option.type === 'image') {
+        if (img) { img.src = option.src; img.classList.remove('hidden'); }
+        if (emoji) emoji.classList.add('hidden');
+    } else {
+        if (emoji) { emoji.textContent = option.glyph; emoji.classList.remove('hidden'); }
+        if (img) img.classList.add('hidden');
+    }
+    document.querySelectorAll('.ai-icon-swatch').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-ai-icon') === iconId);
+    });
+}
+
+function aiIconKey() {
+    return `weekwise_ai_icon_${currentUserId}`;
+}
+
+async function selectAiIcon(iconId) {
+    if (iconId !== 'default' && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    applyAiIcon(iconId);
+    localStorage.setItem(aiIconKey(), iconId);
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, ai_icon: iconId },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+
+async function loadAiIconSetting() {
+    let iconId = 'default';
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('user_premium').select('ai_icon').eq('user_id', currentUserId).maybeSingle();
+        if (data && data.ai_icon) iconId = data.ai_icon;
+    }
+    if (iconId === 'default') {
+        const local = localStorage.getItem(aiIconKey());
+        if (local) iconId = local;
+    }
+    // פרימיום פג - חוזרים לברירת המחדל בשקט (לא נועלים בחירה ישנה), אותו
+    // דפוס בדיוק כמו הגופן האישי (ר' app.js:7322 בהערת המחקר)
+    if (iconId !== 'default' && !isPremiumUser) iconId = 'default';
+    applyAiIcon(iconId);
 }
 
 // --- צבע טקסט אישי לכל האפליקציה (חינמי, נפרד מערכת הנושא הפרימיום למעלה):
