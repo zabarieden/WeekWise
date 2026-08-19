@@ -2720,14 +2720,14 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    אטומה - חוסך עבודת GPU מיותרת */
 .dock-fab.dock-fab-img {
     background-image: url('sport-fab-icon.png');
-    /* מעל 100% (לא בדיוק cover/100%) - "מזזם החוצה" כך שהדמות עצמה נראית
-       קטנה יותר ולא נוגעת במסגרת החיצונית של הבועה, בלי לחשוף את קצה
-       הריבוע המקורי של התמונה (עדיין ממלא את כל השטח ברציפות, לא no-repeat
-       עם אחוז קטן שהיה חושף "מלבן") - לפי בקשה מפורשת */
-    background-size: 145%;
+    /* אחוז קטן משמעותית (לא cover) + no-repeat - בדיוק כמו שהאימוג'י (למשל
+       🍎) יושב קטן וממורכז על גבי הזכוכית הרגילה של הכפתור, לא ממלא את כל
+       השטח - לפי בקשה מפורשת ("שזה יראה כמו התפוח"). לא מבטלים יותר את
+       backdrop-filter - הזכוכית הרגילה של .dock-fab צריכה להישאר גלויה
+       מסביב לתמונה, אותו רקע בדיוק כמו שאר הבועות (מים/כסף/תפוח) */
+    background-size: 56%;
+    background-repeat: no-repeat;
     background-position: center;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 /* אותו דפוס בדיוק, תמונה אחרת (עיפרון) - במקום אימוג'י הפתקים */
 .dock-fab.dock-fab-img.notes-fab-img {
