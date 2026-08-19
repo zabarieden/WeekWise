@@ -95,7 +95,23 @@ Deno.serve(async (req) => {
         const body = await req.json();
         const text: string = body?.text;
         const today: string | undefined = body?.today;
+        const existingItems: any[] = Array.isArray(body?.existingItems) ? body.existingItems : [];
         if (!text || !text.trim()) return jsonResponse({ error: "missing_text" }, 400);
+
+        // רשימת הפריטים הקיימים (נטענת ונשלחת מהלקוח, ר' fetchExistingScheduleItems
+        // ב-app.js) - כדי שה-AI יוכל לזהות "תשני את X"/"תמחקי את Y" כהתייחסות
+        // לפריט קיים (ומחזיר intent:'update'/'delete' + target_id/target_table)
+        // במקום ליצור עוד אחד בשקט, בדיוק הבאג שדווח בפועל (כפילות "20:17 זום"/
+        // "20:20 הזום"). ריק כשאין פריטים קיימים - הפרומפט עדיין תקין, פשוט בלי
+        // הקשר-עריכה בכלל
+        const existingItemsContext = existingItems.length
+            ? "\n\nThe user's EXISTING schedule items right now (for reference, so you can detect edit/delete intent):\n" +
+              existingItems.map((it) => {
+                  const when = it.table === "weekly_schedule" ? `every ${it.day_of_week}` : `on ${it.event_date}`;
+                  const timeStr = it.time ? ` at ${it.time}` : "";
+                  return `- id="${it.id}" table="${it.table}": "${it.title}" (${when}${timeStr})`;
+              }).join("\n")
+            : "";
 
         // הקשר של "היום" נדרש כדי שה-AI יוכל לחשב תאריך מדויק לאירועים חד-
         // פעמיים ("שבוע הבא ביום שני" הוא תאריך אחר לגמרי תלוי מתי זה נשלח) -
@@ -163,7 +179,26 @@ Deno.serve(async (req) => {
                             "format. For RECURRING events, event_date must be null. If no time was mentioned for a " +
                             "ONE-TIME event, set time to null - never guess or default to 00:00. RECURRING events " +
                             "almost always have a time mentioned; only set time to null there too if truly none was " +
-                            "given.\n\nText: " + text,
+                            "given.\n\n" +
+                            "Decide the INTENT of each event: \"create\" (the default - describing something new " +
+                            "that doesn't already exist), \"update\" (the user wants to change an existing item - " +
+                            "phrasing like \"change/move/reschedule/rename X\", \"X is now at...\", \"instead of X " +
+                            "do Y\"), or \"delete\" (phrasing like \"cancel/remove/delete X\"). When intent is " +
+                            "\"update\" or \"delete\", look at the EXISTING ITEMS list below (if any) and try to " +
+                            "identify which single existing item the user means, by title/day/time similarity - set " +
+                            "target_id to that item's exact id string (copy it exactly, never invent one) and " +
+                            "target_table to its table. If confident about exactly one match, also fill in the " +
+                            "OTHER fields (day_of_week/time/task_title/event_date) with the FULL FINAL desired " +
+                            "state of that item after the change - not just the field that changed (e.g. if only " +
+                            "the time is changing, still include that item's existing title and day/date " +
+                            "unchanged, taken from the existing items list). If more than one existing item " +
+                            "plausibly matches, or none match confidently enough, set needsMatchClarification to " +
+                            "true and matchCandidateIds to the array of the 2-4 most likely candidate ids instead " +
+                            "of guessing - never guess a target when unsure. If there are no existing items at all, " +
+                            "or intent is \"create\", leave intent as \"create\", target_id/target_table null, and " +
+                            "needsMatchClarification false." +
+                            existingItemsContext +
+                            "\n\nText: " + text,
                     },
                 ],
                 tools: [
@@ -184,8 +219,13 @@ Deno.serve(async (req) => {
                                             recurring: { type: "boolean", description: "true = repeats every week, false = a specific one-time occurrence" },
                                             event_date: { type: ["string", "null"], description: "YYYY-MM-DD - required when recurring is false, null when recurring is true" },
                                             recurring_duration_months: { type: ["number", "null"], description: "Only set when recurring=true AND an explicit end point/duration was mentioned (e.g. 'for 2 months'). Null for open-ended recurring routines and always null when recurring=false." },
+                                            intent: { type: "string", enum: ["create", "update", "delete"], description: "'create' (default) for a brand-new item, 'update' to change an existing item, 'delete' to remove one - see existing items list in the prompt" },
+                                            target_id: { type: ["string", "null"], description: "The exact id of the existing item being updated/deleted, copied from the existing items list - null for intent='create'" },
+                                            target_table: { type: ["string", "null"], enum: ["weekly_schedule", "calendar_events", null], description: "Which table target_id belongs to - null for intent='create'" },
+                                            needsMatchClarification: { type: "boolean", description: "true when intent is update/delete but you're not confident which single existing item is meant - never guess, ask instead" },
+                                            matchCandidateIds: { type: "array", items: { type: "string" }, description: "2-4 most likely existing item ids, only when needsMatchClarification is true" },
                                         },
-                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date", "recurring_duration_months"],
+                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date", "recurring_duration_months", "intent", "target_id", "target_table", "needsMatchClarification"],
                                     },
                                 },
                             },
@@ -224,7 +264,7 @@ Deno.serve(async (req) => {
         const rawEvents: any[] = toolUseBlock.input.events || [];
         const seen = new Set<string>();
         const events = rawEvents.filter((ev) => {
-            const key = `${ev.day_of_week}|${ev.time}|${ev.task_title}|${ev.recurring}|${ev.event_date}|${ev.recurring_duration_months}`;
+            const key = `${ev.day_of_week}|${ev.time}|${ev.task_title}|${ev.recurring}|${ev.event_date}|${ev.recurring_duration_months}|${ev.intent}|${ev.target_id}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;

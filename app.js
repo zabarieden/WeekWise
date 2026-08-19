@@ -3339,12 +3339,78 @@ async function applyParsedScheduleEvents(allEvents) {
     return { recurringCount: events.length, oneTimeDates: allOneTimeDates };
 }
 
+// מטפלת באירועי intent 'update'/'delete' שה-AI זיהה כהתייחסות לפריט *קיים*
+// (target_id/target_table, ר' parse-schedule-request) - לא יוצרת שורה חדשה
+// (שם הבאג המקורי: "תשני 20:17 ל-20:20" יצר כפילות במקום לערוך). לא כותבת
+// update/delete גולמי בעצמה - ממלאת את אותם שדות-טופס שעריכה ידנית ממלאה
+// (ר' openGlanceTaskEditor/openEditCalendarEvent) וקוראת לפונקציות הקיימות
+// עצמן (saveGlanceTaskEdit/addCalendarEvent), כדי לקבל בחינם את אותה
+// ולידציה + רענון-מסכים בדיוק כמו עריכה ידנית, בלי לשכפל את הלוגיקה
+async function applyScheduleEditsAndDeletes(events) {
+    let updated = 0, deleted = 0;
+    for (const ev of events) {
+        if (!ev.target_id || !ev.target_table) continue;
+        if (ev.intent === 'delete') {
+            if (ev.target_table === 'weekly_schedule') {
+                await supabaseClient.from('weekly_schedule').delete().eq('id', ev.target_id);
+            } else {
+                await supabaseClient.from('calendar_events').delete().eq('id', ev.target_id);
+            }
+            deleted++;
+        } else if (ev.intent === 'update') {
+            if (ev.target_table === 'weekly_schedule') {
+                editingGlanceTaskId = ev.target_id;
+                document.getElementById('glance-edit-task-title-input').value = ev.task_title || '';
+                document.getElementById('glance-edit-task-time-input').value = ev.time || '';
+                document.getElementById('glance-edit-task-reminder').value = '0';
+                document.getElementById('glance-edit-task-reminder-text').value = '';
+                populateGlanceTaskDaySelect(ev.day_of_week);
+                await saveGlanceTaskEdit();
+            } else {
+                editingCalendarEventId = ev.target_id;
+                editingCalendarEventGroupId = null;
+                document.getElementById('calendar-event-title-input').value = ev.task_title || '';
+                document.getElementById('calendar-event-date-input').value = ev.event_date || '';
+                document.getElementById('calendar-event-time-input').value = ev.time || '';
+                document.getElementById('calendar-event-reminder').value = '0';
+                document.getElementById('calendar-event-reminder-text').value = '';
+                await addCalendarEvent();
+            }
+            updated++;
+        }
+    }
+    if (updated || deleted) await loadTodayTasks();
+    return { updated, deleted };
+}
+
+// שער-הכניסה היחיד שממנו כל קבוצת אירועים "סופית" (ברורה, או שהוברהרה) עוברת
+// בפועל - מפצלת לפי intent במקום להניח שהכול יצירה: עריכה/מחיקה עוברות דרך
+// applyScheduleEditsAndDeletes, השאר (יצירה, או ללא intent כלל - כמו שהמנתח
+// המקומי מחזיר) עוברות דרך applyParsedScheduleEvents הקיימת כרגיל
+async function finalizeScheduleEvents(allEvents) {
+    const toCreate = allEvents.filter(ev => !ev.intent || ev.intent === 'create');
+    const toEditOrDelete = allEvents.filter(ev => ev.intent === 'update' || ev.intent === 'delete');
+    const [createSummary, editSummary] = await Promise.all([
+        toCreate.length ? applyParsedScheduleEvents(toCreate) : { recurringCount: 0, oneTimeDates: [] },
+        toEditOrDelete.length ? applyScheduleEditsAndDeletes(toEditOrDelete) : { updated: 0, deleted: 0 },
+    ]);
+    return { ...createSummary, ...editSummary };
+}
+
 // מציגה את הודעת ההצלחה הנכונה לפי לאן בפועל נחתו הפריטים (רוטינה שבועית
 // חוזרת מול תאריך ספציפי ביומן) - כדי שהמשתמש יידע מיד איפה למצוא את מה
 // שהוא הרגע הוסיף, במקום הודעת "עודכן" גנרית שלא אומרת כלום על זה
 function showScheduleAiSuccessToast(summary) {
     const recurringCount = (summary && summary.recurringCount) || 0;
     const oneTimeDates = (summary && summary.oneTimeDates) || [];
+    const updated = (summary && summary.updated) || 0;
+    const deleted = (summary && summary.deleted) || 0;
+    // רק עריכה/מחיקה, בלי אף יצירה חדשה - ההודעות הרגילות למטה כולן מדברות
+    // על "נוסף", לא מתאימות כאן
+    if (recurringCount === 0 && oneTimeDates.length === 0 && (updated || deleted)) {
+        showAppToast(t(deleted && !updated ? 'schedule_ai_success_deleted' : 'schedule_ai_success_updated'));
+        return;
+    }
     if (recurringCount > 0 && oneTimeDates.length > 0) {
         showAppToast(t('schedule_ai_success_mixed'));
     } else if (oneTimeDates.length > 0) {
@@ -3368,12 +3434,12 @@ function showScheduleAiSuccessToast(summary) {
 // של "חד-פעמי מול חוזר" - ר' applyParsedScheduleEvents). תקלת רשת חד-פעמית
 // היא הגורם השכיח ביותר לנפילה למנתח המקומי הנחות, בדיוק כמו ב-
 // attemptRecipeCloudScan
-async function attemptScheduleParse(token, text, today) {
+async function attemptScheduleParse(token, text, today, existingItems) {
     try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-schedule-request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text, today })
+            body: JSON.stringify({ text, today, existingItems })
         });
         const result = await res.json();
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
@@ -3385,29 +3451,44 @@ async function attemptScheduleParse(token, text, today) {
     }
 }
 
-// בועת ה-AI יודעת רק "להוסיף" - אין לה שום מושג של מחיקה/הסרה, לא בענן ולא
-// במנתח המקומי. בלי הבדיקה הזו, בקשת מחיקה בטקסט חופשי ("תמחקי את הריצה
-// בשבת") הייתה נופלת דרך אותו נתיב ADD כמו כל בקשה אחרת, ומחלצת מהטקסט עוד
-// אירוע במקום למחוק כלום - כפילות שקטה במקום מחיקה, בדיוק מה שגילינו בפועל
-// (שתי כפילויות "ריצת 10 קילומטר" שנוצרו מניסיונות מחיקה). עדיף להודיע
-// במפורש שזה עדיין לא נתמך מאשר ליצור נתונים שגויים בשקט
-const SCHEDULE_DELETE_INTENT_WORDS = [
-    'delete', 'remove', 'cancel', 'מחק', 'תמחק', 'מחיקה', 'למחוק', 'הסר', 'תסיר', 'בטל', 'תבטל',
-    'eliminar', 'borrar', 'quitar', 'cancelar', 'supprimer', 'effacer', 'annuler', 'retirer',
-    'احذف', 'حذف', 'ألغ', 'إلغاء', 'امسح', 'удали', 'убрать', 'отмени',
-    'löschen', 'entfernen', 'streichen', 'excluir', 'apagar', 'remover',
-    '削除', 'キャンセル', '删除', '取消', 'हटाओ', 'हटाना', 'मिटाओ', 'रद्द',
-    '삭제', '취소', '제거', 'sil', 'iptal', 'kaldır', 'hapus', 'batalkan',
-    'elimina', 'cancella', 'rimuovi', 'annulla', 'xóa', 'hủy', 'usuń', 'skasuj', 'anuluj',
-    'ลบ', 'ยกเลิก', 'مٹا', 'منسوخ', 'মুছে', 'বাতিল', 'futa', 'ondoa', 'ghairi',
-    'видали', 'скасувати', 'διαγραφή', 'διέγραψε', 'ακύρωσε', 'verwijder', 'annuleer',
-    'esborra', 'cancel·la', 'șterge', 'anulează', 'parẹ́', 'fagilé',
-    'ta bort', 'radera', 'avboka', 'slett', 'fjern', 'avbryt', 'slet', 'annuller',
-    'smaž', 'odstraň', 'zruš', 'töröl', 'mégse', 'poista', 'peruuta',
-];
-function looksLikeScheduleDeleteRequest(text) {
-    const lower = text.toLowerCase();
-    return SCHEDULE_DELETE_INTENT_WORDS.some(word => lower.includes(word.toLowerCase()));
+// שם-פעילות "נקי" לתצוגה/השוואה - אירועים חד-פעמיים שנוצרו בעבר דרך
+// applyOneTimeScheduleEvents שמרו את השעה *בתוך* הכותרת עצמה (event_time
+// נשאר null, ר' ההערה שם) - כדי שה-AI ישווה/יציג שם-פעילות בלבד (לא "20:17
+// זום" כמחרוזת שלמה), מסירים קידומת HH:MM אם יש כזו
+function stripLeadingTimeFromTitle(title) {
+    return (title || '').replace(/^\d{1,2}:\d{2}\s*/, '').trim() || title;
+}
+
+// שמורה מהקריאה האחרונה ל-fetchExistingScheduleItems - כדי שכפתורי-הבחירה
+// בשאלת ההבהרה מסוג 'match' (ר' showNextScheduleClarification) יוכלו להציג
+// כותרת/יום/שעה קריאים לכל מועמד, בלי שאלת-שרת נוספת רק בשביל תצוגה
+let lastFetchedExistingItems = [];
+
+// רשימת הפריטים הקיימים (לו"ז חוזר + אירועי יומן קרובים) שנשלחת ל-AI לפני
+// כל ניתוח טקסט חדש - כדי שהוא יוכל לזהות "תשני את X" / "תמחקי את Y" כהתייחסות
+// לפריט קיים במקום ליצור עוד אחד, ר' parse-schedule-request. נטענת מחדש בכל
+// קריאה (לא cache) - אין שום מקום אחר באפליקציה ששומר רשימה כזו בזיכרון
+async function fetchExistingScheduleItems() {
+    if (!supabaseClient || !currentUserId) return [];
+    const todayStr = getLocalDateString();
+    const past = new Date(); past.setDate(past.getDate() - 3);
+    const future = new Date(); future.setDate(future.getDate() + 30);
+    const [{ data: weekly }, { data: events }] = await Promise.all([
+        supabaseClient.from('weekly_schedule').select('id, task_title, day_of_week, time_of_day').eq('user_id', currentUserId),
+        supabaseClient.from('calendar_events').select('id, event_title, event_date, event_time')
+            .eq('user_id', currentUserId).eq('source', 'calendar')
+            .gte('event_date', getLocalDateString(past)).lte('event_date', getLocalDateString(future)),
+    ]);
+    const items = [];
+    (weekly || []).forEach(row => {
+        if (!row.task_title) return;
+        items.push({ id: row.id, table: 'weekly_schedule', title: row.task_title, day_of_week: row.day_of_week, time: row.time_of_day || null });
+    });
+    (events || []).forEach(row => {
+        if (!row.event_title) return;
+        items.push({ id: row.id, table: 'calendar_events', title: stripLeadingTimeFromTitle(row.event_title), event_date: row.event_date, time: row.event_time || null });
+    });
+    return items;
 }
 
 async function parseScheduleWithAI() {
@@ -3421,10 +3502,6 @@ async function parseScheduleWithAI() {
     const text = input.value.trim();
     if (!text) { showAppToast(t('schedule_ai_empty'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    if (looksLikeScheduleDeleteRequest(text)) {
-        showAppToast(t('schedule_ai_delete_not_supported'), 'error');
-        return;
-    }
 
     // מגן מפני שליחה כפולה: אין שום חיווי חזותי מיידי (showScheduleAiLoading
     // מתעכב בכוונה 5 שניות, ר' למטה), אז טאפ כפול מהיר לפני שרואים משהו
@@ -3442,8 +3519,10 @@ async function parseScheduleWithAI() {
         let events = null;
         if (token) {
             const today = getLocalDateString();
-            let attempt = await attemptScheduleParse(token, text, today);
-            if (attempt.status === 'retry') attempt = await attemptScheduleParse(token, text, today);
+            const existingItems = await fetchExistingScheduleItems();
+            lastFetchedExistingItems = existingItems;
+            let attempt = await attemptScheduleParse(token, text, today, existingItems);
+            if (attempt.status === 'retry') attempt = await attemptScheduleParse(token, text, today, existingItems);
 
             if (attempt.status === 'premium_required') { openPremiumUpgradeModal(); return; }
             // מכסת ה-AI (חודשית לפרימיום, או לכל-החיים לחינמית) נגמרה - לא
@@ -3472,22 +3551,27 @@ async function parseScheduleWithAI() {
         // "חוזר כל יום" שונה במהותו מהשניים האחרים - הוא לא רק קובע recurring
         // true/false על האירוע כמות שהוא, אלא *מכפיל* כל אירוע ל-7 (אחד לכל
         // יום בשבוע), בלי קשר לאיזה יום הוזכר בפועל בטקסט - לפי בקשה מפורשת
-        // ("כפתור נוסף חוזר כל יום")
+        // ("כפתור נוסף חוזר כל יום"). חל רק על אירועי-יצירה (intent 'create'
+        // או ללא intent בכלל, כמו שהמנתח המקומי מחזיר) - אירוע עריכה/מחיקה
+        // מתייחס לפריט *קיים* עם היום/שעה שלו כבר, אין מה "לכפות" עליו מצב
         const durationMonthsInput = document.getElementById('ai-schedule-duration-months');
         const explicitDurationMonths = durationMonthsInput ? parseInt(durationMonthsInput.value) || null : null;
+        const isCreateIntent = ev => !ev.intent || ev.intent === 'create';
         if (scheduleAiMode === 'recurring-daily') {
-            events = events.flatMap(ev => ev.needsClarification ? [ev] : dbDaysMap.map(day => ({
+            events = events.flatMap(ev => (!isCreateIntent(ev) || ev.needsClarification) ? [ev] : dbDaysMap.map(day => ({
                 ...ev, day_of_week: day, recurring: true, event_date: null,
                 recurring_duration_months: explicitDurationMonths || null,
             })));
         } else {
-            events = events.map(ev => applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths));
+            events = events.map(ev => isCreateIntent(ev) ? applyExplicitScheduleMode(ev, scheduleAiMode, explicitDurationMonths) : ev);
         }
 
-        // "X עד Y" בלי שעת התחלה: לא מנחשים - שואלים את המשתמש בפועל (אחד
-        // אחרי השני אם יש כמה), ורק אז שומרים הכול יחד עם שאר האירועים הברורים
-        const clearEvents = events.filter(ev => !ev.needsClarification);
-        const ambiguousEvents = events.filter(ev => ev.needsClarification);
+        // "X עד Y" בלי שעת התחלה (יצירה) או "לא בטוח לאיזה פריט קיים הכוונה"
+        // (עריכה/מחיקה, needsMatchClarification) - שני סוגי אי-ודאות, לא
+        // מנחשים אף אחד מהם: שואלים את המשתמש בפועל (אחד אחרי השני אם יש
+        // כמה), ורק אז מטפלים בהכול יחד עם שאר האירועים הברורים
+        const clearEvents = events.filter(ev => !ev.needsClarification && !ev.needsMatchClarification);
+        const ambiguousEvents = events.filter(ev => ev.needsClarification || ev.needsMatchClarification);
 
         input.value = '';
         closeModal('modal-ai-brain');
@@ -3495,7 +3579,7 @@ async function parseScheduleWithAI() {
         if (ambiguousEvents.length) {
             runScheduleClarificationFlow(ambiguousEvents, clearEvents);
         } else {
-            const summary = await applyParsedScheduleEvents(clearEvents);
+            const summary = await finalizeScheduleEvents(clearEvents);
             showScheduleAiSuccessToast(summary);
         }
     } finally {
@@ -3522,28 +3606,49 @@ function runScheduleClarificationFlow(ambiguousEvents, clearEvents) {
     showNextScheduleClarification();
 }
 
-// מציגה את שאלת ההבהרה הבאה בתור - אחת משני סוגים: "kind:'until'" (שעת
-// התחלה חסרה, קלט טקסט חופשי) או "kind:'ampm'" (שעה עמומה 1-11, שתי כפתורי
-// בחירה בוקר/ערב) - כל תור מציג רק את הפקדים הרלוונטיים לסוג שלו
+// מציגה את שאלת ההבהרה הבאה בתור - אחת משלושה סוגים: "kind:'until'" (שעת
+// התחלה חסרה, קלט טקסט חופשי), "kind:'ampm'" (שעה עמומה 1-11, שתי כפתורי
+// בחירה בוקר/ערב), או "kind:'match'" (עריכה/מחיקה שה-AI לא בטוח לאיזה פריט
+// קיים היא מתייחסת - רשימת מועמדים ללחיצה, ר' resolveMatchClarification) -
+// כל תור מציג רק את הפקדים הרלוונטיים לסוג שלו
 function showNextScheduleClarification() {
     if (!scheduleClarificationQueue.length) { finishScheduleClarificationFlow(); return; }
     const ev = scheduleClarificationQueue[0];
     const inputEl = document.getElementById('schedule-clarify-input');
     const untilActions = document.getElementById('schedule-clarify-until-actions');
     const ampmActions = document.getElementById('schedule-clarify-ampm-actions');
+    const matchActions = document.getElementById('schedule-clarify-match-actions');
+    inputEl.classList.add('hidden');
+    untilActions.classList.add('hidden');
+    ampmActions.classList.add('hidden');
+    matchActions.classList.add('hidden');
     if (ev.kind === 'ampm') {
         document.getElementById('schedule-clarify-question').textContent =
             t('schedule_clarify_ampm_question_template').replace('{title}', ev.task_title).replace('{hour}', ev.hour);
-        inputEl.classList.add('hidden');
-        untilActions.classList.add('hidden');
         ampmActions.classList.remove('hidden');
+    } else if (ev.kind === 'match') {
+        document.getElementById('schedule-clarify-question').textContent =
+            t('schedule_clarify_match_question_template').replace('{title}', ev.task_title);
+        const listEl = document.getElementById('schedule-clarify-match-list');
+        const candidates = (ev.matchCandidateIds || [])
+            .map(id => lastFetchedExistingItems.find(item => item.id === id))
+            .filter(Boolean);
+        listEl.innerHTML = candidates.map(item => {
+            const whenLabel = item.table === 'weekly_schedule'
+                ? `${t(dayNameKeys[dbDaysMap.indexOf(item.day_of_week)] || 'day_sunday')} ${item.time || ''}`
+                : `${item.event_date || ''} ${item.time || ''}`;
+            return `<button type="button" class="hamburger-drawer-item" onclick="resolveMatchClarification('${item.id}', '${item.table}')">
+                <span class="hamburger-drawer-item-title">${escapeHtmlForReport(item.title)}</span>
+                <span class="hamburger-drawer-item-icon">${escapeHtmlForReport(whenLabel.trim())}</span>
+            </button>`;
+        }).join('');
+        matchActions.classList.remove('hidden');
     } else {
         document.getElementById('schedule-clarify-question').textContent =
             t('schedule_clarify_question_template').replace('{title}', ev.task_title).replace('{end}', ev.endTime);
         inputEl.value = '';
         inputEl.classList.remove('hidden');
         untilActions.classList.remove('hidden');
-        ampmActions.classList.add('hidden');
     }
     openModal('modal-schedule-clarify');
 }
@@ -3612,12 +3717,34 @@ function resolveAmpmClarification(period) {
     showNextScheduleClarification();
 }
 
+// המשתמשת בחרה איזה פריט קיים היא באמת התכוונה אליו (ר' רשימת המועמדים
+// ב-showNextScheduleClarification) - שומרת את שאר האירוע כמות שהוא (intent/
+// task_title/time/day_of_week/event_date שה-AI כבר קבע), רק ממלאת
+// target_id/target_table ומסירה את דגל חוסר-הוודאות
+function resolveMatchClarification(chosenId, chosenTable) {
+    const ev = scheduleClarificationQueue.shift();
+    if (!ev) return;
+    scheduleClarificationResolved.push({ ...ev, needsMatchClarification: false, target_id: chosenId, target_table: chosenTable });
+    closeModal('modal-schedule-clarify');
+    showNextScheduleClarification();
+}
+
+// "אף אחד מהם" - ה-AI טעה בזיהוי כוונת עריכה, או שבאמת מדובר בפריט חדש -
+// חוזרים ל-intent 'create' הרגיל במקום לערוך/למחוק כלום
+function skipMatchClarification() {
+    const ev = scheduleClarificationQueue.shift();
+    if (!ev) return;
+    scheduleClarificationResolved.push({ ...ev, needsMatchClarification: false, intent: 'create', target_id: null, target_table: null });
+    closeModal('modal-schedule-clarify');
+    showNextScheduleClarification();
+}
+
 async function finishScheduleClarificationFlow() {
     const allEvents = [...scheduleClarificationClearEvents, ...scheduleClarificationResolved];
     scheduleClarificationClearEvents = [];
     scheduleClarificationResolved = [];
     if (!allEvents.length) return;
-    const summary = await applyParsedScheduleEvents(allEvents);
+    const summary = await finalizeScheduleEvents(allEvents);
     showScheduleAiSuccessToast(summary);
 }
 
