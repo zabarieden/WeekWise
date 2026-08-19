@@ -20,7 +20,17 @@ const VAPID_CONTACT_EMAIL = Deno.env.get("VAPID_CONTACT_EMAIL") || "mailto:admin
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-webpush.setVapidDetails(VAPID_CONTACT_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+// כל ההתחלה עטופה ב-try/catch מפורש: כשל כאן (למשל מפתח VAPID לא תקין) היה
+// מפיל את כל המודול עם "WORKER_ERROR: Function exited due to an error" חסר-
+// פרטים לגמרי, בלי שום דרך לדעת למה מבחוץ (אין גישה ל-logs דרך ה-CLI כאן) -
+// לפי בקשה מפורשת לאבחן למה תזכורות בכלל לא הגיעו. עכשיו כשל בשלב הזה עדיין
+// גורם לכל קריאה להיכשל, אבל עם הודעת שגיאה אמיתית וקריאה ב-net._http_response
+let initError: string | null = null;
+try {
+    webpush.setVapidDetails(VAPID_CONTACT_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+} catch (err: any) {
+    initError = `VAPID init failed: ${err?.message || err}`;
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -51,6 +61,15 @@ function getLocalWallClock(now: Date, timeZone: string) {
 }
 
 Deno.serve(async (_req) => {
+    if (initError) return jsonResponse({ ok: false, error: initError }, 500);
+    try {
+        return await handleRequest();
+    } catch (err: any) {
+        return jsonResponse({ ok: false, error: err?.message || String(err), stack: err?.stack }, 500);
+    }
+});
+
+async function handleRequest(): Promise<Response> {
     const now = new Date();
 
     // כל המנויים הפעילים, מקובצים לפי user_id - כדי לדעת אילו משתמשים בכלל צריך לבדוק
@@ -167,7 +186,7 @@ Deno.serve(async (_req) => {
     }
 
     return jsonResponse({ ok: true, usersChecked: subsByUser.size, remindersChecked: checked, sent });
-});
+}
 
 function jsonResponse(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {

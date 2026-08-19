@@ -12898,7 +12898,7 @@ function requestNotificationPermission() {
 // --- Push ברקע: מנוי Web Push אמיתי, כדי שתזכורות יתריעו גם כשהאפליקציה סגורה ---
 // מפתח VAPID ציבורי בלבד - המפתח הפרטי חי אך ורק כ-secret בפונקציית ה-Edge
 // בצד שרת (ראו supabase/functions/send-due-reminders), לעולם לא בקוד לקוח.
-const VAPID_PUBLIC_KEY = 'BABt7imCNGNn3BOL7q8Nv6bzRTNPDAaNraCZ5K3d88PKNkDOtXIRI8AXBGHw9JvD6xutr-qEXTs8geWq5zwZG18';
+const VAPID_PUBLIC_KEY = 'BFTd-9l3QCR4EwNlejlPlfuTcTiKzvEPtKzmlHdJ1Fq-qAdLO7NWBjJ2fGIM3cZh3uVZI5zLzaaOgGmdmJM3KHw';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -12915,12 +12915,22 @@ async function registerPushNotifications() {
     try {
         const registration = await navigator.serviceWorker.register('./sw.js');
         let subscription = await registration.pushManager.getSubscription();
+        // מפתח ה-VAPID התחלף בשרת (המפתח הקודם היה שבור - Push לא עבד בכלל
+        // בפועל). מנוי קיים בדפדפן שנוצר עם המפתח הישן לא תואם יותר לשרת ולא
+        // יעבוד עד שנבטל ונירשם מחדש עם המפתח הנוכחי - קורה פעם אחת בלבד
+        // לכל שינוי מפתח, מסומן ב-localStorage כדי לא לבטל/להירשם בכל טעינה
+        const lastKey = localStorage.getItem('weekwise_vapid_key_used');
+        if (subscription && lastKey !== VAPID_PUBLIC_KEY) {
+            try { await subscription.unsubscribe(); } catch { /* ok */ }
+            subscription = null;
+        }
         if (!subscription) {
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
         }
+        localStorage.setItem('weekwise_vapid_key_used', VAPID_PUBLIC_KEY);
         await savePushSubscription(subscription);
     } catch (err) {
         console.error('Push subscription failed:', err);
