@@ -3082,75 +3082,45 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 }
 .today-peek-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
 
-/* --today-peek-width: רוחב "הלשונית" הגלויה תמיד (~20-25% מהמסך, לפי בקשה
-   מפורשת) - clamp עם vw כדי לעקוב אחרי הרוחב האמיתי של .phone-wrapper בכל
-   breakpoint בלי לשכפל מדיה-קוארי נפרדת לכל אחד (700/820/1200px) */
+/* שני אלמנטים עצמאיים (לא flex-child אחד בתוך השני, לפי בקשה - הגרסה
+   הקודמת עם calc(100% - var(...)) בתוך flex לא עבדה בפועל, "לא רואים כלום"
+   כשפותחים) - הלשונית עומדת במקום קבוע, פשוט, בלי transform מותנה בכלל
+   (position בלבד + translateY(-50%) קבוע למרכוז אנכי). הפאנל נגלל 100% מלא
+   פנימה/החוצה (translateX(100%)<->translateX(0), בדיוק כמו .hamburger-drawer)
+   - בלי שום חישוב "כמה בדיוק להשאיר גלוי", כי הלשונית העצמאית היא זו שנשארת
+   גלויה ממילא (z-index גבוה יותר, מונחת מעל קצה הפאנל) */
 :root {
     --today-peek-width: clamp(60px, 22vw, 260px);
 }
-.today-peek-panel {
+.today-peek-tab {
     position: absolute;
     top: 50%;
     right: 0;
-    width: 82%;
-    max-width: 320px;
-    max-height: 70vh;
-    background-color: var(--bg-sheet);
-    background-image: linear-gradient(160deg, var(--border-color), transparent 55%);
-    border: 1px solid var(--border-color);
-    border-radius: 22px 0 0 22px;
-    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
-    box-sizing: border-box;
-    display: flex;
-    z-index: 3510;
-    /* המצב הסגור: לא translateX(100%) מלא (כמו hamburger-drawer) אלא רק עד
-       שנשאר בדיוק --today-peek-width גלוי - הלשונית אחרונה ב-DOM (ר'
-       index.html) כדי שתנחת בדיוק בפס הגלוי הזה, ב-RTL וב-LTR כאחד */
-    transform: translateY(-50%) translateX(calc(100% - var(--today-peek-width)));
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.today-peek-panel.open { transform: translateY(-50%) translateX(0); }
-/* בזמן גרירה (ר' initTodayPeekDrag ב-app.js) - בלי transition כדי שהפאנל
-   יעקוב מיידית אחרי האצבע, אותו רעיון בדיוק כמו dock-fab-active-drag */
-.today-peek-panel.dragging { transition: none; }
-html[dir="ltr"] .today-peek-panel {
-    right: auto;
-    left: 0;
-    border-radius: 0 22px 22px 0;
-    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
-    transform: translateY(-50%) translateX(calc(-100% + var(--today-peek-width)));
-}
-html[dir="ltr"] .today-peek-panel.open { transform: translateY(-50%) translateX(0); }
-
-.today-peek-content {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: 16px;
-    overflow-y: auto;
-}
-.today-peek-content-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-.today-peek-content-header h2 { margin: 0; font-size: 1.05rem; }
-
-.today-peek-tab {
-    flex: 0 0 var(--today-peek-width);
     width: var(--today-peek-width);
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: transparent;
-    border: none;
-    border-inline-start: 1px solid var(--border-color);
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-inline-end: none;
+    border-radius: 18px 0 0 18px;
+    box-shadow: -6px 0 20px rgba(0, 0, 0, 0.35);
+    box-sizing: border-box;
     cursor: pointer;
-    padding: 12px 4px;
+    padding: 14px 4px;
     touch-action: pan-y;
+    z-index: 3520;
+}
+html[dir="ltr"] .today-peek-tab {
+    right: auto;
+    left: 0;
+    border-radius: 0 18px 18px 0;
+    box-shadow: 6px 0 20px rgba(0, 0, 0, 0.35);
 }
 .today-peek-tab-icon { font-size: 1.5rem; }
 .today-peek-tab-count {
@@ -3166,6 +3136,47 @@ html[dir="ltr"] .today-peek-panel.open { transform: translateY(-50%) translateX(
     justify-content: center;
     padding: 0 5px;
 }
+
+.today-peek-content-panel {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 82%;
+    max-width: 320px;
+    max-height: 70vh;
+    background-color: var(--bg-sheet);
+    background-image: linear-gradient(160deg, var(--border-color), transparent 55%);
+    border: 1px solid var(--border-color);
+    border-radius: 22px 0 0 22px;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding: 16px;
+    z-index: 3510;
+    transform: translateY(-50%) translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.today-peek-content-panel.open { transform: translateY(-50%) translateX(0); }
+/* בזמן גרירה (ר' initTodayPeekDrag ב-app.js) - בלי transition כדי שהפאנל
+   יעקוב מיידית אחרי האצבע, אותו רעיון בדיוק כמו dock-fab-active-drag */
+.today-peek-content-panel.dragging { transition: none; }
+html[dir="ltr"] .today-peek-content-panel {
+    right: auto;
+    left: 0;
+    border-radius: 0 22px 22px 0;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
+    transform: translateY(-50%) translateX(-100%);
+}
+html[dir="ltr"] .today-peek-content-panel.open { transform: translateY(-50%) translateX(0); }
+
+.today-peek-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.today-peek-content-header h2 { margin: 0; font-size: 1.05rem; }
 
 /* מגירת המחברת (לא שאר 5 המגירות שחולקות .hamburger-drawer) מתרחבת
    כמעט-למסך-מלא בדסקטופ - קנבס ציור נהנה משטח גדול ("כמו Procreate"), לפי

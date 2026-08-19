@@ -4473,7 +4473,7 @@ function getTodayCardViewCount() {
 // מחלקת state חדשה) כדי לשמור על הישן: מסתיר את אשכול הבועות (fab-dock) כל
 // עוד היא פתוחה, בדיוק כמו שהיה על today-tasks-card הישנה
 function openTodayPeekPanel() {
-    const panel = document.getElementById('today-peek-panel');
+    const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
     const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.add('open');
@@ -4487,7 +4487,7 @@ function openTodayPeekPanel() {
     loadTodayTasks();
 }
 function closeTodayPeekPanel() {
-    const panel = document.getElementById('today-peek-panel');
+    const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
     const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.remove('open');
@@ -4495,7 +4495,7 @@ function closeTodayPeekPanel() {
     if (wrapper) wrapper.classList.remove('today-preview-open');
 }
 function toggleTodayPeekPanel() {
-    const panel = document.getElementById('today-peek-panel');
+    const panel = document.getElementById('today-peek-content-panel');
     if (panel && panel.classList.contains('open')) closeTodayPeekPanel();
     else openTodayPeekPanel();
 }
@@ -4504,10 +4504,13 @@ function toggleTodayPeekPanel() {
 // אותו רעיון בדיוק כמו initDockCarouselGestures/initGoalPathDrag: מבטלים
 // transition כדי שהפאנל יעקוב מיידית אחרי האצבע, וב-pointerup קובעים מצב
 // סופי (פתוח/סגור) לפי סף מרחק, לא לפי מהירות - טאפ בלי גרירה משמעותית
-// (מתחת לסף) עדיין מטפל דרך toggleTodayPeekPanel הרגיל (click), לא כאן
+// (מתחת לסף) עדיין מטפל דרך toggleTodayPeekPanel הרגיל (click), לא כאן.
+// הפאנל נגלל 0%<->100% מלא (לא "כמה בדיוק להשאיר גלוי" - הלשונית עצמה
+// עצמאית ונשארת גלויה ממילא, ר' theme.css), אז החישוב כאן פשוט: אחוז-סגירה
+// 0 (פתוח) עד 100 (סגור)
 function initTodayPeekDrag() {
     const tab = document.getElementById('today-peek-tab');
-    const panel = document.getElementById('today-peek-panel');
+    const panel = document.getElementById('today-peek-content-panel');
     if (!tab || !panel) return;
     let startX = 0;
     let dragging = false;
@@ -4531,18 +4534,13 @@ function initTodayPeekDrag() {
         if (!dragging) return;
         const isLtr = document.documentElement.dir === 'ltr';
         const isOpen = panel.classList.contains('open');
-        // אחוז ה"סגירה" הנוכחי (0 = פתוח לגמרי, 1 = סגור לגמרי/רק הלשונית
-        // גלויה) - מתחיל מהמצב שבו הייתה הגרירה כשהתחילה, ונע לפי הגרירה
-        // בפועל, ביחס לרוחב הפאנל עצמו (לא רוחב המסך)
-        const peekWidthPx = parseFloat(getComputedStyle(panel).getPropertyValue('--today-peek-width')) || 72;
-        const maxClosedFraction = 1 - (peekWidthPx / panelWidthPx);
-        const dragFraction = deltaX / panelWidthPx;
         // ב-RTL הפאנל נפתח שמאלה (translateX שלילי), ב-LTR ימינה (חיובי) -
-        // ר' html[dir="ltr"] .today-peek-panel ב-theme.css
-        let closedFraction = isOpen ? 0 : maxClosedFraction;
-        closedFraction += isLtr ? dragFraction : -dragFraction;
-        closedFraction = Math.max(0, Math.min(maxClosedFraction, closedFraction));
-        const pxOffset = closedFraction * panelWidthPx * (isLtr ? -1 : 1);
+        // ר' html[dir="ltr"] .today-peek-content-panel ב-theme.css
+        let closedPct = isOpen ? 0 : 100;
+        const dragPct = (deltaX / panelWidthPx) * 100;
+        closedPct += isLtr ? -dragPct : dragPct;
+        closedPct = Math.max(0, Math.min(100, closedPct));
+        const pxOffset = (closedPct / 100) * panelWidthPx * (isLtr ? -1 : 1);
         panel.style.transform = `translateY(-50%) translateX(${pxOffset}px)`;
     });
     const finishDrag = (e) => {
@@ -4552,7 +4550,7 @@ function initTodayPeekDrag() {
         panel.style.transform = '';
         const isLtr = document.documentElement.dir === 'ltr';
         const deltaX = e.clientX - startX;
-        // סף: יותר מ-40% מרוחב הפאנל בכיוון הנכון = משנה מצב
+        // סף: יותר מ-25% מרוחב הפאנל בכיוון הנכון = משנה מצב
         const openedEnough = (isLtr ? deltaX : -deltaX) > panelWidthPx * 0.25;
         const closedEnough = (isLtr ? -deltaX : deltaX) > panelWidthPx * 0.25;
         const wasOpen = panel.classList.contains('open');

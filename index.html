@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=371">
+    <link rel="stylesheet" href="theme.css?v=372">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -143,8 +143,9 @@
                     </button>
                 </div>
                 <!-- הצצה להיום: עברה מכרטיס מלא-רוחב בזרימת המסך לפאנל-צד צר שנפתח
-                     במשיכה/לחיצה (ר' #today-peek-panel, שוכן ליד שאר המגירות
-                     בסוף #app-container - לא כאן) - לפי בקשה מפורשת -->
+                     במשיכה/לחיצה (ר' #today-peek-content-panel ו-#today-peek-tab,
+                     שוכנים ליד שאר המגירות בסוף #app-container - לא כאן) - לפי
+                     בקשה מפורשת -->
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
                      הראשי עבר לסרגל התחתון הקבוע (.bottom-tab-bar) -->
             </div>
@@ -909,8 +910,9 @@
                 <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
                      דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
                      לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. אייקון תמונה
-                     (סטופר+דגל מרוצים) במקום אימוג'י - לפי בקשה מפורשת, ר' .dock-fab-img
-                     ב-theme.css -->
+                     (אדם רץ, בלי כדור-זכוכית עצמאי מובנה בתמונה עצמה הפעם - כדי
+                     שלא ייווצר "בועה בתוך בועה" עם עיצוב הזכוכית הקיים של הכפתור,
+                     לפי בקשה מפורשת) - ר' .dock-fab-img ב-theme.css -->
                 <button type="button" class="dock-fab dock-fab-img hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout"></button>
 
                 <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
@@ -958,35 +960,35 @@
                  (~20-25% מרוחב המסך, ר' --today-peek-width) שנשארת תמיד גלויה
                  ומציגה אייקון + מספר משימות שנותרו - לכן היא *לא* בתוך overlay
                  עם display:none (כמו hamburger-drawer-overlay), אלא אלמנט נפרד
-                 ותמיד-מוצג, עם מצב פתוח/סגור דרך transform בלבד (ר' .today-peek-panel
-                 ב-theme.css). ה-overlay (עמעום הרקע) הוא רכיב-אחות נפרד, מוצג רק
+                 ותמיד-מוצג, עם מצב פתוח/סגור דרך transform בלבד (ר' .today-peek-tab/
+                 .today-peek-content-panel ב-theme.css). ה-overlay (עמעום הרקע) הוא
+                 רכיב-אחות נפרד, מוצג רק
                  כשפתוח, ללחיצה-בחוץ-לסגירה. לחיצה/משיכה על הלשונית (ר'
                  initTodayPeekDrag ב-app.js) פותחת את הפאנל המלא עם הרשימה - לפי
                  בקשה מפורשת. מחליף לגמרי את today-tasks-card הישן (היה כרטיס
                  מלא-רוחב בזרימת המסך) -->
             <div id="today-peek-overlay" class="today-peek-overlay" onclick="closeTodayPeekPanel()"></div>
-            <div id="today-peek-panel" class="today-peek-panel">
-                <div class="today-peek-content">
-                    <div class="today-peek-content-header">
-                        <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                        <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
-                             updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
-                             מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
-                            🔥 <span id="home-calorie-badge-value">0</span>
-                        </button>
-                    </div>
-                    <div id="today-tasks-list" class="today-tasks-list"></div>
+            <!-- שני אלמנטים עצמאיים לגמרי (לא flex-child אחד בתוך השני) - הלשונית
+                 תמיד באותו מקום הפשוט (position קבוע, בלי transform מותנה),
+                 והפאנל נגלל 100% מלא פנימה/החוצה (בלי חישוב "כמה להשאיר גלוי")
+                 - ר' ההסבר המלא ב-.today-peek-tab/.today-peek-content-panel
+                 ב-theme.css -->
+            <div id="today-peek-content-panel" class="today-peek-content-panel">
+                <div class="today-peek-content-header">
+                    <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
+                    <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                         updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
+                         מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
+                    <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                        🔥 <span id="home-calorie-badge-value">0</span>
+                    </button>
                 </div>
-                <!-- אחרונה ב-DOM בכוונה (לא ראשונה) - כדי שבזרימת flex-row היא
-                     תנחת בדיוק בקצה שנשאר גלוי אחרי ה-transform במצב סגור, גם
-                     ב-RTL וגם ב-LTR (ר' ההסבר המפורט ב-.today-peek-panel
-                     ב-theme.css) -->
-                <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
-                    <span class="today-peek-tab-icon">📋</span>
-                    <span class="today-peek-tab-count hidden" id="today-peek-tab-count">0</span>
-                </button>
+                <div id="today-tasks-list" class="today-tasks-list"></div>
             </div>
+            <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
+                <span class="today-peek-tab-icon">📋</span>
+                <span class="today-peek-tab-count hidden" id="today-peek-tab-count">0</span>
+            </button>
 
             <div id="hamburger-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeHamburgerMenu()">
                 <nav class="hamburger-drawer" onclick="event.stopPropagation()">
@@ -3119,6 +3121,6 @@
     </div>
 
     <script src="i18n.js?v=287"></script>
-    <script src="app.js?v=410"></script>
+    <script src="app.js?v=411"></script>
 </body>
 </html>
