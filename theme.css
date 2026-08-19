@@ -2720,11 +2720,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    אטומה - חוסך עבודת GPU מיותרת */
 .dock-fab.dock-fab-img {
     background-image: url('sport-fab-icon.png');
-    /* cover (לא אחוז חלקי עם no-repeat) - חזרה לזה אחרי שדווח שרקע-הריבוע
-       הכהה של התמונה עצמה נראה כ"מלבן" בתוך העיגול: cover תמיד ממלא את כל
-       השטח ונחתך בעצמו לעיגול, בלי שהריבוע המקורי נשאר גלוי בפנים - לפי
-       בקשה מפורשת ("רקע נקי כמו בשניים [מים/כסף]") */
-    background-size: cover;
+    /* מעל 100% (לא בדיוק cover/100%) - "מזזם החוצה" כך שהדמות עצמה נראית
+       קטנה יותר ולא נוגעת במסגרת החיצונית של הבועה, בלי לחשוף את קצה
+       הריבוע המקורי של התמונה (עדיין ממלא את כל השטח ברציפות, לא no-repeat
+       עם אחוז קטן שהיה חושף "מלבן") - לפי בקשה מפורשת */
+    background-size: 145%;
     background-position: center;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
