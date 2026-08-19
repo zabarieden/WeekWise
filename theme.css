@@ -3552,22 +3552,29 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    רק כאן, לא ב-triggerDailyGreetingSparkles שממשיכה להשתמש ב-.all-done-sparkle
    הרגילה. מלבנים קטנים בצבעי המותג, נפילה איטית ואטימות מרוככת (0.85, לא 1)
    וסיבוב מתון (200deg, לא 360) לתחושה רגועה יותר - לפי בקשה מפורשת */
+/* פרץ מהמרכז (לא נפילה מלמעלה) - כל חלקיק מתחיל במרכז המסך ממש ו"קופץ"
+   החוצה לכיוון/מרחק אקראיים (--tx/--ty, נקבעים ב-JS), עם נפילה קלה בסוף
+   (התוספת ל-ty) לתחושת כבידה טבעית - לפי בקשה מפורשת ("שיקפוץ מאמצע המסך") */
 .gentle-confetti-piece {
     position: absolute;
-    top: -20px;
+    top: 50%;
+    left: 50%;
     width: 7px;
     height: 12px;
     border-radius: 2px;
     opacity: 0;
-    animation-name: gentleConfettiFall;
-    animation-timing-function: ease-in;
+    --tx: 0px;
+    --ty: 0px;
+    --rot: 0deg;
+    animation-name: gentleConfettiBurst;
+    animation-timing-function: ease-out;
     animation-fill-mode: forwards;
 }
-@keyframes gentleConfettiFall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.85; }
-    85% { opacity: 0.85; }
-    100% { transform: translateY(115vh) rotate(200deg); opacity: 0; }
+@keyframes gentleConfettiBurst {
+    0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 0; }
+    12% { opacity: 0.9; }
+    70% { opacity: 0.85; }
+    100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty) + 60px)) rotate(var(--rot)); opacity: 0; }
 }
 /* ברכה יומית (בוקר טוב/ערב טוב וכו') - ר' checkDailyGreeting ב-app.js.
    fixed+centered למעלה, מעל הכל, נעלמת בהדרגה אחרי כמה שניות */

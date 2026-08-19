@@ -3,6 +3,10 @@
 This function needs a few one-time setup steps in your Supabase project. I can't run the
 Supabase CLI or apply SQL myself from here, so please run these yourself.
 
+Covers reminders for both `weekly_schedule` (recurring weekly slots) and `calendar_events`
+(one-time dated events, "מבט ליומן") - same due-time math, same dedup pattern, run as two
+independent queries/loops per user inside the same function.
+
 ## 1. Database changes
 
 Run in the Supabase SQL Editor:
@@ -27,6 +31,12 @@ create policy "Users manage their own push subscriptions" on push_subscriptions
 
 -- Dedup marker so the same reminder doesn't push twice in one day.
 alter table weekly_schedule add column if not exists last_notified_date date;
+
+-- Reminders for one-time "מבט ליומן" events (calendar_events) - same shape as
+-- weekly_schedule's reminder_minutes/reminder_text/last_notified_date above.
+alter table calendar_events add column if not exists reminder_minutes integer;
+alter table calendar_events add column if not exists reminder_text text;
+alter table calendar_events add column if not exists last_notified_date date;
 ```
 
 ## 2. VAPID keys

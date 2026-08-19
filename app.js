@@ -5135,6 +5135,10 @@ function openEditCalendarEvent(item) {
     document.getElementById('calendar-event-date-input').value = item.event_date;
     updateDateFieldDisplay('calendar-event-date-input');
     document.getElementById('calendar-event-time-input').value = item.event_time || '';
+    document.getElementById('calendar-event-reminder').value = item.reminder_minutes || '0';
+    updateCustomSelectDisplay('calendar-event-reminder');
+    document.getElementById('calendar-event-reminder-text').value = item.reminder_text || '';
+    document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
@@ -5160,6 +5164,9 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
+    // תזכורת היא לפי-מופע (שעה+טקסט), לא משמעותית בעריכת-שם-כל-הסדרה - מוסתרת
+    // כאן בדיוק כמו תאריך/שעה/checkbox החזרה
+    document.getElementById('calendar-event-reminder-wrap').classList.add('hidden');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
     document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
     openModal('modal-add-calendar-event');
@@ -5181,6 +5188,10 @@ function resetCalendarEventModal() {
     updateCustomSelectDisplay('calendar-event-duration-input');
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
+    document.getElementById('calendar-event-reminder').value = '0';
+    updateCustomSelectDisplay('calendar-event-reminder');
+    document.getElementById('calendar-event-reminder-text').value = '';
+    document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
     document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_add_btn');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
@@ -5201,6 +5212,8 @@ async function addCalendarEvent() {
     const timeNorm = normalizeScheduleTimeInput(timeInput.value);
     if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const eventTime = timeNorm.time || null;
+    const reminderMinutes = parseInt(document.getElementById('calendar-event-reminder').value) || 0;
+    const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
     if (editingCalendarEventGroupId) {
@@ -5217,7 +5230,10 @@ async function addCalendarEvent() {
     }
     if (editingCalendarEventId) {
         if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title, event_date: date, event_time: eventTime }).eq('id', editingCalendarEventId);
+        const { error } = await supabaseClient.from('calendar_events').update({
+            event_title: title, event_date: date, event_time: eventTime,
+            reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+        }).eq('id', editingCalendarEventId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         resetCalendarEventModal();
         closeModal('modal-add-calendar-event');
@@ -5238,10 +5254,14 @@ async function addCalendarEvent() {
         const groupId = crypto.randomUUID();
         rows = generateRecurringDates(date, recurUnit, recurInterval, months).map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
-            event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId
+            event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId,
+            reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
         }));
     } else {
-        rows = [{ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null }];
+        rows = [{
+            username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
+            reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+        }];
     }
 
     const { error } = await supabaseClient.from('calendar_events').insert(rows);
@@ -5251,6 +5271,9 @@ async function addCalendarEvent() {
     timeInput.value = '';
     recurringCheckbox.checked = false;
     toggleRecurringOptionsVisibility();
+    document.getElementById('calendar-event-reminder').value = '0';
+    updateCustomSelectDisplay('calendar-event-reminder');
+    document.getElementById('calendar-event-reminder-text').value = '';
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
@@ -5270,9 +5293,14 @@ async function duplicateCalendarEvent() {
     const timeNorm = normalizeScheduleTimeInput(timeInput.value);
     if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const eventTime = timeNorm.time || null;
+    const reminderMinutes = parseInt(document.getElementById('calendar-event-reminder').value) || 0;
+    const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null });
+    const { error } = await supabaseClient.from('calendar_events').insert({
+        username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
+        reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+    });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     resetCalendarEventModal();
     closeModal('modal-add-calendar-event');
@@ -12446,15 +12474,53 @@ async function checkReminders() {
                 fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
             }
         });
+
+        // אותו דבר בדיוק, אבל לאירועים חד-פעמיים ב"מבט ליומן" (calendar_events) -
+        // מסוננים לפי תאריך מדויק (event_date), לא יום-בשבוע חוזר כמו למעלה.
+        // מפתח ה-localStorage מסומן ב-ce_ בנפרד מ-reminderFiredKey הרגיל, כדי
+        // שלא יתנגש עם מזהה מקרי זהה משתי הטבלאות - לפי בקשה מפורשת ("גם
+        // תזכורות לאירועים חד-פעמיים, לא רק ללוח הזמנים הקבוע")
+        const { data: eventData } = await supabaseClient.from('calendar_events')
+            .select('id, event_time, event_title, reminder_minutes, reminder_text')
+            .eq('user_id', currentUserId)
+            .eq('event_date', todayStr)
+            .gt('reminder_minutes', 0);
+        (eventData || []).forEach(item => {
+            if (!item.event_time) return;
+            const key = `weekwise_reminder_fired_ce_${item.id}`;
+            if (localStorage.getItem(key) === todayStr) return;
+            const [h, m] = item.event_time.split(':').map(Number);
+            if (isNaN(h) || isNaN(m)) return;
+            const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+            const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
+            if (now >= triggerDate) {
+                localStorage.setItem(key, todayStr);
+                fireReminder({ taskTitle: item.event_title, text: item.reminder_text });
+            }
+        });
     } finally {
         checkRemindersInProgress = false;
     }
 }
 
+// הפופאפ החדש (עם קונפטי) מחליף את showReminderToast הישן - לפי בקשה
+// מפורשת ("שיהיה משהו חמוד שקופץ"). הצליל וה-push הרגילים ממשיכים ללא שינוי
 function fireReminder(rem) {
     playReminderChime();
-    showReminderToast(rem.taskTitle, rem.text);
+    showReminderPopup(rem.taskTitle, rem.text);
     showBrowserNotification(rem.taskTitle, rem.text);
+}
+
+function showReminderPopup(taskTitle, text) {
+    document.getElementById('reminder-popup-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
+    document.getElementById('reminder-popup-text').textContent = text || t('reminder_default_text');
+    openModal('modal-reminder-popup');
+    const confettiEl = document.getElementById('reminder-popup-confetti');
+    if (confettiEl) {
+        confettiEl.innerHTML = '';
+        spawnGentleConfettiBurst(confettiEl, 14);
+        setTimeout(() => spawnGentleConfettiBurst(confettiEl, 14), 350);
+    }
 }
 
 function requestNotificationPermission() {

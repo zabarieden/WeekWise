@@ -119,6 +119,51 @@ Deno.serve(async (_req) => {
                 await supabase.from("weekly_schedule").update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
             }
         }
+
+        // אותו דבר בדיוק, בשביל אירועים חד-פעמיים ב"מבט ליומן" (calendar_events) -
+        // מסוננים לפי event_date מדויק (לא day_of_week חוזר כמו למעלה), עם דדופ
+        // נפרד משלהם (calendar_events.last_notified_date, לא זו של weekly_schedule)
+        const { data: dueEvents } = await supabase
+            .from("calendar_events")
+            .select("id, event_title, reminder_text, reminder_minutes, event_time, last_notified_date")
+            .eq("user_id", userId)
+            .eq("event_date", wallClock.dateStr)
+            .gt("reminder_minutes", 0);
+
+        for (const row of dueEvents ?? []) {
+            checked++;
+            if (!row.event_time) continue;
+            if (row.last_notified_date === wallClock.dateStr) continue;
+
+            const [h, m] = row.event_time.split(":").map((n: string) => parseInt(n, 10));
+            if (Number.isNaN(h) || Number.isNaN(m)) continue;
+            const taskMinutes = h * 60 + m;
+            const triggerMinutes = taskMinutes - row.reminder_minutes;
+            if (nowMinutes < triggerMinutes) continue;
+
+            const title = `⏰ ${row.event_title || "NOT10.ai"}`;
+            const body = row.reminder_text || "";
+
+            let anySucceeded = false;
+            for (const sub of userSubs) {
+                try {
+                    await webpush.sendNotification(
+                        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                        JSON.stringify({ title, body }),
+                    );
+                    anySucceeded = true;
+                    sent++;
+                } catch (err: any) {
+                    if (err?.statusCode === 404 || err?.statusCode === 410) {
+                        await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+                    }
+                }
+            }
+
+            if (anySucceeded) {
+                await supabase.from("calendar_events").update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
+            }
+        }
     }
 
     return jsonResponse({ ok: true, usersChecked: subsByUser.size, remindersChecked: checked, sent });

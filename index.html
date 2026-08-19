@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=368">
+    <link rel="stylesheet" href="theme.css?v=369">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2943,7 +2943,7 @@
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
                         </select>
                     </div>
-                    <div class="reminder-fields-wrap" style="margin-top: 8px;">
+                    <div id="calendar-event-reminder-wrap" class="reminder-fields-wrap" style="margin-top: 8px;">
                         <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-reminder')"><span id="calendar-event-reminder-display"></span></button>
                         <select id="calendar-event-reminder" class="hidden">
                             <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
@@ -3103,7 +3103,7 @@
 
     </div>
 
-    <script src="i18n.js?v=286"></script>
-    <script src="app.js?v=407"></script>
+    <script src="i18n.js?v=287"></script>
+    <script src="app.js?v=408"></script>
 </body>
 </html>
