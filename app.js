@@ -4452,8 +4452,16 @@ async function loadTodayTasks() {
         if (!item.is_completed) allDone = false;
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
+        // event_time (לא רק event_title) - עד עכשיו אירועי calendar_events כאן
+        // הוצגו רק לפי הכותרת, בלי צ'יפ-שעה נפרד (בניגוד לשורות weekly_schedule
+        // למעלה, שכן מקבלות .today-tasks-time) - זו הייתה הסיבה המקורית
+        // שהשעה הוטמעה בתוך הכותרת עצמה בזמן היצירה (ר' applyOneTimeScheduleEvents).
+        // עכשיו שעריכה דרך ה-AI מנקה את הכותרת ושומרת שעה נכונה בעמודה נפרדת
+        // (ר' applyScheduleEditsAndDeletes), חייבים להציג אותה בפועל - אחרת
+        // היא "נעלמת" ויזואלית אחרי עריכה, בדיוק מה שדווח
         row.innerHTML = `
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
+            ${item.event_time ? `<span class="today-tasks-time">${escapeHtmlForReport(item.event_time)}</span>` : ''}
             <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
         `;
         // כפתורי עריכה/מחיקה מחוברים דרך closure (לא onclick עם JSON מוטמע
@@ -6896,17 +6904,22 @@ function applyDockOrder() {
     // מתחילה ב-RTL), ובאנגלית/LTR דווקא *משמאל* - אחרת סדר-הקריאה הסמנטי
     // ("פריסה, פתקים, תפוח, מים, ספורט") היה מתהפך בפועל כשעוברים לאנגלית
     const dirSign = document.documentElement.dir === 'ltr' ? -1 : 1;
+    // עד 2 בועות פעילות (למשל ברירת המחדל החדשה: פתקים + ארוחות מוכנות) -
+    // בלי בועה "קדמית" גדולה יותר בכלל, שתיהן באותו גודל (fab-tier-side) ואותו
+    // גובה, לפי בקשה מפורשת ("2 הבועות שיהיו באותו הגודל") - ההבחנה "קדמי מול
+    // צדדי" משמעותית רק כשיש עוד בועות מסביב ליצור איתן קשת אמיתית
+    const noSingleFront = fabCarouselOrder.length <= 2;
     fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
         if (!el) return;
         const dist = (i - frontIndex) * dirSign; // 0 בדיוק עבור הבועה הקדמית עצמה
         const absDist = Math.abs(dist);
-        const isFront = i === frontIndex;
+        const isFront = i === frontIndex && !noSingleFront;
         // הבועה הקדמית קיבלה עד עכשיו הרמה 0 (הכי "נמוכה" מכולן, כי הקשת
         // מתחילה ב-0 ועולה כלפי הצדדים) - לפי בקשה מפורשת ("שהבועה המרכזית
         // תהיה קצת יותר למעלה") היא מקבלת הרמה קבועה משלה, פחותה מהמקסימום
         // שהבועות הרחוקות מגיעות אליו כדי לשמור על צורת-קשת כללית
-        const lift = isFront ? 14 : Math.min(absDist * 9, 30);
+        const lift = noSingleFront ? 14 : (isFront ? 14 : Math.min(absDist * 9, 30));
         el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
         el.style.top = `${Math.round(-lift)}px`;
         el.classList.toggle('fab-tier-front', isFront);

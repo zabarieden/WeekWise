@@ -2591,8 +2591,16 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .preset-quick-add-header-row h3 { margin: 0; text-align: start; }
 
 /* "לוח היום" (🧭) - טאבים מותאמים-אישית + לוח צבעוני לפי בלוקי-שעה, ר'
-   openDailyBoardModal/renderDailyBoard ב-app.js */
-.daily-board-sheet { max-height: 85vh; display: flex; flex-direction: column; }
+   openDailyBoardModal/renderDailyBoard ב-app.js.
+   מוצג כחלונית-צד נגררת (כמו "הצצה להיום"), לא כפופ-אפ מרכזי - לפי בקשה
+   מפורשת. ממשיך להשתמש באותו openModal/closeModal('modal-daily-board')
+   הגנרי כמו כל שאר ה-.apple-modal - בלי לשנות שום JS - ורק דורס את מיקום/
+   אנימציית ה-overlay/ה-sheet עבור המודל הזה בלבד */
+#modal-daily-board.apple-modal { justify-content: flex-end; align-items: stretch; padding: 0; }
+html[dir="ltr"] #modal-daily-board.apple-modal { justify-content: flex-start; }
+.daily-board-sheet { max-height: 100%; height: 100%; width: 92%; max-width: 420px; margin: 0; border-radius: 18px 0 0 18px; box-sizing: border-box; display: flex; flex-direction: column; transform: translateX(100%); opacity: 1; transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
+html[dir="ltr"] .daily-board-sheet { border-radius: 0 18px 18px 0; transform: translateX(-100%); }
+#modal-daily-board.open .daily-board-sheet { transform: translateX(0); }
 .daily-board-close-btn { position: absolute; top: 12px; inset-inline-end: 16px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 5; }
 .daily-board-tabs-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .daily-board-tabs-scroll { display: flex; gap: 8px; overflow-x: auto; flex: 1; min-width: 0; padding-bottom: 2px; }
@@ -2952,12 +2960,6 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 .daily-board-fab { top: auto; left: auto; right: 24px; bottom: 30px; transform: none; width: 44px; height: 44px; }
 html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
 .daily-board-fab:active { transform: scale(0.85); }
-/* גרסה ממוקמת מחדש - ממש מתחת ל"הצצה להיום" (בתוך .today-peek-anchor),
-   לא בפינה הימנית-תחתונה הישנה - לפי בקשה מפורשת. הפינה הישנה נשארת ריקה
-   בינתיים, ר' ההערה ב-index.html. דורסת רק את המיקום (top/right/bottom),
-   לא את שאר העיצוב (הנקודה הפועמת וכו') שממשיך להגיע מ-.daily-board-fab */
-.daily-board-fab-under-peek { position: absolute; top: 68px; right: 0; left: auto; bottom: auto; }
-html[dir="ltr"] .daily-board-fab-under-peek { right: auto; left: 0; }
 /* var(--accent-pink)/var(--accent-purple-light) בלי סיומת -text בכוונה - גרסת
    ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), וזה גרם לנקודה
    להיראות כהה/עמומה דווקא במצב הבהיר - לפי בקשה קודמת ("בבהיר אני רוצה
@@ -3205,7 +3207,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 130px; }
+.today-peek-anchor { position: relative; height: 70px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3257,11 +3259,10 @@ html[dir="ltr"] .today-peek-tab {
    מפורשת ("בלי התמונה והמספר, שיקראו לה הצצה להיום") */
 .today-peek-tab-label {
     display: inline-block;
-    transform: rotate(-90deg);
     white-space: nowrap;
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     letter-spacing: 0.3px;
 }
 
