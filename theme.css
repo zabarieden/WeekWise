@@ -3710,14 +3710,31 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    ב-app.js) עם keyframes מוטבעים לכל חלקיק בנפרד - לא כאן - כדי להבטיח מסלול
    אקראי עצמאי אמיתי לכל חלקיק (הגרסה הקודמת עם --tx/--ty ב-CSS דווחה כ"נופלת
    בקו אחד" במקום זיקוקים) */
+/* ניצוץ עגול עם זוהר (לא מלבן קונפטי שטוח) - נראה כמו ניצוץ זיקוקים אמיתי,
+   לא נייר קונפטי - לפי בקשה מפורשת ("כמו זיקוקים"). box-shadow/גודל
+   נקבעים ב-JS פר-חלקיק (ר' spawnGentleConfettiBurst) כדי שהזוהר יתאים
+   לצבע הספציפי של כל ניצוץ */
 .gentle-confetti-piece {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 7px;
-    height: 12px;
-    border-radius: 2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
     opacity: 0;
+}
+/* "הבזק" קצר בנקודת הפריצה עצמה - הרגע של "בום" לפני שהניצוצות מתפזרים,
+   לפי בקשה מפורשת */
+.gentle-confetti-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    pointer-events: none;
 }
 /* ברכה יומית (בוקר טוב/ערב טוב וכו') - ר' checkDailyGreeting ב-app.js.
    fixed+centered למעלה, מעל הכל, נעלמת בהדרגה אחרי כמה שניות */

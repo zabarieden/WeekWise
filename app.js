@@ -4382,8 +4382,21 @@ async function loadTodayTasks() {
 // המחדל ב-CSS, top/left 50%). משותפת בין חגיגת "הכל בוצע" (פעמיים, ר'
 // triggerAllDoneSparkles) לבין פופאפ התזכורת - לפי בקשה מפורשת
 function spawnGentleConfettiBurst(container, count, originX, originY) {
-    const confettiColors = ['var(--accent-pink)', 'var(--accent-purple)', 'var(--accent-green)', '#eab308'];
+    const confettiColors = ['#f472b6', '#a855f7', '#4ade80', '#eab308', '#38bdf8'];
     const hasOrigin = originX != null && originY != null;
+
+    // "הבזק" לבן קצרצר בדיוק בנקודת הפריצה - רגע ה"בום" לפני שהניצוצות
+    // מתפזרים, לפי בקשה מפורשת ("כמו זיקוקים") - עגול, לא מלבן קונפטי
+    const flash = document.createElement('span');
+    flash.className = 'gentle-confetti-flash';
+    if (hasOrigin) { flash.style.left = `${originX}px`; flash.style.top = `${originY}px`; }
+    container.appendChild(flash);
+    const flashAnim = flash.animate([
+        { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 0.95, offset: 0 },
+        { transform: 'translate(-50%, -50%) scale(2.2)', opacity: 0, offset: 1 },
+    ], { duration: 320, easing: 'ease-out', fill: 'forwards' });
+    flashAnim.onfinish = () => flash.remove();
+
     for (let i = 0; i < count; i++) {
         const piece = document.createElement('span');
         piece.className = 'gentle-confetti-piece';
@@ -4391,27 +4404,34 @@ function spawnGentleConfettiBurst(container, count, originX, originY) {
             piece.style.left = `${originX}px`;
             piece.style.top = `${originY}px`;
         }
-        piece.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        const size = 3 + Math.random() * 3;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size}px`;
+        piece.style.backgroundColor = color;
+        // זוהר ניאון סביב כל ניצוץ (לא רק צבע שטוח) - זה מה שהופך מלבני-קונפטי
+        // עגולים לניצוצות-זיקוקים אמיתיים למראה
+        piece.style.boxShadow = `0 0 ${4 + Math.random() * 4}px 1px ${color}`;
         container.appendChild(piece);
 
         // Web Animations API עם ערכים חושבים ומוטבעים ישירות בכל keyframe
         // (לא CSS custom properties + @keyframes משותף) - כדי להבטיח שכל
         // חלקיק מקבל מסלול אקראי עצמאי לגמרי, אחרי שהגרסה הקודמת (--tx/--ty
         // ב-CSS) דווחה כ"נופלת בקו אחד" במקום להתפוצץ כמו זיקוקים לכיוונים
-        // שונים. פרץ מהיר החוצה (0%->35%), ואז נפילה/כבייה קלה (35%->100%)
-        // לתחושת זיקוקים אמיתית, לא נפילה ישרה
+        // שונים. פרץ מהיר החוצה (0%->30%, תנועה ליניארית - "ירי" מהיר, לא
+        // ease-in), ואז דעיכה/נפילה קלה (30%->100%) עם ease-out - בדיוק קצב
+        // ניצוץ זיקוקים אמיתי (יריקה מהירה, ואז ריחוף/דעיכה איטית)
         const angle = Math.random() * Math.PI * 2;
-        const distance = 90 + Math.random() * 190;
+        const distance = 100 + Math.random() * 220;
         const tx = Math.cos(angle) * distance;
         const ty = Math.sin(angle) * distance;
-        const rot = (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 360);
-        const duration = 1500 + Math.random() * 1000;
+        const duration = 1400 + Math.random() * 900;
 
         const anim = piece.animate([
-            { transform: 'translate(-50%, -50%) scale(0.4) rotate(0deg)', opacity: 0, offset: 0 },
-            { transform: `translate(calc(-50% + ${(tx * 0.9).toFixed(1)}px), calc(-50% + ${(ty * 0.9).toFixed(1)}px)) scale(1) rotate(${(rot * 0.7).toFixed(0)}deg)`, opacity: 1, offset: 0.35 },
-            { transform: `translate(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${(ty + 50).toFixed(1)}px)) scale(0.9) rotate(${rot.toFixed(0)}deg)`, opacity: 0, offset: 1 },
-        ], { duration, easing: 'cubic-bezier(0.15, 0.65, 0.35, 1)', fill: 'forwards' });
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0 },
+            { transform: `translate(calc(-50% + ${(tx * 0.92).toFixed(1)}px), calc(-50% + ${(ty * 0.92).toFixed(1)}px)) scale(0.9)`, opacity: 1, offset: 0.3, easing: 'ease-out' },
+            { transform: `translate(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${(ty + 60).toFixed(1)}px)) scale(0.4)`, opacity: 0, offset: 1 },
+        ], { duration, easing: 'linear', fill: 'forwards' });
         anim.onfinish = () => piece.remove();
     }
 }
