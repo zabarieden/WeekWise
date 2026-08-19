@@ -2674,8 +2674,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     left: 0;
     top: 0;
     transform: translate(-50%, -50%);
-    width: 76px;
-    height: 76px;
+    /* הוגדל (היה 76px) - לפי בקשה מפורשת ("רואים את זה ממש ממש קטן
+       במובייל") - ר' גם fab-tier-side/fab-tier-front למטה ו-FAB_ROW_STEP
+       ב-app.js שהוגדל יחד אתו כדי שהבועות לא יתחילו לחפוף */
+    width: 86px;
+    height: 86px;
     border-radius: 50%;
     overflow: hidden;
     /* בועת-סבון אמיתית (לפי בקשה מפורשת + תמונת-סגנון): גוף כחלחל-שקוף עם
@@ -2686,7 +2689,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-backdrop-filter: blur(16px) saturate(1.6);
     border: 1.5px solid rgba(255, 255, 255, 0.55);
     color: #fff;
-    font-size: 2rem;
+    font-size: 2.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2719,7 +2722,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    בהסרת-רקע ידנית. מכבים backdrop-filter כי אין מה "לראות מבעד" לתמונה
    אטומה - חוסך עבודת GPU מיותרת */
 .dock-fab.dock-fab-img {
-    background-image: url('sport-fab-icon.png');
+    /* ?v=2 - קובץ-תמונה (בניגוד ל-CSS/JS) לא היה עם מחרוזת-גרסה בכלל, אז
+       עדכון קובץ לא כפה רענון-cache בכל שכבות ה-CDN - דווח בפועל ("עדיין
+       רואה את הישן"). עכשיו יש לו את אותה מוסכמה בדיוק כמו theme.css?v=/
+       app.js?v= - להעלות את המספר בכל פעם שהתמונה עצמה מתחלפת */
+    background-image: url('sport-fab-icon.png?v=2');
     /* אחוז קטן משמעותית (לא cover) + no-repeat - בדיוק כמו שהאימוג'י (למשל
        🍎) יושב קטן וממורכז על גבי הזכוכית הרגילה של הכפתור, לא ממלא את כל
        השטח - לפי בקשה מפורשת ("שזה יראה כמו התפוח"). לא מבטלים יותר את
@@ -2728,10 +2735,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     background-size: 56%;
     background-repeat: no-repeat;
     background-position: center;
-}
-/* אותו דפוס בדיוק, תמונה אחרת (עיפרון) - במקום אימוג'י הפתקים */
-.dock-fab.dock-fab-img.notes-fab-img {
-    background-image: url('notes-fab-icon.png');
 }
 /* ריחוף עדין - אותו רעיון בדיוק כמו aiBrainFloat (עוזר ה-AI), לפי בקשה
    מפורשת "שהבועות ירחפו קצת כמו המוח". משך שונה מעט לכל רמת-עומק (ר'
@@ -2780,7 +2783,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.
    נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא קבוע לבועה
    ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
-.dock-fab.fab-tier-side { width: 58px; height: 58px; font-size: 1.5rem; animation-duration: 4.4s; }
+.dock-fab.fab-tier-side { width: 66px; height: 66px; font-size: 1.75rem; animation-duration: 4.4s; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 112px; height: 112px; }
     .ai-brain-icon { font-size: 4rem; }
@@ -2796,9 +2799,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    fab-tier-front נקבעת דינמית לפי מיקום, לא ID קבוע. גדולה יותר ופעימה
    עדינה (זוהר לבן-רך, לא צבעוני) כדי שתמיד תבלוט כעוגן המרכזי */
 .dock-fab.fab-tier-front {
-    width: 92px;
-    height: 92px;
-    font-size: 2.4rem;
+    width: 104px;
+    height: 104px;
+    font-size: 2.75rem;
     /* שתי אנימציות בו-זמנית (לא רק fabPulse שהיה מחליף/מוחק את dockFabFloat
        שיורשת מ-.dock-fab - animation הוא shorthand, לא מצטבר בין כללים) -
        הריחוף (transform) והפעימה (box-shadow) על שתי תכונות שונות, אין ביניהן

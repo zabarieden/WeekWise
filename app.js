@@ -2320,7 +2320,25 @@ function renderHomeGreeting() {
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
     textEl.textContent = t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    positionTodayPeekPanel();
 }
+
+// ממקם את "הצצה ליום" (ר' --today-peek-top ב-theme.css) ממש מתחת לשורת
+// הברכה/תאריך בפועל - נמדד חי (getBoundingClientRect), לא פיקסל קבוע
+// שהיה מחושב פעם אחת עבור עברית/מובייל בלבד ואז דווח כ"נבלע" מתחת לברכה
+// באנגלית (טקסט שונה, רוחב/breakpoint שונה) - לפי בקשה מפורשת "לא רק
+// באנגלית, בכל שפה". נקראת מ-renderHomeGreeting (כל טעינה + כל החלפת שפה,
+// ר' onLanguageChanged) וגם ב-resize, כך שהיא תמיד עדכנית
+function positionTodayPeekPanel() {
+    const greetingRow = document.querySelector('.home-greeting-row');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (!greetingRow || !wrapper) return;
+    const rowRect = greetingRow.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const topPx = Math.round(rowRect.bottom - wrapperRect.top) + 14;
+    document.documentElement.style.setProperty('--today-peek-top', `${topPx}px`);
+}
+window.addEventListener('resize', positionTodayPeekPanel);
 
 // עריכה מהירה של משימה קבועה מהלו"ז - נפתחת גם מ"הצצה ליום" (בעתיד, אם
 // ייווסף קישור עריכה שם) וגם מפירוט היום בלוח החודשי (renderSelectedCalendarDay)
@@ -6662,7 +6680,11 @@ function applyFabOrder() {
 // מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה. צומצם (74,
 // לא 85) כדי שהשורה כולה תיכנס ברוחב מסך מובייל בלי לגלוש - לפי בקשה
 // מפורשת שחוזרת ("זה עוד פעם טיפה יוצא מהמסך")
-const FAB_ROW_STEP = 74;
+// 86 (היה 74) - עודכן יחד עם הגדלת הבועות (fab-tier-front 104px/fab-tier-side
+// 66px ב-theme.css, לפי בקשה "רואים את זה קטן במובייל") כדי שלא יתחילו
+// לחפוף - המינימום המתמטי כדי שבועה-קדמית וצדדית סמוכה לא ייגעו הוא
+// (104+66)/2=85, אז 86 עם שוליים קטנים
+const FAB_ROW_STEP = 86;
 
 // --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
 // לא נשמר ב-localStorage בעצמו (מתאפס ל-null בכל טעינה) - אבל מי שהיה
