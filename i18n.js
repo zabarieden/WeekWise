@@ -664,7 +664,7 @@ he: {
     note_triage_success_today: "נוסף למשימות של היום!", note_triage_success_tomorrow: "נוסף למשימות של מחר!", note_triage_success_shopping: "הועבר לרשימת הקניות!", note_triage_success_otherdate: "נוסף ללו״ז שלך!",
     progress_title: "מד התקדמות שבועי", general_title: "רשימת קניות",
     calendar_glance_title: "כל האירועים", calendar_glance_subtitle: "(תאריכים ואירועים קרובים)",
-    today_tasks_title: "הצצה להיום", today_tasks_empty_hint: "אין שום דבר מתוכנן להיום", recurring_task_tooltip: "משימה קבועה שבועית",
+    today_tasks_title: "הצצה ליום", today_tasks_empty_hint: "אין שום דבר מתוכנן להיום", recurring_task_tooltip: "משימה קבועה שבועית",
     today_tasks_all_done_message: "כל הכבוד, סיימת את כל המשימות להיום! זמן להירגע 💜",
     today_tasks_still_time_message: "בלי לחץ - יש לך עוד זמן היום להספיק את זה 💜",
     today_tasks_rotate_1: "אפשר לעצור לרגע, לנוח, ואז לעשות את הצעד הראשון ☕",
