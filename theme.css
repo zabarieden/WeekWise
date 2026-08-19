@@ -3137,6 +3137,12 @@ html[dir="ltr"] .today-peek-tab {
     border-radius: 0 14px 14px 0;
     box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
 }
+/* נעלמת כשהפאנל פתוח - לפי בקשה מפורשת. אחות אחרי הפאנל ב-DOM (ר' index.html)
+   אז ~ עובד; סגירה עדיין אפשרית דרך לחיצה על הרקע המעומעם (today-peek-overlay) */
+#today-peek-content-panel.open ~ .today-peek-tab {
+    opacity: 0;
+    pointer-events: none;
+}
 /* טקסט אנכי - סיבוב של בלוק אופקי רגיל (לא writing-mode) כדי שסדר-הקריאה
    העברי/RTL הרגיל יישמר במדויק כמו שהוא, רק מוטה 90 מעלות - לפי בקשה
    מפורשת ("בלי התמונה והמספר, שיקראו לה הצצה להיום") */
