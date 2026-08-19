@@ -978,12 +978,20 @@
             <div id="today-peek-content-panel" class="today-peek-content-panel">
                 <div class="today-peek-content-header">
                     <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                    <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
-                         updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
-                         מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-                    <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
-                        🔥 <span id="home-calorie-badge-value">0</span>
-                    </button>
+                    <div class="hamburger-drawer-header-actions">
+                        <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                             updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
+                             מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
+                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                            🔥 <span id="home-calorie-badge-value">0</span>
+                        </button>
+                        <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
+                             זה"): הלשונית עצמה נעלמת כשפתוח (ר' theme.css), ואזור
+                             הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
+                             92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
+                             בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
+                        <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
+                    </div>
                 </div>
                 <div id="today-tasks-list" class="today-tasks-list"></div>
             </div>
