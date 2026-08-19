@@ -232,6 +232,18 @@ async function loadUserLanguage() {
     const { data } = await supabaseClient.from('user_premium').select('language').eq('user_id', currentUserId).maybeSingle();
     if (data && data.language && translations[data.language] && data.language !== currentLang) {
         setLanguage(data.language);
+        return;
+    }
+    // אין ערך שרתי בכלל (חשבון שמעולם לא נגע בבורר-השפה בפועל - השפה
+    // הנוכחית הגיעה מ-localStorage/ברירת המחדל של הדפדפן בלבד, מעולם לא
+    // נשמרה לחשבון) - מיגרציה חד-כיוונית שקטה של הערך המקומי לחשבון, כדי
+    // שמכשיר/דפדפן חדש (או ניקוי מטמון) לא יאבד את השפה שוב - דווח במפורש
+    // ("זה צריך לזכור שהייתי בעברית" אחרי ניקוי מטמון)
+    if (data && !data.language) {
+        supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, language: currentLang },
+            { onConflict: 'user_id' },
+        );
     }
 }
 
