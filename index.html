@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=369">
+    <link rel="stylesheet" href="theme.css?v=370">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -929,9 +929,10 @@
 
                 <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
                      דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
-                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. אימוג'י ברק -
-                     לפי בקשה מפורשת (שינוי מאימוג'י משקולת שהיה קודם) -->
-                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">⚡</button>
+                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. אייקון תמונה
+                     (סטופר+דגל מרוצים) במקום אימוג'י - לפי בקשה מפורשת, ר' .dock-fab-img
+                     ב-theme.css -->
+                <button type="button" class="dock-fab dock-fab-img hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout"></button>
 
                 <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
                      מההגדרות, אותו דפוס בדיוק כמו כפתור המים/ספורט. לוחצים, בוחרים
@@ -3104,6 +3105,6 @@
     </div>
 
     <script src="i18n.js?v=287"></script>
-    <script src="app.js?v=408"></script>
+    <script src="app.js?v=409"></script>
 </body>
 </html>

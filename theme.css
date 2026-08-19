@@ -2712,6 +2712,19 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     user-select: none;
     -webkit-user-select: none;
 }
+/* בועה עם תמונה (סטופר+דגל) במקום אימוג'י טקסטואלי - לפי בקשה מפורשת.
+   התמונה עצמה כבר כדור-זכוכית מוכן (נשלחה מוכנה), אז מחליפים רק את
+   background-image (לא את כל ה-shorthand background) כדי ש-cover יחתוך
+   אוטומטית את הפינות הכהות של הריבוע המקורי לתוך העיגול - אין צורך
+   בהסרת-רקע ידנית. מכבים backdrop-filter כי אין מה "לראות מבעד" לתמונה
+   אטומה - חוסך עבודת GPU מיותרת */
+.dock-fab.dock-fab-img {
+    background-image: url('sport-fab-icon.png');
+    background-size: cover;
+    background-position: center;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
 /* ריחוף עדין - אותו רעיון בדיוק כמו aiBrainFloat (עוזר ה-AI), לפי בקשה
    מפורשת "שהבועות ירחפו קצת כמו המוח". משך שונה מעט לכל רמת-עומק (ר'
    .fab-tier-* למטה) כדי שלא כולן "ינשמו" בדיוק ביחד - מרגיש יותר אורגני */
@@ -3555,6 +3568,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 /* פרץ מהמרכז (לא נפילה מלמעלה) - כל חלקיק מתחיל במרכז המסך ממש ו"קופץ"
    החוצה לכיוון/מרחק אקראיים (--tx/--ty, נקבעים ב-JS), עם נפילה קלה בסוף
    (התוספת ל-ty) לתחושת כבידה טבעית - לפי בקשה מפורשת ("שיקפוץ מאמצע המסך") */
+/* האנימציה עצמה מתבצעת ב-JS (Web Animations API, ר' spawnGentleConfettiBurst
+   ב-app.js) עם keyframes מוטבעים לכל חלקיק בנפרד - לא כאן - כדי להבטיח מסלול
+   אקראי עצמאי אמיתי לכל חלקיק (הגרסה הקודמת עם --tx/--ty ב-CSS דווחה כ"נופלת
+   בקו אחד" במקום זיקוקים) */
 .gentle-confetti-piece {
     position: absolute;
     top: 50%;
@@ -3563,18 +3580,6 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     height: 12px;
     border-radius: 2px;
     opacity: 0;
-    --tx: 0px;
-    --ty: 0px;
-    --rot: 0deg;
-    animation-name: gentleConfettiBurst;
-    animation-timing-function: ease-out;
-    animation-fill-mode: forwards;
-}
-@keyframes gentleConfettiBurst {
-    0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 0; }
-    12% { opacity: 0.9; }
-    70% { opacity: 0.85; }
-    100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty) + 60px)) rotate(var(--rot)); opacity: 0; }
 }
 /* ברכה יומית (בוקר טוב/ערב טוב וכו') - ר' checkDailyGreeting ב-app.js.
    fixed+centered למעלה, מעל הכל, נעלמת בהדרגה אחרי כמה שניות */

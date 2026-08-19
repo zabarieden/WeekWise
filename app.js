@@ -4397,15 +4397,28 @@ function spawnGentleConfettiBurst(container, count, originX, originY) {
             piece.style.left = `${originX}px`;
             piece.style.top = `${originY}px`;
         }
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 110 + Math.random() * 220;
-        piece.style.setProperty('--tx', `${Math.round(Math.cos(angle) * distance)}px`);
-        piece.style.setProperty('--ty', `${Math.round(Math.sin(angle) * distance)}px`);
-        piece.style.setProperty('--rot', `${Math.round(Math.random() * 360)}deg`);
         piece.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
-        piece.style.animationDuration = `${1.6 + Math.random() * 1.2}s`;
         container.appendChild(piece);
-        piece.addEventListener('animationend', () => piece.remove());
+
+        // Web Animations API עם ערכים חושבים ומוטבעים ישירות בכל keyframe
+        // (לא CSS custom properties + @keyframes משותף) - כדי להבטיח שכל
+        // חלקיק מקבל מסלול אקראי עצמאי לגמרי, אחרי שהגרסה הקודמת (--tx/--ty
+        // ב-CSS) דווחה כ"נופלת בקו אחד" במקום להתפוצץ כמו זיקוקים לכיוונים
+        // שונים. פרץ מהיר החוצה (0%->35%), ואז נפילה/כבייה קלה (35%->100%)
+        // לתחושת זיקוקים אמיתית, לא נפילה ישרה
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 90 + Math.random() * 190;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        const rot = (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 360);
+        const duration = 1500 + Math.random() * 1000;
+
+        const anim = piece.animate([
+            { transform: 'translate(-50%, -50%) scale(0.4) rotate(0deg)', opacity: 0, offset: 0 },
+            { transform: `translate(calc(-50% + ${(tx * 0.9).toFixed(1)}px), calc(-50% + ${(ty * 0.9).toFixed(1)}px)) scale(1) rotate(${(rot * 0.7).toFixed(0)}deg)`, opacity: 1, offset: 0.35 },
+            { transform: `translate(calc(-50% + ${tx.toFixed(1)}px), calc(-50% + ${(ty + 50).toFixed(1)}px)) scale(0.9) rotate(${rot.toFixed(0)}deg)`, opacity: 0, offset: 1 },
+        ], { duration, easing: 'cubic-bezier(0.15, 0.65, 0.35, 1)', fill: 'forwards' });
+        anim.onfinish = () => piece.remove();
     }
 }
 
