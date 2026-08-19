@@ -3348,6 +3348,14 @@ async function applyParsedScheduleEvents(allEvents) {
 // ולידציה + רענון-מסכים בדיוק כמו עריכה ידנית, בלי לשכפל את הלוגיקה
 async function applyScheduleEditsAndDeletes(events) {
     let updated = 0, deleted = 0;
+    // תזכורת: אם המשתמשת בחרה משהו בשדה התזכורת של מוח ה-AI (ר'
+    // aiReminderMinutes/aiReminderText ב-applyParsedScheduleEvents) - זו
+    // בקשה מפורשת לתזכורת החדשה הזו, גם בעריכה. אם לא נגעה בו (0), חשוב
+    // *לשמר* את התזכורת שכבר הייתה קיימת על הפריט ולא לאפס אותה בשקט -
+    // זה היה הבאג המקורי: כל עריכה דרך ה-AI מחקה תזכורת+טקסט שהוגדרו קודם
+    // ידנית, גם כשהבקשה לא נגעה בתזכורת בכלל
+    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     for (const ev of events) {
         if (!ev.target_id || !ev.target_table) continue;
         if (ev.intent === 'delete') {
@@ -3358,12 +3366,15 @@ async function applyScheduleEditsAndDeletes(events) {
             }
             deleted++;
         } else if (ev.intent === 'update') {
+            const existingItem = lastFetchedExistingItems.find(item => item.id === ev.target_id);
+            const reminderMinutes = aiReminderMinutes > 0 ? aiReminderMinutes : (existingItem?.reminder_minutes || 0);
+            const reminderText = aiReminderMinutes > 0 ? aiReminderText : (existingItem?.reminder_text || '');
             if (ev.target_table === 'weekly_schedule') {
                 editingGlanceTaskId = ev.target_id;
                 document.getElementById('glance-edit-task-title-input').value = ev.task_title || '';
                 document.getElementById('glance-edit-task-time-input').value = ev.time || '';
-                document.getElementById('glance-edit-task-reminder').value = '0';
-                document.getElementById('glance-edit-task-reminder-text').value = '';
+                document.getElementById('glance-edit-task-reminder').value = String(reminderMinutes);
+                document.getElementById('glance-edit-task-reminder-text').value = reminderText;
                 populateGlanceTaskDaySelect(ev.day_of_week);
                 await saveGlanceTaskEdit();
             } else {
@@ -3372,8 +3383,8 @@ async function applyScheduleEditsAndDeletes(events) {
                 document.getElementById('calendar-event-title-input').value = ev.task_title || '';
                 document.getElementById('calendar-event-date-input').value = ev.event_date || '';
                 document.getElementById('calendar-event-time-input').value = ev.time || '';
-                document.getElementById('calendar-event-reminder').value = '0';
-                document.getElementById('calendar-event-reminder-text').value = '';
+                document.getElementById('calendar-event-reminder').value = String(reminderMinutes);
+                document.getElementById('calendar-event-reminder-text').value = reminderText;
                 await addCalendarEvent();
             }
             updated++;
@@ -3474,19 +3485,19 @@ async function fetchExistingScheduleItems() {
     const past = new Date(); past.setDate(past.getDate() - 3);
     const future = new Date(); future.setDate(future.getDate() + 30);
     const [{ data: weekly }, { data: events }] = await Promise.all([
-        supabaseClient.from('weekly_schedule').select('id, task_title, day_of_week, time_of_day').eq('user_id', currentUserId),
-        supabaseClient.from('calendar_events').select('id, event_title, event_date, event_time')
+        supabaseClient.from('weekly_schedule').select('id, task_title, day_of_week, time_of_day, reminder_minutes, reminder_text').eq('user_id', currentUserId),
+        supabaseClient.from('calendar_events').select('id, event_title, event_date, event_time, reminder_minutes, reminder_text')
             .eq('user_id', currentUserId).eq('source', 'calendar')
             .gte('event_date', getLocalDateString(past)).lte('event_date', getLocalDateString(future)),
     ]);
     const items = [];
     (weekly || []).forEach(row => {
         if (!row.task_title) return;
-        items.push({ id: row.id, table: 'weekly_schedule', title: row.task_title, day_of_week: row.day_of_week, time: row.time_of_day || null });
+        items.push({ id: row.id, table: 'weekly_schedule', title: row.task_title, day_of_week: row.day_of_week, time: row.time_of_day || null, reminder_minutes: row.reminder_minutes || 0, reminder_text: row.reminder_text || '' });
     });
     (events || []).forEach(row => {
         if (!row.event_title) return;
-        items.push({ id: row.id, table: 'calendar_events', title: stripLeadingTimeFromTitle(row.event_title), event_date: row.event_date, time: row.event_time || null });
+        items.push({ id: row.id, table: 'calendar_events', title: stripLeadingTimeFromTitle(row.event_title), event_date: row.event_date, time: row.event_time || null, reminder_minutes: row.reminder_minutes || 0, reminder_text: row.reminder_text || '' });
     });
     return items;
 }
