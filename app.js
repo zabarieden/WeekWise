@@ -13041,15 +13041,24 @@ async function unsubscribePushNotifications() {
     }
 }
 
+// חשוב: דרך ה-Service Worker (registration.showNotification), לא new Notification()
+// הישיר - ה-constructor הישיר פשוט לא נתמך ב-iOS (Safari/PWA) בכלל, אז תזכורת
+// שנורית כשהאפליקציה פתוחה הייתה משמיעה צליל ומציגה פופאפ בתוך האפליקציה, אבל
+// בלי שום התראת-מערכת אמיתית באייפון - דווח במפורש ("קיבלתי צלצול אבל לא
+// התראה"). registration.showNotification הוא בדיוק מה שמשמש כבר בהצלחה בנתיב
+// ה-Push השרתי (ר' sw.js/'push' listener) - אותה קריאה בדיוק, רק מהצד הזה
 function showBrowserNotification(taskTitle, text) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const notification = new Notification(`${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`, {
-        body: text || t('reminder_default_text'),
-        icon: 'icon.png',
-        tag: `weekwise-reminder-${taskTitle}-${Date.now()}`
-    });
-    notification.onclick = () => { window.focus(); notification.close(); };
-    notification.onclose = () => {}; // סגירה מפורשת ומטופלת - לא אמורה לגרום להצגה חוזרת
+    const title = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
+    const options = { body: text || t('reminder_default_text'), icon: 'icon.png', tag: `weekwise-reminder-${taskTitle}-${Date.now()}` };
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) { reg.showNotification(title, options); return; }
+            try { new Notification(title, options); } catch { /* iOS ללא SW רשום - אין מה לעשות */ }
+        });
+        return;
+    }
+    try { new Notification(title, options); } catch { /* לא נתמך בדפדפן הזה */ }
 }
 
 let reminderToastTimeout = null;
