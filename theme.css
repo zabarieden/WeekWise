@@ -2372,11 +2372,11 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 }
 .home-hero-panel {
     /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
-       הקבועים (עוזר AI בפינה שמאל-עליונה - top:22px עד 122px אחרי שהוגדל
-       ("גדול פי כמה"), המבורגר בפינה ימין-עליונה, קטן בהרבה) - בלי זה שורת
+       הקבועים (עוזר AI בפינה שמאל-עליונה - top:22px עד 182px אחרי שהוגדל
+       שוב ל-160px, המבורגר בפינה ימין-עליונה, קטן בהרבה) - בלי זה שורת
        "שלום.../תאריך" מסתתרת מתחתיהם. הסרגל העליון (.bottom-tab-bar) שסיפק
        את הפינוי הזה הוסר לגמרי */
-    padding: 140px 14px 14px 14px;
+    padding: 195px 14px 14px 14px;
     margin-bottom: 16px;
     position: relative;
     z-index: 5;
@@ -2545,7 +2545,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
        תת-מסך (רשת קוביות/רשימה) הייתה מתחילה ממש מתחת לפינה השמאלית-עליונה
        ומתנגשת איתו. padding-bottom - מפנה מקום רק מתחת ל-.ai-fab הצף
        (bottom:25px) כדי שהשורה האחרונה בכל רשימה לא תיבלע מתחתיו */
-    padding-top: 140px;
+    padding-top: 195px;
     padding-bottom: calc(165px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
@@ -2865,15 +2865,15 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.
    נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא קבוע לבועה
    ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
-.dock-fab.fab-tier-side { width: 66px; height: 66px; font-size: 1.75rem; animation-duration: 4.4s; }
+.dock-fab.fab-tier-side { width: 58px; height: 58px; font-size: 1.55rem; animation-duration: 4.4s; }
 @media (max-width: 420px) {
-    .ai-brain-fab { width: 128px; height: 128px; }
-    .ai-brain-icon { font-size: 4.4rem; }
-    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (128px, קצה תחתון ב-top:22px+128px=150px)
-       - הערך הבסיסי (140px, ר' .home-hero-panel/.main-scroll-area למעלה)
-       מחושב לפי הגרסה הרגילה (100px) ולא מספיק יותר במובייל */
-    .home-hero-panel { padding-top: 160px; }
-    .main-scroll-area { padding-top: 160px; }
+    .ai-brain-fab { width: 180px; height: 180px; }
+    .ai-brain-icon { font-size: 5.4rem; }
+    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (180px, קצה תחתון ב-top:22px+180px=202px)
+       - הערך הבסיסי (195px, ר' .home-hero-panel/.main-scroll-area למעלה)
+       לא מספיק במובייל הצר, שם הבועה עוד יותר גדולה מהגרסה הרגילה */
+    .home-hero-panel { padding-top: 215px; }
+    .main-scroll-area { padding-top: 215px; }
 }
 /* מי שבמרכז (עמדת "קדמי") - לא בהכרח הפתק! לפי בקשה מפורשת ("אני רוצה
    שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב") כל בועה יכולה להגיע
@@ -2881,9 +2881,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    fab-tier-front נקבעת דינמית לפי מיקום, לא ID קבוע. גדולה יותר ופעימה
    עדינה (זוהר לבן-רך, לא צבעוני) כדי שתמיד תבלוט כעוגן המרכזי */
 .dock-fab.fab-tier-front {
-    width: 104px;
-    height: 104px;
-    font-size: 2.75rem;
+    width: 90px;
+    height: 90px;
+    font-size: 2.4rem;
     /* שתי אנימציות בו-זמנית (לא רק fabPulse שהיה מחליף/מוחק את dockFabFloat
        שיורשת מ-.dock-fab - animation הוא shorthand, לא מצטבר בין כללים) -
        הריחוף (transform) והפעימה (box-shadow) על שתי תכונות שונות, אין ביניהן
@@ -2914,11 +2914,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     position: absolute;
     top: 22px;
     left: 22px;
-    /* הוגדל (היה 100px) - לפי בקשה מפורשת ("שיהיה יותר גדול", "שיראו אותו
-       יותר טוב") - גם משפר את איכות-התצוגה הנתפסת של תמונת הרובוט (פחות
-       מוקטנת מהמקור, יותר פרטים נראים) */
-    width: 116px;
-    height: 116px;
+    /* הוגדל משמעותית (היה 100px, אז 116px, עכשיו הרבה יותר) - לפי בקשה
+       מפורשת חוזרת ("תגדיל עוד את ה-AI... עוד הרבה") - גם משפר את
+       איכות-התצוגה הנתפסת של תמונת הרובוט (פחות מוקטנת מהמקור, יותר
+       פרטים נראים). ר' padding-top של .home-hero-panel/.main-scroll-area
+       למעלה - חייב לפנות מספיק מקום מתחת לבועה הגדולה יותר */
+    width: 160px;
+    height: 160px;
     background: transparent;
     border: none;
     color: #fff;
@@ -2950,6 +2952,12 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 .daily-board-fab { top: auto; left: auto; right: 24px; bottom: 30px; transform: none; width: 44px; height: 44px; }
 html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
 .daily-board-fab:active { transform: scale(0.85); }
+/* גרסה ממוקמת מחדש - ממש מתחת ל"הצצה להיום" (בתוך .today-peek-anchor),
+   לא בפינה הימנית-תחתונה הישנה - לפי בקשה מפורשת. הפינה הישנה נשארת ריקה
+   בינתיים, ר' ההערה ב-index.html. דורסת רק את המיקום (top/right/bottom),
+   לא את שאר העיצוב (הנקודה הפועמת וכו') שממשיך להגיע מ-.daily-board-fab */
+.daily-board-fab-under-peek { position: absolute; top: 68px; right: 0; left: auto; bottom: auto; }
+html[dir="ltr"] .daily-board-fab-under-peek { right: auto; left: 0; }
 /* var(--accent-pink)/var(--accent-purple-light) בלי סיומת -text בכוונה - גרסת
    ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), וזה גרם לנקודה
    להיראות כהה/עמומה דווקא במצב הבהיר - לפי בקשה קודמת ("בבהיר אני רוצה
@@ -3197,7 +3205,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 100px; }
+.today-peek-anchor { position: relative; height: 130px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3205,22 +3213,25 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
     position: absolute;
     top: 14px;
     right: 0;
-    width: var(--today-peek-width);
-    min-height: 84px;
+    width: auto;
+    max-width: 150px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, 0.05);
+    /* יותר אטום/זוהר מבעבר (היה 0.05/opacity 0.75, כמעט בלתי-נראה על רקע
+       כהה) - לפי בקשה מפורשת ("ברקע שחור לא רואים") */
+    background-color: rgba(255, 255, 255, 0.14);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-inline-end: none;
     border-radius: 14px 0 0 14px;
-    box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
+    box-shadow: -3px 0 14px rgba(0, 0, 0, 0.3), 0 0 14px rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
     cursor: pointer;
-    padding: 8px 3px;
-    opacity: 0.75;
+    padding: 10px 16px;
+    opacity: 0.95;
     touch-action: pan-y;
     z-index: 3520;
     transition: opacity 0.2s ease;

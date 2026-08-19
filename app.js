@@ -6637,11 +6637,11 @@ function filterHelpFaq() {
     if (emptyHint) emptyHint.classList.toggle('hidden', anyVisible);
 }
 
-// כפתור צף להוספה מהירה של מים - דלוק כברירת מחדל (opt-out, לא opt-in) לפי
-// בקשה מפורשת: כל מי שלא נגע בהגדרה בכלל רואה את הכפתור מיד, בדיוק כמו
-// btn-preset-fab למטה - "!== 'false'" ולא "=== 'true'"
+// כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (opt-in, לא opt-out)
+// שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"),
+// דורס את ה-opt-out הקודם ("=== 'true'" ולא "!== 'false'")
 function isWaterFabOn() {
-    return localStorage.getItem('weekwise_water_fab') !== 'false';
+    return localStorage.getItem('weekwise_water_fab') === 'true';
 }
 
 function applyWaterFabSetting(enabled, skipRestack) {
@@ -6961,8 +6961,10 @@ function toggleWaterFabFromCard() {
 // כפתור צף להוספה מהירה של ספורט - דלוק כברירת מחדל (opt-out) עכשיו, לפי
 // בקשה מפורשת - "!== 'false'" ולא "=== 'true'", אותו דפוס בדיוק כמו שאר
 // בועות ה-Dock (בעבר זו הייתה היחידה שנשארה opt-in במפורש, זה השתנה)
+// כבוי כברירת מחדל (opt-in) שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל:
+// פתקים + ארוחות מוכנות"), דורס שוב את השינוי הקודם ל-opt-out
 function isSportFabOn() {
-    return localStorage.getItem('weekwise_sport_fab') !== 'false';
+    return localStorage.getItem('weekwise_sport_fab') === 'true';
 }
 
 function applySportFabSetting(enabled, skipRestack) {
@@ -7009,12 +7011,11 @@ function togglePresetFab() {
 }
 
 // כפתור צף למעבר מהיר למסך התקציב - היה "פריסה חכמה" (מבוססת-AI, ר' ההערה
-// ב-index.html) והוחלף בבועה הזו בתקציב, לפי בקשה מפורשת: תקציב נבדק בפועל
-// הרבה יותר ולא צריך AI בכלל, בעוד שפריסה חכמה עדיין נגישה דרך הקובייה שלה
-// במסך הראשי. דלוק כברירת מחדל (opt-out), אותה סיבה בדיוק כמו שאר בועות
-// ה-Dock (כולל ספורט, שהיה opt-in בעבר ושונה לפי בקשה מפורשת)
+// ב-index.html) והוחלף בבועה הזו בתקציב. כבוי כברירת מחדל (opt-in) - לפי
+// בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"), דורס שוב
+// את ה-opt-out הקודם
 function isFinanceFabOn() {
-    return localStorage.getItem('weekwise_finance_fab') !== 'false';
+    return localStorage.getItem('weekwise_finance_fab') === 'true';
 }
 
 function applyFinanceFabSetting(enabled, skipRestack) {
@@ -14110,6 +14111,15 @@ async function openNotebookDetailDrawer() {
     if (titleEl) titleEl.textContent = notebook ? notebook.title : '';
     await loadNotebookPages(currentOpenNotebookId);
     if (notebookPagesCache.length) openNotebookPage(notebookPagesCache[0].id);
+    // במובייל פאנל-הדפים מקופל כברירת מחדל (בדסקטופ הוא ממילא תמיד גלוי
+    // בצד, ר' theme.css) - פותחים אותו אוטומטית בכניסה למחברת כדי שהמשתמשת
+    // תראה קודם את רשימת הדפים ותבחר במפורש, במקום לנחות ישר בתוך דף פתוח
+    // וגדול (הדף הראשון עדיין נטען ברקע, כדי שהניווט/חיצים יעבדו מיד) -
+    // לפי בקשה מפורשת
+    const panel = document.getElementById('notebook-page-tabs-panel');
+    const arrow = document.getElementById('notebook-page-tabs-arrow');
+    if (panel) panel.classList.add('open');
+    if (arrow) arrow.classList.add('open');
 }
 function closeNotebookDetailDrawer() {
     const overlay = document.getElementById('notebook-detail-drawer-overlay');
@@ -14137,6 +14147,19 @@ async function loadNotebookPages(notebookId) {
     } else {
         notebookAllItemsCache = [];
     }
+}
+
+// נקראת מלחיצה בפועל על דף ברשימה (לא מהטעינה השקטה הראשונית ב-
+// openNotebookDetailDrawer) - סוגרת את פאנל-הדפים במובייל אחרי הבחירה כדי
+// שהדף הנבחר יתגלה מיד, לפי בקשה מפורשת ("שילחצו על דף הוא יפתח, לא ישר
+// דף פתוח גדול") - בדסקטופ הפאנל תמיד גלוי בצד ממילא (ר' theme.css),
+// הסרת המחלקה שם לא משנה כלום ויזואלית
+function selectNotebookPage(pageId) {
+    openNotebookPage(pageId);
+    const panel = document.getElementById('notebook-page-tabs-panel');
+    const arrow = document.getElementById('notebook-page-tabs-arrow');
+    if (panel) panel.classList.remove('open');
+    if (arrow) arrow.classList.remove('open');
 }
 
 function openNotebookPage(pageId) {
@@ -14239,7 +14262,7 @@ function renderPageTabsList() {
     }
     listEl.innerHTML = pages.map(page => `
         <li class="notebook-page-tab-item${page.id === currentOpenPageId ? ' active' : ''}">
-            <span class="notebook-page-tab-item-main" onclick="openNotebookPage('${page.id}')">${notebookPagesCache.indexOf(page) + 1}. ${escapeHtmlForReport(page.title)}</span>
+            <span class="notebook-page-tab-item-main" onclick="selectNotebookPage('${page.id}')">${notebookPagesCache.indexOf(page) + 1}. ${escapeHtmlForReport(page.title)}</span>
             <button type="button" class="btn-delete-item" onclick="deleteNotebookPage('${page.id}')">❌</button>
         </li>
     `).join('');

@@ -365,6 +365,14 @@ Deno.serve(async (req) => {
         // "להתחשב" במספר שלה בלי ממש להישען עליו, ולתת עדיין הערכה עצמאית -
         // בדיוק ההפך ממטרת מנגנון האישור/דחייה כולו - לפי בקשה מפורשת
         const trustUserNumberNote = `If the user's answer states or implies a specific calorie count (for the whole item, or per unit/piece - e.g. "each one is about 16 calories" or "the whole plate is 400 calories"), treat that as ground truth from someone who actually knows what they're eating, not as one more data point to weigh against your own independent guess. Just do the arithmetic (e.g. multiply their per-unit number by the quantity already given) and use that as your calorie total for that item, instead of re-estimating it yourself.`;
+        // דווח בפועל: "3 לחמיות, 116 קלוריות" פורש כ-116 קלוריות *בסך הכל*
+        // לשלוש הלחמיות (116 קלוריות ליחידה, ~39 כל אחת - נמוך בצורה לא
+        // סבירה ללחמנייה אמיתית), במקום 116 קלוריות *לכל אחת* (348 בסך הכל,
+        // בדיוק כמו שמופיע על אריזת מוצר אמיתי) - trustUserNumberNote למעלה
+        // כבר מכסה מקרה כזה, אבל רק בענף hasAnswer (תשובה לשאלת-הבהרה), לא
+        // בענף הראשוני (תיאור-מזון חדש, בלי הבהרה קודמת) - שם לא הייתה שום
+        // הנחיה בעניין הזה בכלל. לפי בקשה מפורשת אחרי שדווח
+        const explicitCountCaloriesNote = `If the description states a quantity greater than one together with a single calorie number right next to it (e.g. "3 rolls, 116 calories", "2 cookies 80 calories"), default to treating that number as PER ITEM/UNIT (multiply by the count) unless the wording explicitly says it's a combined/total figure (e.g. "in total", "altogether", "combined", "סך הכל") - a per-unit calorie count matching a real product label is far more common in casual food descriptions than a pre-summed total, and treating it as a total tends to produce an implausibly low per-item number.`;
         // נתון-רקע משלושה מאגרים אמיתיים - Open Food Facts (מוצרים ממותגים,
         // ר' lookupOpenFoodFacts למעלה), TZAMERET (מאגר משרד הבריאות, מנות
         // ישראליות/ביתיות) ו-USDA (מרכיבים גנריים באנגלית, ר'
