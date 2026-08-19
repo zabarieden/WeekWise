@@ -312,6 +312,12 @@ Deno.serve(async (req) => {
         // הסיכוי שהקריאה כולה תיחתך בגלל תקרת הזמן ותיפול בשקט לגיבוי הגס -
         // לפי בקשה מפורשת לצמצם זמן תגובה
         const breadTermNote = `In Hebrew, the word "ביס" attached to a bread/pita name (e.g. "פיתת ביס", "פיתה ביס", "לחם ביס") is a real bakery product name for a specific smaller/snack-size bread item - it does NOT mean "a bite" or "a nibble" taken out of a regular-size bread. Treat it as one whole small bread item at its typical product size and calorie count (based on your own knowledge, no need to search for this specific term), not as a tiny fraction of a larger item.`;
+        // דווח בפועל (ר' פירוט מלא של המשתמשת): "גמבה" פורש כסלט פלפל-עגבניה
+        // מבושל עם שמן (~100 קלוריות למנה), במקום פלפל אדום פשוט/גולמי כמו
+        // שהתכוונה (~25 קלוריות) - פער של פי 4 על פריט אחד. "גמבה" הוא סלנג
+        // ישראלי נפוץ לפלפל (בדרך כלל אדום), לא שם של מנה מבושלת - לפי בקשה
+        // מפורשת אחרי שדווח
+        const gambaTermNote = `In Hebrew, "גמבה" is common Israeli slang for a plain bell pepper (usually red), eaten raw or as a simple side - it is NOT the name of a cooked pepper-and-tomato salad/stew dish. When a food description mentions "גמבה" on its own (no other words implying a cooked dish, like "מבושלת" or "בישלתי"), treat it as one plain raw bell pepper at its typical size and calorie count (very low-calorie, mostly water - roughly 20-30 kcal for a medium one), not as an oil-cooked salad portion.`;
         // הנחיה חדשה שנייה: כשתיאור המנה כולל כמה רכיבים שכל אחד מהם בנפרד
         // עמום באופן-הכנה (לא רק בכמות) - כמו תפוח אדמה (מבושל/מאודה לעומת
         // אפוי/מטוגן בשמן) או יוגורט (רזה/דיאטטי לעומת רגיל/מתוק) - ה-AI נטה
@@ -390,8 +396,8 @@ Deno.serve(async (req) => {
             ? `A nutrition database search for this description returned these real reference items with verified nutrition data - ${referenceParts.join("; also ")}. If one of these plausibly matches an item the user described (same food/product, similar name), prefer its exact kcal/protein/fat/carbs-per-100g figures over your own memory or estimate for that item - it's real reference data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.${referenceProductMatchCaution}`
             : "";
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${offDataNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${offDataNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
