@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=381">
+    <link rel="stylesheet" href="theme.css?v=382">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -142,48 +142,17 @@
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
                 </div>
-                <!-- הצצה להיום: פאנל-צד צר, בזרימה רגילה ממש אחרי שורת הברכה (לא
-                     position קבוע ביחס ל-#app-container) - כך שהיא גוללת יחד עם
-                     הברכה בדיוק, ולא "נשארת מאחור"/זזה כשגוללים - לפי בקשה מפורשת.
-                     .today-peek-anchor היא נקודת-עיגון עם גובה 0 (position:relative,
-                     לא תופסת מקום בזרימה) - הלשונית/הפאנל בתוכה הם position:absolute
-                     ביחס אליה, מעוגנים לקצה הפועל (ימין ב-RTL/שמאל ב-LTR) עם "לשונית"
-                     צרה שנשארת תמיד גלויה, ופאנל שנגלל 100% פנימה/החוצה (ר'
-                     .today-peek-tab/.today-peek-content-panel ב-theme.css). לחיצה/
-                     משיכה על הלשונית (ר' initTodayPeekDrag ב-app.js) פותחת את הפאנל
-                     המלא עם הרשימה - לפי בקשה מפורשת. מחליף לגמרי את today-tasks-card
-                     הישן (היה כרטיס מלא-רוחב בזרימת המסך) -->
-                <!-- ה-overlay חייב לשבת כאן, כאחות של הלשונית/הפאנל בתוך
-                     .home-hero-panel (לא כילד ישיר של #app-container כמו קודם) -
-                     .home-hero-panel יוצרת הקשר-שכבות משלה (position:relative +
-                     z-index:5), אז z-index גבוה על אלמנט מחוץ לה (למשל 3500)
-                     היה מצייר אותו מעל *כל* התוכן הפנימי כאן, כולל הלשונית/הפאנל
-                     עצמם (z-index:3510/3520, אבל "כלוא" בהקשר הפנימי) - מה שהיה
-                     גורם לעמעום לכסות אותם. position:fixed (לא absolute) כדי
-                     שבכל זאת יכסה את כל המסך, לא רק את הגובה הנמוך של
-                     .home-hero-panel עצמה -->
-                <div id="today-peek-overlay" class="today-peek-overlay" onclick="closeTodayPeekPanel()"></div>
+                <!-- הצצה להיום - רק "הלשונית" (הרצועה הצרה הקבועה) יושבת כאן, בזרימה
+                     רגילה ממש אחרי שורת הברכה, כדי שתגלול יחד איתה בדיוק - לפי
+                     בקשה מפורשת אחרי שדווח שהיא "זזה" בגלילה. .today-peek-anchor
+                     נקודת-עיגון בגובה קבוע וקטן (לא 0!) כדי שהלשונית לא תגלוש
+                     מחוץ לגובה-התוכן הטבעי של .home-hero-panel ותכריח סרגל-גלילה
+                     מיותר להופיע (דווח במפורש: "יש סרגל ליד ההצצה"). הפאנל הפתוח
+                     עצמו (עם התוכן/הרשימה) ו-ה-overlay שוכנים בנפרד למטה, ליד שאר
+                     המגירות - הם לא צריכים לגלול עם הברכה (הרקע המעומעם חוסם
+                     אינטראקציה בכל מקרה כשהם פתוחים), ר' #today-peek-content-panel
+                     בהמשך הקובץ -->
                 <div class="today-peek-anchor">
-                    <div id="today-peek-content-panel" class="today-peek-content-panel">
-                        <div class="today-peek-content-header">
-                            <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
-                            <div class="hamburger-drawer-header-actions">
-                                <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
-                                     updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
-                                     מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-                                <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
-                                    🔥 <span id="home-calorie-badge-value">0</span>
-                                </button>
-                                <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
-                                     זה"): הלשונית עצמה נעלמת כשפתוח (ר' theme.css), ואזור
-                                     הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
-                                     92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
-                                     בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
-                                <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
-                            </div>
-                        </div>
-                        <div id="today-tasks-list" class="today-tasks-list"></div>
-                    </div>
                     <!-- טקסט אנכי (writing-mode) במקום אייקון+תג-מספר - לפי בקשה מפורשת
                          ("בלי התמונה והמספר") - נשאר קריא גם ברצועה צרה מאוד -->
                     <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
@@ -953,11 +922,11 @@
 
                 <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
                      דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
-                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. אייקון תמונה
-                     (אדם רץ, בלי כדור-זכוכית עצמאי מובנה בתמונה עצמה הפעם - כדי
-                     שלא ייווצר "בועה בתוך בועה" עם עיצוב הזכוכית הקיים של הכפתור,
-                     לפי בקשה מפורשת) - ר' .dock-fab-img ב-theme.css -->
-                <button type="button" class="dock-fab dock-fab-img hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout"></button>
+                     לא מודל מהיר, כי משך האימון וסוגו משתנים בכל פעם. חזרה
+                     לאימוג'י (🏃, לא תמונה) - לפי בקשה מפורשת: תמונת PNG סטטית
+                     לא יכולה להסתנכרן עם ערכת הנושא הנבחרת (בניגוד לאימוג'י,
+                     שמרונדר ניטרלי בכל ערכה) -->
+                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">🏃</button>
 
                 <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
                      מההגדרות, אותו דפוס בדיוק כמו כפתור המים/ספורט. לוחצים, בוחרים
@@ -1004,6 +973,34 @@
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
             <button type="button" class="hamburger-fab" id="btn-hamburger-menu" onclick="openHamburgerMenu()" data-i18n-title="hamburger_menu_btn_title" title="Menu">☰</button>
+
+            <!-- הפאנל הפתוח של "הצצה להיום" + הרקע המעומעם שלו - כאן, ברמת
+                 #app-container (לא בתוך .home-hero-panel הגוללת) בכוונה: הם לא
+                 צריכים לעקוב אחרי גלילת הברכה (הלשונית בלבד עושה זאת, ר' למעלה),
+                 ואם הם היו יושבים בתוך אזור גולל, הם היו מכריחים סרגל-גלילה
+                 מיותר להופיע שם (דווח במפורש). מכסים את כל המסך תמיד, בדיוק כמו
+                 hamburger-drawer-overlay למטה - אותו דפוס בדיוק -->
+            <div id="today-peek-overlay" class="today-peek-overlay" onclick="closeTodayPeekPanel()"></div>
+            <div id="today-peek-content-panel" class="today-peek-content-panel">
+                <div class="today-peek-content-header">
+                    <h2 data-i18n="today_tasks_title">Today's Tasks</h2>
+                    <div class="hamburger-drawer-header-actions">
+                        <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
+                             updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
+                             מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
+                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                            🔥 <span id="home-calorie-badge-value">0</span>
+                        </button>
+                        <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
+                             זה"): הלשונית עצמה נעלמת כשפתוח (ר' theme.css), ואזור
+                             הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
+                             92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
+                             בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
+                        <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
+                    </div>
+                </div>
+                <div id="today-tasks-list" class="today-tasks-list"></div>
+            </div>
 
             <div id="hamburger-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeHamburgerMenu()">
                 <nav class="hamburger-drawer" onclick="event.stopPropagation()">
@@ -3166,6 +3163,6 @@
     </div>
 
     <script src="i18n.js?v=290"></script>
-    <script src="app.js?v=416"></script>
+    <script src="app.js?v=417"></script>
 </body>
 </html>

@@ -2867,13 +2867,13 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
 .dock-fab.fab-tier-side { width: 66px; height: 66px; font-size: 1.75rem; animation-duration: 4.4s; }
 @media (max-width: 420px) {
-    .ai-brain-fab { width: 112px; height: 112px; }
-    .ai-brain-icon { font-size: 4rem; }
-    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (112px, קצה תחתון ב-top:22px+112px=134px)
+    .ai-brain-fab { width: 128px; height: 128px; }
+    .ai-brain-icon { font-size: 4.4rem; }
+    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (128px, קצה תחתון ב-top:22px+128px=150px)
        - הערך הבסיסי (140px, ר' .home-hero-panel/.main-scroll-area למעלה)
        מחושב לפי הגרסה הרגילה (100px) ולא מספיק יותר במובייל */
-    .home-hero-panel { padding-top: 150px; }
-    .main-scroll-area { padding-top: 150px; }
+    .home-hero-panel { padding-top: 160px; }
+    .main-scroll-area { padding-top: 160px; }
 }
 /* מי שבמרכז (עמדת "קדמי") - לא בהכרח הפתק! לפי בקשה מפורשת ("אני רוצה
    שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב") כל בועה יכולה להגיע
@@ -2914,8 +2914,11 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     position: absolute;
     top: 22px;
     left: 22px;
-    width: 100px;
-    height: 100px;
+    /* הוגדל (היה 100px) - לפי בקשה מפורשת ("שיהיה יותר גדול", "שיראו אותו
+       יותר טוב") - גם משפר את איכות-התצוגה הנתפסת של תמונת הרובוט (פחות
+       מוקטנת מהמקור, יותר פרטים נראים) */
+    width: 116px;
+    height: 116px;
     background: transparent;
     border: none;
     color: #fff;
@@ -3000,15 +3003,19 @@ html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
     /* רלוונטי רק ל-img (לא ל-span האימוג'י) - שהתמונה תוצג שלמה, יחסית,
        בלי מתיחה/עיוות, לא ממלאת/נחתכת לתוך הריבוע */
     object-fit: contain;
-    font-size: 3.6rem;
+    font-size: 4.1rem;
     line-height: 1;
-    filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px rgba(210, 225, 255, 0.55)) drop-shadow(0 0 32px rgba(168, 85, 247, 0.35));
+    /* זוהר בגוון --accent-purple/--accent-purple-light (לא רגבה סגול קבוע) -
+       כך שהוא תמיד מתאים לערכת הנושא הנבחרת, לא נשאר סגול קבוע גם על רקע
+       ירוק/אחר - לפי בקשה מפורשת ("שיתאים לצבעים בכללי"). color-mix שומר על
+       אותה עוצמת-שקיפות שהייתה קודם (rgba(...,0.35) וכו') */
+    filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-purple-light) 55%, transparent)) drop-shadow(0 0 32px color-mix(in srgb, var(--accent-purple) 35%, transparent));
     animation: aiBrainFloat 5.5s ease-in-out infinite;
     transition: filter 0.25s ease;
 }
 @keyframes aiBrainFloat {
-    0%, 100% { transform: translateY(0); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px rgba(210, 225, 255, 0.55)) drop-shadow(0 0 32px rgba(168, 85, 247, 0.35)); }
-    50% { transform: translateY(-14px); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 22px rgba(210, 225, 255, 0.4)) drop-shadow(0 0 40px rgba(168, 85, 247, 0.25)); }
+    0%, 100% { transform: translateY(0); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-purple-light) 55%, transparent)) drop-shadow(0 0 32px color-mix(in srgb, var(--accent-purple) 35%, transparent)); }
+    50% { transform: translateY(-14px); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 22px color-mix(in srgb, var(--accent-purple-light) 40%, transparent)) drop-shadow(0 0 40px color-mix(in srgb, var(--accent-purple) 25%, transparent)); }
 }
 /* ההילה מתחזקת במעבר עכבר/לחיצה, לאותת על פעילות - animation:none חובה כאן
    (לא רק filter) כי אנימציית CSS פעילה "מנצחת" בקאסקייד על ערך filter רגיל
@@ -3016,7 +3023,7 @@ html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
 .ai-brain-fab:hover .ai-brain-icon, .ai-brain-fab:active .ai-brain-icon {
     animation: none;
     transform: translateY(-4px);
-    filter: saturate(1) brightness(1.15) drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 22px rgba(210, 225, 255, 0.7)) drop-shadow(0 0 44px rgba(168, 85, 247, 0.45));
+    filter: saturate(1) brightness(1.15) drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 22px color-mix(in srgb, var(--accent-purple-light) 70%, transparent)) drop-shadow(0 0 44px color-mix(in srgb, var(--accent-purple) 45%, transparent));
 }
 
 /* תגית-רמז (tooltip) בעיצוב האפליקציה במקום ה-title הדפדפני הגנרי (שאי
@@ -3168,10 +3175,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    כדי לא להתנגש עם בועת ה-AI (פינה שמאלית-עליונה) או תפריט ההמבורגר (פינה
    ימנית-עליונה) - לפי בקשה מפורשת */
 .today-peek-overlay {
-    /* fixed (לא absolute) - הכרחי כי היא יושבת בתוך .home-hero-panel (לצורך
-       הקשר-שכבות משותף עם הלשונית/הפאנל, ר' ההערה ב-index.html), אבל
-       .home-hero-panel עצמה קצרה (רק גובה הברכה+העיגון), לא גובה כל המסך */
-    position: fixed;
+    /* חזרה ל-absolute רגיל - הפאנל/העמעום עברו בחזרה לרמת #app-container
+       (לא בתוך .home-hero-panel יותר), אז אין יותר בעיית הקשר-שכבות
+       שדרשה position:fixed */
+    position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
@@ -3181,21 +3188,16 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 }
 .today-peek-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
 
-/* שני אלמנטים עצמאיים (לא flex-child אחד בתוך השני, לפי בקשה - הגרסה
-   הקודמת עם calc(100% - var(...)) בתוך flex לא עבדה בפועל, "לא רואים כלום"
-   כשפותחים) - הלשונית עומדת במקום קבוע, פשוט, בלי transform מותנה בכלל
-   (position בלבד + translateY(-50%) קבוע למרכוז אנכי). הפאנל נגלל 100% מלא
-   פנימה/החוצה (translateX(100%)<->translateX(0), בדיוק כמו .hamburger-drawer)
-   - בלי שום חישוב "כמה בדיוק להשאיר גלוי", כי הלשונית העצמאית היא זו שנשארת
-   גלויה ממילא (z-index גבוה יותר, מונחת מעל קצה הפאנל) */
-/* .today-peek-anchor: נקודת-עיגון בגובה 0 (position:relative, לא תופסת מקום
-   בזרימה) ממוקמת ב-index.html ממש אחרי .home-greeting-row, בתוך אותו הורה
-   גולל בדיוק (.home-hero-panel) - כך שהלשונית/הפאנל (position:absolute
-   ביחסית אליה) גוללים יחד עם הברכה תמיד, בלי תלות בגלילה. הגרסה הקודמת
-   (top מחושב פעם אחת ב-JS ביחס ל-#app-container, שלא גולל בעצמו) יצאה נכונה
-   רק בגלילה=0 - ברגע שגוללים, הברכה זזה אבל הפאנל (מחוץ לאזור הגלילה) נשאר
-   במקומו, בדיוק כמו שדווח ("זזה אחרי גלילה") */
-.today-peek-anchor { position: relative; height: 0; }
+/* .today-peek-anchor: נקודת-עיגון בזרימה רגילה, ממש אחרי .home-greeting-row
+   בתוך .home-hero-panel הגוללת (ר' index.html) - רק "הלשונית" חיה כאן
+   (position:absolute ביחס אליה), כדי שהיא תגלול יחד עם הברכה תמיד, בלי
+   תלות בגלילה (הגרסה הקודמת - top מחושב ב-JS ביחס ל-#app-container שלא
+   גולל - יצאה נכונה רק בגלילה=0). גובה קבוע וקטן (לא 0!) בגודל הלשונית
+   בערך, כדי שהיא לא תגלוש מחוץ לגובה-התוכן הטבעי של .home-hero-panel
+   ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
+   הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
+   צריך לעקוב אחרי גלילת הברכה */
+.today-peek-anchor { position: relative; height: 100px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3230,9 +3232,12 @@ html[dir="ltr"] .today-peek-tab {
     border-radius: 0 14px 14px 0;
     box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
 }
-/* נעלמת כשהפאנל פתוח - לפי בקשה מפורשת. אחות אחרי הפאנל ב-DOM (ר' index.html)
-   אז ~ עובד; סגירה עדיין אפשרית דרך לחיצה על הרקע המעומעם (today-peek-overlay) */
-#today-peek-content-panel.open ~ .today-peek-tab {
+/* נעלמת כשהפאנל פתוח - לפי בקשה מפורשת. הלשונית והפאנל כבר לא אחיות ב-DOM
+   (הפאנל עבר לרמת #app-container, הלשונית נשארה בתוך .home-hero-panel) אז
+   סלקטור ~ כבר לא עובד - מוחלף במחלקה שמוצמדת ישירות ע"י JS (ר'
+   openTodayPeekPanel/closeTodayPeekPanel ב-app.js). סגירה עדיין אפשרית דרך
+   לחיצה על הרקע המעומעם (today-peek-overlay) */
+.today-peek-tab.panel-open {
     opacity: 0;
     pointer-events: none;
 }
@@ -3251,7 +3256,7 @@ html[dir="ltr"] .today-peek-tab {
 
 .today-peek-content-panel {
     position: absolute;
-    top: 14px;
+    top: 195px;
     right: 0;
     /* רחב יותר מבעבר (היה 82%/320px) - לפי בקשה מפורשת ("במובייל שיפתח יותר")
        כדי שמשפטים ארוכים (עכשיו עוטפים, לא נחתכים - ר' .today-tasks-text)
@@ -4954,7 +4959,23 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 #sport-notes-input { width: 100%; box-sizing: border-box; font-family: inherit; resize: vertical; }
 .reminder-fields-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
 .reminder-fields-wrap select { flex: 1 1 140px; min-width: 0; box-sizing: border-box; }
-.reminder-fields-wrap input { flex: 2 1 200px; min-width: 0; box-sizing: border-box; }
+/* לא הייתה כאן שום עיצוב-צבע קודם (רק flex) - נופל אחורה לברירת המחדל
+   הכהה-גנרית של הדפדפן (color-scheme:dark ב-:root), שלא תואמת את שאר
+   הצבעים הסגולים-של-האפליקציה מסביב (למשל .language-select הצמוד) - לפי
+   בקשה מפורשת ("צריך להיות כמו הצבעים באפליקציה") */
+.reminder-fields-wrap input {
+    flex: 2 1 200px;
+    min-width: 0;
+    box-sizing: border-box;
+    background-color: rgba(20, 10, 30, 0.55);
+    border: 1px solid var(--accent-purple);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.9rem;
+    outline: none;
+}
+.reminder-fields-wrap input::placeholder { color: var(--text-secondary); opacity: 0.8; }
 
 .reminder-toast { position: absolute; top: -140px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(255,0,127,0.18), rgba(168,85,247,0.18)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,0,127,0.35); border-radius: 16px; padding: 14px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 4000; transition: top 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .reminder-toast.show { top: 16px; }

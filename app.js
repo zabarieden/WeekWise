@@ -4503,9 +4503,13 @@ function getTodayCardViewCount() {
 function openTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
+    const tab = document.getElementById('today-peek-tab');
     const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.add('open');
     if (overlay) overlay.classList.add('open');
+    // הלשונית והפאנל כבר לא אחיות ב-DOM (ר' theme.css) - מחלקה ישירה במקום
+    // סלקטור ~ כדי שהלשונית עדיין תיעלם כשפותחים
+    if (tab) tab.classList.add('panel-open');
     if (wrapper) wrapper.classList.add('today-preview-open');
     // סופרים פתיחה בפועל בלבד (לא כל loadTodayTasks שרץ מסיבות אחרות ברקע) -
     // כדי שהודעת "יש לך עוד זמן" (ר' loadTodayTasks) תרגיש כמו תגובה לביקור
@@ -4517,9 +4521,11 @@ function openTodayPeekPanel() {
 function closeTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
+    const tab = document.getElementById('today-peek-tab');
     const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
+    if (tab) tab.classList.remove('panel-open');
     if (wrapper) wrapper.classList.remove('today-preview-open');
 }
 function toggleTodayPeekPanel() {
@@ -6686,11 +6692,12 @@ function applyFabOrder() {
 // מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה. צומצם (74,
 // לא 85) כדי שהשורה כולה תיכנס ברוחב מסך מובייל בלי לגלוש - לפי בקשה
 // מפורשת שחוזרת ("זה עוד פעם טיפה יוצא מהמסך")
-// 86 (היה 74) - עודכן יחד עם הגדלת הבועות (fab-tier-front 104px/fab-tier-side
-// 66px ב-theme.css, לפי בקשה "רואים את זה קטן במובייל") כדי שלא יתחילו
-// לחפוף - המינימום המתמטי כדי שבועה-קדמית וצדדית סמוכה לא ייגעו הוא
-// (104+66)/2=85, אז 86 עם שוליים קטנים
-const FAB_ROW_STEP = 86;
+// 76 (היה 86, לפני זה 74) - ההגדלה הקודמת (104px/66px) גלשה מחוץ למסך
+// במובייל ("הבועות הצדדיות יוצאות מהמסך"), אז חזרה לגודל מתון יותר -
+// עודכן יחד עם fab-tier-front 90px/fab-tier-side 58px ב-theme.css.
+// המינימום המתמטי כדי שבועה-קדמית וצדדית סמוכה לא ייגעו הוא (90+58)/2=74,
+// אז 76 עם שוליים קטנים
+const FAB_ROW_STEP = 76;
 
 // --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
 // לא נשמר ב-localStorage בעצמו (מתאפס ל-null בכל טעינה) - אבל מי שהיה
