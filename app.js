@@ -4356,7 +4356,7 @@ async function loadTodayTasks() {
                 event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
             });
             if (celebrateError) console.error('today_celebrated insert failed:', celebrateError);
-            else triggerAllDoneSparkles();
+            else triggerAllDoneSparkles(celebration);
         }
     // עוד לא הכל בוצע - הודעת עידוד לפי כמה פעמים נפתחה הכרטיס היום, מוצגת
     // *לצד* רשימת המשימות שנשארו (לא במקומה): מ-5 פתיחות "בלי לחץ" עדינה,
@@ -4382,15 +4382,21 @@ async function loadTodayTasks() {
 // בבת אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
 // (position:relative + overflow:hidden כבר קיימים שם) כדי שלא יגלשו החוצה
 // על מסכי דסקטופ רחבים
-// קונפטי עדין (מלבנים קטנים בצבעי המותג) - כל חלקיק "קופץ" ממש ממרכז ה-
-// container שהתקבל, לכיוון/מרחק אקראיים (--tx/--ty/--rot). משותפת בין חגיגת
-// "הכל בוצע" (פעמיים, ר' triggerAllDoneSparkles) לבין פופאפ התזכורת החדש -
-// לפי בקשה מפורשת ("שיקפוץ פעמיים בצורה יפה, לא צריך לפי שניות")
-function spawnGentleConfettiBurst(container, count) {
+// קונפטי עדין (מלבנים קטנים בצבעי המותג) - כל חלקיק "קופץ" מנקודת המוצא
+// (originX/originY, בפיקסלים יחסית ל-container) לכיוון/מרחק אקראיים
+// (--tx/--ty/--rot). בלי origin - נופל חזרה למרכז ה-container עצמו (ברירת
+// המחדל ב-CSS, top/left 50%). משותפת בין חגיגת "הכל בוצע" (פעמיים, ר'
+// triggerAllDoneSparkles) לבין פופאפ התזכורת - לפי בקשה מפורשת
+function spawnGentleConfettiBurst(container, count, originX, originY) {
     const confettiColors = ['var(--accent-pink)', 'var(--accent-purple)', 'var(--accent-green)', '#eab308'];
+    const hasOrigin = originX != null && originY != null;
     for (let i = 0; i < count; i++) {
         const piece = document.createElement('span');
         piece.className = 'gentle-confetti-piece';
+        if (hasOrigin) {
+            piece.style.left = `${originX}px`;
+            piece.style.top = `${originY}px`;
+        }
         const angle = Math.random() * Math.PI * 2;
         const distance = 110 + Math.random() * 220;
         piece.style.setProperty('--tx', `${Math.round(Math.cos(angle) * distance)}px`);
@@ -4403,7 +4409,12 @@ function spawnGentleConfettiBurst(container, count) {
     }
 }
 
-function triggerAllDoneSparkles() {
+// anchorEl אופציונלי - כשמועבר (ר' loadTodayTasks, מעביר את פסקת "כל
+// הכבוד" עצמה), הקונפטי קופץ ממש מנקודת המילים האלה על המסך, לא ממרכז
+// גיאומטרי מנותק של כל האפליקציה - לפי בקשה מפורשת אחרי שדווח שזה נראה
+// "נופל מהצד" (זה קרה כי top/left 50% היו יחסית ל-.phone-wrapper כולו,
+// שלא בהכרח ממורכז חזותית מול הכרטיס שבו מופיעה ההודעה בפועל)
+function triggerAllDoneSparkles(anchorEl) {
     if (document.getElementById('all-done-sparkles')) return;
     const wrapper = document.querySelector('.phone-wrapper');
     if (!wrapper) return;
@@ -4412,8 +4423,16 @@ function triggerAllDoneSparkles() {
     overlay.className = 'all-done-sparkles';
     wrapper.appendChild(overlay);
 
-    spawnGentleConfettiBurst(overlay, 16);
-    setTimeout(() => spawnGentleConfettiBurst(overlay, 16), 350);
+    let originX = null, originY = null;
+    if (anchorEl) {
+        const anchorRect = anchorEl.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+        originX = anchorRect.left + anchorRect.width / 2 - wrapperRect.left;
+        originY = anchorRect.top + anchorRect.height / 2 - wrapperRect.top;
+    }
+
+    spawnGentleConfettiBurst(overlay, 16, originX, originY);
+    setTimeout(() => spawnGentleConfettiBurst(overlay, 16, originX, originY), 350);
     setTimeout(() => overlay.remove(), 3200);
 }
 

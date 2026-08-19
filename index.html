@@ -2853,6 +2853,20 @@
             </div>
         </div>
 
+        <!-- חלון צף: פופאפ תזכורת - מחליף את הבאנר השטוח הקודם (#reminder-toast),
+             נפתח כשתזכורת (ללוח זמנים שבועי או אירוע חד-פעמי ביומן) מגיעה בזמן
+             שהאפליקציה פתוחה - ר' fireReminder/showReminderPopup ב-app.js -->
+        <div id="modal-reminder-popup" class="apple-modal">
+            <div class="modal-sheet goal-celebration-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="all-done-sparkles" id="reminder-popup-confetti"></div>
+                <div class="goal-celebration-emoji">⏰</div>
+                <h3 id="reminder-popup-title"></h3>
+                <p id="reminder-popup-text" class="modal-subtitle"></p>
+                <button class="btn-primary btn-premium-cta" style="width:100%;" onclick="closeModal('modal-reminder-popup')" data-i18n="reminder_popup_close_btn">Got it!</button>
+            </div>
+        </div>
+
         <!-- לוח שנה מותאם-אישית, בעיצוב האפליקציה - מחליף את הפופ-אפ הטבעי של
              הדפדפן שלא ניתן לעצב בכלל (ר' openCustomDatePicker/renderCustomDatePickerGrid
              ב-app.js) - משמש את כל שדות התאריך באפליקציה, לפי בקשה מפורשת -->
@@ -2928,6 +2942,16 @@
                             <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
                         </select>
+                    </div>
+                    <div class="reminder-fields-wrap" style="margin-top: 8px;">
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-reminder')"><span id="calendar-event-reminder-display"></span></button>
+                        <select id="calendar-event-reminder" class="hidden">
+                            <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
+                            <option value="5" data-i18n="reminder_5min">🔔 5 minutes before</option>
+                            <option value="10" data-i18n="reminder_10min">🔔 10 minutes before</option>
+                            <option value="15" data-i18n="reminder_15min">🔔 15 minutes before</option>
+                        </select>
+                        <input type="text" id="calendar-event-reminder-text" data-i18n-placeholder="reminder_text_placeholder" placeholder="Custom reminder text (optional)">
                     </div>
                     <!-- שכפול - יוצר אירוע חדש בתאריך שרשום בשדה כרגע, בלי לגעת במקורי -
                          מוצג רק במצב עריכה (כמו כפתור המחיקה), לפי בקשה מפורשת
@@ -3080,6 +3104,6 @@
     </div>
 
     <script src="i18n.js?v=286"></script>
-    <script src="app.js?v=406"></script>
+    <script src="app.js?v=407"></script>
 </body>
 </html>
