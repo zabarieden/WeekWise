@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=384">
+    <link rel="stylesheet" href="theme.css?v=385">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -157,6 +157,14 @@
                          לקרוא"), עם רקע יותר בולט/זוהר כדי שיראו אותה גם על רקע כהה -->
                     <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
                         <span class="today-peek-tab-label" data-i18n="today_tasks_title">A Peek at Today</span>
+                    </button>
+                    <!-- "לוח היום" - טאב שני, אותו עיצוב זכוכית בדיוק כמו "הצצה להיום"
+                         ממש (משתמש באותה מחלקה today-peek-tab), רק ממוקם מתחתיו
+                         (.daily-board-tab דורסת top בלבד) - לפי בקשה מפורשת, במקום
+                         הנקודה הפועמת שהייתה בפינה התחתונה. עדיין פותח את
+                         #modal-daily-board הרגיל (מעוצב כחלונית-צד, ר' theme.css) -->
+                    <button type="button" class="today-peek-tab daily-board-tab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-title="daily_board_title" data-i18n-aria-label="daily_board_title" aria-label="Daily Board">
+                        <span class="today-peek-tab-label" data-i18n="daily_board_title">Daily Agenda</span>
                     </button>
                 </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
@@ -968,13 +976,6 @@
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
             <button type="button" class="hamburger-fab" id="btn-hamburger-menu" onclick="openHamburgerMenu()" data-i18n-title="hamburger_menu_btn_title" title="Menu">☰</button>
-
-            <!-- כפתור "לוח היום" - חזר לפינה הימנית-תחתונה המקורית (עיגול קטן עם
-                 נקודה פועמת) - לפי בקשה מפורשת, אחרי ניסיון קצר למקם אותו מתחת
-                 ל"הצצה להיום" שנדחה. עדיין פותח את #modal-daily-board הרגיל, אבל
-                 המודל עצמו עוצב מחדש כחלונית-צד נגררת כמו הצצה-להיום, לא כפופ-אפ
-                 מרכזי - ר' #modal-daily-board.apple-modal ב-theme.css -->
-            <button type="button" class="ai-brain-fab daily-board-fab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-aria-label="daily_board_fab_title" aria-label="Daily Board"></button>
 
             <!-- הפאנל הפתוח של "הצצה להיום" + הרקע המעומעם שלו - כאן, ברמת
                  #app-container (לא בתוך .home-hero-panel הגוללת) בכוונה: הם לא

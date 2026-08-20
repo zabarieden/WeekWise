@@ -2371,12 +2371,12 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     background-repeat: repeat;
 }
 .home-hero-panel {
-    /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לשני כפתורי ה-FAB
-       הקבועים (עוזר AI בפינה שמאל-עליונה - top:22px עד 182px אחרי שהוגדל
-       שוב ל-160px, המבורגר בפינה ימין-עליונה, קטן בהרבה) - בלי זה שורת
-       "שלום.../תאריך" מסתתרת מתחתיהם. הסרגל העליון (.bottom-tab-bar) שסיפק
-       את הפינוי הזה הוסר לגמרי */
-    padding: 195px 14px 14px 14px;
+    /* padding-top מוגדל (לא 14px) כדי לפנות מקום מתחת לכפתור ההמבורגר הקבוע
+       (פינה ימין-עליונה, top:22px+44px) - בלי זה שורת "שלום.../תאריך"
+       מסתתרת מתחתיו. עוזר ה-AI עבר לפינה שמאל-*תחתונה* (לפי בקשה מפורשת
+       "שלא יזוז" ותהיה קבועה למטה) ולא תופס יותר מקום כאן למעלה בכלל -
+       הערך הקודם (195px) היה מיועד רק בשבילו, ר' .ai-brain-fab למטה */
+    padding: 90px 14px 14px 14px;
     margin-bottom: 16px;
     position: relative;
     z-index: 5;
@@ -2540,12 +2540,12 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     min-width: 0;
     position: relative;
     z-index: 10;
-    /* padding-top זהה לזה של .home-hero-panel למעלה, מאותה סיבה בדיוק - עוזר
-       ה-AI גדל משמעותית ("גדול פי כמה") ובלי זה השורה הראשונה של כל תצוגת
-       תת-מסך (רשת קוביות/רשימה) הייתה מתחילה ממש מתחת לפינה השמאלית-עליונה
-       ומתנגשת איתו. padding-bottom - מפנה מקום רק מתחת ל-.ai-fab הצף
-       (bottom:25px) כדי שהשורה האחרונה בכל רשימה לא תיבלע מתחתיו */
-    padding-top: 195px;
+    /* padding-top זהה לזה של .home-hero-panel למעלה, מאותה סיבה בדיוק - מפנה
+       מקום רק מתחת להמבורגר הקבוע (פינה ימין-עליונה); עוזר ה-AI עבר לפינה
+       שמאל-תחתונה ולא תופס יותר מקום כאן. padding-bottom - מפנה מקום רק
+       מתחת ל-.ai-fab הצף (bottom:25px) כדי שהשורה האחרונה בכל רשימה לא
+       תיבלע מתחתיו */
+    padding-top: 90px;
     padding-bottom: calc(165px + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
     width: 100%;
@@ -2877,11 +2877,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 @media (max-width: 420px) {
     .ai-brain-fab { width: 180px; height: 180px; }
     .ai-brain-icon { font-size: 5.4rem; }
-    /* מפנה מקום מתחת לעוזר ה-AI הגדול יותר (180px, קצה תחתון ב-top:22px+180px=202px)
-       - הערך הבסיסי (195px, ר' .home-hero-panel/.main-scroll-area למעלה)
-       לא מספיק במובייל הצר, שם הבועה עוד יותר גדולה מהגרסה הרגילה */
-    .home-hero-panel { padding-top: 215px; }
-    .main-scroll-area { padding-top: 215px; }
 }
 /* מי שבמרכז (עמדת "קדמי") - לא בהכרח הפתק! לפי בקשה מפורשת ("אני רוצה
    שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב") כל בועה יכולה להגיע
@@ -2910,23 +2905,18 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 
 
-/* עוזר ה-AI (🧠): ננעל בפינה השמאלית-עליונה - בדיוק המקום שאימוג'י הברכה
-   ("מזג האוויר") תפס לפני שהוסר - בלי גרירה בכלל, לפי בקשה מפורשת.
-   position:absolute יחסית ל-.phone-wrapper (לא fixed) מאותה סיבה בדיוק כמו
-   .ai-fab למעלה - כך שהוא נשאר צמוד לכרטיס הנראה בפועל גם בדסקטופ רחב עם
-   שוליים, לא לחלון הדפדפן הגולמי.
+/* עוזר ה-AI (🧠): עבר לפינה השמאלית-*תחתונה*, קבוע לגמרי בלי גרירה ובלי
+   ריחוף/תזוזה (ר' .ai-brain-icon למטה - הוסרה אנימציית aiBrainFloat) -
+   לפי בקשה מפורשת ("שלא יזוז"). position:absolute יחסית ל-.phone-wrapper
+   (לא fixed) מאותה סיבה בדיוק כמו .ai-fab למעלה - כך שהוא נשאר צמוד לכרטיס
+   הנראה בפועל גם בדסקטופ רחב עם שוליים, לא לחלון הדפדפן הגולמי.
    בלי קופסה/רקע/מסגרת בעדיפות - ניסינו עיגול זכוכית מסביב (כמו בועות ה-
    Dock) ונדחה במפורש ("בלי בועה שיהיה יותר חופשי") - חזרה לגרסה השקופה
    לגמרי, רק עם זוהר חזק יותר על האימוג'י עצמו (ר' .ai-brain-icon) */
 .ai-brain-fab {
     position: absolute;
-    top: 22px;
+    bottom: 30px;
     left: 22px;
-    /* הוגדל משמעותית (היה 100px, אז 116px, עכשיו הרבה יותר) - לפי בקשה
-       מפורשת חוזרת ("תגדיל עוד את ה-AI... עוד הרבה") - גם משפר את
-       איכות-התצוגה הנתפסת של תמונת הרובוט (פחות מוקטנת מהמקור, יותר
-       פרטים נראים). ר' padding-top של .home-hero-panel/.main-scroll-area
-       למעלה - חייב לפנות מספיק מקום מתחת לבועה הגדולה יותר */
     width: 160px;
     height: 160px;
     background: transparent;
@@ -2943,42 +2933,17 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-user-select: none;
 }
 .ai-brain-fab:active { transform: scale(0.9); }
-/* עוזר ה-AI/תפריט ההמבורגר יושבים בשתי פינות מנוגדות (ר' ההערות עליהם
-   למעלה) - בעברית/RTL עוזר ה-AI בשמאל וההמבורגר בימין; באנגלית/LTR הן
-   צריכות להתחלף כדי שהפריסה תישאר "מראה" נכונה (לא נשארת קבועה לפי צד
-   פיזי בלי קשר לכיוון השפה, מה שדווח כבאג ויזואלי מפורש) */
-html[dir="ltr"] .ai-brain-fab { left: auto; right: 22px; }
+/* קבוע בפינה שמאל-תחתונה בשתי כיווני-שפה כאחד - לא מתחלף בין RTL/LTR כמו
+   שהיה כשהיה למעלה מול ההמבורגר (עכשיו אין שם התנגשות איתו יותר), לפי
+   בקשה מפורשת ("שלא יזוז") */
+html[dir="ltr"] .ai-brain-fab { left: 22px; }
 html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
-/* כפתור "לוח היום" - יורש את העיצוב השקוף/בלי-קופסה של עוזר ה-AI, אבל לא
-   את מיקומו: נעוץ ממש בתחתית המסך (מתחת לדוק כולו), קטן, במרכז אופקית -
-   לא בפינה העליונה יחד עם המוח, ולא תופס עמדה בתוך הדוק עצמו, לפי בקשה
-   מפורשת ("יותר קטן, ודווקא למטה... הכי הכי למטה שיש") */
-/* "Pulse Dot" - עיגול קטן ומדויק עם הילה פועמת שמזמינה ללחוץ, בפינה
-   ימין-למטה - לפי בקשה מפורשת ("לא אוהבת את הקו... תעיגול קטן ומדויק...
-   אנימציית Pulse עדינה (הילה מתרחבת)... מצד ימין למטה"), במקום הפס
-   המלא-רוחב הקודם */
-.daily-board-fab { top: auto; left: auto; right: 24px; bottom: 30px; transform: none; width: 44px; height: 44px; }
-html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
-.daily-board-fab:active { transform: scale(0.85); }
-/* var(--accent-pink)/var(--accent-purple-light) בלי סיומת -text בכוונה - גרסת
-   ה-text מוכהית ב-40% שחור במצב בהיר (כדי שטקסט יישאר קריא), וזה גרם לנקודה
-   להיראות כהה/עמומה דווקא במצב הבהיר - לפי בקשה קודמת ("בבהיר אני רוצה
-   שזה יהיה בהיר"). הגוונים המקוריים נשארים בהירים/זוהרים בשני המצבים */
-.daily-board-fab::after {
-    content: "";
-    display: block;
-    width: 12px;
-    height: 12px;
-    margin: auto;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple-light));
-    animation: dailyBoardPulse 2.2s ease-out infinite;
-}
-@keyframes dailyBoardPulse {
-    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 55%, transparent); }
-    70% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--accent-pink) 0%, transparent); }
-    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 0%, transparent); }
-}
+/* כפתור "לוח היום" - הוסר מהפינה התחתונה (הנקודה הפועמת) והפך לטאב שני,
+   ממש מתחת ל"הצצה להיום" - אותו עיצוב-זכוכית מדויק (משתמש ישירות במחלקה
+   .today-peek-tab, ר' index.html), רק דורס top כדי שיתייצב מתחתיו במקום
+   מעליו/עליו - לפי בקשה מפורשת ("תמחק את הנקודה... תשים מתחת להצצה
+   להיום... בדיוק אותו הדבר... טאב שקוף כזה שיראה אותו הדבר") */
+.daily-board-tab { top: 66px; }
 /* תג קלוריות עדין - כבוי כברירת מחדל (ר' isHomeCalorieBadgeOn ב-app.js),
    אפשרות למי שרוצה לראות מספר קלוריות תמידי במסך הבית. יושב בתוך שורת
    הכותרת של "הצצה להיום" (.card-title-row-end), ליד חץ הקיפול - לא צף
@@ -3015,25 +2980,16 @@ html[dir="ltr"] .daily-board-fab { right: auto; left: 24px; }
     object-fit: contain;
     font-size: 4.1rem;
     line-height: 1;
-    /* זוהר בגוון --accent-purple/--accent-purple-light (לא רגבה סגול קבוע) -
-       כך שהוא תמיד מתאים לערכת הנושא הנבחרת, לא נשאר סגול קבוע גם על רקע
-       ירוק/אחר - לפי בקשה מפורשת ("שיתאים לצבעים בכללי"). color-mix שומר על
-       אותה עוצמת-שקיפות שהייתה קודם (rgba(...,0.35) וכו') */
-    filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-purple-light) 55%, transparent)) drop-shadow(0 0 32px color-mix(in srgb, var(--accent-purple) 35%, transparent));
-    animation: aiBrainFloat 5.5s ease-in-out infinite;
+    /* בלי תזוזה/ריחוף - לפי בקשה מפורשת ("שלא יזוז"), הוסרה אנימציית
+       aiBrainFloat שהייתה כאן קודם. גם זוהר קליל בהרבה מקודם (רדיוסים
+       קטנים יותר, בלי saturate/brightness) - לפי בקשה מפורשת ("קצת מטושטש...
+       שיראה יותר טוב") - הילה כבדה מדי הייתה מטשטשת את קווי המתאר החדים
+       של הרובוט עצמו. color-mix שומר על התאמה לערכת הנושא הנבחרת */
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 8px color-mix(in srgb, var(--accent-purple-light) 40%, transparent));
     transition: filter 0.25s ease;
 }
-@keyframes aiBrainFloat {
-    0%, 100% { transform: translateY(0); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 16px color-mix(in srgb, var(--accent-purple-light) 55%, transparent)) drop-shadow(0 0 32px color-mix(in srgb, var(--accent-purple) 35%, transparent)); }
-    50% { transform: translateY(-14px); filter: saturate(0.9) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 22px color-mix(in srgb, var(--accent-purple-light) 40%, transparent)) drop-shadow(0 0 40px color-mix(in srgb, var(--accent-purple) 25%, transparent)); }
-}
-/* ההילה מתחזקת במעבר עכבר/לחיצה, לאותת על פעילות - animation:none חובה כאן
-   (לא רק filter) כי אנימציית CSS פעילה "מנצחת" בקאסקייד על ערך filter רגיל
-   שמוגדר ב-:hover/:active, אז בלי לעצור אותה השינוי פשוט לא היה נראה */
 .ai-brain-fab:hover .ai-brain-icon, .ai-brain-fab:active .ai-brain-icon {
-    animation: none;
-    transform: translateY(-4px);
-    filter: saturate(1) brightness(1.15) drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 22px color-mix(in srgb, var(--accent-purple-light) 70%, transparent)) drop-shadow(0 0 44px color-mix(in srgb, var(--accent-purple) 45%, transparent));
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-purple-light) 55%, transparent));
 }
 
 /* תגית-רמז (tooltip) בעיצוב האפליקציה במקום ה-title הדפדפני הגנרי (שאי
@@ -3207,7 +3163,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 70px; }
+.today-peek-anchor { position: relative; height: 122px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
