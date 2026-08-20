@@ -2743,55 +2743,37 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     pointer-events: none;
 }
 
-/* עיצוב משותף לכל בועה ב-Dock - זכוכית שקופה/צלולה כמעט חסרת-צבע (לא
-   סגול/ציאן צבעוני!) - לפי בקשה מפורשת ומדויקת אחרי שהגרסה הצבעונית נדחתה
-   ("לא דומה בכלל, אותו הצבע כמו בתמונה") - התמונה שהמשתמשת שלחה מראה זכוכית
-   כמעט לבנה/כסופה, לא ורוד-סגול. backdrop-filter עם saturate בנוסף ל-blur
-   מגביר את הבהירות/ה"קריסטל" של מה שנראה מאחורי הבועה. ברק עגלגל (::before)
-   בפינה השמאלית-עליונה מדמה השתקפות אור על משטח זכוכית/כדור מבריק.
-   overflow:hidden קוצץ את הברק למעגל עצמו בלי לפגוע ב-box-shadow (זה לא
-   מושפע מ-overflow, נצבע כחלק מהקופסה עצמה, לא כתוכן חורג) */
+/* עיצוב משותף לכפתורי ה-Dock - "כרטיסי-זכוכית" מלבניים-מעוגלים במקום בועות
+   עגולות (לפי בקשה מפורשת: "2 כפתורים... במקום בועות... כרטיסי-זכוכית
+   מלבניים") - אותה שפת-זכוכית בדיוק (blur/saturate/highlight/צל) שהייתה על
+   הבועות, רק על קופסה מרובעת-מעוגלת עם אייקון+תווית-טקסט קטנה במקום עיגול
+   ריק. בלי אנימציית ריחוף (dockFabFloat הוסרה) - כרטיס/כפתור אמור להרגיש
+   יציב, לא מרחף כמו בועה */
 .dock-fab {
     position: absolute;
-    /* left/top (לא transform!) הם מה ש-JS קובע לכל בועה (ר' applyDockOrder
+    /* left/top (לא transform!) הם מה ש-JS קובע לכל כפתור (ר' applyDockOrder
        ב-app.js) - ערכי פיקסלים ביחס לנקודת העיגון של .fab-dock (שגודלה 0,
        אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים). transform
-       ממרכז את הבועה על הנקודה של עצמה בלבד - היסט הגרירה החיה כבר לא כאן
-       (ר' ההערה על #fab-dock ב-.fab-dock עצמו) כדי לא "להתנגש" עם אנימציית
-       הריחוף (dockFabFloat) שגם היא כותבת ל-transform של הבועה הזו - שתי
-       אנימציות/עדכונים על אותה תכונה, על אותו אלמנט, בו-זמנית, זה מה שגרם
-       לגרירה "לקפוץ" במקום לזוז חלק */
+       ממרכז את הכרטיס על הנקודה של עצמו בלבד */
     left: 0;
     top: 0;
     transform: translate(-50%, -50%);
-    /* הוגדל (היה 76px) - לפי בקשה מפורשת ("רואים את זה ממש ממש קטן
-       במובייל") - ר' גם fab-tier-side/fab-tier-front למטה ו-FAB_ROW_STEP
-       ב-app.js שהוגדל יחד אתו כדי שהבועות לא יתחילו לחפוף */
-    width: 86px;
-    height: 86px;
-    border-radius: 50%;
+    width: 92px;
+    height: 92px;
+    border-radius: 22px;
     overflow: hidden;
-    /* בועת-סבון אמיתית (לפי בקשה מפורשת + תמונת-סגנון): גוף כחלחל-שקוף עם
-       ניגודיות חזקה, לא גוון אחיד חלש. saturate גבוה ב-backdrop-filter
-       מגביר את תחושת ה"קריסטל" של הרקע הנראה מבעד לבועה */
     background: linear-gradient(150deg, rgba(210, 235, 255, 0.45) 0%, rgba(180, 220, 255, 0.15) 45%, rgba(200, 230, 255, 0.04) 60%, rgba(190, 225, 255, 0.18) 100%);
     backdrop-filter: blur(16px) saturate(1.6);
     -webkit-backdrop-filter: blur(16px) saturate(1.6);
     border: 1.5px solid rgba(255, 255, 255, 0.55);
     color: #fff;
-    font-size: 2.2rem;
+    font-size: 2rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     cursor: pointer;
-    /* מודל-אור עקבי: "אור ישר מלמעלה" - inset-ים/צל-המגע בלי היסט אופקי,
-       רק אנכי. הצל התחתון (0 32px 6px -6px, כהה 0.75) - היסט גדול יותר
-       (32px, לא 20px) כדי שיהיה רווח ברור בין הבועה לצל שלה (הבועה נראית
-       "מרחפת גבוה", לא נוגעת) - בדיוק כמו בתמונת-הסגנון של בועת-סבון בודדת
-       על משטח לבן (צל שטוח, חד וכהה, מרוחק בבירור מהכדור מעליו, לא "מוצמד"
-       אליו) - לפי בקשה מפורשת אחרי שהגרסה הקודמת עדיין לא הייתה קרובה
-       מספיק. blur קטן (6px) ו-spread שלילי (-6px) שומרים על קצה חד/מוגדר
-       ואליפסה קטנה מהבועה עצמה, לא עיגול מטושטש ברוחב זהה */
     box-shadow:
         0 32px 6px -9px rgba(0, 0, 0, 0.75),
         0 0 20px -4px rgba(200, 225, 255, 0.5),
@@ -2800,11 +2782,12 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     padding: 0;
     flex-shrink: 0;
     transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
-    animation: dockFabFloat 5s ease-in-out infinite;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
 }
+.dock-fab-icon { font-size: 1em; line-height: 1; }
+.dock-fab-label { font-size: 0.6rem; font-weight: 600; color: var(--text-primary); line-height: 1; letter-spacing: 0.2px; }
 /* בועה עם תמונה (סטופר+דגל) במקום אימוג'י טקסטואלי - לפי בקשה מפורשת.
    התמונה עצמה כבר כדור-זכוכית מוכן (נשלחה מוכנה), אז מחליפים רק את
    background-image (לא את כל ה-shorthand background) כדי ש-cover יחתוך
@@ -2825,13 +2808,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     background-size: 70%;
     background-repeat: no-repeat;
     background-position: center;
-}
-/* ריחוף עדין - אותו רעיון בדיוק כמו aiBrainFloat (עוזר ה-AI), לפי בקשה
-   מפורשת "שהבועות ירחפו קצת כמו המוח". משך שונה מעט לכל רמת-עומק (ר'
-   .fab-tier-* למטה) כדי שלא כולן "ינשמו" בדיוק ביחד - מרגיש יותר אורגני */
-@keyframes dockFabFloat {
-    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
-    50% { transform: translate(-50%, -50%) translateY(-5px); }
 }
 /* highlight-ים - רך וגדול למעלה (השתקפות כללית), חד/קטן למעלה (נקודת-אור
    ישירה, "ספקולר"), ועוד נקודת-אור שנייה קטנה יותר למטה (כמו בתמונת-
@@ -2873,7 +2849,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.
    נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא קבוע לבועה
    ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
-.dock-fab.fab-tier-side { width: 58px; height: 58px; font-size: 1.55rem; animation-duration: 4.4s; }
+.dock-fab.fab-tier-side { width: 92px; height: 92px; font-size: 2rem; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 180px; height: 180px; }
     .ai-brain-icon { font-size: 5.4rem; }
@@ -2889,9 +2865,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     font-size: 2.4rem;
     /* שתי אנימציות בו-זמנית (לא רק fabPulse שהיה מחליף/מוחק את dockFabFloat
        שיורשת מ-.dock-fab - animation הוא shorthand, לא מצטבר בין כללים) -
-       הריחוף (transform) והפעימה (box-shadow) על שתי תכונות שונות, אין ביניהן
-       התנגשות */
-    animation: dockFabFloat 6s ease-in-out infinite, fabPulse 2.5s ease-in-out infinite;
+       הריחוף (transform) הוסר (ר' ההערה למעלה על .dock-fab) - נשארה רק
+       הפעימה (box-shadow) */
+    animation: fabPulse 2.5s ease-in-out infinite;
 }
 /* עד עכשיו לא כללה בכלל את שכבת הצל ה"מרחפת/מנותקת" ששאר הבועות מקבלות
    מ-.dock-fab (הפעימה - animation - היא shorthand, אז היא דורסת את כל
