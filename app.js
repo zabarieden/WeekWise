@@ -6669,6 +6669,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'add_onetime_event', category: 'glance' },
     { id: 'delete_series_history', category: 'glance' },
     { id: 'which_ai_button', category: 'ai' },
+    { id: 'ai_edit_or_delete', category: 'ai' },
     { id: 'ai_phrasing_tips', category: 'ai' },
     { id: 'ai_mixed_request', category: 'ai' },
     { id: 'ai_bounded_duration', category: 'ai' },
