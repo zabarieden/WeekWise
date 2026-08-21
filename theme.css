@@ -4738,8 +4738,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .ai-brain-cell-row .ai-brain-tab:active { transform: scale(0.94); }
 /* בררת חד-פעמי/חוזר מעל תיבת הטקסט של תכנון הלו"ז - אותה שפה חזותית בדיוק
    כמו .ai-brain-tab, רק קטן יותר כי זו בחירה משנית בתוך טאב אחד, לא מעבר טאבים */
-.ai-schedule-mode-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
-.ai-schedule-mode-btn { position: relative; flex: 1; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
+/* flex-wrap:wrap - שלושת הכפתורים (עם טקסט ארוך כמו "חוזר כל יום 📆") לא
+   תמיד נכנסים בשורה אחת ברוחב מודל צר, ובלי wrap הם פשוט גולשים/נחתכים
+   מחוץ למודל (דווח במפורש עם צילום מסך: "חצוי במסך לא רואים") - עדיף
+   שהשלישי יעבור לשורה שנייה מאשר ייחתך ולא יהיה נגיש בכלל */
+.ai-schedule-mode-toggle { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+/* min-width:0 קריטי - בלי זה, פריט-flex לא מתכווץ מתחת לרוחב-התוכן הטבעי
+   שלו (ברירת המחדל היא min-width:auto), אז 3 כפתורים עם טקסט ארוך גולשים
+   מחוץ לשורה גם עם flex:1 ו-flex-wrap - זה בדיוק מה שגרם לחיתוך/לסימן-
+   המידע-שנראה-"לא-עובד" (הכפתור המכיל אותו היה בחלקו מחוץ לתחום הנראה) */
+.ai-schedule-mode-btn { position: relative; flex: 1; min-width: 0; white-space: nowrap; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.15); color: var(--text-secondary); border-radius: 10px; padding: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
 .ai-schedule-mode-btn.active { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
 /* אייקון "מידע" - עבר לתג קטן שצף *מעל* הכפתור (לא עוד עמודה נפרדת בשורה
    עם שאר הכפתורים) - לפי בקשה מפורשת ("שיהיה יותר נקי איכשהו"). position:
