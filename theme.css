@@ -3139,7 +3139,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 122px; }
+.today-peek-anchor { position: relative; height: 174px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3183,6 +3183,10 @@ html[dir="ltr"] .today-peek-tab {
    בספציפיות, בלי תלות בסדר-מקור בקובץ - נמנע מהבאג הקודם (חפיפת הטאבים)
    שנגרם בדיוק מהסתמכות על סדר-מקור בין שני כללי-מחלקה זהים בספציפיות */
 #today-peek-tab { top: 66px; }
+/* טאב שלישי אופציונלי ("לימודים") - צמד-מחלקות (.today-peek-tab.study-peek-tab)
+   בכוונה, לא ID: ספציפיות 2 מחלקות מנצחת תמיד על מחלקה בודדת בלי תלות בסדר-
+   מקור, אותו עיקרון בדיוק כמו התיקון ב-#today-peek-tab למעלה */
+.today-peek-tab.study-peek-tab { top: 118px; }
 /* נעלמת כשהפאנל פתוח - לפי בקשה מפורשת. הלשונית והפאנל כבר לא אחיות ב-DOM
    (הפאנל עבר לרמת #app-container, הלשונית נשארה בתוך .home-hero-panel) אז
    סלקטור ~ כבר לא עובד - מוחלף במחלקה שמוצמדת ישירות ע"י JS (ר'
@@ -4299,7 +4303,11 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    לחיצה עליו פותחת מודל נפרד (modal-notes-archive), "כמו לעולם חדש" */
 /* margin-right (פיזי, לא margin-inline-end לוגי) - תמיד בצד שמאל הפיזי
    של המסך בלי קשר לכיוון הכתיבה של השפה הנוכחית (RTL/LTR), לפי בקשה מפורשת */
-.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-right: auto; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
+/* margin-left:auto (לא margin-right) בכוונה - פיזי, לא הופך לפי dir כמו
+   inset-inline - כדי שהפח יישאר תמיד בצד ימין הפיזי, גם באנגלית/LTR ושאר
+   שפות שאינן עברית, לפי בקשה מפורשת ("בכל מקום שפה אחרת... שהפח יהיה מצד
+   ימין") - margin-right:auto הקודם דחף אותו שמאלה תמיד, לא רק בעברית */
+.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-left: auto; margin-right: 0; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
 .notes-archive-icon-btn:hover { opacity: 1; }
 .notes-archive-count-badge { font-size: 0.65rem; font-variant-numeric: tabular-nums; }
 .notes-archive-list { margin-top: 6px; opacity: 0.85; }

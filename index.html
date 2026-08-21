@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=391">
+    <link rel="stylesheet" href="theme.css?v=392">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -168,6 +168,13 @@
                          #modal-daily-board הרגיל (מעוצב כחלונית-צד, ר' theme.css) -->
                     <button type="button" class="today-peek-tab daily-board-tab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-title="daily_board_title" data-i18n-aria-label="daily_board_title" aria-label="Daily Board">
                         <span class="today-peek-tab-label" data-i18n="daily_board_title">Daily Agenda</span>
+                    </button>
+                    <!-- טאב שלישי אופציונלי (כבוי כברירת מחדל, ר' study-peek-tab-toggle
+                         בהגדרות > התאמה ויומן) - אותה מחלקה today-peek-tab, ממוקם שלישי
+                         בערימה (.study-peek-tab דורסת top). פותח את מגירת הלימודים
+                         הקיימת (openStudyDrawer), לא מסך חדש - לפי בקשה מפורשת -->
+                    <button type="button" class="today-peek-tab study-peek-tab hidden" id="study-peek-tab" onclick="openStudyDrawer()" data-i18n-title="study_menu_label" data-i18n-aria-label="study_menu_label" aria-label="Study">
+                        <span class="today-peek-tab-label" data-i18n="study_menu_label">Study</span>
                     </button>
                 </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
@@ -2171,6 +2178,16 @@
                         </label>
                     </div>
 
+                    <!-- טאב שלישי אופציונלי בערימה מתחת ל"הצצה להיום"/"השגרה שלי" - כבוי
+                         כברירת מחדל, לפי בקשה מפורשת ("אפשרות לשים... גם בהתאמה אישית") -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_study_tab_label" for="study-peek-tab-toggle">Show a "Study" tab below "A Peek at Today"</label>
+                        <label class="switch">
+                            <input type="checkbox" id="study-peek-tab-toggle" onchange="toggleStudyPeekTab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
                 </div>
 
                 <!-- 🔔 התראות -->
@@ -2223,6 +2240,20 @@
                         <p id="settings-subscription-status" class="modal-subtitle"></p>
                         <button type="button" id="btn-change-plan" class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="openLemonSqueezyPortal()" data-i18n="settings_change_plan_btn">Change Plan</button>
                         <button type="button" id="btn-cancel-subscription" class="btn-clear-specific btn-danger-outline" style="width: 100%; margin-top: 8px;" onclick="cancelPremiumSubscription()" data-i18n="settings_cancel_sub_btn">Cancel Subscription</button>
+                    </div>
+
+                    <!-- חיבור ל-Google Calendar (סנכרון דו-כיווני) - status/connect/
+                         disconnect כולם דרך edge functions, אין שום קריאה ישירה
+                         ל-google_calendar_connections מהלקוח (אין לה בכלל RLS
+                         שמאפשרת גישה מהדפדפן, ר' google-calendar-status/index.ts) -->
+                    <div id="google-calendar-disconnected-section">
+                        <label class="settings-label" data-i18n="settings_google_calendar_title">Google Calendar</label>
+                        <button type="button" class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="connectGoogleCalendar()" data-i18n="settings_google_calendar_connect_btn">📅 Connect Google Calendar</button>
+                    </div>
+                    <div id="google-calendar-connected-section" class="hidden">
+                        <label class="settings-label" data-i18n="settings_google_calendar_title">Google Calendar</label>
+                        <p id="google-calendar-status-text" class="modal-subtitle"></p>
+                        <button type="button" class="btn-clear-specific btn-danger-outline" style="width: 100%; margin-top: 6px;" onclick="disconnectGoogleCalendar()" data-i18n="settings_google_calendar_disconnect_btn">Disconnect</button>
                     </div>
 
                     <button id="btn-logout" class="btn-secondary" style="width: 100%; margin-top: 10px;" data-i18n="logout_btn">🚪 Log Out</button>
@@ -3205,7 +3236,7 @@
 
     </div>
 
-    <script src="i18n.js?v=296"></script>
-    <script src="app.js?v=429"></script>
+    <script src="i18n.js?v=297"></script>
+    <script src="app.js?v=430"></script>
 </body>
 </html>

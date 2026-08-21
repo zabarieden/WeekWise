@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
+    applyStudyPeekTabSetting();
     updateHomeSkyDayNight();
     if (!homeSkyDayNightIntervalStarted) {
         homeSkyDayNightIntervalStarted = true;
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     updateAuthUI();
+    handleGoogleCalendarRedirect();
     document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
         e.preventDefault();
         authMode = authMode === 'login' ? 'signup' : 'login';
@@ -2047,6 +2049,9 @@ function openSettingsDrawer() {
     renderNotificationSettingsStatus();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
+    const studyTabToggle = document.getElementById('study-peek-tab-toggle');
+    if (studyTabToggle) studyTabToggle.checked = isStudyPeekTabOn();
+    refreshGoogleCalendarStatus();
     renderFinanceCategoryManageList();
     renderFinanceCategoryIconPicker();
     initFinanceCategoryDragReorder();
@@ -6056,6 +6061,91 @@ async function openLemonSqueezyPortal() {
 function cancelPremiumSubscription() {
     if (!confirm(t('settings_cancel_sub_confirm'))) return;
     openLemonSqueezyPortal();
+}
+
+// --- Google Calendar (סנכרון דו-כיווני) - ר' התוכנית שהוסכמה: המחוברות/
+// הטוקנים חיים אך ורק בטבלת google_calendar_connections בצד שרת (אין לה
+// שום RLS שמאפשרת גישה מהלקוח בכלל), אז כל אינטראקציה עוברת דרך edge
+// functions ייעודיים, אותו דפוס בדיוק כמו openLemonSqueezyPortal למעלה ---
+async function getSupabaseAccessToken() {
+    if (!supabaseClient) return null;
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    return sessionData && sessionData.session ? sessionData.session.access_token : null;
+}
+
+async function connectGoogleCalendar() {
+    const token = await getSupabaseAccessToken();
+    if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-auth-start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        const result = await res.json();
+        if (!res.ok || !result.url) { showAppToast(t('settings_google_calendar_error_toast'), 'error'); return; }
+        window.location.href = result.url;
+    } catch {
+        showAppToast(t('settings_google_calendar_error_toast'), 'error');
+    }
+}
+
+async function disconnectGoogleCalendar() {
+    if (!confirm(t('settings_google_calendar_disconnect_confirm'))) return;
+    const token = await getSupabaseAccessToken();
+    if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-disconnect`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) { showAppToast(t('settings_google_calendar_error_toast'), 'error'); return; }
+        showAppToast(t('settings_google_calendar_disconnected_toast'));
+        refreshGoogleCalendarStatus();
+    } catch {
+        showAppToast(t('settings_google_calendar_error_toast'), 'error');
+    }
+}
+
+// נקראת בכל פתיחת מסך ההגדרות (ר' openSettingsDrawer) - לא נשמרת/נטענת
+// מ-localStorage, כי המצב האמיתי חי רק בשרת ויכול להשתנות ממכשיר אחר
+async function refreshGoogleCalendarStatus() {
+    const disconnectedSection = document.getElementById('google-calendar-disconnected-section');
+    const connectedSection = document.getElementById('google-calendar-connected-section');
+    if (!disconnectedSection || !connectedSection) return;
+    const token = await getSupabaseAccessToken();
+    if (!token) return;
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        const result = await res.json();
+        const connected = res.ok && result.connected;
+        disconnectedSection.classList.toggle('hidden', connected);
+        connectedSection.classList.toggle('hidden', !connected);
+        if (connected) {
+            const statusEl = document.getElementById('google-calendar-status-text');
+            if (statusEl && result.connectedAt) {
+                const d = new Date(result.connectedAt);
+                statusEl.textContent = t('settings_google_calendar_connected_since').replace('{date}', d.toLocaleDateString(currentLang));
+            }
+        }
+    } catch { /* משאירים את המצב הקודם על המסך - לא קריטי אם הבדיקה נכשלה פעם אחת */ }
+}
+
+// טיפול בחזרה מ-Google אחרי אישור/דחיית ההרשאה (google-calendar-oauth-callback
+// מפנה חזרה לכאן עם ?google_calendar=connected|error) - נקרא פעם אחת מתוך
+// init האפליקציה, מנקה את הפרמטרים מה-URL כדי שרענון-דף לא יציג שוב את הטוסט
+function handleGoogleCalendarRedirect() {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('google_calendar');
+    if (!status) return;
+    if (status === 'connected') showAppToast(t('settings_google_calendar_connected_toast'));
+    else if (status === 'error') showAppToast(t('settings_google_calendar_error_toast'), 'error');
+    params.delete('google_calendar');
+    params.delete('detail');
+    const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
+    window.history.replaceState({}, '', newUrl);
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
@@ -13250,6 +13340,23 @@ function updateHomeCalorieBadge() {
     document.getElementById('home-calorie-badge-value').textContent = todayCaloriesTotal;
 }
 
+// טאב שלישי אופציונלי בערימה מתחת ל"הצצה להיום"/"השגרה שלי" - כבוי כברירת
+// מחדל (opt-in), אותו דפוס בדיוק כמו isHomeCalorieBadgeOn - לפי בקשה
+// מפורשת ("אפשרות לשים... גם בהתאמה אישית")
+function isStudyPeekTabOn() { return localStorage.getItem('weekwise_study_peek_tab') === 'true'; }
+function toggleStudyPeekTab() {
+    const enabled = document.getElementById('study-peek-tab-toggle').checked;
+    localStorage.setItem('weekwise_study_peek_tab', String(enabled));
+    applyStudyPeekTabSetting();
+}
+function applyStudyPeekTabSetting() {
+    const tab = document.getElementById('study-peek-tab');
+    const toggle = document.getElementById('study-peek-tab-toggle');
+    const enabled = isStudyPeekTabOn();
+    if (tab) tab.classList.toggle('hidden', !enabled);
+    if (toggle) toggle.checked = enabled;
+}
+
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
     const calorieGoalInput = document.getElementById('calorie-daily-goal-input');
@@ -13661,17 +13768,20 @@ let pendingRoutineItemTime = null;
 // טווח-השעות הטבעי שכל בלוק מציע לבחירה בהגדרות (לא כל 24 השעות בכל בלוק -
 // זה היה הופך לרשימה ארוכה ובלתי-שימושית) - השעות שמחוץ לטווח הזה (00:00-
 // 04:00) פשוט לא רלוונטיות ל"סדר יום" ולכן לא מוצעות כלל
+// "אחר הצהריים" מסתיימת ב-16:00 (רק השעה הזו), 17 ומעלה עוברות ל"ערב" - לפי
+// בקשה מפורשת ("19 זה אחר הצהריים ולא ערב? תעשה שאחר הצהריים יהיה עד השעה
+// 16:00"), אחרי שדווח שהשעה 19:00 הופיעה תחת "אחר הצהריים" בטעות
 const DAILY_BOARD_BUCKET_RANGES = {
     morning: [5, 6, 7, 8, 9, 10, 11],
     noon: [12, 13, 14, 15],
-    afternoon: [16, 17, 18, 19],
-    evening: [20, 21, 22, 23],
+    afternoon: [16],
+    evening: [17, 18, 19, 20, 21, 22, 23],
 };
 const DAILY_BOARD_DEFAULT_HOURS = {
     morning: [7, 8, 10, 11],
     noon: [12, 14, 15],
-    afternoon: [16, 17, 19],
-    evening: [20, 21, 22],
+    afternoon: [16],
+    evening: [17, 19, 20, 21, 22],
 };
 
 // לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
