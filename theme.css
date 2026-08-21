@@ -3011,10 +3011,11 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
 .quick-note-dest-mini[data-tooltip]:hover::after, .quick-note-dest-mini[data-tooltip]:focus-visible::after {
     opacity: 1;
 }
-/* עוזר ה-AI יושב בפינה העליונה - רמז שיקפוץ מעליו היה נחתך מחוץ למסך,
-   אז כאן דווקא מתחתיו, מיושר לשמאל (לא ממורכז, כי הכפתור צמוד לקצה) */
+/* עוזר ה-AI עבר לפינה ה*תחתונה* (bottom:30px) - רמז שקופץ מתחתיו נחתך מחוץ
+   למסך/למסגרת (דווח במפורש עם צילום מסך: "זה חותך את העוזר AI"), בדיוק
+   ההפך מהמצב הישן כשהוא היה למעלה - אז עכשיו דווקא מעליו */
 .ai-brain-fab[data-tooltip]::after {
-    top: calc(100% + 10px);
+    bottom: calc(100% + 10px);
     left: 0;
 }
 .ai-brain-fab[data-tooltip]:hover::after, .ai-brain-fab[data-tooltip]:focus-visible::after {

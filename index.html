@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=392">
+    <link rel="stylesheet" href="theme.css?v=393">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1796,6 +1796,7 @@
                     </button>
                     <input type="date" id="sport-quick-date-input" class="date-picker-hidden-input">
                     <input type="number" id="sport-quick-distance-input" step="0.1" min="0" data-i18n-placeholder="sport_distance_placeholder" placeholder="Distance in km (optional)">
+                    <input type="text" id="sport-quick-notes-input" data-i18n-placeholder="sport_notes_placeholder" placeholder="Notes (optional)">
                     <div class="action-buttons-wrap">
                         <button class="btn-primary" onclick="submitSportQuickAdd()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-sport-quick-add')" data-i18n="close_btn">Close</button>
@@ -1820,6 +1821,7 @@
                     <input type="number" id="finance-quick-amount-input" data-i18n-placeholder="finance_amount_placeholder" placeholder="Amount">
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('finance-quick-category-select')"><span id="finance-quick-category-select-display"></span></button>
                     <select id="finance-quick-category-select" class="hidden"></select>
+                    <input type="text" id="finance-quick-note-input" data-i18n-placeholder="finance_note_placeholder" placeholder="Note (optional)">
                     <div class="action-buttons-wrap">
                         <button class="btn-primary" onclick="submitFinanceQuickAdd()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-finance-quick-add')" data-i18n="close_btn">Close</button>
@@ -3236,7 +3238,7 @@
 
     </div>
 
-    <script src="i18n.js?v=297"></script>
-    <script src="app.js?v=430"></script>
+    <script src="i18n.js?v=298"></script>
+    <script src="app.js?v=431"></script>
 </body>
 </html>

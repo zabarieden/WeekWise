@@ -6885,8 +6885,11 @@ function filterHelpFaq() {
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (opt-in, לא opt-out)
 // שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"),
 // דורס את ה-opt-out הקודם ("=== 'true'" ולא "!== 'false'")
+// חזרה ל-opt-in (לא opt-out) - לפי בקשה מפורשת ("תקציב אוכל פתקים וספורט...
+// יהיה ברירת המחדל... בלי המים") - שלושת האחרות (ספורט/ארוחות/תקציב)
+// נשארות opt-out, רק מים חוזרות לכבויות כברירת מחדל
 function isWaterFabOn() {
-    return localStorage.getItem('weekwise_water_fab') !== 'false';
+    return localStorage.getItem('weekwise_water_fab') === 'true';
 }
 
 function applyWaterFabSetting(enabled, skipRestack) {
@@ -6909,11 +6912,11 @@ function applyWaterFabSetting(enabled, skipRestack) {
 // initFabOrderDragReorder) - קובע רק את הסדר היחסי-ביניהן כשהן נכנסות
 // לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
 function getFabOrder() {
-    // סדר-ברירת-מחדל עודכן לפי בקשה מפורשת עם תמונת-ייחוס (מימין לשמאל:
-    // פריסה, פתקים, תפוח באמצע, מים, ספורט) - ר' ההערה על allIds ב-
-    // applyDockOrder למטה, ששם בפועל מוכנס btn-ai-fab (הפתק) מיד אחרי
-    // btn-preset-fab (התפוח) כדי לשחזר בדיוק את הסדר הזה
-    const defaultOrder = ['btn-sport-fab', 'btn-water-fab', 'btn-preset-fab', 'btn-finance-fab'];
+    // סדר-ברירת-מחדל עודכן לפי בקשה מפורשת חדשה (מימין לשמאל ב-RTL: תקציב,
+    // אוכל, פתקים, ספורט - בלי מים) - btn-ai-fab (הפתק) מוכנס בפועל מיד אחרי
+    // btn-preset-fab (האוכל) ב-applyDockOrder למטה, כדי שיצא בדיוק "תקציב,
+    // אוכל, פתקים, ספורט" בלי צורך לרשום את הפתק כאן בכלל
+    const defaultOrder = ['btn-finance-fab', 'btn-preset-fab', 'btn-sport-fab', 'btn-water-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
         if (Array.isArray(saved) && defaultOrder.every(id => saved.includes(id))) return saved;
@@ -7194,7 +7197,9 @@ function resetFabLayout() {
     localStorage.removeItem('weekwise_sport_fab');
     localStorage.removeItem('weekwise_preset_fab');
     localStorage.removeItem('weekwise_finance_fab');
-    applyWaterFabSetting(true, true);
+    // מים לא כלולות בברירת המחדל (opt-in בלבד) - לפי בקשה מפורשת ("תקציב
+    // אוכל פתקים וספורט... בלי המים"); שלוש האחרות כן, ר' isXFabOn למעלה
+    applyWaterFabSetting(false, true);
     applySportFabSetting(true, true);
     applyPresetFabSetting(true, true);
     applyFinanceFabSetting(true, true);
@@ -8596,6 +8601,8 @@ function selectFinanceQuickType(type) {
 function openFinanceQuickAddModal() {
     const amountInput = document.getElementById('finance-quick-amount-input');
     if (amountInput) amountInput.value = '';
+    const noteInput = document.getElementById('finance-quick-note-input');
+    if (noteInput) noteInput.value = '';
     selectFinanceQuickType('expense');
     openModal('modal-finance-quick-add');
 }
@@ -8604,14 +8611,17 @@ async function submitFinanceQuickAdd() {
     if (!supabaseClient || !currentUserId) return;
     const amountInput = document.getElementById('finance-quick-amount-input');
     const categorySelect = document.getElementById('finance-quick-category-select');
+    const noteInput = document.getElementById('finance-quick-note-input');
     const amount = parseFloat(amountInput.value);
     if (!amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    const note = noteInput && noteInput.value.trim() ? noteInput.value.trim() : null;
     const { error } = await supabaseClient.from('budget_tracker').insert({
         user_id: currentUserId, username: currentUsername, entry_type: currentFinanceQuickType,
-        amount: amount, category: categorySelect.value, note: null, entry_date: getLocalDateString(),
+        amount: amount, category: categorySelect.value, note: note, entry_date: getLocalDateString(),
     });
     if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
     amountInput.value = '';
+    if (noteInput) noteInput.value = '';
     closeModal('modal-finance-quick-add');
     showAppToast(t('finance_add_success'));
     if (document.getElementById('finance-summary-month-label')) await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
@@ -9450,6 +9460,8 @@ function openSportQuickAddModal() {
     if (customInput) customInput.value = '';
     const distanceInput = document.getElementById('sport-quick-distance-input');
     if (distanceInput) distanceInput.value = '';
+    const notesInput = document.getElementById('sport-quick-notes-input');
+    if (notesInput) notesInput.value = '';
     // ברירת מחדל: היום - אבל ניתנת לשינוי, כדי לאפשר לרשום אימון מאתמול/
     // מיום קודם ששכחו להוסיף בזמנו, לפי בקשה מפורשת
     const dateInput = document.getElementById('sport-quick-date-input');
@@ -9471,10 +9483,12 @@ async function submitSportQuickAdd() {
     const sessionDate = (dateInput && dateInput.value) || getLocalDateString();
     const distanceInput = document.getElementById('sport-quick-distance-input');
     const distance = distanceInput && distanceInput.value ? parseFloat(distanceInput.value) : null;
+    const notesInput = document.getElementById('sport-quick-notes-input');
+    const notes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : null;
     const { error } = await supabaseClient.from('sport_sessions').insert({
         user_id: currentUserId, username: currentUsername, sport_type: currentSportQuickType,
         custom_type_name: customName, duration_minutes: duration, distance_km: distance,
-        motivation: null, session_date: sessionDate, notes: null, photo_url: null,
+        motivation: null, session_date: sessionDate, notes: notes, photo_url: null,
     });
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
     closeModal('modal-sport-quick-add');
