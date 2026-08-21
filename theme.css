@@ -1523,46 +1523,52 @@ html.high-contrast.light-mode {
    במצב בהיר הופכים לתיבות אפורות בהירות עם טקסט כהה, כדי להישאר קריאים */
 /* שורות תוכן (לו"ז/ארוחות/התקדמות) משתמשות ב-var(--bg-row) - כך שגם במצב
    בהיר, החלפת ערכת נושא פרימיום צובעת אותן בגוון התואם, ולא רק את הרקע הגדול */
-html.light-mode .day-tab,
-html.light-mode .day-page,
-html.light-mode .slot-input-group,
-html.light-mode .meal-row,
-html.light-mode .progress-row {
+/* :where(...) - חל גם כשמצב-בהיר (html.light-mode) לא פעיל בפועל, אבל
+   ערכת-הרקע הנבחרת היא בהירה בכל זאת (bg_white/bg_beige, ר' תחילת הקובץ) -
+   לפני זה השדות/הכפתורים האלה נשארו עם הגוון הכהה הקבוע שלהם (מיועד לרקע
+   כהה) גם על רקע לבן, ויצאו כמו "קופסאות אפורות" בולטות - דווח במפורש
+   ("כל הצבעים האפורים האלה... ברקע לבן"). :where() כדי לא להעלות ספציפיות
+   מעבר למה שהיה (html.light-mode לבד) */
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .day-tab,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .day-page,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .slot-input-group,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .meal-row,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .progress-row {
     background-color: var(--bg-row);
     color: var(--text-primary);
 }
 /* שדות קלט/טפסים נשארים תמיד בגוון אפור-נייטרלי קבוע, ללא קשר לערכת הנושא -
    כדי שיישארו נראים כמו שדה הזנה פונקציונלי, לא כמו שורת תוכן צבעונית */
-html.light-mode .calendar-event-recur-interval-input,
-html.light-mode .recipe-form-grid input,
-html.light-mode .recipe-form-grid textarea,
-html.light-mode .recipe-form-grid select,
-html.light-mode #recipe-ai-raw-input,
-html.light-mode .food-input,
-html.light-mode .calories-input,
-html.light-mode .weight-inputs-wrap input,
-html.light-mode .hours-input,
-html.light-mode .schedule-adder-grid select,
-html.light-mode .schedule-adder-grid input,
-html.light-mode .preset-manager-grid select,
-html.light-mode .preset-manager-grid input,
-html.light-mode #sport-custom-type-input,
-html.light-mode #sport-quick-custom-type-input,
-html.light-mode #water-daily-goal-input,
-html.light-mode #calorie-daily-goal-input,
-html.light-mode #protein-daily-goal-input,
-html.light-mode #habit-name-input,
-html.light-mode #contact-us-message,
-html.light-mode #ai-schedule-duration-months,
-html.light-mode #preset-quick-add-search,
-html.light-mode #food-quick-add-input,
-html.light-mode #routine-item-title-input,
-html.light-mode #routine-tab-name-input,
-html.light-mode #glance-edit-task-day-select,
-html.light-mode #glance-edit-task-reminder,
-html.light-mode #glance-edit-task-reminder-text,
-html.light-mode #ai-quick-add-input,
-html.light-mode .vision-card-back-add-row input {
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-recur-interval-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid textarea,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid select,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #recipe-ai-raw-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .food-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calories-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .weight-inputs-wrap input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .hours-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .schedule-adder-grid select,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .schedule-adder-grid input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-manager-grid select,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-manager-grid input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #sport-custom-type-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #sport-quick-custom-type-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #water-daily-goal-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #calorie-daily-goal-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #protein-daily-goal-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #habit-name-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #contact-us-message,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #ai-schedule-duration-months,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #preset-quick-add-search,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #food-quick-add-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #routine-item-title-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #routine-tab-name-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-day-select,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-reminder,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-reminder-text,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #ai-quick-add-input,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .vision-card-back-add-row input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
@@ -1570,21 +1576,22 @@ html.light-mode .vision-card-back-add-row input {
    כדי לקבל גם הן את גוון ערכת הנושא, עם זכוכית לבנה רכה כברירת מחדל - וה-
    color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
    (הפופאפ עצמו, שלא ניתן לעצב ב-CSS) ייפתח גם הוא בהיר ולא כתיבה שחורה */
-html.light-mode .center-list li:not(.center-list-divider),
-html.light-mode .calendar-event-item {
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .center-list li:not(.center-list-divider),
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-item {
     background-color: var(--bg-row);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
-html.light-mode .calendar-event-series-dates {
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-series-dates {
     background-color: rgba(0, 0, 0, 0.04);
 }
-html.light-mode .language-select,
-html.light-mode .preset-select-trigger {
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .language-select,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-select-trigger,
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .date-picker-field-trigger {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--accent-purple-text);
     color-scheme: light;
 }
-html.light-mode input[type="date"] {
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) input[type="date"] {
     background: rgba(0, 0, 0, 0.05) !important;
     color: var(--accent-purple-text) !important;
     color-scheme: light;
@@ -4919,6 +4926,12 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     outline: none;
 }
 .reminder-fields-wrap input::placeholder { color: var(--text-secondary); opacity: 0.8; }
+/* אותה בעיה בדיוק כמו שאר שדות-הקלט למעלה (רקע כהה קבוע, לא תלוי-ערכת-נושא) -
+   קופסה אפורה בולטת על רקע בהיר, דווח במפורש */
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .reminder-fields-wrap input {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--accent-purple-text);
+}
 
 .reminder-toast { position: absolute; top: -140px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(255,0,127,0.18), rgba(168,85,247,0.18)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,0,127,0.35); border-radius: 16px; padding: 14px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 4000; transition: top 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .reminder-toast.show { top: 16px; }
@@ -5635,6 +5648,10 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .food-picker-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .food-picker-qty-row input { flex: 1 1 auto; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-primary); border-radius: 12px; padding: 12px 14px; font-size: 0.9rem; outline: none; text-align: center; }
 .food-picker-qty-row input:focus { border-color: var(--accent-purple); }
+:where(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .food-picker-qty-row input {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
 .food-picker-qty-row span { flex: 0 0 auto; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; }
 input[type="date"] {
     background: rgba(20, 10, 30, 0.55) !important;
