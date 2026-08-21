@@ -1776,6 +1776,16 @@
                 <input type="text" id="sport-quick-custom-type-input" class="hidden" style="margin-top: 10px;" data-i18n-placeholder="sport_custom_type_placeholder" placeholder="What sport? (e.g. Yoga, Tennis)">
                 <div class="preset-manager-grid" style="margin-top: 10px;">
                     <input type="number" id="sport-quick-duration-input" data-i18n-placeholder="sport_duration_placeholder" placeholder="Duration (minutes)">
+                    <!-- תאריך - אותו רכיב-בורר מותאם-אישית בדיוק כמו בכל שאר האפליקציה
+                         (לא <input type=date> גולמי) - לפי בקשה מפורשת ("לוח שנה קטן
+                         סגול חמוד"), וכדי לאפשר לרשום אימון מאתמול ששכחו להוסיף -
+                         ר' openDateFieldPicker/updateDateFieldDisplay ב-app.js -->
+                    <button type="button" id="sport-quick-date-trigger" class="date-picker-field-trigger" onclick="openDateFieldPicker('sport-quick-date-input')">
+                        <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                        <span id="sport-quick-date-input-display" data-placeholder=""></span>
+                    </button>
+                    <input type="date" id="sport-quick-date-input" class="date-picker-hidden-input">
+                    <input type="number" id="sport-quick-distance-input" step="0.1" min="0" data-i18n-placeholder="sport_distance_placeholder" placeholder="Distance in km (optional)">
                     <div class="action-buttons-wrap">
                         <button class="btn-primary" onclick="submitSportQuickAdd()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-sport-quick-add')" data-i18n="close_btn">Close</button>
@@ -3189,6 +3199,6 @@
     </div>
 
     <script src="i18n.js?v=294"></script>
-    <script src="app.js?v=426"></script>
+    <script src="app.js?v=427"></script>
 </body>
 </html>

@@ -4407,6 +4407,10 @@ function toggleRecurringOptionsVisibility() {
 // לראות מה מתוכנן היום בלי לצאת ממבט הבית וללחוץ על לשונית "השבוע שלי".
 // שאילתה עצמאית (לא תלויה ב-DOM של loadWeeklySchedule), כי שתי הפונקציות
 // רצות במקביל ב-Promise.all בטעינה
+// עוקב אחרי מעבר false→true בתוך טעינת-הדף הנוכחית בלבד (ר' ההערה בתוך
+// loadTodayTasks) - לא נשמר בשום מקום, מתאפס ל-null בכל רענון-דף בכוונה
+let lastKnownAllDoneState = null;
+
 async function loadTodayTasks() {
     if (!supabaseClient || !currentUserId) return;
     // נקראת מכאן (לא מכל call site שנוגע ב-calendar_events בנפרד) כדי
@@ -4500,28 +4504,31 @@ async function loadTodayTasks() {
         celebration.className = 'today-tasks-celebration';
         celebration.textContent = t('today_tasks_all_done_message');
         container.appendChild(celebration);
-        // נצנצים על פני כל האפליקציה לרגע החגיגה - רק בפעם הראשונה שמגיעים
-        // ל"הכל בוצע" ביום הזה. הדגל ב-Supabase (לא localStorage) - דווח
-        // שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה בנייד, אותו דפוס בדיוק
-        // כמו checkDailyFocusPrompt/דגל ה-"1" על המוח.
-        //
-        // בעבר היה כאן גם איפוס-הדגל (מחיקה) כל פעם שנקרא עם allDone=false,
-        // כדי שסבב השלמה חדש אחרי ביטול-סימון יחגוג שוב. אבל loadTodayTasks
-        // נקראת מהמון מקומות באפליקציה (ר' ההערה למעלה) - כשקריאה אחת מוצאת
-        // allDone=true ומכניסה את הדגל, וקריאה אחרת כמעט-בו-זמנית (על נתונים
-        // מעט שונים/לא-מסונכרנים עדיין) מוצאת allDone=false ומוחקת אותו מיד -
-        // הדגל אף פעם לא נשאר שמור בפועל, וכל רענון-דף חדש חוגג מחדש. הוסר
-        // לגמרי כדי לחסל את התחרות הזו - המחיר: השלמה חוזרת באותו יום אחרי
-        // ביטול-סימון לא תחגוג שוב, מחיר קטן מול הבאג שדווח ("כל פעם שאני
-        // מרעננת זה עושה את הנצנצים")
-        if (populated.length + events.length > 0 && !alreadyCelebratedToday) {
-            const { error: celebrateError } = await supabaseClient.from('calendar_events').insert({
-                username: currentUsername, user_id: currentUserId,
-                event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
-            });
-            if (celebrateError) console.error('today_celebrated insert failed:', celebrateError);
-            else triggerAllDoneSparkles(celebration);
+        // נצנצים על פני כל האפליקציה לרגע החגיגה. הדגל ב-Supabase (לא
+        // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
+        // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח -
+        // הוא עדיין שער-הכניסה היחיד שמונע כפילות בין מכשירים/רענוני-דף
+        // רגילים (לא נמחק/נכתב מחדש בכל קריאה - זה מה שגרם לתחרות המקורית).
+        // בנוסף, lastKnownAllDoneState (משתנה זיכרון בלבד, לא DB) עוקב אחרי
+        // מעבר אמיתי false→true *בתוך אותה טעינת-דף* - כדי לחגוג שוב אחרי
+        // ביטול-סימון-ואז-סימון-מחדש או הוספת משימה חדשה ואז השלמתה, לפי
+        // בקשה מפורשת ("ברגע שמוחקים את הוי ושמים שוב - שיעשה שוב קונפטי").
+        // מתחיל כ-null (לא false!) כדי שטעינת-דף ראשונה שכבר חגגה היום
+        // (alreadyCelebratedToday) לא תיחשב "מעבר" ותחגוג שוב סתם מרענון
+        const justTransitioned = lastKnownAllDoneState === false;
+        if (populated.length + events.length > 0) {
+            if (!alreadyCelebratedToday) {
+                const { error: celebrateError } = await supabaseClient.from('calendar_events').insert({
+                    username: currentUsername, user_id: currentUserId,
+                    event_title: 'today_celebrated', event_date: todayStr, source: 'today_celebrated',
+                });
+                if (celebrateError) console.error('today_celebrated insert failed:', celebrateError);
+                else triggerAllDoneSparkles(celebration);
+            } else if (justTransitioned) {
+                triggerAllDoneSparkles(celebration);
+            }
         }
+        lastKnownAllDoneState = true;
     // עוד לא הכל בוצע - הודעת עידוד לפי כמה פעמים נפתחה הכרטיס היום, מוצגת
     // *לצד* רשימת המשימות שנשארו (לא במקומה): מ-5 פתיחות "בלי לחץ" עדינה,
     // ומ-7 פתיחות ואילך מתחלפת כל 2 פתיחות למשפט הבא במאגר (חוזרת מההתחלה
@@ -4529,6 +4536,7 @@ async function loadTodayTasks() {
     // מסומנות (הענף הזה כבר לא רץ בכלל, ר' if(allDone) למעלה) - לפי בקשה
     // מפורשת
     } else {
+        lastKnownAllDoneState = false;
         const viewCount = getTodayCardViewCount();
         if (populated.length + events.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
@@ -9340,6 +9348,12 @@ function openSportQuickAddModal() {
     if (durationInput) durationInput.value = '';
     const customInput = document.getElementById('sport-quick-custom-type-input');
     if (customInput) customInput.value = '';
+    const distanceInput = document.getElementById('sport-quick-distance-input');
+    if (distanceInput) distanceInput.value = '';
+    // ברירת מחדל: היום - אבל ניתנת לשינוי, כדי לאפשר לרשום אימון מאתמול/
+    // מיום קודם ששכחו להוסיף בזמנו, לפי בקשה מפורשת
+    const dateInput = document.getElementById('sport-quick-date-input');
+    if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('sport-quick-date-input'); }
     selectSportQuickType('running');
     openModal('modal-sport-quick-add');
 }
@@ -9353,10 +9367,14 @@ async function submitSportQuickAdd() {
     if (isCustom && !customName) { showAppToast(t('sport_missing_custom_name'), 'error'); return; }
     const duration = parseInt(durationInput.value) || null;
     if (!duration) { showAppToast(t('sport_missing_duration'), 'error'); return; }
+    const dateInput = document.getElementById('sport-quick-date-input');
+    const sessionDate = (dateInput && dateInput.value) || getLocalDateString();
+    const distanceInput = document.getElementById('sport-quick-distance-input');
+    const distance = distanceInput && distanceInput.value ? parseFloat(distanceInput.value) : null;
     const { error } = await supabaseClient.from('sport_sessions').insert({
         user_id: currentUserId, username: currentUsername, sport_type: currentSportQuickType,
-        custom_type_name: customName, duration_minutes: duration, distance_km: null,
-        motivation: null, session_date: getLocalDateString(), notes: null, photo_url: null,
+        custom_type_name: customName, duration_minutes: duration, distance_km: distance,
+        motivation: null, session_date: sessionDate, notes: null, photo_url: null,
     });
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
     closeModal('modal-sport-quick-add');
