@@ -6898,17 +6898,13 @@ function applyDockOrder() {
         fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
         active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
     }
-    // הבועה ה"קדמית" (הגדולה) חייבת לשבת בדיוק ב-x=0 תמיד - לא "איפה שיוצא
-    // הכי קרוב למרכז המתמטי" (dist=0.5 עם מספר זוגי, כמו קודם). לפי בקשה
-    // מפורשת חוזרת: "אני רוצה שזה יהיה באמצע... הבועה האמצעית" - בדסקטופ
-    // (מספר אי-זוגי, יש משבצת-אמצע אמיתית) זה כבר יצא נכון מעצמו, אבל
-    // במובייל (מספר זוגי, למשל 4) המרכז ה"מתמטי" נופל *בין* שתי משבצות -
-    // מרכוז לפי תיבה-חוסמת (הגרסה הקודמת) ריכז את השורה כולה נכון, אבל לא
-    // את הבועה הגדולה עצמה, שזה בדיוק מה שדווח כבאג. הפתרון: קובעים קודם
-    // איזו בועה קדמית (המשבצת הכי קרובה למרכז), ואז מודדים מרחק של *כל*
-    // בועה אחרת ממנה (לא מהמרכז המתמטי) - כך שהיא, לא המרכז התאורטי, תמיד
-    // ב-0 בדיוק. במספר זוגי זה יוצא א-סימטרי (יותר בועות בצד אחד) - זה
-    // מחיר סביר כדי שהבועה החשובה ביותר תהיה תמיד באמת במרכז המסך
+    // חזרה למרכוז-כקבוצה (dist לפי centerIndex השברי, לא frontIndex המעוגל) -
+    // לפי בקשה מפורשת חדשה ("ברגע שמורידים בועה זה לא באמצע... שלא משנה מה
+    // שיהיה, באמצע המסך מרוכז"): הגרסה הקודמת נעלה את הבועה הקדמית בדיוק
+    // ב-x=0 ברווח זוגי, מה שהזיז את כל השורה כאסימטרית (יותר בועות בצד אחד)
+    // כשמכבים/מדליקים בועה - בדיוק מה שדווח. frontIndex עדיין קיים ונשאר
+    // לקביעת מי מקבל את הסגנון "קדמי" (גדול/בולט), אבל לא קובע את המיקום
+    // הפיזי יותר - כל השורה כולה, כקבוצה, תמיד ממורכזת סביב x=0
     const centerIndex = (fabCarouselOrder.length - 1) / 2;
     const frontIndex = Math.round(centerIndex);
     // style.left הוא ערך פיזי תמיד (לא הופך לפי dir כמו left/right לוגיים) -
@@ -6924,8 +6920,9 @@ function applyDockOrder() {
     fabCarouselOrder.forEach((id, i) => {
         const el = document.getElementById(id);
         if (!el) return;
-        const dist = (i - frontIndex) * dirSign; // 0 בדיוק עבור הבועה הקדמית עצמה
-        const absDist = Math.abs(dist);
+        const dist = (i - centerIndex) * dirSign; // ממרכז-הקבוצה השברי, לא מהבועה הקדמית - כל השורה ממורכזת
+        const frontDist = i - frontIndex; // מרחק שלם מהבועה הקדמית - עדיין קובע גודל/הרמה
+        const absDist = Math.abs(frontDist);
         const isFront = i === frontIndex && !noSingleFront;
         // הבועה הקדמית קיבלה עד עכשיו הרמה 0 (הכי "נמוכה" מכולן, כי הקשת
         // מתחילה ב-0 ועולה כלפי הצדדים) - לפי בקשה מפורשת ("שהבועה המרכזית
@@ -7084,15 +7081,27 @@ function initFabOrderDragReorder() {
     }
 }
 
-// מאפסת גם את סדר הבועות בהגדרות וגם את מצב הקרוסלה בפועל (מי במרכז עכשיו)
-// - חוזרת לפתק בחזית, בדיוק כמו בטעינה ראשונה
+// מאפסת גם את סדר הבועות בהגדרות וגם את מצב הקרוסלה בפועל (מי במרכז עכשיו),
+// וגם את מצב ההצגה/הכיבוי של כל 4 הבועות הניתנות-לכיבוי - חוזרת ל-5
+// הבועות כולן דלוקות והפתק בחזית, בדיוק כמו ברירת המחדל של חשבון חדש - לפי
+// בקשה מפורשת ("איפוס קיצורי דרך... שהברירת מחדל יהיה הכל... שהפתקים
+// באמצע"). לפני זה איפוס-הסדר לא נגע בכלל בכיבוי/הדלקה, רק בסדר/סיבוב
 function resetFabLayout() {
     localStorage.removeItem('weekwise_fab_order');
     // גם מוחקים את הבועה-האחרונה-שהייתה-בחזית שנשמרת בנפרד (ר'
     // weekwise_fab_front_id ב-applyDockOrder) - בלי זה "איפוס" היה עדיין
     // מחזיר את הבועה האישית שהייתה שם קודם, לא ממש חוזר לברירת המחדל הטהורה
     localStorage.removeItem('weekwise_fab_front_id');
+    localStorage.removeItem('weekwise_water_fab');
+    localStorage.removeItem('weekwise_sport_fab');
+    localStorage.removeItem('weekwise_preset_fab');
+    localStorage.removeItem('weekwise_finance_fab');
+    applyWaterFabSetting(true, true);
+    applySportFabSetting(true, true);
+    applyPresetFabSetting(true, true);
+    applyFinanceFabSetting(true, true);
     fabCarouselOrder = null;
+    localStorage.setItem('weekwise_fab_front_id', 'btn-ai-fab');
     restackFabs();
     showAppToast(t('settings_reset_fab_layout_done'));
 }

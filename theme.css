@@ -2592,15 +2592,14 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 
 /* "לוח היום" (🧭) - טאבים מותאמים-אישית + לוח צבעוני לפי בלוקי-שעה, ר'
    openDailyBoardModal/renderDailyBoard ב-app.js.
-   מוצג כחלונית-צד נגררת (כמו "הצצה להיום"), לא כפופ-אפ מרכזי - לפי בקשה
-   מפורשת. ממשיך להשתמש באותו openModal/closeModal('modal-daily-board')
-   הגנרי כמו כל שאר ה-.apple-modal - בלי לשנות שום JS - ורק דורס את מיקום/
-   אנימציית ה-overlay/ה-sheet עבור המודל הזה בלבד */
-#modal-daily-board.apple-modal { justify-content: flex-end; align-items: stretch; padding: 0; }
-html[dir="ltr"] #modal-daily-board.apple-modal { justify-content: flex-start; }
-.daily-board-sheet { max-height: 100%; height: 100%; width: 92%; max-width: 420px; margin: 0; border-radius: 18px 0 0 18px; box-sizing: border-box; display: flex; flex-direction: column; transform: translateX(100%); opacity: 1; transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
-html[dir="ltr"] .daily-board-sheet { border-radius: 0 18px 18px 0; transform: translateX(-100%); }
-#modal-daily-board.open .daily-board-sheet { transform: translateX(0); }
+   מוצג כגיליון-תחתון ממורכז (לא נגרר מהצד, כמו שהיה קודם) - לפי בקשה
+   מפורשת ("שתהיה גם ממורכזת"). ממשיך להשתמש באותו openModal/
+   closeModal('modal-daily-board') הגנרי כמו כל שאר ה-.apple-modal - בלי
+   לשנות שום JS - ורק דורס את מיקום/אנימציית ה-overlay/ה-sheet עבור המודל
+   הזה בלבד */
+#modal-daily-board.apple-modal { justify-content: center; align-items: flex-end; padding: 0; }
+.daily-board-sheet { max-height: 88vh; width: 92%; max-width: 460px; margin: 0 auto; border-radius: 20px 20px 0 0; box-sizing: border-box; display: flex; flex-direction: column; transform: translateY(100%); opacity: 1; transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
+#modal-daily-board.open .daily-board-sheet { transform: translateY(0); }
 .daily-board-close-btn { position: absolute; top: 12px; inset-inline-end: 16px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 5; }
 .daily-board-tabs-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .daily-board-tabs-scroll { display: flex; gap: 8px; overflow-x: auto; flex: 1; min-width: 0; padding-bottom: 2px; }
