@@ -4299,16 +4299,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* גרירת פתק אל "היום"/"מחר" (ר' initNoteTriageDragDrop ב-app.js) - אותה שפה
    חזותית כמו ידית הגרירה של הלו"ז (.slot-drag-handle) */
 .note-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
-/* ארכיון פתקים מחוקים - אייקון קטן ומעומעם, תמיד בצד שמאל הפיזי (לא לפי
-   כיוון הכתיבה - בקשה מפורשת), לא קישור-טקסט עם חץ ולא מתקפל בתוך הרשימה -
-   לחיצה עליו פותחת מודל נפרד (modal-notes-archive), "כמו לעולם חדש" */
-/* margin-right (פיזי, לא margin-inline-end לוגי) - תמיד בצד שמאל הפיזי
-   של המסך בלי קשר לכיוון הכתיבה של השפה הנוכחית (RTL/LTR), לפי בקשה מפורשת */
-/* margin-left:auto (לא margin-right) בכוונה - פיזי, לא הופך לפי dir כמו
-   inset-inline - כדי שהפח יישאר תמיד בצד ימין הפיזי, גם באנגלית/LTR ושאר
-   שפות שאינן עברית, לפי בקשה מפורשת ("בכל מקום שפה אחרת... שהפח יהיה מצד
-   ימין") - margin-right:auto הקודם דחף אותו שמאלה תמיד, לא רק בעברית */
-.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-left: auto; margin-right: 0; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
+/* ארכיון פתקים מחוקים - אייקון קטן ומעומעם, לא קישור-טקסט עם חץ ולא מתקפל
+   בתוך הרשימה - לחיצה עליו פותחת מודל נפרד (modal-notes-archive), "כמו
+   לעולם חדש".
+   margin-inline-start:auto (לוגי, לא margin-left/right פיזי!) - לפי בקשה
+   מפורשת אחרי שני ניסיונות קודמים: קודם margin-right:auto (פיזי) דחף אותו
+   שמאלה תמיד, גם בעברית - נראה "לא בסדר" מול "להגיע לזה" שיושב מימין ב-RTL.
+   אז margin-left:auto (פיזי, ההפך) תוקן לאנגלית אבל שבר עברית (שניהם
+   התכנסו לאותו צד ימין). התיקון הנכון: לוגי, לא פיזי - "בצד השני של הטקסט"
+   הוא בדיוק צד-הסוף (inline-end) בכל שפה/כיוון, בלי תלות ב-RTL/LTR */
+.notes-archive-icon-btn { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-inline-start: auto; margin-inline-end: 0; width: fit-content; background: none; border: none; padding: 4px; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.5; cursor: pointer; transition: var(--transition); }
 .notes-archive-icon-btn:hover { opacity: 1; }
 .notes-archive-count-badge { font-size: 0.65rem; font-variant-numeric: tabular-nums; }
 .notes-archive-list { margin-top: 6px; opacity: 0.85; }
