@@ -13665,27 +13665,28 @@ const DAILY_BOARD_DEFAULT_HOURS = {
 };
 
 // לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
-// ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות ולשנות לכל טאב שונה")
+// ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות ולשנות לכל טאב שונה").
+// נשמר בעמודת routine_tabs.custom_hours (Supabase, לא localStorage) - לפי
+// בקשה מפורשת ("סדר היום לא מסתנכרן במובייל ובמחשב") - לפני זה זה היה
+// localStorage בלבד, אז התאמת-שעות שנעשתה במחשב לא הייתה מגיעה לנייד
+// (ולהפך) בכלל, רק סדר-הטאבים/המשימות עצמן (routine_tabs/routine_items)
+// היו מסונכרנות. dailyBoardTabs כבר נטען מ-Supabase עם select('*') ב-
+// loadRoutineTabs, אז custom_hours מגיע יחד עם שאר שדות הטאב אוטומטית.
 // קריטי להחזיר עותק טרי בכל קריאה (לא רפרנס משותף ל-DAILY_BOARD_DEFAULT_HOURS
 // הקבוע) - toggleDailyBoardHour עושה hours[bucket] = list על מה שמוחזר כאן
 // ישירות; אם היה מוחזר הרפרנס המשותף עצמו, מוטציה כזו הייתה משנה את הקבוע
 // הגלובלי לצמיתות עבור *כל* הטאבים שעדיין אין להם התאמה אישית משלהם - בדיוק
-// הבאג שדווח ("הוספתי שעה בלימודים וזה התווסף גם לשגרה היומית"), שאומת דרך
-// הקונסול: שני הטאבים הראו את אותה שעה מותאמת, כשלטאב שלא נגעו בו כלל לא
-// הייתה בכלל רשומת localStorage משלו - סימן שהוא פשוט ירש את הקבוע המזוהם
+// הבאג שדווח בעבר ("הוספתי שעה בלימודים וזה התווסף גם לשגרה היומית")
 function getDailyBoardCustomHours(tabId) {
-    const raw = tabId ? localStorage.getItem(`weekwise_board_hours_${currentUserId}_${tabId}`) : null;
-    if (!raw) return { morning: [...DAILY_BOARD_DEFAULT_HOURS.morning], noon: [...DAILY_BOARD_DEFAULT_HOURS.noon], afternoon: [...DAILY_BOARD_DEFAULT_HOURS.afternoon], evening: [...DAILY_BOARD_DEFAULT_HOURS.evening] };
-    try {
-        const parsed = JSON.parse(raw);
-        return {
-            morning: Array.isArray(parsed.morning) ? parsed.morning : [...DAILY_BOARD_DEFAULT_HOURS.morning],
-            noon: Array.isArray(parsed.noon) ? parsed.noon : [...DAILY_BOARD_DEFAULT_HOURS.noon],
-            afternoon: Array.isArray(parsed.afternoon) ? parsed.afternoon : [...DAILY_BOARD_DEFAULT_HOURS.afternoon],
-            evening: Array.isArray(parsed.evening) ? parsed.evening : [...DAILY_BOARD_DEFAULT_HOURS.evening],
-        };
-    } catch (e) { return { morning: [...DAILY_BOARD_DEFAULT_HOURS.morning], noon: [...DAILY_BOARD_DEFAULT_HOURS.noon], afternoon: [...DAILY_BOARD_DEFAULT_HOURS.afternoon], evening: [...DAILY_BOARD_DEFAULT_HOURS.evening] };
-    }
+    const tab = tabId ? dailyBoardTabs.find(t => t.id === tabId) : null;
+    const saved = tab && tab.custom_hours && typeof tab.custom_hours === 'object' ? tab.custom_hours : null;
+    if (!saved) return { morning: [...DAILY_BOARD_DEFAULT_HOURS.morning], noon: [...DAILY_BOARD_DEFAULT_HOURS.noon], afternoon: [...DAILY_BOARD_DEFAULT_HOURS.afternoon], evening: [...DAILY_BOARD_DEFAULT_HOURS.evening] };
+    return {
+        morning: Array.isArray(saved.morning) ? saved.morning : [...DAILY_BOARD_DEFAULT_HOURS.morning],
+        noon: Array.isArray(saved.noon) ? saved.noon : [...DAILY_BOARD_DEFAULT_HOURS.noon],
+        afternoon: Array.isArray(saved.afternoon) ? saved.afternoon : [...DAILY_BOARD_DEFAULT_HOURS.afternoon],
+        evening: Array.isArray(saved.evening) ? saved.evening : [...DAILY_BOARD_DEFAULT_HOURS.evening],
+    };
 }
 
 function toggleDailyBoardHour(bucket, hour) {
@@ -13696,9 +13697,13 @@ function toggleDailyBoardHour(bucket, hour) {
     if (idx === -1) list.push(hour); else list.splice(idx, 1);
     list.sort((a, b) => a - b);
     hours[bucket] = list;
-    localStorage.setItem(`weekwise_board_hours_${currentUserId}_${activeDailyBoardTabId}`, JSON.stringify(hours));
+    // עדכון-מקומי אופטימי (רינדור מיידי, בלי לחכות לרשת) + כתיבה ל-Supabase
+    // ברקע - אותה תחושת-מיידיות שהייתה עם localStorage, אבל עכשיו גם מסונכרן
+    const tab = dailyBoardTabs.find(t => t.id === activeDailyBoardTabId);
+    if (tab) tab.custom_hours = hours;
     renderDailyBoardHourSettings();
     renderDailyBoard();
+    if (supabaseClient) supabaseClient.from('routine_tabs').update({ custom_hours: hours }).eq('id', activeDailyBoardTabId);
 }
 
 // פאנל השעות פתוח/סגור בתוך מודל "סדר היום" עצמו (לא בהגדרות הכלליות -
