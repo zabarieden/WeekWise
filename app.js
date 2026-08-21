@@ -6787,7 +6787,7 @@ function filterHelpFaq() {
 // שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"),
 // דורס את ה-opt-out הקודם ("=== 'true'" ולא "!== 'false'")
 function isWaterFabOn() {
-    return localStorage.getItem('weekwise_water_fab') === 'true';
+    return localStorage.getItem('weekwise_water_fab') !== 'false';
 }
 
 function applyWaterFabSetting(enabled, skipRestack) {
@@ -7115,7 +7115,7 @@ function toggleWaterFabFromCard() {
 // כבוי כברירת מחדל (opt-in) שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל:
 // פתקים + ארוחות מוכנות"), דורס שוב את השינוי הקודם ל-opt-out
 function isSportFabOn() {
-    return localStorage.getItem('weekwise_sport_fab') === 'true';
+    return localStorage.getItem('weekwise_sport_fab') !== 'false';
 }
 
 function applySportFabSetting(enabled, skipRestack) {
@@ -7166,7 +7166,7 @@ function togglePresetFab() {
 // בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"), דורס שוב
 // את ה-opt-out הקודם
 function isFinanceFabOn() {
-    return localStorage.getItem('weekwise_finance_fab') === 'true';
+    return localStorage.getItem('weekwise_finance_fab') !== 'false';
 }
 
 function applyFinanceFabSetting(enabled, skipRestack) {

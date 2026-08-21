@@ -929,7 +929,10 @@
                 <!-- כפתור צף להוספה מהירה של מים - אפשר לכבות מההגדרות. בועה
                      נקייה בלי מספר עליה (לפי בקשה מפורשת) - לוחצים ונפתח חלון קטן
                      לבחירת כמות (כוס/בקבוק/מותאם אישית), לא מוסיף אוטומטית 200 מ״ל -->
-                <button type="button" class="dock-fab hidden" id="btn-water-fab" onclick="openModal('modal-water-quick-add')" data-i18n-tooltip="water_quick_add_title" data-i18n-aria-label="water_quick_add_title" aria-label="Add water">💧</button>
+                <button type="button" class="dock-fab hidden" id="btn-water-fab" onclick="openModal('modal-water-quick-add')" data-i18n-tooltip="water_quick_add_title" data-i18n-aria-label="water_quick_add_title" aria-label="Add water">
+                    <span class="dock-fab-icon">💧</span>
+                    <span class="dock-fab-label" data-i18n="dock_fab_label_water">Water</span>
+                </button>
 
                 <!-- כפתור צף להוספה מהירה של ספורט - אפשר לכבות מההגדרות, אותו
                      דפוס בדיוק כמו כפתור המים. לוחצים וקופצים ישר למסך ספורט המלא -
@@ -937,7 +940,10 @@
                      לאימוג'י (🏃, לא תמונה) - לפי בקשה מפורשת: תמונת PNG סטטית
                      לא יכולה להסתנכרן עם ערכת הנושא הנבחרת (בניגוד לאימוג'י,
                      שמרונדר ניטרלי בכל ערכה) -->
-                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">🏃</button>
+                <button type="button" class="dock-fab hidden" id="btn-sport-fab" onclick="openSportQuickAddModal()" data-i18n-tooltip="sport_add_title" data-i18n-aria-label="sport_add_title" aria-label="Log a Workout">
+                    <span class="dock-fab-icon">🏃</span>
+                    <span class="dock-fab-label" data-i18n="dock_fab_label_sport">Sport</span>
+                </button>
 
                 <!-- כפתור צף להוספה מהירה של ארוחה קבועה שמורה - אפשר לכבות
                      מההגדרות, אותו דפוס בדיוק כמו כפתור המים/ספורט. לוחצים, בוחרים
@@ -957,7 +963,10 @@
                      בפועל הרבה יותר ולא קשור ל-AI בכלל, אז מגיע לו מקום קבוע
                      בדוק - לפי בקשה מפורשת. אותו דפוס בדיוק כמו btn-sport-fab:
                      ניווט ישיר למסך, בלי מודל נפרד -->
-                <button type="button" class="dock-fab hidden" id="btn-finance-fab" onclick="openFinanceQuickAddModal()" data-i18n-tooltip="finance_fab_title" data-i18n-aria-label="finance_fab_title" aria-label="Add expense/income">💰</button>
+                <button type="button" class="dock-fab hidden" id="btn-finance-fab" onclick="openFinanceQuickAddModal()" data-i18n-tooltip="finance_fab_title" data-i18n-aria-label="finance_fab_title" aria-label="Add expense/income">
+                    <span class="dock-fab-icon">💰</span>
+                    <span class="dock-fab-label" data-i18n="dock_fab_label_finance">Budget</span>
+                </button>
             </div>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
@@ -3179,7 +3188,7 @@
 
     </div>
 
-    <script src="i18n.js?v=292"></script>
-    <script src="app.js?v=423"></script>
+    <script src="i18n.js?v=293"></script>
+    <script src="app.js?v=424"></script>
 </body>
 </html>
