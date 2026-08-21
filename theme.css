@@ -3677,6 +3677,36 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 /* "משימות להיום": אותה שפה חזותית כמו שורות מבט-ליומן, אבל בגוון הזהב של
    עולם הלו"ז (--tile-accent) במקום סגול, כדי להבחין ביניהם בבירור */
 .today-tasks-list { display: flex; flex-direction: column; gap: 8px; }
+/* בועות "מה חשוב לך לעשות היום" - לא משימות (בלי צ'קבוקס, לא נספרות
+   ב"הכל בוצע"), רק תזכורת דקורטיבית שמוצגת מעל רשימת המשימות - לפי בקשה
+   מפורשת ("שזה לא יהיה כמשימה... בועה כזו של תזכורת"). סגנון "מסגרת
+   נוצצת" (אופציה 10 מתוך 20 שהוצגו) - רקע אטום בגוון var(--bg-sheet) עם
+   מסגרת-גרדיאנט 1px (טריק ה-mask: שכבה שנייה מלאה, גזורה כך שרק הטבעת
+   הדקה בקצה נשארת גלויה) */
+.daily-focus-chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.daily-focus-chip {
+    position: relative;
+    background: var(--bg-sheet);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+}
+.daily-focus-chip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    padding: 1px;
+    background: linear-gradient(120deg, var(--accent-pink), var(--accent-purple-light), var(--accent-pink));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
 /* פירוט היום הנבחר במבט חודשי משתמש באותה מחלקה (today-tasks-row) אבל
    בהקשר שונה לגמרי - כאן דורסים בחזרה לגוון סגול (במקום הזהב של
    "משימות להיום" בבית), לפי בקשה מפורשת ("צבע... שיותר מתאים לסגול") */

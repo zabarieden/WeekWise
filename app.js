@@ -4444,11 +4444,27 @@ async function loadTodayTasks() {
             if (mb === null) return -1;
             return ma - mb;
         });
-    const events = eventRows || [];
+    // תשובות ל"מה חשוב לך לעשות היום" (source:'daily_focus') לא משימות -
+    // מוצגות בנפרד כבועות דקורטיביות למעלה, לא בתוך רשימת המשימות עם
+    // צ'קבוקס, לפי בקשה מפורשת ("שזה לא יהיה כמשימה... בועה כזו של תזכורת")
+    const allEvents = eventRows || [];
+    const focusItems = allEvents.filter(item => item.source === 'daily_focus');
+    const events = allEvents.filter(item => item.source !== 'daily_focus');
     container.innerHTML = '';
-    if (!populated.length && !events.length) {
+    if (!populated.length && !events.length && !focusItems.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
+    }
+    if (focusItems.length) {
+        const chipsRow = document.createElement('div');
+        chipsRow.className = 'daily-focus-chips-row';
+        focusItems.forEach(item => {
+            const chip = document.createElement('span');
+            chip.className = 'daily-focus-chip';
+            chip.textContent = item.event_title;
+            chipsRow.appendChild(chip);
+        });
+        container.appendChild(chipsRow);
     }
     // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
     // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
