@@ -7291,8 +7291,13 @@ function updateHomeSkyDayNight() {
     strip.classList.toggle('sky-night', !isDay);
 }
 
+// 5 הראשונות בגריד הבחירה (4 הרקעים הניטרליים + ברירת המחדל הוורודה) חינמיות -
+// לפי בקשה מפורשת ("5 הראשונים... זה מספיק"), שאר 36 הערכות הצבעוניות/
+// המיוחדות נשארות פרימיום בלבד
+const FREE_COLOR_THEMES = ['default', 'bg_white', 'bg_black', 'bg_beige', 'bg_dark_grey'];
+
 async function selectColorTheme(themeName) {
-    if (themeName !== 'default' && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     applyColorTheme(themeName);
     localStorage.setItem(colorThemeKey(), themeName);
     // מפתח נוסף בלי תלות במשתמשת מחוברת - נקרא סינכרונית ומוקדם מאוד ב-
@@ -7310,14 +7315,19 @@ async function selectColorTheme(themeName) {
 }
 
 async function loadColorTheme() {
-    let themeName = 'default';
+    // הברירת מחדל האמיתית (חשבון חדש/מי שלא בחר/ה בכלל) היא "לבן", לא הוורוד-
+    // סגול המקורי (עדיין קיים כאופציה נפרדת בשם "Default" בגריד הבחירה) - לפי
+    // בקשה מפורשת. אותו שינוי בדיוק בהיישום-המוקדם הסינכרוני ב-index.html.
+    // themeName נשאר null עד שנמצא ערך אמיתי - כדי לא לבלבל בין "לא נבחר שום
+    // דבר" (נופל ל-bg_white) לבין "המשתמשת בפועל בחרה bg_white" (ערך אמיתי,
+    // לא אמור להידרס בחזרה מ-localStorage ישן)
+    let themeName = null;
     if (supabaseClient && currentUserId) {
         const { data } = await supabaseClient.from('user_premium').select('theme').eq('user_id', currentUserId).maybeSingle();
         if (data && data.theme) themeName = data.theme;
     }
-    if (themeName === 'default') {
-        const local = localStorage.getItem(colorThemeKey());
-        if (local) themeName = local;
+    if (!themeName) {
+        themeName = localStorage.getItem(colorThemeKey()) || 'bg_white';
     }
     applyColorTheme(themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);

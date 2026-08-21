@@ -16,7 +16,10 @@
         (function () {
             try {
                 var theme = localStorage.getItem('weekwise_last_color_theme');
-                if (theme && theme !== 'default') document.documentElement.setAttribute('data-color-theme', theme);
+                // ברירת המחדל האמיתית (מי שעדיין לא בחר/ה בכלל, כולל חשבון חדש)
+                // היא עכשיו "לבן" ולא הוורוד-סגול המקורי - לפי בקשה מפורשת
+                if (!theme) theme = 'bg_white';
+                if (theme !== 'default') document.documentElement.setAttribute('data-color-theme', theme);
                 // אותו הסיפור בדיוק לגבי מצב בהיר - loadLightModeSetting ב-app.js
                 // הוא async (מחכה לחיבור ל-Supabase), אז בלי היישום המוקדם הזה
                 // האתר תמיד מתחיל כהה בכל רענון/פתיחה ורק "קופץ" לבהיר כשההבטחה
@@ -1919,10 +1922,10 @@
                     <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                     <div class="theme-picker-grid">
                         <!-- 4 רקעים ניטרליים - לפני כל שאר האפשרויות, לפי בקשה מפורשת -->
-                        <button type="button" class="theme-swatch theme-swatch-bg-white" data-theme="bg_white" onclick="selectColorTheme('bg_white')" title="White"><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-swatch-bg-black" data-theme="bg_black" onclick="selectColorTheme('bg_black')" title="Black"><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-swatch-bg-beige" data-theme="bg_beige" onclick="selectColorTheme('bg_beige')" title="Beige"><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-swatch-bg-dark-grey" data-theme="bg_dark_grey" onclick="selectColorTheme('bg_dark_grey')" title="Dark Grey"><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-white" data-theme="bg_white" onclick="selectColorTheme('bg_white')" title="White"></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-black" data-theme="bg_black" onclick="selectColorTheme('bg_black')" title="Black"></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-beige" data-theme="bg_beige" onclick="selectColorTheme('bg_beige')" title="Beige"></button>
+                        <button type="button" class="theme-swatch theme-swatch-bg-dark-grey" data-theme="bg_dark_grey" onclick="selectColorTheme('bg_dark_grey')" title="Dark Grey"></button>
                         <button type="button" class="theme-swatch theme-swatch-default" data-theme="default" onclick="selectColorTheme('default')" title="Default"></button>
                         <button type="button" class="theme-swatch theme-swatch-blue" data-theme="blue_teal" onclick="selectColorTheme('blue_teal')" title="Blue & Teal"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-gold" data-theme="gold_red" onclick="selectColorTheme('gold_red')" title="Gold & Red"><span class="theme-swatch-lock">🔒</span></button>
@@ -3199,6 +3202,6 @@
     </div>
 
     <script src="i18n.js?v=295"></script>
-    <script src="app.js?v=428"></script>
+    <script src="app.js?v=429"></script>
 </body>
 </html>
