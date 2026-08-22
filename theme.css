@@ -1630,46 +1630,46 @@ html.high-contrast.light-mode {
    כהה) גם על רקע לבן, ויצאו כמו "קופסאות אפורות" בולטות - דווח במפורש
    ("כל הצבעים האפורים האלה... ברקע לבן"). :where() כדי לא להעלות ספציפיות
    מעבר למה שהיה (html.light-mode לבד) */
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .day-tab,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .day-page,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .slot-input-group,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .meal-row,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .progress-row {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .day-tab,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .day-page,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .slot-input-group,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .meal-row,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .progress-row {
     background-color: var(--bg-row);
     color: var(--text-primary);
 }
 /* שדות קלט/טפסים נשארים תמיד בגוון אפור-נייטרלי קבוע, ללא קשר לערכת הנושא -
    כדי שיישארו נראים כמו שדה הזנה פונקציונלי, לא כמו שורת תוכן צבעונית */
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-recur-interval-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid textarea,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .recipe-form-grid select,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #recipe-ai-raw-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .food-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calories-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .weight-inputs-wrap input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .hours-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .schedule-adder-grid select,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .schedule-adder-grid input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-manager-grid select,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-manager-grid input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #sport-custom-type-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #sport-quick-custom-type-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #water-daily-goal-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #calorie-daily-goal-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #protein-daily-goal-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #habit-name-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #contact-us-message,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #ai-schedule-duration-months,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #preset-quick-add-search,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #food-quick-add-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #routine-item-title-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #routine-tab-name-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-day-select,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-reminder,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #glance-edit-task-reminder-text,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) #ai-quick-add-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .vision-card-back-add-row input {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .calendar-event-recur-interval-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .recipe-form-grid input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .recipe-form-grid textarea,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .recipe-form-grid select,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #recipe-ai-raw-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .food-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .calories-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .weight-inputs-wrap input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .hours-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .schedule-adder-grid select,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .schedule-adder-grid input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-manager-grid select,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-manager-grid input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #sport-custom-type-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #sport-quick-custom-type-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #water-daily-goal-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #calorie-daily-goal-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #protein-daily-goal-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #habit-name-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #contact-us-message,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-schedule-duration-months,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #preset-quick-add-search,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #food-quick-add-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #routine-item-title-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #routine-tab-name-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-day-select,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder-text,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-quick-add-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .vision-card-back-add-row input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
@@ -1677,22 +1677,22 @@ html.high-contrast.light-mode {
    כדי לקבל גם הן את גוון ערכת הנושא, עם זכוכית לבנה רכה כברירת מחדל - וה-
    color-scheme הופך מ-dark ל-light כדי שלוח השנה/התפריט הנייטיבי של הדפדפן
    (הפופאפ עצמו, שלא ניתן לעצב ב-CSS) ייפתח גם הוא בהיר ולא כתיבה שחורה */
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .center-list li:not(.center-list-divider),
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-item {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .center-list li:not(.center-list-divider),
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .calendar-event-item {
     background-color: var(--bg-row);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .calendar-event-series-dates {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .calendar-event-series-dates {
     background-color: rgba(0, 0, 0, 0.04);
 }
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .language-select,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .preset-select-trigger,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .date-picker-field-trigger {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .language-select,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-select-trigger,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .date-picker-field-trigger {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--accent-purple-text);
     color-scheme: light;
 }
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) input[type="date"] {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) input[type="date"] {
     background: rgba(0, 0, 0, 0.05) !important;
     color: var(--accent-purple-text) !important;
     color-scheme: light;
@@ -5012,7 +5012,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .reminder-fields-wrap input::placeholder { color: var(--text-secondary); opacity: 0.8; }
 /* אותה בעיה בדיוק כמו שאר שדות-הקלט למעלה (רקע כהה קבוע, לא תלוי-ערכת-נושא) -
    קופסה אפורה בולטת על רקע בהיר, דווח במפורש */
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .reminder-fields-wrap input {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .reminder-fields-wrap input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--accent-purple-text);
 }
@@ -5737,7 +5737,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .food-picker-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .food-picker-qty-row input { flex: 1 1 auto; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-primary); border-radius: 12px; padding: 12px 14px; font-size: 0.9rem; outline: none; text-align: center; }
 .food-picker-qty-row input:focus { border-color: var(--accent-purple); }
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"]) .food-picker-qty-row input {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .food-picker-qty-row input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
