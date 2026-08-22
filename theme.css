@@ -4639,7 +4639,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 #modal-language-picker { z-index: 3500; }
 /* border-radius מלא בכל הפינות (לא רק העליונות) + צל סימטרי - כרטיס
    צף במרכז המסך, לא "בוטום-שיט" צמוד לתחתית */
-.modal-sheet { background-color: var(--bg-sheet); border: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(40px); opacity: 0; transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.23s ease-out; max-height: 85vh; overflow-y: auto; position: relative; }
+.modal-sheet { background-color: var(--bg-sheet); border: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(40px); opacity: 0; transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.23s ease-out; max-height: 85vh; overflow-y: auto; overflow-x: hidden; position: relative; }
 
 .recipe-scan-loading { display: flex; position: absolute; inset: 0; background-color: rgba(7, 6, 10, 0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-direction: column; align-items: center; justify-content: center; gap: 16px; border-radius: 20px; z-index: 50; }
 .recipe-scan-loading p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; font-weight: 500; }
