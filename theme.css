@@ -3690,6 +3690,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    נטייה מתחלפת (nth-child) כדי שכמה פתקים יחד ייראו "מפוזרים" באופן טבעי,
    לא כולם באותו כיוון בדיוק */
 .daily-focus-chip {
+    position: relative;
     background: #fff4cc;
     color: #5c4a12;
     font-weight: 600;
@@ -3701,6 +3702,17 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 }
 .daily-focus-chip:nth-child(even) { transform: rotate(2.5deg); }
 .daily-focus-chip:nth-child(3n) { transform: rotate(-1.5deg); }
+/* נצנצים דקורטיביים (השראה מאופציה 32/23 בגלריה) - נוספו לפתק הצהוב, לפי
+   בקשה מפורשת ("להוסיף למה שעכשיו את הנצנצים... ממש חמוד"). ::before/::after
+   כדי לא לגעת ב-JS (הטקסט עצמו נשאר textContent פשוט) */
+.daily-focus-chip::before, .daily-focus-chip::after {
+    content: '✨';
+    position: absolute;
+    font-size: 0.7rem;
+    pointer-events: none;
+}
+.daily-focus-chip::before { top: -6px; inset-inline-end: -4px; }
+.daily-focus-chip::after { bottom: -6px; inset-inline-start: -4px; font-size: 0.55rem; opacity: 0.85; }
 /* פירוט היום הנבחר במבט חודשי משתמש באותה מחלקה (today-tasks-row) אבל
    בהקשר שונה לגמרי - כאן דורסים בחזרה לגוון סגול (במקום הזהב של
    "משימות להיום" בבית), לפי בקשה מפורשת ("צבע... שיותר מתאים לסגול") */
