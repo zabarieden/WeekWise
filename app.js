@@ -14512,12 +14512,17 @@ async function openNotebookDetailDrawer() {
     const titleEl = document.getElementById('notebook-detail-title');
     if (titleEl) titleEl.textContent = notebook ? notebook.title : '';
     await loadNotebookPages(currentOpenNotebookId);
-    if (notebookPagesCache.length) openNotebookPage(notebookPagesCache[0].id);
+    // אף דף לא נפתח אוטומטית - סגור כברירת מחדל, רק לחיצה על דף ברשימה
+    // פותחת אותו בפועל (ר' selectNotebookPage) - לפי בקשה מפורשת
+    currentOpenPageId = null;
+    renderPageTabsList();
+    const contentWrap = document.getElementById('notebook-page-content-wrap');
+    const emptyState = document.getElementById('notebook-detail-empty-state');
+    if (contentWrap) contentWrap.classList.add('hidden');
+    if (emptyState) emptyState.classList.remove('hidden');
     // במובייל פאנל-הדפים מקופל כברירת מחדל (בדסקטופ הוא ממילא תמיד גלוי
     // בצד, ר' theme.css) - פותחים אותו אוטומטית בכניסה למחברת כדי שהמשתמשת
-    // תראה קודם את רשימת הדפים ותבחר במפורש, במקום לנחות ישר בתוך דף פתוח
-    // וגדול (הדף הראשון עדיין נטען ברקע, כדי שהניווט/חיצים יעבדו מיד) -
-    // לפי בקשה מפורשת
+    // תראה קודם את רשימת הדפים
     const panel = document.getElementById('notebook-page-tabs-panel');
     const arrow = document.getElementById('notebook-page-tabs-arrow');
     if (panel) panel.classList.add('open');
@@ -14572,10 +14577,22 @@ function openNotebookPage(pageId) {
     notebookPagesSearchFilterIds = null;
     const searchInput = document.getElementById('notebook-pages-search-input');
     if (searchInput) searchInput.value = '';
+    document.getElementById('notebook-detail-empty-state').classList.add('hidden');
+    document.getElementById('notebook-page-content-wrap').classList.remove('hidden');
     loadNotebookItems(pageId);
     renderPageNavHeader();
     renderPageTabsList();
-    initNotebookCanvas();
+    // דף-כתיבה (page_type:'write') מציג טקסטאריה במקום קנבס-ציור - שני
+    // סוגי-דף שונים לגמרי, לא רק סגנון (ר' modal-notebook-page-type-choice)
+    const isWrite = page.page_type === 'write';
+    document.querySelector('.notebook-page-toolbar').classList.toggle('hidden', isWrite);
+    document.getElementById('notebook-page-canvas').closest('.notebook-page-canvas-wrap').classList.toggle('hidden', isWrite);
+    document.getElementById('notebook-page-text-content').classList.toggle('hidden', !isWrite);
+    if (isWrite) {
+        document.getElementById('notebook-page-text-content').value = page.text_content || '';
+    } else {
+        initNotebookCanvas();
+    }
 }
 
 function renderPageNavHeader() {
@@ -14600,13 +14617,15 @@ function goToNextPage() {
     if (idx !== -1 && idx < notebookPagesCache.length - 1) openNotebookPage(notebookPagesCache[idx + 1].id);
 }
 
-// "+" יוצר דף חדש וריק ועוברת אליו מיד, בלי חלון-דיאלוג ביניים (אפשר לשנות שם
-// אח"כ דרך כותרת הדף) - לפי בקשה מפורשת ("נוצר מיד דף ריק, אפשר לשנות שם אחר
-// כך"), כדי שההוספה תהיה מהירה ("דף אינסופי" - בלי הגבלת כמות בכלל)
-async function addNotebookPage() {
+// "+" פותחת קודם בחירת סוג-דף (ציור/כתיבה, ר' modal-notebook-page-type-choice)
+// ורק אז יוצרת דף חדש וריק ועוברת אליו מיד, בלי עוד חלון-דיאלוג נוסף (אפשר
+// לשנות שם אח"כ דרך כותרת הדף) - לפי בקשה מפורשת, כדי שההוספה תהיה מהירה
+// ("דף אינסופי" - בלי הגבלת כמות בכלל)
+async function createNotebookPage(pageType) {
+    closeModal('modal-notebook-page-type-choice');
     if (!supabaseClient || !currentUserId || !currentOpenNotebookId) return;
     const nextOrder = notebookPagesCache.length ? Math.max(...notebookPagesCache.map(p => p.sort_order)) + 1 : 0;
-    const { data, error } = await supabaseClient.from('notebook_pages').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} ${nextOrder + 1}`, sort_order: nextOrder, canvas_data: [] }).select().maybeSingle();
+    const { data, error } = await supabaseClient.from('notebook_pages').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} ${nextOrder + 1}`, sort_order: nextOrder, canvas_data: [], page_type: pageType, text_content: pageType === 'write' ? '' : null }).select().maybeSingle();
     if (error || !data) return;
     notebookPagesCache.push(data);
     openNotebookPage(data.id);
@@ -14935,6 +14954,21 @@ async function saveCanvasData() {
     await supabaseClient.from('notebook_pages').update({ canvas_data: canvasStrokes }).eq('id', currentOpenPageId);
     const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
     if (page) page.canvas_data = canvasStrokes;
+}
+
+// דף-כתיבה: שמירה מבוזרת (לא בכל הקשת מקש, כמו הציור ששומר רק על פעולות
+// בדידות/שלמות) - 800ms אחרי שהמשתמשת הפסיקה להקליד
+let notebookTextSaveDebounceTimer = null;
+function scheduleNotebookTextSave() {
+    clearTimeout(notebookTextSaveDebounceTimer);
+    notebookTextSaveDebounceTimer = setTimeout(saveNotebookTextContent, 800);
+}
+async function saveNotebookTextContent() {
+    if (!supabaseClient || !currentOpenPageId) return;
+    const value = document.getElementById('notebook-page-text-content').value;
+    await supabaseClient.from('notebook_pages').update({ text_content: value }).eq('id', currentOpenPageId);
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    if (page) page.text_content = value;
 }
 
 // --- בוחר אימוג'ים - נוחת כמדבקה על הקנבס (לא נכנס לשדה טקסט), לפי בקשה

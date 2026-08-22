@@ -3465,6 +3465,27 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    מצב .selected קבוע - כל לחיצה כאן היא הנחתה חד-פעמית על הקנבס, לא בחירה */
 .notebook-emoji-picker { max-height: 160px; overflow-y: auto; margin-bottom: 8px; }
 .notebook-items-section-header { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+/* דף-כתיבה (page_type:'write') - חלופה טקסטואלית לקנבס-הציור, אותו גודל/
+   מסגרת בדיוק כמו .notebook-page-canvas כדי שהמעבר בין סוגי-דף לא "יקפוץ" */
+.notebook-page-text-content {
+    display: block; width: 100%; height: min(60vh, 500px); border-radius: 12px;
+    background-color: var(--bg-glass); border: 1px solid var(--border-color);
+    color: var(--text-primary); padding: 14px; font-size: 0.95rem; font-family: inherit;
+    resize: vertical; outline: none; box-sizing: border-box; margin-bottom: 8px;
+}
+.notebook-page-text-content:focus { border-color: var(--accent-pink); box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+@media (min-width: 1024px) {
+    .notebook-page-text-content { height: min(65vh, 640px); }
+}
+/* בחירת סוג-דף (ציור/כתיבה) לפני יצירה - שני כפתורים גדולים זהים, לא רשימה */
+.notebook-page-type-choice-grid { display: flex; gap: 12px; margin: 8px 0 16px; }
+.notebook-page-type-choice-btn {
+    flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 20px 12px; background-color: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 14px; color: var(--text-primary); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+}
+.notebook-page-type-choice-btn:active { transform: scale(0.96); background-color: rgba(168, 85, 247, 0.14); }
+.notebook-page-type-choice-icon { font-size: 1.8rem; }
 
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים

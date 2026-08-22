@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=409">
+    <link rel="stylesheet" href="theme.css?v=410">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1222,7 +1222,7 @@
                         <button type="button" class="settings-back-btn" onclick="closeNotebookDetailDrawer(); openNotebooksDrawer();">🔙</button>
                         <h3 id="notebook-detail-title"></h3>
                         <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="addNotebookPage()" data-i18n-title="notebook_page_add_btn_title" title="Add page">＋</button>
+                            <button type="button" class="vision-drawer-add-btn" onclick="openModal('modal-notebook-page-type-choice')" data-i18n-title="notebook_page_add_btn_title" title="Add page">＋</button>
                             <button type="button" class="hamburger-drawer-close" onclick="closeNotebookDetailDrawer()">✕</button>
                         </div>
                     </div>
@@ -1238,6 +1238,10 @@
                             <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list"></ul>
                         </div>
                         <div class="notebook-detail-main-col">
+                            <!-- שום דף לא נבחר עדיין (סגור כברירת מחדל, ר' openNotebookDetailDrawer
+                                 ב-app.js) - רק לחיצה על דף ברשימה פותחת אותו בפועל -->
+                            <p id="notebook-detail-empty-state" class="today-tasks-empty" data-i18n="notebook_no_page_selected_hint">Tap a page on the left to open it.</p>
+                            <div id="notebook-page-content-wrap" class="hidden">
                             <!-- ניווט בין דפי המחברה: כותרת-דף לחיצה (פותחת שינוי-שם), חצי
                                  הקודם/הבא, מונה "N / סה"כ", וחץ שפותח/סוגר את פאנל כל הדפים
                                  (מובייל בלבד - בדסקטופ הפאנל תמיד גלוי בצד) - לפי בקשה מפורשת
@@ -1271,11 +1275,13 @@
                                 <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
                                 <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
                             </div>
+                            <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
                             <div class="notebook-items-section-header">
                                 <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
                             </div>
                             <ul id="notebook-items-list" class="study-tasks-list"></ul>
                             <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1588,6 +1594,28 @@
                         <button id="btn-save-notebook-page-rename" class="btn-primary" onclick="submitRenamePage()" data-i18n="notebook_page_rename_save_btn">Save</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-rename-notebook-page')" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- בחירת סוג-דף לפני יצירה: ציור (קנבס חופשי) או כתיבה (טקסט) - לפי
+             בקשה מפורשת ("שיהיה בחירה של ציור או כתיבה") -->
+        <div id="modal-notebook-page-type-choice" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="notebook_page_type_choice_title">New Page</h3>
+                <div class="notebook-page-type-choice-grid">
+                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('draw')">
+                        <span class="notebook-page-type-choice-icon">✏️</span>
+                        <span data-i18n="notebook_page_type_draw">Drawing</span>
+                    </button>
+                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('write')">
+                        <span class="notebook-page-type-choice-icon">📝</span>
+                        <span data-i18n="notebook_page_type_write">Writing</span>
+                    </button>
+                </div>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-notebook-page-type-choice')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -3247,7 +3275,7 @@
 
     </div>
 
-    <script src="i18n.js?v=301"></script>
-    <script src="app.js?v=435"></script>
+    <script src="i18n.js?v=302"></script>
+    <script src="app.js?v=436"></script>
 </body>
 </html>
