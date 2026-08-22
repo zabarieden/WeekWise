@@ -4570,7 +4570,8 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* קופסת סימון: var(--accent-purple) ולא צבע קבוע, כדי שתעקוב אוטומטית אחרי
    ערכת הנושא הפעילה (כהה/בהיר וגם ערכות הצבע הפרימיום שמחליפות את המשתנה הזה) */
 .btn-complete-item {
-    background: transparent;
+    background: rgba(168, 85, 247, 0.1);
+    background: color-mix(in srgb, var(--accent-purple) 10%, transparent);
     border: 2px solid var(--accent-purple);
     border-radius: 10px;
     width: 30px;
