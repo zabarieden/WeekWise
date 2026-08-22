@@ -119,10 +119,44 @@ notification even while NOT10.ai's own in-app reminder delivery is unreliable.
 No stored duration field, so timed events default to a 1-hour block on the
 Google side; all-day events use `date`/`date+1`.
 
+## Milestone 3 - NOT10.ai→Google push for recurring series (done, partial)
+
+No new tables - reuses `calendar_sync_outbox.recurrence_group_id` (added above)
+and the same `google-calendar-outbox-drain` function, redeployed with recurring-
+aware logic. Nothing new to run; the trigger function was updated in place
+(`calendar_events_enqueue_outbox()`, same migration file pattern as Milestone 2).
+
+- **`generateRecurringDates()` in app.js doesn't persist its own parameters**
+  (unit/interval/duration) anywhere on the row - only the resulting `event_date`
+  values survive. So the drain function reconstructs the RRULE by inferring the
+  pattern from the sibling rows' actual dates (`inferRRule()`): a constant day-gap
+  → `FREQ=DAILY` or `FREQ=WEEKLY`; a constant day-of-month with a constant
+  month-gap → `FREQ=MONTHLY`. If the pattern isn't regular (e.g. a occurrence's
+  date was hand-edited since creation), falls back to pushing every occurrence as
+  an independent one-off Google event instead of losing sync entirely.
+- **Series creation**: one `Events.insert` call for the whole group, with
+  `recurrence: ["RRULE:..."]`; the resulting series-master `google_event_id` is
+  written onto *all* sibling rows (shared, not unique per row - matches the
+  original schema note).
+- **Whole-series edits**: `openEditCalendarEventSeries()` in app.js is the only
+  UI path that edits a recurring group, and it only ever changes the shared
+  title across every sibling row at once - so any subsequent outbox activity on
+  an already-synced group is treated as a title-only `PATCH` on the series
+  master (deliberately not `PUT`, so the existing `recurrence` field on the
+  Google side is never overwritten/cleared).
+- **Deleting a single occurrence while the series still has other rows is a
+  no-op on the Google side** (verified) - the trigger only enqueues a delete
+  once the *last* row sharing that `recurrence_group_id` is gone, since every
+  sibling shares one Google event and deleting it would wipe the whole series.
+  Concretely this means removing one occurrence locally does not yet remove
+  just that occurrence from Google (it stays there) - full instance-level
+  editing/deletion via `Events.instances()` is not implemented.
+- **Editing a single occurrence's own date/time within an already-pushed
+  series is not implemented** - the app's UI doesn't currently expose this
+  (see `openEditCalendarEventSeries` note above), so it wasn't built.
+
 ## Known limitations
 
-- **Recurring events still don't push** - `recurrence_group_id IS NOT NULL` rows
-  are excluded from the outbox trigger entirely (Milestone 3).
 - **Refresh tokens expire every 7 days while the OAuth consent screen is in
   "Testing" status** - a reconnect is needed weekly until Google approves the
   verification submission and it moves to "In production."

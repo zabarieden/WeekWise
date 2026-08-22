@@ -1,11 +1,13 @@
-// Milestone 2: pushes one-time (non-recurring) calendar_events changes made in
-// NOT10.ai back to Google Calendar. Drains calendar_sync_outbox, populated by a
-// DB trigger on calendar_events (see the migration in this function's DEPLOY.md).
+// Milestone 2+3: pushes calendar_events changes made in NOT10.ai back to Google
+// Calendar - one-time events (Milestone 2) and recurring series (Milestone 3).
+// Drains calendar_sync_outbox, populated by a DB trigger on calendar_events (see
+// the migration in this function's DEPLOY.md).
 //
 // Runs on a cron tick (every 1-2 min), not per-request - so it always fetches
 // current row state itself rather than trusting any snapshot in the outbox row.
-// That also gives free de-duplication: several queued 'update' rows for the same
-// event collapse into a single Events.update call using the latest state.
+// That also gives free de-duplication: several queued rows for the same event
+// (or the same recurring series) collapse into a single Google API call using
+// the latest state.
 
 import { serviceClient, getValidAccessToken, GoogleConnection } from "../_shared/google-calendar.ts";
 
@@ -34,7 +36,16 @@ function addHour(dateStr: string, timeStr: string): { date: string; time: string
     };
 }
 
-function buildEventBody(row: any, timeZone: string) {
+function reminderBody(reminderMinutes: number | null | undefined) {
+    // null/undefined -> useDefault (Google's own default reminders); אחרת
+    // override מדויק כדי שהתראת-גוגל תתריע באותו קיזוז בדיוק כמו שהוגדר
+    // ב-NOT10.ai - זה בפועל "מתקן" למשתמשת מחוברת את בעיית ההתראות הפנימיות
+    // השבורות, כי התראת-גוגל אמינה ועובדת גם כשהפנימית לא
+    if (reminderMinutes === null || reminderMinutes === undefined) return { useDefault: true };
+    return { useDefault: false, overrides: [{ method: "popup", minutes: reminderMinutes }] };
+}
+
+function buildOneTimeEventBody(row: any, timeZone: string) {
     const body: any = { summary: row.event_title || "(No title)" };
     if (row.event_time) {
         const end = addHour(row.event_date, row.event_time);
@@ -44,16 +55,36 @@ function buildEventBody(row: any, timeZone: string) {
         body.start = { date: row.event_date };
         body.end = { date: addDays(row.event_date, 1) };
     }
-    // reminder_minutes null/undefined -> useDefault (Google's own default reminders);
-    // אחרת override מדויק כדי שהתראת-גוגל תתריע באותו קיזוז בדיוק כמו שהוגדר
-    // ב-NOT10.ai - זה בפועל "מתקן" למשתמשת מחוברת את בעיית ההתראות הפנימיות
-    // השבורות, כי התראת-גוגל אמינה ועובדת גם כשהפנימית לא
-    if (row.reminder_minutes === null || row.reminder_minutes === undefined) {
-        body.reminders = { useDefault: true };
-    } else {
-        body.reminders = { useDefault: false, overrides: [{ method: "popup", minutes: row.reminder_minutes }] };
-    }
+    body.reminders = reminderBody(row.reminder_minutes);
     return body;
+}
+
+// מנסה להסיק כלל-חזרה (RRULE) מתוך רשימת התאריכים הממוינת בפועל של הסדרה -
+// generateRecurringDates ב-app.js לא שומר את פרמטרי היצירה (unit/interval)
+// בשום מקום בטבלה עצמה, רק את התאריכים המחושבים-מראש, אז זו הדרך היחידה
+// לשחזר את הכלל בלי לשנות סכמה. FREQ=DAILY/WEEKLY נבדק לפי פער-ימים אחיד;
+// FREQ=MONTHLY נבדק לפי יום-קבוע-בחודש + מרווח-חודשים אחיד. תבנית לא-סדירה
+// (למשל אחרי שמישהי ערכה תאריך בודד בסדרה ידנית) מחזירה null - הקוראת
+// אחראית ליפול-אחורה לדחיפת כל מופע כאירוע נפרד, לא לשבור את כל הסדרה
+function inferRRule(sortedDates: string[]): string | null {
+    const count = sortedDates.length;
+    if (count < 2) return null;
+    const parsed = sortedDates.map((s) => { const [y, m, d] = s.split("-").map(Number); return { y, m, d }; });
+    const toDayNum = (p: { y: number; m: number; d: number }) => Math.floor(Date.UTC(p.y, p.m - 1, p.d) / 86400000);
+    const dayNums = parsed.map(toDayNum);
+    const dayDiffs = dayNums.slice(1).map((v, i) => v - dayNums[i]);
+    if (dayDiffs.every((d) => d === dayDiffs[0] && d > 0)) {
+        const step = dayDiffs[0];
+        if (step % 7 === 0) return `FREQ=WEEKLY;INTERVAL=${step / 7};COUNT=${count}`;
+        return `FREQ=DAILY;INTERVAL=${step};COUNT=${count}`;
+    }
+    const sameDom = parsed.every((p) => p.d === parsed[0].d);
+    const monthNums = parsed.map((p) => p.y * 12 + p.m);
+    const monthDiffs = monthNums.slice(1).map((v, i) => v - monthNums[i]);
+    if (sameDom && monthDiffs.every((d) => d === monthDiffs[0] && d > 0)) {
+        return `FREQ=MONTHLY;INTERVAL=${monthDiffs[0]};COUNT=${count}`;
+    }
+    return null;
 }
 
 async function getCalendarTimeZone(accessToken: string, calendarId: string): Promise<string> {
@@ -70,7 +101,7 @@ Deno.serve(async () => {
 
     const { data: pending, error: pendingErr } = await supabase
         .from("calendar_sync_outbox")
-        .select("id, calendar_event_id, user_id, action, google_event_id, attempts")
+        .select("id, calendar_event_id, user_id, action, google_event_id, recurrence_group_id, attempts")
         .is("processed_at", null)
         .order("created_at", { ascending: true })
         .limit(200);
@@ -113,20 +144,19 @@ Deno.serve(async () => {
         }
 
         const timeZone = await getCalendarTimeZone(accessToken, conn.google_calendar_id);
+        const calId = conn.google_calendar_id;
+        const eventsBase = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`;
 
+        // מחיקות - כל שורה בנפרד. הטריגר כבר דואג שסדרה חוזרת רק תגיע לכאן
+        // כשהמופע האחרון שלה נמחק (ר' הערת הטריגר), אז google_event_id כאן
+        // תמיד באמת אמור להימחק לגמרי, לא רק מופע בודד מתוך סדרה חיה
         const deletes = rows.filter((r) => r.action === "delete");
-        const upserts = rows.filter((r) => r.action !== "delete");
-        const upsertEventIds = [...new Set(upserts.map((r) => r.calendar_event_id))];
-
-        // מחיקות - כל שורה בנפרד, ה-google_event_id כבר נשמר בתור (השורה
-        // המקומית עצמה כבר נמחקה, אין ממה עוד לקרוא)
         for (const delRow of deletes) {
             try {
                 if (delRow.google_event_id) {
-                    const res = await fetch(
-                        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(conn.google_calendar_id)}/events/${encodeURIComponent(delRow.google_event_id)}`,
-                        { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } },
-                    );
+                    const res = await fetch(`${eventsBase}/${encodeURIComponent(delRow.google_event_id)}`, {
+                        method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` },
+                    });
                     if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`delete failed: ${res.status} ${await res.text()}`);
                 }
                 await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).eq("id", delRow.id);
@@ -134,18 +164,21 @@ Deno.serve(async () => {
             } catch (e) {
                 const attempts = (delRow.attempts || 0) + 1;
                 await supabase.from("calendar_sync_outbox").update({
-                    attempts,
-                    last_error: String(e),
-                    processed_at: attempts >= MAX_ATTEMPTS ? nowIso() : null,
+                    attempts, last_error: String(e), processed_at: attempts >= MAX_ATTEMPTS ? nowIso() : null,
                 }).eq("id", delRow.id);
             }
         }
 
-        // הוספות/עדכונים - פר calendar_event_id ייחודי (לא פר שורת-תור), כדי
+        const upserts = rows.filter((r) => r.action !== "delete");
+        const oneTimeUpserts = upserts.filter((r) => !r.recurrence_group_id);
+        const recurringUpserts = upserts.filter((r) => r.recurrence_group_id);
+
+        // אירועים חד-פעמיים - פר calendar_event_id ייחודי (לא פר שורת-תור), כדי
         // שכמה עריכות שהצטברו על אותו אירוע יתמזגו לקריאת-גוגל אחת עם המצב
         // העדכני ביותר בפועל, במקום לשלוח את אותו אירוע כמה פעמים ברצף
-        for (const eventId of upsertEventIds) {
-            const rowsForEvent = upserts.filter((r) => r.calendar_event_id === eventId);
+        const oneTimeEventIds = [...new Set(oneTimeUpserts.map((r) => r.calendar_event_id))];
+        for (const eventId of oneTimeEventIds) {
+            const rowsForEvent = oneTimeUpserts.filter((r) => r.calendar_event_id === eventId);
             const rowIds = rowsForEvent.map((r) => r.id);
             try {
                 const { data: current } = await supabase.from("calendar_events")
@@ -153,32 +186,24 @@ Deno.serve(async () => {
                     .eq("id", eventId).maybeSingle();
 
                 if (!current || current.source !== "calendar" || current.recurrence_group_id) {
-                    // האירוע נמחק/השתנה מאז שנכנס לתור, או שהוא כבר לא בתחום
-                    // מיילסטון 2 (חוזר) - שום דבר לעשות, פשוט מסמנים כמעובד
                     await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
                     processedCount += rowIds.length;
                     continue;
                 }
 
-                const body = buildEventBody(current, timeZone);
-                let res: Response;
-                if (current.google_event_id) {
-                    res = await fetch(
-                        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(conn.google_calendar_id)}/events/${encodeURIComponent(current.google_event_id)}`,
-                        { method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body) },
-                    );
-                } else {
-                    res = await fetch(
-                        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(conn.google_calendar_id)}/events`,
-                        { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body) },
-                    );
-                }
+                const body = buildOneTimeEventBody(current, timeZone);
+                const res = current.google_event_id
+                    ? await fetch(`${eventsBase}/${encodeURIComponent(current.google_event_id)}`, {
+                        method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                    })
+                    : await fetch(eventsBase, {
+                        method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                    });
                 if (!res.ok) throw new Error(`upsert failed: ${res.status} ${await res.text()}`);
                 const ev = await res.json();
 
-                // כתיבה זו נוגעת ב-google_synced_at באותו statement - הטריגר על
-                // calendar_events בודק בדיוק את זה כדי לא להכניס את השורה הזו
-                // שוב לתור (מניעת-לולאה, ר' הערת הטריגר במיגרציה)
+                // כתיבה זו נוגעת ב-google_synced_at באותו statement - הטריגר
+                // בודק בדיוק את זה כדי לא להכניס את השורה הזו שוב לתור
                 await supabase.from("calendar_events").update({
                     google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
                     google_synced_at: nowIso(),
@@ -189,9 +214,105 @@ Deno.serve(async () => {
             } catch (e) {
                 const attempts = Math.max(...rowsForEvent.map((r) => r.attempts || 0)) + 1;
                 await supabase.from("calendar_sync_outbox").update({
-                    attempts,
-                    last_error: String(e),
-                    processed_at: attempts >= MAX_ATTEMPTS ? nowIso() : null,
+                    attempts, last_error: String(e), processed_at: attempts >= MAX_ATTEMPTS ? nowIso() : null,
+                }).in("id", rowIds);
+            }
+        }
+
+        // סדרות חוזרות - פר recurrence_group_id, לא פר שורה/מופע - כל אחיות-
+        // הסדרה שנכנסו לתור מטופלות ביחד בקריאת-גוגל אחת (יצירה) או בעדכון-
+        // כותרת אחד (סדרה שכבר קיימת בגוגל)
+        const groupIds = [...new Set(recurringUpserts.map((r) => r.recurrence_group_id))];
+        for (const groupId of groupIds) {
+            const rowsForGroup = recurringUpserts.filter((r) => r.recurrence_group_id === groupId);
+            const rowIds = rowsForGroup.map((r) => r.id);
+            try {
+                const { data: siblings } = await supabase.from("calendar_events")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, source")
+                    .eq("recurrence_group_id", groupId).eq("source", "calendar").order("event_date", { ascending: true });
+
+                if (!siblings || siblings.length === 0) {
+                    // כל הסדרה נמחקה מאז שנכנסה לתור - שום דבר לעשות
+                    await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
+                    processedCount += rowIds.length;
+                    continue;
+                }
+
+                const alreadySynced = siblings.filter((s) => s.google_event_id);
+
+                if (alreadySynced.length > 0) {
+                    // הסדרה כבר קיימת בגוגל - כאן זה תמיד עריכת-כותרת-לכל-הסדרה
+                    // (הדרך היחידה בממשק לערוך עריכת-קבוצה, ר' openEditCalendarEventSeries
+                    // ב-app.js - אין כרגע דרך לערוך מופע בודד בתוך סדרה שכבר נדחפה).
+                    // PATCH ולא PUT בכוונה - כדי לא לדרוס/למחוק בטעות את שדה
+                    // ה-recurrence הקיים על אירוע-האב בגוגל, שולחים רק את מה שבאמת
+                    // השתנה
+                    const masterId = alreadySynced[0].google_event_id;
+                    const title = siblings[0].event_title || "(No title)";
+                    const res = await fetch(`${eventsBase}/${encodeURIComponent(masterId)}`, {
+                        method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ summary: title }),
+                    });
+                    if (!res.ok && res.status !== 404) throw new Error(`series title update failed: ${res.status} ${await res.text()}`);
+                    if (res.ok) {
+                        const ev = await res.json();
+                        await supabase.from("calendar_events").update({
+                            google_etag: ev.etag || null, google_updated: ev.updated || null, google_synced_at: nowIso(),
+                        }).eq("recurrence_group_id", groupId);
+                    }
+                    await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
+                    processedCount += rowIds.length;
+                    continue;
+                }
+
+                // סדרה חדשה - עדיין לא נדחפה בכלל
+                const dates = siblings.map((s) => s.event_date);
+                const rule = inferRRule(dates);
+                const first = siblings[0];
+
+                if (rule) {
+                    const body: any = buildOneTimeEventBody(first, timeZone);
+                    body.recurrence = [`RRULE:${rule}`];
+                    const res = await fetch(eventsBase, {
+                        method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                    });
+                    if (!res.ok) throw new Error(`series create failed: ${res.status} ${await res.text()}`);
+                    const ev = await res.json();
+                    // אותו google_event_id (מזהה-אב) על כל האחיות - זה בדיוק
+                    // המנגנון שמאפשר לעדכון-כותרת עתידי לדעת איזה event לפצ'ץ'
+                    await supabase.from("calendar_events").update({
+                        google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                        google_synced_at: nowIso(),
+                    }).eq("recurrence_group_id", groupId);
+                } else {
+                    // תבנית לא-סדירה - לא ניתן לבנות RRULE אמין (למשל אחרי עריכה
+                    // ידנית של תאריך בודד). נופלים אחורה לדחיפת כל מופע כאירוע
+                    // עצמאי נפרד, כל אחד עם google_event_id משלו - עדיף מלאבד
+                    // סנכרון לגמרי על כל הסדרה
+                    for (const s of siblings) {
+                        const body = buildOneTimeEventBody(s, timeZone);
+                        const res = s.google_event_id
+                            ? await fetch(`${eventsBase}/${encodeURIComponent(s.google_event_id)}`, {
+                                method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                            })
+                            : await fetch(eventsBase, {
+                                method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                            });
+                        if (!res.ok) throw new Error(`flattened occurrence push failed: ${res.status} ${await res.text()}`);
+                        const ev = await res.json();
+                        await supabase.from("calendar_events").update({
+                            google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                            google_synced_at: nowIso(),
+                        }).eq("id", s.id);
+                    }
+                }
+
+                await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
+                processedCount += rowIds.length;
+            } catch (e) {
+                const attempts = Math.max(...rowsForGroup.map((r) => r.attempts || 0)) + 1;
+                await supabase.from("calendar_sync_outbox").update({
+                    attempts, last_error: String(e), processed_at: attempts >= MAX_ATTEMPTS ? nowIso() : null,
                 }).in("id", rowIds);
             }
         }
