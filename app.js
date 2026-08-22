@@ -1690,6 +1690,7 @@ async function initAppAfterAuth(user) {
         loadColorTheme(),
         loadAiIconSetting(),
         loadLightModeSetting(),
+        loadStudyPeekTabSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
         loadMonthlyGoal(),
@@ -13374,10 +13375,23 @@ function updateHomeCalorieBadge() {
 // מחדל (opt-in), אותו דפוס בדיוק כמו isHomeCalorieBadgeOn - לפי בקשה
 // מפורשת ("אפשרות לשים... גם בהתאמה אישית")
 function isStudyPeekTabOn() { return localStorage.getItem('weekwise_study_peek_tab') === 'true'; }
-function toggleStudyPeekTab() {
+async function loadStudyPeekTabSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('study_peek_tab_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.study_peek_tab_enabled === null || data.study_peek_tab_enabled === undefined) return;
+    localStorage.setItem('weekwise_study_peek_tab', String(data.study_peek_tab_enabled));
+    applyStudyPeekTabSetting();
+}
+async function toggleStudyPeekTab() {
     const enabled = document.getElementById('study-peek-tab-toggle').checked;
     localStorage.setItem('weekwise_study_peek_tab', String(enabled));
     applyStudyPeekTabSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, study_peek_tab_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
 }
 function applyStudyPeekTabSetting() {
     const tab = document.getElementById('study-peek-tab');
