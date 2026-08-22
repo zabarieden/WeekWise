@@ -134,36 +134,52 @@ html[data-ui-scale="large"] { font-size: 22px; }
     --accent-purple-light: #c084fc;
 }
 [data-color-theme="cotton_candy"] {
-    --bg-main: linear-gradient(135deg, #2a0a2e, #3d1044);
-    --bg-row: rgba(90, 30, 100, 0.5);
-    --border-color: rgba(244, 114, 255, 0.25);
+    --bg-main: linear-gradient(135deg, #ffe3fb, #f0dcff);
+    --bg-row: rgba(216, 70, 239, 0.1);
+    --bg-glass: rgba(255, 245, 254, 0.75);
+    --bg-sheet: #fffaff;
+    --border-color: rgba(216, 70, 239, 0.22);
+    --text-primary: #3a1440;
+    --text-secondary: #8a6b92;
     --accent-pink: #f472ff;
     --accent-purple: #b366ff;
-    --accent-purple-light: #d9a3ff;
+    --accent-purple-light: #a020e0;
 }
 [data-color-theme="sherbet_sky"] {
-    --bg-main: linear-gradient(135deg, #2e1010, #3d1a10);
-    --bg-row: rgba(100, 50, 40, 0.5);
-    --border-color: rgba(255, 158, 128, 0.25);
-    --accent-pink: #ff9eb5;
-    --accent-purple: #ffb37a;
-    --accent-purple-light: #ffd9a0;
+    --bg-main: linear-gradient(135deg, #ffe8d6, #ffd6e0);
+    --bg-row: rgba(255, 138, 101, 0.12);
+    --bg-glass: rgba(255, 248, 243, 0.75);
+    --bg-sheet: #fffaf6;
+    --border-color: rgba(255, 138, 101, 0.22);
+    --text-primary: #402418;
+    --text-secondary: #927060;
+    --accent-pink: #ff5f8a;
+    --accent-purple: #ff8a3d;
+    --accent-purple-light: #e0692a;
 }
 [data-color-theme="aurora_pastel"] {
-    --bg-main: linear-gradient(135deg, #0a1030, #1a1044);
-    --bg-row: rgba(40, 40, 100, 0.5);
-    --border-color: rgba(147, 197, 253, 0.25);
-    --accent-pink: #93c5fd;
-    --accent-purple: #c4b5fd;
-    --accent-purple-light: #f0abfc;
+    --bg-main: linear-gradient(135deg, #dbeafe, #ede9fe);
+    --bg-row: rgba(129, 140, 248, 0.1);
+    --bg-glass: rgba(245, 247, 255, 0.75);
+    --bg-sheet: #f8faff;
+    --border-color: rgba(129, 140, 248, 0.22);
+    --text-primary: #1e1b40;
+    --text-secondary: #6b6890;
+    --accent-pink: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-purple-light: #c026d3;
 }
 [data-color-theme="rainbow_mist"] {
-    --bg-main: linear-gradient(135deg, #1a0a2e, #2e0a20, #0a1a2e);
-    --bg-row: rgba(90, 50, 100, 0.5);
-    --border-color: rgba(216, 180, 254, 0.3);
-    --accent-pink: #f9a8d4;
-    --accent-purple: #a78bfa;
-    --accent-purple-light: #93c5fd;
+    --bg-main: linear-gradient(135deg, #ffe3ec 0%, #f3e0ff 33%, #e0ecff 66%, #dcfce9 100%);
+    --bg-row: rgba(196, 130, 240, 0.1);
+    --bg-glass: rgba(253, 248, 255, 0.75);
+    --bg-sheet: #fdfaff;
+    --border-color: rgba(196, 130, 240, 0.22);
+    --text-primary: #2e1a3d;
+    --text-secondary: #7d6a8c;
+    --accent-pink: #ec4899;
+    --accent-purple: #8b5cf6;
+    --accent-purple-light: #2563eb;
 }
 [data-color-theme="neon_glass"] {
     --bg-main: linear-gradient(135deg, #0a0518, #1a0530);
