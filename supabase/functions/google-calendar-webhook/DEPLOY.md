@@ -74,10 +74,55 @@ select cron.schedule(
 
 (Same `net.http_post` + service-role-bearer pattern as `send-due-reminders`.)
 
-## Known limitations (Milestone 1 scope)
+## Milestone 2 - NOT10.ai→Google push for one-time events (done)
 
-- **Pull only** - Google→NOT10.ai. Events created/edited/deleted in NOT10.ai do not
-  yet push back to Google (Milestone 2/3).
+Covers `google-calendar-outbox-drain` and two DB objects applied directly against
+the linked project (nothing to run here):
+
+- `calendar_sync_outbox` table (service-role only, RLS enabled with no client
+  policies): `id`, `calendar_event_id`, `user_id`, `action` (insert/update/delete),
+  `google_event_id` (snapshot, used for deletes since the local row is already
+  gone by drain time), `attempts`, `last_error`, `created_at`, `processed_at`.
+- `calendar_events_enqueue_outbox()` trigger function + `calendar_events_outbox_trigger`
+  (`AFTER INSERT OR UPDATE OR DELETE`). Scoped to `source = 'calendar'` rows with
+  `recurrence_group_id IS NULL` (one-time events only - recurring push is
+  Milestone 3). Loop prevention: on UPDATE, only enqueues when `google_synced_at`
+  did **not** change in that same statement - every pull-direction write (webhook/
+  reconcile) and every outbox-drain confirmation write touches that column, so
+  those are correctly skipped; genuine local edits from `app.js` never touch it.
+
+Deploy:
+```bash
+supabase functions deploy google-calendar-outbox-drain
+```
+
+Cron (every minute, same `net.http_post` + service-role-bearer pattern):
+```sql
+select cron.schedule(
+  'google-calendar-outbox-drain-every-min',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := 'https://fncssznyigwlltoqlfwh.supabase.co/functions/v1/google-calendar-outbox-drain',
+    headers := jsonb_build_object('Authorization', 'Bearer <service-role-key>', 'Content-Type', 'application/json')
+  );
+  $$
+);
+```
+
+The drain function re-reads each event's current state from `calendar_events` at
+drain time rather than trusting the outbox row's snapshot - several queued rows
+for the same event collapse into one Google API call using the latest state.
+Reminders: `reminder_minutes` is translated into a Google `popup` reminder
+override on push, so a connected user gets Google's (reliable) native
+notification even while NOT10.ai's own in-app reminder delivery is unreliable.
+No stored duration field, so timed events default to a 1-hour block on the
+Google side; all-day events use `date`/`date+1`.
+
+## Known limitations
+
+- **Recurring events still don't push** - `recurrence_group_id IS NOT NULL` rows
+  are excluded from the outbox trigger entirely (Milestone 3).
 - **Refresh tokens expire every 7 days while the OAuth consent screen is in
   "Testing" status** - a reconnect is needed weekly until Google approves the
   verification submission and it moves to "In production."
@@ -89,3 +134,5 @@ select cron.schedule(
   side's edit with no warning. Acceptable for personal use, not enterprise-grade.
 - **`weekly_schedule` (the day-of-week grid) is out of scope** - only dated
   `calendar_events` sync.
+- **Outbox retries cap at 10 attempts** per row, then gives up (marks processed
+  with `last_error` retained) rather than retrying forever.
