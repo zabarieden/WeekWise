@@ -151,9 +151,20 @@ aware logic. Nothing new to run; the trigger function was updated in place
   Concretely this means removing one occurrence locally does not yet remove
   just that occurrence from Google (it stays there) - full instance-level
   editing/deletion via `Events.instances()` is not implemented.
-- **Editing a single occurrence's own date/time within an already-pushed
-  series is not implemented** - the app's UI doesn't currently expose this
-  (see `openEditCalendarEventSeries` note above), so it wasn't built.
+- **Editing a single occurrence's own date/time/title within an already-pushed
+  series is now supported** (previously listed here as not implemented - added
+  after the UI gained an edit button per-occurrence inside the expanded series
+  view, `openEditCalendarEvent(occurrence)`). Two new immutable anchor columns,
+  `recurrence_original_date`/`recurrence_original_time`, are stamped once at
+  series-creation time (never touched by later edits) and used to look up the
+  matching Google instance via `Events.instances()` - matching on
+  `originalStartTime` rather than the (now possibly-changed) current
+  `event_date`/`event_time`. The drain function distinguishes a whole-series
+  edit from a single-occurrence edit by comparing which `calendar_event_id`s
+  actually appear in the pending outbox batch for that group: all siblings at
+  once → series-title `PATCH`; a subset (normally one) → per-instance `PATCH`
+  via the matched instance id. Rows created before this column existed fall
+  back to matching on their current `event_date`/`event_time` instead.
 
 ## Known limitations
 

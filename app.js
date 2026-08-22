@@ -5360,6 +5360,16 @@ function buildRecurringEventRow(items, groupId) {
         checkbox.onchange = () => toggleEventOccurrenceCompletion(occurrence.id, checkbox.checked);
         const dateLabel = document.createElement('span');
         dateLabel.textContent = formatEventDateBadge(occurrence.event_date);
+        // עריכת מופע בודד זה בלבד (כותרת/תאריך/שעה/תזכורת) - openEditCalendarEvent
+        // כבר תומכת בעריכת שורה בודדת לפי id בלי לגעת בשאר הסדרה (ר' ההערה שם,
+        // editingCalendarEventGroupId נשאר null), רק היה חסר כפתור-כניסה אליה
+        // מתוך הרשימה המורחבת הזו - לפי בקשה מפורשת
+        const editSingleBtn = document.createElement('button');
+        editSingleBtn.type = 'button';
+        editSingleBtn.className = 'btn-edit-item';
+        editSingleBtn.innerHTML = EDIT_ICON_SVG;
+        editSingleBtn.title = t('calendar_event_edit_occurrence_title');
+        editSingleBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); openEditCalendarEvent(occurrence); };
         // מחיקת מופע בודד זה בלבד - להבדיל מ-❌ של כל הסדרה למעלה, שמפסיקה
         // את כל המופעים העתידיים (ר' deleteRecurringSeries). כאן נשארים כל
         // שאר המופעים העתידיים במקום, נמחק רק התאריך הספציפי הזה
@@ -5371,6 +5381,7 @@ function buildRecurringEventRow(items, groupId) {
         deleteSingleBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteSingleSeriesOccurrence(occurrence.id); };
         line.appendChild(checkbox);
         line.appendChild(dateLabel);
+        line.appendChild(editSingleBtn);
         line.appendChild(deleteSingleBtn);
         datesList.appendChild(line);
     });
@@ -5568,9 +5579,14 @@ async function addCalendarEvent() {
         const recurUnit = recurUnitSelect.value;
         const recurInterval = parseInt(recurIntervalInput.value) || 1;
         const groupId = crypto.randomUUID();
+        // recurrence_original_date/time - עוגן קבוע לתאריך/שעה שבהם המופע נוצר,
+        // לעולם לא משתנה בעריכה מאוחרת (ר' openEditCalendarEvent) - זה מה
+        // שמאפשר לדחיפה לגוגל (Events.instances) לאתר את המופע הנכון גם אחרי
+        // שהתאריך/שעה שלו עצמם השתנו בעריכת-מופע-בודד
         rows = generateRecurringDates(date, recurUnit, recurInterval, months).map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
             event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId,
+            recurrence_original_date: eventDate, recurrence_original_time: eventTime,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
         }));
     } else {

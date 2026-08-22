@@ -87,6 +87,27 @@ function inferRRule(sortedDates: string[]): string | null {
     return null;
 }
 
+// כל המופעים בפועל של סדרה חוזרת מסוימת בגוגל (לא רק ה"אב") - כל אחד עם
+// originalStartTime משלו (העוגן שמזהה אותו בתוך הסדרה) ו-id ייחודי משלו
+// (masterId_YYYYMMDDTHHMMSSZ) - זה מה שמאפשר PATCH על מופע ספציפי בלי לגעת
+// בשאר הסדרה. עימוד (pageToken) כדי לכסות גם סדרות ארוכות
+async function fetchAllInstances(eventsBase: string, masterId: string, accessToken: string): Promise<any[]> {
+    const all: any[] = [];
+    let pageToken: string | undefined;
+    do {
+        const params = new URLSearchParams({ maxResults: "2500" });
+        if (pageToken) params.set("pageToken", pageToken);
+        const res = await fetch(`${eventsBase}/${encodeURIComponent(masterId)}/instances?${params}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!res.ok) throw new Error(`instances fetch failed: ${res.status} ${await res.text()}`);
+        const data = await res.json();
+        all.push(...(data.items || []));
+        pageToken = data.nextPageToken;
+    } while (pageToken);
+    return all;
+}
+
 async function getCalendarTimeZone(accessToken: string, calendarId: string): Promise<string> {
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -228,7 +249,7 @@ Deno.serve(async () => {
             const rowIds = rowsForGroup.map((r) => r.id);
             try {
                 const { data: siblings } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, source")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, source, recurrence_original_date, recurrence_original_time")
                     .eq("recurrence_group_id", groupId).eq("source", "calendar").order("event_date", { ascending: true });
 
                 if (!siblings || siblings.length === 0) {
@@ -241,24 +262,68 @@ Deno.serve(async () => {
                 const alreadySynced = siblings.filter((s) => s.google_event_id);
 
                 if (alreadySynced.length > 0) {
-                    // הסדרה כבר קיימת בגוגל - כאן זה תמיד עריכת-כותרת-לכל-הסדרה
-                    // (הדרך היחידה בממשק לערוך עריכת-קבוצה, ר' openEditCalendarEventSeries
-                    // ב-app.js - אין כרגע דרך לערוך מופע בודד בתוך סדרה שכבר נדחפה).
-                    // PATCH ולא PUT בכוונה - כדי לא לדרוס/למחוק בטעות את שדה
-                    // ה-recurrence הקיים על אירוע-האב בגוגל, שולחים רק את מה שבאמת
-                    // השתנה
                     const masterId = alreadySynced[0].google_event_id;
-                    const title = siblings[0].event_title || "(No title)";
-                    const res = await fetch(`${eventsBase}/${encodeURIComponent(masterId)}`, {
-                        method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ summary: title }),
-                    });
-                    if (!res.ok && res.status !== 404) throw new Error(`series title update failed: ${res.status} ${await res.text()}`);
-                    if (res.ok) {
+                    const touchedIds = new Set(rowsForGroup.map((r) => r.calendar_event_id));
+                    const touchedSiblings = siblings.filter((s) => touchedIds.has(s.id));
+                    // כל האחיות נגעו באותו batch - עריכת-כותרת-לכל-הסדרה
+                    // (openEditCalendarEventSeries ב-app.js, הדרך היחידה שמעדכנת
+                    // את כל השורות באותו UPDATE אחד, ר' ההערה שם). PATCH ולא PUT
+                    // בכוונה - כדי לא לדרוס/למחוק בטעות את שדה ה-recurrence
+                    // הקיים על אירוע-האב בגוגל, שולחים רק את מה שבאמת השתנה
+                    if (touchedSiblings.length >= siblings.length) {
+                        const title = siblings[0].event_title || "(No title)";
+                        const res = await fetch(`${eventsBase}/${encodeURIComponent(masterId)}`, {
+                            method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({ summary: title }),
+                        });
+                        if (!res.ok && res.status !== 404) throw new Error(`series title update failed: ${res.status} ${await res.text()}`);
+                        if (res.ok) {
+                            const ev = await res.json();
+                            await supabase.from("calendar_events").update({
+                                google_etag: ev.etag || null, google_updated: ev.updated || null, google_synced_at: nowIso(),
+                            }).eq("recurrence_group_id", groupId);
+                        }
+                        await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
+                        processedCount += rowIds.length;
+                        continue;
+                    }
+
+                    // רק חלק מהאחיות נגעו - עריכת מופע בודד (openEditCalendarEvent
+                    // דרך כפתור-העריכה בתוך הרשימה המורחבת של הסדרה, ר' app.js).
+                    // מאתרים את המופע הנכון בגוגל דרך Events.instances, לפי
+                    // recurrence_original_date/time - העוגן שלעולם לא זז אחרי
+                    // שהמופע נוצר, גם אם event_date/event_time עצמם השתנו כאן -
+                    // בלי העוגן הזה אין דרך לדעת איזה מופע-גוגל תואם לשורה אחרי
+                    // שהתאריך שלה כבר השתנה מקומית
+                    const instances = await fetchAllInstances(eventsBase, masterId, accessToken);
+                    for (const s of touchedSiblings) {
+                        const anchorDate = s.recurrence_original_date || s.event_date;
+                        const anchorTime = s.recurrence_original_time || s.event_time;
+                        const match = instances.find((inst: any) => {
+                            const ost = inst.originalStartTime;
+                            if (!ost) return false;
+                            if (ost.date) return ost.date === anchorDate;
+                            if (ost.dateTime) return ost.dateTime.slice(0, 10) === anchorDate && (!anchorTime || ost.dateTime.slice(11, 16) === anchorTime);
+                            return false;
+                        });
+                        if (!match) {
+                            // המופע לא נמצא בגוגל (למשל נמחק שם ידנית) - לא ניתן
+                            // לעדכן משהו שלא קיים, מדלגים על השורה הזו בלי לשבור
+                            // את שאר האצווה
+                            continue;
+                        }
+                        const body = buildOneTimeEventBody(s, timeZone);
+                        const res = await fetch(`${eventsBase}/${encodeURIComponent(match.id)}`, {
+                            method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                        });
+                        if (!res.ok) throw new Error(`instance update failed: ${res.status} ${await res.text()}`);
+                        // google_event_id של השורה נשאר מזהה-האב המשותף בכוונה
+                        // (לא מזהה-המופע הספציפי) - כדי שעריכה עתידית לאותה שורה
+                        // עדיין תדע לחפש דרך אותו אב, בעזרת העוגן שלא זז
                         const ev = await res.json();
                         await supabase.from("calendar_events").update({
                             google_etag: ev.etag || null, google_updated: ev.updated || null, google_synced_at: nowIso(),
-                        }).eq("recurrence_group_id", groupId);
+                        }).eq("id", s.id);
                     }
                     await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
                     processedCount += rowIds.length;
