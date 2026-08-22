@@ -2924,7 +2924,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .ai-brain-fab {
     position: absolute;
     bottom: 30px;
-    left: 22px;
+    inset-inline-end: 22px;
     width: 160px;
     height: 160px;
     background: transparent;
@@ -2941,11 +2941,9 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     -webkit-user-select: none;
 }
 .ai-brain-fab:active { transform: scale(0.9); }
-/* קבוע בפינה שמאל-תחתונה בשתי כיווני-שפה כאחד - לא מתחלף בין RTL/LTR כמו
-   שהיה כשהיה למעלה מול ההמבורגר (עכשיו אין שם התנגשות איתו יותר), לפי
-   בקשה מפורשת ("שלא יזוז") */
-html[dir="ltr"] .ai-brain-fab { left: 22px; }
-html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
+/* משתמש ב-inset-inline-end (לא left/right פיזי) - בעברית/RTL זה בצד שמאל
+   (כמו קודם), באנגלית/LTR זה הופך לצד ימין, בהתאמה ל"קצה" הזרימה בכל שפה -
+   לפי בקשה מפורשת ("כל השפות שזה כמו אנגלית... הAI יהיה מימין ולהפך") */
 /* תג קלוריות עדין - כבוי כברירת מחדל (ר' isHomeCalorieBadgeOn ב-app.js),
    אפשרות למי שרוצה לראות מספר קלוריות תמידי במסך הבית. יושב בתוך שורת
    הכותרת של "הצצה להיום" (.card-title-row-end), ליד חץ הקיפול - לא צף
@@ -3042,7 +3040,7 @@ html[dir="ltr"] .ai-brain-fab[data-tooltip]::after { left: auto; right: 0; }
    ההפך מהמצב הישן כשהוא היה למעלה - אז עכשיו דווקא מעליו */
 .ai-brain-fab[data-tooltip]::after {
     bottom: calc(100% + 10px);
-    left: 0;
+    inset-inline-end: 0;
 }
 .ai-brain-fab[data-tooltip]:hover::after, .ai-brain-fab[data-tooltip]:focus-visible::after {
     opacity: 1;

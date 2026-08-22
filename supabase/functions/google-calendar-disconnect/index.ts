@@ -43,18 +43,23 @@ Deno.serve(async (req) => {
             console.error(`Token revoke failed (continuing with local cleanup): ${err}`);
         }
 
-        if (conn.channel_id && conn.channel_resource_id) {
+        // עוצרים את כל ערוצי ה-Push של כל היומנים (לא רק אחד - כל יומן יש לו
+        // ערוץ נפרד, ר' google_calendar_watches)
+        const { data: watches } = await supabase.from("google_calendar_watches").select("channel_id, channel_resource_id").eq("connection_id", conn.id);
+        for (const watch of watches || []) {
+            if (!watch.channel_id || !watch.channel_resource_id) continue;
             try {
                 await fetch("https://www.googleapis.com/calendar/v3/channels/stop", {
                     method: "POST",
                     headers: { Authorization: `Bearer ${conn.access_token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: conn.channel_id, resourceId: conn.channel_resource_id }),
+                    body: JSON.stringify({ id: watch.channel_id, resourceId: watch.channel_resource_id }),
                 });
             } catch (err) {
                 console.error(`Channel stop failed (continuing with local cleanup): ${err}`);
             }
         }
 
+        // מחיקת החיבור מוחקת גם את כל שורות ה-watches שלו (on delete cascade)
         await supabase.from("google_calendar_connections").delete().eq("id", conn.id);
         return jsonResponse({ ok: true, wasConnected: true });
     } catch (err) {

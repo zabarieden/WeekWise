@@ -166,6 +166,43 @@ aware logic. Nothing new to run; the trigger function was updated in place
   via the matched instance id. Rows created before this column existed fall
   back to matching on their current `event_date`/`event_time` instead.
 
+## Multi-calendar support (done)
+
+A Google account can have more than one calendar (the user's own primary one,
+plus any shared/subscribed calendars - e.g. a booking app like "Boostapp" adds
+its own calendar to the account). Originally only `primary` was synced, which
+meant events on any other calendar silently never appeared in NOT10.ai with no
+indication why. Now every calendar in the account is synced automatically.
+
+New table `google_calendar_watches` (service-role only, RLS enabled, no client
+policies): one row per `(connection_id, google_calendar_id)`, holding the
+per-calendar `sync_token`, push-channel fields, and `last_full_sync_at` -
+`google_calendar_connections` no longer holds any of that (it's now purely the
+account-level OAuth token record). `calendar_events` gained a
+`google_calendar_id` column so push knows which calendar an already-synced
+event belongs to.
+
+`discoverCalendarWatches()` (in `_shared/google-calendar.ts`) fetches
+`GET /users/me/calendarList` and inserts a watch row for any calendar not
+already tracked - called on every `pullDeltaForConnection()` (i.e. every
+reconcile tick and every webhook-triggered pull), so a calendar added to the
+Google account *after* the user connected gets picked up within 30 minutes,
+no reconnect needed. The primary calendar is deliberately excluded from
+discovery (filtered via the calendarList entry's `primary: true` flag) - it's
+already covered by the fixed `google_calendar_id: "primary"` watch row created
+at connect time; primary's *real* id is the user's own email address, and
+without this exclusion it gets discovered as if it were a second calendar,
+double-pulling every primary-calendar event under two different
+`google_calendar_id` values.
+
+Push (`google-calendar-outbox-drain`) targets whichever calendar an
+already-synced event's `google_calendar_id` says; new local events/series
+always push to `primary` (the sensible default target - there's no other
+signal for where a brand-new NOT10.ai event should go).
+
+No new deploy commands - same 7 functions, all now import the updated shared
+module.
+
 ## Known limitations
 
 - **Refresh tokens expire every 7 days while the OAuth consent screen is in

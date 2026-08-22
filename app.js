@@ -4806,8 +4806,11 @@ async function loadMonthlyCalendarGrid() {
     // במקור רק ב-calendar_events; עכשיו מוסיפים גם את הימים שיש בהם משימה
     // קבועה מהלו"ז השבועי (weekly_schedule), כדי שנקודה תופיע גם על יום כזה,
     // בדיוק כמו שכבר קורה בווידג'ט השבועי החדש במסך הבית
+    // לא כוללים source פנימי (daily_focus/today_celebrated/daily_focus_dismissed)
+    // בחישוב הנקודה - אלה לא אירועים/משימות אמיתיים, ונוצרים כמעט כל יום, מה
+    // שגרם לנקודה להופיע כמעט על כל יום בחודש בלי קשר אם יש בו משהו אמיתי
     const [{ data }, { data: recurringData }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr),
+        supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr).not('source', 'in', '(today_celebrated,daily_focus_dismissed,daily_focus)'),
         supabaseClient.from('weekly_schedule').select('day_of_week, task_title').eq('user_id', currentUserId),
     ]);
     const markedDates = new Set((data || []).map(r => r.event_date));
@@ -4866,24 +4869,40 @@ async function renderSelectedCalendarDay() {
     if (!detail || !selectedCalendarDay) return;
     const [y, m, d] = selectedCalendarDay.split('-').map(Number);
     const dayOfWeek = dbDaysMap[new Date(y, m - 1, d).getDay()];
-    const [{ data }, { data: recurringDataRaw }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).order('day_sort_order', { ascending: true, nullsFirst: false }),
+    const [{ data: dataRaw }, { data: recurringDataRaw }] = await Promise.all([
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).not('source', 'in', '(today_celebrated,daily_focus_dismissed)').order('day_sort_order', { ascending: true, nullsFirst: false }),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
     ]);
     // אותו סינון בדיוק כמו ב-loadTodayTasks - משבצות בסיס ריקות (task_title
     // "") הן פנימיות בלבד, לא משימות אמיתיות, ולא אמורות להופיע כאן כשורות ריקות
     const recurringData = (recurringDataRaw || []).filter(r => (r.task_title || '').trim());
+    // תשובות "מה חשוב לך לעשות היום" (source:'daily_focus') לא משימות - אותו
+    // סינון בדיוק כמו ב-loadTodayTasks, שהיה חסר כאן (דווח: "אני רואה את זה
+    // כאירוע... זה לא אירוע או משימה")
+    const focusItems = (dataRaw || []).filter(item => item.source === 'daily_focus');
+    const data = (dataRaw || []).filter(item => item.source !== 'daily_focus');
     const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
-    if ((!data || !data.length) && (!recurringData || !recurringData.length)) {
+    if (!data.length && !recurringData.length && !focusItems.length) {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>`;
+    if (focusItems.length) {
+        const chipsRow = document.createElement('div');
+        chipsRow.className = 'daily-focus-chips-row';
+        focusItems.forEach(item => {
+            const chip = document.createElement('span');
+            chip.className = 'daily-focus-chip';
+            chip.textContent = item.event_title;
+            chipsRow.appendChild(chip);
+        });
+        detail.appendChild(chipsRow);
+    }
 
     // בנוי עם closures (לא onclick עם מחרוזת מוטמעת) כדי ש-openEditCalendarEvent
     // תקבל את האובייקט המלא (לא רק id) - נוסף כפתור ✏️ עריכה שלא היה קיים כאן
     // עד היום (היה רק ❌ מחיקה), לפי בקשה מפורשת
-    (data || []).forEach(item => {
+    data.forEach(item => {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
         row.setAttribute('data-item-id', item.id);

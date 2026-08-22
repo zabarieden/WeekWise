@@ -3,18 +3,19 @@
 // Google redirects the user's browser here directly after they approve consent -
 // there is no Supabase JWT on this request at all, so `state` (written by
 // google-calendar-auth-start) is the only thing identifying which user this is
-// for. Exchanges the code for tokens, stores the connection, and does the
-// INITIAL watch+list synchronously so "Connected" in the UI actually means
-// "already syncing," not "will start syncing on the next cron tick."
+// for. Exchanges the code for tokens, stores the connection, discovers every
+// calendar in the user's Google account (not just primary - see
+// discoverCalendarWatches), opens a push channel for each, and does the INITIAL
+// pull synchronously so "Connected" in the UI actually means "already syncing,"
+// not "will start syncing on the next cron tick."
 //
 // Deploy with --no-verify-jwt (Google can't send a Supabase JWT) - see DEPLOY.md.
 
-import { serviceClient, pullDeltaForConnection, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../_shared/google-calendar.ts";
+import { serviceClient, discoverCalendarWatches, openWatchChannel, pullDeltaForWatch, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../_shared/google-calendar.ts";
 
 const SITE_URL = Deno.env.get("SITE_URL")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/google-calendar-oauth-callback`;
-const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/google-calendar-webhook`;
 
 const supabase = serviceClient();
 
@@ -84,42 +85,27 @@ Deno.serve(async (req) => {
             connId = inserted!.id;
         }
 
-        // ערוץ Push ראשוני (Events.watch) - מקבל התראות כשמשהו משתנה בגוגל.
-        // channel_token אקראי הוא מנגנון-האימות היחיד של google-calendar-webhook
-        // (גוף ה-Push עצמו תמיד ריק, אין חתימה קריפטוגרפית ל-Push notifications
-        // רגילים של Calendar) - חייב סוד לפני שמזמינים ערוץ, לא אחרי
-        const channelId = crypto.randomUUID();
-        const channelToken = crypto.randomUUID();
         const { data: conn } = await supabase.from("google_calendar_connections").select("*").eq("id", connId).single();
 
-        const watchRes = await fetch(
-            `https://www.googleapis.com/calendar/v3/calendars/primary/events/watch`,
-            {
-                method: "POST",
-                headers: { Authorization: `Bearer ${tokens.access_token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ id: channelId, type: "web_hook", address: WEBHOOK_URL, token: channelToken }),
-            },
-        );
-        if (watchRes.ok) {
-            const watchData = await watchRes.json();
-            await supabase.from("google_calendar_connections").update({
-                channel_id: channelId,
-                channel_resource_id: watchData.resourceId,
-                channel_token: channelToken,
-                channel_expiration: watchData.expiration ? new Date(Number(watchData.expiration)).toISOString() : null,
-            }).eq("id", connId);
-        } else {
-            console.error(`Events.watch failed for user ${userId}: ${await watchRes.text()}`);
-            // ממשיכים בכל זאת - google-calendar-reconcile (כל 30 דק) ו-
-            // google-calendar-renew-channels יתפסו את זה גם בלי Push מיידי
-        }
-
-        // משיכה ראשונית סינכרונית - כדי ש"מחובר" יאמר "כבר מסתנכרן" בפועל
+        // מגלה את כל היומנים בחשבון הגוגל (לא רק primary), פותחת ערוץ Push
+        // ומושכת דלתא ראשונית לכל אחד - כשל ביומן בודד (למשל watch נכשל) לא
+        // עוצר את השאר; reconcile/renew-channels הם רשת-הביטחון להמשך
         try {
-            const { data: freshConn } = await supabase.from("google_calendar_connections").select("*").eq("id", connId).single();
-            await pullDeltaForConnection(supabase, freshConn as any);
+            const watches = await discoverCalendarWatches(supabase, conn as any, tokens.access_token);
+            for (const watch of watches) {
+                try {
+                    await openWatchChannel(supabase, watch, tokens.access_token);
+                } catch (err) {
+                    console.error(`Events.watch failed for user ${userId}, calendar ${watch.google_calendar_id}: ${err}`);
+                }
+                try {
+                    await pullDeltaForWatch(supabase, conn as any, watch, tokens.access_token);
+                } catch (err) {
+                    console.error(`Initial pull failed for user ${userId}, calendar ${watch.google_calendar_id}: ${err}`);
+                }
+            }
         } catch (err) {
-            console.error(`Initial pull failed for user ${userId}: ${err}`);
+            console.error(`Calendar discovery failed for user ${userId}: ${err}`);
         }
 
         return redirectToApp("connected");

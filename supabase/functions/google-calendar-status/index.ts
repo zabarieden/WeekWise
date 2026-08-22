@@ -32,15 +32,27 @@ Deno.serve(async (req) => {
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
 
         const { data } = await supabase.from("google_calendar_connections")
-            .select("is_connected, google_calendar_id, created_at, last_full_sync_at")
+            .select("id, is_connected, created_at")
             .eq("user_id", userData.user.id).maybeSingle();
 
         if (!data || !data.is_connected) return jsonResponse({ connected: false });
+
+        // last_full_sync_at זז מ-google_calendar_connections ל-per-watch (כל
+        // יומן מתעדכן בנפרד, ר' google_calendar_watches) - מדווחים כאן את
+        // הכי-עדכני מביניהם, וגם כמה יומנים בסך הכול מסונכרנים
+        const { data: watches } = await supabase.from("google_calendar_watches")
+            .select("calendar_summary, last_full_sync_at").eq("connection_id", data.id);
+        const lastFullSyncAt = (watches || [])
+            .map((w) => w.last_full_sync_at)
+            .filter(Boolean)
+            .sort()
+            .pop() || null;
+
         return jsonResponse({
             connected: true,
-            googleCalendarId: data.google_calendar_id,
+            calendarCount: (watches || []).length,
             connectedAt: data.created_at,
-            lastFullSyncAt: data.last_full_sync_at,
+            lastFullSyncAt,
         });
     } catch (err) {
         return jsonResponse({ error: "server_error", detail: String(err) }, 500);

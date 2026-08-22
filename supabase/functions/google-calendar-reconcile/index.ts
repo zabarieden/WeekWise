@@ -7,6 +7,11 @@
 // send-due-reminders (loop every connection, best-effort per-connection, never let
 // one failure stop the rest).
 //
+// pullDeltaForConnection() re-discovers the user's calendar list on every call
+// (see discoverCalendarWatches in _shared) - so this is also how a calendar
+// added to someone's Google account *after* they first connected gets picked
+// up automatically, without needing to disconnect/reconnect.
+//
 // Deploy this via the Supabase CLI - see DEPLOY.md in this folder.
 
 import { serviceClient, pullDeltaForConnection } from "../_shared/google-calendar.ts";
@@ -22,16 +27,17 @@ Deno.serve(async (_req) => {
     if (error) return jsonResponse({ ok: false, error: error.message }, 500);
     if (!connections || !connections.length) return jsonResponse({ ok: true, connections: 0 });
 
-    let succeeded = 0, failed = 0, totalApplied = 0;
+    let succeeded = 0, failed = 0, totalApplied = 0, totalCalendars = 0;
     for (const conn of connections) {
         try {
-            const { applied } = await pullDeltaForConnection(supabase, conn as any);
+            const { applied, calendars } = await pullDeltaForConnection(supabase, conn as any);
             succeeded++;
             totalApplied += applied;
+            totalCalendars += calendars;
         } catch (err) {
             failed++;
             console.error(`Reconcile failed for connection ${conn.id} (user ${conn.user_id}): ${err}`);
         }
     }
-    return jsonResponse({ ok: true, connections: connections.length, succeeded, failed, totalApplied });
+    return jsonResponse({ ok: true, connections: connections.length, succeeded, failed, totalApplied, totalCalendars });
 });

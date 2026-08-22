@@ -164,9 +164,18 @@ Deno.serve(async () => {
             continue;
         }
 
-        const timeZone = await getCalendarTimeZone(accessToken, conn.google_calendar_id);
-        const calId = conn.google_calendar_id;
-        const eventsBase = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`;
+        // מולטי-יומן: כל אירוע יכול להיות שייך ליומן-גוגל שונה (לא כולם primary
+        // - ר' google_calendar_id על calendar_events/calendar_sync_outbox).
+        // אירוע/סדרה חדשים שעדיין לא נדחפו תמיד הולכים ל-primary של החיבור
+        // (יעד-ברירת-המחדל להוספה מ-NOT10.ai); עדכון/מחיקה של אירוע שכבר קיים
+        // הולכים ליומן שבו הוא כבר חי, לא בהכרח primary
+        const eventsBaseFor = (calId: string) => `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`;
+        const tzCache = new Map<string, string>();
+        const getTZ = async (calId: string): Promise<string> => {
+            if (!tzCache.has(calId)) tzCache.set(calId, await getCalendarTimeZone(accessToken, calId));
+            return tzCache.get(calId)!;
+        };
+        const primaryCalId = conn.google_calendar_id;
 
         // מחיקות - כל שורה בנפרד. הטריגר כבר דואג שסדרה חוזרת רק תגיע לכאן
         // כשהמופע האחרון שלה נמחק (ר' הערת הטריגר), אז google_event_id כאן
@@ -175,6 +184,7 @@ Deno.serve(async () => {
         for (const delRow of deletes) {
             try {
                 if (delRow.google_event_id) {
+                    const eventsBase = eventsBaseFor(delRow.google_calendar_id || primaryCalId);
                     const res = await fetch(`${eventsBase}/${encodeURIComponent(delRow.google_event_id)}`, {
                         method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` },
                     });
@@ -203,7 +213,7 @@ Deno.serve(async () => {
             const rowIds = rowsForEvent.map((r) => r.id);
             try {
                 const { data: current } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, source, recurrence_group_id")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id")
                     .eq("id", eventId).maybeSingle();
 
                 if (!current || current.source !== "calendar" || current.recurrence_group_id) {
@@ -212,6 +222,9 @@ Deno.serve(async () => {
                     continue;
                 }
 
+                const targetCalId = current.google_event_id ? (current.google_calendar_id || primaryCalId) : primaryCalId;
+                const eventsBase = eventsBaseFor(targetCalId);
+                const timeZone = await getTZ(targetCalId);
                 const body = buildOneTimeEventBody(current, timeZone);
                 const res = current.google_event_id
                     ? await fetch(`${eventsBase}/${encodeURIComponent(current.google_event_id)}`, {
@@ -226,7 +239,7 @@ Deno.serve(async () => {
                 // כתיבה זו נוגעת ב-google_synced_at באותו statement - הטריגר
                 // בודק בדיוק את זה כדי לא להכניס את השורה הזו שוב לתור
                 await supabase.from("calendar_events").update({
-                    google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                    google_event_id: ev.id, google_calendar_id: targetCalId, google_etag: ev.etag || null, google_updated: ev.updated || null,
                     google_synced_at: nowIso(),
                 }).eq("id", eventId);
 
@@ -249,7 +262,7 @@ Deno.serve(async () => {
             const rowIds = rowsForGroup.map((r) => r.id);
             try {
                 const { data: siblings } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, source, recurrence_original_date, recurrence_original_time")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_original_date, recurrence_original_time")
                     .eq("recurrence_group_id", groupId).eq("source", "calendar").order("event_date", { ascending: true });
 
                 if (!siblings || siblings.length === 0) {
@@ -263,6 +276,9 @@ Deno.serve(async () => {
 
                 if (alreadySynced.length > 0) {
                     const masterId = alreadySynced[0].google_event_id;
+                    const seriesCalId = alreadySynced[0].google_calendar_id || primaryCalId;
+                    const eventsBase = eventsBaseFor(seriesCalId);
+                    const timeZone = await getTZ(seriesCalId);
                     const touchedIds = new Set(rowsForGroup.map((r) => r.calendar_event_id));
                     const touchedSiblings = siblings.filter((s) => touchedIds.has(s.id));
                     // כל האחיות נגעו באותו batch - עריכת-כותרת-לכל-הסדרה
@@ -330,7 +346,10 @@ Deno.serve(async () => {
                     continue;
                 }
 
-                // סדרה חדשה - עדיין לא נדחפה בכלל
+                // סדרה חדשה - עדיין לא נדחפה בכלל. תמיד ל-primary של החיבור -
+                // אין עדיין יומן-מקור להחליט לפיו (בניגוד לעדכון סדרה קיימת)
+                const eventsBase = eventsBaseFor(primaryCalId);
+                const timeZone = await getTZ(primaryCalId);
                 const dates = siblings.map((s) => s.event_date);
                 const rule = inferRRule(dates);
                 const first = siblings[0];
@@ -346,7 +365,7 @@ Deno.serve(async () => {
                     // אותו google_event_id (מזהה-אב) על כל האחיות - זה בדיוק
                     // המנגנון שמאפשר לעדכון-כותרת עתידי לדעת איזה event לפצ'ץ'
                     await supabase.from("calendar_events").update({
-                        google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                        google_event_id: ev.id, google_calendar_id: primaryCalId, google_etag: ev.etag || null, google_updated: ev.updated || null,
                         google_synced_at: nowIso(),
                     }).eq("recurrence_group_id", groupId);
                 } else {
@@ -366,7 +385,7 @@ Deno.serve(async () => {
                         if (!res.ok) throw new Error(`flattened occurrence push failed: ${res.status} ${await res.text()}`);
                         const ev = await res.json();
                         await supabase.from("calendar_events").update({
-                            google_event_id: ev.id, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                            google_event_id: ev.id, google_calendar_id: primaryCalId, google_etag: ev.etag || null, google_updated: ev.updated || null,
                             google_synced_at: nowIso(),
                         }).eq("id", s.id);
                     }
