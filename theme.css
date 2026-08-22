@@ -4784,6 +4784,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .ai-brain-target-option input[type="radio"] { accent-color: var(--accent-purple); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
 .ai-brain-panel { margin-top: 2px; }
 .ai-brain-panel .modal-subtitle { margin-top: 0; margin-bottom: 16px; line-height: 1.5; }
+/* כתב-ויתור "AI יכול לטעות" - קבוע בתחתית המודל, לא בתוך אף טאב ספציפי
+   (ר' index.html) - לפי בקשה מפורשת ("תרשום את זה... לא יודעת איפה שצריך") */
+.ai-disclaimer-caption { margin: 12px 0 0; font-size: 0.68rem; color: var(--text-secondary); opacity: 0.75; text-align: center; }
 .ai-brain-panel .action-buttons-wrap { margin-top: 16px !important; }
 /* תיבת הטקסט של תכנון הלו"ז מטקסט חופשי - לפני התיקון הזה לא הייתה לה שום
    הגדרת CSS ייעודית, אז היא נפלה חזרה לעיצוב ברירת המחדל המכוער של הדפדפן
