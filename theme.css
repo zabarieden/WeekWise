@@ -3684,29 +3684,23 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    מסגרת-גרדיאנט 1px (טריק ה-mask: שכבה שנייה מלאה, גזורה כך שרק הטבעת
    הדקה בקצה נשארת גלויה) */
 .daily-focus-chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+/* ניסוי #2: פתק-דביק צהוב נטוי (אופציה 3 מתוך ה-20) - לפי בקשה מפורשת
+   ("תהפוך את זה למספר 3, אני רוצה לראות איך זה יצא"). צבע צהוב-פתק קבוע
+   בכוונה (לא צבעי var(--accent-*)) - זה בדיוק הזהות החזותית של "פתק דביק",
+   נטייה מתחלפת (nth-child) כדי שכמה פתקים יחד ייראו "מפוזרים" באופן טבעי,
+   לא כולם באותו כיוון בדיוק */
 .daily-focus-chip {
-    position: relative;
-    background: var(--bg-sheet);
-    color: var(--text-primary);
-    font-weight: 700;
+    background: #fff4cc;
+    color: #5c4a12;
+    font-weight: 600;
     font-size: 0.78rem;
-    padding: 7px 14px;
-    border-radius: 999px;
-    border: 1px solid transparent;
-    background-clip: padding-box;
+    padding: 7px 12px;
+    border-radius: 4px;
+    transform: rotate(-3deg);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
 }
-.daily-focus-chip::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
-    padding: 1px;
-    background: linear-gradient(120deg, var(--accent-pink), var(--accent-purple-light), var(--accent-pink));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-}
+.daily-focus-chip:nth-child(even) { transform: rotate(2.5deg); }
+.daily-focus-chip:nth-child(3n) { transform: rotate(-1.5deg); }
 /* פירוט היום הנבחר במבט חודשי משתמש באותה מחלקה (today-tasks-row) אבל
    בהקשר שונה לגמרי - כאן דורסים בחזרה לגוון סגול (במקום הזהב של
    "משימות להיום" בבית), לפי בקשה מפורשת ("צבע... שיותר מתאים לסגול") */
