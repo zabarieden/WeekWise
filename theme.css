@@ -133,6 +133,46 @@ html[data-ui-scale="large"] { font-size: 22px; }
     --accent-purple: #a855f7;
     --accent-purple-light: #c084fc;
 }
+[data-color-theme="cotton_candy"] {
+    --bg-main: linear-gradient(135deg, #2a0a2e, #3d1044);
+    --bg-row: rgba(90, 30, 100, 0.5);
+    --border-color: rgba(244, 114, 255, 0.25);
+    --accent-pink: #f472ff;
+    --accent-purple: #b366ff;
+    --accent-purple-light: #d9a3ff;
+}
+[data-color-theme="sherbet_sky"] {
+    --bg-main: linear-gradient(135deg, #2e1010, #3d1a10);
+    --bg-row: rgba(100, 50, 40, 0.5);
+    --border-color: rgba(255, 158, 128, 0.25);
+    --accent-pink: #ff9eb5;
+    --accent-purple: #ffb37a;
+    --accent-purple-light: #ffd9a0;
+}
+[data-color-theme="aurora_pastel"] {
+    --bg-main: linear-gradient(135deg, #0a1030, #1a1044);
+    --bg-row: rgba(40, 40, 100, 0.5);
+    --border-color: rgba(147, 197, 253, 0.25);
+    --accent-pink: #93c5fd;
+    --accent-purple: #c4b5fd;
+    --accent-purple-light: #f0abfc;
+}
+[data-color-theme="rainbow_mist"] {
+    --bg-main: linear-gradient(135deg, #1a0a2e, #2e0a20, #0a1a2e);
+    --bg-row: rgba(90, 50, 100, 0.5);
+    --border-color: rgba(216, 180, 254, 0.3);
+    --accent-pink: #f9a8d4;
+    --accent-purple: #a78bfa;
+    --accent-purple-light: #93c5fd;
+}
+[data-color-theme="neon_glass"] {
+    --bg-main: linear-gradient(135deg, #0a0518, #1a0530);
+    --bg-row: rgba(120, 20, 130, 0.5);
+    --border-color: rgba(255, 0, 170, 0.35);
+    --accent-pink: #ff2fb8;
+    --accent-purple: #a020f0;
+    --accent-purple-light: #d060ff;
+}
 [data-color-theme="blue_teal"] {
     --bg-main: linear-gradient(135deg, #001820, #002733);
     --bg-row: rgba(10, 45, 58, 0.55);
@@ -777,6 +817,51 @@ html.light-mode[data-color-theme="bg_dark_grey"] {
     --border-color: rgba(0, 0, 0, 0.1);
     --text-primary: #1c1c1e;
     --text-secondary: #5a5a5e;
+}
+html.light-mode[data-color-theme="cotton_candy"] {
+    --bg-main: linear-gradient(135deg, #ffe3fb, #f0dcff);
+    --bg-row: rgba(216, 70, 239, 0.1);
+    --bg-glass: rgba(255, 245, 254, 0.75);
+    --bg-sheet: #fffaff;
+    --border-color: rgba(216, 70, 239, 0.22);
+    --text-primary: #3a1440;
+    --text-secondary: #8a6b92;
+}
+html.light-mode[data-color-theme="sherbet_sky"] {
+    --bg-main: linear-gradient(135deg, #ffe8d6, #ffd6e0);
+    --bg-row: rgba(255, 138, 101, 0.12);
+    --bg-glass: rgba(255, 248, 243, 0.75);
+    --bg-sheet: #fffaf6;
+    --border-color: rgba(255, 138, 101, 0.22);
+    --text-primary: #402418;
+    --text-secondary: #927060;
+}
+html.light-mode[data-color-theme="aurora_pastel"] {
+    --bg-main: linear-gradient(135deg, #dbeafe, #ede9fe);
+    --bg-row: rgba(129, 140, 248, 0.1);
+    --bg-glass: rgba(245, 247, 255, 0.75);
+    --bg-sheet: #f8faff;
+    --border-color: rgba(129, 140, 248, 0.22);
+    --text-primary: #1e1b40;
+    --text-secondary: #6b6890;
+}
+html.light-mode[data-color-theme="rainbow_mist"] {
+    --bg-main: linear-gradient(135deg, #ffe3ec 0%, #f3e0ff 33%, #e0ecff 66%, #dcfce9 100%);
+    --bg-row: rgba(196, 130, 240, 0.1);
+    --bg-glass: rgba(253, 248, 255, 0.75);
+    --bg-sheet: #fdfaff;
+    --border-color: rgba(196, 130, 240, 0.22);
+    --text-primary: #2e1a3d;
+    --text-secondary: #7d6a8c;
+}
+html.light-mode[data-color-theme="neon_glass"] {
+    --bg-main: linear-gradient(135deg, #ffe0f5, #f0d9ff);
+    --bg-row: rgba(255, 0, 170, 0.1);
+    --bg-glass: rgba(255, 245, 253, 0.7);
+    --bg-sheet: #fff5fd;
+    --border-color: rgba(255, 0, 170, 0.25);
+    --text-primary: #3d0a30;
+    --text-secondary: #8c5a80;
 }
 html.light-mode[data-color-theme="blue_teal"] {
     --bg-main: linear-gradient(135deg, #d6f3fa, #b8e8f3);
@@ -1765,7 +1850,12 @@ html:not(.light-mode)[data-color-theme="royal_amethyst"] .home-sky-scene .home-s
 html:not(.light-mode)[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-night,
 html:not(.light-mode)[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-night,
 html:not(.light-mode)[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-night,
-html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-night {
+html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-night,
+html:not(.light-mode)[data-color-theme="cotton_candy"] .home-sky-scene .home-sky-topstrip.sky-night,
+html:not(.light-mode)[data-color-theme="sherbet_sky"] .home-sky-scene .home-sky-topstrip.sky-night,
+html:not(.light-mode)[data-color-theme="aurora_pastel"] .home-sky-scene .home-sky-topstrip.sky-night,
+html:not(.light-mode)[data-color-theme="rainbow_mist"] .home-sky-scene .home-sky-topstrip.sky-night,
+html:not(.light-mode)[data-color-theme="neon_glass"] .home-sky-scene .home-sky-topstrip.sky-night {
     background-image:
         radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
         radial-gradient(1px 1px at 90px 70px, rgba(255, 255, 255, 0.7), transparent),
@@ -1794,7 +1884,12 @@ html:not(.light-mode)[data-color-theme="royal_amethyst"] .home-sky-scene .home-s
 html:not(.light-mode)[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-day,
 html:not(.light-mode)[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-day,
 html:not(.light-mode)[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-day,
-html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day {
+html:not(.light-mode)[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day,
+html:not(.light-mode)[data-color-theme="cotton_candy"] .home-sky-scene .home-sky-topstrip.sky-day,
+html:not(.light-mode)[data-color-theme="sherbet_sky"] .home-sky-scene .home-sky-topstrip.sky-day,
+html:not(.light-mode)[data-color-theme="aurora_pastel"] .home-sky-scene .home-sky-topstrip.sky-day,
+html:not(.light-mode)[data-color-theme="rainbow_mist"] .home-sky-scene .home-sky-topstrip.sky-day,
+html:not(.light-mode)[data-color-theme="neon_glass"] .home-sky-scene .home-sky-topstrip.sky-day {
     /* "שעון סאנברסט" עם שדה נצנצים (אפשרות 103 בהשוואת השמשות) - גרעין
        פליז קטן, 12 קרניים דקות (repeating-conic-gradient בטבעת בזווית של
        30deg, כמו שעון קיר), ומסביב נקודות-כוכב עדינות + כמה נצנצי ✦ (כל
@@ -1845,7 +1940,12 @@ html.light-mode[data-color-theme="royal_amethyst"] .home-sky-scene .home-sky-top
 html.light-mode[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-night,
 html.light-mode[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-night,
 html.light-mode[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-night,
-html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-night {
+html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="cotton_candy"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="sherbet_sky"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="aurora_pastel"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="rainbow_mist"] .home-sky-scene .home-sky-topstrip.sky-night,
+html.light-mode[data-color-theme="neon_glass"] .home-sky-scene .home-sky-topstrip.sky-night {
     background-image:
         radial-gradient(1.5px 1.5px at 20px 30px, rgba(71, 60, 130, 0.5), transparent),
         radial-gradient(1px 1px at 90px 70px, rgba(71, 60, 130, 0.38), transparent),
@@ -1874,7 +1974,12 @@ html.light-mode[data-color-theme="royal_amethyst"] .home-sky-scene .home-sky-top
 html.light-mode[data-color-theme="graphite_steel"] .home-sky-scene .home-sky-topstrip.sky-day,
 html.light-mode[data-color-theme="citrus_lime"] .home-sky-scene .home-sky-topstrip.sky-day,
 html.light-mode[data-color-theme="copper_bronze"] .home-sky-scene .home-sky-topstrip.sky-day,
-html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day {
+html.light-mode[data-color-theme="navy_sapphire"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="cotton_candy"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="sherbet_sky"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="aurora_pastel"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="rainbow_mist"] .home-sky-scene .home-sky-topstrip.sky-day,
+html.light-mode[data-color-theme="neon_glass"] .home-sky-scene .home-sky-topstrip.sky-day {
     background-image:
         repeating-conic-gradient(from 0deg at var(--sky-sun-x) var(--sky-sun-y), rgba(154, 100, 30, 0.55) 0deg 2deg, transparent 2deg 30deg),
         radial-gradient(circle at var(--sky-sun-x) var(--sky-sun-y), #fff0d0 0 4px, #c9822a 4px 8px, rgba(154, 100, 30, 0.4) 8px 14px, transparent 15px),
@@ -5100,6 +5205,11 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .theme-swatch-bg-beige { background: linear-gradient(135deg, #f5efe2, #d9c9a8); }
 .theme-swatch-bg-dark-grey { background: linear-gradient(135deg, #3a3a3c, #1c1c1e); }
 .theme-swatch-default { background: linear-gradient(135deg, #ff007f, #a855f7); }
+.theme-swatch-cottoncandy { background: linear-gradient(135deg, #ffb3f0, #d9a3ff); }
+.theme-swatch-sherbetsky { background: linear-gradient(135deg, #ffc9a8, #ffb3c9); }
+.theme-swatch-aurorapastel { background: linear-gradient(135deg, #a8c9ff, #d9b3ff); }
+.theme-swatch-rainbowmist { background: linear-gradient(135deg, #ffb3c9, #d9b3ff, #b3d9ff, #b3f0d9); }
+.theme-swatch-neonglass { background: linear-gradient(135deg, #ff2fb8, #a020f0); }
 .theme-swatch-blue { background: linear-gradient(135deg, #00d4ff, #0ea5e9); }
 .theme-swatch-gold { background: linear-gradient(135deg, #f59e0b, #dc2626); }
 .theme-swatch-forest { background: linear-gradient(135deg, #10b981, #059669); }
