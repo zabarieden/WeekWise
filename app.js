@@ -1691,6 +1691,7 @@ async function initAppAfterAuth(user) {
         loadAiIconSetting(),
         loadLightModeSetting(),
         loadStudyPeekTabSetting(),
+        loadHomeCalorieBadgeSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
         loadMonthlyGoal(),
@@ -13392,10 +13393,27 @@ function updateMiniCalorieIndicator() {
 // בהגדרות ומקבלת מספר קטן שמתעדכן בזמן אמת. לוחצים עליו כדי לקפוץ ישר
 // למסך התזונה, לא רק תצוגה ---
 function isHomeCalorieBadgeOn() { return localStorage.getItem('weekwise_home_calorie_badge') === 'true'; }
-function toggleHomeCalorieBadge() {
+// היה localStorage בלבד - כמו טאב הלימודים לפני התיקון שלו, זה בדיוק מה
+// שגרם ל"רואה את זה בנייד, בדפדפן לא" (כל מכשיר עם ה-localStorage שלו)
+async function loadHomeCalorieBadgeSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('home_calorie_badge_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.home_calorie_badge_enabled === null || data.home_calorie_badge_enabled === undefined) return;
+    localStorage.setItem('weekwise_home_calorie_badge', String(data.home_calorie_badge_enabled));
+    updateHomeCalorieBadge();
+    const toggle = document.getElementById('home-calorie-badge-toggle');
+    if (toggle) toggle.checked = data.home_calorie_badge_enabled;
+}
+async function toggleHomeCalorieBadge() {
     const enabled = document.getElementById('home-calorie-badge-toggle').checked;
     localStorage.setItem('weekwise_home_calorie_badge', String(enabled));
     updateHomeCalorieBadge();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, home_calorie_badge_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
 }
 function updateHomeCalorieBadge() {
     const badge = document.getElementById('home-calorie-badge');
@@ -13888,21 +13906,32 @@ function getDailyBoardCustomHours(tabId) {
     };
 }
 
-function toggleDailyBoardHour(bucket, hour) {
+async function toggleDailyBoardHour(bucket, hour) {
     if (!activeDailyBoardTabId) return;
     const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
+    const previousHours = { morning: [...hours.morning], noon: [...hours.noon], afternoon: [...hours.afternoon], evening: [...hours.evening] };
     const list = (hours[bucket] || []).slice();
     const idx = list.indexOf(hour);
     if (idx === -1) list.push(hour); else list.splice(idx, 1);
     list.sort((a, b) => a - b);
     hours[bucket] = list;
-    // עדכון-מקומי אופטימי (רינדור מיידי, בלי לחכות לרשת) + כתיבה ל-Supabase
-    // ברקע - אותה תחושת-מיידיות שהייתה עם localStorage, אבל עכשיו גם מסונכרן
+    // עדכון-מקומי אופטימי (רינדור מיידי, בלי לחכות לרשת) + כתיבה ל-Supabase -
+    // אותה תחושת-מיידיות שהייתה עם localStorage, אבל עכשיו גם מסונכרן. אם
+    // הכתיבה נכשלת בפועל (למשל ניתוק רשת) מחזירים את המצב המקומי אחורה
+    // ומודיעים - בלי זה כישלון היה נשאר שקט לגמרי ומתאפס בטעינה הבאה, בדיוק
+    // התסמין שדווח ("כל יום מחדש אני מוחקת... וזה חוזר")
     const tab = dailyBoardTabs.find(t => t.id === activeDailyBoardTabId);
     if (tab) tab.custom_hours = hours;
     renderDailyBoardHourSettings();
     renderDailyBoard();
-    if (supabaseClient) supabaseClient.from('routine_tabs').update({ custom_hours: hours }).eq('id', activeDailyBoardTabId);
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.from('routine_tabs').update({ custom_hours: hours }).eq('id', activeDailyBoardTabId);
+    if (error) {
+        if (tab) tab.custom_hours = previousHours;
+        renderDailyBoardHourSettings();
+        renderDailyBoard();
+        showAppToast(t('daily_board_hours_save_failed'), 'error');
+    }
 }
 
 // פאנל השעות פתוח/סגור בתוך מודל "סדר היום" עצמו (לא בהגדרות הכלליות -
