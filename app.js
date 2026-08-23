@@ -12468,6 +12468,16 @@ function findGapSplitPoint(text, gapStart, gapEnd) {
 // נשאר "לא ידוע" (null בכל פריט) לא הופך ל-0 בסכימה - רק פריטים עם בסיס
 // אמיתי לחישוב (protein != null) נכנסים לסכום; matchedAny על calories בלבד
 // (כמו קודם), protein פשוט 0 אם אף פריט לא תרם ערך ידוע
+// תקרת-שפיות פר-פריט בודד - ר' דיווח בפועל: "עד 10 פריכונים" בסוף משפט ארוך
+// (בלי שום מאכל מזוהה אחריו) גרם לחלון-ההקשר של המאכל המזוהה *האחרון* לפני
+// זה (שמשתרע עד סוף המחרוזת, ר' windowEnd) "לבלוע" את ה-10 כאילו הייתה
+// הכמות שלו, וייצר 9,056 קלוריות למנת-בוקר רגילה - אותה משפחת-באג בדיוק כמו
+// "טונה"+200 שתועד למעלה (מספר תועה שנדבק למאכל הלא-נכון ומוכפל בטעות).
+// במקום לנסות לכסות כל תבנית-משפט אפשרית מראש, זו רשת-ביטחון גורפת: פריט
+// בודד שיוצא מעל הסביר בעליל (אפילו מנה גדולה אמיתית לא אמורה לחצות את זה)
+// נזרק בשקט במקום להיכנס לסכום - עדיף לפספס פריט אחד מלתת מספר הזוי פי 5-40
+const MAX_PLAUSIBLE_SINGLE_ITEM_KCAL = 2000;
+
 function estimateFreeTextMacros(text) {
     if (!text) return { calories: 0, protein: 0 };
     const matches = findAllFoodMatches(text);
@@ -12484,8 +12494,8 @@ function estimateFreeTextMacros(text) {
         const windowStart = i > 0 ? findGapSplitPoint(text, matches[i - 1].end, match.start) : 0;
         const windowEnd = i < matches.length - 1 ? findGapSplitPoint(text, match.end, matches[i + 1].start) : text.length;
         const macros = computeItemMacros(match.item, text.slice(windowStart, windowEnd), isMultiFood, match.end - windowStart);
-        if (macros.calories > 0) { totalCalories += macros.calories; matchedAny = true; }
-        if (macros.protein != null) totalProtein += macros.protein;
+        if (macros.calories > 0 && macros.calories <= MAX_PLAUSIBLE_SINGLE_ITEM_KCAL) { totalCalories += macros.calories; matchedAny = true; }
+        if (macros.protein != null && macros.calories <= MAX_PLAUSIBLE_SINGLE_ITEM_KCAL) totalProtein += macros.protein;
     });
     return matchedAny ? { calories: totalCalories, protein: Math.round(totalProtein * 10) / 10 } : { calories: 0, protein: 0 };
 }
