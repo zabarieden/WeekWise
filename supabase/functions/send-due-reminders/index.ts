@@ -116,6 +116,13 @@ async function handleRequest(): Promise<Response> {
 
             const title = `⏰ ${row.task_title || "MyWeek"}`;
             const body = row.reminder_text || "";
+            // tag דטרמיניסטי (לא קבוע-גנרי) - חייב, משתי סיבות: (1) בלי tag ייחודי
+            // פר-תזכורת, שתי תזכורות שונות שהגיעו לזמנן באותו סבב-דחיפה היו
+            // "דורסות" זו את זו בתצוגה (רק האחרונה הייתה נראית - התנהגות דפדפן
+            // מובנית ל-tag משותף); (2) אותו נוסחה בדיוק כמו reminderNotificationTag
+            // ב-app.js, כדי שהתראת-Push הזו תתמזג עם showBrowserNotification הישירה
+            // מהלקוח אם שתיהן ירוצו על אותה תזכורת - מונע כפילות שדווחה בפועל
+            const tag = `weekwise-reminder-schedule-${row.id}-${wallClock.dateStr}`;
 
             let anySucceeded = false;
             for (const sub of userSubs) {
@@ -126,7 +133,7 @@ async function handleRequest(): Promise<Response> {
                     // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                        JSON.stringify({ title, body }),
+                        JSON.stringify({ title, body, tag }),
                         { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;
@@ -149,7 +156,7 @@ async function handleRequest(): Promise<Response> {
         // נפרד משלהם (calendar_events.last_notified_date, לא זו של weekly_schedule)
         const { data: dueEvents } = await supabase
             .from("calendar_events")
-            .select("id, event_title, reminder_text, reminder_minutes, event_time, last_notified_date")
+            .select("id, event_title, reminder_text, reminder_minutes, event_time, last_notified_date, google_event_id")
             .eq("user_id", userId)
             .eq("event_date", wallClock.dateStr)
             .gt("reminder_minutes", 0);
@@ -158,6 +165,11 @@ async function handleRequest(): Promise<Response> {
             checked++;
             if (!row.event_time) continue;
             if (row.last_notified_date === wallClock.dateStr) continue;
+            // אירוע מסונכרן עם גוגל כבר מקבל תזכורת-גוגל מקורית תואמת באותו קיזוז
+            // בדיוק (ר' reminderBody ב-google-calendar-outbox-drain) - שליחת Push
+            // פנימי גם כאן הייתה יוצרת 2 התראות לאותו אירוע בדיוק, אחת מכל מקור.
+            // עדיפות לגוגל: אמינה יותר, ועובדת גם בלי מנוי-Push בכלל
+            if (row.google_event_id) continue;
 
             const [h, m] = row.event_time.split(":").map((n: string) => parseInt(n, 10));
             if (Number.isNaN(h) || Number.isNaN(m)) continue;
@@ -167,6 +179,7 @@ async function handleRequest(): Promise<Response> {
 
             const title = `⏰ ${row.event_title || "NOT10.ai"}`;
             const body = row.reminder_text || "";
+            const tag = `weekwise-reminder-event-${row.id}-${wallClock.dateStr}`;
 
             let anySucceeded = false;
             for (const sub of userSubs) {
@@ -177,7 +190,7 @@ async function handleRequest(): Promise<Response> {
                     // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                        JSON.stringify({ title, body }),
+                        JSON.stringify({ title, body, tag }),
                         { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;

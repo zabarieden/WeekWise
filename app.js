@@ -271,7 +271,16 @@ function onLanguageChanged() {
     updateLanguagePickerTriggers();
     updateLegalLinksForLanguage();
     renderHomeGreeting();
-    if (!currentUserId) return;
+    // applyTranslations (i18n.js) דרסה כרגע את placeholder שדה הסיסמה חזרה
+    // לגרסת-ההרשמה הקבועה שבתבנית ה-HTML (data-i18n-placeholder), בלי קשר
+    // למצב האמיתי (login/signup) - כי זו קריאה גנרית שלא יודעת על authMode.
+    // updateAuthUI כבר מטפלת בזה נכון פעם אחת באתחול, אבל בלי הקריאה הזו כאן
+    // כל החלפת-שפה בעודה במסך ההתחברות הייתה מאפסת את זה בחזרה ל"לפחות 6
+    // תווים" - דווח בפועל ("דיברנו על זה כבר, לא יודעת למה זה חזר"). לפני
+    // ה-return המוקדם (לא רק אחריו) כי זה בדיוק המצב שבו currentUserId עדיין
+    // ריק - מי שלא מחוברת, יושבת על מסך ההתחברות
+    if (!currentUserId) { updateAuthUI(); return; }
+    updateAuthUI();
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     Promise.all([
@@ -13069,10 +13078,23 @@ async function checkReminders() {
 
 // הפופאפ החדש (עם קונפטי) מחליף את showReminderToast הישן - לפי בקשה
 // מפורשת ("שיהיה משהו חמוד שקופץ"). הצליל וה-push הרגילים ממשיכים ללא שינוי
+// showBrowserNotification עדיין נשארת (לא הוסרה) - היא הפתרון היחיד שעובד
+// באייפון (ר' ההערה למטה, "בלי שום התראת-מערכת אמיתית באייפון"), אבל
+// send-due-reminders בשרת שולח Push אמיתי לאותה תזכורת בדיוק גם כשהטאב פתוח,
+// אז שני המסלולים יכולים לרוץ ביחד ולהציג 2 התראות-מערכת כפולות לאותה
+// תזכורת - דווח בפועל ("מתריע פעמיים"). הפתרון: תג (tag) דטרמיניסטי וזהה
+// בשני הצדדים (ר' reminderNotificationTag למטה + התג שנשלח מ-send-due-reminders) -
+// שתי קריאות showNotification עם אותו tag מתמזגות אוטומטית לתצוגה אחת
+// (התנהגות דפדפן מובנית), במקום להצטבר כשתי התראות נפרדות
+function reminderNotificationTag(rem) {
+    if (!rem || !rem.sourceType || !rem.sourceId) return `weekwise-reminder-${Date.now()}`;
+    return `weekwise-reminder-${rem.sourceType}-${rem.sourceId}-${rem.sourceDate || getLocalDateString()}`;
+}
+
 function fireReminder(rem) {
     playReminderChime();
     showReminderPopup(rem.taskTitle, rem.text, rem);
-    showBrowserNotification(rem.taskTitle, rem.text);
+    showBrowserNotification(rem.taskTitle, rem.text, reminderNotificationTag(rem));
 }
 
 // שומר לאיזו שורה בפועל התזכורת הפתוחה שייכת (סוג+מזהה+תאריך, ר' checkReminders)
@@ -13083,7 +13105,7 @@ let currentReminderPopupSource = null;
 function showReminderPopup(taskTitle, text, source) {
     currentReminderPopupSource = source || null;
     document.getElementById('reminder-popup-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
-    document.getElementById('reminder-popup-text').textContent = text || t('reminder_default_text');
+    document.getElementById('reminder-popup-text').textContent = text || '';
     const doneBtn = document.getElementById('reminder-popup-done-btn');
     if (doneBtn) doneBtn.classList.toggle('hidden', !currentReminderPopupSource);
     openModal('modal-reminder-popup');
@@ -13288,10 +13310,10 @@ async function unsubscribePushNotifications() {
 // בלי שום התראת-מערכת אמיתית באייפון - דווח במפורש ("קיבלתי צלצול אבל לא
 // התראה"). registration.showNotification הוא בדיוק מה שמשמש כבר בהצלחה בנתיב
 // ה-Push השרתי (ר' sw.js/'push' listener) - אותה קריאה בדיוק, רק מהצד הזה
-function showBrowserNotification(taskTitle, text) {
+function showBrowserNotification(taskTitle, text, tag) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const title = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
-    const options = { body: text || t('reminder_default_text'), icon: 'icon.png', tag: `weekwise-reminder-${taskTitle}-${Date.now()}` };
+    const options = { body: text || '', icon: 'icon.png', tag: tag || `weekwise-reminder-${taskTitle}-${Date.now()}` };
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistration().then(reg => {
             if (reg) { reg.showNotification(title, options); return; }
