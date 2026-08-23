@@ -1,3 +1,30 @@
+## Incident (2026-08-22): local cleanup deletes echoed as real Google deletes
+
+While fixing the duplicate-primary-calendar discovery bug, calendar_events rows
+that had been wrongly duplicated (once under `google_calendar_id: "primary"`, once
+under the primary calendar's literal email address) were cleaned up with a direct
+SQL delete. `calendar_events_enqueue_outbox()` had no way to tell "internal/
+administrative delete" apart from "user deleted this in the app" - every delete on
+a synced row unconditionally enqueued an outbox delete job, which the drain
+function then pushed to Google as a real `Events.delete`. Since both the "primary"
+and duplicate-email copies of a row shared the same real `google_event_id`, this
+deleted several genuine, pre-existing events from the user's actual Google
+Calendar. Same underlying risk existed on the pull side too: a local hard-delete
+in `pullDeltaForWatch` when Google reports an event `cancelled` used a plain
+`.delete()`, which would trigger the same unwanted echo-delete back to Google
+(usually harmless there since Google already has it gone, but the same fragile
+pattern).
+
+Fixed with a transaction-local Postgres flag (`app.skip_outbox_trigger`, set via
+`set_config(..., true)`) that the trigger checks before enqueueing anything. Any
+sync-internal delete must go through the new `delete_calendar_event_internal(...)`
+RPC function (sets the flag, then deletes, in one transaction) instead of a plain
+`.from('calendar_events').delete()` - `pullDeltaForWatch`'s cancelled-event
+handling now does this. A future direct/administrative SQL cleanup on synced rows
+should wrap itself the same way (`select set_config('app.skip_outbox_trigger',
+'true', true);` before the delete, in the same statement/transaction) to avoid
+repeating this.
+
 # Deploying Google Calendar two-way sync (Milestone 1: connect + Google→NOT10.ai pull)
 
 Covers `google-calendar-auth-start`, `google-calendar-oauth-callback`,

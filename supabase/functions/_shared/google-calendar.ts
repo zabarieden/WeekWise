@@ -208,7 +208,15 @@ export async function pullDeltaForWatch(supabase: SupabaseClient, conn: GoogleCo
         for (const ev of data.items || []) {
             checked++;
             if (ev.status === "cancelled") {
-                await supabase.from("calendar_events").delete().eq("user_id", conn.user_id).eq("google_event_id", ev.id).eq("google_calendar_id", watch.google_calendar_id);
+                // RPC (לא .delete() ישיר) - מגדירה דגל בתוך הטרנזקציה שהטריגר על
+                // calendar_events בודק כדי *לא* להכניס מחיקה-הד לתור-היציאה.
+                // בלי זה: המחיקה המקומית הזו הייתה מפעילה את הטריגר, שהיה דוחף
+                // מחיקה חזרה לגוגל על אירוע שגוגל כבר ידעה שנמחק - מיותר במקרה
+                // הרגיל, אבל מסוכן בפועל (ר' התקרית ב-DEPLOY.md - זה בדיוק מה
+                // שמחק אירועים אמיתיים בטעות)
+                await supabase.rpc("delete_calendar_event_internal", {
+                    p_user_id: conn.user_id, p_google_event_id: ev.id, p_google_calendar_id: watch.google_calendar_id,
+                });
                 applied++;
                 continue;
             }
