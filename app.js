@@ -6851,6 +6851,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'toggle_fabs', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
+    { id: 'google_calendar_sync', category: 'account' },
     { id: 'forgot_password', category: 'account' },
     { id: 'report_bug_feature', category: 'account' },
     { id: 'contact_support', category: 'account' },
@@ -13034,7 +13035,7 @@ async function checkReminders() {
             // להציג את התזכורת באיחור (פעם אחת בלבד, בזכות reminderFiredKey) מאשר לפספס אותה.
             if (now >= triggerDate) {
                 localStorage.setItem(reminderFiredKey(item.id), todayStr);
-                fireReminder({ taskTitle: item.task_title, text: item.reminder_text });
+                fireReminder({ taskTitle: item.task_title, text: item.reminder_text, sourceType: 'schedule', sourceId: item.id, sourceDate: todayStr });
             }
         });
 
@@ -13058,7 +13059,7 @@ async function checkReminders() {
             const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
             if (now >= triggerDate) {
                 localStorage.setItem(key, todayStr);
-                fireReminder({ taskTitle: item.event_title, text: item.reminder_text });
+                fireReminder({ taskTitle: item.event_title, text: item.reminder_text, sourceType: 'event', sourceId: item.id });
             }
         });
     } finally {
@@ -13070,13 +13071,21 @@ async function checkReminders() {
 // מפורשת ("שיהיה משהו חמוד שקופץ"). הצליל וה-push הרגילים ממשיכים ללא שינוי
 function fireReminder(rem) {
     playReminderChime();
-    showReminderPopup(rem.taskTitle, rem.text);
+    showReminderPopup(rem.taskTitle, rem.text, rem);
     showBrowserNotification(rem.taskTitle, rem.text);
 }
 
-function showReminderPopup(taskTitle, text) {
+// שומר לאיזו שורה בפועל התזכורת הפתוחה שייכת (סוג+מזהה+תאריך, ר' checkReminders)
+// כדי שכפתורי "בוצע"/"עוד לא" יידעו על מה לפעול - לפי בקשה מפורשת שהפופאפ
+// יאפשר לסמן השלמה במקום רק לסגור אותו
+let currentReminderPopupSource = null;
+
+function showReminderPopup(taskTitle, text, source) {
+    currentReminderPopupSource = source || null;
     document.getElementById('reminder-popup-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
     document.getElementById('reminder-popup-text').textContent = text || t('reminder_default_text');
+    const doneBtn = document.getElementById('reminder-popup-done-btn');
+    if (doneBtn) doneBtn.classList.toggle('hidden', !currentReminderPopupSource);
     openModal('modal-reminder-popup');
     const confettiEl = document.getElementById('reminder-popup-confetti');
     if (confettiEl) {
@@ -13084,6 +13093,22 @@ function showReminderPopup(taskTitle, text) {
         spawnGentleConfettiBurst(confettiEl, 14);
         setTimeout(() => spawnGentleConfettiBurst(confettiEl, 14), 350);
     }
+}
+
+// "בוצע, תודה" - מסמנת השלמה על השורה האמיתית (אותו מנגנון בדיוק כמו הצ'קבוקס
+// ברשימות עצמן, ר' toggleScheduleCompletion/toggleEventOccurrenceCompletion),
+// לא רק סוגרת את הפופאפ. "עוד לא בוצע" (הכפתור השני, ישירות ב-HTML) רק סוגרת -
+// שום שינוי במשימה, בדיוק כמו "הבנתי!" הישן
+async function markReminderPopupDone() {
+    const source = currentReminderPopupSource;
+    closeModal('modal-reminder-popup');
+    if (!source) return;
+    if (source.sourceType === 'schedule') {
+        await toggleScheduleCompletion(source.sourceId, source.sourceDate, true);
+    } else if (source.sourceType === 'event') {
+        await toggleEventOccurrenceCompletion(source.sourceId, true);
+    }
+    showAppToast(t('reminder_popup_marked_done_toast'));
 }
 
 function requestNotificationPermission() {
