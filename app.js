@@ -355,6 +355,7 @@ function updateLiveCaloriesToday() {
     todayCaloriesTotal = total;
     todayProteinTotal = proteinTotal;
     updateNutritionGoalProgress();
+    updateHomeCalorieBadge();
 }
 
 // --- הלוגיקה לסימון V מצד ימין ---
@@ -13501,6 +13502,7 @@ async function loadDailyNutrition(date) {
     todayCaloriesTotal = total;
     todayProteinTotal = proteinTotal;
     updateNutritionGoalProgress();
+    updateHomeCalorieBadge();
 }
 
 // --- זיהוי ארוחה מתמונה (פרימיום בלבד): AI אמיתי בעל יכולת ראייה, דרך אותו
