@@ -122,17 +122,36 @@ Deno.serve(async () => {
 
     const { data: pending, error: pendingErr } = await supabase
         .from("calendar_sync_outbox")
-        .select("id, calendar_event_id, user_id, action, google_event_id, recurrence_group_id, attempts")
+        .select("id, calendar_event_id, user_id, action, google_event_id, google_calendar_id, recurrence_group_id, attempts, created_at")
         .is("processed_at", null)
         .order("created_at", { ascending: true })
         .limit(200);
     if (pendingErr) return new Response(JSON.stringify({ error: pendingErr.message }), { status: 500 });
     if (!pending || pending.length === 0) return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
 
+    // בלם-חירום: מספר חריג-בעליל של מחיקות ביחד לאותה משתמשת (הרבה מעבר למה
+    // שפעולה תקינה אחת אי פעם תייצר - מחיקת סדרה שלמה כוללת בדרך כלל עד
+    // כמה עשרות) מעכב את המחיקות עד שהן "בשלות" (5 דקות מרגע שנכנסו לתור) -
+    // לא נדחף לגוגל מיד. זו רשת-ביטחון אחרונה בדיוק נגד התרחיש שקרה בפועל
+    // (ר' התקרית ב-DEPLOY.md): ניקוי/באג שיוצר גל מחיקות בבת אחת מקבל חלון
+    // קצר להיתפס (ידנית, או בסבב-דחיפה הבא) לפני שהוא הופך לבלתי-הפיך בגוגל -
+    // בלי לעכב בכלל מחיקה בודדת/סדרה רגילה, שאף פעם לא מתקרבות לסף הזה
+    const DELETE_BURST_THRESHOLD = 20;
+    const DELETE_HOLD_MS = 5 * 60 * 1000;
     const byUser = new Map<string, typeof pending>();
     for (const row of pending) {
         if (!byUser.has(row.user_id)) byUser.set(row.user_id, []);
         byUser.get(row.user_id)!.push(row);
+    }
+    for (const [, userRows] of byUser) {
+        const deleteRows = userRows.filter((r) => r.action === "delete");
+        if (deleteRows.length <= DELETE_BURST_THRESHOLD) continue;
+        const cutoff = Date.now() - DELETE_HOLD_MS;
+        const tooFresh = new Set(deleteRows.filter((r) => new Date(r.created_at).getTime() > cutoff).map((r) => r.id));
+        if (tooFresh.size === 0) continue;
+        const filtered = userRows.filter((r) => !tooFresh.has(r.id));
+        userRows.length = 0;
+        userRows.push(...filtered);
     }
 
     let processedCount = 0;
