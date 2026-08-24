@@ -2294,7 +2294,13 @@ function openCenterItemEditor(btn, type) {
     setTimeout(() => input.focus(), 150);
 }
 
-function submitCenterItem() {
+// דגל חד-פעמי נגד הגשה כפולה - בלי זה, כמה לחיצות מהירות על "שמירה" (רשת
+// אטית, נגיעה כפולה בטעות) הספיקו כולן לרוץ לפני ש-closeModal בכלל השפיע
+// חזותית, וכל אחת יצרה שורת my_center_tasks נפרדת משלה - דווח בפועל
+// ("פתק אחד מיליון פתקים אותו הדבר")
+let centerItemSubmitInFlight = false;
+async function submitCenterItem() {
+    if (centerItemSubmitInFlight) return;
     const input = document.getElementById('center-item-input');
     const text = input.value.trim();
     const type = pendingCenterItemType;
@@ -2302,15 +2308,20 @@ function submitCenterItem() {
     const color = pendingCenterItemColor;
     const glow = pendingCenterItemGlow;
     const bg = pendingCenterItemBg;
-    closeModal('modal-add-center-item');
-    editingCenterItemId = null;
-    pendingCenterItemType = null;
-    pendingCenterItemColor = null;
-    pendingCenterItemGlow = null;
-    pendingCenterItemBg = null;
     if (!text || !type) return;
-    if (editId) updateCenterItemDirect(editId, type, text, color, glow, bg);
-    else insertCenterItemDirect(type, text, color, glow, bg);
+    centerItemSubmitInFlight = true;
+    try {
+        closeModal('modal-add-center-item');
+        editingCenterItemId = null;
+        pendingCenterItemType = null;
+        pendingCenterItemColor = null;
+        pendingCenterItemGlow = null;
+        pendingCenterItemBg = null;
+        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg);
+        else await insertCenterItemDirect(type, text, color, glow, bg);
+    } finally {
+        centerItemSubmitInFlight = false;
+    }
 }
 
 async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor) {
