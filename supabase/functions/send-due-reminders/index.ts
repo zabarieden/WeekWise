@@ -123,6 +123,15 @@ async function handleRequest(): Promise<Response> {
             // ב-app.js, כדי שהתראת-Push הזו תתמזג עם showBrowserNotification הישירה
             // מהלקוח אם שתיהן ירוצו על אותה תזכורת - מונע כפילות שדווחה בפועל
             const tag = `weekwise-reminder-schedule-${row.id}-${wallClock.dateStr}`;
+            // actions/data: כפתורי "בוצע"/"עוד לא" ישירות על התראת-המערכת עצמה,
+            // לא רק בפופאפ הפנימי - sw.js קורא את זה ב-notificationclick ומפעיל
+            // mark-reminder-done. userId חייב בתוך data כי אין session בתוך ה-
+            // Service Worker לדעת מי המשתמשת - ר' ההערה ב-mark-reminder-done
+            const actions = [
+                { action: "done", title: "✅" },
+                { action: "not_done", title: "⏰" },
+            ];
+            const data = { sourceType: "schedule", sourceId: row.id, sourceDate: wallClock.dateStr, userId };
 
             let anySucceeded = false;
             for (const sub of userSubs) {
@@ -133,7 +142,7 @@ async function handleRequest(): Promise<Response> {
                     // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                        JSON.stringify({ title, body, tag }),
+                        JSON.stringify({ title, body, tag, actions, data }),
                         { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;
@@ -180,6 +189,11 @@ async function handleRequest(): Promise<Response> {
             const title = `⏰ ${row.event_title || "NOT10.ai"}`;
             const body = row.reminder_text || "";
             const tag = `weekwise-reminder-event-${row.id}-${wallClock.dateStr}`;
+            const actions = [
+                { action: "done", title: "✅" },
+                { action: "not_done", title: "⏰" },
+            ];
+            const data = { sourceType: "event", sourceId: row.id, sourceDate: wallClock.dateStr, userId };
 
             let anySucceeded = false;
             for (const sub of userSubs) {
@@ -190,7 +204,7 @@ async function handleRequest(): Promise<Response> {
                     // סביר כבר לא רלוונטית, עדיף שהיא תיפול מאשר תגיע מאוחר מדי
                     await webpush.sendNotification(
                         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                        JSON.stringify({ title, body, tag }),
+                        JSON.stringify({ title, body, tag, actions, data }),
                         { urgency: "high", TTL: 600 },
                     );
                     anySucceeded = true;

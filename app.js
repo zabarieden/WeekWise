@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateAuthUI();
     handleGoogleCalendarRedirect();
+    handleNotificationDeepLink();
     document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
         e.preventDefault();
         authMode = authMode === 'login' ? 'signup' : 'login';
@@ -6209,6 +6210,19 @@ function handleGoogleCalendarRedirect() {
     params.delete('detail');
     const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
     window.history.replaceState({}, '', newUrl);
+}
+
+// טיפול בקישור-עומק מהתראה (sw.js פותח ./index.html?open=peek בלחיצה על
+// גוף ההתראה, ר' notificationclick) - פותח ישר את "הצצה להיום" במקום נחיתה
+// כללית על מסך הבית, לפי בקשה מפורשת ("שילחצו על ההתראה ותיקח ישר להצצה")
+function handleNotificationDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const open = params.get('open');
+    if (!open) return;
+    params.delete('open');
+    const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
+    window.history.replaceState({}, '', newUrl);
+    if (open === 'peek') openTodayPeekPanel();
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
@@ -13094,7 +13108,7 @@ function reminderNotificationTag(rem) {
 function fireReminder(rem) {
     playReminderChime();
     showReminderPopup(rem.taskTitle, rem.text, rem);
-    showBrowserNotification(rem.taskTitle, rem.text, reminderNotificationTag(rem));
+    showBrowserNotification(rem.taskTitle, rem.text, reminderNotificationTag(rem), rem);
 }
 
 // שומר לאיזו שורה בפועל התזכורת הפתוחה שייכת (סוג+מזהה+תאריך, ר' checkReminders)
@@ -13310,10 +13324,19 @@ async function unsubscribePushNotifications() {
 // בלי שום התראת-מערכת אמיתית באייפון - דווח במפורש ("קיבלתי צלצול אבל לא
 // התראה"). registration.showNotification הוא בדיוק מה שמשמש כבר בהצלחה בנתיב
 // ה-Push השרתי (ר' sw.js/'push' listener) - אותה קריאה בדיוק, רק מהצד הזה
-function showBrowserNotification(taskTitle, text, tag) {
+function showBrowserNotification(taskTitle, text, tag, rem) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const title = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
     const options = { body: text || '', icon: 'icon.png', tag: tag || `weekwise-reminder-${taskTitle}-${Date.now()}` };
+    // actions/data: אותה תוספת בדיוק כמו ב-send-due-reminders (השרת), כדי
+    // שהתראה שנשלחת מכאן (הלקוח, לא מהשרת) תיתן את אותם כפתורי בוצע/עוד-לא
+    // על התראת-המערכת עצמה - actions נתמך רק דרך registration.showNotification,
+    // לא new Notification() הישיר, אז זה פשוט מתעלם בשקט בנתיב הישיר (בסדר,
+    // אין ברירה טובה יותר שם)
+    if (rem && rem.sourceType && rem.sourceId) {
+        options.actions = [{ action: 'done', title: '✅' }, { action: 'not_done', title: '⏰' }];
+        options.data = { sourceType: rem.sourceType, sourceId: rem.sourceId, sourceDate: rem.sourceDate || getLocalDateString(), userId: currentUserId };
+    }
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistration().then(reg => {
             if (reg) { reg.showNotification(title, options); return; }
