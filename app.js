@@ -1701,6 +1701,7 @@ async function initAppAfterAuth(user) {
         loadColorTheme(),
         loadAiIconSetting(),
         loadLightModeSetting(),
+        loadReminderChimeSetting(),
         loadStudyPeekTabSetting(),
         loadHomeCalorieBadgeSetting(),
         loadGlobalTextColor(),
@@ -2060,6 +2061,7 @@ function openSettingsDrawer() {
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
     renderNotificationSettingsStatus();
+    renderReminderChimePicker();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
     const studyTabToggle = document.getElementById('study-peek-tab-toggle');
@@ -12993,33 +12995,96 @@ function unlockReminderAudio() {
     if (reminderAudioCtx && reminderAudioCtx.state === 'suspended') reminderAudioCtx.resume();
 }
 
-async function playReminderChime() {
+// כל צליל מוגדר כסדרת תווים (Hz) + סוג גל + קצב, לא כקובץ שמע - נבנה חי
+// דרך Web Audio, בדיוק כמו הצליל המקורי (עכשיו 'chord_up', עדיין ברירת
+// המחדל כדי שמי שלא בחר/ה כלום לא ישמע שינוי). לפי בקשה מפורשת לבורר-צלילים
+// עם כמה אפשרויות בהגדרות - כל אחד מהם שונה בגובה/קצב/גל כדי שיהיה
+// מבחין-לאוזן, לא רק וריאציה עדינה על אותו דבר
+const REMINDER_CHIMES = {
+    chord_up: { notes: [523.25, 659.25, 783.99], type: 'sine', gap: 0.16, peak: 0.22, decay: 0.65 },
+    bell: { notes: [880, 659.25], type: 'triangle', gap: 0.22, peak: 0.2, decay: 0.9 },
+    soft_pop: { notes: [660], type: 'sine', gap: 0, peak: 0.25, decay: 0.28 },
+    marimba: { notes: [587.33, 698.46, 880], type: 'triangle', gap: 0.14, peak: 0.24, decay: 0.5 },
+    alert: { notes: [784, 784, 784], type: 'square', gap: 0.13, peak: 0.14, decay: 0.14 },
+    wind_chime: { notes: [1046.5, 880, 698.46, 523.25], type: 'sine', gap: 0.13, peak: 0.18, decay: 0.55 },
+};
+const REMINDER_CHIME_DEFAULT = 'chord_up';
+
+function isValidReminderChimeId(id) { return !!REMINDER_CHIMES[id]; }
+function getReminderChimeId() {
+    const saved = localStorage.getItem('weekwise_reminder_chime');
+    return isValidReminderChimeId(saved) ? saved : REMINDER_CHIME_DEFAULT;
+}
+
+async function playReminderChime(chimeId) {
     unlockReminderAudio();
     if (!reminderAudioCtx) return;
     if (reminderAudioCtx.state === 'suspended') {
         try { await reminderAudioCtx.resume(); } catch (e) { /* still locked without a fresh gesture, nothing more we can do here */ }
     }
     if (reminderAudioCtx.state !== 'running') return;
+    const chime = REMINDER_CHIMES[chimeId] || REMINDER_CHIMES[getReminderChimeId()];
     const now = reminderAudioCtx.currentTime;
-    const notes = [523.25, 659.25, 783.99]; // דו-מי-סול: אקורד עולה נעים
-    notes.forEach((freq, i) => {
+    chime.notes.forEach((freq, i) => {
         const osc = reminderAudioCtx.createOscillator();
         const gain = reminderAudioCtx.createGain();
-        osc.type = 'sine';
+        osc.type = chime.type;
         osc.frequency.value = freq;
-        const start = now + i * 0.16;
+        const start = now + i * chime.gap;
         gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.22, start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.65);
+        gain.gain.linearRampToValueAtTime(chime.peak, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + chime.decay);
         osc.connect(gain).connect(reminderAudioCtx.destination);
         osc.start(start);
-        osc.stop(start + 0.7);
+        osc.stop(start + chime.decay + 0.05);
     });
 }
 
 function testReminderChime() {
     playReminderChime();
     showAppToast(t('toast_test_chime'));
+}
+
+// בורר-הצלילים בהגדרות: כל שורה מנגנת תצוגה-מקדימה בלחיצה, ובחירה בפועל
+// (הרדיו/הדגשה) שומרת מקומית + מסונכרנת לחשבון (כמו study_peek_tab_enabled -
+// אותו דפוס בדיוק, כדי שהבחירה תעבור גם למכשירים אחרים)
+function previewReminderChime(chimeId) {
+    playReminderChime(chimeId);
+}
+
+function renderReminderChimePicker() {
+    const list = document.getElementById('reminder-chime-picker-list');
+    if (!list) return;
+    const current = getReminderChimeId();
+    list.innerHTML = Object.keys(REMINDER_CHIMES).map((id) => `
+        <li class="reminder-chime-option${id === current ? ' selected' : ''}" data-chime-id="${id}">
+            <button type="button" class="reminder-chime-option-main" onclick="selectReminderChime('${id}')">
+                <span class="reminder-chime-option-check">${id === current ? '✓' : ''}</span>
+                <span data-i18n="reminder_chime_${id}">${t('reminder_chime_' + id)}</span>
+            </button>
+            <button type="button" class="reminder-chime-preview-btn" onclick="previewReminderChime('${id}')" title="${t('reminder_chime_preview_title')}">▶</button>
+        </li>
+    `).join('');
+}
+
+async function selectReminderChime(chimeId) {
+    if (!isValidReminderChimeId(chimeId)) return;
+    localStorage.setItem('weekwise_reminder_chime', chimeId);
+    renderReminderChimePicker();
+    playReminderChime(chimeId);
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, reminder_chime_id: chimeId },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+
+async function loadReminderChimeSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('reminder_chime_id').eq('user_id', currentUserId).maybeSingle();
+    if (!data || !isValidReminderChimeId(data.reminder_chime_id)) return;
+    localStorage.setItem('weekwise_reminder_chime', data.reminder_chime_id);
 }
 
 function reminderFiredKey(rowId) {

@@ -1688,6 +1688,8 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .language-select,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-select-trigger,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .language-search-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .reminder-chime-option-main,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .reminder-chime-preview-btn,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .date-picker-field-trigger {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--accent-purple-text);
@@ -5248,6 +5250,16 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .settings-toggle-row[data-fab-id] .settings-label { flex: 1; }
 .fab-order-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; flex-shrink: 0; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .fab-order-drag-handle:active { cursor: grabbing; }
+
+/* בורר-צלילים להתראות: כל שורה = שם-הצליל + כפתור ▶ תצוגה-מקדימה נפרד -
+   לפי בקשה מפורשת ("בורר צלילים... כמה אפשרויות") */
+.reminder-chime-picker-list { list-style: none; margin: 0 0 16px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.reminder-chime-option { display: flex; align-items: center; gap: 8px; }
+.reminder-chime-option-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: var(--transition); text-align: start; }
+.reminder-chime-option.selected .reminder-chime-option-main { background-color: rgba(168, 85, 247, 0.14); border-color: var(--accent-purple); color: var(--accent-purple-light-text); font-weight: 700; }
+.reminder-chime-option-check { width: 16px; flex-shrink: 0; color: var(--accent-purple-light-text); font-weight: 700; }
+.reminder-chime-preview-btn { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.reminder-chime-preview-btn:active { transform: scale(0.92); }
 
 /* מסך-ראשי של ההגדרות: 5 שורות-קטגוריה קומפקטיות במקום גלילה ארוכה אחת -
    בסגנון הגדרות וואטסאפ/iOS, לפי בקשה מפורשת */
