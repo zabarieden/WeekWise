@@ -1822,51 +1822,47 @@ function applyDailyFocusIconState() {
     badge.classList.toggle('daily-focus-badge-dim', dailyFocusState === 'dismissed');
 }
 
-// "Daily Mix" - בנק 42 המשפטים (7 קטגוריות × 6) - עברו למפתחות i18n (היו
-// בעברית בלבד עד עכשיו, במכוון, לפי בקשה מפורשת קודמת: "תוכן אישי/מנוסח,
-// לא מחרוזת ממשק" - שונה לפי בקשה מפורשת נוספת שרצתה שגם התוכן הזה יתאים
-// לשפה הנבחרת ("כל שפה בשפה שלו"), אחרי שדווח שהוא נשאר בעברית גם באנגלית.
-// המערך מחזיק עכשיו *מפתחות* (daily_focus_c<קטגוריה>_d<יום-בסבב>), לא את
-// הטקסט עצמו - renderDailyFocusTags קוראת ל-t() על כל מפתח
-const DAILY_FOCUS_TAG_BANK = [
-    ['daily_focus_c1_d0', 'daily_focus_c1_d1', 'daily_focus_c1_d2', 'daily_focus_c1_d3', 'daily_focus_c1_d4', 'daily_focus_c1_d5'],
-    ['daily_focus_c2_d0', 'daily_focus_c2_d1', 'daily_focus_c2_d2', 'daily_focus_c2_d3', 'daily_focus_c2_d4', 'daily_focus_c2_d5'],
-    ['daily_focus_c3_d0', 'daily_focus_c3_d1', 'daily_focus_c3_d2', 'daily_focus_c3_d3', 'daily_focus_c3_d4', 'daily_focus_c3_d5'],
-    ['daily_focus_c4_d0', 'daily_focus_c4_d1', 'daily_focus_c4_d2', 'daily_focus_c4_d3', 'daily_focus_c4_d4', 'daily_focus_c4_d5'],
-    ['daily_focus_c5_d0', 'daily_focus_c5_d1', 'daily_focus_c5_d2', 'daily_focus_c5_d3', 'daily_focus_c5_d4', 'daily_focus_c5_d5'],
-    ['daily_focus_c6_d0', 'daily_focus_c6_d1', 'daily_focus_c6_d2', 'daily_focus_c6_d3', 'daily_focus_c6_d4', 'daily_focus_c6_d5'],
-    ['daily_focus_c7_d0', 'daily_focus_c7_d1', 'daily_focus_c7_d2', 'daily_focus_c7_d3', 'daily_focus_c7_d4', 'daily_focus_c7_d5'],
-];
-// לא רנדומלי - סבב קבוע לפי אינדקס-יום: יום 1 = משפט #1 מכל קטגוריה, יום 2 =
-// משפט #2 וכו', חוזר כל 6 ימים - לפי בקשה מפורשת ("את הדוגמא הראשונה מכל
-// קטגוריה ליום ה-1... את הדוגמא ה-2 לסבב השני"). מבוסס על תאריך (לא על
-// localStorage/מונה-פתיחות) כדי שכל המכשירים של אותה משתמשת יראו את אותה
-// תערובת באותו יום קלנדרי
-function getDailyFocusRotationIndex() {
+// "Daily Mix" גרסה 2 - ארכיטקטורה שנתית מודולרית לפי בקשה מפורשת, מחליפה
+// את בנק ה-42 המשפטים הישן (7 קטגוריות × 6 ימים, ר' היסטוריית git למי
+// שמחפש את הגרסה הקודמת): 6 סבבים דו-חודשיים (phase) × מחזור של 7 ימים
+// בכל סבב (day) × 5 משפטים ביום (slot) = 210 משפטים, כל אחד מפתח i18n
+// בפורמט daily_focus_p<סבב>_d<יום>_s<משבצת> (למשל daily_focus_p3_d7_s2)
+//
+// phase נקבע לפי החודש הקלנדרי בפועל (לא מחזורי-רץ כמו day) - ינואר-פברואר
+// = סבב 1, מרץ-אפריל = סבב 2 וכו' - כך שהיומן מתעד תהליך התפתחות אמיתי
+// לאורך השנה, לא רק חזרה מקרית. day עדיין מחזורי-רץ (כמו בגרסה הקודמת,
+// עכשיו מחזור של 7 במקום 6) כדי שיום 7 - המוקדש קבוע להטענה/שקט/הודיה בתוכן
+// עצמו בכל סבב - יחזור באופן קצבי, לא צמוד ליום בשבוע האמיתי
+function getDailyFocusPhase() {
+    return Math.floor(new Date().getMonth() / 2) + 1; // 1-6
+}
+function getDailyFocusRotationDay() {
     const epoch = new Date(2024, 0, 1).getTime();
     const daysSinceEpoch = Math.floor((Date.now() - epoch) / 86400000);
-    return ((daysSinceEpoch % 6) + 6) % 6;
+    return (((daysSinceEpoch % 7) + 7) % 7) + 1; // 1-7
 }
 
 let selectedDailyFocusTags = [];
 
-// בונה את 7 התגיות של היום (משפט אחד מכל קטגוריה, לפי הסבב) + תגית "אחר"
-// חופשית בסוף. בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags
+// בונה את 5 התגיות של היום (כל 5 המשפטים של הסבב+יום הנוכחיים, בלי בחירה
+// אקראית מתוך מאגר גדול יותר - כל 5 מוצגות תמיד) + תגית "אחר" חופשית בסוף.
+// בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags
 function renderDailyFocusTags() {
     const container = document.getElementById('daily-focus-tags-list');
     if (!container) return;
     container.innerHTML = '';
     selectedDailyFocusTags = [];
-    const idx = getDailyFocusRotationIndex();
-    DAILY_FOCUS_TAG_BANK.forEach(category => {
-        const text = t(category[idx]);
+    const phase = getDailyFocusPhase();
+    const day = getDailyFocusRotationDay();
+    for (let slot = 1; slot <= 5; slot++) {
+        const text = t(`daily_focus_p${phase}_d${day}_s${slot}`);
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'daily-focus-tag-chip';
         chip.textContent = text;
         chip.onclick = () => toggleDailyFocusTag(text, chip);
         container.appendChild(chip);
-    });
+    }
     const otherChip = document.createElement('button');
     otherChip.type = 'button';
     otherChip.className = 'daily-focus-tag-chip daily-focus-tag-chip-other';
