@@ -122,7 +122,7 @@ Deno.serve(async () => {
 
     const { data: pending, error: pendingErr } = await supabase
         .from("calendar_sync_outbox")
-        .select("id, calendar_event_id, user_id, action, google_event_id, google_calendar_id, recurrence_group_id, attempts, created_at")
+        .select("id, calendar_event_id, user_id, action, google_event_id, google_calendar_id, recurrence_group_id, attempts, created_at, is_series_title_edit")
         .is("processed_at", null)
         .order("created_at", { ascending: true })
         .limit(200);
@@ -300,12 +300,17 @@ Deno.serve(async () => {
                     const timeZone = await getTZ(seriesCalId);
                     const touchedIds = new Set(rowsForGroup.map((r) => r.calendar_event_id));
                     const touchedSiblings = siblings.filter((s) => touchedIds.has(s.id));
-                    // כל האחיות נגעו באותו batch - עריכת-כותרת-לכל-הסדרה
-                    // (openEditCalendarEventSeries ב-app.js, הדרך היחידה שמעדכנת
-                    // את כל השורות באותו UPDATE אחד, ר' ההערה שם). PATCH ולא PUT
-                    // בכוונה - כדי לא לדרוס/למחוק בטעות את שדה ה-recurrence
-                    // הקיים על אירוע-האב בגוגל, שולחים רק את מה שבאמת השתנה
-                    if (touchedSiblings.length >= siblings.length) {
+                    // מזהים עריכת-כותרת-לכל-הסדרה לפי הדגל is_series_title_edit
+                    // שהטריגר מתייג (ר' update_calendar_event_series_title ב-DB
+                    // וההערה ב-app.js), לא לפי כמות השורות שנכנסו לתור - ניחוש
+                    // לפי-כמות (touchedSiblings.length >= siblings.length) היה
+                    // שגוי בטעות בסדרה קצרה (2 מופעים) אם שתי עריכות-מופע-בודד
+                    // נפרדות נכנסו לתור בסמיכות זמן, ומטפל בהן (בטעות) כעריכת-
+                    // כותרת-לכל-הסדרה - מה שהיה מפיל בשקט את שינויי התאריך/שעה
+                    // בפועל של שתי העריכות. PATCH ולא PUT בכוונה - כדי לא לדרוס/
+                    // למחוק בטעות את שדה ה-recurrence הקיים על אירוע-האב בגוגל,
+                    // שולחים רק את מה שבאמת השתנה
+                    if (rowsForGroup.some((r) => r.is_series_title_edit)) {
                         const title = siblings[0].event_title || "(No title)";
                         const res = await fetch(`${eventsBase}/${encodeURIComponent(masterId)}`, {
                             method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -323,8 +328,11 @@ Deno.serve(async () => {
                         continue;
                     }
 
-                    // רק חלק מהאחיות נגעו - עריכת מופע בודד (openEditCalendarEvent
-                    // דרך כפתור-העריכה בתוך הרשימה המורחבת של הסדרה, ר' app.js).
+                    // עריכת מופע/מופעים בודדים, לא כותרת-כל-הסדרה (openEditCalendarEvent
+                    // דרך כפתור-העריכה בתוך הרשימה המורחבת של הסדרה, ר' app.js) -
+                    // גם אם במקרה כל האחיות נגעו (למשל שתיהן נערכו בנפרד בסמיכות
+                    // זמן בסדרה של 2 מופעים), הדגל is_series_title_edit=false מכל
+                    // שורה אומר בוודאות שזו לא הייתה עריכת-כותרת-משותפת.
                     // מאתרים את המופע הנכון בגוגל דרך Events.instances, לפי
                     // recurrence_original_date/time - העוגן שלעולם לא זז אחרי
                     // שהמופע נוצר, גם אם event_date/event_time עצמם השתנו כאן -

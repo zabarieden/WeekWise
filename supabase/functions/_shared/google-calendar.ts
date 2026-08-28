@@ -96,13 +96,16 @@ export async function discoverCalendarWatches(supabase: SupabaseClient, conn: Go
     });
     if (!res.ok) throw new Error(`calendarList fetch failed: ${res.status} ${await res.text()}`);
     const data = await res.json();
-    // הפריט עם primary:true הוא אותו יומן ראשי בדיוק שכבר מכוסה ע"י שורת ה-
-    // watch הקבועה עם google_calendar_id="primary" (נוצרת ב-oauth-callback,
-    // לא כאן) - ה-id "האמיתי" שלו בפועל הוא כתובת המייל של המשתמשת, לא
-    // המילה "primary" - בלי הסינון הזה הוא היה מתגלה שוב כיומן "חדש" ונמשך
-    // פעמיים במקביל (עם שני google_calendar_id שונים לאותם אירועים בפועל),
-    // שיוצר כפילויות אמיתיות בטבלה
-    const calendars: any[] = (data.items || []).filter((c: any) => !c.primary);
+    // הפריט עם primary:true הוא היומן הראשי של המשתמשת - ה-id "האמיתי" שלו
+    // בפועל הוא כתובת המייל שלה, לא המילה "primary". מנרמלים אותו כאן ל-
+    // google_calendar_id="primary" (אותו מזהה קבוע שכבר משמש לדחיפת אירועים
+    // חדשים ב-outbox-drain) כדי שגם היומן הראשי יקבל שורת watch משלו ויסונכרן
+    // דו-כיווני, במקום להיות מסונן החוצה לגמרי (באג קודם: הוא היה מתגלה שוב
+    // תחת המייל האמיתי שלו ונמשך פעמיים במקביל עם שני google_calendar_id שונים
+    // לאותם אירועים בפועל - זה מה שגרם למחיקה הכפולה/תקרית המחיקה ההמונית -
+    // נירמול לאותו מזהה קבוע תמיד, ולא סינון מוחלט, הוא התיקון הנכון: מונע את
+    // הכפילות בלי לאבד את הסנכרון של היומן הראשי)
+    const calendars: any[] = (data.items || []).map((c: any) => (c.primary ? { ...c, id: "primary" } : c));
 
     const { data: existingWatches } = await supabase.from("google_calendar_watches")
         .select("*").eq("connection_id", conn.id);

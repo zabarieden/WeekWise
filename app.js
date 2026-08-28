@@ -5565,7 +5565,21 @@ function resetCalendarEventModal() {
     document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
 }
 
+// דגל חד-פעמי נגד הגשה כפולה, באותו דפוס בדיוק כמו centerItemSubmitInFlight
+// (ר' ההערה שם - "פתק אחד מיליון פתקים אותו הדבר") - כאן הסיכון גדול אף
+// יותר: לחיצה כפולה על "הוספת אירוע" בסדרה חוזרת לא יוצרת שורה כפולה אחת,
+// אלא מכפילה את כל הסדרה (יכולה להיות מאות שורות)
+let addCalendarEventInFlight = false;
 async function addCalendarEvent() {
+    if (addCalendarEventInFlight) return;
+    addCalendarEventInFlight = true;
+    try {
+        await addCalendarEventImpl();
+    } finally {
+        addCalendarEventInFlight = false;
+    }
+}
+async function addCalendarEventImpl() {
     const titleInput = document.getElementById('calendar-event-title-input');
     const dateInput = document.getElementById('calendar-event-date-input');
     const recurringCheckbox = document.getElementById('calendar-event-recurring-checkbox');
@@ -5585,7 +5599,13 @@ async function addCalendarEvent() {
 
     if (editingCalendarEventGroupId) {
         if (!title) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-        const { error } = await supabaseClient.from('calendar_events').update({ event_title: title }).eq('recurrence_group_id', editingCalendarEventGroupId);
+        // RPC ולא .update() ישיר - כדי לסמן app.series_title_edit באותה
+        // טרנזקציה (ר' ההערה בפונקציית ה-SQL) ולתת לטריגר לתייג את שורות
+        // תור-היציאה כ-is_series_title_edit=true. בלי זה, google-calendar-
+        // outbox-drain מנחשת "עריכת-כל-הסדרה מול עריכת-מופע-בודד" רק לפי
+        // כמה שורות נכנסו לתור באותו סבב - ניחוש שגוי בטעות בסדרה קצרה
+        // (2 מופעים) אם שתי עריכות-מופע-בודד נפרדות נכנסות לתור בסמיכות
+        const { error } = await supabaseClient.rpc('update_calendar_event_series_title', { p_group_id: editingCalendarEventGroupId, p_title: title });
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         resetCalendarEventModal();
         closeModal('modal-add-calendar-event');
