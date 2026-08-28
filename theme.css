@@ -3400,6 +3400,56 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .project-card, .notebook-card { display: flex; align-items: center; gap: 12px; width: 100%; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; box-sizing: border-box; }
 .project-card-main, .notebook-card-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
 .project-card-actions, .notebook-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+/* --- טבלאות מותאמות אישית (Tables) - כרטיסי-רשימה בסגנון project-card, וגריד
+   טבלה שהוא Flexbox על divs (לא <table>, בהתאמה לשאר האפליקציה) עם מספר
+   עמודות דינמי - בניגוד לגריד היומן החודשי (repeat(7,1fr) קבוע), כאן מספר
+   העמודות נקבע ע"י המשתמשת, אז השורה גולשת אופקית בתוך מעטפת גלילה משלה
+   (בדיוק כמו .day-tabs-strip) במקום CSS Grid עם מספר עמודות קבוע-מראש */
+.custom-tables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.custom-table-card { display: flex; flex-direction: column; align-items: center; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px 10px; box-sizing: border-box; text-align: center; }
+.custom-table-card-main { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; width: 100%; overflow: hidden; }
+.custom-table-card-icon { font-size: 1.8rem; }
+.custom-table-card-name { color: var(--text-primary); font-weight: 600; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.custom-table-card-actions { display: flex; align-items: center; gap: 4px; }
+.table-detail-back-btn { font-size: 1.1rem; }
+
+.table-grid-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 10px 0; }
+.table-grid-scroll::-webkit-scrollbar { display: none; }
+.table-grid { display: flex; flex-direction: column; min-width: min-content; }
+.table-grid-row { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.table-grid-header-row { background-color: var(--bg-row); font-weight: 700; border-bottom: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px 10px 0 0; }
+.table-grid-cell { flex: 0 0 140px; padding: 10px 12px; color: var(--text-primary); font-size: 0.85rem; display: flex; align-items: center; box-sizing: border-box; overflow: hidden; }
+.table-grid-header-cell { color: var(--text-primary); }
+.table-grid-row-actions { flex: 0 0 44px; justify-content: center; }
+.table-add-row-btn { width: 100%; margin-top: 4px; }
+
+.table-select-option-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-grid-cell input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-purple); cursor: pointer; }
+.table-grid-cell input[type="text"], .table-grid-cell input[type="number"] { width: 100%; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-family: inherit; padding: 0; }
+.table-grid-cell input[type="text"]:focus, .table-grid-cell input[type="number"]:focus { outline: none; }
+.column-drag-handle { cursor: grab; touch-action: none; }
+
+.pending-columns-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.pending-column-row { display: flex; align-items: center; gap: 8px; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 10px; padding: 8px 10px; }
+.pending-column-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+.pending-column-type-badge { flex: 0 0 auto; font-size: 0.72rem; color: var(--text-secondary); background-color: rgba(255, 255, 255, 0.05); border-radius: 999px; padding: 2px 8px; }
+.table-column-type-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.table-column-type-chip { padding: 8px 14px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-family: inherit; font-size: 0.85rem; }
+.table-column-type-chip.selected { background-color: rgba(168, 85, 247, 0.15); border-color: var(--accent-purple); color: var(--text-primary); }
+.pending-select-options-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.pending-select-option-row { display: flex; align-items: center; gap: 8px; }
+.pending-select-option-row input[type="text"] { flex: 1 1 auto; min-width: 0; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 10px; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; }
+.pending-select-option-swatches { display: flex; gap: 4px; flex-shrink: 0; }
+.table-date-cell-btn, .table-select-cell-btn { width: 100%; text-align: start; background: transparent; border: none; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; cursor: pointer; padding: 4px 0; }
+.table-select-cell-btn { color: var(--text-secondary); }
+
+@media (max-width: 768px) {
+    .table-grid-cell { flex-basis: 110px; font-size: 0.8rem; }
+}
+@media (max-width: 480px) {
+    .custom-tables-grid { grid-template-columns: repeat(1, 1fr); }
+}
 .projects-list { list-style: none; margin: 0; padding: 0; }
 /* בורר אייקון לפרויקט - אותו דפוס בדיוק כמו .vision-goal-category-chip, רק
    ריבועי (אמוג'י בלבד, בלי תווית טקסט) */

@@ -6906,6 +6906,9 @@ const HELP_FAQ_ENTRIES = [
     { id: 'toggle_fabs', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
+    { id: 'what_are_tables', category: 'tables' },
+    { id: 'table_column_types', category: 'tables' },
+    { id: 'table_select_colors', category: 'tables' },
     { id: 'google_calendar_sync', category: 'account' },
     { id: 'forgot_password', category: 'account' },
     { id: 'report_bug_feature', category: 'account' },
@@ -14511,6 +14514,600 @@ function renderProjectIconPicker() {
 function selectProjectIcon(icon) {
     selectedProjectIcon = icon;
     renderProjectIconPicker();
+}
+
+// --- טבלאות מותאמות אישית (Tables) - מסך top-level נפרד לגמרי, לא מקונן
+// בתוך תחום קיים (לימודים/משימות/לוח חזון) - לפי בקשה מפורשת. משתמשת יוצרת
+// כמה טבלאות שהיא רוצה, לכל טבלה עמודות מותאמות אישית (טקסט/מספר/בחירה/
+// תאריך/וי) ושורות חופשיות - בדומה למסד-נתונים של Notion. נעול לפרימיום,
+// באותו דפוס בדיוק כמו openMyProjectsEntry למטה
+let customTablesCache = [];
+let customTableColumnsCache = [];
+let customTableRowsCache = [];
+let currentOpenTableId = null;
+let editingCustomTableId = null;
+const TABLE_ICON_PRESETS = ['📋', '📊', '📈', '🗂️', '📦', '🎬', '🎮', '🛠️', '🏠', '🚗', '🐾', '🎓'];
+let selectedTableIcon = TABLE_ICON_PRESETS[0];
+
+function openTablesSection() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    switchToTab('tables-section');
+    showTablesListView();
+}
+
+// חוזרים תמיד לתצוגת-הרשימה בכל כניסה למסך (ולא נשארים "תקועים" בתוך טבלה
+// שנפתחה בביקור קודם) - ר' ההערה על openTablesSection למעלה
+function showTablesListView() {
+    currentOpenTableId = null;
+    document.getElementById('tables-list-view').classList.remove('hidden');
+    document.getElementById('table-detail-view').classList.add('hidden');
+    loadCustomTables();
+}
+
+function openTableDetail(tableId) {
+    currentOpenTableId = tableId;
+    document.getElementById('tables-list-view').classList.add('hidden');
+    document.getElementById('table-detail-view').classList.remove('hidden');
+    loadTableColumnsAndRows(tableId);
+}
+
+async function loadCustomTables() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data, error } = await supabaseClient.from('custom_tables').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
+    if (error) return;
+    customTablesCache = data || [];
+    renderCustomTablesList();
+}
+
+function renderCustomTablesList() {
+    const listEl = document.getElementById('custom-tables-list');
+    const emptyEl = document.getElementById('custom-tables-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.toggle('hidden', customTablesCache.length > 0);
+    customTablesCache.forEach(table => {
+        const card = document.createElement('div');
+        card.className = 'custom-table-card';
+        card.innerHTML = `
+            <span class="custom-table-card-main" onclick="openTableDetail('${table.id}')">
+                <span class="custom-table-card-icon">${table.icon || '📋'}</span>
+                <span class="custom-table-card-name">${escapeHtmlForReport(table.name)}</span>
+            </span>
+            <span class="custom-table-card-actions">
+                <button type="button" class="btn-edit-item" onclick="openEditTableModal('${table.id}')">${EDIT_ICON_SVG}</button>
+                <button type="button" class="btn-delete-item" onclick="deleteCustomTable('${table.id}')">❌</button>
+            </span>
+        `;
+        listEl.appendChild(card);
+    });
+}
+
+function renderTableIconPicker() {
+    const container = document.getElementById('table-icon-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    TABLE_ICON_PRESETS.forEach(icon => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'icon-picker-chip' + (selectedTableIcon === icon ? ' selected' : '');
+        chip.textContent = icon;
+        chip.onclick = () => selectTableIcon(icon);
+        container.appendChild(chip);
+    });
+}
+function selectTableIcon(icon) {
+    selectedTableIcon = icon;
+    renderTableIconPicker();
+}
+
+function openAddTableModal() {
+    editingCustomTableId = null;
+    document.getElementById('table-modal-title').textContent = t('table_add_modal_title');
+    document.getElementById('table-name-input').value = '';
+    selectedTableIcon = TABLE_ICON_PRESETS[0];
+    renderTableIconPicker();
+    openModal('modal-add-table');
+    setTimeout(() => document.getElementById('table-name-input').focus(), 150);
+}
+
+function openEditTableModal(tableId) {
+    const table = customTablesCache.find(tbl => tbl.id === tableId);
+    if (!table) return;
+    editingCustomTableId = tableId;
+    document.getElementById('table-modal-title').textContent = t('table_edit_modal_title');
+    document.getElementById('table-name-input').value = table.name;
+    selectedTableIcon = table.icon || TABLE_ICON_PRESETS[0];
+    renderTableIconPicker();
+    openModal('modal-add-table');
+}
+
+async function saveCustomTable() {
+    const input = document.getElementById('table-name-input');
+    const name = input.value.trim();
+    if (!name) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    const icon = selectedTableIcon;
+    const editId = editingCustomTableId;
+    if (editId) {
+        const { error } = await supabaseClient.from('custom_tables').update({ name, icon }).eq('id', editId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    } else {
+        const { error } = await supabaseClient.from('custom_tables').insert({ user_id: currentUserId, username: currentUsername, name, icon, sort_order: Date.now() });
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    }
+    closeModal('modal-add-table');
+    editingCustomTableId = null;
+    await loadCustomTables();
+    showAppToast(t('item_added_success'));
+}
+
+function deleteCustomTable(tableId) {
+    showDangerConfirm(t('table_delete_title'), t('table_delete_confirm'), async () => {
+        const { error } = await supabaseClient.from('custom_tables').delete().eq('id', tableId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        if (currentOpenTableId === tableId) showTablesListView();
+        else loadCustomTables();
+    });
+}
+
+async function loadTableColumnsAndRows(tableId) {
+    if (!supabaseClient || !currentUserId) return;
+    const [colsRes, rowsRes] = await Promise.all([
+        supabaseClient.from('custom_table_columns').select('*').eq('table_id', tableId).order('sort_order', { ascending: true }),
+        supabaseClient.from('custom_table_rows').select('*').eq('table_id', tableId).order('sort_order', { ascending: true }),
+    ]);
+    customTableColumnsCache = colsRes.data || [];
+    customTableRowsCache = rowsRes.data || [];
+    const table = customTablesCache.find(tbl => tbl.id === tableId);
+    const titleEl = document.getElementById('table-detail-title');
+    if (titleEl && table) titleEl.textContent = `${table.icon || '📋'} ${table.name}`;
+    renderTableGrid();
+}
+
+// --- ניהול עמודות - בדיוק כמו saveVisionGoal (יעד+תחנות): רשימה זמנית
+// בזיכרון (pendingTableColumns) שמתעדכנת חופשי בזמן שהמודל פתוח, ומתיישבת
+// מול ה-DB רק בלחיצה על שמירה (diff מול originalTableColumnIds - מה שהיה
+// ונעלם נמחק, מה שנשאר מתעדכן, מה שחדש נוסף) - לא כתיבה מיידית לכל שינוי
+let pendingTableColumns = [];
+let originalTableColumnIds = [];
+let editingCustomColumnId = null; // אינדקס בתוך pendingTableColumns, null = חדשה
+const TABLE_COLUMN_TYPES = ['text', 'number', 'select', 'date', 'checkbox'];
+// אפשרויות-הבחירה של עמודת select שכרגע פתוחה במודל-המשני - לכל אפשרות id
+// מקומי (crypto.randomUUID, לא תלוי-DB), label וצבע. תא שבוחר ערך שומר את
+// ה-id, לא את הטקסט - כך ששינוי שם/צבע מאוחר יותר משפיע אוטומטית על כל
+// התאים שכבר משתמשים באפשרות הזו (ר' buildSelectCell)
+let pendingSelectOptions = [];
+const TABLE_SELECT_OPTION_COLOR_PRESETS = ['#ff453a', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
+
+function openColumnManager() {
+    pendingTableColumns = customTableColumnsCache.map(col => ({ ...col }));
+    originalTableColumnIds = pendingTableColumns.filter(c => c.id).map(c => c.id);
+    renderPendingTableColumns();
+    initTableColumnDragReorder();
+    openModal('modal-manage-columns');
+}
+
+function renderPendingTableColumns() {
+    const list = document.getElementById('pending-columns-list');
+    if (!list) return;
+    list.innerHTML = '';
+    pendingTableColumns.forEach((col, index) => {
+        const row = document.createElement('div');
+        row.className = 'pending-column-row';
+        row.setAttribute('data-pending-index', index);
+        row.innerHTML = `
+            <span class="column-drag-handle">⠿</span>
+            <span class="pending-column-name">${escapeHtmlForReport(col.name)}</span>
+            <span class="pending-column-type-badge">${t('table_column_type_' + col.type)}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditColumnSubModal(${index})">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-item" onclick="removePendingTableColumn(${index})">❌</button>
+        `;
+        list.appendChild(row);
+    });
+}
+
+// גרירה-לסידור-מחדש רק בתוך pendingTableColumns (בזיכרון) - לא כותבת ל-DB
+// באופן מיידי כמו initFinanceCategoryDragReorder, כי כאן יש שלב "שמירה" נפרד
+// (ר' ההערה על pendingTableColumns למעלה) - הסדר האמיתי נכתב רק ב-
+// saveTableColumns. אחרי גרירה מרנדרים מחדש כדי שה-onclick המקודדים לפי
+// אינדקס (openEditColumnSubModal(index) וכו') יתאימו לסדר החדש
+let tableColumnsSortableInitialized = false;
+function initTableColumnDragReorder() {
+    if (typeof Sortable === 'undefined' || tableColumnsSortableInitialized) return;
+    const list = document.getElementById('pending-columns-list');
+    if (!list) return;
+    tableColumnsSortableInitialized = true;
+    new Sortable(list, {
+        handle: '.column-drag-handle',
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: false,
+        dragoverBubble: false,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: () => {
+            const newOrder = Array.from(list.children).map(el => parseInt(el.getAttribute('data-pending-index'), 10));
+            pendingTableColumns = newOrder.map(i => pendingTableColumns[i]);
+            renderPendingTableColumns();
+        },
+    });
+}
+
+function openAddColumnSubModal() {
+    editingCustomColumnId = null;
+    document.getElementById('column-name-input').value = '';
+    pendingSelectOptions = [];
+    selectColumnType('text');
+    renderPendingSelectOptionsList();
+    openModal('modal-add-column');
+    setTimeout(() => document.getElementById('column-name-input').focus(), 150);
+}
+
+function openEditColumnSubModal(index) {
+    const col = pendingTableColumns[index];
+    if (!col) return;
+    editingCustomColumnId = index;
+    document.getElementById('column-name-input').value = col.name;
+    // עותק עמוק-מספיק - כדי שעריכת האפשרויות במודל לא תשנה את pendingTableColumns
+    // עד שממש לוחצים "שמירה" (ואם לוחצים "ביטול", pendingTableColumns נשאר נקי)
+    pendingSelectOptions = (col.select_options || []).map(opt => ({ ...opt }));
+    selectColumnType(col.type);
+    renderPendingSelectOptionsList();
+    openModal('modal-add-column');
+}
+
+function selectColumnType(type) {
+    document.querySelectorAll('#column-type-picker .table-column-type-chip').forEach(chip => {
+        chip.classList.toggle('selected', chip.getAttribute('data-type') === type);
+    });
+    document.getElementById('column-type-picker').setAttribute('data-selected-type', type);
+    const optionsEditor = document.getElementById('column-select-options-editor');
+    if (optionsEditor) optionsEditor.classList.toggle('hidden', type !== 'select');
+}
+
+function addPendingSelectOption() {
+    const color = TABLE_SELECT_OPTION_COLOR_PRESETS[pendingSelectOptions.length % TABLE_SELECT_OPTION_COLOR_PRESETS.length];
+    pendingSelectOptions.push({ id: crypto.randomUUID(), label: '', color });
+    renderPendingSelectOptionsList();
+}
+function removePendingSelectOption(index) {
+    pendingSelectOptions.splice(index, 1);
+    renderPendingSelectOptionsList();
+}
+function selectPendingOptionColor(index, color) {
+    if (pendingSelectOptions[index]) pendingSelectOptions[index].color = color;
+    renderPendingSelectOptionsList();
+}
+function updatePendingOptionLabel(index, label) {
+    if (pendingSelectOptions[index]) pendingSelectOptions[index].label = label;
+}
+
+function renderPendingSelectOptionsList() {
+    const list = document.getElementById('pending-select-options-list');
+    if (!list) return;
+    list.innerHTML = '';
+    pendingSelectOptions.forEach((opt, index) => {
+        const row = document.createElement('div');
+        row.className = 'pending-select-option-row';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = opt.label;
+        input.placeholder = t('table_column_option_placeholder');
+        input.oninput = () => updatePendingOptionLabel(index, input.value);
+        row.appendChild(input);
+        const swatchRow = document.createElement('div');
+        swatchRow.className = 'pending-select-option-swatches';
+        TABLE_SELECT_OPTION_COLOR_PRESETS.forEach(color => {
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
+            swatch.className = 'note-color-swatch' + (opt.color === color ? ' selected' : '');
+            swatch.style.backgroundColor = color;
+            swatch.onclick = () => selectPendingOptionColor(index, color);
+            swatchRow.appendChild(swatch);
+        });
+        row.appendChild(swatchRow);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-delete-item';
+        removeBtn.textContent = '❌';
+        removeBtn.onclick = () => removePendingSelectOption(index);
+        row.appendChild(removeBtn);
+        list.appendChild(row);
+    });
+}
+
+// שמירת עמודה בודדת בתוך המודל-המשני - כותבת רק לתוך pendingTableColumns
+// (לא ל-DB), סוגרת את המודל-המשני וחוזרת למודל הראשי (openModal סוגרת אוטומטית
+// כל .apple-modal.open אחר, אז חוזרים אליו ידנית) - השמירה בפועל ל-DB קורית
+// רק ב-saveTableColumns כשלוחצים "שמירה" על כל רשימת העמודות ביחד
+function saveColumnSubModal() {
+    const name = document.getElementById('column-name-input').value.trim();
+    if (!name) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    const type = document.getElementById('column-type-picker').getAttribute('data-selected-type') || 'text';
+    let selectOptions = null;
+    if (type === 'select') {
+        selectOptions = pendingSelectOptions.filter(opt => opt.label.trim()).map(opt => ({ ...opt, label: opt.label.trim() }));
+        if (selectOptions.length === 0) { showAppToast(t('table_column_needs_option_error'), 'error'); return; }
+    }
+    if (editingCustomColumnId !== null) {
+        const existing = pendingTableColumns[editingCustomColumnId];
+        pendingTableColumns[editingCustomColumnId] = { ...existing, name, type, select_options: selectOptions };
+    } else {
+        pendingTableColumns.push({ id: null, name, type, select_options: selectOptions, sort_order: (pendingTableColumns.length + 1) * 10 });
+    }
+    closeModal('modal-add-column');
+    editingCustomColumnId = null;
+    renderPendingTableColumns();
+    openModal('modal-manage-columns');
+}
+
+// מחיקה עם אזהרה רק אם לעמודה כבר יש id אמיתי (כלומר כבר קיימת ב-DB ועלולה
+// להחזיק נתוני-תא אמיתיים בשורות) - עמודה חדשה שעוד לא נשמרה (id===null)
+// נמחקת מיד בלי אזהרה, אין לה שום נתון לאבד
+function removePendingTableColumn(index) {
+    const col = pendingTableColumns[index];
+    if (col && col.id) {
+        showDangerConfirm(t('table_column_delete_title'), t('table_column_delete_confirm'), () => {
+            pendingTableColumns.splice(index, 1);
+            renderPendingTableColumns();
+        });
+    } else {
+        pendingTableColumns.splice(index, 1);
+        renderPendingTableColumns();
+    }
+}
+
+async function saveTableColumns() {
+    if (!supabaseClient || !currentUserId || !currentOpenTableId) return;
+    const keptIds = pendingTableColumns.filter(c => c.id).map(c => c.id);
+    const toDelete = originalTableColumnIds.filter(id => !keptIds.includes(id));
+    if (toDelete.length) await supabaseClient.from('custom_table_columns').delete().in('id', toDelete);
+    for (let i = 0; i < pendingTableColumns.length; i++) {
+        const col = pendingTableColumns[i];
+        const sortOrder = (i + 1) * 10;
+        if (col.id) {
+            await supabaseClient.from('custom_table_columns').update({ name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder }).eq('id', col.id);
+        } else {
+            await supabaseClient.from('custom_table_columns').insert({ table_id: currentOpenTableId, user_id: currentUserId, name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder });
+        }
+    }
+    closeModal('modal-manage-columns');
+    await loadTableColumnsAndRows(currentOpenTableId);
+    showAppToast(t('item_added_success'));
+}
+
+function renderTableGrid() {
+    const headerEl = document.getElementById('table-grid-header');
+    const bodyEl = document.getElementById('table-grid-body');
+    const emptyEl = document.getElementById('table-grid-empty');
+    if (!headerEl || !bodyEl) return;
+    headerEl.innerHTML = '';
+    bodyEl.innerHTML = '';
+    if (customTableColumnsCache.length === 0) {
+        if (emptyEl) { emptyEl.textContent = t('table_no_columns_hint'); emptyEl.classList.remove('hidden'); }
+        return;
+    }
+    customTableColumnsCache.forEach(col => {
+        const headerCell = document.createElement('div');
+        headerCell.className = 'table-grid-cell table-grid-header-cell';
+        headerCell.textContent = col.name;
+        headerEl.appendChild(headerCell);
+    });
+    if (customTableRowsCache.length === 0) {
+        if (emptyEl) { emptyEl.textContent = t('table_no_rows_hint'); emptyEl.classList.remove('hidden'); }
+    } else if (emptyEl) {
+        emptyEl.classList.add('hidden');
+    }
+    customTableRowsCache.forEach(row => bodyEl.appendChild(buildTableRowElement(row)));
+}
+
+// שורה בודדת נבנית כ-DOM node עצמאי (במקום renderTableGrid מלא) כדי ש-
+// addTableRow יוכל רק לצרף שורה חדשה בלי לבנות מחדש את כל הגריד - חשוב
+// בטבלה עם הרבה שורות
+function buildTableRowElement(row) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'table-grid-row';
+    rowEl.setAttribute('data-row-id', row.id);
+    customTableColumnsCache.forEach(col => {
+        rowEl.appendChild(renderTableCell(row, col));
+    });
+    const actionsCell = document.createElement('div');
+    actionsCell.className = 'table-grid-cell table-grid-row-actions';
+    actionsCell.innerHTML = `<button type="button" class="btn-delete-item" onclick="deleteTableRow('${row.id}')">❌</button>`;
+    rowEl.appendChild(actionsCell);
+    return rowEl;
+}
+
+// עורך-תא לפי סוג העמודה - dispatch לפי column.type
+function renderTableCell(row, column) {
+    switch (column.type) {
+        case 'number': return buildNumberCell(row, column);
+        case 'checkbox': return buildCheckboxCell(row, column);
+        case 'select': return buildSelectCell(row, column);
+        case 'date': return buildDateCell(row, column);
+        case 'text': return buildTextCell(row, column);
+        default: return buildReadOnlyCell(row, column);
+    }
+}
+
+function buildReadOnlyCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const value = row.data && row.data[column.id];
+    cell.textContent = value !== undefined && value !== null ? String(value) : '';
+    return cell;
+}
+
+function buildTextCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = (row.data && row.data[column.id]) || '';
+    input.onblur = () => updateCellValue(row.id, column.id, input.value.trim() || null);
+    cell.appendChild(input);
+    return cell;
+}
+
+function buildNumberCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const input = document.createElement('input');
+    input.type = 'number';
+    const current = row.data && row.data[column.id];
+    input.value = current !== undefined && current !== null ? current : '';
+    input.onblur = () => {
+        const parsed = input.value.trim() === '' ? null : parseFloat(input.value);
+        updateCellValue(row.id, column.id, Number.isNaN(parsed) ? null : parsed);
+    };
+    cell.appendChild(input);
+    return cell;
+}
+
+function buildCheckboxCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = !!(row.data && row.data[column.id]);
+    input.onchange = () => updateCellValue(row.id, column.id, input.checked);
+    cell.appendChild(input);
+    return cell;
+}
+
+// לחיצה פותחת ישירות את openCustomDatePicker (חתימה מוכרת: currentValue,
+// onSelect) - בלי input מוסתר פר-תא, כי הפונקציה כבר מקבלת callback ישיר.
+// customDatePickerClear() קוראת ל-onSelect עם '' (לא null) - ממירים כאן.
+// עיצוב התאריך המוצג זהה בדיוק ל-updateDateFieldDisplay הקיימת
+function formatTableDateCellLabel(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function buildDateCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'table-date-cell-btn';
+    const value = row.data && row.data[column.id];
+    btn.textContent = value ? formatTableDateCellLabel(value) : '—';
+    btn.onclick = () => openCustomDatePicker(value || null, (dateStr) => {
+        updateCellValue(row.id, column.id, dateStr || null);
+        btn.textContent = dateStr ? formatTableDateCellLabel(dateStr) : '—';
+    });
+    cell.appendChild(btn);
+    return cell;
+}
+
+// תא-בחירה - צ'יפ צבעוני עם התווית הנוכחית (או "+" ריק אם לא נבחר כלום),
+// לחיצה פותחת מודל-בחירה קטן ומיוחד (לא openCustomSelectPicker - זה קשור
+// חזק ל-<select> אמיתי, לא מתאים כאן, ר' תוכנית העבודה). התא שומר את ה-id
+// של האפשרות, לא את התווית - כדי שעריכת שם/צבע מאוחרת בעורך העמודות
+// תשתקף אוטומטית בכל התאים שכבר משתמשים בה
+let selectCellPickerContext = null; // { rowId, columnId }
+function buildSelectCell(row, column) {
+    const cell = document.createElement('div');
+    cell.className = 'table-grid-cell';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'table-select-cell-btn';
+    const optionId = row.data && row.data[column.id];
+    const option = (column.select_options || []).find(opt => opt.id === optionId);
+    if (option) {
+        const chip = document.createElement('span');
+        chip.className = 'table-select-option-chip';
+        chip.textContent = option.label;
+        chip.style.backgroundColor = hexToRgba(option.color, 0.18);
+        chip.style.color = option.color;
+        btn.appendChild(chip);
+    } else {
+        btn.textContent = '+';
+    }
+    btn.onclick = () => openSelectCellPicker(row.id, column.id);
+    cell.appendChild(btn);
+    return cell;
+}
+
+function openSelectCellPicker(rowId, columnId) {
+    selectCellPickerContext = { rowId, columnId };
+    const column = customTableColumnsCache.find(c => c.id === columnId);
+    const row = customTableRowsCache.find(r => r.id === rowId);
+    const currentOptionId = row && row.data ? row.data[columnId] : null;
+    const list = document.getElementById('table-select-cell-picker-list');
+    list.innerHTML = '';
+    (column && column.select_options || []).forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'custom-select-picker-row' + (opt.id === currentOptionId ? ' selected' : '');
+        btn.onclick = () => selectTableCellOption(opt.id);
+        const chip = document.createElement('span');
+        chip.className = 'table-select-option-chip';
+        chip.textContent = opt.label;
+        chip.style.backgroundColor = hexToRgba(opt.color, 0.18);
+        chip.style.color = opt.color;
+        btn.appendChild(chip);
+        list.appendChild(btn);
+    });
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'custom-select-picker-row';
+    clearBtn.textContent = t('table_select_cell_clear');
+    clearBtn.onclick = () => selectTableCellOption(null);
+    list.appendChild(clearBtn);
+    openModal('modal-table-select-cell-picker');
+}
+
+function selectTableCellOption(optionId) {
+    if (!selectCellPickerContext) return;
+    const { rowId, columnId } = selectCellPickerContext;
+    updateCellValue(rowId, columnId, optionId);
+    closeModal('modal-table-select-cell-picker');
+    // תא בודד מוחלף מקומית במקום renderTableGrid מלא - אותה סיבה בדיוק
+    // כמו buildTableRowElement, לא לגרום להבהוב/אובדן פוקוס בשאר השורות
+    const row = customTableRowsCache.find(r => r.id === rowId);
+    const column = customTableColumnsCache.find(c => c.id === columnId);
+    const rowEl = document.querySelector(`.table-grid-row[data-row-id="${rowId}"]`);
+    if (row && column && rowEl) {
+        const colIndex = customTableColumnsCache.indexOf(column);
+        const oldCell = rowEl.children[colIndex];
+        if (oldCell) rowEl.replaceChild(buildSelectCell(row, column), oldCell);
+    }
+    selectCellPickerContext = null;
+}
+
+// קריאה-מיזוג-כתיבה על כל אובייקט ה-data של השורה - אין טבלה רביעית פר-תא
+// (ר' ההערה בסכימה), כל עדכון תא שולח מחדש את כל האובייקט עם המפתח הבודד
+// שהשתנה. עדכון ה-cache מקומית בלי לטעון מחדש כדי שעריכת תא לא תגרום להבהוב/
+// לאובדן פוקוס בשאר התאים הפתוחים לעריכה
+async function updateCellValue(rowId, columnId, value) {
+    const row = customTableRowsCache.find(r => r.id === rowId);
+    if (!row) return;
+    const newData = { ...(row.data || {}), [columnId]: value };
+    const { error } = await supabaseClient.from('custom_table_rows').update({ data: newData, updated_at: new Date().toISOString() }).eq('id', rowId);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    row.data = newData;
+}
+
+async function addTableRow() {
+    if (!supabaseClient || !currentUserId || !currentOpenTableId) return;
+    const { data, error } = await supabaseClient.from('custom_table_rows').insert({ table_id: currentOpenTableId, user_id: currentUserId, data: {}, sort_order: Date.now() }).select().single();
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    customTableRowsCache.push(data);
+    const emptyEl = document.getElementById('table-grid-empty');
+    if (emptyEl) emptyEl.classList.add('hidden');
+    document.getElementById('table-grid-body').appendChild(buildTableRowElement(data));
+}
+
+function deleteTableRow(rowId) {
+    supabaseClient.from('custom_table_rows').delete().eq('id', rowId).then(({ error }) => {
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        customTableRowsCache = customTableRowsCache.filter(r => r.id !== rowId);
+        const rowEl = document.querySelector(`.table-grid-row[data-row-id="${rowId}"]`);
+        if (rowEl) rowEl.remove();
+        if (customTableRowsCache.length === 0) {
+            const emptyEl = document.getElementById('table-grid-empty');
+            if (emptyEl) { emptyEl.textContent = t('table_no_rows_hint'); emptyEl.classList.remove('hidden'); }
+        }
+    });
 }
 
 function openMyProjectsEntry() {
