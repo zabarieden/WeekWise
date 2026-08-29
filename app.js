@@ -15037,7 +15037,7 @@ function openSelectCellPicker(rowId, columnId) {
     (column && column.select_options || []).forEach(opt => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'custom-select-picker-row' + (opt.id === currentOptionId ? ' selected' : '');
+        btn.className = 'preset-quick-add-item custom-select-picker-row' + (opt.id === currentOptionId ? ' selected' : '');
         btn.onclick = () => selectTableCellOption(opt.id);
         const chip = document.createElement('span');
         chip.className = 'table-select-option-chip';
@@ -15049,7 +15049,7 @@ function openSelectCellPicker(rowId, columnId) {
     });
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
-    clearBtn.className = 'custom-select-picker-row';
+    clearBtn.className = 'preset-quick-add-item custom-select-picker-row';
     clearBtn.textContent = t('table_select_cell_clear');
     clearBtn.onclick = () => selectTableCellOption(null);
     list.appendChild(clearBtn);
