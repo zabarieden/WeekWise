@@ -6915,6 +6915,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'what_are_tables', category: 'tables' },
     { id: 'table_column_types', category: 'tables' },
     { id: 'table_select_colors', category: 'tables' },
+    { id: 'table_ai_builder', category: 'tables' },
     { id: 'google_calendar_sync', category: 'account' },
     { id: 'forgot_password', category: 'account' },
     { id: 'report_bug_feature', category: 'account' },
