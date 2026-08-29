@@ -14740,6 +14740,8 @@ function openColumnManager() {
     originalTableColumnIds = pendingTableColumns.filter(c => c.id).map(c => c.id);
     renderPendingTableColumns();
     initTableColumnDragReorder();
+    const hint = document.getElementById('ai-review-columns-hint');
+    if (hint) hint.classList.add('hidden');
     openModal('modal-manage-columns');
 }
 
@@ -14749,14 +14751,12 @@ function openColumnManager() {
 // מקומית (אין תחליף הגיוני ל-AI כאן, בניגוד ללו"ז/טקסט-אוכל). תוצאת ה-AI
 // אף פעם לא נכתבת ישירות ל-DB - נטענת לתוך אותה זרימת עריכה ידנית בדיוק
 // (modal-add-table -> modal-manage-columns) כדי שטעות של ה-AI תהיה זולה
-// לתקן בровнnотуже בדיוק כמו טעות ידנית (ר' scan-recipe-image, שאותו עיקרון
+// לתקן בדיוק כמו טעות ידנית (ר' scan-recipe-image, שאותו עיקרון
 // בדיוק - "הטופס נשאר ניתן לעריכה כי אף מודל לא מושלם")
 let aiTableBuilderReviewActive = false;
-let pendingAiTableRows = []; // [{ [pendingColumnsIndex]: coercedValue }]
 
 function resetAiTableBuilderState() {
     aiTableBuilderReviewActive = false;
-    pendingAiTableRows = [];
 }
 
 function cancelAddTableModal() {
@@ -14776,6 +14776,8 @@ function openColumnManagerForAiReview() {
     originalTableColumnIds = [];
     renderPendingTableColumns();
     initTableColumnDragReorder();
+    const hint = document.getElementById('ai-review-columns-hint');
+    if (hint) hint.classList.remove('hidden');
     openModal('modal-manage-columns');
 }
 
@@ -14795,12 +14797,12 @@ async function attemptTableAiRequest(token, description) {
     }
 }
 
-// ממפה את תשובת ה-AI לתוך pendingTableColumns/pendingAiTableRows - אותה
-// צורה בדיוק ש-openColumnManager כבר יודעת להציג, כדי לא לבנות שום UI חדש
+// ממפה את מבנה-הטבלה שה-AI הציע לתוך pendingTableColumns - אותה צורה
+// בדיוק ש-openColumnManager כבר יודעת להציג, כדי לא לבנות שום UI חדש.
+// בכוונה לא ממלא שום שורה - דווח בפועל שמשתמשת לא רצתה שה-AI "ימלא לה
+// הכל בסתם דברים", רק שייצור את המבנה והיא תמלא בעצמה את הנתונים האמיתיים
 function applyAiTableBuilderResult(table) {
-    const localIdToIndex = {};
     pendingTableColumns = (table.columns || []).map((col, index) => {
-        localIdToIndex[col.local_id] = index;
         let selectOptions = null;
         if (col.type === 'select' && Array.isArray(col.select_options)) {
             selectOptions = col.select_options
@@ -14810,29 +14812,14 @@ function applyAiTableBuilderResult(table) {
         return { id: null, name: (col.name || '').trim() || t('table_column_type_text'), type: TABLE_COLUMN_TYPES.includes(col.type) ? col.type : 'text', select_options: selectOptions, sort_order: (index + 1) * 10 };
     });
 
-    pendingAiTableRows = (table.rows || []).map(row => {
-        const values = {};
-        (row.cells || []).forEach(cell => {
-            const colIndex = localIdToIndex[cell.column_local_id];
-            if (colIndex === undefined) return;
-            const col = pendingTableColumns[colIndex];
-            const raw = cell.value;
-            if (raw === undefined || raw === null) return;
-            if (col.type === 'checkbox') { values[colIndex] = String(raw).toLowerCase() === 'true'; }
-            else if (col.type === 'number') { const n = parseFloat(raw); if (!Number.isNaN(n)) values[colIndex] = n; }
-            else if (col.type === 'date') { if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) values[colIndex] = raw; }
-            else if (col.type === 'select') {
-                const match = (col.select_options || []).find(opt => opt.label.toLowerCase() === String(raw).toLowerCase());
-                if (match) values[colIndex] = match.id;
-            } else { values[colIndex] = String(raw); }
-        });
-        return values;
-    });
-
     aiTableBuilderReviewActive = true;
     editingCustomTableId = null;
     selectedTableIcon = /\p{Emoji}/u.test(table.table_icon || '') ? table.table_icon : TABLE_ICON_PRESETS[0];
-    document.getElementById('table-modal-title').textContent = t('table_add_modal_title');
+    // כותרת ייעודית (לא הכותרת הגנרית "טבלה חדשה") - דווח בפועל שמשתמשת ראתה
+    // רק את ה-toast "מוכן" והניחה שהטבלה כבר נשמרה, בלי לשים לב שנפתח מסך
+    // שדורש בעצמו לחיצה על "הוספה" (ואז "שמירה" במסך העמודות) כדי שזה
+    // באמת יישמר - הכותרת הגנרית לא רמזה בכלל שזו תוצאת ה-AI שממתינה לאישור
+    document.getElementById('table-modal-title').textContent = t('table_ai_review_title');
     document.getElementById('table-name-input').value = (table.table_name || '').trim();
     renderTableIconPicker();
     closeModal('modal-ai-brain');
@@ -14887,26 +14874,6 @@ async function buildTableWithAI() {
         if (loadingEl) loadingEl.classList.add('hidden');
         if (submitBtn) submitBtn.disabled = false;
     }
-}
-
-// אינסרט אחד מרוכז (bulk) ולא לולאה על addTableRow+updateCellValue - כל
-// הנתונים כבר מוכנים ומלאים בזיכרון (לא קלט-משתמש חי שדורש round-trip
-// משלו), אז insert אחד עם כל השורות יחד פשוט יותר ומהיר יותר מ-N קריאות
-// רשת עוקבות
-async function materializeAiStarterRows(freshCols) {
-    if (!pendingAiTableRows.length) { aiTableBuilderReviewActive = false; return; }
-    const rowsPayload = pendingAiTableRows.map((rowValues, i) => {
-        const data = {};
-        Object.entries(rowValues).forEach(([colIndex, value]) => {
-            const col = freshCols[Number(colIndex)];
-            if (col) data[col.id] = value;
-        });
-        return { table_id: currentOpenTableId, user_id: currentUserId, data, sort_order: (i + 1) * 10 };
-    });
-    const { error } = await supabaseClient.from('custom_table_rows').insert(rowsPayload);
-    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
-    aiTableBuilderReviewActive = false;
-    pendingAiTableRows = [];
 }
 
 function renderPendingTableColumns() {
@@ -15093,17 +15060,7 @@ async function saveTableColumns() {
             await supabaseClient.from('custom_table_columns').insert({ table_id: currentOpenTableId, user_id: currentUserId, name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder });
         }
     }
-    // שורות-ההתחלה שה-AI הציע (אם יש) מומרות עכשיו, אחרי שהעמודות כבר קיבלו
-    // id אמיתי ב-DB - sort_order זהה בדיוק לסדר ב-pendingTableColumns (נכתב
-    // כ-(i+1)*10 בלולאה למעלה), אז מיון לפי sort_order משחזר את אותו הסדר
-    // ומאפשר להתאים כל אינדקס ב-pendingAiTableRows לעמודה האמיתית שלו
-    if (aiTableBuilderReviewActive && pendingAiTableRows.length) {
-        const { data: freshCols } = await supabaseClient.from('custom_table_columns').select('*').eq('table_id', currentOpenTableId).order('sort_order', { ascending: true });
-        await materializeAiStarterRows(freshCols || []);
-    } else {
-        aiTableBuilderReviewActive = false;
-    }
-
+    aiTableBuilderReviewActive = false;
     closeModal('modal-manage-columns');
     await loadTableColumnsAndRows(currentOpenTableId);
     showAppToast(t('item_added_success'));

@@ -2,8 +2,11 @@
 //
 // AI-assisted "Tables" builder: accepts a short free-text description (e.g.
 // "מעקב אחרי שוק ההון שלי") and uses Claude to design a starter table -
-// name, icon, up to 12 columns (text/number/select/date/checkbox, with
-// colored options for select), and up to 10 realistic example rows. The
+// name, icon, and up to 12 columns (text/number/select/date/checkbox, with
+// colored options for select). Deliberately does NOT generate example rows
+// - reported in practice ("מילא לי הכל בסתם דברים... אני אמורה למלא"):
+// users want the AI to build the structure, then fill in their own real
+// data themselves, not review/discard a table full of invented rows. The
 // frontend NEVER writes this straight to the DB - it stages the result into
 // the exact same modal-add-table -> modal-manage-columns editable flow used
 // for manual table creation (see openColumnManagerForAiReview in app.js),
@@ -121,21 +124,18 @@ Deno.serve(async (req) => {
                             "to include and their order over your own default judgment. Otherwise use your own best " +
                             "real-world judgment for a common table of that general kind - no clarifying question is " +
                             "possible, never hedge with empty/generic output.\n\n" +
-                            "Produce 3-10 example/starter rows (follow the description if it states a specific count, " +
-                            "e.g. \"10 rows\") with realistic, plausible sample data - never placeholder text like " +
-                            "'Example 1' or 'Item A'. These are a genuinely useful starting point the user will edit " +
-                            "afterward, not a template.\n\n" +
+                            "Design ONLY the table's structure - do not invent any example/starter rows or sample " +
+                            "data. The user will add their own real rows themselves after the table is created.\n\n" +
                             "CRITICAL: respond in the exact same language the user wrote their description in - the " +
-                            "table name, every column name, every select option label, and every row value must all " +
-                            "be in that language. Never translate to English unless the description itself was in " +
-                            "English.\n\n" +
+                            "table name, every column name, and every select option label must all be in that " +
+                            "language. Never translate to English unless the description itself was in English.\n\n" +
                             "Description: " + description,
                     },
                 ],
                 tools: [
                     {
                         name: "build_starter_table",
-                        description: "Design a starter table (name, icon, columns, and a few realistic example rows) from a short free-text description.",
+                        description: "Design a starter table's structure (name, icon, columns) from a short free-text description - no example rows.",
                         input_schema: {
                             type: "object",
                             properties: {
@@ -148,7 +148,6 @@ Deno.serve(async (req) => {
                                     items: {
                                         type: "object",
                                         properties: {
-                                            local_id: { type: "string", description: "Short stable id for THIS response only (e.g. 'c1','c2') - referenced by rows[].cells below. Not a database id." },
                                             name: { type: "string", description: "Column header, same language as the description." },
                                             type: { type: "string", enum: ["text", "number", "select", "date", "checkbox"] },
                                             select_options: {
@@ -164,33 +163,11 @@ Deno.serve(async (req) => {
                                                 },
                                             },
                                         },
-                                        required: ["local_id", "name", "type", "select_options"],
-                                    },
-                                },
-                                rows: {
-                                    type: "array",
-                                    maxItems: 10,
-                                    description: "3-10 example/starter rows with realistic, plausible sample data - never placeholder text.",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            cells: {
-                                                type: "array",
-                                                items: {
-                                                    type: "object",
-                                                    properties: {
-                                                        column_local_id: { type: "string", description: "Must match one of columns[].local_id above." },
-                                                        value: { type: "string", description: "Cell value as plain text. checkbox: exactly 'true' or 'false'. date: YYYY-MM-DD. select: must exactly match one of that column's select_options[].label. number: a plain numeral. Omit the cell (don't add it to this array) if nothing sensible fits." },
-                                                    },
-                                                    required: ["column_local_id", "value"],
-                                                },
-                                            },
-                                        },
-                                        required: ["cells"],
+                                        required: ["name", "type", "select_options"],
                                     },
                                 },
                             },
-                            required: ["table_name", "table_icon", "columns", "rows"],
+                            required: ["table_name", "table_icon", "columns"],
                         },
                     },
                 ],

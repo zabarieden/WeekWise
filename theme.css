@@ -3423,15 +3423,51 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .table-grid-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 10px 0; }
 .table-grid-scroll::-webkit-scrollbar { display: none; }
 .table-grid { display: flex; flex-direction: column; min-width: min-content; }
-.table-grid-row { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.table-grid-row { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: var(--transition); }
 .table-grid-header-row { background-color: var(--bg-row); font-weight: 700; border-bottom: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px 10px 0 0; }
-.table-grid-cell { flex: 0 0 140px; padding: 10px 12px; color: var(--text-primary); font-size: 0.85rem; display: flex; align-items: center; box-sizing: border-box; overflow: hidden; }
+/* פסים עדינים לסירוגין בגוון הערכת-נושא (accent-purple), לא אפור גנרי -
+   ורווח אנכי גדול יותר בכל תא, לפי בקשה מפורשת ("רווחים יותר טובים...
+   גרדיאנט עדין בצבע של הערכת נושא... פסים עדינים בין שורה לשורה") */
+#table-grid-body .table-grid-row:nth-child(odd) { background: linear-gradient(90deg, rgba(168, 85, 247, 0.07), rgba(168, 85, 247, 0.015)); }
+#table-grid-body .table-grid-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+#table-grid-body .table-grid-row:hover { background-color: rgba(168, 85, 247, 0.1); }
+.table-grid-cell { flex: 0 0 140px; padding: 15px 12px; color: var(--text-primary); font-size: 0.85rem; display: flex; align-items: center; box-sizing: border-box; overflow: hidden; }
 .table-grid-header-cell { color: var(--text-primary); }
 .table-grid-row-actions { flex: 0 0 44px; justify-content: center; }
 .table-add-row-btn { width: 100%; margin-top: 4px; }
 
 .table-select-option-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.table-grid-cell input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-purple); cursor: pointer; }
+/* עיצוב ידני מלא (לא accent-color) - accent-color לא נתמך באמינות בכל
+   WebView (דווח בפועל: הוי הופיע צהוב - ברירת המחדל של המערכת/דפדפן, לא
+   הסגול המבוקש), ובנוסף עדין יותר מ-checkbox מערכת גולמי, לפי בקשה מפורשת */
+.table-grid-cell input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+.table-grid-cell input[type="checkbox"]:checked {
+    background-color: var(--accent-purple);
+    border-color: var(--accent-purple);
+}
+.table-grid-cell input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
 .table-grid-cell input[type="text"], .table-grid-cell input[type="number"] { width: 100%; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-family: inherit; padding: 0; }
 .table-grid-cell input[type="text"]:focus, .table-grid-cell input[type="number"]:focus { outline: none; }
 .column-drag-handle { cursor: grab; touch-action: none; }
