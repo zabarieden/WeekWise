@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyMealRowCounts();
     applyFinanceCycleSetting();
     applyStudyPeekTabSetting();
+    applyHabitsPeekTabSetting();
     updateHomeSkyDayNight();
     if (!homeSkyDayNightIntervalStarted) {
         homeSkyDayNightIntervalStarted = true;
@@ -1703,6 +1704,7 @@ async function initAppAfterAuth(user) {
         loadLightModeSetting(),
         loadReminderChimeSetting(),
         loadStudyPeekTabSetting(),
+        loadHabitsPeekTabSetting(),
         loadHomeCalorieBadgeSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
@@ -2062,6 +2064,8 @@ function openSettingsDrawer() {
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
     const studyTabToggle = document.getElementById('study-peek-tab-toggle');
     if (studyTabToggle) studyTabToggle.checked = isStudyPeekTabOn();
+    const habitsTabToggle = document.getElementById('habits-peek-tab-toggle');
+    if (habitsTabToggle) habitsTabToggle.checked = isHabitsPeekTabOn();
     refreshGoogleCalendarStatus();
     renderFinanceCategoryManageList();
     renderFinanceCategoryIconPicker();
@@ -2893,6 +2897,8 @@ async function duplicateSlotToNextDay(day, slot) {
 function openAiBrainModal(tab = 'food') {
     document.getElementById('ai-schedule-input').value = '';
     document.getElementById('ai-finance-input').value = '';
+    const tableInput = document.getElementById('ai-table-input');
+    if (tableInput) tableInput.value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
     document.getElementById('ai-schedule-reminder').value = '0';
@@ -9922,22 +9928,25 @@ const IMAGE_SCAN_FREE_LIMIT = 5;
 const FOOD_TEXT_FREE_LIFETIME_LIMIT = 5;
 const SMART_SPLIT_FREE_LIFETIME_LIMIT = 5;
 const SCHEDULE_AI_FREE_LIFETIME_LIMIT = 5;
+const TABLE_AI_FREE_LIFETIME_LIMIT = 5;
 let cachedAiUsage = 0;
 let cachedImageScansUsed = 0; // recipe_image_scan_lifetime_used - לא חודשי יותר
 let cachedFoodTextLifetimeUsed = 0;
 let cachedSmartSplitLifetimeUsed = 0;
 let cachedScheduleAiLifetimeUsed = 0;
+let cachedTableAiLifetimeUsed = 0;
 
 async function loadAiUsage() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('user_ai_usage')
-        .select('recipe_ai_parses_used, recipe_image_scan_lifetime_used, food_text_lifetime_used, smart_split_lifetime_used, schedule_ai_lifetime_used')
+        .select('recipe_ai_parses_used, recipe_image_scan_lifetime_used, food_text_lifetime_used, smart_split_lifetime_used, schedule_ai_lifetime_used, table_ai_lifetime_used')
         .eq('user_id', currentUserId).maybeSingle();
     cachedAiUsage = data ? data.recipe_ai_parses_used : 0;
     cachedImageScansUsed = data ? (data.recipe_image_scan_lifetime_used || 0) : 0;
     cachedFoodTextLifetimeUsed = data ? (data.food_text_lifetime_used || 0) : 0;
     cachedSmartSplitLifetimeUsed = data ? (data.smart_split_lifetime_used || 0) : 0;
     cachedScheduleAiLifetimeUsed = data ? (data.schedule_ai_lifetime_used || 0) : 0;
+    cachedTableAiLifetimeUsed = data ? (data.table_ai_lifetime_used || 0) : 0;
     renderRecipeScanUsageHint();
 }
 
@@ -13633,6 +13642,36 @@ function applyStudyPeekTabSetting() {
     if (toggle) toggle.checked = enabled;
 }
 
+// טאב רביעי בערימה - הרגלים, מיד אחרי לימודים - בניגוד ללימודים זה דולק
+// כברירת מחדל (opt-out, !== 'false' ולא === 'true') לפי בקשה מפורשת, אותו
+// דפוס בדיוק כמו isLightModeOn - חוץ מזה זהה לחלוטין ל-Study-peek-tab
+function isHabitsPeekTabOn() { return localStorage.getItem('weekwise_habits_peek_tab') !== 'false'; }
+async function loadHabitsPeekTabSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('habits_peek_tab_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.habits_peek_tab_enabled === null || data.habits_peek_tab_enabled === undefined) return;
+    localStorage.setItem('weekwise_habits_peek_tab', String(data.habits_peek_tab_enabled));
+    applyHabitsPeekTabSetting();
+}
+async function toggleHabitsPeekTab() {
+    const enabled = document.getElementById('habits-peek-tab-toggle').checked;
+    localStorage.setItem('weekwise_habits_peek_tab', String(enabled));
+    applyHabitsPeekTabSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, habits_peek_tab_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function applyHabitsPeekTabSetting() {
+    const tab = document.getElementById('habits-peek-tab');
+    const toggle = document.getElementById('habits-peek-tab-toggle');
+    const enabled = isHabitsPeekTabOn();
+    if (tab) tab.classList.toggle('hidden', !enabled);
+    if (toggle) toggle.checked = enabled;
+}
+
 async function loadDailyNutrition(date) {
     if (!supabaseClient) return;
     const calorieGoalInput = document.getElementById('calorie-daily-goal-input');
@@ -14601,6 +14640,9 @@ function selectTableIcon(icon) {
 }
 
 function openAddTableModal() {
+    // איפוס חד-משמעי - כדי שטבלה שנוצרת ידנית אחרי ניסיון AI שננטש לא "תירש"
+    // עמודות/שורות ממתינות מהניסיון הקודם (ר' resetAiTableBuilderState)
+    resetAiTableBuilderState();
     editingCustomTableId = null;
     document.getElementById('table-modal-title').textContent = t('table_add_modal_title');
     document.getElementById('table-name-input').value = '';
@@ -14631,8 +14673,18 @@ async function saveCustomTable() {
         const { error } = await supabaseClient.from('custom_tables').update({ name, icon }).eq('id', editId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     } else {
-        const { error } = await supabaseClient.from('custom_tables').insert({ user_id: currentUserId, username: currentUsername, name, icon, sort_order: Date.now() });
+        // .select().single() (לא bare insert) - צריך את ה-id האמיתי של הטבלה
+        // החדשה מיד כדי להמשיך אוטומטית לעורך העמודות בזרימת ה-AI
+        // (aiTableBuilderReviewActive), ר' openColumnManagerForAiReview למטה
+        const { data, error } = await supabaseClient.from('custom_tables').insert({ user_id: currentUserId, username: currentUsername, name, icon, sort_order: Date.now() }).select().single();
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        if (aiTableBuilderReviewActive) {
+            currentOpenTableId = data.id;
+            closeModal('modal-add-table');
+            editingCustomTableId = null;
+            openColumnManagerForAiReview();
+            return;
+        }
     }
     closeModal('modal-add-table');
     editingCustomTableId = null;
@@ -14677,6 +14729,10 @@ const TABLE_COLUMN_TYPES = ['text', 'number', 'select', 'date', 'checkbox'];
 // התאים שכבר משתמשים באפשרות הזו (ר' buildSelectCell)
 let pendingSelectOptions = [];
 const TABLE_SELECT_OPTION_COLOR_PRESETS = ['#ff453a', '#f5c518', '#34d399', '#22d3ee', '#3b82f6', '#a855f7', '#ff2d95'];
+// שם-צבע -> הקסדצימלי, אותו סדר בדיוק כמו TABLE_SELECT_OPTION_COLOR_PRESETS -
+// ה-AI (parse-table-request) מחזיר שם-צבע מתוך enum קבוע, לא הקס, כדי שלא
+// יצטרך "לנחש" גוונים ותמיד ייצא בדיוק אחד מהצבעים שכבר קיימים בבורר הידני
+const TABLE_AI_COLOR_NAME_MAP = { red: '#ff453a', yellow: '#f5c518', green: '#34d399', cyan: '#22d3ee', blue: '#3b82f6', purple: '#a855f7', pink: '#ff2d95' };
 
 function openColumnManager() {
     pendingTableColumns = customTableColumnsCache.map(col => ({ ...col }));
@@ -14684,6 +14740,172 @@ function openColumnManager() {
     renderPendingTableColumns();
     initTableColumnDragReorder();
     openModal('modal-manage-columns');
+}
+
+// --- בניית טבלה עם AI - "טאב" בתוך ה-AI Brain הכללי (modal-ai-brain, לא
+// מודל נפרד) לפי בקשה מפורשת ("שיהיה קשור לרובוט/מוח"), אותו דפוס בדיוק
+// כמו טאב הלו"ז (parseScheduleWithAI/attemptScheduleParse) - ללא נפילה
+// מקומית (אין תחליף הגיוני ל-AI כאן, בניגוד ללו"ז/טקסט-אוכל). תוצאת ה-AI
+// אף פעם לא נכתבת ישירות ל-DB - נטענת לתוך אותה זרימת עריכה ידנית בדיוק
+// (modal-add-table -> modal-manage-columns) כדי שטעות של ה-AI תהיה זולה
+// לתקן בровнnотуже בדיוק כמו טעות ידנית (ר' scan-recipe-image, שאותו עיקרון
+// בדיוק - "הטופס נשאר ניתן לעריכה כי אף מודל לא מושלם")
+let aiTableBuilderReviewActive = false;
+let pendingAiTableRows = []; // [{ [pendingColumnsIndex]: coercedValue }]
+
+function resetAiTableBuilderState() {
+    aiTableBuilderReviewActive = false;
+    pendingAiTableRows = [];
+}
+
+function cancelAddTableModal() {
+    closeModal('modal-add-table');
+    resetAiTableBuilderState();
+}
+function cancelColumnManager() {
+    closeModal('modal-manage-columns');
+    resetAiTableBuilderState();
+}
+
+// כמו openColumnManager, אבל לא מאפסת pendingTableColumns מ-customTableColumnsCache
+// (אין עדיין שום דבר ב-DB - הטבלה הזו נוצרה הרגע) - פשוט מציגה את מה ש-
+// applyAiTableBuilderResult כבר הכין, באותו עורך-עמודות בדיוק (גרירה/עריכה/
+// מחיקה/הוספה, הכל זהה לחלוטין לזרימה הידנית)
+function openColumnManagerForAiReview() {
+    originalTableColumnIds = [];
+    renderPendingTableColumns();
+    initTableColumnDragReorder();
+    openModal('modal-manage-columns');
+}
+
+async function attemptTableAiRequest(token, description) {
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-table-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ description })
+        });
+        const result = await res.json();
+        if (res.status === 402 || result.error === 'limit_reached') return { status: 'limit', scope: result.scope };
+        if (res.ok && !result.error && result.table) return { status: 'ok', table: result.table };
+        return { status: 'retry' };
+    } catch {
+        return { status: 'retry' };
+    }
+}
+
+// ממפה את תשובת ה-AI לתוך pendingTableColumns/pendingAiTableRows - אותה
+// צורה בדיוק ש-openColumnManager כבר יודעת להציג, כדי לא לבנות שום UI חדש
+function applyAiTableBuilderResult(table) {
+    const localIdToIndex = {};
+    pendingTableColumns = (table.columns || []).map((col, index) => {
+        localIdToIndex[col.local_id] = index;
+        let selectOptions = null;
+        if (col.type === 'select' && Array.isArray(col.select_options)) {
+            selectOptions = col.select_options
+                .filter(opt => opt && opt.label && opt.label.trim())
+                .map(opt => ({ id: crypto.randomUUID(), label: opt.label.trim(), color: TABLE_AI_COLOR_NAME_MAP[opt.color] || TABLE_SELECT_OPTION_COLOR_PRESETS[0] }));
+        }
+        return { id: null, name: (col.name || '').trim() || t('table_column_type_text'), type: TABLE_COLUMN_TYPES.includes(col.type) ? col.type : 'text', select_options: selectOptions, sort_order: (index + 1) * 10 };
+    });
+
+    pendingAiTableRows = (table.rows || []).map(row => {
+        const values = {};
+        (row.cells || []).forEach(cell => {
+            const colIndex = localIdToIndex[cell.column_local_id];
+            if (colIndex === undefined) return;
+            const col = pendingTableColumns[colIndex];
+            const raw = cell.value;
+            if (raw === undefined || raw === null) return;
+            if (col.type === 'checkbox') { values[colIndex] = String(raw).toLowerCase() === 'true'; }
+            else if (col.type === 'number') { const n = parseFloat(raw); if (!Number.isNaN(n)) values[colIndex] = n; }
+            else if (col.type === 'date') { if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) values[colIndex] = raw; }
+            else if (col.type === 'select') {
+                const match = (col.select_options || []).find(opt => opt.label.toLowerCase() === String(raw).toLowerCase());
+                if (match) values[colIndex] = match.id;
+            } else { values[colIndex] = String(raw); }
+        });
+        return values;
+    });
+
+    aiTableBuilderReviewActive = true;
+    editingCustomTableId = null;
+    selectedTableIcon = /\p{Emoji}/u.test(table.table_icon || '') ? table.table_icon : TABLE_ICON_PRESETS[0];
+    document.getElementById('table-modal-title').textContent = t('table_add_modal_title');
+    document.getElementById('table-name-input').value = (table.table_name || '').trim();
+    renderTableIconPicker();
+    closeModal('modal-ai-brain');
+    openModal('modal-add-table');
+    showAppToast(t('ai_table_builder_ready'));
+}
+
+async function buildTableWithAI() {
+    // הטאב הזה חי בתוך modal-ai-brain הכללי, שנגיש גם *מחוץ* למסך הטבלאות
+    // (למשל הבועה הגלובלית) - שם אין נעילת-פרימיום כלל ברמת הפתיחה (ר'
+    // openAiBrainModal), אז חייבים לבדוק כאן במפורש, לא לסמוך על
+    // openTablesSection לשמור על השער היחיד
+    if (!isPremiumUser) { closeModal('modal-ai-brain'); openPremiumUpgradeModal(); return; }
+    if (!isPremiumUser && cachedTableAiLifetimeUsed >= TABLE_AI_FREE_LIFETIME_LIMIT) {
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_table_ai')), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
+    const input = document.getElementById('ai-table-input');
+    const description = input.value.trim();
+    if (!description) { showAppToast(t('ai_table_builder_empty'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+    const submitBtn = document.getElementById('btn-table-ai-build');
+    if (submitBtn && submitBtn.disabled) return;
+    if (submitBtn) submitBtn.disabled = true;
+    const loadingEl = document.getElementById('table-ai-loading');
+    const loadingTimer = setTimeout(() => { if (loadingEl) loadingEl.classList.remove('hidden'); }, 5000);
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
+
+        let attempt = await attemptTableAiRequest(token, description);
+        if (attempt.status === 'retry') attempt = await attemptTableAiRequest(token, description);
+
+        if (attempt.status === 'limit') {
+            if (attempt.scope === 'free_lifetime') {
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_table_ai')), 'error');
+                openPremiumUpgradeModal();
+            } else {
+                showAppToast(t('ai_monthly_limit_reached'), 'error');
+            }
+            return;
+        }
+        if (attempt.status !== 'ok') { showAppToast(t('ai_table_builder_failed'), 'error'); return; }
+
+        await loadAiUsage();
+        applyAiTableBuilderResult(attempt.table);
+    } finally {
+        clearTimeout(loadingTimer);
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+// אינסרט אחד מרוכז (bulk) ולא לולאה על addTableRow+updateCellValue - כל
+// הנתונים כבר מוכנים ומלאים בזיכרון (לא קלט-משתמש חי שדורש round-trip
+// משלו), אז insert אחד עם כל השורות יחד פשוט יותר ומהיר יותר מ-N קריאות
+// רשת עוקבות
+async function materializeAiStarterRows(freshCols) {
+    if (!pendingAiTableRows.length) { aiTableBuilderReviewActive = false; return; }
+    const rowsPayload = pendingAiTableRows.map((rowValues, i) => {
+        const data = {};
+        Object.entries(rowValues).forEach(([colIndex, value]) => {
+            const col = freshCols[Number(colIndex)];
+            if (col) data[col.id] = value;
+        });
+        return { table_id: currentOpenTableId, user_id: currentUserId, data, sort_order: (i + 1) * 10 };
+    });
+    const { error } = await supabaseClient.from('custom_table_rows').insert(rowsPayload);
+    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
+    aiTableBuilderReviewActive = false;
+    pendingAiTableRows = [];
 }
 
 function renderPendingTableColumns() {
@@ -14870,6 +15092,17 @@ async function saveTableColumns() {
             await supabaseClient.from('custom_table_columns').insert({ table_id: currentOpenTableId, user_id: currentUserId, name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder });
         }
     }
+    // שורות-ההתחלה שה-AI הציע (אם יש) מומרות עכשיו, אחרי שהעמודות כבר קיבלו
+    // id אמיתי ב-DB - sort_order זהה בדיוק לסדר ב-pendingTableColumns (נכתב
+    // כ-(i+1)*10 בלולאה למעלה), אז מיון לפי sort_order משחזר את אותו הסדר
+    // ומאפשר להתאים כל אינדקס ב-pendingAiTableRows לעמודה האמיתית שלו
+    if (aiTableBuilderReviewActive && pendingAiTableRows.length) {
+        const { data: freshCols } = await supabaseClient.from('custom_table_columns').select('*').eq('table_id', currentOpenTableId).order('sort_order', { ascending: true });
+        await materializeAiStarterRows(freshCols || []);
+    } else {
+        aiTableBuilderReviewActive = false;
+    }
+
     closeModal('modal-manage-columns');
     await loadTableColumnsAndRows(currentOpenTableId);
     showAppToast(t('item_added_success'));

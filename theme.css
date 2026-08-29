@@ -3166,7 +3166,7 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 174px; }
+.today-peek-anchor { position: relative; height: 226px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3214,6 +3214,9 @@ html[dir="ltr"] .today-peek-tab {
    בכוונה, לא ID: ספציפיות 2 מחלקות מנצחת תמיד על מחלקה בודדת בלי תלות בסדר-
    מקור, אותו עיקרון בדיוק כמו התיקון ב-#today-peek-tab למעלה */
 .today-peek-tab.study-peek-tab { top: 118px; }
+/* טאב רביעי ("הרגלים") - דולק כברירת מחדל (opt-out), אותו עיקרון-ספציפיות
+   בדיוק (צמד-מחלקות, לא ID) כמו לימודים - ר' habits-peek-tab-toggle */
+.today-peek-tab.habits-peek-tab { top: 170px; }
 /* נעלמת כשהפאנל פתוח - לפי בקשה מפורשת. הלשונית והפאנל כבר לא אחיות ב-DOM
    (הפאנל עבר לרמת #app-container, הלשונית נשארה בתוך .home-hero-panel) אז
    סלקטור ~ כבר לא עובד - מוחלף במחלקה שמוצמדת ישירות ע"י JS (ר'
