@@ -2756,7 +2756,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 .fab-dock {
     position: absolute !important;
     left: 50%;
-    top: 56%;
+    /* 58% ולא 56% - נדחף טיפה למטה כדי לא לגעת בטאב הרביעי ("הרגלים") שנוסף
+       לערימת today-peek-tab (ר' theme.css .today-peek-anchor), שדווח במפורש
+       שנוגע בדוק בטלפון */
+    top: 58%;
     z-index: 99999 !important;
     opacity: 1;
     transition: opacity 0.3s ease;
