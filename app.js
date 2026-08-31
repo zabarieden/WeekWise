@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFinanceCycleSetting();
     applyStudyPeekTabSetting();
     applyHabitsPeekTabSetting();
+    applyAiFabCompactSetting();
     updateHomeSkyDayNight();
     if (!homeSkyDayNightIntervalStarted) {
         homeSkyDayNightIntervalStarted = true;
@@ -1705,6 +1706,7 @@ async function initAppAfterAuth(user) {
         loadReminderChimeSetting(),
         loadStudyPeekTabSetting(),
         loadHabitsPeekTabSetting(),
+        loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
@@ -2066,6 +2068,8 @@ function openSettingsDrawer() {
     if (studyTabToggle) studyTabToggle.checked = isStudyPeekTabOn();
     const habitsTabToggle = document.getElementById('habits-peek-tab-toggle');
     if (habitsTabToggle) habitsTabToggle.checked = isHabitsPeekTabOn();
+    const aiFabCompactToggle = document.getElementById('ai-fab-compact-toggle');
+    if (aiFabCompactToggle) aiFabCompactToggle.checked = isAiFabCompactOn();
     refreshGoogleCalendarStatus();
     renderFinanceCategoryManageList();
     renderFinanceCategoryIconPicker();
@@ -7557,7 +7561,9 @@ const AI_ICON_OPTIONS = {
     default: { type: 'image', src: 'robot-fab-icon.png?v=1' },
     brain: { type: 'emoji', glyph: '🧠' },
     sparkles: { type: 'emoji', glyph: '✨' },
-    crystal_ball: { type: 'emoji', glyph: '🔮' },
+    lightbulb: { type: 'emoji', glyph: '💡' },
+    star: { type: 'emoji', glyph: '🌟' },
+    lightning: { type: 'emoji', glyph: '⚡' },
 };
 
 function applyAiIcon(iconId) {
@@ -7606,6 +7612,36 @@ async function loadAiIconSetting() {
     // דפוס בדיוק כמו הגופן האישי (ר' app.js:7322 בהערת המחקר)
     if (iconId !== 'default' && !isPremiumUser) iconId = 'default';
     applyAiIcon(iconId);
+}
+
+// גודל כפתור עוזר ה-AI - חופשי לכולם (לא פרימיום, בניגוד לבחירת האייקון
+// למעלה), כבוי כברירת מחדל (opt-in), לפי בקשה מפורשת ("סתם נקודה למי
+// שרוצה שזה יהיה יותר קטן"). אותו דפוס בדיוק כמו study_peek_tab_enabled
+function isAiFabCompactOn() { return localStorage.getItem('weekwise_ai_fab_compact') === 'true'; }
+async function loadAiFabCompactSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('ai_fab_compact').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.ai_fab_compact === null || data.ai_fab_compact === undefined) return;
+    localStorage.setItem('weekwise_ai_fab_compact', String(data.ai_fab_compact));
+    applyAiFabCompactSetting();
+}
+async function toggleAiFabCompact() {
+    const enabled = document.getElementById('ai-fab-compact-toggle').checked;
+    localStorage.setItem('weekwise_ai_fab_compact', String(enabled));
+    applyAiFabCompactSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, ai_fab_compact: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function applyAiFabCompactSetting() {
+    const fab = document.getElementById('btn-ai-brain-fab');
+    const toggle = document.getElementById('ai-fab-compact-toggle');
+    const enabled = isAiFabCompactOn();
+    if (fab) fab.classList.toggle('ai-brain-fab-compact', enabled);
+    if (toggle) toggle.checked = enabled;
 }
 
 // --- צבע טקסט אישי לכל האפליקציה (חינמי, נפרד מערכת הנושא הפרימיום למעלה):

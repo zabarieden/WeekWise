@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=416">
+    <link rel="stylesheet" href="theme.css?v=417">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2146,7 +2146,18 @@
                         <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="default" onclick="selectAiIcon('default')" title="Default"><img src="robot-fab-icon.png?v=1" alt=""></button>
                         <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="brain" onclick="selectAiIcon('brain')" title="Brain">🧠<span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="sparkles" onclick="selectAiIcon('sparkles')" title="Sparkles">✨<span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="crystal_ball" onclick="selectAiIcon('crystal_ball')" title="Crystal Ball">🔮<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="lightbulb" onclick="selectAiIcon('lightbulb')" title="Lightbulb">💡<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="star" onclick="selectAiIcon('star')" title="Star">🌟<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="lightning" onclick="selectAiIcon('lightning')" title="Lightning">⚡<span class="theme-swatch-lock">🔒</span></button>
+                    </div>
+
+                    <!-- גודל כפתור עוזר ה-AI - חופשי לכולם, לא פרימיום, לפי בקשה מפורשת -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_ai_fab_compact_label" for="ai-fab-compact-toggle">Make the AI assistant button smaller</label>
+                        <label class="switch">
+                            <input type="checkbox" id="ai-fab-compact-toggle" onchange="toggleAiFabCompact()">
+                            <span class="switch-slider"></span>
+                        </label>
                     </div>
 
                     <!-- צבע טקסט אישי: חינמי, נפרד מערכת הנושא הפרימיום למעלה - דורס
@@ -3424,7 +3435,7 @@
 
     </div>
 
-    <script src="i18n.js?v=314"></script>
-    <script src="app.js?v=452"></script>
+    <script src="i18n.js?v=315"></script>
+    <script src="app.js?v=453"></script>
 </body>
 </html>
