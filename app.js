@@ -14700,7 +14700,20 @@ function openEditTableModal(tableId) {
     openModal('modal-add-table');
 }
 
+// דגל חד-פעמי נגד הגשה כפולה, אותו דפוס בדיוק כמו centerItemSubmitInFlight/
+// addCalendarEventInFlight - בלי זה, טאפ כפול מהיר על "הוספה" היה יכול
+// ליצור שתי שורות custom_tables זהות
+let saveCustomTableInFlight = false;
 async function saveCustomTable() {
+    if (saveCustomTableInFlight) return;
+    saveCustomTableInFlight = true;
+    try {
+        await saveCustomTableImpl();
+    } finally {
+        saveCustomTableInFlight = false;
+    }
+}
+async function saveCustomTableImpl() {
     const input = document.getElementById('table-name-input');
     const name = input.value.trim();
     if (!name) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
@@ -14801,6 +14814,17 @@ function cancelAddTableModal() {
 }
 function cancelColumnManager() {
     closeModal('modal-manage-columns');
+    // בזרימת ה-AI, saveCustomTable כבר יצרה את שורת custom_tables בפועל לפני
+    // שהגענו לכאן (כדי לקבל id אמיתי ולהמשיך אוטומטית לעורך העמודות) - אם
+    // מבטלים כאן בלי לשמור אף עמודה, הטבלה הזו נשארת "רפאים" ריקה ב-DB
+    // לצמיתות בלי שום דרך לדעת למה היא שם. במסלול הידני אין בעיה מקבילה -
+    // saveCustomTable לא פותחת את עורך העמודות אוטומטית שם בכלל
+    if (aiTableBuilderReviewActive && currentOpenTableId) {
+        const orphanTableId = currentOpenTableId;
+        supabaseClient.from('custom_tables').delete().eq('id', orphanTableId).then(({ error }) => {
+            if (!error) customTablesCache = customTablesCache.filter(tbl => tbl.id !== orphanTableId);
+        });
+    }
     resetAiTableBuilderState();
 }
 
@@ -15082,7 +15106,17 @@ function removePendingTableColumn(index) {
     }
 }
 
+let saveTableColumnsInFlight = false;
 async function saveTableColumns() {
+    if (saveTableColumnsInFlight) return;
+    saveTableColumnsInFlight = true;
+    try {
+        await saveTableColumnsImpl();
+    } finally {
+        saveTableColumnsInFlight = false;
+    }
+}
+async function saveTableColumnsImpl() {
     if (!supabaseClient || !currentUserId || !currentOpenTableId) return;
     const keptIds = pendingTableColumns.filter(c => c.id).map(c => c.id);
     const toDelete = originalTableColumnIds.filter(id => !keptIds.includes(id));
@@ -15205,7 +15239,12 @@ function buildCheckboxCell(row, column) {
 // onSelect) - בלי input מוסתר פר-תא, כי הפונקציה כבר מקבלת callback ישיר.
 // customDatePickerClear() קוראת ל-onSelect עם '' (לא null) - ממירים כאן.
 // עיצוב התאריך המוצג זהה בדיוק ל-updateDateFieldDisplay הקיימת
+// בודקת בעצמה שהערך הוא באמת מחרוזת YYYY-MM-DD תקנית לפני שמנסים לפרסר -
+// עמודה יכולה להתחלף בדיעבד לסוג date אחרי ששורות כבר החזיקו ערך מסוג אחר
+// תחת אותו column.id (למשל מספר/בוליאני) - בלי הבדיקה הזו, .split על מספר
+// היה זורק חריגה לא-תפוסה וקורס את רינדור כל שאר השורות בטבלה
 function formatTableDateCellLabel(dateStr) {
+    if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return '—';
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
@@ -15215,7 +15254,8 @@ function buildDateCell(row, column) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'table-date-cell-btn';
-    const value = row.data && row.data[column.id];
+    const rawValue = row.data && row.data[column.id];
+    const value = typeof rawValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawValue) ? rawValue : null;
     btn.textContent = value ? formatTableDateCellLabel(value) : '—';
     btn.onclick = () => openCustomDatePicker(value || null, (dateStr) => {
         updateCellValue(row.id, column.id, dateStr || null);
@@ -15314,14 +15354,21 @@ async function updateCellValue(rowId, columnId, value) {
     row.data = newData;
 }
 
+let addTableRowInFlight = false;
 async function addTableRow() {
+    if (addTableRowInFlight) return;
     if (!supabaseClient || !currentUserId || !currentOpenTableId) return;
-    const { data, error } = await supabaseClient.from('custom_table_rows').insert({ table_id: currentOpenTableId, user_id: currentUserId, data: {}, sort_order: Date.now() }).select().single();
-    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    customTableRowsCache.push(data);
-    const emptyEl = document.getElementById('table-grid-empty');
-    if (emptyEl) emptyEl.classList.add('hidden');
-    document.getElementById('table-grid-body').appendChild(buildTableRowElement(data));
+    addTableRowInFlight = true;
+    try {
+        const { data, error } = await supabaseClient.from('custom_table_rows').insert({ table_id: currentOpenTableId, user_id: currentUserId, data: {}, sort_order: Date.now() }).select().single();
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        customTableRowsCache.push(data);
+        const emptyEl = document.getElementById('table-grid-empty');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        document.getElementById('table-grid-body').appendChild(buildTableRowElement(data));
+    } finally {
+        addTableRowInFlight = false;
+    }
 }
 
 function deleteTableRow(rowId) {

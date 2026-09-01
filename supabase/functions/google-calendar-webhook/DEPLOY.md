@@ -214,13 +214,16 @@ event belongs to.
 already tracked - called on every `pullDeltaForConnection()` (i.e. every
 reconcile tick and every webhook-triggered pull), so a calendar added to the
 Google account *after* the user connected gets picked up within 30 minutes,
-no reconnect needed. The primary calendar is deliberately excluded from
-discovery (filtered via the calendarList entry's `primary: true` flag) - it's
-already covered by the fixed `google_calendar_id: "primary"` watch row created
-at connect time; primary's *real* id is the user's own email address, and
-without this exclusion it gets discovered as if it were a second calendar,
-double-pulling every primary-calendar event under two different
-`google_calendar_id` values.
+no reconnect needed. The primary calendar's real id (its `calendarList` entry
+has `primary: true`) is the user's own email address, not the literal string
+"primary" - it's normalized to `"primary"` here before insertion, so it gets
+its own real watch row under that same fixed id `outbox-drain` already uses
+as the default push target, instead of being discovered again under its
+email address as if it were a second calendar (which would double-pull every
+primary-calendar event under two different `google_calendar_id` values - the
+root cause of a real incident where duplicate rows led to accidentally
+deleting genuine Google Calendar events, see `google-calendar-outbox-drain`'s
+delete-burst circuit breaker).
 
 Push (`google-calendar-outbox-drain`) targets whichever calendar an
 already-synced event's `google_calendar_id` says; new local events/series
