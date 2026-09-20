@@ -7599,14 +7599,20 @@ async function selectAiIcon(iconId) {
 }
 
 async function loadAiIconSetting() {
-    let iconId = 'default';
+    // iconId נשאר null עד שנמצא ערך אמיתי - כדי לא לבלבל בין "לא נבחר שום
+    // דבר בענן" (נופל ל-localStorage/'default') לבין "המשתמשת בפועל בחרה
+    // 'default'" (ערך אמיתי מה-DB, לא אמור להידרס בחזרה ממכשיר אחר עם
+    // localStorage ישן) - אותו דפוס בדיוק כמו loadColorTheme למעלה. זה בדיוק
+    // מה שגרם לאייקון להיות לא מסונכרן בין מובייל לדפדפן: 'default' שימש גם
+    // כ"עוד לא נטען" וגם כבחירה אמיתית, אז בחירת ברירת-מחדל אמיתית ב-DB
+    // הייתה נדרסת בשקט בחזרה לערך ישן שנשאר ב-localStorage של מכשיר אחר
+    let iconId = null;
     if (supabaseClient && currentUserId) {
-        const { data } = await supabaseClient.from('user_premium').select('ai_icon').eq('user_id', currentUserId).maybeSingle();
-        if (data && data.ai_icon) iconId = data.ai_icon;
+        const { data, error } = await supabaseClient.from('user_premium').select('ai_icon').eq('user_id', currentUserId).maybeSingle();
+        if (!error) iconId = (data && data.ai_icon) || 'default';
     }
-    if (iconId === 'default') {
-        const local = localStorage.getItem(aiIconKey());
-        if (local) iconId = local;
+    if (!iconId) {
+        iconId = localStorage.getItem(aiIconKey()) || 'default';
     }
     // פרימיום פג - חוזרים לברירת המחדל בשקט (לא נועלים בחירה ישנה), אותו
     // דפוס בדיוק כמו הגופן האישי (ר' app.js:7322 בהערת המחקר)
