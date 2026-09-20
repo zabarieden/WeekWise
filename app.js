@@ -2390,8 +2390,7 @@ function openGlanceTaskEditor(id, title, time, day, reminderMinutes, reminderTex
     editingGlanceTaskId = id;
     document.getElementById('glance-edit-task-title-input').value = title || '';
     document.getElementById('glance-edit-task-time-input').value = time || '';
-    document.getElementById('glance-edit-task-reminder').value = String(reminderMinutes || 0);
-    updateCustomSelectDisplay('glance-edit-task-reminder');
+    setReminderSelectValue('glance-edit-task-reminder', reminderMinutes || 0);
     document.getElementById('glance-edit-task-reminder-text').value = reminderText || '';
     populateGlanceTaskDaySelect(day);
     openModal('modal-edit-glance-task');
@@ -2405,7 +2404,7 @@ async function saveGlanceTaskEdit() {
     const norm = normalizeScheduleTimeInput(timeInput.value);
     if (norm.time === null || norm.needsAmpm) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const day = document.getElementById('glance-edit-task-day-select').value;
-    const reminderMinutes = parseInt(document.getElementById('glance-edit-task-reminder').value) || 0;
+    const reminderMinutes = getReminderMinutesFromSelect('glance-edit-task-reminder');
     const reminderText = document.getElementById('glance-edit-task-reminder-text').value.trim();
     const { error } = await supabaseClient.from('weekly_schedule').update({ task_title: title, time_of_day: norm.time, day_of_week: day, reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText }).eq('id', editingGlanceTaskId);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
@@ -2425,7 +2424,7 @@ async function duplicateGlanceTask() {
     const norm = normalizeScheduleTimeInput(timeInput.value);
     if (norm.time === null || norm.needsAmpm) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const day = document.getElementById('glance-edit-task-day-select').value;
-    const reminderMinutes = parseInt(document.getElementById('glance-edit-task-reminder').value) || 0;
+    const reminderMinutes = getReminderMinutesFromSelect('glance-edit-task-reminder');
     const reminderText = document.getElementById('glance-edit-task-reminder-text').value.trim();
     const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', day);
     const nextSlot = (existingSlots || []).reduce((max, r) => Math.max(max, r.slot_number || 0), 0) + 1;
@@ -2905,8 +2904,7 @@ function openAiBrainModal(tab = 'food') {
     if (tableInput) tableInput.value = '';
     const foodInput = document.getElementById('food-quick-add-input');
     if (foodInput) foodInput.value = '';
-    document.getElementById('ai-schedule-reminder').value = '0';
-    updateCustomSelectDisplay('ai-schedule-reminder');
+    setReminderSelectValue('ai-schedule-reminder', 0);
     document.getElementById('ai-schedule-reminder-text').value = '';
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
@@ -3270,7 +3268,7 @@ async function applyOneTimeScheduleEvents(events) {
     // חד-פעמיים מה-AI תמיד יצאו בלי תזכורת בכלל גם כשהמשתמשת כן סימנה אחת -
     // בדיוק מה שדחף לבקש מה-AI "ליצור התראה" כפעילות נפרדת בפני עצמה, ר'
     // ההערה בפרומפט של parse-schedule-request
-    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderMinutes = getReminderMinutesFromSelect('ai-schedule-reminder');
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     const rows = events.filter(ev => ev.event_date).map(ev => ({
         username: currentUsername, user_id: currentUserId,
@@ -3313,7 +3311,7 @@ async function applyBoundedRecurringScheduleEvents(events) {
     // אותו טעם בדיוק כמו applyOneTimeScheduleEvents למעלה - בלי זה, סדרה
     // חוזרת-מוגבלת מה-AI (calendar_events) גם היא הייתה מתעלמת בשקט משדה
     // התזכורת שסומן
-    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderMinutes = getReminderMinutesFromSelect('ai-schedule-reminder');
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     const groups = new Map();
     events.forEach(ev => {
@@ -3379,7 +3377,7 @@ async function applyParsedScheduleEvents(allEvents) {
     // סימון השדה הזה לא עשה כלום כשהבקשה יצרה תאריך ספציפי, מה שדחף בפועל
     // לבקש מה-AI "ליצור התראה" כפעילות נפרדת בפני עצמה כדי לפצות, ר' ההערה
     // בפרומפט של parse-schedule-request
-    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderMinutes = getReminderMinutesFromSelect('ai-schedule-reminder');
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     for (const day of Object.keys(byDay)) {
         const { data: existingSlots } = await supabaseClient.from('weekly_schedule').select('slot_number').eq('user_id', currentUserId).eq('day_of_week', day);
@@ -3411,7 +3409,7 @@ async function applyScheduleEditsAndDeletes(events) {
     // *לשמר* את התזכורת שכבר הייתה קיימת על הפריט ולא לאפס אותה בשקט -
     // זה היה הבאג המקורי: כל עריכה דרך ה-AI מחקה תזכורת+טקסט שהוגדרו קודם
     // ידנית, גם כשהבקשה לא נגעה בתזכורת בכלל
-    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderMinutes = getReminderMinutesFromSelect('ai-schedule-reminder');
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     for (const ev of events) {
         if (!ev.target_id || !ev.target_table) continue;
@@ -3430,7 +3428,7 @@ async function applyScheduleEditsAndDeletes(events) {
                 editingGlanceTaskId = ev.target_id;
                 document.getElementById('glance-edit-task-title-input').value = ev.task_title || '';
                 document.getElementById('glance-edit-task-time-input').value = ev.time || '';
-                document.getElementById('glance-edit-task-reminder').value = String(reminderMinutes);
+                setReminderSelectValue('glance-edit-task-reminder', reminderMinutes);
                 document.getElementById('glance-edit-task-reminder-text').value = reminderText;
                 populateGlanceTaskDaySelect(ev.day_of_week);
                 await saveGlanceTaskEdit();
@@ -3440,7 +3438,7 @@ async function applyScheduleEditsAndDeletes(events) {
                 document.getElementById('calendar-event-title-input').value = ev.task_title || '';
                 document.getElementById('calendar-event-date-input').value = ev.event_date || '';
                 document.getElementById('calendar-event-time-input').value = ev.time || '';
-                document.getElementById('calendar-event-reminder').value = String(reminderMinutes);
+                setReminderSelectValue('calendar-event-reminder', reminderMinutes);
                 document.getElementById('calendar-event-reminder-text').value = reminderText;
                 await addCalendarEvent();
             }
@@ -5536,8 +5534,7 @@ function openEditCalendarEvent(item) {
     document.getElementById('calendar-event-date-input').value = item.event_date;
     updateDateFieldDisplay('calendar-event-date-input');
     document.getElementById('calendar-event-time-input').value = item.event_time || '';
-    document.getElementById('calendar-event-reminder').value = item.reminder_minutes || '0';
-    updateCustomSelectDisplay('calendar-event-reminder');
+    setReminderSelectValue('calendar-event-reminder', item.reminder_minutes || 0);
     document.getElementById('calendar-event-reminder-text').value = item.reminder_text || '';
     document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
@@ -5589,8 +5586,7 @@ function resetCalendarEventModal() {
     updateCustomSelectDisplay('calendar-event-duration-input');
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
-    document.getElementById('calendar-event-reminder').value = '0';
-    updateCustomSelectDisplay('calendar-event-reminder');
+    setReminderSelectValue('calendar-event-reminder', 0);
     document.getElementById('calendar-event-reminder-text').value = '';
     document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
     document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
@@ -5627,7 +5623,7 @@ async function addCalendarEventImpl() {
     const timeNorm = normalizeScheduleTimeInput(timeInput.value);
     if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const eventTime = timeNorm.time || null;
-    const reminderMinutes = parseInt(document.getElementById('calendar-event-reminder').value) || 0;
+    const reminderMinutes = getReminderMinutesFromSelect('calendar-event-reminder');
     const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
@@ -5697,8 +5693,7 @@ async function addCalendarEventImpl() {
     timeInput.value = '';
     recurringCheckbox.checked = false;
     toggleRecurringOptionsVisibility();
-    document.getElementById('calendar-event-reminder').value = '0';
-    updateCustomSelectDisplay('calendar-event-reminder');
+    setReminderSelectValue('calendar-event-reminder', 0);
     document.getElementById('calendar-event-reminder-text').value = '';
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
@@ -5719,7 +5714,7 @@ async function duplicateCalendarEvent() {
     const timeNorm = normalizeScheduleTimeInput(timeInput.value);
     if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const eventTime = timeNorm.time || null;
-    const reminderMinutes = parseInt(document.getElementById('calendar-event-reminder').value) || 0;
+    const reminderMinutes = getReminderMinutesFromSelect('calendar-event-reminder');
     const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
@@ -8014,8 +8009,55 @@ function selectCustomSelectOption(value) {
         select.value = value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
         updateCustomSelectDisplay(customSelectPickerTargetId);
+        // תמיכה גנרית ב"התאמה אישית": כל select שמשתמש בפיקר הזה ויש לו input
+        // עם id `${selectId}-custom` מציג/מסתיר אותו לפי הבחירה - כרגע רק
+        // בוררי התזכורת (add-slot/glance-edit/ai-schedule/calendar-event) יש
+        // להם input כזה, לפי בקשה מפורשת ("+ אחד שהוא התאמה אישית")
+        const customInput = document.getElementById(`${customSelectPickerTargetId}-custom`);
+        if (customInput) customInput.classList.toggle('hidden', value !== 'custom');
     }
     document.getElementById('modal-custom-select-picker').classList.remove('open');
+}
+
+// ערך תזכורת אמיתי מתוך select+input-מותאם-אישית צמוד (`${selectId}-custom`) -
+// כשנבחר value==='custom' קוראים את המספר החופשי מהאינפוט במקום מה-select
+// עצמו. משותפת לכל 4 בוררי התזכורת (add-slot/glance-edit/ai-schedule/
+// calendar-event reminder), לפי בקשה מפורשת ("+ אחד שהוא התאמה אישית וירשמו
+// כמה דק לפני בעצמם")
+function getReminderMinutesFromSelect(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return 0;
+    if (select.value === 'custom') {
+        const customInput = document.getElementById(`${selectId}-custom`);
+        const raw = customInput ? (parseInt(customInput.value) || 0) : 0;
+        // 40320 = 4 שבועות, אותו תקרה בדיוק שגוגל קלנדר מקבל ל-reminders.
+        // overrides[].minutes (ר' reminderBody ב-google-calendar-outbox-drain) -
+        // בלי זה, ערך-ענק שהוקלד ידנית היה עובר בשקט את הסינכרון הפנימי
+        // (checkReminders/send-due-reminders, שאין להם תקרה) אבל נכשל בשקט
+        // כשהאירוע מסונכרן עם גוגל
+        return Math.min(raw, 40320);
+    }
+    return parseInt(select.value) || 0;
+}
+
+// הכיוון ההפוך - ממלא select+input-מותאם-אישית מערך reminder_minutes שמור
+// (עריכת פריט קיים, או איפוס לברירת מחדל עם minutes=0): אם זה אחד הפריסטים
+// הקבועים (0/10 דק'/שעה/יום) בוחר אותו ומסתיר את שדה ההתאמה האישית; כל ערך
+// אחר (למשל תזכורת ישנה מלפני שהיו פריסטים אחרים, או תזכורת-מותאמת-אישית
+// קודמת) עובר ל"התאמה אישית" עם הערך המדויק גלוי לעריכה
+function setReminderSelectValue(selectId, minutes) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const customInput = document.getElementById(`${selectId}-custom`);
+    const presetValues = ['0', '10', '60', '1440'];
+    if (minutes && !presetValues.includes(String(minutes))) {
+        select.value = 'custom';
+        if (customInput) { customInput.value = minutes; customInput.classList.remove('hidden'); }
+    } else {
+        select.value = String(minutes || 0);
+        if (customInput) { customInput.value = ''; customInput.classList.add('hidden'); }
+    }
+    updateCustomSelectDisplay(selectId);
 }
 
 // מציג את הטקסט של האפשרות הנבחרת כרגע בתוך span עם id `${selectId}-display` -
@@ -13045,7 +13087,7 @@ async function saveScheduleSlotFromAdder() {
     if (norm.time === null) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     timeInput.value = norm.time;
     const timeVal = norm.time;
-    const reminderMinutes = parseInt(document.getElementById('add-slot-reminder').value) || 0;
+    const reminderMinutes = getReminderMinutesFromSelect('add-slot-reminder');
     const reminderText = document.getElementById('add-slot-reminder-text').value.trim();
     const payload = {
         time_of_day: timeVal,
@@ -13081,11 +13123,10 @@ function openAddTaskModal() {
     document.getElementById('add-slot-num').value = String(slot);
     document.getElementById('add-slot-time').value = '';
     document.getElementById('add-slot-task').value = '';
-    document.getElementById('add-slot-reminder').value = '0';
+    setReminderSelectValue('add-slot-reminder', 0);
     document.getElementById('add-slot-reminder-text').value = '';
     updateCustomSelectDisplay('add-slot-day');
     updateCustomSelectDisplay('add-slot-num');
-    updateCustomSelectDisplay('add-slot-reminder');
     openModal('modal-add-task');
 }
 
