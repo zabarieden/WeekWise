@@ -196,7 +196,18 @@ Deno.serve(async (req) => {
                             "true and matchCandidateIds to the array of the 2-4 most likely candidate ids instead " +
                             "of guessing - never guess a target when unsure. If there are no existing items at all, " +
                             "or intent is \"create\", leave intent as \"create\", target_id/target_table null, and " +
-                            "needsMatchClarification false." +
+                            "needsMatchClarification false.\n\n" +
+                            "A phrase asking to be reminded/notified/alerted about something ALREADY described " +
+                            "earlier in the same message (e.g. \"also remind me\", \"create a reminder/notification " +
+                            "for it too\", \"תזכיר לי גם\", \"תייצר התראה ומשימה\", \"עם תזכורת\") is NOT a request " +
+                            "for a separate new activity - never output an event whose task_title is just a bare " +
+                            "notification-mechanism word with no real activity content of its own (English: " +
+                            "\"reminder\"/\"task\"/\"notification\"/\"alert\"; Hebrew: \"תזכורת\"/\"התראה\"/" +
+                            "\"משימה\", alone or combined like \"התראה ומשימה\"). The app already has a separate " +
+                            "reminder control outside this text box that the user sets herself - so when the only " +
+                            "new information in a phrase is \"remind me about the thing I just described\", leave " +
+                            "it out entirely instead of inventing a placeholder event for it, even if a day/date " +
+                            "like \"the day before\" was mentioned for it." +
                             existingItemsContext +
                             "\n\nText: " + text,
                     },

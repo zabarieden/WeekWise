@@ -1,3 +1,25 @@
+## Incident (2026-09-20): "also remind me" turned into a phantom event
+
+A request like "Work on the 26th, and also create a reminder and task for the day
+before" produced three events: the real "Work" event, plus two garbage one-time
+events literally titled "Reminder" and "Task" on the day before - because the
+reminder-mechanism words became the only content extracted for that clause, with
+no real activity attached to them. Two separate causes, both fixed:
+
+1. The reminder toggle on the AI schedule tab (`ai-schedule-reminder`/
+   `ai-schedule-reminder-text` in index.html) only ever got applied to
+   `weekly_schedule` rows in `applyParsedScheduleEvents` - a one-time or bounded-
+   recurring `calendar_events` row from the same AI call silently got no reminder
+   at all, even when the toggle was set. This gave the user no way to express "a
+   reminder is what I actually want" other than describing it in the free text
+   itself, which is what led to the phantom events in the first place. Now applied
+   in `applyOneTimeScheduleEvents`/`applyBoundedRecurringScheduleEvents` too.
+2. The prompt now explicitly tells the model that a clause describing wanting to
+   be reminded/notified about something already mentioned earlier in the same
+   message is not a request for a new activity, and to leave it out rather than
+   inventing an event whose title is just a bare mechanism word ("reminder"/
+   "task"/"notification"/"alert" or the Hebrew equivalents).
+
 # Deploying the AI Schedule Planner
 
 Same pattern as `scan-recipe-image`. If you already set up `ANTHROPIC_API_KEY` for the

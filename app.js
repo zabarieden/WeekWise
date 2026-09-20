@@ -3265,11 +3265,20 @@ function parseScheduleTextLocally(text) {
 // אמורות לנחות במקומות שונים לגמרי באפליקציה
 async function applyOneTimeScheduleEvents(events) {
     if (!supabaseClient || !currentUserId) return [];
+    // אותו שדה-תזכורת משותף מ-reminder-fields-wrap כמו applyParsedScheduleEvents
+    // (ר' ההערה שם) - עד היום הוחל רק על weekly_schedule, ואירועי calendar_events
+    // חד-פעמיים מה-AI תמיד יצאו בלי תזכורת בכלל גם כשהמשתמשת כן סימנה אחת -
+    // בדיוק מה שדחף לבקש מה-AI "ליצור התראה" כפעילות נפרדת בפני עצמה, ר'
+    // ההערה בפרומפט של parse-schedule-request
+    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     const rows = events.filter(ev => ev.event_date).map(ev => ({
         username: currentUsername, user_id: currentUserId,
         event_title: ev.time ? `${ev.time} ${ev.task_title}` : ev.task_title,
         event_date: ev.event_date,
         source: 'calendar',
+        reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+        reminder_text: aiReminderText || null,
     }));
     if (!rows.length) return [];
     await supabaseClient.from('calendar_events').insert(rows);
@@ -3301,6 +3310,11 @@ function nextDateForDayOfWeek(dayName) {
 // אחד ותימחק/תיערך כיחידה אחת, לא כ-7 סדרות נפרדות
 async function applyBoundedRecurringScheduleEvents(events) {
     if (!supabaseClient || !currentUserId) return [];
+    // אותו טעם בדיוק כמו applyOneTimeScheduleEvents למעלה - בלי זה, סדרה
+    // חוזרת-מוגבלת מה-AI (calendar_events) גם היא הייתה מתעלמת בשקט משדה
+    // התזכורת שסומן
+    const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
+    const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     const groups = new Map();
     events.forEach(ev => {
         const key = `${ev.task_title}|${ev.time || ''}|${ev.recurring_duration_months}`;
@@ -3317,6 +3331,8 @@ async function applyBoundedRecurringScheduleEvents(events) {
                     username: currentUsername, user_id: currentUserId,
                     event_title: ev.task_title, event_date: eventDate, event_time: ev.time || null,
                     recurrence_group_id: groupId, source: 'calendar',
+                    reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+                    reminder_text: aiReminderText || null,
                 });
             });
         });
@@ -3355,10 +3371,14 @@ async function applyParsedScheduleEvents(allEvents) {
         byDay[ev.day_of_week].push(ev);
     });
 
-    // תזכורת אחת משותפת לכל האירועים החוזרים שנוצרים מהניתוח הזה (ר'
-    // reminder-fields-wrap במסך "לוז" של מוח ה-AI, index.html) - לא פר-אירוע,
-    // כי אין כאן מסך-סקירה שמאפשר להגדיר תזכורת נפרדת לכל משימה, לפי בקשה
-    // מפורשת ("AI התראות רק ללוז")
+    // תזכורת אחת משותפת לכל האירועים שנוצרים מהניתוח הזה (ר' reminder-fields-
+    // wrap במסך "לוז" של מוח ה-AI, index.html) - לא פר-אירוע, כי אין כאן מסך-
+    // סקירה שמאפשר להגדיר תזכורת נפרדת לכל משימה. מוחלת גם על אירועי calendar_
+    // events חד-פעמיים/מוגבלים-בזמן (applyOneTimeScheduleEvents/
+    // applyBoundedRecurringScheduleEvents) ולא רק weekly_schedule כאן - בלי זה
+    // סימון השדה הזה לא עשה כלום כשהבקשה יצרה תאריך ספציפי, מה שדחף בפועל
+    // לבקש מה-AI "ליצור התראה" כפעילות נפרדת בפני עצמה כדי לפצות, ר' ההערה
+    // בפרומפט של parse-schedule-request
     const aiReminderMinutes = parseInt(document.getElementById('ai-schedule-reminder')?.value) || 0;
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     for (const day of Object.keys(byDay)) {
