@@ -5728,6 +5728,15 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .finance-history-date { font-size: 0.68rem; color: var(--text-secondary); opacity: 0.8; }
 .finance-history-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
 .finance-history-empty { color: var(--text-secondary); text-align: center; padding: 10px 0; background: transparent !important; box-shadow: none !important; border: none !important; }
+/* חשבוניות/קבלות: שתי כרטיסי-קטגוריה גדולים יותר מ-.ai-brain-tab הרגיל (צריך
+   מטרת-הקשה גדולה, לא פיל דק) - תמונה ממוזערת בשורת ההיסטוריה, כי לאף שורת
+   הוצאה רגילה אין תמונה היום */
+.receipt-category-cards { display: flex; gap: 10px; margin-top: 10px; }
+.receipt-category-card { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 10px; border-radius: 14px; background: var(--bg-row); border: 1px solid var(--border-color); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: var(--transition); }
+.receipt-category-card.active { border-color: var(--accent-purple); box-shadow: 0 0 0 2px var(--accent-purple) inset; }
+.receipt-category-icon { font-size: 1.8rem; }
+.receipt-history-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.receipt-export-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 4px 8px; }
 /* הוצאות קבועות: תג "מקור" (כרטיס/בנק) קטן ליד השם - עוזר להבדיל בין כמה
    ייבואים ממקורות שונים, ר' confirmRecurringExpenseImport ב-app.js */
 .recurring-expense-source-tag { display: inline-block; align-self: flex-start; font-size: 0.65rem; font-weight: 600; padding: 1px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); }

@@ -6929,6 +6929,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'finance_cycle_day', category: 'finance' },
     { id: 'finance_recurring', category: 'finance' },
     { id: 'finance_custom_categories', category: 'finance' },
+    { id: 'receipts_feature', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
@@ -8992,6 +8993,209 @@ async function renderFinanceHistory() {
 async function deleteFinanceEntry(id) {
     await supabaseClient.from('budget_tracker').delete().eq('id', id);
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
+}
+
+// --- חשבוניות/קבלות: תת-תצוגה בתוך הוצאות, טבלה נפרדת לגמרי מ-budget_tracker
+// (receipts) - שתי קטגוריות קבועות בלבד (business/home), בלי מערכת קטגוריות
+// מורחבת כמו בהוצאות הרגילות, כי לא ביקשה את זה, ולא משפיעה על הסיכום/
+// היסטוריית ההוצאות הרגילים - חינמי, לא פרימיום, לפי בקשה מפורשת ---
+let currentReceiptCategory = null;
+let editingReceiptId = null;
+let cachedReceiptsRows = [];
+
+// אותו דפוס בדיוק כמו uploadSportPhoto/uploadRecipeImage - בלי דחיסה/שינוי
+// גודל (אף פונקציית העלאה אחרת באפליקציה לא עושה את זה), נכשל בשקט ל-null
+async function uploadReceiptImage(file) {
+    if (!supabaseClient || !currentUserId || !file.type.startsWith('image/')) return null;
+    try {
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'jpg';
+        const path = `${currentUserId}/${Date.now()}.${ext}`;
+        const { error } = await supabaseClient.storage.from('receipt-photos').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) return null;
+        const { data } = supabaseClient.storage.from('receipt-photos').getPublicUrl(path);
+        return data ? data.publicUrl : null;
+    } catch {
+        return null;
+    }
+}
+
+function setReceiptPhotoPreview(url) {
+    const preview = document.getElementById('receipt-photo-preview');
+    if (!preview) return;
+    if (url) { preview.src = url; preview.classList.remove('hidden'); }
+    else { preview.src = ''; preview.classList.add('hidden'); }
+}
+
+async function handleReceiptPhotoSelected(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    // תצוגה מקדימה מיידית מקומית, לפני שההעלאה לענן מסתיימת
+    setReceiptPhotoPreview(URL.createObjectURL(file));
+    const url = await uploadReceiptImage(file);
+    if (url) {
+        document.getElementById('receipt-photo-url-input').value = url;
+        setReceiptPhotoPreview(url);
+    } else {
+        showAppToast(t('receipt_photo_upload_failed'), 'error');
+        setReceiptPhotoPreview(null);
+    }
+}
+
+function openReceiptCategory(category) {
+    currentReceiptCategory = category;
+    document.querySelectorAll('#finance-section [data-receipt-category]').forEach(card => {
+        card.classList.toggle('active', card.getAttribute('data-receipt-category') === category);
+    });
+    document.getElementById('receipts-list-wrap').classList.remove('hidden');
+    loadReceipts(category);
+}
+
+async function loadReceipts(category) {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('receipts').select('*')
+        .eq('user_id', currentUserId).eq('category', category)
+        .order('receipt_date', { ascending: false }).order('created_at', { ascending: false });
+    cachedReceiptsRows = data || [];
+    renderReceiptsList(cachedReceiptsRows);
+}
+
+function renderReceiptsList(rows) {
+    const list = document.getElementById('receipts-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!rows.length) {
+        list.innerHTML = `<li class="finance-history-empty">${t('receipts_empty_hint')}</li>`;
+        return;
+    }
+    rows.forEach(row => {
+        const li = document.createElement('li');
+        li.className = 'finance-history-row';
+        const formattedDate = new Date(row.receipt_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
+        li.innerHTML = `
+            ${row.image_url ? `<img class="receipt-history-thumb" src="${row.image_url}" alt="">` : ''}
+            <div class="finance-history-main">
+                <span class="finance-history-category">${escapeHtmlForReport(row.title)}</span>
+                <span class="finance-history-date">${formattedDate}</span>
+            </div>
+            <span class="finance-history-amount" style="color: var(--accent-red);">${Number(row.amount).toLocaleString()}</span>
+            <button type="button" class="btn-edit-item" onclick="openEditReceiptModal('${row.id}')">${EDIT_ICON_SVG}</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteReceipt('${row.id}')">❌</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+function openAddReceiptModal() {
+    editingReceiptId = null;
+    document.getElementById('receipt-modal-title').textContent = t('receipts_add_btn');
+    document.getElementById('receipt-title-input').value = '';
+    document.getElementById('receipt-amount-input').value = '';
+    document.getElementById('receipt-photo-url-input').value = '';
+    setReceiptPhotoPreview(null);
+    const dateInput = document.getElementById('receipt-date-input');
+    dateInput.value = getLocalDateString();
+    updateDateFieldDisplay('receipt-date-input');
+    openModal('modal-add-receipt');
+}
+
+function openEditReceiptModal(id) {
+    const row = cachedReceiptsRows.find(r => r.id === id);
+    if (!row) return;
+    editingReceiptId = id;
+    document.getElementById('receipt-modal-title').textContent = t('receipt_save_btn');
+    document.getElementById('receipt-title-input').value = row.title;
+    document.getElementById('receipt-amount-input').value = row.amount;
+    document.getElementById('receipt-photo-url-input').value = row.image_url || '';
+    setReceiptPhotoPreview(row.image_url || null);
+    const dateInput = document.getElementById('receipt-date-input');
+    dateInput.value = row.receipt_date;
+    updateDateFieldDisplay('receipt-date-input');
+    openModal('modal-add-receipt');
+}
+
+async function submitReceiptEntry() {
+    if (!supabaseClient || !currentUserId || !currentReceiptCategory) return;
+    const title = document.getElementById('receipt-title-input').value.trim();
+    const amount = parseFloat(document.getElementById('receipt-amount-input').value);
+    const dateInput = document.getElementById('receipt-date-input');
+    const imageUrl = document.getElementById('receipt-photo-url-input').value || null;
+    if (!title || !amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
+    const payload = {
+        title, amount, receipt_date: dateInput.value || getLocalDateString(), image_url: imageUrl,
+    };
+    let error;
+    if (editingReceiptId) {
+        ({ error } = await supabaseClient.from('receipts').update(payload).eq('id', editingReceiptId));
+    } else {
+        ({ error } = await supabaseClient.from('receipts').insert({
+            user_id: currentUserId, username: currentUsername, category: currentReceiptCategory, ...payload,
+        }));
+    }
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    closeModal('modal-add-receipt');
+    showAppToast(t('item_added_success'));
+    await loadReceipts(currentReceiptCategory);
+}
+
+function deleteReceipt(id) {
+    supabaseClient.from('receipts').delete().eq('id', id).then(({ error }) => {
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        loadReceipts(currentReceiptCategory);
+    });
+}
+
+// ייצוא PDF ממוקד לקטגוריה מסוננת בלבד - נפרד לגמרי מ-exportUserDataReport
+// (בקשה מפורשת: כפתור-ייצוא ישיר מתוך תצוגת הקטגוריה, לא דרך בורר-הדוח
+// הכללי) אבל אותה טכניקה בדיוק: בלי ספריית PDF (הפונטים המובנים לא תומכים
+// בעברית), חלון הדפסה חדש עם HTML אמיתי - כך שתמונות (URL ציבורי מה-
+// Storage) פשוט נטענות ומודפסות כרגיל, בלי טריקי base64/canvas
+async function exportReceiptsCategoryPdf(category) {
+    if (!supabaseClient || !currentUserId || !category) return;
+    const { data } = await supabaseClient.from('receipts').select('*')
+        .eq('user_id', currentUserId).eq('category', category)
+        .order('receipt_date', { ascending: false });
+    const rows = data || [];
+    const categoryLabel = t(category === 'business' ? 'receipt_category_business' : 'receipt_category_home');
+    const isRtl = document.documentElement.getAttribute('dir') === 'rtl' || document.documentElement.dir === 'rtl';
+    const entriesHtml = rows.length ? rows.map(row => {
+        const formattedDate = new Date(row.receipt_date).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
+        return `
+            <div class="entry">
+                ${row.image_url ? `<img class="entry-img" src="${row.image_url}" alt="">` : ''}
+                <div class="entry-text">
+                    <div class="entry-main">${escapeHtmlForReport(row.title)}</div>
+                    <div class="entry-sub">${formattedDate}</div>
+                </div>
+                <div class="entry-value">${Number(row.amount).toLocaleString()}</div>
+            </div>
+        `;
+    }).join('') : `<p class="empty">${escapeHtmlForReport(t('receipt_export_empty'))}</p>`;
+    const bodyHtml = `
+        <div class="header-banner"><h1>NOT10.ai</h1><p class="sub">${escapeHtmlForReport(categoryLabel)} - ${new Date().toLocaleDateString()}</p></div>
+        ${entriesHtml}
+    `;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
+    printWindow.document.write(`<!DOCTYPE html><html dir="${isRtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>NOT10.ai - ${escapeHtmlForReport(categoryLabel)}</title>
+<style>
+    body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; padding: 32px; color: #2b2438; background: #fff; }
+    .header-banner { text-align: center; margin-bottom: 30px; }
+    h1 { color: #a855f7; margin: 0; font-size: 2rem; letter-spacing: 1px; }
+    .sub { color: #918da3; font-size: 0.85rem; margin-top: 4px; }
+    .entry { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #fdf3ff, #fff0f7); border: 1px solid #f3d9f7; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .entry-img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+    .entry-text { flex: 1; direction: ${isRtl ? 'rtl' : 'ltr'}; }
+    .entry-main { font-weight: 700; color: #3a2e4d; font-size: 0.95rem; }
+    .entry-sub { color: #918da3; font-size: 0.8rem; margin-top: 2px; }
+    .entry-value { font-weight: 700; color: #a855f7; direction: ltr; white-space: nowrap; }
+    .empty { color: #b3aec0; font-style: italic; text-align: center; }
+    @media print { body { padding: 10px; } }
+</style>
+</head><body>${bodyHtml}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { try { printWindow.focus(); printWindow.print(); } catch (err) {} }, 400);
 }
 
 // --- הוצאות קבועות / הוראות קבע: טבלת תכנון נפרדת מהיסטוריית ההכנסות/הוצאות
