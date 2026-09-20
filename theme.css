@@ -3547,6 +3547,18 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .notebook-color-swatch.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-sheet); }
 .notebook-toolbar-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); font-size: 0.95rem; cursor: pointer; }
 .notebook-toolbar-btn.active { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
+/* שורת בחירת-כלי (עט/מרקר-עגול/מרקר-מרובע/מחק) - נפרדת מהצבעים, לפי בקשה
+   מפורשת להוסיף כלים אמיתיים ולא רק "עט מול מחק" בינארי */
+.notebook-tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; }
+.notebook-tool-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); font-size: 1.1rem; cursor: pointer; color: var(--text-primary); }
+.notebook-tool-btn svg { width: 18px; height: 18px; }
+.notebook-tool-btn.active { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); color: var(--accent-purple-text); }
+.notebook-toolbar-sep { width: 1px; align-self: stretch; background: var(--border-color); margin: 0 2px; }
+/* עובי-קו (עוד "סגנונות ציור" לעט, לפי בקשה מפורשת) - נקודה קטנה שגדלה
+   ויזואלית לפי העובי בפועל, כדי שהבחירה תהיה ברורה בלי טקסט */
+.notebook-width-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: rgba(255,255,255,0.04); border: 1px solid var(--border-color); cursor: pointer; padding: 0; }
+.notebook-width-btn.active { background-color: rgba(168, 85, 247, 0.18); border-color: var(--accent-purple); }
+.notebook-width-dot { display: block; border-radius: 50%; background: var(--text-primary); }
 /* touch-action:none קריטי - בלעדיו ציור באצבע/Apple Pencil "גונב" את הגלילה
    של הדף במקום לצייר, במיוחד באייפד/מובייל */
 .notebook-page-canvas-wrap { position: relative; margin-bottom: 8px; }

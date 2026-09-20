@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=419">
+    <link rel="stylesheet" href="theme.css?v=420">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1347,16 +1347,36 @@
                                 <span id="notebook-page-counter" class="notebook-page-counter"></span>
                                 <button type="button" class="notebook-page-tabs-arrow" id="notebook-page-tabs-arrow" onclick="togglePagesListPanel()" data-i18n-title="notebook_pages_panel_toggle_title" title="Show all pages">▾</button>
                             </div>
-                            <!-- כלי-כתיבה חופשית (עט/מוחק/ביטול/ניקוי) + בוחר אימוג'ים שנוחת
-                                 כמדבקה על הקנבס - לפי בקשה מפורשת ("גם ידנית אם זה באייפד...
-                                 אפשר להוסיף אימוגים בדף") -->
+                            <!-- כלי-ציור (עט/מרקר-עגול/מרקר-מרובע/מחק) - שורה נפרדת מהצבעים/עובי,
+                                 לפי בקשה מפורשת ("עוד עטים וסגנונות ציור... מרקר גם לצייר מרקר
+                                 וגם למרקר עם ריבוע"). מחק בעל אייקון SVG מותאם (לא אימוג'י ספוג
+                                 🧽 הישן) - לפי בקשה מפורשת שהאייקון עצמו לא נראה טוב -->
+                            <div class="notebook-tool-row">
+                                <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" data-i18n-title="notebook_canvas_pen_title" title="Pen">✏️</button>
+                                <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" data-i18n-title="notebook_canvas_marker_title" title="Marker">🖌️</button>
+                                <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" data-i18n-title="notebook_canvas_marker_square_title" title="Flat marker">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg>
+                                </button>
+                                <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg>
+                                </button>
+                            </div>
+                            <!-- צבעים + עובי-קו (עוד "סגנונות ציור", לפי בקשה מפורשת - רלוונטי לעט
+                                 בלבד, למרקר עובי קבוע משלו) + ביטול/ניקוי/אימוג'ים -->
                             <div class="notebook-page-toolbar">
                                 <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
                                 <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
                                 <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
                                 <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
                                 <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-toolbar-btn" id="notebook-eraser-btn" onclick="setEraserMode(!isEraserMode)" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">🧽</button>
+                                <button type="button" class="notebook-color-swatch" style="background:#8e24aa" onclick="setPenColor('#8e24aa', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#d81b60" onclick="setPenColor('#d81b60', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <button type="button" class="notebook-color-swatch" style="background:#00897b" onclick="setPenColor('#00897b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                <span class="notebook-toolbar-sep"></span>
+                                <button type="button" class="notebook-width-btn" onclick="setPenWidth(1.5, this)" data-i18n-title="notebook_canvas_width_thin_title" title="Thin"><span class="notebook-width-dot" style="width:4px;height:4px;"></span></button>
+                                <button type="button" class="notebook-width-btn active" onclick="setPenWidth(3, this)" data-i18n-title="notebook_canvas_width_medium_title" title="Medium"><span class="notebook-width-dot" style="width:8px;height:8px;"></span></button>
+                                <button type="button" class="notebook-width-btn" onclick="setPenWidth(6, this)" data-i18n-title="notebook_canvas_width_thick_title" title="Thick"><span class="notebook-width-dot" style="width:14px;height:14px;"></span></button>
+                                <span class="notebook-toolbar-sep"></span>
                                 <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
                                 <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
                                 <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
@@ -3507,7 +3527,7 @@
 
     </div>
 
-    <script src="i18n.js?v=318"></script>
-    <script src="app.js?v=459"></script>
+    <script src="i18n.js?v=319"></script>
+    <script src="app.js?v=460"></script>
 </body>
 </html>

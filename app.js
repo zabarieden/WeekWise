@@ -14840,7 +14840,12 @@ let notebookPagesSearchFilterIds = null; // null = בלי סינון פעיל ב
 let canvasStrokes = [];
 let currentStroke = null;
 let penColor = '#2b2b2b';
-let isEraserMode = false;
+// currentDrawTool מחליף את isEraserMode הישן (בוליאני יחיד, לא הספיק כשנוספו
+// עוד כלים) - 'pen'/'marker'/'marker_square'/'eraser'. penWidth רלוונטי רק
+// לעט (עוד עטים/עוביים לפי בקשה מפורשת) - למרקר יש עובי קבוע משלו, בכוונה
+// לא מושפע מבורר-העובי, כדי לא להסתבך עם ציפייה למרקר-דק/עבה שלא התבקשה
+let currentDrawTool = 'pen';
+let penWidth = 3;
 let notebookCanvasPointerBound = false;
 const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','❌','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
 
@@ -15938,6 +15943,7 @@ function openNotebookPage(pageId) {
     // דף-כתיבה (page_type:'write') מציג טקסטאריה במקום קנבס-ציור - שני
     // סוגי-דף שונים לגמרי, לא רק סגנון (ר' modal-notebook-page-type-choice)
     const isWrite = page.page_type === 'write';
+    document.querySelector('.notebook-tool-row').classList.toggle('hidden', isWrite);
     document.querySelector('.notebook-page-toolbar').classList.toggle('hidden', isWrite);
     document.getElementById('notebook-page-canvas').closest('.notebook-page-canvas-wrap').classList.toggle('hidden', isWrite);
     document.getElementById('notebook-page-text-content').classList.toggle('hidden', !isWrite);
@@ -16188,13 +16194,27 @@ function redrawCanvasFromStrokes() {
 // t:'emoji' כבר לא מטופל כאן - עבר לשכבת DOM נפרדת (ר' renderEmojiOverlay)
 // כדי שאפשר יהיה לגרור אימוג'ים אחרי ההנחתה, לפי בקשה מפורשת ("שיהיה אפשר
 // להזיז את האימוג'י ידנית"). דיו בלבד מכאן ואילך
+//
+// פרמטרי-רינדור לפי סוג קו שמור (entry.t) - משותף בין drawStrokeEntry (ציור
+// מחדש) ל-continueStroke (ציור חי), כדי ששני המסלולים ייראו תמיד זהים:
+// 's'=עט (אטום, קצה עגול), 'e'=מחק (destination-out, קיים כבר), 'm'=מרקר
+// עגול (שקוף חלקית, קצה עגול - "כמו טוש"), 'q'=מרקר מרובע/שטוח (שקוף חלקית,
+// קצה מרובע - "כמו טוש-שטוח", לפי בקשה מפורשת)
+function strokeRenderParams(type) {
+    if (type === 'e') return { cap: 'round', join: 'round', alpha: 1, composite: 'destination-out' };
+    if (type === 'm') return { cap: 'round', join: 'round', alpha: 0.4, composite: 'source-over' };
+    if (type === 'q') return { cap: 'square', join: 'bevel', alpha: 0.4, composite: 'source-over' };
+    return { cap: 'round', join: 'round', alpha: 1, composite: 'source-over' };
+}
 function drawStrokeEntry(ctx, canvas, entry) {
     if (!entry.pts || entry.pts.length < 2) return;
-    ctx.globalCompositeOperation = entry.t === 'e' ? 'destination-out' : 'source-over';
+    const rp = strokeRenderParams(entry.t);
+    ctx.globalCompositeOperation = rp.composite;
+    ctx.globalAlpha = rp.alpha;
     ctx.strokeStyle = entry.c || '#000';
     ctx.lineWidth = entry.w || 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = rp.cap;
+    ctx.lineJoin = rp.join;
     ctx.beginPath();
     // עקומה חלקה דרך נקודות-אמצע (quadratic-curve-through-midpoints) במקום
     // lineTo גס נקודה-לנקודה - "כמו Procreate", לפי בקשה מפורשת. הקטע
@@ -16214,6 +16234,7 @@ function drawStrokeEntry(ctx, canvas, entry) {
     }
     ctx.stroke();
     ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
 }
 
 function getNotebookCanvasPoint(canvas, e) {
@@ -16221,11 +16242,15 @@ function getNotebookCanvasPoint(canvas, e) {
     return [(e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height];
 }
 
+const DRAW_TOOL_CODES = { pen: 's', marker: 'm', marker_square: 'q', eraser: 'e' };
+const DRAW_TOOL_WIDTHS = { s: () => penWidth, m: () => 14, q: () => 16, e: () => 18 };
+
 function startStroke(e) {
     const canvas = document.getElementById('notebook-page-canvas');
     if (!canvas) return;
     e.preventDefault();
-    currentStroke = { t: isEraserMode ? 'e' : 's', c: penColor, w: isEraserMode ? 18 : 3, pts: [getNotebookCanvasPoint(canvas, e)] };
+    const toolCode = DRAW_TOOL_CODES[currentDrawTool] || 's';
+    currentStroke = { t: toolCode, c: penColor, w: DRAW_TOOL_WIDTHS[toolCode](), pts: [getNotebookCanvasPoint(canvas, e)] };
     document.addEventListener('pointermove', continueStroke);
     document.addEventListener('pointerup', endStroke);
 }
@@ -16240,11 +16265,13 @@ function continueStroke(e) {
     currentStroke.pts.push(getNotebookCanvasPoint(canvas, e));
     const ctx = canvas.getContext('2d');
     const pts = currentStroke.pts;
-    ctx.globalCompositeOperation = currentStroke.t === 'e' ? 'destination-out' : 'source-over';
+    const rp = strokeRenderParams(currentStroke.t);
+    ctx.globalCompositeOperation = rp.composite;
+    ctx.globalAlpha = rp.alpha;
     ctx.strokeStyle = currentStroke.c;
     ctx.lineWidth = currentStroke.w;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = rp.cap;
+    ctx.lineJoin = rp.join;
     ctx.beginPath();
     if (pts.length < 3) {
         // קטע ראשון - אין עוד נקודת-אמצע קודמת, קו פשוט
@@ -16259,6 +16286,7 @@ function continueStroke(e) {
     }
     ctx.stroke();
     ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
 }
 
 function endStroke() {
@@ -16286,20 +16314,29 @@ function clearCanvas() {
     });
 }
 
-function setPenColor(color, btnEl) {
-    penColor = color;
-    isEraserMode = false;
-    document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
-    if (btnEl) btnEl.classList.add('active');
-    const eraserBtn = document.getElementById('notebook-eraser-btn');
-    if (eraserBtn) eraserBtn.classList.remove('active');
+// כלי הציור (עט/מרקר-עגול/מרקר-מרובע/מחק) נבחר בנפרד לגמרי מהצבע - בחירת
+// צבע לא משנה יותר את הכלי הפעיל (בניגוד להתנהגות הישנה, שבה כל בחירת צבע
+// יצאה אוטומטית ממצב מחק), כי עכשיו יש 3 כלי-ציור אמיתיים לבחור מביניהם,
+// לא רק "עט מול מחק" בינארי - לפי בקשה מפורשת להוסיף עוד כלים
+function setDrawTool(tool) {
+    currentDrawTool = tool;
+    document.querySelectorAll('.notebook-tool-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-draw-tool') === tool);
+    });
 }
 
-function setEraserMode(on) {
-    isEraserMode = on;
-    const eraserBtn = document.getElementById('notebook-eraser-btn');
-    if (eraserBtn) eraserBtn.classList.toggle('active', on);
-    if (on) document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
+function setPenColor(color, btnEl) {
+    penColor = color;
+    document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+}
+
+// עובי-קו רלוונטי לעט בלבד (לפי בקשה מפורשת "עוד עטים וסגנונות ציור") - למרקר
+// עובי קבוע משלו (ר' DRAW_TOOL_WIDTHS), לא מושפע מהבורר הזה בכוונה
+function setPenWidth(width, btnEl) {
+    penWidth = width;
+    document.querySelectorAll('.notebook-width-btn').forEach(el => el.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
 }
 
 async function saveCanvasData() {
