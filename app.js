@@ -4571,25 +4571,29 @@ async function loadTodayTasks() {
         container.appendChild(row);
     });
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
-    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל
+    // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל. אבל רק כשבאמת
+    // הייתה משימה/אירוע היום שסומן וי - לא כשאין שום דבר בכלל (הצצה ריקה),
+    // לפי בקשה מפורשת נוספת ("שלא ירשום כלום"). הפתקים הנפרדים ("מה חשוב לך
+    // היום") לא נספרים כמשימה כאן - populated/events הם רק weekly_schedule
+    // ו-calendar_events בפועל
     if (allDone) {
-        const celebration = document.createElement('p');
-        celebration.className = 'today-tasks-celebration';
-        celebration.textContent = t('today_tasks_all_done_message');
-        container.appendChild(celebration);
-        // נצנצים על פני כל האפליקציה לרגע החגיגה. הדגל ב-Supabase (לא
-        // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
-        // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח -
-        // הוא עדיין שער-הכניסה היחיד שמונע כפילות בין מכשירים/רענוני-דף
-        // רגילים (לא נמחק/נכתב מחדש בכל קריאה - זה מה שגרם לתחרות המקורית).
-        // בנוסף, lastKnownAllDoneState (משתנה זיכרון בלבד, לא DB) עוקב אחרי
-        // מעבר אמיתי false→true *בתוך אותה טעינת-דף* - כדי לחגוג שוב אחרי
-        // ביטול-סימון-ואז-סימון-מחדש או הוספת משימה חדשה ואז השלמתה, לפי
-        // בקשה מפורשת ("ברגע שמוחקים את הוי ושמים שוב - שיעשה שוב קונפטי").
-        // מתחיל כ-null (לא false!) כדי שטעינת-דף ראשונה שכבר חגגה היום
-        // (alreadyCelebratedToday) לא תיחשב "מעבר" ותחגוג שוב סתם מרענון
-        const justTransitioned = lastKnownAllDoneState === false;
         if (populated.length + events.length > 0) {
+            const celebration = document.createElement('p');
+            celebration.className = 'today-tasks-celebration';
+            celebration.textContent = t('today_tasks_all_done_message');
+            container.appendChild(celebration);
+            // נצנצים על פני כל האפליקציה לרגע החגיגה. הדגל ב-Supabase (לא
+            // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
+            // בנייד, אותו דפוס בדיוק כמו checkDailyFocusPrompt/דגל ה-"1" על המוח -
+            // הוא עדיין שער-הכניסה היחיד שמונע כפילות בין מכשירים/רענוני-דף
+            // רגילים (לא נמחק/נכתב מחדש בכל קריאה - זה מה שגרם לתחרות המקורית).
+            // בנוסף, lastKnownAllDoneState (משתנה זיכרון בלבד, לא DB) עוקב אחרי
+            // מעבר אמיתי false→true *בתוך אותה טעינת-דף* - כדי לחגוג שוב אחרי
+            // ביטול-סימון-ואז-סימון-מחדש או הוספת משימה חדשה ואז השלמתה, לפי
+            // בקשה מפורשת ("ברגע שמוחקים את הוי ושמים שוב - שיעשה שוב קונפטי").
+            // מתחיל כ-null (לא false!) כדי שטעינת-דף ראשונה שכבר חגגה היום
+            // (alreadyCelebratedToday) לא תיחשב "מעבר" ותחגוג שוב סתם מרענון
+            const justTransitioned = lastKnownAllDoneState === false;
             if (!alreadyCelebratedToday) {
                 const { error: celebrateError } = await supabaseClient.from('calendar_events').insert({
                     username: currentUsername, user_id: currentUserId,
@@ -6924,6 +6928,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'daily_nutrition_goals', category: 'nutrition' },
     { id: 'calorie_monthly_view', category: 'nutrition' },
     { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
+    { id: 'weight_note', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'finance_cycle_day', category: 'finance' },
@@ -16844,8 +16849,10 @@ async function toggleProgressCheckin(targetId, dateStr, shouldCheck) {
 }
 
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
-async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w }); loadWeightHistory(); }
-async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date}) <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
+async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w, note: note || null }); if (noteInput) noteInput.value = ''; loadWeightHistory(); }
+// note מוצג בצבע ההדגשה של ערכת הנושא (--accent-purple-text, אותו משתנה
+// שכל הדגשה טקסטואלית אחרת באפליקציה משתמשת בו) - לפי בקשה מפורשת
+async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date})${item.note ? ` <span class="weight-note-text">${escapeHtmlForReport(item.note)}</span>` : ''} <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }
 
 // --- מד צעדים יומי: תצוגה בלבד, מקור הנתונים יהיה סנכרון אוטומטי עתידי ---

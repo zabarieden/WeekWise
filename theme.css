@@ -1669,7 +1669,8 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder-text,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-quick-add-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .vision-card-back-add-row input {
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .vision-card-back-add-row input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .weight-note-input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
@@ -4400,6 +4401,10 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .weight-inputs-wrap input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; flex: 1 1 110px; min-width: 0; box-sizing: border-box; }
 .weight-inputs-wrap .date-picker-field-trigger { flex: 1 1 110px; min-width: 0; padding: 8px; font-size: 0.8rem; }
 .weight-inputs-wrap #btn-save-weight { flex: 1 1 100%; width: 100% !important; }
+.weight-note-input { background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px; font-size: 0.8rem; outline: none; width: 100%; box-sizing: border-box; }
+/* צבע ההדגשה של ערכת הנושא (--accent-purple-text), כמו כל טקסט-הדגשה אחר
+   באפליקציה - לפי בקשה מפורשת */
+.weight-note-text { color: var(--accent-purple-text); font-size: 0.85rem; margin-inline-start: 6px; }
 /* max-width+margin:auto (לא width:100% גורף) - כדי שברוחב מסך גדול (דסקטופ)
    הרשימה לא תימתח לכל הרוחב אלא תישאר קומפקטית וממורכזת, לפי בקשה מפורשת */
 /* חזרה ל-width:100% מלא (בלי תקרת max-width) - לפי בקשה מפורשת שהרוחב
