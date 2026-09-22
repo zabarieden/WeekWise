@@ -4379,6 +4379,10 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .finance-stat-expense .stat-number { color: var(--accent-purple-text); }
 .finance-stat-budget .stat-number, .finance-stat-budget .stat-number-input { color: var(--accent-gold-text); }
 .finance-stat-remaining .stat-number { color: var(--accent-green-text); }
+/* חמישה כרטיסים ברשת דו-טורית (הכנסה/הוצאה, תקציב-מתוכנן/הכנסה-צפויה,
+   ומאזן חודשי) - הכרטיס האחרון פורש על פני שתי העמודות במקום להישאר לבד
+   בצד אחד, כך שהוא קורא כשורת-סיכום ברורה מתחת לשתי שורות התכנון */
+#finance-card-remaining { grid-column: 1 / -1; }
 /* תקציב מתוכנן ניתן לעריכה במקום (לא כפתור/מודל נפרד) - נראה בדיוק כמו
    .stat-number הרגיל אבל הוא בפועל input, ללא מסגרת/רקע ברירת מחדל של הדפדפן */
 .stat-number-input {

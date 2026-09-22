@@ -6931,6 +6931,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'finance_recurring', category: 'finance' },
     { id: 'finance_custom_categories', category: 'finance' },
     { id: 'receipts_feature', category: 'finance' },
+    { id: 'finance_monthly_balance', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
@@ -8520,6 +8521,7 @@ const FINANCE_CATEGORIES = {
 let currentFinanceEntryType = 'expense';
 let financeSummaryMonthKey = null;
 let cachedFinanceTargetBudget = 0;
+let cachedFinanceTargetIncome = 0;
 
 // --- מחזור פיננסי מותאם אישית: יום ההתחלה של "החודש" לצורך סיכום/היסטוריה -
 // ברירת מחדל 1 (= חודש קלנדרי רגיל, בלי שינוי התנהגות למי שלא נגע בזה) -
@@ -8926,6 +8928,7 @@ async function renderFinanceSummary() {
     const incomeEl = document.getElementById('finance-total-income');
     const expenseEl = document.getElementById('finance-total-expense');
     const budgetInput = document.getElementById('finance-target-budget-input');
+    const incomeTargetInput = document.getElementById('finance-target-income-input');
     const remainingEl = document.getElementById('finance-remaining');
     const overspendLabel = document.getElementById('finance-overspend-label');
     if (!labelEl || !supabaseClient || !currentUserId) return;
@@ -8944,7 +8947,7 @@ async function renderFinanceSummary() {
     const [{ data: entries }, { data: targetRow }, { data: recurringRows }] = await Promise.all([
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
-        supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).lte('month_key', monthKey).order('month_key', { ascending: false }).limit(1).maybeSingle(),
+        supabaseClient.from('budget_monthly_targets').select('target_amount, target_income').eq('user_id', currentUserId).lte('month_key', monthKey).order('month_key', { ascending: false }).limit(1).maybeSingle(),
         supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, is_paused, installment_current, installment_total')
             .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
@@ -8961,11 +8964,15 @@ async function renderFinanceSummary() {
 
     cachedFinanceTargetBudget = (targetRow && targetRow.target_amount) || 0;
     budgetInput.value = cachedFinanceTargetBudget || '';
+    cachedFinanceTargetIncome = (targetRow && targetRow.target_income) || 0;
+    incomeTargetInput.value = cachedFinanceTargetIncome || '';
 
-    // "כמה נשאר להוציא" = תקציב מתוכנן פחות הוצאות בפועל - אם ההוצאות עברו את
-    // התקציב, מציגים את סכום החריגה עם תווית אזהרה רכה (ענבר/אדום), לא סתם
-    // מספר שלילי סתמי
-    const remaining = cachedFinanceTargetBudget - expense;
+    // "מאזן חודשי" = הכנסה צפויה (לא הכנסה בפועל עד כה!) פחות הוצאות בפועל -
+    // לפי בקשה מפורשת: לפני שהמשכורת מגיעה, ההכנסה-בפועל עדיין 0 כמעט כל
+    // חודש, מה שהיה גורם למאזן להיראות שלילי/מלחיץ רוב הזמן גם כשהכול בסדר.
+    // שימוש בהכנסה הצפויה (קבוע שנקבע מראש, כמו התקציב המתוכנן) נותן תמונה
+    // ריאלית של "אם הכל יגיע כמתוכנן" לאורך כל החודש, לא רק בסופו
+    const remaining = cachedFinanceTargetIncome - expense;
     remainingEl.textContent = Math.abs(remaining).toLocaleString();
     if (remaining < 0) {
         remainingEl.style.color = 'var(--accent-red)';
@@ -8984,6 +8991,19 @@ async function saveFinanceTargetBudget() {
     await supabaseClient.from('budget_monthly_targets')
         .upsert({ user_id: currentUserId, username: currentUsername, month_key: monthKey, target_amount: target }, { onConflict: 'user_id,month_key' });
     cachedFinanceTargetBudget = target;
+    await renderFinanceSummary();
+}
+
+// אותו דפוס בדיוק כמו saveFinanceTargetBudget - "הכנסה צפויה" משתמשת באותה
+// טבלה (budget_monthly_targets), עמודה נפרדת, אותו upsert על אותו מפתח
+async function saveFinanceTargetIncome() {
+    if (!supabaseClient || !currentUserId) return;
+    const incomeTargetInput = document.getElementById('finance-target-income-input');
+    const target = parseFloat(incomeTargetInput.value) || 0;
+    const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
+    await supabaseClient.from('budget_monthly_targets')
+        .upsert({ user_id: currentUserId, username: currentUsername, month_key: monthKey, target_income: target }, { onConflict: 'user_id,month_key' });
+    cachedFinanceTargetIncome = target;
     await renderFinanceSummary();
 }
 
