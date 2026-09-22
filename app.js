@@ -9053,10 +9053,12 @@ async function renderFinanceHistory() {
         list.appendChild(li);
     });
     // הוצאות קבועות דבוקות בתחתית הרשימה (לא מעורבבות בין העסקאות הרגילות) -
-    // לפי בקשה מפורשת
-    (recurringRows || []).forEach(row => {
+    // לפי בקשה מפורשת. תשלום שהגיע לתשלום האחרון לא מופיע כאן בכלל - אותה
+    // התנהגות בדיוק כמו הוראת קבע מוקפאת (מסוננת כבר בשאילתה למעלה,
+    // is_paused=false), לא רק מעומעם באותה רשימה
+    (recurringRows || []).filter(row => !isInstallmentFinished(row, getLocalDateString())).forEach(row => {
         const li = document.createElement('li');
-        li.className = 'finance-history-row' + (isInstallmentFinished(row, getLocalDateString()) ? ' recurring-expense-ended' : '');
+        li.className = 'finance-history-row';
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
@@ -9318,7 +9320,9 @@ function renderRecurringInstallmentsSection() {
     if (!container) return;
     if (!isPremiumUser) { renderRecurringPremiumHint(container); return; }
     const today = getLocalDateString();
-    const items = cachedRecurringExpenses.filter(item => item.installment_total && isRecurringExpenseActive(item) && !isInstallmentFinished(item, today));
+    const dateActive = cachedRecurringExpenses.filter(item => item.installment_total && isRecurringExpenseActive(item));
+    const items = dateActive.filter(item => !isInstallmentFinished(item, today));
+    const finishedItems = dateActive.filter(item => isInstallmentFinished(item, today));
     const monthlyTotal = items.reduce((sum, item) => sum + Number(item.amount), 0);
     container.innerHTML = `
         <div class="stats-grid stats-grid-2col">
@@ -9337,7 +9341,39 @@ function renderRecurringInstallmentsSection() {
         </div>
         <ul id="recurring-installments-list" class="center-list" style="margin-top:10px;"></ul>
     `;
-    renderRecurringExpensesList('recurring-installments-list', item => !!item.installment_total);
+    renderRecurringInstallmentsList(items, finishedItems);
+}
+
+function buildRecurringInstallmentsDoneDivider() {
+    const li = document.createElement('li');
+    li.className = 'center-list-divider';
+    li.onclick = () => li.classList.toggle('expanded');
+    const label = document.createElement('span');
+    label.className = 'center-list-divider-label';
+    label.textContent = t('finance_recurring_installments_done_section_label');
+    const chevron = document.createElement('span');
+    chevron.className = 'center-list-divider-chevron';
+    chevron.textContent = '›';
+    li.appendChild(label);
+    li.appendChild(chevron);
+    return li;
+}
+
+// תשלום שהגיע לתשלום האחרון יורד לתחתית הרשימה מתחת למפריד מתקפל ומעומעם -
+// אותו דפוס בדיוק כמו הוראת קבע מוקפאת (buildRecurringPausedDivider/
+// renderRecurringStandingOrdersList למעלה), לפי בקשה מפורשת ("כמו שעשית
+// בהקפאה... שלא יהיה ממש ביחד עם כל התשלומים")
+function renderRecurringInstallmentsList(items, finishedItems) {
+    const list = document.getElementById('recurring-installments-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!items.length && !finishedItems.length) { list.innerHTML = `<li class="finance-history-empty">${t('finance_recurring_empty')}</li>`; return; }
+    const today = getLocalDateString();
+    items.forEach(item => list.appendChild(buildRecurringExpenseRowEl(item, today)));
+    if (finishedItems.length) {
+        list.appendChild(buildRecurringInstallmentsDoneDivider());
+        finishedItems.forEach(item => list.appendChild(buildRecurringExpenseRowEl(item, today)));
+    }
 }
 
 // "הוראות קבע" (בלי installment_total) - הסכום כאן מוצג רק כמידע ("כמה
