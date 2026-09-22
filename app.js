@@ -8945,13 +8945,17 @@ async function renderFinanceSummary() {
         supabaseClient.from('budget_tracker').select('entry_type, amount')
             .eq('user_id', currentUserId).gte('entry_date', firstStr).lte('entry_date', lastStr),
         supabaseClient.from('budget_monthly_targets').select('target_amount').eq('user_id', currentUserId).lte('month_key', monthKey).order('month_key', { ascending: false }).limit(1).maybeSingle(),
-        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, is_paused')
+        supabaseClient.from('recurring_expenses').select('amount, start_date, end_date, is_paused, installment_current, installment_total')
             .eq('user_id', currentUserId).lte('start_date', lastStr).or(`end_date.is.null,end_date.gte.${firstStr}`),
     ]);
     let income = 0, expense = 0;
     (entries || []).forEach(row => { if (row.entry_type === 'income') income += Number(row.amount); else expense += Number(row.amount); });
-    // הוראת קבע מוקפאת לא נכנסת לסה"כ ההוצאות - זו בדיוק המשמעות של "הקפאה"
-    (recurringRows || []).forEach(row => { if (!row.is_paused) expense += Number(row.amount); });
+    // הוראת קבע מוקפאת לא נכנסת לסה"כ ההוצאות - זו בדיוק המשמעות של "הקפאה".
+    // תשלום שכבר הגיע לתשלום האחרון (isInstallmentFinished) גם לא נכנס - אין
+    // לו end_date משלו בכלל (ר' ההערה שם), אז בלי הבדיקה הזו הוא היה נספר
+    // כאן לנצח גם אחרי שכל התשלומים כבר שולמו בפועל, בדיוק הבאג שדווח
+    const todayStr = getLocalDateString();
+    (recurringRows || []).forEach(row => { if (!row.is_paused && !isInstallmentFinished(row, todayStr)) expense += Number(row.amount); });
     incomeEl.textContent = income.toLocaleString();
     expenseEl.textContent = expense.toLocaleString();
 
@@ -9032,7 +9036,7 @@ async function renderFinanceHistory() {
     // לפי בקשה מפורשת
     (recurringRows || []).forEach(row => {
         const li = document.createElement('li');
-        li.className = 'finance-history-row';
+        li.className = 'finance-history-row' + (isInstallmentFinished(row, getLocalDateString()) ? ' recurring-expense-ended' : '');
         li.innerHTML = `
             <div class="finance-history-main">
                 <span class="finance-history-category">${escapeHtmlForReport(row.name)}</span>
@@ -9293,7 +9297,8 @@ function renderRecurringInstallmentsSection() {
     const container = document.getElementById('recurring-installments-content');
     if (!container) return;
     if (!isPremiumUser) { renderRecurringPremiumHint(container); return; }
-    const items = cachedRecurringExpenses.filter(item => item.installment_total && isRecurringExpenseActive(item));
+    const today = getLocalDateString();
+    const items = cachedRecurringExpenses.filter(item => item.installment_total && isRecurringExpenseActive(item) && !isInstallmentFinished(item, today));
     const monthlyTotal = items.reduce((sum, item) => sum + Number(item.amount), 0);
     container.innerHTML = `
         <div class="stats-grid stats-grid-2col">
@@ -9407,12 +9412,27 @@ function monthsBetweenDateStrings(fromStr, toStr) {
 // רק "תשלומים" נספרים בפועל ב"סה\"כ לחודש" בסיכום (ר' renderFinanceSummary) -
 // "הוראת קבע" נשארת בצד, מוצגת רק כאן ובהיסטוריה. משתמשים בפונקציה הזו גם
 // כאן וגם ב-renderFinanceHistory, כדי לא לשכפל את הלוגיקה
+// חישוב "liveCurrent" (מספר התשלום הנוכחי בפועל, לפי חודשים שחלפו מ-start_date)
+// משותף בין buildRecurringExpenseTypeBadgesHtml ל-isInstallmentFinished - כדי
+// ששני המקומות תמיד יסכימו על אותו מספר בדיוק
+function liveInstallmentCurrent(item, today) {
+    const monthsElapsed = Math.max(0, monthsBetweenDateStrings(item.start_date, today));
+    return Math.min((item.installment_current || 1) + monthsElapsed, item.installment_total);
+}
+
+// תשלום נחשב "הסתיים" כשהגיע למספר התשלום האחרון - לתשלומים (בניגוד להוראות
+// קבע) אין end_date משלהם בכלל, אז זו הדרך היחידה לדעת שהם באמת נגמרו. בלי
+// זה, פריט כמו "תשלום 3 מתוך 3" ממשיך להיספר בסיכום החודשי לנצח - דווח בפועל
+function isInstallmentFinished(item, today) {
+    if (!item.installment_total) return false;
+    return liveInstallmentCurrent(item, today) >= item.installment_total;
+}
+
 function buildRecurringExpenseTypeBadgesHtml(item, today) {
     if (!item.installment_total) {
         return `<span class="recurring-expense-source-tag">🔁 ${t('finance_recurring_standing_order_badge')}</span>`;
     }
-    const monthsElapsed = Math.max(0, monthsBetweenDateStrings(item.start_date, today));
-    const liveCurrent = Math.min((item.installment_current || 1) + monthsElapsed, item.installment_total);
+    const liveCurrent = liveInstallmentCurrent(item, today);
     const progress = t('finance_recurring_installment_progress').replace('{current}', liveCurrent).replace('{total}', item.installment_total);
     const totalPaid = Number(item.amount) * item.installment_total;
     const totalBadge = t('finance_recurring_total_paid').replace('{total}', totalPaid.toLocaleString());
@@ -9420,10 +9440,12 @@ function buildRecurringExpenseTypeBadgesHtml(item, today) {
 }
 
 function buildRecurringExpenseRowEl(item, today) {
-    const ended = item.end_date && item.end_date < today;
+    const installmentsFinished = isInstallmentFinished(item, today);
+    const ended = (item.end_date && item.end_date < today) || installmentsFinished;
     let badgeText;
-    if (!item.end_date) badgeText = t('finance_recurring_ongoing');
-    else if (ended) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
+    if (installmentsFinished) badgeText = t('finance_recurring_installments_paid_off');
+    else if (!item.end_date) badgeText = t('finance_recurring_ongoing');
+    else if (item.end_date < today) badgeText = t('finance_recurring_ended_on').replace('{date}', formatShortMonthYear(item.end_date));
     else badgeText = t('finance_recurring_ends_on').replace('{date}', formatShortMonthYear(item.end_date));
     const li = document.createElement('li');
     li.className = 'finance-history-row' + (ended ? ' recurring-expense-ended' : '');
