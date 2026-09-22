@@ -6926,6 +6926,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
     { id: 'weight_note', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
+    { id: 'habits_sport_link_overview', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'finance_cycle_day', category: 'finance' },
     { id: 'finance_recurring', category: 'finance' },
@@ -10208,6 +10209,11 @@ async function renderSportHistory() {
         const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
         const notesPart = row.notes ? `<span class="finance-history-note">${escapeHtmlForReport(row.notes)}</span>` : '';
         const photoPart = row.photo_url ? `<img src="${row.photo_url}" class="sport-history-thumb" alt="">` : '';
+        // תג "מהרגל" - נקבע רק פעם אחת בשורה (source_habit_id), לא ניתן
+        // לעריכה כאן - כדי שיהיה ברור למה הרשומה הזו קיימת בכלל, ר'
+        // toggleHabitCheckin. תג מותנה בעצם קיום ה-id, לא בכך שההרגל המקורי
+        // עדיין קיים (source_habit_id הופך ל-null אם ההרגל נמחק בעתיד)
+        const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
         li.innerHTML = `
             ${photoPart}
             <div class="finance-history-main">
@@ -10215,6 +10221,7 @@ async function renderSportHistory() {
                 <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
                 ${motivationPart}
                 ${notesPart}
+                ${habitSourceBadge}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <button type="button" class="btn-delete-slot" onclick="shareSportSession('${row.id}')">📤</button>
@@ -14415,7 +14422,7 @@ async function loadHabits() {
         checkBtn.type = 'button';
         checkBtn.className = 'btn-complete-item' + (doneToday ? ' checked' : '');
         checkBtn.textContent = doneToday ? '✓' : '';
-        checkBtn.onclick = () => toggleHabitCheckin(habit.id, todayStr, !doneToday);
+        checkBtn.onclick = () => toggleHabitCheckin(habit, todayStr, !doneToday);
         const nameSpan = document.createElement('span');
         nameSpan.className = 'center-list-item-text';
         nameSpan.textContent = habit.name;
@@ -14513,16 +14520,93 @@ async function renderHabitHistory() {
     grid.innerHTML = html;
 }
 
+// --- מבט-על חודשי לכל ההרגלים ביחד (בניגוד להיסטוריית-הרגל-הבודד למעלה) -
+// טבלה אחת רחבה (גוללת אופקית, ר' .habits-overview-table-wrap), שורה לכל
+// הרגל ועמודה לכל יום בחודש - קריאה בלבד לגמרי, אין שום קליק על תא, לפי
+// בקשה מפורשת ("אי אפשר לשנות רק לראות") ---
+let viewedHabitsOverviewMonthKey = null;
+
+async function openHabitsOverviewModal() {
+    viewedHabitsOverviewMonthKey = currentMonthKey();
+    openModal('modal-habits-overview');
+    await renderHabitsOverview();
+}
+
+async function navigateHabitsOverview(delta) {
+    if (!viewedHabitsOverviewMonthKey) return;
+    viewedHabitsOverviewMonthKey = shiftMonthKey(viewedHabitsOverviewMonthKey, delta);
+    await renderHabitsOverview();
+}
+
+async function renderHabitsOverview() {
+    if (!viewedHabitsOverviewMonthKey || !supabaseClient || !currentUserId) return;
+    const monthKey = viewedHabitsOverviewMonthKey;
+    document.getElementById('habits-overview-month-label').textContent = formatMonthLabel(monthKey);
+    const [y, m] = monthKey.split('-').map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const firstStr = `${monthKey}-01`;
+    const lastStr = `${monthKey}-${String(daysInMonth).padStart(2, '0')}`;
+    const [{ data: habits }, { data: checkins }] = await Promise.all([
+        supabaseClient.from('habits').select('id, name').eq('user_id', currentUserId).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
+        supabaseClient.from('habit_checkins').select('habit_id, checkin_date').eq('user_id', currentUserId).gte('checkin_date', firstStr).lte('checkin_date', lastStr),
+    ]);
+    const table = document.getElementById('habits-overview-table');
+    const emptyHint = document.getElementById('habits-overview-empty');
+    if (!habits || !habits.length) {
+        table.innerHTML = '';
+        emptyHint.classList.remove('hidden');
+        return;
+    }
+    emptyHint.classList.add('hidden');
+    const checkinsByHabit = {};
+    (checkins || []).forEach(c => {
+        if (!checkinsByHabit[c.habit_id]) checkinsByHabit[c.habit_id] = new Set();
+        checkinsByHabit[c.habit_id].add(c.checkin_date);
+    });
+    let headerHtml = '<tr><th class="habits-overview-name-col"></th>';
+    for (let day = 1; day <= daysInMonth; day++) headerHtml += `<th>${day}</th>`;
+    headerHtml += '</tr>';
+    let bodyHtml = '';
+    habits.forEach(habit => {
+        const dates = checkinsByHabit[habit.id] || new Set();
+        bodyHtml += `<tr><td class="habits-overview-name-col">${escapeHtmlForReport(habit.name)}</td>`;
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
+            bodyHtml += `<td>${dates.has(dateStr) ? '✓' : ''}</td>`;
+        }
+        bodyHtml += '</tr>';
+    });
+    table.innerHTML = headerHtml + bodyHtml;
+}
+
 function openAddHabitModal() {
     document.getElementById('habit-name-input').value = '';
+    document.getElementById('habit-link-sport-toggle').checked = false;
+    document.getElementById('habit-sport-duration-input').value = '';
+    document.getElementById('habit-sport-duration-input').classList.add('hidden');
     openModal('modal-add-habit');
+}
+
+// מציג/מסתיר את שדה משך-הזמן לפי מצב הבורר - אותו דפוס בדיוק כמו
+// toggleRecurringEndDateField. הקישור להרגל נקבע רק כאן, בעת היצירה - אין
+// עריכת הרגל בכלל באפליקציה הזו, לפי בקשה מפורשת
+function toggleHabitSportLinkField() {
+    const linked = document.getElementById('habit-link-sport-toggle').checked;
+    document.getElementById('habit-sport-duration-input').classList.toggle('hidden', !linked);
 }
 
 async function addHabit() {
     const input = document.getElementById('habit-name-input');
     const name = input.value.trim();
     if (!name) { showAppToast(t('habits_missing_name'), 'error'); return; }
-    await supabaseClient.from('habits').insert({ user_id: currentUserId, username: currentUsername, name });
+    const linkToSport = document.getElementById('habit-link-sport-toggle').checked;
+    const durationInput = document.getElementById('habit-sport-duration-input');
+    const sportDuration = linkToSport ? parseInt(durationInput.value) || 0 : 0;
+    if (linkToSport && !sportDuration) { showAppToast(t('habits_missing_sport_duration'), 'error'); return; }
+    await supabaseClient.from('habits').insert({
+        user_id: currentUserId, username: currentUsername, name,
+        link_to_sport: linkToSport, sport_duration_minutes: linkToSport ? sportDuration : null,
+    });
     input.value = '';
     closeModal('modal-add-habit');
     await loadHabits();
@@ -17167,13 +17251,33 @@ async function deleteRoutineItemFromModal() {
     await renderDailyBoard();
 }
 
-async function toggleHabitCheckin(habitId, dateStr, checked) {
+// מקבלת את אובייקט ההרגל המלא (לא רק ה-id) כדי לדעת אם link_to_sport/
+// sport_duration_minutes בלי סבב-שרת נוסף - ר' ההערה ב-loadHabits. וי על
+// הרגל מקושר-ספורט רושם אוטומטית גם אימון בספורט (כאילו נלחץ "+" שם ידנית),
+// וביטול-וי מוחק בדיוק את אותה רשומה - כדי שלא יישארו רישומים יתומים אם
+// מסמנים ומבטלים כמה פעמים, לפי בקשה מפורשת
+async function toggleHabitCheckin(habit, dateStr, checked) {
+    const habitId = habit.id;
     if (checked) {
         await supabaseClient.from('habit_checkins').insert({ habit_id: habitId, user_id: currentUserId, checkin_date: dateStr });
+        if (habit.link_to_sport) {
+            await supabaseClient.from('sport_sessions').insert({
+                user_id: currentUserId, username: currentUsername, sport_type: 'custom',
+                custom_type_name: habit.name, duration_minutes: habit.sport_duration_minutes,
+                distance_km: null, motivation: null, session_date: dateStr, notes: null,
+                photo_url: null, source_habit_id: habitId,
+            });
+        }
     } else {
         await supabaseClient.from('habit_checkins').delete().eq('habit_id', habitId).eq('checkin_date', dateStr);
+        if (habit.link_to_sport) {
+            await supabaseClient.from('sport_sessions').delete().eq('source_habit_id', habitId).eq('session_date', dateStr);
+        }
     }
     await loadHabits();
+    if (habit.link_to_sport && document.getElementById('sport-summary-next-btn')) {
+        await Promise.all([renderSportSummary(), renderSportHistory()]);
+    }
 }
 async function addProgressTarget() {
     if (!supabaseClient) return;

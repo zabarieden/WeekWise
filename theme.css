@@ -4556,6 +4556,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .habit-history-stat-label { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
 .habit-history-grid .monthly-calendar-cell { cursor: default; }
 .habit-history-grid .monthly-calendar-cell.habit-history-done { background-color: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); }
+/* מבט-על חודשי לכל ההרגלים - טבלה רחבה, גוללת אופקית בתוך עטיפה משלה (לא
+   מגלגלת את כל העמוד לרוחב) - עמודת השם דביקה (sticky) בצד ההתחלה של
+   הכיוון (inset-inline-start מתאים אוטומטית ל-RTL/LTR) כדי שתישאר גלויה
+   תוך כדי גלילה ימינה/שמאלה. קריאה בלבד - אין hover/cursor:pointer בכוונה */
+.habits-overview-table-wrap { overflow-x: auto; margin-top: 10px; border-radius: 12px; }
+.habits-overview-table { border-collapse: collapse; width: 100%; }
+.habits-overview-table th, .habits-overview-table td { padding: 6px 8px; text-align: center; font-size: 0.78rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+.habits-overview-table th { color: var(--text-secondary); font-weight: 600; font-size: 0.7rem; }
+.habits-overview-name-col { position: sticky; inset-inline-start: 0; background-color: var(--bg-sheet); text-align: start !important; font-weight: 600; }
+.habits-overview-table td:not(.habits-overview-name-col) { color: var(--accent-gold-text); font-weight: 700; }
 /* עזרה ושאלות נפוצות - גיליון גבוה יותר מהרגיל (85vh->92vh) כי יש הרבה
    תוכן; החיפוש תמיד גלוי למעלה, מחוץ לרשימה הגוללת עצמה */
 .help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }
