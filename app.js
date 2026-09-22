@@ -14051,6 +14051,25 @@ function applyStudyPeekTabSetting() {
     const enabled = isStudyPeekTabOn();
     if (tab) tab.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
+    repositionPeekTabStack();
+}
+
+// מסדרת מחדש את ה-top (בפיקסלים) של כל לשונית בערימה לפי מי שבאמת גלוי/ה
+// כרגע - בלי זה, כיבוי טאב באמצע הערימה (למשל לימודים) היה משאיר רווח קבוע
+// במקומו במקום שהטאב שאחריו (הרגלים) יעלה למלא אותו, בדיוק לפי בקשה מפורשת
+// ("שלא יהיו גאפים/מרווחים"). סדר הערימה בפועל (מלמעלה למטה): השגרה שלי
+// (btn-daily-board-fab) → הצצה להיום (today-peek-tab) → לימודים (study-peek-tab,
+// אופציונלי) → הרגלים (habits-peek-tab, אופציונלי) - נקרא בכל שינוי נראות
+// (הפעלה/כיבוי של כל אחד מהטאבים האופציונליים)
+function repositionPeekTabStack() {
+    const stackIds = ['btn-daily-board-fab', 'today-peek-tab', 'study-peek-tab', 'habits-peek-tab'];
+    let visibleIndex = 0;
+    stackIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.classList.contains('hidden')) return;
+        el.style.top = `${14 + visibleIndex * 52}px`;
+        visibleIndex++;
+    });
 }
 
 // טאב רביעי בערימה - הרגלים, מיד אחרי לימודים - בניגוד ללימודים זה דולק
@@ -14081,6 +14100,7 @@ function applyHabitsPeekTabSetting() {
     const enabled = isHabitsPeekTabOn();
     if (tab) tab.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
+    repositionPeekTabStack();
 }
 
 async function loadDailyNutrition(date) {
