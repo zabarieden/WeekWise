@@ -1702,6 +1702,7 @@ async function initAppAfterAuth(user) {
         loadAiUsage(),
         loadColorTheme(),
         loadAiIconSetting(),
+        loadFabDockSettings(),
         loadLightModeSetting(),
         loadReminderChimeSetting(),
         loadStudyPeekTabSetting(),
@@ -7027,6 +7028,46 @@ function filterHelpFaq() {
     if (emptyHint) emptyHint.classList.toggle('hidden', anyVisible);
 }
 
+// סנכרון התאמת ה-Dock (4 בועות דלוקות/כבויות + סדר + מי בחזית) בין מכשירים -
+// עד היום הכל היה ב-localStorage בלבד, אז שינוי במובייל אף פעם לא הגיע
+// לדפדפן ולהפך, בדיוק כמו הבאג שתוקן קודם לאייקון ה-AI. fire-and-forget,
+// אותו דפוס בדיוק כמו selectAiIcon - לא חוסם את הפעולה המקומית המיידית
+function syncFabDockSettingToDb(patch) {
+    if (!supabaseClient || !currentUserId) return;
+    supabaseClient.from('user_premium').upsert(
+        { user_id: currentUserId, username: currentUsername, ...patch },
+        { onConflict: 'user_id' },
+    );
+}
+
+// טוענת את כל 6 ההגדרות מה-DB (אם יש) ומחילה אותן על גבי מה שכבר הוחל
+// מ-localStorage ב-DOMContentLoaded (לפני שהיה session בכלל) - בדיוק כמו
+// loadAiIconSetting, ה-DB תמיד גובר כשהוא נגיש. מאפסת fabCarouselOrder כדי
+// לאלץ בנייה מחדש מלאה של סדר-הבועות (לא רק תיאום מי-פעיל/כבוי) - אחרת
+// applyDockOrder היה שומר על הסדר הישן שכבר נבנה מקומית, ר' ההערה שם
+async function loadFabDockSettings() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium')
+        .select('sport_fab_enabled, water_fab_enabled, preset_fab_enabled, finance_fab_enabled, fab_order, fab_front_id')
+        .eq('user_id', currentUserId).maybeSingle();
+    if (!data) return;
+    if (data.water_fab_enabled !== null && data.water_fab_enabled !== undefined) localStorage.setItem('weekwise_water_fab', data.water_fab_enabled ? 'true' : 'false');
+    if (data.sport_fab_enabled !== null && data.sport_fab_enabled !== undefined) localStorage.setItem('weekwise_sport_fab', data.sport_fab_enabled ? 'true' : 'false');
+    if (data.preset_fab_enabled !== null && data.preset_fab_enabled !== undefined) localStorage.setItem('weekwise_preset_fab', data.preset_fab_enabled ? 'true' : 'false');
+    if (data.finance_fab_enabled !== null && data.finance_fab_enabled !== undefined) localStorage.setItem('weekwise_finance_fab', data.finance_fab_enabled ? 'true' : 'false');
+    const defaultOrder = ['btn-finance-fab', 'btn-preset-fab', 'btn-sport-fab', 'btn-water-fab'];
+    if (Array.isArray(data.fab_order) && defaultOrder.every(id => data.fab_order.includes(id))) {
+        localStorage.setItem('weekwise_fab_order', JSON.stringify(data.fab_order));
+    }
+    if (data.fab_front_id) localStorage.setItem('weekwise_fab_front_id', data.fab_front_id);
+    fabCarouselOrder = null;
+    applyWaterFabSetting(isWaterFabOn(), true);
+    applySportFabSetting(isSportFabOn(), true);
+    applyPresetFabSetting(isPresetFabOn(), true);
+    applyFinanceFabSetting(isFinanceFabOn(), true);
+    restackFabs();
+}
+
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (opt-in, לא opt-out)
 // שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"),
 // דורס את ה-opt-out הקודם ("=== 'true'" ולא "!== 'false'")
@@ -7188,7 +7229,10 @@ function applyDockOrder() {
     // שומרים מי בחזית עכשיו כדי שהטעינה הבאה תזכור (ר' השחזור למעלה) - לא
     // רק אחרי גרירה, גם אחרי סיבוב או שינוי הגדרות שהזיז את מי שבחזית
     const currentFrontId = fabCarouselOrder[frontIndex];
-    if (currentFrontId) localStorage.setItem('weekwise_fab_front_id', currentFrontId);
+    if (currentFrontId) {
+        localStorage.setItem('weekwise_fab_front_id', currentFrontId);
+        syncFabDockSettingToDb({ fab_front_id: currentFrontId });
+    }
 }
 
 function restackFabs() {
@@ -7321,6 +7365,7 @@ function initFabOrderDragReorder() {
                     .map(el => el.getAttribute('data-fab-id') || el.id)
                     .filter(Boolean);
                 localStorage.setItem('weekwise_fab_order', JSON.stringify(order));
+                syncFabDockSettingToDb({ fab_order: order });
                 applyFabOrder();
             },
         });
@@ -7351,6 +7396,12 @@ function resetFabLayout() {
     fabCarouselOrder = null;
     localStorage.setItem('weekwise_fab_front_id', 'btn-ai-fab');
     restackFabs();
+    // מאפסת גם ב-DB (null = "לא הוגדר", חוזר לברירת המחדל) - אחרת איפוס
+    // מקומי היה משאיר ערך ישן ב-DB שיחזור ויידרוס את האיפוס במכשיר אחר
+    syncFabDockSettingToDb({
+        water_fab_enabled: null, sport_fab_enabled: null, preset_fab_enabled: null,
+        finance_fab_enabled: null, fab_order: null, fab_front_id: 'btn-ai-fab',
+    });
     showAppToast(t('settings_reset_fab_layout_done'));
 }
 
@@ -7358,12 +7409,14 @@ function toggleWaterFab() {
     const enabled = document.getElementById('water-fab-toggle').checked;
     localStorage.setItem('weekwise_water_fab', enabled ? 'true' : 'false');
     applyWaterFabSetting(enabled);
+    syncFabDockSettingToDb({ water_fab_enabled: enabled });
 }
 
 function toggleWaterFabFromCard() {
     const enabled = !isWaterFabOn();
     localStorage.setItem('weekwise_water_fab', enabled ? 'true' : 'false');
     applyWaterFabSetting(enabled);
+    syncFabDockSettingToDb({ water_fab_enabled: enabled });
     showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
@@ -7390,6 +7443,7 @@ function toggleSportFab() {
     const enabled = document.getElementById('sport-fab-toggle').checked;
     localStorage.setItem('weekwise_sport_fab', enabled ? 'true' : 'false');
     applySportFabSetting(enabled);
+    syncFabDockSettingToDb({ sport_fab_enabled: enabled });
 }
 
 function toggleSportFabFromCard() {
@@ -7417,6 +7471,7 @@ function togglePresetFab() {
     const enabled = document.getElementById('preset-fab-toggle').checked;
     localStorage.setItem('weekwise_preset_fab', enabled ? 'true' : 'false');
     applyPresetFabSetting(enabled);
+    syncFabDockSettingToDb({ preset_fab_enabled: enabled });
 }
 
 // כפתור צף למעבר מהיר למסך התקציב - היה "פריסה חכמה" (מבוססת-AI, ר' ההערה
@@ -7439,6 +7494,7 @@ function toggleFinanceFab() {
     const enabled = document.getElementById('finance-fab-toggle').checked;
     localStorage.setItem('weekwise_finance_fab', enabled ? 'true' : 'false');
     applyFinanceFabSetting(enabled);
+    syncFabDockSettingToDb({ finance_fab_enabled: enabled });
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
