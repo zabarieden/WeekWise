@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=423">
+    <link rel="stylesheet" href="theme.css?v=424">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1359,6 +1359,24 @@
                                 <span id="notebook-page-counter" class="notebook-page-counter"></span>
                                 <button type="button" class="notebook-page-tabs-arrow" id="notebook-page-tabs-arrow" onclick="togglePagesListPanel()" data-i18n-title="notebook_pages_panel_toggle_title" title="Show all pages">▾</button>
                             </div>
+                            <!-- שורות-הטקסט של הדף (לא הציור) - עכשיו למעלה, מיד אחרי ניווט-הדף,
+                                 לפי בקשה מפורשת ("שהדף יהיה למעלה") -->
+                            <div class="notebook-items-section-header">
+                                <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
+                            </div>
+                            <ul id="notebook-items-list" class="study-tasks-list"></ul>
+                            <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
+                            <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
+                            <!-- הציור עצמו - מתחת לטקסט, מתקפל וסגור כברירת מחדל, נפתח רק בלחיצה
+                                 מפורשת - לפי בקשה מפורשת ("והציור יהיה למטה סגור ושילחצו עליו רק
+                                 אם רוצים"). אתחול הקנבס (initNotebookCanvas) קורה רק כשנפתח בפועל
+                                 (ר' toggleNotebookCanvasSection ב-app.js) - קנבס שמאותחל בזמן
+                                 שהוא מוסתר (display:none) מקבל מידות 0/1 פיקסל, לא הגודל האמיתי -->
+                            <div class="notebook-canvas-section-header" id="notebook-canvas-section-header" onclick="toggleNotebookCanvasSection()">
+                                <span data-i18n="notebook_canvas_section_label">🎨 Drawing</span>
+                                <span class="card-toggle-icon" id="notebook-canvas-toggle-icon">▼</span>
+                            </div>
+                            <div class="notebook-canvas-section-body hidden" id="notebook-canvas-section-body">
                             <!-- כלי-ציור (עט/מרקר-עגול/מרקר-מרובע/מחק) - שורה נפרדת מהצבעים/עובי,
                                  לפי בקשה מפורשת ("עוד עטים וסגנונות ציור... מרקר גם לצייר מרקר
                                  וגם למרקר עם ריבוע"). מחק בעל אייקון SVG מותאם (לא אימוג'י ספוג
@@ -1398,12 +1416,7 @@
                                 <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
                                 <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
                             </div>
-                            <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
-                            <div class="notebook-items-section-header">
-                                <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
                             </div>
-                            <ul id="notebook-items-list" class="study-tasks-list"></ul>
-                            <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
                             </div>
                         </div>
                     </div>
@@ -3571,7 +3584,7 @@
 
     </div>
 
-    <script src="i18n.js?v=325"></script>
-    <script src="app.js?v=466"></script>
+    <script src="i18n.js?v=326"></script>
+    <script src="app.js?v=467"></script>
 </body>
 </html>

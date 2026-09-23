@@ -1659,6 +1659,7 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #calorie-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #protein-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #habit-name-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #habit-sport-duration-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #contact-us-message,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-schedule-duration-months,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #preset-quick-add-search,
@@ -4562,10 +4563,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    תוך כדי גלילה ימינה/שמאלה. קריאה בלבד - אין hover/cursor:pointer בכוונה */
 .habits-overview-table-wrap { overflow-x: auto; margin-top: 10px; border-radius: 12px; }
 .habits-overview-table { border-collapse: collapse; width: 100%; }
-.habits-overview-table th, .habits-overview-table td { padding: 6px 8px; text-align: center; font-size: 0.78rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+.habits-overview-table th, .habits-overview-table td { padding: 8px; text-align: center; font-size: 0.78rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
 .habits-overview-table th { color: var(--text-secondary); font-weight: 600; font-size: 0.7rem; }
 .habits-overview-name-col { position: sticky; inset-inline-start: 0; background-color: var(--bg-sheet); text-align: start !important; font-weight: 600; }
-.habits-overview-table td:not(.habits-overview-name-col) { color: var(--accent-gold-text); font-weight: 700; }
+/* עמודת "היום" מודגשת בעדינות, כמו .monthly-calendar-cell.today בהיסטוריית-
+   הרגל הבודדת - כדי שהעין תמצא מיד איפה נמצאים בחודש */
+.habits-overview-today-col { background-color: rgba(168, 85, 247, 0.08); }
+th.habits-overview-today-col { color: var(--accent-purple-text); font-weight: 800; }
+/* עיגול-נקודה צבעוני לתא-שסומן, במקום טקסט "✓" גולמי - אותו גוון בדיוק כמו
+   monthly-calendar-dot, לעקביות עם שאר תצוגות הלוח-החודשי באפליקציה */
+.habits-overview-done-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
 /* עזרה ושאלות נפוצות - גיליון גבוה יותר מהרגיל (85vh->92vh) כי יש הרבה
    תוכן; החיפוש תמיד גלוי למעלה, מחוץ לרשימה הגוללת עצמה */
 .help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }
@@ -5092,7 +5099,8 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* היו rgba(0,0,0,0.4)+color:#fff קבועים - עובד רק על רקע כהה, ולא תלוי
    בערכת-נושא בכלל. זה מסביר את כל תלונות "התיבה אפורה במצב בהיר" לאורך כל
    השדות האלה, לא רק ל-#center-item-input שכבר תוקן בנפרד קודם */
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #habit-sport-duration-input { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
+#habit-sport-duration-input { width: 100%; box-sizing: border-box; }
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
@@ -5355,6 +5363,11 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
 .settings-subsection-body { display: none; margin-top: 12px; }
 .settings-subsection.expanded .settings-subsection-body { display: block; }
 .settings-subsection.expanded .card-toggle-icon { transform: rotate(180deg); }
+/* קטע הציור במחברת - מתקפל, סגור כברירת מחדל בכל פתיחת-דף (לא נזכר בין
+   פתיחות), לפי בקשה מפורשת. אותה כותרת-לחיצה בדיוק כמו .card-title-row
+   הרגיל, רק שאין כאן .card אב שממנו .card-toggle-icon יורש את הסיבוב */
+.notebook-canvas-section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 2px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 12px; border-top: 1px solid var(--border-color); }
+#notebook-canvas-toggle-icon.rotated { transform: rotate(180deg); }
 /* תיקון גלישה אופקית: קטגוריות כספים מותאמות-אישית (בועות .ai-brain-tab עם
    flex:1 שלא עוטף כברירת מחדל) גלשו מחוץ למסך במובייל כשיש הרבה קטגוריות -
    לפי בקשה מפורשת ("שלא ילך ימינה שמאלה רק למטה למעלה"). flex:0 0 auto
@@ -5750,7 +5763,11 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    מטרת-הקשה גדולה, לא פיל דק) - תמונה ממוזערת בשורת ההיסטוריה, כי לאף שורת
    הוצאה רגילה אין תמונה היום */
 .receipt-category-cards { display: flex; gap: 10px; margin-top: 10px; }
-.receipt-category-card { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 10px; border-radius: 14px; background: var(--bg-row); border: 1px solid var(--border-color); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: var(--transition); }
+/* עגולות ועדינות יותר (לא ריבועיות/אפורות), עם גוון-רקע עדין משלה לכל
+   קטגוריה (עסק=כחלחל, בית=חמים) - לפי בקשה מפורשת */
+.receipt-category-card { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 10px; border-radius: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid var(--border-color); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: var(--transition); }
+.receipt-category-card[data-receipt-category="business"] { background: linear-gradient(135deg, rgba(30, 136, 229, 0.16), rgba(30, 136, 229, 0.04)); }
+.receipt-category-card[data-receipt-category="home"] { background: linear-gradient(135deg, rgba(251, 140, 0, 0.16), rgba(251, 140, 0, 0.04)); }
 .receipt-category-card.active { border-color: var(--accent-purple); box-shadow: 0 0 0 2px var(--accent-purple) inset; }
 .receipt-category-icon { font-size: 1.8rem; }
 .receipt-history-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }

@@ -14563,8 +14563,15 @@ async function renderHabitsOverview() {
         if (!checkinsByHabit[c.habit_id]) checkinsByHabit[c.habit_id] = new Set();
         checkinsByHabit[c.habit_id].add(c.checkin_date);
     });
+    // עיצוב "לוח שנה" - עמודת-היום-הנוכחי מודגשת, ותא-שסומן מקבל עיגול-נקודה
+    // צבעוני (כמו monthly-calendar-dot בהיסטוריית-הרגל-הבודדת) במקום טקסט
+    // "✓" גולמי - לפי בקשה מפורשת ("יותר מסודר כמו במבט ליומן שלנו")
+    const todayStr = getLocalDateString();
     let headerHtml = '<tr><th class="habits-overview-name-col"></th>';
-    for (let day = 1; day <= daysInMonth; day++) headerHtml += `<th>${day}</th>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
+        headerHtml += `<th${dateStr === todayStr ? ' class="habits-overview-today-col"' : ''}>${day}</th>`;
+    }
     headerHtml += '</tr>';
     let bodyHtml = '';
     habits.forEach(habit => {
@@ -14572,7 +14579,9 @@ async function renderHabitsOverview() {
         bodyHtml += `<tr><td class="habits-overview-name-col">${escapeHtmlForReport(habit.name)}</td>`;
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
-            bodyHtml += `<td>${dates.has(dateStr) ? '✓' : ''}</td>`;
+            const isDone = dates.has(dateStr);
+            const isToday = dateStr === todayStr;
+            bodyHtml += `<td${isToday ? ' class="habits-overview-today-col"' : ''}>${isDone ? '<span class="habits-overview-done-dot"></span>' : ''}</td>`;
         }
         bodyHtml += '</tr>';
     });
@@ -16181,15 +16190,30 @@ function openNotebookPage(pageId) {
     // דף-כתיבה (page_type:'write') מציג טקסטאריה במקום קנבס-ציור - שני
     // סוגי-דף שונים לגמרי, לא רק סגנון (ר' modal-notebook-page-type-choice)
     const isWrite = page.page_type === 'write';
-    document.querySelector('.notebook-tool-row').classList.toggle('hidden', isWrite);
-    document.querySelector('.notebook-page-toolbar').classList.toggle('hidden', isWrite);
-    document.getElementById('notebook-page-canvas').closest('.notebook-page-canvas-wrap').classList.toggle('hidden', isWrite);
+    document.getElementById('notebook-canvas-section-header').classList.toggle('hidden', isWrite);
     document.getElementById('notebook-page-text-content').classList.toggle('hidden', !isWrite);
     if (isWrite) {
         document.getElementById('notebook-page-text-content').value = page.text_content || '';
     } else {
-        initNotebookCanvas();
+        // הציור מתחיל מתקופל בכל פתיחת-דף (לא זוכר מצב-פתיחה קודם) - לפי
+        // בקשה מפורשת ("סגור ושילחצו עליו רק אם רוצים"). לא מאתחלים את הקנבס
+        // כאן - הוא מוסתר עכשיו, ואתחול על אלמנט מוסתר נותן מידות 0/1 פיקסל
+        // (ר' initNotebookCanvas) - האתחול קורה רק כשבאמת נפתח, ר'
+        // toggleNotebookCanvasSection למטה
+        document.getElementById('notebook-canvas-section-body').classList.add('hidden');
+        document.getElementById('notebook-canvas-toggle-icon').classList.remove('rotated');
     }
+}
+
+// מתקפל/נפתח את קטע הציור - ר' ההערה ב-openNotebookPage לגבי הצורך לאתחל
+// את הקנבס רק כשבאמת נחשף (לא כשהוא display:none)
+function toggleNotebookCanvasSection() {
+    const body = document.getElementById('notebook-canvas-section-body');
+    const icon = document.getElementById('notebook-canvas-toggle-icon');
+    const wasHidden = body.classList.contains('hidden');
+    body.classList.toggle('hidden');
+    icon.classList.toggle('rotated', wasHidden);
+    if (wasHidden) initNotebookCanvas();
 }
 
 function renderPageNavHeader() {
@@ -16364,11 +16388,15 @@ async function submitNotebookItem() {
     closeModal('modal-add-notebook-item');
     editingNotebookItemId = null;
     if (!title || !supabaseClient || !currentUserId || !currentOpenPageId) return;
+    let error;
     if (editId) {
-        await supabaseClient.from('notebook_items').update({ title }).eq('id', editId);
+        ({ error } = await supabaseClient.from('notebook_items').update({ title }).eq('id', editId));
     } else {
-        await supabaseClient.from('notebook_items').insert({ page_id: currentOpenPageId, user_id: currentUserId, username: currentUsername, title });
+        // notebook_id הוא NOT NULL בטבלה - בלי אותו כאן ה-insert נכשל בשקט
+        // (לא היה שום בדיקת error!) והתוספת פשוט לא קרתה בכלל, בדיוק מה שדווח
+        ({ error } = await supabaseClient.from('notebook_items').insert({ notebook_id: currentOpenNotebookId, page_id: currentOpenPageId, user_id: currentUserId, username: currentUsername, title }));
     }
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadNotebookItems(currentOpenPageId);
     // מרענן גם את מטמון-החיפוש הכולל (כל הפריטים מכל הדפים), כדי שפריט חדש/
     // מעודכן יהיה מיד בר-חיפוש בלי לצאת ולהיכנס שוב למחברת
