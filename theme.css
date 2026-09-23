@@ -4547,6 +4547,10 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     border-color: transparent;
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
 }
+/* "בסכנה" - כבר יש פספוס אחד (נסלח) ואם היום גם לא יסומן הרצף באמת יישבר -
+   אזהרה קטנה וברורה צמודה לתג-הרצף עצמו, לפי בקשה מפורשת ("אות קטנה...
+   שיודעים שאם לא עושים את זה היום זה היום האחרון") */
+.habit-streak-risk-badge { margin-inline-start: 4px; }
 .btn-habit-history { flex-shrink: 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.95rem; cursor: pointer; padding: 4px; opacity: 0.8; transition: var(--transition); }
 .btn-habit-history:hover { opacity: 1; transform: scale(1.1); }
 /* מודל היסטוריית הרגל - שלושת השבבים העגולים (רצף נוכחי/שיא/סה"כ) מעל
@@ -4557,6 +4561,9 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .habit-history-stat-label { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
 .habit-history-grid .monthly-calendar-cell { cursor: default; }
 .habit-history-grid .monthly-calendar-cell.habit-history-done { background-color: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); }
+/* כל פספוס מסומן בקו אדמדם עדין למטה - עדין בכוונה (לא צועק), כי פספוס בודד
+   כבר לא שובר את הרצף - זו רק תזכורת ויזואלית שהיום הזה לא סומן */
+.habit-history-miss-mark { position: absolute; bottom: 4px; width: 8px; height: 2px; border-radius: 2px; background-color: var(--accent-red); opacity: 0.55; }
 /* מבט-על חודשי לכל ההרגלים - טבלה רחבה, גוללת אופקית בתוך עטיפה משלה (לא
    מגלגלת את כל העמוד לרוחב) - עמודת השם דביקה (sticky) בצד ההתחלה של
    הכיוון (inset-inline-start מתאים אוטומטית ל-RTL/LTR) כדי שתישאר גלויה

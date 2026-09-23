@@ -14445,14 +14445,25 @@ async function emptyNotesArchive(type) {
 // --- הרגלים ורצף (streak): רשימת הרגלים אישיים, כל אחד עם סימון "בוצע
 // היום" ורצף ימים רצופים. הרצף מחושב בצד הלקוח מתוך תאריכי הסימונים (לא
 // עמודה נפרדת שצריך לתחזק) - כך שהוא תמיד עקבי עם הנתונים בפועל ---
+// פספוס יחיד (לא רצוף) לא שובר את הרצף יותר - רק שני ימי-פספוס רצופים שוברים
+// אותו, לפי בקשה מפורשת ("2 פספוסים וזה מתאפס... שיהיה הזדמנות שזה לא
+// יתאפס"). המספר המוצג הוא כמות הימים שבאמת סומנו (לא כולל את יום-הפספוס-
+// הבודד-שנסלח), אבל הספירה ממשיכה אחורה דרכו במקום לעצור
 function computeHabitStreak(dateSet, todayStr) {
     let streak = 0;
+    let missStreak = 0;
     const cursor = new Date(`${todayStr}T00:00:00`);
     // אם היום עצמו עוד לא סומן, לא "שוברים" את הרצף רק בגלל זה - מתחילים
     // לספור מאתמול; הרצף המוצג הוא "עד כמה ימים רצופים זה עדיין חי"
     if (!dateSet.has(getLocalDateString(cursor))) cursor.setDate(cursor.getDate() - 1);
-    while (dateSet.has(getLocalDateString(cursor))) {
-        streak++;
+    while (true) {
+        if (dateSet.has(getLocalDateString(cursor))) {
+            streak++;
+            missStreak = 0;
+        } else {
+            missStreak++;
+            if (missStreak >= 2) break;
+        }
         cursor.setDate(cursor.getDate() - 1);
     }
     return streak;
@@ -14483,6 +14494,14 @@ async function loadHabits() {
         const dates = checkinsByHabit[habit.id] || new Set();
         const streak = computeHabitStreak(dates, todayStr);
         const doneToday = dates.has(todayStr);
+        // "בסכנה" - אתמול כבר היה פספוס (הפספוס-הבודד-הנסלח כבר נוצל) והיום
+        // עדיין לא סומן - אם היום גם לא יסומן, זה יהיה 2 פספוסים רצופים
+        // והרצף באמת יישבר. מוצג רק כשיש בכלל רצף לאבד (streak>0), לפי בקשה
+        // מפורשת ("מין אות קטנה... שיודעים שאם לא עושים את זה היום זה היום
+        // האחרון והרצף נשבר")
+        const yesterdayCursor = new Date(`${todayStr}T00:00:00`);
+        yesterdayCursor.setDate(yesterdayCursor.getDate() - 1);
+        const atRisk = streak > 0 && !doneToday && !dates.has(getLocalDateString(yesterdayCursor));
 
         const li = document.createElement('li');
         li.className = 'habit-item' + (doneToday ? ' habit-done' : '');
@@ -14497,6 +14516,13 @@ async function loadHabits() {
         const streakBadge = document.createElement('span');
         streakBadge.className = 'habit-streak-badge' + (streak > 0 ? ' habit-streak-active' : '');
         streakBadge.textContent = streak > 0 ? `🔥 ${streak}` : '–';
+        if (atRisk) {
+            const riskBadge = document.createElement('span');
+            riskBadge.className = 'habit-streak-risk-badge';
+            riskBadge.textContent = '⚠️';
+            riskBadge.title = t('habit_streak_at_risk_title');
+            streakBadge.appendChild(riskBadge);
+        }
         // כפתור היסטוריה: לוח חודשי לכל הרגל בנפרד, ר' openHabitHistoryModal -
         // בלי זה אין שום דרך לראות מה כבר סומן בעבר, רק את הרצף הנוכחי
         const historyBtn = document.createElement('button');
@@ -14547,7 +14573,9 @@ function computeLongestHabitStreak(dateSet) {
     let longest = 1, current = 1;
     for (let i = 1; i < sortedDates.length; i++) {
         const diffDays = Math.round((new Date(`${sortedDates[i]}T00:00:00`) - new Date(`${sortedDates[i - 1]}T00:00:00`)) / 86400000);
-        current = diffDays === 1 ? current + 1 : 1;
+        // פער של יום אחד בין שתי הופעות (diffDays===2, פספוס יחיד באמצע) לא
+        // שובר את הרצף - אותו חוק בדיוק כמו computeHabitStreak
+        current = diffDays <= 2 ? current + 1 : 1;
         longest = Math.max(longest, current);
     }
     return longest;
@@ -14575,14 +14603,18 @@ async function renderHabitHistory() {
     const startWeekday = firstDate.getDay();
     const daysInMonth = lastDate.getDate();
 
+    // כל פספוס (יום עבר בלי וי) מסומן בקו קטן ועדין - לפי בקשה מפורשת ("לרשום
+    // כל פספוס איכשהוא"). לא נוגע ביום-היום (עוד לא נגמר) ולא בימים עתידיים
     let html = '';
     for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isDone = dateSet.has(dateStr);
-        html += `<div class="monthly-calendar-cell${dateStr === todayStr ? ' today' : ''}${isDone ? ' habit-history-done' : ''}">
+        const isMissed = !isDone && dateStr < todayStr;
+        html += `<div class="monthly-calendar-cell${dateStr === todayStr ? ' today' : ''}${isDone ? ' habit-history-done' : ''}${isMissed ? ' habit-history-missed' : ''}">
             <span class="monthly-calendar-day-num">${day}</span>
             ${isDone ? '<span class="monthly-calendar-dot"></span>' : ''}
+            ${isMissed ? '<span class="habit-history-miss-mark"></span>' : ''}
         </div>`;
     }
     grid.innerHTML = html;
