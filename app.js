@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     restackFabs();
     applyMealRowCounts();
     applyFinanceCycleSetting();
+    applyDailyBoardPeekTabSetting();
+    applyTodayPeekTabSetting();
     applyStudyPeekTabSetting();
     applyHabitsPeekTabSetting();
     applyAiFabCompactSetting();
@@ -1705,6 +1707,8 @@ async function initAppAfterAuth(user) {
         loadFabDockSettings(),
         loadLightModeSetting(),
         loadReminderChimeSetting(),
+        loadDailyBoardPeekTabSetting(),
+        loadTodayPeekTabSetting(),
         loadStudyPeekTabSetting(),
         loadHabitsPeekTabSetting(),
         loadAiFabCompactSetting(),
@@ -2065,6 +2069,10 @@ function openSettingsDrawer() {
     renderReminderChimePicker();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
+    const dailyBoardTabToggle = document.getElementById('daily-board-peek-tab-toggle');
+    if (dailyBoardTabToggle) dailyBoardTabToggle.checked = isDailyBoardPeekTabOn();
+    const todayTabToggle = document.getElementById('today-peek-tab-toggle');
+    if (todayTabToggle) todayTabToggle.checked = isTodayPeekTabOn();
     const studyTabToggle = document.getElementById('study-peek-tab-toggle');
     if (studyTabToggle) studyTabToggle.checked = isStudyPeekTabOn();
     const habitsTabToggle = document.getElementById('habits-peek-tab-toggle');
@@ -14141,6 +14149,66 @@ function applyHabitsPeekTabSetting() {
     const tab = document.getElementById('habits-peek-tab');
     const toggle = document.getElementById('habits-peek-tab-toggle');
     const enabled = isHabitsPeekTabOn();
+    if (tab) tab.classList.toggle('hidden', !enabled);
+    if (toggle) toggle.checked = enabled;
+    repositionPeekTabStack();
+}
+
+// שני הטאבים הראשונים בערימה (השגרה שלי/הצצה להיום) - עד היום תמיד היו דלוקים
+// בלי שום אפשרות לכבות אותם, בניגוד ללימודים/הרגלים למעלה. אותו דפוס בדיוק
+// (opt-out, !== 'false') - כברירת מחדל נשארים דלוקים בדיוק כמו שהיו, לפי
+// בקשה מפורשת ("שהברירת מחדל תשאר כמו שהיא")
+function isDailyBoardPeekTabOn() { return localStorage.getItem('weekwise_daily_board_peek_tab') !== 'false'; }
+async function loadDailyBoardPeekTabSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('daily_board_peek_tab_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.daily_board_peek_tab_enabled === null || data.daily_board_peek_tab_enabled === undefined) return;
+    localStorage.setItem('weekwise_daily_board_peek_tab', String(data.daily_board_peek_tab_enabled));
+    applyDailyBoardPeekTabSetting();
+}
+async function toggleDailyBoardPeekTab() {
+    const enabled = document.getElementById('daily-board-peek-tab-toggle').checked;
+    localStorage.setItem('weekwise_daily_board_peek_tab', String(enabled));
+    applyDailyBoardPeekTabSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, daily_board_peek_tab_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function applyDailyBoardPeekTabSetting() {
+    const tab = document.getElementById('btn-daily-board-fab');
+    const toggle = document.getElementById('daily-board-peek-tab-toggle');
+    const enabled = isDailyBoardPeekTabOn();
+    if (tab) tab.classList.toggle('hidden', !enabled);
+    if (toggle) toggle.checked = enabled;
+    repositionPeekTabStack();
+}
+
+function isTodayPeekTabOn() { return localStorage.getItem('weekwise_today_peek_tab') !== 'false'; }
+async function loadTodayPeekTabSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('today_peek_tab_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.today_peek_tab_enabled === null || data.today_peek_tab_enabled === undefined) return;
+    localStorage.setItem('weekwise_today_peek_tab', String(data.today_peek_tab_enabled));
+    applyTodayPeekTabSetting();
+}
+async function toggleTodayPeekTab() {
+    const enabled = document.getElementById('today-peek-tab-toggle').checked;
+    localStorage.setItem('weekwise_today_peek_tab', String(enabled));
+    applyTodayPeekTabSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, today_peek_tab_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function applyTodayPeekTabSetting() {
+    const tab = document.getElementById('today-peek-tab');
+    const toggle = document.getElementById('today-peek-tab-toggle');
+    const enabled = isTodayPeekTabOn();
     if (tab) tab.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
     repositionPeekTabStack();

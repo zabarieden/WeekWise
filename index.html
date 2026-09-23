@@ -2467,6 +2467,25 @@
                         </label>
                     </div>
 
+                    <!-- שני הטאבים הראשונים בערימה - עד היום תמיד דלוקים בלי אפשרות כיבוי
+                         בכלל, בניגוד ללימודים/הרגלים למטה - נוספה להם אותה אפשרות כיבוי/
+                         הדלקה, כברירת מחדל דלוקים בדיוק כמו שהיו, לפי בקשה מפורשת -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_daily_board_tab_label" for="daily-board-peek-tab-toggle">Show a "My Routine" tab</label>
+                        <label class="switch">
+                            <input type="checkbox" id="daily-board-peek-tab-toggle" onchange="toggleDailyBoardPeekTab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_today_peek_tab_label" for="today-peek-tab-toggle">Show a "Peek at Today" tab</label>
+                        <label class="switch">
+                            <input type="checkbox" id="today-peek-tab-toggle" onchange="toggleTodayPeekTab()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
                     <!-- טאב שלישי אופציונלי בערימה מתחת ל"הצצה להיום"/"השגרה שלי" - כבוי
                          כברירת מחדל, לפי בקשה מפורשת ("אפשרות לשים... גם בהתאמה אישית") -->
                     <div class="settings-toggle-row">
@@ -3584,7 +3603,7 @@
 
     </div>
 
-    <script src="i18n.js?v=326"></script>
-    <script src="app.js?v=467"></script>
+    <script src="i18n.js?v=327"></script>
+    <script src="app.js?v=468"></script>
 </body>
 </html>
