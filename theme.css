@@ -2436,10 +2436,14 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
-/* פתק שבועי - צורת "פתק" (נטייה קלה + נצנצים), אבל בצבע ניטרלי של ערכת
-   הנושא הנוכחית (var(--bg-glass), אותו רקע-זכוכית בדיוק כמו .card) במקום
-   צהוב-פתק קבוע - לפי בקשה מפורשת ("תמיד יהיה בצבע ניטרלי... צבע של ערכת
-   הנושא") אחרי שהצבע הצהוב הקבוע לא התאים לכל ערכות הנושא */
+/* עמודת-צד בקצה הנגדי לברכה/תאריך ב-home-greeting-row - מכילה את הפתק
+   השבועי ואת תג הפרימיום, אחד מעל השני. flex-end רגיל (לא מיקום מוחלט)
+   כדי שהצד יתהפך אוטומטית לפי כיוון השפה - לפי בקשה מפורשת */
+.home-greeting-side-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+/* פתק שבועי - "פתק חמוד" קומפקטי (לא רצועה ברוחב מלא) בצד הנגדי לתאריך,
+   בצבע ניטרלי של ערכת הנושא הנוכחית (var(--bg-glass), אותו רקע-זכוכית
+   בדיוק כמו .card) - לפי בקשה מפורשת ("פתק חמוד... בצד השני של התאריך",
+   "תמיד יהיה בצבע ניטרלי... צבע של ערכת הנושא") */
 .weekly-note-widget {
     position: relative;
     background-color: var(--bg-glass);
@@ -2448,23 +2452,46 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-top: 1px solid rgba(255, 255, 255, 0.22);
     color: var(--text-primary);
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    transform: rotate(-0.6deg);
+    border-radius: 8px;
+    padding: 6px 10px;
+    max-width: 120px;
+    transform: rotate(1.2deg);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
     cursor: pointer;
 }
 .weekly-note-widget::before, .weekly-note-widget::after {
     content: '✨';
     position: absolute;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     pointer-events: none;
 }
-.weekly-note-widget::before { top: -7px; inset-inline-end: -3px; }
-.weekly-note-widget::after { bottom: -7px; inset-inline-start: -3px; font-size: 0.6rem; opacity: 0.85; }
-.weekly-note-display { display: block; font-size: 0.85rem; font-weight: 600; line-height: 1.35; white-space: pre-wrap; word-break: break-word; }
+.weekly-note-widget::before { top: -6px; inset-inline-end: -3px; }
+.weekly-note-widget::after { bottom: -6px; inset-inline-start: -3px; font-size: 0.5rem; opacity: 0.85; }
+/* קומפקטי = שורה אחת בלבד עם "..." לטקסט ארוך (לא עוד גלישה חופשית לכמה
+   שורות כמו ברצועה הישנה) - הטקסט המלא עדיין נגיש דרך הבלון בלחיצה */
+.weekly-note-display { display: block; font-size: 0.78rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .weekly-note-display-empty { font-weight: 500; opacity: 0.75; font-style: italic; }
+/* הבלון הצף - נפתח מעל שאר התוכן (לא בזרימה) כדי שהפתק הקטן לא ידחוף/ישנה
+   את פריסת שורת הברכה כשעורכים, לפי בקשה מפורשת. מיושר לצד הנגדי לתאריך
+   (אותו inset-inline-end כמו הפתק עצמו) כדי שיפתח כלפי מרכז המסך, לא
+   יגלוש מחוץ לגבול המסך בצד הפוך */
+.weekly-note-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    inset-inline-end: 0;
+    width: 220px;
+    z-index: 20;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transform: none;
+    cursor: default;
+}
 .weekly-note-textarea {
     width: 100%;
     box-sizing: border-box;

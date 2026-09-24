@@ -14261,27 +14261,25 @@ function renderWeeklyNoteDisplay() {
     display.textContent = currentWeeklyNoteText.trim() || t('weekly_note_empty_hint');
     display.classList.toggle('weekly-note-display-empty', !currentWeeklyNoteText.trim());
 }
+// פותח "בלון" צף (position:absolute, ר' theme.css) במקום להחליף inline את
+// הפתק הקטן עצמו - הפתק עכשיו קומפקטי (בצד הנגדי לתאריך), אין לו מקום
+// לטקסטאזור בתוך הזרימה הרגילה בלי לדחוף את שאר שורת הברכה, לפי בקשה
+// מפורשת ("פתק חמוד... בצד השני של התאריך")
 function startEditWeeklyNote() {
-    const display = document.getElementById('weekly-note-display');
+    const popover = document.getElementById('weekly-note-popover');
     const textarea = document.getElementById('weekly-note-textarea');
-    const actions = document.getElementById('weekly-note-edit-actions');
-    if (!display || !textarea || !actions) return;
+    if (!popover || !textarea) return;
     textarea.value = currentWeeklyNoteText;
-    display.classList.add('hidden');
-    textarea.classList.remove('hidden');
-    actions.classList.remove('hidden');
+    popover.classList.remove('hidden');
     textarea.focus();
 }
 async function saveWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
-    const display = document.getElementById('weekly-note-display');
-    const actions = document.getElementById('weekly-note-edit-actions');
+    const popover = document.getElementById('weekly-note-popover');
     if (!textarea) return;
     currentWeeklyNoteText = textarea.value.trim();
     renderWeeklyNoteDisplay();
-    textarea.classList.add('hidden');
-    if (actions) actions.classList.add('hidden');
-    if (display) display.classList.remove('hidden');
+    if (popover) popover.classList.add('hidden');
     if (!supabaseClient || !currentUserId) return;
     const { error } = await supabaseClient.from('user_premium').upsert(
         { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText },

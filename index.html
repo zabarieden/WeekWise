@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=427">
+    <link rel="stylesheet" href="theme.css?v=428">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -138,26 +138,33 @@
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                         <p class="home-greeting-date" id="home-greeting-date"></p>
                     </div>
-                    <!-- מוצג רק למי שאינה פרימיום (ר' updateHomePremiumBadgeVisibility) -
-                         נקודת גילוי נוספת לשדרוג ישירות ממסך הבית, לצד ההגדרות -->
-                    <button type="button" id="home-premium-badge" class="home-premium-badge hidden" onclick="openPremiumUpgradeModal()">
-                        <span class="home-premium-badge-icon">⭐</span>
-                        <span data-i18n="home_premium_badge_label">Premium</span>
-                    </button>
-                </div>
-                <!-- פתק שבועי - פתק-דביק עדין למעלה במסך הבית, בדיוק מתחת לברכה. נכתב
-                     פעם (או כמה פעמים) בשבוע ונשאר מוצג עד שנערך שוב - לא מתאפס
-                     אוטומטית מדי שבוע, לפי בקשה מפורשת ("משהו שרוצים ללכת איתו כל
-                     השבוע"). לחיצה על הפתק עצמו עוברת למצב עריכה inline (טקסטאזור
-                     במקום הטקסט) - בלי מודל נפרד, כדי שזה יישאר קליל כמו "לכתוב על
-                     פתק" ולא כמו טופס. ניתן לכיבוי מהגדרות (weekly-note-toggle),
-                     ברירת מחדל דלוק - ר' isWeeklyNoteOn/loadWeeklyNoteSetting -->
-                <div class="weekly-note-widget hidden" id="weekly-note-widget">
-                    <span class="weekly-note-display" id="weekly-note-display" onclick="startEditWeeklyNote()"></span>
-                    <textarea class="weekly-note-textarea hidden" id="weekly-note-textarea" rows="2" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
-                    <div class="weekly-note-edit-actions hidden" id="weekly-note-edit-actions">
-                        <button type="button" class="weekly-note-save-btn" onclick="saveWeeklyNote()" data-i18n-title="weekly_note_save_title" title="Save">✓</button>
-                        <button type="button" class="weekly-note-clear-btn" onclick="clearWeeklyNote()" data-i18n-title="weekly_note_clear_title" title="Clear">🗑️</button>
+                    <!-- עמודת-צד בקצה הנגדי לברכה/תאריך - מכילה את הפתק השבועי ואת תג
+                         הפרימיום, אחד מעל השני. flex רגיל (לא מיקום מוחלט) כדי שהצד
+                         יתהפך אוטומטית לפי כיוון השפה (RTL/LTR) בדיוק כמו כל שאר
+                         השורה - לפי בקשה מפורשת ("בעברית משמאל, באנגלית מימין וככה
+                         כל השפות"), בלי שום קוד ייעודי לכיוון -->
+                    <div class="home-greeting-side-stack">
+                        <!-- פתק שבועי - עכשיו "פתק חמוד" קומפקטי (לא רצועה ברוחב מלא),
+                             יושב בצד הנגדי לתאריך, לפי בקשה מפורשת. לחיצה עליו בזמן
+                             שהוא סגור פותחת "בלון" צף (position:absolute, לא בזרימה)
+                             עם טקסטאזור לעריכה - כך שהעריכה לא דוחפת/משנה את פריסת
+                             שורת הברכה כשהוא פתוח. ר' startEditWeeklyNote/saveWeeklyNote -->
+                        <div class="weekly-note-widget hidden" id="weekly-note-widget">
+                            <span class="weekly-note-display" id="weekly-note-display" onclick="startEditWeeklyNote()"></span>
+                            <div class="weekly-note-popover hidden" id="weekly-note-popover">
+                                <textarea class="weekly-note-textarea" id="weekly-note-textarea" rows="3" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
+                                <div class="weekly-note-edit-actions">
+                                    <button type="button" class="weekly-note-save-btn" onclick="saveWeeklyNote()" data-i18n-title="weekly_note_save_title" title="Save">✓</button>
+                                    <button type="button" class="weekly-note-clear-btn" onclick="clearWeeklyNote()" data-i18n-title="weekly_note_clear_title" title="Clear">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- מוצג רק למי שאינה פרימיום (ר' updateHomePremiumBadgeVisibility) -
+                             נקודת גילוי נוספת לשדרוג ישירות ממסך הבית, לצד ההגדרות -->
+                        <button type="button" id="home-premium-badge" class="home-premium-badge hidden" onclick="openPremiumUpgradeModal()">
+                            <span class="home-premium-badge-icon">⭐</span>
+                            <span data-i18n="home_premium_badge_label">Premium</span>
+                        </button>
                     </div>
                 </div>
                 <!-- הצצה להיום - רק "הלשונית" (הרצועה הצרה הקבועה) יושבת כאן, בזרימה
@@ -3629,6 +3636,6 @@
     </div>
 
     <script src="i18n.js?v=330"></script>
-    <script src="app.js?v=471"></script>
+    <script src="app.js?v=472"></script>
 </body>
 </html>
