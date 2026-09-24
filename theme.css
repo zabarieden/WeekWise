@@ -2436,19 +2436,23 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
-/* פתק שבועי - אותה זהות חזותית בדיוק כמו .daily-focus-chip (פתק-דביק צהוב
-   נטוי + נצנצים), רק רחב יותר (כל רוחב המסך, לא צ'יפ קטן) כי זה טקסט חופשי
-   ולא תג קצר. צבע צהוב-פתק קבוע בכוונה (לא var(--accent-*)) - אותה סיבה
-   בדיוק כמו שם: זו הזהות החזותית של "פתק", לא צריכה להשתנות לפי ערכת נושא */
+/* פתק שבועי - צורת "פתק" (נטייה קלה + נצנצים), אבל בצבע ניטרלי של ערכת
+   הנושא הנוכחית (var(--bg-glass), אותו רקע-זכוכית בדיוק כמו .card) במקום
+   צהוב-פתק קבוע - לפי בקשה מפורשת ("תמיד יהיה בצבע ניטרלי... צבע של ערכת
+   הנושא") אחרי שהצבע הצהוב הקבוע לא התאים לכל ערכות הנושא */
 .weekly-note-widget {
     position: relative;
-    background: #fff4cc;
-    color: #5c4a12;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    color: var(--text-primary);
     border-radius: 6px;
     padding: 10px 14px;
     margin-bottom: 14px;
     transform: rotate(-0.6deg);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
     cursor: pointer;
 }
 .weekly-note-widget::before, .weekly-note-widget::after {
@@ -2464,10 +2468,10 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .weekly-note-textarea {
     width: 100%;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(92, 74, 18, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 4px;
-    color: #5c4a12;
+    color: var(--text-primary);
     font-size: 0.85rem;
     font-family: inherit;
     padding: 6px 8px;
@@ -2475,14 +2479,15 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 }
 .weekly-note-edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 .weekly-note-save-btn, .weekly-note-clear-btn {
-    background: rgba(92, 74, 18, 0.12);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
     border: none;
     border-radius: 4px;
     padding: 4px 10px;
     font-size: 0.85rem;
     cursor: pointer;
 }
-.weekly-note-save-btn:hover, .weekly-note-clear-btn:hover { background: rgba(92, 74, 18, 0.22); }
+.weekly-note-save-btn:hover, .weekly-note-clear-btn:hover { background: rgba(255, 255, 255, 0.2); }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
 .home-premium-badge {
