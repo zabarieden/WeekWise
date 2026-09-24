@@ -5479,7 +5479,11 @@ function buildRecurringEventRow(items, groupId) {
 }
 
 async function toggleEventOccurrenceCompletion(id, isCompleted) {
-    await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
+    // בדיקת { error } נוספה אחרי דיווח בפועל שסימון וי "לא עבד" בלי שום הודעה -
+    // עדכון שנכשל בשקט (למשל טריגר DB שנכשל) השאיר את הצ'קבוקס נראה כאילו
+    // כלום לא קרה, בלי שום רמז למה. ר' גם תיקון הטריגר עצמו ב-calendar_events_enqueue_outbox
+    const { error } = await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); return; }
     loadCalendarEvents();
     loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
