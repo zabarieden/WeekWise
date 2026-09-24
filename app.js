@@ -1711,6 +1711,7 @@ async function initAppAfterAuth(user) {
         loadTodayPeekTabSetting(),
         loadStudyPeekTabSetting(),
         loadHabitsPeekTabSetting(),
+        loadWeeklyNoteSetting(),
         loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
         loadGlobalTextColor(),
@@ -6901,6 +6902,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'daily_board', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
+    { id: 'weekly_note', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -14216,6 +14218,81 @@ function applyTodayPeekTabSetting() {
     if (tab) tab.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
     repositionPeekTabStack();
+}
+
+// --- פתק שבועי עדין במסך הבית - נכתב פעם (או כמה פעמים) בשבוע ונשאר מוצג
+// עד שנערך שוב, בלי איפוס אוטומטי - "משהו שרוצים ללכת איתו כל השבוע", לפי
+// בקשה מפורשת. אותו דפוס בדיוק כמו שאר טאבי-ההצצה: localStorage לתגובה
+// מיידית + סנכרון ל-user_premium (null בעמודות = "עוד לא סונכרן", ר' ההערה
+// הכללית על הדפוס הזה ליד loadFabDockSettings) ---
+let currentWeeklyNoteText = '';
+function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
+async function loadWeeklyNoteSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text').eq('user_id', currentUserId).maybeSingle();
+    if (data && data.weekly_note_enabled !== null && data.weekly_note_enabled !== undefined) {
+        localStorage.setItem('weekwise_weekly_note_enabled', String(data.weekly_note_enabled));
+    }
+    currentWeeklyNoteText = (data && data.weekly_note_text) || '';
+    applyWeeklyNoteSetting();
+    renderWeeklyNoteDisplay();
+}
+async function toggleWeeklyNote() {
+    const enabled = document.getElementById('weekly-note-toggle').checked;
+    localStorage.setItem('weekwise_weekly_note_enabled', String(enabled));
+    applyWeeklyNoteSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, weekly_note_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function applyWeeklyNoteSetting() {
+    const widget = document.getElementById('weekly-note-widget');
+    const toggle = document.getElementById('weekly-note-toggle');
+    const enabled = isWeeklyNoteOn();
+    if (widget) widget.classList.toggle('hidden', !enabled);
+    if (toggle) toggle.checked = enabled;
+}
+function renderWeeklyNoteDisplay() {
+    const display = document.getElementById('weekly-note-display');
+    if (!display) return;
+    display.textContent = currentWeeklyNoteText.trim() || t('weekly_note_empty_hint');
+    display.classList.toggle('weekly-note-display-empty', !currentWeeklyNoteText.trim());
+}
+function startEditWeeklyNote() {
+    const display = document.getElementById('weekly-note-display');
+    const textarea = document.getElementById('weekly-note-textarea');
+    const actions = document.getElementById('weekly-note-edit-actions');
+    if (!display || !textarea || !actions) return;
+    textarea.value = currentWeeklyNoteText;
+    display.classList.add('hidden');
+    textarea.classList.remove('hidden');
+    actions.classList.remove('hidden');
+    textarea.focus();
+}
+async function saveWeeklyNote() {
+    const textarea = document.getElementById('weekly-note-textarea');
+    const display = document.getElementById('weekly-note-display');
+    const actions = document.getElementById('weekly-note-edit-actions');
+    if (!textarea) return;
+    currentWeeklyNoteText = textarea.value.trim();
+    renderWeeklyNoteDisplay();
+    textarea.classList.add('hidden');
+    if (actions) actions.classList.add('hidden');
+    if (display) display.classList.remove('hidden');
+    if (!supabaseClient || !currentUserId) return;
+    const { error } = await supabaseClient.from('user_premium').upsert(
+        { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText },
+        { onConflict: 'user_id' },
+    );
+    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
+}
+function clearWeeklyNote() {
+    const textarea = document.getElementById('weekly-note-textarea');
+    if (textarea) textarea.value = '';
+    saveWeeklyNote();
 }
 
 async function loadDailyNutrition(date) {

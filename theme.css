@@ -2436,6 +2436,53 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
+/* פתק שבועי - אותה זהות חזותית בדיוק כמו .daily-focus-chip (פתק-דביק צהוב
+   נטוי + נצנצים), רק רחב יותר (כל רוחב המסך, לא צ'יפ קטן) כי זה טקסט חופשי
+   ולא תג קצר. צבע צהוב-פתק קבוע בכוונה (לא var(--accent-*)) - אותה סיבה
+   בדיוק כמו שם: זו הזהות החזותית של "פתק", לא צריכה להשתנות לפי ערכת נושא */
+.weekly-note-widget {
+    position: relative;
+    background: #fff4cc;
+    color: #5c4a12;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    transform: rotate(-0.6deg);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+}
+.weekly-note-widget::before, .weekly-note-widget::after {
+    content: '✨';
+    position: absolute;
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+.weekly-note-widget::before { top: -7px; inset-inline-end: -3px; }
+.weekly-note-widget::after { bottom: -7px; inset-inline-start: -3px; font-size: 0.6rem; opacity: 0.85; }
+.weekly-note-display { display: block; font-size: 0.85rem; font-weight: 600; line-height: 1.35; white-space: pre-wrap; word-break: break-word; }
+.weekly-note-display-empty { font-weight: 500; opacity: 0.75; font-style: italic; }
+.weekly-note-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(92, 74, 18, 0.35);
+    border-radius: 4px;
+    color: #5c4a12;
+    font-size: 0.85rem;
+    font-family: inherit;
+    padding: 6px 8px;
+    resize: vertical;
+}
+.weekly-note-edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+.weekly-note-save-btn, .weekly-note-clear-btn {
+    background: rgba(92, 74, 18, 0.12);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.weekly-note-save-btn:hover, .weekly-note-clear-btn:hover { background: rgba(92, 74, 18, 0.22); }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
 .home-premium-badge {

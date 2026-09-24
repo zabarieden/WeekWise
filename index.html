@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=425">
+    <link rel="stylesheet" href="theme.css?v=426">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -144,6 +144,21 @@
                         <span class="home-premium-badge-icon">⭐</span>
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
+                </div>
+                <!-- פתק שבועי - פתק-דביק עדין למעלה במסך הבית, בדיוק מתחת לברכה. נכתב
+                     פעם (או כמה פעמים) בשבוע ונשאר מוצג עד שנערך שוב - לא מתאפס
+                     אוטומטית מדי שבוע, לפי בקשה מפורשת ("משהו שרוצים ללכת איתו כל
+                     השבוע"). לחיצה על הפתק עצמו עוברת למצב עריכה inline (טקסטאזור
+                     במקום הטקסט) - בלי מודל נפרד, כדי שזה יישאר קליל כמו "לכתוב על
+                     פתק" ולא כמו טופס. ניתן לכיבוי מהגדרות (weekly-note-toggle),
+                     ברירת מחדל דלוק - ר' isWeeklyNoteOn/loadWeeklyNoteSetting -->
+                <div class="weekly-note-widget hidden" id="weekly-note-widget">
+                    <span class="weekly-note-display" id="weekly-note-display" onclick="startEditWeeklyNote()"></span>
+                    <textarea class="weekly-note-textarea hidden" id="weekly-note-textarea" rows="2" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
+                    <div class="weekly-note-edit-actions hidden" id="weekly-note-edit-actions">
+                        <button type="button" class="weekly-note-save-btn" onclick="saveWeeklyNote()" data-i18n-title="weekly_note_save_title" title="Save">✓</button>
+                        <button type="button" class="weekly-note-clear-btn" onclick="clearWeeklyNote()" data-i18n-title="weekly_note_clear_title" title="Clear">🗑️</button>
+                    </div>
                 </div>
                 <!-- הצצה להיום - רק "הלשונית" (הרצועה הצרה הקבועה) יושבת כאן, בזרימה
                      רגילה ממש אחרי שורת הברכה, כדי שתגלול יחד איתה בדיוק - לפי
@@ -2467,6 +2482,16 @@
                         </label>
                     </div>
 
+                    <!-- פתק שבועי עדין למעלה במסך הבית - דלוק כברירת מחדל, לפי בקשה
+                         מפורשת ("שהברירת מחדל שיהיה פעיל אבל אפשרות לכבות") -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_weekly_note_label" for="weekly-note-toggle">Show a weekly note on the home screen</label>
+                        <label class="switch">
+                            <input type="checkbox" id="weekly-note-toggle" onchange="toggleWeeklyNote()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
                     <!-- שני הטאבים הראשונים בערימה - עד היום תמיד דלוקים בלי אפשרות כיבוי
                          בכלל, בניגוד ללימודים/הרגלים למטה - נוספה להם אותה אפשרות כיבוי/
                          הדלקה, כברירת מחדל דלוקים בדיוק כמו שהיו, לפי בקשה מפורשת -->
@@ -3603,7 +3628,7 @@
 
     </div>
 
-    <script src="i18n.js?v=328"></script>
-    <script src="app.js?v=470"></script>
+    <script src="i18n.js?v=329"></script>
+    <script src="app.js?v=471"></script>
 </body>
 </html>
