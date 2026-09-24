@@ -7114,10 +7114,10 @@ function applyWaterFabSetting(enabled, skipRestack) {
 // initFabOrderDragReorder) - קובע רק את הסדר היחסי-ביניהן כשהן נכנסות
 // לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
 function getFabOrder() {
-    // סדר-ברירת-מחדל עודכן לפי בקשה מפורשת חדשה (מימין לשמאל ב-RTL: תקציב,
-    // אוכל, פתקים, ספורט - בלי מים) - btn-ai-fab (הפתק) מוכנס בפועל מיד אחרי
-    // btn-preset-fab (האוכל) ב-applyDockOrder למטה, כדי שיצא בדיוק "תקציב,
-    // אוכל, פתקים, ספורט" בלי צורך לרשום את הפתק כאן בכלל
+    // סדר-ברירת-מחדל: תקציב, אוכל, ספורט, מים (בלי הפתק) - btn-ai-fab (הפתק)
+    // מוכנס בפועל מיד אחרי btn-finance-fab (התקציב) ב-applyDockOrder למטה,
+    // כדי שעם ספורט+מים כבויים כברירת מחדל (ר' isSportFabOn/isWaterFabOn)
+    // יצא בדיוק "תקציב, פתקים באמצע, אוכל" - לפי בקשה מפורשת
     const defaultOrder = ['btn-finance-fab', 'btn-preset-fab', 'btn-sport-fab', 'btn-water-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
@@ -7167,14 +7167,15 @@ let fabCarouselOrder = null;
 // fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
 // בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
 function applyDockOrder() {
-    // btn-ai-fab (הפתק) מוכנס מיד אחרי btn-preset-fab (התפוח) בסדר - לא
-    // תמיד ראשון כמו קודם - כדי שסדר-ברירת-המחדל הטבעי (לפני כל גרירה/סיבוב)
-    // יצא בדיוק "פריסה, פתקים, תפוח באמצע, מים, ספורט" לפי בקשה מפורשת עם
-    // תמונת-ייחוס. לפי מיקום התפוח בפועל (לא אינדקס קבוע) כדי שזה יישאר
-    // הגיוני גם אם המשתמשת משנה את סדר ה-4 הבועות הניתנות-לכיבוי בהגדרות
+    // btn-ai-fab (הפתק) מוכנס מיד אחרי btn-finance-fab (התקציב) בסדר - כדי
+    // שסדר-ברירת-המחדל הטבעי (לפני כל גרירה/סיבוב), עם ספורט+מים כבויים
+    // כברירת מחדל, יצא בדיוק "תקציב, פתקים באמצע, אוכל" - לפי בקשה מפורשת
+    // עם תמונת-ייחוס ("שהפתקים יהיה באמצע... זה הברירת מחדל הראשונית").
+    // לפי מיקום התקציב בפועל (לא אינדקס קבוע) כדי שזה יישאר הגיוני גם אם
+    // המשתמשת משנה את סדר ה-4 הבועות הניתנות-לכיבוי בהגדרות
     const order = getFabOrder();
-    const presetIdx = order.indexOf('btn-preset-fab');
-    const insertAt = presetIdx === -1 ? order.length : presetIdx + 1;
+    const financeIdx = order.indexOf('btn-finance-fab');
+    const insertAt = financeIdx === -1 ? order.length : financeIdx + 1;
     const allIds = [...order.slice(0, insertAt), 'btn-ai-fab', ...order.slice(insertAt)];
     const active = allIds.filter(id => {
         const el = document.getElementById(id);
@@ -7403,10 +7404,10 @@ function resetFabLayout() {
     localStorage.removeItem('weekwise_sport_fab');
     localStorage.removeItem('weekwise_preset_fab');
     localStorage.removeItem('weekwise_finance_fab');
-    // מים לא כלולות בברירת המחדל (opt-in בלבד) - לפי בקשה מפורשת ("תקציב
-    // אוכל פתקים וספורט... בלי המים"); שלוש האחרות כן, ר' isXFabOn למעלה
+    // מים וספורט לא כלולים בברירת המחדל (opt-in בלבד) - לפי בקשה מפורשת
+    // ("תקציב, פתקים באמצע, אוכל... בלי ספורט"); שתי האחרות כן, ר' isXFabOn למעלה
     applyWaterFabSetting(false, true);
-    applySportFabSetting(true, true);
+    applySportFabSetting(false, true);
     applyPresetFabSetting(true, true);
     applyFinanceFabSetting(true, true);
     fabCarouselOrder = null;
@@ -7436,13 +7437,12 @@ function toggleWaterFabFromCard() {
     showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
-// כפתור צף להוספה מהירה של ספורט - דלוק כברירת מחדל (opt-out) עכשיו, לפי
-// בקשה מפורשת - "!== 'false'" ולא "=== 'true'", אותו דפוס בדיוק כמו שאר
-// בועות ה-Dock (בעבר זו הייתה היחידה שנשארה opt-in במפורש, זה השתנה)
-// כבוי כברירת מחדל (opt-in) שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל:
-// פתקים + ארוחות מוכנות"), דורס שוב את השינוי הקודם ל-opt-out
+// כפתור צף להוספה מהירה של ספורט - כבוי כברירת מחדל (opt-in, לא opt-out) -
+// לפי בקשה מפורשת עם תמונת-ייחוס ("הברירת מחדל שלא יהיה ספורט... זה
+// הברירת מחדל הראשונית לאפליקציה": תקציב + אוכל + פתקים בלבד). אותו דפוס
+// בדיוק כמו isWaterFabOn - "=== 'true'" ולא "!== 'false'"
 function isSportFabOn() {
-    return localStorage.getItem('weekwise_sport_fab') !== 'false';
+    return localStorage.getItem('weekwise_sport_fab') === 'true';
 }
 
 function applySportFabSetting(enabled, skipRestack) {
