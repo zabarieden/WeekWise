@@ -14809,7 +14809,12 @@ async function addHabit() {
     await loadHabits();
 }
 
+// אישור לפני מחיקה - לפי בקשה מפורשת, אחרי שדווח על מחיקה בטעות. חשוב
+// במיוחד כאן (יותר מרוב המחיקות באפליקציה): habit_checkins עם ON DELETE
+// CASCADE על habit_id - מחיקת הרגל הורסת לצמיתות גם את כל ההיסטוריה/רצף
+// שלו, בלי שום דרך לשחזר. ההודעה עצמה מבהירה את זה במפורש, לא רק "בטוח?"
 async function deleteHabit(id) {
+    if (!confirm(t('habits_delete_confirm'))) return;
     await supabaseClient.from('habits').delete().eq('id', id);
     await loadHabits();
 }
@@ -16605,19 +16610,39 @@ async function deleteNotebookItem(id) {
 // שמתווספים/מוסרים דינמית) תואם את הסגנון הקיים באפליקציה (ר' גרירת-אווטאר
 // במסלול-היעדים) - לא setPointerCapture. touch-action:none על הקנבס (ב-CSS)
 // הוא קריטי כדי שציור באצבע/Apple Pencil לא "יגנוב" גלילה של הדף ---
-function initNotebookCanvas() {
-    const canvas = document.getElementById('notebook-page-canvas');
-    if (!canvas) return;
+function sizeNotebookCanvasToContainer(canvas) {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
+}
+
+function initNotebookCanvas() {
+    const canvas = document.getElementById('notebook-page-canvas');
+    if (!canvas) return;
+    sizeNotebookCanvasToContainer(canvas);
     if (!notebookCanvasPointerBound) {
         notebookCanvasPointerBound = true;
         canvas.addEventListener('pointerdown', startStroke);
     }
     redrawCanvasFromStrokes();
     renderEmojiOverlay();
+    // המדידה הראשונית למעלה עלולה לתפוס רגע-ביניים שבו הפריסה עוד לא
+    // התייצבה לגמרי (בעיקר במגירה הרחבה של "הפרוייקטים שלי" בדסקטופ, ר'
+    // .notebook-detail-drawer) - הקנבס מקבל אז רוחב/גובה כמעט-0 (מתעגל ל-1
+    // פיקסל), וכל שרטוט הלאה נדחס לרצועה בלתי-נראית לגמרי: הכפתורים עדיין
+    // מגיבים (סימון "פעיל" עובד), אבל שום דבר לא נראה מצויר בפועל - בדיוק
+    // הדיווח בפועל בתוך פרוייקטים. פריים נוסף אחרי הרינדור הראשון בודק שוב
+    // ומתקן את עצמו בשקט אם הגודל השתנה משמעותית בינתיים
+    requestAnimationFrame(() => {
+        if (canvas.closest('.hidden')) return;
+        const beforeW = canvas.width, beforeH = canvas.height;
+        sizeNotebookCanvasToContainer(canvas);
+        if (canvas.width !== beforeW || canvas.height !== beforeH) {
+            redrawCanvasFromStrokes();
+            renderEmojiOverlay();
+        }
+    });
 }
 
 // initNotebookCanvas מתאים DPR-מדויק לגודל ה-CSS בזמן הפתיחה בלבד - בלי
