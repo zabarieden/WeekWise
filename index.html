@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=429">
+    <link rel="stylesheet" href="theme.css?v=430">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2019,7 +2019,7 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="weekly_note_modal_title">Weekly Note</h3>
-                <textarea id="weekly-note-textarea" rows="4" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
+                <textarea id="weekly-note-textarea" rows="4" maxlength="60" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveWeeklyNote()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific" onclick="clearWeeklyNote()" data-i18n="clear_btn">Clear</button>
@@ -3645,6 +3645,6 @@
     </div>
 
     <script src="i18n.js?v=331"></script>
-    <script src="app.js?v=473"></script>
+    <script src="app.js?v=474"></script>
 </body>
 </html>

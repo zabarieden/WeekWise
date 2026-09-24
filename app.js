@@ -14255,11 +14255,22 @@ function applyWeeklyNoteSetting() {
     if (widget) widget.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
 }
+// גודל הגופן יורד בהדרגה לפי אורך הטקסט כדי שהכל יכנס בפתק הקטן בלי להיחתך -
+// לפי בקשה מפורשת ("כתבתי ולא הכל נכנס... גם אם ארוך פשוט להקטין את
+// האותיות"). מוגבל ל-60 תווים גם בטקסטאזור עצמו (ר' index.html) כדי שגם
+// בשלב-הגופן-הקטן-ביותר זה עדיין יישאר קריא בתוך פתק 104x104 פיקסלים
 function renderWeeklyNoteDisplay() {
     const display = document.getElementById('weekly-note-display');
     if (!display) return;
-    display.textContent = currentWeeklyNoteText.trim() || t('weekly_note_empty_hint');
-    display.classList.toggle('weekly-note-display-empty', !currentWeeklyNoteText.trim());
+    const text = currentWeeklyNoteText.trim();
+    const shownText = text || t('weekly_note_empty_hint');
+    display.textContent = shownText;
+    display.classList.toggle('weekly-note-display-empty', !text);
+    let fontSize = 0.72;
+    if (shownText.length > 45) fontSize = 0.5;
+    else if (shownText.length > 32) fontSize = 0.58;
+    else if (shownText.length > 20) fontSize = 0.65;
+    display.style.fontSize = fontSize + 'rem';
 }
 // מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
 // כמו בגרסה הקודמת, אחרי שדווח שאי אפשר היה להקליד בתוכו בפועל. מודל רגיל

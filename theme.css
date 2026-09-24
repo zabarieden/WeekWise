@@ -2455,8 +2455,8 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     border-top: 1px solid rgba(255, 255, 255, 0.22);
     color: var(--text-primary);
     border-radius: 4px;
-    width: 88px;
-    height: 88px;
+    width: 104px;
+    height: 104px;
     box-sizing: border-box;
     padding: 10px 8px;
     display: flex;
@@ -2467,22 +2467,26 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
     cursor: pointer;
 }
-/* "נייר הדבק" - מלבן חצי-שקוף מסתובב אחרת מהפתק עצמו (לא אותה זווית),
-   כאילו הודבק ביד בנפרד - זו הבקשה המרכזית ("דבק סלוטפ למטה... מצוייר חמוד") */
+/* "נייר הדבק" - עבר לפינה (לא אמצע-תחתית), קטן יותר ונוטה חזק יותר, כאילו
+   מישהו הדביק אותו באלכסון על הפינה - לפי בקשה מפורשת ("קצת יותר קטן ונוטה
+   הצידה בפינה") */
 .weekly-note-tape {
     position: absolute;
-    bottom: -9px;
-    inset-inline-start: 50%;
-    width: 38px;
-    height: 16px;
-    margin-inline-start: -19px;
+    top: -5px;
+    inset-inline-end: 4px;
+    width: 26px;
+    height: 12px;
     background: rgba(255, 255, 255, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transform: rotate(4deg);
+    transform: rotate(-42deg);
     pointer-events: none;
 }
-.weekly-note-display { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.72rem; font-weight: 600; line-height: 1.25; word-break: break-word; }
+/* גודל הגופן נקבע דינמית מ-JS לפי אורך הטקסט (ר' renderWeeklyNoteDisplay
+   ב-app.js) כדי שכל מה שנכתב יכנס בלי להיחתך - לפי בקשה מפורשת ("כל מה
+   שאני כותבת יכנס... גם אם ארוך פשוט להקטין את האותיות") - לכן בלי
+   line-clamp/ellipsis יותר, גלישה רגילה על פני כמה שורות */
+.weekly-note-display { display: block; overflow: hidden; font-weight: 600; line-height: 1.22; word-break: break-word; }
 .weekly-note-display-empty { font-weight: 500; opacity: 0.75; font-style: italic; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
