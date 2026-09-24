@@ -14261,25 +14261,23 @@ function renderWeeklyNoteDisplay() {
     display.textContent = currentWeeklyNoteText.trim() || t('weekly_note_empty_hint');
     display.classList.toggle('weekly-note-display-empty', !currentWeeklyNoteText.trim());
 }
-// פותח "בלון" צף (position:absolute, ר' theme.css) במקום להחליף inline את
-// הפתק הקטן עצמו - הפתק עכשיו קומפקטי (בצד הנגדי לתאריך), אין לו מקום
-// לטקסטאזור בתוך הזרימה הרגילה בלי לדחוף את שאר שורת הברכה, לפי בקשה
-// מפורשת ("פתק חמוד... בצד השני של התאריך")
+// מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
+// כמו בגרסה הקודמת, אחרי שדווח שאי אפשר היה להקליד בתוכו בפועל. מודל רגיל
+// הוא רכיב בדוק ואמין שכבר בשימוש בכל שאר האפליקציה, בלי הסיכונים של
+// מיקום-מוחלט מותאם-אישית (z-index/עכבר-לכידה של רכיבים אחרים)
 function startEditWeeklyNote() {
-    const popover = document.getElementById('weekly-note-popover');
     const textarea = document.getElementById('weekly-note-textarea');
-    if (!popover || !textarea) return;
+    if (!textarea) return;
     textarea.value = currentWeeklyNoteText;
-    popover.classList.remove('hidden');
+    openModal('modal-weekly-note');
     textarea.focus();
 }
 async function saveWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
-    const popover = document.getElementById('weekly-note-popover');
     if (!textarea) return;
     currentWeeklyNoteText = textarea.value.trim();
     renderWeeklyNoteDisplay();
-    if (popover) popover.classList.add('hidden');
+    closeModal('modal-weekly-note');
     if (!supabaseClient || !currentUserId) return;
     const { error } = await supabaseClient.from('user_premium').upsert(
         { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText },

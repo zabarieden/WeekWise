@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=428">
+    <link rel="stylesheet" href="theme.css?v=429">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -144,20 +144,15 @@
                          השורה - לפי בקשה מפורשת ("בעברית משמאל, באנגלית מימין וככה
                          כל השפות"), בלי שום קוד ייעודי לכיוון -->
                     <div class="home-greeting-side-stack">
-                        <!-- פתק שבועי - עכשיו "פתק חמוד" קומפקטי (לא רצועה ברוחב מלא),
-                             יושב בצד הנגדי לתאריך, לפי בקשה מפורשת. לחיצה עליו בזמן
-                             שהוא סגור פותחת "בלון" צף (position:absolute, לא בזרימה)
-                             עם טקסטאזור לעריכה - כך שהעריכה לא דוחפת/משנה את פריסת
-                             שורת הברכה כשהוא פתוח. ר' startEditWeeklyNote/saveWeeklyNote -->
-                        <div class="weekly-note-widget hidden" id="weekly-note-widget">
-                            <span class="weekly-note-display" id="weekly-note-display" onclick="startEditWeeklyNote()"></span>
-                            <div class="weekly-note-popover hidden" id="weekly-note-popover">
-                                <textarea class="weekly-note-textarea" id="weekly-note-textarea" rows="3" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
-                                <div class="weekly-note-edit-actions">
-                                    <button type="button" class="weekly-note-save-btn" onclick="saveWeeklyNote()" data-i18n-title="weekly_note_save_title" title="Save">✓</button>
-                                    <button type="button" class="weekly-note-clear-btn" onclick="clearWeeklyNote()" data-i18n-title="weekly_note_clear_title" title="Clear">🗑️</button>
-                                </div>
-                            </div>
+                        <!-- פתק שבועי - "פתק חמוד" מרובע עם "נייר דבק" ציורי בתחתית, יושב
+                             בצד הנגדי לתאריך, לפי בקשה מפורשת. לחיצה עליו פותחת מודל
+                             רגיל (apple-modal, ר' #modal-weekly-note) לעריכה - לא בלון
+                             מותאם-אישית (position:absolute) כמו קודם, אחרי שדווח על
+                             באג הקלדה בגרסה הקודמת (המודל הרגיל בדוק ואמין בכל שאר
+                             האפליקציה) -->
+                        <div class="weekly-note-widget hidden" id="weekly-note-widget" onclick="startEditWeeklyNote()">
+                            <span class="weekly-note-tape"></span>
+                            <span class="weekly-note-display" id="weekly-note-display"></span>
                         </div>
                         <!-- מוצג רק למי שאינה פרימיום (ר' updateHomePremiumBadgeVisibility) -
                              נקודת גילוי נוספת לשדרוג ישירות ממסך הבית, לצד ההגדרות -->
@@ -2018,6 +2013,20 @@
             </div>
         </div>
 
+        <!-- חלון צף: עריכת הפתק השבועי - מודל רגיל (לא בלון-צף מותאם-אישית),
+             אחרי שדווח שבגרסה הקודמת אי אפשר היה להקליד בבלון -->
+        <div id="modal-weekly-note" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="weekly_note_modal_title">Weekly Note</h3>
+                <textarea id="weekly-note-textarea" rows="4" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" onclick="saveWeeklyNote()" data-i18n="save_generic">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="clearWeeklyNote()" data-i18n="clear_btn">Clear</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: הוספת מים מהירה מהכפתור הצף - כוס/בקבוק/כמות מותאמת אישית -->
         <div id="modal-water-quick-add" class="apple-modal">
             <div class="modal-sheet">
@@ -3635,7 +3644,7 @@
 
     </div>
 
-    <script src="i18n.js?v=330"></script>
-    <script src="app.js?v=472"></script>
+    <script src="i18n.js?v=331"></script>
+    <script src="app.js?v=473"></script>
 </body>
 </html>
