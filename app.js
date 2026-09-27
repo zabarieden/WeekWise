@@ -50,21 +50,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
     applyUiScale(getUiScale());
-    // הבאג השורשי (דווח חוזר: "האימון תמיד באמצע"): כל אחת מארבע הפונקציות
-    // האלה קראה בעבר ל-restackFabs()/applyDockOrder() בעצמה - אז הקריאה
-    // הראשונה (אחרי applyWaterFabSetting בלבד) רצה כשעדיין רק כפתור המים
-    // עצמו קיבל את מצב ה-hidden הנכון שלו, ושלושת האחרים עדיין במצב ברירת
-    // המחדל הגולמי של ה-HTML. applyDockOrder בונה את fabCarouselOrder
-    // (ומשחזר את הבועה-הקדמית-השמורה לתוכו) בקריאה הראשונה הזו בלבד - כך
-    // שהמערך שנבנה תמיד התבסס על מצב-נראות חלקי/שגוי, וכל קריאה נוספת רק
-    // "מסדרת" אותו סביב הטעות הזו במקום לתקן אותה. עכשיו מיישמים את כל
-    // הנראות קודם (skipRestack=true, בלי restack באמצע), ומסדרים את ה-Dock
-    // פעם אחת בסוף כשכל ארבעת המצבים כבר נכונים
-    applyWaterFabSetting(isWaterFabOn(), true);
-    applySportFabSetting(isSportFabOn(), true);
-    applyPresetFabSetting(isPresetFabOn(), true);
-    applyFinanceFabSetting(isFinanceFabOn(), true);
-    restackFabs();
+    // ארבעת הפריטים האלה (מים/ספורט/אוכל/תקציב) עברו מבועות-דוק נפרדות
+    // לשורות בפופ-אפ "עוד" (ר' renderMoreFabPopup) - applyXFabSetting כאן
+    // רק מסנכרנת את הטוגל בהגדרות, לא מציגה/מסתירה שום אלמנט-דוק בפועל
+    // (הפופ-אפ עצמו נבנה מחדש בכל פתיחה, ר' ההערה שם)
+    applyWaterFabSetting(isWaterFabOn());
+    applySportFabSetting(isSportFabOn());
+    applyPresetFabSetting(isPresetFabOn());
+    applyFinanceFabSetting(isFinanceFabOn());
     applyMealRowCounts();
     applyFinanceCycleSetting();
     applyDailyBoardPeekTabSetting();
@@ -84,7 +77,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ריקה זמנית - ומתעדכנות נכון כשהפונקציה שממלאת אותן רצה בהמשך
     document.querySelectorAll('select').forEach(select => { if (select.id) updateCustomSelectDisplay(select.id); });
     initFabOrderDragReorder();
-    initDockCarouselGestures();
     initTodayPeekDrag();
     initSupabase();
     initCubesNavigation();
@@ -1730,6 +1722,7 @@ async function initAppAfterAuth(user) {
     applyPwaShortcutDeepLink();
     initFixedAiFab();
     initFixedAiBrainFab();
+    initMoreFabPopup();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
@@ -2580,9 +2573,7 @@ function applyPwaShortcutDeepLink() {
     if (view && validTargets.includes(view)) switchToTab(view);
 }
 
-// בועת הפתקים היא בועה רגילה ב-Dock עכשיו (לא נעולה יותר למרכז) - מחוות
-// הטאפ/סיבוב המשותפת לכל הבועות נמצאת ב-initDockCarouselGestures (ר' למטה
-// ב-app.js), כאן רק מחברים את הקליק הרגיל לפתיחת המודל
+// הפתק (btn-ai-fab) קבוע בדוק - כאן רק מחברים את הקליק הרגיל לפתיחת המודל
 function initFixedAiFab() {
     const el = document.getElementById('btn-ai-fab');
     if (!el) return;
@@ -4789,7 +4780,7 @@ function toggleTodayPeekPanel() {
 }
 
 // גרירה ישירה של הלשונית לפתיחה/סגירה ("נפתח למשיכה", לפי בקשה מפורשת) -
-// אותו רעיון בדיוק כמו initDockCarouselGestures/initGoalPathDrag: מבטלים
+// אותו רעיון בדיוק כמו initGoalPathDrag: מבטלים
 // transition כדי שהפאנל יעקוב מיידית אחרי האצבע, וב-pointerup קובעים מצב
 // סופי (פתוח/סגור) לפי סף מרחק, לא לפי מהירות - טאפ בלי גרירה משמעותית
 // (מתחת לסף) עדיין מטפל דרך toggleTodayPeekPanel הרגיל (click), לא כאן.
@@ -6919,6 +6910,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
+    { id: 'more_fab_popup', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -7072,15 +7064,13 @@ function syncFabDockSettingToDb(patch) {
     );
 }
 
-// טוענת את כל 6 ההגדרות מה-DB (אם יש) ומחילה אותן על גבי מה שכבר הוחל
+// טוענת את כל ההגדרות מה-DB (אם יש) ומחילה אותן על גבי מה שכבר הוחל
 // מ-localStorage ב-DOMContentLoaded (לפני שהיה session בכלל) - בדיוק כמו
-// loadAiIconSetting, ה-DB תמיד גובר כשהוא נגיש. מאפסת fabCarouselOrder כדי
-// לאלץ בנייה מחדש מלאה של סדר-הבועות (לא רק תיאום מי-פעיל/כבוי) - אחרת
-// applyDockOrder היה שומר על הסדר הישן שכבר נבנה מקומית, ר' ההערה שם
+// loadAiIconSetting, ה-DB תמיד גובר כשהוא נגיש
 async function loadFabDockSettings() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('user_premium')
-        .select('sport_fab_enabled, water_fab_enabled, preset_fab_enabled, finance_fab_enabled, fab_order, fab_front_id')
+        .select('sport_fab_enabled, water_fab_enabled, preset_fab_enabled, finance_fab_enabled, fab_order')
         .eq('user_id', currentUserId).maybeSingle();
     if (!data) return;
     if (data.water_fab_enabled !== null && data.water_fab_enabled !== undefined) localStorage.setItem('weekwise_water_fab', data.water_fab_enabled ? 'true' : 'false');
@@ -7091,49 +7081,31 @@ async function loadFabDockSettings() {
     if (Array.isArray(data.fab_order) && defaultOrder.every(id => data.fab_order.includes(id))) {
         localStorage.setItem('weekwise_fab_order', JSON.stringify(data.fab_order));
     }
-    if (data.fab_front_id) localStorage.setItem('weekwise_fab_front_id', data.fab_front_id);
-    fabCarouselOrder = null;
-    applyWaterFabSetting(isWaterFabOn(), true);
-    applySportFabSetting(isSportFabOn(), true);
-    applyPresetFabSetting(isPresetFabOn(), true);
-    applyFinanceFabSetting(isFinanceFabOn(), true);
-    restackFabs();
+    applyWaterFabSetting(isWaterFabOn());
+    applySportFabSetting(isSportFabOn());
+    applyPresetFabSetting(isPresetFabOn());
+    applyFinanceFabSetting(isFinanceFabOn());
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (opt-in, לא opt-out)
-// שוב - לפי בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"),
-// דורס את ה-opt-out הקודם ("=== 'true'" ולא "!== 'false'")
-// חזרה ל-opt-in (לא opt-out) - לפי בקשה מפורשת ("תקציב אוכל פתקים וספורט...
-// יהיה ברירת המחדל... בלי המים") - שלושת האחרות (ספורט/ארוחות/תקציב)
-// נשארות opt-out, רק מים חוזרות לכבויות כברירת מחדל
 function isWaterFabOn() {
     return localStorage.getItem('weekwise_water_fab') === 'true';
 }
 
-function applyWaterFabSetting(enabled, skipRestack) {
-    const fab = document.getElementById('btn-water-fab');
-    if (fab) fab.classList.toggle('hidden', !enabled);
+// מסנכרנת רק את הטוגל בהגדרות ואת כפתור-הקיצור שבתוך מסך המים עצמו - הבועה
+// עצמה עברה לפופ-אפ "עוד" (ר' MORE_FAB_ORDERED_ITEMS למטה), אין יותר אלמנט
+// דוק נפרד להסתיר/להציג כאן
+function applyWaterFabSetting(enabled) {
     const toggle = document.getElementById('water-fab-toggle');
     if (toggle) toggle.checked = enabled;
-    // כפתור מקביל בתוך מסך מעקב המים עצמו (לא רק בהגדרות) - נוח יותר לגלות
-    // ולהפעיל/לכבות בלי לצאת מהמסך, לפי בקשה מפורשת. שני הכפתורים תמיד
-    // מסונכרנים - שינוי באחד מעדכן את השני (דרך applyWaterFabSetting המשותפת)
     const shortcutBtn = document.getElementById('btn-water-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('water_fab_shortcut_remove_btn') : t('water_fab_shortcut_add_btn');
-    if (!skipRestack) restackFabs();
 }
 
-// הסדר הבסיסי של 4 הבועות הניתנות-לכיבוי (לא כולל הפתק - ר' fabCarouselOrder
-// למטה, שהוא-זה שקובע את הסדר/מי-במרכז בפועל בעגלה). btn-food-fab הוסרה
-// לגמרי מהרשימה - ההוספה המהירה בטקסט חופשי עברה לטאב הראשון במוח ה-AI, לפי
-// בקשה מפורשת. עדיין ניתן לגרירה בהגדרות (#fab-order-list, ר'
-// initFabOrderDragReorder) - קובע רק את הסדר היחסי-ביניהן כשהן נכנסות
-// לעגלה, לא משפיע יותר על ה-Dock עצמו ישירות
+// הסדר של 4 הפריטים הניתנים-לכיבוי בפופ-אפ "עוד" (לימודים/הרגלים קבועים
+// מעליהם, ר' MORE_FAB_FIXED_ITEMS למטה) - עדיין ניתן לגרירה בהגדרות
+// (#fab-order-list, ר' initFabOrderDragReorder)
 function getFabOrder() {
-    // סדר-ברירת-מחדל: תקציב, אוכל, ספורט, מים (בלי הפתק) - btn-ai-fab (הפתק)
-    // מוכנס בפועל מיד אחרי btn-finance-fab (התקציב) ב-applyDockOrder למטה,
-    // כדי שעם ספורט+מים כבויים כברירת מחדל (ר' isSportFabOn/isWaterFabOn)
-    // יצא בדיוק "תקציב, פתקים באמצע, אוכל" - לפי בקשה מפורשת
     const defaultOrder = ['btn-finance-fab', 'btn-preset-fab', 'btn-sport-fab', 'btn-water-fab'];
     try {
         const saved = JSON.parse(localStorage.getItem('weekwise_fab_order'));
@@ -7142,9 +7114,7 @@ function getFabOrder() {
     return defaultOrder;
 }
 
-// מיישמת את הסדר על שורות ההגדרות (#fab-order-list) - הדרך היחידה שנשארה
-// להשפיע על הסדר הבסיסי; ה-Dock עצמו (fabCarouselOrder) לא תלוי בסדר ה-DOM
-// יותר בכלל, רק ב-left/top שנקבעים ישירות ב-applyDockOrder
+// מיישמת את הסדר על שורות ההגדרות (#fab-order-list) בלבד
 function applyFabOrder() {
     const order = getFabOrder();
     const settingsList = document.getElementById('fab-order-list');
@@ -7155,232 +7125,8 @@ function applyFabOrder() {
     });
 }
 
-// מרחק קבוע בין כל שתי משבצות סמוכות בשורה - קו ישר מקצה לקצה. צומצם (74,
-// לא 85) כדי שהשורה כולה תיכנס ברוחב מסך מובייל בלי לגלוש - לפי בקשה
-// מפורשת שחוזרת ("זה עוד פעם טיפה יוצא מהמסך")
-// 76 (היה 86, לפני זה 74) - ההגדלה הקודמת (104px/66px) גלשה מחוץ למסך
-// במובייל ("הבועות הצדדיות יוצאות מהמסך"), אז חזרה לגודל מתון יותר -
-// עודכן יחד עם fab-tier-front 90px/fab-tier-side 58px ב-theme.css.
-// המינימום המתמטי כדי שבועה-קדמית וצדדית סמוכה לא ייגעו הוא (90+58)/2=74,
-// אז 76 עם שוליים קטנים
-const FAB_ROW_STEP = 76;
-
-// --- מצב הקרוסלה בפועל: מי נמצא איפה עכשיו (כולל הפתק!) ---
-// לא נשמר ב-localStorage בעצמו (מתאפס ל-null בכל טעינה) - אבל מי שהיה
-// בחזית כן נשמר בנפרד (weekwise_fab_front_id) ומוחזר לחזית בבנייה מחדש של
-// המערך, ר' applyDockOrder - לפי בקשה מפורשת "שהברירת מחדל תהיה מה
-// שהמשתמשת בחרה לאחרונה" (דורס החלטה קודמת שהתחילה תמיד עם הפתק בחזית)
-let fabCarouselOrder = null;
-
-// קובעת את המיקום החזותי (left/top בפיקסלים) והגודל (fab-tier-front/
-// fab-tier-side - שתי רמות בלבד, לא מדורג, לפי בקשה מפורשת "שהבועה
-// האמצעית תהיה פשוט יותר גדולה וכל מה שמצדדיה יהיו יותר קטנות") של כל
-// הבועות בעגלה - כולל הפתק, שכבר לא נעולה תמיד במרכז (לפי בקשה מפורשת:
-// "אני רוצה שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב"). כל בועה
-// ממוקמת לפי המרחק (במשבצות, לא בפיקסלים) בינה לבין אמצע-המערך בפועל -
-// כך שכולן על אותו קו ישר, וסיבוב (ר' rotateFabRow) פשוט מזיז את כולן
-// משבצת אחת שמאלה/ימינה במקום קפיצה. מתאמת מחדש בכל קריאה את
-// fabCarouselOrder מול מי שבאמת פעיל/מוסתר כרגע (toggle בהגדרות) - מוציאה
-// בועה שכובתה, מוסיפה בסוף בועה שהופעלה זה עתה, בלי לאבד את שאר הסידור
-function applyDockOrder() {
-    // btn-ai-fab (הפתק) מוכנס מיד אחרי btn-finance-fab (התקציב) בסדר - כדי
-    // שסדר-ברירת-המחדל הטבעי (לפני כל גרירה/סיבוב), עם ספורט+מים כבויים
-    // כברירת מחדל, יצא בדיוק "תקציב, פתקים באמצע, אוכל" - לפי בקשה מפורשת
-    // עם תמונת-ייחוס ("שהפתקים יהיה באמצע... זה הברירת מחדל הראשונית").
-    // לפי מיקום התקציב בפועל (לא אינדקס קבוע) כדי שזה יישאר הגיוני גם אם
-    // המשתמשת משנה את סדר ה-4 הבועות הניתנות-לכיבוי בהגדרות
-    const order = getFabOrder();
-    const financeIdx = order.indexOf('btn-finance-fab');
-    const insertAt = financeIdx === -1 ? order.length : financeIdx + 1;
-    const allIds = [...order.slice(0, insertAt), 'btn-ai-fab', ...order.slice(insertAt)];
-    const active = allIds.filter(id => {
-        const el = document.getElementById(id);
-        return el && !el.classList.contains('hidden');
-    });
-    if (!fabCarouselOrder) {
-        fabCarouselOrder = active.slice();
-        // בטעינה ראשונה: לפי בקשה מפורשת ("שהברירת מחדל תהיה מה שהמשתמשת
-        // בחרה לאחרונה"), לא משאירים את מי-שיוצא-בחזית לגמרי במקרה (תלוי רק
-        // בסדר הבועות במערך) - במקום זה מציבים את הבועה שהייתה בחזית
-        // בפעם הקודמת (נשמרה ב-weekwise_fab_front_id, ר' השמירה בסוף
-        // הפונקציה) ממש במשבצת החזית, בדיוק כמו שסיום-גרירה עושה. זה דורס
-        // את ההחלטה הישנה יותר ("כל טעינה מתחילה עם הפתק בחזית") - עדיין
-        // עובד גם אם הבועה שנשמרה כובתה בינתיים (פשוט נופל חזרה למקום
-        // הטבעי שלה במערך)
-        const savedFrontId = localStorage.getItem('weekwise_fab_front_id');
-        if (savedFrontId && fabCarouselOrder.includes(savedFrontId)) {
-            const targetIndex = Math.round((fabCarouselOrder.length - 1) / 2);
-            const idx = fabCarouselOrder.indexOf(savedFrontId);
-            fabCarouselOrder.splice(idx, 1);
-            fabCarouselOrder.splice(targetIndex, 0, savedFrontId);
-        }
-    } else {
-        fabCarouselOrder = fabCarouselOrder.filter(id => active.includes(id));
-        active.forEach(id => { if (!fabCarouselOrder.includes(id)) fabCarouselOrder.push(id); });
-    }
-    // חזרה למרכוז-כקבוצה (dist לפי centerIndex השברי, לא frontIndex המעוגל) -
-    // לפי בקשה מפורשת חדשה ("ברגע שמורידים בועה זה לא באמצע... שלא משנה מה
-    // שיהיה, באמצע המסך מרוכז"): הגרסה הקודמת נעלה את הבועה הקדמית בדיוק
-    // ב-x=0 ברווח זוגי, מה שהזיז את כל השורה כאסימטרית (יותר בועות בצד אחד)
-    // כשמכבים/מדליקים בועה - בדיוק מה שדווח. frontIndex עדיין קיים ונשאר
-    // לקביעת מי מקבל את הסגנון "קדמי" (גדול/בולט), אבל לא קובע את המיקום
-    // הפיזי יותר - כל השורה כולה, כקבוצה, תמיד ממורכזת סביב x=0
-    const centerIndex = (fabCarouselOrder.length - 1) / 2;
-    const frontIndex = Math.round(centerIndex);
-    // style.left הוא ערך פיזי תמיד (לא הופך לפי dir כמו left/right לוגיים) -
-    // בעברית/RTL אינדקס-0 (הראשון בסדר) צריך לשבת פיזית *מימין* (שם קריאה
-    // מתחילה ב-RTL), ובאנגלית/LTR דווקא *משמאל* - אחרת סדר-הקריאה הסמנטי
-    // ("פריסה, פתקים, תפוח, מים, ספורט") היה מתהפך בפועל כשעוברים לאנגלית
-    const dirSign = document.documentElement.dir === 'ltr' ? -1 : 1;
-    // עד 2 בועות פעילות (למשל ברירת המחדל החדשה: פתקים + ארוחות מוכנות) -
-    // בלי בועה "קדמית" גדולה יותר בכלל, שתיהן באותו גודל (fab-tier-side) ואותו
-    // גובה, לפי בקשה מפורשת ("2 הבועות שיהיו באותו הגודל") - ההבחנה "קדמי מול
-    // צדדי" משמעותית רק כשיש עוד בועות מסביב ליצור איתן קשת אמיתית
-    const noSingleFront = fabCarouselOrder.length <= 2;
-    fabCarouselOrder.forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const dist = (i - centerIndex) * dirSign; // ממרכז-הקבוצה השברי, לא מהבועה הקדמית - כל השורה ממורכזת
-        const frontDist = i - frontIndex; // מרחק שלם מהבועה הקדמית - עדיין קובע גודל/הרמה
-        const absDist = Math.abs(frontDist);
-        const isFront = i === frontIndex && !noSingleFront;
-        // הבועה הקדמית קיבלה עד עכשיו הרמה 0 (הכי "נמוכה" מכולן, כי הקשת
-        // מתחילה ב-0 ועולה כלפי הצדדים) - לפי בקשה מפורשת ("שהבועה המרכזית
-        // תהיה קצת יותר למעלה") היא מקבלת הרמה קבועה משלה, פחותה מהמקסימום
-        // שהבועות הרחוקות מגיעות אליו כדי לשמור על צורת-קשת כללית
-        const lift = noSingleFront ? 14 : (isFront ? 14 : Math.min(absDist * 9, 30));
-        el.style.left = `${Math.round(dist * FAB_ROW_STEP)}px`;
-        el.style.top = `${Math.round(-lift)}px`;
-        el.classList.toggle('fab-tier-front', isFront);
-        el.classList.toggle('fab-tier-side', !isFront);
-    });
-    allIds.forEach(id => {
-        if (active.includes(id)) return;
-        const el = document.getElementById(id);
-        if (el) { el.style.left = ''; el.style.top = ''; el.classList.remove('fab-tier-front', 'fab-tier-side'); }
-    });
-    // שומרים מי בחזית עכשיו כדי שהטעינה הבאה תזכור (ר' השחזור למעלה) - לא
-    // רק אחרי גרירה, גם אחרי סיבוב או שינוי הגדרות שהזיז את מי שבחזית
-    const currentFrontId = fabCarouselOrder[frontIndex];
-    if (currentFrontId) {
-        localStorage.setItem('weekwise_fab_front_id', currentFrontId);
-        syncFabDockSettingToDb({ fab_front_id: currentFrontId });
-    }
-}
-
-function restackFabs() {
-    applyFabOrder();
-    applyDockOrder();
-}
-
-// "מסובבים" את סדר הבועות בעגלה - לפי בקשה מפורשת ("כמו משחק יהיה אפשר
-// לסובב וכל פעם שמסובבים אחד אחר מגיע קדימה"). מסובב את fabCarouselOrder
-// עצמו (לא weekwise_fab_order - זה כבר לא הבעלים של סדר ה-Dock, ר' ההערה
-// למעלה) - כל בועה, כולל הפתק, יכולה לעבור דרך משבצת 0 (קדמי)
-function rotateFabRow(direction) {
-    if (!fabCarouselOrder || fabCarouselOrder.length < 2) return;
-    if (direction > 0) {
-        fabCarouselOrder.push(fabCarouselOrder.shift());
-    } else {
-        fabCarouselOrder.unshift(fabCarouselOrder.pop());
-    }
-    applyDockOrder();
-}
-
-// גרירה ישירה - "לוקחים" בועה ספציפית וגוררים אותה בעצמה (לא את כל השורה
-// יחד) ממש עם האצבע, לפי בקשה מפורשת ("אני רוצה לבחור בועה ולגרור אותה ממש
-// עם האצבע שלי לאמצע - שיבוא ביחד איתי, ושלא יתחלף רנדומלית"). גרסה קודמת
-// הזיזה את כל השורה יחד לפי מרחק-הגרירה הכולל וסיבבה לפי כמה "צעדים" זה
-// יצא - זה לא תאם למה שהמשתמשת בפועל תפסה/גררה, ולכן הרגיש "רנדומלי".
-// עכשיו: רק הבועה שנגררת בפועל זזה (בשני צירים, ממש עם האצבע), ורק אם
-// היא משתחררת קרוב מספיק למרכז (FAB_ROW_STEP/2) היא הופכת לבועה הקדמית -
-// אחרת היא פשוט חוזרת למקומה. תוצאה תמיד צפויה: "מה שגררתי זה מה שזז"
-function initDockCarouselGestures() {
-    const TAP_THRESHOLD = 10;
-    document.querySelectorAll('.dock-fab').forEach(el => {
-        let startX = 0, startY = 0, baseLeft = 0, baseTop = 0, dragging = false, pointerId = null, lastDx = 0, lastDy = 0;
-
-        function onPointerMove(e) {
-            if (e.pointerId !== pointerId) return;
-            const dx = e.clientX - startX, dy = e.clientY - startY;
-            if (!dragging && Math.hypot(dx, dy) > TAP_THRESHOLD) {
-                dragging = true;
-                el.classList.add('dock-fab-active-drag');
-                el.style.zIndex = '10';
-                baseLeft = parseFloat(el.style.left) || 0;
-                baseTop = parseFloat(el.style.top) || 0;
-            }
-            if (dragging) {
-                e.preventDefault();
-                lastDx = dx;
-                lastDy = dy;
-                el.style.left = `${baseLeft + dx}px`;
-                el.style.top = `${baseTop + dy}px`;
-            }
-        }
-        function cleanup() {
-            document.removeEventListener('pointermove', onPointerMove);
-            document.removeEventListener('pointerup', onPointerUp);
-            document.removeEventListener('pointercancel', onPointerCancel);
-            pointerId = null;
-        }
-        function settle(id) {
-            el.classList.remove('dock-fab-active-drag');
-            el.style.zIndex = '';
-            // "קרוב מספיק למרכז" - המיקום הסופי (לא רק תזוזה מהמקום המקורי)
-            // חייב להיות בטווח הזה מ-x=0 כדי לזכות במקום הקדמי. הורחב מ-חצי
-            // צעד (37px) ל-65% ממנו (~48px) לפי בקשה מפורשת - היה קשה מדי
-            // לפגוע בול במרכז ("קשה להחליף בינהם... בקושי מתחלף")
-            if (Math.abs(baseLeft + lastDx) < FAB_ROW_STEP * 0.65) {
-                const centerIndex = (fabCarouselOrder.length - 1) / 2;
-                const frontIndex = Math.round(centerIndex);
-                const idx = fabCarouselOrder.indexOf(id);
-                if (idx > -1) {
-                    fabCarouselOrder.splice(idx, 1);
-                    fabCarouselOrder.splice(frontIndex, 0, id);
-                }
-            }
-            // בלי requestAnimationFrame - הבועה הזאת כבר יצאה מ-dock-fab-active-drag
-            // (transition חזר לה), אז applyDockOrder יכול לכתוב left/top חדשים
-            // מיד והמעבר יהיה חלק מעצמו
-            applyDockOrder();
-        }
-        function onPointerUp(e) {
-            if (e.pointerId !== pointerId) return;
-            const wasDragging = dragging;
-            cleanup();
-            dragging = false;
-            if (wasDragging) {
-                el.dataset.justSwiped = '1';
-                setTimeout(() => { delete el.dataset.justSwiped; }, 150);
-                settle(el.id);
-            }
-        }
-        function onPointerCancel(e) {
-            if (e.pointerId !== pointerId) return;
-            cleanup();
-            if (dragging) { el.classList.remove('dock-fab-active-drag'); el.style.zIndex = ''; applyDockOrder(); }
-            dragging = false;
-        }
-        el.addEventListener('pointerdown', (e) => {
-            if (e.pointerType === 'mouse' && e.button !== 0) return;
-            startX = e.clientX;
-            startY = e.clientY;
-            pointerId = e.pointerId;
-            document.addEventListener('pointermove', onPointerMove);
-            document.addEventListener('pointerup', onPointerUp);
-            document.addEventListener('pointercancel', onPointerCancel);
-        });
-        // חוסם רק את ה-click שמגיע מיד אחרי גרירה אמיתית - טאפ רגיל תמיד עובר
-        el.addEventListener('click', (e) => {
-            if (el.dataset.justSwiped) { e.preventDefault(); e.stopImmediatePropagation(); }
-        }, true);
-    });
-}
-
-// גרירה-לסידור-מחדש בהגדרות (#fab-order-list, ידית ⠿ ייעודית) - היחידה
-// שנשארה מבוססת-Sortable; ה-Dock עצמו עבר כולו למחוות-סיבוב (ר'
-// initDockCarouselGestures למעלה), בלי Sortable בכלל
+// גרירה-לסידור-מחדש בהגדרות (#fab-order-list, ידית ⠿ ייעודית) - קובעת את
+// סדר 4 השורות הניתנות-לכיבוי בתוך פופ-אפ "עוד" (ר' renderMoreFabPopup)
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
     const settingsList = document.getElementById('fab-order-list');
@@ -7405,35 +7151,24 @@ function initFabOrderDragReorder() {
     }
 }
 
-// מאפסת גם את סדר הבועות בהגדרות וגם את מצב הקרוסלה בפועל (מי במרכז עכשיו),
-// וגם את מצב ההצגה/הכיבוי של כל 4 הבועות הניתנות-לכיבוי - חוזרת ל-5
-// הבועות כולן דלוקות והפתק בחזית, בדיוק כמו ברירת המחדל של חשבון חדש - לפי
-// בקשה מפורשת ("איפוס קיצורי דרך... שהברירת מחדל יהיה הכל... שהפתקים
-// באמצע"). לפני זה איפוס-הסדר לא נגע בכלל בכיבוי/הדלקה, רק בסדר/סיבוב
+// מאפסת את סדר-השורות בהגדרות וגם את מצב ההצגה/הכיבוי של כל 4 הפריטים
+// הניתנים-לכיבוי בפופ-אפ "עוד" - חוזרת לברירת המחדל של חשבון חדש
 function resetFabLayout() {
     localStorage.removeItem('weekwise_fab_order');
-    // גם מוחקים את הבועה-האחרונה-שהייתה-בחזית שנשמרת בנפרד (ר'
-    // weekwise_fab_front_id ב-applyDockOrder) - בלי זה "איפוס" היה עדיין
-    // מחזיר את הבועה האישית שהייתה שם קודם, לא ממש חוזר לברירת המחדל הטהורה
-    localStorage.removeItem('weekwise_fab_front_id');
     localStorage.removeItem('weekwise_water_fab');
     localStorage.removeItem('weekwise_sport_fab');
     localStorage.removeItem('weekwise_preset_fab');
     localStorage.removeItem('weekwise_finance_fab');
-    // מים וספורט לא כלולים בברירת המחדל (opt-in בלבד) - לפי בקשה מפורשת
-    // ("תקציב, פתקים באמצע, אוכל... בלי ספורט"); שתי האחרות כן, ר' isXFabOn למעלה
-    applyWaterFabSetting(false, true);
-    applySportFabSetting(false, true);
-    applyPresetFabSetting(true, true);
-    applyFinanceFabSetting(true, true);
-    fabCarouselOrder = null;
-    localStorage.setItem('weekwise_fab_front_id', 'btn-ai-fab');
-    restackFabs();
+    applyWaterFabSetting(false);
+    applySportFabSetting(false);
+    applyPresetFabSetting(true);
+    applyFinanceFabSetting(true);
+    applyFabOrder();
     // מאפסת גם ב-DB (null = "לא הוגדר", חוזר לברירת המחדל) - אחרת איפוס
     // מקומי היה משאיר ערך ישן ב-DB שיחזור ויידרוס את האיפוס במכשיר אחר
     syncFabDockSettingToDb({
         water_fab_enabled: null, sport_fab_enabled: null, preset_fab_enabled: null,
-        finance_fab_enabled: null, fab_order: null, fab_front_id: 'btn-ai-fab',
+        finance_fab_enabled: null, fab_order: null,
     });
     showAppToast(t('settings_reset_fab_layout_done'));
 }
@@ -7453,22 +7188,16 @@ function toggleWaterFabFromCard() {
     showAppToast(t(enabled ? 'water_fab_shortcut_added_toast' : 'water_fab_shortcut_removed_toast'));
 }
 
-// כפתור צף להוספה מהירה של ספורט - כבוי כברירת מחדל (opt-in, לא opt-out) -
-// לפי בקשה מפורשת עם תמונת-ייחוס ("הברירת מחדל שלא יהיה ספורט... זה
-// הברירת מחדל הראשונית לאפליקציה": תקציב + אוכל + פתקים בלבד). אותו דפוס
-// בדיוק כמו isWaterFabOn - "=== 'true'" ולא "!== 'false'"
+// כפתור צף להוספה מהירה של ספורט - כבוי כברירת מחדל (opt-in, לא opt-out)
 function isSportFabOn() {
     return localStorage.getItem('weekwise_sport_fab') === 'true';
 }
 
-function applySportFabSetting(enabled, skipRestack) {
-    const fab = document.getElementById('btn-sport-fab');
-    if (fab) fab.classList.toggle('hidden', !enabled);
+function applySportFabSetting(enabled) {
     const toggle = document.getElementById('sport-fab-toggle');
     if (toggle) toggle.checked = enabled;
     const shortcutBtn = document.getElementById('btn-sport-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('sport_fab_shortcut_remove_btn') : t('sport_fab_shortcut_add_btn');
-    if (!skipRestack) restackFabs();
 }
 
 function toggleSportFab() {
@@ -7485,18 +7214,14 @@ function toggleSportFabFromCard() {
     showAppToast(t(enabled ? 'sport_fab_shortcut_added_toast' : 'sport_fab_shortcut_removed_toast'));
 }
 
-// כפתור צף להוספה מהירה של ארוחה קבועה שמורה - דלוק כברירת מחדל (opt-out),
-// אותה סיבה בדיוק כמו btn-water-fab למעלה
+// כפתור צף להוספה מהירה של ארוחה קבועה שמורה - דלוק כברירת מחדל (opt-out)
 function isPresetFabOn() {
     return localStorage.getItem('weekwise_preset_fab') !== 'false';
 }
 
-function applyPresetFabSetting(enabled, skipRestack) {
-    const fab = document.getElementById('btn-preset-fab');
-    if (fab) fab.classList.toggle('hidden', !enabled);
+function applyPresetFabSetting(enabled) {
     const toggle = document.getElementById('preset-fab-toggle');
     if (toggle) toggle.checked = enabled;
-    if (!skipRestack) restackFabs();
 }
 
 function togglePresetFab() {
@@ -7506,20 +7231,14 @@ function togglePresetFab() {
     syncFabDockSettingToDb({ preset_fab_enabled: enabled });
 }
 
-// כפתור צף למעבר מהיר למסך התקציב - היה "פריסה חכמה" (מבוססת-AI, ר' ההערה
-// ב-index.html) והוחלף בבועה הזו בתקציב. כבוי כברירת מחדל (opt-in) - לפי
-// בקשה מפורשת ("2 בועות בברירת מחדל: פתקים + ארוחות מוכנות"), דורס שוב
-// את ה-opt-out הקודם
+// כפתור צף למעבר מהיר למסך התקציב - דלוק כברירת מחדל (opt-out)
 function isFinanceFabOn() {
     return localStorage.getItem('weekwise_finance_fab') !== 'false';
 }
 
-function applyFinanceFabSetting(enabled, skipRestack) {
-    const fab = document.getElementById('btn-finance-fab');
-    if (fab) fab.classList.toggle('hidden', !enabled);
+function applyFinanceFabSetting(enabled) {
     const toggle = document.getElementById('finance-fab-toggle');
     if (toggle) toggle.checked = enabled;
-    if (!skipRestack) restackFabs();
 }
 
 function toggleFinanceFab() {
@@ -7527,6 +7246,70 @@ function toggleFinanceFab() {
     localStorage.setItem('weekwise_finance_fab', enabled ? 'true' : 'false');
     applyFinanceFabSetting(enabled);
     syncFabDockSettingToDb({ finance_fab_enabled: enabled });
+}
+
+// --- פופ-אפ "עוד" - מאחד את מה שהיה פעם 2 טאבים בערימה (לימודים/הרגלים)
+// ו-4 בועות-דוק נפרדות (תקציב/אוכל/ספורט/מים) לפריט אחד יחיד בדוק שנפתח
+// לרשימה קטנה - לפי בקשה מפורשת ("לחבר בין הטאבים לבועות הצפות"). שום
+// דגל-הפעלה/כיבוי לא השתנה - isStudyPeekTabOn/isHabitsPeekTabOn/isXFabOn
+// נשארו בדיוק כמו שהיו, רק המקום שבו פריט דלוק מוצג השתנה ---
+const MORE_FAB_FIXED_ITEMS = [
+    { icon: '📓', labelKey: 'study_menu_label', isOn: () => isStudyPeekTabOn(), action: "closeMoreFabPopup(); openStudyDrawer();" },
+    { icon: '🔥', labelKey: 'habits_title', isOn: () => isHabitsPeekTabOn(), action: "closeMoreFabPopup(); navigateFromMenu('habits-section');" },
+];
+const MORE_FAB_ORDERED_ITEMS = {
+    'btn-finance-fab': { icon: '💰', labelKey: 'dock_fab_label_finance', isOn: () => isFinanceFabOn(), action: "closeMoreFabPopup(); openFinanceQuickAddModal();" },
+    'btn-preset-fab': { icon: '🍎', labelKey: 'dock_fab_label_food', isOn: () => isPresetFabOn(), action: "closeMoreFabPopup(); openPresetQuickAddModal();" },
+    'btn-sport-fab': { icon: '💪', labelKey: 'dock_fab_label_sport', isOn: () => isSportFabOn(), action: "closeMoreFabPopup(); openSportQuickAddModal();" },
+    'btn-water-fab': { icon: '💧', labelKey: 'dock_fab_label_water', isOn: () => isWaterFabOn(), action: "closeMoreFabPopup(); openModal('modal-water-quick-add');" },
+};
+
+// בונה מחדש את רשימת השורות הגלויות (0 עד 6) בכל פתיחה - לא צריך סנכרון-חי
+// כשמשנים הגדרה, כי #fab-dock (וכל מה שבתוכו, כולל הפופ-אפ) כבר מוסתר
+// לגמרי כל עוד מגירת ההגדרות פתוחה (ר' .phone-wrapper.modal-open .fab-dock
+// ב-theme.css) - שני המצבים האלה אף פעם לא גלויים בו-זמנית
+function renderMoreFabPopup() {
+    const list = document.getElementById('more-fab-popup-list');
+    if (!list) return;
+    const items = [
+        ...MORE_FAB_FIXED_ITEMS,
+        ...getFabOrder().map(id => MORE_FAB_ORDERED_ITEMS[id]).filter(Boolean),
+    ].filter(item => item.isOn());
+    list.innerHTML = items.map(item => `
+        <button type="button" class="hamburger-drawer-item more-fab-popup-row" onclick="${item.action}">
+            <span class="hamburger-drawer-item-icon">${item.icon}</span>
+            <span class="hamburger-drawer-item-title">${escapeHtmlForReport(t(item.labelKey))}</span>
+        </button>
+    `).join('');
+}
+
+function openMoreFabPopup() {
+    renderMoreFabPopup();
+    const popup = document.getElementById('more-fab-popup');
+    if (popup) popup.classList.add('open');
+}
+function closeMoreFabPopup() {
+    const popup = document.getElementById('more-fab-popup');
+    if (popup) popup.classList.remove('open');
+}
+function toggleMoreFabPopup() {
+    const popup = document.getElementById('more-fab-popup');
+    if (popup && popup.classList.contains('open')) closeMoreFabPopup();
+    else openMoreFabPopup();
+}
+
+// סוגר בלחיצה מחוץ לפופ-אפ ולכפתור עצמו - נרשם פעם אחת בלבד (ר'
+// initMoreFabPopup), החזרה המוקדמת כשהפופ-אפ סגור הופכת אותו לזול
+function handleMoreFabPopupOutsideClick(e) {
+    const popup = document.getElementById('more-fab-popup');
+    const btn = document.getElementById('btn-more-fab');
+    if (!popup || !popup.classList.contains('open')) return;
+    if (popup.contains(e.target) || (btn && btn.contains(e.target))) return;
+    closeMoreFabPopup();
+}
+
+function initMoreFabPopup() {
+    document.addEventListener('click', handleMoreFabPopupOutsideClick);
 }
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
@@ -14118,24 +13901,19 @@ async function toggleStudyPeekTab() {
         );
     }
 }
+// לימודים עבר לפופ-אפ "עוד" (ר' renderMoreFabPopup) - הטוגל כאן רק מסנכרן
+// את התיבה בהגדרות, אין יותר אלמנט-טאב נפרד להציג/להסתיר
 function applyStudyPeekTabSetting() {
-    const tab = document.getElementById('study-peek-tab');
     const toggle = document.getElementById('study-peek-tab-toggle');
-    const enabled = isStudyPeekTabOn();
-    if (tab) tab.classList.toggle('hidden', !enabled);
-    if (toggle) toggle.checked = enabled;
-    repositionPeekTabStack();
+    if (toggle) toggle.checked = isStudyPeekTabOn();
 }
 
-// מסדרת מחדש את ה-top (בפיקסלים) של כל לשונית בערימה לפי מי שבאמת גלוי/ה
-// כרגע - בלי זה, כיבוי טאב באמצע הערימה (למשל לימודים) היה משאיר רווח קבוע
-// במקומו במקום שהטאב שאחריו (הרגלים) יעלה למלא אותו, בדיוק לפי בקשה מפורשת
-// ("שלא יהיו גאפים/מרווחים"). סדר הערימה בפועל (מלמעלה למטה): השגרה שלי
-// (btn-daily-board-fab) → הצצה להיום (today-peek-tab) → לימודים (study-peek-tab,
-// אופציונלי) → הרגלים (habits-peek-tab, אופציונלי) - נקרא בכל שינוי נראות
-// (הפעלה/כיבוי של כל אחד מהטאבים האופציונליים)
+// מסדרת מחדש את ה-top (בפיקסלים) של כל טאב בערימה לפי מי שבאמת גלוי/ה כרגע -
+// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. הערימה כוללת עכשיו
+// רק 2 טאבים קבועים (השגרה שלי + הצצה להיום) - לימודים/הרגלים עברו לפופ-אפ
+// "עוד" (ר' renderMoreFabPopup), לפי בקשה מפורשת לאחד את הטאבים עם הבועות
 function repositionPeekTabStack() {
-    const stackIds = ['btn-daily-board-fab', 'today-peek-tab', 'study-peek-tab', 'habits-peek-tab'];
+    const stackIds = ['btn-daily-board-fab', 'today-peek-tab'];
     let visibleIndex = 0;
     stackIds.forEach(id => {
         const el = document.getElementById(id);
@@ -14145,9 +13923,8 @@ function repositionPeekTabStack() {
     });
 }
 
-// טאב רביעי בערימה - הרגלים, מיד אחרי לימודים - בניגוד ללימודים זה דולק
-// כברירת מחדל (opt-out, !== 'false' ולא === 'true') לפי בקשה מפורשת, אותו
-// דפוס בדיוק כמו isLightModeOn - חוץ מזה זהה לחלוטין ל-Study-peek-tab
+// הרגלים - אותה סיבה בדיוק כמו study-peek-tab, opt-out (!== 'false') לפי
+// בקשה מפורשת
 function isHabitsPeekTabOn() { return localStorage.getItem('weekwise_habits_peek_tab') !== 'false'; }
 async function loadHabitsPeekTabSetting() {
     if (!supabaseClient || !currentUserId) return;
@@ -14167,13 +13944,11 @@ async function toggleHabitsPeekTab() {
         );
     }
 }
+// הרגלים עבר לפופ-אפ "עוד" (ר' renderMoreFabPopup) - אותו דפוס בדיוק כמו
+// applyStudyPeekTabSetting
 function applyHabitsPeekTabSetting() {
-    const tab = document.getElementById('habits-peek-tab');
     const toggle = document.getElementById('habits-peek-tab-toggle');
-    const enabled = isHabitsPeekTabOn();
-    if (tab) tab.classList.toggle('hidden', !enabled);
-    if (toggle) toggle.checked = enabled;
-    repositionPeekTabStack();
+    if (toggle) toggle.checked = isHabitsPeekTabOn();
 }
 
 // שני הטאבים הראשונים בערימה (השגרה שלי/הצצה להיום) - עד היום תמיד היו דלוקים

@@ -2795,26 +2795,20 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* אשכול-שורה: בלי קופסת-זכוכית מלבנית מאחור בכלל (לפי בקשה מפורשת - "כמו
-   המוח בלי רקע"), בהשראת תמונת-סגנון ששלחה המשתמשת - שורה אחת אופקית עם
-   קשת עדינה כלפי מעלה ככל שמתרחקים מהמרכז (ר' FAB_ROW_OFFSETS ב-app.js) -
-   מי שבמרכז ("קדמי") גדול/בולט יותר, לא בהכרח הפתק - כל בועה יכולה להגיע
-   לשם דרך סיבוב (ר' .fab-tier-front למטה). צל נפרד לכל בועה (לא צל-רצפה
-   משותף אחד - נדחה במפורש: "סתם עיגול שחור") נמצא בתוך box-shadow של
-   .dock-fab עצמה. .fab-dock עצמו הוא נקודת-עיגון בגודל 0 (position:absolute,
-   בלי width/height) - ממוקם ב-left:50% (למרכז אופקית) ו-top (למרכז אנכית,
-   "קצת למטה" מהאמצע הליטרלי לפי בקשה מפורשת), לא באמצעות translate(-50%)
-   כי לקופסה בגודל 0 זה ממילא no-op. כל בועה ממוקמת סביב הנקודה הזו ב-JS
-   (ר' applyDockOrder/FAB_ROW_OFFSETS ב-app.js) עם left:0;top:0 קבוע
-   ו-transform:translate() שמערבב אחוזים (למרכז את הבועה על עצמה) ופיקסלים
-   (ההיסט מהמרכז) - כך שאין תלות כלל בגודל תיבה של ה-Dock */
+/* Dock: עכשיו 2 כרטיסי-זכוכית סטטיים זה לצד זה (בלי קרוסלה/גרירה-סיבובית -
+   לימודים/הרגלים/תקציב/אוכל/ספורט/מים עברו לפופ-אפ "עוד", ר' .more-fab-popup
+   למטה ו-renderMoreFabPopup ב-app.js, לפי בקשה מפורשת לאחד את הטאבים עם
+   הבועות). display:flex פשוט על נקודת-העיגון עצמה - הילדים מסתדרים בשורה
+   לפי dir בלי שום חישוב left/top מ-JS יותר */
 .fab-dock {
     position: absolute !important;
     left: 50%;
-    /* 58% ולא 56% - נדחף טיפה למטה כדי לא לגעת בטאב הרביעי ("הרגלים") שנוסף
-       לערימת today-peek-tab (ר' theme.css .today-peek-anchor), שדווח במפורש
-       שנוגע בדוק בטלפון */
+    /* 58% ולא 56% - נדחף טיפה למטה כדי לא לגעת בטאבים בערימת today-peek-anchor */
     top: 58%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 18px;
     z-index: 99999 !important;
     opacity: 1;
     transition: opacity 0.3s ease;
@@ -2842,14 +2836,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    ריק. בלי אנימציית ריחוף (dockFabFloat הוסרה) - כרטיס/כפתור אמור להרגיש
    יציב, לא מרחף כמו בועה */
 .dock-fab {
-    position: absolute;
-    /* left/top (לא transform!) הם מה ש-JS קובע לכל כפתור (ר' applyDockOrder
-       ב-app.js) - ערכי פיקסלים ביחס לנקודת העיגון של .fab-dock (שגודלה 0,
-       אז left/top כאחוזים היו תמיד מתאפסים - חייב פיקסלים). transform
-       ממרכז את הכרטיס על הנקודה של עצמו בלבד */
-    left: 0;
-    top: 0;
-    transform: translate(-50%, -50%);
+    position: relative;
     width: 92px;
     height: 92px;
     border-radius: 22px;
@@ -2873,8 +2860,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
         inset 0 -10px 14px rgba(0, 0, 0, 0.18);
     padding: 0;
     flex-shrink: 0;
-    transition: var(--transition), left 0.35s ease, top 0.35s ease, width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
-    touch-action: none;
+    transition: var(--transition);
+    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
 }
@@ -2928,20 +2915,41 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     filter: blur(0.5px);
     pointer-events: none;
 }
-.dock-fab:active { transform: translate(-50%, -50%) scale(0.9); }
-/* גרירה ישירה של בועה ספציפית (ר' initDockCarouselGestures ב-app.js) -
-   רק היא זזה, לא כל השורה. מבטלים transition על left/top כדי שהיא תעקוב
-   מיידית אחרי האצבע (לא "תגרור רגליים"), ומקפיאים את אנימציית הריחוף
-   (animation-play-state) כדי שלא תתחרה על transform עם ה-scale/מיקום שלה
-   באותו רגע. z-index (נקבע ב-JS, לא כאן) מרים אותה מעל שכנותיה תוך כדי
-   הגרירה כדי שלא "תיבלע" מתחתן */
-.dock-fab.dock-fab-active-drag { transition: none; animation-play-state: paused; }
-/* שתי רמות גודל בלבד (לא מדורג) - האמצעית גדולה (fab-tier-front), כל
-   השאר קטנות באופן אחיד (fab-tier-side), לפי בקשה מפורשת. בלי opacity/
-   עמעום - זה גרם להן להיראות "דהויות" ולא זכוכיתיות, רק הגודל משדר מרחק.
-   נקבע ב-JS (ר' applyDockOrder) לפי מרחק המשבצת מהמרכז, לא קבוע לבועה
-   ספציפית - כל בועה יכולה להיות "קדמית" כשמסובבים */
-.dock-fab.fab-tier-side { width: 92px; height: 92px; font-size: 2rem; }
+.dock-fab:active { transform: scale(0.9); }
+/* פופ-אפ "עוד" - "צומח" מתוך הכפתור (סגנון speed-dial), לפי בקשה מפורשת.
+   שורותיו נבנות דינמית ב-renderMoreFabPopup (app.js) בעזרת אותה מחלקת-שורה
+   הקיימת כבר בתפריט ההמבורגר (.hamburger-drawer-item) - לא מומצא סגנון-שורה
+   חדש. inset-inline-end (לא left/right) כדי שייפתח כלפי מרכז המסך משני
+   הכיוונים (RTL/LTR) בלי קוד ייעודי לכיוון */
+.more-fab-popup {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    inset-inline-end: -20px;
+    width: 220px;
+    max-width: calc(100vw - 40px);
+    box-sizing: border-box;
+    background-color: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    padding: 8px;
+    z-index: 100000;
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: bottom center;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.more-fab-popup.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+.more-fab-popup-list { display: flex; flex-direction: column; }
+.more-fab-popup-list .hamburger-drawer-item { margin-bottom: 0; }
+.more-fab-popup-list .hamburger-drawer-item + .hamburger-drawer-item { margin-top: 6px; }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 180px; height: 180px; }
     .ai-brain-icon { font-size: 5.4rem; }
@@ -2951,31 +2959,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
    בסדר-מקור/מדיה-קווארי, לפי בקשה מפורשת ("שיהיה יותר קטן העוזר AI") */
 .ai-brain-fab.ai-brain-fab-compact { width: 100px; height: 100px; }
 .ai-brain-fab.ai-brain-fab-compact .ai-brain-icon { font-size: 2.6rem; }
-/* מי שבמרכז (עמדת "קדמי") - לא בהכרח הפתק! לפי בקשה מפורשת ("אני רוצה
-   שהמשתמש יבחר לעצמו מה יהיה באמצע על ידי סיבוב") כל בועה יכולה להגיע
-   לעמדה הזו דרך סיבוב (ר' fabCarouselOrder/applyDockOrder ב-app.js) -
-   fab-tier-front נקבעת דינמית לפי מיקום, לא ID קבוע. גדולה יותר ופעימה
-   עדינה (זוהר לבן-רך, לא צבעוני) כדי שתמיד תבלוט כעוגן המרכזי */
-.dock-fab.fab-tier-front {
-    width: 90px;
-    height: 90px;
-    font-size: 2.4rem;
-    /* שתי אנימציות בו-זמנית (לא רק fabPulse שהיה מחליף/מוחק את dockFabFloat
-       שיורשת מ-.dock-fab - animation הוא shorthand, לא מצטבר בין כללים) -
-       הריחוף (transform) הוסר (ר' ההערה למעלה על .dock-fab) - נשארה רק
-       הפעימה (box-shadow) */
-    animation: fabPulse 2.5s ease-in-out infinite;
-}
-/* עד עכשיו לא כללה בכלל את שכבת הצל ה"מרחפת/מנותקת" ששאר הבועות מקבלות
-   מ-.dock-fab (הפעימה - animation - היא shorthand, אז היא דורסת את כל
-   box-shadow, כולל השכבה הזו) - זה כנראה מה שגרם לצל של הבועה הקדמית
-   להרגיש שונה/צמוד יחסית לשכנות שלה, לפי בקשה מפורשת. עכשיו כוללת גם אותה
-   (עם spread שלילי יותר, -14 במקום -6, כי הבועה הקדמית גדולה יותר ופיזית
-   קרובה יותר לשכנות - כדי שהצל לא "יגע" בהן) וגם את זוהר-הפעימה הסגול מעליה */
-@keyframes fabPulse {
-    0%, 100% { box-shadow: 0 32px 6px -14px rgba(0, 0, 0, 0.75), 0 0 30px -2px rgba(168, 85, 247, 0.45), inset 0 3px 3px rgba(255, 255, 255, 0.75), inset 0 -10px 14px rgba(0, 0, 0, 0.18); }
-    50% { box-shadow: 0 32px 6px -14px rgba(0, 0, 0, 0.75), 0 0 42px 0px rgba(168, 85, 247, 0.6), inset 0 3px 3px rgba(255, 255, 255, 0.75), inset 0 -10px 14px rgba(0, 0, 0, 0.18); }
-}
 
 
 /* עוזר ה-AI (🧠): עבר לפינה השמאלית-*תחתונה*, קבוע לגמרי בלי גרירה ובלי
@@ -3229,7 +3212,9 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-.today-peek-anchor { position: relative; height: 226px; }
+/* 130px (היה 226px) - הערימה כוללת עכשיו רק 2 טאבים קבועים (השגרה שלי +
+   הצצה להיום), לימודים/הרגלים עברו לפופ-אפ "עוד" באשכול הבועות הצפות */
+.today-peek-anchor { position: relative; height: 130px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
