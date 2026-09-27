@@ -50,14 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyHighContrast(isHighContrastOn());
     applyColorFilter(getSavedColorFilter());
     applyUiScale(getUiScale());
-    // ארבעת הפריטים האלה (מים/ספורט/אוכל/תקציב) עברו מבועות-דוק נפרדות
-    // לשורות בפופ-אפ "עוד" (ר' renderMoreFabPopup) - applyXFabSetting כאן
-    // רק מסנכרנת את הטוגל בהגדרות, לא מציגה/מסתירה שום אלמנט-דוק בפועל
-    // (הפופ-אפ עצמו נבנה מחדש בכל פתיחה, ר' ההערה שם)
     applyWaterFabSetting(isWaterFabOn());
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
     applyFinanceFabSetting(isFinanceFabOn());
+    applyFabOrder();
     applyMealRowCounts();
     applyFinanceCycleSetting();
     applyDailyBoardPeekTabSetting();
@@ -1722,7 +1719,6 @@ async function initAppAfterAuth(user) {
     applyPwaShortcutDeepLink();
     initFixedAiFab();
     initFixedAiBrainFab();
-    initMoreFabPopup();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
@@ -6910,7 +6906,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
-    { id: 'more_fab_popup', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
@@ -7085,6 +7080,7 @@ async function loadFabDockSettings() {
     applySportFabSetting(isSportFabOn());
     applyPresetFabSetting(isPresetFabOn());
     applyFinanceFabSetting(isFinanceFabOn());
+    applyFabOrder();
 }
 
 // כפתור צף להוספה מהירה של מים - כבוי כברירת מחדל (opt-in, לא opt-out)
@@ -7092,19 +7088,21 @@ function isWaterFabOn() {
     return localStorage.getItem('weekwise_water_fab') === 'true';
 }
 
-// מסנכרנת רק את הטוגל בהגדרות ואת כפתור-הקיצור שבתוך מסך המים עצמו - הבועה
-// עצמה עברה לפופ-אפ "עוד" (ר' MORE_FAB_ORDERED_ITEMS למטה), אין יותר אלמנט
-// דוק נפרד להסתיר/להציג כאן
+// מסנכרנת את הטוגל בהגדרות, את כפתור-הקיצור שבתוך מסך המים עצמו, וגם
+// מציגה/מסתירה את הבועה עצמה בשורת ה-Dock - חזרה לכפתור-דוק אמיתי (לא שורה
+// בפופ-אפ) לפי בקשה מפורשת ("במקום העוד תשים את כולם בתור")
 function applyWaterFabSetting(enabled) {
+    const fab = document.getElementById('btn-water-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('water-fab-toggle');
     if (toggle) toggle.checked = enabled;
     const shortcutBtn = document.getElementById('btn-water-fab-shortcut');
     if (shortcutBtn) shortcutBtn.textContent = enabled ? t('water_fab_shortcut_remove_btn') : t('water_fab_shortcut_add_btn');
 }
 
-// הסדר של 4 הפריטים הניתנים-לכיבוי בפופ-אפ "עוד" (לימודים/הרגלים קבועים
-// מעליהם, ר' MORE_FAB_FIXED_ITEMS למטה) - עדיין ניתן לגרירה בהגדרות
-// (#fab-order-list, ר' initFabOrderDragReorder)
+// הסדר של 4 הבועות הניתנות-לכיבוי בתוך שורת ה-Dock (תקציב/אוכל/ספורט/מים -
+// לימודים/הרגלים/פתקים קבועים במקומם, לא חלק מהסדר הזה) - ניתן לגרירה
+// בהגדרות (#fab-order-list, ר' initFabOrderDragReorder)
 function getFabOrder() {
     const defaultOrder = ['btn-finance-fab', 'btn-preset-fab', 'btn-sport-fab', 'btn-water-fab'];
     try {
@@ -7114,19 +7112,30 @@ function getFabOrder() {
     return defaultOrder;
 }
 
-// מיישמת את הסדר על שורות ההגדרות (#fab-order-list) בלבד
+// מיישמת את הסדר גם על שורות ההגדרות (#fab-order-list) וגם על סדר-ה-DOM
+// בפועל בתוך #fab-dock (appendChild מזיז אלמנט קיים לסוף הקונטיינר, אז
+// קריאה לפי הסדר הרצוי מסדרת מחדש בלי לגעת בלימודים/הרגלים/פתקים הקבועים
+// שכבר יושבים בהתחלה)
 function applyFabOrder() {
     const order = getFabOrder();
     const settingsList = document.getElementById('fab-order-list');
-    if (!settingsList) return;
-    order.forEach(id => {
-        const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
-        if (row) settingsList.appendChild(row);
-    });
+    if (settingsList) {
+        order.forEach(id => {
+            const row = settingsList.querySelector(`[data-fab-id="${id}"]`);
+            if (row) settingsList.appendChild(row);
+        });
+    }
+    const dock = document.getElementById('fab-dock');
+    if (dock) {
+        order.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) dock.appendChild(el);
+        });
+    }
 }
 
 // גרירה-לסידור-מחדש בהגדרות (#fab-order-list, ידית ⠿ ייעודית) - קובעת את
-// סדר 4 השורות הניתנות-לכיבוי בתוך פופ-אפ "עוד" (ר' renderMoreFabPopup)
+// סדר 4 הבועות הניתנות-לכיבוי בשורת ה-Dock
 function initFabOrderDragReorder() {
     if (typeof Sortable === 'undefined') return;
     const settingsList = document.getElementById('fab-order-list');
@@ -7151,8 +7160,8 @@ function initFabOrderDragReorder() {
     }
 }
 
-// מאפסת את סדר-השורות בהגדרות וגם את מצב ההצגה/הכיבוי של כל 4 הפריטים
-// הניתנים-לכיבוי בפופ-אפ "עוד" - חוזרת לברירת המחדל של חשבון חדש
+// מאפסת את סדר הבועות בהגדרות/ב-Dock וגם את מצב ההצגה/הכיבוי של כל 4
+// הבועות הניתנות-לכיבוי - חוזרת לברירת המחדל של חשבון חדש
 function resetFabLayout() {
     localStorage.removeItem('weekwise_fab_order');
     localStorage.removeItem('weekwise_water_fab');
@@ -7194,6 +7203,8 @@ function isSportFabOn() {
 }
 
 function applySportFabSetting(enabled) {
+    const fab = document.getElementById('btn-sport-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('sport-fab-toggle');
     if (toggle) toggle.checked = enabled;
     const shortcutBtn = document.getElementById('btn-sport-fab-shortcut');
@@ -7220,6 +7231,8 @@ function isPresetFabOn() {
 }
 
 function applyPresetFabSetting(enabled) {
+    const fab = document.getElementById('btn-preset-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('preset-fab-toggle');
     if (toggle) toggle.checked = enabled;
 }
@@ -7237,6 +7250,8 @@ function isFinanceFabOn() {
 }
 
 function applyFinanceFabSetting(enabled) {
+    const fab = document.getElementById('btn-finance-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('finance-fab-toggle');
     if (toggle) toggle.checked = enabled;
 }
@@ -7248,69 +7263,6 @@ function toggleFinanceFab() {
     syncFabDockSettingToDb({ finance_fab_enabled: enabled });
 }
 
-// --- פופ-אפ "עוד" - מאחד את מה שהיה פעם 2 טאבים בערימה (לימודים/הרגלים)
-// ו-4 בועות-דוק נפרדות (תקציב/אוכל/ספורט/מים) לפריט אחד יחיד בדוק שנפתח
-// לרשימה קטנה - לפי בקשה מפורשת ("לחבר בין הטאבים לבועות הצפות"). שום
-// דגל-הפעלה/כיבוי לא השתנה - isStudyPeekTabOn/isHabitsPeekTabOn/isXFabOn
-// נשארו בדיוק כמו שהיו, רק המקום שבו פריט דלוק מוצג השתנה ---
-const MORE_FAB_FIXED_ITEMS = [
-    { icon: '📓', labelKey: 'study_menu_label', isOn: () => isStudyPeekTabOn(), action: "closeMoreFabPopup(); openStudyDrawer();" },
-    { icon: '🔥', labelKey: 'habits_title', isOn: () => isHabitsPeekTabOn(), action: "closeMoreFabPopup(); navigateFromMenu('habits-section');" },
-];
-const MORE_FAB_ORDERED_ITEMS = {
-    'btn-finance-fab': { icon: '💰', labelKey: 'dock_fab_label_finance', isOn: () => isFinanceFabOn(), action: "closeMoreFabPopup(); openFinanceQuickAddModal();" },
-    'btn-preset-fab': { icon: '🍎', labelKey: 'dock_fab_label_food', isOn: () => isPresetFabOn(), action: "closeMoreFabPopup(); openPresetQuickAddModal();" },
-    'btn-sport-fab': { icon: '💪', labelKey: 'dock_fab_label_sport', isOn: () => isSportFabOn(), action: "closeMoreFabPopup(); openSportQuickAddModal();" },
-    'btn-water-fab': { icon: '💧', labelKey: 'dock_fab_label_water', isOn: () => isWaterFabOn(), action: "closeMoreFabPopup(); openModal('modal-water-quick-add');" },
-};
-
-// בונה מחדש את רשימת השורות הגלויות (0 עד 6) בכל פתיחה - לא צריך סנכרון-חי
-// כשמשנים הגדרה, כי #fab-dock (וכל מה שבתוכו, כולל הפופ-אפ) כבר מוסתר
-// לגמרי כל עוד מגירת ההגדרות פתוחה (ר' .phone-wrapper.modal-open .fab-dock
-// ב-theme.css) - שני המצבים האלה אף פעם לא גלויים בו-זמנית
-function renderMoreFabPopup() {
-    const list = document.getElementById('more-fab-popup-list');
-    if (!list) return;
-    const items = [
-        ...MORE_FAB_FIXED_ITEMS,
-        ...getFabOrder().map(id => MORE_FAB_ORDERED_ITEMS[id]).filter(Boolean),
-    ].filter(item => item.isOn());
-    list.innerHTML = items.map(item => `
-        <button type="button" class="hamburger-drawer-item more-fab-popup-row" onclick="${item.action}">
-            <span class="hamburger-drawer-item-icon">${item.icon}</span>
-            <span class="hamburger-drawer-item-title">${escapeHtmlForReport(t(item.labelKey))}</span>
-        </button>
-    `).join('');
-}
-
-function openMoreFabPopup() {
-    renderMoreFabPopup();
-    const popup = document.getElementById('more-fab-popup');
-    if (popup) popup.classList.add('open');
-}
-function closeMoreFabPopup() {
-    const popup = document.getElementById('more-fab-popup');
-    if (popup) popup.classList.remove('open');
-}
-function toggleMoreFabPopup() {
-    const popup = document.getElementById('more-fab-popup');
-    if (popup && popup.classList.contains('open')) closeMoreFabPopup();
-    else openMoreFabPopup();
-}
-
-// סוגר בלחיצה מחוץ לפופ-אפ ולכפתור עצמו - נרשם פעם אחת בלבד (ר'
-// initMoreFabPopup), החזרה המוקדמת כשהפופ-אפ סגור הופכת אותו לזול
-function handleMoreFabPopupOutsideClick(e) {
-    const popup = document.getElementById('more-fab-popup');
-    const btn = document.getElementById('btn-more-fab');
-    if (!popup || !popup.classList.contains('open')) return;
-    if (popup.contains(e.target) || (btn && btn.contains(e.target))) return;
-    closeMoreFabPopup();
-}
-
-function initMoreFabPopup() {
-    document.addEventListener('click', handleMoreFabPopupOutsideClick);
-}
 
 // --- ערכות נושא צבע פרימיום: כל שאר ה-CSS כבר משתמש ב-var(--accent-*), אז
 // זה רק עניין של להחליף את attribute ה-data-color-theme על ה-html ---
@@ -13901,17 +13853,19 @@ async function toggleStudyPeekTab() {
         );
     }
 }
-// לימודים עבר לפופ-אפ "עוד" (ר' renderMoreFabPopup) - הטוגל כאן רק מסנכרן
-// את התיבה בהגדרות, אין יותר אלמנט-טאב נפרד להציג/להסתיר
+// לימודים עבר לבועת-דוק רגילה (btn-study-fab) בשורת ה-Dock, לא טאב בערימה
+// יותר - הטוגל כאן מציג/מסתיר אותה, בדיוק כמו applyXFabSetting
 function applyStudyPeekTabSetting() {
+    const enabled = isStudyPeekTabOn();
+    const fab = document.getElementById('btn-study-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('study-peek-tab-toggle');
-    if (toggle) toggle.checked = isStudyPeekTabOn();
+    if (toggle) toggle.checked = enabled;
 }
 
 // מסדרת מחדש את ה-top (בפיקסלים) של כל טאב בערימה לפי מי שבאמת גלוי/ה כרגע -
-// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. הערימה כוללת עכשיו
-// רק 2 טאבים קבועים (השגרה שלי + הצצה להיום) - לימודים/הרגלים עברו לפופ-אפ
-// "עוד" (ר' renderMoreFabPopup), לפי בקשה מפורשת לאחד את הטאבים עם הבועות
+// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. הערימה כוללת רק 2
+// טאבים קבועים (השגרה שלי + הצצה להיום) - לימודים/הרגלים עברו לשורת ה-Dock
 function repositionPeekTabStack() {
     const stackIds = ['btn-daily-board-fab', 'today-peek-tab'];
     let visibleIndex = 0;
@@ -13944,11 +13898,13 @@ async function toggleHabitsPeekTab() {
         );
     }
 }
-// הרגלים עבר לפופ-אפ "עוד" (ר' renderMoreFabPopup) - אותו דפוס בדיוק כמו
-// applyStudyPeekTabSetting
+// הרגלים - אותו דפוס בדיוק כמו applyStudyPeekTabSetting
 function applyHabitsPeekTabSetting() {
+    const enabled = isHabitsPeekTabOn();
+    const fab = document.getElementById('btn-habits-fab');
+    if (fab) fab.classList.toggle('hidden', !enabled);
     const toggle = document.getElementById('habits-peek-tab-toggle');
-    if (toggle) toggle.checked = isHabitsPeekTabOn();
+    if (toggle) toggle.checked = enabled;
 }
 
 // שני הטאבים הראשונים בערימה (השגרה שלי/הצצה להיום) - עד היום תמיד היו דלוקים

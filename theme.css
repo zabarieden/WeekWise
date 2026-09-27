@@ -2795,11 +2795,10 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* Dock: עכשיו 2 כרטיסי-זכוכית סטטיים זה לצד זה (בלי קרוסלה/גרירה-סיבובית -
-   לימודים/הרגלים/תקציב/אוכל/ספורט/מים עברו לפופ-אפ "עוד", ר' .more-fab-popup
-   למטה ו-renderMoreFabPopup ב-app.js, לפי בקשה מפורשת לאחד את הטאבים עם
-   הבועות). display:flex פשוט על נקודת-העיגון עצמה - הילדים מסתדרים בשורה
-   לפי dir בלי שום חישוב left/top מ-JS יותר */
+/* Dock: כל הפריטים בשורה אחת ישירה (בלי קרוסלה/גרירה-סיבובית, ובלי פופ-אפ
+   "עוד" - בוטל לפי בקשה מפורשת "במקום העוד תשים את כולם בתור"). display:flex
+   פשוט על נקודת-העיגון עצמה - הילדים מסתדרים בשורה לפי dir, וכפתור מוסתר
+   (hidden) פשוט לא תופס מקום, בלי שום חישוב left/top מ-JS */
 .fab-dock {
     position: absolute !important;
     left: 50%;
@@ -2829,127 +2828,34 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     pointer-events: none;
 }
 
-/* עיצוב משותף לכפתורי ה-Dock - "כרטיסי-זכוכית" מלבניים-מעוגלים במקום בועות
-   עגולות (לפי בקשה מפורשת: "2 כפתורים... במקום בועות... כרטיסי-זכוכית
-   מלבניים") - אותה שפת-זכוכית בדיוק (blur/saturate/highlight/צל) שהייתה על
-   הבועות, רק על קופסה מרובעת-מעוגלת עם אייקון+תווית-טקסט קטנה במקום עיגול
-   ריק. בלי אנימציית ריחוף (dockFabFloat הוסרה) - כרטיס/כפתור אמור להרגיש
-   יציב, לא מרחף כמו בועה */
+/* עיצוב משותף לכפתורי ה-Dock - אייקון בלבד, בלי רקע/מסגרת/זכוכית בכלל -
+   לפי בחירה מפורשת מתוך לוח-אפשרויות ("אייקונים בלבד, בלי רקע") אחרי שדווח
+   שהבועות הזכוכיתיות "מרגישות לא חלק מהאפליקציה". drop-shadow (לא box-shadow,
+   כי אין קופסה) שומר על קריאות מעל רקעים משתנים בלי להוסיף מסגרת ויזואלית.
+   min-width/height 44px (לא width/height קבועים - האייקון עצמו קטן משמעותית)
+   שומר על שטח-מגע נגיש בלי לצייר עיגול/ריבוע רואים */
 .dock-fab {
-    position: relative;
-    width: 92px;
-    height: 92px;
-    border-radius: 22px;
-    overflow: hidden;
-    background: linear-gradient(150deg, rgba(210, 235, 255, 0.45) 0%, rgba(180, 220, 255, 0.15) 45%, rgba(200, 230, 255, 0.04) 60%, rgba(190, 225, 255, 0.18) 100%);
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
-    color: #fff;
-    font-size: 2rem;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: var(--text-primary);
+    font-size: 1.6rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 4px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
     cursor: pointer;
-    box-shadow:
-        0 32px 6px -9px rgba(0, 0, 0, 0.75),
-        0 0 20px -4px rgba(200, 225, 255, 0.5),
-        inset 0 3px 3px rgba(255, 255, 255, 0.75),
-        inset 0 -10px 14px rgba(0, 0, 0, 0.18);
-    padding: 0;
     flex-shrink: 0;
     transition: var(--transition);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
 }
 .dock-fab-icon { font-size: 1em; line-height: 1; }
-.dock-fab-label { font-size: 0.6rem; font-weight: 600; color: var(--text-primary); line-height: 1; letter-spacing: 0.2px; }
-/* בועה עם תמונה (סטופר+דגל) במקום אימוג'י טקסטואלי - לפי בקשה מפורשת.
-   התמונה עצמה כבר כדור-זכוכית מוכן (נשלחה מוכנה), אז מחליפים רק את
-   background-image (לא את כל ה-shorthand background) כדי ש-cover יחתוך
-   אוטומטית את הפינות הכהות של הריבוע המקורי לתוך העיגול - אין צורך
-   בהסרת-רקע ידנית. מכבים backdrop-filter כי אין מה "לראות מבעד" לתמונה
-   אטומה - חוסך עבודת GPU מיותרת */
-.dock-fab.dock-fab-img {
-    /* ?v=2 - קובץ-תמונה (בניגוד ל-CSS/JS) לא היה עם מחרוזת-גרסה בכלל, אז
-       עדכון קובץ לא כפה רענון-cache בכל שכבות ה-CDN - דווח בפועל ("עדיין
-       רואה את הישן"). עכשיו יש לו את אותה מוסכמה בדיוק כמו theme.css?v=/
-       app.js?v= - להעלות את המספר בכל פעם שהתמונה עצמה מתחלפת */
-    background-image: url('sport-fab-icon.png?v=2');
-    /* אחוז קטן משמעותית (לא cover) + no-repeat - בדיוק כמו שהאימוג'י (למשל
-       🍎) יושב קטן וממורכז על גבי הזכוכית הרגילה של הכפתור, לא ממלא את כל
-       השטח - לפי בקשה מפורשת ("שזה יראה כמו התפוח"). לא מבטלים יותר את
-       backdrop-filter - הזכוכית הרגילה של .dock-fab צריכה להישאר גלויה
-       מסביב לתמונה, אותו רקע בדיוק כמו שאר הבועות (מים/כסף/תפוח) */
-    background-size: 70%;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-/* highlight-ים - רך וגדול למעלה (השתקפות כללית), חד/קטן למעלה (נקודת-אור
-   ישירה, "ספקולר"), ועוד נקודת-אור שנייה קטנה יותר למטה (כמו בתמונת-
-   הסגנון - בועת סבון אמיתית כמעט תמיד מראה גם השתקפות משנית בתחתית).
-   שתי שכבות radial-gradient על ::after (לא עוד pseudo-element - לאלמנט יש
-   רק before/after) - זה מה שהיה חסר כדי שזה יראה "זכוכיתי" ולא רק "מעומעם" */
-.dock-fab::before {
-    content: '';
-    position: absolute;
-    top: 6%;
-    left: 12%;
-    width: 52%;
-    height: 38%;
-    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8), transparent 72%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-.dock-fab::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(ellipse 14% 10% at 32% 20%, rgba(255, 255, 255, 0.95), transparent 100%),
-        radial-gradient(ellipse 18% 12% at 55% 82%, rgba(255, 255, 255, 0.55), transparent 100%);
-    border-radius: 50%;
-    filter: blur(0.5px);
-    pointer-events: none;
-}
-.dock-fab:active { transform: scale(0.9); }
-/* פופ-אפ "עוד" - "צומח" מתוך הכפתור (סגנון speed-dial), לפי בקשה מפורשת.
-   שורותיו נבנות דינמית ב-renderMoreFabPopup (app.js) בעזרת אותה מחלקת-שורה
-   הקיימת כבר בתפריט ההמבורגר (.hamburger-drawer-item) - לא מומצא סגנון-שורה
-   חדש. inset-inline-end (לא left/right) כדי שייפתח כלפי מרכז המסך משני
-   הכיוונים (RTL/LTR) בלי קוד ייעודי לכיוון */
-.more-fab-popup {
-    position: absolute;
-    bottom: calc(100% + 14px);
-    inset-inline-end: -20px;
-    width: 220px;
-    max-width: calc(100vw - 40px);
-    box-sizing: border-box;
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color);
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    padding: 8px;
-    z-index: 100000;
-    opacity: 0;
-    transform: translateY(8px) scale(0.96);
-    transform-origin: bottom center;
-    pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
-}
-.more-fab-popup.open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-}
-.more-fab-popup-list { display: flex; flex-direction: column; }
-.more-fab-popup-list .hamburger-drawer-item { margin-bottom: 0; }
-.more-fab-popup-list .hamburger-drawer-item + .hamburger-drawer-item { margin-top: 6px; }
+.dock-fab:active { transform: scale(0.82); }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 180px; height: 180px; }
     .ai-brain-icon { font-size: 5.4rem; }
