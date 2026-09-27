@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=435">
+    <link rel="stylesheet" href="theme.css?v=436">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2410,6 +2410,18 @@
                         </label>
                     </div>
 
+                    <!-- התאמה אישית של הפתק - צבע וסגנון, מקוננת כאן ולא כטוגלים נפרדים
+                         ברשימה הראשית כדי שלא יהיה בלגן, לפי בקשה מפורשת. נראית רק כשהפתק
+                         עצמו דלוק (ר' applyWeeklyNoteSetting ב-app.js). ברירת המחדל (כפתור
+                         ה-↺) היא בדיוק המראה הקיים לפי ערכת הנושא - לא משתנה כלום למי
+                         שלא בוחר לגעת בזה -->
+                    <div class="weekly-note-customize" id="weekly-note-customize">
+                        <label class="settings-label" data-i18n="weekly_note_color_label">Note color</label>
+                        <div id="weekly-note-color-swatches" class="note-color-swatches"></div>
+                        <label class="settings-label" data-i18n="weekly_note_shape_label">Note style</label>
+                        <div id="weekly-note-shape-swatches" class="note-color-swatches"></div>
+                    </div>
+
                     <!-- שאלת "מה הכי חשוב לך לעשות היום" (התג "1" על אייקון המוח) - דלוק
                          כברירת מחדל, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
                          לכבות שתהיה לה האפשרות") -->
@@ -3537,7 +3549,7 @@
 
     </div>
 
-    <script src="i18n.js?v=337"></script>
-    <script src="app.js?v=482"></script>
+    <script src="i18n.js?v=338"></script>
+    <script src="app.js?v=483"></script>
 </body>
 </html>

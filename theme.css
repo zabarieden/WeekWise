@@ -1588,6 +1588,9 @@ html.high-contrast.light-mode {
    ב-app.js) - "ברירת מחדל" (חזרה לצבע הטקסט הרגיל של הנושא) הוא עיגול עם
    קו-מתאר בלבד ואות A, לא צבע מוצק, כדי שיהיה ברור שהוא "ללא צבע נבחר" */
 .note-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 10px; }
+/* עטיפת ההתאמה האישית של הפתק השבועי בהגדרות - שוליים קלים כדי שלא תידבק
+   ישר לטוגל שמעליה */
+.weekly-note-customize { margin-top: 4px; margin-bottom: 8px; }
 /* תצוגה מקדימה חיה של הפתק/משימה במודל ההוספה/עריכה (ר' updateCenterItemPreview
    ב-app.js) - אותו עיצוב-בסיס בדיוק כמו שורה אמיתית ברשימה (.center-list li),
    רק בלי הכפתורים, כדי שמה שרואים כאן יהיה בדיוק מה שיתקבל בפועל - לפי בקשה
@@ -2488,6 +2491,90 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
    line-clamp/ellipsis יותר, גלישה רגילה על פני כמה שורות */
 .weekly-note-display { display: block; overflow: hidden; font-weight: 600; line-height: 1.22; word-break: break-word; }
 .weekly-note-display-empty { font-weight: 500; opacity: 0.75; font-style: italic; }
+
+/* צבעי פתק אופציונליים - "פתק דביק" קלאסי בכמה גוונים, לפי בקשה מפורשת
+   ("4 צבעים... חוץ מהברירת מחדל שזה הרגיל עם ערכת הנושא"). כל צבע כולל גם
+   צבע-טקסט כהה קבוע משלו (לא var(--text-primary), שיכול להיות לבן במצב
+   כהה ובלתי-קריא מעל רקע פסטלי בהיר) */
+.weekly-note-widget.weekly-note-color-yellow { background-color: #fdf1a1; color: #4b3b00; }
+.weekly-note-widget.weekly-note-color-pink { background-color: #fbd3e6; color: #5c1f3d; }
+.weekly-note-widget.weekly-note-color-mint { background-color: #c8f2d4; color: #0d3d24; }
+.weekly-note-widget.weekly-note-color-blue { background-color: #cfe3fb; color: #12305c; }
+.weekly-note-color-swatch-yellow { background-color: #fdf1a1; }
+.weekly-note-color-swatch-pink { background-color: #fbd3e6; }
+.weekly-note-color-swatch-mint { background-color: #c8f2d4; }
+.weekly-note-color-swatch-blue { background-color: #cfe3fb; }
+
+/* 4 סגנונות/צורות אופציונליים לפתק, לפי בקשה מפורשת ("אפשרות לשנות צורה,
+   נגיד 4 סגנונות"). ברירת המחדל (בלי אף אחת מהמחלקות האלו) היא בדיוק המראה
+   הקיים - מרובע עם נייר-דבק בפינה, ר' .weekly-note-widget/.weekly-note-tape
+   למעלה */
+.weekly-note-widget.weekly-note-shape-round { border-radius: 24px; transform: none; }
+.weekly-note-widget.weekly-note-shape-circle { border-radius: 50%; transform: none; }
+.weekly-note-widget.weekly-note-shape-ribbon,
+.weekly-note-widget.weekly-note-shape-card {
+    transform: none;
+}
+.weekly-note-widget.weekly-note-shape-round .weekly-note-tape,
+.weekly-note-widget.weekly-note-shape-circle .weekly-note-tape,
+.weekly-note-widget.weekly-note-shape-ribbon .weekly-note-tape,
+.weekly-note-widget.weekly-note-shape-card .weekly-note-tape {
+    display: none;
+}
+/* סרט/דגל משולש בפינה במקום נייר-דבק - קפל נייר קלאסי */
+.weekly-note-widget.weekly-note-shape-ribbon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 22px 22px 0;
+    border-color: transparent rgba(0, 0, 0, 0.25) transparent transparent;
+}
+html[dir="ltr"] .weekly-note-widget.weekly-note-shape-ribbon::after {
+    border-width: 0 0 22px 22px;
+    border-color: transparent transparent rgba(0, 0, 0, 0.25) transparent;
+}
+/* כרטיסייה שטוחה עם פס-הדגשה בצד, בלי דבק ובלי סיבוב - מראה נקי יותר */
+.weekly-note-widget.weekly-note-shape-card {
+    border-radius: 6px;
+    border-inline-start: 5px solid rgba(255, 255, 255, 0.4);
+}
+
+/* קבוצת ה-swatches של סגנון/צורה - כל אחד בצורתו-שלו כדי לרמוז על התוצאה
+   בלי צורך בטקסט הסבר, אותו דפוס בדיוק כמו note-color-swatch */
+.note-shape-swatch {
+    width: 30px;
+    height: 30px;
+    background-color: var(--bg-glass);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    padding: 0;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+.note-shape-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.3); transform: scale(1.08); }
+.note-shape-swatch-round { border-radius: 10px; }
+.note-shape-swatch-circle { border-radius: 50%; }
+.note-shape-swatch-ribbon { border-radius: 4px; position: relative; overflow: hidden; }
+.note-shape-swatch-ribbon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent var(--text-secondary) transparent transparent;
+}
+html[dir="ltr"] .note-shape-swatch-ribbon::after {
+    border-width: 0 0 12px 12px;
+    border-color: transparent transparent var(--text-secondary) transparent;
+}
+.note-shape-swatch-card { border-radius: 4px; border-inline-start: 4px solid var(--text-secondary); }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
 .home-greeting-date-clickable { cursor: pointer; width: fit-content; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }

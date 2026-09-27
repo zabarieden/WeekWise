@@ -13703,12 +13703,15 @@ let currentWeeklyNoteText = '';
 function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
 async function loadWeeklyNoteSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape').eq('user_id', currentUserId).maybeSingle();
     if (data && data.weekly_note_enabled !== null && data.weekly_note_enabled !== undefined) {
         localStorage.setItem('weekwise_weekly_note_enabled', String(data.weekly_note_enabled));
     }
     currentWeeklyNoteText = (data && data.weekly_note_text) || '';
+    currentWeeklyNoteColor = (data && data.weekly_note_color) || null;
+    currentWeeklyNoteShape = (data && data.weekly_note_shape) || null;
     applyWeeklyNoteSetting();
+    applyWeeklyNoteStyle();
     renderWeeklyNoteDisplay();
 }
 async function toggleWeeklyNote() {
@@ -13725,9 +13728,95 @@ async function toggleWeeklyNote() {
 function applyWeeklyNoteSetting() {
     const widget = document.getElementById('weekly-note-widget');
     const toggle = document.getElementById('weekly-note-toggle');
+    const customize = document.getElementById('weekly-note-customize');
     const enabled = isWeeklyNoteOn();
     if (widget) widget.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
+    if (customize) customize.classList.toggle('hidden', !enabled);
+}
+
+// --- התאמה אישית של הפתק (צבע + סגנון/צורה) - אופציונלי, לפי בקשה מפורשת
+// ("4 צבעים וגם אפשרות לשנות צורה... חוץ מהברירת מחדל שזה הרגיל עם ערכת
+// הנושא... שמי שרוצה להחליף שיחליף"). ברירת המחדל (null) היא בדיוק המראה
+// הקיים (רקע ניטרלי לפי ערכת הנושא + נייר-דבק בפינה) - לא משתנה כלום למי
+// שלא בוחר בפעם הראשונה. אותו דפוס בדיוק כמו applyGlobalTextColor/
+// renderGlobalTextColorSwatches (default+presets, סנכרון ל-user_premium) -
+// ממוקם מקונן בתוך הגדרות הפתק עצמו (לא טוגלים נפרדים ברשימה הראשית), לפי
+// בקשה מפורשת ("שלא יהיה הרבה בלגן")
+let currentWeeklyNoteColor = null;
+let currentWeeklyNoteShape = null;
+const WEEKLY_NOTE_COLOR_PRESETS = ['yellow', 'pink', 'mint', 'blue'];
+const WEEKLY_NOTE_SHAPE_PRESETS = ['round', 'circle', 'ribbon', 'card'];
+function applyWeeklyNoteStyle() {
+    const widget = document.getElementById('weekly-note-widget');
+    if (widget) {
+        WEEKLY_NOTE_COLOR_PRESETS.forEach(c => widget.classList.remove(`weekly-note-color-${c}`));
+        if (currentWeeklyNoteColor) widget.classList.add(`weekly-note-color-${currentWeeklyNoteColor}`);
+        WEEKLY_NOTE_SHAPE_PRESETS.forEach(s => widget.classList.remove(`weekly-note-shape-${s}`));
+        if (currentWeeklyNoteShape) widget.classList.add(`weekly-note-shape-${currentWeeklyNoteShape}`);
+    }
+    renderWeeklyNoteColorSwatches();
+    renderWeeklyNoteShapeSwatches();
+}
+function renderWeeklyNoteColorSwatches() {
+    const wrap = document.getElementById('weekly-note-color-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!currentWeeklyNoteColor ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = '↺';
+    defaultBtn.onclick = () => selectWeeklyNoteColor(null);
+    wrap.appendChild(defaultBtn);
+    WEEKLY_NOTE_COLOR_PRESETS.forEach(colorKey => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `note-color-swatch weekly-note-color-swatch-${colorKey}` + (currentWeeklyNoteColor === colorKey ? ' selected' : '');
+        btn.onclick = () => selectWeeklyNoteColor(colorKey);
+        wrap.appendChild(btn);
+    });
+}
+async function selectWeeklyNoteColor(colorKey) {
+    currentWeeklyNoteColor = colorKey;
+    applyWeeklyNoteStyle();
+    localStorage.setItem('weekwise_weekly_note_color', colorKey || '');
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, weekly_note_color: colorKey },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+function renderWeeklyNoteShapeSwatches() {
+    const wrap = document.getElementById('weekly-note-shape-swatches');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const defaultBtn = document.createElement('button');
+    defaultBtn.type = 'button';
+    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!currentWeeklyNoteShape ? ' selected' : '');
+    defaultBtn.title = t('note_text_color_default');
+    defaultBtn.textContent = '↺';
+    defaultBtn.onclick = () => selectWeeklyNoteShape(null);
+    wrap.appendChild(defaultBtn);
+    WEEKLY_NOTE_SHAPE_PRESETS.forEach(shapeKey => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `note-shape-swatch note-shape-swatch-${shapeKey}` + (currentWeeklyNoteShape === shapeKey ? ' selected' : '');
+        btn.onclick = () => selectWeeklyNoteShape(shapeKey);
+        wrap.appendChild(btn);
+    });
+}
+async function selectWeeklyNoteShape(shapeKey) {
+    currentWeeklyNoteShape = shapeKey;
+    applyWeeklyNoteStyle();
+    localStorage.setItem('weekwise_weekly_note_shape', shapeKey || '');
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, weekly_note_shape: shapeKey },
+            { onConflict: 'user_id' },
+        );
+    }
 }
 // גודל הגופן יורד בהדרגה לפי אורך הטקסט כדי שהכל יכנס בפתק הקטן בלי להיחתך -
 // לפי בקשה מפורשת ("כתבתי ולא הכל נכנס... גם אם ארוך פשוט להקטין את
@@ -13740,10 +13829,12 @@ function renderWeeklyNoteDisplay() {
     const shownText = text || t('weekly_note_empty_hint');
     display.textContent = shownText;
     display.classList.toggle('weekly-note-display-empty', !text);
-    let fontSize = 0.72;
-    if (shownText.length > 45) fontSize = 0.5;
-    else if (shownText.length > 32) fontSize = 0.58;
-    else if (shownText.length > 20) fontSize = 0.65;
+    // הוגדל לפי בקשה מפורשת ("תגדיל את הפונט בפתקים") - כל מדרגה גדלה
+    // בהתאמה, עדיין יורדת בהדרגה לפי אורך הטקסט כדי שהכל יכנס בלי להיחתך
+    let fontSize = 0.85;
+    if (shownText.length > 45) fontSize = 0.6;
+    else if (shownText.length > 32) fontSize = 0.68;
+    else if (shownText.length > 20) fontSize = 0.76;
     display.style.fontSize = fontSize + 'rem';
 }
 // מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
