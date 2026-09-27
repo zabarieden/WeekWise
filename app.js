@@ -14812,11 +14812,15 @@ async function addHabit() {
 // אישור לפני מחיקה - לפי בקשה מפורשת, אחרי שדווח על מחיקה בטעות. חשוב
 // במיוחד כאן (יותר מרוב המחיקות באפליקציה): habit_checkins עם ON DELETE
 // CASCADE על habit_id - מחיקת הרגל הורסת לצמיתות גם את כל ההיסטוריה/רצף
-// שלו, בלי שום דרך לשחזר. ההודעה עצמה מבהירה את זה במפורש, לא רק "בטוח?"
-async function deleteHabit(id) {
-    if (!confirm(t('habits_delete_confirm'))) return;
-    await supabaseClient.from('habits').delete().eq('id', id);
-    await loadHabits();
+// שלו, בלי שום דרך לשחזר. showDangerConfirm (לא confirm() דפדפן גנרי) -
+// אותו מודל מעוצב-אפליקציה שכבר משמש לכל שאר המחיקות המשמעותיות (פרוייקט/
+// מחברת/יעד/טבלה וכו') - לפי בקשה מפורשת אחרי שההודעה האפורה נראתה "לא
+// טוב", וגם קוצרה
+function deleteHabit(id) {
+    showDangerConfirm(t('habits_delete_title'), t('habits_delete_confirm'), async () => {
+        await supabaseClient.from('habits').delete().eq('id', id);
+        await loadHabits();
+    });
 }
 
 // --- "לוח היום" (🧭): טאבים מותאמים-אישית (routine_tabs, ברירת מחדל 2 -
