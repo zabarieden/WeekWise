@@ -688,9 +688,13 @@ async function deletePreset(id) {
 }
 
 // סדר קבוע של הקטגוריות (תואם לאפשרויות ב-#new-preset-category) - כך שהרשימה
-// המקובצת תמיד מוצגת באותו סדר לוגי (בוקר -> צהריים -> ערב -> נשנושים), ולא
-// לפי סדר יצירה כרונולוגי שהופך לבלגן ככל שנוספות עוד ארוחות
-const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'snack', 'drinks'];
+// המקובצת תמיד מוצגת באותו סדר לוגי (בוקר -> צהריים -> ערב -> מרקים -> נשנוש
+// דל קלוריות -> מתוקים -> קינוחים -> שתייה), ולא לפי סדר יצירה כרונולוגי
+// שהופך לבלגן ככל שנוספות עוד ארוחות. מרקים/מתוקים/קינוחים נוספו לפי בקשה
+// מפורשת ("שיהיה פשוט ושיהיה להבנה ולהפריד אותם") - 'snack' (המפתח הפנימי,
+// לא שונה כדי לא לדרוש מיגרציה לפריטים קיימים) עבר לתייג "נשנוש דל קלוריות"
+// בלבד, כי "מתוקים" קיבלה קטגוריה נפרדת משלה עכשיו
+const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'soup', 'snack', 'sweet', 'dessert', 'drinks'];
 
 async function loadPresetManageList() {
     if (!supabaseClient || !currentUserId) return;
@@ -965,9 +969,10 @@ function renderPresetQuickAddList(filter) {
 // reasoning: נימוק ה-AI (פר-פריט, לפני הסיכום) נשמר לצד הרשומה - לא מוצג
 // בממשק הרגיל, רק כדי שיהיה אפשר לבדוק בדיעבד אם מספר נראה לא הגיוני, בלי
 // לחסום את השמירה עצמה בשום כרטיס-אישור - לפי בקשה מפורשת
+const SNACK_ROUTED_PRESET_CATEGORIES = ['snack', 'sweet', 'dessert'];
 async function addQuickLogEntry(foodDescription, calories, presetCategory, proteinGrams, reasoning) {
     const today = getLocalDateString();
-    const preferredSlotKeys = presetCategory ? (presetCategory === 'snack' ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
+    const preferredSlotKeys = presetCategory ? (SNACK_ROUTED_PRESET_CATEGORIES.includes(presetCategory) ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
     const slot = await getTodayEmptyMealSlot(preferredSlotKeys);
     if (slot) {
         await supabaseClient.from('calorie_tracker').insert({
@@ -1692,6 +1697,7 @@ async function initAppAfterAuth(user) {
         loadWeeklyNoteSetting(),
         loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
+        loadDailyFocusPromptSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
         loadMonthlyGoal(),
@@ -1778,9 +1784,32 @@ let lastCheckedDailyFocusDate = null;
 // "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה חסום") - לא-פרימיום
 // מקבל 'answered' (תג מוסתר) בלי שום רמז/פיתוי
 let dailyFocusState = 'unseen';
+// הפעלה/כיבוי של השאלה היומית - ברירת מחדל דלוק (opt-out), אותו דפוס בדיוק
+// כמו weekly-note, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
+// לכבות שתהיה לה האפשרות"). כיבוי לא מוחק תשובות עבר, רק מסתיר את התג/בועה
+// מהיום והלאה
+function isDailyFocusPromptOn() { return localStorage.getItem('weekwise_daily_focus_prompt_enabled') !== 'false'; }
+async function loadDailyFocusPromptSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('daily_focus_prompt_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.daily_focus_prompt_enabled === null || data.daily_focus_prompt_enabled === undefined) return;
+    localStorage.setItem('weekwise_daily_focus_prompt_enabled', String(data.daily_focus_prompt_enabled));
+}
+async function toggleDailyFocusPrompt() {
+    const enabled = document.getElementById('daily-focus-prompt-toggle').checked;
+    localStorage.setItem('weekwise_daily_focus_prompt_enabled', String(enabled));
+    if (enabled) checkDailyFocusPrompt();
+    else { dailyFocusState = 'answered'; applyDailyFocusIconState(); }
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, daily_focus_prompt_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
 async function checkDailyFocusPrompt() {
     if (!currentUserId || !supabaseClient) return;
-    if (!isPremiumUser) {
+    if (!isPremiumUser || !isDailyFocusPromptOn()) {
         dailyFocusState = 'answered';
         applyDailyFocusIconState();
         return;
@@ -2054,6 +2083,8 @@ function openSettingsDrawer() {
     if (todayTabToggle) todayTabToggle.checked = isTodayPeekTabOn();
     const aiFabCompactToggle = document.getElementById('ai-fab-compact-toggle');
     if (aiFabCompactToggle) aiFabCompactToggle.checked = isAiFabCompactOn();
+    const dailyFocusPromptToggle = document.getElementById('daily-focus-prompt-toggle');
+    if (dailyFocusPromptToggle) dailyFocusPromptToggle.checked = isDailyFocusPromptOn();
     refreshGoogleCalendarStatus();
     renderFinanceCategoryManageList();
     renderFinanceCategoryIconPicker();
@@ -2442,12 +2473,6 @@ function showTabSection(targetId) {
     // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.add('hidden');
-    // אשכול הבועות (#fab-dock) שייך למסך הבית בלבד עכשיו - לא כפתור-פינה
-    // צנוע כמו עוזר ה-AI, אלא אשכול גדול וממורכז שצף ממש מעל תוכן במסכים
-    // פנימיים (דווח במפורש עם צילום מסך: "אני נכנסת לפתקים... זה לא נעלם").
-    // עוזר ה-AI (המוח) נשאר צף בכל מסך כרגיל - זה נוגע רק ל-Dock עצמו
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.add('subview-open');
     // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
     // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
     // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
@@ -2475,8 +2500,6 @@ function goHome() {
     tabContents.forEach(content => { content.classList.remove('active-tab'); closeSubView(content.id); });
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.remove('hidden');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('subview-open');
 }
 
 function switchToTab(targetId) {
@@ -2508,9 +2531,9 @@ function closeSubView(sectionId) {
 function openHamburgerMenu() {
     const overlay = document.getElementById('hamburger-drawer-overlay');
     if (overlay) overlay.classList.add('open');
-    // .menu-open מסתיר בכוח את כל כפתורי ה-FAB (theme.css) - נדרש כי ל-.fab-dock
-    // יש z-index:99999 !important, גבוה בהרבה מהמגירה, אז הסתמכות על שכבות
-    // בלבד לא מספיקה כדי שהמגירה לא תיחסם על ידו במובייל
+    // .menu-open מסתיר בכוח את כפתורי ה-FAB הצפים (theme.css) - נדרש כי יש להם
+    // z-index:99999 !important, גבוה בהרבה מהמגירה, אז הסתמכות על שכבות
+    // בלבד לא מספיקה כדי שהמגירה לא תיחסם על ידם במובייל
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.add('menu-open');
 }
@@ -4723,20 +4746,16 @@ function getTodayCardViewCount() {
 }
 
 // פתיחה/סגירה של פאנל-הצד "הצצה להיום" - אותו דפוס בדיוק כמו שאר המגירות
-// (openHamburgerMenu/closeHamburgerMenu וכו'), רק עם today-preview-open (לא
-// מחלקת state חדשה) כדי לשמור על הישן: מסתיר את אשכול הבועות (fab-dock) כל
-// עוד היא פתוחה, בדיוק כמו שהיה על today-tasks-card הישנה
+// (openHamburgerMenu/closeHamburgerMenu וכו')
 function openTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
     const tab = document.getElementById('today-peek-tab');
-    const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.add('open');
     if (overlay) overlay.classList.add('open');
     // הלשונית והפאנל כבר לא אחיות ב-DOM (ר' theme.css) - מחלקה ישירה במקום
     // סלקטור ~ כדי שהלשונית עדיין תיעלם כשפותחים
     if (tab) tab.classList.add('panel-open');
-    if (wrapper) wrapper.classList.add('today-preview-open');
     // סופרים פתיחה בפועל בלבד (לא כל loadTodayTasks שרץ מסיבות אחרות ברקע) -
     // כדי שהודעת "יש לך עוד זמן" (ר' loadTodayTasks) תרגיש כמו תגובה לביקור
     // חוזר אמיתי, לא לכל טעינה טכנית
@@ -4748,11 +4767,9 @@ function closeTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
     const overlay = document.getElementById('today-peek-overlay');
     const tab = document.getElementById('today-peek-tab');
-    const wrapper = document.querySelector('.phone-wrapper');
     if (panel) panel.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
     if (tab) tab.classList.remove('panel-open');
-    if (wrapper) wrapper.classList.remove('today-preview-open');
 }
 function toggleTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
@@ -13599,17 +13616,22 @@ function updateHomeCalorieBadge() {
 }
 
 // מסדרת מחדש את ה-top (בפיקסלים) של כל טאב בערימה לפי מי שבאמת גלוי/ה כרגע -
-// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. הערימה כוללת רק 2
-// טאבים קבועים (השגרה שלי + הצצה להיום) - לימודים/הרגלים עברו לתפריט
-// ההמבורגר (שכבר מכיל ניווט ישיר אליהם) לפי בקשה מפורשת
+// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. 3 טאבים: השגרה שלי +
+// הצצה להיום (44px כל אחד, לימודים/הרגלים עברו לתפריט ההמבורגר) ואז הפתקים
+// (btn-ai-fab, 64px - טאב גדול יותר, ר' .notes-peek-tab), שממוקם תמיד מתחתיהם
+// לפי בקשה מפורשת - כל פריט שומר slot בגובה שלו-עצמו, לא גודל אחיד
 function repositionPeekTabStack() {
-    const stackIds = ['btn-daily-board-fab', 'today-peek-tab'];
-    let visibleIndex = 0;
-    stackIds.forEach(id => {
+    const stack = [
+        { id: 'btn-daily-board-fab', slotHeight: 52 },
+        { id: 'today-peek-tab', slotHeight: 52 },
+        { id: 'btn-ai-fab', slotHeight: 72 },
+    ];
+    let top = 14;
+    stack.forEach(({ id, slotHeight }) => {
         const el = document.getElementById(id);
         if (!el || el.classList.contains('hidden')) return;
-        el.style.top = `${14 + visibleIndex * 52}px`;
-        visibleIndex++;
+        el.style.top = `${top}px`;
+        top += slotHeight;
     });
 }
 

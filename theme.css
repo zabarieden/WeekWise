@@ -2795,67 +2795,6 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 
 
 
-/* Dock: כל הפריטים בשורה אחת ישירה (בלי קרוסלה/גרירה-סיבובית, ובלי פופ-אפ
-   "עוד" - בוטל לפי בקשה מפורשת "במקום העוד תשים את כולם בתור"). display:flex
-   פשוט על נקודת-העיגון עצמה - הילדים מסתדרים בשורה לפי dir, וכפתור מוסתר
-   (hidden) פשוט לא תופס מקום, בלי שום חישוב left/top מ-JS */
-.fab-dock {
-    position: absolute !important;
-    left: 50%;
-    /* 58% ולא 56% - נדחף טיפה למטה כדי לא לגעת בטאבים בערימת today-peek-anchor */
-    top: 58%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    z-index: 99999 !important;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-}
-.phone-wrapper.menu-open .fab-dock,
-.phone-wrapper.modal-open .fab-dock,
-.phone-wrapper.subview-open .fab-dock,
-.phone-wrapper.vision-open .fab-dock,
-.phone-wrapper.study-open .fab-dock,
-.phone-wrapper.projects-open .fab-dock {
-    display: none;
-}
-/* "הצצה להיום" (לא תפריט/מודל) - כניסה/יציאה בהדרגה (fade), לא היעלמות
-   פתאומית, לפי בקשה מפורשת. opacity+pointer-events (לא display:none) כדי
-   שה-transition על .fab-dock למעלה יוכל לרוץ בפועל */
-.phone-wrapper.today-preview-open .fab-dock {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* עיצוב משותף לכפתורי ה-Dock - אייקון בלבד, בלי רקע/מסגרת/זכוכית בכלל -
-   לפי בחירה מפורשת מתוך לוח-אפשרויות ("אייקונים בלבד, בלי רקע") אחרי שדווח
-   שהבועות הזכוכיתיות "מרגישות לא חלק מהאפליקציה". drop-shadow (לא box-shadow,
-   כי אין קופסה) שומר על קריאות מעל רקעים משתנים בלי להוסיף מסגרת ויזואלית.
-   min-width/height 44px (לא width/height קבועים - האייקון עצמו קטן משמעותית)
-   שומר על שטח-מגע נגיש בלי לצייר עיגול/ריבוע רואים */
-.dock-fab {
-    background: none;
-    border: none;
-    box-shadow: none;
-    color: var(--text-primary);
-    font-size: 1.6rem;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: var(--transition);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
-}
-.dock-fab-icon { font-size: 1em; line-height: 1; }
-.dock-fab:active { transform: scale(0.82); }
 @media (max-width: 420px) {
     .ai-brain-fab { width: 180px; height: 180px; }
     .ai-brain-icon { font-size: 5.4rem; }
@@ -2970,17 +2909,8 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transition: opacity 0.15s ease;
     z-index: 100000;
 }
-/* בטלנו את תגית-הרמז על בועות ה-Dock (במחשב, hover) - overflow:hidden של
-   .dock-fab (נחוץ לקיצוץ הברק/highlight-ים לעיגול, ר' .dock-fab למעלה)
-   קוצץ גם אותה בטעות, כך שבמקום לצוף מעל הבועה היא נראית כטקסט מקוטע
-   "בתוך" הבועה עצמה - דווח במפורש עם צילום מסך. הכי בטוח פשוט לכבות אותה
-   לגמרי כאן, לפי בקשה מפורשת ("תמחוק את המילים") */
-.dock-fab[data-tooltip]::after {
-    display: none;
-}
-/* בורר יעד "פתק מהיר" (quick-note-dest-mini, ר' index.html) - אין לו
-   class="dock-fab", אז צריך כלל מיקום נפרד; אותו רעיון (קופץ מעליו, ממורכז),
-   רק עם מרווח קטן יותר שמתאים לגודל הזעיר של הכפתורים */
+/* בורר יעד "פתק מהיר" (quick-note-dest-mini, ר' index.html) - אותו רעיון
+   (קופץ מעליו, ממורכז), רק עם מרווח קטן יותר שמתאים לגודל הזעיר של הכפתורים */
 .quick-note-dest-mini[data-tooltip]::after {
     bottom: calc(100% + 6px);
     left: 50%;
@@ -3040,12 +2970,11 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 }
 .hamburger-drawer-overlay.open { display: block; animation: fadeOverlay 0.2s ease-out; }
 /* כשהמגירה פתוחה (menu-open) או כל מודל אחר (modal-open, ר' openModal/
-   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הנותרים (ה-Dock
-   המאוחד כבר מוסתר לגמרי דרך .fab-dock למעלה). חייבים להעלים אותם ממש (לא
-   רק סדר שכבות), כי z-index:99999 !important שלהם גבוה בהרבה מ-4000/2000 של
-   המגירה/המודלים, אחרת הם ממשיכים לצוף מעל התוכן ואף לתפוס לחיצות/מגע
-   שאמורות להגיע לכפתורים מתחתיהם - זה גרם בפועל לכפתור "איפוס פריסת
-   הקיצורים" בהגדרות להיראות כאילו לא עושה כלום במובייל */
+   closeModal ב-app.js) - מסתירים בכוח את שני כפתורי ה-FAB הצפים (עוזר ה-AI
+   ותפריט ההמבורגר). חייבים להעלים אותם ממש (לא רק סדר שכבות), כי
+   z-index:99999 !important שלהם גבוה בהרבה מ-4000/2000 של המגירה/המודלים,
+   אחרת הם ממשיכים לצוף מעל התוכן ואף לתפוס לחיצות/מגע שאמורות להגיע
+   לכפתורים מתחתיהם */
 .phone-wrapper.menu-open .ai-brain-fab,
 .phone-wrapper.menu-open .hamburger-fab,
 .phone-wrapper.modal-open .ai-brain-fab,
@@ -3118,9 +3047,10 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
    ותכריח סרגל-גלילה מיותר להופיע (דווח במפורש "יש סרגל ליד ההצצה") - הפאנל
    הפתוח עצמו כבר לא כאן בכלל (חזר לרמת #app-container, ר' למטה), כי הוא לא
    צריך לעקוב אחרי גלילת הברכה */
-/* 130px (היה 226px) - הערימה כוללת עכשיו רק 2 טאבים קבועים (השגרה שלי +
-   הצצה להיום), לימודים/הרגלים עברו לפופ-אפ "עוד" באשכול הבועות הצפות */
-.today-peek-anchor { position: relative; height: 130px; }
+/* 190px - הערימה כוללת 3 טאבים: השגרה שלי + הצצה להיום (44px כל אחד) +
+   הפתקים (טאב גדול יותר, 64px - ר' .notes-peek-tab למטה), שיושב מתחת
+   ל"הצצה להיום" לפי בקשה מפורשת */
+.today-peek-anchor { position: relative; height: 190px; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3182,6 +3112,21 @@ html[dir="ltr"] .today-peek-tab {
     color: var(--text-primary);
     letter-spacing: 0.3px;
 }
+/* הפתקים - טאב שלישי בערימה, מתחת ל"הצצה להיום", גדול יותר משמעותית מהשניים
+   מעליו (שטח-מגע גדול לחיצה) ובלי תווית טקסט - רק ציור של דף-נייר (ר' ה-SVG
+   ב-index.html), "ממש דף נייר... שאפשר ללחוץ בגדול" לפי בקשה מפורשת */
+.notes-peek-tab {
+    min-width: 64px;
+    min-height: 64px;
+    padding: 12px;
+}
+.notes-peek-tab .notes-peek-icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    color: var(--text-primary);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
 
 .today-peek-content-panel {
     position: absolute;
@@ -3207,7 +3152,7 @@ html[dir="ltr"] .today-peek-tab {
 }
 .today-peek-content-panel.open { transform: translateX(0); }
 /* בזמן גרירה (ר' initTodayPeekDrag ב-app.js) - בלי transition כדי שהפאנל
-   יעקוב מיידית אחרי האצבע, אותו רעיון בדיוק כמו dock-fab-active-drag */
+   יעקוב מיידית אחרי האצבע */
 .today-peek-content-panel.dragging { transition: none; }
 html[dir="ltr"] .today-peek-content-panel {
     right: auto;
@@ -4205,8 +4150,9 @@ html[dir="rtl"] .calendar-event-recurring-options .language-select { padding: 10
        המלאים באפליקציה (apple-modal/login-overlay/hamburger-drawer-overlay).
        fixed שבור בדסקטופ הרחב, כי שם .phone-wrapper הוא כרטיס ממורכז עם
        max-width (לא כל חלון הדפדפן) - fixed היה "בורח" מגבולות הכרטיס וגם לא
-       מכסה נכון את הרוחב המלא שלו. z-index גבוה מ-.fab-dock (99999 !important)
-       זה מה שבאמת תיקן את הבעיה של הכפתור הצף שהציץ מעל תצוגת המתכון */
+       מכסה נכון את הרוחב המלא שלו. z-index גבוה מכפתורי ה-FAB הצפים (99999
+       !important) זה מה שבאמת תיקן את הבעיה של הכפתור הצף שהציץ מעל תצוגת
+       המתכון */
     position: absolute;
     inset: 0;
     /* background (לא background-color)! חלק מהערכות הפרימיום מגדירות

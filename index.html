@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=434">
+    <link rel="stylesheet" href="theme.css?v=435">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -186,10 +186,18 @@
                     <button type="button" class="today-peek-tab daily-board-tab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-title="daily_board_title" data-i18n-aria-label="daily_board_title" aria-label="Daily Board">
                         <span class="today-peek-tab-label" data-i18n="daily_board_title">Daily Agenda</span>
                     </button>
-                    <!-- לימודים והרגלים עברו לפופ-אפ "עוד" באשכול הבועות הצפות (ר'
-                         #more-fab-popup, renderMoreFabPopup ב-app.js) - לפי בקשה מפורשת
-                         לאחד את הטאבים עם הבועות - הטוגלים בהגדרות עדיין שולטים אם
-                         הפריט מופיע שם, רק המיקום השתנה -->
+                    <!-- הפתקים - טאב שלישי, מתחת ל"הצצה להיום", לפי בקשה מפורשת. ציור
+                         דף-נייר (לא אימוג'י/טקסט) וגדול יותר מהטאבים מעליו כדי שיהיה נוח
+                         ללחוץ עליו - ר' .notes-peek-tab ב-theme.css -->
+                    <button type="button" class="today-peek-tab notes-peek-tab" id="btn-ai-fab" data-i18n-title="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">
+                        <svg class="notes-peek-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
+                            <path d="M15 3v4h4"/>
+                            <line x1="8" y1="10.5" x2="16" y2="10.5"/>
+                            <line x1="8" y1="14" x2="16" y2="14"/>
+                            <line x1="8" y1="17.5" x2="12.5" y2="17.5"/>
+                        </svg>
+                    </button>
                 </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
                      הראשי עבר לסרגל התחתון הקבוע (.bottom-tab-bar) -->
@@ -1016,25 +1024,6 @@
                         <button type="button" class="btn-secondary table-add-row-btn" onclick="addTableRow()" data-i18n="table_add_row_btn">+ Add row</button>
                     </div>
                 </section>
-            </div>
-
-            <!-- Dock: רק הפתק נשאר כבועה צפה - לימודים/הרגלים/תקציב/אוכל/ספורט/מים
-                 עברו כולם לתפריט ההמבורגר (שכבר מכיל ניווט ישיר לכל אחד מהם, ר'
-                 hamburger-drawer למטה) או, במקרה של אוכל, לקיצור בתוך פתק מהיר
-                 עצמו (ר' quick-note-dest-mini-row ב-modal-ai-quick-add) - לפי
-                 בקשה מפורשת ("תשאיר את הכל בהמבורגר... אין כפתורים"). אייקון
-                 ציור (רשימה+עט) במקום אימוג'י, לפי בקשה מפורשת -->
-            <div id="fab-dock" class="fab-dock">
-                <button type="button" class="dock-fab" id="btn-ai-fab" data-i18n-tooltip="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">
-                    <span class="dock-fab-icon">
-                        <svg viewBox="0 0 24 24" width="1em" height="1em" style="display:block" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3.5" y1="6" x2="13" y2="6"/>
-                            <line x1="3.5" y1="11" x2="10.5" y2="11"/>
-                            <line x1="3.5" y1="16" x2="8.5" y2="16"/>
-                            <path d="M20.4 5.6a1.6 1.6 0 0 0-2.3 0l-7.6 7.6-1 3.1 3.1-1 7.6-7.6a1.6 1.6 0 0 0 0-2.3z"/>
-                        </svg>
-                    </span>
-                </button>
             </div>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
@@ -2421,6 +2410,17 @@
                         </label>
                     </div>
 
+                    <!-- שאלת "מה הכי חשוב לך לעשות היום" (התג "1" על אייקון המוח) - דלוק
+                         כברירת מחדל, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
+                         לכבות שתהיה לה האפשרות") -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_daily_focus_prompt_label" for="daily-focus-prompt-toggle">Show the daily "what's important today" reminder</label>
+                        <label class="switch">
+                            <input type="checkbox" id="daily-focus-prompt-toggle" onchange="toggleDailyFocusPrompt()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
                     <!-- שני הטאבים הראשונים בערימה - עד היום תמיד דלוקים בלי אפשרות כיבוי
                          בכלל, בניגוד ללימודים/הרגלים למטה - נוספה להם אותה אפשרות כיבוי/
                          הדלקה, כברירת מחדל דלוקים בדיוק כמו שהיו, לפי בקשה מפורשת -->
@@ -2830,7 +2830,7 @@
                     <button type="button" id="btn-estimate-preset-calories" class="btn-secondary" onclick="estimatePresetCaloriesWithAI()" data-i18n="preset_estimate_ai_btn">✨ Estimate calories with AI</button>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('new-preset-category')"><span id="new-preset-category-display"></span></button>
                     <select id="new-preset-category" class="hidden">
-                        <option value="morning" data-i18n="preset_cat_morning">🌅 Breakfast & light meals</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals</option><option value="snack" data-i18n="preset_cat_snack">🍭 Snacks and treats</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option>
+                        <option value="morning" data-i18n="preset_cat_morning">🌅 Main meals - Breakfast</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals - Lunch</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals - Dinner</option><option value="soup" data-i18n="preset_cat_soup">🍲 Soups</option><option value="snack" data-i18n="preset_cat_snack">🥕 Low-calorie snacks</option><option value="sweet" data-i18n="preset_cat_sweet">🍬 Sweets</option><option value="dessert" data-i18n="preset_cat_dessert">🍰 Desserts</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option>
                     </select>
                     <div class="action-buttons-wrap">
                         <button id="btn-add-preset" class="btn-primary" data-i18n="preset_add_btn">Add to library</button>
@@ -3537,7 +3537,7 @@
 
     </div>
 
-    <script src="i18n.js?v=336"></script>
-    <script src="app.js?v=481"></script>
+    <script src="i18n.js?v=337"></script>
+    <script src="app.js?v=482"></script>
 </body>
 </html>
