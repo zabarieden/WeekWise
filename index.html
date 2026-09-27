@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=430">
+    <link rel="stylesheet" href="theme.css?v=431">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -136,7 +136,7 @@
                 <div class="home-greeting-row">
                     <div>
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
-                        <p class="home-greeting-date" id="home-greeting-date"></p>
+                        <p class="home-greeting-date home-greeting-date-clickable" id="home-greeting-date" onclick="openQuickDatePeek()" data-i18n-title="home_greeting_date_peek_title" title="Quick look at the calendar"></p>
                     </div>
                     <!-- עמודת-צד בקצה הנגדי לברכה/תאריך - מכילה את הפתק השבועי ואת תג
                          הפרימיום, אחד מעל השני. flex רגיל (לא מיקום מוחלט) כדי שהצד
@@ -3644,7 +3644,7 @@
 
     </div>
 
-    <script src="i18n.js?v=333"></script>
-    <script src="app.js?v=477"></script>
+    <script src="i18n.js?v=334"></script>
+    <script src="app.js?v=478"></script>
 </body>
 </html>

@@ -2557,6 +2557,21 @@ function navigateFromMenu(sectionId, subviewId) {
     if (subviewId) openSubTile(sectionId, subviewId);
 }
 
+// לחיצה על התאריך בברכת הבית - קיצור-דרך ל"מבט חודשי" הקיים (לא בונה שום
+// לוח-שנה מוקטן חדש) - לפי בקשה מפורשת ("לפתוח זריז ולראות תאריך ויום...
+// אפילו לנצל את המבט ליומן, עדיף"). גם דואגים שהכרטיס יהיה פתוח בפועל (הוא
+// מקופל כברירת מחדל) וגם בוחרים את היום הנוכחי, כדי שהיא תראה מיד את
+// הפירוט/אפשרות ההוספה של היום - לא רק לוח סגור
+function openQuickDatePeek() {
+    switchToTab('schedule-section');
+    const monthlyCard = document.querySelector('#schedule-section .card');
+    if (monthlyCard && !monthlyCard.classList.contains('expanded')) {
+        const header = monthlyCard.querySelector('.collapsible-header');
+        if (header) toggleCardSection(header);
+    }
+    selectCalendarDay(getLocalDateString());
+}
+
 // --- קיצורי דרך של ה-PWA (manifest.json shortcuts): קפיצה ישירה ללשונית מבוקשת ---
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);
@@ -6903,6 +6918,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
+    { id: 'quick_date_peek', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },

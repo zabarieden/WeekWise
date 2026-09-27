@@ -2490,6 +2490,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .weekly-note-display-empty { font-weight: 500; opacity: 0.75; font-style: italic; }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
+.home-greeting-date-clickable { cursor: pointer; width: fit-content; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 .home-premium-badge {
     display: flex;
     align-items: center;
