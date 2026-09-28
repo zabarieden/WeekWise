@@ -8677,10 +8677,9 @@ async function handleReceiptPhotoSelected(event) {
 
 function openReceiptCategory(category) {
     currentReceiptCategory = category;
-    document.querySelectorAll('#finance-section [data-receipt-category]').forEach(card => {
-        card.classList.toggle('active', card.getAttribute('data-receipt-category') === category);
-    });
-    document.getElementById('receipts-list-wrap').classList.remove('hidden');
+    const title = document.getElementById('receipts-list-title');
+    if (title) title.textContent = t(category === 'business' ? 'receipt_category_business' : 'receipt_category_home');
+    openSubTile('receipts-section', 'list');
     loadReceipts(category);
 }
 
