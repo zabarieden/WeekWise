@@ -257,6 +257,9 @@ function onLanguageChanged() {
     updateLanguagePickerTriggers();
     updateLegalLinksForLanguage();
     renderHomeGreeting();
+    // טקסט ה"פתק ריק" של הפתק השבועי נכתב ב-JS (לא data-i18n), אז applyTranslations
+    // לא מרעננת אותו - בלי זה הוא נשאר בשפה הקודמת אחרי החלפת שפה
+    renderWeeklyNoteDisplay();
     // applyTranslations (i18n.js) דרסה כרגע את placeholder שדה הסיסמה חזרה
     // לגרסת-ההרשמה הקבועה שבתבנית ה-HTML (data-i18n-placeholder), בלי קשר
     // למצב האמיתי (login/signup) - כי זו קריאה גנרית שלא יודעת על authMode.
@@ -1886,6 +1889,24 @@ function renderDailyFocusTags() {
     otherChip.textContent = t('daily_focus_other_option');
     otherChip.onclick = () => toggleDailyFocusOther(otherChip);
     container.appendChild(otherChip);
+}
+
+// תשובת "מה חשוב היום" נשמרת ב-DB כטקסט גולמי בשפה שהייתה פעילה ברגע הבחירה,
+// אז אחרי החלפת שפה היא נשארה בשפה הישנה (דווח: ממשק באנגלית, כרטיס בעברית).
+// אם הטקסט השמור זהה בדיוק להצעה מוכנה באחת השפות - מציגים אותה בשפה הנוכחית;
+// טקסט חופשי שהמשתמשת כתבה ב"אחר" נשאר כמו שהוא (אין ממה לתרגם)
+let dailyFocusTitleIndex = null;
+function localizeDailyFocusTitle(title) {
+    if (!dailyFocusTitleIndex) {
+        dailyFocusTitleIndex = new Map();
+        Object.values(translations).forEach(dict => {
+            Object.keys(dict).forEach(k => {
+                if (/^daily_focus_p\d+_d\d+_s\d+$/.test(k) && !dailyFocusTitleIndex.has(dict[k])) dailyFocusTitleIndex.set(dict[k], k);
+            });
+        });
+    }
+    const key = dailyFocusTitleIndex.get(title);
+    return key ? t(key) : title;
 }
 
 function toggleDailyFocusTag(text, chipEl) {
@@ -4531,7 +4552,7 @@ async function loadTodayTasks() {
         focusItems.forEach(item => {
             const chip = document.createElement('span');
             chip.className = 'daily-focus-chip';
-            chip.textContent = item.event_title;
+            chip.textContent = localizeDailyFocusTitle(item.event_title);
             chipsRow.appendChild(chip);
         });
         container.appendChild(chipsRow);
@@ -4960,7 +4981,7 @@ async function renderSelectedCalendarDay() {
         focusItems.forEach(item => {
             const chip = document.createElement('span');
             chip.className = 'daily-focus-chip';
-            chip.textContent = item.event_title;
+            chip.textContent = localizeDailyFocusTitle(item.event_title);
             chipsRow.appendChild(chip);
         });
         detail.appendChild(chipsRow);
