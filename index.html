@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=436">
+    <link rel="stylesheet" href="theme.css?v=437">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3035,6 +3035,17 @@
                 <h3 data-i18n="smart_split_modal_title">🪄 Smart Split</h3>
                 <p class="modal-subtitle" data-i18n="smart_split_modal_subtitle">Write a task, and leave it to NOT10.ai to figure out the right pace for you.</p>
                 <textarea id="smart-split-task-input" rows="3" data-i18n-placeholder="smart_split_task_placeholder" placeholder="e.g. Prepare a presentation + summarize a report for the meeting"></textarea>
+                <!-- צילום/בחירת תמונה של המשימה (דף מטלות, רשימה, פתק בכתב יד) - במקום או
+                     בנוסף לטקסט. בלי capture=, כדי שבנייד תופיע גם אפשרות "צלם" וגם
+                     "גלריה" - לפי בקשה מפורשת ("אפשרות צילום תמונה בפריסה החכמה") -->
+                <input type="file" id="smart-split-photo-input" accept="image/*" class="hidden" onchange="handleSmartSplitPhotoSelected(event)">
+                <div class="smart-split-photo-row">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('smart-split-photo-input').click()" data-i18n="smart_split_add_photo_btn">📷 Add a photo</button>
+                    <div id="smart-split-photo-preview" class="smart-split-photo-preview hidden">
+                        <img id="smart-split-photo-thumb" alt="">
+                        <button type="button" class="smart-split-photo-remove" onclick="clearSmartSplitPhoto()" data-i18n-title="smart_split_photo_remove_title" data-i18n-aria-label="smart_split_photo_remove_title" title="Remove photo" aria-label="Remove photo">✕</button>
+                    </div>
+                </div>
                 <!-- SVG סגול נקי (לא אימוג'י מסונן - filter על 📅 הרב-צבעוני יצר
                      כתם ורוד מכוער) - בלי רקע/מסגרת, רק האייקון עצמו במרכז,
                      בלי טקסט "dd/mm/yyyy" גלוי - לפי בקשה מפורשת -->
@@ -3549,7 +3560,7 @@
 
     </div>
 
-    <script src="i18n.js?v=338"></script>
-    <script src="app.js?v=483"></script>
+    <script src="i18n.js?v=339"></script>
+    <script src="app.js?v=484"></script>
 </body>
 </html>

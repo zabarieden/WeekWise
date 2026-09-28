@@ -133,8 +133,27 @@ Deno.serve(async (req) => {
         const dueDate: string = body?.dueDate;
         const today: string = body?.today;
         const freeDaysAnswer: string = body?.freeDaysAnswer || "";
-        if (!text || !text.trim()) return jsonResponse({ error: "missing_text" }, 400);
+        // תמונה אופציונלית (למשל צילום של דף מטלות/רשימה) - במקום או בנוסף לטקסט
+        const imageBase64: string = body?.imageBase64 || "";
+        const mediaType: string = body?.mediaType || "";
+        const hasImage = !!imageBase64 && mediaType.startsWith("image/");
+        if (imageBase64 && !hasImage) return jsonResponse({ error: "invalid_image" }, 400);
+        if ((!text || !text.trim()) && !hasImage) return jsonResponse({ error: "missing_text" }, 400);
         if (!dueDate || !today) return jsonResponse({ error: "missing_dates" }, 400);
+
+        const taskBlock = hasImage
+            ? "The task is described in the attached photo (it may be a homework sheet, assignment, syllabus, " +
+              "list, or handwritten note) - read it carefully" +
+              (text && text.trim() ? ", together with this additional note from the user: \"" + text + "\"" : "") +
+              ".\n\n"
+            : "\"" + text + "\"\n\n";
+        const buildUserContent = (promptText: string) =>
+            hasImage
+                ? [
+                    { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+                    { type: "text", text: promptText },
+                ]
+                : promptText;
 
         const candidateDates = computeCandidateDates(today, dueDate);
 
@@ -151,10 +170,10 @@ Deno.serve(async (req) => {
                 messages: [
                     {
                         role: "user",
-                        content:
+                        content: buildUserContent(
                             "The user needs to finish the following task by " + dueDate + " (that date itself is NOT " +
                             "available for work - the task must be complete by the day before it):\n\n" +
-                            "\"" + text + "\"\n\n" +
+                            taskBlock +
                             "Today is " + today + " (" + DAY_NAMES[new Date(`${today}T00:00:00`).getDay()] + "). " +
                             "The candidate dates available to work on it, each with its day of the week, are exactly: " +
                             formatCandidateDatesWithWeekday(candidateDates) + ".\n\n" +
@@ -176,7 +195,7 @@ Deno.serve(async (req) => {
                             "or bracket prefix of any kind. Every event_date you return MUST be one of the exact " +
                             "candidate dates listed above - never invent a different date. Use at least one chunk; " +
                             "it's fine to use only some of the candidate dates (skip busy ones) but never fewer than " +
-                            "what's needed to cover the whole task.",
+                            "what's needed to cover the whole task."),
                     },
                 ],
                 tools: [
