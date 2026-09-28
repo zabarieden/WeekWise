@@ -1591,11 +1591,6 @@ html.high-contrast.light-mode {
 /* עטיפת ההתאמה האישית של הפתק השבועי בהגדרות - שוליים קלים כדי שלא תידבק
    ישר לטוגל שמעליה */
 .weekly-note-customize { margin-top: 4px; margin-bottom: 8px; }
-/* שורת "הוספת תמונה" בפריסה החכמה - כפתור + תצוגה מקדימה קטנה עם X להסרה */
-.smart-split-photo-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
-.smart-split-photo-preview { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
-.smart-split-photo-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-color); display: block; }
-.smart-split-photo-remove { position: absolute; top: -6px; inset-inline-end: -6px; width: 20px; height: 20px; border-radius: 50%; border: none; background: #ef4444; color: #fff; font-size: 0.65rem; line-height: 1; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; }
 /* תצוגה מקדימה חיה של הפתק/משימה במודל ההוספה/עריכה (ר' updateCenterItemPreview
    ב-app.js) - אותו עיצוב-בסיס בדיוק כמו שורה אמיתית ברשימה (.center-list li),
    רק בלי הכפתורים, כדי שמה שרואים כאן יהיה בדיוק מה שיתקבל בפועל - לפי בקשה

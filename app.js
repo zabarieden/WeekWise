@@ -3841,57 +3841,6 @@ async function finishScheduleClarificationFlow() {
 // קריאות נפרדות), ואז מוחלות כאירועי calendar_events חד-פעמיים בדיוק כמו
 // applyOneTimeScheduleEvents - עריכה/מחיקה דרך אותם כפתורי X/✏️ הרגילים ---
 let pendingSmartSplitTask = null;
-let pendingSmartSplitPhoto = null;
-
-// מקטינה תמונה מהמצלמה (לרוב 4000+ פיקסלים) ל-1600 בצד הארוך ומקודדת JPEG - כדי
-// שהבקשה לשרת תהיה קטנה ומהירה, בלי לפגוע בקריאות של טקסט/כתב-יד בתמונה
-async function downscaleImageToBase64(file, maxDim = 1600, quality = 0.85) {
-    const url = URL.createObjectURL(file);
-    try {
-        const img = await new Promise((resolve, reject) => {
-            const el = new Image();
-            el.onload = () => resolve(el);
-            el.onerror = reject;
-            el.src = url;
-        });
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        return { mediaType: 'image/jpeg', base64: dataUrl.split(',')[1], previewUrl: dataUrl };
-    } finally {
-        URL.revokeObjectURL(url);
-    }
-}
-
-function renderSmartSplitPhotoPreview() {
-    const preview = document.getElementById('smart-split-photo-preview');
-    const thumb = document.getElementById('smart-split-photo-thumb');
-    if (!preview || !thumb) return;
-    preview.classList.toggle('hidden', !pendingSmartSplitPhoto);
-    thumb.src = pendingSmartSplitPhoto ? pendingSmartSplitPhoto.previewUrl : '';
-}
-
-async function handleSmartSplitPhotoSelected(event) {
-    const input = event.target;
-    const file = input.files && input.files[0];
-    input.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { showAppToast(t('recipe_scan_unsupported_type'), 'error'); return; }
-    try {
-        pendingSmartSplitPhoto = await downscaleImageToBase64(file);
-        renderSmartSplitPhotoPreview();
-    } catch {
-        showAppToast(t('recipe_scan_unsupported_type'), 'error');
-    }
-}
-
-function clearSmartSplitPhoto() {
-    pendingSmartSplitPhoto = null;
-    renderSmartSplitPhotoPreview();
-}
 
 function openSmartSplitModal() {
     // לא פרימיום עדיין מקבלת עד 5 שימושים חינמיים לכל החיים - ר' loadAiUsage
@@ -3903,31 +3852,28 @@ function openSmartSplitModal() {
     document.getElementById('smart-split-task-input').value = '';
     document.getElementById('smart-split-due-date-input').value = '';
     pendingSmartSplitTask = null;
-    clearSmartSplitPhoto();
     openModal('modal-smart-split-input');
 }
 
 function submitSmartSplitTaskStep() {
     const text = document.getElementById('smart-split-task-input').value.trim();
     const dueDate = document.getElementById('smart-split-due-date-input').value;
-    if (!text && !pendingSmartSplitPhoto) { showAppToast(t('smart_split_empty_error'), 'error'); return; }
+    if (!text) { showAppToast(t('smart_split_empty_error'), 'error'); return; }
     if (!dueDate) { showAppToast(t('smart_split_due_date_required_error'), 'error'); return; }
     if (dueDate <= getLocalDateString()) { showAppToast(t('smart_split_due_date_past_error'), 'error'); return; }
 
-    pendingSmartSplitTask = { text, dueDate, photo: pendingSmartSplitPhoto };
+    pendingSmartSplitTask = { text, dueDate };
     document.getElementById('smart-split-clarify-input').value = '';
     closeModal('modal-smart-split-input');
     openModal('modal-smart-split-clarify');
 }
 
-async function attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer, photo) {
+async function attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer) {
     try {
-        const payload = { text, dueDate, today, freeDaysAnswer };
-        if (photo) { payload.imageBase64 = photo.base64; payload.mediaType = photo.mediaType; }
         const res = await fetch(`${SUPABASE_URL}/functions/v1/split-task-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ text, dueDate, today, freeDaysAnswer })
         });
         const result = await res.json();
         if (res.status === 402 || result.error === 'premium_required') return { status: 'premium_required' };
@@ -3952,9 +3898,9 @@ async function submitSmartSplitClarify() {
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
         if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-        const { text, dueDate, photo } = pendingSmartSplitTask;
+        const { text, dueDate } = pendingSmartSplitTask;
         const today = getLocalDateString();
-        const attempt = await attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer, photo);
+        const attempt = await attemptSmartSplit(token, text, dueDate, today, freeDaysAnswer);
 
         if (attempt.status === 'premium_required') { closeModal('modal-smart-split-clarify'); openPremiumUpgradeModal(); return; }
         if (attempt.status === 'limit') {
