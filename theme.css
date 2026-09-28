@@ -1661,8 +1661,8 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #water-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #calorie-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #protein-daily-goal-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #habit-name-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #habit-sport-duration-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #routine-goal-name-input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #routine-goal-sport-duration-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #weekly-note-textarea,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #contact-us-message,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-schedule-duration-months,
@@ -2791,6 +2791,11 @@ html[dir="ltr"] .note-shape-swatch-ribbon::after {
 .btn-link-action { background: none; border: none; padding: 4px 2px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
 .daily-board-delete-tab-btn { color: #f87171; }
 .daily-board-body { flex: 1; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 14px; }
+/* סקציית מטרות/הרגלים בתוך "השגרה שלי" - מעל פריטי-השעה הרגילים, אותם
+   רכיבי רשימה בדיוק כמו מסך ההרגלים הישן (habit-item/habits-list וכו') */
+.daily-board-goals-section { margin-top: 10px; border-radius: 14px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.06); }
+.daily-board-goals-section .card-title-row { margin-bottom: 6px; }
+.daily-board-goals-section .card-title-row h4 { margin: 0; font-size: 0.95rem; }
 .daily-board-bucket-section { border-radius: 14px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.06); }
 /* היו 4 גוונים קבועים (כתום/ירוק/כחול/סגול) בלי קשר לערכת הנושא הנבחרת -
    עכשיו נגזרים משלושת צבעי-המותג של הערכה עצמה (ורוד/סגול/סגול-בהיר, אלה
@@ -4527,20 +4532,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    אזהרה קטנה וברורה צמודה לתג-הרצף עצמו, לפי בקשה מפורשת ("אות קטנה...
    שיודעים שאם לא עושים את זה היום זה היום האחרון") */
 .habit-streak-risk-badge { margin-inline-start: 4px; }
-.btn-habit-history { flex-shrink: 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.95rem; cursor: pointer; padding: 4px; opacity: 0.8; transition: var(--transition); }
-.btn-habit-history:hover { opacity: 1; transform: scale(1.1); }
-/* מודל היסטוריית הרגל - שלושת השבבים העגולים (רצף נוכחי/שיא/סה"כ) מעל
-   הלוח החודשי, ואותם רכיבי monthly-calendar-* בדיוק כמו הלוח הכללי */
-.habit-history-stats { display: flex; justify-content: space-around; margin-bottom: 16px; }
-.habit-history-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.habit-history-stat-value { font-size: 1.3rem; font-weight: 800; color: var(--accent-gold-text); font-variant-numeric: tabular-nums; }
-.habit-history-stat-label { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; }
-.habit-history-grid .monthly-calendar-cell { cursor: default; }
-.habit-history-grid .monthly-calendar-cell.habit-history-done { background-color: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); }
-/* כל פספוס מסומן בקו אדמדם עדין למטה - עדין בכוונה (לא צועק), כי פספוס בודד
-   כבר לא שובר את הרצף - זו רק תזכורת ויזואלית שהיום הזה לא סומן */
-.habit-history-miss-mark { position: absolute; bottom: 4px; width: 8px; height: 2px; border-radius: 2px; background-color: var(--accent-red); opacity: 0.55; }
-/* מבט-על חודשי לכל ההרגלים - טבלה רחבה, גוללת אופקית בתוך עטיפה משלה (לא
+/* מבט-על חודשי - טבלה רחבה, גוללת אופקית בתוך עטיפה משלה (לא
    מגלגלת את כל העמוד לרוחב) - עמודת השם דביקה (sticky) בצד ההתחלה של
    הכיוון (inset-inline-start מתאים אוטומטית ל-RTL/LTR) כדי שתישאר גלויה
    תוך כדי גלילה ימינה/שמאלה. קריאה בלבד - אין hover/cursor:pointer בכוונה */
@@ -4792,6 +4784,10 @@ th.habits-overview-today-col { color: var(--accent-purple-text); font-weight: 80
    ב-app.js) - z-index גבוה יותר מבטיח שהם תמיד יצטיירו *מעל* אותו מודל-הורה
    שנשאר פתוח מתחתיהם, בלי תלות בסדר ה-DOM */
 #modal-custom-date-picker, #modal-custom-select-picker { z-index: 2500; }
+/* אותה סיבה בדיוק - הוספת/מבט-על מטרות נפתחים מתוך #modal-daily-board עצמו
+   ונפתחים/נסגרים ישירות (ר' openAddRoutineGoalModal/openRoutineGoalsOverviewModal
+   ב-app.js) כדי שהוא יישאר פתוח מתחתיהם */
+#modal-add-routine-goal, #modal-routine-goals-overview { z-index: 2500; }
 /* בורר השפה חייב להיפתח גם מעל מסך הכניסה (.login-overlay, z-index:3000 -
    גבוה מ-.apple-modal הרגיל של 2000!) אז הוא צריך z-index ייעודי גבוה יותר */
 #modal-language-picker { z-index: 3500; }
@@ -5082,15 +5078,15 @@ th.habits-overview-today-col { color: var(--accent-purple-text); font-weight: 80
 /* היו rgba(0,0,0,0.4)+color:#fff קבועים - עובד רק על רקע כהה, ולא תלוי
    בערכת-נושא בכלל. זה מסביר את כל תלונות "התיבה אפורה במצב בהיר" לאורך כל
    השדות האלה, לא רק ל-#center-item-input שכבר תוקן בנפרד קודם */
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #habit-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #habit-sport-duration-input, #weekly-note-textarea { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
-#habit-sport-duration-input { width: 100%; box-sizing: border-box; }
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #routine-goal-name-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #routine-goal-sport-duration-input, #weekly-note-textarea { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
+#routine-goal-sport-duration-input { width: 100%; box-sizing: border-box; }
 #weekly-note-textarea { width: 100%; box-sizing: border-box; resize: vertical; }
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
 .preset-quick-add-item:active { transform: scale(0.98); }
 .preset-quick-add-item-cal { color: var(--text-secondary); font-size: 0.8rem; flex-shrink: 0; }
-#habit-name-input { width: 100%; box-sizing: border-box; }
+#routine-goal-name-input { width: 100%; box-sizing: border-box; }
 #contact-us-message { width: 100%; box-sizing: border-box; font-family: inherit; resize: vertical; margin-bottom: 10px; }
 #contact-us-category { margin-bottom: 10px; }
 /* היה input חד-שורתי, שהפך פתק ארוך לבלתי-ניתן-לעריכה בפועל (אין דרך

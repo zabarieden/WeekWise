@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=439">
+    <link rel="stylesheet" href="theme.css?v=440">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -968,19 +968,6 @@
                     </div>
                 </section>
 
-                <!-- חלונית: הרגלים ורצף - כמו ספורט, נגישה רק מהתפריט הצדדי (☰), לא
-                     מטאב קבוע בסרגל התחתון ולא מקוננת בתוך "פתקים" (לפי בקשה מפורשת) -->
-                <section class="tab-content" id="habits-section">
-                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-                    <div class="card expanded">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="habits_title">Habits</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openHabitsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button><button class="btn-floating-add" onclick="event.stopPropagation(); openAddHabitModal()">➕</button><span class="card-toggle-icon">▼</span></div></div>
-                        <div class="card-body">
-                            <ul id="habits-list" class="center-list habits-list"></ul>
-                            <p id="habits-empty-hint" class="today-tasks-empty hidden" data-i18n="habits_empty_hint">No habits yet - add one to start tracking your streak.</p>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- טבלאות מותאמות אישית (Notion-style) - מסך top-level נפרד לגמרי,
                      לא מקונן בתוך תחום קיים, לפי בקשה מפורשת. שתי תצוגות פנימיות
                      (רשימת טבלאות / טבלה פתוחה) מתחלפות עם hidden רגיל, לא דרך
@@ -1105,10 +1092,6 @@
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
                         <span class="hamburger-drawer-item-icon">🛒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
-                    </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('habits-section')">
-                        <span class="hamburger-drawer-item-icon">🔥</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="habits_title">Habits</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_goals">Goals &amp; Progress</div>
@@ -1931,26 +1914,29 @@
             </div>
         </div>
 
-        <!-- חלון צף: הוספת הרגל חדש -->
-        <div id="modal-add-habit" class="apple-modal">
+        <!-- חלון צף: הוספת מטרה/הרגל חדש בתוך "השגרה שלי" - נפתח/נסגר ישירות
+             (לא openModal/closeModal, ר' openAddRoutineGoalModal ב-app.js) כדי
+             ש-#modal-daily-board יישאר פתוח מתחתיו, אותו דפוס בדיוק כמו
+             #modal-custom-date-picker (z-index גבוה יותר, ר' theme.css) -->
+        <div id="modal-add-routine-goal" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="habits_add_modal_title">New Habit</h3>
-                <input type="text" id="habit-name-input" data-i18n-placeholder="habits_name_placeholder" placeholder="e.g. Drink water, Read, Meditate...">
-                <!-- קישור הרגל למעקב ספורט - נקבע רק בעת היצירה (אין עריכת הרגל בכלל),
-                     לפי בקשה מפורשת: כל וי על ההרגל הזה ירשום אוטומטית גם אימון ספורט
-                     (openAddHabitModal/addHabit/toggleHabitCheckin ב-app.js) -->
+                <input type="text" id="routine-goal-name-input" data-i18n-placeholder="habits_name_placeholder" placeholder="e.g. Drink water, Read, Meditate...">
+                <!-- קישור מטרה למעקב ספורט - נקבע רק בעת היצירה (אין עריכה בכלל),
+                     לפי בקשה מפורשת: כל וי על המטרה הזו ירשום אוטומטית גם אימון
+                     ספורט (openAddRoutineGoalModal/addRoutineGoal/toggleRoutineGoalCheckin ב-app.js) -->
                 <div class="settings-toggle-row" style="margin-top: 12px;">
-                    <label class="settings-label" data-i18n="habits_link_sport_label" for="habit-link-sport-toggle">Also log this as a sport session when completed</label>
+                    <label class="settings-label" data-i18n="habits_link_sport_label" for="routine-goal-link-sport-toggle">Also log this as a sport session when completed</label>
                     <label class="switch">
-                        <input type="checkbox" id="habit-link-sport-toggle" onchange="toggleHabitSportLinkField()">
+                        <input type="checkbox" id="routine-goal-link-sport-toggle" onchange="toggleRoutineGoalSportLinkField()">
                         <span class="switch-slider"></span>
                     </label>
                 </div>
-                <input type="number" id="habit-sport-duration-input" class="hidden" style="margin-top: 8px;" data-i18n-placeholder="habits_sport_duration_placeholder" placeholder="Duration in minutes">
+                <input type="number" id="routine-goal-sport-duration-input" class="hidden" style="margin-top: 8px;" data-i18n-placeholder="habits_sport_duration_placeholder" placeholder="Duration in minutes">
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button type="button" class="btn-primary" onclick="addHabit()" data-i18n="save_generic">Save</button>
-                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-add-habit')" data-i18n="cancel_btn">Cancel</button>
+                    <button type="button" class="btn-primary" onclick="addRoutineGoal()" data-i18n="save_generic">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeAddRoutineGoalModal()" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -3105,58 +3091,27 @@
         </div>
 
         <!-- חלון צף: הגדרת יעד חודשי (פרימיום בלבד) -->
-        <!-- חלון צף: היסטוריית הרגל - לוח חודשי עם הדגשה על כל יום שסומן, אותם
-             רכיבי CSS בדיוק כמו הלוח החודשי הכללי (monthly-calendar-grid), ר'
-             openHabitHistoryModal/renderHabitHistory ב-app.js -->
-        <div id="modal-habit-history" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 id="habit-history-title">Habit name</h3>
-                <div class="habit-history-stats">
-                    <div class="habit-history-stat">
-                        <span class="habit-history-stat-value" id="habit-history-stat-current">0</span>
-                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_current">🔥 Current</span>
-                    </div>
-                    <div class="habit-history-stat">
-                        <span class="habit-history-stat-value" id="habit-history-stat-best">0</span>
-                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_best">🏆 Best</span>
-                    </div>
-                    <div class="habit-history-stat">
-                        <span class="habit-history-stat-value" id="habit-history-stat-total">0</span>
-                        <span class="habit-history-stat-label" data-i18n="habit_history_stat_total">✅ Total</span>
-                    </div>
-                </div>
-                <div class="monthly-goal-nav">
-                    <button class="monthly-goal-nav-btn" onclick="navigateHabitHistory(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
-                    <span class="monthly-goal-month-label" id="habit-history-month-label"></span>
-                    <button class="monthly-goal-nav-btn" onclick="navigateHabitHistory(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
-                </div>
-                <div class="monthly-calendar-weekdays">
-                    <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
-                </div>
-                <div class="monthly-calendar-grid habit-history-grid" id="habit-history-grid"></div>
-                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 14px;" onclick="closeModal('modal-habit-history')" data-i18n="close_btn">Close</button>
-            </div>
-        </div>
-
-        <!-- חלון צף: מבט-על חודשי לכל ההרגלים ביחד (בניגוד להיסטוריית-הרגל-בודד
-             למעלה) - טבלה אחת, שורה לכל הרגל, עמודה לכל יום בחודש, וי בתא בו
-             סומן. קריאה בלבד לגמרי - אין קליק על תא, לפי בקשה מפורשת ("אי אפשר
-             לשנות רק לראות"). ר' openHabitsOverviewModal/renderHabitsOverview -->
-        <div id="modal-habits-overview" class="apple-modal">
+        <!-- חלון צף: מבט-על חודשי למטרות/הרגלים - של הטאב הפעיל *בלבד* ב"שגרה
+             שלי" (לא כל הטאבים ביחד), לפי בקשה מפורשת ("כמה טאבים כל טאב עם
+             מטרות שונות"). טבלה אחת, שורה לכל מטרה, עמודה לכל יום בחודש, נקודה
+             בתא בו סומן. קריאה בלבד לגמרי - אין קליק על תא, לפי בקשה מפורשת
+             ("אי אפשר לשנות רק לראות"). נפתח/נסגר ישירות (לא openModal/
+             closeModal, ר' openRoutineGoalsOverviewModal ב-app.js) כדי
+             ש-#modal-daily-board יישאר פתוח מתחתיו -->
+        <div id="modal-routine-goals-overview" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="habits_overview_title">Habits - Monthly Overview</h3>
                 <div class="monthly-goal-nav">
-                    <button class="monthly-goal-nav-btn" onclick="navigateHabitsOverview(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
-                    <span class="monthly-goal-month-label" id="habits-overview-month-label"></span>
-                    <button class="monthly-goal-nav-btn" onclick="navigateHabitsOverview(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
+                    <button class="monthly-goal-nav-btn" onclick="navigateRoutineGoalsOverview(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
+                    <span class="monthly-goal-month-label" id="routine-goals-overview-month-label"></span>
+                    <button class="monthly-goal-nav-btn" onclick="navigateRoutineGoalsOverview(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
                 </div>
                 <div class="habits-overview-table-wrap">
-                    <table class="habits-overview-table" id="habits-overview-table"></table>
+                    <table class="habits-overview-table" id="routine-goals-overview-table"></table>
                 </div>
-                <p id="habits-overview-empty" class="today-tasks-empty hidden" data-i18n="habits_empty_hint">No habits yet - add one to start tracking your streak.</p>
-                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 14px;" onclick="closeModal('modal-habits-overview')" data-i18n="close_btn">Close</button>
+                <p id="routine-goals-overview-empty" class="today-tasks-empty hidden" data-i18n="routine_goals_empty_hint">No goals yet - add one to start tracking.</p>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 14px;" onclick="closeRoutineGoalsOverviewModal()" data-i18n="close_btn">Close</button>
             </div>
         </div>
 
@@ -3198,11 +3153,37 @@
                         <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_evening">🌙 Evening</span>
                         <div class="daily-board-hours-chips" id="board-hours-evening"></div>
                     </div>
+                    <!-- הפעלה/כיבוי כללי (לא פר-טאב) של סקציית המטרות/הרגלים למטה -
+                         אותו מקום בדיוק שבו מכבים/מדליקים שעות, לפי בקשה מפורשת
+                         ("שיהיה אפשרות להוריד את הוי בתוך ההגדרות איפה שמורידים
+                         ושמים את השעות") -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="routine_goals_toggle_label" for="routine-goals-toggle">Show goals &amp; habits tracking</label>
+                        <label class="switch">
+                            <input type="checkbox" id="routine-goals-toggle" onchange="toggleRoutineGoals()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
                     <!-- מחיקת טאב הועברה לתוך פאנל ההגדרות (⚙️) - לא מוצגת קבוע
                          מתחת לשורת הטאבים - לפי בקשה מפורשת ("שיהיה יותר נקי") -->
                     <div class="daily-board-tab-actions">
                         <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                     </div>
+                </div>
+                <!-- מטרות/הרגלים של הטאב הפעיל - נכנס לתוך "השגרה שלי" עצמה, לא
+                     מסך נפרד, לפי בקשה מפורשת ("שזה יהיה ביחד"). אותם רכיבי
+                     CSS/JS בדיוק כמו מסך ההרגלים הישן (habit-item/btn-complete-item/
+                     habit-streak-badge וכו') - ר' loadRoutineGoals ב-app.js -->
+                <div class="daily-board-goals-section" id="daily-board-goals-section">
+                    <div class="card-title-row">
+                        <h4 data-i18n="routine_goals_section_title">🎯 Goals &amp; Habits</h4>
+                        <div class="card-header-actions">
+                            <button type="button" class="btn-floating-add" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
+                            <button type="button" class="btn-floating-add" onclick="openAddRoutineGoalModal()">➕</button>
+                        </div>
+                    </div>
+                    <ul id="daily-board-goals-list" class="center-list habits-list"></ul>
+                    <p id="daily-board-goals-empty" class="today-tasks-empty hidden" data-i18n="routine_goals_empty_hint">No goals yet - add one to start tracking.</p>
                 </div>
                 <div class="daily-board-body" id="daily-board-body"></div>
             </div>
@@ -3547,7 +3528,7 @@
 
     </div>
 
-    <script src="i18n.js?v=341"></script>
-    <script src="app.js?v=488"></script>
+    <script src="i18n.js?v=342"></script>
+    <script src="app.js?v=489"></script>
 </body>
 </html>
