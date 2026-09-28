@@ -6967,7 +6967,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
     { id: 'weight_note', category: 'nutrition' },
     { id: 'habits_streaks', category: 'habits' },
-    { id: 'habits_sport_link_overview', category: 'habits' },
     { id: 'finance_ai_add', category: 'finance' },
     { id: 'finance_cycle_day', category: 'finance' },
     { id: 'finance_recurring', category: 'finance' },
@@ -9779,12 +9778,9 @@ async function renderSportHistory() {
         const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
         const notesPart = row.notes ? `<span class="finance-history-note">${escapeHtmlForReport(row.notes)}</span>` : '';
         const photoPart = row.photo_url ? `<img src="${row.photo_url}" class="sport-history-thumb" alt="">` : '';
-        // תג "ממטרה/הרגל" - נקבע רק פעם אחת בשורה, לא ניתן לעריכה כאן - כדי
-        // שיהיה ברור למה הרשומה הזו קיימת בכלל, ר' toggleRoutineGoalCheckin.
-        // source_habit_id (ישן, ממסך ההרגלים הנפרד שכבר הוסר) נשאר רלוונטי
-        // לרשומות ספורט היסטוריות; source_routine_item_id הוא המקור החדש -
-        // תג מותנה בעצם קיום אחד מה-id-ים, לא בכך שהמקור המקורי עדיין קיים
-        const habitSourceBadge = (row.source_habit_id || row.source_routine_item_id) ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
+        // תג "מהרגל" - רק לרשומות ספורט היסטוריות שנרשמו אוטומטית ממסך ההרגלים
+        // הישן (שהוסר) - מותנה בעצם קיום source_habit_id, לא בכך שההרגל עדיין קיים
+        const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
         li.innerHTML = `
             ${photoPart}
             <div class="finance-history-main">
@@ -14117,52 +14113,12 @@ async function emptyNotesArchive(type) {
     await refreshNotesArchiveCount(type);
 }
 
-// --- מטרות/הרגלים בתוך "השגרה שלי" - כל טאב יכול להכיל, בנוסף לפריטי-השעה
-// הרגילים, רשימת "מטרות" (routine_items עם kind='goal') עם וי יומי ורצף -
-// בדיוק כמו הרגלים שהיו מסך נפרד, רק מקוננים בתוך הטאב שלהם, לפי בקשה
-// מפורשת ("שזה יהיה ביחד... כמה טאבים כל טאב עם מטרות שונות"). הרצף מחושב
-// בצד הלקוח מתוך תאריכי הסימונים (routine_item_checkins) - פספוס יחיד לא
-// שובר רצף, רק שני ימי-פספוס רצופים שוברים אותו, לפי בקשה מפורשת ("2
-// פספוסים וזה מתאפס... שיהיה הזדמנות שזה לא יתאפס")
-function computeStreak(dateSet, todayStr) {
-    let streak = 0;
-    let missStreak = 0;
-    const cursor = new Date(`${todayStr}T00:00:00`);
-    // אם היום עצמו עוד לא סומן, לא "שוברים" את הרצף רק בגלל זה - מתחילים
-    // לספור מאתמול; הרצף המוצג הוא "עד כמה ימים רצופים זה עדיין חי"
-    if (!dateSet.has(getLocalDateString(cursor))) cursor.setDate(cursor.getDate() - 1);
-    while (true) {
-        if (dateSet.has(getLocalDateString(cursor))) {
-            streak++;
-            missStreak = 0;
-        } else {
-            missStreak++;
-            if (missStreak >= 2) break;
-        }
-        cursor.setDate(cursor.getDate() - 1);
-    }
-    return streak;
-}
-
-// הרצף ההיסטורי הכי ארוך אי-פעם - לא בשימוש כרגע בממשק (אין יותר מודל
-// היסטוריה נפרד לכל מטרה בנפרד - המבט החודשי של הטאב כבר מכסה את זה), נשאר
-// זמין כפונקציית-עזר אם יתווסף שימוש עתידי
-function computeLongestStreak(dateSet) {
-    if (!dateSet.size) return 0;
-    const sortedDates = Array.from(dateSet).sort();
-    let longest = 1, current = 1;
-    for (let i = 1; i < sortedDates.length; i++) {
-        const diffDays = Math.round((new Date(`${sortedDates[i]}T00:00:00`) - new Date(`${sortedDates[i - 1]}T00:00:00`)) / 86400000);
-        current = diffDays <= 2 ? current + 1 : 1;
-        longest = Math.max(longest, current);
-    }
-    return longest;
-}
-
-// הפעלה/כיבוי כללי (לא פר-טאב) של כל סקציית המטרות/הרגלים - ברירת מחדל
-// דלוק (opt-out), אותו דפוס בדיוק כמו isDailyBoardPeekTabOn, לפי בקשה
-// מפורשת ("שיהיה אפשרות להוריד את הוי... מי שרוצה בלי הרגלים אבל מי שכן
-// שיהיה שם הכל"). ממוקם בתוך פאנל השעות (⚙️) - אותו מקום בדיוק שהיא ביקשה
+// --- וי יומי על פריטי "השגרה שלי": כל שורת-שעה מלאה בכל טאב מקבלת ריבוע וי
+// קטן ל"עשיתי היום" - וזה המעקב של המטרות וההרגלים, בלי סקציה נפרדת ובלי
+// הוספה נוספת, לפי בקשה מפורשת ("בבוקר ערב וכו' בכל שעה פשוט וי ליד... וככה
+// לא צריך להוסיף וזה יהיה המטרות וההרגלים"). הסימונים ב-routine_item_checkins
+// (פריט+תאריך). הפעלה/כיבוי כללי (לא פר-טאב) מתוך פאנל השעות (⚙️), ברירת
+// מחדל דלוק - אותו דפוס בדיוק כמו isDailyBoardPeekTabOn
 function isRoutineGoalsOn() { return localStorage.getItem('weekwise_routine_goals_enabled') !== 'false'; }
 async function loadRoutineGoalsSetting() {
     if (!supabaseClient || !currentUserId) return;
@@ -14183,165 +14139,36 @@ async function toggleRoutineGoals() {
     }
 }
 function applyRoutineGoalsSetting() {
-    const section = document.getElementById('daily-board-goals-section');
+    const overviewBtn = document.getElementById('daily-board-overview-btn');
     const toggle = document.getElementById('routine-goals-toggle');
     const enabled = isRoutineGoalsOn();
-    if (section) section.classList.toggle('hidden', !enabled);
+    if (overviewBtn) overviewBtn.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
+    const modal = document.getElementById('modal-daily-board');
+    if (modal && modal.classList.contains('open')) renderDailyBoard();
 }
 
-// טוענת/מציגה את המטרות של הטאב הפעיל *בלבד* - נקראת מכל מקום שמחליף/יוצר/
-// מוחק טאב (loadRoutineTabs/switchRoutineTab/addRoutineTab/deleteActiveRoutineTab),
-// אותו דפוס בדיוק כמו loadHabits לשעבר, רק ממוין לפי tab_id
-async function loadRoutineGoals() {
-    if (!supabaseClient || !currentUserId) return;
-    const list = document.getElementById('daily-board-goals-list');
-    const emptyHint = document.getElementById('daily-board-goals-empty');
-    if (!list || !activeDailyBoardTabId) return;
-    const [{ data: goals }, { data: checkins }] = await Promise.all([
-        supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'goal').order('created_at', { ascending: true }),
-        supabaseClient.from('routine_item_checkins').select('item_id, checkin_date').eq('user_id', currentUserId),
-    ]);
-    list.innerHTML = '';
-    if (!goals || !goals.length) {
-        emptyHint.classList.remove('hidden');
-        return;
-    }
-    emptyHint.classList.add('hidden');
+// עדכון אופטימי (הוי מתחלף מיד, לפני שהשרת עונה) - ואם הכתיבה נכשלה, מחזירים
+// את המצב הקודם כדי שהמסך לא "ישקר" על מה שבאמת נשמר
+async function toggleRoutineItemCheckin(itemId, btn) {
     const todayStr = getLocalDateString();
-    const checkinsByItem = {};
-    (checkins || []).forEach(c => {
-        if (!checkinsByItem[c.item_id]) checkinsByItem[c.item_id] = new Set();
-        checkinsByItem[c.item_id].add(c.checkin_date);
-    });
-    goals.forEach(goal => {
-        const dates = checkinsByItem[goal.id] || new Set();
-        const streak = computeStreak(dates, todayStr);
-        const doneToday = dates.has(todayStr);
-        // "בסכנה" - אותו חוק בדיוק כמו בהרגלים לשעבר: אתמול כבר פספוס, היום
-        // עדיין לא סומן - עוד פספוס אחד ישבור את הרצף
-        const yesterdayCursor = new Date(`${todayStr}T00:00:00`);
-        yesterdayCursor.setDate(yesterdayCursor.getDate() - 1);
-        const atRisk = streak > 0 && !doneToday && !dates.has(getLocalDateString(yesterdayCursor));
-
-        const li = document.createElement('li');
-        li.className = 'habit-item' + (doneToday ? ' habit-done' : '');
-        const checkBtn = document.createElement('button');
-        checkBtn.type = 'button';
-        checkBtn.className = 'btn-complete-item' + (doneToday ? ' checked' : '');
-        checkBtn.textContent = doneToday ? '✓' : '';
-        checkBtn.onclick = () => toggleRoutineGoalCheckin(goal, todayStr, !doneToday);
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'center-list-item-text';
-        nameSpan.textContent = goal.title;
-        const streakBadge = document.createElement('span');
-        streakBadge.className = 'habit-streak-badge' + (streak > 0 ? ' habit-streak-active' : '');
-        streakBadge.textContent = streak > 0 ? `🔥 ${streak}` : '–';
-        if (atRisk) {
-            const riskBadge = document.createElement('span');
-            riskBadge.className = 'habit-streak-risk-badge';
-            riskBadge.textContent = '⚠️';
-            riskBadge.title = t('habit_streak_at_risk_title');
-            streakBadge.appendChild(riskBadge);
-        }
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
-        deleteBtn.onclick = () => deleteRoutineGoal(goal.id);
-
-        li.appendChild(checkBtn);
-        li.appendChild(nameSpan);
-        li.appendChild(streakBadge);
-        li.appendChild(deleteBtn);
-        list.appendChild(li);
-    });
-}
-
-// נפתח/נסגר ישירות (לא דרך openModal/closeModal הגנריים) כדי ש-#modal-daily-board
-// שממנו זה נפתח יישאר פתוח מתחתיו - אותו דפוס בדיוק כמו openCustomDatePicker
-function openAddRoutineGoalModal() {
-    if (!activeDailyBoardTabId) return;
-    document.getElementById('routine-goal-name-input').value = '';
-    document.getElementById('routine-goal-link-sport-toggle').checked = false;
-    document.getElementById('routine-goal-sport-duration-input').value = '';
-    document.getElementById('routine-goal-sport-duration-input').classList.add('hidden');
-    document.getElementById('modal-add-routine-goal').classList.add('open');
-}
-function closeAddRoutineGoalModal() {
-    document.getElementById('modal-add-routine-goal').classList.remove('open');
-}
-
-// מציג/מסתיר את שדה משך-הזמן לפי מצב הבורר - אותו דפוס בדיוק כמו
-// toggleRecurringEndDateField. הקישור לספורט נקבע רק כאן, בעת היצירה - אין
-// עריכה למטרה בכלל, אותו דפוס בדיוק כמו הרגלים לשעבר
-function toggleRoutineGoalSportLinkField() {
-    const linked = document.getElementById('routine-goal-link-sport-toggle').checked;
-    document.getElementById('routine-goal-sport-duration-input').classList.toggle('hidden', !linked);
-}
-
-async function addRoutineGoal() {
-    if (!activeDailyBoardTabId) return;
-    const input = document.getElementById('routine-goal-name-input');
-    const title = input.value.trim();
-    if (!title) { showAppToast(t('habits_missing_name'), 'error'); return; }
-    const linkToSport = document.getElementById('routine-goal-link-sport-toggle').checked;
-    const durationInput = document.getElementById('routine-goal-sport-duration-input');
-    const sportDuration = linkToSport ? parseInt(durationInput.value) || 0 : 0;
-    if (linkToSport && !sportDuration) { showAppToast(t('habits_missing_sport_duration'), 'error'); return; }
-    await supabaseClient.from('routine_items').insert({
-        user_id: currentUserId, tab_id: activeDailyBoardTabId, title, kind: 'goal',
-        link_to_sport: linkToSport, sport_duration_minutes: linkToSport ? sportDuration : null,
-    });
-    closeAddRoutineGoalModal();
-    await loadRoutineGoals();
-}
-
-// אישור לפני מחיקה - showDangerConfirm (לא confirm() דפדפן גנרי), אותו דפוס
-// בדיוק כמו מחיקת הרגל לשעבר. חשוב כאן במיוחד: מוחק גם את כל היסטוריית
-// הסימונים (routine_item_checkins, ON DELETE CASCADE על item_id) לצמיתות
-function deleteRoutineGoal(id) {
-    showDangerConfirm(t('habits_delete_title'), t('habits_delete_confirm'), async () => {
-        await supabaseClient.from('routine_items').delete().eq('id', id);
-        await loadRoutineGoals();
-    });
-}
-
-// מקבלת את אובייקט המטרה המלא (לא רק ה-id) כדי לדעת אם link_to_sport/
-// sport_duration_minutes בלי סבב-שרת נוסף - ר' ההערה ב-loadRoutineGoals. וי
-// על מטרה מקושרת-ספורט רושם אוטומטית גם אימון בספורט (כאילו נלחץ "+" שם
-// ידנית), וביטול-וי מוחק בדיוק את אותה רשומה - כדי שלא יישארו רישומים
-// יתומים, אותו דפוס בדיוק כמו toggleHabitCheckin לשעבר, רק source_routine_item_id
-// במקום source_habit_id (עמודה נפרדת - habits/habit_checkins נשארו כגיבוי
-// שקט במסד הנתונים, לא בשימוש יותר)
-async function toggleRoutineGoalCheckin(goal, dateStr, checked) {
-    const itemId = goal.id;
-    if (checked) {
-        await supabaseClient.from('routine_item_checkins').insert({ item_id: itemId, user_id: currentUserId, checkin_date: dateStr });
-        if (goal.link_to_sport) {
-            await supabaseClient.from('sport_sessions').insert({
-                user_id: currentUserId, username: currentUsername, sport_type: 'custom',
-                custom_type_name: goal.title, duration_minutes: goal.sport_duration_minutes,
-                distance_km: null, motivation: null, session_date: dateStr, notes: null,
-                photo_url: null, source_routine_item_id: itemId,
-            });
-        }
-    } else {
-        await supabaseClient.from('routine_item_checkins').delete().eq('item_id', itemId).eq('checkin_date', dateStr);
-        if (goal.link_to_sport) {
-            await supabaseClient.from('sport_sessions').delete().eq('source_routine_item_id', itemId).eq('session_date', dateStr);
-        }
-    }
-    await loadRoutineGoals();
-    if (goal.link_to_sport && document.getElementById('sport-summary-next-btn')) {
-        await Promise.all([renderSportSummary(), renderSportHistory()]);
+    const checked = !btn.classList.contains('checked');
+    btn.classList.toggle('checked', checked);
+    btn.textContent = checked ? '✓' : '';
+    const { error } = checked
+        ? await supabaseClient.from('routine_item_checkins').insert({ item_id: itemId, user_id: currentUserId, checkin_date: todayStr })
+        : await supabaseClient.from('routine_item_checkins').delete().eq('item_id', itemId).eq('checkin_date', todayStr);
+    if (error) {
+        console.error('routine checkin failed', error);
+        btn.classList.toggle('checked', !checked);
+        btn.textContent = !checked ? '✓' : '';
+        showAppToast(t('error_not_connected'), 'error');
     }
 }
 
-// --- מבט-על חודשי למטרות/הרגלים - של הטאב הפעיל *בלבד*, לא כל הטאבים
-// ביחד, לפי בקשה מפורשת ("כמה טאבים כל טאב עם מטרות שונות"). טבלה אחת
-// רחבה (גוללת אופקית), שורה לכל מטרה ועמודה לכל יום בחודש - קריאה בלבד
-// לגמרי, אין שום קליק על תא, אותו דפוס בדיוק כמו מבט-העל הישן של ההרגלים.
+// --- מבט-על חודשי של הטאב הפעיל *בלבד* (לא כל הטאבים ביחד), לפי בקשה
+// מפורשת ("כמה טאבים כל טאב עם מטרות שונות"). טבלה אחת רחבה (גוללת
+// אופקית), שורה לכל פריט בשגרה ועמודה לכל יום בחודש - קריאה בלבד לגמרי.
 // נפתח/נסגר ישירות (לא openModal/closeModal) כדי ש-#modal-daily-board
 // יישאר פתוח מתחתיו ---
 let viewedRoutineGoalsOverviewMonthKey = null;
@@ -14372,7 +14199,7 @@ async function renderRoutineGoalsOverview() {
     const lastStr = `${monthKey}-${String(daysInMonth).padStart(2, '0')}`;
     const table = document.getElementById('routine-goals-overview-table');
     const emptyHint = document.getElementById('routine-goals-overview-empty');
-    const { data: goals } = await supabaseClient.from('routine_items').select('id, title').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'goal').order('created_at', { ascending: true });
+    const { data: goals } = await supabaseClient.from('routine_items').select('id, title, time').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'scheduled').order('time', { ascending: true });
     if (!goals || !goals.length) {
         table.innerHTML = '';
         emptyHint.classList.remove('hidden');
@@ -14396,7 +14223,7 @@ async function renderRoutineGoalsOverview() {
     let bodyHtml = '';
     goals.forEach(goal => {
         const dates = checkinsByItem[goal.id] || new Set();
-        bodyHtml += `<tr><td class="habits-overview-name-col">${escapeHtmlForReport(goal.title)}</td>`;
+        bodyHtml += `<tr><td class="habits-overview-name-col">${escapeHtmlForReport((goal.time || '').slice(0, 5))} ${escapeHtmlForReport(goal.title)}</td>`;
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
             const isDone = dates.has(dateStr);
@@ -14549,7 +14376,6 @@ async function loadRoutineTabs() {
     }
     renderRoutineTabsBar();
     await renderDailyBoard();
-    await loadRoutineGoals();
 }
 
 function renderRoutineTabsBar() {
@@ -14580,7 +14406,6 @@ async function switchRoutineTab(tabId) {
     renderRoutineTabsBar();
     renderDailyBoardHourSettings();
     await renderDailyBoard();
-    await loadRoutineGoals();
 }
 
 // מודל מעוצב במקום prompt()/window.prompt הנייטיבי של הדפדפן (הראה "האתר
@@ -14623,7 +14448,6 @@ async function addRoutineTab(name) {
         renderRoutineTabsBar();
         renderDailyBoardHourSettings();
         await renderDailyBoard();
-        await loadRoutineGoals();
     }
 }
 
@@ -17086,7 +16910,6 @@ async function deleteActiveRoutineTab() {
         activeDailyBoardTabId = dailyBoardTabs[0] ? dailyBoardTabs[0].id : null;
         renderRoutineTabsBar();
         await renderDailyBoard();
-        await loadRoutineGoals();
     });
 }
 
@@ -17094,9 +16917,16 @@ async function renderDailyBoard() {
     const body = document.getElementById('daily-board-body');
     if (!body) return;
     if (!activeDailyBoardTabId) { body.innerHTML = ''; return; }
-    const { data: items } = await supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId);
+    const { data: items } = await supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
     const itemsByTime = {};
     (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
+    // מה כבר סומן היום (וי) - רק כשהמעקב דלוק, אחרת אין טעם בשאילתה
+    const checksOn = isRoutineGoalsOn();
+    let doneTodayIds = new Set();
+    if (checksOn && items && items.length) {
+        const { data: todayChecks } = await supabaseClient.from('routine_item_checkins').select('item_id').in('item_id', items.map(it => it.id)).eq('checkin_date', getLocalDateString());
+        doneTodayIds = new Set((todayChecks || []).map(c => c.item_id));
+    }
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
@@ -17123,6 +16953,20 @@ async function renderDailyBoard() {
             titleBtn.className = 'daily-board-item-title';
             titleBtn.textContent = item ? item.title : t('daily_board_item_add_placeholder');
             titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
+            if (checksOn && item) {
+                const done = doneTodayIds.has(item.id);
+                const checkBtn = document.createElement('button');
+                checkBtn.type = 'button';
+                checkBtn.className = 'btn-complete-item daily-board-item-check' + (done ? ' checked' : '');
+                checkBtn.textContent = done ? '✓' : '';
+                checkBtn.onclick = () => toggleRoutineItemCheckin(item.id, checkBtn);
+                row.appendChild(checkBtn);
+            } else if (checksOn) {
+                // שורה ריקה בלי וי - מרווח באותו רוחב כדי שעמודת השעות תישאר מיושרת
+                const spacer = document.createElement('span');
+                spacer.className = 'daily-board-item-check-spacer';
+                row.appendChild(spacer);
+            }
             row.appendChild(timeSpan);
             row.appendChild(titleBtn);
             section.appendChild(row);

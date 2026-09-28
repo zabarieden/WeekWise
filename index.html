@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=440">
+    <link rel="stylesheet" href="theme.css?v=441">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1914,33 +1914,6 @@
             </div>
         </div>
 
-        <!-- חלון צף: הוספת מטרה/הרגל חדש בתוך "השגרה שלי" - נפתח/נסגר ישירות
-             (לא openModal/closeModal, ר' openAddRoutineGoalModal ב-app.js) כדי
-             ש-#modal-daily-board יישאר פתוח מתחתיו, אותו דפוס בדיוק כמו
-             #modal-custom-date-picker (z-index גבוה יותר, ר' theme.css) -->
-        <div id="modal-add-routine-goal" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="habits_add_modal_title">New Habit</h3>
-                <input type="text" id="routine-goal-name-input" data-i18n-placeholder="habits_name_placeholder" placeholder="e.g. Drink water, Read, Meditate...">
-                <!-- קישור מטרה למעקב ספורט - נקבע רק בעת היצירה (אין עריכה בכלל),
-                     לפי בקשה מפורשת: כל וי על המטרה הזו ירשום אוטומטית גם אימון
-                     ספורט (openAddRoutineGoalModal/addRoutineGoal/toggleRoutineGoalCheckin ב-app.js) -->
-                <div class="settings-toggle-row" style="margin-top: 12px;">
-                    <label class="settings-label" data-i18n="habits_link_sport_label" for="routine-goal-link-sport-toggle">Also log this as a sport session when completed</label>
-                    <label class="switch">
-                        <input type="checkbox" id="routine-goal-link-sport-toggle" onchange="toggleRoutineGoalSportLinkField()">
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-                <input type="number" id="routine-goal-sport-duration-input" class="hidden" style="margin-top: 8px;" data-i18n-placeholder="habits_sport_duration_placeholder" placeholder="Duration in minutes">
-                <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button type="button" class="btn-primary" onclick="addRoutineGoal()" data-i18n="save_generic">Save</button>
-                    <button type="button" class="btn-clear-specific" onclick="closeAddRoutineGoalModal()" data-i18n="cancel_btn">Cancel</button>
-                </div>
-            </div>
-        </div>
-
         <!-- חלון צף: עריכת הפתק השבועי - מודל רגיל (לא בלון-צף מותאם-אישית),
              אחרי שדווח שבגרסה הקודמת אי אפשר היה להקליד בבלון -->
         <div id="modal-weekly-note" class="apple-modal">
@@ -3101,7 +3074,7 @@
         <div id="modal-routine-goals-overview" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="habits_overview_title">Habits - Monthly Overview</h3>
+                <h3 data-i18n="routine_goals_section_title">🎯 Goals &amp; Habits</h3>
                 <div class="monthly-goal-nav">
                     <button class="monthly-goal-nav-btn" onclick="navigateRoutineGoalsOverview(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
                     <span class="monthly-goal-month-label" id="routine-goals-overview-month-label"></span>
@@ -3132,6 +3105,7 @@
                          בקשה מפורשת ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות
                          ולשנות לכל טאב שונה"). גם עברו לכאן מהגדרות הכלליות, כי שם
                          לא היה ברור לאיזה טאב הן מתייחסות -->
+                    <button type="button" class="daily-board-tab-add" id="daily-board-overview-btn" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
                     <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
@@ -3169,21 +3143,6 @@
                     <div class="daily-board-tab-actions">
                         <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                     </div>
-                </div>
-                <!-- מטרות/הרגלים של הטאב הפעיל - נכנס לתוך "השגרה שלי" עצמה, לא
-                     מסך נפרד, לפי בקשה מפורשת ("שזה יהיה ביחד"). אותם רכיבי
-                     CSS/JS בדיוק כמו מסך ההרגלים הישן (habit-item/btn-complete-item/
-                     habit-streak-badge וכו') - ר' loadRoutineGoals ב-app.js -->
-                <div class="daily-board-goals-section" id="daily-board-goals-section">
-                    <div class="card-title-row">
-                        <h4 data-i18n="routine_goals_section_title">🎯 Goals &amp; Habits</h4>
-                        <div class="card-header-actions">
-                            <button type="button" class="btn-floating-add" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
-                            <button type="button" class="btn-floating-add" onclick="openAddRoutineGoalModal()">➕</button>
-                        </div>
-                    </div>
-                    <ul id="daily-board-goals-list" class="center-list habits-list"></ul>
-                    <p id="daily-board-goals-empty" class="today-tasks-empty hidden" data-i18n="routine_goals_empty_hint">No goals yet - add one to start tracking.</p>
                 </div>
                 <div class="daily-board-body" id="daily-board-body"></div>
             </div>
@@ -3528,7 +3487,7 @@
 
     </div>
 
-    <script src="i18n.js?v=342"></script>
-    <script src="app.js?v=489"></script>
+    <script src="i18n.js?v=343"></script>
+    <script src="app.js?v=490"></script>
 </body>
 </html>
