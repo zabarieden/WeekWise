@@ -2547,6 +2547,7 @@ function showTabSection(targetId) {
     // זו מעבר "מסך מלא" אמיתי, לא סרגל ניווט קבוע שנשאר צמוד למעלה
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.add('hidden');
+    resetShellScroll();
     // לוח הימים כבר לא פעיל כברירת מחדל מרגע הטעינה (המסך הראשי הוא כעת מסך
     // הבית) - הגובה שחושב בזמן ש-schedule-section היה display:none הוא 0,
     // אז מחשבים מחדש בכל פעם שנכנסים אליו בפועל. גם קופצים בכל כניסה
@@ -2574,6 +2575,18 @@ function goHome() {
     tabContents.forEach(content => { content.classList.remove('active-tab'); closeSubView(content.id); });
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.remove('hidden');
+    resetShellScroll();
+}
+
+// המסגרת החיצונית (.phone-wrapper / #app-container) לא אמורה לגלול לעולם - רק אזורי
+// התוכן. scrollIntoView (או גלילה אחרת שמטפסת בשרשרת) יכולה בכל זאת להזיז אותה
+// ולהשאיר את ☰/▦ חתוכים למעלה אחרי החזרה למסך הבית (דווח) - מאפסים בכל מעבר
+function resetShellScroll() {
+    ['.phone-wrapper', '#app-container'].forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el && (el.scrollTop || el.scrollLeft)) { el.scrollTop = 0; el.scrollLeft = 0; }
+    });
+    if (document.scrollingElement && document.scrollingElement.scrollTop) document.scrollingElement.scrollTop = 0;
 }
 
 function switchToTab(targetId) {

@@ -31,6 +31,16 @@ function nmPlan() { return NEW_ME_PLANS[nmProfile ? nmProfile.plan : 1300]; }
 function nmChoice(slot) { return (nmProfile && nmProfile['choice_' + slot]) || 'A'; }
 function nmOptText(plan, slot, opt, short) { return newMeText(`p${plan}_${slot}_${opt}${short ? '_t' : ''}`); }
 function nmRoot() { return document.getElementById('new-me-root'); }
+// גלילה לראש המסך - רק באזור התוכן שגולל (לא scrollIntoView, שמזיז גם את המסגרת
+// החיצונית של האפליקציה ומשאיר את ☰/▦ חתוכים אחרי היציאה)
+function nmScrollTop() {
+    let el = nmRoot();
+    while (el && el !== document.body) {
+        const oy = getComputedStyle(el).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) { el.scrollTop = 0; return; }
+        el = el.parentElement;
+    }
+}
 // <bdi> כדי ש-~430 לא יקפוץ לסוף השורה בעברית/ערבית (bidi)
 function nmMeta(o) { return `<bdi dir="ltr">~${o.kcal}</bdi> ${nmEsc(t('calories_unit'))} · ${nmEsc(t('nm_protein_short').replace('{n}', o.protein))}`; }
 
@@ -205,7 +215,7 @@ async function nmQuizNext() {
         const w = parseFloat(q.weight);
         if (!(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
-    if (q.step < 3) { q.step++; nmRenderQuiz(nmRoot()); nmRoot().scrollIntoView({ block: 'start' }); return; }
+    if (q.step < 3) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
     const today = getLocalDateString();
     const goal = parseFloat(q.goal);
     const row = {
@@ -293,7 +303,7 @@ function nmGo(view) {
     nmView = view;
     nmRenderView(nmRoot());
     const root = nmRoot();
-    if (root) root.scrollIntoView({ block: 'start' });
+    if (root) nmScrollTop();
 }
 
 function nmRingHtml(eaten, goal) {
