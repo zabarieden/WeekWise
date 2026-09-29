@@ -51,7 +51,10 @@ Deno.serve(async (req) => {
         if (!allowed) return jsonResponse({ error: "not_purchased" }, 403);
 
         const body = await req.json().catch(() => ({}));
-        const lang = /^[a-z]{2}$/.test(String(body?.lang || "")) ? String(body.lang) : "en";
+        // Only languages whose PDF was verified against the menu are served
+        // (other language files contain translation errors in quantities)
+        const READY_LANGS = ["he", "en", "es"];
+        const lang = READY_LANGS.includes(String(body?.lang || "")) ? String(body.lang) : "en";
 
         let { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(`${lang}.pdf`, URL_TTL_SECONDS);
         if (error || !data?.signedUrl) {

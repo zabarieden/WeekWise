@@ -7,6 +7,11 @@
 // נתוני התפריט והטקסטים לפי שפה - new-me-data.js.
 
 const NEW_ME_DISCLAIMER_VERSION = '2026-09-29';
+// הורדת ה-PDF רק בשפות שהקובץ שלהן נבדק ותואם לתפריט (עברית/אנגלית/ספרדית) - בשאר קובצי
+// השפות יש טעויות תרגום בכמויות (הטקסט באפליקציה כבר תוקן לפי האנגלית). להוסיף שפה כאן
+// כשיועלה ל-new-me-pdfs קובץ מתוקן שלה
+const NEW_ME_PDF_READY_LANGS = ['he', 'en', 'es'];
+function nmPdfEnabled() { return NEW_ME_PDF_READY_LANGS.includes(currentLang); }
 // משבצת New Me → meal_type הקיים במעקב הארוחות (meal_4 = נשנוש 1, שם היסטורי)
 const NEW_ME_TRACKER_SLOT = { meal1: 'meal_1', snack1: 'meal_4', meal2: 'meal_2', snack2: 'snack' };
 const NEW_ME_PRESET_CATEGORY = { meal1: 'morning', snack1: 'snack', meal2: 'noon', snack2: 'snack' };
@@ -57,7 +62,7 @@ function nmRenderSales(root) {
             <div class="nm-price-note">${nmEsc(t('nm_sales_note'))}</div>
         </div>
         <ul class="nm-features">
-            ${[1, 2, 3, 4].map(i => `<li>${nmEsc(t('nm_sales_f' + i))}</li>`).join('')}
+            ${(nmPdfEnabled() ? [1, 2, 3, 4] : [1, 2, 3]).map(i => `<li>${nmEsc(t('nm_sales_f' + i))}</li>`).join('')}
         </ul>
         <div class="nm-preview" aria-hidden="true">${preview}</div>
         <button type="button" class="nm-btn-primary" onclick="submitNewMePurchase(this)">${nmEsc(t('nm_buy_btn'))}</button>`;
@@ -297,7 +302,7 @@ function nmRenderHome(root) {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
     const done = Object.keys(nmTodayCheckins).length;
-    const tiles = ['menu', 'table', 'month', 'pdf', 'tips', 'settings'];
+    const tiles = ['menu', 'table', 'month', ...(nmPdfEnabled() ? ['pdf'] : []), 'tips', 'settings'];
     root.innerHTML = `
         <div class="nm-dash">
             <div class="nm-dash-top">
