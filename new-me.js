@@ -32,7 +32,7 @@ function nmChoice(slot) { return (nmProfile && nmProfile['choice_' + slot]) || '
 function nmOptText(plan, slot, opt, short) { return newMeText(`p${plan}_${slot}_${opt}${short ? '_t' : ''}`); }
 function nmRoot() { return document.getElementById('new-me-root'); }
 // <bdi> כדי ש-~430 לא יקפוץ לסוף השורה בעברית/ערבית (bidi)
-function nmMeta(o) { return `<bdi>~${o.kcal}</bdi> ${nmEsc(t('calories_unit'))} · ${nmEsc(t('nm_protein_short').replace('{n}', o.protein))}`; }
+function nmMeta(o) { return `<bdi dir="ltr">~${o.kcal}</bdi> ${nmEsc(t('calories_unit'))} · ${nmEsc(t('nm_protein_short').replace('{n}', o.protein))}`; }
 
 async function renderNewMe() {
     const root = nmRoot();
@@ -53,7 +53,7 @@ async function renderNewMe() {
 function nmRenderSales(root) {
     const plan = NEW_ME_PLANS[1300];
     const preview = NEW_ME_SLOTS.map(slot => `
-        <div class="nm-preview-row"><span>${nmEsc(t('nm_slot_' + slot))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi>~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
+        <div class="nm-preview-row"><span>${nmEsc(t('nm_slot_' + slot))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
     root.innerHTML = `
         <div class="nm-hero">
             <div class="nm-hero-eyebrow">✨ New Me</div>
@@ -487,7 +487,7 @@ async function nmRenderTable(body) {
         ${rows.length ? `
         <div class="nm-table-wrap"><table class="nm-table">
             <thead><tr><th>${nmEsc(t('nm_table_food'))}</th><th>${nmEsc(t('calories_unit'))}</th><th>${nmEsc(t('nm_table_protein'))}</th></tr></thead>
-            <tbody>${rows.map(r => `<tr><td><span class="nm-td-slot">${nmEsc(t('nm_slot_' + r.slot))}</span>${nmEsc(nmOptText(r.plan, r.slot, r.option_id, true))}</td><td class="nm-num"><bdi>~${r.kcal}</bdi></td><td class="nm-num"><bdi>~${Math.round(r.protein_g)}</bdi></td></tr>`).join('')}</tbody>
+            <tbody>${rows.map(r => `<tr><td><span class="nm-td-slot">${nmEsc(t('nm_slot_' + r.slot))}</span>${nmEsc(nmOptText(r.plan, r.slot, r.option_id, true))}</td><td class="nm-num"><bdi dir="ltr">~${r.kcal}</bdi></td><td class="nm-num"><bdi dir="ltr">~${Math.round(r.protein_g)}</bdi></td></tr>`).join('')}</tbody>
             <tfoot><tr><td>${nmEsc(t('nm_table_total'))}</td><td class="nm-num">${nmFmt(total.kcal)}</td><td class="nm-num">${nmFmt(Math.round(total.protein))}</td></tr></tfoot>
         </table></div>` : `<p class="nm-empty">${nmEsc(t('nm_table_empty'))}</p>`}
         <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
