@@ -15277,7 +15277,25 @@ let customTableColumnsCache = [];
 let customTableRowsCache = [];
 let currentOpenTableId = null;
 let editingCustomTableId = null;
-const TABLE_ICON_PRESETS = ['📋', '📊', '📈', '🗂️', '📦', '🎬', '🎮', '🛠️', '🏠', '🚗', '🐾', '🎓'];
+// פתקים צבעוניים ('note:<צבע>') מצוירים כ-SVG (אין אימוג'י של פתק ורוד/סגול) -
+// ר' tableIconHtml; כל השאר אימוג'ים רגילים
+const TABLE_NOTE_ICON_COLORS = { pink: '#f9a8d4', yellow: '#fde047', purple: '#c4b5fd', blue: '#93c5fd', green: '#86efac', orange: '#fdba74' };
+const TABLE_ICON_PRESETS = [
+    '📋', '📊', '📈', '🗂️', '📦', '🎬', '🎮', '🛠️', '🏠', '🚗', '🐾', '🎓',
+    'note:pink', 'note:yellow', 'note:purple', 'note:blue', 'note:green', 'note:orange',
+    '📝', '🗒️', '📒', '📌', '📍', '💡', '🎁', '🎉', '🎂', '❤️', '⭐', '✅',
+    '🛒', '💰', '🧾', '💳', '📅', '⏰', '✈️', '🧳', '🍽️', '🍳', '💊', '🏥',
+    '🏋️', '⚽', '👶', '👨‍👩‍👧', '🐶', '🌱', '🌸', '📚', '💼', '💻', '📷', '🎵',
+    '🎨', '👗', '💄', '🧹', '🔑', '📞', '🎯', '🏆',
+];
+function tableIconHtml(icon) {
+    const match = /^note:(\w+)$/.exec(icon || '');
+    const color = match && TABLE_NOTE_ICON_COLORS[match[1]];
+    if (color) {
+        return `<svg class="table-note-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v12l-6 6H4z" fill="${color}"/><path d="M14 21v-6h6z" fill="rgba(0,0,0,.18)"/><path d="M7.5 8h9M7.5 11.5h9M7.5 15h4.5" stroke="rgba(0,0,0,.35)" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    }
+    return escapeHtmlForReport(icon || '📋');
+}
 let selectedTableIcon = TABLE_ICON_PRESETS[0];
 
 function openTablesSection() {
@@ -15321,7 +15339,7 @@ function renderCustomTablesList() {
         card.className = 'custom-table-card';
         card.innerHTML = `
             <span class="custom-table-card-main" onclick="openTableDetail('${table.id}')">
-                <span class="custom-table-card-icon">${table.icon || '📋'}</span>
+                <span class="custom-table-card-icon">${tableIconHtml(table.icon)}</span>
                 <span class="custom-table-card-name">${escapeHtmlForReport(table.name)}</span>
             </span>
             <span class="custom-table-card-actions">
@@ -15337,17 +15355,27 @@ function renderTableIconPicker() {
     const container = document.getElementById('table-icon-picker');
     if (!container) return;
     container.innerHTML = '';
-    TABLE_ICON_PRESETS.forEach(icon => {
+    // אייקון שלא ברשימה (הוקלד ידנית או הוצע ע"י ה-AI) מוצג ראשון, מסומן
+    const icons = TABLE_ICON_PRESETS.includes(selectedTableIcon) ? TABLE_ICON_PRESETS : [selectedTableIcon, ...TABLE_ICON_PRESETS];
+    icons.forEach(icon => {
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'icon-picker-chip' + (selectedTableIcon === icon ? ' selected' : '');
-        chip.textContent = icon;
+        chip.innerHTML = tableIconHtml(icon);
         chip.onclick = () => selectTableIcon(icon);
         container.appendChild(chip);
     });
 }
 function selectTableIcon(icon) {
     selectedTableIcon = icon;
+    renderTableIconPicker();
+}
+// "אחר" - הקלדת אימוג'י כלשהו שלא ברשימה
+function handleTableIconCustomInput(input) {
+    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
+    if (!match) return;
+    selectedTableIcon = match[0];
+    input.value = '';
     renderTableIconPicker();
 }
 
@@ -15436,7 +15464,7 @@ async function loadTableColumnsAndRows(tableId) {
     customTableRowsCache = rowsRes.data || [];
     const table = customTablesCache.find(tbl => tbl.id === tableId);
     const titleEl = document.getElementById('table-detail-title');
-    if (titleEl && table) titleEl.textContent = `${table.icon || '📋'} ${table.name}`;
+    if (titleEl && table) titleEl.innerHTML = `${tableIconHtml(table.icon)} ${escapeHtmlForReport(table.name)}`;
     renderTableGrid();
 }
 
@@ -15987,6 +16015,14 @@ function openSelectCellPicker(rowId, columnId) {
         chip.style.backgroundColor = hexToRgba(opt.color, 0.18);
         chip.style.color = opt.color;
         btn.appendChild(chip);
+        // × קטן בצד - מוחק את האפשרות מהעמודה (לא רק מהתא)
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'table-select-option-remove';
+        removeBtn.setAttribute('role', 'button');
+        removeBtn.setAttribute('aria-label', t('table_select_option_delete_title'));
+        removeBtn.textContent = '×';
+        removeBtn.onclick = (e) => { e.stopPropagation(); deleteTableSelectOption(columnId, opt.id); };
+        btn.appendChild(removeBtn);
         list.appendChild(btn);
     });
     // "אחר" - תמיד אפשר להקליד ערך שלא קיים ברשימה (למשל "אחיין"); הערך החדש
@@ -16039,6 +16075,27 @@ function selectTableCellOption(optionId) {
         if (oldCell) rowEl.replaceChild(buildSelectCell(row, column), oldCell);
     }
     selectCellPickerContext = null;
+}
+
+// מחיקת אפשרות מעמודת בחירה ישירות מבורר הערך. אם יש תאים שמשתמשים בה -
+// קודם אישור, והתאים האלה מתרוקנים (נשמרים ב-DB כ-null)
+function deleteTableSelectOption(columnId, optionId) {
+    const column = customTableColumnsCache.find(c => c.id === columnId);
+    if (!column) return;
+    const usedRows = customTableRowsCache.filter(r => r.data && r.data[columnId] === optionId);
+    const doDelete = async () => {
+        const previous = column.select_options || [];
+        column.select_options = previous.filter(opt => opt.id !== optionId);
+        const { error } = await supabaseClient.from('custom_table_columns').update({ select_options: column.select_options }).eq('id', column.id);
+        if (error) { column.select_options = previous; showAppToast(t('error_adding_item'), 'error'); return; }
+        for (const row of usedRows) await updateCellValue(row.id, columnId, null);
+        const context = selectCellPickerContext;
+        closeModal('modal-table-select-cell-picker');
+        renderTableGrid();
+        if (context) openSelectCellPicker(context.rowId, context.columnId);
+    };
+    if (usedRows.length) showDangerConfirm(t('table_select_option_delete_title'), t('table_select_option_delete_confirm').replace('{count}', usedRows.length), doDelete);
+    else doDelete();
 }
 
 async function addTableSelectOptionFromCell(rawLabel) {

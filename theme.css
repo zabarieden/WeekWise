@@ -1657,6 +1657,9 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .schedule-adder-grid input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-manager-grid select,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .preset-manager-grid input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .select-other-manual-row input,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #recipe-category-input-custom,
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #recurring-category-select-custom,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #sport-custom-type-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #sport-quick-custom-type-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #water-daily-goal-input,
@@ -3069,7 +3072,7 @@ html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
 .hamburger-fab.newme-fab,
 html[dir="ltr"] .hamburger-fab.newme-fab {
     top: auto; right: auto; left: auto;
-    bottom: 150px;
+    bottom: 164px;
     inset-inline-end: 34px;
     width: 42px; height: 42px;
     border-radius: 50%;
@@ -3080,7 +3083,7 @@ html[dir="ltr"] .hamburger-fab.newme-fab {
 }
 .hamburger-fab.newme-fab svg { width: 20px; height: 20px; fill: currentColor; opacity: .9; }
 /* רובוט קומפקטי (100px) - הכפתור נשאר ממורכז מעליו */
-.phone-wrapper:has(.ai-brain-fab-compact) .hamburger-fab.newme-fab { bottom: 108px; inset-inline-end: 26px; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
+.phone-wrapper:has(.ai-brain-fab-compact) .hamburger-fab.newme-fab { bottom: 120px; inset-inline-end: 26px; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .modal-sheet.categories-sheet { max-width: 380px; }
 /* כותרת ממורכזת באמת: 3 עמודות (חזרה | כותרת | פעולות) כך שהכפתורים לא דוחפים אותה הצידה */
 .categories-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 16px; }
@@ -5310,7 +5313,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* היו rgba(0,0,0,0.4)+color:#fff קבועים - עובד רק על רקע כהה, ולא תלוי
    בערכת-נושא בכלל. זה מסביר את כל תלונות "התיבה אפורה במצב בהיר" לאורך כל
    השדות האלה, לא רק ל-#center-item-input שכבר תוקן בנפרד קודם */
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #weekly-note-textarea { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, .select-other-manual-row input, #recipe-category-input-custom, #recurring-category-select-custom, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #weekly-note-textarea { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
 #weekly-note-textarea { width: 100%; box-sizing: border-box; resize: vertical; }
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
@@ -6309,3 +6312,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .select-other-manual-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; }
 .select-other-manual-row input { flex: 1; min-width: 0; }
 .select-other-manual-row .btn-primary { flex-shrink: 0; width: auto; padding-inline: 16px; margin: 0; }
+
+/* × קטן למחיקת אפשרות בבורר הערך של תא בטבלה */
+.table-select-option-remove { flex-shrink: 0; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-secondary); font-size: 1rem; line-height: 1; opacity: .7; cursor: pointer; }
+.table-select-option-remove:hover { opacity: 1; background: rgba(127,127,127,.15); }
+/* פתקים צבעוניים כאייקון טבלה */
+.table-note-icon { width: 1.15em; height: 1.15em; vertical-align: -0.2em; display: inline-block; }
