@@ -102,7 +102,7 @@ async function handleNewMeCheckoutReturn() {
             hasNewMe = !!(data && data.new_me_purchased);
         }
     }
-    if (hasNewMe) { showAppToast(t('nm_unlocked_toast')); renderNewMe(); }
+    if (hasNewMe) { updateNewMeShortcut(); showAppToast(t('nm_unlocked_toast')); renderNewMe(); }
     else showAppToast(t('nm_unlock_pending'), 'error');
 }
 
