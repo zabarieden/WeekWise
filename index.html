@@ -26,6 +26,20 @@
                 // מתמלאת - בדיוק התסמין שדווח ("שמרתי לבהיר, ואחרי רענון זה כהה")
                 // גם אם בפועל ה-DB/localStorage כבר שמרו בהיר נכון
                 if (localStorage.getItem('weekwise_light_mode') !== 'false') document.documentElement.classList.add('light-mode');
+                // פונט וצבע-טקסט מותאמים אישית - אותה בעיה בדיוק ("לשבריר שנייה רואים את
+                // הפונט הקודם"): מיושמים כאן מהמטמון, לפני כל ציור. נטען רק הפונט שנבחר
+                // (לא כל הרשימה), עם display=block כדי שלא יוצג קודם בפונט אחר ואז יתחלף
+                var font = localStorage.getItem('weekwise_global_font');
+                if (font) {
+                    document.documentElement.style.setProperty('--user-font', "'" + font + "', sans-serif");
+                    var fl = document.createElement('link');
+                    fl.rel = 'stylesheet';
+                    fl.id = 'user-font-stylesheet';
+                    fl.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font) + ':wght@400;600;700&display=block';
+                    document.head.appendChild(fl);
+                }
+                var textColor = localStorage.getItem('weekwise_global_text_color');
+                if (textColor) document.documentElement.style.setProperty('--user-accent', textColor);
             } catch (e) { /* localStorage חסום/לא זמין - נשאר על ברירת המחדל */ }
         })();
     </script>
@@ -3523,7 +3537,7 @@
     </div>
 
     <script src="i18n.js?v=352"></script>
-    <script src="app.js?v=500"></script>
+    <script src="app.js?v=501"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=7"></script>
 </body>

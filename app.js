@@ -7491,6 +7491,7 @@ function applyGlobalTextColor(color) {
     currentGlobalTextColor = color;
     if (color) document.documentElement.style.setProperty('--user-accent', color);
     else document.documentElement.style.removeProperty('--user-accent');
+    try { localStorage.setItem('weekwise_global_text_color', color || ''); } catch {}
     renderGlobalTextColorSwatches();
 }
 
@@ -7576,14 +7577,31 @@ function loadCuratedFontStylesheets() {
     document.head.appendChild(link);
 }
 
+// טוען רק את הפונט שנבחר (לא את כל הרשימה) - ה-<head> כבר עושה את זה מוקדם מהמטמון,
+// כאן רק מוודאים שהקישור מתאים לפונט הנוכחי (למשל אחרי בחירה/סנכרון ממכשיר אחר)
+function ensureUserFontStylesheet(fontName) {
+    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;600;700&display=block`;
+    let link = document.getElementById('user-font-stylesheet');
+    if (link && link.href === href) return;
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.id = 'user-font-stylesheet';
+        document.head.appendChild(link);
+    }
+    link.href = href;
+}
+
 function applyGlobalFont(fontName) {
     currentFontFamily = fontName;
     if (fontName) {
-        loadCuratedFontStylesheets();
+        ensureUserFontStylesheet(fontName);
         document.documentElement.style.setProperty('--user-font', `'${fontName}', sans-serif`);
     } else {
         document.documentElement.style.removeProperty('--user-font');
     }
+    // מטמון לפתיחה הבאה - ר' הסקריפט המוקדם ב-<head> של index.html
+    try { localStorage.setItem('weekwise_global_font', fontName || ''); } catch {}
     const nameEl = document.getElementById('font-picker-settings-name');
     if (nameEl) nameEl.textContent = fontName || t('font_picker_default_option');
 }
