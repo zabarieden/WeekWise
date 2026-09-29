@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=459">
+    <link rel="stylesheet" href="theme.css?v=460">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1606,6 +1606,7 @@
                     </div>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('recurring-category-select')"><span id="recurring-category-select-display"></span></button>
                     <select id="recurring-category-select" class="hidden"></select>
+                    <input type="text" id="recurring-category-select-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
                     <input type="text" id="recurring-source-input" data-i18n-placeholder="finance_recurring_source_placeholder" placeholder="Source / card (optional)">
                     <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('recurring-start-date-input')">
                         <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
@@ -2846,8 +2847,9 @@
                     <button type="button" id="btn-estimate-preset-calories" class="btn-secondary" onclick="estimatePresetCaloriesWithAI()" data-i18n="preset_estimate_ai_btn">✨ Estimate calories with AI</button>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('new-preset-category')"><span id="new-preset-category-display"></span></button>
                     <select id="new-preset-category" class="hidden">
-                        <option value="morning" data-i18n="preset_cat_morning">🌅 Main meals - Breakfast</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals - Lunch</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals - Dinner</option><option value="soup" data-i18n="preset_cat_soup">🍲 Soups</option><option value="snack" data-i18n="preset_cat_snack">🥕 Low-calorie snacks</option><option value="sweet" data-i18n="preset_cat_sweet">🍬 Sweets</option><option value="dessert" data-i18n="preset_cat_dessert">🍰 Desserts</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option>
+                        <option value="morning" data-i18n="preset_cat_morning">🌅 Main meals - Breakfast</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals - Lunch</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals - Dinner</option><option value="soup" data-i18n="preset_cat_soup">🍲 Soups</option><option value="snack" data-i18n="preset_cat_snack">🥕 Low-calorie snacks</option><option value="sweet" data-i18n="preset_cat_sweet">🍬 Sweets</option><option value="dessert" data-i18n="preset_cat_dessert">🍰 Desserts</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option><option value="custom" data-i18n="select_other_manual">✏️ Other (type manually)</option>
                     </select>
+                    <input type="text" id="new-preset-category-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
                     <div class="action-buttons-wrap">
                         <button id="btn-add-preset" class="btn-primary" data-i18n="preset_add_btn">Add to library</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-preset'); cancelPresetEdit();" data-i18n="cancel_btn">Cancel</button>
@@ -3434,6 +3436,7 @@
 
                     <p class="settings-label" data-i18n="vision_goal_category_label">Category</p>
                     <div id="vision-goal-category-chips" class="vision-goal-category-chips"></div>
+                    <input type="text" id="vision-goal-category-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
 
                     <input type="file" id="vision-goal-image-input" accept="image/*" class="hidden" onchange="handleVisionGoalImageSelected(event)">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('vision-goal-image-input').click()" data-i18n="vision_goal_image_upload_btn">📷 Upload a vision image</button>
@@ -3488,7 +3491,9 @@
                         <option value="salads" data-i18n="recipe_category_salads">Salads</option>
                         <option value="soups" data-i18n="recipe_category_soups">Soups</option>
                         <option value="desserts" data-i18n="recipe_category_desserts">Desserts</option>
+                        <option value="custom" data-i18n="select_other_manual">✏️ Other (type manually)</option>
                     </select>
+                    <input type="text" id="recipe-category-input-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
                     <input type="number" id="recipe-calories-input" data-i18n-placeholder="recipe_calories_placeholder" placeholder="Total calories" oninput="updateRecipeCaloriesPerServingHint()">
                     <p id="recipe-calories-estimate-hint" class="recipe-calories-estimate-hint hidden" data-i18n="recipe_calories_estimated_hint">Estimated calories - please double-check and adjust as needed</p>
                     <input type="number" id="recipe-servings-input" data-i18n-placeholder="recipe_servings_placeholder" placeholder="Servings (e.g. 10 slices)" oninput="updateRecipeCaloriesPerServingHint()">
@@ -3559,8 +3564,8 @@
 
     </div>
 
-    <script src="i18n.js?v=359"></script>
-    <script src="app.js?v=509"></script>
+    <script src="i18n.js?v=360"></script>
+    <script src="app.js?v=510"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=10"></script>
 </body>

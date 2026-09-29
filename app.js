@@ -601,8 +601,9 @@ async function addCustomPreset() {
     const calories = parseInt(caloriesInput.value) || 0;
     const protein = proteinInput.value.trim() ? parseFloat(proteinInput.value) : null;
     const description = descriptionInput.value.trim();
-    const category = document.getElementById('new-preset-category').value;
+    const category = getSelectValueWithOther('new-preset-category');
     if (!name || calories <= 0) return;
+    if (!category) { showAppToast(t('select_other_missing'), 'error'); return; }
 
     // מגבלת חינם: עד 10 ארוחות שמורות סה"כ (לא ניתן להוספה, כן ניתן לעריכה) -
     // מבוססת על הכמות הנוכחית במאגר, כך שמחיקת ארוחה משחררת מקום להוספה חדשה
@@ -636,8 +637,7 @@ function editPreset(id) {
     document.getElementById('new-preset-calories').value = preset.calories;
     document.getElementById('new-preset-protein').value = preset.protein_grams != null ? preset.protein_grams : '';
     document.getElementById('new-preset-description').value = preset.description || '';
-    document.getElementById('new-preset-category').value = preset.meal_category;
-    updateCustomSelectDisplay('new-preset-category');
+    setSelectValueWithOther('new-preset-category', preset.meal_category);
     document.getElementById('btn-add-preset').textContent = t('preset_update_btn');
 }
 
@@ -710,6 +710,19 @@ async function deletePreset(id) {
 // בלבד, כי "מתוקים" קיבלה קטגוריה נפרדת משלה עכשיו
 const PRESET_CATEGORY_ORDER = ['morning', 'noon', 'evening', 'soup', 'snack', 'sweet', 'dessert', 'drinks'];
 
+// קטגוריות שהוקלדו ידנית ("אחר") נשמרות כטקסט חופשי ב-meal_category ומוצגות
+// אחרי הקבועות, לפי סדר הופעתן
+function getPresetCategoryKeys() {
+    const custom = [];
+    cachedPresets.forEach(p => {
+        if (p.meal_category && !PRESET_CATEGORY_ORDER.includes(p.meal_category) && !custom.includes(p.meal_category)) custom.push(p.meal_category);
+    });
+    return [...PRESET_CATEGORY_ORDER, ...custom];
+}
+function presetCategoryLabel(catKey) {
+    return PRESET_CATEGORY_ORDER.includes(catKey) ? t('preset_cat_' + catKey) : '✏️ ' + escapeHtmlForReport(catKey);
+}
+
 async function loadPresetManageList() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
@@ -727,7 +740,7 @@ async function loadPresetManageList() {
         return;
     }
 
-    PRESET_CATEGORY_ORDER.forEach(catKey => {
+    getPresetCategoryKeys().forEach(catKey => {
         const items = cachedPresets.filter(p => p.meal_category === catKey);
         if (!items.length) return;
 
@@ -735,7 +748,7 @@ async function loadPresetManageList() {
         group.className = 'preset-category-group expanded';
         group.innerHTML = `
             <div class="preset-category-header" onclick="togglePresetCategory(this)">
-                <span class="preset-category-label">${t('preset_cat_' + catKey)}</span>
+                <span class="preset-category-label">${presetCategoryLabel(catKey)}</span>
                 <span class="preset-category-count">${items.length}</span>
                 <span class="preset-category-chevron">▼</span>
             </div>
@@ -950,13 +963,13 @@ function renderPresetQuickAddList(filter) {
     if (!list) return;
     const query = (filter || '').trim().toLowerCase();
     if (emptyHint) emptyHint.classList.toggle('hidden', cachedPresets.length > 0);
-    list.innerHTML = PRESET_CATEGORY_ORDER.map(catKey => {
+    list.innerHTML = getPresetCategoryKeys().map(catKey => {
         const items = cachedPresets.filter(item => item.meal_category === catKey && item.food_name.toLowerCase().includes(query));
         if (!items.length) return '';
         return `
             <div class="preset-category-group${query ? ' expanded' : ''}">
                 <div class="preset-category-header" onclick="togglePresetCategory(this)">
-                    <span class="preset-category-label">${t('preset_cat_' + catKey)}</span>
+                    <span class="preset-category-label">${presetCategoryLabel(catKey)}</span>
                     <span class="preset-category-count">${items.length}</span>
                     <span class="preset-category-chevron">▼</span>
                 </div>
@@ -6035,11 +6048,24 @@ let currentRecipeCategory = null;
 let currentDetailRecipeId = null;
 let editingRecipeId = null;
 
+// קטגוריות מתכון שהוקלדו ידנית ("אחר") - טקסט חופשי ב-recipes.category
+function getRecipeCategoryList() {
+    const fixedKeys = RECIPE_CATEGORIES.map(c => c.key);
+    const custom = [];
+    cachedRecipes.forEach(r => {
+        if (r.category && !fixedKeys.includes(r.category) && !custom.includes(r.category)) custom.push(r.category);
+    });
+    return [...RECIPE_CATEGORIES, ...custom.map(key => ({ key, icon: '📁', custom: true }))];
+}
+function recipeCategoryLabel(key) {
+    return RECIPE_CATEGORIES.some(c => c.key === key) ? t(`recipe_category_${key}`) : key;
+}
+
 function renderRecipeCategoriesGrid() {
     const grid = document.getElementById('recipes-categories-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    RECIPE_CATEGORIES.forEach(cat => {
+    getRecipeCategoryList().forEach(cat => {
         const count = cachedRecipes.filter(r => r.category === cat.key).length;
         const card = document.createElement('div');
         card.className = 'recipe-category-card';
@@ -6049,7 +6075,7 @@ function renderRecipeCategoriesGrid() {
         icon.textContent = cat.icon;
         const label = document.createElement('div');
         label.className = 'recipe-category-label';
-        label.textContent = t(`recipe_category_${cat.key}`);
+        label.textContent = recipeCategoryLabel(cat.key);
         const countEl = document.createElement('div');
         countEl.className = 'recipe-category-count';
         countEl.textContent = count;
@@ -6096,7 +6122,7 @@ function renderRecipeCards(list) {
 
 function openRecipeCategory(categoryKey) {
     currentRecipeCategory = categoryKey;
-    document.getElementById('recipes-list-category-title').textContent = t(`recipe_category_${categoryKey}`);
+    document.getElementById('recipes-list-category-title').textContent = recipeCategoryLabel(categoryKey);
     renderRecipeCards(cachedRecipes.filter(r => r.category === categoryKey));
     document.getElementById('recipes-categories-grid').classList.add('hidden');
     document.getElementById('recipes-list-view').classList.add('open');
@@ -6133,8 +6159,7 @@ function openAddRecipeForm() {
     document.getElementById('modal-add-recipe-title').textContent = t('recipe_modal_title');
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = '';
-    document.getElementById('recipe-category-input').value = currentRecipeCategory || '';
-    updateCustomSelectDisplay('recipe-category-input');
+    setSelectValueWithOther('recipe-category-input', currentRecipeCategory || '');
     document.getElementById('recipe-calories-input').value = '';
     document.getElementById('recipe-servings-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
@@ -6152,8 +6177,7 @@ function openEditRecipeForm() {
     document.getElementById('modal-add-recipe-title').textContent = t('recipe_edit_modal_title');
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = recipe.title || '';
-    document.getElementById('recipe-category-input').value = recipe.category || '';
-    updateCustomSelectDisplay('recipe-category-input');
+    setSelectValueWithOther('recipe-category-input', recipe.category || '');
     document.getElementById('recipe-calories-input').value = recipe.calories || '';
     document.getElementById('recipe-servings-input').value = recipe.servings || '';
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
@@ -6174,7 +6198,7 @@ function setRecipeCaloriesEstimateHint(show) {
 
 async function saveRecipe() {
     const title = document.getElementById('recipe-title-input').value.trim();
-    const category = document.getElementById('recipe-category-input').value;
+    const category = getSelectValueWithOther('recipe-category-input');
     const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
     const servings = parseInt(document.getElementById('recipe-servings-input').value) || null;
     const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
@@ -6221,7 +6245,7 @@ function openRecipeDetail(id) {
     if (recipe.image_url) { detailPhoto.src = recipe.image_url; detailPhoto.classList.remove('hidden'); }
     else { detailPhoto.src = ''; detailPhoto.classList.add('hidden'); }
     document.getElementById('recipe-detail-title').textContent = recipe.title;
-    document.getElementById('recipe-detail-category').textContent = t(`recipe_category_${recipe.category}`);
+    document.getElementById('recipe-detail-category').textContent = recipeCategoryLabel(recipe.category);
     document.getElementById('recipe-detail-calories').textContent = recipe.calories ? `${recipe.calories} ${t('calories_unit')}` : '';
 
     const ingredientsList = document.getElementById('recipe-detail-ingredients');
@@ -7151,6 +7175,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'multi_device_login', category: 'general' },
     { id: 'app_stuck_loading', category: 'general' },
     { id: 'refresh_data', category: 'general' },
+    { id: 'other_manual_option', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
@@ -7937,6 +7962,26 @@ function setReminderSelectValue(selectId, minutes) {
         select.value = String(minutes || 0);
         if (customInput) { customInput.value = ''; customInput.classList.add('hidden'); }
     }
+    updateCustomSelectDisplay(selectId);
+}
+
+// "אחר" גנרי לבוררי קטגוריה: אפשרות value="custom" + input צמוד עם id
+// `${selectId}-custom` (אותו מנגנון כמו בוררי התזכורת) - הערך האמיתי הוא
+// הטקסט שהוקלד. ערך שמור שאינו אחת האפשרויות הקבועות נטען חזרה ל"אחר"
+function getSelectValueWithOther(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return '';
+    if (select.value !== 'custom') return select.value;
+    const customInput = document.getElementById(`${selectId}-custom`);
+    return customInput ? customInput.value.trim().slice(0, 40) : '';
+}
+function setSelectValueWithOther(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const customInput = document.getElementById(`${selectId}-custom`);
+    const isFixed = !value || Array.from(select.options).some(o => o.value === value && o.value !== 'custom');
+    select.value = isFixed ? (value || select.options[0].value) : 'custom';
+    if (customInput) { customInput.value = isFixed ? '' : value; customInput.classList.toggle('hidden', isFixed); }
     updateCustomSelectDisplay(selectId);
 }
 
@@ -9394,7 +9439,32 @@ function renderRecurringExpensesList(listId, filterFn) {
 function populateRecurringCategoryOptions() {
     const select = document.getElementById('recurring-category-select');
     if (!select) return;
-    select.innerHTML = FINANCE_CATEGORIES.expense.map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    // הקטגוריות הקבועות + הקטגוריות האישיות + "אחר" (הקלדה ידנית - נשמרת
+    // כקטגוריה אישית חדשה, כך שהיא זמינה גם במסך ההוצאות וההכנסות)
+    const builtInHtml = FINANCE_CATEGORIES.expense.map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
+    const customHtml = getCustomFinanceCategoriesForType('expense').map(c => `<option value="custom_${c.id}">${c.icon || '🏷️'} ${escapeHtmlForReport(c.name)}</option>`).join('');
+    select.innerHTML = builtInHtml + customHtml + `<option value="custom">${escapeHtmlForReport(t('select_other_manual'))}</option>`;
+    const customInput = document.getElementById('recurring-category-select-custom');
+    if (customInput) { customInput.value = ''; customInput.classList.add('hidden'); }
+}
+
+// "אחר" בהוצאה קבועה: יוצר (או מוצא לפי שם) קטגוריה אישית ומחזיר את ה-value שלה
+async function resolveRecurringCategoryValue() {
+    const select = document.getElementById('recurring-category-select');
+    if (!select) return null;
+    if (select.value !== 'custom') return select.value || null;
+    const name = getSelectValueWithOther('recurring-category-select');
+    if (!name) return undefined;
+    const existing = getCustomFinanceCategoriesForType('expense').find(c => c.name.trim().toLowerCase() === name.toLowerCase());
+    if (existing) return `custom_${existing.id}`;
+    const { data, error } = await supabaseClient.from('custom_finance_categories').insert({
+        user_id: currentUserId, username: currentUsername, entry_type: 'expense',
+        name, icon: '🏷️', sort_order: Date.now(),
+    }).select('id').single();
+    if (error || !data) return null;
+    await loadCustomFinanceCategories();
+    populateFinanceCategoryOptions(currentFinanceEntryType);
+    return `custom_${data.id}`;
 }
 
 function toggleRecurringEndDateField() {
@@ -9504,12 +9574,13 @@ function openEditRecurringExpenseModal(id) {
 async function submitRecurringExpense() {
     const name = document.getElementById('recurring-name-input').value.trim();
     const amount = parseFloat(document.getElementById('recurring-amount-input').value);
-    const category = document.getElementById('recurring-category-select').value || null;
     const source = document.getElementById('recurring-source-input').value.trim() || null;
     const startDate = document.getElementById('recurring-start-date-input').value || getLocalDateString();
     const isInstallment = document.getElementById('recurring-is-installment-toggle').checked;
     if (!name || !amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
     if (isInstallment && !pendingRecurringInstallmentTotal) { showAppToast(t('finance_recurring_installment_count_required'), 'error'); return; }
+    const category = await resolveRecurringCategoryValue();
+    if (category === undefined) { showAppToast(t('select_other_missing'), 'error'); return; }
     let endDate, installmentCurrent, installmentTotal;
     if (isInstallment) {
         installmentCurrent = pendingRecurringInstallmentCurrent || 1;
@@ -10295,7 +10366,7 @@ async function parseRecipeWithAI() {
 
     const parsed = parseRecipeText(raw);
     document.getElementById('recipe-title-input').value = parsed.title;
-    if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
+    if (parsed.category) setSelectValueWithOther('recipe-category-input', parsed.category);
     updateCustomSelectDisplay('recipe-category-input');
     document.getElementById('recipe-calories-input').value = parsed.calories || '';
     document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
@@ -10407,7 +10478,7 @@ async function runLocalRecipeOcrFallback(file) {
         if (looksLikeGarbledOcrBody(parsed.ingredients) || looksLikeGarbledOcrBody(parsed.instructions)) return false;
         const titleUnclear = looksLikeGarbledOcrTitle(parsed.title);
         document.getElementById('recipe-title-input').value = titleUnclear ? '' : parsed.title;
-        if (parsed.category) document.getElementById('recipe-category-input').value = parsed.category;
+        if (parsed.category) setSelectValueWithOther('recipe-category-input', parsed.category);
         updateCustomSelectDisplay('recipe-category-input');
         document.getElementById('recipe-calories-input').value = parsed.calories || '';
         document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
@@ -10503,7 +10574,7 @@ async function runRecipeImageScan(file) {
             // בדיוק כמו ב-parseRecipeText מתמודד עם זה כרשת ביטחון נוספת
             const cleanTitle = sanitizeOcrText(recipe.title || '');
             document.getElementById('recipe-title-input').value = cleanTitle;
-            if (recipe.category) document.getElementById('recipe-category-input').value = recipe.category;
+            if (recipe.category) setSelectValueWithOther('recipe-category-input', recipe.category);
             updateCustomSelectDisplay('recipe-category-input');
             document.getElementById('recipe-calories-input').value = recipe.calories || '';
             document.getElementById('recipe-ingredients-input').value = sanitizeOcrText(recipe.ingredients || '');
@@ -13034,8 +13105,7 @@ function saveMealRowAsPreset(button) {
     document.getElementById('new-preset-calories').value = calories;
     document.getElementById('new-preset-protein').value = protein != null ? protein : '';
     const defaultCategory = categoryTrigger ? categoryTrigger.getAttribute('data-category') : 'snack';
-    document.getElementById('new-preset-category').value = defaultCategory;
-    updateCustomSelectDisplay('new-preset-category');
+    setSelectValueWithOther('new-preset-category', defaultCategory);
     openModal('modal-add-preset');
     loadPresetManageList();
 }
@@ -15919,6 +15989,31 @@ function openSelectCellPicker(rowId, columnId) {
         btn.appendChild(chip);
         list.appendChild(btn);
     });
+    // "אחר" - תמיד אפשר להקליד ערך שלא קיים ברשימה (למשל "אחיין"); הערך החדש
+    // נוסף כאפשרות קבועה של העמודה, כך שבפעם הבאה הוא כבר מופיע ברשימה
+    const otherBtn = document.createElement('button');
+    otherBtn.type = 'button';
+    otherBtn.className = 'preset-quick-add-item custom-select-picker-row';
+    otherBtn.textContent = t('select_other_manual');
+    otherBtn.onclick = () => {
+        const wrap = document.createElement('div');
+        wrap.className = 'select-other-manual-row';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 60;
+        input.placeholder = t('select_other_placeholder');
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn-primary';
+        addBtn.textContent = t('add_btn');
+        addBtn.onclick = () => addTableSelectOptionFromCell(input.value);
+        input.onkeydown = (e) => { if (e.key === 'Enter') addTableSelectOptionFromCell(input.value); };
+        wrap.appendChild(input);
+        wrap.appendChild(addBtn);
+        otherBtn.replaceWith(wrap);
+        input.focus();
+    };
+    list.appendChild(otherBtn);
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'preset-quick-add-item custom-select-picker-row';
@@ -15944,6 +16039,26 @@ function selectTableCellOption(optionId) {
         if (oldCell) rowEl.replaceChild(buildSelectCell(row, column), oldCell);
     }
     selectCellPickerContext = null;
+}
+
+async function addTableSelectOptionFromCell(rawLabel) {
+    const label = String(rawLabel || '').trim();
+    if (!label || !selectCellPickerContext) return;
+    const column = customTableColumnsCache.find(c => c.id === selectCellPickerContext.columnId);
+    if (!column) return;
+    const options = column.select_options || [];
+    const existing = options.find(opt => opt.label.trim().toLowerCase() === label.toLowerCase());
+    if (existing) { selectTableCellOption(existing.id); return; }
+    const color = TABLE_SELECT_OPTION_COLOR_PRESETS[options.length % TABLE_SELECT_OPTION_COLOR_PRESETS.length];
+    const newOption = { id: crypto.randomUUID(), label, color };
+    column.select_options = [...options, newOption];
+    const { error } = await supabaseClient.from('custom_table_columns').update({ select_options: column.select_options }).eq('id', column.id);
+    if (error) {
+        column.select_options = options;
+        showAppToast(t('error_adding_item'), 'error');
+        return;
+    }
+    selectTableCellOption(newOption.id);
 }
 
 // קריאה-מיזוג-כתיבה על כל אובייקט ה-data של השורה - אין טבלה רביעית פר-תא
@@ -16924,10 +17039,11 @@ function renderVisionGoalCard(goal, milestones) {
     front.onclick = () => flipVisionCard(goal.id);
 
     const categoryPreset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === goal.category);
-    if (categoryPreset) {
+    if (categoryPreset || goal.category) {
         const tag = document.createElement('div');
         tag.className = 'vision-card-category-tag';
-        tag.textContent = `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}`;
+        // קטגוריה שהוקלדה ידנית ("אחר") נשמרת כטקסט חופשי ומוצגת כמו שהיא
+        tag.textContent = categoryPreset ? `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}` : `🎯 ${goal.category}`;
         front.appendChild(tag);
     }
     // גביע נוצץ-וזוהר על יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים במה
@@ -17188,15 +17304,32 @@ function renderVisionGoalCategoryChips() {
     VISION_GOAL_CATEGORY_PRESETS.forEach(preset => {
         const chip = document.createElement('button');
         chip.type = 'button';
-        chip.className = 'vision-goal-category-chip' + (selectedVisionGoalCategory === preset.key ? ' selected' : '');
+        chip.className = 'vision-goal-category-chip' + (visionGoalCategoryChipKey() === preset.key ? ' selected' : '');
         chip.textContent = `${preset.icon} ${t('vision_goal_category_' + preset.key)}`;
         chip.onclick = () => selectVisionGoalCategory(preset.key);
         container.appendChild(chip);
     });
+    // "אחר" = הקלדה ידנית של קטגוריה שלא ברשימה; הטקסט עצמו נשמר ב-category
+    const customInput = document.getElementById('vision-goal-category-custom');
+    if (customInput) {
+        const isOther = visionGoalCategoryChipKey() === 'other';
+        customInput.classList.toggle('hidden', !isOther);
+        if (!isOther) customInput.value = '';
+        else if (selectedVisionGoalCategory !== 'other' && document.activeElement !== customInput) customInput.value = selectedVisionGoalCategory;
+    }
+}
+// קטגוריה ששמורה כטקסט חופשי מסומנת בצ'יפ "אחר"
+function visionGoalCategoryChipKey() {
+    if (!selectedVisionGoalCategory) return null;
+    return VISION_GOAL_CATEGORY_PRESETS.some(c => c.key === selectedVisionGoalCategory) ? selectedVisionGoalCategory : 'other';
 }
 function selectVisionGoalCategory(key) {
-    selectedVisionGoalCategory = selectedVisionGoalCategory === key ? null : key;
+    selectedVisionGoalCategory = visionGoalCategoryChipKey() === key ? null : key;
     renderVisionGoalCategoryChips();
+    if (key === 'other' && selectedVisionGoalCategory) {
+        const customInput = document.getElementById('vision-goal-category-custom');
+        if (customInput) customInput.focus();
+    }
 }
 
 // מעלה את קובץ תמונת-החזון עצמה ל-Supabase Storage (bucket "goal-vision-photos") -
@@ -17273,7 +17406,10 @@ async function saveVisionGoal() {
     const title = document.getElementById('vision-goal-title-input').value.trim();
     if (!title) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
     const imageUrl = document.getElementById('vision-goal-image-url-input').value || null;
-    const payload = { title, category: selectedVisionGoalCategory, image_url: imageUrl };
+    const customCategoryInput = document.getElementById('vision-goal-category-custom');
+    const customCategory = customCategoryInput ? customCategoryInput.value.trim().slice(0, 40) : '';
+    const category = visionGoalCategoryChipKey() === 'other' && customCategory ? customCategory : (visionGoalCategoryChipKey() === 'other' ? 'other' : selectedVisionGoalCategory);
+    const payload = { title, category, image_url: imageUrl };
 
     let goalId = editingVisionGoalId;
     if (goalId) {
