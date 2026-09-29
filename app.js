@@ -14117,10 +14117,19 @@ async function toggleQuickNoteApple() {
 }
 
 let currentWeeklyNoteText = (() => { try { return localStorage.getItem(WEEKLY_NOTE_CACHE_KEY) || ''; } catch { return ''; } })();
+// רשימה לסימון בפתק (0-3 שורות) - כל שורה {text, done}; נשמרת כמו הטקסט: מטמון במכשיר + user_premium
+let currentWeeklyNoteItems = (() => { try { return JSON.parse(localStorage.getItem('weekwise_weekly_note_items') || '[]'); } catch { return []; } })();
+let currentWeeklyNoteItemCount = (() => { try { return parseInt(localStorage.getItem('weekwise_weekly_note_item_count'), 10) || 0; } catch { return 0; } })();
+function cacheWeeklyNoteItems() {
+    try {
+        localStorage.setItem('weekwise_weekly_note_items', JSON.stringify(currentWeeklyNoteItems));
+        localStorage.setItem('weekwise_weekly_note_item_count', String(currentWeeklyNoteItemCount));
+    } catch {}
+}
 function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
 async function loadWeeklyNoteSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data, error } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape').eq('user_id', currentUserId).maybeSingle();
+    const { data, error } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape, weekly_note_items, weekly_note_item_count').eq('user_id', currentUserId).maybeSingle();
     if (data && data.weekly_note_enabled !== null && data.weekly_note_enabled !== undefined) {
         localStorage.setItem('weekwise_weekly_note_enabled', String(data.weekly_note_enabled));
     }
@@ -14128,6 +14137,9 @@ async function loadWeeklyNoteSetting() {
     if (!error && data) {
         currentWeeklyNoteText = data.weekly_note_text || '';
         try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
+        if (Array.isArray(data.weekly_note_items)) currentWeeklyNoteItems = data.weekly_note_items;
+        if (data.weekly_note_item_count !== null && data.weekly_note_item_count !== undefined) currentWeeklyNoteItemCount = data.weekly_note_item_count;
+        cacheWeeklyNoteItems();
     }
     currentWeeklyNoteColor = (data && data.weekly_note_color) || null;
     currentWeeklyNoteShape = (data && data.weekly_note_shape) || null;
@@ -14149,11 +14161,9 @@ async function toggleWeeklyNote() {
 function applyWeeklyNoteSetting() {
     const widget = document.getElementById('weekly-note-widget');
     const toggle = document.getElementById('weekly-note-toggle');
-    const customize = document.getElementById('weekly-note-customize');
     const enabled = isWeeklyNoteOn();
     if (widget) widget.classList.toggle('hidden', !enabled);
     if (toggle) toggle.checked = enabled;
-    if (customize) customize.classList.toggle('hidden', !enabled);
 }
 
 // --- התאמה אישית של הפתק (צבע + סגנון/צורה) - אופציונלי, לפי בקשה מפורשת
@@ -14247,6 +14257,19 @@ function renderWeeklyNoteDisplay() {
     const display = document.getElementById('weekly-note-display');
     if (!display) return;
     const text = currentWeeklyNoteText.trim();
+    const items = currentWeeklyNoteItems.slice(0, currentWeeklyNoteItemCount).map((item, index) => ({ ...item, index })).filter(item => (item.text || '').trim());
+    const widget = document.getElementById('weekly-note-widget');
+    if (widget) widget.classList.toggle('weekly-note-has-items', items.length > 0);
+    if (items.length) {
+        // שורות לסימון + טקסט חופשי מתחת (אם נכתב). ✓ מסמן ישר מהפתק בלי לפתוח את העריכה
+        const totalLength = items.reduce((sum, item) => sum + item.text.length, 0) + text.length;
+        display.innerHTML = `<ul class="weekly-note-items">${items.map(item => `
+            <li class="${item.done ? 'done' : ''}"><button type="button" class="weekly-note-check" onclick="event.stopPropagation(); toggleWeeklyNoteItem(${item.index})" aria-pressed="${item.done ? 'true' : 'false'}">${item.done ? '✓' : ''}</button><span>${escapeHtmlForReport(item.text)}</span></li>`).join('')}
+        </ul>${text ? `<div class="weekly-note-free">${escapeHtmlForReport(text)}</div>` : ''}`;
+        display.classList.remove('weekly-note-display-empty');
+        display.style.fontSize = (totalLength > 70 ? 0.6 : totalLength > 45 ? 0.66 : 0.72) + 'rem';
+        return;
+    }
     const shownText = text || t('weekly_note_empty_hint');
     display.textContent = shownText;
     display.classList.toggle('weekly-note-display-empty', !text);
@@ -14266,19 +14289,115 @@ function startEditWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
     if (!textarea) return;
     textarea.value = currentWeeklyNoteText;
+    const panel = document.getElementById('weekly-note-customize');
+    if (panel) panel.classList.add('hidden');
+    const gear = document.getElementById('weekly-note-gear');
+    if (gear) gear.classList.remove('active');
+    renderWeeklyNoteItemsEditor(currentWeeklyNoteItems.map(item => item.text || ''));
+    renderWeeklyNoteItemCountChips();
+    renderWeeklyNoteColorSwatches();
+    renderWeeklyNoteShapeSwatches();
     openModal('modal-weekly-note');
-    textarea.focus();
+    const firstInput = document.querySelector('#weekly-note-items-edit input');
+    (firstInput || textarea).focus();
+}
+function toggleWeeklyNoteSettingsPanel() {
+    const panel = document.getElementById('weekly-note-customize');
+    if (!panel) return;
+    panel.classList.toggle('hidden');
+    const gear = document.getElementById('weekly-note-gear');
+    if (gear) gear.classList.toggle('active', !panel.classList.contains('hidden'));
+}
+// שורות העריכה של הרשימה לסימון - לפי הכמות שנבחרה בהגדרות (0-3)
+function renderWeeklyNoteItemsEditor(values) {
+    const wrap = document.getElementById('weekly-note-items-edit');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    for (let i = 0; i < currentWeeklyNoteItemCount; i++) {
+        const row = document.createElement('div');
+        row.className = 'weekly-note-item-edit-row';
+        const box = document.createElement('span');
+        box.className = 'weekly-note-item-edit-box';
+        box.setAttribute('aria-hidden', 'true');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 28;
+        input.value = values[i] || '';
+        input.placeholder = t('weekly_note_item_placeholder').replace('{n}', i + 1);
+        row.appendChild(box);
+        row.appendChild(input);
+        wrap.appendChild(row);
+    }
+    const textarea = document.getElementById('weekly-note-textarea');
+    if (textarea) textarea.placeholder = t(currentWeeklyNoteItemCount ? 'weekly_note_free_placeholder' : 'weekly_note_placeholder');
+}
+function renderWeeklyNoteItemCountChips() {
+    const wrap = document.getElementById('weekly-note-item-count-chips');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    [0, 1, 2, 3].forEach(count => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'weekly-note-count-chip' + (currentWeeklyNoteItemCount === count ? ' selected' : '');
+        chip.textContent = count === 0 ? t('weekly_note_items_none') : String(count);
+        chip.onclick = () => selectWeeklyNoteItemCount(count);
+        wrap.appendChild(chip);
+    });
+}
+async function selectWeeklyNoteItemCount(count) {
+    const values = Array.from(document.querySelectorAll('#weekly-note-items-edit input')).map(input => input.value);
+    currentWeeklyNoteItemCount = count;
+    cacheWeeklyNoteItems();
+    renderWeeklyNoteItemCountChips();
+    renderWeeklyNoteItemsEditor(values.length ? values : currentWeeklyNoteItems.map(item => item.text || ''));
+    renderWeeklyNoteDisplay();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, weekly_note_item_count: count },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+async function saveWeeklyNoteItemsToServer() {
+    cacheWeeklyNoteItems();
+    if (!supabaseClient || !currentUserId) return null;
+    const { error } = await supabaseClient.from('user_premium').upsert(
+        { user_id: currentUserId, username: currentUsername, weekly_note_items: currentWeeklyNoteItems, weekly_note_item_count: currentWeeklyNoteItemCount },
+        { onConflict: 'user_id' },
+    );
+    return error;
+}
+// ✓ ישר מהפתק במסך הבית
+async function toggleWeeklyNoteItem(index) {
+    const item = currentWeeklyNoteItems[index];
+    if (!item) return;
+    item.done = !item.done;
+    renderWeeklyNoteDisplay();
+    await saveWeeklyNoteItemsToServer();
 }
 async function saveWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
     if (!textarea) return;
     currentWeeklyNoteText = textarea.value.trim();
     try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
+    // שורה שהטקסט שלה לא השתנה שומרת את הסימון שלה; שורה ששונתה מתחילה לא מסומנת
+    const inputs = Array.from(document.querySelectorAll('#weekly-note-items-edit input'));
+    if (inputs.length || currentWeeklyNoteItemCount === 0) {
+        const previous = currentWeeklyNoteItems;
+        const edited = inputs.map((input, i) => {
+            const text = input.value.trim();
+            const old = previous[i];
+            return { text, done: !!(old && old.done && old.text === text && text) };
+        });
+        // שורות מעבר לכמות שנבחרה נשמרות (אם יחזרו לכמות גדולה יותר, הן יופיעו שוב)
+        currentWeeklyNoteItems = edited.concat(previous.slice(edited.length));
+    }
     renderWeeklyNoteDisplay();
     closeModal('modal-weekly-note');
-    if (!supabaseClient || !currentUserId) return;
+    if (!supabaseClient || !currentUserId) { cacheWeeklyNoteItems(); return; }
+    cacheWeeklyNoteItems();
     const { error } = await supabaseClient.from('user_premium').upsert(
-        { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText },
+        { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText, weekly_note_items: currentWeeklyNoteItems, weekly_note_item_count: currentWeeklyNoteItemCount },
         { onConflict: 'user_id' },
     );
     if (error) showAppToast(t('error_adding_item') + error.message, 'error');
@@ -14286,6 +14405,7 @@ async function saveWeeklyNote() {
 function clearWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
     if (textarea) textarea.value = '';
+    document.querySelectorAll('#weekly-note-items-edit input').forEach(input => { input.value = ''; });
     saveWeeklyNote();
 }
 

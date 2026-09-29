@@ -2466,8 +2466,8 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     border-top: 1px solid rgba(255, 255, 255, 0.22);
     color: var(--text-primary);
     border-radius: 4px;
-    width: 104px;
-    height: 104px;
+    width: 118px;
+    height: 118px;
     box-sizing: border-box;
     padding: 10px 8px;
     display: flex;
@@ -6331,7 +6331,31 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .table-note-icon { width: 1.15em; height: 1.15em; vertical-align: -0.2em; display: inline-block; }
 
 /* הצצה להיום - כפתור קטן מתחת לתאריך */
-.today-peek-chip { display: flex; align-items: center; gap: 5px; margin-top: 6px; width: fit-content; padding: 3px 10px 3px 9px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-secondary); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; line-height: 1.4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); touch-action: pan-y; }
+.today-peek-chip { display: flex; align-items: center; gap: 5px; margin-top: 12px; width: fit-content; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-secondary); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; line-height: 1.4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); touch-action: pan-y; }
 .today-peek-chip svg { width: 14px; height: 14px; flex-shrink: 0; }
 .today-peek-chip:active { transform: scale(0.96); }
 .today-peek-chip.hidden { display: none; }
+
+/* פתק שבועי: כותרת + גלגל שיניים, רשימה לסימון (0-3), טקסט חופשי */
+.weekly-note-modal-head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 10px; }
+.weekly-note-modal-head h3 { grid-column: 2; margin: 0; text-align: center; }
+.weekly-note-gear { grid-column: 3; justify-self: end; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.weekly-note-gear svg { width: 18px; height: 18px; }
+.weekly-note-gear.active { color: var(--accent-purple); border-color: var(--accent-purple); }
+#weekly-note-textarea { min-height: 150px; }
+.weekly-note-items-edit { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.weekly-note-items-edit:empty { display: none; }
+.weekly-note-item-edit-row { display: flex; align-items: center; gap: 10px; }
+.weekly-note-item-edit-box { width: 18px; height: 18px; flex-shrink: 0; border-radius: 5px; border: 1.5px solid var(--text-secondary); opacity: .7; }
+.weekly-note-item-edit-row input { flex: 1; min-width: 0; background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: .9rem; outline: none; }
+.weekly-note-count-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+.weekly-note-count-chip { min-width: 40px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
+.weekly-note-count-chip.selected { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, transparent); color: var(--accent-purple); }
+/* הפתק במסך הבית כשיש רשימה - מיושר להתחלה, כל שורה עם ריבוע סימון */
+.weekly-note-widget.weekly-note-has-items { align-items: flex-start; justify-content: flex-start; text-align: start; padding: 12px 9px 8px; }
+.weekly-note-widget.weekly-note-has-items .weekly-note-display { width: 100%; }
+.weekly-note-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.weekly-note-items li { display: flex; align-items: flex-start; gap: 5px; line-height: 1.25; }
+.weekly-note-items li.done span { text-decoration: line-through; opacity: .6; }
+.weekly-note-check { flex-shrink: 0; width: 1.25em; height: 1.25em; margin-top: .02em; border-radius: 4px; border: 1.5px solid currentColor; background: transparent; color: inherit; font: inherit; font-size: 1em; font-weight: 800; line-height: 1; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: .85; }
+.weekly-note-free { margin-top: 6px; }
