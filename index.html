@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=457">
+    <link rel="stylesheet" href="theme.css?v=458">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3120,9 +3120,11 @@
                     <button type="button" class="categories-back hidden" id="categories-menu-back" onclick="closeCategoriesGroup()" aria-label="Back">‹</button>
                     <h3 id="categories-menu-title" data-i18n="categories_menu_title">All Categories</h3>
                     <!-- מעבר לתצוגת רשימה (☰), והגדרות - שאחרת לא נגישות בתצוגת קוביות -->
-                    <button type="button" class="menu-style-switch" onclick="closeModal('modal-categories'); openSettingsDrawer();" data-i18n-title="settings_title" data-i18n-aria-label="settings_title" title="Settings" aria-label="Settings">⚙️</button>
-                    <button type="button" class="menu-style-switch" onclick="switchMenuStyle('list')" data-i18n-title="menu_switch_to_list" data-i18n-aria-label="menu_switch_to_list" title="Switch to list view" aria-label="Switch to list view">☰</button>
-                    <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" aria-label="Close">✕</button>
+                    <div class="categories-header-actions">
+                        <button type="button" class="menu-style-switch" onclick="closeModal('modal-categories'); openSettingsDrawer();" data-i18n-title="settings_title" data-i18n-aria-label="settings_title" title="Settings" aria-label="Settings">⚙️</button>
+                        <button type="button" class="menu-style-switch" onclick="switchMenuStyle('list')" data-i18n-title="menu_switch_to_list" data-i18n-aria-label="menu_switch_to_list" title="Switch to list view" aria-label="Switch to list view">☰</button>
+                        <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" aria-label="Close">✕</button>
+                    </div>
                 </div>
                 <div id="categories-menu-body"></div>
             </div>
