@@ -3112,6 +3112,13 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-root bdi, .nm-sheet bdi { display: inline-block; direction: ltr; unicode-bidi: isolate; }
 .nm-fine { color: var(--text-secondary); font-size: .82rem; line-height: 1.5; margin: 6px 0 0; }
 .nm-ai-note { color: var(--text-secondary); font-size: .72rem; line-height: 1.5; margin: 8px 4px 0; opacity: .85; text-align: center; }
+/* מעקב משקל - שורת קישור בתחתית מדדי קלוריות */
+.calories-weight-link { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 16px; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-weight: 600; text-align: start; cursor: pointer; transition: var(--transition); }
+.calories-weight-link:active { transform: scale(0.98); }
+.calories-weight-link-icon { font-size: 1.3rem; }
+.calories-weight-link-title { flex: 1; }
+.calories-weight-link-chevron { color: var(--text-secondary); font-size: 1.3rem; }
+html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 /* סיכום כל החשבוניות */
 .receipts-total-years { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .receipts-total-field { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--text-secondary); }
