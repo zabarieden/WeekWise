@@ -1714,10 +1714,11 @@ html.light-mode .premium-benefits-list li {
     box-shadow: 0 0 12px rgba(168, 85, 247, 0.12);
 }
 body {
-    /* var(--user-font) - נקבע ב-JS (applyGlobalFont) כשנבחר פונט פרימיום
-       מותאם אישית מ-Google Fonts; לא מוגדר כברירת מחדל, אז נופל תמיד
-       לערימת פונטי המערכת הרגילה */
-    font-family: var(--user-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    /* var(--user-font) - נקבע ב-JS (applyGlobalFont) כשנבחר פונט פרימיום אחר.
+       ברירת המחדל לכולם היא Playpen Sans Hebrew (נטען ב-<head>) - המראה של
+       האפליקציה כפי שהוגדר, לפי בקשה מפורשת. שפות שהוא לא מכסה (ערבית, CJK,
+       תאית וכו') נופלות אוטומטית לפונט המערכת לכל תו */
+    font-family: var(--user-font, "Playpen Sans Hebrew", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     background-color: #07060a;
     color: var(--text-primary);
     margin: 0;
@@ -1741,6 +1742,7 @@ body {
 /* טקסט בשדות קלט/טקסטאריה חייב להישאר ניתן לבחירה/עריכה כרגיל - רק תוויות
    ותוכן סטטי "מתים" לחלוטין (בלי בחירה, בלי תפריט חיפוש/העתקה של הדפדפן) */
 input, textarea, select {
+    font-family: inherit;
     -webkit-user-select: text;
     user-select: text;
     -webkit-touch-callout: default;

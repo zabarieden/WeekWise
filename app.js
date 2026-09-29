@@ -1470,7 +1470,14 @@ async function submitAuthForm() {
             // onboarding_completed: false במפורש - ר' ההערה המלאה ליד
             // openOnboarding על ההבדל בין הרשמה חדשה (עוברת את האשף) מול
             // התחברות רגילה (לא, גם אם עדיין false משום מה ברשומה ישנה)
-            await supabaseClient.from('user_premium').insert({ user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false });
+            // ברירות המחדל של משתמש/ת חדש/ה = בדיוק המראה של האפליקציה כפי שהמפתחת
+            // הגדירה אותה (לפי בקשה מפורשת: "כל משתמש שמוריד זה מה שהוא רואה"):
+            // רקע לבן, רובוט קטן, תג קלוריות בהצצה, פתק ורוד, צליל תזכורת wind_chime
+            await supabaseClient.from('user_premium').insert({
+                user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false,
+                theme: 'bg_white', ai_fab_compact: true, home_calorie_badge_enabled: true,
+                weekly_note_color: 'pink', reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
+            });
         }
         if (data.session) {
             openOnboarding(data.user);
@@ -7453,7 +7460,7 @@ async function loadAiIconSetting() {
 // גודל כפתור עוזר ה-AI - חופשי לכולם (לא פרימיום, בניגוד לבחירת האייקון
 // למעלה), כבוי כברירת מחדל (opt-in), לפי בקשה מפורשת ("סתם נקודה למי
 // שרוצה שזה יהיה יותר קטן"). אותו דפוס בדיוק כמו study_peek_tab_enabled
-function isAiFabCompactOn() { return localStorage.getItem('weekwise_ai_fab_compact') === 'true'; }
+function isAiFabCompactOn() { return localStorage.getItem('weekwise_ai_fab_compact') !== 'false'; }
 async function loadAiFabCompactSetting() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('user_premium').select('ai_fab_compact').eq('user_id', currentUserId).maybeSingle();
@@ -13269,7 +13276,7 @@ const REMINDER_CHIMES = {
     alert: { notes: [784, 784, 784], type: 'square', gap: 0.13, peak: 0.14, decay: 0.14 },
     wind_chime: { notes: [1046.5, 880, 698.46, 523.25], type: 'sine', gap: 0.13, peak: 0.18, decay: 0.55 },
 };
-const REMINDER_CHIME_DEFAULT = 'chord_up';
+const REMINDER_CHIME_DEFAULT = 'wind_chime';
 
 function isValidReminderChimeId(id) { return !!REMINDER_CHIMES[id]; }
 function getReminderChimeId() {
@@ -13800,7 +13807,7 @@ function updateMiniCalorieIndicator() {
 // קבועים מול העיניים - לפי שיקול מפורש "או שזה אכזרי?"), מי שרוצה מדליקה
 // בהגדרות ומקבלת מספר קטן שמתעדכן בזמן אמת. לוחצים עליו כדי לקפוץ ישר
 // למסך התזונה, לא רק תצוגה ---
-function isHomeCalorieBadgeOn() { return localStorage.getItem('weekwise_home_calorie_badge') === 'true'; }
+function isHomeCalorieBadgeOn() { return localStorage.getItem('weekwise_home_calorie_badge') !== 'false'; }
 // היה localStorage בלבד - כמו טאב הלימודים לפני התיקון שלו, זה בדיוק מה
 // שגרם ל"רואה את זה בנייד, בדפדפן לא" (כל מכשיר עם ה-localStorage שלו)
 async function loadHomeCalorieBadgeSetting() {
