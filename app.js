@@ -1506,7 +1506,7 @@ function openOnboarding(user) {
     onboardingPendingGoalTitle = null;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    requestAnimationFrame(repositionPeekTabStack);
+    requestAnimationFrame(() => { repositionPeekTabStack(); alignWeeklyNoteToDate(); });
     renderOnboardingStep();
     openModal('modal-onboarding');
 }
@@ -1678,7 +1678,7 @@ async function initAppAfterAuth(user) {
     currentUserCreatedAt = user.created_at;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    requestAnimationFrame(repositionPeekTabStack);
+    requestAnimationFrame(() => { repositionPeekTabStack(); alignWeeklyNoteToDate(); });
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -2432,6 +2432,17 @@ function renderHomeGreeting() {
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
     textEl.textContent = t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    requestAnimationFrame(alignWeeklyNoteToDate);
+}
+
+// הפתק השבועי (בצד הנגדי) מתחיל בדיוק בגובה שורת התאריך - המרחק נמדד בפועל
+// (גודל הברכה משתנה לפי שפה/גופן), לא מספר קבוע
+function alignWeeklyNoteToDate() {
+    const row = document.querySelector('.home-greeting-row');
+    const dateEl = document.getElementById('home-greeting-date');
+    if (!row || !dateEl || !dateEl.offsetHeight) return;
+    const offset = dateEl.getBoundingClientRect().top - row.getBoundingClientRect().top;
+    if (offset > 0) row.style.setProperty('--greeting-line-h', `${Math.round(offset)}px`);
 }
 
 // עריכה מהירה של משימה קבועה מהלו"ז - נפתחת גם מ"הצצה ליום" (בעתיד, אם
