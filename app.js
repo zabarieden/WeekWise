@@ -7164,6 +7164,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'finance_recurring', category: 'finance' },
     { id: 'finance_custom_categories', category: 'finance' },
     { id: 'receipts_feature', category: 'finance' },
+    { id: 'receipts_total', category: 'finance' },
     { id: 'finance_monthly_balance', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'vision_board_today', category: 'goals' },
@@ -8999,6 +9000,50 @@ async function submitReceiptEntry() {
     closeModal('modal-add-receipt');
     showAppToast(t('item_added_success'));
     await loadReceipts(currentReceiptCategory);
+}
+
+// --- סיכום כל החשבוניות משתי הקטגוריות (בית + עסק) לטווח שנים - לפי בקשה מפורשת
+// ("חיבור כל החשבוניות... שואל רק מאיזה שנה עד איזה שנה"). ברירת המחדל: משנת
+// החשבונית הכי ישנה ועד השנה הנוכחית ---
+async function openReceiptsTotalModal() {
+    const fromEl = document.getElementById('receipts-total-from');
+    const toEl = document.getElementById('receipts-total-to');
+    const result = document.getElementById('receipts-total-result');
+    const thisYear = new Date().getFullYear();
+    let firstYear = thisYear;
+    if (supabaseClient && currentUserId) {
+        const { data } = await supabaseClient.from('receipts').select('receipt_date').eq('user_id', currentUserId).order('receipt_date', { ascending: true }).limit(1);
+        if (data && data.length && data[0].receipt_date) firstYear = Math.min(thisYear, parseInt(String(data[0].receipt_date).slice(0, 4), 10) || thisYear);
+    }
+    if (fromEl) fromEl.value = firstYear;
+    if (toEl) toEl.value = thisYear;
+    if (result) { result.classList.add('hidden'); result.innerHTML = ''; }
+    openModal('modal-receipts-total');
+}
+
+async function calculateReceiptsTotal() {
+    const result = document.getElementById('receipts-total-result');
+    let from = parseInt(document.getElementById('receipts-total-from').value, 10);
+    let to = parseInt(document.getElementById('receipts-total-to').value, 10);
+    if (!(from >= 1900 && from <= 2200) || !(to >= 1900 && to <= 2200)) { showAppToast(t('receipts_total_invalid'), 'error'); return; }
+    if (from > to) [from, to] = [to, from];
+    if (!supabaseClient || !currentUserId) return;
+    const { data, error } = await supabaseClient.from('receipts').select('amount, category')
+        .eq('user_id', currentUserId).gte('receipt_date', `${from}-01-01`).lte('receipt_date', `${to}-12-31`);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    const rows = data || [];
+    const sum = cat => rows.filter(r => !cat || r.category === cat).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const fmt = n => n.toLocaleString(currentLang, { maximumFractionDigits: 2 });
+    const range = from === to ? String(from) : `${from}–${to}`;
+    result.innerHTML = rows.length ? `
+        <div class="receipts-total-range"><bdi dir="ltr">${escapeHtmlForReport(range)}</bdi></div>
+        <div class="receipts-total-sum"><bdi>${fmt(sum(null))}</bdi></div>
+        <div class="receipts-total-count">${escapeHtmlForReport(t('receipts_total_count').replace('{count}', rows.length))}</div>
+        <div class="receipts-total-split">
+            <span>🏠 ${escapeHtmlForReport(t('receipt_category_home'))}: <bdi>${fmt(sum('home'))}</bdi></span>
+            <span>🏢 ${escapeHtmlForReport(t('receipt_category_business'))}: <bdi>${fmt(sum('business'))}</bdi></span>
+        </div>` : `<p class="receipts-total-empty">${escapeHtmlForReport(t('receipts_total_empty'))}</p>`;
+    result.classList.remove('hidden');
 }
 
 function deleteReceipt(id) {
