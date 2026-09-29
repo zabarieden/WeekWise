@@ -3059,14 +3059,15 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 .categories-fab-icon { display: block; fill: currentColor; opacity: .85; }
 html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
 /* קיצור דרך ל-New Me "התפריט שלי היום" - שלישי בשורה, רק למי שרכש/ה */
-/* בפינה התחתונה, בצד של טאבי-הצד (בעברית ימין, מתחת לעמודת "השגרה שלי / הצצה
-   להיום / פתקים"), רחוק מהרובוט - לפי בקשה מפורשת. עיגול זכוכית עדין; הצבע נגזר
-   מערכת הנושא (--accent-*-text, כולל צבע-משתמש אם נבחר), לא קבוע */
+/* מעל הרובוט, ממורכז אליו (בעברית בצד שמאל, בשפות LTR מימין - צד הרובוט) - לפי
+   בקשה מפורשת ("מעל הרובוט... יותר סימטרי ופחות בלגן"). הרובוט: bottom 30px,
+   inset-inline-end 22px, 160px (או 100px בקומפקטי), והכפתור 42px. עיגול זכוכית
+   עדין; הצבע נגזר מערכת הנושא (--accent-*-text, כולל צבע-משתמש), לא קבוע */
 .hamburger-fab.newme-fab,
 html[dir="ltr"] .hamburger-fab.newme-fab {
     top: auto; right: auto; left: auto;
-    bottom: 34px;
-    inset-inline-start: 18px;
+    bottom: 166px;
+    inset-inline-end: 81px;
     width: 42px; height: 42px;
     border-radius: 50%;
     background: color-mix(in srgb, var(--accent-purple) 16%, rgba(255, 255, 255, 0.06));
@@ -3074,7 +3075,9 @@ html[dir="ltr"] .hamburger-fab.newme-fab {
     color: var(--accent-purple-light-text);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 16px color-mix(in srgb, var(--accent-pink) 22%, transparent);
 }
-.hamburger-fab.newme-fab svg { width: 20px; height: 20px; fill: currentColor; opacity: .9; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
+.hamburger-fab.newme-fab svg { width: 20px; height: 20px; fill: currentColor; opacity: .9; }
+/* רובוט קומפקטי (100px) - הכפתור נשאר ממורכז מעליו */
+.phone-wrapper:has(.ai-brain-fab-compact) .hamburger-fab.newme-fab { bottom: 118px; inset-inline-end: 51px; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .categories-sheet { max-width: 460px; }
 .categories-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .categories-header h3 { flex: 1; margin: 0; text-align: center; }
