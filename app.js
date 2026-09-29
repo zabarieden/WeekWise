@@ -1477,6 +1477,8 @@ async function submitAuthForm() {
                 user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false,
                 theme: 'bg_white', ai_fab_compact: true, home_calorie_badge_enabled: true,
                 weekly_note_color: 'pink', reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
+                // השפה = מה שנבחר במסך ההרשמה (ברירת מחדל: אנגלית) - לא העברית של המפתחת
+                language: currentLang || 'en',
             });
         }
         if (data.session) {

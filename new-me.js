@@ -360,7 +360,7 @@ function nmRenderMenu(body) {
             <div class="nm-meal${done ? ' done' : ''}">
                 <div class="nm-meal-head">
                     <span class="nm-slot-name">${nmEsc(t('nm_slot_' + slot))}</span>
-                    <button type="button" class="nm-check${done ? ' on' : ''}" onclick="nmToggleCheck('${slot}', this)" aria-pressed="${done}" aria-label="${nmEsc(t('nm_mark_eaten'))}">✓</button>
+                    <button type="button" class="nm-check${done ? ' on' : ''}" onclick="nmToggleCheck('${slot}', this)" aria-pressed="${done}" aria-label="${nmEsc(t('nm_mark_eaten'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
                 <div class="nm-option-name">${nmEsc(nmOptText(plan, slot, opt, true))}</div>
                 <div class="nm-option-text">${nmEsc(nmOptText(plan, slot, opt))}</div>

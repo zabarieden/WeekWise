@@ -3108,7 +3108,7 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-empty { color: var(--text-secondary); text-align: center; padding: 18px 0; margin: 0; }
 .nm-eyebrow, .nm-hero-eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
 
-.nm-btn-primary { width: 100%; border: none; border-radius: 16px; padding: 15px 18px; font: inherit; font-weight: 700; font-size: 1rem; color: #fff; background: var(--nm-grad); cursor: pointer; box-shadow: 0 8px 22px rgba(168, 85, 247, .28); transition: var(--transition); }
+.nm-btn-primary { width: 100%; border: none; border-radius: 16px; padding: 15px 18px; font: inherit; font-weight: 700; font-size: 1rem; color: #fff; background: var(--nm-grad); cursor: pointer; box-shadow: 0 8px 22px color-mix(in srgb, var(--accent-purple) 28%, transparent); transition: var(--transition); }
 .nm-btn-primary:active { transform: scale(.98); }
 .nm-btn-primary:disabled { opacity: .4; box-shadow: none; cursor: not-allowed; }
 .nm-btn-small { width: auto; padding: 11px 16px; font-size: .9rem; white-space: nowrap; }
@@ -3117,7 +3117,7 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-link { color: var(--accent-purple-light-text); font-size: .85rem; }
 
 /* מכירה */
-.nm-hero { border-radius: 26px; padding: 28px 22px; background: var(--nm-grad); color: #fff; text-align: center; box-shadow: 0 16px 40px rgba(168, 85, 247, .25); }
+.nm-hero { border-radius: 26px; padding: 28px 22px; background: var(--nm-grad); color: #fff; text-align: center; box-shadow: 0 16px 40px color-mix(in srgb, var(--accent-purple) 25%, transparent); }
 .nm-hero .nm-hero-eyebrow { color: rgba(255, 255, 255, .85); }
 .nm-hero-title { margin: 10px 0 18px; font-size: 1.35rem; line-height: 1.35; text-wrap: balance; }
 .nm-price { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -3143,7 +3143,7 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-field input, .nm-weight-add input, .nm-date { border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); border-radius: 14px; padding: 13px 14px; font: inherit; font-size: 1rem; width: 100%; box-sizing: border-box; }
 .nm-plan-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .nm-plan-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 20px 10px; border-radius: 20px; border: 2px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; cursor: pointer; transition: var(--transition); }
-.nm-plan-card.selected { border-color: var(--accent-pink); box-shadow: 0 0 0 4px rgba(255, 0, 127, .12); }
+.nm-plan-card.selected { border-color: var(--accent-pink); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-pink) 12%, transparent); }
 .nm-plan-num { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .nm-plan-unit { font-size: .8rem; color: var(--text-secondary); }
 .nm-plan-desc { font-size: .78rem; color: var(--text-secondary); margin-top: 6px; text-align: center; }
@@ -3194,7 +3194,8 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-meal.done { border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent); }
 .nm-meal.done .nm-option-name, .nm-meal.done .nm-option-text { opacity: .55; }
 .nm-meal-head { display: flex; align-items: center; justify-content: space-between; }
-.nm-check { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent; color: transparent; font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: var(--transition); }
+.nm-check { width: 40px; height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 0; border-radius: 50%; border: 2px solid var(--border-color); background: transparent; color: transparent; cursor: pointer; transition: var(--transition); }
+.nm-check svg { width: 20px; height: 20px; display: block; }
 .nm-check.on { background: var(--nm-grad); border-color: transparent; color: #fff; }
 .nm-check:disabled { opacity: .6; }
 .nm-meal-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
@@ -3279,7 +3280,7 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 /* כתבת בונוס - "דגשי תזונה" */
 .nm-bonus { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 12%, transparent), color-mix(in srgb, var(--accent-pink) 12%, transparent)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; transition: var(--transition); }
 .nm-bonus:active { transform: scale(.98); }
-.nm-bonus-icon { flex-shrink: 0; width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; font-size: 1.7rem; background: var(--bg-glass); box-shadow: 0 6px 16px rgba(168, 85, 247, .18); transform: rotate(-4deg); }
+.nm-bonus-icon { flex-shrink: 0; width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; font-size: 1.7rem; background: var(--bg-glass); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-purple) 18%, transparent); transform: rotate(-4deg); }
 .nm-bonus-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .nm-bonus-badge { align-self: flex-start; font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--nm-grad); padding: 3px 9px; border-radius: 999px; }
 .nm-bonus-title { font-weight: 800; font-size: 1rem; }
