@@ -258,6 +258,8 @@ function onLanguageChanged() {
     updateLanguagePickerTriggers();
     updateLegalLinksForLanguage();
     renderHomeGreeting();
+    // רוחב אחיד של שלושת טאבי הצד תלוי באורך התוויות בשפה החדשה
+    repositionPeekTabStack();
     // טקסט ה"פתק ריק" של הפתק השבועי נכתב ב-JS (לא data-i18n), אז applyTranslations
     // לא מרעננת אותו - בלי זה הוא נשאר בשפה הקודמת אחרי החלפת שפה
     renderWeeklyNoteDisplay();
@@ -1504,6 +1506,7 @@ function openOnboarding(user) {
     onboardingPendingGoalTitle = null;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
+    requestAnimationFrame(repositionPeekTabStack);
     renderOnboardingStep();
     openModal('modal-onboarding');
 }
@@ -1675,6 +1678,7 @@ async function initAppAfterAuth(user) {
     currentUserCreatedAt = user.created_at;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
+    requestAnimationFrame(repositionPeekTabStack);
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -13785,19 +13789,30 @@ function updateHomeCalorieBadge() {
 // הצצה להיום (44px כל אחד, לימודים/הרגלים עברו לתפריט ההמבורגר) ואז הפתקים
 // (btn-ai-fab, 64px - טאב גדול יותר, ר' .notes-peek-tab), שממוקם תמיד מתחתיהם
 // לפי בקשה מפורשת - כל פריט שומר slot בגובה שלו-עצמו, לא גודל אחיד
+// עכשיו: שלושתם באותו גודל (48px גובה, רוחב = התווית הארוכה ביותר בשפה הנוכחית),
+// 8px ביניהם, והעוגן כולו ממורכז אנכית באמצע המסך (ר' .today-peek-anchor)
 function repositionPeekTabStack() {
-    const stack = [
-        { id: 'btn-daily-board-fab', slotHeight: 52 },
-        { id: 'today-peek-tab', slotHeight: 52 },
-        { id: 'btn-ai-fab', slotHeight: 72 },
-    ];
-    let top = 14;
-    stack.forEach(({ id, slotHeight }) => {
-        const el = document.getElementById(id);
-        if (!el || el.classList.contains('hidden')) return;
+    const TAB_H = 48, GAP = 8;
+    const visible = ['btn-daily-board-fab', 'today-peek-tab', 'btn-ai-fab']
+        .map(id => document.getElementById(id))
+        .filter(el => el && !el.classList.contains('hidden'));
+    visible.forEach(el => { el.style.width = ''; });
+    const measured = Math.max(0, ...visible.map(el => el.offsetWidth || 0));
+    // מסך הבית עוד מוסתר (לפני התחברות) - אין מה למדוד; מנסים שוב כשיוצג
+    if (!measured && visible.length) {
+        if ((repositionPeekTabStack.retries = (repositionPeekTabStack.retries || 0) + 1) <= 150) setTimeout(repositionPeekTabStack, 400);
+        return;
+    }
+    repositionPeekTabStack.retries = 0;
+    const width = Math.max(96, measured);
+    let top = 0;
+    visible.forEach(el => {
         el.style.top = `${top}px`;
-        top += slotHeight;
+        el.style.width = `${width}px`;
+        top += TAB_H + GAP;
     });
+    const anchor = document.querySelector('.today-peek-anchor');
+    if (anchor) anchor.style.setProperty('--peek-stack-h', `${Math.max(0, top - GAP)}px`);
 }
 
 // שני הטאבים הראשונים בערימה (השגרה שלי/הצצה להיום) - עד היום תמיד היו דלוקים

@@ -3353,7 +3353,13 @@ html[dir="ltr"] .hamburger-drawer-overlay.open .hamburger-drawer { transform: tr
 /* 190px - הערימה כוללת 3 טאבים: השגרה שלי + הצצה להיום (44px כל אחד) +
    הפתקים (טאב גדול יותר, 64px - ר' .notes-peek-tab למטה), שיושב מתחת
    ל"הצצה להיום" לפי בקשה מפורשת */
-.today-peek-anchor { position: relative; height: 190px; }
+/* הערימה (השגרה שלי / הצצה להיום / פתקים) ממורכזת אנכית באמצע מסך הבית, צמודה
+   לקצה, ושלושתן באותו גודל בדיוק - לפי בקשה מפורשת ("באמצע הדף... באותו הגודל,
+   שיראה טוב סימטרית"). position:absolute ביחס ל-.home-hero-panel (שהוא ה-scroller),
+   כך שהיא עדיין גוללת יחד עם התוכן. הגובה והרוחב האחיד נקבעים ב-JS
+   (repositionPeekTabStack) לפי הטאבים הגלויים והתווית הארוכה ביותר בשפה הנוכחית */
+.today-peek-anchor { position: absolute; top: 50%; right: 0; width: 0; height: var(--peek-stack-h, 160px); transform: translateY(-50%); z-index: 6; }
+html[dir="ltr"] .today-peek-anchor { right: auto; left: 0; }
 :root {
     --today-peek-width: clamp(40px, 10vw, 56px);
 }
@@ -3418,15 +3424,12 @@ html[dir="ltr"] .today-peek-tab {
 /* הפתקים - טאב שלישי בערימה, מתחת ל"הצצה להיום", גדול יותר משמעותית מהשניים
    מעליו (שטח-מגע גדול לחיצה) ובלי תווית טקסט - רק ציור של דף-נייר (ר' ה-SVG
    ב-index.html), "ממש דף נייר... שאפשר ללחוץ בגדול" לפי בקשה מפורשת */
-.notes-peek-tab {
-    min-width: 64px;
-    min-height: 64px;
-    padding: 12px;
-}
+/* הפתקים - באותו גודל בדיוק כמו שני הטאבים האחרים (סימטריה), רק עם ציור דף */
+.today-peek-anchor .today-peek-tab { height: 48px; min-height: 48px; padding: 0 16px; }
 .notes-peek-tab .notes-peek-icon {
     display: block;
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     color: var(--text-primary);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
