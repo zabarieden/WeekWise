@@ -6977,7 +6977,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
     { id: 'notification_action_buttons', category: 'settings_a11y' },
-    { id: 'toggle_fabs', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'what_are_tables', category: 'tables' },
@@ -14166,9 +14165,9 @@ async function toggleRoutineItemCheckin(itemId, btn) {
     }
 }
 
-// --- מבט-על חודשי של הטאב הפעיל *בלבד* (לא כל הטאבים ביחד), לפי בקשה
-// מפורשת ("כמה טאבים כל טאב עם מטרות שונות"). טבלה אחת רחבה (גוללת
-// אופקית), שורה לכל פריט בשגרה ועמודה לכל יום בחודש - קריאה בלבד לגמרי.
+// --- לוח "הרגלים" חודשי של הטאב הפעיל *בלבד* (לא כל הטאבים ביחד), לפי בקשה
+// מפורשת ("כמה טאבים כל טאב עם מטרות שונות"). לוח חודשי רגיל: רק ימים שסומן
+// בהם וי מסומנים, ולחיצה על יום מציגה מה סומן בו ("רק מה שסומן וי יראו אותו").
 // נפתח/נסגר ישירות (לא openModal/closeModal) כדי ש-#modal-daily-board
 // יישאר פתוח מתחתיו ---
 let viewedRoutineGoalsOverviewMonthKey = null;
@@ -14197,42 +14196,60 @@ async function renderRoutineGoalsOverview() {
     const daysInMonth = new Date(y, m, 0).getDate();
     const firstStr = `${monthKey}-01`;
     const lastStr = `${monthKey}-${String(daysInMonth).padStart(2, '0')}`;
-    const table = document.getElementById('routine-goals-overview-table');
+    const grid = document.getElementById('routine-goals-overview-grid');
+    const detail = document.getElementById('routine-goals-overview-day-detail');
     const emptyHint = document.getElementById('routine-goals-overview-empty');
-    const { data: goals } = await supabaseClient.from('routine_items').select('id, title, time').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'scheduled').order('time', { ascending: true });
-    if (!goals || !goals.length) {
-        table.innerHTML = '';
-        emptyHint.classList.remove('hidden');
-        return;
+    const { data: items } = await supabaseClient.from('routine_items').select('id, title, time').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'scheduled').order('time', { ascending: true });
+    const itemById = new Map((items || []).map(it => [it.id, it]));
+    let checkins = [];
+    if (itemById.size) {
+        const { data } = await supabaseClient.from('routine_item_checkins').select('item_id, checkin_date').in('item_id', [...itemById.keys()]).gte('checkin_date', firstStr).lte('checkin_date', lastStr);
+        checkins = data || [];
     }
-    const goalIds = goals.map(g => g.id);
-    const { data: checkins } = await supabaseClient.from('routine_item_checkins').select('item_id, checkin_date').in('item_id', goalIds).gte('checkin_date', firstStr).lte('checkin_date', lastStr);
-    emptyHint.classList.add('hidden');
-    const checkinsByItem = {};
-    (checkins || []).forEach(c => {
-        if (!checkinsByItem[c.item_id]) checkinsByItem[c.item_id] = new Set();
-        checkinsByItem[c.item_id].add(c.checkin_date);
+    // יום -> הפריטים שסומנו בו, ממוינים לפי שעה (items כבר ממוינים לפי time)
+    const checkedByDate = {};
+    checkins.forEach(c => {
+        if (!itemById.has(c.item_id)) return;
+        (checkedByDate[c.checkin_date] = checkedByDate[c.checkin_date] || new Set()).add(c.item_id);
     });
+    emptyHint.classList.toggle('hidden', Object.keys(checkedByDate).length > 0);
+    detail.innerHTML = '';
+
     const todayStr = getLocalDateString();
-    let headerHtml = '<tr><th class="habits-overview-name-col"></th>';
+    const startWeekday = new Date(y, m - 1, 1).getDay();
+    grid.innerHTML = '';
+    for (let i = 0; i < startWeekday; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'monthly-calendar-cell empty';
+        grid.appendChild(empty);
+    }
+    const showDay = (dateStr, cell) => {
+        grid.querySelectorAll('.monthly-calendar-cell.selected').forEach(el => el.classList.remove('selected'));
+        cell.classList.add('selected');
+        const [yy, mm, dd] = dateStr.split('-').map(Number);
+        const dayLabel = new Date(yy, mm - 1, dd).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+        detail.innerHTML = `<div class="monthly-calendar-day-title">${escapeHtmlForReport(dayLabel)}</div>`;
+        (items || []).filter(it => checkedByDate[dateStr].has(it.id)).forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'routine-overview-done-row';
+            row.textContent = `✓ ${(it.time || '').slice(0, 5)} ${it.title}`;
+            detail.appendChild(row);
+        });
+    };
+    let todayCell = null;
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
-        headerHtml += `<th${dateStr === todayStr ? ' class="habits-overview-today-col"' : ''}>${day}</th>`;
-    }
-    headerHtml += '</tr>';
-    let bodyHtml = '';
-    goals.forEach(goal => {
-        const dates = checkinsByItem[goal.id] || new Set();
-        bodyHtml += `<tr><td class="habits-overview-name-col">${escapeHtmlForReport((goal.time || '').slice(0, 5))} ${escapeHtmlForReport(goal.title)}</td>`;
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
-            const isDone = dates.has(dateStr);
-            const isToday = dateStr === todayStr;
-            bodyHtml += `<td${isToday ? ' class="habits-overview-today-col"' : ''}>${isDone ? '<span class="habits-overview-done-dot"></span>' : ''}</td>`;
+        const count = checkedByDate[dateStr] ? checkedByDate[dateStr].size : 0;
+        const cell = document.createElement('div');
+        cell.className = 'monthly-calendar-cell' + (dateStr === todayStr ? ' today' : '') + (count ? ' routine-overview-has-checks' : ' routine-overview-no-checks');
+        cell.innerHTML = `<span class="monthly-calendar-day-num">${day}</span>${count ? `<span class="routine-overview-count">✓${count}</span>` : ''}`;
+        if (count) {
+            cell.onclick = () => showDay(dateStr, cell);
+            if (dateStr === todayStr) todayCell = cell;
         }
-        bodyHtml += '</tr>';
-    });
-    table.innerHTML = headerHtml + bodyHtml;
+        grid.appendChild(cell);
+    }
+    if (todayCell) showDay(todayStr, todayCell);
 }
 
 // --- "לוח היום" (🧭): טאבים מותאמים-אישית (routine_tabs, ברירת מחדל 2 -

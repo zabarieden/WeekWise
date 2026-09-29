@@ -4490,62 +4490,13 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    לשימוש שוטף" בלי להיעלם לגמרי */
 .archive-item { opacity: 0.7; border-style: dashed; }
 .archive-item .center-list-item-text { color: var(--text-secondary); }
-/* הרגלים ורצף - שורה עם כפתור סימון-יומי, שם, תגית רצף וכפתור מחיקה, לפי
-   סדר קבוע (לא space-between כמו .center-list li הרגיל, כדי שלא "יתפזרו"
-   עם 4 ילדים) */
-.habit-item { display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
-/* פס גרדיאנט בצד ההתחלה הלוגי (RTL-safe) - זוהר כשההרגל בוצע היום, עמום
-   כשלא, כדי שהעין תתפוס מיד מה כבר נעשה בלי לקרוא כל שורה. לפי בקשה מפורשת
-   לעיצוב יותר "יפה" - לא היה שום דבר חזותי שמבדיל בין שורות בעבר */
-.habit-item::before {
-    content: '';
-    position: absolute;
-    inset-inline-start: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--accent-gold), var(--accent-pink));
-    opacity: 0.2;
-    transition: var(--transition);
-}
-.habit-item.habit-done::before { opacity: 1; box-shadow: 0 0 10px rgba(245, 158, 11, 0.55); }
-.habit-streak-badge {
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-variant-numeric: tabular-nums;
-}
-.habit-streak-badge.habit-streak-active {
-    color: #fff;
-    background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
-}
-/* "בסכנה" - כבר יש פספוס אחד (נסלח) ואם היום גם לא יסומן הרצף באמת יישבר -
-   אזהרה קטנה וברורה צמודה לתג-הרצף עצמו, לפי בקשה מפורשת ("אות קטנה...
-   שיודעים שאם לא עושים את זה היום זה היום האחרון") */
-.habit-streak-risk-badge { margin-inline-start: 4px; }
-/* מבט-על חודשי - טבלה רחבה, גוללת אופקית בתוך עטיפה משלה (לא
-   מגלגלת את כל העמוד לרוחב) - עמודת השם דביקה (sticky) בצד ההתחלה של
-   הכיוון (inset-inline-start מתאים אוטומטית ל-RTL/LTR) כדי שתישאר גלויה
-   תוך כדי גלילה ימינה/שמאלה. קריאה בלבד - אין hover/cursor:pointer בכוונה */
-.habits-overview-table-wrap { overflow-x: auto; margin-top: 10px; border-radius: 12px; }
-.habits-overview-table { border-collapse: collapse; width: 100%; }
-.habits-overview-table th, .habits-overview-table td { padding: 8px; text-align: center; font-size: 0.78rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
-.habits-overview-table th { color: var(--text-secondary); font-weight: 600; font-size: 0.7rem; }
-.habits-overview-name-col { position: sticky; inset-inline-start: 0; background-color: var(--bg-sheet); text-align: start !important; font-weight: 600; }
-/* עמודת "היום" מודגשת בעדינות, כמו .monthly-calendar-cell.today בהיסטוריית-
-   הרגל הבודדת - כדי שהעין תמצא מיד איפה נמצאים בחודש */
-.habits-overview-today-col { background-color: rgba(168, 85, 247, 0.08); }
-th.habits-overview-today-col { color: var(--accent-purple-text); font-weight: 800; }
-/* עיגול-נקודה צבעוני לתא-שסומן, במקום טקסט "✓" גולמי - אותו גוון בדיוק כמו
-   monthly-calendar-dot, לעקביות עם שאר תצוגות הלוח-החודשי באפליקציה */
-.habits-overview-done-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--tile-accent, var(--accent-gold)); }
+/* לוח ההרגלים החודשי ("השגרה שלי" > 📅) - אותם תאי monthly-calendar-* כמו
+   "מבט חודשי", רק שימים בלי אף וי עמומים ולא לחיצים, וימים עם וי מקבלים
+   תג ספירה קטן ✓N; לחיצה על יום כזה מציגה מתחת את הפריטים שסומנו בו */
+.monthly-calendar-cell.routine-overview-no-checks { opacity: 0.45; cursor: default; }
+.monthly-calendar-cell.routine-overview-has-checks { border-color: var(--tile-accent, var(--accent-purple)); flex-direction: column; gap: 1px; }
+.routine-overview-count { font-size: 0.6rem; font-weight: 800; line-height: 1; color: var(--tile-accent, var(--accent-purple-text)); }
+.routine-overview-done-row { font-size: 0.85rem; color: var(--text-primary); padding: 8px 10px; border-radius: 10px; background-color: var(--bg-row); }
 /* עזרה ושאלות נפוצות - גיליון גבוה יותר מהרגיל (85vh->92vh) כי יש הרבה
    תוכן; החיפוש תמיד גלוי למעלה, מחוץ לרשימה הגוללת עצמה */
 .help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }

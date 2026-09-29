@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=441">
+    <link rel="stylesheet" href="theme.css?v=442">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3074,16 +3074,21 @@
         <div id="modal-routine-goals-overview" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="routine_goals_section_title">🎯 Goals &amp; Habits</h3>
+                <h3 data-i18n="habits_title">Habits</h3>
                 <div class="monthly-goal-nav">
                     <button class="monthly-goal-nav-btn" onclick="navigateRoutineGoalsOverview(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
                     <span class="monthly-goal-month-label" id="routine-goals-overview-month-label"></span>
                     <button class="monthly-goal-nav-btn" onclick="navigateRoutineGoalsOverview(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
                 </div>
-                <div class="habits-overview-table-wrap">
-                    <table class="habits-overview-table" id="routine-goals-overview-table"></table>
+                <!-- לוח חודשי רגיל (אותם רכיבי monthly-calendar-* כמו "מבט חודשי") - רק
+                     ימים שסומן בהם וי מסומנים, ולחיצה על יום מציגה בדיוק מה סומן בו -
+                     לפי בקשה מפורשת ("תשנה לטבלה חודשית... ורק מה שסומן וי יראו אותו") -->
+                <div class="monthly-calendar-weekdays">
+                    <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
                 </div>
-                <p id="routine-goals-overview-empty" class="today-tasks-empty hidden" data-i18n="routine_goals_empty_hint">No goals yet - add one to start tracking.</p>
+                <div class="monthly-calendar-grid" id="routine-goals-overview-grid"></div>
+                <div class="monthly-calendar-day-detail" id="routine-goals-overview-day-detail"></div>
+                <p id="routine-goals-overview-empty" class="today-tasks-empty hidden" data-i18n="routine_overview_no_checks">No check-offs this month yet.</p>
                 <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 14px;" onclick="closeRoutineGoalsOverviewModal()" data-i18n="close_btn">Close</button>
             </div>
         </div>
@@ -3487,7 +3492,7 @@
 
     </div>
 
-    <script src="i18n.js?v=343"></script>
-    <script src="app.js?v=490"></script>
+    <script src="i18n.js?v=344"></script>
+    <script src="app.js?v=491"></script>
 </body>
 </html>
