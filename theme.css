@@ -3300,8 +3300,11 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-drink-row { display: flex; align-items: center; gap: 6px; }
 .nm-drink-row.logged { padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--accent-purple) 10%, transparent); }
 .nm-drink-name { flex: 1; min-width: 0; color: var(--text-primary); font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nm-drink-input, .nm-drink-kcal { border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); border-radius: 12px; padding: 9px 10px; font: inherit; font-size: .88rem; min-width: 0; box-sizing: border-box; }
+.nm-drink-input, .nm-drink-milk, .nm-drink-kcal { border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); border-radius: 12px; padding: 9px 10px; font: inherit; font-size: .88rem; min-width: 0; box-sizing: border-box; }
 .nm-drink-input { flex: 1; }
+.nm-drink-milk { width: 130px; flex: 0 1 130px; }
+/* טלפון צר: שם המשקה בשורה מלאה, ומתחתיו חלב | קלוריות | הוספה */
+@media (max-width: 600px) { .nm-drink-row:not(.logged) { flex-wrap: wrap; } .nm-drink-row:not(.logged) .nm-drink-input { flex-basis: 100%; } .nm-drink-row:not(.logged) .nm-drink-milk { flex: 1 1 0; width: auto; min-width: 0; } .nm-drink-row:not(.logged) .nm-chip { flex-shrink: 0; } .nm-drink-row:not(.logged) + .nm-drink-row:not(.logged) { margin-top: 6px; } }
 .nm-drink-kcal { width: 76px; flex: 0 0 76px; text-align: center; }
 .nm-x { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: .8rem; }
 .nm-drink-kcal-logged { width: 64px; flex: 0 0 64px; padding: 6px 6px; background: var(--bg-card, transparent); }

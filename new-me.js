@@ -22,6 +22,7 @@ let nmQuiz = null;             // מצב השאלון בזמן מילוי
 let nmTodayCheckins = {};      // slot → row, להיום
 let nmTrackerToday = [];       // כל רישומי calorie_tracker של היום (מקור האמת לסכום - כמו ההצצה להיום)
 let nmDrinkDraftRows = 0;      // שורות-הזנה ריקות נוספות לשתייה (מעבר למינימום)
+let nmDrinkDraftsCache = [];    // מה שהוקלד בשורות השתייה ועוד לא נוסף - נשמר בין רינדורים
 let nmSavedDrinks = [];        // משקאות קבועים (new_me_saved_drinks) - לחיצה אחת מוסיפה
 let nmTableDate = null;
 let nmMonthKey = null;         // 'YYYY-MM'
@@ -286,6 +287,7 @@ function nmAfterTrackerChange() {
 
 // ---------- תצוגות ----------
 function nmRenderView(root) {
+    nmCaptureDrinkDrafts();
     if (nmView === 'home') return nmRenderHome(root);
     const titles = { menu: 'nm_tile_menu', table: 'nm_tile_table', month: 'nm_tile_month', tips: 'nm_tile_tips', settings: 'nm_tile_settings' };
     root.innerHTML = `
@@ -300,6 +302,71 @@ function nmRenderView(root) {
     else if (nmView === 'month') nmRenderMonth(body);
     else if (nmView === 'tips') nmRenderTips(body);
     else if (nmView === 'settings') nmRenderSettings(body);
+    if (nmView === 'menu') nmRestoreDrinkDrafts();
+}
+
+// כל רינדור מחדש (הוספת משקה, ✓ על ארוחה...) בונה את הכרטיס מאפס - בלי זה
+// כל מה שהוקלד בשורות אחרות ועוד לא נוסף היה נמחק
+function nmCaptureDrinkDrafts() {
+    const root = nmRoot();
+    const rows = root ? root.querySelectorAll('.nm-drink-row:not(.logged)') : [];
+    if (!rows.length) return;
+    nmDrinkDraftsCache = Array.from(rows).map(row => {
+        const kcalEl = row.querySelector('.nm-drink-kcal');
+        return {
+            name: row.querySelector('.nm-drink-input').value,
+            milk: row.querySelector('.nm-drink-milk').value,
+            kcal: kcalEl.value,
+            manual: kcalEl.dataset.manual === '1',
+            ai: kcalEl.dataset.ai === '1',
+            protein: row.dataset.protein || '',
+        };
+    }).filter(d => d.name.trim() || d.milk.trim() || d.kcal !== '');
+}
+function nmRestoreDrinkDrafts() {
+    const root = nmRoot();
+    const drafts = nmDrinkDraftsCache;
+    if (!root || !drafts.length) return;
+    const moreBtn = root.querySelector('.nm-drinks .nm-link-btn');
+    let rows = root.querySelectorAll('.nm-drink-row:not(.logged)');
+    while (rows.length < drafts.length && moreBtn) {
+        moreBtn.insertAdjacentHTML('beforebegin', nmDrinkDraftRowHtml());
+        rows = root.querySelectorAll('.nm-drink-row:not(.logged)');
+    }
+    drafts.forEach((d, i) => {
+        const row = rows[i];
+        const kcalEl = row.querySelector('.nm-drink-kcal');
+        row.querySelector('.nm-drink-input').value = d.name;
+        row.querySelector('.nm-drink-milk').value = d.milk;
+        kcalEl.value = d.kcal;
+        if (d.manual) kcalEl.dataset.manual = '1';
+        if (d.ai) kcalEl.dataset.ai = '1';
+        if (d.protein) row.dataset.protein = d.protein;
+    });
+}
+
+function nmDrinkDraftRowHtml() {
+    return `
+                <div class="nm-drink-row">
+                    <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t('nm_drink_name_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)">
+                    <input type="text" class="nm-drink-milk" maxlength="30" placeholder="${nmEsc(t('nm_drink_milk_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)" aria-label="${nmEsc(t('nm_drink_milk_ph'))}">
+                    <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1500" placeholder="${nmEsc(t('calories_unit'))}" oninput="this.dataset.manual = '1'">
+                    <button type="button" class="nm-chip" onclick="nmAddDrink(this)">${nmEsc(t('nm_drink_add'))}</button>
+                </div>`;
+}
+// "+ עוד משקה" מוסיף שורה במקום, בלי לבנות את הכרטיס מחדש
+function nmAddDrinkRow(btn) {
+    nmDrinkDraftRows++;
+    btn.insertAdjacentHTML('beforebegin', nmDrinkDraftRowHtml());
+    const rows = btn.parentElement.querySelectorAll('.nm-drink-row:not(.logged)');
+    rows[rows.length - 1].querySelector('.nm-drink-input').focus();
+}
+
+// שם המשקה כפי שנשלח ל-AI ונשמר: "קפה (חלב: קצת)" כשהוקלד חלב
+function nmDrinkFullName(row) {
+    const name = row.querySelector('.nm-drink-input').value.trim();
+    const milk = row.querySelector('.nm-drink-milk').value.trim();
+    return name && milk ? `${name} (${t('nm_drink_milk_word')}: ${milk})` : name;
 }
 
 function nmGo(view) {
@@ -428,22 +495,16 @@ function nmDrinksHtml() {
                     <button type="button" class="nm-x" onclick="nmRemoveDrink('${r.id}', this)" aria-label="${nmEsc(t('nm_remove'))}">✕</button>
                 </div>`;
             }).join('')}
-            ${Array.from({ length: emptyRows }, () => `
-                <div class="nm-drink-row">
-                    <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t('nm_drink_name_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)">
-                    <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1500" placeholder="${nmEsc(t('calories_unit'))}" oninput="this.dataset.manual = '1'">
-                    <button type="button" class="nm-chip" onclick="nmAddDrink(this)">${nmEsc(t('nm_drink_add'))}</button>
-                </div>`).join('')}
-            <button type="button" class="nm-link-btn" onclick="nmDrinkDraftRows++; nmRenderView(nmRoot())">${nmEsc(t('nm_drink_more'))}</button>
+            ${Array.from({ length: emptyRows }, nmDrinkDraftRowHtml).join('')}
+            <button type="button" class="nm-link-btn" onclick="nmAddDrinkRow(this)">${nmEsc(t('nm_drink_more'))}</button>
         </div>`;
 }
 
 // חישוב קלוריות אוטומטי (AI) - המשתמש/ת רק מקליד/ה שם משקה; המספר מתמלא לבד שנייה אחרי
 // שמפסיקים להקליד, ונשאר ניתן לעריכה. אם הוקלד מספר ידנית - לא דורסים אותו
 async function nmEstimateDrink(row) {
-    const nameEl = row.querySelector('.nm-drink-input');
     const kcalEl = row.querySelector('.nm-drink-kcal');
-    const drink = nameEl.value.trim();
+    const drink = nmDrinkFullName(row);
     if (drink.length < 2 || kcalEl.dataset.manual === '1') return null;
     const saved = nmSavedDrinks.find(s => s.name.trim().toLowerCase() === drink.toLowerCase());
     if (saved) { kcalEl.value = saved.kcal; kcalEl.dataset.ai = '1'; return { kcal: saved.kcal, protein_g: 0, name: saved.name }; }
@@ -475,13 +536,13 @@ async function nmEstimateDrink(row) {
     }
 }
 
-let nmDrinkTypingTimer = null;
+// טיימר לכל שורה בנפרד - הקלדה בשורה אחת לא מבטלת חישוב של שורה אחרת
 function nmDrinkNameTyped(input) {
     const row = input.closest('.nm-drink-row');
     const kcalEl = row.querySelector('.nm-drink-kcal');
     if (kcalEl.dataset.ai === '1') { kcalEl.value = ''; delete kcalEl.dataset.ai; }
-    clearTimeout(nmDrinkTypingTimer);
-    nmDrinkTypingTimer = setTimeout(() => nmEstimateDrink(row), 900);
+    clearTimeout(row._nmTimer);
+    row._nmTimer = setTimeout(() => nmEstimateDrink(row), 900);
 }
 
 function nmNextDrinkSlot() {
@@ -504,11 +565,11 @@ async function nmInsertDrink(name, kcal, protein) {
 async function nmAddDrink(el) {
     const row = el.closest('.nm-drink-row');
     const btn = row.querySelector('.nm-chip');
-    const name = row.querySelector('.nm-drink-input').value.trim();
     const kcalEl = row.querySelector('.nm-drink-kcal');
-    if (!name) { showAppToast(t('nm_drink_missing'), 'error'); return; }
+    if (!row.querySelector('.nm-drink-input').value.trim()) { showAppToast(t('nm_drink_missing'), 'error'); return; }
+    const name = nmDrinkFullName(row);
     if (btn) btn.disabled = true;
-    clearTimeout(nmDrinkTypingTimer);
+    clearTimeout(row._nmTimer);
     // אם הקלוריות עוד לא חושבו - מחשבים עכשיו, לפני ההוספה
     if (kcalEl.value === '') await nmEstimateDrink(row);
     const kcal = parseInt(kcalEl.value, 10);
@@ -519,7 +580,10 @@ async function nmAddDrink(el) {
         return;
     }
     if (nmDrinkDraftRows > 0) nmDrinkDraftRows--;
-    await nmInsertDrink(name, kcal, parseFloat(row.dataset.protein) || 0);
+    const protein = parseFloat(row.dataset.protein) || 0;
+    // מרוקנים את השורה שנוספה, כדי שהרינדור הבא לא ישמור אותה כטיוטה
+    row.querySelectorAll('input').forEach(input => { input.value = ''; });
+    await nmInsertDrink(name, kcal, protein);
 }
 
 async function nmAddSavedDrink(id, btn) {
