@@ -2150,9 +2150,6 @@ function openSettingsDrawer() {
     const dailyFocusPromptToggle = document.getElementById('daily-focus-prompt-toggle');
     if (dailyFocusPromptToggle) dailyFocusPromptToggle.checked = isDailyFocusPromptOn();
     refreshGoogleCalendarStatus();
-    renderFinanceCategoryManageList();
-    renderFinanceCategoryIconPicker();
-    initFinanceCategoryDragReorder();
 }
 
 function openSettingsSubscreen(name) {
@@ -8584,10 +8581,10 @@ async function addCustomFinanceCategory() {
     const input = document.getElementById('new-finance-category-name');
     const name = input.value.trim();
     if (!name || !supabaseClient || !currentUserId) return;
-    const { error } = await supabaseClient.from('custom_finance_categories').insert({
+    const { data, error } = await supabaseClient.from('custom_finance_categories').insert({
         user_id: currentUserId, username: currentUsername, entry_type: currentFinanceCategoryManageType,
         name, icon: selectedFinanceCategoryIcon, sort_order: Date.now(),
-    });
+    }).select('id').single();
     if (error) { showAppToast(t('finance_category_add_failed'), 'error'); return; }
     input.value = '';
     selectedFinanceCategoryIcon = '🏷️';
@@ -8596,6 +8593,39 @@ async function addCustomFinanceCategory() {
     await loadCustomFinanceCategories();
     renderFinanceCategoryManageList();
     populateFinanceCategoryOptions(currentFinanceEntryType);
+    // נפתח מ"➕ קטגוריה חדשה…" בבורר - בוחרים אוטומטית את הקטגוריה החדשה וחוזרים לטופס
+    if (financeCategoriesOpenedFromPicker && data && currentFinanceCategoryManageType === currentFinanceEntryType) {
+        const select = document.getElementById('finance-category-select');
+        if (select) { select.value = `custom_${data.id}`; lastFinanceCategoryValue = select.value; updateCustomSelectDisplay('finance-category-select'); }
+        financeCategoriesOpenedFromPicker = false;
+        closeModal('modal-finance-categories');
+    }
+}
+
+// ניהול הקטגוריות המותאמות אישית נפתח עכשיו מתוך מסך הוצאות והכנסות (לא מההגדרות)
+let financeCategoriesOpenedFromPicker = false;
+function openFinanceCategoriesModal(fromPicker) {
+    financeCategoriesOpenedFromPicker = !!fromPicker;
+    selectFinanceCategoryManageType(currentFinanceEntryType || 'expense');
+    renderFinanceCategoryIconPicker();
+    openModal('modal-finance-categories');
+    initFinanceCategoryDragReorder();
+    const input = document.getElementById('new-finance-category-name');
+    if (input && fromPicker) setTimeout(() => input.focus(), 150);
+}
+
+// "➕ קטגוריה חדשה…" בסוף רשימת הקטגוריות - פותח את חלון הניהול ומחזיר את הבחירה
+// הקודמת (כדי שלא תישאר "קטגוריה חדשה" כערך נבחר)
+let lastFinanceCategoryValue = null;
+function handleFinanceCategoryChange(select) {
+    if (select.value === '__new__') {
+        const fallback = lastFinanceCategoryValue && Array.from(select.options).some(o => o.value === lastFinanceCategoryValue) ? lastFinanceCategoryValue : (select.options[0] && select.options[0].value);
+        select.value = fallback;
+        updateCustomSelectDisplay('finance-category-select');
+        openFinanceCategoriesModal(true);
+        return;
+    }
+    lastFinanceCategoryValue = select.value;
 }
 
 async function deleteCustomFinanceCategory(id) {
@@ -8610,7 +8640,10 @@ function populateFinanceCategoryOptions(type) {
     if (!select) return;
     const builtInHtml = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
     const customHtml = getCustomFinanceCategoriesForType(type).map(c => `<option value="custom_${c.id}">${c.icon || '🏷️'} ${escapeHtmlForReport(c.name)}</option>`).join('');
-    select.innerHTML = builtInHtml + customHtml;
+    const newOptionHtml = `<option value="__new__">${escapeHtmlForReport(t('finance_category_new_option'))}</option>`;
+    select.innerHTML = builtInHtml + customHtml + newOptionHtml;
+    if (lastFinanceCategoryValue && Array.from(select.options).some(o => o.value === lastFinanceCategoryValue && o.value !== '__new__')) select.value = lastFinanceCategoryValue;
+    else lastFinanceCategoryValue = select.value;
     updateCustomSelectDisplay('finance-category-select');
 }
 
@@ -8693,50 +8726,6 @@ function cancelFinanceEntryEdit() {
     document.getElementById('finance-note-input').value = '';
     document.getElementById('btn-add-finance-entry').textContent = t('finance_add_btn');
     document.getElementById('btn-cancel-finance-edit').classList.add('hidden');
-}
-
-// --- הוספת הוצאה/הכנסה מהירה מהכפתור הצף (modal-sport... לא, modal-finance-
-// quick-add) - state ואלמנטים נפרדים לגמרי מהמסך המלא (currentFinanceEntryType/
-// finance-amount-input וכו') כדי שלא יתנגשו איתם, לפי בקשה מפורשת ("בועות
-// לא יעבירו לחלון אחר... בחלון קטן לרשום כמה פרטים וזהו שישלח") ---
-let currentFinanceQuickType = 'expense';
-function selectFinanceQuickType(type) {
-    currentFinanceQuickType = type;
-    document.querySelectorAll('#modal-finance-quick-add [data-finance-quick-type]').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-finance-quick-type') === type);
-    });
-    const select = document.getElementById('finance-quick-category-select');
-    if (select) select.innerHTML = FINANCE_CATEGORIES[type].map(([value, key]) => `<option value="${value}">${t(key)}</option>`).join('');
-    updateCustomSelectDisplay('finance-quick-category-select');
-}
-
-function openFinanceQuickAddModal() {
-    const amountInput = document.getElementById('finance-quick-amount-input');
-    if (amountInput) amountInput.value = '';
-    const noteInput = document.getElementById('finance-quick-note-input');
-    if (noteInput) noteInput.value = '';
-    selectFinanceQuickType('expense');
-    openModal('modal-finance-quick-add');
-}
-
-async function submitFinanceQuickAdd() {
-    if (!supabaseClient || !currentUserId) return;
-    const amountInput = document.getElementById('finance-quick-amount-input');
-    const categorySelect = document.getElementById('finance-quick-category-select');
-    const noteInput = document.getElementById('finance-quick-note-input');
-    const amount = parseFloat(amountInput.value);
-    if (!amount || amount <= 0) { showAppToast(t('finance_invalid_amount'), 'error'); return; }
-    const note = noteInput && noteInput.value.trim() ? noteInput.value.trim() : null;
-    const { error } = await supabaseClient.from('budget_tracker').insert({
-        user_id: currentUserId, username: currentUsername, entry_type: currentFinanceQuickType,
-        amount: amount, category: categorySelect.value, note: note, entry_date: getLocalDateString(),
-    });
-    if (error) { showAppToast(t('finance_add_failed'), 'error'); return; }
-    amountInput.value = '';
-    if (noteInput) noteInput.value = '';
-    closeModal('modal-finance-quick-add');
-    showAppToast(t('finance_add_success'));
-    if (document.getElementById('finance-summary-month-label')) await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
 
 async function navigateFinanceMonth(delta) {
@@ -9875,8 +9864,7 @@ async function submitSportSession() {
 
 // --- רישום אימון מהיר מהכפתור הצף - סוג+משך בלבד, בלי מרחק/הערות/תמונה/
 // מוטיבציה. state ואלמנטים נפרדים לגמרי מהמסך המלא (currentSportType/
-// sport-duration-input וכו') כדי שלא יתנגשו איתם - אותה סיבה בדיוק כמו
-// submitFinanceQuickAdd למעלה ---
+// sport-duration-input וכו') כדי שלא יתנגשו איתם ---
 let currentSportQuickType = 'running';
 function selectSportQuickType(type) {
     currentSportQuickType = type;
