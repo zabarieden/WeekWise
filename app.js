@@ -1740,6 +1740,7 @@ async function initAppAfterAuth(user) {
         loadTodayPeekTabSetting(),
         loadWeeklyNoteSetting(),
         loadQuickNoteAppleSetting(),
+        loadMenuStyleSetting(),
         loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
         loadDailyFocusPromptSetting(),
@@ -2736,6 +2737,34 @@ function openNewMe(view = 'home') {
     if (typeof nmView !== 'undefined') nmView = view;
     switchToTab('new-me-section');
     if (typeof renderNewMe === 'function') renderNewMe();
+}
+
+// --- בחירה בין תפריט רשימה (☰) לתפריט קוביות (▦) - רק אחד מוצג למעלה, לפי
+// בקשה מפורשת ("או המבורגר או קוביות ולא גם וגם"). ברירת מחדל: רשימה. מעבר מתוך
+// כל אחד מהם (כפתור בכותרת), נשמר במכשיר + בחשבון (user_premium.menu_style) ---
+function getMenuStyle() { return localStorage.getItem('weekwise_menu_style') === 'tiles' ? 'tiles' : 'list'; }
+function applyMenuStyle(style) {
+    document.documentElement.classList.toggle('menu-style-tiles', style === 'tiles');
+}
+async function switchMenuStyle(style) {
+    localStorage.setItem('weekwise_menu_style', style);
+    applyMenuStyle(style);
+    // עוברים ישר לתפריט שנבחר, כדי שיהיה ברור מה השתנה
+    if (style === 'tiles') { closeHamburgerMenu(); openCategoriesMenu(); }
+    else { closeModal('modal-categories'); openHamburgerMenu(); }
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, menu_style: style },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+async function loadMenuStyleSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('menu_style').eq('user_id', currentUserId).maybeSingle();
+    if (!data || !data.menu_style) return;
+    localStorage.setItem('weekwise_menu_style', data.menu_style);
+    applyMenuStyle(data.menu_style);
 }
 
 function closeHamburgerMenu() {

@@ -38,6 +38,8 @@
                     fl.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font) + ':wght@400;600;700&display=block';
                     document.head.appendChild(fl);
                 }
+                // ☰ או ▦ - רק אחד מוצג למעלה, לפי הבחירה (ר' switchMenuStyle ב-app.js)
+                if (localStorage.getItem('weekwise_menu_style') === 'tiles') document.documentElement.classList.add('menu-style-tiles');
                 var textColor = localStorage.getItem('weekwise_global_text_color');
                 if (textColor) document.documentElement.style.setProperty('--user-accent', textColor);
             } catch (e) { /* localStorage חסום/לא זמין - נשאר על ברירת המחדל */ }
@@ -68,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=455">
+    <link rel="stylesheet" href="theme.css?v=456">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1100,7 +1102,11 @@
                 <div class="hamburger-drawer-scroll">
                     <div class="hamburger-drawer-header">
                         <h3 data-i18n="hamburger_menu_title">Menu</h3>
-                        <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
+                        <div class="hamburger-drawer-header-actions">
+                            <!-- מעבר לתצוגת קוביות - בחירה בין ☰ לבין ▦ (רק אחד מהם מוצג למעלה) -->
+                            <button type="button" class="menu-style-switch" onclick="switchMenuStyle('tiles')" data-i18n-title="menu_switch_to_tiles" data-i18n-aria-label="menu_switch_to_tiles" title="Switch to tiles view" aria-label="Switch to tiles view"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" style="fill:currentColor"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
+                        </div>
                     </div>
 
                     <!-- New Me - קיצור קטן בראש התפריט (לא קבוצה - לא נאסף למסך הקטגוריות, שם יש לו קובייה משלו) -->
@@ -3140,6 +3146,9 @@
                 <div class="categories-header">
                     <button type="button" class="categories-back hidden" id="categories-menu-back" onclick="closeCategoriesGroup()" aria-label="Back">‹</button>
                     <h3 id="categories-menu-title" data-i18n="categories_menu_title">All Categories</h3>
+                    <!-- מעבר לתצוגת רשימה (☰), והגדרות - שאחרת לא נגישות בתצוגת קוביות -->
+                    <button type="button" class="menu-style-switch" onclick="closeModal('modal-categories'); openSettingsDrawer();" data-i18n-title="settings_title" data-i18n-aria-label="settings_title" title="Settings" aria-label="Settings">⚙️</button>
+                    <button type="button" class="menu-style-switch" onclick="switchMenuStyle('list')" data-i18n-title="menu_switch_to_list" data-i18n-aria-label="menu_switch_to_list" title="Switch to list view" aria-label="Switch to list view">☰</button>
                     <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" aria-label="Close">✕</button>
                 </div>
                 <div id="categories-menu-body"></div>
@@ -3575,8 +3584,8 @@
 
     </div>
 
-    <script src="i18n.js?v=354"></script>
-    <script src="app.js?v=507"></script>
+    <script src="i18n.js?v=355"></script>
+    <script src="app.js?v=508"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=9"></script>
 </body>

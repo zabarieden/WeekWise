@@ -3083,6 +3083,14 @@ html[dir="ltr"] .hamburger-fab.newme-fab {
 .phone-wrapper:has(.ai-brain-fab-compact) .hamburger-fab.newme-fab { bottom: 108px; inset-inline-end: 26px; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .categories-sheet { max-width: 460px; }
 .categories-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+/* בחירה בין ☰ (רשימה) ל-▦ (קוביות): רק אחד מוצג למעלה, תמיד בפינה של ההמבורגר */
+html.menu-style-tiles #btn-hamburger-menu { display: none; }
+html:not(.menu-style-tiles) #btn-categories-menu { display: none; }
+html.menu-style-tiles .hamburger-fab.categories-fab { right: 22px; }
+html.menu-style-tiles[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 22px; }
+html.menu-style-tiles .hamburger-fab.categories-fab .categories-fab-icon { width: 1.2em; height: 1.2em; }
+.menu-style-switch { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font-size: 1rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; transition: var(--transition); }
+.menu-style-switch:active { transform: scale(0.92); }
 .categories-header h3 { flex: 1; margin: 0; text-align: center; }
 .categories-back { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0; }
 html[dir="rtl"] .categories-back { transform: scaleX(-1); }
