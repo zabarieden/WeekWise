@@ -71,6 +71,9 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    faq_a_quick_note_apple: "The 🍎 next to 📝 and 🛒 in the notes window is a shortcut for quickly logging one of your saved meals to today's Daily Meal Tracker. It's on by default - if you don't need it, turn it off in Settings > Personalization & Calendar ('Show the 🍎 saved-meal shortcut in the notes window'), and turn it back on there anytime.",
+    faq_q_quick_note_apple: "What is the 🍎 in the notes window, and can I hide it?",
+    settings_quick_note_apple_label: "Show the 🍎 saved-meal shortcut in the notes window",
     faq_a_vision_board_today: "Tapping ➕ next to a step on the back of a Vision Board card adds it to today's tasks (Peek at Today and the calendar). The two stay synced: checking it off in either place checks it off in the other and updates the goal's progress, and deleting the task from today's tasks also deletes that step from the Vision Board. Each step can be added once per day.",
     faq_q_vision_board_today: "What happens when I add a Vision Board step to today (➕)?",
     vision_milestone_already_today: "This step is already in today's tasks.",
@@ -684,6 +687,9 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    faq_a_quick_note_apple: "ה-🍎 שליד 📝 ו-🛒 בחלון הפתקים הוא קיצור דרך להוספה מהירה של אחת הארוחות השמורות למעקב הארוחות היומי של היום. הוא דלוק כברירת מחדל - אם לא צריכים אותו, אפשר לכבות אותו בהגדרות > התאמה אישית ויומן ('להציג את קיצור הדרך 🍎 לארוחות שמורות בחלון הפתקים'), ולהדליק אותו שוב שם בכל רגע.",
+    faq_q_quick_note_apple: "מה זה ה-🍎 בחלון הפתקים, ואפשר להסתיר אותו?",
+    settings_quick_note_apple_label: "להציג את קיצור הדרך 🍎 לארוחות שמורות בחלון הפתקים",
     faq_a_vision_board_today: "לחיצה על ➕ ליד תחנה בגב כרטיס בלוח החזון מוסיפה אותה למשימות של היום (הצצה להיום ולוח השנה). השתיים נשארות מסונכרנות: סימון ✓ באחד המקומות מסמן גם בשני ומעדכן את ההתקדמות של היעד, ומחיקת המשימה מהמשימות של היום מוחקת גם את התחנה מלוח החזון. כל תחנה אפשר להוסיף פעם אחת ביום.",
     faq_q_vision_board_today: "מה קורה כשמוסיפים תחנה מלוח החזון להיום (➕)?",
     vision_milestone_already_today: "התחנה הזו כבר נמצאת במשימות של היום.",
@@ -1297,6 +1303,9 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    faq_a_quick_note_apple: "La 🍎 junto a 📝 y 🛒 en la ventana de notas es un acceso directo para registrar rápidamente una de tus comidas guardadas en el Registro Diario de Comidas de hoy. Está activada por defecto: si no la necesitas, desactívala en Ajustes > Personalización y calendario ('Mostrar el acceso directo 🍎 a comidas guardadas en la ventana de notas') y vuelve a activarla ahí cuando quieras.",
+    faq_q_quick_note_apple: "¿Qué es la 🍎 en la ventana de notas y puedo ocultarla?",
+    settings_quick_note_apple_label: "Mostrar el acceso directo 🍎 a comidas guardadas en la ventana de notas",
     faq_a_vision_board_today: "Al tocar ➕ junto a un hito en el reverso de una tarjeta del Tablero de Visión, se añade a las tareas de hoy (Un Vistazo al Día de Hoy y el calendario). Ambos quedan sincronizados: marcarlo con ✓ en un lugar lo marca también en el otro y actualiza el progreso de la meta, y eliminar la tarea de las tareas de hoy también elimina ese hito del Tablero de Visión. Cada hito se puede añadir una vez al día.",
     faq_q_vision_board_today: "¿Qué pasa al añadir un hito del Tablero de Visión a hoy (➕)?",
     vision_milestone_already_today: "Este hito ya está en las tareas de hoy.",
@@ -1917,6 +1926,9 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla.",
 },
 fr: {
+    faq_a_quick_note_apple: "La 🍎 à côté de 📝 et 🛒 dans la fenêtre de notes est un raccourci pour ajouter rapidement l'un de vos repas enregistrés au Suivi Quotidien des Repas du jour. Elle est activée par défaut - si vous n'en avez pas besoin, désactivez-la dans Paramètres > Personnalisation et calendrier ('Afficher le raccourci 🍎 vers les repas enregistrés dans la fenêtre de notes'), et réactivez-la au même endroit à tout moment.",
+    faq_q_quick_note_apple: "Qu'est-ce que la 🍎 dans la fenêtre de notes, et peut-on la masquer ?",
+    settings_quick_note_apple_label: "Afficher le raccourci 🍎 vers les repas enregistrés dans la fenêtre de notes",
     faq_a_vision_board_today: "Appuyer sur ➕ à côté d'une étape, au dos d'une carte du Tableau de Vision, l'ajoute aux tâches du jour (Un Coup d'Œil sur Aujourd'hui et le calendrier). Les deux restent synchronisées : cocher ✓ d'un côté coche aussi l'autre et met à jour la progression de l'objectif, et supprimer la tâche des tâches du jour supprime aussi cette étape du Tableau de Vision. Chaque étape peut être ajoutée une fois par jour.",
     faq_q_vision_board_today: "Que se passe-t-il quand on ajoute une étape du Tableau de Vision à aujourd'hui (➕) ?",
     vision_milestone_already_today: "Cette étape figure déjà dans les tâches du jour.",
@@ -2537,6 +2549,9 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer.",
 },
 ar: {
+    faq_a_quick_note_apple: "الـ 🍎 بجانب 📝 و🛒 في نافذة الملاحظات هي اختصار لتسجيل إحدى الوجبات المحفوظة بسرعة في متتبع الوجبات اليومي لليوم. وهي مفعّلة افتراضيًا - وعند عدم الحاجة إليها يمكن إيقافها من الإعدادات > التخصيص والتقويم ('إظهار اختصار 🍎 للوجبات المحفوظة في نافذة الملاحظات')، وإعادة تفعيلها من هناك في أي وقت.",
+    faq_q_quick_note_apple: "ما هي 🍎 في نافذة الملاحظات، وهل يمكن إخفاؤها؟",
+    settings_quick_note_apple_label: "إظهار اختصار 🍎 للوجبات المحفوظة في نافذة الملاحظات",
     faq_a_vision_board_today: "الضغط على ➕ بجانب معلم على ظهر بطاقة في لوحة الرؤية يضيفه إلى مهام اليوم (لمحة عن اليوم والتقويم). ويبقى الاثنان متزامنين: وضع علامة ✓ في أحد المكانين يضعها في الآخر أيضًا ويحدّث تقدم الهدف، وحذف المهمة من مهام اليوم يحذف أيضًا هذا المعلم من لوحة الرؤية. يمكن إضافة كل معلم مرة واحدة في اليوم.",
     faq_q_vision_board_today: "ماذا يحدث عند إضافة معلم من لوحة الرؤية إلى اليوم (➕)؟",
     vision_milestone_already_today: "هذا المعلم موجود بالفعل في مهام اليوم.",
@@ -3157,6 +3172,9 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده.",
 },
 ru: {
+    faq_a_quick_note_apple: "🍎 рядом с 📝 и 🛒 в окне заметок - это ярлык для быстрого добавления одного из сохранённых блюд в Дневник питания на сегодня. По умолчанию он включён - если он не нужен, его можно отключить в Настройках > Персонализация и календарь («Показывать ярлык 🍎 сохранённых блюд в окне заметок») и в любой момент включить там же снова.",
+    faq_q_quick_note_apple: "Что за 🍎 в окне заметок и можно ли её скрыть?",
+    settings_quick_note_apple_label: "Показывать ярлык 🍎 сохранённых блюд в окне заметок",
     faq_a_vision_board_today: "Нажатие ➕ рядом с вехой на обороте карточки Доски Визуализации добавляет её в задачи на сегодня («Взгляд на сегодня» и календарь). Они остаются синхронизированными: отметка ✓ в одном месте ставит её и в другом и обновляет прогресс цели, а удаление задачи из задач на сегодня удаляет и эту веху с Доски Визуализации. Каждую веху можно добавить один раз в день.",
     faq_q_vision_board_today: "Что происходит при добавлении вехи с Доски Визуализации на сегодня (➕)?",
     vision_milestone_already_today: "Эта веха уже есть в задачах на сегодня.",
@@ -3777,6 +3795,9 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'.",
 },
 de: {
+    faq_a_quick_note_apple: "Der 🍎 neben 📝 und 🛒 im Notizfenster ist ein Kurzbefehl, um schnell eine deiner gespeicherten Mahlzeiten für heute im Bereich „Täglicher Mahlzeiten-Tracker“ einzutragen. Er ist standardmäßig aktiviert - wenn du ihn nicht brauchst, schalte ihn unter Einstellungen > Personalisierung & Kalender aus ('🍎-Kurzbefehl für gespeicherte Mahlzeiten im Notizfenster anzeigen') und dort jederzeit wieder ein.",
+    faq_q_quick_note_apple: "Was ist der 🍎 im Notizfenster, und kann ich ihn ausblenden?",
+    settings_quick_note_apple_label: "🍎-Kurzbefehl für gespeicherte Mahlzeiten im Notizfenster anzeigen",
     faq_a_vision_board_today: "Ein Tipp auf ➕ neben einem Meilenstein auf der Rückseite einer Visionboard-Karte fügt ihn zu den heutigen Aufgaben hinzu (Ein Blick auf Heute und der Kalender). Beide bleiben synchron: Abhaken mit ✓ an einer Stelle hakt ihn auch an der anderen ab und aktualisiert den Fortschritt des Ziels, und das Löschen der Aufgabe aus den heutigen Aufgaben löscht auch den Meilenstein vom Visionboard. Jeder Meilenstein kann einmal pro Tag hinzugefügt werden.",
     faq_q_vision_board_today: "Was passiert, wenn man einen Meilenstein vom Visionboard zu heute hinzufügt (➕)?",
     vision_milestone_already_today: "Dieser Meilenstein ist bereits in den heutigen Aufgaben.",
@@ -4397,6 +4418,9 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben.",
 },
 pt: {
+    faq_a_quick_note_apple: "A 🍎 ao lado de 📝 e 🛒 na janela de notas é um atalho para registrar rapidamente uma das suas refeições salvas no Registro Diário de Refeições de hoje. Ela vem ativada por padrão - se não precisar dela, desative-a em Configurações > Personalização e calendário ('Mostrar o atalho 🍎 de refeições salvas na janela de notas') e reative-a ali quando quiser.",
+    faq_q_quick_note_apple: "O que é a 🍎 na janela de notas, e dá para ocultá-la?",
+    settings_quick_note_apple_label: "Mostrar o atalho 🍎 de refeições salvas na janela de notas",
     faq_a_vision_board_today: "Tocar em ➕ ao lado de um marco no verso de um cartão do Quadro de Visão o adiciona às tarefas de hoje (Uma Olhadinha no Dia de Hoje e o calendário). Os dois ficam sincronizados: marcar ✓ em um lugar marca também no outro e atualiza o progresso da meta, e excluir a tarefa das tarefas de hoje também exclui esse marco do Quadro de Visão. Cada marco pode ser adicionado uma vez por dia.",
     faq_q_vision_board_today: "O que acontece ao adicionar um marco do Quadro de Visão a hoje (➕)?",
     vision_milestone_already_today: "Este marco já está nas tarefas de hoje.",
@@ -5017,6 +5041,9 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar.",
 },
 ja: {
+    faq_a_quick_note_apple: "メモ画面の📝と🛒の横にある🍎は、保存した食事を今日の毎日の食事記録にすばやく記録するためのショートカットです。初期設定ではオンになっています。不要な場合は、設定 > パーソナライズとカレンダー(「メモ画面に保存した食事の🍎ショートカットを表示」)でオフにでき、いつでも同じ場所でオンに戻せます。",
+    faq_q_quick_note_apple: "メモ画面の🍎は何ですか?非表示にできますか?",
+    settings_quick_note_apple_label: "メモ画面に保存した食事の🍎ショートカットを表示",
     faq_a_vision_board_today: "ビジョンボードのカード裏面にあるマイルストーンの横の➕をタップすると、今日のタスク（「今日をチラ見」とカレンダー）に追加されます。両者は同期されます。どちらかで✓を付けるともう一方にも反映され、目標の進捗も更新されます。また、今日のタスクから削除すると、そのマイルストーンもビジョンボードから削除されます。各マイルストーンは1日1回追加できます。",
     faq_q_vision_board_today: "ビジョンボードのマイルストーンを今日に追加（➕）するとどうなりますか？",
     vision_milestone_already_today: "このマイルストーンはすでに今日のタスクにあります。",
@@ -5637,6 +5664,9 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。",
 },
 zh: {
+    faq_a_quick_note_apple: "便签窗口中 📝 和 🛒 旁边的 🍎 是一个快捷方式，可将已保存的餐食快速记录到今天的每日饮食记录中。它默认开启 - 如果不需要，可以在设置 > 个性化与日历中关闭(“在便签窗口中显示 🍎 已保存餐食快捷方式”)，之后随时可以在同一处重新开启。",
+    faq_q_quick_note_apple: "便签窗口中的 🍎 是什么？可以隐藏吗？",
+    settings_quick_note_apple_label: "在便签窗口中显示 🍎 已保存餐食快捷方式",
     faq_a_vision_board_today: "点击愿景板卡片背面里程碑旁的 ➕，即可将其添加到今天的任务（“今日一瞥”和日历）。两者保持同步：在任一处打 ✓，另一处也会同步勾选，并更新目标的进度；从今天的任务中删除该任务，也会从愿景板中删除这个里程碑。每个里程碑每天可添加一次。",
     faq_q_vision_board_today: "把愿景板上的里程碑添加到今天（➕）会怎样？",
     vision_milestone_already_today: "这个里程碑已经在今天的任务中了。",
@@ -6257,6 +6287,9 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。",
 },
 hi: {
+    faq_a_quick_note_apple: "नोट्स विंडो में 📝 और 🛒 के पास वाला 🍎 एक शॉर्टकट है, जिससे सहेजे गए भोजन में से किसी एक को आज के दैनिक भोजन ट्रैकर में जल्दी दर्ज किया जा सकता है। यह डिफ़ॉल्ट रूप से चालू रहता है - ज़रूरत न हो तो इसे सेटिंग्स > पर्सनलाइज़ेशन और कैलेंडर ('नोट्स विंडो में सहेजे गए भोजन का 🍎 शॉर्टकट दिखाएँ') में बंद किया जा सकता है, और वहीं से कभी भी फिर चालू किया जा सकता है।",
+    faq_q_quick_note_apple: "नोट्स विंडो में 🍎 क्या है, और क्या इसे छिपाया जा सकता है?",
+    settings_quick_note_apple_label: "नोट्स विंडो में सहेजे गए भोजन का 🍎 शॉर्टकट दिखाएँ",
     faq_a_vision_board_today: "विज़न बोर्ड कार्ड के पीछे किसी माइलस्टोन के पास ➕ पर टैप करने से वह आज के कार्यों (आज की एक झलक और कैलेंडर) में जुड़ जाता है। दोनों सिंक रहते हैं: किसी एक जगह ✓ लगाने पर दूसरी जगह भी लग जाता है और लक्ष्य की प्रगति अपडेट हो जाती है, और आज के कार्यों से कार्य हटाने पर वह माइलस्टोन विज़न बोर्ड से भी हट जाता है। हर माइलस्टोन को दिन में एक बार जोड़ा जा सकता है।",
     faq_q_vision_board_today: "विज़न बोर्ड के माइलस्टोन को आज में जोड़ने (➕) पर क्या होता है?",
     vision_milestone_already_today: "यह माइलस्टोन पहले से आज के कार्यों में है।",
@@ -6877,6 +6910,9 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा।",
 },
 ko: {
+    faq_a_quick_note_apple: "메모 창에서 📝와 🛒 옆에 있는 🍎는 저장한 식사 중 하나를 오늘의 일일 식사 기록에 빠르게 추가하는 바로가기입니다. 기본적으로 켜져 있으며, 필요 없다면 설정 > 개인 설정 및 캘린더('메모 창에 저장한 식사 🍎 바로가기 표시')에서 끌 수 있고 언제든 같은 곳에서 다시 켤 수 있습니다.",
+    faq_q_quick_note_apple: "메모 창의 🍎는 무엇이고, 숨길 수 있나요?",
+    settings_quick_note_apple_label: "메모 창에 저장한 식사 🍎 바로가기 표시",
     faq_a_vision_board_today: "비전 보드 카드 뒷면의 마일스톤 옆 ➕를 누르면 오늘 할 일(오늘 살짝 엿보기와 캘린더)에 추가됩니다. 둘은 동기화되어, 한쪽에서 ✓ 표시하면 다른 쪽에도 표시되고 목표의 진행 상황이 업데이트되며, 오늘 할 일에서 해당 작업을 삭제하면 비전 보드에서도 그 마일스톤이 삭제됩니다. 각 마일스톤은 하루에 한 번 추가할 수 있습니다.",
     faq_q_vision_board_today: "비전 보드의 마일스톤을 오늘에 추가(➕)하면 어떻게 되나요?",
     vision_milestone_already_today: "이 마일스톤은 이미 오늘 할 일에 있습니다.",
@@ -7497,6 +7533,9 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다.",
 },
 tr: {
+    faq_a_quick_note_apple: "Not penceresinde 📝 ve 🛒 yanındaki 🍎, kayıtlı öğünlerinden birini bugünün Günlük Öğün Takibi'ne hızlıca eklemek için bir kısayoldur. Varsayılan olarak açıktır - ihtiyacın yoksa Ayarlar > Kişiselleştirme ve Takvim bölümünden ('Not penceresinde kayıtlı öğünler için 🍎 kısayolunu göster') kapatabilir, istediğin zaman yine oradan açabilirsin.",
+    faq_q_quick_note_apple: "Not penceresindeki 🍎 nedir, gizlenebilir mi?",
+    settings_quick_note_apple_label: "Not penceresinde kayıtlı öğünler için 🍎 kısayolunu göster",
     faq_a_vision_board_today: "Vizyon Panosu kartının arka yüzündeki bir kilometre taşının yanındaki ➕'ya dokunmak onu bugünün görevlerine ekler (Bugüne Bir Bakış ve takvim). İkisi senkronize kalır: bir yerde ✓ ile işaretlemek diğerinde de işaretler ve hedefin ilerlemesini günceller; görevi bugünün görevlerinden silmek de o kilometre taşını Vizyon Panosu'ndan siler. Her kilometre taşı günde bir kez eklenebilir.",
     faq_q_vision_board_today: "Vizyon Panosu'ndaki bir kilometre taşını bugüne eklediğimde (➕) ne olur?",
     vision_milestone_already_today: "Bu kilometre taşı zaten bugünün görevlerinde.",
@@ -8117,6 +8156,9 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir.",
 },
 id: {
+    faq_a_quick_note_apple: "🍎 di samping 📝 dan 🛒 pada jendela catatan adalah pintasan untuk mencatat salah satu makanan tersimpan Anda dengan cepat ke Pelacak Makanan Harian hari ini. Pintasan ini aktif secara default - jika tidak diperlukan, matikan di Pengaturan > Personalisasi & Kalender ('Tampilkan pintasan 🍎 makanan tersimpan di jendela catatan'), dan nyalakan lagi di sana kapan saja.",
+    faq_q_quick_note_apple: "Apa itu 🍎 di jendela catatan, dan bisakah disembunyikan?",
+    settings_quick_note_apple_label: "Tampilkan pintasan 🍎 makanan tersimpan di jendela catatan",
     faq_a_vision_board_today: "Mengetuk ➕ di samping pencapaian di bagian belakang kartu Papan Visi akan menambahkannya ke tugas hari ini (Sekilas Hari Ini dan kalender). Keduanya tetap tersinkron: mencentang ✓ di satu tempat juga mencentangnya di tempat lain dan memperbarui progres target, dan menghapus tugas dari tugas hari ini juga menghapus pencapaian itu dari Papan Visi. Setiap pencapaian dapat ditambahkan sekali per hari.",
     faq_q_vision_board_today: "Apa yang terjadi saat menambahkan pencapaian dari Papan Visi ke hari ini (➕)?",
     vision_milestone_already_today: "Pencapaian ini sudah ada di tugas hari ini.",
@@ -8737,6 +8779,9 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya.",
 },
 it: {
+    faq_a_quick_note_apple: "La 🍎 accanto a 📝 e 🛒 nella finestra delle note è una scorciatoia per registrare velocemente uno dei tuoi pasti salvati nel Diario Alimentare Giornaliero di oggi. È attiva di default - se non ti serve, disattivala in Impostazioni > Personalizzazione e calendario ('Mostra la scorciatoia 🍎 ai pasti salvati nella finestra delle note') e riattivala lì quando vuoi.",
+    faq_q_quick_note_apple: "Cos'è la 🍎 nella finestra delle note, e si può nascondere?",
+    settings_quick_note_apple_label: "Mostra la scorciatoia 🍎 ai pasti salvati nella finestra delle note",
     faq_a_vision_board_today: "Toccando ➕ accanto a un traguardo sul retro di una scheda della Bacheca dei Sogni, lo si aggiunge alle attività di oggi (Uno Sguardo a Oggi e il calendario). I due restano sincronizzati: spuntarlo con ✓ in un punto lo spunta anche nell'altro e aggiorna i progressi dell'obiettivo, ed eliminare l'attività dalle attività di oggi elimina anche quel traguardo dalla Bacheca dei Sogni. Ogni traguardo può essere aggiunto una volta al giorno.",
     faq_q_vision_board_today: "Cosa succede aggiungendo a oggi un traguardo della Bacheca dei Sogni (➕)?",
     vision_milestone_already_today: "Questo traguardo è già tra le attività di oggi.",
@@ -9357,6 +9402,9 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla.",
 },
 vi: {
+    faq_a_quick_note_apple: "🍎 bên cạnh 📝 và 🛒 trong cửa sổ ghi chú là lối tắt để nhanh chóng ghi một trong các bữa ăn đã lưu vào Theo Dõi Bữa Ăn Hàng Ngày của hôm nay. Mặc định nó được bật - nếu không cần, bạn có thể tắt trong Cài đặt > Cá Nhân Hóa & Lịch ('Hiện lối tắt 🍎 đến bữa ăn đã lưu trong cửa sổ ghi chú') và bật lại ở đó bất cứ lúc nào.",
+    faq_q_quick_note_apple: "🍎 trong cửa sổ ghi chú là gì, và có thể ẩn nó không?",
+    settings_quick_note_apple_label: "Hiện lối tắt 🍎 đến bữa ăn đã lưu trong cửa sổ ghi chú",
     faq_a_vision_board_today: "Nhấn ➕ bên cạnh một cột mốc ở mặt sau thẻ Bảng Tầm Nhìn sẽ thêm nó vào nhiệm vụ hôm nay (Thoáng Nhìn Ngày Hôm Nay và lịch). Hai nơi luôn được đồng bộ: đánh dấu ✓ ở một nơi cũng sẽ đánh dấu ở nơi kia và cập nhật tiến độ của mục tiêu, còn xóa nhiệm vụ khỏi nhiệm vụ hôm nay cũng sẽ xóa cột mốc đó khỏi Bảng Tầm Nhìn. Mỗi cột mốc có thể được thêm một lần mỗi ngày.",
     faq_q_vision_board_today: "Điều gì xảy ra khi thêm một cột mốc từ Bảng Tầm Nhìn vào hôm nay (➕)?",
     vision_milestone_already_today: "Cột mốc này đã có trong nhiệm vụ hôm nay.",
@@ -9977,6 +10025,9 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận.",
 },
 pl: {
+    faq_a_quick_note_apple: "🍎 obok 📝 i 🛒 w oknie notatek to skrót do szybkiego dodania jednego z zapisanych posiłków na dziś na ekranie „Dzienny Rejestr Posiłków”. Domyślnie jest włączony - jeśli nie jest potrzebny, można go wyłączyć w Ustawienia > Personalizacja i kalendarz ('Pokaż skrót 🍎 do zapisanych posiłków w oknie notatek') i w każdej chwili włączyć tam ponownie.",
+    faq_q_quick_note_apple: "Czym jest 🍎 w oknie notatek i czy można go ukryć?",
+    settings_quick_note_apple_label: "Pokaż skrót 🍎 do zapisanych posiłków w oknie notatek",
     faq_a_vision_board_today: "Dotknięcie ➕ obok kamienia milowego na odwrocie karty Tablicy Wizji dodaje go do dzisiejszych zadań (Rzut Oka na Dzisiaj i kalendarz). Oba miejsca pozostają zsynchronizowane: zaznaczenie ✓ w jednym zaznacza go też w drugim i aktualizuje postęp celu, a usunięcie zadania z dzisiejszych zadań usuwa też ten kamień milowy z Tablicy Wizji. Każdy kamień milowy można dodać raz dziennie.",
     faq_q_vision_board_today: "Co się dzieje po dodaniu kamienia milowego z Tablicy Wizji na dziś (➕)?",
     vision_milestone_already_today: "Ten kamień milowy jest już w dzisiejszych zadaniach.",
@@ -10598,6 +10649,9 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'.",
 },
 th: {
+    faq_a_quick_note_apple: "🍎 ที่อยู่ข้าง 📝 และ 🛒 ในหน้าต่างโน้ตเป็นทางลัดสำหรับบันทึกมื้ออาหารที่บันทึกไว้ลงในตัวติดตามมื้ออาหารรายวันของวันนี้อย่างรวดเร็ว โดยค่าเริ่มต้นจะเปิดอยู่ - หากไม่ต้องการ ปิดได้ในการตั้งค่า > การปรับแต่งและปฏิทิน ('แสดงทางลัด 🍎 สำหรับมื้ออาหารที่บันทึกไว้ในหน้าต่างโน้ต') และเปิดกลับได้ที่เดิมทุกเมื่อ",
+    faq_q_quick_note_apple: "🍎 ในหน้าต่างโน้ตคืออะไร และซ่อนได้ไหม?",
+    settings_quick_note_apple_label: "แสดงทางลัด 🍎 สำหรับมื้ออาหารที่บันทึกไว้ในหน้าต่างโน้ต",
     faq_a_vision_board_today: "การแตะ ➕ ข้างหมุดหมายที่ด้านหลังการ์ดในกระดานวิสัยทัศน์จะเพิ่มหมุดหมายนั้นลงในงานของวันนี้ (แอบดูวันนี้และปฏิทิน) ทั้งสองจะซิงค์กันเสมอ: การทำเครื่องหมาย ✓ ที่หนึ่งจะทำเครื่องหมายอีกที่หนึ่งด้วยและอัปเดตความคืบหน้าของเป้าหมาย ส่วนการลบงานออกจากงานของวันนี้จะลบหมุดหมายนั้นออกจากกระดานวิสัยทัศน์ด้วย แต่ละหมุดหมายเพิ่มได้วันละหนึ่งครั้ง",
     faq_q_vision_board_today: "จะเกิดอะไรขึ้นเมื่อเพิ่มหมุดหมายจากกระดานวิสัยทัศน์ลงในวันนี้ (➕)?",
     vision_milestone_already_today: "หมุดหมายนี้อยู่ในงานของวันนี้แล้ว",
@@ -11220,6 +11274,9 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน",
 },
 ur: {
+    faq_a_quick_note_apple: "نوٹس ونڈو میں 📝 اور 🛒 کے ساتھ والا 🍎 ایک شارٹ کٹ ہے جس سے محفوظ کیے گئے کھانوں میں سے کوئی ایک آج کے روزانہ کھانے کا ٹریکر میں جلدی درج کیا جا سکتا ہے۔ یہ پہلے سے آن ہوتا ہے - اگر ضرورت نہ ہو تو اسے ترتیبات > تخصیص اور کیلنڈر ('نوٹس ونڈو میں محفوظ کھانوں کا 🍎 شارٹ کٹ دکھائیں') میں بند کیا جا سکتا ہے، اور وہیں سے کسی بھی وقت دوبارہ آن کیا جا سکتا ہے۔",
+    faq_q_quick_note_apple: "نوٹس ونڈو میں 🍎 کیا ہے، اور کیا اسے چھپایا جا سکتا ہے؟",
+    settings_quick_note_apple_label: "نوٹس ونڈو میں محفوظ کھانوں کا 🍎 شارٹ کٹ دکھائیں",
     faq_a_vision_board_today: "وژن بورڈ کارڈ کی پشت پر کسی سنگ میل کے ساتھ ➕ پر تھپتھپانے سے وہ آج کے کاموں (آج پر ایک نظر اور کیلنڈر) میں شامل ہو جاتا ہے۔ دونوں ہم آہنگ رہتے ہیں: کسی ایک جگہ ✓ لگانے سے دوسری جگہ بھی لگ جاتا ہے اور ہدف کی پیش رفت اپ ڈیٹ ہو جاتی ہے، اور آج کے کاموں سے کام حذف کرنے سے وہ سنگ میل وژن بورڈ سے بھی حذف ہو جاتا ہے۔ ہر سنگ میل دن میں ایک بار شامل کیا جا سکتا ہے۔",
     faq_q_vision_board_today: "وژن بورڈ کے کسی سنگ میل کو آج میں شامل کرنے (➕) پر کیا ہوتا ہے؟",
     vision_milestone_already_today: "یہ سنگ میل پہلے ہی آج کے کاموں میں موجود ہے۔",
@@ -11842,6 +11899,9 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔",
 },
 bn: {
+    faq_a_quick_note_apple: "নোট উইন্ডোতে 📝 ও 🛒-এর পাশের 🍎 হলো একটি শর্টকাট, যা দিয়ে সংরক্ষিত খাবারগুলোর একটি দ্রুত আজকের দৈনিক খাবার ট্র্যাকার-এ যোগ করা যায়। এটি ডিফল্টভাবে চালু থাকে - প্রয়োজন না হলে সেটিংস > ব্যক্তিগতকরণ ও ক্যালেন্ডার-এ ('নোট উইন্ডোতে সংরক্ষিত খাবারের 🍎 শর্টকাট দেখান') এটি বন্ধ করা যায়, এবং যেকোনো সময় সেখান থেকেই আবার চালু করা যায়।",
+    faq_q_quick_note_apple: "নোট উইন্ডোতে 🍎 কী, আর এটি কি লুকানো যায়?",
+    settings_quick_note_apple_label: "নোট উইন্ডোতে সংরক্ষিত খাবারের 🍎 শর্টকাট দেখান",
     faq_a_vision_board_today: "ভিশন বোর্ড কার্ডের পেছনে কোনো মাইলফলকের পাশে ➕ ট্যাপ করলে সেটি আজকের কাজে (আজকের এক ঝলক ও ক্যালেন্ডার) যোগ হয়। দুটি সিঙ্ক থাকে: এক জায়গায় ✓ দিলে অন্য জায়গাতেও চিহ্নিত হয় এবং লক্ষ্যের অগ্রগতি আপডেট হয়, আর আজকের কাজ থেকে কাজটি মুছে ফেললে মাইলফলকটি ভিশন বোর্ড থেকেও মুছে যায়। প্রতিটি মাইলফলক দিনে একবার যোগ করা যায়।",
     faq_q_vision_board_today: "ভিশন বোর্ডের কোনো মাইলফলক আজকে যোগ করলে (➕) কী হয়?",
     vision_milestone_already_today: "এই মাইলফলকটি ইতিমধ্যে আজকের কাজে আছে।",
@@ -12464,6 +12524,9 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে।",
 },
 sw: {
+    faq_a_quick_note_apple: "🍎 iliyo kando ya 📝 na 🛒 kwenye dirisha la kumbukumbu ni njia ya mkato ya kurekodi haraka mojawapo ya milo yako iliyohifadhiwa kwenye Kifuatiliaji cha Chakula cha Kila Siku cha leo. Imewashwa kwa chaguo-msingi - ikiwa huihitaji, izime katika Mipangilio > Ubinafsishaji na Kalenda ('Onyesha njia ya mkato ya 🍎 ya milo iliyohifadhiwa kwenye dirisha la kumbukumbu'), na uiwashe tena hapo wakati wowote.",
+    faq_q_quick_note_apple: "🍎 kwenye dirisha la kumbukumbu ni nini, na inaweza kufichwa?",
+    settings_quick_note_apple_label: "Onyesha njia ya mkato ya 🍎 ya milo iliyohifadhiwa kwenye dirisha la kumbukumbu",
     faq_a_vision_board_today: "Kugusa ➕ karibu na hatua muhimu upande wa nyuma wa kadi ya Ubao wa Maono huiongeza kwenye kazi za leo (Mtazamo wa Leo na kalenda). Viwili hivi hubaki vimesawazishwa: kuweka alama ✓ mahali pamoja huiweka pia mahali pengine na kusasisha maendeleo ya lengo, na kufuta kazi kutoka kazi za leo pia hufuta hatua hiyo muhimu kutoka Ubao wa Maono. Kila hatua muhimu inaweza kuongezwa mara moja kwa siku.",
     faq_q_vision_board_today: "Nini hutokea ninapoongeza hatua muhimu kutoka Ubao wa Maono kwenye leo (➕)?",
     vision_milestone_already_today: "Hatua muhimu hii tayari iko kwenye kazi za leo.",
@@ -13086,6 +13149,9 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha.",
 },
 uk: {
+    faq_a_quick_note_apple: "🍎 поруч із 📝 і 🛒 у вікні нотаток - це ярлик для швидкого додавання однієї зі збережених страв на сьогодні в розділ «Щоденний Трекер Їжі». Типово він увімкнений - якщо він не потрібен, його можна вимкнути в Налаштування > Персоналізація і календар («Показувати ярлик 🍎 збережених страв у вікні нотаток») і будь-коли знову ввімкнути там само.",
+    faq_q_quick_note_apple: "Що таке 🍎 у вікні нотаток і чи можна її приховати?",
+    settings_quick_note_apple_label: "Показувати ярлик 🍎 збережених страв у вікні нотаток",
     faq_a_vision_board_today: "Натискання ➕ біля віхи на звороті картки Дошки Візуалізації додає її до завдань на сьогодні («Погляд на сьогодні» і календар). Вони залишаються синхронізованими: позначка ✓ в одному місці ставить її й в іншому та оновлює прогрес цілі, а видалення завдання із завдань на сьогодні видаляє й цю віху з Дошки Візуалізації. Кожну віху можна додати один раз на день.",
     faq_q_vision_board_today: "Що відбувається під час додавання віхи з Дошки Візуалізації на сьогодні (➕)?",
     vision_milestone_already_today: "Ця віха вже є в завданнях на сьогодні.",
@@ -13708,6 +13774,9 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'.",
 },
 el: {
+    faq_a_quick_note_apple: "Το 🍎 δίπλα στα 📝 και 🛒 στο παράθυρο σημειώσεων είναι μια συντόμευση για γρήγορη καταχώριση ενός από τα αποθηκευμένα γεύματά σας για σήμερα στην ενότητα «Ημερήσιος Καταγραφέας Φαγητού». Είναι ενεργό από προεπιλογή - αν δεν το χρειάζεστε, απενεργοποιήστε το στις Ρυθμίσεις > Εξατομίκευση & Ημερολόγιο ('Εμφάνιση της συντόμευσης 🍎 για αποθηκευμένα γεύματα στο παράθυρο σημειώσεων') και ενεργοποιήστε το ξανά από εκεί όποτε θέλετε.",
+    faq_q_quick_note_apple: "Τι είναι το 🍎 στο παράθυρο σημειώσεων και μπορεί να κρυφτεί;",
+    settings_quick_note_apple_label: "Εμφάνιση της συντόμευσης 🍎 για αποθηκευμένα γεύματα στο παράθυρο σημειώσεων",
     faq_a_vision_board_today: "Πατώντας ➕ δίπλα σε ένα ορόσημο στο πίσω μέρος μιας κάρτας του Πίνακα Οραματισμού, αυτό προστίθεται στις σημερινές εργασίες (Μια Ματιά στο Σήμερα και ημερολόγιο). Τα δύο μένουν συγχρονισμένα: η σήμανση ✓ στο ένα σημειώνει και το άλλο και ενημερώνει την πρόοδο του στόχου, ενώ η διαγραφή της εργασίας από τις σημερινές εργασίες διαγράφει και το ορόσημο από τον Πίνακα Οραματισμού. Κάθε ορόσημο μπορεί να προστεθεί μία φορά την ημέρα.",
     faq_q_vision_board_today: "Τι συμβαίνει όταν προστίθεται ένα ορόσημο από τον Πίνακα Οραματισμού στο σήμερα (➕);",
     vision_milestone_already_today: "Αυτό το ορόσημο βρίσκεται ήδη στις σημερινές εργασίες.",
@@ -14330,6 +14399,9 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε.",
 },
 nl: {
+    faq_a_quick_note_apple: "De 🍎 naast 📝 en 🛒 in het notitievenster is een snelkoppeling om snel een van je opgeslagen maaltijden toe te voegen aan de Dagelijkse Maaltijdtracker van vandaag. Hij staat standaard aan - heb je hem niet nodig, zet hem dan uit in Instellingen > Personalisatie en kalender ('De 🍎-snelkoppeling naar opgeslagen maaltijden tonen in het notitievenster') en zet hem daar op elk moment weer aan.",
+    faq_q_quick_note_apple: "Wat is de 🍎 in het notitievenster, en kan ik die verbergen?",
+    settings_quick_note_apple_label: "De 🍎-snelkoppeling naar opgeslagen maaltijden tonen in het notitievenster",
     faq_a_vision_board_today: "Tik op ➕ naast een mijlpaal op de achterkant van een Visiebord-kaart om die aan de taken van vandaag toe te voegen (Een Kijkje op Vandaag en de kalender). Ze blijven gesynchroniseerd: afvinken met ✓ op de ene plek vinkt hem ook op de andere af en werkt de voortgang van het doel bij, en de taak verwijderen uit de taken van vandaag verwijdert ook die mijlpaal van het Visiebord. Elke mijlpaal kan één keer per dag worden toegevoegd.",
     faq_q_vision_board_today: "Wat gebeurt er als je een mijlpaal van het Visiebord aan vandaag toevoegt (➕)?",
     vision_milestone_already_today: "Deze mijlpaal staat al in de taken van vandaag.",
@@ -14952,6 +15024,9 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen.",
 },
 ca: {
+    faq_a_quick_note_apple: "La 🍎 al costat de 📝 i 🛒 a la finestra de notes és una drecera per registrar ràpidament un dels teus àpats desats al Registre Diari d'Àpats d'avui. Està activada per defecte - si no la necessites, desactiva-la a Configuració > Personalització i calendari ('Mostrar la drecera 🍎 als àpats desats a la finestra de notes') i torna-la a activar allà quan vulguis.",
+    faq_q_quick_note_apple: "Què és la 🍎 de la finestra de notes, i es pot amagar?",
+    settings_quick_note_apple_label: "Mostrar la drecera 🍎 als àpats desats a la finestra de notes",
     faq_a_vision_board_today: "Tocar ➕ al costat d'una fita al revers d'una targeta del Tauler de Visió l'afegeix a les tasques d'avui (Un Cop d'Ull a Avui i el calendari). Tots dos es mantenen sincronitzats: marcar-la amb ✓ en un lloc també la marca a l'altre i actualitza el progrés de l'objectiu, i eliminar la tasca de les tasques d'avui també elimina aquesta fita del Tauler de Visió. Cada fita es pot afegir un cop al dia.",
     faq_q_vision_board_today: "Què passa en afegir una fita del Tauler de Visió a avui (➕)?",
     vision_milestone_already_today: "Aquesta fita ja és a les tasques d'avui.",
@@ -15574,6 +15649,9 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho.",
 },
 ro: {
+    faq_a_quick_note_apple: "🍎 de lângă 📝 și 🛒 din fereastra de notițe este o scurtătură pentru a adăuga rapid una dintre mesele tale salvate pentru azi în ecranul „Jurnal Zilnic de Alimentație”. E activat implicit - dacă nu ai nevoie de el, îl poți dezactiva din Setări > Personalizare și calendar ('Afișează scurtătura 🍎 către mesele salvate în fereastra de notițe') și îl poți reactiva de acolo oricând.",
+    faq_q_quick_note_apple: "Ce este 🍎 din fereastra de notițe și poate fi ascuns?",
+    settings_quick_note_apple_label: "Afișează scurtătura 🍎 către mesele salvate în fereastra de notițe",
     faq_a_vision_board_today: "Atingerea ➕ de lângă un reper de pe spatele unui card din Panoul de Viziune îl adaugă la sarcinile de azi (O Privire Asupra Zilei de Azi și calendarul). Cele două rămân sincronizate: bifarea cu ✓ într-un loc îl bifează și în celălalt și actualizează progresul obiectivului, iar ștergerea sarcinii din sarcinile de azi șterge și reperul din Panoul de Viziune. Fiecare reper poate fi adăugat o dată pe zi.",
     faq_q_vision_board_today: "Ce se întâmplă la adăugarea unui reper din Panoul de Viziune la ziua de azi (➕)?",
     vision_milestone_already_today: "Acest reper este deja în sarcinile de azi.",
@@ -16196,6 +16274,9 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare.",
 },
 yo: {
+    faq_a_quick_note_apple: "🍎 tó wà lẹ́gbẹ̀ẹ́ 📝 àti 🛒 nínú fèrèsé àkọsílẹ̀ jẹ́ ọ̀nà àbùjá láti yára kọ ọ̀kan nínú àwọn oúnjẹ tí o fi pamọ́ sínú Àtẹ̀lé Oúnjẹ Ojoojúmọ́ ti òní. Ó wà ní títàn ní àìyípadà - bí o kò bá nílò rẹ̀, pa á nínú Ètò > Ìṣàkóso ti ara ẹni àti Kàlẹ́ndà ('Fi ọ̀nà àbùjá 🍎 fún oúnjẹ tí a fi pamọ́ hàn nínú fèrèsé àkọsílẹ̀'), kí o sì tún tàn án níbẹ̀ nígbàkígbà.",
+    faq_q_quick_note_apple: "Kí ni 🍎 nínú fèrèsé àkọsílẹ̀, ṣé a sì lè fi pamọ́?",
+    settings_quick_note_apple_label: "Fi ọ̀nà àbùjá 🍎 fún oúnjẹ tí a fi pamọ́ hàn nínú fèrèsé àkọsílẹ̀",
     faq_a_vision_board_today: "Títẹ ➕ lẹ́gbẹ̀ẹ́ àmì ìlọsíwájú kan ní ẹ̀yìn káàdì Pátákó Ìran máa ń fi kún àwọn iṣẹ́ òní (Ìwòye Òní àti kàlẹ́ńdà). Àwọn méjèèjì máa ń wà ní ìbámu: sísàmì ✓ ní ibì kan máa ń sàmì sí i ní ibì kejì náà, ó sì máa ń ṣe àtúnṣe ìtẹ̀síwájú góńgó náà, pípa iṣẹ́ náà rẹ́ kúrò nínú àwọn iṣẹ́ òní sì máa ń pa àmì ìlọsíwájú náà rẹ́ kúrò lórí Pátákó Ìran pẹ̀lú. A lè fi àmì ìlọsíwájú kọ̀ọ̀kan kún lẹ́ẹ̀kan lójúmọ́.",
     faq_q_vision_board_today: "Kí ló ń ṣẹlẹ̀ tí mo bá fi àmì ìlọsíwájú láti Pátákó Ìran kún òní (➕)?",
     vision_milestone_already_today: "Àmì ìlọsíwájú yìí ti wà nínú àwọn iṣẹ́ òní tẹ́lẹ̀.",
@@ -16819,6 +16900,9 @@ yo: {
 },
 
 sv: {
+    faq_a_quick_note_apple: "🍎 bredvid 📝 och 🛒 i anteckningsfönstret är en genväg för att snabbt lägga till en av dina sparade måltider i dagens Daglig Måltidsspårare. Den är på som standard - om du inte behöver den kan du stänga av den under Inställningar > Personalisering och kalender ('Visa 🍎-genvägen till sparade måltider i anteckningsfönstret') och slå på den där igen när du vill.",
+    faq_q_quick_note_apple: "Vad är 🍎 i anteckningsfönstret, och kan jag dölja den?",
+    settings_quick_note_apple_label: "Visa 🍎-genvägen till sparade måltider i anteckningsfönstret",
     faq_a_vision_board_today: "Tryck på ➕ bredvid en milstolpe på baksidan av ett kort på Visionstavlan för att lägga till den i dagens uppgifter (En Titt på Idag och kalendern). De två hålls synkade: att bocka av med ✓ på ena stället bockar av den även på det andra och uppdaterar målets framsteg, och att ta bort uppgiften från dagens uppgifter tar också bort milstolpen från Visionstavlan. Varje milstolpe kan läggas till en gång per dag.",
     faq_q_vision_board_today: "Vad händer när man lägger till en milstolpe från Visionstavlan i dag (➕)?",
     vision_milestone_already_today: "Den här milstolpen finns redan i dagens uppgifter.",
@@ -17441,6 +17525,9 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta.",
 },
 nb: {
+    faq_a_quick_note_apple: "🍎 ved siden av 📝 og 🛒 i notatvinduet er en snarvei for raskt å føre et av dine lagrede måltider i dagens Daglig Måltidssporer. Den er på som standard - trenger du den ikke, kan du slå den av under Innstillinger > Personalisering og kalender ('Vis 🍎-snarveien til lagrede måltider i notatvinduet') og slå den på igjen der når som helst.",
+    faq_q_quick_note_apple: "Hva er 🍎 i notatvinduet, og kan jeg skjule den?",
+    settings_quick_note_apple_label: "Vis 🍎-snarveien til lagrede måltider i notatvinduet",
     faq_a_vision_board_today: "Trykk på ➕ ved siden av en milepæl på baksiden av et kort på Visjonstavlen for å legge den til i dagens oppgaver (En Titt på I Dag og kalenderen). De to holdes synkronisert: å krysse av med ✓ ett sted krysser den av også det andre stedet og oppdaterer målets fremgang, og å slette oppgaven fra dagens oppgaver sletter også milepælen fra Visjonstavlen. Hver milepæl kan legges til én gang per dag.",
     faq_q_vision_board_today: "Hva skjer når man legger til en milepæl fra Visjonstavlen i dag (➕)?",
     vision_milestone_already_today: "Denne milepælen er allerede i dagens oppgaver.",
@@ -18063,6 +18150,9 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte.",
 },
 da: {
+    faq_a_quick_note_apple: "🍎 ved siden af 📝 og 🛒 i notevinduet er en genvej til hurtigt at registrere et af dine gemte måltider i dagens Daglig Måltidssporing. Den er slået til som standard - hvis du ikke har brug for den, kan du slå den fra under Indstillinger > Personalisering og kalender ('Vis 🍎-genvejen til gemte måltider i notevinduet') og slå den til igen der når som helst.",
+    faq_q_quick_note_apple: "Hvad er 🍎 i notevinduet, og kan jeg skjule den?",
+    settings_quick_note_apple_label: "Vis 🍎-genvejen til gemte måltider i notevinduet",
     faq_a_vision_board_today: "Tryk på ➕ ved siden af en milepæl på bagsiden af et kort på Visionstavlen for at tilføje den til dagens opgaver (Et Kig på I Dag og kalenderen). De to holdes synkroniseret: at krydse af med ✓ ét sted krydser den også af det andet sted og opdaterer målets fremskridt, og at slette opgaven fra dagens opgaver sletter også milepælen fra Visionstavlen. Hver milepæl kan tilføjes én gang om dagen.",
     faq_q_vision_board_today: "Hvad sker der, når man tilføjer en milepæl fra Visionstavlen til i dag (➕)?",
     vision_milestone_already_today: "Denne milepæl er allerede i dagens opgaver.",
@@ -18685,6 +18775,9 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte.",
 },
 cs: {
+    faq_a_quick_note_apple: "🍎 vedle 📝 a 🛒 v okně poznámek je zkratka pro rychlé zapsání jednoho z uložených jídel na dnešek na obrazovku „Denní Sledovač Jídel“. Ve výchozím stavu je zapnutá - pokud ji nepotřebujete, můžete ji vypnout v Nastavení > Přizpůsobení a kalendář ('Zobrazit v okně poznámek zkratku 🍎 k uloženým jídlům') a kdykoli ji tam znovu zapnout.",
+    faq_q_quick_note_apple: "Co je 🍎 v okně poznámek a dá se skrýt?",
+    settings_quick_note_apple_label: "Zobrazit v okně poznámek zkratku 🍎 k uloženým jídlům",
     faq_a_vision_board_today: "Klepnutím na ➕ vedle milníku na zadní straně karty Nástěnky Vizí se milník přidá do dnešních úkolů (Pohled na Dnešek a kalendář). Obojí zůstává synchronizované: odškrtnutí ✓ na jednom místě ho odškrtne i na druhém a aktualizuje pokrok cíle, a smazání úkolu z dnešních úkolů smaže i tento milník z Nástěnky Vizí. Každý milník lze přidat jednou denně.",
     faq_q_vision_board_today: "Co se stane po přidání milníku z Nástěnky Vizí na dnešek (➕)?",
     vision_milestone_already_today: "Tento milník už je v dnešních úkolech.",
@@ -19307,6 +19400,9 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'.",
 },
 hu: {
+    faq_a_quick_note_apple: "A jegyzetablakban a 📝 és a 🛒 melletti 🍎 egy parancsikon, amellyel gyorsan felveheted valamelyik mentett étkezésedet a mai Napi Étkezéskövetőbe. Alapértelmezés szerint be van kapcsolva - ha nincs rá szükséged, kikapcsolhatod a Beállítások > Személyre szabás és naptár részben ('A mentett étkezések 🍎 parancsikonjának megjelenítése a jegyzetablakban'), és ugyanott bármikor visszakapcsolhatod.",
+    faq_q_quick_note_apple: "Mi a 🍎 a jegyzetablakban, és elrejthető?",
+    settings_quick_note_apple_label: "A mentett étkezések 🍎 parancsikonjának megjelenítése a jegyzetablakban",
     faq_a_vision_board_today: "A Vízió Tábla egy kártyájának hátoldalán a mérföldkő melletti ➕ megérintése hozzáadja azt a mai feladatokhoz (Egy Pillantás a Mai Napra és a naptár). A kettő szinkronban marad: ha az egyik helyen ✓ jelet kap, a másikon is kipipálódik, és frissül a cél fejlődése; ha pedig a feladatot törlik a mai feladatok közül, a mérföldkő is törlődik a Vízió Tábláról. Minden mérföldkő naponta egyszer adható hozzá.",
     faq_q_vision_board_today: "Mi történik, ha egy mérföldkövet a Vízió Tábláról hozzáadunk a mai naphoz (➕)?",
     vision_milestone_already_today: "Ez a mérföldkő már szerepel a mai feladatok között.",
@@ -19929,6 +20025,9 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'.",
 },
 fi: {
+    faq_a_quick_note_apple: "Muistiinpanoikkunassa 📝:n ja 🛒:n vieressä oleva 🍎 on pikakuvake, jolla voit nopeasti kirjata jonkin tallennetuista aterioistasi tämän päivän Päivittäinen Ateriaseuranta -näkymään. Se on oletuksena käytössä - jos et tarvitse sitä, voit poistaa sen käytöstä kohdassa Asetukset > Mukauttaminen ja kalenteri ('Näytä tallennettujen aterioiden 🍎-pikakuvake muistiinpanoikkunassa') ja ottaa sen samassa paikassa takaisin käyttöön milloin tahansa.",
+    faq_q_quick_note_apple: "Mikä on muistiinpanoikkunan 🍎, ja voiko sen piilottaa?",
+    settings_quick_note_apple_label: "Näytä tallennettujen aterioiden 🍎-pikakuvake muistiinpanoikkunassa",
     faq_a_vision_board_today: "Kun virstanpylvään vieressä olevaa ➕-painiketta napautetaan Visiotaulun kortin kääntöpuolella, se lisätään tämän päivän tehtäviin (Silmäys Tähän Päivään ja kalenteri). Ne pysyvät synkronoituina: ✓-merkintä yhdessä paikassa merkitsee sen myös toisessa ja päivittää tavoitteen edistymisen, ja tehtävän poistaminen tämän päivän tehtävistä poistaa myös virstanpylvään Visiotaulusta. Kunkin virstanpylvään voi lisätä kerran päivässä.",
     faq_q_vision_board_today: "Mitä tapahtuu, kun Visiotaulun virstanpylväs lisätään tähän päivään (➕)?",
     vision_milestone_already_today: "Tämä virstanpylväs on jo tämän päivän tehtävissä.",

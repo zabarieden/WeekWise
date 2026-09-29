@@ -1855,7 +1855,7 @@
                                  הוסרה מהדוק, ר' בקשה מפורשת ("את האוכל אפשר לשים בתוך הפתקים -
                                  ליד הרשימת קניות את התפוח") - קורא לאותה פונקציה/מודל בדיוק
                                  כמו הבועה הישנה, בלי שינוי בלוגיקה עצמה -->
-                            <button type="button" class="quick-note-dest-mini" onclick="closeModal('modal-ai-quick-add'); openPresetQuickAddModal();" data-i18n-tooltip="preset_fab_title" data-i18n-aria-label="preset_fab_title" aria-label="Quick add saved meal">🍎</button>
+                            <button type="button" class="quick-note-dest-mini" id="quick-note-apple-btn" onclick="closeModal('modal-ai-quick-add'); openPresetQuickAddModal();" data-i18n-tooltip="preset_fab_title" data-i18n-aria-label="preset_fab_title" aria-label="Quick add saved meal">🍎</button>
                         </div>
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-quick-add')" data-i18n="close_btn">Close</button>
                     </div>
@@ -2406,6 +2406,14 @@
                         <label class="settings-label" data-i18n="settings_weekly_note_label" for="weekly-note-toggle">Show a weekly note on the home screen</label>
                         <label class="switch">
                             <input type="checkbox" id="weekly-note-toggle" onchange="toggleWeeklyNote()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <!-- 🍎 בחלון הפתקים (קיצור לארוחות שמורות) - דלוק כברירת מחדל, אפשר להסתיר -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_quick_note_apple_label" for="quick-note-apple-toggle">Show the 🍎 saved-meal shortcut in the notes window</label>
+                        <label class="switch">
+                            <input type="checkbox" id="quick-note-apple-toggle" onchange="toggleQuickNoteApple()">
                             <span class="switch-slider"></span>
                         </label>
                     </div>
@@ -3539,8 +3547,8 @@
 
     </div>
 
-    <script src="i18n.js?v=352"></script>
-    <script src="app.js?v=504"></script>
+    <script src="i18n.js?v=353"></script>
+    <script src="app.js?v=505"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=8"></script>
 </body>

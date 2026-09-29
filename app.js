@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTodayPeekTabSetting();
     // הפתק השבועי מוצג מיד מהמטמון המקומי, עוד לפני הטעינה מהשרת
     applyWeeklyNoteSetting();
+    applyQuickNoteAppleSetting();
     renderWeeklyNoteDisplay();
     applyAiFabCompactSetting();
     applyRoutineGoalsSetting();
@@ -1738,6 +1739,7 @@ async function initAppAfterAuth(user) {
         loadDailyBoardPeekTabSetting(),
         loadTodayPeekTabSetting(),
         loadWeeklyNoteSetting(),
+        loadQuickNoteAppleSetting(),
         loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
         loadDailyFocusPromptSetting(),
@@ -7118,6 +7120,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'categories_menu', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
+    { id: 'quick_note_apple', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
@@ -13939,6 +13942,35 @@ function applyTodayPeekTabSetting() {
 // הטקסט נשמר גם במכשיר ומוצג מיד בפתיחה - כך שהפתק לא "נעלם" גם אם הטעינה מהשרת
 // מתעכבת/נכשלת (דווח שהפתק נראה נמחק ביום חדש). הוא משתנה רק כשעורכים אותו
 const WEEKLY_NOTE_CACHE_KEY = 'weekwise_weekly_note_text';
+// --- 🍎 בחלון הפתקים (קיצור להוספת ארוחה שמורה) - דלוק כברירת מחדל, אפשר להסתיר
+// בהגדרות. אותו דפוס בדיוק כמו שאר המתגים: localStorage מיידי + user_premium לסנכרון ---
+function isQuickNoteAppleOn() { return localStorage.getItem('weekwise_quick_note_apple') !== 'false'; }
+function applyQuickNoteAppleSetting() {
+    const on = isQuickNoteAppleOn();
+    const btn = document.getElementById('quick-note-apple-btn');
+    if (btn) btn.classList.toggle('hidden', !on);
+    const toggle = document.getElementById('quick-note-apple-toggle');
+    if (toggle) toggle.checked = on;
+}
+async function loadQuickNoteAppleSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('quick_note_apple_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.quick_note_apple_enabled === null || data.quick_note_apple_enabled === undefined) return;
+    localStorage.setItem('weekwise_quick_note_apple', String(data.quick_note_apple_enabled));
+    applyQuickNoteAppleSetting();
+}
+async function toggleQuickNoteApple() {
+    const enabled = document.getElementById('quick-note-apple-toggle').checked;
+    localStorage.setItem('weekwise_quick_note_apple', String(enabled));
+    applyQuickNoteAppleSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, quick_note_apple_enabled: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
+}
+
 let currentWeeklyNoteText = (() => { try { return localStorage.getItem(WEEKLY_NOTE_CACHE_KEY) || ''; } catch { return ''; } })();
 function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
 async function loadWeeklyNoteSetting() {
