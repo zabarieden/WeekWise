@@ -14910,23 +14910,44 @@ async function deleteStudyTask(id) {
 // מקטינה תמונה מהמצלמה (לרוב 4000+ פיקסלים) ל-1600 בצד הארוך ומקודדת JPEG - כדי
 // שהבקשה לשרת תהיה קטנה ומהירה, בלי לפגוע בקריאות של כתב-יד/לוח בתמונה
 async function downscaleImageToBase64(file, maxDim = 1600, quality = 0.85) {
-    const url = URL.createObjectURL(file);
+    // createImageBitmap קודם (מפענח גם תמונות גדולות מהמצלמה בלי לחנוק את הזיכרון
+    // בנייד, ומכבד את כיוון הצילום), ואם לא נתמך - <img> רגיל כגיבוי
+    let source = null, width = 0, height = 0, url = null;
     try {
-        const img = await new Promise((resolve, reject) => {
-            const el = new Image();
-            el.onload = () => resolve(el);
-            el.onerror = reject;
-            el.src = url;
-        });
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        if (typeof createImageBitmap === 'function') {
+            try {
+                source = await Promise.race([
+                    createImageBitmap(file, { imageOrientation: 'from-image' }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('bitmap timeout')), 8000)),
+                ]);
+                width = source.width; height = source.height;
+            } catch { source = null; }
+        }
+        if (!source) {
+            url = URL.createObjectURL(file);
+            source = await new Promise((resolve, reject) => {
+                const el = new Image();
+                // קובץ פגום/לא נתמך לא אמור להשאיר את הכפתור תקוע על ⏳ לנצח
+                const timer = setTimeout(() => reject(new Error('decode timeout')), 15000);
+                el.onload = () => { clearTimeout(timer); resolve(el); };
+                el.onerror = () => { clearTimeout(timer); reject(new Error('decode failed')); };
+                el.src = url;
+            });
+            width = source.naturalWidth || source.width; height = source.naturalHeight || source.height;
+        }
+        if (!width || !height) throw new Error('empty image');
+        const scale = Math.min(1, maxDim / Math.max(width, height));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+        canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        return { mediaType: 'image/jpeg', base64: dataUrl.split(',')[1] };
+        const base64 = dataUrl.split(',')[1];
+        if (!base64 || base64.length < 100) throw new Error('encode failed');
+        return { mediaType: 'image/jpeg', base64 };
     } finally {
-        URL.revokeObjectURL(url);
+        if (url) URL.revokeObjectURL(url);
+        if (source && typeof source.close === 'function') source.close();
     }
 }
 
@@ -14948,8 +14969,10 @@ async function handleStudyPhotoSelected(event) {
         let photo;
         try {
             photo = await downscaleImageToBase64(file);
-        } catch {
-            showAppToast(t('recipe_scan_unsupported_type'), 'error');
+        } catch (decodeErr) {
+            // לרוב HEIC (תמונת אייפון) בדפדפן שלא יודע לקרוא אותה
+            console.error('study photo decode failed', file.type, decodeErr);
+            showAppToast(`${t('recipe_scan_unsupported_type')} (E1${file.type ? ' ' + file.type : ''})`, 'error');
             return;
         }
         const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -14972,7 +14995,7 @@ async function handleStudyPhotoSelected(event) {
         }
         if (!res.ok || result.error) {
             console.error('scan-homework-photo failed', res.status, result);
-            showAppToast(t('study_photo_error'), 'error');
+            showAppToast(`${t('study_photo_error')} (E2-${res.status}${result.error ? ' ' + result.error : ''})`, 'error');
             return;
         }
         const titles = (result.items || []).map(i => String(i.title || '').trim()).filter(Boolean);
@@ -14980,14 +15003,14 @@ async function handleStudyPhotoSelected(event) {
         const { error } = await supabaseClient.from('study_tasks').insert(titles.map(title => ({ user_id: currentUserId, username: currentUsername, title })));
         if (error) {
             console.error('study_tasks insert failed', error);
-            showAppToast(t('study_photo_error'), 'error');
+            showAppToast(`${t('study_photo_error')} (E3)`, 'error');
             return;
         }
         await loadStudyTasks();
         showAppToast(t('study_photo_success_toast').replace('{count}', String(titles.length)));
     } catch (err) {
         console.error('handleStudyPhotoSelected failed', err);
-        showAppToast(t('study_photo_error'), 'error');
+        showAppToast(`${t('study_photo_error')} (E4 ${String(err && err.message || err).slice(0, 60)})`, 'error');
     } finally {
         studyPhotoBusy = false;
         if (btn) { btn.disabled = false; btn.textContent = '📷'; }
