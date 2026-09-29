@@ -346,8 +346,10 @@ function updateLiveCaloriesToday() {
         total += calories;
         flagImplausibleCalories(input, calories);
     });
+    // + רישומים בלי שורה במסך (שתייה של New Me) - אחרת הקלדה הייתה "מוחקת" אותם מהסכום
+    total += extraCaloriesToday;
     document.getElementById('calories-today').innerText = total;
-    let proteinTotal = 0;
+    let proteinTotal = extraProteinToday;
     document.querySelectorAll('.protein-input').forEach(input => {
         proteinTotal += parseFloat(input.value) || 0;
     });
@@ -5351,12 +5353,13 @@ async function renderSelectedCalorieDay() {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
-    const sorted = [...data].sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type));
+    const mealOrder = mt => { const i = MEAL_TYPE_ORDER.indexOf(mt); return i < 0 ? 999 : i; };
+    const sorted = [...data].sort((a, b) => mealOrder(a.meal_type) - mealOrder(b.meal_type));
     let dayTotal = 0, dayProteinTotal = 0;
     const rows = sorted.map(item => {
         dayTotal += Number(item.calories) || 0;
         dayProteinTotal += Number(item.protein_grams) || 0;
-        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type];
+        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type] || (String(item.meal_type).startsWith('nm_drink') ? 'nm_slot_drinks' : null);
         const mealLabel = labelKey ? t(labelKey) : item.meal_type;
         const proteinPart = item.protein_grams != null ? ` · ${Number(item.protein_grams)}g` : '';
         return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}${proteinPart}</span></div>`;
@@ -6255,6 +6258,7 @@ async function loadPremiumStatus() {
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
         hasNewMe = true;
+        if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
         renderSettingsSubscriptionSection();
@@ -6270,6 +6274,7 @@ async function loadPremiumStatus() {
     premiumTierFromDb = (data && data.tier) || null;
     // New Me נמכר בנפרד (רכישה חד-פעמית) - לא נפתח ע"י פרימיום ולא ע"י תקופת הניסיון
     hasNewMe = !!(data && data.new_me_purchased);
+    if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
     renderSettingsSubscriptionSection();
@@ -13694,6 +13699,7 @@ async function saveProteinDailyGoal() {
     await supabaseClient.from('nutrition_goals').upsert({ user_id: currentUserId, username: currentUsername, calorie_goal: getCalorieDailyGoal(), protein_goal: val }, { onConflict: 'user_id' });
 }
 let todayCaloriesTotal = 0, todayProteinTotal = 0;
+let extraCaloriesToday = 0, extraProteinToday = 0;
 function updateNutritionGoalProgress() {
     const calorieGoal = getCalorieDailyGoal();
     const calorieFill = document.getElementById('calorie-goal-progress-fill');
@@ -14028,15 +14034,21 @@ async function loadDailyNutrition(date) {
     const { data } = await supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).eq('date', date);
     if (!data) return;
     let total = 0, proteinTotal = 0;
+    extraCaloriesToday = 0; extraProteinToday = 0;
     data.forEach(item => {
         const row = document.querySelector(`[data-meal="${item.meal_type}"]`);
         if (row) {
             row.querySelector('.food-input').value = item.food_description;
             row.querySelector('.calories-input').value = item.calories;
             row.querySelector('.protein-input').value = item.protein_grams || '';
-            total += item.calories;
-            proteinTotal += Number(item.protein_grams) || 0;
+        } else {
+            // רישום בלי שורה במסך (שתייה של New Me, meal_type=nm_drink_N) - לא מוצג
+            // בטופס אבל חייב להיספר, כדי שההצצה להיום ו-New Me יראו את אותו סכום
+            extraCaloriesToday += Number(item.calories) || 0;
+            extraProteinToday += Number(item.protein_grams) || 0;
         }
+        total += Number(item.calories) || 0;
+        proteinTotal += Number(item.protein_grams) || 0;
     });
     document.getElementById('calories-today').innerText = total;
     const proteinTodayEl = document.getElementById('protein-today');

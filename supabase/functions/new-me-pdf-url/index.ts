@@ -51,9 +51,9 @@ Deno.serve(async (req) => {
         if (!allowed) return jsonResponse({ error: "not_purchased" }, 403);
 
         const body = await req.json().catch(() => ({}));
-        // Only languages whose PDF was verified against the menu are served
-        // (other language files contain translation errors in quantities)
-        const READY_LANGS = ["he", "en", "es"];
+        // All menu PDFs are generated from the app's corrected menu text (the
+        // original per-language files had quantity translation errors)
+        const READY_LANGS = ["en", "he", "es", "fr", "ar", "ru", "de", "pt", "ja", "zh", "hi", "ko", "tr", "id", "it", "vi", "pl", "th", "ur", "bn", "sw", "uk", "el", "nl", "ca", "ro", "yo", "sv", "nb", "da", "cs", "hu", "fi"];
         const lang = READY_LANGS.includes(String(body?.lang || "")) ? String(body.lang) : "en";
 
         let { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(`${lang}.pdf`, URL_TTL_SECONDS);

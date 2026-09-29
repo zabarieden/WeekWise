@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=444">
+    <link rel="stylesheet" href="theme.css?v=445">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -287,12 +287,7 @@
                             <span class="sub-tile-icon">🧑‍🍳</span>
                             <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
-                        <!-- דגשי תזונה: לא תת-תצוגה עם מעקב נתונים כמו שאר המעגלים - רק
-                             מודל תוכן קבוע בסגנון מגזין/עיתון, ר' modal-nutrition-daily -->
-                        <div class="sub-tile" onclick="openModal('modal-nutrition-daily')">
-                            <span class="sub-tile-icon">📰</span>
-                            <span class="sub-tile-title" data-i18n="nutrition_daily_tile_title">Nutrition Highlights</span>
-                        </div>
+                        <!-- "דגשי תזונה" (modal-nutrition-daily) עבר להיות כתבת-בונוס בתוך New Me בלבד -->
                     </div>
 
                     <div class="subview-panel" data-subview="meals">
@@ -1042,7 +1037,9 @@
             <!-- "כל הקטגוריות" - כפתור קטן ליד ההמבורגר שפותח מסך קוביות גדולות לפי
                  קטגוריה (בלי הגדרות), לפי בקשה מפורשת. מחלקת hamburger-fab כדי לקבל
                  בדיוק אותו עיצוב ואותם כללי הסתרה (כשתפריט/מודל פתוח) -->
-            <button type="button" class="hamburger-fab categories-fab" id="btn-categories-menu" onclick="openCategoriesMenu()" data-i18n-title="categories_menu_title" data-i18n-aria-label="categories_menu_title" title="All Categories" aria-label="All Categories">▦</button>
+            <button type="button" class="hamburger-fab categories-fab" id="btn-categories-menu" onclick="openCategoriesMenu()" data-i18n-title="categories_menu_title" data-i18n-aria-label="categories_menu_title" title="All Categories" aria-label="All Categories"><svg class="categories-fab-icon" viewBox="0 0 24 24" width="1.05em" height="1.05em" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
+            <!-- קיצור דרך ל"התפריט שלי היום" של New Me - מוצג רק למי שרכש/ה (ר' updateNewMeShortcut ב-new-me.js) -->
+            <button type="button" class="hamburger-fab newme-fab hidden" id="btn-newme-shortcut" onclick="openNewMeMenuToday()" data-i18n-title="nm_shortcut_title" data-i18n-aria-label="nm_shortcut_title" title="My menu today" aria-label="My menu today">✨</button>
 
             <!-- הפאנל הפתוח של "הצצה להיום" + הרקע המעומעם שלו - כאן, ברמת
                  #app-container (לא בתוך .home-hero-panel הגוללת) בכוונה: הם לא
@@ -1079,6 +1076,9 @@
                         <h3 data-i18n="hamburger_menu_title">Menu</h3>
                         <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
                     </div>
+
+                    <!-- New Me - קיצור קטן בראש התפריט (לא קבוצה - לא נאסף למסך הקטגוריות, שם יש לו קובייה משלו) -->
+                    <button type="button" class="hamburger-newme-item" onclick="closeHamburgerMenu(); openNewMe();">✨ New Me</button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_planning">Planning &amp; Calendar</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('schedule-section')">
@@ -3521,9 +3521,9 @@
 
     </div>
 
-    <script src="i18n.js?v=346"></script>
-    <script src="app.js?v=493"></script>
-    <script src="new-me-data.js?v=2"></script>
-    <script src="new-me.js?v=3"></script>
+    <script src="i18n.js?v=347"></script>
+    <script src="app.js?v=494"></script>
+    <script src="new-me-data.js?v=3"></script>
+    <script src="new-me.js?v=4"></script>
 </body>
 </html>

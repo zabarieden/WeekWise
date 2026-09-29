@@ -3051,7 +3051,13 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 /* כפתור "כל הקטגוריות" - ממש ליד ההמבורגר, באותה רצועה עליונה שכבר פנויה
    (padding-top של .home-hero-panel), כך שלא מכסה את הברכה */
 .hamburger-fab.categories-fab { right: 74px; font-size: 1.15rem; }
+/* 4 קוביות גדולות ומעוגלות - עדין יותר מהתו ▦ */
+.categories-fab-icon { display: block; fill: currentColor; opacity: .85; }
 html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
+/* קיצור דרך ל-New Me "התפריט שלי היום" - שלישי בשורה, רק למי שרכש/ה */
+.hamburger-fab.newme-fab { right: 126px; font-size: 1.1rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
+html[dir="ltr"] .hamburger-fab.newme-fab { right: auto; left: 126px; }
+.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .categories-sheet { max-width: 460px; }
 .categories-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .categories-header h3 { flex: 1; margin: 0; text-align: center; }
@@ -3071,6 +3077,8 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-loading { height: 160px; border-radius: 22px; background: var(--bg-row); animation: nmPulse 1.2s ease-in-out infinite alternate; }
 @keyframes nmPulse { from { opacity: .45; } to { opacity: .9; } }
 .nm-num { font-variant-numeric: tabular-nums; }
+/* מספרים משוערים (~450) - בלוק נפרד כדי שה-~ לא יקפוץ לצד השני בעברית/ערבית */
+.nm-root bdi, .nm-sheet bdi { display: inline-block; direction: ltr; unicode-bidi: isolate; }
 .nm-fine { color: var(--text-secondary); font-size: .82rem; line-height: 1.5; margin: 6px 0 0; }
 .nm-ai-note { color: var(--text-secondary); font-size: .72rem; line-height: 1.5; margin: 8px 4px 0; opacity: .85; text-align: center; }
 .nm-empty { color: var(--text-secondary); text-align: center; padding: 18px 0; margin: 0; }
@@ -3218,6 +3226,40 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-settings-block { display: flex; flex-direction: column; gap: 10px; }
 .nm-row-btn, .nm-row-details > summary { display: block; width: 100%; text-align: start; padding: 15px 16px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-weight: 600; cursor: pointer; box-sizing: border-box; }
 .nm-row-details[open] > summary { margin-bottom: 10px; }
+
+/* הגדרות תוכנית - סמל קטן בפינה התחתונה בלבד, בלי ריבוע */
+.nm-gear { align-self: flex-end; width: 36px; height: 36px; margin-top: -6px; padding: 0; border: none; background: none; font-size: 1.25rem; line-height: 1; cursor: pointer; opacity: .6; transition: var(--transition); }
+.nm-gear:hover, .nm-gear:focus-visible { opacity: 1; }
+.nm-gear:active { transform: rotate(45deg); }
+
+/* פיצול הסכום בלוח: תוכנית / שתייה / תוספות */
+.nm-split { font-size: .74rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* שתייה */
+.nm-drinks { gap: 8px; }
+.nm-drinks-total { font-size: .8rem; font-weight: 700; color: var(--accent-purple-light-text); font-variant-numeric: tabular-nums; }
+.nm-drinks-total.over { color: var(--accent-pink-text); }
+.nm-drink-row { display: flex; align-items: center; gap: 6px; }
+.nm-drink-row.logged { padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--accent-purple) 10%, transparent); }
+.nm-drink-name { flex: 1; min-width: 0; color: var(--text-primary); font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nm-drink-input, .nm-drink-kcal { border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); border-radius: 12px; padding: 9px 10px; font: inherit; font-size: .88rem; min-width: 0; box-sizing: border-box; }
+.nm-drink-input { flex: 1; }
+.nm-drink-kcal { width: 76px; flex: 0 0 76px; text-align: center; }
+.nm-x { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: .8rem; }
+.nm-link-btn { align-self: flex-start; border: none; background: none; padding: 4px 2px; color: var(--accent-purple-light-text); font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+
+/* נאכל היום גם מחוץ לתוכנית */
+.nm-extras { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 20px; border: 1px dashed var(--border-color); }
+.nm-extra-row { display: flex; justify-content: space-between; gap: 10px; color: var(--text-primary); font-size: .88rem; }
+
+/* כתבת בונוס - "דגשי תזונה" */
+.nm-bonus { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 12%, transparent), color-mix(in srgb, var(--accent-pink) 12%, transparent)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; transition: var(--transition); }
+.nm-bonus:active { transform: scale(.98); }
+.nm-bonus-icon { flex-shrink: 0; width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; font-size: 1.7rem; background: var(--bg-glass); box-shadow: 0 6px 16px rgba(168, 85, 247, .18); transform: rotate(-4deg); }
+.nm-bonus-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.nm-bonus-badge { align-self: flex-start; font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--nm-grad); padding: 3px 9px; border-radius: 999px; }
+.nm-bonus-title { font-weight: 800; font-size: 1rem; }
+.nm-bonus-sub { font-size: .8rem; color: var(--text-secondary); line-height: 1.4; }
 
 .hamburger-drawer-overlay {
     position: absolute;

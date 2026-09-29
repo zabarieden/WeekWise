@@ -7,21 +7,21 @@
 // נתוני התפריט והטקסטים לפי שפה - new-me-data.js.
 
 const NEW_ME_DISCLAIMER_VERSION = '2026-09-29';
-// הורדת ה-PDF רק בשפות שהקובץ שלהן נבדק ותואם לתפריט (עברית/אנגלית/ספרדית) - בשאר קובצי
-// השפות יש טעויות תרגום בכמויות (הטקסט באפליקציה כבר תוקן לפי האנגלית). להוסיף שפה כאן
-// כשיועלה ל-new-me-pdfs קובץ מתוקן שלה
-const NEW_ME_PDF_READY_LANGS = ['he', 'en', 'es'];
-function nmPdfEnabled() { return NEW_ME_PDF_READY_LANGS.includes(currentLang); }
+// קובצי ה-PDF נוצרים מהטקסט המתוקן שבאפליקציה (לא מהקבצים המקוריים, שבהם היו טעויות
+// תרגום) - שפה בלי קובץ מקבלת אנגלית (ר' new-me-pdf-url)
+function nmPdfEnabled() { return true; }
 // משבצת New Me → meal_type הקיים במעקב הארוחות (meal_4 = נשנוש 1, שם היסטורי)
 const NEW_ME_TRACKER_SLOT = { meal1: 'meal_1', snack1: 'meal_4', meal2: 'meal_2', snack2: 'snack' };
 const NEW_ME_PRESET_CATEGORY = { meal1: 'morning', snack1: 'snack', meal2: 'noon', snack2: 'snack' };
-const NEW_ME_TILE_ICONS = { menu: '🍽️', table: '📋', month: '📅', pdf: '📄', tips: '💡', settings: '⚙️' };
+const NEW_ME_TILE_ICONS = { menu: '🍽️', table: '📋', month: '📅', pdf: '📄', tips: '💡', settings: '⚙️', bonus: '📰' };
 
 let nmProfile = null;          // שורת new_me_profile (או null)
 let nmProfileLoaded = false;
 let nmView = 'home';           // home | menu | table | month | tips | settings
 let nmQuiz = null;             // מצב השאלון בזמן מילוי
 let nmTodayCheckins = {};      // slot → row, להיום
+let nmTrackerToday = [];       // כל רישומי calorie_tracker של היום (מקור האמת לסכום - כמו ההצצה להיום)
+let nmDrinkDraftRows = 0;      // שורות-הזנה ריקות נוספות לשתייה (מעבר למינימום)
 let nmTableDate = null;
 let nmMonthKey = null;         // 'YYYY-MM'
 
@@ -245,13 +245,30 @@ async function nmSyncCalorieGoal() {
 // ---------- נתוני יום ----------
 async function nmLoadToday() {
     const today = getLocalDateString();
-    const { data } = await supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', today);
+    const [{ data }, { data: tracker }] = await Promise.all([
+        supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', today),
+        supabaseClient.from('calorie_tracker').select('id, meal_type, food_description, calories, protein_grams, source').eq('user_id', currentUserId).eq('date', today),
+    ]);
     nmTodayCheckins = {};
     (data || []).forEach(r => { nmTodayCheckins[r.slot] = r; });
+    nmTrackerToday = tracker || [];
 }
 
+function nmIsDrinkRow(r) { return String(r.meal_type || '').startsWith('nm_drink'); }
+
+// סנכרון מלא: הסכום נלקח מ-calorie_tracker (אותו מקור כמו ההצצה להיום ומעקב הארוחות),
+// כך שגם קפה מההוספה המהירה נספר בטבעת. מפוצל לתוכנית / שתייה / תוספות רק לתצוגה
 function nmEatenToday() {
-    return Object.values(nmTodayCheckins).reduce((a, r) => ({ kcal: a.kcal + (r.kcal || 0), protein: a.protein + (Number(r.protein_g) || 0) }), { kcal: 0, protein: 0 });
+    const total = nmTrackerToday.reduce((a, r) => ({ kcal: a.kcal + (Number(r.calories) || 0), protein: a.protein + (Number(r.protein_grams) || 0) }), { kcal: 0, protein: 0 });
+    const plan = Object.values(nmTodayCheckins).reduce((a, r) => a + (r.kcal || 0), 0);
+    const drinks = nmTrackerToday.filter(nmIsDrinkRow).reduce((a, r) => a + (Number(r.calories) || 0), 0);
+    return { kcal: total.kcal, protein: total.protein, plan, drinks, extra: Math.max(0, total.kcal - plan - drinks) };
+}
+
+// אחרי כל שינוי - מרעננים את מעקב הארוחות/ההצצה להיום (אותו סכום בכל מקום)
+function nmAfterTrackerChange() {
+    refreshTodayNutritionViewIfOpen();
+    if (typeof loadStats === 'function') loadStats();
 }
 
 // ---------- תצוגות ----------
@@ -302,7 +319,7 @@ function nmRenderHome(root) {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
     const done = Object.keys(nmTodayCheckins).length;
-    const tiles = ['menu', 'table', 'month', ...(nmPdfEnabled() ? ['pdf'] : []), 'tips', 'settings'];
+    const tiles = ['menu', 'table', 'month', ...(nmPdfEnabled() ? ['pdf'] : []), 'tips'];
     root.innerHTML = `
         <div class="nm-dash">
             <div class="nm-dash-top">
@@ -311,6 +328,7 @@ function nmRenderHome(root) {
                     <div class="nm-eyebrow">✨ New Me · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
                     <div class="nm-stat"><span class="nm-num">${nmFmt(eaten.kcal)}</span> ${nmEsc(t('nm_eaten'))}</div>
                     <div class="nm-stat"><span class="nm-num">${nmFmt(Math.round(eaten.protein))}</span> ${nmEsc(t('nm_protein_unit'))}</div>
+                    <div class="nm-split">${nmEsc(t('nm_split_line').replace('{plan}', nmFmt(eaten.plan)).replace('{drinks}', nmFmt(eaten.drinks)).replace('{extra}', nmFmt(eaten.extra)))}</div>
                     <div class="nm-dots" aria-label="${done}/4">${NEW_ME_SLOTS.map(s => `<span class="${nmTodayCheckins[s] ? 'on' : ''}"></span>`).join('')}</div>
                 </div>
             </div>
@@ -318,7 +336,16 @@ function nmRenderHome(root) {
                 ${tiles.map(k => `<button type="button" class="nm-tile${k === 'menu' ? ' nm-tile-wide' : ''}" onclick="${k === 'pdf' ? 'nmOpenPdf(this)' : `nmGo('${k}')`}">
                     <span class="nm-tile-icon">${NEW_ME_TILE_ICONS[k]}</span><span class="nm-tile-label">${nmEsc(t('nm_tile_' + k))}</span></button>`).join('')}
             </div>
+            <button type="button" class="nm-bonus" onclick="openModal('modal-nutrition-daily')">
+                <span class="nm-bonus-icon">${NEW_ME_TILE_ICONS.bonus}</span>
+                <span class="nm-bonus-text">
+                    <span class="nm-bonus-badge">🎁 ${nmEsc(t('nm_bonus_label'))}</span>
+                    <span class="nm-bonus-title">${nmEsc(t('nutrition_daily_tile_title'))}</span>
+                    <span class="nm-bonus-sub">${nmEsc(t('nm_bonus_sub'))}</span>
+                </span>
+            </button>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>
+            <button type="button" class="nm-gear" onclick="nmGo('settings')" title="${nmEsc(t('nm_tile_settings'))}" aria-label="${nmEsc(t('nm_tile_settings'))}">⚙️</button>
         </div>`;
 }
 
@@ -344,7 +371,95 @@ function nmRenderMenu(body) {
                     </span>
                 </div>
             </div>`;
-    }).join('') + `<p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+    }).join('') + nmDrinksHtml() + nmExtrasHtml() + `<p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+}
+
+// ---------- שתייה (הוספה ידנית, לפחות 3 ביום, כולן יחד עד ~150 קל') ----------
+// כל משקה = שורה משלו ב-calorie_tracker עם meal_type=nm_drink_N (source='new_me'), כך
+// שנספר בהצצה להיום ובמעקב הארוחות כמו כל דבר אחר
+function nmDrinksHtml() {
+    const drinks = nmTrackerToday.filter(nmIsDrinkRow);
+    const total = drinks.reduce((a, r) => a + (Number(r.calories) || 0), 0);
+    const emptyRows = Math.max(NEW_ME_DRINK_ROWS_MIN - drinks.length, 1) + nmDrinkDraftRows;
+    const over = total > NEW_ME_DRINKS_KCAL;
+    return `
+        <div class="nm-meal nm-drinks">
+            <div class="nm-meal-head">
+                <span class="nm-slot-name">🥤 ${nmEsc(t('nm_slot_drinks'))}</span>
+                <span class="nm-drinks-total${over ? ' over' : ''}"><bdi dir="ltr">${nmFmt(total)} / ~${NEW_ME_DRINKS_KCAL}</bdi> ${nmEsc(t('calories_unit'))}</span>
+            </div>
+            <div class="nm-fine">${nmEsc(t('nm_drinks_hint').replace('{kcal}', NEW_ME_DRINKS_KCAL))}</div>
+            ${drinks.map(r => `
+                <div class="nm-drink-row logged">
+                    <span class="nm-drink-name">${nmEsc(String(r.food_description || '').replace(/^🥤\s*/, ''))}</span>
+                    <span class="nm-option-meta"><bdi dir="ltr">${Number(r.calories) || 0}</bdi> ${nmEsc(t('calories_unit'))}</span>
+                    <button type="button" class="nm-x" onclick="nmRemoveDrink('${r.id}', this)" aria-label="${nmEsc(t('nm_remove'))}">✕</button>
+                </div>`).join('')}
+            ${Array.from({ length: emptyRows }, () => `
+                <div class="nm-drink-row">
+                    <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t('nm_drink_name_ph'))}">
+                    <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1000" placeholder="${nmEsc(t('calories_unit'))}">
+                    <button type="button" class="nm-chip" onclick="nmAddDrink(this)">${nmEsc(t('nm_drink_add'))}</button>
+                </div>`).join('')}
+            <button type="button" class="nm-link-btn" onclick="nmDrinkDraftRows++; nmRenderView(nmRoot())">${nmEsc(t('nm_drink_more'))}</button>
+        </div>`;
+}
+
+async function nmAddDrink(btn) {
+    const row = btn.closest('.nm-drink-row');
+    const name = row.querySelector('.nm-drink-input').value.trim();
+    const kcal = parseInt(row.querySelector('.nm-drink-kcal').value, 10);
+    if (!name || !(kcal >= 0)) { showAppToast(t('nm_drink_missing'), 'error'); return; }
+    btn.disabled = true;
+    const used = new Set(nmTrackerToday.filter(nmIsDrinkRow).map(r => r.meal_type));
+    let n = 1;
+    while (used.has('nm_drink_' + n)) n++;
+    await supabaseClient.from('calorie_tracker').insert({
+        username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: 'nm_drink_' + n,
+        food_description: '🥤 ' + name, calories: kcal, protein_grams: 0, source: 'new_me',
+    });
+    if (nmDrinkDraftRows > 0) nmDrinkDraftRows--;
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
+}
+
+async function nmRemoveDrink(id, btn) {
+    if (btn) btn.disabled = true;
+    await supabaseClient.from('calorie_tracker').delete().eq('id', id).eq('user_id', currentUserId);
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
+}
+
+// מה שנוסף היום מחוץ לתוכנית (מעקב הארוחות / הוספה מהירה) - כבר נספר בטבעת
+function nmExtrasHtml() {
+    const planTypes = {};
+    Object.values(nmTodayCheckins).forEach(r => { planTypes[NEW_ME_TRACKER_SLOT[r.slot]] = r; });
+    const rows = nmTrackerToday.filter(r => !nmIsDrinkRow(r) && r.source !== 'new_me').map(r => {
+        const merged = planTypes[r.meal_type];
+        const kcal = (Number(r.calories) || 0) - (merged && merged.mirror_mode === 'merged' ? (merged.kcal || 0) : 0);
+        const desc = merged && merged.mirror_text ? String(r.food_description || '').split(` + ${merged.mirror_text}`).join('') : r.food_description;
+        return { desc, kcal };
+    }).filter(x => x.kcal > 0 || (x.desc && x.desc.trim()));
+    if (!rows.length) return '';
+    return `
+        <div class="nm-extras">
+            <div class="nm-slot-name">➕ ${nmEsc(t('nm_extras_title'))}</div>
+            ${rows.map(x => `<div class="nm-extra-row"><span>${nmEsc(x.desc || '')}</span><span class="nm-option-meta"><bdi dir="ltr">${x.kcal}</bdi> ${nmEsc(t('calories_unit'))}</span></div>`).join('')}
+            <div class="nm-fine">${nmEsc(t('nm_extras_hint'))}</div>
+        </div>`;
+}
+
+// ---------- קיצור הדרך ✨ במסך הבית ----------
+function updateNewMeShortcut() {
+    const btn = document.getElementById('btn-newme-shortcut');
+    if (btn) btn.classList.toggle('hidden', !hasNewMe);
+}
+
+function openNewMeMenuToday() {
+    nmView = 'menu';
+    openNewMe();
 }
 
 // החלפה - רק מתוך 2 האפשרויות האחרות של אותה ארוחה ב-PDF
@@ -382,6 +497,8 @@ async function nmSetChoice(slot, opt) {
     if (nmTodayCheckins[slot]) {
         await nmUncheck(slot);
         await nmCheck(slot);
+        await nmLoadToday();
+        nmAfterTrackerChange();
     }
     nmRenderView(nmRoot());
 }
@@ -392,9 +509,9 @@ async function nmToggleCheck(slot, btn) {
         if (nmTodayCheckins[slot]) await nmUncheck(slot);
         else await nmCheck(slot);
     } finally {
+        await nmLoadToday();
         nmRenderView(nmRoot());
-        refreshTodayNutritionViewIfOpen();
-        if (typeof loadStats === 'function') loadStats();
+        nmAfterTrackerChange();
     }
 }
 
@@ -475,19 +592,23 @@ async function nmSaveAsPreset(slot) {
 // ---------- טבלה יומית ----------
 async function nmRenderTable(body) {
     if (!nmTableDate) nmTableDate = getLocalDateString();
-    const { data } = await supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', nmTableDate);
+    const [{ data }, { data: drinkRows }] = await Promise.all([
+        supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', nmTableDate),
+        supabaseClient.from('calorie_tracker').select('meal_type, food_description, calories').eq('user_id', currentUserId).eq('date', nmTableDate).like('meal_type', 'nm_drink%'),
+    ]);
     const rows = NEW_ME_SLOTS.map(s => (data || []).find(r => r.slot === s)).filter(Boolean);
-    const total = rows.reduce((a, r) => ({ kcal: a.kcal + r.kcal, protein: a.protein + Number(r.protein_g) }), { kcal: 0, protein: 0 });
+    const drinks = drinkRows || [];
+    const total = rows.reduce((a, r) => ({ kcal: a.kcal + r.kcal, protein: a.protein + Number(r.protein_g) }), { kcal: drinks.reduce((a, d) => a + (Number(d.calories) || 0), 0), protein: 0 });
     body.innerHTML = `
         <div class="nm-date-row">
             <button type="button" class="nm-chip" onclick="nmShiftTableDate(-1)" aria-label="-1">‹</button>
             <input type="date" class="nm-date" value="${nmTableDate}" max="${getLocalDateString()}" onchange="nmTableDate = this.value || getLocalDateString(); nmRenderTable(document.getElementById('nm-view-body'))">
             <button type="button" class="nm-chip" onclick="nmShiftTableDate(1)" aria-label="+1">›</button>
         </div>
-        ${rows.length ? `
+        ${rows.length || drinks.length ? `
         <div class="nm-table-wrap"><table class="nm-table">
             <thead><tr><th>${nmEsc(t('nm_table_food'))}</th><th>${nmEsc(t('calories_unit'))}</th><th>${nmEsc(t('nm_table_protein'))}</th></tr></thead>
-            <tbody>${rows.map(r => `<tr><td><span class="nm-td-slot">${nmEsc(t('nm_slot_' + r.slot))}</span>${nmEsc(nmOptText(r.plan, r.slot, r.option_id, true))}</td><td class="nm-num"><bdi dir="ltr">~${r.kcal}</bdi></td><td class="nm-num"><bdi dir="ltr">~${Math.round(r.protein_g)}</bdi></td></tr>`).join('')}</tbody>
+            <tbody>${rows.map(r => `<tr><td><span class="nm-td-slot">${nmEsc(t('nm_slot_' + r.slot))}</span>${nmEsc(nmOptText(r.plan, r.slot, r.option_id, true))}</td><td class="nm-num"><bdi dir="ltr">~${r.kcal}</bdi></td><td class="nm-num"><bdi dir="ltr">~${Math.round(r.protein_g)}</bdi></td></tr>`).join('')}${drinks.map(d => `<tr><td><span class="nm-td-slot">${nmEsc(t('nm_slot_drinks'))}</span>${nmEsc(String(d.food_description || '').replace(/^🥤\s*/, ''))}</td><td class="nm-num">${Number(d.calories) || 0}</td><td class="nm-num">0</td></tr>`).join('')}</tbody>
             <tfoot><tr><td>${nmEsc(t('nm_table_total'))}</td><td class="nm-num">${nmFmt(total.kcal)}</td><td class="nm-num">${nmFmt(Math.round(total.protein))}</td></tr></tfoot>
         </table></div>` : `<p class="nm-empty">${nmEsc(t('nm_table_empty'))}</p>`}
         <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
