@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=447">
+    <link rel="stylesheet" href="theme.css?v=448">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -143,6 +143,13 @@
                     <div>
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                         <p class="home-greeting-date home-greeting-date-clickable" id="home-greeting-date" onclick="openQuickDatePeek()" data-i18n-title="home_greeting_date_peek_title" title="Quick look at the calendar"></p>
+                        <!-- פתק שבועי - מתחת לתאריך, מיושר לאותו קו שלו (לפי בקשה מפורשת: "שהכל
+                             יהיה במקום אחד... מתחת לתאריך מבחינת הקו שלו"). לחיצה פותחת את
+                             #modal-weekly-note הרגיל לעריכה -->
+                        <div class="weekly-note-widget hidden" id="weekly-note-widget" onclick="startEditWeeklyNote()">
+                            <span class="weekly-note-tape"></span>
+                            <span class="weekly-note-display" id="weekly-note-display"></span>
+                        </div>
                     </div>
                     <!-- עמודת-צד בקצה הנגדי לברכה/תאריך - מכילה את הפתק השבועי ואת תג
                          הפרימיום, אחד מעל השני. flex רגיל (לא מיקום מוחלט) כדי שהצד
@@ -150,16 +157,7 @@
                          השורה - לפי בקשה מפורשת ("בעברית משמאל, באנגלית מימין וככה
                          כל השפות"), בלי שום קוד ייעודי לכיוון -->
                     <div class="home-greeting-side-stack">
-                        <!-- פתק שבועי - "פתק חמוד" מרובע עם "נייר דבק" ציורי בתחתית, יושב
-                             בצד הנגדי לתאריך, לפי בקשה מפורשת. לחיצה עליו פותחת מודל
-                             רגיל (apple-modal, ר' #modal-weekly-note) לעריכה - לא בלון
-                             מותאם-אישית (position:absolute) כמו קודם, אחרי שדווח על
-                             באג הקלדה בגרסה הקודמת (המודל הרגיל בדוק ואמין בכל שאר
-                             האפליקציה) -->
-                        <div class="weekly-note-widget hidden" id="weekly-note-widget" onclick="startEditWeeklyNote()">
-                            <span class="weekly-note-tape"></span>
-                            <span class="weekly-note-display" id="weekly-note-display"></span>
-                        </div>
+
                         <!-- מוצג רק למי שאינה פרימיום (ר' updateHomePremiumBadgeVisibility) -
                              נקודת גילוי נוספת לשדרוג ישירות ממסך הבית, לצד ההגדרות -->
                         <button type="button" id="home-premium-badge" class="home-premium-badge hidden" onclick="openPremiumUpgradeModal()">
@@ -1045,7 +1043,7 @@
                  בדיוק אותו עיצוב ואותם כללי הסתרה (כשתפריט/מודל פתוח) -->
             <button type="button" class="hamburger-fab categories-fab" id="btn-categories-menu" onclick="openCategoriesMenu()" data-i18n-title="categories_menu_title" data-i18n-aria-label="categories_menu_title" title="All Categories" aria-label="All Categories"><svg class="categories-fab-icon" viewBox="0 0 24 24" width="1.05em" height="1.05em" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
             <!-- קיצור דרך ל"התפריט שלי היום" של New Me - מוצג רק למי שרכש/ה (ר' updateNewMeShortcut ב-new-me.js) -->
-            <button type="button" class="hamburger-fab newme-fab hidden" id="btn-newme-shortcut" onclick="openNewMeMenuToday()" data-i18n-title="nm_shortcut_title" data-i18n-aria-label="nm_shortcut_title" title="My menu today" aria-label="My menu today">✨</button>
+            <button type="button" class="hamburger-fab newme-fab hidden" id="btn-newme-shortcut" onclick="openNewMeMenuToday()" data-i18n-title="nm_shortcut_title" data-i18n-aria-label="nm_shortcut_title" title="My menu today" aria-label="My menu today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/><path d="M18.5 14.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" opacity=".75"/></svg></button>
 
             <!-- הפאנל הפתוח של "הצצה להיום" + הרקע המעומעם שלו - כאן, ברמת
                  #app-container (לא בתוך .home-hero-panel הגוללת) בכוונה: הם לא
