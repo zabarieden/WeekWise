@@ -13998,7 +13998,7 @@ function updateHomeCalorieBadge() {
 // 8px ביניהם, והעוגן כולו ממורכז אנכית באמצע המסך (ר' .today-peek-anchor)
 function repositionPeekTabStack() {
     const TAB_H = 48, GAP = 8;
-    const visible = ['btn-daily-board-fab', 'today-peek-tab', 'btn-ai-fab']
+    const visible = ['btn-daily-board-fab', 'btn-ai-fab']
         .map(id => document.getElementById(id))
         .filter(el => el && !el.classList.contains('hidden'));
     visible.forEach(el => { el.style.width = ''; });

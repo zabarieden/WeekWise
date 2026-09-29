@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=462">
+    <link rel="stylesheet" href="theme.css?v=463">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -162,6 +162,8 @@
                     <div>
                         <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                         <p class="home-greeting-date home-greeting-date-clickable" id="home-greeting-date" onclick="openQuickDatePeek()" data-i18n-title="home_greeting_date_peek_title" title="Quick look at the calendar"></p>
+                        <!-- הצצה להיום - כפתור קטן מתחת לתאריך (קשור ליום, לא לערימת הטאבים בצד) - לפי בקשה מפורשת. אותו id, כך שכל הקוד הקיים (פתיחה/הגדרת הצגה) עובד כמו שהוא -->
+                        <button type="button" class="today-peek-chip" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span data-i18n="today_tasks_title">A Peek at Today</span></button>
                     </div>
                     <!-- עמודת-צד בקצה הנגדי לברכה/תאריך - מכילה את הפתק השבועי ואת תג
                          הפרימיום, אחד מעל השני. flex רגיל (לא מיקום מוחלט) כדי שהצד
@@ -196,11 +198,6 @@
                      אינטראקציה בכל מקרה כשהם פתוחים), ר' #today-peek-content-panel
                      בהמשך הקובץ -->
                 <div class="today-peek-anchor">
-                    <!-- טקסט אופקי רגיל (לא מסובב) - לפי בקשה מפורשת ("שיהיה יותר נוח
-                         לקרוא"), עם רקע יותר בולט/זוהר כדי שיראו אותה גם על רקע כהה -->
-                    <button type="button" class="today-peek-tab" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today">
-                        <span class="today-peek-tab-label" data-i18n="today_tasks_title">A Peek at Today</span>
-                    </button>
                     <!-- "לוח היום" - טאב שני, אותו עיצוב זכוכית בדיוק כמו "הצצה להיום"
                          ממש (משתמש באותה מחלקה today-peek-tab), רק ממוקם מתחתיו
                          (.daily-board-tab דורסת top בלבד) - לפי בקשה מפורשת, במקום
@@ -3565,8 +3562,8 @@
 
     </div>
 
-    <script src="i18n.js?v=362"></script>
-    <script src="app.js?v=511"></script>
+    <script src="i18n.js?v=363"></script>
+    <script src="app.js?v=512"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=11"></script>
 </body>
