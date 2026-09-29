@@ -3301,6 +3301,20 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-drink-input { flex: 1; }
 .nm-drink-kcal { width: 76px; flex: 0 0 76px; text-align: center; }
 .nm-x { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: .8rem; }
+.nm-drink-kcal-logged { width: 64px; flex: 0 0 64px; padding: 6px 6px; background: var(--bg-card, transparent); }
+.nm-drink-row.estimating .nm-drink-kcal { animation: nmPulse 1s ease-in-out infinite; }
+@keyframes nmPulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .nm-drink-row.estimating .nm-drink-kcal { animation: none; } }
+.nm-star { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: .95rem; line-height: 1; }
+.nm-star.on { color: #e0a100; border-color: color-mix(in srgb, #e0a100 50%, transparent); }
+.nm-saved-drinks { display: flex; flex-direction: column; gap: 6px; }
+.nm-saved-drinks-title { font-size: .78rem; font-weight: 700; color: var(--text-secondary); }
+.nm-saved-drinks-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.nm-saved-chip { display: inline-flex; align-items: center; border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, transparent); border-radius: 999px; overflow: hidden; }
+.nm-saved-chip-add { border: none; background: none; color: var(--text-primary); font: inherit; font-size: .84rem; padding: 6px 4px 6px 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+[dir="rtl"] .nm-saved-chip-add { padding: 6px 12px 6px 4px; }
+.nm-saved-chip-add:disabled { opacity: .5; }
+.nm-saved-chip-x { border: none; background: none; color: var(--text-secondary); font-size: 1rem; line-height: 1; padding: 6px 10px; cursor: pointer; }
 .nm-link-btn { align-self: flex-start; border: none; background: none; padding: 4px 2px; color: var(--accent-purple-light-text); font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
 
 /* נאכל היום גם מחוץ לתוכנית */

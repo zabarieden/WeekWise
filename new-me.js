@@ -22,6 +22,7 @@ let nmQuiz = null;             // מצב השאלון בזמן מילוי
 let nmTodayCheckins = {};      // slot → row, להיום
 let nmTrackerToday = [];       // כל רישומי calorie_tracker של היום (מקור האמת לסכום - כמו ההצצה להיום)
 let nmDrinkDraftRows = 0;      // שורות-הזנה ריקות נוספות לשתייה (מעבר למינימום)
+let nmSavedDrinks = [];        // משקאות קבועים (new_me_saved_drinks) - לחיצה אחת מוסיפה
 let nmTableDate = null;
 let nmMonthKey = null;         // 'YYYY-MM'
 
@@ -255,13 +256,15 @@ async function nmSyncCalorieGoal() {
 // ---------- נתוני יום ----------
 async function nmLoadToday() {
     const today = getLocalDateString();
-    const [{ data }, { data: tracker }] = await Promise.all([
+    const [{ data }, { data: tracker }, { data: saved }] = await Promise.all([
         supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', today),
         supabaseClient.from('calorie_tracker').select('id, meal_type, food_description, calories, protein_grams, source').eq('user_id', currentUserId).eq('date', today),
+        supabaseClient.from('new_me_saved_drinks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
     ]);
     nmTodayCheckins = {};
     (data || []).forEach(r => { nmTodayCheckins[r.slot] = r; });
     nmTrackerToday = tracker || [];
+    nmSavedDrinks = saved || [];
 }
 
 function nmIsDrinkRow(r) { return String(r.meal_type || '').startsWith('nm_drink'); }
@@ -388,11 +391,14 @@ function nmRenderMenu(body) {
 // ---------- שתייה (הוספה ידנית, לפחות 3 ביום, כולן יחד עד ~150 קל') ----------
 // כל משקה = שורה משלו ב-calorie_tracker עם meal_type=nm_drink_N (source='new_me'), כך
 // שנספר בהצצה להיום ובמעקב הארוחות כמו כל דבר אחר
+function nmDrinkName(r) { return String(r.food_description || '').replace(/^🥤\s*/, ''); }
+
 function nmDrinksHtml() {
     const drinks = nmTrackerToday.filter(nmIsDrinkRow);
     const total = drinks.reduce((a, r) => a + (Number(r.calories) || 0), 0);
     const emptyRows = Math.max(NEW_ME_DRINK_ROWS_MIN - drinks.length, 1) + nmDrinkDraftRows;
     const over = total > NEW_ME_DRINKS_KCAL;
+    const savedNames = new Set(nmSavedDrinks.map(s => s.name.trim().toLowerCase()));
     return `
         <div class="nm-meal nm-drinks">
             <div class="nm-meal-head">
@@ -400,39 +406,157 @@ function nmDrinksHtml() {
                 <span class="nm-drinks-total${over ? ' over' : ''}"><bdi dir="ltr">${nmFmt(total)} / ~${NEW_ME_DRINKS_KCAL}</bdi> ${nmEsc(t('calories_unit'))}</span>
             </div>
             <div class="nm-fine">${nmEsc(t('nm_drinks_hint').replace('{kcal}', NEW_ME_DRINKS_KCAL))}</div>
-            ${drinks.map(r => `
+            ${nmSavedDrinks.length ? `
+            <div class="nm-saved-drinks">
+                <span class="nm-saved-drinks-title">⭐ ${nmEsc(t('nm_drink_saved_title'))}</span>
+                <div class="nm-saved-drinks-chips">
+                    ${nmSavedDrinks.map(s => `
+                        <span class="nm-saved-chip">
+                            <button type="button" class="nm-saved-chip-add" onclick="nmAddSavedDrink('${s.id}', this)">${nmEsc(s.name)} · <bdi dir="ltr">${Number(s.kcal) || 0}</bdi></button>
+                            <button type="button" class="nm-saved-chip-x" onclick="nmDeleteSavedDrink('${s.id}')" aria-label="${nmEsc(t('nm_remove'))}">×</button>
+                        </span>`).join('')}
+                </div>
+            </div>` : ''}
+            ${drinks.map(r => {
+                const name = nmDrinkName(r);
+                const isSaved = savedNames.has(name.trim().toLowerCase());
+                return `
                 <div class="nm-drink-row logged">
-                    <span class="nm-drink-name">${nmEsc(String(r.food_description || '').replace(/^🥤\s*/, ''))}</span>
-                    <span class="nm-option-meta"><bdi dir="ltr">${Number(r.calories) || 0}</bdi> ${nmEsc(t('calories_unit'))}</span>
+                    <span class="nm-drink-name">${nmEsc(name)}</span>
+                    <input type="number" class="nm-drink-kcal nm-drink-kcal-logged" inputmode="numeric" min="0" max="1500" value="${Number(r.calories) || 0}" onchange="nmUpdateDrinkKcal('${r.id}', this.value)" aria-label="${nmEsc(t('calories_unit'))}">
+                    <button type="button" class="nm-star${isSaved ? ' on' : ''}" onclick="nmToggleSaveDrink('${r.id}')" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">${isSaved ? '★' : '☆'}</button>
                     <button type="button" class="nm-x" onclick="nmRemoveDrink('${r.id}', this)" aria-label="${nmEsc(t('nm_remove'))}">✕</button>
-                </div>`).join('')}
+                </div>`;
+            }).join('')}
             ${Array.from({ length: emptyRows }, () => `
                 <div class="nm-drink-row">
-                    <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t('nm_drink_name_ph'))}">
-                    <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1000" placeholder="${nmEsc(t('calories_unit'))}">
+                    <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t('nm_drink_name_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)">
+                    <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1500" placeholder="${nmEsc(t('calories_unit'))}" oninput="this.dataset.manual = '1'">
                     <button type="button" class="nm-chip" onclick="nmAddDrink(this)">${nmEsc(t('nm_drink_add'))}</button>
                 </div>`).join('')}
             <button type="button" class="nm-link-btn" onclick="nmDrinkDraftRows++; nmRenderView(nmRoot())">${nmEsc(t('nm_drink_more'))}</button>
         </div>`;
 }
 
-async function nmAddDrink(btn) {
-    const row = btn.closest('.nm-drink-row');
-    const name = row.querySelector('.nm-drink-input').value.trim();
-    const kcal = parseInt(row.querySelector('.nm-drink-kcal').value, 10);
-    if (!name || !(kcal >= 0)) { showAppToast(t('nm_drink_missing'), 'error'); return; }
-    btn.disabled = true;
+// חישוב קלוריות אוטומטי (AI) - המשתמש/ת רק מקליד/ה שם משקה; המספר מתמלא לבד שנייה אחרי
+// שמפסיקים להקליד, ונשאר ניתן לעריכה. אם הוקלד מספר ידנית - לא דורסים אותו
+async function nmEstimateDrink(row) {
+    const nameEl = row.querySelector('.nm-drink-input');
+    const kcalEl = row.querySelector('.nm-drink-kcal');
+    const drink = nameEl.value.trim();
+    if (drink.length < 2 || kcalEl.dataset.manual === '1') return null;
+    const saved = nmSavedDrinks.find(s => s.name.trim().toLowerCase() === drink.toLowerCase());
+    if (saved) { kcalEl.value = saved.kcal; kcalEl.dataset.ai = '1'; return { kcal: saved.kcal, protein_g: 0, name: saved.name }; }
+    const requestId = String(Date.now());
+    row.dataset.estimate = requestId;
+    kcalEl.placeholder = t('nm_drink_estimating');
+    row.classList.add('estimating');
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/new-me-drink-kcal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ drink, language: currentLang }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || !result.ok) throw new Error(result.error || res.status);
+        // תשובה ישנה (המשתמש/ת המשיך/ה להקליד) או מספר שהוקלד ידנית בינתיים - מתעלמים
+        if (row.dataset.estimate !== requestId || kcalEl.dataset.manual === '1') return null;
+        kcalEl.value = result.kcal;
+        kcalEl.dataset.ai = '1';
+        row.dataset.protein = result.protein_g || 0;
+        return result;
+    } catch {
+        return null;
+    } finally {
+        row.classList.remove('estimating');
+        kcalEl.placeholder = t('calories_unit');
+    }
+}
+
+let nmDrinkTypingTimer = null;
+function nmDrinkNameTyped(input) {
+    const row = input.closest('.nm-drink-row');
+    const kcalEl = row.querySelector('.nm-drink-kcal');
+    if (kcalEl.dataset.ai === '1') { kcalEl.value = ''; delete kcalEl.dataset.ai; }
+    clearTimeout(nmDrinkTypingTimer);
+    nmDrinkTypingTimer = setTimeout(() => nmEstimateDrink(row), 900);
+}
+
+function nmNextDrinkSlot() {
     const used = new Set(nmTrackerToday.filter(nmIsDrinkRow).map(r => r.meal_type));
     let n = 1;
     while (used.has('nm_drink_' + n)) n++;
+    return 'nm_drink_' + n;
+}
+
+async function nmInsertDrink(name, kcal, protein) {
     await supabaseClient.from('calorie_tracker').insert({
-        username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: 'nm_drink_' + n,
-        food_description: '🥤 ' + name, calories: kcal, protein_grams: 0, source: 'new_me',
+        username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: nmNextDrinkSlot(),
+        food_description: '🥤 ' + name, calories: kcal, protein_grams: protein || 0, source: 'new_me',
     });
-    if (nmDrinkDraftRows > 0) nmDrinkDraftRows--;
     await nmLoadToday();
     nmRenderView(nmRoot());
     nmAfterTrackerChange();
+}
+
+async function nmAddDrink(el) {
+    const row = el.closest('.nm-drink-row');
+    const btn = row.querySelector('.nm-chip');
+    const name = row.querySelector('.nm-drink-input').value.trim();
+    const kcalEl = row.querySelector('.nm-drink-kcal');
+    if (!name) { showAppToast(t('nm_drink_missing'), 'error'); return; }
+    if (btn) btn.disabled = true;
+    clearTimeout(nmDrinkTypingTimer);
+    // אם הקלוריות עוד לא חושבו - מחשבים עכשיו, לפני ההוספה
+    if (kcalEl.value === '') await nmEstimateDrink(row);
+    const kcal = parseInt(kcalEl.value, 10);
+    if (!(kcal >= 0)) {
+        if (btn) btn.disabled = false;
+        showAppToast(t('nm_drink_est_failed'), 'error');
+        kcalEl.focus();
+        return;
+    }
+    if (nmDrinkDraftRows > 0) nmDrinkDraftRows--;
+    await nmInsertDrink(name, kcal, parseFloat(row.dataset.protein) || 0);
+}
+
+async function nmAddSavedDrink(id, btn) {
+    const s = nmSavedDrinks.find(x => x.id === id);
+    if (!s) return;
+    if (btn) btn.disabled = true;
+    await nmInsertDrink(s.name, Number(s.kcal) || 0, 0);
+}
+
+async function nmUpdateDrinkKcal(id, value) {
+    const kcal = Math.max(0, Math.min(1500, parseInt(value, 10) || 0));
+    await supabaseClient.from('calorie_tracker').update({ calories: kcal }).eq('id', id).eq('user_id', currentUserId);
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
+}
+
+// ☆/★ על משקה שנרשם - שמירה/הסרה מהמשקאות הקבועים (לפי השם)
+async function nmToggleSaveDrink(trackerId) {
+    const r = nmTrackerToday.find(x => x.id === trackerId);
+    if (!r) return;
+    const name = nmDrinkName(r).trim();
+    const existing = nmSavedDrinks.find(s => s.name.trim().toLowerCase() === name.toLowerCase());
+    if (existing) {
+        await supabaseClient.from('new_me_saved_drinks').delete().eq('id', existing.id).eq('user_id', currentUserId);
+    } else {
+        await supabaseClient.from('new_me_saved_drinks').insert({ user_id: currentUserId, name, kcal: Number(r.calories) || 0 });
+        showAppToast(t('nm_drink_saved_toast'));
+    }
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+}
+
+async function nmDeleteSavedDrink(id) {
+    await supabaseClient.from('new_me_saved_drinks').delete().eq('id', id).eq('user_id', currentUserId);
+    await nmLoadToday();
+    nmRenderView(nmRoot());
 }
 
 async function nmRemoveDrink(id, btn) {
@@ -442,7 +566,6 @@ async function nmRemoveDrink(id, btn) {
     nmRenderView(nmRoot());
     nmAfterTrackerChange();
 }
-
 // מה שנוסף היום מחוץ לתוכנית (מעקב הארוחות / הוספה מהירה) - כבר נספר בטבעת
 function nmExtrasHtml() {
     const planTypes = {};
