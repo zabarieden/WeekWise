@@ -2703,7 +2703,10 @@ function renderCategoriesMenu() {
     }));
 }
 
-function openNewMe() {
+// מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
+// פתוחה); רק קיצור ה-✨ פותח ישר את "התפריט שלי היום" (openNewMeMenuToday)
+function openNewMe(view = 'home') {
+    if (typeof nmView !== 'undefined') nmView = view;
     switchToTab('new-me-section');
     if (typeof renderNewMe === 'function') renderNewMe();
 }

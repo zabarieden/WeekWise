@@ -459,8 +459,7 @@ function updateNewMeShortcut() {
 }
 
 function openNewMeMenuToday() {
-    nmView = 'menu';
-    openNewMe();
+    openNewMe('menu');
 }
 
 // החלפה - רק מתוך 2 האפשרויות האחרות של אותה ארוחה ב-PDF
