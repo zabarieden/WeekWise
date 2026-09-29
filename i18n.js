@@ -71,6 +71,9 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    faq_a_vision_board_today: "Tapping ➕ next to a step on the back of a Vision Board card adds it to today's tasks (Peek at Today and the calendar). The two stay synced: checking it off in either place checks it off in the other and updates the goal's progress, and deleting the task from today's tasks also deletes that step from the Vision Board. Each step can be added once per day.",
+    faq_q_vision_board_today: "What happens when I add a Vision Board step to today (➕)?",
+    vision_milestone_already_today: "This step is already in today's tasks.",
     nm_medical_note: "⚕️ General information only – not medical advice and not a substitute for a physician or clinical dietitian. Consult a physician before changing your diet or starting physical activity, especially during pregnancy, with a chronic illness or when taking medication.",
     auth_consent_required: "To sign up, please confirm the Terms of Use and the Privacy Policy.",
     auth_consent_privacy: "Privacy Policy",
@@ -681,6 +684,9 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    faq_a_vision_board_today: "לחיצה על ➕ ליד תחנה בגב כרטיס בלוח החזון מוסיפה אותה למשימות של היום (הצצה להיום ולוח השנה). השתיים נשארות מסונכרנות: סימון ✓ באחד המקומות מסמן גם בשני ומעדכן את ההתקדמות של היעד, ומחיקת המשימה מהמשימות של היום מוחקת גם את התחנה מלוח החזון. כל תחנה אפשר להוסיף פעם אחת ביום.",
+    faq_q_vision_board_today: "מה קורה כשמוסיפים תחנה מלוח החזון להיום (➕)?",
+    vision_milestone_already_today: "התחנה הזו כבר נמצאת במשימות של היום.",
     nm_medical_note: "⚕️ מידע כללי בלבד – לא ייעוץ רפואי ולא תחליף לרופא/ה או לדיאטן/ית קליני/ת. יש להתייעץ עם רופא/ה לפני שינוי תזונתי או תחילת פעילות גופנית, במיוחד בהריון, עם מחלה כרונית או בנטילת תרופות.",
     auth_consent_required: "כדי להירשם יש לאשר את תנאי השימוש ואת מדיניות הפרטיות.",
     auth_consent_privacy: "מדיניות הפרטיות",
@@ -1291,6 +1297,9 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    faq_a_vision_board_today: "Al tocar ➕ junto a un hito en el reverso de una tarjeta del Tablero de Visión, se añade a las tareas de hoy (Un Vistazo al Día de Hoy y el calendario). Ambos quedan sincronizados: marcarlo con ✓ en un lugar lo marca también en el otro y actualiza el progreso de la meta, y eliminar la tarea de las tareas de hoy también elimina ese hito del Tablero de Visión. Cada hito se puede añadir una vez al día.",
+    faq_q_vision_board_today: "¿Qué pasa al añadir un hito del Tablero de Visión a hoy (➕)?",
+    vision_milestone_already_today: "Este hito ya está en las tareas de hoy.",
     nm_medical_note: "⚕️ Solo información general: no constituye asesoramiento médico ni sustituye a un médico o dietista-nutricionista clínico. Se debe consultar a un médico antes de cambiar la alimentación o iniciar actividad física, especialmente en caso de embarazo, enfermedad crónica o toma de medicación.",
     auth_consent_required: "Para registrarse es necesario aceptar los Términos de uso y la Política de privacidad.",
     auth_consent_privacy: "Política de privacidad",
@@ -1908,6 +1917,9 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla.",
 },
 fr: {
+    faq_a_vision_board_today: "Appuyer sur ➕ à côté d'une étape, au dos d'une carte du Tableau de Vision, l'ajoute aux tâches du jour (Un Coup d'Œil sur Aujourd'hui et le calendrier). Les deux restent synchronisées : cocher ✓ d'un côté coche aussi l'autre et met à jour la progression de l'objectif, et supprimer la tâche des tâches du jour supprime aussi cette étape du Tableau de Vision. Chaque étape peut être ajoutée une fois par jour.",
+    faq_q_vision_board_today: "Que se passe-t-il quand on ajoute une étape du Tableau de Vision à aujourd'hui (➕) ?",
+    vision_milestone_already_today: "Cette étape figure déjà dans les tâches du jour.",
     nm_medical_note: "⚕️ Information générale uniquement : ne constitue pas un avis médical et ne remplace pas un médecin ou un diététicien clinicien. Consulter un médecin avant de modifier l'alimentation ou de commencer une activité physique, en particulier en cas de grossesse, de maladie chronique ou de traitement médicamenteux.",
     auth_consent_required: "L'inscription nécessite l'acceptation des Conditions d'utilisation et de la Politique de confidentialité.",
     auth_consent_privacy: "Politique de confidentialité",
@@ -2525,6 +2537,9 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer.",
 },
 ar: {
+    faq_a_vision_board_today: "الضغط على ➕ بجانب معلم على ظهر بطاقة في لوحة الرؤية يضيفه إلى مهام اليوم (لمحة عن اليوم والتقويم). ويبقى الاثنان متزامنين: وضع علامة ✓ في أحد المكانين يضعها في الآخر أيضًا ويحدّث تقدم الهدف، وحذف المهمة من مهام اليوم يحذف أيضًا هذا المعلم من لوحة الرؤية. يمكن إضافة كل معلم مرة واحدة في اليوم.",
+    faq_q_vision_board_today: "ماذا يحدث عند إضافة معلم من لوحة الرؤية إلى اليوم (➕)؟",
+    vision_milestone_already_today: "هذا المعلم موجود بالفعل في مهام اليوم.",
     nm_medical_note: "⚕️ معلومات عامة فقط – ليست نصيحة طبية ولا بديلًا عن الطبيب أو أخصائي التغذية العلاجية. يجب استشارة الطبيب قبل تغيير النظام الغذائي أو البدء بنشاط بدني، ولا سيما أثناء الحمل أو في حال وجود مرض مزمن أو تناول أدوية.",
     auth_consent_required: "للتسجيل، يلزم الموافقة على شروط الاستخدام وسياسة الخصوصية.",
     auth_consent_privacy: "سياسة الخصوصية",
@@ -3142,6 +3157,9 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده.",
 },
 ru: {
+    faq_a_vision_board_today: "Нажатие ➕ рядом с вехой на обороте карточки Доски Визуализации добавляет её в задачи на сегодня («Взгляд на сегодня» и календарь). Они остаются синхронизированными: отметка ✓ в одном месте ставит её и в другом и обновляет прогресс цели, а удаление задачи из задач на сегодня удаляет и эту веху с Доски Визуализации. Каждую веху можно добавить один раз в день.",
+    faq_q_vision_board_today: "Что происходит при добавлении вехи с Доски Визуализации на сегодня (➕)?",
+    vision_milestone_already_today: "Эта веха уже есть в задачах на сегодня.",
     nm_medical_note: "⚕️ Только общая информация – не медицинская консультация и не замена врачу или клиническому диетологу. Перед изменением рациона или началом физической активности проконсультируйтесь с врачом, особенно при беременности, хронических заболеваниях или приёме лекарств.",
     auth_consent_required: "Для регистрации необходимо принять Условия использования и Политику конфиденциальности.",
     auth_consent_privacy: "Политикой конфиденциальности",
@@ -3759,6 +3777,9 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'.",
 },
 de: {
+    faq_a_vision_board_today: "Ein Tipp auf ➕ neben einem Meilenstein auf der Rückseite einer Visionboard-Karte fügt ihn zu den heutigen Aufgaben hinzu (Ein Blick auf Heute und der Kalender). Beide bleiben synchron: Abhaken mit ✓ an einer Stelle hakt ihn auch an der anderen ab und aktualisiert den Fortschritt des Ziels, und das Löschen der Aufgabe aus den heutigen Aufgaben löscht auch den Meilenstein vom Visionboard. Jeder Meilenstein kann einmal pro Tag hinzugefügt werden.",
+    faq_q_vision_board_today: "Was passiert, wenn man einen Meilenstein vom Visionboard zu heute hinzufügt (➕)?",
+    vision_milestone_already_today: "Dieser Meilenstein ist bereits in den heutigen Aufgaben.",
     nm_medical_note: "⚕️ Nur allgemeine Informationen – keine medizinische Beratung und kein Ersatz für ärztliches Fachpersonal oder eine klinische Ernährungsfachkraft. Vor einer Ernährungsumstellung oder dem Beginn körperlicher Aktivität ärztlichen Rat einholen, insbesondere in der Schwangerschaft, bei chronischen Erkrankungen oder bei Einnahme von Medikamenten.",
     auth_consent_required: "Für die Registrierung ist die Zustimmung zu den Nutzungsbedingungen und zur Datenschutzerklärung erforderlich.",
     auth_consent_privacy: "Datenschutzerklärung",
@@ -4376,6 +4397,9 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben.",
 },
 pt: {
+    faq_a_vision_board_today: "Tocar em ➕ ao lado de um marco no verso de um cartão do Quadro de Visão o adiciona às tarefas de hoje (Uma Olhadinha no Dia de Hoje e o calendário). Os dois ficam sincronizados: marcar ✓ em um lugar marca também no outro e atualiza o progresso da meta, e excluir a tarefa das tarefas de hoje também exclui esse marco do Quadro de Visão. Cada marco pode ser adicionado uma vez por dia.",
+    faq_q_vision_board_today: "O que acontece ao adicionar um marco do Quadro de Visão a hoje (➕)?",
+    vision_milestone_already_today: "Este marco já está nas tarefas de hoje.",
     nm_medical_note: "⚕️ Somente informações gerais – não é aconselhamento médico nem substitui um médico ou nutricionista clínico. Consulte um médico antes de mudar a alimentação ou iniciar atividade física, especialmente durante a gravidez, em caso de doença crônica ou de uso de medicamentos.",
     auth_consent_required: "Para se cadastrar, é necessário aceitar os Termos de uso e a Política de privacidade.",
     auth_consent_privacy: "Política de privacidade",
@@ -4993,6 +5017,9 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar.",
 },
 ja: {
+    faq_a_vision_board_today: "ビジョンボードのカード裏面にあるマイルストーンの横の➕をタップすると、今日のタスク（「今日をチラ見」とカレンダー）に追加されます。両者は同期されます。どちらかで✓を付けるともう一方にも反映され、目標の進捗も更新されます。また、今日のタスクから削除すると、そのマイルストーンもビジョンボードから削除されます。各マイルストーンは1日1回追加できます。",
+    faq_q_vision_board_today: "ビジョンボードのマイルストーンを今日に追加（➕）するとどうなりますか？",
+    vision_milestone_already_today: "このマイルストーンはすでに今日のタスクにあります。",
     nm_medical_note: "⚕️ 一般的な情報のみであり、医学的助言ではなく、医師や臨床栄養士に代わるものではありません。食事の変更や身体活動の開始前には、特に妊娠中、慢性疾患がある場合、または薬を服用している場合は、医師に相談してください。",
     auth_consent_required: "登録するには、利用規約およびプライバシーポリシーへの同意が必要です。",
     auth_consent_privacy: "プライバシーポリシー",
@@ -5610,6 +5637,9 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。",
 },
 zh: {
+    faq_a_vision_board_today: "点击愿景板卡片背面里程碑旁的 ➕，即可将其添加到今天的任务（“今日一瞥”和日历）。两者保持同步：在任一处打 ✓，另一处也会同步勾选，并更新目标的进度；从今天的任务中删除该任务，也会从愿景板中删除这个里程碑。每个里程碑每天可添加一次。",
+    faq_q_vision_board_today: "把愿景板上的里程碑添加到今天（➕）会怎样？",
+    vision_milestone_already_today: "这个里程碑已经在今天的任务中了。",
     nm_medical_note: "⚕️ 仅供一般参考——不构成医疗建议，也不能替代医生或临床营养师。调整饮食或开始体育活动前，请咨询医生，尤其是在怀孕期间、患有慢性疾病或正在服药的情况下。",
     auth_consent_required: "注册须同意使用条款和隐私政策。",
     auth_consent_privacy: "隐私政策",
@@ -6227,6 +6257,9 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。",
 },
 hi: {
+    faq_a_vision_board_today: "विज़न बोर्ड कार्ड के पीछे किसी माइलस्टोन के पास ➕ पर टैप करने से वह आज के कार्यों (आज की एक झलक और कैलेंडर) में जुड़ जाता है। दोनों सिंक रहते हैं: किसी एक जगह ✓ लगाने पर दूसरी जगह भी लग जाता है और लक्ष्य की प्रगति अपडेट हो जाती है, और आज के कार्यों से कार्य हटाने पर वह माइलस्टोन विज़न बोर्ड से भी हट जाता है। हर माइलस्टोन को दिन में एक बार जोड़ा जा सकता है।",
+    faq_q_vision_board_today: "विज़न बोर्ड के माइलस्टोन को आज में जोड़ने (➕) पर क्या होता है?",
+    vision_milestone_already_today: "यह माइलस्टोन पहले से आज के कार्यों में है।",
     nm_medical_note: "⚕️ केवल सामान्य जानकारी – यह चिकित्सा सलाह नहीं है और न ही चिकित्सक या क्लिनिकल आहार विशेषज्ञ का विकल्प है। आहार बदलने या शारीरिक गतिविधि शुरू करने से पहले चिकित्सक से परामर्श लें, विशेष रूप से गर्भावस्था में, किसी दीर्घकालिक रोग की स्थिति में या दवाएं लेते समय।",
     auth_consent_required: "पंजीकरण के लिए उपयोग की शर्तों और गोपनीयता नीति को स्वीकार करना आवश्यक है।",
     auth_consent_privacy: "गोपनीयता नीति",
@@ -6844,6 +6877,9 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा।",
 },
 ko: {
+    faq_a_vision_board_today: "비전 보드 카드 뒷면의 마일스톤 옆 ➕를 누르면 오늘 할 일(오늘 살짝 엿보기와 캘린더)에 추가됩니다. 둘은 동기화되어, 한쪽에서 ✓ 표시하면 다른 쪽에도 표시되고 목표의 진행 상황이 업데이트되며, 오늘 할 일에서 해당 작업을 삭제하면 비전 보드에서도 그 마일스톤이 삭제됩니다. 각 마일스톤은 하루에 한 번 추가할 수 있습니다.",
+    faq_q_vision_board_today: "비전 보드의 마일스톤을 오늘에 추가(➕)하면 어떻게 되나요?",
+    vision_milestone_already_today: "이 마일스톤은 이미 오늘 할 일에 있습니다.",
     nm_medical_note: "⚕️ 일반 정보일 뿐이며 의학적 조언이 아니고 의사나 임상영양사를 대체하지 않습니다. 식단을 변경하거나 신체 활동을 시작하기 전에, 특히 임신 중이거나 만성 질환이 있거나 약을 복용 중인 경우 반드시 의사와 상담하세요.",
     auth_consent_required: "가입하려면 이용약관 및 개인정보 처리방침에 동의해야 합니다.",
     auth_consent_privacy: "개인정보 처리방침",
@@ -7461,6 +7497,9 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다.",
 },
 tr: {
+    faq_a_vision_board_today: "Vizyon Panosu kartının arka yüzündeki bir kilometre taşının yanındaki ➕'ya dokunmak onu bugünün görevlerine ekler (Bugüne Bir Bakış ve takvim). İkisi senkronize kalır: bir yerde ✓ ile işaretlemek diğerinde de işaretler ve hedefin ilerlemesini günceller; görevi bugünün görevlerinden silmek de o kilometre taşını Vizyon Panosu'ndan siler. Her kilometre taşı günde bir kez eklenebilir.",
+    faq_q_vision_board_today: "Vizyon Panosu'ndaki bir kilometre taşını bugüne eklediğimde (➕) ne olur?",
+    vision_milestone_already_today: "Bu kilometre taşı zaten bugünün görevlerinde.",
     nm_medical_note: "⚕️ Yalnızca genel bilgi – tıbbi tavsiye değildir ve hekimin ya da klinik diyetisyenin yerini tutmaz. Beslenmenizi değiştirmeden veya fiziksel aktiviteye başlamadan önce, özellikle hamilelik, kronik hastalık veya ilaç kullanımı durumunda bir hekime danışın.",
     auth_consent_required: "Kaydolmak için Kullanım Koşulları ve Gizlilik Politikası metinlerinin onaylanması gerekir.",
     auth_consent_privacy: "Gizlilik Politikası",
@@ -8078,6 +8117,9 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir.",
 },
 id: {
+    faq_a_vision_board_today: "Mengetuk ➕ di samping pencapaian di bagian belakang kartu Papan Visi akan menambahkannya ke tugas hari ini (Sekilas Hari Ini dan kalender). Keduanya tetap tersinkron: mencentang ✓ di satu tempat juga mencentangnya di tempat lain dan memperbarui progres target, dan menghapus tugas dari tugas hari ini juga menghapus pencapaian itu dari Papan Visi. Setiap pencapaian dapat ditambahkan sekali per hari.",
+    faq_q_vision_board_today: "Apa yang terjadi saat menambahkan pencapaian dari Papan Visi ke hari ini (➕)?",
+    vision_milestone_already_today: "Pencapaian ini sudah ada di tugas hari ini.",
     nm_medical_note: "⚕️ Hanya informasi umum – bukan nasihat medis dan bukan pengganti dokter atau ahli gizi klinis. Konsultasikan dengan dokter sebelum mengubah pola makan atau memulai aktivitas fisik, terutama saat hamil, memiliki penyakit kronis, atau mengonsumsi obat-obatan.",
     auth_consent_required: "Untuk mendaftar, Ketentuan Penggunaan dan Kebijakan Privasi wajib disetujui.",
     auth_consent_privacy: "Kebijakan Privasi",
@@ -8695,6 +8737,9 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya.",
 },
 it: {
+    faq_a_vision_board_today: "Toccando ➕ accanto a un traguardo sul retro di una scheda della Bacheca dei Sogni, lo si aggiunge alle attività di oggi (Uno Sguardo a Oggi e il calendario). I due restano sincronizzati: spuntarlo con ✓ in un punto lo spunta anche nell'altro e aggiorna i progressi dell'obiettivo, ed eliminare l'attività dalle attività di oggi elimina anche quel traguardo dalla Bacheca dei Sogni. Ogni traguardo può essere aggiunto una volta al giorno.",
+    faq_q_vision_board_today: "Cosa succede aggiungendo a oggi un traguardo della Bacheca dei Sogni (➕)?",
+    vision_milestone_already_today: "Questo traguardo è già tra le attività di oggi.",
     nm_medical_note: "⚕️ Solo informazioni generali – non costituiscono consulenza medica né sostituiscono un medico o un dietista clinico. Consultare un medico prima di modificare l'alimentazione o iniziare un'attività fisica, in particolare in gravidanza, in presenza di malattie croniche o in caso di assunzione di farmaci.",
     auth_consent_required: "Per la registrazione è necessario accettare i Termini di utilizzo e l'Informativa sulla privacy.",
     auth_consent_privacy: "Informativa sulla privacy",
@@ -9312,6 +9357,9 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla.",
 },
 vi: {
+    faq_a_vision_board_today: "Nhấn ➕ bên cạnh một cột mốc ở mặt sau thẻ Bảng Tầm Nhìn sẽ thêm nó vào nhiệm vụ hôm nay (Thoáng Nhìn Ngày Hôm Nay và lịch). Hai nơi luôn được đồng bộ: đánh dấu ✓ ở một nơi cũng sẽ đánh dấu ở nơi kia và cập nhật tiến độ của mục tiêu, còn xóa nhiệm vụ khỏi nhiệm vụ hôm nay cũng sẽ xóa cột mốc đó khỏi Bảng Tầm Nhìn. Mỗi cột mốc có thể được thêm một lần mỗi ngày.",
+    faq_q_vision_board_today: "Điều gì xảy ra khi thêm một cột mốc từ Bảng Tầm Nhìn vào hôm nay (➕)?",
+    vision_milestone_already_today: "Cột mốc này đã có trong nhiệm vụ hôm nay.",
     nm_medical_note: "⚕️ Chỉ là thông tin chung – không phải lời khuyên y tế và không thay thế bác sĩ hay chuyên gia dinh dưỡng lâm sàng. Hãy tham khảo ý kiến bác sĩ trước khi thay đổi chế độ ăn hoặc bắt đầu hoạt động thể chất, đặc biệt khi đang mang thai, mắc bệnh mãn tính hoặc đang dùng thuốc.",
     auth_consent_required: "Để đăng ký, cần đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư.",
     auth_consent_privacy: "Chính sách quyền riêng tư",
@@ -9929,6 +9977,9 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận.",
 },
 pl: {
+    faq_a_vision_board_today: "Dotknięcie ➕ obok kamienia milowego na odwrocie karty Tablicy Wizji dodaje go do dzisiejszych zadań (Rzut Oka na Dzisiaj i kalendarz). Oba miejsca pozostają zsynchronizowane: zaznaczenie ✓ w jednym zaznacza go też w drugim i aktualizuje postęp celu, a usunięcie zadania z dzisiejszych zadań usuwa też ten kamień milowy z Tablicy Wizji. Każdy kamień milowy można dodać raz dziennie.",
+    faq_q_vision_board_today: "Co się dzieje po dodaniu kamienia milowego z Tablicy Wizji na dziś (➕)?",
+    vision_milestone_already_today: "Ten kamień milowy jest już w dzisiejszych zadaniach.",
     nm_medical_note: "⚕️ Wyłącznie informacje ogólne – nie stanowią porady medycznej i nie zastępują lekarza ani dietetyka klinicznego. Przed zmianą diety lub rozpoczęciem aktywności fizycznej należy skonsultować się z lekarzem, zwłaszcza w ciąży, w przypadku choroby przewlekłej lub przyjmowania leków.",
     auth_consent_required: "Aby się zarejestrować, należy zaakceptować Warunki korzystania i Politykę prywatności.",
     auth_consent_privacy: "Polityką prywatności",
@@ -10547,6 +10598,9 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'.",
 },
 th: {
+    faq_a_vision_board_today: "การแตะ ➕ ข้างหมุดหมายที่ด้านหลังการ์ดในกระดานวิสัยทัศน์จะเพิ่มหมุดหมายนั้นลงในงานของวันนี้ (แอบดูวันนี้และปฏิทิน) ทั้งสองจะซิงค์กันเสมอ: การทำเครื่องหมาย ✓ ที่หนึ่งจะทำเครื่องหมายอีกที่หนึ่งด้วยและอัปเดตความคืบหน้าของเป้าหมาย ส่วนการลบงานออกจากงานของวันนี้จะลบหมุดหมายนั้นออกจากกระดานวิสัยทัศน์ด้วย แต่ละหมุดหมายเพิ่มได้วันละหนึ่งครั้ง",
+    faq_q_vision_board_today: "จะเกิดอะไรขึ้นเมื่อเพิ่มหมุดหมายจากกระดานวิสัยทัศน์ลงในวันนี้ (➕)?",
+    vision_milestone_already_today: "หมุดหมายนี้อยู่ในงานของวันนี้แล้ว",
     nm_medical_note: "⚕️ เป็นข้อมูลทั่วไปเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ และไม่สามารถใช้แทนแพทย์หรือนักกำหนดอาหารทางคลินิก ควรปรึกษาแพทย์ก่อนเปลี่ยนแปลงการรับประทานอาหารหรือเริ่มกิจกรรมทางกาย โดยเฉพาะในระหว่างตั้งครรภ์ เมื่อมีโรคเรื้อรัง หรือเมื่อใช้ยาเป็นประจำ",
     auth_consent_required: "การลงทะเบียนต้องยอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว",
     auth_consent_privacy: "นโยบายความเป็นส่วนตัว",
@@ -11166,6 +11220,9 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน",
 },
 ur: {
+    faq_a_vision_board_today: "وژن بورڈ کارڈ کی پشت پر کسی سنگ میل کے ساتھ ➕ پر تھپتھپانے سے وہ آج کے کاموں (آج پر ایک نظر اور کیلنڈر) میں شامل ہو جاتا ہے۔ دونوں ہم آہنگ رہتے ہیں: کسی ایک جگہ ✓ لگانے سے دوسری جگہ بھی لگ جاتا ہے اور ہدف کی پیش رفت اپ ڈیٹ ہو جاتی ہے، اور آج کے کاموں سے کام حذف کرنے سے وہ سنگ میل وژن بورڈ سے بھی حذف ہو جاتا ہے۔ ہر سنگ میل دن میں ایک بار شامل کیا جا سکتا ہے۔",
+    faq_q_vision_board_today: "وژن بورڈ کے کسی سنگ میل کو آج میں شامل کرنے (➕) پر کیا ہوتا ہے؟",
+    vision_milestone_already_today: "یہ سنگ میل پہلے ہی آج کے کاموں میں موجود ہے۔",
     nm_medical_note: "⚕️ صرف عمومی معلومات – یہ طبی مشورہ نہیں اور نہ ہی معالج یا کلینیکل ماہرِ غذائیت کا متبادل ہے۔ خوراک میں تبدیلی یا جسمانی سرگرمی شروع کرنے سے پہلے معالج سے مشورہ کریں، خاص طور پر حمل کے دوران، کسی دائمی بیماری کی صورت میں یا ادویات کے استعمال کے دوران۔",
     auth_consent_required: "رجسٹریشن کے لیے استعمال کی شرائط اور رازداری کی پالیسی کو قبول کرنا ضروری ہے۔",
     auth_consent_privacy: "رازداری کی پالیسی",
@@ -11785,6 +11842,9 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔",
 },
 bn: {
+    faq_a_vision_board_today: "ভিশন বোর্ড কার্ডের পেছনে কোনো মাইলফলকের পাশে ➕ ট্যাপ করলে সেটি আজকের কাজে (আজকের এক ঝলক ও ক্যালেন্ডার) যোগ হয়। দুটি সিঙ্ক থাকে: এক জায়গায় ✓ দিলে অন্য জায়গাতেও চিহ্নিত হয় এবং লক্ষ্যের অগ্রগতি আপডেট হয়, আর আজকের কাজ থেকে কাজটি মুছে ফেললে মাইলফলকটি ভিশন বোর্ড থেকেও মুছে যায়। প্রতিটি মাইলফলক দিনে একবার যোগ করা যায়।",
+    faq_q_vision_board_today: "ভিশন বোর্ডের কোনো মাইলফলক আজকে যোগ করলে (➕) কী হয়?",
+    vision_milestone_already_today: "এই মাইলফলকটি ইতিমধ্যে আজকের কাজে আছে।",
     nm_medical_note: "⚕️ শুধুমাত্র সাধারণ তথ্য – এটি চিকিৎসা পরামর্শ নয় এবং চিকিৎসক বা ক্লিনিক্যাল ডায়েটিশিয়ানের বিকল্প নয়। খাদ্যাভ্যাস পরিবর্তন বা শারীরিক কার্যকলাপ শুরু করার আগে চিকিৎসকের পরামর্শ নিন, বিশেষত গর্ভাবস্থায়, দীর্ঘস্থায়ী রোগ থাকলে বা ওষুধ সেবনের ক্ষেত্রে।",
     auth_consent_required: "নিবন্ধনের জন্য ব্যবহারের শর্তাবলী ও গোপনীয়তা নীতিতে সম্মতি দেওয়া আবশ্যক।",
     auth_consent_privacy: "গোপনীয়তা নীতি",
@@ -12404,6 +12464,9 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে।",
 },
 sw: {
+    faq_a_vision_board_today: "Kugusa ➕ karibu na hatua muhimu upande wa nyuma wa kadi ya Ubao wa Maono huiongeza kwenye kazi za leo (Mtazamo wa Leo na kalenda). Viwili hivi hubaki vimesawazishwa: kuweka alama ✓ mahali pamoja huiweka pia mahali pengine na kusasisha maendeleo ya lengo, na kufuta kazi kutoka kazi za leo pia hufuta hatua hiyo muhimu kutoka Ubao wa Maono. Kila hatua muhimu inaweza kuongezwa mara moja kwa siku.",
+    faq_q_vision_board_today: "Nini hutokea ninapoongeza hatua muhimu kutoka Ubao wa Maono kwenye leo (➕)?",
+    vision_milestone_already_today: "Hatua muhimu hii tayari iko kwenye kazi za leo.",
     nm_medical_note: "⚕️ Taarifa za jumla pekee – si ushauri wa kitabibu na hazichukui nafasi ya daktari au mtaalamu wa lishe wa kitabibu. Shauriana na daktari kabla ya kubadilisha lishe au kuanza mazoezi ya mwili, hasa wakati wa ujauzito, ukiwa na ugonjwa sugu au unapotumia dawa.",
     auth_consent_required: "Ili kujisajili, ni lazima kukubali Masharti ya Matumizi na Sera ya Faragha.",
     auth_consent_privacy: "Sera ya Faragha",
@@ -13023,6 +13086,9 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha.",
 },
 uk: {
+    faq_a_vision_board_today: "Натискання ➕ біля віхи на звороті картки Дошки Візуалізації додає її до завдань на сьогодні («Погляд на сьогодні» і календар). Вони залишаються синхронізованими: позначка ✓ в одному місці ставить її й в іншому та оновлює прогрес цілі, а видалення завдання із завдань на сьогодні видаляє й цю віху з Дошки Візуалізації. Кожну віху можна додати один раз на день.",
+    faq_q_vision_board_today: "Що відбувається під час додавання віхи з Дошки Візуалізації на сьогодні (➕)?",
+    vision_milestone_already_today: "Ця віха вже є в завданнях на сьогодні.",
     nm_medical_note: "⚕️ Лише загальна інформація – не медична порада і не заміна лікарю чи клінічному дієтологу. Перед зміною харчування або початком фізичної активності проконсультуйтеся з лікарем, особливо під час вагітності, за наявності хронічного захворювання або під час приймання ліків.",
     auth_consent_required: "Для реєстрації необхідно прийняти Умови використання та Політику конфіденційності.",
     auth_consent_privacy: "Політикою конфіденційності",
@@ -13642,6 +13708,9 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'.",
 },
 el: {
+    faq_a_vision_board_today: "Πατώντας ➕ δίπλα σε ένα ορόσημο στο πίσω μέρος μιας κάρτας του Πίνακα Οραματισμού, αυτό προστίθεται στις σημερινές εργασίες (Μια Ματιά στο Σήμερα και ημερολόγιο). Τα δύο μένουν συγχρονισμένα: η σήμανση ✓ στο ένα σημειώνει και το άλλο και ενημερώνει την πρόοδο του στόχου, ενώ η διαγραφή της εργασίας από τις σημερινές εργασίες διαγράφει και το ορόσημο από τον Πίνακα Οραματισμού. Κάθε ορόσημο μπορεί να προστεθεί μία φορά την ημέρα.",
+    faq_q_vision_board_today: "Τι συμβαίνει όταν προστίθεται ένα ορόσημο από τον Πίνακα Οραματισμού στο σήμερα (➕);",
+    vision_milestone_already_today: "Αυτό το ορόσημο βρίσκεται ήδη στις σημερινές εργασίες.",
     nm_medical_note: "⚕️ Μόνο γενικές πληροφορίες – δεν αποτελούν ιατρική συμβουλή ούτε υποκαθιστούν ιατρό ή κλινικό διαιτολόγο. Πριν από αλλαγή στη διατροφή ή έναρξη σωματικής δραστηριότητας, συμβουλευτείτε ιατρό, ιδίως κατά την εγκυμοσύνη, σε περίπτωση χρόνιας νόσου ή λήψης φαρμάκων.",
     auth_consent_required: "Για την εγγραφή απαιτείται η αποδοχή των Όρων χρήσης και της Πολιτικής απορρήτου.",
     auth_consent_privacy: "Πολιτική απορρήτου",
@@ -14261,6 +14330,9 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε.",
 },
 nl: {
+    faq_a_vision_board_today: "Tik op ➕ naast een mijlpaal op de achterkant van een Visiebord-kaart om die aan de taken van vandaag toe te voegen (Een Kijkje op Vandaag en de kalender). Ze blijven gesynchroniseerd: afvinken met ✓ op de ene plek vinkt hem ook op de andere af en werkt de voortgang van het doel bij, en de taak verwijderen uit de taken van vandaag verwijdert ook die mijlpaal van het Visiebord. Elke mijlpaal kan één keer per dag worden toegevoegd.",
+    faq_q_vision_board_today: "Wat gebeurt er als je een mijlpaal van het Visiebord aan vandaag toevoegt (➕)?",
+    vision_milestone_already_today: "Deze mijlpaal staat al in de taken van vandaag.",
     nm_medical_note: "⚕️ Uitsluitend algemene informatie – geen medisch advies en geen vervanging voor een arts of klinisch diëtist. Raadpleeg een arts vóór een wijziging van het voedingspatroon of de start van lichamelijke activiteit, vooral bij zwangerschap, een chronische ziekte of medicijngebruik.",
     auth_consent_required: "Voor registratie is akkoord met de Gebruiksvoorwaarden en het Privacybeleid vereist.",
     auth_consent_privacy: "Privacybeleid",
@@ -14880,6 +14952,9 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen.",
 },
 ca: {
+    faq_a_vision_board_today: "Tocar ➕ al costat d'una fita al revers d'una targeta del Tauler de Visió l'afegeix a les tasques d'avui (Un Cop d'Ull a Avui i el calendari). Tots dos es mantenen sincronitzats: marcar-la amb ✓ en un lloc també la marca a l'altre i actualitza el progrés de l'objectiu, i eliminar la tasca de les tasques d'avui també elimina aquesta fita del Tauler de Visió. Cada fita es pot afegir un cop al dia.",
+    faq_q_vision_board_today: "Què passa en afegir una fita del Tauler de Visió a avui (➕)?",
+    vision_milestone_already_today: "Aquesta fita ja és a les tasques d'avui.",
     nm_medical_note: "⚕️ Només informació general: no constitueix consell mèdic ni substitueix un metge o un dietista clínic. Cal consultar un metge abans de canviar l'alimentació o començar una activitat física, especialment durant l'embaràs, en cas de malaltia crònica o si es pren medicació.",
     auth_consent_required: "Per registrar-se cal acceptar les Condicions d'ús i la Política de privadesa.",
     auth_consent_privacy: "Política de privadesa",
@@ -15499,6 +15574,9 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho.",
 },
 ro: {
+    faq_a_vision_board_today: "Atingerea ➕ de lângă un reper de pe spatele unui card din Panoul de Viziune îl adaugă la sarcinile de azi (O Privire Asupra Zilei de Azi și calendarul). Cele două rămân sincronizate: bifarea cu ✓ într-un loc îl bifează și în celălalt și actualizează progresul obiectivului, iar ștergerea sarcinii din sarcinile de azi șterge și reperul din Panoul de Viziune. Fiecare reper poate fi adăugat o dată pe zi.",
+    faq_q_vision_board_today: "Ce se întâmplă la adăugarea unui reper din Panoul de Viziune la ziua de azi (➕)?",
+    vision_milestone_already_today: "Acest reper este deja în sarcinile de azi.",
     nm_medical_note: "⚕️ Exclusiv informații generale – nu constituie sfat medical și nu înlocuiesc medicul sau dieteticianul clinic. Consultați un medic înainte de a modifica alimentația sau de a începe activitatea fizică, în special în timpul sarcinii, în cazul unei boli cronice sau al administrării de medicamente.",
     auth_consent_required: "Pentru înregistrare este necesară acceptarea Termenilor de utilizare și a Politicii de confidențialitate.",
     auth_consent_privacy: "Politica de confidențialitate",
@@ -16118,6 +16196,9 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare.",
 },
 yo: {
+    faq_a_vision_board_today: "Títẹ ➕ lẹ́gbẹ̀ẹ́ àmì ìlọsíwájú kan ní ẹ̀yìn káàdì Pátákó Ìran máa ń fi kún àwọn iṣẹ́ òní (Ìwòye Òní àti kàlẹ́ńdà). Àwọn méjèèjì máa ń wà ní ìbámu: sísàmì ✓ ní ibì kan máa ń sàmì sí i ní ibì kejì náà, ó sì máa ń ṣe àtúnṣe ìtẹ̀síwájú góńgó náà, pípa iṣẹ́ náà rẹ́ kúrò nínú àwọn iṣẹ́ òní sì máa ń pa àmì ìlọsíwájú náà rẹ́ kúrò lórí Pátákó Ìran pẹ̀lú. A lè fi àmì ìlọsíwájú kọ̀ọ̀kan kún lẹ́ẹ̀kan lójúmọ́.",
+    faq_q_vision_board_today: "Kí ló ń ṣẹlẹ̀ tí mo bá fi àmì ìlọsíwájú láti Pátákó Ìran kún òní (➕)?",
+    vision_milestone_already_today: "Àmì ìlọsíwájú yìí ti wà nínú àwọn iṣẹ́ òní tẹ́lẹ̀.",
     nm_medical_note: "⚕️ Ìsọfúnni gbogbogbò nìkan – kì í ṣe ìmọ̀ràn ìṣègùn, kò sì lè rọ́pò dókítà tàbí onímọ̀ oúnjẹ ìṣègùn. Bá dókítà sọ̀rọ̀ kí o tó yí oúnjẹ rẹ padà tàbí kí o tó bẹ̀rẹ̀ iṣẹ́ ìdárayá ara, pàápàá nígbà oyún, tí o bá ní àìsàn onígbà pípẹ́ tàbí tí o bá ń lo oògùn.",
     auth_consent_required: "Láti forúkọsílẹ̀, ó di dandan láti gba Àwọn Òfin Lílò àti Ìlànà Ìpamọ́.",
     auth_consent_privacy: "Ìlànà Ìpamọ́",
@@ -16738,6 +16819,9 @@ yo: {
 },
 
 sv: {
+    faq_a_vision_board_today: "Tryck på ➕ bredvid en milstolpe på baksidan av ett kort på Visionstavlan för att lägga till den i dagens uppgifter (En Titt på Idag och kalendern). De två hålls synkade: att bocka av med ✓ på ena stället bockar av den även på det andra och uppdaterar målets framsteg, och att ta bort uppgiften från dagens uppgifter tar också bort milstolpen från Visionstavlan. Varje milstolpe kan läggas till en gång per dag.",
+    faq_q_vision_board_today: "Vad händer när man lägger till en milstolpe från Visionstavlan i dag (➕)?",
+    vision_milestone_already_today: "Den här milstolpen finns redan i dagens uppgifter.",
     nm_medical_note: "⚕️ Endast allmän information – inte medicinsk rådgivning och ingen ersättning för läkare eller klinisk dietist. Rådfråga läkare före en kostförändring eller innan fysisk aktivitet påbörjas, särskilt vid graviditet, kronisk sjukdom eller läkemedelsbehandling.",
     auth_consent_required: "För registrering krävs godkännande av Användarvillkoren och Integritetspolicyn.",
     auth_consent_privacy: "Integritetspolicyn",
@@ -17357,6 +17441,9 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta.",
 },
 nb: {
+    faq_a_vision_board_today: "Trykk på ➕ ved siden av en milepæl på baksiden av et kort på Visjonstavlen for å legge den til i dagens oppgaver (En Titt på I Dag og kalenderen). De to holdes synkronisert: å krysse av med ✓ ett sted krysser den av også det andre stedet og oppdaterer målets fremgang, og å slette oppgaven fra dagens oppgaver sletter også milepælen fra Visjonstavlen. Hver milepæl kan legges til én gang per dag.",
+    faq_q_vision_board_today: "Hva skjer når man legger til en milepæl fra Visjonstavlen i dag (➕)?",
+    vision_milestone_already_today: "Denne milepælen er allerede i dagens oppgaver.",
     nm_medical_note: "⚕️ Kun generell informasjon – ikke medisinske råd og ingen erstatning for lege eller klinisk ernæringsfysiolog. Rådfør deg med lege før endring av kostholdet eller oppstart av fysisk aktivitet, særlig ved graviditet, kronisk sykdom eller fast bruk av legemidler.",
     auth_consent_required: "Registrering krever at Vilkårene for bruk og Personvernerklæringen godtas.",
     auth_consent_privacy: "Personvernerklæringen",
@@ -17976,6 +18063,9 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte.",
 },
 da: {
+    faq_a_vision_board_today: "Tryk på ➕ ved siden af en milepæl på bagsiden af et kort på Visionstavlen for at tilføje den til dagens opgaver (Et Kig på I Dag og kalenderen). De to holdes synkroniseret: at krydse af med ✓ ét sted krydser den også af det andet sted og opdaterer målets fremskridt, og at slette opgaven fra dagens opgaver sletter også milepælen fra Visionstavlen. Hver milepæl kan tilføjes én gang om dagen.",
+    faq_q_vision_board_today: "Hvad sker der, når man tilføjer en milepæl fra Visionstavlen til i dag (➕)?",
+    vision_milestone_already_today: "Denne milepæl er allerede i dagens opgaver.",
     nm_medical_note: "⚕️ Udelukkende generel information – ikke medicinsk rådgivning og ingen erstatning for en læge eller klinisk diætist. Søg råd hos en læge før ændring af kosten eller påbegyndelse af fysisk aktivitet, især under graviditet, ved kronisk sygdom eller ved brug af medicin.",
     auth_consent_required: "Oprettelse kræver accept af Brugsvilkårene og Privatlivspolitikken.",
     auth_consent_privacy: "Privatlivspolitikken",
@@ -18595,6 +18685,9 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte.",
 },
 cs: {
+    faq_a_vision_board_today: "Klepnutím na ➕ vedle milníku na zadní straně karty Nástěnky Vizí se milník přidá do dnešních úkolů (Pohled na Dnešek a kalendář). Obojí zůstává synchronizované: odškrtnutí ✓ na jednom místě ho odškrtne i na druhém a aktualizuje pokrok cíle, a smazání úkolu z dnešních úkolů smaže i tento milník z Nástěnky Vizí. Každý milník lze přidat jednou denně.",
+    faq_q_vision_board_today: "Co se stane po přidání milníku z Nástěnky Vizí na dnešek (➕)?",
+    vision_milestone_already_today: "Tento milník už je v dnešních úkolech.",
     nm_medical_note: "⚕️ Pouze obecné informace – nejde o lékařskou radu ani o náhradu lékaře či klinického nutričního terapeuta. Před změnou stravování nebo zahájením pohybové aktivity se poraďte s lékařem, zejména v těhotenství, při chronickém onemocnění nebo při užívání léků.",
     auth_consent_required: "Pro registraci je nutné vyjádřit souhlas s Podmínkami používání a Zásadami ochrany osobních údajů.",
     auth_consent_privacy: "Zásady ochrany osobních údajů",
@@ -19214,6 +19307,9 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'.",
 },
 hu: {
+    faq_a_vision_board_today: "A Vízió Tábla egy kártyájának hátoldalán a mérföldkő melletti ➕ megérintése hozzáadja azt a mai feladatokhoz (Egy Pillantás a Mai Napra és a naptár). A kettő szinkronban marad: ha az egyik helyen ✓ jelet kap, a másikon is kipipálódik, és frissül a cél fejlődése; ha pedig a feladatot törlik a mai feladatok közül, a mérföldkő is törlődik a Vízió Tábláról. Minden mérföldkő naponta egyszer adható hozzá.",
+    faq_q_vision_board_today: "Mi történik, ha egy mérföldkövet a Vízió Tábláról hozzáadunk a mai naphoz (➕)?",
+    vision_milestone_already_today: "Ez a mérföldkő már szerepel a mai feladatok között.",
     nm_medical_note: "⚕️ Kizárólag általános tájékoztatás – nem orvosi tanács, és nem helyettesíti az orvost vagy a klinikai dietetikust. Az étrend megváltoztatása vagy a testmozgás megkezdése előtt konzultáljon orvossal, különösen várandósság, krónikus betegség vagy gyógyszerszedés esetén.",
     auth_consent_required: "A regisztrációhoz el kell fogadni a Felhasználási feltételeket és az Adatvédelmi irányelveket.",
     auth_consent_privacy: "Adatvédelmi irányelveket",
@@ -19833,6 +19929,9 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'.",
 },
 fi: {
+    faq_a_vision_board_today: "Kun virstanpylvään vieressä olevaa ➕-painiketta napautetaan Visiotaulun kortin kääntöpuolella, se lisätään tämän päivän tehtäviin (Silmäys Tähän Päivään ja kalenteri). Ne pysyvät synkronoituina: ✓-merkintä yhdessä paikassa merkitsee sen myös toisessa ja päivittää tavoitteen edistymisen, ja tehtävän poistaminen tämän päivän tehtävistä poistaa myös virstanpylvään Visiotaulusta. Kunkin virstanpylvään voi lisätä kerran päivässä.",
+    faq_q_vision_board_today: "Mitä tapahtuu, kun Visiotaulun virstanpylväs lisätään tähän päivään (➕)?",
+    vision_milestone_already_today: "Tämä virstanpylväs on jo tämän päivän tehtävissä.",
     nm_medical_note: "⚕️ Vain yleistä tietoa – ei lääketieteellistä neuvontaa eikä korvaa lääkäriä tai kliinistä ravitsemusterapeuttia. Keskustele lääkärin kanssa ennen ruokavalion muuttamista tai liikunnan aloittamista, erityisesti raskauden aikana, pitkäaikaissairauden yhteydessä tai lääkkeitä käytettäessä.",
     auth_consent_required: "Rekisteröityminen edellyttää Käyttöehtojen ja Tietosuojakäytännön hyväksymistä.",
     auth_consent_privacy: "Tietosuojakäytännön",

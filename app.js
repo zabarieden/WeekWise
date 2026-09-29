@@ -3596,6 +3596,9 @@ async function applyScheduleEditsAndDeletes(events) {
             if (ev.target_table === 'weekly_schedule') {
                 await supabaseClient.from('weekly_schedule').delete().eq('id', ev.target_id);
             } else {
+                // גם מחיקה דרך ה-AI מסונכרנת ללוח החזון (ר' deleteCalendarEvent)
+                const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', ev.target_id).maybeSingle();
+                if (linked && linked.vision_milestone_id) await deleteVisionMilestoneEverywhere(linked.vision_milestone_id);
                 await supabaseClient.from('calendar_events').delete().eq('id', ev.target_id);
             }
             deleted++;
@@ -5649,6 +5652,9 @@ async function toggleEventOccurrenceCompletion(id, isCompleted) {
     // כלום לא קרה, בלי שום רמז למה. ר' גם תיקון הטריגר עצמו ב-calendar_events_enqueue_outbox
     const { error } = await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); return; }
+    // משימה מלוח החזון - ה-✓ מסונכרן גם לתחנה עצמה (ולהתקדמות היעד)
+    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', id).maybeSingle();
+    if (linked && linked.vision_milestone_id) await setVisionMilestoneDoneFromTask(linked.vision_milestone_id, isCompleted);
     loadCalendarEvents();
     loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
@@ -5910,6 +5916,12 @@ async function duplicateCalendarEvent() {
 }
 
 async function deleteCalendarEvent(id) {
+    // משימה שהגיעה מלוח החזון (➕) - מחיקתה מוחקת גם את התחנה עצמה בלוח החזון,
+    // והמחיקה מתגלגלת (ON DELETE CASCADE) לכל שאר המשימות שמקושרות לאותה תחנה
+    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', id).maybeSingle();
+    if (linked && linked.vision_milestone_id) {
+        await deleteVisionMilestoneEverywhere(linked.vision_milestone_id);
+    }
     await supabaseClient.from('calendar_events').delete().eq('id', id);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
@@ -7125,6 +7137,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'receipts_feature', category: 'finance' },
     { id: 'finance_monthly_balance', category: 'finance' },
     { id: 'monthly_goal_explain', category: 'goals' },
+    { id: 'vision_board_today', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
     { id: 'notification_action_buttons', category: 'settings_a11y' },
@@ -16700,7 +16713,7 @@ function buildVisionMilestoneRow(goalId, goalTitle, milestone) {
     addBtn.className = 'vision-milestone-add-today-btn';
     addBtn.title = t('vision_milestone_add_today_btn_title');
     addBtn.textContent = '➕';
-    addBtn.onclick = () => addMilestoneTaskToToday(goalTitle, milestone.title);
+    addBtn.onclick = () => addMilestoneTaskToToday(goalTitle, milestone);
 
     row.appendChild(checkbox);
     row.appendChild(span);
@@ -16843,7 +16856,31 @@ async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
     const m = visionMilestonesCache.find(x => x.id === milestoneId);
     if (m) m.is_done = checked;
     updateVisionCardProgressDisplay(goalId);
+    // סנכרון הפוך: ✓ בלוח החזון מסמן גם את המשימות היומיות שמקושרות לתחנה
+    const { data: linkedEvents } = await supabaseClient.from('calendar_events').update({ is_completed: checked }).eq('user_id', currentUserId).eq('vision_milestone_id', milestoneId).select('id');
+    if (linkedEvents && linkedEvents.length) { loadTodayTasks(); loadCalendarEvents(); }
     await checkAndMarkGoalAchieved(goalId);
+}
+
+// ✓ על משימה יומית מקושרת → התחנה בלוח החזון מסומנת/מבוטלת בהתאם
+async function setVisionMilestoneDoneFromTask(milestoneId, checked) {
+    const { data: m } = await supabaseClient.from('vision_goal_milestones').update({ is_done: checked }).eq('id', milestoneId).select('goal_id').maybeSingle();
+    const cached = visionMilestonesCache.find(x => x.id === milestoneId);
+    if (cached) cached.is_done = checked;
+    if (m && m.goal_id) {
+        renderVisionGoalsList();
+        await checkAndMarkGoalAchieved(m.goal_id);
+    }
+}
+
+// מחיקת תחנה מלוח החזון (כשמוחקים את המשימה היומית שלה). ה-FK עם ON DELETE CASCADE
+// מוחק גם את כל המשימות האחרות שמקושרות אליה
+async function deleteVisionMilestoneEverywhere(milestoneId) {
+    const cached = visionMilestonesCache.find(x => x.id === milestoneId);
+    await supabaseClient.from('vision_goal_milestones').delete().eq('id', milestoneId).eq('user_id', currentUserId);
+    visionMilestonesCache = visionMilestonesCache.filter(x => x.id !== milestoneId);
+    renderVisionGoalsList();
+    if (cached && cached.goal_id) updateVisionCardProgressDisplay(cached.goal_id);
 }
 
 // כשכל התחנות של יעד מסומנות בוצע, היעד עצמו מסומן "הושג" לצמיתות - לא
@@ -16869,13 +16906,20 @@ async function checkAndMarkGoalAchieved(goalId) {
 // ליומן" רגיל (source:'calendar', לא daily board/לו"ז שבועי), לפי בקשה
 // מפורשת של המשתמשת. שם היעד מוצג כקידומת לתחנה כדי שברשימה שטוחה (מבט
 // ליומן) יהיה ברור מתוך איזה יעד זה הגיע, בלי לפתוח את המגירה
-async function addMilestoneTaskToToday(goalTitle, milestoneTitle) {
+// vision_milestone_id מקשר את המשימה היומית לתחנה - כך שהכול מסונכרן (לפי בקשה מפורשת):
+// מחיקה מההצצה מוחקת גם את התחנה בלוח החזון, ו-✓ בכל אחד מהם מסמן גם בשני
+async function addMilestoneTaskToToday(goalTitle, milestone) {
     if (!supabaseClient || !currentUserId) return;
+    const todayStr = getLocalDateString();
+    const { data: existing } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('vision_milestone_id', milestone.id).limit(1);
+    if (existing && existing.length) { showAppToast(t('vision_milestone_already_today')); return; }
     const { error } = await supabaseClient.from('calendar_events').insert({
         username: currentUsername, user_id: currentUserId,
-        event_title: `🎯 ${goalTitle}: ${milestoneTitle}`,
-        event_date: getLocalDateString(),
+        event_title: `🎯 ${goalTitle}: ${milestone.title}`,
+        event_date: todayStr,
         source: 'calendar', recurrence_group_id: null,
+        vision_milestone_id: milestone.id,
+        is_completed: !!milestone.is_done,
     });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     showAppToast(t('item_added_success'));
