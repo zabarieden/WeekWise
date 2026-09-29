@@ -15,6 +15,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LEMONSQUEEZY_WEBHOOK_SECRET = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET")!;
 const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
 const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -72,6 +73,30 @@ Deno.serve(async (req) => {
     }
 
     const eventName: string = payload?.meta?.event_name || "";
+
+    // New Me = a separate ONE-TIME purchase (an order, not a subscription).
+    // Only ever touches new_me_purchased/new_me_order_id - never is_premium/tier.
+    if (eventName === "order_created" || eventName === "order_refunded") {
+        const orderAttrs = payload?.data?.attributes || {};
+        const orderUserId = payload?.meta?.custom_data?.supabase_user_id;
+        const variantId = String(orderAttrs?.first_order_item?.variant_id ?? "");
+        if (!orderUserId || !LEMONSQUEEZY_VARIANT_ID_NEW_ME || variantId !== LEMONSQUEEZY_VARIANT_ID_NEW_ME) {
+            return new Response(JSON.stringify({ received: true, ignored: true }), { status: 200 });
+        }
+        const purchased = eventName === "order_created"
+            ? orderAttrs.status === "paid"
+            : false;
+        await supabase.from("user_premium").upsert(
+            {
+                user_id: orderUserId,
+                new_me_purchased: purchased,
+                new_me_order_id: String(payload.data.id),
+            },
+            { onConflict: "user_id" },
+        );
+        return new Response(JSON.stringify({ received: true, new_me: purchased }), { status: 200 });
+    }
+
     if (!eventName.startsWith("subscription_")) {
         return new Response(JSON.stringify({ received: true, ignored: true }), { status: 200 });
     }

@@ -271,6 +271,9 @@ function onLanguageChanged() {
     // ריק - מי שלא מחוברת, יושבת על מסך ההתחברות
     if (!currentUserId) { updateAuthUI(); return; }
     updateAuthUI();
+    // New Me נבנה כולו ב-JS - מרנדרים מחדש אם המסך פתוח
+    const newMeSection = document.getElementById('new-me-section');
+    if (newMeSection && newMeSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     Promise.all([
@@ -2666,6 +2669,7 @@ function renderCategoriesMenu() {
 
 function openNewMe() {
     switchToTab('new-me-section');
+    if (typeof renderNewMe === 'function') renderNewMe();
 }
 
 function closeHamburgerMenu() {
@@ -6224,6 +6228,7 @@ let selectedPremiumTier = 'semiannual';
 // (רשומה ב-DB, ניתן לביטול) לבין עקיפת-פיתוח קבועה (אין מה לבטל)
 let premiumTierFromDb = null;
 let isDevSuperuserAccount = false;
+let hasNewMe = false;
 
 // עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
@@ -6249,6 +6254,7 @@ async function loadPremiumStatus() {
         isRealPremiumUser = true;
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
+        hasNewMe = true;
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
         renderSettingsSubscriptionSection();
@@ -6262,6 +6268,8 @@ async function loadPremiumStatus() {
     isPremiumUser = isRealPremiumUser || isInFreeTrial();
     isDevSuperuserAccount = false;
     premiumTierFromDb = (data && data.tier) || null;
+    // New Me נמכר בנפרד (רכישה חד-פעמית) - לא נפתח ע"י פרימיום ולא ע"י תקופת הניסיון
+    hasNewMe = !!(data && data.new_me_purchased);
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
     renderSettingsSubscriptionSection();
@@ -6847,10 +6855,13 @@ async function submitPremiumUpgrade(btn) {
 // הפרימיום בפועל ברענון הבא, מאשר לא לחגוג בכלל אחרי תשלום אמיתי שהצליח
 function handleCheckoutReturn() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('checkout') !== 'success') return;
+    const checkout = params.get('checkout');
+    if (checkout !== 'success' && checkout !== 'newme_success') return;
     params.delete('checkout');
     const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '') + window.location.hash;
     window.history.replaceState({}, '', newUrl);
+    // רכישת New Me (חד-פעמית, נפרדת מפרימיום) - יש לה חזרה משלה, ר' new-me.js
+    if (checkout === 'newme_success') { handleNewMeCheckoutReturn(); return; }
     celebratePremiumUnlock();
 }
 
@@ -7063,6 +7074,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'ai_monthly_limits', category: 'ai' },
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
+    { id: 'new_me_what', category: 'nutrition' },
+    { id: 'new_me_tracking', category: 'nutrition' },
     { id: 'food_variety', category: 'nutrition' },
     { id: 'multi_food_separator', category: 'nutrition' },
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
@@ -17253,7 +17266,9 @@ async function toggleProgressCheckin(targetId, dateStr, shouldCheck) {
 }
 
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
-async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: d, weight_value: w, note: note || null }); if (noteInput) noteInput.value = ''; loadWeightHistory(); }
+// משותף למסך המשקל ול-New Me - שני המסכים כותבים לאותה טבלה בדיוק
+async function insertWeightRecord(value, date, note) { return supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: date, weight_value: value, note: note || null }); }
+async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await insertWeightRecord(w, d, note); if (noteInput) noteInput.value = ''; loadWeightHistory(); }
 // note מוצג בצבע ההדגשה של ערכת הנושא (--accent-purple-text, אותו משתנה
 // שכל הדגשה טקסטואלית אחרת באפליקציה משתמשת בו) - לפי בקשה מפורשת
 async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date})${item.note ? ` <span class="weight-note-text">${escapeHtmlForReport(item.note)}</span>` : ''} <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }

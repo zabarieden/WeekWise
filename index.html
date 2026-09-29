@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=443">
+    <link rel="stylesheet" href="theme.css?v=444">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -878,10 +878,8 @@
                      "בקרוב" - התוכן עצמו ייבנה כאן -->
                 <section class="tab-content" id="new-me-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-                    <div class="card expanded new-me-card">
-                        <h2>✨ New Me</h2>
-                        <p class="new-me-coming-soon" data-i18n="new_me_coming_soon">A new personal program is on its way - coming soon.</p>
-                    </div>
+                    <!-- כל התוכן נבנה דינמית ב-new-me.js (renderNewMe) לפי מצב: מכירה / שאלון / לוח -->
+                    <div id="new-me-root" class="nm-root"></div>
                 </section>
 
                 <!-- קטגוריית ספורט: נגישה רק מהתפריט הצדדי (בלי כפתור קבוע בסרגל
@@ -3523,7 +3521,9 @@
 
     </div>
 
-    <script src="i18n.js?v=345"></script>
-    <script src="app.js?v=492"></script>
+    <script src="i18n.js?v=346"></script>
+    <script src="app.js?v=493"></script>
+    <script src="new-me-data.js?v=1"></script>
+    <script src="new-me.js?v=1"></script>
 </body>
 </html>

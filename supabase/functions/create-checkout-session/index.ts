@@ -23,6 +23,7 @@ const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY")!;
 const LEMONSQUEEZY_STORE_ID = Deno.env.get("LEMONSQUEEZY_STORE_ID")!;
 const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
 const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
 const SITE_URL = Deno.env.get("SITE_URL")!;
 
 const CORS_HEADERS = {
@@ -54,10 +55,16 @@ Deno.serve(async (req) => {
 
         const body = await req.json().catch(() => ({}));
         const tier = body?.tier;
-        if (tier !== "monthly" && tier !== "semiannual") {
+        if (tier !== "monthly" && tier !== "semiannual" && tier !== "new_me") {
             return jsonResponse({ error: "invalid_tier" }, 400);
         }
-        const variantId = tier === "monthly" ? LEMONSQUEEZY_VARIANT_ID_MONTHLY : LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL;
+        // "new_me" = the separate one-time New Me program purchase (not a
+        // subscription, doesn't touch is_premium - see lemonsqueezy-webhook)
+        const variantId = tier === "monthly" ? LEMONSQUEEZY_VARIANT_ID_MONTHLY
+            : tier === "semiannual" ? LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL
+            : LEMONSQUEEZY_VARIANT_ID_NEW_ME;
+        if (!variantId) return jsonResponse({ error: "not_configured" }, 503);
+        const redirectParam = tier === "new_me" ? "newme_success" : "success";
 
         // Lemon Squeezy Checkouts API - JSON:API shape. custom_data.supabase_user_id
         // is how the webhook resolves which user_premium row to update later
@@ -78,7 +85,7 @@ Deno.serve(async (req) => {
                             custom: { supabase_user_id: userId },
                         },
                         product_options: {
-                            redirect_url: `${SITE_URL}/index.html?checkout=success`,
+                            redirect_url: `${SITE_URL}/index.html?checkout=${redirectParam}`,
                         },
                     },
                     relationships: {
