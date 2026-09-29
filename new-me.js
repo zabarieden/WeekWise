@@ -344,6 +344,7 @@ function nmRenderHome(root) {
                     <span class="nm-bonus-sub">${nmEsc(t('nm_bonus_sub'))}</span>
                 </span>
             </button>
+            <p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>
             <button type="button" class="nm-gear" onclick="nmGo('settings')" title="${nmEsc(t('nm_tile_settings'))}" aria-label="${nmEsc(t('nm_tile_settings'))}">⚙️</button>
         </div>`;
@@ -371,7 +372,7 @@ function nmRenderMenu(body) {
                     </span>
                 </div>
             </div>`;
-    }).join('') + nmDrinksHtml() + nmExtrasHtml() + `<p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+    }).join('') + nmDrinksHtml() + nmExtrasHtml() + `<p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p><p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
 }
 
 // ---------- שתייה (הוספה ידנית, לפחות 3 ביום, כולן יחד עד ~150 קל') ----------

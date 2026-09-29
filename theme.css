@@ -3081,6 +3081,7 @@ html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .nm-root bdi, .nm-sheet bdi { display: inline-block; direction: ltr; unicode-bidi: isolate; }
 .nm-fine { color: var(--text-secondary); font-size: .82rem; line-height: 1.5; margin: 6px 0 0; }
 .nm-ai-note { color: var(--text-secondary); font-size: .72rem; line-height: 1.5; margin: 8px 4px 0; opacity: .85; text-align: center; }
+.nm-medical { margin: 4px 0 0; padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent-gold) 45%, transparent); background: color-mix(in srgb, var(--accent-gold) 10%, transparent); color: var(--text-primary); font-size: .8rem; line-height: 1.55; }
 .nm-empty { color: var(--text-secondary); text-align: center; padding: 18px 0; margin: 0; }
 .nm-eyebrow, .nm-hero-eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
 
@@ -5956,6 +5957,11 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .settings-legal-links a { color: var(--text-secondary); text-decoration: underline; }
 /* "שכחתי סיסמה" - קישור קטן וצנוע מתחת לשדה הסיסמה, לא כפתור בולט */
 .auth-forgot-line { margin: 6px 0 0 0 !important; font-size: 0.75rem !important; text-align: end; }
+/* הסכמה אקטיבית בהרשמה - תיבה ריקה + קישורים חיים */
+.auth-consent { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0 2px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary); text-align: start; cursor: pointer; }
+.auth-consent.hidden { display: none; }
+.auth-consent input { width: 18px; height: 18px; flex-shrink: 0; margin: 2px 0 0; accent-color: var(--accent-pink); }
+.auth-consent a { color: var(--accent-purple-light-text); text-decoration: underline; }
 .auth-forgot-line a { color: var(--text-secondary); text-decoration: none; }
 .auth-forgot-line a:hover { color: var(--accent-purple-light-text); text-decoration: underline; }
 

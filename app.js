@@ -1373,6 +1373,7 @@ function updateAuthUI() {
     // זה סתם מבלבל, כי כבר יש סיסמה קיימת שיכולה להיות בכל אורך - דווח:
     // "אין צורך לרשום את זה, זה רק במסך ההרשמה"
     if (passwordInput) passwordInput.placeholder = t(authMode === 'signup' ? 'auth_password_placeholder' : 'auth_password_placeholder_login');
+    renderAuthConsent();
     if (authMode === 'forgot') {
         // מצב "שכחתי סיסמה" - אין שדה סיסמה בכלל כאן (רק אימייל), אין החלפת
         // login/signup, רק קישור חזרה. אותו submitBtn משותף, רק הפעולה
@@ -1405,6 +1406,21 @@ function updateAuthUI() {
     messageEl.textContent = '';
 }
 
+// הסכמה אקטיבית להרשמה (clickwrap): תיבה ריקה (אף פעם לא מסומנת מראש) + קישורים
+// חיים לתנאי השימוש ולמדיניות הפרטיות בשפה הנוכחית. מוצגת רק במצב הרשמה
+const TERMS_VERSION = '2026-09-29';
+function renderAuthConsent() {
+    const line = document.getElementById('auth-consent-line');
+    const text = document.getElementById('auth-consent-text');
+    if (!line || !text) return;
+    line.classList.toggle('hidden', authMode !== 'signup');
+    const suffix = currentLang === 'he' ? '' : (currentLang === 'es' ? '-es' : '-en');
+    const link = (href, label) => `<a href="${href}${suffix}.html" target="_blank" rel="noopener">${escapeHtmlForReport(label)}</a>`;
+    text.innerHTML = escapeHtmlForReport(t('auth_consent_label'))
+        .replace('{terms}', link('terms', t('auth_consent_terms')))
+        .replace('{privacy}', link('privacy', t('auth_consent_privacy')));
+}
+
 async function submitAuthForm() {
     const email = document.getElementById('auth-email-input').value.trim();
     const password = document.getElementById('auth-password-input').value;
@@ -1433,7 +1449,10 @@ async function submitAuthForm() {
     if (!email || !password) { messageEl.textContent = t('auth_fill_both'); return; }
 
     if (authMode === 'signup') {
-        const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { captchaToken } });
+        const consent = document.getElementById('auth-consent-checkbox');
+        if (!consent || !consent.checked) { messageEl.textContent = t('auth_consent_required'); return; }
+        // תיעוד ההסכמה (מתי ולאיזו גרסת תנאים) נשמר עם המשתמש/ת עצמו/ה (auth user_metadata)
+        const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { captchaToken, data: { terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION, age_16_plus_confirmed: true } } });
         resetCaptcha();
         if (error) { messageEl.textContent = error.message; return; }
         // חותמת ברירת מחדל להרשמה חדשה: ערכת נושא ברירת מחדל (theme לא
