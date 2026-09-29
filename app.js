@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFinanceCycleSetting();
     applyDailyBoardPeekTabSetting();
     applyTodayPeekTabSetting();
+    // הפתק השבועי מוצג מיד מהמטמון המקומי, עוד לפני הטעינה מהשרת
+    applyWeeklyNoteSetting();
+    renderWeeklyNoteDisplay();
     applyAiFabCompactSetting();
     applyRoutineGoalsSetting();
     updateHomeSkyDayNight();
@@ -13906,15 +13909,22 @@ function applyTodayPeekTabSetting() {
 // עד שנערך שוב, בלי איפוס אוטומטי - "משהו שרוצים ללכת איתו כל השבוע", לפי
 // בקשה מפורשת. אותו דפוס בדיוק כמו שאר טאבי-ההצצה: localStorage לתגובה
 // מיידית + סנכרון ל-user_premium (null בעמודות = "עוד לא סונכרן") ---
-let currentWeeklyNoteText = '';
+// הטקסט נשמר גם במכשיר ומוצג מיד בפתיחה - כך שהפתק לא "נעלם" גם אם הטעינה מהשרת
+// מתעכבת/נכשלת (דווח שהפתק נראה נמחק ביום חדש). הוא משתנה רק כשעורכים אותו
+const WEEKLY_NOTE_CACHE_KEY = 'weekwise_weekly_note_text';
+let currentWeeklyNoteText = (() => { try { return localStorage.getItem(WEEKLY_NOTE_CACHE_KEY) || ''; } catch { return ''; } })();
 function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
 async function loadWeeklyNoteSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape').eq('user_id', currentUserId).maybeSingle();
+    const { data, error } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape').eq('user_id', currentUserId).maybeSingle();
     if (data && data.weekly_note_enabled !== null && data.weekly_note_enabled !== undefined) {
         localStorage.setItem('weekwise_weekly_note_enabled', String(data.weekly_note_enabled));
     }
-    currentWeeklyNoteText = (data && data.weekly_note_text) || '';
+    // טעינה שנכשלה לא מוחקת את הפתק שכבר מוצג (מהמטמון) - רק תשובה אמיתית מהשרת מחליפה אותו
+    if (!error && data) {
+        currentWeeklyNoteText = data.weekly_note_text || '';
+        try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
+    }
     currentWeeklyNoteColor = (data && data.weekly_note_color) || null;
     currentWeeklyNoteShape = (data && data.weekly_note_shape) || null;
     applyWeeklyNoteSetting();
@@ -14059,6 +14069,7 @@ async function saveWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');
     if (!textarea) return;
     currentWeeklyNoteText = textarea.value.trim();
+    try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
     renderWeeklyNoteDisplay();
     closeModal('modal-weekly-note');
     if (!supabaseClient || !currentUserId) return;

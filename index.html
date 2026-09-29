@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=451">
+    <link rel="stylesheet" href="theme.css?v=452">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1939,6 +1939,14 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="weekly_note_modal_title">Weekly Note</h3>
                 <textarea id="weekly-note-textarea" rows="4" maxlength="60" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
+                <!-- צבע וסגנון הפתק - בתוך הפתק עצמו (לא בהגדרות הכלליות), לפי בקשה מפורשת.
+                     ברירת המחדל (↺) היא המראה הרגיל לפי ערכת הנושא -->
+                <div class="weekly-note-customize" id="weekly-note-customize">
+                    <label class="settings-label" data-i18n="weekly_note_color_label">Note color</label>
+                    <div id="weekly-note-color-swatches" class="note-color-swatches"></div>
+                    <label class="settings-label" data-i18n="weekly_note_shape_label">Note style</label>
+                    <div id="weekly-note-shape-swatches" class="note-color-swatches"></div>
+                </div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveWeeklyNote()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific" onclick="clearWeeklyNote()" data-i18n="clear_btn">Clear</button>
@@ -2385,17 +2393,6 @@
                         </label>
                     </div>
 
-                    <!-- התאמה אישית של הפתק - צבע וסגנון, מקוננת כאן ולא כטוגלים נפרדים
-                         ברשימה הראשית כדי שלא יהיה בלגן, לפי בקשה מפורשת. נראית רק כשהפתק
-                         עצמו דלוק (ר' applyWeeklyNoteSetting ב-app.js). ברירת המחדל (כפתור
-                         ה-↺) היא בדיוק המראה הקיים לפי ערכת הנושא - לא משתנה כלום למי
-                         שלא בוחר לגעת בזה -->
-                    <div class="weekly-note-customize" id="weekly-note-customize">
-                        <label class="settings-label" data-i18n="weekly_note_color_label">Note color</label>
-                        <div id="weekly-note-color-swatches" class="note-color-swatches"></div>
-                        <label class="settings-label" data-i18n="weekly_note_shape_label">Note style</label>
-                        <div id="weekly-note-shape-swatches" class="note-color-swatches"></div>
-                    </div>
 
                     <!-- שאלת "מה הכי חשוב לך לעשות היום" (התג "1" על אייקון המוח) - דלוק
                          כברירת מחדל, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
@@ -3525,8 +3522,8 @@
 
     </div>
 
-    <script src="i18n.js?v=350"></script>
-    <script src="app.js?v=499"></script>
+    <script src="i18n.js?v=351"></script>
+    <script src="app.js?v=500"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=7"></script>
 </body>

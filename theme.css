@@ -1591,6 +1591,7 @@ html.high-contrast.light-mode {
 /* עטיפת ההתאמה האישית של הפתק השבועי בהגדרות - שוליים קלים כדי שלא תידבק
    ישר לטוגל שמעליה */
 .weekly-note-customize { margin-top: 4px; margin-bottom: 8px; }
+#modal-weekly-note .weekly-note-customize { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 /* תצוגה מקדימה חיה של הפתק/משימה במודל ההוספה/עריכה (ר' updateCenterItemPreview
    ב-app.js) - אותו עיצוב-בסיס בדיוק כמו שורה אמיתית ברשימה (.center-list li),
    רק בלי הכפתורים, כדי שמה שרואים כאן יהיה בדיוק מה שיתקבל בפועל - לפי בקשה
