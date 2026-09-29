@@ -51,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=442">
+    <link rel="stylesheet" href="theme.css?v=443">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -873,6 +873,17 @@
                     </div>
                 </section>
 
+                <!-- New Me - מקום לפרויקט החדש (תוכנית תזונה אישית בתשלום נפרד), לפי
+                     בקשה מפורשת ("תעשה מקום לכל הפרויקט החדש... בנפרד"). כרגע רק מסך
+                     "בקרוב" - התוכן עצמו ייבנה כאן -->
+                <section class="tab-content" id="new-me-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+                    <div class="card expanded new-me-card">
+                        <h2>✨ New Me</h2>
+                        <p class="new-me-coming-soon" data-i18n="new_me_coming_soon">A new personal program is on its way - coming soon.</p>
+                    </div>
+                </section>
+
                 <!-- קטגוריית ספורט: נגישה רק מהתפריט הצדדי (בלי כפתור קבוע בסרגל
                      התחתון), לפי בקשה מפורשת - ר' showTabSection ב-app.js -->
                 <section class="tab-content" id="sport-section">
@@ -1030,6 +1041,10 @@
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
                  בלי שום ניתוב חדש (קורא ל-switchToTab/openSubTile הקיימים) -->
             <button type="button" class="hamburger-fab" id="btn-hamburger-menu" onclick="openHamburgerMenu()" data-i18n-title="hamburger_menu_btn_title" title="Menu">☰</button>
+            <!-- "כל הקטגוריות" - כפתור קטן ליד ההמבורגר שפותח מסך קוביות גדולות לפי
+                 קטגוריה (בלי הגדרות), לפי בקשה מפורשת. מחלקת hamburger-fab כדי לקבל
+                 בדיוק אותו עיצוב ואותם כללי הסתרה (כשתפריט/מודל פתוח) -->
+            <button type="button" class="hamburger-fab categories-fab" id="btn-categories-menu" onclick="openCategoriesMenu()" data-i18n-title="categories_menu_title" data-i18n-aria-label="categories_menu_title" title="All Categories" aria-label="All Categories">▦</button>
 
             <!-- הפאנל הפתוח של "הצצה להיום" + הרקע המעומעם שלו - כאן, ברמת
                  #app-container (לא בתוך .home-hero-panel הגוללת) בכוונה: הם לא
@@ -1067,6 +1082,7 @@
                         <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
                     </div>
 
+                    <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_planning">Planning &amp; Calendar</div>
                     <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('schedule-section')">
                         <span class="hamburger-drawer-item-icon">🗓️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
@@ -3063,6 +3079,21 @@
             </div>
         </div>
 
+        <!-- חלון "כל הקטגוריות" (ר' openCategoriesMenu ב-app.js) - קוביות גדולות לכל
+             קבוצה בתפריט, לחיצה על קובייה פותחת את הפריטים שלה כקוביות קטנות. התוכן
+             נבנה מתוך מגירת ההמבורגר עצמה, כך ששניהם תמיד מסונכרנים -->
+        <div id="modal-categories" class="apple-modal">
+            <div class="modal-sheet categories-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div class="categories-header">
+                    <button type="button" class="categories-back hidden" id="categories-menu-back" onclick="closeCategoriesGroup()" aria-label="Back">‹</button>
+                    <h3 id="categories-menu-title" data-i18n="categories_menu_title">All Categories</h3>
+                    <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" aria-label="Close">✕</button>
+                </div>
+                <div id="categories-menu-body"></div>
+            </div>
+        </div>
+
         <!-- חלון צף: הגדרת יעד חודשי (פרימיום בלבד) -->
         <!-- חלון צף: מבט-על חודשי למטרות/הרגלים - של הטאב הפעיל *בלבד* ב"שגרה
              שלי" (לא כל הטאבים ביחד), לפי בקשה מפורשת ("כמה טאבים כל טאב עם
@@ -3492,7 +3523,7 @@
 
     </div>
 
-    <script src="i18n.js?v=344"></script>
-    <script src="app.js?v=491"></script>
+    <script src="i18n.js?v=345"></script>
+    <script src="app.js?v=492"></script>
 </body>
 </html>

@@ -2559,6 +2559,115 @@ function openHamburgerMenu() {
     if (wrapper) wrapper.classList.add('menu-open');
 }
 
+// --- "כל הקטגוריות": מסך קוביות גדולות לכל קבוצה בתפריט (בלי "עוד"/הגדרות),
+// לפי בקשה מפורשת. נבנה ישירות מתוך מגירת ההמבורגר - אותן קבוצות ואותם
+// פריטים, ולחיצה על פריט פשוט "לוחצת" על הפריט המקביל במגירה - כך שאין רשימה
+// כפולה לתחזק ושני הניווטים תמיד מסונכרנים
+const CATEGORY_GROUP_ICONS = {
+    hamburger_group_planning: '🗓️', hamburger_group_notes: '📝', hamburger_group_goals: '🏆',
+    hamburger_group_nutrition: '🍽️', hamburger_group_sport: '🏃', hamburger_group_finance: '📊',
+};
+let categoriesOpenGroupKey = null;
+
+function getMenuCategoryGroups() {
+    const scroll = document.querySelector('#hamburger-drawer-overlay .hamburger-drawer-scroll');
+    const groups = [];
+    let current = null;
+    if (!scroll) return groups;
+    Array.from(scroll.children).forEach(el => {
+        if (el.classList.contains('hamburger-drawer-section-title')) {
+            current = { key: el.getAttribute('data-i18n'), title: el.textContent.trim(), items: [] };
+            groups.push(current);
+        } else if (el.classList.contains('hamburger-drawer-item') && current) {
+            current.items.push(el);
+        }
+    });
+    return groups.filter(g => g.key !== 'hamburger_group_other' && g.items.length);
+}
+
+// חלק מהפריטים במגירה (למשל חשבונית מס) שמים את האימוג'י בתוך הכותרת ולא בתא
+// האייקון - מפרידים אותו כדי שכל קובייה תקבל אייקון גדול משלה
+function splitMenuItemLabel(item) {
+    const iconEl = item.querySelector('.hamburger-drawer-item-icon');
+    const titleEl = item.querySelector('.hamburger-drawer-item-title');
+    let icon = iconEl ? iconEl.textContent.trim() : '';
+    let label = titleEl ? titleEl.textContent.trim() : '';
+    if (!icon) {
+        const m = label.match(/^(\p{Extended_Pictographic}️?)\s*/u);
+        if (m) { icon = m[1]; label = label.slice(m[0].length); }
+    }
+    return { icon, label };
+}
+
+function openCategoriesMenu() {
+    categoriesOpenGroupKey = null;
+    renderCategoriesMenu();
+    openModal('modal-categories');
+}
+
+function closeCategoriesGroup() {
+    categoriesOpenGroupKey = null;
+    renderCategoriesMenu();
+}
+
+function makeCategoryTile(className, icon, label, onClick) {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = className;
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'categories-tile-icon';
+    iconSpan.textContent = icon;
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'categories-tile-label';
+    labelSpan.textContent = label;
+    tile.appendChild(iconSpan);
+    tile.appendChild(labelSpan);
+    tile.onclick = onClick;
+    return tile;
+}
+
+function renderCategoriesMenu() {
+    const body = document.getElementById('categories-menu-body');
+    const titleEl = document.getElementById('categories-menu-title');
+    const backBtn = document.getElementById('categories-menu-back');
+    if (!body) return;
+    const groups = getMenuCategoryGroups();
+    const group = categoriesOpenGroupKey ? groups.find(g => g.key === categoriesOpenGroupKey) : null;
+    body.innerHTML = '';
+    backBtn.classList.toggle('hidden', !group);
+    titleEl.textContent = group ? group.title : t('categories_menu_title');
+    const grid = document.createElement('div');
+    if (group) {
+        grid.className = 'categories-grid categories-sub-grid';
+        group.items.forEach(item => {
+            const { icon, label } = splitMenuItemLabel(item);
+            grid.appendChild(makeCategoryTile('categories-tile categories-sub-tile', icon, label, () => {
+                closeModal('modal-categories');
+                item.click();
+            }));
+        });
+        body.appendChild(grid);
+        return;
+    }
+    grid.className = 'categories-grid';
+    groups.forEach(g => {
+        const icon = CATEGORY_GROUP_ICONS[g.key] || splitMenuItemLabel(g.items[0]).icon;
+        grid.appendChild(makeCategoryTile('categories-tile', icon, g.title, () => {
+            categoriesOpenGroupKey = g.key;
+            renderCategoriesMenu();
+        }));
+    });
+    body.appendChild(grid);
+    body.appendChild(makeCategoryTile('categories-tile categories-newme-tile', '✨', 'New Me', () => {
+        closeModal('modal-categories');
+        openNewMe();
+    }));
+}
+
+function openNewMe() {
+    switchToTab('new-me-section');
+}
+
 function closeHamburgerMenu() {
     const overlay = document.getElementById('hamburger-drawer-overlay');
     if (overlay) overlay.classList.remove('open');
@@ -6929,6 +7038,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
+    { id: 'categories_menu', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },

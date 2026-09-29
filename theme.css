@@ -3048,6 +3048,26 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
 }
 .hamburger-fab:active { transform: scale(0.9); }
 html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
+/* כפתור "כל הקטגוריות" - ממש ליד ההמבורגר, באותה רצועה עליונה שכבר פנויה
+   (padding-top של .home-hero-panel), כך שלא מכסה את הברכה */
+.hamburger-fab.categories-fab { right: 74px; font-size: 1.15rem; }
+html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
+.categories-sheet { max-width: 460px; }
+.categories-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.categories-header h3 { flex: 1; margin: 0; text-align: center; }
+.categories-back { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0; }
+html[dir="rtl"] .categories-back { transform: scaleX(-1); }
+.categories-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.categories-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 104px; padding: 14px 10px; border-radius: 20px; border: 1px solid var(--border-color); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 14%, transparent), color-mix(in srgb, var(--accent-pink) 8%, transparent)); color: var(--text-primary); font-family: inherit; cursor: pointer; transition: var(--transition); }
+.categories-tile:active { transform: scale(0.96); }
+.categories-tile-icon { font-size: 2rem; line-height: 1; }
+.categories-tile-label { font-size: 0.88rem; font-weight: 700; text-align: center; }
+.categories-sub-grid .categories-tile { min-height: 88px; }
+.categories-sub-grid .categories-tile-icon { font-size: 1.6rem; }
+.categories-newme-tile { width: 100%; margin-top: 12px; min-height: 64px; flex-direction: row; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; border-color: transparent; }
+.categories-newme-tile .categories-tile-label { font-size: 1rem; }
+.new-me-card h2 { margin: 0 0 8px; }
+.new-me-coming-soon { color: var(--text-secondary); margin: 0; }
 
 .hamburger-drawer-overlay {
     position: absolute;
