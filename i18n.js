@@ -71,6 +71,7 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    nm_drink_added_toast: "Added ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Break a big assignment into small steps in your calendar",
     weekly_note_free_placeholder: "Free text (optional)",
     weekly_note_item_placeholder: "Item {n}",
@@ -723,6 +724,7 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    nm_drink_added_toast: "נוסף ✓ {name} · {kcal} קלוריות",
     smart_split_study_hint: "מפרקים מטלה גדולה לצעדים קטנים ביומן",
     weekly_note_free_placeholder: "טקסט חופשי (לא חובה)",
     weekly_note_item_placeholder: "שורה {n}",
@@ -1375,6 +1377,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    nm_drink_added_toast: "Añadido ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Divide un trabajo grande en pasos pequeños en tu calendario",
     weekly_note_free_placeholder: "Texto libre (opcional)",
     weekly_note_item_placeholder: "Línea {n}",
@@ -2034,6 +2037,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla.",
 },
 fr: {
+    nm_drink_added_toast: "Ajouté ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Découpez un gros devoir en petites étapes dans votre calendrier",
     weekly_note_free_placeholder: "Texte libre (facultatif)",
     weekly_note_item_placeholder: "Ligne {n}",
@@ -2693,6 +2697,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer.",
 },
 ar: {
+    nm_drink_added_toast: "تمت الإضافة ✓ {name} · {kcal} سعرة",
     smart_split_study_hint: "تقسيم مهمة كبيرة إلى خطوات صغيرة في التقويم",
     weekly_note_free_placeholder: "نص حر (اختياري)",
     weekly_note_item_placeholder: "سطر {n}",
@@ -3352,6 +3357,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده.",
 },
 ru: {
+    nm_drink_added_toast: "Добавлено ✓ {name} · {kcal} ккал",
     smart_split_study_hint: "Разбейте большое задание на маленькие шаги в календаре",
     weekly_note_free_placeholder: "Свободный текст (необязательно)",
     weekly_note_item_placeholder: "Пункт {n}",
@@ -4011,6 +4017,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'.",
 },
 de: {
+    nm_drink_added_toast: "Hinzugefügt ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Zerlege eine große Aufgabe in kleine Schritte in deinem Kalender",
     weekly_note_free_placeholder: "Freitext (optional)",
     weekly_note_item_placeholder: "Punkt {n}",
@@ -4670,6 +4677,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben.",
 },
 pt: {
+    nm_drink_added_toast: "Adicionado ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Divida um trabalho grande em pequenos passos no seu calendário",
     weekly_note_free_placeholder: "Texto livre (opcional)",
     weekly_note_item_placeholder: "Linha {n}",
@@ -5329,6 +5337,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar.",
 },
 ja: {
+    nm_drink_added_toast: "追加しました ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "大きな課題を小さなステップに分けてカレンダーに入れます",
     weekly_note_free_placeholder: "自由テキスト(任意)",
     weekly_note_item_placeholder: "項目 {n}",
@@ -5988,6 +5997,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。",
 },
 zh: {
+    nm_drink_added_toast: "已添加 ✓ {name} · {kcal} 千卡",
     smart_split_study_hint: "把大作业拆分成日历中的小步骤",
     weekly_note_free_placeholder: "自由文本(可选)",
     weekly_note_item_placeholder: "第{n}项",
@@ -6647,6 +6657,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。",
 },
 hi: {
+    nm_drink_added_toast: "जोड़ा गया ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "किसी बड़े असाइनमेंट को अपने कैलेंडर में छोटे-छोटे चरणों में बांटें",
     weekly_note_free_placeholder: "मुक्त टेक्स्ट (वैकल्पिक)",
     weekly_note_item_placeholder: "पंक्ति {n}",
@@ -7306,6 +7317,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा।",
 },
 ko: {
+    nm_drink_added_toast: "추가됨 ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "큰 과제를 작은 단계로 나눠 캘린더에 넣기",
     weekly_note_free_placeholder: "자유 텍스트 (선택)",
     weekly_note_item_placeholder: "항목 {n}",
@@ -7965,6 +7977,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다.",
 },
 tr: {
+    nm_drink_added_toast: "Eklendi ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Büyük bir ödevi takviminde küçük adımlara böl",
     weekly_note_free_placeholder: "Serbest metin (isteğe bağlı)",
     weekly_note_item_placeholder: "Madde {n}",
@@ -8624,6 +8637,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir.",
 },
 id: {
+    nm_drink_added_toast: "Ditambahkan ✓ {name} · {kcal} kkal",
     smart_split_study_hint: "Pecah tugas besar menjadi langkah-langkah kecil di kalender Anda",
     weekly_note_free_placeholder: "Teks bebas (opsional)",
     weekly_note_item_placeholder: "Item {n}",
@@ -9283,6 +9297,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya.",
 },
 it: {
+    nm_drink_added_toast: "Aggiunto ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Scomponi un compito grande in piccoli passi sul calendario",
     weekly_note_free_placeholder: "Testo libero (facoltativo)",
     weekly_note_item_placeholder: "Voce {n}",
@@ -9942,6 +9957,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla.",
 },
 vi: {
+    nm_drink_added_toast: "Đã thêm ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Chia một bài tập lớn thành các bước nhỏ trên lịch của bạn",
     weekly_note_free_placeholder: "Văn bản tự do (không bắt buộc)",
     weekly_note_item_placeholder: "Mục {n}",
@@ -10601,6 +10617,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận.",
 },
 pl: {
+    nm_drink_added_toast: "Dodano ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Podziel duże zadanie na małe kroki w kalendarzu",
     weekly_note_free_placeholder: "Dowolny tekst (opcjonalnie)",
     weekly_note_item_placeholder: "Pozycja {n}",
@@ -11261,6 +11278,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'.",
 },
 th: {
+    nm_drink_added_toast: "เพิ่มแล้ว ✓ {name} · {kcal} กิโลแคลอรี",
     smart_split_study_hint: "แบ่งงานชิ้นใหญ่เป็นขั้นตอนเล็กๆ ในปฏิทิน",
     weekly_note_free_placeholder: "ข้อความอิสระ (ไม่บังคับ)",
     weekly_note_item_placeholder: "รายการที่ {n}",
@@ -11922,6 +11940,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน",
 },
 ur: {
+    nm_drink_added_toast: "شامل کر دیا گیا ✓ {name} · {kcal} کیلوریز",
     smart_split_study_hint: "کسی بڑے اسائنمنٹ کو اپنے کیلنڈر میں چھوٹے مراحل میں تقسیم کریں",
     weekly_note_free_placeholder: "آزاد متن (اختیاری)",
     weekly_note_item_placeholder: "سطر {n}",
@@ -12583,6 +12602,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔",
 },
 bn: {
+    nm_drink_added_toast: "যোগ করা হয়েছে ✓ {name} · {kcal} ক্যালরি",
     smart_split_study_hint: "একটি বড় অ্যাসাইনমেন্টকে আপনার ক্যালেন্ডারে ছোট ছোট ধাপে ভাগ করুন",
     weekly_note_free_placeholder: "মুক্ত টেক্সট (ঐচ্ছিক)",
     weekly_note_item_placeholder: "আইটেম {n}",
@@ -13244,6 +13264,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে।",
 },
 sw: {
+    nm_drink_added_toast: "Imeongezwa ✓ {name} · kalori {kcal}",
     smart_split_study_hint: "Gawa kazi kubwa katika hatua ndogo kwenye kalenda yako",
     weekly_note_free_placeholder: "Maandishi huru (si lazima)",
     weekly_note_item_placeholder: "Kipengee {n}",
@@ -13905,6 +13926,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha.",
 },
 uk: {
+    nm_drink_added_toast: "Додано ✓ {name} · {kcal} ккал",
     smart_split_study_hint: "Розбийте велике завдання на маленькі кроки в календарі",
     weekly_note_free_placeholder: "Довільний текст (необов'язково)",
     weekly_note_item_placeholder: "Пункт {n}",
@@ -14566,6 +14588,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'.",
 },
 el: {
+    nm_drink_added_toast: "Προστέθηκε ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Σπάστε μια μεγάλη εργασία σε μικρά βήματα στο ημερολόγιό σας",
     weekly_note_free_placeholder: "Ελεύθερο κείμενο (προαιρετικό)",
     weekly_note_item_placeholder: "Στοιχείο {n}",
@@ -15227,6 +15250,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε.",
 },
 nl: {
+    nm_drink_added_toast: "Toegevoegd ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Deel een grote opdracht op in kleine stappen in je kalender",
     weekly_note_free_placeholder: "Vrije tekst (optioneel)",
     weekly_note_item_placeholder: "Item {n}",
@@ -15888,6 +15912,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen.",
 },
 ca: {
+    nm_drink_added_toast: "Afegit ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Divideix un treball gran en passos petits al calendari",
     weekly_note_free_placeholder: "Text lliure (opcional)",
     weekly_note_item_placeholder: "Línia {n}",
@@ -16549,6 +16574,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho.",
 },
 ro: {
+    nm_drink_added_toast: "Adăugat ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Împarte o temă mare în pași mici în calendar",
     weekly_note_free_placeholder: "Text liber (opțional)",
     weekly_note_item_placeholder: "Rândul {n}",
@@ -17210,6 +17236,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare.",
 },
 yo: {
+    nm_drink_added_toast: "A ti fi kún un ✓ {name} · kalori {kcal}",
     smart_split_study_hint: "Pín iṣẹ́ ńlá sí àwọn ìgbésẹ̀ kékeré nínú kàlẹ́ńdà rẹ",
     weekly_note_free_placeholder: "Ọ̀rọ̀ òmìnira (kò pọndandan)",
     weekly_note_item_placeholder: "Ohun {n}",
@@ -17872,6 +17899,7 @@ yo: {
 },
 
 sv: {
+    nm_drink_added_toast: "Tillagd ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Dela upp en stor uppgift i små steg i din kalender",
     weekly_note_free_placeholder: "Fritext (valfritt)",
     weekly_note_item_placeholder: "Punkt {n}",
@@ -18533,6 +18561,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta.",
 },
 nb: {
+    nm_drink_added_toast: "Lagt til ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Del opp en stor oppgave i små steg i kalenderen",
     weekly_note_free_placeholder: "Fritekst (valgfritt)",
     weekly_note_item_placeholder: "Punkt {n}",
@@ -19194,6 +19223,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte.",
 },
 da: {
+    nm_drink_added_toast: "Tilføjet ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Del en stor opgave op i små trin i din kalender",
     weekly_note_free_placeholder: "Fritekst (valgfrit)",
     weekly_note_item_placeholder: "Punkt {n}",
@@ -19855,6 +19885,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte.",
 },
 cs: {
+    nm_drink_added_toast: "Přidáno ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Rozdělte velký úkol na malé kroky v kalendáři",
     weekly_note_free_placeholder: "Volný text (nepovinné)",
     weekly_note_item_placeholder: "Položka {n}",
@@ -20516,6 +20547,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'.",
 },
 hu: {
+    nm_drink_added_toast: "Hozzáadva ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Bonts egy nagy feladatot kis lépésekre a naptáradban",
     weekly_note_free_placeholder: "Szabad szöveg (nem kötelező)",
     weekly_note_item_placeholder: "{n}. tétel",
@@ -21177,6 +21209,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'.",
 },
 fi: {
+    nm_drink_added_toast: "Lisätty ✓ {name} · {kcal} kcal",
     smart_split_study_hint: "Pilko iso tehtävä pieniksi vaiheiksi kalenteriisi",
     weekly_note_free_placeholder: "Vapaa teksti (valinnainen)",
     weekly_note_item_placeholder: "Kohta {n}",

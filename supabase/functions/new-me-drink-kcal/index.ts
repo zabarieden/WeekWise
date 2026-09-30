@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
                         "Estimate the calories and protein for ONE typical serving of exactly that drink as it is usually prepared " +
                         "(a regular cup/mug/glass ~240 ml unless the text says a size; a can = 330 ml; an espresso shot = 30 ml). " +
                         "Account for anything mentioned (milk type, sugar, syrup, zero/diet). Plain water, black coffee, plain tea = 0-5 kcal. " +
+                        "Text in parentheses like \"(milk: X)\" (in any language) is milk ADDED to the drink; if X is a bare number it means millilitres of milk (e.g. \"(milk: 100)\" = 100 ml of regular milk), and words like \"a little\" mean about 30 ml. " +
                         "Also return a short clean display name for the drink in the SAME language the user wrote it in (fix typos, keep it short). " +
                         "Answer with the estimate_drink tool only.",
                 }],

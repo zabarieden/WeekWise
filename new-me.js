@@ -565,7 +565,7 @@ function nmDrinksHtml() {
                 const name = nmDrinkName(r);
                 const isSaved = savedNames.has(name.trim().toLowerCase());
                 return `
-                <div class="nm-drink-row logged">
+                <div class="nm-drink-row logged" data-slot="${nmEsc(r.meal_type)}">
                     <span class="nm-drink-name">${nmEsc(name)}</span>
                     <input type="number" class="nm-drink-kcal nm-drink-kcal-logged" inputmode="numeric" min="0" max="1500" value="${Number(r.calories) || 0}" onchange="nmUpdateDrinkKcal('${r.id}', this.value)" aria-label="${nmEsc(t('calories_unit'))}">
                     <button type="button" class="nm-star${isSaved ? ' on' : ''}" onclick="nmToggleSaveDrink('${r.id}')" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">${nmStarSvg(isSaved)}</button>
@@ -589,23 +589,39 @@ async function nmEstimateDrink(row) {
     row.dataset.estimate = requestId;
     kcalEl.placeholder = t('nm_drink_estimating');
     row.classList.add('estimating');
+    delete row.dataset.estErr;
     try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/new-me-drink-kcal`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ drink, language: currentLang }),
-        });
+        // עד 15 שניות לבקשה, וניסיון נוסף אחד אם פג תוקף ההתחברות (401) - כדי שחישוב
+        // לא "ייתקע" בלי שום תגובה
+        const callOnce = async () => {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15000);
+            try {
+                return await fetch(`${SUPABASE_URL}/functions/v1/new-me-drink-kcal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ drink, language: currentLang }),
+                    signal: controller.signal,
+                });
+            } finally { clearTimeout(timer); }
+        };
+        let res = await callOnce();
+        if (res.status === 401) {
+            await supabaseClient.auth.refreshSession().catch(() => {});
+            res = await callOnce();
+        }
         const result = await res.json().catch(() => ({}));
-        if (!res.ok || !result.ok) throw new Error(result.error || res.status);
+        if (!res.ok || !result.ok) { row.dataset.estErr = String(res.status) + (result.error ? ' ' + result.error : ''); throw new Error(result.error || res.status); }
         // תשובה ישנה (המשתמש/ת המשיך/ה להקליד) או מספר שהוקלד ידנית בינתיים - מתעלמים
         if (row.dataset.estimate !== requestId || kcalEl.dataset.manual === '1') return null;
         kcalEl.value = result.kcal;
         kcalEl.dataset.ai = '1';
         row.dataset.protein = result.protein_g || 0;
         return result;
-    } catch {
+    } catch (err) {
+        if (!row.dataset.estErr) row.dataset.estErr = err && err.name === 'AbortError' ? 'timeout' : 'network';
         return null;
     } finally {
         row.classList.remove('estimating');
@@ -635,14 +651,20 @@ function nmNextDrinkSlot() {
 let nmDrinkInsertQueue = Promise.resolve();
 function nmInsertDrink(name, kcal, protein) {
     const job = nmDrinkInsertQueue.then(async () => {
+        const slot = nmNextDrinkSlot();
         const { error } = await supabaseClient.from('calorie_tracker').insert({
-            username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: nmNextDrinkSlot(),
+            username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: slot,
             food_description: '🥤 ' + name, calories: kcal, protein_grams: protein || 0, source: 'new_me',
         });
         if (error) { showAppToast(t('nm_save_error'), 'error'); return false; }
         await nmLoadToday();
         nmRenderView(nmRoot());
         nmAfterTrackerChange();
+        // אישור ברור + הדגשה של המשקה שנוסף (הוא עובר לרשימה למעלה והשורה מתרוקנת -
+        // דווח שזה נראה כאילו לא נוסף, והוא נוסף פעמיים)
+        showAppToast(t('nm_drink_added_toast').replace('{name}', name).replace('{kcal}', kcal));
+        const added = document.querySelector(`#new-me-root .nm-drink-row.logged[data-slot="${slot}"]`);
+        if (added) added.classList.add('just-added');
         return true;
     });
     nmDrinkInsertQueue = job.catch(() => false);
@@ -656,15 +678,15 @@ async function nmAddDrink(el) {
     const kcalEl = row.querySelector('.nm-drink-kcal');
     if (!row.querySelector('.nm-drink-input').value.trim()) { showAppToast(t('nm_drink_missing'), 'error'); return; }
     row.dataset.committing = '1';
-    if (btn) btn.disabled = true;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
     clearTimeout(row._nmTimer);
     // אם הקלוריות עוד לא חושבו - מחשבים עכשיו, לפני ההוספה
     if (kcalEl.value === '') await nmEstimateDrink(row);
     const kcal = parseInt(kcalEl.value, 10);
     if (!(kcal >= 0)) {
         delete row.dataset.committing;
-        if (btn) btn.disabled = false;
-        showAppToast(t('nm_drink_est_failed'), 'error');
+        if (btn) { btn.disabled = false; btn.textContent = t('nm_drink_add'); }
+        showAppToast(t('nm_drink_est_failed') + (row.dataset.estErr ? ` (${row.dataset.estErr})` : ''), 'error');
         kcalEl.focus();
         return;
     }
@@ -678,7 +700,7 @@ async function nmAddDrink(el) {
         // השמירה נכשלה - מחזירים את מה שהוקלד
         if (row.isConnected) row.querySelectorAll('input').forEach((input, i) => { input.value = values[i]; });
         delete row.dataset.committing;
-        if (btn) btn.disabled = false;
+        if (btn) { btn.disabled = false; btn.textContent = t('nm_drink_add'); }
         return;
     }
     if (nmDrinkDraftRows > 0 && row.dataset.kind === 'plain') nmDrinkDraftRows--;
