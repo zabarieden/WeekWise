@@ -1523,7 +1523,8 @@ let onboardingStep = 0;
 let onboardingUser = null;
 let onboardingPendingPhone = null;
 let onboardingPendingGoalTitle = null;
-const ONBOARDING_STEPS = ['welcome', 'country', 'phone', 'goal', 'tour_offer'];
+// הסיור באפליקציה כבר לא שלב בחירה כאן - הוא נפתח אוטומטית פעם אחת אחרי הכניסה (maybeAutoStartAppTour)
+const ONBOARDING_STEPS = ['welcome', 'country', 'phone', 'goal'];
 
 function openOnboarding(user) {
     onboardingUser = user;
@@ -1582,18 +1583,7 @@ function renderOnboardingStep() {
             <input type="text" id="onboarding-goal-input" placeholder="${t('onboarding_goal_placeholder')}" value="${onboardingPendingGoalTitle || ''}">
             <p class="onboarding-hint">${t('onboarding_goal_hint')}</p>
         `;
-        nextBtn.textContent = t('onboarding_next_btn');
-    } else if (key === 'tour_offer') {
-        body.innerHTML = `
-            <div class="onboarding-icon">🧭</div>
-            <h2 class="onboarding-title">${t('onboarding_tour_offer_title')}</h2>
-            <p class="onboarding-subtitle">${t('onboarding_tour_offer_subtitle')}</p>
-            <div class="onboarding-tour-offer-buttons">
-                <button type="button" class="btn-primary" onclick="finishOnboarding(true)">${t('onboarding_tour_offer_yes')}</button>
-                <button type="button" class="btn-secondary" onclick="finishOnboarding(false)">${t('onboarding_tour_offer_no')}</button>
-            </div>
-        `;
-        nextBtn.classList.add('hidden');
+        nextBtn.textContent = t('onboarding_finish_btn');
     }
 }
 
@@ -1619,6 +1609,8 @@ function nextOnboardingStep() {
     if (onboardingStep < ONBOARDING_STEPS.length - 1) {
         onboardingStep++;
         renderOnboardingStep();
+    } else {
+        finishOnboarding(false);
     }
 }
 
@@ -1637,67 +1629,426 @@ async function finishOnboarding(startTour) {
             await supabaseClient.from('vision_goals').insert({ title: onboardingPendingGoalTitle, category: 'personal', user_id: user.id });
         }
     }
-    if (startTour) openAppTour(false, () => initAppAfterAuth(user));
-    else initAppAfterAuth(user);
+    // הסיור נפתח לבד אחרי שהאפליקציה נטענה (maybeAutoStartAppTour ב-initAppAfterAuth)
+    initAppAfterAuth(user);
 }
 
-// --- סיור קצר באפליקציה: אותו מנגנון-שלבים גנרי בדיוק כמו אשף ההרשמה
-// למעלה, נגיש גם מסוף האשף ("כן, בואי נראה!") וגם מההגדרות (תמיכה ומידע
-// > סיור באפליקציה) לצפייה חוזרת בכל עת - fromSettings קובע אם לקרוא ל-
-// onFinish בסיום (רק בהקשר-הרשמה, לא כשנפתח מההגדרות של אפליקציה שכבר
-// טעונה) ---
-let tourStep = 0;
-let tourOnFinish = null;
-const TOUR_STEPS = ['notes', 'calendar', 'nutrition', 'finance', 'sport', 'vision', 'done'];
-const TOUR_STEP_CONTENT = {
-    notes: { icon: '📝', titleKey: 'tour_notes_title', subtitleKey: 'tour_notes_subtitle' },
-    calendar: { icon: '📅', titleKey: 'tour_calendar_title', subtitleKey: 'tour_calendar_subtitle' },
-    nutrition: { icon: '🍎', titleKey: 'tour_nutrition_title', subtitleKey: 'tour_nutrition_subtitle' },
-    finance: { icon: '💰', titleKey: 'tour_finance_title', subtitleKey: 'tour_finance_subtitle' },
-    sport: { icon: '🏋️', titleKey: 'tour_sport_title', subtitleKey: 'tour_sport_subtitle' },
-    vision: { icon: '🎯', titleKey: 'tour_vision_title', subtitleKey: 'tour_vision_subtitle' },
-};
+// --- סיור באפליקציה (גרסה 2): מדגיש כל חלק אמיתי במסך עם חץ והסבר קצר, ומתקדמים
+// ב"המשך"/"חזרה" (או מדלגים) - לפי בקשה מפורשת ("עם חצים ומעברים... הסברים מה זה כל
+// דבר בכמה מילים... ממש הכל"). נפתח אוטומטית פעם אחת בכניסה הראשונה (user_premium.
+// app_tour_version + מטמון במכשיר), וגם מהגדרות > תמיכה ומידע בכל רגע.
+// כל שלב: ctx = איזה מסך צריך להיות פתוח (home/ai/menu/settings), target = האלמנט
+// להדגשה, וטקסטים; קו 🔗 מסביר את החיבור לפיצ'רים אחרים. שלב אופציונלי שהאלמנט שלו
+// לא מוצג (למשל ✨ למי שלא רכש/ה, תג פרימיום למנויים) לא נכלל בסיור ---
+const APP_TOUR_VERSION = 2;
+const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', settings: 'settings_title', summary: 'apptour_ch_summary' };
+const APP_TOUR_STEPS = [
+    { id: 'welcome', ch: 'home', ctx: 'home', icon: '🧭', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text' },
+    { id: 'menu', ch: 'home', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
+    { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
+    { id: 'peek', ch: 'home', ctx: 'home', icon: '👀', target: '#today-peek-tab', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
+    { id: 'note', ch: 'home', ctx: 'home', icon: '🗒️', target: '#weekly-note-widget', titleKey: 'weekly_note_modal_title', text: 'apptour_note_text', optional: true },
+    { id: 'premium', ch: 'home', ctx: 'home', icon: '⭐', target: '#home-premium-badge', titleKey: 'home_premium_badge_label', text: 'apptour_premium_text', optional: true },
+    { id: 'routine', ch: 'home', ctx: 'home', icon: '⏰', target: '#btn-daily-board-fab', titleKey: 'daily_board_title', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
+    { id: 'quicknote', ch: 'home', ctx: 'home', icon: '📝', target: '#btn-ai-fab', titleKey: 'notes_ai_title', text: 'apptour_quicknote_text', link: 'apptour_quicknote_link', optional: true },
+    { id: 'ai', ch: 'home', ctx: 'home', icon: '🤖', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
+    { id: 'newme_short', ch: 'home', ctx: 'home', icon: '✨', target: '#btn-newme-shortcut', titleKey: 'nm_shortcut_title', text: 'apptour_newme_short_text', optional: true },
+    { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
+    { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#modal-ai-brain .ai-brain-tab[data-tab="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
+    { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#modal-ai-brain .ai-brain-tab[data-tab="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
+    { id: 'ai_table', ch: 'ai', ctx: 'ai', tab: 'table', target: '#modal-ai-brain .ai-brain-tab[data-tab="table"]', titleKey: 'ai_brain_tab_table', text: 'apptour_ai_table_text' },
+    { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
+    { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
+    { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text', link: 'apptour_m_vision_link' },
+    { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text', link: 'apptour_m_study_link' },
+    { id: 'm_tables', ch: 'menu', ctx: 'menu', target: '[data-tour="m-tables"]', text: 'apptour_m_tables_text', link: 'apptour_m_tables_link' },
+    { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text', link: 'apptour_m_notes_link' },
+    { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
+    { id: 'm_goal', ch: 'menu', ctx: 'menu', target: '[data-tour="m-goal"]', text: 'apptour_m_goal_text', link: 'apptour_m_goal_link' },
+    { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
+    { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },
+    { id: 'm_calories', ch: 'menu', ctx: 'menu', target: '[data-tour="m-calories"]', text: 'apptour_m_calories_text', link: 'apptour_m_calories_link' },
+    { id: 'm_water', ch: 'menu', ctx: 'menu', target: '[data-tour="m-water"]', text: 'apptour_m_water_text' },
+    { id: 'm_sport', ch: 'menu', ctx: 'menu', target: '[data-tour="m-sport"]', text: 'apptour_m_sport_text', link: 'apptour_m_sport_link' },
+    { id: 'm_steps', ch: 'menu', ctx: 'menu', target: '[data-tour="m-steps"]', text: 'apptour_m_steps_text' },
+    { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
+    { id: 'm_receipts', ch: 'menu', ctx: 'menu', target: '[data-tour="m-receipts"]', text: 'apptour_m_receipts_text', link: 'apptour_m_receipts_link' },
+    { id: 'm_style', ch: 'menu', ctx: 'menu', icon: '▦', target: '[data-tour="m-style"]', titleKey: 'apptour_m_style_title', text: 'apptour_m_style_text' },
+    { id: 's_appearance', ch: 'settings', ctx: 'settings', target: '[data-tour="s-appearance"]', text: 'apptour_s_appearance_text' },
+    { id: 's_personalization', ch: 'settings', ctx: 'settings', target: '[data-tour="s-personalization"]', text: 'apptour_s_personalization_text' },
+    { id: 's_notifications', ch: 'settings', ctx: 'settings', target: '[data-tour="s-notifications"]', text: 'apptour_s_notifications_text' },
+    { id: 's_account', ch: 'settings', ctx: 'settings', target: '[data-tour="s-account"]', text: 'apptour_s_account_text' },
+    { id: 's_support', ch: 'settings', ctx: 'settings', target: '[data-tour="s-support"]', text: 'apptour_s_support_text' },
+    { id: 'connect', ch: 'summary', ctx: 'home', icon: '🔗', titleKey: 'apptour_connect_title', text: 'apptour_connect_text', flows: true },
+    { id: 'done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_done_title', text: 'apptour_done_text' },
+];
+// "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום] או חץ ('>' כיוון אחד, '<>' הדדי)
+const APP_TOUR_FLOWS = [
+    [['🤖', 'ai_brain_fab_title'], ['🖼️', 'vision_board_title'], ['🪄', 'smart_split_tile_title'], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title']],
+    [['✨', null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
+    [['⚖️', 'apptour_flow_weight'], '<>', ['✨', null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🏆', 'monthly_goal_tile_title']],
+    [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
+    [['🔁', 'apptour_flow_recurring'], '>', ['📊', 'bottom_tab_finance']],
+];
+
+let appTourActive = false;
+let appTourLayer = null;
+let appTourPlan = [];
+let appTourPos = 0;
+let appTourCtx = null;
+let appTourTarget = null;
+let appTourToken = 0;
+let appTourOnFinish = null;
+let appTourResizeRaf = 0;
+let appTourTrackTimer = 0;
+let appTourLastRect = '';
+
+function appTourVisible(selector) {
+    const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return null;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) return null;
+    return el;
+}
+function appTourResolveTarget(step) {
+    if (!step.target) return null;
+    return typeof step.target === 'function' ? step.target() : appTourVisible(step.target);
+}
+function appTourWait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function appTourEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
+
+// כותרת + אייקון של פריט בתפריט/בהגדרות נלקחים מהפריט עצמו - תמיד זהים למה שכתוב במסך
+function appTourLabelFromTarget(el) {
+    if (!el) return { icon: '', label: '' };
+    if (el.classList.contains('hamburger-drawer-item')) return splitMenuItemLabel(el);
+    if (el.classList.contains('settings-category-row')) {
+        const icon = el.querySelector('.settings-category-icon');
+        const label = el.querySelector('.settings-category-label');
+        return { icon: icon ? icon.textContent.trim() : '', label: label ? label.textContent.trim() : '' };
+    }
+    let label = el.textContent.trim();
+    let icon = '';
+    const m = label.match(/^(\p{Extended_Pictographic}️?)\s*/u);
+    if (m) { icon = m[1]; label = label.slice(m[0].length); }
+    return { icon, label };
+}
 
 function openAppTour(fromSettings, onFinish) {
-    tourStep = 0;
-    tourOnFinish = fromSettings ? null : (onFinish || null);
-    renderTourStep();
-    openModal('modal-app-tour');
+    if (appTourActive) return;
+    appTourActive = true;
+    appTourOnFinish = onFinish || null;
+    appTourCtx = null;
+    markAppTourSeen();
+    // מתחילים ממסך בית נקי - סוגרים כל חלון/מגירה שפתוחים
+    document.querySelectorAll('.apple-modal.open').forEach(m => closeModal(m.id));
+    document.querySelectorAll('.hamburger-drawer-overlay.open').forEach(o => o.classList.remove('open'));
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('menu-open', 'vision-open', 'study-open', 'projects-open');
+    if (typeof closeTodayPeekPanel === 'function') closeTodayPeekPanel();
+    goHome();
+    appTourBuildLayer();
+    document.addEventListener('keydown', appTourKeydown, true);
+    window.addEventListener('resize', appTourOnResize);
+    // מעקב: אם האלמנט המודגש זז (חלון שמשנה גובה, תוכן שנטען) - הזרקור והכרטיס זזים איתו
+    appTourTrackTimer = setInterval(appTourTrack, 300);
+    // מה נכלל: שלבים אופציונליים במסך הבית נבדקים עכשיו (הם מוצגים/לא מוצגים לפי
+    // הגדרות ורכישות); שלבים בתוך חלונות קיימים תמיד
+    requestAnimationFrame(() => {
+        appTourPlan = APP_TOUR_STEPS.map((step, index) => ({ step, index }))
+            .filter(({ step }) => !(step.optional && step.ctx === 'home' && !appTourResolveTarget(step)))
+            .map(({ index }) => index);
+        appTourPos = 0;
+        appTourShow();
+    });
 }
 
-function renderTourStep() {
-    const key = TOUR_STEPS[tourStep];
-    const body = document.getElementById('tour-step-body');
-    const nextBtn = document.getElementById('btn-tour-next');
-    renderOnboardingDots('tour-dots', TOUR_STEPS.length, tourStep);
-    if (key === 'done') {
-        body.innerHTML = `
-            <div class="onboarding-icon">🎉</div>
-            <h2 class="onboarding-title">${t('tour_done_title')}</h2>
-            <p class="onboarding-subtitle">${t('tour_done_subtitle')}</p>
-        `;
-        nextBtn.textContent = t('tour_done_btn');
-    } else {
-        const c = TOUR_STEP_CONTENT[key];
-        body.innerHTML = `
-            <div class="onboarding-icon">${c.icon}</div>
-            <h2 class="onboarding-title">${t(c.titleKey)}</h2>
-            <p class="onboarding-subtitle">${t(c.subtitleKey)}</p>
-        `;
-        nextBtn.textContent = t('onboarding_next_btn');
+function appTourBuildLayer() {
+    if (appTourLayer) appTourLayer.remove();
+    const layer = document.createElement('div');
+    layer.className = 'app-tour-layer';
+    layer.innerHTML = `
+        <div class="app-tour-block"></div>
+        <div class="app-tour-spot is-empty"></div>
+        <div class="app-tour-arrow hidden" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v16M5.5 9.5 12 3l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" tabindex="-1">
+            <div class="app-tour-top">
+                <span class="app-tour-chapter"></span>
+                <button type="button" class="app-tour-skip" onclick="closeAppTour()"></button>
+            </div>
+            <div class="app-tour-hero" aria-hidden="true"></div>
+            <h3 class="app-tour-title" id="app-tour-title"></h3>
+            <p class="app-tour-text"></p>
+            <div class="app-tour-link"></div>
+            <div class="app-tour-flows"></div>
+            <div class="app-tour-progress"><span></span></div>
+            <div class="app-tour-actions">
+                <button type="button" class="app-tour-back" onclick="appTourBack()"></button>
+                <span class="app-tour-count"></span>
+                <button type="button" class="app-tour-next" onclick="appTourNext()"></button>
+            </div>
+        </div>`;
+    document.body.appendChild(layer);
+    appTourLayer = layer;
+    requestAnimationFrame(() => layer.classList.add('open'));
+}
+
+// פותח/סוגר את המסך שהשלב צריך (תפריט, עוזר AI, הגדרות) ומחכה שהאנימציה תסתיים
+async function appTourEnsureContext(step) {
+    const ctx = step.ctx;
+    const aiModal = document.getElementById('modal-ai-brain');
+    const settingsModal = document.getElementById('modal-settings-drawer');
+    const menuOverlay = document.getElementById('hamburger-drawer-overlay');
+    let changed = false;
+    if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
+    if (ctx !== 'settings' && settingsModal && settingsModal.classList.contains('open')) { closeModal('modal-settings-drawer'); changed = true; }
+    if (ctx !== 'menu' && menuOverlay && menuOverlay.classList.contains('open')) { closeHamburgerMenu(); changed = true; }
+    if (ctx === 'ai') {
+        if (!aiModal.classList.contains('open')) { openAiBrainModal(step.tab || 'food'); changed = true; }
+        else switchAiBrainTab(step.tab || 'food');
+    } else if (ctx === 'menu') {
+        if (!menuOverlay.classList.contains('open')) { openHamburgerMenu(); changed = true; }
+    } else if (ctx === 'settings') {
+        if (!settingsModal.classList.contains('open')) { openSettingsDrawer(); changed = true; }
+        else backToSettingsMain();
+    }
+    appTourCtx = ctx;
+    await appTourWait(changed ? 460 : 60);
+    const target = appTourResolveTarget(step);
+    if (target) { appTourScrollIntoContainer(target); await appTourWait(40); }
+}
+
+// מגלגל רק את מיכל הגלילה הפנימי (המגירה/החלון) כך שהפריט יהיה באמצע - לא את
+// מסגרת האפליקציה (scrollIntoView הזיז בעבר את כל המעטפת, ר' resetShellScroll)
+function appTourScrollIntoContainer(el) {
+    let p = el.parentElement;
+    while (p && p !== document.body) {
+        const cs = getComputedStyle(p);
+        if (/(auto|scroll)/.test(cs.overflowY) && p.scrollHeight > p.clientHeight + 4) {
+            const pr = p.getBoundingClientRect();
+            const er = el.getBoundingClientRect();
+            if (er.top < pr.top + 40 || er.bottom > pr.bottom - 40) p.scrollTop += (er.top + er.height / 2) - (pr.top + pr.height / 2);
+            return;
+        }
+        p = p.parentElement;
     }
 }
 
-function nextTourStep() {
-    if (tourStep < TOUR_STEPS.length - 1) { tourStep++; renderTourStep(); return; }
-    closeAppTour();
+async function appTourShow() {
+    const token = ++appTourToken;
+    const step = APP_TOUR_STEPS[appTourPlan[appTourPos]];
+    if (!step) { closeAppTour(); return; }
+    await appTourEnsureContext(step);
+    if (token !== appTourToken || !appTourActive) return;
+    appTourTarget = appTourResolveTarget(step);
+    appTourRender(step);
+}
+
+function appTourRender(step) {
+    const layer = appTourLayer;
+    if (!layer) return;
+    const card = layer.querySelector('.app-tour-card');
+    const fromTarget = !step.titleKey && appTourTarget ? appTourLabelFromTarget(appTourTarget) : null;
+    const title = step.titleKey ? t(step.titleKey) : (fromTarget ? fromTarget.label : '');
+    const icon = step.icon || (fromTarget ? fromTarget.icon : '');
+    const isCenter = !appTourTarget;
+    layer.querySelector('.app-tour-chapter').textContent = t(APP_TOUR_CHAPTERS[step.ch] || 'apptour_ch_home');
+    layer.querySelector('.app-tour-skip').textContent = t('apptour_skip');
+    const hero = layer.querySelector('.app-tour-hero');
+    hero.textContent = isCenter ? (icon || '✨') : '';
+    hero.classList.toggle('hidden', !isCenter);
+    const titleEl = layer.querySelector('.app-tour-title');
+    titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourEsc(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
+    layer.querySelector('.app-tour-text').textContent = t(step.text);
+    const linkEl = layer.querySelector('.app-tour-link');
+    const linkText = step.link ? t(step.link) : '';
+    linkEl.innerHTML = linkText ? `<span class="app-tour-link-icon" aria-hidden="true">🔗</span><span>${appTourEsc(linkText)}</span>` : '';
+    linkEl.classList.toggle('hidden', !linkText);
+    const flowsEl = layer.querySelector('.app-tour-flows');
+    flowsEl.innerHTML = step.flows ? appTourFlowsHtml() : '';
+    flowsEl.classList.toggle('hidden', !step.flows);
+    const total = appTourPlan.length;
+    layer.querySelector('.app-tour-progress span').style.width = `${Math.round(((appTourPos + 1) / total) * 100)}%`;
+    layer.querySelector('.app-tour-count').innerHTML = `<bdi dir="ltr">${appTourPos + 1} / ${total}</bdi>`;
+    const backBtn = layer.querySelector('.app-tour-back');
+    backBtn.textContent = t('apptour_back');
+    backBtn.classList.toggle('invisible', appTourPos === 0);
+    const nextBtn = layer.querySelector('.app-tour-next');
+    nextBtn.textContent = appTourPos === total - 1 ? t('apptour_finish') : t('apptour_next');
+    card.classList.toggle('is-center', isCenter);
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+    appTourPosition();
+    // מיקום שני אחרי שהפריסה/האנימציות התייצבו
+    setTimeout(() => { if (appTourActive) appTourPosition(); }, 260);
+    try { card.focus({ preventScroll: true }); } catch {}
+}
+
+function appTourFlowsHtml() {
+    const rtl = document.documentElement.dir === 'rtl';
+    return APP_TOUR_FLOWS.map(flow => `<div class="app-tour-flow">${flow.map(part => {
+        if (part === '>') return `<span class="app-tour-flow-arrow" aria-hidden="true">${rtl ? '←' : '→'}</span>`;
+        if (part === '<>') return '<span class="app-tour-flow-arrow" aria-hidden="true">↔</span>';
+        const [icon, key, literal] = part;
+        return `<span class="app-tour-chip">${icon} ${appTourEsc(key ? t(key) : literal)}</span>`;
+    }).join('')}</div>`).join('');
+}
+
+// מיקום: הזרקור סביב האלמנט, הכרטיס מתחתיו או מעליו (איפה שיש מקום), והחץ ביניהם
+function appTourPosition() {
+    const layer = appTourLayer;
+    if (!layer) return;
+    const spot = layer.querySelector('.app-tour-spot');
+    const card = layer.querySelector('.app-tour-card');
+    const arrow = layer.querySelector('.app-tour-arrow');
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const wrapper = document.querySelector('.phone-wrapper');
+    const wr = wrapper ? wrapper.getBoundingClientRect() : { left: 0, right: vw };
+    const boundL = Math.max(0, wr.left);
+    const boundR = Math.min(vw, wr.right > boundL + 200 ? wr.right : vw);
+    const M = 12;
+    const cardW = Math.min(360, boundR - boundL - M * 2);
+    card.style.width = `${cardW}px`;
+    const cardH = card.offsetHeight;
+    const target = appTourTarget && appTourTarget.isConnected ? appTourTarget : null;
+    const r = target ? target.getBoundingClientRect() : null;
+    appTourLastRect = r ? `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}` : '';
+    if (!r || r.width < 2 || r.height < 2) {
+        spot.classList.add('is-empty');
+        spot.style.left = `${(boundL + boundR) / 2}px`;
+        spot.style.top = `${vh / 2}px`;
+        spot.style.width = '0px';
+        spot.style.height = '0px';
+        arrow.classList.add('hidden');
+        card.style.left = `${(boundL + boundR) / 2 - cardW / 2}px`;
+        card.style.top = `${Math.max(M, (vh - cardH) / 2)}px`;
+        return;
+    }
+    const pad = 6;
+    const sl = Math.max(4, r.left - pad);
+    const st = Math.max(4, r.top - pad);
+    const sw = Math.min(vw - 4, r.right + pad) - sl;
+    const sh = Math.min(vh - 4, r.bottom + pad) - st;
+    const radius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
+    spot.classList.remove('is-empty');
+    spot.style.left = `${sl}px`;
+    spot.style.top = `${st}px`;
+    spot.style.width = `${sw}px`;
+    spot.style.height = `${sh}px`;
+    spot.style.borderRadius = radius >= Math.min(r.width, r.height) / 2 - 1 ? '999px' : `${Math.max(10, radius + pad)}px`;
+    const ARROW = 34;
+    const GAP = ARROW + 14;
+    const spaceBelow = vh - (st + sh);
+    const spaceAbove = st;
+    let placement;
+    if (spaceBelow >= cardH + GAP + M) placement = 'below';
+    else if (spaceAbove >= cardH + GAP + M) placement = 'above';
+    else placement = spaceBelow >= spaceAbove ? 'bottom' : 'top';
+    let top;
+    if (placement === 'below') top = st + sh + GAP;
+    else if (placement === 'above') top = st - GAP - cardH;
+    else if (placement === 'bottom') top = vh - cardH - M;
+    else top = M;
+    const cx = r.left + r.width / 2;
+    const left = Math.min(Math.max(cx - cardW / 2, boundL + M), boundR - cardW - M);
+    card.style.left = `${left}px`;
+    card.style.top = `${Math.max(M, top)}px`;
+    if (placement === 'below' || placement === 'above') {
+        arrow.classList.remove('hidden');
+        arrow.dataset.dir = placement === 'below' ? 'up' : 'down';
+        arrow.style.left = `${Math.min(Math.max(cx - ARROW / 2, boundL + M), boundR - M - ARROW)}px`;
+        arrow.style.top = `${placement === 'below' ? st + sh + 7 : st - 7 - ARROW}px`;
+    } else {
+        arrow.classList.add('hidden');
+    }
+}
+
+function appTourNext() {
+    if (!appTourActive) return;
+    if (appTourPos >= appTourPlan.length - 1) { closeAppTour(); return; }
+    appTourPos++;
+    appTourShow();
+}
+function appTourBack() {
+    if (!appTourActive || appTourPos === 0) return;
+    appTourPos--;
+    appTourShow();
+}
+function appTourKeydown(e) {
+    if (!appTourActive) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    const onButton = e.target && e.target.closest && e.target.closest('button');
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAppTour(); }
+    else if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') || (e.key === 'Enter' && !onButton)) { e.preventDefault(); e.stopPropagation(); appTourNext(); }
+    else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) { e.preventDefault(); e.stopPropagation(); appTourBack(); }
+}
+function appTourTrack() {
+    if (!appTourActive || !appTourTarget || !appTourTarget.isConnected) return;
+    const r = appTourTarget.getBoundingClientRect();
+    const key = `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}`;
+    if (key !== appTourLastRect) appTourPosition();
+}
+function appTourOnResize() {
+    cancelAnimationFrame(appTourResizeRaf);
+    appTourResizeRaf = requestAnimationFrame(appTourPosition);
 }
 
 function closeAppTour() {
-    closeModal('modal-app-tour');
-    if (tourOnFinish) { const fn = tourOnFinish; tourOnFinish = null; fn(); }
+    if (!appTourActive) return;
+    appTourActive = false;
+    appTourToken++;
+    document.removeEventListener('keydown', appTourKeydown, true);
+    window.removeEventListener('resize', appTourOnResize);
+    clearInterval(appTourTrackTimer);
+    const layer = appTourLayer;
+    appTourLayer = null;
+    appTourTarget = null;
+    if (layer) { layer.classList.remove('open'); setTimeout(() => layer.remove(), 240); }
+    // סוגרים את מה שהסיור פתח וחוזרים למסך הבית
+    if (appTourCtx === 'ai') closeModal('modal-ai-brain');
+    if (appTourCtx === 'settings') closeModal('modal-settings-drawer');
+    if (appTourCtx === 'menu') closeHamburgerMenu();
+    appTourCtx = null;
+    goHome();
+    if (appTourOnFinish) { const fn = appTourOnFinish; appTourOnFinish = null; fn(); }
 }
 
+async function markAppTourSeen() {
+    try { localStorage.setItem('weekwise_app_tour_version', String(APP_TOUR_VERSION)); } catch {}
+    if (!supabaseClient || !currentUserId) return;
+    await supabaseClient.from('user_premium').upsert(
+        { user_id: currentUserId, username: currentUsername, app_tour_version: APP_TOUR_VERSION },
+        { onConflict: 'user_id' },
+    );
+}
+
+// פעם אחת אוטומטית: מחכים למסך בית רגוע (בלי חלון/מגירה פתוחים) ורק אז מתחילים.
+// אם המשתמש/ת כבר עבר/ה למסך אחר - לא מפריעים; ננסה שוב בכניסה הבאה
+async function maybeAutoStartAppTour() {
+    let seen = 0;
+    try { seen = parseInt(localStorage.getItem('weekwise_app_tour_version'), 10) || 0; } catch {}
+    if (seen >= APP_TOUR_VERSION || !supabaseClient || !currentUserId) return;
+    const { data, error } = await supabaseClient.from('user_premium').select('app_tour_version').eq('user_id', currentUserId).maybeSingle();
+    if (error) return;
+    if (data && (data.app_tour_version || 0) >= APP_TOUR_VERSION) {
+        try { localStorage.setItem('weekwise_app_tour_version', String(data.app_tour_version)); } catch {}
+        return;
+    }
+    await appTourWait(2500);
+    for (let i = 0; i < 50; i++) {
+        if (appTourActive) return;
+        const loginOverlay = document.getElementById('login-overlay');
+        const busy = document.querySelector('.apple-modal.open, .hamburger-drawer-overlay.open, #today-peek-content-panel.open')
+            || (loginOverlay && loginOverlay.style.display !== 'none');
+        const homePanel = document.querySelector('.home-hero-panel');
+        const onHome = homePanel && !homePanel.classList.contains('hidden') && !document.querySelector('.tab-content.active-tab');
+        if (!busy && onHome && document.visibilityState === 'visible') { openAppTour(false); return; }
+        await appTourWait(600);
+    }
+}
 async function initAppAfterAuth(user) {
     currentUserId = user.id;
     currentUsername = user.email;
@@ -1799,6 +2150,7 @@ async function initAppAfterAuth(user) {
             if (getLocalDateString() !== lastCheckedDailyFocusDate) checkDailyFocusPrompt();
         }, 60000);
     }
+    maybeAutoStartAppTour();
 }
 
 // ברכה יומית עם נצנצים - לפי בקשה מפורשת ("בפעם הראשונה ביום, עם נצנצים
@@ -7170,6 +7522,7 @@ async function submitContactUs() {
 // פיצ'ר/תיקון חדש שנוסף לאפליקציה, אמור להתווסף גם ערך מתאים כאן ---
 const HELP_FAQ_ENTRIES = [
     { id: 'welcome', category: 'general' },
+    { id: 'app_tour', category: 'general' },
     { id: 'change_language', category: 'general' },
     { id: 'switch_daily_weekly_monthly', category: 'general' },
     { id: 'multi_device_login', category: 'general' },

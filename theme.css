@@ -6373,3 +6373,54 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .nm-drink-row.logged.just-added { animation: nmJustAdded 2.2s ease-out; }
 @keyframes nmJustAdded { 0%, 35% { box-shadow: 0 0 0 2px var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 26%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .nm-drink-row.logged.just-added { animation: none; box-shadow: 0 0 0 2px var(--accent-purple); } }
+
+/* ===== סיור באפליקציה: זרקור + חץ + כרטיס הסבר ===== */
+.app-tour-layer { position: fixed; inset: 0; z-index: 2147483000; opacity: 0; transition: opacity .22s ease; --tour-card-bg: #1c1629; --tour-card-fg: #f5f1ff; --tour-muted: rgba(245, 241, 255, .66); --tour-line: rgba(255, 255, 255, .09); --tour-tint: rgba(196, 150, 255, .14); --tour-accent: #d6b4ff; }
+.app-tour-layer.open { opacity: 1; }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .app-tour-layer { --tour-card-bg: #ffffff; --tour-card-fg: #1f1830; --tour-muted: rgba(31, 24, 48, .62); --tour-line: rgba(31, 24, 48, .08); --tour-tint: rgba(124, 58, 237, .08); --tour-accent: #7c3aed; }
+.app-tour-block { position: absolute; inset: 0; }
+.app-tour-spot { position: absolute; border-radius: 14px; box-shadow: 0 0 0 200vmax rgba(12, 8, 26, .64); pointer-events: none; transition: left .36s cubic-bezier(.22, .8, .25, 1), top .36s cubic-bezier(.22, .8, .25, 1), width .36s cubic-bezier(.22, .8, .25, 1), height .36s cubic-bezier(.22, .8, .25, 1), border-radius .36s ease; }
+.app-tour-spot::after { content: ''; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid rgba(255, 255, 255, .95); box-shadow: 0 0 0 4px rgba(236, 72, 153, .45), 0 0 26px rgba(168, 85, 247, .65); animation: appTourPulse 1.8s ease-in-out infinite; }
+.app-tour-spot.is-empty::after { display: none; }
+@keyframes appTourPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(1.035); } }
+.app-tour-arrow { position: absolute; width: 34px; height: 34px; color: #fff; filter: drop-shadow(0 2px 6px rgba(168, 85, 247, .8)); pointer-events: none; animation: appTourBounceUp 1.1s ease-in-out infinite; transition: left .3s ease, top .3s ease; }
+.app-tour-arrow svg { width: 100%; height: 100%; display: block; }
+.app-tour-arrow[data-dir="down"] { animation-name: appTourBounceDown; }
+.app-tour-arrow[data-dir="down"] svg { transform: rotate(180deg); }
+@keyframes appTourBounceUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes appTourBounceDown { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+.app-tour-card { position: absolute; box-sizing: border-box; background: var(--tour-card-bg); color: var(--tour-card-fg); border: 1px solid var(--tour-line); border-radius: 20px; padding: 18px 18px 14px; box-shadow: 0 22px 60px rgba(0, 0, 0, .42), 0 2px 8px rgba(0, 0, 0, .18); overflow-x: hidden; overflow-y: auto; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); outline: none; transition: left .3s cubic-bezier(.22, .8, .25, 1), top .3s cubic-bezier(.22, .8, .25, 1); font-family: inherit; }
+.app-tour-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); }
+.app-tour-card.pop { animation: appTourPop .26s ease-out; }
+@keyframes appTourPop { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+.app-tour-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.app-tour-chapter { font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--tour-accent); background: var(--tour-tint); padding: 4px 10px; border-radius: 999px; }
+.app-tour-skip { border: none; background: none; color: var(--tour-muted); font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; padding: 4px 2px; }
+.app-tour-skip:hover, .app-tour-skip:focus-visible { color: var(--tour-card-fg); text-decoration: underline; }
+.app-tour-hero { width: 64px; height: 64px; margin: 4px auto 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, rgba(236, 72, 153, .22), rgba(168, 85, 247, .28)); box-shadow: inset 0 0 0 1px var(--tour-line); }
+.app-tour-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 1.08rem; font-weight: 800; line-height: 1.3; color: var(--tour-card-fg); text-wrap: balance; }
+.app-tour-title-icon { width: 30px; height: 30px; flex-shrink: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: var(--tour-tint); font-size: 1rem; }
+.app-tour-text { margin: 0; font-size: .9rem; line-height: 1.55; color: var(--tour-card-fg); opacity: .92; }
+.app-tour-link { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; padding: 9px 11px; border-radius: 12px; background: var(--tour-tint); font-size: .82rem; line-height: 1.45; color: var(--tour-card-fg); }
+.app-tour-link-icon { flex-shrink: 0; }
+.app-tour-flows { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.app-tour-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 8px; border-radius: 12px; background: var(--tour-tint); }
+.app-tour-chip { font-size: .74rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--tour-card-bg); border: 1px solid var(--tour-line); white-space: nowrap; }
+.app-tour-flow-arrow { color: var(--tour-accent); font-weight: 800; font-size: .9rem; }
+.app-tour-card.is-center { text-align: center; }
+.app-tour-card.is-center .app-tour-title { justify-content: center; }
+.app-tour-card.is-center .app-tour-link, .app-tour-card.is-center .app-tour-flows { text-align: start; }
+.app-tour-progress { height: 4px; margin: 14px 0 12px; border-radius: 999px; background: var(--tour-line); overflow: hidden; }
+.app-tour-progress span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); transition: width .35s ease; }
+.app-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.app-tour-count { font-size: .76rem; font-weight: 700; color: var(--tour-muted); font-variant-numeric: tabular-nums; }
+.app-tour-back, .app-tour-next { font: inherit; font-weight: 700; border-radius: 12px; cursor: pointer; padding: 9px 16px; font-size: .88rem; min-width: 86px; }
+.app-tour-back { background: transparent; color: var(--tour-card-fg); border: 1px solid var(--tour-line); }
+.app-tour-back.invisible { visibility: hidden; }
+.app-tour-next { border: none; color: #fff; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 6px 18px rgba(168, 85, 247, .35); }
+.app-tour-next:active, .app-tour-back:active { transform: scale(.97); }
+.app-tour-back:focus-visible, .app-tour-next:focus-visible, .app-tour-skip:focus-visible { outline: 2px solid var(--tour-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    .app-tour-spot, .app-tour-card, .app-tour-arrow { transition: none; }
+    .app-tour-spot::after, .app-tour-arrow, .app-tour-card.pop { animation: none; }
+}

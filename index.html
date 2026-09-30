@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=467">
+    <link rel="stylesheet" href="theme.css?v=468">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1103,75 +1103,75 @@
                         <h3 data-i18n="hamburger_menu_title">Menu</h3>
                         <div class="hamburger-drawer-header-actions">
                             <!-- מעבר לתצוגת קוביות - בחירה בין ☰ לבין ▦ (רק אחד מהם מוצג למעלה) -->
-                            <button type="button" class="menu-style-switch" onclick="switchMenuStyle('tiles')" data-i18n-title="menu_switch_to_tiles" data-i18n-aria-label="menu_switch_to_tiles" title="Switch to tiles view" aria-label="Switch to tiles view"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" style="fill:currentColor"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
+                            <button type="button" data-tour="m-style" class="menu-style-switch" onclick="switchMenuStyle('tiles')" data-i18n-title="menu_switch_to_tiles" data-i18n-aria-label="menu_switch_to_tiles" title="Switch to tiles view" aria-label="Switch to tiles view"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" style="fill:currentColor"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
                             <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
                         </div>
                     </div>
 
                     <!-- New Me - קיצור קטן בראש התפריט (לא קבוצה - לא נאסף למסך הקטגוריות, שם יש לו קובייה משלו) -->
-                    <button type="button" class="hamburger-newme-item" onclick="closeHamburgerMenu(); openNewMe();">✨ New Me</button>
+                    <button type="button" data-tour="m-newme" class="hamburger-newme-item" onclick="closeHamburgerMenu(); openNewMe();">✨ New Me</button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_planning">Planning &amp; Calendar</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('schedule-section')">
+                    <button type="button" data-tour="m-myweek" class="hamburger-drawer-item" onclick="navigateFromMenu('schedule-section')">
                         <span class="hamburger-drawer-item-icon">🗓️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openGoalsVisionDrawer();">
+                    <button type="button" data-tour="m-vision" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openGoalsVisionDrawer();">
                         <span class="hamburger-drawer-item-icon">🖼️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">Vision Board</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openStudyDrawer();">
+                    <button type="button" data-tour="m-study" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openStudyDrawer();">
                         <span class="hamburger-drawer-item-icon">📓</span>
                         <span class="hamburger-drawer-item-title" data-i18n="study_menu_label">Study</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openTablesSection();">
+                    <button type="button" data-tour="m-tables" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openTablesSection();">
                         <span class="hamburger-drawer-item-icon">📋</span>
                         <span class="hamburger-drawer-item-title" data-i18n="tables_menu_label">Tables</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Lists</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'notes')">
+                    <button type="button" data-tour="m-notes" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'notes')">
                         <span class="hamburger-drawer-item-icon">📝</span>
                         <span class="hamburger-drawer-item-title" data-i18n="notes_title">Notes</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
+                    <button type="button" data-tour="m-shopping" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
                         <span class="hamburger-drawer-item-icon">🛒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_goals">Goals &amp; Progress</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'goal')">
+                    <button type="button" data-tour="m-goal" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'goal')">
                         <span class="hamburger-drawer-item-icon">🏆</span>
                         <span class="hamburger-drawer-item-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'recipes')">
+                    <button type="button" data-tour="m-recipes" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'recipes')">
                         <span class="hamburger-drawer-item-icon">🧑‍🍳</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_recipes">My Recipes</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'meals')">
+                    <button type="button" data-tour="m-meals" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'meals')">
                         <span class="hamburger-drawer-item-icon">🍽️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'calories')">
+                    <button type="button" data-tour="m-calories" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'calories')">
                         <span class="hamburger-drawer-item-icon">🔥</span>
                         <span class="hamburger-drawer-item-title" data-i18n="calorie_metrics_title">Calorie Metrics</span>
                     </button>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'water')">
+                    <button type="button" data-tour="m-water" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'water')">
                         <span class="hamburger-drawer-item-icon">💧</span>
                         <span class="hamburger-drawer-item-title" data-i18n="water_title">Water Tracking</span>
                     </button>
 
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_sport">Sport</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('sport-section')">
+                    <button type="button" data-tour="m-sport" class="hamburger-drawer-item" onclick="navigateFromMenu('sport-section')">
                         <span class="hamburger-drawer-item-icon">🏃</span>
                         <span class="hamburger-drawer-item-title" data-i18n="hamburger_sport_tracking_label">Workout Tracking</span>
                     </button>
                     <!-- מד צעדים: זו פעילות, לא תזונה - רק כאן בתפריט ההמבורגר, לפי בקשה
                          מפורשת. מעקב משקל הוסר מכאן - נשאר רק ב"תזונה ומדדים" למעלה -->
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'steps')">
+                    <button type="button" data-tour="m-steps" class="hamburger-drawer-item" onclick="navigateFromMenu('nutrition-section', 'steps')">
                         <span class="hamburger-drawer-item-icon">👟</span>
                         <span class="hamburger-drawer-item-title" data-i18n="steps_title">Daily Step Counter</span>
                     </button>
@@ -1179,13 +1179,13 @@
                     <!-- קטגוריית הכספים: השם "הוצאות והכנסות" נשאר, אבל האייקון הבודד
                          בתוכה שונה ל"תקציב" 📊, תואם לשינוי בטאב התחתון/עוזר ה-AI -->
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_finance">Expenses &amp; Income</div>
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('finance-section')">
+                    <button type="button" data-tour="m-budget" class="hamburger-drawer-item" onclick="navigateFromMenu('finance-section')">
                         <span class="hamburger-drawer-item-icon">📊</span>
                         <span class="hamburger-drawer-item-title" data-i18n="bottom_tab_finance">Budget</span>
                     </button>
                     <!-- חשבוניות/קבלות - דף משלה (receipts-section), לא חלק מדף התקציב,
                          לפי בקשה מפורשת -->
-                    <button type="button" class="hamburger-drawer-item" onclick="navigateFromMenu('receipts-section')">
+                    <button type="button" data-tour="m-receipts" class="hamburger-drawer-item" onclick="navigateFromMenu('receipts-section')">
                         <span class="hamburger-drawer-item-icon"></span>
                         <span class="hamburger-drawer-item-title" data-i18n="receipts_entry_title">🧾 Tax Invoice / Receipt</span>
                     </button>
@@ -1566,19 +1566,6 @@
             </div>
         </div>
 
-        <!-- סיור קצר באפליקציה - נפתח מ"תרצי סיור?" בסוף אשף ההרשמה, וגם
-             מהגדרות (settings_replay_tour_btn) לצפייה חוזרת בכל עת. אותו
-             מנגנון-שלבים גנרי בדיוק כמו האשף למעלה (renderTourStep) -->
-        <div id="modal-app-tour" class="apple-modal onboarding-modal">
-            <div class="modal-sheet">
-                <button type="button" class="onboarding-skip-link" onclick="closeAppTour()" data-i18n="onboarding_skip_link">Skip</button>
-                <div id="tour-step-body" class="onboarding-step-body"></div>
-                <div class="onboarding-dots" id="tour-dots"></div>
-                <div class="action-buttons-wrap">
-                    <button id="btn-tour-next" class="btn-primary" onclick="nextTourStep()" data-i18n="onboarding_next_btn">Next</button>
-                </div>
-            </div>
-        </div>
 
         <!-- הוצאות קבועות: הוספה/עריכה ידנית -->
         <div id="modal-add-recurring-expense" class="apple-modal">
@@ -2166,27 +2153,27 @@
                      backToSettingsMain ב-app.js -->
                 <div id="settings-main-menu">
                     <h3 data-i18n="settings_title">Settings</h3>
-                    <button type="button" class="settings-category-row" onclick="openSettingsSubscreen('appearance')">
+                    <button type="button" data-tour="s-appearance" class="settings-category-row" onclick="openSettingsSubscreen('appearance')">
                         <span class="settings-category-icon">🎨</span>
                         <span class="settings-category-label" data-i18n="settings_cat_appearance">Appearance &amp; Display</span>
                         <span class="settings-category-chevron">‹</span>
                     </button>
-                    <button type="button" class="settings-category-row" onclick="openSettingsSubscreen('personalization')">
+                    <button type="button" data-tour="s-personalization" class="settings-category-row" onclick="openSettingsSubscreen('personalization')">
                         <span class="settings-category-icon">📅</span>
                         <span class="settings-category-label" data-i18n="settings_cat_personalization">Personalization &amp; Calendar</span>
                         <span class="settings-category-chevron">‹</span>
                     </button>
-                    <button type="button" class="settings-category-row" onclick="openSettingsSubscreen('notifications')">
+                    <button type="button" data-tour="s-notifications" class="settings-category-row" onclick="openSettingsSubscreen('notifications')">
                         <span class="settings-category-icon">🔔</span>
                         <span class="settings-category-label" data-i18n="settings_cat_notifications">Notifications</span>
                         <span class="settings-category-chevron">‹</span>
                     </button>
-                    <button type="button" class="settings-category-row" onclick="openSettingsSubscreen('account')">
+                    <button type="button" data-tour="s-account" class="settings-category-row" onclick="openSettingsSubscreen('account')">
                         <span class="settings-category-icon">👤</span>
                         <span class="settings-category-label" data-i18n="settings_cat_account">Account &amp; Security</span>
                         <span class="settings-category-chevron">‹</span>
                     </button>
-                    <button type="button" class="settings-category-row" onclick="openSettingsSubscreen('support')">
+                    <button type="button" data-tour="s-support" class="settings-category-row" onclick="openSettingsSubscreen('support')">
                         <span class="settings-category-icon">❓</span>
                         <span class="settings-category-label" data-i18n="settings_cat_support">Support &amp; Info</span>
                         <span class="settings-category-chevron">‹</span>
@@ -3566,8 +3553,8 @@
 
     </div>
 
-    <script src="i18n.js?v=367"></script>
-    <script src="app.js?v=514"></script>
+    <script src="i18n.js?v=368"></script>
+    <script src="app.js?v=515"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=14"></script>
 </body>
