@@ -376,7 +376,7 @@ function nmDrinkDraftRowHtml(kind) {
                 <div class="nm-drink-row nm-drink-draft${milk ? ' has-milk' : ''}" data-kind="${milk ? 'milk' : 'plain'}" data-draft-id="d${++nmDraftSeq}" onfocusout="nmDraftFocusOut(this)">
                     <input type="text" class="nm-drink-input" maxlength="60" placeholder="${nmEsc(t(milk ? 'nm_drink_hot_ph' : 'nm_drink_name_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)">
                     <input type="number" class="nm-drink-kcal" inputmode="numeric" min="0" max="1500" placeholder="${nmEsc(t('calories_unit'))}" oninput="this.dataset.manual = '1'">
-                    <button type="button" class="nm-star" onclick="nmSaveDraftAsRegular(this)" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">☆</button>
+                    <button type="button" class="nm-star" onclick="nmSaveDraftAsRegular(this)" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">${nmStarSvg(false)}</button>
                     <button type="button" class="nm-chip" onclick="nmAddDrink(this)">${nmEsc(t('nm_drink_add'))}</button>
                     ${milk ? `<input type="text" class="nm-drink-milk" maxlength="30" placeholder="${nmEsc(t('nm_drink_milk_ph'))}" oninput="nmDrinkNameTyped(this)" onkeydown="if (event.key === 'Enter') nmAddDrink(this)" aria-label="${nmEsc(t('nm_drink_milk_ph'))}">` : ''}
                 </div>`;
@@ -531,6 +531,10 @@ function nmRenderMenu(body) {
 // ---------- שתייה (הוספה ידנית, לפחות 3 ביום, כולן יחד עד ~150 קל') ----------
 // כל משקה = שורה משלו ב-calorie_tracker עם meal_type=nm_drink_N (source='new_me'), כך
 // שנספר בהצצה להיום ובמעקב הארוחות כמו כל דבר אחר
+// כוכב מצויר (לא תו ☆) - תו הכוכב יושב לא ממורכז בעיגול בחלק מהגופנים
+function nmStarSvg(filled) {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.5 6 .9-4.35 4.25 1.03 6-5.38-2.83-5.38 2.83 1.03-6L3.3 9.6l6-.9z" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
+}
 function nmDrinkName(r) { return String(r.food_description || '').replace(/^🥤\s*/, ''); }
 
 function nmDrinksHtml() {
@@ -564,7 +568,7 @@ function nmDrinksHtml() {
                 <div class="nm-drink-row logged">
                     <span class="nm-drink-name">${nmEsc(name)}</span>
                     <input type="number" class="nm-drink-kcal nm-drink-kcal-logged" inputmode="numeric" min="0" max="1500" value="${Number(r.calories) || 0}" onchange="nmUpdateDrinkKcal('${r.id}', this.value)" aria-label="${nmEsc(t('calories_unit'))}">
-                    <button type="button" class="nm-star${isSaved ? ' on' : ''}" onclick="nmToggleSaveDrink('${r.id}')" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">${isSaved ? '★' : '☆'}</button>
+                    <button type="button" class="nm-star${isSaved ? ' on' : ''}" onclick="nmToggleSaveDrink('${r.id}')" title="${nmEsc(t('nm_drink_save_fav'))}" aria-label="${nmEsc(t('nm_drink_save_fav'))}">${nmStarSvg(isSaved)}</button>
                     <button type="button" class="nm-x" onclick="nmRemoveDrink('${r.id}', this)" aria-label="${nmEsc(t('nm_remove'))}">✕</button>
                 </div>`;
             }).join('')}

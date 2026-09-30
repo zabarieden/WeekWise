@@ -7188,7 +7188,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
-    { id: 'study_photo', category: 'ai' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
@@ -15254,72 +15253,6 @@ async function downscaleImageToBase64(file, maxDim = 1600, quality = 0.85) {
     } finally {
         if (url) URL.revokeObjectURL(url);
         if (source && typeof source.close === 'function') source.close();
-    }
-}
-
-// שיעורי בית מתמונה: צילום של הלוח/דף -> scan-homework-photo (AI עם ראייה) ->
-// כל מטלה שנמצאה נכנסת לרשימת הלימודים. הכפתור מציג ⏳ וננעל כל עוד הבקשה
-// רצה (לוקח כמה שניות), כדי שלא יראה כאילו כלום לא קורה
-let studyPhotoBusy = false;
-async function handleStudyPhotoSelected(event) {
-    const input = event.target;
-    const file = input.files && input.files[0];
-    input.value = '';
-    if (!file || studyPhotoBusy) return;
-    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    studyPhotoBusy = true;
-    const btn = document.getElementById('btn-study-photo');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-    showAppToast(t('study_photo_loading'));
-    try {
-        let photo;
-        try {
-            photo = await downscaleImageToBase64(file);
-        } catch (decodeErr) {
-            // לרוב HEIC (תמונת אייפון) בדפדפן שלא יודע לקרוא אותה
-            console.error('study photo decode failed', file.type, decodeErr);
-            showAppToast(`${t('recipe_scan_unsupported_type')} (E1${file.type ? ' ' + file.type : ''})`, 'error');
-            return;
-        }
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-        if (!token) { showAppToast(t('error_not_connected'), 'error'); return; }
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-homework-photo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: photo.base64, mediaType: photo.mediaType })
-        });
-        const result = await res.json().catch(() => ({}));
-        if (result.error === 'limit_reached') {
-            if (result.scope === 'free_lifetime') {
-                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_homework_photo')).replace('{limit}', String(result.limit || 5)), 'error');
-                openPremiumUpgradeModal();
-            } else {
-                showAppToast(t('study_photo_limit_reached'), 'error');
-            }
-            return;
-        }
-        if (!res.ok || result.error) {
-            console.error('scan-homework-photo failed', res.status, result);
-            showAppToast(`${t('study_photo_error')} (E2-${res.status}${result.error ? ' ' + result.error : ''})`, 'error');
-            return;
-        }
-        const titles = (result.items || []).map(i => String(i.title || '').trim()).filter(Boolean);
-        if (!titles.length) { showAppToast(t('study_photo_none_found'), 'error'); return; }
-        const { error } = await supabaseClient.from('study_tasks').insert(titles.map(title => ({ user_id: currentUserId, username: currentUsername, title })));
-        if (error) {
-            console.error('study_tasks insert failed', error);
-            showAppToast(`${t('study_photo_error')} (E3)`, 'error');
-            return;
-        }
-        await loadStudyTasks();
-        showAppToast(t('study_photo_success_toast').replace('{count}', String(titles.length)));
-    } catch (err) {
-        console.error('handleStudyPhotoSelected failed', err);
-        showAppToast(`${t('study_photo_error')} (E4 ${String(err && err.message || err).slice(0, 60)})`, 'error');
-    } finally {
-        studyPhotoBusy = false;
-        if (btn) { btn.disabled = false; btn.textContent = '📷'; }
     }
 }
 
