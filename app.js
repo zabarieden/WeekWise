@@ -295,7 +295,7 @@ function onLanguageChanged() {
         loadCalorieMonthlyCalendar(),
         loadRecipes(),
         loadAiUsage(),
-        loadMonthlyGoal(),
+        loadVisionGoals(),
         loadFinanceData(),
         loadSportData(),
         loadWaterData(),
@@ -1659,12 +1659,11 @@ const APP_TOUR_STEPS = [
     { id: 'ai_table', ch: 'ai', ctx: 'ai', tab: 'table', target: '#modal-ai-brain .ai-brain-tab[data-tab="table"]', titleKey: 'ai_brain_tab_table', text: 'apptour_ai_table_text' },
     { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
-    { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text', link: 'apptour_m_vision_link' },
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text', link: 'apptour_m_study_link' },
     { id: 'm_tables', ch: 'menu', ctx: 'menu', target: '[data-tour="m-tables"]', text: 'apptour_m_tables_text', link: 'apptour_m_tables_link' },
     { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text', link: 'apptour_m_notes_link' },
     { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
-    { id: 'm_goal', ch: 'menu', ctx: 'menu', target: '[data-tour="m-goal"]', text: 'apptour_m_goal_text', link: 'apptour_m_goal_link' },
+    { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text', link: 'apptour_m_vision_link' },
     { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
     { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },
     { id: 'm_calories', ch: 'menu', ctx: 'menu', target: '[data-tour="m-calories"]', text: 'apptour_m_calories_text', link: 'apptour_m_calories_link' },
@@ -1684,9 +1683,9 @@ const APP_TOUR_STEPS = [
 ];
 // "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום] או חץ ('>' כיוון אחד, '<>' הדדי)
 const APP_TOUR_FLOWS = [
-    [['🤖', 'ai_brain_fab_title'], ['🖼️', 'vision_board_title'], ['🪄', 'smart_split_tile_title'], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title']],
+    [['🤖', 'ai_brain_fab_title'], ['🎯', 'vision_board_title'], ['🪄', 'smart_split_tile_title'], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title']],
     [['✨', null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
-    [['⚖️', 'apptour_flow_weight'], '<>', ['✨', null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🏆', 'monthly_goal_tile_title']],
+    [['⚖️', 'apptour_flow_weight'], '<>', ['✨', null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
     [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
     [['🔁', 'apptour_flow_recurring'], '>', ['📊', 'bottom_tab_finance']],
 ];
@@ -2111,7 +2110,7 @@ async function initAppAfterAuth(user) {
         loadRoutineGoalsSetting(),
         loadGlobalTextColor(),
         loadGlobalFont(),
-        loadMonthlyGoal(),
+        loadVisionGoals(),
         loadFinanceData(),
         loadSportData(),
         loadWaterData(),
@@ -2993,7 +2992,7 @@ function openHamburgerMenu() {
 // פריטים, ולחיצה על פריט פשוט "לוחצת" על הפריט המקביל במגירה - כך שאין רשימה
 // כפולה לתחזק ושני הניווטים תמיד מסונכרנים
 const CATEGORY_GROUP_ICONS = {
-    hamburger_group_planning: '🗓️', hamburger_group_notes: '📝', hamburger_group_goals: '🏆',
+    hamburger_group_planning: '🗓️', hamburger_group_notes: '📝', hamburger_group_goals: '🎯',
     hamburger_group_nutrition: '🍽️', hamburger_group_sport: '🏃', hamburger_group_finance: '📊',
 };
 let categoriesOpenGroupKey = null;
@@ -7081,7 +7080,7 @@ async function exportUserDataReport() {
     showAppToast(t('settings_export_data_preparing'));
 
     let weightQuery = includeWeight ? supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: true }) : null;
-    let goalsQuery = includeGoals ? supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('achieved', true).order('month_key', { ascending: true }) : null;
+    let goalsQuery = includeGoals ? supabaseClient.from('vision_goals').select('*').eq('user_id', currentUserId).eq('is_achieved', true).order('achieved_at', { ascending: true }) : null;
     let financeQuery = includeFinance ? supabaseClient.from('budget_tracker').select('*').eq('user_id', currentUserId).order('entry_date', { ascending: false }) : null;
     // הוצאות קבועות נכללות בדוח הכספי - לפי בקשה מפורשת ("זה חשוב לPDF") -
     // לא לפי entry_date (אין להן), אלא לפי חפיפה עם הטווח שנבחר (כמו בסיכום/
@@ -7092,7 +7091,7 @@ async function exportUserDataReport() {
     let calorieQuery = includeCalories ? supabaseClient.from('calorie_tracker').select('*').eq('user_id', currentUserId).order('date', { ascending: false }) : null;
     if (!isAllTime) {
         if (weightQuery) weightQuery = weightQuery.gte('weight_date', rangeStart).lt('weight_date', rangeEndExclusive);
-        if (goalsQuery) goalsQuery = goalsQuery.eq('month_key', selectedMonthKey);
+        if (goalsQuery) goalsQuery = goalsQuery.gte('achieved_at', rangeStart).lt('achieved_at', rangeEndExclusive);
         if (financeQuery) financeQuery = financeQuery.gte('entry_date', rangeStart).lt('entry_date', rangeEndExclusive);
         if (recurringQuery) recurringQuery = recurringQuery.lt('start_date', rangeEndExclusive).or(`end_date.is.null,end_date.gte.${rangeStart}`);
         if (sportQuery) sportQuery = sportQuery.gte('session_date', rangeStart).lt('session_date', rangeEndExclusive);
@@ -7119,7 +7118,7 @@ async function exportUserDataReport() {
     }
     if (includeGoals) {
         const goalsHtml = (goalRows && goalRows.length)
-            ? goalRows.map(row => `<div class="entry"><span class="entry-main">${escapeHtmlForReport(row.goal_name)}</span><span class="entry-sub">${escapeHtmlForReport(formatMonthLabel(row.month_key))}</span></div>`).join('')
+            ? goalRows.map(row => `<div class="entry"><span class="entry-main">${escapeHtmlForReport(row.title)}</span><span class="entry-sub">${row.achieved_at ? escapeHtmlForReport(new Date(row.achieved_at).toLocaleDateString()) : ''}</span></div>`).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
         sectionsHtml += `<h2>${escapeHtmlForReport(t('data_report_achieved_goals'))}</h2>${goalsHtml}`;
     }
@@ -8105,17 +8104,6 @@ function currentMonthKey() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-let cachedMonthlyGoal = null;
-let viewedMonthKey = null;
-let editingMonthlyGoal = false;
-
-async function loadMonthlyGoal() {
-    if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('month_key', currentMonthKey()).maybeSingle();
-    cachedMonthlyGoal = data || null;
-    await renderMonthlyGoal();
-}
-
 function shiftMonthKey(monthKey, delta) {
     const [y, m] = monthKey.split('-').map(Number);
     const d = new Date(y, m - 1 + delta, 1);
@@ -8348,81 +8336,6 @@ function updateCustomSelectDisplay(selectId) {
     display.textContent = opt ? opt.textContent : '';
 }
 
-async function navigateMonthlyGoal(delta) {
-    const base = viewedMonthKey || currentMonthKey();
-    const target = shiftMonthKey(base, delta);
-    if (target > currentMonthKey()) return;
-    viewedMonthKey = target;
-    await renderMonthlyGoal();
-}
-
-function formatGoalProgressText(goal, currentValue) {
-    const cur = currentValue !== null && currentValue !== undefined ? currentValue : '—';
-    if (goal.goal_type === 'weight') {
-        return `${t('monthly_goal_current_label')}: ${cur} ${t('monthly_goal_kg_unit')}  •  ${t('monthly_goal_target_label')}: ${goal.target_value} ${t('monthly_goal_kg_unit')}`;
-    }
-    if (goal.goal_type === 'tasks') {
-        return `${cur} / ${goal.target_value} ${t('monthly_goal_tasks_unit')}`;
-    }
-    // ידני (מספרי): פורמט נקי בלבד, בלי לחזור על שם היעד (הוא כבר מוצג מעל בכותרת)
-    return `${cur} / ${goal.target_value}`;
-}
-
-function isGoalRewardClaimed(goalId) {
-    try { return JSON.parse(localStorage.getItem('weekwise_claimed_goal_rewards') || '[]').includes(goalId); }
-    catch { return false; }
-}
-
-async function claimGoalReward(goalId) {
-    try {
-        const claimed = JSON.parse(localStorage.getItem('weekwise_claimed_goal_rewards') || '[]');
-        if (!claimed.includes(goalId)) {
-            claimed.push(goalId);
-            localStorage.setItem('weekwise_claimed_goal_rewards', JSON.stringify(claimed));
-        }
-    } catch { /* localStorage unavailable, skip persistence */ }
-    if (cachedMonthlyGoal && cachedMonthlyGoal.id === goalId) celebrateGoalAchieved(cachedMonthlyGoal);
-    await renderMonthlyGoal();
-}
-
-async function computeGoalCurrentValue(goal) {
-    if (goal.goal_type === 'weight') {
-        const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1).maybeSingle();
-        return data ? data.weight_value : null;
-    }
-    if (goal.goal_type === 'tasks') {
-        const { data } = await supabaseClient.from('my_center_tasks').select('id').eq('user_id', currentUserId).eq('is_completed', true);
-        return data ? data.length : 0;
-    }
-    return goal.current_value || 0; // custom: מתעדכן ידנית ע"י המשתמש בלבד
-}
-
-function isGoalAchieved(goal, currentValue) {
-    if (currentValue === null || currentValue === undefined) return false;
-    if (goal.goal_type === 'weight') {
-        // כיוון היעד נקבע לפי starting_value מול target_value בזמן היצירה, לא
-        // תמיד ירידה: אם היעד היה *מעל* המשקל ההתחלתי (יעד עלייה במשקל), "הושג"
-        // צריך להיות כשהמשקל *עלה* עד/מעל היעד - לא כשהוא עדיין נמוך ממנו,
-        // אחרת יעד עלייה היה מסומן "הושג" כבר ביום הראשון (כל משקל התחלתי
-        // נמוך הוא תמיד <= יעד גבוה יותר)
-        const start = typeof goal.starting_value === 'number' ? goal.starting_value : currentValue;
-        return start <= goal.target_value ? currentValue >= goal.target_value : currentValue <= goal.target_value;
-    }
-    return currentValue >= goal.target_value;
-}
-
-function goalProgressPercent(goal, currentValue) {
-    if (currentValue === null || currentValue === undefined) return 0;
-    if (goal.goal_type === 'weight') {
-        const start = typeof goal.starting_value === 'number' ? goal.starting_value : currentValue;
-        if (start === goal.target_value) return currentValue <= goal.target_value ? 100 : 0;
-        const pct = ((start - currentValue) / (start - goal.target_value)) * 100;
-        return Math.min(100, Math.max(0, Math.round(pct)));
-    }
-    if (!goal.target_value) return 0;
-    return Math.min(100, Math.max(0, Math.round((currentValue / goal.target_value) * 100)));
-}
-
 // ויזואליזציית "הליכה למטרה": דמות שמתקדמת לאורך מסלול לפי אחוז ההתקדמות,
 // עם דגל בקצה (במקום פס התקדמות רגיל) - הרעיון שעלה בשיחת ה-brainstorm
 // הראשונית על גיימיפיקציה, כאן ממומש רק ליעד החודשי (לפי בקשה מפורשת - לא
@@ -8430,10 +8343,7 @@ function goalProgressPercent(goal, currentValue) {
 // גסות) - inset-inline-start/margin-inline-start (לא left/transform) כדי
 // שהמסלול יתהפך נכון אוטומטית בעברית (RTL) לעומת אנגלית (LTR)
 const GOAL_PATH_STEP_COUNT = 4;
-// draggable=true רק ליעד ידני (custom) בחודש הנוכחי - בדיוק אותו תנאי כמו
-// כפתורי ה+/- הקיימים (adjustCustomGoal), כי weight/tasks מחושבים אוטומטית
-// ממקור נתונים אחר (computeGoalCurrentValue) - גרירה שם הייתה נדרסת מיד
-// ברענון הבא ולא הייתה משנה שום דבר בפועל, רק מבלבלת
+// היום משמש את כרטיס 🎯 יעד החודש ב"היעדים שלי" (תצוגה בלבד, בלי גרירה)
 function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
     const clampedPct = Math.max(0, Math.min(100, pct || 0));
     const steps = Array.from({ length: GOAL_PATH_STEP_COUNT + 1 }, (_, i) => {
@@ -8455,261 +8365,27 @@ function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
     `;
 }
 
-// גרירת הדמות לאורך המסלול כדי לקבוע התקדמות ישירות (אלטרנטיבה מהירה
-// ל-adjustCustomGoal שדורש הרבה לחיצות עבור יעד גדול) - inset-inline-start
-// יחסי לרוחב-הטראק, עם תמיכת RTL/LTR (getComputedStyle direction, לא
-// document.dir הגלובלי - כדי שזה יעבוד נכון גם אם מוטמע במקום עם כיוון שונה)
-function initGoalPathDrag() {
-    const track = document.querySelector('.goal-path-track[data-draggable="true"]');
-    if (!track) return;
-    const targetValue = parseFloat(track.getAttribute('data-target-value')) || 0;
-    const avatar = track.querySelector('.goal-path-avatar');
-    const isRtl = getComputedStyle(track).direction === 'rtl';
-
-    const pctFromEvent = (e) => {
-        const rect = track.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const raw = isRtl ? ((rect.right - clientX) / rect.width) * 100 : ((clientX - rect.left) / rect.width) * 100;
-        return Math.max(0, Math.min(100, raw));
-    };
-
-    let dragging = false;
-    const onMove = (e) => {
-        if (!dragging) return;
-        e.preventDefault();
-        const pct = pctFromEvent(e);
-        if (avatar) avatar.style.insetInlineStart = `${pct}%`;
-    };
-    const onEnd = async (e) => {
-        if (!dragging) return;
-        dragging = false;
-        if (avatar) avatar.classList.remove('dragging');
-        document.removeEventListener('pointermove', onMove);
-        document.removeEventListener('pointerup', onEnd);
-        const pct = pctFromEvent(e);
-        const newValue = Math.round((pct / 100) * targetValue);
-        await setCustomGoalProgress(newValue);
-    };
-    track.onpointerdown = (e) => {
-        dragging = true;
-        e.preventDefault();
-        if (avatar) avatar.classList.add('dragging');
-        const pct = pctFromEvent(e);
-        if (avatar) avatar.style.insetInlineStart = `${pct}%`;
-        document.addEventListener('pointermove', onMove);
-        document.addEventListener('pointerup', onEnd);
-    };
-}
-
-async function setCustomGoalProgress(newValue) {
-    if (!cachedMonthlyGoal) return;
-    const clamped = Math.max(0, newValue);
-    await supabaseClient.from('monthly_goals').update({ current_value: clamped }).eq('id', cachedMonthlyGoal.id);
-    cachedMonthlyGoal.current_value = clamped;
-    await renderMonthlyGoal();
-}
-
-async function renderMonthlyGoal() {
-    const container = document.getElementById('monthly-goal-content');
-    if (!container) return;
-
-    if (!isPremiumUser) {
-        container.innerHTML = `<p class="monthly-goal-empty">${t('monthly_goal_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
-        return;
-    }
-
-    if (!viewedMonthKey) viewedMonthKey = currentMonthKey();
-    const isCurrentMonth = viewedMonthKey === currentMonthKey();
-
-    let goal = isCurrentMonth ? cachedMonthlyGoal : null;
-    if (!isCurrentMonth) {
-        const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).eq('month_key', viewedMonthKey).maybeSingle();
-        goal = data || null;
-    }
-
-    const navHtml = `
-        <div class="monthly-goal-nav">
-            <button class="monthly-goal-nav-btn" onclick="navigateMonthlyGoal(-1)" title="${t('monthly_goal_prev_month')}">‹</button>
-            <span class="monthly-goal-month-label">${formatMonthLabel(viewedMonthKey)}</span>
-            <button class="monthly-goal-nav-btn" onclick="navigateMonthlyGoal(1)" title="${t('monthly_goal_next_month')}" ${isCurrentMonth ? 'disabled' : ''}>›</button>
-        </div>
-    `;
-
-    if (!goal) {
-        container.innerHTML = navHtml + (isCurrentMonth
-            ? `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p><button class="btn-secondary" onclick="openSetMonthlyGoalModal()">${t('monthly_goal_set_btn')}</button>`
-            : `<p class="monthly-goal-empty">${t('monthly_goal_empty_hint')}</p>`);
-        return;
-    }
-
-    let currentValue = goal.current_value;
-    let achieved = goal.achieved;
-    let pct = goalProgressPercent(goal, currentValue);
-
-    if (isCurrentMonth) {
-        currentValue = await computeGoalCurrentValue(goal);
-        achieved = isGoalAchieved(goal, currentValue);
-        pct = goalProgressPercent(goal, currentValue);
-
-        if (achieved && !goal.achieved) {
-            await supabaseClient.from('monthly_goals').update({ achieved: true, current_value: currentValue }).eq('id', goal.id);
-            cachedMonthlyGoal.achieved = true;
-            goal.achieved = true;
-            celebrateGoalAchieved(goal);
-        } else if (currentValue !== null && currentValue !== goal.current_value) {
-            await supabaseClient.from('monthly_goals').update({ current_value: currentValue }).eq('id', goal.id);
-            cachedMonthlyGoal.current_value = currentValue;
-        }
-    }
-
-    const progressText = formatGoalProgressText(goal, currentValue);
-    const actionsHtml = isCurrentMonth
-        ? `<div class="monthly-goal-actions">
-                <button class="btn-edit-item" onclick="openSetMonthlyGoalModal(true)" title="${t('monthly_goal_edit_title')}">${EDIT_ICON_SVG}</button>
-                <button class="btn-delete-item" onclick="deleteMonthlyGoal()">❌</button>
-           </div>`
-        : `<span class="monthly-goal-readonly-badge">${t('monthly_goal_viewing_past')}</span>`;
-
-    let trophyHtml = '';
-    if (achieved) {
-        const claimed = isGoalRewardClaimed(goal.id);
-        trophyHtml = `
-            <div class="monthly-goal-trophy-banner">
-                <span class="monthly-goal-trophy-icon">🏆</span>
-                <div class="monthly-goal-trophy-text">
-                    <strong>${t('monthly_goal_trophy_unlocked')}</strong>
-                    <span>${goal.goal_name} — ${progressText}</span>
-                </div>
-                ${isCurrentMonth ? `<button class="btn-secondary monthly-goal-claim-btn" onclick="claimGoalReward('${goal.id}')" ${claimed ? 'disabled' : ''}>${claimed ? t('monthly_goal_reward_claimed_btn') : t('monthly_goal_claim_reward_btn')}</button>` : ''}
-            </div>`;
-    }
-
-    container.innerHTML = `
-        ${navHtml}
-        <div class="monthly-goal-header-row">
-            <span class="monthly-goal-name">${goal.goal_name}${achieved ? ' 🏆' : ''}</span>
-            ${actionsHtml}
-        </div>
-        ${buildGoalPathHtml(pct, achieved, isCurrentMonth && goal.goal_type === 'custom', goal.target_value)}
-        <div class="monthly-goal-values-row">
-            <span class="monthly-goal-values">${progressText}</span>
-            ${isCurrentMonth && goal.goal_type === 'custom' ? `
-                <div class="monthly-goal-quick-controls">
-                    <button class="btn-goal-step" onclick="adjustCustomGoal(-1)" ${(currentValue || 0) <= 0 ? 'disabled' : ''} title="${t('monthly_goal_decrement_btn')}">−</button>
-                    <button class="btn-goal-step" onclick="adjustCustomGoal(1)" title="${t('monthly_goal_increment_btn')}">+</button>
-                </div>` : ''}
-        </div>
-        ${trophyHtml}
-    `;
-    initGoalPathDrag();
-}
-
-function openSetMonthlyGoalModal(isEdit = false) {
-    editingMonthlyGoal = !!isEdit && !!cachedMonthlyGoal;
-    const titleKey = editingMonthlyGoal ? 'monthly_goal_edit_modal_title' : 'monthly_goal_modal_title';
-    const saveKey = editingMonthlyGoal ? 'monthly_goal_update_btn' : 'monthly_goal_save_btn';
-    const titleEl = document.getElementById('monthly-goal-modal-title');
-    const saveBtn = document.getElementById('monthly-goal-save-btn');
-    titleEl.setAttribute('data-i18n', titleKey);
-    titleEl.textContent = t(titleKey);
-    saveBtn.setAttribute('data-i18n', saveKey);
-    saveBtn.textContent = t(saveKey);
-    document.getElementById('monthly-goal-name-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_name : '';
-    // ברירת המחדל היא 'custom' ולא 'tasks': 'tasks' ו-'weight' לא רק תוויות - הן
-    // מחברות את היעד למקור נתונים אחר לגמרי (משימות שהושלמו ב"מרכז שלי"/מעקב
-    // משקל בפועל), אז יעד חופשי כמו "ירידה במשקל" שנשמר כברירת מחדל כ-'tasks'
-    // עוקב בטעות אחרי משימות שהושלמו שאין להן שום קשר לשם שהמשתמש הקליד
-    document.getElementById('monthly-goal-type-input').value = editingMonthlyGoal ? cachedMonthlyGoal.goal_type : 'custom';
-    updateCustomSelectDisplay('monthly-goal-type-input');
-    document.getElementById('monthly-goal-target-input').value = editingMonthlyGoal ? cachedMonthlyGoal.target_value : '';
-    document.getElementById('monthly-goal-current-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.current_value || 0) : 0;
-    document.getElementById('monthly-goal-reward-input').value = editingMonthlyGoal ? (cachedMonthlyGoal.personal_reward || '') : '';
-    handleMonthlyGoalTypeChange();
-    openModal('modal-set-monthly-goal');
-}
-
-// שדה "התקדמות נוכחית" רלוונטי רק ליעד ידני/מספרי - יעדי משימות/משקל תמיד
-// מחושבים אוטומטית ממקור הנתונים שלהם (ר' computeGoalCurrentValue), ולכן
-// אין טעם (ואף מטעה) לתת למשתמש לערוך אותם ידנית כאן
-function handleMonthlyGoalTypeChange() {
-    const type = document.getElementById('monthly-goal-type-input').value;
-    const wrap = document.getElementById('monthly-goal-current-wrap');
-    if (wrap) wrap.classList.toggle('hidden', type !== 'custom');
-}
-
-async function saveMonthlyGoal() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
-    const name = document.getElementById('monthly-goal-name-input').value.trim();
-    const type = document.getElementById('monthly-goal-type-input').value;
-    const target = parseFloat(document.getElementById('monthly-goal-target-input').value);
-    if (!name || isNaN(target)) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-    // התקדמות נוכחית ניתנת לעריכה ידנית רק ביעד מסוג 'custom' - ליעדי משימות/
-    // משקל היא תמיד מחושבת מחדש אוטומטית (ר' computeGoalCurrentValue)
-    const manualCurrent = type === 'custom' ? (parseFloat(document.getElementById('monthly-goal-current-input').value) || 0) : 0;
-    const personalReward = document.getElementById('monthly-goal-reward-input').value.trim() || null;
-
-    if (editingMonthlyGoal && cachedMonthlyGoal) {
-        const updatePayload = { goal_name: name, goal_type: type, target_value: target, personal_reward: personalReward };
-        if (type === 'custom') updatePayload.current_value = manualCurrent;
-        const { error } = await supabaseClient.from('monthly_goals').update(updatePayload).eq('id', cachedMonthlyGoal.id);
-        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-        editingMonthlyGoal = false;
-        closeModal('modal-set-monthly-goal');
-        showAppToast(t('item_added_success'));
-        await loadMonthlyGoal();
-        return;
-    }
-
-    let startingValue = null;
-    if (type === 'weight') {
-        const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1).maybeSingle();
-        startingValue = data ? data.weight_value : target;
-    }
-
-    const { error } = await supabaseClient.from('monthly_goals').insert({
-        username: currentUsername, user_id: currentUserId, goal_name: name, goal_type: type,
-        target_value: target, starting_value: startingValue, current_value: manualCurrent,
-        month_key: currentMonthKey(), achieved: false, personal_reward: personalReward
-    });
-    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    closeModal('modal-set-monthly-goal');
-    showAppToast(t('item_added_success'));
-    await loadMonthlyGoal();
-}
-
-async function deleteMonthlyGoal() {
-    if (!cachedMonthlyGoal) return;
-    await supabaseClient.from('monthly_goals').delete().eq('id', cachedMonthlyGoal.id);
-    cachedMonthlyGoal = null;
-    await renderMonthlyGoal();
-}
-
-async function adjustCustomGoal(delta) {
-    if (!cachedMonthlyGoal) return;
-    await setCustomGoalProgress((cachedMonthlyGoal.current_value || 0) + delta);
-}
-
 // נשמר לשימוש כפתור השיתוף האופציונלי (shareGoalAchievement) - לא הצגה בלבד
 let lastCelebratedGoalSummary = '';
 
 function celebrateGoalAchieved(goal) {
-    // אם המשתמשת כתבה פינוק אישי משלה בזמן הגדרת היעד - הוא מוצג במקום
-    // ההודעות הגנריות שהיו קודם (עדיין שם כברירת מחדל אם לא נכתב פינוק)
+    // הפרס שהוגדר ליעד מוצג במקום ההודעות הגנריות (שנשארות כברירת מחדל בלי פרס)
     let msg;
-    if (goal.personal_reward) {
-        msg = `${t('monthly_goal_personal_reward_prefix')} ${goal.personal_reward}`;
+    if (goal.reward) {
+        msg = `${t('monthly_goal_personal_reward_prefix')} ${goal.reward}`;
     } else {
         const rewardKeys = ['monthly_goal_reward_1', 'monthly_goal_reward_2', 'monthly_goal_reward_3'];
         msg = t(rewardKeys[Math.floor(Math.random() * rewardKeys.length)]);
     }
     document.getElementById('goal-celebration-text').textContent = msg;
     const summaryEl = document.getElementById('goal-celebration-summary');
-    const progressText = formatGoalProgressText(goal, goal.current_value);
-    lastCelebratedGoalSummary = `${goal.goal_name} — ${progressText}`;
+    const progress = typeof visionGoalProgress === 'function' ? visionGoalProgress(goal) : null;
+    lastCelebratedGoalSummary = progress && progress.label && (goal.track_type || 'steps') !== 'steps' ? `${goal.title} — ${progress.label}` : goal.title;
     if (summaryEl) summaryEl.textContent = lastCelebratedGoalSummary;
     openModal('modal-goal-celebration');
+    const sheet = document.querySelector('#modal-goal-celebration .goal-celebration-sheet');
+    if (sheet && typeof spawnGentleConfettiBurst === 'function') setTimeout(() => spawnGentleConfettiBurst(sheet, 42), 180);
 }
-
 // שיתוף הישג - כפתור משני, לגמרי אופציונלי (ר' הדיון: מישהי בלי "מישהו
 // ספציפי" לשתף איתו לא אמורה להרגיש שמוכרחים - זו סיבה בדיוק ל-navigator.share
 // הכללי, לא ניסוח שמניח קיום חבר/ה ספציפיים, והיא תמיד ניתנת להתעלמות)
@@ -10616,34 +10292,6 @@ async function parseFinanceWithAI() {
     closeModal('modal-ai-brain');
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
     showAppToast(t('finance_ai_success'));
-}
-
-async function toggleMonthlyGoalLookback() {
-    const list = document.getElementById('monthly-goal-lookback-list');
-    if (!list) return;
-    const willShow = list.classList.contains('hidden');
-    if (willShow) await loadPastMonthlyGoals();
-    list.classList.toggle('hidden', !willShow);
-}
-
-async function loadPastMonthlyGoals() {
-    const list = document.getElementById('monthly-goal-lookback-list');
-    if (!list || !supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('monthly_goals').select('*').eq('user_id', currentUserId).lt('month_key', currentMonthKey()).order('month_key', { ascending: false });
-    list.innerHTML = '';
-    if (!data || !data.length) {
-        const empty = document.createElement('div');
-        empty.className = 'calendar-glance-empty';
-        empty.textContent = t('monthly_goal_lookback_empty');
-        list.appendChild(empty);
-        return;
-    }
-    data.forEach(g => {
-        const row = document.createElement('div');
-        row.className = 'monthly-goal-lookback-item' + (g.achieved ? ' achieved' : '');
-        row.innerHTML = `<span class="monthly-goal-lookback-month">${g.month_key}</span><span class="monthly-goal-lookback-name">${g.goal_name}</span><span class="monthly-goal-lookback-values">${g.current_value}/${g.target_value}</span><span>${g.achieved ? '🏆' : '—'}</span>`;
-        list.appendChild(row);
-    });
 }
 
 // --- מונה שימוש חינמי בניתוח מתכונים (10 ניתוחים חינם, לכל החיים - זו לא סריקת
@@ -17401,6 +17049,20 @@ function endEmojiDrag() {
     if (didDrag) saveCanvasData(); // פעם אחת בשחרור - לא בכל pointermove
 }
 
+// --- "היעדים שלי" (לשעבר לוח החזון) - מאחד את לוח החזון ואת היעד החודשי, לפי בקשה
+// מפורשת ("לחבר את זה עם החזון... שאנשים יבינו"). כל יעד: כרטיס תמונה שמתהפך לצעדים,
+// ועכשיו גם "למה זה חשוב לי", עד מתי (ספירה לאחור + בדיקת קצב, בהשראת Strides), פרס 🎁,
+// ומדידת התקדמות לפי צעדים / מספר / משקל. יעד אחד בכל חודש יכול להיות 🎯 "יעד החודש"
+// (פרימיום, כמו היעד החודשי שהוחלף) - מוצג ראשון, עם מסלול ההליכה, ובהצצה להיום ---
+const VISION_GOAL_TEMPLATES = [
+    { key: 'run', icon: '🏃', category: 'health', track: 'steps', steps: 4 },
+    { key: 'save', icon: '💰', category: 'finance', track: 'steps', steps: 4 },
+    { key: 'read', icon: '📚', category: 'learning', track: 'number', target: 12 },
+    { key: 'language', icon: '🗣️', category: 'learning', track: 'steps', steps: 4 },
+    { key: 'weight', icon: '⚖️', category: 'health', track: 'weight' },
+];
+let visionLatestWeight = null;
+
 async function loadVisionGoals() {
     if (!supabaseClient || !currentUserId) return;
     const [goalsRes, milestonesRes] = await Promise.all([
@@ -17409,42 +17071,191 @@ async function loadVisionGoals() {
     ]);
     visionGoalsCache = goalsRes.data || [];
     visionMilestonesCache = milestonesRes.data || [];
+    if (visionGoalsCache.some(g => g.track_type === 'weight' && !g.is_achieved)) await refreshVisionLatestWeight();
     renderVisionGoalsList();
+    renderPeekFocusGoal();
+    // משקל שנרשם במקום אחר (מדדים / New Me) יכול להשלים יעד משקל
+    checkWeightGoalsAchieved();
+}
+
+async function refreshVisionLatestWeight() {
+    const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1).maybeSingle();
+    visionLatestWeight = data && data.weight_value != null ? Number(data.weight_value) : null;
+}
+
+function visionEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
+function visionFmt(n) { return (Math.round(Number(n) * 10) / 10).toLocaleString(currentLang); }
+function visionIsFocus(goal) { return !goal.is_achieved && goal.focus_month === currentMonthKey(); }
+function visionLastDayOfMonth() {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+// ליעד החודש בלי תאריך - סוף החודש הוא תאריך היעד
+function visionEffectiveDeadline(goal) { return goal.target_date || (visionIsFocus(goal) ? visionLastDayOfMonth() : null); }
+function visionDaysLeft(deadline) {
+    if (!deadline) return null;
+    const [y, m, d] = deadline.split('-').map(Number);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((new Date(y, m - 1, d) - today) / 86400000);
+}
+function visionDaysLeftText(days) {
+    if (days === null) return '';
+    if (days > 1) return t('vision_days_left').replace('{n}', days);
+    if (days === 1) return t('vision_day_left_one');
+    if (days === 0) return t('vision_due_today');
+    return t('vision_overdue');
+}
+
+// התקדמות לפי סוג המדידה: צעדים (תחנות שסומנו), מספר (למשל 7/12 ספרים) או משקל
+// (לפי השקילה האחרונה, מנקודת ההתחלה אל היעד - ירידה או עלייה)
+function visionGoalProgress(goal) {
+    const type = goal.track_type || 'steps';
+    if (type === 'number') {
+        const target = Number(goal.target_value) || 0;
+        const cur = Number(goal.current_value) || 0;
+        const pct = target > 0 ? Math.min(100, Math.max(0, Math.round((cur / target) * 100))) : 0;
+        return { pct, label: `${visionFmt(cur)} / ${visionFmt(target)}${goal.unit ? ' ' + goal.unit : ''}`, reached: target > 0 && cur >= target };
+    }
+    if (type === 'weight') {
+        const kg = t('monthly_goal_kg_unit');
+        const target = goal.target_value != null ? Number(goal.target_value) : null;
+        const cur = visionLatestWeight;
+        if (cur === null || target === null) return { pct: 0, label: `— ${document.documentElement.dir === 'rtl' ? '←' : '→'} ${target === null ? '—' : visionFmt(target)} ${kg}`, reached: false };
+        const start = goal.start_value != null ? Number(goal.start_value) : cur;
+        const losing = start >= target;
+        const reached = losing ? cur <= target : cur >= target;
+        const pct = start === target ? (reached ? 100 : 0) : Math.min(100, Math.max(0, Math.round(((start - cur) / (start - target)) * 100)));
+        const arrow = document.documentElement.dir === 'rtl' ? '←' : '→';
+        return { pct, label: `${visionFmt(cur)} ${arrow} ${visionFmt(target)} ${kg}`, reached };
+    }
+    const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+    const total = milestones.length;
+    const done = milestones.filter(m => m.is_done).length;
+    return { pct: total ? Math.round((done / total) * 100) : 0, label: total ? `${done} / ${total}` : '', reached: total > 0 && done === total };
+}
+
+// קצב (כמו "pace line" ב-Strides): משווים את אחוז ההתקדמות לאחוז הזמן שעבר עד התאריך
+function visionPace(goal, pct, deadline) {
+    if (!deadline || pct >= 100) return null;
+    const [y, m, d] = deadline.split('-').map(Number);
+    const end = new Date(y, m - 1, d, 23, 59, 59).getTime();
+    let start = new Date(goal.created_at).getTime();
+    if (!goal.target_date && visionIsFocus(goal)) {
+        const now = new Date();
+        start = Math.max(start, new Date(now.getFullYear(), now.getMonth(), 1).getTime());
+    }
+    const now = Date.now();
+    if (now >= end || end <= start) return null;
+    const expected = ((now - start) / (end - start)) * 100;
+    if (expected < 10) return null;
+    if (pct >= expected + 10) return 'ahead';
+    if (pct >= expected - 10) return 'on_track';
+    return 'behind';
+}
+
+function visionChipsHtml(goal, prog, showReward) {
+    const chips = [];
+    if (!goal.is_achieved) {
+        const deadline = visionEffectiveDeadline(goal);
+        const days = visionDaysLeft(deadline);
+        if (days !== null) {
+            const cls = days < 0 ? ' is-overdue' : (days <= 3 ? ' is-soon' : '');
+            chips.push(`<span class="vision-chip${cls}">📅 ${visionEsc(visionDaysLeftText(days))}</span>`);
+        }
+        const pace = visionPace(goal, prog.pct, deadline);
+        const paceMap = { ahead: ['🚀', 'vision_pace_ahead', 'is-ahead'], on_track: ['✅', 'vision_pace_on_track', 'is-on-track'], behind: ['⚠️', 'vision_pace_behind', 'is-behind'] };
+        if (pace) chips.push(`<span class="vision-chip ${paceMap[pace][2]}">${paceMap[pace][0]} ${visionEsc(t(paceMap[pace][1]))}</span>`);
+    }
+    if (showReward && goal.reward) chips.push(`<span class="vision-chip is-reward">🎁 ${visionEsc(goal.reward)}</span>`);
+    return chips.length ? `<div class="vision-card-chips">${chips.join('')}</div>` : '';
 }
 
 function renderVisionGoalsList() {
     const list = document.getElementById('vision-goals-list');
     const empty = document.getElementById('vision-goals-empty');
+    const focusSlot = document.getElementById('vision-focus-slot');
     const achievedSection = document.getElementById('vision-goals-achieved-section');
     const achievedList = document.getElementById('vision-goals-achieved-list');
     if (!list) return;
+    // כרטיס שהיה הפוך (למשל תוך כדי +1 בגב הכרטיס) נשאר הפוך אחרי הרינדור
+    const flippedIds = new Set(Array.from(document.querySelectorAll('.vision-goal-card.flipped')).map(el => el.dataset.goalId));
     list.innerHTML = '';
+    if (focusSlot) focusSlot.innerHTML = '';
     if (achievedList) achievedList.innerHTML = '';
 
     const activeGoals = visionGoalsCache.filter(g => !g.is_achieved);
+    const focusGoal = activeGoals.find(visionIsFocus);
+    // שאר היעדים: קודם אלה שיש להם תאריך (הקרוב ביותר ראשון), ואז לפי סדר יצירה
+    const otherGoals = activeGoals.filter(g => g !== focusGoal).sort((a, b) => {
+        const da = visionEffectiveDeadline(a), db = visionEffectiveDeadline(b);
+        if (da && db) return da.localeCompare(db);
+        if (da) return -1;
+        if (db) return 1;
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
     // ההישג האחרון קודם (לא סדר-יצירה מקורי) - לפי בקשה מפורשת ("כל חזון
     // חדש יהיה בשורה למעלה"), כך שהטרופיאה הכי טרייה תמיד הכי בולטת
     const achievedGoals = visionGoalsCache.filter(g => g.is_achieved).sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at));
 
-    if (!activeGoals.length) {
-        if (empty) empty.classList.remove('hidden');
-    } else {
-        if (empty) empty.classList.add('hidden');
-        activeGoals.forEach(goal => {
-            const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
-            list.appendChild(renderVisionGoalCard(goal, milestones));
-        });
+    if (empty) empty.classList.toggle('hidden', activeGoals.length > 0);
+    if (!activeGoals.length) renderVisionTemplates();
+
+    if (focusSlot) {
+        if (focusGoal) {
+            focusSlot.appendChild(renderVisionGoalCard(focusGoal, visionMilestonesCache.filter(m => m.goal_id === focusGoal.id), { focus: true }));
+        } else if (activeGoals.length) {
+            const hint = document.createElement('div');
+            hint.className = 'vision-focus-hint';
+            hint.innerHTML = `<span class="vision-focus-hint-icon" aria-hidden="true">🎯</span><span>${visionEsc(t('vision_focus_empty_hint'))}${isPremiumUser ? '' : ' ⭐'}</span>`;
+            focusSlot.appendChild(hint);
+        }
     }
+    otherGoals.forEach(goal => list.appendChild(renderVisionGoalCard(goal, visionMilestonesCache.filter(m => m.goal_id === goal.id))));
 
     // "יעדים שכבשתי" - קבועים כאן לצמיתות, לא נעלמים אוטומטית לעולם (ר' ההערה
     // ב-index.html) - הסקשן עצמו מוצג רק כשיש לפחות הישג אחד
     if (achievedSection) achievedSection.classList.toggle('hidden', achievedGoals.length === 0);
-    if (achievedList) {
-        achievedGoals.forEach(goal => {
-            const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
-            achievedList.appendChild(renderVisionGoalCard(goal, milestones));
-        });
-    }
+    if (achievedList) achievedGoals.forEach(goal => achievedList.appendChild(renderVisionGoalCard(goal, visionMilestonesCache.filter(m => m.goal_id === goal.id))));
+
+    flippedIds.forEach(id => {
+        const card = document.querySelector(`.vision-goal-card[data-goal-id="${id}"]`);
+        if (!card) return;
+        card.classList.add('flipped', 'no-flip-anim');
+        requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('no-flip-anim')));
+    });
+}
+
+// מצב ריק: דוגמאות מוכנות - לחיצה פותחת את חלון היעד כבר ממולא (אפשר לשנות הכול)
+function renderVisionTemplates() {
+    const wrap = document.getElementById('vision-templates');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    VISION_GOAL_TEMPLATES.forEach(tpl => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'vision-template-chip';
+        btn.innerHTML = `<span class="vision-template-icon" aria-hidden="true">${tpl.icon}</span><span>${visionEsc(t('vision_tpl_' + tpl.key))}</span>`;
+        btn.onclick = () => openVisionGoalModal(null, tpl);
+        wrap.appendChild(btn);
+    });
+}
+
+// 🎯 יעד החודש גם ב"הצצה להיום" - שורה קטנה עם התקדמות, לחיצה פותחת את היעדים
+function renderPeekFocusGoal() {
+    const el = document.getElementById('peek-focus-goal');
+    if (!el) return;
+    const goal = visionGoalsCache.find(visionIsFocus);
+    if (!goal) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    const prog = visionGoalProgress(goal);
+    const daysText = visionDaysLeftText(visionDaysLeft(visionEffectiveDeadline(goal)));
+    el.innerHTML = `
+        <span class="peek-focus-goal-top"><span class="peek-focus-goal-label">${visionEsc(t('vision_focus_ribbon'))}</span>${daysText ? `<span class="peek-focus-goal-days">📅 ${visionEsc(daysText)}</span>` : ''}</span>
+        <span class="peek-focus-goal-title">${visionEsc(goal.title)}</span>
+        <span class="peek-focus-goal-bar"><span style="width:${prog.pct}%"></span></span>
+        <span class="peek-focus-goal-meta"><span>${visionEsc(prog.label)}</span><span>${prog.pct}%</span></span>`;
+    el.classList.remove('hidden');
 }
 
 // שורת תחנת-ביניים בודדת (גב הכרטיס) - פונקציה משותפת לבנייה הראשונית ולהוספה
@@ -17481,13 +17292,13 @@ function buildVisionMilestoneRow(goalId, goalTitle, milestone) {
     return row;
 }
 
-function renderVisionGoalCard(goal, milestones) {
-    const total = milestones.length;
-    const done = milestones.filter(m => m.is_done).length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+function renderVisionGoalCard(goal, milestones, opts = {}) {
+    const isFocus = !!opts.focus;
+    const prog = visionGoalProgress(goal);
+    const track = goal.track_type || 'steps';
 
     const card = document.createElement('div');
-    card.className = 'vision-goal-card';
+    card.className = 'vision-goal-card' + (isFocus ? ' is-focus' : '') + (goal.is_achieved ? ' is-achieved' : '');
     card.dataset.goalId = goal.id;
 
     const inner = document.createElement('div');
@@ -17497,20 +17308,37 @@ function renderVisionGoalCard(goal, milestones) {
     front.className = 'vision-card-face vision-card-front';
     const imgUrl = goal.image_url || '';
     front.style.backgroundImage = imgUrl
-        ? `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%), url("${imgUrl.replace(/"/g, '%22')}")`
-        : 'linear-gradient(160deg, rgba(168,85,247,0.35), rgba(0,0,0,0.6))';
+        ? `linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.78) 100%), url("${imgUrl.replace(/"/g, '%22')}")`
+        : (isFocus ? 'linear-gradient(150deg, rgba(236,72,153,0.55), rgba(124,58,237,0.55) 55%, rgba(20,10,40,0.85))' : 'linear-gradient(160deg, rgba(168,85,247,0.35), rgba(0,0,0,0.6))');
     front.onclick = () => flipVisionCard(goal.id);
 
+    const top = document.createElement('div');
+    top.className = 'vision-card-top';
     const categoryPreset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === goal.category);
-    if (categoryPreset || goal.category) {
-        const tag = document.createElement('div');
+    if (isFocus) {
+        const ribbon = document.createElement('span');
+        ribbon.className = 'vision-focus-ribbon';
+        ribbon.textContent = `${t('vision_focus_ribbon')} · ${formatMonthLabel(currentMonthKey())}`;
+        top.appendChild(ribbon);
+    } else if (categoryPreset || goal.category) {
+        const tag = document.createElement('span');
         tag.className = 'vision-card-category-tag';
         // קטגוריה שהוקלדה ידנית ("אחר") נשמרת כטקסט חופשי ומוצגת כמו שהיא
         tag.textContent = categoryPreset ? `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}` : `🎯 ${goal.category}`;
-        front.appendChild(tag);
+        top.appendChild(tag);
     }
-    // גביע נוצץ-וזוהר על יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים במה
-    // שעשו")
+    if (!goal.is_achieved) {
+        const pin = document.createElement('button');
+        pin.type = 'button';
+        pin.className = 'vision-pin-btn' + (isFocus ? ' active' : '');
+        pin.textContent = '🎯';
+        pin.title = t(isFocus ? 'vision_focus_unpin_title' : 'vision_focus_pin_title');
+        pin.setAttribute('aria-label', pin.title);
+        pin.onclick = (e) => { e.stopPropagation(); toggleVisionFocus(goal.id); };
+        top.appendChild(pin);
+    }
+    front.appendChild(top);
+    // גביע נוצץ-וזוהר על יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים במה שעשו")
     if (goal.is_achieved) {
         const trophy = document.createElement('div');
         trophy.className = 'vision-card-trophy-badge';
@@ -17523,10 +17351,35 @@ function renderVisionGoalCard(goal, milestones) {
     nameEl.textContent = goal.title;
     front.appendChild(nameEl);
 
-    const progressRow = document.createElement('div');
-    progressRow.className = 'vision-card-progress-row';
-    progressRow.innerHTML = `<div class="progress-bar-bg"><div class="progress-bar-fill${pct >= 100 ? ' completed' : ''}" style="width:${pct}%"></div></div><span class="vision-card-progress-pct">${pct}%</span>`;
-    front.appendChild(progressRow);
+    const chipsHtml = visionChipsHtml(goal, prog, isFocus);
+    if (chipsHtml) front.insertAdjacentHTML('beforeend', chipsHtml);
+
+    if (isFocus) {
+        // יעד החודש: מסלול ההליכה אל הדגל (מהיעד החודשי הישן) במקום פס רגיל
+        front.insertAdjacentHTML('beforeend', `<div class="vision-focus-path">${buildGoalPathHtml(prog.pct, prog.reached || goal.is_achieved, false, 0)}</div>`);
+    } else {
+        const progressRow = document.createElement('div');
+        progressRow.className = 'vision-card-progress-row';
+        progressRow.innerHTML = `<div class="progress-bar-bg"><div class="progress-bar-fill${prog.pct >= 100 ? ' completed' : ''}" style="width:${prog.pct}%"></div></div><span class="vision-card-progress-pct">${prog.pct}%</span>`;
+        front.appendChild(progressRow);
+    }
+    if (prog.label || (track === 'number' && !goal.is_achieved)) {
+        const labelRow = document.createElement('div');
+        labelRow.className = 'vision-card-progress-label';
+        const labelText = document.createElement('span');
+        labelText.textContent = prog.label + (isFocus ? ` · ${prog.pct}%` : '');
+        labelRow.appendChild(labelText);
+        if (track === 'number' && !goal.is_achieved) {
+            const plus = document.createElement('button');
+            plus.type = 'button';
+            plus.className = 'vision-quick-add';
+            plus.textContent = '+1';
+            plus.title = t('vision_quick_add_title');
+            plus.onclick = (e) => { e.stopPropagation(); adjustVisionGoalNumber(goal.id, 1); };
+            labelRow.appendChild(plus);
+        }
+        front.appendChild(labelRow);
+    }
 
     const back = document.createElement('div');
     back.className = 'vision-card-face vision-card-back';
@@ -17546,11 +17399,48 @@ function renderVisionGoalCard(goal, milestones) {
     backHeader.appendChild(flipBackBtn);
     back.appendChild(backHeader);
 
+    if (goal.why) {
+        const why = document.createElement('div');
+        why.className = 'vision-card-why';
+        why.innerHTML = `<span class="vision-card-why-label">💭 ${visionEsc(t('vision_why_label'))}</span><span>${visionEsc(goal.why)}</span>`;
+        back.appendChild(why);
+    }
+    if (track === 'number') {
+        const row = document.createElement('div');
+        row.className = 'vision-card-number-row';
+        const minus = document.createElement('button');
+        minus.type = 'button';
+        minus.className = 'btn-goal-step';
+        minus.textContent = '−';
+        minus.disabled = goal.is_achieved || (Number(goal.current_value) || 0) <= 0;
+        minus.onclick = () => adjustVisionGoalNumber(goal.id, -1);
+        const value = document.createElement('span');
+        value.className = 'vision-card-number-value';
+        value.textContent = prog.label;
+        const plus = document.createElement('button');
+        plus.type = 'button';
+        plus.className = 'btn-goal-step';
+        plus.textContent = '+';
+        plus.disabled = goal.is_achieved;
+        plus.onclick = () => adjustVisionGoalNumber(goal.id, 1);
+        row.appendChild(minus);
+        row.appendChild(value);
+        row.appendChild(plus);
+        back.appendChild(row);
+    } else if (track === 'weight') {
+        const row = document.createElement('div');
+        row.className = 'vision-card-weight-row';
+        row.innerHTML = `<span class="vision-card-number-value">⚖️ ${visionEsc(prog.label)}</span><span class="vision-goal-field-hint">${visionEsc(t(visionLatestWeight === null ? 'vision_weight_no_data' : 'vision_weight_hint'))}</span>`;
+        back.appendChild(row);
+    }
+
     if (!milestones.length) {
-        const hint = document.createElement('p');
-        hint.className = 'vision-card-no-milestones';
-        hint.textContent = t('vision_goal_no_milestones_hint');
-        back.appendChild(hint);
+        if (track === 'steps') {
+            const hint = document.createElement('p');
+            hint.className = 'vision-card-no-milestones';
+            hint.textContent = t('vision_goal_no_milestones_hint');
+            back.appendChild(hint);
+        }
     } else {
         milestones.forEach(m => back.appendChild(buildVisionMilestoneRow(goal.id, goal.title, m)));
     }
@@ -17570,8 +17460,23 @@ function renderVisionGoalCard(goal, milestones) {
     addRow.appendChild(addRowBtn);
     back.appendChild(addRow);
 
+    if (goal.reward) {
+        const reward = document.createElement('div');
+        reward.className = 'vision-card-reward';
+        reward.textContent = `🎁 ${goal.reward}`;
+        back.appendChild(reward);
+    }
+
     const backActions = document.createElement('div');
     backActions.className = 'vision-card-back-actions';
+    if (!goal.is_achieved) {
+        const doneBtn = document.createElement('button');
+        doneBtn.type = 'button';
+        doneBtn.className = 'vision-mark-achieved-btn';
+        doneBtn.textContent = t('vision_mark_achieved_btn');
+        doneBtn.onclick = () => setVisionGoalAchieved(goal.id);
+        backActions.appendChild(doneBtn);
+    }
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
     editBtn.className = 'btn-edit-item';
@@ -17598,17 +17503,11 @@ function flipVisionCard(goalId) {
     if (card) card.classList.toggle('flipped');
 }
 
-function updateVisionCardProgressDisplay(goalId) {
-    const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"]`);
-    if (!card) return;
-    const milestones = visionMilestonesCache.filter(m => m.goal_id === goalId);
-    const total = milestones.length;
-    const done = milestones.filter(m => m.is_done).length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    const fill = card.querySelector('.progress-bar-fill');
-    if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('completed', pct >= 100); }
-    const pctLabel = card.querySelector('.vision-card-progress-pct');
-    if (pctLabel) pctLabel.textContent = pct + '%';
+// ההתקדמות משפיעה על כמה מקומות בכרטיס (פס/מסלול, צ'יפ קצב, התווית) - מרנדרים מחדש
+// (כרטיס הפוך נשאר הפוך, ר' renderVisionGoalsList)
+function updateVisionCardProgressDisplay() {
+    renderVisionGoalsList();
+    renderPeekFocusGoal();
 }
 
 async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
@@ -17644,23 +17543,82 @@ async function deleteVisionMilestoneEverywhere(milestoneId) {
     if (cached && cached.goal_id) updateVisionCardProgressDisplay(cached.goal_id);
 }
 
-// כשכל התחנות של יעד מסומנות בוצע, היעד עצמו מסומן "הושג" לצמיתות - לא
-// מתאפס אוטומטית אם תחנה מבוטלת אחר כך (לפי בקשה מפורשת, "תמיד שם"). נקראת
-// גם מ-toggleVisionMilestoneDone (סימון ישיר בלוח החזון) וגם מ-
-// toggleStudyTaskStatus (סימון משימת "לימודים" מקושרת) - שני נתיבים שונים
-// לאותה תוצאה, אז הבדיקה מרוכזת כאן במקום אחד
+// היעד מסומן "הושג" לצמיתות כשמגיעים אליו: כל הצעדים סומנו (צעדים), המספר הגיע ליעד
+// (מספר) או השקילה האחרונה הגיעה למשקל היעד (משקל). לא מתאפס אם תחנה מבוטלת אחר כך
+// (לפי בקשה מפורשת, "תמיד שם"). נקראת גם מסימון משימת "לימודים" מקושרת
 async function checkAndMarkGoalAchieved(goalId) {
     if (!supabaseClient || !goalId) return;
-    const { data: milestones } = await supabaseClient.from('vision_goal_milestones').select('is_done').eq('goal_id', goalId);
-    if (!milestones || !milestones.length) return;
-    if (!milestones.every(m => m.is_done)) return;
-    const { data: goal } = await supabaseClient.from('vision_goals').select('is_achieved').eq('id', goalId).maybeSingle();
+    let goal = visionGoalsCache.find(g => g.id === goalId);
+    if (!goal) {
+        const { data } = await supabaseClient.from('vision_goals').select('*').eq('id', goalId).maybeSingle();
+        if (!data) return;
+        goal = data;
+        visionGoalsCache.push(goal);
+    }
+    if (goal.is_achieved) return;
+    if ((goal.track_type || 'steps') === 'steps') {
+        const { data: milestones } = await supabaseClient.from('vision_goal_milestones').select('id, is_done').eq('goal_id', goalId);
+        if (!milestones || !milestones.length || !milestones.every(m => m.is_done)) return;
+    } else if (!visionGoalProgress(goal).reached) {
+        return;
+    }
+    await setVisionGoalAchieved(goalId);
+}
+
+async function setVisionGoalAchieved(goalId) {
+    const goal = visionGoalsCache.find(g => g.id === goalId);
     if (!goal || goal.is_achieved) return;
-    await supabaseClient.from('vision_goals').update({ is_achieved: true, achieved_at: new Date().toISOString() }).eq('id', goalId);
-    const cached = visionGoalsCache.find(g => g.id === goalId);
-    if (cached) cached.is_achieved = true;
+    const achievedAt = new Date().toISOString();
+    const { error } = await supabaseClient.from('vision_goals').update({ is_achieved: true, achieved_at: achievedAt }).eq('id', goalId);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    goal.is_achieved = true;
+    goal.achieved_at = achievedAt;
     renderVisionGoalsList();
-    showAppToast(t('vision_goal_achieved_toast'));
+    renderPeekFocusGoal();
+    celebrateGoalAchieved(goal);
+}
+
+async function adjustVisionGoalNumber(goalId, delta) {
+    const goal = visionGoalsCache.find(g => g.id === goalId);
+    if (!goal || goal.is_achieved) return;
+    const next = Math.max(0, Math.round(((Number(goal.current_value) || 0) + delta) * 10) / 10);
+    goal.current_value = next;
+    renderVisionGoalsList();
+    renderPeekFocusGoal();
+    await supabaseClient.from('vision_goals').update({ current_value: next }).eq('id', goalId);
+    await checkAndMarkGoalAchieved(goalId);
+}
+
+// 🎯 יעד החודש (פרימיום) - רק יעד אחד בכל חודש; בחירה ביעד אחר מחליפה אותו
+async function toggleVisionFocus(goalId) {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const goal = visionGoalsCache.find(g => g.id === goalId);
+    if (!goal || !supabaseClient) return;
+    const month = currentMonthKey();
+    const makeFocus = goal.focus_month !== month;
+    if (makeFocus) {
+        const others = visionGoalsCache.filter(g => g.id !== goalId && g.focus_month === month);
+        if (others.length) await supabaseClient.from('vision_goals').update({ focus_month: null }).in('id', others.map(g => g.id));
+        others.forEach(g => { g.focus_month = null; });
+    }
+    const { error } = await supabaseClient.from('vision_goals').update({ focus_month: makeFocus ? month : null }).eq('id', goalId);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    goal.focus_month = makeFocus ? month : null;
+    if (makeFocus) showAppToast(t('vision_focus_set_toast'));
+    renderVisionGoalsList();
+    renderPeekFocusGoal();
+}
+
+// שקילה חדשה (מדדים / New Me) מעדכנת יעדי משקל ויכולה להשלים אותם
+async function onWeightLoggedForGoals() {
+    if (!visionGoalsCache.some(g => g.track_type === 'weight' && !g.is_achieved)) return;
+    await refreshVisionLatestWeight();
+    renderVisionGoalsList();
+    renderPeekFocusGoal();
+    checkWeightGoalsAchieved();
+}
+function checkWeightGoalsAchieved() {
+    visionGoalsCache.filter(g => g.track_type === 'weight' && !g.is_achieved && visionGoalProgress(g).reached).forEach(g => setVisionGoalAchieved(g.id));
 }
 
 // מזריקה תחנת-ביניים בודדת ליומן כאירוע חד-פעמי להיום - בדיוק כמו "מבט
@@ -17715,19 +17673,23 @@ async function addMilestoneToGoalFromCardBack(goalId, inputEl) {
 // --- הוספה/עריכה של יעד: מודל רגיל (apple-modal), עם רשימת תחנות-ביניים
 // שנבנית בזיכרון (pendingVisionMilestones) ונשמרת כולה בלחיצה על "שמירה".
 // במצב עריכה שומרים גם את ה-id וה-is_done של כל תחנה קיימת (לא רק הטקסט),
-// כדי שסימוני "בוצע" לא יימחקו סתם כי המשתמשת רק שינתה את שם היעד ---
+// כדי שסימוני "בוצע" לא יימחקו סתם כי המשתמשת רק שינתה את שם היעד.
+// template = דוגמה מוכנה מהמצב הריק (ר' VISION_GOAL_TEMPLATES) ---
 let editingVisionGoalId = null;
 let pendingVisionMilestones = [];
 let originalVisionMilestoneIds = [];
 let selectedVisionGoalCategory = null;
+let selectedVisionTrackType = 'steps';
 
-function openVisionGoalModal(goalId = null) {
+function openVisionGoalModal(goalId = null, template = null) {
     editingVisionGoalId = goalId;
     const titleEl = document.getElementById('vision-goal-modal-title');
     const deleteBtn = document.getElementById('btn-delete-vision-goal');
-    if (goalId) {
-        const goal = visionGoalsCache.find(g => g.id === goalId);
-        if (!goal) return;
+    const goal = goalId ? visionGoalsCache.find(g => g.id === goalId) : null;
+    if (goalId && !goal) return;
+    const dateDisplay = document.getElementById('vision-goal-date-input-display');
+    if (dateDisplay) dateDisplay.setAttribute('data-placeholder', t('vision_date_placeholder'));
+    if (goal) {
         if (titleEl) titleEl.textContent = t('vision_goal_modal_title_edit');
         document.getElementById('vision-goal-title-input').value = goal.title || '';
         selectedVisionGoalCategory = goal.category || null;
@@ -17735,17 +17697,38 @@ function openVisionGoalModal(goalId = null) {
         const existing = visionMilestonesCache.filter(m => m.goal_id === goalId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         pendingVisionMilestones = existing.map(m => ({ id: m.id, title: m.title, is_done: m.is_done }));
         originalVisionMilestoneIds = existing.map(m => m.id);
-        if (deleteBtn) deleteBtn.classList.remove('hidden');
+        if (deleteBtn) {
+            deleteBtn.classList.remove('hidden');
+            deleteBtn.onclick = () => { closeModal('modal-add-vision-goal'); deleteVisionGoal(goalId); };
+        }
     } else {
         if (titleEl) titleEl.textContent = t('vision_goal_modal_title_add');
-        document.getElementById('vision-goal-title-input').value = '';
-        selectedVisionGoalCategory = null;
+        document.getElementById('vision-goal-title-input').value = template ? t('vision_tpl_' + template.key) : '';
+        selectedVisionGoalCategory = template ? template.category : null;
         setVisionGoalImagePreview('');
-        pendingVisionMilestones = [];
+        pendingVisionMilestones = template && template.steps
+            ? Array.from({ length: template.steps }, (_, i) => ({ id: null, title: t(`vision_tpl_${template.key}_s${i + 1}`), is_done: false }))
+            : [];
         originalVisionMilestoneIds = [];
         if (deleteBtn) deleteBtn.classList.add('hidden');
     }
+    document.getElementById('vision-goal-why-input').value = goal ? (goal.why || '') : '';
+    document.getElementById('vision-goal-reward-input').value = goal ? (goal.reward || '') : '';
+    document.getElementById('vision-goal-date-input').value = goal ? (goal.target_date || '') : '';
+    updateDateFieldDisplay('vision-goal-date-input');
+    onVisionGoalDateChange();
+    let track = goal ? (goal.track_type || 'steps') : (template ? template.track : 'steps');
+    // מספר / משקל הם חלק מפרימיום (כמו היעד החודשי הישן) - דוגמה כזו נפתחת בצעדים
+    if (track !== 'steps' && !isPremiumUser && !goal) track = 'steps';
+    selectedVisionTrackType = track;
+    const isNumber = track === 'number';
+    document.getElementById('vision-goal-target-input').value = goal && isNumber ? (goal.target_value ?? '') : (!goal && template && template.target ? template.target : '');
+    document.getElementById('vision-goal-current-input').value = goal && isNumber ? (goal.current_value ?? '') : '';
+    document.getElementById('vision-goal-unit-input').value = goal && isNumber ? (goal.unit || '') : (!goal && template && template.key === 'read' ? t('vision_tpl_read_unit') : '');
+    document.getElementById('vision-goal-weight-target-input').value = goal && track === 'weight' ? (goal.target_value ?? '') : '';
+    document.getElementById('vision-goal-focus-toggle').checked = !!(goal && goal.focus_month === currentMonthKey() && !goal.is_achieved);
     renderVisionGoalCategoryChips();
+    renderVisionTrackChips();
     renderPendingVisionMilestones();
     openModal('modal-add-vision-goal');
 }
@@ -17755,9 +17738,52 @@ function resetVisionGoalModal() {
     pendingVisionMilestones = [];
     originalVisionMilestoneIds = [];
     selectedVisionGoalCategory = null;
-    document.getElementById('vision-goal-title-input').value = '';
-    document.getElementById('vision-goal-milestone-input').value = '';
+    selectedVisionTrackType = 'steps';
+    ['vision-goal-title-input', 'vision-goal-milestone-input', 'vision-goal-why-input', 'vision-goal-reward-input', 'vision-goal-date-input',
+        'vision-goal-target-input', 'vision-goal-current-input', 'vision-goal-unit-input', 'vision-goal-weight-target-input'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const focusToggle = document.getElementById('vision-goal-focus-toggle');
+    if (focusToggle) focusToggle.checked = false;
     setVisionGoalImagePreview('');
+}
+
+// איך מודדים התקדמות: צעדים (ברירת מחדל) / מספר / משקל. מספר ומשקל - פרימיום
+function renderVisionTrackChips() {
+    const wrap = document.getElementById('vision-goal-track-chips');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    [['steps', 'vision_track_steps'], ['number', 'vision_track_number'], ['weight', 'vision_track_weight']].forEach(([type, key]) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'vision-goal-category-chip' + (selectedVisionTrackType === type ? ' selected' : '');
+        chip.textContent = t(key) + (type !== 'steps' && !isPremiumUser ? ' ⭐' : '');
+        chip.onclick = () => selectVisionTrackType(type);
+        wrap.appendChild(chip);
+    });
+    document.getElementById('vision-goal-number-fields').classList.toggle('hidden', selectedVisionTrackType !== 'number');
+    document.getElementById('vision-goal-weight-fields').classList.toggle('hidden', selectedVisionTrackType !== 'weight');
+}
+function selectVisionTrackType(type) {
+    // לא פותחים כאן את חלון השדרוג - הוא היה סוגר את חלון היעד ומאבד את מה שהוקלד
+    if (type !== 'steps' && !isPremiumUser) { showAppToast(t('vision_track_premium_hint')); return; }
+    selectedVisionTrackType = type;
+    renderVisionTrackChips();
+}
+function onVisionFocusToggleChange(input) {
+    if (input.checked && !isPremiumUser) { input.checked = false; showAppToast(t('vision_focus_premium_hint')); }
+}
+function onVisionGoalDateChange() {
+    const input = document.getElementById('vision-goal-date-input');
+    const clearBtn = document.getElementById('vision-goal-date-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', !(input && input.value));
+}
+function clearVisionGoalDate() {
+    const input = document.getElementById('vision-goal-date-input');
+    if (input) input.value = '';
+    updateDateFieldDisplay('vision-goal-date-input');
+    onVisionGoalDateChange();
 }
 
 function renderVisionGoalCategoryChips() {
@@ -17872,9 +17898,43 @@ async function saveVisionGoal() {
     const customCategoryInput = document.getElementById('vision-goal-category-custom');
     const customCategory = customCategoryInput ? customCategoryInput.value.trim().slice(0, 40) : '';
     const category = visionGoalCategoryChipKey() === 'other' && customCategory ? customCategory : (visionGoalCategoryChipKey() === 'other' ? 'other' : selectedVisionGoalCategory);
-    const payload = { title, category, image_url: imageUrl };
+    const track = selectedVisionTrackType;
+    const existingGoal = editingVisionGoalId ? visionGoalsCache.find(g => g.id === editingVisionGoalId) : null;
+    const payload = {
+        title, category, image_url: imageUrl,
+        why: document.getElementById('vision-goal-why-input').value.trim() || null,
+        reward: document.getElementById('vision-goal-reward-input').value.trim() || null,
+        target_date: document.getElementById('vision-goal-date-input').value || null,
+        track_type: track, target_value: null, current_value: null, unit: null,
+    };
+    if (track === 'number') {
+        const target = parseFloat(document.getElementById('vision-goal-target-input').value);
+        if (!(target > 0)) { showAppToast(t('vision_number_target_required'), 'error'); return; }
+        payload.target_value = target;
+        payload.current_value = Math.max(0, parseFloat(document.getElementById('vision-goal-current-input').value) || 0);
+        payload.unit = document.getElementById('vision-goal-unit-input').value.trim() || null;
+    } else if (track === 'weight') {
+        const target = parseFloat(document.getElementById('vision-goal-weight-target-input').value);
+        if (!(target > 0)) { showAppToast(t('vision_weight_target_required'), 'error'); return; }
+        payload.target_value = target;
+        // נקודת ההתחלה = השקילה האחרונה ברגע שהיעד הפך ליעד משקל
+        if (!existingGoal || existingGoal.track_type !== 'weight' || existingGoal.start_value == null) {
+            await refreshVisionLatestWeight();
+            payload.start_value = visionLatestWeight;
+        }
+    }
+    const month = currentMonthKey();
+    const wantsFocus = document.getElementById('vision-goal-focus-toggle').checked && isPremiumUser;
+    if (wantsFocus) payload.focus_month = month;
+    else if (existingGoal && existingGoal.focus_month === month) payload.focus_month = null;
 
     let goalId = editingVisionGoalId;
+    if (wantsFocus) {
+        // רק יעד אחד בחודש - מורידים את הסימון מכל יעד אחר של החודש הזה
+        let clear = supabaseClient.from('vision_goals').update({ focus_month: null }).eq('user_id', currentUserId).eq('focus_month', month);
+        if (goalId) clear = clear.neq('id', goalId);
+        await clear;
+    }
     if (goalId) {
         const { error } = await supabaseClient.from('vision_goals').update(payload).eq('id', goalId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
@@ -17901,7 +17961,9 @@ async function saveVisionGoal() {
     closeModal('modal-add-vision-goal');
     resetVisionGoalModal();
     showAppToast(t('item_added_success'));
-    loadVisionGoals();
+    await loadVisionGoals();
+    // יעד מספר/משקל יכול להיות מושג כבר מהרגע הראשון
+    if (track !== 'steps') await checkAndMarkGoalAchieved(goalId);
 }
 
 function deleteVisionGoal(goalId) {
@@ -18138,7 +18200,12 @@ async function toggleProgressCheckin(targetId, dateStr, shouldCheck) {
 
 async function deleteProgressTarget(id) { await supabaseClient.from('weekly_progress_targets').delete().eq('id', id); loadProgressTargets(); }
 // משותף למסך המשקל ול-New Me - שני המסכים כותבים לאותה טבלה בדיוק
-async function insertWeightRecord(value, date, note) { return supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: date, weight_value: value, note: note || null }); }
+async function insertWeightRecord(value, date, note) {
+    const res = await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: date, weight_value: value, note: note || null });
+    // שקילה חדשה מעדכנת יעדי משקל ב"היעדים שלי" (ויכולה להשלים אותם)
+    if (!res.error && typeof onWeightLoggedForGoals === 'function') onWeightLoggedForGoals();
+    return res;
+}
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await insertWeightRecord(w, d, note); if (noteInput) noteInput.value = ''; loadWeightHistory(); }
 // note מוצג בצבע ההדגשה של ערכת הנושא (--accent-purple-text, אותו משתנה
 // שכל הדגשה טקסטואלית אחרת באפליקציה משתמשת בו) - לפי בקשה מפורשת

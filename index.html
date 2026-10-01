@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=468">
+    <link rel="stylesheet" href="theme.css?v=469">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -719,23 +719,6 @@
                     </div>
                     </div>
 
-                    <div class="subview-panel" data-subview="goal">
-                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
-                    <div class="card expanded">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="monthly_goal_title">🏆 Monthly Goal (Premium)</h2>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); toggleMonthlyGoalLookback()" data-i18n-title="monthly_goal_lookback_title" title="Look back">🕓</button>
-                                <span class="card-toggle-icon">▼</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="monthly-goal-content"></div>
-                            <div id="monthly-goal-lookback-list" class="monthly-goal-lookback-list hidden"></div>
-                        </div>
-                    </div>
-                    </div>
-
                     <div class="subview-panel" data-subview="shopping">
                     <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <div class="card expanded">
@@ -1093,6 +1076,8 @@
                         <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
                     </div>
                 </div>
+                <!-- 🎯 יעד החודש - שורה קטנה עם התקדמות, לחיצה פותחת את "היעדים שלי" -->
+                <button type="button" id="peek-focus-goal" class="peek-focus-goal hidden" onclick="closeTodayPeekPanel(); openGoalsVisionDrawer();"></button>
                 <div id="today-tasks-list" class="today-tasks-list"></div>
             </div>
 
@@ -1116,10 +1101,6 @@
                         <span class="hamburger-drawer-item-icon">🗓️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
                     </button>
-                    <button type="button" data-tour="m-vision" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openGoalsVisionDrawer();">
-                        <span class="hamburger-drawer-item-icon">🖼️</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">Vision Board</span>
-                    </button>
                     <button type="button" data-tour="m-study" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openStudyDrawer();">
                         <span class="hamburger-drawer-item-icon">📓</span>
                         <span class="hamburger-drawer-item-title" data-i18n="study_menu_label">Study</span>
@@ -1140,9 +1121,10 @@
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_goals">Goals &amp; Progress</div>
-                    <button type="button" data-tour="m-goal" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'goal')">
-                        <span class="hamburger-drawer-item-icon">🏆</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="monthly_goal_tile_title">Monthly Goal</span>
+                    <!-- "היעדים שלי" (לשעבר לוח החזון) - כולל גם את "יעד החודש" שהחליף את מסך היעד החודשי -->
+                    <button type="button" data-tour="m-vision" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openGoalsVisionDrawer();">
+                        <span class="hamburger-drawer-item-icon">🎯</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">My Goals</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
@@ -1212,8 +1194,17 @@
                             <button type="button" class="hamburger-drawer-close" onclick="closeGoalsVisionDrawer()">✕</button>
                         </div>
                     </div>
+                    <p class="vision-tagline" data-i18n="vision_tagline">Big goals, small steps.</p>
+                    <!-- 🎯 יעד החודש - היעד שמתמקדים בו החודש, מוצג ראשון ומודגש (ר' renderVisionFocusSlot) -->
+                    <div id="vision-focus-slot"></div>
                     <div id="vision-goals-list"></div>
-                    <p id="vision-goals-empty" class="vision-goals-empty hidden" data-i18n="vision_board_empty_hint">No goals yet - tap + to add your first one.</p>
+                    <!-- מצב ריק: הסבר + דוגמאות מוכנות ללחיצה (פותחות את חלון היעד כבר ממולא) -->
+                    <div id="vision-goals-empty" class="vision-goals-empty hidden">
+                        <div class="vision-empty-icon" aria-hidden="true">🎯</div>
+                        <p data-i18n="vision_board_empty_hint">No goals yet – tap + or pick an example below.</p>
+                        <p class="vision-templates-title" data-i18n="vision_templates_title">Quick start – tap a goal:</p>
+                        <div id="vision-templates" class="vision-templates"></div>
+                    </div>
                     <!-- "יעדים שכבשתי" - יעדים שכל התחנות שלהם הושלמו (is_achieved),
                          עוברים לכאן אוטומטית מהרשימה הפעילה למעלה (checkAndMarkGoalAchieved
                          ב-app.js) - קבועים כאן לצמיתות, לא נמחקים אוטומטית, רק אם
@@ -3250,31 +3241,6 @@
             </div>
         </div>
 
-        <div id="modal-set-monthly-goal" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 id="monthly-goal-modal-title" data-i18n="monthly_goal_modal_title">Set This Month's Goal</h3>
-                <div class="preset-manager-grid">
-                    <input type="text" id="monthly-goal-name-input" data-i18n-placeholder="monthly_goal_name_placeholder" placeholder="Goal name (e.g. Lose weight, Finish tasks)">
-                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('monthly-goal-type-input')"><span id="monthly-goal-type-input-display"></span></button>
-                    <select id="monthly-goal-type-input" class="hidden" onchange="handleMonthlyGoalTypeChange()">
-                        <option value="tasks" data-i18n="monthly_goal_type_tasks">Tasks completed</option>
-                        <option value="weight" data-i18n="monthly_goal_type_weight">Weight target</option>
-                        <option value="custom" data-i18n="monthly_goal_type_custom">Manual (numeric progress)</option>
-                    </select>
-                    <input type="number" id="monthly-goal-target-input" data-i18n-placeholder="monthly_goal_target_placeholder" placeholder="Target number">
-                    <div id="monthly-goal-current-wrap" class="hidden">
-                        <input type="number" id="monthly-goal-current-input" data-i18n-placeholder="monthly_goal_current_placeholder" placeholder="Current progress">
-                    </div>
-                    <label class="settings-label" data-i18n="monthly_goal_reward_label">Personal reward when achieved (optional)</label>
-                    <input type="text" id="monthly-goal-reward-input" data-i18n-placeholder="monthly_goal_reward_placeholder" placeholder="e.g. Buy myself flowers, order sushi...">
-                    <div class="action-buttons-wrap">
-                        <button id="monthly-goal-save-btn" onclick="saveMonthlyGoal()" class="btn-primary" data-i18n="monthly_goal_save_btn">Set goal</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-set-monthly-goal')" data-i18n="cancel_btn">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- חלון צף: חגיגת השגת יעד + הצעת פרס -->
         <div id="modal-goal-celebration" class="apple-modal">
@@ -3432,11 +3398,56 @@
                     <img id="vision-goal-image-preview" class="vision-goal-image-preview hidden" alt="">
                     <input type="hidden" id="vision-goal-image-url-input">
 
+                    <!-- למה זה חשוב לי - מוצג בגב הכרטיס כתזכורת מוטיבציה -->
+                    <p class="settings-label" data-i18n="vision_field_why">Why does it matter to me? (optional)</p>
+                    <textarea id="vision-goal-why-input" rows="2" maxlength="200" data-i18n-placeholder="vision_why_placeholder" placeholder="The reason that will keep me going…"></textarea>
+
+                    <!-- עד מתי (לא חובה) - מאפשר ספירה לאחור ובדיקת קצב ("בקצב" / "קצת מאחור") -->
+                    <p class="settings-label" data-i18n="vision_field_target_date">Until when? (optional)</p>
+                    <div class="vision-goal-date-row">
+                        <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('vision-goal-date-input')">
+                            <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                            <span id="vision-goal-date-input-display" data-placeholder=""></span>
+                        </button>
+                        <button type="button" id="vision-goal-date-clear" class="vision-goal-date-clear hidden" onclick="clearVisionGoalDate()" data-i18n-aria-label="vision_date_clear" aria-label="Remove date">✕</button>
+                    </div>
+                    <input type="date" id="vision-goal-date-input" class="date-picker-hidden-input" onchange="onVisionGoalDateChange()">
+
+                    <!-- איך מודדים התקדמות: לפי צעדים (ברירת מחדל) / מספר / משקל -->
+                    <p class="settings-label" data-i18n="vision_field_track">How do I measure progress?</p>
+                    <div id="vision-goal-track-chips" class="vision-goal-category-chips"></div>
+                    <div id="vision-goal-number-fields" class="vision-goal-track-fields hidden">
+                        <label class="vision-goal-mini-label" for="vision-goal-target-input" data-i18n="vision_number_target_ph">Target (e.g. 12)</label>
+                        <input type="number" id="vision-goal-target-input" inputmode="decimal" min="0" data-i18n-placeholder="vision_number_target_ph" placeholder="Target (e.g. 12)">
+                        <label class="vision-goal-mini-label" for="vision-goal-current-input" data-i18n="vision_number_current_ph">Where I am now (e.g. 3)</label>
+                        <input type="number" id="vision-goal-current-input" inputmode="decimal" min="0" data-i18n-placeholder="vision_number_current_ph" placeholder="Where I am now (e.g. 3)">
+                        <label class="vision-goal-mini-label" for="vision-goal-unit-input" data-i18n="vision_number_unit_ph">Unit (e.g. books, km)</label>
+                        <input type="text" id="vision-goal-unit-input" maxlength="16" data-i18n-placeholder="vision_number_unit_ph" placeholder="Unit (e.g. books, km)">
+                    </div>
+                    <div id="vision-goal-weight-fields" class="vision-goal-track-fields hidden">
+                        <label class="vision-goal-mini-label" for="vision-goal-weight-target-input" data-i18n="vision_weight_target_ph">Target weight (kg)</label>
+                        <input type="number" id="vision-goal-weight-target-input" inputmode="decimal" min="0" step="0.1" data-i18n-placeholder="vision_weight_target_ph" placeholder="Target weight (kg)">
+                        <p class="vision-goal-field-hint" data-i18n="vision_weight_hint">Progress follows your latest weigh-in in Calorie &amp; Weight Metrics.</p>
+                    </div>
+
                     <p class="settings-label" data-i18n="vision_goal_milestones_section_title">Milestones</p>
                     <div id="vision-goal-pending-milestones-list" class="vision-goal-pending-milestones-list"></div>
                     <div class="vision-goal-milestone-add-row">
                         <input type="text" id="vision-goal-milestone-input" data-i18n-placeholder="vision_goal_milestone_input_placeholder" placeholder="Add a milestone..." onkeydown="if(event.key==='Enter'){event.preventDefault();addPendingVisionMilestoneRow();}">
                         <button type="button" class="btn-secondary" onclick="addPendingVisionMilestoneRow()" data-i18n="vision_goal_milestone_add_btn">Add</button>
+                    </div>
+
+                    <!-- פרס כשמגיעים ליעד - מוצג בחגיגה כשהיעד מושג -->
+                    <p class="settings-label" data-i18n="vision_field_reward">A reward for reaching it 🎁 (optional)</p>
+                    <input type="text" id="vision-goal-reward-input" maxlength="80" data-i18n-placeholder="vision_reward_placeholder" placeholder="e.g. a spa day, new sneakers…">
+
+                    <!-- 🎯 יעד החודש (פרימיום) - יעד אחד בכל חודש, מוצג ראשון ובהצצה להיום -->
+                    <div class="settings-toggle-row vision-goal-focus-row">
+                        <label class="settings-label" for="vision-goal-focus-toggle" data-i18n="vision_focus_toggle_label">🎯 This is my goal of the month</label>
+                        <label class="switch">
+                            <input type="checkbox" id="vision-goal-focus-toggle" onchange="onVisionFocusToggleChange(this)">
+                            <span class="switch-slider"></span>
+                        </label>
                     </div>
 
                     <button type="button" id="btn-delete-vision-goal" class="btn-clear-week hidden" style="margin-top: 8px;" data-i18n="vision_goal_delete_btn_title">Delete goal</button>
@@ -3553,8 +3564,8 @@
 
     </div>
 
-    <script src="i18n.js?v=368"></script>
-    <script src="app.js?v=515"></script>
+    <script src="i18n.js?v=369"></script>
+    <script src="app.js?v=516"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=14"></script>
 </body>

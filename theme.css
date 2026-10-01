@@ -3871,7 +3871,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 /* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
    בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
    ארוכה לגלול בלי לשבור את מכניקת ההיפוך */
-.vision-goal-card { position: relative; height: 190px; margin-bottom: 16px; perspective: 1000px; cursor: pointer; }
+.vision-goal-card { position: relative; height: 214px; margin-bottom: 16px; perspective: 1000px; cursor: pointer; }
 .vision-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
 .vision-goal-card.flipped .vision-card-inner { transform: rotateY(180deg); }
 .vision-card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-sizing: border-box; }
@@ -6424,3 +6424,65 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
     .app-tour-spot, .app-tour-card, .app-tour-arrow { transition: none; }
     .app-tour-spot::after, .app-tour-arrow, .app-tour-card.pop { animation: none; }
 }
+/* ===== "היעדים שלי" (לשעבר לוח החזון) ===== */
+.vision-tagline { margin: -4px 0 14px; font-size: .82rem; color: var(--text-secondary); text-align: center; }
+.vision-goal-card.no-flip-anim .vision-card-inner { transition: none; }
+.vision-card-top { position: absolute; top: 12px; inset-inline: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; z-index: 2; }
+.vision-card-top .vision-card-category-tag { margin: 0; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.vision-pin-btn { flex-shrink: 0; margin-inline-start: auto; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .28); background: rgba(0, 0, 0, .32); font-size: .95rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; filter: grayscale(1) opacity(.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .15s ease, filter .2s ease; }
+.vision-pin-btn.active { filter: none; background: linear-gradient(135deg, rgba(236, 72, 153, .85), rgba(168, 85, 247, .85)); border-color: rgba(255, 255, 255, .6); box-shadow: 0 0 14px rgba(236, 72, 153, .6); }
+.vision-pin-btn:active { transform: scale(.9); }
+.vision-card-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.vision-chip { display: inline-flex; align-items: center; gap: 3px; font-size: .68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, .38); border: 1px solid rgba(255, 255, 255, .2); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.vision-chip.is-on-track { background: rgba(16, 185, 129, .38); border-color: rgba(110, 231, 183, .55); }
+.vision-chip.is-ahead { background: rgba(56, 189, 248, .36); border-color: rgba(125, 211, 252, .6); }
+.vision-chip.is-behind, .vision-chip.is-soon { background: rgba(245, 158, 11, .42); border-color: rgba(252, 211, 77, .6); }
+.vision-chip.is-overdue { background: rgba(239, 68, 68, .45); border-color: rgba(252, 165, 165, .6); }
+.vision-chip.is-reward { background: rgba(236, 72, 153, .4); border-color: rgba(249, 168, 212, .6); }
+.vision-card-progress-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .74rem; font-weight: 700; color: rgba(255, 255, 255, .92); font-variant-numeric: tabular-nums; }
+.vision-quick-add { flex-shrink: 0; border: 1px solid rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .16); color: #fff; font: inherit; font-size: .74rem; font-weight: 800; border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.vision-quick-add:active { transform: scale(.92); }
+/* 🎯 יעד החודש - כרטיס מודגש ראשון, עם מסלול ההליכה */
+.vision-goal-card.is-focus { height: 278px; margin-bottom: 18px; }
+.vision-goal-card.is-focus .vision-card-front { box-shadow: 0 0 0 2px rgba(236, 72, 153, .8), 0 12px 32px rgba(168, 85, 247, .38); }
+.vision-goal-card.is-focus .vision-card-front-name { font-size: 1.15rem; }
+.vision-focus-ribbon { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 800; letter-spacing: .02em; color: #fff; padding: 5px 11px; border-radius: 999px; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 4px 14px rgba(236, 72, 153, .45); }
+.vision-focus-path { margin: 2px -4px 0; }
+.vision-focus-path .goal-path-perspective { padding: 2px 0 4px; }
+.vision-focus-hint { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 14px; border-radius: 16px; border: 1.5px dashed rgba(236, 72, 153, .5); background: rgba(236, 72, 153, .06); color: var(--text-secondary); font-size: .8rem; line-height: 1.45; }
+.vision-focus-hint-icon { font-size: 1.3rem; flex-shrink: 0; }
+/* גב הכרטיס: למה, מספר / משקל, פרס, סימון כהושג */
+.vision-card-why { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(168, 85, 247, .09); font-size: .78rem; color: var(--text-primary); line-height: 1.4; flex-shrink: 0; }
+.vision-card-why-label { font-size: .7rem; font-weight: 800; color: var(--accent-purple-light-text); }
+.vision-card-number-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 2px 0 8px; flex-shrink: 0; }
+.vision-card-number-value { font-size: .9rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.vision-card-weight-row { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 2px 0 8px; text-align: center; flex-shrink: 0; }
+.vision-goal-field-hint { font-size: .72rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+.vision-card-reward { margin-top: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(236, 72, 153, .09); font-size: .78rem; font-weight: 600; color: var(--text-primary); flex-shrink: 0; }
+.vision-card-back-actions { align-items: center; }
+.vision-mark-achieved-btn { margin-inline-end: auto; border: 1px solid rgba(16, 185, 129, .5); background: rgba(16, 185, 129, .12); color: var(--accent-green-text, #10b981); font: inherit; font-size: .74rem; font-weight: 700; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+/* מצב ריק - דוגמאות מוכנות */
+.vision-goals-empty { margin-top: 12px; }
+.vision-empty-icon { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, rgba(236, 72, 153, .18), rgba(168, 85, 247, .22)); }
+.vision-templates-title { margin: 14px 0 8px; font-size: .78rem; font-weight: 700; color: var(--text-primary); }
+.vision-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; text-align: start; }
+.vision-template-chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(168, 85, 247, .28); background: rgba(168, 85, 247, .07); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; text-align: start; }
+.vision-template-chip:active { transform: scale(.97); }
+.vision-template-icon { font-size: 1.15rem; flex-shrink: 0; }
+/* חלון היעד */
+.vision-goal-date-row { display: flex; align-items: center; gap: 8px; }
+.vision-goal-date-row .date-picker-field-trigger { flex: 1; min-width: 0; }
+.vision-goal-date-clear { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.vision-goal-track-fields { display: flex; flex-direction: column; gap: 8px; }
+.vision-goal-focus-row { margin-top: 6px; padding: 10px 12px; border-radius: 14px; background: rgba(236, 72, 153, .07); border: 1px solid rgba(236, 72, 153, .25); }
+/* 🎯 יעד החודש בהצצה להיום */
+.peek-focus-goal { display: flex; flex-direction: column; gap: 5px; width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 11px 13px; border-radius: 16px; border: 1px solid rgba(236, 72, 153, .35); background: linear-gradient(135deg, rgba(236, 72, 153, .12), rgba(168, 85, 247, .12)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.peek-focus-goal:active { transform: scale(.99); }
+.peek-focus-goal-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.peek-focus-goal-label { font-size: .7rem; font-weight: 800; color: var(--accent-pink-text, #ec4899); letter-spacing: .02em; }
+.peek-focus-goal-days { font-size: .68rem; font-weight: 700; color: var(--text-secondary); }
+.peek-focus-goal-title { font-size: .92rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peek-focus-goal-bar { height: 6px; border-radius: 999px; background: rgba(127, 127, 127, .18); overflow: hidden; }
+.peek-focus-goal-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); }
+.peek-focus-goal-meta { display: flex; justify-content: space-between; gap: 8px; font-size: .72rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }.vision-goal-track-fields { gap: 4px; }
+.vision-goal-mini-label { font-size: .72rem; font-weight: 700; color: var(--text-secondary); margin-top: 4px; }
