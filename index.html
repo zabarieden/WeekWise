@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=469">
+    <link rel="stylesheet" href="theme.css?v=470">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -164,6 +164,8 @@
                         <p class="home-greeting-date home-greeting-date-clickable" id="home-greeting-date" onclick="openQuickDatePeek()" data-i18n-title="home_greeting_date_peek_title" title="Quick look at the calendar"></p>
                         <!-- הצצה להיום - כפתור קטן מתחת לתאריך (קשור ליום, לא לערימת הטאבים בצד) - לפי בקשה מפורשת. אותו id, כך שכל הקוד הקיים (פתיחה/הגדרת הצגה) עובד כמו שהוא -->
                         <button type="button" class="today-peek-chip" id="today-peek-tab" data-i18n-title="today_tasks_title" data-i18n-aria-label="today_tasks_title" aria-label="A Peek at Today"><span data-i18n="today_tasks_title">A Peek at Today</span></button>
+                        <!-- השגרה שלי - מתחת להצצה להיום, באותו עיצוב בדיוק (לפי בקשה מפורשת) -->
+                        <button type="button" class="today-peek-chip" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-title="daily_board_title" data-i18n-aria-label="daily_board_title" aria-label="My Routine"><span data-i18n="daily_board_title">My Routine</span></button>
                     </div>
                     <!-- עמודת-צד בקצה הנגדי לברכה/תאריך - מכילה את הפתק השבועי ואת תג
                          הפרימיום, אחד מעל השני. flex רגיל (לא מיקום מוחלט) כדי שהצד
@@ -187,36 +189,18 @@
                         </button>
                     </div>
                 </div>
-                <!-- הצצה להיום - רק "הלשונית" (הרצועה הצרה הקבועה) יושבת כאן, בזרימה
-                     רגילה ממש אחרי שורת הברכה, כדי שתגלול יחד איתה בדיוק - לפי
-                     בקשה מפורשת אחרי שדווח שהיא "זזה" בגלילה. .today-peek-anchor
-                     נקודת-עיגון בגובה קבוע וקטן (לא 0!) כדי שהלשונית לא תגלוש
-                     מחוץ לגובה-התוכן הטבעי של .home-hero-panel ותכריח סרגל-גלילה
-                     מיותר להופיע (דווח במפורש: "יש סרגל ליד ההצצה"). הפאנל הפתוח
-                     עצמו (עם התוכן/הרשימה) ו-ה-overlay שוכנים בנפרד למטה, ליד שאר
-                     המגירות - הם לא צריכים לגלול עם הברכה (הרקע המעומעם חוסם
-                     אינטראקציה בכל מקרה כשהם פתוחים), ר' #today-peek-content-panel
-                     בהמשך הקובץ -->
-                <div class="today-peek-anchor">
-                    <!-- "לוח היום" - טאב שני, אותו עיצוב זכוכית בדיוק כמו "הצצה להיום"
-                         ממש (משתמש באותה מחלקה today-peek-tab), רק ממוקם מתחתיו
-                         (.daily-board-tab דורסת top בלבד) - לפי בקשה מפורשת, במקום
-                         הנקודה הפועמת שהייתה בפינה התחתונה. עדיין פותח את
-                         #modal-daily-board הרגיל (מעוצב כחלונית-צד, ר' theme.css) -->
-                    <button type="button" class="today-peek-tab daily-board-tab" id="btn-daily-board-fab" onclick="openDailyBoardModal()" data-i18n-title="daily_board_title" data-i18n-aria-label="daily_board_title" aria-label="Daily Board">
-                        <span class="today-peek-tab-label" data-i18n="daily_board_title">Daily Agenda</span>
-                    </button>
-                    <!-- הפתקים - טאב שלישי, מתחת ל"הצצה להיום", לפי בקשה מפורשת. ציור
-                         דף-נייר (לא אימוג'י/טקסט) וגדול יותר מהטאבים מעליו כדי שיהיה נוח
-                         ללחוץ עליו - ר' .notes-peek-tab ב-theme.css -->
-                    <button type="button" class="today-peek-tab notes-peek-tab" id="btn-ai-fab" data-i18n-title="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">
-                        <svg class="notes-peek-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <!-- פתק מהיר - כפתור בולט באמצע מסך הבית (לפי בקשה מפורשת), במקום הטאב הצדדי.
+                     אותו id - הקליק מחובר ב-initFixedAiFab -->
+                <div class="home-quick-note-center">
+                    <button type="button" class="home-quick-note-btn" id="btn-ai-fab" data-i18n-title="notes_ai_title" data-i18n-aria-label="notes_ai_title" aria-label="Quick Note">
+                        <svg class="home-quick-note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
                             <path d="M15 3v4h4"/>
                             <line x1="8" y1="10.5" x2="16" y2="10.5"/>
                             <line x1="8" y1="14" x2="16" y2="14"/>
                             <line x1="8" y1="17.5" x2="12.5" y2="17.5"/>
                         </svg>
+                        <span data-i18n="notes_ai_title">Quick Note</span>
                     </button>
                 </div>
                 <!-- מסך הבית מכיל כרגע רק ברכה + הצצה להיום - הניווט
@@ -3564,8 +3548,8 @@
 
     </div>
 
-    <script src="i18n.js?v=371"></script>
-    <script src="app.js?v=517"></script>
+    <script src="i18n.js?v=372"></script>
+    <script src="app.js?v=518"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=14"></script>
 </body>

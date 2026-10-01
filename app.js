@@ -14014,36 +14014,9 @@ function updateHomeCalorieBadge() {
     document.getElementById('home-calorie-badge-value').textContent = todayCaloriesTotal;
 }
 
-// מסדרת מחדש את ה-top (בפיקסלים) של כל טאב בערימה לפי מי שבאמת גלוי/ה כרגע -
-// בלי זה, כיבוי הטאב הראשון היה משאיר רווח קבוע במקומו. 3 טאבים: השגרה שלי +
-// הצצה להיום (44px כל אחד, לימודים/הרגלים עברו לתפריט ההמבורגר) ואז הפתקים
-// (btn-ai-fab, 64px - טאב גדול יותר, ר' .notes-peek-tab), שממוקם תמיד מתחתיהם
-// לפי בקשה מפורשת - כל פריט שומר slot בגובה שלו-עצמו, לא גודל אחיד
-// עכשיו: שלושתם באותו גודל (48px גובה, רוחב = התווית הארוכה ביותר בשפה הנוכחית),
-// 8px ביניהם, והעוגן כולו ממורכז אנכית באמצע המסך (ר' .today-peek-anchor)
-function repositionPeekTabStack() {
-    const TAB_H = 48, GAP = 8;
-    const visible = ['btn-daily-board-fab', 'btn-ai-fab']
-        .map(id => document.getElementById(id))
-        .filter(el => el && !el.classList.contains('hidden'));
-    visible.forEach(el => { el.style.width = ''; });
-    const measured = Math.max(0, ...visible.map(el => el.offsetWidth || 0));
-    // מסך הבית עוד מוסתר (לפני התחברות) - אין מה למדוד; מנסים שוב כשיוצג
-    if (!measured && visible.length) {
-        if ((repositionPeekTabStack.retries = (repositionPeekTabStack.retries || 0) + 1) <= 150) setTimeout(repositionPeekTabStack, 400);
-        return;
-    }
-    repositionPeekTabStack.retries = 0;
-    const width = Math.max(96, measured);
-    let top = 0;
-    visible.forEach(el => {
-        el.style.top = `${top}px`;
-        el.style.width = `${width}px`;
-        top += TAB_H + GAP;
-    });
-    const anchor = document.querySelector('.today-peek-anchor');
-    if (anchor) anchor.style.setProperty('--peek-stack-h', `${Math.max(0, top - GAP)}px`);
-}
+// הטאבים בצד המסך הוסרו: "השגרה שלי" עבר מתחת ל"הצצה להיום" (באותו עיצוב) והפתק המהיר
+// לכפתור בולט באמצע מסך הבית - לפי בקשה מפורשת. נשארת כפונקציה ריקה כי הגדרות התצוגה קוראות לה
+function repositionPeekTabStack() {}
 
 // שני הטאבים הראשונים בערימה (השגרה שלי/הצצה להיום) - עד היום תמיד היו דלוקים
 // בלי שום אפשרות לכבות אותם, בניגוד ללימודים/הרגלים למעלה. אותו דפוס בדיוק

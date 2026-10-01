@@ -2421,7 +2421,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
        מסתתרת מתחתיו. עוזר ה-AI עבר לפינה שמאל-*תחתונה* (לפי בקשה מפורשת
        "שלא יזוז" ותהיה קבועה למטה) ולא תופס יותר מקום כאן למעלה בכלל -
        הערך הקודם (195px) היה מיועד רק בשבילו, ר' .ai-brain-fab למטה */
-    padding: 90px 14px 14px 14px;
+    padding: 132px 14px 14px 14px;
     margin-bottom: 16px;
     position: relative;
     z-index: 5;
@@ -6331,7 +6331,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .table-note-icon { width: 1.15em; height: 1.15em; vertical-align: -0.2em; display: inline-block; }
 
 /* הצצה להיום - כפתור קטן מתחת לתאריך */
-.today-peek-chip { display: flex; align-items: center; gap: 5px; margin-top: 12px; width: fit-content; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-secondary); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; line-height: 1.4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); touch-action: pan-y; }
+.today-peek-chip { display: flex; align-items: center; gap: 5px; margin-top: 18px; width: fit-content; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer; line-height: 1.4; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); touch-action: pan-y; }
 .today-peek-chip svg { width: 14px; height: 14px; flex-shrink: 0; }
 .today-peek-chip:active { transform: scale(0.96); }
 .today-peek-chip.hidden { display: none; }
@@ -6486,3 +6486,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .peek-focus-goal-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); }
 .peek-focus-goal-meta { display: flex; justify-content: space-between; gap: 8px; font-size: .72rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }.vision-goal-track-fields { gap: 4px; }
 .vision-goal-mini-label { font-size: .72rem; font-weight: 700; color: var(--text-secondary); margin-top: 4px; }
+
+/* "השגרה שלי" מתחת ל"הצצה להיום", באותו עיצוב */
+.today-peek-chip + .today-peek-chip { margin-top: 8px; }
+/* פתק מהיר - כפתור בולט באמצע מסך הבית */
+.home-quick-note-center { margin-block: auto; display: flex; justify-content: center; padding: 28px 0; }
+.home-quick-note-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); color: #fff; font: inherit; font-size: 1.05rem; font-weight: 800; letter-spacing: .01em; cursor: pointer; box-shadow: 0 12px 30px rgba(236, 72, 153, .38), 0 0 0 6px rgba(236, 72, 153, .12); transition: transform .15s ease, box-shadow .2s ease; }
+.home-quick-note-btn:active { transform: scale(.96); }
+.home-quick-note-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.home-quick-note-icon { width: 24px; height: 24px; flex-shrink: 0; }/* כשהפאנל של "הצצה להיום" סגור הצל שלו בלט מקצה המסך (פס אפור בצד) - מוסתר אחרי האנימציה */
+.today-peek-content-panel:not(.open):not(.dragging) { visibility: hidden; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0s linear 0.3s; }
+.today-peek-content-panel.open { visibility: visible; }
