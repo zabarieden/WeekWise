@@ -1641,7 +1641,7 @@ async function finishOnboarding(startTour) {
 // להדגשה, וטקסטים; קו 🔗 מסביר את החיבור לפיצ'רים אחרים. שלב אופציונלי שהאלמנט שלו
 // לא מוצג (למשל ✨ למי שלא רכש/ה, תג פרימיום למנויים) לא נכלל בסיור ---
 const APP_TOUR_VERSION = 2;
-const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', settings: 'settings_title', summary: 'apptour_ch_summary' };
+const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', goals: 'vision_board_title', settings: 'settings_title', summary: 'apptour_ch_summary' };
 const APP_TOUR_STEPS = [
     { id: 'welcome', ch: 'home', ctx: 'home', icon: '🧭', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text' },
     { id: 'menu', ch: 'home', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
@@ -1673,6 +1673,13 @@ const APP_TOUR_STEPS = [
     { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
     { id: 'm_receipts', ch: 'menu', ctx: 'menu', target: '[data-tour="m-receipts"]', text: 'apptour_m_receipts_text', link: 'apptour_m_receipts_link' },
     { id: 'm_style', ch: 'menu', ctx: 'menu', icon: '▦', target: '[data-tour="m-style"]', titleKey: 'apptour_m_style_title', text: 'apptour_m_style_text' },
+    // פרק "🎯 היעדים שלי" - נכנסים פנימה ומסבירים כל חלק (לפי בקשה מפורשת: "שיהיה מסודר").
+    // when = נכלל רק אם רלוונטי לנתונים של המשתמש/ת (בלי יעדים - דוגמאות; עם יעדים - יעד החודש והכרטיס)
+    { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .vision-drawer-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
+    { id: 'g_templates', ch: 'goals', ctx: 'goals', icon: '✨', target: '#vision-templates', titleKey: 'apptour_g_templates_title', text: 'apptour_g_templates_text', when: () => !visionGoalsCache.some(g => !g.is_achieved) },
+    { id: 'g_focus', ch: 'goals', ctx: 'goals', target: '#vision-focus-slot > *', titleKey: 'vision_focus_ribbon', text: 'apptour_g_focus_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
+    { id: 'g_card', ch: 'goals', ctx: 'goals', icon: '🔄', target: () => appTourVisible('#vision-goals-list .vision-goal-card') || appTourVisible('#vision-focus-slot .vision-goal-card'), titleKey: 'apptour_g_card_title', text: 'apptour_g_card_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
+    { id: 'g_achieved', ch: 'goals', ctx: 'goals', target: '#vision-goals-achieved-section .vision-goals-achieved-title', titleKey: 'vision_goals_achieved_title', text: 'apptour_g_achieved_text', when: () => visionGoalsCache.some(g => g.is_achieved) },
     { id: 's_appearance', ch: 'settings', ctx: 'settings', target: '[data-tour="s-appearance"]', text: 'apptour_s_appearance_text' },
     { id: 's_personalization', ch: 'settings', ctx: 'settings', target: '[data-tour="s-personalization"]', text: 'apptour_s_personalization_text' },
     { id: 's_notifications', ch: 'settings', ctx: 'settings', target: '[data-tour="s-notifications"]', text: 'apptour_s_notifications_text' },
@@ -1757,6 +1764,7 @@ function openAppTour(fromSettings, onFinish) {
     requestAnimationFrame(() => {
         appTourPlan = APP_TOUR_STEPS.map((step, index) => ({ step, index }))
             .filter(({ step }) => !(step.optional && step.ctx === 'home' && !appTourResolveTarget(step)))
+            .filter(({ step }) => !step.when || step.when())
             .map(({ index }) => index);
         appTourPos = 0;
         appTourShow();
@@ -1799,7 +1807,9 @@ async function appTourEnsureContext(step) {
     const aiModal = document.getElementById('modal-ai-brain');
     const settingsModal = document.getElementById('modal-settings-drawer');
     const menuOverlay = document.getElementById('hamburger-drawer-overlay');
+    const goalsOverlay = document.getElementById('vision-drawer-overlay');
     let changed = false;
+    if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
     if (ctx !== 'settings' && settingsModal && settingsModal.classList.contains('open')) { closeModal('modal-settings-drawer'); changed = true; }
     if (ctx !== 'menu' && menuOverlay && menuOverlay.classList.contains('open')) { closeHamburgerMenu(); changed = true; }
@@ -1811,6 +1821,13 @@ async function appTourEnsureContext(step) {
     } else if (ctx === 'settings') {
         if (!settingsModal.classList.contains('open')) { openSettingsDrawer(); changed = true; }
         else backToSettingsMain();
+    } else if (ctx === 'goals' && goalsOverlay && !goalsOverlay.classList.contains('open')) {
+        // פותחים מהמטמון בלי טעינה מחדש - רינדור נוסף אחרי הטעינה היה מחליף את האלמנטים המודגשים
+        goalsOverlay.classList.add('open');
+        const wrapper = document.querySelector('.phone-wrapper');
+        if (wrapper) wrapper.classList.add('vision-open');
+        renderVisionGoalsList();
+        changed = true;
     }
     appTourCtx = ctx;
     await appTourWait(changed ? 460 : 60);
@@ -1985,7 +2002,14 @@ function appTourKeydown(e) {
     else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) { e.preventDefault(); e.stopPropagation(); appTourBack(); }
 }
 function appTourTrack() {
-    if (!appTourActive || !appTourTarget || !appTourTarget.isConnected) return;
+    if (!appTourActive) return;
+    // האלמנט הוחלף (רינדור מחדש של רשימה) - מאתרים אותו שוב
+    if (!appTourTarget || !appTourTarget.isConnected) {
+        const step = APP_TOUR_STEPS[appTourPlan[appTourPos]];
+        const fresh = step ? appTourResolveTarget(step) : null;
+        if (fresh) { appTourTarget = fresh; appTourPosition(); }
+        return;
+    }
     const r = appTourTarget.getBoundingClientRect();
     const key = `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}`;
     if (key !== appTourLastRect) appTourPosition();
@@ -2010,6 +2034,7 @@ function closeAppTour() {
     if (appTourCtx === 'ai') closeModal('modal-ai-brain');
     if (appTourCtx === 'settings') closeModal('modal-settings-drawer');
     if (appTourCtx === 'menu') closeHamburgerMenu();
+    if (appTourCtx === 'goals') closeGoalsVisionDrawer();
     appTourCtx = null;
     goHome();
     if (appTourOnFinish) { const fn = appTourOnFinish; appTourOnFinish = null; fn(); }
