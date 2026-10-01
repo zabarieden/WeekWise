@@ -70,7 +70,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=470">
+    <link rel="stylesheet" href="theme.css?v=471">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3226,6 +3226,25 @@
         </div>
 
 
+        <!-- 🔁 הוספת צעד / משימה יומית מיעד ל"השגרה שלי" (בוחרים טאב ושעה פנויה) -->
+        <div id="modal-goal-routine-picker" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="vision_routine_picker_title">🔁 Add to My Routine</h3>
+                <p class="modal-subtitle" id="goal-routine-picker-task"></p>
+                <p class="vision-goal-field-hint" data-i18n="vision_routine_picker_text">Pick a tab and an hour – it will appear in My Routine, and a ✓ there ticks it here too.</p>
+                <p class="settings-label" data-i18n="vision_routine_tab_label">Tab</p>
+                <div id="goal-routine-tab-chips" class="vision-goal-category-chips"></div>
+                <p class="settings-label" data-i18n="vision_routine_hour_label">Hour</p>
+                <div id="goal-routine-hour-chips" class="vision-goal-category-chips"></div>
+                <p id="goal-routine-no-hours" class="vision-goal-field-hint hidden" data-i18n="vision_routine_no_free_hours">No free hours in this tab – add hours in My Routine (⚙️).</p>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" id="btn-goal-routine-add" onclick="confirmGoalRoutineLink()" data-i18n="vision_routine_add_btn">Add to routine</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-goal-routine-picker')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: חגיגת השגת יעד + הצעת פרס -->
         <div id="modal-goal-celebration" class="apple-modal">
             <div class="modal-sheet goal-celebration-sheet">
@@ -3398,8 +3417,13 @@
                     <input type="date" id="vision-goal-date-input" class="date-picker-hidden-input" onchange="onVisionGoalDateChange()">
 
                     <!-- איך מודדים התקדמות: לפי צעדים (ברירת מחדל) / מספר / משקל -->
-                    <p class="settings-label" data-i18n="vision_field_track">How do I measure progress?</p>
-                    <div id="vision-goal-track-chips" class="vision-goal-category-chips"></div>
+                    <p class="settings-label" data-i18n="vision_field_track">How do I track progress?</p>
+                    <div id="vision-goal-track-chips" class="vision-track-options"></div>
+                    <!-- אתגר ימים: כמה ימים (המשימות היומיות נכתבות ברשימה למטה) -->
+                    <div id="vision-goal-days-fields" class="vision-goal-track-fields hidden">
+                        <label class="vision-goal-mini-label" for="vision-goal-days-input" data-i18n="vision_days_target_label">How many days?</label>
+                        <input type="number" id="vision-goal-days-input" inputmode="numeric" min="1" max="365" data-i18n-placeholder="vision_days_target_ph" placeholder="e.g. 8">
+                    </div>
                     <div id="vision-goal-number-fields" class="vision-goal-track-fields hidden">
                         <label class="vision-goal-mini-label" for="vision-goal-target-input" data-i18n="vision_number_target_ph">Target (e.g. 12)</label>
                         <input type="number" id="vision-goal-target-input" inputmode="decimal" min="0" data-i18n-placeholder="vision_number_target_ph" placeholder="Target (e.g. 12)">
@@ -3414,7 +3438,7 @@
                         <p class="vision-goal-field-hint" data-i18n="vision_weight_hint">Progress follows your latest weigh-in in Calorie &amp; Weight Metrics.</p>
                     </div>
 
-                    <p class="settings-label" data-i18n="vision_goal_milestones_section_title">Milestones</p>
+                    <p class="settings-label" id="vision-goal-steps-label" data-i18n="vision_goal_milestones_section_title">Steps on the way</p>
                     <div id="vision-goal-pending-milestones-list" class="vision-goal-pending-milestones-list"></div>
                     <div class="vision-goal-milestone-add-row">
                         <input type="text" id="vision-goal-milestone-input" data-i18n-placeholder="vision_goal_milestone_input_placeholder" placeholder="Add a milestone..." onkeydown="if(event.key==='Enter'){event.preventDefault();addPendingVisionMilestoneRow();}">
@@ -3433,6 +3457,7 @@
                             <span class="switch-slider"></span>
                         </label>
                     </div>
+                    <p class="vision-goal-field-hint vision-goal-focus-hint" data-i18n="vision_focus_toggle_hint">One goal you choose to focus on this month – it shows first, with a path to the flag, and in A Peek at Today too.</p>
 
                     <button type="button" id="btn-delete-vision-goal" class="btn-clear-week hidden" style="margin-top: 8px;" data-i18n="vision_goal_delete_btn_title">Delete goal</button>
                     <div class="action-buttons-wrap">
@@ -3548,8 +3573,8 @@
 
     </div>
 
-    <script src="i18n.js?v=372"></script>
-    <script src="app.js?v=518"></script>
+    <script src="i18n.js?v=373"></script>
+    <script src="app.js?v=519"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=14"></script>
 </body>
