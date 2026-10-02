@@ -497,7 +497,6 @@ function nmRenderHome(root) {
                     <span class="nm-bonus-sub">${nmEsc(t('nm_bonus_sub'))}</span>
                 </span>
             </button>
-            <p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>
             <button type="button" class="nm-gear" onclick="nmGo('settings')" title="${nmEsc(t('nm_tile_settings'))}" aria-label="${nmEsc(t('nm_tile_settings'))}">⚙️</button>
         </div>`;
@@ -525,7 +524,7 @@ function nmRenderMenu(body) {
                     </span>
                 </div>
             </div>`;
-    }).join('') + nmDrinksHtml() + nmExtrasHtml() + nmGoalReminderHtml() + `<p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p><p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+    }).join('') + nmDrinksHtml() + nmExtrasHtml() + nmGoalReminderHtml() + `<p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
 }
 
 // תזכורת עדינה בסוף התפריט (לפי בקשה מפורשת: "תזכורת" עם לב עדין) - לב קטן בגרדיאנט של New Me
