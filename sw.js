@@ -57,8 +57,10 @@ self.addEventListener('notificationclick', (event) => {
     if (event.action === 'not_done') return; // "מאוחר יותר" - רק סוגר, כלום מעבר לזה
 
     // לחיצה על גוף ההתראה עצמו (לא על כפתור) - פותחת/ממקדת את האפליקציה
-    // ישר בהצצה להיום, לא נחיתה כללית על מסך הבית, לפי בקשה מפורשת
-    event.waitUntil(focusOrOpenApp('./index.html?open=peek'));
+    // ישר בהצצה להיום, לא נחיתה כללית על מסך הבית, לפי בקשה מפורשת.
+    // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום
+    const target = data && data.open === 'newme' ? 'newme' : 'peek';
+    event.waitUntil(focusOrOpenApp(`./index.html?open=${target}`));
 });
 
 // טיפול מפורש בסגירה (למשל לחיצה על ה-X): לא עושה כלום מעבר לסגירה עצמה,

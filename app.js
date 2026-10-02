@@ -7014,6 +7014,8 @@ function handleNotificationDeepLink() {
     const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
     window.history.replaceState({}, '', newUrl);
     if (open === 'peek') openTodayPeekPanel();
+    // תזכורת ארוחה של New Me - נפתח ברגע שמצב הרכישה נטען (ר' updateNewMeShortcut)
+    else if (open === 'newme' && typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true;
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
@@ -7708,6 +7710,13 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },
+    { id: 'new_me_swap', category: 'nutrition' },
+    { id: 'new_me_free_meal', category: 'nutrition' },
+    { id: 'new_me_journey', category: 'nutrition' },
+    { id: 'new_me_shopping', category: 'nutrition' },
+    { id: 'new_me_reminders', category: 'nutrition' },
+    { id: 'new_me_checkin', category: 'nutrition' },
+    { id: 'new_me_body', category: 'nutrition' },
     { id: 'food_variety', category: 'nutrition' },
     { id: 'multi_food_separator', category: 'nutrition' },
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },

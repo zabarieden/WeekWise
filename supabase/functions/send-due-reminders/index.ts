@@ -3,6 +3,7 @@
 // Runs on a schedule (see the pg_cron SQL in DEPLOY.md) and sends a real Web Push
 // notification for every weekly_schedule reminder that is due right now, for every
 // user's timezone, so reminders fire even when the app/browser tab is fully closed.
+// Also sends the New Me meal reminders (new_me_reminders - one time per meal).
 //
 // This mirrors the client-side checkReminders()/fireReminder() logic in app.js:
 // same "no upper bound" philosophy (if a reminder was missed - e.g. this function's
@@ -218,6 +219,57 @@ async function handleRequest(): Promise<Response> {
 
             if (anySucceeded) {
                 await supabase.from("calendar_events").update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
+            }
+        }
+
+        // תזכורות ארוחה של New Me: שעה אחת לכל ארוחה (new_me_reminders, הטקסט נכתב מהאפליקציה
+        // בשפת המשתמש/ת). לא שולחים אם הארוחה כבר סומנה ✓ היום, ולא שולחים באיחור של יותר
+        // משעה וחצי - תזכורת לארוחת בוקר בצהריים היא רק רעש
+        const { data: mealRems } = await supabase
+            .from("new_me_reminders")
+            .select("position, slot, time, title, body, today_body, today_date, last_sent_date")
+            .eq("user_id", userId)
+            .eq("enabled", true);
+        const dueMeals = (mealRems ?? []).filter((r) => {
+            if (r.last_sent_date === wallClock.dateStr) return false;
+            const [h, m] = String(r.time || "").split(":").map((n: string) => parseInt(n, 10));
+            if (Number.isNaN(h) || Number.isNaN(m)) return false;
+            const due = h * 60 + m;
+            return nowMinutes >= due && nowMinutes - due <= 90;
+        });
+        if (dueMeals.length) {
+            const [{ data: prof }, { data: checked }] = await Promise.all([
+                supabase.from("new_me_profile").select("reminders_on").eq("user_id", userId).maybeSingle(),
+                supabase.from("new_me_checkins").select("slot").eq("user_id", userId).eq("checkin_date", wallClock.dateStr),
+            ]);
+            const eaten = new Set((checked ?? []).map((c) => c.slot));
+            for (const r of prof?.reminders_on ? dueMeals : []) {
+                if (eaten.has(r.slot)) {
+                    await supabase.from("new_me_reminders").update({ last_sent_date: wallClock.dateStr }).eq("user_id", userId).eq("position", r.position);
+                    continue;
+                }
+                const body = r.today_date === wallClock.dateStr && r.today_body ? r.today_body : (r.body || "");
+                const tag = `weekwise-newme-meal-${r.position}-${wallClock.dateStr}`;
+                const data = { open: "newme" };
+                let anySucceeded = false;
+                for (const sub of userSubs) {
+                    try {
+                        await webpush.sendNotification(
+                            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                            JSON.stringify({ title: r.title || "🍽️ New Me", body, tag, data }),
+                            { urgency: "high", TTL: 1800 },
+                        );
+                        anySucceeded = true;
+                        sent++;
+                    } catch (err: any) {
+                        if (err?.statusCode === 404 || err?.statusCode === 410) {
+                            await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+                        }
+                    }
+                }
+                if (anySucceeded) {
+                    await supabase.from("new_me_reminders").update({ last_sent_date: wallClock.dateStr }).eq("user_id", userId).eq("position", r.position);
+                }
             }
         }
     }

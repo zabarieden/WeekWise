@@ -84,7 +84,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=478">
+    <link rel="stylesheet" href="theme.css?v=479">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -303,7 +303,7 @@
                             <span class="sub-tile-icon">🧑‍🍳</span>
                             <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
-                        <!-- "דגשי תזונה" (modal-nutrition-daily) עבר להיות כתבת-בונוס בתוך New Me בלבד -->
+                        <!-- "דגשי תזונה" עבר להיות כתבת-בונוס בתוך New Me בלבד (כרטיסי סטורי, ר' nmOpenStories) -->
                     </div>
 
                     <div class="subview-panel" data-subview="meals">
@@ -963,13 +963,86 @@
                     </div>
                 </section>
 
-                <!-- New Me - מקום לפרויקט החדש (תוכנית תזונה אישית בתשלום נפרד), לפי
-                     בקשה מפורשת ("תעשה מקום לכל הפרויקט החדש... בנפרד"). כרגע רק מסך
-                     "בקרוב" - התוכן עצמו ייבנה כאן -->
-                <section class="tab-content" id="new-me-section">
+                <!-- New Me - תוכנית תזונה בתשלום נפרד (רכישה חד-פעמית). למטה איור עדין של מטבח
+                     ביתי (מדף עם צנצנות ותבלינים, קערת פירות, קרש חיתוך עם ירקות, קנקן מים ועציץ)
+                     בצבעי ערכת הנושא - על אותו עיקרון כמו פינת הקריאה, לפי בקשה מפורשת -->
+                <section class="tab-content nm-section" id="new-me-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
                     <!-- כל התוכן נבנה דינמית ב-new-me.js (renderNewMe) לפי מצב: מכירה / שאלון / לוח -->
                     <div id="new-me-root" class="nm-root"></div>
+                    <div class="nm-kitchen-scene" aria-hidden="true">
+                        <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
+                            <!-- חלון עם וילונות -->
+                            <rect x="214" y="24" width="66" height="68" rx="6" fill="currentColor" opacity=".08"/>
+                            <rect x="214" y="24" width="66" height="68" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"/>
+                            <line x1="247" y1="24" x2="247" y2="92" stroke="currentColor" stroke-width="1.2" opacity=".32"/>
+                            <line x1="214" y1="58" x2="280" y2="58" stroke="currentColor" stroke-width="1.2" opacity=".32"/>
+                            <circle cx="266" cy="40" r="6" style="fill: var(--accent-gold)" opacity=".45"/>
+                            <line x1="208" y1="21" x2="286" y2="21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".45"/>
+                            <path d="M211 21 c3 22 1 42 11 58 c-6 3 -12 1 -12 1 z" style="fill: var(--accent-pink)" opacity=".3"/>
+                            <path d="M283 21 c-3 22 -1 42 -11 58 c6 3 12 1 12 1 z" style="fill: var(--accent-pink)" opacity=".3"/>
+                            <!-- מדף עם צנצנות ותבלינים -->
+                            <line x1="22" y1="68" x2="180" y2="68" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+                            <path d="M40 69 v10 l10 -10 z M162 69 v10 l-10 -10 z" fill="currentColor" opacity=".4"/>
+                            <rect x="30" y="34" width="28" height="34" rx="6" fill="currentColor" opacity=".12"/>
+                            <rect x="32" y="48" width="24" height="18" rx="4" style="fill: var(--accent-gold)" opacity=".5"/>
+                            <rect x="30" y="34" width="28" height="34" rx="6" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".45"/>
+                            <rect x="32" y="29" width="24" height="7" rx="2" fill="currentColor" opacity=".45"/>
+                            <rect x="64" y="26" width="26" height="42" rx="6" fill="currentColor" opacity=".12"/>
+                            <rect x="66" y="42" width="22" height="24" rx="4" style="fill: var(--accent-pink)" opacity=".45"/>
+                            <rect x="64" y="26" width="26" height="42" rx="6" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".45"/>
+                            <rect x="66" y="21" width="22" height="7" rx="2" style="fill: var(--accent-gold)" opacity=".55"/>
+                            <rect x="96" y="42" width="22" height="26" rx="5" fill="currentColor" opacity=".12"/>
+                            <g fill="currentColor" opacity=".45"><circle cx="102" cy="58" r="2"/><circle cx="108" cy="61" r="2"/><circle cx="112" cy="56" r="2"/><circle cx="104" cy="63" r="2"/><circle cx="111" cy="63" r="2"/></g>
+                            <rect x="96" y="42" width="22" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".45"/>
+                            <rect x="98" y="37" width="18" height="6" rx="2" fill="currentColor" opacity=".45"/>
+                            <rect x="126" y="49" width="9" height="19" rx="2" fill="currentColor" opacity=".3"/>
+                            <rect x="126" y="44" width="9" height="6" rx="1.5" style="fill: var(--accent-pink)" opacity=".6"/>
+                            <rect x="139" y="47" width="9" height="21" rx="2" fill="currentColor" opacity=".3"/>
+                            <rect x="139" y="42" width="9" height="6" rx="1.5" style="fill: var(--accent-gold)" opacity=".65"/>
+                            <rect x="152" y="50" width="9" height="18" rx="2" fill="currentColor" opacity=".3"/>
+                            <rect x="152" y="45" width="9" height="6" rx="1.5" fill="currentColor" opacity=".55"/>
+                            <!-- משטח עבודה וארונות -->
+                            <rect x="0" y="150" width="400" height="7" rx="2" fill="currentColor" opacity=".38"/>
+                            <rect x="6" y="157" width="388" height="33" fill="currentColor" opacity=".1"/>
+                            <g stroke="currentColor" stroke-width="1.2" opacity=".3"><line x1="103" y1="160" x2="103" y2="190"/><line x1="200" y1="160" x2="200" y2="190"/><line x1="297" y1="160" x2="297" y2="190"/></g>
+                            <g fill="currentColor" opacity=".45"><rect x="86" y="165" width="10" height="3" rx="1.5"/><rect x="110" y="165" width="10" height="3" rx="1.5"/><rect x="280" y="165" width="10" height="3" rx="1.5"/><rect x="304" y="165" width="10" height="3" rx="1.5"/></g>
+                            <!-- קערת פירות -->
+                            <circle cx="93" cy="133" r="9" style="fill: var(--accent-pink)" opacity=".6"/>
+                            <path d="M93 124 q1 -5 4 -6" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".5"/>
+                            <circle cx="111" cy="131" r="10" style="fill: var(--accent-gold)" opacity=".6"/>
+                            <circle cx="128" cy="135" r="8" fill="currentColor" opacity=".42"/>
+                            <path d="M82 129 q26 -16 54 -5 q-26 -4 -54 9 z" style="fill: var(--accent-gold)" opacity=".75"/>
+                            <path d="M76 137 h68 q-4 15 -34 15 q-30 0 -34 -15 z" fill="currentColor" opacity=".35"/>
+                            <!-- קרש חיתוך עם ירקות וסכין -->
+                            <rect x="168" y="141" width="84" height="9" rx="4" style="fill: var(--accent-gold)" opacity=".42"/>
+                            <rect x="250" y="143" width="16" height="5" rx="2.5" style="fill: var(--accent-gold)" opacity=".42"/>
+                            <path d="M176 139 l28 -5 l-2 6 z" style="fill: var(--accent-gold)" opacity=".85"/>
+                            <path d="M204 134 l5 -4 M204 135 l6 -1 M203 136 l4 3" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+                            <circle cx="216" cy="137" r="4.5" fill="currentColor" opacity=".3"/>
+                            <circle cx="216" cy="137" r="2" fill="currentColor" opacity=".35"/>
+                            <circle cx="226" cy="137" r="4.5" fill="currentColor" opacity=".3"/>
+                            <circle cx="226" cy="137" r="2" fill="currentColor" opacity=".35"/>
+                            <circle cx="241" cy="133" r="7" style="fill: var(--accent-pink)" opacity=".65"/>
+                            <path d="M238 126 l3 2 l3 -2 l-1 3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+                            <path d="M196 124 h36 l6 3 h-42 z" fill="currentColor" opacity=".3"/>
+                            <rect x="184" y="123" width="13" height="5" rx="2" fill="currentColor" opacity=".55"/>
+                            <!-- קנקן מים וכוס -->
+                            <path d="M287 104 h28 l-2 8 q8 10 6 38 h-36 q-2 -28 6 -38 z" fill="currentColor" opacity=".12"/>
+                            <path d="M284 124 q8 -4 16 0 q8 4 17 0 l1 26 h-35 z" style="fill: var(--accent-pink)" opacity=".3"/>
+                            <path d="M287 104 h28 l-2 8 q8 10 6 38 h-36 q-2 -28 6 -38 z" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+                            <path d="M319 116 q12 2 10 16 q-2 10 -10 10" fill="none" stroke="currentColor" stroke-width="3" opacity=".4"/>
+                            <path d="M287 104 l-6 -4" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+                            <path d="M335 127 h16 l-2 23 h-12 z" fill="currentColor" opacity=".1"/>
+                            <path d="M336 136 h14 l-1 14 h-12 z" style="fill: var(--accent-pink)" opacity=".3"/>
+                            <path d="M335 127 h16 l-2 23 h-12 z" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".45"/>
+                            <!-- עציץ -->
+                            <path d="M358 128 h30 l-4 22 h-22 z" style="fill: var(--accent-gold)" opacity=".5"/>
+                            <path d="M373 128 c-14 -10 -18 -26 -14 -40 c8 10 14 24 14 40 z" fill="currentColor" opacity=".45"/>
+                            <path d="M373 128 c12 -12 20 -20 24 -36 c-12 6 -20 18 -24 36 z" fill="currentColor" opacity=".35"/>
+                            <path d="M373 128 c0 -16 2 -32 8 -46 c2 16 -2 32 -8 46 z" style="fill: var(--accent-pink)" opacity=".4"/>
+                        </svg>
+                    </div>
                 </section>
 
                 <!-- קטגוריית ספורט: נגישה רק מהתפריט הצדדי (בלי כפתור קבוע בסרגל
@@ -3162,43 +3235,6 @@
             </div>
         </div>
 
-        <!-- חלון צף: "דגשי תזונה" - תוכן קבוע בסגנון מגזין/עיתון דיגיטלי, לא נתונים
-             של המשתמשת. שלוש "כתבות" קצרות, כל אחת עם data-i18n נפרד לכל אלמנט
-             (לא בלוק טקסט אחד ארוך) כדי לשמור על מבנה HTML נקי (כותרת/פסקה/רשימה)
-             בלי להזדקק ל-HTML בתוך מחרוזות התרגום עצמן -->
-        <div id="modal-nutrition-daily" class="apple-modal">
-            <div class="modal-sheet nutrition-daily-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <div class="nutrition-daily-masthead">
-                    <h3 class="nutrition-daily-title" data-i18n="nutrition_daily_masthead_title">📰 THE NUTRITION DAILY</h3>
-                    <p class="nutrition-daily-subtitle" data-i18n="nutrition_daily_masthead_subtitle">Your daily magazine for nutrition, precision, and lifestyle</p>
-                </div>
-                <article class="nutrition-daily-article">
-                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article1_title">📰 The Scale Mystery – When Do You Weigh What?</h4>
-                    <p data-i18n="nutrition_daily_article1_intro">The most recommended and accurate way to track is to weigh your food before cooking (while it's raw) - from meat to rice, pasta, potatoes, and vegetables.</p>
-                    <p data-i18n="nutrition_daily_article1_why">Why before cooking? Raw food has fixed values. Cooking only changes the food's liquid content (water absorption or evaporation), so weighing in advance lets you cook however you like, and even mix ingredients together (like when making meatballs or stews) without losing accuracy.</p>
-                    <p data-i18n="nutrition_daily_article1_portion_tip">Portion tip: Already weighed and calculated the whole pot in advance? The weight of the cooked food doesn't matter anymore. You can just divide the finished dish by eye into equal portions!</p>
-                    <p class="nutrition-daily-tip" data-i18n="nutrition_daily_article1_after_note">Prefer weighing after cooking? If your lifestyle is more complex and requires weighing on the plate after the food is ready - that works great too! Just make sure to pick the option in the database meant for that (like "cooked white rice" vs "dry rice"). 💡</p>
-                </article>
-                <div class="nutrition-daily-divider"></div>
-                <article class="nutrition-daily-article">
-                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article2_title">📰 Went Over Today's Goal? No Stress!</h4>
-                    <p data-i18n="nutrition_daily_article2_body">Went over your goal? Ate a bit too little on a weight-gain journey, or a bit too much on a weight-loss one? Take a breath - it's all fine. Your body isn't a daily calculator - it works on a weekly average over time. One off day is a completely natural part of the process. There's no need to "make up for it," starve yourself, or force-compensate at the next meal. Just carry on with your normal routine. Consistency over time is the real secret.</p>
-                </article>
-                <div class="nutrition-daily-divider"></div>
-                <article class="nutrition-daily-article">
-                    <h4 class="nutrition-daily-headline" data-i18n="nutrition_daily_article3_title">📰 Eating Out? Report Like a Pro</h4>
-                    <p data-i18n="nutrition_daily_article3_intro">Restaurants, pizzerias, and burger joints are always a fun experience - but how do you log a dish you didn't make yourself?</p>
-                    <ul class="nutrition-daily-list">
-                        <li data-i18n="nutrition_daily_article3_breakdown">The breakdown method: split the dish into its base components (e.g. noodles + chicken breast + a tablespoon of oil + sauce).</li>
-                        <li data-i18n="nutrition_daily_article3_estimate">The estimate method: not sure? Pick a similar dish from the "eating out" category in the database for a solid average estimate.</li>
-                        <li data-i18n="nutrition_daily_article3_control">Full control: want maximum accuracy? Make the meal at home from your exact ingredients, and save it as a preset meal in the app! 🎯</li>
-                    </ul>
-                </article>
-                <button type="button" class="btn-clear-specific nutrition-daily-close" onclick="closeModal('modal-nutrition-daily')" data-i18n="close_btn">Close</button>
-            </div>
-        </div>
-
         <!-- חלון "כל הקטגוריות" (ר' openCategoriesMenu ב-app.js) - קוביות גדולות לכל
              קבוצה בתפריט, לחיצה על קובייה פותחת את הפריטים שלה כקוביות קטנות. התוכן
              נבנה מתוך מגירת ההמבורגר עצמה, כך ששניהם תמיד מסונכרנים -->
@@ -3814,10 +3850,10 @@
 
     </div>
 
-    <script src="i18n.js?v=381"></script>
-    <script src="app.js?v=528"></script>
-    <script src="new-me-data.js?v=5"></script>
-    <script src="new-me.js?v=16"></script>
+    <script src="i18n.js?v=382"></script>
+    <script src="app.js?v=529"></script>
+    <script src="new-me-data.js?v=6"></script>
+    <script src="new-me.js?v=17"></script>
     <script src="books.js?v=1"></script>
 </body>
 </html>

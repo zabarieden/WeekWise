@@ -30,6 +30,56 @@ const NEW_ME_PLANS = {
 const NEW_ME_DRINKS_KCAL = 150;
 const NEW_ME_DRINK_ROWS_MIN = 3;
 
+// ארוחה חופשית מתוכננת: פעם בשבוע, במקום אחת הארוחות, עד בערך כך קלוריות
+const NEW_ME_FREE_MEAL_KCAL = 700;
+// שעות ברירת המחדל לתזכורות - מ-10:00 עד 19:00 בקפיצות שוות (לפי בקשה מפורשת)
+const NEW_ME_REMINDER_DEFAULTS = ['10:00', '13:00', '16:00', '19:00'];
+// החלפה: מוצגות קודם האפשרויות מכל התפריט (שתי התוכניות) שבטווח ±15% מיעד הארוחה
+const NEW_ME_SWAP_RANGE = 0.15;
+// אבני הדרך במסע (ימים מאז ההתחלה) - אחרי 90 ממשיכים בלי סוף
+const NEW_ME_MILESTONES = [7, 30, 60, 90];
+
+// רשימת קניות: מרכיבים לכל אפשרות, לכמות של יום אחד. יחידות: g = גרם, ml = מ"ל,
+// tsp = כפיות (כף = 3 כפיות - כך שמן זית בכף ובכפית מתחברים לאותה שורה), pcs = יחידות
+// (השם כבר אומר "פרוסות" / "פחיות" / "מנות" כשצריך). מה שבתפריט נמדד בכוס מבושלת
+// (אורז, עדשים, פסטה...) מומר לגרם לא מבושל, כי זה מה שקונים; גבינה / גרנולה / חומוס
+// בכפות - לגרם. שמות המרכיבים מתורגמים ב-i18n.js (nm_ing_*)
+const NEW_ME_INGREDIENTS = {
+    p1300_meal1_A: [['eggs', 2, 'pcs'], ['olive_oil', 3, 'tsp'], ['bread', 2, 'pcs'], ['tomatoes', 2, 'pcs'], ['salad_veg', 1, 'pcs'], ['tahini', 1, 'tsp']],
+    p1300_meal1_B: [['tortilla', 1, 'pcs'], ['tuna_or_chicken', 150, 'g'], ['guacamole_tahini', 3, 'tsp'], ['salad_veg', 1, 'pcs'], ['baby_greens', 1, 'pcs']],
+    p1300_meal1_C: [['protein_yogurt', 1, 'pcs'], ['granola', 40, 'g'], ['berries', 75, 'g'], ['almonds', 12, 'pcs']],
+    p1300_snack1_A: [['apple_pear', 1, 'pcs'], ['walnuts_almonds', 5, 'pcs']],
+    p1300_snack1_B: [['protein_pudding', 1, 'pcs'], ['peanut_butter', 1, 'tsp']],
+    p1300_snack1_C: [['rice_cakes', 3, 'pcs'], ['soft_cheese', 45, 'g'], ['cucumber', 1, 'pcs']],
+    p1300_meal2_A: [['chicken', 100, 'g'], ['brown_rice_quinoa', 50, 'g'], ['green_veg', 1, 'pcs'], ['olive_oil', 1, 'tsp']],
+    p1300_meal2_B: [['salmon', 120, 'g'], ['potato', 1, 'pcs'], ['salad_veg', 1, 'pcs'], ['olive_oil', 1, 'tsp']],
+    p1300_meal2_C: [['tofu', 120, 'g'], ['lentils', 50, 'g'], ['salad_veg', 1, 'pcs'], ['tahini', 2, 'tsp']],
+    p1300_snack2_A: [['tuna_cheese_muffin', 1, 'pcs'], ['salad_veg', 1, 'pcs']],
+    p1300_snack2_B: [['dark_chocolate', 15, 'g']],
+    p1300_snack2_C: [['veg_sticks', 60, 'g'], ['hummus', 30, 'g']],
+    p1500_meal1_A: [['eggs', 2, 'pcs'], ['bread', 2, 'pcs'], ['avocado', 0.5, 'pcs'], ['soft_cheese', 30, 'g'], ['salad_veg', 1, 'pcs']],
+    p1500_meal1_B: [['tuna_can', 1, 'pcs'], ['eggs', 2, 'pcs'], ['light_mayo_tahini', 3, 'tsp'], ['bread', 2, 'pcs'], ['salad_veg', 1, 'pcs']],
+    p1500_meal1_C: [['oats', 60, 'g'], ['milk', 240, 'ml'], ['peanut_butter', 3, 'tsp'], ['fruit', 1, 'pcs'], ['honey_silan', 1, 'tsp']],
+    p1500_snack1_A: [['medjool_date', 1, 'pcs'], ['walnuts_almonds', 11, 'pcs']],
+    p1500_snack1_B: [['protein_yogurt', 1, 'pcs'], ['fruit', 0.5, 'pcs'], ['chia_flax', 1, 'tsp']],
+    p1500_snack1_C: [['protein_bar', 1, 'pcs']],
+    p1500_meal2_A: [['chicken', 120, 'g'], ['rice_couscous_sweet_potato', 65, 'g'], ['salad_veg', 1, 'pcs'], ['olive_oil', 2, 'tsp']],
+    p1500_meal2_B: [['fish', 120, 'g'], ['quinoa_lentils', 45, 'g'], ['root_veg', 1, 'pcs']],
+    p1500_meal2_C: [['pasta', 60, 'g'], ['lean_beef_tofu', 150, 'g'], ['tomato_sauce', 1, 'pcs']],
+    p1500_snack2_A: [['bread', 1, 'pcs'], ['peanut_butter', 1, 'tsp'], ['honey_silan', 1, 'tsp']],
+    p1500_snack2_B: [['dark_chocolate', 15, 'g'], ['almonds', 5, 'pcs']],
+    p1500_snack2_C: [['rice_cakes', 2, 'pcs'], ['soft_cheese', 30, 'g'], ['cucumber', 1, 'pcs'], ['bell_pepper', 0.5, 'pcs']]
+};
+// קבוצה ברשימת הקניות (לפי הסדר הזה) - כל מרכיב שייך לקבוצה אחת
+const NEW_ME_SHOP_GROUPS = {
+    protein: ['eggs', 'tuna_or_chicken', 'chicken', 'salmon', 'fish', 'tofu', 'tuna_can', 'lean_beef_tofu', 'tuna_cheese_muffin'],
+    dairy: ['protein_yogurt', 'protein_pudding', 'soft_cheese', 'milk'],
+    produce: ['tomatoes', 'salad_veg', 'baby_greens', 'green_veg', 'cucumber', 'bell_pepper', 'veg_sticks', 'root_veg', 'potato', 'avocado', 'berries', 'apple_pear', 'fruit', 'medjool_date'],
+    grains: ['bread', 'tortilla', 'granola', 'rice_cakes', 'oats', 'brown_rice_quinoa', 'rice_couscous_sweet_potato', 'quinoa_lentils', 'lentils', 'pasta'],
+    pantry: ['olive_oil', 'tahini', 'guacamole_tahini', 'light_mayo_tahini', 'hummus', 'peanut_butter', 'honey_silan', 'chia_flax', 'almonds', 'walnuts_almonds', 'tomato_sauce'],
+    other: ['dark_chocolate', 'protein_bar']
+};
+
 // PDF file per language (served from the private "new-me-pdfs" storage bucket).
 const NEW_ME_PDF_LANGS = ['en', 'he', 'es', 'fr', 'ar', 'ru', 'de', 'pt', 'ja', 'zh', 'hi', 'ko', 'id', 'vi', 'pl', 'th', 'ur', 'bn', 'sw', 'uk', 'el', 'ca', 'ro', 'yo', 'sv', 'nb', 'da', 'cs', 'hu', 'fi'];
 

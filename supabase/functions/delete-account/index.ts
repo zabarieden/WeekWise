@@ -68,6 +68,13 @@ Deno.serve(async (req) => {
             }
         }
 
+        // תמונות ההתקדמות של New Me (bucket פרטי) - השורות נמחקות ב-cascade עם המשתמש/ת,
+        // אבל הקבצים עצמם לא; תמונות גוף פרטיות חייבות להימחק יחד עם החשבון
+        const { data: photoFiles } = await supabase.storage.from("new-me-photos").list(userId, { limit: 1000 });
+        if (photoFiles && photoFiles.length) {
+            await supabase.storage.from("new-me-photos").remove(photoFiles.map((f) => `${userId}/${f.name}`));
+        }
+
         const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId);
         if (deleteUserError) {
             return jsonResponse({ error: "auth_delete_failed", detail: deleteUserError.message }, 500);
