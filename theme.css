@@ -3064,26 +3064,7 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 /* 4 קוביות גדולות ומעוגלות - עדין יותר מהתו ▦ */
 .categories-fab-icon { display: block; fill: currentColor; opacity: .85; }
 html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
-/* קיצור דרך ל-New Me "התפריט שלי היום" - שלישי בשורה, רק למי שרכש/ה */
-/* מעל הרובוט, ממורכז אליו (בעברית בצד שמאל, בשפות LTR מימין - צד הרובוט) - לפי
-   בקשה מפורשת ("מעל הרובוט... יותר סימטרי ופחות בלגן"). הרובוט: bottom 30px,
-   inset-inline-end 22px, 160px (או 100px בקומפקטי), והכפתור 42px. עיגול זכוכית
-   עדין; הצבע נגזר מערכת הנושא (--accent-*-text, כולל צבע-משתמש), לא קבוע */
-.hamburger-fab.newme-fab,
-html[dir="ltr"] .hamburger-fab.newme-fab {
-    top: auto; right: auto; left: auto;
-    bottom: 164px;
-    inset-inline-end: 34px;
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--accent-purple) 16%, rgba(255, 255, 255, 0.06));
-    border: 1px solid color-mix(in srgb, var(--accent-purple-light-text) 40%, transparent);
-    color: var(--accent-purple-light-text);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 16px color-mix(in srgb, var(--accent-pink) 22%, transparent);
-}
-.hamburger-fab.newme-fab svg { width: 20px; height: 20px; fill: currentColor; opacity: .9; }
-/* רובוט קומפקטי (100px) - הכפתור נשאר ממורכז מעליו */
-.phone-wrapper:has(.ai-brain-fab-compact) .hamburger-fab.newme-fab { bottom: 120px; inset-inline-end: 26px; }.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
+.hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .modal-sheet.categories-sheet { max-width: 380px; }
 /* כותרת ממורכזת באמת: 3 עמודות (חזרה | כותרת | פעולות) כך שהכפתורים לא דוחפים אותה הצידה */
 .categories-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 16px; }
@@ -6495,6 +6476,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
 /* "השגרה שלי" מתחת ל"הצצה להיום", באותו עיצוב */
 .today-peek-chip + .today-peek-chip { margin-top: 8px; }
+/* New Me מתחת להשגרה שלי - אותו גרדיאנט ואותו טקסט לבן כמו .hamburger-newme-item בתפריט */
+.today-peek-chip.newme-chip { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); border-color: transparent; color: #fff; letter-spacing: .02em; }
 /* פתק מהיר - כפתור בולט באמצע מסך הבית */
 .home-quick-note-center { margin-block: auto; display: flex; justify-content: center; padding: 28px 0; }
 .home-quick-note-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); color: #fff; font: inherit; font-size: 1.05rem; font-weight: 800; letter-spacing: .01em; cursor: pointer; box-shadow: 0 12px 30px rgba(236, 72, 153, .38), 0 0 0 6px rgba(236, 72, 153, .12); transition: transform .15s ease, box-shadow .2s ease; }
