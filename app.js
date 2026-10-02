@@ -4052,10 +4052,10 @@ async function applyScheduleEditsAndDeletes(events) {
             if (ev.target_table === 'weekly_schedule') {
                 await supabaseClient.from('weekly_schedule').delete().eq('id', ev.target_id);
             } else {
-                // גם מחיקה דרך ה-AI מסונכרנת ללוח החזון (ר' deleteCalendarEvent)
-                const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', ev.target_id).maybeSingle();
-                if (linked && linked.vision_milestone_id) await deleteVisionMilestoneEverywhere(linked.vision_milestone_id);
+                // גם מחיקה דרך ה-AI מסונכרנת ליעדים (ר' deleteCalendarEvent)
+                const linkedToStep = await handleLinkedStepTaskDelete(ev.target_id);
                 await supabaseClient.from('calendar_events').delete().eq('id', ev.target_id);
+                if (linkedToStep) loadVisionStepEvents().then(renderVisionGoalsList);
             }
             deleted++;
         } else if (ev.intent === 'update') {
@@ -5138,8 +5138,10 @@ async function loadTodayTasks() {
     const allEvents = eventRows || [];
     const focusItems = allEvents.filter(item => item.source === 'daily_focus');
     const events = allEvents.filter(item => item.source !== 'daily_focus');
+    // משימות היעדים של היום (אתגר ימים, תזכורות) - ר' getPeekGoalTaskItems
+    const goalItems = getPeekGoalTaskItems();
     container.innerHTML = '';
-    if (!populated.length && !events.length && !focusItems.length) {
+    if (!populated.length && !events.length && !focusItems.length && !goalItems.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
@@ -5206,6 +5208,10 @@ async function loadTodayTasks() {
         row.appendChild(deleteBtn);
         container.appendChild(row);
     });
+    goalItems.forEach(item => {
+        if (!item.done) allDone = false;
+        container.appendChild(buildPeekGoalTaskRow(item));
+    });
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
     // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל. אבל רק כשבאמת
     // הייתה משימה/אירוע היום שסומן וי - לא כשאין שום דבר בכלל (הצצה ריקה),
@@ -5213,7 +5219,7 @@ async function loadTodayTasks() {
     // היום") לא נספרים כמשימה כאן - populated/events הם רק weekly_schedule
     // ו-calendar_events בפועל
     if (allDone) {
-        if (populated.length + events.length > 0) {
+        if (populated.length + events.length + goalItems.length > 0) {
             const celebration = document.createElement('p');
             celebration.className = 'today-tasks-celebration';
             celebration.textContent = t('today_tasks_all_done_message');
@@ -5251,7 +5257,7 @@ async function loadTodayTasks() {
     } else {
         lastKnownAllDoneState = false;
         const viewCount = getTodayCardViewCount();
-        if (populated.length + events.length > 0 && viewCount >= 5) {
+        if (populated.length + events.length + goalItems.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
             encouragement.className = 'today-tasks-celebration';
             const messageKey = viewCount >= 7
@@ -6372,13 +6378,11 @@ async function duplicateCalendarEvent() {
 }
 
 async function deleteCalendarEvent(id) {
-    // משימה שהגיעה מלוח החזון (➕) - מחיקתה מוחקת גם את התחנה עצמה בלוח החזון,
-    // והמחיקה מתגלגלת (ON DELETE CASCADE) לכל שאר המשימות שמקושרות לאותה תחנה
-    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', id).maybeSingle();
-    if (linked && linked.vision_milestone_id) {
-        await deleteVisionMilestoneEverywhere(linked.vision_milestone_id);
-    }
+    // משימה של צעד מיעד (📅) - משימה חד-פעמית מוחקת גם את הצעד עצמו (והמחיקה מתגלגלת,
+    // ON DELETE CASCADE, לשאר המשימות שלו); מופע של תזכורת שבועית מוחק רק את אותו שבוע
+    const linkedToStep = await handleLinkedStepTaskDelete(id);
     await supabaseClient.from('calendar_events').delete().eq('id', id);
+    if (linkedToStep) loadVisionStepEvents().then(renderVisionGoalsList);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
@@ -7671,6 +7675,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'vision_board_today', category: 'goals' },
     { id: 'goal_days_challenge', category: 'goals' },
+    { id: 'goal_tasks_peek', category: 'goals' },
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
     { id: 'notification_action_buttons', category: 'settings_a11y' },
@@ -17186,18 +17191,44 @@ async function loadVisionGoals() {
     ]);
     visionGoalsCache = goalsRes.data || [];
     visionMilestonesCache = milestonesRes.data || [];
-    const dayGoalIds = visionGoalsCache.filter(g => g.track_type === 'days').map(g => g.id);
+    // סימוני "עמדתי היום": אתגרי ימים + תזכורות של יעדי ספירה/משקל (✓ בהצצה להיום)
+    const checkinGoalIds = visionGoalsCache.filter(g => g.track_type === 'days' || g.reminder_freq).map(g => g.id);
     const [checkinsRes, linksRes] = await Promise.all([
-        dayGoalIds.length ? supabaseClient.from('vision_goal_checkins').select('*').eq('user_id', currentUserId).in('goal_id', dayGoalIds) : Promise.resolve({ data: [] }),
+        checkinGoalIds.length ? supabaseClient.from('vision_goal_checkins').select('*').eq('user_id', currentUserId).in('goal_id', checkinGoalIds) : Promise.resolve({ data: [] }),
         supabaseClient.from('routine_items').select('id, tab_id, time, vision_milestone_id').eq('user_id', currentUserId).not('vision_milestone_id', 'is', null),
+        loadVisionStepEvents(),
     ]);
     visionCheckinsCache = checkinsRes.data || [];
     visionRoutineLinks = linksRes.data || [];
     if (visionGoalsCache.some(g => g.track_type === 'weight' && !g.is_achieved)) await refreshVisionLatestWeight();
     renderVisionGoalsList();
     renderPeekFocusGoal();
+    // משימות היעדים (אתגר ימים, תזכורות) מוצגות בהצצה להיום - מתעדכנות כשהיעדים נטענים
+    if (document.getElementById('today-tasks-list')) loadTodayTasks();
     // משקל שנרשם במקום אחר (מדדים / New Me) יכול להשלים יעד משקל
     checkWeightGoalsAchieved();
+}
+
+// --- 📅 צעדים מתוזמנים ביומן: משימות calendar_events שמקושרות לצעד (vision_milestone_id)
+// מהיום והלאה - בשביל התווית ליד הצעד ("📅 5.10" / "🔁 כל ראשון") ---
+let visionStepEventsCache = [];
+async function loadVisionStepEvents() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('calendar_events').select('id, event_date, recurrence_group_id, vision_milestone_id, is_completed')
+        .eq('user_id', currentUserId).not('vision_milestone_id', 'is', null).gte('event_date', getLocalDateString()).order('event_date', { ascending: true });
+    visionStepEventsCache = data || [];
+}
+// המופע הקרוב שעוד לא סומן + האם זו תזכורת שבועית
+function visionStepScheduleFor(milestoneId) {
+    const events = visionStepEventsCache.filter(e => e.vision_milestone_id === milestoneId && !e.is_completed);
+    if (!events.length) return null;
+    return { next: events[0].event_date, weekly: events.some(e => e.recurrence_group_id) };
+}
+function visionStepScheduleLabel(schedule) {
+    const [y, m, d] = schedule.next.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    if (schedule.weekly) return t('vision_step_schedule_weekly_on').replace('{day}', date.toLocaleDateString(currentLang, { weekday: 'long' }));
+    return date.toLocaleDateString(currentLang, { day: 'numeric', month: 'numeric' });
 }
 
 async function refreshVisionLatestWeight() {
@@ -17436,17 +17467,22 @@ function buildVisionMilestoneRow(goalId, goalTitle, milestone) {
         toggleVisionMilestoneDone(milestone.id, goalId, checkbox.checked);
     };
 
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'vision-milestone-add-today-btn';
-    addBtn.title = t('vision_milestone_add_today_btn_title');
-    addBtn.textContent = '➕';
-    addBtn.onclick = () => addMilestoneTaskToToday(goalTitle, milestone);
+    // 📅 תזמון הצעד ביומן (תאריך / כל שבוע עד שמסיימים) - אם כבר מתוזמן, מוצג מתי
+    const schedule = milestone.is_done ? null : visionStepScheduleFor(milestone.id);
+    const scheduleBtn = document.createElement('button');
+    scheduleBtn.type = 'button';
+    scheduleBtn.className = 'vision-milestone-add-today-btn' + (schedule ? ' is-scheduled' : '');
+    scheduleBtn.title = t('vision_step_schedule_btn_title');
+    scheduleBtn.setAttribute('aria-label', scheduleBtn.title);
+    scheduleBtn.textContent = schedule ? `${schedule.weekly ? '🔁' : '📅'} ${visionStepScheduleLabel(schedule)}` : '📅';
+    // צעד שכבר הושלם - אין מה לתזמן
+    scheduleBtn.disabled = !!milestone.is_done;
+    scheduleBtn.onclick = (e) => { e.stopPropagation(); openGoalStepSchedule(goalId, milestone.id); };
 
     row.appendChild(checkbox);
     row.appendChild(span);
     row.appendChild(buildVisionRoutineButton(milestone));
-    row.appendChild(addBtn);
+    row.appendChild(scheduleBtn);
     return row;
 }
 
@@ -17748,9 +17784,8 @@ async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
     const m = visionMilestonesCache.find(x => x.id === milestoneId);
     if (m) m.is_done = checked;
     updateVisionCardProgressDisplay(goalId);
-    // סנכרון הפוך: ✓ בלוח החזון מסמן גם את המשימות היומיות שמקושרות לתחנה
-    const { data: linkedEvents } = await supabaseClient.from('calendar_events').update({ is_completed: checked }).eq('user_id', currentUserId).eq('vision_milestone_id', milestoneId).select('id');
-    if (linkedEvents && linkedEvents.length) { loadTodayTasks(); loadCalendarEvents(); }
+    // סנכרון הפוך: ✓ ביעד מסמן גם את המשימות ביומן שמקושרות לצעד (ובתזכורת שבועית - מוחק את השבועות הבאים)
+    await syncStepEventsDone(milestoneId, checked);
     await syncRoutineChecksForMilestone(milestoneId, checked, getLocalDateString());
     await checkAndMarkGoalAchieved(goalId);
 }
@@ -17760,6 +17795,8 @@ async function setVisionMilestoneDoneFromTask(milestoneId, checked) {
     const { data: m } = await supabaseClient.from('vision_goal_milestones').update({ is_done: checked }).eq('id', milestoneId).select('goal_id').maybeSingle();
     const cached = visionMilestonesCache.find(x => x.id === milestoneId);
     if (cached) cached.is_done = checked;
+    // שאר המשימות של הצעד (מופעים קודמים / השבועות הבאים בתזכורת שבועית) מתיישרות לפי ה-✓
+    await syncStepEventsDone(milestoneId, checked);
     if (m && m.goal_id) {
         renderVisionGoalsList();
         await checkAndMarkGoalAchieved(m.goal_id);
@@ -17819,6 +17856,7 @@ async function adjustVisionGoalNumber(goalId, delta) {
     renderVisionGoalsList();
     renderPeekFocusGoal();
     await supabaseClient.from('vision_goals').update({ current_value: next }).eq('id', goalId);
+    if (delta > 0) autoCheckGoalReminder(goal);
     await checkAndMarkGoalAchieved(goalId);
 }
 
@@ -17848,6 +17886,7 @@ async function onWeightLoggedForGoals() {
     await refreshVisionLatestWeight();
     renderVisionGoalsList();
     renderPeekFocusGoal();
+    visionGoalsCache.filter(g => g.track_type === 'weight').forEach(autoCheckGoalReminder);
     checkWeightGoalsAchieved();
 }
 function checkWeightGoalsAchieved() {
@@ -17877,6 +17916,75 @@ async function toggleVisionDayCheck(goalId, milestoneId, checked) {
     const goal = visionGoalsCache.find(g => g.id === goalId);
     if (checked && goal && visionDoneDays(goal).includes(today)) showAppToast(t('vision_days_day_done_toast'));
     await checkAndMarkGoalAchieved(goalId);
+    // ✓ ביעד מתעדכן גם בהצצה להיום (ולהפך - הסימון שם קורא לפונקציה הזו)
+    loadTodayTasks();
+}
+
+// --- משימות היעדים בהצצה להיום (לפי בקשה מפורשת: "המשימות של היום צריכות להסתנכרן ישירות
+// עם הצצה יומית"): המשימות היומיות של אתגר ימים פעיל, ותזכורות של יעדי ספירה/משקל ביום
+// שלהן. לא נשמרות כמשימות ביומן - נבנות מהיעדים עצמם, כך שתמיד מסונכרנות (✓ שם = ✓ כאן).
+// צעדים מתוזמנים (📅) כבר מופיעים בהצצה כמשימות יומן רגילות ---
+function getPeekGoalTaskItems() {
+    const weekday = new Date().getDay();
+    const items = [];
+    visionGoalsCache.filter(g => !g.is_achieved).forEach(goal => {
+        if (goal.track_type === 'days') {
+            const tasks = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+            if (tasks.length) tasks.forEach(m => items.push({ kind: 'day', goal, milestoneId: m.id, text: m.title, done: visionCheckedToday(goal.id, m.id) }));
+            else items.push({ kind: 'day', goal, milestoneId: null, text: goal.title, done: visionCheckedToday(goal.id, null), noTag: true });
+        } else if (goal.reminder_freq && (goal.track_type === 'number' || goal.track_type === 'weight')) {
+            if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
+            const text = (goal.reminder_text || '').trim() || goal.title;
+            items.push({ kind: 'reminder', goal, milestoneId: null, text, done: visionCheckedToday(goal.id, null), noTag: text === goal.title });
+        }
+    });
+    return items;
+}
+
+function buildPeekGoalTaskRow(item) {
+    const row = document.createElement('div');
+    row.className = 'today-tasks-row today-goal-task-row';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'day-detail-checkbox';
+    checkbox.checked = item.done;
+    checkbox.onchange = () => (item.kind === 'day' ? toggleVisionDayCheck(item.goal.id, item.milestoneId, checkbox.checked) : toggleGoalReminderCheck(item.goal.id, checkbox.checked));
+    const text = document.createElement('span');
+    text.className = 'today-tasks-text' + (item.done ? ' completed' : '');
+    text.textContent = `${item.kind === 'day' ? '🎯' : '🔔'} ${item.text}`;
+    row.appendChild(checkbox);
+    row.appendChild(text);
+    if (!item.noTag) {
+        const tag = document.createElement('span');
+        tag.className = 'today-goal-task-tag';
+        tag.textContent = item.goal.title;
+        row.appendChild(tag);
+    }
+    return row;
+}
+
+// ✓ על תזכורת של יעד ספירה/משקל - להיום בלבד (סימון בלי milestone ב-vision_goal_checkins)
+async function toggleGoalReminderCheck(goalId, checked) {
+    if (!supabaseClient || !currentUserId) return;
+    const today = getLocalDateString();
+    if (checked) {
+        if (!visionCheckedToday(goalId, null)) {
+            const { data, error } = await supabaseClient.from('vision_goal_checkins').insert({ goal_id: goalId, milestone_id: null, user_id: currentUserId, checkin_date: today }).select().single();
+            if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); return; }
+            visionCheckinsCache.push(data);
+        }
+    } else {
+        await supabaseClient.from('vision_goal_checkins').delete().eq('goal_id', goalId).eq('checkin_date', today).is('milestone_id', null);
+        visionCheckinsCache = visionCheckinsCache.filter(ch => !(ch.goal_id === goalId && !ch.milestone_id && ch.checkin_date === today));
+    }
+    loadTodayTasks();
+}
+
+// שקילה / +1 שנרשמו היום מסמנים לבד את התזכורת של היום ("שקילה", "לקרוא")
+function autoCheckGoalReminder(goal) {
+    if (!goal || goal.is_achieved || !goal.reminder_freq) return;
+    if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== new Date().getDay()) return;
+    if (!visionCheckedToday(goal.id, null)) toggleGoalReminderCheck(goal.id, true);
 }
 
 // ✓ ביעד → ✓ לאותו יום בפריטים המקושרים ב"השגרה שלי"
@@ -18004,24 +18112,106 @@ async function confirmGoalRoutineLink() {
 // ליומן) יהיה ברור מתוך איזה יעד זה הגיע, בלי לפתוח את המגירה
 // vision_milestone_id מקשר את המשימה היומית לתחנה - כך שהכול מסונכרן (לפי בקשה מפורשת):
 // מחיקה מההצצה מוחקת גם את התחנה בלוח החזון, ו-✓ בכל אחד מהם מסמן גם בשני
-async function addMilestoneTaskToToday(goalTitle, milestone) {
-    if (!supabaseClient || !currentUserId) return;
-    const todayStr = getLocalDateString();
-    const { data: existing } = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('vision_milestone_id', milestone.id).limit(1);
-    if (existing && existing.length) { showAppToast(t('vision_milestone_already_today')); return; }
-    const { error } = await supabaseClient.from('calendar_events').insert({
+// --- 📅 תזמון צעד ביומן (לפי בקשה מפורשת: "שזה ירשום מתי יהיה הצעד ... ובאיזה תאריך ... ואם
+// הם רוצים כל שבוע"): נוצרת משימה ב-calendar_events שמקושרת לצעד - מופיעה בהצצה להיום,
+// ב"השבוע שלי", בלוח החודשי וב-Google Calendar אם מחובר, ו-✓ עליה מסמן את הצעד (ולהפך).
+// "כל שבוע עד שמסיימים" = סדרה שבועית (עד תאריך היעד, או 3 חודשים) שהמופעים העתידיים
+// שלה נמחקים ברגע שהצעד מסומן ✓ (ר' syncStepEventsDone) ---
+let goalStepScheduleState = null;
+function openGoalStepSchedule(goalId, milestoneId) {
+    const milestone = visionMilestonesCache.find(m => m.id === milestoneId);
+    if (!milestone) return;
+    const goal = visionGoalsCache.find(g => g.id === goalId) || null;
+    goalStepScheduleState = { goal, milestone };
+    document.getElementById('goal-step-schedule-task').textContent = `🎯 ${goal ? goal.title + ' · ' : ''}${milestone.title}`;
+    const schedule = visionStepScheduleFor(milestoneId);
+    document.getElementById('goal-step-schedule-date').value = schedule ? schedule.next : getLocalDateString();
+    const display = document.getElementById('goal-step-schedule-date-display');
+    if (display) display.setAttribute('data-placeholder', t('vision_step_schedule_date_label'));
+    updateDateFieldDisplay('goal-step-schedule-date');
+    document.getElementById('goal-step-schedule-weekly').checked = !!(schedule && schedule.weekly);
+    const current = document.getElementById('goal-step-schedule-current');
+    current.textContent = schedule ? t('vision_step_schedule_current').replace('{when}', visionStepScheduleLabel(schedule)) : '';
+    current.classList.toggle('hidden', !schedule);
+    document.getElementById('btn-goal-step-unschedule').classList.toggle('hidden', !schedule);
+    openModal('modal-goal-step-schedule');
+}
+
+// תזמון חדש מחליף את הקודם: נמחקות רק המשימות הפתוחות של הצעד מהיום והלאה (עבר ומה שסומן נשארים)
+async function deleteUpcomingStepEvents(milestoneId) {
+    await supabaseClient.from('calendar_events').delete().eq('user_id', currentUserId).eq('vision_milestone_id', milestoneId)
+        .gte('event_date', getLocalDateString()).eq('is_completed', false);
+}
+
+async function confirmGoalStepSchedule() {
+    const st = goalStepScheduleState;
+    if (!st || !supabaseClient || !currentUserId) return;
+    const date = document.getElementById('goal-step-schedule-date').value;
+    if (!date) { showAppToast(t('vision_step_schedule_date_required'), 'error'); return; }
+    const weekly = document.getElementById('goal-step-schedule-weekly').checked;
+    await deleteUpcomingStepEvents(st.milestone.id);
+    let dates = [date];
+    let groupId = null;
+    if (weekly) {
+        groupId = crypto.randomUUID();
+        dates = generateRecurringDates(date, 'weeks', 1, 3);
+        // יעד עם תאריך - התזכורת לא ממשיכה אחריו
+        const deadline = st.goal && st.goal.target_date;
+        if (deadline && deadline >= date) dates = dates.filter(d => d <= deadline);
+    }
+    const title = `🎯 ${st.goal ? st.goal.title + ': ' : ''}${st.milestone.title}`;
+    const rows = dates.map(d => ({
         username: currentUsername, user_id: currentUserId,
-        event_title: `🎯 ${goalTitle}: ${milestone.title}`,
-        event_date: todayStr,
-        source: 'calendar', recurrence_group_id: null,
-        vision_milestone_id: milestone.id,
-        is_completed: !!milestone.is_done,
-    });
+        event_title: title, event_date: d, source: 'calendar',
+        recurrence_group_id: groupId, recurrence_original_date: groupId ? d : null,
+        vision_milestone_id: st.milestone.id, is_completed: false,
+    }));
+    const { error } = await supabaseClient.from('calendar_events').insert(rows);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    showAppToast(t('item_added_success'));
+    closeModal('modal-goal-step-schedule');
+    goalStepScheduleState = null;
+    showAppToast(t('vision_step_scheduled_toast'));
+    await refreshAfterStepScheduleChange();
+}
+
+async function removeGoalStepSchedule() {
+    const st = goalStepScheduleState;
+    if (!st || !supabaseClient) return;
+    await deleteUpcomingStepEvents(st.milestone.id);
+    closeModal('modal-goal-step-schedule');
+    goalStepScheduleState = null;
+    showAppToast(t('vision_step_unscheduled_toast'));
+    await refreshAfterStepScheduleChange();
+}
+
+async function refreshAfterStepScheduleChange() {
+    await loadVisionStepEvents();
+    renderVisionGoalsList();
     loadTodayTasks();
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
+}
+
+// ✓ על צעד (מהיעד או מהמשימה ביומן) → כל המשימות המקושרות מסומנות בהתאם. בתזכורת שבועית
+// ("כל שבוע עד שמסיימים") המופעים העתידיים כבר לא נחוצים - נמחקים
+async function syncStepEventsDone(milestoneId, checked) {
+    if (checked) {
+        await supabaseClient.from('calendar_events').delete().eq('user_id', currentUserId).eq('vision_milestone_id', milestoneId)
+            .gt('event_date', getLocalDateString()).not('recurrence_group_id', 'is', null);
+    }
+    const { data } = await supabaseClient.from('calendar_events').update({ is_completed: checked }).eq('user_id', currentUserId).eq('vision_milestone_id', milestoneId).select('id');
+    await loadVisionStepEvents();
+    // התווית ליד הצעד (📅 / 🔁) מתעדכנת - כרטיסים הפוכים נשארים הפוכים
+    renderVisionGoalsList();
+    if (checked || (data && data.length)) { loadTodayTasks(); loadCalendarEvents(); loadMonthlyCalendarGrid(); }
+}
+
+// מחיקת משימה שמקושרת לצעד: משימה חד-פעמית מוחקת גם את הצעד (כמו שתועד בשאלות הנפוצות);
+// מופע של תזכורת שבועית - רק אותו שבוע נמחק, הצעד נשאר
+async function handleLinkedStepTaskDelete(eventId) {
+    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id, recurrence_group_id').eq('id', eventId).maybeSingle();
+    if (linked && linked.vision_milestone_id && !linked.recurrence_group_id) await deleteVisionMilestoneEverywhere(linked.vision_milestone_id);
+    return !!(linked && linked.vision_milestone_id);
 }
 
 async function addMilestoneToGoalFromCardBack(goalId, inputEl) {
@@ -18102,6 +18292,9 @@ function openVisionGoalModal(goalId = null, template = null) {
     document.getElementById('vision-goal-unit-input').value = goal && isNumber ? (goal.unit || '') : (!goal && template && template.key === 'read' ? t('vision_tpl_read_unit') : '');
     document.getElementById('vision-goal-weight-target-input').value = goal && track === 'weight' ? (goal.target_value ?? '') : '';
     document.getElementById('vision-goal-focus-toggle').checked = !!(goal && goal.focus_month === currentMonthKey() && !goal.is_achieved);
+    selectedVisionReminderFreq = goal && goal.reminder_freq ? goal.reminder_freq : null;
+    selectedVisionReminderWeekday = goal && goal.reminder_weekday != null ? Number(goal.reminder_weekday) : new Date().getDay();
+    document.getElementById('vision-goal-reminder-text').value = goal ? (goal.reminder_text || '') : '';
     renderVisionGoalCategoryChips();
     renderVisionTrackChips();
     renderPendingVisionMilestones();
@@ -18114,8 +18307,11 @@ function resetVisionGoalModal() {
     originalVisionMilestoneIds = [];
     selectedVisionGoalCategory = null;
     selectedVisionTrackType = 'steps';
+    selectedVisionReminderFreq = null;
+    selectedVisionReminderWeekday = new Date().getDay();
     ['vision-goal-title-input', 'vision-goal-milestone-input', 'vision-goal-why-input', 'vision-goal-reward-input', 'vision-goal-date-input',
-        'vision-goal-target-input', 'vision-goal-current-input', 'vision-goal-unit-input', 'vision-goal-weight-target-input', 'vision-goal-days-input'].forEach(id => {
+        'vision-goal-target-input', 'vision-goal-current-input', 'vision-goal-unit-input', 'vision-goal-weight-target-input', 'vision-goal-days-input',
+        'vision-goal-reminder-text'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -18153,6 +18349,58 @@ function renderVisionTrackChips() {
     if (stepsLabel) stepsLabel.textContent = t(isDays ? 'vision_days_tasks_title' : 'vision_goal_milestones_section_title');
     const stepsInput = document.getElementById('vision-goal-milestone-input');
     if (stepsInput) stepsInput.placeholder = t(isDays ? 'vision_days_task_placeholder' : 'vision_goal_milestone_input_placeholder');
+    renderVisionReminderFields();
+}
+
+// 🔔 תזכורת בהצצה להיום ליעדי ספירה/משקל (לפי בקשה מפורשת: "כן, תזכורת קבועה") -
+// בלי / כל יום / כל שבוע ביום שנבחר; הטקסט ניתן לשינוי
+let selectedVisionReminderFreq = null;
+let selectedVisionReminderWeekday = new Date().getDay();
+const VISION_REMINDER_OPTIONS = [
+    { freq: null, key: 'vision_reminder_off' },
+    { freq: 'daily', key: 'vision_reminder_daily' },
+    { freq: 'weekly', key: 'vision_reminder_weekly' },
+];
+function renderVisionReminderFields() {
+    const wrap = document.getElementById('vision-goal-reminder-fields');
+    if (!wrap) return;
+    const applies = selectedVisionTrackType === 'number' || selectedVisionTrackType === 'weight';
+    wrap.classList.toggle('hidden', !applies);
+    if (!applies) return;
+    const chips = document.getElementById('vision-goal-reminder-chips');
+    chips.innerHTML = '';
+    VISION_REMINDER_OPTIONS.forEach(opt => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'vision-goal-category-chip' + (selectedVisionReminderFreq === opt.freq ? ' selected' : '');
+        chip.textContent = t(opt.key);
+        chip.onclick = () => selectVisionReminderFreq(opt.freq);
+        chips.appendChild(chip);
+    });
+    const days = document.getElementById('vision-goal-reminder-weekdays');
+    days.classList.toggle('hidden', selectedVisionReminderFreq !== 'weekly');
+    days.innerHTML = '';
+    if (selectedVisionReminderFreq === 'weekly') {
+        // שמות הימים בשפה הנוכחית - 4.10.2026 היה יום ראשון, כך ש-i תואם ל-getDay()
+        for (let i = 0; i < 7; i++) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'vision-goal-category-chip' + (selectedVisionReminderWeekday === i ? ' selected' : '');
+            chip.textContent = new Date(2026, 9, 4 + i).toLocaleDateString(currentLang, { weekday: 'short' });
+            chip.onclick = () => { selectedVisionReminderWeekday = i; renderVisionReminderFields(); };
+            days.appendChild(chip);
+        }
+    }
+    document.getElementById('vision-goal-reminder-text-wrap').classList.toggle('hidden', !selectedVisionReminderFreq);
+}
+function selectVisionReminderFreq(freq) {
+    selectedVisionReminderFreq = freq;
+    // טקסט ברירת מחדל: "שקילה" ביעד משקל, שם היעד ביעד ספירה
+    const textInput = document.getElementById('vision-goal-reminder-text');
+    if (freq && textInput && !textInput.value.trim()) {
+        textInput.value = selectedVisionTrackType === 'weight' ? t('vision_reminder_weigh_default') : document.getElementById('vision-goal-title-input').value.trim();
+    }
+    renderVisionReminderFields();
 }
 function selectVisionTrackType(type) {
     // לא פותחים כאן את חלון השדרוג - הוא היה סוגר את חלון היעד ומאבד את מה שהוקלד
@@ -18316,6 +18564,11 @@ async function saveVisionGoal() {
             payload.start_value = visionLatestWeight;
         }
     }
+    // 🔔 תזכורת בהצצה להיום - רק ליעדי ספירה/משקל
+    const reminderFreq = (track === 'number' || track === 'weight') ? selectedVisionReminderFreq : null;
+    payload.reminder_freq = reminderFreq;
+    payload.reminder_weekday = reminderFreq === 'weekly' ? selectedVisionReminderWeekday : null;
+    payload.reminder_text = reminderFreq ? (document.getElementById('vision-goal-reminder-text').value.trim().slice(0, 60) || null) : null;
     const month = currentMonthKey();
     const wantsFocus = document.getElementById('vision-goal-focus-toggle').checked && isPremiumUser;
     if (wantsFocus) payload.focus_month = month;

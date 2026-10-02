@@ -84,7 +84,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=474">
+    <link rel="stylesheet" href="theme.css?v=475">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3261,6 +3261,37 @@
             </div>
         </div>
 
+        <!-- 📅 תזמון צעד של יעד: תאריך (+ "כל שבוע עד שמסיימים") - נוצרת משימה ביומן שמופיעה גם
+             בהצצה להיום, ו-✓ עליה מסמן את הצעד (לפי בקשה מפורשת: "הצצה + יומן", "תזכורת עד שמסיימים") -->
+        <div id="modal-goal-step-schedule" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="vision_step_schedule_title">📅 Schedule a step</h3>
+                <p class="modal-subtitle" id="goal-step-schedule-task"></p>
+                <p class="vision-goal-field-hint" data-i18n="vision_step_schedule_text">It will appear in A Peek at Today on that day and in the calendar – a ✓ there ticks the step here too.</p>
+                <p class="vision-goal-field-hint hidden" id="goal-step-schedule-current"></p>
+                <p class="settings-label" data-i18n="vision_step_schedule_date_label">Date</p>
+                <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('goal-step-schedule-date')">
+                    <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                    <span id="goal-step-schedule-date-display" data-placeholder=""></span>
+                </button>
+                <input type="date" id="goal-step-schedule-date" class="date-picker-hidden-input">
+                <div class="settings-toggle-row" style="margin-top: 12px;">
+                    <label class="settings-label" for="goal-step-schedule-weekly" data-i18n="vision_step_schedule_weekly_label">🔁 Every week until done</label>
+                    <label class="switch">
+                        <input type="checkbox" id="goal-step-schedule-weekly">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <p class="vision-goal-field-hint" data-i18n="vision_step_schedule_weekly_hint">Comes back every week on the same day until you tick it once.</p>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" onclick="confirmGoalStepSchedule()" data-i18n="vision_step_schedule_save_btn">Add to calendar</button>
+                    <button type="button" class="btn-clear-specific hidden" id="btn-goal-step-unschedule" onclick="removeGoalStepSchedule()" data-i18n="vision_step_schedule_remove_btn">Remove from calendar</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-goal-step-schedule')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון צף: חגיגת השגת יעד + הצעת פרס -->
         <div id="modal-goal-celebration" class="apple-modal">
             <div class="modal-sheet goal-celebration-sheet">
@@ -3453,6 +3484,16 @@
                         <input type="number" id="vision-goal-weight-target-input" inputmode="decimal" min="0" step="0.1" data-i18n-placeholder="vision_weight_target_ph" placeholder="Target weight (kg)">
                         <p class="vision-goal-field-hint" data-i18n="vision_weight_hint">Progress follows your latest weigh-in in Calorie &amp; Weight Metrics.</p>
                     </div>
+                    <!-- 🔔 תזכורת בהצצה להיום - ליעדי ספירה ומשקל (אין להם משימות יומיות) - כל יום / כל שבוע ביום מסוים -->
+                    <div id="vision-goal-reminder-fields" class="vision-goal-track-fields hidden">
+                        <p class="settings-label" data-i18n="vision_reminder_label">🔔 Reminder in A Peek at Today</p>
+                        <div id="vision-goal-reminder-chips" class="vision-goal-category-chips"></div>
+                        <div id="vision-goal-reminder-weekdays" class="vision-goal-category-chips hidden"></div>
+                        <div id="vision-goal-reminder-text-wrap" class="hidden">
+                            <label class="vision-goal-mini-label" for="vision-goal-reminder-text" data-i18n="vision_reminder_text_label">Reminder text</label>
+                            <input type="text" id="vision-goal-reminder-text" maxlength="60">
+                        </div>
+                    </div>
 
                     <p class="settings-label" id="vision-goal-steps-label" data-i18n="vision_goal_milestones_section_title">Steps on the way</p>
                     <div id="vision-goal-pending-milestones-list" class="vision-goal-pending-milestones-list"></div>
@@ -3589,8 +3630,8 @@
 
     </div>
 
-    <script src="i18n.js?v=377"></script>
-    <script src="app.js?v=522"></script>
+    <script src="i18n.js?v=378"></script>
+    <script src="app.js?v=523"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=16"></script>
 </body>

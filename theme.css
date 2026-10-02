@@ -3914,6 +3914,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .vision-milestone-row span.completed { color: var(--text-secondary); text-decoration: line-through; }
 .vision-milestone-add-today-btn { background: transparent; border: none; color: var(--accent-purple-light-text); font-size: 0.85rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; transition: var(--transition); }
 .vision-milestone-add-today-btn:active { transform: scale(0.9); }
+.vision-milestone-add-today-btn:disabled { opacity: .35; cursor: default; transform: none; }
 .vision-card-no-milestones { font-size: 0.78rem; color: var(--text-secondary); text-align: center; padding: 10px 0; }
 .vision-card-back-add-row { display: flex; gap: 6px; margin-top: 8px; flex-shrink: 0; }
 .vision-card-back-add-row input { flex: 1 1 auto; min-width: 0; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; padding: 7px 8px; font-size: 0.78rem; outline: none; box-sizing: border-box; }
@@ -6501,4 +6502,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .vision-day-toggle.is-done { border-color: rgba(16, 185, 129, .55); background: rgba(16, 185, 129, .14); color: var(--accent-green-text, #10b981); }
 .vision-routine-btn { flex-shrink: 0; border: 1px solid rgba(168, 85, 247, .3); background: transparent; color: var(--accent-purple-light-text); border-radius: 999px; padding: 2px 7px; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .vision-routine-btn.is-linked { border-color: rgba(16, 185, 129, .45); color: var(--accent-green-text, #10b981); cursor: default; }
+/* 📅 צעד מתוזמן ביומן - הכפתור מציג מתי (תאריך / "כל ראשון"), באותו סגנון גלולה כמו 🔁 */
+.vision-milestone-add-today-btn.is-scheduled { border: 1px solid rgba(168, 85, 247, .35); border-radius: 999px; padding: 2px 8px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+/* משימה של יעד בהצצה להיום (אתגר ימים / תזכורת) - שם היעד כתגית קטנה בצד */
+.today-goal-task-tag { flex-shrink: 1; min-width: 0; max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .7rem; font-weight: 600; color: var(--accent-purple-light-text); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); border-radius: 999px; padding: 2px 8px; }
 .vision-hour-chip.is-taken { opacity: .35; text-decoration: line-through; cursor: default; }
