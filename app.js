@@ -6692,16 +6692,27 @@ function closeRecipeDetail() {
     document.getElementById('recipe-detail-view').classList.remove('open');
 }
 
-// שיתוף מתכון - טקסט פשוט (שם, קלוריות, מצרכים, הוראות), דרך אותו תפריט
-// שיתוף קטן (וואטסאפ/מייל/העתקת קישור) שכבר משמש לשיתוף הישג יעד חודשי
+// שיתוף מתכון, דרך אותו תפריט שיתוף קטן (וואטסאפ/מייל/העתקה): שם מודגש, קלוריות
+// (וכמה למנה), מרכיבים כרשימת נקודות, שלבי הכנה ממוספרים, והתמונה אם יש
 function shareRecipe() {
     const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
     if (!recipe) return;
-    let text = `🍽️ ${recipe.title}`;
-    if (recipe.calories) text += ` (${recipe.calories} ${t('calories_unit')})`;
-    if (recipe.ingredients) text += `\n\n${t('recipe_ingredients_label')}:\n${recipe.ingredients}`;
-    if (recipe.instructions) text += `\n\n${t('recipe_instructions_label')}:\n${recipe.instructions}`;
-    openSharePicker(text, '');
+    // בחלק מהשפות התווית כבר מסתיימת בנקודתיים ("מרכיבים:") - לא להכפיל
+    const label = key => t(key).replace(/[:：]\s*$/, '');
+    // שורה לכל פריט, בלי תבליט/מספור שהמשתמש כבר כתב (רק "1. " עם רווח - לא "1.5 כוסות")
+    const listLines = s => String(s || '').split('\n').map(x => x.trim().replace(/^([-•*·]|\d+[.)])\s+/, '')).filter(Boolean);
+    const lines = [`🍽️ ${shareBold(recipe.title)}`];
+    if (recipe.calories) {
+        let meta = `🔥 ${Number(recipe.calories).toLocaleString()} ${t('calories_unit')}`;
+        if (recipe.servings) meta += ` · ≈${Math.round(recipe.calories / recipe.servings)} ${t('recipe_calories_per_serving_unit')}`;
+        lines.push(meta);
+    }
+    const ingredients = listLines(recipe.ingredients);
+    if (ingredients.length) lines.push('', `🧺 ${shareBold(label('recipe_ingredients_label'))}`, ...ingredients.map(x => `• ${x}`));
+    const steps = listLines(recipe.instructions);
+    if (steps.length) lines.push('', `🧑‍🍳 ${shareBold(label('recipe_instructions_label'))}`, ...(steps.length > 1 ? steps.map((x, i) => `${i + 1}. ${x}`) : steps));
+    lines.push('', `${t('recipe_share_enjoy')} 😋`);
+    openSharePicker(lines.join('\n'), { photoUrl: recipe.image_url || '', subject: `🍽️ ${recipe.title}` });
 }
 
 async function deleteRecipe() {
@@ -7261,30 +7272,58 @@ async function exportUserDataReport() {
 // וכו') בלי שום דרך לסנן/להסיר אפליקציות ספציפיות מתוך קוד האתר - וגם איטי
 // (המערכת סורקת את כל האפליקציות המותקנות בכל פעם). תפריט משלנו נותן שליטה
 // מלאה בדיוק על מה שמוצע, ופותח את WhatsApp/המייל ישירות (wa.me / mailto),
-// בלי לעבור דרך הבורר הכבד של המערכת בכלל
-let pendingShareText = '';
-let pendingShareUrl = '';
+// בלי לעבור דרך הבורר הכבד של המערכת בכלל.
+// ההודעות עצמן מעוצבות לוואטסאפ (לפי בקשה מפורשת: "הרבה יותר יפה ומושקע", ותמיד
+// למטה קישור כניסה עדין לאפליקציה): *מודגש*/_נטוי_ של וואטסאפ, אימוג'י בתחילת שורה,
+// וחתימה בסוף. סימוני העיצוב נשמרים כתווים פנימיים ומתורגמים רק בשליחה - לוואטסאפ
+// ל-* ו-_, ובמייל/בהעתקה הם מוסרים (שם הם היו מופיעים ככוכביות)
+const SHARE_APP_HOST = 'app.not10.ai';
+const SHARE_BOLD = '\u0001';
+const SHARE_ITALIC = '\u0002';
+const shareBold = s => `${SHARE_BOLD}${String(s).trim()}${SHARE_BOLD}`;
+const shareItalic = s => `${SHARE_ITALIC}${String(s).trim()}${SHARE_ITALIC}`;
+let pendingShare = { text: '', photoUrl: '', footer: 'full', subject: '' };
 
-function openSharePicker(text, url) {
-    pendingShareText = text || '';
-    pendingShareUrl = url || '';
+// footer: 'full' = קו דק + "נשלח מ-NOT10.ai" + קישור; 'link' = רק הקישור (בהזמנה לאפליקציה עצמה)
+function openSharePicker(text, options = {}) {
+    pendingShare = { text: text || '', photoUrl: options.photoUrl || '', footer: options.footer || 'full', subject: options.subject || '' };
     openModal('modal-share-picker');
 }
 
+function buildShareMessage(forWhatsapp) {
+    // בוואטסאפ הכתובת הקצרה הופכת לקישור לבד; במייל/בהעתקה - כתובת מלאה (לא כל תוכנה מזהה בלי https://)
+    const link = forWhatsapp ? SHARE_APP_HOST : `https://${SHARE_APP_HOST}`;
+    const blocks = [pendingShare.text.trim()];
+    // תמונה (אימון/מתכון) - הקישור הראשון בהודעה, אז וואטסאפ מציג אותה כתצוגה מקדימה
+    if (pendingShare.photoUrl) blocks.push(`📸 ${pendingShare.photoUrl}`);
+    if (pendingShare.footer === 'full') blocks.push(`┈┈┈┈┈┈┈┈\n${shareItalic(t('share_footer_sent_from'))} ✨\n📲 ${link}`);
+    else if (pendingShare.footer === 'link') blocks.push(`📲 ${link}`);
+    let text = blocks.filter(Boolean).join('\n\n')
+        // "NOT10.ai" בטקסט הופך בוואטסאפ לקישור ל-not10.ai (בלי app.), שמחזיר כרגע דף שגיאה -
+        // תו מחבר בלתי נראה בין NOT10 ל-.ai מונע את זה (app.not10.ai באותיות קטנות לא נפגע)
+        .replace(/NOT10\.ai/g, 'NOT10⁠.ai')
+        .replace(/\u0001/g, forWhatsapp ? '*' : '')
+        .replace(/\u0002/g, forWhatsapp ? '_' : '');
+    // עברית/ערבית: שורה בלי אף אות מימין-לשמאל (קו, קישור, מספרים) מיושרת בוואטסאפ לשמאל
+    // ושוברת את היישור - סימן RLM בלתי נראה בתחילתה מיישר אותה לימין כמו שאר ההודעה
+    if (document.documentElement.dir === 'rtl') {
+        text = text.split('\n').map(line => (line && !/[֐-ࣿיִ-﷿ﹰ-﻿]/.test(line) ? '‏' + line : line)).join('\n');
+    }
+    return text;
+}
+
 function shareViaWhatsapp() {
-    const message = pendingShareUrl ? `${pendingShareText} ${pendingShareUrl}` : pendingShareText;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(buildShareMessage(true))}`, '_blank');
     closeModal('modal-share-picker');
 }
 
 function shareViaEmail() {
-    const body = pendingShareUrl ? `${pendingShareText}\n\n${pendingShareUrl}` : pendingShareText;
-    window.location.href = `mailto:?subject=${encodeURIComponent('NOT10.ai')}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(pendingShare.subject || 'NOT10.ai')}&body=${encodeURIComponent(buildShareMessage(false))}`;
     closeModal('modal-share-picker');
 }
 
 async function shareViaCopyLink() {
-    const text = pendingShareUrl ? `${pendingShareText} ${pendingShareUrl}` : pendingShareText;
+    const text = buildShareMessage(false);
     try {
         await navigator.clipboard.writeText(text);
         showAppToast(t('settings_share_app_copied'));
@@ -7294,8 +7333,30 @@ async function shareViaCopyLink() {
     closeModal('modal-share-picker');
 }
 
+// אימוג'י בתחילת תווית (למשל "🏃 ריצה") מופרד מהטקסט - כדי שרק הטקסט יודגש
+function splitLeadingEmoji(label, fallbackIcon) {
+    const m = String(label || '').match(/^(\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*)\s*(.*)$/u);
+    return m ? [m[1], m[2]] : [fallbackIcon, String(label || '')];
+}
+
+// משפט סיום אקראי מתוך כמה - שלא כל הודעה תיראה אותו דבר
+function pickShareClosing(options) {
+    const [key, emoji] = options[Math.floor(Math.random() * options.length)];
+    return `${t(key)} ${emoji}`;
+}
+
 function shareApp() {
-    openSharePicker(t('settings_share_app_text'), location.origin + location.pathname);
+    const text = [
+        `✨ ${shareBold('NOT10.ai')}`,
+        '',
+        t('settings_share_app_text'),
+        '',
+        `🗓️ ${t('nav_myweek')}`,
+        `🎯 ${t('vision_board_menu_label')}`,
+        `🧑‍🍳 ${t('nav_recipes')}`,
+        `📓 ${t('study_menu_label')}`,
+    ].join('\n');
+    openSharePicker(text, { footer: 'link', subject: 'NOT10.ai' });
 }
 
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
@@ -7559,6 +7620,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'weekly_note', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
     { id: 'categories_menu', category: 'general' },
+    { id: 'share_whatsapp', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
     { id: 'quick_note_apple', category: 'notes' },
@@ -8393,8 +8455,10 @@ function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
 
 // נשמר לשימוש כפתור השיתוף האופציונלי (shareGoalAchievement) - לא הצגה בלבד
 let lastCelebratedGoalSummary = '';
+let lastCelebratedGoal = null;
 
 function celebrateGoalAchieved(goal) {
+    lastCelebratedGoal = goal;
     // הפרס שהוגדר ליעד מוצג במקום ההודעות הגנריות (שנשארות כברירת מחדל בלי פרס)
     let msg;
     if (goal.reward) {
@@ -8416,8 +8480,41 @@ function celebrateGoalAchieved(goal) {
 // ספציפי" לשתף איתו לא אמורה להרגיש שמוכרחים - זו סיבה בדיוק ל-navigator.share
 // הכללי, לא ניסוח שמניח קיום חבר/ה ספציפיים, והיא תמיד ניתנת להתעלמות)
 function shareGoalAchievement() {
-    const shareText = t('goal_share_text_template').replace('{goal}', lastCelebratedGoalSummary);
-    openSharePicker(shareText, '');
+    if (!lastCelebratedGoal) return;
+    openSharePicker(buildGoalShareText(lastCelebratedGoal), { subject: `🏆 ${t('goal_share_heading')}` });
+}
+
+// הודעת שיתוף ליעד שהושג: כותרת, שם היעד, ההתקדמות - רק אם באמת הגיעו ליעד (יעד שסומן
+// "הושג" ידנית באמצע לא יופיע עם "1 / 5"), כמה זמן זה לקח, הפרס ומשפט סיום
+function buildGoalShareText(goal) {
+    const lines = [`🏆 ${shareBold(t('goal_share_heading'))}`, '', `🎯 ${shareBold(goal.title)}`];
+    const type = goal.track_type || 'steps';
+    if (type === 'weight') {
+        const start = goal.start_value != null ? Number(goal.start_value) : null;
+        const cur = visionLatestWeight;
+        if (start !== null && cur !== null && start !== cur) {
+            const key = cur < start ? 'goal_share_weight_down' : 'goal_share_weight_up';
+            lines.push(`⚖️ ${t(key).replace('{n}', visionFmt(Math.abs(cur - start))).replace('{unit}', t('monthly_goal_kg_unit'))}`);
+        }
+    } else {
+        const progress = visionGoalProgress(goal);
+        if (progress.reached && progress.label) {
+            if (type === 'steps') {
+                const total = visionMilestonesCache.filter(m => m.goal_id === goal.id).length;
+                lines.push(`✅ ${t('goal_share_steps_line').replace('{done}', total).replace('{total}', total)}`);
+            } else {
+                lines.push(`${type === 'days' ? '🔥' : '🔢'} ${progress.label}`);
+            }
+        }
+    }
+    // באתגר ימים "תוך X ימים" כפול לשורת "8 / 8 ימים" שמעליה - מדלגים
+    if (goal.created_at && type !== 'days') {
+        const days = Math.round(((goal.achieved_at ? new Date(goal.achieved_at) : new Date()) - new Date(goal.created_at)) / 86400000);
+        if (days >= 2) lines.push(`📅 ${t('goal_share_days_taken').replace('{n}', days)}`);
+    }
+    if (goal.reward) lines.push(`🎁 ${t('goal_share_reward_line').replace('{reward}', goal.reward)}`);
+    lines.push('', pickShareClosing([['goal_share_closing_1', '💪'], ['goal_share_closing_2', '✨'], ['goal_share_closing_3', '🙌']]));
+    return lines.join('\n');
 }
 
 // --- הוצאות והכנסות (Finance): קטגוריה עצמאית במסך הבית (לא תת-קטגוריה של
@@ -10216,11 +10313,21 @@ async function deleteSportSession(id) {
 async function shareSportSession(id) {
     const { data: row } = await supabaseClient.from('sport_sessions').select('*').eq('id', id).maybeSingle();
     if (!row) return;
-    let text = `${sportTypeLabel(row)} · ${row.duration_minutes} ${t('sport_minutes_unit')}`;
-    if (row.distance_km) text += ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}`;
-    text += ` (${formatSportDayLabel(row.session_date)})`;
-    if (row.notes) text += `\n\n${row.notes}`;
-    openSharePicker(text, row.photo_url || '');
+    const [icon, name] = splitLeadingEmoji(sportTypeLabel(row), '💪');
+    const lines = [`${icon} ${shareBold(name)}`];
+    let stats = `⏱️ ${row.duration_minutes} ${t('sport_minutes_unit')}`;
+    if (row.distance_km) stats += ` · 📍 ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}`;
+    lines.push(stats);
+    const [y, m, d] = row.session_date.split('-').map(Number);
+    lines.push(`📅 ${new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' })}`);
+    if (row.motivation) {
+        // מוטיבציה שנכתבה ידנית ("אחר") אין לה מפתח תרגום - מוצגת כמו שנכתבה
+        const motKey = `sport_motivation_${row.motivation}`;
+        lines.push(`🎯 ${t('sport_history_motivation_prefix')} ${t(motKey) === motKey ? row.motivation : t(motKey)}`);
+    }
+    if (row.notes) lines.push(`💬 ${row.notes}`);
+    lines.push('', pickShareClosing([['sport_share_closing_1', '💪'], ['sport_share_closing_2', '🙌'], ['sport_share_closing_3', '✨']]));
+    openSharePicker(lines.join('\n'), { photoUrl: row.photo_url || '', subject: sportTypeLabel(row) });
 }
 
 // ייצוא לטבלה (CSV): קובץ נפרד לכל חודש שנצפה כרגע - נפתח ישירות בכל אפליקציית
