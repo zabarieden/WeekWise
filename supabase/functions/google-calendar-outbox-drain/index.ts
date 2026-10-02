@@ -172,6 +172,15 @@ Deno.serve(async () => {
             continue;
         }
 
+        // החיבור לגוגל פג (ר' למטה) - לא מנסים שוב כל דקה; השורות "חונות" (attempts 999)
+        // עד שהמשתמשת מתחברת מחדש, ואז google-calendar-oauth-callback מחזירה אותן לתור
+        if ((conn as { needs_reauth?: boolean }).needs_reauth) {
+            await supabase.from("calendar_sync_outbox")
+                .update({ attempts: 999, last_error: "google connection needs reconnect" })
+                .in("id", rows.map((r) => r.id));
+            continue;
+        }
+
         let accessToken: string;
         try {
             accessToken = await getValidAccessToken(supabase, conn as GoogleConnection);
@@ -180,6 +189,12 @@ Deno.serve(async () => {
             await supabase.from("calendar_sync_outbox")
                 .update({ attempts: 999, last_error: `token refresh failed: ${e}` })
                 .in("id", ids);
+            // invalid_grant = גוגל ביטלה את ההרשאה (פגה / בוטלה / סיסמה שונתה). מסמנים את החיבור
+            // כ"צריך להתחבר מחדש" - ההגדרות באפליקציה מראות אזהרה וכפתור התחברות מחדש, במקום
+            // שהסנכרון ייכשל בשקט (זה בדיוק מה שקרה: נראה "מחובר" אבל שום אירוע לא הגיע לגוגל)
+            if (String(e).includes("invalid_grant")) {
+                await supabase.from("google_calendar_connections").update({ needs_reauth: true }).eq("id", (conn as GoogleConnection).id);
+            }
             continue;
         }
 

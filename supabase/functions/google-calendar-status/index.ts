@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
 
         const { data } = await supabase.from("google_calendar_connections")
-            .select("id, is_connected, created_at")
+            .select("id, is_connected, created_at, needs_reauth")
             .eq("user_id", userData.user.id).maybeSingle();
 
         if (!data || !data.is_connected) return jsonResponse({ connected: false });
@@ -50,6 +50,8 @@ Deno.serve(async (req) => {
 
         return jsonResponse({
             connected: true,
+            // גוגל ביטלה את ההרשאה - האפליקציה מציגה אזהרה + כפתור "התחברות מחדש"
+            needsReconnect: !!data.needs_reauth,
             calendarCount: (watches || []).length,
             connectedAt: data.created_at,
             lastFullSyncAt,

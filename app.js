@@ -2179,6 +2179,9 @@ async function initAppAfterAuth(user) {
         }, 60000);
     }
     maybeAutoStartAppTour();
+    // חיבור לגוגל שפג - טוסט אחד שמפנה להתחברות מחדש (לא חוסם את הטעינה)
+    setTimeout(checkGoogleCalendarNeedsReconnect, 2500);
+    installSingleFlightActions();
 }
 
 // ברכה יומית עם נצנצים - לפי בקשה מפורשת ("בפעם הראשונה ביום, עם נצנצים
@@ -2771,6 +2774,43 @@ function openCenterItemEditor(btn, type) {
 // אטית, נגיעה כפולה בטעות) הספיקו כולן לרוץ לפני ש-closeModal בכלל השפיע
 // חזותית, וכל אחת יצרה שורת my_center_tasks נפרדת משלה - דווח בפועל
 // ("פתק אחד מיליון פתקים אותו הדבר")
+// --- לא משנה כמה לחיצות - פעולה אחת (לפי בקשה מפורשת, אחרי שפתק נוסף 5 פעמים כשהמחשב
+// נתקע ונלחץ "הוספה" שוב ושוב): כל פעולת שמירה/הוספה ברשימה רצה פעם אחת בכל רגע - לחיצות
+// נוספות בזמן שהיא עוד רצה פשוט לא עושות כלום. עוטפים את הפונקציות הגלובליות עצמן, כך
+// שזה תופס את ה-onclick בחלונות (נקרא בזמן הלחיצה). רק פעולות שמופעלות מלחיצה (לא מקוד
+// שקורא להן במקביל) ובלי זרימות AI שקוראות לעצמן באמצע. idempotent - בטוח לקרוא שוב ---
+const SINGLE_FLIGHT_ACTIONS = [
+    'addCustomSportType', 'addProgressTarget', 'confirmGoalRoutineLink', 'confirmNoteTriageOtherDate', 'saveRoutineItem',
+    'saveRoutineTabName', 'submitNotebook', 'submitProject', 'saveRecipe', 'submitFinanceEntry', 'submitReceiptEntry',
+    'submitRecurringExpense', 'submitSportQuickAdd', 'submitSportSession', 'submitStudyItem', 'submitNotebookItem',
+    'saveVisionGoal', 'saveBook', 'saveBookFinish', 'confirmGoalStepSchedule', 'logFoodQuickAdd', 'addCustomWaterLogFromFab',
+    'submitContactUs', 'saveGlanceTaskEdit', 'confirmMoveSlotToDay', 'confirmRecurringExpenseImport', 'saveColumnSubModal',
+    'submitRenamePage', 'submitChangePassword',
+];
+function installSingleFlightActions() {
+    SINGLE_FLIGHT_ACTIONS.forEach(name => {
+        const original = window[name];
+        if (typeof original !== 'function' || original.__singleFlight) return;
+        let running = false;
+        const wrapped = async function (...args) {
+            if (running) return undefined;
+            running = true;
+            try { return await original.apply(this, args); } finally { running = false; }
+        };
+        wrapped.__singleFlight = true;
+        window[name] = wrapped;
+    });
+}
+// רשת ביטחון לכל כפתור שמירה בחלון (גם כאלה שלא ברשימה למעלה): לחיצות שנערמו בזמן שהמחשב
+// היה תקוע מגיעות כולן ברצף אחרי שהוא משתחרר - חוץ מהראשונה, הן נבלעות
+document.addEventListener('click', (e) => {
+    const btn = e.target && e.target.closest ? e.target.closest('.apple-modal .btn-primary') : null;
+    if (!btn) return;
+    const now = Date.now();
+    if (btn.__lastClickAt && now - btn.__lastClickAt < 900) { e.stopImmediatePropagation(); e.preventDefault(); return; }
+    btn.__lastClickAt = now;
+}, true);
+
 let centerItemSubmitInFlight = false;
 async function submitCenterItem() {
     if (centerItemSubmitInFlight) return;
@@ -6934,7 +6974,18 @@ async function refreshGoogleCalendarStatus() {
                 statusEl.textContent = t('settings_google_calendar_connected_since').replace('{date}', d.toLocaleDateString(currentLang));
             }
         }
+        const reconnectBox = document.getElementById('google-calendar-reconnect-box');
+        if (reconnectBox) reconnectBox.classList.toggle('hidden', !(connected && result.needsReconnect));
+        return { connected, needsReconnect: !!(connected && result.needsReconnect) };
     } catch { /* משאירים את המצב הקודם על המסך - לא קריטי אם הבדיקה נכשלה פעם אחת */ }
+    return null;
+}
+
+// בפתיחת האפליקציה: אם גוגל ביטלה את ההרשאה (הסנכרון נכשל ברקע), טוסט אחד שמפנה להגדרות -
+// במקום שאירועים "ייעלמו" בשקט ולא יגיעו ליומן של גוגל (לפי מה שקרה בפועל)
+async function checkGoogleCalendarNeedsReconnect() {
+    const status = await refreshGoogleCalendarStatus();
+    if (status && status.needsReconnect) showAppToast(t('google_calendar_reconnect_toast'), 'error');
 }
 
 // טיפול בחזרה מ-Google אחרי אישור/דחיית ההרשאה (google-calendar-oauth-callback
@@ -7692,6 +7743,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'table_select_colors', category: 'tables' },
     { id: 'table_ai_builder', category: 'tables' },
     { id: 'google_calendar_sync', category: 'account' },
+    { id: 'google_calendar_reconnect', category: 'account' },
     { id: 'forgot_password', category: 'account' },
     { id: 'report_bug_feature', category: 'account' },
     { id: 'contact_support', category: 'account' },
@@ -19041,14 +19093,25 @@ async function loadWaterData() {
 // --- "AI" חוקי-דטרמיניסטי: מוסיף טקסט חופשי כפתק חדש בלשונית הפתקים בלבד ---
 // אין מפתח API/LLM אמיתי - הטקסט מתווסף ישירות לרשימת הפתקים, ללא נגיעה
 // בלוח הזמנים השבועי. מוחלף בעתיד ב-AI אמיתי מאחורי פרוקסי בצד שרת.
+// דגל נגד הוספה כפולה (לפי בקשה מפורשת: פתק נוסף 5 פעמים כשהמחשב נתקע ו"הוספה" נלחץ שוב ושוב) -
+// כל עוד השמירה רצה, לחיצות נוספות / Ctrl+Enter לא עושים כלום, והכפתור מושבת
+let quickNoteAddInFlight = false;
 async function handleAIQuickAdd() {
+    if (quickNoteAddInFlight) return;
     const input = document.getElementById('ai-quick-add-input');
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }
-
-    const ok = await insertCenterItemDirect(quickNoteDestination, text, null, null, null, true);
-    if (!ok) return;
-    showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
-    input.value = '';
-    closeModal('modal-ai-quick-add');
+    quickNoteAddInFlight = true;
+    const btn = document.getElementById('btn-ai-quick-add');
+    if (btn) btn.disabled = true;
+    try {
+        const ok = await insertCenterItemDirect(quickNoteDestination, text, null, null, null, true);
+        if (!ok) return;
+        showAppToast(t(quickNoteDestination === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
+        input.value = '';
+        closeModal('modal-ai-quick-add');
+    } finally {
+        quickNoteAddInFlight = false;
+        if (btn) btn.disabled = false;
+    }
 }

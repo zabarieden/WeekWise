@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
             token_expiry: tokenExpiry,
             granted_scope: tokens.scope || null,
             is_connected: true,
+            needs_reauth: false,
             updated_at: new Date().toISOString(),
         };
         let connId: string;
@@ -84,6 +85,11 @@ Deno.serve(async (req) => {
             const { data: inserted } = await supabase.from("google_calendar_connections").insert(connectionPayload).select("id").single();
             connId = inserted!.id;
         }
+        // התחברות מחדש אחרי שההרשאה פגה: כל מה ש"חנה" בתור בזמן שהחיבור היה שבור חוזר
+        // לתור ונשלח לגוגל בסבב הבא (כל דקה) - שום אירוע שנוסף בינתיים לא הולך לאיבוד
+        await supabase.from("calendar_sync_outbox")
+            .update({ attempts: 0, last_error: null })
+            .eq("user_id", userId).is("processed_at", null).gte("attempts", 999);
 
         const { data: conn } = await supabase.from("google_calendar_connections").select("*").eq("id", connId).single();
 
