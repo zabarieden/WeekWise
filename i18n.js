@@ -71,6 +71,7 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    nm_goal_reminder: "Remember your goal",
     faq_a_share_whatsapp: "You'll find a share option in a few places: 'Share this achievement' in the celebration when you reach a goal, 📤 on a recipe, 📤 next to a workout in Sport, and '✨ Share the App' in Settings. Choose WhatsApp, email or copy. The message comes out neatly laid out with the details – for a goal: the progress, how long it took and your reward; for a recipe: the ingredients and the steps; for a workout: time, distance and the photo. At the bottom there's always a small link to the app, so anyone who wants can go straight in. You can still edit the text in WhatsApp before sending.",
     faq_q_share_whatsapp: "How do I share a goal, recipe or workout on WhatsApp?",
     sport_share_closing_3: "Keep on moving",
@@ -914,6 +915,7 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    nm_goal_reminder: "לזכור את המטרה שלך",
     faq_a_share_whatsapp: "יש אפשרות שיתוף בכמה מקומות: 'שיתוף ההישג הזה' בחגיגה כשמשיגים יעד, 📤 במתכון, 📤 ליד אימון בספורט, ו'✨ שיתוף האפליקציה' בהגדרות. בוחרים וואטסאפ, מייל או העתקה. ההודעה יוצאת מסודרת ויפה עם הפרטים – ביעד: ההתקדמות, כמה זמן זה לקח והפרס; במתכון: המרכיבים ושלבי ההכנה; באימון: זמן, מרחק והתמונה. בסוף ההודעה תמיד יש קישור קטן לאפליקציה, כך שמי שרוצה נכנס ישר. אפשר עדיין לערוך את הטקסט בוואטסאפ לפני השליחה.",
     faq_q_share_whatsapp: "איך משתפים יעד, מתכון או אימון בוואטסאפ?",
     sport_share_closing_3: "ממשיכים לזוז",
@@ -1757,6 +1759,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    nm_goal_reminder: "Recuerda tu meta",
     faq_a_share_whatsapp: "Encontrarás la opción de compartir en varios lugares: «Compartir este logro» en la celebración cuando alcanzas una meta, 📤 en una receta, 📤 junto a un entrenamiento en Deporte y «✨ Compartir la App» en Ajustes. Elige WhatsApp, correo o copiar. El mensaje sale bien organizado y con los detalles – en una meta: el progreso, cuánto tiempo te llevó y tu recompensa; en una receta: los ingredientes y los pasos; en un entrenamiento: el tiempo, la distancia y la foto. Al final siempre hay un pequeño enlace a la app, para que quien quiera pueda entrar directamente. Aún puedes editar el texto en WhatsApp antes de enviarlo.",
     faq_q_share_whatsapp: "¿Cómo comparto una meta, una receta o un entrenamiento por WhatsApp?",
     sport_share_closing_3: "Seguimos en movimiento",
@@ -2607,6 +2610,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla.",
 },
 fr: {
+    nm_goal_reminder: "Gardez votre objectif en tête",
     faq_a_share_whatsapp: "Vous trouverez une option de partage à plusieurs endroits : « Partager cette réussite » dans la célébration lorsque vous atteignez un objectif, 📤 sur une recette, 📤 à côté d'un entraînement dans Sport et « ✨ Partager l'App » dans Paramètres. Choisissez WhatsApp, e-mail ou copier. Le message est joliment mis en forme avec les détails – pour un objectif : la progression, le temps qu'il vous a fallu et votre récompense ; pour une recette : les ingrédients et les étapes de préparation ; pour un entraînement : la durée, la distance et la photo. En bas, il y a toujours un petit lien vers l'app, pour que toute personne intéressée puisse y accéder directement. Vous pouvez encore modifier le texte dans WhatsApp avant de l'envoyer.",
     faq_q_share_whatsapp: "Comment partager un objectif, une recette ou un entraînement sur WhatsApp ?",
     sport_share_closing_3: "On continue de bouger",
@@ -3457,6 +3461,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer.",
 },
 ar: {
+    nm_goal_reminder: "هدفك أمام عينيك دائمًا",
     faq_a_share_whatsapp: "يوجد خيار للمشاركة في عدة أماكن: «شاركي هذا الإنجاز» في شاشة الاحتفال عند تحقيق هدف، و📤 في الوصفة، و📤 بجانب التمرين في قسم «الرياضة»، و«✨ مشاركة التطبيق» في الإعدادات. ثم يكفي اختيار WhatsApp أو البريد الإلكتروني أو النسخ. تخرج الرسالة مرتّبة وأنيقة مع التفاصيل – في الهدف: التقدّم، والمدة التي استغرقها، والمكافأة؛ وفي الوصفة: المكوّنات وخطوات التحضير؛ وفي التمرين: الوقت والمسافة والصورة. وفي أسفل الرسالة يوجد دائمًا رابط صغير إلى التطبيق، ليتمكّن كل من يرغب من الدخول مباشرة. ولا يزال بالإمكان تعديل النص في WhatsApp قبل الإرسال.",
     faq_q_share_whatsapp: "كيف أشارك هدفًا أو وصفة أو تمرينًا على WhatsApp؟",
     sport_share_closing_3: "نواصل الحركة",
@@ -4307,6 +4312,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده.",
 },
 ru: {
+    nm_goal_reminder: "Помните о своей цели",
     faq_a_share_whatsapp: "Поделиться можно из нескольких мест: «Поделиться достижением» в окне поздравления при достижении цели, 📤 в рецепте, 📤 рядом с тренировкой в разделе «Спорт» и «✨ Поделиться приложением» в Настройках. Выберите WhatsApp, эл. почту или копирование. Сообщение получается аккуратно оформленным, со всеми деталями – для цели: прогресс, сколько времени это заняло и ваша награда; для рецепта: ингредиенты и шаги приготовления; для тренировки: время, расстояние и фото. Внизу всегда есть небольшая ссылка на приложение, чтобы любой желающий мог сразу в него перейти. Перед отправкой текст по-прежнему можно отредактировать в WhatsApp.",
     faq_q_share_whatsapp: "Как поделиться целью, рецептом или тренировкой в WhatsApp?",
     sport_share_closing_3: "Продолжаю двигаться",
@@ -5157,6 +5163,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'.",
 },
 de: {
+    nm_goal_reminder: "Denk an dein Ziel",
     faq_a_share_whatsapp: "Eine Möglichkeit zum Teilen findest du an mehreren Stellen: „Diesen Erfolg teilen“ in der Feier, wenn du ein Ziel erreichst, 📤 bei einem Rezept, 📤 neben einem Training im Bereich Sport und „✨ App teilen“ in den Einstellungen. Wähle WhatsApp, E-Mail oder Kopieren. Die Nachricht ist übersichtlich aufgebaut und enthält die Details – bei einem Ziel: den Fortschritt, wie lange es gedauert hat, und deine Belohnung; bei einem Rezept: die Zutaten und die Zubereitung; bei einem Training: Dauer, Strecke und das Foto. Ganz unten steht immer ein kleiner Link zur App, damit alle, die Lust haben, direkt reinschauen können. Du kannst den Text in WhatsApp vor dem Senden noch bearbeiten.",
     faq_q_share_whatsapp: "Wie teile ich ein Ziel, ein Rezept oder ein Training per WhatsApp?",
     sport_share_closing_3: "Immer in Bewegung bleiben",
@@ -6007,6 +6014,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben.",
 },
 pt: {
+    nm_goal_reminder: "Lembre-se da sua meta",
     faq_a_share_whatsapp: "Você encontra a opção de compartilhar em alguns lugares: “Compartilhar esta conquista” na comemoração quando você alcança uma meta, 📤 em uma receita, 📤 ao lado de um treino em Esporte e “✨ Compartilhar o App” em Configurações. Escolha WhatsApp, e-mail ou copiar. A mensagem sai bem organizada, com os detalhes – em uma meta: o progresso, quanto tempo levou e a sua recompensa; em uma receita: os ingredientes e o modo de preparo; em um treino: tempo, distância e a foto. No final sempre há um pequeno link para o app, para que quem quiser possa entrar direto. Você ainda pode editar o texto no WhatsApp antes de enviar.",
     faq_q_share_whatsapp: "Como compartilho uma meta, uma receita ou um treino no WhatsApp?",
     sport_share_closing_3: "Seguimos em movimento",
@@ -6857,6 +6865,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar.",
 },
 ja: {
+    nm_goal_reminder: "目標を忘れずに",
     faq_a_share_whatsapp: "シェアは次の場所からできます：目標を達成したときのお祝い画面の「この達成をシェア」、レシピの 📤、スポーツ画面で運動の横にある 📤、設定の「✨ アプリをシェア」。WhatsApp、メール、コピーから選べます。メッセージは詳細つきで見やすく整った形になります。目標なら進み具合・かかった期間・ごほうび、レシピなら材料と作り方、運動なら時間・距離・写真が入ります。最後には必ずアプリへの小さなリンクが付くので、興味を持った人はそのままアプリを開けます。送信前にWhatsAppで文章を編集することもできます。",
     faq_q_share_whatsapp: "目標、レシピ、運動をWhatsAppでシェアするには？",
     sport_share_closing_3: "これからも体を動かしていきます",
@@ -7707,6 +7716,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。",
 },
 zh: {
+    nm_goal_reminder: "别忘了你的目标",
     faq_a_share_whatsapp: "有几个地方可以分享：达成目标时庆祝画面中的「分享此成就」、食谱上的 📤、「运动」中锻炼记录旁的 📤，以及「设置」中的「✨ 分享应用」。可选择 WhatsApp、邮件或复制。消息会排版整齐并附上详细信息 – 目标：进度、用时和你的奖励；食谱：食材和做法；锻炼：时长、距离和照片。消息末尾总会附上一个指向应用的小链接，有兴趣的人可以直接进入。发送前你仍可以在 WhatsApp 中编辑文字。",
     faq_q_share_whatsapp: "如何在 WhatsApp 上分享目标、食谱或锻炼？",
     sport_share_closing_3: "继续动起来",
@@ -8557,6 +8567,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。",
 },
 hi: {
+    nm_goal_reminder: "अपना लक्ष्य याद रखें",
     faq_a_share_whatsapp: "शेयर करने का विकल्प कुछ जगहों पर है: लक्ष्य हासिल होने पर जश्न वाली स्क्रीन में 'यह उपलब्धि साझा करें', रेसिपी पर 📤, खेल में वर्कआउट के बगल में 📤, और सेटिंग्स में '✨ ऐप शेयर करें'। WhatsApp, ईमेल या कॉपी चुनें। संदेश सारी जानकारी के साथ साफ़-सुथरे ढंग से तैयार होता है – लक्ष्य के लिए: प्रगति, कितना समय लगा और आपका इनाम; रेसिपी के लिए: सामग्री और विधि; वर्कआउट के लिए: समय, दूरी और फ़ोटो। संदेश के आखिर में हमेशा ऐप का एक छोटा-सा लिंक होता है, ताकि जो चाहे सीधे ऐप में आ सके। भेजने से पहले WhatsApp में टेक्स्ट को अब भी बदला जा सकता है।",
     faq_q_share_whatsapp: "WhatsApp पर लक्ष्य, रेसिपी या वर्कआउट कैसे शेयर करूं?",
     sport_share_closing_3: "चलते रहें",
@@ -9407,6 +9418,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा।",
 },
 ko: {
+    nm_goal_reminder: "목표를 기억하세요",
     faq_a_share_whatsapp: "목표를 달성했을 때 축하 화면의 '이 성과 공유하기', 레시피의 📤, '운동' 화면에서 운동 기록 옆의 📤, '설정'의 '✨ 앱 공유하기'에서 공유할 수 있습니다. WhatsApp, 이메일, 복사 중에서 선택하세요. 메시지는 세부 정보가 담겨 깔끔하게 정리됩니다 – 목표에는 진행 상황, 걸린 기간, 보상이 들어가고, 레시피에는 재료와 조리법이, 운동에는 시간, 거리, 사진이 들어갑니다. 맨 아래에는 항상 앱으로 가는 작은 링크가 붙어 있어서 원하는 사람은 누구나 바로 들어올 수 있습니다. 보내기 전에 WhatsApp에서 텍스트를 수정할 수도 있습니다.",
     faq_q_share_whatsapp: "목표, 레시피, 운동을 WhatsApp으로 공유하려면 어떻게 하나요?",
     sport_share_closing_3: "계속 움직여요",
@@ -10257,6 +10269,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다.",
 },
 tr: {
+    nm_goal_reminder: "Hedefinizi unutmayın",
     faq_a_share_whatsapp: "Paylaşma seçeneğini birkaç yerde bulabilirsiniz: bir hedefe ulaştığınızda kutlama ekranındaki 'Bu başarıyı paylaş', tarifteki 📤, Spor bölümünde antrenmanın yanındaki 📤 ve Ayarlar'daki '✨ Uygulamayı Paylaş'. WhatsApp, e-posta veya kopyalama seçeneğini seçin. Mesaj, ayrıntılarla birlikte düzenli ve şık bir şekilde hazırlanır – hedef için: ilerleme, ne kadar sürdüğü ve ödülünüz; tarif için: malzemeler ve adımlar; antrenman için: süre, mesafe ve fotoğraf. En altta her zaman uygulamaya küçük bir bağlantı bulunur, böylece isteyen herkes doğrudan girebilir. Göndermeden önce metni WhatsApp'ta yine de düzenleyebilirsiniz.",
     faq_q_share_whatsapp: "Bir hedefi, tarifi veya antrenmanı WhatsApp üzerinden nasıl paylaşırım?",
     sport_share_closing_3: "Hareket etmeye devam",
@@ -11107,6 +11120,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir.",
 },
 id: {
+    nm_goal_reminder: "Ingat tujuan Anda",
     faq_a_share_whatsapp: "Opsi berbagi ada di beberapa tempat: 'Bagikan pencapaian ini' di layar perayaan saat Anda mencapai target, 📤 di resep, 📤 di samping latihan di Olahraga, dan '✨ Bagikan Aplikasi' di Pengaturan. Pilih WhatsApp, email, atau salin. Pesannya tersusun rapi lengkap dengan detailnya – untuk target: progres, berapa lama waktu yang dibutuhkan, dan hadiah Anda; untuk resep: bahan dan cara membuatnya; untuk latihan: waktu, jarak, dan fotonya. Di bagian bawah selalu ada tautan kecil ke aplikasi, jadi siapa pun yang mau bisa langsung masuk. Anda tetap bisa mengedit teksnya di WhatsApp sebelum mengirim.",
     faq_q_share_whatsapp: "Bagaimana cara membagikan target, resep, atau latihan di WhatsApp?",
     sport_share_closing_3: "Terus bergerak",
@@ -11957,6 +11971,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya.",
 },
 it: {
+    nm_goal_reminder: "Ricorda il tuo obiettivo",
     faq_a_share_whatsapp: "Trovi l'opzione di condivisione in diversi punti: “Condividi questo traguardo” nella celebrazione quando raggiungi un obiettivo, 📤 su una ricetta, 📤 accanto a un allenamento in Sport e “✨ Condividi l'App” nelle Impostazioni. Scegli WhatsApp, email o copia. Il messaggio esce ben impaginato con i dettagli – per un obiettivo: i progressi, quanto tempo ci è voluto e il tuo premio; per una ricetta: gli ingredienti e il procedimento; per un allenamento: tempo, distanza e la foto. In fondo c'è sempre un piccolo link all'app, così chi vuole può entrare direttamente. Puoi comunque modificare il testo su WhatsApp prima di inviarlo.",
     faq_q_share_whatsapp: "Come condivido un obiettivo, una ricetta o un allenamento su WhatsApp?",
     sport_share_closing_3: "Sempre in movimento",
@@ -12807,6 +12822,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla.",
 },
 vi: {
+    nm_goal_reminder: "Hãy nhớ mục tiêu của bạn",
     faq_a_share_whatsapp: "Bạn sẽ thấy tùy chọn chia sẻ ở một vài nơi: 'Chia sẻ thành tích này' trong màn hình chúc mừng khi đạt mục tiêu, 📤 trên công thức, 📤 cạnh buổi tập trong Thể Thao, và '✨ Chia Sẻ Ứng Dụng' trong Cài Đặt. Chọn WhatsApp, email hoặc sao chép. Tin nhắn được trình bày gọn gàng kèm đầy đủ chi tiết – với mục tiêu: tiến độ, thời gian đã mất và phần thưởng của bạn; với công thức: nguyên liệu và cách làm; với buổi tập: thời gian, quãng đường và ảnh. Cuối tin nhắn luôn có một liên kết nhỏ đến ứng dụng, để ai muốn cũng có thể vào ngay. Bạn vẫn có thể chỉnh sửa nội dung trong WhatsApp trước khi gửi.",
     faq_q_share_whatsapp: "Làm sao để chia sẻ mục tiêu, công thức hoặc buổi tập qua WhatsApp?",
     sport_share_closing_3: "Tiếp tục vận động nào",
@@ -13657,6 +13673,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận.",
 },
 pl: {
+    nm_goal_reminder: "Pamiętaj o swoim celu",
     faq_a_share_whatsapp: "Opcję udostępniania znajdziesz w kilku miejscach: „Udostępnij to osiągnięcie” w oknie gratulacji po osiągnięciu celu, 📤 przy przepisie, 📤 obok treningu w sekcji Sport oraz „✨ Udostępnij Aplikację” w Ustawieniach. Wybierz WhatsApp, e-mail lub kopiowanie. Wiadomość wychodzi ładnie ułożona, ze szczegółami – przy celu: postęp, ile czasu to zajęło i Twoja nagroda; przy przepisie: składniki i kroki przygotowania; przy treningu: czas, dystans i zdjęcie. Na dole zawsze jest mały link do aplikacji, więc każdy, kto chce, może od razu do niej wejść. Przed wysłaniem nadal możesz edytować tekst w aplikacji WhatsApp.",
     faq_q_share_whatsapp: "Jak udostępnić cel, przepis lub trening przez WhatsApp?",
     sport_share_closing_3: "Dalej w ruchu",
@@ -14508,6 +14525,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'.",
 },
 th: {
+    nm_goal_reminder: "อย่าลืมเป้าหมายของคุณ",
     faq_a_share_whatsapp: "ตัวเลือกการแชร์มีอยู่หลายที่: 'แชร์ความสำเร็จนี้' ในหน้าฉลองเมื่อทำเป้าหมายสำเร็จ, 📤 ในสูตรอาหาร, 📤 ข้างการออกกำลังกายในหน้ากีฬา และ '✨ แชร์แอป' ในการตั้งค่า เลือกได้ทั้ง WhatsApp อีเมล หรือคัดลอก ข้อความจะออกมาเป็นระเบียบสวยงามพร้อมรายละเอียด – เป้าหมายจะมีความคืบหน้า ระยะเวลาที่ใช้ และรางวัลของคุณ สูตรอาหารจะมีส่วนผสมและวิธีทำ การออกกำลังกายจะมีเวลา ระยะทาง และรูปภาพ ท้ายข้อความจะมีลิงก์เล็กๆ ไปยังแอปเสมอ ใครสนใจก็เข้าแอปได้ทันที และยังแก้ไขข้อความใน WhatsApp ก่อนส่งได้อีกด้วย",
     faq_q_share_whatsapp: "จะแชร์เป้าหมาย สูตรอาหาร หรือการออกกำลังกายทาง WhatsApp ได้อย่างไร?",
     sport_share_closing_3: "ขยับกันต่อไป",
@@ -15360,6 +15378,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน",
 },
 ur: {
+    nm_goal_reminder: "اپنا مقصد یاد رکھیں",
     faq_a_share_whatsapp: "شیئر کرنے کا آپشن کچھ جگہوں پر ہے: ہدف حاصل ہونے پر جشن والی اسکرین میں 'یہ کامیابی شیئر کریں'، ترکیب پر 📤، کھیل میں ورزش کے ساتھ 📤، اور ترتیبات میں '✨ ایپ شیئر کریں'۔ WhatsApp، ای میل یا کاپی منتخب کریں۔ پیغام تمام تفصیلات کے ساتھ صاف ستھرے انداز میں تیار ہوتا ہے – ہدف کے لیے: پیش رفت، کتنا وقت لگا اور آپ کا انعام؛ ترکیب کے لیے: اجزاء اور بنانے کا طریقہ؛ ورزش کے لیے: وقت، فاصلہ اور تصویر۔ پیغام کے آخر میں ہمیشہ ایپ کا ایک چھوٹا سا لنک ہوتا ہے، تاکہ جو چاہے سیدھا ایپ میں آ سکے۔ بھیجنے سے پہلے WhatsApp میں متن میں اب بھی ترمیم کی جا سکتی ہے۔",
     faq_q_share_whatsapp: "WhatsApp پر ہدف، ترکیب یا ورزش کیسے شیئر کروں؟",
     sport_share_closing_3: "حرکت میں رہیں",
@@ -16212,6 +16231,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔",
 },
 bn: {
+    nm_goal_reminder: "আপনার লক্ষ্য মনে রাখুন",
     faq_a_share_whatsapp: "শেয়ার করার অপশন কয়েকটি জায়গায় আছে: লক্ষ্য অর্জন হলে উদযাপনের স্ক্রিনে 'এই অর্জন শেয়ার করুন', রেসিপিতে 📤, খেলাধুলা স্ক্রিনে ওয়ার্কআউটের পাশে 📤, আর সেটিংসে '✨ অ্যাপ শেয়ার করুন'। WhatsApp, ইমেইল বা কপি বেছে নিন। বার্তাটি সব বিবরণসহ সুন্দর করে সাজানো অবস্থায় তৈরি হয় – লক্ষ্যের জন্য: অগ্রগতি, কত সময় লেগেছে আর আপনার পুরস্কার; রেসিপির জন্য: উপকরণ ও প্রণালী; ওয়ার্কআউটের জন্য: সময়, দূরত্ব ও ছবি। বার্তার শেষে সবসময় অ্যাপের একটি ছোট লিঙ্ক থাকে, যাতে যে কেউ চাইলে সরাসরি অ্যাপে ঢুকতে পারে। পাঠানোর আগে WhatsApp-এ লেখাটি এখনও সম্পাদনা করতে পারবেন।",
     faq_q_share_whatsapp: "কীভাবে WhatsApp-এ লক্ষ্য, রেসিপি বা ওয়ার্কআউট শেয়ার করব?",
     sport_share_closing_3: "চলতে থাকুন",
@@ -17064,6 +17084,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে।",
 },
 sw: {
+    nm_goal_reminder: "Kumbuka lengo lako",
     faq_a_share_whatsapp: "Utapata chaguo la kushiriki katika sehemu kadhaa: 'Shiriki Mafanikio Haya' kwenye skrini ya sherehe unapofikia lengo, 📤 kwenye mapishi, 📤 kando ya mazoezi katika Michezo, na '✨ Shiriki Programu' katika Mipangilio. Chagua WhatsApp, barua pepe au kunakili. Ujumbe hutoka ukiwa umepangwa vizuri pamoja na maelezo – kwa lengo: maendeleo, muda uliochukua na zawadi yako; kwa mapishi: viungo na maelekezo; kwa mazoezi: muda, umbali na picha. Chini kabisa daima kuna kiungo kidogo cha programu, ili yeyote anayetaka aingie moja kwa moja. Bado unaweza kuhariri maandishi kwenye WhatsApp kabla ya kutuma.",
     faq_q_share_whatsapp: "Ninashirikije lengo, mapishi au mazoezi kwenye WhatsApp?",
     sport_share_closing_3: "Tuendelee kusonga",
@@ -17916,6 +17937,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha.",
 },
 uk: {
+    nm_goal_reminder: "Пам’ятайте про свою мету",
     faq_a_share_whatsapp: "Поділитися можна з кількох місць: «Поділитися Цим Досягненням» у вікні привітання, коли ви досягаєте цілі, 📤 у рецепті, 📤 біля тренування в розділі «Спорт» і «✨ Поділитися Додатком» у Налаштуваннях. Виберіть WhatsApp, електронну пошту або копіювання. Повідомлення виходить акуратно оформленим, з усіма деталями – для цілі: прогрес, скільки часу на це пішло та ваша нагорода; для рецепта: інгредієнти та кроки приготування; для тренування: час, відстань і фото. Унизу завжди є невелике посилання на застосунок, щоб кожен охочий міг одразу до нього перейти. Перед надсиланням текст усе ще можна відредагувати у WhatsApp.",
     faq_q_share_whatsapp: "Як поділитися ціллю, рецептом чи тренуванням у WhatsApp?",
     sport_share_closing_3: "Рухаюся далі",
@@ -18768,6 +18790,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'.",
 },
 el: {
+    nm_goal_reminder: "Θυμηθείτε τον στόχο σας",
     faq_a_share_whatsapp: "Θα βρείτε επιλογή κοινοποίησης σε μερικά σημεία: «Κοινοποίηση Αυτού του Επιτεύγματος» στην οθόνη εορτασμού όταν πετυχαίνετε έναν στόχο, 📤 σε μια συνταγή, 📤 δίπλα σε μια προπόνηση στην ενότητα «Αθλητισμός» και «✨ Κοινοποίηση Εφαρμογής» στις Ρυθμίσεις. Επιλέξτε WhatsApp, email ή αντιγραφή. Το μήνυμα βγαίνει όμορφα οργανωμένο με τις λεπτομέρειες – για έναν στόχο: η πρόοδος, πόσο χρόνο πήρε και η ανταμοιβή σας· για μια συνταγή: τα υλικά και τα βήματα· για μια προπόνηση: ο χρόνος, η απόσταση και η φωτογραφία. Στο τέλος υπάρχει πάντα ένας μικρός σύνδεσμος για την εφαρμογή, ώστε όποιος θέλει να μπαίνει κατευθείαν. Μπορείτε ακόμη να επεξεργαστείτε το κείμενο στο WhatsApp πριν το στείλετε.",
     faq_q_share_whatsapp: "Πώς κοινοποιώ έναν στόχο, μια συνταγή ή μια προπόνηση στο WhatsApp;",
     sport_share_closing_3: "Συνεχίζω να κινούμαι",
@@ -19620,6 +19643,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε.",
 },
 nl: {
+    nm_goal_reminder: "Denk aan je doel",
     faq_a_share_whatsapp: "Je vindt een deeloptie op een paar plekken: ‘Deze Prestatie Delen’ in het feestje als je een doel bereikt, 📤 bij een recept, 📤 naast een training in Sport en ‘✨ App Delen’ in Instellingen. Kies WhatsApp, e-mail of kopiëren. Het bericht wordt netjes opgemaakt met de details – bij een doel: de voortgang, hoe lang het duurde en je beloning; bij een recept: de ingrediënten en de bereiding; bij een training: tijd, afstand en de foto. Onderaan staat altijd een klein linkje naar de app, zodat iedereen die wil er meteen in kan. Je kunt de tekst in WhatsApp nog aanpassen voordat je hem verstuurt.",
     faq_q_share_whatsapp: "Hoe deel ik een doel, recept of training via WhatsApp?",
     sport_share_closing_3: "Blijven bewegen",
@@ -20472,6 +20496,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen.",
 },
 ca: {
+    nm_goal_reminder: "Recorda el teu objectiu",
     faq_a_share_whatsapp: "Trobaràs l'opció de compartir en diversos llocs: «Compartir Aquest Assoliment» a la celebració quan assoleixes un objectiu, 📤 en una recepta, 📤 al costat d'un entrenament a Esport i «✨ Compartir Aplicació» a Configuració. Tria WhatsApp, correu electrònic o copiar. El missatge surt ben ordenat amb els detalls – en un objectiu: el progrés, quant de temps has trigat i la teva recompensa; en una recepta: els ingredients i els passos de preparació; en un entrenament: el temps, la distància i la foto. Al final sempre hi ha un petit enllaç a l'app, perquè qui vulgui hi pugui entrar directament. Encara pots editar el text a WhatsApp abans d'enviar-lo.",
     faq_q_share_whatsapp: "Com comparteixo un objectiu, una recepta o un entrenament per WhatsApp?",
     sport_share_closing_3: "Seguim en moviment",
@@ -21324,6 +21349,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho.",
 },
 ro: {
+    nm_goal_reminder: "Amintește-ți obiectivul",
     faq_a_share_whatsapp: "Găsești opțiunea de distribuire în câteva locuri: „Distribuie Această Realizare” în sărbătorirea care apare când atingi un obiectiv, 📤 la o rețetă, 📤 lângă un antrenament în Sport și „✨ Distribuie Aplicația” în Setări. Alege WhatsApp, email sau copiere. Mesajul iese frumos aranjat, cu detaliile – la un obiectiv: progresul, cât a durat și recompensa ta; la o rețetă: ingredientele și pașii de preparare; la un antrenament: timpul, distanța și fotografia. La final există mereu un mic link către aplicație, ca oricine vrea să poată intra direct. Poți edita în continuare textul în WhatsApp înainte de a-l trimite.",
     faq_q_share_whatsapp: "Cum distribui un obiectiv, o rețetă sau un antrenament pe WhatsApp?",
     sport_share_closing_3: "Mereu în mișcare",
@@ -22176,6 +22202,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare.",
 },
 yo: {
+    nm_goal_reminder: "Rántí àfojúsùn rẹ",
     faq_a_share_whatsapp: "Àṣàyàn láti fi nǹkan ránṣẹ́ wà ní ibi mélòó kan: 'Fi Àṣeyọrí Yìí Ránṣẹ́' nínú ayẹyẹ nígbà tí o bá dé góńgó kan, 📤 lórí ìlànà oúnjẹ, 📤 lẹ́gbẹ̀ẹ́ eré-ìdárayá kan nínú Eré-ìdárayá, àti '✨ Fi Ohun Èlò Ránṣẹ́' nínú Ètò. Yan WhatsApp, ímeèlì tàbí dídà kọ. Ìfiránṣẹ́ náà máa ń jáde ní mímọ́ àti létòlétò pẹ̀lú àwọn àlàyé – fún góńgó: ìlọsíwájú, bí ó ṣe pẹ́ tó àti èsan rẹ; fún ìlànà oúnjẹ: àwọn èròjà àti àwọn ìtọ́ni; fún eré-ìdárayá: àkókò, ìjìnnà àti fọ́tò. Ní ìsàlẹ̀, ìjápọ̀ kékeré sí ohun èlò náà máa ń wà nígbà gbogbo, kí ẹnikẹ́ni tó bá fẹ́ lè wọlé tààrà. O ṣì lè ṣàtúnṣe ọ̀rọ̀ náà nínú WhatsApp kí o tó fi ránṣẹ́.",
     faq_q_share_whatsapp: "Báwo ni mo ṣe lè fi góńgó, ìlànà oúnjẹ tàbí eré-ìdárayá ránṣẹ́ lórí WhatsApp?",
     sport_share_closing_3: "Ẹ jẹ́ ká máa gbéra nìṣó",
@@ -23029,6 +23056,7 @@ yo: {
 },
 
 sv: {
+    nm_goal_reminder: "Kom ihåg ditt mål",
     faq_a_share_whatsapp: "Du hittar möjligheten att dela på några ställen: ”Dela denna prestation” i firandet när du når ett mål, 📤 på ett recept, 📤 bredvid ett träningspass i Sport och ”✨ Dela Appen” i Inställningar. Välj WhatsApp, e-post eller kopiera. Meddelandet blir snyggt upplagt med detaljerna – för ett mål: framstegen, hur lång tid det tog och din belöning; för ett recept: ingredienserna och stegen; för ett träningspass: tid, sträcka och fotot. Längst ner finns alltid en liten länk till appen, så att den som vill kan gå direkt in. Du kan fortfarande redigera texten i WhatsApp innan du skickar den.",
     faq_q_share_whatsapp: "Hur delar jag ett mål, ett recept eller ett träningspass på WhatsApp?",
     sport_share_closing_3: "Alltid i rörelse",
@@ -23881,6 +23909,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta.",
 },
 nb: {
+    nm_goal_reminder: "Husk målet ditt",
     faq_a_share_whatsapp: "Du finner muligheten til å dele flere steder: «Del denne prestasjonen» i feiringen når du når et mål, 📤 på en oppskrift, 📤 ved siden av en treningsøkt i Sport og «✨ Del Appen» i Innstillinger. Velg WhatsApp, e-post eller kopier. Meldingen blir pent satt opp med detaljene – for et mål: fremgangen, hvor lang tid det tok og belønningen din; for en oppskrift: ingrediensene og fremgangsmåten; for en treningsøkt: tid, distanse og bildet. Nederst er det alltid en liten lenke til appen, så alle som vil, kan gå rett inn. Du kan fortsatt redigere teksten i WhatsApp før du sender den.",
     faq_q_share_whatsapp: "Hvordan deler jeg et mål, en oppskrift eller en treningsøkt på WhatsApp?",
     sport_share_closing_3: "Alltid i bevegelse",
@@ -24733,6 +24762,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte.",
 },
 da: {
+    nm_goal_reminder: "Husk dit mål",
     faq_a_share_whatsapp: "Du finder en delemulighed et par steder: 'Del denne bedrift' i fejringen, når du når et mål, 📤 på en opskrift, 📤 ved siden af en træning i Sport og '✨ Del Appen' i Indstillinger. Vælg WhatsApp, e-mail eller kopiering. Beskeden bliver pænt sat op med detaljerne – for et mål: fremskridtet, hvor lang tid det tog, og din belønning; for en opskrift: ingredienserne og trinene; for en træning: tid, distance og billedet. Nederst er der altid et lille link til appen, så alle, der har lyst, kan gå direkte ind. Du kan stadig redigere teksten i WhatsApp, før du sender den.",
     faq_q_share_whatsapp: "Hvordan deler jeg et mål, en opskrift eller en træning på WhatsApp?",
     sport_share_closing_3: "Jeg bliver ved med at bevæge mig",
@@ -25585,6 +25615,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte.",
 },
 cs: {
+    nm_goal_reminder: "Pamatujte na svůj cíl",
     faq_a_share_whatsapp: "Možnost sdílení najdete na několika místech: „Sdílet tento úspěch“ v okně s gratulací po dosažení cíle, 📤 u receptu, 📤 vedle tréninku v sekci Sport a „✨ Sdílet Aplikaci“ v Nastavení. Zvolte WhatsApp, e-mail nebo kopírování. Zpráva vyjde přehledně uspořádaná se všemi podrobnostmi – u cíle: pokrok, jak dlouho to trvalo, a vaše odměna; u receptu: suroviny a postup přípravy; u tréninku: čas, vzdálenost a fotka. Dole je vždy malý odkaz na aplikaci, takže kdo chce, může ji hned otevřít. Před odesláním můžete text ještě upravit v aplikaci WhatsApp.",
     faq_q_share_whatsapp: "Jak sdílet cíl, recept nebo trénink přes WhatsApp?",
     sport_share_closing_3: "Hýbu se dál",
@@ -26437,6 +26468,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'.",
 },
 hu: {
+    nm_goal_reminder: "Gondolj a célodra",
     faq_a_share_whatsapp: "Megosztási lehetőséget több helyen is találsz: az „Eredmény megosztása” gombot a gratuláló ablakban, amikor elérsz egy célt, a 📤 gombot egy receptnél, a 📤 gombot egy edzés mellett a Sport részben, és a „✨ Alkalmazás Megosztása” gombot a Beállításokban. Válaszd a WhatsApp, az e-mail vagy a másolás lehetőséget. Az üzenet szépen, áttekinthetően rendezve készül el a részletekkel – célnál: a haladás, mennyi ideig tartott és a jutalmad; receptnél: a hozzávalók és az elkészítés lépései; edzésnél: az idő, a táv és a fotó. Az alján mindig ott van egy kis link az alkalmazáshoz, így aki szeretné, egyből beléphet. Miután megnyílik a WhatsApp, küldés előtt még szerkesztheted a szöveget.",
     faq_q_share_whatsapp: "Hogyan oszthatok meg egy célt, receptet vagy edzést WhatsApp-üzenetben?",
     sport_share_closing_3: "Mozgásban maradok",
@@ -27289,6 +27321,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'.",
 },
 fi: {
+    nm_goal_reminder: "Muista tavoitteesi",
     faq_a_share_whatsapp: "Jakomahdollisuuden löydät muutamasta paikasta: 'Jaa tämä saavutus' onnitteluikkunassa, kun saavutat tavoitteen, 📤 reseptissä, 📤 treenin vieressä Urheilu-osiossa ja '✨ Jaa Sovellus' Asetuksissa. Valitse WhatsApp, sähköposti tai kopiointi. Viesti syntyy siististi aseteltuna kaikkine tietoineen – tavoitteessa: edistyminen, kauanko siihen meni ja palkintosi; reseptissä: ainekset ja valmistusvaiheet; treenissä: aika, matka ja kuva. Lopussa on aina pieni linkki sovellukseen, joten kuka tahansa halukas pääsee suoraan sisään. Voit vielä muokata tekstiä WhatsApp-sovelluksessa ennen lähettämistä.",
     faq_q_share_whatsapp: "Miten jaan tavoitteen, reseptin tai treenin WhatsApp-viestinä?",
     sport_share_closing_3: "Jatkan liikkumista",

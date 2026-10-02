@@ -525,7 +525,16 @@ function nmRenderMenu(body) {
                     </span>
                 </div>
             </div>`;
-    }).join('') + nmDrinksHtml() + nmExtrasHtml() + `<p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p><p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+    }).join('') + nmDrinksHtml() + nmExtrasHtml() + nmGoalReminderHtml() + `<p class="nm-medical">${nmEsc(t('nm_medical_note'))}</p><p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
+}
+
+// תזכורת עדינה בסוף התפריט (לפי בקשה מפורשת: "תזכורת" עם לב עדין) - לב קטן בגרדיאנט של New Me
+function nmGoalReminderHtml() {
+    return `
+        <p class="nm-goal-reminder">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="nm-heart-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent-purple)"/><stop offset="1" stop-color="var(--accent-pink)"/></linearGradient></defs><path d="M12 20.6s-7.4-4.5-9.4-9.3C1.2 8.1 3.3 4.9 6.7 4.9c2.1 0 3.6 1.2 5.3 3.2 1.7-2 3.2-3.2 5.3-3.2 3.4 0 5.5 3.2 4.1 6.4-2 4.8-9.4 9.3-9.4 9.3z" fill="url(#nm-heart-grad)"/></svg>
+            <span>${nmEsc(t('nm_goal_reminder'))}</span>
+        </p>`;
 }
 
 // ---------- שתייה (הוספה ידנית, לפחות 3 ביום, כולן יחד עד ~150 קל') ----------
