@@ -296,6 +296,7 @@ function onLanguageChanged() {
         loadRecipes(),
         loadAiUsage(),
         loadVisionGoals(),
+        typeof loadBooks === 'function' ? loadBooks() : null,
         loadFinanceData(),
         loadSportData(),
         loadWaterData(),
@@ -1665,6 +1666,7 @@ const APP_TOUR_STEPS = [
     { id: 'm_tables', ch: 'menu', ctx: 'menu', target: '[data-tour="m-tables"]', text: 'apptour_m_tables_text', link: 'apptour_m_tables_link' },
     { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text', link: 'apptour_m_notes_link' },
     { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
+    { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
     { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
     { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },
     { id: 'm_calories', ch: 'menu', ctx: 'menu', target: '[data-tour="m-calories"]', text: 'apptour_m_calories_text', link: 'apptour_m_calories_link' },
@@ -2137,6 +2139,7 @@ async function initAppAfterAuth(user) {
         loadGlobalTextColor(),
         loadGlobalFont(),
         loadVisionGoals(),
+        typeof loadBooks === 'function' ? loadBooks() : null,
         loadFinanceData(),
         loadSportData(),
         loadWaterData(),
@@ -5139,8 +5142,8 @@ async function loadTodayTasks() {
     const allEvents = eventRows || [];
     const focusItems = allEvents.filter(item => item.source === 'daily_focus');
     const events = allEvents.filter(item => item.source !== 'daily_focus');
-    // משימות היעדים של היום (אתגר ימים, תזכורות) - ר' getPeekGoalTaskItems
-    const goalItems = getPeekGoalTaskItems();
+    // משימות היעדים של היום (אתגר ימים, תזכורות) ומשימת הקריאה היומית (הספרים שלי)
+    const goalItems = getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : []);
     container.innerHTML = '';
     if (!populated.length && !events.length && !focusItems.length && !goalItems.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
@@ -7632,6 +7635,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
+    { id: 'books_what', category: 'books' },
+    { id: 'books_deadline', category: 'books' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
@@ -17937,18 +17942,23 @@ async function toggleVisionDayCheck(goalId, milestoneId, checked) {
 // עם הצצה יומית"): המשימות היומיות של אתגר ימים פעיל, ותזכורות של יעדי ספירה/משקל ביום
 // שלהן. לא נשמרות כמשימות ביומן - נבנות מהיעדים עצמם, כך שתמיד מסונכרנות (✓ שם = ✓ כאן).
 // צעדים מתוזמנים (📅) כבר מופיעים בהצצה כמשימות יומן רגילות ---
+// כל פריט: { icon, text, tag (שם היעד/הספר, או null), done, toggle(checked) } - אותה שורה
+// משמשת גם למשימת הקריאה היומית של "הספרים שלי" (ר' getPeekBookTaskItems ב-books.js)
 function getPeekGoalTaskItems() {
     const weekday = new Date().getDay();
     const items = [];
     visionGoalsCache.filter(g => !g.is_achieved).forEach(goal => {
         if (goal.track_type === 'days') {
             const tasks = visionMilestonesCache.filter(m => m.goal_id === goal.id);
-            if (tasks.length) tasks.forEach(m => items.push({ kind: 'day', goal, milestoneId: m.id, text: m.title, done: visionCheckedToday(goal.id, m.id) }));
-            else items.push({ kind: 'day', goal, milestoneId: null, text: goal.title, done: visionCheckedToday(goal.id, null), noTag: true });
+            if (tasks.length) {
+                tasks.forEach(m => items.push({ icon: '🎯', text: m.title, tag: goal.title, done: visionCheckedToday(goal.id, m.id), toggle: checked => toggleVisionDayCheck(goal.id, m.id, checked) }));
+            } else {
+                items.push({ icon: '🎯', text: goal.title, tag: null, done: visionCheckedToday(goal.id, null), toggle: checked => toggleVisionDayCheck(goal.id, null, checked) });
+            }
         } else if (goal.reminder_freq && (goal.track_type === 'number' || goal.track_type === 'weight')) {
             if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
             const text = (goal.reminder_text || '').trim() || goal.title;
-            items.push({ kind: 'reminder', goal, milestoneId: null, text, done: visionCheckedToday(goal.id, null), noTag: text === goal.title });
+            items.push({ icon: '🔔', text, tag: text === goal.title ? null : goal.title, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
         }
     });
     return items;
@@ -17961,16 +17971,16 @@ function buildPeekGoalTaskRow(item) {
     checkbox.type = 'checkbox';
     checkbox.className = 'day-detail-checkbox';
     checkbox.checked = item.done;
-    checkbox.onchange = () => (item.kind === 'day' ? toggleVisionDayCheck(item.goal.id, item.milestoneId, checkbox.checked) : toggleGoalReminderCheck(item.goal.id, checkbox.checked));
+    checkbox.onchange = () => item.toggle(checkbox.checked);
     const text = document.createElement('span');
     text.className = 'today-tasks-text' + (item.done ? ' completed' : '');
-    text.textContent = `${item.kind === 'day' ? '🎯' : '🔔'} ${item.text}`;
+    text.textContent = `${item.icon} ${item.text}`;
     row.appendChild(checkbox);
     row.appendChild(text);
-    if (!item.noTag) {
+    if (item.tag) {
         const tag = document.createElement('span');
         tag.className = 'today-goal-task-tag';
-        tag.textContent = item.goal.title;
+        tag.textContent = item.tag;
         row.appendChild(tag);
     }
     return row;

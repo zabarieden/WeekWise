@@ -84,7 +84,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=476">
+    <link rel="stylesheet" href="theme.css?v=477">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -879,6 +879,90 @@
                     </div>
                 </section>
 
+                <!-- 📚 הספרים שלי - ארבעה טאבים (לקנות / מחכים לי / בקריאה / קראתי), התקדמות בעמודים,
+                     דד-ליין עם קצב יומי, מדף של ספרים שנקראו, ורקע ביתי עדין למטה (ספרייה, ספה, שטיח
+                     ומנורה) - לפי בקשה מפורשת. הלוגיקה ב-books.js -->
+                <section class="tab-content books-section" id="books-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+                    <div class="books-header">
+                        <div class="books-header-main">
+                            <h2 data-i18n="books_menu_label">My Books</h2>
+                            <div class="books-stats" id="books-stats"></div>
+                        </div>
+                        <button type="button" class="books-add-btn" onclick="openBookModal()" data-i18n="books_add_btn">+ Book</button>
+                    </div>
+                    <button type="button" class="books-goal-chip hidden" id="books-goal-chip" onclick="openBooksGoalPicker()"></button>
+                    <div class="books-tabs" id="books-tabs" role="tablist"></div>
+                    <div id="books-list" class="books-list"></div>
+                    <div class="books-cozy-scene" aria-hidden="true">
+                        <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
+                            <defs>
+                                <radialGradient id="books-lamp-glow"><stop offset="0" style="stop-color: var(--accent-gold); stop-opacity: .45"/><stop offset="1" style="stop-color: var(--accent-gold); stop-opacity: 0"/></radialGradient>
+                            </defs>
+                            <!-- תמונה על הקיר -->
+                            <rect x="196" y="40" width="54" height="40" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"/>
+                            <path d="M202 74 l13 -15 l9 9 l8 -9 l12 15z" fill="currentColor" opacity=".28"/>
+                            <circle cx="238" cy="52" r="4" style="fill: var(--accent-gold)" opacity=".55"/>
+                            <!-- שטיח -->
+                            <ellipse cx="222" cy="180" rx="152" ry="9" fill="currentColor" opacity=".16"/>
+                            <ellipse cx="222" cy="180" rx="134" ry="5.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 4" opacity=".4"/>
+                            <!-- ספרייה -->
+                            <rect x="14" y="40" width="94" height="142" rx="4" fill="currentColor" opacity=".1"/>
+                            <rect x="14" y="40" width="94" height="142" rx="4" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".5"/>
+                            <line x1="14" y1="86" x2="108" y2="86" stroke="currentColor" stroke-width="2" opacity=".5"/>
+                            <line x1="14" y1="134" x2="108" y2="134" stroke="currentColor" stroke-width="2" opacity=".5"/>
+                            <g opacity=".75">
+                                <rect x="20" y="52" width="9" height="33" rx="1.5" style="fill: var(--accent-pink)" opacity=".7"/>
+                                <rect x="30" y="47" width="11" height="38" rx="1.5" fill="currentColor" opacity=".55"/>
+                                <rect x="42" y="55" width="8" height="30" rx="1.5" style="fill: var(--accent-gold)" opacity=".75"/>
+                                <rect x="51" y="50" width="10" height="35" rx="1.5" fill="currentColor" opacity=".35"/>
+                                <rect x="66" y="58" width="9" height="27" rx="1.5" transform="rotate(-14 70 85)" style="fill: var(--accent-pink)" opacity=".55"/>
+                                <rect x="84" y="62" width="18" height="6" rx="1.5" fill="currentColor" opacity=".45"/>
+                                <rect x="86" y="68" width="15" height="6" rx="1.5" style="fill: var(--accent-gold)" opacity=".65"/>
+                                <rect x="84" y="74" width="17" height="11" rx="1.5" fill="currentColor" opacity=".3"/>
+                                <rect x="20" y="99" width="12" height="34" rx="1.5" fill="currentColor" opacity=".45"/>
+                                <rect x="33" y="104" width="8" height="29" rx="1.5" style="fill: var(--accent-gold)" opacity=".7"/>
+                                <rect x="42" y="96" width="10" height="37" rx="1.5" style="fill: var(--accent-pink)" opacity=".6"/>
+                                <rect x="53" y="101" width="9" height="32" rx="1.5" fill="currentColor" opacity=".6"/>
+                                <rect x="63" y="98" width="11" height="35" rx="1.5" fill="currentColor" opacity=".3"/>
+                                <circle cx="91" cy="124" r="9" fill="currentColor" opacity=".3"/>
+                                <rect x="20" y="147" width="10" height="34" rx="1.5" style="fill: var(--accent-pink)" opacity=".5"/>
+                                <rect x="31" y="151" width="12" height="30" rx="1.5" fill="currentColor" opacity=".5"/>
+                                <rect x="44" y="145" width="8" height="36" rx="1.5" style="fill: var(--accent-gold)" opacity=".6"/>
+                                <rect x="53" y="150" width="10" height="31" rx="1.5" fill="currentColor" opacity=".35"/>
+                                <rect x="64" y="148" width="9" height="33" rx="1.5" style="fill: var(--accent-pink)" opacity=".65"/>
+                                <rect x="78" y="164" width="24" height="7" rx="1.5" fill="currentColor" opacity=".4"/>
+                                <rect x="80" y="171" width="21" height="10" rx="1.5" style="fill: var(--accent-gold)" opacity=".55"/>
+                            </g>
+                            <!-- עציץ על הספרייה -->
+                            <rect x="52" y="30" width="18" height="10" rx="2.5" fill="currentColor" opacity=".45"/>
+                            <path d="M61 30 c-2 -9 -8 -14 -14 -16 c3 8 7 13 14 16 z M61 30 c1 -10 6 -16 13 -19 c-1 9 -6 15 -13 19 z M61 30 c0 -8 0 -14 -1 -20 c3 6 3 13 1 20 z" style="fill: var(--accent-gold)" opacity=".5"/>
+                            <!-- ערימת ספרים וכוס ליד הספה -->
+                            <rect x="114" y="168" width="26" height="6" rx="1.5" style="fill: var(--accent-pink)" opacity=".5"/>
+                            <rect x="116" y="162" width="22" height="6" rx="1.5" fill="currentColor" opacity=".45"/>
+                            <rect x="113" y="174" width="28" height="7" rx="1.5" style="fill: var(--accent-gold)" opacity=".55"/>
+                            <rect x="120" y="152" width="9" height="10" rx="2" fill="currentColor" opacity=".45"/>
+                            <path d="M129 155 q4 0 4 3 q0 3 -4 3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+                            <!-- ספה -->
+                            <rect x="150" y="112" width="148" height="40" rx="16" fill="currentColor" opacity=".2"/>
+                            <rect x="142" y="138" width="164" height="32" rx="12" fill="currentColor" opacity=".28"/>
+                            <rect x="136" y="126" width="22" height="46" rx="10" fill="currentColor" opacity=".36"/>
+                            <rect x="290" y="126" width="22" height="46" rx="10" fill="currentColor" opacity=".36"/>
+                            <line x1="224" y1="142" x2="224" y2="166" stroke="currentColor" stroke-width="1.2" opacity=".3"/>
+                            <rect x="162" y="120" width="30" height="22" rx="8" transform="rotate(-8 177 131)" style="fill: var(--accent-pink)" opacity=".42"/>
+                            <rect x="252" y="121" width="28" height="21" rx="8" transform="rotate(7 266 131)" style="fill: var(--accent-gold)" opacity=".42"/>
+                            <rect x="152" y="170" width="5" height="10" rx="2" fill="currentColor" opacity=".45"/>
+                            <rect x="291" y="170" width="5" height="10" rx="2" fill="currentColor" opacity=".45"/>
+                            <path d="M232 139 q8 -5 16 0 q8 -5 16 0 v4 q-8 -4 -16 0 q-8 -4 -16 0 z" fill="currentColor" opacity=".5"/>
+                            <!-- מנורת עמידה -->
+                            <circle cx="354" cy="66" r="34" fill="url(#books-lamp-glow)"/>
+                            <line x1="354" y1="58" x2="354" y2="178" stroke="currentColor" stroke-width="2.4" opacity=".5"/>
+                            <ellipse cx="354" cy="180" rx="14" ry="3.5" fill="currentColor" opacity=".5"/>
+                            <path d="M336 60 L372 60 L363 36 L345 36 Z" style="fill: var(--accent-gold)" opacity=".6"/>
+                        </svg>
+                    </div>
+                </section>
+
                 <!-- New Me - מקום לפרויקט החדש (תוכנית תזונה אישית בתשלום נפרד), לפי
                      בקשה מפורשת ("תעשה מקום לכל הפרויקט החדש... בנפרד"). כרגע רק מסך
                      "בקרוב" - התוכן עצמו ייבנה כאן -->
@@ -1139,6 +1223,10 @@
                     <button type="button" data-tour="m-shopping" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
                         <span class="hamburger-drawer-item-icon">🛒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
+                    </button>
+                    <button type="button" data-tour="m-books" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openBooksSection();">
+                        <span class="hamburger-drawer-item-icon">📚</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="books_menu_label">My Books</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
@@ -3275,6 +3363,83 @@
             </div>
         </div>
 
+        <!-- 📚 הוספה / עריכה של ספר - שם (עם חיפוש כריכה/סופר/עמודים ב-Open Library), סופר, עמודים,
+             לאיזה טאב, ובספר בקריאה גם עמוד נוכחי ו"לסיים עד" -->
+        <div id="modal-book" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="book-modal-title" data-i18n="books_modal_add_title">📚 Add a book</h3>
+                <div class="preset-manager-grid">
+                <label class="settings-label" for="book-title-input" data-i18n="books_field_title">Book name</label>
+                <input type="text" id="book-title-input" maxlength="200" autocomplete="off" oninput="onBookTitleInput()">
+                <div id="book-lookup-results" class="book-lookup-results hidden"></div>
+                <label class="settings-label" for="book-author-input" data-i18n="books_field_author">Author (optional)</label>
+                <input type="text" id="book-author-input" maxlength="120">
+                <label class="settings-label" for="book-pages-input" data-i18n="books_field_pages">Number of pages (optional)</label>
+                <input type="number" id="book-pages-input" inputmode="numeric" min="1" max="20000">
+                <p class="settings-label" data-i18n="books_field_status">Where does it go?</p>
+                <div id="book-status-chips" class="vision-goal-category-chips"></div>
+                <div id="book-reading-fields" class="preset-manager-grid hidden">
+                    <label class="settings-label" for="book-current-input" data-i18n="books_field_current">Current page</label>
+                    <input type="number" id="book-current-input" inputmode="numeric" min="0">
+                    <p class="settings-label" data-i18n="books_field_deadline">Finish by (optional)</p>
+                    <div class="vision-goal-date-row">
+                        <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('book-deadline-input')">
+                            <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                            <span id="book-deadline-input-display" data-placeholder=""></span>
+                        </button>
+                        <button type="button" id="book-deadline-clear" class="vision-goal-date-clear hidden" onclick="clearBookDeadline()" data-i18n-aria-label="vision_date_clear" aria-label="Remove date">✕</button>
+                    </div>
+                    <input type="date" id="book-deadline-input" class="date-picker-hidden-input" onchange="onBookDeadlineChange()">
+                    <p class="vision-goal-field-hint" data-i18n="books_deadline_hint">You'll see how many pages a day you need – and a daily reading task shows up in A Peek at Today.</p>
+                </div>
+                </div>
+                <input type="hidden" id="book-cover-url">
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-primary" onclick="saveBook()" data-i18n="vision_goal_save_btn">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-book')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+                <button type="button" id="btn-delete-book" class="btn-clear-week hidden" style="margin-top: 8px;" data-i18n="books_delete_btn">Delete book</button>
+            </div>
+        </div>
+
+        <!-- 🎉 סיימתי ספר: דירוג ⭐ ומשפט שאהבתי. גם מסך הפרטים של ספר מהמדף ("קראתי") -->
+        <div id="modal-book-finish" class="apple-modal">
+            <div class="modal-sheet book-finish-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="book-finish-title" data-i18n="books_finish_title">🎉 Finished!</h3>
+                <p class="modal-subtitle" id="book-finish-subtitle"></p>
+                <p class="settings-label" data-i18n="books_rating_label">How was it?</p>
+                <div id="book-finish-stars" class="book-finish-stars"></div>
+                <div class="preset-manager-grid">
+                    <label class="settings-label" for="book-finish-note" data-i18n="books_note_label">A line I loved (optional)</label>
+                    <textarea id="book-finish-note" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-primary" onclick="saveBookFinish()" data-i18n="vision_goal_save_btn">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-book-finish')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+                <div class="book-finish-more">
+                    <button type="button" id="btn-book-read-again" class="btn-link-subtle hidden" onclick="readBookAgain()" data-i18n="books_read_again_btn">↩ Read it again</button>
+                    <button type="button" id="btn-book-finish-edit" class="btn-link-subtle hidden" onclick="editBookFromFinish()" data-i18n="books_edit_title">Edit details</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎯 חיבור ליעד קריאה מ"היעדים שלי" (ספירה עד יעד) - כל ספר שנגמר מוסיף +1 -->
+        <div id="modal-books-goal-picker" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="books_goal_picker_title">🎯 Reading goal</h3>
+                <p class="vision-goal-field-hint" data-i18n="books_goal_picker_text">Every book you finish adds +1 to the goal you choose.</p>
+                <div id="books-goal-options" class="vision-goal-category-chips"></div>
+                <p id="books-goal-none-hint" class="vision-goal-field-hint hidden" data-i18n="books_goal_none_hint">No count goals yet – in My Goals, add a goal with 'Count to a target' (for example 12 books).</p>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-books-goal-picker')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 📅 תזמון צעד של יעד: תאריך (+ "כל שבוע עד שמסיימים") - נוצרת משימה ביומן שמופיעה גם
              בהצצה להיום, ו-✓ עליה מסמן את הצעד (לפי בקשה מפורשת: "הצצה + יומן", "תזכורת עד שמסיימים") -->
         <div id="modal-goal-step-schedule" class="apple-modal">
@@ -3644,9 +3809,10 @@
 
     </div>
 
-    <script src="i18n.js?v=378"></script>
-    <script src="app.js?v=526"></script>
+    <script src="i18n.js?v=379"></script>
+    <script src="app.js?v=527"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=16"></script>
+    <script src="books.js?v=1"></script>
 </body>
 </html>
