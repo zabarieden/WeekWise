@@ -14381,18 +14381,28 @@ function renderWeeklyNoteDisplay() {
             <li class="${item.done ? 'done' : ''}"><button type="button" class="weekly-note-check" onclick="event.stopPropagation(); toggleWeeklyNoteItem(${item.index})" aria-pressed="${item.done ? 'true' : 'false'}">${item.done ? '✓' : ''}</button><span>${escapeHtmlForReport(item.text)}</span></li>`).join('')}
         </ul>${text ? `<div class="weekly-note-free">${escapeHtmlForReport(text)}</div>` : ''}`;
         display.classList.remove('weekly-note-display-empty');
+        display.removeAttribute('aria-label');
         display.style.fontSize = (totalLength > 70 ? 0.6 : totalLength > 45 ? 0.66 : 0.72) + 'rem';
         return;
     }
-    const shownText = text || t('weekly_note_empty_hint');
-    display.textContent = shownText;
-    display.classList.toggle('weekly-note-display-empty', !text);
+    // פתק ריק: רק ✏️ עדין, בלי מילים (לפי בקשה מפורשת: "משהו אחר קצר או בכלל לא") -
+    // ההסבר המלא נשאר לקוראי מסך
+    if (!text) {
+        display.textContent = '✏️';
+        display.classList.add('weekly-note-display-empty');
+        display.setAttribute('aria-label', t('weekly_note_empty_hint'));
+        display.style.fontSize = '';
+        return;
+    }
+    display.textContent = text;
+    display.classList.remove('weekly-note-display-empty');
+    display.removeAttribute('aria-label');
     // הוגדל לפי בקשה מפורשת ("תגדיל את הפונט בפתקים") - כל מדרגה גדלה
     // בהתאמה, עדיין יורדת בהדרגה לפי אורך הטקסט כדי שהכל יכנס בלי להיחתך
     let fontSize = 0.85;
-    if (shownText.length > 45) fontSize = 0.6;
-    else if (shownText.length > 32) fontSize = 0.68;
-    else if (shownText.length > 20) fontSize = 0.76;
+    if (text.length > 45) fontSize = 0.6;
+    else if (text.length > 32) fontSize = 0.68;
+    else if (text.length > 20) fontSize = 0.76;
     display.style.fontSize = fontSize + 'rem';
 }
 // מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
