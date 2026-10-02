@@ -1040,6 +1040,20 @@
                      בינהם... שההודעה תישמר... ובמקביל תהיה לי האפשרות להיכנס למוח") -->
                 <span id="ai-brain-fab-badge" class="ai-brain-fab-badge hidden" onclick="event.stopPropagation(); openDailyFocusBubble();" data-i18n-title="daily_focus_badge_title" title="Today's focus reminder">1</span>
             </button>
+            <!-- האייקון האחרון שנבחר לעוזר מיושם כאן מיד, לפני שהדף מצויר (כמו ערכת הנושא בראש
+                 הדף) - בלי זה הרובוט (ברירת המחדל) הבהב לשבריר שנייה עד שההגדרה נטענה מהשרת,
+                 לפי בקשה מפורשת. נשמר ב-applyAiIcon ב-app.js -->
+            <script>
+                (function () {
+                    try {
+                        var glyph = localStorage.getItem('weekwise_last_ai_icon_glyph');
+                        if (!glyph) return;
+                        var img = document.getElementById('ai-brain-icon-img');
+                        var emoji = document.getElementById('ai-brain-icon-emoji');
+                        if (img && emoji) { img.classList.add('hidden'); emoji.textContent = glyph; emoji.classList.remove('hidden'); }
+                    } catch (e) { /* localStorage חסום - נשאר על ברירת המחדל */ }
+                })();
+            </script>
 
             <!-- תפריט המבורגר: לא מחליף את רשת הריבועים של מסך הבית, אלא נוסף
                  לידה - קיצור-דרך מסודר בקטגוריות לכל המסכים/תת-התצוגות הקיימים,
@@ -3631,7 +3645,7 @@
     </div>
 
     <script src="i18n.js?v=378"></script>
-    <script src="app.js?v=523"></script>
+    <script src="app.js?v=524"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=16"></script>
 </body>

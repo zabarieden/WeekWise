@@ -7931,6 +7931,9 @@ function applyAiIcon(iconId) {
     document.querySelectorAll('.ai-icon-swatch').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-ai-icon') === iconId);
     });
+    // נשמר גם בלי מזהה משתמש - הסקריפט הקטן שמתחת לכפתור ב-index.html מיישם אותו מיד בטעינה,
+    // לפני שהדף מצויר (אחרת הרובוט של ברירת המחדל הבהב לשבריר שנייה עד שההגדרה נטענה)
+    try { localStorage.setItem('weekwise_last_ai_icon_glyph', option.type === 'emoji' ? option.glyph : ''); } catch (e) { /* localStorage חסום */ }
 }
 
 function aiIconKey() {
