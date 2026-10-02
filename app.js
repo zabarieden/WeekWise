@@ -1486,10 +1486,11 @@ async function submitAuthForm() {
             // התחברות רגילה (לא, גם אם עדיין false משום מה ברשומה ישנה)
             // ברירות המחדל של משתמש/ת חדש/ה = בדיוק המראה של האפליקציה כפי שהמפתחת
             // הגדירה אותה (לפי בקשה מפורשת: "כל משתמש שמוריד זה מה שהוא רואה"):
-            // רקע לבן, רובוט קטן, תג קלוריות בהצצה, פתק ורוד, צליל תזכורת wind_chime
+            // רקע מנטה במצב בהיר (לפי בקשה מפורשת), רובוט קטן, תג קלוריות בהצצה, פתק ורוד,
+            // צליל תזכורת wind_chime
             await supabaseClient.from('user_premium').insert({
-                user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false,
-                theme: 'bg_white', ai_fab_compact: true, home_calorie_badge_enabled: true,
+                user_id: data.user.id, username: email, light_mode: true, onboarding_completed: false,
+                theme: 'mint_fresh', ai_fab_compact: true, home_calorie_badge_enabled: true,
                 weekly_note_color: 'pink', reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
                 // השפה = מה שנבחר במסך ההרשמה (ברירת מחדל: אנגלית) - לא העברית של המפתחת
                 language: currentLang || 'en',
@@ -7861,10 +7862,10 @@ function updateHomeSkyDayNight() {
     strip.classList.toggle('sky-night', !isDay);
 }
 
-// 5 הראשונות בגריד הבחירה (4 הרקעים הניטרליים + ברירת המחדל הוורודה) חינמיות -
-// לפי בקשה מפורשת ("5 הראשונים... זה מספיק"), שאר 36 הערכות הצבעוניות/
-// המיוחדות נשארות פרימיום בלבד
-const FREE_COLOR_THEMES = ['default', 'bg_white', 'bg_black', 'bg_beige', 'bg_dark_grey'];
+// 6 הראשונות בגריד הבחירה חינמיות: מנטה (ברירת המחדל, נוספה לפי בקשה מפורשת - "הוא יפה"),
+// 4 הרקעים הניטרליים וברירת המחדל הוורודה הישנה ("5 הראשונים... זה מספיק"). שאר הערכות
+// הצבעוניות/המיוחדות נשארות פרימיום בלבד
+const FREE_COLOR_THEMES = ['mint_fresh', 'default', 'bg_white', 'bg_black', 'bg_beige', 'bg_dark_grey'];
 
 async function selectColorTheme(themeName) {
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
@@ -7885,19 +7886,18 @@ async function selectColorTheme(themeName) {
 }
 
 async function loadColorTheme() {
-    // הברירת מחדל האמיתית (חשבון חדש/מי שלא בחר/ה בכלל) היא "לבן", לא הוורוד-
-    // סגול המקורי (עדיין קיים כאופציה נפרדת בשם "Default" בגריד הבחירה) - לפי
-    // בקשה מפורשת. אותו שינוי בדיוק בהיישום-המוקדם הסינכרוני ב-index.html.
+    // הברירת מחדל האמיתית (חשבון חדש/מי שלא בחר/ה בכלל) היא "מנטה" (mint_fresh) -
+    // לפי בקשה מפורשת. אותו שינוי בדיוק בהיישום-המוקדם הסינכרוני ב-index.html.
     // themeName נשאר null עד שנמצא ערך אמיתי - כדי לא לבלבל בין "לא נבחר שום
-    // דבר" (נופל ל-bg_white) לבין "המשתמשת בפועל בחרה bg_white" (ערך אמיתי,
-    // לא אמור להידרס בחזרה מ-localStorage ישן)
+    // דבר" (נופל לברירת המחדל) לבין בחירה אמיתית (לא אמורה להידרס בחזרה
+    // מ-localStorage ישן)
     let themeName = null;
     if (supabaseClient && currentUserId) {
         const { data } = await supabaseClient.from('user_premium').select('theme').eq('user_id', currentUserId).maybeSingle();
         if (data && data.theme) themeName = data.theme;
     }
     if (!themeName) {
-        themeName = localStorage.getItem(colorThemeKey()) || 'bg_white';
+        themeName = localStorage.getItem(colorThemeKey()) || 'mint_fresh';
     }
     applyColorTheme(themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);

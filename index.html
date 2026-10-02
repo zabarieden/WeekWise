@@ -17,8 +17,8 @@
             try {
                 var theme = localStorage.getItem('weekwise_last_color_theme');
                 // ברירת המחדל האמיתית (מי שעדיין לא בחר/ה בכלל, כולל חשבון חדש)
-                // היא עכשיו "לבן" ולא הוורוד-סגול המקורי - לפי בקשה מפורשת
-                if (!theme) theme = 'bg_white';
+                // היא "מנטה" (mint_fresh) במצב בהיר - לפי בקשה מפורשת
+                if (!theme) theme = 'mint_fresh';
                 if (theme !== 'default') document.documentElement.setAttribute('data-color-theme', theme);
                 // אותו הסיפור בדיוק לגבי מצב בהיר - loadLightModeSetting ב-app.js
                 // הוא async (מחכה לחיבור ל-Supabase), אז בלי היישום המוקדם הזה
@@ -2207,7 +2207,8 @@
 
                     <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                     <div class="theme-picker-grid">
-                        <!-- 4 רקעים ניטרליים - לפני כל שאר האפשרויות, לפי בקשה מפורשת -->
+                        <!-- מנטה - ראשונה, חינמית וברירת המחדל (לפי בקשה מפורשת), ואחריה 4 רקעים ניטרליים -->
+                        <button type="button" class="theme-swatch theme-swatch-mint" data-theme="mint_fresh" onclick="selectColorTheme('mint_fresh')" title="Mint Fresh"></button>
                         <button type="button" class="theme-swatch theme-swatch-bg-white" data-theme="bg_white" onclick="selectColorTheme('bg_white')" title="White"></button>
                         <button type="button" class="theme-swatch theme-swatch-bg-black" data-theme="bg_black" onclick="selectColorTheme('bg_black')" title="Black"></button>
                         <button type="button" class="theme-swatch theme-swatch-bg-beige" data-theme="bg_beige" onclick="selectColorTheme('bg_beige')" title="Beige"></button>
@@ -2229,7 +2230,6 @@
                         <button type="button" class="theme-swatch theme-swatch-cherry" data-theme="cherry_blossom" onclick="selectColorTheme('cherry_blossom')" title="Cherry Blossom"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-arctic" data-theme="arctic_frost" onclick="selectColorTheme('arctic_frost')" title="Arctic Frost"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-volcanic" data-theme="volcanic_ember" onclick="selectColorTheme('volcanic_ember')" title="Volcanic Ember"><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-swatch-mint" data-theme="mint_fresh" onclick="selectColorTheme('mint_fresh')" title="Mint Fresh"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-amethyst" data-theme="royal_amethyst" onclick="selectColorTheme('royal_amethyst')" title="Royal Amethyst"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-graphite" data-theme="graphite_steel" onclick="selectColorTheme('graphite_steel')" title="Graphite Steel"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-citrus" data-theme="citrus_lime" onclick="selectColorTheme('citrus_lime')" title="Citrus Lime"><span class="theme-swatch-lock">🔒</span></button>
@@ -3645,7 +3645,7 @@
     </div>
 
     <script src="i18n.js?v=378"></script>
-    <script src="app.js?v=525"></script>
+    <script src="app.js?v=526"></script>
     <script src="new-me-data.js?v=5"></script>
     <script src="new-me.js?v=16"></script>
 </body>
