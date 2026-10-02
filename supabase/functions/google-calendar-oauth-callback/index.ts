@@ -90,6 +90,19 @@ Deno.serve(async (req) => {
         await supabase.from("calendar_sync_outbox")
             .update({ attempts: 0, last_error: null })
             .eq("user_id", userId).is("processed_at", null).gte("attempts", 999);
+        // אירועים עתידיים מהאפליקציה שעוד לא הגיעו לגוגל בכלל (נוספו לפני החיבור, או בזמן שהוא
+        // היה שבור וסומנו "אין חיבור") - נכנסים לתור עכשיו, כך שאחרי חיבור כל מה שמתוכנן מופיע
+        // גם ביומן של גוגל (לפי מה שדווח: "התחבר בהצלחה, למה לא כל הדברים מופיעים?")
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const [{ data: missingEvents }, { data: pendingOutbox }] = await Promise.all([
+            supabase.from("calendar_events").select("id, recurrence_group_id")
+                .eq("user_id", userId).eq("source", "calendar").is("google_synced_at", null).is("google_event_id", null).gte("event_date", todayIso),
+            supabase.from("calendar_sync_outbox").select("calendar_event_id").eq("user_id", userId).is("processed_at", null),
+        ]);
+        const alreadyQueued = new Set((pendingOutbox || []).map((r) => r.calendar_event_id));
+        const toQueue = (missingEvents || []).filter((e) => !alreadyQueued.has(e.id))
+            .map((e) => ({ calendar_event_id: e.id, user_id: userId, action: "insert", recurrence_group_id: e.recurrence_group_id }));
+        if (toQueue.length) await supabase.from("calendar_sync_outbox").insert(toQueue);
 
         const { data: conn } = await supabase.from("google_calendar_connections").select("*").eq("id", connId).single();
 
