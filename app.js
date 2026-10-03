@@ -2229,6 +2229,8 @@ let dailyFocusState = 'unseen';
 // 'skipped' - "🌙 לא היום": התג נעלם עד מחר, בלי להציק. נשמר כשורת daily_focus_dismissed (כמו ✕)
 // עם הכותרת הזו, כדי שכל המסננים הקיימים ימשיכו להסתיר אותה מהלו"ז ומהלוח
 const DAILY_FOCUS_SKIP_TITLE = 'daily_focus_skipped';
+// מה שנבחר ביום האחרון שבו ענו (עד 3 ימים אחורה) - מוצע שוב: "↻ להמשיך עם..." בלחיצה אחת
+let dailyFocusCarryItems = [];
 // הפעלה/כיבוי של השאלה היומית - ברירת מחדל דלוק (opt-out), אותו דפוס בדיוק
 // כמו weekly-note, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
 // לכבות שתהיה לה האפשרות"). כיבוי לא מוחק תשובות עבר, רק מסתיר את התג/בועה
@@ -2261,16 +2263,24 @@ async function checkDailyFocusPrompt() {
     }
     const todayStr = getLocalDateString();
     lastCheckedDailyFocusDate = todayStr;
-    const { data, error } = await supabaseClient.from('calendar_events').select('source, event_title').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    // היום + 3 הימים שלפניו בשאילתה אחת: היום קובע את מצב התג, והימים הקודמים - מה אפשר להמשיך
+    const from = new Date(); from.setDate(from.getDate() - 3);
+    const { data: rows, error } = await supabaseClient.from('calendar_events').select('source, event_title, event_date').eq('user_id', currentUserId)
+        .gte('event_date', getLocalDateString(from)).lte('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    const data = (rows || []).filter(row => row.event_date === todayStr);
     // לוג אבחוני זמני - דווח שהתג "1" חוזר לפעמים באותו יום למרות שנענה בפועל
     // (בחרו תגיות ולחצו הוספה), בלי הודעת שגיאה גלויה. לא נמצא הסבר לוגי דרך
     // קריאת הקוד בלבד (upsert/RLS/אזור-זמן/service-worker כולם נבדקו ונשללו) -
     // הלוג הזה יאפשר לראות מה בפועל חוזר מהשאילתה בפעם הבאה שזה קורה
     console.log('[daily-focus-check]', { todayStr, currentUserId, error, data });
-    if (data && data.some(row => row.source === 'daily_focus')) dailyFocusState = 'answered';
-    else if (data && data.some(row => row.source === 'daily_focus_dismissed' && row.event_title === DAILY_FOCUS_SKIP_TITLE)) dailyFocusState = 'skipped';
-    else if (data && data.some(row => row.source === 'daily_focus_dismissed')) dailyFocusState = 'dismissed';
+    if (data.some(row => row.source === 'daily_focus')) dailyFocusState = 'answered';
+    else if (data.some(row => row.source === 'daily_focus_dismissed' && row.event_title === DAILY_FOCUS_SKIP_TITLE)) dailyFocusState = 'skipped';
+    else if (data.some(row => row.source === 'daily_focus_dismissed')) dailyFocusState = 'dismissed';
     else dailyFocusState = 'unseen';
+    // "להמשיך גם היום": הבחירות של היום האחרון (מ-3 הימים הקודמים) שבו נבחר משהו
+    const past = (rows || []).filter(row => row.source === 'daily_focus' && row.event_date < todayStr);
+    const lastDate = past.reduce((max, row) => (row.event_date > max ? row.event_date : max), '');
+    dailyFocusCarryItems = lastDate ? [...new Set(past.filter(row => row.event_date === lastDate).map(row => row.event_title))] : [];
     applyDailyFocusIconState();
 }
 
@@ -2310,6 +2320,37 @@ let selectedDailyFocusTags = [];
 // בונה את 5 התגיות של היום (כל 5 המשפטים של הסבב+יום הנוכחיים, בלי בחירה
 // אקראית מתוך מאגר גדול יותר - כל 5 מוצגות תמיד) + תגית "אחר" חופשית בסוף.
 // בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags
+// הצעה אחת "מהחיים שלך" - לפי בקשה מפורשת: במקום אחת מ-5 ההצעות הכלליות, משהו מהנתונים
+// עצמם - הצעד הבא ביעד של החודש (או ביעד פעיל אחר), או משימת הקריאה של היום. כשיש כמה, הן
+// מתחלפות לפי היום. אין נתונים מתאימים - נשארות 5 הצעות כלליות
+function getDailyFocusPersonalSuggestion() {
+    const options = [];
+    const goals = (typeof visionGoalsCache !== 'undefined' ? visionGoalsCache : []).filter(g => !g.is_achieved);
+    const goal = goals.find(g => typeof visionIsFocus === 'function' && visionIsFocus(g))
+        || goals.find(g => (typeof visionMilestonesCache !== 'undefined' ? visionMilestonesCache : []).some(m => m.goal_id === g.id && !m.is_done));
+    if (goal) {
+        const step = (typeof visionMilestonesCache !== 'undefined' ? visionMilestonesCache : [])
+            .filter(m => m.goal_id === goal.id && !m.is_done)
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0];
+        options.push(step ? `🎯 ${step.title} · ${goal.title}` : t('daily_focus_personal_goal').replace('{goal}', goal.title));
+    }
+    if (typeof getPeekBookTaskItems === 'function') {
+        const reading = getPeekBookTaskItems().find(item => !item.done);
+        if (reading) options.push(`${reading.icon} ${reading.text} · ${reading.tag}`);
+    }
+    return options.length ? options[getDailyFocusRotationDay() % options.length] : null;
+}
+
+function buildDailyFocusChip(label, saveText, extraClass) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'daily-focus-tag-chip' + (extraClass ? ' ' + extraClass : '');
+    chip.textContent = label;
+    chip.setAttribute('aria-pressed', 'false');
+    chip.onclick = () => toggleDailyFocusTag(saveText, chip);
+    return chip;
+}
+
 function renderDailyFocusTags() {
     const container = document.getElementById('daily-focus-tags-list');
     if (!container) return;
@@ -2317,15 +2358,23 @@ function renderDailyFocusTags() {
     selectedDailyFocusTags = [];
     const phase = getDailyFocusPhase();
     const day = getDailyFocusRotationDay();
-    for (let slot = 1; slot <= 5; slot++) {
+    const shown = new Set();
+    // ↻ מה שנבחר בפעם הקודמת - למעלה, אפשר לסמן יחד עם הצעות אחרות
+    dailyFocusCarryItems.map(localizeDailyFocusTitle).forEach(text => {
+        if (shown.has(text)) return;
+        shown.add(text);
+        container.appendChild(buildDailyFocusChip(`↻ ${text}`, text, 'daily-focus-tag-chip-carry'));
+    });
+    const personal = getDailyFocusPersonalSuggestion();
+    if (personal && !shown.has(personal)) {
+        shown.add(personal);
+        container.appendChild(buildDailyFocusChip(personal, personal, 'daily-focus-tag-chip-personal'));
+    }
+    for (let slot = 1; slot <= (personal ? 4 : 5); slot++) {
         const text = t(`daily_focus_p${phase}_d${day}_s${slot}`);
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'daily-focus-tag-chip';
-        chip.textContent = text;
-        chip.setAttribute('aria-pressed', 'false');
-        chip.onclick = () => toggleDailyFocusTag(text, chip);
-        container.appendChild(chip);
+        if (shown.has(text)) continue;
+        shown.add(text);
+        container.appendChild(buildDailyFocusChip(text, text));
     }
     const otherChip = document.createElement('button');
     otherChip.type = 'button';
@@ -2380,6 +2429,13 @@ function openDailyFocusBubble() {
     if (input) { input.value = ''; input.classList.add('hidden'); }
     document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
     document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
+    // "↻ להמשיך עם: ..." - מה שהיה חשוב בפעם הקודמת, בלחיצה אחת
+    const carryBtn = document.getElementById('daily-focus-carry-btn');
+    if (carryBtn) {
+        const items = dailyFocusCarryItems.map(localizeDailyFocusTitle);
+        carryBtn.classList.toggle('hidden', !items.length);
+        carryBtn.textContent = items.length ? t('daily_focus_carry_btn').replace('{text}', items[0]) + (items.length > 1 ? ` (+${items.length - 1})` : '') : '';
+    }
     if (bubble) bubble.classList.remove('hidden');
     const badge = document.getElementById('ai-brain-fab-badge');
     if (badge) badge.classList.add('hidden');
@@ -2428,6 +2484,28 @@ async function dismissDailyFocusModal() {
     }
     if (dailyFocusState !== 'answered' && dailyFocusState !== 'skipped') dailyFocusState = 'dismissed';
     applyDailyFocusIconState();
+}
+
+// "↻ להמשיך עם..." - לפי בקשה מפורשת: מה שהיה חשוב בפעם הקודמת ולא הסתיים, ממשיך גם להיום
+// בלחיצה אחת - נשמר בדיוק כמו בחירה רגילה (שורות daily_focus של היום)
+let dailyFocusCarryInFlight = false;
+async function continueDailyFocus() {
+    const items = [...new Set(dailyFocusCarryItems.map(localizeDailyFocusTitle))];
+    if (dailyFocusCarryInFlight || dailyFocusState === 'answered' || !items.length || !supabaseClient || !currentUserId) return;
+    dailyFocusCarryInFlight = true;
+    const todayStr = getLocalDateString();
+    const { error } = await supabaseClient.from('calendar_events').insert(items.map(text => ({
+        username: currentUsername, user_id: currentUserId, event_title: text, event_date: todayStr, source: 'daily_focus',
+    })));
+    dailyFocusCarryInFlight = false;
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    dailyFocusCarryItems = [];
+    markDailyFocusPromptShown();
+    applyDailyFocusIconState();
+    const bubble = document.getElementById('daily-focus-bubble');
+    if (bubble) bubble.classList.add('hidden');
+    showAppToast(t('daily_focus_carry_toast'));
+    loadTodayTasks();
 }
 
 // "🌙 לא היום" - לפי בקשה מפורשת: יש ימים שלא מתאים לבחור, וזה בסדר. בניגוד ל-✕ (שמשאיר את התג

@@ -4706,6 +4706,14 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .daily-focus-tag-chip.selected { background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); border-color: color-mix(in srgb, var(--accent-purple) 60%, transparent); }
 .daily-focus-tag-chip.selected::before { content: '✓'; background: var(--accent-purple); border-color: var(--accent-purple); }
 .daily-focus-tag-chip-other { font-style: italic; }
+/* ↻ מהפעם הקודמת ו"מהחיים שלך" (יעד / קריאה) - מסומנות בעדינות כדי שיבלטו מההצעות הכלליות */
+.daily-focus-tag-chip-carry { border-style: dashed; border-color: color-mix(in srgb, var(--accent-purple) 50%, transparent); }
+.daily-focus-tag-chip-personal { border-color: color-mix(in srgb, var(--accent-gold) 70%, transparent); background: color-mix(in srgb, var(--accent-gold) 12%, var(--bg-row)); font-weight: 600; }
+.daily-focus-tag-chip-personal.selected, .daily-focus-tag-chip-carry.selected { border-style: solid; border-color: color-mix(in srgb, var(--accent-purple) 60%, transparent); }
+/* "↻ להמשיך עם: ..." בבועה הקטנה - כפתור רך ברוחב הבועה */
+.daily-focus-carry { align-self: stretch; text-align: start; background: color-mix(in srgb, var(--accent-purple) 10%, transparent); border: 1px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 0.74rem; font-weight: 700; line-height: 1.35; color: var(--text-primary); cursor: pointer; overflow-wrap: anywhere; }
+.daily-focus-carry.hidden { display: none; }
+.daily-focus-carry:active { transform: scale(0.98); }
 .daily-focus-bubble-submit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
 .daily-focus-bubble-submit {
     background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
