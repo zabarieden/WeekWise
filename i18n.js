@@ -71,6 +71,7 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    login_app_purpose: "NOT10.ai – personal planning and tracking: schedule and tasks, notes, nutrition, fitness, budget and goals, with optional Google Calendar sync.",
     item_updated_success: "Changes saved ✓",
     books_credit_label: "Book details & covers:",
     books_page_ask_hint: "So the progress bar and the daily reading task pick up from the right place.",
@@ -1296,6 +1297,7 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    login_app_purpose: "NOT10.ai – תכנון ומעקב אישי: לו״ז ומשימות, פתקים, תזונה, ספורט, תקציב ויעדים, עם סנכרון אופציונלי ליומן גוגל.",
     item_updated_success: "השינויים נשמרו ✓",
     books_credit_label: "פרטי ספרים וכריכות:",
     books_page_ask_hint: "כדי שפס ההתקדמות ומשימת הקריאה היומית ימשיכו מהמקום הנכון.",
@@ -2521,6 +2523,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    login_app_purpose: "NOT10.ai – planificación y seguimiento personal: horario y tareas, notas, nutrición, deporte, presupuesto y metas, con sincronización opcional con Google Calendar.",
     item_updated_success: "Cambios guardados ✓",
     books_credit_label: "Datos y portadas de libros:",
     books_page_ask_hint: "Para que la barra de progreso y la tarea diaria de lectura sigan desde el lugar correcto.",
@@ -3753,6 +3756,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla. Se elimina todo, incluidas las fotos que subiste. Si Google Calendar está conectado, la App lo desconecta primero: no se elimina nada de tu propio Google Calendar.",
 },
 fr: {
+    login_app_purpose: "NOT10.ai – organisation et suivi personnels : planning et tâches, notes, nutrition, sport, budget et objectifs, avec synchronisation facultative avec Google Calendar.",
     item_updated_success: "Modifications enregistrées ✓",
     books_credit_label: "Infos et couvertures des livres :",
     books_page_ask_hint: "Pour que la barre de progression et la tâche de lecture quotidienne reprennent au bon endroit.",
@@ -4985,6 +4989,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer. Tout est supprimé, y compris les photos que vous avez importées. Si Google Calendar est connecté, l'app le déconnecte d'abord – rien n'est supprimé de votre Google Calendar lui-même.",
 },
 ar: {
+    login_app_purpose: "NOT10.ai – تخطيط ومتابعة شخصية: الجدول والمهام، الملاحظات، التغذية، الرياضة، الميزانية والأهداف، مع مزامنة اختيارية مع تقويم جوجل.",
     item_updated_success: "تم حفظ التغييرات ✓",
     books_credit_label: "بيانات الكتب وأغلفتها:",
     books_page_ask_hint: "حتى يستمر شريط التقدم ومهمة القراءة اليومية من المكان الصحيح.",
@@ -6217,6 +6222,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده. يُحذف كل شيء، بما في ذلك الصور التي تم رفعها. وإذا كان تقويم جوجل متصلًا، يفصله التطبيق أولًا – ولا يُحذف أي شيء من تقويم جوجل نفسه.",
 },
 ru: {
+    login_app_purpose: "NOT10.ai – личное планирование и учёт: расписание и задачи, заметки, питание, спорт, бюджет и цели, с необязательной синхронизацией с Google Calendar.",
     item_updated_success: "Изменения сохранены ✓",
     books_credit_label: "Данные о книгах и обложки:",
     books_page_ask_hint: "Чтобы полоса прогресса и ежедневная задача по чтению продолжились с нужного места.",
@@ -7449,6 +7455,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'. Удаляется всё, включая загруженные фото. Если подключён Google Calendar, приложение сначала отключает его – из самого Google Calendar ничего не удаляется.",
 },
 de: {
+    login_app_purpose: "NOT10.ai – persönliche Planung und Übersicht: Zeitplan und Aufgaben, Notizen, Ernährung, Sport, Budget und Ziele, mit optionaler Google Calendar-Synchronisierung.",
     item_updated_success: "Änderungen gespeichert ✓",
     books_credit_label: "Buchdaten & Cover:",
     books_page_ask_hint: "Damit der Fortschrittsbalken und die tägliche Leseaufgabe an der richtigen Stelle weitermachen.",
@@ -8681,6 +8688,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben. Dabei wird alles gelöscht, auch die hochgeladenen Fotos. Ist Google Calendar verbunden, trennt die App die Verbindung zuerst – aus deinem Google Calendar selbst wird nichts gelöscht.",
 },
 pt: {
+    login_app_purpose: "NOT10.ai – planejamento e acompanhamento pessoal: agenda e tarefas, notas, nutrição, esporte, orçamento e metas, com sincronização opcional com o Google Calendar.",
     item_updated_success: "Alterações salvas ✓",
     books_credit_label: "Dados e capas dos livros:",
     books_page_ask_hint: "Para que a barra de progresso e a tarefa diária de leitura continuem do ponto certo.",
@@ -9913,6 +9921,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar. Tudo é excluído, inclusive as fotos que você enviou. Se o Google Calendar estiver conectado, o app o desconecta primeiro – nada é excluído do seu próprio Google Calendar.",
 },
 ja: {
+    login_app_purpose: "NOT10.ai – 個人の計画と記録：スケジュールとタスク、メモ、食事、運動、家計、目標。Googleカレンダーとの同期にも対応（任意）。",
     item_updated_success: "変更を保存しました ✓",
     books_credit_label: "本の情報と表紙：",
     books_page_ask_hint: "進捗バーと毎日の読書タスクが、正しい場所から続くようにするためです。",
@@ -11145,6 +11154,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。アップロードした写真も含めて、すべてが削除されます。Googleカレンダーが連携されている場合は、先に連携が解除されます。Googleカレンダー自体からは何も削除されません。",
 },
 zh: {
+    login_app_purpose: "NOT10.ai – 个人规划与记录：日程和任务、笔记、饮食、运动、预算和目标，可选择与 Google Calendar 同步。",
     item_updated_success: "更改已保存 ✓",
     books_credit_label: "图书信息和封面：",
     books_page_ask_hint: "这样进度条和每日阅读任务就能从正确的位置继续。",
@@ -12377,6 +12387,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。所有内容都会被删除，包括上传的照片。如果已连接 Google Calendar，应用会先断开连接 – Google Calendar 本身中的内容不会被删除。",
 },
 hi: {
+    login_app_purpose: "NOT10.ai – निजी योजना और ट्रैकिंग: शेड्यूल और काम, नोट्स, पोषण, खेल, बजट और लक्ष्य, वैकल्पिक Google Calendar सिंक के साथ।",
     item_updated_success: "बदलाव सहेज लिए गए ✓",
     books_credit_label: "किताबों की जानकारी और कवर:",
     books_page_ask_hint: "ताकि प्रगति बार और रोज़ का पढ़ने का कार्य सही जगह से आगे बढ़ें।",
@@ -13609,6 +13620,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा। इसमें सब कुछ हट जाता है, अपलोड की गई तस्वीरें भी। अगर Google Calendar जुड़ा है, तो ऐप पहले उसे डिस्कनेक्ट करता है – आपके Google Calendar से कुछ भी नहीं हटता।",
 },
 ko: {
+    login_app_purpose: "NOT10.ai – 개인 계획 및 기록: 일정과 할 일, 메모, 식단, 운동, 예산과 목표, 그리고 선택형 Google Calendar 동기화.",
     item_updated_success: "변경 사항을 저장했어요 ✓",
     books_credit_label: "책 정보 및 표지:",
     books_page_ask_hint: "진행률 바와 매일 읽기 할 일이 올바른 곳에서 이어지도록요.",
@@ -14841,6 +14853,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다. 업로드한 사진을 포함해 모든 것이 삭제됩니다. Google Calendar가 연결되어 있으면 앱이 먼저 연결을 해제하며, Google Calendar 자체에서는 아무것도 삭제되지 않습니다.",
 },
 tr: {
+    login_app_purpose: "NOT10.ai – kişisel planlama ve takip: program ve görevler, notlar, beslenme, spor, bütçe ve hedefler; isteğe bağlı Google Calendar senkronizasyonu ile.",
     item_updated_success: "Değişiklikler kaydedildi ✓",
     books_credit_label: "Kitap bilgileri ve kapaklar:",
     books_page_ask_hint: "Böylece ilerleme çubuğu ve günlük okuma görevi doğru yerden devam eder.",
@@ -16073,6 +16086,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir. Yüklediğin fotoğraflar dahil her şey silinir. Google Calendar bağlıysa uygulama önce bağlantıyı keser – Google Calendar'ın kendisinden hiçbir şey silinmez.",
 },
 id: {
+    login_app_purpose: "NOT10.ai – perencanaan dan pelacakan pribadi: jadwal dan tugas, catatan, nutrisi, olahraga, anggaran dan target, dengan sinkronisasi Google Calendar opsional.",
     item_updated_success: "Perubahan disimpan ✓",
     books_credit_label: "Data & sampul buku:",
     books_page_ask_hint: "Agar bilah kemajuan dan tugas membaca harian berlanjut dari tempat yang tepat.",
@@ -17305,6 +17319,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya. Semuanya dihapus, termasuk foto yang Anda unggah. Jika Google Calendar terhubung, aplikasi memutuskannya terlebih dahulu – tidak ada yang dihapus dari Google Calendar Anda sendiri.",
 },
 it: {
+    login_app_purpose: "NOT10.ai – pianificazione e monitoraggio personali: agenda e attività, note, alimentazione, sport, budget e obiettivi, con sincronizzazione facoltativa con Google Calendar.",
     item_updated_success: "Modifiche salvate ✓",
     books_credit_label: "Dati e copertine dei libri:",
     books_page_ask_hint: "Così la barra di avanzamento e l'attività di lettura giornaliera ripartono dal punto giusto.",
@@ -18537,6 +18552,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla. Viene eliminato tutto, comprese le foto caricate. Se Google Calendar è collegato, l'app prima lo scollega: dal tuo Google Calendar non viene eliminato nulla.",
 },
 vi: {
+    login_app_purpose: "NOT10.ai – lập kế hoạch và theo dõi cá nhân: lịch trình và việc cần làm, ghi chú, dinh dưỡng, thể thao, ngân sách và mục tiêu, có thể đồng bộ với Google Calendar (tùy chọn).",
     item_updated_success: "Đã lưu thay đổi ✓",
     books_credit_label: "Thông tin & bìa sách:",
     books_page_ask_hint: "Để thanh tiến độ và nhiệm vụ đọc hằng ngày tiếp tục từ đúng chỗ.",
@@ -19769,6 +19785,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận. Mọi thứ đều bị xóa, kể cả ảnh bạn đã tải lên. Nếu Google Calendar đang được kết nối, ứng dụng sẽ ngắt kết nối trước – không có gì bị xóa khỏi chính Google Calendar của bạn.",
 },
 pl: {
+    login_app_purpose: "NOT10.ai – osobiste planowanie i śledzenie: plan dnia i zadania, notatki, odżywianie, sport, budżet i cele, z opcjonalną synchronizacją z Google Calendar.",
     item_updated_success: "Zmiany zapisane ✓",
     books_credit_label: "Dane i okładki książek:",
     books_page_ask_hint: "Żeby pasek postępu i codzienne zadanie czytania ruszyły od właściwego miejsca.",
@@ -21002,6 +21019,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'. Usuwane jest wszystko, także przesłane zdjęcia. Jeśli Google Calendar jest połączony, aplikacja najpierw go odłącza – z samego Google Calendar nic nie jest usuwane.",
 },
 th: {
+    login_app_purpose: "NOT10.ai – วางแผนและติดตามส่วนตัว: ตารางเวลาและงาน บันทึก โภชนาการ กีฬา งบประมาณ และเป้าหมาย พร้อมซิงค์กับ Google Calendar (ไม่บังคับ)",
     item_updated_success: "บันทึกการเปลี่ยนแปลงแล้ว ✓",
     books_credit_label: "ข้อมูลและปกหนังสือ:",
     books_page_ask_hint: "เพื่อให้แถบความคืบหน้าและงานอ่านประจำวันทำต่อจากจุดที่ถูกต้อง",
@@ -22236,6 +22254,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน ทุกอย่างจะถูกลบ รวมถึงรูปภาพที่อัปโหลดไว้ หากเชื่อมต่อ Google Calendar อยู่ แอปจะยกเลิกการเชื่อมต่อก่อน – จะไม่มีอะไรถูกลบออกจาก Google Calendar เอง",
 },
 ur: {
+    login_app_purpose: "NOT10.ai – ذاتی منصوبہ بندی اور ٹریکنگ: شیڈول اور کام، نوٹس، غذائیت، کھیل، بجٹ اور اہداف، اختیاری Google Calendar سنک کے ساتھ۔",
     item_updated_success: "تبدیلیاں محفوظ ہو گئیں ✓",
     books_credit_label: "کتابوں کی تفصیلات اور سرورق:",
     books_page_ask_hint: "تاکہ پیش رفت کی پٹی اور روزانہ پڑھنے کا کام صحیح جگہ سے جاری رہیں۔",
@@ -23470,6 +23489,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔ اس میں سب کچھ حذف ہو جاتا ہے، اپ لوڈ کی گئی تصاویر بھی۔ اگر Google Calendar جڑا ہوا ہو تو ایپ پہلے اسے منقطع کرتی ہے – خود Google Calendar سے کچھ بھی حذف نہیں ہوتا۔",
 },
 bn: {
+    login_app_purpose: "NOT10.ai – ব্যক্তিগত পরিকল্পনা ও ট্র্যাকিং: সময়সূচি ও কাজ, নোট, পুষ্টি, খেলাধুলা, বাজেট ও লক্ষ্য, ঐচ্ছিক Google Calendar সিঙ্কসহ।",
     item_updated_success: "পরিবর্তন সংরক্ষিত হয়েছে ✓",
     books_credit_label: "বইয়ের তথ্য ও প্রচ্ছদ:",
     books_page_ask_hint: "যাতে অগ্রগতির বার আর দৈনিক পড়ার কাজ সঠিক জায়গা থেকে চলতে থাকে।",
@@ -24704,6 +24724,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে। আপলোড করা ছবিসহ সবকিছু মুছে যায়। Google Calendar সংযুক্ত থাকলে অ্যাপ আগে সেটির সংযোগ বিচ্ছিন্ন করে – Google Calendar থেকে নিজে কিছুই মোছা হয় না।",
 },
 sw: {
+    login_app_purpose: "NOT10.ai – mipango na ufuatiliaji binafsi: ratiba na kazi, madokezo, lishe, michezo, bajeti na malengo, pamoja na usawazishaji wa hiari na Google Calendar.",
     item_updated_success: "Mabadiliko yamehifadhiwa ✓",
     books_credit_label: "Maelezo na majalada ya vitabu:",
     books_page_ask_hint: "Ili upau wa maendeleo na kazi ya kusoma ya kila siku viendelee kutoka mahali sahihi.",
@@ -25938,6 +25959,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha. Kila kitu hufutwa, ikiwa ni pamoja na picha ulizopakia. Ikiwa Google Calendar imeunganishwa, programu huitenganisha kwanza – hakuna kinachofutwa kwenye Google Calendar yenyewe.",
 },
 uk: {
+    login_app_purpose: "NOT10.ai – особисте планування й облік: розклад і завдання, нотатки, харчування, спорт, бюджет і цілі, з необов'язковою синхронізацією з Google Calendar.",
     item_updated_success: "Зміни збережено ✓",
     books_credit_label: "Дані про книги й обкладинки:",
     books_page_ask_hint: "Щоб смуга прогресу та щоденне завдання з читання продовжилися з потрібного місця.",
@@ -27172,6 +27194,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'. Видаляється все, зокрема завантажені фото. Якщо Google Calendar підключено, застосунок спершу відключає його – із самого Google Calendar нічого не видаляється.",
 },
 el: {
+    login_app_purpose: "NOT10.ai – προσωπικός προγραμματισμός και παρακολούθηση: πρόγραμμα και εργασίες, σημειώσεις, διατροφή, άθληση, προϋπολογισμός και στόχοι, με προαιρετικό συγχρονισμό με το Google Calendar.",
     item_updated_success: "Οι αλλαγές αποθηκεύτηκαν ✓",
     books_credit_label: "Στοιχεία και εξώφυλλα βιβλίων:",
     books_page_ask_hint: "Για να συνεχίσουν η μπάρα προόδου και η καθημερινή εργασία ανάγνωσης από το σωστό σημείο.",
@@ -28406,6 +28429,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε. Διαγράφονται τα πάντα, μαζί και οι φωτογραφίες που ανεβάσατε. Αν το Google Calendar είναι συνδεδεμένο, η εφαρμογή το αποσυνδέει πρώτα – τίποτα δεν διαγράφεται από το ίδιο το Google Calendar.",
 },
 nl: {
+    login_app_purpose: "NOT10.ai – persoonlijke planning en overzicht: rooster en taken, notities, voeding, sport, budget en doelen, met optionele synchronisatie met Google Calendar.",
     item_updated_success: "Wijzigingen opgeslagen ✓",
     books_credit_label: "Boekgegevens & covers:",
     books_page_ask_hint: "Zodat de voortgangsbalk en de dagelijkse leestaak op de juiste plek verdergaan.",
@@ -29640,6 +29664,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen. Alles wordt verwijderd, ook de foto's die je hebt geüpload. Als Google Calendar gekoppeld is, ontkoppelt de app die eerst – uit je Google Calendar zelf wordt niets verwijderd.",
 },
 ca: {
+    login_app_purpose: "NOT10.ai – planificació i seguiment personal: horari i tasques, notes, nutrició, esport, pressupost i objectius, amb sincronització opcional amb Google Calendar.",
     item_updated_success: "Canvis desats ✓",
     books_credit_label: "Dades i cobertes dels llibres:",
     books_page_ask_hint: "Perquè la barra de progrés i la tasca diària de lectura continuïn des del lloc correcte.",
@@ -30874,6 +30899,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho. S'elimina tot, incloses les fotos que has pujat. Si Google Calendar està connectat, l'app primer el desconnecta: no s'elimina res del teu Google Calendar.",
 },
 ro: {
+    login_app_purpose: "NOT10.ai – planificare și monitorizare personală: program și sarcini, notițe, nutriție, sport, buget și obiective, cu sincronizare opțională cu Google Calendar.",
     item_updated_success: "Modificări salvate ✓",
     books_credit_label: "Date și coperți ale cărților:",
     books_page_ask_hint: "Ca bara de progres și sarcina zilnică de lectură să continue de unde trebuie.",
@@ -32108,6 +32134,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare. Se șterge totul, inclusiv fotografiile încărcate. Dacă Google Calendar este conectat, aplicația îl deconectează mai întâi – nu se șterge nimic din Google Calendar-ul tău.",
 },
 yo: {
+    login_app_purpose: "NOT10.ai – ètò àti àkọsílẹ̀ ara ẹni: ètò ọjọ́ àti iṣẹ́, àkọsílẹ̀, oúnjẹ, eré ìdárayá, ìnáwó àti àfojúsùn, pẹ̀lú ìmúṣọ̀kan Google Calendar tí kò pọndandan.",
     item_updated_success: "A ti fi àwọn àyípadà pamọ́ ✓",
     books_credit_label: "Àlàyé àti èèpo ìwé:",
     books_page_ask_hint: "Kí ọ̀pá ìtẹ̀síwájú àti iṣẹ́ kíkà ojoojúmọ́ lè máa bá a lọ láti ibi tó tọ́.",
@@ -33343,6 +33370,7 @@ yo: {
 },
 
 sv: {
+    login_app_purpose: "NOT10.ai – personlig planering och uppföljning: schema och uppgifter, anteckningar, kost, träning, budget och mål, med valfri synkning med Google Calendar.",
     item_updated_success: "Ändringar sparade ✓",
     books_credit_label: "Bokdata & omslag:",
     books_page_ask_hint: "Så att förloppsindikatorn och den dagliga läsuppgiften fortsätter från rätt ställe.",
@@ -34577,6 +34605,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta. Allt raderas, även foton du har laddat upp. Om Google Calendar är anslutet kopplar appen först bort det – inget raderas från själva Google Calendar.",
 },
 nb: {
+    login_app_purpose: "NOT10.ai – personlig planlegging og oppfølging: timeplan og oppgaver, notater, kosthold, trening, budsjett og mål, med valgfri synkronisering med Google Calendar.",
     item_updated_success: "Endringer lagret ✓",
     books_credit_label: "Bokdata og omslag:",
     books_page_ask_hint: "Slik at fremdriftslinjen og den daglige leseoppgaven fortsetter fra riktig sted.",
@@ -35811,6 +35840,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte. Alt slettes, også bilder du har lastet opp. Hvis Google Calendar er tilkoblet, kobler appen det fra først – ingenting slettes fra selve Google Calendar.",
 },
 da: {
+    login_app_purpose: "NOT10.ai – personlig planlægning og opfølgning: skema og opgaver, noter, kost, træning, budget og mål, med valgfri synkronisering med Google Calendar.",
     item_updated_success: "Ændringer gemt ✓",
     books_credit_label: "Bogdata og omslag:",
     books_page_ask_hint: "Så statuslinjen og den daglige læseopgave fortsætter fra det rigtige sted.",
@@ -37045,6 +37075,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte. Alt slettes, også billeder, du har uploadet. Hvis Google Calendar er forbundet, afbryder appen forbindelsen først – intet slettes fra selve Google Calendar.",
 },
 cs: {
+    login_app_purpose: "NOT10.ai – osobní plánování a přehled: rozvrh a úkoly, poznámky, výživa, sport, rozpočet a cíle, s volitelnou synchronizací s Google Calendar.",
     item_updated_success: "Změny uloženy ✓",
     books_credit_label: "Údaje o knihách a obálky:",
     books_page_ask_hint: "Aby ukazatel postupu a denní úkol čtení pokračovaly ze správného místa.",
@@ -38279,6 +38310,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'. Smaže se vše, včetně nahraných fotek. Pokud je připojen Google Calendar, aplikace ho nejprve odpojí – ze samotného Google Calendar se nic nesmaže.",
 },
 hu: {
+    login_app_purpose: "NOT10.ai – személyes tervezés és követés: napirend és feladatok, jegyzetek, táplálkozás, sport, költségvetés és célok, opcionális Google Calendar-szinkronizálással.",
     item_updated_success: "Változások mentve ✓",
     books_credit_label: "Könyvadatok és borítók:",
     books_page_ask_hint: "Hogy a haladásjelző és a napi olvasási feladat a megfelelő helyről folytatódjon.",
@@ -39513,6 +39545,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'. Minden törlődik, a feltöltött fotók is. Ha a Google Calendar csatlakoztatva van, az app előbb leválasztja – magából a Google Calendarból semmi nem törlődik.",
 },
 fi: {
+    login_app_purpose: "NOT10.ai – henkilökohtainen suunnittelu ja seuranta: aikataulu ja tehtävät, muistiinpanot, ravinto, liikunta, budjetti ja tavoitteet, valinnaisella Google Calendar -synkronoinnilla.",
     item_updated_success: "Muutokset tallennettu ✓",
     books_credit_label: "Kirjatiedot ja kannet:",
     books_page_ask_hint: "Jotta edistymispalkki ja päivittäinen lukutehtävä jatkuvat oikeasta kohdasta.",
