@@ -4972,6 +4972,8 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
    המלא "נראה יותר טוב"; הריבועים עצמם עגולים ומצומצמים יותר במקום זה
    (border-radius/padding למטה), לפי בקשה מפורשת "יותר עגולה... ויותר קטנה" */
 .center-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+/* פריט שנמחק עכשיו - מתעמעם ולא מגיב ללחיצות עד שהרשימה מתרעננת (ר' deleteCenterItem) */
+.center-list li.is-removing { opacity: .35; pointer-events: none; transition: opacity .15s ease; }
 .center-list li {
     background-color: var(--bg-row);
     backdrop-filter: blur(10px);
@@ -6830,6 +6832,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .book-spine:hover, .book-spine:focus-visible { transform: translateY(-4px); }
 .book-spine-title { writing-mode: vertical-rl; text-orientation: mixed; max-height: calc(100% - 14px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 800; font-size: .66rem; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
 .book-spine-stars { writing-mode: vertical-rl; color: #ffe08a; font-size: .5rem; letter-spacing: -1px; }
+/* קרדיט קטן ומעומעם למקור פרטי הספרים והכריכות */
+.books-credit { margin: 0; text-align: center; font-size: .68rem; color: var(--text-secondary); opacity: .85; }
+.books-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* "באיזה עמוד?" - שדה העמוד ו"מתוך X" באותה שורה */
+.book-page-ask-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 2px; }
+.book-page-ask-row .book-page-input { width: 96px; font-size: 1.05rem; padding: 9px 10px; }
 .books-cozy-scene { position: sticky; bottom: 0; margin-top: auto; height: 170px; pointer-events: none; z-index: 0; color: var(--accent-purple); opacity: .55; }
 .books-cozy-scene svg { display: block; width: 100%; height: 100%; }
 .book-lookup-results { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 4px; }

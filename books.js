@@ -31,7 +31,7 @@ async function loadBooks() {
     since.setDate(since.getDate() - 60);
     const [booksRes, logRes, prefRes] = await Promise.all([
         supabaseClient.from('books').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
-        supabaseClient.from('book_reading_log').select('book_id, log_date, pages, source').eq('user_id', currentUserId).gte('log_date', getLocalDateString(since)),
+        supabaseClient.from('book_reading_log').select('book_id, log_date, pages, source, created_at').eq('user_id', currentUserId).gte('log_date', getLocalDateString(since)).order('created_at', { ascending: true }),
         supabaseClient.from('user_premium').select('books_goal_id').eq('user_id', currentUserId).maybeSingle(),
     ]);
     booksCache = booksRes.data || [];
@@ -55,9 +55,22 @@ function openBooksSection() {
 }
 
 // --- חישובים ---
+// עמודים שנקראו בספר ביום מסוים (לפי סדר הרישומים). הורדת העמוד - תיקון, או חזרה מ"סיימתי"
+// בטעות - היא לא "קריאה שלילית": היא מאפסת את מה שנספר עד אז באותו יום, ומה שנקרא אחריה
+// נספר מחדש. ככה תיקון לא מעלים את משימת הקריאה היומית ולא מקלקל את הקצב והרצף
+function bookPagesReadOn(bookId, dateStr) {
+    let read = 0;
+    bookLogCache.forEach(l => {
+        if (l.book_id === bookId && l.log_date === dateStr) read = Math.max(0, read + (Number(l.pages) || 0));
+    });
+    return read;
+}
+function bookPagesReadToday(bookId) { return bookPagesReadOn(bookId, getLocalDateString()); }
+
+// סכום הרישומים של היום ממקור אחד - 'peek' = מה שה-✓ בהצצה הוסיף, כדי לבטל רק אותו
 function bookLoggedToday(bookId, source) {
     const today = getLocalDateString();
-    return bookLogCache.filter(l => l.book_id === bookId && l.log_date === today && (!source || l.source === source))
+    return bookLogCache.filter(l => l.book_id === bookId && l.log_date === today && l.source === source)
         .reduce((sum, l) => sum + (Number(l.pages) || 0), 0);
 }
 
@@ -65,7 +78,7 @@ function bookLoggedToday(bookId, source) {
 // לא "בורח" תוך כדי קריאה. דד-ליין שעבר = כל מה שנשאר, היום
 function bookDailyPace(book) {
     if (!book || book.status !== 'reading' || !book.deadline || !book.total_pages) return null;
-    const startOfDay = Math.max(0, (Number(book.current_page) || 0) - bookLoggedToday(book.id));
+    const startOfDay = Math.max(0, (Number(book.current_page) || 0) - bookPagesReadToday(book.id));
     const remaining = book.total_pages - startOfDay;
     if (remaining <= 0) return null;
     const daysLeft = Math.max(1, visionDaysLeft(book.deadline) + 1);
@@ -75,7 +88,10 @@ function bookDailyPace(book) {
 // רצף: ימים רצופים עם עמודים שנקראו (בכל הספרים), עד היום - או עד אתמול אם היום עוד לא נקרא
 function bookReadingStreak() {
     const byDate = new Map();
-    bookLogCache.forEach(l => byDate.set(l.log_date, (byDate.get(l.log_date) || 0) + (Number(l.pages) || 0)));
+    new Set(bookLogCache.map(l => `${l.log_date}|${l.book_id}`)).forEach(key => {
+        const [date, bookId] = key.split('|');
+        byDate.set(date, (byDate.get(date) || 0) + bookPagesReadOn(bookId, date));
+    });
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     if (!((byDate.get(getLocalDateString(d)) || 0) > 0)) d.setDate(d.getDate() - 1);
@@ -295,13 +311,34 @@ async function moveBook(bookId, status) {
         patch.goal_counted = false;
         await bumpBooksGoal(-1);
     }
+    // ספר שחוזר ל"בקריאה" כשהוא בעמוד האחרון (למשל אחרי "סיימתי" בטעות או רק כדי לנסות) חוזר
+    // לעמוד שבו היה לפני כן; כשזה לא ידוע - שואלים באיזה עמוד. ככה משימת הקריאה היומית חוזרת להצצה
+    const total = Number(book.total_pages) || 0;
+    const atLastPage = status === 'reading' && total > 0 && (Number(book.current_page) || 0) >= total;
+    const backTo = atLastPage && book.page_before_finish != null && book.page_before_finish < total ? book.page_before_finish : null;
+    if (status === 'reading') patch.page_before_finish = null;
     const { error } = await supabaseClient.from('books').update(patch).eq('id', bookId);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     Object.assign(book, patch);
+    if (backTo !== null) {
+        await setBookPage(bookId, backTo);
+        showAppToast(t('books_back_to_page_toast').replace('{n}', bookFmt(backTo)));
+        return;
+    }
     const meta = bookStatusMeta(status);
     showAppToast(t('books_moved_toast').replace('{tab}', `${meta.icon} ${t(meta.label)}`));
     renderBooks();
     loadTodayTasks();
+    if (atLastPage) openBookPageAsk(bookId);
+}
+
+// רישום ביומן הקריאה של היום: כמה עמודים השתנו (שלילי = תיקון)
+async function logBookPages(bookId, delta, source) {
+    if (!delta) return;
+    const { data } = await supabaseClient.from('book_reading_log')
+        .insert({ user_id: currentUserId, book_id: bookId, log_date: getLocalDateString(), pages: delta, source })
+        .select('book_id, log_date, pages, source, created_at').single();
+    if (data) bookLogCache.push(data);
 }
 
 async function setBookPage(bookId, newPage, source = 'manual') {
@@ -309,19 +346,17 @@ async function setBookPage(bookId, newPage, source = 'manual') {
     if (!book || !supabaseClient || !currentUserId) return;
     const max = Number(book.total_pages) || 100000;
     const page = Math.max(0, Math.min(max, Math.round(Number(newPage) || 0)));
-    const delta = page - (Number(book.current_page) || 0);
+    const before = Number(book.current_page) || 0;
+    const delta = page - before;
     if (!delta) { renderBooks(); return; }
     const { error } = await supabaseClient.from('books').update({ current_page: page }).eq('id', bookId);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     book.current_page = page;
-    const { data } = await supabaseClient.from('book_reading_log')
-        .insert({ user_id: currentUserId, book_id: bookId, log_date: getLocalDateString(), pages: delta, source })
-        .select('book_id, log_date, pages, source').single();
-    if (data) bookLogCache.push(data);
+    await logBookPages(bookId, delta, source);
     renderBooks();
     loadTodayTasks();
-    // הגיע לעמוד האחרון - חגיגת "סיימתי"
-    if (book.total_pages && page >= book.total_pages && delta > 0) openBookFinish(bookId);
+    // הגיע לעמוד האחרון - חגיגת "סיימתי" (עם העמוד שממנו הגיע, למקרה שיחזירו את הספר לקריאה)
+    if (book.total_pages && page >= book.total_pages && delta > 0) openBookFinish(bookId, before);
 }
 
 function addBookPages(bookId, n) {
@@ -340,11 +375,13 @@ async function bumpBooksGoal(delta) {
 }
 
 // --- 🎉 סיימתי: דירוג ⭐ + משפט שאהבתי. גם מסך הפרטים של ספר מהמדף ---
-function openBookFinish(bookId) {
+function openBookFinish(bookId, pageBefore) {
     const book = booksCache.find(b => b.id === bookId);
     if (!book) return;
     const alreadyRead = book.status === 'read';
-    bookFinishState = { bookId, rating: book.rating || 0, alreadyRead };
+    // pageBefore: העמוד שבו הספר היה לפני "סיימתי" - נשמר כדי שחזרה ל"בקריאה" תחזיר אליו
+    if (pageBefore == null && book.status === 'reading') pageBefore = Number(book.current_page) || 0;
+    bookFinishState = { bookId, rating: book.rating || 0, alreadyRead, pageBefore: pageBefore == null ? null : pageBefore };
     document.getElementById('book-finish-title').textContent = alreadyRead ? `📖 ${book.title}` : t('books_finish_title');
     const sub = document.getElementById('book-finish-subtitle');
     if (alreadyRead) {
@@ -391,12 +428,16 @@ async function saveBookFinish() {
     };
     if (!st.alreadyRead) {
         patch.finished_at = getLocalDateString();
+        patch.page_before_finish = st.pageBefore;
         if (book.total_pages) patch.current_page = book.total_pages;
         if (!book.goal_counted && await bumpBooksGoal(1)) patch.goal_counted = true;
     }
+    // הקפיצה לעמוד האחרון של ספר שהיה בקריאה נרשמת כקריאה של היום (וחזרה ל"בקריאה" מקזזת אותה)
+    const finishJump = !st.alreadyRead && book.status === 'reading' && patch.current_page ? patch.current_page - (Number(book.current_page) || 0) : 0;
     const { error } = await supabaseClient.from('books').update(patch).eq('id', book.id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     Object.assign(book, patch);
+    if (finishJump > 0) await logBookPages(book.id, finishJump, 'finish');
     closeModal('modal-book-finish');
     bookFinishState = null;
     renderBooks();
@@ -426,6 +467,30 @@ function editBookFromFinish() {
     openBookModal(st.bookId);
 }
 
+// --- 📖 באיזה עמוד? ספר שחזר ל"בקריאה" מהעמוד האחרון, כשלא ידוע איפה עצרו ---
+let bookPageAskId = null;
+function openBookPageAsk(bookId) {
+    const book = booksCache.find(b => b.id === bookId);
+    if (!book) return;
+    bookPageAskId = bookId;
+    document.getElementById('book-page-ask-subtitle').textContent = book.title;
+    const input = document.getElementById('book-page-ask-input');
+    input.value = '';
+    if (book.total_pages) input.max = book.total_pages; else input.removeAttribute('max');
+    document.getElementById('book-page-ask-of').textContent = book.total_pages ? t('books_page_ask_of').replace('{total}', bookFmt(book.total_pages)) : '';
+    openModal('modal-book-page-ask');
+    setTimeout(() => input.focus(), 250);
+}
+
+async function saveBookPageAsk() {
+    const input = document.getElementById('book-page-ask-input');
+    if (!bookPageAskId || input.value === '') { input.focus(); return; }
+    const bookId = bookPageAskId;
+    bookPageAskId = null;
+    closeModal('modal-book-page-ask');
+    await setBookPage(bookId, input.value);
+}
+
 // --- ➕ הוספה / עריכה ---
 function openBookModal(bookId = null, focusDeadline = false) {
     editingBookId = bookId;
@@ -434,7 +499,9 @@ function openBookModal(bookId = null, focusDeadline = false) {
     document.getElementById('book-title-input').value = book ? book.title : '';
     document.getElementById('book-author-input').value = book ? (book.author || '') : '';
     document.getElementById('book-pages-input').value = book && book.total_pages ? book.total_pages : '';
-    document.getElementById('book-current-input').value = book ? (book.current_page || 0) : '';
+    // ספר מ"קראתי": שדה העמוד מציע את העמוד שבו היה לפני "סיימתי" (למקרה שמחזירים אותו לקריאה)
+    document.getElementById('book-current-input').value = !book ? ''
+        : (book.status === 'read' && book.page_before_finish != null ? book.page_before_finish : (book.current_page || 0));
     document.getElementById('book-cover-url').value = book ? (book.cover_url || '') : '';
     document.getElementById('book-deadline-input').value = book ? (book.deadline || '') : '';
     const display = document.getElementById('book-deadline-input-display');
@@ -492,15 +559,19 @@ async function saveBook() {
     };
     const existing = editingBookId ? booksCache.find(b => b.id === editingBookId) : null;
     const newStatus = bookModalStatus;
+    let pageDelta = 0;
     if (newStatus === 'reading') {
         const cur = Math.max(0, parseInt(document.getElementById('book-current-input').value, 10) || 0);
         payload.current_page = totalPages ? Math.min(totalPages, cur) : cur;
+        // שינוי עמוד בספר שכבר נקרא נרשם ביומן הקריאה בדיוק כמו עדכון מהכרטיס (הורדה = תיקון)
+        if (existing && (existing.status === 'reading' || existing.status === 'read')) pageDelta = payload.current_page - (Number(existing.current_page) || 0);
     }
     let bookId = editingBookId;
     if (existing) {
         const { error } = await supabaseClient.from('books').update(payload).eq('id', bookId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         Object.assign(existing, payload);
+        if (pageDelta) await logBookPages(bookId, pageDelta, 'manual');
     } else {
         const maxOrder = booksCache.reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
         const row = { ...payload, user_id: currentUserId, status: newStatus === 'read' ? 'to_read' : newStatus, sort_order: maxOrder + 10 };
@@ -628,7 +699,7 @@ function getPeekBookTaskItems() {
         if (!pace) return null;
         return {
             icon: '📖', text: t('books_peek_task').replace('{n}', bookFmt(pace)), tag: book.title,
-            done: bookLoggedToday(book.id) >= pace,
+            done: bookPagesReadToday(book.id) >= pace,
             toggle: checked => toggleBookPeekTask(book.id, checked, pace),
         };
     }).filter(Boolean);
@@ -638,7 +709,7 @@ async function toggleBookPeekTask(bookId, checked, pace) {
     const book = booksCache.find(b => b.id === bookId);
     if (!book || !supabaseClient) return;
     if (checked) {
-        const need = Math.max(0, pace - bookLoggedToday(bookId));
+        const need = Math.max(0, pace - bookPagesReadToday(bookId));
         if (need > 0) await setBookPage(bookId, (Number(book.current_page) || 0) + need, 'peek');
         else loadTodayTasks();
         return;

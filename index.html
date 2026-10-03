@@ -86,7 +86,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=481">
+    <link rel="stylesheet" href="theme.css?v=482">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -896,6 +896,8 @@
                     <button type="button" class="books-goal-chip hidden" id="books-goal-chip" onclick="openBooksGoalPicker()"></button>
                     <div class="books-tabs" id="books-tabs" role="tablist"></div>
                     <div id="books-list" class="books-list"></div>
+                    <!-- קרדיט למקור פרטי הספרים והכריכות (חיפוש בהוספת ספר, ר' books.js) -->
+                    <p class="books-credit"><span data-i18n="books_credit_label">Book details &amp; covers:</span> <a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">Open Library</a></p>
                     <div class="books-cozy-scene" aria-hidden="true">
                         <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
                             <defs>
@@ -3469,6 +3471,25 @@
             </div>
         </div>
 
+        <!-- 📖 ספר שחזר מ"קראתי" ל"בקריאה" כשהוא בעמוד האחרון ולא ידוע איפה עצרו: שואלים באיזה עמוד,
+             כדי שפס ההתקדמות ומשימת הקריאה היומית בהצצה ימשיכו מהמקום הנכון (ר' moveBook ב-books.js) -->
+        <div id="modal-book-page-ask" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="books_page_ask_title">📖 Which page are you on?</h3>
+                <p class="modal-subtitle" id="book-page-ask-subtitle"></p>
+                <div class="book-page-ask-row">
+                    <input type="number" id="book-page-ask-input" class="book-page-input" inputmode="numeric" min="0" onkeydown="if (event.key === 'Enter') saveBookPageAsk()">
+                    <span id="book-page-ask-of" class="book-page-label"></span>
+                </div>
+                <p class="vision-goal-field-hint" data-i18n="books_page_ask_hint">So the progress bar and the daily reading task pick up from the right place.</p>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-primary" onclick="saveBookPageAsk()" data-i18n="vision_goal_save_btn">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-book-page-ask')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 🎯 חיבור ליעד קריאה מ"היעדים שלי" (ספירה עד יעד) - כל ספר שנגמר מוסיף +1 -->
         <div id="modal-books-goal-picker" class="apple-modal">
             <div class="modal-sheet">
@@ -3854,10 +3875,10 @@
 
     </div>
 
-    <script src="i18n.js?v=384"></script>
-    <script src="app.js?v=531"></script>
+    <script src="i18n.js?v=385"></script>
+    <script src="app.js?v=532"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=17"></script>
-    <script src="books.js?v=1"></script>
+    <script src="books.js?v=2"></script>
 </body>
 </html>

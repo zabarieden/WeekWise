@@ -22,7 +22,7 @@
 <body>
 
 <h1>Política de Privacidad - NOT10.ai</h1>
-<p class="updated">Última actualización: 29 de septiembre de 2026</p>
+<p class="updated">Última actualización: 3 de octubre de 2026</p>
 
 <p>
 Este documento describe cómo la aplicación <strong>NOT10.ai</strong> ("la App", "el Servicio") recopila, utiliza, almacena y comparte
@@ -42,7 +42,8 @@ App implica la aceptación de esta política.
   <li><strong>Horario y tareas:</strong> tareas semanales recurrentes, eventos y notas para fechas específicas.</li>
   <li><strong>Datos financieros personales:</strong> ingresos y gastos, montos, categorías, notas de texto libre.</li>
   <li><strong>Fotos subidas voluntariamente:</strong> fotos de recetas escritas y fotos de entrenamiento - solo cuando eliges subirlas.</li>
-  <li><strong>Texto libre que escribes</strong> para funciones basadas en IA - ver sección 3.2.</li>
+  <li><strong>Texto libre que escribes</strong> para funciones basadas en IA - ver sección 3.</li>
+  <li><strong>Google Calendar (opcional):</strong> solo si lo conectas - ver sección 3A.</li>
 </ul>
 
 <h3>1.2 Información recopilada automáticamente</h3>
@@ -58,6 +59,7 @@ App implica la aceptación de esta política.
   <li>Para proporcionar el Servicio en sí - guardar y mostrar los datos que ingresaste entre dispositivos/sesiones.</li>
   <li>Para habilitar funciones basadas en IA (Premium) - estimación de calorías, extracción de texto de recetas desde fotos, interpretación de horarios en texto libre.</li>
   <li>Para enviar recordatorios/notificaciones que solicitaste.</li>
+  <li>Para mantener tu horario sincronizado con Google Calendar, si lo conectaste (sección 3A).</li>
   <li>Soporte técnico y respuesta a consultas.</li>
 </ul>
 
@@ -68,10 +70,32 @@ App implica la aceptación de esta política.
 <tr><th>Proveedor</th><th>Rol</th><th>Qué información recibe</th></tr>
 <tr><td><strong>Supabase</strong></td><td>Base de datos, autenticación de usuarios, almacenamiento de archivos, funciones de servidor de la App</td><td>Toda la información detallada en la sección 1 - este es el proveedor de almacenamiento central del Servicio</td></tr>
 <tr><td><strong>Anthropic (Claude AI)</strong></td><td>Funcionamiento de las funciones de IA (solo Premium)</td><td>Solo cuando usas una función de IA específica: una foto que subiste (para escanear una receta escrita) o el texto que escribiste (para estimación de calorías/interpretación de horarios). Esta información se envía únicamente para su procesamiento</td></tr>
-<tr><td><strong>Lemon Squeezy</strong></td><td>Procesamiento de pagos (suscripción Premium, compra de New Me) - actúa como Merchant of Record</td><td>Solo tu dirección de correo electrónico y el identificador de tu cuenta en la app. Los datos de la tarjeta se introducen directamente en Lemon Squeezy y nunca llegan a nosotros</td></tr><td>Envío de correos electrónicos (por ejemplo, respuesta a comentarios enviados desde la App, confirmación de registro, restablecimiento de contraseña)</td><td>Tu dirección de correo electrónico y el contenido relevante del mensaje/correo</td></tr>
+<tr><td><strong>Lemon Squeezy</strong></td><td>Procesamiento de pagos (suscripción Premium, compra de New Me) - actúa como Merchant of Record</td><td>Solo tu dirección de correo electrónico y el identificador de tu cuenta en la app. Los datos de la tarjeta se introducen directamente en Lemon Squeezy y nunca llegan a nosotros</td></tr>
+<tr><td><strong>Resend</strong></td><td>Envío de correos electrónicos (por ejemplo, respuesta a comentarios enviados desde la App, confirmación de registro, restablecimiento de contraseña)</td><td>Tu dirección de correo electrónico y el contenido relevante del mensaje/correo</td></tr>
+<tr><td><strong>Google (Google Calendar)</strong></td><td>Sincronización bidireccional opcional del calendario - solo si lo conectas</td><td>Los eventos, tareas y notas que añades a fechas en la App se escriben en tu propio Google Calendar (ver sección 3A)</td></tr>
 </table>
 
 <p>Cada uno de estos proveedores está sujeto a su propia política de privacidad y seguridad. Elegimos proveedores comprometidos con estándares de seguridad aceptados.</p>
+
+<h2>3A. Datos de Google Calendar (opcional)</h2>
+<p>
+Conectar Google Calendar es opcional y solo ocurre si lo eliges en los ajustes de la App. Al hacerlo, inicias sesión con Google y apruebas
+el acceso a tus calendarios (permiso de Google <code>https://www.googleapis.com/auth/calendar</code>). La App usa este acceso únicamente para
+mostrar tu horario y mantenerlo sincronizado, y para nada más.
+</p>
+<ul>
+  <li><strong>Qué lee la App:</strong> el título, la fecha y la hora de los eventos de tus calendarios de Google, además de identificadores técnicos (ID de evento y de calendario, marcas de versión) que mantienen ambos lados emparejados. Estos eventos se muestran en el horario y en el calendario mensual de la App.</li>
+  <li><strong>Qué escribe la App:</strong> los eventos, tareas y notas que añades a fechas en la App se crean, actualizan y eliminan en tu Google Calendar, para que ambos coincidan. Los eventos que tienen un recordatorio en la App se guardan en Google sin recordatorio de Google, para que no recibas dos avisos.</li>
+  <li><strong>Notificaciones de cambios:</strong> la App registra un canal de notificaciones con Google para que los cambios que haces en Google Calendar aparezcan automáticamente en la App.</li>
+  <li><strong>Almacenamiento:</strong> los eventos sincronizados y los tokens de acceso que emite Google se guardan en nuestra base de datos (Supabase), en servidores cifrados y separados por cuenta, de modo que otros usuarios no pueden acceder a ellos. Los tokens solo los usan las funciones de servidor de la App que realizan la sincronización.</li>
+  <li><strong>Compartir:</strong> no vendemos los datos de Google Calendar, no los usamos para publicidad y no los transferimos a nadie, con una excepción: cuando usas el asistente de horario con IA (Premium), los títulos, fechas y horas de tus próximos elementos del horario - que pueden incluir eventos sincronizados desde Google Calendar - se envían a Anthropic junto con tu solicitud, únicamente para llevarla a cabo (por ejemplo, para entender "mover la cita con el dentista"). Anthropic procesa estos datos según sus términos comerciales y no los usa para entrenar sus modelos. Los datos de Google Calendar nunca se usan para desarrollar, mejorar o entrenar modelos de IA.</li>
+  <li><strong>Acceso humano:</strong> ninguna persona lee tus datos de Google Calendar, salvo que nos lo pidas (por ejemplo, para soporte), que sea necesario por motivos de seguridad o para investigar abusos, o que la ley lo exija.</li>
+  <li><strong>Desconexión y eliminación:</strong> puedes desconectar Google Calendar en cualquier momento desde los ajustes de la App: la App revoca su acceso con Google, detiene el canal de notificaciones y elimina los tokens guardados. Los eventos que ya se mostraban en la App permanecen en ella hasta que los elimines. También puedes quitar el acceso en cualquier momento desde tu cuenta de Google (<a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>). Eliminar tu cuenta elimina todos los eventos sincronizados y la conexión; no elimina nada de tu propio Google Calendar.</li>
+</ul>
+<p>
+<strong>Uso limitado (Limited Use):</strong> el uso y la transferencia a cualquier otra app, por parte de NOT10.ai, de la información recibida de las API de Google
+se ajustarán a la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de Uso limitado.
+</p>
 
 <h2>4. Seguridad de los datos</h2>
 <p>
@@ -85,7 +109,7 @@ razonables y aceptadas para proteger tu información de accesos, usos o divulgac
 <ul>
   <li><strong>Revisar</strong> la información guardada sobre ti.</li>
   <li><strong>Corregir</strong> información incorrecta - la mayoría de los datos se pueden editar directamente dentro de la App en cualquier momento.</li>
-  <li><strong>Eliminar tu cuenta y toda la información asociada</strong> - la eliminación de la cuenta está disponible directamente desde dentro de la App (en la configuración de la cuenta). Esta eliminación es final e irreversible, y elimina todos los datos guardados para ti en el sistema.</li>
+  <li><strong>Eliminar tu cuenta y toda la información asociada</strong> - la eliminación de la cuenta está disponible directamente desde dentro de la App (en la configuración de la cuenta). Esta eliminación es final e irreversible, y elimina todos los datos guardados para ti en el sistema, incluidas las fotos que subiste.</li>
 </ul>
 <p>Para cualquier solicitud relacionada con tu información personal que no se pueda realizar de forma independiente dentro de la App, puedes contactarnos usando los datos al final de este documento.</p>
 

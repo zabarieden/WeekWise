@@ -2745,10 +2745,16 @@ function updateCenterItemPreview() {
 // editingCenterItemId!=null אומר שהמודל פתוח במצב עריכה (לא הוספה) - אותו
 // מודל/שדה משמשים את שני הזרמים, submitCenterItem מנתב לפי מה שמוגדר כאן
 let editingCenterItemId = null;
+// בעריכה הכפתור הוא "שמירה" ולא "הוספה" - כדי שלא ייראה כאילו נוסף פריט חדש
+function setCenterItemSaveLabel(isEdit) {
+    const btn = document.getElementById('btn-save-center-item');
+    if (btn) btn.textContent = t(isEdit ? 'save_generic' : 'add_btn');
+}
 function openCenterAdder(type) {
     editingCenterItemId = null;
     pendingCenterItemType = type;
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
+    setCenterItemSaveLabel(false);
     const input = document.getElementById('center-item-input');
     input.value = '';
     resetCenterItemColorPickers();
@@ -2768,6 +2774,7 @@ function openCenterItemEditor(btn, type) {
     pendingCenterItemType = type;
     const currentText = li.querySelector('.center-list-item-text').textContent.trim();
     document.getElementById('center-item-modal-title').textContent = t('edit_item_title');
+    setCenterItemSaveLabel(true);
     const input = document.getElementById('center-item-input');
     input.value = currentText;
     pendingCenterItemColor = li.getAttribute('data-text-color') || null;
@@ -2848,12 +2855,14 @@ async function submitCenterItem() {
     }
 }
 
+// עריכה מראה "השינויים נשמרו" (לא "הפריט נוסף") - ואם הפריט נמחק בזמן שהשמירה עוד רצה
+// (רשת איטית), לא מראים כלום: בעבר הופיע "הפריט נוסף בהצלחה" מיד אחרי מחיקה
 async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const { error } = await supabaseClient.from('my_center_tasks').update({ content, text_color: textColor, glow_color: glowColor, bg_color: bgColor }).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
-    showAppToast(t('item_added_success'));
+    if (!deletedCenterItemIds.has(id)) showAppToast(t('item_updated_success'));
 }
 
 // מחזירה true/false (הצלחה/כישלון) - קריטי לקוראים כמו handleAIQuickAdd
@@ -14839,8 +14848,19 @@ async function loadStats() {
 }
 // מחיקה רכה (is_deleted=true) בשני הסוגים (פתקים ורשימת קניות) כדי שאפשר
 // יהיה לשחזר מהארכיון, לפי בקשה מפורשת
+// השורה מתעמעמת מיד ולא מגיבה ללחיצות עד שהרשימה מתרעננת: ככה רואים שהמחיקה נקלטה, לחיצה
+// נוספת לא שולחת מחיקה שנייה, והשורה לא זזה מתחת לאצבע באמצע לחיצה כפולה
+const deletedCenterItemIds = new Set();
 async function deleteCenterItem(id, type) {
-    await supabaseClient.from('my_center_tasks').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', id);
+    if (deletedCenterItemIds.has(id)) return;
+    deletedCenterItemIds.add(id);
+    const row = document.querySelector(`#${type}-list li[data-item-id="${id}"]`);
+    if (row) row.classList.add('is-removing');
+    const { error } = await supabaseClient.from('my_center_tasks').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+        deletedCenterItemIds.delete(id);
+        showAppToast(t('error_adding_item') + error.message, 'error');
+    }
     loadCenterItems(type);
 }
 
@@ -14906,6 +14926,7 @@ async function loadNotesArchiveList(type) {
 
 async function restoreArchivedNote(id, type) {
     await supabaseClient.from('my_center_tasks').update({ is_deleted: false, deleted_at: null }).eq('id', id);
+    deletedCenterItemIds.delete(id);
     await loadNotesArchiveList(type);
     await refreshNotesArchiveCount(type);
     await loadCenterItems(type);
