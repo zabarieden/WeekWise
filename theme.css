@@ -6811,6 +6811,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .vision-hour-chip.is-taken { opacity: .35; text-decoration: line-through; cursor: default; }
 /* ===== 📚 הספרים שלי (ר' books.js) - פינת קריאה ביתית: טאבים, כריכות, פס התקדמות, מדף
    עץ עם שדרות צבעוניות ואיור עדין בתחתית (ספרייה, ספה, שטיח ומנורה). הצבעים מערכת הנושא ===== */
+/* 🪙 "מטבעות שגדלים" בתחתית התקציב והחשבוניות (האיור עצמו ב-index.html, #money-scene) - יושב בסוף
+   המסך (margin-top:auto): בחשבוניות הקצרות - בתחתית; בתקציב הארוך - אחרי הכרטיס האחרון, ולא מאחורי
+   הכרטיסים (שם הוא היה נראה רק ככתם מטושטש דרך הזכוכית) */
+#finance-section, #receipts-section { isolation: isolate; }
+.money-cozy-scene { position: relative; margin-top: auto; flex-shrink: 0; height: 170px; pointer-events: none; z-index: -1; color: var(--accent-purple); opacity: .55; }
+.money-cozy-scene svg { display: block; width: 100%; height: 100%; }
 .books-section { gap: 12px; }
 .books-section > *:not(.books-cozy-scene) { position: relative; z-index: 1; }
 .books-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: relative; }
