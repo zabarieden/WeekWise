@@ -36,28 +36,37 @@ function addHour(dateStr: string, timeStr: string): { date: string; time: string
     };
 }
 
-function reminderBody(reminderMinutes: number | null | undefined) {
-    // null/undefined -> useDefault (Google's own default reminders); אחרת
-    // override מדויק כדי שהתראת-גוגל תתריע באותו קיזוז בדיוק כמו שהוגדר
-    // ב-NOT10.ai - זה בפועל "מתקן" למשתמשת מחוברת את בעיית ההתראות הפנימיות
-    // השבורות, כי התראת-גוגל אמינה ועובדת גם כשהפנימית לא
-    if (reminderMinutes === null || reminderMinutes === undefined) return { useDefault: true };
-    return { useDefault: false, overrides: [{ method: "popup", minutes: reminderMinutes }] };
+// מי מתריע על אירוע: אירוע עם תזכורת שהוגדרה באפליקציה מקבל התראה מהאפליקציה בלבד
+// (send-due-reminders שולח Push גם כשהיא סגורה, עם "בוצע" ונודניק) - בגוגל הוא נשמר בלי
+// תזכורות, אחרת הגיעו שתי התראות לאותו אירוע (דווח: "יש התראה גם ביומן גוגל וגם
+// באפליקציה"). אירוע בלי תזכורת באפליקציה: ביצירה מקבל את ברירת המחדל של גוגל (כמו
+// קודם), ובעדכון לא נוגעים בתזכורות שלו בגוגל בכלל (forPatch → undefined)
+function reminderBody(reminderMinutes: number | null | undefined, forPatch = false) {
+    if (reminderMinutes && reminderMinutes > 0) return { useDefault: false, overrides: [] };
+    return forPatch ? undefined : { useDefault: true };
 }
 
-function buildOneTimeEventBody(row: any, timeZone: string) {
+// forPatch: עדכון חלקי (PATCH) - מנקים במפורש את סוג ההתחלה/הסיום האחר (date מול dateTime),
+// כי PATCH ממזג אובייקטים מקוננים ואירוע שעבר משעה ל"כל היום" היה נשאר עם שניהם
+function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false) {
     const body: any = { summary: row.event_title || "(No title)" };
     if (row.event_time) {
         const end = addHour(row.event_date, row.event_time);
         body.start = { dateTime: `${row.event_date}T${row.event_time}:00`, timeZone };
         body.end = { dateTime: `${end.date}T${end.time}:00`, timeZone };
+        if (forPatch) { body.start.date = null; body.end.date = null; }
     } else {
         body.start = { date: row.event_date };
         body.end = { date: addDays(row.event_date, 1) };
+        if (forPatch) { body.start.dateTime = null; body.start.timeZone = null; body.end.dateTime = null; body.end.timeZone = null; }
     }
-    body.reminders = reminderBody(row.reminder_minutes);
+    const reminders = reminderBody(row.reminder_minutes, forPatch);
+    if (reminders) body.reminders = reminders;
     return body;
 }
+
+// סוגי אירועים שנשלחים לגוגל: אירועי יומן רגילים + פתקים שנגררו לתאריך (note_task)
+const SYNCED_SOURCES = ["calendar", "note_task"];
 
 // מנסה להסיק כלל-חזרה (RRULE) מתוך רשימת התאריכים הממוינת בפועל של הסדרה -
 // generateRecurringDates ב-app.js לא שומר את פרמטרי היצירה (unit/interval)
@@ -250,7 +259,7 @@ Deno.serve(async () => {
                     .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id")
                     .eq("id", eventId).maybeSingle();
 
-                if (!current || current.source !== "calendar" || current.recurrence_group_id) {
+                if (!current || !SYNCED_SOURCES.includes(current.source) || current.recurrence_group_id) {
                     await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
                     processedCount += rowIds.length;
                     continue;
@@ -259,10 +268,12 @@ Deno.serve(async () => {
                 const targetCalId = current.google_event_id ? (current.google_calendar_id || primaryCalId) : primaryCalId;
                 const eventsBase = eventsBaseFor(targetCalId);
                 const timeZone = await getTZ(targetCalId);
-                const body = buildOneTimeEventBody(current, timeZone);
+                const body = buildOneTimeEventBody(current, timeZone, !!current.google_event_id);
+                // עדכון = PATCH (לא PUT): PUT מחליף את כל האירוע בגוגל ומוחק תיאור, מיקום,
+                // משתתפים ותזכורות שהוגדרו שם - אצל אירוע שנוצר בגוגל ונערך באפליקציה
                 const res = current.google_event_id
                     ? await fetch(`${eventsBase}/${encodeURIComponent(current.google_event_id)}`, {
-                        method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                        method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
                     })
                     : await fetch(eventsBase, {
                         method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
@@ -373,7 +384,7 @@ Deno.serve(async () => {
                                 // את שאר האצווה
                                 continue;
                             }
-                            const body = buildOneTimeEventBody(s, timeZone);
+                            const body = buildOneTimeEventBody(s, timeZone, true);
                             const res = await fetch(`${eventsBase}/${encodeURIComponent(match.id)}`, {
                                 method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
                             });

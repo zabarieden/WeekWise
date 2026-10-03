@@ -223,9 +223,21 @@ export async function pullDeltaForWatch(supabase: SupabaseClient, conn: GoogleCo
                 applied++;
                 continue;
             }
-            const { data: existing } = await supabase.from("calendar_events")
+            let { data: existing } = await supabase.from("calendar_events")
                 .select("id, updated_at")
                 .eq("user_id", conn.user_id).eq("google_event_id", ev.id).eq("google_calendar_id", watch.google_calendar_id).maybeSingle();
+            // שורות ישנות שסונכרנו לפני שהייתה עמודת google_calendar_id (היא ריקה אצלן) - בלי
+            // ההתאמה הזו כל משיכה מה-primary יצרה עותק כפול שלהן (כך נוצרו "חתונה עמית",
+            // "חינה" ו"טומי מגיע" פעמיים). מאמצים את השורה הקיימת ומשלימים לה את היומן
+            if (!existing && watch.google_calendar_id === conn.google_calendar_id) {
+                const { data: legacy } = await supabase.from("calendar_events")
+                    .select("id, updated_at")
+                    .eq("user_id", conn.user_id).eq("google_event_id", ev.id).is("google_calendar_id", null).maybeSingle();
+                if (legacy) {
+                    await supabase.from("calendar_events").update({ google_calendar_id: watch.google_calendar_id, google_synced_at: new Date().toISOString() }).eq("id", legacy.id);
+                    existing = legacy;
+                }
+            }
 
             const row = mapGoogleEventToRow(conn.user_id, conn.username, watch.google_calendar_id, ev);
             if (!existing) {
@@ -235,7 +247,10 @@ export async function pullDeltaForWatch(supabase: SupabaseClient, conn: GoogleCo
                 const googleUpdated = ev.updated ? new Date(ev.updated).getTime() : 0;
                 const localUpdated = existing.updated_at ? new Date(existing.updated_at).getTime() : 0;
                 if (googleUpdated > localUpdated) {
-                    await supabase.from("calendar_events").update(row).eq("id", existing.id);
+                    // בלי source: שורה קיימת שומרת על הסוג שלה - פתק שנגרר לתאריך (note_task)
+                    // לא הופך לאירוע יומן רגיל רק כי נערך בגוגל
+                    const { source: _source, ...updateRow } = row;
+                    await supabase.from("calendar_events").update(updateRow).eq("id", existing.id);
                 } else {
                     // המקומי מנצח - רק שדות-מעקב, לא תוכן (הגרסה המקומית תידחף
                     // חזרה לגוגל דרך תור-היציאה, ר' google-calendar-outbox-drain)

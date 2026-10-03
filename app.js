@@ -7692,6 +7692,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'books_deadline', category: 'books' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
+    { id: 'reminder_snooze', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
     { id: 'task_not_done_by_eod', category: 'myweek' },
     { id: 'daily_focus_prompt', category: 'glance' },
@@ -13807,11 +13808,13 @@ function fireReminder(rem) {
 let currentReminderPopupSource = null;
 
 function showReminderPopup(taskTitle, text, source) {
-    currentReminderPopupSource = source || null;
+    currentReminderPopupSource = source ? { ...source, taskTitle: taskTitle || '', text: text || '' } : null;
     document.getElementById('reminder-popup-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
     document.getElementById('reminder-popup-text').textContent = text || '';
     const doneBtn = document.getElementById('reminder-popup-done-btn');
     if (doneBtn) doneBtn.classList.toggle('hidden', !currentReminderPopupSource);
+    const snoozeBtn = document.getElementById('reminder-popup-snooze-btn');
+    if (snoozeBtn) snoozeBtn.classList.toggle('hidden', !currentReminderPopupSource);
     openModal('modal-reminder-popup');
     const confettiEl = document.getElementById('reminder-popup-confetti');
     if (confettiEl) {
@@ -13821,14 +13824,71 @@ function showReminderPopup(taskTitle, text, source) {
     }
 }
 
+// נודניק (לפי בקשה מפורשת): "⏰ עוד לא" = עוד תזכורת בעוד 5 דקות, וחוזרת כל 5 דקות (עד 6
+// פעמים אם לא מגיבים) עד "בוצע, תודה" או "הבנתי". השורה נשמרת ב-reminder_snoozes והשרת
+// (send-due-reminders) שולח את ההתראות - כך זה עובד גם כשהאפליקציה סגורה. כשהיא פתוחה,
+// ה-Service Worker מעביר את ההתראה לכאן והפופאפ נפתח שוב (ר' המאזין למטה)
+const REMINDER_SNOOZE_MINUTES = 5;
+const REMINDER_SNOOZE_REPEATS = 6;
+let localReminderSnoozeTimer = null;
+
+function hasPushReminders() {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+        && Notification.permission === 'granted' && isNotificationsEnabled();
+}
+
+async function clearReminderSnooze(source) {
+    clearTimeout(localReminderSnoozeTimer);
+    if (!supabaseClient || !currentUserId || !source || !source.sourceType || !source.sourceId) return;
+    await supabaseClient.from('reminder_snoozes').delete().eq('user_id', currentUserId).eq('source_type', source.sourceType).eq('source_id', source.sourceId);
+}
+
+async function snoozeReminderPopup() {
+    const source = currentReminderPopupSource;
+    closeModal('modal-reminder-popup');
+    if (!source || !supabaseClient || !currentUserId) return;
+    const row = {
+        user_id: currentUserId, source_type: source.sourceType, source_id: source.sourceId,
+        source_date: source.sourceDate || getLocalDateString(),
+        title: String(source.taskTitle || '').slice(0, 200), body: String(source.text || '').slice(0, 500),
+        next_at: new Date(Date.now() + REMINDER_SNOOZE_MINUTES * 60000).toISOString(), remaining: REMINDER_SNOOZE_REPEATS,
+    };
+    const { error } = await supabaseClient.from('reminder_snoozes').upsert(row, { onConflict: 'user_id,source_type,source_id,source_date' });
+    showAppToast(t(error ? 'nm_save_error' : 'reminder_snoozed_toast'), error ? 'error' : undefined);
+    // בלי Push (לא אושרו התראות במכשיר) - הפופאפ חוזר מכאן, כל עוד האפליקציה פתוחה
+    if (!hasPushReminders()) {
+        clearTimeout(localReminderSnoozeTimer);
+        localReminderSnoozeTimer = setTimeout(() => fireReminder({ ...source }), REMINDER_SNOOZE_MINUTES * 60000);
+    }
+}
+
+// "הבנתי!" - סוגר ולא מזכיר שוב (מבטל נודניק פעיל)
+async function dismissReminderPopup() {
+    const source = currentReminderPopupSource;
+    closeModal('modal-reminder-popup');
+    await clearReminderSnooze(source);
+}
+
+// התראת נודניק מהשרת בזמן שהאפליקציה פתוחה (sw.js מעביר אותה לכאן) - פותחים גם את הפופאפ
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        const msg = event.data;
+        if (!msg || msg.type !== 'weekwise-reminder-snooze' || !msg.data) return;
+        if (document.visibilityState !== 'visible') return;
+        const d = msg.data;
+        playReminderChime();
+        showReminderPopup(d.taskTitle, d.text, { sourceType: d.sourceType, sourceId: d.sourceId, sourceDate: d.sourceDate });
+    });
+}
+
 // "בוצע, תודה" - מסמנת השלמה על השורה האמיתית (אותו מנגנון בדיוק כמו הצ'קבוקס
 // ברשימות עצמן, ר' toggleScheduleCompletion/toggleEventOccurrenceCompletion),
-// לא רק סוגרת את הפופאפ. "עוד לא בוצע" (הכפתור השני, ישירות ב-HTML) רק סוגרת -
-// שום שינוי במשימה, בדיוק כמו "הבנתי!" הישן
+// לא רק סוגרת את הפופאפ, ומבטלת נודניק פעיל
 async function markReminderPopupDone() {
     const source = currentReminderPopupSource;
     closeModal('modal-reminder-popup');
     if (!source) return;
+    clearReminderSnooze(source);
     if (source.sourceType === 'schedule') {
         await toggleScheduleCompletion(source.sourceId, source.sourceDate, true);
     } else if (source.sourceType === 'event') {
@@ -14449,6 +14509,7 @@ function renderWeeklyNoteDisplay() {
         display.classList.remove('weekly-note-display-empty');
         display.removeAttribute('aria-label');
         display.style.fontSize = (totalLength > 70 ? 0.6 : totalLength > 45 ? 0.66 : 0.72) + 'rem';
+        fitWeeklyNoteText(display);
         return;
     }
     // פתק ריק: רק ✏️ עדין, בלי מילים (לפי בקשה מפורשת: "משהו אחר קצר או בכלל לא") -
@@ -14470,7 +14531,27 @@ function renderWeeklyNoteDisplay() {
     else if (text.length > 32) fontSize = 0.68;
     else if (text.length > 20) fontSize = 0.76;
     display.style.fontSize = fontSize + 'rem';
+    fitWeeklyNoteText(display);
 }
+// המדרגות למעלה הן רק נקודת התחלה: כאן מודדים בפועל ומקטינים עד שהכול נכנס בפתק. רוחב
+// האותיות שונה בין דפדפנים ומכשירים - דווח שבדפדפן במחשב המילים יצאו מהפתק ובנייד לא
+function fitWeeklyNoteText(display) {
+    // מדידה מיידית (קריאת scrollHeight מכריחה פריסה) - לא requestAnimationFrame, שלא רץ
+    // בטאב ברקע. פתק מוסתר לא נמדד; הוא מותאם שוב כשהגופן נטען או כשגודל החלון משתנה
+    if (!display.isConnected || !display.offsetParent) return;
+    let px = parseFloat(getComputedStyle(display).fontSize);
+    for (let i = 0; i < 40 && px > 7 && (display.scrollHeight > display.clientHeight + 1 || display.scrollWidth > display.clientWidth + 1); i++) {
+        px -= 0.5;
+        display.style.fontSize = px + 'px';
+    }
+}
+// אחרי שהגופן נטען (הוא רחב מהגופן הזמני) ובשינוי גודל חלון - מתאימים את הפתק מחדש
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (typeof currentWeeklyNoteText === 'string') renderWeeklyNoteDisplay(); });
+let weeklyNoteResizeTimer = null;
+window.addEventListener('resize', () => {
+    clearTimeout(weeklyNoteResizeTimer);
+    weeklyNoteResizeTimer = setTimeout(() => { if (typeof currentWeeklyNoteText === 'string') renderWeeklyNoteDisplay(); }, 200);
+});
 // מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
 // כמו בגרסה הקודמת, אחרי שדווח שאי אפשר היה להקליד בתוכו בפועל. מודל רגיל
 // הוא רכיב בדוק ואמין שכבר בשימוש בכל שאר האפליקציה, בלי הסיכונים של

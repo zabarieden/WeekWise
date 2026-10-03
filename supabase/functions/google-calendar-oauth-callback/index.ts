@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         const todayIso = new Date().toISOString().slice(0, 10);
         const [{ data: missingEvents }, { data: pendingOutbox }] = await Promise.all([
             supabase.from("calendar_events").select("id, recurrence_group_id")
-                .eq("user_id", userId).eq("source", "calendar").is("google_synced_at", null).is("google_event_id", null).gte("event_date", todayIso),
+                .eq("user_id", userId).in("source", ["calendar", "note_task"]).is("google_synced_at", null).is("google_event_id", null).gte("event_date", todayIso),
             supabase.from("calendar_sync_outbox").select("calendar_event_id").eq("user_id", userId).is("processed_at", null),
         ]);
         const alreadyQueued = new Set((pendingOutbox || []).map((r) => r.calendar_event_id));

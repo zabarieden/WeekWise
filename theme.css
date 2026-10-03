@@ -2497,7 +2497,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
    ב-app.js) כדי שכל מה שנכתב יכנס בלי להיחתך - לפי בקשה מפורשת ("כל מה
    שאני כותבת יכנס... גם אם ארוך פשוט להקטין את האותיות") - לכן בלי
    line-clamp/ellipsis יותר, גלישה רגילה על פני כמה שורות */
-.weekly-note-display { display: block; overflow: hidden; font-weight: 600; line-height: 1.22; word-break: break-word; }
+.weekly-note-display { display: block; overflow: hidden; max-height: 100%; max-width: 100%; font-weight: 600; line-height: 1.22; word-break: break-word; }
 /* פתק ריק - רק ✏️ גדול ועדין במרכז, בלי טקסט */
 .weekly-note-display-empty { font-size: 1.6rem; opacity: 0.5; font-style: normal; line-height: 1; }
 

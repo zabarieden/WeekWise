@@ -36,6 +36,8 @@ try {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const DB_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// תזכורת שהתפספסה (למשל כשהפונקציה לא רצה) נשלחת באיחור - עד שעה אחרי תחילת המשימה
+const LATE_LIMIT_MINUTES = 60;
 
 // מחזיר את התאריך/שעה המקומיים של המשתמש (לפי אזור הזמן השמור), בלי לבנות Date חדש -
 // כי בניית Date "מקומי" מתוך IANA timezone דורשת חישוב offset, וזה המסלול הפשוט והבטוח.
@@ -89,6 +91,9 @@ async function handleRequest(): Promise<Response> {
     let sent = 0;
     let checked = 0;
 
+    // נודניקים ישנים (למשל של משתמש/ת בלי מנוי Push, שלא יכול להישלח לו) לא נשארים לנצח
+    await supabase.from("reminder_snoozes").delete().lt("next_at", new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString());
+
     for (const [userId, userSubs] of subsByUser) {
         const timeZone = userSubs[0]?.timezone || "UTC";
         const wallClock = getLocalWallClock(now, timeZone);
@@ -111,9 +116,10 @@ async function handleRequest(): Promise<Response> {
             const taskMinutes = h * 60 + m;
             const triggerMinutes = taskMinutes - row.reminder_minutes;
 
-            // בכוונה בלי חסם עליון (תואם את checkReminders() בצד הלקוח): אם הפונקציה
-            // הזו לא רצה בזמן, עדיף לשלוח באיחור פעם אחת מאשר לפספס לגמרי.
+            // אם הפונקציה לא רצה בזמן, עדיף לשלוח באיחור פעם אחת מאשר לפספס - אבל לא על משימה
+            // שהתחילה לפני יותר משעה: התראה בשלוש לפנות בוקר על משהו מחצות היא רק רעש
             if (nowMinutes < triggerMinutes) continue;
+            if (nowMinutes > taskMinutes + LATE_LIMIT_MINUTES) continue;
 
             const title = `⏰ ${row.task_title || "MyWeek"}`;
             const body = row.reminder_text || "";
@@ -175,17 +181,17 @@ async function handleRequest(): Promise<Response> {
             checked++;
             if (!row.event_time) continue;
             if (row.last_notified_date === wallClock.dateStr) continue;
-            // אירוע מסונכרן עם גוגל כבר מקבל תזכורת-גוגל מקורית תואמת באותו קיזוז
-            // בדיוק (ר' reminderBody ב-google-calendar-outbox-drain) - שליחת Push
-            // פנימי גם כאן הייתה יוצרת 2 התראות לאותו אירוע בדיוק, אחת מכל מקור.
-            // עדיפות לגוגל: אמינה יותר, ועובדת גם בלי מנוי-Push בכלל
-            if (row.google_event_id) continue;
+            // גם אירוע שמסונכרן עם גוגל מקבל התראה מכאן: האפליקציה היא היחידה שמתריעה על
+            // אירוע עם תזכורת שהוגדרה בה (בגוגל הוא נשמר בלי תזכורות - ר' reminderBody ב-
+            // google-calendar-outbox-drain). קודם גוגל התריעה ואנחנו דילגנו, ולכן כשהאפליקציה
+            // הייתה סגורה לא הגיעה ממנה שום התראה, וכשהייתה פתוחה הגיעו שתיים
 
             const [h, m] = row.event_time.split(":").map((n: string) => parseInt(n, 10));
             if (Number.isNaN(h) || Number.isNaN(m)) continue;
             const taskMinutes = h * 60 + m;
             const triggerMinutes = taskMinutes - row.reminder_minutes;
             if (nowMinutes < triggerMinutes) continue;
+            if (nowMinutes > taskMinutes + LATE_LIMIT_MINUTES) continue;
 
             const title = `⏰ ${row.event_title || "NOT10.ai"}`;
             const body = row.reminder_text || "";
@@ -220,6 +226,60 @@ async function handleRequest(): Promise<Response> {
             if (anySucceeded) {
                 await supabase.from("calendar_events").update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
             }
+        }
+
+        // נודניק: "⏰ עוד לא" (בהתראה או בפופאפ) נכנס ל-reminder_snoozes - התראה חוזרת כל 5 דקות
+        // עד "בוצע" / "הבנתי" (או סגירת ההתראה), עד 6 פעמים אם מתעלמים. אם המשימה כבר סומנה
+        // כבוצעה בינתיים - מפסיקים בשקט
+        const { data: snoozes } = await supabase
+            .from("reminder_snoozes")
+            .select("*")
+            .eq("user_id", userId)
+            .lte("next_at", now.toISOString())
+            .gt("remaining", 0);
+        for (const sn of snoozes ?? []) {
+            checked++;
+            const key = { user_id: userId, source_type: sn.source_type, source_id: sn.source_id, source_date: sn.source_date };
+            const removeSnooze = () => supabase.from("reminder_snoozes").delete().match(key);
+            let done = false;
+            if (sn.source_type === "event") {
+                const { data: ev } = await supabase.from("calendar_events").select("is_completed").eq("id", sn.source_id).maybeSingle();
+                done = !ev || !!ev.is_completed;
+            } else {
+                const [{ data: comp }, { data: sched }] = await Promise.all([
+                    supabase.from("schedule_completions").select("schedule_id").eq("schedule_id", sn.source_id).eq("completion_date", sn.source_date).maybeSingle(),
+                    supabase.from("weekly_schedule").select("id").eq("id", sn.source_id).maybeSingle(),
+                ]);
+                done = !!comp || !sched;
+            }
+            if (done) { await removeSnooze(); continue; }
+
+            const title = `⏰ ${sn.title || "NOT10.ai"}`;
+            const body = sn.body || "";
+            // אותו tag כמו ההתראה המקורית - מחליף אותה במקום להצטבר, ו-renotify כדי שתצלצל שוב
+            const tag = `weekwise-reminder-${sn.source_type}-${sn.source_id}-${sn.source_date}`;
+            const actions = [
+                { action: "done", title: "✅" },
+                { action: "not_done", title: "⏰" },
+            ];
+            const data = { sourceType: sn.source_type, sourceId: sn.source_id, sourceDate: sn.source_date, userId, snooze: true, taskTitle: sn.title || "", text: sn.body || "" };
+            for (const sub of userSubs) {
+                try {
+                    await webpush.sendNotification(
+                        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                        JSON.stringify({ title, body, tag, actions, data, renotify: true }),
+                        { urgency: "high", TTL: 300 },
+                    );
+                    sent++;
+                } catch (err: any) {
+                    if (err?.statusCode === 404 || err?.statusCode === 410) {
+                        await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+                    }
+                }
+            }
+            const remaining = (sn.remaining || 1) - 1;
+            if (remaining <= 0) await removeSnooze();
+            else await supabase.from("reminder_snoozes").update({ remaining, next_at: new Date(now.getTime() + 5 * 60 * 1000).toISOString() }).match(key);
         }
 
         // תזכורות ארוחה של New Me: שעה אחת לכל ארוחה (new_me_reminders, הטקסט נכתב מהאפליקציה

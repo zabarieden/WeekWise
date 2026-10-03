@@ -20,7 +20,16 @@ self.addEventListener('push', (event) => {
     // מבנה בדיוק) - ר' notificationclick למטה לטיפול בלחיצה עליהם
     if (payload.actions) options.actions = payload.actions;
     if (payload.data) options.data = payload.data;
-    event.waitUntil(self.registration.showNotification(title, options));
+    // נודניק: אותו tag כמו ההתראה הקודמת - renotify כדי שתצלצל/תרטוט שוב ולא תוחלף בשקט
+    if (payload.renotify && options.tag) options.renotify = true;
+    const work = [self.registration.showNotification(title, options)];
+    // אם האפליקציה פתוחה - מציגים בה גם את פופאפ התזכורת (עם "בוצע" / "עוד לא" / "הבנתי")
+    if (payload.data && payload.data.snooze) {
+        work.push(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            list.forEach((c) => c.postMessage({ type: 'weekwise-reminder-snooze', data: payload.data }));
+        }));
+    }
+    event.waitUntil(Promise.all(work));
 });
 
 const MARK_DONE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co/functions/v1/mark-reminder-done';
@@ -36,33 +45,41 @@ function focusOrOpenApp(path) {
     });
 }
 
+// פעולה על תזכורת בלי לפתוח את האפליקציה - ר' mark-reminder-done (אין session כאן בתוך
+// ה-SW, לכן פונקציה נפרדת ללא אימות, שסומכת על sourceId כמזהה בלתי-ניחוש שהגיע רק דרך
+// Push חתום-VAPID של השרת שלנו). action: done / snooze / dismiss
+function reminderAction(data, action) {
+    if (!data || !data.sourceType || !data.sourceId) return Promise.resolve();
+    return fetch(MARK_DONE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, action }),
+    }).catch(() => { /* לא קריטי - אפשר עדיין לסמן ידנית באפליקציה */ });
+}
+
 self.addEventListener('notificationclick', (event) => {
     const data = event.notification.data;
     event.notification.close();
 
     if (event.action === 'done' && data) {
-        // "בוצע" ישירות מהתראת-המערכת - בלי לפתוח את האפליקציה בכלל, ר'
-        // mark-reminder-done (אין session כאן בתוך ה-SW, לכן פונקציה נפרדת
-        // ללא אימות-משתמשת, סומכת על sourceId כמזהה בלתי-ניחוש שהגיע רק
-        // דרך Push חתום-VAPID של השרת שלנו)
-        event.waitUntil(
-            fetch(MARK_DONE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            }).catch(() => { /* לא קריטי - המשתמשת עדיין יכולה לסמן ידנית באפליקציה */ })
-        );
+        event.waitUntil(reminderAction(data, 'done'));
         return;
     }
-    if (event.action === 'not_done') return; // "מאוחר יותר" - רק סוגר, כלום מעבר לזה
+    // "⏰ עוד לא" = נודניק: עוד התראה בעוד 5 דקות (וחוזר עד "בוצע" / "הבנתי") - לפי בקשה
+    // מפורשת; קודם הכפתור רק סגר את ההתראה ולא עשה כלום
+    if (event.action === 'not_done' && data) {
+        event.waitUntil(reminderAction(data, 'snooze'));
+        return;
+    }
 
-    // לחיצה על גוף ההתראה עצמו (לא על כפתור) - פותחת/ממקדת את האפליקציה
-    // ישר בהצצה להיום, לא נחיתה כללית על מסך הבית, לפי בקשה מפורשת.
+    // לחיצה על גוף ההתראה עצמו (לא על כפתור) - ראו את התזכורת, אז מפסיקים נודניק, ופותחים/
+    // ממקדים את האפליקציה ישר בהצצה להיום (לפי בקשה מפורשת).
     // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום
     const target = data && data.open === 'newme' ? 'newme' : 'peek';
-    event.waitUntil(focusOrOpenApp(`./index.html?open=${target}`));
+    event.waitUntil(Promise.all([reminderAction(data, 'dismiss'), focusOrOpenApp(`./index.html?open=${target}`)]));
 });
 
-// טיפול מפורש בסגירה (למשל לחיצה על ה-X): לא עושה כלום מעבר לסגירה עצמה,
-// כדי לוודא שדחיית התראה לעולם לא "מפעילה" שוב משהו בטעות.
-self.addEventListener('notificationclose', () => {});
+// סגירת ההתראה (החלקה הצידה / X) = "הבנתי" - לא להזכיר שוב (מבטל נודניק אם היה)
+self.addEventListener('notificationclose', (event) => {
+    event.waitUntil(reminderAction(event.notification.data, 'dismiss'));
+});
