@@ -2498,8 +2498,12 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
    שאני כותבת יכנס... גם אם ארוך פשוט להקטין את האותיות") - לכן בלי
    line-clamp/ellipsis יותר, גלישה רגילה על פני כמה שורות */
 .weekly-note-display { display: block; overflow: hidden; max-height: 100%; max-width: 100%; font-weight: 600; line-height: 1.22; word-break: break-word; }
-/* פתק ריק - רק ✏️ גדול ועדין במרכז, בלי טקסט */
-.weekly-note-display-empty { font-size: 1.6rem; opacity: 0.5; font-style: normal; line-height: 1; }
+/* פתק ריק - רק עיפרון קטן ועדין בפינה התחתונה (מול נייר הדבק), בלי טקסט */
+.weekly-note-display-empty { font-style: normal; line-height: 1; }
+.weekly-note-pencil { position: absolute; bottom: 9px; inset-inline-end: 9px; display: inline-flex; opacity: 0.5; pointer-events: none; }
+.weekly-note-pencil svg { width: 15px; height: 15px; }
+/* בעיגול הפינה נמצאת מחוץ לצורה - העיפרון יורד למרכז התחתון */
+.weekly-note-widget.weekly-note-shape-circle .weekly-note-pencil { inset-inline-end: auto; left: 50%; bottom: 14px; transform: translateX(-50%); }
 
 /* צבעי פתק אופציונליים - "פתק דביק" קלאסי בכמה גוונים, לפי בקשה מפורשת
    ("4 צבעים... חוץ מהברירת מחדל שזה הרגיל עם ערכת הנושא"). כל צבע כולל גם
@@ -4561,14 +4565,16 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    ("כמו הודעה כזו כמו בוואטסאפ אבל רק מהמוח"). עוזר ה-AI יושב ב-left:22px
    ב-RTL (ברירת המחדל) ו-right:22px ב-LTR (ר' html[dir="ltr"] .ai-brain-fab
    למעלה) - הבועה מוצמדת לצד השני בדיוק באותה לוגיקה */
+/* עוזר ה-AI עבר לתחתית המסך (bottom:30px, אזור לחיצה של 160px) - הבועה יוצאת ממנו: יושבת
+   ממש מעליו, באותו צד (inset-inline-end מתהפך לבד לפי כיוון השפה), והזנב מצביע אליו למטה.
+   z-index מעל אזור הלחיצה השקוף של העוזר, כדי שלחיצות בתחתית הבועה לא יפתחו אותו */
 .daily-focus-bubble {
     position: absolute;
-    top: 46px;
-    left: 130px;
-    right: auto;
-    z-index: 3200;
+    bottom: 150px;
+    inset-inline-end: 26px;
+    z-index: 3600;
     width: 250px;
-    max-width: calc(100% - 150px);
+    max-width: calc(100% - 52px);
     box-sizing: border-box;
     background-color: var(--bg-glass);
     backdrop-filter: blur(16px);
@@ -4579,39 +4585,38 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
     animation: dailyFocusBubbleIn 0.4s ease-out;
 }
 .daily-focus-bubble.hidden { display: none; }
-/* זנב-בועה קטן שמצביע שמאלה, לעבר אייקון המוח - תחושת "בועת דיבור" שיוצאת
-   ממנו, כמו הודעה שהתקבלה בוואטסאפ */
+/* זנב-בועה קטן שמצביע למטה, אל העוזר - תחושת "בועת דיבור" שיוצאת ממנו, כמו הודעה
+   שהתקבלה בוואטסאפ. ריבוע מסובב 45° עם מסגרת ימנית+תחתונה = פינה שמצביעה למטה בכל כיוון שפה */
 .daily-focus-bubble::before {
     content: "";
     position: absolute;
-    top: 26px;
-    left: -7px;
+    bottom: -7px;
+    inset-inline-end: 69px;
     width: 14px;
     height: 14px;
     transform: rotate(45deg);
     background-color: var(--bg-glass);
+    border-right: 1px solid var(--accent-purple);
     border-bottom: 1px solid var(--accent-purple);
-    border-left: 1px solid var(--accent-purple);
 }
+/* עולה קלות מכיוון העוזר שמתחתיה */
 @keyframes dailyFocusBubbleIn {
-    0% { opacity: 0; transform: translateY(-6px) scale(0.95); }
+    0% { opacity: 0; transform: translateY(8px) scale(0.96); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-/* אותו היפוך פינות בדיוק כמו עוזר ה-AI עצמו - הבועה עוברת לצד השני, עם
-   הזנב מצביע ימינה אליו במקום שמאלה */
-html[dir="ltr"] .daily-focus-bubble { left: auto; right: 130px; }
-html[dir="ltr"] .daily-focus-bubble::before {
-    left: auto;
-    right: -7px;
-    transform: rotate(-135deg);
-}
-.daily-focus-bubble-collapsed { display: flex; align-items: center; gap: 8px; padding: 14px 14px 14px 16px; cursor: pointer; }
-.daily-focus-bubble-text { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) { .daily-focus-bubble { animation: none; } }
+.daily-focus-bubble-collapsed { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 14px 14px 10px 16px; cursor: pointer; }
+.daily-focus-bubble-row { display: flex; align-items: flex-start; gap: 8px; }
+.daily-focus-bubble-text { flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); line-height: 1.35; text-wrap: balance; }
 .daily-focus-bubble-close { flex-shrink: 0; background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; opacity: 0.6; padding: 2px 4px; }
 .daily-focus-bubble-close:hover { opacity: 1; }
-.daily-focus-bubble-expanded { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px 14px; }
+.daily-focus-bubble-expanded { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px 16px; max-height: calc(100vh - 230px); max-height: calc(100dvh - 230px); overflow-y: auto; scrollbar-width: thin; }
 .daily-focus-bubble-expanded.hidden { display: none; }
-.daily-focus-bubble-expanded-header { display: flex; justify-content: flex-end; margin-top: 6px; }
+/* בתצוגה הפתוחה השאלה נשארת למעלה (קודם נעלמה ונשאר רק ✕), ומתחתיה רמז עדין שלא חייבים הכול */
+.daily-focus-pick-hint { margin: -2px 0 0; font-size: 0.72rem; color: var(--text-secondary); line-height: 1.35; }
+/* "🌙 לא היום" - קישור טקסט שקט ולא כפתור בולט: אפשרות לגיטימית, לא "כישלון" */
+.daily-focus-not-today { align-self: flex-start; background: none; border: none; padding: 4px 2px; font: inherit; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; opacity: 0.85; border-radius: 8px; }
+.daily-focus-not-today:hover, .daily-focus-not-today:focus-visible { opacity: 1; color: var(--text-primary); }
 /* תג "1" קטן על אייקון המוח כשיש שאלה יומית שעוד לא נענתה - כמו הודעה
    שלא נקראה. יושב על .ai-brain-fab עצמו (לא נע עם ה"נשימה" של האייקון
    הפנימי) כדי שלא יזוז/יקפוץ */
@@ -4664,34 +4669,58 @@ html[dir="ltr"] .daily-focus-bubble::before {
 }
 /* תגיות "Daily Mix" - בחירה מרובה, ר' renderDailyFocusTags/toggleDailyFocusTag
    ב-app.js. תגית "אחר" מסומנת שונה (איטלי) כדי להבדיל אותה מהתגיות הקבועות */
-.daily-focus-tags-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.daily-focus-tags-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 2px; }
+/* כל הצעה בשורה משלה עם עיגול סימון בצד - קל לקרוא משפט שלם ולסמן כמה (במקום ענן תגיות צפוף) */
 .daily-focus-tag-chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
     background-color: var(--bg-row);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 14px;
-    padding: 6px 12px;
+    border-radius: 12px;
+    padding: 7px 10px;
     font-size: 0.76rem;
+    line-height: 1.35;
     font-family: inherit;
     cursor: pointer;
     text-align: start;
     transition: var(--transition);
 }
-.daily-focus-tag-chip.selected { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+.daily-focus-tag-chip::before {
+    content: '';
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--accent-purple) 55%, transparent);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 12px;
+    text-align: center;
+    color: #fff;
+}
+.daily-focus-tag-chip.selected { background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); border-color: color-mix(in srgb, var(--accent-purple) 60%, transparent); }
+.daily-focus-tag-chip.selected::before { content: '✓'; background: var(--accent-purple); border-color: var(--accent-purple); }
 .daily-focus-tag-chip-other { font-style: italic; }
-.daily-focus-bubble-submit-row { display: flex; justify-content: flex-end; }
+.daily-focus-bubble-submit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
 .daily-focus-bubble-submit {
-    background: transparent;
-    border: 1px solid var(--accent-purple);
-    color: var(--accent-purple-text);
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+    border: none;
+    color: #fff;
     border-radius: 20px;
-    padding: 6px 18px;
+    padding: 7px 20px;
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-purple) 30%, transparent);
     transition: var(--transition);
 }
-.daily-focus-bubble-submit:hover { background-color: rgba(168, 85, 247, 0.15); }
+.daily-focus-bubble-submit:hover { filter: brightness(1.06); }
+.daily-focus-bubble-submit:active { transform: scale(0.96); }
 /* מוסתרת בכוח כשהמגירה/מודל פתוחים - אותו טעם בדיוק כמו שני כפתורי ה-FAB
    הקבועים (ר' ההערה עליהם למעלה): z-index גבוה שלה היה מנצח את שכבת
    המגירה/המודלים ומשאיר אותה צפה מעליהם */

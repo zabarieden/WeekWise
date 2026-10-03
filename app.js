@@ -2226,6 +2226,9 @@ let lastCheckedDailyFocusDate = null;
 // "Daily Mix" - לפי בקשה מפורשת ("שכל הפרימיום יהיה חסום") - לא-פרימיום
 // מקבל 'answered' (תג מוסתר) בלי שום רמז/פיתוי
 let dailyFocusState = 'unseen';
+// 'skipped' - "🌙 לא היום": התג נעלם עד מחר, בלי להציק. נשמר כשורת daily_focus_dismissed (כמו ✕)
+// עם הכותרת הזו, כדי שכל המסננים הקיימים ימשיכו להסתיר אותה מהלו"ז ומהלוח
+const DAILY_FOCUS_SKIP_TITLE = 'daily_focus_skipped';
 // הפעלה/כיבוי של השאלה היומית - ברירת מחדל דלוק (opt-out), אותו דפוס בדיוק
 // כמו weekly-note, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
 // לכבות שתהיה לה האפשרות"). כיבוי לא מוחק תשובות עבר, רק מסתיר את התג/בועה
@@ -2258,13 +2261,14 @@ async function checkDailyFocusPrompt() {
     }
     const todayStr = getLocalDateString();
     lastCheckedDailyFocusDate = todayStr;
-    const { data, error } = await supabaseClient.from('calendar_events').select('source').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
+    const { data, error } = await supabaseClient.from('calendar_events').select('source, event_title').eq('user_id', currentUserId).eq('event_date', todayStr).in('source', ['daily_focus', 'daily_focus_dismissed']);
     // לוג אבחוני זמני - דווח שהתג "1" חוזר לפעמים באותו יום למרות שנענה בפועל
     // (בחרו תגיות ולחצו הוספה), בלי הודעת שגיאה גלויה. לא נמצא הסבר לוגי דרך
     // קריאת הקוד בלבד (upsert/RLS/אזור-זמן/service-worker כולם נבדקו ונשללו) -
     // הלוג הזה יאפשר לראות מה בפועל חוזר מהשאילתה בפעם הבאה שזה קורה
     console.log('[daily-focus-check]', { todayStr, currentUserId, error, data });
     if (data && data.some(row => row.source === 'daily_focus')) dailyFocusState = 'answered';
+    else if (data && data.some(row => row.source === 'daily_focus_dismissed' && row.event_title === DAILY_FOCUS_SKIP_TITLE)) dailyFocusState = 'skipped';
     else if (data && data.some(row => row.source === 'daily_focus_dismissed')) dailyFocusState = 'dismissed';
     else dailyFocusState = 'unseen';
     applyDailyFocusIconState();
@@ -2277,7 +2281,7 @@ async function checkDailyFocusPrompt() {
 function applyDailyFocusIconState() {
     const badge = document.getElementById('ai-brain-fab-badge');
     if (!badge) return;
-    badge.classList.toggle('hidden', dailyFocusState === 'answered');
+    badge.classList.toggle('hidden', dailyFocusState === 'answered' || dailyFocusState === 'skipped');
     badge.classList.toggle('daily-focus-badge-dim', dailyFocusState === 'dismissed');
 }
 
@@ -2319,6 +2323,7 @@ function renderDailyFocusTags() {
         chip.type = 'button';
         chip.className = 'daily-focus-tag-chip';
         chip.textContent = text;
+        chip.setAttribute('aria-pressed', 'false');
         chip.onclick = () => toggleDailyFocusTag(text, chip);
         container.appendChild(chip);
     }
@@ -2352,6 +2357,7 @@ function toggleDailyFocusTag(text, chipEl) {
     const idx = selectedDailyFocusTags.indexOf(text);
     if (idx === -1) { selectedDailyFocusTags.push(text); chipEl.classList.add('selected'); }
     else { selectedDailyFocusTags.splice(idx, 1); chipEl.classList.remove('selected'); }
+    chipEl.setAttribute('aria-pressed', idx === -1 ? 'true' : 'false');
 }
 
 // תגית "אחר" חופשית - לא נספרת עם selectedDailyFocusTags (יש לה טקסט חופשי
@@ -2420,8 +2426,26 @@ async function dismissDailyFocusModal() {
         });
         if (error) console.error('daily_focus_dismissed insert failed:', error.message);
     }
-    if (dailyFocusState !== 'answered') dailyFocusState = 'dismissed';
+    if (dailyFocusState !== 'answered' && dailyFocusState !== 'skipped') dailyFocusState = 'dismissed';
     applyDailyFocusIconState();
+}
+
+// "🌙 לא היום" - לפי בקשה מפורשת: יש ימים שלא מתאים לבחור, וזה בסדר. בניגוד ל-✕ (שמשאיר את התג
+// דהוי כל היום) התג נעלם לגמרי, והשאלה חוזרת מחר בבוקר כרגיל
+async function skipDailyFocusToday() {
+    const bubble = document.getElementById('daily-focus-bubble');
+    if (bubble) bubble.classList.add('hidden');
+    if (dailyFocusState === 'answered') return;
+    dailyFocusState = 'skipped';
+    applyDailyFocusIconState();
+    showAppToast(t('daily_focus_not_today_toast'));
+    if (isPremiumUser && supabaseClient && currentUserId) {
+        const { error } = await supabaseClient.from('calendar_events').insert({
+            username: currentUsername, user_id: currentUserId, event_title: DAILY_FOCUS_SKIP_TITLE,
+            event_date: getLocalDateString(), source: 'daily_focus_dismissed',
+        });
+        if (error) console.error('daily_focus skip insert failed:', error.message);
+    }
 }
 
 // בחירה מרובה - כל תגית שנבחרה (+ הטקסט החופשי מ"אחר", אם הוזן) הופכת לשורת
@@ -3326,7 +3350,9 @@ async function loadWeekOneTimeEvents() {
     if (!supabaseClient || !currentUserId) return;
     const weekStart = getIsoDateForDayThisWeek(0);
     const weekEnd = getIsoDateForDayThisWeek(6);
-    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', weekStart).lte('event_date', weekEnd);
+    // בלי שורות פנימיות (סימון "חגגנו היום", תשובות/סגירות של "מה חשוב היום") - הן לא אירועים
+    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', weekStart).lte('event_date', weekEnd)
+        .not('source', 'in', '(today_celebrated,daily_focus_dismissed,daily_focus)');
     const byDate = new Map();
     (data || []).forEach(item => {
         if (!byDate.has(item.event_date)) byDate.set(item.event_date, []);
@@ -14532,10 +14558,10 @@ function renderWeeklyNoteDisplay() {
         fitWeeklyNoteText(display);
         return;
     }
-    // פתק ריק: רק ✏️ עדין, בלי מילים (לפי בקשה מפורשת: "משהו אחר קצר או בכלל לא") -
-    // ההסבר המלא נשאר לקוראי מסך
+    // פתק ריק: רק עיפרון קטן ועדין בפינה, בלי מילים (לפי בקשה מפורשת: "את העיפרון לשים בצד
+    // ובקטן יותר") - ההסבר המלא נשאר לקוראי מסך
     if (!text) {
-        display.textContent = '✏️';
+        display.innerHTML = `<span class="weekly-note-pencil" aria-hidden="true">${EDIT_ICON_SVG}</span>`;
         display.classList.add('weekly-note-display-empty');
         display.setAttribute('aria-label', t('weekly_note_empty_hint'));
         display.style.fontSize = '';
