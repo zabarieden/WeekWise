@@ -5309,6 +5309,10 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* אותה סיבה בדיוק - המבט החודשי נפתח מתוך #modal-daily-board עצמו ונפתח/נסגר
    ישירות (ר' openRoutineGoalsOverviewModal ב-app.js) כדי שהוא יישאר פתוח מתחתיו */
 #modal-routine-goals-overview { z-index: 2500; }
+/* גם עריכת/הוספת פריט ושם טאב נפתחים מעל "השגרה שלי" בלי לסגור אותה (ר' openModalOverDailyBoard),
+   וחלון אישור מחיקה תמיד מעל כל חלון אחר */
+#modal-add-routine-item, #modal-routine-tab-name { z-index: 2500; }
+#modal-danger-confirm { z-index: 2600; }
 /* בורר השפה חייב להיפתח גם מעל מסך הכניסה (.login-overlay, z-index:3000 -
    גבוה מ-.apple-modal הרגיל של 2000!) אז הוא צריך z-index ייעודי גבוה יותר */
 #modal-language-picker { z-index: 3500; }

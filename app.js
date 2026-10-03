@@ -13,7 +13,7 @@ window.addEventListener('orientationchange', setAppHeightVar);
 
 // אייקון עיפרון (SVG, לא אימוג'י) - כדי שיהיה ניתן לצבוע בסגול דרך currentColor;
 // אימוג'י ✏️ מגיע עם צבע קבוע משלו ולא ניתן לצביעה ב-CSS (כמו שקרה עם ⭐)
-const EDIT_ICON_SVG = '<svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const EDIT_ICON_SVG = '<svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M12.3 9.3l2.4 2.4M5.95 15.65l2.4 2.4"/><path d="M13.5 20.5c1.1-.8 2.3-.8 3.4 0s2.3.8 3.4 0"/></svg>';
 
 const SUPABASE_URL = 'https://fncssznyigwlltoqlfwh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt';
@@ -2517,11 +2517,22 @@ function openModal(modalId) {
 }
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('open');
-    // תמיד מותר להסיר בלי תנאי - openModal כבר דואגת שלכל היותר מודל אחד
-    // פתוח בו-זמנית (ר' ההערה למעלה), אז סגירת "המודל הפתוח" תמיד אומרת
-    // שאף מודל אחר לא נשאר פתוח
+    // חלון שנפתח מעל חלון אחר (למשל עריכת פריט מעל "השגרה שלי") - החלון שמתחת עדיין
+    // פתוח, ולכן מסירים את מצב "חלון פתוח" רק כשבאמת לא נשאר אף חלון
     const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('modal-open');
+    if (wrapper && !document.querySelector('.apple-modal.open')) wrapper.classList.remove('modal-open');
+}
+
+// "השגרה שלי" נשארת פתוחה בזמן עריכות (לפי בקשה מפורשת: "שמשנים משהו זה ישר סוגר... רק
+// ברגע שאלחץ איקס הדף ייסגר") - כל חלון שנפתח מתוכה (עריכת/הוספת פריט, שם טאב, אישור
+// מחיקה) נפתח מעליה במקום לסגור אותה. כל שינוי נשמר מיד כמו קודם; ✕ רק סוגר
+function isDailyBoardOpen() {
+    const board = document.getElementById('modal-daily-board');
+    return !!(board && board.classList.contains('open'));
+}
+function openModalOverDailyBoard(modalId) {
+    if (!isDailyBoardOpen()) { openModal(modalId); return; }
+    document.getElementById(modalId).classList.add('open');
 }
 
 // --- ניווט מסך ההגדרות: מסך-ראשי (5 קטגוריות) + מסכי-משנה, בסגנון הגדרות
@@ -15240,7 +15251,7 @@ function openAddRoutineTabPrompt() {
     routineTabNameMode = 'add';
     document.getElementById('routine-tab-name-modal-title').textContent = t('daily_board_add_tab_title');
     document.getElementById('routine-tab-name-input').value = '';
-    openModal('modal-routine-tab-name');
+    openModalOverDailyBoard('modal-routine-tab-name');
 }
 
 function openRenameRoutineTabModal(tabId) {
@@ -15249,7 +15260,7 @@ function openRenameRoutineTabModal(tabId) {
     routineTabNameMode = 'rename';
     document.getElementById('routine-tab-name-modal-title').textContent = t('daily_board_rename_tab_btn');
     document.getElementById('routine-tab-name-input').value = tab.name;
-    openModal('modal-routine-tab-name');
+    openModalOverDailyBoard('modal-routine-tab-name');
 }
 
 async function saveRoutineTabName() {
@@ -15289,7 +15300,8 @@ function showDangerConfirm(titleText, messageText, onConfirm) {
     const freshBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(freshBtn, btn);
     freshBtn.addEventListener('click', () => { closeModal('modal-danger-confirm'); onConfirm(); });
-    openModal('modal-danger-confirm');
+    // מתוך "השגרה שלי" (למשל מחיקת טאב) - האישור נפתח מעליה ולא סוגר אותה
+    openModalOverDailyBoard('modal-danger-confirm');
 }
 
 // --- לוח החזון (Vision Board) - מגירה שנייה מהצד (אותה תבנית בדיוק כמו
@@ -18868,7 +18880,8 @@ function openAddRoutineItemModal(time) {
     document.getElementById('routine-item-time-label').textContent = time;
     document.getElementById('routine-item-title-input').value = '';
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
-    openModal('modal-add-routine-item');
+    openModalOverDailyBoard('modal-add-routine-item');
+    setTimeout(() => document.getElementById('routine-item-title-input').focus(), 50);
 }
 
 function openEditRoutineItemModal(item) {
@@ -18878,7 +18891,7 @@ function openEditRoutineItemModal(item) {
     document.getElementById('routine-item-time-label').textContent = pendingRoutineItemTime;
     document.getElementById('routine-item-title-input').value = item.title;
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
-    openModal('modal-add-routine-item');
+    openModalOverDailyBoard('modal-add-routine-item');
 }
 
 async function saveRoutineItem() {

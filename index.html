@@ -84,7 +84,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=480">
+    <link rel="stylesheet" href="theme.css?v=481">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1527,10 +1527,10 @@
                                 <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" data-i18n-title="notebook_canvas_pen_title" title="Pen">✏️</button>
                                 <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" data-i18n-title="notebook_canvas_marker_title" title="Marker">🖌️</button>
                                 <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" data-i18n-title="notebook_canvas_marker_square_title" title="Flat marker">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.6h7.5" stroke-width="3.2" opacity=".35"/><g transform="rotate(40 12 11)"><rect x="9.2" y="2.6" width="5.6" height="10.4" rx="1.6"/><path d="M9.2 6.4h5.6"/><path d="M9.8 13h4.4l-.7 2.6h-3z"/><path d="M10.6 15.6h2.8l-.6 2.8h-1.6z"/></g></svg>
                                 </button>
                                 <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(45 12 11)"><rect x="8" y="3" width="8" height="14.5" rx="2.2"/><path d="M8 10.6h8"/><path d="M8.85 11.4h6.3v4.9a1.2 1.2 0 0 1-1.2 1.2h-3.9a1.2 1.2 0 0 1-1.2-1.2z" fill="currentColor" opacity=".18" stroke="none"/></g><circle cx="9.4" cy="20.8" r=".7" fill="currentColor" stroke="none" opacity=".55"/><circle cx="12.4" cy="20.1" r=".55" fill="currentColor" stroke="none" opacity=".45"/><circle cx="6.9" cy="19.6" r=".5" fill="currentColor" stroke="none" opacity=".4"/></svg>
                                 </button>
                             </div>
                             <!-- צבעים + עובי-קו (עוד "סגנונות ציור", לפי בקשה מפורשת - רלוונטי לעט
@@ -1577,7 +1577,7 @@
                             📤
                         </button>
                         <button class="btn-recipe-edit" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" title="Edit recipe">
-                            <svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> <span data-i18n="recipe_edit_btn">Edit</span>
+                            <svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M12.3 9.3l2.4 2.4M5.95 15.65l2.4 2.4"/><path d="M13.5 20.5c1.1-.8 2.3-.8 3.4 0s2.3.8 3.4 0"/></svg> <span data-i18n="recipe_edit_btn">Edit</span>
                         </button>
                         <button class="btn-recipe-delete" onclick="deleteRecipe()" data-i18n-title="recipe_delete_title" title="Delete recipe">
                             🗑️ <span data-i18n="recipe_delete_btn">Delete</span>
@@ -2116,7 +2116,7 @@
                 <div class="weekly-note-modal-head">
                     <h3 data-i18n="weekly_note_modal_title">Weekly Note</h3>
                     <!-- ההגדרות (רשימה לסימון, צבע, סגנון) מוסתרות מאחורי גלגל שיניים קטן - לפי בקשה מפורשת -->
-                    <button type="button" class="weekly-note-gear" id="weekly-note-gear" onclick="toggleWeeklyNoteSettingsPanel()" data-i18n-title="weekly_note_settings_title" data-i18n-aria-label="weekly_note_settings_title" title="Note settings" aria-label="Note settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+                    <button type="button" class="weekly-note-gear" id="weekly-note-gear" onclick="toggleWeeklyNoteSettingsPanel()" data-i18n-title="weekly_note_settings_title" data-i18n-aria-label="weekly_note_settings_title" title="Note settings" aria-label="Note settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2"/><path d="M18 12h2.4M16.24 16.24l1.7 1.7M12 18v2.4M7.76 16.24l-1.7 1.7M6 12H3.6M7.76 7.76L6.06 6.06M12 6V3.6M16.24 7.76l1.7-1.7" stroke-width="3" stroke-linecap="butt"/></svg></button>
                 </div>
                 <!-- רשימה לסימון (1-3 שורות, נבחר בהגדרות) - כל שורה עם ✓ שאפשר לסמן גם ישר מהפתק במסך הבית -->
                 <div id="weekly-note-items-edit" class="weekly-note-items-edit"></div>
@@ -3852,8 +3852,8 @@
 
     </div>
 
-    <script src="i18n.js?v=383"></script>
-    <script src="app.js?v=530"></script>
+    <script src="i18n.js?v=384"></script>
+    <script src="app.js?v=531"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=17"></script>
     <script src="books.js?v=1"></script>
