@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=487">
+    <link rel="stylesheet" href="theme.css?v=488">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -995,6 +995,72 @@
                     </div>
                 </section>
 
+                <!-- 📓 המחברות שלי (לפי בקשה מפורשת, במקום "לימודים" ו"הפרויקטים שלי"): ארון עם מדפים - כל מדף
+                     הוא פרויקט, ועליו המחברות שלו בכריכות שבוחרים (צבע, דוגמה ומדבקה). על המדף העליון קבועה
+                     מחברת "📝 משימות" (שיעורי הבית של פעם, study_tasks). מחברת נפתחת כמחברת אמיתית (#nb-view):
+                     דפים שמתהפכים, סוגי דף, סימנייה ותוכן עניינים. הלוגיקה ב-app.js (renderNotebookShelves) -->
+                <section class="tab-content books-section notebooks-section" id="notebooks-section">
+                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
+                    <div class="books-header">
+                        <div class="books-header-main">
+                            <h2 data-i18n="study_title">My Notebooks</h2>
+                            <div class="books-stats" id="nb-stats"></div>
+                        </div>
+                        <button type="button" class="books-add-btn" onclick="openNotebookCoverModal()" data-i18n="nb_add_notebook_btn">+ Notebook</button>
+                    </div>
+                    <!-- פריסה חכמה - לפרק מטלה גדולה לצעדים ביומן (עברה לכאן מ"לימודים") -->
+                    <button type="button" class="study-smart-split-btn" onclick="openSmartSplitModal()"><span class="study-smart-split-icon" aria-hidden="true">🪄</span><span class="study-smart-split-text"><span class="study-smart-split-title" data-i18n="smart_split_tile_title">Smart Split</span><span class="study-smart-split-sub" data-i18n="smart_split_study_hint">Break a big assignment into small steps in your calendar</span></span></button>
+                    <div id="nb-bookcase" class="nb-bookcase"></div>
+                    <button type="button" class="nb-add-shelf-btn" onclick="openAddShelfModal()" data-i18n="nb_add_shelf_btn">+ Shelf</button>
+                    <div class="books-cozy-scene nb-desk-scene" aria-hidden="true">
+                        <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
+                            <defs>
+                                <radialGradient id="nb-lamp-glow"><stop offset="0" style="stop-color: var(--accent-gold); stop-opacity: .45"/><stop offset="1" style="stop-color: var(--accent-gold); stop-opacity: 0"/></radialGradient>
+                            </defs>
+                            <!-- פתקים על הקיר -->
+                            <rect x="236" y="34" width="30" height="30" rx="2" transform="rotate(-6 251 49)" style="fill: var(--accent-gold)" opacity=".45"/>
+                            <rect x="272" y="44" width="28" height="28" rx="2" transform="rotate(5 286 58)" style="fill: var(--accent-pink)" opacity=".42"/>
+                            <circle cx="251" cy="36" r="2.4" fill="currentColor" opacity=".55"/>
+                            <circle cx="286" cy="46" r="2.4" fill="currentColor" opacity=".55"/>
+                            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".35"><path d="M242 46 h16 M242 52 h12"/><path d="M278 57 h15 M278 63 h10"/></g>
+                            <!-- שולחן -->
+                            <ellipse cx="200" cy="184" rx="186" ry="5" fill="currentColor" opacity=".12"/>
+                            <rect x="12" y="148" width="376" height="10" rx="4" fill="currentColor" opacity=".3"/>
+                            <rect x="30" y="158" width="7" height="26" rx="2" fill="currentColor" opacity=".3"/>
+                            <rect x="363" y="158" width="7" height="26" rx="2" fill="currentColor" opacity=".3"/>
+                            <!-- מנורת שולחן -->
+                            <circle cx="88" cy="88" r="36" fill="url(#nb-lamp-glow)"/>
+                            <ellipse cx="52" cy="146" rx="18" ry="4" fill="currentColor" opacity=".5"/>
+                            <path d="M52 144 L66 104 L92 84" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
+                            <path d="M84 72 L108 92 L98 100 L76 80 Z" style="fill: var(--accent-gold)" opacity=".62"/>
+                            <!-- ערימת מחברות -->
+                            <rect x="114" y="138" width="54" height="10" rx="2" style="fill: var(--accent-pink)" opacity=".55"/>
+                            <rect x="118" y="128" width="48" height="10" rx="2" fill="currentColor" opacity=".42"/>
+                            <rect x="112" y="118" width="52" height="10" rx="2" style="fill: var(--accent-gold)" opacity=".6"/>
+                            <g fill="#fff" opacity=".55"><circle cx="120" cy="143" r="1.4"/><circle cx="124" cy="133" r="1.4"/><circle cx="118" cy="123" r="1.4"/></g>
+                            <!-- כוס עפרונות -->
+                            <rect x="186" y="98" width="3" height="32" rx="1.5" transform="rotate(-10 187 130)" style="fill: var(--accent-gold)" opacity=".75"/>
+                            <rect x="194" y="92" width="3" height="38" rx="1.5" style="fill: var(--accent-pink)" opacity=".7"/>
+                            <rect x="201" y="100" width="3" height="30" rx="1.5" transform="rotate(12 202 130)" fill="currentColor" opacity=".55"/>
+                            <rect x="182" y="120" width="28" height="28" rx="4" fill="currentColor" opacity=".38"/>
+                            <path d="M186 126 v16" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".4"/>
+                            <!-- מחברת פתוחה -->
+                            <path d="M228 140 L262 136 L262 147 L222 148 Z" fill="#fff" opacity=".7"/>
+                            <path d="M262 136 L296 140 L302 148 L262 147 Z" fill="#fff" opacity=".62"/>
+                            <path d="M228 140 L262 136 L296 140 L302 148 L262 147 L222 148 Z M262 136 V147" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/>
+                            <g stroke="currentColor" stroke-width=".8" opacity=".3"><path d="M232 142 l26 -2.6"/><path d="M231 145 l27 -1.6"/><path d="M266 140 l26 2.6"/><path d="M266 143 l28 1.8"/></g>
+                            <rect x="276" y="142" width="22" height="2.6" rx="1.3" transform="rotate(-18 287 143)" style="fill: var(--accent-gold)" opacity=".8"/>
+                            <!-- ספל -->
+                            <path d="M332 132 q7 0 7 6 q0 6 -7 6" fill="none" stroke="currentColor" stroke-width="2" opacity=".45"/>
+                            <rect x="316" y="128" width="17" height="20" rx="3.5" fill="currentColor" opacity=".42"/>
+                            <path d="M321 122 q-3 -4 0 -8 q3 -4 0 -8 M327 122 q-3 -4 0 -8 q3 -4 0 -8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".3"/>
+                            <!-- עציץ קטן -->
+                            <path d="M352 130 h22 l-3 18 h-16 z" style="fill: var(--accent-gold)" opacity=".55"/>
+                            <path d="M363 130 c-2 -10 -9 -15 -15 -16 c3 8 8 13 15 16 z M363 130 c1 -11 7 -17 14 -19 c-1 9 -6 15 -14 19 z M363 130 c0 -9 0 -15 -1 -21 c3 6 3 14 1 21 z" fill="currentColor" opacity=".45"/>
+                        </svg>
+                    </div>
+                </section>
+
                 <!-- New Me - תוכנית תזונה בתשלום נפרד (רכישה חד-פעמית). למטה איור עדין של מטבח
                      ביתי (מדף עם צנצנות ותבלינים, קערת פירות, קרש חיתוך עם ירקות, קנקן מים ועציץ)
                      בצבעי ערכת הנושא - על אותו עיקרון כמו פינת הקריאה, לפי בקשה מפורשת -->
@@ -1311,7 +1377,7 @@
                         <span class="hamburger-drawer-item-icon">🗓️</span>
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
                     </button>
-                    <button type="button" data-tour="m-study" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openStudyDrawer();">
+                    <button type="button" data-tour="m-study" class="hamburger-drawer-item" onclick="openNotebooksSection()">
                         <span class="hamburger-drawer-item-icon">📓</span>
                         <span class="hamburger-drawer-item-title" data-i18n="study_menu_label">Study</span>
                     </button>
@@ -1426,176 +1492,95 @@
                 </nav>
             </div>
 
-            <!-- מגירת "לימודים" - יומן שיעורי בית עצמאי, מגירה שלישית מהצד (אותה
-                 תבנית בדיוק כמו לוח החזון) - קטגוריה נפרדת לגמרי בתפריט, לא
-                 כרוכה בטאב "לימודים" הגנרי בלוח היום (routine_tabs), לפי בקשה
-                 מפורשת ("משהו נפרד וחדש לגמרי... בתפריט הראשי בהמבורגר") -->
-            <div id="study-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeStudyDrawer()">
-                <nav class="hamburger-drawer study-drawer notebook-paper-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <h3 data-i18n="study_title">Study</h3>
-                        <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="openAddStudyItemModal()" data-i18n-title="study_add_btn_title" title="Add homework">＋</button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeStudyDrawer()">✕</button>
-                        </div>
+            <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
+                 סימנייה, תוכן עניינים, ודף אחד בכל פעם שמתהפך כמו במחברת אמיתית (חצים בתחתית הדף או
+                 החלקה הצידה). סוג הדף קובע את הנייר (data-paper): שורות לכתיבה, משבצות וחלק לציור,
+                 ורשימה לסימון. מחברת "📝 משימות" נפתחת באותו מסך עם רשימת המשימות (study_tasks).
+                 z-index מתחת לחלונות הצפים (apple-modal), כדי שכריכה/תוכן עניינים/סוג דף ייפתחו מעליה;
+                 כפתורי ה-FAB מוסתרים בזמן שהיא פתוחה (projects-open על .phone-wrapper) - ר' openNotebookView -->
+            <div id="nb-view" class="nb-view" aria-hidden="true">
+                <div class="nb-view-top">
+                    <button type="button" class="nb-view-back" onclick="closeNotebookView()" data-i18n-title="nb_back_title" data-i18n-aria-label="nb_back_title" title="Back to the bookcase" aria-label="Back to the bookcase"><span aria-hidden="true">←</span></button>
+                    <div class="nb-view-title"><span id="nb-view-emoji" class="nb-view-emoji"></span><span id="nb-view-name" class="nb-view-name"></span></div>
+                    <div class="nb-view-actions">
+                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookContents()" data-i18n-title="nb_contents_title" data-i18n-aria-label="nb_contents_title" title="Contents" aria-label="Contents">☰</button>
+                        <button type="button" class="nb-view-btn nb-only-notebook" id="nb-bookmark-btn" onclick="toggleNotebookBookmark()" aria-pressed="false" title="Bookmark this page" aria-label="Bookmark this page">🔖</button>
+                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookCoverModal(currentOpenNotebookId)" data-i18n-title="nb_cover_edit_title" data-i18n-aria-label="nb_cover_edit_title" title="Cover &amp; details" aria-label="Cover &amp; details">🎨</button>
+                        <button type="button" class="nb-view-btn nb-view-btn-add nb-only-notebook" onclick="openModal('modal-notebook-page-type-choice')" data-i18n-title="notebook_page_add_btn_title" data-i18n-aria-label="notebook_page_add_btn_title" title="Add page" aria-label="Add page">＋</button>
+                        <button type="button" class="nb-view-btn nb-view-btn-add nb-only-tasks" onclick="openAddStudyItemModal()" data-i18n-title="study_add_btn_title" data-i18n-aria-label="study_add_btn_title" title="Add task" aria-label="Add task">＋</button>
                     </div>
-                    <!-- פריסה חכמה - עברה לכאן מעוזר ה-AI, כדי שיהיה ברור למה היא משמשת (לפרק מטלה גדולה לצעדים ביומן) - לפי בקשה מפורשת -->
-                    <button type="button" class="study-smart-split-btn" onclick="closeStudyDrawer(); openSmartSplitModal();"><span class="study-smart-split-icon" aria-hidden="true">🪄</span><span class="study-smart-split-text"><span class="study-smart-split-title" data-i18n="smart_split_tile_title">Smart Split</span><span class="study-smart-split-sub" data-i18n="smart_split_study_hint">Break a big assignment into small steps in your calendar</span></span></button>
-                    <ul id="study-tasks-list" class="study-tasks-list"></ul>
-                    <p id="study-tasks-empty" class="vision-goals-empty hidden" data-i18n="study_empty_hint">No homework yet - tap + to add your first task.</p>
-                    <!-- כניסה ל"הפרויקטים שלי" - תכונה נפרדת ועוצמתית יותר (מחברות מרובות
-                         בתוך פרויקטים), לפי בקשה מפורשת - "לימודים" עצמו נשאר פשוט כמו
-                         שהוא, זו רק דרך להיכנס למשהו נוסף למי שרוצה יותר מבנה -->
-                    <button type="button" class="study-drawer-footer-link" onclick="openMyProjectsEntry()">
-                        <span class="study-drawer-footer-link-icon">📁</span>
-                        <span data-i18n="my_projects_footer_label">Want more structure? Try My Projects</span>
-                    </button>
                 </div>
-                </nav>
-            </div>
-
-            <!-- "הפרויקטים שלי" - תכונה נפרדת ועוצמתית יותר: פרויקטים > מחברות > שורות
-                 (מחברת = בדיוק כמו "לימודים", דף מחברת עם קווים ווי) - 3 מגירות
-                 drill-down (סוגר-הורה/פותח-ילד + כפתור חזרה מפורש, אותו דפוס בדיוק
-                 כמו .settings-back-btn) - פרימיום בלבד -->
-            <div id="projects-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeProjectsDrawer()">
-                <nav class="hamburger-drawer projects-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <h3 data-i18n="projects_title">My Projects</h3>
-                        <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="openAddProjectModal()" data-i18n-title="projects_add_btn_title" title="Add project">＋</button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeProjectsDrawer()">✕</button>
+                <div class="nb-book" id="nb-book">
+                    <div class="nb-sheet" id="nb-sheet" data-paper="write">
+                        <span class="nb-binding" aria-hidden="true"></span>
+                        <span class="nb-page-ribbon hidden" id="nb-page-ribbon" aria-hidden="true"></span>
+                        <!-- מחברת "📝 משימות" (study_tasks) -->
+                        <div class="nb-page nb-tasks-page nb-only-tasks">
+                            <button type="button" class="study-smart-split-btn" onclick="openSmartSplitModal()"><span class="study-smart-split-icon" aria-hidden="true">🪄</span><span class="study-smart-split-text"><span class="study-smart-split-title" data-i18n="smart_split_tile_title">Smart Split</span><span class="study-smart-split-sub" data-i18n="smart_split_study_hint">Break a big assignment into small steps in your calendar</span></span></button>
+                            <ul id="study-tasks-list" class="study-tasks-list"></ul>
+                            <p id="study-tasks-empty" class="vision-goals-empty hidden" data-i18n="study_empty_hint">No tasks yet – tap + to add the first one.</p>
                         </div>
-                    </div>
-                    <ul id="projects-list" class="projects-list"></ul>
-                    <p id="projects-empty" class="vision-goals-empty hidden" data-i18n="projects_empty_hint">No projects yet - tap + to create your first one.</p>
-                </div>
-                </nav>
-            </div>
-
-            <div id="notebooks-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeNotebooksDrawer()">
-                <nav class="hamburger-drawer notebooks-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <button type="button" class="settings-back-btn" onclick="closeNotebooksDrawer(); openProjectsDrawer();">🔙</button>
-                        <h3 id="notebooks-drawer-title"></h3>
-                        <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookModal()" data-i18n-title="notebooks_add_btn_title" title="Add notebook">＋</button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeNotebooksDrawer()">✕</button>
-                        </div>
-                    </div>
-                    <ul id="notebooks-list" class="projects-list"></ul>
-                    <p id="notebooks-empty" class="vision-goals-empty hidden" data-i18n="notebooks_empty_hint">No notebooks yet - tap + to create your first one.</p>
-                </div>
-                </nav>
-            </div>
-
-            <div id="notebook-detail-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeNotebookDetailDrawer()">
-                <nav class="hamburger-drawer notebook-detail-drawer notebook-paper-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <button type="button" class="settings-back-btn" onclick="closeNotebookDetailDrawer(); openNotebooksDrawer();">🔙</button>
-                        <h3 id="notebook-detail-title"></h3>
-                        <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="openModal('modal-notebook-page-type-choice')" data-i18n-title="notebook_page_add_btn_title" title="Add page">＋</button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeNotebookDetailDrawer()">✕</button>
-                        </div>
-                    </div>
-                    <!-- מבנה דו-עמודתי בדסקטופ: פאנל-הדפים כסרגל-צד קבוע ליד עמודת
-                         התוכן, במקום פאנל-נגלל שמכסה הכל - לפי בקשה מפורשת ("חלונית
-                         שאפשר לפתוח ולפתוח לי דף ספציפי, ממש בצד"). במובייל (מתחת
-                         ל-1024px) שני האלמנטים חוזרים לזרימה רגילה מלמעלה-למטה,
-                         והחץ/הפאנל-הנגלל נשארים בדיוק כמו קודם - ר' .notebook-detail-body
-                         ב-theme.css -->
-                    <div class="notebook-detail-body">
-                        <div class="notebook-page-tabs-panel" id="notebook-page-tabs-panel">
-                            <input type="text" id="notebook-pages-search-input" class="language-search-input" oninput="searchNotebookPages(this.value)" data-i18n-placeholder="notebook_pages_search_placeholder" placeholder="Search pages...">
-                            <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list"></ul>
-                        </div>
-                        <div class="notebook-detail-main-col">
-                            <!-- שום דף לא נבחר עדיין (סגור כברירת מחדל, ר' openNotebookDetailDrawer
-                                 ב-app.js) - רק לחיצה על דף ברשימה פותחת אותו בפועל -->
-                            <p id="notebook-detail-empty-state" class="today-tasks-empty" data-i18n="notebook_no_page_selected_hint">Tap a page on the left to open it.</p>
-                            <div id="notebook-page-content-wrap" class="hidden">
-                            <!-- ניווט בין דפי המחברה: כותרת-דף לחיצה (פותחת שינוי-שם), חצי
-                                 הקודם/הבא, מונה "N / סה"כ", וחץ שפותח/סוגר את פאנל כל הדפים
-                                 (מובייל בלבד - בדסקטופ הפאנל תמיד גלוי בצד) - לפי בקשה מפורשת
-                                 ("אפשרות לעבור בין הדפים ולכל דף לקרוא בשם...") -->
-                            <div class="notebook-page-header-nav">
-                                <button type="button" class="notebook-page-nav-btn" id="notebook-page-prev-btn" onclick="goToPrevPage()" aria-label="Previous page">‹</button>
+                        <!-- דף במחברת -->
+                        <div class="nb-page nb-only-notebook" id="notebook-page-content-wrap">
+                            <div class="nb-page-head">
                                 <button type="button" class="notebook-page-title-btn" onclick="openRenamePageModal()">
                                     <span id="notebook-page-title-text"></span>
                                     <span class="notebook-page-title-edit-icon">✏️</span>
                                 </button>
-                                <button type="button" class="notebook-page-nav-btn" id="notebook-page-next-btn" onclick="goToNextPage()" aria-label="Next page">›</button>
-                                <span id="notebook-page-counter" class="notebook-page-counter"></span>
-                                <button type="button" class="notebook-page-tabs-arrow" id="notebook-page-tabs-arrow" onclick="togglePagesListPanel()" data-i18n-title="notebook_pages_panel_toggle_title" title="Show all pages">▾</button>
                             </div>
-                            <!-- שורות-הטקסט של הדף (לא הציור) - עכשיו למעלה, מיד אחרי ניווט-הדף,
-                                 לפי בקשה מפורשת ("שהדף יהיה למעלה") -->
-                            <div class="notebook-items-section-header">
-                                <button type="button" class="vision-drawer-add-btn" onclick="openAddNotebookItemModal()" data-i18n-title="notebook_item_add_btn_title" title="Add item">＋</button>
+                            <div class="nb-page-body">
+                                <ul id="notebook-items-list" class="study-tasks-list nb-items-list"></ul>
+                                <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
+                                <form class="nb-list-add hidden" id="nb-list-add" onsubmit="event.preventDefault(); addNotebookListLine();">
+                                    <input type="text" id="nb-list-add-input" maxlength="300" autocomplete="off" data-i18n-placeholder="nb_list_add_placeholder" placeholder="Add a line…">
+                                    <button type="submit" class="nb-list-add-btn" data-i18n-aria-label="notebook_item_add_btn_title" aria-label="Add item">＋</button>
+                                </form>
+                                <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
+                                <!-- דף ציור (חלק / משבצות): הכלים מעל, הקנבס שקוף כך שהנייר נראה דרכו -->
+                                <div class="nb-canvas-area hidden" id="notebook-canvas-section-body">
+                                    <div class="notebook-tool-row">
+                                        <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" data-i18n-title="notebook_canvas_pen_title" title="Pen">✏️</button>
+                                        <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" data-i18n-title="notebook_canvas_marker_title" title="Marker">🖌️</button>
+                                        <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" data-i18n-title="notebook_canvas_marker_square_title" title="Flat marker">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.6h7.5" stroke-width="3.2" opacity=".35"/><g transform="rotate(40 12 11)"><rect x="9.2" y="2.6" width="5.6" height="10.4" rx="1.6"/><path d="M9.2 6.4h5.6"/><path d="M9.8 13h4.4l-.7 2.6h-3z"/><path d="M10.6 15.6h2.8l-.6 2.8h-1.6z"/></g></svg>
+                                        </button>
+                                        <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(45 12 11)"><rect x="8" y="3" width="8" height="14.5" rx="2.2"/><path d="M8 10.6h8"/><path d="M8.85 11.4h6.3v4.9a1.2 1.2 0 0 1-1.2 1.2h-3.9a1.2 1.2 0 0 1-1.2-1.2z" fill="currentColor" opacity=".18" stroke="none"/></g><circle cx="9.4" cy="20.8" r=".7" fill="currentColor" stroke="none" opacity=".55"/><circle cx="12.4" cy="20.1" r=".55" fill="currentColor" stroke="none" opacity=".45"/><circle cx="6.9" cy="19.6" r=".5" fill="currentColor" stroke="none" opacity=".4"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="notebook-page-toolbar">
+                                        <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#8e24aa" onclick="setPenColor('#8e24aa', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#d81b60" onclick="setPenColor('#d81b60', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#00897b" onclick="setPenColor('#00897b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
+                                        <span class="notebook-toolbar-sep"></span>
+                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(1.5, this)" data-i18n-title="notebook_canvas_width_thin_title" title="Thin"><span class="notebook-width-dot" style="width:4px;height:4px;"></span></button>
+                                        <button type="button" class="notebook-width-btn active" onclick="setPenWidth(3, this)" data-i18n-title="notebook_canvas_width_medium_title" title="Medium"><span class="notebook-width-dot" style="width:8px;height:8px;"></span></button>
+                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(6, this)" data-i18n-title="notebook_canvas_width_thick_title" title="Thick"><span class="notebook-width-dot" style="width:14px;height:14px;"></span></button>
+                                        <span class="notebook-toolbar-sep"></span>
+                                        <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
+                                        <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
+                                        <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
+                                    </div>
+                                    <div id="notebook-emoji-picker" class="icon-picker-row notebook-emoji-picker hidden"></div>
+                                    <div class="notebook-page-canvas-wrap">
+                                        <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
+                                        <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
+                                    </div>
+                                </div>
                             </div>
-                            <ul id="notebook-items-list" class="study-tasks-list"></ul>
-                            <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
-                            <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
-                            <!-- הציור עצמו - מתחת לטקסט, מתקפל וסגור כברירת מחדל, נפתח רק בלחיצה
-                                 מפורשת - לפי בקשה מפורשת ("והציור יהיה למטה סגור ושילחצו עליו רק
-                                 אם רוצים"). אתחול הקנבס (initNotebookCanvas) קורה רק כשנפתח בפועל
-                                 (ר' toggleNotebookCanvasSection ב-app.js) - קנבס שמאותחל בזמן
-                                 שהוא מוסתר (display:none) מקבל מידות 0/1 פיקסל, לא הגודל האמיתי -->
-                            <div class="notebook-canvas-section-header" id="notebook-canvas-section-header" onclick="toggleNotebookCanvasSection()">
-                                <span data-i18n="notebook_canvas_section_label">🎨 Drawing</span>
-                                <span class="card-toggle-icon" id="notebook-canvas-toggle-icon">▼</span>
-                            </div>
-                            <div class="notebook-canvas-section-body hidden" id="notebook-canvas-section-body">
-                            <!-- כלי-ציור (עט/מרקר-עגול/מרקר-מרובע/מחק) - שורה נפרדת מהצבעים/עובי,
-                                 לפי בקשה מפורשת ("עוד עטים וסגנונות ציור... מרקר גם לצייר מרקר
-                                 וגם למרקר עם ריבוע"). מחק בעל אייקון SVG מותאם (לא אימוג'י ספוג
-                                 🧽 הישן) - לפי בקשה מפורשת שהאייקון עצמו לא נראה טוב -->
-                            <div class="notebook-tool-row">
-                                <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" data-i18n-title="notebook_canvas_pen_title" title="Pen">✏️</button>
-                                <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" data-i18n-title="notebook_canvas_marker_title" title="Marker">🖌️</button>
-                                <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" data-i18n-title="notebook_canvas_marker_square_title" title="Flat marker">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.6h7.5" stroke-width="3.2" opacity=".35"/><g transform="rotate(40 12 11)"><rect x="9.2" y="2.6" width="5.6" height="10.4" rx="1.6"/><path d="M9.2 6.4h5.6"/><path d="M9.8 13h4.4l-.7 2.6h-3z"/><path d="M10.6 15.6h2.8l-.6 2.8h-1.6z"/></g></svg>
-                                </button>
-                                <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(45 12 11)"><rect x="8" y="3" width="8" height="14.5" rx="2.2"/><path d="M8 10.6h8"/><path d="M8.85 11.4h6.3v4.9a1.2 1.2 0 0 1-1.2 1.2h-3.9a1.2 1.2 0 0 1-1.2-1.2z" fill="currentColor" opacity=".18" stroke="none"/></g><circle cx="9.4" cy="20.8" r=".7" fill="currentColor" stroke="none" opacity=".55"/><circle cx="12.4" cy="20.1" r=".55" fill="currentColor" stroke="none" opacity=".45"/><circle cx="6.9" cy="19.6" r=".5" fill="currentColor" stroke="none" opacity=".4"/></svg>
-                                </button>
-                            </div>
-                            <!-- צבעים + עובי-קו (עוד "סגנונות ציור", לפי בקשה מפורשת - רלוונטי לעט
-                                 בלבד, למרקר עובי קבוע משלו) + ביטול/ניקוי/אימוג'ים -->
-                            <div class="notebook-page-toolbar">
-                                <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#8e24aa" onclick="setPenColor('#8e24aa', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#d81b60" onclick="setPenColor('#d81b60', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <button type="button" class="notebook-color-swatch" style="background:#00897b" onclick="setPenColor('#00897b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                <span class="notebook-toolbar-sep"></span>
-                                <button type="button" class="notebook-width-btn" onclick="setPenWidth(1.5, this)" data-i18n-title="notebook_canvas_width_thin_title" title="Thin"><span class="notebook-width-dot" style="width:4px;height:4px;"></span></button>
-                                <button type="button" class="notebook-width-btn active" onclick="setPenWidth(3, this)" data-i18n-title="notebook_canvas_width_medium_title" title="Medium"><span class="notebook-width-dot" style="width:8px;height:8px;"></span></button>
-                                <button type="button" class="notebook-width-btn" onclick="setPenWidth(6, this)" data-i18n-title="notebook_canvas_width_thick_title" title="Thick"><span class="notebook-width-dot" style="width:14px;height:14px;"></span></button>
-                                <span class="notebook-toolbar-sep"></span>
-                                <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
-                                <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
-                                <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
-                            </div>
-                            <div id="notebook-emoji-picker" class="icon-picker-row notebook-emoji-picker hidden"></div>
-                            <div class="notebook-page-canvas-wrap">
-                                <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
-                                <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
-                            </div>
-                            </div>
+                            <div class="nb-page-foot">
+                                <button type="button" class="nb-turn-btn" id="notebook-page-prev-btn" onclick="goToPrevPage()" data-i18n-title="nb_prev_page" data-i18n-aria-label="nb_prev_page" title="Previous page" aria-label="Previous page"><span aria-hidden="true">‹</span></button>
+                                <span id="notebook-page-counter" class="nb-page-counter"></span>
+                                <button type="button" class="nb-turn-btn" id="notebook-page-next-btn" onclick="goToNextPage()" data-i18n-title="nb_next_page" data-i18n-aria-label="nb_next_page" title="Next page" aria-label="Next page"><span aria-hidden="true">›</span></button>
                             </div>
                         </div>
                     </div>
                 </div>
-                </nav>
             </div>
 
             <!-- תצוגת פרטי מתכון במסך מלא, נפתחת מהקובייה ברשת המתכונים -->
@@ -1838,20 +1823,23 @@
 
         <!-- חלונות צפים: "הפרויקטים שלי" - הוספת/עריכת פרויקט/מחברה/שורה, אותה
              תבנית מינימלית בדיוק כמו modal-add-study-item (שדה כותרת יחיד) -->
+        <!-- מדף בארון של "המחברות שלי" (טבלת projects - כל מדף הוא פרויקט) -->
         <div id="modal-add-project" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 id="project-modal-title" data-i18n="projects_add_item_title">New Project</h3>
+                <h3 id="project-modal-title" data-i18n="nb_shelf_add_title">New shelf</h3>
                 <div class="preset-manager-grid">
-                    <textarea id="project-item-input" rows="2" data-i18n-placeholder="projects_add_placeholder" placeholder="Project name..."></textarea>
-                    <!-- אייקון לפרויקט - כדי שיהיה קל להבחין בין פרויקטים במבט חטוף (למשל
-                         ילד/ה שרוצה "מתמטיקה" מול "היסטוריה") - לפי בקשה מפורשת -->
+                    <textarea id="project-item-input" rows="1" maxlength="60" data-i18n-placeholder="nb_shelf_name_placeholder" placeholder="Shelf name (e.g. Studies, Work)"></textarea>
+                    <!-- אייקון למדף - כדי להבחין בין מדפים במבט חטוף (למשל "מתמטיקה" מול "היסטוריה"),
+                         ו"אחר" להקלדת כל אימוג'י -->
                     <p class="settings-label" data-i18n="project_icon_label">Icon</p>
                     <div id="project-icon-picker" class="icon-picker-row"></div>
+                    <input type="text" id="project-icon-custom" maxlength="16" data-i18n-placeholder="table_icon_custom_placeholder" placeholder="✏️ Other - type any emoji" oninput="handleProjectIconCustomInput(this)">
                     <div class="action-buttons-wrap">
                         <button id="btn-save-project" class="btn-primary" onclick="submitProject()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-project')" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                    <button type="button" class="nb-danger-link hidden" id="project-delete-btn" onclick="deleteProject(editingProjectId)" data-i18n="nb_shelf_delete_btn">🗑️ Delete shelf</button>
                 </div>
             </div>
         </div>
@@ -1927,16 +1915,44 @@
             </div>
         </div>
 
-        <div id="modal-add-notebook" class="apple-modal">
+        <!-- כריכה ופרטים של מחברת: שם, מדף (כולל "➕ מדף חדש…" עם שם להקלדה), צבע, דוגמה ומדבקה
+             (כולל "אחר" להקלדת כל אימוג'י), עם תצוגה מקדימה חיה של הכריכה - ר' openNotebookCoverModal -->
+        <div id="modal-nb-cover" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 id="notebook-modal-title" data-i18n="notebooks_add_item_title">New Notebook</h3>
+                <h3 id="nb-cover-modal-title" data-i18n="notebooks_add_item_title">New Notebook</h3>
+                <div class="nb-cover-preview-wrap" id="nb-cover-preview"></div>
                 <div class="preset-manager-grid">
-                    <textarea id="notebook-item-input" rows="2" data-i18n-placeholder="notebooks_add_placeholder" placeholder="Notebook name..."></textarea>
+                    <input type="text" id="nb-cover-name" maxlength="60" autocomplete="off" data-i18n-placeholder="notebooks_add_placeholder" placeholder="Notebook name..." oninput="renderNbCoverPreview()">
+                    <p class="settings-label" data-i18n="nb_shelf_label">Shelf</p>
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('nb-cover-shelf')"><span id="nb-cover-shelf-display"></span></button>
+                    <select id="nb-cover-shelf" class="hidden" onchange="onNbCoverShelfChange()"></select>
+                    <input type="text" id="nb-cover-new-shelf" class="hidden" maxlength="60" autocomplete="off" data-i18n-placeholder="nb_shelf_name_placeholder" placeholder="Shelf name (e.g. Studies, Work)">
+                    <p class="settings-label" data-i18n="nb_color_label">Color</p>
+                    <div id="nb-cover-colors" class="nb-swatch-row"></div>
+                    <p class="settings-label" data-i18n="nb_pattern_label">Pattern</p>
+                    <div id="nb-cover-patterns" class="nb-pattern-row"></div>
+                    <p class="settings-label" data-i18n="nb_sticker_label">Sticker</p>
+                    <div id="nb-cover-emojis" class="icon-picker-row"></div>
+                    <input type="text" id="nb-cover-emoji-custom" maxlength="16" data-i18n-placeholder="table_icon_custom_placeholder" placeholder="✏️ Other - type any emoji" oninput="handleNbCoverEmojiCustomInput(this)">
                     <div class="action-buttons-wrap">
-                        <button id="btn-save-notebook" class="btn-primary" onclick="submitNotebook()" data-i18n="add_btn">Add</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-notebook')" data-i18n="cancel_btn">Cancel</button>
+                        <button id="btn-save-nb-cover" class="btn-primary" onclick="saveNotebookCover()" data-i18n="add_btn">Add</button>
+                        <button class="btn-clear-specific" onclick="closeModal('modal-nb-cover')" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                    <button type="button" class="nb-danger-link hidden" id="nb-cover-delete-btn" onclick="deleteNotebookFromCover()" data-i18n="nb_delete_notebook_btn">🗑️ Delete notebook</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- תוכן העניינים של המחברת הפתוחה: חיפוש בשמות הדפים ובשורות שבהם, ומעבר לדף בלחיצה -->
+        <div id="modal-nb-contents" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="nb_contents_title">Contents</h3>
+                <input type="text" id="notebook-pages-search-input" class="language-search-input" oninput="searchNotebookPages(this.value)" data-i18n-placeholder="notebook_pages_search_placeholder" placeholder="Search pages...">
+                <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list nb-toc-list"></ul>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-nb-contents')" data-i18n="close_btn">Close</button>
                 </div>
             </div>
         </div>
@@ -1969,20 +1985,32 @@
             </div>
         </div>
 
-        <!-- בחירת סוג-דף לפני יצירה: ציור (קנבס חופשי) או כתיבה (טקסט) - לפי
-             בקשה מפורשת ("שיהיה בחירה של ציור או כתיבה") -->
+        <!-- בחירת סוג-דף לפני יצירה - ארבעה ניירות: שורות (כתיבה), משבצות (חשבון ושרטוטים),
+             חלק (ציור חופשי) ורשימה לסימון ✓ - כל כפתור מראה פיסת נייר מהסוג שלו -->
         <div id="modal-notebook-page-type-choice" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="notebook_page_type_choice_title">New Page</h3>
-                <div class="notebook-page-type-choice-grid">
-                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('draw')">
-                        <span class="notebook-page-type-choice-icon">✏️</span>
-                        <span data-i18n="notebook_page_type_draw">Drawing</span>
-                    </button>
+                <div class="notebook-page-type-choice-grid nb-page-type-grid">
                     <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('write')">
-                        <span class="notebook-page-type-choice-icon">📝</span>
-                        <span data-i18n="notebook_page_type_write">Writing</span>
+                        <span class="nb-type-thumb" data-paper="write" aria-hidden="true"></span>
+                        <span class="nb-type-name" data-i18n="nb_page_type_lined">Lined</span>
+                        <span class="nb-type-desc" data-i18n="nb_page_type_lined_desc">For writing</span>
+                    </button>
+                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('grid')">
+                        <span class="nb-type-thumb" data-paper="grid" aria-hidden="true"></span>
+                        <span class="nb-type-name" data-i18n="nb_page_type_grid">Grid</span>
+                        <span class="nb-type-desc" data-i18n="nb_page_type_grid_desc">For math and sketches</span>
+                    </button>
+                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('draw')">
+                        <span class="nb-type-thumb" data-paper="draw" aria-hidden="true"></span>
+                        <span class="nb-type-name" data-i18n="nb_page_type_blank">Blank</span>
+                        <span class="nb-type-desc" data-i18n="nb_page_type_blank_desc">Draw freely</span>
+                    </button>
+                    <button type="button" class="notebook-page-type-choice-btn" onclick="createNotebookPage('list')">
+                        <span class="nb-type-thumb" data-paper="list" aria-hidden="true"></span>
+                        <span class="nb-type-name" data-i18n="nb_page_type_list">Checklist</span>
+                        <span class="nb-type-desc" data-i18n="nb_page_type_list_desc">Lines to tick off</span>
                     </button>
                 </div>
                 <div class="action-buttons-wrap">
@@ -3990,8 +4018,8 @@
 
     </div>
 
-    <script src="i18n.js?v=389"></script>
-    <script src="app.js?v=535"></script>
+    <script src="i18n.js?v=390"></script>
+    <script src="app.js?v=536"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=17"></script>
     <script src="books.js?v=2"></script>

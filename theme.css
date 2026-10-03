@@ -6899,6 +6899,148 @@ html[dir="ltr"] .home-grow-corner svg { transform: scaleX(-1); }
 .book-spine:hover, .book-spine:focus-visible { transform: translateY(-4px); }
 .book-spine-title { writing-mode: vertical-rl; text-orientation: mixed; max-height: calc(100% - 14px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 800; font-size: .66rem; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
 .book-spine-stars { writing-mode: vertical-rl; color: #ffe08a; font-size: .5rem; letter-spacing: -1px; }
+
+/* ===== 📓 המחברות שלי: ארון עם מדפי עץ (כמו פינת הקריאה), כריכות בצבע/דוגמה/מדבקה שבוחרים, ומחברת
+   פתוחה במסך מלא עם נייר לפי סוג הדף ודפים שמתהפכים סביב הכריכה (ר' renderNotebookShelves /
+   playNotebookPageTurn ב-app.js). הכריכה של מחברת תמיד בצד ה-start - ימין בעברית, שמאל באנגלית ===== */
+.nb-bookcase { display: flex; flex-direction: column; gap: 22px; }
+.nb-shelf { display: flex; flex-direction: column; gap: 4px; }
+.nb-shelf-label { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: none; background: none; padding: 2px 4px; font: inherit; font-weight: 800; font-size: .92rem; color: var(--text-primary); cursor: pointer; text-align: start; }
+.nb-shelf-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-shelf-edit { display: inline-flex; width: 15px; height: 15px; opacity: .45; flex-shrink: 0; }
+.nb-shelf-edit svg { width: 100%; height: 100%; }
+.nb-shelf-row { display: flex; align-items: flex-end; gap: 12px; min-height: 112px; padding: 12px 12px 0; overflow-x: auto; scrollbar-width: none; }
+.nb-shelf-row::-webkit-scrollbar { display: none; }
+.nb-shelf-board { height: 11px; margin-top: -1px; border-radius: 3px; background: linear-gradient(180deg, #d1a274, #9c6b43); box-shadow: 0 5px 10px rgba(0, 0, 0, .16); }
+.nb-shelf-empty { align-self: center; color: var(--text-secondary); font-size: .8rem; padding-bottom: 14px; }
+.nb-empty-hint { margin: 0; text-align: center; color: var(--text-secondary); font-size: .88rem; }
+.nb-add-shelf-btn { align-self: center; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); color: var(--text-primary); border-radius: 999px; padding: 9px 20px; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
+.nb-add-shelf-btn:active { transform: scale(.96); }
+/* כריכה: צבע + דוגמה (שכבת רקע לבנה-שקופה), פס כריכה כהה בצד ה-start, תווית לבנה עם השם */
+.nb-cover { --nb-color: #8ab4f8; position: relative; flex: 0 0 auto; width: 76px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 8px 6px; border: none; border-radius: 3px 9px 9px 3px; background-color: var(--nb-color); box-shadow: inset 7px 0 0 rgba(0, 0, 0, .13), 0 4px 10px rgba(0, 0, 0, .2); font: inherit; color: #2b2b2b; cursor: pointer; overflow: hidden; transition: transform .2s ease; box-sizing: border-box; }
+html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7px 0 0 rgba(0, 0, 0, .13), 0 4px 10px rgba(0, 0, 0, .2); }
+.nb-cover:hover, .nb-cover:focus-visible { transform: translateY(-4px); }
+.nb-cover-emoji { font-size: 1.55rem; line-height: 1; }
+.nb-cover-label { max-width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, .9); border-radius: 3px; padding: 3px 5px; font-size: .62rem; font-weight: 800; line-height: 1.2; text-align: center; color: #333; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.nb-cover-ribbon { position: absolute; top: 0; inset-inline-end: 11px; width: 9px; height: 28px; background: var(--accent-pink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.nb-cover-badge { position: absolute; top: 5px; inset-inline-end: 5px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--accent-pink); color: #fff; font-size: .66rem; font-weight: 800; line-height: 18px; text-align: center; }
+.nb-pat-dots { background-image: radial-gradient(rgba(255, 255, 255, .5) 1.4px, transparent 1.7px); background-size: 9px 9px; }
+.nb-pat-stripes { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .3) 0 5px, transparent 5px 11px); }
+.nb-pat-grid { background-image: linear-gradient(rgba(255, 255, 255, .38) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .38) 1px, transparent 1px); background-size: 10px 10px; }
+.nb-pat-gingham { background-image: linear-gradient(rgba(255, 255, 255, .26) 50%, transparent 50%), linear-gradient(90deg, rgba(255, 255, 255, .26) 50%, transparent 50%); background-size: 14px 14px; }
+/* מחברת המשימות: נייר שורות לבן עם ✓ - נראית כמו מחברת עבודה, לא כמו כריכה צבעונית */
+.nb-cover.nb-cover-tasks { background-color: #fffdf6; background-image: repeating-linear-gradient(to bottom, transparent 0 11px, rgba(110, 140, 230, .32) 11px 12px); border: 1px solid rgba(0, 0, 0, .08); }
+.nb-cover.nb-cover-add { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 50%, transparent); box-shadow: none; color: var(--accent-purple-text, var(--text-primary)); font-size: 1.6rem; font-weight: 300; width: 58px; }
+/* למי שאינו/ה פרימיום - כרטיס הזמנה עם שלוש כריכות קטנות */
+.nb-premium-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-glass)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; box-sizing: border-box; }
+.nb-premium-covers { display: flex; flex-shrink: 0; }
+.nb-premium-covers span { width: 22px; height: 30px; border-radius: 2px 5px 5px 2px; background: var(--nb-color); box-shadow: inset 3px 0 0 rgba(0, 0, 0, .14), 0 2px 4px rgba(0, 0, 0, .15); margin-inline-end: -6px; }
+.nb-premium-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; font-size: .8rem; color: var(--text-secondary); }
+.nb-premium-text b { font-size: .92rem; color: var(--text-primary); }
+.nb-premium-badge { flex-shrink: 0; font-size: .74rem; font-weight: 800; padding: 5px 10px; border-radius: 999px; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
+.notebooks-section .nb-desk-scene { position: relative; opacity: .5; }
+
+/* --- חלון הכריכה --- */
+.nb-cover-preview-wrap { display: flex; justify-content: center; margin: 2px 0 10px; }
+.nb-cover.nb-cover-preview { width: 92px; height: 122px; cursor: default; }
+.nb-cover.nb-cover-preview:hover { transform: none; }
+.nb-swatch-row, .nb-pattern-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; background: var(--nb-color); box-shadow: 0 1px 3px rgba(0, 0, 0, .2); cursor: pointer; }
+.nb-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-sheet), 0 0 0 4px var(--accent-purple); }
+.nb-pattern-chip { min-width: 64px; height: 38px; padding: 0 8px; border-radius: 10px; border: 2px solid transparent; background-color: var(--nb-color); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); cursor: pointer; font: inherit; }
+.nb-pattern-chip.selected { border-color: var(--text-primary); }
+.nb-pattern-name { display: inline-block; background: rgba(255, 255, 255, .88); color: #333; border-radius: 4px; padding: 1px 5px; font-size: .68rem; font-weight: 800; }
+.nb-danger-link { align-self: center; border: none; background: none; color: #e5484d; font: inherit; font-size: .85rem; font-weight: 700; padding: 6px 10px; cursor: pointer; }
+
+/* --- בחירת סוג דף: פיסת נייר קטנה מכל סוג --- */
+.nb-page-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.nb-page-type-grid .notebook-page-type-choice-btn { padding: 12px 10px; gap: 4px; }
+.nb-type-thumb { width: 54px; height: 40px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-sheet); margin-bottom: 4px; }
+.nb-type-name { font-size: .88rem; font-weight: 800; }
+.nb-type-desc { font-size: .72rem; font-weight: 500; color: var(--text-secondary); }
+
+/* --- תוכן עניינים --- */
+.nb-toc-list { max-height: 50vh; overflow-y: auto; }
+.nb-toc-list .notebook-page-tab-item-main { display: flex; align-items: center; gap: 8px; }
+.nb-toc-num { flex-shrink: 0; min-width: 22px; font-weight: 800; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.nb-toc-type { flex-shrink: 0; width: 20px; text-align: center; }
+.nb-toc-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-toc-mark { flex-shrink: 0; }
+
+/* --- המחברת הפתוחה (מסך מלא; מתחת לחלונות הצפים כדי שייפתחו מעליה) --- */
+.nb-view { display: none; position: absolute; inset: 0; z-index: 1900; flex-direction: column; background: var(--bg-main); overflow: hidden; }
+.nb-view.open { display: flex; animation: fadeIn .2s ease-out; }
+.nb-view-top { display: flex; align-items: center; gap: 8px; padding: max(14px, env(safe-area-inset-top, 0px)) 12px 10px; flex-shrink: 0; }
+.nb-view-back { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1.1rem; cursor: pointer; }
+html[dir="ltr"] .nb-view-back span { display: inline-block; transform: scaleX(-1); }
+.nb-view-title { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.05rem; color: var(--text-primary); }
+.nb-view-emoji { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+.nb-view-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-view-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.nb-view-btn { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
+.nb-view-btn.active { background: color-mix(in srgb, var(--accent-pink) 22%, var(--bg-glass)); border-color: var(--accent-pink); }
+.nb-view-btn-add { color: #fff; border: none; font-size: 1.2rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
+.nb-view.is-tasks .nb-only-notebook, .nb-view.is-notebook .nb-only-tasks { display: none !important; }
+/* המחברת עצמה: גיליון נייר עם ספירלה בצד ה-start; touch-action:pan-y - גלילה למעלה/למטה רגילה,
+   והחלקה הצידה נשארת לנו להעברת דף */
+.nb-book { position: relative; flex: 1 1 auto; min-height: 0; display: flex; margin: 0 12px 12px; perspective: 1600px; touch-action: pan-y; }
+.nb-sheet { --nb-color: var(--accent-purple); --nb-line: color-mix(in srgb, var(--accent-purple) 20%, transparent); position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; border-radius: 6px 16px 16px 6px; background-color: var(--bg-sheet); border-inline-start: 8px solid var(--nb-color); box-shadow: 0 10px 28px rgba(0, 0, 0, .18), 0 1px 3px rgba(0, 0, 0, .12); padding-inline-start: 22px; overflow: hidden; backface-visibility: hidden; }
+html[dir="rtl"] .nb-sheet { border-radius: 16px 6px 6px 16px; }
+.nb-binding { position: absolute; top: 14px; bottom: 14px; inset-inline-start: 3px; width: 16px; pointer-events: none; background-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .14) 0 2.6px, color-mix(in srgb, var(--text-primary) 42%, transparent) 3px 4.4px, transparent 4.8px); background-size: 16px 24px; background-repeat: repeat-y; }
+.nb-page-ribbon { position: absolute; top: -2px; inset-inline-end: 22px; z-index: 3; width: 14px; height: 46px; background: var(--accent-pink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); box-shadow: 0 2px 4px rgba(0, 0, 0, .2); pointer-events: none; }
+.nb-page { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.nb-tasks-page { overflow-y: auto; padding: 14px 14px 18px 4px; background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--nb-line) 31px 32px); background-attachment: local; }
+html[dir="rtl"] .nb-tasks-page { padding: 14px 4px 18px 14px; }
+.nb-page-head { display: flex; justify-content: center; padding: 12px 40px 4px; flex-shrink: 0; }
+.nb-page-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 6px 14px 10px 4px; }
+html[dir="rtl"] .nb-page-body { padding: 6px 4px 10px 14px; }
+.nb-page-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px 10px 4px; flex-shrink: 0; }
+html[dir="rtl"] .nb-page-foot { padding: 6px 4px 10px 12px; }
+.nb-turn-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.nb-turn-btn:disabled { opacity: .3; cursor: default; }
+.nb-page-counter { font-size: .8rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+/* הנייר לפי סוג הדף - שורות / משבצות / חלק / רשימה */
+.nb-sheet[data-paper="write"] .nb-page-body, .nb-sheet[data-paper="list"] .nb-page-body, .nb-type-thumb[data-paper="write"], .nb-type-thumb[data-paper="list"] { background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--nb-line) 31px 32px); background-attachment: local; }
+.nb-sheet[data-paper="grid"] .nb-page-body, .nb-type-thumb[data-paper="grid"] { background-image: linear-gradient(var(--nb-line) 1px, transparent 1px), linear-gradient(90deg, var(--nb-line) 1px, transparent 1px); background-size: 22px 22px; background-attachment: local; }
+.nb-type-thumb { --nb-line: color-mix(in srgb, var(--accent-purple) 28%, transparent); background-size: 100% 9px; }
+.nb-type-thumb[data-paper="write"], .nb-type-thumb[data-paper="list"] { background-image: repeating-linear-gradient(to bottom, transparent 0 8px, var(--nb-line) 8px 9px); }
+.nb-type-thumb[data-paper="grid"] { background-size: 8px 8px; }
+.nb-type-thumb[data-paper="list"] { position: relative; }
+.nb-type-thumb[data-paper="list"]::before { content: '✓'; position: absolute; top: 4px; inset-inline-start: 6px; font-size: .7rem; font-weight: 800; color: var(--accent-purple); }
+.nb-sheet .study-tasks-list { background-image: none; min-height: 0; }
+.nb-sheet .study-tasks-list::before { display: none; }
+.nb-sheet[data-paper="list"] .study-task-item, .nb-sheet[data-paper="write"] .study-task-item, .nb-tasks-page .study-task-item { height: 32px; }
+.nb-sheet .notebook-page-text-content { height: auto; min-height: 100%; border: none; border-radius: 0; background: transparent; padding: 6px 2px 0; line-height: 32px; font-size: 1rem; resize: none; box-shadow: none; }
+.nb-sheet .notebook-page-text-content:focus { box-shadow: none; }
+.nb-sheet .nb-page-body:has(.notebook-page-text-content:not(.hidden)) { display: flex; flex-direction: column; }
+.nb-sheet .notebook-page-text-content:not(.hidden) { flex: 1 1 auto; }
+.nb-sheet .notebook-page-canvas { background: transparent; border: 1px dashed color-mix(in srgb, var(--accent-purple) 18%, transparent); }
+.nb-list-add { display: flex; align-items: center; gap: 8px; height: 32px; margin-top: 0; }
+.nb-list-add input { flex: 1 1 auto; min-width: 0; height: 30px; border: none; border-bottom: 1.5px dashed color-mix(in srgb, var(--accent-purple) 40%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .95rem; padding: 0 4px; outline: none; }
+.nb-list-add input:focus { border-bottom-style: solid; border-bottom-color: var(--accent-pink); }
+.nb-list-add-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: none; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); font: inherit; font-size: 1.05rem; cursor: pointer; }
+/* היפוך דף - העתק הדף (nb-sheet-ghost) מונח בדיוק על הדף ומתהפך סביב הכריכה */
+.nb-sheet-ghost { position: absolute; inset: 0; pointer-events: none; }
+.nb-sheet-ghost.nb-turn-out { z-index: 2; transform-origin: left center; animation: nbTurnOutLtr .42s cubic-bezier(.45, .05, .7, .4) forwards; }
+html[dir="rtl"] .nb-sheet-ghost.nb-turn-out { transform-origin: right center; animation-name: nbTurnOutRtl; }
+.nb-sheet-ghost.nb-turn-under { z-index: 0; }
+.nb-sheet.nb-turn-in { transform-origin: left center; animation: nbTurnInLtr .42s cubic-bezier(.3, .6, .55, 1); }
+html[dir="rtl"] .nb-sheet.nb-turn-in { transform-origin: right center; animation-name: nbTurnInRtl; }
+.nb-sheet-ghost.nb-turn-out::after, .nb-sheet.nb-turn-in::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to right, rgba(0, 0, 0, .18), transparent 70%); animation: nbTurnShade .42s ease forwards; }
+html[dir="rtl"] .nb-sheet-ghost.nb-turn-out::after, html[dir="rtl"] .nb-sheet.nb-turn-in::after { background: linear-gradient(to left, rgba(0, 0, 0, .18), transparent 70%); }
+.nb-sheet.nb-turn-in::after { animation-direction: reverse; }
+@keyframes nbTurnOutLtr { from { transform: rotateY(0); } to { transform: rotateY(-96deg); } }
+@keyframes nbTurnOutRtl { from { transform: rotateY(0); } to { transform: rotateY(96deg); } }
+@keyframes nbTurnInLtr { from { transform: rotateY(-96deg); } to { transform: rotateY(0); } }
+@keyframes nbTurnInRtl { from { transform: rotateY(96deg); } to { transform: rotateY(0); } }
+@keyframes nbTurnShade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .nb-sheet-ghost, .nb-sheet.nb-turn-in { animation: none !important; }
+    .nb-cover { transition: none; }
+}
+@media (min-width: 1024px) {
+    .nb-book { max-width: 860px; width: 100%; align-self: center; }
+}
 /* קרדיט קטן ומעומעם למקור פרטי הספרים והכריכות */
 .books-credit { margin: 0; text-align: center; font-size: .68rem; color: var(--text-secondary); opacity: .85; }
 .books-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

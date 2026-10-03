@@ -1757,6 +1757,7 @@ function openAppTour(fromSettings, onFinish) {
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.remove('menu-open', 'vision-open', 'study-open', 'projects-open');
     if (typeof closeTodayPeekPanel === 'function') closeTodayPeekPanel();
+    if (typeof isNotebookViewOpen === 'function' && isNotebookViewOpen()) closeNotebookView();
     goHome();
     appTourBuildLayer();
     document.addEventListener('keydown', appTourKeydown, true);
@@ -7878,6 +7879,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_apple', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
+    { id: 'my_notebooks', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
     { id: 'books_what', category: 'books' },
     { id: 'books_deadline', category: 'books' },
@@ -15528,26 +15530,11 @@ function closeGoalsVisionDrawer() {
     if (wrapper) wrapper.classList.remove('vision-open');
 }
 
-// --- "לימודים" - יומן שיעורי בית עצמאי, מגירה שלישית מהצד (אותה תבנית
-// בדיוק כמו openGoalsVisionDrawer/closeGoalsVisionDrawer) - טבלה נפרדת
-// (study_tasks) ולא my_center_tasks, כי כאן אין צבעים/"להגיע לזה"/גרירה -
-// רק כותרת + וי, לפי בקשה מפורשת ("משהו נפרד וחדש לגמרי") ---
+// --- מחברת "📝 משימות" (שיעורי הבית של פעם) - המחברת הקבועה על המדף העליון ב"המחברות שלי"
+// (ר' openTasksNotebook). טבלה נפרדת (study_tasks) ולא my_center_tasks, כי כאן אין צבעים/"להגיע
+// לזה"/גרירה - רק כותרת + וי, וקישור אופציונלי לצעד ביעד ---
 let studyTasksCache = [];
 let editingStudyItemId = null;
-
-function openStudyDrawer() {
-    const overlay = document.getElementById('study-drawer-overlay');
-    if (overlay) overlay.classList.add('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.add('study-open');
-    loadStudyTasks();
-}
-function closeStudyDrawer() {
-    const overlay = document.getElementById('study-drawer-overlay');
-    if (overlay) overlay.classList.remove('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('study-open');
-}
 
 async function loadStudyTasks() {
     if (!supabaseClient || !currentUserId) return;
@@ -15555,6 +15542,8 @@ async function loadStudyTasks() {
     if (error) return;
     studyTasksCache = data || [];
     renderStudyTasksList();
+    // מספר המשימות הפתוחות על הכריכה ובסיכום של הארון
+    if (isNotebooksSectionOpen()) renderNotebookShelves();
 }
 
 // לחיצה על הטקסט (לא הצ'קבוקס/עריכה/מחיקה) מרחיבה את השורה במקום, במקום
@@ -15742,7 +15731,7 @@ async function downscaleImageToBase64(file, maxDim = 1600, quality = 0.85) {
 // בתחתית מגירת לימודים - לפי בקשה מפורשת ("אני רוצה שהלימודים עצמם ישארו
 // ככה"). פרימיום בלבד, אותו דפוס נעילה בדיוק כמו openSmartSplitModal ---
 let projectsCache = [];
-let notebooksCache = [];
+
 let notebookItemsCache = [];
 let currentOpenProjectId = null;
 let currentOpenNotebookId = null;
@@ -15777,29 +15766,10 @@ let penWidth = 3;
 let notebookCanvasPointerBound = false;
 const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','❌','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
 
-// אייקון לכל פרויקט - כדי להבחין במבט חטוף בין פרויקטים (למשל "מתמטיקה" מול
-// "היסטוריה" אצל ילד/ה) - לפי בקשה מפורשת. דפוס זהה ל-VISION_GOAL_CATEGORY_PRESETS/
-// selectVisionGoalCategory, רק שכאן האמוג'י עצמו הוא גם המזהה וגם התצוגה
+// אייקון לכל מדף (פרויקט) - כדי להבחין במבט חטוף בין מדפים (למשל "מתמטיקה" מול "היסטוריה"
+// אצל ילד/ה) - לפי בקשה מפורשת. האמוג'י עצמו הוא גם המזהה וגם התצוגה (ר' renderProjectIconPicker)
 const PROJECT_ICON_PRESETS = ['📁', '📚', '💼', '🎨', '🔬', '🏋️', '🎵', '💻', '🌱', '⚽', '🧮', '🌍'];
 let selectedProjectIcon = '📁';
-
-function renderProjectIconPicker() {
-    const container = document.getElementById('project-icon-picker');
-    if (!container) return;
-    container.innerHTML = '';
-    PROJECT_ICON_PRESETS.forEach(icon => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'icon-picker-chip' + (selectedProjectIcon === icon ? ' selected' : '');
-        chip.textContent = icon;
-        chip.onclick = () => selectProjectIcon(icon);
-        container.appendChild(chip);
-    });
-}
-function selectProjectIcon(icon) {
-    selectedProjectIcon = icon;
-    renderProjectIconPicker();
-}
 
 // --- טבלאות מותאמות אישית (Tables) - מסך top-level נפרד לגמרי, לא מקונן
 // בתוך תחום קיים (לימודים/משימות/לוח חזון) - לפי בקשה מפורשת. משתמשת יוצרת
@@ -16695,245 +16665,265 @@ function deleteTableRow(rowId) {
     });
 }
 
-function openMyProjectsEntry() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
-    closeStudyDrawer();
-    openProjectsDrawer();
+// --- 📓 המחברות שלי (לפי בקשה מפורשת, במקום "לימודים" ו"הפרויקטים שלי"): ארון עם מדפים - כל מדף הוא
+// פרויקט (projects) ועליו המחברות שלו (project_notebooks) בכריכות שבוחרים: צבע, דוגמה ומדבקה. על המדף
+// העליון קבועה מחברת "📝 משימות" (study_tasks - שיעורי הבית של פעם, חינם לכולם). מחברות משלך -
+// פרימיום, כמו "הפרויקטים שלי" קודם. מחברת נפתחת במסך מלא (#nb-view) כמחברת אמיתית: דף אחד בכל פעם
+// שמתהפך (חצים או החלקה), סוגי דף (שורות / משבצות / חלק / רשימה), סימנייה (bookmark_page_id - המחברת
+// נפתחת שם) ותוכן עניינים עם חיפוש ---
+const NB_COVER_COLORS = ['#ef8a80', '#f6b26b', '#f3d36b', '#9ccc9c', '#7fd1c1', '#8ab4f8', '#b39ddb', '#f48fb1'];
+const NB_COVER_PATTERNS = ['plain', 'dots', 'stripes', 'grid', 'gingham'];
+const NB_COVER_EMOJIS = ['📓', '📚', '✏️', '🧮', '🔬', '🎨', '🎵', '💼', '🌍', '💡', '🌸', '⭐', '❤️', '📈'];
+const NB_PAGE_TYPES = ['write', 'grid', 'draw', 'list'];
+const NB_PAGE_TYPE_ICONS = { write: '📝', grid: '▦', draw: '✏️', list: '☑️' };
+const NB_NEW_SHELF = '__new__';
+const NB_TURN_MS = 420;
+let allNotebooksCache = [];
+let nbViewMode = null;      // 'notebook' | 'tasks' | null (סגור)
+let nbCoverDraft = null;    // הכריכה שנערכת בחלון הכריכה
+
+function nbSortByOrder(a, b) {
+    const ao = a.sort_order == null ? Infinity : a.sort_order;
+    const bo = b.sort_order == null ? Infinity : b.sort_order;
+    if (ao !== bo) return ao - bo;
+    return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+}
+// מחברת בלי צבע שמור (נוצרה לפני הכריכות) מקבלת צבע קבוע לפי המיקום שלה בארון
+function nbCoverColor(nb) {
+    if (nb && nb.cover_color) return nb.cover_color;
+    const idx = Math.max(0, allNotebooksCache.indexOf(nb));
+    return NB_COVER_COLORS[idx % NB_COVER_COLORS.length];
+}
+function nbCoverPattern(nb) {
+    return nb && NB_COVER_PATTERNS.includes(nb.cover_pattern) ? nb.cover_pattern : 'plain';
 }
 
-// --- מגירה 1: רשימת פרויקטים ---
-function openProjectsDrawer() {
-    const overlay = document.getElementById('projects-drawer-overlay');
-    if (overlay) overlay.classList.add('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.add('projects-open');
-    loadProjects();
+function isNotebooksSectionOpen() {
+    const section = document.getElementById('notebooks-section');
+    return !!(section && section.classList.contains('active-tab'));
 }
-function closeProjectsDrawer() {
-    const overlay = document.getElementById('projects-drawer-overlay');
-    if (overlay) overlay.classList.remove('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('projects-open');
+function openNotebooksSection() {
+    closeHamburgerMenu();
+    switchToTab('notebooks-section');
+    renderNotebookShelves();
+    loadNotebooksHome();
 }
+// שמות ישנים (מגירת "לימודים" ו"הפרויקטים שלי" שהוחלפו) - מובילים לארון החדש
+function openStudyDrawer() { openNotebooksSection(); }
+function openMyProjectsEntry() { openNotebooksSection(); }
+function loadProjects() { return loadNotebooksHome(); }
 
-async function loadProjects() {
+async function loadNotebooksHome() {
     if (!supabaseClient || !currentUserId) return;
-    const { data, error } = await supabaseClient.from('projects').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
-    if (error) return;
-    projectsCache = data || [];
-    renderProjectsList();
+    const [projectsRes, notebooksRes, tasksRes] = await Promise.all([
+        supabaseClient.from('projects').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
+        supabaseClient.from('project_notebooks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
+        supabaseClient.from('study_tasks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }),
+    ]);
+    if (!projectsRes.error) projectsCache = (projectsRes.data || []).slice().sort(nbSortByOrder);
+    if (!notebooksRes.error) allNotebooksCache = (notebooksRes.data || []).slice().sort(nbSortByOrder);
+    if (!tasksRes.error) studyTasksCache = tasksRes.data || [];
+    renderNotebookShelves();
 }
 
-function renderProjectsList() {
-    const listEl = document.getElementById('projects-list');
-    const emptyEl = document.getElementById('projects-empty');
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    if (emptyEl) emptyEl.classList.toggle('hidden', projectsCache.length > 0);
+function renderNotebookShelves() {
+    const wrap = document.getElementById('nb-bookcase');
+    if (!wrap) return;
+    renderNotebookStats();
+    wrap.innerHTML = '';
+    wrap.appendChild(buildNbShelf(null, [buildTasksCover()]));
+    const addShelfBtn = document.querySelector('.nb-add-shelf-btn');
+    if (addShelfBtn) addShelfBtn.classList.toggle('hidden', !isPremiumUser);
+    if (!isPremiumUser) { wrap.appendChild(buildNbPremiumCard()); return; }
     projectsCache.forEach(project => {
-        const li = document.createElement('li');
-        li.className = 'project-card';
-        li.innerHTML = `
-            <span class="project-card-main" onclick="openProjectDetail('${project.id}')">${project.icon || '📁'} ${escapeHtmlForReport(project.title)}</span>
-            <span class="project-card-actions">
-                <button type="button" class="btn-edit-item" onclick="openEditProjectModal('${project.id}')">${EDIT_ICON_SVG}</button>
-                <button type="button" class="btn-delete-item" onclick="deleteProject('${project.id}')">❌</button>
-            </span>
-        `;
-        listEl.appendChild(li);
+        const covers = allNotebooksCache.filter(n => n.project_id === project.id).map(buildNotebookCover);
+        wrap.appendChild(buildNbShelf(project, covers));
     });
-}
-
-function openAddProjectModal() {
-    editingProjectId = null;
-    document.getElementById('project-modal-title').textContent = t('projects_add_item_title');
-    document.getElementById('project-item-input').value = '';
-    selectedProjectIcon = PROJECT_ICON_PRESETS[0];
-    renderProjectIconPicker();
-    openModal('modal-add-project');
-    setTimeout(() => document.getElementById('project-item-input').focus(), 150);
-}
-
-function openEditProjectModal(id) {
-    const project = projectsCache.find(p => p.id === id);
-    if (!project) return;
-    editingProjectId = id;
-    document.getElementById('project-modal-title').textContent = t('edit_item_title');
-    document.getElementById('project-item-input').value = project.title;
-    selectedProjectIcon = project.icon || PROJECT_ICON_PRESETS[0];
-    renderProjectIconPicker();
-    openModal('modal-add-project');
-}
-
-async function submitProject() {
-    const input = document.getElementById('project-item-input');
-    const title = input.value.trim();
-    const icon = selectedProjectIcon;
-    const editId = editingProjectId;
-    closeModal('modal-add-project');
-    editingProjectId = null;
-    if (!title || !supabaseClient || !currentUserId) return;
-    if (editId) {
-        await supabaseClient.from('projects').update({ title, icon }).eq('id', editId);
-    } else {
-        await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title, icon });
+    if (!projectsCache.length) {
+        const hint = document.createElement('p');
+        hint.className = 'nb-empty-hint';
+        hint.textContent = t('nb_empty_hint');
+        wrap.appendChild(hint);
     }
-    await loadProjects();
-    showAppToast(t('item_added_success'));
 }
 
-function deleteProject(id) {
-    showDangerConfirm(t('project_delete_title'), t('project_delete_confirm'), async () => {
-        await supabaseClient.from('projects').delete().eq('id', id);
-        loadProjects();
-    });
+function renderNotebookStats() {
+    const el = document.getElementById('nb-stats');
+    if (!el) return;
+    const chips = [];
+    if (isPremiumUser && allNotebooksCache.length) chips.push(`📓 ${t('nb_stat_notebooks').replace('{n}', allNotebooksCache.length.toLocaleString(currentLang))}`);
+    const open = studyTasksCache.filter(x => !x.is_completed).length;
+    if (open) chips.push(`📝 ${t('nb_stat_tasks').replace('{n}', open.toLocaleString(currentLang))}`);
+    el.innerHTML = chips.map(c => `<span class="books-stat-chip">${escapeHtmlForReport(c)}</span>`).join('');
 }
 
-// --- מגירה 2: מחברות בתוך פרויקט אחד (currentOpenProjectId) ---
-function openProjectDetail(projectId) {
-    currentOpenProjectId = projectId;
-    closeProjectsDrawer();
-    openNotebooksDrawer();
-}
-
-function openNotebooksDrawer() {
-    const overlay = document.getElementById('notebooks-drawer-overlay');
-    if (overlay) overlay.classList.add('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.add('projects-open');
-    const project = projectsCache.find(p => p.id === currentOpenProjectId);
-    const titleEl = document.getElementById('notebooks-drawer-title');
-    if (titleEl) titleEl.textContent = project ? `${project.icon || '📁'} ${project.title}` : '';
-    loadProjectNotebooks(currentOpenProjectId);
-}
-function closeNotebooksDrawer() {
-    const overlay = document.getElementById('notebooks-drawer-overlay');
-    if (overlay) overlay.classList.remove('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('projects-open');
-}
-
-async function loadProjectNotebooks(projectId) {
-    if (!supabaseClient || !currentUserId || !projectId) return;
-    const { data, error } = await supabaseClient.from('project_notebooks').select('*').eq('project_id', projectId).eq('user_id', currentUserId).order('created_at', { ascending: false });
-    if (error) return;
-    notebooksCache = data || [];
-    renderNotebooksList();
-}
-
-function renderNotebooksList() {
-    const listEl = document.getElementById('notebooks-list');
-    const emptyEl = document.getElementById('notebooks-empty');
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    if (emptyEl) emptyEl.classList.toggle('hidden', notebooksCache.length > 0);
-    notebooksCache.forEach(notebook => {
-        const li = document.createElement('li');
-        li.className = 'notebook-card';
-        li.innerHTML = `
-            <span class="notebook-card-main" onclick="openNotebookDetail('${notebook.id}')">📓 ${escapeHtmlForReport(notebook.title)}</span>
-            <span class="notebook-card-actions">
-                <button type="button" class="btn-edit-item" onclick="openEditNotebookModal('${notebook.id}')">${EDIT_ICON_SVG}</button>
-                <button type="button" class="btn-delete-item" onclick="deleteNotebook('${notebook.id}')">❌</button>
-            </span>
-        `;
-        listEl.appendChild(li);
-    });
-}
-
-function openAddNotebookModal() {
-    editingNotebookId = null;
-    document.getElementById('notebook-modal-title').textContent = t('notebooks_add_item_title');
-    document.getElementById('notebook-item-input').value = '';
-    openModal('modal-add-notebook');
-    setTimeout(() => document.getElementById('notebook-item-input').focus(), 150);
-}
-
-function openEditNotebookModal(id) {
-    const notebook = notebooksCache.find(n => n.id === id);
-    if (!notebook) return;
-    editingNotebookId = id;
-    document.getElementById('notebook-modal-title').textContent = t('edit_item_title');
-    document.getElementById('notebook-item-input').value = notebook.title;
-    openModal('modal-add-notebook');
-}
-
-async function submitNotebook() {
-    const input = document.getElementById('notebook-item-input');
-    const title = input.value.trim();
-    const editId = editingNotebookId;
-    closeModal('modal-add-notebook');
-    editingNotebookId = null;
-    if (!title || !supabaseClient || !currentUserId || !currentOpenProjectId) return;
-    if (editId) {
-        await supabaseClient.from('project_notebooks').update({ title }).eq('id', editId);
-    } else {
-        await supabaseClient.from('project_notebooks').insert({ project_id: currentOpenProjectId, user_id: currentUserId, username: currentUsername, title });
+// מדף: שם המדף (לחיצה = עריכה), שורת הכריכות עם "+" להוספת מחברת למדף הזה, ולוח העץ מתחת
+function buildNbShelf(project, covers) {
+    const shelf = document.createElement('div');
+    shelf.className = 'nb-shelf' + (project ? '' : ' nb-shelf-pinned');
+    if (project) {
+        const label = document.createElement('button');
+        label.type = 'button';
+        label.className = 'nb-shelf-label';
+        label.innerHTML = `<span class="nb-shelf-icon">${escapeHtmlForReport(project.icon || '📁')}</span><span class="nb-shelf-name">${escapeHtmlForReport(project.title)}</span><span class="nb-shelf-edit" aria-hidden="true">${EDIT_ICON_SVG}</span>`;
+        label.title = t('nb_shelf_edit_title');
+        label.onclick = () => openEditProjectModal(project.id);
+        shelf.appendChild(label);
     }
-    await loadProjectNotebooks(currentOpenProjectId);
-    showAppToast(t('item_added_success'));
+    const row = document.createElement('div');
+    row.className = 'nb-shelf-row';
+    covers.forEach(c => row.appendChild(c));
+    if (project) {
+        row.appendChild(buildNbAddSlot(project.id));
+        if (!covers.length) {
+            const empty = document.createElement('span');
+            empty.className = 'nb-shelf-empty';
+            empty.textContent = t('nb_shelf_empty');
+            row.appendChild(empty);
+        }
+    }
+    shelf.appendChild(row);
+    const board = document.createElement('div');
+    board.className = 'nb-shelf-board';
+    shelf.appendChild(board);
+    return shelf;
 }
 
-function deleteNotebook(id) {
-    showDangerConfirm(t('notebook_delete_title'), t('notebook_delete_confirm'), async () => {
-        await supabaseClient.from('project_notebooks').delete().eq('id', id);
-        loadProjectNotebooks(currentOpenProjectId);
-    });
+function nbCoverInnerHtml(emoji, title) {
+    return `<span class="nb-cover-emoji">${escapeHtmlForReport(emoji)}</span><span class="nb-cover-label">${escapeHtmlForReport(title)}</span>`;
+}
+function buildNotebookCover(nb) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `nb-cover nb-pat-${nbCoverPattern(nb)}`;
+    btn.dataset.notebookId = nb.id;
+    btn.style.setProperty('--nb-color', nbCoverColor(nb));
+    btn.innerHTML = nbCoverInnerHtml(nb.cover_emoji || '📓', nb.title) + (nb.bookmark_page_id ? '<span class="nb-cover-ribbon" aria-hidden="true"></span>' : '');
+    btn.title = nb.title;
+    btn.onclick = () => openNotebookView(nb.id);
+    return btn;
+}
+function buildTasksCover() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nb-cover nb-cover-tasks';
+    const open = studyTasksCache.filter(x => !x.is_completed).length;
+    btn.innerHTML = nbCoverInnerHtml('📝', t('nb_tasks_notebook_title')) + (open ? `<span class="nb-cover-badge">${open.toLocaleString(currentLang)}</span>` : '');
+    btn.title = t('nb_tasks_notebook_title');
+    btn.onclick = () => openTasksNotebook();
+    return btn;
+}
+function buildNbAddSlot(projectId) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nb-cover nb-cover-add';
+    btn.innerHTML = '<span aria-hidden="true">＋</span>';
+    btn.title = t('notebooks_add_item_title');
+    btn.setAttribute('aria-label', btn.title);
+    btn.onclick = () => openNotebookCoverModal(null, projectId);
+    return btn;
+}
+// למי שאינו/ה פרימיום: מחברת המשימות פתוחה לכולם, ומתחתיה הזמנה למחברות משלך
+function buildNbPremiumCard() {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'nb-premium-card';
+    card.innerHTML = `<span class="nb-premium-covers" aria-hidden="true"><span style="--nb-color:#ef8a80"></span><span style="--nb-color:#8ab4f8"></span><span style="--nb-color:#f3d36b"></span></span>
+        <span class="nb-premium-text"><b>${escapeHtmlForReport(t('nb_premium_title'))}</b><span>${escapeHtmlForReport(t('nb_premium_text'))}</span></span>
+        <span class="nb-premium-badge">⭐ ${escapeHtmlForReport(t('home_premium_badge_label'))}</span>`;
+    card.onclick = () => openPremiumUpgradeModal();
+    return card;
 }
 
-// --- מגירה 3: מחברת רב-דפים (currentOpenNotebookId > currentOpenPageId) -
-// כל דף זהה חזותית ל"לימודים" (ר' renderStudyTasksList) עבור הטקסט שבו, ובנוסף
-// מכיל שכבת ציור חופשי משלו - לפי בקשה מפורשת לתכונה גדולה (ר' ההערה על
-// notebookPagesCache למעלה) ---
-function openNotebookDetail(notebookId) {
+// --- המחברת הפתוחה (#nb-view) ---
+function setNotebookViewOpen(open) {
+    const view = document.getElementById('nb-view');
+    if (!view) return;
+    view.classList.toggle('open', open);
+    view.setAttribute('aria-hidden', open ? 'false' : 'true');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.toggle('projects-open', open);
+}
+function isNotebookViewOpen() {
+    const view = document.getElementById('nb-view');
+    return !!(view && view.classList.contains('open'));
+}
+
+function openTasksNotebook() {
+    const view = document.getElementById('nb-view');
+    if (!view) return;
+    nbViewMode = 'tasks';
+    view.classList.add('is-tasks');
+    view.classList.remove('is-notebook');
+    document.getElementById('nb-view-emoji').textContent = '📝';
+    document.getElementById('nb-view-name').textContent = t('nb_tasks_notebook_title');
+    const sheet = document.getElementById('nb-sheet');
+    sheet.dataset.paper = 'list';
+    sheet.style.removeProperty('--nb-color');
+    document.getElementById('nb-page-ribbon').classList.add('hidden');
+    setNotebookViewOpen(true);
+    renderStudyTasksList();
+    loadStudyTasks();
+}
+
+async function openNotebookView(notebookId) {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const nb = allNotebooksCache.find(n => n.id === notebookId);
+    const view = document.getElementById('nb-view');
+    if (!nb || !view) return;
+    nbViewMode = 'notebook';
     currentOpenNotebookId = notebookId;
-    closeNotebooksDrawer();
-    openNotebookDetailDrawer();
-}
-
-async function openNotebookDetailDrawer() {
-    const overlay = document.getElementById('notebook-detail-drawer-overlay');
-    if (overlay) overlay.classList.add('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.add('projects-open');
-    const notebook = notebooksCache.find(n => n.id === currentOpenNotebookId);
-    const titleEl = document.getElementById('notebook-detail-title');
-    if (titleEl) titleEl.textContent = notebook ? notebook.title : '';
-    await loadNotebookPages(currentOpenNotebookId);
-    // אף דף לא נפתח אוטומטית - סגור כברירת מחדל, רק לחיצה על דף ברשימה
-    // פותחת אותו בפועל (ר' selectNotebookPage) - לפי בקשה מפורשת
+    currentOpenProjectId = nb.project_id;
     currentOpenPageId = null;
-    renderPageTabsList();
-    const contentWrap = document.getElementById('notebook-page-content-wrap');
-    const emptyState = document.getElementById('notebook-detail-empty-state');
-    if (contentWrap) contentWrap.classList.add('hidden');
-    if (emptyState) emptyState.classList.remove('hidden');
-    // במובייל פאנל-הדפים מקופל כברירת מחדל (בדסקטופ הוא ממילא תמיד גלוי
-    // בצד, ר' theme.css) - פותחים אותו אוטומטית בכניסה למחברת כדי שהמשתמשת
-    // תראה קודם את רשימת הדפים
-    const panel = document.getElementById('notebook-page-tabs-panel');
-    const arrow = document.getElementById('notebook-page-tabs-arrow');
-    if (panel) panel.classList.add('open');
-    if (arrow) arrow.classList.add('open');
+    view.classList.add('is-notebook');
+    view.classList.remove('is-tasks');
+    renderNotebookViewTitle();
+    notebookPagesCache = [];
+    notebookItemsCache = [];
+    notebookAllItemsCache = [];
+    renderPageNavHeader();
+    setNotebookViewOpen(true);
+    initNotebookSwipe();
+    await loadNotebookPages(notebookId);
+    if (currentOpenNotebookId !== notebookId || !isNotebookViewOpen()) return;
+    const startId = nb.bookmark_page_id && notebookPagesCache.some(p => p.id === nb.bookmark_page_id) ? nb.bookmark_page_id : (notebookPagesCache[0] && notebookPagesCache[0].id);
+    if (startId) openNotebookPage(startId);
 }
-function closeNotebookDetailDrawer() {
-    const overlay = document.getElementById('notebook-detail-drawer-overlay');
-    if (overlay) overlay.classList.remove('open');
-    const wrapper = document.querySelector('.phone-wrapper');
-    if (wrapper) wrapper.classList.remove('projects-open');
+function openNotebookDetail(notebookId) { openNotebookView(notebookId); }
+
+function renderNotebookViewTitle() {
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+    document.getElementById('nb-view-emoji').textContent = nb ? (nb.cover_emoji || '📓') : '';
+    document.getElementById('nb-view-name').textContent = nb ? nb.title : '';
+    const sheet = document.getElementById('nb-sheet');
+    if (sheet && nb) sheet.style.setProperty('--nb-color', nbCoverColor(nb));
 }
 
-// טוענת את כל הדפים של המחברה + (לצורך חיפוש) את כל הפריטים מכל הדפים ביחד -
-// שאילתה אחת נוספת, לא פר-דף, כדי שהחיפוש יהיה מיידי בלי לפנות לשרת על כל
-// הקלדה. אם למחברה אין אף דף (לא אמור לקרות אחרי המיגרציה, אבל מכסה מחברת
-// חדשה-לגמרי) - נוצר "דף 1" ריק אוטומטית
+function closeNotebookView() {
+    if (nbViewMode === 'notebook') flushNotebookTextSave();
+    setNotebookViewOpen(false);
+    nbViewMode = null;
+    renderNotebookShelves();
+}
+function closeNotebookDetailDrawer() { closeNotebookView(); }
+
+// טקסט שעוד לא נשמר (השמירה מחכה 800ms אחרי ההקלדה) נשמר מיד כשעוברים דף או סוגרים את המחברת
+function flushNotebookTextSave() {
+    if (!notebookTextSaveDebounceTimer) return;
+    clearTimeout(notebookTextSaveDebounceTimer);
+    notebookTextSaveDebounceTimer = null;
+    saveNotebookTextContent();
+}
+
+// טוענת את כל הדפים של המחברת + (לחיפוש בתוכן העניינים) את כל השורות מכל הדפים - שאילתה אחת, לא
+// פר-דף. מחברת בלי אף דף (לא אמור לקרות - מחברת חדשה נוצרת עם דף ראשון) מקבלת "דף 1" ריק עם שורות
 async function loadNotebookPages(notebookId) {
     if (!supabaseClient || !currentUserId || !notebookId) return;
     const { data, error } = await supabaseClient.from('notebook_pages').select('*').eq('notebook_id', notebookId).eq('user_id', currentUserId).order('sort_order', { ascending: true });
     if (error) return;
     notebookPagesCache = data || [];
     if (!notebookPagesCache.length) {
-        const { data: created } = await supabaseClient.from('notebook_pages').insert({ notebook_id: notebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} 1`, sort_order: 0, canvas_data: [] }).select().maybeSingle();
+        const { data: created } = await supabaseClient.from('notebook_pages').insert({ notebook_id: notebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} 1`, sort_order: 0, canvas_data: [], page_type: 'write', text_content: '' }).select().maybeSingle();
         if (created) notebookPagesCache = [created];
     }
     if (notebookPagesCache.length) {
@@ -16944,95 +16934,143 @@ async function loadNotebookPages(notebookId) {
     }
 }
 
-// נקראת מלחיצה בפועל על דף ברשימה (לא מהטעינה השקטה הראשונית ב-
-// openNotebookDetailDrawer) - סוגרת את פאנל-הדפים במובייל אחרי הבחירה כדי
-// שהדף הנבחר יתגלה מיד, לפי בקשה מפורשת ("שילחצו על דף הוא יפתח, לא ישר
-// דף פתוח גדול") - בדסקטופ הפאנל תמיד גלוי בצד ממילא (ר' theme.css),
-// הסרת המחלקה שם לא משנה כלום ויזואלית
-function selectNotebookPage(pageId) {
-    openNotebookPage(pageId);
-    const panel = document.getElementById('notebook-page-tabs-panel');
-    const arrow = document.getElementById('notebook-page-tabs-arrow');
-    if (panel) panel.classList.remove('open');
-    if (arrow) arrow.classList.remove('open');
-}
-
+// פותחת דף: סוג הדף קובע את הנייר ומה מוצג - שורות = טקסט חופשי, רשימה = שורות לסימון ✓,
+// חלק / משבצות = קנבס ציור (שקוף, הנייר נראה דרכו). שורות ישנות שנכתבו בדף מסוג אחר (לפני סוגי
+// הדפים) עדיין מוצגות בו, כדי ששום דבר לא ייעלם
 function openNotebookPage(pageId) {
     const page = notebookPagesCache.find(p => p.id === pageId);
     if (!page) return;
+    if (currentOpenPageId && currentOpenPageId !== pageId) flushNotebookTextSave();
     currentOpenPageId = pageId;
     canvasStrokes = Array.isArray(page.canvas_data) ? page.canvas_data.slice() : [];
-    notebookPagesSearchFilterIds = null;
-    const searchInput = document.getElementById('notebook-pages-search-input');
-    if (searchInput) searchInput.value = '';
-    document.getElementById('notebook-detail-empty-state').classList.add('hidden');
-    document.getElementById('notebook-page-content-wrap').classList.remove('hidden');
+    const type = NB_PAGE_TYPES.includes(page.page_type) ? page.page_type : 'draw';
+    document.getElementById('nb-sheet').dataset.paper = type;
+    const textEl = document.getElementById('notebook-page-text-content');
+    textEl.classList.toggle('hidden', type !== 'write');
+    if (type === 'write') textEl.value = page.text_content || '';
+    document.getElementById('nb-list-add').classList.toggle('hidden', type !== 'list');
+    const isCanvas = type === 'draw' || type === 'grid';
+    document.getElementById('notebook-canvas-section-body').classList.toggle('hidden', !isCanvas);
+    document.getElementById('notebook-emoji-picker')?.classList.add('hidden');
+    notebookItemsCache = notebookAllItemsCache.filter(i => i.page_id === pageId).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+    renderNotebookItemsList();
     loadNotebookItems(pageId);
+    if (isCanvas) initNotebookCanvas();
     renderPageNavHeader();
     renderPageTabsList();
-    // דף-כתיבה (page_type:'write') מציג טקסטאריה במקום קנבס-ציור - שני
-    // סוגי-דף שונים לגמרי, לא רק סגנון (ר' modal-notebook-page-type-choice)
-    const isWrite = page.page_type === 'write';
-    document.getElementById('notebook-canvas-section-header').classList.toggle('hidden', isWrite);
-    document.getElementById('notebook-page-text-content').classList.toggle('hidden', !isWrite);
-    if (isWrite) {
-        document.getElementById('notebook-page-text-content').value = page.text_content || '';
-    } else {
-        // הציור מתחיל מתקופל בכל פתיחת-דף (לא זוכר מצב-פתיחה קודם) - לפי
-        // בקשה מפורשת ("סגור ושילחצו עליו רק אם רוצים"). לא מאתחלים את הקנבס
-        // כאן - הוא מוסתר עכשיו, ואתחול על אלמנט מוסתר נותן מידות 0/1 פיקסל
-        // (ר' initNotebookCanvas) - האתחול קורה רק כשבאמת נפתח, ר'
-        // toggleNotebookCanvasSection למטה
-        document.getElementById('notebook-canvas-section-body').classList.add('hidden');
-        document.getElementById('notebook-canvas-toggle-icon').classList.remove('rotated');
-    }
-}
-
-// מתקפל/נפתח את קטע הציור - ר' ההערה ב-openNotebookPage לגבי הצורך לאתחל
-// את הקנבס רק כשבאמת נחשף (לא כשהוא display:none)
-function toggleNotebookCanvasSection() {
-    const body = document.getElementById('notebook-canvas-section-body');
-    const icon = document.getElementById('notebook-canvas-toggle-icon');
-    const wasHidden = body.classList.contains('hidden');
-    body.classList.toggle('hidden');
-    icon.classList.toggle('rotated', wasHidden);
-    if (wasHidden) initNotebookCanvas();
+    renderNotebookBookmarkState();
+    const body = document.querySelector('#nb-sheet .nb-page-body');
+    if (body) body.scrollTop = 0;
 }
 
 function renderPageNavHeader() {
-    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
     const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    const page = notebookPagesCache[idx];
     const titleEl = document.getElementById('notebook-page-title-text');
     if (titleEl) titleEl.textContent = page ? page.title : '';
     const counterEl = document.getElementById('notebook-page-counter');
-    if (counterEl) counterEl.textContent = t('notebook_page_counter_label').replace('{current}', idx + 1).replace('{total}', notebookPagesCache.length);
+    if (counterEl) counterEl.textContent = idx === -1 ? '' : t('notebook_page_counter_label').replace('{current}', idx + 1).replace('{total}', notebookPagesCache.length);
     const prevBtn = document.getElementById('notebook-page-prev-btn');
     const nextBtn = document.getElementById('notebook-page-next-btn');
     if (prevBtn) prevBtn.disabled = idx <= 0;
     if (nextBtn) nextBtn.disabled = idx === -1 || idx >= notebookPagesCache.length - 1;
 }
 
+// היפוך דף: "רוח רפאים" (העתק של הדף הנוכחי, כולל הציור שעל הקנבס) מתהפך סביב הכריכה - קדימה הדף
+// הישן מתקפל ומגלה את החדש שמתחתיו; אחורה הדף הקודם חוזר ומתהפך מעל הנוכחי. הכריכה בצד ה-start
+// (ימין בעברית, שמאל באנגלית), בדיוק כמו במחברת אמיתית בכל שפה. בלי אנימציה למי שביקש/ה פחות תנועה
+function nbReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function playNotebookPageTurn(dir, swap) {
+    const sheet = document.getElementById('nb-sheet');
+    const book = document.getElementById('nb-book');
+    if (!sheet || !book || nbReducedMotion()) { swap(); return; }
+    book.querySelectorAll('.nb-sheet-ghost').forEach(g => g.remove());
+    sheet.classList.remove('nb-turn-in');
+    const ghost = sheet.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.classList.add('nb-sheet-ghost');
+    const srcCanvas = sheet.querySelector('canvas'), dstCanvas = ghost.querySelector('canvas');
+    if (srcCanvas && dstCanvas && srcCanvas.width > 1) {
+        dstCanvas.width = srcCanvas.width;
+        dstCanvas.height = srcCanvas.height;
+        try { dstCanvas.getContext('2d').drawImage(srcCanvas, 0, 0); } catch (e) { /* קנבס ריק - לא נורא */ }
+    }
+    const srcText = sheet.querySelector('textarea'), dstText = ghost.querySelector('textarea');
+    if (srcText && dstText) dstText.value = srcText.value;
+    const srcBody = sheet.querySelector('.nb-page-body');
+    const scrollTop = srcBody ? srcBody.scrollTop : 0;
+    swap();
+    if (dir === 'next') {
+        ghost.classList.add('nb-turn-out');
+        book.appendChild(ghost);
+    } else {
+        ghost.classList.add('nb-turn-under');
+        book.insertBefore(ghost, sheet);
+        void sheet.offsetWidth;
+        sheet.classList.add('nb-turn-in');
+    }
+    const ghostBody = ghost.querySelector('.nb-page-body');
+    if (ghostBody) ghostBody.scrollTop = scrollTop;
+    setTimeout(() => { ghost.remove(); sheet.classList.remove('nb-turn-in'); }, NB_TURN_MS + 80);
+}
+
 function goToPrevPage() {
     const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
-    if (idx > 0) openNotebookPage(notebookPagesCache[idx - 1].id);
+    if (idx > 0) {
+        const id = notebookPagesCache[idx - 1].id;
+        playNotebookPageTurn('prev', () => openNotebookPage(id));
+    }
 }
 function goToNextPage() {
     const idx = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
-    if (idx !== -1 && idx < notebookPagesCache.length - 1) openNotebookPage(notebookPagesCache[idx + 1].id);
+    if (idx !== -1 && idx < notebookPagesCache.length - 1) {
+        const id = notebookPagesCache[idx + 1].id;
+        playNotebookPageTurn('next', () => openNotebookPage(id));
+    }
 }
 
-// "+" פותחת קודם בחירת סוג-דף (ציור/כתיבה, ר' modal-notebook-page-type-choice)
-// ורק אז יוצרת דף חדש וריק ועוברת אליו מיד, בלי עוד חלון-דיאלוג נוסף (אפשר
-// לשנות שם אח"כ דרך כותרת הדף) - לפי בקשה מפורשת, כדי שההוספה תהיה מהירה
-// ("דף אינסופי" - בלי הגבלת כמות בכלל)
+// החלקה הצידה על הדף מעבירה דף - לכיוון הכריכה = קדימה (ימינה בעברית, שמאלה באנגלית). לא על
+// הקנבס (שם מציירים), לא בשדות קלט ולא בטקסט בזמן כתיבה (שם גוררים כדי לסמן טקסט)
+function initNotebookSwipe() {
+    const book = document.getElementById('nb-book');
+    if (!book || book.dataset.swipeBound) return;
+    book.dataset.swipeBound = '1';
+    let startX = 0, startY = 0, startTime = 0, tracking = false;
+    book.addEventListener('pointerdown', (e) => {
+        tracking = false;
+        if (nbViewMode !== 'notebook') return;
+        const target = e.target;
+        if (target.closest('canvas, .notebook-emoji-item, input, .notebook-page-toolbar, .notebook-tool-row, .notebook-emoji-picker')) return;
+        const ta = target.closest('textarea');
+        if (ta && document.activeElement === ta) return;
+        startX = e.clientX; startY = e.clientY; startTime = Date.now(); tracking = true;
+    });
+    book.addEventListener('pointerup', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (Date.now() - startTime > 700 || Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+        const forward = document.documentElement.dir === 'rtl' ? dx > 0 : dx < 0;
+        if (forward) goToNextPage(); else goToPrevPage();
+    });
+    book.addEventListener('pointercancel', () => { tracking = false; });
+}
+
+// "+" בראש המחברת: קודם בוחרים סוג נייר (ר' modal-notebook-page-type-choice), ואז נוצר דף חדש בסוף
+// המחברת והיא מתהפכת אליו מיד (אפשר לשנות שם אחר כך בלחיצה על כותרת הדף)
 async function createNotebookPage(pageType) {
     closeModal('modal-notebook-page-type-choice');
     if (!supabaseClient || !currentUserId || !currentOpenNotebookId) return;
+    const type = NB_PAGE_TYPES.includes(pageType) ? pageType : 'write';
     const nextOrder = notebookPagesCache.length ? Math.max(...notebookPagesCache.map(p => p.sort_order)) + 1 : 0;
-    const { data, error } = await supabaseClient.from('notebook_pages').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} ${nextOrder + 1}`, sort_order: nextOrder, canvas_data: [], page_type: pageType, text_content: pageType === 'write' ? '' : null }).select().maybeSingle();
-    if (error || !data) return;
+    const { data, error } = await supabaseClient.from('notebook_pages').insert({ notebook_id: currentOpenNotebookId, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} ${notebookPagesCache.length + 1}`, sort_order: nextOrder, canvas_data: [], page_type: type, text_content: type === 'write' ? '' : null }).select().maybeSingle();
+    if (error || !data) { if (error) showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     notebookPagesCache.push(data);
-    openNotebookPage(data.id);
+    playNotebookPageTurn('next', () => openNotebookPage(data.id));
 }
 
 function openRenamePageModal() {
@@ -17058,48 +17096,346 @@ async function submitRenamePage() {
     renderPageTabsList();
 }
 
-// מוחקת דף; אם היה הדף האחרון היחיד - נוצר מיד "דף 1" ריק חדש (מחברת לא
-// אמורה להישאר בלי אף דף), ואם היה הדף הפתוח - עוברת לדף שכן אחריו
+// מוחקת דף (מתוך תוכן העניינים); אם היה הדף היחיד - נוצר מיד "דף 1" ריק (מחברת לא נשארת בלי דף),
+// ואם היה הדף הפתוח - עוברים לדף הראשון. סימנייה על הדף הזה מתאפסת לבד (on delete set null)
 function deleteNotebookPage(pageId) {
     showDangerConfirm(t('notebook_page_delete_title'), t('notebook_page_delete_confirm'), async () => {
         await supabaseClient.from('notebook_pages').delete().eq('id', pageId);
         notebookPagesCache = notebookPagesCache.filter(p => p.id !== pageId);
+        notebookAllItemsCache = notebookAllItemsCache.filter(i => i.page_id !== pageId);
+        const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+        if (nb && nb.bookmark_page_id === pageId) nb.bookmark_page_id = null;
         if (!notebookPagesCache.length) {
+            currentOpenPageId = null;
             await loadNotebookPages(currentOpenNotebookId);
             if (notebookPagesCache.length) openNotebookPage(notebookPagesCache[0].id);
             return;
         }
         if (currentOpenPageId === pageId) {
+            currentOpenPageId = null;
             openNotebookPage(notebookPagesCache[0].id);
         } else {
+            renderPageNavHeader();
             renderPageTabsList();
         }
     });
 }
 
+// --- 🔖 סימנייה: דף אחד בכל מחברת; המחברת נפתחת עליו, ועל הכריכה בארון תלוי סרט ---
+function renderNotebookBookmarkState() {
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+    const on = !!(nb && currentOpenPageId && nb.bookmark_page_id === currentOpenPageId);
+    const ribbon = document.getElementById('nb-page-ribbon');
+    if (ribbon) ribbon.classList.toggle('hidden', !on);
+    const btn = document.getElementById('nb-bookmark-btn');
+    if (btn) {
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.title = t(on ? 'nb_bookmark_remove_title' : 'nb_bookmark_add_title');
+        btn.setAttribute('aria-label', btn.title);
+    }
+}
+async function toggleNotebookBookmark() {
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+    if (!nb || !currentOpenPageId || !supabaseClient) return;
+    const newValue = nb.bookmark_page_id === currentOpenPageId ? null : currentOpenPageId;
+    const { error } = await supabaseClient.from('project_notebooks').update({ bookmark_page_id: newValue }).eq('id', nb.id);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    nb.bookmark_page_id = newValue;
+    renderNotebookBookmarkState();
+    renderPageTabsList();
+    showAppToast(t(newValue ? 'nb_bookmark_set_toast' : 'nb_bookmark_removed_toast'));
+}
+
+// --- ☰ תוכן עניינים: כל הדפים לפי הסדר (מספר, סוג הנייר, שם, 🔖), חיפוש בשמות ובשורות, מעבר בלחיצה ---
+function openNotebookContents() {
+    notebookPagesSearchFilterIds = null;
+    const input = document.getElementById('notebook-pages-search-input');
+    if (input) input.value = '';
+    renderPageTabsList();
+    openModal('modal-nb-contents');
+}
 function renderPageTabsList() {
     const listEl = document.getElementById('notebook-page-tabs-list');
     if (!listEl) return;
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
     const pages = notebookPagesSearchFilterIds ? notebookPagesCache.filter(p => notebookPagesSearchFilterIds.has(p.id)) : notebookPagesCache;
     if (!pages.length) {
         listEl.innerHTML = `<p class="language-no-results">${t('notebook_pages_no_results')}</p>`;
         return;
     }
-    listEl.innerHTML = pages.map(page => `
+    listEl.innerHTML = pages.map(page => {
+        const type = NB_PAGE_TYPES.includes(page.page_type) ? page.page_type : 'draw';
+        const marked = nb && nb.bookmark_page_id === page.id;
+        return `
         <li class="notebook-page-tab-item${page.id === currentOpenPageId ? ' active' : ''}">
-            <span class="notebook-page-tab-item-main" onclick="selectNotebookPage('${page.id}')">${notebookPagesCache.indexOf(page) + 1}. ${escapeHtmlForReport(page.title)}</span>
+            <span class="notebook-page-tab-item-main" onclick="selectNotebookPage('${page.id}')"><span class="nb-toc-num">${notebookPagesCache.indexOf(page) + 1}</span><span class="nb-toc-type" aria-hidden="true">${NB_PAGE_TYPE_ICONS[type]}</span><span class="nb-toc-title">${escapeHtmlForReport(page.title)}</span>${marked ? '<span class="nb-toc-mark" aria-hidden="true">🔖</span>' : ''}</span>
             <button type="button" class="btn-delete-item" onclick="deleteNotebookPage('${page.id}')">❌</button>
-        </li>
-    `).join('');
+        </li>`;
+    }).join('');
+}
+function selectNotebookPage(pageId) {
+    closeModal('modal-nb-contents');
+    const from = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    const to = notebookPagesCache.findIndex(p => p.id === pageId);
+    if (to === -1 || to === from) return;
+    playNotebookPageTurn(to > from ? 'next' : 'prev', () => openNotebookPage(pageId));
 }
 
-function togglePagesListPanel() {
-    const panel = document.getElementById('notebook-page-tabs-panel');
-    const arrow = document.getElementById('notebook-page-tabs-arrow');
-    if (!panel) return;
-    const nowOpen = panel.classList.toggle('open');
-    if (arrow) arrow.classList.toggle('open', nowOpen);
-    if (nowOpen) setTimeout(() => document.getElementById('notebook-pages-search-input')?.focus(), 150);
+// --- 🎨 כריכה ופרטים: מחברת חדשה (מה-"+ מחברת" או מה-"+" שעל מדף) או עריכת קיימת ---
+function openNotebookCoverModal(notebookId, presetShelfId) {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    const nb = notebookId ? allNotebooksCache.find(n => n.id === notebookId) : null;
+    const defaultShelf = presetShelfId || (projectsCache[0] && projectsCache[0].id) || NB_NEW_SHELF;
+    nbCoverDraft = nb
+        ? { id: nb.id, project_id: nb.project_id, color: nbCoverColor(nb), pattern: nbCoverPattern(nb), emoji: nb.cover_emoji || '📓' }
+        : { id: null, project_id: defaultShelf, color: NB_COVER_COLORS[allNotebooksCache.length % NB_COVER_COLORS.length], pattern: 'plain', emoji: '📓' };
+    document.getElementById('nb-cover-modal-title').textContent = t(nb ? 'nb_cover_edit_title' : 'notebooks_add_item_title');
+    document.getElementById('btn-save-nb-cover').textContent = t(nb ? 'save_generic' : 'add_btn');
+    document.getElementById('nb-cover-name').value = nb ? nb.title : '';
+    document.getElementById('nb-cover-emoji-custom').value = '';
+    const newShelfInput = document.getElementById('nb-cover-new-shelf');
+    newShelfInput.value = projectsCache.length ? '' : t('nb_default_shelf_name');
+    renderNbCoverShelfOptions();
+    renderNbCoverPickers();
+    document.getElementById('nb-cover-delete-btn').classList.toggle('hidden', !nb);
+    openModal('modal-nb-cover');
+    if (!nb) setTimeout(() => document.getElementById('nb-cover-name').focus(), 150);
+}
+function openAddNotebookModal() { openNotebookCoverModal(null, currentOpenProjectId); }
+function openEditNotebookModal(id) { openNotebookCoverModal(id); }
+
+function renderNbCoverShelfOptions() {
+    const select = document.getElementById('nb-cover-shelf');
+    if (!select || !nbCoverDraft) return;
+    select.innerHTML = '';
+    projectsCache.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.icon || '📁'} ${p.title}`;
+        select.appendChild(opt);
+    });
+    const other = document.createElement('option');
+    other.value = NB_NEW_SHELF;
+    other.textContent = t('nb_shelf_new_option');
+    select.appendChild(other);
+    select.value = nbCoverDraft.project_id;
+    updateCustomSelectDisplay('nb-cover-shelf');
+    document.getElementById('nb-cover-new-shelf').classList.toggle('hidden', nbCoverDraft.project_id !== NB_NEW_SHELF);
+}
+function onNbCoverShelfChange() {
+    const select = document.getElementById('nb-cover-shelf');
+    if (!select || !nbCoverDraft) return;
+    nbCoverDraft.project_id = select.value;
+    const input = document.getElementById('nb-cover-new-shelf');
+    input.classList.toggle('hidden', select.value !== NB_NEW_SHELF);
+    if (select.value === NB_NEW_SHELF) setTimeout(() => input.focus(), 120);
+}
+
+function renderNbCoverPickers() {
+    const d = nbCoverDraft;
+    if (!d) return;
+    const colors = document.getElementById('nb-cover-colors');
+    colors.innerHTML = '';
+    NB_COVER_COLORS.forEach(color => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'nb-swatch' + (d.color === color ? ' selected' : '');
+        b.style.setProperty('--nb-color', color);
+        b.setAttribute('aria-label', color);
+        b.setAttribute('aria-pressed', d.color === color ? 'true' : 'false');
+        b.onclick = () => { d.color = color; renderNbCoverPickers(); };
+        colors.appendChild(b);
+    });
+    const patterns = document.getElementById('nb-cover-patterns');
+    patterns.innerHTML = '';
+    NB_COVER_PATTERNS.forEach(pattern => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `nb-pattern-chip nb-pat-${pattern}` + (d.pattern === pattern ? ' selected' : '');
+        b.style.setProperty('--nb-color', d.color);
+        b.setAttribute('aria-pressed', d.pattern === pattern ? 'true' : 'false');
+        b.innerHTML = `<span class="nb-pattern-name">${escapeHtmlForReport(t('nb_pattern_' + pattern))}</span>`;
+        b.onclick = () => { d.pattern = pattern; renderNbCoverPickers(); };
+        patterns.appendChild(b);
+    });
+    const emojis = document.getElementById('nb-cover-emojis');
+    emojis.innerHTML = '';
+    // מדבקה שהוקלדה ב"אחר" (לא ברשימה) מוצגת ראשונה ומסומנת
+    const list = NB_COVER_EMOJIS.includes(d.emoji) ? NB_COVER_EMOJIS : [d.emoji, ...NB_COVER_EMOJIS];
+    list.forEach(emoji => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'icon-picker-chip' + (d.emoji === emoji ? ' selected' : '');
+        b.textContent = emoji;
+        b.onclick = () => { d.emoji = emoji; renderNbCoverPickers(); };
+        emojis.appendChild(b);
+    });
+    renderNbCoverPreview();
+}
+// "אחר" - הקלדת כל אימוג'י שלא ברשימה (אותו דפוס כמו handleTableIconCustomInput)
+function handleNbCoverEmojiCustomInput(input) {
+    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
+    if (!match || !nbCoverDraft) return;
+    nbCoverDraft.emoji = match[0];
+    input.value = '';
+    renderNbCoverPickers();
+}
+function renderNbCoverPreview() {
+    const wrap = document.getElementById('nb-cover-preview');
+    if (!wrap || !nbCoverDraft) return;
+    const name = document.getElementById('nb-cover-name').value.trim() || t('notebooks_add_item_title');
+    wrap.innerHTML = `<span class="nb-cover nb-cover-preview nb-pat-${nbCoverDraft.pattern}" style="--nb-color:${nbCoverDraft.color}">${nbCoverInnerHtml(nbCoverDraft.emoji, name)}</span>`;
+}
+
+async function saveNotebookCover() {
+    const d = nbCoverDraft;
+    if (!d || !supabaseClient || !currentUserId) return;
+    const title = document.getElementById('nb-cover-name').value.trim() || t('notebooks_add_item_title');
+    let projectId = d.project_id;
+    if (projectId === NB_NEW_SHELF || !projectsCache.some(p => p.id === projectId)) {
+        const shelfName = document.getElementById('nb-cover-new-shelf').value.trim() || t('nb_default_shelf_name');
+        const { data: shelf, error: shelfError } = await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title: shelfName, icon: '📁' }).select().maybeSingle();
+        if (shelfError || !shelf) { showAppToast(t('error_adding_item') + (shelfError ? shelfError.message : ''), 'error'); return; }
+        projectsCache.push(shelf);
+        projectId = shelf.id;
+    }
+    const payload = { title, project_id: projectId, cover_color: d.color, cover_pattern: d.pattern, cover_emoji: d.emoji };
+    closeModal('modal-nb-cover');
+    nbCoverDraft = null;
+    if (d.id) {
+        const { error } = await supabaseClient.from('project_notebooks').update(payload).eq('id', d.id);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        const nb = allNotebooksCache.find(n => n.id === d.id);
+        if (nb) Object.assign(nb, payload);
+        if (nbViewMode === 'notebook' && currentOpenNotebookId === d.id) renderNotebookViewTitle();
+        renderNotebookShelves();
+        showAppToast(t('item_updated_success'));
+        return;
+    }
+    const { data, error } = await supabaseClient.from('project_notebooks').insert({ ...payload, user_id: currentUserId, username: currentUsername }).select().maybeSingle();
+    if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
+    // מחברת חדשה מתחילה עם דף שורות אחד, ונפתחת מיד
+    await supabaseClient.from('notebook_pages').insert({ notebook_id: data.id, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} 1`, sort_order: 0, canvas_data: [], page_type: 'write', text_content: '' });
+    allNotebooksCache.push(data);
+    renderNotebookShelves();
+    showAppToast(t('item_added_success'));
+    openNotebookView(data.id);
+}
+
+function deleteNotebookFromCover() {
+    const id = nbCoverDraft && nbCoverDraft.id;
+    if (!id) return;
+    closeModal('modal-nb-cover');
+    deleteNotebook(id);
+}
+function deleteNotebook(id) {
+    showDangerConfirm(t('notebook_delete_title'), t('notebook_delete_confirm'), async () => {
+        await supabaseClient.from('project_notebooks').delete().eq('id', id);
+        allNotebooksCache = allNotebooksCache.filter(n => n.id !== id);
+        if (nbViewMode === 'notebook' && currentOpenNotebookId === id) {
+            setNotebookViewOpen(false);
+            nbViewMode = null;
+        }
+        renderNotebookShelves();
+    });
+}
+
+// --- מדפים (טבלת projects): שם + אייקון (כולל "אחר"), עריכה בלחיצה על שם המדף, ומחיקה מתוך העריכה ---
+function renderProjectIconPicker() {
+    const container = document.getElementById('project-icon-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    const icons = PROJECT_ICON_PRESETS.includes(selectedProjectIcon) ? PROJECT_ICON_PRESETS : [selectedProjectIcon, ...PROJECT_ICON_PRESETS];
+    icons.forEach(icon => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'icon-picker-chip' + (selectedProjectIcon === icon ? ' selected' : '');
+        chip.textContent = icon;
+        chip.onclick = () => selectProjectIcon(icon);
+        container.appendChild(chip);
+    });
+}
+function selectProjectIcon(icon) {
+    selectedProjectIcon = icon;
+    renderProjectIconPicker();
+}
+function handleProjectIconCustomInput(input) {
+    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
+    if (!match) return;
+    selectedProjectIcon = match[0];
+    input.value = '';
+    renderProjectIconPicker();
+}
+
+function openAddShelfModal() {
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
+    openAddProjectModal();
+}
+function openAddProjectModal() {
+    editingProjectId = null;
+    document.getElementById('project-modal-title').textContent = t('nb_shelf_add_title');
+    document.getElementById('btn-save-project').textContent = t('add_btn');
+    document.getElementById('project-item-input').value = '';
+    document.getElementById('project-icon-custom').value = '';
+    document.getElementById('project-delete-btn').classList.add('hidden');
+    selectedProjectIcon = PROJECT_ICON_PRESETS[0];
+    renderProjectIconPicker();
+    openModal('modal-add-project');
+    setTimeout(() => document.getElementById('project-item-input').focus(), 150);
+}
+function openEditProjectModal(id) {
+    const project = projectsCache.find(p => p.id === id);
+    if (!project) return;
+    editingProjectId = id;
+    document.getElementById('project-modal-title').textContent = t('nb_shelf_edit_title');
+    document.getElementById('btn-save-project').textContent = t('save_generic');
+    document.getElementById('project-item-input').value = project.title;
+    document.getElementById('project-icon-custom').value = '';
+    document.getElementById('project-delete-btn').classList.remove('hidden');
+    selectedProjectIcon = project.icon || PROJECT_ICON_PRESETS[0];
+    renderProjectIconPicker();
+    openModal('modal-add-project');
+}
+
+async function submitProject() {
+    const input = document.getElementById('project-item-input');
+    const title = input.value.trim();
+    const icon = selectedProjectIcon;
+    const editId = editingProjectId;
+    if (!title) { input.focus(); return; }
+    closeModal('modal-add-project');
+    editingProjectId = null;
+    if (!supabaseClient || !currentUserId) return;
+    if (editId) {
+        const { error } = await supabaseClient.from('projects').update({ title, icon }).eq('id', editId);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        const project = projectsCache.find(p => p.id === editId);
+        if (project) Object.assign(project, { title, icon });
+        showAppToast(t('item_updated_success'));
+    } else {
+        const { data, error } = await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title, icon }).select().maybeSingle();
+        if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
+        projectsCache.push(data);
+        showAppToast(t('item_added_success'));
+    }
+    renderNotebookShelves();
+}
+
+function deleteProject(id) {
+    if (!id) return;
+    closeModal('modal-add-project');
+    showDangerConfirm(t('nb_shelf_delete_title'), t('nb_shelf_delete_confirm'), async () => {
+        await supabaseClient.from('projects').delete().eq('id', id);
+        projectsCache = projectsCache.filter(p => p.id !== id);
+        allNotebooksCache = allNotebooksCache.filter(n => n.project_id !== id);
+        if (nbViewMode === 'notebook' && currentOpenProjectId === id) {
+            setNotebookViewOpen(false);
+            nbViewMode = null;
+        }
+        editingProjectId = null;
+        renderNotebookShelves();
+    });
 }
 
 // מחפשת גם בשמות הדפים וגם בטקסט הפריטים שבתוכם (לא בציור החופשי - אין OCR,
@@ -17114,20 +17450,25 @@ function searchNotebookPages(filter) {
     renderPageTabsList();
 }
 
+// השורות של דף: לפי סדר הכתיבה (הראשונה למעלה), כמו ברשימה על נייר
 async function loadNotebookItems(pageId) {
     if (!supabaseClient || !currentUserId || !pageId) return;
-    const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('page_id', pageId).eq('user_id', currentUserId).order('created_at', { ascending: false });
-    if (error) return;
+    const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('page_id', pageId).eq('user_id', currentUserId).order('created_at', { ascending: true });
+    if (error || pageId !== currentOpenPageId) return;
     notebookItemsCache = data || [];
     renderNotebookItemsList();
 }
 
+// רשימת השורות מוצגת בדף "רשימה" (עם רמז כשהיא ריקה), ובדפים מסוג אחר רק אם יש בהם שורות ישנות
 function renderNotebookItemsList() {
     const listEl = document.getElementById('notebook-items-list');
     const emptyEl = document.getElementById('notebook-items-empty');
     if (!listEl) return;
     listEl.innerHTML = '';
-    if (emptyEl) emptyEl.classList.toggle('hidden', notebookItemsCache.length > 0);
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    const isList = !!(page && page.page_type === 'list');
+    listEl.classList.toggle('hidden', !isList && !notebookItemsCache.length);
+    if (emptyEl) emptyEl.classList.toggle('hidden', !isList || notebookItemsCache.length > 0);
     notebookItemsCache.forEach(item => {
         const li = document.createElement('li');
         li.className = 'study-task-item';
@@ -17195,6 +17536,19 @@ async function deleteNotebookItem(id) {
     notebookAllItemsCache = notebookAllItemsCache.filter(i => i.id !== id);
 }
 
+// דף "רשימה": שורה חדשה נכתבת ישר בתחתית הדף (Enter או +), בלי חלון נפרד - והשדה נשאר פתוח לשורה הבאה
+async function addNotebookListLine() {
+    const input = document.getElementById('nb-list-add-input');
+    const title = (input && input.value || '').trim();
+    if (!title || !supabaseClient || !currentUserId || !currentOpenPageId) return;
+    input.value = '';
+    const { data, error } = await supabaseClient.from('notebook_items').insert({ notebook_id: currentOpenNotebookId, page_id: currentOpenPageId, user_id: currentUserId, username: currentUsername, title }).select().maybeSingle();
+    if (error) { input.value = title; showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    if (data) notebookAllItemsCache.push(data);
+    await loadNotebookItems(currentOpenPageId);
+    input.focus();
+}
+
 // --- שכבת הציור החופשי (קנבס) לכל דף - נבנתה מאפס, אין תקדים בקוד הקיים.
 // דפוס אירועי המצביע (pointerdown על הקנבס + מאזיני document ל-pointermove/up
 // שמתווספים/מוסרים דינמית) תואם את הסגנון הקיים באפליקציה (ר' גרירת-אווטאר
@@ -17224,11 +17578,18 @@ function initNotebookCanvas() {
     // מגיבים (סימון "פעיל" עובד), אבל שום דבר לא נראה מצויר בפועל - בדיוק
     // הדיווח בפועל בתוך פרוייקטים. פריים נוסף אחרי הרינדור הראשון בודק שוב
     // ומתקן את עצמו בשקט אם הגודל השתנה משמעותית בינתיים
+    // חשוב: משנים את canvas.width/height רק אם הגודל באמת השתנה - כל השמה (גם לאותו ערך) מוחקת
+    // את כל מה שצויר, וזה מה שגרם לציור שמור להיעלם פריים אחד אחרי שנפתח הדף
     requestAnimationFrame(() => {
         if (canvas.closest('.hidden')) return;
-        const beforeW = canvas.width, beforeH = canvas.height;
-        sizeNotebookCanvasToContainer(canvas);
-        if (canvas.width !== beforeW || canvas.height !== beforeH) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width < 2 || rect.height < 2) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.max(1, Math.round(rect.width * dpr));
+        const h = Math.max(1, Math.round(rect.height * dpr));
+        if (w !== canvas.width || h !== canvas.height) {
+            canvas.width = w;
+            canvas.height = h;
             redrawCanvasFromStrokes();
             renderEmojiOverlay();
         }
@@ -17236,14 +17597,14 @@ function initNotebookCanvas() {
 }
 
 // initNotebookCanvas מתאים DPR-מדויק לגודל ה-CSS בזמן הפתיחה בלבד - בלי
-// listener, שינוי גודל חלון (רלוונטי הרבה יותר עכשיו עם הרוחב-המלא בדסקטופ,
-// ר' .notebook-detail-drawer) היה משאיר את הקנבס מטושטש/לא מסונכרן עד
-// שהדף נפתח מחדש. פעיל רק כשהמגירה פתוחה בפועל (בדיקה זולה), מבוזר (debounce)
+// listener, שינוי גודל חלון היה משאיר את הקנבס מטושטש/לא מסונכרן עד שהדף
+// נפתח מחדש. פעיל רק כשמחברת פתוחה על דף ציור (בדיקה זולה), מבוזר (debounce)
 // כדי לא להריץ redraw מלא על כל פיקסל תזוזה באמצע גרירת-חלון
 let notebookResizeDebounceTimer = null;
 function handleNotebookViewportResize() {
-    const overlay = document.getElementById('notebook-detail-drawer-overlay');
-    if (!overlay || !overlay.classList.contains('open')) return;
+    if (nbViewMode !== 'notebook' || !isNotebookViewOpen()) return;
+    const area = document.getElementById('notebook-canvas-section-body');
+    if (!area || area.classList.contains('hidden')) return;
     clearTimeout(notebookResizeDebounceTimer);
     notebookResizeDebounceTimer = setTimeout(() => {
         initNotebookCanvas();
