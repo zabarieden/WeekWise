@@ -68,7 +68,7 @@ let nmTrackerToday = [];       // כל רישומי calorie_tracker של היו�
 let nmDrinkDraftRows = 0;      // שורות-הזנה ריקות נוספות לשתייה (מעבר למינימום)
 let nmDrinkDraftsCache = [];    // מה שהוקלד בשורות השתייה ועוד לא נוסף - נשמר בין רינדורים
 let nmSavedDrinks = [];        // משקאות קבועים (new_me_saved_drinks) - לחיצה אחת מוסיפה
-let nmWeekDays = [];           // שורות new_me_days של השבוע הנוכחי (ראשון-שבת)
+let nmWeekDays = [];           // שורות new_me_days של השבוע הנוכחי והבא (ראשון-שבת) - ארוחה חופשית מתוכננת עד שבוע קדימה
 let nmToday = null;            // שורת new_me_days של היום: החלפות להיום, ארוחה חופשית, צ'ק-אין
 let nmReminders = [];          // new_me_reminders (שעה לכל מיקום ארוחה)
 let nmReminderSig = '';        // חתימת התזכורות שנשמרו לאחרונה - לא כותבים שוב אם לא השתנה כלום
@@ -393,7 +393,7 @@ async function nmLoadToday() {
         supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', today),
         supabaseClient.from('calorie_tracker').select('id, meal_type, food_description, calories, protein_grams, source').eq('user_id', currentUserId).eq('date', today),
         supabaseClient.from('new_me_saved_drinks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
-        supabaseClient.from('new_me_days').select('*').eq('user_id', currentUserId).gte('day', nmWeekStart()).lte('day', nmWeekEnd()),
+        supabaseClient.from('new_me_days').select('*').eq('user_id', currentUserId).gte('day', nmWeekStart()).lte('day', nmAddDays(nmWeekEnd(), 7)),
         supabaseClient.from('new_me_reminders').select('*').eq('user_id', currentUserId).order('position', { ascending: true }),
     ]);
     nmTodayCheckins = {};
@@ -1091,32 +1091,46 @@ async function nmSaveAsPreset(slot) {
 }
 
 // ---------- ארוחה חופשית מתוכננת (פעם בשבוע, במקום ארוחה, עד ~700 קל') ----------
-function nmWeekFreeRow() { return nmWeekDays.find(d => d.free_slot) || null; }
+// אפשר לתכנן עד שבוע קדימה (היום + 6 ימים, גם אל תוך השבוע הבא - לפי בקשה מפורשת, כדי שבסוף
+// שבוע לא יוצע רק "היום"). הכלל נשאר אחת לכל שבוע ראשון-שבת: בחירת יום אחר באותו שבוע מעבירה אליו
+function nmWeekStartOf(ds) { const d = nmDate(ds); d.setDate(d.getDate() - d.getDay()); return getLocalDateString(d); }
+function nmFreeRowInWeekOf(ds) {
+    const start = nmWeekStartOf(ds), end = nmAddDays(start, 6);
+    return nmWeekDays.find(d => d.free_slot && d.day >= start && d.day <= end) || null;
+}
+function nmWeekFreeRow() { return nmFreeRowInWeekOf(getLocalDateString()); }
+function nmFreeHorizonDays() {
+    const today = getLocalDateString();
+    return Array.from({ length: 7 }, (_, i) => nmAddDays(today, i));
+}
 
 function nmFreeMealRowHtml() {
-    const row = nmWeekFreeRow();
     const today = getLocalDateString();
-    if (!row) {
-        return `<button type="button" class="nm-free-plan-btn" onclick="nmOpenFreeMealSheet()">
+    const days = nmFreeHorizonDays();
+    const parts = [];
+    const thisWeek = nmWeekFreeRow();
+    if (thisWeek && thisWeek.day < today) parts.push(`<div class="nm-free-note muted">🍕 ${nmEsc(t('nm_free_used').replace('{day}', nmWeekdayName(thisWeek.day)))}</div>`);
+    // ארוחות חופשיות שכבר תוכננו לימים הבאים (היום עצמו מוצג בכרטיס הארוחה)
+    nmWeekDays.filter(d => d.free_slot && d.day > today && d.day <= days[days.length - 1]).sort((a, b) => a.day.localeCompare(b.day)).forEach(row => {
+        const meal = nmPosName(Math.max(0, nmOrder().indexOf(row.free_slot)));
+        parts.push(`<div class="nm-free-note">🍕 ${nmEsc(t('nm_free_planned_for').replace('{day}', nmWeekdayName(row.day)).replace('{meal}', meal))}
+            <button type="button" class="nm-link-btn" onclick="nmCancelFreeMeal('${row.day}')">${nmEsc(t('nm_free_cancel'))}</button></div>`);
+    });
+    // הכפתור מוצג כל עוד יש בשבוע הקרוב יום ששבוע שלו עוד בלי ארוחה חופשית
+    if (days.some(ds => !nmFreeRowInWeekOf(ds))) {
+        parts.push(`<button type="button" class="nm-free-plan-btn" onclick="nmOpenFreeMealSheet()">
             <span class="nm-free-plan-icon" aria-hidden="true">🍕</span>
             <span class="nm-free-plan-text"><b>${nmEsc(t('nm_free_plan_btn'))}</b><span>${nmTpl('nm_free_plan_sub', { kcal: nmFmt(NEW_ME_FREE_MEAL_KCAL) })}</span></span>
-        </button>`;
+        </button>`);
     }
-    if (row.day === today) return '';
-    const meal = nmPosName(Math.max(0, nmOrder().indexOf(row.free_slot)));
-    if (row.day > today) {
-        return `<div class="nm-free-note">🍕 ${nmEsc(t('nm_free_planned_for').replace('{day}', nmWeekdayName(row.day)).replace('{meal}', meal))}
-            <button type="button" class="nm-link-btn" onclick="nmCancelFreeMeal()">${nmEsc(t('nm_free_cancel'))}</button></div>`;
-    }
-    return `<div class="nm-free-note muted">🍕 ${nmEsc(t('nm_free_used').replace('{day}', nmWeekdayName(row.day)))}</div>`;
+    return parts.join('');
 }
 
 function nmOpenFreeMealSheet() {
     const today = getLocalDateString();
-    const days = [];
-    for (let ds = today; ds <= nmWeekEnd(); ds = nmAddDays(ds, 1)) days.push(ds);
+    const days = nmFreeHorizonDays();
     const order = nmOrder();
-    let selDay = today;
+    let selDay = days.find(ds => !nmFreeRowInWeekOf(ds)) || today;
     let selSlot = order.find(s => !nmTodayCheckins[s]) || order[order.length - 1];
     const ov = nmOpenSheet('', 'nm-free-sheet');
     const sheet = ov.querySelector('.nm-sheet');
@@ -1126,7 +1140,10 @@ function nmOpenFreeMealSheet() {
             <h4>🍕 ${nmEsc(t('nm_free_plan_btn'))}</h4>
             <p class="nm-fine">${nmEsc(t('nm_free_sheet_hint').replace('{kcal}', nmFmt(NEW_ME_FREE_MEAL_KCAL)))}</p>
             <div class="nm-sheet-label">${nmEsc(t('nm_free_which_day'))}</div>
-            <div class="nm-chip-row">${days.map(ds => `<button type="button" class="nm-pick${ds === selDay ? ' on' : ''}" data-day="${ds}">${nmEsc(ds === today ? t('nm_today') : nmWeekdayName(ds))}</button>`).join('')}</div>
+            <div class="nm-chip-row">${days.map(ds => {
+                const isFree = !!nmWeekDays.find(d => d.day === ds && d.free_slot);
+                return `<button type="button" class="nm-pick${ds === selDay ? ' on' : ''}" data-day="${ds}">${isFree ? '🍕 ' : ''}${nmEsc(ds === today ? t('nm_today') : nmWeekdayName(ds))}</button>`;
+            }).join('')}</div>
             <div class="nm-sheet-label">${nmEsc(t('nm_free_which_meal'))}</div>
             <div class="nm-chip-row">${order.map((s, i) => {
                 const blocked = selDay === today && nmTodayCheckins[s];
@@ -1147,6 +1164,12 @@ function nmOpenFreeMealSheet() {
 
 async function nmPlanFreeMeal(day, slot) {
     const today = getLocalDateString();
+    // אחת לשבוע: ארוחה חופשית שכבר תוכננה ליום אחר באותו שבוע עוברת ליום החדש
+    const sameWeek = nmFreeRowInWeekOf(day);
+    if (sameWeek && sameWeek.day !== day) {
+        if (sameWeek.day === today && nmTodayCheckins[sameWeek.free_slot]) await nmUncheck(sameWeek.free_slot);
+        await nmUpsertDay(sameWeek.day, { free_slot: null, free_text: null, free_kcal: null });
+    }
     if (day === today && nmTodayCheckins[slot]) await nmUncheck(slot);
     const saved = await nmUpsertDay(day, { free_slot: slot, free_text: null, free_kcal: null });
     await nmLoadToday();
@@ -1157,8 +1180,8 @@ async function nmPlanFreeMeal(day, slot) {
     if (nmProfile.reminders_on) nmSyncReminders();
 }
 
-async function nmCancelFreeMeal() {
-    const row = nmWeekFreeRow();
+async function nmCancelFreeMeal(day) {
+    const row = day ? nmWeekDays.find(d => d.day === day && d.free_slot) : nmWeekFreeRow();
     if (!row) return;
     if (row.day === getLocalDateString() && nmTodayCheckins[row.free_slot]) await nmUncheck(row.free_slot);
     await nmUpsertDay(row.day, { free_slot: null, free_text: null, free_kcal: null });

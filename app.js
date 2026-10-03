@@ -1644,57 +1644,42 @@ async function finishOnboarding(startTour) {
 // לא מוצג (למשל ✨ למי שלא רכש/ה, תג פרימיום למנויים) לא נכלל בסיור ---
 const APP_TOUR_VERSION = 2;
 const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', goals: 'vision_board_title', settings: 'settings_title', summary: 'apptour_ch_summary' };
+// לפי בקשה מפורשת: רק הפיצ'רים הגדולים, מתומצת ומלהיב, ו"דבר בתוך דבר" - מראים פריט
+// בתפריט ואז נכנסים פנימה (היעדים עם כרטיס דוגמה שמתהפך ומראה את הצעדים, המחברות שלי). עוזר ה-AI
+// מוסבר קודם כולו ורק אחר כך כל לשונית. דברים פשוטים (פתקים, קניות, מים, צעדים...) כבר לא בסיור
 const APP_TOUR_STEPS = [
     { id: 'welcome', ch: 'home', ctx: 'home', icon: '🧭', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text' },
-    { id: 'menu', ch: 'home', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
-    { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
     { id: 'peek', ch: 'home', ctx: 'home', icon: '👀', target: '#today-peek-tab', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
-    { id: 'note', ch: 'home', ctx: 'home', icon: '🗒️', target: '#weekly-note-widget', titleKey: 'weekly_note_modal_title', text: 'apptour_note_text', optional: true },
-    { id: 'premium', ch: 'home', ctx: 'home', icon: '⭐', target: '#home-premium-badge', titleKey: 'home_premium_badge_label', text: 'apptour_premium_text', optional: true },
-    { id: 'routine', ch: 'home', ctx: 'home', icon: '⏰', target: '#btn-daily-board-fab', titleKey: 'daily_board_title', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
-    { id: 'newme_short', ch: 'home', ctx: 'home', icon: '✨', target: '#btn-newme-shortcut', titleKey: 'nm_shortcut_title', text: 'apptour_newme_short_text', optional: true },
-    { id: 'quicknote', ch: 'home', ctx: 'home', icon: '📝', target: '#btn-ai-fab', titleKey: 'notes_ai_title', text: 'apptour_quicknote_text', link: 'apptour_quicknote_link', optional: true },
     { id: 'corner', ch: 'home', ctx: 'home', icon: '🌼', target: '#home-grow-corner', titleKey: 'home_corner_title', text: 'apptour_corner_text', link: 'apptour_corner_link', optional: true },
-    { id: 'ai', ch: 'home', ctx: 'home', icon: '🤖', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
+    { id: 'routine', ch: 'home', ctx: 'home', icon: '⏰', target: '#btn-daily-board-fab', titleKey: 'daily_board_title', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
+    // העוזר: קודם ההסבר הכללי (על הרובוט), ואז הלשוניות שבפנים
+    { id: 'ai', ch: 'ai', ctx: 'home', icon: '🤖', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#modal-ai-brain .ai-brain-tab[data-tab="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
     { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#modal-ai-brain .ai-brain-tab[data-tab="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
-    { id: 'ai_table', ch: 'ai', ctx: 'ai', tab: 'table', target: '#modal-ai-brain .ai-brain-tab[data-tab="table"]', titleKey: 'ai_brain_tab_table', text: 'apptour_ai_table_text' },
-    { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
-    { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text', link: 'apptour_m_vision_link' },
-    { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
-    { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text', link: 'apptour_m_study_link' },
-    { id: 'm_tables', ch: 'menu', ctx: 'menu', target: '[data-tour="m-tables"]', text: 'apptour_m_tables_text', link: 'apptour_m_tables_link' },
-    { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text', link: 'apptour_m_notes_link' },
-    { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
-    { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
-    { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
-    { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },
-    { id: 'm_calories', ch: 'menu', ctx: 'menu', target: '[data-tour="m-calories"]', text: 'apptour_m_calories_text', link: 'apptour_m_calories_link' },
-    { id: 'm_water', ch: 'menu', ctx: 'menu', target: '[data-tour="m-water"]', text: 'apptour_m_water_text' },
-    { id: 'm_sport', ch: 'menu', ctx: 'menu', target: '[data-tour="m-sport"]', text: 'apptour_m_sport_text', link: 'apptour_m_sport_link' },
-    { id: 'm_steps', ch: 'menu', ctx: 'menu', target: '[data-tour="m-steps"]', text: 'apptour_m_steps_text' },
-    { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
-    { id: 'm_receipts', ch: 'menu', ctx: 'menu', target: '[data-tour="m-receipts"]', text: 'apptour_m_receipts_text', link: 'apptour_m_receipts_link' },
-    { id: 'm_style', ch: 'menu', ctx: 'menu', icon: '▦', target: '[data-tour="m-style"]', titleKey: 'apptour_m_style_title', text: 'apptour_m_style_text' },
-    // פרק "🎯 היעדים שלי" - נכנסים פנימה ומסבירים כל חלק (לפי בקשה מפורשת: "שיהיה מסודר").
-    // when = נכלל רק אם רלוונטי לנתונים של המשתמש/ת (בלי יעדים - דוגמאות; עם יעדים - יעד החודש והכרטיס)
+    { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
+    // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - כרטיס דוגמה שמתהפך לבד ומראה צעדים, "למה" ופרס
+    { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text' },
+    { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '🔄', titleKey: 'apptour_g_card_title', text: 'apptour_g_card_text', link: 'apptour_m_vision_link', demo: 'goal' },
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .vision-drawer-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
-    { id: 'g_templates', ch: 'goals', ctx: 'goals', icon: '✨', target: '#vision-templates', titleKey: 'apptour_g_templates_title', text: 'apptour_g_templates_text', when: () => !visionGoalsCache.some(g => !g.is_achieved) },
     { id: 'g_focus', ch: 'goals', ctx: 'goals', target: '#vision-focus-slot > *', titleKey: 'vision_focus_ribbon', text: 'apptour_g_focus_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
-    { id: 'g_card', ch: 'goals', ctx: 'goals', icon: '🔄', target: () => appTourVisible('#vision-goals-list .vision-goal-card') || appTourVisible('#vision-focus-slot .vision-goal-card'), titleKey: 'apptour_g_card_title', text: 'apptour_g_card_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
-    { id: 'g_achieved', ch: 'goals', ctx: 'goals', target: '#vision-goals-achieved-section .vision-goals-achieved-title', titleKey: 'vision_goals_achieved_title', text: 'apptour_g_achieved_text', when: () => visionGoalsCache.some(g => g.is_achieved) },
+    // 📓 המחברות שלי: הפריט בתפריט, ואז הארון עצמו
+    { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
+    { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '📓', target: '#nb-bookcase', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
+    { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
+    { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
+    { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
+    { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
     { id: 's_appearance', ch: 'settings', ctx: 'settings', target: '[data-tour="s-appearance"]', text: 'apptour_s_appearance_text' },
-    { id: 's_personalization', ch: 'settings', ctx: 'settings', target: '[data-tour="s-personalization"]', text: 'apptour_s_personalization_text' },
-    { id: 's_notifications', ch: 'settings', ctx: 'settings', target: '[data-tour="s-notifications"]', text: 'apptour_s_notifications_text' },
-    { id: 's_account', ch: 'settings', ctx: 'settings', target: '[data-tour="s-account"]', text: 'apptour_s_account_text' },
-    { id: 's_support', ch: 'settings', ctx: 'settings', target: '[data-tour="s-support"]', text: 'apptour_s_support_text' },
     { id: 'connect', ch: 'summary', ctx: 'home', icon: '🔗', titleKey: 'apptour_connect_title', text: 'apptour_connect_text', flows: true },
     { id: 'done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_done_title', text: 'apptour_done_text' },
 ];
-// "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום] או חץ ('>' כיוון אחד, '<>' הדדי)
+// "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום (או כמה מפתחות - מוצגים עם ›), טקסט קבוע] או חץ
+// ('>' כיוון אחד, '<>' הדדי). פריסה חכמה מוצגת עם המקום שלה - בתוך המחברות שלי
 const APP_TOUR_FLOWS = [
-    [['🤖', 'ai_brain_fab_title'], ['🎯', 'vision_board_title'], ['🪄', 'smart_split_tile_title'], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title']],
+    [['🤖', 'ai_brain_fab_title'], ['🎯', 'vision_board_title'], ['🪄', ['study_title', 'smart_split_tile_title']], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title'], '>', ['🌼', 'home_corner_title']],
+    [['📚', 'books_menu_label'], '>', ['👀', 'today_tasks_title'], ['🎯', 'vision_board_title']],
+    [['📅', 'apptour_flow_calendar'], '<>', ['🗓️', null, 'Google Calendar']],
     [['✨', null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
     [['⚖️', 'apptour_flow_weight'], '<>', ['✨', null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
     [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
@@ -1790,6 +1775,7 @@ function appTourBuildLayer() {
                 <button type="button" class="app-tour-skip" onclick="closeAppTour()"></button>
             </div>
             <div class="app-tour-hero" aria-hidden="true"></div>
+            <div class="app-tour-demo hidden"></div>
             <h3 class="app-tour-title" id="app-tour-title"></h3>
             <p class="app-tour-text"></p>
             <div class="app-tour-link"></div>
@@ -1813,8 +1799,10 @@ async function appTourEnsureContext(step) {
     const settingsModal = document.getElementById('modal-settings-drawer');
     const menuOverlay = document.getElementById('hamburger-drawer-overlay');
     const goalsOverlay = document.getElementById('vision-drawer-overlay');
+    const notebooksSection = document.getElementById('notebooks-section');
     let changed = false;
     if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
+    if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
     if (ctx !== 'settings' && settingsModal && settingsModal.classList.contains('open')) { closeModal('modal-settings-drawer'); changed = true; }
     if (ctx !== 'menu' && menuOverlay && menuOverlay.classList.contains('open')) { closeHamburgerMenu(); changed = true; }
@@ -1832,6 +1820,11 @@ async function appTourEnsureContext(step) {
         const wrapper = document.querySelector('.phone-wrapper');
         if (wrapper) wrapper.classList.add('vision-open');
         renderVisionGoalsList();
+        changed = true;
+    } else if (ctx === 'notebooks' && notebooksSection && !notebooksSection.classList.contains('active-tab')) {
+        // "דבר בתוך דבר": אחרי הפריט בתפריט נכנסים לארון עצמו
+        switchToTab('notebooks-section');
+        renderNotebookShelves();
         changed = true;
     }
     appTourCtx = ctx;
@@ -1878,7 +1871,18 @@ function appTourRender(step) {
     layer.querySelector('.app-tour-skip').textContent = t('apptour_skip');
     const hero = layer.querySelector('.app-tour-hero');
     hero.textContent = isCenter ? (icon || '✨') : '';
-    hero.classList.toggle('hidden', !isCenter);
+    hero.classList.toggle('hidden', !isCenter || !!step.demo);
+    const demoEl = layer.querySelector('.app-tour-demo');
+    clearTimeout(appTourDemoTimer);
+    demoEl.innerHTML = '';
+    demoEl.classList.toggle('hidden', !step.demo);
+    if (step.demo === 'goal') {
+        demoEl.appendChild(buildTourDemoGoalCard());
+        // בכרטיס האמיתי הגב גולל בגובה קבוע - בדוגמה הכרטיס גבוה מספיק כדי שכל הצעדים והפרס ייראו
+        const demoCard = demoEl.querySelector('.app-tour-demo-card');
+        const demoBack = demoCard && demoCard.querySelector('.vision-card-back');
+        if (demoBack && demoBack.scrollHeight > demoBack.clientHeight) demoCard.style.height = `${demoBack.scrollHeight + 2}px`;
+    }
     const titleEl = layer.querySelector('.app-tour-title');
     titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourEsc(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
     layer.querySelector('.app-tour-text').textContent = t(step.text);
@@ -1913,8 +1917,40 @@ function appTourFlowsHtml() {
         if (part === '>') return `<span class="app-tour-flow-arrow" aria-hidden="true">${rtl ? '←' : '→'}</span>`;
         if (part === '<>') return '<span class="app-tour-flow-arrow" aria-hidden="true">↔</span>';
         const [icon, key, literal] = part;
-        return `<span class="app-tour-chip">${icon} ${appTourEsc(key ? t(key) : literal)}</span>`;
+        const label = Array.isArray(key) ? key.map(k => t(k)).join(' › ') : (key ? t(key) : literal);
+        return `<span class="app-tour-chip">${icon} ${appTourEsc(label)}</span>`;
     }).join('')}</div>`).join('');
+}
+
+// כרטיס יעד לדוגמה בתוך הסיור (לפי בקשה מפורשת - "שיהפוך גם ויראה את הצעדים והשלבים"): אותו כרטיס
+// אמיתי של "היעדים שלי" (renderVisionGoalCard) עם יעד דוגמה שלא נשמר בשום מקום. מתהפך לבד אחרי רגע
+// כדי להראות את הצעדים, ולחיצה הופכת אותו הלוך ושוב. הכפתורים שבתוכו לא פעילים (רק תצוגה)
+let appTourDemoTimer = 0;
+function buildTourDemoGoalCard() {
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + 24);
+    const goal = { id: 'tour-demo-goal', title: t('apptour_demo_goal_title'), category: 'health', track_type: 'steps', why: t('apptour_demo_goal_why'), reward: t('apptour_demo_goal_reward'), target_date: getLocalDateString(deadline), image_url: '', is_achieved: false, created_at: new Date(Date.now() - 6 * 86400000).toISOString() };
+    const milestones = [1, 2, 3, 4].map(i => ({ id: `tour-demo-step-${i}`, goal_id: goal.id, title: t(`apptour_demo_goal_step_${i}`), is_done: i <= 2, sort_order: i, due_date: null }));
+    // ההתקדמות של כרטיס נספרת מהמטמון של הצעדים - הדוגמה נכנסת אליו רק לרגע הציור
+    const savedMilestones = visionMilestonesCache;
+    let card;
+    visionMilestonesCache = savedMilestones.concat(milestones);
+    try { card = renderVisionGoalCard(goal, milestones); } finally { visionMilestonesCache = savedMilestones; }
+    card.classList.add('app-tour-demo-card');
+    card.removeAttribute('data-goal-id');
+    // בלי תמונה החזית ריקה - איור גדול במקום התמונה שמשתמשים בדרך כלל מוסיפים
+    const demoFront = card.querySelector('.vision-card-front');
+    if (demoFront) demoFront.insertAdjacentHTML('afterbegin', '<span class="app-tour-demo-art" aria-hidden="true">🏃</span>');
+    const wrap = document.createElement('div');
+    wrap.className = 'app-tour-demo-wrap';
+    wrap.appendChild(card);
+    const hint = document.createElement('p');
+    hint.className = 'app-tour-demo-hint';
+    hint.textContent = t('apptour_demo_tap_hint');
+    wrap.appendChild(hint);
+    wrap.addEventListener('click', () => { clearTimeout(appTourDemoTimer); card.classList.toggle('flipped'); });
+    appTourDemoTimer = setTimeout(() => card.classList.add('flipped'), 1700);
+    return wrap;
 }
 
 // מיקום: הזרקור סביב האלמנט, הכרטיס מתחתיו או מעליו (איפה שיש מקום), והחץ ביניהם
@@ -2040,6 +2076,7 @@ function closeAppTour() {
     if (appTourCtx === 'settings') closeModal('modal-settings-drawer');
     if (appTourCtx === 'menu') closeHamburgerMenu();
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
+    clearTimeout(appTourDemoTimer);
     appTourCtx = null;
     goHome();
     if (appTourOnFinish) { const fn = appTourOnFinish; appTourOnFinish = null; fn(); }
@@ -6908,6 +6945,9 @@ function openRecipeDetail(id) {
     }
 
     document.getElementById('recipe-detail-view').classList.add('open');
+    // חלונות שנפתחים מתוך המתכון (עריכה, הוספה לארוחות הקבועות, בוררים) עולים מעל תצוגת המתכון
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.add('recipe-view-open');
 }
 
 // מחשבת ומציגה חיה "X קלוריות למנה" מתחת לשדה מספר-המנות, בזמן מילוי/עריכת
@@ -6929,6 +6969,32 @@ function updateRecipeCaloriesPerServingHint() {
 function closeRecipeDetail() {
     currentDetailRecipeId = null;
     document.getElementById('recipe-detail-view').classList.remove('open');
+    const wrapper = document.querySelector('.phone-wrapper');
+    if (wrapper) wrapper.classList.remove('recipe-view-open');
+}
+
+// ⭐ מתכון → ארוחה קבועה (meal_presets), לפי בקשה מפורשת: פותח את "הוספת ארוחה למאגר" עם השם,
+// הקלוריות למנה (או סך הכל כשאין מספר מנות), המרכיבים כתיאור וקטגוריה מתאימה - הכול ממולא,
+// ואפשר לשנות לפני השמירה. אותה מגבלת חינם כמו כל הוספה למאגר
+const RECIPE_TO_PRESET_CATEGORY = { breakfast: 'morning', meat_mains: 'noon', dairy_mains: 'evening', soups: 'soup', snacks: 'snack', desserts: 'dessert', appetizers: 'noon', sides: 'noon', salads: 'noon' };
+function addRecipeToPresets() {
+    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    if (!recipe) return;
+    if (!isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
+        showAppToast(t('preset_limit_desc'), 'error');
+        openPremiumUpgradeModal();
+        return;
+    }
+    cancelPresetEdit();
+    const kcal = Number(recipe.calories) || 0;
+    const servings = Number(recipe.servings) || 0;
+    document.getElementById('new-preset-name').value = recipe.title || '';
+    document.getElementById('new-preset-calories').value = kcal ? Math.round(servings > 0 ? kcal / servings : kcal) : '';
+    document.getElementById('new-preset-protein').value = '';
+    document.getElementById('new-preset-description').value = (recipe.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean).join(', ').slice(0, 300);
+    setSelectValueWithOther('new-preset-category', RECIPE_TO_PRESET_CATEGORY[recipe.category] || 'noon');
+    openModal('modal-add-preset');
+    loadPresetManageList();
 }
 
 // שיתוף מתכון, דרך אותו תפריט שיתוף קטן (וואטסאפ/מייל/העתקה): שם מודגש, קלוריות
@@ -7916,6 +7982,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
     { id: 'chain_data_source', category: 'nutrition' },
     { id: 'save_meal_preset', category: 'nutrition' },
+    { id: 'recipe_to_preset', category: 'nutrition' },
     { id: 'quick_add_preset_fab', category: 'nutrition' },
     { id: 'quick_add_food_fab', category: 'nutrition' },
     { id: 'photo_scan_recipe', category: 'nutrition' },
@@ -17986,6 +18053,9 @@ function visionDaysLeftText(days) {
     return t('vision_overdue');
 }
 
+// בידוד LTR (U+2066...U+2069): בעברית "7 / 12" הוצג הפוך כ-"12 / 7" - בלי תווים נסתרים בקוד
+const visionLtr = s => String.fromCharCode(0x2066) + s + String.fromCharCode(0x2069);
+
 // התקדמות לפי סוג המדידה: צעדים (תחנות שסומנו), מספר (למשל 7/12 ספרים) או משקל
 // (לפי השקילה האחרונה, מנקודת ההתחלה אל היעד - ירידה או עלייה)
 function visionGoalProgress(goal) {
@@ -17999,7 +18069,7 @@ function visionGoalProgress(goal) {
         const target = Number(goal.target_value) || 0;
         const cur = Number(goal.current_value) || 0;
         const pct = target > 0 ? Math.min(100, Math.max(0, Math.round((cur / target) * 100))) : 0;
-        return { pct, label: `${visionFmt(cur)} / ${visionFmt(target)}${goal.unit ? ' ' + goal.unit : ''}`, reached: target > 0 && cur >= target };
+        return { pct, label: visionLtr(`${visionFmt(cur)} / ${visionFmt(target)}`) + (goal.unit ? ' ' + goal.unit : ''), reached: target > 0 && cur >= target };
     }
     if (type === 'weight') {
         const kg = t('monthly_goal_kg_unit');
@@ -18016,7 +18086,7 @@ function visionGoalProgress(goal) {
     const milestones = visionMilestonesCache.filter(m => m.goal_id === goal.id);
     const total = milestones.length;
     const done = milestones.filter(m => m.is_done).length;
-    return { pct: total ? Math.round((done / total) * 100) : 0, label: total ? `${done} / ${total}` : '', reached: total > 0 && done === total };
+    return { pct: total ? Math.round((done / total) * 100) : 0, label: total ? visionLtr(`${done} / ${total}`) : '', reached: total > 0 && done === total };
 }
 
 // אתגר ימים: יום נחשב "עמדתי בו" כשכל המשימות היומיות סומנו באותו תאריך
