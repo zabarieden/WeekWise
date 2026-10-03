@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateHomeSkyDayNight();
     if (!homeSkyDayNightIntervalStarted) {
         homeSkyDayNightIntervalStarted = true;
-        setInterval(updateHomeSkyDayNight, 15 * 60000);
+        setInterval(() => { updateHomeSkyDayNight(); refreshHomeGrowIfNewDay(); }, 15 * 60000);
     }
     // אתחול חד-פעמי של התצוגה בכל תפריטי-הבחירה המותאמים (custom-select) -
     // רשימות סטטיות (שלעולם לא מתמלאות מחדש דינמית) מקבלות כאן את הטקסט
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderHomeGreeting();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') checkReminders();
+        if (document.visibilityState === 'visible') { checkReminders(); refreshHomeGrowIfNewDay(); }
     });
 
     if (supabaseClient) {
@@ -1654,6 +1654,7 @@ const APP_TOUR_STEPS = [
     { id: 'routine', ch: 'home', ctx: 'home', icon: '⏰', target: '#btn-daily-board-fab', titleKey: 'daily_board_title', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
     { id: 'newme_short', ch: 'home', ctx: 'home', icon: '✨', target: '#btn-newme-shortcut', titleKey: 'nm_shortcut_title', text: 'apptour_newme_short_text', optional: true },
     { id: 'quicknote', ch: 'home', ctx: 'home', icon: '📝', target: '#btn-ai-fab', titleKey: 'notes_ai_title', text: 'apptour_quicknote_text', link: 'apptour_quicknote_link', optional: true },
+    { id: 'corner', ch: 'home', ctx: 'home', icon: '🌼', target: '#home-grow-corner', titleKey: 'home_corner_title', text: 'apptour_corner_text', link: 'apptour_corner_link', optional: true },
     { id: 'ai', ch: 'home', ctx: 'home', icon: '🤖', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#modal-ai-brain .ai-brain-tab[data-tab="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
@@ -5308,6 +5309,12 @@ async function loadTodayTasks() {
     const events = allEvents.filter(item => item.source !== 'daily_focus');
     // משימות היעדים של היום (אתגר ימים, תזכורות) ומשימת הקריאה היומית (הספרים שלי)
     const goalItems = getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : []);
+    // 🌼 הפינה שגדלה איתך במסך הבית - סופרת בדיוק את המשימות שברשימה כאן (התשובות ל"מה חשוב
+    // לך היום" הן בועות תזכורת ולא משימות, ולא נספרות - בדיוק כמו בחגיגת "הכל בוצע" למטה)
+    updateHomeGrowCorner(
+        populated.filter(item => completedScheduleIds.has(item.id)).length + events.filter(item => item.is_completed).length + goalItems.filter(item => item.done).length,
+        populated.length + events.length + goalItems.length
+    );
     container.innerHTML = '';
     if (!populated.length && !events.length && !focusItems.length && !goalItems.length) {
         container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
@@ -5562,6 +5569,65 @@ function closeTodayPeekPanel() {
     if (panel) panel.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
     if (tab) tab.classList.remove('panel-open');
+    flushHomeGrowPending();
+}
+
+// --- 🌼 "פינה לא מושלמת שגדלה איתך" בתחתית מסך הבית (לפי בחירה מפורשת מבין אפשרויות): כל
+// משימה שמסומנת ✓ ב"הצצה להיום" פותחת עוד חיננית באדנית (עד 6), וכשכל המשימות של היום בוצעו -
+// פריחה מלאה ופרפר. ביטול ✓ סוגר את החיננית שוב; שום דבר לא נובל, ובכל יום חדש מתחילים מניצנים.
+// נקראת מ-loadTodayTasks עם אותן משימות בדיוק שברשימה שם, כך שתמיד מסונכרנת (#home-grow-corner) ---
+const HOME_GROW_MAX_FLOWERS = 6;
+let homeGrowShown = null;      // { flowers, allDone, date } - מה שמוצג עכשיו (null = עוד לא צויר)
+let homeGrowPending = null;    // שינוי שממתין לסגירת "הצצה להיום", כדי שהפריחה תיראה בעיניים
+let homeGrowPendingTimer = 0;
+function updateHomeGrowCorner(done, total) {
+    const allDone = total > 0 && done >= total;
+    const state = { flowers: allDone ? HOME_GROW_MAX_FLOWERS : Math.min(done, HOME_GROW_MAX_FLOWERS), allDone, date: getLocalDateString() };
+    const panel = document.getElementById('today-peek-content-panel');
+    if (homeGrowShown && panel && panel.classList.contains('open')) { homeGrowPending = state; return; }
+    homeGrowPending = null;
+    clearTimeout(homeGrowPendingTimer);
+    applyHomeGrowCorner(state);
+}
+// הפאנל נסגר - מה שסומן בו פורח עכשיו, אחרי שהפאנל החליק החוצה
+function flushHomeGrowPending() {
+    if (!homeGrowPending) return;
+    const state = homeGrowPending;
+    homeGrowPending = null;
+    clearTimeout(homeGrowPendingTimer);
+    homeGrowPendingTimer = setTimeout(() => applyHomeGrowCorner(state), 320);
+}
+function applyHomeGrowCorner(state) {
+    const corner = document.getElementById('home-grow-corner');
+    if (!corner) return;
+    // הציור הראשון (פתיחת האפליקציה) בלי אנימציה - מה שכבר בוצע היום פשוט פורח שם
+    const first = !homeGrowShown;
+    const bloomed = !first && state.flowers > homeGrowShown.flowers;
+    if (first) corner.classList.add('no-anim');
+    corner.querySelectorAll('.grow-flower').forEach(f => {
+        const step = f.getAttribute('data-step');
+        f.classList.toggle('on', step === 'all' ? state.allDone : Number(step) <= state.flowers);
+    });
+    // קריאת המידות מכריחה את הדפדפן לחשב את המצב הסופי עם no-anim, כך שהסרת המחלקה מיד אחר כך
+    // לא מפעילה מעבר (סינכרוני - לא תלוי ב-requestAnimationFrame, שלא רץ בלשונית ברקע)
+    if (first) { void corner.getBoundingClientRect(); corner.classList.remove('no-anim'); }
+    homeGrowShown = state;
+    if (bloomed) maybeShowHomeGrowHint();
+}
+// פעם אחת בכל מכשיר, בחיננית הראשונה שנפתחת - הסבר קצר למה היא פרחה. רק כשמסך הבית מוצג
+// (✓ ממסך אחר, למשל מהלוח החודשי, לא "מבזבז" את ההסבר על חיננית שלא רואים)
+function maybeShowHomeGrowHint() {
+    const home = document.querySelector('.home-hero-panel');
+    if (!home || home.classList.contains('hidden')) return;
+    try {
+        if (localStorage.getItem('weekwise_home_grow_hint_seen')) return;
+        localStorage.setItem('weekwise_home_grow_hint_seen', '1');
+    } catch (e) { return; }
+    showAppToast(t('home_corner_first_bloom_toast'));
+}
+// האפליקציה נשארה פתוחה אחרי חצות - מתחילים את היום החדש מניצנים
+function refreshHomeGrowIfNewDay() {
+    if (homeGrowShown && homeGrowShown.date !== getLocalDateString()) loadTodayTasks();
 }
 function toggleTodayPeekPanel() {
     const panel = document.getElementById('today-peek-content-panel');
@@ -7803,6 +7869,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
+    { id: 'home_corner', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
     { id: 'categories_menu', category: 'general' },
     { id: 'share_whatsapp', category: 'general' },

@@ -6817,6 +6817,26 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 #finance-section, #receipts-section { isolation: isolate; }
 .money-cozy-scene { position: relative; margin-top: auto; flex-shrink: 0; height: 170px; pointer-events: none; z-index: -1; color: var(--accent-purple); opacity: .55; }
 .money-cozy-scene svg { display: block; width: 100%; height: 100%; }
+/* 🌼 "פינה לא מושלמת שגדלה איתך" בתחתית מסך הבית, בצד שמול הרובוט (inline-start - הרובוט ב-inline-end).
+   בתוך .home-sky-scene, כך שמוצגת רק במסך הבית ומאחורי התוכן. ב-LTR האיור מתהפך כדי שהאדנית תישאר
+   בקצה המסך והמזרן לכיוון האמצע. חיננית נפתחת = .grow-flower.on (ר' updateHomeGrowCorner ב-app.js) */
+.home-grow-corner { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); inset-inline-start: 0; width: min(62%, 280px); color: var(--accent-purple); opacity: .72; pointer-events: none; }
+.home-grow-corner svg { display: block; width: 100%; height: auto; overflow: visible; }
+html[dir="ltr"] .home-grow-corner svg { transform: scaleX(-1); }
+.grow-flower .grow-open { opacity: 0; transform: scale(.25); transition: opacity .45s ease, transform .65s cubic-bezier(.34, 1.56, .64, 1); }
+.grow-flower.on .grow-open { opacity: 1; transform: scale(1); }
+.grow-flower .grow-bud { transition: opacity .3s ease; }
+.grow-flower.on .grow-bud { opacity: 0; }
+.home-grow-corner.no-anim .grow-open, .home-grow-corner.no-anim .grow-bud { transition: none; }
+/* הפרפר מרחף ומנופף בכנפיים כמה שניות כשמגיע, ואז נח (לא אנימציה אינסופית במסך הבית) */
+.grow-flower.on .grow-float { animation: growFloat 3.2s ease-in-out 4; }
+.grow-flower.on .grow-flutter { animation: growFlap .55s ease-in-out 22; }
+@keyframes growFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-3px, -4px); } }
+@keyframes growFlap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.45); } }
+@media (prefers-reduced-motion: reduce) {
+    .grow-flower .grow-open, .grow-flower .grow-bud { transition: none; }
+    .grow-flower.on .grow-float, .grow-flower.on .grow-flutter { animation: none; }
+}
 .books-section { gap: 12px; }
 .books-section > *:not(.books-cozy-scene) { position: relative; z-index: 1; }
 .books-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: relative; }

@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=486">
+    <link rel="stylesheet" href="theme.css?v=487">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -178,6 +178,27 @@
                          ברירת המחדל בלבד: גובה קבוע מוחלט + overflow:hidden, בלי תלות
                          בתמיכת דפדפן ב-mask-image - ר' theme.css/updateHomeSkyDayNight -->
                     <div class="home-sky-topstrip"></div>
+                    <!-- 🌼 "פינה לא מושלמת שגדלה איתך" (לפי בחירה מפורשת מבין אפשרויות): מזרן יוגה חצי
+                         פתוח עם פתקים, ספל ואדנית חינניות - בתחתית המסך, בצד שמול הרובוט. כל משימה
+                         שמסומנת ב"הצצה להיום" פותחת עוד חיננית (עד 6), וכשהכל בוצע - פריחה מלאה ופרפר.
+                         שום דבר לא נובל, ובכל בוקר מתחילים מניצנים (ר' updateHomeGrowCorner ב-app.js).
+                         הציורים עצמם ב-sprite בתחתית הדף; ב-LTR האיור מתהפך (ר' theme.css) -->
+                    <div class="home-grow-corner" id="home-grow-corner" aria-hidden="true">
+                        <svg viewBox="150 82 250 108">
+                            <use href="#corner-mat-half" x="156"/>
+                            <use href="#corner-sticky" x="186" y="174" style="fill: var(--accent-gold)" opacity=".78"/>
+                            <use href="#corner-sticky" x="206" y="177" style="fill: var(--accent-pink)" opacity=".72"/>
+                            <use href="#corner-mug" x="284"/>
+                            <use href="#corner-planter"/>
+                            <g class="grow-flower" data-step="1" transform="translate(362 104)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="2" transform="translate(336 110)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="3" transform="translate(376 114)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="4" transform="translate(324 122)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="5" transform="translate(350 118)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="6" transform="translate(388 126)"><use class="grow-bud" href="#corner-daisy-bud"/><use class="grow-open" href="#corner-daisy"/></g>
+                            <g class="grow-flower" data-step="all" transform="translate(300 98)"><g class="grow-open"><g class="grow-float"><use class="grow-flutter" href="#corner-butterfly"/></g></g></g>
+                        </svg>
+                    </div>
                 </div>
                 <div class="home-greeting-row">
                     <div>
@@ -3926,13 +3947,51 @@
                     <path d="M362 152 c11 -12 18 -20 21 -36 c-11 6 -18 18 -21 36 z" fill="currentColor" opacity=".35"/>
                     <path d="M362 152 c0 -17 2 -32 8 -46 c2 17 -2 32 -8 46 z" style="fill: var(--accent-pink)" opacity=".5"/>
                 </g>
+
+                <!-- 🌼 הפינה שגדלה איתך (מסך הבית, ר' #home-grow-corner) -->
+                <g id="corner-mat-half">
+                    <ellipse cx="62" cy="185" rx="66" ry="4" fill="currentColor" opacity=".1"/>
+                    <path d="M16 164 Q14 161 18 161 L104 161 L104 184 L4 184 Q0 184 2 181 Z" style="fill: var(--accent-pink)" opacity=".52"/>
+                    <g stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".4"><path d="M14 169 h80"/><path d="M8 177 h86"/></g>
+                    <circle cx="108" cy="171" r="13" style="fill: var(--accent-pink)" opacity=".75"/>
+                    <path d="M100 171 a8 8 0 1 1 8 8 a5 5 0 1 1 5 -5 a2.4 2.4 0 1 1 -2.4 -2.4" fill="none" stroke="currentColor" stroke-width=".9" opacity=".45"/>
+                </g>
+                <g id="corner-sticky"><path d="M0 0 l10 -1.5 l2.5 5 l-10 1.5 z"/></g>
+                <g id="corner-mug">
+                    <path d="M15 170.5 q6.5 0 6.5 5.5 q0 5.5 -6.5 5.5" fill="none" style="stroke: var(--accent-gold)" stroke-width="2.4" opacity=".75"/>
+                    <rect x="0" y="166" width="15.5" height="17" rx="3" style="fill: var(--accent-gold)" opacity=".72"/>
+                    <ellipse cx="7.75" cy="166.6" rx="7.2" ry="1.6" fill="#fff" opacity=".4"/>
+                    <path d="M3.6 171 v8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".45"/>
+                    <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".35"><path d="M5 162 q-3 -4 0 -7.5 q3 -3.5 0 -7.5"/><path d="M10.5 162 q-3 -4 0 -7.5 q3 -3.5 0 -7.5"/></g>
+                </g>
+                <g id="corner-planter">
+                    <ellipse cx="354" cy="184" rx="44" ry="4" fill="currentColor" opacity=".12"/>
+                    <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".5"><path d="M326 156 Q323 140 324 122"/><path d="M338 156 Q335 132 336 110"/><path d="M350 156 Q352 136 350 118"/><path d="M362 156 Q360 128 362 104"/><path d="M374 156 Q377 134 376 114"/><path d="M385 156 Q389 140 388 126"/></g>
+                    <g fill="currentColor" opacity=".45"><ellipse cx="319" cy="142" rx="5" ry="2" transform="rotate(-30 319 142)"/><ellipse cx="342" cy="134" rx="5" ry="2" transform="rotate(30 342 134)"/><ellipse cx="356" cy="142" rx="5" ry="2" transform="rotate(25 356 142)"/><ellipse cx="367" cy="130" rx="5" ry="2" transform="rotate(30 367 130)"/><ellipse cx="371" cy="144" rx="5" ry="2" transform="rotate(-30 371 144)"/><ellipse cx="392" cy="144" rx="4.5" ry="1.8" transform="rotate(30 392 144)"/></g>
+                    <rect x="316" y="156" width="76" height="27" rx="2.5" style="fill: var(--accent-gold)" opacity=".58"/>
+                    <path d="M318 165 h72 M318 174 h72" stroke="#fff" stroke-width="1" opacity=".35"/>
+                    <rect x="313" y="152" width="82" height="6" rx="2" style="fill: var(--accent-gold)" opacity=".8"/>
+                </g>
+                <g id="corner-daisy">
+                    <g fill="#fff" stroke="currentColor" stroke-width=".45" stroke-opacity=".55"><ellipse cy="-3.9" rx="1.5" ry="3.4"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(45)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(90)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(135)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(180)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(225)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(270)"/><ellipse cy="-3.9" rx="1.5" ry="3.4" transform="rotate(315)"/></g>
+                    <circle r="2.3" style="fill: var(--accent-gold)"/>
+                </g>
+                <g id="corner-daisy-bud"><ellipse cy="-1.5" rx="2.1" ry="3.1" fill="currentColor" opacity=".55"/><path d="M-1.1 -4.1 q1.1 -1.3 2.2 0" fill="none" style="stroke: var(--accent-gold)" stroke-width="1"/></g>
+                <g id="corner-butterfly">
+                    <path d="M0 0 C-3 -8 -12 -9 -11 -2 C-10 2 -4 2 0 0 Z" style="fill: var(--accent-pink)" opacity=".92"/>
+                    <path d="M0 0 C-2 4 -8 8 -8 3.5 C-8 1 -3 .5 0 0 Z" style="fill: var(--accent-gold)" opacity=".88"/>
+                    <path d="M0 0 C3 -8 12 -9 11 -2 C10 2 4 2 0 0 Z" style="fill: var(--accent-pink)" opacity=".92"/>
+                    <path d="M0 0 C2 4 8 8 8 3.5 C8 1 3 .5 0 0 Z" style="fill: var(--accent-gold)" opacity=".88"/>
+                    <path d="M0 -3.5 v7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+                    <path d="M0 -3.5 q-1 -3.5 -3.5 -4.5 M0 -3.5 q1 -3.5 3.5 -4.5" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>
+                </g>
             </defs>
         </svg>
 
     </div>
 
-    <script src="i18n.js?v=388"></script>
-    <script src="app.js?v=534"></script>
+    <script src="i18n.js?v=389"></script>
+    <script src="app.js?v=535"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=17"></script>
     <script src="books.js?v=2"></script>
