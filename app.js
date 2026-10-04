@@ -7414,6 +7414,17 @@ let isDevSuperuserAccount = false;
 let hasNewMe = false;
 // פרטי המסלול של New Me (לכל החיים / חודשי, סטטוס המנוי ותאריכים) - לתצוגה בהגדרות של New Me
 let newMeBilling = null;
+// חשבון הפיתוח רואה תמיד את New Me פתוח. "תצוגה כמו מי שעוד לא רכש/ה" (לפי בקשה מפורשת: "תנעל לי את ה-NEW ME,
+// אני רוצה לראות הכל שזה נעול ואת ההסבר לפני שקונים") - נשמר במכשיר; נדלק מ-⚙️ הגדרות תוכנית, נכבה מהפס שבעמוד הרכישה
+function nmDevLockedPreview() { try { return localStorage.getItem('weekwise_nm_dev_locked') === '1'; } catch { return false; } }
+function setNmDevLockedPreview(on) {
+    try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
+    if (!isDevSuperuserAccount) return;
+    hasNewMe = !on;
+    if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    openNewMe('home');
+}
 
 // עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
@@ -7439,7 +7450,7 @@ async function loadPremiumStatus() {
         isRealPremiumUser = true;
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
-        hasNewMe = true;
+        hasNewMe = !nmDevLockedPreview();
         newMeBilling = null;
         if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
         updateHomePremiumBadgeVisibility();

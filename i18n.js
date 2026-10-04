@@ -71,6 +71,10 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    nm_dev_preview_buy: "Preview only – no purchase from this view",
+    nm_dev_preview_exit: "Unlock",
+    nm_dev_preview_on: "Developer preview: New Me as it looks before buying",
+    nm_dev_preview_btn: "Preview as a non-buyer (locked)",
     faq_a_new_me_plans: "New Me has two plans: $4.99 a month, or $29.99 once for lifetime access. The monthly plan can be cancelled anytime from ⚙️ Plan settings > 💳 Manage subscription – New Me stays open until the end of the month already paid. A switch to lifetime is there too, and the monthly plan then stops by itself, with no double charge. New Me bought before the monthly plan existed stays lifetime.",
     faq_q_new_me_plans: "Monthly or lifetime – how is New Me managed or cancelled?",
     books_lookup_hint_author: "Books by this author – tap to fill in the name, cover and pages:",
@@ -1678,6 +1682,10 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    nm_dev_preview_buy: "תצוגה בלבד – אין רכישה מהתצוגה הזו",
+    nm_dev_preview_exit: "לפתוח שוב",
+    nm_dev_preview_on: "תצוגת פיתוח: New Me כמו שהוא נראה לפני רכישה",
+    nm_dev_preview_btn: "תצוגה כמו לפני רכישה (נעול)",
     faq_a_new_me_plans: "ל-New Me יש שני מסלולים: $4.99 לחודש, או $29.99 פעם אחת לכל החיים. את המסלול החודשי אפשר לבטל בכל רגע ב-⚙️ הגדרות תוכנית > 💳 ניהול המנוי – ו-New Me נשאר פתוח עד סוף החודש ששולם. שם אפשר גם לעבור ל'לכל החיים', והמנוי החודשי נעצר לבד, בלי חיוב כפול. רכישה של New Me מלפני שהיה מסלול חודשי נשארת 'לכל החיים'.",
     faq_q_new_me_plans: "חודשי או לכל החיים – איך מנהלים או מבטלים את New Me?",
     books_lookup_hint_author: "ספרים של הסופר/ת – לחיצה ממלאת שם, כריכה ועמודים:",

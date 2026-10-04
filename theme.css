@@ -7381,3 +7381,8 @@ button.nm-letter-card { cursor: pointer; }
 .nm-bill-status { font-size: .95rem; font-weight: 700; color: var(--text-primary); }
 .nm-bill .nm-fine { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .nm-plan-opt { transition: none; } }
+
+/* ---------- New Me: תצוגת "מי שעוד לא רכש/ה" לחשבון הפיתוח (רק המפתחת רואה) ---------- */
+.nm-dev-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--accent-gold) 60%, transparent); background: color-mix(in srgb, var(--accent-gold) 10%, var(--bg-row)); font-size: .78rem; font-weight: 700; color: var(--text-primary); }
+.nm-dev-bar button { border: none; border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 800; color: #fff; background: var(--accent-gold-text, var(--accent-gold)); cursor: pointer; }
+.nm-dev-btn { border-style: dashed; }

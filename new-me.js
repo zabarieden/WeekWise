@@ -262,8 +262,12 @@ function nmRenderSales(root) {
     const preview = NEW_ME_SLOTS.map((slot, i) => `
         <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
     const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
+    // חשבון הפיתוח בתצוגת "מי שעוד לא רכש/ה" - פס קטן לחזרה למצב פתוח (רק המפתחת רואה אותו)
+    const devBar = typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount
+        ? `<div class="nm-dev-bar"><span>🔧 ${nmEsc(t('nm_dev_preview_on'))}</span><button type="button" onclick="setNmDevLockedPreview(false)">🔓 ${nmEsc(t('nm_dev_preview_exit'))}</button></div>` : '';
     root.innerHTML = `
         <div class="nm-sales">
+            ${devBar}
             <div class="nm-hero">
                 <div class="nm-hero-eyebrow">✨ New Me</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
@@ -297,6 +301,8 @@ function nmRenderSales(root) {
 
 // plan: 'life' (תשלום אחד) או 'monthly' (מנוי) - ברירת מחדל: מה שנבחר בעמוד הרכישה
 async function submitNewMePurchase(btn, plan = nmSalesPlan) {
+    // תצוגת הפיתוח "כמו מי שעוד לא רכש/ה" - רק להסתכל, בלי לפתוח תשלום אמיתי
+    if (typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount && !hasNewMe) { showAppToast(t('nm_dev_preview_buy')); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const original = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = t('food_ai_estimating'); }
@@ -2752,6 +2758,7 @@ function nmRenderSettings(body) {
                 <input type="text" id="nm-settings-name" maxlength="60" autocomplete="name" value="${nmEsc(nmProfile.cert_name || '')}" placeholder="${nmEsc(t('nm_cert_name_ph'))}" onchange="nmSaveFullName(this)"></label>
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
+        ${typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount ? `<button type="button" class="nm-row-btn nm-dev-btn" onclick="setNmDevLockedPreview(true)">🔒 ${nmEsc(t('nm_dev_preview_btn'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
         ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_SLOTS.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmStartQuiz(true); renderNewMe()">📝 ${nmEsc(t('nm_settings_retake'))}</button>
