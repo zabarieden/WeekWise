@@ -7082,3 +7082,52 @@ html[dir="rtl"] .nb-sheet-ghost.nb-turn-out::after, html[dir="rtl"] .nb-sheet.nb
 .google-calendar-reconnect-box { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, #f59e0b 14%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent); }
 .google-calendar-reconnect-box.hidden { display: none; }
 .google-calendar-reconnect-box p { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--text-primary); }
+/* ---------- יומן: סוג פריט (משימה / אירוע / פגישה) בחלון ההוספה ---------- */
+.calendar-kind-row { display: flex; gap: 6px; }
+.calendar-kind-row.hidden { display: none; }
+.calendar-kind-chip { flex: 1 1 0; min-width: 0; padding: 9px 6px; border-radius: 12px; border: 1.5px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: var(--bg-row); color: var(--text-primary); font: inherit; font-weight: 700; font-size: .85rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition); }
+.calendar-kind-chip.on { border-color: var(--tile-accent, var(--accent-pink)); background: color-mix(in srgb, var(--tile-accent, var(--accent-pink)) 16%, transparent); }
+.calendar-kind-chip:focus-visible { outline: 2px solid var(--tile-accent, var(--accent-pink)); outline-offset: 2px; }
+.calendar-event-time-row { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.calendar-event-time-row.is-meeting { grid-template-columns: 1fr 1fr; }
+.calendar-event-time-row input { min-width: 0; }
+#calendar-event-notes-input { resize: vertical; min-height: 56px; }
+
+/* ---------- 🤝 יומן הפגישות: דף נייר עם ספירלה, שורה לכל יום ---------- */
+.meetings-diary { --mt-line: color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 22%, transparent); --mt-margin: color-mix(in srgb, var(--accent-pink) 45%, transparent); position: relative; margin-top: 18px; padding: 24px 12px 10px; border-radius: 8px 8px 16px 16px; background-color: var(--bg-sheet); color: var(--text-primary); box-shadow: 0 10px 26px rgba(0, 0, 0, .16), 0 1px 3px rgba(0, 0, 0, .12); }
+.meetings-diary-rings { position: absolute; top: -10px; inset-inline: 22px; display: flex; justify-content: space-between; pointer-events: none; }
+.meetings-diary-rings span { width: 10px; height: 22px; border-radius: 6px; border: 2.5px solid #9aa4b2; background: linear-gradient(90deg, #eef2f6, #b9c2cd); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+.meetings-day { display: grid; grid-template-columns: 52px minmax(0, 1fr); min-height: 40px; border-bottom: 1px solid var(--mt-line); }
+.meetings-day:last-of-type { border-bottom: none; }
+.meetings-day-name { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 6px 2px 4px; border-inline-end: 2px solid var(--mt-margin); font-size: .7rem; line-height: 1.2; color: var(--text-secondary); text-align: center; }
+.meetings-day-name b { font-size: 1.02rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.meetings-day.today .meetings-day-name b { padding: 0 4px; background: linear-gradient(transparent 55%, color-mix(in srgb, var(--accent-gold) 60%, transparent) 55%); }
+.meetings-day-entries { display: flex; flex-direction: column; gap: 2px; padding: 5px 0 5px; padding-inline-start: 10px; min-width: 0; }
+.meetings-day-empty { padding-top: 6px; color: color-mix(in srgb, var(--text-secondary) 55%, transparent); font-size: .8rem; }
+.meetings-entry { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; padding: 4px 6px; margin-inline-start: -6px; border-radius: 9px; cursor: pointer; font-size: .86rem; line-height: 1.4; transition: background-color .15s; }
+.meetings-entry:hover, .meetings-entry:focus-visible { background-color: color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 10%, transparent); outline: none; }
+.meetings-entry:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 55%, transparent); }
+.meetings-entry-time { font-weight: 800; color: var(--accent-pink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meetings-entry-title { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.meetings-entry.completed .meetings-entry-title { text-decoration: line-through; opacity: .6; }
+.meetings-entry-meta { display: flex; flex-wrap: wrap; gap: 3px 8px; flex-basis: 100%; font-size: .74rem; color: var(--text-secondary); }
+.meetings-entry-place { color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+.meetings-entry-place:hover { text-decoration: underline; }
+.meetings-entry-place.is-link { color: var(--tile-accent, var(--accent-purple-light-text, var(--accent-purple))); font-weight: 700; }
+.meetings-entry-notes { cursor: help; }
+.meetings-week-empty { margin: 10px 0 2px; text-align: center; font-size: .8rem; color: var(--text-secondary); }
+
+/* ---------- 🎯📖 יעדים וקריאה במבט החודשי ---------- */
+.monthly-calendar-marks { position: absolute; top: 3px; inset-inline-end: 3px; font-size: .62rem; line-height: 1; pointer-events: none; }
+.monthly-calendar-legend { margin-top: 8px; font-size: .74rem; color: var(--text-secondary); text-align: center; }
+.monthly-calendar-legend.hidden { display: none; }
+.calendar-goals-group { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.calendar-goals-group-title { font-size: .76rem; font-weight: 700; color: var(--text-secondary); }
+.calendar-deadline-row { font-size: .82rem; font-weight: 700; padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent-gold) 14%, transparent); color: var(--text-primary); }
+.today-goal-task-row.is-readonly input[type="checkbox"] { opacity: .45; cursor: not-allowed; }
+/* שדות הפגישה בתוך שורת השעה/התזכורת (flex-wrap): כל אחד בשורה משלו, ההערות באותו סגנון כמו השדות */
+.reminder-fields-wrap .calendar-event-time-row, .reminder-fields-wrap #calendar-event-with-input, .reminder-fields-wrap #calendar-event-location-input, .reminder-fields-wrap #calendar-event-notes-input { flex: 1 1 100%; }
+.reminder-fields-wrap textarea { box-sizing: border-box; min-width: 0; background-color: rgba(20, 10, 30, 0.55); border: 1px solid var(--accent-purple); color: var(--text-primary); border-radius: 10px; padding: 12px; font: inherit; font-size: 0.9rem; outline: none; }
+.reminder-fields-wrap textarea::placeholder { color: var(--text-secondary); opacity: 0.8; }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .reminder-fields-wrap textarea { background-color: rgba(0, 0, 0, 0.05); color: var(--accent-purple-text); }
+@media (max-width: 420px) { .calendar-event-time-row.is-meeting { grid-template-columns: 1fr; } }

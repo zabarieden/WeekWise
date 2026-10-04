@@ -51,7 +51,8 @@ function reminderBody(reminderMinutes: number | null | undefined, forPatch = fal
 function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false) {
     const body: any = { summary: row.event_title || "(No title)" };
     if (row.event_time) {
-        const end = addHour(row.event_date, row.event_time);
+        // פגישה עם שעת סיום (אחרי ההתחלה) - הסיום האמיתי; אחרת שעה אחת כברירת מחדל
+        const end = row.end_time && row.end_time > row.event_time ? { date: row.event_date, time: row.end_time } : addHour(row.event_date, row.event_time);
         body.start = { dateTime: `${row.event_date}T${row.event_time}:00`, timeZone };
         body.end = { dateTime: `${end.date}T${end.time}:00`, timeZone };
         if (forPatch) { body.start.date = null; body.end.date = null; }
@@ -62,6 +63,15 @@ function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false) {
     }
     const reminders = reminderBody(row.reminder_minutes, forPatch);
     if (reminders) body.reminders = reminders;
+    // פגישה (kind='meeting'): המקום/הקישור והפרטים (עם מי + הערות) נשלחים לגוגל. באירוע שאינו
+    // פגישה לא נוגעים בהם בכלל - כדי לא למחוק תיאור/מיקום של אירוע שנוצר בגוגל ונערך באפליקציה
+    if (row.kind === "meeting") {
+        body.location = row.location || "";
+        const lines: string[] = [];
+        if (row.meeting_with) lines.push(`👤 ${row.meeting_with}`);
+        if (row.notes) lines.push(row.notes);
+        body.description = lines.join("\n\n");
+    }
     return body;
 }
 
@@ -256,7 +266,7 @@ Deno.serve(async () => {
             const rowIds = rowsForEvent.map((r) => r.id);
             try {
                 const { data: current } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id, kind, end_time, meeting_with, location, notes")
                     .eq("id", eventId).maybeSingle();
 
                 if (!current || !SYNCED_SOURCES.includes(current.source) || current.recurrence_group_id) {
@@ -307,7 +317,7 @@ Deno.serve(async () => {
             const rowIds = rowsForGroup.map((r) => r.id);
             try {
                 const { data: siblings } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_original_date, recurrence_original_time")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_original_date, recurrence_original_time, kind, end_time, meeting_with, location, notes")
                     .eq("recurrence_group_id", groupId).eq("source", "calendar").order("event_date", { ascending: true });
 
                 if (!siblings || siblings.length === 0) {

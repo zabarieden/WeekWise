@@ -3149,6 +3149,9 @@ function showTabSection(targetId) {
     if (targetId === 'schedule-section') {
         scrollToDay(dbDaysMap[new Date().getDay()]);
         updateActiveDayPageHeight();
+        // יומן הפגישות נפתח תמיד על השבוע הנוכחי
+        meetingsWeekStart = null;
+        loadMeetingsWeek();
     }
 }
 
@@ -3483,9 +3486,11 @@ async function loadWeekOneTimeEvents() {
         items.forEach(item => {
             const row = document.createElement('div');
             row.className = 'today-tasks-row';
+            const isMeeting = calendarKindOf(item) === 'meeting';
             row.innerHTML = `
                 <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-                <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">📅 ${escapeHtmlForReport(item.event_title)}</span>
+                ${isMeeting && item.event_time ? `<span class="today-tasks-time">${escapeHtmlForReport(meetingTimeRange(item))}</span>` : ''}
+                <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${isMeeting ? '🤝' : '📅'} ${escapeHtmlForReport(item.event_title)}</span>
             `;
             const editBtn = document.createElement('button');
             editBtn.type = 'button';
@@ -5398,10 +5403,13 @@ async function loadTodayTasks() {
         // עכשיו שעריכה דרך ה-AI מנקה את הכותרת ושומרת שעה נכונה בעמודה נפרדת
         // (ר' applyScheduleEditsAndDeletes), חייבים להציג אותה בפועל - אחרת
         // היא "נעלמת" ויזואלית אחרי עריכה, בדיוק מה שדווח
+        // פגישה: טווח השעות (10:00–11:00) ו-🤝; אירוע: 📅 (משימה - בלי אייקון, כמו קודם)
+        const kindIcon = calendarKindIcon(item);
+        const timeLabel = calendarKindOf(item) === 'meeting' ? meetingTimeRange(item) : item.event_time;
         row.innerHTML = `
             <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-            ${item.event_time ? `<span class="today-tasks-time">${escapeHtmlForReport(item.event_time)}</span>` : ''}
-            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${escapeHtmlForReport(item.event_title)}</span>
+            ${timeLabel ? `<span class="today-tasks-time">${escapeHtmlForReport(timeLabel)}</span>` : ''}
+            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${kindIcon ? kindIcon + ' ' : ''}${escapeHtmlForReport(item.event_title)}</span>
         `;
         // כפתורי עריכה/מחיקה מחוברים דרך closure (לא onclick עם JSON מוטמע
         // בתוך מחרוזת HTML) - כך שגרש בודד בכותרת האירוע (למשל "It's") לא
@@ -5800,6 +5808,7 @@ async function loadMonthlyCalendarGrid() {
         </button>`;
     }
     grid.innerHTML = html;
+    refreshCalendarDeadlineMarks();
     initCalendarGridDropTargets();
 
     if (selectedCalendarDay && (selectedCalendarDay < firstStr || selectedCalendarDay > lastStr)) {
@@ -5808,6 +5817,123 @@ async function loadMonthlyCalendarGrid() {
     } else if (selectedCalendarDay) {
         await renderSelectedCalendarDay();
     }
+}
+
+// --- 🎯📖 יעדים וקריאה במבט החודשי (לפי בחירה מפורשת - "א"): בפירוט של כל יום מופיעות משימות
+// היעדים והקריאה של אותו יום (אתגר ימים, תזכורות, "לקרוא N עמודים") בקבוצה נפרדת, ובלוח עצמו
+// סימן קטן רק בימים מיוחדים - תאריך יעד (🎯) ויום הסיום של ספר (📖). משימות שחוזרות כל יום
+// לא מקבלות נקודה בלוח, אחרת כמעט כל יום היה מנוקד. נבנה מהמטמון של היעדים והספרים בלבד ---
+function calendarDeadlineMarks(firstStr, lastStr) {
+    const marks = new Map();
+    const add = (dateStr, kind) => {
+        if (!dateStr || dateStr < firstStr || dateStr > lastStr) return;
+        if (!marks.has(dateStr)) marks.set(dateStr, { goal: false, book: false });
+        marks.get(dateStr)[kind] = true;
+    };
+    visionGoalsCache.filter(g => !g.is_achieved && g.target_date).forEach(g => add(g.target_date, 'goal'));
+    if (typeof booksCache !== 'undefined') booksCache.filter(b => b.status === 'reading' && b.deadline).forEach(b => add(b.deadline, 'book'));
+    return marks;
+}
+// מסמן את התאים בלוח שכבר מצויר (בלי טעינה מהשרת) - נקרא גם כשהיעדים/הספרים נטענים
+function refreshCalendarDeadlineMarks() {
+    const grid = document.getElementById('monthly-calendar-grid');
+    if (!grid) return;
+    const cells = grid.querySelectorAll('.monthly-calendar-cell[data-date]');
+    if (!cells.length) return;
+    const marks = calendarDeadlineMarks(cells[0].dataset.date, cells[cells.length - 1].dataset.date);
+    let anyGoal = false, anyBook = false;
+    cells.forEach(cell => {
+        const old = cell.querySelector('.monthly-calendar-marks');
+        if (old) old.remove();
+        const mark = marks.get(cell.dataset.date);
+        if (!mark) return;
+        anyGoal = anyGoal || mark.goal;
+        anyBook = anyBook || mark.book;
+        const span = document.createElement('span');
+        span.className = 'monthly-calendar-marks';
+        span.setAttribute('aria-hidden', 'true');
+        span.textContent = (mark.goal ? '🎯' : '') + (mark.book ? '📖' : '');
+        cell.appendChild(span);
+    });
+    const legend = document.getElementById('monthly-calendar-legend');
+    if (legend) {
+        const parts = [];
+        if (anyGoal) parts.push(`🎯 ${t('calendar_legend_goal')}`);
+        if (anyBook) parts.push(`📖 ${t('calendar_legend_book')}`);
+        legend.textContent = parts.join(' · ');
+        legend.classList.toggle('hidden', !parts.length);
+    }
+}
+function visionCheckedOn(goalId, milestoneId, dateStr) {
+    return visionCheckinsCache.some(ch => ch.goal_id === goalId && (ch.milestone_id || null) === (milestoneId || null) && ch.checkin_date === dateStr);
+}
+// משימות היעדים והקריאה של יום מסוים. היום - בדיוק מה שבהצצה להיום (✓ פעיל); יום אחר - לקריאה
+// בלבד: עבר עם מה שסומן בפועל (וכמה עמודים נקראו), עתיד עם מה שמתוכנן (✓ אפשרי רק ביום עצמו)
+function calendarGoalItemsForDate(dateStr) {
+    const today = getLocalDateString();
+    if (dateStr === today) {
+        return getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : []).map(item => ({ ...item, live: true }));
+    }
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const weekday = new Date(y, m - 1, d).getDay();
+    const items = [];
+    visionGoalsCache.filter(g => !g.is_achieved).forEach(goal => {
+        if (goal.created_at && dateStr < getLocalDateString(new Date(goal.created_at))) return;
+        if (goal.target_date && dateStr > goal.target_date) return;
+        if (goal.track_type === 'days') {
+            const tasks = visionMilestonesCache.filter(ms => ms.goal_id === goal.id);
+            if (tasks.length) tasks.forEach(ms => items.push({ icon: '🎯', text: ms.title, tag: goal.title, done: visionCheckedOn(goal.id, ms.id, dateStr) }));
+            else items.push({ icon: '🎯', text: goal.title, tag: null, done: visionCheckedOn(goal.id, null, dateStr) });
+        } else if (goal.reminder_freq && (goal.track_type === 'number' || goal.track_type === 'weight')) {
+            if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
+            const text = (goal.reminder_text || '').trim() || goal.title;
+            items.push({ icon: '🔔', text, tag: text === goal.title ? null : goal.title, done: visionCheckedOn(goal.id, null, dateStr) });
+        }
+    });
+    if (typeof booksCache !== 'undefined') {
+        booksCache.forEach(book => {
+            if (dateStr < today) {
+                const read = bookPagesReadOn(book.id, dateStr);
+                if (read > 0) items.push({ icon: '📖', text: t('books_peek_task').replace('{n}', bookFmt(read)), tag: book.title, done: true });
+            } else if (book.status === 'reading' && book.deadline && dateStr <= book.deadline) {
+                const pace = bookDailyPace(book);
+                if (pace) items.push({ icon: '📖', text: t('books_peek_task').replace('{n}', bookFmt(pace)), tag: book.title, done: false });
+            }
+        });
+    }
+    return items;
+}
+function calendarDeadlineRowsForDate(dateStr) {
+    const rows = visionGoalsCache.filter(g => !g.is_achieved && g.target_date === dateStr).map(g => `🎯 ${t('calendar_goal_deadline_row').replace('{title}', g.title)}`);
+    if (typeof booksCache !== 'undefined') booksCache.filter(b => b.status === 'reading' && b.deadline === dateStr).forEach(b => rows.push(`📖 ${t('calendar_book_deadline_row').replace('{title}', b.title)}`));
+    return rows;
+}
+function buildCalendarGoalsGroup(dateStr, goalItems, deadlineRows) {
+    const group = document.createElement('div');
+    group.className = 'calendar-goals-group';
+    const title = document.createElement('div');
+    title.className = 'calendar-goals-group-title';
+    title.textContent = t('calendar_goals_group_title');
+    group.appendChild(title);
+    deadlineRows.forEach(text => {
+        const row = document.createElement('div');
+        row.className = 'calendar-deadline-row';
+        row.textContent = text;
+        group.appendChild(row);
+    });
+    goalItems.forEach(item => {
+        const row = buildPeekGoalTaskRow(item.live
+            ? { ...item, toggle: async checked => { await item.toggle(checked); if (selectedCalendarDay === dateStr) renderSelectedCalendarDay(); } }
+            : { ...item, toggle: () => {} });
+        if (!item.live) {
+            const checkbox = row.querySelector('input');
+            checkbox.disabled = true;
+            checkbox.title = t('calendar_goal_check_today_only');
+            row.classList.add('is-readonly');
+        }
+        group.appendChild(row);
+    });
+    return group;
 }
 
 async function navigateMonthlyCalendar(delta) {
@@ -5845,7 +5971,9 @@ async function renderSelectedCalendarDay() {
     const focusItems = (dataRaw || []).filter(item => item.source === 'daily_focus');
     const data = (dataRaw || []).filter(item => item.source !== 'daily_focus');
     const dayLabel = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
-    if (!data.length && !recurringData.length && !focusItems.length) {
+    const goalItems = calendarGoalItemsForDate(selectedCalendarDay);
+    const deadlineRows = calendarDeadlineRowsForDate(selectedCalendarDay);
+    if (!data.length && !recurringData.length && !focusItems.length && !goalItems.length && !deadlineRows.length) {
         detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div><p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
         return;
     }
@@ -5880,7 +6008,8 @@ async function renderSelectedCalendarDay() {
         checkbox.onchange = () => toggleEventOccurrenceCompletion(item.id, checkbox.checked);
         const textSpan = document.createElement('span');
         textSpan.className = 'today-tasks-text' + (item.is_completed ? ' completed' : '');
-        textSpan.textContent = item.event_title;
+        const kindIcon = calendarKindIcon(item);
+        textSpan.textContent = (kindIcon ? kindIcon + ' ' : '') + item.event_title;
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'btn-edit-item';
@@ -5893,6 +6022,12 @@ async function renderSelectedCalendarDay() {
         deleteBtn.onclick = () => deleteCalendarEvent(item.id);
         row.appendChild(dragHandle);
         row.appendChild(checkbox);
+        if (calendarKindOf(item) === 'meeting' && item.event_time) {
+            const time = document.createElement('span');
+            time.className = 'today-tasks-time';
+            time.textContent = meetingTimeRange(item);
+            row.appendChild(time);
+        }
         row.appendChild(textSpan);
         row.appendChild(editBtn);
         row.appendChild(deleteBtn);
@@ -5928,6 +6063,7 @@ async function renderSelectedCalendarDay() {
         row.appendChild(deleteBtn);
         detail.appendChild(row);
     });
+    if (goalItems.length || deadlineRows.length) detail.appendChild(buildCalendarGoalsGroup(selectedCalendarDay, goalItems, deadlineRows));
     initCalendarTaskDragSource();
 }
 
@@ -6127,8 +6263,123 @@ async function renderSelectedCalorieDay() {
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>${rows}<div class="monthly-calendar-day-total">${escapeHtmlForReport(t('calorie_monthly_day_total_label'))} ${dayTotal} · ${escapeHtmlForReport(t('calorie_monthly_day_total_protein_label'))} ${Math.round(dayProteinTotal * 10) / 10}g</div>`;
 }
 
+// --- 🤝 כרטיס הפגישות: יומן נייר של השבוע (לפי בחירה מפורשת מתוך 4 עיצובים) - דף עם ספירלה,
+// שורה לכל יום ראשון-שבת, הפגישות כתובות עם שעה, מקום/קישור ועם מי. לחיצה על פגישה פותחת
+// אותה לעריכה; ＋ בכרטיס פותח הוספה עם "פגישה" מסומן. מתרענן יחד עם "כל האירועים" ---
+let meetingsWeekStart = null;
+async function loadMeetingsWeek() {
+    const diary = document.getElementById('meetings-diary');
+    if (!diary || !supabaseClient || !currentUserId) return;
+    if (!meetingsWeekStart) meetingsWeekStart = currentWeekStart();
+    const start = meetingsWeekStart;
+    const label = document.getElementById('meetings-week-label');
+    if (label) label.textContent = formatWeekRangeLabel(start);
+    const { data } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('kind', 'meeting')
+        .gte('event_date', start).lte('event_date', addDaysToDateStr(start, 6)).order('event_date', { ascending: true });
+    // ניווט מהיר בין שבועות - מציירים רק את התוצאה של השבוע שמוצג עכשיו
+    if (start !== meetingsWeekStart) return;
+    renderMeetingsDiary(data || [], start);
+}
+function renderMeetingsDiary(meetings, start) {
+    const diary = document.getElementById('meetings-diary');
+    if (!diary) return;
+    const today = getLocalDateString();
+    diary.innerHTML = `<div class="meetings-diary-rings" aria-hidden="true">${'<span></span>'.repeat(7)}</div>`;
+    for (let i = 0; i < 7; i++) {
+        const dateStr = addDaysToDateStr(start, i);
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dayRow = document.createElement('div');
+        dayRow.className = 'meetings-day' + (dateStr === today ? ' today' : '');
+        dayRow.dataset.date = dateStr;
+        const name = document.createElement('div');
+        name.className = 'meetings-day-name';
+        name.innerHTML = `<span>${escapeHtmlForReport(new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'short' }))}</span><b>${d}</b>`;
+        const list = document.createElement('div');
+        list.className = 'meetings-day-entries';
+        const items = meetings.filter(mt => mt.event_date === dateStr).sort((a, b) => (a.event_time || '').localeCompare(b.event_time || ''));
+        if (!items.length) {
+            const dash = document.createElement('span');
+            dash.className = 'meetings-day-empty';
+            dash.textContent = '—';
+            list.appendChild(dash);
+        }
+        items.forEach(mt => list.appendChild(buildMeetingDiaryEntry(mt)));
+        dayRow.appendChild(name);
+        dayRow.appendChild(list);
+        diary.appendChild(dayRow);
+    }
+    if (!meetings.length) {
+        const hint = document.createElement('p');
+        hint.className = 'meetings-week-empty';
+        hint.textContent = t('meetings_week_empty');
+        diary.appendChild(hint);
+    }
+}
+function buildMeetingDiaryEntry(mt) {
+    // div ולא button - בתוכה יש קישורים (מפות / הצטרפות לשיחה), ואסור קישור בתוך כפתור
+    const entry = document.createElement('div');
+    entry.className = 'meetings-entry' + (mt.is_completed ? ' completed' : '');
+    entry.setAttribute('role', 'button');
+    entry.tabIndex = 0;
+    entry.dataset.id = mt.id;
+    const open = () => openEditCalendarEvent(mt);
+    entry.onclick = open;
+    entry.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
+    const time = document.createElement('span');
+    time.className = 'meetings-entry-time';
+    time.textContent = meetingTimeRange(mt);
+    const title = document.createElement('span');
+    title.className = 'meetings-entry-title';
+    title.textContent = mt.event_title;
+    entry.appendChild(time);
+    entry.appendChild(title);
+    const meta = [];
+    if (mt.location) {
+        const place = document.createElement('a');
+        place.className = 'meetings-entry-place';
+        place.target = '_blank';
+        place.rel = 'noopener';
+        if (isMeetingLink(mt.location)) {
+            place.href = meetingLinkHref(mt.location);
+            place.classList.add('is-link');
+            place.textContent = `🔗 ${t('meetings_join_link')}`;
+        } else {
+            place.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mt.location)}`;
+            place.title = t('meetings_open_map');
+            place.textContent = `📍 ${mt.location}`;
+        }
+        place.onclick = e => e.stopPropagation();
+        meta.push(place);
+    }
+    if (mt.meeting_with) {
+        const who = document.createElement('span');
+        who.className = 'meetings-entry-with';
+        who.textContent = `👤 ${mt.meeting_with}`;
+        meta.push(who);
+    }
+    if (mt.notes) {
+        const notes = document.createElement('span');
+        notes.className = 'meetings-entry-notes';
+        notes.textContent = '📝';
+        notes.title = mt.notes;
+        meta.push(notes);
+    }
+    if (meta.length) {
+        const row = document.createElement('span');
+        row.className = 'meetings-entry-meta';
+        meta.forEach(el => row.appendChild(el));
+        entry.appendChild(row);
+    }
+    return entry;
+}
+function navigateMeetingsWeek(delta) {
+    meetingsWeekStart = addDaysToDateStr(meetingsWeekStart || currentWeekStart(), delta * 7);
+    loadMeetingsWeek();
+}
+
 async function loadCalendarEvents() {
     if (!supabaseClient) return;
+    loadMeetingsWeek();
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     // השנה מוצגת פעם אחת בקטן ליד הכותרת (לא בכל כותרת-חודש בנפרד למטה) -
@@ -6228,7 +6479,9 @@ function buildSingleEventRow(item) {
     dateBadge.textContent = formatEventDateBadge(item.event_date);
     const titleSpan = document.createElement('span');
     titleSpan.className = 'calendar-event-title-text';
-    titleSpan.textContent = item.event_title;
+    const kindIcon = calendarKindIcon(item);
+    const range = calendarKindOf(item) === 'meeting' ? meetingTimeRange(item) : '';
+    titleSpan.textContent = (kindIcon ? kindIcon + ' ' : '') + item.event_title + (range ? ` · ${range}` : '');
     const editBtn = document.createElement('button');
     editBtn.className = 'btn-edit-item';
     editBtn.innerHTML = EDIT_ICON_SVG;
@@ -6297,7 +6550,8 @@ function buildRecurringEventRow(items, groupId) {
     const titleSpan = document.createElement('span');
     titleSpan.className = 'calendar-event-title-text';
     const lastDate = formatEventDateBadge(items[items.length - 1].event_date);
-    titleSpan.textContent = `${items[0].event_title} · ${t('calendar_event_recurring_until')} ${lastDate}`;
+    const seriesIcon = calendarKindIcon(items[0]);
+    titleSpan.textContent = `${seriesIcon ? seriesIcon + ' ' : ''}${items[0].event_title} · ${t('calendar_event_recurring_until')} ${lastDate}`;
 
     // מונה התקדמות: כמה מהמופעים שנוצרו כבר סומנו כהושלמו מתוך הסך הכול -
     // התכלית ("Target Count") היא פשוט מספר התאריכים שנוצרו לסדרה הזו
@@ -6445,18 +6699,28 @@ function generateRecurringDates(startDateStr, unit, interval, durationMonths) {
 let editingCalendarEventId = null;
 let editingCalendarEventGroupId = null;
 
-function openEditCalendarEvent(item) {
+async function openEditCalendarEvent(item) {
+    // שורה שנטענה בלי עמודות הפגישה (kind וכו') - טוענים אותה מלאה, אחרת שמירה הייתה הופכת פגישה למשימה
+    if (!('kind' in item) && supabaseClient) {
+        const { data } = await supabaseClient.from('calendar_events').select('*').eq('id', item.id).maybeSingle();
+        if (data) item = data;
+    }
     editingCalendarEventId = item.id;
     editingCalendarEventGroupId = null;
     document.getElementById('calendar-event-title-input').value = item.event_title;
     document.getElementById('calendar-event-date-input').value = item.event_date;
     updateDateFieldDisplay('calendar-event-date-input');
     document.getElementById('calendar-event-time-input').value = item.event_time || '';
+    document.getElementById('calendar-event-end-time-input').value = item.end_time || '';
+    document.getElementById('calendar-event-with-input').value = item.meeting_with || '';
+    document.getElementById('calendar-event-location-input').value = item.location || '';
+    document.getElementById('calendar-event-notes-input').value = item.notes || '';
     setReminderSelectValue('calendar-event-reminder', item.reminder_minutes || 0);
     document.getElementById('calendar-event-reminder-text').value = item.reminder_text || '';
     document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
-    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_edit_modal_title');
-    document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_update_btn');
+    document.getElementById('calendar-kind-row').classList.remove('hidden');
+    // הכותרת והכפתור לפי הסוג ("עריכת פגישה" / "עדכון משימה"...)
+    setCalendarEventKind(calendarKindOf(item));
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
     // עריכת אירוע בודד (למשל לחיצה על בועת אירוע ברשת השבועית במסך הבית) -
@@ -6481,10 +6745,69 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
     document.querySelector('.calendar-event-recurring-toggle').classList.add('hidden');
     document.getElementById('calendar-event-recurring-options').classList.add('hidden');
     // תזכורת היא לפי-מופע (שעה+טקסט), לא משמעותית בעריכת-שם-כל-הסדרה - מוסתרת
-    // כאן בדיוק כמו תאריך/שעה/checkbox החזרה
+    // כאן בדיוק כמו תאריך/שעה/checkbox החזרה (וגם בחירת הסוג - כאן משנים רק את השם)
     document.getElementById('calendar-event-reminder-wrap').classList.add('hidden');
+    document.getElementById('calendar-kind-row').classList.add('hidden');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
     document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
+    openModal('modal-add-calendar-event');
+}
+
+// --- סוג פריט ביומן: משימה / אירוע / פגישה (calendar_events.kind) - לפי בקשה מפורשת. משימה ואירוע
+// נשמרים ומתנהגים כמו קודם (ההבדל הוא האייקון); פגישה מוסיפה שעת סיום, עם מי, מקום/קישור והערות,
+// ומופיעה גם בכרטיס "פגישות" (יומן הנייר) במבט ליומן. שורות ישנות בלי kind מוצגות כמו משימה ---
+const CALENDAR_KINDS = ['task', 'event', 'meeting'];
+let calendarEventKind = 'task';
+function calendarKindOf(item) { return item && CALENDAR_KINDS.includes(item.kind) ? item.kind : 'task'; }
+function calendarKindIcon(item) { const kind = calendarKindOf(item); return kind === 'meeting' ? '🤝' : kind === 'event' ? '📅' : ''; }
+// "10:00–11:00" בבידוד LTR - בעברית טווח שעות בלי בידוד מוצג הפוך ("11:00–10:00")
+function meetingTimeRange(item) {
+    if (!item || !item.event_time) return '';
+    const end = item.end_time && item.end_time > item.event_time ? item.end_time : null;
+    return String.fromCharCode(0x2066) + item.event_time + (end ? `–${end}` : '') + String.fromCharCode(0x2069);
+}
+function isMeetingLink(text) { return /^https?:\/\//i.test(text || '') || /(^|\.)(zoom\.us|meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|webex\.com|whereby\.com)\b/i.test(text || ''); }
+function meetingLinkHref(text) { const s = String(text || '').trim(); return /^https?:\/\//i.test(s) ? s : `https://${s}`; }
+function setCalendarEventKind(kind) {
+    calendarEventKind = CALENDAR_KINDS.includes(kind) ? kind : 'task';
+    document.querySelectorAll('#calendar-kind-row .calendar-kind-chip').forEach(chip => {
+        const on = chip.dataset.kind === calendarEventKind;
+        chip.classList.toggle('on', on);
+        chip.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const isMeeting = calendarEventKind === 'meeting';
+    document.querySelectorAll('#modal-add-calendar-event .calendar-meeting-only').forEach(el => el.classList.toggle('hidden', !isMeeting));
+    document.querySelector('#modal-add-calendar-event .calendar-event-time-row').classList.toggle('is-meeting', isMeeting);
+    document.getElementById('calendar-event-time-input').placeholder = t(isMeeting ? 'calendar_meeting_start_placeholder' : 'calendar_event_time_placeholder');
+    document.getElementById('calendar-event-title-input').placeholder = t({ task: 'calendar_task_title_placeholder', event: 'calendar_event_title_placeholder', meeting: 'calendar_meeting_title_placeholder' }[calendarEventKind]);
+    if (editingCalendarEventGroupId) return;
+    const editing = !!editingCalendarEventId;
+    const labels = {
+        task: editing ? ['calendar_edit_task_title', 'calendar_update_task_btn'] : ['calendar_add_task_title', 'calendar_add_task_btn'],
+        event: editing ? ['calendar_event_edit_modal_title', 'calendar_event_update_btn'] : ['calendar_event_modal_title', 'calendar_event_add_btn'],
+        meeting: editing ? ['calendar_edit_meeting_title', 'calendar_update_meeting_btn'] : ['calendar_add_meeting_title', 'calendar_add_meeting_btn'],
+    }[calendarEventKind];
+    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t(labels[0]);
+    document.getElementById('btn-add-calendar-event').textContent = t(labels[1]);
+}
+// שדות הפגישה מהטופס (null לסוג שאינו פגישה - מעבר מפגישה למשימה מנקה אותם). null = שעת סיום לא תקינה
+function readCalendarMeetingFields() {
+    if (calendarEventKind !== 'meeting') return { kind: calendarEventKind, end_time: null, meeting_with: null, location: null, notes: null };
+    const endRaw = document.getElementById('calendar-event-end-time-input').value.trim();
+    const endNorm = normalizeScheduleTimeInput(endRaw);
+    if (endRaw && (endNorm.time === null || endNorm.needsAmpm)) return null;
+    const clean = id => document.getElementById(id).value.trim() || null;
+    return { kind: 'meeting', end_time: endNorm.time || null, meeting_with: clean('calendar-event-with-input'), location: clean('calendar-event-location-input'), notes: clean('calendar-event-notes-input') };
+}
+// ＋ בכרטיס הפגישות: אותו חלון הוספה, עם "פגישה" כבר מסומן ותאריך מהשבוע שמוצג
+function openAddMeeting() {
+    resetCalendarEventModal();
+    setCalendarEventKind('meeting');
+    const today = getLocalDateString();
+    const start = meetingsWeekStart || currentWeekStart();
+    const end = addDaysToDateStr(start, 6);
+    document.getElementById('calendar-event-date-input').value = today >= start && today <= end ? today : start;
+    updateDateFieldDisplay('calendar-event-date-input');
     openModal('modal-add-calendar-event');
 }
 
@@ -6507,10 +6830,12 @@ function resetCalendarEventModal() {
     setReminderSelectValue('calendar-event-reminder', 0);
     document.getElementById('calendar-event-reminder-text').value = '';
     document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
-    document.getElementById('modal-add-calendar-event').querySelector('h3').textContent = t('calendar_event_modal_title');
-    document.getElementById('btn-add-calendar-event').textContent = t('calendar_event_add_btn');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
     document.getElementById('btn-duplicate-calendar-event').classList.add('hidden');
+    ['calendar-event-end-time-input', 'calendar-event-with-input', 'calendar-event-location-input', 'calendar-event-notes-input'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('calendar-kind-row').classList.remove('hidden');
+    // ברירת המחדל: משימה (כמו כל מה שנוסף כאן עד עכשיו) - קובע גם את הכותרת והכפתור
+    setCalendarEventKind('task');
 }
 
 // דגל חד-פעמי נגד הגשה כפולה, באותו דפוס בדיוק כמו centerItemSubmitInFlight
@@ -6544,6 +6869,13 @@ async function addCalendarEventImpl() {
     const reminderMinutes = getReminderMinutesFromSelect('calendar-event-reminder');
     const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    // פגישה: שעת התחלה חובה, שעת סיום (רשות) אחריה
+    const meeting = editingCalendarEventGroupId ? null : readCalendarMeetingFields();
+    if (!editingCalendarEventGroupId) {
+        if (!meeting) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+        if (meeting.kind === 'meeting' && !eventTime) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
+        if (meeting.end_time && eventTime && meeting.end_time <= eventTime) { showAppToast(t('calendar_meeting_end_before_start'), 'error'); return; }
+    }
 
     if (editingCalendarEventGroupId) {
         if (!title) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
@@ -6568,6 +6900,7 @@ async function addCalendarEventImpl() {
         const { error } = await supabaseClient.from('calendar_events').update({
             event_title: title, event_date: date, event_time: eventTime,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+            ...meeting,
         }).eq('id', editingCalendarEventId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         resetCalendarEventModal();
@@ -6596,23 +6929,19 @@ async function addCalendarEventImpl() {
             event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId,
             recurrence_original_date: eventDate, recurrence_original_time: eventTime,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+            ...meeting,
         }));
     } else {
         rows = [{
             username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+            ...meeting,
         }];
     }
 
     const { error } = await supabaseClient.from('calendar_events').insert(rows);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    titleInput.value = '';
-    dateInput.value = '';
-    timeInput.value = '';
-    recurringCheckbox.checked = false;
-    toggleRecurringOptionsVisibility();
-    setReminderSelectValue('calendar-event-reminder', 0);
-    document.getElementById('calendar-event-reminder-text').value = '';
+    resetCalendarEventModal();
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
     loadCalendarEvents();
@@ -6636,9 +6965,14 @@ async function duplicateCalendarEvent() {
     const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
+    const meeting = readCalendarMeetingFields();
+    if (!meeting) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    if (meeting.kind === 'meeting' && !eventTime) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
+    if (meeting.end_time && eventTime && meeting.end_time <= eventTime) { showAppToast(t('calendar_meeting_end_before_start'), 'error'); return; }
     const { error } = await supabaseClient.from('calendar_events').insert({
         username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
         reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
+        ...meeting,
     });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     resetCalendarEventModal();
@@ -7953,10 +8287,12 @@ const HELP_FAQ_ENTRIES = [
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'reminder_snooze', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
+    { id: 'calendar_goals_reading', category: 'myweek' },
     { id: 'task_not_done_by_eod', category: 'myweek' },
     { id: 'daily_focus_prompt', category: 'glance' },
     { id: 'what_is_glance', category: 'glance' },
     { id: 'add_onetime_event', category: 'glance' },
+    { id: 'meetings', category: 'glance' },
     { id: 'delete_series_history', category: 'glance' },
     { id: 'edit_single_occurrence', category: 'glance' },
     { id: 'which_ai_button', category: 'ai' },
@@ -17997,6 +18333,8 @@ async function loadVisionGoals() {
     renderPeekFocusGoal();
     // משימות היעדים (אתגר ימים, תזכורות) מוצגות בהצצה להיום - מתעדכנות כשהיעדים נטענים
     if (document.getElementById('today-tasks-list')) loadTodayTasks();
+    // 🎯 תאריכי יעד בלוח החודשי
+    refreshCalendarDeadlineMarks();
     // משקל שנרשם במקום אחר (מדדים / New Me) יכול להשלים יעד משקל
     checkWeightGoalsAchieved();
 }

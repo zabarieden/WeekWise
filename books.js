@@ -38,8 +38,9 @@ async function loadBooks() {
     bookLogCache = logRes.data || [];
     booksGoalId = prefRes && prefRes.data ? prefRes.data.books_goal_id : null;
     if (isBooksSectionOpen()) renderBooks();
-    // משימת הקריאה היומית מופיעה בהצצה להיום
+    // משימת הקריאה היומית מופיעה בהצצה להיום, ויום הסיום (📖) בלוח החודשי
     if (document.getElementById('today-tasks-list')) loadTodayTasks();
+    if (typeof refreshCalendarDeadlineMarks === 'function') refreshCalendarDeadlineMarks();
 }
 
 function isBooksSectionOpen() {

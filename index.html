@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=489">
+    <link rel="stylesheet" href="theme.css?v=490">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -286,6 +286,8 @@
                                 <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
                             </div>
                             <div class="monthly-calendar-grid" id="monthly-calendar-grid"></div>
+                            <!-- מקרא לסימנים בלוח (🎯 תאריך יעד · 📖 סיום ספר) - מוצג רק כשיש כאלה בחודש -->
+                            <div id="monthly-calendar-legend" class="monthly-calendar-legend hidden"></div>
                             <div id="monthly-calendar-day-detail" class="monthly-calendar-day-detail"></div>
                         </div>
                     </div>
@@ -306,6 +308,26 @@
                         </div>
                         <div class="card-body">
                             <div id="calendar-glance-list" class="calendar-glance-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- 🤝 פגישות: יומן נייר של השבוע (לפי בחירה מפורשת מתוך 4 עיצובים) - שורה לכל יום,
+                         הפגישות כתובות עם שעה, מקום או עם מי; לחיצה על פגישה פותחת אותה לעריכה -->
+                    <div class="card meetings-card">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="meetings_card_title">🤝 Meetings</h2>
+                            <div class="card-header-actions">
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openAddMeeting()" data-i18n-title="calendar_add_meeting_title" title="Add a meeting">＋</button>
+                                <span class="card-toggle-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="monthly-goal-nav">
+                                <button class="monthly-goal-nav-btn" onclick="navigateMeetingsWeek(-1)" data-i18n-title="meetings_prev_week" title="Previous week">‹</button>
+                                <span class="monthly-goal-month-label" id="meetings-week-label"></span>
+                                <button class="monthly-goal-nav-btn" onclick="navigateMeetingsWeek(1)" data-i18n-title="meetings_next_week" title="Next week">›</button>
+                            </div>
+                            <div id="meetings-diary" class="meetings-diary"></div>
                         </div>
                     </div>
                 </section>
@@ -3687,6 +3709,13 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="calendar_event_modal_title">Add Event</h3>
                 <div class="preset-manager-grid">
+                    <!-- סוג: משימה / אירוע / פגישה - פגישה מוסיפה שעת סיום, עם מי, מקום/קישור והערות,
+                         ומופיעה גם בכרטיס "פגישות" (יומן הנייר) במבט ליומן -->
+                    <div class="calendar-kind-row" id="calendar-kind-row" role="radiogroup">
+                        <button type="button" class="calendar-kind-chip on" data-kind="task" role="radio" aria-checked="true" onclick="setCalendarEventKind('task')" data-i18n="calendar_kind_task">✅ Task</button>
+                        <button type="button" class="calendar-kind-chip" data-kind="event" role="radio" aria-checked="false" onclick="setCalendarEventKind('event')" data-i18n="calendar_kind_event">📅 Event</button>
+                        <button type="button" class="calendar-kind-chip" data-kind="meeting" role="radio" aria-checked="false" onclick="setCalendarEventKind('meeting')" data-i18n="calendar_kind_meeting">🤝 Meeting</button>
+                    </div>
                     <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title...">
                     <button type="button" id="calendar-event-date-trigger" class="date-picker-field-trigger" onclick="openDateFieldPicker('calendar-event-date-input')">
                         <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
@@ -3716,7 +3745,13 @@
                         </select>
                     </div>
                     <div id="calendar-event-reminder-wrap" class="reminder-fields-wrap" style="margin-top: 8px;">
-                        <input type="text" id="calendar-event-time-input" data-i18n-placeholder="calendar_event_time_placeholder" placeholder="Time - optional, e.g. 09:00">
+                        <div class="calendar-event-time-row">
+                            <input type="text" id="calendar-event-time-input" data-i18n-placeholder="calendar_event_time_placeholder" placeholder="Time - optional, e.g. 09:00">
+                            <input type="text" id="calendar-event-end-time-input" class="calendar-meeting-only hidden" data-i18n-placeholder="calendar_meeting_end_placeholder" placeholder="Ends at – e.g. 10:00 (optional)">
+                        </div>
+                        <input type="text" id="calendar-event-with-input" class="calendar-meeting-only hidden" maxlength="120" data-i18n-placeholder="calendar_meeting_with_placeholder" placeholder="With whom? (optional)">
+                        <input type="text" id="calendar-event-location-input" class="calendar-meeting-only hidden" maxlength="300" data-i18n-placeholder="calendar_meeting_location_placeholder" placeholder="Place or link – address, Zoom, Meet… (optional)">
+                        <textarea id="calendar-event-notes-input" class="calendar-meeting-only hidden" rows="2" maxlength="1000" data-i18n-placeholder="calendar_meeting_notes_placeholder" placeholder="Notes (optional)"></textarea>
                         <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-reminder')"><span id="calendar-event-reminder-display"></span></button>
                         <select id="calendar-event-reminder" class="hidden">
                             <option value="0" data-i18n="reminder_none">🔕 No reminder</option>
@@ -4020,10 +4055,10 @@
 
     </div>
 
-    <script src="i18n.js?v=391"></script>
-    <script src="app.js?v=537"></script>
+    <script src="i18n.js?v=392"></script>
+    <script src="app.js?v=538"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=18"></script>
-    <script src="books.js?v=2"></script>
+    <script src="books.js?v=3"></script>
 </body>
 </html>
