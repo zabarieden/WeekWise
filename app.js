@@ -19219,6 +19219,17 @@ function buildPeekGoalTaskRow(item) {
         tag.textContent = item.tag;
         row.appendChild(tag);
     }
+    // ⓘ קטן (אתגרי New Me): "מה בדיוק נחשב?" נפתח בלי לצאת מההצצה
+    if (item.info) {
+        const info = document.createElement('button');
+        info.type = 'button';
+        info.className = 'today-goal-task-info';
+        info.textContent = 'ⓘ';
+        info.title = item.infoLabel || '';
+        info.setAttribute('aria-label', item.infoLabel || 'ⓘ');
+        info.onclick = e => { e.stopPropagation(); item.info(); };
+        row.appendChild(info);
+    }
     return row;
 }
 

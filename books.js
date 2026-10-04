@@ -695,10 +695,17 @@ async function runBookLookup(q, mode) {
 function renderBookLookup(docs, mode) {
     const box = document.getElementById('book-lookup-results');
     if (!box) return;
-    if (!docs.length) { hideBookLookup(); return; }
     // התוצאות מופיעות מתחת לשדה שמקלידים בו - שם הספר או הסופר/ת
     const anchor = document.getElementById(mode === 'author' ? 'book-author-input' : 'book-title-input');
     if (anchor && anchor.nextElementSibling !== box) anchor.insertAdjacentElement('afterend', box);
+    const authorEmpty = !document.getElementById('book-author-input').value.trim();
+    // לא נמצא לפי השם - מציעים לחפש לפי הסופר/ת (שם בעברית נמצא הרבה יותר בקלות)
+    if (!docs.length) {
+        if (mode !== 'title') { hideBookLookup(); return; }
+        box.innerHTML = `<p class="book-lookup-hint">${bookEsc(t('books_lookup_none'))}</p>`;
+        box.classList.remove('hidden');
+        return;
+    }
     box.innerHTML = `<p class="book-lookup-hint">${bookEsc(t(mode === 'author' ? 'books_lookup_hint_author' : 'books_lookup_hint'))}</p>`;
     docs.forEach(doc => {
         const row = document.createElement('div');
@@ -722,6 +729,7 @@ function renderBookLookup(docs, mode) {
         }
         box.appendChild(row);
     });
+    if (mode === 'title' && authorEmpty) box.insertAdjacentHTML('beforeend', `<p class="book-lookup-more">${bookEsc(t('books_lookup_try_author'))}</p>`);
     if (docs.some(d => d.source === 'google')) {
         box.insertAdjacentHTML('beforeend', '<div class="book-lookup-powered"><img src="powered-by-google.png" alt="Powered by Google" width="62" height="30"></div>');
     }

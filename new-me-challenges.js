@@ -11,7 +11,6 @@
 
 const NEW_ME_CHALLENGES = [
     { key: 'no_sugar_5', kind: 'big', days: 5, icon: '🍬' },
-    { key: 'no_carbs_7', kind: 'big', days: 7, icon: '🥖' },
     { key: 'deficit_14', kind: 'big', days: 14, icon: '📉', budget: true },
     { key: 'sport_14', kind: 'big', days: 14, icon: '🏃', auto: 'sport' },
     { key: 'no_fried_14', kind: 'big', days: 14, icon: '🍟' },
@@ -21,6 +20,8 @@ const NEW_ME_CHALLENGES = [
     { key: 'menu_21', kind: 'big', days: 21, icon: '🍽️', auto: 'menu' },
     // "לרדת 5 קילו בחודש" = גירעון + ספורט + בלי סוכר (וכל אחד מהם גם כאתגר נפרד, למעלה)
     { key: 'lose5_month', kind: 'big', days: 30, icon: '🎯', budget: true, weight: true },
+    // בלי פחמימות - אחרון ברשימה (לפי בקשה מפורשת): קשה לסדר שוב את התפריט מיד אחרי שרק התחלנו
+    { key: 'no_carbs_7', kind: 'big', days: 7, icon: '🥖' },
     { key: 'cinnamon_coffee', kind: 'mini', days: 7, icon: '☕' },
     { key: 'water_first', kind: 'mini', days: 7, icon: '💧' },
     { key: 'veg_each_meal', kind: 'mini', days: 7, icon: '🥗' },
@@ -36,6 +37,29 @@ const NEW_ME_CH_SPORT_MIN = 20;      // "שבועיים של תנועה": אימ
 const NEW_ME_CH_START_AHEAD = 14;    // אפשר לתזמן התחלה עד שבועיים קדימה
 // משימה יומית משותפת (ובמיני-אתגרים השם עצמו הוא המשימה)
 const NEW_ME_CH_TASK_KEYS = { no_sugar_21: 'no_sugar_5' };
+// ⓘ "מה בדיוק נחשב?" לכל אתגר (לפי בקשה מפורשת: "רשימה מפורטת בעזרה בכל אתגר... אפילו בהצצה היומית סמל קטן
+// שאפשר לפתוח"). שורה שמתחילה ב-• היא פריט ברשימה; 21 יום בלי סוכר - אותה רשימה כמו 5 ימים
+const NEW_ME_CH_HELP_KEYS = { no_sugar_21: 'no_sugar_5' };
+function nmChHelpHtml(key) {
+    const lines = t(`nm_ch_${NEW_ME_CH_HELP_KEYS[key] || key}_help`).split('\n').map(s => s.trim()).filter(Boolean);
+    let html = '';
+    let list = [];
+    const flush = () => { if (list.length) { html += `<ul class="nm-ch-help-list">${list.map(l => `<li>${nmEsc(l)}</li>`).join('')}</ul>`; list = []; } };
+    lines.forEach(l => { if (l.startsWith('•')) list.push(l.replace(/^•\s*/, '')); else { flush(); html += `<p>${nmEsc(l)}</p>`; } });
+    flush();
+    return `<div class="nm-ch-help">${html}</div>`;
+}
+function nmOpenChallengeHelp(key) {
+    const def = nmChDef(key);
+    if (!def) return;
+    nmOpenSheet(`
+        <div class="nm-ch-sheet-head">
+            <span class="nm-ch-icon big" aria-hidden="true">${def.icon}</span>
+            <div><span class="nm-ch-kind">ⓘ ${nmEsc(t('nm_ch_help_btn'))}</span><h4>${nmEsc(nmChTitle(key))}</h4></div>
+        </div>
+        ${nmChHelpHtml(key)}
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nm-ch-help-sheet');
+}
 const NEW_ME_LETTER_MIN = 10;
 
 let nmChallenges = [];          // new_me_challenges - כל ההיסטוריה
@@ -262,6 +286,8 @@ function getPeekChallengeItems() {
             tag: nmChTitle(c.challenge_key),
             done: !!mark,
             toggle: checked => nmMarkChallengeDay(c.id, st.today, checked ? 'done' : null),
+            info: () => nmOpenChallengeHelp(c.challenge_key),
+            infoLabel: t('nm_ch_help_btn'),
         };
     }).filter(Boolean);
 }
@@ -272,7 +298,7 @@ function nmChallengeCalendarItems(dateStr) {
     return nmChActive().filter(c => dateStr >= c.start_date && dateStr <= nmChEnd(c)).map(c => {
         const mark = (nmChallengeDays.find(d => d.challenge_id === c.id && d.day === dateStr) || {}).state;
         if (dateStr < today && !mark) return null;
-        return { icon: nmChDef(c.challenge_key).icon, text: nmChTask(c.challenge_key) + (mark === 'free' ? ` · 🍕 ${t('nm_ch_free_btn')}` : ''), tag: nmChTitle(c.challenge_key), done: !!mark };
+        return { icon: nmChDef(c.challenge_key).icon, text: nmChTask(c.challenge_key) + (mark === 'free' ? ` · 🍕 ${t('nm_ch_free_btn')}` : ''), tag: nmChTitle(c.challenge_key), done: !!mark, info: () => nmOpenChallengeHelp(c.challenge_key), infoLabel: t('nm_ch_help_btn') };
     }).filter(Boolean);
 }
 
@@ -484,7 +510,7 @@ function nmOpenChallenge(key) {
     const tomorrow = nmAddDays(today, 1);
     const nextWeek = nmAddDays(nmWeekStart(), 7);
     // בלי יום התחלה שנבחר מראש - המשתמש/ת בוחר/ת מתי מתחילים (הכפתור נפתח רק אחרי הבחירה)
-    let sel = null, other = false, otherDate = nmAddDays(today, 2), confirmCancel = false;
+    let sel = null, other = false, otherDate = nmAddDays(today, 2), confirmCancel = false, helpOpen = false;
     const ov = nmOpenSheet('', 'nm-ch-sheet');
     const sheet = ov.querySelector('.nm-sheet');
     const render = () => {
@@ -527,10 +553,13 @@ function nmOpenChallenge(key) {
                 <div><span class="nm-ch-kind">${nmEsc(nmChKindLabel(def.kind))}</span><h4>${nmEsc(nmChTitle(key))}</h4></div>
             </div>
             <p class="nm-ch-desc">${nmEsc(t('nm_ch_' + key + '_desc'))}</p>
+            <details class="nm-ch-help-details"${helpOpen ? ' open' : ''}><summary>ⓘ ${nmEsc(t('nm_ch_help_btn'))}</summary>${nmChHelpHtml(key)}</details>
             ${key === 'lose5_month' ? `<p class="nm-soft-warn">💛 ${nmEsc(t('nm_ch_lose5_note'))}</p>` : ''}
             ${act ? '' : facts}
             ${main}
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+        const hd = sheet.querySelector('.nm-ch-help-details');
+        if (hd) hd.addEventListener('toggle', () => { helpOpen = hd.open; });
         sheet.querySelectorAll('[data-start-day]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.startDay; other = false; render(); }));
         const ob = sheet.querySelector('[data-start-other]');
         if (ob) ob.addEventListener('click', () => { other = true; render(); });

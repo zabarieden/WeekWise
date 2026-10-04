@@ -7386,3 +7386,19 @@ button.nm-letter-card { cursor: pointer; }
 .nm-dev-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--accent-gold) 60%, transparent); background: color-mix(in srgb, var(--accent-gold) 10%, var(--bg-row)); font-size: .78rem; font-weight: 700; color: var(--text-primary); }
 .nm-dev-bar button { border: none; border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 800; color: #fff; background: var(--accent-gold-text, var(--accent-gold)); cursor: pointer; }
 .nm-dev-btn { border-style: dashed; }
+
+/* כל הכפתורים במחברות (לפי בקשה מפורשת): הסמלים (← ☰ 🔖 🎨 ＋ ‹ › ✏️) ממורכזים בדיוק - בגופן המערכת, לא בגופן הכתב של האפליקציה שמזיז אותם למטה */
+.nb-view-back, .nb-view-btn, .nb-turn-btn, .nb-list-add-btn, .notebook-tool-btn { display: inline-grid; place-items: center; padding: 0; line-height: 1; box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+.nb-view-back span { line-height: 1; }
+
+/* ---------- New Me: ⓘ "מה בדיוק נחשב?" לכל אתגר + חיפוש ספרים לפי סופר/ת ---------- */
+.nm-ch-help { display: flex; flex-direction: column; gap: 8px; font-size: .9rem; line-height: 1.55; color: var(--text-primary); }
+.nm-ch-help p { margin: 0; }
+.nm-ch-help-list { margin: 0; padding-inline-start: 1.25em; display: flex; flex-direction: column; gap: 4px; }
+.nm-ch-help-details { padding: 10px 12px; border-radius: 14px; background: var(--bg-row); border: 1px solid var(--border-color); }
+.nm-ch-help-details summary { cursor: pointer; font-weight: 800; font-size: .88rem; color: var(--accent-pink-text, var(--accent-pink)); }
+.nm-ch-help-details[open] summary { margin-bottom: 10px; }
+.nm-ch-help-sheet .nm-ch-help { margin: 4px 0 6px; }
+.today-goal-task-info { flex-shrink: 0; width: 26px; height: 26px; display: inline-grid; place-items: center; padding: 0; margin-inline-start: 2px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-secondary); font-size: .85rem; line-height: 1; cursor: pointer; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.today-goal-task-info:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.book-lookup-more { margin: 2px 4px 0; font-size: .72rem; color: var(--text-secondary); }
