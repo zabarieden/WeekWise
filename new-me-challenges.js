@@ -280,8 +280,15 @@ function nmChallengeCalendarItems(dateStr) {
 function nmChallengeStripHtml() {
     if (!nmChallengesLoaded) return '';
     const cards = nmChActive().map(c => nmChallengeCardHtml(c, 'home')).concat(nmChEndedNotices().map(nmChallengeEndedHtml));
-    if (!cards.length) return nmChallengeSuggestHtml();
-    return `<div class="nm-ch-strip">${cards.join('')}</div>`;
+    if (!cards.length) return nmChallengeInviteHtml();
+    return `
+        <div class="nm-ch-strip">
+            <div class="nm-ch-strip-head">
+                <span>🏆 ${nmEsc(t('nm_ch_active_title'))}</span>
+                <button type="button" class="nm-link-btn" onclick="nmGo('challenges')">${nmEsc(t('nm_ch_all'))}</button>
+            </div>
+            ${cards.join('')}
+        </div>`;
 }
 
 // mode: 'home' (קומפקטי, בראש התפריט) | 'view' (מסך האתגרים, עם לוח הימים) | 'sheet' (בתוך גיליון האתגר)
@@ -393,27 +400,19 @@ function nmChallengeEndedHtml(c) {
         </div>`;
 }
 
-// אין אתגר פעיל: הצעה עדינה - אתגר השבוע (מתחלף כל שבוע), אפשר להסתיר עד השבוע הבא
-function nmChWeekPick(kind) {
-    const done = nmChDoneKeys();
-    const pool = NEW_ME_CHALLENGES.filter(c => c.kind === kind);
-    const fresh = pool.filter(c => !done.has(c.key));
-    const list = fresh.length ? fresh : pool;
-    const week = Math.floor(nmDaysBetween('2026-01-04', nmWeekStart()) / 7);
-    return list[((week % list.length) + list.length) % list.length];
-}
-function nmChallengeSuggestHtml() {
+// אין אתגר פעיל: הזמנה כללית לבחור אתגר - בלי להחליט במקום המשתמש/ת איזה (לפי בקשה מפורשת:
+// "שהמשתמש יבחר איזה אתגר ומתי להתחיל"). פותחת את רשימת כל האתגרים; אפשר להסתיר עד השבוע הבא
+function nmChallengeInviteHtml() {
     let hidden = null;
     try { hidden = localStorage.getItem('weekwise_nm_ch_suggest_hidden'); } catch {}
     if (hidden === nmWeekStart()) return '';
-    const pick = nmChWeekPick('big');
     return `
-        <div class="nm-ch-suggest">
-            <span class="nm-ch-icon" aria-hidden="true">${pick.icon}</span>
-            <button type="button" class="nm-ch-suggest-text" onclick="nmOpenChallenge('${pick.key}')">
-                <span class="nm-ch-kind">🏆 ${nmEsc(t('nm_ch_week_pick'))}</span>
-                <b>${nmEsc(nmChTitle(pick.key))}</b>
-                <span class="nm-fine">${nmEsc(t('nm_ch_days_n').replace('{n}', nmFmt(pick.days)))} · ${nmEsc(nmChFreeLine(nmChFreeDays(pick.days)))}</span>
+        <div class="nm-ch-suggest nm-ch-invite">
+            <span class="nm-ch-icon" aria-hidden="true">🏆</span>
+            <button type="button" class="nm-ch-suggest-text" onclick="nmGo('challenges')">
+                <b>${nmEsc(t('nm_tile_challenges'))}</b>
+                <span class="nm-fine">${nmEsc(t('nm_ch_choose_sub').replace('{n}', nmFmt(NEW_ME_CHALLENGES.length)))}</span>
+                <span class="nm-ch-invite-btn">${nmEsc(t('nm_ch_choose_btn'))}</span>
             </button>
             <button type="button" class="nm-ch-x" onclick="nmHideChallengeSuggest()" aria-label="${nmEsc(t('nm_ch_not_now'))}" title="${nmEsc(t('nm_ch_not_now'))}">✕</button>
         </div>`;
@@ -429,7 +428,6 @@ function nmRenderChallenges(body) {
     const done = nmChDoneKeys();
     const active = nmChActive();
     const shelf = kind => NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(c => `<span class="nm-ch-medal${done.has(c.key) ? ' on' : ''}" title="${nmEsc(nmChTitle(c.key))}">${c.icon}</span>`).join('');
-    const picks = ['big', 'mini'].filter(k => !nmChActiveOfKind(k)).map(nmChWeekPick);
     body.innerHTML = `
         <div class="nm-ch-hero${nmChAllDone() ? ' is-open' : ''}">
             <div class="nm-ch-hero-top">
@@ -442,30 +440,21 @@ function nmRenderChallenges(body) {
                 ? `<button type="button" class="nm-btn-primary nm-gift-btn" onclick="nmGo('gift')">🎁 ${nmEsc(t('nm_gift_open'))}</button>`
                 : `<div class="nm-ch-gift-line"><span aria-hidden="true">🎁</span><span>${nmEsc(t('nm_ch_gift_locked'))} · <b>${nmEsc(t('nm_ch_gift_left').replace('{n}', nmFmt(total - n)))}</b></span></div>`}
         </div>
-        ${nmLetterCardHtml()}
+        ${active.length || nmChEndedNotices().length ? `
         <section class="nm-ch-section">
             <div class="nm-section-head"><h3>${nmEsc(t('nm_ch_active_title'))}</h3></div>
-            ${active.length ? active.map(c => nmChallengeCardHtml(c, 'view')).join('') : `<p class="nm-fine">${nmEsc(t('nm_ch_none_active'))}</p>`}
+            ${active.map(c => nmChallengeCardHtml(c, 'home')).join('')}
             ${nmChEndedNotices().map(nmChallengeEndedHtml).join('')}
-        </section>
-        ${picks.length ? `
-        <section class="nm-ch-section">
-            <div class="nm-section-head"><h3>✨ ${nmEsc(t('nm_ch_week_pick'))}</h3></div>
-            <div class="nm-ch-picks">${picks.map(d => `
-                <button type="button" class="nm-ch-pick kind-${d.kind}" onclick="nmOpenChallenge('${d.key}')">
-                    <span class="nm-ch-icon" aria-hidden="true">${d.icon}</span>
-                    <span class="nm-ch-kind">${nmEsc(nmChKindLabel(d.kind))}</span>
-                    <b>${nmEsc(nmChTitle(d.key))}</b>
-                    <span class="nm-fine">${nmEsc(t('nm_ch_days_n').replace('{n}', nmFmt(d.days)))}</span>
-                </button>`).join('')}</div>
         </section>` : ''}
+        <p class="nm-ch-list-hint">👆 ${nmEsc(t('nm_ch_list_hint'))}</p>
         ${['big', 'mini'].map(kind => `
         <section class="nm-ch-section">
             <div class="nm-section-head"><h3>${nmEsc(t(kind === 'big' ? 'nm_ch_kind_big' : 'nm_ch_kind_mini'))}</h3></div>
             <p class="nm-fine nm-ch-section-sub">${nmEsc(t(kind === 'big' ? 'nm_ch_kind_big_sub' : 'nm_ch_kind_mini_sub'))}</p>
             <div class="nm-ch-list">${NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(nmChRowHtml).join('')}</div>
         </section>`).join('')}
-        <p class="nm-fine nm-rule">${nmEsc(t('nm_ch_rule'))}</p>`;
+        <p class="nm-fine nm-rule">${nmEsc(t('nm_ch_rule'))}</p>
+        ${nmLetterCardHtml()}`;
 }
 
 function nmChRowHtml(def) {
@@ -487,7 +476,8 @@ function nmOpenChallenge(key) {
     const today = getLocalDateString();
     const tomorrow = nmAddDays(today, 1);
     const nextWeek = nmAddDays(nmWeekStart(), 7);
-    let sel = today, other = false, otherDate = nmAddDays(today, 2), confirmCancel = false;
+    // בלי יום התחלה שנבחר מראש - המשתמש/ת בוחר/ת מתי מתחילים (הכפתור נפתח רק אחרי הבחירה)
+    let sel = null, other = false, otherDate = nmAddDays(today, 2), confirmCancel = false;
     const ov = nmOpenSheet('', 'nm-ch-sheet');
     const sheet = ov.querySelector('.nm-sheet');
     const render = () => {
@@ -521,7 +511,7 @@ function nmOpenChallenge(key) {
                 </div>
                 ${other ? `<input type="date" class="nm-date" data-start-date value="${otherDate}" min="${today}" max="${nmAddDays(today, NEW_ME_CH_START_AHEAD)}" aria-label="${nmEsc(t('nm_ch_start_other'))}">` : ''}
                 ${sameKind ? `<p class="nm-soft-warn">${nmEsc(t(def.kind === 'big' ? 'nm_ch_replace_big' : 'nm_ch_replace_mini').replace('{title}', nmChTitle(sameKind.challenge_key)))}</p>` : ''}
-                <button type="button" class="nm-btn-primary" data-start>${nmEsc(t('nm_ch_start_btn'))}</button>`;
+                <button type="button" class="nm-btn-primary" data-start ${other || sel ? '' : 'disabled'}>${nmEsc(t('nm_ch_start_btn'))}</button>`;
         }
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>

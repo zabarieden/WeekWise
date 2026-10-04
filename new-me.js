@@ -1675,17 +1675,29 @@ function nmStarSvg(filled) {
 }
 function nmDrinkName(r) { return String(r.food_description || '').replace(/^🥤\s*/, ''); }
 
+// כרטיס השתייה סגור כברירת מחדל (לפי בקשה מפורשת - "תופס מלא מקום"): בכותרת השם והסכום,
+// ולחיצה פותחת. נשאר פתוח בזמן העבודה (גם אחרי רינדור מחדש), ובכניסה הבאה שוב סגור
+let nmDrinksOpen = false;
+function nmToggleDrinks(btn) {
+    nmDrinksOpen = !nmDrinksOpen;
+    const card = btn.closest('.nm-drinks');
+    card.classList.toggle('open', nmDrinksOpen);
+    btn.setAttribute('aria-expanded', String(nmDrinksOpen));
+}
 function nmDrinksHtml() {
     const drinks = nmTrackerToday.filter(nmIsDrinkRow);
     const total = drinks.reduce((a, r) => a + (Number(r.calories) || 0), 0);
     const over = total > NEW_ME_DRINKS_KCAL;
     const savedNames = new Set(nmSavedDrinks.map(s => s.name.trim().toLowerCase()));
     return `
-        <div class="nm-meal nm-drinks">
-            <div class="nm-meal-head">
+        <div class="nm-meal nm-drinks${nmDrinksOpen ? ' open' : ''}">
+            <button type="button" class="nm-meal-head nm-drinks-toggle" aria-expanded="${nmDrinksOpen}" onclick="nmToggleDrinks(this)">
                 <span class="nm-slot-name">🥤 ${nmEsc(t('nm_slot_drinks'))}</span>
+                <span class="nm-head-space"></span>
                 <span class="nm-drinks-total${over ? ' over' : ''}"><bdi dir="ltr">${nmFmt(total)} / ~${NEW_ME_DRINKS_KCAL}</bdi> ${nmEsc(t('calories_unit'))}</span>
-            </div>
+                <span class="nm-drinks-chev" aria-hidden="true"></span>
+            </button>
+            <div class="nm-drinks-body">
             <div class="nm-fine">${nmEsc(t('nm_drinks_hint').replace('{kcal}', NEW_ME_DRINKS_KCAL))}</div>
             ${nmSavedDrinks.length ? '' : `<div class="nm-fine nm-saved-empty">${nmEsc(t('nm_drink_saved_empty_hint'))}</div>`}
             ${nmSavedDrinks.length ? `
@@ -1712,6 +1724,7 @@ function nmDrinksHtml() {
             }).join('')}
             ${['plain', 'plain', 'milk', 'milk'].concat(Array(nmDrinkDraftRows).fill('plain')).map(nmDrinkDraftRowHtml).join('')}
             <button type="button" class="nm-link-btn" onclick="nmAddDrinkRow(this)">${nmEsc(t('nm_drink_more'))}</button>
+            </div>
         </div>`;
 }
 
