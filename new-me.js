@@ -215,25 +215,56 @@ async function renderNewMe() {
     nmRenderView(root);
     nmAwardBadges();
     if (nmProfile.reminders_on) nmSyncReminders();
+    nmMaybeAutoTour();
 }
 
 // ---------- מכירה ----------
+// לפי בקשה מפורשת: "תמציתי, שהכל יהיה שם ויהיה רשום הכל, שידעו למה הם משלמים... שיראה מקצועי".
+// כותרת + מחיר וכפתור, "מה מקבלים" בשלוש קבוצות, איך זה עובד (3 שלבים), הצצה ליום, שאלות קצרות
+// וכפתור שוב. המחיר עצמו נקבע ב-Lemon Squeezy - כאן רק התווית שמוצגת
+const NEW_ME_PRICE = '$19.99';
+const NEW_ME_SALES_GROUPS = [
+    ['nm_sales_g_menu', ['nm_sales_f1', 'nm_sales_f5', 'nm_sales_f8', 'nm_sales_f6', 'nm_sales_f4']],
+    ['nm_sales_g_track', ['nm_sales_f2', 'nm_sales_f9', 'nm_sales_f10', 'nm_sales_f11', 'nm_sales_f3']],
+    ['nm_sales_g_journey', ['nm_sales_f12', 'nm_sales_f7', 'nm_sales_f13']],
+];
 function nmRenderSales(root) {
     const plan = NEW_ME_PLANS[1300];
     const preview = NEW_ME_SLOTS.map((slot, i) => `
         <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
+    const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(t('nm_buy_btn_price').replace('{price}', NEW_ME_PRICE))}</button>`;
     root.innerHTML = `
-        <div class="nm-hero">
-            <div class="nm-hero-eyebrow">✨ New Me</div>
-            <h2 class="nm-hero-title">${nmEsc(t('nm_sales_subtitle'))}</h2>
-            <div class="nm-price">${nmEsc(t('nm_sales_price'))}</div>
-            <div class="nm-price-note">${nmEsc(t('nm_sales_note'))}</div>
-        </div>
-        <ul class="nm-features">
-            ${[1, 2, 5, 6, 7, 3, 4].map(i => `<li>${nmEsc(t('nm_sales_f' + i))}</li>`).join('')}
-        </ul>
-        <div class="nm-preview" aria-hidden="true">${preview}</div>
-        <button type="button" class="nm-btn-primary" onclick="submitNewMePurchase(this)">${nmEsc(t('nm_buy_btn'))}</button>`;
+        <div class="nm-sales">
+            <div class="nm-hero">
+                <div class="nm-hero-eyebrow">✨ New Me</div>
+                <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
+                <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
+                <div class="nm-price-row"><span class="nm-price"><bdi dir="ltr">${NEW_ME_PRICE}</bdi></span><span class="nm-price-once">${nmEsc(t('nm_sales_once'))}</span></div>
+                <div class="nm-price-note">${nmEsc(t('nm_sales_note'))}</div>
+            </div>
+            ${buy}
+            <p class="nm-sales-trust">${nmEsc(t('nm_sales_trust'))}</p>
+            <section class="nm-sales-card">
+                <h3>${nmEsc(t('nm_sales_inc_title'))}</h3>
+                ${NEW_ME_SALES_GROUPS.map(([g, items]) => `
+                    <div class="nm-sales-group">
+                        <div class="nm-sales-group-title">${nmEsc(t(g))}</div>
+                        <ul class="nm-features">${items.map(k => `<li>${nmEsc(t(k))}</li>`).join('')}</ul>
+                    </div>`).join('')}
+            </section>
+            <section class="nm-sales-card">
+                <h3>${nmEsc(t('nm_sales_how_title'))}</h3>
+                <ol class="nm-sales-steps">${[1, 2, 3].map(i => `<li><span class="nm-step-num" aria-hidden="true">${nmFmt(i)}</span><span>${nmEsc(t('nm_sales_how' + i))}</span></li>`).join('')}</ol>
+            </section>
+            <div class="nm-sales-preview">
+                <div class="nm-sheet-label">${nmEsc(t('nm_sales_preview_label'))}</div>
+                <div class="nm-preview" aria-hidden="true">${preview}</div>
+            </div>
+            <section class="nm-sales-card nm-sales-faq">
+                ${[1, 2, 3].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i))}</p></details>`).join('')}
+            </section>
+            ${buy}
+        </div>`;
 }
 
 async function submitNewMePurchase(btn) {
@@ -287,7 +318,15 @@ function nmStartQuiz(fromSettings) {
         // מכתב מהעבר (לא חובה) - שלב אחרון, רק כשעוד לא נכתב
         withLetter: !(nmProfile && nmProfile.letter_written_at),
         letter: '',
+        name: (nmProfile && nmProfile.cert_name) || '',
     };
+    // שם מלא: אם עוד לא נשמר - ממלאים מראש מחשבון Google (אפשר לשנות)
+    if (!nmQuiz.name && typeof nmCertDefaultName === 'function') nmCertDefaultName().then(def => {
+        if (!nmQuiz || nmQuiz.name || !def) return;
+        nmQuiz.name = def;
+        const input = document.getElementById('nm-q-name');
+        if (input && !input.value) input.value = def;
+    });
 }
 function nmQuizTotal() { return nmQuiz && nmQuiz.withLetter ? 5 : 4; }
 
@@ -314,8 +353,12 @@ function nmRenderQuiz(root) {
             </label>`;
         canContinue = q.agreed;
     } else if (q.step === 1) {
+        // שם מלא (חובה - לפי בקשה מפורשת: "כל אחד שנרשם ירשום גם מה השם המלא שלו") - מופיע על התעודה
         body = `
-            <h3 class="nm-step-title">${nmEsc(t('nm_q_weight_title'))}</h3>
+            <h3 class="nm-step-title">${nmEsc(t('nm_q_about_title'))}</h3>
+            <label class="nm-field"><span>${nmEsc(t('nm_q_full_name'))}</span>
+                <input type="text" id="nm-q-name" maxlength="60" autocomplete="name" value="${nmEsc(q.name)}" oninput="nmQuiz.name = this.value"></label>
+            <p class="nm-fine nm-field-hint">${nmEsc(t('nm_q_full_name_hint'))}</p>
             <label class="nm-field"><span>${nmEsc(t('nm_q_current_weight'))}</span>
                 <input type="number" inputmode="decimal" step="0.1" min="20" max="400" value="${nmEsc(q.weight)}" oninput="nmQuiz.weight = this.value"></label>
             <label class="nm-field"><span>${nmEsc(t('nm_q_goal_weight'))}</span>
@@ -382,6 +425,7 @@ async function nmQuizNext() {
     const q = nmQuiz;
     if (q.step === 0 && !q.agreed) return;
     if (q.step === 1) {
+        if (String(q.name || '').trim().length < 2) { showAppToast(t('nm_q_full_name_missing'), 'error'); return; }
         const w = parseFloat(q.weight);
         if (!(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
@@ -399,6 +443,7 @@ async function nmQuizNext() {
         disclaimer_version: NEW_ME_DISCLAIMER_VERSION,
         choice_meal1: q.choices.meal1, choice_snack1: q.choices.snack1,
         choice_meal2: q.choices.meal2, choice_snack2: q.choices.snack2,
+        cert_name: String(q.name || '').trim().slice(0, 60),
         updated_at: new Date().toISOString(),
     };
     // מסע חדש מתחיל ביום הראשון של התוכנית; מילוי השאלון מחדש לא מאפס את "יום X"
@@ -1924,6 +1969,8 @@ function nmExtrasHtml() {
 function updateNewMeShortcut() {
     const btn = document.getElementById('btn-newme-shortcut');
     if (btn) btn.classList.toggle('hidden', !hasNewMe);
+    // מי שעוד לא רכש/ה: מנעול קטן על New Me בתפריט (לחיצה פותחת את עמוד ההסבר והרכישה)
+    document.querySelectorAll('.hamburger-newme-item').forEach(b => b.classList.toggle('locked', !hasNewMe));
     // לחיצה על תזכורת ארוחה (?open=newme) - נפתח ברגע שמצב הרכישה נטען
     if (nmPendingDeepLink && hasNewMe) { nmPendingDeepLink = false; openNewMe(); }
     // האתגרים הפעילים מופיעים בהצצה להיום גם בלי לפתוח את New Me
@@ -2643,6 +2690,11 @@ function nmRenderSettings(body) {
             </div>
             <p class="nm-fine">${nmEsc(t('nm_q_plan_note'))}</p>
         </div>
+        <div class="nm-settings-block">
+            <label class="nm-field"><span>${nmEsc(t('nm_settings_full_name'))}</span>
+                <input type="text" id="nm-settings-name" maxlength="60" autocomplete="name" value="${nmEsc(nmProfile.cert_name || '')}" placeholder="${nmEsc(t('nm_cert_name_ph'))}" onchange="nmSaveFullName(this)"></label>
+        </div>
+        <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
         ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_SLOTS.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmStartQuiz(true); renderNewMe()">📝 ${nmEsc(t('nm_settings_retake'))}</button>
@@ -2650,6 +2702,49 @@ function nmRenderSettings(body) {
             <summary>⚕️ ${nmEsc(t('nm_settings_disclaimer'))}</summary>
             ${nmDisclaimerHtml()}
         </details>`;
+}
+
+async function nmSaveFullName(input) {
+    const name = String(input.value || '').trim().slice(0, 60);
+    if (name.length < 2) { showAppToast(t('nm_q_full_name_missing'), 'error'); input.value = nmProfile.cert_name || ''; return; }
+    const { error } = await supabaseClient.from('new_me_profile').update({ cert_name: name, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+    nmProfile.cert_name = name;
+    showAppToast(t('nm_name_saved'));
+}
+
+// ---------- סיור קטן ב-New Me (לפי בקשה מפורשת: "סיור קטן בפני עצמו אחרי שמשלמים") ----------
+// אותו מנגנון של הסיור באפליקציה (הדגשה + כרטיס הסבר), על המסך של New Me. נפתח לבד פעם אחת -
+// אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
+const NEW_ME_TOUR_STEPS = [
+    { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: '✨', titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
+    { id: 'nm_ring', ch: 'newme', ctx: 'newme', icon: '🔥', target: '#new-me-root .nm-ring', titleKey: 'nm_tour_ring_title', text: 'nm_tour_ring_text', optional: true },
+    { id: 'nm_menu', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-menu-list .nm-meal', titleKey: 'nm_tile_menu', text: 'nm_tour_menu_text', optional: true },
+    { id: 'nm_swap', ch: 'newme', ctx: 'newme', icon: '🔄', target: '#nm-menu-list .nm-meal-actions', titleKey: 'nm_swap', text: 'nm_tour_swap_text', optional: true },
+    { id: 'nm_drinks', ch: 'newme', ctx: 'newme', icon: '🥤', target: '#new-me-root .nm-drinks', titleKey: 'nm_slot_drinks', text: 'nm_tour_drinks_text', optional: true },
+    { id: 'nm_challenges', ch: 'newme', ctx: 'newme', icon: '🏆', target: () => appTourVisible('#new-me-root .nm-ch-invite') || appTourVisible('#new-me-root .nm-ch-strip') || appTourVisible('#new-me-root .nm-tile[data-tile="challenges"]'), titleKey: 'nm_tile_challenges', text: 'nm_tour_challenges_text', optional: true },
+    { id: 'nm_tiles', ch: 'newme', ctx: 'newme', icon: '🧩', target: '#new-me-root .nm-tiles', titleKey: 'nm_tour_tiles_title', text: 'nm_tour_tiles_text', optional: true },
+    { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
+];
+function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }
+function nmStartTour() {
+    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
+    // השלבים נבחרים לפי מה שמוצג במסך הראשי של New Me - חוזרים אליו קודם (למשל כשנפתח מההגדרות)
+    if (nmView !== 'home') nmGo('home');
+    if (typeof openAppTour === 'function') openAppTour(true, null, { steps: NEW_ME_TOUR_STEPS, keepScreen: true });
+}
+function nmMaybeAutoTour() {
+    if (nmTourSeen() || nmView !== 'home' || nmQuiz) return;
+    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
+    // מחכים שחגיגת הישג (אם קופצת) תיסגר, ושהמסך של New Me עדיין פתוח
+    let tries = 0;
+    const attempt = () => {
+        const sec = document.getElementById('new-me-section');
+        if (!sec || !sec.classList.contains('active-tab') || nmView !== 'home' || (typeof appTourActive !== 'undefined' && appTourActive)) return;
+        if (document.querySelector('.nm-sheet-overlay') && ++tries < 40) { setTimeout(attempt, 500); return; }
+        nmStartTour();
+    };
+    setTimeout(attempt, 700);
 }
 
 async function nmChangePlan(p) {

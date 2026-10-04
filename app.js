@@ -1643,7 +1643,7 @@ async function finishOnboarding(startTour) {
 // להדגשה, וטקסטים; קו 🔗 מסביר את החיבור לפיצ'רים אחרים. שלב אופציונלי שהאלמנט שלו
 // לא מוצג (למשל ✨ למי שלא רכש/ה, תג פרימיום למנויים) לא נכלל בסיור ---
 const APP_TOUR_VERSION = 2;
-const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', goals: 'vision_board_title', settings: 'settings_title', summary: 'apptour_ch_summary' };
+const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', goals: 'vision_board_title', settings: 'settings_title', summary: 'apptour_ch_summary', newme: 'nm_tour_ch' };
 // לפי בקשה מפורשת: רק הפיצ'רים הגדולים, מתומצת ומלהיב, ו"דבר בתוך דבר" - מראים פריט
 // בתפריט ואז נכנסים פנימה (היעדים עם כרטיס דוגמה שמתהפך ומראה את הצעדים, המחברות שלי). עוזר ה-AI
 // מוסבר קודם כולו ורק אחר כך כל לשונית. דברים פשוטים (פתקים, קניות, מים, צעדים...) כבר לא בסיור
@@ -1688,6 +1688,9 @@ const APP_TOUR_FLOWS = [
 
 let appTourActive = false;
 let appTourLayer = null;
+// אותו מנגנון משמש גם לסיור הקטן של New Me (שלבים משלו, על המסך של New Me בלי לחזור לבית)
+let appTourSteps = APP_TOUR_STEPS;
+let appTourKeepScreen = false;
 let appTourPlan = [];
 let appTourPos = 0;
 let appTourCtx = null;
@@ -1723,19 +1726,23 @@ function appTourLabelFromTarget(el) {
         const label = el.querySelector('.settings-category-label');
         return { icon: icon ? icon.textContent.trim() : '', label: label ? label.textContent.trim() : '' };
     }
-    let label = el.textContent.trim();
+    // המנעול של New Me (למי שעוד לא רכש/ה) לא חלק מהכותרת
+    let label = el.textContent.replace(/\s*🔒\s*$/u, '').trim();
     let icon = '';
     const m = label.match(/^(\p{Extended_Pictographic}️?)\s*/u);
     if (m) { icon = m[1]; label = label.slice(m[0].length); }
     return { icon, label };
 }
 
-function openAppTour(fromSettings, onFinish) {
+// opts.steps - רשימת שלבים אחרת (הסיור של New Me); opts.keepScreen - נשארים במסך הנוכחי ולא חוזרים לבית
+function openAppTour(fromSettings, onFinish, opts = {}) {
     if (appTourActive) return;
     appTourActive = true;
     appTourOnFinish = onFinish || null;
     appTourCtx = null;
-    markAppTourSeen();
+    appTourSteps = opts.steps || APP_TOUR_STEPS;
+    appTourKeepScreen = !!opts.keepScreen;
+    if (!opts.steps) markAppTourSeen();
     // מתחילים ממסך בית נקי - סוגרים כל חלון/מגירה שפתוחים
     document.querySelectorAll('.apple-modal.open').forEach(m => closeModal(m.id));
     document.querySelectorAll('.hamburger-drawer-overlay.open').forEach(o => o.classList.remove('open'));
@@ -1743,7 +1750,7 @@ function openAppTour(fromSettings, onFinish) {
     if (wrapper) wrapper.classList.remove('menu-open', 'vision-open', 'study-open', 'projects-open');
     if (typeof closeTodayPeekPanel === 'function') closeTodayPeekPanel();
     if (typeof isNotebookViewOpen === 'function' && isNotebookViewOpen()) closeNotebookView();
-    goHome();
+    if (!appTourKeepScreen) goHome();
     appTourBuildLayer();
     document.addEventListener('keydown', appTourKeydown, true);
     window.addEventListener('resize', appTourOnResize);
@@ -1752,8 +1759,8 @@ function openAppTour(fromSettings, onFinish) {
     // מה נכלל: שלבים אופציונליים במסך הבית נבדקים עכשיו (הם מוצגים/לא מוצגים לפי
     // הגדרות ורכישות); שלבים בתוך חלונות קיימים תמיד
     requestAnimationFrame(() => {
-        appTourPlan = APP_TOUR_STEPS.map((step, index) => ({ step, index }))
-            .filter(({ step }) => !(step.optional && step.ctx === 'home' && !appTourResolveTarget(step)))
+        appTourPlan = appTourSteps.map((step, index) => ({ step, index }))
+            .filter(({ step }) => !(step.optional && (step.ctx === 'home' || step.ctx === 'newme') && !appTourResolveTarget(step)))
             .filter(({ step }) => !step.when || step.when())
             .map(({ index }) => index);
         appTourPos = 0;
@@ -1826,6 +1833,14 @@ async function appTourEnsureContext(step) {
         switchToTab('notebooks-section');
         renderNotebookShelves();
         changed = true;
+    } else if (ctx === 'newme') {
+        // הסיור של New Me: המסך הראשי של New Me פתוח (בלי לטעון מחדש אם כבר שם)
+        const nmSection = document.getElementById('new-me-section');
+        if (nmSection && (!nmSection.classList.contains('active-tab') || (typeof nmView !== 'undefined' && nmView !== 'home'))) {
+            if (nmSection.classList.contains('active-tab') && typeof nmGo === 'function') nmGo('home');
+            else openNewMe('home');
+            changed = true;
+        }
     }
     appTourCtx = ctx;
     await appTourWait(changed ? 460 : 60);
@@ -1851,7 +1866,7 @@ function appTourScrollIntoContainer(el) {
 
 async function appTourShow() {
     const token = ++appTourToken;
-    const step = APP_TOUR_STEPS[appTourPlan[appTourPos]];
+    const step = appTourSteps[appTourPlan[appTourPos]];
     if (!step) { closeAppTour(); return; }
     await appTourEnsureContext(step);
     if (token !== appTourToken || !appTourActive) return;
@@ -2046,7 +2061,7 @@ function appTourTrack() {
     if (!appTourActive) return;
     // האלמנט הוחלף (רינדור מחדש של רשימה) - מאתרים אותו שוב
     if (!appTourTarget || !appTourTarget.isConnected) {
-        const step = APP_TOUR_STEPS[appTourPlan[appTourPos]];
+        const step = appTourSteps[appTourPlan[appTourPos]];
         const fresh = step ? appTourResolveTarget(step) : null;
         if (fresh) { appTourTarget = fresh; appTourPosition(); }
         return;
@@ -2078,7 +2093,11 @@ function closeAppTour() {
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
     clearTimeout(appTourDemoTimer);
     appTourCtx = null;
-    goHome();
+    // הסיור של New Me נשאר במסך של New Me (גלילה חזרה למעלה)
+    if (appTourKeepScreen) { if (typeof nmScrollTop === 'function') nmScrollTop(); }
+    else goHome();
+    appTourSteps = APP_TOUR_STEPS;
+    appTourKeepScreen = false;
     if (appTourOnFinish) { const fn = appTourOnFinish; appTourOnFinish = null; fn(); }
 }
 
@@ -3319,10 +3338,17 @@ function renderCategoriesMenu() {
         }));
     });
     body.appendChild(grid);
-    body.appendChild(makeCategoryTile('categories-tile categories-newme-tile', '✨', 'New Me', () => {
+    const newMeTile = makeCategoryTile('categories-tile categories-newme-tile', '✨', 'New Me', () => {
         closeModal('modal-categories');
         openNewMe();
-    }));
+    });
+    // מי שעוד לא רכש/ה: מנעול קטן (לחיצה פותחת את עמוד ההסבר והרכישה)
+    if (!hasNewMe) {
+        newMeTile.classList.add('locked');
+        newMeTile.insertAdjacentHTML('beforeend', '<span class="nm-lock-badge" aria-hidden="true">🔒</span>');
+        newMeTile.setAttribute('aria-label', `New Me – ${t('nm_locked_label')}`);
+    }
+    body.appendChild(newMeTile);
 }
 
 // מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
@@ -8308,6 +8334,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
+    { id: 'new_me_tour', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },
     { id: 'new_me_swap', category: 'nutrition' },
     { id: 'new_me_flexible_menu', category: 'nutrition' },

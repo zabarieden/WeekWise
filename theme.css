@@ -7331,3 +7331,33 @@ button.nm-letter-card { cursor: pointer; }
 .nm-drinks.open .nm-drinks-chev { transform: translateY(2px) rotate(-135deg); }
 .nm-drinks-body { display: flex; flex-direction: column; gap: 8px; }
 .nm-drinks:not(.open) .nm-drinks-body { display: none; }
+
+/* ---------- New Me: עמוד ההסבר והרכישה, מנעול למי שעוד לא רכש/ה ---------- */
+.nm-sales { display: flex; flex-direction: column; gap: 14px; }
+.nm-sales .nm-hero-title { margin: 8px 0 6px; font-size: 1.45rem; }
+.nm-hero-sub { margin: 0 auto 16px; max-width: 34ch; font-size: .92rem; line-height: 1.55; opacity: .93; }
+.nm-price-row { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 4px 10px; }
+.nm-price-once { font-size: .86rem; font-weight: 700; opacity: .92; }
+.nm-buy-btn { font-size: 1.02rem; }
+.nm-sales-trust { margin: -4px 0 0; text-align: center; font-size: .78rem; color: var(--text-secondary); }
+.nm-sales-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--border-color); background: var(--bg-row); }
+.nm-sales-card h3 { margin: 0; font-size: 1.05rem; color: var(--text-primary); }
+.nm-sales-group { display: flex; flex-direction: column; gap: 8px; }
+.nm-sales-group + .nm-sales-group { padding-top: 10px; border-top: 1px solid var(--border-color); }
+.nm-sales-group-title { font-size: .8rem; font-weight: 800; letter-spacing: .03em; color: var(--accent-pink-text, var(--accent-pink)); }
+.nm-sales-card .nm-features { gap: 8px; }
+.nm-sales-card .nm-features li { display: flex; gap: 10px; padding: 0; border: none; background: none; font-size: .9rem; line-height: 1.5; }
+.nm-sales-card .nm-features li::before { flex-shrink: 0; margin: 0; }
+.nm-sales-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.nm-sales-steps li { display: flex; align-items: center; gap: 12px; font-size: .9rem; line-height: 1.45; color: var(--text-primary); }
+.nm-step-num { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--nm-grad); color: #fff; font-weight: 800; font-size: .85rem; }
+.nm-sales-preview { display: flex; flex-direction: column; gap: 6px; }
+.nm-sales-faq { gap: 0; }
+.nm-sales-faq details { padding: 10px 0; border-top: 1px solid var(--border-color); }
+.nm-sales-faq details:first-child { border-top: none; padding-top: 0; }
+.nm-sales-faq details:last-child { padding-bottom: 0; }
+.nm-sales-faq summary { cursor: pointer; font-weight: 700; font-size: .9rem; color: var(--text-primary); }
+.nm-sales-faq p { margin: 6px 0 0; font-size: .86rem; line-height: 1.55; color: var(--text-secondary); }
+.nm-field-hint { margin: -6px 2px 4px; }
+.nm-lock-badge { display: none; margin-inline-start: 6px; font-size: .8em; }
+.hamburger-newme-item.locked .nm-lock-badge, .categories-newme-tile.locked .nm-lock-badge { display: inline; }
