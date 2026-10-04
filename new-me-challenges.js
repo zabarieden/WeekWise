@@ -451,21 +451,28 @@ function nmRenderChallenges(body) {
         <section class="nm-ch-section">
             <div class="nm-section-head"><h3>${nmEsc(t(kind === 'big' ? 'nm_ch_kind_big' : 'nm_ch_kind_mini'))}</h3></div>
             <p class="nm-fine nm-ch-section-sub">${nmEsc(t(kind === 'big' ? 'nm_ch_kind_big_sub' : 'nm_ch_kind_mini_sub'))}</p>
-            <div class="nm-ch-list">${NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(nmChRowHtml).join('')}</div>
+            <div class="nm-ch-tiles">${NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(nmChTileHtml).join('')}</div>
         </section>`).join('')}
         <p class="nm-fine nm-rule">${nmEsc(t('nm_ch_rule'))}</p>
         ${nmLetterCardHtml()}`;
 }
 
-function nmChRowHtml(def) {
+// קובייה קטנה לבחירה (לפי בקשה מפורשת: "בקוביות קטנות לבחירה ולא כשורה"): אייקון, שם, מספר ימים;
+// ✓ זהב בפינה לאתגר שהושלם, תווית קטנה לאתגר שרץ עכשיו / מתחיל בקרוב. הפרטים - בגיליון שנפתח
+function nmChTileHtml(def) {
     const act = nmChActiveOfKey(def.key);
     const isDone = !!nmChLastDone(def.key);
-    const status = act ? (nmChState(act).scheduled ? t('nm_ch_status_soon') : t('nm_ch_status_active')) : isDone ? t('nm_ch_status_done') : '';
+    const status = act ? (nmChState(act).scheduled ? t('nm_ch_status_soon') : t('nm_ch_status_active')) : '';
+    const title = nmChTitle(def.key);
+    const days = t('nm_ch_days_n').replace('{n}', nmFmt(def.days));
+    const label = [title, days, status || (isDone ? t('nm_ch_status_done') : '')].filter(Boolean).join(' · ');
     return `
-        <button type="button" class="nm-ch-row${isDone ? ' done' : ''}${act ? ' active' : ''}" onclick="nmOpenChallenge('${def.key}')">
-            <span class="nm-ch-icon" aria-hidden="true">${def.icon}</span>
-            <span class="nm-ch-row-text"><b>${nmEsc(nmChTitle(def.key))}</b><span>${nmEsc(t('nm_ch_days_n').replace('{n}', nmFmt(def.days)))}${def.days >= 7 ? ` · 🍕 ${nmFmt(nmChFreeDays(def.days))}` : ''}</span></span>
-            ${status ? `<span class="nm-ch-status">${nmEsc(status)}</span>` : ''}
+        <button type="button" class="nm-ch-tile${isDone ? ' done' : ''}${act ? ' active' : ''}" data-ch="${def.key}" onclick="nmOpenChallenge('${def.key}')" aria-label="${nmEsc(label)}">
+            ${isDone ? '<span class="nm-ch-tile-check" aria-hidden="true">✓</span>' : ''}
+            <span class="nm-ch-tile-icon" aria-hidden="true">${def.icon}</span>
+            <b class="nm-ch-tile-title">${nmEsc(title)}</b>
+            <span class="nm-ch-tile-days">${nmEsc(days)}</span>
+            ${status ? `<span class="nm-ch-tile-status">${nmEsc(status)}</span>` : ''}
         </button>`;
 }
 

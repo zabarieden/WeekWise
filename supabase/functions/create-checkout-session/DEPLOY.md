@@ -31,6 +31,8 @@ supabase secrets set LEMONSQUEEZY_API_KEY=<your-api-key>
 supabase secrets set LEMONSQUEEZY_STORE_ID=<your-store-id>
 supabase secrets set LEMONSQUEEZY_VARIANT_ID_MONTHLY=<monthly-variant-id>
 supabase secrets set LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL=<semiannual-variant-id>
+supabase secrets set LEMONSQUEEZY_VARIANT_ID_NEW_ME=<new-me-lifetime-variant-id>
+supabase secrets set LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY=<new-me-monthly-variant-id>
 supabase secrets set SITE_URL=https://app.not10.ai
 ```
 

@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=494">
+    <link rel="stylesheet" href="theme.css?v=495">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -949,7 +949,6 @@
                     <div class="books-tabs" id="books-tabs" role="tablist"></div>
                     <div id="books-list" class="books-list"></div>
                     <!-- קרדיט למקור פרטי הספרים והכריכות (חיפוש בהוספת ספר, ר' books.js) -->
-                    <p class="books-credit"><span data-i18n="books_credit_label">Book details &amp; covers:</span> <a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">Open Library</a></p>
                     <div class="books-cozy-scene" aria-hidden="true">
                         <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
                             <defs>
@@ -1861,11 +1860,9 @@
                 <h3 id="project-modal-title" data-i18n="nb_shelf_add_title">New shelf</h3>
                 <div class="preset-manager-grid">
                     <textarea id="project-item-input" rows="1" maxlength="60" data-i18n-placeholder="nb_shelf_name_placeholder" placeholder="Shelf name (e.g. Studies, Work)"></textarea>
-                    <!-- אייקון למדף - כדי להבחין בין מדפים במבט חטוף (למשל "מתמטיקה" מול "היסטוריה"),
-                         ו"אחר" להקלדת כל אימוג'י -->
+                    <!-- אייקון למדף - כדי להבחין בין מדפים במבט חטוף (למשל "מתמטיקה" מול "היסטוריה") -->
                     <p class="settings-label" data-i18n="project_icon_label">Icon</p>
                     <div id="project-icon-picker" class="icon-picker-row"></div>
-                    <input type="text" id="project-icon-custom" maxlength="16" data-i18n-placeholder="table_icon_custom_placeholder" placeholder="✏️ Other - type any emoji" oninput="handleProjectIconCustomInput(this)">
                     <div class="action-buttons-wrap">
                         <button id="btn-save-project" class="btn-primary" onclick="submitProject()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-project')" data-i18n="cancel_btn">Cancel</button>
@@ -1883,7 +1880,6 @@
                     <textarea id="table-name-input" rows="2" data-i18n-placeholder="table_name_placeholder" placeholder="Table name..."></textarea>
                     <p class="settings-label" data-i18n="table_icon_label">Icon</p>
                     <div id="table-icon-picker" class="icon-picker-row"></div>
-                    <input type="text" id="table-icon-custom" maxlength="16" data-i18n-placeholder="table_icon_custom_placeholder" placeholder="✏️ Other - type any emoji" oninput="handleTableIconCustomInput(this)">
                     <div class="action-buttons-wrap">
                         <button id="btn-save-table" class="btn-primary" onclick="saveCustomTable()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="cancelAddTableModal()" data-i18n="cancel_btn">Cancel</button>
@@ -1965,7 +1961,6 @@
                     <div id="nb-cover-patterns" class="nb-pattern-row"></div>
                     <p class="settings-label" data-i18n="nb_sticker_label">Sticker</p>
                     <div id="nb-cover-emojis" class="icon-picker-row"></div>
-                    <input type="text" id="nb-cover-emoji-custom" maxlength="16" data-i18n-placeholder="table_icon_custom_placeholder" placeholder="✏️ Other - type any emoji" oninput="handleNbCoverEmojiCustomInput(this)">
                     <div class="action-buttons-wrap">
                         <button id="btn-save-nb-cover" class="btn-primary" onclick="saveNotebookCover()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-nb-cover')" data-i18n="cancel_btn">Cancel</button>
@@ -3504,7 +3499,7 @@
             </div>
         </div>
 
-        <!-- 📚 הוספה / עריכה של ספר - שם (עם חיפוש כריכה/סופר/עמודים ב-Open Library), סופר, עמודים,
+        <!-- 📚 הוספה / עריכה של ספר - שם וסופר/ת (הקלדה בכל אחד מהם מחפשת כריכה/סופר/עמודים ב-Open Library וב-Google Books), עמודים,
              לאיזה טאב, ובספר בקריאה גם עמוד נוכחי ו"לסיים עד" -->
         <div id="modal-book" class="apple-modal">
             <div class="modal-sheet">
@@ -3515,7 +3510,7 @@
                 <input type="text" id="book-title-input" maxlength="200" autocomplete="off" oninput="onBookTitleInput()">
                 <div id="book-lookup-results" class="book-lookup-results hidden"></div>
                 <label class="settings-label" for="book-author-input" data-i18n="books_field_author">Author (optional)</label>
-                <input type="text" id="book-author-input" maxlength="120">
+                <input type="text" id="book-author-input" maxlength="120" autocomplete="off" oninput="onBookAuthorInput()">
                 <label class="settings-label" for="book-pages-input" data-i18n="books_field_pages">Number of pages (optional)</label>
                 <input type="number" id="book-pages-input" inputmode="numeric" min="1" max="20000">
                 <p class="settings-label" data-i18n="books_field_status">Where does it go?</p>
@@ -4062,11 +4057,11 @@
 
     </div>
 
-    <script src="i18n.js?v=396"></script>
-    <script src="app.js?v=541"></script>
+    <script src="i18n.js?v=397"></script>
+    <script src="app.js?v=542"></script>
     <script src="new-me-data.js?v=6"></script>
-    <script src="new-me.js?v=22"></script>
-    <script src="new-me-challenges.js?v=2"></script>
-    <script src="books.js?v=3"></script>
+    <script src="new-me.js?v=23"></script>
+    <script src="new-me-challenges.js?v=3"></script>
+    <script src="books.js?v=4"></script>
 </body>
 </html>

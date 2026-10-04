@@ -220,9 +220,38 @@ async function renderNewMe() {
 
 // ---------- מכירה ----------
 // לפי בקשה מפורשת: "תמציתי, שהכל יהיה שם ויהיה רשום הכל, שידעו למה הם משלמים... שיראה מקצועי".
-// כותרת + מחיר וכפתור, "מה מקבלים" בשלוש קבוצות, איך זה עובד (3 שלבים), הצצה ליום, שאלות קצרות
-// וכפתור שוב. המחיר עצמו נקבע ב-Lemon Squeezy - כאן רק התווית שמוצגת
-const NEW_ME_PRICE = '$19.99';
+// כותרת, שני מסלולים (לכל החיים / חודשי) וכפתור, "מה מקבלים" בשלוש קבוצות, איך זה עובד (3 שלבים),
+// הצצה ליום, שאלות קצרות וכפתור שוב. המחירים עצמם נקבעים ב-Lemon Squeezy - כאן רק התוויות שמוצגות
+const NEW_ME_PRICES = { life: '$29.99', monthly: '$4.99' };
+let nmSalesPlan = 'life';
+function nmBuyLabel(plan) {
+    return plan === 'monthly'
+        ? t('nm_buy_btn_monthly').replace('{price}', NEW_ME_PRICES.monthly)
+        : t('nm_buy_btn_price').replace('{price}', NEW_ME_PRICES.life);
+}
+function nmPlanOptionsHtml() {
+    const opt = (plan, name, price, per, sub, badge) => `
+        <button type="button" role="radio" aria-checked="${nmSalesPlan === plan}" class="nm-plan-opt${nmSalesPlan === plan ? ' selected' : ''}" data-plan="${plan}" onclick="nmPickSalesPlan('${plan}')">
+            ${badge ? `<span class="nm-plan-badge">${nmEsc(badge)}</span>` : ''}
+            <span class="nm-plan-name">${nmEsc(name)}</span>
+            <span class="nm-plan-price"><bdi dir="ltr">${price}</bdi>${per ? `<small>${nmEsc(per)}</small>` : ''}</span>
+            <span class="nm-plan-sub">${nmEsc(sub)}</span>
+        </button>`;
+    return `<div class="nm-plans" role="radiogroup" aria-label="${nmEsc(t('nm_bill_title'))}">
+        ${opt('life', t('nm_plan_life'), NEW_ME_PRICES.life, '', t('nm_plan_life_sub'), t('nm_plan_best'))}
+        ${opt('monthly', t('nm_plan_monthly'), NEW_ME_PRICES.monthly, t('nm_plan_per_month'), t('nm_plan_monthly_sub'), '')}
+    </div>`;
+}
+// בחירת מסלול: מעדכנים במקום (בלי לצייר מחדש - שהגלילה והשאלות הפתוחות יישארו)
+function nmPickSalesPlan(plan) {
+    nmSalesPlan = plan === 'monthly' ? 'monthly' : 'life';
+    document.querySelectorAll('#new-me-root .nm-plan-opt').forEach(b => {
+        const on = b.dataset.plan === nmSalesPlan;
+        b.classList.toggle('selected', on);
+        b.setAttribute('aria-checked', String(on));
+    });
+    document.querySelectorAll('#new-me-root .nm-buy-btn').forEach(b => { if (!b.disabled) b.textContent = nmBuyLabel(nmSalesPlan); });
+}
 const NEW_ME_SALES_GROUPS = [
     ['nm_sales_g_menu', ['nm_sales_f1', 'nm_sales_f5', 'nm_sales_f8', 'nm_sales_f6', 'nm_sales_f4']],
     ['nm_sales_g_track', ['nm_sales_f2', 'nm_sales_f9', 'nm_sales_f10', 'nm_sales_f11', 'nm_sales_f3']],
@@ -232,16 +261,15 @@ function nmRenderSales(root) {
     const plan = NEW_ME_PLANS[1300];
     const preview = NEW_ME_SLOTS.map((slot, i) => `
         <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
-    const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(t('nm_buy_btn_price').replace('{price}', NEW_ME_PRICE))}</button>`;
+    const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
     root.innerHTML = `
         <div class="nm-sales">
             <div class="nm-hero">
                 <div class="nm-hero-eyebrow">✨ New Me</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
                 <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
-                <div class="nm-price-row"><span class="nm-price"><bdi dir="ltr">${NEW_ME_PRICE}</bdi></span><span class="nm-price-once">${nmEsc(t('nm_sales_once'))}</span></div>
-                <div class="nm-price-note">${nmEsc(t('nm_sales_note'))}</div>
             </div>
+            ${nmPlanOptionsHtml()}
             ${buy}
             <p class="nm-sales-trust">${nmEsc(t('nm_sales_trust'))}</p>
             <section class="nm-sales-card">
@@ -261,13 +289,14 @@ function nmRenderSales(root) {
                 <div class="nm-preview" aria-hidden="true">${preview}</div>
             </div>
             <section class="nm-sales-card nm-sales-faq">
-                ${[1, 2, 3].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i))}</p></details>`).join('')}
+                ${[1, 2, 3].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i).replace('{monthly}', NEW_ME_PRICES.monthly).replace('{life}', NEW_ME_PRICES.life))}</p></details>`).join('')}
             </section>
             ${buy}
         </div>`;
 }
 
-async function submitNewMePurchase(btn) {
+// plan: 'life' (תשלום אחד) או 'monthly' (מנוי) - ברירת מחדל: מה שנבחר בעמוד הרכישה
+async function submitNewMePurchase(btn, plan = nmSalesPlan) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const original = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = t('food_ai_estimating'); }
@@ -278,7 +307,7 @@ async function submitNewMePurchase(btn) {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ tier: 'new_me' }),
+            body: JSON.stringify({ tier: plan === 'monthly' ? 'new_me_monthly' : 'new_me' }),
         });
         const result = await res.json().catch(() => ({}));
         if (!res.ok || !result.url) { showAppToast(t('settings_billing_error_toast'), 'error'); return; }
@@ -353,12 +382,12 @@ function nmRenderQuiz(root) {
             </label>`;
         canContinue = q.agreed;
     } else if (q.step === 1) {
-        // שם מלא (חובה - לפי בקשה מפורשת: "כל אחד שנרשם ירשום גם מה השם המלא שלו") - מופיע על התעודה
+        // שם מלא (חובה - לפי בקשה מפורשת: "כל אחד שנרשם ירשום גם מה השם המלא שלו"). משמש לתעודה
+        // שבמתנה - אבל לא כותבים את זה כאן: מה שיש במתנה הוא הפתעה (לפי בקשה מפורשת)
         body = `
             <h3 class="nm-step-title">${nmEsc(t('nm_q_about_title'))}</h3>
             <label class="nm-field"><span>${nmEsc(t('nm_q_full_name'))}</span>
                 <input type="text" id="nm-q-name" maxlength="60" autocomplete="name" value="${nmEsc(q.name)}" oninput="nmQuiz.name = this.value"></label>
-            <p class="nm-fine nm-field-hint">${nmEsc(t('nm_q_full_name_hint'))}</p>
             <label class="nm-field"><span>${nmEsc(t('nm_q_current_weight'))}</span>
                 <input type="number" inputmode="decimal" step="0.1" min="20" max="400" value="${nmEsc(q.weight)}" oninput="nmQuiz.weight = this.value"></label>
             <label class="nm-field"><span>${nmEsc(t('nm_q_goal_weight'))}</span>
@@ -2676,9 +2705,37 @@ async function nmOpenPdf(btn) {
     }
 }
 
+// "המסלול שלך": לכל החיים, או חודשי - מתי מתחדש / עד מתי פתוח אחרי ביטול, ניהול המנוי
+// (ה-Portal של Lemon Squeezy: ביטול, אמצעי תשלום) ומעבר ל"לכל החיים" (החודשי נעצר לבד - ר' webhook)
+function nmBillingHtml() {
+    if (typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount) {
+        return `<div class="nm-settings-block nm-bill"><div class="nm-slot-name">${nmEsc(t('nm_bill_title'))}</div><div class="nm-bill-status">${nmEsc(t('settings_sub_status_dev'))}</div></div>`;
+    }
+    const b = (typeof newMeBilling !== 'undefined' && newMeBilling) || {};
+    const day = iso => (iso ? nmLongDate(getLocalDateString(new Date(iso))) : '');
+    let status = `⭐ ${t('nm_bill_life')}`;
+    let actions = '';
+    if (b.plan === 'monthly') {
+        if (b.status === 'cancelled') status = t('nm_bill_monthly_ends').replace('{date}', day(b.endsAt));
+        else if (b.status === 'past_due' || b.status === 'unpaid') status = t('nm_bill_monthly_issue');
+        else status = b.renewsAt ? t('nm_bill_monthly_renews').replace('{date}', day(b.renewsAt)) : t('nm_plan_monthly');
+        actions = `
+            <button type="button" class="nm-row-btn" onclick="openLemonSqueezyPortal('new_me')">💳 ${nmEsc(t('nm_bill_manage'))}</button>
+            <button type="button" class="nm-row-btn nm-bill-upgrade" onclick="submitNewMePurchase(this, 'life')">⭐ ${nmEsc(t('nm_bill_upgrade').replace('{price}', NEW_ME_PRICES.life))}</button>
+            <p class="nm-fine">${nmEsc(t('nm_bill_upgrade_note'))}</p>`;
+    }
+    return `
+        <div class="nm-settings-block nm-bill">
+            <div class="nm-slot-name">${nmEsc(t('nm_bill_title'))}</div>
+            <div class="nm-bill-status">${nmEsc(status)}</div>
+            ${actions}
+        </div>`;
+}
+
 function nmRenderSettings(body) {
     const customOrder = nmOrder().join(',') !== NEW_ME_SLOTS.join(',');
     body.innerHTML = `
+        ${nmBillingHtml()}
         <div class="nm-settings-block">
             <div class="nm-slot-name">${nmEsc(t('nm_settings_plan'))}</div>
             <div class="nm-plan-cards">
@@ -2691,7 +2748,7 @@ function nmRenderSettings(body) {
             <p class="nm-fine">${nmEsc(t('nm_q_plan_note'))}</p>
         </div>
         <div class="nm-settings-block">
-            <label class="nm-field"><span>${nmEsc(t('nm_settings_full_name'))}</span>
+            <label class="nm-field"><span>${nmEsc(t('nm_q_full_name'))}</span>
                 <input type="text" id="nm-settings-name" maxlength="60" autocomplete="name" value="${nmEsc(nmProfile.cert_name || '')}" placeholder="${nmEsc(t('nm_cert_name_ph'))}" onchange="nmSaveFullName(this)"></label>
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>

@@ -45,14 +45,17 @@ Deno.serve(async (req) => {
         const userId = userData.user.id;
 
         // stripe_subscription_id הוא שם עמודה היסטורי - מחזיק היום את מזהה
-        // המנוי של Lemon Squeezy (ר' lemonsqueezy-webhook)
+        // המנוי של Lemon Squeezy (ר' lemonsqueezy-webhook). { product: "new_me" } -
+        // המנוי החודשי של New Me (עמודה משלו)
+        const body = await req.json().catch(() => ({}));
+        const forNewMe = body?.product === "new_me";
         const { data: premiumRow } = await supabase
             .from("user_premium")
-            .select("stripe_subscription_id")
+            .select("stripe_subscription_id, new_me_subscription_id")
             .eq("user_id", userId)
             .maybeSingle();
 
-        const subscriptionId = premiumRow?.stripe_subscription_id as string | undefined;
+        const subscriptionId = (forNewMe ? premiumRow?.new_me_subscription_id : premiumRow?.stripe_subscription_id) as string | undefined;
         if (!subscriptionId) return jsonResponse({ error: "no_subscription" }, 404);
 
         const response = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`, {

@@ -24,6 +24,7 @@ const LEMONSQUEEZY_STORE_ID = Deno.env.get("LEMONSQUEEZY_STORE_ID")!;
 const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
 const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
 const SITE_URL = Deno.env.get("SITE_URL")!;
 
 const CORS_HEADERS = {
@@ -55,16 +56,17 @@ Deno.serve(async (req) => {
 
         const body = await req.json().catch(() => ({}));
         const tier = body?.tier;
-        if (tier !== "monthly" && tier !== "semiannual" && tier !== "new_me") {
+        if (tier !== "monthly" && tier !== "semiannual" && tier !== "new_me" && tier !== "new_me_monthly") {
             return jsonResponse({ error: "invalid_tier" }, 400);
         }
-        // "new_me" = the separate one-time New Me program purchase (not a
-        // subscription, doesn't touch is_premium - see lemonsqueezy-webhook)
+        // "new_me" = the New Me program for life (one-time order), "new_me_monthly" = New Me
+        // as a monthly subscription. Neither touches is_premium - see lemonsqueezy-webhook
         const variantId = tier === "monthly" ? LEMONSQUEEZY_VARIANT_ID_MONTHLY
             : tier === "semiannual" ? LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL
+            : tier === "new_me_monthly" ? LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY
             : LEMONSQUEEZY_VARIANT_ID_NEW_ME;
         if (!variantId) return jsonResponse({ error: "not_configured" }, 503);
-        const redirectParam = tier === "new_me" ? "newme_success" : "success";
+        const redirectParam = tier === "new_me" || tier === "new_me_monthly" ? "newme_success" : "success";
 
         // Lemon Squeezy Checkouts API - JSON:API shape. custom_data.supabase_user_id
         // is how the webhook resolves which user_premium row to update later

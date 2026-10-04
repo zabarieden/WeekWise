@@ -7412,6 +7412,8 @@ let selectedPremiumTier = 'semiannual';
 let premiumTierFromDb = null;
 let isDevSuperuserAccount = false;
 let hasNewMe = false;
+// פרטי המסלול של New Me (לכל החיים / חודשי, סטטוס המנוי ותאריכים) - לתצוגה בהגדרות של New Me
+let newMeBilling = null;
 
 // עוקף בדיקת פרימיום למפתחת בלבד, כדי לאפשר בדיקה מלאה של כל התכונות - חסום
 // זהה מיושם גם בצד השרת (Edge Functions), כי בדיקת לקוח בלבד ניתנת לעקיפה
@@ -7438,6 +7440,7 @@ async function loadPremiumStatus() {
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
         hasNewMe = true;
+        newMeBilling = null;
         if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
@@ -7452,8 +7455,9 @@ async function loadPremiumStatus() {
     isPremiumUser = isRealPremiumUser || isInFreeTrial();
     isDevSuperuserAccount = false;
     premiumTierFromDb = (data && data.tier) || null;
-    // New Me נמכר בנפרד (רכישה חד-פעמית) - לא נפתח ע"י פרימיום ולא ע"י תקופת הניסיון
+    // New Me נמכר בנפרד (לכל החיים או מנוי חודשי) - לא נפתח ע"י פרימיום ולא ע"י תקופת הניסיון
     hasNewMe = !!(data && data.new_me_purchased);
+    newMeBilling = data ? { plan: data.new_me_plan || (data.new_me_purchased ? 'lifetime' : null), status: data.new_me_subscription_status || null, renewsAt: data.new_me_renews_at || null, endsAt: data.new_me_ends_at || null } : null;
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
@@ -7503,7 +7507,8 @@ function renderSettingsSubscriptionSection() {
 // וגם ביטול, אין צורך לבנות שתי מסכי-ניהול נפרדים. הביטול/השינוי בפועל
 // קורה שם, וחוזר לאפליקציה דרך lemonsqueezy-webhook כשהמצב באמת משתנה -
 // לא מיידית כאן כמו הזרם ההדגמתי הקודם
-async function openLemonSqueezyPortal() {
+// product: 'new_me' - המנוי החודשי של New Me (אותו Portal, מנוי אחר)
+async function openLemonSqueezyPortal(product) {
     if (!supabaseClient || !currentUserId) return;
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
@@ -7512,6 +7517,7 @@ async function openLemonSqueezyPortal() {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/create-billing-portal-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(product ? { product } : {}),
         });
         const result = await res.json();
         if (!res.ok || !result.url) { showAppToast(t('settings_billing_error_toast'), 'error'); return; }
@@ -8334,6 +8340,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
+    { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },
     { id: 'new_me_swap', category: 'nutrition' },
@@ -8342,7 +8349,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },
-    { id: 'new_me_advanced', category: 'nutrition' },
+    // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה
+    { id: 'new_me_advanced', category: 'nutrition', when: () => typeof nmChAllDone === 'function' && nmChAllDone() },
     { id: 'new_me_shopping', category: 'nutrition' },
     { id: 'new_me_reminders', category: 'nutrition' },
     { id: 'new_me_checkin', category: 'nutrition' },
@@ -8396,6 +8404,7 @@ function renderHelpFaqList() {
     list.innerHTML = '';
     let currentCategory = null;
     HELP_FAQ_ENTRIES.forEach(entry => {
+        if (entry.when && !entry.when()) return;
         if (entry.category !== currentCategory) {
             currentCategory = entry.category;
             const header = document.createElement('div');
@@ -16407,15 +16416,6 @@ function selectTableIcon(icon) {
     selectedTableIcon = icon;
     renderTableIconPicker();
 }
-// "אחר" - הקלדת אימוג'י כלשהו שלא ברשימה
-function handleTableIconCustomInput(input) {
-    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
-    if (!match) return;
-    selectedTableIcon = match[0];
-    input.value = '';
-    renderTableIconPicker();
-}
-
 function openAddTableModal() {
     // איפוס חד-משמעי - כדי שטבלה שנוצרת ידנית אחרי ניסיון AI שננטש לא "תירש"
     // עמודות/שורות ממתינות מהניסיון הקודם (ר' resetAiTableBuilderState)
@@ -17726,7 +17726,6 @@ function openNotebookCoverModal(notebookId, presetShelfId) {
     document.getElementById('nb-cover-modal-title').textContent = t(nb ? 'nb_cover_edit_title' : 'notebooks_add_item_title');
     document.getElementById('btn-save-nb-cover').textContent = t(nb ? 'save_generic' : 'add_btn');
     document.getElementById('nb-cover-name').value = nb ? nb.title : '';
-    document.getElementById('nb-cover-emoji-custom').value = '';
     const newShelfInput = document.getElementById('nb-cover-new-shelf');
     newShelfInput.value = projectsCache.length ? '' : t('nb_default_shelf_name');
     renderNbCoverShelfOptions();
@@ -17805,16 +17804,7 @@ function renderNbCoverPickers() {
         emojis.appendChild(b);
     });
     renderNbCoverPreview();
-}
-// "אחר" - הקלדת כל אימוג'י שלא ברשימה (אותו דפוס כמו handleTableIconCustomInput)
-function handleNbCoverEmojiCustomInput(input) {
-    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
-    if (!match || !nbCoverDraft) return;
-    nbCoverDraft.emoji = match[0];
-    input.value = '';
-    renderNbCoverPickers();
-}
-function renderNbCoverPreview() {
+}function renderNbCoverPreview() {
     const wrap = document.getElementById('nb-cover-preview');
     if (!wrap || !nbCoverDraft) return;
     const name = document.getElementById('nb-cover-name').value.trim() || t('notebooks_add_item_title');
@@ -17893,14 +17883,6 @@ function selectProjectIcon(icon) {
     selectedProjectIcon = icon;
     renderProjectIconPicker();
 }
-function handleProjectIconCustomInput(input) {
-    const match = (input.value || '').match(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*/u);
-    if (!match) return;
-    selectedProjectIcon = match[0];
-    input.value = '';
-    renderProjectIconPicker();
-}
-
 function openAddShelfModal() {
     if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     openAddProjectModal();
@@ -17910,7 +17892,6 @@ function openAddProjectModal() {
     document.getElementById('project-modal-title').textContent = t('nb_shelf_add_title');
     document.getElementById('btn-save-project').textContent = t('add_btn');
     document.getElementById('project-item-input').value = '';
-    document.getElementById('project-icon-custom').value = '';
     document.getElementById('project-delete-btn').classList.add('hidden');
     selectedProjectIcon = PROJECT_ICON_PRESETS[0];
     renderProjectIconPicker();
@@ -17924,7 +17905,6 @@ function openEditProjectModal(id) {
     document.getElementById('project-modal-title').textContent = t('nb_shelf_edit_title');
     document.getElementById('btn-save-project').textContent = t('save_generic');
     document.getElementById('project-item-input').value = project.title;
-    document.getElementById('project-icon-custom').value = '';
     document.getElementById('project-delete-btn').classList.remove('hidden');
     selectedProjectIcon = project.icon || PROJECT_ICON_PRESETS[0];
     renderProjectIconPicker();

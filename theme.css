@@ -3144,8 +3144,6 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-hero { border-radius: 26px; padding: 28px 22px; background: var(--nm-grad); color: #fff; text-align: center; box-shadow: 0 16px 40px color-mix(in srgb, var(--accent-purple) 25%, transparent); }
 .nm-hero .nm-hero-eyebrow { color: rgba(255, 255, 255, .85); }
 .nm-hero-title { margin: 10px 0 18px; font-size: 1.35rem; line-height: 1.35; text-wrap: balance; }
-.nm-price { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.nm-price-note { font-size: .82rem; opacity: .85; margin-top: 4px; }
 .nm-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .nm-features li { padding: 14px 16px; border-radius: 16px; background: var(--bg-row); border: 1px solid var(--border-color); color: var(--text-primary); line-height: 1.45; }
 .nm-features li::before { content: '✓'; color: var(--accent-pink-text); font-weight: 800; margin-inline-end: 10px; }
@@ -7059,8 +7057,6 @@ html[dir="rtl"] .nb-sheet-ghost.nb-turn-out::after, html[dir="rtl"] .nb-sheet.nb
     .nb-book { max-width: 860px; width: 100%; align-self: center; }
 }
 /* קרדיט קטן ומעומעם למקור פרטי הספרים והכריכות */
-.books-credit { margin: 0; text-align: center; font-size: .68rem; color: var(--text-secondary); opacity: .85; }
-.books-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 /* "באיזה עמוד?" - שדה העמוד ו"מתוך X" באותה שורה */
 .book-page-ask-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 2px; }
 .book-page-ask-row .book-page-input { width: 96px; font-size: 1.05rem; padding: 9px 10px; }
@@ -7074,6 +7070,12 @@ html[dir="rtl"] .nb-sheet-ghost.nb-turn-out::after, html[dir="rtl"] .nb-sheet.nb
 .book-lookup-text { display: flex; flex-direction: column; min-width: 0; }
 .book-lookup-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: .82rem; }
 .book-lookup-meta { font-size: .7rem; color: var(--text-secondary); }
+.book-lookup-row { display: flex; flex-direction: column; gap: 2px; }
+.book-lookup-row .book-lookup-item { width: 100%; box-sizing: border-box; }
+.book-lookup-link { align-self: flex-end; font-size: .68rem; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; padding: 0 4px; }
+.book-lookup-powered { display: flex; justify-content: flex-end; padding: 2px 4px 0; }
+.book-lookup-powered img { height: 15px; width: auto; display: block; opacity: .9; }
+html:not(.light-mode) .book-lookup-powered img { background: #fff; border-radius: 4px; padding: 2px 4px; }
 .book-finish-stars { display: flex; justify-content: center; gap: 4px; margin: 4px 0 10px; }
 .book-star { border: none; background: transparent; padding: 2px; font-size: 1.9rem; line-height: 1; color: var(--accent-gold); cursor: pointer; }
 .book-star:not(.on) { opacity: .55; }
@@ -7212,16 +7214,21 @@ div.nm-ch-head-text { cursor: default; }
 .nm-ch-section { display: flex; flex-direction: column; gap: 10px; }
 .nm-ch-section > .nm-fine { margin: 0 2px; }
 .nm-ch-section-sub { margin-top: -6px !important; }
-.nm-ch-list { display: flex; flex-direction: column; gap: 8px; }
-.nm-ch-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; box-sizing: border-box; }
-.nm-ch-row .nm-ch-icon { width: 38px; height: 38px; font-size: 1.2rem; border-radius: 12px; }
-.nm-ch-row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.nm-ch-row-text b { font-size: .92rem; }
-.nm-ch-row-text span { font-size: .76rem; color: var(--text-secondary); }
-.nm-ch-status { flex-shrink: 0; font-size: .72rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--accent-pink) 14%, transparent); color: var(--accent-pink-text, var(--accent-pink)); }
-.nm-ch-row.done .nm-ch-status { background: color-mix(in srgb, var(--accent-gold) 16%, transparent); color: var(--accent-gold-text, var(--accent-gold)); }
-.nm-ch-row.done .nm-ch-icon { border-color: color-mix(in srgb, var(--accent-gold) 55%, transparent); background: color-mix(in srgb, var(--accent-gold) 12%, var(--bg-glass)); }
-.nm-ch-row.active { border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent); }
+/* האתגרים לבחירה - קוביות קטנות (3 בשורה, 2 במסך צר מאוד) */
+.nm-ch-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 340px) { .nm-ch-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.nm-ch-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; min-height: 118px; padding: 12px 6px 10px; border-radius: 18px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: center; cursor: pointer; box-sizing: border-box; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.nm-ch-tile:hover { border-color: color-mix(in srgb, var(--accent-pink) 35%, var(--border-color)); }
+.nm-ch-tile:active { transform: scale(.97); }
+.nm-ch-tile:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-ch-tile-icon { width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center; border-radius: 14px; font-size: 1.35rem; background: var(--bg-glass); border: 1px solid var(--border-color); box-sizing: border-box; }
+.nm-ch-tile-title { font-size: .78rem; font-weight: 800; line-height: 1.25; text-wrap: balance; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.nm-ch-tile-days { margin-top: auto; font-size: .7rem; color: var(--text-secondary); }
+.nm-ch-tile-status { font-size: .66rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent-pink) 14%, transparent); color: var(--accent-pink-text, var(--accent-pink)); }
+.nm-ch-tile-check { position: absolute; top: 6px; inset-inline-end: 6px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; font-size: .66rem; font-weight: 900; color: #fff; background: var(--accent-gold); box-shadow: 0 2px 6px color-mix(in srgb, var(--accent-gold) 40%, transparent); }
+.nm-ch-tile.done .nm-ch-tile-icon { border-color: color-mix(in srgb, var(--accent-gold) 55%, transparent); background: color-mix(in srgb, var(--accent-gold) 12%, var(--bg-glass)); }
+.nm-ch-tile.active { border-color: color-mix(in srgb, var(--accent-pink) 50%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-pink) 14%, transparent); }
+@media (prefers-reduced-motion: reduce) { .nm-ch-tile { transition: none; } }
 .nm-ch-sheet-head { display: flex; align-items: center; gap: 14px; }
 .nm-ch-sheet-head h4 { margin: 2px 0 0; font-size: 1.12rem; text-wrap: balance; }
 .nm-ch-desc { margin: 0; color: var(--text-primary); line-height: 1.55; font-size: .92rem; }
@@ -7336,8 +7343,6 @@ button.nm-letter-card { cursor: pointer; }
 .nm-sales { display: flex; flex-direction: column; gap: 14px; }
 .nm-sales .nm-hero-title { margin: 8px 0 6px; font-size: 1.45rem; }
 .nm-hero-sub { margin: 0 auto 16px; max-width: 34ch; font-size: .92rem; line-height: 1.55; opacity: .93; }
-.nm-price-row { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 4px 10px; }
-.nm-price-once { font-size: .86rem; font-weight: 700; opacity: .92; }
 .nm-buy-btn { font-size: 1.02rem; }
 .nm-sales-trust { margin: -4px 0 0; text-align: center; font-size: .78rem; color: var(--text-secondary); }
 .nm-sales-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--border-color); background: var(--bg-row); }
@@ -7361,3 +7366,18 @@ button.nm-letter-card { cursor: pointer; }
 .nm-field-hint { margin: -6px 2px 4px; }
 .nm-lock-badge { display: none; margin-inline-start: 6px; font-size: .8em; }
 .hamburger-newme-item.locked .nm-lock-badge, .categories-newme-tile.locked .nm-lock-badge { display: inline; }
+
+/* ---------- New Me: שני מסלולים בעמוד הרכישה (לכל החיים / חודשי) + "המסלול שלך" בהגדרות ---------- */
+.nm-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.nm-plan-opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 20px 10px 14px; border-radius: 20px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: center; cursor: pointer; box-sizing: border-box; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.nm-plan-opt.selected { border-color: var(--accent-pink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent), 0 10px 24px color-mix(in srgb, var(--accent-purple) 14%, transparent); }
+.nm-plan-opt:active { transform: scale(.98); }
+.nm-plan-opt:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-plan-badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 10px; border-radius: 999px; font-size: .68rem; font-weight: 800; color: #fff; background: var(--nm-grad); box-shadow: 0 4px 10px color-mix(in srgb, var(--accent-pink) 30%, transparent); box-sizing: border-box; }
+.nm-plan-name { font-size: .84rem; font-weight: 800; color: var(--text-secondary); }
+.nm-plan-price { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 0 4px; font-size: 1.55rem; font-weight: 900; line-height: 1.15; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.nm-plan-price small { font-size: .72rem; font-weight: 700; color: var(--text-secondary); }
+.nm-plan-sub { font-size: .74rem; line-height: 1.35; color: var(--text-secondary); }
+.nm-bill-status { font-size: .95rem; font-weight: 700; color: var(--text-primary); }
+.nm-bill .nm-fine { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .nm-plan-opt { transition: none; } }

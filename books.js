@@ -3,8 +3,8 @@
 // בקריאה / קראתי. ספר בקריאה: התקדמות בעמודים, דד-ליין ("לסיים עד") עם קצב עמודים
 // ליום ומשימה יומית בהצצה להיום, ורצף ימי קריאה. ספרים שנקראו עומדים כשדרות על מדף,
 // עם דירוג ⭐ ומשפט שאהבתי. סיום ספר מוסיף +1 ליעד קריאה מ"היעדים שלי" (אם חובר).
-// בהוספה - חיפוש כריכה, סופר ומספר עמודים ב-Open Library (חינמי, בלי מפתח); ספר שלא
-// נמצא (למשל הרבה ספרים בעברית) מקבל כריכה צבעונית מהשם. הרעיונות מאפליקציות קריאה
+// בהוספה ובעריכה - חיפוש כריכה, סופר ומספר עמודים לפי שם הספר או הסופר/ת: Open Library, ו-Google
+// Books כשלא נמצא מספיק; ספר שלא נמצא בכלל מקבל כריכה צבעונית מהשם. הרעיונות מאפליקציות קריאה
 // (Goodreads - מדפים, Leaf/Basmo - דד-ליין וקצב יומי, Bookly - רצף)
 // ============================================================================
 const BOOK_STATUSES = [
@@ -606,55 +606,137 @@ function deleteBook(bookId) {
     });
 }
 
-// --- 🔎 חיפוש ב-Open Library תוך כדי הקלדת השם (רק בהוספה): כריכה, סופר, עמודים ---
+// --- 🔎 חיפוש פרטי ספר תוך כדי הקלדה: לפי שם הספר, או לפי שם הסופר/ת (לפי בקשה מפורשת - "אם לא
+// לפי הספר אז לפי הסופר") - כריכה, סופר, עמודים. מקור ראשון Open Library (חינמי, בלי מפתח); כשהוא
+// לא מוצא מספיק (נפוץ בספרים בעברית) - גם Google Books, דרך פונקציית השרת book-lookup שמחזיקה את
+// המפתח. תוצאה מ-Google מוצגת עם הלוגו "Powered by Google" וקישור לדף הספר ב-Google Books (דרישת
+// התנאים שלהם). הקרדיט הכללי לשני המקורות - במדיניות הפרטיות, לא על המסך (לפי בקשה מפורשת) ---
 let bookLookupTimer = null;
 let bookLookupSeq = 0;
-function onBookTitleInput() {
+const BOOK_RTL_SCRIPT = /[֐-׿؀-ۿ]/;
+function onBookTitleInput() { scheduleBookLookup('title'); }
+function onBookAuthorInput() { scheduleBookLookup('author'); }
+function scheduleBookLookup(mode) {
     clearTimeout(bookLookupTimer);
-    const q = document.getElementById('book-title-input').value.trim();
-    if (q.length < 3 || editingBookId) { hideBookLookup(); return; }
-    bookLookupTimer = setTimeout(() => runBookLookup(q), 650);
+    const input = document.getElementById(mode === 'author' ? 'book-author-input' : 'book-title-input');
+    const q = input ? input.value.trim() : '';
+    if (q.length < 3) { hideBookLookup(); return; }
+    bookLookupTimer = setTimeout(() => runBookLookup(q, mode), 650);
 }
 function hideBookLookup() {
     const box = document.getElementById('book-lookup-results');
     if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
 }
-async function runBookLookup(q) {
-    const seq = ++bookLookupSeq;
+function bookLookupKey(b) { return `${b.title}|${b.author}`.toLowerCase().replace(/[^\p{L}\p{N}|]+/gu, ' ').trim(); }
+
+async function fetchOpenLibraryBooks(q, mode, author) {
+    const params = mode === 'author' ? `author=${encodeURIComponent(q)}`
+        : author ? `title=${encodeURIComponent(q)}&author=${encodeURIComponent(author)}`
+        : `q=${encodeURIComponent(q)}`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 6000);
-        const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=4&fields=title,author_name,number_of_pages_median,cover_i`, { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!res.ok || seq !== bookLookupSeq) return;
+        const res = await fetch(`https://openlibrary.org/search.json?${params}&limit=8&fields=title,author_name,number_of_pages_median,cover_i`, { signal: ctrl.signal });
+        if (!res.ok) return [];
         const json = await res.json();
-        const docs = (json.docs || []).filter(d => d.title).slice(0, 4);
-        const box = document.getElementById('book-lookup-results');
-        if (!box || seq !== bookLookupSeq) return;
-        if (!docs.length) { hideBookLookup(); return; }
-        box.innerHTML = `<p class="book-lookup-hint">${bookEsc(t('books_lookup_hint'))}</p>`;
-        docs.forEach(doc => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'book-lookup-item';
-            const author = (doc.author_name || [])[0] || '';
-            const pages = doc.number_of_pages_median || null;
-            const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : '';
-            btn.innerHTML = `${cover ? `<img src="${bookEsc(cover.replace('-M.jpg', '-S.jpg'))}" alt="" loading="lazy">` : '<span class="book-lookup-noimg">📕</span>'}
-                <span class="book-lookup-text"><span class="book-lookup-title">${bookEsc(doc.title)}</span><span class="book-lookup-meta">${bookEsc([author, pages ? t('books_pages_count').replace('{n}', bookFmt(pages)) : ''].filter(Boolean).join(' · '))}</span></span>`;
-            btn.onclick = () => {
-                const titleInput = document.getElementById('book-title-input');
-                // השם שהוקלד נשאר, אלא אם הוא חלק מהשם שנמצא (השלמה של שם חלקי)
-                if (doc.title.toLowerCase().includes(titleInput.value.trim().toLowerCase())) titleInput.value = doc.title;
-                if (author) document.getElementById('book-author-input').value = author;
-                if (pages) document.getElementById('book-pages-input').value = pages;
-                document.getElementById('book-cover-url').value = cover;
-                hideBookLookup();
-            };
-            box.appendChild(btn);
+        return (json.docs || []).filter(d => d.title).map(d => ({
+            title: d.title,
+            author: (d.author_name || [])[0] || '',
+            pages: d.number_of_pages_median || null,
+            cover: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : '',
+            thumb: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '',
+            source: 'ol',
+        }));
+    } catch { return []; } finally { clearTimeout(timer); }
+}
+
+async function fetchGoogleBooks(q, mode, author) {
+    if (!supabaseClient || typeof getSupabaseAccessToken !== 'function') return [];
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+        const token = await getSupabaseAccessToken();
+        if (!token) return [];
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/book-lookup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ q, mode, author: author || '' }),
+            signal: ctrl.signal,
         });
-        box.classList.remove('hidden');
-    } catch (e) { /* אין רשת / חסום - החיפוש אופציונלי */ }
+        if (!res.ok) return [];
+        const json = await res.json();
+        return (json.items || []).filter(b => b && b.title).map(b => ({ ...b, source: 'google' }));
+    } catch { return []; } finally { clearTimeout(timer); }
+}
+
+async function runBookLookup(q, mode) {
+    const seq = ++bookLookupSeq;
+    const author = mode === 'title' ? document.getElementById('book-author-input').value.trim() : '';
+    const ol = await fetchOpenLibraryBooks(q, mode, author);
+    if (seq !== bookLookupSeq) return;
+    let results = ol;
+    // Open Library מצא מעט, או שמחפשים בעברית/ערבית (שם הוא חלש) - גם Google Books.
+    // בעברית/ערבית - התוצאות של Google קודם
+    const rtl = BOOK_RTL_SCRIPT.test(q + author);
+    if (ol.length < 3 || rtl) {
+        const google = await fetchGoogleBooks(q, mode, author);
+        if (seq !== bookLookupSeq) return;
+        const merged = [];
+        const seen = new Set();
+        (rtl ? [...google, ...ol] : [...ol, ...google]).forEach(b => {
+            const key = bookLookupKey(b);
+            if (!seen.has(key)) { seen.add(key); merged.push(b); }
+        });
+        results = merged;
+    }
+    renderBookLookup(results.slice(0, 6), mode);
+}
+
+function renderBookLookup(docs, mode) {
+    const box = document.getElementById('book-lookup-results');
+    if (!box) return;
+    if (!docs.length) { hideBookLookup(); return; }
+    // התוצאות מופיעות מתחת לשדה שמקלידים בו - שם הספר או הסופר/ת
+    const anchor = document.getElementById(mode === 'author' ? 'book-author-input' : 'book-title-input');
+    if (anchor && anchor.nextElementSibling !== box) anchor.insertAdjacentElement('afterend', box);
+    box.innerHTML = `<p class="book-lookup-hint">${bookEsc(t(mode === 'author' ? 'books_lookup_hint_author' : 'books_lookup_hint'))}</p>`;
+    docs.forEach(doc => {
+        const row = document.createElement('div');
+        row.className = 'book-lookup-row';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'book-lookup-item';
+        const meta = [doc.author, doc.pages ? t('books_pages_count').replace('{n}', bookFmt(doc.pages)) : ''].filter(Boolean).join(' · ');
+        btn.innerHTML = `${doc.thumb ? `<img src="${bookEsc(doc.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="book-lookup-noimg">📕</span>'}
+            <span class="book-lookup-text"><span class="book-lookup-title">${bookEsc(doc.title)}</span><span class="book-lookup-meta">${bookEsc(meta)}</span></span>`;
+        btn.onclick = () => applyBookLookup(doc, mode);
+        row.appendChild(btn);
+        if (doc.source === 'google' && doc.link) {
+            const link = document.createElement('a');
+            link.className = 'book-lookup-link';
+            link.href = doc.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = 'Google Books ↗';
+            row.appendChild(link);
+        }
+        box.appendChild(row);
+    });
+    if (docs.some(d => d.source === 'google')) {
+        box.insertAdjacentHTML('beforeend', '<div class="book-lookup-powered"><img src="powered-by-google.png" alt="Powered by Google" width="62" height="30"></div>');
+    }
+    box.classList.remove('hidden');
+}
+
+function applyBookLookup(doc, mode) {
+    const titleInput = document.getElementById('book-title-input');
+    const typed = titleInput.value.trim().toLowerCase();
+    // חיפוש לפי סופר/ת: הספר שנבחר הוא השם. לפי שם: השם שהוקלד נשאר, אלא אם הוא חלק מהשם שנמצא
+    if (mode === 'author' || !typed || doc.title.toLowerCase().includes(typed)) titleInput.value = doc.title;
+    if (doc.author) document.getElementById('book-author-input').value = doc.author;
+    if (doc.pages) document.getElementById('book-pages-input').value = doc.pages;
+    document.getElementById('book-cover-url').value = doc.cover || '';
+    hideBookLookup();
 }
 
 // --- 🎯 חיבור ליעד קריאה מ"היעדים שלי" ---
