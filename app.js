@@ -8304,9 +8304,11 @@ const HELP_FAQ_ENTRIES = [
     { id: 'ai_monthly_limits', category: 'ai' },
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
+    { id: 'workout_calories', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },
     { id: 'new_me_swap', category: 'nutrition' },
+    { id: 'new_me_flexible_menu', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'new_me_shopping', category: 'nutrition' },
@@ -10738,13 +10740,16 @@ async function submitSportSession() {
     const duration = parseInt(durationInput.value) || null;
     const distance = distanceInput.value ? parseFloat(distanceInput.value) : null;
     if (!duration) { showAppToast(t('sport_missing_duration'), 'error'); return; }
+    if (burnWeightKg == null) await refreshBurnWeight();
+    const sportRow = { sport_type: isCustom ? 'custom' : currentSportType, custom_type_name: customName, duration_minutes: duration, distance_km: distance };
     const { error } = await supabaseClient.from('sport_sessions').insert({
-        user_id: currentUserId, username: currentUsername, sport_type: isCustom ? 'custom' : currentSportType,
-        custom_type_name: customName, duration_minutes: duration, distance_km: distance,
+        user_id: currentUserId, username: currentUsername, ...sportRow,
         motivation: currentSportMotivation, session_date: dateInput.value || getLocalDateString(),
         notes: notesInput.value.trim() || null, photo_url: photoUrlInput.value || null,
+        calories_burned: estimateSportKcal(sportRow),
     });
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    afterSportChanged();
     durationInput.value = '';
     distanceInput.value = '';
     document.getElementById('sport-custom-type-input').value = '';
@@ -10800,12 +10805,15 @@ async function submitSportQuickAdd() {
     const distance = distanceInput && distanceInput.value ? parseFloat(distanceInput.value) : null;
     const notesInput = document.getElementById('sport-quick-notes-input');
     const notes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : null;
+    if (burnWeightKg == null) await refreshBurnWeight();
+    const sportRow = { sport_type: currentSportQuickType, custom_type_name: customName, duration_minutes: duration, distance_km: distance };
     const { error } = await supabaseClient.from('sport_sessions').insert({
-        user_id: currentUserId, username: currentUsername, sport_type: currentSportQuickType,
-        custom_type_name: customName, duration_minutes: duration, distance_km: distance,
+        user_id: currentUserId, username: currentUsername, ...sportRow,
         motivation: null, session_date: sessionDate, notes: notes, photo_url: null,
+        calories_burned: estimateSportKcal(sportRow),
     });
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    afterSportChanged();
     closeModal('modal-sport-quick-add');
     showAppToast(t('sport_add_success'));
     if (document.getElementById('sport-summary-next-btn')) await Promise.all([renderSportSummary(), renderSportHistory()]);
@@ -10869,6 +10877,79 @@ function sportTypeLabel(row) {
     return t(`sport_type_${row.sport_type}`);
 }
 
+// --- 🔥 שריפת קלוריות באימונים (לפי בקשה מפורשת: "אימונים מתחברים לקלוריות של יומן התזונה")
+// הערכה: MET × משקל (ק"ג) × שעות. בריצה ובאופניים ה-MET נגזר מהמהירות כשיש מרחק; בסוג "אחר"
+// לפי מילת מפתח בשם (בכמה שפות). המספר נשמר על האימון (calories_burned) ונכנס לתקציב היומי ---
+const SPORT_CUSTOM_MET = [
+    [/walk|הליכ|camin|marche|marcher|spazier|gehen|ходьб|прогулк|مشي|passeggi/i, 3.5],
+    [/hik|טיול|טיפוס|sender|randonn|wander|поход|trilha|escursion/i, 6],
+    [/yoga|יוגה|йога|يوغا|ioga/i, 2.5],
+    [/pilates|פילאטיס|пилатес|بيلاتس/i, 3],
+    [/stretch|מתיח|estira|étire|dehn|растяж|تمدد|alonga/i, 2.3],
+    [/hiit|crossfit|קרוספיט|אינטרוו|tabata|טבטה/i, 8],
+    [/spin|ספינינג/i, 8.5],
+    [/jump|rope|דילוג|חבל|скакал/i, 11],
+    [/row|חתיר|rem[oa]|aviron|rudern|гребл/i, 7],
+    [/ellip|אליפט/i, 5],
+    [/box|איגרוף|boxe|бокс|ملاكم/i, 7.8],
+    [/tennis|טניס|tenis|теннис|تنس|tênis/i, 7.3],
+    [/basket|כדורסל|baloncesto|баскетбол|السلة|basquete|pallacanestro/i, 6.5],
+    [/football|soccer|כדורגל|fútbol|futbol|fußball|футбол|القدم|futebol|calcio/i, 7],
+    [/dance|danc|ריקוד|זומבה|zumba|baile|danse|tanz|танц|رقص|dança|danza/i, 5.5],
+    [/gym|weight|strength|כוח|משקולות|חדר כושר|fuerza|pesas|muscul|kraft|силов|тренаж|أثقال|pesi/i, 5],
+];
+function sportMet(row) {
+    const minutes = Number(row.duration_minutes) || 0;
+    const km = Number(row.distance_km) || 0;
+    const speed = minutes > 0 && km > 0 ? km / (minutes / 60) : 0;
+    if (row.sport_type === 'running') return speed ? Math.min(16, Math.max(6, speed * 1.02)) : 9.8;
+    if (row.sport_type === 'cycling') {
+        if (!speed) return 7.5;
+        return speed < 16 ? 4 : speed < 19 ? 6.8 : speed < 22 ? 8 : speed < 25 ? 10 : speed < 30 ? 12 : 15.8;
+    }
+    if (row.sport_type === 'swimming') return 7;
+    const name = String(row.custom_type_name || '');
+    const hit = SPORT_CUSTOM_MET.find(([re]) => re.test(name));
+    return hit ? hit[1] : 5;
+}
+let burnWeightKg = null;
+async function refreshBurnWeight() {
+    if (!supabaseClient || !currentUserId) return null;
+    const { data } = await supabaseClient.from('weight_tracker').select('weight_value').eq('user_id', currentUserId).order('weight_date', { ascending: false }).limit(1);
+    const w = data && data[0] ? Number(data[0].weight_value) : 0;
+    burnWeightKg = w > 25 && w < 400 ? w : null;
+    return burnWeightKg;
+}
+// משקל לא ידוע - 70 ק"ג (הערכה; לכן תמיד "~")
+function estimateSportKcal(row) {
+    const minutes = Number(row.duration_minutes) || 0;
+    if (minutes <= 0) return 0;
+    return Math.round(sportMet(row) * (burnWeightKg || 70) * (minutes / 60));
+}
+function sportSessionKcal(row) {
+    return row.calories_burned != null ? Number(row.calories_burned) || 0 : estimateSportKcal(row);
+}
+async function loadBurnedKcalForDate(date) {
+    if (!supabaseClient || !currentUserId) return 0;
+    if (burnWeightKg == null) await refreshBurnWeight();
+    const { data } = await supabaseClient.from('sport_sessions').select('sport_type, custom_type_name, duration_minutes, distance_km, calories_burned').eq('user_id', currentUserId).eq('session_date', date);
+    return (data || []).reduce((sum, row) => sum + sportSessionKcal(row), 0);
+}
+// שריפה ביום שמוצג במעקב הארוחות (בדרך כלל היום) - נכנסת לתקציב ולמחוון
+let trackerBurnedKcal = 0;
+async function refreshTrackerBurn(date) {
+    const dateInput = document.getElementById('selected-date');
+    const d = date || (dateInput && dateInput.value) || getLocalDateString();
+    trackerBurnedKcal = await loadBurnedKcalForDate(d);
+    updateNutritionGoalProgress();
+}
+// אחרי הוספה/מחיקה של אימון - מעקב הארוחות ו-New Me רואים את השריפה החדשה
+function afterSportChanged() {
+    refreshTrackerBurn();
+    const nmSection = document.getElementById('new-me-section');
+    if (nmSection && nmSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
+}
+
 function formatSportDayLabel(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
@@ -10882,14 +10963,17 @@ async function renderSportSummary() {
     const nextBtn = document.getElementById('sport-summary-next-btn');
     if (nextBtn) nextBtn.disabled = monthKey === currentMonthKey();
     const { firstStr, lastStr } = sportMonthRange(monthKey);
-    const { data } = await supabaseClient.from('sport_sessions').select('session_date, sport_type, duration_minutes, distance_km')
+    if (burnWeightKg == null) await refreshBurnWeight();
+    const { data } = await supabaseClient.from('sport_sessions').select('session_date, sport_type, custom_type_name, duration_minutes, distance_km, calories_burned')
         .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr);
     const rows = data || [];
-    let totalMinutes = 0, totalKm = 0;
-    rows.forEach(row => { totalMinutes += row.duration_minutes || 0; totalKm += Number(row.distance_km) || 0; });
+    let totalMinutes = 0, totalKm = 0, totalKcal = 0;
+    rows.forEach(row => { totalMinutes += row.duration_minutes || 0; totalKm += Number(row.distance_km) || 0; totalKcal += sportSessionKcal(row); });
     document.getElementById('sport-total-sessions').textContent = rows.length;
     document.getElementById('sport-total-minutes').textContent = totalMinutes.toLocaleString();
     document.getElementById('sport-total-km').textContent = totalKm.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const kcalEl = document.getElementById('sport-total-kcal');
+    if (kcalEl) kcalEl.textContent = `~${totalKcal.toLocaleString()}`;
 
     // "ימים חזקים": לא רשימת תאריכים שטוחה - ימי-השבוע (ראשון/שני/...) שבהם
     // יש הכי הרבה אימונים החודש, כתבנית הרגל חוזרת (יכול להיות יותר מיום
@@ -10940,6 +11024,7 @@ async function renderSportHistory() {
     if (!list || !supabaseClient || !currentUserId) return;
     const monthKey = sportSummaryMonthKey || currentMonthKey();
     const { firstStr, lastStr } = sportMonthRange(monthKey);
+    if (burnWeightKg == null) await refreshBurnWeight();
     const { data } = await supabaseClient.from('sport_sessions').select('*')
         .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
         .order('session_date', { ascending: false }).order('created_at', { ascending: false });
@@ -10952,7 +11037,8 @@ async function renderSportHistory() {
         // "YYYY-MM-DD" מפורש כ-UTC חצות ע"י JS - יכול להזיז את היום המוצג
         // באזורי זמן עם offset שלילי מ-UTC
         const formattedDate = formatSportDayLabel(row.session_date);
-        const distancePart = row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '';
+        const distancePart = (row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '')
+            + ` · 🔥 ~${sportSessionKcal(row).toLocaleString()} ${t('calories_unit')}`;
         const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
         const notesPart = row.notes ? `<span class="finance-history-note">${escapeHtmlForReport(row.notes)}</span>` : '';
         const photoPart = row.photo_url ? `<img src="${row.photo_url}" class="sport-history-thumb" alt="">` : '';
@@ -10978,6 +11064,7 @@ async function renderSportHistory() {
 
 async function deleteSportSession(id) {
     await supabaseClient.from('sport_sessions').delete().eq('id', id);
+    afterSportChanged();
     await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 
@@ -14792,9 +14879,15 @@ async function saveProteinDailyGoal() {
 let todayCaloriesTotal = 0, todayProteinTotal = 0;
 let extraCaloriesToday = 0, extraProteinToday = 0;
 function updateNutritionGoalProgress() {
-    const calorieGoal = getCalorieDailyGoal();
+    // תקציב היום = היעד + מה שנשרף באימונים באותו יום (לפי בחירה מפורשת)
+    const calorieGoal = getCalorieDailyGoal() + trackerBurnedKcal;
     const calorieFill = document.getElementById('calorie-goal-progress-fill');
     if (calorieFill) calorieFill.style.width = `${calorieGoal > 0 ? Math.min(100, Math.round((todayCaloriesTotal / calorieGoal) * 100)) : 0}%`;
+    const burnLine = document.getElementById('calorie-burn-line');
+    if (burnLine) {
+        burnLine.classList.toggle('hidden', trackerBurnedKcal <= 0);
+        burnLine.textContent = trackerBurnedKcal > 0 ? t('calorie_burn_line').replace('{amount}', trackerBurnedKcal.toLocaleString()).replace('{budget}', calorieGoal.toLocaleString()) : '';
+    }
     const proteinGoal = getProteinDailyGoal();
     const proteinFill = document.getElementById('protein-goal-progress-fill');
     if (proteinFill) proteinFill.style.width = `${proteinGoal > 0 ? Math.min(100, Math.round((todayProteinTotal / proteinGoal) * 100)) : 0}%`;
@@ -14807,11 +14900,12 @@ function updateMiniCalorieIndicator() {
     const el = document.getElementById('daily-calorie-mini-indicator');
     if (!el) return;
     const goal = getCalorieDailyGoal();
-    const remaining = goal - todayCaloriesTotal;
+    const remaining = goal + trackerBurnedKcal - todayCaloriesTotal;
     const remainingText = remaining >= 0
         ? t('daily_calorie_mini_remaining').replace('{amount}', remaining)
         : t('daily_calorie_mini_over').replace('{amount}', Math.abs(remaining));
-    el.textContent = t('daily_calorie_mini_summary').replace('{total}', todayCaloriesTotal).replace('{goal}', goal) + ' · ' + remainingText;
+    const burnText = trackerBurnedKcal > 0 ? ' · ' + t('daily_calorie_mini_burn').replace('{amount}', trackerBurnedKcal) : '';
+    el.textContent = t('daily_calorie_mini_summary').replace('{total}', todayCaloriesTotal).replace('{goal}', goal) + burnText + ' · ' + remainingText;
     updateHomeCalorieBadge();
 }
 
@@ -15320,6 +15414,8 @@ async function loadDailyNutrition(date) {
     todayProteinTotal = proteinTotal;
     updateNutritionGoalProgress();
     updateHomeCalorieBadge();
+    // 🏃 אימונים באותו יום מגדילים את התקציב
+    refreshTrackerBurn(date);
 }
 
 // --- זיהוי ארוחה מתמונה (פרימיום בלבד): AI אמיתי בעל יכולת ראייה, דרך אותו
@@ -19990,6 +20086,8 @@ async function insertWeightRecord(value, date, note) {
     const res = await supabaseClient.from('weight_tracker').insert({ username: currentUsername, user_id: currentUserId, weight_date: date, weight_value: value, note: note || null });
     // שקילה חדשה מעדכנת יעדי משקל ב"היעדים שלי" (ויכולה להשלים אותם)
     if (!res.error && typeof onWeightLoggedForGoals === 'function') onWeightLoggedForGoals();
+    // הערכת השריפה באימונים הבאים לפי המשקל החדש
+    if (!res.error) burnWeightKg = null;
     return res;
 }
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await insertWeightRecord(w, d, note); if (noteInput) noteInput.value = ''; loadWeightHistory(); }

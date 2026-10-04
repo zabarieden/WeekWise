@@ -3340,7 +3340,8 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 /* הגיליונות והסטורי נפתחים מחוץ ל-.nm-root (בתוך .phone-wrapper) - צריכים את הגרדיאנט גם שם */
 .nm-sheet-overlay, .nm-story-overlay { --nm-grad: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
 .nm-section > *:not(.nm-kitchen-scene) { position: relative; z-index: 1; }
-.nm-kitchen-scene { position: sticky; bottom: 0; margin-top: auto; height: 160px; pointer-events: none; z-index: 0; color: var(--accent-purple); opacity: .45; }
+/* בסוף התוכן ולא דבוק לתחתית המסך - לפי בקשה מפורשת ("מסתיר ומפריע"): רואים אותו רק כשגוללים עד למטה */
+.nm-kitchen-scene { position: relative; margin-top: auto; padding-top: 24px; height: 160px; flex-shrink: 0; pointer-events: none; z-index: 0; color: var(--accent-purple); opacity: .45; }
 .nm-kitchen-scene svg { display: block; width: 100%; height: 100%; }
 .nm-view-body { display: flex; flex-direction: column; gap: 12px; }
 .nm-card { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-row); }
@@ -7131,3 +7132,24 @@ html[dir="rtl"] .nb-sheet-ghost.nb-turn-out::after, html[dir="rtl"] .nb-sheet.nb
 .reminder-fields-wrap textarea::placeholder { color: var(--text-secondary); opacity: 0.8; }
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .reminder-fields-wrap textarea { background-color: rgba(0, 0, 0, 0.05); color: var(--accent-purple-text); }
 @media (max-width: 420px) { .calendar-event-time-row.is-meeting { grid-template-columns: 1fr; } }
+
+/* ---------- New Me: שריפה באימונים, ארוחה שהוסרה וקלוריות פנויות, החלפה בשלוש לשוניות ---------- */
+.nm-burn-line { font-size: .76rem; font-weight: 700; color: var(--accent-purple-light-text, var(--accent-purple)); }
+.nm-burn-line bdi { font-variant-numeric: tabular-nums; }
+.nm-room-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 18px; border: 1.5px dashed color-mix(in srgb, var(--accent-pink) 55%, transparent); background: color-mix(in srgb, var(--accent-pink) 6%, transparent); }
+.nm-room-title { font-weight: 800; font-size: .92rem; }
+.nm-room-card .nm-fine { margin: 0; }
+.nm-restore-row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.nm-custom-tag { font-size: .85em; }
+.nm-swap-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--bg-row); }
+.nm-swap-tab { flex: 1 1 0; min-width: 0; padding: 8px 6px; border: none; border-radius: 11px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nm-swap-tab.on { background: var(--nm-grad, linear-gradient(135deg, var(--accent-purple), var(--accent-pink))); color: #fff; box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-pink) 30%, transparent); }
+.nm-swap-tab:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-swap-budget { font-size: .8rem; font-weight: 700; color: var(--accent-purple-light-text, var(--accent-purple)); }
+.nm-option.too-big { opacity: .5; cursor: not-allowed; }
+.nm-ai-input { width: 100%; box-sizing: border-box; min-height: 76px; padding: 12px 14px; border-radius: 16px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .92rem; resize: vertical; }
+.nm-ai-input:focus { outline: none; border-color: var(--accent-pink); }
+.nm-ai-result { border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent); }
+.nm-ai-result .nm-btn-primary { margin-top: 6px; }
+.nm-loading-inline { height: 120px; border-radius: 16px; background: var(--bg-row); animation: nmPulse 1.2s ease-in-out infinite alternate; }
+.calorie-burn-line { margin: 8px 0 0; font-size: .78rem; font-weight: 600; color: var(--text-secondary); }

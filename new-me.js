@@ -89,6 +89,8 @@ let nmCompare = { before: null, after: null };
 let nmShopDays = 7;
 let nmShopOff = new Set();     // מרכיבים שהורדו מהרשימה ("יש בבית")
 let nmPendingDeepLink = false; // לחיצה על תזכורת ארוחה - פותחים את New Me כשמצב הרכישה ידוע
+let nmCustomMeals = [];        // new_me_custom_meals: ארוחות שנבחרו מהארוחות הקבועות או נכתבו ל-AI (מפתח c_<id>)
+let nmBurnedToday = 0;         // קלוריות שנשרפו באימונים היום - מגדילות את התקציב (לפי בחירה מפורשת)
 
 function nmEsc(s) { return escapeHtmlForReport(s == null ? '' : s); }
 function nmFmt(n) { try { return Number(n).toLocaleString(currentLang); } catch { return String(n); } }
@@ -140,22 +142,28 @@ function nmParseItem(key) {
     const m = /^p(1300|1500)_(meal1|snack1|meal2|snack2)_([ABC])$/.exec(key || '');
     return m ? { key, plan: Number(m[1]), slot: m[2], opt: m[3] } : null;
 }
+// ארוחה אישית (מהארוחות הקבועות או מכתיבה ל-AI) - מפתח c_<uuid> מטבלת new_me_custom_meals
+function nmIsCustomKey(key) { return /^c_[0-9a-f-]{36}$/i.test(key || ''); }
+function nmCustomMeal(key) { return nmIsCustomKey(key) ? nmCustomMeals.find(m => 'c_' + m.id === key) || null : null; }
+function nmValidKey(key) { return !!(nmParseItem(key) || nmCustomMeal(key)); }
 function nmItemInfo(key) {
+    const cm = nmCustomMeal(key);
+    if (cm) return { key, custom: true, source: cm.source, plan: nmProfile ? nmProfile.plan : 1300, slot: null, opt: null, kcal: Number(cm.kcal) || 0, protein: Math.round((Number(cm.protein) || 0) * 10) / 10, name: cm.name, text: cm.description || '' };
     const p = nmParseItem(key);
     if (!p) return null;
     const o = NEW_ME_PLANS[p.plan][p.slot].options[p.opt];
     return { ...p, kcal: o.kcal, protein: o.protein };
 }
-function nmItemShort(it) { return nmOptText(it.plan, it.slot, it.opt, true); }
-function nmItemFull(it) { return nmOptText(it.plan, it.slot, it.opt); }
+function nmItemShort(it) { return it.custom ? it.name : nmOptText(it.plan, it.slot, it.opt, true); }
+function nmItemFull(it) { return it.custom ? (it.text || t(it.source === 'ai' ? 'nm_custom_from_ai' : 'nm_custom_from_saved')) : nmOptText(it.plan, it.slot, it.opt); }
 // הבחירה הקבועה של משבצת (choice_meal1...): אות בודדת = אפשרות של אותה ארוחה בתוכנית
-// הנוכחית (כך שמעבר 1,300↔1,500 מתאים את המנה); מפתח מלא = פריט מכל התפריט
+// הנוכחית (כך שמעבר 1,300↔1,500 מתאים את המנה); מפתח מלא = פריט מכל התפריט או ארוחה אישית
 function nmPermanentKey(slot) {
     const v = (nmProfile && nmProfile['choice_' + slot]) || 'A';
     if (/^[ABC]$/.test(v)) return nmItemKey(nmProfile.plan, slot, v);
-    return nmParseItem(v) ? v : nmItemKey(nmProfile.plan, slot, 'A');
+    return nmValidKey(v) ? v : nmItemKey(nmProfile.plan, slot, 'A');
 }
-function nmIsOverride(slot) { return !!(nmToday && nmToday.overrides && nmParseItem(nmToday.overrides[slot])); }
+function nmIsOverride(slot) { return !!(nmToday && nmToday.overrides && nmValidKey(nmToday.overrides[slot])); }
 function nmTodayKey(slot) { return nmIsOverride(slot) ? nmToday.overrides[slot] : nmPermanentKey(slot); }
 function nmIsFree(slot) { return !!(nmToday && nmToday.free_slot === slot); }
 function nmFreeKcal() { return (nmToday && Number(nmToday.free_kcal)) || NEW_ME_FREE_MEAL_KCAL; }
@@ -171,6 +179,17 @@ function nmOrder() {
 }
 function nmPosName(i) { return t('nm_pos_' + (i + 1)); }
 function nmSlotName(slot) { return nmPosName(Math.max(0, nmOrder().indexOf(slot))); }
+// ארוחות שהוסרו מהתפריט (למשל 3 ארוחות במקום 4) - לפי בקשה מפורשת. ארוחה שהוסרה שומרת על
+// המיקום שלה ביום (השם לפי שעת היום לא זז), והקלוריות שלה פנויות למילוי עד סך התוכנית
+const NEW_ME_MIN_MEALS = 2;
+function nmHiddenSlots() { return String((nmProfile && nmProfile.hidden_slots) || '').split(',').filter(s => NEW_ME_SLOTS.includes(s)); }
+function nmActiveOrder() { const hidden = nmHiddenSlots(); return nmOrder().filter(s => !hidden.includes(s)); }
+// סדר חדש של הארוחות הפעילות → סדר מלא: הארוחות שהוסרו נשארות במקומן
+function nmComposeOrder(active) { const hidden = nmHiddenSlots(); const queue = active.slice(); return nmOrder().map(s => (hidden.includes(s) ? s : queue.shift())); }
+// כמה ארוחות צריך לסמן כדי שהיום ייחשב "טוב" - 3, או כולן כשיש פחות
+function nmGoodDayChecks() { return Math.min(3, nmActiveOrder().length); }
+// God Mode - נפתח למי שסיים/ה את כל האתגרים (ר' "אתגרים" למטה); עד אז false
+function nmGodMode() { return typeof nmGodModeActive === 'function' ? nmGodModeActive() : false; }
 
 async function renderNewMe() {
     const root = nmRoot();
@@ -389,12 +408,14 @@ async function nmSyncCalorieGoal() {
 // ---------- נתוני יום ----------
 async function nmLoadToday() {
     const today = getLocalDateString();
-    const [{ data }, { data: tracker }, { data: saved }, { data: days }, { data: rems }] = await Promise.all([
+    const [{ data }, { data: tracker }, { data: saved }, { data: days }, { data: rems }, { data: custom }, burned] = await Promise.all([
         supabaseClient.from('new_me_checkins').select('*').eq('user_id', currentUserId).eq('checkin_date', today),
         supabaseClient.from('calorie_tracker').select('id, meal_type, food_description, calories, protein_grams, source').eq('user_id', currentUserId).eq('date', today),
         supabaseClient.from('new_me_saved_drinks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
         supabaseClient.from('new_me_days').select('*').eq('user_id', currentUserId).gte('day', nmWeekStart()).lte('day', nmAddDays(nmWeekEnd(), 7)),
         supabaseClient.from('new_me_reminders').select('*').eq('user_id', currentUserId).order('position', { ascending: true }),
+        supabaseClient.from('new_me_custom_meals').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
+        typeof loadBurnedKcalForDate === 'function' ? loadBurnedKcalForDate(today) : Promise.resolve(0),
     ]);
     nmTodayCheckins = {};
     (data || []).forEach(r => { nmTodayCheckins[r.slot] = r; });
@@ -403,6 +424,8 @@ async function nmLoadToday() {
     nmWeekDays = days || [];
     nmToday = nmWeekDays.find(d => d.day === today) || null;
     nmReminders = rems || [];
+    nmCustomMeals = custom || [];
+    nmBurnedToday = Number(burned) || 0;
 }
 
 // נתוני המסע: סיכום לכל יום (בדיקות / קלוריות / ארוחה חופשית / צ'ק-אין), הישגים, משקל
@@ -447,8 +470,10 @@ function nmEatenToday() {
 
 // סה"כ התפריט של היום (כולל החלפות וארוחה חופשית) + תקציב השתייה - מול יעד התוכנית
 function nmMenuTotal() {
-    return nmOrder().reduce((a, slot) => a + (nmIsFree(slot) ? nmFreeKcal() : nmItemInfo(nmTodayKey(slot)).kcal), 0) + NEW_ME_DRINKS_KCAL;
+    return nmActiveOrder().reduce((a, slot) => a + (nmIsFree(slot) ? nmFreeKcal() : nmItemInfo(nmTodayKey(slot)).kcal), 0) + NEW_ME_DRINKS_KCAL;
 }
+// כמה קלוריות פנויות בתפריט של היום עד סך התוכנית (אחרי שהוסרה ארוחה או נבחרה ארוחה קטנה יותר)
+function nmMenuRoom() { return Math.max(0, nmProfile.plan - nmMenuTotal()); }
 
 // אחרי כל שינוי - מרעננים את מעקב הארוחות/ההצצה להיום (אותו סכום בכל מקום)
 function nmAfterTrackerChange() {
@@ -461,7 +486,8 @@ function nmStartDay() { return (nmProfile && (nmProfile.started_on || String(nmP
 function nmJourneyDay() { return Math.max(1, nmDaysBetween(nmStartDay(), getLocalDateString()) + 1); }
 // יום טוב: ✓ על 3 ארוחות לפחות ובלי לעבור את יעד הקלוריות ביותר מ-10%. ביום של ארוחה
 // חופשית מתוכננת היום נספר גם אם עבר את היעד (לפי בקשה מפורשת)
-function nmIsGoodDay(r) { return r.checks >= 3 && (r.free || r.kcal <= nmProfile.plan * 1.1); }
+// עם פחות ארוחות בתפריט (למשל 2 + נשנוש) - מספיק לסמן את כולן; שריפה באימונים מגדילה את התקרה
+function nmIsGoodDay(r) { return r.checks >= nmGoodDayChecks() && (r.free || r.kcal <= (nmProfile.plan + (Number(r.burned) || 0)) * 1.1); }
 function nmStreaks() {
     const today = getLocalDateString();
     const rows = nmStats.filter(r => r.day >= nmStartDay() && r.day <= today);
@@ -474,7 +500,7 @@ function nmStreaks() {
         else if (rows[i].day === today) continue;
         else break;
     }
-    return { current, best, good: rows.filter(nmIsGoodDay).length, perfect: rows.filter(r => r.checks >= 4).length };
+    return { current, best, good: rows.filter(nmIsGoodDay).length, perfect: rows.filter(r => r.checks >= nmActiveOrder().length).length };
 }
 function nmMilestoneName(n) { return [7, 30, 60, 90].includes(n) ? t('nm_milestone_' + n) : t('nm_milestone_day').replace('{n}', nmFmt(n)); }
 function nmNextMilestone(day) { return NEW_ME_MILESTONE_PATH.find(n => n > day) || (Math.floor(day / 365) + 1) * 365; }
@@ -628,26 +654,28 @@ function nmRenderHome(root) {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
     const order = nmOrder();
-    const done = order.filter(s => nmTodayCheckins[s]).length;
+    const active = nmActiveOrder();
+    const done = active.filter(s => nmTodayCheckins[s]).length;
     const day = nmJourneyDay();
     const st = nmStreaks();
     const next = nmNextMilestone(day), prev = nmPrevMilestone(day);
     const pct = Math.max(4, Math.round(((day - prev) / (next - prev)) * 100));
     const menuTotal = nmMenuTotal();
     const over = menuTotal - plan;
-    const hasFreeToday = order.some(nmIsFree);
+    const hasFreeToday = active.some(nmIsFree);
     const warn = !hasFreeToday && over > plan * 0.08;
     root.innerHTML = `
         <div class="nm-dash">
             <div class="nm-hero-card">
                 <div class="nm-dash-top">
-                    ${nmRingHtml(eaten.kcal, plan)}
+                    ${nmRingHtml(eaten.kcal, plan + nmBurnedToday)}
                     <div class="nm-dash-stats">
                         <div class="nm-eyebrow">✨ New Me · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
                         <button type="button" class="nm-day-chip" onclick="nmGo('journey')">${nmDayHtml(day)}${st.current > 0 ? `<span class="nm-day-streak">🔥 ${nmFmt(st.current)}</span>` : ''}</button>
                         <div class="nm-stat"><span class="nm-num">${nmFmt(eaten.kcal)}</span> ${nmEsc(t('nm_eaten'))} · <span class="nm-num">${nmFmt(Math.round(eaten.protein))}</span> ${nmEsc(t('nm_protein_unit'))}</div>
                         <div class="nm-split">${nmEsc(t('nm_split_line').replace('{plan}', nmFmt(eaten.plan)).replace('{drinks}', nmFmt(eaten.drinks)).replace('{extra}', nmFmt(eaten.extra)))}</div>
-                        <div class="nm-dots" aria-label="${done}/4">${order.map(s => `<span class="${nmTodayCheckins[s] ? 'on' : ''}"></span>`).join('')}</div>
+                        ${nmBurnedToday > 0 ? `<div class="nm-burn-line">🏃 ${nmTpl('nm_burned_line', { n: nmFmt(nmBurnedToday) })}</div>` : ''}
+                        <div class="nm-dots" aria-label="${done}/${active.length}">${active.map(s => `<span class="${nmTodayCheckins[s] ? 'on' : ''}"></span>`).join('')}</div>
                     </div>
                 </div>
                 <button type="button" class="nm-journey-strip" onclick="nmGo('journey')">
@@ -661,7 +689,8 @@ function nmRenderHome(root) {
                     <span class="nm-total-chip${warn ? ' warn' : ''}" title="${nmEsc(t('nm_menu_total_title'))}"><bdi dir="ltr">~${nmFmt(menuTotal)} / ${nmFmt(plan)}</bdi></span>
                 </div>
                 ${warn ? `<p class="nm-soft-warn">${nmEsc(t('nm_menu_over_warn').replace('{n}', nmFmt(over)))}</p>` : ''}
-                <div class="nm-menu-list" id="nm-menu-list">${order.map((s, i) => nmMealCardHtml(s, i)).join('')}</div>
+                <div class="nm-menu-list" id="nm-menu-list">${active.map(s => nmMealCardHtml(s, order.indexOf(s))).join('')}</div>
+                ${nmMenuRoomHtml()}
                 <p class="nm-drag-hint">${nmEsc(t('nm_drag_hint'))}</p>
                 ${nmFreeMealRowHtml()}
                 ${nmDrinksHtml()}
@@ -735,23 +764,80 @@ function nmMealCardHtml(slot, idx) {
     }
     const it = nmItemInfo(nmTodayKey(slot));
     // תג הפרש רק כשהפריט הגיע מהחלפה מחוץ לאפשרויות של אותה ארוחה (או להיום בלבד)
-    const crossed = nmIsOverride(slot) || it.slot !== slot || it.plan !== nmProfile.plan;
+    const crossed = nmIsOverride(slot) || it.custom || it.slot !== slot || it.plan !== nmProfile.plan;
     const diff = it.kcal - NEW_ME_PLANS[nmProfile.plan][slot].target;
+    const canRemove = nmActiveOrder().length > NEW_ME_MIN_MEALS;
     return `
         <div class="nm-meal${done ? ' done' : ''}" data-slot="${slot}">
             ${head}
-            <div class="nm-option-name">${nmEsc(nmItemShort(it))}</div>
+            <div class="nm-option-name">${it.custom ? `<span class="nm-custom-tag" title="${nmEsc(t(it.source === 'ai' ? 'nm_custom_from_ai' : 'nm_custom_from_saved'))}">${it.source === 'ai' ? '✨' : '⭐'}</span> ` : ''}${nmEsc(nmItemShort(it))}</div>
             <div class="nm-option-text">${nmEsc(nmItemFull(it))}</div>
             <div class="nm-meal-foot">
                 <span class="nm-option-meta">${nmMeta(it)}${crossed && Math.abs(diff) >= 5 ? ' ' + nmDiffChip(diff) : ''}</span>
                 <span class="nm-meal-actions">
                     <button type="button" class="nm-chip" onclick="nmOpenSwap('${slot}')">🔄 ${nmEsc(t('nm_swap'))}</button>
                     ${nmIsOverride(slot) ? `<button type="button" class="nm-chip" onclick="nmRevertToday('${slot}')">↩ ${nmEsc(t('nm_swap_revert'))}</button>` : ''}
-                    <button type="button" class="nm-chip nm-chip-icon" onclick="nmSaveAsPreset('${slot}')" title="${nmEsc(t('nm_save_preset'))}" aria-label="${nmEsc(t('nm_save_preset'))}">⭐</button>
+                    ${it.source === 'preset' ? '' : `<button type="button" class="nm-chip nm-chip-icon" onclick="nmSaveAsPreset('${slot}')" title="${nmEsc(t('nm_save_preset'))}" aria-label="${nmEsc(t('nm_save_preset'))}">⭐</button>`}
+                    ${canRemove ? `<button type="button" class="nm-chip nm-chip-icon" onclick="nmAskRemoveMeal('${slot}')" title="${nmEsc(t('nm_remove_meal'))}" aria-label="${nmEsc(t('nm_remove_meal'))}">➖</button>` : ''}
                 </span>
             </div>
         </div>`;
 }
+
+// ---------- הסרת ארוחה מהתפריט / החזרה, והקלוריות שהתפנו ----------
+// לפי בקשה מפורשת: "במקום 4 ארוחות 3, או 2 ארוחות + נשנוש". הקלוריות של הארוחה שהוסרה
+// פנויות למילוי - ארוחה גדולה יותר, ארוחה מהארוחות הקבועות או כתיבה ל-AI - עד סך התוכנית
+function nmMenuRoomHtml() {
+    const order = nmOrder();
+    const hidden = nmHiddenSlots();
+    const room = nmMenuRoom();
+    const active = nmActiveOrder();
+    const parts = [];
+    if (room >= 40) {
+        parts.push(`
+            <div class="nm-room-card">
+                <div class="nm-room-title">🍽️ ${nmTpl('nm_room_title', { n: nmFmt(room) })}</div>
+                <p class="nm-fine">${nmEsc(t('nm_room_hint'))}</p>
+                <div class="nm-chip-row">${active.filter(s => !nmIsFree(s)).map(s => `<button type="button" class="nm-chip" onclick="nmOpenSwap('${s}')">🔄 ${nmEsc(nmPosName(order.indexOf(s)))}</button>`).join('')}</div>
+            </div>`);
+    }
+    if (hidden.length) {
+        parts.push(`<div class="nm-restore-row">${hidden.map(s => `<button type="button" class="nm-link-btn" onclick="nmRestoreMeal('${s}')">➕ ${nmEsc(t('nm_restore_meal').replace('{slot}', nmPosName(order.indexOf(s))))}</button>`).join('')}</div>`);
+    }
+    return parts.join('');
+}
+
+function nmAskRemoveMeal(slot) {
+    if (nmActiveOrder().length <= NEW_ME_MIN_MEALS) { showAppToast(t('nm_remove_min').replace('{n}', NEW_ME_MIN_MEALS), 'error'); return; }
+    const idx = nmOrder().indexOf(slot);
+    const it = nmIsFree(slot) ? { kcal: nmFreeKcal() } : nmItemInfo(nmTodayKey(slot));
+    const ov = nmOpenSheet(`
+        <h4>➖ ${nmEsc(t('nm_remove_title').replace('{slot}', nmPosName(idx)))}</h4>
+        <p class="nm-fine">${nmTpl('nm_remove_text', { n: nmFmt(it.kcal) })}</p>
+        <button type="button" class="nm-btn-primary" data-remove>${nmEsc(t('nm_remove_confirm'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-remove-sheet');
+    ov.querySelector('[data-remove]').addEventListener('click', async () => { ov.remove(); await nmSetMealHidden(slot, true); });
+}
+
+async function nmSetMealHidden(slot, hide) {
+    const hidden = new Set(nmHiddenSlots());
+    if (hide) {
+        if (nmActiveOrder().length <= NEW_ME_MIN_MEALS) return;
+        // ארוחה שכבר סומנה ✓ היום - הסימון (והרישום ביומן) יורד איתה
+        if (nmTodayCheckins[slot]) await nmUncheck(slot);
+        hidden.add(slot);
+    } else hidden.delete(slot);
+    const value = [...hidden].join(',') || null;
+    const { error } = await supabaseClient.from('new_me_profile').update({ hidden_slots: value, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+    nmProfile.hidden_slots = value;
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
+    showAppToast(t(hide ? 'nm_remove_done' : 'nm_restore_done'));
+    if (nmProfile.reminders_on) nmSyncReminders();
+}
+function nmRestoreMeal(slot) { return nmSetMealHidden(slot, false); }
 
 // תזכורת עדינה בסוף התפריט (לפי בקשה מפורשת: "תזכורת" עם לב עדין) - לב קטן בצבעי ערכת הנושא
 function nmGoalReminderHtml() {
@@ -771,12 +857,13 @@ function nmInitDrag(list) {
         handle.addEventListener('keydown', e => {
             if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
             e.preventDefault();
-            const order = nmOrder();
+            // רק הארוחות שבתפריט זזות; ארוחה שהוסרה נשארת במקומה ביום
+            const order = nmActiveOrder();
             const from = order.indexOf(handle.dataset.slot);
             const to = from + (e.key === 'ArrowUp' ? -1 : 1);
             if (to < 0 || to >= order.length) return;
             order.splice(to, 0, order.splice(from, 1)[0]);
-            nmSaveOrder(order, handle.dataset.slot);
+            nmSaveOrder(nmComposeOrder(order), handle.dataset.slot);
         });
     });
 }
@@ -836,9 +923,9 @@ function nmDragStart(e, handle, list) {
         card.classList.remove('dragging');
         list.classList.remove('is-dragging');
         if (to !== from) {
-            const order = nmOrder();
+            const order = nmActiveOrder();
             order.splice(to, 0, order.splice(from, 1)[0]);
-            nmSaveOrder(order, card.dataset.slot);
+            nmSaveOrder(nmComposeOrder(order), card.dataset.slot);
         }
     };
     handle.addEventListener('pointermove', onMove);
@@ -879,11 +966,21 @@ function nmSwapCandidates(slot) {
     };
 }
 
-function nmOpenSwap(slot) {
+// החלפה בשלוש לשוניות (לפי בקשה מפורשת): 🍽️ מהתפריט, ⭐ מהארוחות הקבועות (מאגר הארוחות
+// השמורות), ✨ כתיבה חופשית ל-AI. ארוחה מהמאגר או מה-AI נשמרת כארוחה אישית (c_<id>) וזורמת
+// לאותו אישור "רק להיום / קבוע". מה שנכנס: עד סך התוכנית - הקלוריות של הארוחה הנוכחית +
+// מה שפנוי בתפריט (למשל אחרי שהוסרה ארוחה). ב-God Mode אין מגבלה
+function nmOpenSwap(slot, startTab) {
     const idx = nmOrder().indexOf(slot);
     const cur = nmItemInfo(nmTodayKey(slot));
     const { near, far } = nmSwapCandidates(slot);
     const freeAvailable = !nmWeekFreeRow();
+    const room = nmMenuRoom();
+    const budget = cur.kcal + room;
+    const god = nmGodMode();
+    const fitsBudget = kcal => god || kcal <= budget * 1.1;
+    let tab = startTab || 'menu';
+    let aiText = '', aiResult = null, aiBusy = false;
     const ov = nmOpenSheet('', 'nm-swap-sheet');
     const sheet = ov.querySelector('.nm-sheet');
     const optHtml = c => `
@@ -892,30 +989,106 @@ function nmOpenSwap(slot) {
             <span class="nm-option-text">${nmEsc(nmItemFull(c))}</span>
             <span class="nm-option-meta">${nmMeta(c)}</span>
         </button>`;
+    const TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', '✨', 'nm_swap_tab_ai']];
+    const headHtml = () => `
+        <span class="nm-sheet-grip" aria-hidden="true"></span>
+        <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmPosName(idx)))}</h4>
+        <div class="nm-swap-current"><span>${nmEsc(t('nm_swap_now'))}</span> <b>${nmEsc(nmItemShort(cur))}</b> · <bdi dir="ltr">~${cur.kcal}</bdi> ${nmEsc(t('calories_unit'))}</div>
+        <div class="nm-swap-tabs" role="tablist">${TABS.map(([k, icon, label]) => `<button type="button" role="tab" class="nm-swap-tab${tab === k ? ' on' : ''}" aria-selected="${tab === k}" data-tab="${k}">${icon} ${nmEsc(t(label))}</button>`).join('')}</div>
+        ${room >= 40 && !god ? `<div class="nm-swap-budget">${nmTpl('nm_swap_budget', { n: nmFmt(budget) })}</div>` : ''}`;
+    const bindTabs = () => sheet.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
+    const backBtn = `<button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+    const render = () => { if (tab === 'saved') renderSaved(); else if (tab === 'ai') renderAi(); else renderList(); sheet.scrollTop = 0; };
     const renderList = () => {
-        sheet.innerHTML = `
-            <span class="nm-sheet-grip" aria-hidden="true"></span>
-            <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmPosName(idx)))}</h4>
-            <div class="nm-swap-current"><span>${nmEsc(t('nm_swap_now'))}</span> <b>${nmEsc(nmItemShort(cur))}</b> · <bdi dir="ltr">~${cur.kcal}</bdi> ${nmEsc(t('calories_unit'))}</div>
+        sheet.innerHTML = `${headHtml()}
             <div class="nm-sheet-label">${nmTpl('nm_swap_similar', { p: Math.round(NEW_ME_SWAP_RANGE * 100) })}</div>
             ${near.length ? near.map(optHtml).join('') : `<p class="nm-fine">${nmEsc(t('nm_swap_none_near'))}</p>`}
             ${far.length ? `<details class="nm-swap-more"><summary>${nmEsc(t('nm_swap_show_all').replace('{n}', far.length))}</summary><div class="nm-swap-more-list">${far.map(optHtml).join('')}</div></details>` : ''}
             ${freeAvailable ? `<button type="button" class="nm-option nm-option-free" data-free="1"><span class="nm-option-name">🍕 ${nmEsc(t('nm_swap_free_option'))}</span><span class="nm-option-text">${nmTpl('nm_free_plan_sub', { kcal: nmFmt(NEW_ME_FREE_MEAL_KCAL) })}</span></button>` : ''}
-            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+            ${backBtn}`;
+        bindTabs();
         sheet.querySelectorAll('[data-key]').forEach(b => b.addEventListener('click', () => renderConfirm(b.dataset.key)));
         const fb = sheet.querySelector('[data-free]');
         if (fb) fb.addEventListener('click', () => { ov.remove(); nmPlanFreeMeal(getLocalDateString(), slot); });
+    };
+    const renderSaved = async () => {
+        sheet.innerHTML = `${headHtml()}<div class="nm-loading-inline" aria-hidden="true"></div>${backBtn}`;
+        bindTabs();
+        let presets = typeof cachedPresets !== 'undefined' && cachedPresets.length ? cachedPresets : null;
+        if (!presets) {
+            const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
+            presets = data || [];
+            if (typeof cachedPresets !== 'undefined') cachedPresets = presets;
+        }
+        if (tab !== 'saved' || !ov.isConnected) return;
+        const items = presets.filter(p => Number(p.calories) > 0).map(p => ({ p, kcal: Math.round(Number(p.calories)), fits: fitsBudget(Number(p.calories)) }));
+        items.sort((a, b) => (b.fits - a.fits) || Math.abs(a.kcal - budget) - Math.abs(b.kcal - budget));
+        const row = x => `
+            <button type="button" class="nm-option${x.fits ? '' : ' too-big'}" data-preset="${x.p.id}" ${x.fits ? '' : 'disabled'}>
+                <span class="nm-option-top"><span class="nm-option-name">${nmEsc(x.p.food_name)}</span>${nmDiffChip(x.kcal - cur.kcal)}</span>
+                ${x.p.description ? `<span class="nm-option-text">${nmEsc(x.p.description)}</span>` : ''}
+                <span class="nm-option-meta">${nmMeta({ kcal: x.kcal, protein: Math.round(Number(x.p.protein_grams) || 0) })}</span>
+            </button>`;
+        const fits = items.filter(x => x.fits), big = items.filter(x => !x.fits);
+        sheet.innerHTML = `${headHtml()}
+            ${items.length ? `${fits.length ? fits.map(row).join('') : `<p class="nm-fine">${nmEsc(t('nm_swap_saved_none_fit'))}</p>`}
+                ${big.length ? `<div class="nm-sheet-label">${nmEsc(t('nm_swap_bigger_label'))}</div>${big.map(row).join('')}` : ''}`
+                : `<p class="nm-fine">${nmEsc(t('nm_swap_saved_empty'))}</p>`}
+            ${backBtn}`;
+        bindTabs();
+        sheet.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', async () => {
+            const p = presets.find(x => x.id === b.dataset.preset);
+            if (!p) return;
+            b.disabled = true;
+            const key = await nmCreateCustomMeal({ name: p.food_name, description: p.description || null, kcal: Math.round(Number(p.calories)), protein: Number(p.protein_grams) || 0, source: 'preset', preset_id: p.id });
+            if (key && ov.isConnected) renderConfirm(key);
+        }));
+    };
+    const aiResultHtml = () => {
+        const fits = fitsBudget(aiResult.kcal);
+        return `
+            <div class="nm-swap-pick nm-ai-result">
+                <span class="nm-option-name">✨ ${nmEsc(aiResult.name)}</span>
+                ${aiResult.description ? `<span class="nm-option-text">${nmEsc(aiResult.description)}</span>` : ''}
+                <span class="nm-option-meta">${nmMeta({ kcal: aiResult.kcal, protein: Math.round(aiResult.protein) })}${aiResult.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
+                ${fits ? `<button type="button" class="nm-btn-primary" data-use>${nmEsc(t('nm_swap_ai_use'))}</button>` : `<p class="nm-soft-warn">${nmTpl('nm_swap_ai_too_big', { n: nmFmt(budget) })}</p>`}
+            </div>`;
+    };
+    const renderAi = () => {
+        sheet.innerHTML = `${headHtml()}
+            <p class="nm-fine">${nmEsc(t('nm_swap_ai_hint'))}</p>
+            <textarea class="nm-ai-input" rows="3" maxlength="300" placeholder="${nmEsc(t('nm_swap_ai_ph'))}" aria-label="${nmEsc(t('nm_swap_tab_ai'))}">${nmEsc(aiText)}</textarea>
+            <button type="button" class="nm-btn-primary" data-estimate ${aiBusy ? 'disabled' : ''}>${nmEsc(t(aiBusy ? 'nm_swap_ai_busy' : 'nm_swap_ai_go'))}</button>
+            ${aiResult ? aiResultHtml() : ''}
+            ${backBtn}`;
+        bindTabs();
+        const ta = sheet.querySelector('.nm-ai-input');
+        ta.addEventListener('input', () => { aiText = ta.value; });
+        sheet.querySelector('[data-estimate]').addEventListener('click', async () => {
+            const text = aiText.trim();
+            if (text.length < 2) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+            aiBusy = true; aiResult = null; render();
+            aiResult = await nmEstimateMeal(text, cur.kcal);
+            aiBusy = false;
+            if (ov.isConnected && tab === 'ai') render();
+        });
+        const use = sheet.querySelector('[data-use]');
+        if (use) use.addEventListener('click', async () => {
+            use.disabled = true;
+            const key = await nmCreateCustomMeal({ name: aiResult.name, description: aiResult.description || null, kcal: aiResult.kcal, protein: aiResult.protein, source: 'ai' });
+            if (key && ov.isConnected) renderConfirm(key);
+        });
     };
     const renderConfirm = key => {
         const it = nmItemInfo(key);
         const d = it.kcal - cur.kcal;
         const newTotal = nmMenuTotal() + d;
-        const big = Math.abs(d) >= 60 || newTotal > nmProfile.plan * 1.08;
+        const big = !god && (Math.abs(d) >= 60 || newTotal > nmProfile.plan * 1.08) && newTotal > nmProfile.plan;
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>
             <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmPosName(idx)))}</h4>
             <div class="nm-swap-pick">
-                <span class="nm-option-name">${nmEsc(nmItemShort(it))}</span>
+                <span class="nm-option-name">${it.custom ? (it.source === 'ai' ? '✨ ' : '⭐ ') : ''}${nmEsc(nmItemShort(it))}</span>
                 <span class="nm-option-text">${nmEsc(nmItemFull(it))}</span>
                 <span class="nm-option-meta">${nmMeta(it)}</span>
             </div>
@@ -930,14 +1103,65 @@ function nmOpenSwap(slot) {
                 <button type="button" class="nm-mode-btn" data-mode="permanent"><b>${nmEsc(t('nm_swap_permanent'))}</b><span>${nmEsc(t('nm_swap_permanent_sub'))}</span></button>
             </div>
             <button type="button" class="nm-btn-ghost" data-back>${nmEsc(t('nm_back'))}</button>`;
-        sheet.querySelector('[data-back]').addEventListener('click', renderList);
+        sheet.querySelector('[data-back]').addEventListener('click', render);
         sheet.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', async () => {
             ov.remove();
             await nmApplySwap(slot, key, b.dataset.mode);
         }));
         sheet.scrollTop = 0;
     };
-    renderList();
+    render();
+}
+
+// ארוחה אישית חדשה (או קיימת זהה - לא מכפילים): ממאגר הארוחות הקבועות או מה-AI
+async function nmCreateCustomMeal(fields) {
+    const name = String(fields.name || '').trim().slice(0, 120);
+    if (!name) return null;
+    const kcal = Math.max(0, Math.min(3000, Math.round(Number(fields.kcal) || 0)));
+    const protein = Math.max(0, Math.min(300, Math.round((Number(fields.protein) || 0) * 10) / 10));
+    const same = nmCustomMeals.find(m => m.source === fields.source && m.name === name && Number(m.kcal) === kcal && (fields.source !== 'preset' || m.preset_id === fields.preset_id));
+    if (same) return 'c_' + same.id;
+    const { data, error } = await supabaseClient.from('new_me_custom_meals').insert({
+        user_id: currentUserId, name, description: fields.description ? String(fields.description).slice(0, 600) : null,
+        kcal, protein, source: fields.source, preset_id: fields.preset_id || null,
+    }).select().single();
+    if (error || !data) { showAppToast(t('nm_save_error'), 'error'); return null; }
+    nmCustomMeals.push(data);
+    return 'c_' + data.id;
+}
+
+// הערכת ארוחה שנכתבה: AI (פונקציה ייעודית לרוכשי New Me), ואם לא הצליח - הערכה מקומית גסה
+async function nmEstimateMeal(text, budget) {
+    const fallback = () => {
+        const local = typeof estimateFreeTextMacros === 'function' ? estimateFreeTextMacros(text) : { calories: 0, protein: 0 };
+        return { name: text.slice(0, 80), description: '', kcal: Math.round(Number(local.calories) || 0), protein: Number(local.protein) || 0, rough: true };
+    };
+    try {
+        const callOnce = async () => {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 25000);
+            try {
+                return await fetch(`${SUPABASE_URL}/functions/v1/new-me-meal-kcal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ meal: text, language: currentLang, budget }),
+                    signal: controller.signal,
+                });
+            } finally { clearTimeout(timer); }
+        };
+        let res = await callOnce();
+        if (res.status === 401) {
+            await supabaseClient.auth.refreshSession().catch(() => {});
+            res = await callOnce();
+        }
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || !result.ok || !(result.kcal > 0)) return fallback();
+        return { name: result.name || text.slice(0, 80), description: result.description || '', kcal: result.kcal, protein: Number(result.protein_g) || 0, rough: false };
+    } catch {
+        return fallback();
+    }
 }
 
 // ארוחה שכבר סומנה ✓ - הסימון עובר לפריט החדש (מסירים ומסמנים מחדש)
@@ -958,9 +1182,10 @@ async function nmSetTodayOverride(slot, key) {
 async function nmApplySwap(slot, key, mode) {
     const ok = await nmWithRecheck(slot, async () => {
         if (mode === 'today') return nmSetTodayOverride(slot, key);
-        // קבוע: פריט מאותה ארוחה ומאותה תוכנית נשמר כאות (כך שמעבר תוכנית מתאים את המנה)
+        // קבוע: פריט מאותה ארוחה ומאותה תוכנית נשמר כאות (כך שמעבר תוכנית מתאים את המנה);
+        // ארוחה אישית (c_...) או פריט מארוחה אחרת - נשמרים כמפתח המלא
         const p = nmParseItem(key);
-        const value = p.plan === nmProfile.plan && p.slot === slot ? p.opt : key;
+        const value = p && p.plan === nmProfile.plan && p.slot === slot ? p.opt : key;
         const { error } = await supabaseClient.from('new_me_profile').update({ ['choice_' + slot]: value, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
         if (error) { showAppToast(t('nm_save_error'), 'error'); return false; }
         nmProfile['choice_' + slot] = value;
@@ -998,8 +1223,8 @@ async function nmToggleCheck(slot, btn) {
         nmAfterTrackerChange();
     }
     if (!wasChecked && nmView === 'home') {
-        // כל ארבע הארוחות של היום סומנו - חגיגה קטנה
-        if (nmOrder().every(s => nmTodayCheckins[s])) {
+        // כל הארוחות שבתפריט של היום סומנו - חגיגה קטנה
+        if (nmActiveOrder().every(s => nmTodayCheckins[s])) {
             const list = document.getElementById('nm-menu-list');
             if (list && typeof spawnGentleConfettiBurst === 'function') spawnGentleConfettiBurst(list, 30);
             showAppToast(t('nm_all_done_toast'));
@@ -1799,11 +2024,12 @@ function nmShopItems(days) {
     for (let i = 0; i < days; i++) {
         const ds = nmAddDays(today, i);
         const dayRow = nmWeekDays.find(r => r.day === ds);
-        NEW_ME_SLOTS.forEach(slot => {
+        nmActiveOrder().forEach(slot => {
             if (dayRow && dayRow.free_slot === slot) return;
             if (i === 0 && nmTodayCheckins[slot]) return;   // מה שכבר נאכל היום לא צריך לקנות
             const ov = dayRow && dayRow.overrides && dayRow.overrides[slot];
-            const key = nmParseItem(ov) ? ov : nmPermanentKey(slot);
+            // ארוחה אישית (מהמאגר / AI) - אין פירוט מרכיבים, לא נכנסת לרשימה
+            const key = nmValidKey(ov) ? ov : nmPermanentKey(slot);
             (NEW_ME_INGREDIENTS[key] || []).forEach(([ing, qty, unit]) => {
                 const k = `${ing}|${unit}`;
                 if (!totals[k]) totals[k] = { ing, unit, qty: 0 };
@@ -2113,6 +2339,7 @@ async function nmDeletePhoto(id) {
 // ---------- טבלה יומית ----------
 function nmCheckinLabel(r) {
     if (r.option_id === 'free') return String(r.mirror_text || ('🍕 ' + t('nm_free_meal')));
+    if (nmIsCustomKey(r.option_id)) { const cm = nmCustomMeal(r.option_id); return cm ? cm.name : String(r.mirror_text || '').replace(/^✨\s*/, ''); }
     const p = nmParseItem(r.option_id);
     if (p) return nmOptText(p.plan, p.slot, p.opt, true);
     return nmOptText(r.plan, r.slot, r.option_id, true);
@@ -2244,6 +2471,7 @@ async function nmSyncReminders(change) {
     if (!nmProfile) return;
     const today = getLocalDateString();
     const nowMin = nmMinutesNow();
+    const hidden = nmHiddenSlots();
     const rows = nmOrder().map((slot, i) => {
         const prev = nmReminderRow(i) || {};
         let time = prev.time || NEW_ME_REMINDER_DEFAULTS[i];
@@ -2252,6 +2480,8 @@ async function nmSyncReminders(change) {
             if (change.time) time = change.time;
             if (change.enabled != null) enabled = change.enabled;
         }
+        // ארוחה שהוסרה מהתפריט - בלי תזכורת
+        if (hidden.includes(slot)) enabled = false;
         const [h, m] = time.split(':').map(Number);
         // שעה שכבר עברה היום לא נשלחת מיד (למשל כשמדליקים תזכורות בצהריים)
         const passed = h * 60 + m <= nowMin;
@@ -2280,6 +2510,7 @@ function nmRenderReminders(body) {
     const on = !!nmProfile.reminders_on;
     const perm = nmNotifyState();
     const order = nmOrder();
+    const hiddenSlots = nmHiddenSlots();
     body.innerHTML = `
         <div class="nm-card">
             <label class="nm-switch-row">
@@ -2293,7 +2524,7 @@ function nmRenderReminders(body) {
             </div>` : ''}
         </div>
         <div class="nm-card nm-rem-list${on ? '' : ' is-off'}">
-            ${order.map((slot, i) => `
+            ${order.map((slot, i) => hiddenSlots.includes(slot) ? '' : `
                 <div class="nm-rem-row">
                     <div class="nm-rem-text"><b>${nmEsc(nmPosName(i))}</b><span>${nmEsc(nmItemShort(nmItemInfo(nmPermanentKey(slot))))}</span></div>
                     <input type="time" class="nm-rem-time" value="${nmReminderTime(i)}" onchange="nmSetReminderTime(${i}, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmPosName(i))}">
