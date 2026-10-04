@@ -5351,7 +5351,7 @@ async function loadTodayTasks() {
     const focusItems = allEvents.filter(item => item.source === 'daily_focus');
     const events = allEvents.filter(item => item.source !== 'daily_focus');
     // משימות היעדים של היום (אתגר ימים, תזכורות) ומשימת הקריאה היומית (הספרים שלי)
-    const goalItems = getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : []);
+    const goalItems = getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : [], typeof getPeekChallengeItems === 'function' ? getPeekChallengeItems() : []);
     // 🌼 הפינה שגדלה איתך במסך הבית - סופרת בדיוק את המשימות שברשימה כאן (התשובות ל"מה חשוב
     // לך היום" הן בועות תזכורת ולא משימות, ולא נספרות - בדיוק כמו בחגיגת "הכל בוצע" למטה)
     updateHomeGrowCorner(
@@ -5872,7 +5872,7 @@ function visionCheckedOn(goalId, milestoneId, dateStr) {
 function calendarGoalItemsForDate(dateStr) {
     const today = getLocalDateString();
     if (dateStr === today) {
-        return getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : []).map(item => ({ ...item, live: true }));
+        return getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : [], typeof getPeekChallengeItems === 'function' ? getPeekChallengeItems() : []).map(item => ({ ...item, live: true }));
     }
     const [y, m, d] = dateStr.split('-').map(Number);
     const weekday = new Date(y, m - 1, d).getDay();
@@ -5901,6 +5901,8 @@ function calendarGoalItemsForDate(dateStr) {
             }
         });
     }
+    // אתגרי New Me הפעילים (new-me-challenges.js)
+    if (typeof nmChallengeCalendarItems === 'function') items.push(...nmChallengeCalendarItems(dateStr));
     return items;
 }
 function calendarDeadlineRowsForDate(dateStr) {
@@ -8311,6 +8313,9 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_flexible_menu', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
+    { id: 'new_me_challenges', category: 'nutrition' },
+    { id: 'new_me_letter_gift', category: 'nutrition' },
+    { id: 'new_me_advanced', category: 'nutrition' },
     { id: 'new_me_shopping', category: 'nutrition' },
     { id: 'new_me_reminders', category: 'nutrition' },
     { id: 'new_me_checkin', category: 'nutrition' },
@@ -10948,6 +10953,8 @@ function afterSportChanged() {
     refreshTrackerBurn();
     const nmSection = document.getElementById('new-me-section');
     if (nmSection && nmSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
+    // אתגר "שבועיים של תנועה" ב-New Me: אימון של 20 דקות מסמן את היום לבד
+    if (hasNewMe && typeof nmChallengeAutoCheck === 'function') nmChallengeAutoCheck('sport');
 }
 
 function formatSportDayLabel(dateStr) {

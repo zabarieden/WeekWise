@@ -17,9 +17,17 @@ function nmPdfEnabled() { return true; }
 const NEW_ME_TRACKER_SLOT = { meal1: 'meal_1', snack1: 'meal_4', meal2: 'meal_2', snack2: 'snack' };
 // קטגוריית "ארוחה שמורה" לפי שעת היום של המיקום (בוקר / נשנוש / צהריים / נשנוש ערב)
 const NEW_ME_PRESET_CATEGORY_BY_POS = ['morning', 'snack', 'noon', 'snack'];
-const NEW_ME_TILE_ICONS = { journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
-const NEW_ME_TILES = ['journey', 'shop', 'badges', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
-const NEW_ME_VIEW_TITLES = { journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_tile_settings' };
+const NEW_ME_TILE_ICONS = { challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
+// אתגרים, מכתב מהעבר והמתנה בסוף (תעודה, מצב מתקדם וסטטיסטיקות) - new-me-challenges.js
+const NEW_ME_TILES = ['challenges', 'journey', 'shop', 'badges', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
+const NEW_ME_VIEW_TITLES = { challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_tile_settings' };
+// אחרי כל האתגרים: אריח למתנה, ובמצב מתקדם - גם לסטטיסטיקות
+function nmTiles() {
+    const extra = [];
+    if (typeof nmChAllDone === 'function' && nmChAllDone()) extra.push('gift');
+    if (nmGodMode()) extra.push('stats');
+    return NEW_ME_TILES.slice(0, 1).concat(extra, NEW_ME_TILES.slice(1));
+}
 // הישגים: אייקון + סוג (תנאי). הטקסטים ב-i18n (nm_badge_*); streak/day/kg משתמשים בטקסט אחד עם {n}
 const NEW_ME_BADGES = [
     { key: 'first_meal', icon: '🌱' },
@@ -203,7 +211,7 @@ async function renderNewMe() {
     }
     if (!nmProfile || nmQuiz) { if (!nmQuiz) nmStartQuiz(); nmRenderQuiz(root); return; }
     if (nmView === 'menu' || nmView === 'tips') nmView = 'home';
-    await Promise.all([nmLoadToday(), nmLoadJourney()]);
+    await Promise.all([nmLoadToday(), nmLoadJourney(), nmLoadChallenges()]);
     nmRenderView(root);
     nmAwardBadges();
     if (nmProfile.reminders_on) nmSyncReminders();
@@ -276,8 +284,12 @@ function nmStartQuiz(fromSettings) {
         plan: nmProfile ? nmProfile.plan : 1300,
         choices: Object.fromEntries(NEW_ME_SLOTS.map(s => [s, nmProfile ? nmChoice(s) : 'A'])),
         fromSettings: !!fromSettings,
+        // מכתב מהעבר (לא חובה) - שלב אחרון, רק כשעוד לא נכתב
+        withLetter: !(nmProfile && nmProfile.letter_written_at),
+        letter: '',
     };
 }
+function nmQuizTotal() { return nmQuiz && nmQuiz.withLetter ? 5 : 4; }
 
 function nmDisclaimerHtml() {
     const suffix = currentLang === 'he' ? '' : (currentLang === 'es' ? '-es' : '-en');
@@ -291,7 +303,7 @@ function nmDisclaimerHtml() {
 
 function nmRenderQuiz(root) {
     const q = nmQuiz;
-    const total = 4;
+    const total = nmQuizTotal();
     let body = '';
     let canContinue = true;
     if (q.step === 0) {
@@ -320,6 +332,13 @@ function nmRenderQuiz(root) {
                     </button>`).join('')}
             </div>
             <p class="nm-fine">${nmEsc(t('nm_q_plan_note'))}</p>`;
+    } else if (q.step === 4) {
+        body = `
+            <h3 class="nm-step-title">✉️ ${nmEsc(t('nm_letter_title'))}</h3>
+            <p class="nm-fine">${nmEsc(t('nm_letter_intro').replace('{n}', nmFmt(NEW_ME_CHALLENGES.length)))}</p>
+            <textarea class="nm-letter-input" rows="8" maxlength="4000" placeholder="${nmEsc(t('nm_letter_ph'))}" aria-label="${nmEsc(t('nm_letter_title'))}" oninput="nmQuiz.letter = this.value">${nmEsc(q.letter)}</textarea>
+            <p class="nm-fine">🔒 ${nmEsc(t('nm_letter_seal_note'))}</p>
+            <p class="nm-fine">${nmEsc(t('nm_letter_quiz_note'))}</p>`;
     } else {
         const order = nmProfile ? nmOrder() : NEW_ME_SLOTS;
         body = `
@@ -366,7 +385,9 @@ async function nmQuizNext() {
         const w = parseFloat(q.weight);
         if (!(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
-    if (q.step < 3) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
+    if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
+    const letter = q.withLetter ? String(q.letter || '').trim().slice(0, 4000) : '';
+    if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
     const today = getLocalDateString();
     const goal = parseFloat(q.goal);
     const row = {
@@ -382,6 +403,7 @@ async function nmQuizNext() {
     };
     // מסע חדש מתחיל ביום הראשון של התוכנית; מילוי השאלון מחדש לא מאפס את "יום X"
     if (!nmProfile) row.started_on = today;
+    if (letter) { row.letter_text = letter; row.letter_written_at = new Date().toISOString(); }
     const { data, error } = await supabaseClient.from('new_me_profile').upsert(row, { onConflict: 'user_id' }).select().maybeSingle();
     if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
     nmProfile = data || { ...nmProfile, ...row };
@@ -392,6 +414,7 @@ async function nmQuizNext() {
     nmQuiz = null;
     nmView = 'home';
     renderNewMe();
+    if (letter) showAppToast(t('nm_letter_sealed_toast'));
 }
 
 // יעד הקלוריות היומי של האפליקציה = התוכנית, כדי שהצצה להיום/מדדי קלוריות יתאימו
@@ -612,6 +635,8 @@ function nmOpenSheet(html, cls) {
 // ---------- תצוגות ----------
 function nmRenderView(root) {
     nmCaptureDrinkDrafts();
+    // מצב מתקדם: מראה זהב בכל New Me (כולל הגיליונות)
+    document.documentElement.toggleAttribute('data-nm-god', nmGodMode());
     if (!NEW_ME_VIEW_TITLES[nmView] || nmView === 'pdf') nmView = 'home';
     if (nmView === 'home') { nmRenderHome(root); nmRestoreDrinkDrafts(); return; }
     root.innerHTML = `
@@ -621,7 +646,7 @@ function nmRenderView(root) {
         </div>
         <div id="nm-view-body" class="nm-view-body"></div>`;
     const body = document.getElementById('nm-view-body');
-    const renderers = { journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
+    const renderers = { challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
     renderers[nmView](body);
 }
 
@@ -684,6 +709,7 @@ function nmRenderHome(root) {
                 </button>
             </div>
             <section class="nm-today" id="nm-today">
+                ${nmChallengeStripHtml()}
                 <div class="nm-section-head">
                     <h3>${nmEsc(t('nm_tile_menu'))}</h3>
                     <span class="nm-total-chip${warn ? ' warn' : ''}" title="${nmEsc(t('nm_menu_total_title'))}"><bdi dir="ltr">~${nmFmt(menuTotal)} / ${nmFmt(plan)}</bdi></span>
@@ -699,7 +725,7 @@ function nmRenderHome(root) {
             </section>
             ${nmCheckinHtml()}
             ${nmPhotoNudgeHtml()}
-            <div class="nm-tiles">${NEW_ME_TILES.map(nmTileHtml).join('')}</div>
+            <div class="nm-tiles">${nmTiles().map(nmTileHtml).join('')}</div>
             <button type="button" class="nm-bonus" onclick="nmOpenStories()">
                 <span class="nm-bonus-icon">${NEW_ME_TILE_ICONS.bonus}</span>
                 <span class="nm-bonus-text">
@@ -715,6 +741,8 @@ function nmRenderHome(root) {
 }
 
 function nmTileSub(k) {
+    if (k === 'challenges') return `<bdi dir="ltr">${nmChDoneCount()}/${NEW_ME_CHALLENGES.length}</bdi>`;
+    if (k === 'gift') return nmGodMode() ? '👑' : '';
     if (k === 'journey') return nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())));
     if (k === 'badges') return `<bdi dir="ltr">${NEW_ME_BADGES.filter(b => nmBadges[b.key]).length}/${NEW_ME_BADGES.length}</bdi>`;
     if (k === 'reminders') return nmEsc(t(nmProfile.reminders_on ? 'nm_on' : 'nm_off'));
@@ -960,6 +988,8 @@ function nmSwapCandidates(slot) {
         all.push({ ...it, dist: Math.abs(it.kcal - target) / target, own });
     })));
     const sort = (a, b) => a.own - b.own || a.dist - b.dist;
+    // מצב מתקדם (בניית תפריט חופשית): כל האפשרויות ברשימה אחת, בלי חלוקה לפי קלוריות
+    if (nmGodMode()) return { near: all.sort(sort), far: [] };
     return {
         near: all.filter(x => x.dist <= NEW_ME_SWAP_RANGE).sort(sort),
         far: all.filter(x => x.dist > NEW_ME_SWAP_RANGE).sort(sort),
@@ -1001,7 +1031,7 @@ function nmOpenSwap(slot, startTab) {
     const render = () => { if (tab === 'saved') renderSaved(); else if (tab === 'ai') renderAi(); else renderList(); sheet.scrollTop = 0; };
     const renderList = () => {
         sheet.innerHTML = `${headHtml()}
-            <div class="nm-sheet-label">${nmTpl('nm_swap_similar', { p: Math.round(NEW_ME_SWAP_RANGE * 100) })}</div>
+            ${god ? '' : `<div class="nm-sheet-label">${nmTpl('nm_swap_similar', { p: Math.round(NEW_ME_SWAP_RANGE * 100) })}</div>`}
             ${near.length ? near.map(optHtml).join('') : `<p class="nm-fine">${nmEsc(t('nm_swap_none_near'))}</p>`}
             ${far.length ? `<details class="nm-swap-more"><summary>${nmEsc(t('nm_swap_show_all').replace('{n}', far.length))}</summary><div class="nm-swap-more-list">${far.map(optHtml).join('')}</div></details>` : ''}
             ${freeAvailable ? `<button type="button" class="nm-option nm-option-free" data-free="1"><span class="nm-option-name">🍕 ${nmEsc(t('nm_swap_free_option'))}</span><span class="nm-option-text">${nmTpl('nm_free_plan_sub', { kcal: nmFmt(NEW_ME_FREE_MEAL_KCAL) })}</span></button>` : ''}
@@ -1231,6 +1261,8 @@ async function nmToggleCheck(slot, btn) {
         }
     }
     nmAwardBadges(!wasChecked && wasFree ? ['free_meal'] : []);
+    // "21 ימים לפי התפריט": 3 ארוחות מסומנות = היום באתגר מסומן לבד
+    if (!wasChecked) nmChallengeAutoCheck('menu');
 }
 
 async function nmCheck(slot) {
@@ -1881,6 +1913,8 @@ function updateNewMeShortcut() {
     if (btn) btn.classList.toggle('hidden', !hasNewMe);
     // לחיצה על תזכורת ארוחה (?open=newme) - נפתח ברגע שמצב הרכישה נטען
     if (nmPendingDeepLink && hasNewMe) { nmPendingDeepLink = false; openNewMe(); }
+    // האתגרים הפעילים מופיעים בהצצה להיום גם בלי לפתוח את New Me
+    if (hasNewMe && !nmChallengesLoaded) nmLoadChallenges().then(() => { if (nmChActive().length && typeof loadTodayTasks === 'function') loadTodayTasks(); });
 }
 
 // התפריט של היום נמצא עכשיו ישירות במסך הראשי של New Me
