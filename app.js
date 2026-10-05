@@ -211,7 +211,7 @@ function selectLanguageFromPicker(lang) {
         supabaseClient.from('user_premium').upsert(
             { user_id: currentUserId, username: currentUsername, language: lang },
             { onConflict: 'user_id' },
-        );
+        ).then(() => {});
     }
 }
 
@@ -236,7 +236,7 @@ async function loadUserLanguage() {
         supabaseClient.from('user_premium').upsert(
             { user_id: currentUserId, username: currentUsername, language: currentLang },
             { onConflict: 'user_id' },
-        );
+        ).then(() => {});
     }
 }
 
@@ -8398,6 +8398,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'what_are_tables', category: 'tables' },
+    { id: 'table_views', category: 'tables' },
     { id: 'table_column_types', category: 'tables' },
     { id: 'table_select_colors', category: 'tables' },
     { id: 'table_ai_builder', category: 'tables' },
@@ -17515,6 +17516,8 @@ function saveColumnSubModal() {
     }
     closeModal('modal-add-column');
     editingCustomColumnId = null;
+    // "+ עמודה" מתוך הטבלה (tables.js): נשמר מיד, בלי לחזור לרשימת העמודות
+    if (tblQuickColumn) { tblQuickColumn = false; saveTableColumns(); return; }
     renderPendingTableColumns();
     openModal('modal-manage-columns');
 }
@@ -17567,289 +17570,18 @@ async function saveTableColumnsImpl() {
     showAppToast(t('item_added_success'));
 }
 
-function renderTableGrid() {
-    const headerEl = document.getElementById('table-grid-header');
-    const bodyEl = document.getElementById('table-grid-body');
-    const emptyEl = document.getElementById('table-grid-empty');
-    if (!headerEl || !bodyEl) return;
-    headerEl.innerHTML = '';
-    bodyEl.innerHTML = '';
-    if (customTableColumnsCache.length === 0) {
-        if (emptyEl) { emptyEl.textContent = t('table_no_columns_hint'); emptyEl.classList.remove('hidden'); }
-        return;
-    }
-    customTableColumnsCache.forEach(col => {
-        const headerCell = document.createElement('div');
-        headerCell.className = 'table-grid-cell table-grid-header-cell';
-        headerCell.textContent = col.name;
-        headerEl.appendChild(headerCell);
-    });
-    if (customTableRowsCache.length === 0) {
-        if (emptyEl) { emptyEl.textContent = t('table_no_rows_hint'); emptyEl.classList.remove('hidden'); }
-    } else if (emptyEl) {
-        emptyEl.classList.add('hidden');
-    }
-    customTableRowsCache.forEach(row => bodyEl.appendChild(buildTableRowElement(row)));
-}
-
-// שורה בודדת נבנית כ-DOM node עצמאי (במקום renderTableGrid מלא) כדי ש-
-// addTableRow יוכל רק לצרף שורה חדשה בלי לבנות מחדש את כל הגריד - חשוב
-// בטבלה עם הרבה שורות
-function buildTableRowElement(row) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'table-grid-row';
-    rowEl.setAttribute('data-row-id', row.id);
-    customTableColumnsCache.forEach(col => {
-        rowEl.appendChild(renderTableCell(row, col));
-    });
-    const actionsCell = document.createElement('div');
-    actionsCell.className = 'table-grid-cell table-grid-row-actions';
-    actionsCell.innerHTML = `<button type="button" class="btn-delete-item" onclick="deleteTableRow('${row.id}')">❌</button>`;
-    rowEl.appendChild(actionsCell);
-    return rowEl;
-}
-
-// עורך-תא לפי סוג העמודה - dispatch לפי column.type
-function renderTableCell(row, column) {
-    switch (column.type) {
-        case 'number': return buildNumberCell(row, column);
-        case 'checkbox': return buildCheckboxCell(row, column);
-        case 'select': return buildSelectCell(row, column);
-        case 'date': return buildDateCell(row, column);
-        case 'text': return buildTextCell(row, column);
-        default: return buildReadOnlyCell(row, column);
-    }
-}
-
-function buildReadOnlyCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const value = row.data && row.data[column.id];
-    cell.textContent = value !== undefined && value !== null ? String(value) : '';
-    return cell;
-}
-
-function buildTextCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = (row.data && row.data[column.id]) || '';
-    input.onblur = () => updateCellValue(row.id, column.id, input.value.trim() || null);
-    cell.appendChild(input);
-    return cell;
-}
-
-function buildNumberCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const input = document.createElement('input');
-    input.type = 'number';
-    const current = row.data && row.data[column.id];
-    input.value = current !== undefined && current !== null ? current : '';
-    input.onblur = () => {
-        const parsed = input.value.trim() === '' ? null : parseFloat(input.value);
-        updateCellValue(row.id, column.id, Number.isNaN(parsed) ? null : parsed);
-    };
-    cell.appendChild(input);
-    return cell;
-}
-
-function buildCheckboxCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = !!(row.data && row.data[column.id]);
-    input.onchange = () => updateCellValue(row.id, column.id, input.checked);
-    cell.appendChild(input);
-    return cell;
-}
-
-// לחיצה פותחת ישירות את openCustomDatePicker (חתימה מוכרת: currentValue,
-// onSelect) - בלי input מוסתר פר-תא, כי הפונקציה כבר מקבלת callback ישיר.
-// customDatePickerClear() קוראת ל-onSelect עם '' (לא null) - ממירים כאן.
-// עיצוב התאריך המוצג זהה בדיוק ל-updateDateFieldDisplay הקיימת
-// בודקת בעצמה שהערך הוא באמת מחרוזת YYYY-MM-DD תקנית לפני שמנסים לפרסר -
-// עמודה יכולה להתחלף בדיעבד לסוג date אחרי ששורות כבר החזיקו ערך מסוג אחר
-// תחת אותו column.id (למשל מספר/בוליאני) - בלי הבדיקה הזו, .split על מספר
-// היה זורק חריגה לא-תפוסה וקורס את רינדור כל שאר השורות בטבלה
+// התצוגות של טבלה פתוחה (טבלה / כרטיסים / לוח), כרטיס השורה, המיון והסינון - ב-tables.js. כאן רק
+// התווית של תאריך ושמירת ערך של תא
+// בודקת בעצמה שהערך הוא באמת מחרוזת YYYY-MM-DD תקנית לפני שמנסים לפרסר - עמודה יכולה להתחלף בדיעבד
+// לסוג date אחרי ששורות כבר החזיקו ערך מסוג אחר תחת אותו column.id (למשל מספר/בוליאני)
 function formatTableDateCellLabel(dateStr) {
     if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return '—';
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' });
 }
-function buildDateCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'table-date-cell-btn';
-    const rawValue = row.data && row.data[column.id];
-    const value = typeof rawValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawValue) ? rawValue : null;
-    btn.textContent = value ? formatTableDateCellLabel(value) : '—';
-    btn.onclick = () => openCustomDatePicker(value || null, (dateStr) => {
-        updateCellValue(row.id, column.id, dateStr || null);
-        btn.textContent = dateStr ? formatTableDateCellLabel(dateStr) : '—';
-    });
-    cell.appendChild(btn);
-    return cell;
-}
 
-// תא-בחירה - צ'יפ צבעוני עם התווית הנוכחית (או "+" ריק אם לא נבחר כלום),
-// לחיצה פותחת מודל-בחירה קטן ומיוחד (לא openCustomSelectPicker - זה קשור
-// חזק ל-<select> אמיתי, לא מתאים כאן, ר' תוכנית העבודה). התא שומר את ה-id
-// של האפשרות, לא את התווית - כדי שעריכת שם/צבע מאוחרת בעורך העמודות
-// תשתקף אוטומטית בכל התאים שכבר משתמשים בה
-let selectCellPickerContext = null; // { rowId, columnId }
-function buildSelectCell(row, column) {
-    const cell = document.createElement('div');
-    cell.className = 'table-grid-cell';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'table-select-cell-btn';
-    const optionId = row.data && row.data[column.id];
-    const option = (column.select_options || []).find(opt => opt.id === optionId);
-    if (option) {
-        const chip = document.createElement('span');
-        chip.className = 'table-select-option-chip';
-        chip.textContent = option.label;
-        chip.style.backgroundColor = hexToRgba(option.color, 0.18);
-        chip.style.color = option.color;
-        btn.appendChild(chip);
-    } else {
-        btn.textContent = '+';
-    }
-    btn.onclick = () => openSelectCellPicker(row.id, column.id);
-    cell.appendChild(btn);
-    return cell;
-}
-
-function openSelectCellPicker(rowId, columnId) {
-    selectCellPickerContext = { rowId, columnId };
-    const column = customTableColumnsCache.find(c => c.id === columnId);
-    const row = customTableRowsCache.find(r => r.id === rowId);
-    const currentOptionId = row && row.data ? row.data[columnId] : null;
-    const list = document.getElementById('table-select-cell-picker-list');
-    list.innerHTML = '';
-    (column && column.select_options || []).forEach(opt => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'preset-quick-add-item custom-select-picker-row' + (opt.id === currentOptionId ? ' selected' : '');
-        btn.onclick = () => selectTableCellOption(opt.id);
-        const chip = document.createElement('span');
-        chip.className = 'table-select-option-chip';
-        chip.textContent = opt.label;
-        chip.style.backgroundColor = hexToRgba(opt.color, 0.18);
-        chip.style.color = opt.color;
-        btn.appendChild(chip);
-        // × קטן בצד - מוחק את האפשרות מהעמודה (לא רק מהתא)
-        const removeBtn = document.createElement('span');
-        removeBtn.className = 'table-select-option-remove';
-        removeBtn.setAttribute('role', 'button');
-        removeBtn.setAttribute('aria-label', t('table_select_option_delete_title'));
-        removeBtn.textContent = '×';
-        removeBtn.onclick = (e) => { e.stopPropagation(); deleteTableSelectOption(columnId, opt.id); };
-        btn.appendChild(removeBtn);
-        list.appendChild(btn);
-    });
-    // "אחר" - תמיד אפשר להקליד ערך שלא קיים ברשימה (למשל "אחיין"); הערך החדש
-    // נוסף כאפשרות קבועה של העמודה, כך שבפעם הבאה הוא כבר מופיע ברשימה
-    const otherBtn = document.createElement('button');
-    otherBtn.type = 'button';
-    otherBtn.className = 'preset-quick-add-item custom-select-picker-row';
-    otherBtn.textContent = t('select_other_manual');
-    otherBtn.onclick = () => {
-        const wrap = document.createElement('div');
-        wrap.className = 'select-other-manual-row';
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.maxLength = 60;
-        input.placeholder = t('select_other_placeholder');
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'btn-primary';
-        addBtn.textContent = t('add_btn');
-        addBtn.onclick = () => addTableSelectOptionFromCell(input.value);
-        input.onkeydown = (e) => { if (e.key === 'Enter') addTableSelectOptionFromCell(input.value); };
-        wrap.appendChild(input);
-        wrap.appendChild(addBtn);
-        otherBtn.replaceWith(wrap);
-        input.focus();
-    };
-    list.appendChild(otherBtn);
-    const clearBtn = document.createElement('button');
-    clearBtn.type = 'button';
-    clearBtn.className = 'preset-quick-add-item custom-select-picker-row';
-    clearBtn.textContent = t('table_select_cell_clear');
-    clearBtn.onclick = () => selectTableCellOption(null);
-    list.appendChild(clearBtn);
-    openModal('modal-table-select-cell-picker');
-}
-
-function selectTableCellOption(optionId) {
-    if (!selectCellPickerContext) return;
-    const { rowId, columnId } = selectCellPickerContext;
-    updateCellValue(rowId, columnId, optionId);
-    closeModal('modal-table-select-cell-picker');
-    // תא בודד מוחלף מקומית במקום renderTableGrid מלא - אותה סיבה בדיוק
-    // כמו buildTableRowElement, לא לגרום להבהוב/אובדן פוקוס בשאר השורות
-    const row = customTableRowsCache.find(r => r.id === rowId);
-    const column = customTableColumnsCache.find(c => c.id === columnId);
-    const rowEl = document.querySelector(`.table-grid-row[data-row-id="${rowId}"]`);
-    if (row && column && rowEl) {
-        const colIndex = customTableColumnsCache.indexOf(column);
-        const oldCell = rowEl.children[colIndex];
-        if (oldCell) rowEl.replaceChild(buildSelectCell(row, column), oldCell);
-    }
-    selectCellPickerContext = null;
-}
-
-// מחיקת אפשרות מעמודת בחירה ישירות מבורר הערך. אם יש תאים שמשתמשים בה -
-// קודם אישור, והתאים האלה מתרוקנים (נשמרים ב-DB כ-null)
-function deleteTableSelectOption(columnId, optionId) {
-    const column = customTableColumnsCache.find(c => c.id === columnId);
-    if (!column) return;
-    const usedRows = customTableRowsCache.filter(r => r.data && r.data[columnId] === optionId);
-    const doDelete = async () => {
-        const previous = column.select_options || [];
-        column.select_options = previous.filter(opt => opt.id !== optionId);
-        const { error } = await supabaseClient.from('custom_table_columns').update({ select_options: column.select_options }).eq('id', column.id);
-        if (error) { column.select_options = previous; showAppToast(t('error_adding_item'), 'error'); return; }
-        for (const row of usedRows) await updateCellValue(row.id, columnId, null);
-        const context = selectCellPickerContext;
-        closeModal('modal-table-select-cell-picker');
-        renderTableGrid();
-        if (context) openSelectCellPicker(context.rowId, context.columnId);
-    };
-    if (usedRows.length) showDangerConfirm(t('table_select_option_delete_title'), t('table_select_option_delete_confirm').replace('{count}', usedRows.length), doDelete);
-    else doDelete();
-}
-
-async function addTableSelectOptionFromCell(rawLabel) {
-    const label = String(rawLabel || '').trim();
-    if (!label || !selectCellPickerContext) return;
-    const column = customTableColumnsCache.find(c => c.id === selectCellPickerContext.columnId);
-    if (!column) return;
-    const options = column.select_options || [];
-    const existing = options.find(opt => opt.label.trim().toLowerCase() === label.toLowerCase());
-    if (existing) { selectTableCellOption(existing.id); return; }
-    const color = TABLE_SELECT_OPTION_COLOR_PRESETS[options.length % TABLE_SELECT_OPTION_COLOR_PRESETS.length];
-    const newOption = { id: crypto.randomUUID(), label, color };
-    column.select_options = [...options, newOption];
-    const { error } = await supabaseClient.from('custom_table_columns').update({ select_options: column.select_options }).eq('id', column.id);
-    if (error) {
-        column.select_options = options;
-        showAppToast(t('error_adding_item'), 'error');
-        return;
-    }
-    selectTableCellOption(newOption.id);
-}
-
-// קריאה-מיזוג-כתיבה על כל אובייקט ה-data של השורה - אין טבלה רביעית פר-תא
-// (ר' ההערה בסכימה), כל עדכון תא שולח מחדש את כל האובייקט עם המפתח הבודד
-// שהשתנה. עדכון ה-cache מקומית בלי לטעון מחדש כדי שעריכת תא לא תגרום להבהוב/
-// לאובדן פוקוס בשאר התאים הפתוחים לעריכה
+// קריאה-מיזוג-כתיבה על כל אובייקט ה-data של השורה - אין טבלה רביעית פר-תא (ר' ההערה בסכימה), כל עדכון
+// תא שולח מחדש את כל האובייקט עם המפתח הבודד שהשתנה. ה-cache מתעדכן מקומית בלי טעינה מחדש
 async function updateCellValue(rowId, columnId, value) {
     const row = customTableRowsCache.find(r => r.id === rowId);
     if (!row) return;
@@ -17857,36 +17589,6 @@ async function updateCellValue(rowId, columnId, value) {
     const { error } = await supabaseClient.from('custom_table_rows').update({ data: newData, updated_at: new Date().toISOString() }).eq('id', rowId);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     row.data = newData;
-}
-
-let addTableRowInFlight = false;
-async function addTableRow() {
-    if (addTableRowInFlight) return;
-    if (!supabaseClient || !currentUserId || !currentOpenTableId) return;
-    addTableRowInFlight = true;
-    try {
-        const { data, error } = await supabaseClient.from('custom_table_rows').insert({ table_id: currentOpenTableId, user_id: currentUserId, data: {}, sort_order: Date.now() }).select().single();
-        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-        customTableRowsCache.push(data);
-        const emptyEl = document.getElementById('table-grid-empty');
-        if (emptyEl) emptyEl.classList.add('hidden');
-        document.getElementById('table-grid-body').appendChild(buildTableRowElement(data));
-    } finally {
-        addTableRowInFlight = false;
-    }
-}
-
-function deleteTableRow(rowId) {
-    supabaseClient.from('custom_table_rows').delete().eq('id', rowId).then(({ error }) => {
-        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-        customTableRowsCache = customTableRowsCache.filter(r => r.id !== rowId);
-        const rowEl = document.querySelector(`.table-grid-row[data-row-id="${rowId}"]`);
-        if (rowEl) rowEl.remove();
-        if (customTableRowsCache.length === 0) {
-            const emptyEl = document.getElementById('table-grid-empty');
-            if (emptyEl) { emptyEl.textContent = t('table_no_rows_hint'); emptyEl.classList.remove('hidden'); }
-        }
-    });
 }
 
 // --- 📓 המחברות שלי (לפי בקשה מפורשת, במקום "לימודים" ו"הפרויקטים שלי"): ארון עם מדפים - כל מדף הוא

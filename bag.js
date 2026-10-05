@@ -840,11 +840,12 @@ function openTableView(tableId) {
     const same = isTableViewOpen() && currentOpenTableId === tableId;
     currentOpenTableId = tableId;
     if (!same) {
+        // עד שהעמודות והשורות נטענות - מסך נקי (בלי "אין עמודות" שמהבהב)
         customTableColumnsCache = [];
         customTableRowsCache = [];
-        document.getElementById('table-grid-header').innerHTML = '';
-        document.getElementById('table-grid-body').innerHTML = '';
-        document.getElementById('table-grid-empty').classList.add('hidden');
+        ['tbl-body', 'tbl-tools'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+        ['table-grid-empty', 'tbl-add-row', 'tbl-row-hint', 'tbl-sum-pill'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        if (typeof tblRenderModes === 'function') tblRenderModes();
         const scroll = document.getElementById('table-view-scroll');
         if (scroll) scroll.scrollTop = 0;
     }

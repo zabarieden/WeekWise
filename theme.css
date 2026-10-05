@@ -3958,63 +3958,9 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .project-card-main, .notebook-card-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
 .project-card-actions, .notebook-card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
-/* --- טבלאות מותאמות אישית (Tables) - כרטיסי-רשימה בסגנון project-card, וגריד
-   טבלה שהוא Flexbox על divs (לא <table>, בהתאמה לשאר האפליקציה) עם מספר
-   עמודות דינמי - בניגוד לגריד היומן החודשי (repeat(7,1fr) קבוע), כאן מספר
-   העמודות נקבע ע"י המשתמשת, אז השורה גולשת אופקית בתוך מעטפת גלילה משלה
-   (בדיוק כמו .day-tabs-strip) במקום CSS Grid עם מספר עמודות קבוע-מראש */
-.table-detail-back-btn { font-size: 1.1rem; }
+/* --- טבלאות: עורך העמודות. התצוגות של טבלה פתוחה (טבלה / כרטיסים / לוח) - בבלוק .tbl-* בסוף הקובץ --- */
 
-.table-grid-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 10px 0; }
-.table-grid-scroll::-webkit-scrollbar { display: none; }
-.table-grid { display: flex; flex-direction: column; min-width: min-content; }
-.table-grid-row { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: var(--transition); }
-.table-grid-header-row { background-color: var(--bg-row); font-weight: 700; border-bottom: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px 10px 0 0; }
-/* פסים עדינים לסירוגין בגוון הערכת-נושא (accent-purple), לא אפור גנרי -
-   ורווח אנכי גדול יותר בכל תא, לפי בקשה מפורשת ("רווחים יותר טובים...
-   גרדיאנט עדין בצבע של הערכת נושא... פסים עדינים בין שורה לשורה") */
-#table-grid-body .table-grid-row:nth-child(odd) { background: linear-gradient(90deg, rgba(168, 85, 247, 0.07), rgba(168, 85, 247, 0.015)); }
-#table-grid-body .table-grid-row:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
-#table-grid-body .table-grid-row:hover { background-color: rgba(168, 85, 247, 0.1); }
-.table-grid-cell { flex: 0 0 140px; padding: 15px 12px; color: var(--text-primary); font-size: 0.85rem; display: flex; align-items: center; box-sizing: border-box; overflow: hidden; }
-.table-grid-header-cell { color: var(--text-primary); }
-.table-grid-row-actions { flex: 0 0 44px; justify-content: center; }
-.table-add-row-btn { width: 100%; margin-top: 4px; }
 
-.table-select-option-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* עיצוב ידני מלא (לא accent-color) - accent-color לא נתמך באמינות בכל
-   WebView (דווח בפועל: הוי הופיע צהוב - ברירת המחדל של המערכת/דפדפן, לא
-   הסגול המבוקש), ובנוסף עדין יותר מ-checkbox מערכת גולמי, לפי בקשה מפורשת */
-.table-grid-cell input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-radius: 6px;
-    background-color: rgba(255, 255, 255, 0.03);
-    cursor: pointer;
-    position: relative;
-    flex-shrink: 0;
-    transition: var(--transition);
-}
-.table-grid-cell input[type="checkbox"]:checked {
-    background-color: var(--accent-purple);
-    border-color: var(--accent-purple);
-}
-.table-grid-cell input[type="checkbox"]:checked::after {
-    content: '✓';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-}
-.table-grid-cell input[type="text"], .table-grid-cell input[type="number"] { width: 100%; background: transparent; border: none; color: var(--text-primary); font-size: 0.85rem; font-family: inherit; padding: 0; }
-.table-grid-cell input[type="text"]:focus, .table-grid-cell input[type="number"]:focus { outline: none; }
 .column-drag-handle { cursor: grab; touch-action: none; }
 
 .pending-columns-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
@@ -4028,12 +3974,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .pending-select-option-row { display: flex; align-items: center; gap: 8px; }
 .pending-select-option-row input[type="text"] { flex: 1 1 auto; min-width: 0; background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 10px; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; }
 .pending-select-option-swatches { display: flex; gap: 4px; flex-shrink: 0; }
-.table-date-cell-btn, .table-select-cell-btn { width: 100%; text-align: start; background: transparent; border: none; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; cursor: pointer; padding: 4px 0; }
-.table-select-cell-btn { color: var(--text-secondary); }
 
-@media (max-width: 768px) {
-    .table-grid-cell { flex-basis: 110px; font-size: 0.8rem; }
-}
 .projects-list { list-style: none; margin: 0; padding: 0; }
 /* בורר אייקון לפרויקט - אותו דפוס בדיוק כמו .vision-goal-category-chip, רק
    ריבועי (אמוג'י בלבד, בלי תווית טקסט) */
@@ -6461,9 +6402,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .select-other-manual-row input { flex: 1; min-width: 0; }
 .select-other-manual-row .btn-primary { flex-shrink: 0; width: auto; padding-inline: 16px; margin: 0; }
 
-/* × קטן למחיקת אפשרות בבורר הערך של תא בטבלה */
-.table-select-option-remove { flex-shrink: 0; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-secondary); font-size: 1rem; line-height: 1; opacity: .7; cursor: pointer; }
-.table-select-option-remove:hover { opacity: 1; background: rgba(127,127,127,.15); }
 /* פתקים צבעוניים כאייקון טבלה */
 .table-note-icon { width: 1.15em; height: 1.15em; vertical-align: -0.2em; display: inline-block; }
 
@@ -7686,12 +7624,9 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
 .tbl-crumb { font-size: .74rem; font-weight: 700; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tbl-title { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0; font-size: 1.15rem; font-weight: 800; line-height: 1.25; color: var(--text-primary); }
 .tbl-title-icon { flex-shrink: 0; line-height: 1; }
-.tbl-title-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tbl-edit-btn .btn-edit-icon { width: 20px; height: 20px; }
+.tbl-title-name { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; line-height: 1.2; }
 .tbl-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 14px calc(24px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
 .tbl-scroll::-webkit-scrollbar { display: none; }
-.tbl-view .table-grid-scroll { margin: 4px 0 10px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); }
-.tbl-add-row { width: 100%; min-height: 46px; padding: 0 16px; border-radius: 14px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 28%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .92rem; font-weight: 800; cursor: pointer; }
 
 /* תווית הכיס של משימה במחברת המשימות */
 .study-task-pocket { --pocket: var(--accent-purple); flex-shrink: 0; align-self: center; max-width: 34%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 800; color: var(--text-primary); background: color-mix(in srgb, var(--pocket) 22%, transparent); border: 1px solid color-mix(in srgb, var(--pocket) 45%, transparent); }
@@ -7701,3 +7636,113 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
     .bag-binder.open, .tbl-view.open, .bag-art-wrap .bag-art, .bag-art-wrap .bag-art-pop, .bag-binder-sheet.is-turning .bag-binder-scroll, .bag-seeding-dot { animation: none !important; }
     .bag-table-card:hover, .bag-table-card:focus-visible { transform: none; }
 }
+
+/* --- ▦ בתוך טבלה (tables.js): תצוגות טבלה / כרטיסים / לוח, מיון וסינון, כרטיס שורה --- */
+.tbl-sum-pill { flex-shrink: 0; max-width: 32%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 10px; border-radius: 999px; font-size: .76rem; font-weight: 800; color: var(--accent-purple-light-text); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); font-variant-numeric: tabular-nums; }
+.tbl-modes { flex-shrink: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0 14px; padding: 4px; border-radius: 14px; background: var(--bg-glass); border: 1px solid var(--border-color); }
+.tbl-mode { min-width: 0; min-height: 38px; padding: 0 6px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.tbl-mode-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-mode.active { background: var(--text-primary); color: var(--bg-sheet); }
+.tbl-tools { flex-shrink: 0; display: flex; gap: 8px; padding: 10px 14px 8px; overflow-x: auto; scrollbar-width: none; }
+.tbl-tools::-webkit-scrollbar { display: none; }
+.tbl-chip { flex-shrink: 0; max-width: 72%; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.tbl-chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tbl-chip.active { border-color: color-mix(in srgb, var(--accent-purple) 55%, transparent); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); }
+.tbl-chip.is-accent { border-color: color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); color: var(--accent-purple-light-text); }
+.tbl-chip-x { flex-shrink: 0; width: 20px; height: 20px; display: inline-grid; place-items: center; margin-inline-end: -4px; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 14%, transparent); font-size: .9rem; line-height: 1; }
+.tbl-scroll { padding-top: 2px; }
+
+/* טבלה: שורות flex כדי שהעמודה הראשונה תיצמד בגלילה הצידה; תא צמוד מקבל רקע אטום */
+.tbl-grid-scroll { overflow-x: auto; overscroll-behavior-x: contain; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); scrollbar-width: thin; }
+.tbl-grid { display: inline-flex; flex-direction: column; min-width: 100%; }
+.tbl-tr { display: flex; min-height: 46px; border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent); cursor: pointer; }
+.tbl-tr:not(.is-head):not(.is-sum):active, .tbl-tr:not(.is-head):not(.is-sum):focus-visible { background: color-mix(in srgb, var(--accent-purple) 10%, transparent); outline: none; }
+.tbl-tr.is-head { min-height: 40px; cursor: default; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.tbl-tr.is-sum { min-height: 42px; border-bottom: none; cursor: default; background: color-mix(in srgb, var(--accent-purple) 9%, transparent); color: var(--accent-purple-light-text); }
+.tbl-td, .tbl-th { flex: 0 0 auto; box-sizing: border-box; min-width: 0; padding: 0 10px; display: flex; align-items: center; gap: 6px; font-size: .86rem; color: var(--text-primary); overflow: hidden; }
+.tbl-th { border: none; border-radius: 0; background: transparent; font: inherit; font-size: .76rem; font-weight: 700; color: var(--text-secondary); text-align: start; cursor: pointer; }
+.tbl-th-icon { flex-shrink: 0; font-size: .72rem; font-weight: 800; opacity: .8; }
+.tbl-th-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-th-sort { flex-shrink: 0; color: var(--accent-pink); font-weight: 800; }
+.tbl-td.is-sticky, .tbl-th.is-sticky { position: sticky; inset-inline-start: 0; z-index: 1; background: var(--bg-sheet); border-inline-end: 1px solid var(--border-color); }
+.tbl-td.is-sticky { font-weight: 700; }
+.tbl-tr.is-head .is-sticky { background: color-mix(in srgb, var(--text-primary) 5%, var(--bg-sheet)); }
+.tbl-tr.is-sum .tbl-td { font-weight: 800; color: var(--accent-purple-light-text); }
+.tbl-tr.is-sum .is-sticky { background: color-mix(in srgb, var(--accent-purple) 12%, var(--bg-sheet)); }
+.tbl-tr.is-sum .is-count { font-weight: 600; color: var(--text-secondary); }
+.tbl-td-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-num { font-variant-numeric: tabular-nums; }
+.tbl-muted { color: var(--text-secondary); opacity: .75; }
+.tbl-check { flex-shrink: 0; width: 24px; height: 24px; padding: 0; border-radius: 7px; border: 2px solid color-mix(in srgb, var(--text-secondary) 70%, transparent); background: transparent; display: grid; place-items: center; color: #fff; cursor: pointer; }
+.tbl-check.on { border-color: transparent; background: var(--accent-pink); }
+.tbl-opt { --opt: #a855f7; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 9px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: color-mix(in srgb, var(--opt) 72%, var(--text-primary)); background: color-mix(in srgb, var(--opt) 18%, transparent); }
+.tbl-yes { font-weight: 700; color: var(--accent-pink-text, var(--accent-pink)); }
+.tbl-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 14px 0; padding: 18px; border-radius: 16px; border: 1.5px dashed var(--border-color); text-align: center; font-size: .9rem; line-height: 1.5; color: var(--text-secondary); }
+.tbl-empty.hidden { display: none; }
+.tbl-add-row { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; margin-top: 12px; padding: 0 16px; border-radius: 14px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 28%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .92rem; font-weight: 800; cursor: pointer; }
+.tbl-add-row.is-strong { min-height: 50px; border: none; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); box-shadow: 0 10px 22px color-mix(in srgb, var(--accent-pink) 26%, transparent); }
+.tbl-add-row.hidden, .tbl-hint.hidden { display: none; }
+.tbl-hint { margin: 12px 0 0; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-glass); font-size: .82rem; line-height: 1.45; color: var(--text-secondary); }
+
+/* כרטיסים */
+.tbl-cards { display: flex; flex-direction: column; gap: 10px; }
+.tbl-card { --tbl-accent: transparent; display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px 14px; box-sizing: border-box; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--tbl-accent) 45%, var(--border-color)); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.tbl-card:active { transform: scale(.99); }
+.tbl-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.tbl-card-title { min-width: 0; font-size: 1rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.tbl-card-head .tbl-opt { flex-shrink: 0; max-width: 46%; }
+.tbl-card-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tbl-card-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tbl-card-label { font-size: .7rem; font-weight: 600; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-card-value { min-width: 0; font-size: .88rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.tbl-card-value .tbl-td-text { white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* לוח */
+.tbl-board-by { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; font-size: .8rem; font-weight: 700; color: var(--text-secondary); }
+.tbl-board { display: flex; gap: 10px; margin: 0 -14px; padding: 0 14px 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.tbl-board::-webkit-scrollbar { display: none; }
+.tbl-lane { --lane: var(--text-secondary); flex: 0 0 min(250px, 78%); display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--lane) 30%, transparent); background: color-mix(in srgb, var(--lane) 9%, var(--bg-row)); scroll-snap-align: start; }
+.tbl-lane-head { display: flex; align-items: center; gap: 8px; font-size: .86rem; font-weight: 800; color: var(--text-primary); }
+.tbl-lane-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--lane); }
+.tbl-lane-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-lane-count { margin-inline-start: auto; font-size: .74rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.tbl-lane-list { display: flex; flex-direction: column; gap: 8px; min-height: 64px; }
+.tbl-card.is-compact { padding: 10px 12px; border-radius: 14px; gap: 6px; }
+.tbl-card.is-compact .tbl-card-title { font-size: .92rem; }
+.tbl-card.is-compact .tbl-card-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tbl-board-need { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px; border-radius: 18px; border: 1.5px dashed var(--border-color); text-align: center; font-size: .9rem; line-height: 1.5; color: var(--text-secondary); }
+.tbl-board-need p { margin: 0; max-width: 34ch; }
+
+/* כרטיס שורה */
+.tbl-row-fields { display: flex; flex-direction: column; gap: 14px; margin: 6px 0 14px; max-height: 58vh; overflow-y: auto; }
+.tbl-field { display: flex; flex-direction: column; gap: 6px; }
+.tbl-field-label { display: flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 700; color: var(--text-secondary); }
+.tbl-input { width: 100%; box-sizing: border-box; min-height: 44px; margin: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .95rem; line-height: 1.4; resize: none; outline: none; }
+.tbl-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple) 20%, transparent); }
+.tbl-toggle { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; }
+.tbl-toggle-box { width: 22px; height: 22px; box-sizing: border-box; border-radius: 7px; border: 2px solid color-mix(in srgb, var(--text-secondary) 70%, transparent); display: grid; place-items: center; color: #fff; }
+.tbl-toggle.on .tbl-toggle-box { border-color: transparent; background: var(--accent-pink); }
+.tbl-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tbl-chip-opt { --opt: #a855f7; display: inline-flex; align-items: center; max-width: 100%; border-radius: 999px; border: 1.5px solid transparent; background: color-mix(in srgb, var(--opt) 15%, transparent); }
+.tbl-chip-opt.selected { border-color: var(--opt); background: color-mix(in srgb, var(--opt) 30%, transparent); }
+.tbl-chip-pick { min-width: 0; min-height: 34px; padding-block: 0; padding-inline: 12px 4px; border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; font-size: .84rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.tbl-chip-del { flex-shrink: 0; width: 28px; height: 28px; margin-inline-end: 3px; padding: 0; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; }
+.tbl-chip-other { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1.5px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.tbl-chips .select-other-manual-row { flex-basis: 100%; }
+.tbl-date-btn { align-self: flex-start; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; }
+
+/* מיון / סינון / פעולות */
+.tbl-pick-list { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; max-height: 55vh; overflow-y: auto; }
+.tbl-pick-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; text-align: start; cursor: pointer; }
+.tbl-pick-icon { flex-shrink: 0; width: 24px; text-align: center; font-size: .8rem; font-weight: 800; color: var(--text-secondary); }
+.tbl-pick-dot { --opt: #a855f7; flex-shrink: 0; width: 12px; height: 12px; margin-inline: 6px; border-radius: 50%; background: var(--opt); }
+.tbl-pick-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-pick-mark { flex-shrink: 0; font-weight: 800; color: var(--accent-pink); }
+.tbl-pick-text { display: flex; gap: 8px; align-items: center; }
+.tbl-pick-text input { flex: 1; min-width: 0; }
+.tbl-pick-text .btn-primary { flex-shrink: 0; width: auto; margin: 0; padding-inline: 18px; }
+.bag-add-option.is-danger .bag-add-option-name { color: var(--accent-red-text, #e5484d); }
+.bag-add-option.is-danger .bag-add-option-icon { background: color-mix(in srgb, #e5484d 14%, transparent); }
+
+.tbl-mode:focus-visible, .tbl-chip:focus-visible, .tbl-th:focus-visible, .tbl-check:focus-visible, .tbl-card:focus-visible, .tbl-add-row:focus-visible, .tbl-toggle:focus-visible, .tbl-chip-pick:focus-visible, .tbl-chip-del:focus-visible, .tbl-chip-other:focus-visible, .tbl-date-btn:focus-visible, .tbl-pick-row:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tbl-card:active { transform: none; } }

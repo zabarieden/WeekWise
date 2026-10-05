@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=501">
+    <link rel="stylesheet" href="theme.css?v=502">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1459,7 +1459,8 @@
                 </div>
             </div>
 
-            <!-- ▦ טבלה פתוחה (bag.js openTableView, הגריד ב-app.js renderTableGrid) - מסך מלא מעל התיק והקלסר -->
+            <!-- ▦ טבלה פתוחה (tables.js) - מסך מלא מעל התיק והקלסר: שלוש תצוגות (טבלה / כרטיסים / לוח), מיון,
+                 סינון ו"+ עמודה"; נגיעה בשורה פותחת את כרטיס השורה (#modal-table-row) -->
             <div id="table-view" class="tbl-view" aria-hidden="true">
                 <div class="tbl-top">
                     <button type="button" class="gv-icon-btn" onclick="closeTableView()" data-i18n-title="gv_back" data-i18n-aria-label="gv_back" title="Back" aria-label="Back"><svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
@@ -1467,20 +1468,19 @@
                         <span class="tbl-crumb" id="table-view-crumb"></span>
                         <h2 class="tbl-title" id="table-detail-title"></h2>
                     </div>
-                    <button type="button" class="gv-icon-btn" onclick="openColumnManager()" data-i18n-title="table_manage_columns_btn" data-i18n-aria-label="table_manage_columns_btn" title="Columns" aria-label="Columns"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9.5 4v16M15 4v16"></path></svg></button>
-                    <button type="button" class="gv-icon-btn tbl-edit-btn" onclick="openEditTableModal(currentOpenTableId)" data-i18n-title="table_edit_modal_title" data-i18n-aria-label="table_edit_modal_title" title="Edit table" aria-label="Edit table"><svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M12.3 9.3l2.4 2.4M5.95 15.65l2.4 2.4"/><path d="M13.5 20.5c1.1-.8 2.3-.8 3.4 0s2.3.8 3.4 0"/></svg></button>
+                    <span class="tbl-sum-pill hidden" id="tbl-sum-pill"></span>
+                    <button type="button" class="gv-icon-btn" onclick="openTableActions()" data-i18n-title="tbl_more" data-i18n-aria-label="tbl_more" title="More" aria-label="More"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
                 </div>
+                <div class="tbl-modes" id="tbl-modes" role="tablist"></div>
+                <div class="tbl-tools" id="tbl-tools"></div>
                 <div class="tbl-scroll" id="table-view-scroll">
-                    <div class="table-grid-scroll">
-                        <div id="table-grid" class="table-grid">
-                            <div id="table-grid-header" class="table-grid-row table-grid-header-row"></div>
-                            <div id="table-grid-body"></div>
-                        </div>
-                    </div>
-                    <p id="table-grid-empty" class="today-tasks-empty hidden"></p>
-                    <button type="button" class="tbl-add-row" onclick="addTableRow()" data-i18n="table_add_row_btn">+ Add row</button>
+                    <div id="tbl-body"></div>
+                    <div id="table-grid-empty" class="tbl-empty hidden"></div>
+                    <button type="button" class="tbl-add-row hidden" id="tbl-add-row" onclick="addTableRow()">+ Add row</button>
+                    <p class="tbl-hint hidden" id="tbl-row-hint"><span aria-hidden="true">👆</span> <span data-i18n="tbl_row_hint">Tap a row to open it as a full card – easier to edit on the phone.</span></p>
                 </div>
             </div>
+
 
             <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
                  סימנייה, תוכן עניינים, ודף אחד בכל פעם שמתהפך כמו במחברת אמיתית (חצים בתחתית הדף או
@@ -1910,22 +1910,50 @@
                     </div>
                     <div class="action-buttons-wrap">
                         <button class="btn-primary" onclick="saveColumnSubModal()" data-i18n="table_save_btn">Save</button>
-                        <button class="btn-clear-specific" onclick="closeModal('modal-add-column'); openModal('modal-manage-columns');" data-i18n="cancel_btn">Cancel</button>
+                        <button class="btn-clear-specific" onclick="cancelColumnSubModal()" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="modal-table-select-cell-picker" class="apple-modal">
+        <!-- ▦ כרטיס שורה (tables.js): כל העמודות של השורה עם עורך לפי הסוג; כל שינוי נשמר מיד -->
+        <div id="modal-table-row" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="table_select_cell_picker_title">Choose a value</h3>
-                <div id="table-select-cell-picker-list" class="preset-quick-add-list"></div>
+                <h3 id="tbl-row-title">Row details</h3>
+                <div id="tbl-row-fields" class="tbl-row-fields"></div>
                 <div class="action-buttons-wrap">
-                    <button class="btn-clear-specific" onclick="closeModal('modal-table-select-cell-picker')" data-i18n="cancel_btn">Cancel</button>
+                    <button class="btn-primary" onclick="closeTableRowCard()" data-i18n="close_btn">Close</button>
+                </div>
+                <button type="button" class="nb-danger-link" onclick="deleteTableRowFromCard()" data-i18n="tbl_row_delete">🗑️ Delete row</button>
+            </div>
+        </div>
+
+        <!-- ▦ ⋯ בטבלה: עמודות / שם, אייקון וכיס / מחיקה (openTableActions) -->
+        <div id="modal-table-actions" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="tbl-actions-title"></h3>
+                <div id="tbl-actions-grid" class="bag-add-grid"></div>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-table-actions')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
+
+        <!-- ▦ מיון / סינון בטבלה - רשימה אחת שמתמלאת לפי הצורך (tblPick) -->
+        <div id="modal-table-pick" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="tbl-pick-title"></h3>
+                <div id="tbl-pick-list" class="tbl-pick-list"></div>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-table-pick')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+
 
         <!-- כריכה ופרטים של מחברת: שם, מדף (כולל "➕ מדף חדש…" עם שם להקלדה), צבע, דוגמה ומדבקה
              (כולל "אחר" להקלדת כל אימוג'י), עם תצוגה מקדימה חיה של הכריכה - ר' openNotebookCoverModal -->
@@ -4104,10 +4132,11 @@
 
     </div>
 
-    <script src="i18n.js?v=404"></script>
-    <script src="app.js?v=549"></script>
+    <script src="i18n.js?v=405"></script>
+    <script src="app.js?v=550"></script>
     <script src="goals-library.js?v=1"></script>
-    <script src="bag.js?v=1"></script>
+    <script src="bag.js?v=2"></script>
+    <script src="tables.js?v=1"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=24"></script>
     <script src="new-me-challenges.js?v=4"></script>
