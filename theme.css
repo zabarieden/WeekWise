@@ -3645,7 +3645,9 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .phone-wrapper.study-open .ai-brain-fab,
 .phone-wrapper.study-open .hamburger-fab,
 .phone-wrapper.projects-open .ai-brain-fab,
-.phone-wrapper.projects-open .hamburger-fab {
+.phone-wrapper.projects-open .hamburger-fab,
+.phone-wrapper.bag-open .ai-brain-fab,
+.phone-wrapper.bag-open .hamburger-fab {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -3961,12 +3963,6 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    עמודות דינמי - בניגוד לגריד היומן החודשי (repeat(7,1fr) קבוע), כאן מספר
    העמודות נקבע ע"י המשתמשת, אז השורה גולשת אופקית בתוך מעטפת גלילה משלה
    (בדיוק כמו .day-tabs-strip) במקום CSS Grid עם מספר עמודות קבוע-מראש */
-.custom-tables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.custom-table-card { display: flex; flex-direction: column; align-items: center; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px 10px; box-sizing: border-box; text-align: center; }
-.custom-table-card-main { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; width: 100%; overflow: hidden; }
-.custom-table-card-icon { font-size: 1.8rem; }
-.custom-table-card-name { color: var(--text-primary); font-weight: 600; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.custom-table-card-actions { display: flex; align-items: center; gap: 4px; }
 .table-detail-back-btn { font-size: 1.1rem; }
 
 .table-grid-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 10px 0; }
@@ -4037,9 +4033,6 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 
 @media (max-width: 768px) {
     .table-grid-cell { flex-basis: 110px; font-size: 0.8rem; }
-}
-@media (max-width: 480px) {
-    .custom-tables-grid { grid-template-columns: repeat(1, 1fr); }
 }
 .projects-list { list-style: none; margin: 0; padding: 0; }
 /* בורר אייקון לפרויקט - אותו דפוס בדיוק כמו .vision-goal-category-chip, רק
@@ -4675,7 +4668,8 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .phone-wrapper.modal-open .daily-focus-bubble,
 .phone-wrapper.vision-open .daily-focus-bubble,
 .phone-wrapper.study-open .daily-focus-bubble,
-.phone-wrapper.projects-open .daily-focus-bubble {
+.phone-wrapper.projects-open .daily-focus-bubble,
+.phone-wrapper.bag-open .daily-focus-bubble {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -6707,22 +6701,9 @@ html[dir="ltr"] .home-grow-corner svg { transform: scaleX(-1); }
 .book-spine-title { writing-mode: vertical-rl; text-orientation: mixed; max-height: calc(100% - 14px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 800; font-size: .66rem; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
 .book-spine-stars { writing-mode: vertical-rl; color: #ffe08a; font-size: .5rem; letter-spacing: -1px; }
 
-/* ===== 📓 המחברות שלי: ארון עם מדפי עץ (כמו פינת הקריאה), כריכות בצבע/דוגמה/מדבקה שבוחרים, ומחברת
-   פתוחה במסך מלא עם נייר לפי סוג הדף ודפים שמתהפכים סביב הכריכה (ר' renderNotebookShelves /
-   playNotebookPageTurn ב-app.js). הכריכה של מחברת תמיד בצד ה-start - ימין בעברית, שמאל באנגלית ===== */
-.nb-bookcase { display: flex; flex-direction: column; gap: 22px; }
-.nb-shelf { display: flex; flex-direction: column; gap: 4px; }
-.nb-shelf-label { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: none; background: none; padding: 2px 4px; font: inherit; font-weight: 800; font-size: .92rem; color: var(--text-primary); cursor: pointer; text-align: start; }
-.nb-shelf-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nb-shelf-edit { display: inline-flex; width: 15px; height: 15px; opacity: .45; flex-shrink: 0; }
-.nb-shelf-edit svg { width: 100%; height: 100%; }
-.nb-shelf-row { display: flex; align-items: flex-end; gap: 12px; min-height: 112px; padding: 12px 12px 0; overflow-x: auto; scrollbar-width: none; }
-.nb-shelf-row::-webkit-scrollbar { display: none; }
-.nb-shelf-board { height: 11px; margin-top: -1px; border-radius: 3px; background: linear-gradient(180deg, #d1a274, #9c6b43); box-shadow: 0 5px 10px rgba(0, 0, 0, .16); }
-.nb-shelf-empty { align-self: center; color: var(--text-secondary); font-size: .8rem; padding-bottom: 14px; }
-.nb-empty-hint { margin: 0; text-align: center; color: var(--text-secondary); font-size: .88rem; }
-.nb-add-shelf-btn { align-self: center; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); color: var(--text-primary); border-radius: 999px; padding: 9px 20px; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
-.nb-add-shelf-btn:active { transform: scale(.96); }
+/* ===== 📓 מחברות (בכיסים של "התיק שלי"): כריכות בצבע/דוגמה/מדבקה שבוחרים, ומחברת פתוחה במסך מלא
+   עם נייר לפי סוג הדף ודפים שמתהפכים סביב הכריכה (ר' playNotebookPageTurn ב-app.js). הכריכה של מחברת
+   תמיד בצד ה-start - ימין בעברית, שמאל באנגלית ===== */
 /* כריכה: צבע + דוגמה (שכבת רקע לבנה-שקופה), פס כריכה כהה בצד ה-start, תווית לבנה עם השם */
 .nb-cover { --nb-color: #8ab4f8; position: relative; flex: 0 0 auto; width: 76px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 8px 6px; border: none; border-radius: 3px 9px 9px 3px; background-color: var(--nb-color); box-shadow: inset 7px 0 0 rgba(0, 0, 0, .13), 0 4px 10px rgba(0, 0, 0, .2); font: inherit; color: #2b2b2b; cursor: pointer; overflow: hidden; transition: transform .2s ease; box-sizing: border-box; }
 html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7px 0 0 rgba(0, 0, 0, .13), 0 4px 10px rgba(0, 0, 0, .2); }
@@ -6730,14 +6711,10 @@ html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7
 .nb-cover-emoji { font-size: 1.55rem; line-height: 1; }
 .nb-cover-label { max-width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, .9); border-radius: 3px; padding: 3px 5px; font-size: .62rem; font-weight: 800; line-height: 1.2; text-align: center; color: #333; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
 .nb-cover-ribbon { position: absolute; top: 0; inset-inline-end: 11px; width: 9px; height: 28px; background: var(--accent-pink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
-.nb-cover-badge { position: absolute; top: 5px; inset-inline-end: 5px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--accent-pink); color: #fff; font-size: .66rem; font-weight: 800; line-height: 18px; text-align: center; }
 .nb-pat-dots { background-image: radial-gradient(rgba(255, 255, 255, .5) 1.4px, transparent 1.7px); background-size: 9px 9px; }
 .nb-pat-stripes { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .3) 0 5px, transparent 5px 11px); }
 .nb-pat-grid { background-image: linear-gradient(rgba(255, 255, 255, .38) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .38) 1px, transparent 1px); background-size: 10px 10px; }
 .nb-pat-gingham { background-image: linear-gradient(rgba(255, 255, 255, .26) 50%, transparent 50%), linear-gradient(90deg, rgba(255, 255, 255, .26) 50%, transparent 50%); background-size: 14px 14px; }
-/* מחברת המשימות: נייר שורות לבן עם ✓ - נראית כמו מחברת עבודה, לא כמו כריכה צבעונית */
-.nb-cover.nb-cover-tasks { background-color: #fffdf6; background-image: repeating-linear-gradient(to bottom, transparent 0 11px, rgba(110, 140, 230, .32) 11px 12px); border: 1px solid rgba(0, 0, 0, .08); }
-.nb-cover.nb-cover-add { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 50%, transparent); box-shadow: none; color: var(--accent-purple-text, var(--text-primary)); font-size: 1.6rem; font-weight: 300; width: 58px; }
 /* למי שאינו/ה פרימיום - כרטיס הזמנה עם שלוש כריכות קטנות */
 .nb-premium-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-glass)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; box-sizing: border-box; }
 .nb-premium-covers { display: flex; flex-shrink: 0; }
@@ -6745,13 +6722,13 @@ html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7
 .nb-premium-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; font-size: .8rem; color: var(--text-secondary); }
 .nb-premium-text b { font-size: .92rem; color: var(--text-primary); }
 .nb-premium-badge { flex-shrink: 0; font-size: .74rem; font-weight: 800; padding: 5px 10px; border-radius: 999px; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
-.notebooks-section .nb-desk-scene { position: relative; opacity: .5; }
 
 /* --- חלון הכריכה --- */
 .nb-cover-preview-wrap { display: flex; justify-content: center; margin: 2px 0 10px; }
 .nb-cover.nb-cover-preview { width: 92px; height: 122px; cursor: default; }
 .nb-cover.nb-cover-preview:hover { transform: none; }
 .nb-swatch-row, .nb-pattern-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-swatch-row { gap: 6px; }
 .nb-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; background: var(--nb-color); box-shadow: 0 1px 3px rgba(0, 0, 0, .2); cursor: pointer; }
 .nb-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-sheet), 0 0 0 4px var(--accent-purple); }
 .nb-pattern-chip { min-width: 64px; height: 38px; padding: 0 8px; border-radius: 10px; border: 2px solid transparent; background-color: var(--nb-color); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); cursor: pointer; font: inherit; }
@@ -7527,3 +7504,200 @@ html[dir="rtl"] .glib-card-chevron { transform: scaleX(-1); }
 .glib-edit-btn { min-height: 48px; padding: 0 18px; border-radius: 16px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .92rem; font-weight: 700; cursor: pointer; }
 .glib-tile:focus-visible, .glib-card:focus-visible, .glib-sub-chip:focus-visible, .glib-start-btn:focus-visible, .glib-edit-btn:focus-visible, .glib-routine:has(input:focus-visible) { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .glib-view.open { animation: none; } }
+
+/* ===== 🎒 התיק שלי (bag.js): כיסים בצבע משלהם (--pocket), כרטיס המשימות כפתק צהוב, קלסר עם טבעות
+   וחוצצים, וטבלה פתוחה במסך מלא. הדף של הקלסר, הפתקים והטבלאות הקטנות הם נייר - בהירים בכל ערכת
+   נושא, כמו בסקיצה. הטבעות בצד ה-start של הדף והחוצצים בצד ה-end (logical properties) ===== */
+.bag-section { gap: 14px; }
+.bag-root { display: flex; flex-direction: column; gap: 14px; }
+.bag-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bag-title { margin: 0; min-width: 0; font-size: 1.5rem; font-weight: 800; line-height: 1.2; color: var(--text-primary); text-wrap: balance; }
+.bag-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.bag-search-btn.active { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 18%, var(--bg-glass)); }
+.bag-add-btn { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: none; border-radius: 14px; display: inline-grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent-pink) 32%, transparent); cursor: pointer; }
+.bag-add-btn:active, .bag-add-slot:active, .bag-tasks-card:active, .bag-table-card:active, .bag-item:active, .bag-add-option:active, .bag-chip-btn:active, .bag-new-pocket:active { transform: scale(.97); }
+.bag-search { margin: 0; }
+.bag-search-close { flex-shrink: 0; width: 32px; height: 32px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; background: color-mix(in srgb, var(--text-secondary) 16%, transparent); color: var(--text-primary); cursor: pointer; }
+.bag-chevron { flex-shrink: 0; opacity: .55; }
+html[dir="rtl"] .bag-chevron { transform: scaleX(-1); }
+
+/* התיק המצויר: בכניסה למסך הדברים נכנסים לתיק; נגיעה - התיק מקפץ */
+.bag-hero { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: -6px; }
+.bag-art-wrap { width: min(250px, 70vw); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bag-art { display: block; width: 100%; height: auto; overflow: visible; }
+.bag-art-handle { stroke: color-mix(in srgb, var(--accent-purple) 80%, #000); }
+.bag-art-body { fill: color-mix(in srgb, var(--accent-purple) 70%, #1a0030); }
+.bag-art-rim { fill: color-mix(in srgb, var(--accent-purple) 88%, #fff); }
+.bag-art-pocket { fill: color-mix(in srgb, var(--accent-purple) 50%, #12001f); }
+.bag-art-stitch { stroke: color-mix(in srgb, var(--accent-purple) 50%, #fff); }
+.bag-art-button { fill: var(--accent-gold); }
+.bag-art-wrap.intro .bag-art-pop { animation: bagPopIn .7s cubic-bezier(.2, .9, .3, 1.25) both; }
+.bag-art-wrap.intro .bag-art-pop-2 { animation-delay: .08s; }
+.bag-art-wrap.intro .bag-art-pop-3 { animation-delay: .16s; }
+.bag-art-wrap.wiggle .bag-art { animation: bagWiggle .55s ease; transform-origin: 50% 92%; }
+.bag-art-wrap.wiggle .bag-art-pop { animation: bagPopUp .55s ease; }
+.bag-art-wrap.wiggle .bag-art-pop-2 { animation-delay: .05s; }
+.bag-art-wrap.wiggle .bag-art-pop-3 { animation-delay: .1s; }
+@keyframes bagPopIn { from { transform: translateY(30px); } to { transform: translateY(0); } }
+@keyframes bagPopUp { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-9px); } }
+@keyframes bagWiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 60% { transform: rotate(2.5deg); } }
+.bag-totals { margin: 0; font-size: .84rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* מסננים: הכל / מחברות / טבלאות / משימות */
+.bag-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 16px; background: var(--bg-glass); border: 1px solid var(--border-color); }
+.bag-filter { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 50px; padding: 6px 2px; border-radius: 12px; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.bag-filter-icon { font-size: 1.05rem; line-height: 1; }
+.bag-filter-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .76rem; font-weight: 700; }
+.bag-filter.active { background: var(--text-primary); color: var(--bg-sheet); }
+
+.bag-content { display: flex; flex-direction: column; gap: 12px; }
+
+/* כרטיס המשימות - פתק צהוב */
+.bag-tasks-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; box-sizing: border-box; border-radius: 18px; border: 1px solid #f0dd8a; background: #fff6cc; color: #2b2410; font: inherit; text-align: start; cursor: pointer; box-shadow: 0 8px 20px rgba(0, 0, 0, .16); }
+.bag-tasks-icon { flex-shrink: 0; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; font-size: 1.3rem; line-height: 1; background: rgba(255, 255, 255, .72); }
+.bag-tasks-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bag-tasks-title { font-size: .95rem; font-weight: 800; }
+.bag-tasks-line { font-size: .8rem; font-weight: 600; color: #5b5030; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bag-tasks-line::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-inline-end: 6px; border-radius: 3px; border: 1.5px solid #a39565; vertical-align: -1px; }
+.bag-tasks-line.is-calm::before { display: none; }
+.bag-tasks-count { flex-shrink: 0; min-width: 26px; height: 26px; padding: 0 7px; box-sizing: border-box; border-radius: 999px; display: grid; place-items: center; font-size: .78rem; font-weight: 800; color: #fff; background: var(--accent-pink); font-variant-numeric: tabular-nums; }
+.bag-tasks-card .bag-chevron { color: #8a7a45; opacity: 1; }
+
+/* כיס: מסגרת מקווקוות ורקע בגוון הכיס, ושורת הכריכות והטבלאות שנגללת הצידה */
+.bag-pocket { --pocket: var(--accent-purple); display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 20px; border: 2px dashed color-mix(in srgb, var(--pocket) 52%, transparent); background: color-mix(in srgb, var(--pocket) 13%, var(--bg-row)); }
+.bag-pocket-head { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 2px; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.bag-pocket-head.is-static { cursor: default; }
+.bag-pocket-icon { flex-shrink: 0; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; font-size: 1.1rem; line-height: 1; background: color-mix(in srgb, var(--pocket) 26%, transparent); }
+.bag-pocket-name { flex: 1; min-width: 0; font-size: 1rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bag-pocket-meta { flex-shrink: 0; font-size: .76rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.bag-pocket-row { display: flex; align-items: flex-end; gap: 10px; margin: 0 -12px; padding: 6px 12px; overflow-x: auto; scrollbar-width: none; }
+.bag-pocket-row::-webkit-scrollbar { display: none; }
+.bag-pocket-empty { align-self: center; font-size: .8rem; color: var(--text-secondary); white-space: nowrap; }
+.bag-pocket.is-loose { --pocket: var(--text-secondary); border-style: dotted; }
+.bag-pocket.is-general { --pocket: var(--accent-gold); }
+
+/* טבלה קטנה בכיס - דף עם שורות צבעוניות */
+.bag-table-card { flex: 0 0 auto; width: 100px; height: 100px; padding: 9px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; border-radius: 12px; background: #fbfaf7; color: #1f1d1a; font: inherit; text-align: start; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, .2); overflow: hidden; transition: transform .2s ease; }
+.bag-table-card:hover, .bag-table-card:focus-visible { transform: translateY(-4px); }
+.bag-table-card-name { flex-shrink: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: .7rem; font-weight: 800; line-height: 1.25; word-break: break-word; }
+.bag-table-card-icon { margin-inline-end: 4px; }
+.bag-table-card-icon .table-note-icon, .bag-item-cover .table-note-icon, .tbl-title-icon .table-note-icon { width: 1.2em; height: 1.2em; vertical-align: -3px; }
+.bag-table-card-lines { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding-top: 5px; border-top: 1px solid #e4e1d8; overflow: hidden; }
+.bag-table-card-lines i { display: flex; gap: 3px; height: 7px; }
+.bag-table-card-lines i::before { content: ''; flex: 1; border-radius: 3px; background: #ebe8e0; }
+.bag-table-card-lines i::after { content: ''; width: 20px; border-radius: 3px; background: color-mix(in srgb, var(--pocket, #a855f7) 55%, #fff); }
+.bag-table-card-lines i:nth-child(2)::after { background: #86efac; }
+.bag-table-card-lines i:nth-child(3)::after { background: #fcd34d; }
+.bag-table-card-foot { font-size: .66rem; font-weight: 800; color: #6e6a62; font-variant-numeric: tabular-nums; }
+.bag-add-slot { flex: 0 0 auto; width: 58px; height: 100px; padding: 0; box-sizing: border-box; display: grid; place-items: center; border-radius: 12px; border: 2px dashed color-mix(in srgb, var(--pocket, var(--accent-purple)) 55%, transparent); background: transparent; color: var(--text-primary); cursor: pointer; }
+
+/* משימות (בכרטיסים, במסנן משימות ובקלסר) */
+.bag-task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.bag-task { display: flex; align-items: flex-start; gap: 4px; }
+.bag-task-check { flex-shrink: 0; width: 34px; height: 34px; margin-inline-start: -6px; padding: 0; border-radius: 10px; display: grid; place-items: center; background: transparent; cursor: pointer; }
+.bag-task-box { width: 22px; height: 22px; box-sizing: border-box; border-radius: 7px; border: 2px solid color-mix(in srgb, var(--text-secondary) 75%, transparent); display: grid; place-items: center; color: #fff; }
+.bag-task.is-done .bag-task-box { border-color: transparent; background: #10b981; }
+.bag-task-title { flex: 1; min-width: 0; padding: 7px 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 600; line-height: 1.4; text-align: start; overflow-wrap: anywhere; cursor: pointer; }
+.bag-task.is-done .bag-task-title { color: var(--text-secondary); text-decoration: line-through; }
+
+/* מצבים ריקים, הכנת הדוגמאות, "+ כיס חדש" */
+.bag-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 18px; border-radius: 20px; border: 1.5px dashed var(--border-color); text-align: center; color: var(--text-secondary); font-size: .9rem; line-height: 1.5; }
+.bag-empty-title { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text-primary); }
+.bag-empty-text { margin: 0; max-width: 34ch; }
+.bag-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.bag-chip-btn { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 800; cursor: pointer; }
+.bag-seeding { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent-purple) 12%, var(--bg-row)); color: var(--text-primary); font-size: .88rem; font-weight: 700; }
+.bag-seeding-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-pink); animation: bagPulse 1s ease-in-out infinite; }
+@keyframes bagPulse { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
+.bag-new-pocket { align-self: stretch; min-height: 48px; padding: 0 16px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 30%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .92rem; font-weight: 800; cursor: pointer; }
+
+/* ＋ מה להוסיף */
+.bag-add-grid { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 12px; }
+.bag-add-option { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; box-sizing: border-box; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.bag-add-option-icon { flex-shrink: 0; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; font-size: 1.35rem; line-height: 1; background: color-mix(in srgb, var(--accent-purple) 16%, transparent); }
+.bag-add-option-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bag-add-option-name { font-size: .95rem; font-weight: 800; }
+.bag-add-option-desc { font-size: .78rem; font-weight: 500; line-height: 1.35; color: var(--text-secondary); }
+.bag-add-option.is-locked .bag-add-option-icon { filter: saturate(.5); }
+
+/* --- הקלסר (z-index 1880: מתחת למחברת ולטבלה הפתוחות ולחלונות הצפים) --- */
+.bag-binder { --pocket: var(--accent-purple); --pocket-ink: #fff; display: none; position: absolute; inset: 0; z-index: 1880; flex-direction: column; gap: 12px; padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(14px, env(safe-area-inset-bottom, 0px)); box-sizing: border-box; background: var(--bg-main); overflow: hidden; }
+.bag-binder.open { display: flex; animation: fadeIn .2s ease-out; }
+.bag-binder-top { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.bag-crumb { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap; }
+.bag-crumb-root, .bag-crumb-sep { flex-shrink: 0; font-size: .8rem; font-weight: 700; color: var(--text-secondary); }
+.bag-crumb-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+.bag-crumb-name > span:first-child, .bag-page-name > span:first-child { margin-inline-end: .15em; }
+.bag-binder-body { flex: 1; min-height: 0; display: flex; }
+.bag-binder-sheet { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; border-start-start-radius: 6px; border-end-start-radius: 6px; border-start-end-radius: 18px; border-end-end-radius: 18px; background: #fbfaf7; color: #1f1d1a; box-shadow: 0 16px 34px rgba(0, 0, 0, .35); overflow: hidden; }
+.bag-ring { position: absolute; inset-inline-start: 11px; z-index: 2; width: 13px; height: 13px; border-radius: 50%; background: #2a2a2e; box-shadow: inset 0 0 0 3px #c9c9d1, 0 1px 0 rgba(255, 255, 255, .7); }
+.bag-ring:nth-child(1) { top: 64px; }
+.bag-ring:nth-child(2) { top: calc(50% - 6px); }
+.bag-ring:nth-child(3) { bottom: 64px; }
+.bag-binder-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding-block: 18px; padding-inline: 36px 14px; overflow-y: auto; scrollbar-width: none; }
+.bag-binder-scroll::-webkit-scrollbar { display: none; }
+.bag-binder-sheet.is-turning .bag-binder-scroll { animation: bagPageIn .28s ease-out; }
+@keyframes bagPageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.bag-page-title { display: flex; align-items: center; gap: 8px; }
+.bag-page-mark { flex-shrink: 0; width: 12px; height: 28px; border-radius: 4px; background: var(--pocket); }
+.bag-page-name { flex: 1; min-width: 0; margin: 0; font-size: 1.3rem; font-weight: 800; line-height: 1.25; color: #1f1d1a; overflow-wrap: anywhere; }
+.bag-page-edit { flex-shrink: 0; width: 38px; height: 38px; padding: 0; border-radius: 12px; display: grid; place-items: center; background: rgba(0, 0, 0, .05); color: #4a463f; cursor: pointer; }
+.bag-page-edit .btn-edit-icon { width: 18px; height: 18px; }
+.bag-page-meta { margin: -6px 0 0; font-size: .8rem; font-weight: 700; color: #6e6a62; font-variant-numeric: tabular-nums; }
+.bag-page-items { display: flex; flex-direction: column; gap: 8px; }
+.bag-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; box-sizing: border-box; border-radius: 14px; border: 1px solid #ebe8e0; background: #fff; color: #1f1d1a; font: inherit; text-align: start; cursor: pointer; }
+.bag-item-cover { --nb-color: #8ab4f8; flex-shrink: 0; width: 36px; height: 46px; box-sizing: border-box; display: grid; place-items: center; border-start-start-radius: 3px; border-end-start-radius: 3px; border-start-end-radius: 8px; border-end-end-radius: 8px; background-color: var(--nb-color); box-shadow: inset 4px 0 0 rgba(0, 0, 0, .14); font-size: 1.05rem; line-height: 1; }
+html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14); }
+.bag-item-cover.is-table { border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; box-shadow: none; color: #4f46e5; }
+.bag-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bag-item-name { font-size: .95rem; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.bag-item-meta { font-size: .74rem; font-weight: 600; color: #6e6a62; }
+.bag-item-mark { flex-shrink: 0; font-size: .9rem; }
+.bag-item .bag-chevron { color: #8a8579; opacity: 1; }
+.bag-page-empty { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; border: 1.5px dashed #d9d4c7; color: #6e6a62; font-size: .88rem; line-height: 1.45; }
+.bag-page-empty p { margin: 0; }
+.bag-page-empty-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bag-paper-chip { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #ddd8cb; background: #fff; color: #1f1d1a; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.bag-page-tasks { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; border: 1px solid #f0dd8a; background: #fff6cc; color: #2b2410; }
+.bag-page-tasks-head { margin-bottom: 2px; font-size: .9rem; font-weight: 800; }
+.bag-page-tasks .bag-task-title { color: #2b2410; }
+.bag-page-tasks .bag-task.is-done .bag-task-title { color: #8a7d55; }
+.bag-page-tasks .bag-task-box { border-color: #a39565; }
+.bag-page-tasks .bag-task.is-done .bag-task-box { border-color: transparent; }
+.bag-task-add { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.bag-task-add input { flex: 1; min-width: 0; height: 40px; margin: 0; padding: 0 12px; box-sizing: border-box; border-radius: 12px; border: 1px dashed #d8c77f; background: rgba(255, 255, 255, .7); color: #2b2410; font: inherit; font-size: .9rem; outline: none; box-shadow: none; }
+.bag-task-add input::placeholder { color: #9a8c5c; opacity: 1; }
+.bag-task-add input:focus { border-style: solid; border-color: #c9a92c; background: #fff; }
+.bag-task-add-btn { flex-shrink: 0; width: 40px; height: 40px; padding: 0; border-radius: 12px; display: grid; place-items: center; background: #2b2410; color: #fff6cc; cursor: pointer; }
+/* החוצצים: לשונית בצבע הכיס, הכתב לאורך; הכיס הפתוח צמוד לדף והשאר קצת מרוחקים */
+.bag-binder-tabs { flex-shrink: 0; width: 46px; display: flex; flex-direction: column; gap: 8px; padding: 28px 0 8px; overflow-y: auto; scrollbar-width: none; }
+.bag-binder-tabs::-webkit-scrollbar { display: none; }
+.bag-tab { --tab: var(--accent-purple); --tab-ink: #fff; flex-shrink: 0; width: 40px; min-height: 76px; margin-inline-start: 6px; padding: 10px 0 12px; box-sizing: border-box; border-start-start-radius: 0; border-end-start-radius: 0; border-start-end-radius: 12px; border-end-end-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--tab); color: var(--tab-ink); font: inherit; cursor: pointer; opacity: .8; box-shadow: 0 6px 14px rgba(0, 0, 0, .22); }
+.bag-tab.active { width: 46px; margin-inline-start: 0; opacity: 1; }
+.bag-tab-icon { font-size: .95rem; line-height: 1; }
+.bag-tab-label { display: block; writing-mode: vertical-rl; max-height: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; font-weight: 800; line-height: 1.2; }
+.bag-tab-add { min-height: 52px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 35%, transparent); background: transparent; color: var(--text-primary); box-shadow: none; opacity: 1; }
+
+/* --- טבלה פתוחה (z-index 1900, כמו המחברת) --- */
+.tbl-view { display: none; position: absolute; inset: 0; z-index: 1900; flex-direction: column; background: var(--bg-main); overflow: hidden; }
+.tbl-view.open { display: flex; animation: fadeIn .2s ease-out; }
+.tbl-top { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: max(14px, env(safe-area-inset-top, 0px)) 14px 10px; }
+.tbl-heading { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.tbl-crumb { font-size: .74rem; font-weight: 700; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-title { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0; font-size: 1.15rem; font-weight: 800; line-height: 1.25; color: var(--text-primary); }
+.tbl-title-icon { flex-shrink: 0; line-height: 1; }
+.tbl-title-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl-edit-btn .btn-edit-icon { width: 20px; height: 20px; }
+.tbl-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 14px calc(24px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+.tbl-scroll::-webkit-scrollbar { display: none; }
+.tbl-view .table-grid-scroll { margin: 4px 0 10px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); }
+.tbl-add-row { width: 100%; min-height: 46px; padding: 0 16px; border-radius: 14px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 28%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .92rem; font-weight: 800; cursor: pointer; }
+
+/* תווית הכיס של משימה במחברת המשימות */
+.study-task-pocket { --pocket: var(--accent-purple); flex-shrink: 0; align-self: center; max-width: 34%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 800; color: var(--text-primary); background: color-mix(in srgb, var(--pocket) 22%, transparent); border: 1px solid color-mix(in srgb, var(--pocket) 45%, transparent); }
+
+.bag-filter:focus-visible, .bag-add-btn:focus-visible, .bag-pocket-head:focus-visible, .bag-table-card:focus-visible, .bag-add-slot:focus-visible, .bag-tasks-card:focus-visible, .bag-task-check:focus-visible, .bag-task-title:focus-visible, .bag-chip-btn:focus-visible, .bag-new-pocket:focus-visible, .bag-add-option:focus-visible, .bag-item:focus-visible, .bag-page-edit:focus-visible, .bag-paper-chip:focus-visible, .bag-tab:focus-visible, .bag-task-add-btn:focus-visible, .bag-search-close:focus-visible, .tbl-add-row:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    .bag-binder.open, .tbl-view.open, .bag-art-wrap .bag-art, .bag-art-wrap .bag-art-pop, .bag-binder-sheet.is-turning .bag-binder-scroll, .bag-seeding-dot { animation: none !important; }
+    .bag-table-card:hover, .bag-table-card:focus-visible { transform: none; }
+}

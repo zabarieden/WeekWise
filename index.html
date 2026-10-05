@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=500">
+    <link rel="stylesheet" href="theme.css?v=501">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1018,70 +1018,12 @@
                     </div>
                 </section>
 
-                <!-- 📓 המחברות שלי (לפי בקשה מפורשת, במקום "לימודים" ו"הפרויקטים שלי"): ארון עם מדפים - כל מדף
-                     הוא פרויקט, ועליו המחברות שלו בכריכות שבוחרים (צבע, דוגמה ומדבקה). על המדף העליון קבועה
-                     מחברת "📝 משימות" (שיעורי הבית של פעם, study_tasks). מחברת נפתחת כמחברת אמיתית (#nb-view):
-                     דפים שמתהפכים, סוגי דף, סימנייה ותוכן עניינים. הלוגיקה ב-app.js (renderNotebookShelves) -->
-                <section class="tab-content books-section notebooks-section" id="notebooks-section">
+                <!-- 🎒 התיק שלי (bag.js, לפי בקשה מפורשת - במקום "המחברות שלי" ו"טבלאות"): המחברות, הטבלאות
+                     והמשימות במקום אחד. כל כיס הוא פרויקט ובו המחברות, הטבלאות והמשימות שלו; כיס נפתח כקלסר
+                     (#bag-binder) וטבלה במסך מלא (#table-view). כל התוכן נבנה ב-JS (renderBag) -->
+                <section class="tab-content bag-section" id="notebooks-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-                    <div class="books-header">
-                        <div class="books-header-main">
-                            <h2 data-i18n="study_title">My Notebooks</h2>
-                            <div class="books-stats" id="nb-stats"></div>
-                        </div>
-                        <button type="button" class="books-add-btn" onclick="openNotebookCoverModal()" data-i18n="nb_add_notebook_btn">+ Notebook</button>
-                    </div>
-                    <!-- פריסה חכמה - לפרק מטלה גדולה לצעדים ביומן (עברה לכאן מ"לימודים") -->
-                    <button type="button" class="study-smart-split-btn" onclick="openSmartSplitModal()"><span class="study-smart-split-icon" aria-hidden="true">🪄</span><span class="study-smart-split-text"><span class="study-smart-split-title" data-i18n="smart_split_tile_title">Smart Split</span><span class="study-smart-split-sub" data-i18n="smart_split_study_hint">Break a big assignment into small steps in your calendar</span></span></button>
-                    <div id="nb-bookcase" class="nb-bookcase"></div>
-                    <button type="button" class="nb-add-shelf-btn" onclick="openAddShelfModal()" data-i18n="nb_add_shelf_btn">+ Shelf</button>
-                    <div class="books-cozy-scene nb-desk-scene" aria-hidden="true">
-                        <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMax meet">
-                            <defs>
-                                <radialGradient id="nb-lamp-glow"><stop offset="0" style="stop-color: var(--accent-gold); stop-opacity: .45"/><stop offset="1" style="stop-color: var(--accent-gold); stop-opacity: 0"/></radialGradient>
-                            </defs>
-                            <!-- פתקים על הקיר -->
-                            <rect x="236" y="34" width="30" height="30" rx="2" transform="rotate(-6 251 49)" style="fill: var(--accent-gold)" opacity=".45"/>
-                            <rect x="272" y="44" width="28" height="28" rx="2" transform="rotate(5 286 58)" style="fill: var(--accent-pink)" opacity=".42"/>
-                            <circle cx="251" cy="36" r="2.4" fill="currentColor" opacity=".55"/>
-                            <circle cx="286" cy="46" r="2.4" fill="currentColor" opacity=".55"/>
-                            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".35"><path d="M242 46 h16 M242 52 h12"/><path d="M278 57 h15 M278 63 h10"/></g>
-                            <!-- שולחן -->
-                            <ellipse cx="200" cy="184" rx="186" ry="5" fill="currentColor" opacity=".12"/>
-                            <rect x="12" y="148" width="376" height="10" rx="4" fill="currentColor" opacity=".3"/>
-                            <rect x="30" y="158" width="7" height="26" rx="2" fill="currentColor" opacity=".3"/>
-                            <rect x="363" y="158" width="7" height="26" rx="2" fill="currentColor" opacity=".3"/>
-                            <!-- מנורת שולחן -->
-                            <circle cx="88" cy="88" r="36" fill="url(#nb-lamp-glow)"/>
-                            <ellipse cx="52" cy="146" rx="18" ry="4" fill="currentColor" opacity=".5"/>
-                            <path d="M52 144 L66 104 L92 84" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
-                            <path d="M84 72 L108 92 L98 100 L76 80 Z" style="fill: var(--accent-gold)" opacity=".62"/>
-                            <!-- ערימת מחברות -->
-                            <rect x="114" y="138" width="54" height="10" rx="2" style="fill: var(--accent-pink)" opacity=".55"/>
-                            <rect x="118" y="128" width="48" height="10" rx="2" fill="currentColor" opacity=".42"/>
-                            <rect x="112" y="118" width="52" height="10" rx="2" style="fill: var(--accent-gold)" opacity=".6"/>
-                            <g fill="#fff" opacity=".55"><circle cx="120" cy="143" r="1.4"/><circle cx="124" cy="133" r="1.4"/><circle cx="118" cy="123" r="1.4"/></g>
-                            <!-- כוס עפרונות -->
-                            <rect x="186" y="98" width="3" height="32" rx="1.5" transform="rotate(-10 187 130)" style="fill: var(--accent-gold)" opacity=".75"/>
-                            <rect x="194" y="92" width="3" height="38" rx="1.5" style="fill: var(--accent-pink)" opacity=".7"/>
-                            <rect x="201" y="100" width="3" height="30" rx="1.5" transform="rotate(12 202 130)" fill="currentColor" opacity=".55"/>
-                            <rect x="182" y="120" width="28" height="28" rx="4" fill="currentColor" opacity=".38"/>
-                            <path d="M186 126 v16" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".4"/>
-                            <!-- מחברת פתוחה -->
-                            <path d="M228 140 L262 136 L262 147 L222 148 Z" fill="#fff" opacity=".7"/>
-                            <path d="M262 136 L296 140 L302 148 L262 147 Z" fill="#fff" opacity=".62"/>
-                            <path d="M228 140 L262 136 L296 140 L302 148 L262 147 L222 148 Z M262 136 V147" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/>
-                            <g stroke="currentColor" stroke-width=".8" opacity=".3"><path d="M232 142 l26 -2.6"/><path d="M231 145 l27 -1.6"/><path d="M266 140 l26 2.6"/><path d="M266 143 l28 1.8"/></g>
-                            <rect x="276" y="142" width="22" height="2.6" rx="1.3" transform="rotate(-18 287 143)" style="fill: var(--accent-gold)" opacity=".8"/>
-                            <!-- ספל -->
-                            <path d="M332 132 q7 0 7 6 q0 6 -7 6" fill="none" stroke="currentColor" stroke-width="2" opacity=".45"/>
-                            <rect x="316" y="128" width="17" height="20" rx="3.5" fill="currentColor" opacity=".42"/>
-                            <path d="M321 122 q-3 -4 0 -8 q3 -4 0 -8 M327 122 q-3 -4 0 -8 q3 -4 0 -8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".3"/>
-                            <!-- עציץ קטן -->
-                            <path d="M352 130 h22 l-3 18 h-16 z" style="fill: var(--accent-gold)" opacity=".55"/>
-                            <path d="M363 130 c-2 -10 -9 -15 -15 -16 c3 8 8 13 15 16 z M363 130 c1 -11 7 -17 14 -19 c-1 9 -6 15 -14 19 z M363 130 c0 -9 0 -15 -1 -21 c3 6 3 14 1 21 z" fill="currentColor" opacity=".45"/>
-                        </svg>
-                    </div>
+                    <div id="bag-root" class="bag-root"></div>
                 </section>
 
                 <!-- New Me - תוכנית תזונה בתשלום נפרד (רכישה חד-פעמית). למטה איור עדין של מטבח
@@ -1265,45 +1207,6 @@
                         </div>
                     </div>
                 </section>
-
-                <!-- טבלאות מותאמות אישית (Notion-style) - מסך top-level נפרד לגמרי,
-                     לא מקונן בתוך תחום קיים, לפי בקשה מפורשת. שתי תצוגות פנימיות
-                     (רשימת טבלאות / טבלה פתוחה) מתחלפות עם hidden רגיל, לא דרך
-                     מנגנון subview-panel (המיועד לסט קבוע וידוע מראש של תת-תצוגות,
-                     לא רשימה דינמית של טבלאות שהמשתמשת יוצרת) -->
-                <section class="tab-content" id="tables-section">
-                    <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-
-                    <div id="tables-list-view">
-                        <div class="card-title-row">
-                            <h2 data-i18n="tables_title">Tables</h2>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="openAiBrainModal('table')" data-i18n-tooltip="ai_table_builder_entry_tooltip" data-i18n-aria-label="ai_table_builder_entry_tooltip" aria-label="Build with AI">🧠</button>
-                                <button class="btn-floating-add" onclick="openAddTableModal()">➕</button>
-                            </div>
-                        </div>
-                        <div id="custom-tables-list" class="custom-tables-grid"></div>
-                        <p id="custom-tables-empty" class="today-tasks-empty hidden" data-i18n="tables_empty_hint">No tables yet - create one to get started.</p>
-                    </div>
-
-                    <div id="table-detail-view" class="hidden">
-                        <div class="card-title-row">
-                            <div class="card-header-actions">
-                                <button type="button" class="btn-secondary" onclick="openColumnManager()" data-i18n="table_manage_columns_btn">Columns</button>
-                            </div>
-                            <h2 id="table-detail-title"></h2>
-                            <button type="button" class="btn-edit-item table-detail-back-btn" onclick="showTablesListView()"><span aria-hidden="true">←</span></button>
-                        </div>
-                        <div class="table-grid-scroll">
-                            <div id="table-grid" class="table-grid">
-                                <div id="table-grid-header" class="table-grid-row table-grid-header-row"></div>
-                                <div id="table-grid-body"></div>
-                            </div>
-                        </div>
-                        <p id="table-grid-empty" class="today-tasks-empty hidden"></p>
-                        <button type="button" class="btn-secondary table-add-row-btn" onclick="addTableRow()" data-i18n="table_add_row_btn">+ Add row</button>
-                    </div>
-                </section>
             </div>
 
             <!-- כפתור עוזר ה-AI: תכנון לו"ז מטקסט חופשי + סריקת תמונה למתכון/ארוחה
@@ -1405,12 +1308,8 @@
                         <span class="hamburger-drawer-item-title" data-i18n="nav_myweek">MyWeek</span>
                     </button>
                     <button type="button" data-tour="m-study" class="hamburger-drawer-item" onclick="openNotebooksSection()">
-                        <span class="hamburger-drawer-item-icon">📓</span>
+                        <span class="hamburger-drawer-item-icon">🎒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="study_menu_label">Study</span>
-                    </button>
-                    <button type="button" data-tour="m-tables" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openTablesSection();">
-                        <span class="hamburger-drawer-item-icon">📋</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="tables_menu_label">Tables</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_notes">Lists</div>
@@ -1540,6 +1439,47 @@
                  הצפים): נושאים › תחומים › תוכניות מוכנות, כל אחת עם צעד קטן יומי. 2 תוכניות בכל נושא בחינם -->
             <div id="goals-library" class="glib-view" aria-hidden="true">
                 <div id="glib-scroll" class="glib-scroll"></div>
+            </div>
+
+            <!-- 🎒 כיס פתוח ב"התיק שלי" (bag.js) - קלסר במסך מלא: דף אחד עם המחברות, הטבלאות והמשימות של הכיס,
+                 טבעות בצד אחד וחוצצים צבעוניים בצד השני למעבר בין הכיסים. z-index 1880 - מתחת למחברת ולטבלה
+                 הפתוחות (1900) שנפתחות מעליו, ומתחת לחלונות הצפים -->
+            <div id="bag-binder" class="bag-binder" aria-hidden="true">
+                <div class="bag-binder-top">
+                    <button type="button" class="gv-icon-btn" onclick="closeBagBinder()" data-i18n-title="nb_back_title" data-i18n-aria-label="nb_back_title" title="Back to My Bag" aria-label="Back to My Bag"><svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                    <div class="bag-crumb" id="bag-binder-crumb"></div>
+                    <button type="button" class="bag-add-btn" onclick="openBagAddMenu(bagBinderPocketId)" data-i18n-title="bag_new_title" data-i18n-aria-label="bag_new_title" title="New" aria-label="New"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button>
+                </div>
+                <div class="bag-binder-body">
+                    <div class="bag-binder-sheet" id="bag-binder-sheet">
+                        <span class="bag-ring" aria-hidden="true"></span><span class="bag-ring" aria-hidden="true"></span><span class="bag-ring" aria-hidden="true"></span>
+                        <div class="bag-binder-scroll" id="bag-binder-scroll"></div>
+                    </div>
+                    <div class="bag-binder-tabs" id="bag-binder-tabs"></div>
+                </div>
+            </div>
+
+            <!-- ▦ טבלה פתוחה (bag.js openTableView, הגריד ב-app.js renderTableGrid) - מסך מלא מעל התיק והקלסר -->
+            <div id="table-view" class="tbl-view" aria-hidden="true">
+                <div class="tbl-top">
+                    <button type="button" class="gv-icon-btn" onclick="closeTableView()" data-i18n-title="gv_back" data-i18n-aria-label="gv_back" title="Back" aria-label="Back"><svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                    <div class="tbl-heading">
+                        <span class="tbl-crumb" id="table-view-crumb"></span>
+                        <h2 class="tbl-title" id="table-detail-title"></h2>
+                    </div>
+                    <button type="button" class="gv-icon-btn" onclick="openColumnManager()" data-i18n-title="table_manage_columns_btn" data-i18n-aria-label="table_manage_columns_btn" title="Columns" aria-label="Columns"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9.5 4v16M15 4v16"></path></svg></button>
+                    <button type="button" class="gv-icon-btn tbl-edit-btn" onclick="openEditTableModal(currentOpenTableId)" data-i18n-title="table_edit_modal_title" data-i18n-aria-label="table_edit_modal_title" title="Edit table" aria-label="Edit table"><svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M12.3 9.3l2.4 2.4M5.95 15.65l2.4 2.4"/><path d="M13.5 20.5c1.1-.8 2.3-.8 3.4 0s2.3.8 3.4 0"/></svg></button>
+                </div>
+                <div class="tbl-scroll" id="table-view-scroll">
+                    <div class="table-grid-scroll">
+                        <div id="table-grid" class="table-grid">
+                            <div id="table-grid-header" class="table-grid-row table-grid-header-row"></div>
+                            <div id="table-grid-body"></div>
+                        </div>
+                    </div>
+                    <p id="table-grid-empty" class="today-tasks-empty hidden"></p>
+                    <button type="button" class="tbl-add-row" onclick="addTableRow()" data-i18n="table_add_row_btn">+ Add row</button>
+                </div>
             </div>
 
             <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
@@ -1761,6 +1701,10 @@
                 <h3 id="study-item-modal-title" data-i18n="study_add_item_title">Add Homework</h3>
                 <div class="preset-manager-grid">
                     <textarea id="study-item-input" rows="3" data-i18n-placeholder="study_add_placeholder" placeholder="What do you need to do?"></textarea>
+                    <p class="settings-label bag-pocket-field" data-i18n="nb_shelf_label">Pocket</p>
+                    <button type="button" class="language-select custom-select-trigger bag-pocket-field" onclick="openCustomSelectPicker('study-item-pocket')"><span id="study-item-pocket-display"></span></button>
+                    <select id="study-item-pocket" class="hidden" onchange="onBagPocketSelectChange('study-item-pocket', 'study-item-new-pocket')"></select>
+                    <input type="text" id="study-item-new-pocket" class="hidden" maxlength="60" autocomplete="off" data-i18n-placeholder="nb_shelf_name_placeholder" placeholder="Pocket name (e.g. Home, Work, Trips)">
                     <!-- קישור אופציונלי לתחנת-ביניים בלוח החזון - כשמסמנים משימה כזו
                          כבוצעה, התחנה המקושרת מסומנת אוטומטית גם היא (checkAndMarkGoalAchieved
                          ב-app.js), לפי בקשה מפורשת. שני שלבים (יעד ואז תחנה) ולא רשימה
@@ -1873,9 +1817,21 @@
             </div>
         </div>
 
+        <!-- 🎒 ＋ בתיק: מה להוסיף - מחברת / טבלה / טבלה עם AI / משימה / כיס (נבנה ב-openBagAddMenu) -->
+        <div id="modal-bag-add" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="bag-add-title">What to add?</h3>
+                <div id="bag-add-grid" class="bag-add-grid"></div>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-bag-add')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלונות צפים: "הפרויקטים שלי" - הוספת/עריכת פרויקט/מחברה/שורה, אותה
              תבנית מינימלית בדיוק כמו modal-add-study-item (שדה כותרת יחיד) -->
-        <!-- מדף בארון של "המחברות שלי" (טבלת projects - כל מדף הוא פרויקט) -->
+        <!-- כיס ב"התיק שלי" (טבלת projects - כל כיס הוא פרויקט): שם, אייקון וצבע -->
         <div id="modal-add-project" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
@@ -1885,6 +1841,8 @@
                     <!-- אייקון למדף - כדי להבחין בין מדפים במבט חטוף (למשל "מתמטיקה" מול "היסטוריה") -->
                     <p class="settings-label" data-i18n="project_icon_label">Icon</p>
                     <div id="project-icon-picker" class="icon-picker-row"></div>
+                    <p class="settings-label" data-i18n="nb_color_label">Color</p>
+                    <div id="project-color-picker" class="nb-swatch-row"></div>
                     <div class="action-buttons-wrap">
                         <button id="btn-save-project" class="btn-primary" onclick="submitProject()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-project')" data-i18n="cancel_btn">Cancel</button>
@@ -1902,10 +1860,15 @@
                     <textarea id="table-name-input" rows="2" data-i18n-placeholder="table_name_placeholder" placeholder="Table name..."></textarea>
                     <p class="settings-label" data-i18n="table_icon_label">Icon</p>
                     <div id="table-icon-picker" class="icon-picker-row"></div>
+                    <p class="settings-label" data-i18n="nb_shelf_label">Pocket</p>
+                    <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('table-pocket')"><span id="table-pocket-display"></span></button>
+                    <select id="table-pocket" class="hidden" onchange="onBagPocketSelectChange('table-pocket', 'table-new-pocket')"></select>
+                    <input type="text" id="table-new-pocket" class="hidden" maxlength="60" autocomplete="off" data-i18n-placeholder="nb_shelf_name_placeholder" placeholder="Pocket name (e.g. Home, Work, Trips)">
                     <div class="action-buttons-wrap">
                         <button id="btn-save-table" class="btn-primary" onclick="saveCustomTable()" data-i18n="add_btn">Add</button>
                         <button class="btn-clear-specific" onclick="cancelAddTableModal()" data-i18n="cancel_btn">Cancel</button>
                     </div>
+                    <button type="button" class="nb-danger-link hidden" id="table-delete-btn" onclick="deleteCustomTableFromModal()" data-i18n="bag_delete_table_btn">🗑️ Delete table</button>
                 </div>
             </div>
         </div>
@@ -4017,6 +3980,7 @@
                     <li><span class="premium-benefit-icon">📷</span><span data-i18n="premium_benefit_unlimited">Unlimited recipe scans/uploads and saved meals</span></li>
                     <li><span class="premium-benefit-icon">🗓️</span><span data-i18n="premium_benefit_routine_templates">Ready templates for My Routine</span></li>
                     <li><span class="premium-benefit-icon">📚</span><span data-i18n="premium_benefit_goal_library">The whole goal library – every ready plan</span></li>
+                    <li><span class="premium-benefit-icon">🎒</span><span data-i18n="premium_benefit_bag">My Bag – pockets with notebooks and tables of your own</span></li>
                 </ul>
                 <div class="premium-tiers-grid">
                     <div class="premium-tier-option" data-tier="monthly" onclick="selectPremiumTier(this)">
@@ -4140,9 +4104,10 @@
 
     </div>
 
-    <script src="i18n.js?v=403"></script>
-    <script src="app.js?v=548"></script>
+    <script src="i18n.js?v=404"></script>
+    <script src="app.js?v=549"></script>
     <script src="goals-library.js?v=1"></script>
+    <script src="bag.js?v=1"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=24"></script>
     <script src="new-me-challenges.js?v=4"></script>

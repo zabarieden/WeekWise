@@ -280,6 +280,8 @@ function onLanguageChanged() {
     // New Me נבנה כולו ב-JS - מרנדרים מחדש אם המסך פתוח
     const newMeSection = document.getElementById('new-me-section');
     if (newMeSection && newMeSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
+    // גם "התיק שלי" (והקלסר) נבנים ב-JS
+    if (typeof renderBag === 'function' && isNotebooksSectionOpen()) renderBag();
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     Promise.all([
@@ -1664,9 +1666,9 @@ const APP_TOUR_STEPS = [
     { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '👣', titleKey: 'apptour_g_path_title', text: 'apptour_g_path_text', link: 'apptour_m_vision_link', demo: 'goal' },
     { id: 'g_today', ch: 'goals', ctx: 'goals', icon: '✅', target: '#gv-today', titleKey: 'gv_today_title', text: 'apptour_g_today_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
-    // 📓 המחברות שלי: הפריט בתפריט, ואז הארון עצמו
+    // 🎒 התיק שלי: הפריט בתפריט, ואז התיק עצמו (הכיסים)
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
-    { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '📓', target: '#nb-bookcase', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
+    { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#bag-content', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
     { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
@@ -1752,6 +1754,7 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
     if (wrapper) wrapper.classList.remove('menu-open', 'vision-open', 'study-open', 'projects-open');
     if (typeof closeTodayPeekPanel === 'function') closeTodayPeekPanel();
     if (typeof isNotebookViewOpen === 'function' && isNotebookViewOpen()) closeNotebookView();
+    if (typeof bagCloseOverlays === 'function') bagCloseOverlays();
     if (!appTourKeepScreen) goHome();
     appTourBuildLayer();
     document.addEventListener('keydown', appTourKeydown, true);
@@ -1834,7 +1837,7 @@ async function appTourEnsureContext(step) {
         renderVisionGoalsList();
         changed = true;
     } else if (ctx === 'notebooks' && notebooksSection && !notebooksSection.classList.contains('active-tab')) {
-        // "דבר בתוך דבר": אחרי הפריט בתפריט נכנסים לארון עצמו
+        // "דבר בתוך דבר": אחרי הפריט בתפריט נכנסים לתיק עצמו (מהמטמון, בלי לטעון מחדש)
         switchToTab('notebooks-section');
         renderNotebookShelves();
         changed = true;
@@ -3129,6 +3132,7 @@ async function deleteGlanceTaskEdit() {
 // תוכל לשמש גם למסכים שאין להם כפתור קבוע בסרגל התחתון (כמו ספורט, שנגיש
 // רק מהתפריט הצדדי, לפי בקשה מפורשת) - בלי "ללחוץ" על כפתור שלא קיים בכלל
 function showTabSection(targetId) {
+    if (targetId !== 'notebooks-section' && typeof bagCloseOverlays === 'function') bagCloseOverlays();
     const cubes = document.querySelectorAll('.bottom-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     cubes.forEach(c => c.classList.toggle('active', c.getAttribute('data-target') === targetId));
@@ -3165,6 +3169,8 @@ function initCubesNavigation() {
 // חוזרים למסך הבית הטהור: כל המסכים הפנימיים נסגרים, קובייה אף אחת לא מסומנת
 // כפעילה, ומסך הבית (רשת הקוביות) חוזר להיות היחיד המוצג
 function goHome() {
+    // הקלסר והטבלה הפתוחה של "התיק שלי" הם שכבות מעל המסך - נסגרים איתו
+    if (typeof bagCloseOverlays === 'function') bagCloseOverlays();
     const cubes = document.querySelectorAll('.bottom-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     cubes.forEach(c => c.classList.remove('active'));
@@ -8312,6 +8318,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_apple', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
+    { id: 'my_bag', category: 'notes' },
+    { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },
     { id: 'smart_split', category: 'notes' },
     { id: 'books_what', category: 'books' },
@@ -16785,9 +16793,12 @@ function renderStudyTasksList() {
     studyTasksCache.forEach(item => {
         const li = document.createElement('li');
         li.className = 'study-task-item';
+        // משימה ששייכת לכיס ב"התיק שלי" - תווית קטנה בצבע הכיס
+        const pocket = isPremiumUser && item.project_id ? projectsCache.find(p => p.id === item.project_id) : null;
         li.innerHTML = `
             <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleStudyTaskStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}" onclick="toggleStudyItemExpand(this)">${escapeHtmlForReport(item.title)}</span>
+            ${pocket ? `<span class="study-task-pocket" style="--pocket:${escapeHtmlForReport(bagPocketColor(pocket))}">${escapeHtmlForReport(bagPocketLabel(pocket))}</span>` : ''}
             <button type="button" class="btn-edit-item" onclick="openEditStudyItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
             <button type="button" class="btn-delete-item" onclick="deleteStudyTask('${item.id}')">❌</button>
         `;
@@ -16865,6 +16876,8 @@ async function openAddStudyItemModal() {
     editingStudyItemId = null;
     document.getElementById('study-item-modal-title').textContent = t('study_add_item_title');
     document.getElementById('study-item-input').value = '';
+    // הכיס שממנו נפתחה ההוספה (בתיק), אחרת "משימות כלליות"
+    bagPrepareTaskPocketField(bagPendingPocketId);
     await renderStudyMilestoneOptions(null);
     openModal('modal-add-study-item');
     setTimeout(() => document.getElementById('study-item-input').focus(), 150);
@@ -16876,6 +16889,7 @@ async function openEditStudyItemModal(id) {
     editingStudyItemId = id;
     document.getElementById('study-item-modal-title').textContent = t('edit_item_title');
     document.getElementById('study-item-input').value = item.title;
+    bagPrepareTaskPocketField(item.project_id);
     await renderStudyMilestoneOptions(item.linked_milestone_id);
     openModal('modal-add-study-item');
     setTimeout(() => document.getElementById('study-item-input').focus(), 150);
@@ -16887,16 +16901,25 @@ async function submitStudyItem() {
     const milestoneSelect = document.getElementById('study-item-milestone');
     const linkedMilestoneId = milestoneSelect && milestoneSelect.value ? milestoneSelect.value : null;
     const editId = editingStudyItemId;
+    if (!title) { closeModal('modal-add-study-item'); editingStudyItemId = null; return; }
+    if (!supabaseClient || !currentUserId) return;
+    // הכיס נקבע רק אצל מנויי פרימיום (בלי פרימיום השדה מוסתר והמשימה נשארת כמו שהיא)
+    const fields = { title, linked_milestone_id: linkedMilestoneId };
+    if (isPremiumUser) {
+        const projectId = await bagResolvePocketSelect('study-item-pocket', 'study-item-new-pocket');
+        if (projectId === false) return;
+        fields.project_id = projectId;
+    }
     closeModal('modal-add-study-item');
     editingStudyItemId = null;
-    if (!title || !supabaseClient || !currentUserId) return;
+    bagPendingPocketId = null;
     if (editId) {
-        await supabaseClient.from('study_tasks').update({ title, linked_milestone_id: linkedMilestoneId }).eq('id', editId);
+        await supabaseClient.from('study_tasks').update(fields).eq('id', editId);
     } else {
-        await supabaseClient.from('study_tasks').insert({ user_id: currentUserId, username: currentUsername, title, linked_milestone_id: linkedMilestoneId });
+        await supabaseClient.from('study_tasks').insert({ user_id: currentUserId, username: currentUsername, ...fields });
     }
     await loadStudyTasks();
-    showAppToast(t('item_added_success'));
+    showAppToast(t(editId ? 'item_updated_success' : 'item_added_success'));
 }
 
 async function deleteStudyTask(id) {
@@ -16989,10 +17012,11 @@ let penWidth = 3;
 let notebookCanvasPointerBound = false;
 const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','❌','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
 
-// אייקון לכל מדף (פרויקט) - כדי להבחין במבט חטוף בין מדפים (למשל "מתמטיקה" מול "היסטוריה"
-// אצל ילד/ה) - לפי בקשה מפורשת. האמוג'י עצמו הוא גם המזהה וגם התצוגה (ר' renderProjectIconPicker)
-const PROJECT_ICON_PRESETS = ['📁', '📚', '💼', '🎨', '🔬', '🏋️', '🎵', '💻', '🌱', '⚽', '🧮', '🌍'];
-let selectedProjectIcon = '📁';
+// אייקון וצבע לכל כיס (פרויקט) ב"התיק שלי" - כדי להבחין במבט חטוף בין כיסים (בית, משפחה, עבודה, טיולים...).
+// האמוג'י עצמו הוא גם המזהה וגם התצוגה (ר' renderProjectIconPicker); הצבעים - BAG_POCKET_COLORS ב-bag.js
+const PROJECT_ICON_PRESETS = ['🏠', '👨‍👩‍👧', '💡', '🧳', '💼', '🎨', '🍳', '🎉', '🌱', '⚽', '🎵', '📚', '💰', '🐾', '❤️', '📁'];
+let selectedProjectIcon = '🏠';
+let selectedProjectColor = null;
 
 // --- טבלאות מותאמות אישית (Tables) - מסך top-level נפרד לגמרי, לא מקונן
 // בתוך תחום קיים (לימודים/משימות/לוח חזון) - לפי בקשה מפורשת. משתמשת יוצרת
@@ -17025,58 +17049,8 @@ function tableIconHtml(icon) {
 }
 let selectedTableIcon = TABLE_ICON_PRESETS[0];
 
-function openTablesSection() {
-    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
-    switchToTab('tables-section');
-    showTablesListView();
-}
-
-// חוזרים תמיד לתצוגת-הרשימה בכל כניסה למסך (ולא נשארים "תקועים" בתוך טבלה
-// שנפתחה בביקור קודם) - ר' ההערה על openTablesSection למעלה
-function showTablesListView() {
-    currentOpenTableId = null;
-    document.getElementById('tables-list-view').classList.remove('hidden');
-    document.getElementById('table-detail-view').classList.add('hidden');
-    loadCustomTables();
-}
-
-function openTableDetail(tableId) {
-    currentOpenTableId = tableId;
-    document.getElementById('tables-list-view').classList.add('hidden');
-    document.getElementById('table-detail-view').classList.remove('hidden');
-    loadTableColumnsAndRows(tableId);
-}
-
-async function loadCustomTables() {
-    if (!supabaseClient || !currentUserId) return;
-    const { data, error } = await supabaseClient.from('custom_tables').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true });
-    if (error) return;
-    customTablesCache = data || [];
-    renderCustomTablesList();
-}
-
-function renderCustomTablesList() {
-    const listEl = document.getElementById('custom-tables-list');
-    const emptyEl = document.getElementById('custom-tables-empty');
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    if (emptyEl) emptyEl.classList.toggle('hidden', customTablesCache.length > 0);
-    customTablesCache.forEach(table => {
-        const card = document.createElement('div');
-        card.className = 'custom-table-card';
-        card.innerHTML = `
-            <span class="custom-table-card-main" onclick="openTableDetail('${table.id}')">
-                <span class="custom-table-card-icon">${tableIconHtml(table.icon)}</span>
-                <span class="custom-table-card-name">${escapeHtmlForReport(table.name)}</span>
-            </span>
-            <span class="custom-table-card-actions">
-                <button type="button" class="btn-edit-item" onclick="openEditTableModal('${table.id}')">${EDIT_ICON_SVG}</button>
-                <button type="button" class="btn-delete-item" onclick="deleteCustomTable('${table.id}')">❌</button>
-            </span>
-        `;
-        listEl.appendChild(card);
-    });
-}
+// הטבלאות גרות בכיסים של "התיק שלי" (bag.js: טעינה ב-loadNotebooksHome, מסך מלא ב-openTableView) - כאן
+// החלונות (שם, אייקון, כיס, עמודות) והגריד
 
 function renderTableIconPicker() {
     const container = document.getElementById('table-icon-picker');
@@ -17101,11 +17075,16 @@ function openAddTableModal() {
     // איפוס חד-משמעי - כדי שטבלה שנוצרת ידנית אחרי ניסיון AI שננטש לא "תירש"
     // עמודות/שורות ממתינות מהניסיון הקודם (ר' resetAiTableBuilderState)
     resetAiTableBuilderState();
+    if (!isPremiumUser) { openPremiumUpgradeModal(); return; }
     editingCustomTableId = null;
     document.getElementById('table-modal-title').textContent = t('table_add_modal_title');
+    document.getElementById('btn-save-table').textContent = t('add_btn');
     document.getElementById('table-name-input').value = '';
     selectedTableIcon = TABLE_ICON_PRESETS[0];
     renderTableIconPicker();
+    // טבלה חדשה נכנסת לכיס שממנו נפתחה ההוספה (bagPendingPocketId), אחרת לכיס הראשון
+    bagPrepareTablePocketField(bagPendingPocketId, false);
+    document.getElementById('table-delete-btn').classList.add('hidden');
     openModal('modal-add-table');
     setTimeout(() => document.getElementById('table-name-input').focus(), 150);
 }
@@ -17115,9 +17094,13 @@ function openEditTableModal(tableId) {
     if (!table) return;
     editingCustomTableId = tableId;
     document.getElementById('table-modal-title').textContent = t('table_edit_modal_title');
+    document.getElementById('btn-save-table').textContent = t('save_generic');
     document.getElementById('table-name-input').value = table.name;
     selectedTableIcon = table.icon || TABLE_ICON_PRESETS[0];
     renderTableIconPicker();
+    // טבלה מלפני התיק (בלי כיס) נשארת כך עד שבוחרים לה כיס
+    bagPrepareTablePocketField(table.project_id || null, !table.project_id || !projectsCache.some(p => p.id === table.project_id));
+    document.getElementById('table-delete-btn').classList.remove('hidden');
     openModal('modal-add-table');
 }
 
@@ -17140,35 +17123,52 @@ async function saveCustomTableImpl() {
     if (!name) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
     const icon = selectedTableIcon;
     const editId = editingCustomTableId;
+    // הכיס (או "➕ כיס חדש…" - נוצר כאן); false = יצירת הכיס נכשלה והטעות כבר הוצגה
+    const projectId = await bagResolvePocketSelect('table-pocket', 'table-new-pocket');
+    if (projectId === false) return;
     if (editId) {
-        const { error } = await supabaseClient.from('custom_tables').update({ name, icon }).eq('id', editId);
+        const { error } = await supabaseClient.from('custom_tables').update({ name, icon, project_id: projectId }).eq('id', editId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    } else {
-        // .select().single() (לא bare insert) - צריך את ה-id האמיתי של הטבלה
-        // החדשה מיד כדי להמשיך אוטומטית לעורך העמודות בזרימת ה-AI
-        // (aiTableBuilderReviewActive), ר' openColumnManagerForAiReview למטה
-        const { data, error } = await supabaseClient.from('custom_tables').insert({ user_id: currentUserId, username: currentUsername, name, icon, sort_order: Date.now() }).select().single();
-        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-        if (aiTableBuilderReviewActive) {
-            currentOpenTableId = data.id;
-            closeModal('modal-add-table');
-            editingCustomTableId = null;
-            openColumnManagerForAiReview();
-            return;
-        }
+        const table = customTablesCache.find(tbl => tbl.id === editId);
+        if (table) Object.assign(table, { name, icon, project_id: projectId });
+        closeModal('modal-add-table');
+        editingCustomTableId = null;
+        renderNotebookShelves();
+        showAppToast(t('item_updated_success'));
+        return;
     }
+    // .select().single() (לא bare insert) - צריך את ה-id האמיתי של הטבלה
+    // החדשה מיד כדי להמשיך אוטומטית לעורך העמודות בזרימת ה-AI
+    // (aiTableBuilderReviewActive), ר' openColumnManagerForAiReview למטה
+    const { data, error } = await supabaseClient.from('custom_tables').insert({ user_id: currentUserId, username: currentUsername, name, icon, project_id: projectId, sort_order: Date.now() }).select().single();
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    customTablesCache.push(data);
+    bagPendingPocketId = null;
     closeModal('modal-add-table');
     editingCustomTableId = null;
-    await loadCustomTables();
+    currentOpenTableId = data.id;
+    if (aiTableBuilderReviewActive) { openColumnManagerForAiReview(); return; }
+    // טבלה חדשה נפתחת מיד, ישר עם חלון העמודות - טבלה בלי עמודות היא עוד לא טבלה
+    renderNotebookShelves();
     showAppToast(t('item_added_success'));
+    await openTableView(data.id);
+    openColumnManager();
 }
 
+function deleteCustomTableFromModal() {
+    const id = editingCustomTableId;
+    if (!id) return;
+    closeModal('modal-add-table');
+    editingCustomTableId = null;
+    deleteCustomTable(id);
+}
 function deleteCustomTable(tableId) {
     showDangerConfirm(t('table_delete_title'), t('table_delete_confirm'), async () => {
         const { error } = await supabaseClient.from('custom_tables').delete().eq('id', tableId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-        if (currentOpenTableId === tableId) showTablesListView();
-        else loadCustomTables();
+        customTablesCache = customTablesCache.filter(tbl => tbl.id !== tableId);
+        if (currentOpenTableId === tableId) closeTableView();
+        else renderNotebookShelves();
     });
 }
 
@@ -17178,11 +17178,12 @@ async function loadTableColumnsAndRows(tableId) {
         supabaseClient.from('custom_table_columns').select('*').eq('table_id', tableId).order('sort_order', { ascending: true }),
         supabaseClient.from('custom_table_rows').select('*').eq('table_id', tableId).order('sort_order', { ascending: true }),
     ]);
+    // בינתיים נסגרה הטבלה או נפתחה אחרת - לא מציירים נתונים ישנים
+    if (tableId !== currentOpenTableId) return;
     customTableColumnsCache = colsRes.data || [];
     customTableRowsCache = rowsRes.data || [];
-    const table = customTablesCache.find(tbl => tbl.id === tableId);
-    const titleEl = document.getElementById('table-detail-title');
-    if (titleEl && table) titleEl.innerHTML = `${tableIconHtml(table.icon)} ${escapeHtmlForReport(table.name)}`;
+    bagRowCounts[tableId] = customTableRowsCache.length;
+    renderTableViewHead();
     renderTableGrid();
 }
 
@@ -17242,8 +17243,11 @@ function cancelColumnManager() {
     // saveCustomTable לא פותחת את עורך העמודות אוטומטית שם בכלל
     if (aiTableBuilderReviewActive && currentOpenTableId) {
         const orphanTableId = currentOpenTableId;
+        currentOpenTableId = null;
         supabaseClient.from('custom_tables').delete().eq('id', orphanTableId).then(({ error }) => {
-            if (!error) customTablesCache = customTablesCache.filter(tbl => tbl.id !== orphanTableId);
+            if (error) return;
+            customTablesCache = customTablesCache.filter(tbl => tbl.id !== orphanTableId);
+            renderNotebookShelves();
         });
     }
     resetAiTableBuilderState();
@@ -17301,8 +17305,12 @@ function applyAiTableBuilderResult(table) {
     // שדורש בעצמו לחיצה על "הוספה" (ואז "שמירה" במסך העמודות) כדי שזה
     // באמת יישמר - הכותרת הגנרית לא רמזה בכלל שזו תוצאת ה-AI שממתינה לאישור
     document.getElementById('table-modal-title').textContent = t('table_ai_review_title');
+    document.getElementById('btn-save-table').textContent = t('add_btn');
     document.getElementById('table-name-input').value = (table.table_name || '').trim();
     renderTableIconPicker();
+    // כמו טבלה ידנית: לכיס שממנו נפתח ה-AI (מתוך התיק), אחרת לכיס הראשון
+    bagPrepareTablePocketField(bagPendingPocketId, false);
+    document.getElementById('table-delete-btn').classList.add('hidden');
     closeModal('modal-ai-brain');
     openModal('modal-add-table');
     showAppToast(t('ai_table_builder_ready'));
@@ -17553,7 +17561,9 @@ async function saveTableColumnsImpl() {
     }
     aiTableBuilderReviewActive = false;
     closeModal('modal-manage-columns');
-    await loadTableColumnsAndRows(currentOpenTableId);
+    // טבלה שה-AI בנה (אפשר גם מחוץ לתיק) נפתחת עכשיו במסך מלא; טבלה פתוחה רק מתרעננת
+    if (isTableViewOpen()) await loadTableColumnsAndRows(currentOpenTableId);
+    else await openTableView(currentOpenTableId);
     showAppToast(t('item_added_success'));
 }
 
@@ -17916,92 +17926,11 @@ function isNotebooksSectionOpen() {
     const section = document.getElementById('notebooks-section');
     return !!(section && section.classList.contains('active-tab'));
 }
-function openNotebooksSection() {
-    closeHamburgerMenu();
-    switchToTab('notebooks-section');
-    renderNotebookShelves();
-    loadNotebooksHome();
-}
-// שמות ישנים (מגירת "לימודים" ו"הפרויקטים שלי" שהוחלפו) - מובילים לארון החדש
+// המסך עצמו (התיק, הכיסים, הקלסר והטעינה) ב-bag.js: openNotebooksSection / loadNotebooksHome / renderBag.
+// שמות ישנים (מגירת "לימודים" ו"הפרויקטים שלי" שהוחלפו) - מובילים לתיק
 function openStudyDrawer() { openNotebooksSection(); }
 function openMyProjectsEntry() { openNotebooksSection(); }
 function loadProjects() { return loadNotebooksHome(); }
-
-async function loadNotebooksHome() {
-    if (!supabaseClient || !currentUserId) return;
-    const [projectsRes, notebooksRes, tasksRes] = await Promise.all([
-        supabaseClient.from('projects').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
-        supabaseClient.from('project_notebooks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true }),
-        supabaseClient.from('study_tasks').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }),
-    ]);
-    if (!projectsRes.error) projectsCache = (projectsRes.data || []).slice().sort(nbSortByOrder);
-    if (!notebooksRes.error) allNotebooksCache = (notebooksRes.data || []).slice().sort(nbSortByOrder);
-    if (!tasksRes.error) studyTasksCache = tasksRes.data || [];
-    renderNotebookShelves();
-}
-
-function renderNotebookShelves() {
-    const wrap = document.getElementById('nb-bookcase');
-    if (!wrap) return;
-    renderNotebookStats();
-    wrap.innerHTML = '';
-    wrap.appendChild(buildNbShelf(null, [buildTasksCover()]));
-    const addShelfBtn = document.querySelector('.nb-add-shelf-btn');
-    if (addShelfBtn) addShelfBtn.classList.toggle('hidden', !isPremiumUser);
-    if (!isPremiumUser) { wrap.appendChild(buildNbPremiumCard()); return; }
-    projectsCache.forEach(project => {
-        const covers = allNotebooksCache.filter(n => n.project_id === project.id).map(buildNotebookCover);
-        wrap.appendChild(buildNbShelf(project, covers));
-    });
-    if (!projectsCache.length) {
-        const hint = document.createElement('p');
-        hint.className = 'nb-empty-hint';
-        hint.textContent = t('nb_empty_hint');
-        wrap.appendChild(hint);
-    }
-}
-
-function renderNotebookStats() {
-    const el = document.getElementById('nb-stats');
-    if (!el) return;
-    const chips = [];
-    if (isPremiumUser && allNotebooksCache.length) chips.push(`📓 ${t('nb_stat_notebooks').replace('{n}', allNotebooksCache.length.toLocaleString(currentLang))}`);
-    const open = studyTasksCache.filter(x => !x.is_completed).length;
-    if (open) chips.push(`📝 ${t('nb_stat_tasks').replace('{n}', open.toLocaleString(currentLang))}`);
-    el.innerHTML = chips.map(c => `<span class="books-stat-chip">${escapeHtmlForReport(c)}</span>`).join('');
-}
-
-// מדף: שם המדף (לחיצה = עריכה), שורת הכריכות עם "+" להוספת מחברת למדף הזה, ולוח העץ מתחת
-function buildNbShelf(project, covers) {
-    const shelf = document.createElement('div');
-    shelf.className = 'nb-shelf' + (project ? '' : ' nb-shelf-pinned');
-    if (project) {
-        const label = document.createElement('button');
-        label.type = 'button';
-        label.className = 'nb-shelf-label';
-        label.innerHTML = `<span class="nb-shelf-icon">${escapeHtmlForReport(project.icon || '📁')}</span><span class="nb-shelf-name">${escapeHtmlForReport(project.title)}</span><span class="nb-shelf-edit" aria-hidden="true">${EDIT_ICON_SVG}</span>`;
-        label.title = t('nb_shelf_edit_title');
-        label.onclick = () => openEditProjectModal(project.id);
-        shelf.appendChild(label);
-    }
-    const row = document.createElement('div');
-    row.className = 'nb-shelf-row';
-    covers.forEach(c => row.appendChild(c));
-    if (project) {
-        row.appendChild(buildNbAddSlot(project.id));
-        if (!covers.length) {
-            const empty = document.createElement('span');
-            empty.className = 'nb-shelf-empty';
-            empty.textContent = t('nb_shelf_empty');
-            row.appendChild(empty);
-        }
-    }
-    shelf.appendChild(row);
-    const board = document.createElement('div');
-    board.className = 'nb-shelf-board';
-    shelf.appendChild(board);
-    return shelf;
-}
 
 function nbCoverInnerHtml(emoji, title) {
     return `<span class="nb-cover-emoji">${escapeHtmlForReport(emoji)}</span><span class="nb-cover-label">${escapeHtmlForReport(title)}</span>`;
@@ -18016,37 +17945,6 @@ function buildNotebookCover(nb) {
     btn.title = nb.title;
     btn.onclick = () => openNotebookView(nb.id);
     return btn;
-}
-function buildTasksCover() {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'nb-cover nb-cover-tasks';
-    const open = studyTasksCache.filter(x => !x.is_completed).length;
-    btn.innerHTML = nbCoverInnerHtml('📝', t('nb_tasks_notebook_title')) + (open ? `<span class="nb-cover-badge">${open.toLocaleString(currentLang)}</span>` : '');
-    btn.title = t('nb_tasks_notebook_title');
-    btn.onclick = () => openTasksNotebook();
-    return btn;
-}
-function buildNbAddSlot(projectId) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'nb-cover nb-cover-add';
-    btn.innerHTML = '<span aria-hidden="true">＋</span>';
-    btn.title = t('notebooks_add_item_title');
-    btn.setAttribute('aria-label', btn.title);
-    btn.onclick = () => openNotebookCoverModal(null, projectId);
-    return btn;
-}
-// למי שאינו/ה פרימיום: מחברת המשימות פתוחה לכולם, ומתחתיה הזמנה למחברות משלך
-function buildNbPremiumCard() {
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'nb-premium-card';
-    card.innerHTML = `<span class="nb-premium-covers" aria-hidden="true"><span style="--nb-color:#ef8a80"></span><span style="--nb-color:#8ab4f8"></span><span style="--nb-color:#f3d36b"></span></span>
-        <span class="nb-premium-text"><b>${escapeHtmlForReport(t('nb_premium_title'))}</b><span>${escapeHtmlForReport(t('nb_premium_text'))}</span></span>
-        <span class="nb-premium-badge">⭐ ${escapeHtmlForReport(t('home_premium_badge_label'))}</span>`;
-    card.onclick = () => openPremiumUpgradeModal();
-    return card;
 }
 
 // --- המחברת הפתוחה (#nb-view) ---
@@ -18066,6 +17964,8 @@ function isNotebookViewOpen() {
 function openTasksNotebook() {
     const view = document.getElementById('nb-view');
     if (!view) return;
+    // משימה שמוסיפים מכאן היא "משימה כללית" - לא נכנסת לכיס שנפתח קודם
+    bagPendingPocketId = null;
     nbViewMode = 'tasks';
     view.classList.add('is-tasks');
     view.classList.remove('is-notebook');
@@ -18114,7 +18014,11 @@ function renderNotebookViewTitle() {
 }
 
 function closeNotebookView() {
-    if (nbViewMode === 'notebook') flushNotebookTextSave();
+    if (nbViewMode === 'notebook') {
+        flushNotebookTextSave();
+        // מספר הדפים שמוצג בתיק ובקלסר
+        if (currentOpenNotebookId) bagPageCounts[currentOpenNotebookId] = notebookPagesCache.length;
+    }
     setNotebookViewOpen(false);
     nbViewMode = null;
     renderNotebookShelves();
@@ -18499,9 +18403,8 @@ async function saveNotebookCover() {
     let projectId = d.project_id;
     if (projectId === NB_NEW_SHELF || !projectsCache.some(p => p.id === projectId)) {
         const shelfName = document.getElementById('nb-cover-new-shelf').value.trim() || t('nb_default_shelf_name');
-        const { data: shelf, error: shelfError } = await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title: shelfName, icon: '📁' }).select().maybeSingle();
-        if (shelfError || !shelf) { showAppToast(t('error_adding_item') + (shelfError ? shelfError.message : ''), 'error'); return; }
-        projectsCache.push(shelf);
+        const shelf = await bagCreatePocket(shelfName);
+        if (!shelf) return;
         projectId = shelf.id;
     }
     const payload = { title, project_id: projectId, cover_color: d.color, cover_pattern: d.pattern, cover_emoji: d.emoji };
@@ -18522,6 +18425,8 @@ async function saveNotebookCover() {
     // מחברת חדשה מתחילה עם דף שורות אחד, ונפתחת מיד
     await supabaseClient.from('notebook_pages').insert({ notebook_id: data.id, user_id: currentUserId, username: currentUsername, title: `${t('notebook_page_default_title')} 1`, sort_order: 0, canvas_data: [], page_type: 'write', text_content: '' });
     allNotebooksCache.push(data);
+    bagPageCounts[data.id] = 1;
+    bagPendingPocketId = null;
     renderNotebookShelves();
     showAppToast(t('item_added_success'));
     openNotebookView(data.id);
@@ -18545,7 +18450,22 @@ function deleteNotebook(id) {
     });
 }
 
-// --- מדפים (טבלת projects): שם + אייקון (כולל "אחר"), עריכה בלחיצה על שם המדף, ומחיקה מתוך העריכה ---
+// --- כיסים (טבלת projects): שם, אייקון וצבע; עריכה מה-✏️ שבקלסר, ומחיקה מתוך העריכה ---
+function renderProjectColorPicker() {
+    const container = document.getElementById('project-color-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    BAG_POCKET_COLORS.forEach(color => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'nb-swatch' + (selectedProjectColor === color ? ' selected' : '');
+        b.style.setProperty('--nb-color', color);
+        b.setAttribute('aria-label', color);
+        b.setAttribute('aria-pressed', selectedProjectColor === color ? 'true' : 'false');
+        b.onclick = () => { selectedProjectColor = color; renderProjectColorPicker(); };
+        container.appendChild(b);
+    });
+}
 function renderProjectIconPicker() {
     const container = document.getElementById('project-icon-picker');
     if (!container) return;
@@ -18575,7 +18495,9 @@ function openAddProjectModal() {
     document.getElementById('project-item-input').value = '';
     document.getElementById('project-delete-btn').classList.add('hidden');
     selectedProjectIcon = PROJECT_ICON_PRESETS[0];
+    selectedProjectColor = BAG_POCKET_COLORS[projectsCache.length % BAG_POCKET_COLORS.length];
     renderProjectIconPicker();
+    renderProjectColorPicker();
     openModal('modal-add-project');
     setTimeout(() => document.getElementById('project-item-input').focus(), 150);
 }
@@ -18588,7 +18510,9 @@ function openEditProjectModal(id) {
     document.getElementById('project-item-input').value = project.title;
     document.getElementById('project-delete-btn').classList.remove('hidden');
     selectedProjectIcon = project.icon || PROJECT_ICON_PRESETS[0];
+    selectedProjectColor = bagPocketColor(project);
     renderProjectIconPicker();
+    renderProjectColorPicker();
     openModal('modal-add-project');
 }
 
@@ -18596,37 +18520,54 @@ async function submitProject() {
     const input = document.getElementById('project-item-input');
     const title = input.value.trim();
     const icon = selectedProjectIcon;
+    const color = selectedProjectColor;
     const editId = editingProjectId;
     if (!title) { input.focus(); return; }
     closeModal('modal-add-project');
     editingProjectId = null;
     if (!supabaseClient || !currentUserId) return;
     if (editId) {
-        const { error } = await supabaseClient.from('projects').update({ title, icon }).eq('id', editId);
+        const { error } = await supabaseClient.from('projects').update({ title, icon, color }).eq('id', editId);
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         const project = projectsCache.find(p => p.id === editId);
-        if (project) Object.assign(project, { title, icon });
+        if (project) Object.assign(project, { title, icon, color });
         showAppToast(t('item_updated_success'));
-    } else {
-        const { data, error } = await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title, icon }).select().maybeSingle();
-        if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
-        projectsCache.push(data);
-        showAppToast(t('item_added_success'));
+        renderNotebookShelves();
+        return;
     }
+    const { data, error } = await supabaseClient.from('projects').insert({ user_id: currentUserId, username: currentUsername, title, icon, color }).select().maybeSingle();
+    if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
+    projectsCache.push(data);
+    showAppToast(t('item_added_success'));
     renderNotebookShelves();
+    bagOnPocketCreated(data);
 }
 
+// מחיקת כיס מוחקת את כל מה שבתוכו - המחברות (FK cascade) וגם הטבלאות והמשימות שלו. החלון אומר כמה
+// מכל סוג, ושאפשר להעביר קודם לכיס אחר את מה שרוצים לשמור
 function deleteProject(id) {
     if (!id) return;
     closeModal('modal-add-project');
-    showDangerConfirm(t('nb_shelf_delete_title'), t('nb_shelf_delete_confirm'), async () => {
-        await supabaseClient.from('projects').delete().eq('id', id);
+    const items = bagItemsOf(id);
+    const message = t('nb_shelf_delete_confirm')
+        .replace('{nb}', items.notebooks.length.toLocaleString(currentLang))
+        .replace('{tb}', items.tables.length.toLocaleString(currentLang))
+        .replace('{ts}', items.tasks.length.toLocaleString(currentLang));
+    showDangerConfirm(t('nb_shelf_delete_title'), message, async () => {
+        await supabaseClient.from('custom_tables').delete().eq('project_id', id).eq('user_id', currentUserId);
+        await supabaseClient.from('study_tasks').delete().eq('project_id', id).eq('user_id', currentUserId);
+        const { error } = await supabaseClient.from('projects').delete().eq('id', id);
+        if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        const goneTables = customTablesCache.filter(x => x.project_id === id).map(x => x.id);
         projectsCache = projectsCache.filter(p => p.id !== id);
         allNotebooksCache = allNotebooksCache.filter(n => n.project_id !== id);
+        customTablesCache = customTablesCache.filter(x => x.project_id !== id);
+        studyTasksCache = studyTasksCache.filter(x => x.project_id !== id);
         if (nbViewMode === 'notebook' && currentOpenProjectId === id) {
             setNotebookViewOpen(false);
             nbViewMode = null;
         }
+        if (currentOpenTableId && goneTables.includes(currentOpenTableId)) closeTableView();
         editingProjectId = null;
         renderNotebookShelves();
     });
