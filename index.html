@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=497">
+    <link rel="stylesheet" href="theme.css?v=498">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1315,8 +1315,8 @@
                  רק אחד מוצג בכל רגע לפי הבחירה, כי לא ניתן לשים גם תמונה וגם
                  טקסט-אימוג'י באותו אלמנט -->
             <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-tooltip="ai_brain_fab_title" data-i18n-aria-label="ai_brain_fab_title" aria-label="AI Assistant">
-                <img class="ai-brain-icon" id="ai-brain-icon-img" src="robot-fab-icon.png?v=1" alt="">
-                <span class="ai-brain-icon ai-brain-icon-emoji hidden" id="ai-brain-icon-emoji"></span>
+                <img class="ai-brain-icon hidden" id="ai-brain-icon-img" src="robot-fab-icon.png?v=1" alt="">
+                <span class="ai-brain-icon ai-brain-icon-emoji" id="ai-brain-icon-emoji">🌟</span>
 
                 <!-- לחיצה על התג עצמו (לא כל הכפתור) פותחת את תזכורת "מה חשוב היום" -
                      כדי שהיא לא תחסום גישה למוח עצמו, לפי בקשה מפורשת ("תפריד
@@ -1324,16 +1324,15 @@
                 <span id="ai-brain-fab-badge" class="ai-brain-fab-badge hidden" onclick="event.stopPropagation(); openDailyFocusBubble();" data-i18n-title="daily_focus_badge_title" title="Today's focus reminder">1</span>
             </button>
             <!-- האייקון האחרון שנבחר לעוזר מיושם כאן מיד, לפני שהדף מצויר (כמו ערכת הנושא בראש
-                 הדף) - בלי זה הרובוט (ברירת המחדל) הבהב לשבריר שנייה עד שההגדרה נטענה מהשרת,
-                 לפי בקשה מפורשת. נשמר ב-applyAiIcon ב-app.js -->
+                 הדף) - בלי זה ברירת המחדל (🌟) הבהבה לשבריר שנייה אצל מי שבחר/ה ברובוט, עד
+                 שההגדרה נטענה מהשרת. נשמר ב-applyAiIcon ב-app.js -->
             <script>
                 (function () {
                     try {
-                        var glyph = localStorage.getItem('weekwise_last_ai_icon_glyph');
-                        if (!glyph) return;
+                        if (localStorage.getItem('weekwise_last_ai_icon') !== 'robot') return;
                         var img = document.getElementById('ai-brain-icon-img');
                         var emoji = document.getElementById('ai-brain-icon-emoji');
-                        if (img && emoji) { img.classList.add('hidden'); emoji.textContent = glyph; emoji.classList.remove('hidden'); }
+                        if (img && emoji) { img.classList.remove('hidden'); emoji.classList.add('hidden'); }
                     } catch (e) { /* localStorage חסום - נשאר על ברירת המחדל */ }
                 })();
             </script>
@@ -2522,17 +2521,14 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="rocket_ship" data-color-theme="rocket_ship" onclick="selectColorTheme('rocket_ship')" title="Rocket Ship"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                     </div>
 
-                    <!-- בורר אייקון עוזר ה-AI (פרימיום, חוץ מברירת המחדל) - אותו דפוס
-                         בדיוק כמו בורר ערכת הנושא למעלה (theme-swatch + theme-swatch-lock),
-                         ר' AI_ICON_OPTIONS/selectAiIcon ב-app.js - לפי בקשה מפורשת -->
+                    <!-- בורר אייקון עוזר ה-AI - רק שתי אפשרויות, לפי בקשה מפורשת ("תמחק את כל
+                         האפשרויות, רק מה שיש לי עכשיו כראשון ואת הרובוט כשני אחרי שמשלמים"):
+                         🌟 ברירת המחדל לכולם, והרובוט בפרימיום (theme-swatch-lock כמו בערכות הנושא),
+                         ר' AI_ICON_OPTIONS/selectAiIcon ב-app.js -->
                     <label class="settings-label" data-i18n="settings_ai_icon_label">AI Assistant Icon (Premium)</label>
                     <div class="theme-picker-grid" id="ai-icon-picker-grid">
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="default" onclick="selectAiIcon('default')" title="Default"><img src="robot-fab-icon.png?v=1" alt=""></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="brain" onclick="selectAiIcon('brain')" title="Brain">🧠<span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="sparkles" onclick="selectAiIcon('sparkles')" title="Sparkles">✨<span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="lightbulb" onclick="selectAiIcon('lightbulb')" title="Lightbulb">💡<span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="star" onclick="selectAiIcon('star')" title="Star">🌟<span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="lightning" onclick="selectAiIcon('lightning')" title="Lightning">⚡<span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="default" onclick="selectAiIcon('default')" title="🌟">🌟</button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="robot" onclick="selectAiIcon('robot')" title="🤖"><img src="robot-fab-icon.png?v=1" alt=""><span class="theme-swatch-lock">🔒</span></button>
                     </div>
 
                     <!-- גודל כפתור עוזר ה-AI - חופשי לכולם, לא פרימיום, לפי בקשה מפורשת -->
@@ -2731,6 +2727,22 @@
 
                     <label class="settings-label" data-i18n="settings_reminder_chime_label">Reminder sound</label>
                     <ul id="reminder-chime-picker-list" class="reminder-chime-picker-list"></ul>
+                    <!-- תזכורת חזקה יותר - לפי בקשה מפורשת ("צלילים יותר חזקים ואפשרויות אחרות"): כמה פעמים
+                         מצלצל (ברירת מחדל 3), רטט, והסבר קצר על הצליל כשהאפליקציה סגורה (שם זה צליל הטלפון) -->
+                    <label class="settings-label" data-i18n="reminder_ring_label">Ring</label>
+                    <div class="reminder-ring-chips" id="reminder-ring-chips" role="radiogroup">
+                        <button type="button" class="calendar-kind-chip" data-ring="once" role="radio" onclick="selectReminderRingMode('once')" data-i18n="reminder_ring_once">Once</button>
+                        <button type="button" class="calendar-kind-chip" data-ring="three" role="radio" onclick="selectReminderRingMode('three')" data-i18n="reminder_ring_three">3 times</button>
+                        <button type="button" class="calendar-kind-chip" data-ring="until" role="radio" onclick="selectReminderRingMode('until')" data-i18n="reminder_ring_until">Until I respond</button>
+                    </div>
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="reminder_vibrate_label" for="reminder-vibrate-toggle">Vibrate with the sound</label>
+                        <label class="switch">
+                            <input type="checkbox" id="reminder-vibrate-toggle" onchange="toggleReminderVibrate()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <p class="reminder-closed-app-hint" data-i18n="reminder_closed_app_hint">📱 When the app is closed, the phone's own notification sound plays.</p>
                 </div>
 
                 <!-- 👤 חשבון ואבטחה -->
@@ -3148,9 +3160,10 @@
                 <!-- ספורט ותקציב הוסרו מכאן - יש להם כבר בועה משלהם ב-Dock, ולא רוצים
                      כפילות (אותה פעולה נגישה משני מקומות), לפי בקשה מפורשת ("אם יש
                      בועה זה לא צריך להיות ב-AI"). פריסה חכמה נשארת - אין לה בועה -->
+                <!-- הלו"ז ראשון (והוא הטאב שנפתח) - לפי בקשה מפורשת ("בעוזר ai שים את הלוז ראשון") -->
                 <div class="ai-brain-tabs ai-brain-cell-row">
-                    <button type="button" class="ai-brain-tab active" data-tab="food" onclick="switchAiBrainTab('food')" data-i18n="ai_brain_tab_food">🍎 Food</button>
-                    <button type="button" class="ai-brain-tab" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
+                    <button type="button" class="ai-brain-tab active" data-tab="schedule" onclick="switchAiBrainTab('schedule')" data-i18n="ai_brain_tab_schedule">📅 Schedule</button>
+                    <button type="button" class="ai-brain-tab" data-tab="food" onclick="switchAiBrainTab('food')" data-i18n="ai_brain_tab_food">🍎 Food</button>
                     <button type="button" class="ai-brain-tab" data-tab="photo" onclick="switchAiBrainTab('photo')" data-i18n="ai_brain_tab_photo">📷 Photo</button>
                     <button type="button" class="ai-brain-tab" data-tab="table" onclick="switchAiBrainTab('table')" data-i18n="ai_brain_tab_table">🗂️ Table</button>
                 </div>
@@ -3161,7 +3174,7 @@
                      btn-food-quick-add-submit) כדי ש-logFoodQuickAdd/setFoodQuickAddLoading
                      וכו' ב-app.js ימשיכו לעבוד בלי שינוי לוגיקה, רק openFoodQuickAddModal
                      ו-finishFoodQuickAdd עודכנו לפתוח/לסגור את modal-ai-brain במקום -->
-                <div class="ai-brain-panel" data-ai-brain-panel="food">
+                <div class="ai-brain-panel hidden" data-ai-brain-panel="food">
                     <div id="food-quick-add-form-fields">
                         <p class="modal-subtitle" data-i18n="food_quick_add_subtitle">Describe what you ate with a quantity (e.g. "1 cup cottage cheese" or "100g rice") and we'll estimate the calories.</p>
                         <input type="text" id="food-quick-add-input" autocomplete="off" data-i18n-placeholder="food_quick_add_placeholder" placeholder="e.g. half a cup of cottage cheese">
@@ -3178,7 +3191,7 @@
                     </div>
                 </div>
 
-                <div class="ai-brain-panel hidden" data-ai-brain-panel="schedule">
+                <div class="ai-brain-panel" data-ai-brain-panel="schedule">
                     <div id="schedule-ai-loading" class="recipe-scan-loading hidden">
                         <div class="chasing-dots-loader"><span></span><span></span><span></span></div>
                         <p data-i18n="schedule_ai_loading_text">Planning your week...</p>
@@ -3399,9 +3412,17 @@
                          לא היה ברור לאיזה טאב הן מתייחסות -->
                     <button type="button" class="daily-board-tab-add" id="daily-board-overview-btn" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
                     <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
-                    <button type="button" class="daily-board-tab-add" onclick="openAddRoutineTabPrompt()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
+                    <!-- ➕ פותח בחירה: טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום) - לפי בקשה מפורשת -->
+                    <button type="button" class="daily-board-tab-add" onclick="openRoutineAddChoice()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
                 <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
+                    <!-- לאילו ימים הטאב (לא חובה): ביום הזה "השגרה שלי" נפתחת ישר עליו, ושאלת "3 ימים בלי ✓"
+                         סופרת רק את הימים שבהם הפריט באמת קיים - לפי בקשה מפורשת -->
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="routine_tab_days_label">📅 Days for this tab</span>
+                        <div class="daily-board-hours-chips" id="board-tab-days"></div>
+                        <p class="daily-board-hours-panel-hint" data-i18n="routine_tab_days_hint">On these days My Routine opens straight on this tab.</p>
+                    </div>
                     <p class="daily-board-hours-panel-hint" data-i18n="daily_board_hours_settings_hint">These hours apply only to the tab currently selected above.</p>
                     <div class="daily-board-hours-settings-group">
                         <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_morning">🌅 Morning</span>
@@ -3436,6 +3457,8 @@
                         <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                     </div>
                 </div>
+                <!-- 🌱 כרטיס עדין על פריט שלא סומן ✓ יותר מ-3 ימים (ר' renderRoutineNudge ב-app.js) -->
+                <div id="routine-nudge-slot" class="routine-nudge-slot"></div>
                 <div class="daily-board-body" id="daily-board-body"></div>
             </div>
         </div>
@@ -3458,6 +3481,31 @@
             </div>
         </div>
 
+        <!-- ➕ ב"השגרה שלי": טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום בלבד) - תבניות
+             ימים (א׳–ה׳ וכו', ריקות או כהעתק של הטאב הנוכחי) ו-10 שגרות מוכנות עם תוכן -->
+        <div id="modal-routine-add-choice" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="daily_board_add_tab_title">Add tab</h3>
+                <div class="routine-add-options">
+                    <button type="button" class="routine-add-option" onclick="routineAddEmptyTab()">✏️ <span data-i18n="routine_add_empty">New empty tab</span></button>
+                    <button type="button" class="routine-add-option" id="routine-add-duplicate-btn" onclick="routineStartDuplicateTab()">📄 <span id="routine-add-duplicate-label"></span></button>
+                </div>
+                <div class="routine-templates-head">
+                    <span data-i18n="routine_templates_title">Ready templates</span>
+                    <span class="routine-premium-badge" id="routine-templates-premium-badge">⭐ Premium</span>
+                </div>
+                <p class="routine-templates-sub" data-i18n="routine_templates_days_label">A tab for each day</p>
+                <div class="routine-days-fill" id="routine-days-fill" role="radiogroup"></div>
+                <div class="routine-template-grid" id="routine-template-days"></div>
+                <p class="routine-templates-sub" data-i18n="routine_templates_ready_label">Ready routines</p>
+                <div class="routine-template-grid" id="routine-template-ready"></div>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-add-choice')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - כותרת + באילו ימים הוא
              חוזר בדיוק אותו דבר כל יום (בלי בחירת ימים - לפי בקשה מפורשת:
              "כל הקטע של הלו״ז היומי שזה שגרה שחוזר על עצמה"). השעה עצמה
@@ -3471,6 +3519,8 @@
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
                 <p class="daily-board-item-time-label" id="routine-item-time-label"></p>
                 <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
+                <!-- מוצג רק כשהגיעו מ"🌱 להקטין" בכרטיס של 3 ימים בלי ✓ -->
+                <p class="routine-item-smaller-hint hidden" id="routine-item-smaller-hint" data-i18n="routine_nudge_smaller_hint">A smaller step is easier to keep.</p>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific hidden" id="routine-item-delete-btn" onclick="deleteRoutineItemFromModal()" data-i18n="daily_board_delete_item_btn">Delete</button>
@@ -3740,8 +3790,10 @@
                             </select>
                         </div>
                         <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-duration-input')"><span id="calendar-event-duration-input-display"></span></button>
+                        <!-- "למשך חודש" - לפי בקשה מפורשת ("בחזרה - חודש גם שיהיה"); ברירת המחדל נשארת 3 חודשים -->
                         <select id="calendar-event-duration-input" class="hidden">
-                            <option value="3" data-i18n="calendar_event_duration_3m">For 3 months</option>
+                            <option value="1" data-i18n="calendar_event_duration_1m">For 1 month</option>
+                            <option value="3" selected data-i18n="calendar_event_duration_3m">For 3 months</option>
                             <option value="6" data-i18n="calendar_event_duration_6m">For 6 months</option>
                             <option value="12" data-i18n="calendar_event_duration_12m">For 12 months</option>
                         </select>
@@ -3934,6 +3986,7 @@
                     <li><span class="premium-benefit-icon">🧠</span><span data-i18n="premium_benefit_ai_planner">AI Schedule Planner - describe your week in plain language</span></li>
                     <li><span class="premium-benefit-icon">🏆</span><span data-i18n="premium_benefit_goals">Monthly goals with reward celebrations</span></li>
                     <li><span class="premium-benefit-icon">📷</span><span data-i18n="premium_benefit_unlimited">Unlimited recipe scans/uploads and saved meals</span></li>
+                    <li><span class="premium-benefit-icon">🗓️</span><span data-i18n="premium_benefit_routine_templates">Ready templates for My Routine</span></li>
                 </ul>
                 <div class="premium-tiers-grid">
                     <div class="premium-tier-option" data-tier="monthly" onclick="selectPremiumTier(this)">
@@ -4057,8 +4110,8 @@
 
     </div>
 
-    <script src="i18n.js?v=399"></script>
-    <script src="app.js?v=544"></script>
+    <script src="i18n.js?v=400"></script>
+    <script src="app.js?v=545"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=24"></script>
     <script src="new-me-challenges.js?v=4"></script>

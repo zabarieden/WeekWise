@@ -39,16 +39,21 @@ function addHour(dateStr: string, timeStr: string): { date: string; time: string
 // מי מתריע על אירוע: אירוע עם תזכורת שהוגדרה באפליקציה מקבל התראה מהאפליקציה בלבד
 // (send-due-reminders שולח Push גם כשהיא סגורה, עם "בוצע" ונודניק) - בגוגל הוא נשמר בלי
 // תזכורות, אחרת הגיעו שתי התראות לאותו אירוע (דווח: "יש התראה גם ביומן גוגל וגם
-// באפליקציה"). אירוע בלי תזכורת באפליקציה: ביצירה מקבל את ברירת המחדל של גוגל (כמו
-// קודם), ובעדכון לא נוגעים בתזכורות שלו בגוגל בכלל (forPatch → undefined)
-function reminderBody(reminderMinutes: number | null | undefined, forPatch = false) {
-    if (reminderMinutes && reminderMinutes > 0) return { useDefault: false, overrides: [] };
+// באפליקציה"). אירוע עם שעה ובלי תזכורת באפליקציה: ביצירה מקבל את ברירת המחדל של גוגל (כמו
+// קודם), ובעדכון לא נוגעים בתזכורות שלו בגוגל בכלל (forPatch → undefined).
+// משימה בלי שעה ("כל היום") שנוצרה באפליקציה - בלי שום התראה מגוגל: ברירת המחדל של גוגל
+// (למשל 30 דקות לפני) נספרת מחצות, ולכן הגיעה התראה ב-23:30 בלילה שלפני (דווח: "למה יש
+// התראה של יומן גוגל יום לפני? ב-23 זה התריע למחר"). appOrigin: בעדכון (PATCH) נוגעים
+// בתזכורות רק אם האירוע נוצר באפליקציה - לא באירוע שנוצר בגוגל עם התראות שנבחרו שם
+function reminderBody(row: any, forPatch = false, appOrigin = false) {
+    if (row.reminder_minutes && row.reminder_minutes > 0) return { useDefault: false, overrides: [] };
+    if (!row.event_time && (!forPatch || appOrigin)) return { useDefault: false, overrides: [] };
     return forPatch ? undefined : { useDefault: true };
 }
 
 // forPatch: עדכון חלקי (PATCH) - מנקים במפורש את סוג ההתחלה/הסיום האחר (date מול dateTime),
 // כי PATCH ממזג אובייקטים מקוננים ואירוע שעבר משעה ל"כל היום" היה נשאר עם שניהם
-function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false) {
+function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false, appOrigin = false) {
     const body: any = { summary: row.event_title || "(No title)" };
     if (row.event_time) {
         // פגישה עם שעת סיום (אחרי ההתחלה) - הסיום האמיתי; אחרת שעה אחת כברירת מחדל
@@ -61,7 +66,7 @@ function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false) {
         body.end = { date: addDays(row.event_date, 1) };
         if (forPatch) { body.start.dateTime = null; body.start.timeZone = null; body.end.dateTime = null; body.end.timeZone = null; }
     }
-    const reminders = reminderBody(row.reminder_minutes, forPatch);
+    const reminders = reminderBody(row, forPatch, appOrigin);
     if (reminders) body.reminders = reminders;
     // פגישה (kind='meeting'): המקום/הקישור והפרטים (עם מי + הערות) נשלחים לגוגל. באירוע שאינו
     // פגישה לא נוגעים בהם בכלל - כדי לא למחוק תיאור/מיקום של אירוע שנוצר בגוגל ונערך באפליקציה
@@ -278,7 +283,14 @@ Deno.serve(async () => {
                 const targetCalId = current.google_event_id ? (current.google_calendar_id || primaryCalId) : primaryCalId;
                 const eventsBase = eventsBaseFor(targetCalId);
                 const timeZone = await getTZ(targetCalId);
-                const body = buildOneTimeEventBody(current, timeZone, !!current.google_event_id);
+                // נוצר באפליקציה = יש לו שורת 'insert' בתור (הטריגר לא מכניס כזו לאירוע שיובא מגוגל)
+                let appOrigin = false;
+                if (current.google_event_id && !current.event_time) {
+                    const { data: insertRows } = await supabase.from("calendar_sync_outbox")
+                        .select("id").eq("calendar_event_id", eventId).eq("action", "insert").limit(1);
+                    appOrigin = !!(insertRows && insertRows.length);
+                }
+                const body = buildOneTimeEventBody(current, timeZone, !!current.google_event_id, appOrigin);
                 // עדכון = PATCH (לא PUT): PUT מחליף את כל האירוע בגוגל ומוחק תיאור, מיקום,
                 // משתתפים ותזכורות שהוגדרו שם - אצל אירוע שנוצר בגוגל ונערך באפליקציה
                 const res = current.google_event_id
@@ -394,7 +406,8 @@ Deno.serve(async () => {
                                 // את שאר האצווה
                                 continue;
                             }
-                            const body = buildOneTimeEventBody(s, timeZone, true);
+                            // סדרה חוזרת תמיד נוצרת באפליקציה (מגוגל מגיעים מופעים בודדים) - appOrigin
+                            const body = buildOneTimeEventBody(s, timeZone, true, true);
                             const res = await fetch(`${eventsBase}/${encodeURIComponent(match.id)}`, {
                                 method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
                             });

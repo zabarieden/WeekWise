@@ -78,6 +78,11 @@ Deno.serve(async (req) => {
                         `A user of a diet app wants to eat this meal instead of a planned one: "${meal}" (UI language: ${language}). ` +
                         "Estimate the calories and protein of exactly what is described. Use the amounts written; where no amount is given, " +
                         "assume one typical home portion for a person on a weight-loss plan (not a restaurant portion). " +
+                        // לא מטוגן כברירת מחדל - לפי בקשה מפורשת (ר' cookingDefaultNote ב-estimate-food-text)
+                        "Unless the text itself says fried, deep-fried, breaded or battered (e.g. \"מטוגן\", \"שניצל\", \"בציפוי\", \"fried\", \"schnitzel\"), " +
+                        "assume it was NOT fried: oven-baked, grilled, boiled or cooked in a pan with almost no oil. \"In a pan\" (\"במחבת\") alone means a non-stick pan " +
+                        "with at most a light spray or half a teaspoon of oil, not frying. A cooking-method word never changes the portion size: one slice of chicken " +
+                        "or turkey breast is about 30 g cooked, so 3 slices baked or in a pan are about 90-100 g of plain cooked breast (roughly 150-170 kcal). " +
                         (budget > 0 ? `For context only, the meal it replaces is about ${budget} kcal - do NOT change your estimate to match it. ` : "") +
                         "Also return a short clean display name for the meal in the SAME language the user wrote in (fix typos, max ~6 words), " +
                         "and a one-line list of its components with the portions you assumed, in the same language. " +

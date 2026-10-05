@@ -45,6 +45,9 @@ const FOOD_TEXT_MONTHLY_LIMIT = 180;
 // כל התהליך הרגיל בלי שום שינוי. פג-תוקף אחרי 180 יום כדי לא "לנעול" לתמיד
 // הערכה של מנת-רשת שהמתכון שלה עשוי להשתנות עם הזמן
 const CACHE_MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
+// גרסת ההנחיות בתוך מפתח המטמון: כששיטת החישוב משתנה (למשל "לא מטוגן כברירת מחדל",
+// 2026-10-04), הערכות ישנות שחושבו לפי הכלל הקודם לא חוזרות - הן פשוט לא נמצאות יותר
+const CACHE_KEY_VERSION = "v2|";
 
 function normalizeCacheText(text: string): string {
     return text.trim().toLowerCase().replace(/\s+/g, " ");
@@ -236,7 +239,7 @@ Deno.serve(async (req) => {
         // ולפני בדיקת המכסה בכוונה: פגיעה במטמון לא אמורה לעלות למשתמשת כלום,
         // גם אם המכסה החודשית שלה כבר נגמרה
         if (!hasAnswer) {
-            const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
+            const cacheKey = `${CACHE_KEY_VERSION}${language}|${country}|${normalizeCacheText(String(text))}`;
             const { data: cacheRow } = await supabase
                 .from("food_text_cache")
                 .select("calories, protein_grams, created_at")
@@ -332,6 +335,11 @@ Deno.serve(async (req) => {
         // 710 בגוגל, שהניח דווקא תפוח אדמה *בלי* שמן) - הכיוון הנכון הוא
         // אמצע ריאלי, לא הטיה שיטתית לאף צד, בדיוק כמו ב-realismNote למעלה
         const prepMethodNote = `When a food's preparation method or type isn't stated but meaningfully changes its calories (e.g. potato: boiled/steamed vs. roasted/fried with oil; yogurt: plain/low-fat vs. regular/sweetened; rice: plain vs. cooked with oil), do not anchor on either extreme - not the leanest/lowest-calorie version, and not the richest/highest-oil version either. Use the single most statistically typical preparation as an everyday home-cooked side dish or product in ${countryName} (for potato specifically, a plain baked/roasted potato with at most a light amount of oil - not deep-fried, not fully dry-steamed; for yogurt, a standard/regular-fat plain yogurt, not diet 0% and not a heavily sweetened dessert yogurt, unless the description implies otherwise). This matters most when a meal description lists several such unspecified items together - anchoring on either extreme on each one individually compounds into a large, consistent bias for the whole meal in that direction, which is exactly the systematic bias this feature must avoid in both directions.`;
+        // ברירת מחדל לאופן הבישול - לפי בקשה מפורשת ("נקודת ההנחה הראשונית שזה לא מטוגן"). נבדק
+        // בפועל: "3 פרוסות חזה עוף" קיבל 98 קל', אבל "3 פרוסות חזה עוף במחבת" קיבל 380 - המילה
+        // "במחבת" גרמה ל-AI להניח טיגון בשמן וגם להגדיל את הפרוסה (30 → 65 גרם). לכן: לא מטוגן אלא
+        // אם נכתב במפורש, "במחבת" = כמעט בלי שמן, ושיטת הבישול לא משנה את גודל המנה
+        const cookingDefaultNote = `COOKING-METHOD DEFAULT (the user's explicit rule): unless the description itself says the food was fried, deep-fried, breaded/battered or crispy-coated (e.g. "מטוגן", "טיגון", "שניצל", "בציפוי", "צ'יפס", "פריך", "fried", "schnitzel", "breaded", "battered", "tempura"), assume it was NOT fried - it was oven-baked, grilled, air-fried, boiled, or cooked in a pan with almost no oil. "In a pan" ("במחבת", "on the pan") on its own means seared in a non-stick pan with at most a light spray or about half a teaspoon of oil for the whole portion (roughly 0-20 kcal of oil in total) - it does NOT mean fried in oil. Never add frying oil, breading or batter that the user did not mention. A cooking-method word also never changes the assumed portion size: when meat is counted in slices or pieces without a weight, use the same modest home portion whether or not a method is mentioned (e.g. one slice of chicken or turkey breast is about 30 g cooked, so "3 slices of chicken breast" - baked, grilled or in a pan - is about 90-100 g of plain cooked breast, roughly 150-170 kcal).`;
         // מנחה שימוש ב-web_search כשיש שם מקום/רשת/מותג במשפט - לא לכל תיאור
         // מזון (זה היה מבזבז זמן ועלות על "תפוח" או "אורז לבן"). תוקן אחרי
         // בדיקה בפועל: הניסוח הקודם (רק "רשת ידועה" עם דוגמאות מקדונלד'ס/
@@ -405,8 +413,8 @@ Deno.serve(async (req) => {
             ? `A nutrition database search for this description returned these real reference items with verified nutrition data - ${referenceParts.join("; also ")}. If one of these plausibly matches an item the user described (same food/product, similar name), prefer its exact kcal/protein/fat/carbs-per-100g figures over your own memory or estimate for that item - it's real reference data, more reliable than a guess. If none of them actually match what the user meant, ignore this and estimate normally.${referenceProductMatchCaution}`
             : "";
         const promptText = hasAnswer
-            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${slashAlternativesNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
-            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${slashAlternativesNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${offDataNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
+            ? `The user described a food/meal: "${text}". You previously asked: "${clarificationQuestion}". Their answer: "${clarificationAnswer}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${cookingDefaultNote} ${slashAlternativesNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${trustUserNumberNote} Using all of this, give your best final total calorie estimate now. Respond in ${languageName} if the question needed a language, but the tool call itself just needs the number. End by calling the estimate_or_clarify tool with the result.`
+            : `Estimate the total calories for this food/meal description, written by the user in ${languageName}: "${text}". ${realismNote} ${breadTermNote} ${gambaTermNote} ${prepMethodNote} ${cookingDefaultNote} ${slashAlternativesNote} ${countryNote} ${searchNote} ${unknownNote} ${breakdownNote} ${offDataNote} If the description is genuinely ambiguous about what was eaten or the quantity (not just imprecise - genuinely unclear), ask ONE short clarifying question in ${languageName} instead of guessing. Otherwise give your best total calorie estimate. End by calling the estimate_or_clarify tool with the result.`;
 
         const estimateTool = useEstimateOnlyTool ? ESTIMATE_ONLY_TOOL : ESTIMATE_OR_CLARIFY_TOOL;
         const messages: any[] = [{ role: "user", content: promptText }];
@@ -492,7 +500,7 @@ Deno.serve(async (req) => {
             // תיאור שכבר קיים אך פג-תוקף. reasoning לא נשמר במטמון בכוונה -
             // זו קריאה חדשה לגמרי בכל פעם
             if (!hasAnswer) {
-                const cacheKey = `${language}|${country}|${normalizeCacheText(String(text))}`;
+                const cacheKey = `${CACHE_KEY_VERSION}${language}|${country}|${normalizeCacheText(String(text))}`;
                 await supabase.from("food_text_cache").upsert(
                     { cache_key: cacheKey, calories, protein_grams: proteinGrams, created_at: new Date().toISOString() },
                     { onConflict: "cache_key" },

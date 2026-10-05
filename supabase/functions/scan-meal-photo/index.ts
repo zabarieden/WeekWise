@@ -126,7 +126,9 @@ Deno.serve(async (req) => {
                                 type: "text",
                                 text:
                                     "This photo shows a meal. Identify each distinct food item visible and estimate its " +
-                                    "calorie count as best you can from portion size and appearance. Combine items that " +
+                                    "calorie count as best you can from portion size and appearance. Unless the food " +
+                                    "clearly looks deep-fried, breaded or battered in the photo, assume it was baked, " +
+                                    "grilled or cooked in a pan with very little oil - do not add frying oil that isn't visible. Combine items that " +
                                     "are clearly part of one dish into a single entry rather than over-splitting. Write " +
                                     `every food_name in ${languageName}, not English (unless ${languageName} is English) - ` +
                                     "the app's interface language is set to this, so food names must match it. Extract " +

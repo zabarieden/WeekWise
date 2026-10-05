@@ -20,6 +20,11 @@ self.addEventListener('push', (event) => {
     // מבנה בדיוק) - ר' notificationclick למטה לטיפול בלחיצה עליהם
     if (payload.actions) options.actions = payload.actions;
     if (payload.data) options.data = payload.data;
+    // תזכורת חזקה יותר (לפי בקשה מפורשת): רטט בטלפונים שתומכים, ותזכורת למשימה נשארת על המסך
+    // עד שמגיבים (בוצע / עוד לא / החלקה) במקום להיעלם לבד. הצליל עצמו הוא צליל ההתראות של הטלפון
+    options.vibrate = [400, 150, 400, 150, 700];
+    options.silent = false;
+    if (payload.data && payload.data.sourceType) options.requireInteraction = true;
     // נודניק: אותו tag כמו ההתראה הקודמת - renotify כדי שתצלצל/תרטוט שוב ולא תוחלף בשקט
     if (payload.renotify && options.tag) options.renotify = true;
     const work = [self.registration.showNotification(title, options)];
