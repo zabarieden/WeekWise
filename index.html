@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=499">
+    <link rel="stylesheet" href="theme.css?v=500">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1491,7 +1491,7 @@
                         <svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
                     </button>
                     <h2 class="gv-title" data-i18n="vision_board_title">My Goals</h2>
-                    <button type="button" class="gv-icon-btn gv-add-btn" onclick="openVisionGoalModal()" data-i18n-title="vision_goal_add_btn_title" data-i18n-aria-label="vision_goal_add_btn_title" title="Add a goal" aria-label="Add a goal">
+                    <button type="button" class="gv-icon-btn gv-add-btn" onclick="openGoalsLibrary()" data-i18n-title="vision_goal_add_btn_title" data-i18n-aria-label="vision_goal_add_btn_title" title="Add a goal" aria-label="Add a goal">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
                     </button>
                 </div>
@@ -1511,7 +1511,7 @@
                     </section>
                     <div id="gv-chips" class="gv-chips hidden"></div>
                     <div id="gv-goal" class="gv-goal"></div>
-                    <!-- מצב ריק: איור שביל, הסבר + דוגמאות מוכנות (פותחות את חלון היעד כבר ממולא) -->
+                    <!-- מצב ריק: איור שביל, הסבר + הנושאים של ספריית היעדים (goals-library.js) -->
                     <div id="vision-goals-empty" class="gv-empty hidden">
                         <svg class="gv-empty-art" viewBox="0 0 200 150" fill="none" aria-hidden="true">
                             <path d="M100 140 C 40 120, 40 92, 100 78 S 162 44, 100 18" stroke="currentColor" stroke-opacity=".18" stroke-width="10" stroke-linecap="round"></path>
@@ -1523,8 +1523,8 @@
                         </svg>
                         <h3 class="gv-empty-title" data-i18n="gv_empty_title">Every big goal starts with one small stone</h3>
                         <p class="gv-empty-text" data-i18n="vision_board_empty_hint">No goals yet – tap + or pick an example below.</p>
-                        <p class="gv-templates-title" data-i18n="vision_templates_title">Quick start – tap a goal:</p>
-                        <div id="vision-templates" class="gv-templates"></div>
+                        <p class="gv-templates-title" data-i18n="glib_empty_pick">Start from the goal library – pick a topic:</p>
+                        <div id="vision-templates" class="glib-grid"></div>
                         <button type="button" class="gv-own-goal-btn" onclick="openVisionGoalModal()" data-i18n="gv_empty_own">＋ My own goal</button>
                     </div>
                     <!-- "יעדים שכבשתי" - יעדים שהושגו (is_achieved) נשארים כאן לצמיתות; נמחקים רק אם מוחקים
@@ -1534,6 +1534,12 @@
                         <div id="vision-goals-achieved-list" class="gv-achieved-list"></div>
                     </section>
                 </div>
+            </div>
+
+            <!-- 📚 ספריית יעדים (goals-library.js) - מסך מלא מעל "היעדים שלי" (z-index 1950, מתחת לחלונות
+                 הצפים): נושאים › תחומים › תוכניות מוכנות, כל אחת עם צעד קטן יומי. 2 תוכניות בכל נושא בחינם -->
+            <div id="goals-library" class="glib-view" aria-hidden="true">
+                <div id="glib-scroll" class="glib-scroll"></div>
             </div>
 
             <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
@@ -4010,6 +4016,7 @@
                     <li><span class="premium-benefit-icon">🏆</span><span data-i18n="premium_benefit_goals">Monthly goals with reward celebrations</span></li>
                     <li><span class="premium-benefit-icon">📷</span><span data-i18n="premium_benefit_unlimited">Unlimited recipe scans/uploads and saved meals</span></li>
                     <li><span class="premium-benefit-icon">🗓️</span><span data-i18n="premium_benefit_routine_templates">Ready templates for My Routine</span></li>
+                    <li><span class="premium-benefit-icon">📚</span><span data-i18n="premium_benefit_goal_library">The whole goal library – every ready plan</span></li>
                 </ul>
                 <div class="premium-tiers-grid">
                     <div class="premium-tier-option" data-tier="monthly" onclick="selectPremiumTier(this)">
@@ -4133,8 +4140,9 @@
 
     </div>
 
-    <script src="i18n.js?v=402"></script>
-    <script src="app.js?v=547"></script>
+    <script src="i18n.js?v=403"></script>
+    <script src="app.js?v=548"></script>
+    <script src="goals-library.js?v=1"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=24"></script>
     <script src="new-me-challenges.js?v=4"></script>
