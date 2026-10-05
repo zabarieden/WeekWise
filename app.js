@@ -16674,9 +16674,8 @@ function renderRoutineNudge() {
             <div class="routine-nudge-meta">${n.time ? `${escapeHtmlForReport(n.time)} · ` : ''}${escapeHtmlForReport(where)}</div>
             <p class="routine-nudge-text">${escapeHtmlForReport(t('routine_nudge_days').replace('{n}', n.sinceDays))} ${escapeHtmlForReport(t('routine_nudge_question'))}</p>
             <div class="routine-nudge-actions">
-                <button type="button" class="routine-nudge-btn primary" onclick="routineNudgeKeep()">✓ ${escapeHtmlForReport(t('routine_nudge_keep'))}</button>
-                <button type="button" class="routine-nudge-btn" onclick="routineNudgeChange(false)">✏️ ${escapeHtmlForReport(t('routine_nudge_change'))}</button>
-                <button type="button" class="routine-nudge-btn" onclick="routineNudgeChange(true)">🌱 ${escapeHtmlForReport(t('routine_nudge_smaller'))}</button>
+                <button type="button" class="routine-nudge-btn primary" style="grid-column: 1 / -1;" onclick="routineNudgeKeep()">✓ ${escapeHtmlForReport(t('routine_nudge_keep'))}</button>
+                <button type="button" class="routine-nudge-btn" onclick="routineNudgeChange()">✏️ ${escapeHtmlForReport(t('routine_nudge_change'))}</button>
                 <button type="button" class="routine-nudge-btn" onclick="routineNudgeRemove()">🗑️ ${escapeHtmlForReport(t('routine_nudge_remove'))}</button>
             </div>
         </div>`;
@@ -16706,7 +16705,8 @@ async function routineNudgeLater() {
     refreshRoutineNudge();
 }
 
-async function routineNudgeChange(smaller) {
+// ✏️ לשנות - פותח את הפריט לעריכה (היה גם "🌱 להקטין" שעשה בדיוק אותו דבר - הוסר לפי בקשה מפורשת)
+async function routineNudgeChange() {
     const n = routineNudge;
     if (!n) return;
     if (n.tabId !== activeDailyBoardTabId) {
@@ -16715,7 +16715,7 @@ async function routineNudgeChange(smaller) {
         renderDailyBoardHourSettings();
         await renderDailyBoard();
     }
-    openEditRoutineItemModal(n.item, { fromNudge: true, smaller });
+    openEditRoutineItemModal(n.item, { fromNudge: true });
 }
 
 function routineNudgeRemove() {
@@ -20665,7 +20665,6 @@ function openAddRoutineItemModal(time) {
     editingRoutineItemId = null;
     routineNudgeEditing = null;
     pendingRoutineItemTime = time;
-    document.getElementById('routine-item-smaller-hint').classList.add('hidden');
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_add_item_title');
     document.getElementById('routine-item-time-label').textContent = time;
     document.getElementById('routine-item-title-input').value = '';
@@ -20674,11 +20673,10 @@ function openAddRoutineItemModal(time) {
     setTimeout(() => document.getElementById('routine-item-title-input').focus(), 50);
 }
 
-// opts.fromNudge: נפתח מכרטיס ה-🌱 (✏️ לשנות / 🌱 להקטין) - אחרי שמירה הכרטיס לא שואל שוב 3 ימים
+// opts.fromNudge: נפתח מכרטיס ה-🌱 (✏️ לשנות) - אחרי שמירה הכרטיס לא שואל שוב 3 ימים
 function openEditRoutineItemModal(item, opts = {}) {
     editingRoutineItemId = item.id;
     routineNudgeEditing = opts.fromNudge ? routineNudge : null;
-    document.getElementById('routine-item-smaller-hint').classList.toggle('hidden', !opts.smaller);
     pendingRoutineItemTime = (item.time || '').slice(0, 5);
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_edit_item_title');
     document.getElementById('routine-item-time-label').textContent = pendingRoutineItemTime;
