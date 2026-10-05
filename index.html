@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=498">
+    <link rel="stylesheet" href="theme.css?v=499">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1481,42 +1481,59 @@
                 </nav>
             </div>
 
-            <!-- מגירת "לוח החזון" - יעדים ככרטיסי-חזון עם תמונת רקע, שמתהפכים ללוח
-                 תחנות-ביניים בלחיצה. מגירה שנייה מהצד (אותה תבנית בדיוק כמו
-                 hamburger-drawer-overlay) - לא תפריט ניווט, אלא פאנל עצמאי -->
-            <div id="vision-drawer-overlay" class="hamburger-drawer-overlay" onclick="closeGoalsVisionDrawer()">
-                <nav class="hamburger-drawer" onclick="event.stopPropagation()">
-                <div class="hamburger-drawer-scroll">
-                    <div class="hamburger-drawer-header">
-                        <h3 data-i18n="vision_board_title">Vision Board</h3>
-                        <div class="hamburger-drawer-header-actions">
-                            <button type="button" class="vision-drawer-add-btn" onclick="openVisionGoalModal()" data-i18n-title="vision_goal_add_btn_title" title="Add a goal">＋</button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeGoalsVisionDrawer()">✕</button>
-                        </div>
-                    </div>
-                    <p class="vision-tagline" data-i18n="vision_tagline">Big goals, small steps.</p>
-                    <!-- 🎯 יעד החודש - היעד שמתמקדים בו החודש, מוצג ראשון ומודגש (ר' renderVisionFocusSlot) -->
-                    <div id="vision-focus-slot"></div>
-                    <div id="vision-goals-list"></div>
-                    <!-- מצב ריק: הסבר + דוגמאות מוכנות ללחיצה (פותחות את חלון היעד כבר ממולא) -->
-                    <div id="vision-goals-empty" class="vision-goals-empty hidden">
-                        <div class="vision-empty-icon" aria-hidden="true">🎯</div>
-                        <p data-i18n="vision_board_empty_hint">No goals yet – tap + or pick an example below.</p>
-                        <p class="vision-templates-title" data-i18n="vision_templates_title">Quick start – tap a goal:</p>
-                        <div id="vision-templates" class="vision-templates"></div>
-                    </div>
-                    <!-- "יעדים שכבשתי" - יעדים שכל התחנות שלהם הושלמו (is_achieved),
-                         עוברים לכאן אוטומטית מהרשימה הפעילה למעלה (checkAndMarkGoalAchieved
-                         ב-app.js) - קבועים כאן לצמיתות, לא נמחקים אוטומטית, רק אם
-                         מוחקים את היעד עצמו דרך כפתור המחיקה על הכרטיס - לפי בקשה
-                         מפורשת ("תמיד שם בלי אפשרות למחוק אלא אם כן מוחקים... דרך
-                         המה שיצר את זה") -->
-                    <div id="vision-goals-achieved-section" class="vision-goals-achieved-section hidden">
-                        <h4 class="vision-goals-achieved-title" data-i18n="vision_goals_achieved_title">🏆 Goals I've Conquered</h4>
-                        <div id="vision-goals-achieved-list"></div>
-                    </div>
+            <!-- 🎯 "היעדים שלי" - מסך מלא (לפי הבחירה בעיצוב "מסע של צעדים"): פתק קבוע "לא 10",
+                 הצעדים הקטנים של היום מכל היעדים, צ'יפ לכל יעד, ושביל אבנים אל הדגל של היעד שנבחר
+                 (ר' renderVisionGoalsList ב-app.js). z-index מתחת לחלונות הצפים (apple-modal),
+                 כך שחלון היעד / תזמון / שגרה נפתחים מעליו -->
+            <div id="vision-drawer-overlay" class="goals-view" aria-hidden="true">
+                <div class="gv-top">
+                    <button type="button" class="gv-icon-btn" onclick="closeGoalsVisionDrawer()" data-i18n-title="gv_back" data-i18n-aria-label="gv_back" title="Back" aria-label="Back">
+                        <svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+                    </button>
+                    <h2 class="gv-title" data-i18n="vision_board_title">My Goals</h2>
+                    <button type="button" class="gv-icon-btn gv-add-btn" onclick="openVisionGoalModal()" data-i18n-title="vision_goal_add_btn_title" data-i18n-aria-label="vision_goal_add_btn_title" title="Add a goal" aria-label="Add a goal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                    </button>
                 </div>
-                </nav>
+                <div class="gv-scroll" id="goals-view-scroll">
+                    <!-- תזכורת קבועה (לפי בקשה מפורשת): לא צריך להיות מושלמים - רק קצת כל יום -->
+                    <div class="gv-note" role="note">
+                        <strong data-i18n="gv_note_title">Not 10 · just a little every day</strong>
+                        <span data-i18n="gv_note_text">We don't have to be perfect – just do a little every day to move forward.</span>
+                    </div>
+                    <!-- הצעדים הקטנים של היום מכל היעדים, עם ✓ מהיר (אותם פריטים כמו בהצצה להיום) -->
+                    <section id="gv-today" class="gv-today hidden">
+                        <div class="gv-section-head">
+                            <h3 data-i18n="gv_today_title">Today's small steps</h3>
+                            <span id="gv-today-count" class="gv-today-count"></span>
+                        </div>
+                        <div id="gv-today-list" class="gv-today-list"></div>
+                    </section>
+                    <div id="gv-chips" class="gv-chips hidden"></div>
+                    <div id="gv-goal" class="gv-goal"></div>
+                    <!-- מצב ריק: איור שביל, הסבר + דוגמאות מוכנות (פותחות את חלון היעד כבר ממולא) -->
+                    <div id="vision-goals-empty" class="gv-empty hidden">
+                        <svg class="gv-empty-art" viewBox="0 0 200 150" fill="none" aria-hidden="true">
+                            <path d="M100 140 C 40 120, 40 92, 100 78 S 162 44, 100 18" stroke="currentColor" stroke-opacity=".18" stroke-width="10" stroke-linecap="round"></path>
+                            <circle cx="100" cy="132" r="11" class="gv-empty-stone-done"></circle>
+                            <circle cx="62" cy="104" r="10" class="gv-empty-stone"></circle>
+                            <circle cx="118" cy="72" r="10" class="gv-empty-stone"></circle>
+                            <circle cx="132" cy="44" r="9" class="gv-empty-stone"></circle>
+                            <text x="100" y="22" text-anchor="middle" font-size="22">🏁</text>
+                        </svg>
+                        <h3 class="gv-empty-title" data-i18n="gv_empty_title">Every big goal starts with one small stone</h3>
+                        <p class="gv-empty-text" data-i18n="vision_board_empty_hint">No goals yet – tap + or pick an example below.</p>
+                        <p class="gv-templates-title" data-i18n="vision_templates_title">Quick start – tap a goal:</p>
+                        <div id="vision-templates" class="gv-templates"></div>
+                        <button type="button" class="gv-own-goal-btn" onclick="openVisionGoalModal()" data-i18n="gv_empty_own">＋ My own goal</button>
+                    </div>
+                    <!-- "יעדים שכבשתי" - יעדים שהושגו (is_achieved) נשארים כאן לצמיתות; נמחקים רק אם מוחקים
+                         את היעד עצמו (לפי בקשה מפורשת). לחיצה על הישג מראה את השביל שלו עד הדגל -->
+                    <section id="vision-goals-achieved-section" class="gv-achieved hidden">
+                        <h3 class="gv-achieved-title" data-i18n="vision_goals_achieved_title">🏆 Goals I've Conquered</h3>
+                        <div id="vision-goals-achieved-list" class="gv-achieved-list"></div>
+                    </section>
+                </div>
             </div>
 
             <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
@@ -3829,9 +3846,9 @@
             </div>
         </div>
 
-        <!-- חלון צף: הוספה/עריכה של יעד בלוח החזון (Vision Board) - שם, קטגוריה,
-             תמונת חזון, ורשימת תחנות-ביניים שנבנית בזיכרון (pendingVisionMilestones)
-             ונשמרת כולה יחד עם לחיצה על "שמירה" -->
+        <!-- חלון צף: הוספה/עריכה של יעד ב"היעדים שלי" - קודם מה שבונה את השביל (שם, סמל, איך
+             עוקבים, הצעד הקטן, תחנות), ואחר כך התוספות (למה, עד מתי, פרס, קטגוריה, תמונה). רשימת
+             התחנות נבנית בזיכרון (pendingVisionMilestones) ונשמרת כולה בלחיצה על "שמירה" -->
         <div id="modal-add-vision-goal" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
@@ -3839,31 +3856,11 @@
                 <div class="preset-manager-grid">
                     <input type="text" id="vision-goal-title-input" data-i18n-placeholder="vision_goal_title_placeholder" placeholder="Goal name...">
 
-                    <p class="settings-label" data-i18n="vision_goal_category_label">Category</p>
-                    <div id="vision-goal-category-chips" class="vision-goal-category-chips"></div>
-                    <input type="text" id="vision-goal-category-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
+                    <!-- הסמל של היעד: על האבן של היום בשביל, בצ'יפ ובהצצה להיום -->
+                    <p class="settings-label" data-i18n="vision_goal_icon_label">Icon</p>
+                    <div id="vision-goal-icon-picker" class="vision-goal-icon-picker"></div>
 
-                    <input type="file" id="vision-goal-image-input" accept="image/*" class="hidden" onchange="handleVisionGoalImageSelected(event)">
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('vision-goal-image-input').click()" data-i18n="vision_goal_image_upload_btn">📷 Upload a vision image</button>
-                    <img id="vision-goal-image-preview" class="vision-goal-image-preview hidden" alt="">
-                    <input type="hidden" id="vision-goal-image-url-input">
-
-                    <!-- למה זה חשוב לי - מוצג בגב הכרטיס כתזכורת מוטיבציה -->
-                    <p class="settings-label" data-i18n="vision_field_why">Why does it matter to me? (optional)</p>
-                    <textarea id="vision-goal-why-input" rows="2" maxlength="200" data-i18n-placeholder="vision_why_placeholder" placeholder="The reason that will keep me going…"></textarea>
-
-                    <!-- עד מתי (לא חובה) - מאפשר ספירה לאחור ובדיקת קצב ("בקצב" / "קצת מאחור") -->
-                    <p class="settings-label" data-i18n="vision_field_target_date">Until when? (optional)</p>
-                    <div class="vision-goal-date-row">
-                        <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('vision-goal-date-input')">
-                            <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
-                            <span id="vision-goal-date-input-display" data-placeholder=""></span>
-                        </button>
-                        <button type="button" id="vision-goal-date-clear" class="vision-goal-date-clear hidden" onclick="clearVisionGoalDate()" data-i18n-aria-label="vision_date_clear" aria-label="Remove date">✕</button>
-                    </div>
-                    <input type="date" id="vision-goal-date-input" class="date-picker-hidden-input" onchange="onVisionGoalDateChange()">
-
-                    <!-- איך מודדים התקדמות: לפי צעדים (ברירת מחדל) / מספר / משקל -->
+                    <!-- איך מודדים התקדמות: לפי תחנות (ברירת מחדל) / ימים / מספר / משקל -->
                     <p class="settings-label" data-i18n="vision_field_track">How do I track progress?</p>
                     <div id="vision-goal-track-chips" class="vision-track-options"></div>
                     <!-- אתגר ימים: כמה ימים (המשימות היומיות נכתבות ברשימה למטה) -->
@@ -3884,27 +3881,54 @@
                         <input type="number" id="vision-goal-weight-target-input" inputmode="decimal" min="0" step="0.1" data-i18n-placeholder="vision_weight_target_ph" placeholder="Target weight (kg)">
                         <p class="vision-goal-field-hint" data-i18n="vision_weight_hint">Progress follows your latest weigh-in in Calorie &amp; Weight Metrics.</p>
                     </div>
-                    <!-- 🔔 תזכורת בהצצה להיום - ליעדי ספירה ומשקל (אין להם משימות יומיות) - כל יום / כל שבוע ביום מסוים -->
-                    <div id="vision-goal-reminder-fields" class="vision-goal-track-fields hidden">
-                        <p class="settings-label" data-i18n="vision_reminder_label">🔔 Reminder in A Peek at Today</p>
+                    <!-- 👣 הצעד הקטן (ליעדי תחנות / ספירה / משקל - באתגר ימים יש "מה עושים כל יום"): כל יום /
+                         כל שבוע ביום מסוים. מופיע בצעדים של היום וגם בהצצה להיום. נשמר בשדות reminder_* -->
+                    <div id="vision-goal-reminder-fields" class="vision-goal-track-fields vision-small-step-box hidden">
+                        <p class="settings-label" data-i18n="vision_reminder_label">👣 A small step (shows in A Peek at Today)</p>
                         <div id="vision-goal-reminder-chips" class="vision-goal-category-chips"></div>
                         <div id="vision-goal-reminder-weekdays" class="vision-goal-category-chips hidden"></div>
                         <div id="vision-goal-reminder-text-wrap" class="hidden">
-                            <label class="vision-goal-mini-label" for="vision-goal-reminder-text" data-i18n="vision_reminder_text_label">Reminder text</label>
-                            <input type="text" id="vision-goal-reminder-text" maxlength="60">
+                            <label class="vision-goal-mini-label" for="vision-goal-reminder-text" data-i18n="vision_reminder_text_label">What's the small step?</label>
+                            <input type="text" id="vision-goal-reminder-text" maxlength="60" data-i18n-placeholder="vision_small_step_ph" placeholder="e.g. 10 minutes of easy running">
+                            <p class="vision-goal-field-hint" data-i18n="vision_small_step_hint">Small on purpose – something doable even on a hard day.</p>
                         </div>
                     </div>
 
-                    <p class="settings-label" id="vision-goal-steps-label" data-i18n="vision_goal_milestones_section_title">Steps on the way</p>
+                    <p class="settings-label" id="vision-goal-steps-label" data-i18n="vision_goal_milestones_section_title">Stations on the way</p>
                     <div id="vision-goal-pending-milestones-list" class="vision-goal-pending-milestones-list"></div>
                     <div class="vision-goal-milestone-add-row">
-                        <input type="text" id="vision-goal-milestone-input" data-i18n-placeholder="vision_goal_milestone_input_placeholder" placeholder="Add a milestone..." onkeydown="if(event.key==='Enter'){event.preventDefault();addPendingVisionMilestoneRow();}">
+                        <input type="text" id="vision-goal-milestone-input" data-i18n-placeholder="vision_goal_milestone_input_placeholder" placeholder="Add a station..." onkeydown="if(event.key==='Enter'){event.preventDefault();addPendingVisionMilestoneRow();}">
                         <button type="button" class="btn-secondary" onclick="addPendingVisionMilestoneRow()" data-i18n="vision_goal_milestone_add_btn">Add</button>
                     </div>
+
+                    <!-- למה זה חשוב לי - מוצג מתחת לשביל כתזכורת מוטיבציה -->
+                    <p class="settings-label" data-i18n="vision_field_why">Why does it matter to me? (optional)</p>
+                    <textarea id="vision-goal-why-input" rows="2" maxlength="200" data-i18n-placeholder="vision_why_placeholder" placeholder="The reason that will keep me going…"></textarea>
+
+                    <!-- עד מתי (לא חובה) - מאפשר ספירה לאחור ובדיקת קצב ("בקצב" / "קצת מאחור") -->
+                    <p class="settings-label" data-i18n="vision_field_target_date">Until when? (optional)</p>
+                    <div class="vision-goal-date-row">
+                        <button type="button" class="date-picker-field-trigger" onclick="openDateFieldPicker('vision-goal-date-input')">
+                            <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+                            <span id="vision-goal-date-input-display" data-placeholder=""></span>
+                        </button>
+                        <button type="button" id="vision-goal-date-clear" class="vision-goal-date-clear hidden" onclick="clearVisionGoalDate()" data-i18n-aria-label="vision_date_clear" aria-label="Remove date">✕</button>
+                    </div>
+                    <input type="date" id="vision-goal-date-input" class="date-picker-hidden-input" onchange="onVisionGoalDateChange()">
 
                     <!-- פרס כשמגיעים ליעד - מוצג בחגיגה כשהיעד מושג -->
                     <p class="settings-label" data-i18n="vision_field_reward">A reward for reaching it 🎁 (optional)</p>
                     <input type="text" id="vision-goal-reward-input" maxlength="80">
+
+                    <p class="settings-label" data-i18n="vision_goal_category_label">Category</p>
+                    <div id="vision-goal-category-chips" class="vision-goal-category-chips"></div>
+                    <input type="text" id="vision-goal-category-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
+
+                    <!-- תמונה (לא חובה) - מוצגת כבאנר מעל השביל -->
+                    <input type="file" id="vision-goal-image-input" accept="image/*" class="hidden" onchange="handleVisionGoalImageSelected(event)">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('vision-goal-image-input').click()" data-i18n="vision_goal_image_upload_btn">📷 Add a picture</button>
+                    <img id="vision-goal-image-preview" class="vision-goal-image-preview hidden" alt="">
+                    <input type="hidden" id="vision-goal-image-url-input">
 
                     <!-- 🎯 יעד החודש (פרימיום) - יעד אחד בכל חודש, מוצג ראשון ובהצצה להיום -->
                     <div class="settings-toggle-row vision-goal-focus-row">
@@ -4109,8 +4133,8 @@
 
     </div>
 
-    <script src="i18n.js?v=401"></script>
-    <script src="app.js?v=546"></script>
+    <script src="i18n.js?v=402"></script>
+    <script src="app.js?v=547"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=24"></script>
     <script src="new-me-challenges.js?v=4"></script>

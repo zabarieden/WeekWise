@@ -1658,11 +1658,12 @@ const APP_TOUR_STEPS = [
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#modal-ai-brain .ai-brain-tab[data-tab="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
-    // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - כרטיס דוגמה שמתהפך לבד ומראה צעדים, "למה" ופרס
+    // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - שביל דוגמה שמצטייר (תחנות, האבן של היום והדגל),
+    // הצעדים הקטנים של היום (כשיש יעדים), והוספת יעד
     { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text' },
-    { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '🔄', titleKey: 'apptour_g_card_title', text: 'apptour_g_card_text', link: 'apptour_m_vision_link', demo: 'goal' },
-    { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .vision-drawer-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
-    { id: 'g_focus', ch: 'goals', ctx: 'goals', target: '#vision-focus-slot > *', titleKey: 'vision_focus_ribbon', text: 'apptour_g_focus_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
+    { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '👣', titleKey: 'apptour_g_path_title', text: 'apptour_g_path_text', link: 'apptour_m_vision_link', demo: 'goal' },
+    { id: 'g_today', ch: 'goals', ctx: 'goals', icon: '✅', target: '#gv-today', titleKey: 'gv_today_title', text: 'apptour_g_today_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
+    { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
     // 📓 המחברות שלי: הפריט בתפריט, ואז הארון עצמו
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
     { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '📓', target: '#nb-bookcase', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
@@ -1746,6 +1747,7 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
     // מתחילים ממסך בית נקי - סוגרים כל חלון/מגירה שפתוחים
     document.querySelectorAll('.apple-modal.open').forEach(m => closeModal(m.id));
     document.querySelectorAll('.hamburger-drawer-overlay.open').forEach(o => o.classList.remove('open'));
+    if (isGoalsViewOpen()) closeGoalsVisionDrawer();
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.remove('menu-open', 'vision-open', 'study-open', 'projects-open');
     if (typeof closeTodayPeekPanel === 'function') closeTodayPeekPanel();
@@ -1824,8 +1826,11 @@ async function appTourEnsureContext(step) {
     } else if (ctx === 'goals' && goalsOverlay && !goalsOverlay.classList.contains('open')) {
         // פותחים מהמטמון בלי טעינה מחדש - רינדור נוסף אחרי הטעינה היה מחליף את האלמנטים המודגשים
         goalsOverlay.classList.add('open');
+        goalsOverlay.setAttribute('aria-hidden', 'false');
         const wrapper = document.querySelector('.phone-wrapper');
         if (wrapper) wrapper.classList.add('vision-open');
+        const scroll = document.getElementById('goals-view-scroll');
+        if (scroll) scroll.scrollTop = 0;
         renderVisionGoalsList();
         changed = true;
     } else if (ctx === 'notebooks' && notebooksSection && !notebooksSection.classList.contains('active-tab')) {
@@ -1891,13 +1896,7 @@ function appTourRender(step) {
     clearTimeout(appTourDemoTimer);
     demoEl.innerHTML = '';
     demoEl.classList.toggle('hidden', !step.demo);
-    if (step.demo === 'goal') {
-        demoEl.appendChild(buildTourDemoGoalCard());
-        // בכרטיס האמיתי הגב גולל בגובה קבוע - בדוגמה הכרטיס גבוה מספיק כדי שכל הצעדים והפרס ייראו
-        const demoCard = demoEl.querySelector('.app-tour-demo-card');
-        const demoBack = demoCard && demoCard.querySelector('.vision-card-back');
-        if (demoBack && demoBack.scrollHeight > demoBack.clientHeight) demoCard.style.height = `${demoBack.scrollHeight + 2}px`;
-    }
+    if (step.demo === 'goal') demoEl.appendChild(buildTourDemoGoalPath());
     const titleEl = layer.querySelector('.app-tour-title');
     titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourEsc(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
     layer.querySelector('.app-tour-text').textContent = t(step.text);
@@ -1937,34 +1936,16 @@ function appTourFlowsHtml() {
     }).join('')}</div>`).join('');
 }
 
-// כרטיס יעד לדוגמה בתוך הסיור (לפי בקשה מפורשת - "שיהפוך גם ויראה את הצעדים והשלבים"): אותו כרטיס
-// אמיתי של "היעדים שלי" (renderVisionGoalCard) עם יעד דוגמה שלא נשמר בשום מקום. מתהפך לבד אחרי רגע
-// כדי להראות את הצעדים, ולחיצה הופכת אותו הלוך ושוב. הכפתורים שבתוכו לא פעילים (רק תצוגה)
+// שביל לדוגמה בתוך הסיור: אותו שביל אמיתי של "היעדים שלי" (buildGoalPath) עם יעד דוגמה שלא נשמר
+// בשום מקום - שתי תחנות מאחור, האבן של היום עם הצעד הקטן, והדגל. מצטייר כשהשלב נפתח (רק תצוגה)
 let appTourDemoTimer = 0;
-function buildTourDemoGoalCard() {
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 24);
-    const goal = { id: 'tour-demo-goal', title: t('apptour_demo_goal_title'), category: 'health', track_type: 'steps', why: t('apptour_demo_goal_why'), reward: t('apptour_demo_goal_reward'), target_date: getLocalDateString(deadline), image_url: '', is_achieved: false, created_at: new Date(Date.now() - 6 * 86400000).toISOString() };
-    const milestones = [1, 2, 3, 4].map(i => ({ id: `tour-demo-step-${i}`, goal_id: goal.id, title: t(`apptour_demo_goal_step_${i}`), is_done: i <= 2, sort_order: i, due_date: null }));
-    // ההתקדמות של כרטיס נספרת מהמטמון של הצעדים - הדוגמה נכנסת אליו רק לרגע הציור
-    const savedMilestones = visionMilestonesCache;
-    let card;
-    visionMilestonesCache = savedMilestones.concat(milestones);
-    try { card = renderVisionGoalCard(goal, milestones); } finally { visionMilestonesCache = savedMilestones; }
-    card.classList.add('app-tour-demo-card');
-    card.removeAttribute('data-goal-id');
-    // בלי תמונה החזית ריקה - איור גדול במקום התמונה שמשתמשים בדרך כלל מוסיפים
-    const demoFront = card.querySelector('.vision-card-front');
-    if (demoFront) demoFront.insertAdjacentHTML('afterbegin', '<span class="app-tour-demo-art" aria-hidden="true">🏃</span>');
+function buildTourDemoGoalPath() {
+    const goal = { id: 'tour-demo-goal', title: t('apptour_demo_goal_title'), icon: '🏃', track_type: 'steps', reminder_freq: 'daily', reminder_text: t('apptour_demo_goal_small_step'), is_achieved: false, created_at: new Date(Date.now() - 17 * 86400000).toISOString() };
+    const milestones = [1, 2, 3].map(i => ({ id: `tour-demo-step-${i}`, goal_id: goal.id, title: t(`apptour_demo_goal_step_${i}`), is_done: i <= 2, sort_order: i }));
     const wrap = document.createElement('div');
-    wrap.className = 'app-tour-demo-wrap';
-    wrap.appendChild(card);
-    const hint = document.createElement('p');
-    hint.className = 'app-tour-demo-hint';
-    hint.textContent = t('apptour_demo_tap_hint');
-    wrap.appendChild(hint);
-    wrap.addEventListener('click', () => { clearTimeout(appTourDemoTimer); card.classList.toggle('flipped'); });
-    appTourDemoTimer = setTimeout(() => card.classList.add('flipped'), 1700);
+    wrap.className = 'app-tour-demo-wrap gv-demo';
+    wrap.insertAdjacentHTML('beforeend', `<div class="gv-demo-meta"><span>${visionEsc(t('gv_journey_day').replace('{n}', 18))}</span><span>${visionEsc(t('gv_stations_progress').replace('{done}', 2).replace('{total}', 3))}</span></div>`);
+    wrap.appendChild(buildGoalPath(goal, milestones, { pct: 67, label: '', reached: false }, { compact: true, demo: true, animate: true }));
     return wrap;
 }
 
@@ -2126,7 +2107,7 @@ async function maybeAutoStartAppTour() {
     for (let i = 0; i < 50; i++) {
         if (appTourActive) return;
         const loginOverlay = document.getElementById('login-overlay');
-        const busy = document.querySelector('.apple-modal.open, .hamburger-drawer-overlay.open, #today-peek-content-panel.open')
+        const busy = document.querySelector('.apple-modal.open, .hamburger-drawer-overlay.open, .goals-view.open, #today-peek-content-panel.open')
             || (loginOverlay && loginOverlay.style.display !== 'none');
         const homePanel = document.querySelector('.home-hero-panel');
         const onHome = homePanel && !homePanel.classList.contains('hidden') && !document.querySelector('.tab-content.active-tab');
@@ -8397,6 +8378,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'receipts_feature', category: 'finance' },
     { id: 'receipts_total', category: 'finance' },
     { id: 'finance_monthly_balance', category: 'finance' },
+    { id: 'goal_small_steps', category: 'goals' },
     { id: 'monthly_goal_explain', category: 'goals' },
     { id: 'vision_board_today', category: 'goals' },
     { id: 'goal_days_challenge', category: 'goals' },
@@ -9161,35 +9143,6 @@ function updateCustomSelectDisplay(selectId) {
     if (!select || !display) return;
     const opt = select.options[select.selectedIndex];
     display.textContent = opt ? opt.textContent : '';
-}
-
-// ויזואליזציית "הליכה למטרה": דמות שמתקדמת לאורך מסלול לפי אחוז ההתקדמות,
-// עם דגל בקצה (במקום פס התקדמות רגיל) - הרעיון שעלה בשיחת ה-brainstorm
-// הראשונית על גיימיפיקציה, כאן ממומש רק ליעד החודשי (לפי בקשה מפורשת - לא
-// בכל מקום). GOAL_PATH_STEP_COUNT צעדים בדידים (כמו נקודות ציון שבועיות
-// גסות) - inset-inline-start/margin-inline-start (לא left/transform) כדי
-// שהמסלול יתהפך נכון אוטומטית בעברית (RTL) לעומת אנגלית (LTR)
-const GOAL_PATH_STEP_COUNT = 4;
-// היום משמש את כרטיס 🎯 יעד החודש ב"היעדים שלי" (תצוגה בלבד, בלי גרירה)
-function buildGoalPathHtml(pct, achieved, draggable, targetValue) {
-    const clampedPct = Math.max(0, Math.min(100, pct || 0));
-    const steps = Array.from({ length: GOAL_PATH_STEP_COUNT + 1 }, (_, i) => {
-        const stepPct = (i / GOAL_PATH_STEP_COUNT) * 100;
-        const reached = clampedPct >= stepPct - 1;
-        return `<span class="goal-path-step${reached ? ' reached' : ''}" style="inset-inline-start: ${stepPct}%;"></span>`;
-    }).join('');
-    const avatarEmoji = achieved ? '🎉' : '🚶';
-    const draggableAttrs = draggable ? ` data-draggable="true" data-target-value="${targetValue}"` : '';
-    return `
-        <div class="goal-path-perspective">
-            <div class="goal-path-track"${draggableAttrs}>
-                <div class="goal-path-line"></div>
-                ${steps}
-                <div class="goal-path-avatar${draggable ? ' draggable' : ''}" style="inset-inline-start: ${clampedPct}%;">${avatarEmoji}</div>
-                <div class="goal-path-flag">🎯</div>
-            </div>
-        </div>
-    `;
 }
 
 // נשמר לשימוש כפתור השיתוף האופציונלי (shareGoalAchievement) - לא הצגה בלבד
@@ -16674,7 +16627,7 @@ function renderRoutineNudge() {
             <div class="routine-nudge-meta">${n.time ? `${escapeHtmlForReport(n.time)} · ` : ''}${escapeHtmlForReport(where)}</div>
             <p class="routine-nudge-text">${escapeHtmlForReport(t('routine_nudge_days').replace('{n}', n.sinceDays))} ${escapeHtmlForReport(t('routine_nudge_question'))}</p>
             <div class="routine-nudge-actions">
-                <button type="button" class="routine-nudge-btn primary" style="grid-column: 1 / -1;" onclick="routineNudgeKeep()">✓ ${escapeHtmlForReport(t('routine_nudge_keep'))}</button>
+                <button type="button" class="routine-nudge-btn primary" onclick="routineNudgeKeep()">✓ ${escapeHtmlForReport(t('routine_nudge_keep'))}</button>
                 <button type="button" class="routine-nudge-btn" onclick="routineNudgeChange()">✏️ ${escapeHtmlForReport(t('routine_nudge_change'))}</button>
                 <button type="button" class="routine-nudge-btn" onclick="routineNudgeRemove()">🗑️ ${escapeHtmlForReport(t('routine_nudge_remove'))}</button>
             </div>
@@ -16762,18 +16715,35 @@ const VISION_GOAL_CATEGORY_PRESETS = [
 let visionGoalsCache = [];
 let visionMilestonesCache = [];
 
-function openGoalsVisionDrawer() {
-    const overlay = document.getElementById('vision-drawer-overlay');
-    if (overlay) overlay.classList.add('open');
+// מסך "היעדים שלי" (מסך מלא, ר' renderVisionGoalsList). goalId - לפתוח ישר על השביל של יעד מסוים
+function openGoalsVisionDrawer(goalId) {
+    const view = document.getElementById('vision-drawer-overlay');
+    if (view) { view.classList.add('open'); view.setAttribute('aria-hidden', 'false'); }
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.add('vision-open');
+    if (goalId) visionSelectedGoalId = goalId;
+    else {
+        // הישג שנבחר בפעם הקודמת - פותחים שוב על היעדים הפעילים
+        const sel = visionGoalsCache.find(g => g.id === visionSelectedGoalId);
+        if (sel && sel.is_achieved) visionSelectedGoalId = null;
+    }
+    visionAnimatePath = true;
+    const scroll = document.getElementById('goals-view-scroll');
+    if (scroll) scroll.scrollTop = 0;
+    // מהמטמון מיד, ואחרי הטעינה שוב (בפעם הראשונה - השביל מצטייר אחרי הטעינה)
+    renderVisionGoalsList();
+    if (!visionGoalsCache.length) visionAnimatePath = true;
     loadVisionGoals();
 }
 function closeGoalsVisionDrawer() {
-    const overlay = document.getElementById('vision-drawer-overlay');
-    if (overlay) overlay.classList.remove('open');
+    const view = document.getElementById('vision-drawer-overlay');
+    if (view) { view.classList.remove('open'); view.setAttribute('aria-hidden', 'true'); }
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.remove('vision-open');
+}
+function isGoalsViewOpen() {
+    const view = document.getElementById('vision-drawer-overlay');
+    return !!(view && view.classList.contains('open'));
 }
 
 // --- מחברת "📝 משימות" (שיעורי הבית של פעם) - המחברת הקבועה על המדף העליון ב"המחברות שלי"
@@ -19133,8 +19103,8 @@ async function loadVisionGoals() {
     ]);
     visionGoalsCache = goalsRes.data || [];
     visionMilestonesCache = milestonesRes.data || [];
-    // סימוני "עמדתי היום": אתגרי ימים + תזכורות של יעדי ספירה/משקל (✓ בהצצה להיום)
-    const checkinGoalIds = visionGoalsCache.filter(g => g.track_type === 'days' || g.reminder_freq).map(g => g.id);
+    // סימוני "✓ עשיתי היום" / "עמדתי היום" של כל היעדים (אתגרי ימים, צעדים קטנים, 7 הימים האחרונים)
+    const checkinGoalIds = visionGoalsCache.map(g => g.id);
     const [checkinsRes, linksRes] = await Promise.all([
         checkinGoalIds.length ? supabaseClient.from('vision_goal_checkins').select('*').eq('user_id', currentUserId).in('goal_id', checkinGoalIds) : Promise.resolve({ data: [] }),
         supabaseClient.from('routine_items').select('id, tab_id, time, vision_milestone_id').eq('user_id', currentUserId).not('vision_milestone_id', 'is', null),
@@ -19256,7 +19226,7 @@ function visionDoneDays(goal) {
 }
 // רצף: ימים רצופים עד היום (אם היום עוד לא הושלם - עד אתמול)
 function visionStreak(goal) {
-    const done = new Set(visionDoneDays(goal));
+    const done = new Set(visionGoalDayDates(goal));
     const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -19290,76 +19260,200 @@ function visionPace(goal, pct, deadline) {
     return 'behind';
 }
 
-function visionChipsHtml(goal, prog, showReward) {
-    const chips = [];
+// תגיות מתחת לשם היעד: 🎯 יעד החודש, כמה ימים נשארו, קצב (🚀 / ✅ / ⚠️) ורצף 🔥
+function visionTagsHtml(goal, prog) {
+    const tags = [];
+    if (visionIsFocus(goal)) tags.push(`<span class="gv-tag is-focus">${visionEsc(t('vision_focus_ribbon'))}</span>`);
     if (!goal.is_achieved) {
         const deadline = visionEffectiveDeadline(goal);
         const days = visionDaysLeft(deadline);
         if (days !== null) {
             const cls = days < 0 ? ' is-overdue' : (days <= 3 ? ' is-soon' : '');
-            chips.push(`<span class="vision-chip${cls}">📅 ${visionEsc(visionDaysLeftText(days))}</span>`);
+            tags.push(`<span class="gv-tag${cls}">📅 ${visionEsc(visionDaysLeftText(days))}</span>`);
         }
         const pace = visionPace(goal, prog.pct, deadline);
         const paceMap = { ahead: ['🚀', 'vision_pace_ahead', 'is-ahead'], on_track: ['✅', 'vision_pace_on_track', 'is-on-track'], behind: ['⚠️', 'vision_pace_behind', 'is-behind'] };
-        if (pace) chips.push(`<span class="vision-chip ${paceMap[pace][2]}">${paceMap[pace][0]} ${visionEsc(t(paceMap[pace][1]))}</span>`);
+        if (pace) tags.push(`<span class="gv-tag ${paceMap[pace][2]}">${paceMap[pace][0]} ${visionEsc(t(paceMap[pace][1]))}</span>`);
+        const streak = visionStreak(goal);
+        if (streak >= 2) tags.push(`<span class="gv-tag is-streak">${visionEsc(t('vision_days_streak').replace('{n}', streak))}</span>`);
     }
-    if (showReward && goal.reward) chips.push(`<span class="vision-chip is-reward">🎁 ${visionEsc(goal.reward)}</span>`);
-    return chips.length ? `<div class="vision-card-chips">${chips.join('')}</div>` : '';
+    return tags.length ? `<div class="gv-tags">${tags.join('')}</div>` : '';
+}
+
+// --- 🎯 מסך "היעדים שלי" (עיצוב "מסע של צעדים", לפי בחירה מפורשת): פתק "לא 10" קבוע, הצעדים
+// הקטנים של היום מכל היעדים, צ'יפ לכל יעד ושביל אבנים של היעד שנבחר - תחנות שעברו ✓, האבן של
+// היום שזוהרת, מה שבהמשך והדגל. מתחת לשביל: "✓ עשיתי היום" עם 7 הימים האחרונים, התוכנית
+// (תחנות / מונה / שקילה), למה, פרס ופעולות ---
+let visionSelectedGoalId = null;
+let visionAnimatePath = false;
+let visionPathSeq = 0;
+const VISION_SELECTED_KEY = 'weekwise_goals_selected';
+const VISION_CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+
+function visionGoalIcon(goal) {
+    if (goal && goal.icon) return goal.icon;
+    const preset = goal ? VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === goal.category) : null;
+    return preset && preset.key !== 'other' ? preset.icon : '🎯';
+}
+// ימים שבהם עשו משהו ליעד: באתגר ימים - ימים שהושלמו; בשאר - סימוני "✓ עשיתי היום" (בלי תחנה)
+function visionGoalDayDates(goal) {
+    if (goal.track_type === 'days') return visionDoneDays(goal);
+    return [...new Set(visionCheckinsCache.filter(ch => ch.goal_id === goal.id && !ch.milestone_id).map(ch => ch.checkin_date))].sort();
+}
+function visionJourneyDay(goal) {
+    const start = new Date(goal.created_at);
+    start.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.max(1, Math.round((today - start) / 86400000) + 1);
+}
+function visionSmallStepText(goal) { return (goal.reminder_text || '').trim() || null; }
+function visionSmallStepFreqText(goal) {
+    if (goal.reminder_freq === 'daily') return t('vision_reminder_daily');
+    if (goal.reminder_freq === 'weekly') return t('vision_step_schedule_weekly_on').replace('{day}', new Date(2026, 9, 4 + (Number(goal.reminder_weekday) || 0)).toLocaleDateString(currentLang, { weekday: 'long' }));
+    return '';
+}
+function visionSortedMilestones(goalId) {
+    return visionMilestonesCache.filter(m => m.goal_id === goalId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+}
+// יעד החודש ראשון, אחריו יעדים עם תאריך (הקרוב ביותר ראשון), ואז לפי סדר יצירה
+function visionSortedActiveGoals() {
+    return visionGoalsCache.filter(g => !g.is_achieved).sort((a, b) => {
+        const fa = visionIsFocus(a), fb = visionIsFocus(b);
+        if (fa !== fb) return fa ? -1 : 1;
+        const da = visionEffectiveDeadline(a), db = visionEffectiveDeadline(b);
+        if (da && db && da !== db) return da.localeCompare(db);
+        if (da && !db) return -1;
+        if (db && !da) return 1;
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+}
+function resolveSelectedVisionGoal() {
+    let goal = visionGoalsCache.find(g => g.id === visionSelectedGoalId) || null;
+    if (!goal) {
+        let saved = null;
+        try { saved = localStorage.getItem(VISION_SELECTED_KEY); } catch {}
+        const active = visionSortedActiveGoals();
+        goal = active.find(g => g.id === saved) || active[0] || null;
+        visionSelectedGoalId = goal ? goal.id : null;
+    }
+    return goal;
+}
+function selectVisionGoal(goalId, scrollToPath) {
+    visionSelectedGoalId = goalId;
+    visionAnimatePath = true;
+    const goal = visionGoalsCache.find(g => g.id === goalId);
+    if (goal && !goal.is_achieved) { try { localStorage.setItem(VISION_SELECTED_KEY, goalId); } catch {} }
+    renderVisionGoalsList();
+    if (scrollToPath) {
+        const scroll = document.getElementById('goals-view-scroll');
+        const panel = document.getElementById('gv-goal');
+        if (scroll && panel) scroll.scrollTo({ top: Math.max(0, panel.offsetTop - 12), behavior: 'smooth' });
+    }
 }
 
 function renderVisionGoalsList() {
-    const list = document.getElementById('vision-goals-list');
+    const view = document.getElementById('vision-drawer-overlay');
+    if (!view) return;
+    const active = visionSortedActiveGoals();
+    const achieved = visionGoalsCache.filter(g => g.is_achieved).sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at));
     const empty = document.getElementById('vision-goals-empty');
-    const focusSlot = document.getElementById('vision-focus-slot');
+    if (empty) empty.classList.toggle('hidden', active.length > 0);
+    if (!active.length) renderVisionTemplates();
+    renderGoalsTodayStrip(active);
+    const selected = resolveSelectedVisionGoal();
+    renderGoalsChips(active, selected);
+    renderGoalPanel(selected);
+    // "יעדים שכבשתי" - הסקשן מוצג רק כשיש לפחות הישג אחד
     const achievedSection = document.getElementById('vision-goals-achieved-section');
     const achievedList = document.getElementById('vision-goals-achieved-list');
-    if (!list) return;
-    // כרטיס שהיה הפוך (למשל תוך כדי +1 בגב הכרטיס) נשאר הפוך אחרי הרינדור
-    const flippedIds = new Set(Array.from(document.querySelectorAll('.vision-goal-card.flipped')).map(el => el.dataset.goalId));
-    list.innerHTML = '';
-    if (focusSlot) focusSlot.innerHTML = '';
-    if (achievedList) achievedList.innerHTML = '';
-
-    const activeGoals = visionGoalsCache.filter(g => !g.is_achieved);
-    const focusGoal = activeGoals.find(visionIsFocus);
-    // שאר היעדים: קודם אלה שיש להם תאריך (הקרוב ביותר ראשון), ואז לפי סדר יצירה
-    const otherGoals = activeGoals.filter(g => g !== focusGoal).sort((a, b) => {
-        const da = visionEffectiveDeadline(a), db = visionEffectiveDeadline(b);
-        if (da && db) return da.localeCompare(db);
-        if (da) return -1;
-        if (db) return 1;
-        return new Date(a.created_at) - new Date(b.created_at);
-    });
-    // ההישג האחרון קודם (לא סדר-יצירה מקורי) - לפי בקשה מפורשת ("כל חזון
-    // חדש יהיה בשורה למעלה"), כך שהטרופיאה הכי טרייה תמיד הכי בולטת
-    const achievedGoals = visionGoalsCache.filter(g => g.is_achieved).sort((a, b) => new Date(b.achieved_at) - new Date(a.achieved_at));
-
-    if (empty) empty.classList.toggle('hidden', activeGoals.length > 0);
-    if (!activeGoals.length) renderVisionTemplates();
-
-    if (focusSlot) {
-        if (focusGoal) {
-            focusSlot.appendChild(renderVisionGoalCard(focusGoal, visionMilestonesCache.filter(m => m.goal_id === focusGoal.id), { focus: true }));
-        } else if (activeGoals.length) {
-            const hint = document.createElement('div');
-            hint.className = 'vision-focus-hint';
-            hint.innerHTML = `<span class="vision-focus-hint-icon" aria-hidden="true">🎯</span><span>${visionEsc(t('vision_focus_empty_hint'))}${isPremiumUser ? '' : ' ⭐'}</span>`;
-            focusSlot.appendChild(hint);
-        }
+    if (achievedSection) achievedSection.classList.toggle('hidden', !achieved.length);
+    if (achievedList) {
+        achievedList.innerHTML = '';
+        achieved.forEach(goal => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'gv-achieved-card' + (selected && selected.id === goal.id ? ' selected' : '');
+            const date = goal.achieved_at ? new Date(goal.achieved_at).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+            card.innerHTML = `<span class="gv-achieved-trophy" aria-hidden="true">🏆</span><span class="gv-achieved-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><span class="gv-achieved-name">${visionEsc(goal.title)}</span>${date ? `<span class="gv-achieved-date">${visionEsc(date)}</span>` : ''}`;
+            card.onclick = () => selectVisionGoal(goal.id, true);
+            achievedList.appendChild(card);
+        });
     }
-    otherGoals.forEach(goal => list.appendChild(renderVisionGoalCard(goal, visionMilestonesCache.filter(m => m.goal_id === goal.id))));
+}
 
-    // "יעדים שכבשתי" - קבועים כאן לצמיתות, לא נעלמים אוטומטית לעולם (ר' ההערה
-    // ב-index.html) - הסקשן עצמו מוצג רק כשיש לפחות הישג אחד
-    if (achievedSection) achievedSection.classList.toggle('hidden', achievedGoals.length === 0);
-    if (achievedList) achievedGoals.forEach(goal => achievedList.appendChild(renderVisionGoalCard(goal, visionMilestonesCache.filter(m => m.goal_id === goal.id))));
+// --- הצעדים הקטנים של היום (אותם פריטים בדיוק כמו בהצצה להיום, ר' getPeekGoalTaskItems) - כרטיס
+// לכל צעד עם ✓ מהיר; לחיצה על הטקסט פותחת את השביל של היעד ---
+function renderGoalsTodayStrip(activeGoals) {
+    const section = document.getElementById('gv-today');
+    const list = document.getElementById('gv-today-list');
+    const count = document.getElementById('gv-today-count');
+    if (!section || !list) return;
+    section.classList.toggle('hidden', !activeGoals.length);
+    list.innerHTML = '';
+    if (count) count.textContent = '';
+    if (!activeGoals.length) return;
+    const items = getPeekGoalTaskItems();
+    if (!items.length) {
+        const hint = document.createElement('div');
+        hint.className = 'gv-today-empty';
+        hint.textContent = t('gv_today_empty');
+        list.appendChild(hint);
+        return;
+    }
+    const doneCount = items.filter(it => it.done).length;
+    if (count) count.textContent = doneCount === items.length ? t('gv_today_all_done') : visionLtr(`${doneCount} / ${items.length}`);
+    items.forEach(item => list.appendChild(buildGoalsTodayCard(item)));
+}
+function buildGoalsTodayCard(item) {
+    const card = document.createElement('div');
+    card.className = 'gv-today-card' + (item.done ? ' is-done' : '');
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'gv-check';
+    check.setAttribute('aria-pressed', item.done ? 'true' : 'false');
+    check.setAttribute('aria-label', item.text);
+    check.innerHTML = VISION_CHECK_SVG;
+    check.onclick = (e) => {
+        e.stopPropagation();
+        // משוב מיידי - הרינדור המלא מגיע אחרי השמירה
+        const next = !card.classList.contains('is-done');
+        card.classList.toggle('is-done', next);
+        check.setAttribute('aria-pressed', next ? 'true' : 'false');
+        item.toggle(next);
+    };
+    const body = document.createElement('button');
+    body.type = 'button';
+    body.className = 'gv-today-body';
+    body.innerHTML = `<span class="gv-today-text">${visionEsc(item.icon)} ${visionEsc(item.text)}</span>${item.tag ? `<span class="gv-today-tag">${visionEsc(item.tag)}</span>` : ''}`;
+    body.onclick = () => { if (item.goalId) selectVisionGoal(item.goalId, true); };
+    card.appendChild(check);
+    card.appendChild(body);
+    return card;
+}
 
-    flippedIds.forEach(id => {
-        const card = document.querySelector(`.vision-goal-card[data-goal-id="${id}"]`);
-        if (!card) return;
-        card.classList.add('flipped', 'no-flip-anim');
-        requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('no-flip-anim')));
+// צ'יפ לכל יעד פעיל (רק כשיש יותר מיעד אחד) - בוחרים איזה שביל לראות
+function renderGoalsChips(activeGoals, selected) {
+    const wrap = document.getElementById('gv-chips');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    wrap.classList.toggle('hidden', activeGoals.length < 2);
+    if (activeGoals.length < 2) return;
+    activeGoals.forEach(goal => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        const isSel = !!(selected && selected.id === goal.id);
+        chip.className = 'gv-chip-goal' + (isSel ? ' selected' : '');
+        chip.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+        chip.innerHTML = `<span aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><span class="gv-chip-name">${visionEsc(goal.title)}</span>${visionIsFocus(goal) ? '<span class="gv-chip-focus" aria-hidden="true">🎯</span>' : ''}`;
+        chip.onclick = () => selectVisionGoal(goal.id);
+        wrap.appendChild(chip);
     });
+    const sel = wrap.querySelector('.gv-chip-goal.selected');
+    if (sel) {
+        const target = sel.offsetLeft - (wrap.clientWidth - sel.offsetWidth) / 2;
+        wrap.scrollLeft = target;
+    }
 }
 
 // מצב ריק: דוגמאות מוכנות - לחיצה פותחת את חלון היעד כבר ממולא (אפשר לשנות הכול)
@@ -19370,8 +19464,8 @@ function renderVisionTemplates() {
     VISION_GOAL_TEMPLATES.forEach(tpl => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'vision-template-chip';
-        btn.innerHTML = `<span class="vision-template-icon" aria-hidden="true">${tpl.icon}</span><span>${visionEsc(t('vision_tpl_' + tpl.key))}</span>`;
+        btn.className = 'gv-template';
+        btn.innerHTML = `<span class="gv-template-icon" aria-hidden="true">${tpl.icon}</span><span>${visionEsc(t('vision_tpl_' + tpl.key))}</span>`;
         btn.onclick = () => openVisionGoalModal(null, tpl);
         wrap.appendChild(btn);
     });
@@ -19390,6 +19484,8 @@ function renderPeekFocusGoal() {
         <span class="peek-focus-goal-title">${visionEsc(goal.title)}</span>
         <span class="peek-focus-goal-bar"><span style="width:${prog.pct}%"></span></span>
         <span class="peek-focus-goal-meta"><span>${visionEsc(prog.label)}</span><span>${prog.pct}%</span></span>`;
+    // נפתח ישר על השביל של יעד החודש
+    el.onclick = () => { closeTodayPeekPanel(); openGoalsVisionDrawer(goal.id); };
     el.classList.remove('hidden');
 }
 
@@ -19467,259 +19563,459 @@ function buildVisionDayTaskRow(goal, milestone) {
     return row;
 }
 
-function renderVisionGoalCard(goal, milestones, opts = {}) {
-    const isFocus = !!opts.focus;
+// --- הפאנל של היעד שנבחר: כותרת (באנר כשיש תמונה), השביל, כרטיס "עשיתי היום", התוכנית, למה,
+// פרס ופעולות. יעד שהושג מוצג עם השביל כולו עד הגביע 🏆 ---
+function renderGoalPanel(goal) {
+    const panel = document.getElementById('gv-goal');
+    if (!panel) return;
+    panel.innerHTML = '';
+    panel.classList.toggle('hidden', !goal);
+    if (!goal) { visionAnimatePath = false; return; }
     const prog = visionGoalProgress(goal);
     const track = goal.track_type || 'steps';
+    const milestones = visionSortedMilestones(goal.id);
 
-    const card = document.createElement('div');
-    card.className = 'vision-goal-card' + (isFocus ? ' is-focus' : '') + (goal.is_achieved ? ' is-achieved' : '');
-    card.dataset.goalId = goal.id;
-
-    const inner = document.createElement('div');
-    inner.className = 'vision-card-inner';
-
-    const front = document.createElement('div');
-    front.className = 'vision-card-face vision-card-front';
-    const imgUrl = goal.image_url || '';
-    front.style.backgroundImage = imgUrl
-        ? `linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.78) 100%), url("${imgUrl.replace(/"/g, '%22')}")`
-        : (isFocus ? 'linear-gradient(150deg, rgba(236,72,153,0.55), rgba(124,58,237,0.55) 55%, rgba(20,10,40,0.85))' : 'linear-gradient(160deg, rgba(168,85,247,0.35), rgba(0,0,0,0.6))');
-    front.onclick = () => flipVisionCard(goal.id);
-
-    const top = document.createElement('div');
-    top.className = 'vision-card-top';
-    const categoryPreset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === goal.category);
-    if (isFocus) {
-        const ribbon = document.createElement('span');
-        ribbon.className = 'vision-focus-ribbon';
-        ribbon.textContent = `${t('vision_focus_ribbon')} · ${formatMonthLabel(currentMonthKey())}`;
-        top.appendChild(ribbon);
-    } else if (categoryPreset || goal.category) {
-        const tag = document.createElement('span');
-        tag.className = 'vision-card-category-tag';
-        // קטגוריה שהוקלדה ידנית ("אחר") נשמרת כטקסט חופשי ומוצגת כמו שהיא
-        tag.textContent = categoryPreset ? `${categoryPreset.icon} ${t('vision_goal_category_' + categoryPreset.key)}` : `🎯 ${goal.category}`;
-        top.appendChild(tag);
-    }
-    if (!goal.is_achieved) {
-        const pin = document.createElement('button');
-        pin.type = 'button';
-        pin.className = 'vision-pin-btn' + (isFocus ? ' active' : '');
-        pin.textContent = '🎯';
-        pin.title = t(isFocus ? 'vision_focus_unpin_title' : 'vision_focus_pin_title');
-        pin.setAttribute('aria-label', pin.title);
-        pin.onclick = (e) => { e.stopPropagation(); toggleVisionFocus(goal.id); };
-        top.appendChild(pin);
-    }
-    front.appendChild(top);
-    // גביע נוצץ-וזוהר על יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים במה שעשו")
+    const head = document.createElement('div');
+    head.className = 'gv-goal-head' + (goal.image_url ? ' has-image' : '');
+    if (goal.image_url) head.style.setProperty('--gv-goal-image', `url("${String(goal.image_url).replace(/"/g, '%22')}")`);
+    let meta1;
     if (goal.is_achieved) {
-        const trophy = document.createElement('div');
-        trophy.className = 'vision-card-trophy-badge';
-        trophy.title = t('vision_goal_achieved_badge_title');
-        trophy.textContent = '🏆';
-        front.appendChild(trophy);
-    }
-    const nameEl = document.createElement('div');
-    nameEl.className = 'vision-card-front-name';
-    nameEl.textContent = goal.title;
-    front.appendChild(nameEl);
-
-    const chipsHtml = visionChipsHtml(goal, prog, isFocus);
-    if (chipsHtml) front.insertAdjacentHTML('beforeend', chipsHtml);
-
-    if (isFocus) {
-        // יעד החודש: מסלול ההליכה אל הדגל (מהיעד החודשי הישן) במקום פס רגיל
-        front.insertAdjacentHTML('beforeend', `<div class="vision-focus-path">${buildGoalPathHtml(prog.pct, prog.reached || goal.is_achieved, false, 0)}</div>`);
-    } else if (track === 'days' && (Number(goal.target_value) || 0) <= 31) {
-        // אתגר ימים: נקודה לכל יום - הנקודות מתמלאות כל יום שעומדים בו
-        const target = Math.max(1, Number(goal.target_value) || 1);
-        const doneCount = Math.min(visionDoneDays(goal).length, target);
-        front.insertAdjacentHTML('beforeend', `<div class="vision-days-dots" aria-hidden="true">${Array.from({ length: target }, (_, i) => `<span class="${i < doneCount ? 'done' : ''}"></span>`).join('')}</div>`);
+        const date = goal.achieved_at ? new Date(goal.achieved_at).toLocaleDateString(currentLang, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        meta1 = `🏆 ${t('gv_achieved_on').replace('{date}', date)}`;
     } else {
-        const progressRow = document.createElement('div');
-        progressRow.className = 'vision-card-progress-row';
-        progressRow.innerHTML = `<div class="progress-bar-bg"><div class="progress-bar-fill${prog.pct >= 100 ? ' completed' : ''}" style="width:${prog.pct}%"></div></div><span class="vision-card-progress-pct">${prog.pct}%</span>`;
-        front.appendChild(progressRow);
+        meta1 = t('gv_journey_day').replace('{n}', visionJourneyDay(goal));
     }
+    let meta2 = prog.label;
+    if (track === 'steps') meta2 = milestones.length ? t('gv_stations_progress').replace('{done}', milestones.filter(m => m.is_done).length).replace('{total}', milestones.length) : '';
+    head.innerHTML = `
+        <div class="gv-goal-title-row"><span class="gv-goal-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><h3 class="gv-goal-title">${visionEsc(goal.title)}</h3></div>
+        <div class="gv-meta"><span>${visionEsc(meta1)}</span>${meta2 ? `<span>${visionEsc(meta2)}</span>` : ''}</div>
+        ${visionTagsHtml(goal, prog)}`;
+    panel.appendChild(head);
+
+    panel.appendChild(buildGoalPath(goal, milestones, prog, { animate: visionAnimatePath }));
+    visionAnimatePath = false;
+    if (!goal.is_achieved) panel.appendChild(buildGoalActionCard(goal, milestones));
+    const plan = buildGoalPlan(goal, milestones, prog);
+    if (plan) panel.appendChild(plan);
+    if (goal.why) panel.appendChild(buildGoalNoteRow('gv-why', '💭', t('vision_why_label'), goal.why));
+    if (goal.reward) panel.appendChild(buildGoalNoteRow('gv-reward', '🎁', t('gv_reward_label'), goal.reward));
+    panel.appendChild(buildGoalActions(goal));
+}
+
+function buildGoalNoteRow(cls, icon, label, text) {
+    const row = document.createElement('div');
+    row.className = `gv-note-row ${cls}`;
+    row.innerHTML = `<span class="gv-note-row-icon" aria-hidden="true">${icon}</span><span><span class="gv-note-row-label">${visionEsc(label)}</span>${visionEsc(text)}</span>`;
+    return row;
+}
+
+// מודל השביל: אבן לכל תחנה (תחנות) / יום (אתגר ימים) / יחידה או שמינית מהיעד (ספירה) / שמינית
+// מהדרך (משקל). current = האבן הראשונה שעוד לא הושלמה (-1 כשהכול הושלם)
+function visionPathModel(goal, milestones, prog) {
+    const track = goal.track_type || 'steps';
+    let stones = [];
+    let flag = goal.title;
+    if (track === 'steps') {
+        stones = milestones.map((m, i) => ({ num: i + 1, title: m.title, done: !!m.is_done, milestoneId: m.id }));
+    } else if (track === 'days') {
+        const target = Math.max(1, Math.min(365, Number(goal.target_value) || 1));
+        const done = Math.min(visionDoneDays(goal).length, target);
+        stones = Array.from({ length: target }, (_, i) => ({ num: i + 1, done: i < done }));
+        flag = t('gv_flag_days').replace('{n}', target);
+    } else if (track === 'number') {
+        const target = Number(goal.target_value) || 0;
+        const cur = Number(goal.current_value) || 0;
+        if (target > 0 && Number.isInteger(target) && target <= 40) {
+            stones = Array.from({ length: target }, (_, i) => ({ num: i + 1, done: cur >= i + 1 }));
+        } else if (target > 0) {
+            // יעד גדול (למשל 100 ק״מ) - 6 אבנים, כל אחת שישית מהדרך, כך שכל השביל נראה בלי קיצור
+            stones = Array.from({ length: 6 }, (_, i) => {
+                const v = (target * (i + 1)) / 6;
+                return { num: Math.round(v * 10) / 10, done: cur >= v - 1e-9 };
+            });
+        }
+        flag = `${visionFmt(target)}${goal.unit ? ' ' + goal.unit : ''}`;
+    } else if (track === 'weight') {
+        stones = Array.from({ length: 6 }, (_, i) => ({ num: null, done: prog.pct >= ((i + 1) / 6) * 100 - 0.01 }));
+        if (goal.target_value != null) flag = `${visionFmt(goal.target_value)} ${t('monthly_goal_kg_unit')}`;
+    }
+    if (goal.is_achieved) stones.forEach(s => { s.done = true; });
+    return { stones, current: stones.findIndex(s => !s.done), flag, track };
+}
+
+// הבועה ליד האבן של היום: מה עושים עכשיו (הצעד הקטן / התחנה הבאה / היום באתגר) + פעולה מהירה
+function visionPathBubble(goal, model, milestones, isStart) {
+    const step = visionSmallStepText(goal);
+    if (isStart) {
+        return {
+            label: step ? t('gv_step_today') : '', text: step || t('gv_add_first_station'),
+            action: { text: t('gv_add_station_btn'), run: () => { const input = document.querySelector('#gv-goal .gv-plan .gv-add-row input'); if (input) { input.scrollIntoView({ block: 'center', behavior: 'smooth' }); input.focus({ preventScroll: true }); } } },
+        };
+    }
+    if (model.track === 'steps') {
+        const st = model.stones[model.current];
+        if (!st) return null;
+        return { label: t('gv_next_station'), text: st.title, sub: step ? `👣 ${step}` : '', action: { text: t('gv_station_done_btn'), run: () => toggleVisionMilestoneDone(st.milestoneId, goal.id, true) } };
+    }
+    if (model.track === 'days') {
+        const n = model.current + 1;
+        if (visionDoneDays(goal).includes(getLocalDateString())) return { label: t('gv_day_n').replace('{n}', n), text: t('gv_tomorrow_continue') };
+        return { label: t('gv_today_day_n').replace('{n}', n), text: milestones.length ? milestones.map(m => m.title).join(' · ') : goal.title };
+    }
+    if (model.track === 'number') {
+        const label = visionGoalProgress(goal).label;
+        return { label: step ? t('gv_step_today') : t('gv_progress_title'), text: step || label, sub: step ? label : '', action: { text: '+1', aria: t('vision_quick_add_title'), run: () => adjustVisionGoalNumber(goal.id, 1) } };
+    }
+    const now = visionLatestWeight != null ? t('gv_weight_now').replace('{w}', visionFmt(visionLatestWeight)) : t('vision_weight_no_data');
+    return step ? { label: t('gv_step_today'), text: step, sub: now } : { label: t('gv_progress_title'), text: now };
+}
+
+// השביל עצמו: SVG מתפתל (מסלול דהוי + החלק שכבר עברו בגרדיאנט) ואבנים מעליו. ארוך מדי? רואים
+// חלון סביב היום, עם "✓ N" למה שמאחור ו-"+N" למה שנשאר. compact = הדוגמה בסיור
+function buildGoalPath(goal, milestones, prog, opts = {}) {
+    const model = visionPathModel(goal, milestones, prog);
+    const L = model.stones.length;
+    const cur = model.current;
+    const MAX = 6;
+    let start = 0;
+    let end = L - 1;
+    if (L > MAX) {
+        const c = cur === -1 ? L - 1 : cur;
+        start = Math.max(0, c - 2);
+        end = Math.min(L - 1, start + MAX - 1);
+        start = Math.max(0, end - MAX + 1);
+    }
+    const nodes = [];
+    if (!L) nodes.push({ kind: goal.is_achieved ? 'done' : 'start', stone: { title: '' } });
+    if (L && start > 0) nodes.push({ kind: 'sum-done', n: start });
+    for (let i = start; L && i <= end; i++) {
+        const s = model.stones[i];
+        nodes.push({ kind: i === cur ? 'current' : (s.done ? 'done' : 'future'), stone: s });
+    }
+    if (L && end < L - 1) nodes.push({ kind: 'sum-future', n: L - 1 - end });
+    nodes.push({ kind: 'flag' });
+
+    const compact = !!opts.compact;
+    const k = compact ? 0.8 : 1;
+    const GAP = compact ? 54 : 70;
+    const PAD_T = compact ? 34 : 46;
+    const PAD_B = compact ? 30 : 40;
+    const rtl = document.documentElement.dir === 'rtl';
+    // האבן של היום תמיד בצד (שם יש מקום לבועה), והשביל מתפתל ממנה בגל
+    let focusIdx = nodes.findIndex(n => n.kind === 'current' || n.kind === 'start');
+    const hasBubble = focusIdx !== -1 && !goal.is_achieved && !opts.noBubble;
+    const walkedTo = focusIdx === -1 ? nodes.length - 1 : focusIdx;
+    if (focusIdx === -1) focusIdx = nodes.length - 1;
+    // מרווח נוסף מעל ומתחת לאבן של היום - שהבועה לא תעלה על האבנים השכנות
+    const EXTRA = hasBubble ? (compact ? 14 : 24) : 0;
+    const gapAfter = i => GAP + (i === focusIdx || i + 1 === focusIdx ? EXTRA : 0);
+    let H = PAD_T + PAD_B;
+    for (let i = 0; i < nodes.length - 1; i++) H += gapAfter(i);
+    let yCursor = H - PAD_B;
+    const pts = nodes.map((n, i) => {
+        let x = n.kind === 'flag' ? 50 : 50 + 24 * Math.sin((i - focusIdx + 1) * Math.PI / 2);
+        if (rtl) x = 100 - x;
+        const y = yCursor;
+        yCursor -= gapAfter(i);
+        return { x: Math.round(x * 10) / 10, y };
+    });
+    const f = v => Math.round(v * 10) / 10;
+    const segs = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
+        segs.push(`C ${f(p1.x + (p2.x - p0.x) / 6)} ${f(p1.y + (p2.y - p0.y) / 6)}, ${f(p2.x - (p3.x - p1.x) / 6)} ${f(p2.y - (p3.y - p1.y) / 6)}, ${f(p2.x)} ${f(p2.y)}`);
+    }
+    // "זנב" קצר מתחתית המסגרת אל האבן הראשונה - המסע התחיל עוד קודם
+    const head = `M ${f(pts[0].x)} ${H - 8} L ${f(pts[0].x)} ${f(pts[0].y)}`;
+    const full = `${head} ${segs.join(' ')}`;
+    const firstDone = nodes[0].kind === 'done' || nodes[0].kind === 'sum-done';
+    const walked = walkedTo > 0 ? `${head} ${segs.slice(0, walkedTo).join(' ')}` : (firstDone ? head : '');
+    const gid = `gvWalk${++visionPathSeq}`;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'gv-path' + (compact ? ' is-compact' : '') + (opts.animate ? ' draw-in' : '') + (goal.is_achieved ? ' is-achieved' : '');
+    wrap.style.height = `${H}px`;
+    wrap.innerHTML = `<svg class="gv-path-svg" viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="gv-path-track" d="${full}" vector-effect="non-scaling-stroke"></path></svg>`
+        + (walked ? `<svg class="gv-path-svg gv-path-walked" viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true" focusable="false"><defs><linearGradient id="${gid}" x1="0" y1="${H}" x2="0" y2="${f(pts[walkedTo].y)}" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color: var(--accent-purple)"></stop><stop offset="1" style="stop-color: var(--accent-pink)"></stop></linearGradient></defs><path class="gv-path-walk" d="${walked}" stroke="url(#${gid})" vector-effect="non-scaling-stroke"></path></svg>` : '');
+
+    // צד התווית/הבועה: הרחק מהמרכז, ובאבן שבמרכז - הרחק מהשכנה
+    const sideOf = i => {
+        const x = pts[i].x;
+        if (Math.abs(x - 50) > 1) return x > 50 ? 'left' : 'right';
+        const nb = pts[i + 1] || pts[i - 1];
+        return nb && nb.x > 50 ? 'left' : 'right';
+    };
+    const placeBeside = (el, i, r, cap) => {
+        const p = pts[i];
+        const side = sideOf(i);
+        el.classList.add(`is-${side}`);
+        el.style.top = `${p.y}px`;
+        const room = side === 'right' ? `calc(${f(100 - p.x)}% - ${r + 14}px)` : `calc(${f(p.x)}% - ${r + 14}px)`;
+        if (side === 'right') el.style.left = `calc(${f(p.x)}% + ${r + 10}px)`;
+        else el.style.right = `calc(${f(100 - p.x)}% + ${r + 10}px)`;
+        el.style.maxWidth = cap ? `min(${room}, ${cap}px)` : room;
+    };
+    const radius = { done: 21, future: 19, current: 30, start: 30, flag: 27 };
+    const lastIdx = Math.max(1, nodes.length - 1);
+    nodes.forEach((n, i) => {
+        const p = pts[i];
+        const node = document.createElement('span');
+        node.className = 'gv-node';
+        node.style.left = `${p.x}%`;
+        node.style.top = `${p.y}px`;
+        node.style.setProperty('--k', i);
+        let label = '';
+        if (n.kind === 'done') {
+            node.innerHTML = `<span class="gv-stone is-done" style="--mix: ${Math.round((i / lastIdx) * 100)}%">${VISION_CHECK_SVG}</span>`;
+            label = n.stone.title || '';
+        } else if (n.kind === 'future') {
+            const num = n.stone.num == null ? '' : (model.track === 'number' ? visionFmt(n.stone.num) : String(n.stone.num));
+            node.innerHTML = `<span class="gv-stone is-future">${visionEsc(num)}</span>`;
+            label = n.stone.title || '';
+        } else if (n.kind === 'sum-done') {
+            node.innerHTML = `<span class="gv-stone is-sum is-done" style="--mix: 0%">✓ ${visionLtr(String(n.n))}</span>`;
+        } else if (n.kind === 'sum-future') {
+            node.innerHTML = `<span class="gv-stone is-sum is-future">${visionLtr('+' + n.n)}</span>`;
+        } else if (n.kind === 'current' || n.kind === 'start') {
+            node.innerHTML = `<span class="gv-stone is-current">${visionEsc(visionGoalIcon(goal))}</span>`;
+        } else {
+            node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">${goal.is_achieved ? '🏆' : '🏁'}</span>`;
+            label = model.flag;
+        }
+        wrap.appendChild(node);
+        if (label) {
+            const lab = document.createElement('span');
+            lab.className = 'gv-label' + (n.kind === 'flag' ? ' is-flag' : '') + (n.kind === 'done' ? ' is-done' : '');
+            lab.textContent = label;
+            placeBeside(lab, i, Math.round((radius[n.kind] || 20) * k), 0);
+            wrap.appendChild(lab);
+        }
+        if ((n.kind === 'current' || n.kind === 'start') && !goal.is_achieved && !opts.noBubble) {
+            const b = visionPathBubble(goal, model, milestones, n.kind === 'start');
+            if (!b) return;
+            const bubble = document.createElement('div');
+            bubble.className = 'gv-bubble';
+            if (b.label) bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-label">${visionEsc(b.label)}</span>`);
+            bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-text">${visionEsc(b.text)}</span>`);
+            if (b.sub) bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-sub">${visionEsc(b.sub)}</span>`);
+            if (b.action && !opts.demo) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'gv-bubble-btn';
+                btn.textContent = b.action.text;
+                if (b.action.aria) btn.setAttribute('aria-label', b.action.aria);
+                btn.onclick = (e) => { e.stopPropagation(); b.action.run(); };
+                bubble.appendChild(btn);
+            }
+            placeBeside(bubble, i, Math.round(30 * k), compact ? 190 : 240);
+            wrap.appendChild(bubble);
+        }
+    });
+    return wrap;
+}
+
+// --- כרטיס "היום": באתגר ימים - המשימות של היום (או ✓ אחד); בשאר - הצעד הקטן ו-"✓ עשיתי היום".
+// מתחת - 7 הימים האחרונים ---
+function buildGoalActionCard(goal, milestones) {
+    const card = document.createElement('div');
+    card.className = 'gv-action-card';
+    const track = goal.track_type || 'steps';
+    const head = document.createElement('div');
+    head.className = 'gv-step-head';
     if (track === 'days') {
-        const labelRow = document.createElement('div');
-        labelRow.className = 'vision-card-progress-label';
-        const labelText = document.createElement('span');
-        const streak = visionStreak(goal);
-        labelText.textContent = prog.label + (streak >= 2 ? ` · ${t('vision_days_streak').replace('{n}', streak)}` : '');
-        labelRow.appendChild(labelText);
-        if (!goal.is_achieved) {
-            const tasks = milestones;
+        head.innerHTML = `<span>${visionEsc(t(milestones.length ? 'vision_days_today_title' : 'gv_step_today'))}</span>`;
+        card.appendChild(head);
+        if (milestones.length) {
+            const list = document.createElement('div');
+            list.className = 'gv-day-tasks';
+            milestones.forEach(m => list.appendChild(buildVisionDayTaskRow(goal, m)));
+            card.appendChild(list);
+        } else {
             const doneToday = visionDoneDays(goal).includes(getLocalDateString());
-            const todayBtn = document.createElement('button');
-            todayBtn.type = 'button';
-            todayBtn.className = 'vision-quick-add vision-today-btn' + (doneToday ? ' is-done' : '');
-            todayBtn.textContent = doneToday ? t('vision_days_today_done') : t('vision_days_today_btn');
-            // עם משימות יומיות - הופכים לכרטיס כדי לסמן אותן; בלי משימות - סימון ישיר של היום
-            todayBtn.onclick = (e) => { e.stopPropagation(); if (tasks.length) flipVisionCard(goal.id); else toggleVisionDayCheck(goal.id, null, !doneToday); };
-            labelRow.appendChild(todayBtn);
+            card.appendChild(buildGoalDidButton(doneToday, t(doneToday ? 'vision_days_today_done' : 'vision_days_today_btn'), () => toggleVisionDayCheck(goal.id, null, !doneToday)));
         }
-        front.appendChild(labelRow);
-    } else if (prog.label || (track === 'number' && !goal.is_achieved)) {
-        const labelRow = document.createElement('div');
-        labelRow.className = 'vision-card-progress-label';
-        const labelText = document.createElement('span');
-        labelText.textContent = prog.label + (isFocus ? ` · ${prog.pct}%` : '');
-        labelRow.appendChild(labelText);
-        if (track === 'number' && !goal.is_achieved) {
-            const plus = document.createElement('button');
-            plus.type = 'button';
-            plus.className = 'vision-quick-add';
-            plus.textContent = '+1';
-            plus.title = t('vision_quick_add_title');
-            plus.onclick = (e) => { e.stopPropagation(); adjustVisionGoalNumber(goal.id, 1); };
-            labelRow.appendChild(plus);
+        card.appendChild(buildGoalAddRow(t('vision_days_task_placeholder'), input => addMilestoneToGoalFromCardBack(goal.id, input)));
+    } else {
+        const step = visionSmallStepText(goal);
+        const freq = goal.reminder_freq ? visionSmallStepFreqText(goal) : '';
+        head.innerHTML = `<span>👣 ${visionEsc(t('gv_small_step_label'))}</span>${freq ? `<span class="gv-step-freq">${visionEsc(freq)}</span>` : ''}`;
+        card.appendChild(head);
+        if (step) {
+            card.insertAdjacentHTML('beforeend', `<div class="gv-step-text">${visionEsc(step)}</div><div class="gv-step-hint">${visionEsc(t('gv_small_ok'))}</div>`);
+        } else {
+            const setBtn = document.createElement('button');
+            setBtn.type = 'button';
+            setBtn.className = 'gv-set-step-btn';
+            setBtn.textContent = t('gv_add_small_step');
+            setBtn.onclick = () => openVisionGoalModal(goal.id, null, { focusSmallStep: true });
+            card.appendChild(setBtn);
         }
-        front.appendChild(labelRow);
+        const doneToday = visionCheckedToday(goal.id, null);
+        card.appendChild(buildGoalDidButton(doneToday, t(doneToday ? 'gv_did_today_done' : 'gv_did_today_btn'), () => toggleGoalReminderCheck(goal.id, !doneToday)));
     }
+    card.appendChild(buildGoalWeek(goal));
+    return card;
+}
 
-    const back = document.createElement('div');
-    back.className = 'vision-card-face vision-card-back';
+function buildGoalDidButton(done, label, onToggle) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'gv-did-btn' + (done ? ' is-done' : '');
+    btn.setAttribute('aria-pressed', done ? 'true' : 'false');
+    btn.textContent = label;
+    btn.onclick = () => {
+        // ניצוצות קטנים רק כשמסמנים (לא כשמבטלים) - על המסך עצמו, כי הכרטיס מצטייר מחדש
+        const view = document.getElementById('vision-drawer-overlay');
+        if (!done && view && typeof spawnGentleConfettiBurst === 'function') {
+            const vr = view.getBoundingClientRect();
+            const br = btn.getBoundingClientRect();
+            spawnGentleConfettiBurst(view, 18, br.left - vr.left + br.width / 2, br.top - vr.top + br.height / 2);
+        }
+        onToggle();
+    };
+    return btn;
+}
 
-    const backHeader = document.createElement('div');
-    backHeader.className = 'vision-card-back-header';
-    const backTitle = document.createElement('h4');
-    backTitle.className = 'vision-card-back-title';
-    backTitle.textContent = goal.title;
-    const flipBackBtn = document.createElement('button');
-    flipBackBtn.type = 'button';
-    flipBackBtn.className = 'vision-card-flip-back-btn';
-    flipBackBtn.title = t('vision_card_flip_back_btn_title');
-    flipBackBtn.textContent = '↩';
-    flipBackBtn.onclick = () => flipVisionCard(goal.id);
-    backHeader.appendChild(backTitle);
-    backHeader.appendChild(flipBackBtn);
-    back.appendChild(backHeader);
-
-    if (goal.why) {
-        const why = document.createElement('div');
-        why.className = 'vision-card-why';
-        why.innerHTML = `<span class="vision-card-why-label">💭 ${visionEsc(t('vision_why_label'))}</span><span>${visionEsc(goal.why)}</span>`;
-        back.appendChild(why);
+// 7 הימים האחרונים - נקודה מלאה בכל יום שעשו משהו ליעד (בלי "רצף נשבר": לא צריך 10)
+function buildGoalWeek(goal) {
+    const done = new Set(visionGoalDayDates(goal));
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 6);
+    let count = 0;
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+        const key = getLocalDateString(d);
+        const isDone = done.has(key);
+        if (isDone) count++;
+        days.push(`<span class="gv-week-day${isDone ? ' is-done' : ''}${i === 6 ? ' is-today' : ''}"><span class="gv-week-dot"></span>${visionEsc(d.toLocaleDateString(currentLang, { weekday: 'narrow' }))}</span>`);
+        d.setDate(d.getDate() + 1);
     }
-    if (track === 'number') {
+    const row = document.createElement('div');
+    row.className = 'gv-week';
+    row.setAttribute('role', 'img');
+    row.setAttribute('aria-label', `${t('gv_week_label')}: ${count} / 7`);
+    row.innerHTML = `<span class="gv-week-label" aria-hidden="true">${visionEsc(t('gv_week_label'))}</span><span class="gv-week-days" aria-hidden="true">${days.join('')}</span>`;
+    return row;
+}
+
+function buildGoalAddRow(placeholder, onAdd) {
+    const row = document.createElement('div');
+    row.className = 'gv-add-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 120;
+    input.placeholder = placeholder;
+    input.setAttribute('aria-label', placeholder);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-secondary';
+    btn.textContent = t('vision_goal_milestone_add_btn');
+    btn.onclick = () => onAdd(input);
+    input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(input); } };
+    row.appendChild(input);
+    row.appendChild(btn);
+    return row;
+}
+
+// התוכנית: תחנות (עם 🔁 לשגרה ו-📅 ליומן) / מונה −/+ / משקל עם שקילה מהירה
+function buildGoalPlan(goal, milestones, prog) {
+    const track = goal.track_type || 'steps';
+    if (track === 'days') return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'gv-plan';
+    const title = document.createElement('h4');
+    title.className = 'gv-plan-title';
+    wrap.appendChild(title);
+    if (track === 'steps') {
+        title.textContent = t('gv_plan_title');
+        if (milestones.length) milestones.forEach(m => wrap.appendChild(buildVisionMilestoneRow(goal.id, goal.title, m)));
+        else wrap.insertAdjacentHTML('beforeend', `<p class="gv-plan-empty">${visionEsc(t('vision_goal_no_milestones_hint'))}</p>`);
+        if (!goal.is_achieved) wrap.appendChild(buildGoalAddRow(t('vision_goal_milestone_input_placeholder'), input => addMilestoneToGoalFromCardBack(goal.id, input)));
+    } else if (track === 'number') {
+        title.textContent = t('gv_progress_title');
         const row = document.createElement('div');
-        row.className = 'vision-card-number-row';
+        row.className = 'gv-counter';
         const minus = document.createElement('button');
         minus.type = 'button';
-        minus.className = 'btn-goal-step';
+        minus.className = 'gv-counter-btn';
         minus.textContent = '−';
+        minus.setAttribute('aria-label', '−1');
         minus.disabled = goal.is_achieved || (Number(goal.current_value) || 0) <= 0;
         minus.onclick = () => adjustVisionGoalNumber(goal.id, -1);
         const value = document.createElement('span');
-        value.className = 'vision-card-number-value';
+        value.className = 'gv-counter-value';
         value.textContent = prog.label;
         const plus = document.createElement('button');
         plus.type = 'button';
-        plus.className = 'btn-goal-step';
+        plus.className = 'gv-counter-btn is-plus';
         plus.textContent = '+';
-        plus.disabled = goal.is_achieved;
+        plus.setAttribute('aria-label', t('vision_quick_add_title'));
+        plus.disabled = !!goal.is_achieved;
         plus.onclick = () => adjustVisionGoalNumber(goal.id, 1);
         row.appendChild(minus);
         row.appendChild(value);
         row.appendChild(plus);
-        back.appendChild(row);
+        wrap.appendChild(row);
     } else if (track === 'weight') {
-        const row = document.createElement('div');
-        row.className = 'vision-card-weight-row';
-        row.innerHTML = `<span class="vision-card-number-value">⚖️ ${visionEsc(prog.label)}</span><span class="vision-goal-field-hint">${visionEsc(t(visionLatestWeight === null ? 'vision_weight_no_data' : 'vision_weight_hint'))}</span>`;
-        back.appendChild(row);
-    }
-
-    if (track === 'days') {
-        const todayTitle = document.createElement('div');
-        todayTitle.className = 'vision-card-section-title';
-        todayTitle.textContent = t('vision_days_today_title');
-        back.appendChild(todayTitle);
-        if (milestones.length) {
-            milestones.forEach(m => back.appendChild(buildVisionDayTaskRow(goal, m)));
-        } else if (!goal.is_achieved) {
-            const doneToday = visionDoneDays(goal).includes(getLocalDateString());
-            const dayBtn = document.createElement('button');
-            dayBtn.type = 'button';
-            dayBtn.className = 'vision-day-toggle' + (doneToday ? ' is-done' : '');
-            dayBtn.textContent = doneToday ? t('vision_days_today_done') : t('vision_days_today_btn');
-            dayBtn.onclick = () => toggleVisionDayCheck(goal.id, null, !doneToday);
-            back.appendChild(dayBtn);
+        title.textContent = t('gv_progress_title');
+        wrap.insertAdjacentHTML('beforeend', `<div class="gv-weigh-info">⚖️ ${visionEsc(prog.label)}</div><p class="vision-goal-field-hint">${visionEsc(t(visionLatestWeight === null ? 'vision_weight_no_data' : 'vision_weight_hint'))}</p>`);
+        if (!goal.is_achieved) {
+            const row = document.createElement('div');
+            row.className = 'gv-add-row';
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.inputMode = 'decimal';
+            input.step = '0.1';
+            input.min = '0';
+            input.placeholder = t('gv_weigh_ph');
+            input.setAttribute('aria-label', input.placeholder);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-secondary';
+            btn.textContent = t('vision_goal_save_btn');
+            btn.onclick = async () => {
+                const v = parseFloat(input.value);
+                if (!(v > 0)) { input.focus(); return; }
+                btn.disabled = true;
+                const res = await insertWeightRecord(v, getLocalDateString(), '');
+                btn.disabled = false;
+                if (res && res.error) { showAppToast(t('error_adding_item') + res.error.message, 'error'); return; }
+                showAppToast(t('gv_weigh_saved'));
+            };
+            row.appendChild(input);
+            row.appendChild(btn);
+            wrap.appendChild(row);
         }
-    } else if (!milestones.length) {
-        if (track === 'steps') {
-            const hint = document.createElement('p');
-            hint.className = 'vision-card-no-milestones';
-            hint.textContent = t('vision_goal_no_milestones_hint');
-            back.appendChild(hint);
-        }
-    } else {
-        milestones.forEach(m => back.appendChild(buildVisionMilestoneRow(goal.id, goal.title, m)));
     }
+    return wrap;
+}
 
-    const addRow = document.createElement('div');
-    addRow.className = 'vision-card-back-add-row';
-    const addInput = document.createElement('input');
-    addInput.type = 'text';
-    addInput.placeholder = t(track === 'days' ? 'vision_days_task_placeholder' : 'vision_goal_milestone_input_placeholder');
-    const addRowBtn = document.createElement('button');
-    addRowBtn.type = 'button';
-    addRowBtn.className = 'btn-secondary';
-    addRowBtn.textContent = t('vision_goal_milestone_add_btn');
-    addRowBtn.onclick = () => addMilestoneToGoalFromCardBack(goal.id, addInput);
-    addInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addMilestoneToGoalFromCardBack(goal.id, addInput); } };
-    addRow.appendChild(addInput);
-    addRow.appendChild(addRowBtn);
-    back.appendChild(addRow);
-
-    if (goal.reward) {
-        const reward = document.createElement('div');
-        reward.className = 'vision-card-reward';
-        reward.textContent = `🎁 ${goal.reward}`;
-        back.appendChild(reward);
-    }
-
-    const backActions = document.createElement('div');
-    backActions.className = 'vision-card-back-actions';
+// פעולות: עריכה, 🎯 יעד החודש, סימון כהושג, מחיקה
+function buildGoalActions(goal) {
+    const row = document.createElement('div');
+    row.className = 'gv-goal-actions';
+    const add = (cls, html, onClick, aria) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = `gv-action-btn ${cls}`;
+        b.innerHTML = html;
+        if (aria) { b.setAttribute('aria-label', aria); b.title = aria; }
+        b.onclick = onClick;
+        row.appendChild(b);
+    };
+    add('is-edit', `${EDIT_ICON_SVG}<span>${visionEsc(t('edit_btn'))}</span>`, () => openVisionGoalModal(goal.id));
     if (!goal.is_achieved) {
-        const doneBtn = document.createElement('button');
-        doneBtn.type = 'button';
-        doneBtn.className = 'vision-mark-achieved-btn';
-        doneBtn.textContent = t('vision_mark_achieved_btn');
-        doneBtn.onclick = () => setVisionGoalAchieved(goal.id);
-        backActions.appendChild(doneBtn);
+        const focus = visionIsFocus(goal);
+        add(focus ? 'is-focus-on' : 'is-focus', `<span aria-hidden="true">🎯</span><span>${visionEsc(t(focus ? 'vision_focus_unpin_title' : 'vision_focus_pin_title'))}${!focus && !isPremiumUser ? ' ⭐' : ''}</span>`, () => toggleVisionFocus(goal.id));
+        add('is-achieve', visionEsc(t('vision_mark_achieved_btn')), () => setVisionGoalAchieved(goal.id));
     }
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'btn-edit-item';
-    editBtn.innerHTML = EDIT_ICON_SVG;
-    editBtn.title = t('edit_btn');
-    editBtn.onclick = () => openVisionGoalModal(goal.id);
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'btn-delete-item';
-    deleteBtn.textContent = '❌';
-    deleteBtn.onclick = () => deleteVisionGoal(goal.id);
-    backActions.appendChild(editBtn);
-    backActions.appendChild(deleteBtn);
-    back.appendChild(backActions);
-
-    inner.appendChild(front);
-    inner.appendChild(back);
-    card.appendChild(inner);
-    return card;
+    add('is-delete', '<span aria-hidden="true">🗑️</span>', () => deleteVisionGoal(goal.id), t('vision_goal_delete_btn_title'));
+    return row;
 }
 
-function flipVisionCard(goalId) {
-    const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"]`);
-    if (card) card.classList.toggle('flipped');
-}
-
-// ההתקדמות משפיעה על כמה מקומות בכרטיס (פס/מסלול, צ'יפ קצב, התווית) - מרנדרים מחדש
-// (כרטיס הפוך נשאר הפוך, ר' renderVisionGoalsList)
+// ההתקדמות משפיעה על כמה מקומות במסך (השביל, התגיות, הצעדים של היום) - מרנדרים מחדש
 function updateVisionCardProgressDisplay() {
     renderVisionGoalsList();
     renderPeekFocusGoal();
@@ -19876,18 +20172,21 @@ async function toggleVisionDayCheck(goalId, milestoneId, checked) {
 function getPeekGoalTaskItems() {
     const weekday = new Date().getDay();
     const items = [];
-    visionGoalsCache.filter(g => !g.is_achieved).forEach(goal => {
+    // אותו סדר כמו הצ'יפים במסך היעדים (יעד החודש ראשון)
+    visionSortedActiveGoals().forEach(goal => {
+        const icon = visionGoalIcon(goal);
         if (goal.track_type === 'days') {
-            const tasks = visionMilestonesCache.filter(m => m.goal_id === goal.id);
+            const tasks = visionSortedMilestones(goal.id);
             if (tasks.length) {
-                tasks.forEach(m => items.push({ icon: '🎯', text: m.title, tag: goal.title, done: visionCheckedToday(goal.id, m.id), toggle: checked => toggleVisionDayCheck(goal.id, m.id, checked) }));
+                tasks.forEach(m => items.push({ goalId: goal.id, icon, text: m.title, tag: goal.title, done: visionCheckedToday(goal.id, m.id), toggle: checked => toggleVisionDayCheck(goal.id, m.id, checked) }));
             } else {
-                items.push({ icon: '🎯', text: goal.title, tag: null, done: visionCheckedToday(goal.id, null), toggle: checked => toggleVisionDayCheck(goal.id, null, checked) });
+                items.push({ goalId: goal.id, icon, text: goal.title, tag: null, done: visionCheckedToday(goal.id, null), toggle: checked => toggleVisionDayCheck(goal.id, null, checked) });
             }
-        } else if (goal.reminder_freq && (goal.track_type === 'number' || goal.track_type === 'weight')) {
+        } else if (goal.reminder_freq) {
+            // 👣 הצעד הקטן של כל יעד אחר (תחנות / ספירה / משקל) - כל יום, או בשבוע ביום שנבחר
             if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
-            const text = (goal.reminder_text || '').trim() || goal.title;
-            items.push({ icon: '🔔', text, tag: text === goal.title ? null : goal.title, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
+            const text = visionSmallStepText(goal) || goal.title;
+            items.push({ goalId: goal.id, icon, text, tag: text === goal.title ? null : goal.title, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
         }
     });
     return items;
@@ -19926,27 +20225,30 @@ function buildPeekGoalTaskRow(item) {
     return row;
 }
 
-// ✓ על תזכורת של יעד ספירה/משקל - להיום בלבד (סימון בלי milestone ב-vision_goal_checkins)
+// ✓ על הצעד הקטן / "✓ עשיתי היום" של יעד (לא אתגר ימים) - להיום בלבד (סימון בלי milestone
+// ב-vision_goal_checkins). מתעדכן גם בהצצה להיום וגם במסך היעדים
 async function toggleGoalReminderCheck(goalId, checked) {
     if (!supabaseClient || !currentUserId) return;
     const today = getLocalDateString();
     if (checked) {
         if (!visionCheckedToday(goalId, null)) {
             const { data, error } = await supabaseClient.from('vision_goal_checkins').insert({ goal_id: goalId, milestone_id: null, user_id: currentUserId, checkin_date: today }).select().single();
-            if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); return; }
+            if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); renderVisionGoalsList(); return; }
             visionCheckinsCache.push(data);
         }
     } else {
         await supabaseClient.from('vision_goal_checkins').delete().eq('goal_id', goalId).eq('checkin_date', today).is('milestone_id', null);
         visionCheckinsCache = visionCheckinsCache.filter(ch => !(ch.goal_id === goalId && !ch.milestone_id && ch.checkin_date === today));
     }
+    renderVisionGoalsList();
     loadTodayTasks();
 }
 
-// שקילה / +1 שנרשמו היום מסמנים לבד את התזכורת של היום ("שקילה", "לקרוא")
+// +1 שנרשם היום מסמן לבד את הצעד הקטן של היום; ביעד משקל - רק כשהצעד הקטן הוא השקילה עצמה
 function autoCheckGoalReminder(goal) {
     if (!goal || goal.is_achieved || !goal.reminder_freq) return;
     if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== new Date().getDay()) return;
+    if (goal.track_type === 'weight' && (visionSmallStepText(goal) || '') !== t('vision_reminder_weigh_default')) return;
     if (!visionCheckedToday(goal.id, null)) toggleGoalReminderCheck(goal.id, true);
 }
 
@@ -20189,11 +20491,11 @@ async function addMilestoneToGoalFromCardBack(goalId, inputEl) {
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     visionMilestonesCache.push(data);
     inputEl.value = '';
-    // רינדור מחדש (כרטיס הפוך נשאר הפוך) - באתגר ימים השורה נבנית אחרת
     updateVisionCardProgressDisplay(goalId);
-    if (goal && goal.track_type !== 'days') {
-        const card = document.querySelector(`.vision-goal-card[data-goal-id="${goalId}"] .vision-card-back-add-row input`);
-        if (card) card.focus();
+    // ממשיכים להוסיף בלי ללחוץ שוב על השדה (השדה החדש אחרי הרינדור)
+    if (goal) {
+        const next = document.querySelector('#gv-goal .gv-add-row input[type="text"]');
+        if (next) next.focus({ preventScroll: true });
     }
 }
 
@@ -20208,7 +20510,27 @@ let originalVisionMilestoneIds = [];
 let selectedVisionGoalCategory = null;
 let selectedVisionTrackType = 'steps';
 
-function openVisionGoalModal(goalId = null, template = null) {
+// סמלים לבחירה ליעד (בלי "אחר" - בורר סמלים, ר' הכלל על תפריטים)
+const VISION_GOAL_ICON_OPTIONS = ['🎯', '🏃', '💪', '🧘', '🥗', '💧', '😴', '⚖️', '📚', '🗣️', '🎸', '🎹', '🎨', '✍️', '💼', '💰', '🏠', '🧹', '✈️', '❤️', '👨‍👩‍👧', '🌱', '🛒', '⭐'];
+let selectedVisionGoalIcon = '🎯';
+let visionGoalIconTouched = false;
+function renderVisionGoalIconPicker() {
+    const wrap = document.getElementById('vision-goal-icon-picker');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const options = VISION_GOAL_ICON_OPTIONS.includes(selectedVisionGoalIcon) ? VISION_GOAL_ICON_OPTIONS : [selectedVisionGoalIcon, ...VISION_GOAL_ICON_OPTIONS];
+    options.forEach(icon => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'vision-goal-icon-opt' + (icon === selectedVisionGoalIcon ? ' selected' : '');
+        btn.setAttribute('aria-pressed', icon === selectedVisionGoalIcon ? 'true' : 'false');
+        btn.textContent = icon;
+        btn.onclick = () => { selectedVisionGoalIcon = icon; visionGoalIconTouched = true; renderVisionGoalIconPicker(); };
+        wrap.appendChild(btn);
+    });
+}
+
+function openVisionGoalModal(goalId = null, template = null, opts = {}) {
     editingVisionGoalId = goalId;
     const titleEl = document.getElementById('vision-goal-modal-title');
     const deleteBtn = document.getElementById('btn-delete-vision-goal');
@@ -20255,13 +20577,26 @@ function openVisionGoalModal(goalId = null, template = null) {
     document.getElementById('vision-goal-unit-input').value = goal && isNumber ? (goal.unit || '') : (!goal && template && template.key === 'read' ? t('vision_tpl_read_unit') : '');
     document.getElementById('vision-goal-weight-target-input').value = goal && track === 'weight' ? (goal.target_value ?? '') : '';
     document.getElementById('vision-goal-focus-toggle').checked = !!(goal && goal.focus_month === currentMonthKey() && !goal.is_achieved);
-    selectedVisionReminderFreq = goal && goal.reminder_freq ? goal.reminder_freq : null;
+    // 👣 הצעד הקטן: ביעד חדש - כל יום כברירת מחדל ("רק קצת כל יום"); בעריכה - מה שנשמר
+    selectedVisionReminderFreq = goal ? (goal.reminder_freq || null) : 'daily';
+    if (goal && opts.focusSmallStep && !selectedVisionReminderFreq) selectedVisionReminderFreq = 'daily';
     selectedVisionReminderWeekday = goal && goal.reminder_weekday != null ? Number(goal.reminder_weekday) : new Date().getDay();
     document.getElementById('vision-goal-reminder-text').value = goal ? (goal.reminder_text || '') : '';
+    const categoryPreset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === selectedVisionGoalCategory && c.key !== 'other');
+    selectedVisionGoalIcon = (goal && goal.icon) || (template && template.icon) || (categoryPreset ? categoryPreset.icon : '🎯');
+    visionGoalIconTouched = !!((goal && goal.icon) || template);
+    renderVisionGoalIconPicker();
     renderVisionGoalCategoryChips();
     renderVisionTrackChips();
     renderPendingVisionMilestones();
     openModal('modal-add-vision-goal');
+    // מ"＋ להגדיר צעד קטן" שמתחת לשביל - ישר לשדה של הצעד הקטן
+    if (opts.focusSmallStep) {
+        setTimeout(() => {
+            const input = document.getElementById('vision-goal-reminder-text');
+            if (input && !input.closest('.hidden')) { input.scrollIntoView({ block: 'center' }); input.focus({ preventScroll: true }); }
+        }, 260);
+    }
 }
 
 function resetVisionGoalModal() {
@@ -20281,6 +20616,8 @@ function resetVisionGoalModal() {
     const focusToggle = document.getElementById('vision-goal-focus-toggle');
     if (focusToggle) focusToggle.checked = false;
     setVisionGoalImagePreview('');
+    selectedVisionGoalIcon = '🎯';
+    visionGoalIconTouched = false;
 }
 
 // איך מודדים התקדמות: צעדים (ברירת מחדל) / מספר / משקל. מספר ומשקל - פרימיום
@@ -20315,8 +20652,8 @@ function renderVisionTrackChips() {
     renderVisionReminderFields();
 }
 
-// 🔔 תזכורת בהצצה להיום ליעדי ספירה/משקל (לפי בקשה מפורשת: "כן, תזכורת קבועה") -
-// בלי / כל יום / כל שבוע ביום שנבחר; הטקסט ניתן לשינוי
+// 👣 הצעד הקטן (לשעבר "תזכורת בהצצה להיום" של יעדי ספירה/משקל) - לכל יעד שאינו אתגר ימים:
+// בלי / כל יום / כל שבוע ביום שנבחר, והטקסט של הצעד. נשמר בשדות reminder_* של היעד
 let selectedVisionReminderFreq = null;
 let selectedVisionReminderWeekday = new Date().getDay();
 const VISION_REMINDER_OPTIONS = [
@@ -20327,7 +20664,8 @@ const VISION_REMINDER_OPTIONS = [
 function renderVisionReminderFields() {
     const wrap = document.getElementById('vision-goal-reminder-fields');
     if (!wrap) return;
-    const applies = selectedVisionTrackType === 'number' || selectedVisionTrackType === 'weight';
+    // באתגר ימים יש "מה עושים כל יום" במקום צעד קטן
+    const applies = selectedVisionTrackType !== 'days';
     wrap.classList.toggle('hidden', !applies);
     if (!applies) return;
     const chips = document.getElementById('vision-goal-reminder-chips');
@@ -20358,12 +20696,10 @@ function renderVisionReminderFields() {
 }
 function selectVisionReminderFreq(freq) {
     selectedVisionReminderFreq = freq;
-    // טקסט ברירת מחדל: "שקילה" ביעד משקל, שם היעד ביעד ספירה
-    const textInput = document.getElementById('vision-goal-reminder-text');
-    if (freq && textInput && !textInput.value.trim()) {
-        textInput.value = selectedVisionTrackType === 'weight' ? t('vision_reminder_weigh_default') : document.getElementById('vision-goal-title-input').value.trim();
-    }
     renderVisionReminderFields();
+    // הטקסט נשאר ריק (עם דוגמה בשדה) - הצעד הקטן הוא משהו שכל אחד/ת כותב/ת לעצמו
+    const textInput = document.getElementById('vision-goal-reminder-text');
+    if (freq && textInput && !textInput.value.trim()) textInput.focus({ preventScroll: true });
 }
 function selectVisionTrackType(type) {
     // לא פותחים כאן את חלון השדרוג - הוא היה סוגר את חלון היעד ומאבד את מה שהוקלד
@@ -20414,6 +20750,12 @@ function visionGoalCategoryChipKey() {
 }
 function selectVisionGoalCategory(key) {
     selectedVisionGoalCategory = visionGoalCategoryChipKey() === key ? null : key;
+    // כל עוד לא בחרו סמל בעצמם - הסמל הולך אחרי הקטגוריה
+    if (!visionGoalIconTouched) {
+        const preset = VISION_GOAL_CATEGORY_PRESETS.find(c => c.key === selectedVisionGoalCategory && c.key !== 'other');
+        selectedVisionGoalIcon = preset ? preset.icon : '🎯';
+        renderVisionGoalIconPicker();
+    }
     renderVisionGoalCategoryChips();
     if (key === 'other' && selectedVisionGoalCategory) {
         const customInput = document.getElementById('vision-goal-category-custom');
@@ -20501,7 +20843,7 @@ async function saveVisionGoal() {
     const track = selectedVisionTrackType;
     const existingGoal = editingVisionGoalId ? visionGoalsCache.find(g => g.id === editingVisionGoalId) : null;
     const payload = {
-        title, category, image_url: imageUrl,
+        title, category, image_url: imageUrl, icon: selectedVisionGoalIcon || null,
         why: document.getElementById('vision-goal-why-input').value.trim() || null,
         reward: document.getElementById('vision-goal-reward-input').value.trim() || null,
         target_date: document.getElementById('vision-goal-date-input').value || null,
@@ -20527,8 +20869,8 @@ async function saveVisionGoal() {
             payload.start_value = visionLatestWeight;
         }
     }
-    // 🔔 תזכורת בהצצה להיום - רק ליעדי ספירה/משקל
-    const reminderFreq = (track === 'number' || track === 'weight') ? selectedVisionReminderFreq : null;
+    // 👣 הצעד הקטן - לכל יעד שאינו אתגר ימים
+    const reminderFreq = track !== 'days' ? selectedVisionReminderFreq : null;
     payload.reminder_freq = reminderFreq;
     payload.reminder_weekday = reminderFreq === 'weekly' ? selectedVisionReminderWeekday : null;
     payload.reminder_text = reminderFreq ? (document.getElementById('vision-goal-reminder-text').value.trim().slice(0, 60) || null) : null;
@@ -20570,6 +20912,10 @@ async function saveVisionGoal() {
     closeModal('modal-add-vision-goal');
     resetVisionGoalModal();
     showAppToast(t('item_added_success'));
+    // היעד שנשמר הוא זה שרואים את השביל שלו
+    visionSelectedGoalId = goalId;
+    visionAnimatePath = true;
+    try { localStorage.setItem(VISION_SELECTED_KEY, goalId); } catch {}
     await loadVisionGoals();
     // יעד מספר/משקל יכול להיות מושג כבר מהרגע הראשון
     if (track === 'number' || track === 'weight') await checkAndMarkGoalAchieved(goalId);

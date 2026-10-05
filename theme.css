@@ -1676,7 +1676,6 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #glance-edit-task-reminder-text,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-quick-add-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .vision-card-back-add-row input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .weight-note-input {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
@@ -3886,8 +3885,6 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
    (justify-content:space-between עם 3 ילדים ישיר אותם למרחקים שווים, לא
    צמודים זה לזה) */
 .hamburger-drawer-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.vision-drawer-add-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(168, 85, 247, 0.3); background-color: rgba(168, 85, 247, 0.1); color: var(--accent-purple-light-text); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; transition: var(--transition); }
-.vision-drawer-add-btn:active { transform: scale(0.88); }
 .vision-goals-empty { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 24px; padding: 0 10px; }
 
 /* מגירת "לימודים" - עיצוב "יומן פתוח": קו שוליים אדום אנכי + פינה מקופלת,
@@ -4145,60 +4142,6 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .notebook-page-type-choice-btn:active { transform: scale(0.96); background-color: rgba(168, 85, 247, 0.14); }
 .notebook-page-type-choice-icon { font-size: 1.8rem; }
 
-/* כרטיס-חזון בודד - גובה קבוע כי שני הצדדים (front/back) ממוקמים absolute
-   בתוך perspective; overflow-y:auto בגב הכרטיס מאפשר רשימת תחנות-ביניים
-   ארוכה לגלול בלי לשבור את מכניקת ההיפוך */
-.vision-goal-card { position: relative; height: 214px; margin-bottom: 16px; perspective: 1000px; cursor: pointer; }
-.vision-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
-.vision-goal-card.flipped .vision-card-inner { transform: rotateY(180deg); }
-.vision-card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-sizing: border-box; }
-.vision-card-front {
-    background-color: #1a0f2e;
-    background-size: cover, contain;
-    background-repeat: no-repeat, no-repeat;
-    background-position: center, center;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 14px;
-    box-sizing: border-box;
-    color: #fff;
-}
-.vision-card-front-name { font-size: 1rem; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.6); margin-bottom: 6px; }
-.vision-card-category-tag { display: inline-block; align-self: flex-start; border-radius: 999px; padding: 3px 10px; font-size: 0.7rem; font-weight: 600; background: rgba(168, 85, 247, 0.35); border: 1px solid rgba(168, 85, 247, 0.5); margin-bottom: 8px; }
-/* גביע נוצץ-וזוהר על כרטיסי יעדים שהושגו - לפי בקשה מפורשת ("שיתגאו אנשים
-   במה שעשו") */
-.vision-card-trophy-badge {
-    position: absolute; top: 10px; inset-inline-end: 10px; font-size: 1.5rem;
-    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9)) drop-shadow(0 0 12px rgba(250, 204, 21, 0.5));
-    animation: trophyGlowPulse 2.4s ease-in-out infinite;
-}
-@keyframes trophyGlowPulse {
-    0%, 100% { filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9)) drop-shadow(0 0 12px rgba(250, 204, 21, 0.5)); }
-    50% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 1)) drop-shadow(0 0 18px rgba(250, 204, 21, 0.75)); }
-}
-/* "יעדים שכבשתי" - סקשן קבוע בתחתית לוח החזון, לא נעלם אוטומטית לעולם -
-   כותרת מודגשת עם גוון זהוב כדי להבדיל אותו מהרשימה הפעילה למעלה */
-.vision-goals-achieved-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); }
-.vision-goals-achieved-title { font-size: 0.95rem; font-weight: 700; color: #fbbf24; margin: 0 0 12px 0; text-align: center; }
-.vision-card-progress-row { display: flex; align-items: center; gap: 8px; }
-.vision-card-progress-row .progress-bar-bg { flex: 1 1 auto; }
-.vision-card-progress-pct { font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
-.vision-card-back {
-    transform: rotateY(180deg);
-    background-color: var(--bg-row);
-    border: 1px solid rgba(168, 85, 247, 0.3);
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.22);
-    padding: 12px 14px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-}
-.vision-card-back-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-shrink: 0; gap: 8px; }
-.vision-card-back-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vision-card-flip-back-btn { background: transparent; border: none; color: var(--accent-purple-light-text); font-size: 1rem; cursor: pointer; padding: 2px 6px; flex-shrink: 0; }
-.vision-card-back-actions { display: flex; gap: 10px; margin-top: 8px; flex-shrink: 0; }
 .vision-milestone-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .vision-milestone-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-purple); cursor: pointer; flex-shrink: 0; }
 .vision-milestone-row span { flex: 1 1 auto; min-width: 0; font-size: 0.82rem; color: var(--text-primary); word-break: break-word; }
@@ -4206,9 +4149,6 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .vision-milestone-add-today-btn { background: transparent; border: none; color: var(--accent-purple-light-text); font-size: 0.85rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; transition: var(--transition); }
 .vision-milestone-add-today-btn:active { transform: scale(0.9); }
 .vision-milestone-add-today-btn:disabled { opacity: .35; cursor: default; transform: none; }
-.vision-card-no-milestones { font-size: 0.78rem; color: var(--text-secondary); text-align: center; padding: 10px 0; }
-.vision-card-back-add-row { display: flex; gap: 6px; margin-top: 8px; flex-shrink: 0; }
-.vision-card-back-add-row input { flex: 1 1 auto; min-width: 0; background-color: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; border-radius: 8px; padding: 7px 8px; font-size: 0.78rem; outline: none; box-sizing: border-box; }
 
 /* צ'יפים לבחירת קטגוריה (מודל הוספה/עריכה) - אותה שפה כמו סוואצ'ים אחרים
    באפליקציה, רק עם אייקון+טקסט במקום עיגול צבע בלבד */
@@ -5247,97 +5187,6 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .progress-day-check.checked { background-color: rgba(0, 230, 118, 0.18); border-color: var(--accent-green); color: var(--accent-green-text); box-shadow: 0 0 8px rgba(0, 230, 118, 0.4); }
 .progress-day-check:disabled { opacity: 0.35; cursor: not-allowed; }
 .progress-day-check:active:not(:disabled) { transform: scale(0.9); }
-/* ויזואליזציית "הליכה למטרה" ליעד החודשי (ר' buildGoalPathHtml ב-app.js) -
-   inset-inline-start/margin-inline-start בכל מקום (לא left/right/transform)
-   כדי שהמסלול יתהפך אוטומטית נכון בעברית (RTL) מול אנגלית (LTR).
-   האווטאר/הדגל בנויים כ"כדורי ניאון" זוהרים - בדיוק אותה שפה חזותית של
-   .cube-icon/.sub-tile-icon בשאר האפליקציה (זכוכית כהה + טבעת זוהרת + הבהוק
-   פנימי) - כדי שירגיש תלת-ממדי ומלוטש כמו כל שאר האייקונים, לא אימוג'י שטוח
-   מונח על קו. הוסרה ההטיה התלת-ממדית האמיתית (perspective/rotateX/translateZ)
-   שהייתה כאן קודם - באגי חפיפה/בריחה מחוץ לכרטיס במסכים רחבים ובמובייל
-   (רכיבים עם transform תלת-ממדי לפעמים "בורחים" מ-overflow:hidden של ההורה
-   בדפדפנים מסוימים) - עדיף מסלול שטוח יציב על פני אפקט תלת-ממד שביר */
-.goal-path-perspective { padding: 6px 0 34px 0; }
-.goal-path-track {
-    position: relative;
-    height: 46px;
-    /* 22px, לא 6px: זה חצי הרוחב של .goal-path-avatar (38px) - בלי שוליים
-       מספיקים, כשה-pct מתקרב ל-0% או ל-100% חצי מהאווטאר "נשפך" מעבר לגבול
-       המסלול וניחתך ע"י overflow-hidden של .phone-wrapper - בדיוק התלונה
-       "לא רואים טוב את האיש רץ" במובייל */
-    margin: 0 22px;
-}
-.goal-path-line {
-    position: absolute;
-    top: 50%;
-    inset-inline-start: 0;
-    inset-inline-end: 38px;
-    height: 10px;
-    transform: translateY(-50%);
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
-    opacity: 0.28;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-}
-.goal-path-step {
-    position: absolute;
-    top: 50%;
-    width: 12px;
-    height: 12px;
-    margin-inline-start: -6px;
-    margin-top: -6px;
-    border-radius: 50%;
-    background-color: var(--bg-glass);
-    border: 2px solid var(--accent-purple);
-    opacity: 0.5;
-    transition: var(--transition);
-    box-sizing: border-box;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
-}
-.goal-path-step.reached { opacity: 1; background: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.3); }
-.goal-path-avatar {
-    position: absolute;
-    top: 50%;
-    width: 38px;
-    height: 38px;
-    margin-inline-start: -19px;
-    margin-top: -19px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 2px solid var(--accent-pink);
-    box-shadow: 0 0 16px rgba(255, 0, 127, 0.55), 0 0 24px rgba(168, 85, 247, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 10px rgba(0, 0, 0, 0.4);
-    transition: inset-inline-start 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    z-index: 2;
-}
-/* יעד ידני (custom) בלבד: אפשר לגרור את הדמות לאורך המסלול כדי לקבוע
-   התקדמות ישירות, במקום ללחוץ הרבה פעמים על +/- ליעד גדול */
-.goal-path-track[data-draggable="true"] { cursor: pointer; touch-action: none; }
-.goal-path-avatar.draggable { cursor: grab; }
-.goal-path-avatar.dragging { transition: none; cursor: grabbing; }
-.goal-path-flag {
-    position: absolute;
-    top: 50%;
-    inset-inline-end: -2px;
-    width: 34px;
-    height: 34px;
-    margin-top: -17px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.15rem;
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 2px solid var(--accent-gold);
-    box-shadow: 0 0 14px rgba(245, 158, 11, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 10px rgba(0, 0, 0, 0.4);
-}
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
 .btn-logout:hover { color: var(--accent-red-text); border-color: rgba(255, 69, 58, 0.15); }
 /* align-items:center (לא flex-end) - כל המודלים באפליקציה מרוכזים אנכית
@@ -6699,16 +6548,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .app-tour-link-icon { flex-shrink: 0; }
 .app-tour-flows { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .app-tour-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 8px; border-radius: 12px; background: var(--tour-tint); }
-/* כרטיס יעד לדוגמה בסיור (buildTourDemoGoalCard): הכרטיס האמיתי של "היעדים שלי", רק לתצוגה - מתהפך
-   לבד ובלחיצה, בלי הכפתורים הפעילים (נעיצה, הוספת צעד, "הושג") */
 .app-tour-demo { margin: 2px 0 12px; }
-.app-tour-demo-wrap { cursor: pointer; }
-.app-tour-demo-card { margin-bottom: 6px; }
-.app-tour-demo-card * { pointer-events: none !important; }
-.app-tour-demo-card .vision-pin-btn, .app-tour-demo-card .vision-card-back-add-row, .app-tour-demo-card .vision-card-back-actions { display: none !important; }
-.app-tour-demo-card .vision-card-inner { transition-duration: .75s; }
-.app-tour-demo-art { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); font-size: 74px; line-height: 1; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .45)); }
-.app-tour-demo-hint { margin: 0; text-align: center; font-size: .78rem; color: var(--tour-card-fg); opacity: .7; }
 .app-tour-chip { font-size: .74rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--tour-card-bg); border: 1px solid var(--tour-line); white-space: nowrap; }
 .app-tour-flow-arrow { color: var(--tour-accent); font-weight: 800; font-size: .9rem; }
 .app-tour-card.is-center { text-align: center; }
@@ -6729,50 +6569,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
     .app-tour-spot::after, .app-tour-arrow, .app-tour-card.pop { animation: none; }
 }
 /* ===== "היעדים שלי" (לשעבר לוח החזון) ===== */
-.vision-tagline { margin: -4px 0 14px; font-size: .82rem; color: var(--text-secondary); text-align: center; }
-.vision-goal-card.no-flip-anim .vision-card-inner { transition: none; }
-.vision-card-top { position: absolute; top: 12px; inset-inline: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; z-index: 2; }
-.vision-card-top .vision-card-category-tag { margin: 0; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.vision-pin-btn { flex-shrink: 0; margin-inline-start: auto; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .28); background: rgba(0, 0, 0, .32); font-size: .95rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; filter: grayscale(1) opacity(.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .15s ease, filter .2s ease; }
-.vision-pin-btn.active { filter: none; background: linear-gradient(135deg, rgba(236, 72, 153, .85), rgba(168, 85, 247, .85)); border-color: rgba(255, 255, 255, .6); box-shadow: 0 0 14px rgba(236, 72, 153, .6); }
-.vision-pin-btn:active { transform: scale(.9); }
-.vision-card-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-.vision-chip { display: inline-flex; align-items: center; gap: 3px; font-size: .68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, .38); border: 1px solid rgba(255, 255, 255, .2); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.vision-chip.is-on-track { background: rgba(16, 185, 129, .38); border-color: rgba(110, 231, 183, .55); }
-.vision-chip.is-ahead { background: rgba(56, 189, 248, .36); border-color: rgba(125, 211, 252, .6); }
-.vision-chip.is-behind, .vision-chip.is-soon { background: rgba(245, 158, 11, .42); border-color: rgba(252, 211, 77, .6); }
-.vision-chip.is-overdue { background: rgba(239, 68, 68, .45); border-color: rgba(252, 165, 165, .6); }
-.vision-chip.is-reward { background: rgba(236, 72, 153, .4); border-color: rgba(249, 168, 212, .6); }
-.vision-card-progress-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .74rem; font-weight: 700; color: rgba(255, 255, 255, .92); font-variant-numeric: tabular-nums; }
-.vision-quick-add { flex-shrink: 0; border: 1px solid rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .16); color: #fff; font: inherit; font-size: .74rem; font-weight: 800; border-radius: 999px; padding: 4px 11px; cursor: pointer; }
-.vision-quick-add:active { transform: scale(.92); }
-/* 🎯 יעד החודש - כרטיס מודגש ראשון, עם מסלול ההליכה */
-.vision-goal-card.is-focus { height: 278px; margin-bottom: 18px; }
-.vision-goal-card.is-focus .vision-card-front { box-shadow: 0 0 0 2px rgba(236, 72, 153, .8), 0 12px 32px rgba(168, 85, 247, .38); }
-.vision-goal-card.is-focus .vision-card-front-name { font-size: 1.15rem; }
-.vision-focus-ribbon { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 800; letter-spacing: .02em; color: #fff; padding: 5px 11px; border-radius: 999px; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 4px 14px rgba(236, 72, 153, .45); }
-.vision-focus-path { margin: 2px -4px 0; }
-.vision-focus-path .goal-path-perspective { padding: 2px 0 4px; }
-.vision-focus-hint { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 14px; border-radius: 16px; border: 1.5px dashed rgba(236, 72, 153, .5); background: rgba(236, 72, 153, .06); color: var(--text-secondary); font-size: .8rem; line-height: 1.45; }
-.vision-focus-hint-icon { font-size: 1.3rem; flex-shrink: 0; }
-/* גב הכרטיס: למה, מספר / משקל, פרס, סימון כהושג */
-.vision-card-why { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(168, 85, 247, .09); font-size: .78rem; color: var(--text-primary); line-height: 1.4; flex-shrink: 0; }
-.vision-card-why-label { font-size: .7rem; font-weight: 800; color: var(--accent-purple-light-text); }
-.vision-card-number-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 2px 0 8px; flex-shrink: 0; }
-.vision-card-number-value { font-size: .9rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.vision-card-weight-row { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 2px 0 8px; text-align: center; flex-shrink: 0; }
 .vision-goal-field-hint { font-size: .72rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
-.vision-card-reward { margin-top: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(236, 72, 153, .09); font-size: .78rem; font-weight: 600; color: var(--text-primary); flex-shrink: 0; }
-.vision-card-back-actions { align-items: center; }
-.vision-mark-achieved-btn { margin-inline-end: auto; border: 1px solid rgba(16, 185, 129, .5); background: rgba(16, 185, 129, .12); color: var(--accent-green-text, #10b981); font: inherit; font-size: .74rem; font-weight: 700; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
 /* מצב ריק - דוגמאות מוכנות */
 .vision-goals-empty { margin-top: 12px; }
-.vision-empty-icon { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, rgba(236, 72, 153, .18), rgba(168, 85, 247, .22)); }
-.vision-templates-title { margin: 14px 0 8px; font-size: .78rem; font-weight: 700; color: var(--text-primary); }
-.vision-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; text-align: start; }
-.vision-template-chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(168, 85, 247, .28); background: rgba(168, 85, 247, .07); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; text-align: start; }
-.vision-template-chip:active { transform: scale(.97); }
-.vision-template-icon { font-size: 1.15rem; flex-shrink: 0; }
 /* חלון היעד */
 .vision-goal-date-row { display: flex; align-items: center; gap: 8px; }
 .vision-goal-date-row .date-picker-field-trigger { flex: 1; min-width: 0; }
@@ -6810,13 +6609,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .vision-track-option-title { font-size: .84rem; font-weight: 800; }
 .vision-track-option-desc { font-size: .72rem; color: var(--text-secondary); line-height: 1.35; }
 .vision-goal-focus-hint { margin-top: 4px; }
-.vision-days-dots { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 2px; }
-.vision-days-dots span { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .55); box-sizing: border-box; }
-.vision-days-dots span.done { border-color: transparent; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 0 8px rgba(236, 72, 153, .6); }
-.vision-today-btn.is-done { background: rgba(16, 185, 129, .3); border-color: rgba(110, 231, 183, .7); }
-.vision-card-section-title { font-size: .74rem; font-weight: 800; color: var(--accent-purple-light-text); margin: 2px 0 2px; flex-shrink: 0; }
-.vision-day-toggle { width: 100%; margin: 6px 0; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(127, 127, 127, .06); color: var(--text-primary); font: inherit; font-weight: 800; cursor: pointer; flex-shrink: 0; }
-.vision-day-toggle.is-done { border-color: rgba(16, 185, 129, .55); background: rgba(16, 185, 129, .14); color: var(--accent-green-text, #10b981); }
 .vision-routine-btn { flex-shrink: 0; border: 1px solid rgba(168, 85, 247, .3); background: transparent; color: var(--accent-purple-light-text); border-radius: 999px; padding: 2px 7px; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .vision-routine-btn.is-linked { border-color: rgba(16, 185, 129, .45); color: var(--accent-green-text, #10b981); cursor: default; }
 /* 📅 צעד מתוזמן ביומן - הכפתור מציג מתי (תאריך / "כל ראשון"), באותו סגנון גלולה כמו 🔁 */
@@ -7442,6 +7234,202 @@ button.nm-letter-card { cursor: pointer; }
 .routine-nudge-text { margin: 8px 0 10px; font-size: .86rem; line-height: 1.5; }
 .routine-nudge-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .routine-nudge-btn { min-width: 0; padding: 8px 6px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.routine-nudge-btn.primary { border-color: transparent; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
-.routine-item-smaller-hint { margin: 8px 2px 0; font-size: .8rem; line-height: 1.5; color: var(--text-secondary); }
-.routine-item-smaller-hint.hidden { display: none; }
+.routine-nudge-btn.primary { border-color: transparent; grid-column: 1 / -1; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
+/* ===== 🎯 "היעדים שלי" - מסך מלא בעיצוב "מסע של צעדים" (ר' renderVisionGoalsList ב-app.js):
+   פתק "לא 10" קבוע, הצעדים הקטנים של היום, צ'יפים ושביל אבנים אל הדגל. רק משתני ערכת הנושא
+   (חוץ מהפתק הצהוב - נייר "אמיתי" שנראה אותו דבר בכל ערכה) ===== */
+.goals-view { display: none; position: absolute; inset: 0; z-index: 1900; flex-direction: column; background: var(--bg-main); overflow: hidden; isolation: isolate; }
+.goals-view.open { display: flex; animation: fadeIn .2s ease-out; }
+.goals-view::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 340px; z-index: -1; pointer-events: none; background: radial-gradient(120% 100% at 18% 0%, color-mix(in srgb, var(--accent-pink) 15%, transparent), transparent 64%); }
+.gv-top { display: flex; align-items: center; gap: 10px; padding: max(14px, env(safe-area-inset-top, 0px)) 16px 8px; flex-shrink: 0; }
+.gv-title { flex: 1; min-width: 0; margin: 0; font-size: 1.45rem; font-weight: 800; line-height: 1.2; color: var(--text-primary); }
+.gv-icon-btn { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); display: inline-grid; place-items: center; cursor: pointer; }
+.gv-icon-btn:active { transform: scale(.94); }
+.gv-add-btn { border: none; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent-pink) 32%, transparent); }
+html[dir="rtl"] .gv-back-icon { transform: scaleX(-1); }
+.gv-scroll { position: relative; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 6px 16px calc(32px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 18px; scrollbar-width: none; }
+.gv-scroll::-webkit-scrollbar { display: none; }
+.gv-scroll > * { flex-shrink: 0; }
+
+/* הפתק הקבוע - "לא 10 · רק קצת כל יום" */
+.gv-note { position: relative; align-self: flex-start; max-width: min(310px, 88%); display: flex; flex-direction: column; gap: 3px; margin-top: 6px; padding: 12px 16px 13px; border-radius: 6px 6px 16px 6px; background: #fff3a8; color: #2b2410; transform: rotate(-1.4deg); box-shadow: 0 10px 22px rgba(0, 0, 0, .28), inset 0 -2px 0 rgba(0, 0, 0, .05); }
+.gv-note::before { content: ""; position: absolute; top: -8px; left: 50%; width: 58px; height: 16px; transform: translateX(-50%) rotate(2deg); border-radius: 3px; background: rgba(255, 255, 255, .55); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.gv-note strong { font-size: 1rem; font-weight: 800; }
+.gv-note span { font-size: .8rem; line-height: 1.45; color: #4a3f1c; }
+
+/* הצעדים הקטנים של היום */
+.gv-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.gv-section-head h3 { margin: 0; font-size: .98rem; font-weight: 800; color: var(--text-primary); }
+.gv-today-count { font-size: .78rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gv-today-list { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.gv-today-list::-webkit-scrollbar { display: none; }
+.gv-today-card { flex: 0 0 auto; width: min(230px, 66%); box-sizing: border-box; scroll-snap-align: start; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 18px; background: var(--bg-row); border: 1px solid var(--border-color); transition: background .2s, border-color .2s; }
+.gv-today-card.is-done { border-color: color-mix(in srgb, var(--accent-green) 45%, transparent); background: color-mix(in srgb, var(--accent-green) 9%, var(--bg-row)); }
+.gv-check { flex-shrink: 0; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--text-primary) 35%, transparent); background: transparent; color: transparent; display: grid; place-items: center; cursor: pointer; transition: transform .15s, background .2s, border-color .2s, color .2s; }
+.gv-check svg { width: 17px; height: 17px; }
+.gv-today-card.is-done .gv-check { border-color: transparent; background: var(--accent-green); color: #04140b; }
+.gv-check:active { transform: scale(.88); }
+.gv-today-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 0; border: none; border-radius: 0; background: none; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.gv-today-text { font-size: .86rem; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gv-today-card.is-done .gv-today-text { color: var(--text-secondary); }
+.gv-today-tag { max-width: 100%; font-size: .7rem; font-weight: 600; color: var(--accent-purple-light-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gv-today-empty { flex: 1; padding: 12px 14px; border-radius: 16px; border: 1.5px dashed var(--border-color); color: var(--text-secondary); font-size: .82rem; line-height: 1.45; }
+
+/* צ'יפ לכל יעד */
+.gv-chips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 4px; scrollbar-width: none; }
+.gv-chips::-webkit-scrollbar { display: none; }
+.gv-chip-goal { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; max-width: 220px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
+.gv-chip-goal.selected { border-color: transparent; background: var(--text-primary); color: var(--bg-sheet); font-weight: 800; }
+.gv-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gv-chip-focus { font-size: .8rem; }
+
+/* היעד שנבחר */
+.gv-goal { display: flex; flex-direction: column; gap: 14px; }
+.gv-goal-head { display: flex; flex-direction: column; gap: 8px; }
+.gv-goal-head.has-image { justify-content: flex-end; min-height: 128px; padding: 16px; border-radius: 22px; background: linear-gradient(180deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .72)), var(--gv-goal-image) center / cover no-repeat; }
+.gv-goal-title-row { display: flex; align-items: center; gap: 10px; }
+.gv-goal-icon { flex-shrink: 0; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; background: color-mix(in srgb, var(--accent-purple) 16%, transparent); }
+.gv-goal-title { margin: 0; min-width: 0; font-size: 1.18rem; font-weight: 800; line-height: 1.25; color: var(--text-primary); text-wrap: balance; }
+.gv-meta { display: flex; justify-content: space-between; gap: 10px; font-size: .8rem; font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.has-image .gv-goal-title { color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+.has-image .gv-goal-icon { background: rgba(255, 255, 255, .22); }
+.has-image .gv-meta { color: rgba(255, 255, 255, .88); }
+.gv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.gv-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; color: var(--text-primary); background: var(--bg-row); border: 1px solid var(--border-color); }
+.gv-tag.is-focus { color: #fff; border-color: transparent; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); }
+.gv-tag.is-on-track { color: var(--accent-green-text); border-color: color-mix(in srgb, var(--accent-green) 45%, transparent); background: color-mix(in srgb, var(--accent-green) 10%, transparent); }
+.gv-tag.is-ahead { color: var(--accent-cyan-text); border-color: color-mix(in srgb, var(--accent-cyan) 45%, transparent); background: color-mix(in srgb, var(--accent-cyan) 10%, transparent); }
+.gv-tag.is-behind, .gv-tag.is-soon { color: var(--accent-gold-text); border-color: color-mix(in srgb, var(--accent-gold) 45%, transparent); background: color-mix(in srgb, var(--accent-gold) 10%, transparent); }
+.gv-tag.is-overdue { color: var(--accent-red-text); border-color: color-mix(in srgb, var(--accent-red) 45%, transparent); background: color-mix(in srgb, var(--accent-red) 10%, transparent); }
+.gv-tag.is-streak { color: var(--accent-gold-text); }
+
+/* השביל */
+.gv-path { position: relative; width: 100%; flex-shrink: 0; }
+.gv-path-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.gv-path-track { fill: none; stroke: color-mix(in srgb, var(--text-primary) 12%, transparent); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; }
+.gv-path-walk { fill: none; stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; }
+.gv-path.is-compact .gv-path-track, .gv-path.is-compact .gv-path-walk { stroke-width: 11px; }
+.gv-node { position: absolute; z-index: 1; transform: translate(-50%, -50%); }
+.gv-stone { display: grid; place-items: center; box-sizing: border-box; border-radius: 50%; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.gv-stone.is-done { width: 42px; height: 42px; color: #fff; background: color-mix(in srgb, var(--accent-pink) var(--mix, 0%), var(--accent-purple)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-purple) 20%, transparent); }
+.gv-stone.is-done svg { width: 19px; height: 19px; }
+.gv-stone.is-current { width: 60px; height: 60px; font-size: 1.6rem; background: var(--accent-pink); box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-pink) 24%, transparent), 0 0 28px color-mix(in srgb, var(--accent-pink) 60%, transparent); animation: gvGlow 2.8s ease-in-out infinite; }
+.gv-stone.is-future { width: 38px; height: 38px; font-size: .78rem; color: var(--text-secondary); background: var(--bg-sheet); border: 2px dashed color-mix(in srgb, var(--text-primary) 28%, transparent); }
+.gv-stone.is-sum { width: auto; min-width: 46px; height: 32px; padding: 0 10px; border-radius: 999px; font-size: .78rem; white-space: nowrap; }
+.gv-flag { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 1.45rem; background: var(--bg-sheet); border: 2px solid color-mix(in srgb, var(--accent-gold) 65%, transparent); box-sizing: border-box; }
+.gv-flag.is-reached { border-color: var(--accent-gold); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-gold) 22%, transparent), 0 0 26px color-mix(in srgb, var(--accent-gold) 55%, transparent); }
+.gv-path.is-compact .gv-stone.is-done { width: 34px; height: 34px; }
+.gv-path.is-compact .gv-stone.is-done svg { width: 16px; height: 16px; }
+.gv-path.is-compact .gv-stone.is-current { width: 48px; height: 48px; font-size: 1.3rem; }
+.gv-path.is-compact .gv-stone.is-future { width: 30px; height: 30px; }
+.gv-path.is-compact .gv-flag { width: 44px; height: 44px; font-size: 1.2rem; }
+.gv-label { position: absolute; z-index: 1; transform: translateY(-50%); font-size: .76rem; font-weight: 600; line-height: 1.3; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gv-label.is-left { text-align: right; }
+.gv-label.is-right { text-align: left; }
+.gv-label.is-done { color: var(--text-primary); opacity: .78; }
+.gv-label.is-flag { font-weight: 800; color: var(--accent-gold-text); }
+.gv-bubble { position: absolute; z-index: 2; transform: translateY(-50%); box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 9px 12px 10px; border-radius: 16px; background: var(--bg-sheet); border: 1px solid color-mix(in srgb, var(--accent-pink) 45%, transparent); box-shadow: 0 10px 24px rgba(0, 0, 0, .22); text-align: start; }
+.gv-bubble-label { font-size: .7rem; font-weight: 800; color: var(--accent-pink-text); }
+.gv-bubble-text { font-size: .86rem; font-weight: 700; line-height: 1.3; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gv-bubble-sub { font-size: .72rem; line-height: 1.3; color: var(--text-secondary); }
+.gv-bubble-btn { margin-top: 4px; padding: 6px 13px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
+.gv-bubble-btn:active { transform: scale(.94); }
+.gv-path.is-compact .gv-bubble-text { font-size: .8rem; }
+/* פתיחה: הדרך שעברו "נצבעת" מלמטה למעלה והאבנים קופצות אחת אחרי השנייה */
+.gv-path.draw-in .gv-path-walked { animation: gvReveal 1.1s cubic-bezier(.3, .8, .3, 1) both; }
+.gv-path.draw-in .gv-node, .gv-path.draw-in .gv-label, .gv-path.draw-in .gv-bubble { animation: gvPop .42s cubic-bezier(.3, 1.4, .5, 1) both; animation-delay: calc(var(--k, 0) * 70ms); }
+.gv-path.draw-in .gv-label, .gv-path.draw-in .gv-bubble { animation-name: gvFade; animation-delay: .45s; }
+@keyframes gvReveal { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes gvPop { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
+@keyframes gvFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gvGlow { 50% { box-shadow: 0 0 0 11px color-mix(in srgb, var(--accent-pink) 15%, transparent), 0 0 38px color-mix(in srgb, var(--accent-pink) 70%, transparent); } }
+
+/* כרטיס "היום" */
+.gv-action-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 22px; background: var(--bg-row); border: 1px solid var(--border-color); }
+.gv-step-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .76rem; font-weight: 800; color: var(--accent-purple-light-text); }
+.gv-step-freq { font-weight: 700; color: var(--text-secondary); }
+.gv-step-text { font-size: 1.02rem; font-weight: 800; line-height: 1.35; color: var(--text-primary); }
+.gv-step-hint { margin-top: -4px; font-size: .8rem; color: var(--text-secondary); }
+.gv-did-btn { min-height: 52px; padding: 0 16px; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-pink) 28%, transparent); }
+.gv-did-btn:active { transform: scale(.98); }
+.gv-did-btn.is-done { border: 1px solid color-mix(in srgb, var(--accent-green) 50%, transparent); background: color-mix(in srgb, var(--accent-green) 14%, transparent); color: var(--accent-green-text); box-shadow: none; }
+.gv-set-step-btn { align-self: flex-start; padding: 7px 13px; border-radius: 999px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 55%, transparent); background: transparent; color: var(--accent-purple-light-text); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.gv-day-tasks { display: flex; flex-direction: column; }
+.gv-week { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 2px; }
+.gv-week-label { font-size: .72rem; font-weight: 700; color: var(--text-secondary); }
+.gv-week-days { display: flex; gap: 7px; }
+.gv-week-day { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 16px; font-size: .62rem; font-weight: 700; color: var(--text-secondary); }
+.gv-week-dot { width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--text-primary) 30%, transparent); }
+.gv-week-day.is-done .gv-week-dot { border: none; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); }
+.gv-week-day.is-today { color: var(--text-primary); }
+
+/* התוכנית, למה, פרס, פעולות */
+.gv-plan { display: flex; flex-direction: column; padding: 14px; border-radius: 22px; background: var(--bg-row); border: 1px solid var(--border-color); }
+.gv-plan-title { margin: 0 0 6px; font-size: .92rem; font-weight: 800; color: var(--text-primary); }
+.gv-plan-empty { margin: 4px 0; font-size: .82rem; color: var(--text-secondary); }
+.gv-goal .vision-milestone-row { gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-color); }
+.gv-goal .vision-milestone-row:last-of-type { border-bottom: none; }
+.gv-goal .vision-milestone-row input[type="checkbox"] { width: 20px; height: 20px; }
+.gv-goal .vision-milestone-row span { font-size: .9rem; }
+.gv-add-row { display: flex; gap: 8px; margin-top: 8px; }
+.gv-add-row input { flex: 1; min-width: 0; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .86rem; outline: none; }
+.gv-add-row input:focus { border-color: var(--accent-purple); }
+.gv-add-row .btn-secondary { flex-shrink: 0; width: auto; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-glass); font-size: .84rem; }
+.gv-counter { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 4px 0; }
+.gv-counter-btn { width: 46px; height: 46px; padding: 0; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
+.gv-counter-btn.is-plus { border: none; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
+.gv-counter-btn:disabled { opacity: .35; cursor: default; }
+.gv-counter-value { min-width: 96px; text-align: center; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.gv-weigh-info { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+.gv-note-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 18px; font-size: .88rem; line-height: 1.45; color: var(--text-primary); }
+.gv-note-row-icon { font-size: 1.1rem; line-height: 1.3; }
+.gv-note-row-label { display: block; margin-bottom: 1px; font-size: .72rem; font-weight: 800; color: var(--accent-purple-light-text); }
+.gv-why { background: color-mix(in srgb, var(--accent-purple) 10%, transparent); }
+.gv-reward { background: color-mix(in srgb, var(--accent-pink) 10%, transparent); }
+.gv-reward .gv-note-row-label { color: var(--accent-pink-text); }
+.gv-goal-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.gv-action-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.gv-action-btn svg { width: 15px; height: 15px; }
+.gv-action-btn.is-focus-on { border-color: color-mix(in srgb, var(--accent-pink) 55%, transparent); color: var(--accent-pink-text); }
+.gv-action-btn.is-achieve { border-color: color-mix(in srgb, var(--accent-green) 50%, transparent); color: var(--accent-green-text); }
+.gv-action-btn.is-delete { width: 40px; padding: 0; justify-content: center; margin-inline-start: auto; }
+
+/* יעדים שכבשתי */
+.gv-achieved { padding-top: 16px; border-top: 1px solid var(--border-color); }
+.gv-achieved-title { margin: 0 0 10px; font-size: .98rem; font-weight: 800; color: var(--accent-gold-text); }
+.gv-achieved-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.gv-achieved-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--accent-gold) 35%, transparent); background: color-mix(in srgb, var(--accent-gold) 8%, var(--bg-row)); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.gv-achieved-card.selected { box-shadow: 0 0 0 2px var(--accent-gold); }
+.gv-achieved-icon { font-size: 1.35rem; }
+.gv-achieved-name { font-size: .84rem; font-weight: 800; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gv-achieved-date { font-size: .7rem; font-weight: 600; color: var(--text-secondary); }
+.gv-achieved-trophy { position: absolute; top: 9px; inset-inline-end: 10px; font-size: 1.1rem; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-gold) 80%, transparent)); }
+
+/* מצב ריק */
+.gv-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.gv-empty-art { width: 180px; height: 135px; color: var(--text-primary); }
+.gv-empty-stone { fill: var(--bg-sheet); stroke: color-mix(in srgb, var(--text-primary) 32%, transparent); stroke-width: 2; stroke-dasharray: 4 3; }
+.gv-empty-stone-done { fill: var(--accent-pink); }
+.gv-empty-title { margin: 2px 0 0; font-size: 1.08rem; font-weight: 800; color: var(--text-primary); text-wrap: balance; }
+.gv-empty-text { margin: 0; font-size: .84rem; line-height: 1.45; color: var(--text-secondary); }
+.gv-templates-title { align-self: stretch; margin: 10px 0 0; text-align: start; font-size: .82rem; font-weight: 800; color: var(--text-primary); }
+.gv-templates { align-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gv-template { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .82rem; font-weight: 700; line-height: 1.3; text-align: start; cursor: pointer; }
+.gv-template:active { transform: scale(.97); }
+.gv-template-icon { flex-shrink: 0; font-size: 1.3rem; }
+.gv-own-goal-btn { align-self: stretch; min-height: 48px; margin-top: 4px; padding: 0 16px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 55%, transparent); background: transparent; color: var(--accent-purple-light-text); font: inherit; font-size: .92rem; font-weight: 800; cursor: pointer; }
+
+/* חלון היעד: בורר סמל ותיבת הצעד הקטן */
+.vision-goal-icon-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.vision-goal-icon-opt { width: 40px; height: 40px; padding: 0; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(127, 127, 127, .06); font-size: 1.2rem; line-height: 1; display: grid; place-items: center; cursor: pointer; }
+.vision-goal-icon-opt.selected { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 18%, transparent); box-shadow: 0 0 0 1px var(--accent-purple); }
+.vision-small-step-box { padding: 10px 12px 12px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--accent-pink) 25%, transparent); background: color-mix(in srgb, var(--accent-pink) 7%, transparent); }
+
+/* הדוגמה בסיור */
+.gv-demo { display: flex; flex-direction: column; gap: 4px; }
+.gv-demo-meta { display: flex; justify-content: space-between; gap: 8px; font-size: .74rem; font-weight: 700; color: var(--tour-muted, var(--text-secondary)); }
+
+.gv-icon-btn:focus-visible, .gv-check:focus-visible, .gv-today-body:focus-visible, .gv-chip-goal:focus-visible, .gv-bubble-btn:focus-visible, .gv-did-btn:focus-visible, .gv-set-step-btn:focus-visible, .gv-action-btn:focus-visible, .gv-achieved-card:focus-visible, .gv-template:focus-visible, .gv-own-goal-btn:focus-visible, .gv-counter-btn:focus-visible, .vision-goal-icon-opt:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    .goals-view.open, .gv-stone.is-current, .gv-path.draw-in .gv-path-walked, .gv-path.draw-in .gv-node, .gv-path.draw-in .gv-label, .gv-path.draw-in .gv-bubble { animation: none; }
+}
