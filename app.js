@@ -1681,15 +1681,17 @@ const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', m
 // מוסבר קודם כולו ורק אחר כך כל לשונית. דברים פשוטים (פתקים, קניות, מים, צעדים...) כבר לא בסיור
 const APP_TOUR_STEPS = [
     { id: 'welcome', ch: 'home', ctx: 'home', icon: '🧭', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text' },
-    { id: 'peek', ch: 'home', ctx: 'home', icon: '👀', target: '#today-peek-tab', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
+    // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
+    { id: 'peek', ch: 'home', ctx: 'home', icon: '🗓️', target: '#myday-bar', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
     { id: 'corner', ch: 'home', ctx: 'home', icon: '🌼', target: '#home-grow-corner', titleKey: 'home_corner_title', text: 'apptour_corner_text', link: 'apptour_corner_link', optional: true },
-    { id: 'routine', ch: 'home', ctx: 'home', icon: '⏰', target: '#btn-daily-board-fab', titleKey: 'daily_board_title', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
     // העוזר: קודם ההסבר הכללי (על הכפתור), ואז הלשוניות שבפנים - לפי הסדר שלהן (הלו"ז ראשון)
     { id: 'ai', ch: 'ai', ctx: 'home', icon: '🌟', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
     { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#modal-ai-brain .ai-brain-tab[data-tab="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#modal-ai-brain .ai-brain-tab[data-tab="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
+    // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
+    { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
     // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - שביל דוגמה שמצטייר (תחנות, האבן של היום והדגל),
     // הצעדים הקטנים של היום (כשיש יעדים), והוספת יעד
     { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text' },
@@ -2231,6 +2233,8 @@ async function initAppAfterAuth(user) {
     applyPwaShortcutDeepLink();
     initFixedAiFab();
     initFixedAiBrainFab();
+    // מסך הבית החדש ("היום שלי", פוקוס, לחיצה ארוכה על פתק מהיר) + כוס המים במגירה (ר' home.js)
+    if (typeof initHomeV2 === 'function') { initHomeV2(); loadMyDayWater(); }
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
@@ -5378,11 +5382,13 @@ async function loadTodayTasks() {
     if (!container) return;
     const todayDbDay = dbDaysMap[new Date().getDay()];
     const todayStr = getLocalDateString();
-    const [{ data, error }, { data: eventRows }, completedScheduleIds, { data: celebratedRows }] = await Promise.all([
+    // + השגרה של היום ("היום שלי" – הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
+    const [{ data, error }, { data: eventRows }, completedScheduleIds, { data: celebratedRows }, routine] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
         supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr).not('source', 'in', '(today_celebrated,daily_focus_dismissed)'),
         getScheduleCompletionsForDate(todayStr),
         supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated').limit(1),
+        typeof loadMyDayRoutine === 'function' ? loadMyDayRoutine(todayStr) : Promise.resolve({ items: [], doneIds: new Set(), checksOn: false }),
     ]);
     if (error || !data) return;
     const alreadyCelebratedToday = !!(celebratedRows && celebratedRows.length > 0);
@@ -5403,90 +5409,17 @@ async function loadTodayTasks() {
     const events = allEvents.filter(item => item.source !== 'daily_focus');
     // משימות היעדים של היום (אתגר ימים, תזכורות) ומשימת הקריאה היומית (הספרים שלי)
     const goalItems = getPeekGoalTaskItems().concat(typeof getPeekBookTaskItems === 'function' ? getPeekBookTaskItems() : [], typeof getPeekChallengeItems === 'function' ? getPeekChallengeItems() : []);
-    // 🌼 הפינה שגדלה איתך במסך הבית - סופרת בדיוק את המשימות שברשימה כאן (התשובות ל"מה חשוב
-    // לך היום" הן בועות תזכורת ולא משימות, ולא נספרות - בדיוק כמו בחגיגת "הכל בוצע" למטה)
-    updateHomeGrowCorner(
-        populated.filter(item => completedScheduleIds.has(item.id)).length + events.filter(item => item.is_completed).length + goalItems.filter(item => item.done).length,
-        populated.length + events.length + goalItems.length
-    );
-    container.innerHTML = '';
-    if (!populated.length && !events.length && !focusItems.length && !goalItems.length) {
-        container.innerHTML = `<p class="today-tasks-empty">${t('today_tasks_empty_hint')}</p>`;
-        return;
-    }
-    if (focusItems.length) {
-        const chipsRow = document.createElement('div');
-        chipsRow.className = 'daily-focus-chips-row';
-        focusItems.forEach(item => {
-            const chip = document.createElement('span');
-            chip.className = 'daily-focus-chip';
-            chip.textContent = localizeDailyFocusTitle(item.event_title);
-            chipsRow.appendChild(chip);
-        });
-        container.appendChild(chipsRow);
-    }
-    // סימון "מה עשיתי" - כל משימה קבועה מהלו"ז יכולה עכשיו להיות מסומנת ✓ ליום
-    // הספציפי הזה בלבד (schedule_completions, מפתח על schedule_id+תאריך) - לא
-    // מוחקת ולא משנה את הלו"ז החוזר עצמו, ומתאפסת מאליה במופע הבא של אותו יום
-    let allDone = true;
-    populated.forEach(item => {
-        const isDone = completedScheduleIds.has(item.id);
-        if (!isDone) allDone = false;
-        const row = document.createElement('div');
-        row.className = 'today-tasks-row';
-        row.innerHTML = `
-            <input type="checkbox" class="day-detail-checkbox"${isDone ? ' checked' : ''} onchange="toggleScheduleCompletion('${item.id}', '${todayStr}', this.checked)">
-            <span class="today-tasks-time">${item.time_of_day || ''}</span>
-            <span class="today-tasks-text${isDone ? ' completed' : ''}">${getScheduleTaskIcon(item.task_title)} ${escapeHtmlForReport(item.task_title)}</span>
-        `;
-        container.appendChild(row);
-    });
-    // משימות ללא שעה (בעיקר מפתקים גרורים) - מוצגות אחרי שורות השעות, עם
-    // צ'קבוקס-השלמה וכפתור מחיקה, כמו בפירוט היום בלוח החודשי
-    events.forEach(item => {
-        if (!item.is_completed) allDone = false;
-        const row = document.createElement('div');
-        row.className = 'today-tasks-row';
-        // event_time (לא רק event_title) - עד עכשיו אירועי calendar_events כאן
-        // הוצגו רק לפי הכותרת, בלי צ'יפ-שעה נפרד (בניגוד לשורות weekly_schedule
-        // למעלה, שכן מקבלות .today-tasks-time) - זו הייתה הסיבה המקורית
-        // שהשעה הוטמעה בתוך הכותרת עצמה בזמן היצירה (ר' applyOneTimeScheduleEvents).
-        // עכשיו שעריכה דרך ה-AI מנקה את הכותרת ושומרת שעה נכונה בעמודה נפרדת
-        // (ר' applyScheduleEditsAndDeletes), חייבים להציג אותה בפועל - אחרת
-        // היא "נעלמת" ויזואלית אחרי עריכה, בדיוק מה שדווח
-        // פגישה: טווח השעות (10:00–11:00) ו-🤝; אירוע: 📅 (משימה - בלי אייקון, כמו קודם)
-        const kindIcon = calendarKindIcon(item);
-        const isMeeting = calendarKindOf(item) === 'meeting';
-        const timeLabel = isMeeting ? meetingTimeRange(item) : item.event_time;
-        // פגישה: גם עם מי (השם שנרשם) - לפי בקשה מפורשת ("בפגישות השם שרשום להוסיף גם להצצה היומית")
-        const withLabel = isMeeting && item.meeting_with ? `<span class="today-tasks-with">👤 ${escapeHtmlForReport(item.meeting_with)}</span>` : '';
-        row.innerHTML = `
-            <input type="checkbox" class="day-detail-checkbox"${item.is_completed ? ' checked' : ''} onchange="toggleEventOccurrenceCompletion('${item.id}', this.checked)">
-            ${timeLabel ? `<span class="today-tasks-time">${escapeHtmlForReport(timeLabel)}</span>` : ''}
-            <span class="today-tasks-text${item.is_completed ? ' completed' : ''}">${kindIcon ? kindIcon + ' ' : ''}${escapeHtmlForReport(item.event_title)}${withLabel}</span>
-        `;
-        // כפתורי עריכה/מחיקה מחוברים דרך closure (לא onclick עם JSON מוטמע
-        // בתוך מחרוזת HTML) - כך שגרש בודד בכותרת האירוע (למשל "It's") לא
-        // שובר את התבנית או "בורח" מתוך המאפיין
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'btn-edit-item';
-        editBtn.title = t('calendar_event_edit_title');
-        editBtn.innerHTML = EDIT_ICON_SVG;
-        editBtn.onclick = () => openEditCalendarEvent(item);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
-        deleteBtn.onclick = () => deleteCalendarEvent(item.id);
-        row.appendChild(editBtn);
-        row.appendChild(deleteBtn);
-        container.appendChild(row);
-    });
-    goalItems.forEach(item => {
-        if (!item.done) allDone = false;
-        container.appendChild(buildPeekGoalTaskRow(item));
-    });
+    // "היום שלי" (ר' home.js): הלו"ז הקבוע, משימות/אירועים/פגישות של היום, הצעדים הקטנים, השגרה
+    // של היום וארוחות New Me – בציר זמן אחד. 🌼 הפינה שגדלה איתך סופרת עכשיו את כל מה שאפשר לסמן
+    // בציר (גם ✓ בשגרה וגם צעד קטן – לפי בחירה מפורשת). התשובות ל"מה חשוב לך היום" הן בועות תזכורת
+    // ולא משימות, ולא נספרות - בדיוק כמו בחגיגת "הכל בוצע" למטה
+    const newMeItems = typeof myDayNewMeItems === 'function' ? myDayNewMeItems() : [];
+    const dayItems = buildMyDayItems({ todayStr, schedule: populated, completedScheduleIds, events, goalItems, routine, newMeItems });
+    const checkableItems = dayItems.filter(item => item.checkable);
+    updateHomeGrowCorner(checkableItems.filter(item => item.done).length, checkableItems.length);
+    renderMyDay(container, dayItems, focusItems);
+    if (!dayItems.length) return;
+    const allDone = checkableItems.every(item => item.done);
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
     // יישאר סתם עם רשימת ✓ שקטה בלי שום הכרה בזה שסיימת הכל. אבל רק כשבאמת
     // הייתה משימה/אירוע היום שסומן וי - לא כשאין שום דבר בכלל (הצצה ריקה),
@@ -5494,7 +5427,7 @@ async function loadTodayTasks() {
     // היום") לא נספרים כמשימה כאן - populated/events הם רק weekly_schedule
     // ו-calendar_events בפועל
     if (allDone) {
-        if (populated.length + events.length + goalItems.length > 0) {
+        if (checkableItems.length > 0) {
             const celebration = document.createElement('p');
             celebration.className = 'today-tasks-celebration';
             celebration.textContent = t('today_tasks_all_done_message');
@@ -5532,7 +5465,7 @@ async function loadTodayTasks() {
     } else {
         lastKnownAllDoneState = false;
         const viewCount = getTodayCardViewCount();
-        if (populated.length + events.length + goalItems.length > 0 && viewCount >= 5) {
+        if (checkableItems.length > 0 && viewCount >= 5) {
             const encouragement = document.createElement('p');
             encouragement.className = 'today-tasks-celebration';
             const messageKey = viewCount >= 7
@@ -8087,9 +8020,10 @@ function shareApp() {
 
 // נקודת גילוי נוספת לשדרוג ישירות ממסך הבית (לצד ההגדרות) - מוצג רק כשבאמת
 // לא פרימיום, לפי הסטטוס האמיתי מהשרת (לא נגזר מהטקס החגיגי בלבד)
+// ⭐ למי שעוד לא פרימיום - רק ביום אחד בשבוע, לא כל יום (לפי בחירה מפורשת: "פרימיום בעדינות")
 function updateHomePremiumBadgeVisibility() {
     const badge = document.getElementById('home-premium-badge');
-    if (badge) badge.classList.toggle('hidden', isPremiumUser);
+    if (badge) badge.classList.toggle('hidden', isPremiumUser || (typeof homePremiumBadgeDay === 'function' && !homePremiumBadgeDay()));
 }
 
 // מסירים את אייקון המנעול 🔒 מכל ערכות הנושא ברגע שהמשתמשת פרימיום אמיתית -
@@ -8340,6 +8274,12 @@ const HELP_FAQ_ENTRIES = [
     { id: 'app_stuck_loading', category: 'general' },
     { id: 'refresh_data', category: 'general' },
     { id: 'other_manual_option', category: 'general' },
+    // מסך הבית החדש: "היום שלי", חיפוש, פוקוס, לחיצה ארוכה על פתק מהיר, העציץ (ר' home.js)
+    { id: 'my_day', category: 'general' },
+    { id: 'home_search', category: 'general' },
+    { id: 'home_focus', category: 'general' },
+    { id: 'quick_note_hold', category: 'general' },
+    { id: 'home_planter', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
     { id: 'routine_day_tabs', category: 'general' },
@@ -15444,6 +15384,9 @@ function renderWeeklyNoteDisplay() {
     const items = currentWeeklyNoteItems.slice(0, currentWeeklyNoteItemCount).map((item, index) => ({ ...item, index })).filter(item => (item.text || '').trim());
     const widget = document.getElementById('weekly-note-widget');
     if (widget) widget.classList.toggle('weekly-note-has-items', items.length > 0);
+    // פתק ריק מתקפל לסיכה קטנה "פתק לשבוע" במסך הבית (לפי בחירה מפורשת), לחיצה פותחת את העריכה
+    const slot = document.getElementById('home-weekly-note-slot');
+    if (slot) slot.classList.toggle('is-empty', !items.length && !text);
     if (items.length) {
         // שורות לסימון + טקסט חופשי מתחת (אם נכתב). ✓ מסמן ישר מהפתק בלי לפתוח את העריכה
         const totalLength = items.reduce((sum, item) => sum + item.text.length, 0) + text.length;
@@ -15936,6 +15879,8 @@ async function toggleRoutineItemCheckin(itemId, btn) {
         routineNudge = null;
         renderRoutineNudge();
     }
+    // ✓ כאן = ✓ גם ב"היום שלי" (ציר הזמן במסך הבית) ובפינה שגדלה
+    loadTodayTasks();
 }
 
 // --- לוח "הרגלים" חודשי של הטאב הפעיל *בלבד* (לא כל הטאבים ביחד), לפי בקשה

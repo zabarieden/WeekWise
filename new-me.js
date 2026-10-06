@@ -582,6 +582,8 @@ function nmMenuRoom() { return Math.max(0, nmProfile.plan - nmMenuTotal()); }
 function nmAfterTrackerChange() {
     refreshTodayNutritionViewIfOpen();
     if (typeof loadStats === 'function') loadStats();
+    // ✓ / החלפה ב-New Me מתעדכנים גם במסך הבית (האריח וציר הזמן של "היום שלי")
+    if (nmHomeDataDay === getLocalDateString()) { nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); }
 }
 
 // ---------- מסע: יום X, רצף, אבני דרך ----------
@@ -2000,10 +2002,65 @@ function nmExtrasHtml() {
         </div>`;
 }
 
-// ---------- קיצור הדרך של New Me (💎) במסך הבית ----------
+// ---------- New Me (💎) במסך הבית: האריח במגירת "היום שלי" ----------
+// למי שרכש/ה - הארוחה הבאה של היום; למי שלא - נעול, "גרסה חדשה של עצמי" (לפי בחירה מפורשת: New Me
+// גם במסך הבית, נעול למי שלא קנה). הנתונים של היום נטענים פעם אחת ביום גם בלי לפתוח את New Me,
+// כדי שהארוחות יופיעו בציר הזמן של "היום שלי"
+let nmHomeDataDay = null;
+async function nmEnsureHomeData() {
+    if (!hasNewMe || !supabaseClient || !currentUserId) return false;
+    const today = getLocalDateString();
+    if (nmHomeDataDay === today && nmProfileLoaded) return true;
+    nmHomeDataDay = today;
+    if (!nmProfileLoaded) {
+        const { data } = await supabaseClient.from('new_me_profile').select('*').eq('user_id', currentUserId).maybeSingle();
+        nmProfile = data || null;
+        nmProfileLoaded = true;
+    }
+    if (!nmProfile) return false;
+    await nmLoadToday();
+    return true;
+}
+// הארוחות של היום לציר הזמן: { time, text, done, toggle(checked) } - רק כשהנתונים כבר טעונים
+function myDayNewMeItems() {
+    if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString()) return [];
+    const order = nmOrder();
+    return nmActiveOrder().map(slot => {
+        const i = Math.max(0, order.indexOf(slot));
+        const free = nmIsFree(slot);
+        const text = free ? `🍕 ${t('nm_free_meal')}` : `${nmSlotName(slot)} · ${nmItemShort(nmItemInfo(nmTodayKey(slot)))}`;
+        return {
+            time: nmReminderTime(i), text, done: !!nmTodayCheckins[slot],
+            toggle: async checked => { if (!!nmTodayCheckins[slot] !== checked) await nmToggleCheck(slot); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
+        };
+    });
+}
+function nmRenderHomeTile() {
+    const tile = document.getElementById('btn-newme-shortcut');
+    if (!tile) return;
+    tile.classList.toggle('locked', !hasNewMe);
+    const line = document.getElementById('myday-newme-line');
+    const sub = document.getElementById('myday-newme-sub');
+    if (!line || !sub) return;
+    if (!hasNewMe) {
+        line.textContent = t('nm_tile_locked');
+        sub.textContent = t('nm_tile_peek');
+        return;
+    }
+    const meals = myDayNewMeItems();
+    const next = meals.find(m => !m.done);
+    if (!meals.length) { line.textContent = t('nm_shortcut_title'); sub.textContent = ''; return; }
+    if (!next) { line.textContent = t('nm_tile_all_done'); sub.textContent = ''; return; }
+    line.textContent = next.time;
+    sub.textContent = next.text;
+}
+function openNewMeFromHome() {
+    if (hasNewMe) openNewMeMenuToday();
+    else openNewMe();
+}
 function updateNewMeShortcut() {
-    const btn = document.getElementById('btn-newme-shortcut');
-    if (btn) btn.classList.toggle('hidden', !hasNewMe);
+    nmRenderHomeTile();
+    if (hasNewMe) nmEnsureHomeData().then(ok => { if (ok) { nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); } });
     // מי שעוד לא רכש/ה: מנעול קטן על New Me בתפריט (לחיצה פותחת את עמוד ההסבר והרכישה)
     document.querySelectorAll('.hamburger-newme-item').forEach(b => b.classList.toggle('locked', !hasNewMe));
     // לחיצה על תזכורת ארוחה (?open=newme) - נפתח ברגע שמצב הרכישה נטען
