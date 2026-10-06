@@ -282,6 +282,18 @@ function onLanguageChanged() {
     if (newMeSection && newMeSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
     // גם "התיק שלי" (והקלסר) נבנים ב-JS
     if (typeof renderBag === 'function' && isNotebooksSectionOpen()) renderBag();
+    // וגם הכותרת, התאריך ופס הדפים של מחברת פתוחה
+    if (nbViewMode === 'notebook' && isNotebookViewOpen()) {
+        renderNotebookViewTitle();
+        renderPageNavHeader();
+        renderNotebookBookmarkState();
+        const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+        const dateEl = document.getElementById('nb-page-date');
+        if (dateEl) dateEl.textContent = nbPageDateLabel(page);
+    } else if (nbViewMode === 'tasks' && isNotebookViewOpen()) {
+        document.getElementById('nb-view-name').textContent = t('nb_tasks_notebook_title');
+        document.getElementById('nb-view-crumb').textContent = t('study_title');
+    }
     loadCustomDefaultHours();
     buildWeeklyScheduleAccordionUI();
     Promise.all([
@@ -17673,6 +17685,7 @@ function openTasksNotebook() {
     view.classList.remove('is-notebook');
     document.getElementById('nb-view-emoji').textContent = '📝';
     document.getElementById('nb-view-name').textContent = t('nb_tasks_notebook_title');
+    document.getElementById('nb-view-crumb').textContent = t('study_title');
     const sheet = document.getElementById('nb-sheet');
     sheet.dataset.paper = 'list';
     sheet.style.removeProperty('--nb-color');
@@ -17707,15 +17720,20 @@ async function openNotebookView(notebookId) {
 }
 function openNotebookDetail(notebookId) { openNotebookView(notebookId); }
 
+// הכותרת: האימוג'י והשם של המחברת, ומעליהם הדרך אליה ("התיק שלי › 👨‍👩‍👧 המשפחה"); צבע הכריכה צובע
+// את קו השוליים של הנייר
 function renderNotebookViewTitle() {
     const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
     document.getElementById('nb-view-emoji').textContent = nb ? (nb.cover_emoji || '📓') : '';
     document.getElementById('nb-view-name').textContent = nb ? nb.title : '';
+    const pocket = nb ? bagPocket(nb.project_id) : null;
+    document.getElementById('nb-view-crumb').textContent = pocket ? `${t('study_title')} › ${bagPocketLabel(pocket)}` : t('study_title');
     const sheet = document.getElementById('nb-sheet');
     if (sheet && nb) sheet.style.setProperty('--nb-color', nbCoverColor(nb));
 }
 
 function closeNotebookView() {
+    closeNbPops();
     if (nbViewMode === 'notebook') {
         flushNotebookTextSave();
         // מספר הדפים שמוצג בתיק ובקלסר
@@ -17771,7 +17789,11 @@ function openNotebookPage(pageId) {
     document.getElementById('nb-list-add').classList.toggle('hidden', type !== 'list');
     const isCanvas = type === 'draw' || type === 'grid';
     document.getElementById('notebook-canvas-section-body').classList.toggle('hidden', !isCanvas);
-    document.getElementById('notebook-emoji-picker')?.classList.add('hidden');
+    closeNbPops();
+    const dot = document.getElementById('nb-tools-dot');
+    if (dot) dot.style.background = penColor;
+    const dateEl = document.getElementById('nb-page-date');
+    if (dateEl) dateEl.textContent = nbPageDateLabel(page);
     notebookItemsCache = notebookAllItemsCache.filter(i => i.page_id === pageId).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
     renderNotebookItemsList();
     loadNotebookItems(pageId);
@@ -17789,11 +17811,168 @@ function renderPageNavHeader() {
     const titleEl = document.getElementById('notebook-page-title-text');
     if (titleEl) titleEl.textContent = page ? page.title : '';
     const counterEl = document.getElementById('notebook-page-counter');
-    if (counterEl) counterEl.textContent = idx === -1 ? '' : t('notebook_page_counter_label').replace('{current}', idx + 1).replace('{total}', notebookPagesCache.length);
-    const prevBtn = document.getElementById('notebook-page-prev-btn');
-    const nextBtn = document.getElementById('notebook-page-next-btn');
-    if (prevBtn) prevBtn.disabled = idx <= 0;
-    if (nextBtn) nextBtn.disabled = idx === -1 || idx >= notebookPagesCache.length - 1;
+    if (counterEl) counterEl.textContent = idx === -1 ? '' : nbPageCounterLabel(idx);
+    nbRenderStrip();
+}
+function nbPageCounterLabel(idx) {
+    return t('notebook_page_counter_label').replace('{current}', (idx + 1).toLocaleString(currentLang)).replace('{total}', notebookPagesCache.length.toLocaleString(currentLang));
+}
+
+// התאריך שבו הדף נפתח, ליד הכותרת שלו ("יום ב׳ · 5 באוק׳"); שנה רק כשזו לא השנה הנוכחית
+function nbPageDateLabel(page) {
+    const d = page && page.created_at ? new Date(page.created_at) : null;
+    if (!d || isNaN(d.getTime())) return '';
+    try {
+        const sameYear = d.getFullYear() === new Date().getFullYear();
+        const day = d.toLocaleDateString(currentLang, sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+        return `${d.toLocaleDateString(currentLang, { weekday: 'short' })} · ${day}`;
+    } catch (e) { return ''; }
+}
+
+// --- פס הדפים בתחתית: דף קטן לכל דף - הנייר לפי הסוג, ועליו מה שבאמת יש בדף (שורות הטקסט, שורות הרשימה
+// עם ✓, או הציור עצמו בקטן). נבנה מחדש רק כשרשימת הדפים משתנה; במעבר דף רק הדף הנוכחי מתחלף ---
+let nbStripSig = '';
+function nbRenderStrip(force) {
+    const strip = document.getElementById('nb-strip');
+    if (!strip) return;
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+    const mark = nb ? nb.bookmark_page_id || '' : '';
+    const sig = (currentOpenNotebookId || '') + '#' + mark + '#' + currentLang + '#' + notebookPagesCache.map(p => `${p.id}:${p.page_type}:${p.title}`).join('|');
+    if (force || sig !== nbStripSig) {
+        nbStripSig = sig;
+        strip.innerHTML = '';
+        notebookPagesCache.forEach((page, idx) => strip.appendChild(nbBuildThumb(page, idx, page.id === mark)));
+    }
+    strip.querySelectorAll('.nb-thumb').forEach(b => {
+        const on = b.dataset.pageId === currentOpenPageId;
+        b.classList.toggle('is-current', on);
+        if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    nbScrollStripToCurrent();
+}
+function nbBuildThumb(page, idx, marked) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nb-thumb';
+    btn.dataset.pageId = page.id;
+    btn.dataset.paper = NB_PAGE_TYPES.includes(page.page_type) ? page.page_type : 'draw';
+    const label = `${nbPageCounterLabel(idx)} – ${page.title}`;
+    btn.title = page.title;
+    btn.setAttribute('aria-label', label);
+    const canvas = document.createElement('canvas');
+    canvas.className = 'nb-thumb-ink';
+    canvas.setAttribute('aria-hidden', 'true');
+    btn.appendChild(canvas);
+    if (marked) {
+        const ribbon = document.createElement('span');
+        ribbon.className = 'nb-thumb-mark';
+        ribbon.setAttribute('aria-hidden', 'true');
+        btn.appendChild(ribbon);
+    }
+    btn.onclick = () => nbGoToPage(page.id);
+    nbDrawThumb(canvas, page);
+    return btn;
+}
+// מצייר את מה שבדף על קנבס קטן (34×46): קו כותרת קצר למעלה, ואז לפי הסוג - פסי "דיו" לשורות הטקסט,
+// קופסה + פס לכל שורה ברשימה (ירוקה כשסומנה), או הקווים והמדבקות של הציור
+const NB_THUMB_W = 34, NB_THUMB_H = 46;
+function nbDrawThumb(canvas, page) {
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    canvas.width = NB_THUMB_W * dpr;
+    canvas.height = NB_THUMB_H * dpr;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, NB_THUMB_W, NB_THUMB_H);
+    const ink = 'rgba(34, 32, 28, .55)';
+    const type = NB_PAGE_TYPES.includes(page.page_type) ? page.page_type : 'draw';
+    const startX = document.documentElement.dir === 'rtl' ? null : 5;
+    const bar = (y, w, color) => {
+        const width = Math.max(3, Math.min(NB_THUMB_W - 10, w));
+        const x = startX === null ? NB_THUMB_W - 5 - width : startX;
+        ctx.fillStyle = color || ink;
+        ctx.fillRect(x, y, width, 1.4);
+    };
+    bar(4.5, Math.min(18, 6 + String(page.title || '').length * 1.2), 'rgba(34, 32, 28, .8)');
+    const isCurrent = page.id === currentOpenPageId;
+    if (type === 'write') {
+        const textarea = isCurrent ? document.getElementById('notebook-page-text-content') : null;
+        const text = String(textarea ? textarea.value : page.text_content || '');
+        const perLine = 22;
+        const rows = [];
+        text.split('\n').forEach(line => {
+            const l = line.trim().length;
+            if (!l) { rows.push(0); return; }
+            for (let i = 0; i < l; i += perLine) rows.push(Math.min(perLine, l - i));
+        });
+        rows.slice(0, 7).forEach((len, i) => { if (len) bar(11 + i * 5, len * (24 / perLine)); });
+        return;
+    }
+    if (type === 'list') {
+        const items = isCurrent ? notebookItemsCache : notebookAllItemsCache.filter(i => i.page_id === page.id).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+        items.slice(0, 6).forEach((item, i) => {
+            const y = 10 + i * 6;
+            const boxX = startX === null ? NB_THUMB_W - 8 : 5;
+            if (item.is_completed) { ctx.fillStyle = '#10b981'; ctx.fillRect(boxX, y, 3.4, 3.4); }
+            else { ctx.strokeStyle = 'rgba(34, 32, 28, .5)'; ctx.lineWidth = 0.7; ctx.strokeRect(boxX + 0.35, y + 0.35, 2.7, 2.7); }
+            const w = Math.min(18, 5 + String(item.title || '').length * 0.9);
+            const x = startX === null ? NB_THUMB_W - 10 - w : 10;
+            ctx.fillStyle = item.is_completed ? 'rgba(34, 32, 28, .3)' : ink;
+            ctx.fillRect(x, y + 1.1, w, 1.3);
+        });
+        return;
+    }
+    const saved = isCurrent ? canvasStrokes : page.canvas_data;
+    const strokes = Array.isArray(saved) ? saved : [];
+    const area = { x: 3, y: 9, w: NB_THUMB_W - 6, h: NB_THUMB_H - 12 };
+    const scale = area.w / 320;
+    strokes.forEach(entry => {
+        if (entry.t === 'emoji') {
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.font = `${Math.max(5, (entry.size || 32) * scale * 1.3)}px system-ui, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(entry.ch || '', area.x + entry.x * area.w, area.y + entry.y * area.h);
+            return;
+        }
+        if (!entry.pts || entry.pts.length < 2) return;
+        const rp = strokeRenderParams(entry.t);
+        ctx.globalCompositeOperation = rp.composite;
+        ctx.globalAlpha = rp.alpha;
+        ctx.strokeStyle = entry.c || '#000';
+        ctx.lineWidth = Math.max(0.5, (entry.w || 3) * scale);
+        ctx.lineCap = rp.cap;
+        ctx.lineJoin = rp.join;
+        ctx.beginPath();
+        entry.pts.forEach((p, i) => {
+            const x = area.x + p[0] * area.w, y = area.y + p[1] * area.h;
+            if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        });
+        ctx.stroke();
+    });
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+}
+// אחרי שמירה (קו, טקסט, שורה ברשימה) הדף הקטן של הדף הפתוח מתעדכן במקום, בלי לבנות את כל הפס מחדש
+function nbRefreshThumb(pageId) {
+    const page = notebookPagesCache.find(p => p.id === pageId);
+    const canvas = page && document.querySelector(`#nb-strip .nb-thumb[data-page-id="${pageId}"] .nb-thumb-ink`);
+    if (canvas) nbDrawThumb(canvas, page);
+}
+function nbScrollStripToCurrent() {
+    const strip = document.getElementById('nb-strip');
+    const cur = strip && strip.querySelector('.nb-thumb.is-current');
+    if (!cur || strip.scrollWidth <= strip.clientWidth) return;
+    const s = strip.getBoundingClientRect(), c = cur.getBoundingClientRect();
+    strip.scrollBy({ left: (c.left + c.width / 2) - (s.left + s.width / 2), behavior: nbReducedMotion() ? 'auto' : 'smooth' });
+}
+// מעבר לדף מסוים (מפס הדפים או מתוך תוכן העניינים) - מתהפך קדימה או אחורה לפי המיקום שלו
+function nbGoToPage(pageId) {
+    const from = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
+    const to = notebookPagesCache.findIndex(p => p.id === pageId);
+    if (to === -1 || to === from) return;
+    playNotebookPageTurn(to > from ? 'next' : 'prev', () => openNotebookPage(pageId));
 }
 
 // היפוך דף: "רוח רפאים" (העתק של הדף הנוכחי, כולל הציור שעל הקנבס) מתהפך סביב הכריכה - קדימה הדף
@@ -17864,7 +18043,7 @@ function initNotebookSwipe() {
         tracking = false;
         if (nbViewMode !== 'notebook') return;
         const target = e.target;
-        if (target.closest('canvas, .notebook-emoji-item, input, .notebook-page-toolbar, .notebook-tool-row, .notebook-emoji-picker')) return;
+        if (target.closest('canvas, .notebook-emoji-item, input, .nb-tools')) return;
         const ta = target.closest('textarea');
         if (ta && document.activeElement === ta) return;
         startX = e.clientX; startY = e.clientY; startTime = Date.now(); tracking = true;
@@ -17954,6 +18133,8 @@ function renderNotebookBookmarkState() {
         btn.title = t(on ? 'nb_bookmark_remove_title' : 'nb_bookmark_add_title');
         btn.setAttribute('aria-label', btn.title);
     }
+    // הסרט הקטן על הדף המסומן בפס הדפים
+    nbRenderStrip();
 }
 async function toggleNotebookBookmark() {
     const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
@@ -17996,10 +18177,32 @@ function renderPageTabsList() {
 }
 function selectNotebookPage(pageId) {
     closeModal('modal-nb-contents');
-    const from = notebookPagesCache.findIndex(p => p.id === currentOpenPageId);
-    const to = notebookPagesCache.findIndex(p => p.id === pageId);
-    if (to === -1 || to === from) return;
-    playNotebookPageTurn(to > from ? 'next' : 'prev', () => openNotebookPage(pageId));
+    nbGoToPage(pageId);
+}
+
+// --- ⋯ בראש המחברת: כריכה ופרטים, שינוי שם הדף, ניקוי הציור (רק בדף ציור) ומחיקת הדף ---
+function openNotebookActions() {
+    const nb = allNotebooksCache.find(n => n.id === currentOpenNotebookId);
+    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    const grid = document.getElementById('nb-actions-grid');
+    if (!nb || !grid) return;
+    closeNbPops();
+    document.getElementById('nb-actions-title').textContent = `${nb.cover_emoji || '📓'} ${nb.title}`;
+    grid.innerHTML = '';
+    const isCanvas = !!(page && (page.page_type === 'draw' || page.page_type === 'grid'));
+    const options = [{ icon: '🎨', key: 'nb_cover_edit_title', desc: 'nb_action_cover_desc', run: () => openNotebookCoverModal(nb.id) }];
+    if (page) options.push({ icon: '✏️', key: 'notebook_page_rename_title', desc: 'nb_action_rename_desc', run: () => openRenamePageModal() });
+    if (isCanvas) options.push({ icon: '🧽', key: 'notebook_canvas_clear_title', desc: 'nb_action_clear_desc', run: () => clearCanvas() });
+    if (page) options.push({ icon: '🗑️', key: 'nb_action_delete_page', desc: 'nb_action_delete_page_desc', danger: true, run: () => deleteNotebookPage(page.id) });
+    options.forEach(o => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'bag-add-option' + (o.danger ? ' is-danger' : '');
+        b.innerHTML = `<span class="bag-add-option-icon" aria-hidden="true">${o.icon}</span><span class="bag-add-option-text"><span class="bag-add-option-name">${escapeHtmlForReport(t(o.key))}</span><span class="bag-add-option-desc">${escapeHtmlForReport(t(o.desc))}</span></span>`;
+        b.onclick = () => { closeModal('modal-nb-actions'); o.run(); };
+        grid.appendChild(b);
+    });
+    openModal('modal-nb-actions');
 }
 
 // --- 🎨 כריכה ופרטים: מחברת חדשה (מה-"+ מחברת" או מה-"+" שעל מדף) או עריכת קיימת ---
@@ -18293,6 +18496,8 @@ async function loadNotebookItems(pageId) {
     const { data, error } = await supabaseClient.from('notebook_items').select('*').eq('page_id', pageId).eq('user_id', currentUserId).order('created_at', { ascending: true });
     if (error || pageId !== currentOpenPageId) return;
     notebookItemsCache = data || [];
+    // גם החיפוש ופס הדפים רואים מיד ✓ ושורות חדשות של הדף הזה
+    notebookAllItemsCache = notebookAllItemsCache.filter(i => i.page_id !== pageId).concat(notebookItemsCache);
     renderNotebookItemsList();
 }
 
@@ -18317,6 +18522,7 @@ function renderNotebookItemsList() {
         `;
         listEl.appendChild(li);
     });
+    if (currentOpenPageId) nbRefreshThumb(currentOpenPageId);
 }
 
 async function toggleNotebookItemStatus(id, currentStatus) {
@@ -18516,6 +18722,7 @@ function startStroke(e) {
     const canvas = document.getElementById('notebook-page-canvas');
     if (!canvas) return;
     e.preventDefault();
+    closeNbPops();
     const toolCode = DRAW_TOOL_CODES[currentDrawTool] || 's';
     currentStroke = { t: toolCode, c: penColor, w: DRAW_TOOL_WIDTHS[toolCode](), pts: [getNotebookCanvasPoint(canvas, e)] };
     document.addEventListener('pointermove', continueStroke);
@@ -18588,14 +18795,39 @@ function clearCanvas() {
 function setDrawTool(tool) {
     currentDrawTool = tool;
     document.querySelectorAll('.notebook-tool-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-draw-tool') === tool);
+        const on = btn.getAttribute('data-draw-tool') === tool;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+    closeNbPops();
 }
 
+// הצבע שנבחר מופיע גם בעיגול שבגלולה, כך שרואים תמיד באיזה צבע מציירים
 function setPenColor(color, btnEl) {
     penColor = color;
     document.querySelectorAll('.notebook-color-swatch').forEach(el => el.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
+    const dot = document.getElementById('nb-tools-dot');
+    if (dot) dot.style.background = color;
+}
+
+// --- החלוניות הקטנות מעל גלולת הכלים: צבע ועובי / מדבקות. אחת בכל פעם; נסגרות כשמתחילים לצייר,
+// כשבוחרים כלי או כשעוברים דף ---
+function toggleNbPop(which) {
+    const pops = { color: document.getElementById('nb-pop-color'), emoji: document.getElementById('notebook-emoji-picker') };
+    const target = pops[which];
+    if (!target) return;
+    const opening = target.classList.contains('hidden');
+    closeNbPops();
+    if (!opening) return;
+    if (which === 'emoji' && !target.children.length) renderEmojiPicker();
+    target.classList.remove('hidden');
+    const btn = document.getElementById(which === 'color' ? 'nb-tools-color' : 'nb-tools-emoji');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+function closeNbPops() {
+    ['nb-pop-color', 'notebook-emoji-picker'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    ['nb-tools-color', 'nb-tools-emoji'].forEach(id => document.getElementById(id)?.setAttribute('aria-expanded', 'false'));
 }
 
 // עובי-קו רלוונטי לעט בלבד (לפי בקשה מפורשת "עוד עטים וסגנונות ציור") - למרקר
@@ -18608,9 +18840,11 @@ function setPenWidth(width, btnEl) {
 
 async function saveCanvasData() {
     if (!supabaseClient || !currentOpenPageId) return;
-    await supabaseClient.from('notebook_pages').update({ canvas_data: canvasStrokes }).eq('id', currentOpenPageId);
-    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    const pageId = currentOpenPageId;
+    const page = notebookPagesCache.find(p => p.id === pageId);
     if (page) page.canvas_data = canvasStrokes;
+    nbRefreshThumb(pageId);
+    await supabaseClient.from('notebook_pages').update({ canvas_data: canvasStrokes }).eq('id', pageId);
 }
 
 // דף-כתיבה: שמירה מבוזרת (לא בכל הקשת מקש, כמו הציור ששומר רק על פעולות
@@ -18622,10 +18856,12 @@ function scheduleNotebookTextSave() {
 }
 async function saveNotebookTextContent() {
     if (!supabaseClient || !currentOpenPageId) return;
+    const pageId = currentOpenPageId;
     const value = document.getElementById('notebook-page-text-content').value;
-    await supabaseClient.from('notebook_pages').update({ text_content: value }).eq('id', currentOpenPageId);
-    const page = notebookPagesCache.find(p => p.id === currentOpenPageId);
+    const page = notebookPagesCache.find(p => p.id === pageId);
     if (page) page.text_content = value;
+    nbRefreshThumb(pageId);
+    await supabaseClient.from('notebook_pages').update({ text_content: value }).eq('id', pageId);
 }
 
 // --- בוחר אימוג'ים - נוחת כמדבקה על הקנבס (לא נכנס לשדה טקסט), לפי בקשה
@@ -18645,17 +18881,14 @@ function renderEmojiPicker() {
 }
 
 function toggleEmojiPickerPanel() {
-    const panel = document.getElementById('notebook-emoji-picker');
-    if (!panel) return;
-    const nowHidden = panel.classList.toggle('hidden');
-    if (!nowHidden && !panel.children.length) renderEmojiPicker();
+    toggleNbPop('emoji');
 }
 
 function stampEmojiOnCanvas(emoji) {
     canvasStrokes.push({ t: 'emoji', ch: emoji, x: 0.5, y: 0.4, size: 32 });
     renderEmojiOverlay();
     saveCanvasData();
-    document.getElementById('notebook-emoji-picker')?.classList.add('hidden');
+    closeNbPops();
 }
 
 // --- שכבת-DOM נפרדת לאימוג'ים על הקנבס (לא מצוירים לתוך הביטמאפ) - כדי

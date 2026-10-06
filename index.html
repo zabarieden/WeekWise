@@ -88,7 +88,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=502">
+    <link rel="stylesheet" href="theme.css?v=503">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1482,27 +1482,29 @@
             </div>
 
 
-            <!-- 📓 מחברת פתוחה ("המחברות שלי", #notebooks-section) - מסך מלא מעל הארון: כריכה ופרטים,
-                 סימנייה, תוכן עניינים, ודף אחד בכל פעם שמתהפך כמו במחברת אמיתית (חצים בתחתית הדף או
-                 החלקה הצידה). סוג הדף קובע את הנייר (data-paper): שורות לכתיבה, משבצות וחלק לציור,
-                 ורשימה לסימון. מחברת "📝 משימות" נפתחת באותו מסך עם רשימת המשימות (study_tasks).
-                 z-index מתחת לחלונות הצפים (apple-modal), כדי שכריכה/תוכן עניינים/סוג דף ייפתחו מעליה;
-                 כפתורי ה-FAB מוסתרים בזמן שהיא פתוחה (projects-open על .phone-wrapper) - ר' openNotebookView -->
+            <!-- 📓 מחברת פתוחה (מתוך התיק / הקלסר) - מסך מלא: דף נייר בצבע שמנת (קבוע בכל ערכת נושא, כמו
+                 נייר אמיתי) שמתהפך כמו במחברת אמיתית - בהחלקה הצידה או בלחיצה על דף בפס הדפים שבתחתית.
+                 סוג הדף קובע את הנייר (data-paper): שורות לכתיבה, משבצות וחלק לציור, ורשימה לסימון; בדפי
+                 ציור הכלים צפים בגלולה כהה בתחתית הדף. מחברת "📝 משימות" נפתחת באותו מסך עם רשימת המשימות
+                 (study_tasks). z-index מתחת לחלונות הצפים (apple-modal), כדי שכריכה / תוכן עניינים / סוג דף
+                 ייפתחו מעליה; כפתורי ה-FAB מוסתרים בזמן שהיא פתוחה (projects-open על .phone-wrapper) -
+                 ר' openNotebookView -->
             <div id="nb-view" class="nb-view" aria-hidden="true">
                 <div class="nb-view-top">
-                    <button type="button" class="nb-view-back" onclick="closeNotebookView()" data-i18n-title="nb_back_title" data-i18n-aria-label="nb_back_title" title="Back to the bookcase" aria-label="Back to the bookcase"><span aria-hidden="true">←</span></button>
-                    <div class="nb-view-title"><span id="nb-view-emoji" class="nb-view-emoji"></span><span id="nb-view-name" class="nb-view-name"></span></div>
+                    <button type="button" class="gv-icon-btn" onclick="closeNotebookView()" data-i18n-title="nb_back_title" data-i18n-aria-label="nb_back_title" title="Back to My Bag" aria-label="Back to My Bag"><svg class="gv-back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                    <div class="nb-heading">
+                        <span class="nb-crumb" id="nb-view-crumb"></span>
+                        <div class="nb-view-title"><span id="nb-view-emoji" class="nb-view-emoji"></span><span id="nb-view-name" class="nb-view-name"></span></div>
+                    </div>
                     <div class="nb-view-actions">
-                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookContents()" data-i18n-title="nb_contents_title" data-i18n-aria-label="nb_contents_title" title="Contents" aria-label="Contents">☰</button>
-                        <button type="button" class="nb-view-btn nb-only-notebook" id="nb-bookmark-btn" onclick="toggleNotebookBookmark()" aria-pressed="false" title="Bookmark this page" aria-label="Bookmark this page">🔖</button>
-                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookCoverModal(currentOpenNotebookId)" data-i18n-title="nb_cover_edit_title" data-i18n-aria-label="nb_cover_edit_title" title="Cover &amp; details" aria-label="Cover &amp; details">🎨</button>
-                        <button type="button" class="nb-view-btn nb-view-btn-add nb-only-notebook" onclick="openModal('modal-notebook-page-type-choice')" data-i18n-title="notebook_page_add_btn_title" data-i18n-aria-label="notebook_page_add_btn_title" title="Add page" aria-label="Add page">＋</button>
-                        <button type="button" class="nb-view-btn nb-view-btn-add nb-only-tasks" onclick="openAddStudyItemModal()" data-i18n-title="study_add_btn_title" data-i18n-aria-label="study_add_btn_title" title="Add task" aria-label="Add task">＋</button>
+                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookContents()" data-i18n-title="nb_contents_title" data-i18n-aria-label="nb_contents_title" title="Contents" aria-label="Contents"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></button>
+                        <button type="button" class="nb-view-btn nb-only-notebook" id="nb-bookmark-btn" onclick="toggleNotebookBookmark()" aria-pressed="false" title="Bookmark this page" aria-label="Bookmark this page"><svg class="nb-bookmark-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-3.8-5.5 3.8z"></path></svg></button>
+                        <button type="button" class="nb-view-btn nb-only-notebook" onclick="openNotebookActions()" data-i18n-title="tbl_more" data-i18n-aria-label="tbl_more" title="More" aria-label="More"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+                        <button type="button" class="nb-view-btn nb-view-btn-add nb-only-tasks" onclick="openAddStudyItemModal()" data-i18n-title="study_add_btn_title" data-i18n-aria-label="study_add_btn_title" title="Add task" aria-label="Add task"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button>
                     </div>
                 </div>
                 <div class="nb-book" id="nb-book">
                     <div class="nb-sheet" id="nb-sheet" data-paper="write">
-                        <span class="nb-binding" aria-hidden="true"></span>
                         <span class="nb-page-ribbon hidden" id="nb-page-ribbon" aria-hidden="true"></span>
                         <!-- מחברת "📝 משימות" (study_tasks) -->
                         <div class="nb-page nb-tasks-page nb-only-tasks">
@@ -1510,13 +1512,14 @@
                             <ul id="study-tasks-list" class="study-tasks-list"></ul>
                             <p id="study-tasks-empty" class="vision-goals-empty hidden" data-i18n="study_empty_hint">No tasks yet – tap + to add the first one.</p>
                         </div>
-                        <!-- דף במחברת -->
+                        <!-- דף במחברת: כותרת + התאריך שבו נפתח, ואז הנייר -->
                         <div class="nb-page nb-only-notebook" id="notebook-page-content-wrap">
                             <div class="nb-page-head">
-                                <button type="button" class="notebook-page-title-btn" onclick="openRenamePageModal()">
+                                <button type="button" class="notebook-page-title-btn" onclick="openRenamePageModal()" data-i18n-title="notebook_page_rename_title" title="Rename Page">
                                     <span id="notebook-page-title-text"></span>
-                                    <span class="notebook-page-title-edit-icon">✏️</span>
+                                    <span class="notebook-page-title-edit-icon" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"></path></svg></span>
                                 </button>
+                                <span class="nb-page-date" id="nb-page-date"></span>
                             </div>
                             <div class="nb-page-body">
                                 <ul id="notebook-items-list" class="study-tasks-list nb-items-list"></ul>
@@ -1526,50 +1529,57 @@
                                     <button type="submit" class="nb-list-add-btn" data-i18n-aria-label="notebook_item_add_btn_title" aria-label="Add item">＋</button>
                                 </form>
                                 <textarea id="notebook-page-text-content" class="notebook-page-text-content hidden" oninput="scheduleNotebookTextSave()" data-i18n-placeholder="notebook_page_text_placeholder" placeholder="Start writing..."></textarea>
-                                <!-- דף ציור (חלק / משבצות): הכלים מעל, הקנבס שקוף כך שהנייר נראה דרכו -->
+                                <!-- דף ציור (חלק / משבצות): הקנבס שקוף כך שהנייר נראה דרכו; הכלים בגלולה שמתחת -->
                                 <div class="nb-canvas-area hidden" id="notebook-canvas-section-body">
-                                    <div class="notebook-tool-row">
-                                        <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" data-i18n-title="notebook_canvas_pen_title" title="Pen">✏️</button>
-                                        <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" data-i18n-title="notebook_canvas_marker_title" title="Marker">🖌️</button>
-                                        <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" data-i18n-title="notebook_canvas_marker_square_title" title="Flat marker">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.6h7.5" stroke-width="3.2" opacity=".35"/><g transform="rotate(40 12 11)"><rect x="9.2" y="2.6" width="5.6" height="10.4" rx="1.6"/><path d="M9.2 6.4h5.6"/><path d="M9.8 13h4.4l-.7 2.6h-3z"/><path d="M10.6 15.6h2.8l-.6 2.8h-1.6z"/></g></svg>
-                                        </button>
-                                        <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" data-i18n-title="notebook_canvas_eraser_title" title="Eraser">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(45 12 11)"><rect x="8" y="3" width="8" height="14.5" rx="2.2"/><path d="M8 10.6h8"/><path d="M8.85 11.4h6.3v4.9a1.2 1.2 0 0 1-1.2 1.2h-3.9a1.2 1.2 0 0 1-1.2-1.2z" fill="currentColor" opacity=".18" stroke="none"/></g><circle cx="9.4" cy="20.8" r=".7" fill="currentColor" stroke="none" opacity=".55"/><circle cx="12.4" cy="20.1" r=".55" fill="currentColor" stroke="none" opacity=".45"/><circle cx="6.9" cy="19.6" r=".5" fill="currentColor" stroke="none" opacity=".4"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="notebook-page-toolbar">
-                                        <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#8e24aa" onclick="setPenColor('#8e24aa', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#d81b60" onclick="setPenColor('#d81b60', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <button type="button" class="notebook-color-swatch" style="background:#00897b" onclick="setPenColor('#00897b', this)" data-i18n-title="notebook_canvas_pen_color_title" title="Pen color"></button>
-                                        <span class="notebook-toolbar-sep"></span>
-                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(1.5, this)" data-i18n-title="notebook_canvas_width_thin_title" title="Thin"><span class="notebook-width-dot" style="width:4px;height:4px;"></span></button>
-                                        <button type="button" class="notebook-width-btn active" onclick="setPenWidth(3, this)" data-i18n-title="notebook_canvas_width_medium_title" title="Medium"><span class="notebook-width-dot" style="width:8px;height:8px;"></span></button>
-                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(6, this)" data-i18n-title="notebook_canvas_width_thick_title" title="Thick"><span class="notebook-width-dot" style="width:14px;height:14px;"></span></button>
-                                        <span class="notebook-toolbar-sep"></span>
-                                        <button type="button" class="notebook-toolbar-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" title="Undo last stroke">↩️</button>
-                                        <button type="button" class="notebook-toolbar-btn" onclick="clearCanvas()" data-i18n-title="notebook_canvas_clear_title" title="Clear page">🗑️</button>
-                                        <button type="button" class="notebook-toolbar-btn" onclick="toggleEmojiPickerPanel()" data-i18n-title="notebook_emoji_picker_toggle_title" title="Insert emoji">🙂</button>
-                                    </div>
-                                    <div id="notebook-emoji-picker" class="icon-picker-row notebook-emoji-picker hidden"></div>
                                     <div class="notebook-page-canvas-wrap">
                                         <canvas id="notebook-page-canvas" class="notebook-page-canvas"></canvas>
                                         <div id="notebook-emoji-overlay" class="notebook-emoji-overlay"></div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="nb-page-foot">
-                                <button type="button" class="nb-turn-btn" id="notebook-page-prev-btn" onclick="goToPrevPage()" data-i18n-title="nb_prev_page" data-i18n-aria-label="nb_prev_page" title="Previous page" aria-label="Previous page"><span aria-hidden="true">‹</span></button>
-                                <span id="notebook-page-counter" class="nb-page-counter"></span>
-                                <button type="button" class="nb-turn-btn" id="notebook-page-next-btn" onclick="goToNextPage()" data-i18n-title="nb_next_page" data-i18n-aria-label="nb_next_page" title="Next page" aria-label="Next page"><span aria-hidden="true">›</span></button>
+                            <!-- 🖊️ גלולת הכלים - רק בדפי ציור (ר' .nb-sheet[data-paper]): עט / מרקר / מרקר שטוח / מחק,
+                                 עיגול הצבע (צבעים + עובי בחלונית שנפתחת מעליה), ביטול ומדבקות -->
+                            <div class="nb-tools" id="nb-tools">
+                                <div class="nb-pop hidden" id="nb-pop-color">
+                                    <div class="nb-pop-row">
+                                        <button type="button" class="notebook-color-swatch active" style="background:#2b2b2b" onclick="setPenColor('#2b2b2b', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#e53935" onclick="setPenColor('#e53935', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#1e88e5" onclick="setPenColor('#1e88e5', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#43a047" onclick="setPenColor('#43a047', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#fb8c00" onclick="setPenColor('#fb8c00', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#8e24aa" onclick="setPenColor('#8e24aa', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#d81b60" onclick="setPenColor('#d81b60', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                        <button type="button" class="notebook-color-swatch" style="background:#00897b" onclick="setPenColor('#00897b', this)" data-i18n-title="notebook_canvas_pen_color_title" data-i18n-aria-label="notebook_canvas_pen_color_title" title="Pen color" aria-label="Pen color"></button>
+                                    </div>
+                                    <div class="nb-pop-row">
+                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(1.5, this)" data-i18n-title="notebook_canvas_width_thin_title" data-i18n-aria-label="notebook_canvas_width_thin_title" title="Thin" aria-label="Thin"><span class="notebook-width-dot" style="width:4px;height:4px;"></span></button>
+                                        <button type="button" class="notebook-width-btn active" onclick="setPenWidth(3, this)" data-i18n-title="notebook_canvas_width_medium_title" data-i18n-aria-label="notebook_canvas_width_medium_title" title="Medium" aria-label="Medium"><span class="notebook-width-dot" style="width:8px;height:8px;"></span></button>
+                                        <button type="button" class="notebook-width-btn" onclick="setPenWidth(6, this)" data-i18n-title="notebook_canvas_width_thick_title" data-i18n-aria-label="notebook_canvas_width_thick_title" title="Thick" aria-label="Thick"><span class="notebook-width-dot" style="width:14px;height:14px;"></span></button>
+                                    </div>
+                                </div>
+                                <div id="notebook-emoji-picker" class="nb-pop icon-picker-row notebook-emoji-picker hidden"></div>
+                                <div class="nb-tools-pill" role="group" data-i18n-aria-label="nb_tools_label" aria-label="Drawing tools">
+                                    <button type="button" class="notebook-tool-btn active" data-draw-tool="pen" onclick="setDrawTool('pen')" aria-pressed="true" data-i18n-title="notebook_canvas_pen_title" data-i18n-aria-label="notebook_canvas_pen_title" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"></path><path d="M13 8.6l2.4 2.4"></path></svg></button>
+                                    <button type="button" class="notebook-tool-btn" data-draw-tool="marker" onclick="setDrawTool('marker')" aria-pressed="false" data-i18n-title="notebook_canvas_marker_title" data-i18n-aria-label="notebook_canvas_marker_title" title="Marker" aria-label="Marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 15l6-6 3 3-6 6z"></path><path d="M9 15l-3 3h4"></path><path d="M14 8l2-2 3 3-2 2"></path></svg></button>
+                                    <button type="button" class="notebook-tool-btn" data-draw-tool="marker_square" onclick="setDrawTool('marker_square')" aria-pressed="false" data-i18n-title="notebook_canvas_marker_square_title" data-i18n-aria-label="notebook_canvas_marker_square_title" title="Flat marker" aria-label="Flat marker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.6h7.5" stroke-width="3.2" opacity=".35"></path><g transform="rotate(40 12 11)"><rect x="9.2" y="2.6" width="5.6" height="10.4" rx="1.6"></rect><path d="M9.2 6.4h5.6"></path><path d="M9.8 13h4.4l-.7 2.6h-3z"></path><path d="M10.6 15.6h2.8l-.6 2.8h-1.6z"></path></g></svg></button>
+                                    <button type="button" class="notebook-tool-btn" data-draw-tool="eraser" onclick="setDrawTool('eraser')" aria-pressed="false" data-i18n-title="notebook_canvas_eraser_title" data-i18n-aria-label="notebook_canvas_eraser_title" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(45 12 11)"><rect x="8" y="3" width="8" height="14.5" rx="2.2"></rect><path d="M8 10.6h8"></path><path d="M8.85 11.4h6.3v4.9a1.2 1.2 0 0 1-1.2 1.2h-3.9a1.2 1.2 0 0 1-1.2-1.2z" fill="currentColor" opacity=".18" stroke="none"></path></g><circle cx="9.4" cy="20.8" r=".7" fill="currentColor" stroke="none" opacity=".55"></circle><circle cx="12.4" cy="20.1" r=".55" fill="currentColor" stroke="none" opacity=".45"></circle><circle cx="6.9" cy="19.6" r=".5" fill="currentColor" stroke="none" opacity=".4"></circle></svg></button>
+                                    <span class="nb-tools-sep" aria-hidden="true"></span>
+                                    <button type="button" class="nb-tools-btn nb-tools-color" id="nb-tools-color" onclick="toggleNbPop('color')" aria-expanded="false" data-i18n-title="nb_tools_color_title" data-i18n-aria-label="nb_tools_color_title" title="Color and thickness" aria-label="Color and thickness"><span class="nb-tools-dot" id="nb-tools-dot" aria-hidden="true"></span></button>
+                                    <button type="button" class="nb-tools-btn" onclick="undoLastStroke()" data-i18n-title="notebook_canvas_undo_title" data-i18n-aria-label="notebook_canvas_undo_title" title="Undo last stroke" aria-label="Undo last stroke"><svg class="nb-undo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></button>
+                                    <button type="button" class="nb-tools-btn" id="nb-tools-emoji" onclick="toggleEmojiPickerPanel()" aria-expanded="false" data-i18n-title="notebook_emoji_picker_toggle_title" data-i18n-aria-label="notebook_emoji_picker_toggle_title" title="Insert emoji" aria-label="Insert emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 14.2c.9 1.3 2.1 1.9 3.5 1.9s2.6-.6 3.5-1.9"></path><circle cx="9.2" cy="10" r=".7" fill="currentColor"></circle><circle cx="14.8" cy="10" r=".7" fill="currentColor"></circle></svg></button>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- פס הדפים: דף קטן לכל דף במחברת (עם מה שכתוב / מצויר בו), הנוכחי מוקף, 🔖 על הדף המסומן;
+                     לחיצה מעבירה אליו, ＋ מוסיף דף - ר' nbRenderStrip -->
+                <div class="nb-strip-wrap nb-only-notebook">
+                    <div class="nb-strip-row">
+                        <div class="nb-strip" id="nb-strip" data-i18n-aria-label="nb_strip_label" aria-label="Notebook pages"></div>
+                        <button type="button" class="nb-thumb-add" onclick="openModal('modal-notebook-page-type-choice')" data-i18n-title="notebook_page_add_btn_title" data-i18n-aria-label="notebook_page_add_btn_title" title="Add page" aria-label="Add page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button>
+                    </div>
+                    <span id="notebook-page-counter" class="nb-page-counter"></span>
                 </div>
             </div>
 
@@ -1992,6 +2002,18 @@
                 <ul id="notebook-page-tabs-list" class="notebook-page-tabs-list nb-toc-list"></ul>
                 <div class="action-buttons-wrap">
                     <button class="btn-clear-specific" onclick="closeModal('modal-nb-contents')" data-i18n="close_btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📓 ⋯ במחברת: כריכה ופרטים / שינוי שם הדף / ניקוי הציור / מחיקת הדף (openNotebookActions) -->
+        <div id="modal-nb-actions" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="nb-actions-title"></h3>
+                <div id="nb-actions-grid" class="bag-add-grid"></div>
+                <div class="action-buttons-wrap">
+                    <button class="btn-clear-specific" onclick="closeModal('modal-nb-actions')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -4132,8 +4154,8 @@
 
     </div>
 
-    <script src="i18n.js?v=405"></script>
-    <script src="app.js?v=550"></script>
+    <script src="i18n.js?v=406"></script>
+    <script src="app.js?v=551"></script>
     <script src="goals-library.js?v=1"></script>
     <script src="bag.js?v=2"></script>
     <script src="tables.js?v=1"></script>
