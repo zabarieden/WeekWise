@@ -222,7 +222,7 @@ async function renderNewMe() {
 // לפי בקשה מפורשת: "תמציתי, שהכל יהיה שם ויהיה רשום הכל, שידעו למה הם משלמים... שיראה מקצועי".
 // כותרת, שני מסלולים (לכל החיים / חודשי) וכפתור, "מה מקבלים" בשלוש קבוצות, איך זה עובד (3 שלבים),
 // הצצה ליום, שאלות קצרות וכפתור שוב. המחירים עצמם נקבעים ב-Lemon Squeezy - כאן רק התוויות שמוצגות
-const NEW_ME_PRICES = { life: '$29.99', monthly: '$4.99' };
+const NEW_ME_PRICES = { life: '$39.99', monthly: '$5.99' };
 let nmSalesPlan = 'life';
 function nmBuyLabel(plan) {
     return plan === 'monthly'
