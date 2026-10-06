@@ -215,7 +215,8 @@ function tblRenderSumPill() {
 }
 
 // --- תצוגת טבלה: שורות flex (כך שהעמודה הראשונה נצמדת בגלילה הצידה), כותרת = מיון ---
-function tblColWidth(col, index) { return index === 0 ? TBL_STICKY_WIDTH : (TBL_COL_WIDTH[col.type] || 130); }
+// עמודת ✓ שמחוברת לרשימת הקניות רחבה יותר - יש בה גם את כפתור ה-🛒
+function tblColWidth(col, index) { return index === 0 ? TBL_STICKY_WIDTH : (tblIsShopCol(col) ? 104 : (TBL_COL_WIDTH[col.type] || 130)); }
 function tblBuildGrid(rows) {
     const cols = customTableColumnsCache;
     const v = tblView();
@@ -263,6 +264,7 @@ function tblBuildGrid(rows) {
                 b.innerHTML = val ? BAG_CHECK_SVG : '';
                 b.onclick = e => { e.stopPropagation(); tblSetCell(row.id, col.id, !val); };
                 td.appendChild(b);
+                if (!val && tblIsShopCol(col)) { td.classList.add('has-shop'); td.appendChild(tblShopButton(row.id, col.id)); }
             } else {
                 td.innerHTML = tblValueHtml(col, val);
             }
@@ -304,12 +306,14 @@ function tblBuildCards(rows) {
     rows.forEach(row => list.appendChild(tblBuildCard(row)));
     return list;
 }
+// הכרטיס הוא div עם role=button (לא <button>) - כדי שכפתור ה-🛒 יוכל לשבת בתוכו
 function tblBuildCard(row, compact, skipColId) {
     const cols = customTableColumnsCache;
     const titleCol = cols[0];
     const statusCol = cols.find((c, i) => i > 0 && c.type === 'select' && c.id !== skipColId);
-    const card = document.createElement('button');
-    card.type = 'button';
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
     card.className = 'tbl-card' + (compact ? ' is-compact' : '');
     card.dataset.rowId = row.id;
     const status = statusCol ? tblOption(statusCol, tblCellValue(row, statusCol)) : null;
@@ -317,9 +321,15 @@ function tblBuildCard(row, compact, skipColId) {
     const title = tblPlainValue(titleCol, tblCellValue(row, titleCol));
     const head = `<span class="tbl-card-head"><span class="tbl-card-title">${title ? bagEsc(title) : '<span class="tbl-muted">—</span>'}</span>${status ? tblValueHtml(statusCol, status.id) : ''}</span>`;
     const fields = cols.filter((c, i) => i > 0 && c !== statusCol && c.id !== skipColId).slice(0, compact ? 2 : 6);
-    const grid = fields.length ? `<span class="tbl-card-fields">${fields.map(c => `<span class="tbl-card-field"><span class="tbl-card-label">${bagEsc(c.name)}</span><span class="tbl-card-value">${tblValueHtml(c, tblCellValue(row, c), { words: true })}</span></span>`).join('')}</span>` : '';
+    const grid = fields.length ? `<span class="tbl-card-fields">${fields.map(c => `<span class="tbl-card-field"><span class="tbl-card-label">${bagEsc(c.name)}</span><span class="tbl-card-value" data-col-id="${bagEsc(c.id)}">${tblValueHtml(c, tblCellValue(row, c), { words: true })}</span></span>`).join('')}</span>` : '';
     card.innerHTML = head + grid;
+    fields.forEach(c => {
+        if (!tblIsShopCol(c) || tblCellValue(row, c)) return;
+        const slot = card.querySelector(`.tbl-card-value[data-col-id="${CSS.escape(c.id)}"]`);
+        if (slot) slot.appendChild(tblShopButton(row.id, c.id));
+    });
     card.onclick = () => openTableRowCard(row.id);
+    card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTableRowCard(row.id); } };
     return card;
 }
 
@@ -385,9 +395,77 @@ function tblBuildBoard(rows) {
     return wrap;
 }
 
+// --- 🛒 עמודת ✓ שמחוברת לרשימת הקניות (למשל "יש מצרכים" בארוחות השבוע, לפי בקשה מפורשת): בשורה שלא
+// מסומנת יש כפתור 🛒 שמוסיף אותה לרשימת הקניות - פעם אחת בלבד (הפריט מקושר לתא דרך
+// my_center_tasks.source_ref). מסמנים כאן ✓ (יש) - הפריט יורד מהרשימה; מוחקים אותו ברשימה - גם כאן הוא
+// כבר לא "ברשימה"; מסמנים אותו שם כנקנה - התא כאן מסומן ✓ לבד (ר' syncShopItemToTable ב-app.js) ---
+let tblShopItems = new Map();
+let tblShopNameSetCache = null;
+// עמודה שלא נקבע לה במפורש (shop_link ריק) - מחוברת אם השם שלה הוא שם עמודת הדוגמה "יש מצרכים" באחת השפות
+function tblShopNameSet() {
+    if (!tblShopNameSetCache) tblShopNameSetCache = new Set(SUPPORTED_LANGUAGES.map(l => translations[l] && translations[l].bag_ex_col_groceries).filter(Boolean));
+    return tblShopNameSetCache;
+}
+function tblIsShopCol(col) {
+    if (!col || col.type !== 'checkbox') return false;
+    if (col.shop_link === true || col.shop_link === false) return col.shop_link;
+    return tblShopNameSet().has(String(col.name || '').trim());
+}
+function tblShopRef(rowId, colId) { return `tbl:${currentOpenTableId}:${rowId}:${colId}`; }
+async function tblLoadShopItems() {
+    tblShopItems = new Map();
+    if (!supabaseClient || !currentUserId || !currentOpenTableId || !customTableColumnsCache.some(tblIsShopCol)) return;
+    const tableId = currentOpenTableId;
+    const { data } = await supabaseClient.from('my_center_tasks').select('id, source_ref, is_completed').eq('user_id', currentUserId).eq('task_type', 'general').eq('is_deleted', false).like('source_ref', `tbl:${tableId}:%`);
+    if (tableId !== currentOpenTableId) return;
+    (data || []).forEach(it => tblShopItems.set(it.source_ref, it));
+}
+// שם הפריט ברשימה: עמודת הטקסט הבאה שיש בה משהו (בארוחות השבוע - שם הארוחה, לא היום), אחרת העמודה הראשונה
+function tblShopName(row) {
+    const cols = customTableColumnsCache;
+    const col = cols.find((c, i) => i > 0 && c.type === 'text' && !tblIsEmpty(tblCellValue(row, c))) || cols[0];
+    return (col ? tblPlainValue(col, tblCellValue(row, col)) : '') || (tblTable() || {}).name || '';
+}
+async function tblAddToShopping(rowId, colId) {
+    const row = customTableRowsCache.find(r => r.id === rowId);
+    if (!row || !supabaseClient || !currentUserId) return;
+    const ref = tblShopRef(rowId, colId);
+    if (tblShopItems.has(ref)) { showAppToast(t('tbl_shop_already')); return; }
+    const content = t('tbl_shop_item').replace('{name}', tblShopName(row));
+    const { data, error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: 'general', content, source_ref: ref, is_completed: false, is_deleted: false }).select('id, source_ref, is_completed').single();
+    if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
+    tblShopItems.set(ref, data);
+    showAppToast(t('tbl_shop_added_toast'));
+    if (typeof loadCenterItems === 'function') loadCenterItems('general');
+    renderTableGrid();
+    if (tblRowCardId === rowId) tblRenderRowCard();
+}
+// ✓ "יש" / שורה שנמחקה - הפריט המקושר יורד מרשימת הקניות (לארכיון שלה, כמו מחיקה רגילה שם)
+async function tblDropShopItems(refs) {
+    const ids = refs.map(r => tblShopItems.get(r)).filter(Boolean).map(it => it.id);
+    refs.forEach(r => tblShopItems.delete(r));
+    if (!ids.length || !supabaseClient) return;
+    await supabaseClient.from('my_center_tasks').update({ is_deleted: true, deleted_at: new Date().toISOString() }).in('id', ids);
+    if (typeof loadCenterItems === 'function') loadCenterItems('general');
+}
+// כפתור קטן ליד ✓ שלא סומן: 🛒 (להוסיף) או 🛒✓ (כבר ברשימה)
+function tblShopButton(rowId, colId) {
+    const inList = tblShopItems.has(tblShopRef(rowId, colId));
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tbl-shop-btn' + (inList ? ' is-in' : '');
+    b.innerHTML = inList ? '🛒<span aria-hidden="true">✓</span>' : '🛒';
+    b.title = t(inList ? 'tbl_shop_in_list' : 'tbl_shop_add');
+    b.setAttribute('aria-label', b.title);
+    b.onclick = e => { e.stopPropagation(); if (inList) showAppToast(t('tbl_shop_already')); else tblAddToShopping(rowId, colId); };
+    b.onkeydown = e => e.stopPropagation();
+    return b;
+}
+
 // --- עריכה ---
 async function tblSetCell(rowId, colId, value) {
     await updateCellValue(rowId, colId, value);
+    if (value === true && tblIsShopCol(tblCol(colId))) await tblDropShopItems([tblShopRef(rowId, colId)]);
     renderTableGrid();
 }
 function tblToggleSort(colId) {
@@ -460,8 +538,34 @@ function tblBuildField(row, col) {
         b.className = 'tbl-toggle' + (val ? ' on' : '');
         b.setAttribute('aria-pressed', val ? 'true' : 'false');
         b.innerHTML = `<span class="tbl-toggle-box" aria-hidden="true">${val ? BAG_CHECK_SVG : ''}</span><span>${bagEsc(t(val ? 'tbl_checked' : 'tbl_unchecked'))}</span>`;
-        b.onclick = () => rerender(!val);
+        b.onclick = async () => {
+            if (!val && tblIsShopCol(col)) await tblDropShopItems([tblShopRef(row.id, col.id)]);
+            rerender(!val);
+        };
         field.appendChild(b);
+        // 🛒 בכרטיס: להוסיף לרשימת הקניות, או "כבר ברשימה" עם אפשרות להוריד
+        if (!val && tblIsShopCol(col)) {
+            const ref = tblShopRef(row.id, col.id);
+            const line = document.createElement('div');
+            line.className = 'tbl-shop-line';
+            if (tblShopItems.has(ref)) {
+                line.innerHTML = `<span class="tbl-shop-status">${bagEsc(t('tbl_shop_in_list'))}</span>`;
+                const off = document.createElement('button');
+                off.type = 'button';
+                off.className = 'tbl-shop-off';
+                off.textContent = t('tbl_shop_remove');
+                off.onclick = async () => { await tblDropShopItems([ref]); tblRenderRowCard(); renderTableGrid(); };
+                line.appendChild(off);
+            } else {
+                const add = document.createElement('button');
+                add.type = 'button';
+                add.className = 'tbl-shop-add';
+                add.textContent = t('tbl_shop_add');
+                add.onclick = () => tblAddToShopping(row.id, col.id);
+                line.appendChild(add);
+            }
+            field.appendChild(line);
+        }
     } else if (col.type === 'select') {
         field.appendChild(tblBuildOptionChips(row, col));
     } else if (col.type === 'date') {
@@ -591,6 +695,8 @@ function deleteTableRowFromCard() {
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
         customTableRowsCache = customTableRowsCache.filter(r => r.id !== id);
         bagRowCounts[currentOpenTableId] = customTableRowsCache.length;
+        // שורה שנמחקה - גם הפריטים שלה ברשימת הקניות יורדים
+        await tblDropShopItems(customTableColumnsCache.filter(tblIsShopCol).map(c => tblShopRef(id, c.id)));
         renderTableGrid();
     });
 }

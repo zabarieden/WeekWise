@@ -396,7 +396,7 @@ function glibBuildTemplatePage(tpl) {
         body.appendChild(row);
         glibPrepareRoutine(tpl).then(planInfo => {
             if (!planInfo || !row.isConnected || glibState.tpl !== tpl) return;
-            row.querySelector('.glib-routine-text').textContent = t('glib_routine_toggle').replace('{time}', planInfo.label);
+            glibRenderRoutineText(row.querySelector('.glib-routine-text'), tpl);
             row.classList.remove('hidden');
         });
     }
@@ -484,8 +484,94 @@ async function glibPrepareRoutine(tpl) {
     const commonPick = glibPickHours(common, desired);
     const plans = freeByTab.map(x => ({ tabId: x.tabId, hours: commonPick || glibPickHours(x.free, desired) })).filter(p => p.hours);
     if (!plans.length) return null;
-    glibState.routinePlan = { tplId: tpl.id, plans, label: plans[0].hours.map(glibHourText).join(', ') };
+    // שעות שכבר יש בהן משהו באחד הטאבים - לא אפשריות בבחירת שעה אחרת
+    const used = new Set((data || []).map(r => parseInt(String(r.time || '').slice(0, 2), 10)).filter(h => !Number.isNaN(h)));
+    glibState.routinePlan = { tplId: tpl.id, plans, tabs, used, label: plans[0].hours.map(glibHourText).join(', ') };
     return glibState.routinePlan;
+}
+
+// "להוסיף ל'השגרה שלי' · 21:00" - השעה היא כפתור: לחיצה פותחת בחירת שעה אחרת (לפי בקשה מפורשת - לא רק
+// השעה שהוצעה). באתגר עם כמה משימות ביום - כפתור לכל משימה
+function glibRenderRoutineText(el, tpl) {
+    const plan = glibState.routinePlan;
+    if (!el || !plan) return;
+    const text = t('glib_routine_toggle');
+    const parts = text.includes('{time}') ? text.split('{time}') : [text + ' · ', ''];
+    el.innerHTML = '';
+    el.append(parts[0]);
+    plan.plans[0].hours.forEach((h, i) => {
+        if (i) el.append(', ');
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'glib-time-chip';
+        chip.innerHTML = `<bdi dir="ltr">${glibHourText(h)}</bdi><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"></path></svg>`;
+        chip.setAttribute('aria-label', `${t('glib_routine_time_title')} ${glibHourText(h)}`);
+        // בתוך <label> של המתג - בלי preventDefault הלחיצה הייתה גם מדליקה/מכבה אותו
+        chip.onclick = (e) => { e.preventDefault(); e.stopPropagation(); glibOpenHourPicker(tpl, i, () => glibRenderRoutineText(el, tpl)); };
+        el.appendChild(chip);
+    });
+    el.append(parts[1]);
+}
+
+// בחירת שעה: 05:00 עד 23:00. שעה שכבר תפוסה בשגרה (או נבחרה למשימה אחרת של אותו אתגר) - מסומנת ולא
+// לחיצה. שעה שעוד לא מופיעה בשעות של הטאב - תתווסף לטאב כשהיעד נשמר (ר' glibEnsureTabHours)
+function glibOpenHourPicker(tpl, index, onDone) {
+    const plan = glibState.routinePlan;
+    if (!plan || plan.tplId !== tpl.id) return;
+    const current = plan.plans[0].hours[index];
+    const others = new Set(plan.plans[0].hours.filter((_, i) => i !== index));
+    const ov = document.createElement('div');
+    ov.className = 'glib-hour-overlay';
+    ov.innerHTML = `<div class="glib-hour-sheet" role="dialog" aria-modal="true"><span class="glib-hour-grip" aria-hidden="true"></span><h3 class="glib-hour-title">${glibEsc(t('glib_routine_time_title'))}</h3><p class="glib-hour-hint">${glibEsc(t('glib_routine_time_hint'))}</p><div class="glib-hour-grid"></div></div>`;
+    ov.querySelector('.glib-hour-sheet').setAttribute('aria-label', t('glib_routine_time_title'));
+    const grid = ov.querySelector('.glib-hour-grid');
+    for (let h = 5; h <= 23; h++) {
+        const busy = h !== current && (plan.used.has(h) || others.has(h));
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'glib-hour' + (h === current ? ' is-current' : '') + (busy ? ' is-busy' : '');
+        b.disabled = busy;
+        b.innerHTML = `<bdi dir="ltr">${glibHourText(h)}</bdi>${busy ? `<small>${glibEsc(t('glib_routine_hour_busy'))}</small>` : ''}`;
+        if (h === current) b.setAttribute('aria-pressed', 'true');
+        b.onclick = () => {
+            plan.plans.forEach(p => { p.hours[index] = h; });
+            plan.label = plan.plans[0].hours.map(glibHourText).join(', ');
+            ov.remove();
+            onDone();
+        };
+        grid.appendChild(b);
+    }
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
+    const cur = grid.querySelector('.is-current');
+    if (cur) cur.focus();
+}
+
+// שעה שנבחרה ועוד לא מופיעה בשעות של הטאב - נוספת לבלוק המתאים (בוקר / צהריים / אחר הצהריים / ערב),
+// אחרת הצעד לא היה מופיע ב"השגרה שלי" (הטאב מציג רק את השעות שלו)
+async function glibEnsureTabHours(plan) {
+    const updates = [];
+    plan.plans.forEach(p => {
+        const tab = (plan.tabs || []).find(tb => tb.id === p.tabId);
+        if (!tab) return;
+        const saved = tab.custom_hours && typeof tab.custom_hours === 'object' ? tab.custom_hours : {};
+        const hours = {};
+        ['morning', 'noon', 'afternoon', 'evening'].forEach(b => { hours[b] = (Array.isArray(saved[b]) ? saved[b] : DAILY_BOARD_DEFAULT_HOURS[b]).map(Number); });
+        let changed = false;
+        p.hours.forEach(h => {
+            if (Object.values(hours).some(list => list.includes(h))) return;
+            const bucket = Object.keys(DAILY_BOARD_BUCKET_RANGES).find(b => DAILY_BOARD_BUCKET_RANGES[b].includes(h));
+            if (!bucket) return;
+            hours[bucket] = [...hours[bucket], h].sort((a, b) => a - b);
+            changed = true;
+        });
+        if (!changed) return;
+        tab.custom_hours = hours;
+        const cached = dailyBoardTabs.find(tb => tb.id === tab.id);
+        if (cached) cached.custom_hours = hours;
+        updates.push(supabaseClient.from('routine_tabs').update({ custom_hours: hours }).eq('id', tab.id));
+    });
+    if (updates.length) await Promise.all(updates);
 }
 
 // התוכנית → פריטים בשגרה: באתגר ימים - כל משימה יומית בשעה שלה (vision_milestone_id; בלי משימות -
@@ -503,6 +589,7 @@ async function glibApplyRoutinePlan(goal, milestones, plan) {
         }
     });
     if (!items.length) return false;
+    await glibEnsureTabHours(plan);
     const { error } = await supabaseClient.from('routine_items').insert(items);
     if (error) { console.error('library routine items failed', error); return false; }
     const board = document.getElementById('modal-daily-board');

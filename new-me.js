@@ -784,7 +784,7 @@ function nmRenderHome(root) {
                     </div>
                 </div>
                 <button type="button" class="nm-journey-strip" onclick="nmGo('journey')">
-                    <span class="nm-journey-strip-text">${NEW_ME_MILESTONE_ICONS[next] || '🏁'} ${nmEsc(t(next - day === 1 ? 'nm_next_milestone_one' : 'nm_next_milestone').replace('{n}', nmFmt(next - day)).replace('{name}', nmMilestoneName(next)))}</span>
+                    <span class="nm-journey-strip-text">${NEW_ME_MILESTONE_ICONS[next] || '🏆'} ${nmEsc(t(next - day === 1 ? 'nm_next_milestone_one' : 'nm_next_milestone').replace('{n}', nmFmt(next - day)).replace('{name}', nmMilestoneName(next)))}</span>
                     <span class="nm-progress" aria-hidden="true"><span style="width:${pct}%"></span></span>
                 </button>
             </div>

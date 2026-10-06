@@ -386,7 +386,25 @@ function updateLiveCaloriesToday() {
 async function toggleTaskStatus(id, currentStatus, type) {
     if (!supabaseClient) return;
     await supabaseClient.from('my_center_tasks').update({ is_completed: !currentStatus }).eq('id', id);
+    if (type === 'general') await syncShopItemToTable(id, !currentStatus);
     loadCenterItems(type);
+}
+
+// פריט ברשימת הקניות שהגיע מטבלה (🛒 בעמודת "יש מצרכים") וסומן כנקנה - גם התא בטבלה מסומן ✓ (וביטול
+// הסימון שם מבטל גם כאן). source_ref = tbl:<טבלה>:<שורה>:<עמודה>
+async function syncShopItemToTable(id, bought) {
+    const { data: item } = await supabaseClient.from('my_center_tasks').select('source_ref').eq('id', id).maybeSingle();
+    const m = item && /^tbl:([^:]+):([^:]+):([^:]+)$/.exec(item.source_ref || '');
+    if (!m) return;
+    const [, tableId, rowId, colId] = m;
+    const { data: row } = await supabaseClient.from('custom_table_rows').select('id, data').eq('id', rowId).maybeSingle();
+    if (!row) return;
+    const newData = { ...(row.data || {}), [colId]: bought };
+    const { error } = await supabaseClient.from('custom_table_rows').update({ data: newData, updated_at: new Date().toISOString() }).eq('id', rowId);
+    if (error) return;
+    const cached = customTableRowsCache.find(r => r.id === rowId);
+    if (cached) cached.data = newData;
+    if (currentOpenTableId === tableId && typeof renderTableGrid === 'function') renderTableGrid();
 }
 
 function loadAllCenterItems() {
@@ -8411,6 +8429,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'what_are_tables', category: 'tables' },
     { id: 'table_views', category: 'tables' },
+    { id: 'table_shopping_link', category: 'tables' },
     { id: 'table_column_types', category: 'tables' },
     { id: 'table_select_colors', category: 'tables' },
     { id: 'table_ai_builder', category: 'tables' },
@@ -8596,6 +8615,15 @@ function updateHomeSkyDayNight() {
 // 4 הרקעים הניטרליים וברירת המחדל הוורודה הישנה ("5 הראשונים... זה מספיק"). שאר הערכות
 // הצבעוניות/המיוחדות נשארות פרימיום בלבד
 const FREE_COLOR_THEMES = ['mint_fresh', 'default', 'bg_white', 'bg_black', 'bg_beige', 'bg_dark_grey'];
+// ערכות שהוצאו בסבב 2 (דומות מדי לאחרות - "פחות, רק היפות", לפי בקשה מפורשת): מי שבחרה אחת מהן עוברת
+// לבד לקרובה ביותר. אותה מפה בדיוק גם בסקריפט המוקדם בראש index.html
+const COLOR_THEME_ALIASES = {
+    sherbet_sky: 'cotton_candy', aurora_pastel: 'rainbow_mist', neon_glass: 'default', ocean_teal: 'blue_teal', arctic_frost: 'blue_teal',
+    volcanic_ember: 'gold_red', royal_amethyst: 'lavender_dream', graphite_steel: 'bg_dark_grey', copper_bronze: 'gold_red',
+    silver_sparkle: 'gold_sparkle', starlight_glam: 'star_map', diamond_sparkle: 'gold_sparkle', blueprint_draft: 'star_map',
+    vaporwave_neon: 'pink_sparkle', neon_trading_chart: 'bull_run', market_data_glow: 'bull_run', bear_crash: 'bull_run', rocket_ship: 'space_rocket',
+};
+function normalizeColorTheme(name) { return COLOR_THEME_ALIASES[name] || name; }
 
 async function selectColorTheme(themeName) {
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
@@ -8629,6 +8657,13 @@ async function loadColorTheme() {
     if (!themeName) {
         themeName = localStorage.getItem(colorThemeKey()) || 'mint_fresh';
     }
+    // ערכה שהוצאה - עוברים לקרובה ושומרים, כדי שגם במכשיר הבא זו תהיה הבחירה
+    const mapped = normalizeColorTheme(themeName);
+    if (mapped !== themeName) {
+        themeName = mapped;
+        localStorage.setItem(colorThemeKey(), themeName);
+        if (supabaseClient && currentUserId) supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, theme: themeName }, { onConflict: 'user_id' }).then(() => {});
+    }
     applyColorTheme(themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);
 }
@@ -8640,10 +8675,14 @@ async function loadColorTheme() {
 // לשים גם src וגם טקסט באותו אלמנט. רק שתי אפשרויות, לפי בקשה מפורשת: 🌟 (מה
 // שהיה אצלה) כברירת המחדל לכולם, והרובוט שני - בפרימיום. בחירות ישנות שהוסרו
 // (מוח/נצנצים/נורה/ברק, ו-'star' עצמו) נופלות בשקט לברירת המחדל
+// ברירת המחדל עכשיו (סבב 2, לפי בחירה מפורשת): "בועה רכה" - ענן צבעים מערכת הנושא שזז ונושם, בלי
+// אייקון (span#ai-brain-orb). 🌟 נשאר כאפשרות חינמית, והרובוט בפרימיום
 const AI_ICON_OPTIONS = {
-    default: { type: 'emoji', glyph: '🌟' },
+    default: { type: 'orb' },
+    star: { type: 'emoji', glyph: '🌟' },
     robot: { type: 'image', src: 'robot-fab-icon.png?v=1' },
 };
+const AI_ICON_PREMIUM = ['robot'];
 function normalizeAiIconId(iconId) { return AI_ICON_OPTIONS[iconId] ? iconId : 'default'; }
 
 function applyAiIcon(iconId) {
@@ -8651,13 +8690,12 @@ function applyAiIcon(iconId) {
     const option = AI_ICON_OPTIONS[iconId];
     const img = document.getElementById('ai-brain-icon-img');
     const emoji = document.getElementById('ai-brain-icon-emoji');
-    if (option.type === 'image') {
-        if (img) { img.src = option.src; img.classList.remove('hidden'); }
-        if (emoji) emoji.classList.add('hidden');
-    } else {
-        if (emoji) { emoji.textContent = option.glyph; emoji.classList.remove('hidden'); }
-        if (img) img.classList.add('hidden');
-    }
+    const orb = document.getElementById('ai-brain-orb');
+    if (img) img.classList.toggle('hidden', option.type !== 'image');
+    if (emoji) emoji.classList.toggle('hidden', option.type !== 'emoji');
+    if (orb) orb.classList.toggle('hidden', option.type !== 'orb');
+    if (option.type === 'image' && img) img.src = option.src;
+    if (option.type === 'emoji' && emoji) emoji.textContent = option.glyph;
     document.querySelectorAll('.ai-icon-swatch').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-ai-icon') === iconId);
     });
@@ -8675,7 +8713,7 @@ function aiIconKey() {
 
 async function selectAiIcon(iconId) {
     iconId = normalizeAiIconId(iconId);
-    if (iconId !== 'default' && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    if (AI_ICON_PREMIUM.includes(iconId) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     applyAiIcon(iconId);
     localStorage.setItem(aiIconKey(), iconId);
     if (supabaseClient && currentUserId) {
@@ -8705,7 +8743,7 @@ async function loadAiIconSetting() {
     // פרימיום פג - חוזרים לברירת המחדל בשקט (לא נועלים בחירה ישנה), אותו
     // דפוס בדיוק כמו הגופן האישי (ר' app.js:7322 בהערת המחקר)
     iconId = normalizeAiIconId(iconId);
-    if (iconId !== 'default' && !isPremiumUser) iconId = 'default';
+    if (AI_ICON_PREMIUM.includes(iconId) && !isPremiumUser) iconId = 'default';
     applyAiIcon(iconId);
 }
 
@@ -17196,6 +17234,9 @@ async function loadTableColumnsAndRows(tableId) {
     customTableColumnsCache = colsRes.data || [];
     customTableRowsCache = rowsRes.data || [];
     bagRowCounts[tableId] = customTableRowsCache.length;
+    // מה מהשורות כבר ברשימת הקניות (עמודת ✓ מחוברת - ר' tblLoadShopItems ב-tables.js)
+    await tblLoadShopItems();
+    if (tableId !== currentOpenTableId) return;
     renderTableViewHead();
     renderTableGrid();
 }
@@ -17428,6 +17469,7 @@ function openAddColumnSubModal() {
     editingCustomColumnId = null;
     document.getElementById('column-name-input').value = '';
     pendingSelectOptions = [];
+    document.getElementById('column-shop-link-toggle').checked = false;
     selectColumnType('text');
     renderPendingSelectOptionsList();
     openModal('modal-add-column');
@@ -17442,6 +17484,7 @@ function openEditColumnSubModal(index) {
     // עותק עמוק-מספיק - כדי שעריכת האפשרויות במודל לא תשנה את pendingTableColumns
     // עד שממש לוחצים "שמירה" (ואם לוחצים "ביטול", pendingTableColumns נשאר נקי)
     pendingSelectOptions = (col.select_options || []).map(opt => ({ ...opt }));
+    document.getElementById('column-shop-link-toggle').checked = tblIsShopCol(col);
     selectColumnType(col.type);
     renderPendingSelectOptionsList();
     openModal('modal-add-column');
@@ -17454,6 +17497,8 @@ function selectColumnType(type) {
     document.getElementById('column-type-picker').setAttribute('data-selected-type', type);
     const optionsEditor = document.getElementById('column-select-options-editor');
     if (optionsEditor) optionsEditor.classList.toggle('hidden', type !== 'select');
+    const shopRow = document.getElementById('column-shop-link-row');
+    if (shopRow) shopRow.classList.toggle('hidden', type !== 'checkbox');
 }
 
 function addPendingSelectOption() {
@@ -17520,11 +17565,12 @@ function saveColumnSubModal() {
         selectOptions = pendingSelectOptions.filter(opt => opt.label.trim()).map(opt => ({ ...opt, label: opt.label.trim() }));
         if (selectOptions.length === 0) { showAppToast(t('table_column_needs_option_error'), 'error'); return; }
     }
+    const shopLink = type === 'checkbox' ? document.getElementById('column-shop-link-toggle').checked : null;
     if (editingCustomColumnId !== null) {
         const existing = pendingTableColumns[editingCustomColumnId];
-        pendingTableColumns[editingCustomColumnId] = { ...existing, name, type, select_options: selectOptions };
+        pendingTableColumns[editingCustomColumnId] = { ...existing, name, type, select_options: selectOptions, shop_link: shopLink };
     } else {
-        pendingTableColumns.push({ id: null, name, type, select_options: selectOptions, sort_order: (pendingTableColumns.length + 1) * 10 });
+        pendingTableColumns.push({ id: null, name, type, select_options: selectOptions, shop_link: shopLink, sort_order: (pendingTableColumns.length + 1) * 10 });
     }
     closeModal('modal-add-column');
     editingCustomColumnId = null;
@@ -17568,10 +17614,12 @@ async function saveTableColumnsImpl() {
     for (let i = 0; i < pendingTableColumns.length; i++) {
         const col = pendingTableColumns[i];
         const sortOrder = (i + 1) * 10;
+        // shop_link: רק לעמודת ✓; עמודה שלא נגעו בה נשארת ריקה (= לפי השם, ר' tblIsShopCol)
+        const shopLink = col.type === 'checkbox' && typeof col.shop_link === 'boolean' ? col.shop_link : null;
         if (col.id) {
-            await supabaseClient.from('custom_table_columns').update({ name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder }).eq('id', col.id);
+            await supabaseClient.from('custom_table_columns').update({ name: col.name, type: col.type, select_options: col.select_options || null, shop_link: shopLink, sort_order: sortOrder }).eq('id', col.id);
         } else {
-            await supabaseClient.from('custom_table_columns').insert({ table_id: currentOpenTableId, user_id: currentUserId, name: col.name, type: col.type, select_options: col.select_options || null, sort_order: sortOrder });
+            await supabaseClient.from('custom_table_columns').insert({ table_id: currentOpenTableId, user_id: currentUserId, name: col.name, type: col.type, select_options: col.select_options || null, shop_link: shopLink, sort_order: sortOrder });
         }
     }
     aiTableBuilderReviewActive = false;
@@ -19658,7 +19706,7 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
         } else if (n.kind === 'current' || n.kind === 'start') {
             node.innerHTML = `<span class="gv-stone is-current">${visionEsc(visionGoalIcon(goal))}</span>`;
         } else {
-            node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">${goal.is_achieved ? '🏆' : '🏁'}</span>`;
+            node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">🏆</span>`;
             label = model.flag;
         }
         wrap.appendChild(node);

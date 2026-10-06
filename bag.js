@@ -1001,6 +1001,8 @@ async function bagSeedExamples(uid) {
         d.tb.cols.forEach((c, i) => colDefs.push({
             table_id: tb.id, user_id: uid, name: t(`bag_ex_col_${c.key}`), type: c.type, sort_order: (i + 1) * 10,
             select_options: c.options ? c.options.map(([key, color]) => ({ id: crypto.randomUUID(), label: t(`bag_ex_opt_${key}`), color })) : null,
+            // "יש מצרכים" בארוחות השבוע מחוברת לרשימת הקניות (🛒 בשורות שלא סומנו)
+            shop_link: c.key === 'groceries' ? true : null,
         }));
     });
     const [pagesRes, colsRes] = await Promise.all([
