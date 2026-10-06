@@ -1707,14 +1707,20 @@ const APP_TOUR_STEPS = [
     { id: 'connect', ch: 'summary', ctx: 'home', icon: '🔗', titleKey: 'apptour_connect_title', text: 'apptour_connect_text', flows: true },
     { id: 'done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_done_title', text: 'apptour_done_text' },
 ];
+// האייקון של New Me - יהלום (ציור משלנו, לא אימוג'י; בחירה 12 בקנבס). בצבע הטקסט - לבן על הגרדיאנט
+// בתפריט, בקטגוריות, בקיצור בהצצה להיום ובכותרת של New Me; בסיור הוא מופיע בתוך אריח גרדיאנט
+const NM_ICON_SVG = '<svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg>';
+function appTourIconHtml(icon) {
+    return String(icon).startsWith('<svg') ? `<span class="app-tour-svg-icon">${icon}</span>` : appTourEsc(icon);
+}
 // "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום (או כמה מפתחות - מוצגים עם ›), טקסט קבוע] או חץ
 // ('>' כיוון אחד, '<>' הדדי). פריסה חכמה מוצגת עם המקום שלה - בתוך המחברות שלי
 const APP_TOUR_FLOWS = [
     [['🤖', 'ai_brain_fab_title'], ['🎯', 'vision_board_title'], ['🪄', ['study_title', 'smart_split_tile_title']], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title'], '>', ['🌼', 'home_corner_title']],
     [['📚', 'books_menu_label'], '>', ['👀', 'today_tasks_title'], ['🎯', 'vision_board_title']],
     [['📅', 'apptour_flow_calendar'], '<>', ['🗓️', null, 'Google Calendar']],
-    [['✨', null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
-    [['⚖️', 'apptour_flow_weight'], '<>', ['✨', null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
+    [[NM_ICON_SVG, null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
+    [['⚖️', 'apptour_flow_weight'], '<>', [NM_ICON_SVG, null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
     [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
     [['🔁', 'apptour_flow_recurring'], '>', ['📊', 'bottom_tab_finance']],
 ];
@@ -1764,6 +1770,7 @@ function appTourLabelFromTarget(el) {
     let icon = '';
     const m = label.match(/^(\p{Extended_Pictographic}️?)\s*/u);
     if (m) { icon = m[1]; label = label.slice(m[0].length); }
+    else if (el.querySelector('svg.nm-icon')) icon = NM_ICON_SVG;
     return { icon, label };
 }
 
@@ -1923,7 +1930,7 @@ function appTourRender(step) {
     layer.querySelector('.app-tour-chapter').textContent = t(APP_TOUR_CHAPTERS[step.ch] || 'apptour_ch_home');
     layer.querySelector('.app-tour-skip').textContent = t('apptour_skip');
     const hero = layer.querySelector('.app-tour-hero');
-    hero.textContent = isCenter ? (icon || '✨') : '';
+    hero.innerHTML = isCenter ? appTourIconHtml(icon || '✨') : '';
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
     clearTimeout(appTourDemoTimer);
@@ -1931,7 +1938,7 @@ function appTourRender(step) {
     demoEl.classList.toggle('hidden', !step.demo);
     if (step.demo === 'goal') demoEl.appendChild(buildTourDemoGoalPath());
     const titleEl = layer.querySelector('.app-tour-title');
-    titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourEsc(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
+    titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourIconHtml(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
     layer.querySelector('.app-tour-text').textContent = t(step.text);
     const linkEl = layer.querySelector('.app-tour-link');
     const linkText = step.link ? t(step.link) : '';
@@ -3314,7 +3321,7 @@ function makeCategoryTile(className, icon, label, onClick) {
     tile.className = className;
     const iconSpan = document.createElement('span');
     iconSpan.className = 'categories-tile-icon';
-    iconSpan.textContent = icon;
+    if (icon === NM_ICON_SVG) iconSpan.innerHTML = icon; else iconSpan.textContent = icon;
     const labelSpan = document.createElement('span');
     labelSpan.className = 'categories-tile-label';
     labelSpan.textContent = label;
@@ -3356,7 +3363,7 @@ function renderCategoriesMenu() {
         }));
     });
     body.appendChild(grid);
-    const newMeTile = makeCategoryTile('categories-tile categories-newme-tile', '✨', 'New Me', () => {
+    const newMeTile = makeCategoryTile('categories-tile categories-newme-tile', NM_ICON_SVG, 'New Me', () => {
         closeModal('modal-categories');
         openNewMe();
     });
@@ -3370,7 +3377,7 @@ function renderCategoriesMenu() {
 }
 
 // מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
-// פתוחה); רק קיצור ה-✨ פותח ישר את "התפריט שלי היום" (openNewMeMenuToday)
+// פתוחה); רק הקיצור של New Me (💎) פותח ישר את "התפריט שלי היום" (openNewMeMenuToday)
 function openNewMe(view = 'home') {
     if (typeof nmView !== 'undefined') nmView = view;
     switchToTab('new-me-section');

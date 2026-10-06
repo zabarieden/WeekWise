@@ -269,7 +269,7 @@ function nmRenderSales(root) {
         <div class="nm-sales">
             ${devBar}
             <div class="nm-hero">
-                <div class="nm-hero-eyebrow">✨ New Me</div>
+                <div class="nm-hero-eyebrow">${NM_ICON_SVG} New Me</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
                 <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
             </div>
@@ -775,7 +775,7 @@ function nmRenderHome(root) {
                 <div class="nm-dash-top">
                     ${nmRingHtml(eaten.kcal, plan + nmBurnedToday)}
                     <div class="nm-dash-stats">
-                        <div class="nm-eyebrow">✨ New Me · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
+                        <div class="nm-eyebrow">${NM_ICON_SVG} New Me · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
                         <button type="button" class="nm-day-chip" onclick="nmGo('journey')">${nmDayHtml(day)}${st.current > 0 ? `<span class="nm-day-streak">🔥 ${nmFmt(st.current)}</span>` : ''}</button>
                         <div class="nm-stat"><span class="nm-num">${nmFmt(eaten.kcal)}</span> ${nmEsc(t('nm_eaten'))} · <span class="nm-num">${nmFmt(Math.round(eaten.protein))}</span> ${nmEsc(t('nm_protein_unit'))}</div>
                         <div class="nm-split">${nmEsc(t('nm_split_line').replace('{plan}', nmFmt(eaten.plan)).replace('{drinks}', nmFmt(eaten.drinks)).replace('{extra}', nmFmt(eaten.extra)))}</div>
@@ -2000,7 +2000,7 @@ function nmExtrasHtml() {
         </div>`;
 }
 
-// ---------- קיצור הדרך ✨ במסך הבית ----------
+// ---------- קיצור הדרך של New Me (💎) במסך הבית ----------
 function updateNewMeShortcut() {
     const btn = document.getElementById('btn-newme-shortcut');
     if (btn) btn.classList.toggle('hidden', !hasNewMe);
@@ -2781,7 +2781,7 @@ async function nmSaveFullName(input) {
 // אותו מנגנון של הסיור באפליקציה (הדגשה + כרטיס הסבר), על המסך של New Me. נפתח לבד פעם אחת -
 // אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
 const NEW_ME_TOUR_STEPS = [
-    { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: '✨', titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
+    { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
     { id: 'nm_ring', ch: 'newme', ctx: 'newme', icon: '🔥', target: '#new-me-root .nm-ring', titleKey: 'nm_tour_ring_title', text: 'nm_tour_ring_text', optional: true },
     { id: 'nm_menu', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-menu-list .nm-meal', titleKey: 'nm_tile_menu', text: 'nm_tour_menu_text', optional: true },
     { id: 'nm_swap', ch: 'newme', ctx: 'newme', icon: '🔄', target: '#nm-menu-list .nm-meal-actions', titleKey: 'nm_swap', text: 'nm_tour_swap_text', optional: true },
