@@ -89,7 +89,8 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
     schedule.forEach(row => {
         const done = completedScheduleIds.has(row.id);
         items.push({
-            kind: 'calendar', group: 'calendar', minutes: scheduleTimeToMinutes(row.time_of_day), done, checkable: true,
+            // הלו"ז הקבוע של השבוע נחשב "משימות" (לא "פגישות ואירועים") - כך הוא נקרא ונתפס
+            kind: 'task', group: 'tasks', minutes: scheduleTimeToMinutes(row.time_of_day), done, checkable: true,
             title: row.task_title, toggle: checked => toggleScheduleCompletion(row.id, todayStr, checked),
             build: () => myDayRow({
                 done, time: row.time_of_day || '', text: `${myDayIcon(row.task_title)}${row.task_title}`,
@@ -110,7 +111,7 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
                 done: !!ev.is_completed, time: String(ev.event_time || '').slice(0, 5),
                 text: `${calendarKindIcon(ev) ? calendarKindIcon(ev) + ' ' : ''}${ev.event_title}`,
                 withName: isMeeting && ev.meeting_with ? ev.meeting_with : '',
-                tag: kind === 'task' ? '' : `${t('myday_filter_calendar')}${range ? ` · ${range}` : ''}`,
+                tag: range,
                 onchange: checked => toggleEventOccurrenceCompletion(ev.id, checked),
                 onopen: () => openEditCalendarEvent(ev),
             }),
@@ -286,6 +287,25 @@ function myDayNowMarker(now) {
     return el;
 }
 
+// סינון שאין בו כלום היום לא מוצג (במקום מסך "אין כאן כלום"); אם הוא היה הבחירה - חוזרים ל"הכול".
+// כשיש רק סוג אחד של דברים היום, כל שורת הסינון מוסתרת
+function syncMyDayFilterChips(items) {
+    const groups = new Set(items.map(it => it.group).filter(Boolean));
+    let current = myDayFilter;
+    document.querySelectorAll('#myday-filters .myday-filter').forEach(btn => {
+        const f = btn.dataset.filter;
+        const empty = f !== 'all' && !groups.has(f);
+        btn.classList.toggle('hidden', empty);
+        if (empty && f === current) current = 'all';
+    });
+    if (current !== myDayFilter) {
+        myDayFilter = current;
+        document.querySelectorAll('#myday-filters .myday-filter').forEach(btn => btn.setAttribute('aria-pressed', btn.dataset.filter === myDayFilter ? 'true' : 'false'));
+    }
+    const row = document.getElementById('myday-filters');
+    if (row) row.classList.toggle('hidden', groups.size < 2);
+}
+
 function setMyDayFilter(filter) {
     myDayFilter = ['all', 'tasks', 'routine', 'calendar'].includes(filter) ? filter : 'all';
     document.querySelectorAll('#myday-filters .myday-filter').forEach(btn => btn.setAttribute('aria-pressed', btn.dataset.filter === myDayFilter ? 'true' : 'false'));
@@ -322,6 +342,7 @@ function renderMyDayBar(items) {
 function renderMyDay(container, items, focusItems) {
     myDayItems = items;
     myDayFocusItems = focusItems;
+    syncMyDayFilterChips(items);
     renderMyDayTimeline(container, items, focusItems);
     renderMyDayBar(items);
     if (document.body.classList.contains('home-focus-on')) renderHomeFocus();
@@ -371,6 +392,16 @@ async function loadMyDayWater() {
     myDayWaterState = { glasses: Math.round(totalMl / MY_DAY_GLASS_ML), goal: Math.max(1, Math.round(getWaterDailyGoal() / MY_DAY_GLASS_ML)) };
     const value = document.getElementById('myday-water-value');
     if (value) value.textContent = `${myDayWaterState.glasses}/${myDayWaterState.goal}`;
+}
+// ⓘ קטן ליד "מים": כמה זה 8 כוסות (לפי בקשה מפורשת - "משהו שפותחים")
+function toggleMyDayWaterInfo(e) {
+    if (e) e.stopPropagation();
+    const tip = document.getElementById('myday-water-tip');
+    if (!tip) return;
+    const show = tip.classList.contains('hidden');
+    tip.classList.toggle('hidden', !show);
+    const btn = document.querySelector('.myday-water-info');
+    if (btn) btn.setAttribute('aria-expanded', String(show));
 }
 async function addMyDayWaterGlass(btn) {
     if (btn) btn.disabled = true;
@@ -614,13 +645,15 @@ function initHomeV2() {
         if (pop && !pop.classList.contains('hidden') && !e.target.closest('#home-done-popover, #btn-home-planter')) pop.classList.add('hidden');
         const menu = document.getElementById('quick-note-menu');
         if (menu && !menu.classList.contains('hidden') && !e.target.closest('#quick-note-menu, #btn-ai-fab')) menu.classList.add('hidden');
+        const tip = document.getElementById('myday-water-tip');
+        if (tip && !tip.classList.contains('hidden') && !e.target.closest('.myday-water-info, #myday-water-tip')) toggleMyDayWaterInfo();
         syncHomePopoverClass();
     });
     try { if (sessionStorage.getItem('weekwise_home_focus') === '1') toggleHomeFocus(true); } catch {}
 }
 
 // ===================== שלב 2: נגיעות אישיות =====================
-// לפי הרעיונות שנבחרו במפורש: 11 שם בברכה, 3 רצף ימים, 8 משפט קטן ליום, 12 ספירה לאחור,
+// לפי הרעיונות שנבחרו במפורש: 3 רצף ימים, 8 משפט קטן ליום, 12 ספירה לאחור,
 // 5 "3 דברים טובים" בערב, 14 השבועות הקודמים של הפתק השבועי, 9 מזג אוויר בשמיים
 
 const HOME_FLAME_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.8.2 1.6 1 2.6 2 3 0-2.6-.6-5.4.8-8.2z"/></svg>';
@@ -629,50 +662,6 @@ const HOME_MOON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="non
 
 function homeDaysBetween(a, b) {
     return Math.round((Date.parse(`${b}T12:00:00`) - Date.parse(`${a}T12:00:00`)) / 86400000);
-}
-
-// --- 👋 השם בברכה: מה שנכתב בהגדרות; אם עוד לא נכתב כלום - השם הפרטי מחשבון הגוגל.
-// מחרוזת ריקה בהגדרות = "בלי שם" במפורש (גם אם יש שם בגוגל) ---
-const HOME_NAME_KEY = 'weekwise_display_name';
-let homeGoogleFirstName = '';
-function homeDisplayName() {
-    let saved = null;
-    try { saved = localStorage.getItem(HOME_NAME_KEY); } catch {}
-    if (saved !== null) return saved.trim();
-    return homeGoogleFirstName;
-}
-async function loadHomeDisplayName() {
-    if (!supabaseClient || !currentUserId) return;
-    try {
-        const { data: s } = await supabaseClient.auth.getSession();
-        const meta = (s && s.session && s.session.user && s.session.user.user_metadata) || {};
-        homeGoogleFirstName = String(meta.given_name || meta.full_name || meta.name || '').trim().split(/\s+/)[0] || '';
-    } catch {}
-    try {
-        // השרת קובע (גם "עוד לא נכתב שם" - כדי שבמכשיר משותף לא יופיע שם של חשבון אחר)
-        const { data, error } = await supabaseClient.from('user_premium').select('display_name').eq('user_id', currentUserId).maybeSingle();
-        if (!error) {
-            if (data && data.display_name !== null && data.display_name !== undefined) localStorage.setItem(HOME_NAME_KEY, data.display_name);
-            else localStorage.removeItem(HOME_NAME_KEY);
-        }
-    } catch {}
-    applyHomeDisplayName();
-}
-function applyHomeDisplayName() {
-    const input = document.getElementById('display-name-input');
-    if (input && document.activeElement !== input) input.value = homeDisplayName();
-    renderHomeGreeting();
-}
-let homeNameSaveTimer = 0;
-function onDisplayNameInput(value) {
-    const name = String(value || '').trim().slice(0, 30);
-    try { localStorage.setItem(HOME_NAME_KEY, name); } catch {}
-    renderHomeGreeting();
-    clearTimeout(homeNameSaveTimer);
-    homeNameSaveTimer = setTimeout(() => {
-        if (!supabaseClient || !currentUserId) return;
-        supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, display_name: name }, { onConflict: 'user_id' }).then(() => {});
-    }, 600);
 }
 
 // --- ✨ משפט קטן ליום, ברוח "בדרך ל-10" - מתחלף כל בוקר (21 משפטים, אחד ליום) ---
@@ -925,6 +914,7 @@ async function toggleHomeWeather() {
     await refreshHomeWeather(true);
 }
 async function refreshHomeWeather(force) {
+    if (homeWeatherPreview) { applyHomeWeather(homeWeatherPreview); return; }
     if (!isHomeWeatherOn()) { applyHomeWeather(null); return; }
     let cache = null;
     try { cache = JSON.parse(localStorage.getItem(HOME_WEATHER_CACHE_KEY) || 'null'); } catch {}
@@ -953,13 +943,36 @@ async function refreshHomeWeather(force) {
 }
 const HOME_WEATHER_COVERED = ['clouds', 'rain', 'snow', 'storm', 'fog'];
 function applyHomeWeather(state) {
-    const sky = state && isHomeWeatherOn() ? state.sky : null;
+    const sky = state && (state.preview || isHomeWeatherOn()) ? state.sky : null;
     const layer = document.getElementById('home-weather');
-    if (layer) layer.className = 'home-weather' + (sky && sky !== 'clear' ? ` wx-${sky}` : '');
+    if (layer) {
+        let cls = 'home-weather';
+        if (sky === 'clear') {
+            // יום בהיר: שמש עדינה (בלילה ירח וכוכבים) - רק כשהערכה לא מציירת שמיים משלה
+            const strip = document.querySelector('.home-sky-scene .home-sky-topstrip');
+            const themeSky = strip && getComputedStyle(strip).backgroundImage !== 'none';
+            if (!themeSky) cls += state.day === false ? ' wx-clear-night' : ' wx-clear-day';
+        } else if (sky) cls += ` wx-${sky}`;
+        layer.className = cls;
+    }
     const scene = document.querySelector('.home-sky-scene');
     if (scene) scene.classList.toggle('wx-covered', HOME_WEATHER_COVERED.includes(sky));
     const toggle = document.getElementById('home-weather-toggle');
     if (toggle) toggle.checked = isHomeWeatherOn();
+    const dev = document.getElementById('weather-dev-preview');
+    if (dev) dev.classList.toggle('hidden', !(typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount));
+}
+
+// --- 🛠️ למנהלת המוצר בלבד (חשבון הפיתוח): תצוגה מקדימה של כל סוגי מזג האוויר בשמיים, בלי מיקום.
+// נשארת עד שבוחרים ✕ (או רענון של הדף) ---
+let homeWeatherPreview = null;
+function previewHomeWeather(sky, day) {
+    if (typeof isDevSuperuserAccount === 'undefined' || !isDevSuperuserAccount) return;
+    homeWeatherPreview = sky ? { sky, day: day !== false, preview: true } : null;
+    if (homeWeatherPreview) applyHomeWeather(homeWeatherPreview);
+    else refreshHomeWeather(false);
+    closeModal('modal-settings-drawer');
+    if (typeof goHome === 'function') goHome();
 }
 
 // --- הפעלה אחרי הכניסה, ורענון קטן כל 10 דקות (ברכה לפי השעה, ערב, יום חדש, מזג אוויר) ---
@@ -968,7 +981,6 @@ let homePhase2Day = null;
 function initHomePhase2() {
     homePhase2Day = getLocalDateString();
     renderHomeDailyLine();
-    loadHomeDisplayName();
     loadHomeStreak();
     loadHomeCountdown();
     loadGoodThingsSetting();

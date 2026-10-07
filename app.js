@@ -3083,9 +3083,7 @@ function renderHomeGreeting() {
     let key = 'home_greeting_morning';
     if (hour >= 12 && hour < 18) key = 'home_greeting_afternoon';
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
-    // 👋 עם השם, אם יש (מההגדרות או מחשבון הגוגל - ר' homeDisplayName ב-home.js)
-    const name = typeof homeDisplayName === 'function' ? homeDisplayName() : '';
-    textEl.textContent = name ? t('home_greeting_named').replace('{greeting}', t(key)).replace('{name}', name) : t(key);
+    textEl.textContent = t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
     if (typeof renderHomeDailyLine === 'function') renderHomeDailyLine();
     if (typeof renderHomeChips === 'function') renderHomeChips();
@@ -8289,7 +8287,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_hold', category: 'general' },
     { id: 'home_planter', category: 'general' },
     // שלב 2 של מסך הבית: נגיעות אישיות (ר' home.js)
-    { id: 'home_name', category: 'general' },
     { id: 'home_streak', category: 'general' },
     { id: 'daily_line', category: 'general' },
     { id: 'home_countdown', category: 'general' },

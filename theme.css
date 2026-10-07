@@ -8130,3 +8130,42 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
     .home-chip { min-height: 27px; padding: 0 9px; font-size: 0.72rem; gap: 5px; }
     .home-daily-line { font-size: 0.8rem; }
 }
+
+/* ---------- תיקונים אחרי מסך הבית (שלב 2) ---------- */
+/* 💧 ⓘ קטן ליד "מים" - כמה זה 8 כוסות */
+.myday-water-tile { position: relative; }
+.myday-water-label-row { display: inline-flex; align-items: center; gap: 5px; }
+.myday-water-info { width: 16px; height: 16px; min-height: 0; padding: 0; margin: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-secondary) 65%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-family: Georgia, 'Times New Roman', serif; font-size: 0.62rem; font-style: italic; font-weight: 700; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; z-index: 1; }
+.myday-water-info:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.myday-water-tip { position: absolute; bottom: calc(100% + 8px); inset-inline-start: 0; width: max-content; max-width: 220px; padding: 8px 11px; border-radius: 12px; background: var(--bg-sheet); border: 1px solid color-mix(in srgb, #60a5fa 40%, var(--border-color)); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3); color: var(--text-primary); font-size: 0.78rem; line-height: 1.45; z-index: 5; }
+.myday-water-tip.hidden { display: none; }
+
+/* סינון "היום שלי": סינון בלי כלום היום לא מוצג; כשיש רק סוג אחד - כל השורה מוסתרת */
+.myday-filters.hidden, .myday-filter.hidden { display: none; }
+
+/* 🗓️ מסך לוח הזמנים במחשב / אייפד: "מבט חודשי" בעמודה אחת, ו"כל האירועים" ומתחתיו "פגישות" בשנייה */
+@media (min-width: 1024px) {
+    #schedule-section.active-tab { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto 1fr; grid-template-areas: "back back" "month events" "month meetings"; }
+    #schedule-section.active-tab > .btn-back-home { grid-area: back; }
+    #schedule-section.active-tab > .monthly-calendar-card { grid-area: month; }
+    #schedule-section.active-tab > .calendar-glance-card { grid-area: events; }
+    #schedule-section.active-tab > .meetings-card { grid-area: meetings; }
+}
+
+/* 🌤️ יום בהיר: שמש עדינה (ובלילה ירח וכמה כוכבים) - רק כשהערכה לא מציירת שמיים משלה */
+.home-weather.wx-clear-day::before { content: ''; position: absolute; top: 56px; inset-inline-start: 16%; width: 128px; height: 128px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, #fde68a 85%, transparent) 0 17%, color-mix(in srgb, #fbbf24 32%, transparent) 30%, transparent 68%); animation: wxGlow 6s ease-in-out infinite alternate; }
+.home-weather.wx-clear-night::before { content: ''; position: absolute; top: 70px; inset-inline-start: 20%; width: 34px; height: 34px; border-radius: 50%; box-shadow: inset -9px -3px 0 0 color-mix(in srgb, #fef3c7 88%, transparent); filter: drop-shadow(0 0 10px rgba(254, 243, 199, 0.45)); transform: rotate(-20deg); }
+.home-weather.wx-clear-night::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 300px; background-image: radial-gradient(circle at 12% 22%, #fef3c7 0 1.2px, transparent 1.9px), radial-gradient(circle at 34% 9%, #fef3c7 0 1px, transparent 1.6px), radial-gradient(circle at 58% 28%, #fef3c7 0 1.3px, transparent 2px), radial-gradient(circle at 76% 14%, #fef3c7 0 1px, transparent 1.6px), radial-gradient(circle at 88% 35%, #fef3c7 0 1.2px, transparent 1.9px), radial-gradient(circle at 46% 44%, #fef3c7 0 0.9px, transparent 1.5px); opacity: 0.75; animation: wxTwinkle 4s ease-in-out infinite alternate; }
+html.light-mode .home-weather.wx-clear-night::after { display: none; }
+@keyframes wxGlow { from { transform: scale(0.96); opacity: 0.85; } to { transform: scale(1.04); opacity: 1; } }
+@keyframes wxTwinkle { from { opacity: 0.45; } to { opacity: 0.85; } }
+
+/* 🛠️ תצוגה מקדימה למנהלת המוצר (חשבון הפיתוח בלבד) */
+.settings-dev-row { margin: -6px 0 16px; padding: 10px 12px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 50%, transparent); }
+.settings-dev-row.hidden { display: none; }
+.settings-dev-row .settings-hint { margin: 0 0 8px; }
+.dev-weather-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.dev-weather-btns button { width: 38px; height: 38px; min-height: 0; padding: 0; border-radius: 12px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--text-primary) 5%, transparent); font-size: 1.05rem; line-height: 1; }
+@media (prefers-reduced-motion: reduce) {
+    .home-weather.wx-clear-day::before, .home-weather.wx-clear-night::after { animation: none !important; }
+}
