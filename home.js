@@ -230,17 +230,7 @@ function myDayFormatMinutes(m) {
 // מצייר את ציר הזמן ל-#today-tasks-list (המגירה הפתוחה) לפי הסינון שנבחר
 function renderMyDayTimeline(container, items, focusItems) {
     container.innerHTML = '';
-    if (focusItems && focusItems.length) {
-        const chipsRow = document.createElement('div');
-        chipsRow.className = 'daily-focus-chips-row';
-        focusItems.forEach(item => {
-            const chip = document.createElement('span');
-            chip.className = 'daily-focus-chip';
-            chip.textContent = localizeDailyFocusTitle(item.event_title);
-            chipsRow.appendChild(chip);
-        });
-        container.appendChild(chipsRow);
-    }
+    if (focusItems && focusItems.length) container.appendChild(buildDailyFocusBanner(focusItems));
     if (!items.length) {
         container.insertAdjacentHTML('beforeend', `<p class="today-tasks-empty">${myDayEsc(t('today_tasks_empty_hint'))}</p>`);
         return;

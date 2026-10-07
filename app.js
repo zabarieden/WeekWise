@@ -2479,6 +2479,28 @@ function renderDailyFocusTags() {
 // אם הטקסט השמור זהה בדיוק להצעה מוכנה באחת השפות - מציגים אותה בשפה הנוכחית;
 // טקסט חופשי שהמשתמשת כתבה ב"אחר" נשאר כמו שהוא (אין ממה לתרגם)
 let dailyFocusTitleIndex = null;
+// "הכיוון של היום" (התשובות ל"מה חשוב לך לעשות היום"): באנר אחד בגרדיאנט של צבעי הערכה, טקסט לבן
+// ומצפן - אפשרות ה' שנבחרה (במקום הפתקים הצהובים). ב"היום שלי" ובפירוט יום בלוח החודשי
+function buildDailyFocusBanner(focusItems) {
+    const banner = document.createElement('div');
+    banner.className = 'daily-focus-banner';
+    banner.innerHTML = '<svg class="daily-focus-banner-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>';
+    const body = document.createElement('span');
+    body.className = 'daily-focus-banner-body';
+    const label = document.createElement('span');
+    label.className = 'daily-focus-banner-label';
+    label.textContent = t('daily_focus_banner_label');
+    body.appendChild(label);
+    focusItems.forEach(item => {
+        const line = document.createElement('span');
+        line.className = 'daily-focus-banner-text';
+        line.textContent = localizeDailyFocusTitle(item.event_title);
+        body.appendChild(line);
+    });
+    banner.appendChild(body);
+    return banner;
+}
+
 function localizeDailyFocusTitle(title) {
     if (!dailyFocusTitleIndex) {
         dailyFocusTitleIndex = new Map();
@@ -5983,17 +6005,7 @@ async function renderSelectedCalendarDay() {
         return;
     }
     detail.innerHTML = `<div class="monthly-calendar-day-title">${dayLabel}</div>`;
-    if (focusItems.length) {
-        const chipsRow = document.createElement('div');
-        chipsRow.className = 'daily-focus-chips-row';
-        focusItems.forEach(item => {
-            const chip = document.createElement('span');
-            chip.className = 'daily-focus-chip';
-            chip.textContent = localizeDailyFocusTitle(item.event_title);
-            chipsRow.appendChild(chip);
-        });
-        detail.appendChild(chipsRow);
-    }
+    if (focusItems.length) detail.appendChild(buildDailyFocusBanner(focusItems));
 
     // בנוי עם closures (לא onclick עם מחרוזת מוטמעת) כדי ש-openEditCalendarEvent
     // תקבל את האובייקט המלא (לא רק id) - נוסף כפתור ✏️ עריכה שלא היה קיים כאן
@@ -8629,6 +8641,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
+    { id: 'room_computer', category: 'nutrition' },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },
     // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה

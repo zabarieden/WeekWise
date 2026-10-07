@@ -261,7 +261,7 @@ function openSecretRoom(opts = {}) {
             </div>
             <button type="button" class="sr-arrow sr-arrow-next" onclick="roomTurn(1)" aria-label="${srEsc(t('room_turn_next'))}">${srIsRtl() ? SR_CHEVRON.prev : SR_CHEVRON.next}</button>
             <button type="button" class="sr-arrow sr-arrow-prev" onclick="roomTurn(-1)" aria-label="${srEsc(t('room_turn_prev'))}">${srIsRtl() ? SR_CHEVRON.next : SR_CHEVRON.prev}</button>
-            <div class="sr-caption" id="sr-caption" aria-live="polite"></div>
+            <div class="sr-caption" id="sr-caption" aria-live="polite"></div><!-- מוסתר: רק לקורא מסך -->
             <div class="sr-tip hidden" id="sr-tip" role="status"></div>
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
@@ -277,6 +277,7 @@ function openSecretRoom(opts = {}) {
 
 function closeSecretRoom() {
     roomStopGame();
+    if (pcState) { pcStopTimers(); pcState = null; }
     document.getElementById('sr-overlay')?.remove();
     roomRenderDevKeys();
 }
@@ -327,11 +328,9 @@ function srRenderWall(highlight, dir) {
     scene.innerHTML = `<svg class="sr-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" style="direction:${srIsRtl() ? 'rtl' : 'ltr'}" role="group" aria-label="${srEsc(t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title'))}">${walls[roomWall](keys, highlight)}</svg>`;
     scene.classList.remove('turn-next', 'turn-prev');
     if (dir) { void scene.offsetWidth; scene.classList.add(dir > 0 ? 'turn-next' : 'turn-prev'); }
+    // בלי כיתוב על הקיר (לפי בקשה מפורשת: "לא צריך להסביר כל דבר") - רק לקורא מסך, שם הקיר
     const cap = document.getElementById('sr-caption');
-    if (cap) {
-        const dots = Array.from({ length: ROOM_WALLS }, (_, i) => `<i class="${i === roomWall ? 'on' : ''}"></i>`).join('');
-        cap.innerHTML = `<b>${srEsc(t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title'))}</b><span>${srEsc(t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_hint'))}</span><span class="sr-dots" aria-hidden="true">${dots}</span>`;
-    }
+    if (cap) cap.textContent = t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title');
     srHideTip();
     srFitTexts(scene);
     srFitBubbles(scene.querySelector('svg'));
@@ -817,68 +816,472 @@ function roomStartFirstTalk() {
     });
 }
 
-// ---------- המחשב (מפתח 2): שיחה קטנה, בלי שמירה ----------
+// ---------- המחשב (מפתח 2): שיחה בעץ ----------
+// שלושה מסלולים לפי התסריטים שנשלחו - יום טוב / עמוס / קשה - כל אחד עם ענפים, ובסוף משימה קטנה 🎯.
+// בכל שלב: "↩ חזרה" (צעד אחורה, לענות אחרת) ו"שיחה חדשה". אחרי יום עמוס / קשה, מי שחוזר למחשב באותו
+// יום מקבל "חזרתי..." עם תסריט ההמשך. נשמרות רק הבחירות (לא מה שנכתב), רק במכשיר הזה ועד סוף היום.
+// צומת: say = שורות המחשב, ואז אחד מ: opts ([תשובה, הצומת הבא]), task (משימה קטנה → next),
+// write (כתיבה חופשית → next; בלי שורות → empty), breathe (5 נשימות → next), when (באיזו שעה + תזכורת → next),
+// go (ממשיך לבד), end (סוף השיחה)
+const PCX = {
+    welcome: { say: ['pcx_back_hi'] },
+    root: { say: ['pcx_hi'], opts: [['pcx_o_good', 'a'], ['pcx_o_busy', 'b'], ['pcx_o_hard', 'c']] },
+    // 🟢 יום טוב
+    a: { say: ['pcx_a_q'], opts: [['pcx_a_o1', 'a1'], ['pcx_a_o2', 'a2'], ['pcx_a_o3', 'a3']] },
+    a1: { say: ['pcx_a1_q'], opts: [['pcx_a1_o1', 'a1a'], ['pcx_a1_o2', 'a1b'], ['pcx_a1_o3', 'a1c']] },
+    a1a: { say: ['pcx_a1a_q'], opts: [['pcx_a1a_r1', 'a1a_t'], ['pcx_a1a_r2', 'a1a_t']] },
+    a1a_t: { say: ['pcx_a1a_s'], task: 'a1a', next: 'a_end' },
+    a1b: { say: ['pcx_a1b_q'], opts: [['pcx_a1b_r1', 'a1b_t'], ['pcx_a1b_r2', 'a1b_t']] },
+    a1b_t: { say: ['pcx_a1b_s'], task: 'a1b', next: 'a_end' },
+    a1c: { say: ['pcx_a1c_q'], opts: [['pcx_a1c_r1', 'a1c_t1'], ['pcx_a1c_r2', 'a1c_t2']] },
+    a1c_t1: { say: ['pcx_a1c_s1'], task: 'a1c', next: 'a_end' },
+    a1c_t2: { say: ['pcx_a1c_s2'], task: 'a1c', next: 'a_end' },
+    a2: { say: ['pcx_a2_q'], opts: [['pcx_a2_o1', 'a2a'], ['pcx_a2_o2', 'a2b']] },
+    a2a: { say: ['pcx_a2a_q'], opts: [['pcx_a2a_r1', 'a2a_t'], ['pcx_a2a_r2', 'a2a_t']] },
+    a2a_t: { say: ['pcx_a2a_s'], task: 'a2a', next: 'a_end' },
+    a2b: { say: ['pcx_a2b_q'], opts: [['pcx_a2b_r1', 'a2b_t'], ['pcx_a2b_r2', 'a2b_t']] },
+    a2b_t: { say: ['pcx_a2b_s'], task: 'a2b', next: 'a_end' },
+    a3: { say: ['pcx_a3_q'], opts: [['pcx_a3_o1', 'a3a'], ['pcx_a3_o2', 'a3b']] },
+    a3a: { say: ['pcx_a3a_q'], opts: [['pcx_a3a_r1', 'a3a_t'], ['pcx_a3a_r2', 'a3a_t']] },
+    a3a_t: { say: ['pcx_a3a_s'], task: 'a3a', next: 'a_end' },
+    a3b: { say: ['pcx_a3b_q'], opts: [['pcx_a3b_r1', 'a3b_t'], ['pcx_a3b_r2', 'a3b_t']] },
+    a3b_t: { say: ['pcx_a3b_s'], task: 'a3b', next: 'a_end' },
+    a_end: { say: ['pcx_a_end'], end: true },
+    // 🟡 יום עמוס
+    b: { say: ['pcx_b_q'], opts: [['pcx_b_o1', 'b1'], ['pcx_b_o2', 'b2'], ['pcx_b_o3', 'b3']] },
+    b1: { say: ['pcx_b1_q'], opts: [['pcx_b1_o1', 'b1a'], ['pcx_b1_o2', 'b1b']] },
+    b1a: { say: ['pcx_b1a_q'], opts: [['pcx_b1a_r1', 'b1a_t'], ['pcx_b1a_r2', 'b1a_t']] },
+    b1a_t: { say: ['pcx_b1a_s'], task: 'b1a', next: 'b_end' },
+    b1b: { say: ['pcx_b1b_q'], opts: [['pcx_b1b_r1', 'b1b_t'], ['pcx_b1b_r2', 'b1b_t']] },
+    b1b_t: { say: ['pcx_b1b_s'], task: 'b1b', next: 'b_end' },
+    b2: { say: ['pcx_b2_q'], opts: [['pcx_b2_o1', 'b2a'], ['pcx_b2_o2', 'b2b']] },
+    b2a: { say: ['pcx_b2a_q'], opts: [['pcx_b2a_r1', 'b2a_t'], ['pcx_b2a_r2', 'b2a_t']] },
+    b2a_t: { say: ['pcx_b2a_s'], task: 'b2a', next: 'b_end' },
+    b2b: { say: ['pcx_b2b_q'], opts: [['pcx_b2b_r1', 'b2b_t']] },
+    b2b_t: { say: ['pcx_b2b_s'], task: 'b2b', next: 'b2b_ask' },
+    b2b_ask: { say: ['pcx_b2b_ask'], opts: [['pcx_b2b_yes', 'b2b_w'], ['pcx_b2b_no', 'b_end']] },
+    b2b_w: { write: 'dump', next: 'b2b_wd', empty: 'b_end' },
+    b2b_wd: { say: ['pcx_dump_done_s'], go: 'b_end' },
+    b3: { say: ['pcx_b3_q'], opts: [['pcx_b3_o1', 'b3a'], ['pcx_b3_o2', 'b3b']] },
+    b3a: { say: ['pcx_b3a_q'], opts: [['pcx_b3a_r1', 'b3a_t'], ['pcx_b3a_r2', 'b3a_t']] },
+    b3a_t: { say: ['pcx_b3a_s'], task: 'b3a', next: 'b3a_when' },
+    b3a_when: { say: ['pcx_b3a_ask'], when: true, next: 'b_end' },
+    b3b: { say: ['pcx_b3b_q'], opts: [['pcx_b3b_r1', 'b3b_t']] },
+    b3b_t: { say: ['pcx_b3b_s'], task: 'b3b', next: 'b_end' },
+    b_end: { say: ['pcx_b_end1', 'pcx_b_end2'], end: true },
+    // 🟡 חוזרים אחרי יום עמוס
+    br: { say: ['pcx_br_q'], opts: [['pcx_br_o1', 'br1'], ['pcx_br_o2', 'br2'], ['pcx_br_o3', 'br3']] },
+    br1: { say: ['pcx_br1_q'], opts: [['pcx_br1_r1', 'br1_t1'], ['pcx_br1_r2', 'br1_t2']] },
+    br1_t1: { say: ['pcx_br1_s1'], task: 'br1', next: 'here_end' },
+    br1_t2: { say: ['pcx_br1_s2'], task: 'br1', next: 'here_end' },
+    br2: { say: ['pcx_br2_q'], opts: [['pcx_br2_r1', 'br2_t']] },
+    br2_t: { say: ['pcx_br2_s'], task: 'br2', next: 'here_end' },
+    br3: { say: ['pcx_br3_q'], opts: [['pcx_br3_r1', 'br3_t']] },
+    br3_t: { say: ['pcx_br3_s'], task: 'br3', next: 'here_end' },
+    // 🔴 יום קשה
+    c: { say: ['pcx_c_q'], opts: [['pcx_c_o1', 'c1'], ['pcx_c_o2', 'c2'], ['pcx_c_o3', 'c3'], ['pcx_c_o4', 'c4']] },
+    c1: { say: ['pcx_c1_q'], opts: [['pcx_c1_o1', 'c1a'], ['pcx_c1_o2', 'c1b']] },
+    c1a: { say: ['pcx_c1a_q'], opts: [['pcx_c1a_r1', 'c1a_t'], ['pcx_c1a_r2', 'c1a_t']] },
+    c1a_t: { say: ['pcx_c1a_s'], task: 'c1a', next: 'c_end' },
+    c1b: { say: ['pcx_c1b_q'], opts: [['pcx_c1b_r1', 'c1b_t']] },
+    c1b_t: { say: ['pcx_c1b_s'], task: 'c1b', next: 'c_end' },
+    c2: { say: ['pcx_c2_q'], opts: [['pcx_c2_o1', 'c2a'], ['pcx_c2_o2', 'c2b']] },
+    c2a: { say: ['pcx_c2a_q'], opts: [['pcx_c2a_r1', 'c2a_w'], ['pcx_c2a_r2', 'c2a_t']] },
+    c2a_w: { write: 'vent', next: 'c2a_wt', empty: 'c2a_t' },
+    c2a_wt: { say: ['pcx_vent_s'], task: 'c2a', next: 'c_end' },
+    c2a_t: { say: ['pcx_c2a_s'], task: 'c2a', next: 'c_end' },
+    c2b: { say: ['pcx_c2b_q'], opts: [['pcx_c2b_r1', 'c2b_t']] },
+    c2b_t: { say: ['pcx_c2b_s'], task: 'c2b', next: 'c_end' },
+    c3: { say: ['pcx_c3_q'], opts: [['pcx_c3_o1', 'c3a'], ['pcx_c3_o2', 'c3b']] },
+    c3a: { say: ['pcx_c3a_q'], opts: [['pcx_c3a_r1', 'c3a_t']] },
+    c3a_t: { say: ['pcx_c3a_s'], task: 'c3a', next: 'c_end' },
+    c3b: { say: ['pcx_c3b_q'], opts: [['pcx_c3b_r1', 'c3b_t']] },
+    c3b_t: { say: ['pcx_c3b_s'], task: 'c3b', next: 'c_end' },
+    c4: { say: ['pcx_c4_q'], opts: [['pcx_c4_o1', 'c4a_t'], ['pcx_c4_o2', 'c4b_t']] },
+    c4a_t: { say: ['pcx_c4a_s'], task: 'c4a', next: 'c_end' },
+    c4b_t: { say: ['pcx_c4b_s'], task: 'c4b', next: 'c_end' },
+    c_end: { say: ['pcx_c_end1', 'pcx_c_end2'], end: true },
+    // 🔴 חוזרים אחרי יום קשה
+    cr: { say: ['pcx_cr_q'], opts: [['pcx_cr_o1', 'cr1'], ['pcx_cr_o2', 'cr2'], ['pcx_cr_o3', 'cr3']] },
+    cr1: { say: ['pcx_cr1_s'], go: 'here_end' },
+    cr2: { say: ['pcx_cr2_s'], opts: [['pcx_cr2_o1', 'cr2_b'], ['pcx_cr2_o2', 'cr2_w']] },
+    cr2_b: { breathe: true, next: 'cr2_bd' },
+    cr2_bd: { say: ['pcx_breath_done'], go: 'here_end' },
+    cr2_w: { write: 'three', next: 'cr2_wd', empty: 'here_end' },
+    cr2_wd: { say: ['pcx_vent_s'], go: 'here_end' },
+    cr3: { say: ['pcx_cr3_s'], go: 'here_end' },
+    here_end: { say: ['pcx_here_end'], end: true },
+};
+const PCX_ROOT_PATHS = ['a', 'b', 'c'];
+const PCX_WHEN = [0, 30, 60]; // "עכשיו" / "בעוד חצי שעה" / "בעוד שעה"
+let pcState = null; // { el, lines, history: [{ node, pick, opts?, lines?, time? }], timers, busy, saved, writing }
+
+function pcStoreKey() { return `weekwise_room_pc_${currentUserId || 'me'}`; }
+// השיחה של היום (רק אם כבר ענו בה משהו) - כדי להציע "חזרתי..." / לחזור אליה
+function pcLoadSaved() {
+    try {
+        const s = JSON.parse(localStorage.getItem(pcStoreKey()) || 'null');
+        return s && s.date === getLocalDateString() && Array.isArray(s.history) && s.history.some(e => e.pick !== undefined && e.pick !== null) ? s : null;
+    } catch { return null; }
+}
+function pcSave() {
+    if (!pcState) return;
+    // בלי מה שנכתב חופשי - רק כמה שורות היו
+    const history = pcState.history.map(e => ({ node: e.node, pick: e.pick, opts: e.opts, time: e.time, n: e.lines ? e.lines.length : e.n }));
+    try { localStorage.setItem(pcStoreKey(), JSON.stringify({ date: getLocalDateString(), history })); } catch { /* פרטי */ }
+}
+// באיזה מסלול השיחה (בשביל ההמשך כשחוזרים): לפי התשובה הראשונה, או לפי "חזרתי..."
+function pcPathOf(history) {
+    let path = null;
+    (history || []).forEach(e => {
+        if (e.node === 'root' && typeof e.pick === 'number') path = PCX_ROOT_PATHS[e.pick] || null;
+        if (e.node === 'br') path = 'b';
+        if (e.node === 'cr') path = 'c';
+    });
+    return path;
+}
+function pcLast() { return pcState.history[pcState.history.length - 1]; }
+function pcOpts(entry) { return entry.opts || PCX[entry.node].opts || null; }
+function pcStopTimers() {
+    if (!pcState) return;
+    pcState.timers.forEach(id => clearTimeout(id));
+    pcState.timers = [];
+    pcState.busy = false;
+    pcState.lines.querySelectorAll('.sr-crt-typing, .sr-crt-breath-box').forEach(el => el.remove());
+}
+function pcLater(fn, ms) { const id = setTimeout(fn, ms); pcState.timers.push(id); return id; }
+function pcReducedMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function pcScroll() { const l = pcState.lines; l.scrollTop = l.scrollHeight; }
+function pcLine(text, who, cls) {
+    const el = document.createElement('span');
+    el.className = (who === 'me' ? 'sr-crt-me' : 'sr-crt-bot') + (cls ? ' ' + cls : '');
+    el.textContent = who === 'me' ? `${text} ›` : `‹ ${text}`;
+    pcState.lines.appendChild(el);
+    return el;
+}
+// שורות המחשב אחת אחרי השנייה, עם "···" קצר לפני כל אחת (מיד, כשמבקשים פחות תנועה)
+function pcSay(texts, done) {
+    const list = (texts || []).filter(Boolean);
+    if (!list.length) { if (done) done(); return; }
+    pcState.busy = true;
+    const step = i => {
+        if (i >= list.length) { pcState.busy = false; if (done) done(); return; }
+        const typing = pcLine('···', 'bot', 'sr-crt-typing');
+        pcScroll();
+        const wait = pcReducedMotion() ? 120 : Math.min(1100, 380 + list[i].length * 9);
+        pcLater(() => { typing.remove(); pcLine(list[i], 'bot'); pcScroll(); step(i + 1); }, wait);
+    };
+    step(0);
+}
+function pcMeText(entry) {
+    const node = PCX[entry.node];
+    const opts = pcOpts(entry);
+    if (opts && typeof entry.pick === 'number' && opts[entry.pick]) return t(opts[entry.pick][0]);
+    if (node.task && entry.pick) return t(entry.pick === 'today' ? 'pcx_task_today' : 'pcx_task_ok');
+    if (node.when && typeof entry.pick === 'number') return t('pcx_when_' + entry.pick);
+    return null;
+}
+// מה המחשב עונה מיד אחרי הבחירה (לפני הצומת הבא)
+function pcAfterTexts(entry) {
+    const node = PCX[entry.node];
+    if (node.task && entry.pick) return [t('pcx_task_ack')];
+    if (node.when && typeof entry.pick === 'number') return [entry.time ? t('pcx_when_remind').replace('{time}', entry.time) : t('pcx_when_now')];
+    return [];
+}
+function pcTaskCard(id, live) {
+    const card = document.createElement('div');
+    card.className = 'sr-crt-task' + (live ? '' : ' is-done');
+    card.innerHTML = `<b>${srEsc(t('pcx_task_label'))} · ${srEsc(t(`pcx_${id}_tn`))}</b><span>${srEsc(t(`pcx_${id}_t`))}</span>`;
+    pcState.lines.appendChild(card);
+    return card;
+}
+
 function roomOpenComputer() {
     const stage = srStage();
     if (!stage) return;
-    const now = new Date();
-    const when = new Intl.DateTimeFormat(currentLang, { weekday: 'long', hour: '2-digit', minute: '2-digit' }).format(now);
+    if (pcState) { pcStopTimers(); pcState = null; }
     const pc = document.createElement('div');
     pc.className = 'sr-pc';
     pc.innerHTML = `
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('computer'))}</b><span></span></div>
         <div class="sr-crt">
             <div class="sr-crt-screen">
-                <div class="sr-crt-lines" aria-live="polite">
-                    <span class="sr-crt-meta">${srEsc(t('room_title'))} · ${srEsc(when)}</span>
-                    <span class="sr-crt-bot">‹ ${srEsc(t('room_pc_q'))}</span>
-                    <div class="sr-crt-opts">${['good', 'ok', 'hard'].map(k => `<button type="button" data-mood="${k}">${srEsc(t('room_pc_' + k))}</button>`).join('')}</div>
+                <div class="sr-crt-lines" aria-live="polite"></div>
+                <div class="sr-crt-nav">
+                    <button type="button" class="sr-crt-navbtn" data-pc="back">${srEsc(t('pcx_back'))}</button>
+                    <button type="button" class="sr-crt-navbtn" data-pc="new">✦ ${srEsc(t('pcx_new'))}</button>
                 </div>
-                <form class="sr-crt-input"><label aria-hidden="true">‹</label><input type="text" maxlength="200" placeholder="${srEsc(t('room_pc_input'))}" aria-label="${srEsc(t('room_pc_input'))}"><button type="submit" aria-label="${srEsc(t('room_pc_send'))}">↵</button></form>
+                <form class="sr-crt-input"><label aria-hidden="true">‹</label><input type="text" maxlength="300" placeholder="${srEsc(t('room_pc_input'))}" aria-label="${srEsc(t('room_pc_input'))}"><button type="submit" aria-label="${srEsc(t('room_pc_send'))}">↵</button></form>
             </div>
             <div class="sr-crt-brand"><span>NOT10</span><i></i></div>
         </div>
         <p class="sr-crt-private">${SR_LOCK_SVG}${srEsc(t('room_pc_private'))}</p>`;
     stage.appendChild(pc);
-    const lines = pc.querySelector('.sr-crt-lines');
-    const add = (text, who) => {
-        const el = document.createElement('span');
-        el.className = who === 'me' ? 'sr-crt-me' : 'sr-crt-bot';
-        el.textContent = who === 'me' ? `${text} ›` : `‹ ${text}`;
-        lines.appendChild(el);
-        lines.scrollTop = lines.scrollHeight;
-        return el;
-    };
-    const suggest = () => {
-        const box = document.createElement('div');
-        box.className = 'sr-crt-sugs';
-        box.innerHTML = [1, 2, 3].map(i => `<button type="button" data-sug="${i}">· ${srEsc(t('room_pc_s' + i))}</button>`).join('');
-        lines.appendChild(box);
-        box.querySelectorAll('[data-sug]').forEach(b => b.addEventListener('click', () => {
-            box.remove();
-            add(t('room_pc_s' + b.dataset.sug), 'me');
-            setTimeout(() => add(t('room_pc_s' + b.dataset.sug + '_r'), 'bot'), 500);
-        }));
-        lines.scrollTop = lines.scrollHeight;
-    };
-    pc.querySelectorAll('[data-mood]').forEach(b => b.addEventListener('click', () => {
-        pc.querySelector('.sr-crt-opts')?.remove();
-        add(t('room_pc_' + b.dataset.mood), 'me');
-        setTimeout(() => {
-            add(t('room_pc_r_' + b.dataset.mood), 'bot');
-            if (b.dataset.mood === 'good') pc.querySelector('.sr-crt-input input').focus(); else suggest();
-        }, 500);
-    }));
-    pc.querySelector('.sr-crt-input').addEventListener('submit', e => {
-        e.preventDefault();
-        const input = pc.querySelector('.sr-crt-input input');
-        const text = input.value.trim();
-        if (!text) return;
-        input.value = '';
-        add(text, 'me');
-        setTimeout(() => add(t('room_pc_heard'), 'bot'), 500);
+    pcState = { el: pc, lines: pc.querySelector('.sr-crt-lines'), history: [], timers: [], busy: false, saved: null, writing: null };
+    const saved = pcLoadSaved();
+    if (saved) {
+        // חוזרים באותו יום: להמשיך את השיחה, "חזרתי..." (אחרי עמוס / קשה), או שיחה חדשה
+        pcState.saved = saved.history;
+        const path = pcPathOf(saved.history);
+        const opts = [['pcx_back_resume', '@resume']];
+        if (path === 'b') opts.push(['pcx_br_me', 'br']);
+        if (path === 'c') opts.push(['pcx_cr_me', 'cr']);
+        opts.push(['pcx_new', '@new']);
+        pcState.history = [{ node: 'welcome', opts }];
+    } else {
+        pcState.history = [{ node: 'root' }];
+    }
+    pcRenderAll(true);
+    pc.querySelector('[data-pc="back"]').addEventListener('click', pcBack);
+    pc.querySelector('[data-pc="new"]').addEventListener('click', pcNew);
+    pc.querySelector('.sr-crt-input').addEventListener('submit', e => { e.preventDefault(); pcSubmitText(); });
+    pc.querySelector('.sr-sub-back').addEventListener('click', () => { pcStopTimers(); pc.remove(); pcState = null; });
+}
+
+// כל השיחה מההתחלה (פתיחה / חזרה / המשך) - הכול מיד, ורק הצומת האחרון "מוקלד" כשפותחים
+function pcRenderAll(animateLast) {
+    pcStopTimers();
+    const lines = pcState.lines;
+    lines.innerHTML = '';
+    const when = new Intl.DateTimeFormat(currentLang, { weekday: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date());
+    const meta = document.createElement('span');
+    meta.className = 'sr-crt-meta';
+    meta.textContent = `${t('room_title')} · ${when}`;
+    lines.appendChild(meta);
+    const h = pcState.history;
+    h.forEach((entry, i) => {
+        const node = PCX[entry.node];
+        const isLast = i === h.length - 1;
+        if (isLast && animateLast) return;
+        (node.say || []).forEach(k => pcLine(t(k), 'bot'));
+        if (node.task) pcTaskCard(node.task, isLast && entry.pick === undefined);
+        if (node.write && entry.pick !== undefined) {
+            if (entry.lines) entry.lines.forEach(x => pcLine(x, 'me', 'is-free'));
+            else if (entry.n) pcLine('✍️ ···', 'me', 'is-free');
+        }
+        if (entry.pick !== undefined && entry.pick !== null) {
+            const me = pcMeText(entry);
+            if (me) pcLine(me, 'me');
+            pcAfterTexts(entry).forEach(x => pcLine(x, 'bot'));
+        }
     });
-    pc.querySelector('.sr-sub-back').addEventListener('click', () => pc.remove());
+    const last = pcLast();
+    if (animateLast) pcEnter(last, true);
+    else pcShowControls(last);
+    pcScroll();
+    pcUpdateNav();
+}
+
+// נכנסים לצומת: השורות שלו, ואז הכפתורים / המשימה / הכתיבה (או ממשיכים לבד)
+function pcEnter(entry, fresh) {
+    const node = PCX[entry.node];
+    pcSay((node.say || []).map(k => t(k)), () => {
+        if (node.task) { pcTaskCard(node.task, true); }
+        if (node.go) { pcGo(node.go); return; }
+        pcShowControls(entry);
+        pcScroll();
+    });
+    if (!fresh) pcSave();
+}
+function pcGo(id) {
+    pcState.history.push({ node: id });
+    pcUpdateNav();
+    pcEnter(pcLast());
+}
+
+function pcShowControls(entry) {
+    pcState.lines.querySelector('.sr-crt-ctrl')?.remove();
+    pcState.writing = null;
+    if (entry.pick !== undefined && entry.pick !== null) return;
+    const node = PCX[entry.node];
+    const box = document.createElement('div');
+    box.className = 'sr-crt-ctrl';
+    const btn = (label, onClick, cls) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        if (cls) b.className = cls;
+        b.textContent = label;
+        b.addEventListener('click', onClick);
+        box.appendChild(b);
+        return b;
+    };
+    const opts = pcOpts(entry);
+    if (opts) {
+        opts.forEach(([key], i) => btn(t(key), () => pcPick(i)));
+    } else if (node.task) {
+        btn(t('pcx_task_ok'), () => pcPick('ok'));
+        btn(t('pcx_task_today'), async () => {
+            if (pcState.busy) return;
+            const ok = await pcAddTodayTask(t(`pcx_${node.task}_t`));
+            if (ok) { showAppToast(t('pcx_task_added')); pcPick('today'); }
+        });
+    } else if (node.write) {
+        pcState.writing = entry;
+        box.classList.add('is-write');
+        btn(t('pcx_write_done'), () => pcWriteDone(false));
+        if (node.write === 'dump') btn(t('pcx_dump_save'), () => pcWriteDone(true), 'is-save');
+        setTimeout(() => pcState && pcState.el.querySelector('.sr-crt-input input')?.focus(), 60);
+    } else if (node.when) {
+        PCX_WHEN.forEach((_, i) => btn(t('pcx_when_' + i), () => pcPickWhen(i)));
+    } else if (node.breathe) {
+        pcBreathe(entry);
+        return;
+    } else if (node.end) {
+        box.classList.add('is-end');
+        btn(`✦ ${t('pcx_new')}`, pcNew, 'is-new');
+    }
+    pcState.lines.appendChild(box);
+}
+
+function pcPick(value) {
+    if (!pcState || pcState.busy) return;
+    const entry = pcLast();
+    if (entry.node === 'welcome') {
+        const target = entry.opts[value][1];
+        if (target === '@resume') { pcState.history = pcState.saved.map(e => ({ ...e })); pcRenderAll(false); pcSave(); return; }
+        if (target === '@new') { pcNew(); return; }
+    }
+    pcState.lines.querySelector('.sr-crt-ctrl')?.remove();
+    pcState.lines.querySelectorAll('.sr-crt-task:not(.is-done)').forEach(c => c.classList.add('is-done'));
+    entry.pick = value;
+    const me = pcMeText(entry);
+    if (me) pcLine(me, 'me');
+    pcScroll();
+    const node = PCX[entry.node];
+    const opts = pcOpts(entry);
+    const next = opts ? opts[value][1] : node.next;
+    pcSave();
+    pcUpdateNav();
+    pcSay(pcAfterTexts(entry), () => { if (next) pcGo(next); });
+}
+
+// "באיזו שעה תהיה ההפסקה?" - בעוד חצי שעה / שעה נכנסת משימה עם תזכורת להיום שלי
+async function pcPickWhen(i) {
+    if (!pcState || pcState.busy) return;
+    const entry = pcLast();
+    if (PCX_WHEN[i]) {
+        const d = new Date(Date.now() + PCX_WHEN[i] * 60000);
+        d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5, 0, 0);
+        const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        if (d.getDate() === new Date().getDate() && await pcAddTodayTask(t('pcx_break_title'), time)) entry.time = time;
+    }
+    pcPick(i);
+}
+
+async function pcAddTodayTask(title, time) {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return false; }
+    const row = { username: currentUsername, user_id: currentUserId, event_title: title, event_date: getLocalDateString(), kind: 'task' };
+    if (time) Object.assign(row, { event_time: time, reminder_minutes: 1 });
+    const { error } = await supabaseClient.from('calendar_events').insert(row);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return false; }
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    return true;
+}
+
+// כתיבה חופשית בתוך השיחה (פריקה / "מה שקרה" / 3 משפטים): כל שורה נכנסת, ו"סיימתי" ממשיך
+function pcSubmitText() {
+    if (!pcState) return;
+    const input = pcState.el.querySelector('.sr-crt-input input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    const entry = pcLast();
+    const ctrl = pcState.lines.querySelector('.sr-crt-ctrl');
+    if (pcState.writing === entry) {
+        entry.lines = entry.lines || [];
+        entry.lines.push(text);
+        pcLine(text, 'me', 'is-free');
+        if (ctrl) pcState.lines.appendChild(ctrl);
+        pcScroll();
+        if (entry.lines.length === 1) pcSay([t('pcx_write_more')], () => { const c = pcState && pcState.lines.querySelector('.sr-crt-ctrl'); if (c) { pcState.lines.appendChild(c); pcScroll(); } });
+        return;
+    }
+    // מחוץ לשלב של כתיבה: תשובה עדינה, והבחירות של השלב נשארות
+    pcLine(text, 'me', 'is-free');
+    pcScroll();
+    pcSay([t('room_pc_heard')], () => { const c = pcState && pcState.lines.querySelector('.sr-crt-ctrl'); if (c) { pcState.lines.appendChild(c); pcScroll(); } });
+}
+async function pcWriteDone(saveNote) {
+    if (!pcState || pcState.writing !== pcLast()) return;
+    pcStopTimers();
+    const entry = pcLast();
+    const node = PCX[entry.node];
+    const written = entry.lines || [];
+    if (saveNote && written.length && typeof insertCenterItemDirect === 'function') {
+        const ok = await insertCenterItemDirect('weekly', `🧠 ${written.join(' · ')}`, null, null, null, true);
+        if (ok) showAppToast(t('pcx_dump_saved'));
+    }
+    pcState.writing = null;
+    pcState.lines.querySelector('.sr-crt-ctrl')?.remove();
+    entry.pick = 'done';
+    pcSave();
+    pcUpdateNav();
+    pcGo(written.length ? node.next : (node.empty || node.next));
+}
+
+// 5 נשימות יחד: עיגול שגדל (שאיפה) וקטן (נשיפה)
+function pcBreathe(entry) {
+    const box = document.createElement('div');
+    box.className = 'sr-crt-breath-box';
+    box.innerHTML = '<span class="sr-crt-breath" aria-hidden="true"></span><span class="sr-crt-breath-label" aria-live="polite"></span>';
+    pcState.lines.appendChild(box);
+    pcScroll();
+    const circle = box.querySelector('.sr-crt-breath');
+    const label = box.querySelector('.sr-crt-breath-label');
+    const half = pcReducedMotion() ? 2500 : 3500;
+    pcState.busy = true;
+    const cycle = n => {
+        if (n > 5) {
+            pcState.busy = false;
+            box.remove();
+            entry.pick = 'done';
+            pcSave();
+            pcGo(PCX[entry.node].next);
+            return;
+        }
+        label.textContent = `${t('pcx_breath_in')} ${srFmt(n)}/${srFmt(5)}`;
+        circle.classList.add('in');
+        pcLater(() => {
+            label.textContent = `${t('pcx_breath_out')} ${srFmt(n)}/${srFmt(5)}`;
+            circle.classList.remove('in');
+            pcLater(() => cycle(n + 1), half);
+        }, half);
+    };
+    cycle(1);
+}
+
+// ↩ חזרה: מבטלים את התשובה האחרונה (וצמתים שעברו לבד), והבחירות של השלב חוזרות
+function pcBack() {
+    if (!pcState) return;
+    pcStopTimers();
+    const h = pcState.history;
+    const answered = e => e.pick !== undefined && e.pick !== null;
+    if (!answered(pcLast())) {
+        if (h.length <= 1) return;
+        h.pop();
+    }
+    // צמתים שעוברים לבד (וגם הנשימות) - לא עוצרים בהם בדרך אחורה
+    while (h.length > 1 && (PCX[pcLast().node].go || PCX[pcLast().node].breathe)) h.pop();
+    const last = pcLast();
+    delete last.pick; delete last.time; delete last.lines; delete last.n;
+    pcState.writing = null;
+    pcRenderAll(false);
+    pcSave();
+}
+function pcNew() {
+    if (!pcState) return;
+    pcStopTimers();
+    pcState.history = [{ node: 'root' }];
+    pcState.saved = null;
+    pcRenderAll(true);
+    pcSave();
+}
+function pcUpdateNav() {
+    if (!pcState) return;
+    const h = pcState.history;
+    const atStart = h.length === 1 && (h[0].pick === undefined || h[0].pick === null);
+    const back = pcState.el.querySelector('[data-pc="back"]');
+    if (back) back.disabled = atStart;
 }
 
 // ---------- המשחק (מפתח 3): לתפוס ניצוצות, דקה אחת ----------
