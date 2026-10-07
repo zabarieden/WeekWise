@@ -151,7 +151,7 @@ function roomDoorCardHtml() {
         </div>`;
     return `
         <section class="sr-door-card${open ? ' open' : ''}">
-            <button type="button" class="sr-door-info" onclick="roomOpenHowItWorks()" aria-label="${srEsc(t('room_how_title'))}" title="${srEsc(t('room_how_title'))}">ⓘ</button>
+            <button type="button" class="sr-door-info" onclick="roomOpenHowItWorks()" aria-label="${srEsc(t('room_how_title'))}" title="${srEsc(t('room_how_title'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 11v6.5"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg></button>
             ${roomDoorSvg(open)}
             <h3>${srEsc(t('room_title'))}</h3>
             <p class="sr-door-tag">${srEsc(t('room_tagline'))}</p>
