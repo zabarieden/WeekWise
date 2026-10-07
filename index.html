@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=513">
+    <link rel="stylesheet" href="theme.css?v=514">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -718,28 +718,20 @@
 
                     <div class="subview-panel" data-subview="recipes">
                     <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
-                    <div class="card recipes-main-card expanded">
-                        <div class="card-title-row">
-                            <h2 data-i18n="recipes_title">My Recipes</h2>
-                            <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="openAddRecipeForm()" data-i18n-title="recipes_add_title" title="Add recipe">➕</button>
-                            </div>
+                    <!-- המתכונים שלי: גלריה אחת - חיפוש (בשם או במצרך), תוויות רק לקטגוריות שיש בהן מתכונים,
+                         ורשת של 2 עמודות (תמונה או צבע הקטגוריה). ר' renderRecipesGallery -->
+                    <div class="recipes-gallery">
+                        <div class="recipes-top">
+                            <h2 class="recipes-top-title" data-i18n="recipes_title">My Recipes</h2>
+                            <button type="button" class="recipes-top-btn" onclick="openRecipeScan()" data-i18n-title="recipes_scan_title" data-i18n-aria-label="recipes_scan_title" title="Scan a recipe" aria-label="Scan a recipe"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.4-2h5l1.4 2h1.6A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.4" r="3.4"/></svg></button>
+                            <button type="button" class="recipes-top-btn is-add" onclick="openAddRecipeForm()" data-i18n-title="recipes_add_title" data-i18n-aria-label="recipes_add_title" title="Add recipe" aria-label="Add recipe"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
                         </div>
-                        <div class="card-body">
-                            <!-- רמה 1: רשת קטגוריות קבועה -->
-                            <div id="recipes-categories-grid" class="recipes-categories-grid"></div>
-
-                            <!-- רמה 2: רשימת המתכונים בקטגוריה שנבחרה -->
-                            <div id="recipes-list-view" class="recipes-list-view">
-                                <div class="recipes-list-header">
-                                    <button class="btn-recipe-back" onclick="closeRecipeCategory()">
-                                        <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
-                                    </button>
-                                    <h3 id="recipes-list-category-title"></h3>
-                                </div>
-                                <div id="recipes-grid" class="recipes-grid"></div>
-                            </div>
-                        </div>
+                        <label class="recipes-search">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                            <input type="search" id="recipes-search-input" autocomplete="off" oninput="renderRecipesGallery()" data-i18n-placeholder="recipes_search_placeholder" placeholder="Search a recipe or ingredient…" data-i18n-aria-label="recipes_search_placeholder" aria-label="Search a recipe or ingredient">
+                        </label>
+                        <div class="recipes-chips" id="recipes-chips"></div>
+                        <div id="recipes-grid" class="recipes-grid"></div>
                     </div>
                     </div>
                 </section>
@@ -1586,6 +1578,12 @@
                             </div>
                             <button type="button" class="dictate-btn nb-dictate hidden" data-dictate="notebook-page-text-content" onclick="toggleDictation('notebook-page-text-content', this)" aria-pressed="false" data-i18n-aria-label="dictation_btn_aria" data-i18n-title="dictation_btn_aria" aria-label="Speak and it is written" title="Speak and it is written"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
                             <div class="nb-page-body">
+                                <!-- דף שמחובר לרשימת הקניות: אותה רשימה בשני מקומות (ר' nbIsShopPage) -->
+                                <div class="nb-shop-link hidden" id="nb-shop-link">
+                                    <span class="nb-shop-link-icon" aria-hidden="true">🛒</span>
+                                    <span class="nb-shop-link-text" data-i18n="nb_linked_shop_banner">Connected to the Shopping List – what's added here shows up there too</span>
+                                    <button type="button" class="nb-shop-link-btn" onclick="nbOpenShoppingList()" data-i18n="nb_linked_shop_open">To the list</button>
+                                </div>
                                 <ul id="notebook-items-list" class="study-tasks-list nb-items-list"></ul>
                                 <p id="notebook-items-empty" class="vision-goals-empty hidden" data-i18n="notebook_items_empty_hint">Nothing here yet - tap + to add your first line.</p>
                                 <form class="nb-list-add hidden" id="nb-list-add" onsubmit="event.preventDefault(); addNotebookListLine();">
@@ -1647,37 +1645,53 @@
                 </div>
             </div>
 
-            <!-- תצוגת פרטי מתכון במסך מלא, נפתחת מהקובייה ברשת המתכונים -->
+            <!-- עמוד מתכון במסך מלא: למעלה התמונה (או צבע הקטגוריה), ומתחת גיליון מעוגל - קטגוריה, שם, קלוריות,
+                 מספר מנות (− / + והכמויות משתנות איתו), מצרכים (✓ = יש בבית) / אופן ההכנה, ומה שחסר לרשימת הקניות -->
             <div id="recipe-detail-view" class="recipe-detail-view">
-                <div class="recipe-detail-header">
-                    <button class="btn-recipe-back" onclick="closeRecipeDetail()">
-                        <span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span>
-                    </button>
-                    <div class="recipe-detail-header-actions">
-                        <button class="btn-recipe-edit" onclick="shareRecipe()" data-i18n-title="recipe_share_title" title="Share recipe">
-                            📤
-                        </button>
-                        <button class="btn-recipe-edit" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" title="Edit recipe">
-                            <svg class="btn-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M12.3 9.3l2.4 2.4M5.95 15.65l2.4 2.4"/><path d="M13.5 20.5c1.1-.8 2.3-.8 3.4 0s2.3.8 3.4 0"/></svg> <span data-i18n="recipe_edit_btn">Edit</span>
-                        </button>
-                        <button class="btn-recipe-delete" onclick="deleteRecipe()" data-i18n-title="recipe_delete_title" title="Delete recipe">
-                            🗑️ <span data-i18n="recipe_delete_btn">Delete</span>
-                        </button>
+                <div class="recipe-page-scroll" id="recipe-page-scroll">
+                    <div class="recipe-hero" id="recipe-hero">
+                        <img id="recipe-detail-photo" class="recipe-hero-photo hidden" alt="">
+                        <span class="recipe-hero-emoji" id="recipe-hero-emoji" aria-hidden="true"></span>
+                        <button type="button" class="recipe-hero-btn recipe-hero-back" onclick="closeRecipeDetail()" data-i18n-title="recipe_back_btn" data-i18n-aria-label="recipe_back_btn" title="Back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+                        <div class="recipe-hero-actions">
+                            <button type="button" class="recipe-hero-btn" onclick="shareRecipe()" data-i18n-title="recipe_share_title" data-i18n-aria-label="recipe_share_title" title="Share recipe" aria-label="Share recipe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></button>
+                            <button type="button" class="recipe-hero-btn" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" data-i18n-aria-label="recipe_edit_title" title="Edit recipe" aria-label="Edit recipe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M13 8.6l2.4 2.4"/></svg></button>
+                        </div>
                     </div>
-                </div>
-                <div class="recipe-detail-body">
-                    <img id="recipe-detail-photo" class="recipe-detail-photo hidden" alt="">
-                    <h2 id="recipe-detail-title"></h2>
-                    <div class="recipe-detail-meta">
-                        <span id="recipe-detail-category" class="recipe-detail-badge"></span>
-                        <span id="recipe-detail-calories" class="recipe-detail-badge"></span>
+                    <div class="recipe-sheet">
+                        <div class="recipe-sheet-head">
+                            <span class="recipe-sheet-cat" id="recipe-detail-category"></span>
+                            <h2 class="recipe-sheet-title" id="recipe-detail-title"></h2>
+                        </div>
+                        <div class="recipe-sheet-meta">
+                            <span class="recipe-kcal-chip" id="recipe-detail-calories"></span>
+                            <span class="recipe-servings" id="recipe-servings">
+                                <button type="button" class="recipe-servings-btn" onclick="stepRecipeServings(-1)" data-i18n-aria-label="recipe_servings_less" data-i18n-title="recipe_servings_less" aria-label="Fewer servings" title="Fewer servings">−</button>
+                                <span class="recipe-servings-value" id="recipe-servings-value" aria-live="polite"></span>
+                                <button type="button" class="recipe-servings-btn" onclick="stepRecipeServings(1)" data-i18n-aria-label="recipe_servings_more" data-i18n-title="recipe_servings_more" aria-label="More servings" title="More servings">+</button>
+                            </span>
+                        </div>
+                        <div class="recipe-seg" role="tablist">
+                            <button type="button" role="tab" class="recipe-seg-btn is-on" id="recipe-seg-ingredients" onclick="setRecipeTab('ingredients')" aria-selected="true" aria-controls="recipe-pane-ingredients"></button>
+                            <button type="button" role="tab" class="recipe-seg-btn" id="recipe-seg-steps" onclick="setRecipeTab('steps')" aria-selected="false" aria-controls="recipe-pane-steps"></button>
+                        </div>
+                        <div class="recipe-pane" id="recipe-pane-ingredients" role="tabpanel">
+                            <ul id="recipe-detail-ingredients" class="recipe-have-list"></ul>
+                            <p class="recipe-have-hint" id="recipe-have-hint" data-i18n="recipe_have_hint">✓ = have at home. Whatever isn't checked goes to the shopping list in one tap.</p>
+                        </div>
+                        <div class="recipe-pane hidden" id="recipe-pane-steps" role="tabpanel">
+                            <div id="recipe-detail-instructions" class="recipe-detail-instructions"></div>
+                        </div>
+                        <div class="recipe-actions">
+                            <button type="button" class="recipe-action-main" id="recipe-to-shopping-btn" onclick="sendRecipeMissingToShopping()"></button>
+                            <button type="button" class="recipe-action-soft" id="recipe-eat-today-btn" onclick="logRecipeEatToday()"><span aria-hidden="true">🍽️</span> <span data-i18n="recipe_eat_today_btn">Eat today</span></button>
+                        </div>
+                        <div class="recipe-sheet-foot">
+                            <!-- ⭐ מתכון → ארוחה קבועה: פותח את "הוספת ארוחה למאגר" ממולא מראש (ר' addRecipeToPresets) -->
+                            <button type="button" class="recipe-add-preset-btn" onclick="addRecipeToPresets()" data-i18n="recipe_add_to_presets_btn">⭐ Add to Saved Meals</button>
+                            <button type="button" class="recipe-delete-link" onclick="deleteRecipe()" data-i18n="recipe_delete_title">Delete recipe</button>
+                        </div>
                     </div>
-                    <!-- ⭐ מתכון → ארוחה קבועה: פותח את "הוספת ארוחה למאגר" ממולא מראש (ר' addRecipeToPresets) -->
-                    <button type="button" class="recipe-add-preset-btn" onclick="addRecipeToPresets()" data-i18n="recipe_add_to_presets_btn">⭐ Add to Saved Meals</button>
-                    <h3 data-i18n="recipe_ingredients_label">Ingredients</h3>
-                    <ul id="recipe-detail-ingredients" class="recipe-detail-list"></ul>
-                    <h3 data-i18n="recipe_instructions_label">Instructions</h3>
-                    <div id="recipe-detail-instructions" class="recipe-detail-instructions"></div>
                 </div>
             </div>
         </div>
@@ -4284,16 +4298,16 @@
 
     </div>
 
-    <script src="i18n.js?v=418"></script>
-    <script src="app.js?v=561"></script>
+    <script src="i18n.js?v=419"></script>
+    <script src="app.js?v=562"></script>
     <script src="goals-library.js?v=2"></script>
-    <script src="bag.js?v=3"></script>
+    <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="new-me-data.js?v=6"></script>
     <script src="new-me.js?v=29"></script>
     <script src="new-me-challenges.js?v=5"></script>
     <script src="secret-room.js?v=3"></script>
     <script src="books.js?v=5"></script>
-    <script src="home.js?v=4"></script>
+    <script src="home.js?v=5"></script>
 </body>
 </html>

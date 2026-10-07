@@ -904,7 +904,8 @@ const BAG_EXAMPLES = [
     {
         key: 'home', icon: '🏠', color: '#ff4f9a',
         notebooks: [
-            { key: 'lists', emoji: '🛒', color: '#7fd1c1', pattern: 'dots', type: 'list', items: [['lists_1', false], ['lists_2', false], ['lists_3', true], ['lists_4', false]] },
+            // דף "קניות" מחובר לרשימת הקניות של האפליקציה (אותה רשימה בשני מקומות) - בלי שורות דוגמה משלו
+            { key: 'lists', emoji: '🛒', color: '#7fd1c1', pattern: 'dots', type: 'list', linked: 'shopping' },
             { key: 'recipes', emoji: '🍲', color: '#f6b26b', pattern: 'stripes', type: 'write' },
         ],
         tables: [{
@@ -1006,7 +1007,7 @@ async function bagSeedExamples(uid) {
         }));
     });
     const [pagesRes, colsRes] = await Promise.all([
-        pageDefs.length ? supabaseClient.from('notebook_pages').insert(pageDefs.map(({ d, n }) => ({ ...base, notebook_id: n.id, title: t(`bag_ex_pg_${d.nb.key}`), sort_order: 0, canvas_data: [], page_type: d.nb.type, text_content: d.nb.type === 'write' ? t(`bag_ex_txt_${d.nb.key}`) : '' }))).select() : { data: [] },
+        pageDefs.length ? supabaseClient.from('notebook_pages').insert(pageDefs.map(({ d, n }) => ({ ...base, notebook_id: n.id, title: t(`bag_ex_pg_${d.nb.key}`), sort_order: 0, canvas_data: [], page_type: d.nb.type, text_content: d.nb.type === 'write' ? t(`bag_ex_txt_${d.nb.key}`) : '', linked_list: d.nb.linked || null }))).select() : { data: [] },
         colDefs.length ? supabaseClient.from('custom_table_columns').insert(colDefs).select() : { data: [] },
         tasks.length ? supabaseClient.from('study_tasks').insert(tasks) : null,
     ]);

@@ -657,7 +657,7 @@ function startDictation(input, btn) {
     dictationSession = session;
     rec.onresult = e => {
         let interim = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
+        for (let i = e.resultIndex || 0; i < e.results.length; i++) {
             const r = e.results[i];
             if (r.isFinal) finalText = [finalText, r[0].transcript].map(s => s.trim()).filter(Boolean).join(' ');
             else interim += r[0].transcript;
@@ -667,7 +667,8 @@ function startDictation(input, btn) {
     rec.onerror = ev => {
         const code = ev && ev.error;
         session.finish();
-        if (code === 'no-speech' || code === 'aborted') return;
+        // aborted = עצירה שלנו (סגירת חלון / מעבר דף); "לא נשמע כלום" כן מקבל הודעה, כדי שיהיה ברור מה קרה
+        if (code === 'aborted') return;
         showAppToast(t(code === 'not-allowed' || code === 'service-not-allowed' ? 'dictation_mic_denied' : 'quick_note_voice_failed'), 'error');
     };
     rec.onend = () => session.finish();
