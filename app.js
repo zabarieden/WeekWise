@@ -78,7 +78,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') { checkReminders(); refreshHomeGrowIfNewDay(); }
+        else updateReminderPresence(false);
     });
+    // תזכורות: האפליקציה "מול העיניים" רק כשהחלון בפוקוס - ר' updateReminderPresence
+    window.addEventListener('focus', () => checkReminders());
+    window.addEventListener('blur', () => updateReminderPresence(false));
+    window.addEventListener('pagehide', () => updateReminderPresence(false));
 
     if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -5490,8 +5495,8 @@ async function loadTodayTasks() {
 // (--tx/--ty/--rot). בלי origin - נופל חזרה למרכז ה-container עצמו (ברירת
 // המחדל ב-CSS, top/left 50%). משותפת בין חגיגת "הכל בוצע" (פעמיים, ר'
 // triggerAllDoneSparkles) לבין פופאפ התזכורת - לפי בקשה מפורשת
-function spawnGentleConfettiBurst(container, count, originX, originY) {
-    const confettiColors = ['#f472b6', '#a855f7', '#4ade80', '#eab308', '#38bdf8'];
+function spawnGentleConfettiBurst(container, count, originX, originY, colors) {
+    const confettiColors = colors || ['#f472b6', '#a855f7', '#4ade80', '#eab308', '#38bdf8'];
     const hasOrigin = originX != null && originY != null;
 
     // "הבזק" לבן קצרצר בדיוק בנקודת הפריצה - רגע ה"בום" לפני שהניצוצות
@@ -6636,8 +6641,9 @@ async function toggleEventOccurrenceCompletion(id, isCompleted) {
     const { error } = await supabaseClient.from('calendar_events').update({ is_completed: isCompleted }).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); loadTodayTasks(); return; }
     // משימה מלוח החזון - ה-✓ מסונכרן גם לתחנה עצמה (ולהתקדמות היעד)
-    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id').eq('id', id).maybeSingle();
+    const { data: linked } = await supabaseClient.from('calendar_events').select('vision_milestone_id, event_date').eq('id', id).maybeSingle();
     if (linked && linked.vision_milestone_id) await setVisionMilestoneDoneFromTask(linked.vision_milestone_id, isCompleted);
+    if (isCompleted && linked && linked.event_date && typeof markReminderDoneFromList === 'function') markReminderDoneFromList('event', id, linked.event_date);
     loadCalendarEvents();
     loadTodayTasks();
     if (selectedCalendarDay) renderSelectedCalendarDay();
@@ -6660,6 +6666,7 @@ async function toggleScheduleCompletion(scheduleId, dateStr, isCompleted) {
             { user_id: currentUserId, username: currentUsername, schedule_id: scheduleId, completion_date: dateStr },
             { onConflict: 'schedule_id,completion_date' }
         );
+        if (typeof markReminderDoneFromList === 'function') markReminderDoneFromList('schedule', scheduleId, dateStr);
     } else {
         await supabaseClient.from('schedule_completions').delete()
             .eq('schedule_id', scheduleId).eq('completion_date', dateStr);
@@ -8385,6 +8392,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'notifications_not_arriving', category: 'settings_a11y' },
     { id: 'reminder_chime', category: 'settings_a11y' },
     { id: 'notification_action_buttons', category: 'settings_a11y' },
+    { id: 'reminders_one_place', category: 'settings_a11y' },
     { id: 'premium_benefits', category: 'premium' },
     { id: 'cancel_subscription', category: 'premium' },
     { id: 'what_are_tables', category: 'tables' },
@@ -14522,6 +14530,23 @@ function renderReminderRingSettings() {
     });
     const vibrate = document.getElementById('reminder-vibrate-toggle');
     if (vibrate) vibrate.checked = isReminderVibrateOn();
+    const allDevices = document.getElementById('reminder-all-devices-toggle');
+    if (allDevices) allDevices.checked = isReminderAllDevicesOn();
+}
+
+// איפה תזכורות מגיעות כשהאפליקציה סגורה: כברירת מחדל רק לטלפון (לפי בקשה מפורשת), או גם
+// למחשב ולטאבלט. נשמר בחשבון - השרת (send-due-reminders) הוא שקורא את זה
+function isReminderAllDevicesOn() { return localStorage.getItem('weekwise_reminder_all_devices') === 'true'; }
+
+async function toggleReminderAllDevices() {
+    const enabled = document.getElementById('reminder-all-devices-toggle').checked;
+    localStorage.setItem('weekwise_reminder_all_devices', String(enabled));
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, reminder_all_devices: enabled },
+            { onConflict: 'user_id' },
+        );
+    }
 }
 
 async function selectReminderRingMode(mode) {
@@ -14590,100 +14615,239 @@ async function selectReminderChime(chimeId) {
 
 async function loadReminderChimeSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('reminder_chime_id, reminder_ring_mode, reminder_vibrate').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_premium').select('reminder_chime_id, reminder_ring_mode, reminder_vibrate, reminder_all_devices').eq('user_id', currentUserId).maybeSingle();
     if (!data) return;
     if (isValidReminderChimeId(data.reminder_chime_id)) localStorage.setItem('weekwise_reminder_chime', data.reminder_chime_id);
     if (REMINDER_RING_MODES.includes(data.reminder_ring_mode)) localStorage.setItem('weekwise_reminder_ring', data.reminder_ring_mode);
     if (typeof data.reminder_vibrate === 'boolean') localStorage.setItem('weekwise_reminder_vibrate', String(data.reminder_vibrate));
+    localStorage.setItem('weekwise_reminder_all_devices', String(data.reminder_all_devices === true));
 }
 
 function reminderFiredKey(rowId) {
     return `weekwise_reminder_fired_${rowId}`;
 }
 
-// שומר על כך שלא יתקיימו שתי קריאות חופפות בו-זמנית: אם checkReminders() נקרא
-// שוב (למשל ה-interval של 20 שניות מתנגש עם visibilitychange) לפני שהקריאה
-// הקודמת סיימה לסמן reminderFiredKey, שתי הקריאות עלולות לראות "עדיין לא הופעל"
-// ולהציג את אותה תזכורת פעמיים - זה בדיוק מה שגרם לתזכורת "לחזור מיד" אחרי סגירה.
+// --- תזכורות: פעם אחת, במקום אחד, מסונכרנות בין כל המכשירים (לפי בקשה מפורשת, "ממש ממש חשוב") ---
+// קודם כל מכשיר פתוח הציג לבד כל תזכורת (בלי חסם זמן - גם שעות אחרי) והשרת שלח Push לכל
+// המכשירים, אז אותה תזכורת קפצה בטלפון, במחשב ובאייפד - ושוב גם אחרי "בוצע". עכשיו:
+// - reminder_deliveries: שורה אחת לכל תזכורת ביום - מי מסר אותה ומה ענו. מכשיר שרואה שורה כזו
+//   לא מציג אותה שוב, ו"בוצע" / "הבנתי" נרשמים בה וסוגרים אותה בכל מקום.
+// - האפליקציה מציגה תזכורת רק כשהיא פתוחה מול העיניים (גלויה ובפוקוס), ו"תופסת" אותה קודם
+//   (המפתח הייחודי - רק מכשיר אחד מצליח). reminder_presence מסמנת לשרת שיש מכשיר כזה, והוא
+//   מחכה לו עד 2 דקות לפני שהוא שולח בעצמו.
+// - בלי מכשיר פתוח, השרת (send-due-reminders) שולח Push - כברירת מחדל רק לטלפון, או לכל
+//   המכשירים אם הדליקו את זה בהגדרות (reminder_all_devices).
+// - נודניק: כל סבב נלקח פעם אחת (עדכון מותנה על next_at) - במכשיר הפתוח, אחרת בטלפון.
+const REMINDER_LATE_LIMIT_MINUTES = 60;
+const REMINDER_PRESENCE_TTL_MS = 75000;
+const REMINDER_PRESENCE_REFRESH_MS = 50000;
+let reminderPresenceOn = false;
+let reminderPresenceSentAt = 0;
+const reminderPopupQueue = [];
+
+function getReminderDeviceId() {
+    let id = null;
+    try { id = localStorage.getItem('weekwise_device_id'); } catch (e) { /* פרטי */ }
+    if (!id) {
+        id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `d${Date.now()}${Math.random().toString(16).slice(2)}`;
+        try { localStorage.setItem('weekwise_device_id', id); } catch (e) { /* פרטי */ }
+    }
+    return id;
+}
+
+function getReminderDeviceKind() {
+    const ua = navigator.userAgent || '';
+    if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'tablet';
+    if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'mobile' : 'tablet';
+    if (/iPhone|iPod|Windows Phone|Mobile/.test(ua)) return 'mobile';
+    if (navigator.userAgentData && navigator.userAgentData.mobile) return 'mobile';
+    return 'desktop';
+}
+
+function isAppInFrontOfUser() {
+    return document.visibilityState === 'visible' && (typeof document.hasFocus !== 'function' || document.hasFocus());
+}
+
+// "האפליקציה פתוחה מולי כאן" - מתעדכן כשנכנסים / יוצאים, וכל ~50 שניות כל עוד היא פתוחה
+async function updateReminderPresence(inFront) {
+    if (!supabaseClient || !currentUserId) return;
+    const on = (inFront === undefined ? isAppInFrontOfUser() : inFront) && isNotificationsEnabled();
+    if (on === reminderPresenceOn && (!on || Date.now() - reminderPresenceSentAt < REMINDER_PRESENCE_REFRESH_MS)) return;
+    reminderPresenceOn = on;
+    reminderPresenceSentAt = Date.now();
+    try {
+        await supabaseClient.from('reminder_presence').upsert({
+            user_id: currentUserId, device_id: getReminderDeviceId(), device_kind: getReminderDeviceKind(),
+            visible_until: new Date(Date.now() + (on ? REMINDER_PRESENCE_TTL_MS : 0)).toISOString(),
+        }, { onConflict: 'user_id,device_id' });
+    } catch (e) { /* לא קריטי - השרת פשוט ישלח לטלפון */ }
+}
+
+function reminderKey(sourceType, sourceId) { return `${sourceType}:${sourceId}`; }
+function reminderSeenKey(rem) { return rem.sourceType === 'event' ? `weekwise_reminder_fired_ce_${rem.sourceId}` : reminderFiredKey(rem.sourceId); }
+function wasReminderSeenHere(rem) {
+    try { return localStorage.getItem(reminderSeenKey(rem)) === rem.sourceDate; } catch (e) { return false; }
+}
+function markReminderSeenHere(rem) {
+    try { localStorage.setItem(reminderSeenKey(rem), rem.sourceDate); } catch (e) { /* פרטי */ }
+}
+
+// התזכורות שהגיע זמנן עכשיו - לא יותר משעה אחרי תחילת המשימה (כמו בשרת): תזכורת על משהו
+// שכבר עבר מזמן היא רק רעש, וזה מה שגרם לה לקפוץ שוב כשפתחו מכשיר אחר שעות אחר כך
+async function collectDueReminders(now, todayStr) {
+    const [{ data: sched }, { data: events }] = await Promise.all([
+        supabaseClient.from('weekly_schedule').select('id, time_of_day, task_title, reminder_minutes, reminder_text')
+            .eq('user_id', currentUserId).eq('day_of_week', dbDaysMap[now.getDay()]).gt('reminder_minutes', 0),
+        supabaseClient.from('calendar_events').select('id, event_time, event_title, reminder_minutes, reminder_text')
+            .eq('user_id', currentUserId).eq('event_date', todayStr).gt('reminder_minutes', 0),
+    ]);
+    const due = [];
+    const consider = (time, minutes, rem) => {
+        if (!time) return;
+        const [h, m] = String(time).split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) return;
+        const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+        const triggerDate = new Date(taskDate.getTime() - minutes * 60000);
+        if (now < triggerDate || now - taskDate > REMINDER_LATE_LIMIT_MINUTES * 60000) return;
+        due.push(rem);
+    };
+    (sched || []).forEach(item => consider(item.time_of_day, item.reminder_minutes,
+        { taskTitle: item.task_title, text: item.reminder_text, sourceType: 'schedule', sourceId: item.id, sourceDate: todayStr }));
+    (events || []).forEach(item => consider(item.event_time, item.reminder_minutes,
+        { taskTitle: item.event_title, text: item.reminder_text, sourceType: 'event', sourceId: item.id, sourceDate: todayStr }));
+    return due;
+}
+
+// רק מכשיר אחד מצליח להכניס את השורה (המפתח הייחודי) - וגם השרת "תופס" בדיוק כך לפני Push
+async function claimReminderDelivery(rem) {
+    const { data, error } = await supabaseClient.from('reminder_deliveries').upsert({
+        user_id: currentUserId, source_type: rem.sourceType, source_id: rem.sourceId, source_date: rem.sourceDate,
+        channel: 'app', device_kind: getReminderDeviceKind(),
+    }, { onConflict: 'user_id,source_type,source_id,source_date', ignoreDuplicates: true }).select('source_id');
+    return !error && Array.isArray(data) && data.length > 0;
+}
+
+async function isReminderTaskDone(rem) {
+    if (rem.sourceType === 'event') {
+        const { data } = await supabaseClient.from('calendar_events').select('is_completed').eq('id', rem.sourceId).maybeSingle();
+        return !data || !!data.is_completed;
+    }
+    const [{ data: comp }, { data: row }] = await Promise.all([
+        supabaseClient.from('schedule_completions').select('schedule_id').eq('schedule_id', rem.sourceId).eq('completion_date', rem.sourceDate).maybeSingle(),
+        supabaseClient.from('weekly_schedule').select('id').eq('id', rem.sourceId).maybeSingle(),
+    ]);
+    return !!comp || !row;
+}
+
+// סבב נודניק שהגיע זמנו: "לוקחים" אותו בעדכון מותנה (next_at עדיין הישן) - אם השרת או מכשיר
+// אחר כבר לקח אותו, העדכון לא תופס כלום ולא מציגים
+async function claimDueReminderSnoozes(now) {
+    const { data: due } = await supabaseClient.from('reminder_snoozes')
+        .select('source_type, source_id, source_date, title, body, next_at, remaining')
+        .eq('user_id', currentUserId).lte('next_at', now.toISOString()).gt('remaining', 0);
+    for (const sn of due || []) {
+        const key = { user_id: currentUserId, source_type: sn.source_type, source_id: sn.source_id, source_date: sn.source_date };
+        const rem = { taskTitle: sn.title || '', text: sn.body || '', sourceType: sn.source_type, sourceId: sn.source_id, sourceDate: sn.source_date };
+        const late = now - new Date(sn.next_at) > REMINDER_LATE_LIMIT_MINUTES * 60000;
+        if (late || await isReminderTaskDone(rem)) {
+            await supabaseClient.from('reminder_snoozes').delete().match(key);
+            continue;
+        }
+        const remaining = (sn.remaining || 1) - 1;
+        const { data: won } = await supabaseClient.from('reminder_snoozes')
+            .update({ remaining, next_at: new Date(now.getTime() + REMINDER_SNOOZE_MINUTES * 60000).toISOString() })
+            .match(key).eq('next_at', sn.next_at).select('source_id');
+        if (!won || !won.length) continue;
+        if (remaining <= 0) await supabaseClient.from('reminder_snoozes').delete().match(key);
+        queueReminder(rem);
+    }
+}
+
+// התראות-מערכת של התזכורות במכשיר הזה (במגש) - נסגרות כשכבר ענו עליהן
+function closeReminderNotifications(match) {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg || typeof reg.getNotifications !== 'function') return;
+        return reg.getNotifications().then(list => list.forEach(n => { if (match(n)) n.close(); }));
+    }).catch(() => { /* לא נתמך */ });
+}
+
+// מה שענו עליו במקום אחר ("בוצע" / "הבנתי") נסגר גם כאן - הפופאפ, התור וההתראה במגש
+function syncRemindersAnsweredElsewhere(deliveries, todayStr) {
+    const answered = new Set(deliveries.filter(r => r.acked_at).map(r => reminderKey(r.source_type, r.source_id)));
+    if (!answered.size) return;
+    for (let i = reminderPopupQueue.length - 1; i >= 0; i--) {
+        if (answered.has(reminderKey(reminderPopupQueue[i].sourceType, reminderPopupQueue[i].sourceId))) reminderPopupQueue.splice(i, 1);
+    }
+    const src = currentReminderPopupSource;
+    if (src && isReminderPopupOpen() && answered.has(reminderKey(src.sourceType, src.sourceId))) {
+        stopReminderRinging();
+        closeModal('modal-reminder-popup');
+        currentReminderPopupSource = null;
+        showNextQueuedReminder();
+    }
+    closeReminderNotifications(n => {
+        const d = n.data;
+        return !!(d && d.sourceType && d.sourceDate === todayStr && answered.has(reminderKey(d.sourceType, d.sourceId)));
+    });
+}
+
+// שומר על כך שלא יתקיימו שתי קריאות חופפות בו-זמנית (ה-interval של 20 שניות מתנגש עם
+// visibilitychange / focus) - אחרת שתיהן היו רואות "עדיין לא הוצג" ומציגות פעמיים
 let checkRemindersInProgress = false;
 
 async function checkReminders() {
     if (checkRemindersInProgress) return;
     if (!supabaseClient || !currentUserId) return;
     if (!isNotificationsEnabled()) return;
+    updateReminderPresence();
+    if (!isAppInFrontOfUser()) return;
     checkRemindersInProgress = true;
     try {
         const now = new Date();
-        const todayDbDay = dbDaysMap[now.getDay()];
         const todayStr = getLocalDateString(now);
-        const { data } = await supabaseClient.from('weekly_schedule')
-            .select('id, time_of_day, task_title, reminder_minutes, reminder_text')
-            .eq('user_id', currentUserId)
-            .eq('day_of_week', todayDbDay)
-            .gt('reminder_minutes', 0);
-        if (!data) return;
-        data.forEach(item => {
-            if (!item.time_of_day) return;
-            if (localStorage.getItem(reminderFiredKey(item.id)) === todayStr) return;
-            const [h, m] = item.time_of_day.split(':').map(Number);
-            if (isNaN(h) || isNaN(m)) return;
-            const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-            const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
-            // בכוונה בלי חסם עליון: אם האפליקציה הייתה סגורה/ברקע כשהגיע הזמן, עדיף
-            // להציג את התזכורת באיחור (פעם אחת בלבד, בזכות reminderFiredKey) מאשר לפספס אותה.
-            if (now >= triggerDate) {
-                localStorage.setItem(reminderFiredKey(item.id), todayStr);
-                fireReminder({ taskTitle: item.task_title, text: item.reminder_text, sourceType: 'schedule', sourceId: item.id, sourceDate: todayStr });
-            }
-        });
-
-        // אותו דבר בדיוק, אבל לאירועים חד-פעמיים ב"מבט ליומן" (calendar_events) -
-        // מסוננים לפי תאריך מדויק (event_date), לא יום-בשבוע חוזר כמו למעלה.
-        // מפתח ה-localStorage מסומן ב-ce_ בנפרד מ-reminderFiredKey הרגיל, כדי
-        // שלא יתנגש עם מזהה מקרי זהה משתי הטבלאות - לפי בקשה מפורשת ("גם
-        // תזכורות לאירועים חד-פעמיים, לא רק ללוח הזמנים הקבוע")
-        const { data: eventData } = await supabaseClient.from('calendar_events')
-            .select('id, event_time, event_title, reminder_minutes, reminder_text')
-            .eq('user_id', currentUserId)
-            .eq('event_date', todayStr)
-            .gt('reminder_minutes', 0);
-        (eventData || []).forEach(item => {
-            if (!item.event_time) return;
-            const key = `weekwise_reminder_fired_ce_${item.id}`;
-            if (localStorage.getItem(key) === todayStr) return;
-            const [h, m] = item.event_time.split(':').map(Number);
-            if (isNaN(h) || isNaN(m)) return;
-            const taskDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-            const triggerDate = new Date(taskDate.getTime() - item.reminder_minutes * 60000);
-            if (now >= triggerDate) {
-                localStorage.setItem(key, todayStr);
-                fireReminder({ taskTitle: item.event_title, text: item.reminder_text, sourceType: 'event', sourceId: item.id });
-            }
-        });
+        const due = (await collectDueReminders(now, todayStr)).filter(rem => !wasReminderSeenHere(rem));
+        const { data: rows } = await supabaseClient.from('reminder_deliveries')
+            .select('source_type, source_id, acked_at').eq('user_id', currentUserId).eq('source_date', todayStr);
+        const deliveries = rows || [];
+        syncRemindersAnsweredElsewhere(deliveries, todayStr);
+        const delivered = new Set(deliveries.map(r => reminderKey(r.source_type, r.source_id)));
+        for (const rem of due) {
+            if (!delivered.has(reminderKey(rem.sourceType, rem.sourceId)) && await claimReminderDelivery(rem)) queueReminder(rem);
+            markReminderSeenHere(rem);
+        }
+        await claimDueReminderSnoozes(now);
     } finally {
         checkRemindersInProgress = false;
     }
 }
 
-// הפופאפ החדש (עם קונפטי) מחליף את showReminderToast הישן - לפי בקשה
-// מפורשת ("שיהיה משהו חמוד שקופץ"). הצליל וה-push הרגילים ממשיכים ללא שינוי
-// showBrowserNotification עדיין נשארת (לא הוסרה) - היא הפתרון היחיד שעובד
-// באייפון (ר' ההערה למטה, "בלי שום התראת-מערכת אמיתית באייפון"), אבל
-// send-due-reminders בשרת שולח Push אמיתי לאותה תזכורת בדיוק גם כשהטאב פתוח,
-// אז שני המסלולים יכולים לרוץ ביחד ולהציג 2 התראות-מערכת כפולות לאותה
-// תזכורת - דווח בפועל ("מתריע פעמיים"). הפתרון: תג (tag) דטרמיניסטי וזהה
-// בשני הצדדים (ר' reminderNotificationTag למטה + התג שנשלח מ-send-due-reminders) -
-// שתי קריאות showNotification עם אותו tag מתמזגות אוטומטית לתצוגה אחת
-// (התנהגות דפדפן מובנית), במקום להצטבר כשתי התראות נפרדות
+// tag דטרמיניסטי - אותה נוסחה בדיוק כמו ב-send-due-reminders, כדי שאפשר יהיה לסגור מכאן את
+// ההתראה שהשרת שלח למכשיר הזה (ר' closeReminderNotifications)
 function reminderNotificationTag(rem) {
     if (!rem || !rem.sourceType || !rem.sourceId) return `weekwise-reminder-${Date.now()}`;
     return `weekwise-reminder-${rem.sourceType}-${rem.sourceId}-${rem.sourceDate || getLocalDateString()}`;
 }
 
+// הפופאפ (עם קונפטי) והצלצול - רק כשהאפליקציה פתוחה מול העיניים, אז בלי התראת-מערכת נוספת
+// (היא רק נשארה במגש אחרי שכבר ענו בפופאפ)
 function fireReminder(rem) {
     startReminderRinging();
     showReminderPopup(rem.taskTitle, rem.text, rem);
-    showBrowserNotification(rem.taskTitle, rem.text, reminderNotificationTag(rem), rem);
+}
+
+// תזכורת אחת בכל פעם: אם פופאפ אחר פתוח, הבאה מחכה בתור ונפתחת כשעונים עליו
+function queueReminder(rem) {
+    if (isReminderPopupOpen() && currentReminderPopupSource) {
+        if (!reminderPopupQueue.some(q => q.sourceType === rem.sourceType && q.sourceId === rem.sourceId)) reminderPopupQueue.push(rem);
+        return;
+    }
+    fireReminder(rem);
+}
+
+function showNextQueuedReminder() {
+    const next = reminderPopupQueue.shift();
+    if (next) setTimeout(() => queueReminder(next), 450);
 }
 
 // שומר לאיזו שורה בפועל התזכורת הפתוחה שייכת (סוג+מזהה+תאריך, ר' checkReminders)
@@ -14691,6 +14855,8 @@ function fireReminder(rem) {
 // יאפשר לסמן השלמה במקום רק לסגור אותו
 let currentReminderPopupSource = null;
 
+// השעון מצויר רק למעלה (ר' .reminder-popup-clock ב-index.html) - לא גם בכותרת או בכפתורים,
+// לפי בקשה מפורשת; הצבעים לפי ערכת הנושא
 function showReminderPopup(taskTitle, text, source) {
     currentReminderPopupSource = source ? { ...source, taskTitle: taskTitle || '', text: text || '' } : null;
     document.getElementById('reminder-popup-title').textContent = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
@@ -14703,56 +14869,69 @@ function showReminderPopup(taskTitle, text, source) {
     const confettiEl = document.getElementById('reminder-popup-confetti');
     if (confettiEl) {
         confettiEl.innerHTML = '';
-        spawnGentleConfettiBurst(confettiEl, 14);
-        setTimeout(() => spawnGentleConfettiBurst(confettiEl, 14), 350);
+        const colors = reminderThemeConfettiColors();
+        spawnGentleConfettiBurst(confettiEl, 14, undefined, undefined, colors);
+        setTimeout(() => spawnGentleConfettiBurst(confettiEl, 14, undefined, undefined, colors), 350);
     }
 }
 
-// נודניק (לפי בקשה מפורשת): "⏰ עוד לא" = עוד תזכורת בעוד 5 דקות, וחוזרת כל 5 דקות (עד 6
-// פעמים אם לא מגיבים) עד "בוצע, תודה" או "הבנתי". השורה נשמרת ב-reminder_snoozes והשרת
-// (send-due-reminders) שולח את ההתראות - כך זה עובד גם כשהאפליקציה סגורה. כשהיא פתוחה,
-// ה-Service Worker מעביר את ההתראה לכאן והפופאפ נפתח שוב (ר' המאזין למטה)
+function reminderThemeConfettiColors() {
+    const css = getComputedStyle(document.documentElement);
+    const colors = ['--accent-pink', '--accent-purple', '--accent-purple-light'].map(v => css.getPropertyValue(v).trim()).filter(Boolean);
+    return colors.length ? colors : undefined;
+}
+
+// נודניק (לפי בקשה מפורשת): "עוד לא" = עוד תזכורת בעוד 5 דקות, וחוזרת כל 5 דקות (עד 6 פעמים
+// אם לא מגיבים) עד "בוצע, תודה" או "הבנתי". השורה נשמרת ב-reminder_snoozes, וכל סבב מגיע
+// למקום אחד: למכשיר שפתוח מול העיניים (checkReminders לוקח אותו), אחרת השרת שולח לטלפון
 const REMINDER_SNOOZE_MINUTES = 5;
 const REMINDER_SNOOZE_REPEATS = 6;
-let localReminderSnoozeTimer = null;
 
-function hasPushReminders() {
-    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
-        && Notification.permission === 'granted' && isNotificationsEnabled();
+// "בוצע" / "הבנתי" / "עוד לא" נרשמים בשורת המסירה - כל מכשיר אחר סוגר את התזכורת לפי זה
+async function recordReminderAnswer(source, kind) {
+    if (!supabaseClient || !currentUserId || !source || !source.sourceType || !source.sourceId) return;
+    closeReminderNotifications(n => n.tag === reminderNotificationTag(source));
+    await supabaseClient.from('reminder_deliveries').upsert({
+        user_id: currentUserId, source_type: source.sourceType, source_id: source.sourceId,
+        source_date: source.sourceDate || getLocalDateString(), ack_kind: kind,
+        acked_at: kind === 'snooze' ? null : new Date().toISOString(),
+    }, { onConflict: 'user_id,source_type,source_id,source_date' });
 }
 
 async function clearReminderSnooze(source) {
-    clearTimeout(localReminderSnoozeTimer);
     if (!supabaseClient || !currentUserId || !source || !source.sourceType || !source.sourceId) return;
     await supabaseClient.from('reminder_snoozes').delete().eq('user_id', currentUserId).eq('source_type', source.sourceType).eq('source_id', source.sourceId);
 }
 
-async function snoozeReminderPopup() {
+function closeReminderPopupForAnswer() {
     const source = currentReminderPopupSource;
     stopReminderRinging();
     closeModal('modal-reminder-popup');
-    if (!source || !supabaseClient || !currentUserId) return;
-    const row = {
-        user_id: currentUserId, source_type: source.sourceType, source_id: source.sourceId,
-        source_date: source.sourceDate || getLocalDateString(),
-        title: String(source.taskTitle || '').slice(0, 200), body: String(source.text || '').slice(0, 500),
-        next_at: new Date(Date.now() + REMINDER_SNOOZE_MINUTES * 60000).toISOString(), remaining: REMINDER_SNOOZE_REPEATS,
-    };
-    const { error } = await supabaseClient.from('reminder_snoozes').upsert(row, { onConflict: 'user_id,source_type,source_id,source_date' });
-    showAppToast(t(error ? 'nm_save_error' : 'reminder_snoozed_toast'), error ? 'error' : undefined);
-    // בלי Push (לא אושרו התראות במכשיר) - הפופאפ חוזר מכאן, כל עוד האפליקציה פתוחה
-    if (!hasPushReminders()) {
-        clearTimeout(localReminderSnoozeTimer);
-        localReminderSnoozeTimer = setTimeout(() => fireReminder({ ...source }), REMINDER_SNOOZE_MINUTES * 60000);
-    }
+    currentReminderPopupSource = null;
+    return source;
 }
 
-// "הבנתי!" - סוגר ולא מזכיר שוב (מבטל נודניק פעיל)
+async function snoozeReminderPopup() {
+    const source = closeReminderPopupForAnswer();
+    if (source && supabaseClient && currentUserId) {
+        const row = {
+            user_id: currentUserId, source_type: source.sourceType, source_id: source.sourceId,
+            source_date: source.sourceDate || getLocalDateString(),
+            title: String(source.taskTitle || '').slice(0, 200), body: String(source.text || '').slice(0, 500),
+            next_at: new Date(Date.now() + REMINDER_SNOOZE_MINUTES * 60000).toISOString(), remaining: REMINDER_SNOOZE_REPEATS,
+        };
+        const { error } = await supabaseClient.from('reminder_snoozes').upsert(row, { onConflict: 'user_id,source_type,source_id,source_date' });
+        recordReminderAnswer(source, 'snooze');
+        showAppToast(t(error ? 'nm_save_error' : 'reminder_snoozed_toast'), error ? 'error' : undefined);
+    }
+    showNextQueuedReminder();
+}
+
+// "הבנתי!" - סוגר ולא מזכיר שוב, בשום מכשיר (מבטל נודניק פעיל)
 async function dismissReminderPopup() {
-    const source = currentReminderPopupSource;
-    stopReminderRinging();
-    closeModal('modal-reminder-popup');
-    await clearReminderSnooze(source);
+    const source = closeReminderPopupForAnswer();
+    await Promise.all([clearReminderSnooze(source), recordReminderAnswer(source, 'dismiss')]);
+    showNextQueuedReminder();
 }
 
 // התראת נודניק מהשרת בזמן שהאפליקציה פתוחה (sw.js מעביר אותה לכאן) - פותחים גם את הפופאפ
@@ -14762,26 +14941,33 @@ if ('serviceWorker' in navigator) {
         if (!msg || msg.type !== 'weekwise-reminder-snooze' || !msg.data) return;
         if (document.visibilityState !== 'visible') return;
         const d = msg.data;
-        startReminderRinging();
-        showReminderPopup(d.taskTitle, d.text, { sourceType: d.sourceType, sourceId: d.sourceId, sourceDate: d.sourceDate });
+        queueReminder({ taskTitle: d.taskTitle, text: d.text, sourceType: d.sourceType, sourceId: d.sourceId, sourceDate: d.sourceDate });
     });
 }
 
 // "בוצע, תודה" - מסמנת השלמה על השורה האמיתית (אותו מנגנון בדיוק כמו הצ'קבוקס
 // ברשימות עצמן, ר' toggleScheduleCompletion/toggleEventOccurrenceCompletion),
-// לא רק סוגרת את הפופאפ, ומבטלת נודניק פעיל
+// לא רק סוגרת את הפופאפ, ומבטלת נודניק פעיל - בכל המכשירים
 async function markReminderPopupDone() {
-    const source = currentReminderPopupSource;
-    stopReminderRinging();
-    closeModal('modal-reminder-popup');
-    if (!source) return;
-    clearReminderSnooze(source);
-    if (source.sourceType === 'schedule') {
-        await toggleScheduleCompletion(source.sourceId, source.sourceDate, true);
-    } else if (source.sourceType === 'event') {
-        await toggleEventOccurrenceCompletion(source.sourceId, true);
+    const source = closeReminderPopupForAnswer();
+    if (source) {
+        clearReminderSnooze(source);
+        recordReminderAnswer(source, 'done');
+        if (source.sourceType === 'schedule') {
+            await toggleScheduleCompletion(source.sourceId, source.sourceDate, true);
+        } else if (source.sourceType === 'event') {
+            await toggleEventOccurrenceCompletion(source.sourceId, true);
+        }
+        showAppToast(t('reminder_popup_marked_done_toast'));
     }
-    showAppToast(t('reminder_popup_marked_done_toast'));
+    showNextQueuedReminder();
+}
+
+// סימון ✓ ברשימות עצמן = "בוצע" גם לתזכורת: לא תגיע (או תחזור בנודניק) באף מכשיר
+function markReminderDoneFromList(sourceType, sourceId, sourceDate) {
+    const source = { sourceType, sourceId, sourceDate };
+    clearReminderSnooze(source);
+    recordReminderAnswer(source, 'done');
 }
 
 function requestNotificationPermission() {
@@ -14846,16 +15032,21 @@ async function savePushSubscription(subscription) {
     const json = subscription.toJSON();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const { data: existing } = await supabaseClient.from('push_subscriptions').select('id').eq('endpoint', json.endpoint).maybeSingle();
+    // סוג המכשיר: השרת שולח תזכורות כברירת מחדל רק לטלפון (ר' send-due-reminders)
     const payload = {
         user_id: currentUserId,
         username: currentUsername,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
-        timezone: timezone
+        timezone: timezone,
+        device_kind: getReminderDeviceKind(),
+        device_id: getReminderDeviceId(),
     };
     if (existing) await supabaseClient.from('push_subscriptions').update(payload).eq('id', existing.id);
     else await supabaseClient.from('push_subscriptions').insert(payload);
+    // מנוי ישן של אותו מכשיר (נרשם מחדש, למשל אחרי החלפת מפתח) לא ממשיך לקבל עוד עותק של כל תזכורת
+    await supabaseClient.from('push_subscriptions').delete().eq('user_id', currentUserId).eq('device_id', payload.device_id).neq('endpoint', json.endpoint);
 }
 
 // --- כפתור מפורש בהגדרות: הפעלת ההתראות בעצמה (בנוסף לבקשה השקטה שקורית
@@ -14953,38 +15144,6 @@ async function unsubscribePushNotifications() {
     } catch (err) {
         console.error('Push unsubscribe failed:', err);
     }
-}
-
-// חשוב: דרך ה-Service Worker (registration.showNotification), לא new Notification()
-// הישיר - ה-constructor הישיר פשוט לא נתמך ב-iOS (Safari/PWA) בכלל, אז תזכורת
-// שנורית כשהאפליקציה פתוחה הייתה משמיעה צליל ומציגה פופאפ בתוך האפליקציה, אבל
-// בלי שום התראת-מערכת אמיתית באייפון - דווח במפורש ("קיבלתי צלצול אבל לא
-// התראה"). registration.showNotification הוא בדיוק מה שמשמש כבר בהצלחה בנתיב
-// ה-Push השרתי (ר' sw.js/'push' listener) - אותה קריאה בדיוק, רק מהצד הזה
-function showBrowserNotification(taskTitle, text, tag, rem) {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const title = `${t('reminder_prefix')}${taskTitle || t('reminder_default_task')}`;
-    const options = { body: text || '', icon: 'icon.png', tag: tag || `weekwise-reminder-${taskTitle}-${Date.now()}` };
-    // actions/data: אותה תוספת בדיוק כמו ב-send-due-reminders (השרת), כדי
-    // שהתראה שנשלחת מכאן (הלקוח, לא מהשרת) תיתן את אותם כפתורי בוצע/עוד-לא
-    // על התראת-המערכת עצמה - actions נתמך רק דרך registration.showNotification,
-    // לא new Notification() הישיר, אז זה פשוט מתעלם בשקט בנתיב הישיר (בסדר,
-    // אין ברירה טובה יותר שם)
-    if (rem && rem.sourceType && rem.sourceId) {
-        options.actions = [{ action: 'done', title: '✅' }, { action: 'not_done', title: '⏰' }];
-        options.data = { sourceType: rem.sourceType, sourceId: rem.sourceId, sourceDate: rem.sourceDate || getLocalDateString(), userId: currentUserId };
-        // כמו ב-sw.js: נשארת על המסך עד שמגיבים, עם רטט (אם הוא דלוק בהגדרות)
-        options.requireInteraction = true;
-        if (isReminderVibrateOn()) options.vibrate = REMINDER_VIBRATE_PATTERN;
-    }
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistration().then(reg => {
-            if (reg) { reg.showNotification(title, options); return; }
-            try { new Notification(title, options); } catch { /* iOS ללא SW רשום - אין מה לעשות */ }
-        });
-        return;
-    }
-    try { new Notification(title, options); } catch { /* לא נתמך בדפדפן הזה */ }
 }
 
 let reminderToastTimeout = null;

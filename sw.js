@@ -16,8 +16,8 @@ self.addEventListener('push', (event) => {
         tag: payload.tag || 'weekwise-push-reminder'
     };
     // actions/data: כפתורי בוצע/עוד-לא ישירות על התראת-המערכת - מגיעים
-    // מ-send-due-reminders (שרת) או מ-showBrowserNotification (לקוח, אותו
-    // מבנה בדיוק) - ר' notificationclick למטה לטיפול בלחיצה עליהם
+    // מ-send-due-reminders (השרת שולח רק כשהאפליקציה לא פתוחה מול העיניים,
+    // וכל תזכורת פעם אחת) - ר' notificationclick למטה לטיפול בלחיצה עליהם
     if (payload.actions) options.actions = payload.actions;
     if (payload.data) options.data = payload.data;
     // תזכורת חזקה יותר (לפי בקשה מפורשת): רטט בטלפונים שתומכים, ותזכורת למשימה נשארת על המסך
