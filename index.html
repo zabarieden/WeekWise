@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=506">
+    <link rel="stylesheet" href="theme.css?v=507">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -181,6 +181,9 @@
                          ברירת המחדל בלבד: גובה קבוע מוחלט + overflow:hidden, בלי תלות
                          בתמיכת דפדפן ב-mask-image - ר' theme.css/updateHomeSkyDayNight -->
                     <div class="home-sky-topstrip"></div>
+                    <!-- 🌦️ מזג אוויר בשמיים (כבוי כברירת מחדל, נדלק בהגדרות): עננים / גשם / שלג / ערפל / סערה
+                         ברקע של מסך הבית - שכבה דקורטיבית בלבד (ר' applyHomeWeather ב-home.js) -->
+                    <div class="home-weather" id="home-weather" aria-hidden="true"></div>
                     <!-- 🌼 "פינה לא מושלמת שגדלה איתך" (לפי בחירה מפורשת מבין אפשרויות): מזרן יוגה חצי
                          פתוח עם פתקים, ספל ואדנית חינניות - בתחתית המסך, בצד שמול הרובוט. כל משימה
                          שמסומנת ב"הצצה להיום" פותחת עוד חיננית (עד 6), וכשהכל בוצע - פריחה מלאה ופרפר.
@@ -227,6 +230,10 @@
                 <div class="home-greeting-row home-greeting-center">
                     <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
                     <p class="home-greeting-date home-greeting-date-clickable" id="home-greeting-date" onclick="openQuickDatePeek()" data-i18n-title="home_greeting_date_peek_title" title="Quick look at the calendar"></p>
+                    <!-- ✨ משפט קטן ליום (מתחלף כל בוקר), ומתחתיו צ'יפים קטנים: רצף ימים, ספירה לאחור לאירוע
+                         שסומן ⭐, ובערב "3 דברים טובים מהיום" (שלב 2, ר' home.js) -->
+                    <p class="home-daily-line" id="home-daily-line"></p>
+                    <div class="home-chips hidden" id="home-chips"></div>
                 </div>
                 <!-- פתק מהיר - כפתור בולט באמצע מסך הבית (לפי בקשה מפורשת). לחיצה רגילה פותחת פתק
                      (initFixedAiFab), לחיצה ארוכה - תפריט קטן: הקלטה / רשימת קניות / פתק רגיל (home.js) -->
@@ -2339,6 +2346,40 @@
             </div>
         </div>
 
+        <!-- 🗂️ השבועות הקודמים של הפתק השבועי (לחיצה ארוכה על הפתק או על הסיכה - ר' openWeeklyNoteHistory) -->
+        <div id="modal-weekly-history" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="weekly_note_history_title">Past weeks</h3>
+                <div id="weekly-history-list" class="weekly-history-list"></div>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-weekly-history')" data-i18n="close_btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌙 "3 דברים טובים מהיום" - בערב, מהצ'יפ שמתחת לברכה (ר' openGoodThings ב-home.js) -->
+        <div id="modal-good-things" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="good_things_title">3 good things from today</h3>
+                <p class="good-things-hint" data-i18n="good_things_hint">Something small that was good today – even one is enough.</p>
+                <div class="good-things-inputs" id="good-things-inputs">
+                    <label class="good-things-row"><span class="good-things-num" aria-hidden="true">1</span><input type="text" maxlength="90" data-i18n-placeholder="good_things_placeholder" placeholder="Something good that happened…"></label>
+                    <label class="good-things-row"><span class="good-things-num" aria-hidden="true">2</span><input type="text" maxlength="90" data-i18n-placeholder="good_things_placeholder" placeholder="Something good that happened…"></label>
+                    <label class="good-things-row"><span class="good-things-num" aria-hidden="true">3</span><input type="text" maxlength="90" data-i18n-placeholder="good_things_placeholder" placeholder="Something good that happened…"></label>
+                </div>
+                <div class="action-buttons-wrap good-things-actions" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" onclick="saveGoodThings()" data-i18n="save_generic">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="skipGoodThingsTonight()" data-i18n="good_things_skip">Not tonight</button>
+                </div>
+                <details class="good-things-past" id="good-things-past" ontoggle="if (this.open) renderGoodThingsPast()">
+                    <summary data-i18n="good_things_past">Previous days</summary>
+                    <div id="good-things-past-list" class="good-things-past-list"></div>
+                </details>
+            </div>
+        </div>
+
         <!-- חלון צף: הוספת מים מהירה מהכפתור הצף - כוס/בקבוק/כמות מותאמת אישית -->
         <div id="modal-water-quick-add" class="apple-modal">
             <div class="modal-sheet">
@@ -2754,6 +2795,30 @@
                             <span class="switch-slider"></span>
                         </label>
                     </div>
+                    <!-- 👋 השם בברכה במסך הבית ("ערב טוב, דנה") - ברירת המחדל היא השם הפרטי מחשבון הגוגל;
+                         שדה ריק = בלי שם (ר' onDisplayNameInput ב-home.js) -->
+                    <div class="settings-toggle-row settings-name-row">
+                        <label class="settings-label" data-i18n="settings_display_name_label" for="display-name-input">Name in the greeting</label>
+                        <input type="text" id="display-name-input" class="settings-name-input" maxlength="30" autocomplete="given-name" data-i18n-placeholder="settings_display_name_placeholder" placeholder="First name" oninput="onDisplayNameInput(this.value)">
+                    </div>
+                    <p class="settings-hint" data-i18n="settings_display_name_hint">Shown in the greeting on the home screen. You can leave it empty.</p>
+                    <!-- 🌙 "3 דברים טובים מהיום" בערב - דלוק כברירת מחדל -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_good_things_label" for="good-things-toggle">"3 good things" in the evening</label>
+                        <label class="switch">
+                            <input type="checkbox" id="good-things-toggle" checked onchange="toggleGoodThingsSetting()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <!-- 🌦️ מזג אוויר בשמיים - כבוי כברירת מחדל (צריך אישור מיקום; המיקום נשמר רק במכשיר) -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_weather_label" for="home-weather-toggle">Weather in the home screen sky</label>
+                        <label class="switch">
+                            <input type="checkbox" id="home-weather-toggle" onchange="toggleHomeWeather()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <p class="settings-hint" data-i18n="settings_weather_hint">Rain, clouds or snow in the home screen background, by the weather where you are.</p>
                     <!-- 🍎 בחלון הפתקים (קיצור לארוחות שמורות) - דלוק כברירת מחדל, אפשר להסתיר -->
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_quick_note_apple_label" for="quick-note-apple-toggle">Show the 🍎 saved-meal shortcut in the notes window</label>
@@ -4189,8 +4254,8 @@
 
     </div>
 
-    <script src="i18n.js?v=410"></script>
-    <script src="app.js?v=554"></script>
+    <script src="i18n.js?v=411"></script>
+    <script src="app.js?v=555"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=3"></script>
     <script src="tables.js?v=2"></script>
@@ -4198,6 +4263,6 @@
     <script src="new-me.js?v=28"></script>
     <script src="new-me-challenges.js?v=4"></script>
     <script src="books.js?v=5"></script>
-    <script src="home.js?v=1"></script>
+    <script src="home.js?v=2"></script>
 </body>
 </html>

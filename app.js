@@ -2235,6 +2235,8 @@ async function initAppAfterAuth(user) {
     initFixedAiBrainFab();
     // מסך הבית החדש ("היום שלי", פוקוס, לחיצה ארוכה על פתק מהיר) + כוס המים במגירה (ר' home.js)
     if (typeof initHomeV2 === 'function') { initHomeV2(); loadMyDayWater(); }
+    // שלב 2: שם בברכה, רצף, משפט ליום, ספירה לאחור, "3 דברים טובים", השבועות הקודמים, מזג אוויר
+    if (typeof initHomePhase2 === 'function') initHomePhase2();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
@@ -3081,8 +3083,12 @@ function renderHomeGreeting() {
     let key = 'home_greeting_morning';
     if (hour >= 12 && hour < 18) key = 'home_greeting_afternoon';
     else if (hour >= 18 || hour < 5) key = 'home_greeting_evening';
-    textEl.textContent = t(key);
+    // 👋 עם השם, אם יש (מההגדרות או מחשבון הגוגל - ר' homeDisplayName ב-home.js)
+    const name = typeof homeDisplayName === 'function' ? homeDisplayName() : '';
+    textEl.textContent = name ? t('home_greeting_named').replace('{greeting}', t(key)).replace('{name}', name) : t(key);
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    if (typeof renderHomeDailyLine === 'function') renderHomeDailyLine();
+    if (typeof renderHomeChips === 'function') renderHomeChips();
     requestAnimationFrame(alignWeeklyNoteToDate);
 }
 
@@ -6369,6 +6375,8 @@ function navigateMeetingsWeek(delta) {
 async function loadCalendarEvents() {
     if (!supabaseClient) return;
     loadMeetingsWeek();
+    // ⏳ הספירה לאחור במסך הבית (האירוע הקרוב שסומן ⭐) - מתעדכנת אחרי כל שינוי ביומן
+    if (typeof loadHomeCountdown === 'function') loadHomeCountdown();
     const container = document.getElementById('calendar-glance-list');
     if (!container) return;
     // השנה מוצגת פעם אחת בקטן ליד הכותרת (לא בכל כותרת-חודש בנפרד למטה) -
@@ -8280,6 +8288,14 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_focus', category: 'general' },
     { id: 'quick_note_hold', category: 'general' },
     { id: 'home_planter', category: 'general' },
+    // שלב 2 של מסך הבית: נגיעות אישיות (ר' home.js)
+    { id: 'home_name', category: 'general' },
+    { id: 'home_streak', category: 'general' },
+    { id: 'daily_line', category: 'general' },
+    { id: 'home_countdown', category: 'general' },
+    { id: 'good_things', category: 'general' },
+    { id: 'weekly_note_history', category: 'general' },
+    { id: 'home_weather', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
     { id: 'routine_day_tabs', category: 'general' },
@@ -15523,6 +15539,8 @@ async function saveWeeklyNoteItemsToServer() {
         { user_id: currentUserId, username: currentUsername, weekly_note_items: currentWeeklyNoteItems, weekly_note_item_count: currentWeeklyNoteItemCount },
         { onConflict: 'user_id' },
     );
+    // ✓ בפתק נשמר גם בעותק של השבוע (השבועות הקודמים, ר' snapshotWeeklyNote ב-home.js)
+    if (!error && typeof snapshotWeeklyNote === 'function') snapshotWeeklyNote();
     return error;
 }
 // ✓ ישר מהפתק במסך הבית
@@ -15559,6 +15577,8 @@ async function saveWeeklyNote() {
         { onConflict: 'user_id' },
     );
     if (error) showAppToast(t('error_adding_item') + error.message, 'error');
+    // עותק של השבוע הזה, ל"השבועות שעברו" (פתק שנמחק לא מוחק אותו - ר' home.js)
+    else if (typeof snapshotWeeklyNote === 'function') snapshotWeeklyNote();
 }
 function clearWeeklyNote() {
     const textarea = document.getElementById('weekly-note-textarea');

@@ -325,6 +325,8 @@ function renderMyDay(container, items, focusItems) {
     renderMyDayTimeline(container, items, focusItems);
     renderMyDayBar(items);
     if (document.body.classList.contains('home-focus-on')) renderHomeFocus();
+    // הרצף כולל את היום ברגע שיש ✓ ראשון
+    if (typeof renderHomeChips === 'function') renderHomeChips();
 }
 
 function openMyDayAddTask() {
@@ -518,25 +520,26 @@ function toggleHomeDonePopover(force) {
 // --- לחיצה ארוכה על "פתק מהיר": הקלטה (הכתבה לפתק) / ישר לרשימת הקניות / פתק רגיל ---
 const HOME_SPEECH_LANGS = { he: 'he-IL', en: 'en-US', es: 'es-ES', fr: 'fr-FR', ar: 'ar-SA', ru: 'ru-RU', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', zh: 'zh-CN', hi: 'hi-IN', ko: 'ko-KR', tr: 'tr-TR', id: 'id-ID', it: 'it-IT', vi: 'vi-VN', pl: 'pl-PL', th: 'th-TH', ur: 'ur-PK', bn: 'bn-BD', sw: 'sw-KE', uk: 'uk-UA', el: 'el-GR', nl: 'nl-NL', ca: 'ca-ES', ro: 'ro-RO', yo: 'yo-NG', sv: 'sv-SE', nb: 'nb-NO', da: 'da-DK', cs: 'cs-CZ', hu: 'hu-HU', fi: 'fi-FI' };
 function homeSpeechSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
-let quickNoteLongPressFired = false;
-function initQuickNoteLongPress() {
-    const el = document.getElementById('btn-ai-fab');
+// לחיצה ארוכה (חצי שנייה) על כפתור. הקליק שבא אחריה לא מפעיל את הלחיצה הרגילה (מה שנפתח
+// בלחיצה הארוכה כבר פתוח) - משמש לפתק המהיר ולפתק השבועי
+function homeAttachLongPress(el, onLong) {
     if (!el || el.dataset.longPress) return;
     el.dataset.longPress = '1';
     let timer = 0;
-    const start = () => {
-        quickNoteLongPressFired = false;
+    let fired = false;
+    el.addEventListener('pointerdown', () => {
+        fired = false;
         clearTimeout(timer);
-        timer = setTimeout(() => { quickNoteLongPressFired = true; openQuickNoteMenu(); }, 520);
-    };
-    const cancel = () => clearTimeout(timer);
-    el.addEventListener('pointerdown', start);
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, cancel));
+        timer = setTimeout(() => { fired = true; onLong(); }, 520);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(timer)));
     el.addEventListener('contextmenu', e => e.preventDefault());
-    // הקליק שאחרי לחיצה ארוכה לא פותח את הפתק הרגיל (התפריט כבר פתוח)
     el.addEventListener('click', e => {
-        if (quickNoteLongPressFired) { e.stopImmediatePropagation(); e.preventDefault(); quickNoteLongPressFired = false; }
+        if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; }
     }, true);
+}
+function initQuickNoteLongPress() {
+    homeAttachLongPress(document.getElementById('btn-ai-fab'), openQuickNoteMenu);
 }
 function openQuickNoteMenu() {
     const menu = document.getElementById('quick-note-menu');
@@ -614,4 +617,378 @@ function initHomeV2() {
         syncHomePopoverClass();
     });
     try { if (sessionStorage.getItem('weekwise_home_focus') === '1') toggleHomeFocus(true); } catch {}
+}
+
+// ===================== שלב 2: נגיעות אישיות =====================
+// לפי הרעיונות שנבחרו במפורש: 11 שם בברכה, 3 רצף ימים, 8 משפט קטן ליום, 12 ספירה לאחור,
+// 5 "3 דברים טובים" בערב, 14 השבועות הקודמים של הפתק השבועי, 9 מזג אוויר בשמיים
+
+const HOME_FLAME_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.8.2 1.6 1 2.6 2 3 0-2.6-.6-5.4.8-8.2z"/></svg>';
+const HOME_HOURGLASS_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/></svg>';
+const HOME_MOON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>';
+
+function homeDaysBetween(a, b) {
+    return Math.round((Date.parse(`${b}T12:00:00`) - Date.parse(`${a}T12:00:00`)) / 86400000);
+}
+
+// --- 👋 השם בברכה: מה שנכתב בהגדרות; אם עוד לא נכתב כלום - השם הפרטי מחשבון הגוגל.
+// מחרוזת ריקה בהגדרות = "בלי שם" במפורש (גם אם יש שם בגוגל) ---
+const HOME_NAME_KEY = 'weekwise_display_name';
+let homeGoogleFirstName = '';
+function homeDisplayName() {
+    let saved = null;
+    try { saved = localStorage.getItem(HOME_NAME_KEY); } catch {}
+    if (saved !== null) return saved.trim();
+    return homeGoogleFirstName;
+}
+async function loadHomeDisplayName() {
+    if (!supabaseClient || !currentUserId) return;
+    try {
+        const { data: s } = await supabaseClient.auth.getSession();
+        const meta = (s && s.session && s.session.user && s.session.user.user_metadata) || {};
+        homeGoogleFirstName = String(meta.given_name || meta.full_name || meta.name || '').trim().split(/\s+/)[0] || '';
+    } catch {}
+    try {
+        // השרת קובע (גם "עוד לא נכתב שם" - כדי שבמכשיר משותף לא יופיע שם של חשבון אחר)
+        const { data, error } = await supabaseClient.from('user_premium').select('display_name').eq('user_id', currentUserId).maybeSingle();
+        if (!error) {
+            if (data && data.display_name !== null && data.display_name !== undefined) localStorage.setItem(HOME_NAME_KEY, data.display_name);
+            else localStorage.removeItem(HOME_NAME_KEY);
+        }
+    } catch {}
+    applyHomeDisplayName();
+}
+function applyHomeDisplayName() {
+    const input = document.getElementById('display-name-input');
+    if (input && document.activeElement !== input) input.value = homeDisplayName();
+    renderHomeGreeting();
+}
+let homeNameSaveTimer = 0;
+function onDisplayNameInput(value) {
+    const name = String(value || '').trim().slice(0, 30);
+    try { localStorage.setItem(HOME_NAME_KEY, name); } catch {}
+    renderHomeGreeting();
+    clearTimeout(homeNameSaveTimer);
+    homeNameSaveTimer = setTimeout(() => {
+        if (!supabaseClient || !currentUserId) return;
+        supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, display_name: name }, { onConflict: 'user_id' }).then(() => {});
+    }, 600);
+}
+
+// --- ✨ משפט קטן ליום, ברוח "בדרך ל-10" - מתחלף כל בוקר (21 משפטים, אחד ליום) ---
+const HOME_DAILY_LINE_COUNT = 21;
+function homeDailyLineIndex(date) {
+    const d = date || new Date();
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) % HOME_DAILY_LINE_COUNT + 1;
+}
+function renderHomeDailyLine() {
+    const el = document.getElementById('home-daily-line');
+    if (el) el.textContent = t(`daily_line_${homeDailyLineIndex()}`);
+}
+
+// --- 🔥 רצף ימים: כמה ימים ברצף היה לפחות ✓ אחד (יומן, לו"ז, שגרה, יעדים, New Me). הימים
+// הקודמים נטענים פעם ביום; היום נספר חי מ"היום שלי". עוד אין ✓ היום? הרצף עדיין לא נשבר -
+// סופרים עד אתמול. מוצג רק מ-2 ימים, ורצף שנגמר פשוט נעלם בשקט (בלי שום הודעה) ---
+let homeStreakPast = null;
+let homeStreakLoadedDay = null;
+async function loadHomeStreak() {
+    if (!supabaseClient || !currentUserId) return;
+    const today = getLocalDateString();
+    const from = addDaysToDateStr(today, -120);
+    const uid = currentUserId;
+    const safe = p => p.then(r => r.data || []).catch(() => []);
+    const [sc, ev, rc, vc, nc] = await Promise.all([
+        safe(supabaseClient.from('schedule_completions').select('completion_date').eq('user_id', uid).gte('completion_date', from)),
+        safe(supabaseClient.from('calendar_events').select('event_date').eq('user_id', uid).eq('is_completed', true).gte('event_date', from).lte('event_date', today)),
+        safe(supabaseClient.from('routine_item_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
+        safe(supabaseClient.from('vision_goal_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
+        safe(supabaseClient.from('new_me_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
+    ]);
+    const days = new Set([...sc.map(r => r.completion_date), ...ev.map(r => r.event_date), ...rc.map(r => r.checkin_date), ...vc.map(r => r.checkin_date), ...nc.map(r => r.checkin_date)].filter(Boolean));
+    days.delete(today);
+    homeStreakPast = days;
+    homeStreakLoadedDay = today;
+    renderHomeChips();
+}
+function homeStreakCount() {
+    if (!homeStreakPast) return 0;
+    const today = getLocalDateString();
+    let n = myDayItems.some(it => it.checkable && it.done) ? 1 : 0;
+    let d = addDaysToDateStr(today, -1);
+    while (homeStreakPast.has(d)) { n++; d = addDaysToDateStr(d, -1); }
+    return n;
+}
+
+// --- ⏳ ספירה לאחור לאירוע הקרוב שסומן ⭐ ביומן (עד 100 יום קדימה) ---
+let homeCountdown = null;
+async function loadHomeCountdown() {
+    if (!supabaseClient || !currentUserId) return;
+    const today = getLocalDateString();
+    const { data } = await supabaseClient.from('calendar_events').select('id, event_title, event_date, is_completed').eq('user_id', currentUserId).eq('is_starred', true).gte('event_date', today).order('event_date', { ascending: true }).limit(10);
+    const next = (data || []).find(ev => !ev.is_completed && (ev.event_title || '').trim());
+    const days = next ? homeDaysBetween(today, next.event_date) : null;
+    homeCountdown = next && days <= 100 ? { date: next.event_date, title: next.event_title.trim(), days } : null;
+    renderHomeChips();
+}
+function homeCountdownText(cd) {
+    if (cd.days <= 0) return t('home_countdown_today').replace('{title}', cd.title);
+    if (cd.days === 1) return t('home_countdown_tomorrow').replace('{title}', cd.title);
+    return t('home_countdown_days').replace('{n}', cd.days).replace('{title}', cd.title);
+}
+function openHomeCountdown() {
+    if (!homeCountdown) return;
+    switchToTab('schedule-section');
+    selectCalendarDay(homeCountdown.date);
+}
+
+// --- 🌙 "3 דברים טובים מהיום" - בערב (18:00 עד 04:00; אחרי חצות זה עדיין היום שעבר) ---
+const GOOD_THINGS_KEY = 'weekwise_good_things_enabled';
+function isGoodThingsOn() { try { return localStorage.getItem(GOOD_THINGS_KEY) !== 'false'; } catch { return true; } }
+function isHomeEvening() { const h = new Date().getHours(); return h >= 18 || h < 4; }
+function goodThingsDay() {
+    const d = new Date();
+    if (d.getHours() < 4) d.setDate(d.getDate() - 1);
+    return getLocalDateString(d);
+}
+let goodThingsToday = null;
+let goodThingsLoadedFor = null;
+async function loadGoodThingsToday() {
+    if (!supabaseClient || !currentUserId) return;
+    const day = goodThingsDay();
+    const { data } = await supabaseClient.from('good_things').select('items').eq('user_id', currentUserId).eq('day', day).maybeSingle();
+    goodThingsToday = data && Array.isArray(data.items) ? data.items : null;
+    goodThingsLoadedFor = day;
+    renderHomeChips();
+}
+function goodThingsSaved() { return !!(goodThingsToday && goodThingsToday.some(x => String(x || '').trim())); }
+function goodThingsChipVisible() {
+    if (!isGoodThingsOn() || !isHomeEvening()) return false;
+    let skipped = null;
+    try { skipped = localStorage.getItem(`weekwise_good_things_skip_${currentUserId}`); } catch {}
+    return goodThingsSaved() || skipped !== goodThingsDay();
+}
+function openGoodThings() {
+    const items = goodThingsToday || [];
+    document.querySelectorAll('#good-things-inputs input').forEach((input, i) => { input.value = items[i] || ''; });
+    const past = document.getElementById('good-things-past');
+    if (past) past.open = false;
+    openModal('modal-good-things');
+}
+async function saveGoodThings() {
+    if (!supabaseClient || !currentUserId) return;
+    const items = [...document.querySelectorAll('#good-things-inputs input')].map(input => input.value.trim()).filter(Boolean);
+    const day = goodThingsDay();
+    let error = null;
+    if (items.length) {
+        ({ error } = await supabaseClient.from('good_things').upsert({ user_id: currentUserId, day, items, updated_at: new Date().toISOString() }, { onConflict: 'user_id,day' }));
+    } else if (goodThingsSaved()) {
+        ({ error } = await supabaseClient.from('good_things').delete().eq('user_id', currentUserId).eq('day', day));
+    }
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    goodThingsToday = items.length ? items : null;
+    goodThingsLoadedFor = day;
+    closeModal('modal-good-things');
+    if (items.length) showAppToast(t('good_things_saved_toast'));
+    renderHomeChips();
+}
+function skipGoodThingsTonight() {
+    try { localStorage.setItem(`weekwise_good_things_skip_${currentUserId}`, goodThingsDay()); } catch {}
+    closeModal('modal-good-things');
+    renderHomeChips();
+}
+async function renderGoodThingsPast() {
+    const box = document.getElementById('good-things-past-list');
+    if (!box || !supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('good_things').select('day, items').eq('user_id', currentUserId).lt('day', goodThingsDay()).order('day', { ascending: false }).limit(14);
+    const rows = (data || []).filter(r => Array.isArray(r.items) && r.items.some(Boolean));
+    if (!rows.length) { box.innerHTML = `<p class="good-things-past-empty">${myDayEsc(t('good_things_past_empty'))}</p>`; return; }
+    box.innerHTML = rows.map(r => {
+        const [y, m, d] = r.day.split('-').map(Number);
+        const label = new Date(y, m - 1, d).toLocaleDateString(currentLang, { weekday: 'short', day: 'numeric', month: 'short' });
+        return `<div class="good-things-past-day"><span class="good-things-past-date">${myDayEsc(label)}</span><ul>${r.items.filter(Boolean).map(x => `<li>${myDayEsc(x)}</li>`).join('')}</ul></div>`;
+    }).join('');
+}
+function applyGoodThingsSetting() {
+    const toggle = document.getElementById('good-things-toggle');
+    if (toggle) toggle.checked = isGoodThingsOn();
+    renderHomeChips();
+}
+async function loadGoodThingsSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('good_things_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (data && data.good_things_enabled !== null && data.good_things_enabled !== undefined) {
+        try { localStorage.setItem(GOOD_THINGS_KEY, String(data.good_things_enabled)); } catch {}
+    }
+    applyGoodThingsSetting();
+}
+async function toggleGoodThingsSetting() {
+    const enabled = document.getElementById('good-things-toggle').checked;
+    try { localStorage.setItem(GOOD_THINGS_KEY, String(enabled)); } catch {}
+    applyGoodThingsSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, good_things_enabled: enabled }, { onConflict: 'user_id' });
+    }
+}
+
+// --- הצ'יפים הקטנים מתחת לברכה: רצף, ספירה לאחור, ובערב "3 דברים טובים" ---
+function renderHomeChips() {
+    const box = document.getElementById('home-chips');
+    if (!box) return;
+    const chips = [];
+    const streak = homeStreakCount();
+    if (streak >= 2) {
+        chips.push(`<span class="home-chip home-chip-streak" title="${myDayEsc(t('home_streak_title'))}">${HOME_FLAME_SVG}<span>${myDayEsc(t('home_streak_days').replace('{n}', streak))}</span></span>`);
+    }
+    if (homeCountdown) {
+        chips.push(`<button type="button" class="home-chip home-chip-countdown" onclick="openHomeCountdown()">${HOME_HOURGLASS_SVG}<span>${myDayEsc(homeCountdownText(homeCountdown))}</span></button>`);
+    }
+    if (goodThingsChipVisible()) {
+        const saved = goodThingsSaved();
+        chips.push(`<button type="button" class="home-chip home-chip-good${saved ? ' is-saved' : ''}" onclick="openGoodThings()">${HOME_MOON_SVG}<span>${myDayEsc(t(saved ? 'good_things_chip_done' : 'good_things_chip'))}</span></button>`);
+    }
+    box.innerHTML = chips.join('');
+    box.classList.toggle('hidden', !chips.length);
+}
+
+// --- 🗂️ השבועות הקודמים של הפתק השבועי: בכל שמירה נשמר עותק לשבוע הנוכחי (פתק שלא השתנה
+// מקבל עותק בפתיחה הראשונה בשבוע). פתק שנמחק לא מוחק את מה שנשמר לשבוע. לחיצה ארוכה על
+// הפתק (או על הסיכה) פותחת את השבועות שעברו ---
+async function snapshotWeeklyNote(onlyIfMissing) {
+    if (!supabaseClient || !currentUserId) return;
+    const text = String(currentWeeklyNoteText || '').trim();
+    const items = (currentWeeklyNoteItems || []).slice(0, currentWeeklyNoteItemCount).filter(it => String(it.text || '').trim());
+    if (!text && !items.length) return;
+    const week = currentWeekStart();
+    if (onlyIfMissing) {
+        try { if (localStorage.getItem(`weekwise_weekly_note_snap_week_${currentUserId}`) === week) return; } catch {}
+        const { data } = await supabaseClient.from('weekly_note_history').select('id').eq('user_id', currentUserId).eq('week_start', week).limit(1);
+        if (data && data.length) { try { localStorage.setItem(`weekwise_weekly_note_snap_week_${currentUserId}`, week); } catch {} return; }
+    }
+    const { error } = await supabaseClient.from('weekly_note_history').upsert(
+        { user_id: currentUserId, week_start: week, note_text: text, note_items: items, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,week_start' },
+    );
+    if (!error) { try { localStorage.setItem(`weekwise_weekly_note_snap_week_${currentUserId}`, week); } catch {} }
+}
+async function openWeeklyNoteHistory() {
+    const box = document.getElementById('weekly-history-list');
+    if (!box) return;
+    box.innerHTML = '';
+    openModal('modal-weekly-history');
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('weekly_note_history').select('week_start, note_text, note_items').eq('user_id', currentUserId).lt('week_start', currentWeekStart()).order('week_start', { ascending: false }).limit(26);
+    const rows = data || [];
+    if (!rows.length) { box.innerHTML = `<p class="weekly-history-empty">${myDayEsc(t('weekly_note_history_empty'))}</p>`; return; }
+    box.innerHTML = rows.map(r => {
+        const [y, m, d] = r.week_start.split('-').map(Number);
+        const label = t('weekly_note_history_week').replace('{date}', new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' }));
+        const items = Array.isArray(r.note_items) ? r.note_items.filter(it => it && String(it.text || '').trim()) : [];
+        return `<div class="weekly-history-card">
+            <span class="weekly-history-week">${myDayEsc(label)}</span>
+            ${items.length ? `<ul class="weekly-history-items">${items.map(it => `<li class="${it.done ? 'done' : ''}"><span class="weekly-history-box" aria-hidden="true">${it.done ? '✓' : ''}</span>${myDayEsc(it.text)}</li>`).join('')}</ul>` : ''}
+            ${r.note_text ? `<p class="weekly-history-text">${myDayEsc(r.note_text)}</p>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// --- 🌦️ מזג אוויר בשמיים: כבוי כברירת מחדל (צריך אישור מיקום). המיקום המשוער (מעוגל לכקילומטר)
+// נשמר רק במכשיר; הבדיקה עצמה דרך פונקציית השרת weather (MET Norway). מתעדכן כל 40 דקות לכל היותר ---
+const HOME_WEATHER_KEY = 'weekwise_weather_on';
+const HOME_WEATHER_COORDS_KEY = 'weekwise_weather_coords';
+const HOME_WEATHER_CACHE_KEY = 'weekwise_weather_cache';
+function isHomeWeatherOn() { try { return localStorage.getItem(HOME_WEATHER_KEY) === 'true'; } catch { return false; } }
+function homeWeatherLocate() {
+    return new Promise(resolve => {
+        if (!navigator.geolocation) { resolve(null); return; }
+        navigator.geolocation.getCurrentPosition(
+            pos => resolve({ lat: Math.round(pos.coords.latitude * 100) / 100, lon: Math.round(pos.coords.longitude * 100) / 100 }),
+            () => resolve(null),
+            { enableHighAccuracy: false, timeout: 12000, maximumAge: 6 * 3600 * 1000 },
+        );
+    });
+}
+async function toggleHomeWeather() {
+    const toggle = document.getElementById('home-weather-toggle');
+    const on = toggle ? toggle.checked : !isHomeWeatherOn();
+    if (!on) {
+        try { localStorage.setItem(HOME_WEATHER_KEY, 'false'); localStorage.removeItem(HOME_WEATHER_COORDS_KEY); localStorage.removeItem(HOME_WEATHER_CACHE_KEY); } catch {}
+        applyHomeWeather(null);
+        return;
+    }
+    const coords = await homeWeatherLocate();
+    if (!coords) {
+        if (toggle) toggle.checked = false;
+        showAppToast(t('weather_location_denied'), 'error');
+        return;
+    }
+    try { localStorage.setItem(HOME_WEATHER_KEY, 'true'); localStorage.setItem(HOME_WEATHER_COORDS_KEY, JSON.stringify(coords)); } catch {}
+    await refreshHomeWeather(true);
+}
+async function refreshHomeWeather(force) {
+    if (!isHomeWeatherOn()) { applyHomeWeather(null); return; }
+    let cache = null;
+    try { cache = JSON.parse(localStorage.getItem(HOME_WEATHER_CACHE_KEY) || 'null'); } catch {}
+    if (!force && cache && Date.now() - cache.at < 40 * 60000) { applyHomeWeather(cache); return; }
+    let coords = null;
+    try { coords = JSON.parse(localStorage.getItem(HOME_WEATHER_COORDS_KEY) || 'null'); } catch {}
+    if (!coords || !supabaseClient) { applyHomeWeather(cache); return; }
+    try {
+        const { data: s } = await supabaseClient.auth.getSession();
+        const token = s && s.session && s.session.access_token;
+        if (!token) { applyHomeWeather(cache); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/weather`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(coords),
+        });
+        const out = await res.json();
+        if (!res.ok || !out.sky) throw new Error(out.error || 'weather');
+        const next = { sky: out.sky, day: !!out.day, at: Date.now() };
+        try { localStorage.setItem(HOME_WEATHER_CACHE_KEY, JSON.stringify(next)); } catch {}
+        applyHomeWeather(next);
+    } catch (e) {
+        applyHomeWeather(cache);
+        if (force) showAppToast(t('weather_failed'), 'error');
+    }
+}
+const HOME_WEATHER_COVERED = ['clouds', 'rain', 'snow', 'storm', 'fog'];
+function applyHomeWeather(state) {
+    const sky = state && isHomeWeatherOn() ? state.sky : null;
+    const layer = document.getElementById('home-weather');
+    if (layer) layer.className = 'home-weather' + (sky && sky !== 'clear' ? ` wx-${sky}` : '');
+    const scene = document.querySelector('.home-sky-scene');
+    if (scene) scene.classList.toggle('wx-covered', HOME_WEATHER_COVERED.includes(sky));
+    const toggle = document.getElementById('home-weather-toggle');
+    if (toggle) toggle.checked = isHomeWeatherOn();
+}
+
+// --- הפעלה אחרי הכניסה, ורענון קטן כל 10 דקות (ברכה לפי השעה, ערב, יום חדש, מזג אוויר) ---
+let homePhase2Timer = 0;
+let homePhase2Day = null;
+function initHomePhase2() {
+    homePhase2Day = getLocalDateString();
+    renderHomeDailyLine();
+    loadHomeDisplayName();
+    loadHomeStreak();
+    loadHomeCountdown();
+    loadGoodThingsSetting();
+    loadGoodThingsToday();
+    snapshotWeeklyNote(true);
+    refreshHomeWeather(false);
+    homeAttachLongPress(document.getElementById('weekly-note-widget'), openWeeklyNoteHistory);
+    homeAttachLongPress(document.getElementById('weekly-note-pin'), openWeeklyNoteHistory);
+    if (homePhase2Timer) return;
+    homePhase2Timer = setInterval(() => {
+        renderHomeGreeting();
+        const today = getLocalDateString();
+        if (today !== homePhase2Day) {
+            homePhase2Day = today;
+            loadHomeStreak();
+            loadHomeCountdown();
+            snapshotWeeklyNote(true);
+        }
+        if (goodThingsLoadedFor !== goodThingsDay()) loadGoodThingsToday();
+        else renderHomeChips();
+        refreshHomeWeather(false);
+    }, 10 * 60000);
 }
