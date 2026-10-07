@@ -2245,7 +2245,7 @@ async function initAppAfterAuth(user) {
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
     document.getElementById('btn-copy-yesterday').onclick = copyFromYesterday;
     document.getElementById('btn-save-daily-focus').onclick = saveDailyFocus;
-    selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); loadDailySteps(e.target.value); };
+    selectedDateInput.onchange = (e) => { loadDailyNutrition(e.target.value); };
 
     // טעינת תזונה וצעדים להיום אוטומטית (אם קיים)
     if(today) { loadDailyNutrition(today); loadDailySteps(today); }
@@ -3208,6 +3208,8 @@ function showTabSection(targetId) {
         meetingsWeekStart = null;
         loadMeetingsWeek();
     }
+    // פס הצעדים בראש "מעקב אימונים" - תמיד מעודכן להיום
+    if (targetId === 'sport-section') loadDailySteps(getLocalDateString());
 }
 
 function initCubesNavigation() {
@@ -8343,6 +8345,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
+    { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
@@ -21325,14 +21328,17 @@ async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracke
 
 // --- מד צעדים יומי: תצוגה בלבד, מקור הנתונים יהיה סנכרון אוטומטי עתידי ---
 // (Google Fit / Apple Health) דרך אפליקציה נייטיבית - אין קלט ידני יותר.
+// מוצג כפס קטן בראש "מעקב אימונים" (לפי בקשה מפורשת) - תמיד של היום ושל השבוע הנוכחי
+function formatStepCount(n) { return (Number(n) || 0).toLocaleString(currentLang); }
+
 async function loadDailySteps(date) {
     if (!supabaseClient || !currentUserId) return;
-    document.getElementById('steps-today').innerText = '0';
-    const { data, error } = await supabaseClient.from('step_tracker').select('*').eq('user_id', currentUserId).eq('step_date', date).maybeSingle();
+    const todayEl = document.getElementById('steps-today');
+    if (!todayEl) return;
+    todayEl.innerText = formatStepCount(0);
+    const { data, error } = await supabaseClient.from('step_tracker').select('*').eq('user_id', currentUserId).eq('step_date', date || getLocalDateString()).maybeSingle();
     if (error) { showAppToast(t('error_loading_steps') + error.message, 'error'); return; }
-    if (data) {
-        document.getElementById('steps-today').innerText = data.step_count;
-    }
+    if (data) todayEl.innerText = formatStepCount(data.step_count);
     loadStepStats();
 }
 
@@ -21353,7 +21359,8 @@ async function loadStepStats() {
     data.forEach(item => {
         if (item.step_date >= weekStartStr && item.step_date <= weekEndStr) weekly += Number(item.step_count) || 0;
     });
-    document.getElementById('steps-weekly').innerText = weekly;
+    const weeklyEl = document.getElementById('steps-weekly');
+    if (weeklyEl) weeklyEl.innerText = formatStepCount(weekly);
 }
 
 // --- מעקב מים: הוספה מהירה (כוס/בקבוק/כמות מותאמת), סך יומי+שבועי, יעד
