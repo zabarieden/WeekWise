@@ -8683,3 +8683,10 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nmh-meal-sheet .nmh-meal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .nm-hall-more-sheet .nm-tiles { margin-bottom: 10px; }
 @media (prefers-reduced-motion: reduce) { .nmh-glow, .nmh-float { animation: none; } }
+
+/* כפתור ה-PM של חשבון הפיתוח: במסדרון - בתוך הציור, בשורה מתחת לפס העליון (לא מכסה את ⋯);
+   בתצוגת "כמו לפני רכישה" - שורה עם פתיחה של New Me */
+.nmh-dev { position: absolute; top: calc(54 * var(--u)); inset-inline-end: calc(12 * var(--u)); z-index: 5; }
+.nmh-dev .sr-dev-keys { position: static; }
+.sr-dev-keys.is-row { flex-direction: row; padding: 6px 10px; }
+.sr-dev-keys .sr-dev-unlock { width: auto; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 0.82rem; white-space: nowrap; }

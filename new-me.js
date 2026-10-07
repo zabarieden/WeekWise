@@ -202,7 +202,13 @@ function nmGodMode() { return typeof nmGodModeActive === 'function' ? nmGodModeA
 async function renderNewMe() {
     const root = nmRoot();
     if (!root) return;
-    if (!hasNewMe) { nmRenderSales(root); return; }
+    if (!hasNewMe) {
+        const sec = document.getElementById('new-me-section');
+        if (sec) sec.classList.remove('nm-hall-mode');
+        nmRenderSales(root);
+        if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys();
+        return;
+    }
     if (!nmProfileLoaded) {
         root.innerHTML = '<div class="nm-loading"></div>';
         const { data } = await supabaseClient.from('new_me_profile').select('*').eq('user_id', currentUserId).maybeSingle();
@@ -725,7 +731,9 @@ function nmRenderView(root) {
     // במסדרון בלי "חזרה למסך הבית" ובלי איור המטבח בתחתית - המסדרון הוא כל המסך
     const section = document.getElementById('new-me-section');
     if (section) section.classList.toggle('nm-hall-mode', nmView === 'home');
-    if (nmView === 'home') { nmRenderHome(root); return; }
+    // כפתור ה-PM של חשבון הפיתוח: במסדרון בתוך הציור, בשאר המסכים בצד
+    const devKeys = () => { if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys(); };
+    if (nmView === 'home') { nmRenderHome(root); devKeys(); return; }
     root.innerHTML = `
         <div class="nm-subhead">
             <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}">‹</button>
@@ -736,6 +744,7 @@ function nmRenderView(root) {
     const renderers = { day: nmRenderDay, challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
     renderers[nmView](body);
     if (nmView === 'day') nmRestoreDrinkDrafts();
+    devKeys();
 }
 
 function nmGo(view) {
@@ -901,6 +910,7 @@ function nmRenderHome(root) {
                 <span class="nmh-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
                 <button type="button" class="nmh-more" onclick="nmOpenHallMore()" title="${nmEsc(t('tbl_more'))}" aria-label="${nmEsc(t('tbl_more'))}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
             </div>
+            <div class="nmh-dev"></div>
             ${lampBtns}
             ${tagHtml}
             <div class="nmh-frames">${framesHtml}</div>

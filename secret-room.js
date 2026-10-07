@@ -63,9 +63,19 @@ function roomRealKeys() {
 }
 function roomIsDev() { return typeof isDevSuperuserAccount !== 'undefined' && !!isDevSuperuserAccount; }
 function roomDevStoreKey() { return `weekwise_room_dev_keys_${currentUserId}`; }
+// המפתחות של כפתור ה-PM נשמרים בחשבון (new_me_room.dev_keys) - אותו מספר בכל מכשיר. לפני כן נשמרו
+// רק במכשיר, ובמכשיר אחר הדלת חזרה להיות נעולה; null = עוד לא נשמר → מה שיש במכשיר (ומועבר לחשבון ב-roomLoad)
+function roomDevLocalDelta() {
+    try { return parseInt(localStorage.getItem(roomDevStoreKey()), 10) || 0; } catch { return 0; }
+}
 function roomDevDelta() {
     if (!roomIsDev()) return 0;
-    try { return parseInt(localStorage.getItem(roomDevStoreKey()), 10) || 0; } catch { return 0; }
+    if (roomState && roomState.dev_keys != null) return parseInt(roomState.dev_keys, 10) || 0;
+    return roomDevLocalDelta();
+}
+async function roomSetDevDelta(n) {
+    try { localStorage.setItem(roomDevStoreKey(), String(n)); } catch {}
+    await roomSave({ dev_keys: n });
 }
 function roomKeys() { return Math.max(0, roomRealKeys() + roomDevDelta()); }
 function roomNextUnlock(keys) { return ROOM_UNLOCKS.find(u => u.n > keys) || null; }
@@ -77,6 +87,10 @@ async function roomLoad() {
     const { data } = await supabaseClient.from('new_me_room').select('*').eq('user_id', currentUserId).maybeSingle();
     roomState = data || { keys_seen: 0, style: 'night', wall_color: null, life_score: null, next_step: null, game_best: 0 };
     roomLoaded = true;
+    if (roomIsDev() && roomState.dev_keys == null) {
+        const local = roomDevLocalDelta();
+        if (local) roomSave({ dev_keys: local });
+    }
 }
 
 async function roomSave(fields) {
@@ -1620,14 +1634,26 @@ function roomOpenDecor(fromStudio) {
 function roomRenderDevKeys() {
     let el = document.getElementById('sr-dev-keys');
     const sec = document.getElementById('new-me-section');
-    const inNewMe = !!(sec && sec.classList.contains('active-tab') && typeof hasNewMe !== 'undefined' && hasNewMe && typeof nmProfile !== 'undefined' && nmProfile);
-    const show = roomIsDev() && roomLoaded && (srIsOpen() || inNewMe);
+    const secOpen = !!(sec && sec.classList.contains('active-tab'));
+    const inNewMe = secOpen && typeof hasNewMe !== 'undefined' && hasNewMe && typeof nmProfile !== 'undefined' && !!nmProfile;
+    // תצוגת "כמו לפני רכישה" של חשבון הפיתוח: אותו כפתור, עם פתיחה של New Me
+    const lockedPreview = secOpen && roomIsDev() && typeof hasNewMe !== 'undefined' && !hasNewMe && typeof nmDevLockedPreview === 'function' && nmDevLockedPreview();
+    const show = roomIsDev() && (lockedPreview || (roomLoaded && (srIsOpen() || inNewMe)));
     if (!show) { if (el) el.remove(); return; }
-    if (!el) {
+    // במסדרון: בתוך הציור, בשורה מתחת לפס העליון (כדי לא לכסות את ⋯ ולזוז יחד עם המסדרון)
+    const hallSlot = !srIsOpen() && !lockedPreview ? document.querySelector('#new-me-root .nmh .nmh-dev') : null;
+    const parent = hallSlot || document.querySelector('.phone-wrapper') || document.body;
+    if (!el || el.parentNode !== parent) {
+        if (el) el.remove();
         el = document.createElement('div');
         el.id = 'sr-dev-keys';
         el.className = 'sr-dev-keys';
-        (document.querySelector('.phone-wrapper') || document.body).appendChild(el);
+        parent.appendChild(el);
+    }
+    el.classList.toggle('is-row', !!hallSlot || lockedPreview);
+    if (lockedPreview) {
+        el.innerHTML = `<span class="sr-dev-tag">PM</span><button type="button" class="sr-dev-unlock" onclick="setNmDevLockedPreview(false)">🔓 ${srEsc(t('nm_dev_preview_exit'))}</button>`;
+        return;
     }
     el.innerHTML = `
         <span class="sr-dev-tag">PM</span>
@@ -1639,7 +1665,7 @@ function roomRenderDevKeys() {
 async function roomDevAddKey() {
     if (!roomIsDev()) return;
     if (!roomLoaded) await roomLoad();
-    try { localStorage.setItem(roomDevStoreKey(), String(roomDevDelta() + 1)); } catch {}
+    await roomSetDevDelta(roomDevDelta() + 1);
     const keys = roomKeys();
     roomRenderDevKeys();
     // המפתח הראשון מגיע מ-3 ימים עם New Me (בלי חגיגת אתגר) - שאר המפתחות אחרי חגיגת אתגר רגילה
@@ -1655,7 +1681,7 @@ async function roomDevRemoveKey() {
     if (!roomIsDev() || roomKeys() <= 0) return;
     if (!roomLoaded) await roomLoad();
     const before = roomKeys();
-    try { localStorage.setItem(roomDevStoreKey(), String(roomDevDelta() - 1)); } catch {}
+    await roomSetDevDelta(roomDevDelta() - 1);
     const keys = roomKeys();
     if ((Number(roomState.keys_seen) || 0) > keys) await roomSave({ keys_seen: keys });
     const closed = ROOM_UNLOCKS.find(u => u.n === before);
