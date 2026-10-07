@@ -8633,6 +8633,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
+    { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },

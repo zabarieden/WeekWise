@@ -17,10 +17,10 @@ function nmPdfEnabled() { return true; }
 const NEW_ME_TRACKER_SLOT = { meal1: 'meal_1', snack1: 'meal_4', meal2: 'meal_2', snack2: 'snack' };
 // קטגוריית "ארוחה שמורה" לפי שעת היום של המיקום (בוקר / נשנוש / צהריים / נשנוש ערב)
 const NEW_ME_PRESET_CATEGORY_BY_POS = ['morning', 'snack', 'noon', 'snack'];
-const NEW_ME_TILE_ICONS = { challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
+const NEW_ME_TILE_ICONS = { day: '📋', challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
 // אתגרים, מכתב מהעבר והמתנה בסוף (תעודה, מצב מתקדם וסטטיסטיקות) - new-me-challenges.js
 const NEW_ME_TILES = ['challenges', 'journey', 'shop', 'badges', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
-const NEW_ME_VIEW_TITLES = { challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_tile_settings' };
+const NEW_ME_VIEW_TITLES = { day: 'nm_hall_day', challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_tile_settings' };
 // אחרי כל האתגרים: אריח למתנה, ובמצב מתקדם - גם לסטטיסטיקות
 function nmTiles() {
     const extra = [];
@@ -722,7 +722,10 @@ function nmRenderView(root) {
     // מצב מתקדם: מראה זהב בכל New Me (כולל הגיליונות)
     document.documentElement.toggleAttribute('data-nm-god', nmGodMode());
     if (!NEW_ME_VIEW_TITLES[nmView] || nmView === 'pdf') nmView = 'home';
-    if (nmView === 'home') { nmRenderHome(root); nmRestoreDrinkDrafts(); return; }
+    // במסדרון בלי "חזרה למסך הבית" ובלי איור המטבח בתחתית - המסדרון הוא כל המסך
+    const section = document.getElementById('new-me-section');
+    if (section) section.classList.toggle('nm-hall-mode', nmView === 'home');
+    if (nmView === 'home') { nmRenderHome(root); return; }
     root.innerHTML = `
         <div class="nm-subhead">
             <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}">‹</button>
@@ -730,8 +733,9 @@ function nmRenderView(root) {
         </div>
         <div id="nm-view-body" class="nm-view-body"></div>`;
     const body = document.getElementById('nm-view-body');
-    const renderers = { challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
+    const renderers = { day: nmRenderDay, challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
     renderers[nmView](body);
+    if (nmView === 'day') nmRestoreDrinkDrafts();
 }
 
 function nmGo(view) {
@@ -759,7 +763,204 @@ function nmRingHtml(eaten, goal) {
         </div>`;
 }
 
+// ---------- המסדרון: המסך הראשי של New Me (לפי בחירה מפורשת: "ב – יותר נקי") ----------
+// New Me הוא המסדרון שלפני החדר הסודי: כל מנורה על הקיר היא ארוחה של היום (דולקת = ✓, ורודה = הבאה),
+// מתחת למנורה הורודה זוהר רק שם הארוחה הבאה (נגיעה בו או בכל מנורה = הארוחה, ✓ אכלתי / 🔄), המשימות
+// שמביאות מפתח הן תמונות ממוסגרות על הקיר עם טבעת התקדמות, הצעדים על השטיח הם הימים, הדלת בסוף היא
+// החדר, ולוח המפתחות על הקיר. קרוב אלינו, בלי כיתובים: קנקן מים (שתייה), לוח עם דף (כל היום - התפריט
+// המלא וכל מה שהיה במסך הקודם) ותמונה (המסע שלי).
+// הציור במידות 390×760; מה שמעליו ממוקם באחוזים מאותן מידות, כך שהכול גדל וקטן יחד
+const NMH_W = 390, NMH_H = 760;
+const NMH_LAMPS = [{ x: 40, y: 190, side: 'l' }, { x: 350, y: 190, side: 'r' }, { x: 104, y: 228, side: 'l' }, { x: 286, y: 228, side: 'r' }];
+// הצעדים על השטיח, מהקרוב (לפני 6 ימים) ועד הדלת: 6 ימים שעברו, היום, ו-5 שבדרך
+const NMH_STEPS = [[732, 19, 6], [676, 17, 5.4], [626, 15, 4.8], [582, 13.4, 4.3], [544, 12, 3.9], [510, 10.6, 3.5], [480, 9.6, 3.2], [454, 8.6, 2.9], [432, 7.6, 2.6], [413, 6.8, 2.3], [397, 6, 2], [384, 5.2, 1.8]];
+function nmhX(v) { return `${(v / NMH_W * 100).toFixed(3)}%`; }
+function nmhY(v) { return `${(v / NMH_H * 100).toFixed(3)}%`; }
+function nmhKeySvg(fill) { return `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true"><circle cx="8" cy="12" r="4.5"/><rect x="11" y="10.8" width="10" height="2.4" rx="1.2"/><rect x="17" y="12" width="2.2" height="4" rx="1"/><circle cx="8" cy="12" r="1.6" fill="#0b0714"/></svg>`; }
+
 function nmRenderHome(root) {
+    const plan = nmProfile.plan;
+    const eaten = nmEatenToday();
+    const order = nmOrder();
+    const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
+    const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
+    const left = Math.round(plan + nmBurnedToday - eaten.kcal);
+    const st = nmStreaks();
+    const day = nmJourneyDay();
+    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
+    const lampsLeft = active.filter(s => !nmTodayCheckins[s]).length;
+    // מנורות: דולקת (נאכל), ורודה (הבאה), כבויה (אחר כך)
+    const lampsSvg = active.map((slot, i) => {
+        const L = NMH_LAMPS[i];
+        const near = i < 2;
+        const s = near ? 1 : 0.8;
+        const state = nmTodayCheckins[slot] ? 'lit' : slot === nextSlot ? 'next' : 'off';
+        const halo = state === 'off' ? '' : `<circle class="nmh-glow" cx="${L.x}" cy="${L.y + 16 * s}" r="${(near ? 40 : 30)}" fill="url(#nmh-${state === 'lit' ? 'lamp' : 'pink'})"/>`;
+        const shade = state === 'lit' ? '#ffd27a' : state === 'next' ? '#ff9ecf' : '#4a3a5e';
+        return `${halo}<path d="M${L.x - 9 * s} ${L.y + 24 * s} h${18 * s} l${-3.5 * s} ${-16 * s} h${-11 * s} z" fill="${shade}"${state === 'off' ? ' stroke="#8a78a8" stroke-width="0.8"' : ''}/><rect x="${L.x - 2.5 * s}" y="${L.y + 24 * s}" width="${5 * s}" height="${12 * s}" fill="#6b4a2e"/>`;
+    }).join('');
+    // צעדים: ימים טובים בזהב, ימים אחרים חיוורים, היום בוורוד, ומה שבדרך כמעט שקוף
+    const today = getLocalDateString();
+    const statsByDay = {};
+    nmStats.forEach(r => { statsByDay[r.day] = r; });
+    const stepsSvg = NMH_STEPS.map(([y, rx, ry], i) => {
+        const offset = i - 6; // שלילי = עבר, 0 = היום
+        if (offset === 0) return `<ellipse class="nmh-glow" cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="#ff4fa3"/>`;
+        if (offset > 0) return `<ellipse cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="#ffffff" opacity="${(0.16 - offset * 0.015).toFixed(3)}"/>`;
+        const ds = nmAddDays(today, offset);
+        if (ds < nmStartDay()) return '';
+        const r = statsByDay[ds];
+        const good = r && nmIsGoodDay(r);
+        return `<ellipse cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="${good ? '#ffd27a' : '#c9c0dc'}" opacity="${good ? (0.95 - (5 + offset) * -0.02).toFixed(2) : '0.28'}"/>`;
+    }).join('');
+    // לוח המפתחות: עד 3 מפתחות (ועוד +N); בלי מפתחות - 3 נקודות של המפתח הראשון (✓ ב-3 ימים)
+    const starter = typeof roomStarterDays === 'function' ? Math.min(3, roomStarterDays()) : 0;
+    const rackKeys = keys > 0
+        ? [0, 1, 2].filter(i => i < keys).map(i => `<g transform="translate(${27 + i * 18} 0)"><circle cx="0" cy="${421 + 11}" r="3.8" fill="#ffd27a"/><rect x="-1" y="${435}" width="2.2" height="14" rx="1" fill="#ffd27a"/><rect x="1" y="${444}" width="3.8" height="2" fill="#ffd27a"/></g>`).join('')
+        : [0, 1, 2].map(i => `<circle cx="${28 + i * 18}" cy="${437}" r="4" fill="${i < starter ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-opacity="0.6" stroke-width="1.4"/>`).join('');
+    const door = `
+        <ellipse cx="195" cy="370" rx="40" ry="5" fill="#ffd27a" opacity="0.3"/>
+        <path d="M170 370 V320 A25 25 0 0 1 220 320 V370 Z" fill="#3a2418"/>
+        <path d="M173.5 370 V321 A21.5 21.5 0 0 1 216.5 321 V370 Z" fill="url(#nmh-wood)"/>
+        <line x1="195" y1="300" x2="195" y2="370" stroke="#4a2c1e" stroke-width="1.2"/>
+        <rect x="173.5" y="331" width="43" height="3" fill="#2b1a12"/><rect x="173.5" y="353" width="43" height="3" fill="#2b1a12"/>
+        <circle cx="208" cy="342" r="2.6" fill="#e8b84f"/>
+        <circle class="nmh-glow" cx="208" cy="350" r="9" fill="url(#nmh-key)"/>
+        ${keys > 0 ? '<circle cx="208" cy="349" r="1.5" fill="#ffd27a"/><path d="M207.3 349.5 h1.4 l0.5 3 h-2.4z" fill="#ffd27a"/>' : '<g transform="translate(187 336)"><rect x="0" y="6" width="16" height="12" rx="3" fill="#8a78a8"/><path d="M3 6 V3.6 a5 5 0 0 1 10 0 V6" fill="none" stroke="#8a78a8" stroke-width="2.2"/></g>'}
+        <rect x="173.5" y="367" width="43" height="3" fill="#ffd27a" opacity="0.9"/>`;
+    // מתחת למנורה הורודה זוהר רק שם הארוחה הבאה (וכשהכול דולק - "כל המנורות דולקות", מתחת למנורה הראשונה)
+    const tagLamp = NMH_LAMPS[nextSlot ? active.indexOf(nextSlot) : 0];
+    const tagTop = tagLamp.y + 40;
+    const tagPos = tagLamp.side === 'l' ? `left:${nmhX(Math.max(8, tagLamp.x - 34))}` : `right:${nmhX(Math.max(8, NMH_W - tagLamp.x - 34))}`;
+    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : `🍽️ ${nmItemShort(nmItemInfo(nmTodayKey(nextSlot)))}`;
+    const tagHtml = nextSlot
+        ? `<button type="button" class="nmh-tag" style="${tagPos};top:${nmhY(tagTop)}" onclick="nmOpenHallMeal('${nextSlot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(nextSlot))} – ${nextName}`)}">${nmEsc(nextName)}</button>`
+        : `<button type="button" class="nmh-tag is-done" style="${tagPos};top:${nmhY(tagTop)}" onclick="nmGo('day')">${nmEsc(t('nm_hall_all_lit'))}</button>`;
+    // כל מנורה היא כפתור לארוחה שלה (גם מי שאכל/ה קודם ארוחה אחרת)
+    const lampBtns = active.map((slot, i) => {
+        const L = NMH_LAMPS[i];
+        const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
+        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}" style="left:${nmhX(L.x - 24)};top:${nmhY(L.y - 4)};width:${nmhX(48)};height:${nmhY(48)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(slot))} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
+    }).join('');
+    // המשימות שמביאות מפתח: תמונות ממוסגרות על הקיר, עם טבעת התקדמות; בלי אתגר - מסגרת עם ＋
+    const chs = (typeof nmChActive === 'function' ? nmChActive() : []).slice(0, 2);
+    const frameBox = [{ x: 268, y: 312, s: 64 }, { x: 276, y: 390, s: 52 }];
+    const ring = (pct, color, icon) => `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15" fill="#1d1430"/><circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3.5"/>${pct > 0 ? `<circle cx="20" cy="20" r="15" fill="none" stroke="${color}" stroke-width="3.5" stroke-dasharray="${(94.25 * pct / 100).toFixed(1)} 95" stroke-linecap="round" transform="rotate(-90 20 20)"/>` : ''}<text x="20" y="25" text-anchor="middle" font-size="13">${icon}</text></svg>`;
+    const framesHtml = chs.length ? chs.map((c, i) => {
+        const def = nmChDef(c.challenge_key);
+        const s = nmChState(c);
+        const pct = s.needed ? Math.min(100, Math.round(s.done / s.needed * 100)) : 0;
+        const b = frameBox[i];
+        return `<button type="button" class="nmh-frame" style="left:${nmhX(b.x)};top:${nmhY(b.y)};width:${nmhX(b.s)};height:${nmhY(b.s)}" onclick="nmOpenChallenge('${c.challenge_key}')" aria-label="${nmEsc(`${nmChTitle(c.challenge_key)} · ${s.done}/${s.needed}`)}">${ring(pct, i ? '#ff9ecf' : '#ffd27a', def.icon)}</button>`;
+    }).join('') : `<button type="button" class="nmh-frame is-new" style="left:${nmhX(frameBox[0].x)};top:${nmhY(frameBox[0].y)};width:${nmhX(frameBox[0].s)};height:${nmhY(frameBox[0].s)}" onclick="nmGo('challenges')" aria-label="${nmEsc(t('room_board_add'))}">＋</button>`;
+    const spark = lampsLeft ? bagPlural('nm_hall_left', lampsLeft) : t('nm_hall_all_lit');
+    root.innerHTML = `
+        <div class="nmh" role="group" aria-label="New Me">
+            <svg class="nmh-scene" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                    <linearGradient id="nmh-wall-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#170e28"/><stop offset="1" stop-color="#2d1c46"/></linearGradient>
+                    <linearGradient id="nmh-wall-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#170e28"/><stop offset="1" stop-color="#2d1c46"/></linearGradient>
+                    <radialGradient id="nmh-back" cx="0.5" cy="0.8" r="0.8"><stop offset="0" stop-color="#5b3a54"/><stop offset="1" stop-color="#2f1f48"/></radialGradient>
+                    <linearGradient id="nmh-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#211421"/><stop offset="1" stop-color="#3a2838"/></linearGradient>
+                    <linearGradient id="nmh-carpet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7a2a5e"/><stop offset="1" stop-color="#4a1d43"/></linearGradient>
+                    <linearGradient id="nmh-wood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3626"/><stop offset="0.5" stop-color="#7a4b33"/><stop offset="1" stop-color="#5a3626"/></linearGradient>
+                    <radialGradient id="nmh-lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.85"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+                    <radialGradient id="nmh-pink" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff7ac0" stop-opacity="0.9"/><stop offset="1" stop-color="#ff4fa3" stop-opacity="0"/></radialGradient>
+                    <radialGradient id="nmh-key" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a6" stop-opacity="0.95"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+                    <radialGradient id="nmh-spark" cx="0.34" cy="0.3" r="0.8"><stop offset="0" stop-color="#ffb3dc"/><stop offset="0.55" stop-color="#ff4fa3"/><stop offset="1" stop-color="#a855f7"/></radialGradient>
+                </defs>
+                <polygon points="0,0 390,0 245,230 145,230" fill="#120b20"/>
+                <polygon points="0,0 145,230 145,370 0,760" fill="url(#nmh-wall-l)"/>
+                <polygon points="390,0 245,230 245,370 390,760" fill="url(#nmh-wall-r)"/>
+                <rect x="145" y="230" width="100" height="140" fill="url(#nmh-back)"/>
+                <polygon points="0,760 390,760 245,370 145,370" fill="url(#nmh-floor)"/>
+                <g stroke="rgba(0,0,0,0.28)" stroke-width="1"><line x1="160" y1="370" x2="46" y2="760"/><line x1="230" y1="370" x2="344" y2="760"/><line x1="152" y1="370" x2="0" y2="690"/><line x1="238" y1="370" x2="390" y2="690"/></g>
+                <polygon points="181,370 209,370 292,760 98,760" fill="url(#nmh-carpet)"/>
+                <polygon points="183,370 207,370 284,760 106,760" fill="none" stroke="#ffd27a" stroke-opacity="0.35" stroke-width="1.3"/>
+                ${stepsSvg}
+                ${door}
+                ${lampsSvg}
+                <line x1="${tagLamp.x}" y1="${tagLamp.y + 36}" x2="${tagLamp.x}" y2="${tagTop}" stroke="#ff9ecf" stroke-opacity="0.5" stroke-width="1"/>
+                <rect x="14" y="418" width="64" height="38" rx="6" fill="#3a2418" stroke="#6b4a2e" stroke-width="1"/>
+                ${rackKeys}
+                <rect x="8" y="652" width="112" height="9" rx="3" fill="#6b4428"/><rect x="16" y="661" width="6" height="54" fill="#4f321d"/><rect x="106" y="661" width="6" height="54" fill="#4f321d"/>
+                <path d="M30 652 v-26 a6 6 0 0 1 6 -6 h10 a6 6 0 0 1 6 6 v26 z" fill="#7dd3fc" opacity="0.75"/><path d="M52 632 h6 a4 4 0 0 1 0 12 h-6" fill="none" stroke="#7dd3fc" stroke-width="2" opacity="0.75"/><rect x="33" y="636" width="16" height="14" rx="2" fill="#38bdf8" opacity="0.6"/>
+                <rect x="72" y="616" width="30" height="36" rx="3" fill="#f3e9d7"/><rect x="80" y="612" width="14" height="6" rx="2" fill="#8a7a60"/><g stroke="#8a7a60" stroke-width="1.6" stroke-linecap="round"><line x1="77" y1="626" x2="97" y2="626"/><line x1="77" y1="633" x2="97" y2="633"/><line x1="77" y1="640" x2="91" y2="640"/></g>
+                <g transform="rotate(6 338 630)"><rect x="306" y="592" width="64" height="76" rx="4" fill="#6b4a2e"/><rect x="312" y="598" width="52" height="64" rx="2" fill="#2b1a40"/><circle cx="338" cy="621" r="9" fill="#ff9ecf" opacity="0.8"/><path d="M314 660 l14 -20 l10 12 l8 -8 l16 16 z" fill="#7dffcf" opacity="0.55"/></g>
+                <g class="nmh-float">
+                    <circle cx="318" cy="526" r="22" fill="url(#nmh-spark)"/>
+                    <ellipse cx="310.5" cy="523" rx="2.7" ry="3.5" fill="#2a1145"/><ellipse cx="324.5" cy="523" rx="2.7" ry="3.5" fill="#2a1145"/>
+                    <circle cx="311.5" cy="522" r="0.9" fill="#fff"/><circle cx="325.5" cy="522" r="0.9" fill="#fff"/>
+                    <path d="M311 533 q7 4.5 14 0" stroke="#2a1145" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+                </g>
+            </svg>
+            <div class="nmh-hud">
+                <span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span>
+                <span class="nmh-chip${left < 0 ? ' is-over' : ''}" title="${nmEsc(t(left < 0 ? 'nm_over' : 'nm_left'))}">⚡ <bdi dir="ltr">${left < 0 ? '+' : ''}${nmFmt(Math.abs(left))}</bdi></span>
+                ${st.current > 0 ? `<span class="nmh-chip is-streak">🔥 <bdi dir="ltr">${nmFmt(st.current)}</bdi></span>` : ''}
+                <span class="nmh-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
+                <button type="button" class="nmh-more" onclick="nmOpenHallMore()" title="${nmEsc(t('tbl_more'))}" aria-label="${nmEsc(t('tbl_more'))}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
+            </div>
+            ${lampBtns}
+            ${tagHtml}
+            <div class="nmh-frames">${framesHtml}</div>
+            <button type="button" class="nmh-door" style="left:${nmhX(164)};top:${nmhY(292)};width:${nmhX(62)};height:${nmhY(82)}" onclick="nmOpenHallDoor()" aria-label="${nmEsc(t('room_title'))}"></button>
+            <span class="nmh-today" style="left:${nmhX(104)};top:${nmhY(468)}">${nmEsc(t('nm_day_n').replace('{n}', nmFmt(day)))}</span>
+            <span class="nmh-say" style="left:${nmhX(222)};top:${nmhY(452)}">${nmEsc(spark)}</span>
+            <button type="button" class="nmh-obj nmh-obj-drinks" style="left:${nmhX(22)};top:${nmhY(612)};width:${nmhX(44)};height:${nmhY(48)}" onclick="nmOpenHallDay('drinks')" title="${nmEsc(t('nm_slot_drinks'))}" aria-label="${nmEsc(t('nm_slot_drinks'))}"></button>
+            <button type="button" class="nmh-obj nmh-obj-day" style="left:${nmhX(66)};top:${nmhY(604)};width:${nmhX(44)};height:${nmhY(54)}" onclick="nmOpenHallDay()" title="${nmEsc(t('nm_hall_day'))}" aria-label="${nmEsc(t('nm_hall_day'))}"></button>
+            <button type="button" class="nmh-obj nmh-obj-journey" style="left:${nmhX(300)};top:${nmhY(588)};width:${nmhX(78)};height:${nmhY(88)}" onclick="nmGo('journey')" title="${nmEsc(t('nm_tile_journey'))}" aria-label="${nmEsc(t('nm_tile_journey'))}"></button>
+        </div>`;
+}
+
+// נגיעה בשם הזוהר או במנורה: הארוחה עצמה - מה אוכלים, ✓ אכלתי (או ביטול), 🔄 החלפה, והתפריט המלא
+function nmOpenHallMeal(slot) {
+    const idx = nmOrder().indexOf(slot);
+    const done = !!nmTodayCheckins[slot];
+    const free = nmIsFree(slot);
+    const it = free ? null : nmItemInfo(nmTodayKey(slot));
+    const remTime = nmProfile.reminders_on && nmReminderEnabled(idx) ? nmReminderTime(idx) : null;
+    const ov = nmOpenSheet(`
+        <span class="nmh-meal-eyebrow">${nmEsc(nmPosName(idx))}${remTime ? ` · <bdi dir="ltr">${nmEsc(remTime)}</bdi>` : ''}</span>
+        <h4 class="nmh-meal-name">${free ? `🍕 ${nmEsc(t('nm_free_meal'))}` : nmEsc(nmItemShort(it))}</h4>
+        ${free ? '' : `<p class="nmh-meal-text">${nmEsc(nmItemFull(it))}</p>`}
+        <span class="nmh-meal-meta">${free ? `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}` : nmMeta(it)}</span>
+        <button type="button" class="nm-btn-primary nmh-meal-ate${done ? ' is-done' : ''}" data-ate aria-pressed="${done}">${done ? `✓ ${nmEsc(t('nm_hall_eaten'))}` : nmEsc(t('nm_hall_ate'))}</button>
+        <div class="nmh-meal-row">
+            ${free ? '' : `<button type="button" class="nm-chip" data-swap>🔄 ${nmEsc(t('nm_swap'))}</button>`}
+            <button type="button" class="nm-chip" data-day>📋 ${nmEsc(t('nm_hall_day'))}</button>
+        </div>`, 'nmh-meal-sheet');
+    ov.querySelector('[data-ate]').addEventListener('click', async e => { ov.remove(); await nmToggleCheck(slot, e.currentTarget); });
+    const swap = ov.querySelector('[data-swap]');
+    if (swap) swap.addEventListener('click', () => { ov.remove(); nmOpenSwap(slot); });
+    ov.querySelector('[data-day]').addEventListener('click', () => { ov.remove(); nmGo('day'); });
+}
+
+// הדלת בסוף המסדרון: יש מפתח - נכנסים לחדר; עוד אין - איך מקבלים את המפתח הראשון
+function nmOpenHallDoor() {
+    if (typeof roomKeys !== 'function') return;
+    if (roomKeys() >= 1) openSecretRoom({ wall: 0 });
+    else roomOpenHowItWorks();
+}
+// "כל היום": התפריט המלא, שתייה, תוספות, צ'ק-אין וכל מה שהיה במסך הקודם; מהקנקן - ישר לשתייה
+function nmOpenHallDay(focus) {
+    nmGo('day');
+    if (focus === 'drinks') {
+        const el = document.querySelector('#new-me-root .nm-drinks');
+        const sc = nmScroller();
+        if (el && sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 80;
+    }
+}
+// ⋯ במסדרון: כל האריחים (אתגרים, מסע, קניות, הישגים...), הגדרות והסטורי
+function nmOpenHallMore() {
+    const ov = nmOpenSheet(`
+        <div class="nm-tiles">${nmTiles().map(nmTileHtml).join('')}${nmTileHtml('settings')}</div>
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nm-hall-more-sheet');
+    ov.querySelectorAll('.nm-tile').forEach(b => b.addEventListener('click', () => ov.remove()));
+}
+
+// "כל היום" - מה שהיה המסך הראשי עד המסדרון (בלי שינוי): טבעת, אתגרים, התפריט, שתייה, תוספות ואריחים
+function nmRenderDay(root) {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
     const order = nmOrder();
@@ -809,7 +1010,6 @@ function nmRenderHome(root) {
             </section>
             ${nmCheckinHtml()}
             ${nmPhotoNudgeHtml()}
-            ${typeof roomDoorCardHtml === 'function' ? roomDoorCardHtml() : ''}
             <div class="nm-tiles">${nmTiles().map(nmTileHtml).join('')}</div>
             <button type="button" class="nm-bonus" onclick="nmOpenStories()">
                 <span class="nm-bonus-icon">${NEW_ME_TILE_ICONS.bonus}</span>
@@ -1337,10 +1537,10 @@ async function nmToggleCheck(slot, btn) {
         nmRenderView(nmRoot());
         nmAfterTrackerChange();
     }
-    if (!wasChecked && nmView === 'home') {
-        // כל הארוחות שבתפריט של היום סומנו - חגיגה קטנה
+    if (!wasChecked && (nmView === 'home' || nmView === 'day')) {
+        // כל הארוחות שבתפריט של היום סומנו (כל המנורות דולקות) - חגיגה קטנה
         if (nmActiveOrder().every(s => nmTodayCheckins[s])) {
-            const list = document.getElementById('nm-menu-list');
+            const list = document.getElementById('nm-menu-list') || document.querySelector('#new-me-root .nmh');
             if (list && typeof spawnGentleConfettiBurst === 'function') spawnGentleConfettiBurst(list, 30);
             showAppToast(t('nm_all_done_toast'));
         }
@@ -2844,13 +3044,12 @@ async function nmSaveFullName(input) {
 // אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
 const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
-    { id: 'nm_ring', ch: 'newme', ctx: 'newme', icon: '🔥', target: '#new-me-root .nm-ring', titleKey: 'nm_tour_ring_title', text: 'nm_tour_ring_text', optional: true },
-    { id: 'nm_menu', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-menu-list .nm-meal', titleKey: 'nm_tile_menu', text: 'nm_tour_menu_text', optional: true },
-    { id: 'nm_swap', ch: 'newme', ctx: 'newme', icon: '🔄', target: '#nm-menu-list .nm-meal-actions', titleKey: 'nm_swap', text: 'nm_tour_swap_text', optional: true },
-    { id: 'nm_drinks', ch: 'newme', ctx: 'newme', icon: '🥤', target: '#new-me-root .nm-drinks', titleKey: 'nm_slot_drinks', text: 'nm_tour_drinks_text', optional: true },
-    { id: 'nm_challenges', ch: 'newme', ctx: 'newme', icon: '🏆', target: () => appTourVisible('#new-me-root .nm-ch-invite') || appTourVisible('#new-me-root .nm-ch-strip') || appTourVisible('#new-me-root .nm-tile[data-tile="challenges"]'), titleKey: 'nm_tile_challenges', text: 'nm_tour_challenges_text', optional: true },
-    { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .sr-door-card', titleKey: 'room_title', text: 'room_tour_text', optional: true },
-    { id: 'nm_tiles', ch: 'newme', ctx: 'newme', icon: '🧩', target: '#new-me-root .nm-tiles', titleKey: 'nm_tour_tiles_title', text: 'nm_tour_tiles_text', optional: true },
+    // המסדרון (המסך הראשי): המנורות = הארוחות, תמונות המשימות, הדלת לחדר, והלוח עם הדף (כל היום)
+    { id: 'nm_lamps', ch: 'newme', ctx: 'newme', icon: '💡', target: () => appTourVisible('#new-me-root .nmh-tag'), titleKey: 'nm_tour_lamps_title', text: 'nm_tour_lamps_text', optional: true },
+    { id: 'nm_challenges', ch: 'newme', ctx: 'newme', icon: '🏆', target: '#new-me-root .nmh-frame', titleKey: 'nm_tile_challenges', text: 'nm_tour_frames_text', optional: true },
+    { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door', titleKey: 'room_title', text: 'room_tour_text', optional: true },
+    { id: 'nm_day', ch: 'newme', ctx: 'newme', icon: '📋', target: '#new-me-root .nmh-obj-day', titleKey: 'nm_hall_day', text: 'nm_tour_day_text', optional: true },
+    { id: 'nm_more', ch: 'newme', ctx: 'newme', icon: '🧩', target: '#new-me-root .nmh-more', titleKey: 'nm_tour_tiles_title', text: 'nm_tour_tiles_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
 ];
 function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }

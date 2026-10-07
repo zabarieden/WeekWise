@@ -87,12 +87,11 @@ async function roomSave(fields) {
     return !error;
 }
 
-// אחרי כל שינוי במפתחות: כרטיס הדלת ב-New Me, הקיר הפתוח, וכפתור המפתח של מנהלת המוצר
+// אחרי כל שינוי במפתחות: המסדרון של New Me (לוח המפתחות והדלת), הקיר הפתוח, וכפתור המפתח של מנהלת המוצר
 function roomAfterKeysChange() {
     const sec = document.getElementById('new-me-section');
     if (sec && sec.classList.contains('active-tab') && typeof nmView !== 'undefined' && nmView === 'home' && nmProfile && !nmQuiz) {
-        const card = document.querySelector('#new-me-root .sr-door-card');
-        if (card) card.outerHTML = roomDoorCardHtml();
+        if (document.querySelector('#new-me-root .nmh')) nmRenderView(nmRoot());
     }
     if (srIsOpen()) srRenderWall();
     roomRenderDevKeys();

@@ -156,7 +156,7 @@ async function nmSetChallengeStatus(c, status) {
 let nmChSheetRefresh = null;
 function nmAfterChallengeChange() {
     const sec = document.getElementById('new-me-section');
-    if (sec && sec.classList.contains('active-tab') && nmProfile && !nmQuiz && (nmView === 'home' || nmView === 'challenges')) nmRenderView(nmRoot());
+    if (sec && sec.classList.contains('active-tab') && nmProfile && !nmQuiz && (nmView === 'home' || nmView === 'day' || nmView === 'challenges')) nmRenderView(nmRoot());
     if (nmChSheetRefresh) nmChSheetRefresh();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
 }
