@@ -211,11 +211,13 @@ async function renderNewMe() {
     }
     if (!nmProfile || nmQuiz) { if (!nmQuiz) nmStartQuiz(); nmRenderQuiz(root); return; }
     if (nmView === 'menu' || nmView === 'tips') nmView = 'home';
-    await Promise.all([nmLoadToday(), nmLoadJourney(), nmLoadChallenges()]);
+    await Promise.all([nmLoadToday(), nmLoadJourney(), nmLoadChallenges(), typeof roomLoad === 'function' ? roomLoad() : null]);
     nmRenderView(root);
     nmAwardBadges();
     if (nmProfile.reminders_on) nmSyncReminders();
     nmMaybeAutoTour();
+    // החדר הסודי: מפתח חדש שעוד לא נחשף (למשל היום השלישי עם New Me) + כפתור המפתח של מנהלת המוצר
+    if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
 }
 
 // ---------- מכירה ----------
@@ -704,12 +706,12 @@ function nmCelebrate(keys) {
     }
 }
 
-// גיליון תחתון כללי - נסגר בלחיצה על הרקע או על כל אלמנט עם data-close
-function nmOpenSheet(html, cls) {
+// גיליון תחתון כללי - נסגר בלחיצה על הרקע או על כל אלמנט עם data-close (ואז onClose, אם יש)
+function nmOpenSheet(html, cls, onClose) {
     const ov = document.createElement('div');
     ov.className = 'nm-sheet-overlay';
     ov.innerHTML = `<div class="nm-sheet${cls ? ' ' + cls : ''}" role="dialog" aria-modal="true"><span class="nm-sheet-grip" aria-hidden="true"></span>${html}</div>`;
-    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-close]')) ov.remove(); });
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-close]')) { ov.remove(); if (onClose) onClose(); } });
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
     return ov;
 }
@@ -807,6 +809,7 @@ function nmRenderHome(root) {
             </section>
             ${nmCheckinHtml()}
             ${nmPhotoNudgeHtml()}
+            ${typeof roomDoorCardHtml === 'function' ? roomDoorCardHtml() : ''}
             <div class="nm-tiles">${nmTiles().map(nmTileHtml).join('')}</div>
             <button type="button" class="nm-bonus" onclick="nmOpenStories()">
                 <span class="nm-bonus-icon">${NEW_ME_TILE_ICONS.bonus}</span>
@@ -1345,6 +1348,8 @@ async function nmToggleCheck(slot, btn) {
     nmAwardBadges(!wasChecked && wasFree ? ['free_meal'] : []);
     // "21 ימים לפי התפריט": 3 ארוחות מסומנות = היום באתגר מסומן לבד
     if (!wasChecked) nmChallengeAutoCheck('menu');
+    // ✓ ביום השלישי עם New Me = המפתח הראשון לחדר הסודי
+    if (!wasChecked && typeof roomCheckNewKeys === 'function') roomCheckNewKeys();
 }
 
 async function nmCheck(slot) {
@@ -2844,6 +2849,7 @@ const NEW_ME_TOUR_STEPS = [
     { id: 'nm_swap', ch: 'newme', ctx: 'newme', icon: '🔄', target: '#nm-menu-list .nm-meal-actions', titleKey: 'nm_swap', text: 'nm_tour_swap_text', optional: true },
     { id: 'nm_drinks', ch: 'newme', ctx: 'newme', icon: '🥤', target: '#new-me-root .nm-drinks', titleKey: 'nm_slot_drinks', text: 'nm_tour_drinks_text', optional: true },
     { id: 'nm_challenges', ch: 'newme', ctx: 'newme', icon: '🏆', target: () => appTourVisible('#new-me-root .nm-ch-invite') || appTourVisible('#new-me-root .nm-ch-strip') || appTourVisible('#new-me-root .nm-tile[data-tile="challenges"]'), titleKey: 'nm_tile_challenges', text: 'nm_tour_challenges_text', optional: true },
+    { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .sr-door-card', titleKey: 'room_title', text: 'room_tour_text', optional: true },
     { id: 'nm_tiles', ch: 'newme', ctx: 'newme', icon: '🧩', target: '#new-me-root .nm-tiles', titleKey: 'nm_tour_tiles_title', text: 'nm_tour_tiles_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
 ];

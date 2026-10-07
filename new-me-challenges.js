@@ -246,10 +246,13 @@ async function nmChallengeAutoCheck(trigger) {
     }
 }
 
-function nmCelebrateChallenge(c) {
+// opts.n / opts.simulated: כפתור המפתח של מנהלת המוצר מציג בדיוק את אותה חגיגה ("כאילו הסתיים אתגר").
+// אחרי הסגירה - חגיגת המפתח של החדר הסודי (ר' roomCheckNewKeys ב-secret-room.js)
+function nmCelebrateChallenge(c, opts = {}) {
     const def = nmChDef(c.challenge_key);
-    const n = nmChDoneCount(), total = NEW_ME_CHALLENGES.length;
-    const all = n >= total;
+    const n = opts.n != null ? opts.n : nmChDoneCount(), total = NEW_ME_CHALLENGES.length;
+    const all = !opts.simulated && n >= total;
+    const afterClose = () => { if (typeof roomCheckNewKeys === 'function') setTimeout(roomCheckNewKeys, 260); };
     const ov = nmOpenSheet(`
         <div class="nm-celebrate-eyebrow">🏆 ${nmEsc(nmChKindLabel(c.kind))}</div>
         <div class="nm-medal big" aria-hidden="true"><span>${def.icon}</span></div>
@@ -259,13 +262,13 @@ function nmCelebrateChallenge(c) {
         <div class="nm-celebrate-actions">
             <button type="button" class="nm-btn-ghost" data-share>${nmEsc(t('nm_share'))}</button>
             <button type="button" class="nm-btn-primary" data-ok>${nmEsc(all ? t('nm_gift_open') : t('nm_celebrate_ok'))}</button>
-        </div>`, 'nm-celebrate');
+        </div>`, 'nm-celebrate', afterClose);
     const sheet = ov.querySelector('.nm-sheet');
     ov.querySelector('[data-share]').addEventListener('click', () => {
         ov.remove();
         openSharePicker(`${shareBold(t('nm_ch_share_text'))}\n\n${def.icon} ${nmChTitle(c.challenge_key)}\n✨ ${t('nm_ch_complete_desc').replace('{n}', n).replace('{total}', total)}`);
     });
-    ov.querySelector('[data-ok]').addEventListener('click', () => { ov.remove(); if (all) nmGo('gift'); });
+    ov.querySelector('[data-ok]').addEventListener('click', () => { ov.remove(); if (all) nmGo('gift'); else afterClose(); });
     if (typeof spawnGentleConfettiBurst === 'function') {
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 60 : 40), 150);
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 40 : 24), 550);

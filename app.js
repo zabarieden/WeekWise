@@ -3210,6 +3210,8 @@ function showTabSection(targetId) {
     }
     // פס הצעדים בראש "מעקב אימונים" - תמיד מעודכן להיום
     if (targetId === 'sport-section') loadDailySteps(getLocalDateString());
+    // כפתור המפתח של מנהלת המוצר מוצג רק בתוך New Me / החדר הסודי
+    if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys();
 }
 
 function initCubesNavigation() {
@@ -3230,6 +3232,8 @@ function goHome() {
     const homePanel = document.querySelector('.home-hero-panel');
     if (homePanel) homePanel.classList.remove('hidden');
     resetShellScroll();
+    // כפתור המפתח של מנהלת המוצר - רק בתוך New Me / החדר הסודי
+    if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys();
 }
 
 // המסגרת החיצונית (.phone-wrapper / #app-container) לא אמורה לגלול לעולם - רק אזורי
@@ -8354,6 +8358,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_flexible_menu', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
+    { id: 'secret_room', category: 'nutrition', when: () => !!(translations[currentLang] && translations[currentLang].faq_q_secret_room) },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },
     // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה
