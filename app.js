@@ -2702,12 +2702,14 @@ async function logoutUser() {
 // מוזר, אלא גם תופסים לחיצות/מגע שאמורות להגיע לכפתורים מתחתיהם (זה בדיוק
 // מה שגרם לכפתור "איפוס פריסת הקיצורים" להיראות כאילו "לא עושה כלום")
 function openModal(modalId) {
+    if (typeof stopDictation === 'function') stopDictation();
     document.querySelectorAll('.apple-modal.open').forEach(m => { if (m.id !== modalId) m.classList.remove('open'); });
     document.getElementById(modalId).classList.add('open');
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.add('modal-open');
 }
 function closeModal(modalId) {
+    if (typeof stopDictation === 'function') stopDictation();
     document.getElementById(modalId).classList.remove('open');
     // חלון שנפתח מעל חלון אחר (למשל עריכת פריט מעל "השגרה שלי") - החלון שמתחת עדיין
     // פתוח, ולכן מסירים את מצב "חלון פתוח" רק כשבאמת לא נשאר אף חלון
@@ -8298,6 +8300,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_search', category: 'general' },
     { id: 'home_focus', category: 'general' },
     { id: 'quick_note_hold', category: 'general' },
+    { id: 'dictation', category: 'general' },
     { id: 'home_planter', category: 'general' },
     // שלב 2 של מסך הבית: נגיעות אישיות (ר' home.js)
     { id: 'home_streak', category: 'general' },
@@ -17963,6 +17966,7 @@ function openNotebookPage(pageId) {
     const page = notebookPagesCache.find(p => p.id === pageId);
     if (!page) return;
     if (currentOpenPageId && currentOpenPageId !== pageId) flushNotebookTextSave();
+    if (typeof stopDictation === 'function') stopDictation();
     currentOpenPageId = pageId;
     canvasStrokes = Array.isArray(page.canvas_data) ? page.canvas_data.slice() : [];
     const type = NB_PAGE_TYPES.includes(page.page_type) ? page.page_type : 'draw';
@@ -21499,6 +21503,7 @@ async function loadWaterData() {
 let quickNoteAddInFlight = false;
 async function handleAIQuickAdd() {
     if (quickNoteAddInFlight) return;
+    if (typeof stopDictation === 'function') stopDictation();
     const input = document.getElementById('ai-quick-add-input');
     const text = input.value.trim();
     if (!text) { showAppToast(t('notes_ai_empty'), 'error'); return; }

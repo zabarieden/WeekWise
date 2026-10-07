@@ -382,7 +382,6 @@ function srHotspot(id, el) {
     if (id === 'roof') { roomOpenRoof(); return; }
     if (id === 'talk-note') { roomStartFirstTalk(); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
-    if (id === 'letter') { if (typeof nmOpenLetterSheet === 'function') nmOpenLetterSheet(); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
     if (id === 'trophies') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); }
 }
@@ -616,16 +615,10 @@ function srWallBoard(keys) {
         <rect x="120" y="146" width="150" height="26" rx="4" fill="#fbf3e4"/>
         <text x="195" y="164" text-anchor="middle" font-size="13" font-weight="800" fill="#4a2c1e" data-fit="140">${srEsc(t('room_board_sign'))}</text>
         ${notesSvg}
-        <g class="sr-hot sr-note" data-hot="letter" role="button" tabindex="0" aria-label="${srEsc(t('room_board_letter'))}" transform="rotate(-2 290 340)">
-            <rect x="236" y="300" width="104" height="66" rx="3" fill="#f3e6cf"/>
-            <path d="M236 300 L288 336 L340 300" fill="none" stroke="#cdb894" stroke-width="2"/>
-            <circle cx="288" cy="336" r="10" fill="#d6336c"/>
-            <path d="M284 336 h8 M288 332 v8" stroke="#ffd1e0" stroke-width="1.6"/>
-            <text x="288" y="384" text-anchor="middle" font-size="10.5" fill="#fff7e6" data-fit="104">${srEsc(t('room_board_letter'))}</text>
-        </g>
-        <g class="sr-hot" data-hot="add-challenge" role="button" tabindex="0" aria-label="${srEsc(t('room_board_add'))}">
-            <rect x="196" y="398" width="120" height="28" rx="14" fill="rgba(0,0,0,0.12)" stroke="#fff7e6" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <text x="256" y="416" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff7e6" data-fit="108">${srEsc(t('room_board_add'))}</text>
+        <!-- המכתב מהעבר לא כאן: הוא יחכה ל"חדר הים" שייפתח אחרי הרבה אתגרים (לפי בקשה מפורשת) -->
+        <g class="sr-hot" data-hot="add-challenge" role="button" tabindex="0" aria-label="${srEsc(t('room_board_add'))}" transform="rotate(2 288 340)">
+            <rect x="228" y="300" width="120" height="80" rx="4" fill="rgba(255,255,255,0.08)" stroke="#fff7e6" stroke-width="1.6" stroke-dasharray="5 5"/>
+            <text x="288" y="346" text-anchor="middle" font-size="12" font-weight="800" fill="#fff7e6" data-fit="108">${srEsc(t('room_board_add'))}</text>
         </g>
         <rect x="58" y="500" width="276" height="10" rx="2" fill="#8a5a3c"/>
         <rect x="64" y="510" width="8" height="14" fill="#6c442e"/><rect x="320" y="510" width="8" height="14" fill="#6c442e"/>

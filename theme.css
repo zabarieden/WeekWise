@@ -8503,3 +8503,18 @@ html.light-mode .home-weather.wx-clear-night::after { display: none; }
     .sr-spark { animation-duration: 1500ms !important; }
 }
 .sr-door-info svg { width: 16px; height: 16px; display: block; }
+
+/* ===== הכתבה (v562): מיקרופון בפינת הפתק המהיר, הפתק השבועי ועמוד כתיבה במחברת ===== */
+.dictate-wrap { position: relative; }
+.dictate-wrap > textarea { padding-inline-end: 50px !important; }
+.dictate-btn { position: absolute; inset-inline-end: 8px; bottom: 10px; z-index: 20; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--accent-pink-text); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); }
+.dictate-btn.hidden { display: none; }
+.dictate-btn svg { width: 18px; height: 18px; }
+.dictate-btn.listening { background: #ff453a; border-color: #ff453a; color: #fff; animation: dictatePulse 1.3s ease-out infinite; }
+.dictate-btn:focus-visible { outline: 2px solid var(--accent-pink-text); outline-offset: 2px; }
+@keyframes dictatePulse { 0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.55); } 100% { box-shadow: 0 0 0 14px rgba(255, 69, 58, 0); } }
+.nb-dictate { bottom: 16px; inset-inline-end: 16px; width: 46px; height: 46px; background: var(--paper, #fbfaf6); color: var(--accent-pink-text); border-color: rgba(60, 50, 30, 0.16); }
+.nb-dictate svg { width: 20px; height: 20px; }
+.nb-sheet:not([data-paper="write"]) .nb-dictate { display: none; }
+#weekly-note-textarea.is-listening, .notebook-page-text-content.is-listening { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 45%, transparent); }
+@media (prefers-reduced-motion: reduce) { .dictate-btn.listening { animation: none; } }

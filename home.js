@@ -592,29 +592,86 @@ function quickNoteMenuAction(action) {
     openModal('modal-ai-quick-add');
     if (action === 'voice') setTimeout(startQuickNoteDictation, 120);
 }
-let quickNoteRecognition = null;
 function startQuickNoteDictation() {
-    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
     const input = document.getElementById('ai-quick-add-input');
+    startDictation(input, document.querySelector('.dictate-btn[data-dictate="ai-quick-add-input"]'));
+}
+
+// --- הכתבה: מדברים והמילים נכתבות תוך כדי (Chrome / אנדרואיד / ספארי באייפון) ---
+// לפי בקשה מפורשת ("שיהיה ממש אפשר לדבר וזה יכתוב במילים"): כפתור מיקרופון גלוי בפינת הפתק המהיר,
+// בעמוד כתיבה במחברת ובפתק השבועי. לחיצה מתחילה, לחיצה נוספת עוצרת; הטקסט נכנס במקום הסמן,
+// בשפת האפליקציה. באנדרואיד - משפט אחד בכל לחיצה (ההקשבה הרציפה שם משכפלת מילים)
+let dictationSession = null;
+function initDictationButtons() {
+    document.querySelectorAll('.dictate-btn').forEach(b => b.classList.toggle('hidden', !homeSpeechSupported()));
+}
+// עוצרים הקשבה פתוחה (סגירת חלון, מעבר עמוד במחברת) - שלא תמשיך לכתוב לשדה שכבר לא מול העיניים
+function stopDictation() {
+    const s = dictationSession;
+    if (!s) return;
+    try { s.rec.abort(); } catch {}
+    s.finish();
+}
+function toggleDictation(targetId, btn) {
+    if (dictationSession && dictationSession.input.id === targetId) { try { dictationSession.rec.stop(); } catch {} return; }
+    startDictation(document.getElementById(targetId), btn);
+}
+function startDictation(input, btn) {
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Rec || !input) { showAppToast(t('quick_note_voice_failed'), 'error'); return; }
-    try { if (quickNoteRecognition) quickNoteRecognition.abort(); } catch {}
+    stopDictation();
     const rec = new Rec();
-    quickNoteRecognition = rec;
     rec.lang = HOME_SPEECH_LANGS[currentLang] || currentLang;
-    rec.interimResults = false;
+    rec.interimResults = true;
+    rec.continuous = !/Android/i.test(navigator.userAgent);
     rec.maxAlternatives = 1;
+    const max = input.maxLength > 0 ? input.maxLength : Infinity;
+    const start = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+    const end = typeof input.selectionEnd === 'number' ? input.selectionEnd : start;
+    const before = input.value.slice(0, start), after = input.value.slice(end);
+    const sep = before && !/\s$/.test(before) ? ' ' : '';
+    let finalText = '';
+    let heard = false;
+    const render = interim => {
+        const spoken = [finalText, interim].map(s => s.trim()).filter(Boolean).join(' ');
+        if (!spoken) return;
+        heard = true;
+        const head = (before + sep + spoken).slice(0, max);
+        input.value = (head + (after && !/^\s/.test(after) ? ' ' : '') + after).slice(0, max);
+        try { input.setSelectionRange(head.length, head.length); } catch {}
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
     const placeholder = input.placeholder;
     input.placeholder = t('quick_note_listening');
     input.classList.add('is-listening');
-    const finish = () => { input.placeholder = placeholder; input.classList.remove('is-listening'); quickNoteRecognition = null; };
-    rec.onresult = e => {
-        const said = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
-        if (said) input.value = (input.value.trim() ? input.value.trim() + ' ' : '') + said;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+    if (btn) { btn.classList.add('listening'); btn.setAttribute('aria-pressed', 'true'); }
+    const session = { rec, input, btn, finish: () => {} };
+    session.finish = () => {
+        if (dictationSession !== session) return;
+        dictationSession = null;
+        input.placeholder = placeholder;
+        input.classList.remove('is-listening');
+        if (btn) { btn.classList.remove('listening'); btn.setAttribute('aria-pressed', 'false'); }
+        if (heard) { render(''); input.dispatchEvent(new Event('change', { bubbles: true })); }
     };
-    rec.onerror = () => { finish(); showAppToast(t('quick_note_voice_failed'), 'error'); };
-    rec.onend = finish;
-    try { rec.start(); } catch { finish(); showAppToast(t('quick_note_voice_failed'), 'error'); }
+    dictationSession = session;
+    rec.onresult = e => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            const r = e.results[i];
+            if (r.isFinal) finalText = [finalText, r[0].transcript].map(s => s.trim()).filter(Boolean).join(' ');
+            else interim += r[0].transcript;
+        }
+        render(interim);
+    };
+    rec.onerror = ev => {
+        const code = ev && ev.error;
+        session.finish();
+        if (code === 'no-speech' || code === 'aborted') return;
+        showAppToast(t(code === 'not-allowed' || code === 'service-not-allowed' ? 'dictation_mic_denied' : 'quick_note_voice_failed'), 'error');
+    };
+    rec.onend = () => session.finish();
+    try { rec.start(); } catch { session.finish(); showAppToast(t('quick_note_voice_failed'), 'error'); }
 }
 
 // --- ⭐ כוכב הפרימיום בבית – רק ביום אחד בשבוע (היום הראשון שבו נפתחת האפליקציה בכל שבוע) ---
@@ -640,6 +697,7 @@ function syncHomePopoverClass() {
 function initHomeV2() {
     initMyDaySwipes();
     initQuickNoteLongPress();
+    initDictationButtons();
     document.addEventListener('click', e => {
         const pop = document.getElementById('home-done-popover');
         if (pop && !pop.classList.contains('hidden') && !e.target.closest('#home-done-popover, #btn-home-planter')) pop.classList.add('hidden');
