@@ -71,6 +71,8 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    pcx_free_pick: "Got it 💛 Which of these is closest?",
+    room_pc_power: "Power",
     faq_a_new_me_hall: "New Me opens in the hallway before the secret room. Each lamp on the wall is one of today's meals – lit means eaten, pink is the next one, and its name glows under it. Tapping the name or any lamp opens the meal: ✓ I ate it, 🔄 swap, or the whole day. The framed pictures are the missions that bring a key, the steps on the carpet are the days (gold = a day that went well), the key board shows the keys, and the door at the end leads to the secret room. The clipboard opens the whole day (full menu, drinks, extras and the evening check-in), the water jug opens drinks, the photo opens My journey, and ⋯ has everything else. ⚡ shows the calories left for today.",
     faq_q_new_me_hall: "What's the hallway in New Me?",
     nm_hall_all_lit: "All the lamps are lit ✨",
@@ -2874,6 +2876,8 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    pcx_free_pick: "קיבלתי 💛 מה מכל אלה הכי קרוב?",
+    room_pc_power: "הדלקה וכיבוי",
     faq_a_new_me_hall: "New Me נפתח במסדרון שלפני החדר הסודי. כל מנורה על הקיר היא ארוחה של היום – דולקת = נאכלה, ורודה = הבאה, והשם שלה זוהר מתחתיה. נגיעה בשם או בכל מנורה פותחת את הארוחה: ✓ אכלתי, 🔄 החלפה, או כל היום. התמונות הממוסגרות הן המשימות שמביאות מפתח, הצעדים על השטיח הם הימים (זהב = יום שהלך טוב), לוח המפתחות מראה את המפתחות, והדלת בסוף מובילה לחדר הסודי. הלוח עם הדף פותח את כל היום (התפריט המלא, שתייה, תוספות וצ׳ק-אין הערב), קנקן המים פותח את השתייה, התמונה פותחת את המסע שלי, וב-⋯ יש את כל השאר. ⚡ מראה כמה קלוריות נשארו להיום.",
     faq_q_new_me_hall: "מה זה המסדרון ב-New Me?",
     nm_hall_all_lit: "כל המנורות דולקות ✨",
@@ -5677,6 +5681,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    room_pc_power: "Encender y apagar",
     daily_focus_banner_label: "El rumbo de hoy",
     faq_a_nb_shopping_link: "La página 'Compras' del cuaderno 'Listas de casa' está conectada a la Lista de Compras de la app: es la misma lista en dos lugares. Lo que se añade, se marca o se borra en la página pasa también en la Lista de Compras, y al revés. 'A la lista', arriba de la página, abre la Lista de Compras.",
     faq_a_recipes_gallery: "En Mis Recetas todas las recetas están en una sola galería: busca por nombre o por ingrediente, o toca la etiqueta de una categoría. 📷 escanea una receta y ＋ añade una nueva. Dentro de una receta, marca ✓ junto a lo que ya hay en casa: un toque manda todo lo demás a la lista de compras (solo lo que aún no está). − / + cambia el número de porciones y las cantidades cambian con él, y 'Comer hoy' añade una porción a las comidas de hoy.",
@@ -8235,6 +8240,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla. Se elimina todo, incluidas las fotos que subiste. Si Google Calendar está conectado, la App lo desconecta primero: no se elimina nada de tu propio Google Calendar.",
 },
 fr: {
+    room_pc_power: "Marche / arrêt",
     daily_focus_banner_label: "Le cap du jour",
     faq_a_nb_shopping_link: "La page 'Courses' du cahier 'Listes de la maison' est reliée à la Liste de Courses de l'app : c'est la même liste à deux endroits. Ce qu'on ajoute, coche ou supprime sur la page se fait aussi dans la Liste de Courses, et inversement. 'Vers la liste', en haut de la page, ouvre la Liste de Courses elle-même.",
     faq_a_recipes_gallery: "Dans Mes Recettes, toutes les recettes sont dans une seule galerie : cherchez par nom ou par ingrédient, ou touchez l'étiquette d'une catégorie. 📷 scanne une recette et ＋ en ajoute une nouvelle. Dans une recette, cochez ✓ ce qui est déjà à la maison : un geste envoie tout le reste dans la liste de courses (seulement ce qui n'y est pas encore). − / + change le nombre de portions et les quantités suivent, et 'Manger aujourd'hui' ajoute une portion aux repas du jour.",
@@ -10793,6 +10799,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer. Tout est supprimé, y compris les photos que vous avez importées. Si Google Calendar est connecté, l'app le déconnecte d'abord – rien n'est supprimé de votre Google Calendar lui-même.",
 },
 ar: {
+    room_pc_power: "التشغيل والإيقاف",
     daily_focus_banner_label: "اتجاه اليوم",
     faq_a_nb_shopping_link: "صفحة 'التسوّق' في دفتر 'قوائم البيت' متصلة بقائمة التسوق في التطبيق، فهي القائمة نفسها في مكانين. ما يُضاف أو يُحدَّد أو يُحذف في الصفحة يحدث في قائمة التسوق أيضًا، والعكس صحيح. 'إلى القائمة' في أعلى الصفحة يفتح قائمة التسوق نفسها.",
     faq_a_recipes_gallery: "في وصفاتي توجد كل الوصفات في معرض واحد: ابحث بالاسم أو بمكوّن، أو المس وسم فئة. 📷 يمسح وصفة و＋ يضيف وصفة جديدة. داخل الوصفة ضع ✓ بجانب ما هو موجود في البيت، ولمسة واحدة ترسل كل الباقي إلى قائمة التسوق (فقط ما ليس فيها بعد). − / + يغيّر عدد الحصص وتتغيّر الكميات معه، و'للأكل اليوم' يضيف حصة واحدة إلى وجبات اليوم.",
@@ -13356,6 +13363,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده. يُحذف كل شيء، بما في ذلك الصور التي تم رفعها. وإذا كان تقويم جوجل متصلًا، يفصله التطبيق أولًا – ولا يُحذف أي شيء من تقويم جوجل نفسه.",
 },
 ru: {
+    room_pc_power: "Включить и выключить",
     daily_focus_banner_label: "Направление дня",
     faq_a_nb_shopping_link: "Страница «Покупки» в тетради «Домашние списки» связана со Списком покупок приложения – это один и тот же список в двух местах. Всё, что добавлено, отмечено или удалено на странице, происходит и в Списке покупок, и наоборот. «К списку» вверху страницы открывает сам Список покупок.",
     faq_a_recipes_gallery: "В «Моих рецептах» все рецепты собраны в одной галерее: ищите по названию или по продукту либо нажмите на метку категории. 📷 сканирует рецепт, а ＋ добавляет новый. Внутри рецепта отметьте ✓ то, что уже есть дома, – одно нажатие отправит всё остальное в список покупок (только то, чего там ещё нет). − / + меняет число порций, а вместе с ним и количества, а «Съесть сегодня» добавляет одну порцию в сегодняшние приёмы пищи.",
@@ -15920,6 +15928,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'. Удаляется всё, включая загруженные фото. Если подключён Google Calendar, приложение сначала отключает его – из самого Google Calendar ничего не удаляется.",
 },
 de: {
+    room_pc_power: "Ein/Aus",
     daily_focus_banner_label: "Die Richtung für heute",
     faq_a_nb_shopping_link: "Die Seite 'Einkauf' im Notizbuch 'Listen für zu Hause' ist mit der Einkaufsliste der App verbunden – es ist dieselbe Liste an zwei Orten. Was auf der Seite hinzugefügt, abgehakt oder gelöscht wird, passiert auch in der Einkaufsliste, und umgekehrt. 'Zur Liste' oben auf der Seite öffnet die Einkaufsliste selbst.",
     faq_a_recipes_gallery: "In Meine Rezepte sind alle Rezepte in einer Galerie: Suche nach Namen oder nach einer Zutat, oder tippe auf das Etikett einer Kategorie. 📷 scannt ein Rezept und ＋ fügt ein neues hinzu. In einem Rezept hakst du ✓ ab, was schon zu Hause ist – ein Tipp schickt alles andere auf die Einkaufsliste (nur, was dort noch fehlt). − / + ändert die Zahl der Portionen und die Mengen ändern sich mit, und 'Heute essen' trägt eine Portion in die heutigen Mahlzeiten ein.",
@@ -18478,6 +18487,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben. Dabei wird alles gelöscht, auch die hochgeladenen Fotos. Ist Google Calendar verbunden, trennt die App die Verbindung zuerst – aus deinem Google Calendar selbst wird nichts gelöscht.",
 },
 pt: {
+    room_pc_power: "Ligar e desligar",
     daily_focus_banner_label: "A direção de hoje",
     faq_a_nb_shopping_link: "A página 'Compras' do caderno 'Listas da casa' está ligada à Lista de Compras do app – é a mesma lista em dois lugares. O que é adicionado, marcado ou apagado na página acontece também na Lista de Compras, e vice-versa. 'Para a lista', no alto da página, abre a própria Lista de Compras.",
     faq_a_recipes_gallery: "Em Minhas Receitas todas as receitas ficam numa só galeria: busque pelo nome ou por um ingrediente, ou toque na etiqueta de uma categoria. 📷 escaneia uma receita e ＋ adiciona uma nova. Dentro de uma receita, marque ✓ ao lado do que já tem em casa – um toque manda todo o resto para a lista de compras (só o que ainda não está lá). − / + muda o número de porções e as quantidades mudam junto, e 'Comer hoje' adiciona uma porção às refeições de hoje.",
@@ -21036,6 +21046,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar. Tudo é excluído, inclusive as fotos que você enviou. Se o Google Calendar estiver conectado, o app o desconecta primeiro – nada é excluído do seu próprio Google Calendar.",
 },
 ja: {
+    room_pc_power: "電源",
     daily_focus_banner_label: "今日の方向",
     faq_a_nb_shopping_link: "「家のリスト」ノートの「買い物」ページは、アプリの買い物リストとつながっていて、同じリストが2か所にある形です。ページで追加・チェック・削除したものは買い物リストにも反映され、その逆も同じです。ページ上の「リストへ」で買い物リストそのものが開きます。",
     faq_a_recipes_gallery: "マイレシピでは、すべてのレシピが1つのギャラリーにあります。名前や材料で検索するか、カテゴリーのタグをタップします。📷でレシピをスキャン、＋で新しいレシピを追加できます。レシピの中で、家にあるものに✓を付けると、残りはワンタップで買い物リストへ送れます（まだリストにないものだけ）。− / + で人数を変えると分量も一緒に変わり、「今日食べる」で1人分が今日の食事に追加されます。",
@@ -23594,6 +23605,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。アップロードした写真も含めて、すべてが削除されます。Googleカレンダーが連携されている場合は、先に連携が解除されます。Googleカレンダー自体からは何も削除されません。",
 },
 zh: {
+    room_pc_power: "电源",
     daily_focus_banner_label: "今天的方向",
     faq_a_nb_shopping_link: "“家用清单”笔记本里的“购物”页和应用的购物清单是连在一起的——同一个清单，出现在两个地方。在这一页添加、打勾或删除的内容，购物清单里也会一样变化，反过来也是。页面顶部的“去清单”会打开购物清单本身。",
     faq_a_recipes_gallery: "在“我的食谱”里，所有食谱都在同一个图库中：可以按名称或食材搜索，或点一个分类标签。📷 扫描食谱，＋ 添加新食谱。在食谱里，给家里已有的东西打 ✓，一键就能把其余的都加入购物清单（只加清单里还没有的）。用 − / + 改变份数，用量会跟着变；“今天吃”会把一份加入今天的餐食。",
@@ -26152,6 +26164,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。所有内容都会被删除，包括上传的照片。如果已连接 Google Calendar，应用会先断开连接 – Google Calendar 本身中的内容不会被删除。",
 },
 hi: {
+    room_pc_power: "चालू/बंद",
     daily_focus_banner_label: "आज की दिशा",
     faq_a_nb_shopping_link: "'घर की सूचियाँ' नोटबुक का 'ख़रीदारी' पेज ऐप की खरीदारी सूची से जुड़ा है – यह एक ही सूची है, दो जगह। पेज पर जो जोड़ा, चिह्नित या हटाया जाता है, वह खरीदारी सूची में भी होता है, और उल्टा भी। पेज के ऊपर 'सूची पर जाएँ' खरीदारी सूची खोलता है।",
     faq_a_recipes_gallery: "मेरी रेसिपी में सारी रेसिपी एक ही गैलरी में हैं: नाम या किसी सामग्री से खोजें, या किसी श्रेणी के टैग पर टैप करें। 📷 रेसिपी स्कैन करता है और ＋ नई रेसिपी जोड़ता है। रेसिपी के अंदर, जो घर में पहले से है उस पर ✓ लगाएँ – एक टैप बाकी सब खरीदारी सूची में भेज देता है (सिर्फ़ वही जो वहाँ अभी नहीं है)। − / + से सर्विंग की संख्या बदलती है और मात्राएँ भी साथ बदलती हैं, और 'आज खाना है' आज के भोजन में एक सर्विंग जोड़ देता है।",
@@ -28710,6 +28723,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा। इसमें सब कुछ हट जाता है, अपलोड की गई तस्वीरें भी। अगर Google Calendar जुड़ा है, तो ऐप पहले उसे डिस्कनेक्ट करता है – आपके Google Calendar से कुछ भी नहीं हटता।",
 },
 ko: {
+    room_pc_power: "전원",
     daily_focus_banner_label: "오늘의 방향",
     faq_a_nb_shopping_link: "'집 목록' 노트의 '장보기' 페이지는 앱의 쇼핑 목록과 연결되어 있어요. 같은 목록이 두 곳에 있는 거예요. 페이지에서 추가하거나 체크하거나 삭제한 것은 쇼핑 목록에서도 똑같이 바뀌고, 반대도 마찬가지예요. 페이지 위쪽의 '목록으로'를 누르면 쇼핑 목록이 열려요.",
     faq_a_recipes_gallery: "내 레시피에서는 모든 레시피가 하나의 갤러리에 있어요. 이름이나 재료로 검색하거나 카테고리 태그를 탭하세요. 📷은 레시피를 스캔하고 ＋는 새 레시피를 추가해요. 레시피 안에서 이미 집에 있는 것에 ✓ 표시를 하면, 한 번의 탭으로 나머지를 모두 쇼핑 목록에 보낼 수 있어요(아직 목록에 없는 것만). − / +로 인분을 바꾸면 분량도 함께 바뀌고, '오늘 먹기'는 1인분을 오늘의 식사에 추가해요.",
@@ -31268,6 +31282,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다. 업로드한 사진을 포함해 모든 것이 삭제됩니다. Google Calendar가 연결되어 있으면 앱이 먼저 연결을 해제하며, Google Calendar 자체에서는 아무것도 삭제되지 않습니다.",
 },
 tr: {
+    room_pc_power: "Aç/kapat",
     daily_focus_banner_label: "Bugünün yönü",
     faq_a_nb_shopping_link: "'Ev listeleri' defterindeki 'Alışveriş' sayfası uygulamanın Alışveriş Listesine bağlıdır – iki yerde duran aynı listedir. Sayfada eklenen, işaretlenen ya da silinen her şey Alışveriş Listesinde de olur, tersi de geçerlidir. Sayfanın üstündeki 'Listeye git' Alışveriş Listesinin kendisini açar.",
     faq_a_recipes_gallery: "Tariflerim'de tüm tarifler tek bir galeridedir: ada ya da bir malzemeye göre arayın veya bir kategori etiketine dokunun. 📷 bir tarifi tarar, ＋ yeni bir tarif ekler. Tarifin içinde evde zaten olanların yanına ✓ koyun – tek dokunuş geri kalan her şeyi alışveriş listesine gönderir (yalnızca orada henüz olmayanları). − / + porsiyon sayısını değiştirir, miktarlar da onunla birlikte değişir; 'Bugün ye' bugünün öğünlerine bir porsiyon ekler.",
@@ -33826,6 +33841,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir. Yüklediğin fotoğraflar dahil her şey silinir. Google Calendar bağlıysa uygulama önce bağlantıyı keser – Google Calendar'ın kendisinden hiçbir şey silinmez.",
 },
 id: {
+    room_pc_power: "Nyalakan/matikan",
     daily_focus_banner_label: "Arah hari ini",
     faq_a_nb_shopping_link: "Halaman 'Belanja' di buku catatan 'Daftar rumah' terhubung ke Daftar Belanja aplikasi – ini daftar yang sama di dua tempat. Apa pun yang ditambahkan, dicentang, atau dihapus di halaman itu juga terjadi di Daftar Belanja, begitu pula sebaliknya. 'Ke daftar' di bagian atas halaman membuka Daftar Belanja itu sendiri.",
     faq_a_recipes_gallery: "Di Resep Saya semua resep ada dalam satu galeri: cari berdasarkan nama atau bahan, atau ketuk label kategori. 📷 memindai resep dan ＋ menambahkan resep baru. Di dalam resep, centang ✓ di samping yang sudah ada di rumah – sekali ketuk mengirim sisanya ke daftar belanja (hanya yang belum ada di sana). − / + mengubah jumlah porsi dan takarannya ikut berubah, dan 'Makan hari ini' menambahkan satu porsi ke makanan hari ini.",
@@ -36384,6 +36400,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya. Semuanya dihapus, termasuk foto yang Anda unggah. Jika Google Calendar terhubung, aplikasi memutuskannya terlebih dahulu – tidak ada yang dihapus dari Google Calendar Anda sendiri.",
 },
 it: {
+    room_pc_power: "Accendi/spegni",
     daily_focus_banner_label: "La direzione di oggi",
     faq_a_nb_shopping_link: "La pagina 'Spesa' del quaderno 'Liste di casa' è collegata alla Lista della Spesa dell'app: è la stessa lista in due posti. Ciò che si aggiunge, si spunta o si elimina nella pagina succede anche nella Lista della Spesa, e viceversa. 'Alla lista', in cima alla pagina, apre la Lista della Spesa vera e propria.",
     faq_a_recipes_gallery: "In Le Mie Ricette tutte le ricette sono in un'unica galleria: cerca per nome o per ingrediente, oppure tocca l'etichetta di una categoria. 📷 scansiona una ricetta e ＋ ne aggiunge una nuova. Dentro una ricetta, spunta ✓ ciò che c'è già in casa: un tocco manda tutto il resto nella lista della spesa (solo ciò che non c'è ancora). − / + cambia il numero di porzioni e le quantità cambiano insieme, e 'Mangiare oggi' aggiunge una porzione ai pasti di oggi.",
@@ -38942,6 +38959,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla. Viene eliminato tutto, comprese le foto caricate. Se Google Calendar è collegato, l'app prima lo scollega: dal tuo Google Calendar non viene eliminato nulla.",
 },
 vi: {
+    room_pc_power: "Bật/tắt",
     daily_focus_banner_label: "Hướng đi hôm nay",
     faq_a_nb_shopping_link: "Trang 'Đi chợ' trong sổ 'Danh sách việc nhà' được kết nối với Danh Sách Mua Sắm của ứng dụng – đó là cùng một danh sách ở hai nơi. Những gì được thêm, đánh dấu hay xóa trên trang cũng xảy ra trong Danh Sách Mua Sắm, và ngược lại. 'Đến danh sách' ở đầu trang mở chính Danh Sách Mua Sắm.",
     faq_a_recipes_gallery: "Trong Công Thức Của Tôi, mọi công thức nằm trong một thư viện: tìm theo tên hoặc theo nguyên liệu, hoặc chạm vào nhãn của một danh mục. 📷 quét công thức và ＋ thêm công thức mới. Trong một công thức, đánh dấu ✓ cạnh những thứ nhà đã có – một lần chạm sẽ gửi phần còn lại vào danh sách mua sắm (chỉ những thứ chưa có ở đó). − / + thay đổi số phần và lượng nguyên liệu thay đổi theo, còn 'Ăn hôm nay' thêm một phần vào bữa ăn hôm nay.",
@@ -41500,6 +41518,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận. Mọi thứ đều bị xóa, kể cả ảnh bạn đã tải lên. Nếu Google Calendar đang được kết nối, ứng dụng sẽ ngắt kết nối trước – không có gì bị xóa khỏi chính Google Calendar của bạn.",
 },
 pl: {
+    room_pc_power: "Włącz/wyłącz",
     daily_focus_banner_label: "Kierunek na dziś",
     faq_a_nb_shopping_link: "Strona 'Zakupy' w zeszycie 'Listy domowe' jest połączona z Listą Zakupów aplikacji – to ta sama lista w dwóch miejscach. To, co zostanie dodane, zaznaczone lub usunięte na stronie, dzieje się też na Liście Zakupów, i odwrotnie. 'Do listy' u góry strony otwiera samą Listę Zakupów.",
     faq_a_recipes_gallery: "W Moich Przepisach wszystkie przepisy są w jednej galerii: szukaj po nazwie lub po składniku albo dotknij etykiety kategorii. 📷 skanuje przepis, a ＋ dodaje nowy. W przepisie zaznacz ✓ to, co już jest w domu – jedno dotknięcie wyśle resztę na listę zakupów (tylko to, czego tam jeszcze nie ma). − / + zmienia liczbę porcji, a ilości zmieniają się razem z nią, a 'Zjeść dziś' dodaje jedną porcję do dzisiejszych posiłków.",
@@ -44065,6 +44084,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'. Usuwane jest wszystko, także przesłane zdjęcia. Jeśli Google Calendar jest połączony, aplikacja najpierw go odłącza – z samego Google Calendar nic nie jest usuwane.",
 },
 th: {
+    room_pc_power: "เปิด/ปิด",
     daily_focus_banner_label: "ทิศทางของวันนี้",
     faq_a_nb_shopping_link: "หน้า 'ของที่ต้องซื้อ' ในสมุด 'รายการของบ้าน' เชื่อมกับรายการซื้อของของแอป – เป็นรายการเดียวกันที่อยู่สองที่ สิ่งที่เพิ่ม ติ๊ก หรือลบในหน้านี้ จะเกิดในรายการซื้อของด้วย และกลับกันก็เช่นกัน 'ไปที่รายการ' ด้านบนของหน้าจะเปิดรายการซื้อของโดยตรง",
     faq_a_recipes_gallery: "ในสูตรอาหารของฉัน ทุกสูตรอยู่ในแกลเลอรีเดียว: ค้นหาด้วยชื่อหรือวัตถุดิบ หรือแตะป้ายหมวดหมู่ 📷 ใช้สแกนสูตร และ ＋ ใช้เพิ่มสูตรใหม่ ในสูตรอาหาร ติ๊ก ✓ ข้างสิ่งที่มีที่บ้านแล้ว – แตะครั้งเดียวก็ส่งที่เหลือทั้งหมดไปยังรายการซื้อของ (เฉพาะที่ยังไม่มีในรายการ) − / + เปลี่ยนจำนวนที่ และปริมาณจะเปลี่ยนตาม ส่วน 'กินวันนี้' จะเพิ่มหนึ่งที่ในมื้ออาหารของวันนี้",
@@ -46625,6 +46645,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน ทุกอย่างจะถูกลบ รวมถึงรูปภาพที่อัปโหลดไว้ หากเชื่อมต่อ Google Calendar อยู่ แอปจะยกเลิกการเชื่อมต่อก่อน – จะไม่มีอะไรถูกลบออกจาก Google Calendar เอง",
 },
 ur: {
+    room_pc_power: "آن/آف",
     daily_focus_banner_label: "آج کی سمت",
     faq_a_nb_shopping_link: "'گھر کی فہرستیں' نوٹ بک کا 'خریداری' صفحہ ایپ کی خریداری کی فہرست سے جڑا ہے – یہ ایک ہی فہرست ہے، دو جگہوں پر۔ صفحے پر جو شامل، نشان زد یا حذف ہو، وہ خریداری کی فہرست میں بھی ہوتا ہے، اور اس کے الٹ بھی۔ صفحے کے اوپر 'فہرست پر جائیں' خود خریداری کی فہرست کھولتا ہے۔",
     faq_a_recipes_gallery: "میری ترکیبیں میں ساری ترکیبیں ایک ہی گیلری میں ہیں: نام یا کسی جزو سے تلاش کریں، یا کسی زمرے کے ٹیگ پر ٹیپ کریں۔ 📷 ترکیب اسکین کرتا ہے اور ＋ نئی ترکیب شامل کرتا ہے۔ ترکیب کے اندر، جو گھر میں پہلے سے ہے اس کے ساتھ ✓ لگائیں – ایک ٹیپ باقی سب خریداری کی فہرست میں بھیج دیتا ہے (صرف وہ جو ابھی وہاں نہیں)۔ − / + سرونگز کی تعداد بدلتا ہے اور مقداریں بھی ساتھ بدلتی ہیں، اور 'آج کھانا ہے' آج کے کھانوں میں ایک سرونگ شامل کر دیتا ہے۔",
@@ -49185,6 +49206,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔ اس میں سب کچھ حذف ہو جاتا ہے، اپ لوڈ کی گئی تصاویر بھی۔ اگر Google Calendar جڑا ہوا ہو تو ایپ پہلے اسے منقطع کرتی ہے – خود Google Calendar سے کچھ بھی حذف نہیں ہوتا۔",
 },
 bn: {
+    room_pc_power: "চালু/বন্ধ",
     daily_focus_banner_label: "আজকের দিশা",
     faq_a_nb_shopping_link: "'বাড়ির তালিকা' নোটবুকের 'বাজার' পাতাটি অ্যাপের কেনাকাটার তালিকার সঙ্গে যুক্ত – এটি একই তালিকা, দুই জায়গায়। পাতায় যা যোগ, টিক বা মুছে ফেলা হয়, তা কেনাকাটার তালিকাতেও হয়, আর উল্টোটাও। পাতার ওপরে 'তালিকায় যান' কেনাকাটার তালিকাটি খোলে।",
     faq_a_recipes_gallery: "আমার রেসিপিতে সব রেসিপি একটি গ্যালারিতে আছে: নাম বা উপকরণ দিয়ে খুঁজুন, অথবা কোনো বিভাগের ট্যাগে ট্যাপ করুন। 📷 রেসিপি স্ক্যান করে আর ＋ নতুন রেসিপি যোগ করে। রেসিপির ভেতরে, যা বাড়িতে আগে থেকেই আছে তার পাশে ✓ দিন – এক ট্যাপে বাকি সব কেনাকাটার তালিকায় চলে যায় (শুধু যা সেখানে এখনও নেই)। − / + পরিবেশনের সংখ্যা বদলায় আর পরিমাণও সঙ্গে বদলায়, এবং 'আজ খাওয়া' আজকের খাবারে এক পরিবেশন যোগ করে।",
@@ -51745,6 +51767,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে। আপলোড করা ছবিসহ সবকিছু মুছে যায়। Google Calendar সংযুক্ত থাকলে অ্যাপ আগে সেটির সংযোগ বিচ্ছিন্ন করে – Google Calendar থেকে নিজে কিছুই মোছা হয় না।",
 },
 sw: {
+    room_pc_power: "Washa/zima",
     daily_focus_banner_label: "Mwelekeo wa leo",
     faq_a_nb_shopping_link: "Ukurasa wa 'Manunuzi' katika daftari la 'Orodha za nyumbani' umeunganishwa na Orodha ya Ununuzi ya programu – ni orodha ileile mahali pawili. Kinachoongezwa, kuwekewa alama au kufutwa kwenye ukurasa hutokea pia kwenye Orodha ya Ununuzi, na kinyume chake. 'Kwenye orodha' juu ya ukurasa hufungua Orodha ya Ununuzi yenyewe.",
     faq_a_recipes_gallery: "Katika Mapishi Yangu mapishi yote yako kwenye matunzio moja: tafuta kwa jina au kwa kiungo, au gusa lebo ya aina. 📷 huchanganua pishi na ＋ huongeza pishi jipya. Ndani ya pishi, weka ✓ kando ya kilicho tayari nyumbani – mguso mmoja hutuma vingine vyote kwenye orodha ya ununuzi (vile tu ambavyo bado havimo). − / + hubadilisha idadi ya migao na vipimo hubadilika pamoja nayo, na 'Kula leo' huongeza mgao mmoja kwenye milo ya leo.",
@@ -54305,6 +54328,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha. Kila kitu hufutwa, ikiwa ni pamoja na picha ulizopakia. Ikiwa Google Calendar imeunganishwa, programu huitenganisha kwanza – hakuna kinachofutwa kwenye Google Calendar yenyewe.",
 },
 uk: {
+    room_pc_power: "Увімкнути й вимкнути",
     daily_focus_banner_label: "Напрям дня",
     faq_a_nb_shopping_link: "Сторінка «Покупки» в зошиті «Домашні списки» пов'язана зі Списком Покупок застосунку – це той самий список у двох місцях. Те, що додано, позначено чи видалено на сторінці, відбувається і в Списку Покупок, і навпаки. «До списку» вгорі сторінки відкриває сам Список Покупок.",
     faq_a_recipes_gallery: "У «Моїх Рецептах» усі рецепти зібрано в одній галереї: шукайте за назвою чи продуктом або торкніться мітки категорії. 📷 сканує рецепт, а ＋ додає новий. Усередині рецепта позначте ✓ те, що вже є вдома, – один дотик надішле все інше до списку покупок (лише те, чого там ще немає). − / + змінює кількість порцій, і разом із нею змінюються кількості продуктів, а «З'їсти сьогодні» додає одну порцію до сьогоднішніх страв.",
@@ -56871,6 +56895,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'. Видаляється все, зокрема завантажені фото. Якщо Google Calendar підключено, застосунок спершу відключає його – із самого Google Calendar нічого не видаляється.",
 },
 el: {
+    room_pc_power: "Ενεργοποίηση/απενεργοποίηση",
     daily_focus_banner_label: "Η κατεύθυνση της ημέρας",
     faq_a_nb_shopping_link: "Η σελίδα 'Ψώνια' στο τετράδιο 'Λίστες για το σπίτι' είναι συνδεδεμένη με τη Λίστα Αγορών της εφαρμογής – είναι η ίδια λίστα σε δύο σημεία. Ό,τι προστίθεται, τσεκάρεται ή διαγράφεται στη σελίδα γίνεται και στη Λίστα Αγορών, και αντίστροφα. Το 'Στη λίστα' στο πάνω μέρος της σελίδας ανοίγει την ίδια τη Λίστα Αγορών.",
     faq_a_recipes_gallery: "Στις Συνταγές Μου όλες οι συνταγές είναι σε μία συλλογή: αναζήτηση με όνομα ή με υλικό, ή πάτημα στην ετικέτα μιας κατηγορίας. Το 📷 σαρώνει μια συνταγή και το ＋ προσθέτει νέα. Μέσα σε μια συνταγή, τσεκάρετε ✓ ό,τι υπάρχει ήδη στο σπίτι – ένα πάτημα στέλνει όλα τα υπόλοιπα στη λίστα αγορών (μόνο όσα δεν είναι ήδη εκεί). Το − / + αλλάζει τον αριθμό των μερίδων και οι ποσότητες αλλάζουν μαζί, και το 'Για σήμερα' προσθέτει μία μερίδα στα σημερινά γεύματα.",
@@ -59431,6 +59456,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε. Διαγράφονται τα πάντα, μαζί και οι φωτογραφίες που ανεβάσατε. Αν το Google Calendar είναι συνδεδεμένο, η εφαρμογή το αποσυνδέει πρώτα – τίποτα δεν διαγράφεται από το ίδιο το Google Calendar.",
 },
 nl: {
+    room_pc_power: "Aan/uit",
     daily_focus_banner_label: "De richting van vandaag",
     faq_a_nb_shopping_link: "De pagina 'Boodschappen' in het schrift 'Lijstjes voor thuis' is gekoppeld aan de Boodschappenlijst van de app – het is dezelfde lijst op twee plekken. Wat op de pagina wordt toegevoegd, afgevinkt of verwijderd, gebeurt ook in de Boodschappenlijst, en andersom. 'Naar de lijst' boven aan de pagina opent de Boodschappenlijst zelf.",
     faq_a_recipes_gallery: "In Mijn Recepten staan alle recepten in één galerij: zoek op naam of op een ingrediënt, of tik op het label van een categorie. 📷 scant een recept en ＋ voegt een nieuw toe. Vink in een recept ✓ aan wat al in huis is – met één tik gaat de rest naar de boodschappenlijst (alleen wat daar nog niet op staat). − / + verandert het aantal porties en de hoeveelheden veranderen mee, en 'Vandaag eten' voegt één portie toe aan de maaltijden van vandaag.",
@@ -61991,6 +62017,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen. Alles wordt verwijderd, ook de foto's die je hebt geüpload. Als Google Calendar gekoppeld is, ontkoppelt de app die eerst – uit je Google Calendar zelf wordt niets verwijderd.",
 },
 ca: {
+    room_pc_power: "Encendre i apagar",
     daily_focus_banner_label: "El rumb d'avui",
     faq_a_nb_shopping_link: "La pàgina 'Compra' de la llibreta 'Llistes de casa' està connectada a la Llista de Compres de l'app: és la mateixa llista en dos llocs. El que s'afegeix, es marca o s'esborra a la pàgina passa també a la Llista de Compres, i a l'inrevés. 'A la llista', a dalt de la pàgina, obre la mateixa Llista de Compres.",
     faq_a_recipes_gallery: "A Les Meves Receptes totes les receptes són en una sola galeria: cerca pel nom o per un ingredient, o toca l'etiqueta d'una categoria. 📷 escaneja una recepta i ＋ n'afegeix una de nova. Dins d'una recepta, marca ✓ el que ja hi ha a casa: un toc envia tota la resta a la llista de la compra (només el que encara no hi és). − / + canvia el nombre de racions i les quantitats canvien amb ell, i 'Menjar avui' afegeix una ració als àpats d'avui.",
@@ -64551,6 +64578,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho. S'elimina tot, incloses les fotos que has pujat. Si Google Calendar està connectat, l'app primer el desconnecta: no s'elimina res del teu Google Calendar.",
 },
 ro: {
+    room_pc_power: "Pornire/oprire",
     daily_focus_banner_label: "Direcția de azi",
     faq_a_nb_shopping_link: "Pagina 'Cumpărături' din caietul 'Liste pentru casă' este legată de Lista de Cumpărături a aplicației – e aceeași listă în două locuri. Ce se adaugă, se bifează sau se șterge pe pagină se întâmplă și în Lista de Cumpărături, și invers. 'La listă', sus pe pagină, deschide chiar Lista de Cumpărături.",
     faq_a_recipes_gallery: "În Rețetele Mele toate rețetele sunt într-o singură galerie: caută după nume sau după un ingredient ori atinge eticheta unei categorii. 📷 scanează o rețetă, iar ＋ adaugă una nouă. Într-o rețetă, bifează ✓ ce există deja acasă – o atingere trimite tot restul în lista de cumpărături (doar ce nu e încă acolo). − / + schimbă numărul de porții și cantitățile se schimbă odată cu el, iar 'De mâncat azi' adaugă o porție la mesele de azi.",
@@ -67114,6 +67142,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare. Se șterge totul, inclusiv fotografiile încărcate. Dacă Google Calendar este conectat, aplicația îl deconectează mai întâi – nu se șterge nimic din Google Calendar-ul tău.",
 },
 yo: {
+    room_pc_power: "Tan/pa",
     daily_focus_banner_label: "Ìdarí òní",
     faq_a_nb_shopping_link: "Ojú-ìwé 'Rírajà' nínú ìwé 'Àkójọ ilé' so mọ́ Àtòjọ Ọjà ti áàpù – àtòjọ kan náà ni ní ibi méjì. Ohun tí a fi kún, tí a sàmì sí tàbí tí a pa rẹ́ lórí ojú-ìwé náà máa ṣẹlẹ̀ nínú Àtòjọ Ọjà pẹ̀lú, àti ní òdìkejì. 'Sí àtòjọ náà' lókè ojú-ìwé máa ṣí Àtòjọ Ọjà fúnra rẹ̀.",
     faq_a_recipes_gallery: "Nínú Àwọn Ìlànà Mi, gbogbo ìlànà wà nínú àwòrán-ìfihàn kan: wá pẹ̀lú orúkọ tàbí èròjà, tàbí fọwọ́ kan àmì ẹ̀ka kan. 📷 máa ń ṣàyẹ̀wò ìlànà, ＋ sì máa ń fi tuntun kún un. Nínú ìlànà kan, fi ✓ sí ẹ̀gbẹ́ ohun tó ti wà nílé – ìfọwọ́kàn kan máa fi gbogbo ìyókù ránṣẹ́ sí àtòjọ ọjà (kìkì èyí tí kò tíì sí níbẹ̀). − / + máa ń yí iye ìpín padà, àwọn ìwọ̀n náà sì máa yí padà pẹ̀lú rẹ̀, 'Jẹ ẹ́ lónìí' sì máa ń fi ìpín kan kún oúnjẹ ti òní.",
@@ -69675,6 +69704,7 @@ yo: {
 },
 
 sv: {
+    room_pc_power: "På/av",
     daily_focus_banner_label: "Dagens riktning",
     faq_a_nb_shopping_link: "Sidan 'Inköp' i häftet 'Listor för hemmet' är kopplad till appens Inköpslista – det är samma lista på två ställen. Det som läggs till, bockas av eller raderas på sidan händer också i Inköpslistan, och tvärtom. 'Till listan' högst upp på sidan öppnar själva Inköpslistan.",
     faq_a_recipes_gallery: "I Mina Recept finns alla recept i ett enda galleri: sök på namn eller på en ingrediens, eller tryck på en kategoris etikett. 📷 skannar ett recept och ＋ lägger till ett nytt. Inne i ett recept bockar du ✓ för det som redan finns hemma – ett tryck skickar resten till inköpslistan (bara det som inte redan står där). − / + ändrar antalet portioner och mängderna ändras med, och 'Äta i dag' lägger till en portion i dagens måltider.",
@@ -72235,6 +72265,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta. Allt raderas, även foton du har laddat upp. Om Google Calendar är anslutet kopplar appen först bort det – inget raderas från själva Google Calendar.",
 },
 nb: {
+    room_pc_power: "På/av",
     daily_focus_banner_label: "Dagens retning",
     faq_a_nb_shopping_link: "Siden 'Handleliste' i notatboken 'Lister til hjemmet' er koblet til appens Handleliste – det er den samme listen på to steder. Det som legges til, krysses av eller slettes på siden, skjer også i Handlelisten, og omvendt. 'Til listen' øverst på siden åpner selve Handlelisten.",
     faq_a_recipes_gallery: "I Mine Oppskrifter ligger alle oppskriftene i ett galleri: søk på navn eller på en ingrediens, eller trykk på merket til en kategori. 📷 skanner en oppskrift og ＋ legger til en ny. Inne i en oppskrift krysser du av ✓ for det som allerede finnes hjemme – ett trykk sender resten til handlelisten (bare det som ikke står der fra før). − / + endrer antall porsjoner og mengdene endres med, og 'Spise i dag' legger én porsjon til dagens måltider.",
@@ -74795,6 +74826,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte. Alt slettes, også bilder du har lastet opp. Hvis Google Calendar er tilkoblet, kobler appen det fra først – ingenting slettes fra selve Google Calendar.",
 },
 da: {
+    room_pc_power: "Tænd/sluk",
     daily_focus_banner_label: "Dagens retning",
     faq_a_nb_shopping_link: "Siden 'Indkøb' i notesbogen 'Lister til hjemmet' er forbundet med appens Indkøbsliste – det er den samme liste to steder. Det, der tilføjes, krydses af eller slettes på siden, sker også i Indkøbslisten, og omvendt. 'Til listen' øverst på siden åbner selve Indkøbslisten.",
     faq_a_recipes_gallery: "I Mine Opskrifter ligger alle opskrifter i ét galleri: søg på navn eller på en ingrediens, eller tryk på en kategoris mærkat. 📷 scanner en opskrift og ＋ tilføjer en ny. Inde i en opskrift krydser du ✓ af ved det, der allerede er derhjemme – ét tryk sender resten til indkøbslisten (kun det, der ikke allerede står der). − / + ændrer antallet af portioner, og mængderne ændrer sig med, og 'Spise i dag' tilføjer én portion til dagens måltider.",
@@ -77355,6 +77387,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte. Alt slettes, også billeder, du har uploadet. Hvis Google Calendar er forbundet, afbryder appen forbindelsen først – intet slettes fra selve Google Calendar.",
 },
 cs: {
+    room_pc_power: "Zapnout/vypnout",
     daily_focus_banner_label: "Směr na dnešek",
     faq_a_nb_shopping_link: "Stránka 'Nákup' v sešitě 'Domácí seznamy' je propojená s Nákupním Seznamem aplikace – je to tentýž seznam na dvou místech. Co se na stránce přidá, zaškrtne nebo smaže, stane se i v Nákupním Seznamu, a naopak. 'Na seznam' nahoře na stránce otevře samotný Nákupní Seznam.",
     faq_a_recipes_gallery: "V Mých Receptech jsou všechny recepty v jedné galerii: hledejte podle názvu nebo suroviny, nebo klepněte na štítek kategorie. 📷 naskenuje recept a ＋ přidá nový. V receptu zaškrtněte ✓ u toho, co už je doma – jedno klepnutí pošle všechno ostatní na nákupní seznam (jen to, co tam ještě není). − / + mění počet porcí a s ním i množství, a 'Sníst dnes' přidá jednu porci do dnešních jídel.",
@@ -79919,6 +79952,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'. Smaže se vše, včetně nahraných fotek. Pokud je připojen Google Calendar, aplikace ho nejprve odpojí – ze samotného Google Calendar se nic nesmaže.",
 },
 hu: {
+    room_pc_power: "Be/ki",
     daily_focus_banner_label: "A mai irány",
     faq_a_nb_shopping_link: "Az 'Otthoni listák' füzet 'Bevásárlás' oldala össze van kapcsolva az alkalmazás Bevásárlólistájával – ugyanaz a lista két helyen. Ami az oldalon hozzáadódik, kipipálódik vagy törlődik, az a Bevásárlólistán is megtörténik, és fordítva. Az oldal tetején az 'A listához' magát a Bevásárlólistát nyitja meg.",
     faq_a_recipes_gallery: "A Receptjeim között minden recept egy galériában van: keress név vagy hozzávaló szerint, vagy érints meg egy kategóriacímkét. A 📷 beolvas egy receptet, a ＋ újat ad hozzá. Egy recepten belül pipáld ki ✓, ami már van otthon – egy érintés a többit a bevásárlólistára küldi (csak azt, ami még nincs rajta). A − / + az adagok számát változtatja, és vele együtt a mennyiségeket is, a 'Ma eszem' pedig egy adagot ad a mai étkezésekhez.",
@@ -82479,6 +82513,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'. Minden törlődik, a feltöltött fotók is. Ha a Google Calendar csatlakoztatva van, az app előbb leválasztja – magából a Google Calendarból semmi nem törlődik.",
 },
 fi: {
+    room_pc_power: "Päälle/pois",
     daily_focus_banner_label: "Päivän suunta",
     faq_a_nb_shopping_link: "'Kodin listat' -vihon 'Ostokset'-sivu on yhdistetty sovelluksen Ostoslistaan – se on sama lista kahdessa paikassa. Mitä sivulle lisätään, rastitetaan tai poistetaan, tapahtuu myös Ostoslistassa, ja päinvastoin. Sivun yläosan 'Listaan' avaa itse Ostoslistan.",
     faq_a_recipes_gallery: "Omissa Resepteissä kaikki reseptit ovat yhdessä galleriassa: hae nimellä tai aineksella tai napauta luokan tunnistetta. 📷 skannaa reseptin ja ＋ lisää uuden. Reseptin sisällä rastita ✓ se, mitä kotoa jo löytyy – yksi napautus lähettää kaiken muun ostoslistalle (vain sen, mitä siellä ei vielä ole). − / + muuttaa annosten määrää ja määrät muuttuvat mukana, ja 'Syödään tänään' lisää yhden annoksen tämän päivän aterioihin.",

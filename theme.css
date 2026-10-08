@@ -8690,3 +8690,23 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nmh-dev .sr-dev-keys { position: static; }
 .sr-dev-keys.is-row { flex-direction: row; padding: 6px 10px; }
 .sr-dev-keys .sr-dev-unlock { width: auto; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 0.82rem; white-space: nowrap; }
+
+/* המחשב: כפתור הדלקה (הנורה הירוקה) – המסך מתכווץ לפס ולנקודה ונכבה, ונפתח בחזרה כשמדליקים */
+.sr-crt-on { flex: 1; min-height: 0; display: flex; flex-direction: column; transform-origin: 50% 50%; }
+.sr-crt-screen.pc-off .sr-crt-on { opacity: 0; transform: scale(0, 0.01); animation: srCrtOff 0.5s ease-in forwards; pointer-events: none; }
+.sr-crt-screen.pc-on .sr-crt-on { animation: srCrtOn 0.55s ease-out; }
+.sr-crt-screen.pc-off { background: radial-gradient(120% 90% at 50% 40%, #0b1714, #030807 80%); }
+.sr-crt-screen.pc-off::before { content: ''; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #e6fff5; box-shadow: 0 0 16px 6px rgba(94, 255, 198, 0.55); opacity: 0; animation: srCrtDot 1.1s ease-out 0.42s forwards; pointer-events: none; }
+@keyframes srCrtOff { 0% { transform: scale(1, 1); filter: brightness(1); opacity: 1; } 55% { transform: scale(1, 0.01); filter: brightness(2.6); opacity: 1; } 100% { transform: scale(0, 0.01); filter: brightness(3); opacity: 0; } }
+@keyframes srCrtOn { 0% { transform: scale(0, 0.01); filter: brightness(3); opacity: 0; } 45% { transform: scale(1, 0.01); filter: brightness(2.6); opacity: 1; } 100% { transform: scale(1, 1); filter: brightness(1); opacity: 1; } }
+@keyframes srCrtDot { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.3); } }
+.sr-crt-power { position: relative; z-index: auto; display: grid; place-items: center; width: 28px; height: 28px; margin: -8px -8px -8px 0; padding: 0; border: none; border-radius: 50%; background: transparent; cursor: pointer; }
+.sr-crt-power::before { content: ''; width: 11px; height: 11px; border-radius: 50%; background: #5effc6; box-shadow: 0 0 8px #5effc6, inset 0 0 2px #fff; transition: background 0.3s, box-shadow 0.3s, transform 0.12s; }
+.sr-crt-power.is-off::before { background: #59695f; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5); }
+.sr-crt-power:active::before { transform: scale(0.82); }
+.sr-crt-power:focus-visible { outline: 2px solid #8a7a60; outline-offset: 1px; }
+/* מה שלפני השאלה האחרונה מתכווץ – כדי שהשאלה שעניתי עליה, התשובה והשאלה החדשה ייכנסו יחד */
+.sr-crt-lines > .is-old { font-size: 0.8em; opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) {
+    .sr-crt-screen.pc-off .sr-crt-on, .sr-crt-screen.pc-on .sr-crt-on, .sr-crt-screen.pc-off::before { animation-duration: 0.01s !important; animation-delay: 0s !important; }
+}

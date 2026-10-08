@@ -964,7 +964,96 @@ function pcStopTimers() {
 }
 function pcLater(fn, ms) { const id = setTimeout(fn, ms); pcState.timers.push(id); return id; }
 function pcReducedMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
-function pcScroll() { const l = pcState.lines; l.scrollTop = l.scrollHeight; }
+// השאלה שעניתי עליה נשארת בעין (לפי בקשה מפורשת: "הצהוב עולה למעלה והשאלה הקודמת מוסתרת"): מה שלפניה
+// מתכווץ, והגלילה נעצרת על השאלה הקודמת כל עוד רואים גם את תחילת הכפתורים; אחרת - השאלה החדשה למעלה
+function pcCondense() {
+    const kids = Array.from(pcState.lines.children);
+    let me = -1;
+    kids.forEach((k, i) => { if (k.classList.contains('sr-crt-me')) me = i; });
+    let i = (me < 0 ? kids.length : me) - 1;
+    while (i >= 0 && !kids[i].classList.contains('sr-crt-bot')) i--;
+    while (i > 0 && kids[i - 1].classList.contains('sr-crt-bot') && !kids[i - 1].classList.contains('sr-crt-meta')) i--;
+    const anchor = me >= 0 && i >= 0 ? i : -1;
+    kids.forEach((k, j) => k.classList.toggle('is-old', anchor > 0 && j < anchor && !k.classList.contains('sr-crt-meta')));
+    pcState.anchor = anchor >= 0 ? kids[anchor] : null;
+}
+function pcScroll() {
+    const l = pcState.lines;
+    const bottom = Math.max(0, l.scrollHeight - l.clientHeight);
+    const a = pcState.anchor;
+    if (!a || !a.isConnected) { l.scrollTop = bottom; return; }
+    const box = l.getBoundingClientRect();
+    const rel = el => el.getBoundingClientRect().top - box.top + l.scrollTop;
+    const top = Math.max(0, rel(a) - 6);
+    if (top >= bottom) { l.scrollTop = bottom; return; }
+    const ctrl = l.querySelector('.sr-crt-ctrl');
+    if (!ctrl || rel(ctrl) - top < l.clientHeight - 44) { l.scrollTop = top; return; }
+    const kids = Array.from(l.children);
+    const meIdx = kids.map(k => k.classList.contains('sr-crt-me')).lastIndexOf(true);
+    const newQ = kids.slice(meIdx + 1).find(k => k.classList.contains('sr-crt-bot') && !k.classList.contains('sr-crt-typing'));
+    l.scrollTop = newQ ? Math.min(bottom, Math.max(0, rel(newQ) - 6)) : bottom;
+}
+
+// טקסט חופשי במקום כפתור (לפי בקשה מפורשת): מתחברים לתשובה הכי קרובה. ההתאמה כאן במכשיר בלבד - שום דבר
+// לא נשלח לשרת, כי השיחה נשארת במכשיר. מילים משותפות עם התשובה (עם ובלי ו/ה/ב/ל/מ/ש/כ בהתחלה, ובלי
+// אותיות סופיות), ולשאלות הקצרות גם מילים נרדפות. אם אין שום רמז - שואלים מה הכי קרוב, והכפתורים נשארים
+const PCX_HINTS = {
+    pcx_o_good: 'טוב טובה טובים מעולה מצוין מצוינת נהדר נפלא שמח שמחה כיף אחלה סבבה בסדר אנרגיה פרודוקטיבי פרודוקטיבית מדהים מדהימה רגוע רגועה good great happy fine okay awesome amazing productive energy nice calm',
+    pcx_o_busy: 'עמוס עמוסה לחוץ לחוצה לחץ הרבה מלא מלאה רץ רצה ריצות זמן משימות עבודה מטורף מטורפת בלגן טירוף שנייה busy stressed rushed hectic lot work tasks crazy time',
+    pcx_o_hard: 'קשה רע רעה עצוב עצובה עייף עייפה תשוש תשושה מותש מותשת גמור גמורה שבור שבורה כבד כבדה בוכה בכיתי כועס כועסת מדוכא מדוכאת מבואס מבואסת גרוע נורא hard bad sad tired exhausted heavy cry cried angry down awful terrible',
+    pcx_task_today: 'להוסיף תוסיף תוסיפי תכניס היום יומן רשימה add today list calendar',
+    pcx_when_0: 'עכשיו מיד כבר now right away',
+    pcx_when_1: 'חצי 30 half',
+    pcx_when_2: 'שעה 60 hour',
+    pcx_back_resume: 'להמשיך המשך נמשיך חזרה continue resume back',
+    pcx_new: 'חדשה חדש מההתחלה new start over',
+};
+function pcFold(s) { return String(s || '').toLowerCase().replace(/[֑-ׇ]/g, '').replace(/ך/g, 'כ').replace(/ם/g, 'מ').replace(/ן/g, 'נ').replace(/ף/g, 'פ').replace(/ץ/g, 'צ'); }
+const PCX_STOP = new Set(('אני את אתה אתם לי לך לו לה לנו זה זאת זו של שלי עם על אל גם כן רק כל היה היתה הייתה היו יש אבל או כי אז מה איך כמו עוד ממש קצת יותר מאוד הכי די פשוט ' +
+    'the a an and or but to of in on at is am are was were be been it its this that i im my me you your so just very really quite some').split(' ').map(pcFold));
+function pcWords(s) { return pcFold(s).replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 1 && !PCX_STOP.has(w)); }
+function pcVariants(w) {
+    const v = [w];
+    const pre = 'ובלמשהכ';
+    if (/^[א-ת]/.test(w)) {
+        if (w.length >= 4 && pre.includes(w[0])) v.push(w.slice(1));
+        if (w.length >= 5 && pre.includes(w[0]) && pre.includes(w[1])) v.push(w.slice(2));
+    }
+    return v;
+}
+function pcWordScore(a, b) {
+    const va = pcVariants(a), vb = pcVariants(b);
+    if (va.some(x => vb.includes(x))) return 1;
+    for (const x of va) for (const y of vb) {
+        const [s, l] = x.length <= y.length ? [x, y] : [y, x];
+        if (s.length >= 3 && l.startsWith(s)) return 0.7;
+    }
+    return 0;
+}
+// choices: [{ key, value }] → הערך של התשובה הכי קרובה, או null כשאין שום רמז
+function pcMatch(text, choices) {
+    const words = pcWords(text);
+    if (!words.length) return null;
+    const best1 = (list, w) => list.reduce((m, x) => Math.max(m, pcWordScore(w, x)), 0);
+    const neg = /(^|\s)(לא|not|no)(\s|$)/.test(pcFold(text));
+    const goodHints = pcWords(PCX_HINTS.pcx_o_good);
+    const negGood = neg && words.some(w => best1(goodHints, w) === 1);
+    // הדירוג מחלק באורך התשובה (תשובה ארוכה לא מנצחת רק כי יש בה הרבה מילים); מספיקה מילה משותפת אחת
+    let best = null, bestScore = 0, bestRaw = 0;
+    choices.forEach(c => {
+        const label = pcWords(t(c.key));
+        const hints = PCX_HINTS[c.key] ? pcWords(PCX_HINTS[c.key]) : [];
+        let ls = 0, hs = 0;
+        words.forEach(w => { ls += best1(label, w); hs += best1(hints, w); });
+        let score = (label.length ? ls / Math.sqrt(label.length) : 0) + hs * 0.8;
+        let raw = ls + hs;
+        // "לא טוב" ≠ יום טוב
+        if (negGood && c.key === 'pcx_o_good') { score -= 2; raw = 0; }
+        if (negGood && c.key === 'pcx_o_hard') { score += 1.5; raw += 1; }
+        if (score > bestScore + 1e-9) { best = c.value; bestScore = score; bestRaw = raw; }
+    });
+    return bestRaw >= 0.7 ? best : null;
+}
 function pcLine(text, who, cls) {
     const el = document.createElement('span');
     el.className = (who === 'me' ? 'sr-crt-me' : 'sr-crt-bot') + (cls ? ' ' + cls : '');
@@ -987,6 +1076,8 @@ function pcSay(texts, done) {
     step(0);
 }
 function pcMeText(entry) {
+    // מה שנכתב חופשי (וחובר לתשובה הקרובה) מוצג כמו שנכתב - רק בזמן השיחה, לא נשמר
+    if (entry.said) return entry.said;
     const node = PCX[entry.node];
     const opts = pcOpts(entry);
     if (opts && typeof entry.pick === 'number' && opts[entry.pick]) return t(opts[entry.pick][0]);
@@ -1019,21 +1110,34 @@ function roomOpenComputer() {
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('computer'))}</b><span></span></div>
         <div class="sr-crt">
             <div class="sr-crt-screen">
-                <div class="sr-crt-lines" aria-live="polite"></div>
-                <div class="sr-crt-nav">
-                    <button type="button" class="sr-crt-navbtn" data-pc="back">${srEsc(t('pcx_back'))}</button>
-                    <button type="button" class="sr-crt-navbtn" data-pc="new">✦ ${srEsc(t('pcx_new'))}</button>
+                <div class="sr-crt-on">
+                    <div class="sr-crt-lines" aria-live="polite"></div>
+                    <div class="sr-crt-nav">
+                        <button type="button" class="sr-crt-navbtn" data-pc="back">${srEsc(t('pcx_back'))}</button>
+                        <button type="button" class="sr-crt-navbtn" data-pc="new">✦ ${srEsc(t('pcx_new'))}</button>
+                    </div>
+                    <form class="sr-crt-input"><label aria-hidden="true">‹</label><input type="text" maxlength="300" placeholder="${srEsc(t('room_pc_input'))}" aria-label="${srEsc(t('room_pc_input'))}"><button type="submit" aria-label="${srEsc(t('room_pc_send'))}">↵</button></form>
                 </div>
-                <form class="sr-crt-input"><label aria-hidden="true">‹</label><input type="text" maxlength="300" placeholder="${srEsc(t('room_pc_input'))}" aria-label="${srEsc(t('room_pc_input'))}"><button type="submit" aria-label="${srEsc(t('room_pc_send'))}">↵</button></form>
             </div>
-            <div class="sr-crt-brand"><span>NOT10</span><i></i></div>
+            <div class="sr-crt-brand"><span>NOT10</span><button type="button" class="sr-crt-power" aria-pressed="true" aria-label="${srEsc(t('room_pc_power'))}" title="${srEsc(t('room_pc_power'))}"></button></div>
         </div>
         <p class="sr-crt-private">${SR_LOCK_SVG}${srEsc(t('room_pc_private'))}</p>`;
     stage.appendChild(pc);
-    pcState = { el: pc, lines: pc.querySelector('.sr-crt-lines'), history: [], timers: [], busy: false, saved: null, writing: null };
+    pcState = { el: pc, lines: pc.querySelector('.sr-crt-lines'), history: [], timers: [], busy: false, saved: null, writing: null, off: false, anchor: null };
+    pcBoot();
+    pc.querySelector('[data-pc="back"]').addEventListener('click', pcBack);
+    pc.querySelector('[data-pc="new"]').addEventListener('click', pcNew);
+    pc.querySelector('.sr-crt-input').addEventListener('submit', e => { e.preventDefault(); pcSubmitText(); });
+    pc.querySelector('.sr-crt-power').addEventListener('click', pcPower);
+    pc.querySelector('.sr-sub-back').addEventListener('click', () => { pcStopTimers(); pc.remove(); pcState = null; });
+}
+
+// כמו להדליק את המחשב: חוזרים באותו יום → להמשיך את השיחה, "חזרתי..." (אחרי עמוס / קשה), או שיחה חדשה
+function pcBoot() {
     const saved = pcLoadSaved();
+    pcState.saved = null;
+    pcState.anchor = null;
     if (saved) {
-        // חוזרים באותו יום: להמשיך את השיחה, "חזרתי..." (אחרי עמוס / קשה), או שיחה חדשה
         pcState.saved = saved.history;
         const path = pcPathOf(saved.history);
         const opts = [['pcx_back_resume', '@resume']];
@@ -1045,10 +1149,27 @@ function roomOpenComputer() {
         pcState.history = [{ node: 'root' }];
     }
     pcRenderAll(true);
-    pc.querySelector('[data-pc="back"]').addEventListener('click', pcBack);
-    pc.querySelector('[data-pc="new"]').addEventListener('click', pcNew);
-    pc.querySelector('.sr-crt-input').addEventListener('submit', e => { e.preventDefault(); pcSubmitText(); });
-    pc.querySelector('.sr-sub-back').addEventListener('click', () => { pcStopTimers(); pc.remove(); pcState = null; });
+}
+
+// הנורה הירוקה = כפתור הדלקה (לפי בקשה מפורשת: "יסגור ויפתח את המחשב כאילו אמיתי"): המסך מתכווץ לפס
+// ולנקודה ונכבה; בהדלקה הוא נפתח בחזרה, כמו מחשב שנדלק מחדש
+function pcPower() {
+    if (!pcState) return;
+    const screen = pcState.el.querySelector('.sr-crt-screen');
+    const btn = pcState.el.querySelector('.sr-crt-power');
+    pcState.off = !pcState.off;
+    btn.setAttribute('aria-pressed', String(!pcState.off));
+    btn.classList.toggle('is-off', pcState.off);
+    if (pcState.off) {
+        pcStopTimers();
+        pcState.writing = null;
+        screen.classList.remove('pc-on');
+        screen.classList.add('pc-off');
+        return;
+    }
+    screen.classList.remove('pc-off');
+    screen.classList.add('pc-on');
+    pcBoot();
 }
 
 // כל השיחה מההתחלה (פתיחה / חזרה / המשך) - הכול מיד, ורק הצומת האחרון "מוקלד" כשפותחים
@@ -1078,6 +1199,7 @@ function pcRenderAll(animateLast) {
             pcAfterTexts(entry).forEach(x => pcLine(x, 'bot'));
         }
     });
+    pcCondense();
     const last = pcLast();
     if (animateLast) pcEnter(last, true);
     else pcShowControls(last);
@@ -1146,8 +1268,8 @@ function pcShowControls(entry) {
     pcState.lines.appendChild(box);
 }
 
-function pcPick(value) {
-    if (!pcState || pcState.busy) return;
+function pcPick(value, said) {
+    if (!pcState || pcState.busy || pcState.off) return;
     const entry = pcLast();
     if (entry.node === 'welcome') {
         const target = entry.opts[value][1];
@@ -1157,8 +1279,10 @@ function pcPick(value) {
     pcState.lines.querySelector('.sr-crt-ctrl')?.remove();
     pcState.lines.querySelectorAll('.sr-crt-task:not(.is-done)').forEach(c => c.classList.add('is-done'));
     entry.pick = value;
+    if (said) entry.said = said; else delete entry.said;
     const me = pcMeText(entry);
-    if (me) pcLine(me, 'me');
+    if (me) pcLine(me, 'me', said ? 'is-free' : '');
+    pcCondense();
     pcScroll();
     const node = PCX[entry.node];
     const opts = pcOpts(entry);
@@ -1169,7 +1293,7 @@ function pcPick(value) {
 }
 
 // "באיזו שעה תהיה ההפסקה?" - בעוד חצי שעה / שעה נכנסת משימה עם תזכורת להיום שלי
-async function pcPickWhen(i) {
+async function pcPickWhen(i, said) {
     if (!pcState || pcState.busy) return;
     const entry = pcLast();
     if (PCX_WHEN[i]) {
@@ -1178,7 +1302,7 @@ async function pcPickWhen(i) {
         const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         if (d.getDate() === new Date().getDate() && await pcAddTodayTask(t('pcx_break_title'), time)) entry.time = time;
     }
-    pcPick(i);
+    pcPick(i, said);
 }
 
 async function pcAddTodayTask(title, time) {
@@ -1193,10 +1317,10 @@ async function pcAddTodayTask(title, time) {
 
 // כתיבה חופשית בתוך השיחה (פריקה / "מה שקרה" / 3 משפטים): כל שורה נכנסת, ו"סיימתי" ממשיך
 function pcSubmitText() {
-    if (!pcState) return;
+    if (!pcState || pcState.off) return;
     const input = pcState.el.querySelector('.sr-crt-input input');
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || pcState.busy) return;
     input.value = '';
     const entry = pcLast();
     const ctrl = pcState.lines.querySelector('.sr-crt-ctrl');
@@ -1209,10 +1333,36 @@ function pcSubmitText() {
         if (entry.lines.length === 1) pcSay([t('pcx_write_more')], () => { const c = pcState && pcState.lines.querySelector('.sr-crt-ctrl'); if (c) { pcState.lines.appendChild(c); pcScroll(); } });
         return;
     }
-    // מחוץ לשלב של כתיבה: תשובה עדינה, והבחירות של השלב נשארות
-    pcLine(text, 'me', 'is-free');
-    pcScroll();
-    pcSay([t('room_pc_heard')], () => { const c = pcState && pcState.lines.querySelector('.sr-crt-ctrl'); if (c) { pcState.lines.appendChild(c); pcScroll(); } });
+    // בסוף שיחה (או בשלב שכבר נענה): מתחילים שיחה חדשה, ומה שנכתב עונה על השאלה הראשונה
+    if (PCX[entry.node].end || (entry.pick !== undefined && entry.pick !== null)) {
+        pcState.history = [{ node: 'root' }];
+        pcState.saved = null;
+        pcRenderAll(false);
+    }
+    pcFree(text);
+}
+// מה שנכתב חופשי → התשובה הכי קרובה בשלב הזה
+function pcFree(text) {
+    const entry = pcLast();
+    const node = PCX[entry.node];
+    const opts = pcOpts(entry);
+    let value = null;
+    if (opts) value = pcMatch(text, opts.map(([key], i) => ({ key, value: i })));
+    else if (node.task) value = pcMatch(text, [{ key: 'pcx_task_today', value: 'today' }]) || 'ok';
+    else if (node.when) value = pcMatch(text, PCX_WHEN.map((_, i) => ({ key: 'pcx_when_' + i, value: i })));
+    if (value === null) {
+        pcLine(text, 'me', 'is-free');
+        pcCondense();
+        pcScroll();
+        pcSay([t('pcx_free_pick')], () => { const c = pcState && pcState.lines.querySelector('.sr-crt-ctrl'); if (c) { pcState.lines.appendChild(c); pcScroll(); } });
+        return;
+    }
+    if (node.task && value === 'today') {
+        pcAddTodayTask(t(`pcx_${node.task}_t`)).then(ok => { if (ok) { showAppToast(t('pcx_task_added')); pcPick('today', text); } });
+        return;
+    }
+    if (node.when) { pcPickWhen(value, text); return; }
+    pcPick(value, text);
 }
 async function pcWriteDone(saveNote) {
     if (!pcState || pcState.writing !== pcLast()) return;
@@ -1276,13 +1426,13 @@ function pcBack() {
     // צמתים שעוברים לבד (וגם הנשימות) - לא עוצרים בהם בדרך אחורה
     while (h.length > 1 && (PCX[pcLast().node].go || PCX[pcLast().node].breathe)) h.pop();
     const last = pcLast();
-    delete last.pick; delete last.time; delete last.lines; delete last.n;
+    delete last.pick; delete last.time; delete last.lines; delete last.n; delete last.said;
     pcState.writing = null;
     pcRenderAll(false);
     pcSave();
 }
 function pcNew() {
-    if (!pcState) return;
+    if (!pcState || pcState.off) return;
     pcStopTimers();
     pcState.history = [{ node: 'root' }];
     pcState.saved = null;
