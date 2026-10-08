@@ -8710,3 +8710,36 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 @media (prefers-reduced-motion: reduce) {
     .sr-crt-screen.pc-off .sr-crt-on, .sr-crt-screen.pc-on .sr-crt-on, .sr-crt-screen.pc-off::before { animation-duration: 0.01s !important; animation-delay: 0s !important; }
 }
+
+/* המחשב בחדר – מראה "ניאון" (בחירה 9): מסגרת כהה, מסך עם רשת ואופק ורוד, בועות טורקיז למחשב
+   וורודות לתשובות, כפתורי תשובה בשורות. הכול תחת .sr-pc כדי לגבור על המראה הקודם (CRT ירוק) */
+.sr-pc { background: radial-gradient(60% 40% at 50% 30%, rgba(255, 79, 216, 0.12), transparent 70%), radial-gradient(50% 35% at 50% 100%, rgba(46, 242, 255, 0.1), transparent 70%), #07040f; }
+.sr-pc .sr-crt { background: linear-gradient(180deg, #1a1028, #0e0818); border: 1px solid rgba(255, 79, 216, 0.22); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.6), inset 0 -5px 0 rgba(0, 0, 0, 0.25); }
+.sr-pc .sr-crt-screen { font-family: 'Secular One', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; color: #bffbff; text-shadow: none; background: linear-gradient(180deg, #140a26, #0b0618); box-shadow: inset 0 0 0 2px #ff4fd8, 0 0 22px rgba(255, 79, 216, 0.45), inset 0 0 26px rgba(46, 242, 255, 0.18); }
+.sr-pc .sr-crt-screen::after { background: linear-gradient(transparent 62%, rgba(255, 79, 216, 0.16) 62%, transparent 100%), repeating-linear-gradient(90deg, rgba(46, 242, 255, 0.07) 0 1px, transparent 1px 28px); }
+.sr-pc .sr-crt-lines { gap: 8px; }
+.sr-pc .sr-crt-meta { color: rgba(46, 242, 255, 0.6); opacity: 1; }
+.sr-pc .sr-crt-bot:not(.sr-crt-meta), .sr-pc .sr-crt-me { max-width: 86%; box-sizing: border-box; padding: 8px 12px; border-radius: 16px; line-height: 1.45; }
+.sr-pc .sr-crt-bot:not(.sr-crt-meta) { background: rgba(46, 242, 255, 0.05); border: 1.5px solid #2ef2ff; border-end-start-radius: 5px; color: #bffbff; box-shadow: 0 0 10px rgba(46, 242, 255, 0.3); }
+.sr-pc .sr-crt-me { background: #ff4fd8; border-end-end-radius: 5px; color: #1a0518; text-shadow: none; box-shadow: 0 0 14px rgba(255, 79, 216, 0.55); }
+.sr-pc .sr-crt-me.is-free { opacity: 1; }
+.sr-pc .sr-crt-typing { letter-spacing: 0.25em; }
+.sr-pc .sr-crt-ctrl { flex-direction: column; align-items: stretch; gap: 7px; }
+.sr-pc .sr-crt-ctrl button { min-height: 40px; padding: 8px 12px; border-radius: 14px; border: 1.5px solid #ff4fd8; background: transparent; color: #ffc2f3; text-align: start; text-shadow: none; box-shadow: 0 0 8px rgba(255, 79, 216, 0.28); }
+.sr-pc .sr-crt-ctrl button:hover, .sr-pc .sr-crt-ctrl button:focus-visible { background: rgba(255, 79, 216, 0.12); }
+.sr-pc .sr-crt-ctrl.is-end { align-items: center; }
+.sr-pc .sr-crt-ctrl.is-end button { border-color: #2ef2ff; color: #bffbff; text-align: center; box-shadow: 0 0 10px rgba(46, 242, 255, 0.35); }
+.sr-pc .sr-crt-task { border: 1.5px dashed #ffe066; color: #fff3b0; text-shadow: none; box-shadow: 0 0 10px rgba(255, 224, 102, 0.22); }
+.sr-pc .sr-crt-navbtn { border: 1px solid #2ef2ff; background: transparent; color: #bffbff; text-shadow: none; }
+.sr-pc .sr-crt-navbtn:focus-visible { outline-color: #2ef2ff; }
+.sr-pc .sr-crt-input label { display: none; }
+.sr-pc .sr-crt-input input { border-bottom: 1.5px solid #2ef2ff; color: #bffbff; }
+.sr-pc .sr-crt-input input::placeholder { color: rgba(191, 251, 255, 0.45); }
+.sr-pc .sr-crt-input button { border-color: #2ef2ff; color: #bffbff; }
+.sr-pc .sr-crt-brand { color: #ff4fd8; }
+.sr-pc .sr-crt-power::before { background: #2ef2ff; box-shadow: 0 0 8px #2ef2ff, inset 0 0 2px #fff; }
+.sr-pc .sr-crt-power.is-off::before { background: #3a3550; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5); }
+.sr-pc .sr-crt-screen.pc-off { background: linear-gradient(180deg, #0a0614, #05030b); }
+.sr-pc .sr-crt-screen.pc-off::before { background: #ffe9fb; box-shadow: 0 0 16px 6px rgba(255, 79, 216, 0.55); }
+.sr-pc .sr-crt-breath { border-color: #2ef2ff; box-shadow: 0 0 18px rgba(46, 242, 255, 0.45), inset 0 0 14px rgba(46, 242, 255, 0.3); }
+@media (prefers-reduced-motion: reduce) { .sr-pc .sr-crt-breath.in { background: rgba(46, 242, 255, 0.16); } }

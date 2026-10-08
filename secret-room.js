@@ -987,7 +987,7 @@ function pcScroll() {
     const top = Math.max(0, rel(a) - 6);
     if (top >= bottom) { l.scrollTop = bottom; return; }
     const ctrl = l.querySelector('.sr-crt-ctrl');
-    if (!ctrl || rel(ctrl) - top < l.clientHeight - 44) { l.scrollTop = top; return; }
+    if (!ctrl || rel(ctrl) + ctrl.offsetHeight - top <= l.clientHeight) { l.scrollTop = top; return; }
     const kids = Array.from(l.children);
     const meIdx = kids.map(k => k.classList.contains('sr-crt-me')).lastIndexOf(true);
     const newQ = kids.slice(meIdx + 1).find(k => k.classList.contains('sr-crt-bot') && !k.classList.contains('sr-crt-typing'));
@@ -1057,7 +1057,8 @@ function pcMatch(text, choices) {
 function pcLine(text, who, cls) {
     const el = document.createElement('span');
     el.className = (who === 'me' ? 'sr-crt-me' : 'sr-crt-bot') + (cls ? ' ' + cls : '');
-    el.textContent = who === 'me' ? `${text} ›` : `‹ ${text}`;
+    // מראה הניאון: בועות - מי מדבר רואים לפי הצד והצבע, בלי חיצים
+    el.textContent = text;
     pcState.lines.appendChild(el);
     return el;
 }
@@ -1104,6 +1105,14 @@ function roomOpenComputer() {
     const stage = srStage();
     if (!stage) return;
     if (pcState) { pcStopTimers(); pcState = null; }
+    // הגופן של מראה הניאון - נטען רק כשפותחים את המחשב
+    if (!document.getElementById('sr-pc-font')) {
+        const fl = document.createElement('link');
+        fl.id = 'sr-pc-font';
+        fl.rel = 'stylesheet';
+        fl.href = 'https://fonts.googleapis.com/css2?family=Secular+One&display=swap';
+        document.head.appendChild(fl);
+    }
     const pc = document.createElement('div');
     pc.className = 'sr-pc';
     pc.innerHTML = `
