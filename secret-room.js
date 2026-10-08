@@ -1566,48 +1566,109 @@ function roomOpenShelf() {
     }));
 }
 
-// ---------- גג הכוכבים (מפתח 5): כוכב לכל מפתח ----------
-function roomStarLabels() {
-    const labels = [];
-    if (roomStarterDays() >= ROOM_STARTER_DAYS) labels.push(t('room_star_starter'));
-    const done = typeof nmChallenges !== 'undefined' ? nmChallenges.filter(c => c.status === 'done' && nmChDef(c.challenge_key)) : [];
-    const seenKeys = new Set();
-    done.sort((a, b) => String(a.completed_at || '').localeCompare(String(b.completed_at || ''))).forEach(c => {
-        if (seenKeys.has(c.challenge_key)) return;
-        seenKeys.add(c.challenge_key);
-        labels.push(nmChTitle(c.challenge_key) + (c.completed_at ? ` · ${nmShortDate(String(c.completed_at).slice(0, 10))}` : ''));
+// ---------- הגג (מפתח 5) ----------
+// לפי בקשה מפורשת: כוכבים שהם לא מפתחות - פשוט יפים; נגיעה בכוכב = הוא נופל ככוכב נופל וחוזר למקום;
+// עיר יפה מבצבצת מעל הרעפים, ובאופק הרחוק יער וים. וגם (מהבקשה על הגג): רעפים, מקום לשבת וחתול
+const ROOF_STARS = 24;
+function roomRoofScene() {
+    // עיר: בניינים בגבהים שונים עם חלונות דולקים (מיקומים קבועים, כדי שהעיר תהיה אותה עיר בכל פעם)
+    let seed = 11;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const blds = [[34, 48], [58, 70], [80, 40], [100, 96], [126, 58], [146, 120], [170, 74], [196, 104], [222, 62], [244, 88], [268, 52], [290, 78], [314, 44], [336, 66]];
+    let city = '';
+    blds.forEach(([x, h], i) => {
+        const w = i % 3 === 1 ? 22 : 20;
+        const top = 418 - h;
+        city += `<rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${i % 2 ? '#1c1538' : '#221a42'}"/>`;
+        for (let wy = top + 7; wy < 404; wy += 11) {
+            for (let wx = x + 4; wx < x + w - 4; wx += 6) {
+                if (rnd() < 0.42) city += `<rect x="${wx}" y="${wy}" width="2.6" height="4" fill="${rnd() < 0.8 ? '#ffd98a' : '#ff9ecf'}" opacity="${(0.55 + rnd() * 0.45).toFixed(2)}"/>`;
+            }
+        }
     });
-    const keys = roomKeys();
-    while (labels.length < keys) labels.push(t('room_key_n').replace('{n}', srFmt(labels.length + 1)));
-    return labels.slice(0, keys);
+    // מגדל עם אור אדום, וכיפה קטנה
+    city += '<rect x="150" y="262" width="4" height="36" fill="#221a42"/><circle class="sr-roof-beacon" cx="152" cy="260" r="2.6" fill="#ff5a6a"/>';
+    city += '<path d="M200 314 a13 13 0 0 1 26 0 z" fill="#2a2150"/><rect x="211.5" y="296" width="3" height="6" fill="#2a2150"/>';
+    // יער באופק: גבעה ועצי אורן קטנים
+    let pines = '';
+    for (let i = 0; i < 16; i++) {
+        const x = 214 + i * 11 + (i % 2 ? 3 : 0), base = 334 - Math.sin(i / 3) * 6, h = 14 + (i % 3) * 5;
+        pines += `<path d="M${x} ${base} l5 -${h} l5 ${h} z" fill="#0f2c26"/>`;
+    }
+    return `
+        <svg class="sr-roof-scene" viewBox="0 0 390 780" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <defs>
+                <linearGradient id="srRoofSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3a78"/><stop offset="1" stop-color="#121a44"/></linearGradient>
+                <radialGradient id="srRoofGlow" cx="0.5" cy="1" r="0.8"><stop offset="0" stop-color="#ff9ecf" stop-opacity="0.35"/><stop offset="1" stop-color="#ff9ecf" stop-opacity="0"/></radialGradient>
+                <pattern id="srRoofTile" width="26" height="16" patternUnits="userSpaceOnUse">
+                    <rect width="26" height="16" fill="#6f2b20"/>
+                    <path d="M0 0 h26 v8 a13 8 0 0 1 -26 0 z" fill="#93402d"/>
+                    <path d="M2 2 h22" stroke="#b55a40" stroke-width="1.2" opacity="0.7"/>
+                    <path d="M13 0 v16" stroke="#5a2118" stroke-width="0.8" opacity="0.6"/>
+                </pattern>
+            </defs>
+            <circle cx="104" cy="118" r="24" fill="#fff4c9"/>
+            <circle cx="104" cy="118" r="46" fill="#fff4c9" opacity="0.12"/>
+            <g transform="translate(0 220)">
+            <rect x="0" y="230" width="390" height="140" fill="url(#srRoofGlow)"/>
+            <g class="sr-roof-sea">
+                <rect x="0" y="330" width="250" height="40" fill="url(#srRoofSea)"/>
+                <g stroke="#fff4c9" stroke-linecap="round" opacity="0.55"><line x1="56" y1="336" x2="84" y2="336" stroke-width="1.6"/><line x1="60" y1="343" x2="80" y2="343" stroke-width="1.3"/><line x1="64" y1="350" x2="76" y2="350" stroke-width="1"/></g>
+                <g stroke="#9fb3ff" stroke-linecap="round" opacity="0.35"><line x1="120" y1="340" x2="134" y2="340"/><line x1="180" y1="347" x2="192" y2="347"/><line x1="24" y1="352" x2="34" y2="352"/></g>
+            </g>
+            <g class="sr-roof-forest">
+                <path d="M200 340 Q260 318 320 326 T390 322 V370 H200 Z" fill="#0d241f"/>
+                ${pines}
+            </g>
+            <g class="sr-roof-city">${city}</g>
+            <g class="sr-roof-tiles">
+                <path d="M0 418 L390 404 V560 H0 Z" fill="url(#srRoofTile)"/>
+                <path d="M0 418 L390 404" stroke="#4a1a12" stroke-width="7"/>
+                <path d="M0 414.5 L390 400.5" stroke="#a8503a" stroke-width="1.5" opacity="0.8"/>
+                <rect x="0" y="420" width="390" height="140" fill="url(#srRoofGlow)" opacity="0.25"/>
+            </g>
+            <g class="sr-roof-seat">
+                <ellipse cx="292" cy="472" rx="30" ry="9" fill="#000" opacity="0.3"/>
+                <ellipse cx="292" cy="464" rx="28" ry="11" fill="#ff8fc4"/>
+                <ellipse cx="292" cy="460" rx="24" ry="7" fill="#ffb3d6"/>
+                <path d="M270 462 q22 8 44 0" stroke="#e86aa6" stroke-width="1.2" fill="none"/>
+            </g>
+            <g class="sr-roof-cat">
+                <path class="sr-roof-tail" d="M132 404 q22 -4 20 -24 q-1 -9 6 -10" stroke="#120d1f" stroke-width="6" fill="none" stroke-linecap="round"/>
+                <ellipse cx="118" cy="398" rx="17" ry="14" fill="#120d1f"/>
+                <circle cx="116" cy="378" r="10" fill="#120d1f"/>
+                <path d="M108 372 l-2 -11 l8 6 z M124 372 l2 -11 l-8 6 z" fill="#120d1f"/>
+            </g>
+            </g>
+        </svg>`;
 }
-
 function roomOpenRoof() {
     const stage = srStage();
     if (!stage) return;
-    const labels = roomStarLabels();
     let seed = 7;
     const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    const stars = labels.map((label, i) => {
-        const x = 10 + rnd() * 80, y = 14 + rnd() * 52;
-        return `<button type="button" class="sr-star" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;animation-delay:${(i * 0.37) % 3}s" data-label="${srEsc(label)}" aria-label="${srEsc(label)}"></button>`;
-    }).join('');
+    let stars = '';
+    for (let i = 0; i < ROOF_STARS; i++) {
+        const x = 6 + rnd() * 88, y = 5 + rnd() * 44;
+        const size = rnd() < 0.3 ? 'is-big' : rnd() < 0.5 ? 'is-small' : '';
+        stars += `<button type="button" class="sr-star ${size}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;animation-delay:${((i * 0.37) % 3).toFixed(2)}s" aria-label="${srEsc(t('room_star_aria'))}"></button>`;
+    }
     const box = document.createElement('div');
     box.className = 'sr-roof';
     box.innerHTML = `
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('roof'))}</b><span></span></div>
         <div class="sr-roof-sky">
-            <span class="sr-roof-moon" aria-hidden="true"></span>
+            ${roomRoofScene()}
             ${stars}
-            <p class="sr-roof-caption" aria-live="polite">${srEsc(labels.length ? t('room_roof_hint') : t('room_roof_empty'))}</p>
-            <div class="sr-roof-deck" aria-hidden="true"></div>
         </div>`;
     stage.appendChild(box);
     box.querySelector('.sr-sub-back').addEventListener('click', () => box.remove());
+    // כוכב נופל: יורד באלכסון עם שובל, נעלם, וחוזר למקומו
     box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => {
-        box.querySelectorAll('.sr-star.on').forEach(x => x.classList.remove('on'));
-        s.classList.add('on');
-        box.querySelector('.sr-roof-caption').textContent = s.dataset.label;
+        if (s.classList.contains('falling') || s.classList.contains('back')) return;
+        s.classList.add('falling');
+        setTimeout(() => { s.classList.remove('falling'); s.classList.add('back'); }, 1100);
+        setTimeout(() => s.classList.remove('back'), 1950);
     }));
 }
 
