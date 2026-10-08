@@ -182,10 +182,49 @@ function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; re
 // הסדר נשמר כקבוע (new_me_profile.meal_order); השם נקבע לפי המיקום - בוקר / נשנוש / צהריים /
 // נשנוש ערב - כך שגרירת ארוחה למקום אחר משנה גם את השם וגם את שעת התזכורת שלה
 function nmOrder() {
-    const raw = String((nmProfile && nmProfile.meal_order) || '').split(',').filter(s => NEW_ME_SLOTS.includes(s));
-    return raw.length === 4 && new Set(raw).size === 4 ? raw : NEW_ME_SLOTS.slice();
+    const saved = String((nmProfile && nmProfile.meal_order) || '');
+    // הסדר הקודם שנשמר כברירת מחדל (בוקר, נשנוש, צהריים ב-16:00, ערב) = ברירת המחדל החדשה
+    if (saved === 'meal1,snack1,meal2,snack2') return NEW_ME_DEFAULT_ORDER.slice();
+    const raw = saved.split(',').filter(s => NEW_ME_SLOTS.includes(s));
+    return raw.length === 4 && new Set(raw).size === 4 ? raw : NEW_ME_DEFAULT_ORDER.slice();
 }
-function nmPosName(i) { return t('nm_pos_' + (i + 1)); }
+function nmPosName(i) { return t(NEW_ME_POS_KEYS[i] || ('nm_pos_' + (i + 1))); }
+// 21:00: 'eat' / 'drink' / 'none', או null כשעוד לא נשאל
+function nmLateChoice() { const c = nmProfile && nmProfile.late_choice; return ['eat', 'drink', 'none'].includes(c) ? c : null; }
+function nmLateLabel(c) { return t(c === 'eat' ? 'nm_late_eat' : c === 'drink' ? 'nm_late_drink' : 'nm_late_none'); }
+async function nmSetLateChoice(choice) {
+    if (!nmProfile || !['eat', 'drink', 'none'].includes(choice)) return;
+    const prev = nmProfile.late_choice;
+    nmProfile.late_choice = choice;
+    const { error } = await supabaseClient.from('new_me_profile').update({ late_choice: choice, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { nmProfile.late_choice = prev; showAppToast(t('nm_save_error'), 'error'); return; }
+    // בחירה ב"לאכול" / "לשתות" מדליקה את התזכורת של 21:00; "בלי" מכבה
+    await nmSyncReminders(choice === 'none' ? {} : { pos: 4, enabled: true });
+    nmRenderView(nmRoot());
+}
+// שלוש הבחירות של 21:00 (בשאלון, בתזכורות, ובשאלה החד-פעמית ביום)
+function nmLateChoicesHtml(current, onPick) {
+    return `<div class="nm-late-choices" role="radiogroup" aria-label="${nmEsc(t('nm_late_title'))}">${['eat', 'drink', 'none'].map(c => `
+        <button type="button" role="radio" aria-checked="${current === c}" class="nm-late-choice${current === c ? ' selected' : ''}" onclick="${onPick}('${c}')">${nmEsc(nmLateLabel(c))}</button>`).join('')}</div>`;
+}
+// השורה של 21:00 בתפריט היום - או השאלה, כל עוד לא נבחר
+function nmLateRowHtml() {
+    const c = nmLateChoice();
+    if (!c) return `
+        <div class="nm-late nm-late-ask">
+            <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_ask'))}</div>
+            ${nmLateChoicesHtml(null, 'nmSetLateChoice')}
+        </div>`;
+    if (c === 'none') return '';
+    return `
+        <div class="nm-late">
+            <span class="nm-late-time"><bdi dir="ltr">${nmEsc(nmLateTime())}</bdi></span>
+            <span class="nm-late-text">${nmEsc(t(c === 'eat' ? 'nm_late_row_eat' : 'nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)))}</span>
+            <button type="button" class="nm-chip" onclick="nmGo('reminders')">${nmEsc(t('nm_late_change'))}</button>
+        </div>`;
+}
+function nmLateRow() { return nmReminders.find(r => r.position === 5) || null; }
+function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LATE_TIME; }
 function nmSlotName(slot) { return nmPosName(Math.max(0, nmOrder().indexOf(slot))); }
 // ארוחות שהוסרו מהתפריט (למשל 3 ארוחות במקום 4) - לפי בקשה מפורשת. ארוחה שהוסרה שומרת על
 // המיקום שלה ביום (השם לפי שעת היום לא זז), והקלוריות שלה פנויות למילוי עד סך התוכנית
@@ -267,7 +306,7 @@ const NEW_ME_SALES_GROUPS = [
 ];
 function nmRenderSales(root) {
     const plan = NEW_ME_PLANS[1300];
-    const preview = NEW_ME_SLOTS.map((slot, i) => `
+    const preview = NEW_ME_DEFAULT_ORDER.map((slot, i) => `
         <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
     const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
     // חשבון הפיתוח בתצוגת "מי שעוד לא רכש/ה" - פס קטן לחזרה למצב פתוח (רק המפתחת רואה אותו)
@@ -362,6 +401,7 @@ function nmStartQuiz(fromSettings) {
         withLetter: !(nmProfile && nmProfile.letter_written_at),
         letter: '',
         name: (nmProfile && nmProfile.cert_name) || '',
+        late: nmProfile ? nmLateChoice() : null,
     };
     // שם מלא: אם עוד לא נשמר - ממלאים מראש מחשבון Google (אפשר לשנות)
     if (!nmQuiz.name && typeof nmCertDefaultName === 'function') nmCertDefaultName().then(def => {
@@ -426,7 +466,7 @@ function nmRenderQuiz(root) {
             <p class="nm-fine">🔒 ${nmEsc(t('nm_letter_seal_note'))}</p>
             <p class="nm-fine">${nmEsc(t('nm_letter_quiz_note'))}</p>`;
     } else {
-        const order = nmProfile ? nmOrder() : NEW_ME_SLOTS;
+        const order = nmProfile ? nmOrder() : NEW_ME_DEFAULT_ORDER;
         body = `
             <h3 class="nm-step-title">${nmEsc(t('nm_q_menu_title'))}</h3>
             <p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>
@@ -442,6 +482,10 @@ function nmRenderQuiz(root) {
                         </button>`;
                     }).join('')}
                 </div>`).join('')}
+            <div class="nm-quiz-slot">
+                <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
+                ${nmLateChoicesHtml(q.late, 'nmQuizLate')}
+            </div>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
     }
     const isLast = q.step === total - 1;
@@ -457,6 +501,8 @@ function nmRenderQuiz(root) {
             </div>
         </div>`;
 }
+
+function nmQuizLate(c) { nmQuiz.late = c; nmRenderQuiz(nmRoot()); }
 
 function nmQuizBack() {
     if (nmQuiz.step === 0) { nmQuiz = null; nmView = 'settings'; renderNewMe(); return; }
@@ -489,6 +535,7 @@ async function nmQuizNext() {
         cert_name: String(q.name || '').trim().slice(0, 60),
         updated_at: new Date().toISOString(),
     };
+    if (q.late) row.late_choice = q.late;
     // מסע חדש מתחיל ביום הראשון של התוכנית; מילוי השאלון מחדש לא מאפס את "יום X"
     if (!nmProfile) row.started_on = today;
     if (letter) { row.letter_text = letter; row.letter_written_at = new Date().toISOString(); }
@@ -1012,6 +1059,7 @@ function nmRenderDay(root) {
                 ${warn ? `<p class="nm-soft-warn">${nmEsc(t('nm_menu_over_warn').replace('{n}', nmFmt(over)))}</p>` : ''}
                 <div class="nm-menu-list" id="nm-menu-list">${active.map(s => nmMealCardHtml(s, order.indexOf(s))).join('')}</div>
                 ${nmMenuRoomHtml()}
+                ${nmLateRowHtml()}
                 <p class="nm-drag-hint">${nmEsc(t('nm_drag_hint'))}</p>
                 ${nmFreeMealRowHtml()}
                 ${nmDrinksHtml()}
@@ -2895,6 +2943,24 @@ async function nmSyncReminders(change) {
             last_sent_date: passed ? today : (prev.last_sent_date || null),
         };
     });
+    // 21:00 (לבחירה) = מקום 5: משהו קטן / משהו לשתות; "בלי" או עוד לא נבחר = כבוי
+    const late = nmLateChoice();
+    const prevLate = nmLateRow() || {};
+    let lateTime = prevLate.time || NEW_ME_LATE_TIME;
+    let lateOn = prevLate.enabled !== false;
+    if (change && change.pos === 4) {
+        if (change.time) lateTime = change.time;
+        if (change.enabled != null) lateOn = change.enabled;
+    }
+    const [lh, lm] = lateTime.split(':').map(Number);
+    const lateBody = t(late === 'drink' ? 'nm_late_rem_drink_body' : 'nm_late_rem_eat_body').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)).slice(0, 300);
+    rows.push({
+        user_id: currentUserId, position: 5, slot: 'late', time: lateTime,
+        enabled: (late === 'eat' || late === 'drink') && lateOn,
+        title: t(late === 'drink' ? 'nm_late_rem_drink_title' : 'nm_late_rem_eat_title').slice(0, 160),
+        body: lateBody, today_body: lateBody, today_date: today,
+        last_sent_date: lh * 60 + lm <= nowMin ? today : (prevLate.last_sent_date || null),
+    });
     const sig = JSON.stringify(rows);
     if (sig === nmReminderSig && !change) return;
     const { data, error } = await supabaseClient.from('new_me_reminders').upsert(rows.map(r => ({ ...r, updated_at: new Date().toISOString() })), { onConflict: 'user_id,position' }).select();
@@ -2912,6 +2978,8 @@ function nmRenderReminders(body) {
     const perm = nmNotifyState();
     const order = nmOrder();
     const hiddenSlots = nmHiddenSlots();
+    const late = nmLateChoice();
+    const lateRow = nmLateRow();
     body.innerHTML = `
         <div class="nm-card">
             <label class="nm-switch-row">
@@ -2931,6 +2999,16 @@ function nmRenderReminders(body) {
                     <input type="time" class="nm-rem-time" value="${nmReminderTime(i)}" onchange="nmSetReminderTime(${i}, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmPosName(i))}">
                     <input type="checkbox" class="nm-switch" ${nmReminderEnabled(i) ? 'checked' : ''} onchange="nmSetReminderEnabled(${i}, this.checked)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmPosName(i))}">
                 </div>`).join('')}
+        </div>
+        <div class="nm-card nm-late-card">
+            <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
+            ${nmLateChoicesHtml(late, 'nmSetLateChoice')}
+            ${late === 'eat' || late === 'drink' ? `
+            <div class="nm-rem-row${on ? '' : ' is-off'}">
+                <div class="nm-rem-text"><b>${nmEsc(nmLateLabel(late))}</b><span>${nmEsc(t(late === 'eat' ? 'nm_late_row_eat' : 'nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)))}</span></div>
+                <input type="time" class="nm-rem-time" value="${nmLateTime()}" onchange="nmSetReminderTime(4, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmLateLabel(late))}">
+                <input type="checkbox" class="nm-switch" ${lateRow && lateRow.enabled === false ? '' : 'checked'} onchange="nmSetReminderEnabled(4, this.checked)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmLateLabel(late))}">
+            </div>` : ''}
         </div>
         <p class="nm-fine">${nmEsc(t('nm_rem_note'))}</p>`;
 }
@@ -3011,7 +3089,7 @@ function nmBillingHtml() {
 }
 
 function nmRenderSettings(body) {
-    const customOrder = nmOrder().join(',') !== NEW_ME_SLOTS.join(',');
+    const customOrder = nmOrder().join(',') !== NEW_ME_DEFAULT_ORDER.join(',');
     body.innerHTML = `
         ${nmBillingHtml()}
         <div class="nm-settings-block">
@@ -3032,7 +3110,7 @@ function nmRenderSettings(body) {
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
         ${typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount ? `<button type="button" class="nm-row-btn nm-dev-btn" onclick="setNmDevLockedPreview(true)">🔒 ${nmEsc(t('nm_dev_preview_btn'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
-        ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_SLOTS.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
+        ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_DEFAULT_ORDER.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmStartQuiz(true); renderNewMe()">📝 ${nmEsc(t('nm_settings_retake'))}</button>
         <details class="nm-row-details">
             <summary>⚕️ ${nmEsc(t('nm_settings_disclaimer'))}</summary>

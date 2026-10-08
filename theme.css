@@ -8765,3 +8765,14 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
     .sr-roof .sr-star.falling::after { display: none; }
     .sr-roof-tail, .sr-roof-beacon { animation: none; }
 }
+
+/* New Me – 21:00 לבחירה: שורה קטנה בתפריט היום, ושלוש בחירות (בשאלון, בתזכורות ובשאלה החד-פעמית ביום) */
+.nm-late { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 14px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); }
+.nm-late-time { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-purple); }
+.nm-late-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--text-primary); }
+.nm-late-ask { flex-direction: column; align-items: stretch; gap: 0; }
+.nm-late-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.nm-late-choice { flex: 1 1 auto; min-height: 40px; padding: 8px 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; z-index: auto; }
+.nm-late-choice.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); }
+.nm-late-card .nm-rem-row { margin-top: 12px; }
+.nm-late-card .nm-rem-row.is-off { opacity: 0.55; }
