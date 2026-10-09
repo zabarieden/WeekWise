@@ -8760,6 +8760,53 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-roof-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: srCatTail 3.2s ease-in-out infinite; }
 @keyframes srCatTail { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-12deg); } }
 .sr-roof-beacon { animation: srTwinkle 1.6s ease-in-out infinite; }
+/* החתול על הגג: הגב אלינו על שולי הגג; נגיעה - מסתובב, בא ומתחכך, ואז כל נגיעה עושה משהו אחר */
+.sr-roof-scene .sr-cat { pointer-events: auto; cursor: pointer; outline: none; transform: translate(118px, 410px) scale(1); transition: transform 1.7s cubic-bezier(0.45, 0, 0.3, 1); }
+.sr-roof-scene .sr-cat.is-near { transform: translate(138px, 548px) scale(2.1); }
+.sr-cat-hit { pointer-events: all; }
+.sr-cat:focus-visible .sr-cat-hit { stroke: #ffd27a; stroke-width: 1.2; stroke-dasharray: 3 3; }
+.sr-cat-front { opacity: 0; transform-origin: 0 0; transition: opacity 0.35s; }
+.sr-cat-back { transition: opacity 0.35s; }
+.sr-cat.is-turned .sr-cat-front { opacity: 1; }
+.sr-cat.is-turned .sr-cat-back { opacity: 0; }
+.sr-cat.is-walking .sr-cat-inner { animation: srCatWalk 0.34s ease-in-out infinite; }
+.sr-cat.do-rub .sr-cat-inner { animation: srCatRub 0.62s ease-in-out 3; }
+.sr-cat.do-purr .sr-cat-inner { animation: srCatPurr 0.11s linear 15; }
+.sr-cat-lids, .sr-cat-yawn { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); }
+.sr-cat.do-blink .sr-cat-lids { animation: srCatBlink 1.6s ease-in-out; }
+.sr-cat.do-yawn .sr-cat-yawn { animation: srCatYawn 1.6s ease-in-out; }
+.sr-cat.do-yawn .sr-cat-lids { animation: srCatSquint 1.6s ease-in-out; }
+.sr-cat.do-sleep .sr-cat-lids { transform: scaleY(1); }
+.sr-cat.do-stretch .sr-cat-front { animation: srCatStretch 1.6s ease-in-out; }
+.sr-cat.do-sleep .sr-cat-front { transform: scale(1.06, 0.88); transition: transform 0.6s, opacity 0.35s; }
+.sr-cat-head { transform-origin: 0 -24px; }
+.sr-cat.do-groom .sr-cat-head { animation: srCatTilt 1.8s ease-in-out; }
+.sr-cat-paw { transform-box: fill-box; transform-origin: 50% 50%; }
+.sr-cat.do-groom .sr-cat-paw-r { animation: srCatGroom 0.9s ease-in-out 2; }
+.sr-cat.do-knead .sr-cat-paw-l { animation: srCatKnead 0.45s ease-in-out 4; }
+.sr-cat.do-knead .sr-cat-paw-r { animation: srCatKnead 0.45s ease-in-out 0.22s 4; }
+.sr-cat-tailheart { opacity: 0; transition: opacity 0.3s; }
+.sr-cat.do-tailheart .sr-cat-tailheart { opacity: 1; }
+.sr-cat.do-tailheart .sr-cat-tail { opacity: 0; }
+.sr-cat.do-hop .sr-cat-inner { animation: srCatHop 0.7s cubic-bezier(0.3, 0.6, 0.4, 1) 2; }
+.sr-cat.do-bump .sr-cat-inner { animation: srCatBump 1.1s ease-in-out; }
+.sr-cat-float { font-size: 9px; font-weight: 800; fill: #ffd27a; animation: srCatFloat 1.6s ease-out forwards; }
+.sr-cat-float.is-heart { fill: #ff7ab0; }
+.sr-cat-float.is-z { fill: #c9c1f0; font-size: 8px; }
+@keyframes srCatWalk { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-2.5px) rotate(2deg); } }
+@keyframes srCatRub { 0%, 100% { transform: rotate(0deg); } 30% { transform: translateX(-2px) rotate(-9deg); } 70% { transform: translateX(2px) rotate(8deg); } }
+@keyframes srCatPurr { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(0.6px); } }
+@keyframes srCatBlink { 0%, 100% { transform: scaleY(0); } 22%, 42% { transform: scaleY(1); } 58% { transform: scaleY(0); } 72%, 84% { transform: scaleY(1); } }
+@keyframes srCatYawn { 0%, 100% { transform: scaleY(0); } 30%, 65% { transform: scaleY(1); } }
+@keyframes srCatSquint { 0%, 100% { transform: scaleY(0); } 30%, 65% { transform: scaleY(0.85); } }
+@keyframes srCatStretch { 0%, 100% { transform: scale(1, 1); } 40%, 62% { transform: scale(1.24, 0.84); } }
+@keyframes srCatTilt { 0%, 100% { transform: rotate(0deg); } 30%, 72% { transform: rotate(-9deg); } }
+@keyframes srCatGroom { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-5px, -27px); } }
+@keyframes srCatKnead { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.4px); } }
+@keyframes srCatHop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-16px); } }
+@keyframes srCatBump { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.16) translateY(2px); } 58% { transform: scale(0.97); } }
+@keyframes srCatFloat { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+@media (prefers-reduced-motion: reduce) { .sr-roof-scene .sr-cat, .sr-cat * { animation: none !important; transition: none !important; } }
 @media (prefers-reduced-motion: reduce) {
     .sr-roof .sr-star.falling { animation: srStarFade 0.4s forwards; }
     .sr-roof .sr-star.falling::after { display: none; }

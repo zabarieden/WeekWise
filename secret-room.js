@@ -1541,52 +1541,162 @@ function roomRoofScene() {
         const x = 214 + i * 11 + (i % 2 ? 3 : 0), base = 334 - Math.sin(i / 3) * 6, h = 14 + (i % 3) * 5;
         pines += `<path d="M${x} ${base} l5 -${h} l5 ${h} z" fill="#0f2c26"/>`;
     }
+    // הרעפים (לפי בקשה מפורשת: "יותר מלמעלה למטה"): יושבים על הגג ומסתכלים החוצה, והגג יורד מאיתנו אל
+    // השוליים. לכן הרעפים בפרספקטיבה - גדולים למטה (קרוב), קטנים לכיוון השוליים - והקצה המעוגל של כל רעף פונה
+    // אל השוליים (במורד הגג). מציירים מהשורה הרחוקה לקרובה, כך שכל שורה קרובה מכסה את קצה השורה שמעליה
+    const RV = { x: 195, y: 330 }, R_BOTTOM = 560;
+    const rowYs = [0, 1, 2, 3, 4, 5].map(k => RV.y + (R_BOTTOM - RV.y) * Math.pow(0.8, k));
+    const shades = ['#6f2b20', '#7a3124', '#843829'];
+    let tiles = '';
+    for (let r = rowYs.length - 2; r >= 0; r--) {
+        const yb = rowYs[r], yt = rowYs[r + 1];
+        const fb = (yb - RV.y) / (R_BOTTOM - RV.y), ft = (yt - RV.y) / (R_BOTTOM - RV.y);
+        const bulge = (yb - yt) * 0.42, off = r % 2 ? 0.5 : 0;
+        for (let j = -13; j <= 13; j++) {
+            const a = (j + off - 0.5) * 58, b = (j + off + 0.5) * 58;
+            const lbx = RV.x + a * fb, rbx = RV.x + b * fb, ltx = RV.x + a * ft, rtx = RV.x + b * ft;
+            if (rbx < -20 || lbx > 410) continue;
+            const cx = ((ltx + rtx) / 2).toFixed(1), cy = (yt - bulge * 2).toFixed(1);
+            tiles += `<path d="M${lbx.toFixed(1)} ${yb.toFixed(1)} L${rbx.toFixed(1)} ${yb.toFixed(1)} L${rtx.toFixed(1)} ${yt.toFixed(1)} Q${cx} ${cy} ${ltx.toFixed(1)} ${yt.toFixed(1)} Z" fill="${shades[Math.abs(j * 7 + r * 3) % 3]}" stroke="#4f1c14" stroke-width="${(0.4 + fb * 0.6).toFixed(2)}"/>`
+                + `<path d="M${rtx.toFixed(1)} ${yt.toFixed(1)} Q${cx} ${cy} ${ltx.toFixed(1)} ${yt.toFixed(1)}" fill="none" stroke="#c4694a" stroke-width="${(0.6 + fb * 1.2).toFixed(2)}" opacity="0.6"/>`;
+        }
+    }
     return `
-        <svg class="sr-roof-scene" viewBox="0 0 390 780" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <svg class="sr-roof-scene" viewBox="0 0 390 780" preserveAspectRatio="xMidYMax slice" role="group" aria-label="${srEsc(roomItemName('roof'))}">
             <defs>
                 <linearGradient id="srRoofSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3a78"/><stop offset="1" stop-color="#121a44"/></linearGradient>
                 <radialGradient id="srRoofGlow" cx="0.5" cy="1" r="0.8"><stop offset="0" stop-color="#ff9ecf" stop-opacity="0.35"/><stop offset="1" stop-color="#ff9ecf" stop-opacity="0"/></radialGradient>
-                <pattern id="srRoofTile" width="26" height="16" patternUnits="userSpaceOnUse">
-                    <rect width="26" height="16" fill="#6f2b20"/>
-                    <path d="M0 0 h26 v8 a13 8 0 0 1 -26 0 z" fill="#93402d"/>
-                    <path d="M2 2 h22" stroke="#b55a40" stroke-width="1.2" opacity="0.7"/>
-                    <path d="M13 0 v16" stroke="#5a2118" stroke-width="0.8" opacity="0.6"/>
-                </pattern>
+                <linearGradient id="srRoofFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140a26" stop-opacity="0.6"/><stop offset="1" stop-color="#140a26" stop-opacity="0"/></linearGradient>
+                <clipPath id="srRoofClip"><rect x="0" y="408" width="390" height="152"/></clipPath>
             </defs>
-            <circle cx="104" cy="118" r="24" fill="#fff4c9"/>
-            <circle cx="104" cy="118" r="46" fill="#fff4c9" opacity="0.12"/>
+            <g aria-hidden="true">
+                <circle cx="104" cy="118" r="24" fill="#fff4c9"/>
+                <circle cx="104" cy="118" r="46" fill="#fff4c9" opacity="0.12"/>
+            </g>
             <g transform="translate(0 220)">
-            <rect x="0" y="230" width="390" height="140" fill="url(#srRoofGlow)"/>
-            <g class="sr-roof-sea">
-                <rect x="0" y="330" width="250" height="40" fill="url(#srRoofSea)"/>
-                <g stroke="#fff4c9" stroke-linecap="round" opacity="0.55"><line x1="56" y1="336" x2="84" y2="336" stroke-width="1.6"/><line x1="60" y1="343" x2="80" y2="343" stroke-width="1.3"/><line x1="64" y1="350" x2="76" y2="350" stroke-width="1"/></g>
-                <g stroke="#9fb3ff" stroke-linecap="round" opacity="0.35"><line x1="120" y1="340" x2="134" y2="340"/><line x1="180" y1="347" x2="192" y2="347"/><line x1="24" y1="352" x2="34" y2="352"/></g>
+            <g aria-hidden="true">
+                <rect x="0" y="230" width="390" height="140" fill="url(#srRoofGlow)"/>
+                <g class="sr-roof-sea">
+                    <rect x="0" y="330" width="250" height="40" fill="url(#srRoofSea)"/>
+                    <g stroke="#fff4c9" stroke-linecap="round" opacity="0.55"><line x1="56" y1="336" x2="84" y2="336" stroke-width="1.6"/><line x1="60" y1="343" x2="80" y2="343" stroke-width="1.3"/><line x1="64" y1="350" x2="76" y2="350" stroke-width="1"/></g>
+                    <g stroke="#9fb3ff" stroke-linecap="round" opacity="0.35"><line x1="120" y1="340" x2="134" y2="340"/><line x1="180" y1="347" x2="192" y2="347"/><line x1="24" y1="352" x2="34" y2="352"/></g>
+                </g>
+                <g class="sr-roof-forest">
+                    <path d="M200 340 Q260 318 320 326 T390 322 V370 H200 Z" fill="#0d241f"/>
+                    ${pines}
+                </g>
+                <g class="sr-roof-city">${city}</g>
+                <g class="sr-roof-tiles">
+                    <rect x="0" y="408" width="390" height="152" fill="#5a2118"/>
+                    <g clip-path="url(#srRoofClip)">${tiles}</g>
+                    <rect x="0" y="408" width="390" height="64" fill="url(#srRoofFog)"/>
+                    <rect x="0" y="405" width="390" height="5" fill="#3a1510"/>
+                    <path d="M0 405.5 H390" stroke="#a8503a" stroke-width="1.4" opacity="0.8"/>
+                    <rect x="0" y="420" width="390" height="140" fill="url(#srRoofGlow)" opacity="0.25"/>
+                </g>
+                <g class="sr-roof-seat">
+                    <ellipse cx="292" cy="472" rx="30" ry="9" fill="#000" opacity="0.3"/>
+                    <ellipse cx="292" cy="464" rx="28" ry="11" fill="#ff8fc4"/>
+                    <ellipse cx="292" cy="460" rx="24" ry="7" fill="#ffb3d6"/>
+                    <path d="M270 462 q22 8 44 0" stroke="#e86aa6" stroke-width="1.2" fill="none"/>
+                </g>
             </g>
-            <g class="sr-roof-forest">
-                <path d="M200 340 Q260 318 320 326 T390 322 V370 H200 Z" fill="#0d241f"/>
-                ${pines}
-            </g>
-            <g class="sr-roof-city">${city}</g>
-            <g class="sr-roof-tiles">
-                <path d="M0 418 L390 404 V560 H0 Z" fill="url(#srRoofTile)"/>
-                <path d="M0 418 L390 404" stroke="#4a1a12" stroke-width="7"/>
-                <path d="M0 414.5 L390 400.5" stroke="#a8503a" stroke-width="1.5" opacity="0.8"/>
-                <rect x="0" y="420" width="390" height="140" fill="url(#srRoofGlow)" opacity="0.25"/>
-            </g>
-            <g class="sr-roof-seat">
-                <ellipse cx="292" cy="472" rx="30" ry="9" fill="#000" opacity="0.3"/>
-                <ellipse cx="292" cy="464" rx="28" ry="11" fill="#ff8fc4"/>
-                <ellipse cx="292" cy="460" rx="24" ry="7" fill="#ffb3d6"/>
-                <path d="M270 462 q22 8 44 0" stroke="#e86aa6" stroke-width="1.2" fill="none"/>
-            </g>
-            <g class="sr-roof-cat">
-                <path class="sr-roof-tail" d="M132 404 q22 -4 20 -24 q-1 -9 6 -10" stroke="#120d1f" stroke-width="6" fill="none" stroke-linecap="round"/>
-                <ellipse cx="118" cy="398" rx="17" ry="14" fill="#120d1f"/>
-                <circle cx="116" cy="378" r="10" fill="#120d1f"/>
-                <path d="M108 372 l-2 -11 l8 6 z M124 372 l2 -11 l-8 6 z" fill="#120d1f"/>
-            </g>
+            ${roomCatSvg()}
             </g>
         </svg>`;
+}
+// החתול על הגג (לפי בקשה מפורשת): יושב על שולי הגג עם הגב אלינו. נגיעה - מסתובב, בא אלינו ומתחכך
+// להתלטף, ונשאר לידנו; מכאן כל נגיעה עושה משהו אחר (10 דברים, לפי הסדר). (0,0) = בין הכפות, על הגג
+function roomCatSvg() {
+    const F = '#120d1f';
+    return `<g class="sr-cat" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}">
+        <g class="sr-cat-inner">
+            <g class="sr-cat-back">
+                <path class="sr-roof-tail" d="M14 -8 q22 -4 20 -24 q-1 -9 6 -10" stroke="${F}" stroke-width="6" fill="none" stroke-linecap="round"/>
+                <ellipse cx="0" cy="-14" rx="17" ry="14" fill="${F}"/>
+                <circle cx="-2" cy="-34" r="10" fill="${F}"/>
+                <path d="M-10 -40 l-2 -11 l8 6 z M6 -40 l2 -11 l-8 6 z" fill="${F}"/>
+            </g>
+            <g class="sr-cat-front">
+                <path class="sr-roof-tail sr-cat-tail" d="M11 -6 q17 -1 16 -18 q-1 -8 5 -9" stroke="${F}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+                <g class="sr-cat-tailheart"><path d="M11 -6 q12 -1 15 -9" stroke="${F}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 -15 c-1.5 -4.5 -8 -4 -7 1 c0.6 3 4 5.5 7 8 c3 -2.5 6.4 -5 7 -8 c1 -5 -5.5 -5.5 -7 -1 z" fill="#ff7ab0"/></g>
+                <g class="sr-cat-body">
+                    <ellipse cx="0" cy="-14" rx="15" ry="15" fill="${F}"/>
+                    <ellipse cx="0" cy="-12" rx="6.5" ry="9" fill="#2a2042"/>
+                    <ellipse class="sr-cat-paw sr-cat-paw-l" cx="-6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
+                    <ellipse class="sr-cat-paw sr-cat-paw-r" cx="6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
+                </g>
+                <g class="sr-cat-head">
+                    <path d="M-12 -40 l-2.5 -12 l9.5 6.5 z M12 -40 l2.5 -12 l-9.5 6.5 z" fill="${F}"/>
+                    <path d="M-10.6 -42.5 l-1.1 -6 l4.4 3.2 z M10.6 -42.5 l1.1 -6 l-4.4 3.2 z" fill="#ff9ecf" opacity="0.5"/>
+                    <circle cx="0" cy="-35" r="12.5" fill="${F}"/>
+                    <ellipse cx="-4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/><ellipse cx="4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/>
+                    <ellipse cx="-4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/>
+                    <circle cx="-3.8" cy="-38.2" r="0.7" fill="#fff"/><circle cx="5.4" cy="-38.2" r="0.7" fill="#fff"/>
+                    <g class="sr-cat-lids"><ellipse cx="-4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><path d="M-7.4 -36.4 q2.8 2.2 5.6 0 M1.8 -36.4 q2.8 2.2 5.6 0" stroke="#9a8fc4" stroke-width="0.8" fill="none" stroke-linecap="round"/></g>
+                    <path d="M-1.5 -32.2 h3 l-1.5 1.7 z" fill="#ff9ecf"/>
+                    <path d="M0 -30.5 q-1.6 1.7 -3.2 0.4 M0 -30.5 q1.6 1.7 3.2 0.4" stroke="#9a8fc4" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+                    <ellipse class="sr-cat-yawn" cx="0" cy="-29" rx="2.3" ry="2.8" fill="#ff7ab0"/>
+                    <path d="M-6 -31.6 l-8 -1.4 M-6 -30.4 l-8 1.2 M6 -31.6 l8 -1.4 M6 -30.4 l8 1.2" stroke="#9a8fc4" stroke-width="0.6" opacity="0.75" stroke-linecap="round"/>
+                </g>
+            </g>
+            <g class="sr-cat-fx"></g>
+        </g>
+        <ellipse class="sr-cat-hit" cx="2" cy="-24" rx="28" ry="32" fill="transparent"/>
+    </g>`;
+}
+// הנגיעה הראשונה: מסתובב, בא ומתחכך. אחר כך כל נגיעה - הדבר הבא ברשימה (ושינה נמשכת עד הנגיעה הבאה)
+const ROOM_CAT_ACTIONS = [['purr', 1800], ['blink', 1700], ['stretch', 1700], ['groom', 1900], ['tailheart', 2000], ['yawn', 1700], ['hop', 1500], ['bump', 1200], ['knead', 1900], ['sleep', 0]];
+function roomInitCat(cat) {
+    if (!cat) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fx = cat.querySelector('.sr-cat-fx');
+    let near = false, busy = false, idx = 0, zzz = null;
+    const float = (ch, x, y, cls, delay = 0) => setTimeout(() => {
+        if (!cat.isConnected) return;
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        el.setAttribute('x', x);
+        el.setAttribute('y', y);
+        el.setAttribute('text-anchor', 'middle');
+        el.setAttribute('class', `sr-cat-float ${cls}`);
+        el.textContent = ch;
+        fx.appendChild(el);
+        setTimeout(() => el.remove(), 1700);
+    }, delay);
+    const hearts = n => { for (let i = 0; i < n; i++) float('♥', -8 + i * 8, -52 - (i % 2) * 4, 'is-heart', i * 260); };
+    const play = (name, ms) => {
+        busy = true;
+        cat.classList.add('do-' + name);
+        if (name === 'purr') hearts(3);
+        if (name === 'tailheart') float('♥', 27, -22, 'is-heart', 500);
+        if (name === 'bump') float('✦', 12, -50, 'is-spark', 250);
+        if (name === 'sleep') {
+            const z = () => { if (!cat.isConnected) { clearInterval(zzz); return; } float('z', 10 + Math.random() * 6, -46, 'is-z'); };
+            z();
+            zzz = setInterval(z, 1100);
+            busy = false;
+            return;
+        }
+        setTimeout(() => { cat.classList.remove('do-' + name); busy = false; }, reduce ? 300 : ms);
+    };
+    const tap = () => {
+        if (busy) return;
+        if (!near) {
+            near = true;
+            busy = true;
+            cat.classList.add('is-turned');
+            setTimeout(() => cat.classList.add('is-near', 'is-walking'), reduce ? 0 : 380);
+            setTimeout(() => { cat.classList.remove('is-walking'); cat.classList.add('do-rub'); hearts(3); }, reduce ? 0 : 2150);
+            setTimeout(() => { cat.classList.remove('do-rub'); busy = false; }, reduce ? 200 : 4100);
+            return;
+        }
+        if (cat.classList.contains('do-sleep')) { cat.classList.remove('do-sleep'); clearInterval(zzz); zzz = null; return; }
+        const [name, ms] = ROOM_CAT_ACTIONS[idx];
+        idx = (idx + 1) % ROOM_CAT_ACTIONS.length;
+        play(name, ms);
+    };
+    cat.addEventListener('click', tap);
+    cat.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
 }
 function roomOpenRoof(opts = {}) {
     const stage = srStage();
@@ -1608,6 +1718,7 @@ function roomOpenRoof(opts = {}) {
             ${stars}
         </div>`;
     stage.appendChild(box);
+    roomInitCat(box.querySelector('.sr-cat'));
     box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
     // כוכב נופל: יורד באלכסון עם שובל, נעלם, וחוזר למקומו
     box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => {
