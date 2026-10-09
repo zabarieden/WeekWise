@@ -246,10 +246,7 @@ function renderMyDayTimeline(container, items, focusItems) {
     if (untimed.length) {
         const box = document.createElement('div');
         box.className = 'myday-untimed';
-        const head = document.createElement('span');
-        head.className = 'myday-untimed-head';
-        head.textContent = t('myday_no_time');
-        box.appendChild(head);
+        // בלי כותרת "בלי שעה" (לפי בקשה מפורשת: "לא צריך לרשום שם כלום") - רק הפריטים
         untimed.forEach(it => box.appendChild(it.build()));
         container.appendChild(box);
     }
@@ -725,38 +722,6 @@ function renderHomeDailyLine() {
     if (el) el.textContent = t(`daily_line_${homeDailyLineIndex()}`);
 }
 
-// --- 🔥 רצף ימים: כמה ימים ברצף היה לפחות ✓ אחד (יומן, לו"ז, שגרה, יעדים, New Me). הימים
-// הקודמים נטענים פעם ביום; היום נספר חי מ"היום שלי". עוד אין ✓ היום? הרצף עדיין לא נשבר -
-// סופרים עד אתמול. מוצג רק מ-2 ימים, ורצף שנגמר פשוט נעלם בשקט (בלי שום הודעה) ---
-let homeStreakPast = null;
-let homeStreakLoadedDay = null;
-async function loadHomeStreak() {
-    if (!supabaseClient || !currentUserId) return;
-    const today = getLocalDateString();
-    const from = addDaysToDateStr(today, -120);
-    const uid = currentUserId;
-    const safe = p => p.then(r => r.data || []).catch(() => []);
-    const [sc, ev, rc, vc, nc] = await Promise.all([
-        safe(supabaseClient.from('schedule_completions').select('completion_date').eq('user_id', uid).gte('completion_date', from)),
-        safe(supabaseClient.from('calendar_events').select('event_date').eq('user_id', uid).eq('is_completed', true).gte('event_date', from).lte('event_date', today)),
-        safe(supabaseClient.from('routine_item_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
-        safe(supabaseClient.from('vision_goal_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
-        safe(supabaseClient.from('new_me_checkins').select('checkin_date').eq('user_id', uid).gte('checkin_date', from)),
-    ]);
-    const days = new Set([...sc.map(r => r.completion_date), ...ev.map(r => r.event_date), ...rc.map(r => r.checkin_date), ...vc.map(r => r.checkin_date), ...nc.map(r => r.checkin_date)].filter(Boolean));
-    days.delete(today);
-    homeStreakPast = days;
-    homeStreakLoadedDay = today;
-    renderHomeChips();
-}
-function homeStreakCount() {
-    if (!homeStreakPast) return 0;
-    const today = getLocalDateString();
-    let n = myDayItems.some(it => it.checkable && it.done) ? 1 : 0;
-    let d = addDaysToDateStr(today, -1);
-    while (homeStreakPast.has(d)) { n++; d = addDaysToDateStr(d, -1); }
-    return n;
-}
 
 // --- ⏳ ספירה לאחור לאירוע הקרוב שסומן ⭐ ביומן (עד 100 יום קדימה) ---
 let homeCountdown = null;
@@ -874,10 +839,7 @@ function renderHomeChips() {
     const box = document.getElementById('home-chips');
     if (!box) return;
     const chips = [];
-    const streak = homeStreakCount();
-    if (streak >= 2) {
-        chips.push(`<span class="home-chip home-chip-streak" title="${myDayEsc(t('home_streak_title'))}">${HOME_FLAME_SVG}<span>${myDayEsc(t('home_streak_days').replace('{n}', streak))}</span></span>`);
-    }
+    // הרצף (🔥 X ימים ברצף) כבר לא במסך הראשי - לפי בקשה מפורשת: "לא נראה טוב ולא קשור"
     if (homeCountdown) {
         chips.push(`<button type="button" class="home-chip home-chip-countdown" onclick="openHomeCountdown()">${HOME_HOURGLASS_SVG}<span>${myDayEsc(homeCountdownText(homeCountdown))}</span></button>`);
     }
@@ -1031,7 +993,6 @@ let homePhase2Day = null;
 function initHomePhase2() {
     homePhase2Day = getLocalDateString();
     renderHomeDailyLine();
-    loadHomeStreak();
     loadHomeCountdown();
     loadGoodThingsSetting();
     loadGoodThingsToday();
@@ -1045,7 +1006,6 @@ function initHomePhase2() {
         const today = getLocalDateString();
         if (today !== homePhase2Day) {
             homePhase2Day = today;
-            loadHomeStreak();
             loadHomeCountdown();
             snapshotWeeklyNote(true);
         }

@@ -8589,7 +8589,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'dictation', category: 'general' },
     { id: 'home_planter', category: 'general' },
     // שלב 2 של מסך הבית: נגיעות אישיות (ר' home.js)
-    { id: 'home_streak', category: 'general' },
     { id: 'daily_line', category: 'general' },
     { id: 'home_countdown', category: 'general' },
     { id: 'good_things', category: 'general' },
@@ -17032,6 +17031,7 @@ async function duplicateRoutineTab(name) {
 // לכל יום) נחשב פריט אחד. רק למי שמשתמש/ת ב-✓ בפועל (סימון אחד לפחות ב-14 הימים האחרונים).
 // "כן, ממשיכים" = לא שואלים שבוע; "לשנות"/"להקטין" = עוד 3 ימים להתחיל מחדש; ✕ = מחר ---
 const ROUTINE_NUDGE_MISSES = 3;
+const ROUTINE_NUDGE_GENERAL_OVER = 3;
 let routineNudge = null;
 let routineNudgeEditing = null;
 
@@ -17096,15 +17096,21 @@ async function refreshRoutineNudge() {
         const lastCheck = [...checked].sort().pop() || null;
         candidates.push({ key, list, sinceDays: daysBetweenDateStrs(lastCheck || createdStr, todayStr) });
     });
-    if (candidates.length) {
-        candidates.sort((a, b) => b.sinceDays - a.sinceDays);
-        const pick = candidates[0];
-        const first = pick.list.find(it => it.tab_id === activeDailyBoardTabId) || pick.list[0];
-        routineNudge = {
+    const groupOf = c => {
+        const first = c.list.find(it => it.tab_id === activeDailyBoardTabId) || c.list[0];
+        return {
             title: first.title, time: (first.time || '').slice(0, 5), tabId: first.tab_id, tabName: first.tab.name,
-            itemIds: pick.list.map(it => it.id), tabCount: new Set(pick.list.map(it => it.tab_id)).size,
-            sinceDays: pick.sinceDays, item: first,
+            itemIds: c.list.map(it => it.id), tabCount: new Set(c.list.map(it => it.tab_id)).size,
+            sinceDays: c.sinceDays, item: first,
         };
+    };
+    candidates.sort((a, b) => b.sinceDays - a.sinceDays);
+    // יותר מ-3 דברים בלי ✓ (אולי הייתה חופשה): כרטיס אחד כללי במקום לשאול אחד-אחד - לפי בקשה מפורשת
+    if (candidates.length > ROUTINE_NUDGE_GENERAL_OVER) {
+        const groups = candidates.map(groupOf);
+        routineNudge = { general: true, groups, itemIds: groups.flatMap(g => g.itemIds), expanded: false };
+    } else if (candidates.length) {
+        routineNudge = groupOf(candidates[0]);
     }
     renderRoutineNudge();
 }
@@ -17114,6 +17120,27 @@ function renderRoutineNudge() {
     if (!slot) return;
     const n = routineNudge;
     if (!n || !isRoutineGoalsOn()) { slot.innerHTML = ''; return; }
+    const esc = escapeHtmlForReport;
+    const whereOf = g => (g.tabCount > 1 ? t('routine_nudge_where_tabs').replace('{n}', g.tabCount) : g.tabName);
+    if (n.general) {
+        slot.innerHTML = `
+        <div class="routine-nudge-card is-general" role="status">
+            <button type="button" class="routine-nudge-later" onclick="routineNudgeLater()" title="${esc(t('routine_nudge_later'))}" aria-label="${esc(t('routine_nudge_later'))}">✕</button>
+            <div class="routine-nudge-head">🌱 <strong>${esc(t('routine_nudge_general_title').replace('{n}', n.groups.length))}</strong></div>
+            <p class="routine-nudge-text">${esc(t('routine_nudge_general_text'))}</p>
+            ${n.expanded ? `<div class="routine-nudge-list">${n.groups.map((g, i) => `
+                <div class="routine-nudge-row">
+                    <span class="routine-nudge-row-text"><b>${esc(g.title)}</b><small>${g.time ? `${esc(g.time)} · ` : ''}${esc(whereOf(g))}</small></span>
+                    <button type="button" class="routine-nudge-icon" onclick="routineNudgeEditGroup(${i})" title="${esc(t('routine_nudge_change'))}" aria-label="${esc(`${t('routine_nudge_change')}: ${g.title}`)}">✏️</button>
+                    <button type="button" class="routine-nudge-icon" onclick="routineNudgeRemoveGroup(${i})" title="${esc(t('routine_nudge_remove'))}" aria-label="${esc(`${t('routine_nudge_remove')}: ${g.title}`)}">🗑️</button>
+                </div>`).join('')}</div>` : ''}
+            <div class="routine-nudge-actions">
+                <button type="button" class="routine-nudge-btn primary" onclick="routineNudgeKeep()">✓ ${esc(t('routine_nudge_general_keep'))}</button>
+                ${n.expanded ? '' : `<button type="button" class="routine-nudge-btn" onclick="routineNudgeExpand()">✏️ ${esc(t('routine_nudge_general_change'))}</button>`}
+            </div>
+        </div>`;
+        return;
+    }
     const where = n.tabCount > 1 ? t('routine_nudge_where_tabs').replace('{n}', n.tabCount) : n.tabName;
     slot.innerHTML = `
         <div class="routine-nudge-card" role="status">
@@ -17151,6 +17178,44 @@ async function routineNudgeLater() {
     renderRoutineNudge();
     await snoozeRoutineNudgeItems(n.itemIds, 1);
     refreshRoutineNudge();
+}
+
+// הכרטיס הכללי: "לשנות משהו" פותח את רשימת הדברים שחיכו - ✏️ לשנות / 🗑️ להוריד כל אחד
+function routineNudgeExpand() {
+    if (!routineNudge || !routineNudge.general) return;
+    routineNudge.expanded = true;
+    renderRoutineNudge();
+}
+async function routineNudgeEditGroup(i) {
+    const n = routineNudge;
+    if (!n || !n.general || !n.groups[i]) return;
+    const g = n.groups[i];
+    if (g.tabId !== activeDailyBoardTabId) {
+        activeDailyBoardTabId = g.tabId;
+        renderRoutineTabsBar();
+        renderDailyBoardHourSettings();
+        await renderDailyBoard();
+    }
+    openEditRoutineItemModal(g.item, { fromNudge: true });
+    // אחרי שמירה - רק הפריט הזה מחכה 3 ימים
+    routineNudgeEditing = { itemIds: g.itemIds };
+}
+function routineNudgeRemoveGroup(i) {
+    const n = routineNudge;
+    if (!n || !n.general || !n.groups[i]) return;
+    const g = n.groups[i];
+    const message = g.tabCount > 1
+        ? t('routine_nudge_remove_confirm_all').replace('{name}', g.title).replace('{n}', g.tabCount)
+        : t('routine_nudge_remove_confirm').replace('{name}', g.title);
+    showDangerConfirm(t('routine_nudge_remove_title'), message, async () => {
+        await supabaseClient.from('routine_items').delete().in('id', g.itemIds);
+        n.groups.splice(i, 1);
+        n.itemIds = n.groups.flatMap(x => x.itemIds);
+        if (!n.groups.length) routineNudge = null;
+        await renderDailyBoard();
+        showAppToast(t('routine_nudge_removed_toast'));
+        renderRoutineNudge();
+    });
 }
 
 // ✏️ לשנות - פותח את הפריט לעריכה (היה גם "🌱 להקטין" שעשה בדיוק אותו דבר - הוסר לפי בקשה מפורשת)

@@ -1123,7 +1123,7 @@ function roomOpenComputer() {
                     <div class="sr-crt-lines" aria-live="polite"></div>
                     <div class="sr-crt-nav">
                         <button type="button" class="sr-crt-navbtn" data-pc="back">${srEsc(t('pcx_back'))}</button>
-                        <button type="button" class="sr-crt-navbtn" data-pc="new">✦ ${srEsc(t('pcx_new'))}</button>
+                        <button type="button" class="sr-crt-navbtn" data-pc="new">☆ ${srEsc(t('pcx_new'))}</button>
                     </div>
                     <form class="sr-crt-input"><label aria-hidden="true">‹</label><input type="text" maxlength="300" placeholder="${srEsc(t('room_pc_input'))}" aria-label="${srEsc(t('room_pc_input'))}"><button type="submit" aria-label="${srEsc(t('room_pc_send'))}">↵</button></form>
                 </div>
@@ -1272,7 +1272,7 @@ function pcShowControls(entry) {
         return;
     } else if (node.end) {
         box.classList.add('is-end');
-        btn(`✦ ${t('pcx_new')}`, pcNew, 'is-new');
+        btn(`☆ ${t('pcx_new')}`, pcNew, 'is-new');
     }
     pcState.lines.appendChild(box);
 }

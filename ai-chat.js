@@ -8,10 +8,10 @@ let aiChatMode = 'onetime';   // ללו"ז: פעם אחת / כל שבוע / כל
 let aiChatBusy = false;
 let aiChatAnswered = false;   // האם המנוע כבר ענה בשיחה (דרך הודעה) בריצה הנוכחית
 let aiChatToastOrig = null;
+let aiChatAsk = null;         // השאלה של הכלי שנבחר (ועוד לא נענתה) - בחירה בכלי אחר מחליפה אותה, לא מוסיפה עוד אחת
 
 const AI_CHAT_SVG = {
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-    cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>',
     send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
 };
 
@@ -39,7 +39,6 @@ function openAiChat(tool) {
             <div class="ai-chat-body" aria-live="polite"></div>
             <form class="ai-chat-input">
                 <input type="text" maxlength="600" enterkeyhint="send" placeholder="${aiChatEsc(t('ai_chat_placeholder'))}" aria-label="${aiChatEsc(t('ai_chat_placeholder'))}">
-                <button type="button" class="ai-chat-cam" aria-label="${aiChatEsc(t('ai_chat_camera'))}" title="${aiChatEsc(t('ai_chat_camera'))}">${AI_CHAT_SVG.cam}</button>
                 <button type="submit" class="ai-chat-send" aria-label="${aiChatEsc(t('ai_chat_send'))}">${AI_CHAT_SVG.send}</button>
             </form>
         </div>`;
@@ -48,12 +47,12 @@ function openAiChat(tool) {
     wrap.addEventListener('click', e => { if (e.target === wrap) closeAiChat(); });
     wrap.addEventListener('keydown', e => { if (e.key === 'Escape') closeAiChat(); });
     wrap.querySelector('.ai-chat-x').addEventListener('click', () => closeAiChat());
-    wrap.querySelector('.ai-chat-cam').addEventListener('click', aiChatPhoto);
     wrap.querySelector('.ai-chat-input').addEventListener('submit', e => { e.preventDefault(); aiChatSend(); });
     aiChatHookToasts();
     aiChatTool = null;
     aiChatMode = 'onetime';
     aiChatBusy = false;
+    aiChatAsk = null;
     aiChatSay(t('ai_chat_hi'), aiChatToolChips());
     if (tool && tool !== 'photo') aiChatPickTool(tool);
     setTimeout(() => { const i = wrap.querySelector('.ai-chat-input input'); if (i) i.focus(); }, 80);
@@ -124,7 +123,10 @@ function aiChatPickTool(tool) {
     if (!aiChatIsOpen()) return;
     aiChatTool = tool;
     aiChatHighlightTool(tool);
-    aiChatSay(t('ai_chat_ask_' + tool), tool === 'schedule' ? aiChatModeChips() : null);
+    if (aiChatAsk) aiChatAsk.forEach(el => el.remove());
+    const ask = aiChatBubble(t('ai_chat_ask_' + tool), 'bot');
+    const modes = tool === 'schedule' ? aiChatChips(aiChatModeChips()) : null;
+    aiChatAsk = [ask, modes].filter(Boolean);
     const i = aiChatEl().querySelector('.ai-chat-input input');
     if (i) i.focus();
 }
@@ -175,6 +177,7 @@ async function aiChatSend() {
     if (!text) return;
     input.value = '';
     aiChatBubble(text, 'me');
+    aiChatAsk = null;
     const tool = aiChatTool || aiChatDetect(text);
     aiChatTool = tool;
     const typing = aiChatBubble(t('ai_chat_working_' + tool), 'bot', 'is-typing');
