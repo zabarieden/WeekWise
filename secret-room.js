@@ -245,7 +245,6 @@ function roomPlayDoorOpening() {
         openSecretRoom({ wall: 0 });
         ov.classList.add('done');
         setTimeout(() => ov.remove(), 400);
-        if (!roomState.talked_at) setTimeout(roomStartFirstTalk, 650);
     }, reduce ? 150 : 1500);
 }
 
@@ -392,7 +391,6 @@ function srHotspot(id, el) {
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
     if (id === 'roof') { roomOpenRoof(); return; }
-    if (id === 'talk-note') { roomStartFirstTalk(); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
     if (id === 'trophies') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); }
@@ -578,17 +576,12 @@ function srWallWindow(keys, highlight) {
         ${srFriend(p, 130, 548, 32, { x: 198, y: 493, text: t('room_friend_hi'), tail: 'M160 504 l-8 12 l18 -10z' })}`;
 }
 
-// הפתקים על הלוח: הצעד הבא מהשיחה עם ניצוץ + האתגרים הפעילים + "＋ אתגר חדש"
+// הפתקים על הלוח: האתגרים הפעילים (עד 3) + "＋ אתגר חדש". ניצוץ לא שואל שום דבר (לפי בקשה מפורשת, 2026-10-09)
 function srBoardNotes() {
     const notes = [];
-    if (roomState && roomState.talked_at) {
-        notes.push({ hot: 'talk-note', color: '#fff1a8', ink: '#4a3a10', title: t('room_board_my_step'), line: roomState.next_step || '', sub: roomState.life_score ? t('room_board_score').replace('{n}', srFmt(roomState.life_score)) : '' });
-    } else {
-        notes.push({ hot: 'talk-note', color: '#fff1a8', ink: '#4a3a10', title: t('room_board_talk_title'), line: t('room_board_talk_line'), sub: '' });
-    }
     const active = typeof nmChActive === 'function' ? nmChActive() : [];
-    const palette = [['#ffd1e8', '#4a1d34'], ['#d4f7d9', '#1d4a26']];
-    active.slice(0, 2).forEach((c, i) => {
+    const palette = [['#fff1a8', '#4a3a10'], ['#ffd1e8', '#4a1d34'], ['#d4f7d9', '#1d4a26']];
+    active.slice(0, 3).forEach((c, i) => {
         const st = typeof nmChState === 'function' ? nmChState(c) : null;
         notes.push({ hot: 'ch-' + c.challenge_key, color: palette[i][0], ink: palette[i][1], title: nmChTitle(c.challenge_key), line: '', sub: st ? t('room_note_day').replace('{d}', srFmt(Math.max(1, st.dayN))).replace('{n}', srFmt(c.days)) : '', progress: st ? Math.min(1, st.done / Math.max(1, st.needed)) : 0 });
     });
@@ -636,7 +629,7 @@ function srWallBoard(keys) {
         <rect x="64" y="510" width="8" height="14" fill="#6c442e"/><rect x="320" y="510" width="8" height="14" fill="#6c442e"/>
         <g class="sr-hot" data-hot="trophies" role="button" tabindex="0" aria-label="${srEsc(t('room_trophies_aria').replace('{n}', srFmt(done)))}">${trophies}<rect x="96" y="462" width="160" height="40" fill="transparent"/></g>
         <g transform="translate(276 458)"><rect x="6" y="26" width="26" height="16" rx="3" fill="#c46b4a"/><ellipse cx="14" cy="18" rx="6" ry="13" fill="#4fa36c" transform="rotate(-18 14 18)"/><ellipse cx="24" cy="16" rx="6" ry="14" fill="#5bb87a" transform="rotate(16 24 16)"/></g>
-        ${srFriend(p, 62, 566, 25, { x: 160, y: 556, text: t('room_friend_board'), tail: 'M100 562 l-10 10 l18 -8z' })}`;
+        ${srFriend(p, 62, 566, 25, { x: 160, y: 556, text: t('room_friend_line_4'), tail: 'M100 562 l-10 10 l18 -8z' })}`;
 }
 
 function srWallGame(keys) {
@@ -780,53 +773,6 @@ function srWrapText(s, n) {
     if (cur) lines.push(cur);
     if (lines.length > 2) lines[1] = srClip(lines.slice(1).join(' '), n);
     return lines;
-}
-
-// ---------- השיחה הראשונה עם ניצוץ ----------
-function roomStartFirstTalk() {
-    const stage = srStage();
-    if (!stage) return;
-    stage.querySelector('.sr-talk')?.remove();
-    const panel = document.createElement('div');
-    panel.className = 'sr-talk';
-    panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-label', t('room_talk_aria'));
-    const score = roomState.life_score || null;
-    panel.innerHTML = `
-        <div class="sr-talk-head"><span class="sr-talk-orb" aria-hidden="true"></span><b>${srEsc(t('room_friend_name'))}</b><button type="button" class="sr-talk-x" aria-label="${srEsc(t('close_btn'))}">${SR_CLOSE_SVG}</button></div>
-        <div class="sr-talk-body">
-            <div class="sr-msg">${srEsc(t('room_talk_hi'))}</div>
-            <div class="sr-msg">${srEsc(t('room_talk_q1'))}</div>
-            <div class="sr-scale" role="radiogroup" aria-label="${srEsc(t('room_talk_q1'))}">${Array.from({ length: 10 }, (_, i) => `<button type="button" role="radio" aria-checked="${score === i + 1}" class="${score === i + 1 ? 'on' : ''}${i === 9 ? ' ten' : ''}" data-score="${i + 1}">${srFmt(i + 1)}</button>`).join('')}</div>
-            <div class="sr-talk-step${score ? '' : ' hidden'}">
-                <div class="sr-msg">${srEsc(t('room_talk_q2'))}</div>
-                <textarea class="sr-talk-input" rows="2" maxlength="300" placeholder="${srEsc(t('room_talk_placeholder'))}">${srEsc(roomState.next_step || '')}</textarea>
-                <button type="button" class="sr-talk-save">${srEsc(t('room_talk_save'))}</button>
-            </div>
-            <button type="button" class="sr-talk-later">${srEsc(t('room_reveal_later'))}</button>
-        </div>`;
-    stage.appendChild(panel);
-    let picked = score;
-    const close = () => { panel.classList.add('closing'); setTimeout(() => panel.remove(), 200); };
-    panel.querySelector('.sr-talk-x').addEventListener('click', close);
-    panel.querySelector('.sr-talk-later').addEventListener('click', close);
-    panel.querySelectorAll('[data-score]').forEach(b => b.addEventListener('click', () => {
-        picked = Number(b.dataset.score);
-        panel.querySelectorAll('[data-score]').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
-        const step = panel.querySelector('.sr-talk-step');
-        step.classList.remove('hidden');
-        setTimeout(() => step.querySelector('textarea').focus(), 60);
-    }));
-    panel.querySelector('.sr-talk-save').addEventListener('click', async () => {
-        const text = panel.querySelector('.sr-talk-input').value.trim().slice(0, 300);
-        if (!picked) return;
-        const ok = await roomSave({ life_score: picked, next_step: text || null, talked_at: new Date().toISOString() });
-        if (!ok) { showAppToast(t('nm_save_error'), 'error'); return; }
-        close();
-        roomWall = 1;
-        srRenderWall('talk-note', 1);
-        srShowTip(t('room_talk_thanks'));
-    });
 }
 
 // ---------- המחשב (מפתח 2): שיחה בעץ ----------

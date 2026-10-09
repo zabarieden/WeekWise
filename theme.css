@@ -3474,7 +3474,7 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-ms-line > span { display: block; height: 100%; background: var(--nm-grad); }
 .nm-ms-name { font-size: .74rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
 .nm-ms-sub { font-size: .66rem; color: var(--text-secondary); }
-.nm-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.nm-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .nm-stat-box { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 4px; border-radius: 18px; background: var(--bg-row); border: 1px solid var(--border-color); text-align: center; min-width: 0; }
 .nm-stat-box b { font-size: 1.3rem; color: var(--text-primary); }
 .nm-stat-box span:last-child { font-size: .68rem; color: var(--text-secondary); line-height: 1.25; }
@@ -8776,6 +8776,8 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-late-choice.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); }
 .nm-late-card .nm-rem-row { margin-top: 12px; }
 .nm-late-card .nm-rem-row.is-off { opacity: 0.55; }
+.nm-late-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nm-late-picked { margin-top: 8px; color: var(--text-secondary); font-size: 0.95rem; }
 
 /* ארוחות גם בשגרה: הגיליון של New Me (מה להסתיר), והשורה החלשה עם 💎 ב"השגרה שלי" */
 .nm-routine-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 14px; }

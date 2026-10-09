@@ -96,6 +96,7 @@ let nmPhotoUrls = {};          // path → signed URL (שעה)
 let nmCompare = { before: null, after: null };
 let nmShopDays = 7;
 let nmShopOff = new Set();     // מרכיבים שהורדו מהרשימה ("יש בבית")
+let nmLateEditing = false;     // התזכורות: הבחירה של 21:00 פתוחה לשינוי (אחרי בחירה היא נסגרת לשורה אחת)
 let nmPendingDeepLink = false; // לחיצה על תזכורת ארוחה - פותחים את New Me כשמצב הרכישה ידוע
 let nmCustomMeals = [];        // new_me_custom_meals: ארוחות שנבחרו מהארוחות הקבועות או נכתבו ל-AI (מפתח c_<id>)
 let nmBurnedToday = 0;         // קלוריות שנשרפו באימונים היום - מגדילות את התקציב (לפי בחירה מפורשת)
@@ -178,9 +179,9 @@ function nmFreeKcal() { return (nmToday && Number(nmToday.free_kcal)) || NEW_ME_
 // לשאלון: האות שנבחרה לכל משבצת (פריט מכל התפריט → A)
 function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; return /^[ABC]$/.test(v || '') ? v : 'A'; }
 
-// ---------- סדר ושמות לפי שעת היום ----------
-// הסדר נשמר כקבוע (new_me_profile.meal_order); השם נקבע לפי המיקום - בוקר / נשנוש / צהריים /
-// נשנוש ערב - כך שגרירת ארוחה למקום אחר משנה גם את השם וגם את שעת התזכורת שלה
+// ---------- סדר ושמות ----------
+// הסדר נשמר כקבוע (new_me_profile.meal_order). לפי בקשה מפורשת, השם והשעה שייכים לארוחה עצמה
+// ("ארוחת ערב קלה תישאר ארוחת ערב קלה"): גרירה משנה רק את הסדר שרואים, לא את השם ולא את השעה
 function nmOrder() {
     const saved = String((nmProfile && nmProfile.meal_order) || '');
     // הסדר הקודם שנשמר כברירת מחדל (בוקר, נשנוש, צהריים ב-16:00, ערב) = ברירת המחדל החדשה
@@ -200,7 +201,14 @@ async function nmSetLateChoice(choice) {
     if (error) { nmProfile.late_choice = prev; showAppToast(t('nm_save_error'), 'error'); return; }
     // בחירה ב"לאכול" / "לשתות" מדליקה את התזכורת של 21:00; "בלי" מכבה
     await nmSyncReminders(choice === 'none' ? {} : { pos: 4, enabled: true });
+    // לפי בקשה מפורשת: שיהיה ברור שזה נשמר - הבחירה נסגרת לשורה אחת (עם "שינוי") ומופיעה הודעה
+    nmLateEditing = false;
+    showAppToast(t('item_updated_success'));
     nmRenderView(nmRoot());
+}
+function nmEditLateChoice() {
+    nmLateEditing = true;
+    nmRenderReminders(document.getElementById('nm-view-body'));
 }
 // שלוש הבחירות של 21:00 (בשאלון, בתזכורות, ובשאלה החד-פעמית ביום)
 function nmLateChoicesHtml(current, onPick) {
@@ -285,7 +293,8 @@ async function nmMarkRoutineChecked() {
 
 function nmLateRow() { return nmReminders.find(r => r.position === 5) || null; }
 function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LATE_TIME; }
-function nmSlotName(slot) { return nmPosName(Math.max(0, nmOrder().indexOf(slot))); }
+// השם של הארוחה לפי המקום שלה בסדר המקורי (בוקר / צהריים / נשנוש / ערב קלה) - לא זז כשגוררים
+function nmSlotName(slot) { return nmPosName(Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot))); }
 // ארוחות שהוסרו מהתפריט (למשל 3 ארוחות במקום 4) - לפי בקשה מפורשת. ארוחה שהוסרה שומרת על
 // המיקום שלה ביום (השם לפי שעת היום לא זז), והקלוריות שלה פנויות למילוי עד סך התוכנית
 const NEW_ME_MIN_MEALS = 2;
@@ -532,9 +541,9 @@ function nmRenderQuiz(root) {
         body = `
             <h3 class="nm-step-title">${nmEsc(t('nm_q_menu_title'))}</h3>
             <p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>
-            ${order.map((slot, i) => `
+            ${order.map(slot => `
                 <div class="nm-quiz-slot">
-                    <div class="nm-slot-name">${nmEsc(nmPosName(i))}</div>
+                    <div class="nm-slot-name">${nmEsc(nmSlotName(slot))}</div>
                     ${NEW_ME_OPTIONS.map(opt => {
                         const o = NEW_ME_PLANS[q.plan][slot].options[opt];
                         return `<button type="button" class="nm-option${q.choices[slot] === opt ? ' selected' : ''}" onclick="nmQuiz.choices['${slot}'] = '${opt}'; nmRenderQuiz(nmRoot())">
@@ -858,6 +867,7 @@ function nmRenderView(root) {
 
 function nmGo(view) {
     nmView = view;
+    nmLateEditing = false;
     nmRenderView(nmRoot());
     nmScrollTop();
 }
@@ -882,7 +892,7 @@ function nmRingHtml(eaten, goal) {
 }
 
 // ---------- המסדרון: המסך הראשי של New Me (לפי בחירה מפורשת, 2026-10-08: "כן הראשון – א") ----------
-// מסדרון רחב (לא צר ומלחיץ) עם דלתות לאורך הקירות: כל דלת היא חדר, עם מספר לפי הסדר (1 הכי קרובה), ובסוף
+// מסדרון רחב (לא צר ומלחיץ) עם דלתות לאורך הקירות: כל דלת היא חדר (בלי מספרים על הדלתות - לפי בקשה מפורשת), ובסוף
 // דלת 5 - החוצה (חלון עגול שרואים בו ירוק). 4 מנורות על הקירות = 4 הארוחות של היום (זהב = אכלתי, ורודה =
 // הבאה, כבויה = אחר כך). בתקרה פתח לעליית הגג: כשהגג נפתח, נגיעה מורידה סולם לאט ונגיעה נוספת עולה לגג.
 // למטה מציץ התרמיל: הפתק של "הבא" תחוב בו (עם ✓), צרור המפתחות תלוי עליו (נגיעה = הסבר קטן), ונגיעה
@@ -897,13 +907,30 @@ function nmhMx(x) { return document.documentElement.dir === 'rtl' ? x : NMH_W - 
 function nmhPts(arr) { return arr.map(([x, y]) => `${nmhMx(x)},${y}`).join(' '); }
 // המנורות לפי סדר הארוחות: ראשונה-קרובה, שנייה-קרובה, שלישית-רחוקה, רביעית-רחוקה
 const NMH_LAMPS = [{ x: 332.5, y: 270, s: 1 }, { x: 57.5, y: 270, s: 1 }, { x: 282.5, y: 298, s: 0.65 }, { x: 107.5, y: 298, s: 0.65 }];
-// הדלתות שבצדדים, באותה פרספקטיבה של הקירות: מסגרת, דלת, קווי פאנל, ידית, הקו המואר למטה, לוחית, אזור לחיצה
+// הדלתות שבצדדים, באותה פרספקטיבה של הקירות: מסגרת, דלת, קווי פאנל, ידית, הקו המואר למטה, אזור לחיצה
 const NMH_DOORS = [
-    { n: 1, frame: [[382, 273.7], [340, 289.7], [340, 470.7], [382, 507.1]], door: [[379, 277.5], [342.5, 292], [342.5, 468], [379, 499.5]], panels: [[379, 372, 342.5, 361], [379, 438, 342.5, 414]], knob: [346.5, 392, 2.6], light: [379, 499.5, 342.5, 468], plaque: [361, 329, 6.5, 8.5, 10], spill: [[382, 507], [340, 471], [312, 484], [352, 526]], hit: [338, 270, 46, 240] },
-    { n: 2, frame: [[8, 273.7], [50, 289.7], [50, 470.7], [8, 507.1]], door: [[11, 277.5], [47.5, 292], [47.5, 468], [11, 499.5]], panels: [[11, 372, 47.5, 361], [11, 438, 47.5, 414]], knob: [43.5, 392, 2.6], light: [11, 499.5, 47.5, 468], plaque: [29, 329, 6.5, 8.5, 10], spill: [[8, 507], [50, 471], [78, 484], [38, 526]], hit: [6, 270, 46, 240] },
-    { n: 3, frame: [[325, 295.4], [295, 306.9], [295, 431.7], [325, 457.7]], door: [[323, 298.5], [297, 308.8], [297, 429.5], [323, 452]], panels: [[323, 366, 297, 358], [323, 410, 297, 394]], knob: [300, 376, 1.9], light: [323, 452, 297, 429.5], plaque: [311, 334, 4.6, 6, 7.2], spill: [[325, 457.7], [295, 431.7], [282, 440], [306, 468]], hit: [293, 292, 34, 168] },
-    { n: 4, frame: [[65, 295.4], [95, 306.9], [95, 431.7], [65, 457.7]], door: [[67, 298.5], [93, 308.8], [93, 429.5], [67, 452]], panels: [[67, 366, 93, 358], [67, 410, 93, 394]], knob: [90, 376, 1.9], light: [67, 452, 93, 429.5], plaque: [79, 334, 4.6, 6, 7.2], spill: [[65, 457.7], [95, 431.7], [108, 440], [84, 468]], hit: [63, 292, 34, 168] },
+    { n: 1, frame: [[382, 273.7], [340, 289.7], [340, 470.7], [382, 507.1]], door: [[379, 277.5], [342.5, 292], [342.5, 468], [379, 499.5]], panels: [[379, 372, 342.5, 361], [379, 438, 342.5, 414]], knob: [346.5, 392, 2.6], light: [379, 499.5, 342.5, 468], spill: [[382, 507], [340, 471], [312, 484], [352, 526]], hit: [338, 270, 46, 240] },
+    { n: 2, frame: [[8, 273.7], [50, 289.7], [50, 470.7], [8, 507.1]], door: [[11, 277.5], [47.5, 292], [47.5, 468], [11, 499.5]], panels: [[11, 372, 47.5, 361], [11, 438, 47.5, 414]], knob: [43.5, 392, 2.6], light: [11, 499.5, 47.5, 468], spill: [[8, 507], [50, 471], [78, 484], [38, 526]], hit: [6, 270, 46, 240] },
+    { n: 3, frame: [[325, 295.4], [295, 306.9], [295, 431.7], [325, 457.7]], door: [[323, 298.5], [297, 308.8], [297, 429.5], [323, 452]], panels: [[323, 366, 297, 358], [323, 410, 297, 394]], knob: [300, 376, 1.9], light: [323, 452, 297, 429.5], spill: [[325, 457.7], [295, 431.7], [282, 440], [306, 468]], hit: [293, 292, 34, 168] },
+    { n: 4, frame: [[65, 295.4], [95, 306.9], [95, 431.7], [65, 457.7]], door: [[67, 298.5], [93, 308.8], [93, 429.5], [67, 452]], panels: [[67, 366, 93, 358], [67, 410, 93, 394]], knob: [90, 376, 1.9], light: [67, 452, 93, 429.5], spill: [[65, 457.7], [95, 431.7], [108, 440], [84, 468]], hit: [63, 292, 34, 168] },
 ];
+// הסולם מהפתח בתקרה עד השטיח (לפי בקשה מפורשת: שיגיע עד הרצפה). סולם עליית גג שנפתח באלכסון: מתחיל
+// בקצה הרחוק של הפתח ויורד לרצפה קצת יותר קרוב אלינו, ולכן מתרחב למטה. הנקודות מחושבות בפרספקטיבה
+// של המסדרון (נקודת מגוז 195,345; תקרה/רצפה בקיר האחורי ב-290/410): y = 345 + Y/Z, חצי רוחב = 4.045/Z
+function nmhLadderSvg() {
+    const pt = s => { const Z = 0.337 - 0.077 * s, Y = -55 + 120 * s; return { y: 345 + Y / Z, h: 4.045 / Z, w: 0.74 / Z }; };
+    const top = pt(0), foot = pt(1);
+    const rails = [-1, 1].map(side => `<line x1="${(195 + side * top.h).toFixed(1)}" y1="${top.y.toFixed(1)}" x2="${(195 + side * foot.h).toFixed(1)}" y2="${foot.y.toFixed(1)}"/>`).join('');
+    const rungs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map(s => {
+        const p = pt(s);
+        return `<line x1="${(195 - p.h).toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${(195 + p.h).toFixed(1)}" y2="${p.y.toFixed(1)}" stroke-width="${p.w.toFixed(2)}"/>`;
+    }).join('');
+    return `<g class="nmh-ladder">
+        <ellipse cx="195" cy="${(foot.y + 2).toFixed(1)}" rx="${(foot.h + 8).toFixed(1)}" ry="3.6" fill="#000" opacity="0.35"/>
+        <g stroke="#e0a868" stroke-linecap="round">${rungs}</g>
+        <g stroke="#c08a52" stroke-width="3.2" stroke-linecap="round">${rails}</g>
+    </g>`;
+}
 // עד שנבנה חדר משלה, דלת 1 נכנסת לחדר הסודי; 2–5 (החדרים הבאים והדרך החוצה) עוד נעולות
 function nmhDoorOpen(n, keys) { return n === 1 && keys >= 1; }
 function nmhLockSvg(x, y, s) {
@@ -912,7 +939,6 @@ function nmhLockSvg(x, y, s) {
 function nmhDoorSvg(d, open) {
     const right = nmhMx(d.frame[0][0]) > NMH_W / 2;
     const [lx1, ly1, lx2, ly2] = d.light;
-    const [px, py, prx, pry, pfs] = d.plaque;
     const near = d.n <= 2;
     return `<g class="nmh-door-art">
         ${open ? `<polygon points="${nmhPts(d.spill)}" fill="url(#nmh-spill-${right ? 'r' : 'l'})"/>` : ''}
@@ -922,13 +948,10 @@ function nmhDoorSvg(d, open) {
         ${open
             ? `<circle cx="${nmhMx(d.knob[0])}" cy="${d.knob[1]}" r="${d.knob[2]}" fill="#e8b84f"/><line class="nmh-glow" x1="${nmhMx(lx1)}" y1="${ly1}" x2="${nmhMx(lx2)}" y2="${ly2}" stroke="#ffd27a" stroke-width="${near ? 2.2 : 1.7}"/>`
             : nmhLockSvg(nmhMx(d.knob[0]), d.knob[1] - 4, near ? 1.2 : 0.9)}
-        <ellipse cx="${nmhMx(px)}" cy="${py}" rx="${prx}" ry="${pry}" fill="${open ? '#c99a4a' : '#8a6a3a'}" stroke="${open ? '#ffe2a6' : '#c9a66a'}" stroke-width="0.7"/>
-        <text x="${nmhMx(px)}" y="${(py + pfs * 0.38).toFixed(1)}" text-anchor="middle" font-size="${pfs}" font-weight="800" fill="#2b1a12" font-family="system-ui, sans-serif">${nmFmt(d.n)}</text>
     </g>`;
 }
 
 function nmRenderHome(root) {
-    const order = nmOrder();
     const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
     const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
@@ -947,7 +970,7 @@ function nmRenderHome(root) {
         const L = NMH_LAMPS[i];
         const r = 26 * L.s;
         const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
-        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(slot))} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
+        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmSlotName(slot)} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
     }).join('');
     // הדלתות: הצדדים + 5 בסוף (החוצה)
     const doorsSvg = NMH_DOORS.map(d => nmhDoorSvg(d, nmhDoorOpen(d.n, keys))).join('');
@@ -961,7 +984,7 @@ function nmRenderHome(root) {
     const note = nextSlot ? `
         <div class="nmh-note" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}">
             <button type="button" class="nmh-note-body" onclick="nmOpenHallMeal('${nextSlot}')">
-                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmPosName(order.indexOf(nextSlot))))}</span>
+                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
                 <span class="nmh-note-name">${nmEsc(nextName)}</span>
             </button>
             <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
@@ -1014,15 +1037,13 @@ function nmRenderHome(root) {
                     <line class="nmh-hatch-lid" x1="195" y1="152" x2="195" y2="171" stroke="#8a6a3a" stroke-width="1.2"/>
                     <circle class="nmh-hatch-lid" cx="195" cy="174" r="3" fill="none" stroke="#ffd27a" stroke-width="1.4"/>
                 </g>
-                <g class="nmh-ladder"><g stroke="#c08a52" stroke-width="3" stroke-linecap="round"><line x1="183" y1="180" x2="181" y2="300"/><line x1="207" y1="180" x2="209" y2="300"/></g><g stroke="#e0a868" stroke-width="2.2" stroke-linecap="round">${[196, 214, 232, 250, 268, 286].map(y => `<line x1="183" y1="${y}" x2="207" y2="${y}"/>`).join('')}</g></g>
+                ${nmhLadderSvg()}
                 <circle cx="195" cy="360" r="62" fill="url(#nmh-day)"/>
                 <path d="M173 410 V340 A22 22 0 0 1 217 340 V410 Z" fill="#3a2418"/>
                 <path d="M176.5 410 V341 A18.5 18.5 0 0 1 213.5 341 V410 Z" fill="url(#nmh-wood)"/>
                 <circle cx="195" cy="342" r="10" fill="#2b1a12"/><circle cx="195" cy="342" r="8.4" fill="url(#nmh-leaf)"/>
                 <path d="M188 345 q4 -6 8 -2 q3 -5 6 1" fill="none" stroke="#2f6e55" stroke-width="1.2"/>
                 <rect x="176.5" y="376" width="37" height="2.5" fill="#2b1a12"/>
-                <ellipse cx="195" cy="364" rx="4.8" ry="5.6" fill="#8a6a3a" stroke="#c9a66a" stroke-width="0.6"/>
-                <text x="195" y="367" text-anchor="middle" font-size="7" font-weight="800" fill="#2b1a12" font-family="system-ui, sans-serif">${nmFmt(5)}</text>
                 ${nmhLockSvg(207, 386, 0.9)}
                 <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="0.75"/>
                 <ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
@@ -1033,7 +1054,7 @@ function nmRenderHome(root) {
             ${lampBtns}
             ${doorBtns}
             <button type="button" class="nmh-hatch-btn" style="left:${nmhX(148)};top:${nmhY(140)};width:${nmhX(94)};height:${nmhY(56)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
-            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(120)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
+            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(412)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
             ${note}
             <svg class="nmh-scene nmh-bag-front" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                 <path d="M238 756 Q240 708 300 706 Q360 708 362 756 Q362 776 352 780 Q300 794 248 780 Q238 776 238 756 Z" fill="#7a4a26"/>
@@ -1055,13 +1076,12 @@ function nmRenderHome(root) {
 
 // נגיעה בשם הזוהר או במנורה: הארוחה עצמה - מה אוכלים, ✓ אכלתי (או ביטול), 🔄 החלפה, והתפריט המלא
 function nmOpenHallMeal(slot) {
-    const idx = nmOrder().indexOf(slot);
     const done = !!nmTodayCheckins[slot];
     const free = nmIsFree(slot);
     const it = free ? null : nmItemInfo(nmTodayKey(slot));
-    const remTime = nmProfile.reminders_on && nmReminderEnabled(idx) ? nmReminderTime(idx) : null;
+    const remTime = nmProfile.reminders_on && nmSlotReminderEnabled(slot) ? nmSlotReminderTime(slot) : null;
     const ov = nmOpenSheet(`
-        <span class="nmh-meal-eyebrow">${nmEsc(nmPosName(idx))}${remTime ? ` · <bdi dir="ltr">${nmEsc(remTime)}</bdi>` : ''}</span>
+        <span class="nmh-meal-eyebrow">${nmEsc(nmSlotName(slot))}${remTime ? ` · <bdi dir="ltr">${nmEsc(remTime)}</bdi>` : ''}</span>
         <h4 class="nmh-meal-name">${free ? `🍕 ${nmEsc(t('nm_free_meal'))}` : nmEsc(nmItemShort(it))}</h4>
         ${free ? '' : `<p class="nmh-meal-text">${nmEsc(nmItemFull(it))}</p>`}
         <span class="nmh-meal-meta">${free ? `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}` : nmMeta(it)}</span>
@@ -1134,14 +1154,13 @@ function nmOpenBackpack() {
     const left = Math.round(plan + nmBurnedToday - eaten.kcal);
     const st = nmStreaks();
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
-    const order = nmOrder();
     const active = nmActiveOrder();
     const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
     const info = slot => (nmIsFree(slot) ? null : nmItemInfo(nmTodayKey(slot)));
     const name = slot => { const it = info(slot); return it ? nmItemShort(it) : `🍕 ${t('nm_free_meal')}`; };
     const next = nextSlot ? `
         <div class="nmb-next">
-            <span class="nmb-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmPosName(order.indexOf(nextSlot))))}</span>
+            <span class="nmb-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
             <span class="nmb-next-name">${nmEsc(name(nextSlot))}</span>
             <span class="nmb-meta">${info(nextSlot) ? nmMeta(info(nextSlot)) : `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}`}</span>
             <div class="nmb-next-actions">
@@ -1151,7 +1170,7 @@ function nmOpenBackpack() {
         </div>` : `<div class="nmb-next is-done">${nmEsc(t('nm_hall_all_lit'))}</div>`;
     const rows = active.filter(s => s !== nextSlot).map(slot => {
         const done = !!nmTodayCheckins[slot];
-        return `<button type="button" class="nmb-meal${done ? ' is-done' : ''}" data-slot="${slot}"><span class="nmb-check" aria-hidden="true">${done ? '✓' : ''}</span><span class="nmb-pos">${nmEsc(nmPosName(order.indexOf(slot)))}</span><span class="nmb-name">${nmEsc(name(slot))}</span></button>`;
+        return `<button type="button" class="nmb-meal${done ? ' is-done' : ''}" data-slot="${slot}"><span class="nmb-check" aria-hidden="true">${done ? '✓' : ''}</span><span class="nmb-pos">${nmEsc(nmSlotName(slot))}</span><span class="nmb-name">${nmEsc(name(slot))}</span></button>`;
     }).join('');
     const ov = nmOpenSheet(`
         <div class="nmb-band">
@@ -1177,7 +1196,6 @@ function nmOpenHallMore() { nmOpenBackpack(); }
 function nmRenderDay(root) {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
-    const order = nmOrder();
     const active = nmActiveOrder();
     const done = active.filter(s => nmTodayCheckins[s]).length;
     const day = nmJourneyDay();
@@ -1214,10 +1232,9 @@ function nmRenderDay(root) {
                     <span class="nm-total-chip${warn ? ' warn' : ''}" title="${nmEsc(t('nm_menu_total_title'))}"><bdi dir="ltr">~${nmFmt(menuTotal)} / ${nmFmt(plan)}</bdi></span>
                 </div>
                 ${warn ? `<p class="nm-soft-warn">${nmEsc(t('nm_menu_over_warn').replace('{n}', nmFmt(over)))}</p>` : ''}
-                <div class="nm-menu-list" id="nm-menu-list">${active.map(s => nmMealCardHtml(s, order.indexOf(s))).join('')}</div>
+                <div class="nm-menu-list" id="nm-menu-list">${active.map(s => nmMealCardHtml(s)).join('')}</div>
                 ${nmMenuRoomHtml()}
                 ${nmLateRowHtml()}
-                <p class="nm-drag-hint">${nmEsc(t('nm_drag_hint'))}</p>
                 ${nmFreeMealRowHtml()}
                 ${nmDrinksHtml()}
                 ${nmExtrasHtml()}
@@ -1259,14 +1276,14 @@ function nmTileHtml(k) {
     </button>`;
 }
 
-// כרטיס ארוחה: ידית גרירה, שם לפי שעת היום, שעת תזכורת, ✓, ומה אוכלים (או ארוחה חופשית)
-function nmMealCardHtml(slot, idx) {
+// כרטיס ארוחה: ידית גרירה, שם הארוחה, שעת תזכורת, ✓, ומה אוכלים (או ארוחה חופשית)
+function nmMealCardHtml(slot) {
     const done = !!nmTodayCheckins[slot];
-    const remTime = nmProfile.reminders_on && nmReminderEnabled(idx) ? nmReminderTime(idx) : null;
+    const remTime = nmProfile.reminders_on && nmSlotReminderEnabled(slot) ? nmSlotReminderTime(slot) : null;
     const head = `
         <div class="nm-meal-head">
             <button type="button" class="nm-drag" data-slot="${slot}" aria-label="${nmEsc(t('nm_drag_label'))}" title="${nmEsc(t('nm_drag_label'))}">${NM_GRIP_SVG}</button>
-            <span class="nm-slot-name">${nmEsc(nmPosName(idx))}</span>
+            <span class="nm-slot-name">${nmEsc(nmSlotName(slot))}</span>
             ${remTime ? `<button type="button" class="nm-time-chip" onclick="nmGo('reminders')" aria-label="${nmEsc(t('nm_tile_reminders'))}">⏰ <bdi dir="ltr">${remTime}</bdi></button>` : ''}
             ${nmIsOverride(slot) ? `<span class="nm-today-tag">${nmEsc(t('nm_today_only_tag'))}</span>` : ''}
             <span class="nm-head-space"></span>
@@ -1316,7 +1333,6 @@ function nmMealCardHtml(slot, idx) {
 // לפי בקשה מפורשת: "במקום 4 ארוחות 3, או 2 ארוחות + נשנוש". הקלוריות של הארוחה שהוסרה
 // פנויות למילוי - ארוחה גדולה יותר, ארוחה מהארוחות הקבועות או כתיבה ל-AI - עד סך התוכנית
 function nmMenuRoomHtml() {
-    const order = nmOrder();
     const hidden = nmHiddenSlots();
     const room = nmMenuRoom();
     const active = nmActiveOrder();
@@ -1326,21 +1342,20 @@ function nmMenuRoomHtml() {
             <div class="nm-room-card">
                 <div class="nm-room-title">🍽️ ${nmTpl('nm_room_title', { n: nmFmt(room) })}</div>
                 <p class="nm-fine">${nmEsc(t('nm_room_hint'))}</p>
-                <div class="nm-chip-row">${active.filter(s => !nmIsFree(s)).map(s => `<button type="button" class="nm-chip" onclick="nmOpenSwap('${s}')">🔄 ${nmEsc(nmPosName(order.indexOf(s)))}</button>`).join('')}</div>
+                <div class="nm-chip-row">${active.filter(s => !nmIsFree(s)).map(s => `<button type="button" class="nm-chip" onclick="nmOpenSwap('${s}')">🔄 ${nmEsc(nmSlotName(s))}</button>`).join('')}</div>
             </div>`);
     }
     if (hidden.length) {
-        parts.push(`<div class="nm-restore-row">${hidden.map(s => `<button type="button" class="nm-link-btn" onclick="nmRestoreMeal('${s}')">➕ ${nmEsc(t('nm_restore_meal').replace('{slot}', nmPosName(order.indexOf(s))))}</button>`).join('')}</div>`);
+        parts.push(`<div class="nm-restore-row">${hidden.map(s => `<button type="button" class="nm-link-btn" onclick="nmRestoreMeal('${s}')">➕ ${nmEsc(t('nm_restore_meal').replace('{slot}', nmSlotName(s)))}</button>`).join('')}</div>`);
     }
     return parts.join('');
 }
 
 function nmAskRemoveMeal(slot) {
     if (nmActiveOrder().length <= NEW_ME_MIN_MEALS) { showAppToast(t('nm_remove_min').replace('{n}', NEW_ME_MIN_MEALS), 'error'); return; }
-    const idx = nmOrder().indexOf(slot);
     const it = nmIsFree(slot) ? { kcal: nmFreeKcal() } : nmItemInfo(nmTodayKey(slot));
     const ov = nmOpenSheet(`
-        <h4>➖ ${nmEsc(t('nm_remove_title').replace('{slot}', nmPosName(idx)))}</h4>
+        <h4>➖ ${nmEsc(t('nm_remove_title').replace('{slot}', nmSlotName(slot)))}</h4>
         <p class="nm-fine">${nmTpl('nm_remove_text', { n: nmFmt(it.kcal) })}</p>
         <button type="button" class="nm-btn-primary" data-remove>${nmEsc(t('nm_remove_confirm'))}</button>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-remove-sheet');
@@ -1501,7 +1516,6 @@ function nmSwapCandidates(slot) {
 // לאותו אישור "רק להיום / קבוע". מה שנכנס: עד סך התוכנית - הקלוריות של הארוחה הנוכחית +
 // מה שפנוי בתפריט (למשל אחרי שהוסרה ארוחה). ב-God Mode אין מגבלה
 function nmOpenSwap(slot, startTab) {
-    const idx = nmOrder().indexOf(slot);
     const cur = nmItemInfo(nmTodayKey(slot));
     const { near, far } = nmSwapCandidates(slot);
     const freeAvailable = !nmWeekFreeRow();
@@ -1522,7 +1536,7 @@ function nmOpenSwap(slot, startTab) {
     const TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', '✨', 'nm_swap_tab_ai']];
     const headHtml = () => `
         <span class="nm-sheet-grip" aria-hidden="true"></span>
-        <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmPosName(idx)))}</h4>
+        <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmSlotName(slot)))}</h4>
         <div class="nm-swap-current"><span>${nmEsc(t('nm_swap_now'))}</span> <b>${nmEsc(nmItemShort(cur))}</b> · <bdi dir="ltr">~${cur.kcal}</bdi> ${nmEsc(t('calories_unit'))}</div>
         <div class="nm-swap-tabs" role="tablist">${TABS.map(([k, icon, label]) => `<button type="button" role="tab" class="nm-swap-tab${tab === k ? ' on' : ''}" aria-selected="${tab === k}" data-tab="${k}">${icon} ${nmEsc(t(label))}</button>`).join('')}</div>
         ${room >= 40 && !god ? `<div class="nm-swap-budget">${nmTpl('nm_swap_budget', { n: nmFmt(budget) })}</div>` : ''}`;
@@ -1616,7 +1630,7 @@ function nmOpenSwap(slot, startTab) {
         const big = !god && (Math.abs(d) >= 60 || newTotal > nmProfile.plan * 1.08) && newTotal > nmProfile.plan;
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>
-            <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmPosName(idx)))}</h4>
+            <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmSlotName(slot)))}</h4>
             <div class="nm-swap-pick">
                 <span class="nm-option-name">${it.custom ? (it.source === 'ai' ? '✨ ' : '⭐ ') : ''}${nmEsc(nmItemShort(it))}</span>
                 <span class="nm-option-text">${nmEsc(nmItemFull(it))}</span>
@@ -1871,7 +1885,7 @@ function nmFreeMealRowHtml() {
     if (thisWeek && thisWeek.day < today) parts.push(`<div class="nm-free-note muted">🍕 ${nmEsc(t('nm_free_used').replace('{day}', nmWeekdayName(thisWeek.day)))}</div>`);
     // ארוחות חופשיות שכבר תוכננו לימים הבאים (היום עצמו מוצג בכרטיס הארוחה)
     nmWeekDays.filter(d => d.free_slot && d.day > today && d.day <= days[days.length - 1]).sort((a, b) => a.day.localeCompare(b.day)).forEach(row => {
-        const meal = nmPosName(Math.max(0, nmOrder().indexOf(row.free_slot)));
+        const meal = nmSlotName(row.free_slot);
         parts.push(`<div class="nm-free-note">🍕 ${nmEsc(t('nm_free_planned_for').replace('{day}', nmWeekdayName(row.day)).replace('{meal}', meal))}
             <button type="button" class="nm-link-btn" onclick="nmCancelFreeMeal('${row.day}')">${nmEsc(t('nm_free_cancel'))}</button></div>`);
     });
@@ -1904,9 +1918,9 @@ function nmOpenFreeMealSheet() {
                 return `<button type="button" class="nm-pick${ds === selDay ? ' on' : ''}" data-day="${ds}">${isFree ? '🍕 ' : ''}${nmEsc(ds === today ? t('nm_today') : nmWeekdayName(ds))}</button>`;
             }).join('')}</div>
             <div class="nm-sheet-label">${nmEsc(t('nm_free_which_meal'))}</div>
-            <div class="nm-chip-row">${order.map((s, i) => {
+            <div class="nm-chip-row">${order.map(s => {
                 const blocked = selDay === today && nmTodayCheckins[s];
-                return `<button type="button" class="nm-pick${s === selSlot ? ' on' : ''}" data-slot="${s}" ${blocked ? 'disabled' : ''}>${nmEsc(nmPosName(i))}</button>`;
+                return `<button type="button" class="nm-pick${s === selSlot ? ' on' : ''}" data-slot="${s}" ${blocked ? 'disabled' : ''}>${nmEsc(nmSlotName(s))}</button>`;
             }).join('')}</div>
             <button type="button" class="nm-btn-primary" data-save>${nmEsc(t('nm_free_confirm'))}</button>
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
@@ -2444,13 +2458,11 @@ async function nmEnsureHomeData() {
 // הארוחות של היום לציר הזמן: { time, text, done, toggle(checked) } - רק כשהנתונים כבר טעונים
 function myDayNewMeItems() {
     if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString()) return [];
-    const order = nmOrder();
     return nmActiveOrder().map(slot => {
-        const i = Math.max(0, order.indexOf(slot));
         const free = nmIsFree(slot);
         const text = free ? `🍕 ${t('nm_free_meal')}` : `${nmSlotName(slot)} · ${nmItemShort(nmItemInfo(nmTodayKey(slot)))}`;
         return {
-            time: nmReminderTime(i), text, done: !!nmTodayCheckins[slot],
+            time: nmSlotReminderTime(slot), text, done: !!nmTodayCheckins[slot],
             toggle: async checked => { if (!!nmTodayCheckins[slot] !== checked) await nmToggleCheck(slot); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
         };
     });
@@ -2521,7 +2533,6 @@ function nmRenderJourney(body) {
             <div class="nm-stat-box"><span aria-hidden="true">🔥</span><b class="nm-num">${nmFmt(st.current)}</b><span>${nmEsc(t('nm_stat_streak'))}</span></div>
             <div class="nm-stat-box"><span aria-hidden="true">⭐</span><b class="nm-num">${nmFmt(st.best)}</b><span>${nmEsc(t('nm_stat_best'))}</span></div>
             <div class="nm-stat-box"><span aria-hidden="true">✅</span><b class="nm-num">${nmFmt(st.good)}</b><span>${nmEsc(t('nm_stat_good'))}</span></div>
-            <div class="nm-stat-box"><span aria-hidden="true">💯</span><b class="nm-num">${nmFmt(st.perfect)}</b><span>${nmEsc(t('nm_stat_perfect'))}</span></div>
         </div>
         <p class="nm-fine nm-rule">${nmEsc(t('nm_good_day_rule'))}</p>
         ${nmWeightCardHtml()}`;
@@ -3063,11 +3074,14 @@ function nmShiftMonth(delta) {
 }
 
 // ---------- תזכורות לארוחות ----------
-// שעה אחת לכל ארוחה (לפי המיקום ביום), ברירת מחדל 10:00 / 13:00 / 16:00 / 19:00. נשלחות
-// כהתראת Push מהשרת (send-due-reminders) גם כשהאפליקציה סגורה, ולא נשלחות אם הארוחה כבר סומנה
+// שעה אחת לכל ארוחה, ברירת מחדל 10:00 / 13:00 / 16:00 / 19:00. נשלחות כהתראת Push מהשרת
+// (send-due-reminders) גם כשהאפליקציה סגורה, ולא נשלחות אם הארוחה כבר סומנה. השורות בטבלה לפי
+// מקום (1–4, ו-5 ל-21:00), אבל השעה שייכת לארוחה (slot): כשגוררים, השעה עוברת איתה למקום החדש
 function nmReminderRow(i) { return nmReminders.find(r => r.position === i + 1) || null; }
-function nmReminderTime(i) { const r = nmReminderRow(i); return r ? r.time : NEW_ME_REMINDER_DEFAULTS[i]; }
-function nmReminderEnabled(i) { const r = nmReminderRow(i); return !r || r.enabled !== false; }
+function nmSlotDefaultTime(slot) { return NEW_ME_REMINDER_DEFAULTS[Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot))]; }
+function nmSlotReminderRow(slot) { return nmReminders.find(r => r.slot === slot && r.position <= 4) || null; }
+function nmSlotReminderTime(slot) { const r = nmSlotReminderRow(slot); return (r && r.time) || nmSlotDefaultTime(slot); }
+function nmSlotReminderEnabled(slot) { const r = nmSlotReminderRow(slot); return !r || r.enabled !== false; }
 function nmReminderBody(slot, forToday) {
     if (forToday && nmIsFree(slot)) return `🍕 ${t('nm_free_meal')}`;
     const it = nmItemInfo(forToday ? nmTodayKey(slot) : nmPermanentKey(slot));
@@ -3079,8 +3093,9 @@ async function nmSyncReminders(change) {
     const nowMin = nmMinutesNow();
     const hidden = nmHiddenSlots();
     const rows = nmOrder().map((slot, i) => {
-        const prev = nmReminderRow(i) || {};
-        let time = prev.time || NEW_ME_REMINDER_DEFAULTS[i];
+        // השעה, ההפעלה ו"נשלח היום" באים מהשורה של אותה ארוחה, גם אם היא זזה למקום אחר
+        const prev = nmSlotReminderRow(slot) || nmReminderRow(i) || {};
+        let time = prev.time || nmSlotDefaultTime(slot);
         let enabled = prev.enabled !== false;
         if (change && change.pos === i) {
             if (change.time) time = change.time;
@@ -3093,7 +3108,7 @@ async function nmSyncReminders(change) {
         const passed = h * 60 + m <= nowMin;
         return {
             user_id: currentUserId, position: i + 1, slot, time, enabled,
-            title: `🍽️ ${nmPosName(i)}`.slice(0, 160),
+            title: `🍽️ ${nmSlotName(slot)}`.slice(0, 160),
             body: nmReminderBody(slot, false).slice(0, 300),
             today_body: nmReminderBody(slot, true).slice(0, 300),
             today_date: today,
@@ -3152,22 +3167,27 @@ function nmRenderReminders(body) {
         <div class="nm-card nm-rem-list${on ? '' : ' is-off'}">
             ${order.map((slot, i) => hiddenSlots.includes(slot) ? '' : `
                 <div class="nm-rem-row">
-                    <div class="nm-rem-text"><b>${nmEsc(nmPosName(i))}</b><span>${nmEsc(nmItemShort(nmItemInfo(nmPermanentKey(slot))))}</span></div>
-                    <input type="time" class="nm-rem-time" value="${nmReminderTime(i)}" onchange="nmSetReminderTime(${i}, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmPosName(i))}">
-                    <input type="checkbox" class="nm-switch" ${nmReminderEnabled(i) ? 'checked' : ''} onchange="nmSetReminderEnabled(${i}, this.checked)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmPosName(i))}">
+                    <div class="nm-rem-text"><b>${nmEsc(nmSlotName(slot))}</b><span>${nmEsc(nmItemShort(nmItemInfo(nmPermanentKey(slot))))}</span></div>
+                    <input type="time" class="nm-rem-time" value="${nmSlotReminderTime(slot)}" onchange="nmSetReminderTime(${i}, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmSlotName(slot))}">
+                    <input type="checkbox" class="nm-switch" ${nmSlotReminderEnabled(slot) ? 'checked' : ''} onchange="nmSetReminderEnabled(${i}, this.checked)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmSlotName(slot))}">
                 </div>`).join('')}
         </div>
         <div class="nm-card nm-late-card">
+            ${late && !nmLateEditing ? `
+            <div class="nm-late-head">
+                <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
+                <button type="button" class="nm-chip" onclick="nmEditLateChoice()">${nmEsc(t('nm_late_change'))}</button>
+            </div>
+            ${late === 'none' ? `<div class="nm-late-picked">${nmEsc(nmLateLabel('none'))}</div>` : ''}` : `
             <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
-            ${nmLateChoicesHtml(late, 'nmSetLateChoice')}
+            ${nmLateChoicesHtml(late, 'nmSetLateChoice')}`}
             ${late === 'eat' || late === 'drink' ? `
             <div class="nm-rem-row${on ? '' : ' is-off'}">
                 <div class="nm-rem-text"><b>${nmEsc(nmLateLabel(late))}</b><span>${nmEsc(t(late === 'eat' ? 'nm_late_row_eat' : 'nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)))}</span></div>
                 <input type="time" class="nm-rem-time" value="${nmLateTime()}" onchange="nmSetReminderTime(4, this.value)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmLateLabel(late))}">
                 <input type="checkbox" class="nm-switch" ${lateRow && lateRow.enabled === false ? '' : 'checked'} onchange="nmSetReminderEnabled(4, this.checked)" ${on ? '' : 'disabled'} aria-label="${nmEsc(nmLateLabel(late))}">
             </div>` : ''}
-        </div>
-        <p class="nm-fine">${nmEsc(t('nm_rem_note'))}</p>`;
+        </div>`;
 }
 async function nmToggleReminders(on) {
     nmProfile.reminders_on = on;
