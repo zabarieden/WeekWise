@@ -916,7 +916,8 @@ const NMH_DOORS = [
 ];
 // הסולם מהפתח בתקרה עד השטיח (לפי בקשה מפורשת: שיגיע עד הרצפה). סולם עליית גג שנפתח באלכסון: מתחיל
 // בקצה הרחוק של הפתח ויורד לרצפה קצת יותר קרוב אלינו, ולכן מתרחב למטה. הנקודות מחושבות בפרספקטיבה
-// של המסדרון (נקודת מגוז 195,345; תקרה/רצפה בקיר האחורי ב-290/410): y = 345 + Y/Z, חצי רוחב = 4.045/Z
+// של המסדרון (נקודת מגוז 195,345; תקרה/רצפה בקיר האחורי ב-290/410): y = 345 + Y/Z, חצי רוחב = 4.045/Z.
+// מצויר אחרי הדלת שבסוף המסדרון: הסולם קרוב אלינו והדלת מאחוריו (לפי בקשה מפורשת)
 function nmhLadderSvg() {
     const pt = s => { const Z = 0.337 - 0.077 * s, Y = -55 + 120 * s; return { y: 345 + Y / Z, h: 4.045 / Z, w: 0.74 / Z }; };
     const top = pt(0), foot = pt(1);
@@ -931,8 +932,13 @@ function nmhLadderSvg() {
         <g stroke="#c08a52" stroke-width="3.2" stroke-linecap="round">${rails}</g>
     </g>`;
 }
-// עד שנבנה חדר משלה, דלת 1 נכנסת לחדר הסודי; 2–5 (החדרים הבאים והדרך החוצה) עוד נעולות
-function nmhDoorOpen(n, keys) { return n === 1 && keys >= 1; }
+// דלת 1 נכנסת לחדר הסודי; 2–5 - המקומות שבחרה (secret-places.js), כל אחד נפתח במפתח משלו
+function nmhDoorPlace(n) { return typeof SRP_DOOR_PLACE !== 'undefined' ? SRP_DOOR_PLACE[n] || null : null; }
+function nmhDoorOpen(n, keys) {
+    if (n === 1) return keys >= 1;
+    const id = nmhDoorPlace(n);
+    return !!id && typeof roomUnlockAt === 'function' && keys >= roomUnlockAt(id);
+}
 function nmhLockSvg(x, y, s) {
     return `<g transform="translate(${x} ${y}) scale(${s})" fill="none" stroke="#c9a66a" stroke-width="1.3"><rect x="-4" y="-1" width="8" height="7" rx="1.5" fill="#5a4026"/><path d="M-2.4 -1 v-2 a2.4 2.4 0 0 1 4.8 0 v2"/></g>`;
 }
@@ -1037,15 +1043,15 @@ function nmRenderHome(root) {
                     <line class="nmh-hatch-lid" x1="195" y1="152" x2="195" y2="171" stroke="#8a6a3a" stroke-width="1.2"/>
                     <circle class="nmh-hatch-lid" cx="195" cy="174" r="3" fill="none" stroke="#ffd27a" stroke-width="1.4"/>
                 </g>
-                ${nmhLadderSvg()}
                 <circle cx="195" cy="360" r="62" fill="url(#nmh-day)"/>
                 <path d="M173 410 V340 A22 22 0 0 1 217 340 V410 Z" fill="#3a2418"/>
                 <path d="M176.5 410 V341 A18.5 18.5 0 0 1 213.5 341 V410 Z" fill="url(#nmh-wood)"/>
                 <circle cx="195" cy="342" r="10" fill="#2b1a12"/><circle cx="195" cy="342" r="8.4" fill="url(#nmh-leaf)"/>
                 <path d="M188 345 q4 -6 8 -2 q3 -5 6 1" fill="none" stroke="#2f6e55" stroke-width="1.2"/>
                 <rect x="176.5" y="376" width="37" height="2.5" fill="#2b1a12"/>
-                ${nmhLockSvg(207, 386, 0.9)}
-                <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="0.75"/>
+                ${nmhDoorOpen(5, keys) ? `<circle cx="207" cy="390" r="2.2" fill="#e8b84f"/>` : nmhLockSvg(207, 386, 0.9)}
+                <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="${nmhDoorOpen(5, keys) ? 1 : 0.75}"/>
+                ${nmhLadderSvg()}
                 <ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
                 <path d="M236 764 Q236 714 300 710 Q364 714 364 764 L364 880 L236 880 Z" fill="url(#nmh-bag)"/>
             </svg>
@@ -1125,10 +1131,14 @@ function nmhKeysTip() {
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
     nmhTip(`🔑 ${nmFmt(keys)} · ${t('nm_keys_tip')}`);
 }
-// דלת 1 = החדר הסודי (או איך מקבלים את המפתח הראשון); 2–5 - החדרים הבאים, עוד נבנים
+// דלת 1 = החדר הסודי (או איך מקבלים את המפתח הראשון); 2–5 - המקומות: פתוחה - נכנסים, נעולה - כמה מפתחות נשארו
 function nmhDoorTap(n) {
     if (n === 1) { nmOpenHallDoor(); return; }
-    nmhTip(t('nm_door_soon'));
+    const id = nmhDoorPlace(n);
+    if (!id || typeof roomKeys !== 'function') return;
+    const keys = roomKeys(), at = roomUnlockAt(id);
+    if (keys < at) { nmhTip(`🔒 ${roomItemName(id)} · ${roomKeysLeftText(at - keys)}`); return; }
+    roomOpenPlace(id, { fromHall: true });
 }
 // הפתח בתקרה (לפי בקשה מפורשת): נעול עד שהגג נפתח; אחר כך נגיעה אחת מורידה סולם לאט, ונגיעה שנייה עולה לגג
 function nmhHatchTap() {

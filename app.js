@@ -8650,6 +8650,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
+    { id: 'secret_room_places', category: 'nutrition' },
+    { id: 'secret_room_diary', category: 'nutrition' },
     { id: 'room_computer', category: 'nutrition' },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },

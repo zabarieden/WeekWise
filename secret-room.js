@@ -1,21 +1,38 @@
 // ===== New Me: החדר הסודי =====
 // לפי בקשה מפורשת (2026-10-06): חדר פרטי בתוך New Me - "רק שלך, לא צריך לספר עליו לאף אחד".
 // רואים קיר אחד בכל פעם (כמו משחקי חדר בריחה) וחצים מסובבים את החדר. כל אתגר שמסתיים = מפתח,
-// וכל מפתח פותח עוד משהו: 1 הדלת, 2 המחשב, 3 המשחק, 4 המדף, 5 גג הכוכבים, 8 הסטודיו, 12 הספרייה.
-// המפתח הראשון הוא אתגר קטן: ✓ על ארוחה ב-3 ימים שונים. ניצוץ (הבועה עם העיניים) גר בחדר.
+// וכל מפתח פותח דבר אחד (לפי בקשה מפורשת: "20 אתגרים - פתיחה של 20 דברים, לא רק חדרים, מסודר"):
+// המפתח הראשון (✓ על ארוחה ב-3 ימים שונים) פותח את הדלת, ו-20 האתגרים פותחים את כל השאר - ר' ROOM_UNLOCKS.
+// החדרים שמאחורי הדלתות במסדרון - ב-secret-places.js. ניצוץ (הבועה עם העיניים) גר בחדר.
 // ברירת המחדל כהה ("לילה נעים"); "בוקר פסטל" ו"עליית גג" (נפתחת עם הסטודיו) - ב"לעצב את החדר".
 // מנהלת המוצר (חשבון המפתחים) מקבלת כפתור מפתח בצד: כל לחיצה = "כאילו הסתיים אתגר", והפתיחה
 // נראית בדיוק כמו אצל כולם (לפי בקשה מפורשת); "−" סוגר את האחרון כדי לראות את הפתיחה שוב.
 // נשמר ב-new_me_room: אילו מפתחות כבר נחשפו, השיחה הראשונה עם ניצוץ, מראה החדר והשיא במשחק.
 
+// מה פותח מה: החדר (1–4), למעלה ולחדרים שמאחורי הדלתות במסדרון (5–10), הפתעות קטנות בכל מקום (11–20),
+// והאתגר האחרון - בקבוק מגיע מהים עם המכתב מהעבר (21). place = המקום שנפתח (או שבו נמצא הדבר החדש)
 const ROOM_UNLOCKS = [
     { n: 1, id: 'door', wall: 0 },
     { n: 2, id: 'computer', wall: 0 },
     { n: 3, id: 'game', wall: 2 },
     { n: 4, id: 'shelf', wall: 3 },
     { n: 5, id: 'roof', wall: 3 },
+    { n: 6, id: 'porch', place: 'porch' },
+    { n: 7, id: 'music', place: 'music' },
     { n: 8, id: 'studio', map: true },
+    { n: 9, id: 'breath', place: 'breath' },
+    { n: 10, id: 'outside', place: 'outside' },
+    { n: 11, id: 'catvisit', wall: 3 },
     { n: 12, id: 'library', map: true },
+    { n: 13, id: 'wish', roof: true },
+    { n: 14, id: 'rain', place: 'porch' },
+    { n: 15, id: 'selfcare', place: 'outside' },
+    { n: 16, id: 'vinyl', place: 'music' },
+    { n: 17, id: 'sunrise', place: 'breath' },
+    { n: 18, id: 'swing', place: 'outside' },
+    { n: 19, id: 'campfire', place: 'outside' },
+    { n: 20, id: 'tablet', place: 'porch' },
+    { n: 21, id: 'bottle', place: 'porch' },
 ];
 const ROOM_STARTER_DAYS = 3;
 const ROOM_WALLS = 4;
@@ -227,6 +244,8 @@ function roomShowKeyReveal(from, to) {
         const target = opened.filter(u => u.id !== 'door').slice(-1)[0];
         if (typeof openNewMe === 'function' && !document.getElementById('new-me-section').classList.contains('active-tab')) openNewMe('home');
         if (opened.some(u => u.id === 'door')) { roomPlayDoorOpening(); return; }
+        if (target && target.place && typeof roomOpenPlace === 'function') { roomOpenPlace(target.place, { fromHall: true, highlight: target.id }); return; }
+        if (target && target.roof) { openSecretRoom({ wall: 3 }); roomOpenRoof({ highlight: target.id }); return; }
         if (target && target.map) { openSecretRoom({ wall: 0 }); setTimeout(() => roomOpenMap(target.id), 350); return; }
         openSecretRoom(target ? { wall: target.wall, highlight: target.id } : {});
     });
@@ -289,6 +308,7 @@ function openSecretRoom(opts = {}) {
 
 function closeSecretRoom() {
     roomStopGame();
+    if (typeof srpCleanup === 'function') srpCleanup();
     if (pcState) { pcStopTimers(); pcState = null; }
     document.getElementById('sr-overlay')?.remove();
     roomRenderDevKeys();
@@ -387,6 +407,7 @@ function srHotspot(id, el) {
     const locked = el && el.classList.contains('locked');
     if (locked) { srShowLockTip(id); return; }
     if (id === 'friend') { srFriendSays(el); return; }
+    if (id === 'catvisit') { srCatNapTap(el); return; }
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
@@ -761,6 +782,7 @@ function srWallShelf(keys) {
             <rect x="226" y="548" width="138" height="44" rx="4" fill="#4a2c1e"/><rect x="290" y="566" width="12" height="5" rx="2.5" fill="#c99b5b"/>
         </g>
         <ellipse cx="320" cy="660" rx="44" ry="18" fill="#ff8fc4" opacity="0.9"/><ellipse cx="320" cy="652" rx="40" ry="12" fill="#ffb3d6"/>
+        ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}
         ${srFriend(p, 196, 560, 23, { x: 201, y: 509, text: t(roofOpen ? 'room_friend_roof' : 'room_friend_door'), tail: 'M190 518 l4 12 l8 -12z' })}`;
 }
 
@@ -1602,6 +1624,7 @@ function roomRoofScene() {
                 </g>
             </g>
             ${roomCatSvg()}
+            ${roomIsUnlocked('wish') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
             </g>
         </svg>`;
 }
@@ -1719,14 +1742,50 @@ function roomOpenRoof(opts = {}) {
         </div>`;
     stage.appendChild(box);
     roomInitCat(box.querySelector('.sr-cat'));
+    if (typeof roomInitWish === 'function') roomInitWish(box, opts.highlight === 'wish');
     box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
-    // כוכב נופל: יורד באלכסון עם שובל, נעלם, וחוזר למקומו
-    box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => {
-        if (s.classList.contains('falling') || s.classList.contains('back')) return;
-        s.classList.add('falling');
-        setTimeout(() => { s.classList.remove('falling'); s.classList.add('back'); }, 1100);
-        setTimeout(() => s.classList.remove('back'), 1950);
-    }));
+    const sky = box.querySelector('.sr-roof-sky');
+    box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => roomStarFall(s, sky)));
+    // ומדי פעם כוכב נופל לבד, בלי לגעת
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shoot = () => { if (!box.isConnected) return; roomShootingStar(sky); setTimeout(shoot, 11000 + Math.random() * 9000); };
+    if (!reduce) setTimeout(shoot, 6000);
+}
+// כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"): הבזק, שובל ארוך וזוהר וניצוצות שנשארים מאחור
+// לאורך הדרך - לכיוון הצד שיש בו יותר שמיים - ואז הכוכב חוזר למקומו
+const ROOM_STAR_FALL_MS = 1500;
+function roomStarFall(s, sky) {
+    if (s.classList.contains('falling') || s.classList.contains('back')) return;
+    const dir = (parseFloat(s.style.left) || 50) > 50 ? 1 : -1;
+    s.style.setProperty('--fall-x', `${dir * -280}px`);
+    s.style.setProperty('--tail-a', dir > 0 ? '-41.5deg' : '-138.5deg');
+    s.classList.add('falling');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (sky && !reduce) {
+        const sr = s.getBoundingClientRect(), kr = sky.getBoundingClientRect();
+        const x0 = sr.left - kr.left + sr.width / 2, y0 = sr.top - kr.top + sr.height / 2;
+        [0.2, 0.34, 0.48, 0.62, 0.76].forEach(f => setTimeout(() => {
+            if (!sky.isConnected) return;
+            const e = Math.pow(f, 1.6);
+            const d = document.createElement('i');
+            d.className = 'sr-star-dust';
+            d.style.left = `${(x0 + dir * -280 * e).toFixed(1)}px`;
+            d.style.top = `${(y0 + 248 * e).toFixed(1)}px`;
+            sky.appendChild(d);
+            setTimeout(() => d.remove(), 1300);
+        }, f * ROOM_STAR_FALL_MS));
+    }
+    setTimeout(() => { s.classList.remove('falling'); s.classList.add('back'); }, reduce ? 400 : ROOM_STAR_FALL_MS);
+    setTimeout(() => s.classList.remove('back'), (reduce ? 400 : ROOM_STAR_FALL_MS) + 900);
+}
+function roomShootingStar(sky) {
+    if (!sky || !sky.isConnected) return;
+    const el = document.createElement('i');
+    el.className = 'sr-shoot';
+    el.style.left = `${(35 + Math.random() * 55).toFixed(1)}%`;
+    el.style.top = `${(4 + Math.random() * 20).toFixed(1)}%`;
+    sky.appendChild(el);
+    setTimeout(() => el.remove(), 1700);
 }
 
 // ---------- מפת הבית: החדר, הגג, הסטודיו (8), הספרייה (12) והגינה (רצף ימים) ----------
