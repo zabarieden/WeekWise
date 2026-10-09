@@ -1691,9 +1691,9 @@ const APP_TOUR_STEPS = [
     { id: 'corner', ch: 'home', ctx: 'home', icon: '🌼', target: '#home-grow-corner', titleKey: 'home_corner_title', text: 'apptour_corner_text', link: 'apptour_corner_link', optional: true },
     // העוזר: קודם ההסבר הכללי (על הכפתור), ואז הלשוניות שבפנים - לפי הסדר שלהן (הלו"ז ראשון)
     { id: 'ai', ch: 'ai', ctx: 'home', icon: '🌟', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
-    { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#modal-ai-brain .ai-brain-tab[data-tab="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
-    { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#modal-ai-brain .ai-brain-tab[data-tab="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
-    { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#modal-ai-brain .ai-brain-tab[data-tab="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
+    { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#ai-chat .ai-chat-tool[data-tool="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
+    { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#ai-chat .ai-chat-tool[data-tool="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
+    { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#ai-chat .ai-chat-tool[data-tool="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
     // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
     { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
@@ -1860,10 +1860,15 @@ async function appTourEnsureContext(step) {
     if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
     if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
+    if (ctx !== 'ai' && typeof aiChatIsOpen === 'function' && aiChatIsOpen()) { closeAiChat(); changed = true; }
     if (ctx !== 'settings' && settingsModal && settingsModal.classList.contains('open')) { closeModal('modal-settings-drawer'); changed = true; }
     if (ctx !== 'menu' && menuOverlay && menuOverlay.classList.contains('open')) { closeHamburgerMenu(); changed = true; }
     if (ctx === 'ai') {
-        if (!aiModal.classList.contains('open')) { openAiBrainModal(step.tab || 'food'); changed = true; }
+        // העוזר הוא שיחה: פותחים אותה ומסמנים את הכלי של השלב
+        if (typeof aiChatIsOpen === 'function') {
+            if (!aiChatIsOpen()) { openAiChat(); changed = true; }
+            aiChatHighlightTool(step.tab || 'food');
+        } else if (!aiModal.classList.contains('open')) { openAiBrainModal(step.tab || 'food'); changed = true; }
         else switchAiBrainTab(step.tab || 'food');
     } else if (ctx === 'menu') {
         if (!menuOverlay.classList.contains('open')) { openHamburgerMenu(); changed = true; }
@@ -3848,6 +3853,9 @@ function openAiBrainModal(tab = 'schedule') {
     document.getElementById('ai-schedule-reminder-text').value = '';
     setScheduleAiMode('onetime');
     switchAiBrainTab(tab);
+    // העוזר הוא עכשיו שיחה (ai-chat.js, לפי בחירה מפורשת: אפשרות ג). החלון הקודם נשאר מוסתר - השדות שלו
+    // הם מה שהמנועים קוראים
+    if (typeof openAiChat === 'function') { openAiChat(tab); return; }
     openModal('modal-ai-brain');
 }
 
@@ -8622,6 +8630,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'delete_series_history', category: 'glance' },
     { id: 'edit_single_occurrence', category: 'glance' },
     { id: 'which_ai_button', category: 'ai' },
+    { id: 'ai_chat', category: 'ai' },
     { id: 'ai_edit_or_delete', category: 'ai' },
     { id: 'ai_phrasing_tips', category: 'ai' },
     { id: 'ai_mixed_request', category: 'ai' },
