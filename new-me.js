@@ -881,154 +881,175 @@ function nmRingHtml(eaten, goal) {
         </div>`;
 }
 
-// ---------- המסדרון: המסך הראשי של New Me (לפי בחירה מפורשת: "ב – יותר נקי") ----------
-// New Me הוא המסדרון שלפני החדר הסודי: כל מנורה על הקיר היא ארוחה של היום (דולקת = ✓, ורודה = הבאה),
-// מתחת למנורה הורודה זוהר רק שם הארוחה הבאה (נגיעה בו או בכל מנורה = הארוחה, ✓ אכלתי / 🔄), המשימות
-// שמביאות מפתח הן תמונות ממוסגרות על הקיר עם טבעת התקדמות, הצעדים על השטיח הם הימים, הדלת בסוף היא
-// החדר, ולוח המפתחות על הקיר. קרוב אלינו, בלי כיתובים: קנקן מים (שתייה), לוח עם דף (כל היום - התפריט
-// המלא וכל מה שהיה במסך הקודם) ותמונה (המסע שלי).
-// הציור במידות 390×760; מה שמעליו ממוקם באחוזים מאותן מידות, כך שהכול גדל וקטן יחד
-const NMH_W = 390, NMH_H = 760;
-const NMH_LAMPS = [{ x: 40, y: 190, side: 'l' }, { x: 350, y: 190, side: 'r' }, { x: 104, y: 228, side: 'l' }, { x: 286, y: 228, side: 'r' }];
-// הצעדים על השטיח, מהקרוב (לפני 6 ימים) ועד הדלת: 6 ימים שעברו, היום, ו-5 שבדרך
-const NMH_STEPS = [[732, 19, 6], [676, 17, 5.4], [626, 15, 4.8], [582, 13.4, 4.3], [544, 12, 3.9], [510, 10.6, 3.5], [480, 9.6, 3.2], [454, 8.6, 2.9], [432, 7.6, 2.6], [413, 6.8, 2.3], [397, 6, 2], [384, 5.2, 1.8]];
+// ---------- המסדרון: המסך הראשי של New Me (לפי בחירה מפורשת, 2026-10-08: "כן הראשון – א") ----------
+// מסדרון רחב (לא צר ומלחיץ) עם דלתות לאורך הקירות: כל דלת היא חדר, עם מספר לפי הסדר (1 הכי קרובה), ובסוף
+// דלת 5 - החוצה (חלון עגול שרואים בו ירוק). 4 מנורות על הקירות = 4 הארוחות של היום (זהב = אכלתי, ורודה =
+// הבאה, כבויה = אחר כך). בתקרה פתח לעליית הגג: כשהגג נפתח, נגיעה מורידה סולם לאט ונגיעה נוספת עולה לגג.
+// למטה מציץ התרמיל: הפתק של "הבא" תחוב בו (עם ✓), צרור המפתחות תלוי עליו (נגיעה = הסבר קטן), ונגיעה
+// בתרמיל עצמו פותחת את כל New Me. בלי שלטים ובלי כיתובים - רק הציור.
+// הציור במידות 390×844; מה שמעליו ממוקם באחוזים מאותן מידות, כך שהכול גדל וקטן יחד
+const NMH_W = 390, NMH_H = 844;
 function nmhX(v) { return `${(v / NMH_W * 100).toFixed(3)}%`; }
 function nmhY(v) { return `${(v / NMH_H * 100).toFixed(3)}%`; }
 function nmhKeySvg(fill) { return `<svg viewBox="0 0 24 24" fill="${fill}" aria-hidden="true"><circle cx="8" cy="12" r="4.5"/><rect x="11" y="10.8" width="10" height="2.4" rx="1.2"/><rect x="17" y="12" width="2.2" height="4" rx="1"/><circle cx="8" cy="12" r="1.6" fill="#0b0714"/></svg>`; }
+// הצד ה"ראשון" של המסדרון: ימין בעברית, שמאל ב-LTR (המנורה והדלת הראשונות קרובות בצד הזה). x כמו בעברית
+function nmhMx(x) { return document.documentElement.dir === 'rtl' ? x : NMH_W - x; }
+function nmhPts(arr) { return arr.map(([x, y]) => `${nmhMx(x)},${y}`).join(' '); }
+// המנורות לפי סדר הארוחות: ראשונה-קרובה, שנייה-קרובה, שלישית-רחוקה, רביעית-רחוקה
+const NMH_LAMPS = [{ x: 332.5, y: 270, s: 1 }, { x: 57.5, y: 270, s: 1 }, { x: 282.5, y: 298, s: 0.65 }, { x: 107.5, y: 298, s: 0.65 }];
+// הדלתות שבצדדים, באותה פרספקטיבה של הקירות: מסגרת, דלת, קווי פאנל, ידית, הקו המואר למטה, לוחית, אזור לחיצה
+const NMH_DOORS = [
+    { n: 1, frame: [[382, 273.7], [340, 289.7], [340, 470.7], [382, 507.1]], door: [[379, 277.5], [342.5, 292], [342.5, 468], [379, 499.5]], panels: [[379, 372, 342.5, 361], [379, 438, 342.5, 414]], knob: [346.5, 392, 2.6], light: [379, 499.5, 342.5, 468], plaque: [361, 329, 6.5, 8.5, 10], spill: [[382, 507], [340, 471], [312, 484], [352, 526]], hit: [338, 270, 46, 240] },
+    { n: 2, frame: [[8, 273.7], [50, 289.7], [50, 470.7], [8, 507.1]], door: [[11, 277.5], [47.5, 292], [47.5, 468], [11, 499.5]], panels: [[11, 372, 47.5, 361], [11, 438, 47.5, 414]], knob: [43.5, 392, 2.6], light: [11, 499.5, 47.5, 468], plaque: [29, 329, 6.5, 8.5, 10], spill: [[8, 507], [50, 471], [78, 484], [38, 526]], hit: [6, 270, 46, 240] },
+    { n: 3, frame: [[325, 295.4], [295, 306.9], [295, 431.7], [325, 457.7]], door: [[323, 298.5], [297, 308.8], [297, 429.5], [323, 452]], panels: [[323, 366, 297, 358], [323, 410, 297, 394]], knob: [300, 376, 1.9], light: [323, 452, 297, 429.5], plaque: [311, 334, 4.6, 6, 7.2], spill: [[325, 457.7], [295, 431.7], [282, 440], [306, 468]], hit: [293, 292, 34, 168] },
+    { n: 4, frame: [[65, 295.4], [95, 306.9], [95, 431.7], [65, 457.7]], door: [[67, 298.5], [93, 308.8], [93, 429.5], [67, 452]], panels: [[67, 366, 93, 358], [67, 410, 93, 394]], knob: [90, 376, 1.9], light: [67, 452, 93, 429.5], plaque: [79, 334, 4.6, 6, 7.2], spill: [[65, 457.7], [95, 431.7], [108, 440], [84, 468]], hit: [63, 292, 34, 168] },
+];
+// עד שנבנה חדר משלה, דלת 1 נכנסת לחדר הסודי; 2–5 (החדרים הבאים והדרך החוצה) עוד נעולות
+function nmhDoorOpen(n, keys) { return n === 1 && keys >= 1; }
+function nmhLockSvg(x, y, s) {
+    return `<g transform="translate(${x} ${y}) scale(${s})" fill="none" stroke="#c9a66a" stroke-width="1.3"><rect x="-4" y="-1" width="8" height="7" rx="1.5" fill="#5a4026"/><path d="M-2.4 -1 v-2 a2.4 2.4 0 0 1 4.8 0 v2"/></g>`;
+}
+function nmhDoorSvg(d, open) {
+    const right = nmhMx(d.frame[0][0]) > NMH_W / 2;
+    const [lx1, ly1, lx2, ly2] = d.light;
+    const [px, py, prx, pry, pfs] = d.plaque;
+    const near = d.n <= 2;
+    return `<g class="nmh-door-art">
+        ${open ? `<polygon points="${nmhPts(d.spill)}" fill="url(#nmh-spill-${right ? 'r' : 'l'})"/>` : ''}
+        <polygon points="${nmhPts(d.frame)}" fill="#2b1a12"/>
+        <polygon points="${nmhPts(d.door)}" fill="${open ? `url(#nmh-side-${right ? 'r' : 'l'})` : '#3a2418'}"/>
+        <g stroke="${open ? '#2b1a12' : '#24150d'}" stroke-width="${near ? 1.6 : 1.2}">${d.panels.map(([a, b, c, e]) => `<line x1="${nmhMx(a)}" y1="${b}" x2="${nmhMx(c)}" y2="${e}"/>`).join('')}</g>
+        ${open
+            ? `<circle cx="${nmhMx(d.knob[0])}" cy="${d.knob[1]}" r="${d.knob[2]}" fill="#e8b84f"/><line class="nmh-glow" x1="${nmhMx(lx1)}" y1="${ly1}" x2="${nmhMx(lx2)}" y2="${ly2}" stroke="#ffd27a" stroke-width="${near ? 2.2 : 1.7}"/>`
+            : nmhLockSvg(nmhMx(d.knob[0]), d.knob[1] - 4, near ? 1.2 : 0.9)}
+        <ellipse cx="${nmhMx(px)}" cy="${py}" rx="${prx}" ry="${pry}" fill="${open ? '#c99a4a' : '#8a6a3a'}" stroke="${open ? '#ffe2a6' : '#c9a66a'}" stroke-width="0.7"/>
+        <text x="${nmhMx(px)}" y="${(py + pfs * 0.38).toFixed(1)}" text-anchor="middle" font-size="${pfs}" font-weight="800" fill="#2b1a12" font-family="system-ui, sans-serif">${nmFmt(d.n)}</text>
+    </g>`;
+}
 
 function nmRenderHome(root) {
-    const plan = nmProfile.plan;
-    const eaten = nmEatenToday();
     const order = nmOrder();
     const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
     const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
-    const left = Math.round(plan + nmBurnedToday - eaten.kcal);
-    const st = nmStreaks();
-    const day = nmJourneyDay();
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
-    const lampsLeft = active.filter(s => !nmTodayCheckins[s]).length;
+    const roofAt = typeof roomUnlockAt === 'function' ? roomUnlockAt('roof') : 5;
+    const roofOpen = keys >= roofAt;
     // מנורות: דולקת (נאכל), ורודה (הבאה), כבויה (אחר כך)
     const lampsSvg = active.map((slot, i) => {
         const L = NMH_LAMPS[i];
-        const near = i < 2;
-        const s = near ? 1 : 0.8;
+        const x = nmhMx(L.x), y = L.y, s = L.s;
         const state = nmTodayCheckins[slot] ? 'lit' : slot === nextSlot ? 'next' : 'off';
-        const halo = state === 'off' ? '' : `<circle class="nmh-glow" cx="${L.x}" cy="${L.y + 16 * s}" r="${(near ? 40 : 30)}" fill="url(#nmh-${state === 'lit' ? 'lamp' : 'pink'})"/>`;
+        const halo = state === 'off' ? '' : `<circle class="nmh-glow" cx="${x}" cy="${y}" r="${(32 * s).toFixed(1)}" fill="url(#nmh-${state === 'lit' ? 'lamp' : 'pink'})"/>`;
         const shade = state === 'lit' ? '#ffd27a' : state === 'next' ? '#ff9ecf' : '#4a3a5e';
-        return `${halo}<path d="M${L.x - 9 * s} ${L.y + 24 * s} h${18 * s} l${-3.5 * s} ${-16 * s} h${-11 * s} z" fill="${shade}"${state === 'off' ? ' stroke="#8a78a8" stroke-width="0.8"' : ''}/><rect x="${L.x - 2.5 * s}" y="${L.y + 24 * s}" width="${5 * s}" height="${12 * s}" fill="#6b4a2e"/>`;
+        return `${halo}<path d="M${(x - 6.5 * s).toFixed(1)} ${(y + 8 * s).toFixed(1)} h${(13 * s).toFixed(1)} l${(-2.6 * s).toFixed(1)} ${(-11 * s).toFixed(1)} h${(-7.8 * s).toFixed(1)} z" fill="${shade}"${state === 'off' ? ' stroke="#8a78a8" stroke-width="0.7"' : ''}/><rect x="${(x - 1.3 * s).toFixed(1)}" y="${(y + 8 * s).toFixed(1)}" width="${(2.6 * s).toFixed(1)}" height="${(8 * s).toFixed(1)}" fill="#6b4a2e"/>`;
     }).join('');
-    // צעדים: ימים טובים בזהב, ימים אחרים חיוורים, היום בוורוד, ומה שבדרך כמעט שקוף
-    const today = getLocalDateString();
-    const statsByDay = {};
-    nmStats.forEach(r => { statsByDay[r.day] = r; });
-    const stepsSvg = NMH_STEPS.map(([y, rx, ry], i) => {
-        const offset = i - 6; // שלילי = עבר, 0 = היום
-        if (offset === 0) return `<ellipse class="nmh-glow" cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="#ff4fa3"/>`;
-        if (offset > 0) return `<ellipse cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="#ffffff" opacity="${(0.16 - offset * 0.015).toFixed(3)}"/>`;
-        const ds = nmAddDays(today, offset);
-        if (ds < nmStartDay()) return '';
-        const r = statsByDay[ds];
-        const good = r && nmIsGoodDay(r);
-        return `<ellipse cx="195" cy="${y}" rx="${rx}" ry="${ry}" fill="${good ? '#ffd27a' : '#c9c0dc'}" opacity="${good ? (0.95 - (5 + offset) * -0.02).toFixed(2) : '0.28'}"/>`;
-    }).join('');
-    // לוח המפתחות: עד 3 מפתחות (ועוד +N); בלי מפתחות - 3 נקודות של המפתח הראשון (✓ ב-3 ימים)
-    const starter = typeof roomStarterDays === 'function' ? Math.min(3, roomStarterDays()) : 0;
-    const rackKeys = keys > 0
-        ? [0, 1, 2].filter(i => i < keys).map(i => `<g transform="translate(${27 + i * 18} 0)"><circle cx="0" cy="${421 + 11}" r="3.8" fill="#ffd27a"/><rect x="-1" y="${435}" width="2.2" height="14" rx="1" fill="#ffd27a"/><rect x="1" y="${444}" width="3.8" height="2" fill="#ffd27a"/></g>`).join('')
-        : [0, 1, 2].map(i => `<circle cx="${28 + i * 18}" cy="${437}" r="4" fill="${i < starter ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-opacity="0.6" stroke-width="1.4"/>`).join('');
-    const door = `
-        <ellipse cx="195" cy="370" rx="40" ry="5" fill="#ffd27a" opacity="0.3"/>
-        <path d="M170 370 V320 A25 25 0 0 1 220 320 V370 Z" fill="#3a2418"/>
-        <path d="M173.5 370 V321 A21.5 21.5 0 0 1 216.5 321 V370 Z" fill="url(#nmh-wood)"/>
-        <line x1="195" y1="300" x2="195" y2="370" stroke="#4a2c1e" stroke-width="1.2"/>
-        <rect x="173.5" y="331" width="43" height="3" fill="#2b1a12"/><rect x="173.5" y="353" width="43" height="3" fill="#2b1a12"/>
-        <circle cx="208" cy="342" r="2.6" fill="#e8b84f"/>
-        <circle class="nmh-glow" cx="208" cy="350" r="9" fill="url(#nmh-key)"/>
-        ${keys > 0 ? '<circle cx="208" cy="349" r="1.5" fill="#ffd27a"/><path d="M207.3 349.5 h1.4 l0.5 3 h-2.4z" fill="#ffd27a"/>' : '<g transform="translate(187 336)"><rect x="0" y="6" width="16" height="12" rx="3" fill="#8a78a8"/><path d="M3 6 V3.6 a5 5 0 0 1 10 0 V6" fill="none" stroke="#8a78a8" stroke-width="2.2"/></g>'}
-        <rect x="173.5" y="367" width="43" height="3" fill="#ffd27a" opacity="0.9"/>`;
-    // מתחת למנורה הורודה זוהר רק שם הארוחה הבאה (וכשהכול דולק - "כל המנורות דולקות", מתחת למנורה הראשונה)
-    const tagLamp = NMH_LAMPS[nextSlot ? active.indexOf(nextSlot) : 0];
-    const tagTop = tagLamp.y + 40;
-    const tagPos = tagLamp.side === 'l' ? `left:${nmhX(Math.max(8, tagLamp.x - 34))}` : `right:${nmhX(Math.max(8, NMH_W - tagLamp.x - 34))}`;
-    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : `🍽️ ${nmItemShort(nmItemInfo(nmTodayKey(nextSlot)))}`;
-    const tagHtml = nextSlot
-        ? `<button type="button" class="nmh-tag" style="${tagPos};top:${nmhY(tagTop)}" onclick="nmOpenHallMeal('${nextSlot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(nextSlot))} – ${nextName}`)}">${nmEsc(nextName)}</button>`
-        : `<button type="button" class="nmh-tag is-done" style="${tagPos};top:${nmhY(tagTop)}" onclick="nmGo('day')">${nmEsc(t('nm_hall_all_lit'))}</button>`;
-    // כל מנורה היא כפתור לארוחה שלה (גם מי שאכל/ה קודם ארוחה אחרת)
     const lampBtns = active.map((slot, i) => {
         const L = NMH_LAMPS[i];
+        const r = 26 * L.s;
         const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
-        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}" style="left:${nmhX(L.x - 24)};top:${nmhY(L.y - 4)};width:${nmhX(48)};height:${nmhY(48)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(slot))} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
+        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmPosName(order.indexOf(slot))} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
     }).join('');
-    // המשימות שמביאות מפתח: תמונות ממוסגרות על הקיר, עם טבעת התקדמות; בלי אתגר - מסגרת עם ＋
-    const chs = (typeof nmChActive === 'function' ? nmChActive() : []).slice(0, 2);
-    const frameBox = [{ x: 268, y: 312, s: 64 }, { x: 276, y: 390, s: 52 }];
-    const ring = (pct, color, icon) => `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15" fill="#1d1430"/><circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3.5"/>${pct > 0 ? `<circle cx="20" cy="20" r="15" fill="none" stroke="${color}" stroke-width="3.5" stroke-dasharray="${(94.25 * pct / 100).toFixed(1)} 95" stroke-linecap="round" transform="rotate(-90 20 20)"/>` : ''}<text x="20" y="25" text-anchor="middle" font-size="13">${icon}</text></svg>`;
-    const framesHtml = chs.length ? chs.map((c, i) => {
-        const def = nmChDef(c.challenge_key);
-        const s = nmChState(c);
-        const pct = s.needed ? Math.min(100, Math.round(s.done / s.needed * 100)) : 0;
-        const b = frameBox[i];
-        return `<button type="button" class="nmh-frame" style="left:${nmhX(b.x)};top:${nmhY(b.y)};width:${nmhX(b.s)};height:${nmhY(b.s)}" onclick="nmOpenChallenge('${c.challenge_key}')" aria-label="${nmEsc(`${nmChTitle(c.challenge_key)} · ${s.done}/${s.needed}`)}">${ring(pct, i ? '#ff9ecf' : '#ffd27a', def.icon)}</button>`;
-    }).join('') : `<button type="button" class="nmh-frame is-new" style="left:${nmhX(frameBox[0].x)};top:${nmhY(frameBox[0].y)};width:${nmhX(frameBox[0].s)};height:${nmhY(frameBox[0].s)}" onclick="nmGo('challenges')" aria-label="${nmEsc(t('room_board_add'))}">＋</button>`;
-    const spark = lampsLeft ? bagPlural('nm_hall_left', lampsLeft) : t('nm_hall_all_lit');
+    // הדלתות: הצדדים + 5 בסוף (החוצה)
+    const doorsSvg = NMH_DOORS.map(d => nmhDoorSvg(d, nmhDoorOpen(d.n, keys))).join('');
+    const doorBtns = NMH_DOORS.map(d => {
+        const [x, y, w, h] = d.hit;
+        const lx = nmhMx(x) - (document.documentElement.dir === 'rtl' ? 0 : w);
+        return `<button type="button" class="nmh-door" data-door="${d.n}" style="left:${nmhX(lx)};top:${nmhY(y)};width:${nmhX(w)};height:${nmhY(h)}" onclick="nmhDoorTap(${d.n})" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(d.n)))}"></button>`;
+    }).join('') + `<button type="button" class="nmh-door" data-door="5" style="left:${nmhX(171)};top:${nmhY(316)};width:${nmhX(48)};height:${nmhY(96)}" onclick="nmhDoorTap(5)" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(5)))}"></button>`;
+    // הפתק של "הבא" (או "כל המנורות דולקות") - תחוב בתרמיל
+    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : nmItemShort(nmItemInfo(nmTodayKey(nextSlot)));
+    const note = nextSlot ? `
+        <div class="nmh-note" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}">
+            <button type="button" class="nmh-note-body" onclick="nmOpenHallMeal('${nextSlot}')">
+                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmPosName(order.indexOf(nextSlot))))}</span>
+                <span class="nmh-note-name">${nmEsc(nextName)}</span>
+            </button>
+            <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
+        </div>`
+        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_lit'))}</span></button></div>`;
+    // צרור המפתחות על התרמיל: עד 3 מפתחות (ומספר כשיש יותר)
+    const ring = [0, 1, 2].filter(i => i < keys).map(i => {
+        const [x, y, a] = [[236, 800, 18], [242, 802, -6], [248, 799, -28]][i];
+        return `<g transform="rotate(${a} ${x} ${y})"><circle cx="${x}" cy="${y}" r="3"/><rect x="${x - 1}" y="${y + 2}" width="2" height="11" rx="1"/><rect x="${x + 1}" y="${y + 9}" width="3" height="1.6"/></g>`;
+    }).join('');
     root.innerHTML = `
-        <div class="nmh" role="group" aria-label="New Me">
+        <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
             <svg class="nmh-scene" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                 <defs>
-                    <linearGradient id="nmh-wall-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#170e28"/><stop offset="1" stop-color="#2d1c46"/></linearGradient>
-                    <linearGradient id="nmh-wall-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#170e28"/><stop offset="1" stop-color="#2d1c46"/></linearGradient>
-                    <radialGradient id="nmh-back" cx="0.5" cy="0.8" r="0.8"><stop offset="0" stop-color="#5b3a54"/><stop offset="1" stop-color="#2f1f48"/></radialGradient>
-                    <linearGradient id="nmh-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#211421"/><stop offset="1" stop-color="#3a2838"/></linearGradient>
+                    <linearGradient id="nmh-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0717"/><stop offset="1" stop-color="#1d1331"/></linearGradient>
+                    <linearGradient id="nmh-wall-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1e1334"/><stop offset="1" stop-color="#31204d"/></linearGradient>
+                    <linearGradient id="nmh-wall-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#1e1334"/><stop offset="1" stop-color="#31204d"/></linearGradient>
+                    <radialGradient id="nmh-back" cx="0.5" cy="0.75" r="0.85"><stop offset="0" stop-color="#5e3d58"/><stop offset="1" stop-color="#33224d"/></radialGradient>
+                    <linearGradient id="nmh-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1c111d"/><stop offset="1" stop-color="#3a2838"/></linearGradient>
                     <linearGradient id="nmh-carpet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7a2a5e"/><stop offset="1" stop-color="#4a1d43"/></linearGradient>
                     <linearGradient id="nmh-wood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3626"/><stop offset="0.5" stop-color="#7a4b33"/><stop offset="1" stop-color="#5a3626"/></linearGradient>
+                    <linearGradient id="nmh-side-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6a4130"/><stop offset="1" stop-color="#4a2c1e"/></linearGradient>
+                    <linearGradient id="nmh-side-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#6a4130"/><stop offset="1" stop-color="#4a2c1e"/></linearGradient>
+                    <linearGradient id="nmh-spill-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.3"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="nmh-spill-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.3"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></linearGradient>
                     <radialGradient id="nmh-lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.85"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
                     <radialGradient id="nmh-pink" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff7ac0" stop-opacity="0.9"/><stop offset="1" stop-color="#ff4fa3" stop-opacity="0"/></radialGradient>
-                    <radialGradient id="nmh-key" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a6" stop-opacity="0.95"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-                    <radialGradient id="nmh-spark" cx="0.34" cy="0.3" r="0.8"><stop offset="0" stop-color="#ffb3dc"/><stop offset="0.55" stop-color="#ff4fa3"/><stop offset="1" stop-color="#a855f7"/></radialGradient>
+                    <radialGradient id="nmh-day" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#d8ffd9" stop-opacity="0.55"/><stop offset="1" stop-color="#7dffcf" stop-opacity="0"/></radialGradient>
+                    <radialGradient id="nmh-leaf" cx="0.4" cy="0.35" r="0.75"><stop offset="0" stop-color="#d6f7c8"/><stop offset="0.55" stop-color="#6cc08a"/><stop offset="1" stop-color="#2f6e55"/></radialGradient>
+                    <linearGradient id="nmh-spill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9b0" stop-opacity="0.28"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="nmh-bag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98149"/><stop offset="1" stop-color="#8a5a30"/></linearGradient>
                 </defs>
-                <polygon points="0,0 390,0 245,230 145,230" fill="#120b20"/>
-                <polygon points="0,0 145,230 145,370 0,760" fill="url(#nmh-wall-l)"/>
-                <polygon points="390,0 245,230 245,370 390,760" fill="url(#nmh-wall-r)"/>
-                <rect x="145" y="230" width="100" height="140" fill="url(#nmh-back)"/>
-                <polygon points="0,760 390,760 245,370 145,370" fill="url(#nmh-floor)"/>
-                <g stroke="rgba(0,0,0,0.28)" stroke-width="1"><line x1="160" y1="370" x2="46" y2="760"/><line x1="230" y1="370" x2="344" y2="760"/><line x1="152" y1="370" x2="0" y2="690"/><line x1="238" y1="370" x2="390" y2="690"/></g>
-                <polygon points="181,370 209,370 292,760 98,760" fill="url(#nmh-carpet)"/>
-                <polygon points="183,370 207,370 284,760 106,760" fill="none" stroke="#ffd27a" stroke-opacity="0.35" stroke-width="1.3"/>
-                ${stepsSvg}
-                ${door}
+                <polygon points="0,0 390,0 390,202 270,290 120,290 0,202" fill="url(#nmh-ceil)"/>
+                <g fill="#2a1a3f"><rect x="0" y="34" width="390" height="12"/><rect x="0" y="138" width="390" height="8"/><rect x="0" y="189" width="390" height="6"/><polygon points="56,241 334,241 336.8,245 53.2,245"/><polygon points="92,267.5 298,267.5 300,270.5 90,270.5"/></g>
+                <g fill="#3b2856"><rect x="0" y="34" width="390" height="2"/><rect x="0" y="138" width="390" height="1.5"/><rect x="0" y="189" width="390" height="1.2"/></g>
+                <polygon points="0,202 120,290 120,410 0,514" fill="url(#nmh-wall-l)"/>
+                <polygon points="390,202 270,290 270,410 390,514" fill="url(#nmh-wall-r)"/>
+                <rect x="120" y="290" width="150" height="120" fill="url(#nmh-back)"/>
+                <polygon points="0,514 120,410 270,410 390,514 390,844 0,844" fill="url(#nmh-floor)"/>
+                <g stroke="rgba(0,0,0,0.3)" stroke-width="1"><line x1="145" y1="410" x2="-189" y2="844"/><line x1="165" y1="410" x2="-35" y2="844"/><line x1="225" y1="410" x2="425" y2="844"/><line x1="245" y1="410" x2="579" y2="844"/></g>
+                <g stroke="#4a3566" stroke-width="1.6"><line x1="0" y1="514" x2="120" y2="410"/><line x1="390" y1="514" x2="270" y2="410"/></g>
+                <polygon points="180,410 210,410 310,844 80,844" fill="url(#nmh-carpet)"/>
+                <polygon points="182.5,410 207.5,410 300,844 90,844" fill="none" stroke="#ffd27a" stroke-opacity="0.35" stroke-width="1.3"/>
+                <polygon points="176,410 214,410 240,580 150,580" fill="url(#nmh-spill)"/>
+                ${doorsSvg}
                 ${lampsSvg}
-                <line x1="${tagLamp.x}" y1="${tagLamp.y + 36}" x2="${tagLamp.x}" y2="${tagTop}" stroke="#ff9ecf" stroke-opacity="0.5" stroke-width="1"/>
-                <rect x="14" y="418" width="64" height="38" rx="6" fill="#3a2418" stroke="#6b4a2e" stroke-width="1"/>
-                ${rackKeys}
-                <rect x="8" y="652" width="112" height="9" rx="3" fill="#6b4428"/><rect x="16" y="661" width="6" height="54" fill="#4f321d"/><rect x="106" y="661" width="6" height="54" fill="#4f321d"/>
-                <path d="M30 652 v-26 a6 6 0 0 1 6 -6 h10 a6 6 0 0 1 6 6 v26 z" fill="#7dd3fc" opacity="0.75"/><path d="M52 632 h6 a4 4 0 0 1 0 12 h-6" fill="none" stroke="#7dd3fc" stroke-width="2" opacity="0.75"/><rect x="33" y="636" width="16" height="14" rx="2" fill="#38bdf8" opacity="0.6"/>
-                <rect x="72" y="616" width="30" height="36" rx="3" fill="#f3e9d7"/><rect x="80" y="612" width="14" height="6" rx="2" fill="#8a7a60"/><g stroke="#8a7a60" stroke-width="1.6" stroke-linecap="round"><line x1="77" y1="626" x2="97" y2="626"/><line x1="77" y1="633" x2="97" y2="633"/><line x1="77" y1="640" x2="91" y2="640"/></g>
-                <g transform="rotate(6 338 630)"><rect x="306" y="592" width="64" height="76" rx="4" fill="#6b4a2e"/><rect x="312" y="598" width="52" height="64" rx="2" fill="#2b1a40"/><circle cx="338" cy="621" r="9" fill="#ff9ecf" opacity="0.8"/><path d="M314 660 l14 -20 l10 12 l8 -8 l16 16 z" fill="#7dffcf" opacity="0.55"/></g>
-                <g class="nmh-float">
-                    <circle cx="318" cy="526" r="22" fill="url(#nmh-spark)"/>
-                    <ellipse cx="310.5" cy="523" rx="2.7" ry="3.5" fill="#2a1145"/><ellipse cx="324.5" cy="523" rx="2.7" ry="3.5" fill="#2a1145"/>
-                    <circle cx="311.5" cy="522" r="0.9" fill="#fff"/><circle cx="325.5" cy="522" r="0.9" fill="#fff"/>
-                    <path d="M311 533 q7 4.5 14 0" stroke="#2a1145" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+                <g class="nmh-hatch">
+                    <polygon class="nmh-hatch-hole" points="157,152 233,152 227,182 163,182" fill="#22152f" stroke="#ffd27a" stroke-opacity="${roofOpen ? 0.6 : 0.25}" stroke-width="1.2"/>
+                    <polygon class="nmh-hatch-lid" points="163,157 227,157 222.5,178 167.5,178" fill="none" stroke="#3d2a56" stroke-width="1"/>
+                    <line class="nmh-hatch-lid" x1="195" y1="152" x2="195" y2="171" stroke="#8a6a3a" stroke-width="1.2"/>
+                    <circle class="nmh-hatch-lid" cx="195" cy="174" r="3" fill="none" stroke="#ffd27a" stroke-width="1.4"/>
                 </g>
+                <g class="nmh-ladder"><g stroke="#c08a52" stroke-width="3" stroke-linecap="round"><line x1="183" y1="180" x2="181" y2="300"/><line x1="207" y1="180" x2="209" y2="300"/></g><g stroke="#e0a868" stroke-width="2.2" stroke-linecap="round">${[196, 214, 232, 250, 268, 286].map(y => `<line x1="183" y1="${y}" x2="207" y2="${y}"/>`).join('')}</g></g>
+                <circle cx="195" cy="360" r="62" fill="url(#nmh-day)"/>
+                <path d="M173 410 V340 A22 22 0 0 1 217 340 V410 Z" fill="#3a2418"/>
+                <path d="M176.5 410 V341 A18.5 18.5 0 0 1 213.5 341 V410 Z" fill="url(#nmh-wood)"/>
+                <circle cx="195" cy="342" r="10" fill="#2b1a12"/><circle cx="195" cy="342" r="8.4" fill="url(#nmh-leaf)"/>
+                <path d="M188 345 q4 -6 8 -2 q3 -5 6 1" fill="none" stroke="#2f6e55" stroke-width="1.2"/>
+                <rect x="176.5" y="376" width="37" height="2.5" fill="#2b1a12"/>
+                <ellipse cx="195" cy="364" rx="4.8" ry="5.6" fill="#8a6a3a" stroke="#c9a66a" stroke-width="0.6"/>
+                <text x="195" y="367" text-anchor="middle" font-size="7" font-weight="800" fill="#2b1a12" font-family="system-ui, sans-serif">${nmFmt(5)}</text>
+                ${nmhLockSvg(207, 386, 0.9)}
+                <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="0.75"/>
+                <ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
+                <path d="M236 764 Q236 714 300 710 Q364 714 364 764 L364 880 L236 880 Z" fill="url(#nmh-bag)"/>
             </svg>
-            <div class="nmh-hud">
-                <span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span>
-                <span class="nmh-chip${left < 0 ? ' is-over' : ''}" title="${nmEsc(t(left < 0 ? 'nm_over' : 'nm_left'))}">⚡ <bdi dir="ltr">${left < 0 ? '+' : ''}${nmFmt(Math.abs(left))}</bdi></span>
-                ${st.current > 0 ? `<span class="nmh-chip is-streak">🔥 <bdi dir="ltr">${nmFmt(st.current)}</bdi></span>` : ''}
-                <span class="nmh-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
-                <button type="button" class="nmh-more" onclick="nmOpenHallMore()" title="${nmEsc(t('tbl_more'))}" aria-label="${nmEsc(t('tbl_more'))}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
-            </div>
+            <div class="nmh-hud"><span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span></div>
             <div class="nmh-dev"></div>
             ${lampBtns}
-            ${tagHtml}
-            <div class="nmh-frames">${framesHtml}</div>
-            <button type="button" class="nmh-door" style="left:${nmhX(164)};top:${nmhY(292)};width:${nmhX(62)};height:${nmhY(82)}" onclick="nmOpenHallDoor()" aria-label="${nmEsc(t('room_title'))}"></button>
-            <span class="nmh-today" style="left:${nmhX(104)};top:${nmhY(468)}">${nmEsc(t('nm_day_n').replace('{n}', nmFmt(day)))}</span>
-            <span class="nmh-say" style="left:${nmhX(222)};top:${nmhY(452)}">${nmEsc(spark)}</span>
-            <button type="button" class="nmh-obj nmh-obj-drinks" style="left:${nmhX(22)};top:${nmhY(612)};width:${nmhX(44)};height:${nmhY(48)}" onclick="nmOpenHallDay('drinks')" title="${nmEsc(t('nm_slot_drinks'))}" aria-label="${nmEsc(t('nm_slot_drinks'))}"></button>
-            <button type="button" class="nmh-obj nmh-obj-day" style="left:${nmhX(66)};top:${nmhY(604)};width:${nmhX(44)};height:${nmhY(54)}" onclick="nmOpenHallDay()" title="${nmEsc(t('nm_hall_day'))}" aria-label="${nmEsc(t('nm_hall_day'))}"></button>
-            <button type="button" class="nmh-obj nmh-obj-journey" style="left:${nmhX(300)};top:${nmhY(588)};width:${nmhX(78)};height:${nmhY(88)}" onclick="nmGo('journey')" title="${nmEsc(t('nm_tile_journey'))}" aria-label="${nmEsc(t('nm_tile_journey'))}"></button>
+            ${doorBtns}
+            <button type="button" class="nmh-hatch-btn" style="left:${nmhX(148)};top:${nmhY(140)};width:${nmhX(94)};height:${nmhY(56)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
+            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(120)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
+            ${note}
+            <svg class="nmh-scene nmh-bag-front" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <path d="M238 756 Q240 708 300 706 Q360 708 362 756 Q362 776 352 780 Q300 794 248 780 Q238 776 238 756 Z" fill="#7a4a26"/>
+                <path d="M247 756 Q249 716 300 714 Q351 716 353 756" fill="none" stroke="#e8c48a" stroke-opacity="0.55" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <path d="M284 710 Q300 686 316 710" fill="none" stroke="#5a3418" stroke-width="6" stroke-linecap="round"/>
+                <rect x="266" y="766" width="11" height="44" rx="3" fill="#5a3418"/><rect x="323" y="766" width="11" height="44" rx="3" fill="#5a3418"/>
+                <rect x="264" y="795" width="15" height="11" rx="2" fill="none" stroke="#ffd27a" stroke-width="2.2"/><rect x="321" y="795" width="15" height="11" rx="2" fill="none" stroke="#ffd27a" stroke-width="2.2"/>
+                <rect x="256" y="812" width="88" height="70" rx="16" fill="#9a6638"/>
+                <path d="M256 830 Q300 842 344 830" fill="none" stroke="#7a4a26" stroke-width="2"/>
+                <path d="M291 846 h18 l6 7 -15 16 -15 -16 z" fill="#c084fc"/>
+                <circle cx="241" cy="790" r="6" fill="none" stroke="#ffd27a" stroke-width="1.8"/>
+                <g fill="#ffd27a">${ring}</g>
+            </svg>
+            <button type="button" class="nmh-bag" style="left:${nmhX(232)};top:${nmhY(704)};width:${nmhX(136)};height:${nmhY(140)}" onclick="nmOpenBackpack()" aria-label="${nmEsc(t('nm_backpack'))}"></button>
+            <button type="button" class="nmh-keys" data-keys="${keys}" style="left:${nmhX(224)};top:${nmhY(780)};width:${nmhX(34)};height:${nmhY(46)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${keys > 3 ? `<span class="nmh-keys-n"><bdi dir="ltr">${nmFmt(keys)}</bdi></span>` : ''}</button>
+            <div class="nmh-tip" role="status" aria-live="polite"></div>
         </div>`;
 }
 
@@ -1070,13 +1091,87 @@ function nmOpenHallDay(focus) {
         if (el && sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 80;
     }
 }
-// ⋯ במסדרון: כל האריחים (אתגרים, מסע, קניות, הישגים...), הגדרות והסטורי
-function nmOpenHallMore() {
+// הסבר קטן בתוך המסדרון, שנעלם לבד: המפתחות / דלת שעוד נבנית / הגג
+function nmhTip(text) {
+    const tip = document.querySelector('#new-me-root .nmh-tip');
+    if (!tip) return;
+    tip.textContent = text;
+    tip.classList.add('on');
+    clearTimeout(nmhTip.timer);
+    nmhTip.timer = setTimeout(() => tip.classList.remove('on'), 4500);
+}
+// צרור המפתחות (לפי בחירה מפורשת, נוסח א): כמה מפתחות יש, ושכל אתגר שמסתיים פותח דלת
+function nmhKeysTip() {
+    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
+    nmhTip(`🔑 ${nmFmt(keys)} · ${t('nm_keys_tip')}`);
+}
+// דלת 1 = החדר הסודי (או איך מקבלים את המפתח הראשון); 2–5 - החדרים הבאים, עוד נבנים
+function nmhDoorTap(n) {
+    if (n === 1) { nmOpenHallDoor(); return; }
+    nmhTip(t('nm_door_soon'));
+}
+// הפתח בתקרה (לפי בקשה מפורשת): נעול עד שהגג נפתח; אחר כך נגיעה אחת מורידה סולם לאט, ונגיעה שנייה עולה לגג
+function nmhHatchTap() {
+    const hall = document.querySelector('#new-me-root .nmh');
+    if (!hall || typeof roomKeys !== 'function') return;
+    const keys = roomKeys();
+    const at = roomUnlockAt('roof');
+    if (keys < at) { nmhTip(`🔒 ${roomItemName('roof')} · ${roomKeysLeftText(at - keys)}`); return; }
+    if (!hall.classList.contains('is-ladder')) {
+        hall.classList.add('is-ladder');
+        const climb = hall.querySelector('.nmh-ladder-btn');
+        if (climb) climb.removeAttribute('tabindex');
+        return;
+    }
+    openSecretRoom({ wall: 3 });
+    setTimeout(() => { if (typeof roomOpenRoof === 'function' && srIsOpen()) roomOpenRoof({ fromHall: true }); }, 80);
+}
+
+// התרמיל: כל New Me בפנים - הארוחה הבאה (✓ / 🔄), שאר הארוחות של היום, וה"כיסים" (כל האריחים וההגדרות)
+function nmOpenBackpack() {
+    const plan = nmProfile.plan;
+    const eaten = nmEatenToday();
+    const left = Math.round(plan + nmBurnedToday - eaten.kcal);
+    const st = nmStreaks();
+    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
+    const order = nmOrder();
+    const active = nmActiveOrder();
+    const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
+    const info = slot => (nmIsFree(slot) ? null : nmItemInfo(nmTodayKey(slot)));
+    const name = slot => { const it = info(slot); return it ? nmItemShort(it) : `🍕 ${t('nm_free_meal')}`; };
+    const next = nextSlot ? `
+        <div class="nmb-next">
+            <span class="nmb-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmPosName(order.indexOf(nextSlot))))}</span>
+            <span class="nmb-next-name">${nmEsc(name(nextSlot))}</span>
+            <span class="nmb-meta">${info(nextSlot) ? nmMeta(info(nextSlot)) : `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}`}</span>
+            <div class="nmb-next-actions">
+                <button type="button" class="nm-btn-primary" data-ate>${nmEsc(t('nm_hall_ate'))}</button>
+                ${info(nextSlot) ? `<button type="button" class="nmb-swap" data-swap aria-label="${nmEsc(t('nm_swap'))}" title="${nmEsc(t('nm_swap'))}">🔄</button>` : ''}
+            </div>
+        </div>` : `<div class="nmb-next is-done">${nmEsc(t('nm_hall_all_lit'))}</div>`;
+    const rows = active.filter(s => s !== nextSlot).map(slot => {
+        const done = !!nmTodayCheckins[slot];
+        return `<button type="button" class="nmb-meal${done ? ' is-done' : ''}" data-slot="${slot}"><span class="nmb-check" aria-hidden="true">${done ? '✓' : ''}</span><span class="nmb-pos">${nmEsc(nmPosName(order.indexOf(slot)))}</span><span class="nmb-name">${nmEsc(name(slot))}</span></button>`;
+    }).join('');
     const ov = nmOpenSheet(`
-        <div class="nm-tiles">${nmTiles().map(nmTileHtml).join('')}${nmTileHtml('settings')}</div>
-        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nm-hall-more-sheet');
+        <div class="nmb-band">
+            <span class="nmb-title">${NM_ICON_SVG}<span>New Me</span></span>
+            <span class="nmb-chip${left < 0 ? ' is-over' : ''}" title="${nmEsc(t(left < 0 ? 'nm_over' : 'nm_left'))}">⚡ <bdi dir="ltr">${left < 0 ? '+' : ''}${nmFmt(Math.abs(left))}</bdi></span>
+            ${st.current > 0 ? `<span class="nmb-chip is-streak">🔥 <bdi dir="ltr">${nmFmt(st.current)}</bdi></span>` : ''}
+            <span class="nmb-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
+        </div>
+        ${next}
+        ${rows ? `<div class="nmb-meals">${rows}</div>` : ''}
+        <div class="nmb-pockets">${['day', ...nmTiles(), 'settings'].map(nmTileHtml).join('')}</div>`, 'nm-backpack-sheet');
+    const ate = ov.querySelector('[data-ate]');
+    if (ate) ate.addEventListener('click', async e => { ov.remove(); await nmToggleCheck(nextSlot, e.currentTarget); });
+    const swap = ov.querySelector('[data-swap]');
+    if (swap) swap.addEventListener('click', () => { ov.remove(); nmOpenSwap(nextSlot); });
+    ov.querySelectorAll('.nmb-meal').forEach(b => b.addEventListener('click', () => { ov.remove(); nmOpenHallMeal(b.dataset.slot); }));
     ov.querySelectorAll('.nm-tile').forEach(b => b.addEventListener('click', () => ov.remove()));
 }
+// ⋯ של המסדרון הקודם = התרמיל
+function nmOpenHallMore() { nmOpenBackpack(); }
 
 // "כל היום" - מה שהיה המסך הראשי עד המסדרון (בלי שינוי): טבעת, אתגרים, התפריט, שתייה, תוספות ואריחים
 function nmRenderDay(root) {
@@ -3195,12 +3290,10 @@ async function nmSaveFullName(input) {
 // אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
 const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
-    // המסדרון (המסך הראשי): המנורות = הארוחות, תמונות המשימות, הדלת לחדר, והלוח עם הדף (כל היום)
-    { id: 'nm_lamps', ch: 'newme', ctx: 'newme', icon: '💡', target: () => appTourVisible('#new-me-root .nmh-tag'), titleKey: 'nm_tour_lamps_title', text: 'nm_tour_lamps_text', optional: true },
-    { id: 'nm_challenges', ch: 'newme', ctx: 'newme', icon: '🏆', target: '#new-me-root .nmh-frame', titleKey: 'nm_tile_challenges', text: 'nm_tour_frames_text', optional: true },
-    { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door', titleKey: 'room_title', text: 'room_tour_text', optional: true },
-    { id: 'nm_day', ch: 'newme', ctx: 'newme', icon: '📋', target: '#new-me-root .nmh-obj-day', titleKey: 'nm_hall_day', text: 'nm_tour_day_text', optional: true },
-    { id: 'nm_more', ch: 'newme', ctx: 'newme', icon: '🧩', target: '#new-me-root .nmh-more', titleKey: 'nm_tour_tiles_title', text: 'nm_tour_tiles_text', optional: true },
+    // המסדרון (המסך הראשי): המנורות = הארוחות, התרמיל = כל New Me, ודלת 1 לחדר
+    { id: 'nm_lamps', ch: 'newme', ctx: 'newme', icon: '💡', target: '#new-me-root .nmh-lamp', titleKey: 'nm_tour_lamps_title', text: 'nm_tour_lamps_text', optional: true },
+    { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#new-me-root .nmh-bag', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
+    { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
 ];
 function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }

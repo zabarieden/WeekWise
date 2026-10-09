@@ -1642,7 +1642,7 @@ function roomRoofScene() {
             </g>
         </svg>`;
 }
-function roomOpenRoof() {
+function roomOpenRoof(opts = {}) {
     const stage = srStage();
     if (!stage) return;
     let seed = 7;
@@ -1662,7 +1662,7 @@ function roomOpenRoof() {
             ${stars}
         </div>`;
     stage.appendChild(box);
-    box.querySelector('.sr-sub-back').addEventListener('click', () => box.remove());
+    box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
     // כוכב נופל: יורד באלכסון עם שובל, נעלם, וחוזר למקומו
     box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => {
         if (s.classList.contains('falling') || s.classList.contains('back')) return;

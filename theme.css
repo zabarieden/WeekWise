@@ -8786,3 +8786,65 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-routine-row small { font-size: 0.78rem; color: var(--text-secondary); }
 .daily-board-item-row.is-in-newme .daily-board-item-title, .daily-board-item-row.is-in-newme .daily-board-item-time { opacity: 0.45; }
 .daily-board-newme-tag { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); color: var(--text-primary); font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; z-index: auto; }
+
+/* המסדרון הרחב (בחירה א, 2026-10-08): דלתות, מנורות, פתח בתקרה עם סולם, והתרמיל שמציץ עם הפתק של "הבא" */
+.nmh { aspect-ratio: 390 / 844; }
+.nmh-bag-front { z-index: 3; pointer-events: none; }
+.nmh-door, .nmh-hatch-btn, .nmh-ladder-btn, .nmh-bag, .nmh-keys { position: absolute; z-index: 2; padding: 0; border: none; border-radius: 10px; background: transparent; cursor: pointer; }
+.nmh-bag { z-index: 4; border-radius: 40% 40% 0 0; }
+.nmh-keys { z-index: 5; display: flex; align-items: flex-end; justify-content: center; }
+.nmh-keys-n { margin-bottom: calc(2 * var(--u)); padding: 0 calc(5 * var(--u)); border-radius: 99px; background: rgba(11, 7, 20, 0.78); color: #ffd27a; font-size: calc(10 * var(--u)); font-weight: 800; }
+.nmh-note { position: absolute; z-index: 2; box-sizing: border-box; border-radius: calc(7 * var(--u)); border: 1px solid #dcc9a6; background: #f6ecd9; box-shadow: 0 calc(6 * var(--u)) calc(14 * var(--u)) rgba(0, 0, 0, 0.35); transform: rotate(-7deg); transform-origin: 50% 70%; animation: nmhPeek 3.6s ease-in-out infinite; }
+@keyframes nmhPeek { 0%, 100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(-7deg) translateY(calc(-4 * var(--u))); } }
+.nmh-note-body { display: flex; flex-direction: column; gap: calc(2 * var(--u)); width: 100%; height: 100%; box-sizing: border-box; padding: calc(9 * var(--u)) calc(11 * var(--u)); padding-inline-end: calc(14 * var(--u)); border: none; border-radius: inherit; background: transparent; color: #2a1145; font: inherit; text-align: start; cursor: pointer; z-index: auto; }
+.nmh-note-eyebrow { font-size: calc(10 * var(--u)); font-weight: 700; color: #b0306f; }
+.nmh-note-name { font-size: calc(13.5 * var(--u)); font-weight: 800; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.nmh-note.is-done .nmh-note-body { padding-inline-end: calc(11 * var(--u)); justify-content: center; }
+.nmh-note.is-done .nmh-note-name { color: #8a5a10; }
+.nmh-note-check { position: absolute; top: calc(-11 * var(--u)); inset-inline-end: calc(-9 * var(--u)); z-index: 1; display: grid; place-items: center; width: calc(30 * var(--u)); height: calc(30 * var(--u)); padding: 0; border: none; border-radius: 50%; background: linear-gradient(135deg, #ff4fa3, #a855f7); color: #fff; cursor: pointer; box-shadow: 0 calc(3 * var(--u)) calc(8 * var(--u)) rgba(255, 79, 163, 0.45); }
+.nmh-note-check svg { width: 58%; height: 58%; }
+.nmh-note-check:active { transform: scale(0.9); }
+.nmh-ladder-btn { display: none; }
+.nmh.is-ladder .nmh-ladder-btn { display: block; }
+.nmh-ladder { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); opacity: 0; transition: transform 1.8s cubic-bezier(0.3, 0.8, 0.4, 1), opacity 0.4s; }
+.nmh.is-ladder .nmh-ladder { transform: scaleY(1); opacity: 1; }
+.nmh.is-ladder .nmh-hatch-hole { fill: #07040c; }
+.nmh-hatch-lid { transition: opacity 0.4s; }
+.nmh.is-ladder .nmh-hatch-lid { opacity: 0; }
+.nmh.is-roof .nmh-hatch-hole { animation: nmhHatchGlow 2.8s ease-in-out infinite; }
+@keyframes nmhHatchGlow { 0%, 100% { stroke-opacity: 0.35; } 50% { stroke-opacity: 0.9; } }
+.nmh-tip { position: absolute; z-index: 6; left: calc(16 * var(--u)); right: calc(16 * var(--u)); bottom: calc(160 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)); border-radius: calc(16 * var(--u)); border: 1px solid rgba(255, 210, 122, 0.45); background: rgba(18, 11, 32, 0.93); color: #f5f5f7; font-size: calc(13 * var(--u)); line-height: 1.45; text-align: center; opacity: 0; transform: translateY(calc(8 * var(--u))); pointer-events: none; transition: opacity 0.25s, transform 0.25s; }
+.nmh-tip.on { opacity: 1; transform: none; }
+.nmh-door:focus-visible, .nmh-hatch-btn:focus-visible, .nmh-ladder-btn:focus-visible, .nmh-bag:focus-visible, .nmh-keys:focus-visible, .nmh-note-body:focus-visible, .nmh-note-check:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .nmh-note { animation: none; } .nmh-ladder { transition: none; } .nmh.is-roof .nmh-hatch-hole { animation: none; } }
+
+/* התרמיל פתוח: רצועת עור עם ⚡ / 🔥 / 🔑, הארוחה הבאה, שאר הארוחות, וה"כיסים" (כל האריחים) */
+.nm-backpack-sheet .nm-sheet-grip { display: none; }
+.nmb-band { position: relative; display: flex; align-items: center; gap: 8px; margin: -20px -16px 4px; padding: 20px 16px 12px; background: linear-gradient(180deg, #946238, #7a4a26); border-bottom: 2px dashed rgba(232, 196, 138, 0.55); }
+.nmb-band::before { content: ''; position: absolute; top: 8px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(255, 243, 220, 0.5); }
+.nmb-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-size: 1rem; font-weight: 800; color: #fff3dc; }
+.nmb-title svg { flex-shrink: 0; width: 17px; height: 17px; }
+.nmb-chip { display: inline-flex; align-items: center; gap: 3px; padding: 4px 9px; border-radius: 99px; background: rgba(20, 10, 4, 0.42); color: #7dffcf; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+.nmb-chip.is-over, .nmb-chip.is-streak { color: #ffb27a; }
+.nmb-chip.is-keys { color: #ffd27a; }
+.nmb-chip svg { width: 13px; height: 13px; }
+.nmb-next { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 18px; border: 1.5px solid var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 8%, var(--bg-row)); }
+.nmb-next.is-done { align-items: center; padding: 16px; border-color: #ffd27a; font-weight: 800; color: var(--text-primary); }
+.nmb-eyebrow { font-size: 0.78rem; font-weight: 700; color: var(--accent-pink-text, var(--accent-pink)); }
+.nmb-next-name { font-size: 1.15rem; font-weight: 800; line-height: 1.3; color: var(--text-primary); }
+.nmb-meta { font-size: 0.82rem; color: var(--text-secondary); }
+.nmb-next-actions { display: flex; gap: 8px; margin-top: 10px; }
+.nmb-next-actions .nm-btn-primary { flex: 1; margin: 0; }
+.nmb-swap { flex-shrink: 0; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border-radius: 50%; border: 1.5px solid var(--border-color); background: var(--bg-row); font-size: 1.1rem; cursor: pointer; z-index: auto; }
+.nmb-meals { display: flex; flex-direction: column; gap: 6px; }
+.nmb-meal { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: none; border-radius: 14px; background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; z-index: auto; }
+.nmb-check { flex-shrink: 0; display: grid; place-items: center; width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--border-color); font-size: 0.75rem; font-weight: 800; }
+.nmb-meal.is-done .nmb-check { border-color: transparent; background: #ffd27a; color: #2a1145; }
+.nmb-meal.is-done .nmb-name { opacity: 0.7; }
+.nmb-pos { flex-shrink: 0; min-width: 64px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+.nmb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; font-weight: 700; }
+.nmb-pockets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.nmb-pockets .nm-tile { min-height: 0; align-items: center; justify-content: flex-start; gap: 4px; padding: 10px 4px 9px; border-radius: 16px; text-align: center; }
+.nmb-pockets .nm-tile-icon { font-size: 1.25rem; }
+.nmb-pockets .nm-tile-label { font-size: 0.72rem; }
+.nmb-pockets .nm-tile-sub { display: none; }
