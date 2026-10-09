@@ -31,7 +31,8 @@ async function loadMyDayRoutine(todayStr) {
         if (!tab) return empty;
         const { data: rows } = await supabaseClient.from('routine_items').select('*').eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
         const hours = new Set(Object.values(myDayTabHours(tab)).flat());
-        const items = (rows || []).filter(it => (it.title || '').trim() && hours.has(Number(String(it.time || '').slice(0, 2))));
+        // ארוחות שהוסתרו כי הן כבר בתפריט של New Me - לא מופיעות פעמיים
+        const items = (rows || []).filter(it => (it.title || '').trim() && hours.has(Number(String(it.time || '').slice(0, 2))) && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)));
         const checksOn = isRoutineGoalsOn();
         let doneIds = new Set();
         if (checksOn && items.length) {

@@ -8776,3 +8776,13 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-late-choice.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); }
 .nm-late-card .nm-rem-row { margin-top: 12px; }
 .nm-late-card .nm-rem-row.is-off { opacity: 0.55; }
+
+/* ארוחות גם בשגרה: הגיליון של New Me (מה להסתיר), והשורה החלשה עם 💎 ב"השגרה שלי" */
+.nm-routine-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 14px; }
+.nm-routine-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); cursor: pointer; }
+.nm-routine-row input { flex-shrink: 0; width: 20px; height: 20px; accent-color: var(--accent-pink); }
+.nm-routine-row span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nm-routine-row b { font-size: 0.95rem; color: var(--text-primary); }
+.nm-routine-row small { font-size: 0.78rem; color: var(--text-secondary); }
+.daily-board-item-row.is-in-newme .daily-board-item-title, .daily-board-item-row.is-in-newme .daily-board-item-time { opacity: 0.45; }
+.daily-board-newme-tag { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); color: var(--text-primary); font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; z-index: auto; }

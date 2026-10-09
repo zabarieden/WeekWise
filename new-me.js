@@ -223,6 +223,66 @@ function nmLateRowHtml() {
             <button type="button" class="nm-chip" onclick="nmGo('reminders')">${nmEsc(t('nm_late_change'))}</button>
         </div>`;
 }
+// ---------- ארוחות גם בשגרה (לפי בקשה מפורשת) ----------
+// אחרי שקובעים את הארוחות ב-New Me: אם ב"השגרה שלי" יש ארוחות (ארוחת צהריים וכו'), שואלים פעם אחת אם
+// להסתיר אותן משם - כדי שהארוחות לא יופיעו פעמיים. כלום לא נמחק: מוסתרות (routine_items.hidden_by_new_me),
+// ואפשר להחזיר כל אחת מ"השגרה שלי" (💎) או מההגדרות של New Me. כש-New Me לא פעיל - הן חוזרות לבד
+function nmMealWordsRe() {
+    const words = new Set(['ארוחה', 'ארוחת', 'נשנוש', 'breakfast', 'lunch', 'dinner', 'supper', 'brunch', 'meal', 'snack']);
+    ['nm_pos_1', 'nm_pos_2', 'nm_pos_3', 'nm_pos_4', 'nm_pos_dinner'].forEach(k => Object.keys(translations).forEach(l => {
+        const v = translations[l] && translations[l][k];
+        if (v) words.add(String(v).toLowerCase());
+    }));
+    return new RegExp([...words].filter(w => w.length >= 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+}
+async function nmCheckRoutineMeals(fromSettings) {
+    if (!nmProfile || !supabaseClient || !currentUserId) return;
+    if (!fromSettings && nmProfile.routine_meals_checked) return;
+    const [{ data: items }, { data: tabs }] = await Promise.all([
+        supabaseClient.from('routine_items').select('id, tab_id, title, time, hidden_by_new_me').eq('user_id', currentUserId).eq('kind', 'scheduled'),
+        supabaseClient.from('routine_tabs').select('id, name').eq('user_id', currentUserId),
+    ]);
+    const re = nmMealWordsRe();
+    const all = (items || []).filter(it => re.test(it.title || ''));
+    const meals = (fromSettings ? all : all.filter(it => !it.hidden_by_new_me)).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+    if (!meals.length) {
+        if (fromSettings) showAppToast(t('nm_routine_none'));
+        else nmMarkRoutineChecked();
+        return;
+    }
+    const tabName = new Map((tabs || []).map(tb => [tb.id, tb.name]));
+    const ov = nmOpenSheet(`
+        <h4>🍽️ ${nmEsc(t('nm_routine_title'))}</h4>
+        <p class="nm-fine">${nmEsc(t('nm_routine_text'))}</p>
+        <div class="nm-routine-list">${meals.map(it => `
+            <label class="nm-routine-row">
+                <input type="checkbox" value="${nmEsc(it.id)}" ${!fromSettings || it.hidden_by_new_me ? 'checked' : ''}>
+                <span><b>${nmEsc(it.title)}</b><small><bdi dir="ltr">${nmEsc(String(it.time || '').slice(0, 5))}</bdi>${tabName.get(it.tab_id) ? ' · ' + nmEsc(tabName.get(it.tab_id)) : ''}</small></span>
+            </label>`).join('')}</div>
+        <button type="button" class="nm-btn-primary" data-hide>${nmEsc(t(fromSettings ? 'nm_routine_save' : 'nm_routine_hide'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_routine_keep'))}</button>
+        <p class="nm-fine">${nmEsc(t('nm_routine_note'))}</p>`, 'nm-routine-sheet', () => { if (!fromSettings) nmMarkRoutineChecked(); });
+    ov.querySelector('[data-hide]').addEventListener('click', async () => {
+        const boxes = [...ov.querySelectorAll('.nm-routine-row input')];
+        const hide = boxes.filter(b => b.checked).map(b => b.value);
+        const show = boxes.filter(b => !b.checked).map(b => b.value);
+        const ops = [];
+        if (hide.length) ops.push(supabaseClient.from('routine_items').update({ hidden_by_new_me: true }).eq('user_id', currentUserId).in('id', hide));
+        if (show.length) ops.push(supabaseClient.from('routine_items').update({ hidden_by_new_me: false }).eq('user_id', currentUserId).in('id', show));
+        const res = await Promise.all(ops);
+        if (res.some(r => r && r.error)) { showAppToast(t('nm_save_error'), 'error'); return; }
+        ov.remove();
+        nmMarkRoutineChecked();
+        showAppToast(t(hide.length ? 'nm_routine_hidden_toast' : 'nm_routine_kept_toast'));
+        if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    });
+}
+async function nmMarkRoutineChecked() {
+    if (!nmProfile || nmProfile.routine_meals_checked) return;
+    nmProfile.routine_meals_checked = true;
+    await supabaseClient.from('new_me_profile').update({ routine_meals_checked: true, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+}
+
 function nmLateRow() { return nmReminders.find(r => r.position === 5) || null; }
 function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LATE_TIME; }
 function nmSlotName(slot) { return nmPosName(Math.max(0, nmOrder().indexOf(slot))); }
@@ -263,6 +323,8 @@ async function renderNewMe() {
     nmMaybeAutoTour();
     // החדר הסודי: מפתח חדש שעוד לא נחשף (למשל היום השלישי עם New Me) + כפתור המפתח של מנהלת המוצר
     if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
+    // ארוחות שקיימות גם ב"השגרה שלי" - שואלים פעם אחת אם להסתיר אותן משם
+    if (!nmProfile.routine_meals_checked) nmCheckRoutineMeals();
 }
 
 // ---------- מכירה ----------
@@ -3110,6 +3172,7 @@ function nmRenderSettings(body) {
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
         ${typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount ? `<button type="button" class="nm-row-btn nm-dev-btn" onclick="setNmDevLockedPreview(true)">🔒 ${nmEsc(t('nm_dev_preview_btn'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
+        <button type="button" class="nm-row-btn" onclick="nmCheckRoutineMeals(true)">🍽️ ${nmEsc(t('nm_settings_routine'))}</button>
         ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_DEFAULT_ORDER.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmStartQuiz(true); renderNewMe()">📝 ${nmEsc(t('nm_settings_retake'))}</button>
         <details class="nm-row-details">

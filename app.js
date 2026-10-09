@@ -8649,6 +8649,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_advanced', category: 'nutrition', when: () => typeof nmChAllDone === 'function' && nmChAllDone() },
     { id: 'new_me_shopping', category: 'nutrition' },
     { id: 'new_me_reminders', category: 'nutrition' },
+    { id: 'new_me_routine_meals', category: 'nutrition' },
     { id: 'new_me_checkin', category: 'nutrition' },
     { id: 'new_me_body', category: 'nutrition' },
     { id: 'food_variety', category: 'nutrition' },
@@ -17037,7 +17038,7 @@ async function refreshRoutineNudge() {
     if (!isRoutineGoalsOn() || !supabaseClient || !currentUserId || !isDailyBoardOpen()) { renderRoutineNudge(); return; }
     const todayStr = getLocalDateString();
     const [{ data: items }, { data: checks }] = await Promise.all([
-        supabaseClient.from('routine_items').select('id, tab_id, title, time, created_at, nudge_snoozed_until').eq('user_id', currentUserId).eq('kind', 'scheduled'),
+        supabaseClient.from('routine_items').select('id, tab_id, title, time, created_at, nudge_snoozed_until, hidden_by_new_me').eq('user_id', currentUserId).eq('kind', 'scheduled'),
         supabaseClient.from('routine_item_checkins').select('item_id, checkin_date').eq('user_id', currentUserId).gte('checkin_date', addDaysToDateStr(todayStr, -35)),
     ]);
     const recentFrom = addDaysToDateStr(todayStr, -14);
@@ -17052,7 +17053,7 @@ async function refreshRoutineNudge() {
     items.forEach(it => {
         const tab = tabById.get(it.tab_id);
         const key = normalizeRoutineTitle(it.title);
-        if (!tab || !key) return;
+        if (!tab || !key || routineItemInNewMe(it)) return;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push({ ...it, tab });
     });
@@ -21476,8 +21477,10 @@ async function renderDailyBoard() {
         bucketHours.forEach(hour => {
             const timeStr = `${String(hour).padStart(2, '0')}:00`;
             const item = itemsByTime[timeStr];
+            // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
+            const inNewMe = routineItemInNewMe(item);
             const row = document.createElement('div');
-            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty');
+            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty') + (inNewMe ? ' is-in-newme' : '');
             const timeSpan = document.createElement('span');
             timeSpan.className = 'daily-board-item-time';
             timeSpan.textContent = timeStr;
@@ -21486,7 +21489,7 @@ async function renderDailyBoard() {
             titleBtn.className = 'daily-board-item-title';
             titleBtn.textContent = item ? item.title : t('daily_board_item_add_placeholder');
             titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
-            if (checksOn && item) {
+            if (checksOn && item && !inNewMe) {
                 const done = doneTodayIds.has(item.id);
                 const checkBtn = document.createElement('button');
                 checkBtn.type = 'button';
@@ -21502,10 +21505,33 @@ async function renderDailyBoard() {
             }
             row.appendChild(timeSpan);
             row.appendChild(titleBtn);
+            if (inNewMe) {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.className = 'daily-board-newme-tag';
+                tag.textContent = `💎 ${t('routine_newme_tag')}`;
+                tag.title = t('routine_newme_restore');
+                tag.setAttribute('aria-label', `${t('routine_newme_restore')}: ${item.title}`);
+                tag.onclick = () => restoreRoutineItemFromNewMe(item.id);
+                row.appendChild(tag);
+            }
             section.appendChild(row);
         });
         body.appendChild(section);
     });
+}
+
+// פריט שגרה שהוסתר כי הוא ארוחה שכבר בתפריט של New Me (ר' nmCheckRoutineMeals) - רק כש-New Me פעיל;
+// בלי New Me הוא חוזר להיות פריט רגיל
+function routineItemInNewMe(item) {
+    return !!(item && item.hidden_by_new_me && typeof hasNewMe !== 'undefined' && hasNewMe);
+}
+async function restoreRoutineItemFromNewMe(id) {
+    const { error } = await supabaseClient.from('routine_items').update({ hidden_by_new_me: false }).eq('id', id).eq('user_id', currentUserId);
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+    showAppToast(t('routine_newme_restored'));
+    await renderDailyBoard();
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
 }
 
 function openAddRoutineItemModal(time) {
