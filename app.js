@@ -8597,6 +8597,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
     { id: 'routine_day_tabs', category: 'general' },
+    { id: 'routine_daysoff', category: 'general' },
+    { id: 'routine_ai', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
@@ -17027,6 +17029,228 @@ async function duplicateRoutineTab(name) {
     showAppToast(t('routine_duplicate_done').replace('{name}', data.name));
 }
 
+// --- פריטים לשעות עגולות (מה-AI): שעה שכבר יש בה פריט - רק הכותרת מתעדכנת; שאר הפריטים בטאב נשארים ---
+function routineHoursForItems(items) {
+    const hours = { morning: [], noon: [], afternoon: [], evening: [] };
+    items.forEach(it => { const b = routineBucketOfHour(it.hour); if (b && !hours[b].includes(it.hour)) hours[b].push(it.hour); });
+    Object.keys(hours).forEach(b => hours[b].sort((x, y) => x - y));
+    return hours;
+}
+async function insertRoutineItemsAtHours(tabId, items) {
+    const { data: existing } = await supabaseClient.from('routine_items').select('id, time').eq('tab_id', tabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
+    const byTime = new Map((existing || []).map(it => [String(it.time || '').slice(0, 5), it]));
+    const inserts = [];
+    for (const it of items) {
+        const time = `${String(it.hour).padStart(2, '0')}:00`;
+        const ex = byTime.get(time);
+        if (ex) await supabaseClient.from('routine_items').update({ title: it.title }).eq('id', ex.id);
+        else inserts.push({ tab_id: tabId, user_id: currentUserId, title: it.title, time, kind: 'scheduled' });
+    }
+    if (inserts.length) {
+        const { error } = await supabaseClient.from('routine_items').insert(inserts);
+        if (error) throw error;
+    }
+}
+// ימים שעוברים לטאב חדש יוצאים מהטאבים האחרים - כך ביום הזה "השגרה שלי" ו"היום שלי" מראים את הטאב החדש
+async function routineReleaseDays(days, exceptId) {
+    for (const tb of dailyBoardTabs) {
+        if (tb.id === exceptId) continue;
+        const td = routineTabWeekdays(tb);
+        if (!td.some(d => days.includes(d))) continue;
+        const keep = td.filter(d => !days.includes(d));
+        const { error } = await supabaseClient.from('routine_tabs').update({ weekdays: keep }).eq('id', tb.id);
+        if (!error) tb.weekdays = keep;
+    }
+}
+
+// --- ✨ שגרה חדשה עם AI (לפי בקשה מפורשת, 2026-10-09: "בהגדרות לו"ז של AI, והוא מוסיף ערכה חדשה לפי
+// בקשתך - שהמשתמש לא יצטרך להוסיף באופן ידני"). מתארים במילים, וה-AI (parse-routine-request) מחזיר טאב -
+// או כמה, כשיש שגרות שונות לימים שונים - עם ימים ופריטים בשעות עגולות. אותה מכסה כמו לו"ז ה-AI ---
+async function requestRoutineFromAI(text, days, btn) {
+    if (!isPremiumUser && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+        openPremiumUpgradeModal();
+        return null;
+    }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return null; }
+    if (btn && btn.disabled) return null;
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = t('routine_ai_working'); }
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
+        if (!token) { showAppToast(t('error_not_connected'), 'error'); return null; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-routine-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text, weekdays: days && days.length ? days : null, lang: currentLang }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (result.error === 'limit_reached') {
+            if (result.scope === 'free_lifetime') {
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+                openPremiumUpgradeModal();
+            } else showAppToast(t('routine_ai_limit'), 'error');
+            return null;
+        }
+        if (!res.ok || !Array.isArray(result.tabs) || !result.tabs.length) { showAppToast(t('routine_ai_failed'), 'error'); return null; }
+        if (!isPremiumUser) cachedScheduleAiLifetimeUsed++;
+        return result.tabs;
+    } catch {
+        showAppToast(t('routine_ai_failed'), 'error');
+        return null;
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+    }
+}
+
+function openRoutineAiModal() {
+    closeModal('modal-routine-add-choice');
+    const ta = document.getElementById('routine-ai-text');
+    if (ta) ta.value = '';
+    openModalOverDailyBoard('modal-routine-ai');
+    setTimeout(() => { if (ta) ta.focus(); }, 120);
+}
+
+async function createRoutineWithAI() {
+    const ta = document.getElementById('routine-ai-text');
+    const text = ta ? ta.value.trim() : '';
+    if (!text) { showAppToast(t('routine_ai_empty'), 'error'); if (ta) ta.focus(); return; }
+    const tabs = await requestRoutineFromAI(text, null, document.getElementById('routine-ai-create'));
+    if (!tabs) return;
+    let firstId = null;
+    try {
+        for (const ai of tabs) {
+            if (ai.weekdays.length) await routineReleaseDays(ai.weekdays);
+            const { data, error } = await supabaseClient.from('routine_tabs').insert({
+                user_id: currentUserId, username: currentUsername, name: uniqueRoutineTabName(ai.name || t('routine_ai_default_name')),
+                sort_order: nextRoutineTabSortOrder(), weekdays: ai.weekdays.length ? ai.weekdays : null, custom_hours: routineHoursForItems(ai.items),
+            }).select('*').single();
+            if (error || !data) throw error || new Error('insert failed');
+            dailyBoardTabs.push(data);
+            await insertRoutineItemsAtHours(data.id, ai.items);
+            if (!firstId) firstId = data.id;
+        }
+    } catch (e) {
+        showAppToast(t('error_adding_item') + (e && e.message ? e.message : ''), 'error');
+    }
+    closeModal('modal-routine-ai');
+    if (!firstId) return;
+    await finishRoutineTabsChange(firstId);
+    const first = dailyBoardTabs.find(tb => tb.id === firstId);
+    showAppToast(tabs.length > 1 ? t('routine_ai_done_many').replace('{n}', tabs.length) : t('routine_ai_done').replace('{name}', first ? first.name : ''));
+}
+
+// --- 🌴 ימי חופש (לפי בקשה מפורשת, 2026-10-09: "אפשרות ל-2 ימי חופש - ואיזה ימים אלה, ומה תהיה השגרה;
+// או שבימי חופש אין לו"ז ומשאירים נקי"). טאב משלו (routine_tabs.day_off) עם הימים האלה, שיוצאים מהטאבים
+// האחרים - כך בימים האלה "השגרה שלי" ו"היום שלי" מראים רק אותו: בלי פריטים = נקי, בלי לו"ז ---
+let routineDaysOffDays = new Set();
+let routineDaysOffMode = 'clean';
+function routineDaysOffTab() { return dailyBoardTabs.find(tb => tb.day_off) || null; }
+// ימים שעוד אין להם טאב (אם הם 1–3), אחרת סוף השבוע המקובל: שישי–שבת בעברית ובערבית, שבת–ראשון בשאר
+function routineDefaultDaysOff() {
+    const covered = new Set(dailyBoardTabs.filter(tb => !tb.day_off).flatMap(routineTabWeekdays));
+    const free = [0, 1, 2, 3, 4, 5, 6].filter(d => !covered.has(d));
+    if (covered.size && free.length >= 1 && free.length <= 3) return free;
+    return ['he', 'ar'].includes(currentLang) ? [5, 6] : [6, 0];
+}
+function openRoutineDaysOff() {
+    closeModal('modal-routine-add-choice');
+    const existing = routineDaysOffTab();
+    routineDaysOffDays = new Set(existing && routineTabWeekdays(existing).length ? routineTabWeekdays(existing) : routineDefaultDaysOff());
+    routineDaysOffMode = 'clean';
+    const ta = document.getElementById('routine-daysoff-ai-text');
+    if (ta) ta.value = '';
+    renderRoutineDaysOff();
+    openModalOverDailyBoard('modal-routine-daysoff');
+}
+function renderRoutineDaysOff() {
+    const daysWrap = document.getElementById('routine-daysoff-days');
+    if (daysWrap) {
+        daysWrap.innerHTML = '';
+        for (let d = 0; d < 7; d++) {
+            const on = routineDaysOffDays.has(d);
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'board-hour-chip' + (on ? ' active' : '');
+            chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+            chip.textContent = routineWeekdayName(d, 'short');
+            chip.onclick = () => { if (routineDaysOffDays.has(d)) routineDaysOffDays.delete(d); else routineDaysOffDays.add(d); renderRoutineDaysOff(); };
+            daysWrap.appendChild(chip);
+        }
+    }
+    const modes = document.getElementById('routine-daysoff-modes');
+    if (modes) {
+        const opt = (id, icon, key) => `<button type="button" class="routine-daysoff-mode${routineDaysOffMode === id ? ' on' : ''}" role="radio" aria-checked="${routineDaysOffMode === id}" onclick="setRoutineDaysOffMode('${id}')"><span class="routine-daysoff-mode-icon" aria-hidden="true">${icon}</span><span>${escapeHtmlForReport(t(key))}</span></button>`;
+        modes.innerHTML = opt('clean', '🌿', 'routine_daysoff_clean') + opt('own', '✏️', 'routine_daysoff_own') + opt('ai', '✨', 'routine_daysoff_ai');
+    }
+    const ta = document.getElementById('routine-daysoff-ai-text');
+    if (ta) ta.classList.toggle('hidden', routineDaysOffMode !== 'ai');
+    const save = document.getElementById('routine-daysoff-save');
+    if (save) { save.classList.remove('confirm'); save.textContent = t('save_generic'); }
+}
+function setRoutineDaysOffMode(mode) {
+    routineDaysOffMode = mode;
+    renderRoutineDaysOff();
+    if (mode === 'ai') setTimeout(() => { const ta = document.getElementById('routine-daysoff-ai-text'); if (ta) ta.focus(); }, 60);
+}
+async function saveRoutineDaysOff() {
+    if (!supabaseClient || !currentUserId) return;
+    const days = [...routineDaysOffDays].sort((a, b) => a - b);
+    if (!days.length) { showAppToast(t('routine_daysoff_pick_days'), 'error'); return; }
+    const save = document.getElementById('routine-daysoff-save');
+    let tab = routineDaysOffTab();
+    // "בלי לו״ז" כשבטאב של ימי החופש כבר יש פריטים: נגיעה ראשונה שואלת, השנייה מנקה
+    if (routineDaysOffMode === 'clean' && tab) {
+        const items = await fetchRoutineTabItems(tab.id);
+        if (items.length) {
+            if (save && !save.classList.contains('confirm')) { save.classList.add('confirm'); save.textContent = t('routine_daysoff_clear_q'); return; }
+            await supabaseClient.from('routine_items').delete().eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
+        }
+    }
+    let ai = null;
+    if (routineDaysOffMode === 'ai') {
+        const ta = document.getElementById('routine-daysoff-ai-text');
+        const text = ta ? ta.value.trim() : '';
+        if (!text) { showAppToast(t('routine_ai_empty'), 'error'); if (ta) ta.focus(); return; }
+        const tabs = await requestRoutineFromAI(text, days, save);
+        if (!tabs) return;
+        ai = tabs[0];
+    }
+    try {
+        await routineReleaseDays(days, tab ? tab.id : null);
+        if (tab) {
+            const fields = { weekdays: days };
+            if (ai) fields.custom_hours = mergeRoutineHours(getDailyBoardCustomHours(tab.id), routineHoursForItems(ai.items));
+            const { error } = await supabaseClient.from('routine_tabs').update(fields).eq('id', tab.id);
+            if (error) throw error;
+            Object.assign(tab, fields);
+        } else {
+            const { data, error } = await supabaseClient.from('routine_tabs').insert({
+                user_id: currentUserId, username: currentUsername, name: uniqueRoutineTabName(`🌴 ${t('routine_add_daysoff')}`), sort_order: nextRoutineTabSortOrder(),
+                weekdays: days, day_off: true, custom_hours: ai ? routineHoursForItems(ai.items) : null,
+            }).select('*').single();
+            if (error || !data) throw error || new Error('insert failed');
+            dailyBoardTabs.push(data);
+            tab = data;
+        }
+        if (ai) await insertRoutineItemsAtHours(tab.id, ai.items);
+    } catch (e) {
+        showAppToast(t('error_adding_item') + (e && e.message ? e.message : ''), 'error');
+        return;
+    }
+    tab.showGrid = routineDaysOffMode !== 'clean';
+    closeModal('modal-routine-daysoff');
+    await finishRoutineTabsChange(tab.id);
+    showAppToast(t(routineDaysOffMode === 'clean' ? 'routine_daysoff_done_clean' : 'routine_daysoff_done'));
+}
+// טאב ימי חופש נקי (בלי פריטים): במקום שורות שעה ריקות - "יום חופש, בלי לו״ז", ואפשר להוסיף בכל זאת
+function routineDayOffShowGrid() {
+    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    if (tab) tab.showGrid = true;
+    renderDailyBoard();
+}
+
 // --- 🌱 פריט שלא סומן ✓ יותר מ-3 ימים: כרטיס עדין בראש "השגרה שלי" ששואל אם זה עדיין חלק
 // מהשגרה, אם זה עובד ואם כדאי לשנות משהו כדי להתקדם - לפי בקשה מפורשת. נספרים רק הימים
 // שבהם הפריט קיים (ימי הטאב; טאב בלי ימים = כל יום), ואותו שם בכמה טאבים (אותו הרגל שהועתק
@@ -21540,6 +21764,11 @@ async function renderDailyBoard() {
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
+    const activeTab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    if (activeTab && activeTab.day_off && !(items || []).length && !activeTab.showGrid) {
+        body.innerHTML = `<div class="routine-dayoff-empty"><span class="routine-dayoff-empty-icon" aria-hidden="true">🌿</span><p>${escapeHtmlForReport(t('routine_daysoff_empty'))}</p><button type="button" class="btn-link-action" onclick="routineDayOffShowGrid()">${escapeHtmlForReport(t('routine_daysoff_add_anyway'))}</button></div>`;
+        return;
+    }
     body.innerHTML = '';
     bucketOrder.forEach(key => {
         const bucketHours = customHours[key] || [];

@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=528">
+    <link rel="stylesheet" href="theme.css?v=529">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -279,9 +279,9 @@
                         <!-- ⓘ כמה זה 8 כוסות (toggleMyDayWaterInfo ב-home.js) -->
                         <span class="myday-water-tip hidden" id="myday-water-tip" role="note" data-i18n="myday_water_info">8 medium / small glasses of water are about 2 liters on average</span>
                     </div>
-                    <!-- New Me: למי שרכש/ה - הארוחה הבאה; למי שלא - נעול, "גרסה חדשה של עצמי" (לפי בחירה מפורשת).
+                    <!-- New Me: רק למי שרכש/ה - הארוחה הבאה. מי שלא רכש/ה לא רואה אותו כאן, רק בתפריט (לפי בקשה מפורשת, 2026-10-09).
                          אותו id כמו הקיצור הקודם (updateNewMeShortcut ב-new-me.js) -->
-                    <button type="button" class="myday-newme-tile locked" id="btn-newme-shortcut" onclick="openNewMeFromHome()">
+                    <button type="button" class="myday-newme-tile locked hidden" id="btn-newme-shortcut" onclick="openNewMeFromHome()">
                         <span class="myday-newme-head"><svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg>New Me<svg class="myday-newme-lock" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
                         <span class="myday-newme-line" id="myday-newme-line"></span>
                         <span class="myday-newme-sub" id="myday-newme-sub"></span>
@@ -3585,6 +3585,8 @@
                     <button type="button" class="daily-board-tab-add" onclick="openRoutineAddChoice()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
                 <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
+                    <!-- ✨ לו"ז AI בהגדרות (לפי בקשה מפורשת): מתארים במילים, וה-AI מוסיף טאב חדש עם הכול -->
+                    <button type="button" class="routine-ai-settings-btn" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_add_ai">A new routine with AI</span></button>
                     <!-- לאילו ימים הטאב (לא חובה): ביום הזה "השגרה שלי" נפתחת ישר עליו, ושאלת "3 ימים בלי ✓"
                          סופרת רק את הימים שבהם הפריט באמת קיים - לפי בקשה מפורשת -->
                     <div class="daily-board-hours-settings-group">
@@ -3659,6 +3661,9 @@
                 <div class="routine-add-options">
                     <button type="button" class="routine-add-option" onclick="routineAddEmptyTab()">✏️ <span data-i18n="routine_add_empty">New empty tab</span></button>
                     <button type="button" class="routine-add-option" id="routine-add-duplicate-btn" onclick="routineStartDuplicateTab()">📄 <span id="routine-add-duplicate-label"></span></button>
+                    <!-- 🌴 ימי חופש ו-✨ שגרה עם AI (לפי בקשה מפורשת, 2026-10-09) -->
+                    <button type="button" class="routine-add-option" onclick="openRoutineDaysOff()">🌴 <span data-i18n="routine_add_daysoff">Days off</span></button>
+                    <button type="button" class="routine-add-option" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_add_ai">A new routine with AI</span></button>
                 </div>
                 <div class="routine-templates-head">
                     <span data-i18n="routine_templates_title">Ready templates</span>
@@ -3671,6 +3676,36 @@
                 <div class="routine-template-grid" id="routine-template-ready"></div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-add-choice')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌴 ימי חופש: אילו ימים, ומה השגרה בהם (בלי לו״ז / שגרה משלי / לספר ל-AI) - ר' openRoutineDaysOff ב-app.js -->
+        <div id="modal-routine-daysoff" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>🌴 <span data-i18n="routine_add_daysoff">Days off</span></h3>
+                <p class="routine-daysoff-label" data-i18n="routine_daysoff_which">Which days?</p>
+                <div class="daily-board-hours-chips" id="routine-daysoff-days"></div>
+                <p class="routine-daysoff-label" data-i18n="routine_daysoff_what">And what's the routine on those days?</p>
+                <div class="routine-daysoff-modes" id="routine-daysoff-modes" role="radiogroup"></div>
+                <textarea id="routine-daysoff-ai-text" class="routine-ai-input hidden" rows="4" maxlength="2000" data-i18n-placeholder="routine_daysoff_ai_ph" data-i18n-aria-label="routine_daysoff_ai" aria-label="Tell the AI what I do"></textarea>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" id="routine-daysoff-save" onclick="saveRoutineDaysOff()" data-i18n="save_generic">Save</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-daysoff')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✨ שגרה חדשה עם AI: כותבים מה השגרה, ונוצר טאב חדש (ר' createRoutineWithAI ב-app.js) -->
+        <div id="modal-routine-ai" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>✨ <span data-i18n="routine_add_ai">A new routine with AI</span></h3>
+                <textarea id="routine-ai-text" class="routine-ai-input" rows="5" maxlength="2000" data-i18n-placeholder="routine_ai_ph" data-i18n-aria-label="routine_add_ai" aria-label="A new routine with AI"></textarea>
+                <div class="action-buttons-wrap" style="margin-top: 12px;">
+                    <button type="button" class="btn-primary" id="routine-ai-create" onclick="createRoutineWithAI()" data-i18n="routine_ai_create">Create the routine</button>
+                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-ai')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -4298,14 +4333,14 @@
 
     </div>
 
-    <script src="i18n.js?v=432"></script>
-    <script src="app.js?v=568"></script>
+    <script src="i18n.js?v=433"></script>
+    <script src="app.js?v=569"></script>
     <script src="ai-chat.js?v=2"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="new-me-data.js?v=8"></script>
-    <script src="new-me.js?v=36"></script>
+    <script src="new-me.js?v=37"></script>
     <script src="new-me-challenges.js?v=6"></script>
     <script src="secret-room.js?v=14"></script>
     <script src="secret-places.js?v=1"></script>

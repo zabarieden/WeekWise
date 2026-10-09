@@ -2477,10 +2477,12 @@ function myDayNewMeItems() {
         };
     });
 }
+// במסך הבית רק למי שרכש/ה (לפי בקשה מפורשת: "מי שלא קנה - שלא יהיה על המסך, רק בהמבורגר")
 function nmRenderHomeTile() {
     const tile = document.getElementById('btn-newme-shortcut');
     if (!tile) return;
     tile.classList.toggle('locked', !hasNewMe);
+    tile.classList.toggle('hidden', !hasNewMe);
     const line = document.getElementById('myday-newme-line');
     const sub = document.getElementById('myday-newme-sub');
     if (!line || !sub) return;
