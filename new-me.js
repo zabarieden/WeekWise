@@ -291,6 +291,152 @@ async function nmMarkRoutineChecked() {
     await supabaseClient.from('new_me_profile').update({ routine_meals_checked: true, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
 }
 
+// ---------- שעות האוכל (לפי בקשה מפורשת, 2026-10-10) ----------
+// "להטמיע ב-New Me את השעות של האוכל שיהיה מסונכרן גם מהשגרה - לשאול אם יש בשגרה שעות שבהן אוכלים, ואז לסנכרן;
+// ואם אין - לשאול מתי רוצים לאכול וכמה ארוחות". השעות האלה הן השעות של הארוחות בכל מקום: המסדרון, "היום שלי"
+// והתזכורות (new_me_reminders). ארוחה בשגרה מזוהה לפי השם (בוקר / צהריים / ערב / נשנוש, גם בשפות אחרות);
+// "ארוחה" בלי סוג הולכת לארוחה הפנויה הבאה. בשאלון זה שלב משלו; למי שכבר באמצע - שואלים פעם אחת, ואפשר תמיד
+// לחזור לזה מההגדרות של New Me. כמה ארוחות: 4 (הכול), 3 (בלי הנשנוש), 2 (שתי הארוחות הגדולות)
+const NM_TIME_TYPES = [
+    ['meal1', ['nm_pos_1'], ['בוקר', 'breakfast', 'brunch', 'desayuno', 'petit-déjeuner', 'frühstück', 'завтрак', 'فطور', 'colazione', 'café da manhã']],
+    ['meal2', ['nm_pos_3'], ['צהריים', 'צהרים', 'lunch', 'almuerzo', 'déjeuner', 'mittagessen', 'обед', 'غداء', 'pranzo', 'almoço']],
+    ['snack2', ['nm_pos_dinner'], ['ערב', 'dinner', 'supper', 'cena', 'dîner', 'abendessen', 'ужин', 'عشاء', 'jantar']],
+    ['snack1', ['nm_pos_2', 'nm_pos_4'], ['נשנוש', 'snack', 'merienda', 'goûter', 'collation', 'перекус', 'lanche', 'spuntino']],
+];
+const NM_TIMES_HIDE = { 4: [], 3: ['snack1'], 2: ['snack1', 'snack2'] };
+let nmTimes = null;   // { mode: null | 'routine' | 'manual', hidden: [], times: { slot: 'HH:MM' }, found: [], hide, firstTime }
+function nmWordsRe(keys, extra) {
+    const words = new Set(extra);
+    keys.forEach(k => Object.keys(translations).forEach(l => { const v = translations[l] && translations[l][k]; if (v) words.add(String(v).toLowerCase()); }));
+    return new RegExp([...words].filter(w => w.length >= 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+}
+// הארוחות שבשגרה - בטאב של היום (ואם אין בו ארוחות, בטאב הראשון שיש בו) → { times: { slot: 'HH:MM' }, items }
+async function nmRoutineMealTimes() {
+    if (!supabaseClient || !currentUserId) return { times: {}, items: [] };
+    const [{ data: tabs }, { data: items }] = await Promise.all([
+        supabaseClient.from('routine_tabs').select('id, weekdays, sort_order').eq('user_id', currentUserId),
+        supabaseClient.from('routine_items').select('id, tab_id, title, time, hidden_by_new_me').eq('user_id', currentUserId).eq('kind', 'scheduled'),
+    ]);
+    const re = nmMealWordsRe();
+    const meals = (items || []).filter(it => /^\d{2}:\d{2}/.test(String(it.time || '')) && re.test(it.title || ''));
+    if (!meals.length) return { times: {}, items: [] };
+    const today = new Date().getDay();
+    const days = tb => (Array.isArray(tb.weekdays) ? tb.weekdays.map(Number) : []);
+    const sorted = (tabs || []).slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    const tab = [sorted.find(tb => days(tb).includes(today)), sorted.find(tb => !days(tb).length), ...sorted].filter(Boolean).find(tb => meals.some(it => it.tab_id === tb.id));
+    const list = meals.filter(it => !tab || it.tab_id === tab.id).sort((a, b) => String(a.time).localeCompare(String(b.time)));
+    const types = NM_TIME_TYPES.map(([slot, keys, extra]) => [slot, nmWordsRe(keys, extra)]);
+    const times = {}, used = [];
+    list.forEach(it => { const ty = types.find(([slot, r]) => !times[slot] && r.test(it.title || '')); if (ty) { times[ty[0]] = String(it.time).slice(0, 5); used.push(it); } });
+    list.filter(it => !used.includes(it)).forEach(it => { const slot = NEW_ME_DEFAULT_ORDER.find(s => !times[s]); if (slot) { times[slot] = String(it.time).slice(0, 5); used.push(it); } });
+    return { times, items: used };
+}
+function nmTimesStart(opts = {}) {
+    nmTimes = {
+        mode: null,
+        hidden: nmHiddenSlots(),
+        times: Object.fromEntries(NEW_ME_DEFAULT_ORDER.map(s => [s, nmSlotReminderTime(s)])),
+        found: [], hide: true, firstTime: !!opts.firstTime,
+    };
+}
+function nmTimesActive() { return NEW_ME_DEFAULT_ORDER.filter(s => !nmTimes.hidden.includes(s)); }
+function nmTimesBodyHtml() {
+    const s = nmTimes;
+    const pick = (m, key) => `<button type="button" class="nm-times-pick${s.mode === m ? ' selected' : ''}" aria-pressed="${s.mode === m}" onclick="nmTimesPick('${m}')">${nmEsc(t(key))}</button>`;
+    let html = `<p class="nm-times-q">${nmEsc(t('nm_times_q'))}</p><div class="nm-times-picks">${pick('routine', 'nm_times_from_routine')}${pick('manual', 'nm_times_manual')}</div>`;
+    if (!s.mode) return html;
+    if (s.mode === 'routine' && !s.found.length) html += `<p class="nm-soft-warn">${nmEsc(t('nm_times_none_found'))}</p>`;
+    const count = 4 - s.hidden.length;
+    html += `
+        <div class="nm-slot-name">${nmEsc(t('nm_times_count'))}</div>
+        <div class="nm-chip-row nm-times-count" role="radiogroup" aria-label="${nmEsc(t('nm_times_count'))}">${[2, 3, 4].map(n => `<button type="button" role="radio" class="nm-chip${count === n ? ' selected' : ''}" aria-checked="${count === n}" onclick="nmTimesCount(${n})">${nmFmt(n)}</button>`).join('')}</div>
+        <div class="nm-card nm-times-list">${nmTimesActive().map(slot => `
+            <label class="nm-rem-row">
+                <span class="nm-rem-text"><b>${nmEsc(nmSlotName(slot))}</b></span>
+                <input type="time" class="nm-rem-time" data-slot="${slot}" value="${nmEsc(s.times[slot])}" onchange="nmTimesSet('${slot}', this.value)" aria-label="${nmEsc(nmSlotName(slot))}">
+            </label>`).join('')}</div>`;
+    if (s.mode === 'routine' && s.found.length) html += `<label class="nm-agree nm-times-hide"><input type="checkbox" ${s.hide ? 'checked' : ''} onchange="nmTimes.hide = this.checked"><span>${nmEsc(t('nm_times_hide'))}</span></label>`;
+    return html;
+}
+function nmTimesRerender() {
+    const box = document.getElementById('nm-times-box');
+    if (box) box.innerHTML = nmTimesBodyHtml();
+    const save = document.querySelector('.nm-times-sheet [data-save]');
+    if (save) save.disabled = !nmTimes.mode;
+    // בשאלון: "המשך" נפתח רק אחרי שבוחרים
+    if (nmQuiz && nmQuiz.step === 4) nmRenderQuiz(nmRoot());
+}
+async function nmTimesPick(mode) {
+    if (!nmTimes) return;
+    if (mode === 'routine') {
+        const { times, items } = await nmRoutineMealTimes();
+        nmTimes.found = items;
+        Object.assign(nmTimes.times, times);
+    } else nmTimes.found = [];
+    nmTimes.mode = mode;
+    nmTimesRerender();
+}
+function nmTimesCount(n) { if (!nmTimes || !NM_TIMES_HIDE[n]) return; nmTimes.hidden = NM_TIMES_HIDE[n].slice(); nmTimesRerender(); }
+function nmTimesSet(slot, value) { if (nmTimes && /^([01]\d|2[0-3]):[0-5]\d$/.test(value || '')) nmTimes.times[slot] = value; }
+// מה שנשמר בפרופיל: הארוחות שהוסרו, הסדר לפי השעות, ושנשאל
+function nmTimesProfileRow() {
+    const s = nmTimes;
+    const order = NEW_ME_DEFAULT_ORDER.slice().sort((a, b) => s.times[a].localeCompare(s.times[b]) || NEW_ME_DEFAULT_ORDER.indexOf(a) - NEW_ME_DEFAULT_ORDER.indexOf(b));
+    const row = { hidden_slots: s.hidden.join(',') || null, meal_order: order.join(','), meal_times_set_at: new Date().toISOString() };
+    if (s.mode === 'routine' && s.found.length && s.hide) row.routine_meals_checked = true;
+    return row;
+}
+// אחרי שהפרופיל נשמר: השעות לכל הארוחות, והסתרת הארוחות מהשגרה (אם נבחר) - כדי שלא יופיעו פעמיים
+async function nmTimesApplyAfterSave(s) {
+    await nmSyncReminders({ times: s.times });
+    if (s.mode === 'routine' && s.found.length && s.hide) {
+        await supabaseClient.from('routine_items').update({ hidden_by_new_me: true }).eq('user_id', currentUserId).in('id', s.found.map(it => it.id));
+    }
+}
+function nmOpenMealTimes(opts = {}) {
+    if (!nmProfile) return;
+    nmTimesStart(opts);
+    const firstTime = !!opts.firstTime;
+    const ov = nmOpenSheet(`
+        <h4>🕐 ${nmEsc(t('nm_times_title'))}</h4>
+        <div id="nm-times-box">${nmTimesBodyHtml()}</div>
+        <button type="button" class="nm-btn-primary" data-save disabled>${nmEsc(t('save_generic'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t(firstTime ? 'nm_times_later' : 'close_btn'))}</button>`, 'nm-times-sheet', () => { nmTimes = null; if (firstTime) nmTimesMarkAsked(); });
+    ov.querySelector('[data-save]').addEventListener('click', async e => {
+        const s = nmTimes;
+        if (!s || !s.mode) return;
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        // ארוחה שיוצאת מהתפריט וכבר סומנה ✓ היום - הסימון יורד איתה (כמו בהסרת ארוחה)
+        const prevHidden = nmHiddenSlots();
+        for (const slot of s.hidden) if (!prevHidden.includes(slot) && nmTodayCheckins[slot]) await nmUncheck(slot);
+        const row = nmTimesProfileRow();
+        const { error } = await supabaseClient.from('new_me_profile').update({ ...row, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+        if (error) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
+        Object.assign(nmProfile, row);
+        await nmTimesApplyAfterSave(s);
+        ov.remove();
+        nmTimes = null;
+        showAppToast(t('nm_times_saved'));
+        await nmLoadToday();
+        nmRenderView(nmRoot());
+        nmRenderHomeTile();
+        if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    });
+}
+// פעם אחת, למי שכבר באמצע New Me: כשבשגרה יש ארוחות - יש מה לסנכרן, אז שואלים. בלי ארוחות בשגרה השעות נשארות
+// כמו שהן (בשאלון זה שלב קבוע, ותמיד אפשר מההגדרות של New Me)
+async function nmMaybeAskMealTimes() {
+    const { items } = await nmRoutineMealTimes();
+    if (!items.length || document.querySelector('.nm-sheet-overlay, .sr-reveal')) { if (!items.length && !nmProfile.routine_meals_checked) nmCheckRoutineMeals(); return; }
+    nmOpenMealTimes({ firstTime: true });
+}
+async function nmTimesMarkAsked() {
+    if (!nmProfile || nmProfile.meal_times_set_at) return;
+    nmProfile.meal_times_set_at = new Date().toISOString();
+    await supabaseClient.from('new_me_profile').update({ meal_times_set_at: nmProfile.meal_times_set_at, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+}
+
 function nmLateRow() { return nmReminders.find(r => r.position === 5) || null; }
 function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LATE_TIME; }
 // השם של הארוחה לפי המקום שלה בסדר המקורי (בוקר / צהריים / נשנוש / ערב קלה) - לא זז כשגוררים
@@ -332,8 +478,9 @@ async function renderNewMe() {
     nmMaybeAutoTour();
     // החדר הסודי: מפתח חדש שעוד לא נחשף (למשל היום השלישי עם New Me) + כפתור המפתח של מנהלת המוצר
     if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
-    // ארוחות שקיימות גם ב"השגרה שלי" - שואלים פעם אחת אם להסתיר אותן משם
-    if (!nmProfile.routine_meals_checked) nmCheckRoutineMeals();
+    // שעות האוכל - שואלים פעם אחת (מהשגרה, או כמה ארוחות ומתי); ואחר כך, אם צריך, אם להסתיר ארוחות מהשגרה
+    if (!nmProfile.meal_times_set_at) nmMaybeAskMealTimes();
+    else if (!nmProfile.routine_meals_checked) nmCheckRoutineMeals();
 }
 
 // ---------- מכירה ----------
@@ -482,7 +629,7 @@ function nmStartQuiz(fromSettings) {
         if (input && !input.value) input.value = def;
     });
 }
-function nmQuizTotal() { return nmQuiz && nmQuiz.withLetter ? 5 : 4; }
+function nmQuizTotal() { return nmQuiz && nmQuiz.withLetter ? 6 : 5; }
 
 function nmDisclaimerHtml() {
     const suffix = currentLang === 'he' ? '' : (currentLang === 'es' ? '-es' : '-en');
@@ -530,6 +677,13 @@ function nmRenderQuiz(root) {
             </div>
             <p class="nm-fine">${nmEsc(t('nm_q_plan_note'))}</p>`;
     } else if (q.step === 4) {
+        // שעות האוכל: מהשגרה, או כמה ארוחות ומתי (ר' nmTimesBodyHtml)
+        if (!nmTimes) nmTimesStart();
+        body = `
+            <h3 class="nm-step-title">🕐 ${nmEsc(t('nm_times_title'))}</h3>
+            <div id="nm-times-box">${nmTimesBodyHtml()}</div>`;
+        canContinue = !!nmTimes.mode;
+    } else if (q.step === 5) {
         body = `
             <h3 class="nm-step-title">✉️ ${nmEsc(t('nm_letter_title'))}</h3>
             <p class="nm-fine">${nmEsc(t('nm_letter_intro').replace('{n}', nmFmt(NEW_ME_CHALLENGES.length)))}</p>
@@ -576,7 +730,7 @@ function nmRenderQuiz(root) {
 function nmQuizLate(c) { nmQuiz.late = c; nmRenderQuiz(nmRoot()); }
 
 function nmQuizBack() {
-    if (nmQuiz.step === 0) { nmQuiz = null; nmView = 'settings'; renderNewMe(); return; }
+    if (nmQuiz.step === 0) { nmQuiz = null; nmTimes = null; nmView = 'settings'; renderNewMe(); return; }
     nmQuiz.step--;
     nmRenderQuiz(nmRoot());
 }
@@ -589,6 +743,7 @@ async function nmQuizNext() {
         const w = parseFloat(q.weight);
         if (!(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
+    if (q.step === 4 && !(nmTimes && nmTimes.mode)) return;
     if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
     const letter = q.withLetter ? String(q.letter || '').trim().slice(0, 4000) : '';
     if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
@@ -607,12 +762,17 @@ async function nmQuizNext() {
         updated_at: new Date().toISOString(),
     };
     if (q.late) row.late_choice = q.late;
+    // שעות האוכל מהשלב שלהן: הארוחות שהוסרו, הסדר לפי השעות, ושנשאל
+    const timesState = nmTimes && nmTimes.mode ? nmTimes : null;
+    if (timesState) Object.assign(row, nmTimesProfileRow());
     // מסע חדש מתחיל ביום הראשון של התוכנית; מילוי השאלון מחדש לא מאפס את "יום X"
     if (!nmProfile) row.started_on = today;
     if (letter) { row.letter_text = letter; row.letter_written_at = new Date().toISOString(); }
     const { data, error } = await supabaseClient.from('new_me_profile').upsert(row, { onConflict: 'user_id' }).select().maybeSingle();
     if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
     nmProfile = data || { ...nmProfile, ...row };
+    if (timesState) await nmTimesApplyAfterSave(timesState);
+    nmTimes = null;
     // המשקל ההתחלתי נכנס גם למעקב המשקל הקיים (אותה טבלה בדיוק)
     await insertWeightRecord(row.start_weight, today, 'New Me');
     if (typeof loadWeightHistory === 'function') loadWeightHistory();
@@ -3120,6 +3280,8 @@ async function nmSyncReminders(change) {
             if (change.time) time = change.time;
             if (change.enabled != null) enabled = change.enabled;
         }
+        // שעות האוכל (מהשגרה או שנבחרו כאן) - לכל הארוחות בבת אחת
+        if (change && change.times && /^([01]\d|2[0-3]):[0-5]\d$/.test(change.times[slot] || '')) time = change.times[slot];
         // ארוחה שהוסרה מהתפריט - בלי תזכורת
         if (hidden.includes(slot)) enabled = false;
         const [h, m] = time.split(':').map(Number);
@@ -3305,6 +3467,7 @@ function nmRenderSettings(body) {
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
         ${typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount ? `<button type="button" class="nm-row-btn nm-dev-btn" onclick="setNmDevLockedPreview(true)">🔒 ${nmEsc(t('nm_dev_preview_btn'))}</button>` : ''}
+        <button type="button" class="nm-row-btn" onclick="nmOpenMealTimes()">🕐 ${nmEsc(t('nm_times_title'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmCheckRoutineMeals(true)">🍽️ ${nmEsc(t('nm_settings_routine'))}</button>
         ${customOrder ? `<button type="button" class="nm-row-btn" onclick="nmSaveOrder(NEW_ME_DEFAULT_ORDER.slice()); nmGo('settings')">↺ ${nmEsc(t('nm_order_reset'))}</button>` : ''}
