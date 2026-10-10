@@ -21879,13 +21879,20 @@ async function restoreRoutineItemFromNewMe(id) {
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
 }
 
+// השעה של הפריט: כפתור עם השעה, ונגיעה פותחת את הבורר המעוצב (שעות ודקות) - ר' nmToggleTimePicker ב-new-me.js
+function routineItemSetTimeBtn(time) {
+    if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
+    const btn = document.getElementById('routine-item-time-btn');
+    if (btn) btn.querySelector('bdi').textContent = time || '--:--';
+    if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers['routine-item'] = v => { pendingRoutineItemTime = v; };
+}
 function openAddRoutineItemModal(time) {
     if (!activeDailyBoardTabId) return;
     editingRoutineItemId = null;
     routineNudgeEditing = null;
     pendingRoutineItemTime = time;
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_add_item_title');
-    document.getElementById('routine-item-time-label').textContent = time;
+    routineItemSetTimeBtn(time);
     document.getElementById('routine-item-title-input').value = '';
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
     openModalOverDailyBoard('modal-add-routine-item');
@@ -21898,7 +21905,7 @@ function openEditRoutineItemModal(item, opts = {}) {
     routineNudgeEditing = opts.fromNudge ? routineNudge : null;
     pendingRoutineItemTime = (item.time || '').slice(0, 5);
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_edit_item_title');
-    document.getElementById('routine-item-time-label').textContent = pendingRoutineItemTime;
+    routineItemSetTimeBtn(pendingRoutineItemTime);
     document.getElementById('routine-item-title-input').value = item.title;
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
     openModalOverDailyBoard('modal-add-routine-item');
@@ -21907,6 +21914,10 @@ function openEditRoutineItemModal(item, opts = {}) {
 async function saveRoutineItem() {
     const title = document.getElementById('routine-item-title-input').value.trim();
     if (!title) { showAppToast(t('daily_board_item_missing_fields'), 'error'); return; }
+    if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
+    // שעה שכבר יש בה פריט אחר בטאב הזה - כל שורה בלוח היא שעה אחת, אז לא שני פריטים באותה שעה
+    const clash = dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId);
+    if (clash) { showAppToast(t('routine_time_taken').replace('{title}', clash.title), 'error'); return; }
     const payload = { title, time: pendingRoutineItemTime };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);

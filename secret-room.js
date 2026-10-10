@@ -485,13 +485,23 @@ function srShowTip(text) {
 function srHideTip() { const tip = document.getElementById('sr-tip'); if (tip) tip.classList.add('hidden'); }
 
 let srFriendIdx = 0;
+// לפי בקשה מפורשת: ניצוץ מדבר רק כשנוגעים בו. הנגיעה הראשונה בכל קיר = המשפט של הקיר; אחר כך המשפטים מתחלפים.
+// הבועה נעלמת לבד אחרי כמה שניות
+let srFriendHideTimer = null;
 function srFriendSays(el) {
-    const g = el.closest('svg')?.querySelector('.sr-say');
+    const svg = el.closest('svg');
+    const g = svg && svg.querySelector('.sr-say');
     if (!g) return;
-    srFriendIdx = (srFriendIdx % ROOM_FRIEND_LINES) + 1;
-    g.querySelector('text').textContent = t('room_friend_line_' + srFriendIdx);
-    srFitBubbles(el.closest('svg'));
+    if (!g.dataset.said) g.dataset.said = '1';
+    else {
+        srFriendIdx = (srFriendIdx % ROOM_FRIEND_LINES) + 1;
+        g.querySelector('text').textContent = t('room_friend_line_' + srFriendIdx);
+    }
+    g.classList.remove('is-quiet');
+    srFitBubbles(svg);
     g.classList.remove('pop'); void g.getBoundingClientRect(); g.classList.add('pop');
+    clearTimeout(srFriendHideTimer);
+    srFriendHideTimer = setTimeout(() => { if (g.isConnected) g.classList.add('is-quiet'); }, 4500);
 }
 
 function srLockShape() {
@@ -541,7 +551,7 @@ function srShell(p, panels, bulbs, rug) {
 function srFriend(p, cx, cy, r, bubble) {
     const eyeDx = r * 0.31, eyeY = cy + r * 0.12;
     return `
-        <ellipse cx="${cx}" cy="${cy + r * 4.4}" rx="${r * 1.05}" ry="${r * 0.24}" fill="#000" opacity="0.26"/>
+        <ellipse cx="${cx}" cy="${bubble.shadowY || cy + r * 4.4}" rx="${r * 1.05}" ry="${r * 0.24}" fill="#000" opacity="0.26"/>
         <g class="sr-hot sr-friend" data-hot="friend" role="button" tabindex="0" aria-label="${srEsc(t('room_friend_name'))}">
             <g class="sr-float">
                 <circle cx="${cx}" cy="${cy}" r="${r * 1.44}" fill="#ff4fa3" opacity="0.14"/>
@@ -552,7 +562,7 @@ function srFriend(p, cx, cy, r, bubble) {
                 <ellipse cx="${cx - r * 0.53}" cy="${cy + r * 0.44}" rx="${r * 0.125}" ry="${r * 0.075}" fill="#ff9ecf" opacity="0.8"/><ellipse cx="${cx + r * 0.53}" cy="${cy + r * 0.44}" rx="${r * 0.125}" ry="${r * 0.075}" fill="#ff9ecf" opacity="0.8"/>
             </g>
         </g>
-        <g class="sr-say">
+        <g class="sr-say is-quiet">
             <rect x="${bubble.x - 60}" y="${bubble.y - 22}" width="120" height="34" rx="15" fill="#fff"/>
             <path d="${bubble.tail}" fill="#fff"/>
             <text x="${bubble.x}" y="${bubble.y}" text-anchor="middle" font-size="12.5" font-weight="800" fill="#2a1240">${srEsc(bubble.text)}</text>
@@ -678,7 +688,33 @@ function srWallBoard(keys) {
         <rect x="64" y="510" width="8" height="14" fill="#6c442e"/><rect x="320" y="510" width="8" height="14" fill="#6c442e"/>
         <g class="sr-hot" data-hot="trophies" role="button" tabindex="0" aria-label="${srEsc(t('room_trophies_aria').replace('{n}', srFmt(done)))}">${trophies}<rect x="96" y="462" width="160" height="40" fill="transparent"/></g>
         <g transform="translate(276 458)"><rect x="6" y="26" width="26" height="16" rx="3" fill="#c46b4a"/><ellipse cx="14" cy="18" rx="6" ry="13" fill="#4fa36c" transform="rotate(-18 14 18)"/><ellipse cx="24" cy="16" rx="6" ry="14" fill="#5bb87a" transform="rotate(16 24 16)"/></g>
-        ${srFriend(p, 62, 566, 25, { x: 160, y: 556, text: t('room_friend_line_4'), tail: 'M100 562 l-10 10 l18 -8z' })}`;
+        <!-- חדר שינה (לפי בקשה מפורשת: "ובחדר הסודי תשנה לחדר שינה"): מיטה מתחת ללוח, כריות, שמיכה עם כוכבים ונעלי בית -->
+        <g class="sr-bed" aria-hidden="true">
+            <ellipse cx="196" cy="716" rx="172" ry="12" fill="#000" opacity="0.24"/>
+            <rect x="42" y="692" width="10" height="24" rx="2" fill="#3e271c"/><rect x="342" y="692" width="10" height="24" rx="2" fill="#3e271c"/>
+            <path d="M28 704 V562 Q28 526 62 526 Q96 526 96 562 V704 Z" fill="#6d4430"/>
+            <path d="M38 704 V568 Q38 538 62 538 Q86 538 86 568 V704 Z" fill="#87573b"/>
+            <circle cx="62" cy="556" r="5" fill="#ffd27a" opacity="0.85"/>
+            <rect x="330" y="616" width="36" height="88" rx="12" fill="#6d4430"/>
+            <rect x="337" y="624" width="22" height="72" rx="8" fill="#87573b"/>
+            <rect x="86" y="640" width="250" height="58" rx="10" fill="#f3e6cf"/>
+            <rect x="86" y="684" width="250" height="14" rx="6" fill="#d8c3a2"/>
+            <path d="M94 606 Q94 588 114 588 H150 Q168 588 168 606 Q168 626 150 628 H112 Q94 628 94 606 Z" fill="#fff6fa"/>
+            <path d="M116 616 Q116 600 134 600 H166 Q182 600 182 616 Q182 634 166 636 H132 Q116 636 116 616 Z" fill="#ffc9df"/>
+            <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V690 Q344 702 332 702 H162 Q150 702 150 690 Z" fill="#a993f5"/>
+            <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V650 Q300 656 250 652 T150 656 Z" fill="#c8bbff"/>
+            <g fill="#fff4c9" opacity="0.9">
+                <path d="M196 672 l2.2 4.4 4.8 0.7 -3.5 3.4 0.8 4.8 -4.3 -2.3 -4.3 2.3 0.8 -4.8 -3.5 -3.4 4.8 -0.7z"/>
+                <path d="M250 684 l1.6 3.2 3.5 0.5 -2.5 2.5 0.6 3.5 -3.2 -1.7 -3.2 1.7 0.6 -3.5 -2.5 -2.5 3.5 -0.5z"/>
+                <path d="M294 668 l2 4 4.4 0.6 -3.2 3.1 0.8 4.4 -4 -2.1 -4 2.1 0.8 -4.4 -3.2 -3.1 4.4 -0.6z"/>
+                <circle cx="224" cy="664" r="1.6"/><circle cx="318" cy="690" r="1.4"/><circle cx="176" cy="688" r="1.3"/>
+            </g>
+            <g transform="translate(228 756)">
+                <ellipse cx="0" cy="0" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M-4 -5 Q4 -9 12 -3 Q4 2 -4 -1 Z" fill="#fff6fa"/>
+                <ellipse cx="30" cy="7" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M26 2 Q34 -2 42 4 Q34 9 26 6 Z" fill="#fff6fa"/>
+            </g>
+        </g>
+        ${srFriend(p, 130, 546, 25, { x: 232, y: 552, text: t('room_friend_line_4'), tail: 'M172 548 l-14 7 l15 3z', shadowY: 612 })}`;
 }
 
 function srWallGame(keys) {
@@ -739,12 +775,11 @@ function srWallGame(keys) {
         <rect x="22" y="512" width="40" height="92" rx="18" fill="#5b3680"/>
         <rect x="156" y="512" width="40" height="92" rx="18" fill="#5b3680"/>
         <rect x="48" y="556" width="122" height="44" rx="12" fill="#7a46a3"/>
-        <path d="M60 470 l10 16 l10 -16 l10 16 l10 -16 l10 16 l10 -16 l10 16 l10 -16 V540 H60 Z" fill="#ff8fc4" opacity="0.85"/>
         <rect x="34" y="604" width="8" height="40" fill="#2e1d3e"/><rect x="176" y="604" width="8" height="40" fill="#2e1d3e"/>
         <rect x="188" y="600" width="28" height="44" rx="4" fill="#4f3122"/>
         <rect x="182" y="590" width="40" height="12" rx="3" fill="#8a5a3c"/>
         <rect x="188" y="574" width="28" height="16" rx="2" fill="#f3e6cf"/><rect x="192" y="578" width="6" height="6" fill="#ff4fa3"/><rect x="201" y="578" width="6" height="6" fill="#22d3ee"/><rect x="210" y="578" width="4" height="6" fill="#ffd27a"/>
-        ${srFriend(p, 110, 394, 26, { x: 91, y: 342, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M96 352 l4 14 l8 -14z' })}`;
+        ${srFriend(p, 110, 394, 26, { x: 91, y: 342, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M96 352 l4 14 l8 -14z', shadowY: 570 })}`;
 }
 
 function srWallShelf(keys) {
