@@ -9054,3 +9054,52 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
 .routine-nudge-icon { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 10px; border: 1px solid var(--border-color); background: transparent; font-size: .95rem; cursor: pointer; z-index: auto; }
 .routine-nudge-card.is-general .routine-nudge-actions { grid-template-columns: 1fr 1fr; }
 .routine-nudge-card.is-general .routine-nudge-actions > :only-child { grid-column: 1 / -1; }
+
+/* ===== יוגה ביער (מפתח 12) ליד המפל: המעגל נשאר למעלה, והשיחה בחלון "זכוכית רכה" כמו המחשב (לפי בקשה מפורשת:
+   "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב"). המפל (מפתח 13) - הקווים זורמים, אדוות וערפל ===== */
+.sr-place-yoga .srp-view { transition: transform 0.5s ease; }
+.sr-place-yoga.is-talking .srp-view { transform: translateY(-41%); }
+.yg-talk { position: absolute; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 4; max-height: 50%; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 10px; border-radius: 26px; background: radial-gradient(80% 60% at 30% 10%, rgba(255, 122, 192, 0.55), transparent 70%), radial-gradient(70% 60% at 85% 90%, rgba(124, 92, 255, 0.55), transparent 70%), rgba(26, 16, 48, 0.84); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45); color: #fff; font-family: 'Assistant', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; }
+.yg-talk-head { display: flex; align-items: center; gap: 10px; }
+.yg-avatar { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); }
+.yg-avatar svg { display: block; width: 100%; height: 100%; }
+.yg-talk-head b { flex: 1; min-width: 0; font-size: 1rem; }
+.yg-x { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.35); background: transparent; color: #fff; cursor: pointer; }
+.yg-x svg { width: 16px; height: 16px; }
+.yg-screen { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; border-radius: 18px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28); }
+.yg-lines { display: flex; flex-direction: column; gap: 8px; }
+.yg-line { align-self: flex-start; max-width: 86%; box-sizing: border-box; padding: 8px 12px; border-radius: 16px; border-end-start-radius: 5px; background: rgba(255, 255, 255, 0.2); font-size: 0.92rem; line-height: 1.45; }
+.yg-line.is-p1, .yg-line.is-p2 { background: rgba(255, 255, 255, 0.12); }
+.yg-name { display: block; margin-bottom: 2px; font-size: 0.72rem; font-weight: 800; opacity: 0.75; }
+.yg-line.is-me { align-self: flex-end; border-radius: 16px; border-end-end-radius: 5px; background: #fff; color: #4a2a7a; font-weight: 700; }
+.yg-line.is-old { opacity: 0.78; }
+.yg-ctrl { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
+.yg-ctrl button { min-height: 40px; padding: 9px 12px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.1); color: #fff; font: inherit; font-size: 0.92rem; text-align: start; cursor: pointer; }
+.yg-ctrl button:hover, .yg-ctrl button:focus-visible { background: rgba(255, 255, 255, 0.2); }
+.yg-ctrl.is-end { align-items: center; }
+.yg-ctrl.is-end button { min-width: 60%; border-color: rgba(255, 255, 255, 0.8); text-align: center; }
+.yg-task { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 14px; border: 1.5px dashed rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.08); font-size: 0.9rem; }
+.yg-breath-box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0 6px; }
+.yg-breath { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 18px rgba(255, 255, 255, 0.45), inset 0 0 14px rgba(255, 255, 255, 0.3); transition: transform 4s ease-in-out; }
+.yg-breath.in { transform: scale(1.55); }
+.yg-breath-label { min-height: 1.2em; font-size: 0.85rem; font-weight: 700; }
+.yg-nav { display: flex; justify-content: space-between; }
+.yg-navbtn { padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.4); background: transparent; color: #fff; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.yg-navbtn:disabled { opacity: 0.4; cursor: default; }
+.yg-navbtn:focus-visible, .yg-ctrl button:focus-visible, .yg-x:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.srp-fall-lines line { animation: srpFall 1.1s linear infinite; }
+@keyframes srpFall { to { stroke-dashoffset: -48; } }
+.srp-ripples-wf ellipse { opacity: 0; transform-box: fill-box; transform-origin: center; animation: srpRippleWf 3.6s ease-out infinite; }
+@keyframes srpRippleWf { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(1.25); opacity: 0; } }
+.srp-mist ellipse { animation: srpMist 6s ease-in-out infinite alternate; }
+@keyframes srpMist { to { transform: translateX(10px); opacity: 0.35; } }
+.srp-splash-ring { fill: none; stroke: #fff; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: srpSplash 1.4s ease-out forwards; }
+@keyframes srpSplash { 0% { transform: scale(0.3); opacity: 0.9; } 100% { transform: scale(2.6); opacity: 0; } }
+.srp-rainbow { opacity: 0.55; transition: opacity 1.2s; }
+.sr-place-waterfall.is-resting .srp-rainbow { opacity: 1; }
+.srp-falls.locked { cursor: default; }
+@media (prefers-reduced-motion: reduce) {
+    .srp-fall-lines line, .srp-ripples-wf ellipse, .srp-mist ellipse, .srp-splash-ring { animation: none; }
+    .srp-ripples-wf ellipse { opacity: 0.4; }
+    .yg-breath, .sr-place-yoga .srp-view { transition: none; }
+}

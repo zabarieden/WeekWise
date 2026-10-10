@@ -9,6 +9,9 @@
 // כל הציורים בגודל 390×844, כמו המסדרון, וכל מה שנוגעים בו נמצא בתוך הציור עצמו.
 
 const SRP_DOOR_PLACE = { 2: 'porch', 3: 'music', 4: 'breath', 5: 'outside' };
+// מקום בתוך מקום: היוגה בסוף השביל ביער (מפתח 12), והמפל מאחורי היוגה (מפתח 13)
+const SRP_PLACE_PARENT = { yoga: 'outside', waterfall: 'yoga' };
+const SRP_BACK_KEYS = { outside: 'room_back_to_forest', yoga: 'room_back_to_yoga' };
 const SRP_BREATH_MS = 10 * 60 * 1000;   // סשן של עשר דקות (לא כתוב בשום מקום - לפי בקשה מפורשת)
 let srpCleanups = [];
 
@@ -30,18 +33,23 @@ function roomOpenPlace(id, opts = {}) {
     if (typeof roomClearArrow === 'function') roomClearArrow();
     stage.querySelector('.sr-place')?.remove();
     const keys = roomKeys();
-    const P = { porch: [srpPorchScene, srpInitPorch], music: [srpMusicScene, srpInitMusic], breath: [srpBreathScene, srpInitBreath], outside: [srpOutsideScene, srpInitOutside] }[id];
+    const P = { porch: [srpPorchScene, srpInitPorch], music: [srpMusicScene, srpInitMusic], breath: [srpBreathScene, srpInitBreath], outside: [srpOutsideScene, srpInitOutside], yoga: [srpYogaScene, srpInitYoga], waterfall: [srpWaterfallScene, srpInitWaterfall] }[id];
     if (!P) return;
     const box = document.createElement('div');
     box.className = `sr-place sr-place-${id}`;
     box.innerHTML = `
-        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t(opts.fromHall ? 'room_back_to_hall' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName(id))}</b><span class="srp-tools"></span></div>
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t(opts.parent ? SRP_BACK_KEYS[opts.parent] : opts.fromHall ? 'room_back_to_hall' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName(id))}</b><span class="srp-tools"></span></div>
         <div class="srp-view">${P[0](keys)}</div>
         <button type="button" class="srp-rest-exit" aria-label="${srEsc(t('room_rest_aria'))}"></button>`;
     stage.appendChild(box);
-    box.querySelector('.sr-sub-back').addEventListener('click', () => { srpCleanup(); if (opts.fromHall) closeSecretRoom(); else box.remove(); });
+    box.querySelector('.sr-sub-back').addEventListener('click', () => {
+        srpCleanup();
+        // מקום בתוך מקום: חזרה למקום שממנו באו (מהמפל ליוגה, מהיוגה לשביל)
+        if (opts.parent) { roomOpenPlace(opts.parent, { fromHall: opts.fromHall, parent: SRP_PLACE_PARENT[opts.parent] }); return; }
+        if (opts.fromHall) closeSecretRoom(); else box.remove();
+    });
     box.querySelector('.srp-rest-exit').addEventListener('click', () => box.classList.remove('is-resting'));
-    const handlers = P[1](box, keys) || {};
+    const handlers = P[1](box, keys, opts) || {};
     box.querySelectorAll('[data-place-hot]').forEach(el => {
         const go = () => { const fn = handlers[el.dataset.placeHot]; if (fn) fn(el); };
         el.addEventListener('click', go);
@@ -49,9 +57,14 @@ function roomOpenPlace(id, opts = {}) {
     });
     // משהו נפתח כאן ועוד לא הגיעו אליו - חץ מצביע עליו (ר' roomGuide ב-secret-room.js)
     const g = typeof roomGuideUnlock === 'function' ? roomGuideUnlock() : null;
-    if (g && g.place === id) {
+    if (g && g.place) {
         if (g.id === id) roomGuideDone();
-        else setTimeout(() => { if (box.isConnected) roomShowArrow(box, box.querySelector(`[data-place-hot="${g.id}"], [data-tool="${g.id}"]`), roomGuideDone); }, 60);
+        else {
+            // הדבר עצמו כאן - או הכניסה למקום שבתוך המקום הזה, בדרך אליו
+            let target = g.place === id ? g.id : null;
+            if (!target) { let pl = g.place; while (pl && SRP_PLACE_PARENT[pl] !== id) pl = SRP_PLACE_PARENT[pl]; target = pl || null; }
+            if (target) setTimeout(() => { if (box.isConnected) roomShowArrow(box, box.querySelector(`[data-place-hot="${target}"], [data-tool="${target}"]`), g.place === id ? roomGuideDone : null); }, 60);
+        }
     }
 }
 
@@ -791,7 +804,7 @@ function srpOutsideScene(keys) {
                 <rect class="srp-hit" x="62" y="248" width="78" height="194" fill="transparent"/>
             </g>` : ''}
             ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
-                <!-- מפתח 12: השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת יער מוארת (היוגה עוד נבנית) -->
+                <!-- מפתח 12: השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת היוגה ליד המפל -->
                 <ellipse class="srp-flicker" cx="200" cy="388" rx="40" ry="18" fill="url(#srpOLight)"/>
                 <g fill="none" stroke="#8a5e3c" stroke-width="3" stroke-linecap="round"><path d="M188 400 V378"/><path d="M212 400 V378"/><path d="M185 380 Q200 364 215 380"/></g>
                 <g fill="#ffd27a"><circle cx="200" cy="371" r="1.8"/><circle cx="190" cy="377" r="1.3"/><circle cx="210" cy="377" r="1.3"/></g>
@@ -841,7 +854,7 @@ function srpOutsideScene(keys) {
             <g class="srp-night-only" fill="#ffe48e" aria-hidden="true"><circle class="srp-fly" cx="70" cy="560" r="2"/><circle class="srp-fly" cx="320" cy="690" r="2.2" style="animation-delay:1s"/><circle class="srp-fly" cx="260" cy="380" r="1.6" style="animation-delay:2s"/><circle class="srp-fly" cx="110" cy="380" r="1.6" style="animation-delay:.5s"/><circle class="srp-fly" cx="350" cy="480" r="1.8" style="animation-delay:1.6s"/></g>
         </svg>`;
 }
-function srpInitOutside(box) {
+function srpInitOutside(box, keys, opts = {}) {
     const prefs = srpPrefs();
     const lights = box.querySelector('.srp-lights');
     const setDay = (day, save) => {
@@ -864,7 +877,7 @@ function srpInitOutside(box) {
         lights: () => setDay(!box.classList.contains('is-day'), true),
         bench: () => srpRest(box),
         selfcare: () => srpOpenSignView(box),
-        yoga: () => srShowTip(t('room_yoga_soon')),
+        yoga: () => roomOpenPlace('yoga', { fromHall: !!opts.fromHall, parent: 'outside' }),
         swing: el => {
             if (el.classList.contains('is-swinging')) return;
             el.classList.add('is-swinging');
@@ -1020,4 +1033,329 @@ function srCatNapTap(el) {
     if (name === 'butterfly') pop('♥', 0, -56, 'is-heart', 2100);
     if (name === 'yarn') pop('♥', 20, -50, 'is-heart', 1700);
     setTimeout(() => { el.classList.remove('do-' + name); delete el.dataset.busy; }, srpReduce() ? 400 : ms);
+}
+
+// ---------- מפתח 12: יוגה ביער - קרחת ליד המפל, המדריכה ואנשים טובים במעגל ----------
+// לפי בחירה מפורשת (2026-10-10): המקום = ה (ליד המפל); השיחה = א (מעגל שיתוף), "גזע שנפתח כמו במחשב" לפי מה
+// שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
+const SRP_GUIDE_LOOK = { skin: '#a96f4a', hair: '#2a1a12', band: '#7fd6c0' };   // פני המדריכה - עד שתיבחר אחת מהאפשרויות על הקנבס
+const SRP_SKIN = ['#f1c7a5', '#c98e64', '#8d5a3b', '#e3a982', '#5e3a24'];
+function ygHair(style, x, y, c) {
+    if (style === 'bun') return `<circle cx="${x}" cy="${y - 12}" r="4.6" fill="${c}"/><path d="M${x - 9} ${y} Q${x - 10} ${y - 10} ${x} ${y - 10} Q${x + 10} ${y - 10} ${x + 9} ${y} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 9} ${y} Z" fill="${c}"/>`;
+    if (style === 'curly') return `<g fill="${c}"><circle cx="${x - 6}" cy="${y - 6}" r="4.5"/><circle cx="${x}" cy="${y - 9}" r="5"/><circle cx="${x + 6}" cy="${y - 6}" r="4.5"/><circle cx="${x - 8.5}" cy="${y}" r="3.4"/><circle cx="${x + 8.5}" cy="${y}" r="3.4"/></g>`;
+    if (style === 'long') return `<path d="M${x - 10} ${y + 8} Q${x - 11} ${y - 11} ${x} ${y - 11} Q${x + 11} ${y - 11} ${x + 10} ${y + 8} L${x + 7} ${y + 8} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 7} ${y + 8} Z" fill="${c}"/>`;
+    if (style === 'puff') return `<g fill="${c}"><circle cx="${x}" cy="${y - 15}" r="7"/><path d="M${x - 9} ${y} Q${x - 10} ${y - 10} ${x} ${y - 10} Q${x + 10} ${y - 10} ${x + 9} ${y} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 9} ${y} Z"/></g>`;
+    return `<path d="M${x - 9} ${y - 1} Q${x - 9} ${y - 11} ${x} ${y - 11} Q${x + 9} ${y - 11} ${x + 9} ${y - 1} Q${x + 6} ${y - 6} ${x} ${y - 6} Q${x - 6} ${y - 6} ${x - 9} ${y - 1} Z" fill="${c}"/>`;
+}
+function ygFace(x, y) {
+    return `<path d="M${x - 4.6} ${y - 1} q1.4 1.3 2.8 0 M${x + 1.8} ${y - 1} q1.4 1.3 2.8 0" stroke="#2a1d1a" stroke-width="0.9" fill="none" stroke-linecap="round"/><path d="M${x - 2} ${y + 3} q2 1.6 4 0" stroke="#7a3b2e" stroke-width="0.9" fill="none" stroke-linecap="round"/><circle cx="${x - 5}" cy="${y + 2}" r="1.4" fill="#ff9ecf" opacity="0.45"/><circle cx="${x + 5}" cy="${y + 2}" r="1.4" fill="#ff9ecf" opacity="0.45"/>`;
+}
+function ygSit(x, y, s, skin, hair, top, pants, style, heart) {
+    const hands = heart
+        ? `<path d="M-12 -36 Q-9 -24 -2 -24 M12 -36 Q9 -24 2 -24" stroke="${top}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M-2 -30 L0 -22 L2 -30 Z" fill="${skin}"/>`
+        : `<path d="M-12 -36 Q-20 -24 -22 -9 M12 -36 Q20 -24 22 -9" stroke="${top}" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="-22" cy="-8" r="3" fill="${skin}"/><circle cx="22" cy="-8" r="3" fill="${skin}"/>`;
+    return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-5" rx="27" ry="9" fill="${pants}"/><path d="M-14 -8 Q-17 -38 0 -44 Q17 -38 14 -8 Z" fill="${top}"/>${hands}<rect x="-3" y="-50" width="6" height="7" fill="${skin}"/><circle cx="0" cy="-57" r="9.5" fill="${skin}"/>${ygHair(style, 0, -57, hair)}${ygFace(0, -57)}</g>`;
+}
+function ygMat(x, y, w, color) {
+    const h = w * 0.22;
+    return `<path d="M${x - w / 2 + 8} ${y - h} H${x + w / 2 - 8} L${x + w / 2} ${y} H${x - w / 2} Z" fill="${color}"/><path d="M${x - w / 2} ${y} H${x + w / 2} V${y + 3} H${x - w / 2} Z" fill="#000" opacity="0.18"/>`;
+}
+// המדריכה בתנוחת העץ: רגל אחת על הברך, הידיים מעל הראש
+function ygGuide(x, y, s) {
+    const L = SRP_GUIDE_LOOK, top = '#f7efe2', pants = '#cdbb9a';
+    return `<g transform="translate(${x} ${y}) scale(${s})">
+        <path d="M-2 0 L-3 -36" stroke="${pants}" stroke-width="8" stroke-linecap="round"/>
+        <path d="M-3 -34 L14 -26 L-1 -18" stroke="${pants}" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M-12 -38 Q-14 -64 0 -70 Q14 -64 10 -38 Z" fill="${top}"/>
+        <path d="M-9 -64 Q-14 -84 -2 -102 M9 -64 Q14 -84 2 -102" stroke="${top}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+        <path d="M-2.5 -103 L0 -96 L2.5 -103 Z" fill="${L.skin}"/>
+        <rect x="-3" y="-76" width="6" height="7" fill="${L.skin}"/>
+        <circle cx="0" cy="-83" r="9" fill="${L.skin}"/>
+        ${ygHair('puff', 0, -83, L.hair)}
+        <path d="M-8.6 -88 Q0 -93 8.6 -88" stroke="${L.band}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        ${ygFace(0, -83)}
+    </g>`;
+}
+// הפנים של המדריכה בכותרת השיחה
+function ygAvatar() {
+    const L = SRP_GUIDE_LOOK;
+    return `<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="40" fill="#d9efe6"/><g fill="${L.hair}"><circle cx="40" cy="15" r="11"/><circle cx="31" cy="19" r="7"/><circle cx="49" cy="19" r="7"/></g><path d="M18 80 Q20 62 40 60 Q60 62 62 80 Z" fill="#f7efe2"/><rect x="35" y="50" width="10" height="12" rx="4" fill="${L.skin}"/><ellipse cx="40" cy="40" rx="17" ry="20" fill="${L.skin}"/><path d="M23 36 Q24 22 40 22 Q56 22 57 36 Q52 29 40 29 Q28 29 23 36 Z" fill="${L.hair}"/><path d="M24 31 Q40 22 56 31" stroke="${L.band}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30 40 q3 2.6 6 0 M44 40 q3 2.6 6 0" stroke="#1d130f" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M35 48 q5 4 10 0" stroke="#a8494a" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="29" cy="46" r="3" fill="#ff8fa8" opacity="0.35"/><circle cx="51" cy="46" r="3" fill="#ff8fa8" opacity="0.35"/></svg>`;
+}
+function srpYogaScene(keys) {
+    const falls = keys >= roomUnlockAt('waterfall');
+    return `
+        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('yoga'))}">
+            <defs>
+                <linearGradient id="ygSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8e3f0"/><stop offset="1" stop-color="#d8efd2"/></linearGradient>
+                <radialGradient id="ygHalo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff1c9" stop-opacity="0.55"/><stop offset="1" stop-color="#fff1c9" stop-opacity="0"/></radialGradient>
+            </defs>
+            <g aria-hidden="true">
+                <rect width="390" height="844" fill="url(#ygSky)"/>
+                <path d="M0 120 Q60 80 120 130 L150 420 H0 Z" fill="#7a8b8f"/>
+                <path d="M390 110 Q330 70 270 130 L240 420 H390 Z" fill="#6f8287"/>
+                <g fill="#5d8a5f"><ellipse cx="20" cy="110" rx="70" ry="60"/><ellipse cx="372" cy="100" rx="70" ry="58"/></g>
+            </g>
+            <g class="srp-hot srp-falls${falls ? '' : ' locked'}" data-place-hot="waterfall" role="button" tabindex="0" aria-label="${srEsc(roomItemName('waterfall'))}">
+                <rect x="150" y="120" width="90" height="300" fill="#e6f6ff"/>
+                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="18 6" opacity="0.85"><line x1="166" y1="124" x2="166" y2="414"/><line x1="186" y1="130" x2="186" y2="408"/><line x1="206" y1="122" x2="206" y2="416"/><line x1="226" y1="128" x2="226" y2="410"/></g>
+                ${falls ? '' : srLockBadge(195, 256, 'waterfall')}
+                <rect class="srp-hit" x="140" y="110" width="110" height="320" fill="transparent"/>
+            </g>
+            <g aria-hidden="true">
+                <ellipse cx="195" cy="440" rx="150" ry="36" fill="#7fc6d6"/>
+                <ellipse cx="195" cy="430" rx="120" ry="20" fill="#ffffff" opacity="0.5"/>
+                <path d="M0 470 Q195 450 390 470 V844 H0 Z" fill="#8fbf7c"/>
+                <path d="M0 520 Q195 500 390 520 V844 H0 Z" fill="#86b873"/>
+                <g fill="#5f9a5a"><path d="M20 790 q10 -40 20 0 q8 -30 16 0 z"/><path d="M340 800 q10 -40 20 0 q8 -30 16 0 z"/></g>
+                <ellipse cx="195" cy="576" rx="74" ry="12" fill="#9aa5a8"/>
+                <circle cx="195" cy="500" r="80" fill="url(#ygHalo)"/>
+                ${ygMat(195, 576, 104, '#efe2c8')}
+                ${ygMat(95, 640, 76, '#b9a8ff')}${ygMat(295, 640, 76, '#7fd6c0')}${ygMat(145, 704, 82, '#ffb3d6')}${ygMat(245, 704, 82, '#ffd27a')}
+                ${ygSit(95, 634, 0.82, SRP_SKIN[1], '#2a1d1a', '#7c6bd6', '#3d3566', 'curly')}
+                ${ygSit(295, 634, 0.82, SRP_SKIN[3], '#6b3e26', '#2fa58c', '#1f4d44', 'bun', true)}
+                ${ygSit(145, 698, 0.9, SRP_SKIN[0], '#d8b26a', '#ff8fb8', '#6b2f4a', 'long')}
+                ${ygSit(245, 698, 0.9, SRP_SKIN[2], '#111111', '#f6b73c', '#6b4a12', 'short', true)}
+            </g>
+            <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
+                ${ygGuide(195, 570, 1.12)}
+                <rect class="srp-hit" x="160" y="440" width="70" height="140" fill="transparent"/>
+            </g>
+        </svg>`;
+}
+// השיחה: עץ קטן כמו במחשב - כל צומת: מה נאמר (המדריכה / נועה / איתי), ואז בחירה, משימה קטנה, תנוחה עם נשימות או סוף
+const YG_TREE = {
+    start: { say: [['g', 'yg_g_start'], ['p1', 'yg_p1_start'], ['p2', 'yg_p2_start']], opts: [['good', 'yg_o_good'], ['hard', 'yg_o_hard'], ['alone', 'yg_o_alone']] },
+    good: { say: [['g', 'yg_g_good']], opts: [['good_x', 'yg_o_friend'], ['good_x', 'yg_o_family'], ['good_x', 'yg_o_partner']] },
+    good_x: { say: [['p1', 'yg_p1_good'], ['g', 'yg_g_good_msg']], task: 'yg_task_good', next: 'pose_tree' },
+    hard: { say: [['g', 'yg_g_hard']], opts: [['hard_listen', 'yg_o_listen'], ['hard_critic', 'yg_o_critic'], ['hard_used', 'yg_o_used']] },
+    hard_listen: { say: [['g', 'yg_g_listen'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
+    hard_critic: { say: [['g', 'yg_g_critic'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
+    hard_used: { say: [['g', 'yg_g_used'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
+    alone: { say: [['g', 'yg_g_alone'], ['p1', 'yg_p1_alone'], ['g', 'yg_g_alone_q']], opts: [['alone_old', 'yg_o_old'], ['alone_new', 'yg_o_new'], ['pose_heart', 'yg_o_breathe']] },
+    alone_old: { say: [['g', 'yg_g_old']], task: 'yg_task_old', next: 'pose_heart' },
+    alone_new: { say: [['g', 'yg_g_new']], task: 'yg_task_new', next: 'pose_heart' },
+    pose_tree: { say: [['g', 'yg_pose_tree']], breath: true, next: 'end' },
+    pose_child: { say: [['g', 'yg_pose_child']], breath: true, next: 'end' },
+    pose_heart: { say: [['g', 'yg_pose_heart']], breath: true, next: 'end' },
+    end: { say: [['g', 'yg_g_end']], end: true },
+};
+const YG_WHO = { g: 'yg_name_guide', p1: 'yg_name_p1', p2: 'yg_name_p2' };
+let ygState = null;   // { box, path: [{ id, pick }], timers: [] }
+function ygStopTimers() { if (ygState) { ygState.timers.forEach(clearTimeout); ygState.timers = []; } }
+function ygOpenTalk(box) {
+    if (box.querySelector('.yg-talk')) return;
+    const panel = document.createElement('div');
+    panel.className = 'yg-talk';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', t('room_yoga_guide_aria'));
+    panel.innerHTML = `
+        <div class="yg-talk-head"><span class="yg-avatar">${ygAvatar()}</span><b>${srEsc(t('yg_name_guide'))}</b><button type="button" class="yg-x" aria-label="${srEsc(t('close_btn'))}">${SR_CLOSE_SVG}</button></div>
+        <div class="yg-screen"><div class="yg-lines" aria-live="polite"></div></div>
+        <div class="yg-nav"><button type="button" class="yg-navbtn" data-yg="back">${srEsc(t('pcx_back'))}</button><button type="button" class="yg-navbtn" data-yg="new">✦ ${srEsc(t('pcx_new'))}</button></div>`;
+    box.appendChild(panel);
+    box.classList.add('is-talking');
+    ygState = { box, path: [{ id: 'start', pick: null }], timers: [] };
+    const close = () => { ygStopTimers(); ygState = null; panel.remove(); box.classList.remove('is-talking'); };
+    panel.querySelector('.yg-x').addEventListener('click', close);
+    panel.querySelector('[data-yg="new"]').addEventListener('click', () => { if (!ygState) return; ygState.path = [{ id: 'start', pick: null }]; ygRender(true); });
+    panel.querySelector('[data-yg="back"]').addEventListener('click', () => { if (!ygState || ygState.path.length < 2) return; ygState.path.pop(); ygState.path[ygState.path.length - 1].pick = null; ygRender(false); });
+    srpCleanups.push(close);
+    ygRender(true);
+}
+function ygBubble(lines, who, text, extra) {
+    const el = document.createElement('div');
+    el.className = `yg-line is-${who}${extra ? ' ' + extra : ''}`;
+    if (who === 'p1' || who === 'p2') el.innerHTML = `<span class="yg-name">${srEsc(t(YG_WHO[who]))}</span>`;
+    el.appendChild(document.createTextNode(text));
+    lines.appendChild(el);
+    return el;
+}
+// הכול מחדש לפי המסלול (כמו במחשב): מה שכבר נאמר מופיע מיד, והצומת האחרון נאמר לאט
+function ygRender(animateLast) {
+    if (!ygState) return;
+    ygStopTimers();
+    const lines = ygState.box.querySelector('.yg-lines');
+    if (!lines) return;
+    lines.innerHTML = '';
+    const nav = ygState.box.querySelector('[data-yg="back"]');
+    if (nav) nav.disabled = ygState.path.length < 2;
+    const reduce = srpReduce();
+    ygState.path.forEach((entry, i) => {
+        const node = YG_TREE[entry.id];
+        const last = i === ygState.path.length - 1;
+        const step = last && animateLast && !reduce ? 650 : 0;
+        node.say.forEach(([who, key], j) => {
+            const show = () => { if (!ygState) return; ygBubble(lines, who, t(key), last ? '' : 'is-old'); ygScroll(); };
+            if (step) ygState.timers.push(setTimeout(show, j * step)); else show();
+        });
+        if (!last) {
+            if (entry.pick) ygBubble(lines, 'me', entry.pick, 'is-old');
+            return;
+        }
+        const after = () => { if (ygState) ygControls(entry, node); };
+        if (step) ygState.timers.push(setTimeout(after, node.say.length * step)); else after();
+    });
+}
+function ygScroll() { const sc = ygState && ygState.box.querySelector('.yg-screen'); if (sc) sc.scrollTop = sc.scrollHeight; }
+function ygGo(next, pickText) {
+    if (!ygState) return;
+    ygState.path[ygState.path.length - 1].pick = pickText;
+    ygState.path.push({ id: next, pick: null });
+    ygRender(true);
+}
+function ygControls(entry, node) {
+    const lines = ygState.box.querySelector('.yg-lines');
+    const box = document.createElement('div');
+    box.className = 'yg-ctrl';
+    const btn = (text, fn, cls) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; if (cls) b.className = cls; b.addEventListener('click', fn); box.appendChild(b); return b; };
+    if (node.opts) {
+        node.opts.forEach(([next, key]) => btn(t(key), () => ygGo(next, t(key))));
+    } else if (node.task) {
+        const card = document.createElement('div');
+        card.className = 'yg-task';
+        card.innerHTML = `<b>🎯</b><span>${srEsc(t(node.task))}</span>`;
+        lines.appendChild(card);
+        btn(t('pcx_task_ok'), () => ygGo(node.next, t('pcx_task_ok')));
+        btn(t('pcx_task_today'), async () => {
+            const ok = typeof pcAddTodayTask === 'function' ? await pcAddTodayTask(t(node.task)) : false;
+            if (ok) showAppToast(t('pcx_task_added'));
+            ygGo(node.next, t('pcx_task_today'));
+        });
+    } else if (node.breath) {
+        ygBreathe(lines, () => { if (ygState) { const b2 = document.createElement('div'); b2.className = 'yg-ctrl is-end'; const go = document.createElement('button'); go.type = 'button'; go.textContent = t('nm_continue'); go.addEventListener('click', () => ygGo(node.next, null)); b2.appendChild(go); lines.appendChild(b2); ygScroll(); } });
+        return;
+    } else if (node.end) {
+        box.classList.add('is-end');
+        btn(`✦ ${t('pcx_new')}`, () => { ygState.path = [{ id: 'start', pick: null }]; ygRender(true); });
+        btn(t('close_btn'), () => ygState && ygState.box.querySelector('.yg-x').click());
+    }
+    lines.appendChild(box);
+    ygScroll();
+}
+// שלוש נשימות ביחד: העיגול גדל (שאיפה) וקטן (נשיפה)
+function ygBreathe(lines, done) {
+    const wrap = document.createElement('div');
+    wrap.className = 'yg-breath-box';
+    wrap.innerHTML = `<span class="yg-breath"></span><span class="yg-breath-label"></span>`;
+    lines.appendChild(wrap);
+    ygScroll();
+    const ring = wrap.querySelector('.yg-breath'), label = wrap.querySelector('.yg-breath-label');
+    const reduce = srpReduce();
+    const half = reduce ? 300 : 4000;
+    let n = 0;
+    const tick = () => {
+        if (!ygState || !wrap.isConnected) return;
+        if (n >= 6) { label.textContent = ''; ring.classList.remove('in'); done(); return; }
+        const inhale = n % 2 === 0;
+        ring.classList.toggle('in', inhale);
+        label.textContent = t(inhale ? 'room_breath_in' : 'room_breath_out');
+        n++;
+        ygState.timers.push(setTimeout(tick, half));
+    };
+    tick();
+}
+function srpInitYoga(box, keys, opts = {}) {
+    return {
+        guide: () => ygOpenTalk(box),
+        waterfall: el => {
+            if (el.classList.contains('locked')) { srShowLockTip('waterfall'); return; }
+            roomOpenPlace('waterfall', { fromHall: !!opts.fromHall, parent: 'yoga' });
+        },
+    };
+}
+
+// ---------- מפתח 13: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
+// יושבים על הסלע: הכפתורים נעלמים, הקשת מתחזקת ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
+function srpWaterfallScene() {
+    return `
+        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('waterfall'))}">
+            <defs>
+                <linearGradient id="wfBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe9e0"/><stop offset="1" stop-color="#8fc4b0"/></linearGradient>
+                <linearGradient id="wfWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6f6fa"/><stop offset="1" stop-color="#b4e0ec"/></linearGradient>
+                <linearGradient id="wfPool" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4d2"/><stop offset="1" stop-color="#3f8fa3"/></linearGradient>
+                <linearGradient id="wfRain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9a9a"/><stop offset="0.5" stop-color="#ffe08a"/><stop offset="1" stop-color="#9ad6ff"/></linearGradient>
+            </defs>
+            <g aria-hidden="true">
+                <rect width="390" height="844" fill="url(#wfBack)"/>
+                <path d="M70 120 Q100 90 140 100 L250 100 Q296 92 320 124 L340 560 H50 Z" fill="#6b7b78"/>
+                <path d="M90 140 L130 120 L140 200 L110 260 Z M280 130 L310 150 L300 260 L276 220 Z" fill="#5a6967"/>
+                <path d="M70 120 Q100 90 140 100 L250 100 Q296 92 320 124 L316 140 Q290 112 250 116 L140 116 Q102 108 76 134 Z" fill="#4f8f5a"/>
+                <rect x="150" y="104" width="90" height="440" fill="url(#wfWater)"/>
+                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="3" stroke-dasharray="18 6" stroke-linecap="round" opacity="0.9"><line x1="160" y1="104" x2="160" y2="544"/><line x1="178" y1="110" x2="178" y2="544"/><line x1="196" y1="104" x2="196" y2="544"/><line x1="214" y1="110" x2="214" y2="544"/><line x1="230" y1="104" x2="230" y2="544"/></g>
+                <path class="srp-rainbow" d="M120 470 A90 90 0 0 1 280 470" fill="none" stroke="url(#wfRain)" stroke-width="6"/>
+                <g class="srp-mist" fill="#ffffff"><ellipse cx="150" cy="540" rx="80" ry="22" opacity="0.6"/><ellipse cx="250" cy="536" rx="90" ry="20" opacity="0.55"/><ellipse cx="200" cy="520" rx="60" ry="16" opacity="0.5"/></g>
+            </g>
+            <g class="srp-hot srp-pool" data-place-hot="pool" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_pool_aria'))}">
+                <ellipse cx="195" cy="580" rx="210" ry="80" fill="url(#wfPool)"/>
+                <g class="srp-ripples-wf" fill="none" stroke="#ffffff" stroke-width="2"><ellipse cx="195" cy="560" rx="70" ry="14"/><ellipse cx="195" cy="566" rx="90" ry="18" style="animation-delay:1.2s"/><ellipse cx="195" cy="572" rx="110" ry="22" style="animation-delay:2.4s"/></g>
+                <g class="srp-splash"></g>
+            </g>
+            <g aria-hidden="true">
+                <g fill="#5d6a68"><ellipse cx="30" cy="560" rx="60" ry="40"/><ellipse cx="370" cy="556" rx="56" ry="42"/><ellipse cx="90" cy="640" rx="40" ry="20"/></g>
+                <g fill="#77857f"><ellipse cx="24" cy="546" rx="40" ry="18"/><ellipse cx="364" cy="540" rx="36" ry="18"/></g>
+                <path d="M0 640 Q120 610 200 640 T390 630 V844 H0 Z" fill="#2f6b45"/>
+                <path d="M0 700 Q100 680 195 700 T390 694 V844 H0 Z" fill="#245a3a"/>
+                <g stroke="#4f9a5e" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M30 700 q-14 -30 -30 -40"/><path d="M38 700 q-4 -36 -14 -54"/><path d="M46 700 q8 -32 22 -48"/><path d="M54 700 q16 -24 34 -30"/><path d="M340 694 q-16 -26 -32 -34"/><path d="M348 694 q-4 -34 -12 -50"/><path d="M356 694 q8 -30 20 -44"/><path d="M364 694 q14 -22 30 -28"/></g>
+                <path d="M0 0 H390 V62 Q362 92 324 72 Q292 98 254 74 Q222 94 192 72 Q160 96 130 74 Q98 98 68 72 Q38 94 0 68 Z" fill="#1d4a30"/>
+                <g fill="#1d4a30"><rect x="-10" y="0" width="70" height="140" rx="30"/><ellipse cx="20" cy="40" rx="90" ry="70"/><ellipse cx="380" cy="30" rx="96" ry="70"/></g>
+            </g>
+            <g class="srp-hot srp-rock" data-place-hot="rock" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_rock_aria'))}">
+                <ellipse cx="292" cy="760" rx="70" ry="24" fill="#6f7a78"/>
+                <ellipse cx="292" cy="752" rx="64" ry="16" fill="#8a9692"/>
+                <ellipse cx="270" cy="748" rx="22" ry="5" fill="#a3aeaa"/>
+                <rect class="srp-hit" x="216" y="724" width="152" height="64" fill="transparent"/>
+            </g>
+        </svg>`;
+}
+// קול המים: רעש רך עם מסנן, בלולאה - רק כשיושבים על הסלע
+let srpWater = null;
+function srpWaterStart() {
+    const a = srpCtx();
+    if (!a || srpWater) return;
+    const { ctx } = a;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) { last = (last + 0.04 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 6; }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = 1400;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 1.2);
+    src.connect(f); f.connect(g); g.connect(a.master);
+    src.start();
+    srpWater = { src, g, ctx };
+}
+function srpWaterStop() {
+    if (!srpWater) return;
+    const { src, g, ctx } = srpWater;
+    srpWater = null;
+    try { g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); setTimeout(() => { try { src.stop(); } catch {} }, 900); } catch {}
+}
+function srpInitWaterfall(box) {
+    srpCleanups.push(srpWaterStop);
+    box.querySelector('.srp-rest-exit').addEventListener('click', srpWaterStop);
+    return {
+        rock: () => { srpRest(box); srpWaterStart(); },
+        pool: el => {
+            const g = el.querySelector('.srp-splash');
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    if (!g.isConnected) return;
+                    const r = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                    r.setAttribute('cx', 150 + Math.random() * 90);
+                    r.setAttribute('cy', 590 + Math.random() * 30);
+                    r.setAttribute('rx', '18');
+                    r.setAttribute('ry', '5');
+                    r.setAttribute('class', 'srp-splash-ring');
+                    g.appendChild(r);
+                    setTimeout(() => r.remove(), 1500);
+                }, srpReduce() ? 0 : i * 220);
+            }
+        },
+    };
 }

@@ -24,8 +24,8 @@ const ROOM_UNLOCKS = [
     { n: 9, id: 'breath', place: 'breath' },
     { n: 10, id: 'outside', place: 'outside' },
     { n: 11, id: 'catvisit', wall: 3 },
-    { n: 12, id: 'yoga', place: 'outside' },
-    { n: 13, id: 'wish', roof: true },
+    { n: 12, id: 'yoga', place: 'yoga' },
+    { n: 13, id: 'waterfall', place: 'waterfall' },
     { n: 14, id: 'rain', place: 'porch' },
     { n: 15, id: 'selfcare', place: 'outside' },
     { n: 16, id: 'vinyl', place: 'music' },
@@ -170,6 +170,8 @@ function roomShowArrow(container, target, onReach) {
 }
 function roomPlaceDoor(place) {
     const doors = typeof SRP_DOOR_PLACE !== 'undefined' ? SRP_DOOR_PLACE : {};
+    const parents = typeof SRP_PLACE_PARENT !== 'undefined' ? SRP_PLACE_PARENT : {};
+    while (parents[place]) place = parents[place];
     return Object.keys(doors).find(n => doors[n] === place) || '1';
 }
 // במסדרון: לדלת של המקום, לפתח שבתקרה (הגג ומה שעליו), או לדלת של החדר הסודי
@@ -1667,7 +1669,7 @@ function roomRoofScene() {
                 </g>
             </g>
             ${roomCatSvg()}
-            ${roomIsUnlocked('wish') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
+            ${roomIsUnlocked('roof') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
             </g>
         </svg>`;
 }

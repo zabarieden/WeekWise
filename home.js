@@ -524,13 +524,20 @@ function toggleHomeDonePopover(force) {
         <span class="home-done-title">${myDayEsc(t('home_done_title'))}</span>
         ${done.length ? `<ul class="home-done-list">${done.map(it => `<li>${myDayEsc(it.title)}</li>`).join('')}</ul>` : `<p class="home-done-empty">${myDayEsc(t('home_done_empty'))}</p>`}
         <span class="home-done-foot">${myDayEsc(t('home_done_water').replace('{n}', myDayWaterState.glasses).replace('{goal}', myDayWaterState.goal))} · ${myDayEsc(t('home_done_flowers').replace('{n}', flowers))}</span>`;
+    // בערב הצ'יפים שמתחת לברכה מורידים את "פתק מהיר" - החלון לא עולה עליו (וגולל בפנים אם צריך)
+    pop.style.maxHeight = '';
+    const qn = document.getElementById('btn-ai-fab');
+    if (qn && qn.offsetParent) {
+        const room = pop.getBoundingClientRect().bottom - qn.getBoundingClientRect().bottom - 8;
+        if (room > 80 && pop.offsetHeight > room) { pop.style.boxSizing = 'border-box'; pop.style.maxHeight = `${Math.floor(room)}px`; pop.style.overflowY = 'auto'; }
+    }
 }
 
 // --- לחיצה ארוכה על "פתק מהיר": הקלטה (הכתבה לפתק) / ישר לרשימת הקניות / פתק רגיל ---
 const HOME_SPEECH_LANGS = { he: 'he-IL', en: 'en-US', es: 'es-ES', fr: 'fr-FR', ar: 'ar-SA', ru: 'ru-RU', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', zh: 'zh-CN', hi: 'hi-IN', ko: 'ko-KR', tr: 'tr-TR', id: 'id-ID', it: 'it-IT', vi: 'vi-VN', pl: 'pl-PL', th: 'th-TH', ur: 'ur-PK', bn: 'bn-BD', sw: 'sw-KE', uk: 'uk-UA', el: 'el-GR', nl: 'nl-NL', ca: 'ca-ES', ro: 'ro-RO', yo: 'yo-NG', sv: 'sv-SE', nb: 'nb-NO', da: 'da-DK', cs: 'cs-CZ', hu: 'hu-HU', fi: 'fi-FI' };
 function homeSpeechSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
 // לחיצה ארוכה (חצי שנייה) על כפתור. הקליק שבא אחריה לא מפעיל את הלחיצה הרגילה (מה שנפתח
-// בלחיצה הארוכה כבר פתוח) - משמש לפתק המהיר ולפתק השבועי
+// בלחיצה הארוכה כבר פתוח) - משמש לפתק המהיר
 function homeAttachLongPress(el, onLong) {
     if (!el || el.dataset.longPress) return;
     el.dataset.longPress = '1';
