@@ -55,23 +55,6 @@ function roomOpenPlace(id, opts = {}) {
     }
 }
 
-// כפתור קטן בפינה של המקום (הגשם) - מופיע רק אחרי שנפתח
-function srpTool(box, id, icon, on, toggle) {
-    const tools = box.querySelector('.srp-tools');
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'sr-btn srp-tool';
-    b.dataset.tool = id;
-    b.setAttribute('aria-label', roomItemName(id));
-    b.title = roomItemName(id);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.innerHTML = icon;
-    b.addEventListener('click', () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.classList.remove('srp-new'); toggle(v); });
-    tools.appendChild(b);
-    return b;
-}
-const SRP_ICON_RAIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 8.5a3.5 3.5 0 0 1 .5 6.96"/><path d="M9 18l-1 2.5M13 18l-1 2.5M17 17l-1 2.5"/></svg>';
-
 // נשימה ארוכה במנוחה (ערסל / ספסל): הכפתורים נעלמים ורק הנוף נשאר. נגיעה - חוזרים
 function srpRest(box) { box.classList.add('is-resting'); }
 
@@ -224,6 +207,7 @@ function srpMusicStop(quick) {
 function srpPorchScene(keys) {
     const tabletOpen = keys >= roomUnlockAt('tablet');
     const bottle = keys >= roomUnlockAt('bottle');
+    const rainOpen = keys >= roomUnlockAt('rain');
     let rain = '';
     for (let i = 0; i < 34; i++) {
         const x = 34 + ((i * 53) % 322), y = 90 + ((i * 97) % 420);
@@ -258,6 +242,15 @@ function srpPorchScene(keys) {
                     <g class="srp-ripples" fill="none" stroke="#9fb3ff" stroke-opacity="0.55"><ellipse cx="80" cy="430" rx="10" ry="2.5"/><ellipse cx="200" cy="452" rx="12" ry="3" style="animation-delay:.5s"/><ellipse cx="300" cy="424" rx="9" ry="2.2" style="animation-delay:1s"/><ellipse cx="150" cy="462" rx="11" ry="2.6" style="animation-delay:.8s"/></g>
                 </g>
             </g>
+            ${rainOpen ? `<g class="srp-hot srp-cloud" data-place-hot="rain" role="button" tabindex="0" aria-label="${srEsc(roomItemName('rain'))}" aria-pressed="false">
+                <!-- ענן קטן בשמיים: נגיעה עוצרת את הגשם ומחזירה אותו (לפי בקשה מפורשת: "אולי ענן קטן?") -->
+                <g class="srp-cloud-float">
+                    <path class="srp-cloud-body" d="M252 222 a17 17 0 0 1 12 -29 a23 23 0 0 1 43 -7 a16 16 0 0 1 27 16 a14 14 0 0 1 -5 29 h-69 a14 14 0 0 1 -8 -9 z"/>
+                    <path class="srp-cloud-shine" d="M272 196 a17 17 0 0 1 26 -6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                    <g class="srp-cloud-drops" stroke="#b9c6ff" stroke-width="2.2" stroke-linecap="round"><line x1="268" y1="240" x2="265" y2="250"/><line x1="288" y1="242" x2="285" y2="252"/><line x1="308" y1="240" x2="305" y2="250"/><line x1="326" y1="238" x2="323" y2="248"/></g>
+                </g>
+                <rect class="srp-hit" x="240" y="170" width="112" height="88" fill="transparent"/>
+            </g>` : ''}
             ${bottle ? `<g class="srp-hot srp-bottle" data-place-hot="bottle" role="button" tabindex="0" aria-label="${srEsc(t('room_bottle_aria'))}">
                 <g class="srp-bottle-drift"><g class="srp-bottle-bob">
                     <circle cx="296" cy="444" r="36" fill="url(#srpPBottle)"/>
@@ -333,12 +326,15 @@ function srpPorchScene(keys) {
         </svg>`;
 }
 function srpInitPorch(box) {
-    if (roomIsUnlocked('rain')) {
-        // דלוק כברירת מחדל ברגע שנפתח (לפי בקשה מפורשת: "פתח גשם על המרפסת זה לא עושה שום דבר"); הכפתור מכבה
-        const on = srpPrefs().rain !== false;
+    // הגשם: דלוק כברירת מחדל ברגע שנפתח (לפי בקשה מפורשת: "פתח גשם על המרפסת זה לא עושה שום דבר"),
+    // והענן הקטן בשמיים עוצר אותו ומחזיר אותו
+    const cloud = box.querySelector('.srp-cloud');
+    const setRain = (on, save) => {
         box.classList.toggle('is-rain', on);
-        srpTool(box, 'rain', SRP_ICON_RAIN, on, v => { box.classList.toggle('is-rain', v); srpSetPref('rain', v); });
-    }
+        if (cloud) cloud.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (save) srpSetPref('rain', on);
+    };
+    if (cloud) setRain(srpPrefs().rain !== false, false);
     return {
         // נגיעה בערסל - הוא מתנדנד חזק כמה שניות ונרגע (לפי בקשה מפורשת: בלי "להתקרב סתם למסך")
         hammock: el => {
@@ -346,6 +342,7 @@ function srpInitPorch(box) {
             el.classList.add('is-rocking');
             setTimeout(() => el.classList.remove('is-rocking'), srpReduce() ? 300 : 5200);
         },
+        rain: () => setRain(!box.classList.contains('is-rain'), true),
         tablet: el => {
             if (el.classList.contains('locked')) { srShowLockTip('tablet'); return; }
             srShowTip(t('room_tablet_soon'));
@@ -965,42 +962,62 @@ function roomInitWish(root) {
     w.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
 }
 
-// ---------- החתול בא לבקר: ישן על הכרית בחדר הסודי (מפתח 11) ----------
+// ---------- החתול בא לבקר: יושב על הכרית בחדר הסודי (מפתח 11) ----------
+// לפי בקשה מפורשת: דומה לחתול מהגג (אותו ציור), ועושה 5 דברים אחרים לגמרי מאלה שבגג - כל נגיעה הדבר הבא:
+// כדור צמר, מסתובב אחרי הזנב, מתגלגל על הגב, צד עכבר צעצוע, ופרפר שנוחת לו על האף
+const SR_ROOMCAT_ACTIONS = [['yarn', 2400], ['chase', 1900], ['roll', 2300], ['mouse', 2400], ['butterfly', 3000]];
 function srCatNapSvg() {
     const F = '#120d1f';
-    return `<g class="sr-hot sr-catnap" data-hot="catvisit" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}" transform="translate(322 650)">
-        <g class="sr-catnap-body">
-            <path d="M-26 0 Q-30 -22 -6 -26 Q20 -28 26 -8 Q28 2 18 4 L-20 4 Q-27 4 -26 0 Z" fill="${F}"/>
-            <path d="M22 2 Q27 11 8 11 Q-12 11 -20 5" stroke="${F}" stroke-width="6" fill="none" stroke-linecap="round"/>
-            <g class="sr-catnap-head">
-                <path d="M-25 -24 l-2 -10 l8 5 z M-12 -27 l3 -9 l4 8 z" fill="${F}"/>
-                <circle cx="-16" cy="-18" r="10" fill="${F}"/>
-                <path class="sr-catnap-shut" d="M-21.5 -18.5 q2 2 4 0 M-14.5 -18.5 q2 2 4 0" stroke="#9a8fc4" stroke-width="0.9" fill="none" stroke-linecap="round"/>
-                <g class="sr-catnap-eyes"><ellipse cx="-19.5" cy="-19" rx="1.9" ry="2.3" fill="#d8f56a"/><ellipse cx="-12.5" cy="-19" rx="1.9" ry="2.3" fill="#d8f56a"/></g>
-                <path d="M-17.2 -14.6 h2.4 l-1.2 1.4 z" fill="#ff9ecf"/>
+    return `<g class="sr-hot sr-roomcat" data-hot="catvisit" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}" transform="translate(320 656) scale(1.3)">
+        <g class="rc-yarn" aria-hidden="true"><circle cx="34" cy="-7" r="7" fill="#ff7ab0"/><path d="M28 -10 q6 -4 12 2 M29 -4 q6 3 11 -3 M31 -13 q5 6 1 13" stroke="#ffc4dd" stroke-width="1" fill="none"/><path d="M27 -3 q-8 6 -16 2" stroke="#ff7ab0" stroke-width="1" fill="none"/></g>
+        <g class="rc-mouse" aria-hidden="true"><path d="M32 -4 q-7 2 -9 -4" stroke="#b9a8ff" stroke-width="1.2" fill="none"/><ellipse cx="39" cy="-4" rx="7" ry="4.6" fill="#b9a8ff"/><circle cx="45.5" cy="-7" r="2.8" fill="#b9a8ff"/><circle cx="44.5" cy="-9.8" r="1.7" fill="#d9ceff"/><circle cx="47.2" cy="-7.2" r="0.6" fill="${F}"/></g>
+        <g class="rc-all">
+            <path class="rc-tail" d="M11 -6 q17 -1 16 -18 q-1 -8 5 -9" stroke="${F}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+            <g class="rc-body">
+                <ellipse cx="0" cy="-14" rx="15" ry="15" fill="${F}"/>
+                <ellipse cx="0" cy="-12" rx="6.5" ry="9" fill="#2a2042"/>
+                <ellipse class="rc-paw rc-paw-l" cx="-6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
+                <ellipse class="rc-paw rc-paw-r" cx="6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
+            </g>
+            <g class="rc-head">
+                <path d="M-12 -40 l-2.5 -12 l9.5 6.5 z M12 -40 l2.5 -12 l-9.5 6.5 z" fill="${F}"/>
+                <path d="M-10.6 -42.5 l-1.1 -6 l4.4 3.2 z M10.6 -42.5 l1.1 -6 l-4.4 3.2 z" fill="#ff9ecf" opacity="0.5"/>
+                <circle cx="0" cy="-35" r="12.5" fill="${F}"/>
+                <ellipse cx="-4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/><ellipse cx="4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/>
+                <ellipse class="rc-pupil rc-pupil-l" cx="-4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/><ellipse class="rc-pupil rc-pupil-r" cx="4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/>
+                <circle cx="-3.8" cy="-38.2" r="0.7" fill="#fff"/><circle cx="5.4" cy="-38.2" r="0.7" fill="#fff"/>
+                <g class="rc-lids"><ellipse cx="-4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><path d="M-7.4 -36.4 q2.8 2.2 5.6 0 M1.8 -36.4 q2.8 2.2 5.6 0" stroke="#9a8fc4" stroke-width="0.8" fill="none" stroke-linecap="round"/></g>
+                <path d="M-1.5 -32.2 h3 l-1.5 1.7 z" fill="#ff9ecf"/>
+                <path d="M0 -30.5 q-1.6 1.7 -3.2 0.4 M0 -30.5 q1.6 1.7 3.2 0.4" stroke="#9a8fc4" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+                <path d="M-6 -31.6 l-8 -1.4 M-6 -30.4 l-8 1.2 M6 -31.6 l8 -1.4 M6 -30.4 l8 1.2" stroke="#9a8fc4" stroke-width="0.6" opacity="0.75" stroke-linecap="round"/>
             </g>
         </g>
-        <text class="sr-catnap-z" x="-4" y="-32">z</text>
-        <g class="sr-catnap-fx"></g>
-        <ellipse class="sr-hit" cx="0" cy="-12" rx="34" ry="24" fill="transparent"/>
+        <g class="rc-fly" aria-hidden="true"><g class="rc-wings"><path d="M0 0 q-6 -7 -8 -1 q-1 4 8 1 z" fill="#ffd27a"/><path d="M0 0 q6 -7 8 -1 q1 4 -8 1 z" fill="#ffb3d6"/></g><line x1="0" y1="-1.5" x2="0" y2="2" stroke="${F}" stroke-width="0.9" stroke-linecap="round"/></g>
+        <g class="rc-fx"></g>
+        <ellipse class="sr-hit" cx="6" cy="-24" rx="38" ry="34" fill="transparent"/>
     </g>`;
 }
 function srCatNapTap(el) {
-    if (el.classList.contains('is-awake')) return;
-    el.classList.add('is-awake');
-    const fx = el.querySelector('.sr-catnap-fx');
-    for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-            if (!fx || !fx.isConnected) return;
-            const h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            h.setAttribute('x', -18 + i * 9);
-            h.setAttribute('y', -34 - (i % 2) * 4);
-            h.setAttribute('text-anchor', 'middle');
-            h.setAttribute('class', 'sr-cat-float is-heart');
-            h.textContent = '♥';
-            fx.appendChild(h);
-            setTimeout(() => h.remove(), 1700);
-        }, i * 260);
-    }
-    setTimeout(() => el.classList.remove('is-awake'), srpReduce() ? 800 : 3200);
+    if (el.dataset.busy) return;
+    const i = Number(el.dataset.next || 0) % SR_ROOMCAT_ACTIONS.length;
+    const [name, ms] = SR_ROOMCAT_ACTIONS[i];
+    el.dataset.next = String((i + 1) % SR_ROOMCAT_ACTIONS.length);
+    el.dataset.busy = '1';
+    el.classList.add('do-' + name);
+    const fx = el.querySelector('.rc-fx');
+    const pop = (ch, x, y, cls, delay) => setTimeout(() => {
+        if (!fx || !fx.isConnected) return;
+        const h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        h.setAttribute('x', x);
+        h.setAttribute('y', y);
+        h.setAttribute('text-anchor', 'middle');
+        h.setAttribute('class', `sr-cat-float ${cls}`);
+        h.textContent = ch;
+        fx.appendChild(h);
+        setTimeout(() => h.remove(), 1700);
+    }, srpReduce() ? 0 : delay);
+    if (name === 'mouse') pop('✦', 40, -20, 'is-spark', 1500);
+    if (name === 'butterfly') pop('♥', 0, -56, 'is-heart', 2100);
+    if (name === 'yarn') pop('♥', 20, -50, 'is-heart', 1700);
+    setTimeout(() => { el.classList.remove('do-' + name); delete el.dataset.busy; }, srpReduce() ? 400 : ms);
 }

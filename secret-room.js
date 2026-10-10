@@ -749,8 +749,6 @@ function srWallGame(keys) {
         <path d="M42 256 Q 96 240 140 254 T 186 252 V266 H42 Z" fill="#7c3aed"/>
         <g stroke="#6b4630" stroke-opacity="0.35" stroke-width="1"><line x1="78" y1="154" x2="78" y2="266"/><line x1="114" y1="154" x2="114" y2="266"/><line x1="150" y1="154" x2="150" y2="266"/><line x1="42" y1="191" x2="186" y2="191"/><line x1="42" y1="228" x2="186" y2="228"/></g>
         ${holes}
-        <rect x="60" y="280" width="108" height="20" rx="4" fill="#c9a36b"/>
-        <text x="114" y="294" text-anchor="middle" font-size="10" font-weight="800" fill="#4a2c1e" data-fit="100">${srEsc(t('room_puzzle_sign'))}</text>
         <g class="sr-hot${gameOpen ? '' : ' locked'}" data-hot="game" role="button" tabindex="0" aria-label="${srEsc(roomItemName('game'))}">
             ${gameOpen ? `<circle cx="286" cy="262" r="96" fill="url(#${p}Screen)"/>` : ''}
             <polygon points="222,206 350,206 354,640 218,640" fill="url(#${p}Cab)"/>
