@@ -521,6 +521,9 @@ function srpInitBreath(box) {
         srpTool(box, 'sunrise', SRP_ICON_SUN, on, v => { box.classList.toggle('is-sunrise', v); srpSetPref('sunrise', v); });
     }
     let timer = null;
+    // המסך נשאר דולק כל הסשן; יציאה קצרה מהאפליקציה משחררת את זה - בחזרה מבקשים שוב
+    const onVisible = () => { if (document.visibilityState === 'visible' && box.classList.contains('is-on') && box.isConnected) srpWakeOn(); };
+    document.addEventListener('visibilitychange', onVisible);
     const stop = done => {
         clearTimeout(timer);
         timer = null;
@@ -539,7 +542,7 @@ function srpInitBreath(box) {
         box.querySelector('[data-breath="stop"]').focus({ preventScroll: true });
     });
     box.querySelector('[data-breath="stop"]').addEventListener('click', () => stop(false));
-    srpCleanups.push(() => stop(false));
+    srpCleanups.push(() => { stop(false); document.removeEventListener('visibilitychange', onVisible); });
     return {};
 }
 
