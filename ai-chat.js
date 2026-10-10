@@ -80,7 +80,8 @@ function aiChatChips(chips) {
     const b = aiChatBody();
     if (!b || !chips || !chips.length) return null;
     const row = document.createElement('div');
-    row.className = 'ai-chat-chips';
+    // ארבעת הכלים - באמצע, שניים בשורה (לפי בקשה מפורשת: "את הכל במרכז... רק שהשיחה תהיה בצד")
+    row.className = 'ai-chat-chips' + (chips.every(c => c.tool) ? ' is-tools' : '');
     chips.forEach(c => {
         const btn = document.createElement('button');
         btn.type = 'button';

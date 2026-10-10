@@ -2427,7 +2427,8 @@ function getDailyFocusPersonalSuggestion() {
         const step = (typeof visionMilestonesCache !== 'undefined' ? visionMilestonesCache : [])
             .filter(m => m.goal_id === goal.id && !m.is_done)
             .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0];
-        options.push(step ? `🎯 ${step.title} · ${goal.title}` : t('daily_focus_personal_goal').replace('{goal}', goal.title));
+        // רק הצעד עצמו, בלי שם היעד אחריו (לפי בקשה מפורשת: "ה-50 K?" - שם היעד בסוף רק בלבל)
+        options.push(step ? `🎯 ${step.title}` : t('daily_focus_personal_goal').replace('{goal}', goal.title));
     }
     if (typeof getPeekBookTaskItems === 'function') {
         const reading = getPeekBookTaskItems().find(item => !item.done);
@@ -8599,6 +8600,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'routine_day_tabs', category: 'general' },
     { id: 'routine_daysoff', category: 'general' },
     { id: 'routine_ai', category: 'general' },
+    { id: 'routine_exact_time', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'weekly_note', category: 'general' },
@@ -16489,6 +16491,15 @@ const DAILY_BOARD_DEFAULT_HOURS = {
     afternoon: [16],
     evening: [17, 19, 20, 21, 22],
 };
+// שעה בשגרה: מספר = שעה עגולה (8 → 08:00), או "HH:MM" = שעה מדויקת. לפי בקשה מפורשת (2026-10-10): "אם רושמים
+// שעה מסויימת שירשום את השעה ולא שעה עגולה" - 16:10 נשאר 16:10. שעה מדויקת לא נשמרת ב-custom_hours: היא מופיעה
+// בלוח בזכות הפריט עצמו (ר' renderDailyBoard - השורות הן השעות של הטאב + כל שעה שיש בה פריט)
+function routineSlotTime(h) { return typeof h === 'number' ? `${String(h).padStart(2, '0')}:00` : String(h || '').slice(0, 5); }
+function routineSlotMinutes(h) { const [hh, mm] = routineSlotTime(h).split(':').map(Number); return (hh || 0) * 60 + (mm || 0); }
+function routineSlotHour(h) { return typeof h === 'number' ? h : Number(String(h || '').slice(0, 2)); }
+// השעה של פריט שחזר מה-AI: "HH:MM" כשיש, ואחרת השעה העגולה (תשובות ישנות של הפונקציה)
+function routineItemTime(it) { const tm = String((it && it.time) || ''); return /^([01]\d|2[0-3]):[0-5]\d$/.test(tm) ? tm : `${String(it.hour).padStart(2, '0')}:00`; }
+let dailyBoardItemsCache = [];   // הפריטים של הטאב הפעיל (מהרינדור האחרון) - בשביל פאנל השעות
 
 // לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
 // ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות ולשנות לכל טאב שונה").
@@ -16517,6 +16528,22 @@ function getDailyBoardCustomHours(tabId) {
 
 async function toggleDailyBoardHour(bucket, hour) {
     if (!activeDailyBoardTabId) return;
+    // שעה שיש בה משהו לא נעלמת בנגיעה אחת (לפי בקשה מפורשת: "לחצתי... וזה שינה לי את כל ההגדרות בלחיצה אחת"):
+    // קודם שואלים, ורק אז היא יוצאת - יחד עם מה שרשום בה
+    const time = routineSlotTime(hour);
+    const taken = dailyBoardItemsCache.filter(it => String(it.time || '').slice(0, 5) === time);
+    if (taken.length) {
+        showDangerConfirm(t('routine_hour_remove_title').replace('{time}', time), t('routine_hour_remove_text').replace('{title}', taken.map(it => it.title).join(', ')), async () => {
+            const { error } = await supabaseClient.from('routine_items').delete().in('id', taken.map(it => it.id)).eq('user_id', currentUserId);
+            if (error) { showAppToast(t('daily_board_hours_save_failed'), 'error'); return; }
+            dailyBoardItemsCache = dailyBoardItemsCache.filter(it => !taken.includes(it));
+            const now = getDailyBoardCustomHours(activeDailyBoardTabId);
+            if ((now[bucket] || []).includes(hour)) await toggleDailyBoardHour(bucket, hour);
+            else { renderDailyBoardHourSettings(); renderDailyBoard(); }
+            if (typeof loadTodayTasks === 'function') loadTodayTasks();
+        });
+        return;
+    }
     const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
     const previousHours = { morning: [...hours.morning], noon: [...hours.noon], afternoon: [...hours.afternoon], evening: [...hours.evening] };
     const list = (hours[bucket] || []).slice();
@@ -16562,8 +16589,9 @@ function renderDailyBoardHourSettings() {
         const wrap = document.getElementById(`board-hours-${bucket}`);
         if (!wrap) return;
         wrap.innerHTML = '';
+        const itemTimes = new Set(dailyBoardItemsCache.map(it => String(it.time || '').slice(0, 5)));
         DAILY_BOARD_BUCKET_RANGES[bucket].forEach(hour => {
-            const active = (hours[bucket] || []).includes(hour);
+            const active = (hours[bucket] || []).includes(hour) || itemTimes.has(routineSlotTime(hour));
             const chip = document.createElement('button');
             chip.type = 'button';
             chip.className = 'board-hour-chip' + (active ? ' active' : '');
@@ -16840,7 +16868,8 @@ function parseRoutineTemplateItems(text) {
 }
 
 function routineBucketOfHour(hour) {
-    return Object.keys(DAILY_BOARD_BUCKET_RANGES).find(b => DAILY_BOARD_BUCKET_RANGES[b].includes(hour)) || null;
+    const h = routineSlotHour(hour);
+    return Object.keys(DAILY_BOARD_BUCKET_RANGES).find(b => DAILY_BOARD_BUCKET_RANGES[b].includes(h)) || null;
 }
 
 function renderRoutineTemplates() {
@@ -17029,10 +17058,17 @@ async function duplicateRoutineTab(name) {
     showAppToast(t('routine_duplicate_done').replace('{name}', data.name));
 }
 
-// --- פריטים לשעות עגולות (מה-AI): שעה שכבר יש בה פריט - רק הכותרת מתעדכנת; שאר הפריטים בטאב נשארים ---
+// --- פריטים מה-AI, בשעה המדויקת שנכתבה (16:10 נשאר 16:10): שעה שכבר יש בה פריט - רק הכותרת מתעדכנת; שאר
+// הפריטים בטאב נשארים. רק שעות עגולות נכנסות לשעות של הטאב - שעה מדויקת מופיעה בזכות הפריט עצמו ---
 function routineHoursForItems(items) {
     const hours = { morning: [], noon: [], afternoon: [], evening: [] };
-    items.forEach(it => { const b = routineBucketOfHour(it.hour); if (b && !hours[b].includes(it.hour)) hours[b].push(it.hour); });
+    items.forEach(it => {
+        const time = routineItemTime(it);
+        if (!time.endsWith(':00')) return;
+        const h = Number(time.slice(0, 2));
+        const b = routineBucketOfHour(h);
+        if (b && !hours[b].includes(h)) hours[b].push(h);
+    });
     Object.keys(hours).forEach(b => hours[b].sort((x, y) => x - y));
     return hours;
 }
@@ -17041,7 +17077,7 @@ async function insertRoutineItemsAtHours(tabId, items) {
     const byTime = new Map((existing || []).map(it => [String(it.time || '').slice(0, 5), it]));
     const inserts = [];
     for (const it of items) {
-        const time = `${String(it.hour).padStart(2, '0')}:00`;
+        const time = routineItemTime(it);
         const ex = byTime.get(time);
         if (ex) await supabaseClient.from('routine_items').update({ title: it.title }).eq('id', ex.id);
         else inserts.push({ tab_id: tabId, user_id: currentUserId, title: it.title, time, kind: 'scheduled' });
@@ -21750,6 +21786,7 @@ async function renderDailyBoard() {
     if (!activeDailyBoardTabId) { body.innerHTML = ''; return; }
     const { data: items } = await supabaseClient.from('routine_items').select('*').eq('tab_id', activeDailyBoardTabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
     dailyBoardActiveItemCount = (items || []).length;
+    dailyBoardItemsCache = items || [];
     const itemsByTime = {};
     (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
     routineItemGoalLinks = new Map((items || []).filter(it => it.vision_milestone_id).map(it => [it.id, it.vision_milestone_id]));
@@ -21771,16 +21808,18 @@ async function renderDailyBoard() {
     }
     body.innerHTML = '';
     bucketOrder.forEach(key => {
-        const bucketHours = customHours[key] || [];
-        if (!bucketHours.length) return;
+        // השורות: השעות שנבחרו לטאב + כל שעה שיש בה פריט (גם מדויקת, כמו 16:10) - כך פריט לא נעלם לעולם
+        const slots = new Set((customHours[key] || []).map(routineSlotTime));
+        (items || []).forEach(it => { const tm = String(it.time || '').slice(0, 5); if (tm && routineBucketOfHour(tm) === key) slots.add(tm); });
+        const bucketTimes = [...slots].sort((a, b) => routineSlotMinutes(a) - routineSlotMinutes(b));
+        if (!bucketTimes.length) return;
         const section = document.createElement('div');
         section.className = `daily-board-bucket-section daily-board-bucket-${key}`;
         const header = document.createElement('div');
         header.className = 'daily-board-bucket-header';
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
-        bucketHours.forEach(hour => {
-            const timeStr = `${String(hour).padStart(2, '0')}:00`;
+        bucketTimes.forEach(timeStr => {
             const item = itemsByTime[timeStr];
             // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
             const inNewMe = routineItemInNewMe(item);

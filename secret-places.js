@@ -2,7 +2,8 @@
 // לפי בחירה מפורשת (2026-10-09), מתוך 5 אפשרויות לכל דלת על הקנבס:
 // דלת 2 - המרפסת המקורה מול הים: ערסל, והמחשב שם הוא טאבלט (נעול עד שנעצב אותו יחד);
 // דלת 3 - פינה חמה עם כורסה ותקליטים: הגיטרה והיומן (היומן נשמר בחשבון - רק שלך);
-// דלת 4 - חדר הנשימה: חוף בשקיעה, השמש עולה ויורדת עם הנשימה. בלי דקות ובלי ספירה - נכנסים, לוחצים ומתחילים;
+// דלת 4 - חדר הנשימה: חוף בשקיעה, השמש עולה ויורדת עם הנשימה. בלי דקות ובלי ספירה - נכנסים, לוחצים ומתחילים.
+//          ובחול (מפתח 17) - מקל לכתוב בו, וגל בא ומוחק;
 // דלת 5 - השביל ביער עם פנסים וספסל: נגיעה בפנסים מכבה אותם, ויש יום בחוץ.
 // ובאתגר האחרון - בקבוק מגיע מהים, ובתוכו המכתב מהעבר. כל מפתח פותח דבר אחד (ר' ROOM_UNLOCKS).
 // כל הציורים בגודל 390×844, כמו המסדרון, וכל מה שנוגעים בו נמצא בתוך הציור עצמו.
@@ -11,7 +12,7 @@ const SRP_DOOR_PLACE = { 2: 'porch', 3: 'music', 4: 'breath', 5: 'outside' };
 const SRP_BREATH_MS = 10 * 60 * 1000;   // סשן של עשר דקות (לא כתוב בשום מקום - לפי בקשה מפורשת)
 let srpCleanups = [];
 
-// העדפות קטנות של המקום (גשם, זריחה, יום/לילה, מדורה) - נשמרות במכשיר
+// העדפות קטנות של המקום (גשם, יום/לילה, מדורה) - נשמרות במכשיר
 function srpPrefKey() { return `weekwise_room_prefs_${currentUserId || 'me'}`; }
 function srpPrefs() { try { return JSON.parse(localStorage.getItem(srpPrefKey()) || '{}') || {}; } catch { return {}; } }
 function srpSetPref(k, v) { const p = srpPrefs(); p[k] = v; try { localStorage.setItem(srpPrefKey(), JSON.stringify(p)); } catch {} }
@@ -26,6 +27,7 @@ function roomOpenPlace(id, opts = {}) {
     const stage = srStage();
     if (!stage) return;
     srpCleanup();
+    if (typeof roomClearArrow === 'function') roomClearArrow();
     stage.querySelector('.sr-place')?.remove();
     const keys = roomKeys();
     const P = { porch: [srpPorchScene, srpInitPorch], music: [srpMusicScene, srpInitMusic], breath: [srpBreathScene, srpInitBreath], outside: [srpOutsideScene, srpInitOutside] }[id];
@@ -45,22 +47,15 @@ function roomOpenPlace(id, opts = {}) {
         el.addEventListener('click', go);
         el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     });
-    if (opts.highlight) srpHighlight(box, opts.highlight);
+    // משהו נפתח כאן ועוד לא הגיעו אליו - חץ מצביע עליו (ר' roomGuide ב-secret-room.js)
+    const g = typeof roomGuideUnlock === 'function' ? roomGuideUnlock() : null;
+    if (g && g.place === id) {
+        if (g.id === id) roomGuideDone();
+        else setTimeout(() => { if (box.isConnected) roomShowArrow(box, box.querySelector(`[data-place-hot="${g.id}"], [data-tool="${g.id}"]`), roomGuideDone); }, 60);
+    }
 }
 
-// מה שנפתח עכשיו: הודעה קטנה, הבהוב זהוב והתזזיות - על הדבר עצמו (או על כל המקום)
-function srpHighlight(box, id) {
-    srShowTip(t('room_reveal_opened').replace('{item}', roomItemName(id)));
-    const el = box.querySelector(`[data-place-hot="${id}"], [data-tool="${id}"]`);
-    if (el) el.classList.add('srp-new');
-    const stage = srStage();
-    if (!stage || typeof spawnGentleConfettiBurst !== 'function') return;
-    const s = stage.getBoundingClientRect();
-    const r = el ? el.getBoundingClientRect() : { left: s.left, top: s.top + s.height * 0.35, width: s.width, height: 0 };
-    setTimeout(() => spawnGentleConfettiBurst(stage, 30, r.left - s.left + r.width / 2, r.top - s.top + r.height / 2, ['#ffd27a', '#ffe2a6', '#ff9ecf', '#b9a8ff']), 500);
-}
-
-// כפתור קטן בפינה של המקום (גשם / זריחה) - מופיע רק אחרי שנפתח
+// כפתור קטן בפינה של המקום (הגשם) - מופיע רק אחרי שנפתח
 function srpTool(box, id, icon, on, toggle) {
     const tools = box.querySelector('.srp-tools');
     const b = document.createElement('button');
@@ -76,7 +71,6 @@ function srpTool(box, id, icon, on, toggle) {
     return b;
 }
 const SRP_ICON_RAIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 8.5a3.5 3.5 0 0 1 .5 6.96"/><path d="M9 18l-1 2.5M13 18l-1 2.5M17 17l-1 2.5"/></svg>';
-const SRP_ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M5 16a7 7 0 0 1 14 0"/><path d="M3 19h18M12 4v3M5.6 7.6l2 2M18.4 7.6l-2 2"/></svg>';
 
 // נשימה ארוכה במנוחה (ערסל / ספסל): הכפתורים נעלמים ורק הנוף נשאר. נגיעה - חוזרים
 function srpRest(box) { box.classList.add('is-resting'); }
@@ -122,24 +116,90 @@ function srpStrum(i) {
     const now = a.ctx.currentTime + 0.02;
     SRP_CHORDS[i % SRP_CHORDS.length].forEach((f, k) => { srpNote(f, now + k * 0.035, 2.3, 0.13); srpNote(f * 2, now + k * 0.035, 0.9, 0.025, 'sine'); });
 }
-// הפטיפון: לופ רך של ארבעה אקורדים עם ארפג'ו
-const SRP_SONG = { bpm: 72, chords: [[261.63, 329.63, 392.0], [220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [196.0, 246.94, 293.66]] };
-function srpMusicStart() {
+// הפטיפון: חמישה תקליטים (לפי בקשה מפורשת: "5 שירים שונים... מוכרים עולמיים"). שירים מודרניים מוגנים בזכויות
+// יוצרים - לכן רק לחנים קלאסיים ועממיים שכולם מכירים ושהם נחלת הכלל. הכול נוצר במקום, בלי קבצים.
+// תווים: "E5 D#5:2 -:3" - שם התו ואורכו ביחידות של השיר (ברירת מחדל 1; "-" = שקט). אקורדים: "Am C:4" - צליל
+// בס ואחריו ארפג'ו רך. start = מאיפה מתחילים בלופ (למשל שתי הנקודות שלפני התיבה הראשונה ב"לאליזה")
+const SRP_CHORD_NOTES = { Am: ['A2', 'C4', 'E4'], C: ['C3', 'E4', 'G4'], G: ['G2', 'B3', 'D4'], Em: ['E2', 'G3', 'B3'], F: ['F2', 'A3', 'C4'], E: ['E2', 'G#3', 'B3'] };
+const srpRep = (s, n) => Array(n).fill(s).join(' ');
+const SRP_RECORDS = [
+    // לאליזה - בטהובן
+    { id: 1, color: '#ff6aa5', unit: 0.19, start: 46, voices: [
+        { vol: 0.06, ring: 1.5, notes: 'E5 D#5 E5 B4 D5 C5 A4:3 C4 E4 A4 B4:3 E4 G#4 B4 C5:3 E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:3 C4 E4 A4 B4:3 E4 C5 B4 A4:4 E5 D#5' },
+        { vol: 0.04, ring: 2.4, type: 'sine', notes: '-:6 A2 E3 A3 -:3 E2 E3 G#3 -:3 A2 E3 A3 -:3 -:6 A2 E3 A3 -:3 E2 E3 G#3 -:3 A2 E3 A3 -:3' },
+    ] },
+    // האודה לשמחה - בטהובן
+    { id: 2, color: '#ffd27a', unit: 0.25, bar: 8, chords: 'C G C G C G C G:4 C:4 G:4 C:4 G:4 C:4 G C:4 G:4 C G C G:4 C:4', voices: [
+        { vol: 0.055, ring: 1.3, notes: 'E5:2 E5:2 F5:2 G5:2 G5:2 F5:2 E5:2 D5:2 C5:2 C5:2 D5:2 E5:2 E5:3 D5 D5:4 E5:2 E5:2 F5:2 G5:2 G5:2 F5:2 E5:2 D5:2 C5:2 C5:2 D5:2 E5:2 D5:3 C5 C5:4 D5:2 D5:2 E5:2 C5:2 D5:2 E5 F5 E5:2 C5:2 D5:2 E5 F5 E5:2 D5:2 C5:2 D5:2 G4:4 E5:2 E5:2 F5:2 G5:2 G5:2 F5:2 E5:2 D5:2 C5:2 C5:2 D5:2 E5:2 D5:3 C5 C5:4' },
+    ] },
+    // הקאנון - פכלבל: הבס החוזר, ושלושה כינורות שנכנסים אחד אחרי השני
+    { id: 3, color: '#7fd6ff', unit: 0.85, voices: [
+        { vol: 0.045, ring: 1.4, type: 'sine', notes: srpRep('D3 A2 B2 F#2 G2 D2 G2 A2', 4) },
+        { vol: 0.035, ring: 1.15, notes: '-:8 F#5 E5 D5 C#5 B4 A4 B4 C#5 D5 C#5 B4 A4 G4 F#4 G4 E4 D5:.5 F#5:.5 A5:.5 G5:.5 F#5:.5 D5:.5 F#5:.5 E5:.5 D5:.5 B4:.5 D5:.5 A5:.5 G5:.5 B5:.5 A5:.5 G5:.5' },
+        { vol: 0.03, ring: 1.15, notes: '-:16 F#5 E5 D5 C#5 B4 A4 B4 C#5 D5 C#5 B4 A4 G4 F#4 G4 E4' },
+        { vol: 0.028, ring: 1.15, notes: '-:24 F#5 E5 D5 C#5 B4 A4 B4 C#5' },
+    ] },
+    // ג'ימנופדי מס' 1 - סאטי
+    { id: 4, color: '#b9a8ff', unit: 0.72, voices: [
+        { vol: 0.04, ring: 3, type: 'sine', notes: srpRep('G2 -:2 D2 -:2', 6) },
+        { vol: 0.018, ring: 1.3, type: 'sine', notes: srpRep('-:1 B3:2 -:1 A3:2', 6) },
+        { vol: 0.018, ring: 1.3, type: 'sine', notes: srpRep('-:1 D4:2 -:1 C#4:2', 6) },
+        { vol: 0.018, ring: 1.3, type: 'sine', notes: srpRep('-:1 F#4:2 -:1 F#4:2', 6) },
+        { vol: 0.06, ring: 1.2, notes: '-:13 F#5 A5 G5 F#5 C#5 B4 C#5 D5 A4:3 F#4:12' },
+    ] },
+    // גרינסליבס - עממי
+    { id: 5, color: '#5bd18b', unit: 0.27, bar: 6, start: 190, chords: 'Am C G Em Am F E E Am C G Em Am E Am Am C Em G Em Am F E E C Em G Em Am E Am Am', voices: [
+        { vol: 0.055, ring: 1.25, notes: 'C5:4 D5:2 E5:3 F5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:4 A4:2 A4:3 G#4 A4:2 B4:4 G#4:2 E4:4 A4:2 C5:4 D5:2 E5:3 F5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:3 B4 A4:2 G#4:3 F#4 G#4:2 A4:6 A4:6 G5:6 G5:3 F#5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:4 A4:2 A4:3 G#4 A4:2 B4:4 G#4:2 E4:6 G5:6 G5:3 F#5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:3 B4 A4:2 G#4:3 F#4 G#4:2 A4:6 A4:4 A4:2' },
+    ] },
+];
+function srpFreq(name) {
+    const m = /^([A-G])(#|b)?(\d)$/.exec(name || '');
+    if (!m) return 0;
+    const semi = { C: -9, D: -7, E: -5, F: -4, G: -2, A: 0, B: 2 }[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + (Number(m[3]) - 4) * 12;
+    return 440 * Math.pow(2, semi / 12);
+}
+// כל התווים של התקליט ביחידות של השיר, ממוינים לפי הזמן, ואורך הלופ
+function srpSongEvents(song) {
+    const ev = [];
+    let len = 0;
+    const walk = (str, fn) => { let at = 0; String(str).trim().split(/\s+/).forEach(tok => { const [n, l] = tok.split(':'); const d = l ? Number(l) : (fn.bar || 1); if (n !== '-') fn(n, at, d); at += d; }); return at; };
+    song.voices.forEach(v => {
+        len = Math.max(len, walk(v.notes, (n, at, d) => ev.push({ at, f: srpFreq(n), dur: d * song.unit * (v.ring || 1.2), vol: v.vol, type: v.type || 'triangle' })));
+    });
+    if (song.chords) {
+        const add = (n, at, d) => {
+            const [root, third, fifth] = SRP_CHORD_NOTES[n] || [];
+            if (!root) return;
+            ev.push({ at, f: srpFreq(root), dur: d * song.unit * 1.1, vol: 0.045, type: 'sine' });
+            for (let k = 2; k < d; k += 2) ev.push({ at: at + k, f: srpFreq((k / 2) % 2 ? third : fifth), dur: 2 * song.unit * 1.3, vol: 0.022, type: 'sine' });
+        };
+        add.bar = song.bar;
+        len = Math.max(len, walk(song.chords, add));
+    }
+    ev.sort((a, b) => a.at - b.at);
+    return { ev, len };
+}
+function srpMusicStart(i) {
     const a = srpCtx();
     if (!a) return;
     srpMusicStop(true);
-    const beat = 60 / SRP_SONG.bpm;
-    let bar = 0, next = a.ctx.currentTime + 0.12;
-    const step = [0, 1, 2, 1, 0, 2, 1, 2];
+    const song = SRP_RECORDS[i] || SRP_RECORDS[0];
+    const { ev, len } = srpSongEvents(song);
+    if (!ev.length || !len) return;
+    const u = song.unit, start = song.start || 0;
+    let base = a.ctx.currentTime + 0.15 - start * u;
+    let idx = Math.max(0, ev.findIndex(e => e.at >= start));
     const schedule = () => {
-        while (next < a.ctx.currentTime + 1.4) {
-            const ch = SRP_SONG.chords[bar % SRP_SONG.chords.length];
-            ch.forEach(f => srpNote(f / 2, next, beat * 4.2, 0.022, 'sine', 0.5));
-            step.forEach((s, k) => srpNote(ch[s], next + k * beat / 2, 1.3, 0.045));
-            next += beat * 4;
-            bar++;
+        const horizon = a.ctx.currentTime + 1.4;
+        for (let guard = 0; guard < 400; guard++) {
+            if (idx >= ev.length) { idx = 0; base += len * u; }
+            const e = ev[idx];
+            const when = base + e.at * u;
+            if (when > horizon) break;
+            if (when >= a.ctx.currentTime - 0.05) srpNote(e.f, when, e.dur, e.vol, e.type, e.type === 'sine' ? 0.03 : 0.012);
+            idx++;
         }
-        a.loop = setTimeout(schedule, 500);
+        a.loop = setTimeout(schedule, 400);
     };
     schedule();
 }
@@ -232,7 +292,12 @@ function srpPorchScene(keys) {
                     <path d="M78 376 Q195 498 312 376 Q195 438 78 376 Z" fill="#2fa58c"/>
                     <path d="M92 388 Q195 484 298 388" fill="none" stroke="#bff5e6" stroke-width="3"/>
                     <path d="M108 402 Q195 476 282 402" fill="none" stroke="#ffd27a" stroke-width="2.4"/>
-                    <ellipse cx="116" cy="400" rx="22" ry="11" fill="#fff1d6" transform="rotate(16 116 400)"/>
+                    <g transform="translate(118 398) rotate(18)">
+                        <path d="M-25 -12 Q0 -17 25 -12 Q29 0 25 12 Q0 17 -25 12 Q-29 0 -25 -12 Z" fill="#ff8fb8"/>
+                        <g stroke="#ffe3ee" stroke-width="2.2" opacity="0.85"><line x1="-11" y1="-13" x2="-11" y2="13"/><line x1="0" y1="-14.5" x2="0" y2="14.5"/><line x1="11" y1="-13" x2="11" y2="13"/></g>
+                        <path d="M-25 -12 Q0 -17 25 -12 Q29 0 25 12 Q0 17 -25 12 Q-29 0 -25 -12 Z" fill="none" stroke="#fff6fa" stroke-width="1.4"/>
+                        <g fill="#ffd27a"><circle cx="-26" cy="-12" r="2.4"/><circle cx="26" cy="-12" r="2.4"/><circle cx="-26" cy="12" r="2.4"/><circle cx="26" cy="12" r="2.4"/></g>
+                    </g>
                 </g>
                 <path class="srp-hit" d="M66 356 L324 356 L300 462 L90 462 Z" fill="transparent"/>
             </g>
@@ -244,32 +309,43 @@ function srpPorchScene(keys) {
                     <path d="M16 30 q-5 -7 0 -14 q5 7 0 14z" fill="#ff8a3d"/>
                     <path d="M10 0 q6 -10 12 0" fill="none" stroke="#2b1a12" stroke-width="2"/>
                 </g>
-                <g transform="translate(244 640)">
-                    <rect x="0" y="40" width="110" height="52" rx="4" fill="#9a6a44"/>
-                    <path d="M0 54 h110 M0 70 h110 M55 40 v52" stroke="#7a5236" stroke-width="2"/>
-                </g>
             </g>
+            <!-- הטאבלט מונח על שולחן קטן ועדין - בלי מעמד ובלי ארגז (לפי בקשה מפורשת: "טבלט הוא בלי משהו שמחזיק אותו...
+                 ואפשר לשים אותו על שולחן קטן עדין לבחוץ") -->
             <g class="srp-hot srp-tablet${tabletOpen ? ' is-open' : ' locked'}" data-place-hot="tablet" role="button" tabindex="0" aria-label="${srEsc(roomItemName('tablet'))}">
-                ${tabletOpen ? '<circle cx="300" cy="636" r="86" fill="url(#srpPTab)"/>' : ''}
-                <path d="M292 668 l-12 14 h40 l-12 -14 z" fill="#3b3b44"/>
-                <rect x="250" y="592" width="100" height="72" rx="10" fill="#26262e" stroke="#4a4a56" stroke-width="1"/>
-                <rect x="256" y="598" width="88" height="60" rx="5" fill="${tabletOpen ? 'url(#srpPScreen)' : '#0d1424'}"/>
-                <circle cx="300" cy="595" r="1.3" fill="#5a5a66"/>
-                ${tabletOpen
-        ? '<g opacity="0.85"><circle cx="280" cy="616" r="9" fill="#fff" opacity="0.25"/><rect x="296" y="610" width="36" height="6" rx="3" fill="#fff" opacity="0.5"/><rect x="296" y="622" width="26" height="6" rx="3" fill="#fff" opacity="0.35"/><rect x="266" y="640" width="68" height="8" rx="4" fill="#fff" opacity="0.3"/></g>'
-        : `<g transform="translate(300 621) scale(0.55)">${srLockShape()}</g><text x="300" y="650" text-anchor="middle" font-size="8.5" font-weight="800" fill="#ffe2a6">${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('tablet'))))}</text>`}
-                <rect class="srp-hit" x="242" y="584" width="116" height="104" fill="transparent"/>
+                <ellipse cx="300" cy="737" rx="36" ry="5" fill="#000" opacity="0.22"/>
+                <g fill="none" stroke="#efe4d0" stroke-width="2.2" stroke-linecap="round">
+                    <path d="M300 670 V734"/><path d="M298 672 C292 698 283 716 272 735"/><path d="M302 672 C308 698 317 716 328 735"/>
+                    <ellipse cx="300" cy="708" rx="13" ry="3" stroke-width="1.5"/>
+                </g>
+                <ellipse cx="300" cy="664" rx="54" ry="24" fill="#cbb994"/>
+                <ellipse cx="300" cy="660" rx="54" ry="24" fill="#f3ece0"/>
+                <ellipse cx="300" cy="660" rx="47" ry="20" fill="none" stroke="#e2d6bf" stroke-width="1"/>
+                ${tabletOpen ? '<ellipse cx="300" cy="652" rx="74" ry="38" fill="url(#srpPTab)"/>' : ''}
+                <g transform="translate(300 657) scale(1 0.45) rotate(-12)">
+                    <rect x="-38" y="-27" width="76" height="54" rx="7" fill="#26262e"/>
+                    <rect x="-34" y="-23" width="68" height="46" rx="4" fill="${tabletOpen ? 'url(#srpPScreen)' : '#0d1424'}"/>
+                    ${tabletOpen ? '<g fill="#fff"><circle cx="-18" cy="-9" r="7" opacity="0.28"/><rect x="-6" y="-14" width="30" height="5" rx="2.5" opacity="0.5"/><rect x="-6" y="-4" width="22" height="5" rx="2.5" opacity="0.35"/><rect x="-26" y="8" width="52" height="7" rx="3.5" opacity="0.3"/></g>' : ''}
+                </g>
+                ${tabletOpen ? '' : `<g transform="translate(300 630) scale(0.5)">${srLockShape()}</g><text x="300" y="608" text-anchor="middle" font-size="8.5" font-weight="800" fill="#ffe2a6">${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('tablet'))))}</text>`}
+                <rect class="srp-hit" x="240" y="592" width="120" height="152" fill="transparent"/>
             </g>
         </svg>`;
 }
 function srpInitPorch(box) {
     if (roomIsUnlocked('rain')) {
-        const on = !!srpPrefs().rain;
+        // דלוק כברירת מחדל ברגע שנפתח (לפי בקשה מפורשת: "פתח גשם על המרפסת זה לא עושה שום דבר"); הכפתור מכבה
+        const on = srpPrefs().rain !== false;
         box.classList.toggle('is-rain', on);
         srpTool(box, 'rain', SRP_ICON_RAIN, on, v => { box.classList.toggle('is-rain', v); srpSetPref('rain', v); });
     }
     return {
-        hammock: () => srpRest(box),
+        // נגיעה בערסל - הוא מתנדנד חזק כמה שניות ונרגע (לפי בקשה מפורשת: בלי "להתקרב סתם למסך")
+        hammock: el => {
+            if (el.classList.contains('is-rocking')) return;
+            el.classList.add('is-rocking');
+            setTimeout(() => el.classList.remove('is-rocking'), srpReduce() ? 300 : 5200);
+        },
         tablet: el => {
             if (el.classList.contains('locked')) { srShowLockTip('tablet'); return; }
             srShowTip(t('room_tablet_soon'));
@@ -376,9 +452,13 @@ function srpMusicScene(keys) {
                 <rect x="20" y="724" width="44" height="46" rx="3" fill="#6a3f25"/><rect x="68" y="724" width="44" height="46" rx="3" fill="#6a3f25"/>
                 <circle cx="58" cy="747" r="2" fill="#d9b98a"/><circle cx="74" cy="747" r="2" fill="#d9b98a"/>
                 <rect x="10" y="700" width="112" height="18" rx="4" fill="#3a2416"/>
-                <g transform="translate(58 699) scale(1 0.34)"><g class="srp-record"><circle r="30" fill="#141014"/><circle r="22" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="15" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="9" fill="#ff6aa5"/><rect x="2" y="-1.8" width="7" height="3.6" fill="#ffd27a"/></g></g>
+                <g transform="translate(58 699) scale(1 0.34)"><g class="srp-record"><circle r="30" fill="#141014"/><circle r="22" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="15" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="9" style="fill:var(--rec, #ff6aa5)"/><rect x="2" y="-1.8" width="7" height="3.6" fill="#ffd27a"/></g></g>
                 <g class="srp-arm"><circle cx="106" cy="694" r="3" fill="#c9c9d0"/><path d="M106 694 L86 690" stroke="#c9c9d0" stroke-width="2.2" stroke-linecap="round"/></g>
-                <rect class="srp-hit" x="6" y="676" width="122" height="112" fill="transparent"/>
+                <g transform="translate(132 736)">
+                    ${SRP_RECORDS.map((r, i) => `<rect x="${5 + i * 10.5}" y="${i % 2 ? 2 : 0}" width="11" height="34" rx="1.5" fill="${r.color}" transform="rotate(${-8 + i * 4} ${10 + i * 10.5} 34)"/>`).join('')}
+                    <rect x="0" y="18" width="64" height="30" rx="3" fill="#8a5a3c"/><path d="M6 27 h52" stroke="#6a3f25" stroke-width="2" stroke-linecap="round"/>
+                </g>
+                <rect class="srp-hit" x="6" y="676" width="196" height="112" fill="transparent"/>
             </g>` : ''}
         </svg>`;
 }
@@ -408,30 +488,128 @@ function srpInitMusic(box) {
             floatNotes(96, 360, 3);
         },
         diary: () => srpOpenDiary(),
-        vinyl: el => {
-            const on = el.getAttribute('aria-pressed') !== 'true';
-            el.setAttribute('aria-pressed', on ? 'true' : 'false');
-            el.classList.toggle('is-playing', on);
-            if (on) { srpMusicStart(); floatNotes(60, 680, 2); } else srpMusicStop();
-        },
+        vinyl: el => srpOpenRecords(el, floatNotes),
     };
 }
 
-// היומן (לפי בקשה מפורשת: "יומן לכתוב בו - שנשמר"): דף חדש למעלה, והדפים הקודמים מתחת.
-// נשמר בחשבון (new_me_diary, רק לבעלים) - כדי שיהיה בכל מכשיר
+// התקליטים: נגיעה בפטיפון (או בארגז) פותחת את חמשת התקליטים; בחירה מנגנת מיד, ו"לעצור" עוצר
+function srpOpenRecords(el, floatNotes) {
+    const playing = el.classList.contains('is-playing') ? Number(el.dataset.song) : -1;
+    const ov = nmOpenSheet(`
+        <h4>${srEsc(roomItemName('vinyl'))}</h4>
+        <div class="srp-records">${SRP_RECORDS.map((r, i) => `
+            <button type="button" class="srp-record-btn${i === playing ? ' is-on' : ''}" data-song="${i}" style="--rec:${r.color}" aria-pressed="${i === playing}">
+                <span class="srp-record-disc" aria-hidden="true"></span>
+                <span class="srp-record-name">${srEsc(t('room_song_' + r.id))}</span>
+            </button>`).join('')}</div>
+        ${playing >= 0 ? `<button type="button" class="nm-btn-ghost" data-stop>${srEsc(t('room_vinyl_stop'))}</button>` : ''}
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-records-sheet');
+    ov.querySelectorAll('[data-song]').forEach(b => b.addEventListener('click', () => { ov.remove(); srpPlayRecord(el, Number(b.dataset.song), floatNotes); }));
+    const stop = ov.querySelector('[data-stop]');
+    if (stop) stop.addEventListener('click', () => { ov.remove(); srpPlayRecord(el, -1); });
+}
+function srpPlayRecord(el, i, floatNotes) {
+    const on = i >= 0 && !!SRP_RECORDS[i];
+    el.classList.toggle('is-playing', on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on) { delete el.dataset.song; srpMusicStop(); return; }
+    el.dataset.song = String(i);
+    el.style.setProperty('--rec', SRP_RECORDS[i].color);
+    srpMusicStart(i);
+    if (floatNotes) floatNotes(60, 680, 2);
+}
+
+// היומן (לפי בקשה מפורשת: "יומן לכתוב בו - שנשמר"): דף חדש למעלה, ומתחת לוח חודשי מקופל - נקודה בכל יום שכתבו
+// בו, ונגיעה ביום פותחת את הדפים שלו (לפי בקשה מפורשת: "טבלה מקופלת חודשית... הוא פותח את היום הספציפי ויש שם
+// נקודה"). נשמר בחשבון (new_me_diary, רק לבעלים) - כדי שיהיה בכל מכשיר
+let srpDiaryCal = { open: false, month: null, day: null };
 async function srpOpenDiary() {
     let pages = [];
     if (supabaseClient && currentUserId) {
-        const { data } = await supabaseClient.from('new_me_diary').select('id, body, created_at').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(100);
+        const { data } = await supabaseClient.from('new_me_diary').select('id, body, created_at').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(1000);
         pages = data || [];
     }
-    const pageDate = ts => { const d = new Date(ts); return isNaN(d) ? '' : nmLongDate(getLocalDateString(d)); };
+    const byDay = new Map();
+    pages.forEach(p => { const d = new Date(p.created_at); if (isNaN(d)) return; const k = getLocalDateString(d); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(p); });
+    const today = getLocalDateString();
+    if (!srpDiaryCal.month) srpDiaryCal.month = today.slice(0, 7);
     const ov = nmOpenSheet(`
         <h4>${srEsc(t('room_diary_title'))}</h4>
         <textarea class="srp-diary-input" rows="6" maxlength="8000" placeholder="${srEsc(t('room_diary_ph'))}" aria-label="${srEsc(t('room_diary_title'))}"></textarea>
         <button type="button" class="nm-btn-primary" data-save>${srEsc(t('room_diary_save'))}</button>
-        ${pages.length ? `<ul class="srp-diary-list">${pages.map(p => `<li data-id="${srEsc(p.id)}"><button type="button" class="srp-diary-page" aria-expanded="false"><span class="srp-diary-date">${srEsc(pageDate(p.created_at))}</span><span class="srp-diary-snip">${srEsc(srClip(String(p.body).replace(/\s+/g, ' '), 80))}</span></button></li>`).join('')}</ul>` : ''}
+        <div class="srp-cal${srpDiaryCal.open ? ' open' : ''}">
+            <button type="button" class="srp-cal-fold" aria-expanded="${srpDiaryCal.open}"><span class="srp-cal-month"></span><span class="srp-cal-count"></span><span class="srp-cal-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button>
+            <div class="srp-cal-body">
+                <div class="srp-cal-nav">
+                    <button type="button" data-m="-1" aria-label="${srEsc(t('monthly_goal_prev_month'))}">${srIsRtl() ? SR_CHEVRON.next : SR_CHEVRON.prev}</button>
+                    <b class="srp-cal-title"></b>
+                    <button type="button" data-m="1" aria-label="${srEsc(t('monthly_goal_next_month'))}">${srIsRtl() ? SR_CHEVRON.prev : SR_CHEVRON.next}</button>
+                </div>
+                <div class="srp-cal-week">${[0, 1, 2, 3, 4, 5, 6].map(d => `<span>${srEsc(new Date(2026, 0, 4 + d).toLocaleDateString(currentLang, { weekday: 'narrow' }))}</span>`).join('')}</div>
+                <div class="srp-cal-grid"></div>
+                <div class="srp-cal-day"></div>
+            </div>
+        </div>
         <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-diary-sheet');
+    const cal = ov.querySelector('.srp-cal');
+    const pageTime = p => { const d = new Date(p.created_at); return isNaN(d) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    const renderDay = () => {
+        const box = cal.querySelector('.srp-cal-day');
+        const list = srpDiaryCal.day ? byDay.get(srpDiaryCal.day) || [] : [];
+        if (!list.length) { box.innerHTML = ''; return; }
+        box.innerHTML = `<p class="srp-diary-date">${srEsc(nmLongDate(srpDiaryCal.day))}</p>` + list.map(p => `
+            <div class="srp-diary-full" data-id="${srEsc(p.id)}">
+                <span class="srp-diary-time"><bdi dir="ltr">${srEsc(pageTime(p))}</bdi></span>
+                <p>${srEsc(p.body).replace(/\n/g, '<br>')}</p>
+                <button type="button" class="srp-diary-del">${srEsc(t('room_diary_delete'))}</button>
+            </div>`).join('');
+        box.querySelectorAll('.srp-diary-full').forEach(row => {
+            const page = list.find(p => String(p.id) === row.dataset.id);
+            const del = row.querySelector('.srp-diary-del');
+            // מחיקה בשתי נגיעות: הראשונה שואלת, השנייה מוחקת
+            del.addEventListener('click', async () => {
+                if (!del.classList.contains('confirm')) { del.classList.add('confirm'); del.textContent = t('room_diary_delete_q'); return; }
+                del.disabled = true;
+                const { error } = await supabaseClient.from('new_me_diary').delete().eq('id', page.id).eq('user_id', currentUserId);
+                if (error) { del.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
+                list.splice(list.indexOf(page), 1);
+                if (!list.length) byDay.delete(srpDiaryCal.day);
+                renderMonth();
+            });
+        });
+    };
+    const renderMonth = () => {
+        const [y, m] = srpDiaryCal.month.split('-').map(Number);
+        const first = new Date(y, m - 1, 1);
+        const days = new Date(y, m, 0).getDate();
+        const label = first.toLocaleDateString(currentLang, { month: 'long', year: 'numeric' });
+        const written = [...byDay.keys()].filter(k => k.startsWith(srpDiaryCal.month)).length;
+        cal.querySelector('.srp-cal-month').textContent = label;
+        cal.querySelector('.srp-cal-title').textContent = label;
+        cal.querySelector('.srp-cal-count').innerHTML = written ? `<span class="srp-cal-dot" aria-hidden="true"></span><bdi dir="ltr">${srFmt(written)}</bdi>` : '';
+        let cells = '<span></span>'.repeat(first.getDay());
+        for (let d = 1; d <= days; d++) {
+            const k = `${srpDiaryCal.month}-${String(d).padStart(2, '0')}`;
+            const has = byDay.has(k);
+            cells += `<button type="button" class="srp-cal-cell${has ? ' has' : ''}${k === today ? ' today' : ''}${k === srpDiaryCal.day ? ' on' : ''}" data-day="${k}" ${has ? '' : 'disabled'} aria-label="${srEsc(nmLongDate(k))}"><span>${srFmt(d)}</span>${has ? '<i aria-hidden="true"></i>' : ''}</button>`;
+        }
+        cal.querySelector('.srp-cal-grid').innerHTML = cells;
+        cal.querySelectorAll('.srp-cal-cell.has').forEach(b => b.addEventListener('click', () => { srpDiaryCal.day = srpDiaryCal.day === b.dataset.day ? null : b.dataset.day; renderMonth(); }));
+        renderDay();
+    };
+    cal.querySelector('.srp-cal-fold').addEventListener('click', e => {
+        srpDiaryCal.open = !srpDiaryCal.open;
+        cal.classList.toggle('open', srpDiaryCal.open);
+        e.currentTarget.setAttribute('aria-expanded', srpDiaryCal.open ? 'true' : 'false');
+    });
+    cal.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => {
+        const [y, m] = srpDiaryCal.month.split('-').map(Number);
+        const d = new Date(y, m - 1 + Number(b.dataset.m), 1);
+        srpDiaryCal.month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        srpDiaryCal.day = null;
+        renderMonth();
+    }));
+    renderMonth();
     const ta = ov.querySelector('.srp-diary-input');
     ov.querySelector('[data-save]').addEventListener('click', async e => {
         const text = ta.value.trim().slice(0, 8000);
@@ -442,45 +620,25 @@ async function srpOpenDiary() {
         if (error) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
         showAppToast(t('room_diary_saved'));
         ov.remove();
+        // אחרי שמירה: הלוח פתוח על היום, והדף החדש בפנים
+        srpDiaryCal = { open: true, month: today.slice(0, 7), day: today };
         srpOpenDiary();
-    });
-    ov.querySelectorAll('.srp-diary-list li').forEach(li => {
-        const page = pages.find(p => String(p.id) === li.dataset.id);
-        const btn = li.querySelector('.srp-diary-page');
-        btn.addEventListener('click', () => {
-            const open = li.classList.toggle('open');
-            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            li.querySelector('.srp-diary-full')?.remove();
-            if (!open) return;
-            const full = document.createElement('div');
-            full.className = 'srp-diary-full';
-            full.innerHTML = `<p>${srEsc(page.body).replace(/\n/g, '<br>')}</p><button type="button" class="srp-diary-del">${srEsc(t('room_diary_delete'))}</button>`;
-            li.appendChild(full);
-            const del = full.querySelector('.srp-diary-del');
-            // מחיקה בשתי נגיעות: הראשונה שואלת, השנייה מוחקת
-            del.addEventListener('click', async () => {
-                if (!del.classList.contains('confirm')) { del.classList.add('confirm'); del.textContent = t('room_diary_delete_q'); return; }
-                del.disabled = true;
-                const { error } = await supabaseClient.from('new_me_diary').delete().eq('id', page.id).eq('user_id', currentUserId);
-                if (error) { del.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
-                li.remove();
-            });
-        });
     });
     setTimeout(() => ta.focus({ preventScroll: true }), 120);
 }
 
 // ---------- דלת 4: חדר הנשימה - חוף בשקיעה ----------
 // לפי בקשה מפורשת: "משהו מגניב שיגיד איך לנשום, סשן קצר של 10 דק', אל תרשום כמה דק' זה... נכנסים, לוחצים
-// ומתחילים". שאיפה ~4 שניות (השמש עולה, הגל נכנס), נשיפה ~6 שניות (השמש שוקעת, הגל יוצא)
-function srpBreathScene() {
+// ומתחילים". שאיפה ~6 שניות (השמש עולה, הגל נכנס), נשיפה ~8 שניות (השמש שוקעת, הגל יוצא).
+// מפתח 17 (במקום הזריחה - לפי בקשה מפורשת: "למחוק את הזריחה בחוף ולעשות משהו אחר במקום"): מקל על החול -
+// כותבים בו מה רוצים לשחרר, וגל גדול בא ומוחק. לא נשמר בשום מקום
+function srpBreathScene(keys) {
+    const sand = keys >= roomUnlockAt('sand');
     return `
         <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('breath'))}">
             <defs>
                 <linearGradient id="srbDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f1c45"/><stop offset="0.45" stop-color="#5e3a78"/><stop offset="0.78" stop-color="#d9706d"/><stop offset="1" stop-color="#f6b46c"/></linearGradient>
-                <linearGradient id="srbDawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb8e8"/><stop offset="0.5" stop-color="#f7c6d0"/><stop offset="0.8" stop-color="#ffd9a8"/><stop offset="1" stop-color="#fff0c4"/></linearGradient>
                 <linearGradient id="srbSeaDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8637a"/><stop offset="0.35" stop-color="#5a4682"/><stop offset="1" stop-color="#2d3468"/></linearGradient>
-                <linearGradient id="srbSeaDawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c3b0"/><stop offset="0.35" stop-color="#8fb8d8"/><stop offset="1" stop-color="#4f7fb0"/></linearGradient>
                 <linearGradient id="srbSand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d0a2"/><stop offset="1" stop-color="#ddb07c"/></linearGradient>
                 <radialGradient id="srbSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6d6"/><stop offset="0.55" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff9f5e"/></radialGradient>
                 <radialGradient id="srbGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb46a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffb46a" stop-opacity="0"/></radialGradient>
@@ -502,6 +660,17 @@ function srpBreathScene() {
                     <path d="M-20 648 Q4 640 26 648 T74 648 T122 648 T170 648 T218 648 T266 648 T314 648 T362 648 T410 648 V656 Q386 664 362 656 T314 656 T266 656 T218 656 T170 656 T122 656 T74 656 T26 656 T-20 656 Z" fill="#fff" opacity="0.85"/>
                 </g>
             </g>
+            ${sand ? `<g class="srb-writing" aria-hidden="true"><text class="srb-word-light" x="195" y="717" text-anchor="middle"></text><text class="srb-word" x="195" y="716" text-anchor="middle"></text></g>
+            <g class="srb-bigwave" aria-hidden="true">
+                <path d="M-20 600 H410 V690 Q385 702 360 690 T310 690 T260 690 T210 690 T160 690 T110 690 T60 690 T10 690 T-20 690 Z" fill="#a9bde8" opacity="0.6"/>
+                <path d="M-20 690 Q5 702 30 690 T80 690 T130 690 T180 690 T230 690 T280 690 T330 690 T380 690 T430 690" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+            </g>
+            <g class="srp-hot srb-stick" data-place-hot="sand" role="button" tabindex="0" aria-label="${srEsc(roomItemName('sand'))}">
+                <path d="M292 812 L366 788" stroke="#7a5236" stroke-width="5" stroke-linecap="round"/>
+                <path d="M318 804 l9 -13" stroke="#7a5236" stroke-width="3" stroke-linecap="round"/>
+                <g transform="translate(262 812)"><path d="M0 6 Q9 -12 18 6 Z" fill="#f8dccb"/><path d="M9 -4 V5 M5 -1 L7 5 M13 -1 L11 5" stroke="#e0a98f" stroke-width="0.9" fill="none" stroke-linecap="round"/></g>
+                <rect class="srp-hit" x="252" y="772" width="128" height="58" fill="transparent"/>
+            </g>` : ''}
             <text class="srb-cue srb-cue-in" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_in'))}</text>
             <text class="srb-cue srb-cue-out" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_out'))}</text>
         </svg>
@@ -515,11 +684,6 @@ let srpWake = null;
 async function srpWakeOn() { try { if (navigator.wakeLock && navigator.wakeLock.request) srpWake = await navigator.wakeLock.request('screen'); } catch {} }
 function srpWakeOff() { try { if (srpWake) srpWake.release(); } catch {} srpWake = null; }
 function srpInitBreath(box) {
-    if (roomIsUnlocked('sunrise')) {
-        const on = !!srpPrefs().sunrise;
-        box.classList.toggle('is-sunrise', on);
-        srpTool(box, 'sunrise', SRP_ICON_SUN, on, v => { box.classList.toggle('is-sunrise', v); srpSetPref('sunrise', v); });
-    }
     let timer = null;
     // המסך נשאר דולק כל הסשן; יציאה קצרה מהאפליקציה משחררת את זה - בחזרה מבקשים שוב
     const onVisible = () => { if (document.visibilityState === 'visible' && box.classList.contains('is-on') && box.isConnected) srpWakeOn(); };
@@ -543,7 +707,46 @@ function srpInitBreath(box) {
     });
     box.querySelector('[data-breath="stop"]').addEventListener('click', () => stop(false));
     srpCleanups.push(() => { stop(false); document.removeEventListener('visibilitychange', onVisible); });
-    return {};
+    return { sand: () => srpWriteInSand(box) };
+}
+
+// כותבים בחול: המילים מופיעות אות אחרי אות, ואחרי רגע גל גדול עולה על החול ומוחק אותן (לא נשמר בשום מקום)
+function srpWriteInSand(box) {
+    if (box.classList.contains('is-writing')) return;
+    const ov = nmOpenSheet(`
+        <h4>${srEsc(roomItemName('sand'))}</h4>
+        <input type="text" class="sr-wish-input srp-sand-input" maxlength="40" placeholder="${srEsc(t('room_sand_ph'))}" aria-label="${srEsc(t('room_sand_ph'))}">
+        <button type="button" class="nm-btn-primary" data-write>${srEsc(t('room_sand_write'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-sand-sheet');
+    const input = ov.querySelector('.srp-sand-input');
+    const write = () => {
+        const text = input.value.trim().slice(0, 40);
+        if (!text) { input.focus(); return; }
+        ov.remove();
+        const words = [...box.querySelectorAll('.srb-word, .srb-word-light')];
+        if (!words.length) return;
+        box.classList.add('is-writing');
+        box.classList.remove('is-washing');
+        words.forEach(w => { w.textContent = ''; w.removeAttribute('font-size'); });
+        const chars = [...text];
+        const step = srpReduce() ? 0 : 85;
+        chars.forEach((ch, i) => setTimeout(() => {
+            if (!box.isConnected) return;
+            words.forEach(w => { w.textContent += ch; });
+            const len = words[0].getComputedTextLength ? words[0].getComputedTextLength() : 0;
+            if (len > 300) words.forEach(w => w.setAttribute('font-size', String(Math.max(14, Math.floor(32 * 300 / len)))));
+        }, i * step));
+        const wash = chars.length * step + 1800;
+        setTimeout(() => { if (box.isConnected) box.classList.add('is-washing'); }, wash);
+        setTimeout(() => {
+            if (!box.isConnected) return;
+            words.forEach(w => { w.textContent = ''; });
+            box.classList.remove('is-writing', 'is-washing');
+        }, wash + (srpReduce() ? 900 : 3400));
+    };
+    ov.querySelector('[data-write]').addEventListener('click', write);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); write(); } });
+    setTimeout(() => input.focus({ preventScroll: true }), 120);
 }
 
 // ---------- דלת 5: השביל ביער ----------
@@ -557,6 +760,7 @@ const SRP_LANTERNS = [
 ];
 function srpOutsideScene(keys) {
     const swing = keys >= roomUnlockAt('swing');
+    const yoga = keys >= roomUnlockAt('yoga');
     const sign = keys >= roomUnlockAt('selfcare');
     const fire = keys >= roomUnlockAt('campfire');
     const L = SRP_LANTERNS;
@@ -580,14 +784,21 @@ function srpOutsideScene(keys) {
                 <path d="M100 844 C150 710 236 630 204 530 C190 482 192 436 196 398 L204 398 C204 436 204 482 220 530 C262 630 210 724 300 844 Z" fill="url(#srpOPath)"/>
                 <g style="fill:var(--o-stone)" opacity="0.6"><ellipse cx="190" cy="780" rx="16" ry="5"/><ellipse cx="226" cy="712" rx="12" ry="4"/><ellipse cx="214" cy="640" rx="9" ry="3"/><ellipse cx="206" cy="570" rx="7" ry="2.4"/></g>
                 <g style="fill:var(--o-grass)"><ellipse cx="40" cy="640" rx="70" ry="22"/><ellipse cx="350" cy="600" rx="60" ry="18"/><ellipse cx="120" cy="470" rx="40" ry="10"/><ellipse cx="290" cy="460" rx="36" ry="9"/></g>
-                <path d="M26 264 Q90 244 162 256" fill="none" style="stroke:var(--o-trunk)" stroke-width="7" stroke-linecap="round"/>
+                ${swing ? '<path d="M26 264 Q90 244 162 256" fill="none" style="stroke:var(--o-trunk)" stroke-width="7" stroke-linecap="round"/>' : ''}
             </g>
             ${swing ? `<g class="srp-hot srp-swing-hot" data-place-hot="swing" role="button" tabindex="0" aria-label="${srEsc(roomItemName('swing'))}">
-                <g class="srp-swinger">
-                    <g stroke="#c9b48a" stroke-width="1.6"><line x1="84" y1="254" x2="84" y2="404"/><line x1="118" y1="254" x2="118" y2="404"/></g>
-                    <rect x="74" y="402" width="54" height="8" rx="2" fill="#8a5e3c"/>
-                </g>
-                <rect class="srp-hit" x="62" y="248" width="78" height="176" fill="transparent"/>
+                <!-- תלויה על הענף (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה - לא לצדדים -->
+                <ellipse class="srp-swing-shadow" cx="101" cy="434" rx="26" ry="4" fill="#000" opacity="0.22"/>
+                <g class="srp-swing-ropes" stroke="#c9b48a" stroke-width="1.6"><line x1="84" y1="254" x2="84" y2="404"/><line x1="118" y1="254" x2="118" y2="404"/></g>
+                <rect class="srp-swing-seat" x="74" y="402" width="54" height="8" rx="2" fill="#8a5e3c"/>
+                <rect class="srp-hit" x="62" y="248" width="78" height="194" fill="transparent"/>
+            </g>` : ''}
+            ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
+                <!-- מפתח 12: השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת יער מוארת (היוגה עוד נבנית) -->
+                <ellipse class="srp-flicker" cx="200" cy="388" rx="40" ry="18" fill="url(#srpOLight)"/>
+                <g fill="none" stroke="#8a5e3c" stroke-width="3" stroke-linecap="round"><path d="M188 400 V378"/><path d="M212 400 V378"/><path d="M185 380 Q200 364 215 380"/></g>
+                <g fill="#ffd27a"><circle cx="200" cy="371" r="1.8"/><circle cx="190" cy="377" r="1.3"/><circle cx="210" cy="377" r="1.3"/></g>
+                <rect class="srp-hit" x="174" y="356" width="52" height="50" fill="transparent"/>
             </g>` : ''}
             <g class="srp-hot srp-lights" data-place-hot="lights" role="button" tabindex="0" aria-label="${srEsc(t('room_lights_aria'))}" aria-pressed="true">
                 <g class="srp-night-only srp-flicker">${L.map(l => `<circle cx="${l.x}" cy="${l.y}" r="${l.r}" fill="url(#srpOLight)"/>`).join('')}</g>
@@ -655,7 +866,8 @@ function srpInitOutside(box) {
     return {
         lights: () => setDay(!box.classList.contains('is-day'), true),
         bench: () => srpRest(box),
-        selfcare: () => srpOpenSelfCare(),
+        selfcare: () => srpOpenSignView(box),
+        yoga: () => srShowTip(t('room_yoga_soon')),
         swing: el => {
             if (el.classList.contains('is-swinging')) return;
             el.classList.add('is-swinging');
@@ -670,19 +882,39 @@ function srpInitOutside(box) {
     };
 }
 
-// השלט ליד הספסל (מתוך הרעיונות שלה ליער: "לדאוג לעצמך – בדיקה"): רשימה קטנה לסמן בה ✓ - רק להיום, רק במכשיר
-function srpOpenSelfCare() {
+// השלט ליד הספסל (מתוך הרעיונות שלה ליער: "לדאוג לעצמך – בדיקה"). לפי בקשה מפורשת: נגיעה בשלט מושיבה על הספסל -
+// מתקרבים, והשלט גדול: לוח עץ ובתוכו שישה פוסטרים מנייר, כל אחד שאלה קטנה. ✓ על פוסטר - רק להיום, רק במכשיר
+const SRP_CARE_ICONS = ['💭', '😴', '⏳', '💗', '🤸', '🌬️'];
+const SRP_CARE_PAPER = ['#fff3c4', '#dff1ff', '#ffe1ec', '#e3fbe6', '#efe6ff', '#ffe9d6'];
+const SRP_CARE_TILT = [-2.5, 1.8, 2.2, -1.6, -2, 2.6];
+function srpOpenSignView(box) {
+    box.querySelector('.srp-signview')?.remove();
     const key = `weekwise_room_care_${currentUserId || 'me'}`;
     const today = getLocalDateString();
     let st = {};
     try { st = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch {}
     if (st.day !== today || !Array.isArray(st.on)) st = { day: today, on: [] };
-    const items = [1, 2, 3, 4, 5, 6].map(i => `<button type="button" class="srp-care-item${st.on.includes(i) ? ' on' : ''}" data-care="${i}" aria-pressed="${st.on.includes(i)}"><span class="srp-care-box" aria-hidden="true"></span><span>${srEsc(t('room_selfcare_' + i))}</span></button>`).join('');
-    const ov = nmOpenSheet(`
-        <h4>${srEsc(t('room_selfcare_title'))}</h4>
-        <div class="srp-care">${items}</div>
-        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-care-sheet');
-    ov.querySelectorAll('[data-care]').forEach(b => b.addEventListener('click', () => {
+    const view = document.createElement('div');
+    view.className = 'srp-signview';
+    view.innerHTML = `
+        <button type="button" class="sr-sub-back srp-signview-back">${SR_CHEVRON.prev}${srEsc(t('nm_back'))}</button>
+        <div class="srp-signview-board" role="group" aria-label="${srEsc(t('room_selfcare_title'))}">
+            <div class="srp-signview-plank">${srEsc(t('room_selfcare_title'))}</div>
+            <div class="srp-signview-posters">${[1, 2, 3, 4, 5, 6].map(i => `
+                <button type="button" class="srp-poster${st.on.includes(i) ? ' on' : ''}" data-care="${i}" aria-pressed="${st.on.includes(i)}" style="--paper:${SRP_CARE_PAPER[i - 1]};--tilt:${SRP_CARE_TILT[i - 1]}deg">
+                    <span class="srp-poster-pin" aria-hidden="true"></span>
+                    <span class="srp-poster-icon" aria-hidden="true">${SRP_CARE_ICONS[i - 1]}</span>
+                    <span class="srp-poster-text">${srEsc(t('room_selfcare_' + i))}</span>
+                    <span class="srp-poster-stamp" aria-hidden="true">✓</span>
+                </button>`).join('')}</div>
+        </div>
+        <div class="srp-signview-legs" aria-hidden="true"><span></span><span></span></div>`;
+    box.appendChild(view);
+    box.classList.add('is-sign');
+    const close = () => { box.classList.remove('is-sign'); view.remove(); };
+    view.querySelector('.srp-signview-back').addEventListener('click', close);
+    view.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+    view.querySelectorAll('[data-care]').forEach(b => b.addEventListener('click', () => {
         const i = Number(b.dataset.care);
         const on = !st.on.includes(i);
         st.on = on ? st.on.concat(i) : st.on.filter(x => x !== i);
@@ -690,6 +922,7 @@ function srpOpenSelfCare() {
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
         try { localStorage.setItem(key, JSON.stringify(st)); } catch {}
     }));
+    setTimeout(() => { const first = view.querySelector('.srp-poster'); if (first) first.focus({ preventScroll: true }); }, 400);
 }
 
 // ---------- פנס המשאלות על הגג ----------
@@ -707,7 +940,7 @@ function roomWishSvg() {
         <ellipse class="sr-wish-hit" cx="0" cy="-16" rx="24" ry="28" fill="transparent"/>
     </g>`;
 }
-function roomInitWish(root, highlight) {
+function roomInitWish(root) {
     const w = root.querySelector('.sr-wish');
     if (!w) return;
     const open = () => {
@@ -730,7 +963,6 @@ function roomInitWish(root, highlight) {
     };
     w.addEventListener('click', open);
     w.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-    if (highlight) { w.classList.add('srp-new'); srShowTip(t('room_reveal_opened').replace('{item}', roomItemName('wish'))); }
 }
 
 // ---------- החתול בא לבקר: ישן על הכרית בחדר הסודי (מפתח 11) ----------

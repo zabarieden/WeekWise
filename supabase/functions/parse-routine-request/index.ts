@@ -2,8 +2,10 @@
 //
 // "השגרה שלי" → ✨ שגרה חדשה עם AI (לפי בקשה מפורשת, 2026-10-09: "בהגדרות לו"ז של AI, והוא מוסיף
 // ערכה חדשה לפי בקשתך - שהמשתמש לא יצטרך להוסיף באופן ידני"). מקבל תיאור חופשי של שגרה, בכל שפה,
-// ומחזיר טאב אחד או יותר: שם קצר, ימים (0 = ראשון) ופריטים בשעות עגולות 5–23 - בדיוק השורות
-// ש"השגרה שלי" יודעת להציג. משמש גם את "ימי חופש → לספר ל-AI" (שם הימים כבר נבחרו).
+// ומחזיר טאב אחד או יותר: שם קצר, ימים (0 = ראשון) ופריטים בין 05:00 ל-23:59, בשעה המדויקת שנכתבה
+// (לפי בקשה מפורשת, 2026-10-10: "אם רושמים שעה מסויימת שירשום את השעה ולא שעה עגולה" - 16:10 נשאר 16:10).
+// כל פריט חוזר עם time ("HH:MM") וגם hour (השעה העגולה - לגרסאות ישנות של האפליקציה שעוד פתוחות).
+// משמש גם את "ימי חופש → לספר ל-AI" (שם הימים כבר נבחרו).
 //
 // אותה מכסה כמו לו"ז ה-AI (parse-schedule-request, אותן עמודות ב-user_ai_usage): 5 שימושים חינם
 // לכל החיים, ו-60 בחודש לפרימיום. פריסה: supabase functions deploy parse-routine-request
@@ -44,23 +46,35 @@ function jsonResponse(body: unknown, status = 200) {
     });
 }
 
-// מה שחוזר מהמודל עובר ניקוי: ימים 0–6 בלי כפילויות, שעה אחת לכל פריט (5–23), כותרות קצרות
+type Item = { time: string; hour: number; title: string };
+
+// "16:10" / "8:05" / "16" → "16:10" / "08:05" / "16:00"; מחוץ ל-05:00–23:59 → null
+function cleanTime(it: any): string | null {
+    const m = String(it?.time ?? "").trim().match(/^(\d{1,2})(?::(\d{2}))?$/);
+    let h: number, min: number;
+    if (m) { h = Number(m[1]); min = Number(m[2] || 0); }
+    else { h = Math.round(Number(it?.hour)); min = 0; }
+    if (!Number.isInteger(h) || !Number.isInteger(min) || h < 5 || h > 23 || min < 0 || min > 59) return null;
+    return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+// מה שחוזר מהמודל עובר ניקוי: ימים 0–6 בלי כפילויות, פריט אחד לכל שעה מדויקת (05:00–23:59), כותרות קצרות
 function cleanTabs(raw: any[], forcedDays: number[] | null) {
-    const tabs: { name: string; weekdays: number[]; items: { hour: number; title: string }[] }[] = [];
+    const tabs: { name: string; weekdays: number[]; items: Item[] }[] = [];
     for (const tab of (Array.isArray(raw) ? raw : []).slice(0, 7)) {
         const name = String(tab?.name || "").trim().slice(0, 40);
         const weekdays = forcedDays ?? [...new Set((Array.isArray(tab?.weekdays) ? tab.weekdays : [])
             .map((d: unknown) => Number(d)).filter((d: number) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b);
-        const seen = new Set<number>();
-        const items: { hour: number; title: string }[] = [];
+        const seen = new Set<string>();
+        const items: Item[] = [];
         for (const it of Array.isArray(tab?.items) ? tab.items : []) {
-            const hour = Math.round(Number(it?.hour));
+            const time = cleanTime(it);
             const title = String(it?.title || "").trim().slice(0, 80);
-            if (!title || !Number.isInteger(hour) || hour < 5 || hour > 23 || seen.has(hour)) continue;
-            seen.add(hour);
-            items.push({ hour, title });
+            if (!title || !time || seen.has(time)) continue;
+            seen.add(time);
+            items.push({ time, hour: Number(time.slice(0, 2)) + (Number(time.slice(3)) >= 30 && Number(time.slice(0, 2)) < 23 ? 1 : 0), title });
         }
-        items.sort((a, b) => a.hour - b.hour);
+        items.sort((a, b) => a.time.localeCompare(b.time));
         if (items.length) tabs.push({ name, weekdays, items });
         if (forcedDays) break;
     }
@@ -118,14 +132,16 @@ Deno.serve(async (req) => {
                     role: "user",
                     content:
                         "The user describes a routine (a typical day) in their own words, in any language. Turn it into routine tabs " +
-                        "for a planner whose rows are whole hours from 05:00 to 23:00.\n\n" +
+                        "for a daily planner (05:00 to 23:59).\n\n" +
                         "- Give each tab a short name (2–4 words) in the user's language, with no emoji" +
                         (lang ? ` (the app language is "${lang}")` : "") + ".\n" +
                         "- " + daysLine + " Days are numbers: 0 = Sunday, 1 = Monday … 6 = Saturday.\n" +
-                        "- items: one item per activity, at a whole hour between 5 and 23 (24-hour clock). Round to the nearest whole " +
-                        "hour. If two activities land on the same hour, combine them into one short title (\"Shower + breakfast\") " +
-                        "instead of dropping one. Leave out anything between midnight and 05:00.\n" +
-                        "- An activity that spans a range (\"work 9–17\") goes at its start hour; keep the end in the title only when " +
+                        "- items: one item per activity, with its time as \"HH:MM\" on a 24-hour clock. Keep the EXACT time the user " +
+                        "wrote - never round it: \"16:10\" stays \"16:10\", \"17:30\" stays \"17:30\", \"wake up at 8\" is \"08:00\". " +
+                        "Times like \"at 4\" or \"at 7\" without am/pm are read the way people mean them in a daily routine. " +
+                        "If two activities have the same time, combine them into one short title (\"Shower + breakfast\") instead " +
+                        "of dropping one. Leave out anything between midnight and 05:00.\n" +
+                        "- An activity that spans a range (\"work 9–17\") goes at its start time; keep the end in the title only when " +
                         "it helps (\"Work until 17:00\").\n" +
                         "- Titles are short and keep the user's own language and wording. Never invent activities that weren't " +
                         "mentioned, and never add reminders or notes as separate items.\n\n" +
@@ -133,7 +149,7 @@ Deno.serve(async (req) => {
                 }],
                 tools: [{
                     name: "create_routine",
-                    description: "Create routine tabs (name, days, items at whole hours) from the user's description.",
+                    description: "Create routine tabs (name, days, items at the exact times written) from the user's description.",
                     input_schema: {
                         type: "object",
                         properties: {
@@ -149,10 +165,10 @@ Deno.serve(async (req) => {
                                             items: {
                                                 type: "object",
                                                 properties: {
-                                                    hour: { type: "integer", minimum: 5, maximum: 23 },
+                                                    time: { type: "string", description: "HH:MM, 24-hour clock, exactly as the user wrote it" },
                                                     title: { type: "string" },
                                                 },
-                                                required: ["hour", "title"],
+                                                required: ["time", "title"],
                                             },
                                         },
                                     },

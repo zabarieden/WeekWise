@@ -30,9 +30,9 @@ async function loadMyDayRoutine(todayStr) {
         const tab = tabs.find(tb => routineTabWeekdays(tb).includes(todayIdx)) || tabs.find(tb => !routineTabWeekdays(tb).length) || null;
         if (!tab) return empty;
         const { data: rows } = await supabaseClient.from('routine_items').select('*').eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
-        const hours = new Set(Object.values(myDayTabHours(tab)).flat());
+        // כל פריט עם כותרת - גם בשעה מדויקת (16:10), בדיוק כמו בלוח של "השגרה שלי" (שם פריט לא נעלם לעולם).
         // ארוחות שהוסתרו כי הן כבר בתפריט של New Me - לא מופיעות פעמיים
-        const items = (rows || []).filter(it => (it.title || '').trim() && hours.has(Number(String(it.time || '').slice(0, 2))) && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)));
+        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)));
         const checksOn = isRoutineGoalsOn();
         let doneIds = new Set();
         if (checksOn && items.length) {
@@ -45,16 +45,6 @@ async function loadMyDayRoutine(todayStr) {
         return empty;
     }
 }
-// אותו חישוב כמו getDailyBoardCustomHours, על אובייקט הטאב עצמו (הטאבים לא תמיד טעונים כאן)
-function myDayTabHours(tab) {
-    const saved = tab && tab.custom_hours && typeof tab.custom_hours === 'object' ? tab.custom_hours : null;
-    const out = {};
-    Object.keys(DAILY_BOARD_DEFAULT_HOURS).forEach(key => {
-        out[key] = saved && Array.isArray(saved[key]) ? saved[key] : [...DAILY_BOARD_DEFAULT_HOURS[key]];
-    });
-    return out;
-}
-
 // ✓ על פריט שגרה מתוך "היום שלי" – אותו סימון בדיוק כמו ב"השגרה שלי" (routine_item_checkins), כולל
 // הסנכרון ליעד המקושר (צעד / הצעד הקטן היומי)
 async function myDayToggleRoutine(item, checked) {
@@ -711,8 +701,8 @@ function homeDaysBetween(a, b) {
     return Math.round((Date.parse(`${b}T12:00:00`) - Date.parse(`${a}T12:00:00`)) / 86400000);
 }
 
-// --- ✨ משפט קטן ליום, ברוח "בדרך ל-10" - מתחלף כל בוקר (21 משפטים, אחד ליום) ---
-const HOME_DAILY_LINE_COUNT = 21;
+// --- ✨ משפט קטן ליום, ברוח "בדרך ל-10" - מתחלף כל בוקר (20 משפטים, אחד ליום; "גם יום מבולגן..." הוסר לפי בקשה מפורשת) ---
+const HOME_DAILY_LINE_COUNT = 20;
 function homeDailyLineIndex(date) {
     const d = date || new Date();
     return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) % HOME_DAILY_LINE_COUNT + 1;

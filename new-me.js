@@ -1060,7 +1060,7 @@ function nmRenderHome(root) {
             ${lampBtns}
             ${doorBtns}
             <button type="button" class="nmh-hatch-btn" style="left:${nmhX(148)};top:${nmhY(140)};width:${nmhX(94)};height:${nmhY(56)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
-            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(412)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
+            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(412)}" onclick="nmhLadderTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
             ${note}
             <svg class="nmh-scene nmh-bag-front" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                 <path d="M238 756 Q240 708 300 706 Q360 708 362 756 Q362 776 352 780 Q300 794 248 780 Q238 776 238 756 Z" fill="#7a4a26"/>
@@ -1078,6 +1078,8 @@ function nmRenderHome(root) {
             <button type="button" class="nmh-keys" data-keys="${keys}" style="left:${nmhX(224)};top:${nmhY(780)};width:${nmhX(34)};height:${nmhY(46)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${keys > 3 ? `<span class="nmh-keys-n"><bdi dir="ltr">${nmFmt(keys)}</bdi></span>` : ''}</button>
             <div class="nmh-tip" role="status" aria-live="polite"></div>
         </div>`;
+    // משהו נפתח ועוד לא הגיעו אליו - החץ מראה לאן ללכת (ר' roomGuideHallway)
+    if (typeof roomGuideHallway === 'function') setTimeout(roomGuideHallway, 0);
 }
 
 // נגיעה בשם הזוהר או במנורה: הארוחה עצמה - מה אוכלים, ✓ אכלתי (או ביטול), 🔄 החלפה, והתפריט המלא
@@ -1140,19 +1142,24 @@ function nmhDoorTap(n) {
     if (keys < at) { nmhTip(`🔒 ${roomItemName(id)} · ${roomKeysLeftText(at - keys)}`); return; }
     roomOpenPlace(id, { fromHall: true });
 }
-// הפתח בתקרה (לפי בקשה מפורשת): נעול עד שהגג נפתח; אחר כך נגיעה אחת מורידה סולם לאט, ונגיעה שנייה עולה לגג
+// הפתח בתקרה (לפי בקשה מפורשת): נעול עד שהגג נפתח; אחר כך נגיעה בפתח מורידה סולם לאט - ונגיעה נוספת בפתח
+// מקפלת אותו בחזרה (לפי בקשה מפורשת: "שתהיה אפשרות לסגור אותו"). עולים לגג בנגיעה בסולם עצמו (nmhLadderTap)
 function nmhHatchTap() {
     const hall = document.querySelector('#new-me-root .nmh');
     if (!hall || typeof roomKeys !== 'function') return;
     const keys = roomKeys();
     const at = roomUnlockAt('roof');
     if (keys < at) { nmhTip(`🔒 ${roomItemName('roof')} · ${roomKeysLeftText(at - keys)}`); return; }
-    if (!hall.classList.contains('is-ladder')) {
-        hall.classList.add('is-ladder');
-        const climb = hall.querySelector('.nmh-ladder-btn');
-        if (climb) climb.removeAttribute('tabindex');
-        return;
-    }
+    const down = hall.classList.toggle('is-ladder');
+    const climb = hall.querySelector('.nmh-ladder-btn');
+    if (climb) { if (down) climb.removeAttribute('tabindex'); else climb.setAttribute('tabindex', '-1'); }
+    // החץ (כשמשהו על הגג נפתח) עובר מהפתח לסולם, ובחזרה
+    if (typeof roomGuideHallway === 'function') setTimeout(roomGuideHallway, 0);
+}
+function nmhLadderTap() {
+    const hall = document.querySelector('#new-me-root .nmh');
+    if (!hall) return;
+    if (!hall.classList.contains('is-ladder')) { nmhHatchTap(); return; }
     openSecretRoom({ wall: 3 });
     setTimeout(() => { if (typeof roomOpenRoof === 'function' && srIsOpen()) roomOpenRoof({ fromHall: true }); }, 80);
 }

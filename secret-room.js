@@ -9,26 +9,27 @@
 // נראית בדיוק כמו אצל כולם (לפי בקשה מפורשת); "−" סוגר את האחרון כדי לראות את הפתיחה שוב.
 // נשמר ב-new_me_room: אילו מפתחות כבר נחשפו, השיחה הראשונה עם ניצוץ, מראה החדר והשיא במשחק.
 
-// מה פותח מה: החדר (1–4), למעלה ולחדרים שמאחורי הדלתות במסדרון (5–10), הפתעות קטנות בכל מקום (11–20),
-// והאתגר האחרון - בקבוק מגיע מהים עם המכתב מהעבר (21). place = המקום שנפתח (או שבו נמצא הדבר החדש)
+// מה פותח מה: החדר (1–4), הגג ומה שמאחורי הדלתות במסדרון (5–10), הפתעות קטנות בכל מקום (11–20), והאתגר האחרון -
+// בקבוק מגיע מהים עם המכתב מהעבר (21). place = המקום שבו נמצא הדבר החדש; wall = קיר בחדר הסודי; hatch = הפתח
+// שבתקרה במסדרון; tool = כפתור בחדר. כשמשהו נפתח, חץ מוביל אליו (roomGuide) - במקום מפת הבית שהייתה
 const ROOM_UNLOCKS = [
     { n: 1, id: 'door', wall: 0 },
     { n: 2, id: 'computer', wall: 0 },
     { n: 3, id: 'game', wall: 2 },
     { n: 4, id: 'shelf', wall: 3 },
-    { n: 5, id: 'roof', wall: 3 },
+    { n: 5, id: 'roof', hatch: true },
     { n: 6, id: 'porch', place: 'porch' },
     { n: 7, id: 'music', place: 'music' },
-    { n: 8, id: 'studio', map: true },
+    { n: 8, id: 'studio', tool: 'decor' },
     { n: 9, id: 'breath', place: 'breath' },
     { n: 10, id: 'outside', place: 'outside' },
     { n: 11, id: 'catvisit', wall: 3 },
-    { n: 12, id: 'library', map: true },
+    { n: 12, id: 'yoga', place: 'outside' },
     { n: 13, id: 'wish', roof: true },
     { n: 14, id: 'rain', place: 'porch' },
     { n: 15, id: 'selfcare', place: 'outside' },
     { n: 16, id: 'vinyl', place: 'music' },
-    { n: 17, id: 'sunrise', place: 'breath' },
+    { n: 17, id: 'sand', place: 'breath' },
     { n: 18, id: 'swing', place: 'outside' },
     { n: 19, id: 'campfire', place: 'outside' },
     { n: 20, id: 'tablet', place: 'porch' },
@@ -51,7 +52,6 @@ const SR_KEY_OUTLINE_SVG = '<svg class="sr-key-ic" viewBox="0 0 24 24" fill="non
 const SR_LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const SR_CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const SR_BRUSH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c4 0 5-2 5-4a3 3 0 0 0-3-3c-2 0-3 1.5-2 7z"/><path d="M9 14l10-10 1 1-10 10"/></svg>';
-const SR_HOUSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>';
 const SR_CHEVRON = { next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>', prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' };
 
 let roomState = null;        // שורת new_me_room (או ברירת מחדל עד השמירה הראשונה)
@@ -137,6 +137,68 @@ async function roomCheckNewKeys() {
     const seen = Number(roomState.keys_seen) || 0;
     if (keys <= seen || document.querySelector('.sr-reveal')) return;
     roomShowKeyReveal(seen, keys);
+}
+
+// ---------- חץ שמוביל למה שנפתח ----------
+// לפי בקשה מפורשת (2026-10-09, במקום מפת הבית): "ברגע שמשהו נפתח - פשוט תוליך את המשתמש עם חץ לאן שצריך".
+// אחרי חגיגת המפתח חוזרים למסדרון, וחץ מראה לאן ללכת - לדלת של המקום, לפתח שבתקרה או לחדר הסודי; בפנים חץ
+// נוסף מצביע על הדבר עצמו. כל חץ נעלם כשנוגעים במה שהוא מצביע עליו
+let roomGuide = null;   // { id, turned } - מה שנפתח ועוד לא הגיעו אליו
+let roomArrowSeq = 0;   // כל חץ חדש מחליף את הקודם - נגיעה במטרה הישנה כבר לא מוחקת אותו
+function roomGuideUnlock() { return roomGuide ? ROOM_UNLOCKS.find(u => u.id === roomGuide.id) || null : null; }
+function roomGuideDone() { roomGuide = null; }
+function roomClearArrow() {
+    document.querySelectorAll('.room-guide-arrow').forEach(a => a.remove());
+    document.querySelectorAll('.room-guide-target').forEach(el => el.classList.remove('room-guide-target'));
+}
+function roomShowArrow(container, target, onReach) {
+    roomClearArrow();
+    if (!container || !target) return;
+    const c = container.getBoundingClientRect(), r = target.getBoundingClientRect();
+    if (!r.width && !r.height) return;
+    const up = r.top - c.top < 70;
+    const arrow = document.createElement('div');
+    arrow.className = 'room-guide-arrow' + (up ? ' is-up' : '');
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v16M5 12l7 7 7-7"/></svg>';
+    arrow.style.left = `${(r.left - c.left + r.width / 2).toFixed(1)}px`;
+    arrow.style.top = `${(up ? r.bottom - c.top + 4 : r.top - c.top - 4).toFixed(1)}px`;
+    container.appendChild(arrow);
+    target.classList.add('room-guide-target');
+    const seq = ++roomArrowSeq;
+    target.addEventListener('click', () => { if (seq !== roomArrowSeq) return; roomClearArrow(); if (onReach) onReach(); }, { once: true });
+}
+function roomPlaceDoor(place) {
+    const doors = typeof SRP_DOOR_PLACE !== 'undefined' ? SRP_DOOR_PLACE : {};
+    return Object.keys(doors).find(n => doors[n] === place) || '1';
+}
+// במסדרון: לדלת של המקום, לפתח שבתקרה (הגג ומה שעליו), או לדלת של החדר הסודי
+function roomGuideHallway() {
+    const u = roomGuideUnlock();
+    const hall = document.querySelector('#new-me-root .nmh');
+    if (!u || !hall) return;
+    let target;
+    if (u.place) target = hall.querySelector(`.nmh-door[data-door="${roomPlaceDoor(u.place)}"]`);
+    else if (u.hatch || u.roof) target = hall.querySelector(hall.classList.contains('is-ladder') ? '.nmh-ladder-btn' : '.nmh-hatch-btn');
+    else target = hall.querySelector('.nmh-door[data-door="1"]');
+    roomShowArrow(hall, target);
+}
+// בחדר הסודי: פעם אחת מסתובבים לקיר הנכון, והחץ מצביע על מה שנפתח (או על כפתור המברשת - הסטודיו)
+function roomGuideRoom() {
+    const u = roomGuideUnlock();
+    const stage = srStage();
+    if (!u || !stage) return;
+    if (u.id === 'door') { roomGuideDone(); return; }
+    if (u.tool) { roomShowArrow(stage, stage.querySelector(`.sr-tools [data-tool="${u.tool}"]`), roomGuideDone); return; }
+    if (!Number.isInteger(u.wall)) return;
+    if (roomWall !== u.wall) {
+        if (roomGuide.turned) return;
+        roomGuide.turned = true;
+        roomWall = u.wall;
+        srRenderWall();
+        return;
+    }
+    roomShowArrow(stage, stage.querySelector(`#sr-scene [data-hot="${u.id}"]`), roomGuideDone);
 }
 
 // ---------- כרטיס הדלת במסך של New Me ----------
@@ -241,30 +303,19 @@ function roomShowKeyReveal(from, to) {
     ov.querySelector('.sr-reveal-go').addEventListener('click', async () => {
         close();
         await seen;
-        const target = opened.filter(u => u.id !== 'door').slice(-1)[0];
-        if (typeof openNewMe === 'function' && !document.getElementById('new-me-section').classList.contains('active-tab')) openNewMe('home');
-        if (opened.some(u => u.id === 'door')) { roomPlayDoorOpening(); return; }
-        if (target && target.place && typeof roomOpenPlace === 'function') { roomOpenPlace(target.place, { fromHall: true, highlight: target.id }); return; }
-        if (target && target.roof) { openSecretRoom({ wall: 3 }); roomOpenRoof({ highlight: target.id }); return; }
-        if (target && target.map) { openSecretRoom({ wall: 0 }); setTimeout(() => roomOpenMap(target.id), 350); return; }
-        openSecretRoom(target ? { wall: target.wall, highlight: target.id } : {});
+        // לפי בקשה מפורשת: "ברגע שמשהו נפתח - פשוט תוליך את המשתמש עם חץ לאן שצריך" - חוזרים למסדרון,
+        // וחץ מראה לאן ללכת (ר' roomGuideHallway); בפנים חץ נוסף מצביע על הדבר עצמו
+        const target = opened.slice(-1)[0];
+        roomGuide = target ? { id: target.id } : null;
+        if (srIsOpen()) closeSecretRoom();
+        if (typeof openNewMe === 'function') {
+            const sec = document.getElementById('new-me-section');
+            if (sec && sec.classList.contains('active-tab') && typeof nmGo === 'function') nmGo('home');
+            else openNewMe('home');
+        }
+        setTimeout(roomGuideHallway, 450);
     });
     roomAfterKeysChange();
-}
-
-// הדלת נפתחת (מפתח 1) - ואז נכנסים, וניצוץ מציג את עצמו בפעם הראשונה
-function roomPlayDoorOpening() {
-    const ov = document.createElement('div');
-    ov.className = 'sr-door-anim';
-    ov.innerHTML = `<div class="sr-door-anim-frame">${roomDoorSvg(false, true)}</div>`;
-    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
-    requestAnimationFrame(() => ov.classList.add('go'));
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setTimeout(() => {
-        openSecretRoom({ wall: 0 });
-        ov.classList.add('done');
-        setTimeout(() => ov.remove(), 400);
-    }, reduce ? 150 : 1500);
 }
 
 // ---------- החדר ----------
@@ -287,8 +338,7 @@ function openSecretRoom(opts = {}) {
             <button type="button" class="sr-btn sr-close" onclick="closeSecretRoom()" aria-label="${srEsc(t('room_close_aria'))}">${SR_CLOSE_SVG}</button>
             <span class="sr-title">${srEsc(t('room_title'))}</span>
             <div class="sr-tools">
-                <button type="button" class="sr-btn" onclick="roomOpenDecor()" aria-label="${srEsc(t('room_decor_title'))}" title="${srEsc(t('room_decor_title'))}">${SR_BRUSH_SVG}</button>
-                <button type="button" class="sr-btn" onclick="roomOpenMap()" aria-label="${srEsc(t('room_map_title'))}" title="${srEsc(t('room_map_title'))}">${SR_HOUSE_SVG}</button>
+                <button type="button" class="sr-btn" data-tool="decor" onclick="roomOpenDecor()" aria-label="${srEsc(t('room_decor_title'))}" title="${srEsc(t('room_decor_title'))}">${SR_BRUSH_SVG}</button>
             </div>
             <button type="button" class="sr-arrow sr-arrow-next" onclick="roomTurn(1)" aria-label="${srEsc(t('room_turn_next'))}">${srIsRtl() ? SR_CHEVRON.prev : SR_CHEVRON.next}</button>
             <button type="button" class="sr-arrow sr-arrow-prev" onclick="roomTurn(-1)" aria-label="${srEsc(t('room_turn_prev'))}">${srIsRtl() ? SR_CHEVRON.next : SR_CHEVRON.prev}</button>
@@ -297,7 +347,7 @@ function openSecretRoom(opts = {}) {
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
     srApplyStyle();
-    srRenderWall(opts.highlight || null);
+    srRenderWall();
     srBindSwipe(ov.querySelector('.sr-scene'));
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') closeSecretRoom(); });
     roomRenderDevKeys();
@@ -316,7 +366,7 @@ function closeSecretRoom() {
 
 function roomTurn(dir) {
     roomWall = (roomWall + dir + ROOM_WALLS) % ROOM_WALLS;
-    srRenderWall(null, dir);
+    srRenderWall(dir);
 }
 
 function srBindSwipe(el) {
@@ -352,12 +402,13 @@ function srApplyStyle() {
 }
 
 const ROOM_WALL_IDS = ['window', 'board', 'game', 'shelf'];
-function srRenderWall(highlight, dir) {
+function srRenderWall(dir) {
     const scene = document.getElementById('sr-scene');
     if (!scene) return;
     const keys = roomKeys();
     const walls = [srWallWindow, srWallBoard, srWallGame, srWallShelf];
-    scene.innerHTML = `<svg class="sr-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" style="direction:${srIsRtl() ? 'rtl' : 'ltr'}" role="group" aria-label="${srEsc(t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title'))}">${walls[roomWall](keys, highlight)}</svg>`;
+    roomClearArrow();
+    scene.innerHTML = `<svg class="sr-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" style="direction:${srIsRtl() ? 'rtl' : 'ltr'}" role="group" aria-label="${srEsc(t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title'))}">${walls[roomWall](keys)}</svg>`;
     scene.classList.remove('turn-next', 'turn-prev');
     if (dir) { void scene.offsetWidth; scene.classList.add(dir > 0 ? 'turn-next' : 'turn-prev'); }
     // בלי כיתוב על הקיר (לפי בקשה מפורשת: "לא צריך להסביר כל דבר") - רק לקורא מסך, שם הקיר
@@ -370,7 +421,7 @@ function srRenderWall(highlight, dir) {
         el.addEventListener('click', () => srHotspot(el.dataset.hot, el));
         el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); srHotspot(el.dataset.hot, el); } });
     });
-    if (highlight) srPlayUnlock(highlight);
+    roomGuideRoom();
 }
 
 // טקסט על שלט / פתק שארוך מדי בשפה מסוימת מתכווץ לרוחב שלו (data-fit) - קצר לא נמתח
@@ -411,7 +462,6 @@ function srHotspot(id, el) {
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
-    if (id === 'roof') { roomOpenRoof(); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
     if (id === 'trophies') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); }
@@ -442,28 +492,6 @@ function srFriendSays(el) {
     g.querySelector('text').textContent = t('room_friend_line_' + srFriendIdx);
     srFitBubbles(el.closest('svg'));
     g.classList.remove('pop'); void g.getBoundingClientRect(); g.classList.add('pop');
-}
-
-// פתיחת מנעול: המנעול נפתח ונעלם, טבעת זהב והתזזיות - על הדבר שנפתח
-function srPlayUnlock(id) {
-    const svg = document.querySelector('#sr-scene svg');
-    const target = svg && svg.querySelector(`[data-hot="${id}"]`);
-    if (!target) return;
-    const box = target.getBBox();
-    const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
-    const fx = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    fx.setAttribute('class', 'sr-unlock-fx');
-    fx.innerHTML = `
-        <circle class="sr-unlock-ring" cx="${cx}" cy="${cy}" r="${Math.max(box.width, box.height) / 2 + 10}" fill="none" stroke="#ffd27a" stroke-width="4"/>
-        <g transform="translate(${cx} ${cy})"><g class="sr-unlock-lock">${srLockShape()}</g></g>`;
-    svg.appendChild(fx);
-    srShowTip(t('room_reveal_opened').replace('{item}', roomItemName(id)));
-    const stage = srStage();
-    if (stage && typeof spawnGentleConfettiBurst === 'function') {
-        const r = target.getBoundingClientRect(), s = stage.getBoundingClientRect();
-        setTimeout(() => spawnGentleConfettiBurst(stage, 30, r.left - s.left + r.width / 2, r.top - s.top + r.height / 2, ['#ffd27a', '#ffe2a6', '#ff9ecf', '#b9a8ff']), 900);
-    }
-    setTimeout(() => fx.remove(), 4200);
 }
 
 function srLockShape() {
@@ -531,12 +559,12 @@ function srFriend(p, cx, cy, r, bubble) {
         </g>`;
 }
 
-function srWallWindow(keys, highlight) {
+function srWallWindow(keys) {
     const p = 'srw0';
     const pcOpen = keys >= roomUnlockAt('computer');
     const panels = '<rect x="12" y="482" width="70" height="98" rx="4"/><rect x="94" y="482" width="70" height="98" rx="4"/><rect x="176" y="482" width="70" height="98" rx="4"/><rect x="258" y="482" width="70" height="98" rx="4"/><rect x="340" y="482" width="70" height="98" rx="4"/>';
     const bulbs = [[20, 104], [56, 116], [92, 122], [128, 120], [164, 112], [200, 106], [236, 107], [272, 112], [308, 111], [344, 106], [380, 102]];
-    const rug = '<ellipse cx="200" cy="742" rx="164" ry="50" fill="#5f3470" opacity="0.92"/><ellipse cx="200" cy="742" rx="134" ry="38" fill="none" stroke="#e29ad0" stroke-width="2" stroke-dasharray="7 6" opacity="0.8"/><ellipse cx="200" cy="742" rx="92" ry="24" fill="#7d4689"/>';
+    const rug = '<ellipse cx="200" cy="742" rx="164" ry="50" fill="#5f3470" opacity="0.92"/><ellipse cx="200" cy="742" rx="134" ry="38" fill="none" stroke="#e29ad0" stroke-width="3" opacity="0.8"/><ellipse cx="200" cy="742" rx="120" ry="33" fill="none" stroke="#e29ad0" stroke-width="1.4" opacity="0.56"/><ellipse cx="200" cy="742" rx="92" ry="24" fill="#7d4689"/>';
     return `${srShell(p, panels, bulbs, rug)}
         <defs>
             <linearGradient id="${p}Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a42"/><stop offset="1" stop-color="#3e2c6a"/></linearGradient>
@@ -613,7 +641,7 @@ function srWallBoard(keys) {
     const p = 'srw1';
     const panels = '<rect x="-20" y="482" width="70" height="98" rx="4"/><rect x="62" y="482" width="70" height="98" rx="4"/><rect x="144" y="482" width="70" height="98" rx="4"/><rect x="226" y="482" width="70" height="98" rx="4"/><rect x="308" y="482" width="70" height="98" rx="4"/>';
     const bulbs = [[24, 108], [68, 118], [112, 121], [156, 116], [200, 108], [244, 104], [288, 104], [332, 102], [376, 99]];
-    const rug = '<ellipse cx="196" cy="748" rx="150" ry="46" fill="#2f5a6b" opacity="0.85"/><ellipse cx="196" cy="748" rx="120" ry="34" fill="none" stroke="#9ee0e8" stroke-width="2" stroke-dasharray="7 6" opacity="0.6"/>';
+    const rug = '<ellipse cx="196" cy="748" rx="150" ry="46" fill="#2f5a6b" opacity="0.85"/><ellipse cx="196" cy="748" rx="120" ry="34" fill="none" stroke="#9ee0e8" stroke-width="3" opacity="0.6"/><ellipse cx="196" cy="748" rx="106" ry="29" fill="none" stroke="#9ee0e8" stroke-width="1.4" opacity="0.42"/>';
     const slots = [{ x: 52, y: 186, w: 120, h: 86, rot: -4, pin: '#ff4fa3' }, { x: 222, y: 184, w: 120, h: 86, rot: 3, pin: '#60a5fa' }, { x: 56, y: 296, w: 120, h: 86, rot: 2, pin: '#ff4fa3' }];
     const notes = srBoardNotes();
     const notesSvg = notes.map((nt, i) => {
@@ -658,7 +686,7 @@ function srWallGame(keys) {
     const gameOpen = keys >= roomUnlockAt('game');
     const panels = '<rect x="4" y="482" width="70" height="98" rx="4"/><rect x="86" y="482" width="70" height="98" rx="4"/><rect x="168" y="482" width="70" height="98" rx="4"/><rect x="250" y="482" width="70" height="98" rx="4"/><rect x="332" y="482" width="70" height="98" rx="4"/>';
     const bulbs = [[18, 106], [62, 116], [106, 119], [150, 113], [194, 105], [238, 104], [282, 108], [326, 106], [370, 101]];
-    const rug = '<ellipse cx="150" cy="742" rx="140" ry="44" fill="#6b3a50" opacity="0.88"/><ellipse cx="150" cy="742" rx="108" ry="32" fill="none" stroke="#ffc4a8" stroke-width="2" stroke-dasharray="7 6" opacity="0.6"/>';
+    const rug = '<ellipse cx="150" cy="742" rx="140" ry="44" fill="#6b3a50" opacity="0.88"/><ellipse cx="150" cy="742" rx="108" ry="32" fill="none" stroke="#ffc4a8" stroke-width="3" opacity="0.6"/><ellipse cx="150" cy="742" rx="94" ry="27" fill="none" stroke="#ffc4a8" stroke-width="1.4" opacity="0.42"/>';
     // הפאזל בחלון: כל מפתח = חתיכה
     const filled = Math.min(ROOM_PUZZLE_PIECES, keys);
     let holes = '';
@@ -722,10 +750,9 @@ function srWallGame(keys) {
 function srWallShelf(keys) {
     const p = 'srw3';
     const shelfOpen = keys >= roomUnlockAt('shelf');
-    const roofOpen = keys >= roomUnlockAt('roof');
     const panels = '<rect x="176" y="482" width="70" height="98" rx="4"/>';
     const bulbs = [[22, 104], [66, 114], [110, 117], [154, 112], [198, 104], [242, 104], [286, 109], [330, 106], [374, 102]];
-    const rug = '<ellipse cx="236" cy="744" rx="150" ry="46" fill="#5f3470" opacity="0.9"/><ellipse cx="236" cy="744" rx="118" ry="34" fill="none" stroke="#e29ad0" stroke-width="2" stroke-dasharray="7 6" opacity="0.75"/>';
+    const rug = '<ellipse cx="236" cy="744" rx="150" ry="46" fill="#5f3470" opacity="0.9"/><ellipse cx="236" cy="744" rx="118" ry="34" fill="none" stroke="#e29ad0" stroke-width="3" opacity="0.75"/><ellipse cx="236" cy="744" rx="104" ry="29" fill="none" stroke="#e29ad0" stroke-width="1.4" opacity="0.52"/>';
     return `${srShell(p, panels, bulbs, rug)}
         <defs>
             <linearGradient id="${p}Door" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f3324"/><stop offset="0.5" stop-color="#6d4430"/><stop offset="1" stop-color="#4f3324"/></linearGradient>
@@ -733,27 +760,20 @@ function srWallShelf(keys) {
             <linearGradient id="${p}Gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#d69a2b"/></linearGradient>
             <linearGradient id="${p}PhotoA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
             <linearGradient id="${p}PhotoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fda4af"/><stop offset="1" stop-color="#fcd34d"/></linearGradient>
-            <radialGradient id="${p}Port" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3b3a8a"/><stop offset="1" stop-color="#14123a"/></radialGradient>
+            <radialGradient id="${p}Port" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a6"/><stop offset="1" stop-color="#c98a3c"/></radialGradient>
             <radialGradient id="${p}Jar" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-            <radialGradient id="${p}RoofLight" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#b9a8ff" stop-opacity="0.55"/><stop offset="1" stop-color="#b9a8ff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="${p}Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a42"/><stop offset="1" stop-color="#3e2c6a"/></linearGradient>
         </defs>
-        <g class="sr-hot${roofOpen ? '' : ' locked'}" data-hot="roof" role="button" tabindex="0" aria-label="${srEsc(roomItemName('roof'))}">
-            ${roofOpen ? `<circle cx="106" cy="300" r="140" fill="url(#${p}RoofLight)"/>` : ''}
-            <rect x="52" y="150" width="108" height="24" rx="5" fill="#f3e6cf"/>
-            <text x="106" y="167" text-anchor="middle" font-size="11.5" font-weight="800" fill="#3e261a" data-fit="100">${srEsc(roomItemName('roof'))}</text>
-            <rect x="30" y="184" width="152" height="456" rx="8" fill="#3a2418"/>
-            <rect x="40" y="194" width="132" height="446" fill="url(#${p}Door)"/>
-            <circle cx="106" cy="252" r="30" fill="#2a1a12"/>
-            <circle cx="106" cy="252" r="25" fill="url(#${p}Port)"/>
-            <g class="sr-twinkle" fill="#fff"><circle cx="96" cy="244" r="1.6"/><circle cx="114" cy="240" r="1.2"/><circle cx="108" cy="262" r="1.5"/><circle cx="120" cy="256" r="1"/></g>
-            <circle cx="100" cy="256" r="1.1" fill="#ffd27a"/>
-            <rect x="54" y="300" width="104" height="128" rx="5" fill="none" stroke="#83533b" stroke-width="3"/>
-            <rect x="54" y="446" width="104" height="170" rx="5" fill="none" stroke="#83533b" stroke-width="3"/>
-            ${roofOpen
-        ? `<path d="M80 352 l26 -16 l26 16" fill="none" stroke="#ffd27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="106" y="384" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffe2a6" data-fit="96">${srEsc(t('room_roof_open_sign'))}</text>`
-        : srLockBadge(106, 366, 'roof')}
-            <circle cx="158" cy="470" r="6" fill="#e8b84f"/>
-            <rect x="40" y="636" width="132" height="4" fill="#9a8cff" opacity="${roofOpen ? 0.9 : 0.6}"/>
+        <!-- חלון גבוה עם שמי הלילה (עד 2026-10-09 כאן הייתה הדלת לגג; עכשיו עולים לגג רק בסולם שבמסדרון -
+             לפי בקשה מפורשת: "העלייה לגג כבר לא מפה") -->
+        <g aria-hidden="true">
+            <path d="M34 640 V250 A72 72 0 0 1 178 250 V640 Z" fill="#3a2418"/>
+            <path d="M44 630 V252 A62 62 0 0 1 168 252 V630 Z" fill="url(#${p}Sky)"/>
+            <circle cx="132" cy="262" r="16" fill="#fff4c9"/><circle cx="139" cy="257" r="14" fill="#1d1848"/>
+            <g class="sr-twinkle" fill="#fff"><circle cx="72" cy="240" r="1.6"/><circle cx="96" cy="300" r="1.2"/><circle cx="150" cy="340" r="1.4"/><circle cx="70" cy="380" r="1.1"/><circle cx="128" cy="430" r="1.5"/><circle cx="88" cy="480" r="1.2"/><circle cx="150" cy="520" r="1"/></g>
+            <path d="M44 560 Q76 540 106 552 T168 548 V630 H44 Z" fill="#251c4a"/>
+            <rect x="103" y="190" width="6" height="440" fill="#3a2418"/><rect x="44" y="420" width="124" height="6" fill="#3a2418"/>
+            <rect x="28" y="630" width="156" height="12" rx="3" fill="#8a5a3c"/>
         </g>
         <rect x="188" y="168" width="8" height="10" fill="#c9a36b"/>
         <path d="M192 176 C 178 210, 206 240, 186 280 L 200 286 C 214 246, 190 214, 196 178 Z" fill="#ff8fc4"/>
@@ -783,7 +803,7 @@ function srWallShelf(keys) {
         </g>
         <ellipse cx="320" cy="660" rx="44" ry="18" fill="#ff8fc4" opacity="0.9"/><ellipse cx="320" cy="652" rx="40" ry="12" fill="#ffb3d6"/>
         ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}
-        ${srFriend(p, 196, 560, 23, { x: 201, y: 509, text: t(roofOpen ? 'room_friend_roof' : 'room_friend_door'), tail: 'M190 518 l4 12 l8 -12z' })}`;
+        ${srFriend(p, 196, 560, 23, { x: 201, y: 509, text: t('room_friend_line_5'), tail: 'M190 518 l4 12 l8 -12z' })}`;
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
@@ -1527,9 +1547,10 @@ function roomOpenShelf() {
         <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('room_back_to_room'))}</button>`, 'sr-shelf-sheet');
     ov.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
         ov.remove();
+        // הספרים = הספרייה (לפי בקשה מפורשת: "פשוט תחבר את זה לארון ההוא") - הספרים מפינת הקריאה, כאן בחדר
+        if (b.dataset.go === 'books') { roomOpenLibrary(); return; }
         closeSecretRoom();
-        if (b.dataset.go === 'books' && typeof openBooksSection === 'function') openBooksSection();
-        else if (b.dataset.go === 'notebooks' && typeof openBag === 'function') openBag();
+        if (b.dataset.go === 'notebooks' && typeof openBag === 'function') openBag();
         else if (b.dataset.go === 'photos' && typeof nmGo === 'function') nmGo('photos');
     }));
 }
@@ -1742,152 +1763,43 @@ function roomOpenRoof(opts = {}) {
         </div>`;
     stage.appendChild(box);
     roomInitCat(box.querySelector('.sr-cat'));
-    if (typeof roomInitWish === 'function') roomInitWish(box, opts.highlight === 'wish');
+    if (typeof roomInitWish === 'function') roomInitWish(box);
+    const guided = roomGuideUnlock();
+    if (guided && guided.id === 'roof') roomGuideDone();
+    else if (guided && guided.roof) roomShowArrow(box, box.querySelector('.sr-wish'), roomGuideDone);
     box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
     const sky = box.querySelector('.sr-roof-sky');
-    box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => roomStarFall(s, sky)));
+    box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => roomStarFall(s)));
     // ומדי פעם כוכב נופל לבד, בלי לגעת
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const shoot = () => { if (!box.isConnected) return; roomShootingStar(sky); setTimeout(shoot, 11000 + Math.random() * 9000); };
     if (!reduce) setTimeout(shoot, 6000);
 }
-// כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"): הבזק, שובל ארוך וזוהר וניצוצות שנשארים מאחור
-// לאורך הדרך - לכיוון הצד שיש בו יותר שמיים - ואז הכוכב חוזר למקומו
+// כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"; ואחר כך: "הולכים אחורה במקום קדימה... קדימה, בלי
+// הכמה נקודות"): הבזק ושובל ארוך וזוהר מאחוריו, תמיד קדימה - בכיוון הקריאה (שמאלה בעברית, ימינה ב-LTR) -
+// ואז הכוכב חוזר למקומו
 const ROOM_STAR_FALL_MS = 1500;
-function roomStarFall(s, sky) {
+function roomStarFall(s) {
     if (s.classList.contains('falling') || s.classList.contains('back')) return;
-    const dir = (parseFloat(s.style.left) || 50) > 50 ? 1 : -1;
-    s.style.setProperty('--fall-x', `${dir * -280}px`);
-    s.style.setProperty('--tail-a', dir > 0 ? '-41.5deg' : '-138.5deg');
+    const forward = srIsRtl() ? 1 : -1;
+    s.style.setProperty('--fall-x', `${forward * -280}px`);
+    s.style.setProperty('--tail-a', forward > 0 ? '-41.5deg' : '-138.5deg');
     s.classList.add('falling');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (sky && !reduce) {
-        const sr = s.getBoundingClientRect(), kr = sky.getBoundingClientRect();
-        const x0 = sr.left - kr.left + sr.width / 2, y0 = sr.top - kr.top + sr.height / 2;
-        [0.2, 0.34, 0.48, 0.62, 0.76].forEach(f => setTimeout(() => {
-            if (!sky.isConnected) return;
-            const e = Math.pow(f, 1.6);
-            const d = document.createElement('i');
-            d.className = 'sr-star-dust';
-            d.style.left = `${(x0 + dir * -280 * e).toFixed(1)}px`;
-            d.style.top = `${(y0 + 248 * e).toFixed(1)}px`;
-            sky.appendChild(d);
-            setTimeout(() => d.remove(), 1300);
-        }, f * ROOM_STAR_FALL_MS));
-    }
     setTimeout(() => { s.classList.remove('falling'); s.classList.add('back'); }, reduce ? 400 : ROOM_STAR_FALL_MS);
     setTimeout(() => s.classList.remove('back'), (reduce ? 400 : ROOM_STAR_FALL_MS) + 900);
 }
 function roomShootingStar(sky) {
     if (!sky || !sky.isConnected) return;
     const el = document.createElement('i');
-    el.className = 'sr-shoot';
-    el.style.left = `${(35 + Math.random() * 55).toFixed(1)}%`;
+    el.className = 'sr-shoot' + (srIsRtl() ? '' : ' is-ltr');
+    el.style.left = `${((srIsRtl() ? 35 : 10) + Math.random() * 55).toFixed(1)}%`;
     el.style.top = `${(4 + Math.random() * 20).toFixed(1)}%`;
     sky.appendChild(el);
     setTimeout(() => el.remove(), 1700);
 }
 
-// ---------- מפת הבית: החדר, הגג, הסטודיו (8), הספרייה (12) והגינה (רצף ימים) ----------
-function roomOpenMap(highlight) {
-    const stage = srStage();
-    if (!stage) return;
-    stage.querySelector('.sr-map')?.remove();
-    const keys = roomKeys();
-    const streak = typeof nmStreaks === 'function' && nmProfile ? (nmStreaks().current || 0) : 0;
-    const flowers = Math.min(12, streak);
-    let flowerSvg = '';
-    for (let i = 0; i < flowers; i++) {
-        const x = 12 + (i % 6) * 13 + (i >= 6 ? 6 : 0), y = 340 - (i >= 6 ? 12 : 0);
-        flowerSvg += `<circle cx="${x}" cy="${y}" r="4" fill="${i % 2 ? '#ff9ecf' : '#fff'}"/><circle cx="${x}" cy="${y}" r="1.6" fill="#ffd23f"/>`;
-    }
-    const room = (id, x, y, w, h, fill, label) => {
-        const open = keys >= roomUnlockAt(id);
-        return `<g class="sr-hot${open ? '' : ' locked'}" data-room="${id}" role="button" tabindex="0" aria-label="${srEsc(label)}">
-            <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${open ? fill : '#1e1636'}"/>
-            ${open ? '' : `<g transform="translate(${x + w / 2 - 12} ${y + 26})"><rect x="4" y="12" width="16" height="13" rx="2.5" fill="none" stroke="#8f84c4" stroke-width="2"/><path d="M7 12 v-3 a5 5 0 0 1 10 0 v3" fill="none" stroke="#8f84c4" stroke-width="2"/></g>`}
-            <text x="${x + w / 2}" y="${y + h - 16}" text-anchor="middle" font-size="10.5" font-weight="${open ? 800 : 400}" fill="${open ? '#fff' : '#b9b0e0'}" data-fit="${w - 8}">${srEsc(label)}${open ? '' : ` · ${srFmt(roomUnlockAt(id))}`}</text>
-        </g>`;
-    };
-    const chips = ROOM_UNLOCKS.map(u => `<span class="sr-map-chip${keys >= u.n ? ' on' : ''}">${srFmt(u.n)} ${srEsc(roomItemName(u.id))}${keys >= u.n ? ' ✓' : ''}</span>`).join('');
-    const box = document.createElement('div');
-    box.className = 'sr-map';
-    box.innerHTML = `
-        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(t('room_map_title'))}</b><span></span></div>
-        <p class="sr-map-sub">${srEsc(t('room_map_sub'))}</p>
-        <svg class="sr-map-svg" viewBox="0 0 358 372" style="direction:${srIsRtl() ? 'rtl' : 'ltr'}" aria-hidden="false" role="group" aria-label="${srEsc(t('room_map_title'))}">
-            <defs>
-                <linearGradient id="srmSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141a44"/><stop offset="1" stop-color="#3a2a66"/></linearGradient>
-                <linearGradient id="srmSecret" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ecf"/><stop offset="1" stop-color="#a855f7"/></linearGradient>
-                <linearGradient id="srmWarm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf8a"/><stop offset="1" stop-color="#f59e5b"/></linearGradient>
-                <linearGradient id="srmStudio" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
-                <linearGradient id="srmLib" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86efac"/><stop offset="1" stop-color="#0d9488"/></linearGradient>
-            </defs>
-            <rect width="358" height="372" rx="24" fill="url(#srmSky)"/>
-            <g fill="#fff" class="sr-twinkle"><circle cx="30" cy="30" r="1.4"/><circle cx="80" cy="54" r="1.1"/><circle cx="300" cy="24" r="1.5"/><circle cx="250" cy="44" r="1"/><circle cx="340" cy="70" r="1.2"/><circle cx="140" cy="20" r="1.1"/><circle cx="20" cy="110" r="1"/></g>
-            <circle cx="44" cy="60" r="12" fill="#fff4c9"/>
-            <rect y="326" width="358" height="46" fill="#1f3a2a"/>
-            <path d="M0 330 Q 40 318 80 330 V372 H0 Z" fill="#2f5a3c"/>
-            <g><rect x="34" y="276" width="8" height="52" fill="#5a3a26"/><circle cx="38" cy="268" r="22" fill="#3f8a5c"/><circle cx="26" cy="280" r="14" fill="#4fa36c"/><circle cx="52" cy="278" r="13" fill="#5bb87a"/></g>
-            ${flowerSvg}
-            <text x="40" y="362" text-anchor="middle" font-size="10" font-weight="700" fill="#c9f5d6" data-fit="76">${srEsc(t('room_map_garden'))}${streak ? ` · ${srFmt(streak)}` : ''}</text>
-            <g class="sr-hot${keys >= roomUnlockAt('roof') ? '' : ' locked'}" data-room="roof" role="button" tabindex="0" aria-label="${srEsc(roomItemName('roof'))}">
-                <rect x="92" y="86" width="252" height="10" fill="#4a3266"/>
-                <g stroke="#7a6a9a" stroke-width="2"><line x1="96" y1="86" x2="96" y2="70"/><line x1="340" y1="86" x2="340" y2="70"/><line x1="96" y1="70" x2="340" y2="70"/><line x1="150" y1="86" x2="150" y2="70"/><line x1="210" y1="86" x2="210" y2="70"/><line x1="270" y1="86" x2="270" y2="70"/></g>
-                <g opacity="${keys >= roomUnlockAt('roof') ? 1 : 0.55}"><line x1="300" y1="84" x2="290" y2="60" stroke="#c9c2e8" stroke-width="3"/><rect x="276" y="46" width="28" height="9" rx="4" fill="#c9c2e8" transform="rotate(-24 290 50)"/></g>
-                <rect x="138" y="38" width="160" height="24" rx="12" fill="rgba(10,6,16,0.7)"/>
-                <text x="218" y="55" text-anchor="middle" font-size="11" font-weight="800" fill="#d8ccff" data-fit="150">${srEsc(roomItemName('roof'))}${keys >= roomUnlockAt('roof') ? ' ✓' : ` · ${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('roof'))))}`}</text>
-            </g>
-            <rect x="96" y="96" width="244" height="230" fill="#2a1d40"/>
-            ${room('library', 104, 104, 112, 100, 'url(#srmLib)', roomItemName('library'))}
-            ${room('studio', 224, 104, 108, 100, 'url(#srmStudio)', roomItemName('studio'))}
-            <rect x="96" y="210" width="244" height="6" fill="#4a3266"/>
-            <g class="sr-hot" data-room="secret" role="button" tabindex="0" aria-label="${srEsc(t('room_title'))}">
-                <rect x="104" y="222" width="112" height="98" rx="4" fill="url(#srmSecret)"/>
-                <circle cx="160" cy="262" r="12" fill="#fff" opacity="0.25"/><circle cx="160" cy="262" r="8" fill="#ffd6ec"/><ellipse cx="157" cy="263" rx="1.6" ry="2.2" fill="#2a1240"/><ellipse cx="163" cy="263" rx="1.6" ry="2.2" fill="#2a1240"/>
-                <rect x="112" y="296" width="96" height="16" rx="8" fill="rgba(10,6,16,0.6)"/>
-                <text x="160" y="308" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" data-fit="88">${srEsc(t('room_title'))} ✓</text>
-            </g>
-            <rect x="224" y="222" width="108" height="98" rx="4" fill="url(#srmWarm)"/>
-            <rect x="236" y="244" width="30" height="40" rx="3" fill="#8a5a3c" opacity="0.6"/><circle cx="300" cy="262" r="10" fill="#fff4c9" opacity="0.7"/>
-            <rect x="234" y="296" width="88" height="16" rx="8" fill="rgba(10,6,16,0.5)"/>
-            <text x="278" y="308" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" data-fit="82">${srEsc(t('room_map_hall'))}</text>
-        </svg>
-        <div class="sr-map-legend">
-            <span>${SR_KEY_SVG}${srEsc(t('room_map_l1'))}</span>
-            <span>✦ ${srEsc(t('room_map_l2'))}</span>
-            <span>🌱 ${srEsc(t('room_map_l3'))}</span>
-        </div>
-        <div class="sr-map-chips">${chips}</div>`;
-    stage.appendChild(box);
-    srFitTexts(box);
-    box.querySelector('.sr-sub-back').addEventListener('click', () => box.remove());
-    box.querySelectorAll('[data-room]').forEach(el => {
-        const go = () => {
-            const id = el.dataset.room;
-            if (el.classList.contains('locked')) { srShowLockTip(id); return; }
-            if (id === 'secret') { box.remove(); return; }
-            if (id === 'roof') { box.remove(); roomOpenRoof(); return; }
-            if (id === 'studio') { roomOpenDecor(true); return; }
-            if (id === 'library') { roomOpenLibrary(); }
-        };
-        el.addEventListener('click', go);
-        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-    });
-    if (highlight) {
-        const el = box.querySelector(`[data-room="${highlight}"]`);
-        if (el) {
-            el.classList.add('sr-map-new');
-            srShowTip(t('room_reveal_opened').replace('{item}', roomItemName(highlight)));
-            if (typeof spawnGentleConfettiBurst === 'function') {
-                const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect();
-                setTimeout(() => spawnGentleConfettiBurst(stage, 30, r.left - s.left + r.width / 2, r.top - s.top + r.height / 2, ['#ffd27a', '#ffe2a6', '#ff9ecf']), 500);
-            }
-        }
-    }
-}
-
-// ---------- הספרייה (מפתח 12): הספרים מפינת הקריאה ----------
+// ---------- הספרייה (בתוך ארון הספרים): הספרים מפינת הקריאה ----------
 async function roomOpenLibrary() {
     const stage = srStage();
     if (!stage) return;
