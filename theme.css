@@ -1588,10 +1588,6 @@ html.high-contrast.light-mode {
    ב-app.js) - "ברירת מחדל" (חזרה לצבע הטקסט הרגיל של הנושא) הוא עיגול עם
    קו-מתאר בלבד ואות A, לא צבע מוצק, כדי שיהיה ברור שהוא "ללא צבע נבחר" */
 .note-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 10px; }
-/* עטיפת ההתאמה האישית של הפתק השבועי בהגדרות - שוליים קלים כדי שלא תידבק
-   ישר לטוגל שמעליה */
-.weekly-note-customize { margin-top: 4px; margin-bottom: 8px; }
-#modal-weekly-note .weekly-note-customize { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 /* תצוגה מקדימה חיה של הפתק/משימה במודל ההוספה/עריכה (ר' updateCenterItemPreview
    ב-app.js) - אותו עיצוב-בסיס בדיוק כמו שורה אמיתית ברשימה (.center-list li),
    רק בלי הכפתורים, כדי שמה שרואים כאן יהיה בדיוק מה שיתקבל בפועל - לפי בקשה
@@ -1665,7 +1661,6 @@ html.high-contrast.light-mode {
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #water-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #calorie-daily-goal-input,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #protein-daily-goal-input,
-:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #weekly-note-textarea,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #contact-us-message,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #ai-schedule-duration-months,
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) #preset-quick-add-search,
@@ -2443,150 +2438,6 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .home-hero-panel:not(.hidden)::-webkit-scrollbar { display: none; }
 .home-hero-panel:not(.hidden) + .main-scroll-area { display: none; }
 .home-greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
-/* עמודת-צד בקצה הנגדי לברכה/תאריך ב-home-greeting-row - מכילה את הפתק
-   השבועי ואת תג הפרימיום, אחד מעל השני. flex-end רגיל (לא מיקום מוחלט)
-   כדי שהצד יתהפך אוטומטית לפי כיוון השפה - לפי בקשה מפורשת */
-.home-greeting-side-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
-/* הפתק השבועי - תמיד בצד הנגדי לתאריך, והשורה מיושרת למעלה כך שהפתק מתחיל
-   בגובה שורת התאריך (הגובה נמדד ב-JS מהברכה בפועל, ר' alignWeeklyNoteToDate) */
-.home-greeting-row { align-items: flex-start; }
-.home-greeting-side-stack { padding-top: var(--greeting-line-h, 30px); }
-/* פתק שבועי - "פתק חמוד" מרובע עם "נייר דבק" ציורי בתחתית (לא רצועה ברוחב
-   מלא, ולא בלון-עריכה מותאם-אישית - עבר למודל רגיל, ר' app.js), בצבע ניטרלי
-   של ערכת הנושא הנוכחית (var(--bg-glass), אותו רקע-זכוכית בדיוק כמו .card) -
-   לפי בקשה מפורשת ("פתק חמוד... ריבוע עם דבק סלוטפ למטה", "צבע ניטרלי...
-   ערכת הנושא") */
-.weekly-note-widget {
-    position: relative;
-    background-color: var(--bg-glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-top: 1px solid rgba(255, 255, 255, 0.22);
-    color: var(--text-primary);
-    border-radius: 4px;
-    width: 118px;
-    height: 118px;
-    box-sizing: border-box;
-    padding: 10px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    transform: rotate(-2.5deg);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-    cursor: pointer;
-}
-/* "נייר הדבק" - עבר לפינה (לא אמצע-תחתית), קטן יותר ונוטה חזק יותר, כאילו
-   מישהו הדביק אותו באלכסון על הפינה - לפי בקשה מפורשת ("קצת יותר קטן ונוטה
-   הצידה בפינה") */
-.weekly-note-tape {
-    position: absolute;
-    top: -5px;
-    inset-inline-end: 4px;
-    width: 26px;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transform: rotate(-42deg);
-    pointer-events: none;
-}
-/* גודל הגופן נקבע דינמית מ-JS לפי אורך הטקסט (ר' renderWeeklyNoteDisplay
-   ב-app.js) כדי שכל מה שנכתב יכנס בלי להיחתך - לפי בקשה מפורשת ("כל מה
-   שאני כותבת יכנס... גם אם ארוך פשוט להקטין את האותיות") - לכן בלי
-   line-clamp/ellipsis יותר, גלישה רגילה על פני כמה שורות */
-.weekly-note-display { display: block; overflow: hidden; max-height: 100%; max-width: 100%; font-weight: 600; line-height: 1.22; word-break: break-word; }
-/* פתק ריק - רק עיפרון קטן ועדין בפינה התחתונה (מול נייר הדבק), בלי טקסט */
-.weekly-note-display-empty { font-style: normal; line-height: 1; }
-.weekly-note-pencil { position: absolute; bottom: 9px; inset-inline-end: 9px; display: inline-flex; opacity: 0.5; pointer-events: none; }
-.weekly-note-pencil svg { width: 15px; height: 15px; }
-/* בעיגול הפינה נמצאת מחוץ לצורה - העיפרון יורד למרכז התחתון */
-.weekly-note-widget.weekly-note-shape-circle .weekly-note-pencil { inset-inline-end: auto; left: 50%; bottom: 14px; transform: translateX(-50%); }
-
-/* צבעי פתק אופציונליים - "פתק דביק" קלאסי בכמה גוונים, לפי בקשה מפורשת
-   ("4 צבעים... חוץ מהברירת מחדל שזה הרגיל עם ערכת הנושא"). כל צבע כולל גם
-   צבע-טקסט כהה קבוע משלו (לא var(--text-primary), שיכול להיות לבן במצב
-   כהה ובלתי-קריא מעל רקע פסטלי בהיר) */
-.weekly-note-widget.weekly-note-color-yellow { background-color: #fdf1a1; color: #4b3b00; }
-.weekly-note-widget.weekly-note-color-pink { background-color: #fbd3e6; color: #5c1f3d; }
-.weekly-note-widget.weekly-note-color-mint { background-color: #c8f2d4; color: #0d3d24; }
-.weekly-note-widget.weekly-note-color-blue { background-color: #cfe3fb; color: #12305c; }
-.weekly-note-color-swatch-yellow { background-color: #fdf1a1; }
-.weekly-note-color-swatch-pink { background-color: #fbd3e6; }
-.weekly-note-color-swatch-mint { background-color: #c8f2d4; }
-.weekly-note-color-swatch-blue { background-color: #cfe3fb; }
-
-/* 4 סגנונות/צורות אופציונליים לפתק, לפי בקשה מפורשת ("אפשרות לשנות צורה,
-   נגיד 4 סגנונות"). ברירת המחדל (בלי אף אחת מהמחלקות האלו) היא בדיוק המראה
-   הקיים - מרובע עם נייר-דבק בפינה, ר' .weekly-note-widget/.weekly-note-tape
-   למעלה */
-.weekly-note-widget.weekly-note-shape-round { border-radius: 24px; transform: none; }
-.weekly-note-widget.weekly-note-shape-circle { border-radius: 50%; transform: none; }
-.weekly-note-widget.weekly-note-shape-ribbon,
-.weekly-note-widget.weekly-note-shape-card {
-    transform: none;
-}
-.weekly-note-widget.weekly-note-shape-round .weekly-note-tape,
-.weekly-note-widget.weekly-note-shape-circle .weekly-note-tape,
-.weekly-note-widget.weekly-note-shape-ribbon .weekly-note-tape,
-.weekly-note-widget.weekly-note-shape-card .weekly-note-tape {
-    display: none;
-}
-/* סרט/דגל משולש בפינה במקום נייר-דבק - קפל נייר קלאסי */
-.weekly-note-widget.weekly-note-shape-ribbon::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    inset-inline-end: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 22px 22px 0;
-    border-color: transparent rgba(0, 0, 0, 0.25) transparent transparent;
-}
-html[dir="ltr"] .weekly-note-widget.weekly-note-shape-ribbon::after {
-    border-width: 0 0 22px 22px;
-    border-color: transparent transparent rgba(0, 0, 0, 0.25) transparent;
-}
-/* כרטיסייה שטוחה עם פס-הדגשה בצד, בלי דבק ובלי סיבוב - מראה נקי יותר */
-.weekly-note-widget.weekly-note-shape-card {
-    border-radius: 6px;
-    border-inline-start: 5px solid rgba(255, 255, 255, 0.4);
-}
-
-/* קבוצת ה-swatches של סגנון/צורה - כל אחד בצורתו-שלו כדי לרמוז על התוצאה
-   בלי צורך בטקסט הסבר, אותו דפוס בדיוק כמו note-color-swatch */
-.note-shape-swatch {
-    width: 30px;
-    height: 30px;
-    background-color: var(--bg-glass);
-    border: 2px solid var(--border-color);
-    cursor: pointer;
-    padding: 0;
-    box-sizing: border-box;
-    transition: var(--transition);
-}
-.note-shape-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.3); transform: scale(1.08); }
-.note-shape-swatch-round { border-radius: 10px; }
-.note-shape-swatch-circle { border-radius: 50%; }
-.note-shape-swatch-ribbon { border-radius: 4px; position: relative; overflow: hidden; }
-.note-shape-swatch-ribbon::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    inset-inline-end: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 12px 12px 0;
-    border-color: transparent var(--text-secondary) transparent transparent;
-}
-html[dir="ltr"] .note-shape-swatch-ribbon::after {
-    border-width: 0 0 12px 12px;
-    border-color: transparent transparent var(--text-secondary) transparent;
-}
-.note-shape-swatch-card { border-radius: 4px; border-inline-start: 4px solid var(--text-secondary); }
 .home-greeting-text { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
 .home-greeting-date { margin: 2px 0 0 0; font-size: 0.72rem; font-weight: 500; color: var(--text-secondary); text-transform: capitalize; }
 .home-greeting-date-clickable { cursor: pointer; width: fit-content; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
@@ -5425,8 +5276,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 /* היו rgba(0,0,0,0.4)+color:#fff קבועים - עובד רק על רקע כהה, ולא תלוי
    בערכת-נושא בכלל. זה מסביר את כל תלונות "התיבה אפורה במצב בהיר" לאורך כל
    השדות האלה, לא רק ל-#center-item-input שכבר תוקן בנפרד קודם */
-.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #receipt-title-input, #receipt-amount-input, #receipts-total-from, #receipts-total-to, .select-other-manual-row input, #recipe-category-input-custom, #recurring-category-select-custom, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input, #weekly-note-textarea { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
-#weekly-note-textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+.schedule-adder-grid select, .schedule-adder-grid input, .preset-manager-grid select, .preset-manager-grid input, .preset-manager-grid textarea, #receipt-title-input, #receipt-amount-input, #receipts-total-from, #receipts-total-to, .select-other-manual-row input, #recipe-category-input-custom, #recurring-category-select-custom, #sport-custom-type-input, #sport-quick-custom-type-input, #water-daily-goal-input, #sport-notes-input, #glance-edit-task-title-input, #glance-edit-task-time-input, #center-item-input, #help-faq-search, #calorie-daily-goal-input, #protein-daily-goal-input, #contact-us-message, #ai-schedule-duration-months, #preset-quick-add-search, #food-quick-add-input, #routine-item-title-input, #routine-tab-name-input, #glance-edit-task-day-select, #glance-edit-task-reminder, #glance-edit-task-reminder-text, #study-item-input { background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 14px; padding: 12px; font-size: 0.9rem; font-family: inherit; outline: none; z-index: 15;}
 #preset-quick-add-search, #food-quick-add-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 .preset-quick-add-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .preset-quick-add-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background-color: var(--bg-row); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: start; width: 100%; color: var(--text-primary); font-family: inherit; font-size: 0.88rem; }
@@ -6438,29 +6288,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .today-peek-chip:active { transform: scale(0.96); }
 .today-peek-chip.hidden { display: none; }
 
-/* פתק שבועי: כותרת + גלגל שיניים, רשימה לסימון (0-3), טקסט חופשי */
-.weekly-note-modal-head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 10px; }
-.weekly-note-modal-head h3 { grid-column: 2; margin: 0; text-align: center; }
-.weekly-note-gear { grid-column: 3; justify-self: end; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-.weekly-note-gear svg { width: 18px; height: 18px; }
-.weekly-note-gear.active { color: var(--accent-purple); border-color: var(--accent-purple); }
-#weekly-note-textarea { min-height: 150px; }
-.weekly-note-items-edit { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-.weekly-note-items-edit:empty { display: none; }
-.weekly-note-item-edit-row { display: flex; align-items: center; gap: 10px; }
-.weekly-note-item-edit-box { width: 18px; height: 18px; flex-shrink: 0; border-radius: 5px; border: 1.5px solid var(--text-secondary); opacity: .7; }
-.weekly-note-item-edit-row input { flex: 1; min-width: 0; background-color: var(--bg-glass); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: .9rem; outline: none; }
-.weekly-note-count-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
-.weekly-note-count-chip { min-width: 40px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
-.weekly-note-count-chip.selected { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, transparent); color: var(--accent-purple); }
-/* הפתק במסך הבית כשיש רשימה - מיושר להתחלה, כל שורה עם ריבוע סימון */
-.weekly-note-widget.weekly-note-has-items { align-items: flex-start; justify-content: flex-start; text-align: start; padding: 12px 9px 8px; }
-.weekly-note-widget.weekly-note-has-items .weekly-note-display { width: 100%; }
-.weekly-note-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-.weekly-note-items li { display: flex; align-items: flex-start; gap: 5px; line-height: 1.25; }
-.weekly-note-items li.done span { text-decoration: line-through; opacity: .6; }
-.weekly-note-check { flex-shrink: 0; width: 1.25em; height: 1.25em; margin-top: .02em; border-radius: 4px; border: 1.5px solid currentColor; background: transparent; color: inherit; font: inherit; font-size: 1em; font-weight: 800; line-height: 1; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: .85; }
-.weekly-note-free { margin-top: 6px; }
 .nm-star { display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .nm-star svg { width: 15px; height: 15px; display: block; }
 
@@ -7931,11 +7758,6 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
 .home-tool-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.06); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--text-primary); display: grid; place-items: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
 .home-tool-btn:active { transform: scale(0.92); }
 .home-side-stack { position: absolute; top: 76px; inset-inline-end: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 5; }
-.home-weekly-note-slot .weekly-note-widget { zoom: 0.72; }
-.weekly-note-pin { display: none; align-items: center; gap: 5px; min-height: 34px; padding: 0 11px; border-radius: 999px; border: 1px dashed color-mix(in srgb, var(--accent-pink) 55%, transparent); background: transparent; color: var(--accent-pink-text, var(--accent-pink)); font: inherit; font-size: 0.74rem; cursor: pointer; }
-.home-weekly-note-slot.is-empty .weekly-note-widget { display: none !important; }
-.home-weekly-note-slot.is-empty .weekly-note-pin { display: inline-flex; }
-.home-weekly-note-slot.is-empty .weekly-note-widget.hidden + .weekly-note-pin { display: none; }
 .home-greeting-row.home-greeting-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; margin: auto 0 0; padding: 0 12px; }
 .home-greeting-center .home-greeting-text { font-size: clamp(1.55rem, 7.4vw, 2rem); text-wrap: balance; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
 .home-greeting-center .home-greeting-date { font-size: 0.92rem; width: auto; margin: 0; }
@@ -8118,17 +7940,6 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
 .good-things-past-day ul { margin: 4px 0 0; padding-inline-start: 18px; font-size: 0.88rem; line-height: 1.5; }
 .good-things-past-empty { margin: 0; font-size: 0.84rem; color: var(--text-secondary); }
 
-/* 🗂️ השבועות הקודמים של הפתק השבועי (לחיצה ארוכה על הפתק / הסיכה) */
-#weekly-note-widget, #weekly-note-pin { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-.weekly-history-list { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
-.weekly-history-card { padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent-gold) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent-gold) 25%, transparent); }
-.weekly-history-week { font-size: 0.74rem; font-weight: 800; color: var(--text-secondary); }
-.weekly-history-items { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
-.weekly-history-items li { display: flex; align-items: center; gap: 8px; }
-.weekly-history-items li.done { color: var(--text-secondary); text-decoration: line-through; }
-.weekly-history-box { flex: none; width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 0.7rem; box-sizing: border-box; }
-.weekly-history-text { margin: 6px 0 0; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-.weekly-history-empty { margin: 0; font-size: 0.86rem; line-height: 1.6; color: var(--text-secondary); }
 
 /* 🌦️ מזג אוויר בשמיים - שכבה דקורטיבית ברקע מסך הבית (מעל דוגמת הערכה, מתחת לפינה ולתוכן) */
 .home-weather { position: absolute; inset: 0; overflow: hidden; pointer-events: none; --wx-cloud: color-mix(in srgb, var(--text-primary) 15%, transparent); --wx-drop: color-mix(in srgb, #93c5fd 38%, transparent); --wx-drop-soft: color-mix(in srgb, #93c5fd 22%, transparent); --wx-snow: color-mix(in srgb, #dbeafe 62%, var(--text-primary) 38%); --wx-snow-soft: color-mix(in srgb, #dbeafe 35%, transparent); }
@@ -8321,11 +8132,12 @@ html.light-mode .home-weather.wx-clear-night::after { display: none; }
 .sr-enter:focus-visible, .sr-door-info:focus-visible { outline: 2px solid #ffd27a; outline-offset: 3px; }
 .sr-glow { animation: srGlow 2.6s ease-in-out infinite; }
 @keyframes srGlow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-.sr-how-list { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.sr-how-list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--bg-row); font-size: 0.85rem; color: var(--text-primary); }
-.sr-how-n { display: inline-flex; align-items: center; gap: 3px; min-width: 42px; font-weight: 800; color: var(--accent-pink-text); font-variant-numeric: tabular-nums; }
-.sr-how-n .sr-key-ic { width: 18px; height: 18px; color: #e8b84f; }
-.sr-how-list .sr-key-hole, .sr-shelf-sheet .sr-key-hole { fill: var(--bg-sheet); }
+/* ה-i בדלת: "חדר רק שלך" - מפתח, כותרת ושורה אחת, באמצע */
+.sr-how-sheet { text-align: center; }
+.sr-how-key { display: flex; justify-content: center; margin: 2px 0 4px; }
+.sr-how-key .sr-key-ic { width: 38px; height: 38px; color: #e8b84f; }
+.sr-how-line { margin: 2px auto 16px; max-width: 30ch; font-size: 1.02rem; line-height: 1.7; color: var(--text-primary); text-wrap: balance; }
+.sr-how-key .sr-key-hole, .sr-shelf-sheet .sr-key-hole { fill: var(--bg-sheet); }
 .sr-shelf-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
 .sr-shelf-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; cursor: pointer; }
 .sr-shelf-item span { font-size: 1.6rem; }
@@ -8548,7 +8360,7 @@ html.light-mode .home-weather.wx-clear-night::after { display: none; }
 .nb-dictate { bottom: 16px; inset-inline-end: 16px; width: 46px; height: 46px; background: var(--paper, #fbfaf6); color: var(--accent-pink-text); border-color: rgba(60, 50, 30, 0.16); }
 .nb-dictate svg { width: 20px; height: 20px; }
 .nb-sheet:not([data-paper="write"]) .nb-dictate { display: none; }
-#weekly-note-textarea.is-listening, .notebook-page-text-content.is-listening { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 45%, transparent); }
+.notebook-page-text-content.is-listening { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 45%, transparent); }
 @media (prefers-reduced-motion: reduce) { .dictate-btn.listening { animation: none; } }
 
 /* ===== המתכונים שלי (גרסה 562): גלריה אחת - חיפוש, תוויות קטגוריה ורשת של 2 עמודות; ועמוד מתכון עם
@@ -8743,38 +8555,39 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
     .sr-crt-screen.pc-off .sr-crt-on, .sr-crt-screen.pc-on .sr-crt-on, .sr-crt-screen.pc-off::before { animation-duration: 0.01s !important; animation-delay: 0s !important; }
 }
 
-/* המחשב בחדר – מראה "ניאון" (בחירה 9): מסגרת כהה, מסך עם רשת ואופק ורוד, בועות טורקיז למחשב
-   וורודות לתשובות, כפתורי תשובה בשורות. הכול תחת .sr-pc כדי לגבור על המראה הקודם (CRT ירוק) */
-.sr-pc { background: radial-gradient(60% 40% at 50% 30%, rgba(255, 79, 216, 0.12), transparent 70%), radial-gradient(50% 35% at 50% 100%, rgba(46, 242, 255, 0.1), transparent 70%), #07040f; }
-.sr-pc .sr-crt { background: linear-gradient(180deg, #1a1028, #0e0818); border: 1px solid rgba(255, 79, 216, 0.22); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.6), inset 0 -5px 0 rgba(0, 0, 0, 0.25); }
-.sr-pc .sr-crt-screen { font-family: 'Secular One', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; color: #bffbff; text-shadow: none; background: linear-gradient(180deg, #140a26, #0b0618); box-shadow: inset 0 0 0 2px #ff4fd8, 0 0 22px rgba(255, 79, 216, 0.45), inset 0 0 26px rgba(46, 242, 255, 0.18); }
-.sr-pc .sr-crt-screen::after { background: linear-gradient(transparent 62%, rgba(255, 79, 216, 0.16) 62%, transparent 100%), repeating-linear-gradient(90deg, rgba(46, 242, 255, 0.07) 0 1px, transparent 1px 28px); }
+/* המחשב בחדר – מראה "זכוכית רכה" (ערכה 10, לפי בחירה מפורשת): זוהר ורוד-סגול מאחור, מכשיר מזכוכית
+   חלבית, בועות לבנות-שקופות למחשב ולבנות מלאות לתשובות, כפתורי תשובה שקופים בשורות, ונורה לבנה */
+.sr-pc { background: radial-gradient(80% 60% at 30% 20%, #ff7ac0, transparent 70%), radial-gradient(70% 60% at 80% 80%, #7c5cff, transparent 70%), #1a1030; }
+.sr-pc .sr-crt { background: rgba(255, 255, 255, 0.16); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 30px; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.5), inset 0 -5px 0 rgba(0, 0, 0, 0.08); }
+.sr-pc .sr-crt-screen { font-family: 'Assistant', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; color: #fff; text-shadow: none; border-radius: 20px; background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+.sr-pc .sr-crt-screen::after { background: none; }
 .sr-pc .sr-crt-lines { gap: 8px; }
-.sr-pc .sr-crt-meta { color: rgba(46, 242, 255, 0.6); opacity: 1; }
-.sr-pc .sr-crt-bot:not(.sr-crt-meta), .sr-pc .sr-crt-me { max-width: 86%; box-sizing: border-box; padding: 8px 12px; border-radius: 16px; line-height: 1.45; }
-.sr-pc .sr-crt-bot:not(.sr-crt-meta) { background: rgba(46, 242, 255, 0.05); border: 1.5px solid #2ef2ff; border-end-start-radius: 5px; color: #bffbff; box-shadow: 0 0 10px rgba(46, 242, 255, 0.3); }
-.sr-pc .sr-crt-me { background: #ff4fd8; border-end-end-radius: 5px; color: #1a0518; text-shadow: none; box-shadow: 0 0 14px rgba(255, 79, 216, 0.55); }
+.sr-pc .sr-crt-meta { color: rgba(255, 255, 255, 0.65); opacity: 1; }
+.sr-pc .sr-crt-bot:not(.sr-crt-meta), .sr-pc .sr-crt-me { max-width: 84%; box-sizing: border-box; padding: 8px 12px; border-radius: 16px; line-height: 1.45; }
+.sr-pc .sr-crt-bot:not(.sr-crt-meta) { background: rgba(255, 255, 255, 0.2); border: none; border-end-start-radius: 5px; color: #fff; box-shadow: none; }
+.sr-pc .sr-crt-me { background: #fff; border-end-end-radius: 5px; color: #4a2a7a; font-weight: 700; text-shadow: none; box-shadow: none; }
 .sr-pc .sr-crt-me.is-free { opacity: 1; }
 .sr-pc .sr-crt-typing { letter-spacing: 0.25em; }
 .sr-pc .sr-crt-ctrl { flex-direction: column; align-items: stretch; gap: 7px; }
-.sr-pc .sr-crt-ctrl button { min-height: 40px; padding: 8px 12px; border-radius: 14px; border: 1.5px solid #ff4fd8; background: transparent; color: #ffc2f3; text-align: start; text-shadow: none; box-shadow: 0 0 8px rgba(255, 79, 216, 0.28); }
-.sr-pc .sr-crt-ctrl button:hover, .sr-pc .sr-crt-ctrl button:focus-visible { background: rgba(255, 79, 216, 0.12); }
+.sr-pc .sr-crt-ctrl button { min-height: 40px; padding: 9px 12px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.1); color: #fff; text-align: start; text-shadow: none; box-shadow: none; }
+.sr-pc .sr-crt-ctrl button:hover, .sr-pc .sr-crt-ctrl button:focus-visible { background: rgba(255, 255, 255, 0.2); }
 .sr-pc .sr-crt-ctrl.is-end { align-items: center; }
-.sr-pc .sr-crt-ctrl.is-end button { border-color: #2ef2ff; color: #bffbff; text-align: center; box-shadow: 0 0 10px rgba(46, 242, 255, 0.35); }
-.sr-pc .sr-crt-task { border: 1.5px dashed #ffe066; color: #fff3b0; text-shadow: none; box-shadow: 0 0 10px rgba(255, 224, 102, 0.22); }
-.sr-pc .sr-crt-navbtn { border: 1px solid #2ef2ff; background: transparent; color: #bffbff; text-shadow: none; }
-.sr-pc .sr-crt-navbtn:focus-visible { outline-color: #2ef2ff; }
+.sr-pc .sr-crt-ctrl.is-end button { border-color: rgba(255, 255, 255, 0.8); color: #fff; text-align: center; }
+.sr-pc .sr-crt-task { border: 1.5px dashed rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.08); color: #fff; text-shadow: none; box-shadow: none; }
+.sr-pc .sr-crt-navbtn { border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 12px; background: transparent; color: #fff; text-shadow: none; }
+.sr-pc .sr-crt-navbtn:focus-visible { outline-color: #fff; }
+.sr-pc .sr-crt-input { padding: 4px 6px 4px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.14); }
 .sr-pc .sr-crt-input label { display: none; }
-.sr-pc .sr-crt-input input { border-bottom: 1.5px solid #2ef2ff; color: #bffbff; }
-.sr-pc .sr-crt-input input::placeholder { color: rgba(191, 251, 255, 0.45); }
-.sr-pc .sr-crt-input button { border-color: #2ef2ff; color: #bffbff; }
-.sr-pc .sr-crt-brand { color: #ff4fd8; }
-.sr-pc .sr-crt-power::before { background: #2ef2ff; box-shadow: 0 0 8px #2ef2ff, inset 0 0 2px #fff; }
-.sr-pc .sr-crt-power.is-off::before { background: #3a3550; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5); }
-.sr-pc .sr-crt-screen.pc-off { background: linear-gradient(180deg, #0a0614, #05030b); }
-.sr-pc .sr-crt-screen.pc-off::before { background: #ffe9fb; box-shadow: 0 0 16px 6px rgba(255, 79, 216, 0.55); }
-.sr-pc .sr-crt-breath { border-color: #2ef2ff; box-shadow: 0 0 18px rgba(46, 242, 255, 0.45), inset 0 0 14px rgba(46, 242, 255, 0.3); }
-@media (prefers-reduced-motion: reduce) { .sr-pc .sr-crt-breath.in { background: rgba(46, 242, 255, 0.16); } }
+.sr-pc .sr-crt-input input { border-bottom: none; color: #fff; }
+.sr-pc .sr-crt-input input::placeholder { color: rgba(255, 255, 255, 0.6); }
+.sr-pc .sr-crt-input button { border: none; color: #fff; font-weight: 700; }
+.sr-pc .sr-crt-brand { color: #fff; font-family: system-ui, sans-serif; letter-spacing: 0.08em; }
+.sr-pc .sr-crt-power::before { background: #fff; box-shadow: 0 0 8px #fff, inset 0 0 2px #fff; }
+.sr-pc .sr-crt-power.is-off::before { background: rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35); }
+.sr-pc .sr-crt-screen.pc-off { background: rgba(16, 8, 34, 0.55); }
+.sr-pc .sr-crt-screen.pc-off::before { background: #fff; box-shadow: 0 0 16px 6px rgba(255, 154, 213, 0.6); }
+.sr-pc .sr-crt-breath { border-color: #fff; box-shadow: 0 0 18px rgba(255, 255, 255, 0.45), inset 0 0 14px rgba(255, 255, 255, 0.3); }
+@media (prefers-reduced-motion: reduce) { .sr-pc .sr-crt-breath.in { background: rgba(255, 255, 255, 0.18); } }
 
 /* הגג: שמיים, עיר מעל הרעפים, יער וים באופק, כרית וחתול; כוכבים שנופלים וחוזרים בנגיעה */
 .sr-roof .sr-roof-sky { background: radial-gradient(70% 45% at 18% 12%, rgba(255, 244, 201, 0.14), transparent 70%), linear-gradient(180deg, #070a20 0%, #141038 42%, #2a1a4e 58%, #3b2150 66%); }

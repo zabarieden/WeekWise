@@ -841,47 +841,6 @@ function renderHomeChips() {
     box.classList.toggle('hidden', !chips.length);
 }
 
-// --- 🗂️ השבועות הקודמים של הפתק השבועי: בכל שמירה נשמר עותק לשבוע הנוכחי (פתק שלא השתנה
-// מקבל עותק בפתיחה הראשונה בשבוע). פתק שנמחק לא מוחק את מה שנשמר לשבוע. לחיצה ארוכה על
-// הפתק (או על הסיכה) פותחת את השבועות שעברו ---
-async function snapshotWeeklyNote(onlyIfMissing) {
-    if (!supabaseClient || !currentUserId) return;
-    const text = String(currentWeeklyNoteText || '').trim();
-    const items = (currentWeeklyNoteItems || []).slice(0, currentWeeklyNoteItemCount).filter(it => String(it.text || '').trim());
-    if (!text && !items.length) return;
-    const week = currentWeekStart();
-    if (onlyIfMissing) {
-        try { if (localStorage.getItem(`weekwise_weekly_note_snap_week_${currentUserId}`) === week) return; } catch {}
-        const { data } = await supabaseClient.from('weekly_note_history').select('id').eq('user_id', currentUserId).eq('week_start', week).limit(1);
-        if (data && data.length) { try { localStorage.setItem(`weekwise_weekly_note_snap_week_${currentUserId}`, week); } catch {} return; }
-    }
-    const { error } = await supabaseClient.from('weekly_note_history').upsert(
-        { user_id: currentUserId, week_start: week, note_text: text, note_items: items, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id,week_start' },
-    );
-    if (!error) { try { localStorage.setItem(`weekwise_weekly_note_snap_week_${currentUserId}`, week); } catch {} }
-}
-async function openWeeklyNoteHistory() {
-    const box = document.getElementById('weekly-history-list');
-    if (!box) return;
-    box.innerHTML = '';
-    openModal('modal-weekly-history');
-    if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('weekly_note_history').select('week_start, note_text, note_items').eq('user_id', currentUserId).lt('week_start', currentWeekStart()).order('week_start', { ascending: false }).limit(26);
-    const rows = data || [];
-    if (!rows.length) { box.innerHTML = `<p class="weekly-history-empty">${myDayEsc(t('weekly_note_history_empty'))}</p>`; return; }
-    box.innerHTML = rows.map(r => {
-        const [y, m, d] = r.week_start.split('-').map(Number);
-        const label = t('weekly_note_history_week').replace('{date}', new Date(y, m - 1, d).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' }));
-        const items = Array.isArray(r.note_items) ? r.note_items.filter(it => it && String(it.text || '').trim()) : [];
-        return `<div class="weekly-history-card">
-            <span class="weekly-history-week">${myDayEsc(label)}</span>
-            ${items.length ? `<ul class="weekly-history-items">${items.map(it => `<li class="${it.done ? 'done' : ''}"><span class="weekly-history-box" aria-hidden="true">${it.done ? '✓' : ''}</span>${myDayEsc(it.text)}</li>`).join('')}</ul>` : ''}
-            ${r.note_text ? `<p class="weekly-history-text">${myDayEsc(r.note_text)}</p>` : ''}
-        </div>`;
-    }).join('');
-}
-
 // --- 🌦️ מזג אוויר בשמיים: כבוי כברירת מחדל (צריך אישור מיקום). המיקום המשוער (מעוגל לכקילומטר)
 // נשמר רק במכשיר; הבדיקה עצמה דרך פונקציית השרת weather (MET Norway). מתעדכן כל 40 דקות לכל היותר ---
 const HOME_WEATHER_KEY = 'weekwise_weather_on';
@@ -986,10 +945,7 @@ function initHomePhase2() {
     loadHomeCountdown();
     loadGoodThingsSetting();
     loadGoodThingsToday();
-    snapshotWeeklyNote(true);
     refreshHomeWeather(false);
-    homeAttachLongPress(document.getElementById('weekly-note-widget'), openWeeklyNoteHistory);
-    homeAttachLongPress(document.getElementById('weekly-note-pin'), openWeeklyNoteHistory);
     if (homePhase2Timer) return;
     homePhase2Timer = setInterval(() => {
         renderHomeGreeting();
@@ -997,7 +953,6 @@ function initHomePhase2() {
         if (today !== homePhase2Day) {
             homePhase2Day = today;
             loadHomeCountdown();
-            snapshotWeeklyNote(true);
         }
         if (goodThingsLoadedFor !== goodThingsDay()) loadGoodThingsToday();
         else renderHomeChips();

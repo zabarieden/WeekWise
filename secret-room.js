@@ -254,14 +254,13 @@ function roomDoorCardHtml() {
         </section>`;
 }
 
-// "איך זה עובד?" - ההסבר על הדלת והמפתחות (לפי בקשה מפורשת: שיהיה מוסבר באפליקציה)
+// ה-i בדלת: "חדר רק שלך" - בלי רשימת מפתחות ובלי הסבר (לפי בקשה מפורשת, 2026-10-10: "במקום כל זה אני רוצה
+// שיהיה רשום חדר רק שלך, נגלה ביחד את השקט הפנימי שלך מחדש"). מה שכל מפתח פותח נשאר הפתעה
 function roomOpenHowItWorks() {
-    const rows = ROOM_UNLOCKS.map(u => `<li><span class="sr-how-n">${SR_KEY_SVG}${srFmt(u.n)}</span><span>${srEsc(roomItemName(u.id))}</span></li>`).join('');
     nmOpenSheet(`
+        <div class="sr-how-key" aria-hidden="true">${SR_KEY_SVG}</div>
         <h4>${srEsc(t('room_how_title'))}</h4>
-        <p class="nm-fine">${srEsc(t('room_how_text'))}</p>
-        <ul class="sr-how-list">${rows}</ul>
-        <p class="nm-fine">${srEsc(t('room_how_private'))}</p>
+        <p class="sr-how-line">${srEsc(t('room_how_text'))}</p>
         <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'sr-how-sheet');
 }
 
@@ -464,7 +463,6 @@ function srHotspot(id, el) {
     if (id === 'shelf') { roomOpenShelf(); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
-    if (id === 'trophies') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); }
 }
 
 function srShowLockTip(id) {
@@ -579,8 +577,8 @@ function srWallWindow(keys) {
         <defs>
             <linearGradient id="${p}Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a42"/><stop offset="1" stop-color="#3e2c6a"/></linearGradient>
             <linearGradient id="${p}Curtain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2639f"/><stop offset="1" stop-color="#9a3369"/></linearGradient>
-            <linearGradient id="${p}Screen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c2a28"/><stop offset="1" stop-color="#103a33"/></linearGradient>
-            <radialGradient id="${p}Glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#5effc6" stop-opacity="0.30"/><stop offset="1" stop-color="#5effc6" stop-opacity="0"/></radialGradient>
+            <linearGradient id="${p}Screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7ac0"/><stop offset="0.55" stop-color="#9b6bff"/><stop offset="1" stop-color="#5b3bd6"/></linearGradient>
+            <radialGradient id="${p}Glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff9ad5" stop-opacity="0.32"/><stop offset="1" stop-color="#ff9ad5" stop-opacity="0"/></radialGradient>
             <radialGradient id="${p}Moon" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c9" stop-opacity="0.35"/><stop offset="1" stop-color="#fff4c9" stop-opacity="0"/></radialGradient>
         </defs>
         <line x1="24" y1="140" x2="216" y2="140" stroke="#c9a36b" stroke-width="3.5" stroke-linecap="round"/>
@@ -616,10 +614,10 @@ function srWallWindow(keys) {
         <g class="sr-hot${pcOpen ? '' : ' locked'}" data-hot="computer" role="button" tabindex="0" aria-label="${srEsc(roomItemName('computer'))}">
             <rect x="240" y="370" width="114" height="104" rx="10" fill="#efe4d0"/>
             <rect x="251" y="381" width="92" height="70" rx="6" fill="${pcOpen ? `url(#${p}Screen)` : '#1a1424'}"/>
-            ${pcOpen ? `<text x="297" y="406" text-anchor="middle" font-size="11" fill="#7dffcf" data-fit="84">${srEsc(t('room_pc_screen'))}</text>
-            <text x="297" y="424" text-anchor="middle" font-size="9" fill="#7dffcf" opacity="0.6" data-fit="84">${srEsc(t('room_pc_screen_sub'))}</text>
-            <rect class="sr-blink" x="292" y="432" width="8" height="10" fill="#7dffcf"/>
-            <circle class="sr-pulse" cx="297" cy="416" r="10" fill="none" stroke="#7dffcf" stroke-width="2"/>` : ''}
+            ${pcOpen ? `<text x="297" y="406" text-anchor="middle" font-size="11" fill="#ffffff" data-fit="84">${srEsc(t('room_pc_screen'))}</text>
+            <text x="297" y="424" text-anchor="middle" font-size="9" fill="#ffffff" opacity="0.6" data-fit="84">${srEsc(t('room_pc_screen_sub'))}</text>
+            <rect class="sr-blink" x="292" y="432" width="8" height="10" fill="#ffffff"/>
+            <circle class="sr-pulse" cx="297" cy="416" r="10" fill="none" stroke="#ffffff" stroke-width="2"/>` : ''}
             <rect x="280" y="474" width="34" height="8" fill="#ded1bb"/>
             <polygon points="252,486 342,486 336,478 258,478" fill="#ded1bb"/>
             <g stroke="#bfb19a" stroke-width="1"><line x1="262" y1="481" x2="332" y2="481"/><line x1="266" y1="484" x2="328" y2="484"/></g>
@@ -666,10 +664,6 @@ function srWallBoard(keys) {
             ${nt.sub ? `<text x="${cx}" y="${s.y + s.h - 12}" text-anchor="middle" font-size="10.5" fill="${nt.ink}" opacity="0.85" data-fit="${s.w - 14}">${srEsc(nt.sub)}</text>` : ''}
         </g><circle cx="${cx}" cy="${s.y + 2}" r="4" fill="${s.pin}"/>`;
     }).join('');
-    const done = typeof nmChDoneCount === 'function' ? nmChDoneCount() : 0;
-    const trophies = [100, 140, 184, 226].map((x, i) => i < done
-        ? `<path d="M${x} 470 h22 v10 a11 11 0 0 1 -22 0z" fill="#e8b84f"/><rect x="${x + 8}" y="490" width="6" height="6" fill="#d69a2b"/><rect x="${x + 2}" y="495" width="18" height="5" rx="1.5" fill="#b07b1e"/>`
-        : `<path d="M${x} 470 h22 v10 a11 11 0 0 1 -22 0z" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="3 3"/>`).join('');
     return `${srShell(p, panels, bulbs, rug)}
         <defs><pattern id="${p}Cork" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#9c7246"/><circle cx="5.5" cy="5" r="0.8" fill="#dcb07c"/></pattern></defs>
         <circle cx="195" cy="290" r="210" fill="url(#${p}Lamp)" opacity="0.7"/>
@@ -684,11 +678,7 @@ function srWallBoard(keys) {
             <rect x="228" y="300" width="120" height="80" rx="4" fill="rgba(255,255,255,0.08)" stroke="#fff7e6" stroke-width="1.6" stroke-dasharray="5 5"/>
             <text x="288" y="346" text-anchor="middle" font-size="12" font-weight="800" fill="#fff7e6" data-fit="108">${srEsc(t('room_board_add'))}</text>
         </g>
-        <rect x="58" y="500" width="276" height="10" rx="2" fill="#8a5a3c"/>
-        <rect x="64" y="510" width="8" height="14" fill="#6c442e"/><rect x="320" y="510" width="8" height="14" fill="#6c442e"/>
-        <g class="sr-hot" data-hot="trophies" role="button" tabindex="0" aria-label="${srEsc(t('room_trophies_aria').replace('{n}', srFmt(done)))}">${trophies}<rect x="96" y="462" width="160" height="40" fill="transparent"/></g>
-        <g transform="translate(276 458)"><rect x="6" y="26" width="26" height="16" rx="3" fill="#c46b4a"/><ellipse cx="14" cy="18" rx="6" ry="13" fill="#4fa36c" transform="rotate(-18 14 18)"/><ellipse cx="24" cy="16" rx="6" ry="14" fill="#5bb87a" transform="rotate(16 24 16)"/></g>
-        <!-- חדר שינה (לפי בקשה מפורשת: "ובחדר הסודי תשנה לחדר שינה"): מיטה מתחת ללוח, כריות, שמיכה עם כוכבים ונעלי בית -->
+        <!-- בקיר הזה אין מדף ואין ניצוץ (לפי בקשה מפורשת). חדר שינה ("ובחדר הסודי תשנה לחדר שינה"): מיטה מתחת ללוח, כריות, שמיכה עם כוכבים ונעלי בית -->
         <g class="sr-bed" aria-hidden="true">
             <ellipse cx="196" cy="716" rx="172" ry="12" fill="#000" opacity="0.24"/>
             <rect x="42" y="692" width="10" height="24" rx="2" fill="#3e271c"/><rect x="342" y="692" width="10" height="24" rx="2" fill="#3e271c"/>
@@ -713,8 +703,7 @@ function srWallBoard(keys) {
                 <ellipse cx="0" cy="0" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M-4 -5 Q4 -9 12 -3 Q4 2 -4 -1 Z" fill="#fff6fa"/>
                 <ellipse cx="30" cy="7" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M26 2 Q34 -2 42 4 Q34 9 26 6 Z" fill="#fff6fa"/>
             </g>
-        </g>
-        ${srFriend(p, 130, 546, 25, { x: 232, y: 552, text: t('room_friend_line_4'), tail: 'M172 548 l-14 7 l15 3z', shadowY: 612 })}`;
+        </g>`;
 }
 
 function srWallGame(keys) {
@@ -1126,12 +1115,12 @@ function roomOpenComputer() {
     const stage = srStage();
     if (!stage) return;
     if (pcState) { pcStopTimers(); pcState = null; }
-    // הגופן של מראה הניאון - נטען רק כשפותחים את המחשב
+    // הגופן של מראה "זכוכית רכה" (ערכה 10) - נטען רק כשפותחים את המחשב
     if (!document.getElementById('sr-pc-font')) {
         const fl = document.createElement('link');
         fl.id = 'sr-pc-font';
         fl.rel = 'stylesheet';
-        fl.href = 'https://fonts.googleapis.com/css2?family=Secular+One&display=swap';
+        fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap';
         document.head.appendChild(fl);
     }
     const pc = document.createElement('div');

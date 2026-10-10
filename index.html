@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=533">
+    <link rel="stylesheet" href="theme.css?v=534">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -212,20 +212,12 @@
                     <button type="button" class="home-tool-btn" id="btn-home-search" onclick="openHomeSearch()" data-i18n-aria-label="home_search_aria" data-i18n-title="home_search_aria" aria-label="Search the whole app" title="Search the whole app"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></button>
                     <button type="button" class="home-tool-btn" id="btn-home-focus" onclick="toggleHomeFocus()" data-i18n-aria-label="home_focus_label" data-i18n-title="home_focus_label" aria-label="Focus mode" title="Focus mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></button>
                 </div>
-                <!-- תג הפרימיום (רק ביום אחד בשבוע, ר' updateHomePremiumBadgeVisibility) והפתק השבועי -
-                     מתחת לכלים, בצד שמול ההמבורגר. פתק ריק מתקפל לסיכה "פתק לשבוע" (renderWeeklyNoteDisplay) -->
+                <!-- תג הפרימיום (רק ביום אחד בשבוע, ר' updateHomePremiumBadgeVisibility) - מתחת לכלים, בצד שמול ההמבורגר -->
                 <div class="home-side-stack">
                     <button type="button" id="home-premium-badge" class="home-premium-badge hidden" onclick="openPremiumUpgradeModal()">
                         <span class="home-premium-badge-icon">⭐</span>
                         <span data-i18n="home_premium_badge_label">Premium</span>
                     </button>
-                    <div class="home-weekly-note-slot" id="home-weekly-note-slot">
-                        <div class="weekly-note-widget hidden" id="weekly-note-widget" onclick="startEditWeeklyNote()">
-                            <span class="weekly-note-tape"></span>
-                            <span class="weekly-note-display" id="weekly-note-display"></span>
-                        </div>
-                        <button type="button" class="weekly-note-pin" id="weekly-note-pin" onclick="startEditWeeklyNote()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3H7l3-3z"/><path d="M12 13v8"/></svg><span data-i18n="weekly_note_pin_label">Note for the week</span></button>
-                    </div>
                 </div>
                 <div class="home-greeting-row home-greeting-center">
                     <p class="home-greeting-text" id="home-greeting-text">Good morning</p>
@@ -2328,51 +2320,6 @@
             </div>
         </div>
 
-        <!-- חלון צף: עריכת הפתק השבועי - מודל רגיל (לא בלון-צף מותאם-אישית),
-             אחרי שדווח שבגרסה הקודמת אי אפשר היה להקליד בבלון -->
-        <div id="modal-weekly-note" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <div class="weekly-note-modal-head">
-                    <h3 data-i18n="weekly_note_modal_title">Weekly Note</h3>
-                    <!-- ההגדרות (רשימה לסימון, צבע, סגנון) מוסתרות מאחורי גלגל שיניים קטן - לפי בקשה מפורשת -->
-                    <button type="button" class="weekly-note-gear" id="weekly-note-gear" onclick="toggleWeeklyNoteSettingsPanel()" data-i18n-title="weekly_note_settings_title" data-i18n-aria-label="weekly_note_settings_title" title="Note settings" aria-label="Note settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2"/><path d="M18 12h2.4M16.24 16.24l1.7 1.7M12 18v2.4M7.76 16.24l-1.7 1.7M6 12H3.6M7.76 7.76L6.06 6.06M12 6V3.6M16.24 7.76l1.7-1.7" stroke-width="3" stroke-linecap="butt"/></svg></button>
-                </div>
-                <!-- רשימה לסימון (1-3 שורות, נבחר בהגדרות) - כל שורה עם ✓ שאפשר לסמן גם ישר מהפתק במסך הבית -->
-                <div id="weekly-note-items-edit" class="weekly-note-items-edit"></div>
-                <div class="dictate-wrap">
-                    <textarea id="weekly-note-textarea" rows="6" maxlength="60" data-i18n-placeholder="weekly_note_placeholder" placeholder="What do you want to keep in mind this week?"></textarea>
-                    <button type="button" class="dictate-btn hidden" data-dictate="weekly-note-textarea" onclick="toggleDictation('weekly-note-textarea', this)" aria-pressed="false" data-i18n-aria-label="dictation_btn_aria" data-i18n-title="dictation_btn_aria" aria-label="Speak and it is written" title="Speak and it is written"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-                </div>
-                <!-- צבע וסגנון הפתק - בתוך הפתק עצמו (לא בהגדרות הכלליות), לפי בקשה מפורשת.
-                     ברירת המחדל (↺) היא המראה הרגיל לפי ערכת הנושא -->
-                <div class="weekly-note-customize hidden" id="weekly-note-customize">
-                    <label class="settings-label" data-i18n="weekly_note_items_label">Checklist</label>
-                    <div id="weekly-note-item-count-chips" class="weekly-note-count-chips"></div>
-                    <label class="settings-label" data-i18n="weekly_note_color_label">Note color</label>
-                    <div id="weekly-note-color-swatches" class="note-color-swatches"></div>
-                    <label class="settings-label" data-i18n="weekly_note_shape_label">Note style</label>
-                    <div id="weekly-note-shape-swatches" class="note-color-swatches"></div>
-                </div>
-                <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button type="button" class="btn-primary" onclick="saveWeeklyNote()" data-i18n="save_generic">Save</button>
-                    <button type="button" class="btn-clear-specific" onclick="clearWeeklyNote()" data-i18n="clear_btn">Clear</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🗂️ השבועות הקודמים של הפתק השבועי (לחיצה ארוכה על הפתק או על הסיכה - ר' openWeeklyNoteHistory) -->
-        <div id="modal-weekly-history" class="apple-modal">
-            <div class="modal-sheet">
-                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="weekly_note_history_title">Past weeks</h3>
-                <div id="weekly-history-list" class="weekly-history-list"></div>
-                <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-weekly-history')" data-i18n="close_btn">Close</button>
-                </div>
-            </div>
-        </div>
-
         <!-- 🌙 "3 דברים טובים מהיום" - בערב, מהצ'יפ שמתחת לברכה (ר' openGoodThings ב-home.js) -->
         <div id="modal-good-things" class="apple-modal">
             <div class="modal-sheet">
@@ -2801,15 +2748,6 @@
                         </label>
                     </div>
 
-                    <!-- פתק שבועי עדין למעלה במסך הבית - דלוק כברירת מחדל, לפי בקשה
-                         מפורשת ("שהברירת מחדל שיהיה פעיל אבל אפשרות לכבות") -->
-                    <div class="settings-toggle-row">
-                        <label class="settings-label" data-i18n="settings_weekly_note_label" for="weekly-note-toggle">Show a weekly note on the home screen</label>
-                        <label class="switch">
-                            <input type="checkbox" id="weekly-note-toggle" onchange="toggleWeeklyNote()">
-                            <span class="switch-slider"></span>
-                        </label>
-                    </div>
                     <!-- 🌙 "3 דברים טובים מהיום" בערב - דלוק כברירת מחדל -->
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_good_things_label" for="good-things-toggle">"3 good things" in the evening</label>
@@ -4331,8 +4269,8 @@
 
     </div>
 
-    <script src="i18n.js?v=437"></script>
-    <script src="app.js?v=572"></script>
+    <script src="i18n.js?v=438"></script>
+    <script src="app.js?v=573"></script>
     <script src="ai-chat.js?v=3"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
@@ -4340,9 +4278,9 @@
     <script src="new-me-data.js?v=8"></script>
     <script src="new-me.js?v=40"></script>
     <script src="new-me-challenges.js?v=6"></script>
-    <script src="secret-room.js?v=17"></script>
+    <script src="secret-room.js?v=18"></script>
     <script src="secret-places.js?v=4"></script>
     <script src="books.js?v=5"></script>
-    <script src="home.js?v=9"></script>
+    <script src="home.js?v=10"></script>
 </body>
 </html>

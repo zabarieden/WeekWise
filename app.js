@@ -54,10 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFinanceCycleSetting();
     applyDailyBoardPeekTabSetting();
     applyTodayPeekTabSetting();
-    // הפתק השבועי מוצג מיד מהמטמון המקומי, עוד לפני הטעינה מהשרת
-    applyWeeklyNoteSetting();
     applyQuickNoteAppleSetting();
-    renderWeeklyNoteDisplay();
     applyAiFabCompactSetting();
     applyRoutineGoalsSetting();
     updateHomeSkyDayNight();
@@ -269,9 +266,6 @@ function onLanguageChanged() {
     renderHomeGreeting();
     // רוחב אחיד של שלושת טאבי הצד תלוי באורך התוויות בשפה החדשה
     repositionPeekTabStack();
-    // טקסט ה"פתק ריק" של הפתק השבועי נכתב ב-JS (לא data-i18n), אז applyTranslations
-    // לא מרעננת אותו - בלי זה הוא נשאר בשפה הקודמת אחרי החלפת שפה
-    renderWeeklyNoteDisplay();
     // applyTranslations (i18n.js) דרסה כרגע את placeholder שדה הסיסמה חזרה
     // לגרסת-ההרשמה הקבועה שבתבנית ה-HTML (data-i18n-placeholder), בלי קשר
     // למצב האמיתי (login/signup) - כי זו קריאה גנרית שלא יודעת על authMode.
@@ -1529,7 +1523,7 @@ async function submitAuthForm() {
             await supabaseClient.from('user_premium').insert({
                 user_id: data.user.id, username: email, light_mode: true, onboarding_completed: false,
                 theme: 'mint_fresh', ai_fab_compact: true, home_calorie_badge_enabled: true,
-                weekly_note_color: 'pink', reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
+                reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
                 // השפה = מה שנבחר במסך ההרשמה (ברירת מחדל: אנגלית) - לא העברית של המפתחת
                 language: currentLang || 'en',
             });
@@ -1572,7 +1566,7 @@ function openOnboarding(user) {
     onboardingPendingGoalTitle = null;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    requestAnimationFrame(() => { repositionPeekTabStack(); alignWeeklyNoteToDate(); });
+    requestAnimationFrame(repositionPeekTabStack);
     renderOnboardingStep();
     openModal('modal-onboarding');
 }
@@ -2173,7 +2167,7 @@ async function initAppAfterAuth(user) {
     currentUserCreatedAt = user.created_at;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
-    requestAnimationFrame(() => { repositionPeekTabStack(); alignWeeklyNoteToDate(); });
+    requestAnimationFrame(repositionPeekTabStack);
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -2220,7 +2214,6 @@ async function initAppAfterAuth(user) {
         loadReminderChimeSetting(),
         loadDailyBoardPeekTabSetting(),
         loadTodayPeekTabSetting(),
-        loadWeeklyNoteSetting(),
         loadQuickNoteAppleSetting(),
         loadMenuStyleSetting(),
         loadAiFabCompactSetting(),
@@ -2327,7 +2320,7 @@ const DAILY_FOCUS_SKIP_TITLE = 'daily_focus_skipped';
 // מה שנבחר ביום האחרון שבו ענו (עד 3 ימים אחורה) - מוצע שוב: "↻ להמשיך עם..." בלחיצה אחת
 let dailyFocusCarryItems = [];
 // הפעלה/כיבוי של השאלה היומית - ברירת מחדל דלוק (opt-out), אותו דפוס בדיוק
-// כמו weekly-note, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
+// כמו שאר המתגים, לפי בקשה מפורשת ("בברירת מחדל שכן יהיה אבל למי שרוצה
 // לכבות שתהיה לה האפשרות"). כיבוי לא מוחק תשובות עבר, רק מסתיר את התג/בועה
 // מהיום והלאה
 function isDailyFocusPromptOn() { return localStorage.getItem('weekwise_daily_focus_prompt_enabled') !== 'false'; }
@@ -3122,17 +3115,6 @@ function renderHomeGreeting() {
     dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
     if (typeof renderHomeDailyLine === 'function') renderHomeDailyLine();
     if (typeof renderHomeChips === 'function') renderHomeChips();
-    requestAnimationFrame(alignWeeklyNoteToDate);
-}
-
-// הפתק השבועי (בצד הנגדי) מתחיל בדיוק בגובה שורת התאריך - המרחק נמדד בפועל
-// (גודל הברכה משתנה לפי שפה/גופן), לא מספר קבוע
-function alignWeeklyNoteToDate() {
-    const row = document.querySelector('.home-greeting-row');
-    const dateEl = document.getElementById('home-greeting-date');
-    if (!row || !dateEl || !dateEl.offsetHeight) return;
-    const offset = dateEl.getBoundingClientRect().top - row.getBoundingClientRect().top;
-    if (offset > 0) row.style.setProperty('--greeting-line-h', `${Math.round(offset)}px`);
 }
 
 // עריכה מהירה של משימה קבועה מהלו"ז - נפתחת גם מ"הצצה ליום" (בעתיד, אם
@@ -8593,7 +8575,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'daily_line', category: 'general' },
     { id: 'home_countdown', category: 'general' },
     { id: 'good_things', category: 'general' },
-    { id: 'weekly_note_history', category: 'general' },
     { id: 'home_weather', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
@@ -8603,7 +8584,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'routine_exact_time', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
-    { id: 'weekly_note', category: 'general' },
     { id: 'home_corner', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
     { id: 'categories_menu', category: 'general' },
@@ -15685,13 +15665,6 @@ function applyTodayPeekTabSetting() {
     repositionPeekTabStack();
 }
 
-// --- פתק שבועי עדין במסך הבית - נכתב פעם (או כמה פעמים) בשבוע ונשאר מוצג
-// עד שנערך שוב, בלי איפוס אוטומטי - "משהו שרוצים ללכת איתו כל השבוע", לפי
-// בקשה מפורשת. אותו דפוס בדיוק כמו שאר טאבי-ההצצה: localStorage לתגובה
-// מיידית + סנכרון ל-user_premium (null בעמודות = "עוד לא סונכרן") ---
-// הטקסט נשמר גם במכשיר ומוצג מיד בפתיחה - כך שהפתק לא "נעלם" גם אם הטעינה מהשרת
-// מתעכבת/נכשלת (דווח שהפתק נראה נמחק ביום חדש). הוא משתנה רק כשעורכים אותו
-const WEEKLY_NOTE_CACHE_KEY = 'weekwise_weekly_note_text';
 // --- 🍎 בחלון הפתקים (קיצור להוספת ארוחה שמורה) - דלוק כברירת מחדל, אפשר להסתיר
 // בהגדרות. אותו דפוס בדיוק כמו שאר המתגים: localStorage מיידי + user_premium לסנכרון ---
 function isQuickNoteAppleOn() { return localStorage.getItem('weekwise_quick_note_apple') !== 'false'; }
@@ -15719,337 +15692,6 @@ async function toggleQuickNoteApple() {
             { onConflict: 'user_id' },
         );
     }
-}
-
-let currentWeeklyNoteText = (() => { try { return localStorage.getItem(WEEKLY_NOTE_CACHE_KEY) || ''; } catch { return ''; } })();
-// רשימה לסימון בפתק (0-3 שורות) - כל שורה {text, done}; נשמרת כמו הטקסט: מטמון במכשיר + user_premium
-let currentWeeklyNoteItems = (() => { try { return JSON.parse(localStorage.getItem('weekwise_weekly_note_items') || '[]'); } catch { return []; } })();
-let currentWeeklyNoteItemCount = (() => { try { return parseInt(localStorage.getItem('weekwise_weekly_note_item_count'), 10) || 0; } catch { return 0; } })();
-function cacheWeeklyNoteItems() {
-    try {
-        localStorage.setItem('weekwise_weekly_note_items', JSON.stringify(currentWeeklyNoteItems));
-        localStorage.setItem('weekwise_weekly_note_item_count', String(currentWeeklyNoteItemCount));
-    } catch {}
-}
-function isWeeklyNoteOn() { return localStorage.getItem('weekwise_weekly_note_enabled') !== 'false'; }
-async function loadWeeklyNoteSetting() {
-    if (!supabaseClient || !currentUserId) return;
-    const { data, error } = await supabaseClient.from('user_premium').select('weekly_note_enabled, weekly_note_text, weekly_note_color, weekly_note_shape, weekly_note_items, weekly_note_item_count').eq('user_id', currentUserId).maybeSingle();
-    if (data && data.weekly_note_enabled !== null && data.weekly_note_enabled !== undefined) {
-        localStorage.setItem('weekwise_weekly_note_enabled', String(data.weekly_note_enabled));
-    }
-    // טעינה שנכשלה לא מוחקת את הפתק שכבר מוצג (מהמטמון) - רק תשובה אמיתית מהשרת מחליפה אותו
-    if (!error && data) {
-        currentWeeklyNoteText = data.weekly_note_text || '';
-        try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
-        if (Array.isArray(data.weekly_note_items)) currentWeeklyNoteItems = data.weekly_note_items;
-        if (data.weekly_note_item_count !== null && data.weekly_note_item_count !== undefined) currentWeeklyNoteItemCount = data.weekly_note_item_count;
-        cacheWeeklyNoteItems();
-    }
-    currentWeeklyNoteColor = (data && data.weekly_note_color) || null;
-    currentWeeklyNoteShape = (data && data.weekly_note_shape) || null;
-    applyWeeklyNoteSetting();
-    applyWeeklyNoteStyle();
-    renderWeeklyNoteDisplay();
-}
-async function toggleWeeklyNote() {
-    const enabled = document.getElementById('weekly-note-toggle').checked;
-    localStorage.setItem('weekwise_weekly_note_enabled', String(enabled));
-    applyWeeklyNoteSetting();
-    if (supabaseClient && currentUserId) {
-        await supabaseClient.from('user_premium').upsert(
-            { user_id: currentUserId, username: currentUsername, weekly_note_enabled: enabled },
-            { onConflict: 'user_id' },
-        );
-    }
-}
-function applyWeeklyNoteSetting() {
-    const widget = document.getElementById('weekly-note-widget');
-    const toggle = document.getElementById('weekly-note-toggle');
-    const enabled = isWeeklyNoteOn();
-    if (widget) widget.classList.toggle('hidden', !enabled);
-    if (toggle) toggle.checked = enabled;
-}
-
-// --- התאמה אישית של הפתק (צבע + סגנון/צורה) - אופציונלי, לפי בקשה מפורשת
-// ("4 צבעים וגם אפשרות לשנות צורה... חוץ מהברירת מחדל שזה הרגיל עם ערכת
-// הנושא... שמי שרוצה להחליף שיחליף"). ברירת המחדל (null) היא בדיוק המראה
-// הקיים (רקע ניטרלי לפי ערכת הנושא + נייר-דבק בפינה) - לא משתנה כלום למי
-// שלא בוחר בפעם הראשונה. אותו דפוס בדיוק כמו applyGlobalTextColor/
-// renderGlobalTextColorSwatches (default+presets, סנכרון ל-user_premium) -
-// ממוקם מקונן בתוך הגדרות הפתק עצמו (לא טוגלים נפרדים ברשימה הראשית), לפי
-// בקשה מפורשת ("שלא יהיה הרבה בלגן")
-let currentWeeklyNoteColor = null;
-let currentWeeklyNoteShape = null;
-const WEEKLY_NOTE_COLOR_PRESETS = ['yellow', 'pink', 'mint', 'blue'];
-const WEEKLY_NOTE_SHAPE_PRESETS = ['round', 'circle', 'ribbon', 'card'];
-function applyWeeklyNoteStyle() {
-    const widget = document.getElementById('weekly-note-widget');
-    if (widget) {
-        WEEKLY_NOTE_COLOR_PRESETS.forEach(c => widget.classList.remove(`weekly-note-color-${c}`));
-        if (currentWeeklyNoteColor) widget.classList.add(`weekly-note-color-${currentWeeklyNoteColor}`);
-        WEEKLY_NOTE_SHAPE_PRESETS.forEach(s => widget.classList.remove(`weekly-note-shape-${s}`));
-        if (currentWeeklyNoteShape) widget.classList.add(`weekly-note-shape-${currentWeeklyNoteShape}`);
-    }
-    renderWeeklyNoteColorSwatches();
-    renderWeeklyNoteShapeSwatches();
-}
-function renderWeeklyNoteColorSwatches() {
-    const wrap = document.getElementById('weekly-note-color-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const defaultBtn = document.createElement('button');
-    defaultBtn.type = 'button';
-    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!currentWeeklyNoteColor ? ' selected' : '');
-    defaultBtn.title = t('note_text_color_default');
-    defaultBtn.textContent = '↺';
-    defaultBtn.onclick = () => selectWeeklyNoteColor(null);
-    wrap.appendChild(defaultBtn);
-    WEEKLY_NOTE_COLOR_PRESETS.forEach(colorKey => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `note-color-swatch weekly-note-color-swatch-${colorKey}` + (currentWeeklyNoteColor === colorKey ? ' selected' : '');
-        btn.onclick = () => selectWeeklyNoteColor(colorKey);
-        wrap.appendChild(btn);
-    });
-}
-async function selectWeeklyNoteColor(colorKey) {
-    currentWeeklyNoteColor = colorKey;
-    applyWeeklyNoteStyle();
-    localStorage.setItem('weekwise_weekly_note_color', colorKey || '');
-    if (supabaseClient && currentUserId) {
-        await supabaseClient.from('user_premium').upsert(
-            { user_id: currentUserId, username: currentUsername, weekly_note_color: colorKey },
-            { onConflict: 'user_id' },
-        );
-    }
-}
-function renderWeeklyNoteShapeSwatches() {
-    const wrap = document.getElementById('weekly-note-shape-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    const defaultBtn = document.createElement('button');
-    defaultBtn.type = 'button';
-    defaultBtn.className = 'note-color-swatch note-color-swatch-default' + (!currentWeeklyNoteShape ? ' selected' : '');
-    defaultBtn.title = t('note_text_color_default');
-    defaultBtn.textContent = '↺';
-    defaultBtn.onclick = () => selectWeeklyNoteShape(null);
-    wrap.appendChild(defaultBtn);
-    WEEKLY_NOTE_SHAPE_PRESETS.forEach(shapeKey => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `note-shape-swatch note-shape-swatch-${shapeKey}` + (currentWeeklyNoteShape === shapeKey ? ' selected' : '');
-        btn.onclick = () => selectWeeklyNoteShape(shapeKey);
-        wrap.appendChild(btn);
-    });
-}
-async function selectWeeklyNoteShape(shapeKey) {
-    currentWeeklyNoteShape = shapeKey;
-    applyWeeklyNoteStyle();
-    localStorage.setItem('weekwise_weekly_note_shape', shapeKey || '');
-    if (supabaseClient && currentUserId) {
-        await supabaseClient.from('user_premium').upsert(
-            { user_id: currentUserId, username: currentUsername, weekly_note_shape: shapeKey },
-            { onConflict: 'user_id' },
-        );
-    }
-}
-// גודל הגופן יורד בהדרגה לפי אורך הטקסט כדי שהכל יכנס בפתק הקטן בלי להיחתך -
-// לפי בקשה מפורשת ("כתבתי ולא הכל נכנס... גם אם ארוך פשוט להקטין את
-// האותיות"). מוגבל ל-60 תווים גם בטקסטאזור עצמו (ר' index.html) כדי שגם
-// בשלב-הגופן-הקטן-ביותר זה עדיין יישאר קריא בתוך פתק 104x104 פיקסלים
-function renderWeeklyNoteDisplay() {
-    const display = document.getElementById('weekly-note-display');
-    if (!display) return;
-    const text = currentWeeklyNoteText.trim();
-    const items = currentWeeklyNoteItems.slice(0, currentWeeklyNoteItemCount).map((item, index) => ({ ...item, index })).filter(item => (item.text || '').trim());
-    const widget = document.getElementById('weekly-note-widget');
-    if (widget) widget.classList.toggle('weekly-note-has-items', items.length > 0);
-    // פתק ריק מתקפל לסיכה קטנה "פתק לשבוע" במסך הבית (לפי בחירה מפורשת), לחיצה פותחת את העריכה
-    const slot = document.getElementById('home-weekly-note-slot');
-    if (slot) slot.classList.toggle('is-empty', !items.length && !text);
-    if (items.length) {
-        // שורות לסימון + טקסט חופשי מתחת (אם נכתב). ✓ מסמן ישר מהפתק בלי לפתוח את העריכה
-        const totalLength = items.reduce((sum, item) => sum + item.text.length, 0) + text.length;
-        display.innerHTML = `<ul class="weekly-note-items">${items.map(item => `
-            <li class="${item.done ? 'done' : ''}"><button type="button" class="weekly-note-check" onclick="event.stopPropagation(); toggleWeeklyNoteItem(${item.index})" aria-pressed="${item.done ? 'true' : 'false'}">${item.done ? '✓' : ''}</button><span>${escapeHtmlForReport(item.text)}</span></li>`).join('')}
-        </ul>${text ? `<div class="weekly-note-free">${escapeHtmlForReport(text)}</div>` : ''}`;
-        display.classList.remove('weekly-note-display-empty');
-        display.removeAttribute('aria-label');
-        display.style.fontSize = (totalLength > 70 ? 0.6 : totalLength > 45 ? 0.66 : 0.72) + 'rem';
-        fitWeeklyNoteText(display);
-        return;
-    }
-    // פתק ריק: רק עיפרון קטן ועדין בפינה, בלי מילים (לפי בקשה מפורשת: "את העיפרון לשים בצד
-    // ובקטן יותר") - ההסבר המלא נשאר לקוראי מסך
-    if (!text) {
-        display.innerHTML = `<span class="weekly-note-pencil" aria-hidden="true">${EDIT_ICON_SVG}</span>`;
-        display.classList.add('weekly-note-display-empty');
-        display.setAttribute('aria-label', t('weekly_note_empty_hint'));
-        display.style.fontSize = '';
-        return;
-    }
-    display.textContent = text;
-    display.classList.remove('weekly-note-display-empty');
-    display.removeAttribute('aria-label');
-    // הוגדל לפי בקשה מפורשת ("תגדיל את הפונט בפתקים") - כל מדרגה גדלה
-    // בהתאמה, עדיין יורדת בהדרגה לפי אורך הטקסט כדי שהכל יכנס בלי להיחתך
-    let fontSize = 0.85;
-    if (text.length > 45) fontSize = 0.6;
-    else if (text.length > 32) fontSize = 0.68;
-    else if (text.length > 20) fontSize = 0.76;
-    display.style.fontSize = fontSize + 'rem';
-    fitWeeklyNoteText(display);
-}
-// המדרגות למעלה הן רק נקודת התחלה: כאן מודדים בפועל ומקטינים עד שהכול נכנס בפתק. רוחב
-// האותיות שונה בין דפדפנים ומכשירים - דווח שבדפדפן במחשב המילים יצאו מהפתק ובנייד לא
-function fitWeeklyNoteText(display) {
-    // מדידה מיידית (קריאת scrollHeight מכריחה פריסה) - לא requestAnimationFrame, שלא רץ
-    // בטאב ברקע. פתק מוסתר לא נמדד; הוא מותאם שוב כשהגופן נטען או כשגודל החלון משתנה
-    if (!display.isConnected || !display.offsetParent) return;
-    let px = parseFloat(getComputedStyle(display).fontSize);
-    for (let i = 0; i < 40 && px > 7 && (display.scrollHeight > display.clientHeight + 1 || display.scrollWidth > display.clientWidth + 1); i++) {
-        px -= 0.5;
-        display.style.fontSize = px + 'px';
-    }
-}
-// אחרי שהגופן נטען (הוא רחב מהגופן הזמני) ובשינוי גודל חלון - מתאימים את הפתק מחדש
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (typeof currentWeeklyNoteText === 'string') renderWeeklyNoteDisplay(); });
-let weeklyNoteResizeTimer = null;
-window.addEventListener('resize', () => {
-    clearTimeout(weeklyNoteResizeTimer);
-    weeklyNoteResizeTimer = setTimeout(() => { if (typeof currentWeeklyNoteText === 'string') renderWeeklyNoteDisplay(); }, 200);
-});
-// מודל רגיל (apple-modal) לעריכה - לא בלון-צף מותאם-אישית (position:absolute)
-// כמו בגרסה הקודמת, אחרי שדווח שאי אפשר היה להקליד בתוכו בפועל. מודל רגיל
-// הוא רכיב בדוק ואמין שכבר בשימוש בכל שאר האפליקציה, בלי הסיכונים של
-// מיקום-מוחלט מותאם-אישית (z-index/עכבר-לכידה של רכיבים אחרים)
-function startEditWeeklyNote() {
-    const textarea = document.getElementById('weekly-note-textarea');
-    if (!textarea) return;
-    textarea.value = currentWeeklyNoteText;
-    const panel = document.getElementById('weekly-note-customize');
-    if (panel) panel.classList.add('hidden');
-    const gear = document.getElementById('weekly-note-gear');
-    if (gear) gear.classList.remove('active');
-    renderWeeklyNoteItemsEditor(currentWeeklyNoteItems.map(item => item.text || ''));
-    renderWeeklyNoteItemCountChips();
-    renderWeeklyNoteColorSwatches();
-    renderWeeklyNoteShapeSwatches();
-    openModal('modal-weekly-note');
-    const firstInput = document.querySelector('#weekly-note-items-edit input');
-    (firstInput || textarea).focus();
-}
-function toggleWeeklyNoteSettingsPanel() {
-    const panel = document.getElementById('weekly-note-customize');
-    if (!panel) return;
-    panel.classList.toggle('hidden');
-    const gear = document.getElementById('weekly-note-gear');
-    if (gear) gear.classList.toggle('active', !panel.classList.contains('hidden'));
-}
-// שורות העריכה של הרשימה לסימון - לפי הכמות שנבחרה בהגדרות (0-3)
-function renderWeeklyNoteItemsEditor(values) {
-    const wrap = document.getElementById('weekly-note-items-edit');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    for (let i = 0; i < currentWeeklyNoteItemCount; i++) {
-        const row = document.createElement('div');
-        row.className = 'weekly-note-item-edit-row';
-        const box = document.createElement('span');
-        box.className = 'weekly-note-item-edit-box';
-        box.setAttribute('aria-hidden', 'true');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.maxLength = 28;
-        input.value = values[i] || '';
-        input.placeholder = t('weekly_note_item_placeholder').replace('{n}', i + 1);
-        row.appendChild(box);
-        row.appendChild(input);
-        wrap.appendChild(row);
-    }
-    const textarea = document.getElementById('weekly-note-textarea');
-    if (textarea) textarea.placeholder = t(currentWeeklyNoteItemCount ? 'weekly_note_free_placeholder' : 'weekly_note_placeholder');
-}
-function renderWeeklyNoteItemCountChips() {
-    const wrap = document.getElementById('weekly-note-item-count-chips');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    [0, 1, 2, 3].forEach(count => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'weekly-note-count-chip' + (currentWeeklyNoteItemCount === count ? ' selected' : '');
-        chip.textContent = count === 0 ? t('weekly_note_items_none') : String(count);
-        chip.onclick = () => selectWeeklyNoteItemCount(count);
-        wrap.appendChild(chip);
-    });
-}
-async function selectWeeklyNoteItemCount(count) {
-    const values = Array.from(document.querySelectorAll('#weekly-note-items-edit input')).map(input => input.value);
-    currentWeeklyNoteItemCount = count;
-    cacheWeeklyNoteItems();
-    renderWeeklyNoteItemCountChips();
-    renderWeeklyNoteItemsEditor(values.length ? values : currentWeeklyNoteItems.map(item => item.text || ''));
-    renderWeeklyNoteDisplay();
-    if (supabaseClient && currentUserId) {
-        await supabaseClient.from('user_premium').upsert(
-            { user_id: currentUserId, username: currentUsername, weekly_note_item_count: count },
-            { onConflict: 'user_id' },
-        );
-    }
-}
-async function saveWeeklyNoteItemsToServer() {
-    cacheWeeklyNoteItems();
-    if (!supabaseClient || !currentUserId) return null;
-    const { error } = await supabaseClient.from('user_premium').upsert(
-        { user_id: currentUserId, username: currentUsername, weekly_note_items: currentWeeklyNoteItems, weekly_note_item_count: currentWeeklyNoteItemCount },
-        { onConflict: 'user_id' },
-    );
-    // ✓ בפתק נשמר גם בעותק של השבוע (השבועות הקודמים, ר' snapshotWeeklyNote ב-home.js)
-    if (!error && typeof snapshotWeeklyNote === 'function') snapshotWeeklyNote();
-    return error;
-}
-// ✓ ישר מהפתק במסך הבית
-async function toggleWeeklyNoteItem(index) {
-    const item = currentWeeklyNoteItems[index];
-    if (!item) return;
-    item.done = !item.done;
-    renderWeeklyNoteDisplay();
-    await saveWeeklyNoteItemsToServer();
-}
-async function saveWeeklyNote() {
-    const textarea = document.getElementById('weekly-note-textarea');
-    if (!textarea) return;
-    currentWeeklyNoteText = textarea.value.trim();
-    try { localStorage.setItem(WEEKLY_NOTE_CACHE_KEY, currentWeeklyNoteText); } catch {}
-    // שורה שהטקסט שלה לא השתנה שומרת את הסימון שלה; שורה ששונתה מתחילה לא מסומנת
-    const inputs = Array.from(document.querySelectorAll('#weekly-note-items-edit input'));
-    if (inputs.length || currentWeeklyNoteItemCount === 0) {
-        const previous = currentWeeklyNoteItems;
-        const edited = inputs.map((input, i) => {
-            const text = input.value.trim();
-            const old = previous[i];
-            return { text, done: !!(old && old.done && old.text === text && text) };
-        });
-        // שורות מעבר לכמות שנבחרה נשמרות (אם יחזרו לכמות גדולה יותר, הן יופיעו שוב)
-        currentWeeklyNoteItems = edited.concat(previous.slice(edited.length));
-    }
-    renderWeeklyNoteDisplay();
-    closeModal('modal-weekly-note');
-    if (!supabaseClient || !currentUserId) { cacheWeeklyNoteItems(); return; }
-    cacheWeeklyNoteItems();
-    const { error } = await supabaseClient.from('user_premium').upsert(
-        { user_id: currentUserId, username: currentUsername, weekly_note_text: currentWeeklyNoteText, weekly_note_items: currentWeeklyNoteItems, weekly_note_item_count: currentWeeklyNoteItemCount },
-        { onConflict: 'user_id' },
-    );
-    if (error) showAppToast(t('error_adding_item') + error.message, 'error');
-    // עותק של השבוע הזה, ל"השבועות שעברו" (פתק שנמחק לא מוחק אותו - ר' home.js)
-    else if (typeof snapshotWeeklyNote === 'function') snapshotWeeklyNote();
-}
-function clearWeeklyNote() {
-    const textarea = document.getElementById('weekly-note-textarea');
-    if (textarea) textarea.value = '';
-    document.querySelectorAll('#weekly-note-items-edit input').forEach(input => { input.value = ''; });
-    saveWeeklyNote();
 }
 
 async function loadDailyNutrition(date) {
