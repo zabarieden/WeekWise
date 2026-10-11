@@ -363,7 +363,9 @@ const NM_TIME_TYPES = [
     ['snack2', ['nm_pos_dinner'], ['ערב', 'dinner', 'supper', 'cena', 'dîner', 'abendessen', 'ужин', 'عشاء', 'jantar']],
     ['snack1', ['nm_pos_2', 'nm_pos_4'], ['נשנוש', 'snack', 'merienda', 'goûter', 'collation', 'перекус', 'lanche', 'spuntino']],
 ];
-const NM_TIMES_HIDE = { 4: [], 3: ['snack1'], 2: ['snack1', 'snack2'] };
+// כמה ארוחות ביום: 4, 3 (בלי הנשנוש) או 2 + נשנוש (בלי ארוחת הערב הקלה) - לפי בקשה מפורשת: "תוריד את ה2 ארוחות או
+// שתוסיף 2 + נשנוש". בכל מקרה סך הקלוריות נשאר: מה שירד מתחלק בין שאר הארוחות (nmSlotExtra)
+const NM_TIMES_HIDE = { 4: [], 3: ['snack1'], 2: ['snack2'] };
 let nmTimes = null;   // { mode: null | 'routine' | 'manual', hidden: [], times: { slot: 'HH:MM' }, found: [], hide, firstTime }
 function nmWordsRe(keys, extra) {
     const words = new Set(extra);
@@ -406,10 +408,12 @@ function nmTimesBodyHtml() {
     let html = `<p class="nm-times-q">${nmEsc(t('nm_times_q'))}</p><div class="nm-times-picks">${pick('routine', 'nm_times_from_routine')}${pick('manual', 'nm_times_manual')}</div>`;
     if (!s.mode) return html;
     if (s.mode === 'routine' && !s.found.length) html += `<p class="nm-soft-warn">${nmEsc(t('nm_times_none_found'))}</p>`;
-    const count = 4 - s.hidden.length;
+    const hiddenKey = s.hidden.slice().sort().join(',');
+    const count = Object.keys(NM_TIMES_HIDE).map(Number).find(n => NM_TIMES_HIDE[n].join(',') === hiddenKey);
     html += `
         <div class="nm-slot-name">${nmEsc(t('nm_times_count'))}</div>
-        <div class="nm-chip-row nm-times-count" role="radiogroup" aria-label="${nmEsc(t('nm_times_count'))}">${[2, 3, 4].map(n => `<button type="button" role="radio" class="nm-chip${count === n ? ' selected' : ''}" aria-checked="${count === n}" onclick="nmTimesCount(${n})">${nmFmt(n)}</button>`).join('')}</div>
+        <div class="nm-chip-row nm-times-count" role="radiogroup" aria-label="${nmEsc(t('nm_times_count'))}">${[2, 3, 4].map(n => `<button type="button" role="radio" class="nm-chip${count === n ? ' selected' : ''}" aria-checked="${count === n}" data-count="${n}" onclick="nmTimesCount(${n})">${n === 2 ? nmEsc(t('nm_times_two_snack')) : nmFmt(n)}</button>`).join('')}</div>
+        <p class="nm-times-tip nm-times-same">${nmEsc(t('nm_times_same_kcal'))}</p>
         <div class="nm-card nm-times-list">${nmTimesActive().map(slot => `
             <div class="nm-rem-row">
                 <span class="nm-rem-text"><b>${nmEsc(nmSlotName(slot))}</b></span>
@@ -505,7 +509,8 @@ function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LA
 function nmSlotName(slot) { return nmPosName(Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot))); }
 // ארוחות שהוסרו מהתפריט (למשל 3 ארוחות במקום 4) - לפי בקשה מפורשת. ארוחה שהוסרה שומרת על
 // המיקום שלה ביום (השם לפי שעת היום לא זז), והקלוריות שלה פנויות למילוי עד סך התוכנית
-const NEW_ME_MIN_MEALS = 2;
+// לפחות 2 ארוחות + נשנוש (לפי בקשה מפורשת: "תוריד את ה2 ארוחות או שתוסיף 2 + נשנוש")
+const NEW_ME_MIN_MEALS = 3;
 function nmHiddenSlots() { return String((nmProfile && nmProfile.hidden_slots) || '').split(',').filter(s => NEW_ME_SLOTS.includes(s)); }
 function nmActiveOrder() { const hidden = nmHiddenSlots(); return nmOrder().filter(s => !hidden.includes(s)); }
 // סדר חדש של הארוחות הפעילות → סדר מלא: הארוחות שהוסרו נשארות במקומן
@@ -1182,9 +1187,31 @@ function nmEatenToday() {
     return { kcal: total.kcal, protein: total.protein, plan, drinks, extra: Math.max(0, total.kcal - plan - drinks) };
 }
 
-// סה"כ התפריט של היום (כולל החלפות וארוחה חופשית) + תקציב השתייה - מול יעד התוכנית
+// ארוחה שירדה מהתפריט (פחות ארוחות ביום): הקלוריות שלה מתחלקות בין שאר הארוחות, לכל אחת לפי הגודל שלה, מעוגל ל-5 -
+// כך שסך היום נשאר כמו בתוכנית (לפי בקשה מפורשת: "לא משנה מה תבחרו הקלוריות ישארו כי נוסיף/נוריד לכל ארוחה מה שצריך")
+function nmSlotExtra(slot) {
+    if (!nmProfile) return 0;
+    const hidden = nmHiddenSlots();
+    if (!hidden.length || hidden.includes(slot) || nmIsFree(slot)) return 0;
+    const plan = NEW_ME_PLANS[nmProfile.plan] || NEW_ME_PLANS[1300];
+    const freed = hidden.reduce((a, s) => a + (plan[s] ? plan[s].target : 0), 0);
+    const sum = nmActiveOrder().filter(s => !nmIsFree(s)).reduce((a, s) => a + plan[s].target, 0);
+    if (!freed || !sum || !plan[slot]) return 0;
+    return Math.round(freed * plan[slot].target / sum / 5) * 5;
+}
+// השורה הקטנה מתחת לארוחה: כמה נוסף לה, ומה אפשר להוסיף
+function nmExtraLineHtml(slot) {
+    const n = nmSlotExtra(slot);
+    if (!n) return '';
+    const ideas = t(n < 80 ? 'nm_extra_ideas_s' : n < 160 ? 'nm_extra_ideas_m' : 'nm_extra_ideas_l');
+    // תוספת קטנה (פחות מ-40) - רק כמה נוסף, בלי רעיונות (פרי שלם על 15 קלוריות לא מתאים): החלק שלפני המקף
+    let tpl = nmEsc(t('nm_extra_line'));
+    if (n < 40 && tpl.includes('–')) tpl = tpl.split('–')[0].trim();
+    return `<div class="nm-extra-line" data-extra="${n}">${tpl.replace('{n}', `<bdi dir="ltr">+${nmFmt(n)}</bdi>`).replace('{ideas}', nmEsc(ideas))}</div>`;
+}
+// סה"כ התפריט של היום (כולל החלפות, ארוחה חופשית והחלק מארוחה שירדה) + תקציב השתייה - מול יעד התוכנית
 function nmMenuTotal() {
-    return nmActiveOrder().reduce((a, slot) => a + (nmIsFree(slot) ? nmFreeKcal() : nmItemInfo(nmTodayKey(slot)).kcal), 0) + NEW_ME_DRINKS_KCAL;
+    return nmActiveOrder().reduce((a, slot) => a + (nmIsFree(slot) ? nmFreeKcal() : nmItemInfo(nmTodayKey(slot)).kcal + nmSlotExtra(slot)), 0) + NEW_ME_DRINKS_KCAL;
 }
 // כמה קלוריות פנויות בתפריט של היום עד סך התוכנית (אחרי שהוסרה ארוחה או נבחרה ארוחה קטנה יותר)
 function nmMenuRoom() { return Math.max(0, nmProfile.plan - nmMenuTotal()); }
@@ -1598,14 +1625,17 @@ function nmOpenHallMeal(slot) {
         <h4 class="nmh-meal-name">${free ? `🍕 ${nmEsc(t('nm_free_meal'))}` : nmEsc(nmItemShort(it))}</h4>
         ${free ? '' : `<p class="nmh-meal-text">${nmEsc(nmItemFull(it))}</p>`}
         <span class="nmh-meal-meta">${free ? `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}` : nmMeta(it)}</span>
+        ${free ? '' : nmExtraLineHtml(slot)}
         <button type="button" class="nm-btn-primary nmh-meal-ate${done ? ' is-done' : ''}" data-ate aria-pressed="${done}">${done ? `✓ ${nmEsc(t('nm_hall_eaten'))}` : nmEsc(t('nm_hall_ate'))}</button>
         <div class="nmh-meal-row">
-            ${free ? '' : `<button type="button" class="nm-chip" data-swap>🔄 ${nmEsc(t('nm_swap'))}</button>`}
+            ${free ? '' : `<button type="button" class="nm-chip" data-swap>🔄 ${nmEsc(t('nm_swap'))}</button><button type="button" class="nm-chip" data-edit>✏️ ${nmEsc(t('nm_edit_meal'))}</button>`}
             <button type="button" class="nm-chip" data-day>📋 ${nmEsc(t('nm_hall_day'))}</button>
         </div>`, 'nmh-meal-sheet');
     ov.querySelector('[data-ate]').addEventListener('click', async e => { ov.remove(); await nmToggleCheck(slot, e.currentTarget); });
     const swap = ov.querySelector('[data-swap]');
     if (swap) swap.addEventListener('click', () => { ov.remove(); nmOpenSwap(slot); });
+    const edit = ov.querySelector('[data-edit]');
+    if (edit) edit.addEventListener('click', () => { ov.remove(); nmOpenSwap(slot, 'ai', { edit: true }); });
     ov.querySelector('[data-day]').addEventListener('click', () => { ov.remove(); nmGo('day'); });
 }
 
@@ -1780,6 +1810,8 @@ function nmRenderDay(root) {
 }
 
 function nmTileSub(k) {
+    // ה-PDF בנוי ל-4 ארוחות ביום (לפי בקשה מפורשת: "תרשום הPDF הזה מתאים לככה ארוחות")
+    if (k === 'pdf') return nmEsc(t('nm_pdf_meals'));
     if (k === 'challenges') return `<bdi dir="ltr">${nmChDoneCount()}/${NEW_ME_CHALLENGES.length}</bdi>`;
     if (k === 'gift') return nmGodMode() ? '👑' : '';
     if (k === 'journey') return nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())));
@@ -1839,10 +1871,12 @@ function nmMealCardHtml(slot) {
             ${head}
             <div class="nm-option-name">${it.custom ? `<span class="nm-custom-tag" title="${nmEsc(t(it.source === 'ai' ? 'nm_custom_from_ai' : 'nm_custom_from_saved'))}">${it.source === 'ai' ? '✨' : '⭐'}</span> ` : ''}${nmEsc(nmItemShort(it))}</div>
             <div class="nm-option-text">${nmEsc(nmItemFull(it))}</div>
+            ${nmExtraLineHtml(slot)}
             <div class="nm-meal-foot">
                 <span class="nm-option-meta">${nmMeta(it)}${crossed && Math.abs(diff) >= 5 ? ' ' + nmDiffChip(diff) : ''}</span>
                 <span class="nm-meal-actions">
                     <button type="button" class="nm-chip" onclick="nmOpenSwap('${slot}')">🔄 ${nmEsc(t('nm_swap'))}</button>
+                    <button type="button" class="nm-chip" data-edit onclick="nmOpenSwap('${slot}', 'ai', { edit: true })">✏️ ${nmEsc(t('nm_edit_meal'))}</button>
                     ${nmIsOverride(slot) ? `<button type="button" class="nm-chip" onclick="nmRevertToday('${slot}')">↩ ${nmEsc(t('nm_swap_revert'))}</button>` : ''}
                     ${it.source === 'preset' ? '' : `<button type="button" class="nm-chip nm-chip-icon" onclick="nmSaveAsPreset('${slot}')" title="${nmEsc(t('nm_save_preset'))}" aria-label="${nmEsc(t('nm_save_preset'))}">⭐</button>`}
                     ${canRemove ? `<button type="button" class="nm-chip nm-chip-icon" onclick="nmAskRemoveMeal('${slot}')" title="${nmEsc(t('nm_remove_meal'))}" aria-label="${nmEsc(t('nm_remove_meal'))}">➖</button>` : ''}
@@ -2037,7 +2071,9 @@ function nmSwapCandidates(slot) {
 // השמורות), ✨ כתיבה חופשית ל-AI. ארוחה מהמאגר או מה-AI נשמרת כארוחה אישית (c_<id>) וזורמת
 // לאותו אישור "רק להיום / קבוע". מה שנכנס: עד סך התוכנית - הקלוריות של הארוחה הנוכחית +
 // מה שפנוי בתפריט (למשל אחרי שהוסרה ארוחה). ב-God Mode אין מגבלה
-function nmOpenSwap(slot, startTab) {
+// ✏️ לערוך ארוחה (לפי בקשה מפורשת: "אפשרות... לערוך את אחת הארוחות והחישוב גם יעשה עם הAI"): נפתח ב"כתיבה ל-AI"
+// עם הטקסט של הארוחה, משנים מה שרוצים (בלי לחם, עוד ביצה...) וה-AI מחשב מחדש
+function nmOpenSwap(slot, startTab, opts) {
     const cur = nmItemInfo(nmTodayKey(slot));
     const { near, far } = nmSwapCandidates(slot);
     const freeAvailable = !nmWeekFreeRow();
@@ -2046,7 +2082,7 @@ function nmOpenSwap(slot, startTab) {
     const god = nmGodMode();
     const fitsBudget = kcal => god || kcal <= budget * 1.1;
     let tab = startTab || 'menu';
-    let aiText = '', aiResult = null, aiBusy = false;
+    let aiText = opts && opts.edit ? nmItemFull(cur) : '', aiResult = null, aiBusy = false;
     const ov = nmOpenSheet('', 'nm-swap-sheet');
     const sheet = ov.querySelector('.nm-sheet');
     const optHtml = c => `
@@ -2313,8 +2349,10 @@ async function nmCheck(slot) {
         optionId = 'free';
     } else {
         const it = nmItemInfo(nmTodayKey(slot));
-        kcal = it.kcal;
-        protein = it.protein;
+        // כולל החלק מארוחה שירדה (החלבון גדל באותו יחס)
+        const extra = nmSlotExtra(slot);
+        kcal = it.kcal + extra;
+        protein = Math.round((it.protein + (it.kcal ? it.protein * extra / it.kcal : 0)) * 10) / 10;
         plan = it.plan;
         text = `✨ ${nmItemShort(it)}`;
         optionId = it.key;
@@ -2943,19 +2981,78 @@ async function nmRemoveDrink(id, btn) {
 function nmExtrasHtml() {
     const planTypes = {};
     Object.values(nmTodayCheckins).forEach(r => { planTypes[NEW_ME_TRACKER_SLOT[r.slot]] = r; });
-    const rows = nmTrackerToday.filter(r => !nmIsDrinkRow(r) && r.source !== 'new_me').map(r => {
+    const rows = nmTrackerToday.filter(r => !nmIsDrinkRow(r) && (r.source !== 'new_me' || nmIsExtraRow(r))).map(r => {
+        if (nmIsExtraRow(r)) return { desc: r.food_description, kcal: Number(r.calories) || 0, id: r.id };
         const merged = planTypes[r.meal_type];
         const kcal = (Number(r.calories) || 0) - (merged && merged.mirror_mode === 'merged' ? (merged.kcal || 0) : 0);
         const desc = merged && merged.mirror_text ? String(r.food_description || '').split(` + ${merged.mirror_text}`).join('') : r.food_description;
         return { desc, kcal };
     }).filter(x => x.kcal > 0 || (x.desc && x.desc.trim()));
-    if (!rows.length) return '';
+    const addBtn = `<button type="button" class="nm-add-food" onclick="nmOpenAddFood()">➕ ${nmEsc(t('nm_add_food'))}</button>`;
+    if (!rows.length) return `<div class="nm-extras">${addBtn}</div>`;
     return `
         <div class="nm-extras">
             <div class="nm-slot-name">➕ ${nmEsc(t('nm_extras_title'))}</div>
-            ${rows.map(x => `<div class="nm-extra-row"><span>${nmEsc(x.desc || '')}</span><span class="nm-option-meta"><bdi dir="ltr">${x.kcal}</bdi> ${nmEsc(t('calories_unit'))}</span></div>`).join('')}
+            ${rows.map(x => `<div class="nm-extra-row"><span>${nmEsc(x.desc || '')}</span><span class="nm-option-meta"><bdi dir="ltr">${x.kcal}</bdi> ${nmEsc(t('calories_unit'))}${x.id ? `<button type="button" class="nm-extra-x" onclick="nmRemoveExtra('${nmEsc(x.id)}')" aria-label="${nmEsc(t('daily_board_delete_item_btn'))}" title="${nmEsc(t('daily_board_delete_item_btn'))}">✕</button>` : ''}</span></div>`).join('')}
             <div class="nm-fine">${nmEsc(t('nm_extras_hint'))}</div>
+            ${addBtn}
         </div>`;
+}
+// ➕ אוכל שלא בתפריט (לפי בקשה מפורשת: "תעשה אפשרות שאנשים יוסיפו לבד מה הם רוצים לאכול... והחישוב גם יעשה עם הAI"):
+// כותבים מה אכלו, ה-AI מחשב קלוריות וחלבון, ונכנס להיום - שורה משלו ב-calorie_tracker (meal_type=nm_extra_*), כמו המשקאות
+function nmIsExtraRow(r) { return String(r.meal_type || '').startsWith('nm_extra'); }
+function nmOpenAddFood() {
+    let text = '', res = null, busy = false;
+    const ov = nmOpenSheet('', 'nm-addfood-sheet');
+    const sheet = ov.querySelector('.nm-sheet');
+    const render = () => {
+        sheet.innerHTML = `
+            <span class="nm-sheet-grip" aria-hidden="true"></span>
+            <h4>➕ ${nmEsc(t('nm_add_food'))}</h4>
+            <textarea class="nm-ai-input" rows="3" maxlength="300" placeholder="${nmEsc(t('nm_add_food_ph'))}" aria-label="${nmEsc(t('nm_add_food'))}">${nmEsc(text)}</textarea>
+            <button type="button" class="nm-btn-primary" data-estimate ${busy ? 'disabled' : ''}>${nmEsc(t(busy ? 'nm_swap_ai_busy' : 'nm_swap_ai_go'))}</button>
+            ${res ? `<div class="nm-swap-pick nm-ai-result">
+                <span class="nm-option-name">✨ ${nmEsc(res.name)}</span>
+                <span class="nm-option-meta">${nmMeta({ kcal: res.kcal, protein: Math.round(res.protein) })}${res.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
+                <button type="button" class="nm-btn-primary" data-add>${nmEsc(t('nm_add_food_add'))}</button>
+            </div>` : ''}
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+        const ta = sheet.querySelector('.nm-ai-input');
+        ta.addEventListener('input', () => { text = ta.value; });
+        sheet.querySelector('[data-estimate]').addEventListener('click', async () => {
+            if (text.trim().length < 2) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+            busy = true; res = null; render();
+            res = await nmEstimateMeal(text.trim(), 0);
+            busy = false;
+            if (ov.isConnected) render();
+        });
+        const add = sheet.querySelector('[data-add]');
+        if (add) add.addEventListener('click', async () => {
+            add.disabled = true;
+            if (await nmAddExtraFood(res)) { ov.remove(); showAppToast(t('nm_add_food_done')); } else add.disabled = false;
+        });
+    };
+    render();
+}
+async function nmAddExtraFood(r) {
+    if (!r || !(r.kcal > 0) || !supabaseClient || !currentUserId) return false;
+    const { error } = await supabaseClient.from('calorie_tracker').insert({
+        username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: `nm_extra_${Date.now()}`,
+        food_description: `✨ ${String(r.name || '').slice(0, 120)}`, calories: Math.round(r.kcal), protein_grams: Math.round((Number(r.protein) || 0) * 10) / 10, source: 'new_me',
+    });
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return false; }
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
+    return true;
+}
+async function nmRemoveExtra(id) {
+    if (!id || !supabaseClient) return;
+    const { error } = await supabaseClient.from('calorie_tracker').delete().eq('id', id).eq('user_id', currentUserId).like('meal_type', 'nm_extra%');
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+    await nmLoadToday();
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
 }
 
 // ---------- New Me (💎) במסך הבית: האריח במגירת "היום שלי" ----------

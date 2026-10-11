@@ -2051,6 +2051,40 @@ html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern,
         radial-gradient(circle at 45% 80%, rgba(165, 243, 252, 0.22) 0%, transparent 45%);
     background-size: 100% 100%;
 }
+/* ✨ נצנצים מבצבצים בצבעי המים (לפי בקשה מפורשת: "לזה תוסיף נצנצים מבצבצים"): שתי שכבות של נקודות אור שמתחלפות */
+html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::before,
+html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::after,
+[data-color-theme="watercolor_wash"] > .home-theme-pattern::before,
+[data-color-theme="watercolor_wash"] > .home-theme-pattern::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; background-repeat: repeat;
+    animation: wcTwinkle 3.8s ease-in-out infinite;
+}
+html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::before,
+[data-color-theme="watercolor_wash"] > .home-theme-pattern::before {
+    background-image:
+        radial-gradient(2px 2px at 26px 38px, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(1.6px 1.6px at 132px 66px, rgba(236, 72, 153, 0.8), transparent),
+        radial-gradient(2.4px 2.4px at 84px 152px, rgba(251, 191, 36, 0.85), transparent),
+        radial-gradient(1.4px 1.4px at 176px 118px, rgba(168, 85, 247, 0.8), transparent),
+        radial-gradient(1.8px 1.8px at 46px 190px, rgba(255, 255, 255, 0.9), transparent);
+    background-size: 210px 210px;
+}
+html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::after,
+[data-color-theme="watercolor_wash"] > .home-theme-pattern::after {
+    background-image:
+        radial-gradient(1.6px 1.6px at 60px 20px, rgba(168, 85, 247, 0.8), transparent),
+        radial-gradient(2.2px 2.2px at 150px 96px, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(1.4px 1.4px at 20px 120px, rgba(251, 191, 36, 0.85), transparent),
+        radial-gradient(2px 2px at 112px 178px, rgba(236, 72, 153, 0.8), transparent),
+        radial-gradient(1.6px 1.6px at 214px 40px, rgba(255, 255, 255, 0.9), transparent);
+    background-size: 240px 240px;
+    animation-delay: -1.9s;
+}
+@keyframes wcTwinkle { 0%, 100% { opacity: 0.12; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::before, html[data-color-theme="watercolor_wash"] .home-sky-scene .home-theme-pattern::after,
+    [data-color-theme="watercolor_wash"] > .home-theme-pattern::before, [data-color-theme="watercolor_wash"] > .home-theme-pattern::after { animation: none; opacity: 0.7; }
+}
 html[data-color-theme="chemistry_lab"] .home-sky-scene .home-theme-pattern,
 [data-color-theme="chemistry_lab"] > .home-theme-pattern {
     background-image:
@@ -5867,6 +5901,12 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 }
 .premium-unlock-icon { font-size: 3rem; margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6)); }
 .premium-unlock-content h2 { font-size: 1.3rem; margin: 0 0 10px 0; background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+/* ➕ New Me: הקלוריות של ארוחה שירדה, לארוחה הזו; הוספת אוכל ועריכה עם AI */
+.nm-extra-line { margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: rgba(168, 85, 247, 0.1); color: var(--text-secondary); font-size: 0.78rem; line-height: 1.45; }
+.nm-extra-line bdi { font-weight: 800; color: var(--accent-purple); }
+.nm-extras .nm-add-food { display: block; width: 100%; margin-top: 8px; padding: 11px 14px; border-radius: 14px; border: 1.5px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.nm-extras .nm-add-food:active { transform: scale(0.98); }
+.nm-extra-row .nm-extra-x { margin-inline-start: 8px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; line-height: 1; cursor: pointer; }
 .premium-unlock-content p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.78); margin: 0 0 20px 0; line-height: 1.5; }
 /* 💎 חגיגת New Me - אותו מבנה כמו של הפרימיום, בצבעי New Me */
 .newme-unlock-ceremony { background: radial-gradient(circle at 50% 40%, #3b1450, #07040c 72%); }

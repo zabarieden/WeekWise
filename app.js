@@ -6226,7 +6226,7 @@ async function renderSelectedCalorieDay() {
     const rows = sorted.map(item => {
         dayTotal += Number(item.calories) || 0;
         dayProteinTotal += Number(item.protein_grams) || 0;
-        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type] || (String(item.meal_type).startsWith('nm_drink') ? 'nm_slot_drinks' : null);
+        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type] || (String(item.meal_type).startsWith('nm_drink') ? 'nm_slot_drinks' : String(item.meal_type).startsWith('nm_extra') ? 'nm_extra_label' : null);
         const mealLabel = labelKey ? t(labelKey) : item.meal_type;
         const proteinPart = item.protein_grams != null ? ` · ${Number(item.protein_grams)}g` : '';
         return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}${proteinPart}</span></div>`;
@@ -14768,11 +14768,11 @@ function unlockReminderAudio() {
 // מבחין-לאוזן, לא רק וריאציה עדינה על אותו דבר
 // 5 הצלילים הראשונים חדשים וחזקים - לפי בקשה מפורשת ("התראת תזכורת יותר חזקה, צלילים
 // יותר חזקים ואפשרויות אחרות"). kind: 'ring' = צלצול טלפון (שני טונים עם רעד מהיר),
-// 'sweep' = אזעקה עולה, 'bell' = פעמון גדול עם צלילים עיליים; בלי kind = סדרת תווים
+// 'bell' = פעמון גדול עם צלילים עיליים; בלי kind = סדרת תווים. האזעקה העולה ירדה (לפי בקשה מפורשת: "תוריד את האזעקה כצליל
+// בכלל") - מי שבחר/ה בה מקבל/ת את ברירת המחדל (isValidReminderChimeId)
 const REMINDER_CHIMES = {
     alarm_clock: { notes: [1046.5, 1046.5, 1046.5, 1046.5], type: 'square', gap: 0.12, peak: 0.3, decay: 0.09 },
     phone_ring: { kind: 'ring', freqs: [440, 480], ringDur: 0.9, rings: 2, ringGap: 0.25, peak: 0.36 },
-    rising_alarm: { kind: 'sweep', from: 520, to: 1320, sweepDur: 0.55, sweeps: 3, sweepGap: 0.08, type: 'sawtooth', peak: 0.2 },
     melody: { notes: [784, 988, 1175, 988, 1568], type: 'triangle', gap: 0.14, peak: 0.4, decay: 0.32 },
     big_bell: { kind: 'bell', base: 392, partials: [1, 2, 2.76, 4.07, 5.4], peak: 0.38, decay: 2.4 },
     chord_up: { notes: [523.25, 659.25, 783.99], type: 'sine', gap: 0.16, peak: 0.22, decay: 0.65 },
