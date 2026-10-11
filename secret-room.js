@@ -602,11 +602,6 @@ function srWallWindow(keys) {
         <circle cx="98" cy="326" r="7" fill="#fff"/><circle cx="98" cy="326" r="2.8" fill="#ffd23f"/>
         <ellipse cx="70" cy="330" rx="3.2" ry="5.5" fill="#b388e6"/><ellipse cx="124" cy="332" rx="3.2" ry="5.5" fill="#b388e6"/>
         <rect x="160" y="368" width="12" height="18" rx="2" fill="#f3e6cf"/><path class="sr-flame" d="M166 368 q-3 -6 0 -11 q3 5 0 11z" fill="#ffb347"/><circle cx="166" cy="360" r="12" fill="#ffd27a" opacity="0.22"/>
-        <rect x="238" y="194" width="118" height="104" rx="6" fill="#6b4630"/>
-        <rect x="245" y="201" width="104" height="90" rx="3" fill="#fff1a8"/>
-        <text x="297" y="236" text-anchor="middle" font-size="14" font-weight="800" fill="#4a3a10" data-fit="96">${srEsc(t('room_note_a'))}</text>
-        <text x="297" y="260" text-anchor="middle" font-size="12.5" fill="#4a3a10" data-fit="96">${srEsc(t('room_note_b'))}</text>
-        <circle cx="297" cy="197" r="3" fill="#ff4fa3"/>
         <circle cx="366" cy="390" r="150" fill="url(#${p}Lamp)"/>
         ${pcOpen ? `<circle cx="297" cy="420" r="90" fill="url(#${p}Glow)"/>` : ''}
         <rect x="214" y="486" width="176" height="13" rx="3" fill="#8a5a3c"/>
@@ -746,7 +741,7 @@ function srWallGame(keys) {
             <polygon points="222,206 232,206 228,640 218,640" fill="url(#${p}CabSide)" opacity="0.85"/>
             <polygon points="340,206 350,206 354,640 344,640" fill="url(#${p}CabSide)" opacity="0.85"/>
             <rect x="222" y="166" width="128" height="40" rx="6" fill="#1a1238"/>
-            <text class="${gameOpen ? 'sr-neon' : ''}" x="286" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="${gameOpen ? '#ff7ab8' : '#5a4a7a'}" data-fit="118">${srEsc(t('room_note_a'))}</text>
+            <text class="${gameOpen ? 'sr-neon' : ''}" x="286" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="${gameOpen ? '#ff7ab8' : '#5a4a7a'}" data-fit="118">${srEsc(t('room_game_marquee'))}</text>
             <rect x="240" y="220" width="92" height="82" rx="6" fill="#0b0b1e"/>
             ${gameOpen ? `<g fill="#7dd3fc"><rect x="250" y="284" width="30" height="5"/><rect x="290" y="270" width="30" height="5"/><rect x="262" y="252" width="22" height="5"/></g>
             <g fill="#ffd27a"><circle cx="300" cy="236" r="2"/><circle cx="274" cy="240" r="1.6"/><circle cx="318" cy="252" r="1.6"/></g>
@@ -1802,7 +1797,7 @@ function roomOpenRoof(opts = {}) {
 // כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"; ואחר כך: "הולכים אחורה במקום קדימה... קדימה, בלי
 // הכמה נקודות"): הבזק ושובל ארוך וזוהר מאחוריו, תמיד קדימה - בכיוון הקריאה (שמאלה בעברית, ימינה ב-LTR) -
 // ואז הכוכב חוזר למקומו
-const ROOM_STAR_FALL_MS = 1500;
+const ROOM_STAR_FALL_MS = 2100;
 function roomStarFall(s) {
     if (s.classList.contains('falling') || s.classList.contains('back')) return;
     const forward = srIsRtl() ? 1 : -1;
@@ -1811,7 +1806,7 @@ function roomStarFall(s) {
     s.classList.add('falling');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setTimeout(() => { s.classList.remove('falling'); s.classList.add('back'); }, reduce ? 400 : ROOM_STAR_FALL_MS);
-    setTimeout(() => s.classList.remove('back'), (reduce ? 400 : ROOM_STAR_FALL_MS) + 900);
+    setTimeout(() => s.classList.remove('back'), (reduce ? 400 : ROOM_STAR_FALL_MS) + 1300);
 }
 function roomShootingStar(sky) {
     if (!sky || !sky.isConnected) return;

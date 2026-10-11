@@ -15625,6 +15625,7 @@ function applyQuickNoteAppleSetting() {
     if (btn) btn.classList.toggle('hidden', !on);
     const toggle = document.getElementById('quick-note-apple-toggle');
     if (toggle) toggle.checked = on;
+    if (typeof setHomeNoteDest === 'function') setHomeNoteDest();
 }
 async function loadQuickNoteAppleSetting() {
     if (!supabaseClient || !currentUserId) return;

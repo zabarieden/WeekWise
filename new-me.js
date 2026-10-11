@@ -415,6 +415,8 @@ function nmTimesBodyHtml() {
                 <span class="nm-rem-text"><b>${nmEsc(nmSlotName(slot))}</b></span>
                 ${nmTimeBtnHtml('times-' + slot, s.times[slot], nmSlotName(slot), v => nmTimesSet(slot, v))}
             </div>`).join('')}</div>`;
+    // טיפ קטן (לפי בקשה מפורשת): אפשר לשים את השעה הכי מאוחרת שבה אוכלים כל ארוחה
+    html += `<p class="nm-times-tip">${nmEsc(t('nm_times_hint'))}</p>`;
     if (s.mode === 'routine' && s.found.length) html += `<label class="nm-agree nm-times-hide"><input type="checkbox" ${s.hide ? 'checked' : ''} onchange="nmTimes.hide = this.checked"><span>${nmEsc(t('nm_times_hide'))}</span></label>`;
     return html;
 }

@@ -293,8 +293,9 @@ function srpPorchScene(keys) {
                 <circle cx="32" cy="300" r="5" fill="#c9a36b"/><circle cx="358" cy="300" r="5" fill="#c9a36b"/>
             </g>
             <g class="srp-hot srp-hammock" data-place-hot="hammock" role="button" tabindex="0" aria-label="${srEsc(t('room_hammock_aria'))}">
+                <!-- החבלים לא זזים; רק הבד מתנדנד מתחת לקו שבו הם מחזיקים אותו - הוא לא מתנתק מהידיות (לפי בקשה מפורשת) -->
+                <g stroke="#e3cfa3" stroke-width="1.3"><line x1="32" y1="304" x2="78" y2="378"/><line x1="358" y1="304" x2="312" y2="378"/></g>
                 <g class="srp-swing">
-                    <g stroke="#e3cfa3" stroke-width="1.3"><line x1="32" y1="304" x2="78" y2="380"/><line x1="358" y1="304" x2="312" y2="380"/></g>
                     <path d="M78 376 Q195 498 312 376 Q195 438 78 376 Z" fill="#2fa58c"/>
                     <path d="M92 388 Q195 484 298 388" fill="none" stroke="#bff5e6" stroke-width="3"/>
                     <path d="M108 402 Q195 476 282 402" fill="none" stroke="#ffd27a" stroke-width="2.4"/>
@@ -670,7 +671,7 @@ function srpBreathScene(keys) {
                     <path d="M-20 648 Q4 640 26 648 T74 648 T122 648 T170 648 T218 648 T266 648 T314 648 T362 648 T410 648 V656 Q386 664 362 656 T314 656 T266 656 T218 656 T170 656 T122 656 T74 656 T26 656 T-20 656 Z" fill="#fff" opacity="0.85"/>
                 </g>
             </g>
-            ${sand ? `<g class="srb-writing" aria-hidden="true"><text class="srb-word-light" x="195" y="717" text-anchor="middle"></text><text class="srb-word" x="195" y="716" text-anchor="middle"></text></g>
+            ${sand ? `<g class="srb-writing" role="button" tabindex="0" aria-label="${srEsc(t('room_sand_erase_aria'))}"><text class="srb-word-light" x="195" y="717" text-anchor="middle"></text><text class="srb-word" x="195" y="716" text-anchor="middle"></text></g>
             <g class="srb-bigwave" aria-hidden="true">
                 <path d="M-20 600 H410 V690 Q385 702 360 690 T310 690 T260 690 T210 690 T160 690 T110 690 T60 690 T10 690 T-20 690 Z" fill="#a9bde8" opacity="0.6"/>
                 <path d="M-20 690 Q5 702 30 690 T80 690 T130 690 T180 690 T230 690 T280 690 T330 690 T380 690 T430 690" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
@@ -694,6 +695,7 @@ let srpWake = null;
 async function srpWakeOn() { try { if (navigator.wakeLock && navigator.wakeLock.request) srpWake = await navigator.wakeLock.request('screen'); } catch {} }
 function srpWakeOff() { try { if (srpWake) srpWake.release(); } catch {} srpWake = null; }
 function srpInitBreath(box) {
+    srpInitSandErase(box);
     let timer = null;
     // המסך נשאר דולק כל הסשן; יציאה קצרה מהאפליקציה משחררת את זה - בחזרה מבקשים שוב
     const onVisible = () => { if (document.visibilityState === 'visible' && box.classList.contains('is-on') && box.isConnected) srpWakeOn(); };
@@ -721,8 +723,36 @@ function srpInitBreath(box) {
 }
 
 // כותבים בחול: המילים מופיעות אות אחרי אות, ואחרי רגע גל גדול עולה על החול ומוחק אותן (לא נשמר בשום מקום)
+// מחיקה ביד: משפשפים על הכתוב באצבע והוא הולך ונמחק (או Enter / רווח במקלדת)
+function srpInitSandErase(box) {
+    const g = box.querySelector('.srb-writing');
+    if (!g) return;
+    const words = [...box.querySelectorAll('.srb-word, .srb-word-light')];
+    const saved = srpPrefs().sand;
+    if (saved) { words.forEach(w => { w.textContent = saved; }); box.classList.add('is-writing'); fitSand(); }
+    function fitSand() {
+        const len = words[0] && words[0].getComputedTextLength ? words[0].getComputedTextLength() : 0;
+        if (len > 300) words.forEach(w => w.setAttribute('font-size', String(Math.max(14, Math.floor(32 * 300 / len)))));
+    }
+    let rub = 0, last = null;
+    const erase = () => {
+        box.classList.add('is-erasing');
+        srpSetPref('sand', '');
+        setTimeout(() => { words.forEach(w => { w.textContent = ''; w.removeAttribute('font-size'); }); g.style.opacity = ''; box.classList.remove('is-writing', 'is-erasing'); }, srpReduce() ? 0 : 500);
+    };
+    g.addEventListener('pointerdown', e => { if (!box.classList.contains('is-writing')) return; last = [e.clientX, e.clientY]; try { g.setPointerCapture(e.pointerId); } catch {} });
+    g.addEventListener('pointermove', e => {
+        if (!last || !box.classList.contains('is-writing')) return;
+        rub += Math.hypot(e.clientX - last[0], e.clientY - last[1]);
+        last = [e.clientX, e.clientY];
+        const left = Math.max(0, 1 - rub / 280);
+        g.style.opacity = String(left);
+        if (left === 0) { last = null; rub = 0; erase(); }
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => g.addEventListener(ev, () => { last = null; }));
+    g.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && box.classList.contains('is-writing')) { e.preventDefault(); erase(); } });
+}
 function srpWriteInSand(box) {
-    if (box.classList.contains('is-writing')) return;
     const ov = nmOpenSheet(`
         <h4>${srEsc(roomItemName('sand'))}</h4>
         <input type="text" class="sr-wish-input srp-sand-input" maxlength="40" placeholder="${srEsc(t('room_sand_ph'))}" aria-label="${srEsc(t('room_sand_ph'))}">
@@ -746,13 +776,10 @@ function srpWriteInSand(box) {
             const len = words[0].getComputedTextLength ? words[0].getComputedTextLength() : 0;
             if (len > 300) words.forEach(w => w.setAttribute('font-size', String(Math.max(14, Math.floor(32 * 300 / len)))));
         }, i * step));
-        const wash = chars.length * step + 1800;
-        setTimeout(() => { if (box.isConnected) box.classList.add('is-washing'); }, wash);
-        setTimeout(() => {
-            if (!box.isConnected) return;
-            words.forEach(w => { w.textContent = ''; });
-            box.classList.remove('is-writing', 'is-washing');
-        }, wash + (srpReduce() ? 900 : 3400));
+        // נשאר בחול עד שמוחקים ביד (לפי בקשה מפורשת, 2026-10-11) - נשמר רק במכשיר הזה
+        srpSetPref('sand', text);
+        const g = box.querySelector('.srb-writing');
+        if (g) g.style.opacity = '';
     };
     ov.querySelector('[data-write]').addEventListener('click', write);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); write(); } });
@@ -965,7 +992,8 @@ function roomInitWish(root) {
             ov.remove();
             w.classList.remove('is-back', 'srp-new');
             w.classList.add('is-flying');
-            setTimeout(() => { if (!w.isConnected) return; w.classList.remove('is-flying'); w.classList.add('is-back'); }, srpReduce() ? 400 : 7200);
+            // פנס חדש עולה במקומו אחרי שהקודם נעלם בשמיים - בלי לצאת מהגג (לפי בקשה מפורשת, 2026-10-11)
+            setTimeout(() => { if (!w.isConnected) return; w.classList.remove('is-flying'); w.classList.add('is-back'); }, srpReduce() ? 600 : 4800);
         };
         ov.querySelector('[data-fly]').addEventListener('click', fly);
         input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fly(); } });
@@ -976,9 +1004,9 @@ function roomInitWish(root) {
 }
 
 // ---------- החתול בא לבקר: יושב על הכרית בחדר הסודי (מפתח 11) ----------
-// לפי בקשה מפורשת: דומה לחתול מהגג (אותו ציור), ועושה 5 דברים אחרים לגמרי מאלה שבגג - כל נגיעה הדבר הבא:
-// כדור צמר, מסתובב אחרי הזנב, מתגלגל על הגב, צד עכבר צעצוע, ופרפר שנוחת לו על האף
-const SR_ROOMCAT_ACTIONS = [['yarn', 2400], ['chase', 1900], ['roll', 2300], ['mouse', 2400], ['butterfly', 3000]];
+// לפי בקשה מפורשת: דומה לחתול מהגג (אותו ציור), ועושה דברים אחרים לגמרי מאלה שבגג - כל נגיעה הדבר הבא:
+// כדור צמר, עכבר צעצוע ופרפר שנוחת לו על האף (ההתהפכות והנפילה הצידה הוסרו - "זה מוזר", 2026-10-11)
+const SR_ROOMCAT_ACTIONS = [['yarn', 2400], ['mouse', 2400], ['butterfly', 3000]];
 function srCatNapSvg() {
     const F = '#120d1f';
     return `<g class="sr-hot sr-roomcat" data-hot="catvisit" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}" transform="translate(320 656) scale(1.3)">

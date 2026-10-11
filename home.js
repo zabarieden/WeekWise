@@ -609,6 +609,7 @@ function initHomeV2() {
     initMyDaySwipes();
     initDictationButtons();
     document.addEventListener('click', e => {
+        if (!e.target.closest('#home-note-line')) homeNoteHideSuggest();
         const tip = document.getElementById('myday-water-tip');
         if (tip && !tip.classList.contains('hidden') && !e.target.closest('.myday-water-info, #myday-water-tip')) toggleMyDayWaterInfo();
     });
@@ -876,26 +877,66 @@ function initHomePhase2() {
 
 // --- ✏️ שורת הכתיבה במסך הבית (עיצוב 2, לפי בחירה מפורשת, 2026-10-11) - במקום כפתור "פתק מהיר":
 // כותבים ושולחים (➤ / Enter) ישר לפתקים. 📝 בתחילת השורה מחליף ל-🛒 רשימת הקניות ובחזרה ---
+// 🍎 (ארוחה קבועה) - שלישי בסבב, אלא אם הוסתר בהגדרות ("הצגת ה-🍎"): מקלידים ומה שמתאים עולה כמו חיפוש
 let homeNoteDest = 'weekly';
 let homeNoteSaving = false;
+let homeNotePresets = null;
+function homeNoteModes() { return ['weekly', 'general'].concat(typeof isQuickNoteAppleOn !== 'function' || isQuickNoteAppleOn() ? ['meal'] : []); }
 function setHomeNoteDest(dest = homeNoteDest) {
-    homeNoteDest = dest === 'general' ? 'general' : 'weekly';
-    const shopping = homeNoteDest === 'general';
+    homeNoteDest = homeNoteModes().includes(dest) ? dest : 'weekly';
+    const shopping = homeNoteDest === 'general', meal = homeNoteDest === 'meal';
     const btn = document.getElementById('home-note-dest');
     if (btn) {
-        const label = t(shopping ? 'quick_note_dest_shopping' : 'quick_note_dest_notes');
+        const label = t(shopping ? 'quick_note_dest_shopping' : meal ? 'preset_fab_title' : 'quick_note_dest_notes');
         btn.classList.toggle('is-shopping', shopping);
+        btn.classList.toggle('is-meal', meal);
         btn.title = label;
         btn.setAttribute('aria-label', label);
     }
     const input = document.getElementById('home-note-input');
-    if (input && !input.classList.contains('is-listening')) input.placeholder = t(shopping ? 'notes_ai_placeholder_shopping' : 'notes_ai_placeholder');
+    if (input && !input.classList.contains('is-listening')) input.placeholder = t(shopping ? 'notes_ai_placeholder_shopping' : meal ? 'home_note_meal_ph' : 'notes_ai_placeholder');
+    if (meal) homeNoteLoadPresets().then(homeNoteSuggest);
+    else homeNoteHideSuggest();
 }
-function toggleHomeNoteDest() { setHomeNoteDest(homeNoteDest === 'general' ? 'weekly' : 'general'); }
+function toggleHomeNoteDest() { const modes = homeNoteModes(); setHomeNoteDest(modes[(modes.indexOf(homeNoteDest) + 1) % modes.length]); }
+async function homeNoteLoadPresets() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId);
+    homeNotePresets = data || [];
+}
+function homeNoteMatches() {
+    const input = document.getElementById('home-note-input');
+    const q = ((input && input.value) || '').trim().toLowerCase();
+    return (homeNotePresets || []).filter(p => String(p.food_name || '').toLowerCase().includes(q)).slice(0, 6);
+}
+function homeNoteHideSuggest() { const box = document.getElementById('home-note-suggest'); if (box) box.classList.add('hidden'); }
+function homeNoteSuggest() {
+    const box = document.getElementById('home-note-suggest');
+    if (!box || homeNoteDest !== 'meal' || !homeNotePresets) { homeNoteHideSuggest(); return; }
+    const list = homeNoteMatches();
+    box.innerHTML = list.length
+        ? list.map(p => `<button type="button" class="home-note-sugg" role="option" data-id="${myDayEsc(p.id)}"><span>${myDayEsc(p.food_name)}</span><b><bdi dir="ltr">${Number(p.calories) || 0}</bdi> ${myDayEsc(t('calories_unit'))}</b></button>`).join('')
+        : `<p class="home-note-sugg-empty">${myDayEsc(t(homeNotePresets.length ? 'home_search_empty' : 'preset_quick_add_empty'))}</p>`;
+    box.querySelectorAll('[data-id]').forEach(b => b.addEventListener('click', () => homeNoteLogPreset(b.dataset.id)));
+    box.classList.remove('hidden');
+}
+function homeNoteInput() { if (homeNoteDest === 'meal') homeNoteSuggest(); }
+async function homeNoteLogPreset(id) {
+    if (homeNoteSaving) return;
+    homeNoteSaving = true;
+    try {
+        cachedPresets = homeNotePresets || [];
+        await logPresetQuickAdd(id);
+        const input = document.getElementById('home-note-input');
+        if (input) { input.value = ''; input.blur(); }
+        homeNoteHideSuggest();
+    } finally { homeNoteSaving = false; }
+}
 async function saveHomeNoteLine() {
     const input = document.getElementById('home-note-input');
     if (!input || homeNoteSaving) return;
     if (typeof stopDictation === 'function') stopDictation();
+    if (homeNoteDest === 'meal') { const first = homeNoteMatches()[0]; if (first) homeNoteLogPreset(first.id); else input.focus(); return; }
     const text = input.value.trim();
     if (!text) { input.focus(); return; }
     homeNoteSaving = true;
