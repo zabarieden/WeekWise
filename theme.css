@@ -5930,8 +5930,8 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 /* 📔 "היומן בתפריט הראשי" - ביומן ובהגדרות של New Me */
 .nm-diary-menu-row { padding: 13px 16px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); font-weight: 700; }
 .srp-diary-sheet .nm-diary-menu-row { margin-top: 4px; }
-/* 🔧 תצוגת השאלון של מנהלת המוצר - שום דבר לא נשמר */
-.nm-quiz-preview-bar { margin: 0 0 12px; padding: 7px 12px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 55%, transparent); color: var(--text-secondary); font-size: 0.78rem; font-weight: 700; text-align: center; }
+/* 🍎 בלי התאמה: "אין ארוחה קבועה כזו" + לחשב עם AI */
+.home-note-sugg-ai { justify-content: center; font-weight: 700; color: var(--accent-purple); }
 .nm-or-row { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 9px 12px; border-radius: 12px; border: 1.5px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
 .nm-or-row .nm-or-word { flex: none; font-size: 0.72rem; font-weight: 800; color: var(--accent-purple); }
 .nm-or-row .nm-or-name { flex: 1; min-width: 0; font-weight: 700; font-size: 0.86rem; }
@@ -8435,7 +8435,7 @@ html.light-mode .wx-stars { display: none; }
 .recipes-chip:active { transform: scale(0.95); }
 .recipe-tile { display: flex; flex-direction: column; min-width: 0; padding: 0; border: none; border-radius: 20px; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); text-align: start; font-weight: 400; }
 .recipe-tile:active { transform: scale(0.97); }
-.recipe-tile-art { position: relative; display: grid; place-items: center; height: 112px; overflow: hidden; font-size: 46px; line-height: 1; background: linear-gradient(150deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
+.recipe-tile-art { position: relative; display: grid; place-items: center; height: 84px; overflow: hidden; font-size: 46px; line-height: 1; background: linear-gradient(150deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
 .recipe-tile-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .recipe-tile-body { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px 12px; }
 .recipe-tile-title { font-size: 0.95rem; font-weight: 800; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
@@ -9085,16 +9085,17 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .ai-chat-chips.is-tools { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 360px; }
 .ai-chat-chips.is-tools .ai-chat-chip { min-height: 54px; border-radius: 18px; font-size: 0.92rem; }
 .ai-chat-chip { min-height: 38px; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; z-index: auto; }
-.ai-chat-chip:hover, .ai-chat-chip:focus-visible { border-color: var(--accent-pink); outline: none; }
-.ai-chat-chip.is-on { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, transparent); }
+/* בלי אדום בצ'אט (לפי בקשה מפורשת: "גם פה תוריד את האדום הזה"): הבחירה והמיקוד בגוון ניטרלי של הטקסט */
+.ai-chat-chip:hover, .ai-chat-chip:focus-visible { border-color: color-mix(in srgb, var(--text-primary) 35%, transparent); outline: none; }
+.ai-chat-chip.is-on { border-color: color-mix(in srgb, var(--text-primary) 45%, transparent); background: color-mix(in srgb, var(--text-primary) 9%, transparent); }
 .ai-chat-input { display: flex; align-items: center; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border-color); }
 .ai-chat-input input { flex: 1; min-width: 0; height: 46px; box-sizing: border-box; padding: 0 16px; border-radius: 23px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1rem; outline: none; }
-.ai-chat-input input:focus { border-color: var(--accent-pink); }
+.ai-chat-input input:focus { border-color: color-mix(in srgb, var(--text-primary) 28%, var(--border-color)); }
 .ai-chat-cam, .ai-chat-send { flex-shrink: 0; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; cursor: pointer; z-index: auto; }
 .ai-chat-cam { width: 44px; height: 44px; background: var(--bg-row); color: var(--text-primary); }
 .ai-chat-send { width: 46px; height: 46px; background: linear-gradient(135deg, #ff4fa3, #c06bff); color: #fff; box-shadow: 0 6px 16px rgba(255, 79, 163, 0.4); }
 .ai-chat-cam svg, .ai-chat-send svg { width: 22px; height: 22px; }
-.ai-chat-cam:focus-visible, .ai-chat-send:focus-visible, .ai-chat-x:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.ai-chat-cam:focus-visible, .ai-chat-send:focus-visible, .ai-chat-x:focus-visible { outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent); outline-offset: 2px; }
 body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .ai-chat, .ai-chat-sheet { animation: none; } .ai-chat-msg.is-typing { animation: none; } }
 
@@ -9267,7 +9268,7 @@ html.light-mode .home-newme-btn { color: var(--accent-purple); }
 .ai-chat-fix { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; white-space: normal; }
 .ai-chat-fix label { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
 .ai-chat-fix input { width: 96px; height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 1rem; font-variant-numeric: tabular-nums; }
-.ai-chat-fix input:focus { outline: none; border-color: var(--accent-pink); }
+.ai-chat-fix input:focus { outline: none; border-color: color-mix(in srgb, var(--text-primary) 28%, var(--border-color)); }
 .ai-chat-fix .ai-chat-chip { min-height: 40px; }
 
 /* --- 🔧 מתג המפתחת (חשבון הפיתוח בלבד): כפתור קטן קטן "PM" ומנעול - נעילה / "קנייה" של New Me והפרימיום --- */

@@ -7105,12 +7105,11 @@ function renderRecipesGallery() {
             img.src = recipe.image_url;
             img.alt = '';
             img.loading = 'lazy';
-            // תמונה שלא נטענת (נמחקה מהאחסון) - חוזרים לצבע ולאייקון
-            img.onerror = () => { img.remove(); art.textContent = recipeCategoryIcon(recipe.category); };
+            // תמונה שלא נטענת (נמחקה מהאחסון) - חוזרים לצבע
+            img.onerror = () => { img.remove(); };
             art.appendChild(img);
-        } else {
-            art.textContent = recipeCategoryIcon(recipe.category);
         }
+        // בלי אימוג'י גדול - רק הצבע של סוג המתכון (לפי בקשה מפורשת: "שיהיה רק צבע נחמד כזה"); תמונה שצורפה למתכון נשארת
         const body = document.createElement('span');
         body.className = 'recipe-tile-body';
         const title = document.createElement('span');
@@ -7338,16 +7337,17 @@ function openRecipeDetail(id) {
     paintRecipeArt(hero, recipe);
     const photo = document.getElementById('recipe-detail-photo');
     const emoji = document.getElementById('recipe-hero-emoji');
-    emoji.textContent = recipeCategoryIcon(recipe.category);
+    // רק צבע (בלי אימוג'י גדול), כמו בכרטיסים
+    emoji.textContent = '';
     if (recipe.image_url) {
-        photo.onerror = () => { photo.classList.add('hidden'); emoji.classList.remove('hidden'); };
+        photo.onerror = () => { photo.classList.add('hidden'); };
         photo.src = recipe.image_url;
         photo.classList.remove('hidden');
         emoji.classList.add('hidden');
     } else {
         photo.removeAttribute('src');
         photo.classList.add('hidden');
-        emoji.classList.remove('hidden');
+        emoji.classList.add('hidden');
     }
     document.getElementById('recipe-detail-category').textContent = `${recipeCategoryIcon(recipe.category)} ${recipeCategoryLabel(recipe.category)}`;
     document.getElementById('recipe-detail-title').textContent = recipe.title;
@@ -7670,8 +7670,8 @@ function devSimBuyNewMe() {
     if (!isDevSuperuserAccount || hasNewMe) return;
     showAppToast(t('nm_unlocking'));
     setTimeout(() => {
-        // כמו קונה חדש: השאלון מההצהרה - תצוגה בלבד, שום דבר לא נשמר (ר' nmStartQuizPreview)
-        if (typeof nmStartQuizPreview === 'function') nmStartQuizPreview();
+        // כמו קונה חדש: השאלון מההצהרה, ובסוף הוא נשמר (ר' nmStartQuizFresh)
+        if (typeof nmStartQuizFresh === 'function') nmStartQuizFresh();
         setNmDevLockedPreview(false);
         celebrateNewMeUnlock();
     }, 1200);
@@ -7726,8 +7726,8 @@ function devSettingsToggle(kind) {
 function setNmDevLockedPreview(on) {
     try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
     if (!isDevSuperuserAccount) return;
-    // נעילה באמצע תצוגת השאלון - התצוגה נסגרת איתה
-    if (on && typeof nmQuiz !== 'undefined' && nmQuiz && nmQuiz.preview) { nmQuiz = null; nmTimes = null; }
+    // נעילה באמצע השאלון של "הקנייה" - הוא נסגר איתה
+    if (on && typeof nmQuiz !== 'undefined' && nmQuiz && nmQuiz.fresh) { nmQuiz = null; nmTimes = null; }
     hasNewMe = !on;
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
@@ -8754,6 +8754,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_swap', category: 'nutrition' },
     { id: 'new_me_flexible_menu', category: 'nutrition' },
     { id: 'new_me_favorites', category: 'nutrition' },
+    { id: 'new_me_small_breakfast', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
@@ -9008,9 +9009,9 @@ const COLOR_THEME_ALIASES = {
 function normalizeColorTheme(name) { return COLOR_THEME_ALIASES[name] || name; }
 
 // ערכות שיפות יותר בכהה (לפי בקשה מפורשת: "הנצנצים ומעלה הם יותר יפות כהות תשים אותם כהות כברירת מחדל שלוחצים עליהם
-// כל השאר בהיר", ועל הזוהר הצפוני "וגם זאתי כהה"): בחירה בערכה מעבירה למצב שלה - כהה לאלה, בהיר לכל השאר.
+// כל השאר בהיר", ועל הזוהר הצפוני "וגם זאתי כהה"; החללית בהירה - "הפרימיום הראשון יהיה בהיר הוא ממש יפה בהיר"): בחירה בערכה מעבירה למצב שלה - כהה לאלה, בהיר לכל השאר.
 // שחור ואפור כהה נשארים כהים (בבהיר הם יוצאים אפורים בהירים). 🌙 בתפריט ו"מצב בהיר" בהגדרות עדיין משנים אחר כך
-const DARK_FIRST_THEMES = ['space_rocket', 'watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey'];
+const DARK_FIRST_THEMES = ['watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey'];
 async function selectColorTheme(themeName) {
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     applyColorTheme(themeName);

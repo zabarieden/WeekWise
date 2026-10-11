@@ -211,6 +211,9 @@ function myDayPickNow(items) {
     if (next) return { item: next, label: 'next' };
     const untimed = open.find(it => it.minutes === null);
     if (untimed) return { item: untimed, label: 'later' };
+    // נשאר רק מה שעבר מזמן ולא סומן - מראים אותו ("קודם"), ולא "סיימת הכול" (לפי בקשה מפורשת: "לא סיימתי את כל המשימות")
+    const missed = timed.filter(it => it.minutes <= now).pop();
+    if (missed) return { item: missed, label: 'earlier' };
     return null;
 }
 
@@ -305,7 +308,7 @@ function renderMyDayBar(items) {
         nextEl.innerHTML = `<span class="myday-bar-empty">${myDayEsc(total ? t('today_tasks_all_done_message') : t('myday_bar_empty'))}</span>`;
         return;
     }
-    const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : 'myday_later');
+    const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');
     nextEl.innerHTML = `
         <span class="myday-bar-when"><span class="myday-bar-when-label">${myDayEsc(label)}</span><span class="myday-bar-when-time">${myDayEsc(myDayFormatMinutes(pick.item.minutes))}</span></span>
         <span class="myday-bar-what">${myDayEsc(pick.item.title)}</span>
@@ -406,7 +409,7 @@ function renderHomeFocus() {
         body.innerHTML = `<p class="home-focus-empty">${myDayEsc(t('home_focus_empty'))}</p>`;
         return;
     }
-    const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : 'myday_later');
+    const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');
     const time = myDayFormatMinutes(pick.item.minutes);
     const rest = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes)[0];
     body.innerHTML = `
@@ -821,6 +824,7 @@ async function refreshHomeWeather(force) {
 }
 // מה מצויר בשמיים בכל מצב - לפי מזג האוויר האמיתי במיקום (לפי בקשה מפורשת: "לפי מזג האוויר ומיקום של מי שנמצא בו",
 // ושיעבוד בכל הערכות): שמש (ובלילה ירח וכוכבים), עננים אמיתיים (כהים בגשם ובסערה), טיפות, פתיתים, ברק, ערפל
+const HOME_WEATHER_EMOJI = { clear: '☀️', night: '🌙', partly: '⛅', clouds: '☁️', rain: '🌧️', snow: '❄️', storm: '⛈️', fog: '🌫️' };
 function homeWeatherParts(sky, night) {
     const light = night ? '<i class="wx-moon"></i><i class="wx-stars"></i>' : '<i class="wx-sun"></i>';
     const clouds = (n, dark) => [1, 2, 3].slice(0, n).map(i => `<i class="wx-cloud wx-c${i}${dark ? ' wx-dark' : ''}"></i>`).join('');
@@ -845,6 +849,13 @@ function applyHomeWeather(state) {
             layer.className = 'home-weather' + (sky ? ` wx-${sky}${night ? ' wx-night' : ''}` : '');
             layer.innerHTML = sky ? homeWeatherParts(sky, night) : '';
         }
+    }
+    // בהגדרות, מתחת למתג: מה יש עכשיו בחוץ - כדי שיהיה ברור למה בשמיים יש, למשל, גם שמש וגם עננים (מעונן חלקית)
+    const nowEl = document.getElementById('home-weather-now');
+    if (nowEl) {
+        const real = sky && !(state && state.preview);
+        nowEl.classList.toggle('hidden', !real);
+        if (real) nowEl.textContent = t('weather_now').replace('{sky}', `${HOME_WEATHER_EMOJI[sky === 'clear' && night ? 'night' : sky] || ''} ${t('weather_sky_' + sky)}`.trim());
     }
     // כשמזג האוויר פעיל הוא מצייר את השמיים בעצמו - השמש / הכוכבים הכלליים של הערכה מוסתרים (theme.css)
     const scene = document.querySelector('.home-sky-scene');
@@ -925,17 +936,38 @@ function homeNoteMatches() {
     return (homeNotePresets || []).filter(p => String(p.food_name || '').toLowerCase().includes(q)).slice(0, 6);
 }
 function homeNoteHideSuggest() { const box = document.getElementById('home-note-suggest'); if (box) box.classList.add('hidden'); }
+// הרשימה עולה רק אחרי שמתחילים לכתוב (לפי בקשה מפורשת: "אל תפתח ישר את הארוחות הקבועות שמשתמש יכתוב ואז זה יקפוץ לפי התאמה").
+// ובלי התאמה - שורה קצרה ורגילה ("אין ארוחה קבועה כזו") וכפתור לחשב עם AI (לפי בקשה מפורשת: "שלא תהיה הודעת השגיאה הזו")
 function homeNoteSuggest() {
     const box = document.getElementById('home-note-suggest');
     if (!box || homeNoteDest !== 'meal' || !homeNotePresets) { homeNoteHideSuggest(); return; }
+    const input = document.getElementById('home-note-input');
+    const typed = ((input && input.value) || '').trim();
+    if (!typed) { homeNoteHideSuggest(); return; }
     const list = homeNoteMatches();
     box.innerHTML = list.length
         ? list.map(p => `<button type="button" class="home-note-sugg" role="option" data-id="${myDayEsc(p.id)}"><span>${myDayEsc(p.food_name)}</span><b><bdi dir="ltr">${Number(p.calories) || 0}</bdi> ${myDayEsc(t('calories_unit'))}</b></button>`).join('')
-        : `<p class="home-note-sugg-empty">${myDayEsc(t(homeNotePresets.length ? 'home_search_empty' : 'preset_quick_add_empty'))}</p>`;
+        : `<p class="home-note-sugg-empty">${myDayEsc(t('home_note_meal_none'))}</p><button type="button" class="home-note-sugg home-note-sugg-ai" data-ai>${myDayEsc(t('home_note_meal_ai'))}</button>`;
     box.querySelectorAll('[data-id]').forEach(b => b.addEventListener('click', () => homeNoteLogPreset(b.dataset.id)));
+    const ai = box.querySelector('[data-ai]');
+    if (ai) ai.addEventListener('click', () => homeNoteAskAi(typed));
     box.classList.remove('hidden');
 }
 function homeNoteInput() { if (homeNoteDest === 'meal') homeNoteSuggest(); }
+// אין ארוחה קבועה כזו: העוזר מחשב את מה שנכתב (לשונית "מזון" בצ'אט) ורושם אותו להיום
+function homeNoteAskAi(text) {
+    const input = document.getElementById('home-note-input');
+    if (input) { input.value = ''; input.blur(); }
+    homeNoteHideSuggest();
+    if (typeof openAiChat !== 'function') return;
+    openAiChat('food');
+    setTimeout(() => {
+        const field = document.querySelector('#ai-chat .ai-chat-input input');
+        if (!field || !text) return;
+        field.value = text;
+        if (typeof aiChatSend === 'function') aiChatSend();
+    }, 150);
+}
 async function homeNoteLogPreset(id) {
     if (homeNoteSaving) return;
     homeNoteSaving = true;
@@ -951,7 +983,7 @@ async function saveHomeNoteLine() {
     const input = document.getElementById('home-note-input');
     if (!input || homeNoteSaving) return;
     if (typeof stopDictation === 'function') stopDictation();
-    if (homeNoteDest === 'meal') { const first = homeNoteMatches()[0]; if (first) homeNoteLogPreset(first.id); else input.focus(); return; }
+    if (homeNoteDest === 'meal') { const typed = input.value.trim(); const first = typed && homeNoteMatches()[0]; if (first) homeNoteLogPreset(first.id); else if (typed) homeNoteAskAi(typed); else input.focus(); return; }
     const text = input.value.trim();
     if (!text) { input.focus(); return; }
     homeNoteSaving = true;

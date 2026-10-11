@@ -147,9 +147,12 @@ function nmDayHtml(n, cls = '') {
 
 // ---------- פריטים בתפריט ----------
 function nmItemKey(plan, slot, opt) { return `p${plan}_${slot}_${opt}`; }
+// האפשרויות של ארוחה בתוכנית (A–C מה-PDF, ו-D/E החדשות - לא בכל ארוחה)
+function nmSlotOpts(plan, slot) { const s = NEW_ME_PLANS[plan] && NEW_ME_PLANS[plan][slot]; return s ? Object.keys(s.options) : []; }
+function nmHasOpt(plan, slot, opt) { return nmSlotOpts(plan, slot).includes(opt); }
 function nmParseItem(key) {
-    const m = /^p(1300|1500)_(meal1|snack1|meal2|snack2)_([ABC])$/.exec(key || '');
-    return m ? { key, plan: Number(m[1]), slot: m[2], opt: m[3] } : null;
+    const m = /^p(1300|1500)_(meal1|snack1|meal2|snack2)_([A-F])$/.exec(key || '');
+    return m && nmHasOpt(Number(m[1]), m[2], m[3]) ? { key, plan: Number(m[1]), slot: m[2], opt: m[3] } : null;
 }
 // ארוחה אישית (מהארוחות הקבועות או מכתיבה ל-AI) - מפתח c_<uuid> מטבלת new_me_custom_meals
 function nmIsCustomKey(key) { return /^c_[0-9a-f-]{36}$/i.test(key || ''); }
@@ -161,7 +164,7 @@ function nmItemInfo(key) {
     const p = nmParseItem(key);
     if (!p) return null;
     const o = NEW_ME_PLANS[p.plan][p.slot].options[p.opt];
-    return { ...p, kcal: o.kcal, protein: o.protein };
+    return { ...p, kcal: o.kcal, protein: o.protein, small: !!o.small };
 }
 function nmItemShort(it) { return it.custom ? it.name : nmOptText(it.plan, it.slot, it.opt, true); }
 function nmItemFull(it) { return it.custom ? (it.text || t(it.source === 'ai' ? 'nm_custom_from_ai' : 'nm_custom_from_saved')) : nmOptText(it.plan, it.slot, it.opt); }
@@ -169,7 +172,7 @@ function nmItemFull(it) { return it.custom ? (it.text || t(it.source === 'ai' ? 
 // הנוכחית (כך שמעבר 1,300↔1,500 מתאים את המנה); מפתח מלא = פריט מכל התפריט או ארוחה אישית
 function nmPermanentKey(slot) {
     const v = (nmProfile && nmProfile['choice_' + slot]) || 'A';
-    if (/^[ABC]$/.test(v)) return nmItemKey(nmProfile.plan, slot, v);
+    if (/^[A-F]$/.test(v) && nmHasOpt(nmProfile.plan, slot, v)) return nmItemKey(nmProfile.plan, slot, v);
     return nmValidKey(v) ? v : nmItemKey(nmProfile.plan, slot, 'A');
 }
 function nmIsOverride(slot) { return !!(nmToday && nmToday.overrides && nmValidKey(nmToday.overrides[slot])); }
@@ -177,7 +180,7 @@ function nmTodayKey(slot) { return nmIsOverride(slot) ? nmToday.overrides[slot] 
 function nmIsFree(slot) { return !!(nmToday && nmToday.free_slot === slot); }
 function nmFreeKcal() { return (nmToday && Number(nmToday.free_kcal)) || NEW_ME_FREE_MEAL_KCAL; }
 // לשאלון: האות שנבחרה לכל משבצת (פריט מכל התפריט → A)
-function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; return /^[ABC]$/.test(v || '') ? v : 'A'; }
+function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; return /^[A-F]$/.test(v || '') && nmHasOpt(nmProfile.plan, slot, v) ? v : 'A'; }
 // שתי אהובות לכל ארוחה (לפי בקשה מפורשת: "מתוך 6 אפשרויות או 4 הם יבחרו ב2 שהן הכי אוהבים וזה יהיה רשום בתפריט או זה
 // או זה"): choice_<slot> = הראשונה (מה שמוצג), choice2_<slot> = השנייה - בכל יום נגיעה בה מחליפה אליה להיום
 function nmChoice2(slot) { const v = nmProfile && nmProfile['choice2_' + slot]; return /^[A-Z]$/.test(v || '') ? v : null; }
@@ -980,9 +983,9 @@ async function handleNewMeCheckoutReturn() {
 }
 
 // ---------- שאלון ----------
-function nmStartQuiz(fromSettings, preview) {
-    // תצוגה בלבד (מנהלת המוצר, ר' nmStartQuizPreview): כמו קונה חדש - בלי שום דבר מהפרופיל השמור
-    const p = preview ? null : nmProfile;
+function nmStartQuiz(fromSettings, fresh) {
+    // כמו קונה חדש (מנהלת המוצר, ר' nmStartQuizFresh): השאלון מתחיל ריק, בלי מה שכבר שמור
+    const p = fresh ? null : nmProfile;
     nmQuiz = {
         step: 0,
         agreed: false,
@@ -992,9 +995,9 @@ function nmStartQuiz(fromSettings, preview) {
         choices: Object.fromEntries(NEW_ME_SLOTS.map(s => [s, p ? nmChoice(s) : 'A'])),
         choices2: Object.fromEntries(NEW_ME_SLOTS.map(s => [s, p ? nmChoice2(s) : null])),
         fromSettings: !!fromSettings,
-        preview: !!preview,
-        // מכתב מהעבר (לא חובה) - שלב אחרון, רק כשעוד לא נכתב
-        withLetter: !(p && p.letter_written_at),
+        fresh: !!fresh,
+        // מכתב מהעבר (לא חובה) - שלב אחרון, רק כשעוד לא נכתב (גם בשאלון "כמו קונה חדש" - מכתב חתום לא נכתב מחדש)
+        withLetter: !(nmProfile && nmProfile.letter_written_at),
         letter: '',
         name: (p && p.cert_name) || '',
         late: p ? nmLateChoice() : null,
@@ -1009,8 +1012,8 @@ function nmStartQuiz(fromSettings, preview) {
 }
 function nmQuizTotal() { return nmQuiz && nmQuiz.withLetter ? 6 : 5; }
 // מנהלת המוצר: "קנייה" מדומה פותחת את השאלון מההצהרה, בדיוק כמו שקונה חדש רואה (לפי בקשה מפורשת: "קניתי מחדש את
-// הNEW בלי להצהיר... שים לב") - תצוגה בלבד: שום דבר לא נשמר, והפרופיל השמור לא משתנה
-function nmStartQuizPreview() {
+// הNEW בלי להצהיר... שים לב") - ובסוף הוא נשמר כמו אצל כל קונה (לפי בקשה מפורשת: "אני רוצה שזה ישמר שאעשה את הדיאטה שלי")
+function nmStartQuizFresh() {
     nmStartQuiz(false, true);
     nmTimes = null;
 }
@@ -1062,7 +1065,7 @@ function nmRenderQuiz(root) {
             <p class="nm-fine">${nmEsc(t('nm_q_plan_note'))}</p>`;
     } else if (q.step === 4) {
         // שעות האוכל: מהשגרה, או כמה ארוחות ומתי (ר' nmTimesBodyHtml)
-        if (!nmTimes) nmTimesStart({ fresh: q.preview });
+        if (!nmTimes) nmTimesStart({ fresh: q.fresh });
         body = `
             <h3 class="nm-step-title">🕐 ${nmEsc(t('nm_times_title'))}</h3>
             <div id="nm-times-box">${nmTimesBodyHtml()}</div>`;
@@ -1075,14 +1078,14 @@ function nmRenderQuiz(root) {
             <p class="nm-fine">🔒 ${nmEsc(t('nm_letter_seal_note'))}</p>
             <p class="nm-fine">${nmEsc(t('nm_letter_quiz_note'))}</p>`;
     } else {
-        const order = nmProfile && !q.preview ? nmOrder() : NEW_ME_DEFAULT_ORDER;
+        const order = nmProfile && !q.fresh ? nmOrder() : NEW_ME_DEFAULT_ORDER;
         body = `
             <h3 class="nm-step-title">${nmEsc(t('nm_q_menu_title'))}</h3>
             <p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>
             ${order.map(slot => `
                 <div class="nm-quiz-slot">
                     <div class="nm-slot-name">${nmEsc(nmSlotName(slot))}</div>
-                    ${NEW_ME_OPTIONS.map(opt => {
+                    ${nmSlotOpts(q.plan, slot).map(opt => {
                         const o = NEW_ME_PLANS[q.plan][slot].options[opt];
                         const picked = q.choices[slot] === opt || (q.choices2 && q.choices2[slot] === opt);
                         return `<button type="button" class="nm-option${picked ? ' selected' : ''}" aria-pressed="${picked}" data-opt="${opt}" onclick="nmQuizPick('${slot}', '${opt}')">
@@ -1101,13 +1104,12 @@ function nmRenderQuiz(root) {
     const isLast = q.step === total - 1;
     root.innerHTML = `
         <div class="nm-quiz">
-            ${q.preview ? `<div class="nm-quiz-preview-bar">${nmEsc(t('dev_sim_quiz_preview'))}</div>` : ''}
             <div class="nm-steps" aria-label="${nmEsc(t('nm_step_of').replace('{n}', q.step + 1).replace('{total}', total))}">
                 ${Array.from({ length: total }, (_, i) => `<span class="nm-step-dot${i <= q.step ? ' on' : ''}"></span>`).join('')}
             </div>
             ${body}
             <div class="nm-quiz-actions">
-                ${q.step > 0 || q.fromSettings || q.preview ? `<button type="button" class="nm-btn-ghost" onclick="nmQuizBack()">${nmEsc(t('nm_back'))}</button>` : ''}
+                ${q.step > 0 || q.fromSettings || (q.fresh && nmProfile) ? `<button type="button" class="nm-btn-ghost" onclick="nmQuizBack()">${nmEsc(t('nm_back'))}</button>` : ''}
                 <button type="button" class="nm-btn-primary" ${canContinue ? '' : 'disabled'} onclick="nmQuizNext()">${nmEsc(t(isLast ? 'nm_finish' : 'nm_continue'))}</button>
             </div>
         </div>`;
@@ -1116,7 +1118,7 @@ function nmRenderQuiz(root) {
 function nmQuizLate(c) { nmQuiz.late = c; nmRenderQuiz(nmRoot()); }
 
 function nmQuizBack() {
-    if (nmQuiz.step === 0) { const back = nmQuiz.preview ? 'home' : 'settings'; nmQuiz = null; nmTimes = null; nmView = back; renderNewMe(); return; }
+    if (nmQuiz.step === 0) { const back = nmQuiz.fresh ? 'home' : 'settings'; nmQuiz = null; nmTimes = null; nmView = back; renderNewMe(); return; }
     nmQuiz.step--;
     nmRenderQuiz(nmRoot());
 }
@@ -1143,8 +1145,6 @@ async function nmQuizNext() {
     }
     if (q.step === 4 && !(nmTimes && nmTimes.mode)) return;
     if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
-    // תצוגה בלבד: הגיעו לסוף כמו קונה חדש - ושום דבר לא נשמר
-    if (q.preview) { nmQuiz = null; nmTimes = null; nmView = 'home'; showAppToast(t('dev_sim_quiz_preview_done')); await renderNewMe(); nmScrollTop(); return; }
     const letter = q.withLetter ? String(q.letter || '').trim().slice(0, 4000) : '';
     if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
     const today = getLocalDateString();
@@ -1265,13 +1265,24 @@ function nmEatenToday() {
 
 // ארוחה שירדה מהתפריט (פחות ארוחות ביום): הקלוריות שלה מתחלקות בין שאר הארוחות, לכל אחת לפי הגודל שלה, מעוגל ל-5 -
 // כך שסך היום נשאר כמו בתוכנית (לפי בקשה מפורשת: "לא משנה מה תבחרו הקלוריות ישארו כי נוסיף/נוריד לכל ארוחה מה שצריך")
+// ארוחה קטנה בכוונה (ארוחת הבוקר הקטנה, small): כמה היא משאירה מהיעד שלה - זה מתחלק בין שאר הארוחות, כמו ארוחה שירדה
+// (לפי בקשה מפורשת: "לא משנה מה תבחרו הקלוריות ישארו")
+function nmSmallGap(slot) {
+    if (!nmProfile || nmIsFree(slot)) return 0;
+    const it = nmItemInfo(nmTodayKey(slot));
+    const plan = NEW_ME_PLANS[nmProfile.plan] || NEW_ME_PLANS[1300];
+    return it && it.small && plan[slot] ? Math.max(0, plan[slot].target - it.kcal) : 0;
+}
 function nmSlotExtra(slot) {
     if (!nmProfile) return 0;
     const hidden = nmHiddenSlots();
-    if (!hidden.length || hidden.includes(slot) || nmIsFree(slot)) return 0;
+    if (hidden.includes(slot) || nmIsFree(slot)) return 0;
     const plan = NEW_ME_PLANS[nmProfile.plan] || NEW_ME_PLANS[1300];
-    const freed = hidden.reduce((a, s) => a + (plan[s] ? plan[s].target : 0), 0);
-    const sum = nmActiveOrder().filter(s => !nmIsFree(s)).reduce((a, s) => a + plan[s].target, 0);
+    const active = nmActiveOrder().filter(s => !nmIsFree(s));
+    const small = active.filter(s => nmSmallGap(s) > 0);
+    if (small.includes(slot)) return 0;
+    const freed = hidden.reduce((a, s) => a + (plan[s] ? plan[s].target : 0), 0) + small.reduce((a, s) => a + nmSmallGap(s), 0);
+    const sum = active.filter(s => !small.includes(s)).reduce((a, s) => a + plan[s].target, 0);
     if (!freed || !sum || !plan[slot]) return 0;
     return Math.round(freed * plan[slot].target / sum / 5) * 5;
 }
@@ -1281,7 +1292,9 @@ function nmExtraLineHtml(slot) {
     if (!n) return '';
     const ideas = t(n < 80 ? 'nm_extra_ideas_s' : n < 160 ? 'nm_extra_ideas_m' : 'nm_extra_ideas_l');
     // תוספת קטנה (פחות מ-40) - רק כמה נוסף, בלי רעיונות (פרי שלם על 15 קלוריות לא מתאים): החלק שלפני המקף
-    let tpl = nmEsc(t('nm_extra_line'));
+    // מאיפה הקלוריות: מארוחת הבוקר הקטנה (כשאין ארוחה שירדה), או מהארוחה שירדה
+    const fromSmall = !nmHiddenSlots().length && nmActiveOrder().some(s => nmSmallGap(s) > 0);
+    let tpl = nmEsc(t(fromSmall ? 'nm_extra_line_small' : 'nm_extra_line'));
     if (n < 40 && tpl.includes('–')) tpl = tpl.split('–')[0].trim();
     return `<div class="nm-extra-line" data-extra="${n}">${tpl.replace('{n}', `<bdi dir="ltr">+${nmFmt(n)}</bdi>`).replace('{ideas}', nmEsc(ideas))}</div>`;
 }
@@ -2132,7 +2145,7 @@ function nmSwapCandidates(slot) {
     const target = NEW_ME_PLANS[nmProfile.plan][slot].target;
     const currentKey = nmTodayKey(slot);
     const all = [];
-    [1300, 1500].forEach(plan => NEW_ME_SLOTS.forEach(s => NEW_ME_OPTIONS.forEach(opt => {
+    [1300, 1500].forEach(plan => NEW_ME_SLOTS.forEach(s => nmSlotOpts(plan, s).forEach(opt => {
         const key = nmItemKey(plan, s, opt);
         if (key === currentKey) return;
         const it = nmItemInfo(key);
@@ -4086,8 +4099,11 @@ async function nmChangePlan(p) {
 
 // ---------- "דגשי תזונה": כרטיסי סטורי (אחד לכל נושא, איור + נקודה מרכזית) ----------
 // הקשה בצד הקריאה / החלקה / חיצים עוברים כרטיס. 3 הטיפים של התוכנית (מה-PDF) נכנסו לכאן
-const NEW_ME_STORIES = ['cover', 'tip_water', 'tip_veggies', 'tip_personal', 'raw', 'pot', 'after', 'weekly', 'out', 'estimate', 'control', 'outro'];
+const NEW_ME_STORIES = ['cover', 'tip_water', 'tip_veggies', 'tip_personal', 'tip_spread', 'tip_pita', 'tip_salad', 'raw', 'pot', 'after', 'weekly', 'out', 'estimate', 'control', 'outro'];
 const NEW_ME_STORY_ART = {
+    tip_spread: '<circle cx="80" cy="82" r="56" class="sa-soft"/><rect x="52" y="62" width="56" height="58" rx="10" class="sa-fill"/><rect x="52" y="62" width="56" height="58" rx="10" class="sa-line"/><rect x="48" y="50" width="64" height="14" rx="5" class="sa-accent"/><path d="M62 92h36" class="sa-line sa-thin"/><path d="M104 36l-26 44" class="sa-line"/><ellipse cx="76" cy="84" rx="8" ry="5" class="sa-accent-soft"/>',
+    tip_pita: '<circle cx="80" cy="82" r="56" class="sa-soft"/><path d="M34 98a46 46 0 0 1 92 0z" class="sa-fill"/><path d="M34 98a46 46 0 0 1 92 0z" class="sa-line"/><path d="M50 98a30 30 0 0 1 60 0" class="sa-line sa-thin"/><circle cx="64" cy="80" r="3" class="sa-accent"/><circle cx="86" cy="72" r="3" class="sa-accent"/><circle cx="100" cy="88" r="3" class="sa-accent"/>',
+    tip_salad: '<circle cx="80" cy="82" r="56" class="sa-soft"/><path d="M36 86h88a44 32 0 0 1-88 0z" class="sa-fill"/><path d="M36 86h88a44 32 0 0 1-88 0z" class="sa-line"/><path d="M56 86c-4-14 4-24 14-26 2 12-4 20-14 26z" class="sa-accent-soft"/><path d="M78 86c0-16 10-24 20-24 0 12-8 20-20 24z" class="sa-accent-soft"/><circle cx="98" cy="82" r="6" class="sa-accent"/>',
     cover: '<circle cx="80" cy="80" r="56" class="sa-soft"/><rect x="46" y="44" width="68" height="78" rx="8" class="sa-fill"/><rect x="46" y="44" width="68" height="78" rx="8" class="sa-line"/><line x1="58" y1="62" x2="102" y2="62" class="sa-line"/><line x1="58" y1="76" x2="96" y2="76" class="sa-line sa-thin"/><line x1="58" y1="88" x2="100" y2="88" class="sa-line sa-thin"/><line x1="58" y1="100" x2="86" y2="100" class="sa-line sa-thin"/><path d="M118 34l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" class="sa-accent"/><path d="M36 108l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="sa-accent"/>',
     tip_water: '<circle cx="80" cy="82" r="56" class="sa-soft"/><path d="M54 40h52l-6 84a8 8 0 0 1-8 7H68a8 8 0 0 1-8-7z" class="sa-fill"/><path d="M57 74c8 5 16 5 23 0s15-5 23 0l-3 50a8 8 0 0 1-8 7H68a8 8 0 0 1-8-7z" class="sa-accent-soft"/><path d="M54 40h52l-6 84a8 8 0 0 1-8 7H68a8 8 0 0 1-8-7z" class="sa-line"/><path d="M118 52c0 0-8 10-8 15a8 8 0 0 0 16 0c0-5-8-15-8-15z" class="sa-accent"/><circle cx="72" cy="98" r="3" class="sa-dot"/><circle cx="86" cy="110" r="2.2" class="sa-dot"/>',
     tip_veggies: '<circle cx="80" cy="84" r="56" class="sa-soft"/><path d="M34 88h92a46 30 0 0 1-92 0z" class="sa-fill"/><path d="M34 88h92a46 30 0 0 1-92 0z" class="sa-line"/><path d="M58 88c-6-16 2-30 14-34 2 14-4 26-14 34z" class="sa-accent"/><path d="M80 88c0-18 10-30 22-32-1 14-9 26-22 32z" class="sa-accent-soft"/><circle cx="98" cy="80" r="8" class="sa-accent"/><circle cx="66" cy="80" r="6" class="sa-accent-soft"/><path d="M118 46c-6 0-10 4-10 10" class="sa-line sa-thin"/><circle cx="120" cy="44" r="4" class="sa-dot"/>',
