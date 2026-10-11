@@ -510,80 +510,11 @@ function renderHomeSearchResults(groups, q) {
     });
 }
 
-// --- 🌼 לחיצה על העציץ: "מה כבר עשיתי היום" ---
-function toggleHomeDonePopover(force) {
-    const pop = document.getElementById('home-done-popover');
-    if (!pop) return;
-    const show = typeof force === 'boolean' ? force : pop.classList.contains('hidden');
-    pop.classList.toggle('hidden', !show);
-    syncHomePopoverClass();
-    if (!show) return;
-    const done = myDayItems.filter(it => it.checkable && it.done);
-    const flowers = homeGrowShown ? homeGrowShown.flowers : 0;
-    pop.innerHTML = `
-        <span class="home-done-title">${myDayEsc(t('home_done_title'))}</span>
-        ${done.length ? `<ul class="home-done-list">${done.map(it => `<li>${myDayEsc(it.title)}</li>`).join('')}</ul>` : `<p class="home-done-empty">${myDayEsc(t('home_done_empty'))}</p>`}
-        <span class="home-done-foot">${myDayEsc(t('home_done_water').replace('{n}', myDayWaterState.glasses).replace('{goal}', myDayWaterState.goal))} · ${myDayEsc(t('home_done_flowers').replace('{n}', flowers))}</span>`;
-    // בערב הצ'יפים שמתחת לברכה מורידים את "פתק מהיר" - החלון לא עולה עליו (וגולל בפנים אם צריך)
-    pop.style.maxHeight = '';
-    const qn = document.getElementById('btn-ai-fab');
-    if (qn && qn.offsetParent) {
-        const room = pop.getBoundingClientRect().bottom - qn.getBoundingClientRect().bottom - 8;
-        if (room > 80 && pop.offsetHeight > room) { pop.style.boxSizing = 'border-box'; pop.style.maxHeight = `${Math.floor(room)}px`; pop.style.overflowY = 'auto'; }
-    }
-}
-
-// --- לחיצה ארוכה על "פתק מהיר": הקלטה (הכתבה לפתק) / ישר לרשימת הקניות / פתק רגיל ---
+// --- הכתבה: שפות הדיבור ---
 const HOME_SPEECH_LANGS = { he: 'he-IL', en: 'en-US', es: 'es-ES', fr: 'fr-FR', ar: 'ar-SA', ru: 'ru-RU', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', zh: 'zh-CN', hi: 'hi-IN', ko: 'ko-KR', tr: 'tr-TR', id: 'id-ID', it: 'it-IT', vi: 'vi-VN', pl: 'pl-PL', th: 'th-TH', ur: 'ur-PK', bn: 'bn-BD', sw: 'sw-KE', uk: 'uk-UA', el: 'el-GR', nl: 'nl-NL', ca: 'ca-ES', ro: 'ro-RO', yo: 'yo-NG', sv: 'sv-SE', nb: 'nb-NO', da: 'da-DK', cs: 'cs-CZ', hu: 'hu-HU', fi: 'fi-FI' };
 function homeSpeechSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
-// לחיצה ארוכה (חצי שנייה) על כפתור. הקליק שבא אחריה לא מפעיל את הלחיצה הרגילה (מה שנפתח
-// בלחיצה הארוכה כבר פתוח) - משמש לפתק המהיר
-function homeAttachLongPress(el, onLong) {
-    if (!el || el.dataset.longPress) return;
-    el.dataset.longPress = '1';
-    let timer = 0;
-    let fired = false;
-    el.addEventListener('pointerdown', () => {
-        fired = false;
-        clearTimeout(timer);
-        timer = setTimeout(() => { fired = true; onLong(); }, 520);
-    });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(timer)));
-    el.addEventListener('contextmenu', e => e.preventDefault());
-    el.addEventListener('click', e => {
-        if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; }
-    }, true);
-}
-function initQuickNoteLongPress() {
-    homeAttachLongPress(document.getElementById('btn-ai-fab'), openQuickNoteMenu);
-}
-function openQuickNoteMenu() {
-    const menu = document.getElementById('quick-note-menu');
-    if (!menu) return;
-    const voice = menu.querySelector('[data-action="voice"]');
-    if (voice) voice.classList.toggle('hidden', !homeSpeechSupported());
-    menu.classList.remove('hidden');
-    syncHomePopoverClass();
-    if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
-}
-function closeQuickNoteMenu() {
-    const menu = document.getElementById('quick-note-menu');
-    if (menu) menu.classList.add('hidden');
-    syncHomePopoverClass();
-}
-function quickNoteMenuAction(action) {
-    closeQuickNoteMenu();
-    setQuickNoteDestination(action === 'shopping' ? 'general' : 'weekly');
-    openModal('modal-ai-quick-add');
-    if (action === 'voice') setTimeout(startQuickNoteDictation, 120);
-}
-function startQuickNoteDictation() {
-    const input = document.getElementById('ai-quick-add-input');
-    startDictation(input, document.querySelector('.dictate-btn[data-dictate="ai-quick-add-input"]'));
-}
-
 // --- הכתבה: מדברים והמילים נכתבות תוך כדי (Chrome / אנדרואיד / ספארי באייפון) ---
-// לפי בקשה מפורשת ("שיהיה ממש אפשר לדבר וזה יכתוב במילים"): כפתור מיקרופון גלוי בפינת הפתק המהיר,
+// לפי בקשה מפורשת ("שיהיה ממש אפשר לדבר וזה יכתוב במילים"): כפתור מיקרופון בשורת הכתיבה במסך הבית, בפתק המהיר
 // בעמוד כתיבה במחברת ובפתק השבועי. לחיצה מתחילה, לחיצה נוספת עוצרת; הטקסט נכנס במקום הסמן,
 // בשפת האפליקציה. באנדרואיד - משפט אחד בכל לחיצה (ההקשבה הרציפה שם משכפלת מילים)
 let dictationSession = null;
@@ -673,31 +604,19 @@ function homePremiumBadgeDay() {
     return saved.day === today;
 }
 
-// חלונית העציץ או התפריט של הפתק המהיר פתוחים - בועת העוזר מוסתרת בינתיים (שלא תעלה עליהם)
-function syncHomePopoverClass() {
-    const open = ['home-done-popover', 'quick-note-menu'].some(id => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); });
-    document.body.classList.toggle('home-popover-open', open);
-}
-
 // סגירת החלוניות הקטנות בלחיצה בחוץ
 function initHomeV2() {
     initMyDaySwipes();
-    initQuickNoteLongPress();
     initDictationButtons();
     document.addEventListener('click', e => {
-        const pop = document.getElementById('home-done-popover');
-        if (pop && !pop.classList.contains('hidden') && !e.target.closest('#home-done-popover, #btn-home-planter')) pop.classList.add('hidden');
-        const menu = document.getElementById('quick-note-menu');
-        if (menu && !menu.classList.contains('hidden') && !e.target.closest('#quick-note-menu, #btn-ai-fab')) menu.classList.add('hidden');
         const tip = document.getElementById('myday-water-tip');
         if (tip && !tip.classList.contains('hidden') && !e.target.closest('.myday-water-info, #myday-water-tip')) toggleMyDayWaterInfo();
-        syncHomePopoverClass();
     });
     try { if (sessionStorage.getItem('weekwise_home_focus') === '1') toggleHomeFocus(true); } catch {}
 }
 
 // ===================== שלב 2: נגיעות אישיות =====================
-// לפי הרעיונות שנבחרו במפורש: 3 רצף ימים, 8 משפט קטן ליום, 12 ספירה לאחור,
+// לפי הרעיונות שנבחרו במפורש: 3 רצף ימים, 12 ספירה לאחור,
 // 5 "3 דברים טובים" בערב, 14 השבועות הקודמים של הפתק השבועי, 9 מזג אוויר בשמיים
 
 const HOME_FLAME_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.8.2 1.6 1 2.6 2 3 0-2.6-.6-5.4.8-8.2z"/></svg>';
@@ -706,17 +625,6 @@ const HOME_MOON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="non
 
 function homeDaysBetween(a, b) {
     return Math.round((Date.parse(`${b}T12:00:00`) - Date.parse(`${a}T12:00:00`)) / 86400000);
-}
-
-// --- ✨ משפט קטן ליום, ברוח "בדרך ל-10" - מתחלף כל בוקר (20 משפטים, אחד ליום; "גם יום מבולגן..." הוסר לפי בקשה מפורשת) ---
-const HOME_DAILY_LINE_COUNT = 20;
-function homeDailyLineIndex(date) {
-    const d = date || new Date();
-    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) % HOME_DAILY_LINE_COUNT + 1;
-}
-function renderHomeDailyLine() {
-    const el = document.getElementById('home-daily-line');
-    if (el) el.textContent = t(`daily_line_${homeDailyLineIndex()}`);
 }
 
 
@@ -948,7 +856,6 @@ let homePhase2Timer = 0;
 let homePhase2Day = null;
 function initHomePhase2() {
     homePhase2Day = getLocalDateString();
-    renderHomeDailyLine();
     loadHomeCountdown();
     loadGoodThingsSetting();
     loadGoodThingsToday();
@@ -965,4 +872,43 @@ function initHomePhase2() {
         else renderHomeChips();
         refreshHomeWeather(false);
     }, 10 * 60000);
+}
+
+// --- ✏️ שורת הכתיבה במסך הבית (עיצוב 2, לפי בחירה מפורשת, 2026-10-11) - במקום כפתור "פתק מהיר":
+// כותבים ושולחים (➤ / Enter) ישר לפתקים. 📝 בתחילת השורה מחליף ל-🛒 רשימת הקניות ובחזרה ---
+let homeNoteDest = 'weekly';
+let homeNoteSaving = false;
+function setHomeNoteDest(dest = homeNoteDest) {
+    homeNoteDest = dest === 'general' ? 'general' : 'weekly';
+    const shopping = homeNoteDest === 'general';
+    const btn = document.getElementById('home-note-dest');
+    if (btn) {
+        const label = t(shopping ? 'quick_note_dest_shopping' : 'quick_note_dest_notes');
+        btn.classList.toggle('is-shopping', shopping);
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+    const input = document.getElementById('home-note-input');
+    if (input && !input.classList.contains('is-listening')) input.placeholder = t(shopping ? 'notes_ai_placeholder_shopping' : 'notes_ai_placeholder');
+}
+function toggleHomeNoteDest() { setHomeNoteDest(homeNoteDest === 'general' ? 'weekly' : 'general'); }
+async function saveHomeNoteLine() {
+    const input = document.getElementById('home-note-input');
+    if (!input || homeNoteSaving) return;
+    if (typeof stopDictation === 'function') stopDictation();
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    homeNoteSaving = true;
+    const send = document.getElementById('home-note-send');
+    if (send) send.disabled = true;
+    try {
+        const ok = await insertCenterItemDirect(homeNoteDest, text, null, null, null, true);
+        if (!ok) return;
+        showAppToast(t(homeNoteDest === 'general' ? 'notes_ai_added_shopping' : 'notes_ai_added'));
+        input.value = '';
+        input.blur();
+    } finally {
+        homeNoteSaving = false;
+        if (send) send.disabled = false;
+    }
 }

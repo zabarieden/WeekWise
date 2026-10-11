@@ -691,8 +691,8 @@ function srWallBoard(keys) {
             <rect x="337" y="624" width="22" height="72" rx="8" fill="#87573b"/>
             <rect x="86" y="640" width="250" height="58" rx="10" fill="#f3e6cf"/>
             <rect x="86" y="684" width="250" height="14" rx="6" fill="#d8c3a2"/>
-            <path d="M94 606 Q94 588 114 588 H150 Q168 588 168 606 Q168 626 150 628 H112 Q94 628 94 606 Z" fill="#fff6fa"/>
-            <path d="M116 616 Q116 600 134 600 H166 Q182 600 182 616 Q182 634 166 636 H132 Q116 636 116 616 Z" fill="#ffc9df"/>
+            <path d="M94 606 Q94 588 114 588 H150 Q168 588 168 606 Q168 626 150 628 H112 Q94 628 94 606 Z" fill="#fff6fa" transform="translate(0 15)"/>
+            <path d="M116 616 Q116 600 134 600 H166 Q182 600 182 616 Q182 634 166 636 H132 Q116 636 116 616 Z" fill="#ffc9df" transform="translate(0 11)"/>
             <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V690 Q344 702 332 702 H162 Q150 702 150 690 Z" fill="#a993f5"/>
             <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V650 Q300 656 250 652 T150 656 Z" fill="#c8bbff"/>
             <g fill="#fff4c9" opacity="0.9">

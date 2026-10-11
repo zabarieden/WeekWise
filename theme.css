@@ -6380,12 +6380,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .today-peek-chip + .today-peek-chip { margin-top: 8px; }
 /* New Me מתחת להשגרה שלי - אותו גרדיאנט ואותו טקסט לבן כמו .hamburger-newme-item בתפריט */
 .today-peek-chip.newme-chip { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); border-color: transparent; color: #fff; letter-spacing: .02em; }
-/* פתק מהיר - כפתור בולט באמצע מסך הבית */
-.home-quick-note-center { margin-block: auto; display: flex; justify-content: center; padding: 28px 0; }
-.home-quick-note-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); color: #fff; font: inherit; font-size: 1.05rem; font-weight: 800; letter-spacing: .01em; cursor: pointer; box-shadow: 0 12px 30px rgba(236, 72, 153, .38), 0 0 0 6px rgba(236, 72, 153, .12); transition: transform .15s ease, box-shadow .2s ease; }
-.home-quick-note-btn:active { transform: scale(.96); }
-.home-quick-note-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.home-quick-note-icon { width: 24px; height: 24px; flex-shrink: 0; }/* כשהפאנל של "הצצה להיום" סגור הצל שלו בלט מקצה המסך (פס אפור בצד) - מוסתר אחרי האנימציה */
+/* כשהפאנל של "הצצה להיום" סגור הצל שלו בלט מקצה המסך (פס אפור בצד) - מוסתר אחרי האנימציה */
 .today-peek-content-panel:not(.open):not(.dragging) { visibility: hidden; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0s linear 0.3s; }
 .today-peek-content-panel.open { visibility: visible; }
 /* ===== היעדים שלי: אפשרויות מעקב מוסברות, אתגר ימים, חיבור לשגרה ===== */
@@ -6410,26 +6405,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 #finance-section, #receipts-section { isolation: isolate; }
 .money-cozy-scene { position: relative; margin-top: auto; flex-shrink: 0; height: 170px; pointer-events: none; z-index: -1; color: var(--accent-purple); opacity: .55; }
 .money-cozy-scene svg { display: block; width: 100%; height: 100%; }
-/* 🌼 "פינה לא מושלמת שגדלה איתך" בתחתית מסך הבית, בצד שמול הרובוט (inline-start - הרובוט ב-inline-end).
-   בתוך .home-sky-scene, כך שמוצגת רק במסך הבית ומאחורי התוכן. ב-LTR האיור מתהפך כדי שהאדנית תישאר
-   בקצה המסך והמזרן לכיוון האמצע. חיננית נפתחת = .grow-flower.on (ר' updateHomeGrowCorner ב-app.js) */
-.home-grow-corner { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); inset-inline-start: 0; width: min(62%, 280px); color: var(--accent-purple); opacity: .72; pointer-events: none; }
-.home-grow-corner svg { display: block; width: 100%; height: auto; overflow: visible; }
-html[dir="ltr"] .home-grow-corner svg { transform: scaleX(-1); }
-.grow-flower .grow-open { opacity: 0; transform: scale(.25); transition: opacity .45s ease, transform .65s cubic-bezier(.34, 1.56, .64, 1); }
-.grow-flower.on .grow-open { opacity: 1; transform: scale(1); }
-.grow-flower .grow-bud { transition: opacity .3s ease; }
-.grow-flower.on .grow-bud { opacity: 0; }
-.home-grow-corner.no-anim .grow-open, .home-grow-corner.no-anim .grow-bud { transition: none; }
-/* הפרפר מרחף ומנופף בכנפיים כמה שניות כשמגיע, ואז נח (לא אנימציה אינסופית במסך הבית) */
-.grow-flower.on .grow-float { animation: growFloat 3.2s ease-in-out 4; }
-.grow-flower.on .grow-flutter { animation: growFlap .55s ease-in-out 22; }
-@keyframes growFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-3px, -4px); } }
-@keyframes growFlap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.45); } }
-@media (prefers-reduced-motion: reduce) {
-    .grow-flower .grow-open, .grow-flower .grow-bud { transition: none; }
-    .grow-flower.on .grow-float, .grow-flower.on .grow-flutter { animation: none; }
-}
 .books-section { gap: 12px; }
 .books-section > *:not(.books-cozy-scene) { position: relative; z-index: 1; }
 .books-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: relative; }
@@ -7758,25 +7733,9 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
 .home-tool-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.06); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--text-primary); display: grid; place-items: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
 .home-tool-btn:active { transform: scale(0.92); }
 .home-side-stack { position: absolute; top: 76px; inset-inline-end: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 5; }
-.home-greeting-row.home-greeting-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; margin: auto 0 0; padding: 0 12px; }
-.home-greeting-center .home-greeting-text { font-size: clamp(1.55rem, 7.4vw, 2rem); text-wrap: balance; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
-.home-greeting-center .home-greeting-date { font-size: 0.92rem; width: auto; margin: 0; }
-.home-hero-panel .home-quick-note-center { position: relative; margin: 28px 0 auto; }
-.quick-note-menu { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); min-width: 214px; display: flex; flex-direction: column; padding: 6px; border-radius: 18px; background: var(--bg-sheet); border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, var(--border-color)); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); z-index: 20; }
-.quick-note-menu-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: none; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; text-align: start; cursor: pointer; }
-.quick-note-menu-item:hover, .quick-note-menu-item:focus-visible { background: color-mix(in srgb, var(--accent-pink) 14%, transparent); }
-.quick-note-menu-item svg { flex: none; color: var(--accent-pink); }
+.home-greeting-row.home-greeting-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; margin: auto 0; padding: 0 12px; }
+.home-greeting-center .home-greeting-date { font-size: 0.98rem; font-weight: 600; width: auto; margin: 0; }
 #ai-quick-add-input.is-listening { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 45%, transparent); }
-/* הפינה שגדלה איתך יושבת מעל המגירה; כפתור שקוף מעל העציץ פותח "מה כבר עשיתי היום" */
-.home-hero-panel:not(.hidden) .home-grow-corner { bottom: calc(env(safe-area-inset-bottom, 0px) + 216px); }
-.home-planter-tap { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 218px); inset-inline-start: 6px; width: 112px; height: 86px; border: none; border-radius: 18px; background: transparent; cursor: pointer; z-index: 4; }
-.home-planter-tap:focus-visible { outline: 2px solid var(--accent-pink); }
-.home-done-popover { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 226px); inset-inline-start: 14px; width: min(270px, 78%); display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 20px; background: var(--bg-sheet); border: 1px solid color-mix(in srgb, var(--accent-gold) 40%, var(--border-color)); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); z-index: 7; }
-.home-done-title { font-weight: 800; font-size: 0.95rem; }
-.home-done-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.86rem; }
-.home-done-list li::before { content: '✓'; color: var(--accent-green); font-weight: 800; margin-inline-end: 6px; }
-.home-done-empty { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
-.home-done-foot { padding-top: 7px; border-top: 1px solid var(--border-color); font-size: 0.76rem; color: var(--text-secondary); }
 /* העוזר יושב מעל המגירה במסך הבית (קטן יותר, שלא יכסה אותה) */
 .home-hero-panel:not(.hidden) ~ .ai-brain-fab { bottom: calc(env(safe-area-inset-bottom, 0px) + 216px); width: 96px; height: 96px; }
 
@@ -7869,7 +7828,6 @@ html[dir="rtl"] .myday-now-rule { background: linear-gradient(270deg, transparen
 .home-focus-layer.hidden, .home-hero-panel.hidden ~ .home-focus-layer { display: none; }
 body.home-focus-on .hamburger-fab, body.home-focus-on .ai-brain-fab { visibility: hidden; }
 /* חלונית העציץ / התפריט של הפתק המהיר פתוחים - בועת העוזר לא מסתירה אותם */
-body.home-popover-open .ai-brain-fab { visibility: hidden; }
 .home-focus-exit { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 8px 0 14px; border-radius: 999px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
 html[dir="ltr"] .home-focus-exit { padding: 0 14px 0 8px; }
 .home-focus-x { width: 28px; height: 28px; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 8%, transparent); display: grid; place-items: center; font-size: 0.75rem; }
@@ -7901,8 +7859,6 @@ html[dir="ltr"] .home-focus-exit { padding: 0 14px 0 8px; }
 
 /* ---------- מסך הבית, שלב 2: נגיעות אישיות (ר' home.js) ---------- */
 /* ✨ משפט קטן ליום ו-צ'יפים: רצף, ספירה לאחור, "3 דברים טובים" בערב */
-.home-daily-line { margin: 2px 0 0; max-width: 300px; font-size: 0.86rem; line-height: 1.5; color: var(--text-secondary); text-wrap: balance; }
-.home-daily-line:empty { display: none; }
 .home-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; max-width: min(380px, 100%); }
 .home-chips.hidden { display: none; }
 .home-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; max-width: 100%; padding: 0 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); font: inherit; font-size: 0.78rem; font-weight: 600; line-height: 1.2; white-space: nowrap; box-sizing: border-box; }
@@ -7983,7 +7939,6 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
 @media (max-height: 800px) {
     .home-chips { gap: 5px; margin-top: 4px; }
     .home-chip { min-height: 27px; padding: 0 9px; font-size: 0.72rem; gap: 5px; }
-    .home-daily-line { font-size: 0.8rem; }
 }
 
 /* ---------- תיקונים אחרי מסך הבית (שלב 2) ---------- */
@@ -9103,3 +9058,52 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
     .srp-ripples-wf ellipse { opacity: 0.4; }
     .yg-breath, .sr-place-yoga .srp-view { transition: none; }
 }
+
+/* ===== ✏️ מסך הבית - עיצוב 2 (לפי בחירה מפורשת, 2026-10-11): התאריך, הצ'יפים, ושורת כתיבה במקום הכפתור.
+   בלילה - המראה של עיצוב 20: זוהר עדין מאחור, והשורה במסגרת זוהרת ===== */
+.home-note-line { display: flex; align-items: center; gap: 6px; width: min(100%, 360px); box-sizing: border-box; margin-top: 18px; padding: 7px; border-radius: 24px; background: var(--bg-sheet); border: 1px solid var(--border-color); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); text-align: start; }
+.home-note-line:focus-within { border-color: var(--accent-purple); }
+.home-note-dest { flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--accent-purple); cursor: pointer; }
+.home-note-dest svg { width: 22px; height: 22px; }
+.home-note-dest .hn-cart, .home-note-dest.is-shopping .hn-doc { display: none; }
+.home-note-dest.is-shopping .hn-cart { display: block; }
+.home-note-input { flex: 1; min-width: 0; height: 40px; padding: 0 4px; border: none; border-radius: 0; background: transparent; color: var(--text-primary); font: inherit; font-size: 1rem; outline: none; box-shadow: none; }
+.home-note-input::placeholder { color: var(--text-secondary); }
+.home-note-line .home-note-mic { position: static; flex: none; z-index: auto; }
+.home-note-send { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: none; border-radius: 50%; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; cursor: pointer; }
+.home-note-send svg { width: 20px; height: 20px; }
+html[dir="ltr"] .home-note-send svg { transform: scaleX(-1); }
+.home-note-send:disabled { opacity: 0.6; }
+.home-note-dest:active, .home-note-send:active { transform: scale(0.92); }
+.home-note-dest:focus-visible, .home-note-send:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+html:not(.light-mode) .home-sky-scene::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 42% at 50% 36%, color-mix(in srgb, var(--accent-purple) 26%, transparent), transparent 72%); }
+html:not(.light-mode) .home-note-line { background: color-mix(in srgb, var(--bg-sheet) 35%, transparent); border: 1.5px solid var(--accent-pink); box-shadow: 0 0 26px color-mix(in srgb, var(--accent-pink) 25%, transparent), inset 0 0 14px color-mix(in srgb, var(--accent-pink) 12%, transparent); }
+html:not(.light-mode) .home-note-dest { color: var(--accent-pink); }
+html:not(.light-mode) .home-note-input::placeholder { color: color-mix(in srgb, var(--accent-pink) 60%, var(--text-secondary)); }
+html:not(.light-mode) .home-note-send { background: transparent; border: 1.5px solid var(--accent-pink); color: var(--accent-pink); }
+@media (prefers-reduced-motion: reduce) { .home-note-dest:active, .home-note-send:active { transform: none; } }
+
+/* 🔍 החיפוש בראש התפריט, ו-🌙 מצב לילה ליד כפתורי התפריט (לפי בקשה מפורשת) */
+.hamburger-search { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-secondary); font: inherit; font-size: 0.9rem; text-align: start; cursor: pointer; }
+.hamburger-search svg { flex: none; color: var(--text-primary); }
+.hamburger-search:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.categories-sheet .hamburger-search { margin: 4px 0 12px; }
+.js-night-btn .hn-sun, .js-night-btn.is-night .hn-moon { display: none; }
+.js-night-btn.is-night .hn-sun { display: block; }
+
+/* 🎒 התרמיל של New Me במראה "מנורות" (מראה 2, לפי בחירה מפורשת): הסגול של המסדרון, ואור זהב מאחורי כל אייקון */
+.nm-backpack-sheet { background: linear-gradient(180deg, #241640 0%, #1a1030 100%); color: #ffe7b0; }
+.nm-backpack-sheet .nmb-next { border-color: rgba(255, 210, 122, 0.55); background: #2a1b45; }
+.nm-backpack-sheet .nmb-next.is-done { color: #ffe7b0; }
+.nm-backpack-sheet .nmb-eyebrow { color: #ffd27a; }
+.nm-backpack-sheet .nmb-next-name { color: #ffe7b0; }
+.nm-backpack-sheet .nmb-meta { color: #cbb8e8; }
+.nm-backpack-sheet .nmb-next-actions .nm-btn-primary { background: linear-gradient(135deg, #ffe3a3, #ffd27a); color: #2a1145; box-shadow: none; }
+.nm-backpack-sheet .nmb-swap { background: transparent; border-color: rgba(255, 210, 122, 0.55); color: #ffe7b0; }
+.nm-backpack-sheet .nmb-meal { background: #2a1b45; color: #ffe7b0; }
+.nm-backpack-sheet .nmb-pos { color: #cbb8e8; }
+.nm-backpack-sheet .nmb-check { border-color: #ffd27a; }
+.nm-backpack-sheet .nmb-pockets .nm-tile { background: #2a1b45; border: 1px solid rgba(255, 210, 122, 0.18); color: #ffe7b0; }
+.nm-backpack-sheet .nmb-pockets .nm-tile-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 210, 122, 0.5), rgba(255, 210, 122, 0) 72%); }
+.nm-backpack-sheet .nmb-pockets .nm-tile-label { color: #ffe7b0; }
+.nm-backpack-sheet .nmb-pockets .nm-tile:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
