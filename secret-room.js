@@ -1,41 +1,48 @@
 // ===== New Me: החדר הסודי =====
 // לפי בקשה מפורשת (2026-10-06): חדר פרטי בתוך New Me - "רק שלך, לא צריך לספר עליו לאף אחד".
-// רואים קיר אחד בכל פעם (כמו משחקי חדר בריחה) וחצים מסובבים את החדר. כל אתגר שמסתיים = מפתח,
-// וכל מפתח פותח דבר אחד (לפי בקשה מפורשת: "20 אתגרים - פתיחה של 20 דברים, לא רק חדרים, מסודר"):
-// המפתח הראשון (✓ על ארוחה ב-3 ימים שונים) פותח את הדלת, ו-20 האתגרים פותחים את כל השאר - ר' ROOM_UNLOCKS.
+// רואים קיר אחד בכל פעם (כמו משחקי חדר בריחה) וחצים מסובבים את החדר. כל אתגר שמסתיים = מפתח. עשרה שלבים
+// (לפי בקשה מפורשת, 2026-10-11: "מצידי שיהיו רק עשר שלבי פתיחה... כל חדר שנפתח יש בו כבר הכל"): המפתח הראשון
+// (✓ על ארוחה ב-3 ימים שונים) פותח את הדלת ואת כל החדר, ותשעה אתגרים פותחים את כל השאר - ר' ROOM_UNLOCKS.
 // החדרים שמאחורי הדלתות במסדרון - ב-secret-places.js. ניצוץ (הבועה עם העיניים) גר בחדר.
 // ברירת המחדל כהה ("לילה נעים"); "בוקר פסטל" ו"עליית גג" (נפתחת עם הסטודיו) - ב"לעצב את החדר".
 // מנהלת המוצר (חשבון המפתחים) מקבלת כפתור מפתח בצד: כל לחיצה = "כאילו הסתיים אתגר", והפתיחה
 // נראית בדיוק כמו אצל כולם (לפי בקשה מפורשת); "−" סוגר את האחרון כדי לראות את הפתיחה שוב.
 // נשמר ב-new_me_room: אילו מפתחות כבר נחשפו, השיחה הראשונה עם ניצוץ, מראה החדר והשיא במשחק.
 
-// מה פותח מה: החדר (1–4), הגג ומה שמאחורי הדלתות במסדרון (5–10), הפתעות קטנות בכל מקום (11–20), והאתגר האחרון -
-// בקבוק מגיע מהים עם המכתב מהעבר (21). place = המקום שבו נמצא הדבר החדש; wall = קיר בחדר הסודי; hatch = הפתח
-// שבתקרה במסדרון; tool = כפתור בחדר. כשמשהו נפתח, חץ מוביל אליו (roomGuide) - במקום מפת הבית שהייתה
+// מה פותח מה - 10 שלבים: 1 = הדלת וכל החדר (המחשב, המשחק, הפטיפון, הארון עם הספרייה, החתול והסטודיו);
+// 2 = הגג (עם פנס המשאלות); 3 = המרפסת מול הים (עם הגשם); 4 = הגיטרה והיומן; 5 = חדר הנשימה (עם המקל בחול);
+// 6 = שביל היער עם כל מה שבו והיוגה; 7 = המפל (עם בריכת המראה); 8 = הפתעה בגג - טלסקופ ותיבת אוצר; 9 = הטאבלט;
+// 10 = בקבוק מגיע מהים עם המכתב מהעבר. n = כמה מפתחות צריך, וכל השורות של אותו n נפתחות יחד. place = המקום
+// שבו נמצא הדבר החדש; wall = קיר בחדר הסודי; hatch = הפתח שבתקרה במסדרון; roof = על הגג; tool = כפתור בחדר.
+// כשמשהו נפתח, חץ מוביל אליו (roomGuide) - לדבר הראשון בשלב החדש ביותר
 const ROOM_UNLOCKS = [
     { n: 1, id: 'door', wall: 0 },
-    { n: 2, id: 'computer', wall: 0 },
-    { n: 3, id: 'game', wall: 2 },
-    { n: 4, id: 'shelf', wall: 3 },
-    { n: 5, id: 'roof', hatch: true },
-    { n: 6, id: 'porch', place: 'porch' },
-    { n: 7, id: 'music', place: 'music' },
-    { n: 8, id: 'studio', tool: 'decor' },
-    { n: 9, id: 'breath', place: 'breath' },
-    { n: 10, id: 'outside', place: 'outside' },
-    { n: 11, id: 'catvisit', wall: 3 },
-    { n: 12, id: 'yoga', place: 'yoga' },
-    { n: 13, id: 'waterfall', place: 'waterfall' },
-    { n: 14, id: 'rain', place: 'porch' },
-    { n: 15, id: 'selfcare', place: 'outside' },
-    { n: 16, id: 'vinyl', place: 'music' },
-    { n: 17, id: 'sand', place: 'breath' },
-    { n: 18, id: 'swing', place: 'outside' },
-    { n: 19, id: 'campfire', place: 'outside' },
-    { n: 20, id: 'tablet', place: 'porch' },
-    { n: 21, id: 'bottle', place: 'porch' },
+    { n: 1, id: 'computer', wall: 0 },
+    { n: 1, id: 'game', wall: 2 },
+    { n: 1, id: 'vinyl', wall: 2 },
+    { n: 1, id: 'shelf', wall: 3 },
+    { n: 1, id: 'catvisit', wall: 3 },
+    { n: 1, id: 'studio', tool: 'decor' },
+    { n: 2, id: 'roof', hatch: true },
+    { n: 3, id: 'porch', place: 'porch' },
+    { n: 3, id: 'rain', place: 'porch' },
+    { n: 4, id: 'music', place: 'music' },
+    { n: 5, id: 'breath', place: 'breath' },
+    { n: 5, id: 'sand', place: 'breath' },
+    { n: 6, id: 'outside', place: 'outside' },
+    { n: 6, id: 'selfcare', place: 'outside' },
+    { n: 6, id: 'swing', place: 'outside' },
+    { n: 6, id: 'campfire', place: 'outside' },
+    { n: 6, id: 'yoga', place: 'yoga' },
+    { n: 7, id: 'waterfall', place: 'waterfall' },
+    { n: 8, id: 'telescope', roof: true },
+    { n: 8, id: 'chest', roof: true },
+    { n: 9, id: 'tablet', place: 'porch' },
+    { n: 10, id: 'bottle', place: 'porch' },
 ];
+const ROOM_STAGES = 10;
 const ROOM_STARTER_DAYS = 3;
+
 const ROOM_WALLS = 4;
 const ROOM_GAME_SECONDS = 60;
 const ROOM_PUZZLE_PIECES = 12;
@@ -275,7 +282,10 @@ function roomShowKeyReveal(from, to) {
     const eyebrow = first ? t('room_reveal_first_eyebrow') : (many ? t('room_reveal_many_eyebrow').replace('{n}', srFmt(to - from)) : t('room_reveal_eyebrow'));
     const title = opened.some(u => u.id === 'door') ? t('room_reveal_door_title') : t('room_reveal_key_title').replace('{n}', srFmt(to));
     const openedHtml = opened.filter(u => u.id !== 'door').map(u => `<li>${SR_KEY_SVG}<span>${srEsc(t('room_reveal_opened').replace('{item}', roomItemName(u.id)))}</span></li>`).join('');
-    const nextHtml = !opened.length && next ? `<p class="sr-reveal-next">${srEsc(t('room_next_line').replace('{item}', roomItemName(next.id)).replace('{left}', roomKeysLeftText(next.n - to)))}</p>` : '';
+    // אחרי השלב האחרון (הבקבוק) כל אתגר עדיין מביא מפתח - והוא מדליק כוכב חדש בטלסקופ שעל הגג (כל מפתח עושה משהו שרואים)
+    const beyond = !opened.length && !next && roomIsUnlocked('telescope');
+    const nextHtml = beyond ? `<p class="sr-reveal-next">${srEsc(t('room_reveal_star'))}</p>`
+        : (!opened.length && next ? `<p class="sr-reveal-next">${srEsc(t('room_next_line').replace('{item}', roomItemName(next.id)).replace('{left}', roomKeysLeftText(next.n - to)))}</p>` : '');
     const ov = document.createElement('div');
     ov.className = 'sr-reveal';
     ov.setAttribute('role', 'dialog');
@@ -288,7 +298,7 @@ function roomShowKeyReveal(from, to) {
             <h3>${srEsc(title)}</h3>
             ${openedHtml ? `<ul class="sr-reveal-opened">${openedHtml}</ul>` : ''}
             ${nextHtml}
-            <button type="button" class="sr-reveal-go">${srEsc(t(opened.length ? (opened.some(u => u.id === 'door') ? 'room_enter_btn' : 'room_reveal_go') : 'room_reveal_enter'))}</button>
+            <button type="button" class="sr-reveal-go">${srEsc(t(opened.length || beyond ? (opened.some(u => u.id === 'door') ? 'room_enter_btn' : 'room_reveal_go') : 'room_reveal_enter'))}</button>
             <button type="button" class="sr-reveal-later">${srEsc(t('room_reveal_later'))}</button>
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
@@ -306,8 +316,10 @@ function roomShowKeyReveal(from, to) {
         await seen;
         // לפי בקשה מפורשת: "ברגע שמשהו נפתח - פשוט תוליך את המשתמש עם חץ לאן שצריך" - חוזרים למסדרון,
         // וחץ מראה לאן ללכת (ר' roomGuideHallway); בפנים חץ נוסף מצביע על הדבר עצמו
-        const target = opened.slice(-1)[0];
-        roomGuide = target ? { id: target.id } : null;
+        // החץ: לדבר הראשון בשלב החדש ביותר שנפתח (בשלב 1 - הדלת)
+        const topN = opened.length ? Math.max(...opened.map(u => u.n)) : 0;
+        const target = opened.find(u => u.n === topN);
+        roomGuide = target ? { id: target.id } : (beyond ? { id: 'telescope' } : null);
         if (srIsOpen()) closeSecretRoom();
         if (typeof openNewMe === 'function') {
             const sec = document.getElementById('new-me-section');
@@ -359,6 +371,8 @@ function openSecretRoom(opts = {}) {
 
 function closeSecretRoom() {
     roomStopGame();
+    // הפטיפון שבחדר מנגן רק בזמן שהחדר פתוח
+    if (typeof srpMusicStop === 'function') srpMusicStop();
     if (typeof srpCleanup === 'function') srpCleanup();
     if (pcState) { pcStopTimers(); pcState = null; }
     document.getElementById('sr-overlay')?.remove();
@@ -463,6 +477,7 @@ function srHotspot(id, el) {
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
+    if (id === 'vinyl') { if (typeof srpOpenRecords === 'function') srpOpenRecords(el); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
 }
@@ -762,8 +777,23 @@ function srWallGame(keys) {
         <rect x="34" y="604" width="8" height="40" fill="#2e1d3e"/><rect x="176" y="604" width="8" height="40" fill="#2e1d3e"/>
         <rect x="188" y="600" width="28" height="44" rx="4" fill="#4f3122"/>
         <rect x="182" y="590" width="40" height="12" rx="3" fill="#8a5a3c"/>
-        <rect x="188" y="574" width="28" height="16" rx="2" fill="#f3e6cf"/><rect x="192" y="578" width="6" height="6" fill="#ff4fa3"/><rect x="201" y="578" width="6" height="6" fill="#22d3ee"/><rect x="210" y="578" width="4" height="6" fill="#ffd27a"/>
+        ${roomTurntableSvg(keys >= roomUnlockAt('vinyl'))}
         ${srFriend(p, 110, 394, 26, { x: 91, y: 342, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M96 352 l4 14 l8 -14z', shadowY: 570 })}`;
+}
+
+// 🎵 הפטיפון - על השולחן הקטן שליד הכורסה, פתוח עם החדר (לפי בקשה מפורשת: "שהפטיפון כבר יהיה בחדר").
+// נגיעה פותחת את התקליטים (srpOpenRecords ב-secret-places.js); כשמתנגן כאן לחן - התקליט מסתובב ותו קטן עולה
+function roomTurntableSvg(open) {
+    if (!open) return '<rect x="188" y="574" width="28" height="16" rx="2" fill="#f3e6cf"/><rect x="192" y="578" width="6" height="6" fill="#ff4fa3"/><rect x="201" y="578" width="6" height="6" fill="#22d3ee"/><rect x="210" y="578" width="4" height="6" fill="#ffd27a"/>';
+    const on = typeof srpNowPlaying !== 'undefined' && typeof SRP_RECORDS !== 'undefined' && SRP_RECORDS[srpNowPlaying] ? srpNowPlaying : -1;
+    return `<g class="sr-hot srp-vinyl sr-turntable${on >= 0 ? ' is-playing' : ''}" data-hot="vinyl" role="button" tabindex="0" aria-label="${srEsc(roomItemName('vinyl'))}" aria-pressed="${on >= 0}"${on >= 0 ? ` data-song="${on}" style="--rec:${SRP_RECORDS[on].color}"` : ''}>
+            <rect x="180" y="574" width="44" height="16" rx="3" fill="#3a2416"/>
+            <rect x="180" y="586" width="44" height="4" rx="1.5" fill="#24150d"/>
+            <g transform="translate(198 576) scale(1 0.38)"><g class="srp-record"><circle r="15" fill="#141014"/><circle r="11" fill="none" stroke="#2c262c" stroke-width="1.2"/><circle r="5.5" style="fill:var(--rec, #ff6aa5)"/><circle r="1.4" fill="#d9b98a"/></g></g>
+            <g class="srp-arm"><circle cx="219" cy="577" r="2" fill="#c9c9d0"/><path d="M219 577 L208 573" stroke="#c9c9d0" stroke-width="1.6" stroke-linecap="round"/></g>
+            <g class="sr-turntable-note" aria-hidden="true"><path d="M206 562 v-9 l6 -1.5 v9" fill="none" stroke="#ffd27a" stroke-width="1.4"/><circle cx="204.5" cy="562.4" r="2" fill="#ffd27a"/><circle cx="210.5" cy="560.9" r="2" fill="#ffd27a"/></g>
+            <rect class="sr-turntable-hit" x="170" y="544" width="64" height="50" fill="transparent"/>
+        </g>`;
 }
 
 function srWallShelf(keys) {
@@ -836,7 +866,7 @@ function srWrapText(s, n) {
     return lines;
 }
 
-// ---------- המחשב (מפתח 2): שיחה בעץ ----------
+// ---------- המחשב (מהמפתח הראשון): שיחה בעץ ----------
 // שלושה מסלולים לפי התסריטים שנשלחו - יום טוב / עמוס / קשה - כל אחד עם ענפים, ובסוף משימה קטנה 🎯.
 // בכל שלב: "↩ חזרה" (צעד אחורה, לענות אחרת) ו"שיחה חדשה". אחרי יום עמוס / קשה, מי שחוזר למחשב באותו
 // יום מקבל "חזרתי..." עם תסריט ההמשך. נשמרות רק הבחירות (לא מה שנכתב), רק במכשיר הזה ועד סוף היום.
@@ -1463,7 +1493,7 @@ function pcUpdateNav() {
     if (back) back.disabled = atStart;
 }
 
-// ---------- המשחק (מפתח 3): לתפוס ניצוצות, דקה אחת ----------
+// ---------- המשחק (מהמפתח הראשון): לתפוס ניצוצות, דקה אחת ----------
 function roomOpenGame() {
     const stage = srStage();
     if (!stage) return;
@@ -1552,7 +1582,7 @@ function roomStopGame() {
     roomGame = null;
 }
 
-// ---------- המדף (מפתח 4): הספרים, המחברות והזיכרונות ----------
+// ---------- המדף (מהמפתח הראשון): הספרים, המחברות והזיכרונות ----------
 function roomOpenShelf() {
     const item = (id, icon, key) => `<button type="button" class="sr-shelf-item" data-go="${id}"><span aria-hidden="true">${icon}</span><b>${srEsc(t(key))}</b></button>`;
     const ov = nmOpenSheet(`
@@ -1574,7 +1604,7 @@ function roomOpenShelf() {
     }));
 }
 
-// ---------- הגג (מפתח 5) ----------
+// ---------- הגג (שלב 2) ----------
 // לפי בקשה מפורשת: כוכבים שהם לא מפתחות - פשוט יפים; נגיעה בכוכב = הוא נופל ככוכב נופל וחוזר למקום;
 // עיר יפה מבצבצת מעל הרעפים, ובאופק הרחוק יער וים. וגם (מהבקשה על הגג): רעפים, מקום לשבת וחתול
 const ROOF_STARS = 24;
@@ -1665,6 +1695,8 @@ function roomRoofScene() {
             </g>
             ${roomCatSvg()}
             ${roomIsUnlocked('roof') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
+            ${roomIsUnlocked('telescope') ? roomScopeSvg() : ''}
+            ${roomIsUnlocked('chest') ? roomChestSvg() : ''}
             </g>
         </svg>`;
 }
@@ -1772,8 +1804,14 @@ function roomOpenRoof(opts = {}) {
         const size = rnd() < 0.3 ? 'is-big' : rnd() < 0.5 ? 'is-small' : '';
         stars += `<button type="button" class="sr-star ${size}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;animation-delay:${((i * 0.37) % 3).toFixed(2)}s" aria-label="${srEsc(t('room_star_aria'))}"></button>`;
     }
+    // כוכבים מתיבת האוצר: כל כוכב שנמצא בתיבה נשאר בשמיים, גדול וזוהר
+    for (let i = 0; i < roomChestStars(); i++) {
+        const x = 10 + rnd() * 80, y = 6 + rnd() * 40;
+        stars += `<button type="button" class="sr-star is-big is-gift" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;animation-delay:${((i * 0.53) % 3).toFixed(2)}s" aria-label="${srEsc(t('room_chest_star'))}"></button>`;
+    }
     const box = document.createElement('div');
     box.className = 'sr-roof';
+    box._opts = opts;
     box.innerHTML = `
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('roof'))}</b><span></span></div>
         <div class="sr-roof-sky">
@@ -1785,15 +1823,158 @@ function roomOpenRoof(opts = {}) {
     if (typeof roomInitWish === 'function') roomInitWish(box);
     const guided = roomGuideUnlock();
     if (guided && guided.id === 'roof') roomGuideDone();
-    else if (guided && guided.roof) roomShowArrow(box, box.querySelector('.sr-wish'), roomGuideDone);
+    else if (guided && guided.roof) roomShowArrow(box, box.querySelector(`[data-roof-hot="${guided.id}"]`) || box.querySelector('.sr-wish'), roomGuideDone);
     box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
     const sky = box.querySelector('.sr-roof-sky');
     box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => roomStarFall(s)));
+    // 🔭 הטלסקופ ו-🧰 תיבת האוצר (שלב 8)
+    box.querySelectorAll('[data-roof-hot]').forEach(h => {
+        const go = () => { if (h.dataset.roofHot === 'telescope') roomOpenTelescope(); else roomOpenChest(h); };
+        h.addEventListener('click', go);
+        h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
     // ומדי פעם כוכב נופל לבד, בלי לגעת
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const shoot = () => { if (!box.isConnected) return; roomShootingStar(sky); setTimeout(shoot, 11000 + Math.random() * 9000); };
     if (!reduce) setTimeout(shoot, 6000);
 }
+// ---------- 🔭 הטלסקופ ו-🧰 תיבת האוצר על הגג (שלב 8, לפי בחירה מפורשת: רעיונות לגג 2 ו-1) ----------
+// הטלסקופ: מסתכלים דרכו ורואים קבוצת כוכבים שמצטיירת מהאתגרים שהסתיימו - כל אתגר הוא כוכב, ונגיעה בכוכב אומרת
+// איזה אתגר זה היה. התיבה: נעולה; 3 ימים ברצף עם ✓ על ארוחה - והיא נפתחת: בפנים מכתב קטן, מדבקה למכסה או כוכב
+// חדש לשמיים (לפי הסדר), ואז נסגרת ל-3 הימים הבאים. נשמר ב-new_me_room (chest_gifts, chest_opened_on)
+const ROOM_CHEST_DAYS = 3;
+const ROOM_CHEST_LETTERS = 8;
+const ROOM_CHEST_STICKERS = ['🌟', '🌙', '🦋', '🌸', '💛', '🍀', '🌈', '🐚'];
+function roomChestGifts() { return Math.max(0, Number(roomState && roomState.chest_gifts) || 0); }
+function roomChestStickers() { return ROOM_CHEST_STICKERS.slice(0, Math.min(ROOM_CHEST_STICKERS.length, Math.floor((roomChestGifts() + 1) / 3))); }
+function roomChestStars() { return Math.floor(roomChestGifts() / 3); }
+// ימים ברצף עם ✓ על ארוחה (מסיכומי המסע של New Me), רק אחרי הפעם האחרונה שהתיבה נפתחה. היום עוד בלי ✓ - סופרים עד אתמול
+function roomChestStreak() {
+    const stats = typeof nmStats !== 'undefined' && Array.isArray(nmStats) ? nmStats : [];
+    const checked = new Set(stats.filter(r => Number(r.checks) > 0).map(r => String(r.day).slice(0, 10)));
+    const after = roomState && roomState.chest_opened_on ? String(roomState.chest_opened_on).slice(0, 10) : '';
+    let day = getLocalDateString();
+    if (!checked.has(day)) day = addDaysToDateStr(day, -1);
+    let n = 0;
+    while (n < ROOM_CHEST_DAYS && checked.has(day) && day > after) { n++; day = addDaysToDateStr(day, -1); }
+    return n;
+}
+// מנהלת המוצר יכולה לפתוח בכל רגע, כדי לראות איך זה נפתח
+function roomChestReady() { return roomIsDev() || roomChestStreak() >= ROOM_CHEST_DAYS; }
+function roomScopeSvg() {
+    return `<g class="sr-roof-hot sr-scope" data-roof-hot="telescope" role="button" tabindex="0" aria-label="${srEsc(roomItemName('telescope'))}">
+        <ellipse cx="352" cy="503" rx="27" ry="6" fill="#000" opacity="0.32"/>
+        <g stroke="#2e2440" stroke-width="3.2" stroke-linecap="round"><line x1="352" y1="462" x2="333" y2="501"/><line x1="352" y1="462" x2="371" y2="501"/><line x1="352" y1="462" x2="353" y2="503"/></g>
+        <g transform="rotate(32 352 458)">
+            <rect x="326" y="452" width="50" height="12" rx="4" fill="#c9a36b"/>
+            <rect x="314" y="448" width="15" height="20" rx="4" fill="#8a5a3c"/>
+            <rect x="375" y="454" width="9" height="8" rx="2" fill="#5a3a26"/>
+            <rect x="338" y="452" width="3" height="12" fill="#a8824e"/>
+        </g>
+        <circle cx="352" cy="460" r="3.6" fill="#ffd27a"/>
+        <circle class="sr-scope-glint" cx="322" cy="440" r="2.4" fill="#fff3c4"/>
+        <rect x="304" y="418" width="90" height="92" fill="transparent"/>
+    </g>`;
+}
+function roomChestSvg() {
+    const streak = roomChestStreak();
+    const ready = roomChestReady();
+    const dots = [0, 1, 2].map(i => `<circle cx="${38 + i * 14}" cy="440" r="4" fill="${ready || i < streak ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-width="1.4"/>`).join('');
+    const stickers = roomChestStickers().map((s, i) => `<text x="${24 + (i % 4) * 9 + (i % 4 > 1 ? 36 : 0)}" y="${489 + Math.floor(i / 4) * 9}" font-size="8" text-anchor="middle">${s}</text>`).join('');
+    return `<g class="sr-roof-hot sr-chest${ready ? ' is-ready' : ''}" data-roof-hot="chest" role="button" tabindex="0" aria-label="${srEsc(roomItemName('chest'))}">
+        <ellipse class="sr-chest-glow" cx="52" cy="470" rx="46" ry="30" fill="#ffd27a" opacity="${ready ? 0.35 : 0}"/>
+        <ellipse cx="52" cy="502" rx="38" ry="6" fill="#000" opacity="0.32"/>
+        <rect x="16" y="468" width="72" height="33" rx="4" fill="#8a5a3c"/>
+        <rect x="16" y="476" width="72" height="4" fill="#6a3f25"/>
+        <rect x="22" y="468" width="5" height="33" fill="#c9a36b" opacity="0.8"/><rect x="77" y="468" width="5" height="33" fill="#c9a36b" opacity="0.8"/>
+        <g class="sr-chest-lid"><path d="M16 470 Q52 442 88 470 V472 H16 Z" fill="#a56b45"/><path d="M22 466 Q52 446 82 466" fill="none" stroke="#c9a36b" stroke-width="2" opacity="0.8"/></g>
+        <rect x="46" y="474" width="12" height="14" rx="2" fill="#ffd27a"/><circle cx="52" cy="480" r="1.8" fill="#6a3f25"/>
+        ${stickers}
+        <g class="sr-chest-dots">${dots}</g>
+        <rect x="8" y="428" width="88" height="80" fill="transparent"/>
+    </g>`;
+}
+// האתגרים שהסתיימו, לפי הסדר (כל אתגר פעם אחת). מנהלת המוצר בלי אתגרים אמיתיים (מפתחות PM) רואה איך זה
+// ייראה - כוכב לכל מפתח שאחרי הדלת
+function roomDoneChallenges() {
+    const rows = typeof nmChallenges !== 'undefined' && Array.isArray(nmChallenges) ? nmChallenges : [];
+    const seen = new Set();
+    const done = rows.filter(c => c.status === 'done' && typeof nmChDef === 'function' && nmChDef(c.challenge_key))
+        .sort((a, b) => String(a.completed_at || '').localeCompare(String(b.completed_at || '')))
+        .filter(c => { if (seen.has(c.challenge_key)) return false; seen.add(c.challenge_key); return true; })
+        .map(c => ({ title: nmChTitle(c.challenge_key), date: c.completed_at ? String(c.completed_at).slice(0, 10) : '' }));
+    if (!done.length && roomIsDev() && typeof NEW_ME_CHALLENGES !== 'undefined') return NEW_ME_CHALLENGES.slice(0, Math.max(0, roomKeys() - 1)).map(c => ({ title: nmChTitle(c.key), date: '' }));
+    return done;
+}
+// ספירלה בזווית הזהב: הכוכבים מתפזרים יפה, והקווים ביניהם מציירים "קבוצת כוכבים"
+function roomScopePoint(i) {
+    const a = i * 2.39996 + 0.6, r = 18 + 78 * Math.sqrt((i + 1) / 21);
+    return { x: 120 + Math.cos(a) * r, y: 120 + Math.sin(a) * r };
+}
+function roomOpenTelescope() {
+    const done = roomDoneChallenges();
+    const pts = done.map((_, i) => roomScopePoint(i));
+    let seed = 5;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const dust = Array.from({ length: 40 }, () => `<circle cx="${(rnd() * 240).toFixed(1)}" cy="${(rnd() * 240).toFixed(1)}" r="${(0.4 + rnd() * 0.9).toFixed(2)}" fill="#fff" opacity="${(0.3 + rnd() * 0.5).toFixed(2)}"/>`).join('');
+    const lines = pts.slice(1).map((p, i) => `<line x1="${pts[i].x.toFixed(1)}" y1="${pts[i].y.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}"/>`).join('');
+    const stars = pts.map((p, i) => `<g class="sr-scope-star" data-i="${i}" role="button" tabindex="0" aria-label="${srEsc(done[i].title)}"><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="url(#srScopeGlow)"/><circle class="sr-scope-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.4" fill="#fff3c4"/></g>`).join('');
+    const ov = nmOpenSheet(`
+        <h4>${srEsc(t('room_scope_title'))}</h4>
+        <div class="sr-scope-lens">
+            <svg viewBox="0 0 240 240" role="group" aria-label="${srEsc(t('room_scope_title'))}">
+                <defs>
+                    <radialGradient id="srScopeSky" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="#1d2a6b"/><stop offset="1" stop-color="#070a1f"/></radialGradient>
+                    <radialGradient id="srScopeGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.9"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></radialGradient>
+                </defs>
+                <circle cx="120" cy="120" r="118" fill="url(#srScopeSky)"/>
+                ${dust}
+                <g stroke="#9ad6ff" stroke-width="1.2" opacity="0.7" stroke-linecap="round">${lines}</g>
+                ${stars}
+                <circle cx="120" cy="120" r="117" fill="none" stroke="#c9a36b" stroke-width="5"/>
+            </svg>
+        </div>
+        <p class="sr-scope-name" aria-live="polite">${srEsc(done.length ? t('room_scope_hint').replace('{n}', srFmt(done.length)) : t('room_scope_empty'))}</p>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'sr-scope-sheet');
+    const name = ov.querySelector('.sr-scope-name');
+    ov.querySelectorAll('.sr-scope-star').forEach(s => {
+        const pick = () => {
+            ov.querySelectorAll('.sr-scope-star.on').forEach(x => x.classList.remove('on'));
+            s.classList.add('on');
+            const c = done[Number(s.dataset.i)];
+            name.textContent = c.date && typeof nmShortDate === 'function' ? `${c.title} · ${nmShortDate(c.date)}` : c.title;
+        };
+        s.addEventListener('click', pick);
+        s.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    });
+}
+async function roomOpenChest(el) {
+    if (!roomChestReady()) { srShowTip(t('room_chest_locked').replace('{n}', srFmt(roomChestStreak()))); return; }
+    if (el.classList.contains('is-open')) return;
+    el.classList.add('is-open');
+    const g = roomChestGifts();
+    const kind = ['letter', 'sticker', 'star'][g % 3];
+    const round = Math.floor(g / 3);
+    await roomSave({ chest_gifts: g + 1, chest_opened_on: getLocalDateString() });
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    await new Promise(r => setTimeout(r, reduce ? 0 : 650));
+    const gift = kind === 'letter'
+        ? `<div class="nm-letter-paper sr-chest-letter"><p class="nm-letter-body">${srEsc(t(`room_chest_letter_${(round % ROOM_CHEST_LETTERS) + 1}`))}</p></div>`
+        : `<div class="sr-chest-gift${kind === 'star' ? ' is-star' : ''}" aria-hidden="true">${kind === 'star' ? '✦' : ROOM_CHEST_STICKERS[round % ROOM_CHEST_STICKERS.length]}</div>`;
+    nmOpenSheet(`
+        <h4>${srEsc(t(`room_chest_${kind}`))}</h4>
+        ${gift}
+        <p class="sr-chest-next">${srEsc(t('room_chest_next'))}</p>
+        <button type="button" class="nm-btn-primary" data-close>${srEsc(t('nm_continue'))}</button>`, 'sr-chest-sheet', () => roomRefreshRoof());
+}
+// אחרי שנפתחה התיבה: הגג מצויר מחדש - המדבקה על המכסה, הכוכב בשמיים
+function roomRefreshRoof() {
+    const box = document.querySelector('.sr-roof');
+    const opts = (box && box._opts) || {};
+    if (box) box.remove();
+    if (srIsOpen()) roomOpenRoof(opts);
+}
+
 // כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"; ואחר כך: "הולכים אחורה במקום קדימה... קדימה, בלי
 // הכמה נקודות"): הבזק ושובל ארוך וזוהר מאחוריו, תמיד קדימה - בכיוון הקריאה (שמאלה בעברית, ימינה ב-LTR) -
 // ואז הכוכב חוזר למקומו

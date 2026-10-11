@@ -3001,8 +3001,9 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .nm-features li { padding: 14px 16px; border-radius: 16px; background: var(--bg-row); border: 1px solid var(--border-color); color: var(--text-primary); line-height: 1.45; }
 .nm-features li::before { content: '✓'; color: var(--accent-pink-text); font-weight: 800; margin-inline-end: 10px; }
-.nm-preview { border-radius: 18px; border: 1px solid var(--border-color); padding: 6px 14px; filter: blur(2.5px); opacity: .7; user-select: none; pointer-events: none; }
-.nm-preview-row { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; padding: 9px 0; font-size: .82rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); }
+.nm-preview { border-radius: 18px; border: 1px solid var(--border-color); padding: 6px 14px; }
+.nm-preview-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) auto; align-items: center; gap: 8px; padding: 9px 0; font-size: .82rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); }
+.nm-preview-time { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-pink-text, var(--accent-pink)); }
 .nm-preview-row:last-child { border-bottom: none; }
 
 /* שאלון */
@@ -5833,7 +5834,8 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
     inset: 0;
     z-index: 5000;
     display: none;
-    background: radial-gradient(circle at 50% 40%, rgba(168, 85, 247, 0.25), rgba(0, 0, 0, 0.85) 70%);
+    /* אטום: שום דבר מאחור לא נראה בזמן החגיגה (לפי בקשה מפורשת: "שהכל מאחורה יהיה ריק לרגע") */
+    background: radial-gradient(circle at 50% 40%, #2b1748, #07040c 72%);
     align-items: center;
     justify-content: center;
 }
@@ -5865,7 +5867,7 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 }
 .premium-unlock-icon { font-size: 3rem; margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6)); }
 .premium-unlock-content h2 { font-size: 1.3rem; margin: 0 0 10px 0; background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.premium-unlock-content p { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 20px 0; line-height: 1.5; }
+.premium-unlock-content p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.78); margin: 0 0 20px 0; line-height: 1.5; }
 .action-buttons-wrap { display: flex; gap: 8px; }
 /* קיצורי דרך ליד "הוספה" בתוך מודל "פתק מהיר" - לא בורר יעד (זה חזר להיות
    הבורר הגדול עם הטקסט למעלה, ר' .ai-schedule-mode-toggle) אלא ניווט אמיתי:
@@ -9111,7 +9113,7 @@ html:not(.light-mode) .home-note-send { background: transparent; border: 1.5px s
 
 /* --- 🧹 מסך בית נקי יותר (לפי בקשה מפורשת, 2026-10-11) ---
    💎 New Me - כפתור עגול קטן ליד הפוקוס (רק למי שרכש/ה); 💧 המים - צ'יפ קטן בשורת הכותרת של "היום שלי" */
-.home-newme-btn { color: #f5c6ff; border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 34%, transparent), color-mix(in srgb, var(--accent-pink) 24%, transparent)); }
+.home-newme-btn { color: #f5c6ff; } /* בלי מסגרת ובלי צבע רקע - כמו כפתור הפוקוס (לפי בקשה מפורשת: "תוריד את האדום מסביב ליהלום") */
 .home-newme-btn .nm-icon { display: block; width: 19px; height: 19px; }
 html.light-mode .home-newme-btn { color: var(--accent-purple); }
 .myday-bar-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -9246,3 +9248,50 @@ html[dir="rtl"] .nmt-bars i { margin-inline-start: auto; }
 .nmt.is-playing .nmt-play { display: none; }
 .nmt.is-instant, .nmt.is-instant * { transition: none !important; animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .nmt, .nmt * { transition-duration: 0.01s !important; animation-duration: 0.01s !important; animation-iteration-count: 1 !important; } }
+
+/* --- החדר הסודי ב-10 שלבים (2026-10-11): 🎵 הפטיפון בחדר, 🔭 הטלסקופ ו-🧰 תיבת האוצר בגג, 🪞 בריכת המראה --- */
+.sr-turntable .srp-arm { transform-origin: 219px 577px; }
+.sr-turntable.is-playing .srp-arm { transform: rotate(-12deg); }
+.sr-turntable-note { opacity: 0; }
+.sr-turntable.is-playing .sr-turntable-note { animation: srTurnNote 1.8s ease-in-out infinite; }
+@keyframes srTurnNote { 0% { opacity: 0; transform: translateY(4px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px); } }
+.srp-records-group { margin: 12px 2px 6px; font-size: 0.82rem; font-weight: 800; color: var(--text-secondary); }
+.srp-hits { flex-shrink: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.srp-hit-btn { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 54px; padding: 7px 9px; box-sizing: border-box; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); text-decoration: none; }
+.srp-hit-btn:active { transform: scale(0.97); }
+.srp-hit-btn:focus-visible { outline: 2px solid var(--rec); outline-offset: 2px; }
+.srp-hit-btn .srp-record-disc { width: 32px; height: 32px; }
+.srp-hit-btn .srp-record-disc::after { inset: 10px; }
+.srp-hit-name { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; text-align: start; }
+/* שמות השירים והזמרים נשברים לשורה שנייה ולא נחתכים (בעברית החיתוך אכל את תחילת השם: "...ding Lights") */
+.srp-hit-name b { font-size: 0.8rem; overflow-wrap: anywhere; }
+.srp-hit-name small { font-size: 0.68rem; color: var(--text-secondary); overflow-wrap: anywhere; }
+.srp-hit-yt { flex: none; width: 22px; height: 15px; border-radius: 4px; background: #ff2d2d; color: #fff; font-size: 0.55rem; display: grid; place-items: center; }
+.sr-roof-hot { cursor: pointer; }
+.sr-roof-hot:focus { outline: none; }
+.sr-roof-hot:focus-visible > ellipse:first-of-type { fill: #ffd27a; opacity: 0.45; }
+.sr-scope-glint { animation: srGlint 2.8s ease-in-out infinite; }
+@keyframes srGlint { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+.sr-chest-lid { transform-box: fill-box; transform-origin: 0% 100%; transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.sr-chest.is-open .sr-chest-lid { transform: rotate(-26deg) translateY(-4px); }
+.sr-chest.is-ready .sr-chest-glow { animation: srChestGlow 1.8s ease-in-out infinite; }
+@keyframes srChestGlow { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+.sr-star.is-gift::before { inset: 4px; background: #ffc8ea; filter: drop-shadow(0 0 10px #ff9ecf); }
+.sr-scope-lens { width: min(78vw, 300px); aspect-ratio: 1; margin: 6px auto 4px; border-radius: 50%; box-shadow: 0 0 0 6px rgba(201, 163, 107, 0.25), 0 18px 40px rgba(0, 0, 0, 0.45); overflow: hidden; }
+.sr-scope-lens svg { display: block; width: 100%; height: 100%; }
+.sr-scope-star { cursor: pointer; }
+.sr-scope-star:focus { outline: none; }
+.sr-scope-star.on .sr-scope-dot, .sr-scope-star:focus-visible .sr-scope-dot { r: 5; fill: #ffd27a; }
+.sr-scope-name { min-height: 2.6em; margin: 8px 4px; text-align: center; font-weight: 700; color: var(--text-primary); }
+.sr-chest-gift { margin: 10px auto; font-size: 64px; line-height: 1; text-align: center; animation: srGiftIn 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+.sr-chest-gift.is-star { color: #ffd27a; text-shadow: 0 0 24px #ffd27a; }
+@keyframes srGiftIn { from { opacity: 0; transform: scale(0.4) rotate(-12deg); } to { opacity: 1; transform: none; } }
+.sr-chest-letter { margin: 8px 0; }
+.sr-chest-next { margin: 10px 4px; text-align: center; font-size: 0.85rem; color: var(--text-secondary); }
+.srp-pool-q { opacity: 0; transition: opacity 0.9s ease; paint-order: stroke; stroke: rgba(10, 60, 80, 0.5); stroke-width: 3px; pointer-events: none; }
+.sr-place.is-asking .srp-pool-q { opacity: 1; animation: srpPoolQ 3.2s ease-in-out infinite; }
+@keyframes srpPoolQ { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.srp-mirror-q { margin: 6px 0 12px; padding: 18px 16px; border-radius: 18px; text-align: center; font-size: 1.1rem; font-weight: 800; line-height: 1.4; color: #effcff; background: radial-gradient(circle at 50% 120%, #7cc4d2, #2f7f97 60%, #1d5a6e); box-shadow: inset 0 -10px 24px rgba(255, 255, 255, 0.12); text-wrap: balance; }
+.srp-mirror-input { width: 100%; box-sizing: border-box; min-height: 64px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1rem; resize: none; }
+.srp-mirror-input:focus { outline: none; border-color: #5aa9c0; }
+@media (prefers-reduced-motion: reduce) { .sr-turntable-note, .sr-scope-glint, .sr-chest-glow, .srp-pool-q, .sr-chest-gift { animation: none !important; } }

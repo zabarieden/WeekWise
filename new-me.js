@@ -589,7 +589,7 @@ const NEW_ME_SALES_GROUPS = [
 function nmRenderSales(root) {
     const plan = NEW_ME_PLANS[1300];
     const preview = NEW_ME_DEFAULT_ORDER.map((slot, i) => `
-        <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
+        <div class="nm-preview-row"><bdi dir="ltr" class="nm-preview-time">${nmEsc(NEW_ME_REMINDER_DEFAULTS[i] || '')}</bdi><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
     const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
     root.innerHTML = `
         <div class="nm-sales">
@@ -616,7 +616,7 @@ function nmRenderSales(root) {
             </section>
             <div class="nm-sales-preview">
                 <div class="nm-sheet-label">${nmEsc(t('nm_sales_preview_label'))}</div>
-                <div class="nm-preview" aria-hidden="true">${preview}</div>
+                <div class="nm-preview">${preview}</div>
             </div>
             <section class="nm-sales-card nm-sales-faq">
                 ${[1, 2, 3].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i).replace('{monthly}', NEW_ME_PRICES.monthly).replace('{life}', NEW_ME_PRICES.life))}</p></details>`).join('')}

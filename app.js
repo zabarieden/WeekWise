@@ -8693,6 +8693,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'secret_room_yoga', category: 'nutrition' },
     { id: 'secret_room_diary', category: 'nutrition' },
     { id: 'room_computer', category: 'nutrition' },
+    { id: 'room_records', category: 'nutrition' },
+    { id: 'room_roof_gifts', category: 'nutrition' },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },
     // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה

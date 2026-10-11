@@ -3,13 +3,13 @@
 // דלת 2 - המרפסת המקורה מול הים: ערסל, והמחשב שם הוא טאבלט (נעול עד שנעצב אותו יחד);
 // דלת 3 - פינה חמה עם כורסה ותקליטים: הגיטרה והיומן (היומן נשמר בחשבון - רק שלך);
 // דלת 4 - חדר הנשימה: חוף בשקיעה, השמש עולה ויורדת עם הנשימה. בלי דקות ובלי ספירה - נכנסים, לוחצים ומתחילים.
-//          ובחול (מפתח 17) - מקל לכתוב בו, וגל בא ומוחק;
+//          ובחול (עם חדר הנשימה) - מקל לכתוב בו;
 // דלת 5 - השביל ביער עם פנסים וספסל: נגיעה בפנסים מכבה אותם, ויש יום בחוץ.
-// ובאתגר האחרון - בקבוק מגיע מהים, ובתוכו המכתב מהעבר. כל מפתח פותח דבר אחד (ר' ROOM_UNLOCKS).
+// ובאתגר האחרון - בקבוק מגיע מהים, ובתוכו המכתב מהעבר. 10 שלבים: כל מפתח פותח מקום שלם, עם כל מה שבו (ר' ROOM_UNLOCKS).
 // כל הציורים בגודל 390×844, כמו המסדרון, וכל מה שנוגעים בו נמצא בתוך הציור עצמו.
 
 const SRP_DOOR_PLACE = { 2: 'porch', 3: 'music', 4: 'breath', 5: 'outside' };
-// מקום בתוך מקום: היוגה בסוף השביל ביער (מפתח 12), והמפל מאחורי היוגה (מפתח 13)
+// מקום בתוך מקום: היוגה בסוף השביל ביער (שלב 6, עם היער), והמפל מאחורי היוגה (שלב 7)
 const SRP_PLACE_PARENT = { yoga: 'outside', waterfall: 'yoga' };
 const SRP_BACK_KEYS = { outside: 'room_back_to_forest', yoga: 'room_back_to_yoga' };
 const SRP_BREATH_MS = 10 * 60 * 1000;   // סשן של עשר דקות (לא כתוב בשום מקום - לפי בקשה מפורשת)
@@ -112,8 +112,9 @@ function srpStrum(i) {
     const now = a.ctx.currentTime + 0.02;
     SRP_CHORDS[i % SRP_CHORDS.length].forEach((f, k) => { srpNote(f, now + k * 0.035, 2.3, 0.13); srpNote(f * 2, now + k * 0.035, 0.9, 0.025, 'sine'); });
 }
-// הפטיפון: חמישה תקליטים (לפי בקשה מפורשת: "5 שירים שונים... מוכרים עולמיים"). שירים מודרניים מוגנים בזכויות
-// יוצרים - לכן רק לחנים קלאסיים ועממיים שכולם מכירים ושהם נחלת הכלל. הכול נוצר במקום, בלי קבצים.
+// הפטיפון (בחדר, פתוח עם החדר): קודם הקליפים הרשמיים של להיטים עולמיים מהשנים האחרונות ביוטיוב (SRP_HITS - לפי
+// בקשה מפורשת: "שירים מודרניים ממש... מה-10 שנים אחרונות", והם נפתחים ביוטיוב כי הם מוגנים בזכויות יוצרים), ומתחת
+// חמישה לחנים קלאסיים ועממיים שכולם מכירים ושהם נחלת הכלל - הם מתנגנים כאן בחדר. הכול נוצר במקום, בלי קבצים.
 // תווים: "E5 D#5:2 -:3" - שם התו ואורכו ביחידות של השיר (ברירת מחדל 1; "-" = שקט). אקורדים: "Am C:4" - צליל
 // בס ואחריו ארפג'ו רך. start = מאיפה מתחילים בלופ (למשל שתי הנקודות שלפני התיבה הראשונה ב"לאליזה")
 const SRP_CHORD_NOTES = { Am: ['A2', 'C4', 'E4'], C: ['C3', 'E4', 'G4'], G: ['G2', 'B3', 'D4'], Em: ['E2', 'G3', 'B3'], F: ['F2', 'A3', 'C4'], E: ['E2', 'G#3', 'B3'] };
@@ -148,6 +149,21 @@ const SRP_RECORDS = [
         { vol: 0.055, ring: 1.25, notes: 'C5:4 D5:2 E5:3 F5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:4 A4:2 A4:3 G#4 A4:2 B4:4 G#4:2 E4:4 A4:2 C5:4 D5:2 E5:3 F5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:3 B4 A4:2 G#4:3 F#4 G#4:2 A4:6 A4:6 G5:6 G5:3 F#5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:4 A4:2 A4:3 G#4 A4:2 B4:4 G#4:2 E4:6 G5:6 G5:3 F#5 E5:2 D5:4 B4:2 G4:3 A4 B4:2 C5:3 B4 A4:2 G#4:3 F#4 G#4:2 A4:6 A4:4 A4:2' },
     ] },
 ];
+// הלהיטים (yt = מזהה הקליפ הרשמי ביוטיוב, נבדק מול youtube.com/oembed): שמות השירים והזמרים כמו שהם בכל שפה
+const SRP_HITS = [
+    { yt: '4NRXx6U8ABQ', song: 'Blinding Lights', artist: 'The Weeknd', color: '#ff5a6a' },
+    { yt: 'TUVcZfQe-Kw', song: 'Levitating', artist: 'Dua Lipa', color: '#c084fc' },
+    { yt: 'H5v3kku4y6Q', song: 'As It Was', artist: 'Harry Styles', color: '#7fd6ff' },
+    { yt: 'G7KNmW9a75Y', song: 'Flowers', artist: 'Miley Cyrus', color: '#ffd27a' },
+    { yt: 'q0hyYWKXF0Q', song: 'Dance Monkey', artist: 'Tones And I', color: '#5bd18b' },
+    { yt: 'ru0K8uYEZWw', song: "Can't Stop the Feeling!", artist: 'Justin Timberlake', color: '#ff9ecf' },
+    { yt: 'kPa7bsKwL-c', song: 'Die With A Smile', artist: 'Lady Gaga, Bruno Mars', color: '#f59e0b' },
+    { yt: 'ekr2nIex040', song: 'APT.', artist: 'ROSÉ, Bruno Mars', color: '#fb7185' },
+    { yt: 'gdZLi9oWNZg', song: 'Dynamite', artist: 'BTS', color: '#facc15' },
+    { yt: 'WcIcVapfqXw', song: 'Calm Down', artist: 'Rema, Selena Gomez', color: '#38bdf8' },
+    { yt: 'kJQP7kiw5Fk', song: 'Despacito', artist: 'Luis Fonsi, Daddy Yankee', color: '#f97316' },
+    { yt: 'JGwWNGJdvx8', song: 'Shape of You', artist: 'Ed Sheeran', color: '#a78bfa' },
+];
 function srpFreq(name) {
     const m = /^([A-G])(#|b)?(\d)$/.exec(name || '');
     if (!m) return 0;
@@ -175,6 +191,7 @@ function srpSongEvents(song) {
     ev.sort((a, b) => a.at - b.at);
     return { ev, len };
 }
+let srpNowPlaying = -1;   // התקליט שמתנגן עכשיו בחדר - גם כשמסתובבים לקיר אחר וחוזרים, הפטיפון נשאר "מנגן"
 function srpMusicStart(i) {
     const a = srpCtx();
     if (!a) return;
@@ -200,6 +217,7 @@ function srpMusicStart(i) {
     schedule();
 }
 function srpMusicStop(quick) {
+    if (!quick) srpNowPlaying = -1;
     if (!srpAudio) return;
     clearTimeout(srpAudio.loop);
     srpAudio.loop = null;
@@ -389,7 +407,6 @@ async function srpOpenBottle(el) {
 
 // ---------- דלת 3: הגיטרה והיומן ----------
 function srpMusicScene(keys) {
-    const vinyl = keys >= roomUnlockAt('vinyl');
     return `
         <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('music'))}">
             <defs>
@@ -457,20 +474,6 @@ function srpMusicScene(keys) {
             <g class="srp-notes" aria-hidden="true">
                 <g class="srp-note-amb"><path d="M110 330 v-18 l12 -3 v18" fill="none" stroke="#ffd27a" stroke-width="2"/><circle cx="107" cy="331" r="3.4" fill="#ffd27a"/><circle cx="119" cy="328" r="3.4" fill="#ffd27a"/></g>
             </g>
-            ${vinyl ? `<g class="srp-hot srp-vinyl" data-place-hot="vinyl" role="button" tabindex="0" aria-label="${srEsc(roomItemName('vinyl'))}" aria-pressed="false">
-                <ellipse cx="66" cy="782" rx="58" ry="9" fill="#000" opacity="0.3"/>
-                <rect x="14" y="716" width="104" height="62" rx="6" fill="#7a4a2c"/>
-                <rect x="20" y="724" width="44" height="46" rx="3" fill="#6a3f25"/><rect x="68" y="724" width="44" height="46" rx="3" fill="#6a3f25"/>
-                <circle cx="58" cy="747" r="2" fill="#d9b98a"/><circle cx="74" cy="747" r="2" fill="#d9b98a"/>
-                <rect x="10" y="700" width="112" height="18" rx="4" fill="#3a2416"/>
-                <g transform="translate(58 699) scale(1 0.34)"><g class="srp-record"><circle r="30" fill="#141014"/><circle r="22" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="15" fill="none" stroke="#2c262c" stroke-width="1.4"/><circle r="9" style="fill:var(--rec, #ff6aa5)"/><rect x="2" y="-1.8" width="7" height="3.6" fill="#ffd27a"/></g></g>
-                <g class="srp-arm"><circle cx="106" cy="694" r="3" fill="#c9c9d0"/><path d="M106 694 L86 690" stroke="#c9c9d0" stroke-width="2.2" stroke-linecap="round"/></g>
-                <g transform="translate(132 736)">
-                    ${SRP_RECORDS.map((r, i) => `<rect x="${5 + i * 10.5}" y="${i % 2 ? 2 : 0}" width="11" height="34" rx="1.5" fill="${r.color}" transform="rotate(${-8 + i * 4} ${10 + i * 10.5} 34)"/>`).join('')}
-                    <rect x="0" y="18" width="64" height="30" rx="3" fill="#8a5a3c"/><path d="M6 27 h52" stroke="#6a3f25" stroke-width="2" stroke-linecap="round"/>
-                </g>
-                <rect class="srp-hit" x="6" y="676" width="196" height="112" fill="transparent"/>
-            </g>` : ''}
         </svg>`;
 }
 function srpInitMusic(box) {
@@ -499,15 +502,23 @@ function srpInitMusic(box) {
             floatNotes(96, 360, 3);
         },
         diary: () => srpOpenDiary(),
-        vinyl: el => srpOpenRecords(el, floatNotes),
     };
 }
 
-// התקליטים: נגיעה בפטיפון (או בארגז) פותחת את חמשת התקליטים; בחירה מנגנת מיד, ו"לעצור" עוצר
+// התקליטים: נגיעה בפטיפון שבחדר פותחת אותם - הלהיטים (נפתחים ביוטיוב בלשונית חדשה) ומתחת חמשת הלחנים השקטים
+// (מתנגנים כאן מיד, ו"לעצור" עוצר)
 function srpOpenRecords(el, floatNotes) {
     const playing = el.classList.contains('is-playing') ? Number(el.dataset.song) : -1;
     const ov = nmOpenSheet(`
         <h4>${srEsc(roomItemName('vinyl'))}</h4>
+        <p class="srp-records-group">${srEsc(t('room_vinyl_yt'))}</p>
+        <div class="srp-hits">${SRP_HITS.map(h => `
+            <a class="srp-hit-btn" href="https://www.youtube.com/watch?v=${h.yt}" target="_blank" rel="noopener" style="--rec:${h.color}" aria-label="${srEsc(`${h.song} – ${h.artist} · YouTube`)}">
+                <span class="srp-record-disc" aria-hidden="true"></span>
+                <span class="srp-hit-name"><b><bdi>${srEsc(h.song)}</bdi></b><small><bdi>${srEsc(h.artist)}</bdi></small></span>
+                <span class="srp-hit-yt" aria-hidden="true">▶</span>
+            </a>`).join('')}</div>
+        <p class="srp-records-group">${srEsc(t('room_vinyl_here'))}</p>
         <div class="srp-records">${SRP_RECORDS.map((r, i) => `
             <button type="button" class="srp-record-btn${i === playing ? ' is-on' : ''}" data-song="${i}" style="--rec:${r.color}" aria-pressed="${i === playing}">
                 <span class="srp-record-disc" aria-hidden="true"></span>
@@ -521,6 +532,7 @@ function srpOpenRecords(el, floatNotes) {
 }
 function srpPlayRecord(el, i, floatNotes) {
     const on = i >= 0 && !!SRP_RECORDS[i];
+    srpNowPlaying = on ? i : -1;
     el.classList.toggle('is-playing', on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     if (!on) { delete el.dataset.song; srpMusicStop(); return; }
@@ -641,7 +653,7 @@ async function srpOpenDiary() {
 // ---------- דלת 4: חדר הנשימה - חוף בשקיעה ----------
 // לפי בקשה מפורשת: "משהו מגניב שיגיד איך לנשום, סשן קצר של 10 דק', אל תרשום כמה דק' זה... נכנסים, לוחצים
 // ומתחילים". שאיפה ~6 שניות (השמש עולה, הגל נכנס), נשיפה ~8 שניות (השמש שוקעת, הגל יוצא).
-// מפתח 17 (במקום הזריחה - לפי בקשה מפורשת: "למחוק את הזריחה בחוף ולעשות משהו אחר במקום"): מקל על החול -
+// המקל בחול (עם חדר הנשימה; במקום הזריחה - לפי בקשה מפורשת: "למחוק את הזריחה בחוף ולעשות משהו אחר במקום"): מקל על החול -
 // כותבים בו מה רוצים לשחרר, וגל גדול בא ומוחק. לא נשמר בשום מקום
 function srpBreathScene(keys) {
     const sand = keys >= roomUnlockAt('sand');
@@ -831,7 +843,7 @@ function srpOutsideScene(keys) {
                 <rect class="srp-hit" x="62" y="248" width="78" height="194" fill="transparent"/>
             </g>` : ''}
             ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
-                <!-- מפתח 12: השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת היוגה ליד המפל -->
+                <!-- השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת היוגה ליד המפל -->
                 <ellipse class="srp-flicker" cx="200" cy="388" rx="40" ry="18" fill="url(#srpOLight)"/>
                 <g fill="none" stroke="#8a5e3c" stroke-width="3" stroke-linecap="round"><path d="M188 400 V378"/><path d="M212 400 V378"/><path d="M185 380 Q200 364 215 380"/></g>
                 <g fill="#ffd27a"><circle cx="200" cy="371" r="1.8"/><circle cx="190" cy="377" r="1.3"/><circle cx="210" cy="377" r="1.3"/></g>
@@ -1003,7 +1015,7 @@ function roomInitWish(root) {
     w.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
 }
 
-// ---------- החתול בא לבקר: יושב על הכרית בחדר הסודי (מפתח 11) ----------
+// ---------- החתול בא לבקר: יושב על הכרית בחדר הסודי (מהמפתח הראשון) ----------
 // לפי בקשה מפורשת: דומה לחתול מהגג (אותו ציור), ועושה דברים אחרים לגמרי מאלה שבגג - כל נגיעה הדבר הבא:
 // כדור צמר, עכבר צעצוע ופרפר שנוחת לו על האף (ההתהפכות והנפילה הצידה הוסרו - "זה מוזר", 2026-10-11)
 const SR_ROOMCAT_ACTIONS = [['yarn', 2400], ['mouse', 2400], ['butterfly', 3000]];
@@ -1063,7 +1075,7 @@ function srCatNapTap(el) {
     setTimeout(() => { el.classList.remove('do-' + name); delete el.dataset.busy; }, srpReduce() ? 400 : ms);
 }
 
-// ---------- מפתח 12: יוגה ביער - קרחת ליד המפל, המדריכה ואנשים טובים במעגל ----------
+// ---------- שלב 6: יוגה ביער - קרחת ליד המפל, המדריכה ואנשים טובים במעגל ----------
 // לפי בחירה מפורשת (2026-10-10): המקום = ה (ליד המפל); השיחה = א (מעגל שיתוף), "גזע שנפתח כמו במחשב" לפי מה
 // שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
 const SRP_GUIDE_LOOK = { skin: '#a96f4a', hair: '#2a1a12', band: '#7fd6c0' };   // פני המדריכה - עד שתיבחר אחת מהאפשרויות על הקנבס
@@ -1292,7 +1304,7 @@ function srpInitYoga(box, keys, opts = {}) {
     };
 }
 
-// ---------- מפתח 13: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
+// ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
 // יושבים על הסלע: הכפתורים נעלמים, הקשת מתחזקת ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
 function srpWaterfallScene() {
     return `
@@ -1317,6 +1329,7 @@ function srpWaterfallScene() {
                 <ellipse cx="195" cy="580" rx="210" ry="80" fill="url(#wfPool)"/>
                 <g class="srp-ripples-wf" fill="none" stroke="#ffffff" stroke-width="2"><ellipse cx="195" cy="560" rx="70" ry="14"/><ellipse cx="195" cy="566" rx="90" ry="18" style="animation-delay:1.2s"/><ellipse cx="195" cy="572" rx="110" ry="22" style="animation-delay:2.4s"/></g>
                 <g class="srp-splash"></g>
+                <text class="srp-pool-q" x="195" y="600" text-anchor="middle" font-size="17" font-weight="800" fill="#effcff" data-fit="320">${srEsc(t('room_pool_q'))}</text>
             </g>
             <g aria-hidden="true">
                 <g fill="#5d6a68"><ellipse cx="30" cy="560" rx="60" ry="40"/><ellipse cx="370" cy="556" rx="56" ry="42"/><ellipse cx="90" cy="640" rx="40" ry="20"/></g>
@@ -1364,12 +1377,37 @@ function srpWaterStop() {
     srpWater = null;
     try { g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); setTimeout(() => { try { src.stop(); } catch {} }, 900); } catch {}
 }
+function srpOpenMirror(box) {
+    const ov = nmOpenSheet(`
+        <div class="srp-mirror-q">${srEsc(t('room_pool_q'))}</div>
+        <textarea class="srp-mirror-input" rows="2" maxlength="140" placeholder="${srEsc(t('room_pool_ph'))}" aria-label="${srEsc(t('room_pool_q'))}"></textarea>
+        <button type="button" class="nm-btn-primary" data-add>${srEsc(t('room_pool_add'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-mirror-sheet');
+    const input = ov.querySelector('.srp-mirror-input');
+    setTimeout(() => input.focus(), 60);
+    ov.querySelector('[data-add]').addEventListener('click', async () => {
+        const text = input.value.trim();
+        if (!text) { input.focus(); return; }
+        const ok = await pcAddTodayTask(text);
+        if (!ok) return;
+        ov.remove();
+        box.classList.remove('is-asking');
+        showAppToast(t('room_pool_added'));
+    });
+}
 function srpInitWaterfall(box) {
     srpCleanups.push(srpWaterStop);
     box.querySelector('.srp-rest-exit').addEventListener('click', srpWaterStop);
     return {
         rock: () => { srpRest(box); srpWaterStart(); },
         pool: el => {
+            // 🪞 בריכת המראה (לפי בחירה מפורשת - רעיון למפל 3): מתכופפים מעל המים ושאלה עולה מהם; נגיעה נוספת
+            // בזמן שהיא שם - עונים, והתשובה נכנסת ל"היום שלי" כמשימה קטנה
+            if (box.classList.contains('is-asking')) { srpOpenMirror(box); return; }
+            box.classList.add('is-asking');
+            if (typeof srFitTexts === 'function') srFitTexts(el);
+            clearTimeout(box.nmAskTimer);
+            box.nmAskTimer = setTimeout(() => box.classList.remove('is-asking'), 9000);
             const g = el.querySelector('.srp-splash');
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
