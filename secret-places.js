@@ -573,6 +573,7 @@ async function srpOpenDiary() {
                 <div class="srp-cal-day"></div>
             </div>
         </div>
+        ${typeof nmDiaryMenuRowHtml === 'function' ? nmDiaryMenuRowHtml() : ''}
         <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'srp-diary-sheet');
     const cal = ov.querySelector('.srp-cal');
     const pageTime = p => { const d = new Date(p.created_at); return isNaN(d) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };

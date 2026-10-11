@@ -3336,7 +3336,7 @@ function getMenuCategoryGroups() {
         if (el.classList.contains('hamburger-drawer-section-title')) {
             current = { key: el.getAttribute('data-i18n'), title: el.textContent.trim(), items: [] };
             groups.push(current);
-        } else if (el.classList.contains('hamburger-drawer-item') && current) {
+        } else if (el.classList.contains('hamburger-drawer-item') && current && !el.classList.contains('hidden')) {
             current.items.push(el);
         }
     });
@@ -7670,6 +7670,8 @@ function devSimBuyNewMe() {
     if (!isDevSuperuserAccount || hasNewMe) return;
     showAppToast(t('nm_unlocking'));
     setTimeout(() => {
+        // כמו קונה חדש: השאלון מההצהרה - תצוגה בלבד, שום דבר לא נשמר (ר' nmStartQuizPreview)
+        if (typeof nmStartQuizPreview === 'function') nmStartQuizPreview();
         setNmDevLockedPreview(false);
         celebrateNewMeUnlock();
     }, 1200);
@@ -7724,6 +7726,8 @@ function devSettingsToggle(kind) {
 function setNmDevLockedPreview(on) {
     try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
     if (!isDevSuperuserAccount) return;
+    // נעילה באמצע תצוגת השאלון - התצוגה נסגרת איתה
+    if (on && typeof nmQuiz !== 'undefined' && nmQuiz && nmQuiz.preview) { nmQuiz = null; nmTimes = null; }
     hasNewMe = !on;
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
@@ -8686,6 +8690,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_countdown', category: 'general' },
     { id: 'good_things', category: 'general' },
     { id: 'home_weather', category: 'general' },
+    { id: 'theme_mode', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
     { id: 'routine_day_tabs', category: 'general' },
@@ -8723,6 +8728,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'delete_series_history', category: 'glance' },
     { id: 'edit_single_occurrence', category: 'glance' },
     { id: 'which_ai_button', category: 'ai' },
+    { id: 'ai_icon', category: 'ai' },
     { id: 'ai_chat', category: 'ai' },
     { id: 'ai_chat_food_fix', category: 'ai' },
     { id: 'ai_edit_or_delete', category: 'ai' },
@@ -8735,6 +8741,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
+    { id: 'water_month', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_preview', category: 'nutrition' },
     { id: 'new_me_weight_optional', category: 'nutrition' },
@@ -8746,6 +8753,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_tracking', category: 'nutrition' },
     { id: 'new_me_swap', category: 'nutrition' },
     { id: 'new_me_flexible_menu', category: 'nutrition' },
+    { id: 'new_me_favorites', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
@@ -8999,9 +9007,16 @@ const COLOR_THEME_ALIASES = {
 };
 function normalizeColorTheme(name) { return COLOR_THEME_ALIASES[name] || name; }
 
+// ערכות שיפות יותר בכהה (לפי בקשה מפורשת: "הנצנצים ומעלה הם יותר יפות כהות תשים אותם כהות כברירת מחדל שלוחצים עליהם
+// כל השאר בהיר", ועל הזוהר הצפוני "וגם זאתי כהה"): בחירה בערכה מעבירה למצב שלה - כהה לאלה, בהיר לכל השאר.
+// שחור ואפור כהה נשארים כהים (בבהיר הם יוצאים אפורים בהירים). 🌙 בתפריט ו"מצב בהיר" בהגדרות עדיין משנים אחר כך
+const DARK_FIRST_THEMES = ['space_rocket', 'watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey'];
 async function selectColorTheme(themeName) {
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     applyColorTheme(themeName);
+    const light = !DARK_FIRST_THEMES.includes(themeName);
+    localStorage.setItem('weekwise_light_mode', light ? 'true' : 'false');
+    applyLightMode(light);
     localStorage.setItem(colorThemeKey(), themeName);
     // מפתח נוסף בלי תלות במשתמשת מחוברת - נקרא סינכרונית ומוקדם מאוד ב-
     // index.html כדי שמסך הטעינה הראשוני (לפני שהתחברות ל-Supabase מסתיימת)
@@ -9011,7 +9026,7 @@ async function selectColorTheme(themeName) {
     // toggleLightMode (אותה תבנית תחרותית בדיוק, אותו באג פוטנציאלי)
     if (supabaseClient && currentUserId) {
         await supabaseClient.from('user_premium').upsert(
-            { user_id: currentUserId, username: currentUsername, theme: themeName },
+            { user_id: currentUserId, username: currentUsername, theme: themeName, light_mode: light },
             { onConflict: 'user_id' },
         );
     }
@@ -9051,12 +9066,14 @@ async function loadColorTheme() {
 // (מוח/נצנצים/נורה/ברק, ו-'star' עצמו) נופלות בשקט לברירת המחדל
 // ברירת המחדל עכשיו (סבב 2, לפי בחירה מפורשת): "בועה רכה" - ענן צבעים מערכת הנושא שזז ונושם, בלי
 // אייקון (span#ai-brain-orb). 🌟 נשאר כאפשרות חינמית, והרובוט בפרימיום
+// הכוכב ירד, והמוח הצף חזר - בפרימיום בלבד (לפי בקשה מפורשת: "תמחק את הכוכב תשים במקומו מוח שצף כמו שהיה ושיהיה
+// נעול אם לא משלמים"). מי שבחר/ה בכוכב חוזר/ת לבועה הרכה; בלי פרימיום - אין מוח ואין רובוט
 const AI_ICON_OPTIONS = {
     default: { type: 'orb' },
-    star: { type: 'emoji', glyph: '🌟' },
+    brain: { type: 'emoji', glyph: '🧠' },
     robot: { type: 'image', src: 'robot-fab-icon.png?v=1' },
 };
-const AI_ICON_PREMIUM = ['robot'];
+const AI_ICON_PREMIUM = ['robot', 'brain'];
 function normalizeAiIconId(iconId) { return AI_ICON_OPTIONS[iconId] ? iconId : 'default'; }
 
 function applyAiIcon(iconId) {
@@ -9070,6 +9087,7 @@ function applyAiIcon(iconId) {
     if (orb) orb.classList.toggle('hidden', option.type !== 'orb');
     if (option.type === 'image' && img) img.src = option.src;
     if (option.type === 'emoji' && emoji) emoji.textContent = option.glyph;
+    if (emoji) emoji.classList.toggle('is-brain', iconId === 'brain');
     document.querySelectorAll('.ai-icon-swatch').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-ai-icon') === iconId);
     });
@@ -22046,9 +22064,12 @@ async function loadWaterData() {
             todayRows.forEach(row => {
                 const li = document.createElement('li');
                 li.className = 'finance-history-row';
+                // השעה שבה נרשם (לפי בקשה מפורשת: "שעה שנרשמה מתי שתיתי וכמה")
+                const time = waterLogTime(row);
                 li.innerHTML = `
                     <div class="finance-history-main">
                         <span class="finance-history-category">${row.amount_ml} ${t('water_ml_unit')}</span>
+                        ${time ? `<span class="water-log-time"><bdi dir="ltr">${time}</bdi></span>` : ''}
                     </div>
                     <button type="button" class="btn-delete-slot" onclick="deleteWaterLog('${row.id}')">❌</button>
                 `;
@@ -22058,6 +22079,83 @@ async function loadWaterData() {
     }
 
     celebrateWaterGoalIfNeeded(todayTotal, goal, today);
+    // הטבלה החודשית מתעדכנת גם היא כשהיא פתוחה
+    const monthBody = document.getElementById('water-month-body');
+    if (monthBody && !monthBody.classList.contains('hidden')) renderWaterMonth();
+}
+
+function waterLogTime(row) {
+    const d = row && row.created_at ? new Date(row.created_at) : null;
+    if (!d || isNaN(d)) return '';
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// 💧 טבלה חודשית (לפי בקשה מפורשת: "והיומן שלי של טבלת המים גם תוסיף טבלה חודשית"): כל יום בחודש עם כמה נשתה (בליטרים,
+// התא מתמלא לפי היעד, ✓ ביום שהגיע ליעד), ונגיעה ביום מראה את הרישומים שלו - כמה ובאיזו שעה
+let waterMonthKey = null;
+let waterMonthSelDay = null;
+let waterMonthRows = [];
+function toggleWaterMonth() {
+    const body = document.getElementById('water-month-body');
+    const chev = document.getElementById('water-month-chevron');
+    if (!body) return;
+    const hidden = body.classList.toggle('hidden');
+    if (chev) chev.textContent = hidden ? '▶' : '▼';
+    if (!hidden) renderWaterMonth();
+}
+function navigateWaterMonth(delta) {
+    const [y, m] = (waterMonthKey || getLocalDateString().slice(0, 7)).split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    waterMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    waterMonthSelDay = null;
+    renderWaterMonth();
+}
+function selectWaterMonthDay(ds) {
+    waterMonthSelDay = waterMonthSelDay === ds ? null : ds;
+    drawWaterMonth();
+}
+async function renderWaterMonth() {
+    if (!supabaseClient || !currentUserId) return;
+    if (!waterMonthKey) waterMonthKey = getLocalDateString().slice(0, 7);
+    const [y, m] = waterMonthKey.split('-').map(Number);
+    const daysIn = new Date(y, m, 0).getDate();
+    const key = waterMonthKey;
+    const { data } = await supabaseClient.from('water_logs').select('*').eq('user_id', currentUserId).gte('log_date', `${key}-01`).lte('log_date', `${key}-${String(daysIn).padStart(2, '0')}`).order('created_at', { ascending: true });
+    if (key !== waterMonthKey) return;
+    waterMonthRows = data || [];
+    drawWaterMonth();
+}
+function drawWaterMonth() {
+    const grid = document.getElementById('water-month-grid');
+    const label = document.getElementById('water-month-label');
+    const dayBox = document.getElementById('water-month-day');
+    if (!grid || !waterMonthKey) return;
+    const [y, m] = waterMonthKey.split('-').map(Number);
+    const first = new Date(y, m - 1, 1), daysIn = new Date(y, m, 0).getDate();
+    if (label) { try { label.textContent = first.toLocaleDateString(currentLang, { month: 'long', year: 'numeric' }); } catch { label.textContent = waterMonthKey; } }
+    const byDay = {};
+    waterMonthRows.forEach(r => { (byDay[r.log_date] = byDay[r.log_date] || []).push(r); });
+    const goal = getWaterDailyGoal();
+    const today = getLocalDateString();
+    const fmtL = ml => { try { return (ml / 1000).toLocaleString(currentLang, { maximumFractionDigits: 1 }); } catch { return String(Math.round(ml / 100) / 10); } };
+    let html = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map(k => `<span class="water-month-wd">${escapeHtmlForReport(t('weekday_short_' + k))}</span>`).join('');
+    for (let i = 0; i < first.getDay(); i++) html += '<span class="water-month-cell is-empty" aria-hidden="true"></span>';
+    for (let d = 1; d <= daysIn; d++) {
+        const ds = `${waterMonthKey}-${String(d).padStart(2, '0')}`;
+        const total = (byDay[ds] || []).reduce((a, r) => a + (r.amount_ml || 0), 0);
+        const fill = goal > 0 ? Math.min(1, total / goal) : 0;
+        const cls = ['water-month-cell', total ? 'has' : '', goal > 0 && total >= goal ? 'is-goal' : '', ds === today ? 'is-today' : '', ds === waterMonthSelDay ? 'on' : ''].filter(Boolean).join(' ');
+        html += `<button type="button" class="${cls}" data-day="${ds}" style="--fill:${fill.toFixed(2)}" aria-pressed="${ds === waterMonthSelDay}" onclick="selectWaterMonthDay('${ds}')"><span class="water-month-num">${d}</span><span class="water-month-total">${total ? fmtL(total) : ''}</span></button>`;
+    }
+    grid.innerHTML = html;
+    if (!dayBox) return;
+    if (!waterMonthSelDay) { dayBox.innerHTML = ''; return; }
+    const rows = byDay[waterMonthSelDay] || [];
+    const dayTotal = rows.reduce((a, r) => a + (r.amount_ml || 0), 0);
+    let dayLabel = waterMonthSelDay;
+    try { const [yy, mm, dd] = waterMonthSelDay.split('-').map(Number); dayLabel = new Date(yy, mm - 1, dd).toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' }); } catch { /* התאריך כמו שהוא */ }
+    dayBox.innerHTML = `<div class="water-month-day-title">${escapeHtmlForReport(dayLabel)} · <bdi dir="ltr">${dayTotal.toLocaleString()}</bdi> ${escapeHtmlForReport(t('water_ml_unit'))}</div>`
+        + (rows.length ? rows.map(r => `<div class="water-month-row"><span>${r.amount_ml} ${escapeHtmlForReport(t('water_ml_unit'))}</span><bdi dir="ltr">${waterLogTime(r)}</bdi></div>`).join('') : `<p class="water-month-empty">${escapeHtmlForReport(t('water_month_day_empty'))}</p>`);
 }
 
 // --- "AI" חוקי-דטרמיניסטי: מוסיף טקסט חופשי כפתק חדש בלשונית הפתקים בלבד ---

@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=542">
+    <link rel="stylesheet" href="theme.css?v=543">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -655,6 +655,21 @@
                                 <span class="preset-category-chevron" id="water-history-chevron">▼</span>
                             </div>
                             <ul id="water-history-list" class="center-list"></ul>
+                            <!-- 💧 טבלה חודשית (לפי בקשה מפורשת): כל יום בחודש עם כמה נשתה, ונגיעה ביום מראה את הרישומים שלו עם השעות -->
+                            <div class="preset-category-header" onclick="toggleWaterMonth()">
+                                <span class="preset-category-label" data-i18n="water_month_title">Monthly table</span>
+                                <span class="preset-category-chevron" id="water-month-chevron">▶</span>
+                            </div>
+                            <div id="water-month-body" class="water-month hidden">
+                                <div class="water-month-nav">
+                                    <button type="button" class="water-month-arrow" onclick="navigateWaterMonth(-1)" data-i18n-aria-label="monthly_goal_prev_month" aria-label="Previous month">‹</button>
+                                    <span id="water-month-label" class="water-month-label"></span>
+                                    <button type="button" class="water-month-arrow" onclick="navigateWaterMonth(1)" data-i18n-aria-label="monthly_goal_next_month" aria-label="Next month">›</button>
+                                </div>
+                                <div class="water-month-unit" data-i18n="water_month_unit">Liters</div>
+                                <div class="water-month-grid" id="water-month-grid"></div>
+                                <div class="water-month-day" id="water-month-day"></div>
+                            </div>
                             <!-- קונפטי שמופעל כשמגיעים ליעד היומי - אותה טכניקה בדיוק כמו
                                  חגיגת היעד החודשי (modal-goal-celebration), רק בלי המודל -
                                  מוצג ישירות בתוך הכרטיס עצמו, פעם אחת ביום -->
@@ -1213,7 +1228,7 @@
             <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-tooltip="ai_brain_fab_title" data-i18n-aria-label="ai_brain_fab_title" aria-label="AI Assistant">
                 <span class="ai-orb" id="ai-brain-orb" aria-hidden="true"><span class="ai-orb-cloud"></span></span>
                 <img class="ai-brain-icon hidden" id="ai-brain-icon-img" src="robot-fab-icon.png?v=1" alt="">
-                <span class="ai-brain-icon ai-brain-icon-emoji hidden" id="ai-brain-icon-emoji">🌟</span>
+                <span class="ai-brain-icon ai-brain-icon-emoji hidden" id="ai-brain-icon-emoji">🧠</span>
 
                 <!-- לחיצה על התג עצמו (לא כל הכפתור) פותחת את תזכורת "מה חשוב היום" -
                      כדי שהיא לא תחסום גישה למוח עצמו, לפי בקשה מפורשת ("תפריד
@@ -1227,7 +1242,8 @@
                 (function () {
                     try {
                         var icon = localStorage.getItem('weekwise_last_ai_icon');
-                        var shown = icon === 'robot' ? document.getElementById('ai-brain-icon-img') : (icon === 'star' ? document.getElementById('ai-brain-icon-emoji') : null);
+                        var shown = icon === 'robot' ? document.getElementById('ai-brain-icon-img') : (icon === 'brain' ? document.getElementById('ai-brain-icon-emoji') : null);
+                        if (shown && icon === 'brain') shown.classList.add('is-brain');
                         var orb = document.getElementById('ai-brain-orb');
                         if (shown && orb) { shown.classList.remove('hidden'); orb.classList.add('hidden'); }
                     } catch (e) { /* localStorage חסום - נשאר על ברירת המחדל */ }
@@ -1253,9 +1269,11 @@
             <!-- "היום שלי" פתוח: מגירה מלמטה עם ציר זמן אחד - הצצה להיום והשגרה שלי ביחד (לפי בחירה
                  מפורשת "ב – ציר זמן אחד"). הציור עצמו ב-loadTodayTasks → renderMyDay (home.js) -->
             <div id="today-peek-content-panel" class="today-peek-content-panel myday-sheet">
-                <span class="myday-sheet-handle" aria-hidden="true"></span>
+                <!-- לחיצה על הידית או על "היום שלי" סוגרת (לפי בקשה מפורשת: "שלוחצים על היום שלי הוא גם נפתח שלוחצים עליו שוב
+                     הוא נסגר") - כמו הפס הסגור למטה, שלחיצה עליו פותחת -->
+                <button type="button" class="myday-sheet-handle" onclick="closeTodayPeekPanel()" tabindex="-1" aria-hidden="true"></button>
                 <div class="today-peek-content-header">
-                    <h2 data-i18n="today_tasks_title">My Day</h2>
+                    <h2><button type="button" class="myday-sheet-title" onclick="closeTodayPeekPanel()" aria-expanded="true"><span data-i18n="today_tasks_title">My Day</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></h2>
                     <div class="hamburger-drawer-header-actions">
                         <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
                              updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
@@ -1340,6 +1358,11 @@
                     <button type="button" data-tour="m-books" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openBooksSection();">
                         <span class="hamburger-drawer-item-icon">📚</span>
                         <span class="hamburger-drawer-item-title" data-i18n="books_menu_label">Reading Corner</span>
+                    </button>
+                    <!-- 📔 היומן מ-New Me - רק למי שבחר/ה להוסיף אותו לתפריט (אפשר רק אחרי שהיומן נפתח בחדר), ר' updateDiaryMenuItem -->
+                    <button type="button" class="hamburger-drawer-item hidden" id="hamburger-diary-item" onclick="closeHamburgerMenu(); openDiaryFromMenu();">
+                        <span class="hamburger-drawer-item-icon">📔</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="room_diary_title">The diary</span>
                     </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_nutrition">Nutrition &amp; Metrics</div>
@@ -2573,15 +2596,15 @@
                          הוא .theme-preview-tile עם data-color-theme משלו - מציג את דוגמת הרקע
                          האמיתית של הערכה, לא רק גרדיאנט צבעים -->
                     <!-- החללית ראשונה וצבעי המים שנייה (לפי בקשה מפורשת: "תעשה שזה יהיה הראשון במיוחדים הוא כלכך יפה";
-                         "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני") -->
+                         "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני"), והזוהר הצפוני שלישי ("ושתהיה השלישית בתור") -->
                     <div class="theme-special-divider"><span class="theme-special-sparkle">✨</span><span data-i18n="theme_special_section_label">Special Themes</span><span class="theme-special-sparkle">✨</span></div>
                     <div class="theme-picker-grid">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="space_rocket" data-color-theme="space_rocket" onclick="selectColorTheme('space_rocket')" title="Space Rocket"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="watercolor_wash" data-color-theme="watercolor_wash" onclick="selectColorTheme('watercolor_wash')" title="Watercolor"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="aurora_borealis" data-color-theme="aurora_borealis" onclick="selectColorTheme('aurora_borealis')" title="Aurora Borealis"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="barbie_dream" data-color-theme="barbie_dream" onclick="selectColorTheme('barbie_dream')" title="Barbie"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="gold_sparkle" data-color-theme="gold_sparkle" onclick="selectColorTheme('gold_sparkle')" title="Gold Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="pink_sparkle" data-color-theme="pink_sparkle" onclick="selectColorTheme('pink_sparkle')" title="Pink Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="aurora_borealis" data-color-theme="aurora_borealis" onclick="selectColorTheme('aurora_borealis')" title="Aurora Borealis"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="star_map" data-color-theme="star_map" onclick="selectColorTheme('star_map')" title="Star Map"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="botanical_greenhouse" data-color-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" title="Botanical Greenhouse"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="bull_run" data-color-theme="bull_run" onclick="selectColorTheme('bull_run')" title="Bull Run"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -2594,7 +2617,7 @@
                     <label class="settings-label" data-i18n="settings_ai_icon_label">AI Assistant Icon (Premium)</label>
                     <div class="theme-picker-grid" id="ai-icon-picker-grid">
                         <button type="button" class="theme-swatch ai-icon-swatch ai-icon-swatch-orb" data-ai-icon="default" onclick="selectAiIcon('default')" data-i18n-title="settings_ai_icon_orb" data-i18n-aria-label="settings_ai_icon_orb" title="Soft bubble" aria-label="Soft bubble"><span class="ai-orb is-mini" aria-hidden="true"><span class="ai-orb-cloud"></span></span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="star" onclick="selectAiIcon('star')" title="🌟">🌟</button>
+                        <button type="button" class="theme-swatch ai-icon-swatch ai-icon-swatch-brain" data-ai-icon="brain" onclick="selectAiIcon('brain')" title="🧠"><span class="ai-swatch-brain-glyph">🧠</span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="robot" onclick="selectAiIcon('robot')" title="🤖"><img src="robot-fab-icon.png?v=1" alt=""><span class="theme-swatch-lock">🔒</span></button>
                     </div>
 
@@ -4241,18 +4264,18 @@
 
     </div>
 
-    <script src="i18n.js?v=446"></script>
-    <script src="app.js?v=581"></script>
+    <script src="i18n.js?v=447"></script>
+    <script src="app.js?v=582"></script>
     <script src="ai-chat.js?v=4"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="new-me-data.js?v=8"></script>
-    <script src="new-me.js?v=46"></script>
+    <script src="new-me.js?v=47"></script>
     <script src="new-me-challenges.js?v=6"></script>
-    <script src="secret-room.js?v=23"></script>
-    <script src="secret-places.js?v=7"></script>
+    <script src="secret-room.js?v=24"></script>
+    <script src="secret-places.js?v=8"></script>
     <script src="books.js?v=5"></script>
-    <script src="home.js?v=14"></script>
+    <script src="home.js?v=15"></script>
 </body>
 </html>

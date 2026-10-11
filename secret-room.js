@@ -111,6 +111,9 @@ async function roomLoad() {
     const { data } = await supabaseClient.from('new_me_room').select('*').eq('user_id', currentUserId).maybeSingle();
     roomState = data || { keys_seen: 0, style: 'night', wall_color: null, life_score: null, next_step: null, game_best: 0 };
     roomLoaded = true;
+    // 📔 היומן בתפריט הראשי (ר' nmDiaryInMenu): מה שבחשבון גובר - גם במכשיר הזה
+    if (data && typeof nmDiaryMenuKey === 'function') { try { if (data.diary_in_menu) localStorage.setItem(nmDiaryMenuKey(), '1'); else localStorage.removeItem(nmDiaryMenuKey()); } catch {} }
+    if (typeof updateDiaryMenuItem === 'function') updateDiaryMenuItem();
     if (roomIsDev() && roomState.dev_keys == null) {
         const local = roomDevLocalDelta();
         if (local) roomSave({ dev_keys: local });

@@ -819,22 +819,36 @@ async function refreshHomeWeather(force) {
         if (force) showAppToast(t('weather_failed'), 'error');
     }
 }
-const HOME_WEATHER_COVERED = ['clouds', 'rain', 'snow', 'storm', 'fog'];
+// מה מצויר בשמיים בכל מצב - לפי מזג האוויר האמיתי במיקום (לפי בקשה מפורשת: "לפי מזג האוויר ומיקום של מי שנמצא בו",
+// ושיעבוד בכל הערכות): שמש (ובלילה ירח וכוכבים), עננים אמיתיים (כהים בגשם ובסערה), טיפות, פתיתים, ברק, ערפל
+function homeWeatherParts(sky, night) {
+    const light = night ? '<i class="wx-moon"></i><i class="wx-stars"></i>' : '<i class="wx-sun"></i>';
+    const clouds = (n, dark) => [1, 2, 3].slice(0, n).map(i => `<i class="wx-cloud wx-c${i}${dark ? ' wx-dark' : ''}"></i>`).join('');
+    if (sky === 'clear') return light;
+    if (sky === 'partly') return light + clouds(2);
+    if (sky === 'clouds') return clouds(3);
+    if (sky === 'rain') return clouds(3, true) + '<i class="wx-drops"></i>';
+    if (sky === 'storm') return clouds(3, true) + '<i class="wx-drops"></i><i class="wx-bolt"></i>';
+    if (sky === 'snow') return clouds(2) + '<i class="wx-flakes"></i>';
+    if (sky === 'fog') return '<i class="wx-mist"></i><i class="wx-mist wx-mist2"></i>';
+    return '';
+}
 function applyHomeWeather(state) {
     const sky = state && (state.preview || isHomeWeatherOn()) ? state.sky : null;
+    const night = !!(sky && state.day === false);
     const layer = document.getElementById('home-weather');
     if (layer) {
-        let cls = 'home-weather';
-        if (sky === 'clear') {
-            // יום בהיר: שמש עדינה (בלילה ירח וכוכבים) - רק כשהערכה לא מציירת שמיים משלה
-            const strip = document.querySelector('.home-sky-scene .home-sky-topstrip');
-            const themeSky = strip && getComputedStyle(strip).backgroundImage !== 'none';
-            if (!themeSky) cls += state.day === false ? ' wx-clear-night' : ' wx-clear-day';
-        } else if (sky) cls += ` wx-${sky}`;
-        layer.className = cls;
+        // מציירים מחדש רק כשמשהו השתנה - שהעננים לא יקפצו להתחלה בכל רענון
+        const key = sky ? `${sky}-${night ? 'night' : 'day'}` : '';
+        if (layer.dataset.wx !== key) {
+            layer.dataset.wx = key;
+            layer.className = 'home-weather' + (sky ? ` wx-${sky}${night ? ' wx-night' : ''}` : '');
+            layer.innerHTML = sky ? homeWeatherParts(sky, night) : '';
+        }
     }
+    // כשמזג האוויר פעיל הוא מצייר את השמיים בעצמו - השמש / הכוכבים הכלליים של הערכה מוסתרים (theme.css)
     const scene = document.querySelector('.home-sky-scene');
-    if (scene) scene.classList.toggle('wx-covered', HOME_WEATHER_COVERED.includes(sky));
+    if (scene) scene.classList.toggle('wx-on', !!sky);
     const toggle = document.getElementById('home-weather-toggle');
     if (toggle) toggle.checked = isHomeWeatherOn();
     const dev = document.getElementById('weather-dev-preview');
