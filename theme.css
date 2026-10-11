@@ -5868,6 +5868,23 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .premium-unlock-icon { font-size: 3rem; margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6)); }
 .premium-unlock-content h2 { font-size: 1.3rem; margin: 0 0 10px 0; background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .premium-unlock-content p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.78); margin: 0 0 20px 0; line-height: 1.5; }
+/* 💎 חגיגת New Me - אותו מבנה כמו של הפרימיום, בצבעי New Me */
+.newme-unlock-ceremony { background: radial-gradient(circle at 50% 40%, #3b1450, #07040c 72%); }
+.newme-unlock-icon { filter: drop-shadow(0 0 16px rgba(255, 79, 163, 0.7)); }
+.newme-unlock-icon .nm-icon { display: block; width: 3.2rem; height: 3.2rem; margin: 0 auto; color: #f5c6ff; }
+/* זיקוקים בשתי החגיגות: כל פיצוץ = 16 ניצוצות שעפים החוצה ונעלמים */
+.unlock-firework { position: absolute; width: 0; height: 0; }
+.unlock-firework i { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; opacity: 0; box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.55); animation: unlockFireworkSpark 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+@keyframes unlockFireworkSpark {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+    12% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 16px)) scale(0.25); }
+}
+@media (prefers-reduced-motion: reduce) { .unlock-firework { display: none; } }
+/* 🛠 לוח ה-PM בראש ההגדרות - רק לחשבון הפיתוח */
+.settings-dev-panel { margin: 0 0 12px; padding: 8px 12px 2px; border-radius: 14px; border: 1px dashed rgba(255, 210, 122, 0.6); background: rgba(255, 210, 122, 0.06); }
+.settings-dev-title { margin: 0 0 2px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; color: #ffd27a; }
+html.light-mode .settings-dev-title { color: #b7791f; }
 .action-buttons-wrap { display: flex; gap: 8px; }
 /* קיצורי דרך ליד "הוספה" בתוך מודל "פתק מהיר" - לא בורר יעד (זה חזר להיות
    הבורר הגדול עם הטקסט למעלה, ר' .ai-schedule-mode-toggle) אלא ניווט אמיתי:
@@ -5966,7 +5983,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 /* הכרטיס ממורכז במקום שנשאר, ושורת "מה האפליקציה עושה" יושבת בתחתית המסך - במסך נמוך היא
    נדחפת מתחת לכרטיס (בלי לעלות עליו) ואפשר לגלול */
 .login-overlay > .login-card { margin: auto 0; }
-.auth-app-purpose { flex-shrink: 0; max-width: 460px; margin: 0; padding: 10px 20px calc(12px + env(safe-area-inset-bottom, 0px)); font-size: 0.66rem; line-height: 1.5; color: rgba(255, 255, 255, 0.42); text-align: center; text-wrap: balance; }
+.login-card .auth-app-purpose { margin: 12px 0 0; font-size: 0.62rem; line-height: 1.5; color: var(--text-secondary); opacity: 0.6; text-align: center; text-wrap: balance; }
 .login-card { background-color: var(--bg-sheet); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px 20px; width: 85%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 /* לוגו "NOT10.ai" - פונט ייעודי (Poppins, ר' index.html) רק לשם המותג עצמו,
    לא לכל הטקסט באפליקציה - לפי בקשה מפורשת ("פונט יותר יפה") */

@@ -917,7 +917,11 @@ async function handleNewMeCheckoutReturn() {
             hasNewMe = !!(data && data.new_me_purchased);
         }
     }
-    if (hasNewMe) { updateNewMeShortcut(); showAppToast(t('nm_unlocked_toast')); renderNewMe(); }
+    if (hasNewMe) {
+        updateNewMeShortcut();
+        renderNewMe();
+        if (typeof celebrateNewMeUnlock === 'function') celebrateNewMeUnlock(); else showAppToast(t('nm_unlocked_toast'));
+    }
     else showAppToast(t('nm_unlock_pending'), 'error');
 }
 
@@ -1056,8 +1060,9 @@ async function nmQuizNext() {
     if (q.step === 0 && !q.agreed) return;
     if (q.step === 1) {
         if (String(q.name || '').trim().length < 2) { showAppToast(t('nm_q_full_name_missing'), 'error'); return; }
+        // המשקל הנוכחי לא חובה (לפי בקשה מפורשת: "משקל נוכחי גם שלא יהיה חובה") - רק אם נכתב, שיהיה הגיוני
         const w = parseFloat(q.weight);
-        if (!(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
+        if (String(q.weight || '').trim() && !(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
     if (q.step === 4 && !(nmTimes && nmTimes.mode)) return;
     if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
@@ -1065,10 +1070,12 @@ async function nmQuizNext() {
     if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
     const today = getLocalDateString();
     const goal = parseFloat(q.goal);
+    const startW = parseFloat(q.weight);
+    const startWeight = startW >= 20 && startW <= 400 ? startW : null;
     const row = {
         user_id: currentUserId,
         plan: q.plan,
-        start_weight: parseFloat(q.weight),
+        start_weight: startWeight,
         goal_weight: goal > 0 ? goal : null,
         disclaimer_accepted_at: new Date().toISOString(),
         disclaimer_version: NEW_ME_DISCLAIMER_VERSION,
@@ -1078,6 +1085,8 @@ async function nmQuizNext() {
         updated_at: new Date().toISOString(),
     };
     if (q.late) row.late_choice = q.late;
+    // שאלון חוזר בלי משקל - המשקל ההתחלתי שכבר נשמר נשאר
+    if (startWeight == null && nmProfile) delete row.start_weight;
     // שעות האוכל מהשלב שלהן: הארוחות שהוסרו, הסדר לפי השעות, ושנשאל
     const timesState = nmTimes && nmTimes.mode ? nmTimes : null;
     if (timesState) Object.assign(row, nmTimesProfileRow());
@@ -1090,7 +1099,7 @@ async function nmQuizNext() {
     if (timesState) await nmTimesApplyAfterSave(timesState);
     nmTimes = null;
     // המשקל ההתחלתי נכנס גם למעקב המשקל הקיים (אותה טבלה בדיוק)
-    await insertWeightRecord(row.start_weight, today, 'New Me');
+    if (startWeight) await insertWeightRecord(startWeight, today, 'New Me');
     if (typeof loadWeightHistory === 'function') loadWeightHistory();
     await nmSyncCalorieGoal();
     nmQuiz = null;
@@ -1222,8 +1231,16 @@ function nmLatestWeight() {
     const w = nmWeights.filter(x => Number(x.weight_value) > 0);
     return w.length ? Number(w[w.length - 1].weight_value) : null;
 }
+// המשקל בתחילת הדרך: מה שנכתב בשאלון, ואם לא נכתב (לא חובה) - השקילה הראשונה מאז שהתחילו
+function nmStartWeight() {
+    const s = Number(nmProfile && nmProfile.start_weight);
+    if (s > 0) return s;
+    const since = nmStartDay();
+    const first = (typeof nmWeights !== 'undefined' ? nmWeights : []).find(w => Number(w.weight_value) > 0 && w.weight_date >= since);
+    return first ? Number(first.weight_value) : null;
+}
 function nmKgLost() {
-    const s = Number(nmProfile && nmProfile.start_weight), l = nmLatestWeight();
+    const s = nmStartWeight(), l = nmLatestWeight();
     return s > 0 && l ? Math.round((s - l) * 10) / 10 : 0;
 }
 
@@ -1247,7 +1264,7 @@ function nmComputeEarned() {
     const day = nmJourneyDay();
     const lost = nmKgLost();
     const latest = nmLatestWeight();
-    const start = Number(nmProfile.start_weight), goal = Number(nmProfile.goal_weight);
+    const start = nmStartWeight() || 0, goal = Number(nmProfile.goal_weight);
     if (nmStats.some(r => r.checks > 0)) out.add('first_meal');
     if (s.perfect > 0) out.add('perfect_day');
     NEW_ME_BADGES.forEach(b => {
@@ -3037,12 +3054,13 @@ function nmRenderJourney(body) {
 }
 
 function nmWeightCardHtml() {
-    const start = Number(nmProfile.start_weight) || null;
+    const profileStart = Number(nmProfile.start_weight) || null;
+    const start = nmStartWeight();
     const goal = Number(nmProfile.goal_weight) || null;
     const latest = nmLatestWeight();
     const lost = nmKgLost();
     const since = nmStartDay();
-    const series = (start ? [{ weight_date: since, weight_value: start }] : []).concat(nmWeights.filter(w => w.weight_date >= since));
+    const series = (profileStart ? [{ weight_date: since, weight_value: profileStart }] : []).concat(nmWeights.filter(w => w.weight_date >= since));
     const pct = start && goal && latest && start !== goal ? Math.max(0, Math.min(100, Math.round(((start - latest) / (start - goal)) * 100))) : null;
     const kg = v => v ? `<bdi dir="ltr">${nmFmtNum(v, 1)}</bdi>` : '—';
     const recent = nmWeights.slice(-7).reverse();

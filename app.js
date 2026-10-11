@@ -2786,6 +2786,7 @@ function openSettingsDrawer() {
     document.getElementById('settings-main-menu').classList.remove('hidden');
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
+    devRenderSettingsPanel();
     renderNotificationSettingsStatus();
     renderReminderChimePicker();
     renderReminderRingSettings();
@@ -7670,7 +7671,7 @@ function devSimBuyNewMe() {
     showAppToast(t('nm_unlocking'));
     setTimeout(() => {
         setNmDevLockedPreview(false);
-        showAppToast(t('nm_unlocked_toast'));
+        celebrateNewMeUnlock();
     }, 1200);
 }
 // הכפתור עצמו - אותו כפתור בכל מקום: "PM" ומנעול
@@ -7695,6 +7696,30 @@ function devRenderNewMePill() {
 // הפרימיום: בחלון "שדרוג לפרימיום" ובהגדרות > חשבון
 function devRenderPremiumPills() {
     document.querySelectorAll('.dev-sim-slot[data-kind="premium"]').forEach(slot => { slot.innerHTML = devSimPillHtml('premium'); });
+}
+// 🛠 לוח PM בראש ההגדרות (רק לחשבון הפיתוח): מתג לפרימיום ומתג ל-New Me - פתוח / נעול, לבחירתה (לפי בקשה מפורשת:
+// "שתהיה לי אפשרות בכפתורים גם לסגור ולפתוח את הפרימיום ואת הNEW ME לבחירתי לראות הכל - רק לי המפתחת")
+function devRenderSettingsPanel() {
+    const box = document.getElementById('settings-dev-panel');
+    if (!box) return;
+    box.classList.toggle('hidden', !isDevSuperuserAccount);
+    if (!isDevSuperuserAccount) { box.innerHTML = ''; return; }
+    const esc = escapeHtmlForReport;
+    const row = (kind, label, open) => `
+        <div class="settings-toggle-row">
+            <span class="settings-label">${open ? '🔓' : '🔒'} ${esc(label)}</span>
+            <label class="switch">
+                <input type="checkbox" data-kind="${kind}" ${open ? 'checked' : ''} aria-label="${esc(label + ' – ' + t(open ? 'dev_sim_lock' : 'dev_sim_buy'))}" onchange="devSettingsToggle('${kind}')">
+                <span class="switch-slider"></span>
+            </label>
+        </div>`;
+    box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', 'New Me', !!hasNewMe)}`;
+}
+function devSettingsToggle(kind) {
+    if (!isDevSuperuserAccount) return;
+    // New Me נפתח / ננעל ישר מול העיניים - ההגדרות נסגרות; פרימיום נטען מחדש (עם החגיגה כשנפתח)
+    if (kind === 'new_me') closeModal('modal-settings-drawer');
+    devSimToggle(kind);
 }
 function setNmDevLockedPreview(on) {
     try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
@@ -8419,7 +8444,41 @@ function handleCheckoutReturn() {
 
 function celebratePremiumUnlock() {
     const overlay = document.getElementById('premium-unlock-ceremony');
-    if (overlay) overlay.classList.add('open');
+    if (overlay) { overlay.classList.add('open'); spawnUnlockFireworks(overlay); }
+}
+// 💎 חגיגת New Me אחרי הקנייה - בדיוק כמו של הפרימיום (לפי בקשה מפורשת: "שקונים את הNEW ME תעשה שגם יהיה זיקוקים
+// וכאלה בדיוק כל מה שיש שהPREMUME נפתח")
+function celebrateNewMeUnlock() {
+    const overlay = document.getElementById('newme-unlock-ceremony');
+    if (overlay) { overlay.classList.add('open'); spawnUnlockFireworks(overlay); }
+}
+function closeNewMeUnlockCeremony() {
+    const overlay = document.getElementById('newme-unlock-ceremony');
+    if (overlay) overlay.classList.remove('open');
+    showAppToast(t('nm_unlocked_toast'));
+}
+// זיקוקים בשתי החגיגות: כמה פיצוצים קטנים של ניצוצות בשמיים, אחד אחרי השני, ואז הם נעלמים
+function spawnUnlockFireworks(overlay) {
+    const field = overlay && overlay.querySelector('.premium-sparkle-field');
+    if (!field || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    field.querySelectorAll('.unlock-firework').forEach(f => f.remove());
+    const colors = ['#ffd27a', '#ff9ecf', '#c4b5fd', '#7dd3fc', '#fff3c4', '#ff6aa5'];
+    const bursts = 7;
+    for (let b = 0; b < bursts; b++) {
+        const fw = document.createElement('div');
+        fw.className = 'unlock-firework';
+        fw.style.left = `${(12 + Math.random() * 76).toFixed(1)}%`;
+        fw.style.top = `${(8 + Math.random() * 44).toFixed(1)}%`;
+        const color = colors[b % colors.length], delay = (b * 0.45).toFixed(2);
+        let sparks = '';
+        for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2, d = 40 + Math.random() * 30;
+            sparks += `<i style="--dx:${(Math.cos(a) * d).toFixed(1)}px;--dy:${(Math.sin(a) * d).toFixed(1)}px;background:${color};animation-delay:${delay}s"></i>`;
+        }
+        fw.innerHTML = sparks;
+        field.appendChild(fw);
+    }
+    setTimeout(() => field.querySelectorAll('.unlock-firework').forEach(f => f.remove()), bursts * 450 + 1800);
 }
 
 function closePremiumUnlockCeremony() {
@@ -8678,6 +8737,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_preview', category: 'nutrition' },
+    { id: 'new_me_weight_optional', category: 'nutrition' },
     { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
