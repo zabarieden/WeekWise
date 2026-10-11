@@ -7628,9 +7628,74 @@ let isDevSuperuserAccount = false;
 let hasNewMe = false;
 // פרטי המסלול של New Me (לכל החיים / חודשי, סטטוס המנוי ותאריכים) - לתצוגה בהגדרות של New Me
 let newMeBilling = null;
-// חשבון הפיתוח רואה תמיד את New Me פתוח. "תצוגה כמו מי שעוד לא רכש/ה" (לפי בקשה מפורשת: "תנעל לי את ה-NEW ME,
-// אני רוצה לראות הכל שזה נעול ואת ההסבר לפני שקונים") - נשמר במכשיר; נדלק מ-⚙️ הגדרות תוכנית, נכבה מהפס שבעמוד הרכישה
+// --- 🔧 מתג המפתחת (חשבון הפיתוח בלבד): לנעול ולראות בדיוק מה רואה מי שעוד לא קנה, ו"לקנות" כדי לראות איך
+// הכול נפתח - ב-New Me ובפרימיום (לפי בקשה מפורשת, 2026-10-11: "כפתור קטן קטן למטה... כאילו לקנות ולראות איך
+// הכל נפתח... אותו כפתור בדיוק אני רוצה לפרימיום"). תצוגה בלבד, נשמרת במכשיר: לא נוגעת בנתונים, בפתקים או
+// ברכישות אמיתיות. "קנייה" = אותה חזרה מהתשלום כמו אצל כולם (חגיגת הפרימיום / פתיחת New Me), בלי תשלום ---
 function nmDevLockedPreview() { try { return localStorage.getItem('weekwise_nm_dev_locked') === '1'; } catch { return false; } }
+function devPremiumLockedPreview() { try { return localStorage.getItem('weekwise_dev_premium_locked') === '1'; } catch { return false; } }
+// פעם אחת בכל מכשיר: הכול נעול, כמו מי שרק נכנס/ה לאפליקציה (לפי בקשה מפורשת: "ותנעל לי הכל הכל כדי שאראה
+// איך זה כברירת מחדל")
+function devSimFirstRun() {
+    try {
+        if (localStorage.getItem('weekwise_dev_sim_v1')) return;
+        localStorage.setItem('weekwise_dev_sim_v1', '1');
+        localStorage.setItem('weekwise_dev_premium_locked', '1');
+        localStorage.setItem('weekwise_nm_dev_locked', '1');
+    } catch {}
+}
+// חשבון הפיתוח כשהפרימיום "נעול" - כמו מי שרק נכנס/ה (גם בלי שימושים קודמים ב-AI)
+function devSimFreshAccount() { return DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase()) && devPremiumLockedPreview(); }
+// רענון הדף (פונקציה נפרדת, כדי שהבדיקות יוכלו להחליף אותה)
+function devSimReload(url) { window.location.replace(url); }
+// הכפתור הקטן: נעול → "קנייה"; פתוח → נעילה. New Me מתחלף במקום; פרימיום נוגע בכל האפליקציה, אז הדף נטען
+// מחדש - נעילה כמו כניסה חדשה, "קנייה" כמו החזרה מהתשלום (?checkout=success, עם הטקס של הפרימיום)
+function devSimToggle(kind) {
+    if (!isDevSuperuserAccount) return;
+    if (kind === 'new_me') {
+        if (hasNewMe) { setNmDevLockedPreview(true); showAppToast(t('dev_sim_locked_toast')); }
+        else devSimBuyNewMe();
+        return;
+    }
+    const locked = devPremiumLockedPreview();
+    try { if (locked) localStorage.removeItem('weekwise_dev_premium_locked'); else localStorage.setItem('weekwise_dev_premium_locked', '1'); } catch {}
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    if (locked) url.searchParams.set('checkout', 'success');
+    devSimReload(url.toString());
+}
+// "קנייה" של New Me בתצוגה הנעולה: כמו החזרה מהתשלום (מאמתים… ואז נפתח), בלי תשלום אמיתי
+function devSimBuyNewMe() {
+    if (!isDevSuperuserAccount || hasNewMe) return;
+    showAppToast(t('nm_unlocking'));
+    setTimeout(() => {
+        setNmDevLockedPreview(false);
+        showAppToast(t('nm_unlocked_toast'));
+    }, 1200);
+}
+// הכפתור עצמו - אותו כפתור בכל מקום: "PM" ומנעול
+function devSimPillHtml(kind) {
+    if (!isDevSuperuserAccount) return '';
+    const locked = kind === 'premium' ? !isPremiumUser : !hasNewMe;
+    const label = escapeHtmlForReport(t(locked ? 'dev_sim_buy' : 'dev_sim_lock'));
+    return `<button type="button" class="dev-sim-pill${locked ? ' is-locked' : ''}" data-kind="${kind}" onclick="devSimToggle('${kind}')" aria-label="${label}" title="${label}"><b>PM</b><span aria-hidden="true">${locked ? '🔓' : '🔒'}</span></button>`;
+}
+// בתחתית New Me (בפינה שמול התרמיל) - מוצג רק כש-New Me על המסך (theme.css)
+function devRenderNewMePill() {
+    let el = document.getElementById('dev-sim-newme');
+    if (!isDevSuperuserAccount) { if (el) el.remove(); return; }
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'dev-sim-newme';
+        el.className = 'dev-sim-float';
+        (document.querySelector('.phone-wrapper') || document.body).appendChild(el);
+    }
+    el.innerHTML = devSimPillHtml('new_me');
+}
+// הפרימיום: בחלון "שדרוג לפרימיום" ובהגדרות > חשבון
+function devRenderPremiumPills() {
+    document.querySelectorAll('.dev-sim-slot[data-kind="premium"]').forEach(slot => { slot.innerHTML = devSimPillHtml('premium'); });
+}
 function setNmDevLockedPreview(on) {
     try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
     if (!isDevSuperuserAccount) return;
@@ -7660,8 +7725,11 @@ function isInFreeTrial() {
 async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
-        isPremiumUser = true;
-        isRealPremiumUser = true;
+        // 🔧 מתג המפתחת: פרימיום ו-New Me יכולים להיות "נעולים", כמו אצל מי שרק נכנס/ה (devSimToggle)
+        devSimFirstRun();
+        const premiumLocked = devPremiumLockedPreview();
+        isPremiumUser = !premiumLocked;
+        isRealPremiumUser = !premiumLocked;
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
         hasNewMe = !nmDevLockedPreview();
@@ -7695,6 +7763,7 @@ async function loadPremiumStatus() {
 // אמיתי לבטל/לשנות שם. כל שאר המקרים (מנוי חודשי/חצי-שנתי) מקבלים אפשרות
 // אמיתית לבטל - ביטול עצמי הוא פעולה בטוחה (בניגוד להפעלה עצמית), אז זה מיושם באמת
 function renderSettingsSubscriptionSection() {
+    devRenderPremiumPills();
     const section = document.getElementById('settings-subscription-section');
     const statusEl = document.getElementById('settings-subscription-status');
     const changeBtn = document.getElementById('btn-change-plan');
@@ -8291,6 +8360,7 @@ function openPremiumUpgradeModal() {
     document.querySelectorAll('.premium-tier-option').forEach(el => el.classList.remove('selected'));
     const defaultOption = document.querySelector(`.premium-tier-option[data-tier="${selectedPremiumTier}"]`);
     if (defaultOption) defaultOption.classList.add('selected');
+    devRenderPremiumPills();
     openModal('modal-premium-upgrade');
 }
 
@@ -8305,6 +8375,8 @@ function selectPremiumTier(el) {
 // lemonsqueezy-webhook. הטקס החגיגי (celebratePremiumUnlock) זז מכאן לרגע
 // החזרה עם ?checkout=success אחרי אימות שרת אמיתי - ר' handleCheckoutReturn
 async function submitPremiumUpgrade(btn) {
+    // חשבון הפיתוח כשהפרימיום "נעול": "קנייה" בלי תשלום - חוזרים כמו מהתשלום, עם הטקס (devSimToggle)
+    if (isDevSuperuserAccount && !isPremiumUser) { devSimToggle('premium'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const originalText = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = t('food_ai_estimating'); }
@@ -8605,6 +8677,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
+    { id: 'new_me_preview', category: 'nutrition' },
     { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
@@ -11536,6 +11609,8 @@ async function loadAiUsage() {
     cachedSmartSplitLifetimeUsed = data ? (data.smart_split_lifetime_used || 0) : 0;
     cachedScheduleAiLifetimeUsed = data ? (data.schedule_ai_lifetime_used || 0) : 0;
     cachedTableAiLifetimeUsed = data ? (data.table_ai_lifetime_used || 0) : 0;
+    // 🔧 חשבון הפיתוח כשהפרימיום "נעול": כמו מי שרק נכנס/ה - עוד לא נעשה שימוש בכלום
+    if (devSimFreshAccount()) { cachedAiUsage = 0; cachedImageScansUsed = 0; cachedFoodTextLifetimeUsed = 0; cachedSmartSplitLifetimeUsed = 0; cachedScheduleAiLifetimeUsed = 0; cachedTableAiLifetimeUsed = 0; }
     renderRecipeScanUsageHint();
 }
 

@@ -1903,12 +1903,11 @@ function roomRenderDevKeys() {
     const sec = document.getElementById('new-me-section');
     const secOpen = !!(sec && sec.classList.contains('active-tab'));
     const inNewMe = secOpen && typeof hasNewMe !== 'undefined' && hasNewMe && typeof nmProfile !== 'undefined' && !!nmProfile;
-    // תצוגת "כמו לפני רכישה" של חשבון הפיתוח: אותו כפתור, עם פתיחה של New Me
-    const lockedPreview = secOpen && roomIsDev() && typeof hasNewMe !== 'undefined' && !hasNewMe && typeof nmDevLockedPreview === 'function' && nmDevLockedPreview();
-    const show = roomIsDev() && (lockedPreview || (roomLoaded && (srIsOpen() || inNewMe)));
+    // בתצוגה הנעולה (כמו לפני קנייה) אין כאן כלום - הכפתור הקטן בתחתית New Me "קונה" (devRenderNewMePill ב-app.js)
+    const show = roomIsDev() && roomLoaded && (srIsOpen() || inNewMe);
     if (!show) { if (el) el.remove(); return; }
     // במסדרון: בתוך הציור, בשורה מתחת לפס העליון (כדי לא לכסות את ⋯ ולזוז יחד עם המסדרון)
-    const hallSlot = !srIsOpen() && !lockedPreview ? document.querySelector('#new-me-root .nmh .nmh-dev') : null;
+    const hallSlot = !srIsOpen() ? document.querySelector('#new-me-root .nmh .nmh-dev') : null;
     const parent = hallSlot || document.querySelector('.phone-wrapper') || document.body;
     if (!el || el.parentNode !== parent) {
         if (el) el.remove();
@@ -1917,11 +1916,7 @@ function roomRenderDevKeys() {
         el.className = 'sr-dev-keys';
         parent.appendChild(el);
     }
-    el.classList.toggle('is-row', !!hallSlot || lockedPreview);
-    if (lockedPreview) {
-        el.innerHTML = `<span class="sr-dev-tag">PM</span><button type="button" class="sr-dev-unlock" onclick="setNmDevLockedPreview(false)">🔓 ${srEsc(t('nm_dev_preview_exit'))}</button>`;
-        return;
-    }
+    el.classList.toggle('is-row', !!hallSlot);
     el.innerHTML = `
         <span class="sr-dev-tag">PM</span>
         <button type="button" class="sr-dev-add" onclick="roomDevAddKey()" title="${srEsc(t('room_dev_add'))}" aria-label="${srEsc(t('room_dev_add'))}">${SR_KEY_SVG}<b>+</b></button>

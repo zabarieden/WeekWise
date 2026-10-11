@@ -518,6 +518,8 @@ function nmGodMode() { return typeof nmGodModeActive === 'function' ? nmGodModeA
 async function renderNewMe() {
     const root = nmRoot();
     if (!root) return;
+    // 🔧 הכפתור הקטן של המפתחת בתחתית (נעילה / "קנייה") - רק בחשבון הפיתוח
+    if (typeof devRenderNewMePill === 'function') devRenderNewMePill();
     if (!hasNewMe) {
         const sec = document.getElementById('new-me-section');
         if (sec) sec.classList.remove('nm-hall-mode');
@@ -589,17 +591,14 @@ function nmRenderSales(root) {
     const preview = NEW_ME_DEFAULT_ORDER.map((slot, i) => `
         <div class="nm-preview-row"><span>${nmEsc(nmPosName(i))}</span><span>${nmEsc(nmOptText(1300, slot, 'A', true))}</span><span class="nm-num"><bdi dir="ltr">~${plan[slot].options.A.kcal}</bdi></span></div>`).join('');
     const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
-    // חשבון הפיתוח בתצוגת "מי שעוד לא רכש/ה" - פס קטן לחזרה למצב פתוח (רק המפתחת רואה אותו)
-    const devBar = typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount
-        ? `<div class="nm-dev-bar"><span>🔧 ${nmEsc(t('nm_dev_preview_on'))}</span><button type="button" onclick="setNmDevLockedPreview(false)">🔓 ${nmEsc(t('nm_dev_preview_exit'))}</button></div>` : '';
     root.innerHTML = `
         <div class="nm-sales">
-            ${devBar}
             <div class="nm-hero">
                 <div class="nm-hero-eyebrow">${NM_ICON_SVG} New Me</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
                 <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
             </div>
+            ${nmTrailerHtml()}
             ${nmPlanOptionsHtml()}
             ${buy}
             <p class="nm-sales-trust">${nmEsc(t('nm_sales_trust'))}</p>
@@ -624,12 +623,267 @@ function nmRenderSales(root) {
             </section>
             ${buy}
         </div>`;
+    nmTrailerInit(root.querySelector('.nmt'));
+}
+
+// ---------- 🎬 סרטון קצר בעמוד הקנייה ----------
+// לפי בקשה מפורשת (2026-10-11): "סרטון קצר של מה שקורה ב-NEW ME לפני שקונים". לא קובץ וידאו: אותו ציור של
+// המסדרון (nmhSceneSvg) עם "מצלמה" שזזה, אצבע שנוגעת וכתוביות בשפה של המשתמש - כך הוא תמיד נראה בדיוק כמו
+// New Me, בכל 33 השפות. מתנגן לבד פעם אחת כשרואים אותו (לא כשמבקשים פחות תנועה), נגיעה עוצרת וממשיכה, ובסוף
+// "לצפות שוב". מה שמאחורי הדלתות לא מוצג - זה נשאר הפתעה
+const NMT_SCENES = [4800, 5200, 4800, 4600, 4000, 3000];
+const NMT_TOTAL = NMT_SCENES.reduce((a, b) => a + b, 0);
+const NMT_FRAME_H = 540;   // גובה החלון ביחידות של הציור (הרוחב 390)
+const NMT_PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
+const NMT_REPLAY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></svg>';
+let nmt = null;
+function nmtKcal(i) { return NEW_ME_PLANS[1300][NEW_ME_DEFAULT_ORDER[i]].options.A.kcal; }
+// השלבים: [מתי (מ"ש), מה משתנה]. כל שלב קובע עד הסוף את החלקים שהוא נוגע בהם, כך שאפשר גם לקפוץ לכל רגע
+function nmtSteps() {
+    const k1 = nmtKcal(0), k2 = nmtKcal(1);
+    return [
+        [0, { cap: 1, cam: 'top', lit: 0, fresh: -1, keys: 0, door: false, quiz: 'plans', bag: false, ch: null, fly: null, spark: false, end: false, kcal: null, finger: null }],
+        [900, { finger: { el: '[data-nmt-plan="1300"]' } }],
+        [1500, { finger: { el: '[data-nmt-plan="1300"]', tap: true }, quiz: 'picked' }],
+        [2300, { quiz: 'menu', finger: null }],
+        [4400, { quiz: null }],
+        [4800, { cap: 2, finger: { lamp: 0 } }],
+        [5500, { finger: { lamp: 0, tap: true }, lit: 1, fresh: 0, kcal: k1 }],
+        [6900, { finger: { lamp: 1 } }],
+        [7500, { finger: { lamp: 1, tap: true }, lit: 2, fresh: 1, kcal: k1 + k2 }],
+        [9000, { finger: null }],
+        [10000, { cap: 3, cam: 'bag', kcal: null, fresh: -1 }],
+        [11100, { finger: { scene: [300, 772] } }],
+        [11700, { finger: { scene: [300, 772], tap: true }, bag: true }],
+        [12300, { finger: null }],
+        [14300, { bag: false }],
+        [14800, { cap: 4, ch: 0 }],
+        ...[1, 2, 3, 4, 5, 6, 7].map(n => [15000 + n * 200, { ch: n }]),
+        [16700, { ch: 'done' }],
+        [17200, { fly: 'go' }],
+        [18100, { fly: null, keys: 1 }],
+        [19000, { ch: null }],
+        [19400, { cap: 5, cam: 'door' }],
+        [20800, { door: true, spark: true }],
+        [23400, { cap: 0, end: true, spark: false }],
+    ];
+}
+// "המצלמה": איזה חלק של המסדרון רואים (ox/oy ביחידות הציור) ובאיזה זום
+function nmtCam(name) {
+    if (name === 'bag') return { ox: 0, oy: NMH_H - NMT_FRAME_H, z: 1 };
+    if (name === 'door') {
+        const z = 1.7, w = NMH_W / z, h = NMT_FRAME_H / z;
+        return { ox: Math.min(Math.max(nmhMx(361) - w / 2, 0), NMH_W - w), oy: Math.min(Math.max(392 - h / 2, 0), NMH_H - h), z };
+    }
+    return { ox: 0, oy: 150, z: 1 };
+}
+// נקודה בציור → מיקום באחוזים בחלון, לפי המצלמה
+function nmtPt(cam, x, y) { return { x: (x - cam.ox) * cam.z / NMH_W * 100, y: (y - cam.oy) * cam.z / NMT_FRAME_H * 100 }; }
+function nmtArt(st, instant) {
+    const lampsSvg = NMH_LAMPS.map((_, i) => nmhLampSvg(i, i < st.lit ? 'lit' : i === st.lit ? 'next' : 'off', !instant && i === st.fresh ? 'nmt-fresh' : '')).join('');
+    return nmhSceneSvg({ lampsSvg, doorOpen: n => n === 1 && st.door, doorCls: n => (n === 1 && st.door && !instant ? 'nmt-fresh' : ''), roofOpen: false }) + nmhBagFrontSvg(st.keys);
+}
+function nmtQuizHtml(mode) {
+    if (mode === 'menu') {
+        return `<div class="nmt-menu">${NEW_ME_DEFAULT_ORDER.map((slot, i) => `<div class="nmt-menu-row" style="--i:${i}"><bdi dir="ltr" class="nmt-menu-time">${nmEsc(NEW_ME_REMINDER_DEFAULTS[i] || '')}</bdi><span class="nmt-menu-name"><b>${nmEsc(nmPosName(i))}</b><small>${nmEsc(nmOptText(1300, slot, 'A', true))}</small></span><bdi dir="ltr" class="nmt-menu-kcal">~${nmFmt(nmtKcal(i))}</bdi></div>`).join('')}</div>`;
+    }
+    return `<div class="nmt-plans">${[1300, 1500].map(p => `<span class="nmt-plan${mode === 'picked' && p === 1300 ? ' is-on' : ''}" data-nmt-plan="${p}"><b>${nmFmt(p)}</b><small>${nmEsc(t('calories_unit'))}</small></span>`).join('')}</div>`;
+}
+function nmTrailerHtml() {
+    const dots = [1, 2, 3, 4, 5, 6, 7].map(() => '<i></i>').join('');
+    const rows = NEW_ME_DEFAULT_ORDER.map((_, i) => `<div class="nmt-bag-row${i < 2 ? ' is-done' : ''}"><span class="nmt-bag-lamp" aria-hidden="true"></span><span class="nmt-bag-name">${nmEsc(nmPosName(i))}</span><span class="nmt-bag-check">${i < 2 ? '✓' : ''}</span></div>`).join('');
+    return `
+        <section class="nmt">
+            <div class="nmt-frame" role="button" tabindex="0" aria-label="${nmEsc(t('nm_trailer_play'))}">
+                <div class="nmt-stage"><div class="nmt-art"></div></div>
+                <div class="nmt-kcal" aria-hidden="true"></div>
+                <div class="nmt-card nmt-quiz" aria-hidden="true"></div>
+                <div class="nmt-card nmt-bagsheet" aria-hidden="true">${rows}<div class="nmt-bag-extra"><span>💧 ${nmEsc(t('myday_water'))} <bdi dir="ltr">6/8</bdi></span><span>🛒 ${nmEsc(t('nm_tile_shop'))}</span></div></div>
+                <div class="nmt-card nmt-challenge" aria-hidden="true"><span class="nmt-ch-title">🔥 ${nmEsc(t('nm_tile_challenges'))}</span><span class="nmt-ch-dots">${dots}</span><span class="nmt-ch-done">✓</span></div>
+                <span class="nmt-keyfly" aria-hidden="true">${nmhKeySvg('#ffd27a')}</span>
+                <div class="nmt-spark" aria-hidden="true">${[0, 1, 2, 3, 4, 5].map(i => `<i style="--d:${(i * 0.27).toFixed(2)}"></i>`).join('')}</div>
+                <div class="nmt-end" aria-hidden="true"><span class="nmt-end-mark">${NM_ICON_SVG}</span><b>New Me</b><span class="nmt-end-line">${nmEsc(t('nm_trailer_end'))}</span></div>
+                <span class="nmt-finger" aria-hidden="true"></span>
+                <div class="nmt-bars" aria-hidden="true">${NMT_SCENES.map(() => '<span><i></i></span>').join('')}</div>
+                <p class="nmt-cap" aria-live="polite"></p>
+                <span class="nmt-play" aria-hidden="true"></span>
+            </div>
+        </section>`;
+}
+function nmTrailerInit(el) {
+    if (!el) return;
+    if (nmt && nmt.raf) cancelAnimationFrame(nmt.raf);
+    nmt = { el, st: {}, t: 0, idx: 0, steps: nmtSteps(), playing: false, started: false, played: false, last: 0, raf: null };
+    // הניצוצות ליד הדלת (המצלמה של הדלת קבועה)
+    const cam = nmtCam('door');
+    el.querySelectorAll('.nmt-spark i').forEach((s, i) => {
+        const [dx, dy] = [[-16, -64], [14, -34], [-12, 6], [18, 34], [-20, 64], [6, -92]][i];
+        const p = nmtPt(cam, nmhMx(361) + dx, 392 + dy);
+        s.style.left = `${p.x.toFixed(2)}%`;
+        s.style.top = `${p.y.toFixed(2)}%`;
+    });
+    // התמונה לפני שמתחיל: שתי מנורות דולקות, מפתח בצרור ודלת מוארת
+    nmtApply({ cap: -1, cam: 'top', lit: 2, fresh: -1, keys: 1, door: true, quiz: null, bag: false, ch: null, fly: null, spark: false, end: false, kcal: null, finger: null }, true);
+    nmtButton('play');
+    const frame = el.querySelector('.nmt-frame');
+    frame.addEventListener('click', nmtToggle);
+    frame.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nmtToggle(); } });
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver(entries => {
+            if (!nmt || nmt.el !== el || !el.isConnected) { io.disconnect(); return; }
+            if (entries.some(en => en.isIntersecting) && !nmt.played) { io.disconnect(); nmtPlay(); }
+        }, { threshold: 0.6 });
+        io.observe(frame);
+    }
+}
+function nmtApply(patch, instant) {
+    const prev = nmt.st;
+    const st = nmt.st = { ...prev, ...patch };
+    const q = s => nmt.el.querySelector(s);
+    if (st.cam !== prev.cam) {
+        const c = nmtCam(st.cam);
+        q('.nmt-stage').style.transform = `scale(${c.z}) translate(${(-c.ox / NMH_W * 100).toFixed(3)}%, ${(-c.oy / NMH_H * 100).toFixed(3)}%)`;
+    }
+    if (st.lit !== prev.lit || st.keys !== prev.keys || st.door !== prev.door || st.fresh !== prev.fresh) q('.nmt-art').innerHTML = nmtArt(st, instant);
+    if ('quiz' in patch) {
+        const card = q('.nmt-quiz');
+        if (st.quiz) card.innerHTML = nmtQuizHtml(st.quiz);
+        card.classList.toggle('is-on', !!st.quiz);
+    }
+    if ('kcal' in patch) {
+        const k = q('.nmt-kcal');
+        if (st.kcal != null) k.innerHTML = `<bdi dir="ltr">${nmFmt(st.kcal)} / ${nmFmt(1300)}</bdi> ${nmEsc(t('calories_unit'))}`;
+        k.classList.toggle('is-on', st.kcal != null);
+    }
+    if ('bag' in patch) q('.nmt-bagsheet').classList.toggle('is-on', !!st.bag);
+    if ('ch' in patch) {
+        const card = q('.nmt-challenge');
+        card.classList.toggle('is-on', st.ch != null);
+        card.classList.toggle('is-done', st.ch === 'done');
+        card.querySelectorAll('.nmt-ch-dots i').forEach((d, i) => d.classList.toggle('on', st.ch === 'done' || (typeof st.ch === 'number' && i < st.ch)));
+    }
+    if ('fly' in patch) nmtFly(!!st.fly && !instant);
+    if ('spark' in patch) q('.nmt-spark').classList.toggle('is-on', !!st.spark);
+    if ('end' in patch) q('.nmt-end').classList.toggle('is-on', !!st.end);
+    if ('cap' in patch) {
+        const cap = q('.nmt-cap');
+        cap.textContent = st.cap === -1 ? t('nm_trailer_label') : st.cap > 0 ? t(`nm_trailer_c${st.cap}`) : '';
+        if (!instant && cap.textContent) { cap.classList.remove('is-new'); void cap.offsetWidth; cap.classList.add('is-new'); }
+    }
+    if ('finger' in patch) nmtFinger(st.finger, instant);
+}
+// האצבע: על כפתור בכרטיס (el), על מנורה (lamp), או על נקודה בציור (scene); tap - נגיעה
+function nmtFinger(f, instant) {
+    const fg = nmt.el.querySelector('.nmt-finger');
+    if (!f) { fg.classList.remove('is-on', 'is-tap'); return; }
+    const cam = nmtCam(nmt.st.cam);
+    let p = { x: 50, y: 50 };
+    if (f.lamp != null) p = nmtPt(cam, nmhMx(NMH_LAMPS[f.lamp].x), NMH_LAMPS[f.lamp].y + 4);
+    else if (f.scene) p = nmtPt(cam, f.scene[0], f.scene[1]);
+    else if (f.el) {
+        const target = nmt.el.querySelector(f.el);
+        const fr = nmt.el.querySelector('.nmt-frame').getBoundingClientRect();
+        if (target && fr.width && fr.height) {
+            const r = target.getBoundingClientRect();
+            p = { x: (r.left + r.width / 2 - fr.left) / fr.width * 100, y: (r.top + r.height / 2 - fr.top) / fr.height * 100 };
+        }
+    }
+    fg.style.left = `${p.x.toFixed(2)}%`;
+    fg.style.top = `${p.y.toFixed(2)}%`;
+    fg.classList.add('is-on');
+    if (f.tap && !instant) { fg.classList.remove('is-tap'); void fg.offsetWidth; fg.classList.add('is-tap'); }
+}
+// המפתח עף מהאתגר שנגמר אל הצרור שעל התרמיל
+function nmtFly(go) {
+    const k = nmt.el.querySelector('.nmt-keyfly');
+    if (!go) { k.classList.remove('is-on'); return; }
+    const card = nmt.el.querySelector('.nmt-challenge').getBoundingClientRect();
+    const fr = nmt.el.querySelector('.nmt-frame').getBoundingClientRect();
+    const sx = fr.width ? (card.left + card.width / 2 - fr.left) / fr.width * 100 : 50;
+    const sy = fr.height ? (card.top + card.height / 2 - fr.top) / fr.height * 100 : 26;
+    const end = nmtPt(nmtCam('bag'), 242, 806);
+    k.style.transition = 'none';
+    k.style.left = `${sx.toFixed(2)}%`;
+    k.style.top = `${sy.toFixed(2)}%`;
+    k.style.transform = 'scale(1.3)';
+    k.classList.add('is-on');
+    void k.offsetWidth;
+    k.style.transition = '';
+    k.style.left = `${end.x.toFixed(2)}%`;
+    k.style.top = `${end.y.toFixed(2)}%`;
+    k.style.transform = 'scale(0.55) rotate(-25deg)';
+}
+function nmtBars() {
+    let start = 0;
+    nmt.el.querySelectorAll('.nmt-bars i').forEach((bar, i) => {
+        const d = NMT_SCENES[i];
+        bar.style.width = `${(Math.max(0, Math.min(1, (nmt.t - start) / d)) * 100).toFixed(1)}%`;
+        start += d;
+    });
+}
+// הכפתור שבאמצע והתווית של החלון: ▶ (להתחיל / להמשיך), ↻ (לצפות שוב); בזמן הניגון - "להשהות"
+function nmtButton(kind) {
+    nmt.el.querySelector('.nmt-play').innerHTML = kind === 'replay' ? NMT_REPLAY_SVG : NMT_PLAY_SVG;
+    nmt.el.querySelector('.nmt-frame').setAttribute('aria-label', t(kind === 'replay' ? 'nm_trailer_replay' : kind === 'pause' ? 'nm_trailer_pause' : 'nm_trailer_play'));
+}
+function nmtRun(instant) {
+    while (nmt.idx < nmt.steps.length && nmt.steps[nmt.idx][0] <= nmt.t) {
+        nmtApply(nmt.steps[nmt.idx][1], instant);
+        nmt.idx++;
+    }
+}
+function nmtTick(now) {
+    if (!nmt || !nmt.playing) return;
+    if (!nmt.el.isConnected) { nmt.playing = false; return; }
+    nmt.t += Math.min(100, Math.max(0, now - nmt.last));
+    nmt.last = now;
+    nmtRun(false);
+    nmtBars();
+    if (nmt.t >= NMT_TOTAL) { nmtStop(true); return; }
+    nmt.raf = requestAnimationFrame(nmtTick);
+}
+function nmtPlay() {
+    if (!nmt || nmt.playing) return;
+    if (!nmt.started || nmt.t >= NMT_TOTAL) { nmt.t = 0; nmt.idx = 0; nmt.started = true; nmtRun(false); nmtBars(); }
+    nmt.playing = true;
+    nmt.played = true;
+    nmt.el.classList.add('is-playing');
+    nmtButton('pause');
+    nmt.last = performance.now();
+    nmt.raf = requestAnimationFrame(nmtTick);
+}
+function nmtStop(ended) {
+    if (!nmt) return;
+    nmt.playing = false;
+    if (nmt.raf) cancelAnimationFrame(nmt.raf);
+    nmt.raf = null;
+    nmt.el.classList.remove('is-playing');
+    nmtButton(ended ? 'replay' : 'play');
+}
+function nmtToggle() {
+    if (!nmt) return;
+    if (nmt.playing) nmtStop(false);
+    else nmtPlay();
+}
+// קפיצה לרגע מסוים בלי אנימציה (לבדיקות ולצילומי מסך)
+function nmTrailerSeek(ms) {
+    if (!nmt) return;
+    nmtStop(false);
+    nmt.el.classList.add('is-instant');
+    nmt.idx = 0;
+    nmt.started = true;
+    nmt.t = Math.max(0, Math.min(ms, NMT_TOTAL));
+    nmtRun(true);
+    nmtBars();
+    void nmt.el.offsetWidth;
+    nmt.el.classList.remove('is-instant');
 }
 
 // plan: 'life' (תשלום אחד) או 'monthly' (מנוי) - ברירת מחדל: מה שנבחר בעמוד הרכישה
 async function submitNewMePurchase(btn, plan = nmSalesPlan) {
-    // תצוגת הפיתוח "כמו מי שעוד לא רכש/ה" - רק להסתכל, בלי לפתוח תשלום אמיתי
-    if (typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount && !hasNewMe) { showAppToast(t('nm_dev_preview_buy')); return; }
+    // חשבון הפיתוח בתצוגה הנעולה: "קנייה" בלי תשלום - New Me נפתח בדיוק כמו אחרי קנייה אמיתית (devSimBuyNewMe)
+    if (typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount && !hasNewMe) { devSimBuyNewMe(); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const original = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = t('food_ai_estimating'); }
@@ -1164,11 +1418,11 @@ function nmhDoorOpen(n, keys) {
 function nmhLockSvg(x, y, s) {
     return `<g transform="translate(${x} ${y}) scale(${s})" fill="none" stroke="#c9a66a" stroke-width="1.3"><rect x="-4" y="-1" width="8" height="7" rx="1.5" fill="#5a4026"/><path d="M-2.4 -1 v-2 a2.4 2.4 0 0 1 4.8 0 v2"/></g>`;
 }
-function nmhDoorSvg(d, open) {
+function nmhDoorSvg(d, open, cls) {
     const right = nmhMx(d.frame[0][0]) > NMH_W / 2;
     const [lx1, ly1, lx2, ly2] = d.light;
     const near = d.n <= 2;
-    return `<g class="nmh-door-art">
+    return `<g class="nmh-door-art${cls ? ` ${cls}` : ''}">
         ${open ? `<polygon points="${nmhPts(d.spill)}" fill="url(#nmh-spill-${right ? 'r' : 'l'})"/>` : ''}
         <polygon points="${nmhPts(d.frame)}" fill="#2b1a12"/>
         <polygon points="${nmhPts(d.door)}" fill="${open ? `url(#nmh-side-${right ? 'r' : 'l'})` : '#3a2418'}"/>
@@ -1179,52 +1433,19 @@ function nmhDoorSvg(d, open) {
     </g>`;
 }
 
-function nmRenderHome(root) {
-    const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
-    const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
-    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
-    const roofAt = typeof roomUnlockAt === 'function' ? roomUnlockAt('roof') : 5;
-    const roofOpen = keys >= roofAt;
-    // מנורות: דולקת (נאכל), ורודה (הבאה), כבויה (אחר כך)
-    const lampsSvg = active.map((slot, i) => {
-        const L = NMH_LAMPS[i];
-        const x = nmhMx(L.x), y = L.y, s = L.s;
-        const state = nmTodayCheckins[slot] ? 'lit' : slot === nextSlot ? 'next' : 'off';
-        const halo = state === 'off' ? '' : `<circle class="nmh-glow" cx="${x}" cy="${y}" r="${(32 * s).toFixed(1)}" fill="url(#nmh-${state === 'lit' ? 'lamp' : 'pink'})"/>`;
-        const shade = state === 'lit' ? '#ffd27a' : state === 'next' ? '#ff9ecf' : '#4a3a5e';
-        return `${halo}<path d="M${(x - 6.5 * s).toFixed(1)} ${(y + 8 * s).toFixed(1)} h${(13 * s).toFixed(1)} l${(-2.6 * s).toFixed(1)} ${(-11 * s).toFixed(1)} h${(-7.8 * s).toFixed(1)} z" fill="${shade}"${state === 'off' ? ' stroke="#8a78a8" stroke-width="0.7"' : ''}/><rect x="${(x - 1.3 * s).toFixed(1)}" y="${(y + 8 * s).toFixed(1)}" width="${(2.6 * s).toFixed(1)}" height="${(8 * s).toFixed(1)}" fill="#6b4a2e"/>`;
-    }).join('');
-    const lampBtns = active.map((slot, i) => {
-        const L = NMH_LAMPS[i];
-        const r = 26 * L.s;
-        const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
-        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmSlotName(slot)} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
-    }).join('');
-    // הדלתות: הצדדים + 5 בסוף (החוצה)
-    const doorsSvg = NMH_DOORS.map(d => nmhDoorSvg(d, nmhDoorOpen(d.n, keys))).join('');
-    const doorBtns = NMH_DOORS.map(d => {
-        const [x, y, w, h] = d.hit;
-        const lx = nmhMx(x) - (document.documentElement.dir === 'rtl' ? 0 : w);
-        return `<button type="button" class="nmh-door" data-door="${d.n}" style="left:${nmhX(lx)};top:${nmhY(y)};width:${nmhX(w)};height:${nmhY(h)}" onclick="nmhDoorTap(${d.n})" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(d.n)))}"></button>`;
-    }).join('') + `<button type="button" class="nmh-door" data-door="5" style="left:${nmhX(171)};top:${nmhY(316)};width:${nmhX(48)};height:${nmhY(96)}" onclick="nmhDoorTap(5)" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(5)))}"></button>`;
-    // הפתק של "הבא" (או "כל המנורות דולקות") - תחוב בתרמיל
-    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : nmItemShort(nmItemInfo(nmTodayKey(nextSlot)));
-    const note = nextSlot ? `
-        <div class="nmh-note" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}">
-            <button type="button" class="nmh-note-body" onclick="nmOpenHallMeal('${nextSlot}')">
-                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
-                <span class="nmh-note-name">${nmEsc(nextName)}</span>
-            </button>
-            <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
-        </div>`
-        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_lit'))}</span></button></div>`;
-    // צרור המפתחות על התרמיל: עד 3 מפתחות (ומספר כשיש יותר)
-    const ring = [0, 1, 2].filter(i => i < keys).map(i => {
-        const [x, y, a] = [[236, 800, 18], [242, 802, -6], [248, 799, -28]][i];
-        return `<g transform="rotate(${a} ${x} ${y})"><circle cx="${x}" cy="${y}" r="3"/><rect x="${x - 1}" y="${y + 2}" width="2" height="11" rx="1"/><rect x="${x + 1}" y="${y + 9}" width="3" height="1.6"/></g>`;
-    }).join('');
-    root.innerHTML = `
-        <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
+// מנורה אחת במסדרון: 'lit' (נאכל), 'next' (הבאה), 'off' (אחר כך); cls - קלאס להילה (הסרטון בעמוד הקנייה)
+function nmhLampSvg(i, state, cls) {
+    const L = NMH_LAMPS[i];
+    const x = nmhMx(L.x), y = L.y, s = L.s;
+    const halo = state === 'off' ? '' : `<circle class="nmh-glow${cls ? ` ${cls}` : ''}" cx="${x}" cy="${y}" r="${(32 * s).toFixed(1)}" fill="url(#nmh-${state === 'lit' ? 'lamp' : 'pink'})"/>`;
+    const shade = state === 'lit' ? '#ffd27a' : state === 'next' ? '#ff9ecf' : '#4a3a5e';
+    return `${halo}<path d="M${(x - 6.5 * s).toFixed(1)} ${(y + 8 * s).toFixed(1)} h${(13 * s).toFixed(1)} l${(-2.6 * s).toFixed(1)} ${(-11 * s).toFixed(1)} h${(-7.8 * s).toFixed(1)} z" fill="${shade}"${state === 'off' ? ' stroke="#8a78a8" stroke-width="0.7"' : ''}/><rect x="${(x - 1.3 * s).toFixed(1)}" y="${(y + 8 * s).toFixed(1)}" width="${(2.6 * s).toFixed(1)}" height="${(8 * s).toFixed(1)}" fill="#6b4a2e"/>`;
+}
+// הציור של המסדרון בלי הכפתורים - משותף למסדרון עצמו ולסרטון בעמוד הקנייה, כך שהסרטון תמיד נראה בדיוק
+// כמו New Me. lampsSvg - המנורות; doorOpen(n) - האם דלת n פתוחה; doorCls(n) - קלאס לדלת (הסרטון)
+function nmhSceneSvg({ lampsSvg, doorOpen, doorCls, roofOpen }) {
+    const doorsSvg = NMH_DOORS.map(d => nmhDoorSvg(d, doorOpen(d.n), doorCls ? doorCls(d.n) : '')).join('');
+    return `
             <svg class="nmh-scene" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                 <defs>
                     <linearGradient id="nmh-ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0717"/><stop offset="1" stop-color="#1d1331"/></linearGradient>
@@ -1271,19 +1492,20 @@ function nmRenderHome(root) {
                 <circle cx="195" cy="342" r="10" fill="#2b1a12"/><circle cx="195" cy="342" r="8.4" fill="url(#nmh-leaf)"/>
                 <path d="M188 345 q4 -6 8 -2 q3 -5 6 1" fill="none" stroke="#2f6e55" stroke-width="1.2"/>
                 <rect x="176.5" y="376" width="37" height="2.5" fill="#2b1a12"/>
-                ${nmhDoorOpen(5, keys) ? `<circle cx="207" cy="390" r="2.2" fill="#e8b84f"/>` : nmhLockSvg(207, 386, 0.9)}
-                <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="${nmhDoorOpen(5, keys) ? 1 : 0.75}"/>
+                ${doorOpen(5) ? `<circle cx="207" cy="390" r="2.2" fill="#e8b84f"/>` : nmhLockSvg(207, 386, 0.9)}
+                <rect x="176.5" y="407" width="37" height="3" fill="#bff5c9" opacity="${doorOpen(5) ? 1 : 0.75}"/>
                 ${nmhLadderSvg()}
                 <ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
                 <path d="M236 764 Q236 714 300 710 Q364 714 364 764 L364 880 L236 880 Z" fill="url(#nmh-bag)"/>
-            </svg>
-            <div class="nmh-hud"><span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span></div>
-            <div class="nmh-dev"></div>
-            ${lampBtns}
-            ${doorBtns}
-            <button type="button" class="nmh-hatch-btn" style="left:${nmhX(148)};top:${nmhY(140)};width:${nmhX(94)};height:${nmhY(56)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
-            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(412)}" onclick="nmhLadderTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
-            ${note}
+            </svg>`;
+}
+// חזית התרמיל (מעל הפתק) וצרור המפתחות עליו: עד 3 מפתחות (ומספר כשיש יותר - ר' nmh-keys)
+function nmhBagFrontSvg(keys) {
+    const ring = [0, 1, 2].filter(i => i < keys).map(i => {
+        const [x, y, a] = [[236, 800, 18], [242, 802, -6], [248, 799, -28]][i];
+        return `<g transform="rotate(${a} ${x} ${y})"><circle cx="${x}" cy="${y}" r="3"/><rect x="${x - 1}" y="${y + 2}" width="2" height="11" rx="1"/><rect x="${x + 1}" y="${y + 9}" width="3" height="1.6"/></g>`;
+    }).join('');
+    return `
             <svg class="nmh-scene nmh-bag-front" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                 <path d="M238 756 Q240 708 300 706 Q360 708 362 756 Q362 776 352 780 Q300 794 248 780 Q238 776 238 756 Z" fill="#7a4a26"/>
                 <path d="M247 756 Q249 716 300 714 Q351 716 353 756" fill="none" stroke="#e8c48a" stroke-opacity="0.55" stroke-width="1.2" stroke-dasharray="3 3"/>
@@ -1295,7 +1517,51 @@ function nmRenderHome(root) {
                 <path d="M291 846 h18 l6 7 -15 16 -15 -16 z" fill="#c084fc"/>
                 <circle cx="241" cy="790" r="6" fill="none" stroke="#ffd27a" stroke-width="1.8"/>
                 <g fill="#ffd27a">${ring}</g>
-            </svg>
+            </svg>`;
+}
+
+function nmRenderHome(root) {
+    const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
+    const nextSlot = active.find(s => !nmTodayCheckins[s]) || null;
+    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
+    const roofAt = typeof roomUnlockAt === 'function' ? roomUnlockAt('roof') : 5;
+    const roofOpen = keys >= roofAt;
+    // מנורות: דולקת (נאכל), ורודה (הבאה), כבויה (אחר כך)
+    const lampsSvg = active.map((slot, i) => nmhLampSvg(i, nmTodayCheckins[slot] ? 'lit' : slot === nextSlot ? 'next' : 'off')).join('');
+    const lampBtns = active.map((slot, i) => {
+        const L = NMH_LAMPS[i];
+        const r = 26 * L.s;
+        const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
+        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmSlotName(slot)} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
+    }).join('');
+    // הדלתות: הצדדים + 5 בסוף (החוצה) - הציור ב-nmhSceneSvg, כאן אזורי הלחיצה
+    const doorBtns = NMH_DOORS.map(d => {
+        const [x, y, w, h] = d.hit;
+        const lx = nmhMx(x) - (document.documentElement.dir === 'rtl' ? 0 : w);
+        return `<button type="button" class="nmh-door" data-door="${d.n}" style="left:${nmhX(lx)};top:${nmhY(y)};width:${nmhX(w)};height:${nmhY(h)}" onclick="nmhDoorTap(${d.n})" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(d.n)))}"></button>`;
+    }).join('') + `<button type="button" class="nmh-door" data-door="5" style="left:${nmhX(171)};top:${nmhY(316)};width:${nmhX(48)};height:${nmhY(96)}" onclick="nmhDoorTap(5)" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(5)))}"></button>`;
+    // הפתק של "הבא" (או "כל המנורות דולקות") - תחוב בתרמיל
+    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : nmItemShort(nmItemInfo(nmTodayKey(nextSlot)));
+    const note = nextSlot ? `
+        <div class="nmh-note" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}">
+            <button type="button" class="nmh-note-body" onclick="nmOpenHallMeal('${nextSlot}')">
+                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
+                <span class="nmh-note-name">${nmEsc(nextName)}</span>
+            </button>
+            <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
+        </div>`
+        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(626)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_lit'))}</span></button></div>`;
+    root.innerHTML = `
+        <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
+            ${nmhSceneSvg({ lampsSvg, doorOpen: n => nmhDoorOpen(n, keys), roofOpen })}
+            <div class="nmh-hud"><span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span></div>
+            <div class="nmh-dev"></div>
+            ${lampBtns}
+            ${doorBtns}
+            <button type="button" class="nmh-hatch-btn" style="left:${nmhX(148)};top:${nmhY(140)};width:${nmhX(94)};height:${nmhY(56)}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
+            <button type="button" class="nmh-ladder-btn" style="left:${nmhX(172)};top:${nmhY(186)};width:${nmhX(46)};height:${nmhY(412)}" onclick="nmhLadderTap()" aria-label="${nmEsc(t('nm_hatch_climb'))}" tabindex="-1"></button>
+            ${note}
+            ${nmhBagFrontSvg(keys)}
             <button type="button" class="nmh-bag" style="left:${nmhX(232)};top:${nmhY(704)};width:${nmhX(136)};height:${nmhY(140)}" onclick="nmOpenBackpack()" aria-label="${nmEsc(t('nm_backpack'))}"></button>
             <button type="button" class="nmh-keys" data-keys="${keys}" style="left:${nmhX(224)};top:${nmhY(780)};width:${nmhX(34)};height:${nmhY(46)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${keys > 3 ? `<span class="nmh-keys-n"><bdi dir="ltr">${nmFmt(keys)}</bdi></span>` : ''}</button>
             <div class="nmh-tip" role="status" aria-live="polite"></div>
@@ -3519,7 +3785,6 @@ function nmRenderSettings(body) {
                 <input type="text" id="nm-settings-name" maxlength="60" autocomplete="name" value="${nmEsc(nmProfile.cert_name || '')}" placeholder="${nmEsc(t('nm_cert_name_ph'))}" onchange="nmSaveFullName(this)"></label>
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
-        ${typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount ? `<button type="button" class="nm-row-btn nm-dev-btn" onclick="setNmDevLockedPreview(true)">🔒 ${nmEsc(t('nm_dev_preview_btn'))}</button>` : ''}
         <button type="button" class="nm-row-btn" onclick="nmOpenMealTimes()">🕐 ${nmEsc(t('nm_times_title'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmCheckRoutineMeals(true)">🍽️ ${nmEsc(t('nm_settings_routine'))}</button>
