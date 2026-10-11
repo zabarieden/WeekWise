@@ -1030,16 +1030,21 @@ function renderPresetQuickAddList(filter) {
 // בממשק הרגיל, רק כדי שיהיה אפשר לבדוק בדיעבד אם מספר נראה לא הגיוני, בלי
 // לחסום את השמירה עצמה בשום כרטיס-אישור - לפי בקשה מפורשת
 const SNACK_ROUTED_PRESET_CATEGORIES = ['snack', 'sweet', 'dessert'];
+// מה שנרשם עכשיו (השורה, ואם זו שורה חדשה או צירוף לנשנוש קיים) - כדי שאפשר יהיה לתקן קלוריות/חלבון
+// מתוך השיחה עם העוזר בלי לגעת במה שכבר היה בשורה (updateQuickLogEntry, ai-chat.js)
+let lastFoodQuickEntry = null;
 async function addQuickLogEntry(foodDescription, calories, presetCategory, proteinGrams, reasoning) {
     const today = getLocalDateString();
     const preferredSlotKeys = presetCategory ? (SNACK_ROUTED_PRESET_CATEGORIES.includes(presetCategory) ? SNACK_SLOT_KEYS : MEAL_SLOT_KEYS) : null;
     const slot = await getTodayEmptyMealSlot(preferredSlotKeys);
+    const remember = (id, merged) => { lastFoodQuickEntry = id ? { id, merged, text: foodDescription, calories, protein: proteinGrams != null ? proteinGrams : null } : null; };
     if (slot) {
-        await supabaseClient.from('calorie_tracker').insert({
+        const { data: inserted } = await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: slot,
             food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
             ai_reasoning: reasoning || null,
-        });
+        }).select('id').single();
+        remember(inserted && inserted.id, false);
         return;
     }
     const mergeSlot = SNACK_SLOT_KEYS[getSnackCount() - 1];
@@ -1053,13 +1058,36 @@ async function addQuickLogEntry(foodDescription, calories, presetCategory, prote
             protein_grams: (Number(existing.protein_grams) || 0) + (proteinGrams != null ? proteinGrams : 0),
             ai_reasoning: reasoning ? `${existing.ai_reasoning ? existing.ai_reasoning + '\n\n---\n\n' : ''}${reasoning}` : existing.ai_reasoning,
         }).eq('id', existing.id);
+        remember(existing.id, true);
     } else {
-        await supabaseClient.from('calorie_tracker').insert({
+        const { data: inserted } = await supabaseClient.from('calorie_tracker').insert({
             username: currentUsername, user_id: currentUserId, date: today, meal_type: mergeSlot,
             food_description: foodDescription, calories: calories, protein_grams: proteinGrams != null ? proteinGrams : null,
             ai_reasoning: reasoning || null,
-        });
+        }).select('id').single();
+        remember(inserted && inserted.id, false);
     }
+}
+
+// ✏️ תיקון קלוריות/חלבון של מה שנרשם עכשיו (מהשיחה עם העוזר, לפי בקשה מפורשת): בשורה חדשה - פשוט
+// הערכים החדשים; בצירוף לנשנוש קיים - רק החלק שנוסף משתנה, ומה שכבר היה בשורה נשאר
+async function updateQuickLogEntry(entry, calories, proteinGrams) {
+    if (!entry || !supabaseClient || !currentUserId) return false;
+    const { data: row, error: readError } = await supabaseClient.from('calorie_tracker').select('id, calories, protein_grams').eq('id', entry.id).eq('user_id', currentUserId).maybeSingle();
+    if (readError || !row) return false;
+    const fields = entry.merged
+        ? { calories: Math.max(0, (Number(row.calories) || 0) - entry.calories + calories) }
+        : { calories, protein_grams: proteinGrams };
+    if (entry.merged && (entry.protein != null || proteinGrams != null)) {
+        fields.protein_grams = Math.max(0, (Number(row.protein_grams) || 0) - (entry.protein || 0) + (proteinGrams || 0));
+    }
+    const { error } = await supabaseClient.from('calorie_tracker').update(fields).eq('id', row.id).eq('user_id', currentUserId);
+    if (error) return false;
+    entry.calories = calories;
+    entry.protein = proteinGrams;
+    refreshTodayNutritionViewIfOpen();
+    if (typeof updateHomeCalorieBadge === 'function') updateHomeCalorieBadge();
+    return true;
 }
 
 async function logPresetQuickAdd(id) {
@@ -8533,6 +8561,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'routine_daysoff', category: 'general' },
     { id: 'routine_ai', category: 'general' },
     { id: 'routine_exact_time', category: 'general' },
+    { id: 'routine_item_days', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
@@ -8564,6 +8593,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'edit_single_occurrence', category: 'glance' },
     { id: 'which_ai_button', category: 'ai' },
     { id: 'ai_chat', category: 'ai' },
+    { id: 'ai_chat_food_fix', category: 'ai' },
     { id: 'ai_edit_or_delete', category: 'ai' },
     { id: 'ai_phrasing_tips', category: 'ai' },
     { id: 'ai_mixed_request', category: 'ai' },
@@ -8576,6 +8606,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'new_me_what', category: 'nutrition' },
     { id: 'new_me_hall', category: 'nutrition' },
+    { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
     { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
@@ -16067,6 +16098,7 @@ let routineItemSmallStepLinks = new Map();
 let activeDailyBoardTabId = null;
 let editingRoutineItemId = null;
 let pendingRoutineItemTime = null;
+let pendingRoutineItemDays = new Set([0, 1, 2, 3, 4, 5, 6]);
 
 // טווח-השעות הטבעי שכל בלוק מציע לבחירה בהגדרות (לא כל 24 השעות בכל בלוק -
 // זה היה הופך לרשימה ארוכה ובלתי-שימושית) - השעות שמחוץ לטווח הזה (00:00-
@@ -16352,6 +16384,30 @@ function routineTabWeekdays(tab) {
     return d === null ? [] : [d];
 }
 
+// --- 📅 ימים לפריט אחד (routine_items.days_of_week, "0,1,...,6", 0 = ראשון): למשל מסחר רק שני–שישי בתוך
+// טאב של ראשון–שישי (לפי בקשה מפורשת, 2026-10-11). ריק/חסר = כל הימים. בימים האחרים הפריט לא ב"היום שלי",
+// ובלוח הוא חלש יותר, בלי ✓, עם הימים שלו לידו; שאלת "3 ימים בלי ✓" סופרת רק את הימים שלו ---
+const ROUTINE_ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+function routineItemDays(item) {
+    const raw = item ? item.days_of_week : null;
+    if (raw == null || String(raw).trim() === '') return ROUTINE_ALL_DAYS.slice();
+    const days = [...new Set(String(raw).split(',').map(s => parseInt(s, 10)).filter(n => n >= 0 && n <= 6))].sort((a, b) => a - b);
+    return days.length ? days : ROUTINE_ALL_DAYS.slice();
+}
+function routineItemOnDay(item, day) { return routineItemDays(item).includes(day); }
+// "ב׳–ו׳" / "Mon–Fri" לרצף של 3 ימים ומעלה, אחרת השמות הקצרים - רק לפריט שלא בכל הימים של הטאב שלו
+function routineItemDaysLabel(item, tab) {
+    const days = routineItemDays(item);
+    const tabDays = routineTabWeekdays(tab);
+    const scope = tabDays.length ? tabDays : ROUTINE_ALL_DAYS;
+    if (scope.every(d => days.includes(d))) return '';
+    const inScope = days.filter(d => scope.includes(d));
+    const shown = inScope.length ? inScope : days;
+    const run = shown.length >= 3 && shown.every((d, i) => i === 0 || d === shown[i - 1] + 1);
+    if (run) return `${routineWeekdayName(shown[0], 'short')}–${routineWeekdayName(shown[shown.length - 1], 'short')}`;
+    return shown.map(d => routineWeekdayName(d, 'short')).join(' ');
+}
+
 function findTodayRoutineTab() {
     const todayIdx = new Date().getDay();
     return dailyBoardTabs.find(tb => routineTabWeekdays(tb).includes(todayIdx)) || null;
@@ -16500,13 +16556,13 @@ function renderRoutineTemplates() {
 }
 
 async function fetchRoutineTabItems(tabId) {
-    const { data } = await supabaseClient.from('routine_items').select('title, time, vision_milestone_id, vision_goal_id').eq('tab_id', tabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
+    const { data } = await supabaseClient.from('routine_items').select('title, time, vision_milestone_id, vision_goal_id, days_of_week').eq('tab_id', tabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
     return data || [];
 }
 
 async function copyRoutineItemsToTab(items, tabId) {
     if (!items.length) return;
-    const rows = items.map(it => ({ tab_id: tabId, user_id: currentUserId, title: it.title, time: it.time, kind: 'scheduled', vision_milestone_id: it.vision_milestone_id || null, vision_goal_id: it.vision_goal_id || null }));
+    const rows = items.map(it => ({ tab_id: tabId, user_id: currentUserId, title: it.title, time: it.time, kind: 'scheduled', vision_milestone_id: it.vision_milestone_id || null, vision_goal_id: it.vision_goal_id || null, days_of_week: it.days_of_week || ROUTINE_ALL_DAYS.join(',') }));
     const { error } = await supabaseClient.from('routine_items').insert(rows);
     if (error) throw error;
 }
@@ -16904,7 +16960,7 @@ async function refreshRoutineNudge() {
     if (!isRoutineGoalsOn() || !supabaseClient || !currentUserId || !isDailyBoardOpen()) { renderRoutineNudge(); return; }
     const todayStr = getLocalDateString();
     const [{ data: items }, { data: checks }] = await Promise.all([
-        supabaseClient.from('routine_items').select('id, tab_id, title, time, created_at, nudge_snoozed_until, hidden_by_new_me').eq('user_id', currentUserId).eq('kind', 'scheduled'),
+        supabaseClient.from('routine_items').select('id, tab_id, title, time, created_at, nudge_snoozed_until, hidden_by_new_me, days_of_week').eq('user_id', currentUserId).eq('kind', 'scheduled'),
         supabaseClient.from('routine_item_checkins').select('item_id, checkin_date').eq('user_id', currentUserId).gte('checkin_date', addDaysToDateStr(todayStr, -35)),
     ]);
     const recentFrom = addDaysToDateStr(todayStr, -14);
@@ -16926,14 +16982,11 @@ async function refreshRoutineNudge() {
     const candidates = [];
     groups.forEach((list, key) => {
         if (list.some(it => it.nudge_snoozed_until && it.nudge_snoozed_until > todayStr)) return;
-        let everyDay = false;
-        const days = new Set();
-        list.forEach(it => {
-            const tabDays = routineTabWeekdays(it.tab);
-            if (!tabDays.length) everyDay = true;
-            tabDays.forEach(d => days.add(d));
-        });
-        const isDue = dateStr => everyDay || days.has(new Date(`${dateStr}T12:00:00`).getDay());
+        // יום שבו הפריט באמת קיים: הטאב שלו חל ביום הזה, וגם הימים של הפריט עצמו (📅 ימים לפריט)
+        const isDue = dateStr => {
+            const d = new Date(`${dateStr}T12:00:00`).getDay();
+            return list.some(it => { const tabDays = routineTabWeekdays(it.tab); return (!tabDays.length || tabDays.includes(d)) && routineItemOnDay(it, d); });
+        };
         const createdStr = list.map(it => getLocalDateString(new Date(it.created_at))).sort()[0];
         const checked = new Set();
         list.forEach(it => (checksByItem.get(it.id) || new Set()).forEach(d => checked.add(d)));
@@ -21397,6 +21450,7 @@ async function renderDailyBoard() {
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
     const activeTab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    const todayIdx = new Date().getDay();
     if (activeTab && activeTab.day_off && !(items || []).length && !activeTab.showGrid) {
         body.innerHTML = `<div class="routine-dayoff-empty"><span class="routine-dayoff-empty-icon" aria-hidden="true">🌿</span><p>${escapeHtmlForReport(t('routine_daysoff_empty'))}</p><button type="button" class="btn-link-action" onclick="routineDayOffShowGrid()">${escapeHtmlForReport(t('routine_daysoff_add_anyway'))}</button></div>`;
         return;
@@ -21418,8 +21472,10 @@ async function renderDailyBoard() {
             const item = itemsByTime[timeStr];
             // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
             const inNewMe = routineItemInNewMe(item);
+            // 📅 פריט שלא היום (ימים לפריט) - חלש יותר, בלי ✓, והימים שלו לידו
+            const offToday = !!item && !routineItemOnDay(item, todayIdx);
             const row = document.createElement('div');
-            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty') + (inNewMe ? ' is-in-newme' : '');
+            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty') + (inNewMe ? ' is-in-newme' : '') + (offToday ? ' is-off-today' : '');
             const timeSpan = document.createElement('span');
             timeSpan.className = 'daily-board-item-time';
             timeSpan.textContent = timeStr;
@@ -21428,7 +21484,7 @@ async function renderDailyBoard() {
             titleBtn.className = 'daily-board-item-title';
             titleBtn.textContent = item ? item.title : t('daily_board_item_add_placeholder');
             titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
-            if (checksOn && item && !inNewMe) {
+            if (checksOn && item && !inNewMe && !offToday) {
                 const done = doneTodayIds.has(item.id);
                 const checkBtn = document.createElement('button');
                 checkBtn.type = 'button';
@@ -21444,6 +21500,13 @@ async function renderDailyBoard() {
             }
             row.appendChild(timeSpan);
             row.appendChild(titleBtn);
+            const daysLabel = item ? routineItemDaysLabel(item, activeTab) : '';
+            if (daysLabel) {
+                const daysTag = document.createElement('span');
+                daysTag.className = 'daily-board-item-days';
+                daysTag.textContent = daysLabel;
+                row.appendChild(daysTag);
+            }
             if (inNewMe) {
                 const tag = document.createElement('button');
                 tag.type = 'button';
@@ -21480,6 +21543,36 @@ function routineItemSetTimeBtn(time) {
     if (btn) btn.querySelector('bdi').textContent = time || '--:--';
     if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers['routine-item'] = v => { pendingRoutineItemTime = v; };
 }
+// 📅 הימים של הפריט בחלון שלו - אותם צ'יפים כמו "ימים לטאב". רק הימים של הטאב (אם נבחרו לו), ולפחות
+// אחד מהם נשאר מסומן; בטאב של יום אחד אין מה לבחור, אז השורה מוסתרת
+function renderRoutineItemDaysChips() {
+    const wrap = document.getElementById('routine-item-days');
+    if (!wrap) return;
+    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    const tabDays = routineTabWeekdays(tab);
+    const scope = tabDays.length ? tabDays : ROUTINE_ALL_DAYS;
+    const rowEl = document.getElementById('routine-item-days-row');
+    if (rowEl) rowEl.classList.toggle('hidden', scope.length < 2);
+    wrap.innerHTML = '';
+    scope.forEach(d => {
+        const on = pendingRoutineItemDays.has(d);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'board-hour-chip' + (on ? ' active' : '');
+        chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+        chip.textContent = routineWeekdayName(d, 'short');
+        chip.onclick = () => {
+            if (pendingRoutineItemDays.has(d)) {
+                if (scope.filter(x => pendingRoutineItemDays.has(x)).length <= 1) return;
+                pendingRoutineItemDays.delete(d);
+            } else {
+                pendingRoutineItemDays.add(d);
+            }
+            renderRoutineItemDaysChips();
+        };
+        wrap.appendChild(chip);
+    });
+}
 function openAddRoutineItemModal(time) {
     if (!activeDailyBoardTabId) return;
     editingRoutineItemId = null;
@@ -21488,6 +21581,8 @@ function openAddRoutineItemModal(time) {
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_add_item_title');
     routineItemSetTimeBtn(time);
     document.getElementById('routine-item-title-input').value = '';
+    pendingRoutineItemDays = new Set(ROUTINE_ALL_DAYS);
+    renderRoutineItemDaysChips();
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
     openModalOverDailyBoard('modal-add-routine-item');
     setTimeout(() => document.getElementById('routine-item-title-input').focus(), 50);
@@ -21501,6 +21596,8 @@ function openEditRoutineItemModal(item, opts = {}) {
     document.getElementById('routine-item-modal-title').textContent = t('daily_board_edit_item_title');
     routineItemSetTimeBtn(pendingRoutineItemTime);
     document.getElementById('routine-item-title-input').value = item.title;
+    pendingRoutineItemDays = new Set(routineItemDays(item));
+    renderRoutineItemDaysChips();
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
     openModalOverDailyBoard('modal-add-routine-item');
 }
@@ -21512,7 +21609,8 @@ async function saveRoutineItem() {
     // שעה שכבר יש בה פריט אחר בטאב הזה - כל שורה בלוח היא שעה אחת, אז לא שני פריטים באותה שעה
     const clash = dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId);
     if (clash) { showAppToast(t('routine_time_taken').replace('{title}', clash.title), 'error'); return; }
-    const payload = { title, time: pendingRoutineItemTime };
+    const days = [...pendingRoutineItemDays].filter(d => d >= 0 && d <= 6).sort((a, b) => a - b);
+    const payload = { title, time: pendingRoutineItemTime, days_of_week: (days.length ? days : ROUTINE_ALL_DAYS).join(',') };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
     } else {
@@ -21520,6 +21618,7 @@ async function saveRoutineItem() {
     }
     closeModal('modal-add-routine-item');
     await renderDailyBoard();
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
     if (routineNudgeEditing) {
         const nudged = routineNudgeEditing;
         routineNudgeEditing = null;

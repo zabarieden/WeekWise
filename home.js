@@ -32,7 +32,8 @@ async function loadMyDayRoutine(todayStr) {
         const { data: rows } = await supabaseClient.from('routine_items').select('*').eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
         // כל פריט עם כותרת - גם בשעה מדויקת (16:10), בדיוק כמו בלוח של "השגרה שלי" (שם פריט לא נעלם לעולם).
         // ארוחות שהוסתרו כי הן כבר בתפריט של New Me - לא מופיעות פעמיים
-        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)));
+        // ופריט עם ימים משלו (📅 ימים לפריט) - רק בימים שלו
+        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)) && (typeof routineItemOnDay !== 'function' || routineItemOnDay(it, todayIdx)));
         const checksOn = isRoutineGoalsOn();
         let doneIds = new Set();
         if (checksOn && items.length) {
@@ -291,7 +292,7 @@ function setMyDayFilter(filter) {
     if (container) renderMyDayTimeline(container, myDayItems, myDayFocusItems);
 }
 
-// --- המגירה הסגורה בתחתית הבית: כמה בוצע, מה עכשיו (עם ✓), מים ו-New Me ---
+// --- המגירה הסגורה בתחתית הבית: כמה בוצע ומה עכשיו (עם ✓); המים - צ'יפ קטן ליד הכותרת ---
 function renderMyDayBar(items) {
     const countEl = document.getElementById('myday-bar-count');
     const total = items.filter(it => it.checkable).length;

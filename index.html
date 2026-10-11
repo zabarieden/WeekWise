@@ -91,7 +91,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=537">
+    <link rel="stylesheet" href="theme.css?v=538">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -185,8 +185,11 @@
                          ברקע של מסך הבית - שכבה דקורטיבית בלבד (ר' applyHomeWeather ב-home.js) -->
                     <div class="home-weather" id="home-weather" aria-hidden="true"></div>
                 </div>
-                <!-- ◎ מצב פוקוס - בפינה שמול ההמבורגר (החיפוש עבר לתפריט ☰, לפי בקשה מפורשת) -->
+                <!-- ◎ מצב פוקוס - בפינה שמול ההמבורגר (החיפוש עבר לתפריט ☰, לפי בקשה מפורשת).
+                     💎 לידו - New Me, רק למי שרכש/ה (לפי בקשה מפורשת, 2026-10-11: "שיהיה ליד מצב הפוקוס... אני רוצה נקי");
+                     אותו id כמו האריח הקודם במגירה (nmRenderHomeTile ב-new-me.js) -->
                 <div class="home-top-tools">
+                    <button type="button" class="home-tool-btn home-newme-btn hidden" id="btn-newme-shortcut" onclick="openNewMeFromHome()" aria-label="New Me" title="New Me"><svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg></button>
                     <button type="button" class="home-tool-btn" id="btn-home-focus" onclick="toggleHomeFocus()" data-i18n-aria-label="home_focus_label" data-i18n-title="home_focus_label" aria-label="Focus mode" title="Focus mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></button>
                 </div>
                 <!-- תג הפרימיום (רק ביום אחד בשבוע, ר' updateHomePremiumBadgeVisibility) - מתחת לכלים, בצד שמול ההמבורגר -->
@@ -217,28 +220,24 @@
                  אחות של .home-hero-panel (לא בתוכה, שלא תגלול איתה) - מוסתרת כשמסך הבית מוסתר (theme.css) -->
             <section class="myday-bar" id="myday-bar" data-i18n-aria-label="today_tasks_title" aria-label="My Day">
                 <span class="myday-bar-handle" aria-hidden="true"></span>
-                <button type="button" class="myday-bar-head" onclick="openTodayPeekPanel()" data-i18n-aria-label="myday_open_aria" aria-label="Open My Day">
-                    <span class="myday-bar-title" data-i18n="today_tasks_title">My Day</span>
-                    <span class="myday-bar-count" id="myday-bar-count"></span>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
-                </button>
-                <div class="myday-bar-next" id="myday-bar-next"></div>
-                <div class="myday-bar-tiles">
-                    <div class="myday-water-tile" id="myday-water-tile">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.6 16H7.6z"/><path d="M7 10h10"/></svg>
-                        <span class="myday-water-text"><span class="myday-water-label-row"><span class="myday-water-label" data-i18n="myday_water">Water</span><button type="button" class="myday-water-info" onclick="toggleMyDayWaterInfo(event)" aria-expanded="false" aria-controls="myday-water-tip" data-i18n-aria-label="myday_water_info" aria-label="8 medium / small glasses of water are about 2 liters on average">i</button></span><span class="myday-water-value" id="myday-water-value">0/8</span></span>
-                        <button type="button" class="myday-water-add" onclick="addMyDayWaterGlass(this)" data-i18n-aria-label="myday_water_add_aria" aria-label="One more glass of water">+</button>
+                <!-- הכותרת, ולידה 💧 המים כצ'יפ קטן (לפי בקשה מפורשת, 2026-10-11: "שהמים יתפסו פחות מקום, אני רוצה נקי").
+                     New Me עבר לכפתור 💎 ליד הפוקוס למעלה -->
+                <div class="myday-bar-top">
+                    <button type="button" class="myday-bar-head" onclick="openTodayPeekPanel()" data-i18n-aria-label="myday_open_aria" aria-label="Open My Day">
+                        <span class="myday-bar-title" data-i18n="today_tasks_title">My Day</span>
+                        <span class="myday-bar-count" id="myday-bar-count"></span>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+                    </button>
+                    <div class="myday-water-tile" id="myday-water-tile" role="group" data-i18n-aria-label="myday_water" aria-label="Water">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.6 16H7.6z"/><path d="M7 10h10"/></svg>
+                        <span class="myday-water-value" id="myday-water-value">0/8</span>
                         <!-- ⓘ כמה זה 8 כוסות (toggleMyDayWaterInfo ב-home.js) -->
+                        <button type="button" class="myday-water-info" onclick="toggleMyDayWaterInfo(event)" aria-expanded="false" aria-controls="myday-water-tip" data-i18n-aria-label="myday_water_info" aria-label="8 medium / small glasses of water are about 2 liters on average">i</button>
+                        <button type="button" class="myday-water-add" onclick="addMyDayWaterGlass(this)" data-i18n-aria-label="myday_water_add_aria" aria-label="One more glass of water">+</button>
                         <span class="myday-water-tip hidden" id="myday-water-tip" role="note" data-i18n="myday_water_info">8 medium / small glasses of water are about 2 liters on average</span>
                     </div>
-                    <!-- New Me: רק למי שרכש/ה - הארוחה הבאה. מי שלא רכש/ה לא רואה אותו כאן, רק בתפריט (לפי בקשה מפורשת, 2026-10-09).
-                         אותו id כמו הקיצור הקודם (updateNewMeShortcut ב-new-me.js) -->
-                    <button type="button" class="myday-newme-tile locked hidden" id="btn-newme-shortcut" onclick="openNewMeFromHome()">
-                        <span class="myday-newme-head"><svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg>New Me<svg class="myday-newme-lock" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
-                        <span class="myday-newme-line" id="myday-newme-line"></span>
-                        <span class="myday-newme-sub" id="myday-newme-sub"></span>
-                    </button>
                 </div>
+                <div class="myday-bar-next" id="myday-bar-next"></div>
             </section>
 
             <!-- ◎ מצב פוקוס - רק הדבר האחד של עכשיו (ופתק מהיר); כל השאר מוסתר (home.js) -->
@@ -3614,9 +3613,8 @@
             </div>
         </div>
 
-        <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - כותרת + באילו ימים הוא
-             חוזר בדיוק אותו דבר כל יום (בלי בחירת ימים - לפי בקשה מפורשת:
-             "כל הקטע של הלו״ז היומי שזה שגרה שחוזר על עצמה"). השעה עצמה
+        <!-- חלון הוספה/עריכה של פריט בודד בלוח היום - כותרת, שעה ו-📅 ימים: הפריט חוזר בכל ימי הטאב, ואפשר
+             להוריד ממנו ימים (למשל מסחר רק שני–שישי בתוך טאב של ראשון–שישי - לפי בקשה מפורשת, 2026-10-11). השעה עצמה
              לפי השורה שנלחצה בלוח, ואפשר לשנות אותה ביד (לפי בקשה מפורשת, 2026-10-10: "כן תוסיף" - שעה מדויקת
              כמו 16:10) - בבורר המעוצב של New Me (nmToggleTimePicker), לא בבורר-השעה הלבן של הדפדפן -->
         <div id="modal-add-routine-item" class="apple-modal">
@@ -3625,6 +3623,12 @@
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
                 <div class="routine-item-time-row"><button type="button" class="nm-time-btn" id="routine-item-time-btn" data-time-id="routine-item" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button></div>
                 <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
+                <!-- 📅 ימים לפריט הזה בלבד (routine_items.days_of_week) - אותם צ'יפים כמו "ימים לטאב"; רק הימים של הטאב
+                     (אם נבחרו לו), ומוסתר בטאב של יום אחד (renderRoutineItemDaysChips ב-app.js) -->
+                <div class="routine-item-days" id="routine-item-days-row">
+                    <span class="routine-item-days-label" data-i18n="routine_item_days_label">📅 Days</span>
+                    <div class="daily-board-hours-chips" id="routine-item-days"></div>
+                </div>
                 <!-- מוצג רק כשהגיעו מ"🌱 להקטין" בכרטיס של 3 ימים בלי ✓ -->
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
@@ -4198,18 +4202,18 @@
 
     </div>
 
-    <script src="i18n.js?v=441"></script>
-    <script src="app.js?v=576"></script>
-    <script src="ai-chat.js?v=3"></script>
+    <script src="i18n.js?v=442"></script>
+    <script src="app.js?v=577"></script>
+    <script src="ai-chat.js?v=4"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="new-me-data.js?v=8"></script>
-    <script src="new-me.js?v=41"></script>
+    <script src="new-me.js?v=42"></script>
     <script src="new-me-challenges.js?v=6"></script>
     <script src="secret-room.js?v=21"></script>
     <script src="secret-places.js?v=6"></script>
     <script src="books.js?v=5"></script>
-    <script src="home.js?v=13"></script>
+    <script src="home.js?v=14"></script>
 </body>
 </html>

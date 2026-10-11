@@ -2,7 +2,8 @@
 // במקום ארבע לשוניות: שיחה. בוחרים כלי (משהו ליומן / מה אכלתי / תמונה של מתכון / טבלה) או פשוט כותבים,
 // והעוזר מזהה לבד. מאחורי הקלעים רצים בדיוק אותם מנועים כמו קודם (parseScheduleWithAI, logFoodQuickAdd,
 // buildTableWithAI וסריקת התמונה) דרך השדות של החלון הקודם (#modal-ai-brain, שנשאר מוסתר). כל הודעה
-// שהם מציגים בזמן שהשיחה פתוחה מגיעה לשיחה כתשובה של העוזר, במקום טוסט. השיחה לא נשמרת - כל פתיחה מתחילה מחדש
+// שהם מציגים בזמן שהשיחה פתוחה מגיעה לשיחה כתשובה של העוזר, במקום טוסט. השיחה לא נשמרת - כל פתיחה מתחילה מחדש.
+// מתחת לשורת הכתיבה: "AI עלול לטעות" (כמו שהיה); אחרי רישום אוכל: ✏️ לתקן קלוריות / חלבון (לפי בקשה מפורשת)
 let aiChatTool = null;        // 'schedule' | 'food' | 'table' | null (= לזהות לבד)
 let aiChatMode = 'onetime';   // ללו"ז: פעם אחת / כל שבוע / כל יום (כמו הכפתורים בחלון הקודם)
 let aiChatBusy = false;
@@ -40,6 +41,7 @@ function openAiChat(tool) {
             <form class="ai-chat-input">
                 <input type="text" maxlength="600" enterkeyhint="send" placeholder="${aiChatEsc(t('ai_chat_placeholder'))}" aria-label="${aiChatEsc(t('ai_chat_placeholder'))}">
                 <button type="submit" class="ai-chat-send" aria-label="${aiChatEsc(t('ai_chat_send'))}">${AI_CHAT_SVG.send}</button>
+                <p class="ai-chat-note">${aiChatEsc(t('ai_disclaimer_caption'))}</p>
             </form>
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(wrap);
@@ -134,8 +136,52 @@ function aiChatPickTool(tool) {
 function aiChatAfterChips(tool) {
     const chips = [{ label: t('ai_chat_more'), onClick: () => { aiChatTool = null; aiChatSay(t('ai_chat_hi_again'), aiChatToolChips()); } }];
     if (tool === 'schedule') chips.push({ label: t('ai_chat_see_calendar'), onClick: () => { closeAiChat(); showTabSection('schedule-section'); } });
-    if (tool === 'food') chips.push({ label: t('ai_chat_see_food'), onClick: () => { closeAiChat(); showTabSection('nutrition-section'); } });
+    if (tool === 'food') {
+        const entry = aiChatFoodEntry();
+        if (entry) chips.unshift({ label: t('ai_chat_food_edit'), cls: 'ai-chat-fix-chip', onClick: () => aiChatOpenFoodFix(entry) });
+        chips.push({ label: t('ai_chat_see_food'), onClick: () => { closeAiChat(); showTabSection('nutrition-section'); } });
+    }
     return chips;
+}
+
+// ---------- ✏️ תיקון קלוריות / חלבון של מה שנרשם עכשיו ----------
+// lastFoodQuickEntry (app.js) מתאפס בכל שליחה של אוכל, אז זה תמיד מה שנרשם בשליחה הזו
+function aiChatFoodEntry() {
+    return typeof lastFoodQuickEntry !== 'undefined' && lastFoodQuickEntry ? lastFoodQuickEntry : null;
+}
+function aiChatOpenFoodFix(entry) {
+    const b = aiChatBody();
+    if (!b || !entry) return;
+    b.querySelectorAll('.ai-chat-fix').forEach(el => el.remove());
+    const form = document.createElement('form');
+    form.className = 'ai-chat-msg is-bot ai-chat-fix';
+    const prot = entry.protein != null ? Math.round(entry.protein) : '';
+    form.innerHTML = `<label><span>${aiChatEsc(t('calories_input_placeholder'))}</span><input type="number" name="cal" inputmode="numeric" min="1" max="9999" step="1" value="${aiChatEsc(entry.calories)}"></label>`
+        + `<label><span>${aiChatEsc(t('protein_input_placeholder'))}</span><input type="number" name="prot" inputmode="numeric" min="0" max="999" step="1" value="${aiChatEsc(prot)}"></label>`
+        + `<button type="submit" class="ai-chat-chip is-on">${aiChatEsc(t('save_generic'))}</button>`;
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const calRaw = form.querySelector('[name="cal"]').value.trim();
+        const protRaw = form.querySelector('[name="prot"]').value.trim();
+        const cal = Math.round(Number(calRaw));
+        const protein = protRaw === '' ? null : Math.round(Number(protRaw));
+        if (!calRaw || !Number.isFinite(cal) || cal <= 0 || (protein != null && (!Number.isFinite(protein) || protein < 0))) {
+            aiChatSay(t('ai_chat_food_invalid'), null, 'is-error');
+            return;
+        }
+        const btn = form.querySelector('button');
+        btn.disabled = true;
+        const ok = await updateQuickLogEntry(entry, cal, protein);
+        if (!aiChatIsOpen()) return;
+        if (!ok) { btn.disabled = false; aiChatSay(t('nm_save_error'), null, 'is-error'); return; }
+        form.remove();
+        const summary = `${cal} ${t('calories_unit')}${protein != null ? ` · ${t('nm_protein_short').replace('{n}', protein)}` : ''}`;
+        aiChatSay(`${t('ai_chat_food_updated')} ${entry.text} (${summary})`, aiChatAfterChips('food'), 'is-ok');
+    });
+    b.appendChild(form);
+    aiChatScroll();
+    const first = form.querySelector('input');
+    if (first) { first.focus(); first.select(); }
 }
 
 // ---------- ההודעות של המנועים מגיעות לשיחה ----------
@@ -147,7 +193,9 @@ function aiChatHookToasts() {
         if (aiChatIsOpen() && msg) {
             aiChatAnswered = true;
             const err = type === 'error';
-            aiChatSay(String(msg), err ? null : aiChatAfterChips(aiChatTool), err ? 'is-error' : 'is-ok');
+            // גם כשההודעה היא אזהרה (כמו "נראה הרבה") - אם האוכל כבר נרשם, אפשר לתקן אותו
+            const fixable = err && aiChatTool === 'food' && aiChatFoodEntry();
+            aiChatSay(String(msg), err && !fixable ? null : aiChatAfterChips(aiChatTool), err ? 'is-error' : 'is-ok');
             return undefined;
         }
         return orig.call(this, msg, type, ...rest);
@@ -187,6 +235,7 @@ async function aiChatSend() {
     try {
         if (tool === 'food') {
             document.getElementById('food-quick-add-input').value = text;
+            if (typeof lastFoodQuickEntry !== 'undefined') lastFoodQuickEntry = null;
             await logFoodQuickAdd();
         } else if (tool === 'table') {
             document.getElementById('ai-table-input').value = text;

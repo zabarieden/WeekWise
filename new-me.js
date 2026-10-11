@@ -2706,26 +2706,17 @@ function myDayNewMeItems() {
         };
     });
 }
-// במסך הבית רק למי שרכש/ה (לפי בקשה מפורשת: "מי שלא קנה - שלא יהיה על המסך, רק בהמבורגר")
+// 💎 במסך הבית - כפתור קטן ליד הפוקוס, רק למי שרכש/ה (לפי בקשה מפורשת: "מי שלא קנה - שלא יהיה על המסך, רק
+// בהמבורגר"; ו-2026-10-11: "שיהיה ליד מצב הפוקוס... אני רוצה נקי"). הארוחה הבאה - בתווית (ובציר של "היום שלי")
 function nmRenderHomeTile() {
-    const tile = document.getElementById('btn-newme-shortcut');
-    if (!tile) return;
-    tile.classList.toggle('locked', !hasNewMe);
-    tile.classList.toggle('hidden', !hasNewMe);
-    const line = document.getElementById('myday-newme-line');
-    const sub = document.getElementById('myday-newme-sub');
-    if (!line || !sub) return;
-    if (!hasNewMe) {
-        line.textContent = t('nm_tile_locked');
-        sub.textContent = t('nm_tile_peek');
-        return;
-    }
-    const meals = myDayNewMeItems();
-    const next = meals.find(m => !m.done);
-    if (!meals.length) { line.textContent = t('nm_shortcut_title'); sub.textContent = ''; return; }
-    if (!next) { line.textContent = t('nm_tile_all_done'); sub.textContent = ''; return; }
-    line.textContent = next.time;
-    sub.textContent = next.text;
+    const btn = document.getElementById('btn-newme-shortcut');
+    if (!btn) return;
+    btn.classList.toggle('hidden', !hasNewMe);
+    if (!hasNewMe) return;
+    const next = myDayNewMeItems().find(m => !m.done);
+    const label = next ? `${t('nm_shortcut_title')} · ${next.time} ${next.text}` : t('nm_shortcut_title');
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
 }
 function openNewMeFromHome() {
     if (hasNewMe) openNewMeMenuToday();

@@ -7755,22 +7755,10 @@ html[dir="ltr"] .myday-bar-next { padding: 4px 10px 4px 6px; }
 .myday-bar-check { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent-pink); background: transparent; color: var(--accent-pink); display: grid; place-items: center; padding: 0; cursor: pointer; }
 .myday-bar-check:disabled { opacity: 0.5; }
 .myday-bar-empty { font-size: 0.85rem; color: var(--text-secondary); padding: 0 4px; }
-.myday-bar-tiles { display: flex; gap: 8px; }
 .myday-water-tile { flex: 1; display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 8px 6px 10px; border-radius: 16px; background: color-mix(in srgb, #60a5fa 12%, transparent); border: 1px solid color-mix(in srgb, #60a5fa 30%, transparent); color: #93c5fd; box-sizing: border-box; }
-.myday-water-text { flex: 1; display: flex; flex-direction: column; line-height: 1.2; color: var(--text-primary); }
-.myday-water-label { font-size: 0.7rem; color: var(--text-secondary); }
 .myday-water-value { font-size: 0.98rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .myday-water-add { flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; background: #60a5fa; color: #0b1a33; font: inherit; font-size: 1.3rem; font-weight: 800; line-height: 1; padding: 0; cursor: pointer; }
 .myday-water-add:disabled { opacity: 0.6; }
-.myday-newme-tile { flex: 1.25; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; padding: 6px 12px; border: none; border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 80%, transparent), color-mix(in srgb, var(--accent-pink) 65%, transparent)); color: #fff; font: inherit; text-align: start; cursor: pointer; }
-.myday-newme-head { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: 800; }
-.myday-newme-head .nm-icon { width: 1.05em; height: 1.05em; }
-.myday-newme-lock { display: none; color: #ffd27a; }
-.myday-newme-line { font-size: 0.78rem; opacity: 0.92; font-variant-numeric: tabular-nums; }
-.myday-newme-sub { font-size: 0.72rem; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.myday-newme-tile.locked { background: linear-gradient(135deg, #1f1433, #2b1b40); border: 1px solid rgba(255, 210, 122, 0.35); }
-.myday-newme-tile.locked .myday-newme-lock { display: inline; }
-.myday-newme-tile.locked .myday-newme-line { color: #ffe2a6; }
 
 /* --- המגירה הפתוחה: מלמטה, לא מהצד --- */
 .today-peek-content-panel.myday-sheet { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: none; height: 88%; max-height: 88%; display: flex; flex-direction: column; gap: 10px; padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)); border-radius: 30px 30px 0 0; border: none; border-top: 1px solid var(--border-color); box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.5); transform: translateY(105%); overflow: hidden; }
@@ -7944,7 +7932,6 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
 /* ---------- תיקונים אחרי מסך הבית (שלב 2) ---------- */
 /* 💧 ⓘ קטן ליד "מים" - כמה זה 8 כוסות */
 .myday-water-tile { position: relative; }
-.myday-water-label-row { display: inline-flex; align-items: center; gap: 5px; }
 .myday-water-info { width: 16px; height: 16px; min-height: 0; padding: 0; margin: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-secondary) 65%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-family: Georgia, 'Times New Roman', serif; font-size: 0.62rem; font-style: italic; font-weight: 700; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; z-index: 1; }
 .myday-water-info:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
 .myday-water-tip { position: absolute; bottom: calc(100% + 8px); inset-inline-start: 0; width: max-content; max-width: 220px; padding: 8px 11px; border-radius: 12px; background: var(--bg-sheet); border: 1px solid color-mix(in srgb, #60a5fa 40%, var(--border-color)); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3); color: var(--text-primary); font-size: 0.78rem; line-height: 1.45; z-index: 5; }
@@ -9125,3 +9112,51 @@ html:not(.light-mode) .home-note-send { background: transparent; border: 1.5px s
 .home-note-input::placeholder { font-size: 0.9rem; }
 .home-note-line { width: min(100%, 372px); gap: 4px; }
 .home-greeting-row.home-greeting-center { padding: 0 8px; }
+
+/* --- 🧹 מסך בית נקי יותר (לפי בקשה מפורשת, 2026-10-11) ---
+   💎 New Me - כפתור עגול קטן ליד הפוקוס (רק למי שרכש/ה); 💧 המים - צ'יפ קטן בשורת הכותרת של "היום שלי" */
+.home-newme-btn { color: #f5c6ff; border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent-purple) 34%, transparent), color-mix(in srgb, var(--accent-pink) 24%, transparent)); }
+.home-newme-btn .nm-icon { display: block; width: 19px; height: 19px; }
+html.light-mode .home-newme-btn { color: var(--accent-purple); }
+.myday-bar-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.myday-bar-top .myday-bar-head { flex: 1; min-width: 0; }
+.myday-bar-top .myday-bar-title, .myday-bar-top .myday-bar-count { flex: none; }
+.myday-bar-top .myday-water-tile { flex: none; min-height: 0; height: 36px; gap: 6px; padding-block: 0; padding-inline: 10px 3px; border-radius: 999px; }
+.myday-bar-top .myday-water-tile > svg { flex: none; }
+.myday-bar-top .myday-water-value { font-size: 0.88rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.myday-bar-top .myday-water-info { position: relative; }
+.myday-bar-top .myday-water-add { position: relative; width: 30px; height: 30px; font-size: 1.15rem; }
+.myday-bar-top .myday-water-info::after { content: ''; position: absolute; inset: -5px; }
+.myday-bar-top .myday-water-add::after { content: ''; position: absolute; inset: -7px; }
+.myday-bar-top .myday-water-tip { inset-inline-start: auto; inset-inline-end: 0; }
+
+/* ▦ תפריט הקוביות - קוביות קטנות ויפות יותר (לפי בקשה מפורשת): 3 בשורה, ולכל קטגוריה עיגול אייקון בגוון משלה */
+.categories-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.categories-grid .categories-tile { --cat-hue: var(--accent-purple); gap: 7px; min-height: 86px; padding: 12px 6px 10px; border-radius: 18px; background: color-mix(in srgb, var(--cat-hue) 6%, var(--bg-row)); border-color: color-mix(in srgb, var(--cat-hue) 18%, var(--border-color)); }
+.categories-grid .categories-tile:nth-child(6n+2) { --cat-hue: var(--accent-pink); }
+.categories-grid .categories-tile:nth-child(6n+3) { --cat-hue: #2dd4bf; }
+.categories-grid .categories-tile:nth-child(6n+4) { --cat-hue: #f5b14c; }
+.categories-grid .categories-tile:nth-child(6n+5) { --cat-hue: #60a5fa; }
+.categories-grid .categories-tile:nth-child(6n) { --cat-hue: #4ade80; }
+.categories-grid .categories-tile-icon { width: 38px; height: 38px; border-radius: 50%; font-size: 1.15rem; background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--cat-hue) 34%, transparent), color-mix(in srgb, var(--cat-hue) 12%, transparent) 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cat-hue) 38%, transparent); }
+.categories-grid .categories-tile-label { font-size: 0.72rem; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; hyphens: auto; }
+.categories-sub-grid .categories-tile { min-height: 80px; }
+.categories-sub-grid .categories-tile-icon { width: 34px; height: 34px; font-size: 1.02rem; }
+.categories-newme-tile { min-height: 42px; margin-top: 12px; padding: 8px 14px; border-radius: 999px; }
+.categories-newme-tile .categories-tile-label { font-size: 0.86rem; }
+
+/* 📅 ימים לפריט אחד בשגרה - בחלון של הפריט, ובלוח: פריט שלא היום חלש יותר, עם הימים שלו לידו */
+.routine-item-days { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 12px 0 2px; }
+.routine-item-days-label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+.routine-item-days .daily-board-hours-chips { justify-content: center; }
+.daily-board-item-days { flex: none; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--text-secondary); font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.daily-board-item-row.is-off-today .daily-board-item-title, .daily-board-item-row.is-off-today .daily-board-item-time { opacity: 0.5; }
+
+/* 🤖 השיחה עם העוזר: "AI עלול לטעות" מתחת לשורת הכתיבה (כמו שהיה בחלון הקודם), ותיקון קלוריות/חלבון אחרי רישום אוכל */
+.ai-chat-input { flex-wrap: wrap; row-gap: 6px; }
+.ai-chat-note { flex-basis: 100%; margin: 0; font-size: 0.7rem; line-height: 1.3; text-align: center; color: var(--text-secondary); }
+.ai-chat-fix { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; white-space: normal; }
+.ai-chat-fix label { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
+.ai-chat-fix input { width: 96px; height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.ai-chat-fix input:focus { outline: none; border-color: var(--accent-pink); }
+.ai-chat-fix .ai-chat-chip { min-height: 40px; }
