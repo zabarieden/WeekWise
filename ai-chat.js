@@ -122,9 +122,12 @@ function aiChatHighlightTool(tool) {
     const el = aiChatEl();
     if (el) el.querySelectorAll('.ai-chat-tool').forEach(x => x.classList.toggle('is-on', x.dataset.tool === tool));
 }
+// "AI עלול לטעות" לא מופיע בכלי "משהו ליומן" (לפי בקשה מפורשת: "אפשר למחוק רק ביומן בכל השאר להשאיר")
+function aiChatSyncNote() { const el = aiChatEl(); if (el) el.classList.toggle('is-schedule', aiChatTool === 'schedule'); }
 function aiChatPickTool(tool) {
     if (!aiChatIsOpen()) return;
     aiChatTool = tool;
+    aiChatSyncNote();
     aiChatHighlightTool(tool);
     if (aiChatAsk) aiChatAsk.forEach(el => el.remove());
     const ask = aiChatBubble(t('ai_chat_ask_' + tool), 'bot');
@@ -134,7 +137,7 @@ function aiChatPickTool(tool) {
     if (i) i.focus();
 }
 function aiChatAfterChips(tool) {
-    const chips = [{ label: t('ai_chat_more'), onClick: () => { aiChatTool = null; aiChatSay(t('ai_chat_hi_again'), aiChatToolChips()); } }];
+    const chips = [{ label: t('ai_chat_more'), onClick: () => { aiChatTool = null; aiChatSyncNote(); aiChatSay(t('ai_chat_hi_again'), aiChatToolChips()); } }];
     if (tool === 'schedule') chips.push({ label: t('ai_chat_see_calendar'), onClick: () => { closeAiChat(); showTabSection('schedule-section'); } });
     if (tool === 'food') {
         const entry = aiChatFoodEntry();
@@ -229,6 +232,7 @@ async function aiChatSend() {
     aiChatAsk = null;
     const tool = aiChatTool || aiChatDetect(text);
     aiChatTool = tool;
+    aiChatSyncNote();
     const typing = aiChatBubble(t('ai_chat_working_' + tool), 'bot', 'is-typing');
     aiChatBusy = true;
     aiChatAnswered = false;

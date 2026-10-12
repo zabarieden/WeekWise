@@ -3760,8 +3760,12 @@ async function nmRenderMonth(body) {
         const n = r ? Math.min(4, r.checks) : 0;
         const w = weightByDay[ds] != null ? nmFmtNum(Number(weightByDay[ds]), 1) : '';
         const mood = r && r.mood ? NEW_ME_CHECKIN_SCALES.mood[r.mood - 1] : '';
-        cells += `<span class="nm-cal-cell lvl-${n}${ds === today ? ' today' : ''}" title="${n}/4${w ? ' · ' + nmEsc(w) : ''}"><span class="nm-cal-day">${d}</span>${mood || (r && r.free) ? `<span class="nm-cal-mark">${r && r.free ? '🍕' : ''}${mood}</span>` : w ? `<span class="nm-cal-w">${nmEsc(w)}</span>` : ''}</span>`;
+        cells += `<button type="button" class="nm-cal-cell lvl-${n}${ds === today ? ' today' : ''}" data-day="${ds}" title="${n}/4${w ? ' · ' + nmEsc(w) : ''}"><span class="nm-cal-day">${d}</span>${mood || (r && r.free) ? `<span class="nm-cal-mark">${r && r.free ? '🍕' : ''}${mood}</span>` : w ? `<span class="nm-cal-w">${nmEsc(w)}</span>` : ''}</button>`;
     }
+    // ממוצע הקלוריות בחודש (בימים שנרשם בהם משהו) - לפי שאלה מפורשת: "האם יש טבלה חודשית שאפשר לראות אחורה? + קלוריות ממוצעות"
+    const logged = Object.values(byDay).filter(r => Number(r.kcal) > 0);
+    const avgKcal = logged.length ? Math.round(logged.reduce((a, r) => a + Number(r.kcal), 0) / logged.length) : 0;
+    const avgHtml = logged.length ? `<p class="nm-month-avg">${nmEsc(t('nm_month_avg').replace('{kcal}', nmFmt(avgKcal)).replace('{n}', nmFmt(logged.length)))}</p>` : '';
     body.innerHTML = `
         <div class="nm-month-nav">
             <button type="button" class="nm-chip" onclick="nmShiftMonth(-1)">‹</button>
@@ -3773,8 +3777,26 @@ async function nmRenderMonth(body) {
             ${cells}
         </div>
         <div class="nm-legend">${[0, 1, 2, 3, 4].map(n => `<span class="nm-cal-cell lvl-${n}"></span>`).join('')}<span>${nmEsc(t('nm_month_legend'))}</span></div>
+        ${avgHtml}
+        <div class="nm-month-day" aria-live="polite"></div>
         ${nmCheckinInsightHtml(Object.values(byDay))}
         <button type="button" class="nm-row-btn" onclick="nmGo('journey')">⚖️ ${nmEsc(t('nm_month_weight_link'))}</button>`;
+    // נגיעה ביום: כמה ארוחות סומנו וכמה קלוריות נאכלו (ומשקל, אם נשקלו)
+    const detail = body.querySelector('.nm-month-day');
+    body.querySelectorAll('.nm-cal-cell[data-day]').forEach(cell => cell.addEventListener('click', () => {
+        const ds = cell.dataset.day;
+        const wasOn = cell.classList.contains('on');
+        body.querySelectorAll('.nm-cal-cell.on').forEach(x => x.classList.remove('on'));
+        if (wasOn || !detail) { if (detail) detail.innerHTML = ''; return; }
+        cell.classList.add('on');
+        const r = byDay[ds];
+        const w = weightByDay[ds];
+        let label = ds;
+        try { label = new Intl.DateTimeFormat(currentLang, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${ds}T12:00:00`)); } catch (e) {}
+        const has = r && (Number(r.checks) > 0 || Number(r.kcal) > 0);
+        const line = has ? t('nm_month_day_line').replace('{checks}', nmFmt(Number(r.checks) || 0)).replace('{kcal}', nmFmt(Number(r.kcal) || 0)) : t('nm_month_day_empty');
+        detail.innerHTML = `<div class="nm-month-day-title">${nmEsc(label)}</div><div class="nm-month-day-line">${nmEsc(line)}${w != null ? ` · ⚖️ <bdi dir="ltr">${nmEsc(nmFmtNum(Number(w), 1))}</bdi>` : ''}</div>`;
+    }));
 }
 
 // ממוצעי הצ'ק-אין בחודש: בימים שהתפריט נשמר (3+ ארוחות) מול שאר הימים

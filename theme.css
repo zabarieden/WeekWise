@@ -3144,6 +3144,15 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-cal-cell.lvl-3 { background: color-mix(in srgb, var(--accent-pink) 55%, transparent); color: #fff; }
 .nm-cal-cell.lvl-4 { background: var(--nm-grad); color: #fff; }
 .nm-cal-cell.today { outline: 2px solid var(--accent-pink); outline-offset: 1px; }
+/* 📅 נגיעה ביום בלוח החודשי + ממוצע הקלוריות של החודש */
+button.nm-cal-cell { border: 0; padding: 0; font: inherit; cursor: pointer; }
+.nm-cal-cell.on { box-shadow: 0 0 0 2px var(--text-primary); }
+button.nm-cal-cell:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.nm-month-avg { margin: 10px 0 0; font-weight: 700; font-size: 0.88rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.nm-month-day { margin-top: 8px; }
+.nm-month-day:empty { display: none; }
+.nm-month-day-title { font-weight: 800; font-size: 0.86rem; }
+.nm-month-day-line { font-size: 0.84rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .nm-cal-w { font-size: .56rem; opacity: .85; font-variant-numeric: tabular-nums; }
 .nm-legend { display: flex; align-items: center; gap: 4px; font-size: .72rem; color: var(--text-secondary); }
 .nm-legend .nm-cal-cell { width: 14px; height: 14px; aspect-ratio: auto; border-radius: 4px; }
@@ -5930,6 +5939,8 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 /* 📔 "היומן בתפריט הראשי" - ביומן ובהגדרות של New Me */
 .nm-diary-menu-row { padding: 13px 16px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); font-weight: 700; }
 .srp-diary-sheet .nm-diary-menu-row { margin-top: 4px; }
+/* "AI עלול לטעות" - לא בכלי "משהו ליומן" */
+.ai-chat.is-schedule .ai-chat-note { display: none; }
 /* 🍎 בלי התאמה: "אין ארוחה קבועה כזו" + לחשב עם AI */
 .home-note-sugg-ai { justify-content: center; font-weight: 700; color: var(--accent-purple); }
 .nm-or-row { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 9px 12px; border-radius: 12px; border: 1.5px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
