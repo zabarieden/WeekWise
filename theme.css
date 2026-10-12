@@ -9020,6 +9020,20 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-late-choice.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); }
 .nm-late-card .nm-rem-row { margin-top: 12px; }
 .nm-late-card .nm-rem-row.is-off { opacity: 0.55; }
+/* ⚖️ הקלוריות של היום (ארוחות + שתייה + 21:00 = התוכנית) והתיקון של כל ארוחה - ר' nmBudgetBoxHtml / nmBalance */
+.nm-budget { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 10px 14px; border-radius: 16px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.nm-budget-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 0.86rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.nm-budget-row b { font-weight: 800; white-space: nowrap; }
+.nm-budget-sub { margin-top: -3px; padding-inline-start: 1.7em; font-size: 0.74rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.nm-budget-sub bdi { font-weight: 700; color: var(--text-primary); }
+.nm-budget-row.total { margin-top: 2px; padding-top: 7px; border-top: 1px dashed var(--border-color); font-weight: 800; }
+.nm-budget-row.total b { color: var(--accent-purple-light-text); }
+.nm-quiz-slot-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nm-adj-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.nm-adj-chip.up { color: var(--accent-purple-light-text); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); }
+.nm-adj-chip.down { color: var(--accent-pink-text); background: color-mix(in srgb, var(--accent-pink) 12%, transparent); }
+.nm-extra-line.less { background: color-mix(in srgb, var(--accent-pink) 10%, transparent); }
+.nm-extra-line.less bdi { color: var(--accent-pink-text); }
 .nm-late-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .nm-late-picked { margin-top: 8px; color: var(--text-secondary); font-size: 0.95rem; }
 

@@ -250,6 +250,8 @@ function nmOrder() {
 function nmPosName(i) { return t(NEW_ME_POS_KEYS[i] || ('nm_pos_' + (i + 1))); }
 // 21:00: 'eat' / 'drink' / 'none', או null כשעוד לא נשאל
 function nmLateChoice() { const c = nmProfile && nmProfile.late_choice; return ['eat', 'drink', 'none'].includes(c) ? c : null; }
+// "משהו קטן" ב-21:00 = ~100 מתוך התוכנית (יורדות מהארוחות - ר' nmBalance); משקה - מתוך תקציב השתייה
+function nmLateKcal(late) { return (late === undefined ? nmLateChoice() : late) === 'eat' ? NEW_ME_LATE_KCAL : 0; }
 function nmLateLabel(c) { return t(c === 'eat' ? 'nm_late_eat' : c === 'drink' ? 'nm_late_drink' : 'nm_late_none'); }
 async function nmSetLateChoice(choice) {
     if (!nmProfile || !['eat', 'drink', 'none'].includes(choice)) return;
@@ -273,11 +275,32 @@ function nmLateChoicesHtml(current, onPick) {
     return `<div class="nm-late-choices" role="radiogroup" aria-label="${nmEsc(t('nm_late_title'))}">${['eat', 'drink', 'none'].map(c => `
         <button type="button" role="radio" aria-checked="${current === c}" class="nm-late-choice${current === c ? ' selected' : ''}" onclick="${onPick}('${c}')">${nmEsc(nmLateLabel(c))}</button>`).join('')}</div>`;
 }
+// 🍽️ / ☕ / 🌙 הקלוריות של היום (לפי בקשה מפורשת, 2026-10-12: "שאני לוחצת על הכפתורים האלה זה לא נותן לי... כמה קלוריות נשאר
+// לי או בשתיה" + "מה לגבי השתיה לכל היום איפה זה נכנס כקלוריות?" + "שהכל יסתכם ב1300 \ 1500"): הארוחות + ~150 לשתייה (גם
+// המשקה של 21:00 מהן) + ~100 ל"משהו קטן" ב-21:00 (יורדות מהארוחות - ר' nmBalance) = בדיוק התוכנית. בשאלון ובכרטיס של 21:00.
+// menu (בשאלון): { chosen: סך האפשרויות שנבחרו, adj: סך התיקונים } - שורה קטנה מתחת לארוחות
+function nmBudgetBoxHtml(plan, late, menu) {
+    const p = NEW_ME_PLANS[plan] ? Number(plan) : 1300;
+    const lateKcal = late === 'eat' ? NEW_ME_LATE_KCAL : 0;
+    const meals = menu ? menu.chosen + menu.adj : p - NEW_ME_DRINKS_KCAL - lateKcal;
+    const row = (label, n) => `<div class="nm-budget-row"><span>${label}</span><b><bdi dir="ltr">~${nmFmt(n)}</bdi></b></div>`;
+    return `
+        <div class="nm-budget" aria-live="polite">
+            ${row(`🍽️ ${nmEsc(t('nm_budget_meals'))}`, meals)}
+            ${menu && menu.adj ? `<div class="nm-budget-sub">${nmTpl('nm_budget_chosen', { n: nmFmt(menu.chosen), adj: nmSigned(menu.adj) })}</div>` : ''}
+            ${row(`☕ ${nmEsc(t(late === 'drink' ? 'nm_budget_drinks_drink' : 'nm_budget_drinks'))}`, NEW_ME_DRINKS_KCAL)}
+            ${lateKcal ? row(`🌙 ${nmEsc(t('nm_budget_late'))}`, lateKcal) : ''}
+            <div class="nm-budget-row total"><span>${nmEsc(t('nm_budget_total'))}</span><b><bdi dir="ltr">${nmFmt(meals + NEW_ME_DRINKS_KCAL + lateKcal)}</bdi> ${nmEsc(t('calories_unit'))}</b></div>
+        </div>`;
+}
+// +20 / −45 (מינוס אמיתי) לתיקונים - כטקסט (ל-nmTpl, שעוטף ב-bdi בעצמו) או בתוך bdi
+function nmSigned(n) { return `${n > 0 ? '+' : '−'}${nmFmt(Math.abs(n))}`; }
+function nmSignedHtml(n) { return `<bdi dir="ltr">${nmSigned(n)}</bdi>`; }
 // השורה של 21:00 בתפריט היום - או השאלה, כל עוד לא נבחר
 // 🍽️ / ☕ בסוף התפריט: כמה קלוריות כל הארוחות היום, וכמה נשאר לקפה ולשתייה - עם קפה בלחיצה אחת (לפי בקשה מפורשת:
 // "ובסוף תרשום כמה קלוריות לכל הארוחה וכמה קפה נשאר ליום ואיזה... תן כמה אפשרויות")
 function nmDaySummaryHtml() {
-    const meals = Math.max(0, nmMenuTotal() - NEW_ME_DRINKS_KCAL);
+    const meals = Math.max(0, nmMenuTotal() - NEW_ME_DRINKS_KCAL - nmLateKcal());
     const left = Math.max(0, NEW_ME_DRINKS_KCAL - nmEatenToday().drinks);
     const chips = NEW_ME_COFFEE_OPTIONS.map(o => `<button type="button" class="nm-coffee-chip${o.kcal > left ? ' over' : ''}" data-coffee="${o.id}" onclick="nmLogCoffee('${o.id}', this)">${nmEsc(t('nm_coffee_' + o.id))} <bdi dir="ltr">~${nmFmt(o.kcal)}</bdi></button>`).join('');
     return `
@@ -318,7 +341,9 @@ function nmLateRowHtml() {
             ${nmLateChoicesHtml(null, 'nmSetLateChoice')}
         </div>`;
     if (c === 'none') return '';
-    const text = c === 'eat' ? t('nm_late_room_line').replace('{n}', nmFmt(nmLateRoom())) : t('nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL));
+    // גם במשקה: כמה נשאר להיום לשתייה (המשקה של 21:00 יוצא מתקציב השתייה)
+    const room = nmLateRoom();
+    const text = c === 'eat' ? t('nm_late_room_line').replace('{n}', nmFmt(room)) : `${t('nm_late_row_drink')} · ${room > 0 ? t('nm_drinks_left').replace('{n}', nmFmt(room)) : t('nm_drinks_left_none')}`;
     return `
         <div class="nm-late">
             <span class="nm-late-time"><bdi dir="ltr">${nmEsc(nmLateTime())}</bdi></span>
@@ -1116,12 +1141,16 @@ function nmRenderQuiz(root) {
             <p class="nm-fine">${nmEsc(t('nm_letter_quiz_note'))}</p>`;
     } else {
         const order = nmProfile && !q.fresh ? nmOrder() : NEW_ME_DEFAULT_ORDER;
+        // ⚖️ כל בחירה מאוזנת מיד (ר' nmBalance): ליד כל ארוחה התיקון שלה, ובקופסה - הסה"כ של היום
+        const qSlots = order.map(slot => { const o = NEW_ME_PLANS[q.plan][slot].options[q.choices[slot]] || NEW_ME_PLANS[q.plan][slot].options.A; return { slot, kcal: o.kcal, small: !!o.small }; });
+        const qBal = nmBalance(q.plan, qSlots, q.late);
+        const qMenu = { chosen: qSlots.reduce((a, s) => a + s.kcal, 0), adj: qSlots.reduce((a, s) => a + (qBal[s.slot] || 0), 0) };
         body = `
             <h3 class="nm-step-title">${nmEsc(t('nm_q_menu_title'))}</h3>
             <p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>
             ${order.map(slot => `
                 <div class="nm-quiz-slot">
-                    <div class="nm-slot-name">${nmEsc(nmSlotName(slot))}</div>
+                    <div class="nm-quiz-slot-head"><div class="nm-slot-name">${nmEsc(nmSlotName(slot))}</div>${qBal[slot] ? `<span class="nm-adj-chip ${qBal[slot] > 0 ? 'up' : 'down'}" data-adj="${qBal[slot]}">${nmSignedHtml(qBal[slot])}</span>` : ''}</div>
                     ${nmSlotOpts(q.plan, slot).map(opt => {
                         const o = NEW_ME_PLANS[q.plan][slot].options[opt];
                         const picked = q.choices[slot] === opt || (q.choices2 && q.choices2[slot] === opt);
@@ -1135,6 +1164,7 @@ function nmRenderQuiz(root) {
             <div class="nm-quiz-slot">
                 <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
                 ${nmLateChoicesHtml(q.late, 'nmQuizLate')}
+                ${nmBudgetBoxHtml(q.plan, q.late, qMenu)}
             </div>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`;
     }
@@ -1310,34 +1340,91 @@ function nmSmallGap(slot) {
     const plan = NEW_ME_PLANS[nmProfile.plan] || NEW_ME_PLANS[1300];
     return it && it.small && plan[slot] ? Math.max(0, plan[slot].target - it.kcal) : 0;
 }
-function nmSlotExtra(slot) {
-    if (!nmProfile) return 0;
-    const hidden = nmHiddenSlots();
-    if (hidden.includes(slot) || nmIsFree(slot)) return 0;
-    const plan = NEW_ME_PLANS[nmProfile.plan] || NEW_ME_PLANS[1300];
-    const active = nmActiveOrder().filter(s => !nmIsFree(s));
-    const small = active.filter(s => nmSmallGap(s) > 0);
-    if (small.includes(slot)) return 0;
-    const freed = hidden.reduce((a, s) => a + (plan[s] ? plan[s].target : 0), 0) + small.reduce((a, s) => a + nmSmallGap(s), 0);
-    const sum = active.filter(s => !small.includes(s)).reduce((a, s) => a + plan[s].target, 0);
-    if (!freed || !sum || !plan[slot]) return 0;
-    return Math.round(freed * plan[slot].target / sum / 5) * 5;
+// ⚖️ איזון היום (לפי בקשה מפורשת, 2026-10-12: "שהכל יסתכם ב1300 \ 1500 מצידי תוריד דברים מארוחות... כל תיקון חשוב כל
+// בחירה"): הארוחות + ~150 לשתייה + ~100 ב-21:00 (רק כשנבחר "משהו קטן") = בדיוק התוכנית. מה שחסר או עודף - ארוחה שירדה,
+// ארוחת בוקר קטנה, אפשרות קטנה או גדולה מהיעד, ה-100 של 21:00 - נוסף לארוחות או יורד מהן, לכל אחת לפי הגודל שלה, בקפיצות
+// של 5 ובסכום מדויק. חלק של פחות מ-10 לא נרשם לארוחה קטנה (בלי "+5") - הוא עובר לגדולות. לא משתנות: ארוחה קטנה בכוונה,
+// ארוחה חופשית (היעד שלה שמור לה, ומה שמעבר - מותר באותו יום) וארוחה שכבר סומנה (נספר מה שנרשם). אף ארוחה לא יורדת
+// ביותר מ-40% - מה שלא נכנס נשאר מעל התוכנית, והאזהרה הרגילה מופיעה.
+// slots: [{ slot, kcal, small, free, fixed }] - הארוחות שבתפריט (בלי אלה שירדו). מחזיר { slot: ±קלוריות }
+function nmBalance(plan, slots, late) {
+    const P = NEW_ME_PLANS[plan] || NEW_ME_PLANS[1300];
+    const kc = s => Number(s.kcal) || 0;
+    const out = {};
+    slots.forEach(s => { out[s.slot] = 0; });
+    let diff = (Number(plan) || 1300) - NEW_ME_DRINKS_KCAL - nmLateKcal(late || null)
+        - slots.reduce((a, s) => a + (s.free ? (P[s.slot] ? P[s.slot].target : 0) : kc(s)), 0);
+    let pool = slots.filter(s => !s.free && !s.small && !s.fixed && kc(s) >= 50);
+    const shares = () => { const w = pool.reduce((a, s) => a + kc(s), 0); return pool.map(s => diff * kc(s) / w); };
+    if (!diff || !pool.length) return out;
+    while (pool.length > 1 && shares().some(x => Math.abs(x) < 10)) {
+        const min = pool.reduce((m, s) => (kc(s) < kc(m) ? s : m));
+        pool = pool.filter(s => s !== min);
+    }
+    const cap = s => Math.floor(kc(s) * 0.4 / 5) * 5;
+    while (diff < 0 && pool.length) {
+        const sh = shares();
+        const over = pool.filter((s, i) => -sh[i] > cap(s));
+        if (!over.length) break;
+        over.forEach(s => { out[s.slot] = -cap(s); diff += cap(s); });
+        pool = pool.filter(s => !over.includes(s));
+    }
+    if (!diff || !pool.length) return out;
+    const sh = shares();
+    const sign = diff < 0 ? -1 : 1;
+    const units = sh.map(x => Math.abs(x) / 5);
+    const base = units.map(Math.floor);
+    let left = Math.round(Math.abs(diff) / 5) - base.reduce((a, b) => a + b, 0);
+    units.map((u, i) => i).sort((a, b) => (units[b] - base[b]) - (units[a] - base[a]) || kc(pool[b]) - kc(pool[a])).forEach(i => { if (left > 0) { base[i]++; left--; } });
+    pool.forEach((s, i) => { out[s.slot] = sign * base[i] * 5; });
+    // מה שלא מתחלק ל-5 (ארוחה אישית עם מספר "עקום") - לגדולה
+    const rest = diff - pool.reduce((a, s) => a + out[s.slot], 0);
+    if (rest) { const big = pool.reduce((m, s) => (kc(s) > kc(m) ? s : m)); out[big.slot] += rest; }
+    return out;
 }
-// השורה הקטנה מתחת לארוחה: כמה נוסף לה, ומה אפשר להוסיף
+// הארוחות של היום לאיזון. overrides: { slot: key } - "מה אם" (למשל לפני החלפה)
+function nmBalanceSlots(overrides) {
+    return nmActiveOrder().map(slot => {
+        const free = nmIsFree(slot);
+        const ov = overrides && overrides[slot];
+        const it = free ? null : nmItemInfo(ov || nmTodayKey(slot));
+        const ck = !ov && nmTodayCheckins[slot];
+        return { slot, free, small: !!(it && it.small), fixed: !!ck, kcal: ck ? Number(ck.kcal) || 0 : free ? nmFreeKcal() : (it ? it.kcal : 0) };
+    });
+}
+function nmTodayBalance(overrides) { return nmProfile ? nmBalance(nmProfile.plan, nmBalanceSlots(overrides), nmLateChoice()) : {}; }
+// התיקון של ארוחה היום (+ נוסף לה / − יורד ממנה). ארוחה שכבר סומנה - מה שנרשם בה לעומת הארוחה עצמה
+function nmSlotExtra(slot) {
+    if (!nmProfile || nmIsFree(slot) || nmHiddenSlots().includes(slot)) return 0;
+    const ck = nmTodayCheckins[slot];
+    if (ck) { const it = nmItemInfo(nmTodayKey(slot)); return it && ck.option_id === it.key ? (Number(ck.kcal) || 0) - it.kcal : 0; }
+    return nmTodayBalance()[slot] || 0;
+}
+// השורה הקטנה מתחת לארוחה: כמה נוסף לה ומה אפשר להוסיף, או כמה יורד ממנה וממה
 function nmExtraLineHtml(slot) {
     const n = nmSlotExtra(slot);
     if (!n) return '';
-    const ideas = t(n < 80 ? 'nm_extra_ideas_s' : n < 160 ? 'nm_extra_ideas_m' : 'nm_extra_ideas_l');
-    // תוספת קטנה (פחות מ-40) - רק כמה נוסף, בלי רעיונות (פרי שלם על 15 קלוריות לא מתאים): החלק שלפני המקף
-    // מאיפה הקלוריות: מארוחת הבוקר הקטנה (כשאין ארוחה שירדה), או מהארוחה שירדה
-    const fromSmall = !nmHiddenSlots().length && nmActiveOrder().some(s => nmSmallGap(s) > 0);
-    let tpl = nmEsc(t(fromSmall ? 'nm_extra_line_small' : 'nm_extra_line'));
-    if (n < 40 && tpl.includes('–')) tpl = tpl.split('–')[0].trim();
-    return `<div class="nm-extra-line" data-extra="${n}">${tpl.replace('{n}', `<bdi dir="ltr">+${nmFmt(n)}</bdi>`).replace('{ideas}', nmEsc(ideas))}</div>`;
+    let key, ideas;
+    if (n > 0) {
+        ideas = t(n < 80 ? 'nm_extra_ideas_s' : n < 160 ? 'nm_extra_ideas_m' : 'nm_extra_ideas_l');
+        // מאיפה הקלוריות: מהארוחה שירדה, מארוחת הבוקר הקטנה, או השלמה לתוכנית (אפשרות קטנה מהיעד)
+        key = nmHiddenSlots().length ? 'nm_extra_line' : nmActiveOrder().some(s => nmSmallGap(s) > 0) ? 'nm_extra_line_small' : 'nm_extra_line_fill';
+    } else {
+        ideas = t(n > -80 ? 'nm_less_ideas_s' : n > -160 ? 'nm_less_ideas_m' : 'nm_less_ideas_l');
+        key = nmLateKcal() ? 'nm_less_line_late' : 'nm_less_line';
+    }
+    // תיקון קטן (פחות מ-40) - רק כמה, בלי רעיונות (פרי שלם על 15 קלוריות לא מתאים): החלק שלפני המקף
+    let tpl = nmEsc(t(key));
+    if (Math.abs(n) < 40 && tpl.includes('–')) tpl = tpl.split('–')[0].trim();
+    return `<div class="nm-extra-line${n < 0 ? ' less' : ''}" data-extra="${n}">${tpl.replace('{n}', nmSignedHtml(n)).replace('{plan}', nmFmt(nmProfile.plan)).replace('{ideas}', nmEsc(ideas))}</div>`;
 }
-// סה"כ התפריט של היום (כולל החלפות, ארוחה חופשית והחלק מארוחה שירדה) + תקציב השתייה - מול יעד התוכנית
-function nmMenuTotal() {
-    return nmActiveOrder().reduce((a, slot) => a + (nmIsFree(slot) ? nmFreeKcal() : nmItemInfo(nmTodayKey(slot)).kcal + nmSlotExtra(slot)), 0) + NEW_ME_DRINKS_KCAL;
+// סה"כ התפריט של היום (כולל החלפות, ארוחה חופשית והתיקונים) + תקציב השתייה + 21:00 - מול יעד התוכנית
+function nmMenuTotal(overrides) {
+    if (!nmProfile) return 0;
+    const slots = nmBalanceSlots(overrides);
+    const bal = nmBalance(nmProfile.plan, slots, nmLateChoice());
+    // ארוחה שכבר סומנה נספרת כמו שנרשמה (גם כשהיא לא בדיוק אותה ארוחה)
+    return slots.reduce((a, s) => a + s.kcal + (bal[s.slot] || 0), 0) + NEW_ME_DRINKS_KCAL + nmLateKcal();
 }
 // כמה קלוריות פנויות בתפריט של היום עד סך התוכנית (אחרי שהוסרה ארוחה או נבחרה ארוחה קטנה יותר)
 function nmMenuRoom() { return Math.max(0, nmProfile.plan - nmMenuTotal()); }
@@ -2211,7 +2298,8 @@ function nmOpenSwap(slot, startTab, opts) {
     const { near, far } = nmSwapCandidates(slot);
     const freeAvailable = !nmWeekFreeRow();
     const room = nmMenuRoom();
-    const budget = cur.kcal + room;
+    // מה שמגיע לארוחה הזו היום - כולל התיקון שלה (ר' nmBalance)
+    const budget = cur.kcal + nmSlotExtra(slot) + room;
     const god = nmGodMode();
     const fitsBudget = kcal => god || kcal <= budget * 1.1;
     let tab = startTab || 'menu';
@@ -2317,7 +2405,9 @@ function nmOpenSwap(slot, startTab, opts) {
     const renderConfirm = key => {
         const it = nmItemInfo(key);
         const d = it.kcal - cur.kcal;
-        const newTotal = nmMenuTotal() + d;
+        // אחרי ההחלפה היום מתאזן מחדש (nmBalance): ההפרש מתחלק בין הארוחות, והסה"כ נשאר התוכנית
+        const newTotal = nmMenuTotal({ [slot]: key });
+        const absorbed = d - (newTotal - nmMenuTotal());
         const big = !god && (Math.abs(d) >= 60 || newTotal > nmProfile.plan * 1.08) && newTotal > nmProfile.plan;
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>
@@ -2329,6 +2419,7 @@ function nmOpenSwap(slot, startTab, opts) {
             </div>
             <div class="nm-swap-balance">
                 <span class="nm-swap-balance-diff ${d > 0 ? 'up' : d < 0 ? 'down' : 'eq'}">${d === 0 ? nmEsc(t('nm_swap_same_kcal')) : nmTpl(d > 0 ? 'nm_swap_more_kcal' : 'nm_swap_less_kcal', { n: nmFmt(Math.abs(d)) })}</span>
+                ${absorbed ? `<span class="nm-fine nm-swap-balanced">${nmTpl('nm_swap_balanced', { n: nmSigned(-absorbed), plan: nmFmt(nmProfile.plan) })}</span>` : ''}
                 <span class="nm-fine">${nmTpl('nm_swap_day_total', { total: nmFmt(newTotal), plan: nmFmt(nmProfile.plan) })}</span>
             </div>
             ${big ? `<p class="nm-soft-warn">💛 ${nmEsc(t('nm_swap_big_warn'))}</p>` : ''}
@@ -2510,7 +2601,7 @@ async function nmCheck(slot) {
         user_id: currentUserId, checkin_date: today, slot, option_id: optionId, plan,
         kcal, protein_g: protein, mirror_mode: mode, mirror_text: text,
     }, { onConflict: 'user_id,checkin_date,slot' }).select().maybeSingle();
-    nmTodayCheckins[slot] = data || { slot, kcal, protein_g: protein, mirror_mode: mode, mirror_text: text };
+    nmTodayCheckins[slot] = data || { slot, option_id: optionId, kcal, protein_g: protein, mirror_mode: mode, mirror_text: text };
 }
 
 async function nmUncheck(slot) {
@@ -3984,6 +4075,7 @@ function nmRenderReminders(body) {
             ${late === 'none' ? `<div class="nm-late-picked">${nmEsc(nmLateLabel('none'))}</div>` : ''}` : `
             <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_title'))}</div>
             ${nmLateChoicesHtml(late, 'nmSetLateChoice')}`}
+            ${nmBudgetBoxHtml(nmProfile.plan, late)}
             ${late === 'eat' || late === 'drink' ? `
             <div class="nm-rem-row${on ? '' : ' is-off'}">
                 <div class="nm-rem-text"><b>${nmEsc(nmLateLabel(late))}</b><span>${nmEsc(t(late === 'eat' ? 'nm_late_row_eat' : 'nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)))}</span></div>

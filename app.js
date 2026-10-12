@@ -9145,6 +9145,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_small_breakfast', category: 'nutrition' },
     { id: 'new_me_month', category: 'nutrition' },
     { id: 'new_me_coffee', category: 'nutrition' },
+    { id: 'new_me_day_total', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
