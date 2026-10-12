@@ -9676,3 +9676,65 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 @media (prefers-reduced-motion: reduce) {
     .saved-meals-add-btn:active, .saved-meals-rc:active, .saved-meal-today:active, .saved-meal-action:active { transform: none; }
 }
+
+/* ===== צנצנת המשאלות וציטוטים מספרים - בארון הספרים בחדר הסודי (ר' secret-places.js). הצנצנת עצמה בעיצוב
+   שנבחר (SR_JAR_DESIGN); הפתקים והדפים בצבעי נייר קבועים כדי שיהיו קריאים בכל ערכה, בהיר וכהה ===== */
+.sr-shelf-items { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sr-shelf-item span svg { display: block; width: 1.65rem; height: 1.65rem; }
+.sr-jar { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; overflow-y: auto; color: #f5f5f7; background: radial-gradient(70% 40% at 50% 26%, rgba(255, 196, 120, 0.14), transparent 70%), linear-gradient(180deg, #120b19, #1a1208 70%, #24170c); animation: srFadeIn 0.3s ease-out; }
+.sr-jar-niche { flex: none; width: min(100% - 28px, 340px); aspect-ratio: 240 / 330; margin: 4px auto 0; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #2a1810 0%, #3b2418 55%, #2c1b12 100%); box-shadow: inset 0 14px 30px rgba(0, 0, 0, 0.55), 0 18px 40px -20px rgba(0, 0, 0, 0.7); }
+.sr-jar-svg { display: block; width: 100%; height: 100%; cursor: pointer; }
+.sr-jar-svg:focus-visible { outline: 2px solid #ffd27a; outline-offset: -4px; }
+.srj-twinkle { animation: srjTwinkle 2.6s ease-in-out infinite; }
+.srj-twinkle:nth-child(2n) { animation-delay: 0.7s; }
+.srj-twinkle:nth-child(3n) { animation-delay: 1.4s; }
+@keyframes srjTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.srj-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: srjFlicker 1.8s ease-in-out infinite; }
+@keyframes srjFlicker { 0%, 100% { transform: scale(1, 1); } 40% { transform: scale(0.94, 1.06); } 70% { transform: scale(1.04, 0.96); } }
+.sr-jar-empty { margin: 12px 24px 0; text-align: center; font-size: 0.92rem; color: #e9dcc6; }
+.sr-jar-actions { display: flex; gap: 10px; margin: 14px 16px 6px; }
+.sr-jar-actions button { flex: 1; min-height: 50px; border-radius: 18px; font: inherit; font-weight: 800; cursor: pointer; }
+.sr-jar-add { border: none; background: linear-gradient(135deg, #ffd27a, #ff9ecf); color: #2c1b40; }
+.sr-jar-pull { border: 1px solid rgba(255, 210, 122, 0.5); background: rgba(255, 210, 122, 0.08); color: #ffe2a6; }
+.sr-jar-notes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 16px 22px; }
+.sr-jar-note { position: relative; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 8px 12px 8px 10px; border: none; border-radius: 3px 3px 10px 3px; background: var(--paper, #fff4d6); color: #3b2a14; font: inherit; font-size: 0.8rem; font-weight: 700; text-align: start; cursor: pointer; box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.6); }
+.sr-jar-note::before { content: ''; flex: none; width: 10px; height: 8px; border-radius: 1px; background: linear-gradient(90deg, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.18) 50%); }
+.sr-jar-note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-jar-note i { font-style: normal; }
+.sr-jar-note:nth-child(2n) { transform: rotate(-1.2deg); }
+.sr-jar-note:nth-child(3n) { transform: rotate(1deg); }
+.sr-jar-add:focus-visible, .sr-jar-pull:focus-visible, .sr-jar-note:focus-visible, .sr-qbook:focus-visible, .sr-quote-tools button:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
+/* הפתק הפתוח (גם בפופ-אפ השבועי) - דף נייר שנפתח מקיפול */
+.sr-wish-paper { position: relative; padding: 26px 20px 20px; border-radius: 4px 4px 18px 4px; background: var(--paper, #fff4d6); color: #3b2a14; box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.6); transform-origin: 50% 0; animation: srWishUnfold 0.5s cubic-bezier(.2, .8, .3, 1); }
+.sr-wish-paper::before { content: ''; position: absolute; inset-inline: 0; top: 50%; height: 1px; background: rgba(59, 42, 20, 0.12); }
+.sr-wish-paper small { display: block; margin-bottom: 6px; font-size: 0.74rem; font-weight: 700; color: #9a7b4f; }
+.sr-wish-paper-text { position: relative; margin: 0; font-size: 1.12rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+@keyframes srWishUnfold { from { transform: scaleY(0.08) rotate(-5deg); opacity: 0.4; } to { transform: none; opacity: 1; } }
+.sr-wish-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sr-wish-del { color: var(--accent-red-text, #e11d48); }
+.sr-wish-input, .sr-quote-input, .sr-quote-title, .sr-quote-author { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.95rem; line-height: 1.5; resize: vertical; }
+.sr-wish-input { min-height: 120px; }
+.sr-wish-pop { position: relative; display: flex; flex-direction: column; gap: 10px; padding-top: 6px; text-align: center; }
+.sr-wish-pop small { font-size: 0.82rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.02em; }
+.sr-wish-pop-glow { position: absolute; top: -30px; left: 50%; width: 160px; height: 90px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 210, 122, 0.35), transparent); pointer-events: none; }
+.sr-wish-pop .sr-wish-paper { text-align: start; }
+/* ציטוטים מספרים שאהבתי: דף ספר עם מירכאות גדולות */
+.sr-quotes-wrap { display: flex; flex-direction: column; gap: 10px; }
+.sr-quotes { display: flex; flex-direction: column; gap: 10px; }
+.sr-quote { position: relative; margin: 0; padding: 18px 18px 12px 18px; border-radius: 6px 6px 16px 6px; background: #fbf4e6; color: #3a2c1a; box-shadow: 0 10px 20px -16px rgba(0, 0, 0, 0.6); }
+.sr-quote::before { content: '\201C'; position: absolute; top: -6px; inset-inline-start: 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 3rem; line-height: 1; color: #d9a648; }
+.sr-quote blockquote { margin: 0; padding-top: 8px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sr-quote figcaption { margin-top: 8px; font-size: 0.8rem; font-weight: 700; color: #8a6d45; }
+.sr-quote figcaption::before { content: '— '; }
+.sr-quote-tools { display: flex; justify-content: flex-end; gap: 4px; margin-top: 4px; }
+.sr-quote-tools button { width: 32px; height: 32px; padding: 0; border: none; border-radius: 10px; background: transparent; font-size: 0.9rem; cursor: pointer; opacity: 0.6; }
+.sr-quote-tools button:hover { opacity: 1; background: rgba(0, 0, 0, 0.05); }
+.sr-quotes-empty { margin: 4px 0 8px; color: var(--text-secondary); font-size: 0.9rem; text-align: center; }
+.sr-quote-label { margin: 2px 2px 0; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); }
+.sr-quote-books { display: flex; flex-wrap: wrap; gap: 6px; }
+.sr-qbook { max-width: 100%; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.sr-qbook.on { border-color: transparent; background: var(--nm-grad, linear-gradient(135deg, var(--accent-purple), var(--accent-pink))); color: #fff; }
+.books-quotes-chip { border: none; font: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+    .srj-twinkle, .srj-flame, .sr-wish-paper { animation: none; }
+}

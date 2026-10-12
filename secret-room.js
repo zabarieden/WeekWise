@@ -111,6 +111,8 @@ async function roomLoad() {
     const { data } = await supabaseClient.from('new_me_room').select('*').eq('user_id', currentUserId).maybeSingle();
     roomState = data || { keys_seen: 0, style: 'night', wall_color: null, life_score: null, next_step: null, game_best: 0 };
     roomLoaded = true;
+    // המשאלות - כדי שהצנצנת על המדף תראה פתק לכל משאלה (ר' srShelfJarSvg)
+    if (typeof roomFetchWishes === 'function') await roomFetchWishes();
     // 📔 היומן בתפריט הראשי (ר' nmDiaryInMenu): מה שבחשבון גובר - גם במכשיר הזה
     if (data && typeof nmDiaryMenuKey === 'function') { try { if (data.diary_in_menu) localStorage.setItem(nmDiaryMenuKey(), '1'); else localStorage.removeItem(nmDiaryMenuKey()); } catch {} }
     if (typeof updateDiaryMenuItem === 'function') updateDiaryMenuItem();
@@ -436,8 +438,9 @@ function srRenderWall(dir) {
     srFitTexts(scene);
     srFitBubbles(scene.querySelector('svg'));
     scene.querySelectorAll('[data-hot]').forEach(el => {
-        el.addEventListener('click', () => srHotspot(el.dataset.hot, el));
-        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); srHotspot(el.dataset.hot, el); } });
+        // נקודה בתוך נקודה (הצנצנת על המדף בארון) - רק הפנימית מגיבה
+        el.addEventListener('click', e => { if (e.target.closest('[data-hot]') !== el) return; srHotspot(el.dataset.hot, el); });
+        el.addEventListener('keydown', e => { if (e.target !== el) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); srHotspot(el.dataset.hot, el); } });
     });
     roomGuideRoom();
 }
@@ -480,6 +483,7 @@ function srHotspot(id, el) {
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
+    if (id === 'jar') { if (typeof roomOpenJar === 'function') roomOpenJar(); return; }
     if (id === 'vinyl') { if (typeof srpOpenRecords === 'function') srpOpenRecords(el); return; }
     if (id === 'add-challenge') { closeSecretRoom(); if (typeof nmGo === 'function') nmGo('challenges'); return; }
     if (id.startsWith('ch-')) { const key = id.slice(3); if (typeof nmOpenChallenge === 'function') nmOpenChallenge(key); return; }
@@ -836,9 +840,7 @@ function srWallShelf(keys) {
             ${shelfOpen ? `<g>
                 <rect x="226" y="186" width="13" height="60" rx="2" fill="#ff7ab8"/><rect x="241" y="196" width="11" height="50" rx="2" fill="#93c5fd"/><rect x="254" y="180" width="15" height="66" rx="2" fill="#fcd34d"/><rect x="271" y="192" width="10" height="54" rx="2" fill="#86efac"/>
                 <rect x="284" y="200" width="12" height="46" rx="2" fill="#c084fc" transform="rotate(-12 290 246)"/>
-                <circle cx="338" cy="232" r="14" fill="url(#${p}Jar)"/>
-                <rect x="324" y="206" width="28" height="40" rx="8" fill="#ffffff" opacity="0.18"/><rect x="326" y="200" width="24" height="8" rx="3" fill="#c9a36b"/>
-                <g fill="#ffd27a" class="sr-twinkle"><circle cx="332" cy="226" r="2.2"/><circle cx="342" cy="232" r="2"/><circle cx="336" cy="238" r="2.2"/><circle cx="344" cy="222" r="1.6"/></g>
+                ${srShelfJarSvg(p)}
                 <rect x="228" y="270" width="52" height="66" rx="3" fill="#f3e6cf"/><rect x="233" y="275" width="42" height="44" fill="url(#${p}PhotoA)"/><path d="M233 319 L248 300 L258 310 L266 302 L275 319 Z" fill="#4c1d95" opacity="0.5"/>
                 <rect x="290" y="282" width="44" height="54" rx="3" fill="#f3e6cf"/><rect x="294" y="286" width="36" height="36" fill="url(#${p}PhotoB)"/><circle cx="318" cy="298" r="5" fill="#fff4c9"/>
                 <rect x="340" y="296" width="18" height="40" rx="3" fill="#a855f7"/>
@@ -859,6 +861,22 @@ function srWallShelf(keys) {
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+// הצנצנת הקטנה על המדף העליון בארון = צנצנת המשאלות (נגיעה פותחת אותה): פתק מקופל קטן לכל משאלה (עד 6),
+// וגחליליות כשהיא עוד ריקה
+function srShelfJarSvg(p) {
+    const n = Math.min(6, Array.isArray(typeof roomWishes !== 'undefined' ? roomWishes : null) ? roomWishes.length : 0);
+    const papers = typeof SR_JAR_PAPERS !== 'undefined' ? SR_JAR_PAPERS : ['#fff4d6', '#ffd1e3', '#ccf2df'];
+    const spots = [[331, 241, -14], [339, 242, 10], [346, 240, -6], [334, 235, 18], [343, 235, -20], [338, 229, 6]];
+    const notes = spots.slice(0, n).map(([x, y, r], i) => `<rect x="-3.8" y="-2.5" width="7.6" height="5" rx="0.7" fill="${papers[i % papers.length]}" transform="translate(${x} ${y}) rotate(${r})"/>`).join('');
+    const flies = n ? '<circle cx="344" cy="222" r="1.6"/><circle cx="332" cy="226" r="1.8"/>' : '<circle cx="332" cy="226" r="2.2"/><circle cx="342" cy="232" r="2"/><circle cx="336" cy="238" r="2.2"/><circle cx="344" cy="222" r="1.6"/>';
+    return `<g class="sr-hot sr-jar-hot" data-hot="jar" role="button" tabindex="0" aria-label="${srEsc(roomItemName('jar'))}">
+        <rect x="316" y="194" width="44" height="56" fill="transparent"/>
+        <circle cx="338" cy="232" r="14" fill="url(#${p}Jar)"/>${notes}
+        <rect x="324" y="206" width="28" height="40" rx="8" fill="#ffffff" opacity="0.18"/><rect x="326" y="200" width="24" height="8" rx="3" fill="#c9a36b"/>
+        <g fill="#ffd27a" class="sr-twinkle">${flies}</g>
+    </g>`;
+}
 function srWrapText(s, n) {
     const words = String(s || '').split(/\s+/).filter(Boolean);
     const lines = [];
@@ -1593,6 +1611,8 @@ function roomOpenShelf() {
         <p class="nm-fine">${srEsc(t('room_shelf_hint'))}</p>
         <div class="sr-shelf-items">
             ${item('books', '📚', 'room_shelf_books')}
+            ${item('quotes', '💬', 'room_shelf_quotes')}
+            ${item('jar', typeof SR_JAR_ICON !== 'undefined' ? SR_JAR_ICON : '✨', 'room_item_jar')}
             ${item('notebooks', '📒', 'room_shelf_notebooks')}
             ${item('photos', '📸', 'room_shelf_memories')}
         </div>
@@ -1601,6 +1621,9 @@ function roomOpenShelf() {
         ov.remove();
         // הספרים = הספרייה (לפי בקשה מפורשת: "פשוט תחבר את זה לארון ההוא") - הספרים מפינת הקריאה, כאן בחדר
         if (b.dataset.go === 'books') { roomOpenLibrary(); return; }
+        // ציטוטים מספרים שאהבתי וצנצנת המשאלות - בארון (לפי בקשה מפורשת, 2026-10-12; ר' secret-places.js)
+        if (b.dataset.go === 'quotes') { roomOpenQuotes(); return; }
+        if (b.dataset.go === 'jar') { roomOpenJar(); return; }
         closeSecretRoom();
         if (b.dataset.go === 'notebooks' && typeof openBag === 'function') openBag();
         else if (b.dataset.go === 'photos' && typeof nmGo === 'function') nmGo('photos');

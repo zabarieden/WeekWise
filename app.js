@@ -9102,6 +9102,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'smart_split', category: 'notes' },
     { id: 'books_what', category: 'books' },
     { id: 'books_deadline', category: 'books' },
+    { id: 'book_quotes', category: 'books' },
     { id: 'add_myweek_task', category: 'myweek' },
     { id: 'myweek_reminder', category: 'myweek' },
     { id: 'reminder_snooze', category: 'myweek' },
@@ -9153,6 +9154,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'room_computer', category: 'nutrition' },
     { id: 'room_records', category: 'nutrition' },
     { id: 'room_roof_gifts', category: 'nutrition' },
+    { id: 'room_wish_jar', category: 'nutrition' },
     { id: 'new_me_challenges', category: 'nutrition' },
     { id: 'new_me_letter_gift', category: 'nutrition' },
     // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה
@@ -21653,6 +21655,8 @@ function renderVisionGoalIconPicker() {
 
 function openVisionGoalModal(goalId = null, template = null, opts = {}) {
     editingVisionGoalId = goalId;
+    // "להפוך ליעד" מצנצנת המשאלות מסמן איזו משאלה מחכה ליעד הזה; כל פתיחה אחרת של החלון - כבר לא קשורה אליה
+    if (!opts.fromWish && typeof srWishGoalLink !== 'undefined') srWishGoalLink = null;
     const titleEl = document.getElementById('vision-goal-modal-title');
     const deleteBtn = document.getElementById('btn-delete-vision-goal');
     const goal = goalId ? visionGoalsCache.find(g => g.id === goalId) : null;
@@ -22041,6 +22045,8 @@ async function saveVisionGoal() {
         }
         // תוכנית מהספרייה עם "להוסיף לשגרה שלי" דלוק - גם אחרי עריכה
         if (visionPendingLibRoutine && typeof glibApplyRoutinePlan === 'function') await glibApplyRoutinePlan(data, milestones, visionPendingLibRoutine);
+        // נפתח מ"להפוך ליעד" בצנצנת המשאלות - היעד מקושר למשאלה (ר' roomLinkWishToGoal ב-secret-places.js)
+        if (typeof roomLinkWishToGoal === 'function') roomLinkWishToGoal(data);
     }
     closeModal('modal-add-vision-goal');
     resetVisionGoalModal();

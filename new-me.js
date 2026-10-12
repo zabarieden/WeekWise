@@ -3268,6 +3268,8 @@ function updateNewMeShortcut() {
     updateDiaryMenuItem();
     // הבחירה מהחשבון (גם ממכשיר אחר) - נטען פעם אחת ברקע
     if (hasNewMe && typeof roomLoad === 'function' && typeof roomLoaded !== 'undefined' && !roomLoaded) roomLoad().then(updateDiaryMenuItem);
+    // פעם בשבוע: משאלה אקראית מצנצנת המשאלות, בעדינות (ר' roomWishPopupSoon ב-secret-places.js)
+    if (hasNewMe && typeof roomWishPopupSoon === 'function') roomWishPopupSoon();
     if (hasNewMe) nmEnsureHomeData().then(ok => { if (ok) { nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); } });
     // מי שעוד לא רכש/ה: מנעול קטן על New Me בתפריט (לחיצה פותחת את עמוד ההסבר והרכישה)
     document.querySelectorAll('.hamburger-newme-item').forEach(b => b.classList.toggle('locked', !hasNewMe));

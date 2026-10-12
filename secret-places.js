@@ -1426,3 +1426,461 @@ function srpInitWaterfall(box) {
         },
     };
 }
+
+// ===================== צנצנת המשאלות + ציטוטים מספרים (בארון הספרים, מהמפתח הראשון) =====================
+// לפי בקשה מפורשת (2026-10-12): "רשימת משאלות - איך אני רוצה שהחיים שלי יראו? לדמיין הכי פרוע" - כל משאלה
+// היא פתק מקופל בצנצנת זכוכית בארון (room_wishes). פעם בשבוע פופ-אפ עדין עם משאלה אקראית - פעם אחת, במכשיר
+// אחד (new_me_room.wish_popup_at); ובפתיחה השנייה של משאלה מסוימת (לא בראשונה) - אפשר להפוך אותה ליעד
+// ולפרק לצעדים קטנים (היעד שנוצר מקושר אליה - room_wishes.goal_id). עיצוב הצנצנת: 8 אפשרויות + לוח מעל
+// המיטה בקנבס שלה; SR_JAR_DESIGN בוחר אחת, כך שהחלפה = שינוי מספר אחד. הציטוטים (room_quotes): מהארון,
+// וגם בקטן מפינת הקריאה - לכולם, לא רק בחדר
+// הבחירה שלה (2026-10-12): 1 - מייסון, עם "חלומות" על התווית במקום "משאלות" והגחליליות של 3 בתוכה
+const SR_JAR_DESIGN = 1;
+const SR_JAR_PAPERS = ['#fff4d6', '#ffd1e3', '#ccf2df', '#e2d6ff', '#ffdcc2', '#d3ecff'];
+const SR_WISH_GOAL_AT = 2;
+const SR_WISH_POPUP_DAYS = 7;
+const SR_JAR_ICON = '<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect x="9" y="4" width="14" height="5" rx="1.6" fill="#e2b45c"/><path d="M10 9h12v2c3 1 4 3 4 5v9c0 3-2 5-5 5H11c-3 0-5-2-5-5v-9c0-2 1-4 4-5z" fill="rgba(255,255,255,0.18)" stroke="#fff" stroke-opacity="0.7" stroke-width="1.2"/><rect x="10" y="21" width="5" height="3.4" rx="0.6" fill="#ffd1e3" transform="rotate(-14 12 22)"/><rect x="15.5" y="22" width="5" height="3.4" rx="0.6" fill="#ccf2df" transform="rotate(10 18 23)"/><rect x="12.5" y="18" width="5" height="3.4" rx="0.6" fill="#fff4d6" transform="rotate(4 15 19)"/></svg>';
+let roomWishes = null;
+let roomQuotes = null;
+let roomWishPopupScheduled = false;
+let srWishGoalLink = null;
+
+async function roomFetchWishes() {
+    if (!supabaseClient || !currentUserId) return roomWishes || [];
+    const { data } = await supabaseClient.from('room_wishes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+    roomWishes = data || [];
+    return roomWishes;
+}
+
+function srWishPaper(w) {
+    const list = roomWishes || [];
+    const i = Math.max(0, list.findIndex(x => x.id === w.id));
+    return SR_JAR_PAPERS[i % SR_JAR_PAPERS.length];
+}
+function srWishCountText(n) { return n === 1 ? t('room_jar_count_one') : t('room_jar_count_many').replace('{n}', srFmt(n)); }
+function srWishDate(iso) {
+    try { return t('room_wish_written').replace('{date}', new Intl.DateTimeFormat(currentLang, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))); } catch { return ''; }
+}
+
+// ---------- ציורי הצנצנות (אותם ציורים כמו בקנבס) ----------
+function srjRng(seed) { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+function srjNote(x, y, r, color) {
+    const w = 26, h = 16;
+    return `<g class="srj-note" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r.toFixed(1)})"><rect x="${-w / 2 + 1}" y="${-h / 2 + 2}" width="${w}" height="${h}" rx="2" fill="#000" opacity="0.16"/><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="2" fill="${color}"/><rect x="0" y="${-h / 2}" width="${w / 2}" height="${h}" rx="2" fill="#000" opacity="0.07"/><line x1="0" y1="${-h / 2 + 1}" x2="0" y2="${h / 2 - 1}" stroke="#000" stroke-opacity="0.14" stroke-width="0.8"/></g>`;
+}
+function srjSlot(def, i) {
+    const perRow = def.perRow || 5, row = Math.floor(i / perRow), col = i % perRow;
+    const span = (def.xr - def.xl) / perRow, r = srjRng(SR_JAR_DESIGN * 31 + i * 7 + 3);
+    return { x: def.xl + span * (col + 0.5) + (r() - 0.5) * span * 0.5, y: def.floor - 9 - row * (def.dy || 11) + (r() - 0.5) * 4, rot: (r() - 0.5) * 56, color: SR_JAR_PAPERS[i % SR_JAR_PAPERS.length] };
+}
+const srjDefs = p => `
+    <linearGradient id="${p}g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.26"/><stop offset="0.16" stop-color="#fff" stop-opacity="0.07"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.025"/><stop offset="0.82" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.24"/></linearGradient>
+    <linearGradient id="${p}hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="${p}gold" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fbe6a8"/><stop offset="0.35" stop-color="#d9a648"/><stop offset="0.6" stop-color="#f3d27d"/><stop offset="1" stop-color="#9c6d22"/></linearGradient>
+    <linearGradient id="${p}silver" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f4f6fb"/><stop offset="0.45" stop-color="#a9b0c0"/><stop offset="0.7" stop-color="#e3e7f0"/><stop offset="1" stop-color="#6f7686"/></linearGradient>
+    <radialGradient id="${p}warm" cx="0.5" cy="0.55" r="0.55"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${p}plank" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a26d48"/><stop offset="1" stop-color="#6e4329"/></linearGradient>`;
+const srjPlank = p => `<rect x="0" y="292" width="240" height="38" fill="url(#${p}plank)"/><rect x="0" y="292" width="240" height="2" fill="#c08a5f" opacity="0.6"/>`;
+const srjShadow = (cx, rx) => `<ellipse cx="${cx}" cy="293" rx="${rx}" ry="7" fill="#000" opacity="0.38"/>`;
+const srjGlass = (p, d, extra = '') => `<path d="${d}" fill="url(#${p}g)"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.6"/>${extra}`;
+const srjTwinkle = (x, y, r = 1.9) => `<g class="srj-twinkle"><circle cx="${x}" cy="${y}" r="${r * 2.7}" fill="#ffd27a" opacity="0.28"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ffe7a8"/></g>`;
+const SR_JARS = {
+    1: { floor: 284, xl: 56, xr: 184, draw(p, notes) {
+        const d = 'M68 84 L172 84 L172 96 C188 101 192 112 192 126 L192 262 C192 278 182 288 166 288 L74 288 C58 288 48 278 48 262 L48 126 C48 112 52 101 68 96 Z';
+        return `${srjShadow(120, 76)}
+            <clipPath id="${p}in"><path d="M70 98 L170 98 C184 104 188 114 188 128 L188 262 C188 275 179 284 166 284 L74 284 C61 284 52 275 52 262 L52 128 C52 114 56 104 70 98 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><rect x="40" y="90" width="160" height="200" fill="url(#${p}warm)" opacity="0.5"/><g class="srj-notes">${notes}</g>${[[78, 150], [160, 136], [104, 122], [140, 178], [92, 198], [170, 212], [124, 110]].map(([x, y]) => srjTwinkle(x, y)).join('')}</g>
+            ${srjGlass(p, d, `<path d="M58 132 C56 170 56 220 60 262" stroke="url(#${p}hl)" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.65"/><path d="M178 140 C181 180 181 230 178 258" stroke="#fff" stroke-opacity="0.18" stroke-width="3" stroke-linecap="round" fill="none"/><g stroke="#fff" stroke-opacity="0.22" stroke-width="1"><path d="M72 88 Q120 92 168 88"/><path d="M72 92 Q120 96 168 92"/></g>`)}
+            <rect x="62" y="60" width="116" height="26" rx="5" fill="url(#${p}gold)"/><g stroke="#8a5d1c" stroke-opacity="0.45">${Array.from({ length: 13 }, (_, i) => `<line x1="${68 + i * 8.5}" y1="63" x2="${68 + i * 8.5}" y2="83"/>`).join('')}</g>
+            <rect x="66" y="54" width="108" height="9" rx="4" fill="url(#${p}gold)"/><rect x="70" y="55" width="70" height="2.5" rx="1" fill="#fff" opacity="0.5"/>
+            <path d="M66 100 C90 108 150 108 174 100" fill="none" stroke="#c8a36e" stroke-width="3"/><path d="M66 104 C90 112 150 112 174 104" fill="none" stroke="#b18b55" stroke-width="2.4"/>
+            <path d="M150 106 c8 -10 20 -6 16 2 c-4 6 -12 2 -16 -2 c4 8 6 18 -2 22" fill="none" stroke="#c8a36e" stroke-width="2.4" stroke-linecap="round"/>
+            <g transform="rotate(14 172 140)"><path d="M160 128 L196 128 L204 140 L196 152 L160 152 Z" fill="#e9cf9e"/><circle cx="196" cy="140" r="2.6" fill="#7a5a32"/><text x="179" y="144" text-anchor="middle" font-family="Amatic SC, Assistant, sans-serif" font-weight="700" font-size="13" fill="#5a3d1e" data-fit="30">${srEsc(t('room_jar_dreams'))}</text></g>`;
+    } },
+    2: { floor: 286, xl: 46, xr: 194, perRow: 6, draw(p, notes) {
+        const d = 'M86 98 C86 90 92 86 100 86 L140 86 C148 86 154 90 154 98 L154 102 C192 112 204 136 204 164 L204 258 C204 276 192 288 172 288 L68 288 C48 288 36 276 36 258 L36 164 C36 136 48 112 86 102 Z';
+        return `${srjShadow(120, 86)}
+            <clipPath id="${p}in"><path d="M90 104 C190 112 200 140 200 166 L200 258 C200 274 190 284 172 284 L68 284 C50 284 40 274 40 258 L40 166 C40 140 50 112 90 104 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><rect x="30" y="100" width="180" height="190" fill="url(#${p}warm)" opacity="0.45"/><g class="srj-notes">${notes}</g></g>
+            ${srjGlass(p, d, `<path d="M50 160 C46 196 46 236 52 262" stroke="url(#${p}hl)" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.6"/><path d="M70 120 C80 112 96 108 110 107" stroke="#fff" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round" fill="none"/>`)}
+            <rect x="98" y="70" width="44" height="18" rx="4" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.45"/>
+            <circle cx="120" cy="50" r="23" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.55" stroke-width="1.6"/><circle cx="120" cy="50" r="23" fill="url(#${p}warm)" opacity="0.4"/><path d="M106 40 a16 16 0 0 1 12 -9" stroke="#fff" stroke-opacity="0.8" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="131" cy="58" r="2.4" fill="#fff" opacity="0.7"/>
+            <g transform="translate(120 152)"><path d="M-44 -18 Q0 -30 44 -18 Q52 0 44 18 Q0 30 -44 18 Q-52 0 -44 -18 Z" fill="#f7ecd6"/><path d="M-40 -14 Q0 -25 40 -14 Q47 0 40 14 Q0 25 -40 14 Q-47 0 -40 -14 Z" fill="none" stroke="url(#${p}gold)" stroke-width="2"/><text x="0" y="7" text-anchor="middle" font-family="Amatic SC, Assistant, sans-serif" font-weight="700" font-size="19" fill="#6b4a1f" data-fit="74">${srEsc(t('room_jar_dreams'))}</text></g>`;
+    } },
+    3: { floor: 266, xl: 64, xr: 176, dy: 9, draw(p, notes) {
+        const d = 'M46 268 L46 150 C46 88 82 52 120 52 C158 52 194 88 194 150 L194 268 Z';
+        return `${srjShadow(120, 98)}
+            <ellipse cx="120" cy="280" rx="96" ry="13" fill="#5b3a26"/><rect x="24" y="268" width="192" height="12" fill="#6e4730"/><ellipse cx="120" cy="268" rx="96" ry="13" fill="#8f603f"/><ellipse cx="120" cy="268" rx="88" ry="10" fill="none" stroke="#b07a52" stroke-opacity="0.6"/>
+            <clipPath id="${p}in"><path d="M50 268 L50 150 C50 92 84 56 120 56 C156 56 190 92 190 150 L190 268 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><ellipse cx="120" cy="250" rx="70" ry="40" fill="url(#${p}warm)" opacity="0.7"/><g class="srj-notes">${notes}</g>${[[78, 150], [160, 132], [104, 118], [140, 176], [92, 196], [170, 210], [124, 86]].map(([x, y]) => srjTwinkle(x, y)).join('')}</g>
+            ${srjGlass(p, d, `<path d="M62 150 C62 110 80 84 104 72" stroke="url(#${p}hl)" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.7"/><path d="M180 160 C182 200 182 236 180 262" stroke="#fff" stroke-opacity="0.2" stroke-width="3" stroke-linecap="round" fill="none"/>`)}
+            <ellipse cx="120" cy="268" rx="74" ry="7" fill="none" stroke="#fff" stroke-opacity="0.3"/><circle cx="120" cy="44" r="10" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.6" stroke-width="1.4"/><circle cx="116" cy="40" r="3" fill="#fff" opacity="0.7"/>`;
+    } },
+    4: { floor: 270, xl: 52, xr: 188, perRow: 6, draw(p, notes) {
+        const d = 'M102 70 L138 70 L138 98 C182 108 212 142 212 184 C212 236 172 276 120 276 C68 276 28 236 28 184 C28 142 58 108 102 98 Z';
+        const bulbs = [[52, 170], [76, 186], [102, 194], [128, 194], [154, 186], [180, 170], [64, 140], [92, 150], [120, 154], [148, 150], [176, 140]];
+        return `${srjShadow(120, 70)}
+            <rect x="96" y="276" width="48" height="16" rx="5" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.35"/>
+            <clipPath id="${p}in"><path d="M104 74 L136 74 L136 102 C178 112 208 144 208 184 C208 232 170 272 120 272 C70 272 32 232 32 184 C32 144 62 112 104 102 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><circle cx="120" cy="190" r="90" fill="url(#${p}warm)" opacity="0.55"/><g class="srj-notes">${notes}</g><path d="M40 160 Q120 216 200 160" fill="none" stroke="#6b5a3a" stroke-width="1.2"/><path d="M50 132 Q120 176 190 132" fill="none" stroke="#6b5a3a" stroke-width="1.2"/>${bulbs.map(([x, y]) => srjTwinkle(x, y, 2.3)).join('')}</g>
+            ${srjGlass(p, d, `<path d="M46 172 C46 146 62 124 86 112" stroke="url(#${p}hl)" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.7"/><ellipse cx="160" cy="232" rx="16" ry="6" transform="rotate(-38 160 232)" fill="#fff" opacity="0.12"/>`)}
+            <rect x="98" y="62" width="44" height="10" rx="4" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.5"/><path d="M104 36 L136 36 L134 64 L106 64 Z" fill="#b98a5a"/><g fill="#8a6038" opacity="0.7"><circle cx="112" cy="44" r="1.4"/><circle cx="126" cy="50" r="1.2"/><circle cx="118" cy="58" r="1.5"/><circle cx="130" cy="41" r="1"/></g><rect x="104" y="36" width="32" height="5" rx="2" fill="#d4a674"/>
+            <path d="M104 68 C96 74 92 86 98 94" fill="none" stroke="#e7d3a6" stroke-width="2"/><path d="M136 68 C146 72 150 84 142 92" fill="none" stroke="#e7d3a6" stroke-width="2"/>`;
+    } },
+    5: { floor: 284, xl: 52, xr: 188, draw(p, notes) {
+        const d = 'M62 100 L178 100 L196 122 L196 266 L178 288 L62 288 L44 266 L44 122 Z';
+        return `${srjShadow(120, 80)}
+            <clipPath id="${p}in"><path d="M64 104 L176 104 L192 124 L192 264 L176 284 L64 284 L48 264 L48 124 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><rect x="40" y="100" width="160" height="190" fill="url(#${p}warm)" opacity="0.45"/><g class="srj-notes">${notes}</g><rect x="44" y="100" width="40" height="190" fill="#fff" opacity="0.05"/><rect x="156" y="100" width="40" height="190" fill="#000" opacity="0.12"/></g>
+            ${srjGlass(p, d, `<g stroke="url(#${p}gold)" stroke-width="1.6" fill="none" opacity="0.9"><line x1="84" y1="100" x2="84" y2="288"/><line x1="156" y1="100" x2="156" y2="288"/></g><path d="${d}" fill="none" stroke="url(#${p}gold)" stroke-width="2"/><path d="M60 130 L60 256" stroke="url(#${p}hl)" stroke-width="6" stroke-linecap="round" opacity="0.6"/>`)}
+            <rect x="58" y="86" width="124" height="14" rx="2" fill="url(#${p}gold)"/><rect x="72" y="74" width="96" height="13" rx="2" fill="url(#${p}gold)"/><rect x="88" y="64" width="64" height="11" rx="2" fill="url(#${p}gold)"/><g fill="none" stroke="#8a5d1c" stroke-opacity="0.5"><path d="M58 93 H182"/><path d="M72 80 H168"/></g>
+            <path d="M120 40 L132 54 L120 66 L108 54 Z" fill="#b48cff"/><path d="M120 40 L132 54 L120 54 Z" fill="#d9c4ff"/><path d="M108 54 L120 66 L120 54 Z" fill="#7d5bd1"/>`;
+    } },
+    6: { floor: 284, xl: 56, xr: 184, draw(p, notes) {
+        const d = 'M68 84 L172 84 L172 96 C188 101 192 112 192 126 L192 262 C192 278 182 288 166 288 L74 288 C58 288 48 278 48 262 L48 126 C48 112 52 101 68 96 Z';
+        return `${srjShadow(120, 76)}
+            <linearGradient id="${p}aqua" x1="0" x2="1"><stop offset="0" stop-color="#8fe3dc" stop-opacity="0.42"/><stop offset="0.5" stop-color="#8fe3dc" stop-opacity="0.16"/><stop offset="1" stop-color="#8fe3dc" stop-opacity="0.4"/></linearGradient>
+            <clipPath id="${p}in"><path d="M70 98 L170 98 C184 104 188 114 188 128 L188 262 C188 275 179 284 166 284 L74 284 C61 284 52 275 52 262 L52 128 C52 114 56 104 70 98 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><g class="srj-notes">${notes}</g><rect x="40" y="90" width="160" height="200" fill="#5fc9c1" opacity="0.18"/></g>
+            <path d="${d}" fill="url(#${p}aqua)"/><path d="${d}" fill="none" stroke="#c9fffa" stroke-opacity="0.6" stroke-width="1.6"/><path d="M58 132 C56 170 56 220 60 262" stroke="#eafffd" stroke-opacity="0.55" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <text x="120" y="176" text-anchor="middle" font-family="Amatic SC, Assistant, sans-serif" font-weight="700" font-size="34" fill="#eafffd" fill-opacity="0.35" stroke="#7fd4cc" stroke-opacity="0.5" stroke-width="0.8" data-fit="120">${srEsc(t('room_jar_dreams'))}</text><path d="M84 190 Q120 200 156 190" fill="none" stroke="#eafffd" stroke-opacity="0.3" stroke-width="1.5"/>
+            <rect x="62" y="60" width="116" height="26" rx="4" fill="url(#${p}silver)"/><g stroke="#5d6372" stroke-opacity="0.5">${Array.from({ length: 6 }, (_, i) => `<line x1="62" y1="${64 + i * 4}" x2="178" y2="${64 + i * 4}"/>`).join('')}</g><rect x="66" y="54" width="108" height="9" rx="4" fill="url(#${p}silver)"/><circle cx="120" cy="58" r="3" fill="#5d6372" opacity="0.6"/>`;
+    } },
+    7: { floor: 284, xl: 56, xr: 184, draw(p, notes) {
+        const d = 'M74 82 L166 82 L166 94 C184 100 190 114 190 132 L190 262 C190 278 180 288 164 288 L76 288 C60 288 50 278 50 262 L50 132 C50 114 56 100 74 94 Z';
+        const stars = [[78, 140], [104, 124], [128, 150], [160, 132], [150, 176], [96, 182], [120, 210], [170, 228], [74, 236]];
+        return `${srjShadow(120, 76)}
+            <filter id="${p}frost" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.6"/></filter>
+            <radialGradient id="${p}moon" cx="0.5" cy="0.6" r="0.6"><stop offset="0" stop-color="#cfe0ff" stop-opacity="0.5"/><stop offset="1" stop-color="#cfe0ff" stop-opacity="0"/></radialGradient>
+            <clipPath id="${p}in"><path d="M76 96 L164 96 C180 102 186 116 186 134 L186 262 C186 275 177 284 164 284 L76 284 C63 284 54 275 54 262 L54 134 C54 116 60 102 76 96 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><rect x="40" y="90" width="160" height="200" fill="url(#${p}moon)"/><g class="srj-notes" filter="url(#${p}frost)">${notes}</g><rect x="40" y="90" width="160" height="200" fill="#e9eefb" opacity="0.2"/></g>
+            <path d="${d}" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="1.6"/>
+            <g stroke="#fff" stroke-opacity="0.55" stroke-width="0.9" fill="none"><polyline points="${stars.slice(0, 5).map(s => s.join(',')).join(' ')}"/><polyline points="${stars.slice(4).map(s => s.join(',')).join(' ')}"/></g>
+            ${stars.map(([x, y], i) => `<path d="M${x} ${y - 4.5} L${x + 1.3} ${y - 1.3} L${x + 4.5} ${y} L${x + 1.3} ${y + 1.3} L${x} ${y + 4.5} L${x - 1.3} ${y + 1.3} L${x - 4.5} ${y} L${x - 1.3} ${y - 1.3} Z" fill="#fff" opacity="${i % 2 ? 0.75 : 0.95}"/>`).join('')}
+            <path d="M60 136 C58 176 58 222 62 262" stroke="#fff" stroke-opacity="0.45" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <rect x="68" y="58" width="104" height="26" rx="5" fill="url(#${p}silver)"/><rect x="72" y="52" width="96" height="9" rx="4" fill="url(#${p}silver)"/><rect x="76" y="54" width="54" height="2.4" rx="1" fill="#fff" opacity="0.7"/>`;
+    } },
+    8: { floor: 284, xl: 56, xr: 184, perRow: 4, draw(p, notes) {
+        const d = 'M66 96 L174 96 L174 104 C190 110 194 122 194 136 L194 262 C194 278 184 288 168 288 L72 288 C56 288 46 278 46 262 L46 136 C46 122 50 110 66 104 Z';
+        return `${srjShadow(120, 78)}
+            <radialGradient id="${p}candle" cx="0.5" cy="0.62" r="0.5"><stop offset="0" stop-color="#ffcf70" stop-opacity="0.85"/><stop offset="0.45" stop-color="#ff9f43" stop-opacity="0.28"/><stop offset="1" stop-color="#ff9f43" stop-opacity="0"/></radialGradient>
+            <clipPath id="${p}in"><path d="M68 106 L172 106 C186 112 190 124 190 138 L190 262 C190 275 181 284 168 284 L72 284 C59 284 50 275 50 262 L50 138 C50 124 54 112 68 106 Z"/></clipPath>
+            <g clip-path="url(#${p}in)"><rect x="40" y="100" width="160" height="190" fill="url(#${p}candle)"/><g class="srj-notes">${notes}</g><rect x="108" y="228" width="24" height="18" rx="3" fill="#f3efe6"/><rect x="104" y="244" width="32" height="6" rx="2" fill="#c9c3b6"/><line x1="120" y1="228" x2="120" y2="222" stroke="#333" stroke-width="1.2"/><path class="srj-flame" d="M120 202 C126 210 127 218 120 224 C113 218 114 210 120 202 Z" fill="#ffd36b"/><path d="M120 210 C123 214 123 219 120 222 C117 219 117 214 120 210 Z" fill="#fff6d6"/></g>
+            ${srjGlass(p, d, `<path d="M56 140 C54 178 54 224 58 262" stroke="url(#${p}hl)" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.6"/>`)}
+            <path d="M64 96 C64 72 90 62 120 62 C150 62 176 72 176 96 Z" fill="url(#${p}g)" stroke="#fff" stroke-opacity="0.5" stroke-width="1.4"/><path d="M80 82 C88 72 102 68 116 67" stroke="#fff" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round" fill="none"/><rect x="62" y="94" width="116" height="6" rx="3" fill="#f08a2c"/>
+            <g fill="none" stroke="url(#${p}silver)" stroke-width="3" stroke-linecap="round"><path d="M70 98 C60 90 62 74 76 70"/><path d="M170 98 C180 90 178 74 164 70"/><path d="M76 70 C96 52 144 52 164 70"/></g><path d="M182 124 C200 128 204 150 192 160" fill="none" stroke="url(#${p}silver)" stroke-width="3" stroke-linecap="round"/>`;
+    } },
+    // 9: במקום צנצנת - לוח פשתן מעל המיטה; כל משאלה פתק מוצמד שרואים בו את תחילת הטקסט
+    9: { board: true, draw(p, notes) {
+        return `<rect x="18" y="58" width="204" height="196" rx="8" fill="#6e4730"/><rect x="26" y="66" width="188" height="180" rx="4" fill="#d9c8ab"/>
+            <g opacity="0.25" stroke="#a48d68">${Array.from({ length: 18 }, (_, i) => `<line x1="26" y1="${70 + i * 10}" x2="214" y2="${70 + i * 10}"/>`).join('')}</g>
+            <path d="M16 46 Q66 70 120 52 T224 48" fill="none" stroke="#3a2a1c" stroke-width="1.5"/>${[[30, 52], [58, 60], [86, 59], [114, 54], [142, 53], [170, 52], [198, 50]].map(([x, y]) => srjTwinkle(x, y + 4, 2.6)).join('')}
+            <g class="srj-notes">${notes}</g>
+            <rect x="0" y="266" width="240" height="64" fill="#3d2a52"/><rect x="0" y="262" width="240" height="10" rx="4" fill="#5b3a26"/><path d="M20 266 Q60 250 110 262 L110 300 L20 300 Z" fill="#f3e6f7" opacity="0.92"/><path d="M118 264 Q170 252 224 262 L224 300 L118 300 Z" fill="#ffd1e3" opacity="0.9"/>`;
+    } },
+};
+
+function srjBoardNotes(wishes) {
+    const spots = [[30, 76, -4], [116, 70, 3], [72, 128, 2], [154, 124, -5], [28, 182, 4], [118, 186, -2]];
+    return wishes.slice(-spots.length).map((w, i) => {
+        const [x, y, r] = spots[i];
+        return `<g class="srj-note" transform="translate(${x} ${y}) rotate(${r})"><rect x="2" y="3" width="70" height="44" rx="2" fill="#000" opacity="0.15"/><rect x="0" y="0" width="70" height="44" rx="2" fill="${srWishPaper(w)}"/><circle cx="35" cy="6" r="3.4" fill="#e0457b"/><circle cx="34" cy="5" r="1.1" fill="#fff" opacity="0.7"/><text x="35" y="28" text-anchor="middle" font-size="9" fill="#4a3618" data-fit="62">${srEsc(srClip(w.text, 16))}</text></g>`;
+    }).join('');
+}
+
+function srJarSvg(wishes) {
+    const def = SR_JARS[SR_JAR_DESIGN] || SR_JARS[1];
+    const p = 'srj' + SR_JAR_DESIGN;
+    const notes = def.board ? srjBoardNotes(wishes) : wishes.slice(0, 40).map((w, i) => { const s = srjSlot(def, i); return srjNote(s.x, s.y, s.rot, s.color); }).join('');
+    return `<svg class="sr-jar-svg" viewBox="0 0 240 330" role="button" tabindex="0" aria-label="${srEsc(t('room_jar_pull'))}"><defs>${srjDefs(p)}</defs>${def.board ? '' : srjPlank(p)}${def.draw(p, notes)}</svg>`;
+}
+
+// ---------- הצנצנת (מסך בתוך החדר) ----------
+async function roomOpenJar() {
+    const stage = srStage();
+    if (!stage) return;
+    stage.querySelector('.sr-jar')?.remove();
+    const box = document.createElement('div');
+    box.className = 'sr-jar';
+    stage.appendChild(box);
+    srRenderJar(box);
+    await roomFetchWishes();
+    if (box.isConnected) srRenderJar(box);
+}
+
+function srRenderJar(box) {
+    const wishes = roomWishes || [];
+    box.innerHTML = `
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('jar'))}</b><span>${wishes.length ? srEsc(srWishCountText(wishes.length)) : ''}</span></div>
+        <div class="sr-jar-niche">${srJarSvg(wishes)}</div>
+        ${wishes.length ? '' : `<p class="sr-jar-empty">${srEsc(t('room_jar_empty'))}</p>`}
+        <div class="sr-jar-actions">
+            <button type="button" class="sr-jar-add">${srEsc(t('room_jar_add'))}</button>
+            ${wishes.length ? `<button type="button" class="sr-jar-pull">${srEsc(t('room_jar_pull'))}</button>` : ''}
+        </div>
+        ${wishes.length ? `<div class="sr-jar-notes">${wishes.slice().reverse().map(w => `<button type="button" class="sr-jar-note" data-wish="${w.id}" style="--paper:${srWishPaper(w)}"><span>${srEsc(srClip(w.text, 40))}</span>${w.goal_id ? '<i aria-hidden="true">🎯</i>' : ''}</button>`).join('')}</div>` : ''}`;
+    if (typeof srFitTexts === 'function') srFitTexts(box);
+    box.querySelector('.sr-sub-back').addEventListener('click', () => { box.remove(); if (srIsOpen() && typeof srRenderWall === 'function') srRenderWall(); });
+    box.querySelector('.sr-jar-add').addEventListener('click', () => srNewWish(box));
+    const pull = () => srPullWish(box);
+    box.querySelector('.sr-jar-pull')?.addEventListener('click', pull);
+    const svg = box.querySelector('.sr-jar-svg');
+    svg.addEventListener('click', () => { if ((roomWishes || []).length) pull(); else srNewWish(box); });
+    svg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); svg.dispatchEvent(new MouseEvent('click')); } });
+    box.querySelectorAll('[data-wish]').forEach(b => b.addEventListener('click', () => srOpenWish(b.dataset.wish, box)));
+}
+
+// שליפה: פתק אקראי עולה מהצנצנת ונפתח (לא אותו פתק פעמיים ברצף כשיש יותר מאחד)
+let srLastPulledWish = null;
+function srPullWish(box) {
+    const list = roomWishes || [];
+    if (!list.length) return;
+    const pool = list.length > 1 ? list.filter(w => w.id !== srLastPulledWish) : list;
+    const w = pool[Math.floor(Math.random() * pool.length)];
+    srLastPulledWish = w.id;
+    const notes = box.querySelectorAll('.srj-notes .srj-note');
+    const note = notes[Math.min(notes.length - 1, list.indexOf(w))] || notes[notes.length - 1];
+    if (!note || srpReduce() || typeof note.animate !== 'function') { srOpenWish(w.id, box); return; }
+    const tr = note.getAttribute('transform') || '';
+    const m = tr.match(/translate\(([-\d.]+) ([-\d.]+)\)/);
+    const x = m ? Number(m[1]) : 120, y = m ? Number(m[2]) : 260;
+    // נפתח בסוף התנועה - ובכל מקרה אחרי רגע, גם אם הדפדפן לא מריץ אנימציות (רקע, חיסכון בסוללה)
+    let opened = false;
+    const open = () => { if (opened) return; opened = true; srOpenWish(w.id, box); };
+    const anim = note.animate([{ transform: `translate(${x}px, ${y}px)`, opacity: 1 }, { transform: `translate(${x}px, ${y - 170}px) scale(1.4)`, opacity: 0.15 }], { duration: 480, easing: 'ease-in' });
+    anim.onfinish = open;
+    setTimeout(open, 650);
+}
+
+// כתיבת משאלה חדשה - ואחר כך הפתק מתקפל ונופל לצנצנת
+function srNewWish(box) {
+    const ov = nmOpenSheet(`
+        <h4>${srEsc(t('room_wish_new_title'))}</h4>
+        <textarea class="sr-wish-input" rows="5" maxlength="600" placeholder="${srEsc(t('room_wish_new_ph'))}" aria-label="${srEsc(t('room_wish_new_title'))}"></textarea>
+        <button type="button" class="nm-btn-primary" data-save>${srEsc(t('room_wish_fold_btn'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('cancel_btn'))}</button>`, 'sr-wish-new-sheet');
+    const input = ov.querySelector('.sr-wish-input');
+    setTimeout(() => input.focus({ preventScroll: true }), 120);
+    let saving = false;
+    ov.querySelector('[data-save]').addEventListener('click', async () => {
+        const text = input.value.trim();
+        if (!text || saving) { if (!text) input.focus(); return; }
+        saving = true;
+        if (!supabaseClient || !currentUserId) { saving = false; return; }
+        const { data, error } = await supabaseClient.from('room_wishes').insert({ user_id: currentUserId, text }).select().single();
+        if (error || !data) { saving = false; showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
+        ov.remove();
+        roomWishes = [...(roomWishes || []), data];
+        if (!box || !box.isConnected) return;
+        srRenderJar(box);
+        // הפתק החדש נופל לצנצנת
+        const notes = box.querySelectorAll('.srj-notes .srj-note');
+        const note = notes[notes.length - 1];
+        if (!note || srpReduce() || typeof note.animate !== 'function' || (SR_JARS[SR_JAR_DESIGN] || {}).board) return;
+        const s = srjSlot(SR_JARS[SR_JAR_DESIGN] || SR_JARS[1], roomWishes.length - 1);
+        note.animate([{ transform: `translate(${s.x}px, ${s.y - 210}px) rotate(${s.rot - 90}deg)` }, { transform: `translate(${s.x}px, ${s.y + 4}px) rotate(${s.rot}deg)`, offset: 0.82 }, { transform: `translate(${s.x}px, ${s.y}px) rotate(${s.rot}deg)` }], { duration: 820, easing: 'cubic-bezier(.35,.0,.6,1)' });
+    });
+}
+
+// פתיחת משאלה: הפתק נפתח. כל פתיחה נספרת; מהפתיחה השנייה (לא בראשונה) - "להפוך ליעד, בצעדים קטנים"
+function srOpenWish(id, box) {
+    const w = (roomWishes || []).find(x => x.id === id);
+    if (!w) return;
+    w.open_count = (Number(w.open_count) || 0) + 1;
+    w.last_opened_at = new Date().toISOString();
+    if (supabaseClient && currentUserId) supabaseClient.from('room_wishes').update({ open_count: w.open_count, last_opened_at: w.last_opened_at }).eq('id', w.id).eq('user_id', currentUserId).then(() => {}, () => {});
+    const canGoal = !w.goal_id && w.open_count >= SR_WISH_GOAL_AT;
+    const ov = nmOpenSheet(`
+        <div class="sr-wish-paper" style="--paper:${srWishPaper(w)}"><small>${srEsc(srWishDate(w.created_at))}</small><p class="sr-wish-paper-text">${srEsc(w.text)}</p></div>
+        ${w.goal_id ? `<button type="button" class="nm-btn-primary sr-wish-goal" data-goal-open>${srEsc(t('room_wish_in_goals'))}</button>` : ''}
+        ${canGoal ? `<button type="button" class="nm-btn-primary sr-wish-goal" data-goal>${srEsc(t('room_wish_to_goal'))}</button>` : ''}
+        <div class="sr-wish-tools"><button type="button" class="nm-btn-ghost" data-edit>${srEsc(t('edit_btn'))}</button><button type="button" class="nm-btn-ghost sr-wish-del" data-del>${srEsc(t('room_wish_delete'))}</button></div>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('room_wish_back_in'))}</button>`, 'sr-wish-open-sheet');
+    ov.querySelector('[data-goal]')?.addEventListener('click', () => {
+        ov.remove();
+        srWishGoalLink = { wishId: w.id, at: Date.now() };
+        if (srIsOpen()) closeSecretRoom();
+        openVisionGoalModal(null, { title: String(w.text).slice(0, 120), category: null, track: 'steps', milestoneTitles: [] }, { fromWish: true });
+    });
+    ov.querySelector('[data-goal-open]')?.addEventListener('click', () => {
+        ov.remove();
+        if (srIsOpen()) closeSecretRoom();
+        if (typeof openGoalsVisionDrawer === 'function') openGoalsVisionDrawer(w.goal_id);
+    });
+    ov.querySelector('[data-edit]').addEventListener('click', () => {
+        const sheet = ov.querySelector('.nm-sheet');
+        sheet.innerHTML = `<span class="nm-sheet-grip" aria-hidden="true"></span>
+            <h4>${srEsc(t('edit_btn'))}</h4>
+            <textarea class="sr-wish-input" rows="5" maxlength="600" aria-label="${srEsc(t('room_wish_new_title'))}">${srEsc(w.text)}</textarea>
+            <button type="button" class="nm-btn-primary" data-save>${srEsc(t('save_generic'))}</button>
+            <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('cancel_btn'))}</button>`;
+        const input = sheet.querySelector('.sr-wish-input');
+        setTimeout(() => input.focus({ preventScroll: true }), 80);
+        sheet.querySelector('[data-save]').addEventListener('click', async () => {
+            const text = input.value.trim();
+            if (!text) { input.focus(); return; }
+            const { error } = await supabaseClient.from('room_wishes').update({ text }).eq('id', w.id).eq('user_id', currentUserId);
+            if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+            w.text = text;
+            ov.remove();
+            if (box && box.isConnected) srRenderJar(box);
+        });
+    });
+    ov.querySelector('[data-del]').addEventListener('click', () => {
+        ov.remove();
+        showDangerConfirm(t('room_wish_delete_title'), t('room_wish_delete_confirm'), async () => {
+            await supabaseClient.from('room_wishes').delete().eq('id', w.id).eq('user_id', currentUserId);
+            roomWishes = (roomWishes || []).filter(x => x.id !== w.id);
+            if (box && box.isConnected) srRenderJar(box);
+        });
+    });
+}
+
+// היעד שנפתח מ"להפוך ליעד" נשמר - מקשרים אותו למשאלה ומראים אותו ב"היעדים שלי" (נקרא מ-saveVisionGoal)
+async function roomLinkWishToGoal(goal) {
+    const link = srWishGoalLink;
+    srWishGoalLink = null;
+    if (!link || !goal || !goal.id || Date.now() - link.at > 3600000) return;
+    if (supabaseClient && currentUserId) await supabaseClient.from('room_wishes').update({ goal_id: goal.id }).eq('id', link.wishId).eq('user_id', currentUserId);
+    const w = (roomWishes || []).find(x => x.id === link.wishId);
+    if (w) w.goal_id = goal.id;
+    if (typeof openGoalsVisionDrawer === 'function' && !document.getElementById('vision-drawer-overlay')?.classList.contains('open')) openGoalsVisionDrawer(goal.id);
+}
+
+// ---------- פעם בשבוע: משאלה אקראית מהצנצנת, בעדינות (פעם אחת, במכשיר אחד) ----------
+function roomWishPopupSoon() {
+    if (roomWishPopupScheduled) return;
+    roomWishPopupScheduled = true;
+    let tries = 0;
+    const attempt = async () => {
+        tries++;
+        // רק במסך הבית, כשאין שום חלון פתוח (גם לא הסיור באפליקציה)
+        const busy = document.visibilityState === 'hidden' || (typeof appTourActive !== 'undefined' && appTourActive) || document.querySelector('.apple-modal.open, .nm-sheet-overlay, #sr-overlay, .tab-content.active-tab, .app-tour-layer');
+        if (busy) { if (tries < 12) setTimeout(attempt, 20000); return; }
+        await roomWishPopupCheck();
+    };
+    setTimeout(attempt, 5000);
+}
+
+async function roomWishPopupCheck(force) {
+    if (!supabaseClient || !currentUserId) return false;
+    if (typeof hasNewMe !== 'undefined' && !hasNewMe && !roomIsDev()) return false;
+    if (!roomLoaded) await roomLoad();
+    const last = roomState && roomState.wish_popup_at ? new Date(roomState.wish_popup_at).getTime() : 0;
+    if (!force && Date.now() - last < SR_WISH_POPUP_DAYS * 864e5) return false;
+    const wishes = await roomFetchWishes();
+    const ripe = force ? wishes : wishes.filter(w => Date.now() - new Date(w.created_at).getTime() > 864e5);
+    if (!ripe.length) return false;
+    const lastId = roomState ? roomState.wish_popup_last_id : null;
+    const pool = ripe.length > 1 ? ripe.filter(w => w.id !== lastId) : ripe;
+    const w = pool[Math.floor(Math.random() * pool.length)];
+    await roomSave({ wish_popup_at: new Date().toISOString(), wish_popup_last_id: w.id });
+    const ov = nmOpenSheet(`
+        <div class="sr-wish-pop">
+            <span class="sr-wish-pop-glow" aria-hidden="true"></span>
+            <small>${srEsc(t('room_wish_pop_title'))}</small>
+            <div class="sr-wish-paper" style="--paper:${srWishPaper(w)}"><p class="sr-wish-paper-text">${srEsc(w.text)}</p></div>
+        </div>
+        <button type="button" class="nm-btn-primary" data-jar>${srEsc(t('room_wish_pop_jar'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'sr-wish-pop-sheet');
+    ov.querySelector('[data-jar]').addEventListener('click', () => {
+        ov.remove();
+        openSecretRoom({ wall: 3 });
+        setTimeout(() => { if (srIsOpen()) roomOpenJar(); }, 450);
+    });
+    return true;
+}
+
+// ---------- ציטוטים מספרים שאהבתי (מהארון, וגם בקטן מפינת הקריאה) ----------
+async function roomFetchQuotes() {
+    if (!supabaseClient || !currentUserId) return roomQuotes || [];
+    const { data } = await supabaseClient.from('room_quotes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
+    roomQuotes = data || [];
+    return roomQuotes;
+}
+
+async function roomOpenQuotes() {
+    // בסגירה - הצ'יפ בפינת הקריאה מתעדכן במספר הציטוטים
+    const ov = nmOpenSheet('<div class="sr-quotes-wrap"></div>', 'sr-quotes-sheet', () => {
+        if (typeof booksQuotesCount !== 'undefined' && Array.isArray(roomQuotes)) booksQuotesCount = roomQuotes.length;
+        if (typeof renderBooksStats === 'function' && typeof isBooksSectionOpen === 'function' && isBooksSectionOpen()) renderBooksStats();
+    });
+    const wrap = ov.querySelector('.sr-quotes-wrap');
+    srRenderQuotes(wrap, ov);
+    await roomFetchQuotes();
+    if (wrap.isConnected) srRenderQuotes(wrap, ov);
+}
+
+function srRenderQuotes(wrap, ov) {
+    const list = roomQuotes || [];
+    wrap.innerHTML = `
+        <h4>${srEsc(t('room_quotes_title'))}</h4>
+        <div class="sr-quotes">${list.length ? list.map(q => `
+            <figure class="sr-quote">
+                <blockquote>${srEsc(q.quote)}</blockquote>
+                ${q.book_title || q.author ? `<figcaption>${srEsc([q.book_title, q.author].filter(Boolean).join(' · '))}</figcaption>` : ''}
+                <div class="sr-quote-tools"><button type="button" data-qedit="${q.id}" aria-label="${srEsc(t('edit_btn'))}" title="${srEsc(t('edit_btn'))}">✏️</button><button type="button" data-qdel="${q.id}" aria-label="${srEsc(t('room_quote_delete'))}" title="${srEsc(t('room_quote_delete'))}">🗑️</button></div>
+            </figure>`).join('') : `<p class="sr-quotes-empty">${srEsc(t('room_quotes_empty'))}</p>`}</div>
+        <button type="button" class="nm-btn-primary" data-qadd>${srEsc(t('room_quotes_add'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`;
+    wrap.querySelector('[data-qadd]').addEventListener('click', () => srQuoteForm(wrap, ov, null));
+    wrap.querySelectorAll('[data-qedit]').forEach(b => b.addEventListener('click', () => srQuoteForm(wrap, ov, list.find(q => q.id === b.dataset.qedit))));
+    wrap.querySelectorAll('[data-qdel]').forEach(b => b.addEventListener('click', () => {
+        const q = list.find(x => x.id === b.dataset.qdel);
+        if (!q) return;
+        ov.remove();
+        showDangerConfirm(t('room_quote_delete_title'), t('room_quote_delete_confirm'), async () => {
+            await supabaseClient.from('room_quotes').delete().eq('id', q.id).eq('user_id', currentUserId);
+            roomQuotes = (roomQuotes || []).filter(x => x.id !== q.id);
+            roomOpenQuotes();
+        });
+    }));
+}
+
+// הוספה/עריכה: הציטוט, מאיזה ספר (הספרים מפינת הקריאה כצ'יפים + "אחר" להקלדה), ומי כתב (לא חובה)
+function srQuoteForm(wrap, ov, q) {
+    const books = typeof booksCache !== 'undefined' && Array.isArray(booksCache) ? booksCache.slice(-10).reverse() : [];
+    let selBook = q && q.book_id && books.some(b => b.id === q.book_id) ? q.book_id : (q && q.book_title ? 'other' : null);
+    wrap.innerHTML = `
+        <h4>${srEsc(t(q ? 'room_quote_edit_title' : 'room_quotes_add'))}</h4>
+        <textarea class="sr-quote-input" rows="4" maxlength="1500" placeholder="${srEsc(t('room_quote_ph'))}" aria-label="${srEsc(t('room_quote_ph'))}">${q ? srEsc(q.quote) : ''}</textarea>
+        <p class="sr-quote-label">${srEsc(t('room_quote_book'))}</p>
+        <div class="sr-quote-books">${books.map(b => `<button type="button" class="sr-qbook" data-book="${b.id}" aria-pressed="false">${srEsc(srClip(b.title, 30))}</button>`).join('')}<button type="button" class="sr-qbook" data-book="other" aria-pressed="false">${srEsc(t('select_other_manual'))}</button></div>
+        <input type="text" class="sr-quote-title hidden" maxlength="200" placeholder="${srEsc(t('room_quote_book_ph'))}" aria-label="${srEsc(t('room_quote_book_ph'))}" value="${q && selBook === 'other' ? srEsc(q.book_title || '') : ''}">
+        <input type="text" class="sr-quote-author" maxlength="120" placeholder="${srEsc(t('room_quote_author_ph'))}" aria-label="${srEsc(t('room_quote_author_ph'))}" value="${q ? srEsc(q.author || '') : ''}">
+        <button type="button" class="nm-btn-primary" data-qsave>${srEsc(t('save_generic'))}</button>
+        <button type="button" class="nm-btn-ghost" data-qback>${srEsc(t('cancel_btn'))}</button>`;
+    const titleIn = wrap.querySelector('.sr-quote-title');
+    const authorIn = wrap.querySelector('.sr-quote-author');
+    const syncBooks = () => {
+        wrap.querySelectorAll('.sr-qbook').forEach(b => { const on = b.dataset.book === selBook; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+        titleIn.classList.toggle('hidden', selBook !== 'other');
+    };
+    syncBooks();
+    wrap.querySelectorAll('.sr-qbook').forEach(b => b.addEventListener('click', () => {
+        selBook = selBook === b.dataset.book ? null : b.dataset.book;
+        const book = books.find(x => x.id === selBook);
+        if (book && book.author && !authorIn.value.trim()) authorIn.value = book.author;
+        syncBooks();
+        if (selBook === 'other') titleIn.focus();
+    }));
+    const input = wrap.querySelector('.sr-quote-input');
+    setTimeout(() => input.focus({ preventScroll: true }), 80);
+    wrap.querySelector('[data-qback]').addEventListener('click', () => srRenderQuotes(wrap, ov));
+    let saving = false;
+    wrap.querySelector('[data-qsave]').addEventListener('click', async () => {
+        const quote = input.value.trim();
+        if (!quote) { input.focus(); return; }
+        if (saving || !supabaseClient || !currentUserId) return;
+        saving = true;
+        const book = books.find(x => x.id === selBook);
+        const fields = { quote, book_id: book ? book.id : null, book_title: book ? book.title : (selBook === 'other' ? (titleIn.value.trim() || null) : null), author: authorIn.value.trim() || null };
+        const res = q
+            ? await supabaseClient.from('room_quotes').update(fields).eq('id', q.id).eq('user_id', currentUserId)
+            : await supabaseClient.from('room_quotes').insert({ user_id: currentUserId, ...fields });
+        saving = false;
+        if (res.error) { showAppToast(t('error_adding_item') + res.error.message, 'error'); return; }
+        await roomFetchQuotes();
+        if (wrap.isConnected) srRenderQuotes(wrap, ov);
+    });
+}

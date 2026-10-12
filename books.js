@@ -20,6 +20,7 @@ let booksActiveTab = 'reading';
 let editingBookId = null;
 let bookModalStatus = 'to_read';
 let bookFinishState = null;
+let booksQuotesCount = 0;  // ציטוטים מספרים שאהבתי (room_quotes) - צ'יפ קטן בפינת הקריאה, לפי בקשה מפורשת
 
 function bookEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
 function bookStatusMeta(key) { return BOOK_STATUSES.find(s => s.key === key) || BOOK_STATUSES[1]; }
@@ -29,14 +30,16 @@ async function loadBooks() {
     if (!supabaseClient || !currentUserId) return;
     const since = new Date();
     since.setDate(since.getDate() - 60);
-    const [booksRes, logRes, prefRes] = await Promise.all([
+    const [booksRes, logRes, prefRes, quotesRes] = await Promise.all([
         supabaseClient.from('books').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabaseClient.from('book_reading_log').select('book_id, log_date, pages, source, created_at').eq('user_id', currentUserId).gte('log_date', getLocalDateString(since)).order('created_at', { ascending: true }),
         supabaseClient.from('user_premium').select('books_goal_id').eq('user_id', currentUserId).maybeSingle(),
+        supabaseClient.from('room_quotes').select('id').eq('user_id', currentUserId),
     ]);
     booksCache = booksRes.data || [];
     bookLogCache = logRes.data || [];
     booksGoalId = prefRes && prefRes.data ? prefRes.data.books_goal_id : null;
+    booksQuotesCount = quotesRes && Array.isArray(quotesRes.data) ? quotesRes.data.length : 0;
     if (isBooksSectionOpen()) renderBooks();
     // משימת הקריאה היומית מופיעה בהצצה להיום, ויום הסיום (📖) בלוח החודשי
     if (document.getElementById('today-tasks-list')) loadTodayTasks();
@@ -151,7 +154,9 @@ function renderBooksStats() {
     if (reading) chips.push(`📖 ${t('books_stat_reading').replace('{n}', bookFmt(reading))}`);
     chips.push(`✅ ${t('books_stat_year').replace('{n}', bookFmt(year))}`);
     if (streak) chips.push(`🔥 ${t('books_stat_streak').replace('{n}', bookFmt(streak))}`);
-    el.innerHTML = chips.map(c => `<span class="books-stat-chip">${bookEsc(c)}</span>`).join('');
+    el.innerHTML = chips.map(c => `<span class="books-stat-chip">${bookEsc(c)}</span>`).join('')
+        // 💬 ציטוטים מספרים שאהבתי - "בקטן בפינת הקריאה" (אותם ציטוטים כמו בארון בחדר הסודי)
+        + (typeof roomOpenQuotes === 'function' ? `<button type="button" class="books-stat-chip books-quotes-chip" onclick="roomOpenQuotes()">💬 ${bookEsc(t('books_quotes_chip'))}${booksQuotesCount ? ` · ${bookFmt(booksQuotesCount)}` : ''}</button>` : '');
 }
 
 function renderBooksGoalChip() {
