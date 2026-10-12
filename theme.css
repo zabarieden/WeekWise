@@ -9540,3 +9540,139 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .routine-clash-move-label { flex: 1 1 100%; font-size: 0.82rem; color: var(--text-secondary); text-align: start; }
 .routine-clash-move .nm-time-btn { flex: none; }
 .routine-clash-move .btn-primary { flex: 1; margin: 0; }
+
+/* ===== פתקים: רשימה של פתקים דביקים קטנים (עיצוב 1 של הקנבס בגרסת רשימה - בחירה מ-2026-10-12:
+   "בגדול להשאיר רשימה", פתקים קטנים שרואים בהם את מה שכתוב). נייר צהוב/ורוד/מנטה לסירוגין, הטיה
+   קלה ופינה אחת מעוגלת כמו נייר. צבע רקע שנבחר = צבע הנייר (גוון פסטל שלו); צבע טקסט שנבחר מוכהה
+   קצת כדי שיהיה קריא על נייר בהיר. הסלקטורים עם #id כדי לגבור על כללי ה-li הכלליים של ערכות הנושא.
+   אותו עיצוב בתצוגה המקדימה של הפתק הפתוח (#center-item-preview-row) - "דוגמא לאיך זה יראה" ===== */
+#weekly-list { gap: 9px; padding: 2px 3px; }
+:is(#weekly-list > li, #center-item-preview-row).note-paper {
+    --paper: #fef3a8;
+    --paper-ink: #3b3216;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 3px 3px 14px 3px;
+    background: var(--paper);
+    color: var(--paper-ink);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 7px 12px -9px rgba(60, 40, 0, 0.55), 0 1px 1px rgba(60, 40, 0, 0.08);
+    transform: rotate(-0.4deg);
+}
+#weekly-list > li.note-paper:nth-child(2n) { --paper: #ffd9e8; transform: rotate(0.35deg); }
+#weekly-list > li.note-paper:nth-child(3n) { --paper: #d9f5e4; }
+:is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 34%, #fffdf3); }
+:is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text { margin: 0; color: var(--paper-ink); font-size: 0.88rem; line-height: 1.45; }
+:is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc { color: color-mix(in srgb, var(--tc) 68%, #241c0c); }
+:is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tg { text-shadow: 0 0 3px var(--tg), 0 0 9px color-mix(in srgb, var(--tg) 55%, transparent); }
+#weekly-list > li.note-paper .center-list-item-text.completed { color: color-mix(in srgb, var(--paper-ink) 50%, transparent); text-decoration: line-through; }
+#weekly-list > li.note-paper .btn-complete-item {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(59, 50, 22, 0.38);
+    background: rgba(255, 255, 255, 0.45);
+    color: #fff;
+    font-size: 0.7rem;
+    box-shadow: none;
+}
+#weekly-list > li.note-paper .btn-complete-item.checked { background: var(--accent-purple); border-color: var(--accent-purple); }
+#weekly-list > li.note-paper .btn-delete-item { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: -4px -4px -4px 0; padding: 0; color: rgba(59, 50, 22, 0.42); }
+#weekly-list > li.note-paper .btn-delete-item svg { width: 15px; height: 15px; }
+#weekly-list > li.note-paper .btn-delete-item:hover { color: #b42318; transform: none; }
+#weekly-list > li.note-paper .note-drag-handle { color: rgba(59, 50, 22, 0.4); padding: 4px 1px; }
+#weekly-list > li.note-paper .btn-complete-item:focus-visible,
+#weekly-list > li.note-paper .btn-delete-item:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+/* "להגיע לזה": קו מקווקו דק עם מספר הפתקים שבו, מקופל כברירת מחדל; הפתקים שבו קצת דהויים */
+#weekly-list > .center-list-divider { margin-top: 6px; padding: 10px 4px 4px; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 38%, transparent); border-radius: 0; opacity: 1; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+#weekly-list > .center-list-divider:not(.expanded) ~ li { display: none; }
+#weekly-list > .center-list-divider .center-list-divider-label { padding: 0; border: 0; background: none; font-size: 0.78rem; }
+#weekly-list .center-list-divider-count { min-width: 18px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--text-secondary) 16%, transparent); color: var(--text-secondary); font-size: 0.66rem; font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums; }
+#weekly-list > .center-list-divider .center-list-divider-chevron { margin-inline-start: auto; }
+#weekly-list > .center-list-divider ~ li.note-paper { opacity: 1; filter: saturate(0.45); }
+/* אזורי הגרירה ("לעשות היום/מחר/תאריך אחר") - כרטיסים לבנים-רכים עם אייקון קו, כמו בעיצוב 1 */
+#my-center-section .note-triage-zones { gap: 8px; margin-bottom: 14px; }
+#my-center-section .note-triage-zone { gap: 4px; padding: 9px 6px 8px; border: 1px solid transparent; border-radius: 14px; background-color: var(--bg-row); box-shadow: 0 5px 12px -8px rgba(0, 0, 0, 0.38); color: var(--text-secondary); font-size: 0.7rem; }
+#my-center-section .note-triage-icon { width: auto; height: auto; border-radius: 0; background: none; box-shadow: none; color: var(--text-primary); }
+#my-center-section .note-triage-icon svg { display: block; width: 18px; height: 18px; }
+#my-center-section .note-triage-zone:has(.sortable-ghost) { border-color: var(--accent-pink); background-color: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); color: var(--accent-pink-text); transform: scale(1.04); }
+/* העותק הצף בזמן גרירה (מצורף ל-body, מחוץ לרשימה) - גם הוא פתק נייר */
+.sortable-fallback.note-triage-drag-clone.note-paper { background: #fef3a8; border: none; border-radius: 3px 3px 14px 3px; color: #3b3216; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 16px 26px -12px rgba(60, 40, 0, 0.6); }
+.sortable-fallback.note-triage-drag-clone.note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 34%, #fffdf3); }
+.sortable-fallback.note-triage-drag-clone.note-paper .center-list-item-text { margin: 0; color: #3b3216; }
+.sortable-fallback.note-triage-drag-clone.note-paper .btn-complete-item { width: 22px; height: 22px; min-width: 22px; margin: 0; border-radius: 50%; border: 1.5px solid rgba(59, 50, 22, 0.38); background: rgba(255, 255, 255, 0.45); box-shadow: none; }
+.sortable-fallback.note-triage-drag-clone.note-paper .btn-delete-item { color: rgba(59, 50, 22, 0.42); }
+.sortable-fallback.note-triage-drag-clone.note-paper .btn-delete-item svg { width: 15px; height: 15px; }
+@media (prefers-reduced-motion: reduce) {
+    :is(#weekly-list > li, #center-item-preview-row).note-paper,
+    #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
+}
+
+/* ===== ⭐ ארוחות קבועות - דף שלם משלו (בחירה מ-2026-10-12: שילוב של 2 + 8 מהקנבס): חיפוש גדול למעלה,
+   "לאחרונה" בפס נגלל, לשוניות לפי זמן ביום עם קו תחתון, וכרטיס לכל ארוחה עם "+ להיום". הכול על משתני
+   ערכת הנושא, כך שעובד בכל ערכה, בהיר וכהה. ר' renderSavedMealsPage ב-app.js ===== */
+.saved-meals-page { display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box; }
+.saved-meals-top { display: flex; align-items: center; gap: 8px; }
+.saved-meals-title { flex: 1; min-width: 0; margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-primary); text-align: start; }
+.saved-meals-add-btn { flex-shrink: 0; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-pink) 35%, transparent); cursor: pointer; }
+.saved-meals-add-btn:active { transform: scale(0.94); }
+/* חיפוש גדול (עיצוב 8): כרטיס מורם, לא שדה אפור */
+.saved-meals-search { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-radius: 18px; background: var(--bg-row); color: var(--text-secondary); box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.5); cursor: text; }
+.saved-meals-search input { flex: 1; min-width: 0; height: 52px; padding: 0; border: none; background: transparent; color: var(--text-primary); font: inherit; font-size: 1rem; outline: none; box-shadow: none; }
+.saved-meals-search input::placeholder { color: var(--text-secondary); opacity: 0.9; }
+.saved-meals-search input::-webkit-search-cancel-button { filter: grayscale(1); opacity: 0.6; }
+.saved-meals-search:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-pink) 40%, transparent), 0 8px 22px -14px rgba(0, 0, 0, 0.5); }
+/* לאחרונה (עיצוב 8): פס נגלל של כרטיסונים - לחיצה מוסיפה להיום */
+.saved-meals-recent-wrap { display: flex; flex-direction: column; gap: 6px; }
+.saved-meals-label { margin: 2px 4px 0; font-size: 0.76rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.01em; text-align: start; }
+.saved-meals-recent { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px 2px 6px; }
+.saved-meals-recent::-webkit-scrollbar { display: none; }
+.saved-meals-rc { flex: none; display: flex; align-items: center; gap: 10px; max-width: 200px; padding: 9px 10px 9px 13px; border: none; border-radius: 14px; background: var(--bg-row); color: var(--text-primary); text-align: start; box-shadow: 0 4px 12px -9px rgba(0, 0, 0, 0.45); cursor: pointer; }
+.saved-meals-rc-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.saved-meals-rc-text b { overflow: hidden; font-size: 0.82rem; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
+.saved-meals-rc-text small { font-size: 0.68rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.saved-meals-rc-plus { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, var(--accent-purple) 22%, transparent); color: var(--text-primary); font-size: 1rem; font-weight: 800; line-height: 1; }
+.saved-meals-rc.is-done .saved-meals-rc-plus { background: var(--accent-purple); color: #fff; }
+.saved-meals-rc:active { transform: scale(0.96); }
+/* לשוניות לפי זמן ביום (עיצוב 2): קו תחתון, נגללות לרוחב */
+.saved-meals-tabs { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; margin: 2px 0 0; padding: 0 4px; border-bottom: 1px solid color-mix(in srgb, var(--text-secondary) 24%, transparent); }
+.saved-meals-tabs::-webkit-scrollbar { display: none; }
+.saved-meals-tab { flex: none; margin-bottom: -1px; padding: 9px 0 10px; border: none; border-bottom: 2.5px solid transparent; background: none; color: var(--text-secondary); font: inherit; font-size: 0.86rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.saved-meals-tab.is-on { color: var(--text-primary); border-bottom-color: var(--accent-pink); font-weight: 800; }
+/* כרטיס ארוחה (עיצוב 2): שם, מצרכים בשורה אחת, קלוריות·חלבון, ו"+ להיום" בצד */
+.saved-meals-list { display: flex; flex-direction: column; gap: 9px; padding-bottom: 12px; }
+.saved-meal { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 14px; border-radius: 18px; background: var(--bg-row); box-shadow: 0 4px 14px -10px rgba(0, 0, 0, 0.45); }
+.saved-meal-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0; border: none; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.saved-meal-cat { font-size: 0.66rem; font-weight: 800; color: var(--accent-pink-text); letter-spacing: 0.01em; }
+.saved-meal-name { font-size: 0.94rem; font-weight: 800; line-height: 1.3; color: var(--text-primary); overflow-wrap: anywhere; }
+.saved-meal-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; max-width: 100%; overflow: hidden; font-size: 0.74rem; line-height: 1.35; color: var(--text-secondary); }
+.saved-meal-nums { margin-top: 1px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.saved-meal-today { flex: none; min-width: 74px; padding: 7px 12px; border: 1px solid color-mix(in srgb, var(--accent-purple) 38%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--accent-purple) 18%, transparent); color: var(--text-primary); font: inherit; font-size: 0.78rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.saved-meal-today.is-done { border-color: var(--accent-purple); background: var(--accent-purple); color: #fff; }
+.saved-meal-today:active { transform: scale(0.94); }
+.saved-meals-add-btn:focus-visible, .saved-meals-rc:focus-visible, .saved-meals-tab:focus-visible, .saved-meal-main:focus-visible, .saved-meal-today:focus-visible, .saved-meals-empty-btn:focus-visible { outline: 2px solid var(--accent-pink-text); outline-offset: 2px; }
+.saved-meals-none { margin: 22px 8px; color: var(--text-secondary); font-size: 0.86rem; text-align: center; }
+.saved-meals-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8px; padding: 30px 18px; border-radius: 20px; background: var(--bg-row); text-align: center; }
+.saved-meals-empty-icon { font-size: 2rem; }
+.saved-meals-empty p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.saved-meals-empty-btn { padding: 10px 18px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+/* גיליון של ארוחה אחת: להיום / עריכה / מחיקה */
+.saved-meal-actions-nums { margin: -4px 0 0; color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.saved-meal-actions-desc { margin: 6px 0 0; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+.saved-meal-actions { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 6px; }
+.saved-meal-action { padding: 12px; border: none; border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.saved-meal-action.is-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
+.saved-meal-action.is-danger { color: var(--accent-red-text, #e11d48); }
+.saved-meal-action:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+    .saved-meals-add-btn:active, .saved-meals-rc:active, .saved-meal-today:active, .saved-meal-action:active { transform: none; }
+}

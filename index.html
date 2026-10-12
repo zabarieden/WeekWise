@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=546">
+    <link rel="stylesheet" href="theme.css?v=547">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -360,6 +360,10 @@
                             <span class="sub-tile-icon">🧑‍🍳</span>
                             <span class="sub-tile-title" data-i18n="nav_recipes">My Recipes</span>
                         </div>
+                        <div class="sub-tile" onclick="openSavedMealsPage()">
+                            <span class="sub-tile-icon">⭐</span>
+                            <span class="sub-tile-title" data-i18n="menu_saved_meals">Saved meals</span>
+                        </div>
                         <!-- "דגשי תזונה" עבר להיות כתבת-בונוס בתוך New Me בלבד (כרטיסי סטורי, ר' nmOpenStories) -->
                     </div>
 
@@ -370,7 +374,7 @@
                             <h2 data-i18n="nutrition_daily_tracker_title">Daily Meal Tracker</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openPresetQuickAddModal();" data-i18n-title="preset_fab_title" title="Quick add saved meal">🍽️</button>
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); openModal('modal-add-preset'); loadPresetManageList();">＋</button>
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openPresetAdder();" data-i18n-title="preset_modal_title" title="Add Meal to Library">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -703,6 +707,29 @@
                         <div id="recipes-grid" class="recipes-grid"></div>
                     </div>
                     </div>
+
+                    <!-- ⭐ ארוחות קבועות - דף שלם משלו (בחירה מ-2026-10-12: שילוב של 2 + 8 מהקנבס): חיפוש גדול למעלה,
+                         "לאחרונה" (מה שנוסף לאחרונה), לשוניות לפי זמן ביום, ובכל ארוחה "+ להיום". לחיצה על ארוחה פותחת
+                         עריכה/מחיקה; הוספה ועריכה בגיליון (modal-add-preset). ר' renderSavedMealsPage -->
+                    <div class="subview-panel" data-subview="presets">
+                    <button class="btn-subview-back" onclick="closeSubView('nutrition-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
+                    <div class="saved-meals-page">
+                        <div class="saved-meals-top">
+                            <h2 class="saved-meals-title" data-i18n="menu_saved_meals">Saved meals</h2>
+                            <button type="button" class="saved-meals-add-btn" onclick="openPresetAdder()" data-i18n-title="preset_modal_title" data-i18n-aria-label="preset_modal_title" title="Add Meal to Library" aria-label="Add Meal to Library"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
+                        </div>
+                        <label class="saved-meals-search">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                            <input type="search" id="saved-meals-search-input" autocomplete="off" oninput="renderSavedMealsPage()" data-i18n-placeholder="presets_search_placeholder" placeholder="Which meal?" data-i18n-aria-label="presets_search_placeholder" aria-label="Which meal?">
+                        </label>
+                        <div id="saved-meals-recent-wrap" class="saved-meals-recent-wrap hidden">
+                            <p class="saved-meals-label" data-i18n="presets_recent_label">Recently used</p>
+                            <div id="saved-meals-recent" class="saved-meals-recent"></div>
+                        </div>
+                        <div id="saved-meals-tabs" class="saved-meals-tabs" role="tablist"></div>
+                        <div id="saved-meals-list" class="saved-meals-list"></div>
+                    </div>
+                    </div>
                 </section>
 
                 <!-- חלונית 3: פתקים -->
@@ -724,18 +751,18 @@
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="notes_title">Notes</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body">
-                            <p class="note-triage-hint" data-i18n="note_triage_hint">Drag a note onto a day to turn it into a scheduled task:</p>
+                            <!-- גוררים פתק (בידית ⠿) לאחד משלושת אלה כדי שיהפוך למשימה - ההסבר רק ב-FAQ (drag_note_to_schedule) -->
                             <div class="note-triage-zones">
                                 <div class="note-triage-zone" id="note-triage-today-weekly" data-triage="today">
-                                    <span class="note-triage-icon">📅</span>
+                                    <span class="note-triage-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15.2" r="2" fill="currentColor" stroke="none"/></svg></span>
                                     <span data-i18n="note_triage_today">Do Today</span>
                                 </div>
                                 <div class="note-triage-zone" id="note-triage-tomorrow-weekly" data-triage="tomorrow">
-                                    <span class="note-triage-icon">📆</span>
+                                    <span class="note-triage-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="9" cy="15.2" r="1.3"/><circle cx="15" cy="15.2" r="1.8" fill="currentColor" stroke="none"/></svg></span>
                                     <span data-i18n="note_triage_tomorrow">Do Tomorrow</span>
                                 </div>
                                 <div class="note-triage-zone" id="note-triage-otherdate-weekly" data-triage="otherdate">
-                                    <span class="note-triage-icon">🗓️</span>
+                                    <span class="note-triage-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></svg></span>
                                     <span data-i18n="note_triage_otherdate">Other Date</span>
                                 </div>
                             </div>
@@ -1374,7 +1401,7 @@
                     </button>
                     <!-- ⭐ ארוחות קבועות - קטגוריה משלה, מעל מעקב הארוחות היומי (לפי בקשה מפורשת: "אתה יכול לשים את הארוחות קבועות
                          כקטגוריה ? מעל המעקב ארוחות יומי שיהיה שם"): פותח את ספריית הארוחות השמורות - הוספה, עריכה ומחיקה -->
-                    <button type="button" data-tour="m-presets" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openModal('modal-add-preset'); loadPresetManageList();">
+                    <button type="button" data-tour="m-presets" class="hamburger-drawer-item" onclick="openSavedMealsPage();">
                         <span class="hamburger-drawer-item-icon">⭐</span>
                         <span class="hamburger-drawer-item-title" data-i18n="menu_saved_meals">Saved meals</span>
                     </button>
@@ -2481,7 +2508,7 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <div class="preset-quick-add-header-row">
                     <h3 data-i18n="preset_fab_title">Quick add saved meal</h3>
-                    <button type="button" class="btn-floating-add" onclick="closeModal('modal-preset-quick-add'); openModal('modal-add-preset'); loadPresetManageList();" data-i18n-title="preset_quick_add_manage_title" title="Add or edit saved meals">＋</button>
+                    <button type="button" class="btn-floating-add" onclick="closeModal('modal-preset-quick-add'); openSavedMealsPage();" data-i18n-title="preset_quick_add_manage_title" title="Add or edit saved meals">＋</button>
                 </div>
                 <input type="text" id="preset-quick-add-search" oninput="renderPresetQuickAddList(this.value)" data-i18n-placeholder="preset_quick_add_search_placeholder" placeholder="Search a saved meal...">
                 <div id="preset-quick-add-list" class="preset-quick-add-list"></div>
@@ -3222,7 +3249,7 @@
         <div id="modal-add-preset" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="preset_modal_title">Add Meal to Library</h3>
+                <h3 id="preset-modal-title" data-i18n="preset_modal_title">Add Meal to Library</h3>
                 <div class="recipe-scan-hint" id="preset-limit-hint"></div>
                 <div class="preset-manager-grid">
                     <input type="text" id="new-preset-name" data-i18n-placeholder="preset_name_placeholder" placeholder="Meal name">
@@ -3240,8 +3267,22 @@
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-preset'); cancelPresetEdit();" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
-                <h3 class="preset-manage-title" data-i18n="preset_manage_title">Manage Saved Meals</h3>
-                <ul id="preset-manage-list" class="center-list preset-manage-list"></ul>
+            </div>
+        </div>
+
+        <!-- ארוחה קבועה אחת (לחיצה עליה בדף "ארוחות קבועות"): להוסיף להיום, עריכה, מחיקה -->
+        <div id="modal-saved-meal-actions" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 id="saved-meal-actions-title"></h3>
+                <p id="saved-meal-actions-nums" class="saved-meal-actions-nums"></p>
+                <p id="saved-meal-actions-desc" class="saved-meal-actions-desc hidden"></p>
+                <div class="saved-meal-actions">
+                    <button type="button" class="saved-meal-action is-primary" onclick="savedMealActionToday()" data-i18n="presets_add_today_long">Add to today</button>
+                    <button type="button" class="saved-meal-action" onclick="savedMealActionEdit()" data-i18n="edit_btn">Edit</button>
+                    <button type="button" class="saved-meal-action is-danger" onclick="savedMealActionDelete()" data-i18n="presets_delete_btn">Delete meal</button>
+                </div>
+                <button class="btn-clear-specific" onclick="closeModal('modal-saved-meal-actions')" data-i18n="cancel_btn">Cancel</button>
             </div>
         </div>
 
@@ -4294,8 +4335,8 @@
 
     </div>
 
-    <script src="i18n.js?v=450"></script>
-    <script src="app.js?v=585"></script>
+    <script src="i18n.js?v=451"></script>
+    <script src="app.js?v=586"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>

@@ -118,9 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('btn-auth-submit').addEventListener('click', submitAuthForm);
     document.getElementById('btn-logout').addEventListener('click', logoutUser);
-    document.getElementById('btn-add-preset').addEventListener('click', () => {
-        addCustomPreset();
-        closeModal('modal-add-preset');
+    // נסגר רק אחרי שמירה שהצליחה - חסר שם/קלוריות לא מוחק את מה שכבר הוקלד
+    document.getElementById('btn-add-preset').addEventListener('click', async () => {
+        if (await addCustomPreset()) closeModal('modal-add-preset');
     });
     document.getElementById('btn-save-new-slot').addEventListener('click', async () => {
         await saveScheduleSlotFromAdder();
@@ -428,43 +428,64 @@ async function loadCenterItems(type) {
     // מעליה למטה כדי לסמן "לא דחוף", לפי בקשה מפורשת. מוצגת תמיד (גם בלי
     // אף פתק "להגיע לזה" עדיין) כדי שיהיה תמיד יעד גרירה ברור בתחתית
     let dividerInserted = false;
+    // פתקים = רשימה של פתקים דביקים קטנים (עיצוב 1 של הקנבס בגרסת רשימה, בחירה מ-2026-10-12:
+    // "בגדול להשאיר רשימה", פתקים קטנים שרואים בהם את מה שכתוב) - ר' .note-paper ב-theme.css.
+    // לחיצה על הטקסט פותחת את הפתק (אין עיפרון נפרד); רשימת הקניות נשארת כמו שהיא
+    const isNote = type === 'weekly';
+    const somedayCount = isNote ? data.filter(item => item.is_someday).length : 0;
     data.forEach(item => {
-        if (type === 'weekly' && item.is_someday && !dividerInserted) {
-            listUl.appendChild(buildNoteSomedayDivider());
+        if (isNote && item.is_someday && !dividerInserted) {
+            listUl.appendChild(buildNoteSomedayDivider(somedayCount));
             dividerInserted = true;
         }
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
+        if (isNote) li.className = 'note-paper';
         // "נכתב לאחרונה" (בתוך פתק פתוח) - content_updated_at משתנה רק כשהטקסט משתנה, אז ארכיון ושחזור לא נוגעים בו
         li.setAttribute('data-written-at', item.content_updated_at || item.created_at || '');
         if (item.text_color) li.setAttribute('data-text-color', item.text_color);
         if (item.glow_color) li.setAttribute('data-glow-color', item.glow_color);
         if (item.bg_color) li.setAttribute('data-bg-color', item.bg_color);
-        // רקע על ה-li כולו (עמעום 18% דרך hexToRgba כדי שהטקסט/הכפתורים
-        // יישארו קריאים) - אבל הזוהר על הטקסט עצמו (text-shadow), לא box-
-        // shadow על כל השורה, לפי בקשה מפורשת ("הזוהר תחבר לטקסט")
-        if (item.bg_color) li.setAttribute('style', `background-color: ${hexToRgba(item.bg_color, 0.18)}`);
+        // רקע על ה-li כולו - בפתק הוא צבע הנייר עצמו (גוון פסטל של הצבע שנבחר, ר' .note-paper.has-bg),
+        // ברשימת הקניות עמעום 18% דרך hexToRgba כדי שהטקסט/הכפתורים יישארו קריאים. הזוהר על הטקסט
+        // עצמו (text-shadow), לא box-shadow על כל השורה, לפי בקשה מפורשת ("הזוהר תחבר לטקסט")
+        if (item.bg_color) {
+            if (isNote) { li.classList.add('has-bg'); li.style.setProperty('--note-bg', item.bg_color); }
+            else li.setAttribute('style', `background-color: ${hexToRgba(item.bg_color, 0.18)}`);
+        }
         // ידית גרירה רק לפתקים (weekly) - רשימת הקניות אין לה יעדי גרירה משלה,
         // לפי בקשה מפורשת (רק פתקים נגררים - כולל אל "רשימת קניות" כיעד)
-        const dragHandle = type === 'weekly' ? `<span class="note-drag-handle">⠿</span>` : '';
+        const dragHandle = isNote ? `<span class="note-drag-handle" aria-hidden="true">⠿</span>` : '';
+        // בפתק הצבעים עוברים כמשתנים (--tc/--tg) כדי שה-CSS יכהה קצת צבע בהיר ויישאר קריא על הנייר
         const textStyleParts = [];
-        if (item.text_color) textStyleParts.push(`color: ${item.text_color}`);
-        if (item.glow_color) textStyleParts.push(`text-shadow: 0 0 4px ${item.glow_color}, 0 0 10px ${item.glow_color}, 0 0 18px ${item.glow_color}`);
+        const textClasses = [];
+        if (isNote) {
+            if (item.text_color) { textStyleParts.push(`--tc: ${item.text_color}`); textClasses.push('has-tc'); }
+            if (item.glow_color) { textStyleParts.push(`--tg: ${item.glow_color}`); textClasses.push('has-tg'); }
+        } else {
+            if (item.text_color) textStyleParts.push(`color: ${item.text_color}`);
+            if (item.glow_color) textStyleParts.push(`text-shadow: 0 0 4px ${item.glow_color}, 0 0 10px ${item.glow_color}, 0 0 18px ${item.glow_color}`);
+        }
         const colorStyle = textStyleParts.length ? ` style="${textStyleParts.join('; ')};"` : '';
+        const textClass = `center-list-item-text${item.is_completed ? ' completed' : ''}${isNote ? ' is-openable' : ''}${textClasses.length ? ' ' + textClasses.join(' ') : ''}`;
+        const editBtn = isNote ? '' : `<button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">${EDIT_ICON_SVG}</button>`;
+        const deleteBtn = isNote
+            ? `<button type="button" class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')" title="${t('note_to_archive_btn')}" aria-label="${t('note_to_archive_btn')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>`
+            : `<button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>`;
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
-            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}${type === 'weekly' ? ' is-openable' : ''}"${colorStyle}${type === 'weekly' ? ` onclick="openCenterItemEditor(this, '${type}')"` : ''}>
+            <span class="${textClass}"${colorStyle}${isNote ? ` onclick="openCenterItemEditor(this, '${type}')"` : ''}>
                 ${escapeHtmlForReport(item.content)}
             </span>
-            <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">${EDIT_ICON_SVG}</button>
-            <button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>
+            ${editBtn}
+            ${deleteBtn}
         `;
         listUl.appendChild(li);
     });
-    if (type === 'weekly' && !dividerInserted) listUl.appendChild(buildNoteSomedayDivider());
+    if (isNote && !dividerInserted) listUl.appendChild(buildNoteSomedayDivider(0));
     initNoteTriageDragDrop(type);
     refreshNotesArchiveCount(type);
 }
@@ -473,17 +494,24 @@ async function loadCenterItems(type) {
 // שאחריו מוסתרים לגמרי (display:none, לא רק דהויים) כל עוד אין קלאס
 // expanded על ה-li של המפריד עצמו - נשלט לגמרי ב-CSS (ר' .center-list-
 // divider:not(.expanded) ~ li) כדי שלא צריך לגעת בכל פתק בנפרד ב-JS
-function buildNoteSomedayDivider() {
+// count - כמה פתקים יש ב"להגיע לזה", כדי שגם כשהקטע מקופל רואים שיש שם משהו (0 = בלי מספר)
+function buildNoteSomedayDivider(count) {
     const li = document.createElement('li');
     li.className = 'center-list-divider';
     li.onclick = () => li.classList.toggle('expanded');
     const label = document.createElement('span');
     label.className = 'center-list-divider-label';
     label.textContent = t('note_someday_section_label');
+    li.appendChild(label);
+    if (count) {
+        const badge = document.createElement('span');
+        badge.className = 'center-list-divider-count';
+        badge.textContent = count;
+        li.appendChild(badge);
+    }
     const chevron = document.createElement('span');
     chevron.className = 'center-list-divider-chevron';
     chevron.textContent = '›';
-    li.appendChild(label);
     li.appendChild(chevron);
     return li;
 }
@@ -637,15 +665,15 @@ async function addCustomPreset() {
     const protein = proteinInput.value.trim() ? parseFloat(proteinInput.value) : null;
     const description = descriptionInput.value.trim();
     const category = getSelectValueWithOther('new-preset-category');
-    if (!name || calories <= 0) return;
-    if (!category) { showAppToast(t('select_other_missing'), 'error'); return; }
+    if (!name || calories <= 0) { showAppToast(t('meal_save_preset_missing'), 'error'); return false; }
+    if (!category) { showAppToast(t('select_other_missing'), 'error'); return false; }
 
     // מגבלת חינם: עד 10 ארוחות שמורות סה"כ (לא ניתן להוספה, כן ניתן לעריכה) -
     // מבוססת על הכמות הנוכחית במאגר, כך שמחיקת ארוחה משחררת מקום להוספה חדשה
     if (!editingPresetId && !isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
         showAppToast(t('preset_limit_desc'), 'error');
         openPremiumUpgradeModal();
-        return;
+        return false;
     }
 
     if (editingPresetId) {
@@ -662,6 +690,7 @@ async function addCustomPreset() {
     descriptionInput.value = '';
     loadMealPresetsToSelects();
     loadPresetManageList();
+    return true;
 }
 
 function editPreset(id) {
@@ -674,6 +703,8 @@ function editPreset(id) {
     document.getElementById('new-preset-description').value = preset.description || '';
     setSelectValueWithOther('new-preset-category', preset.meal_category);
     document.getElementById('btn-add-preset').textContent = t('preset_update_btn');
+    const titleEl = document.getElementById('preset-modal-title');
+    if (titleEl) titleEl.textContent = t('preset_edit_title');
 }
 
 function cancelPresetEdit() {
@@ -683,6 +714,8 @@ function cancelPresetEdit() {
     document.getElementById('new-preset-protein').value = '';
     document.getElementById('new-preset-description').value = '';
     document.getElementById('btn-add-preset').textContent = t('preset_add_btn');
+    const titleEl = document.getElementById('preset-modal-title');
+    if (titleEl) titleEl.textContent = t('preset_modal_title');
 }
 
 // הערכת קלוריות עם AI בטופס "הוספת ארוחה למאגר" - אותה בדיוק לוגיקה כמו
@@ -758,57 +791,172 @@ function presetCategoryLabel(catKey) {
     return PRESET_CATEGORY_ORDER.includes(catKey) ? t('preset_cat_' + catKey) : '✏️ ' + escapeHtmlForReport(catKey);
 }
 
+// טוען את הארוחות השמורות ומצייר את דף "ארוחות קבועות" (השם נשמר - נקרא מכל מי שפותח את גיליון ההוספה)
 async function loadPresetManageList() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('meal_presets').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
     cachedPresets = data || [];
-    const list = document.getElementById('preset-manage-list');
-    if (!list) return;
-    list.innerHTML = '';
+    renderSavedMealsPage();
+    updatePresetLimitHint();
+}
 
+// --- ⭐ ארוחות קבועות: דף שלם משלו (בחירה מ-2026-10-12 - שילוב של 2 + 8 מהקנבס): חיפוש גדול למעלה,
+// "לאחרונה" (מה שנוסף לאחרונה, נשמר ב-meal_presets.last_used_at כדי שיעבור בין מכשירים), לשוניות לפי
+// זמן ביום, ובכל ארוחה "+ להיום". לחיצה על ארוחה פותחת גיליון קטן: להיום / עריכה / מחיקה ---
+let savedMealsTab = 'all';
+let savedMealActionId = null;
+let savedMealsAddChain = Promise.resolve();
+const SAVED_MEALS_RECENT_MAX = 6;
+
+function openSavedMealsPage() {
+    navigateFromMenu('nutrition-section', 'presets');
+    const search = document.getElementById('saved-meals-search-input');
+    if (search) search.value = '';
+    savedMealsTab = 'all';
+    renderSavedMealsPage();
+    loadPresetManageList();
+}
+
+function isSavedMealsPageOpen() {
+    return !!document.querySelector('#nutrition-section .subview-panel[data-subview="presets"].open');
+}
+
+// מתי נבחרה ארוחה לאחרונה (+ להיום בדף, הוספה מהירה, בורר הארוחות במעקב) - בשביל "לאחרונה"
+function markPresetUsed(id) {
+    const now = new Date().toISOString();
+    const preset = cachedPresets.find(p => p.id === id);
+    if (preset) preset.last_used_at = now;
+    if (supabaseClient && currentUserId) supabaseClient.from('meal_presets').update({ last_used_at: now }).eq('id', id).eq('user_id', currentUserId).then(() => {}, () => {});
+}
+
+// שם קצר ללשונית/לתגית ("בוקר", "מרקים"...); קטגוריה שהוקלדה ב"אחר" - הטקסט שלה כמו שהוא
+function presetTabLabel(catKey) {
+    return PRESET_CATEGORY_ORDER.includes(catKey) ? t('presets_tab_' + catKey) : String(catKey || '');
+}
+
+function presetNumsText(p) {
+    const kcal = `${p.calories} ${t('calories_unit')}`;
+    if (p.protein_grams == null || p.protein_grams === '') return kcal;
+    return `${kcal} · ${t('nm_protein_short').replace('{n}', Math.round(Number(p.protein_grams) * 10) / 10)}`;
+}
+
+function renderSavedMealsPage() {
+    const list = document.getElementById('saved-meals-list');
+    if (!list) return;
+    const tabsEl = document.getElementById('saved-meals-tabs');
+    const recentWrap = document.getElementById('saved-meals-recent-wrap');
+    const recentEl = document.getElementById('saved-meals-recent');
+    const searchInput = document.getElementById('saved-meals-search-input');
+    const q = (searchInput ? searchInput.value : '').trim().toLocaleLowerCase();
     if (!cachedPresets.length) {
-        const empty = document.createElement('li');
-        empty.className = 'preset-manage-empty';
-        empty.textContent = t('preset_manage_empty');
-        list.appendChild(empty);
-        updatePresetLimitHint();
+        tabsEl.innerHTML = '';
+        recentWrap.classList.add('hidden');
+        list.innerHTML = `<div class="saved-meals-empty"><span class="saved-meals-empty-icon" aria-hidden="true">⭐</span><p>${escapeHtmlForReport(t('preset_manage_empty'))}</p><button type="button" class="saved-meals-empty-btn" onclick="openPresetAdder()">${escapeHtmlForReport(t('presets_new_btn'))}</button></div>`;
         return;
     }
+    // לאחרונה - רק כשלא מחפשים; לחיצה מוסיפה להיום מיד
+    const recent = cachedPresets.filter(p => p.last_used_at).sort((a, b) => String(b.last_used_at).localeCompare(String(a.last_used_at))).slice(0, SAVED_MEALS_RECENT_MAX);
+    recentWrap.classList.toggle('hidden', !!q || !recent.length);
+    recentEl.innerHTML = recent.map(p => `<button type="button" class="saved-meals-rc" onclick="addSavedMealToToday('${p.id}', this)" aria-label="${escapeHtmlForReport(t('presets_add_today_long') + ': ' + p.food_name)}"><span class="saved-meals-rc-text"><b>${escapeHtmlForReport(p.food_name)}</b><small>${p.calories} ${escapeHtmlForReport(t('calories_unit'))}</small></span><span class="saved-meals-rc-plus" aria-hidden="true">+</span></button>`).join('');
+    // לשוניות: "הכל" ואז רק קטגוריות שיש בהן ארוחות (בסדר הקבוע, ואחריהן "אחר")
+    const cats = getPresetCategoryKeys().filter(k => cachedPresets.some(p => p.meal_category === k));
+    if (savedMealsTab !== 'all' && !cats.includes(savedMealsTab)) savedMealsTab = 'all';
+    tabsEl.classList.toggle('hidden', !!q);
+    tabsEl.innerHTML = ['all', ...cats].map(k => `<button type="button" class="saved-meals-tab${k === savedMealsTab ? ' is-on' : ''}" role="tab" aria-selected="${k === savedMealsTab}" data-cat="${escapeHtmlForReport(k)}" onclick="setSavedMealsTab(this.dataset.cat)">${escapeHtmlForReport(k === 'all' ? t('presets_tab_all') : presetTabLabel(k))}</button>`).join('');
+    // הרשימה: חיפוש בכל הקטגוריות (גם במצרכים), אחרת לפי הלשונית; לפי א׳-ב׳
+    const collator = new Intl.Collator(currentLang || undefined, { sensitivity: 'base', numeric: true });
+    let items = cachedPresets.filter(p => !q || String(p.food_name || '').toLocaleLowerCase().includes(q) || String(p.description || '').toLocaleLowerCase().includes(q));
+    if (!q && savedMealsTab !== 'all') items = items.filter(p => p.meal_category === savedMealsTab);
+    items.sort((a, b) => collator.compare(String(a.food_name || ''), String(b.food_name || '')));
+    if (!items.length) {
+        list.innerHTML = `<p class="saved-meals-none">${escapeHtmlForReport(t('presets_no_results'))}</p>`;
+        return;
+    }
+    const showCat = !!q || savedMealsTab === 'all';
+    list.innerHTML = items.map(p => `
+        <div class="saved-meal" data-preset-id="${p.id}">
+            <button type="button" class="saved-meal-main" onclick="openSavedMealActions('${p.id}')">
+                ${showCat ? `<span class="saved-meal-cat">${escapeHtmlForReport(presetTabLabel(p.meal_category))}</span>` : ''}
+                <span class="saved-meal-name">${escapeHtmlForReport(p.food_name)}</span>
+                ${p.description ? `<span class="saved-meal-desc">${escapeHtmlForReport(p.description)}</span>` : ''}
+                <span class="saved-meal-nums">${escapeHtmlForReport(presetNumsText(p))}</span>
+            </button>
+            <button type="button" class="saved-meal-today" onclick="addSavedMealToToday('${p.id}', this)">${escapeHtmlForReport(t('presets_add_today_btn'))}</button>
+        </div>`).join('');
+}
 
-    getPresetCategoryKeys().forEach(catKey => {
-        const items = cachedPresets.filter(p => p.meal_category === catKey);
-        if (!items.length) return;
+function setSavedMealsTab(cat) {
+    savedMealsTab = cat || 'all';
+    renderSavedMealsPage();
+}
 
-        const group = document.createElement('li');
-        group.className = 'preset-category-group expanded';
-        group.innerHTML = `
-            <div class="preset-category-header" onclick="togglePresetCategory(this)">
-                <span class="preset-category-label">${presetCategoryLabel(catKey)}</span>
-                <span class="preset-category-count">${items.length}</span>
-                <span class="preset-category-chevron">▼</span>
-            </div>
-            <ul class="preset-category-items"></ul>
-        `;
-        const itemsList = group.querySelector('.preset-category-items');
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'preset-manage-item';
-            const descriptionHtml = item.description ? `<span class="preset-picker-description">${escapeHtmlForReport(item.description)}</span>` : '';
-            li.innerHTML = `
-                <span class="preset-manage-name-wrap">
-                    <span class="preset-manage-name">${escapeHtmlForReport(item.food_name)} (${item.calories}${item.protein_grams != null ? ` · ${item.protein_grams}g` : ''})</span>
-                    ${descriptionHtml}
-                </span>
-                <div class="preset-manage-actions">
-                    <button class="btn-edit-item" onclick="editPreset('${item.id}')">${EDIT_ICON_SVG}</button>
-                    <button class="btn-delete-item" onclick="deletePreset('${item.id}')">🗑️</button>
-                </div>
-            `;
-            itemsList.appendChild(li);
-        });
-        list.appendChild(group);
-    });
-    updatePresetLimitHint();
+// "+ להיום": נכנס למשבצת הפנויה הבאה של היום (בדיוק כמו ההוספה המהירה). הוספות רצות אחת אחרי השנייה -
+// כך ששתי לחיצות מהירות על שתי ארוחות לא נוחתות באותה משבצת
+function addSavedMealToToday(id, btn) {
+    const preset = cachedPresets.find(p => p.id === id);
+    if (!preset || !supabaseClient || !currentUserId) return Promise.resolve();
+    if (btn) btn.disabled = true;
+    const run = async () => {
+        try {
+            await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category, preset.protein_grams);
+            markPresetUsed(id);
+            if (preset.calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) showAppToast(t('calories_implausible_toast').replace('{calories}', preset.calories), 'error');
+            else showAppToast(`${t('quick_add_logged_toast')} ${preset.food_name} (${preset.calories} ${t('calories_unit')})`);
+            refreshTodayNutritionViewIfOpen();
+            if (typeof updateHomeCalorieBadge === 'function') updateHomeCalorieBadge();
+            if (btn && btn.classList.contains('saved-meal-today')) { btn.classList.add('is-done'); btn.textContent = '✓'; }
+            if (btn && btn.classList.contains('saved-meals-rc')) btn.classList.add('is-done');
+            setTimeout(() => { if (isSavedMealsPageOpen()) renderSavedMealsPage(); }, 900);
+        } finally {
+            if (btn) setTimeout(() => { btn.disabled = false; }, 900);
+        }
+    };
+    savedMealsAddChain = savedMealsAddChain.then(run, run);
+    return savedMealsAddChain;
+}
+
+function openSavedMealActions(id) {
+    const p = cachedPresets.find(x => x.id === id);
+    if (!p) return;
+    savedMealActionId = id;
+    document.getElementById('saved-meal-actions-title').textContent = p.food_name;
+    document.getElementById('saved-meal-actions-nums').textContent = `${presetTabLabel(p.meal_category)} · ${presetNumsText(p)}`;
+    const desc = document.getElementById('saved-meal-actions-desc');
+    desc.textContent = p.description || '';
+    desc.classList.toggle('hidden', !p.description);
+    openModal('modal-saved-meal-actions');
+}
+
+function savedMealActionToday() {
+    const id = savedMealActionId;
+    closeModal('modal-saved-meal-actions');
+    if (id) addSavedMealToToday(id, null);
+}
+
+function savedMealActionEdit() {
+    const id = savedMealActionId;
+    closeModal('modal-saved-meal-actions');
+    if (id) openPresetEditor(id);
+}
+
+function savedMealActionDelete() {
+    const p = cachedPresets.find(x => x.id === savedMealActionId);
+    if (!p) return;
+    closeModal('modal-saved-meal-actions');
+    showDangerConfirm(t('presets_delete_title'), t('presets_delete_confirm').replace('{name}', p.food_name), () => deletePreset(p.id));
+}
+
+// ＋ (בדף, בכרטיס המעקב היומי): גיליון "ארוחה חדשה" ריק; בדף, על לשונית של קטגוריה - הקטגוריה הזו כבר בחורה
+function openPresetAdder() {
+    cancelPresetEdit();
+    if (isSavedMealsPageOpen() && PRESET_CATEGORY_ORDER.includes(savedMealsTab)) setSelectValueWithOther('new-preset-category', savedMealsTab);
+    openModal('modal-add-preset');
+    loadPresetManageList();
+}
+
+function openPresetEditor(id) {
+    editPreset(id);
+    openModal('modal-add-preset');
 }
 
 function togglePresetCategory(headerEl) {
@@ -889,6 +1037,7 @@ function selectPresetPickerItem(id) {
         proteinInput.value = existingProtein + (parseFloat(preset.protein_grams) || 0);
     }
     presetPickerTargetRow.dataset.touched = 'true';
+    markPresetUsed(id);
     updateLiveCaloriesToday();
     closeModal('modal-preset-picker');
 }
@@ -1096,6 +1245,7 @@ async function logPresetQuickAdd(id) {
     const preset = cachedPresets.find(p => p.id === id);
     if (!preset) return;
     await addQuickLogEntry(preset.food_name, preset.calories, preset.meal_category, preset.protein_grams);
+    markPresetUsed(id);
     closeModal('modal-preset-quick-add');
     if (preset.calories > IMPLAUSIBLE_SINGLE_MEAL_CALORIES) {
         showAppToast(t('calories_implausible_toast').replace('{calories}', preset.calories), 'error');
@@ -2982,6 +3132,26 @@ function updateCenterItemPreview() {
         if (!text) { row.style.display = 'none'; return; }
         row.style.display = '';
         textEl.textContent = text;
+        // בפתק התצוגה המקדימה היא פתק נייר בדיוק כמו ברשימה (ר' loadCenterItems); ברשימת הקניות - כמו קודם
+        const asNote = pendingCenterItemType === 'weekly';
+        row.classList.toggle('note-paper', asNote);
+        row.classList.toggle('has-bg', asNote && !!pendingCenterItemBg);
+        textEl.classList.toggle('has-tc', asNote && !!pendingCenterItemColor);
+        textEl.classList.toggle('has-tg', asNote && !!pendingCenterItemGlow);
+        if (asNote) {
+            textEl.style.color = '';
+            textEl.style.textShadow = '';
+            textEl.style.setProperty('--tc', pendingCenterItemColor || '');
+            textEl.style.setProperty('--tg', pendingCenterItemGlow || '');
+            row.style.backgroundColor = '';
+            row.style.setProperty('--note-bg', pendingCenterItemBg || '');
+            row.style.setProperty('--paper', centerItemPreviewPaper || '');
+            return;
+        }
+        textEl.style.removeProperty('--tc');
+        textEl.style.removeProperty('--tg');
+        row.style.removeProperty('--note-bg');
+        row.style.removeProperty('--paper');
         textEl.style.color = pendingCenterItemColor || '';
         textEl.style.textShadow = pendingCenterItemGlow ? `0 0 4px ${pendingCenterItemGlow}, 0 0 10px ${pendingCenterItemGlow}, 0 0 18px ${pendingCenterItemGlow}` : '';
         row.style.backgroundColor = pendingCenterItemBg ? hexToRgba(pendingCenterItemBg, 0.18) : '';
@@ -2999,6 +3169,7 @@ function setCenterItemSaveLabel(isEdit) {
 // בתוך פתק פתוח (רק בפתקים, רק כשפותחים פתק קיים): מתי הטקסט נכתב לאחרונה, תאריך ושעה מדויקים -
 // לפי בקשה מפורשת: "בתוך הפתק רק שלוחצים עליו שיראה מתי פעם אחרונה כתבת אותו את התאריך המדויק"
 let editingCenterItemOriginalText = null;
+let centerItemPreviewPaper = '';
 function formatNoteWrittenAt(iso) {
     const d = iso ? new Date(iso) : null;
     if (!d || isNaN(d)) return '';
@@ -3014,6 +3185,7 @@ function setCenterItemWrittenAt(iso) {
 function openCenterAdder(type) {
     editingCenterItemId = null;
     editingCenterItemOriginalText = null;
+    centerItemPreviewPaper = '';
     setCenterItemWrittenAt('');
     pendingCenterItemType = type;
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
@@ -3035,6 +3207,8 @@ function openCenterItemEditor(btn, type) {
     if (!li) return;
     editingCenterItemId = li.getAttribute('data-item-id');
     pendingCenterItemType = type;
+    // התצוגה המקדימה באותו צבע נייר כמו הפתק ברשימה (צהוב/ורוד/מנטה לפי המקום שלו)
+    centerItemPreviewPaper = type === 'weekly' ? getComputedStyle(li).getPropertyValue('--paper').trim() : '';
     const currentText = li.querySelector('.center-list-item-text').textContent.trim();
     document.getElementById('center-item-modal-title').textContent = t('edit_item_title');
     setCenterItemSaveLabel(true);
@@ -8920,6 +9094,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'note_written_at', category: 'notes' },
+    { id: 'notes_sticky_look', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },
@@ -8992,6 +9167,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
     { id: 'chain_data_source', category: 'nutrition' },
     { id: 'save_meal_preset', category: 'nutrition' },
+    { id: 'saved_meals_page', category: 'nutrition' },
     { id: 'recipes_gallery', category: 'nutrition' },
     { id: 'recipe_examples', category: 'nutrition' },
     { id: 'recipe_grams', category: 'nutrition' },
