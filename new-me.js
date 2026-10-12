@@ -274,6 +274,42 @@ function nmLateChoicesHtml(current, onPick) {
         <button type="button" role="radio" aria-checked="${current === c}" class="nm-late-choice${current === c ? ' selected' : ''}" onclick="${onPick}('${c}')">${nmEsc(nmLateLabel(c))}</button>`).join('')}</div>`;
 }
 // השורה של 21:00 בתפריט היום - או השאלה, כל עוד לא נבחר
+// 🍽️ / ☕ בסוף התפריט: כמה קלוריות כל הארוחות היום, וכמה נשאר לקפה ולשתייה - עם קפה בלחיצה אחת (לפי בקשה מפורשת:
+// "ובסוף תרשום כמה קלוריות לכל הארוחה וכמה קפה נשאר ליום ואיזה... תן כמה אפשרויות")
+function nmDaySummaryHtml() {
+    const meals = Math.max(0, nmMenuTotal() - NEW_ME_DRINKS_KCAL);
+    const left = Math.max(0, NEW_ME_DRINKS_KCAL - nmEatenToday().drinks);
+    const chips = NEW_ME_COFFEE_OPTIONS.map(o => `<button type="button" class="nm-coffee-chip${o.kcal > left ? ' over' : ''}" data-coffee="${o.id}" onclick="nmLogCoffee('${o.id}', this)">${nmEsc(t('nm_coffee_' + o.id))} <bdi dir="ltr">~${nmFmt(o.kcal)}</bdi></button>`).join('');
+    return `
+        <div class="nm-day-sum">
+            <div class="nm-day-sum-line">🍽️ ${nmTpl('nm_day_meals_total', { n: nmFmt(meals) })}</div>
+            <div class="nm-day-sum-line">☕ ${left > 0 ? nmTpl('nm_drinks_left', { n: nmFmt(left) }) : nmEsc(t('nm_drinks_left_none'))}</div>
+            <div class="nm-coffee-chips" role="group" aria-label="${nmEsc(t('nm_coffee_title'))}">${chips}</div>
+        </div>`;
+}
+async function nmLogCoffee(id, btn) {
+    const o = NEW_ME_COFFEE_OPTIONS.find(x => x.id === id);
+    if (!o) return;
+    if (btn) btn.disabled = true;
+    await nmInsertDrink(`☕ ${t('nm_coffee_' + id)}`, o.kcal, o.protein);
+}
+// כמה נשאר להיום לערב: היעד פחות מה שכבר נאכל ונשתה, ופחות הארוחות שעוד לא סומנו בתפריט (התקציב של השתייה והערב משותף)
+function nmLateRoom() {
+    if (!nmProfile) return 0;
+    const pending = nmActiveOrder().filter(s => !nmTodayCheckins[s]).reduce((a, s) => a + (nmIsFree(s) ? nmFreeKcal() : nmItemInfo(nmTodayKey(s)).kcal + nmSlotExtra(s)), 0);
+    return Math.max(0, Math.round((nmProfile.plan - nmEatenToday().kcal - pending) / 5) * 5);
+}
+// עד 3 רעיונות שנכנסים בקלוריות שנשארו, מהגדול לקטן
+function nmLateIdeas(room) {
+    return NEW_ME_LATE_IDEAS.filter(i => i.kcal <= room).sort((a, b) => b.kcal - a.kcal).slice(0, 3);
+}
+function nmLateIdeasHtml() {
+    const room = nmLateRoom();
+    const ideas = nmLateIdeas(room);
+    if (!ideas.length) return `<div class="nm-late-ideas">${nmEsc(t('nm_late_ideas_none'))}</div>`;
+    const list = ideas.map(i => `${t('nm_late_idea_' + i.id)} (~${nmFmt(i.kcal)})`).join(' · ');
+    return `<div class="nm-late-ideas">${nmEsc(t('nm_late_ideas').replace('{ideas}', list))}</div>`;
+}
 function nmLateRowHtml() {
     const c = nmLateChoice();
     if (!c) return `
@@ -282,10 +318,11 @@ function nmLateRowHtml() {
             ${nmLateChoicesHtml(null, 'nmSetLateChoice')}
         </div>`;
     if (c === 'none') return '';
+    const text = c === 'eat' ? t('nm_late_room_line').replace('{n}', nmFmt(nmLateRoom())) : t('nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL));
     return `
         <div class="nm-late">
             <span class="nm-late-time"><bdi dir="ltr">${nmEsc(nmLateTime())}</bdi></span>
-            <span class="nm-late-text">${nmEsc(t(c === 'eat' ? 'nm_late_row_eat' : 'nm_late_row_drink').replace('{kcal}', nmFmt(NEW_ME_LATE_KCAL)))}</span>
+            <div class="nm-late-text">${nmEsc(text)}${c === 'eat' ? nmLateIdeasHtml() : ''}</div>
             <button type="button" class="nm-chip" onclick="nmGo('reminders')">${nmEsc(t('nm_late_change'))}</button>
         </div>`;
 }
@@ -1878,6 +1915,7 @@ function nmRenderDay(root) {
                 </div>
                 ${warn ? `<p class="nm-soft-warn">${nmEsc(t('nm_menu_over_warn').replace('{n}', nmFmt(over)))}</p>` : ''}
                 <div class="nm-menu-list" id="nm-menu-list">${active.map(s => nmMealCardHtml(s)).join('')}</div>
+                ${nmDaySummaryHtml()}
                 ${nmMenuRoomHtml()}
                 ${nmLateRowHtml()}
                 ${nmFreeMealRowHtml()}

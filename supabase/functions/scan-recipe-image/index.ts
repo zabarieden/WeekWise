@@ -30,10 +30,12 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
+// כמה קבצים למתכון אחד (המצרכים לחוד, אופן ההכנה לחוד, או כמה דפים) - בקשה אחת, סריקה אחת במונה
+const MAX_SCAN_FILES = 6;
 
 const RECIPE_CATEGORIES = [
     "appetizers", "breakfast", "meat_mains", "dairy_mains",
-    "sides", "snacks", "salads", "soups", "desserts",
+    "sides", "snacks", "salads", "soups", "desserts", "vegan",
 ];
 
 const CORS_HEADERS = {
@@ -108,18 +110,34 @@ Deno.serve(async (req) => {
         }
 
         const body = await req.json();
-        const { imageBase64, mediaType } = body;
-        if (!imageBase64 || !mediaType) return jsonResponse({ error: "missing_image" }, 400);
-
-        const isPdf = mediaType === "application/pdf";
-        const isImage = mediaType.startsWith("image/");
-        if (!isPdf && !isImage) return jsonResponse({ error: "unsupported_file_type" }, 400);
-
+        // images: כמה קבצים למתכון אחד, לכל אחד part = all / ingredients / steps. imageBase64 + mediaType: קובץ אחד, כמו פעם
+        const rawItems: Array<{ base64?: string; mediaType?: string; part?: string }> = Array.isArray(body.images) && body.images.length
+            ? body.images
+            : (body.imageBase64 && body.mediaType ? [{ base64: body.imageBase64, mediaType: body.mediaType, part: "all" }] : []);
+        if (!rawItems.length) return jsonResponse({ error: "missing_image" }, 400);
+        if (rawItems.length > MAX_SCAN_FILES) return jsonResponse({ error: "too_many_files", limit: MAX_SCAN_FILES }, 400);
+        const many = rawItems.length > 1;
         // Anthropic מבחין בין בלוק "image" (לתמונות) לבלוק "document" (ל-PDF) -
-        // שני הסוגים נתמכים באותה קריאת API אחת, רק סוג התוכן שונה
-        const fileContentBlock = isPdf
-            ? { type: "document", source: { type: "base64", media_type: mediaType, data: imageBase64 } }
-            : { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } };
+        // שני הסוגים נתמכים באותה קריאת API אחת, רק סוג התוכן שונה. כשיש כמה קבצים, לפני כל אחד שורה שאומרת מה יש בו
+        const fileBlocks: unknown[] = [];
+        for (let i = 0; i < rawItems.length; i++) {
+            const item = rawItems[i];
+            const mt = String(item.mediaType || "");
+            const isPdf = mt === "application/pdf";
+            if (!item.base64 || (!isPdf && !mt.startsWith("image/"))) return jsonResponse({ error: "unsupported_file_type" }, 400);
+            if (many) {
+                const what = item.part === "ingredients" ? "shows the INGREDIENTS of the recipe"
+                    : item.part === "steps" ? "shows the PREPARATION STEPS (instructions) of the recipe"
+                    : "shows the recipe, or one page/part of it";
+                fileBlocks.push({ type: "text", text: `File ${i + 1} of ${rawItems.length} - ${what}:` });
+            }
+            fileBlocks.push(isPdf
+                ? { type: "document", source: { type: "base64", media_type: mt, data: item.base64 } }
+                : { type: "image", source: { type: "base64", media_type: mt, data: item.base64 } });
+        }
+        const multiNote = many
+            ? `These ${rawItems.length} files are all parts of ONE single recipe (for example the ingredients photographed separately from the instructions, or several pages of the same recipe). Combine them into one recipe: keep the order of the pages, put every ingredient in "ingredients" and every step in "instructions", and never repeat a line that appears in two of the files.\n\n`
+            : "";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -130,16 +148,17 @@ Deno.serve(async (req) => {
             },
             body: JSON.stringify({
                 model: ANTHROPIC_MODEL,
-                max_tokens: 1500,
+                max_tokens: many ? 3000 : 1500,
                 messages: [
                     {
                         role: "user",
                         content: [
-                            fileContentBlock,
+                            ...fileBlocks,
                             {
                                 type: "text",
                                 text:
-                                    "This file contains a recipe - it might be a handwritten note, a screenshot, a photo " +
+                                    multiNote +
+                                    (many ? "These files contain" : "This file contains") + " a recipe - it might be a handwritten note, a screenshot, a photo " +
                                     "of a cookbook page, or a scanned/exported PDF document. It may also be a screenshot " +
                                     "of a chat app (e.g. WhatsApp, Gemini, Messages) showing a recipe someone sent - in " +
                                     "that case, IGNORE everything that is phone/app chrome and not part of the recipe " +
@@ -147,7 +166,7 @@ Deno.serve(async (req) => {
                                     "sender name, message timestamps, 'Reply'/reaction buttons, and any other UI element. " +
                                     "Only transcribe the actual recipe content (title, ingredients, instructions).\n\n" +
                                     "Transcribe the recipe faithfully and extract it with the extract_recipe tool. Keep " +
-                                    "ingredients and instructions exactly as written in the file - do not invent, " +
+                                    "ingredients and instructions exactly as written - do not invent, " +
                                     "embellish, or add anything that isn't actually there. If a word is illegible, skip " +
                                     "it rather than guessing.\n\n" +
                                     "For estimated_total_calories: if the source explicitly states a calorie count, use " +

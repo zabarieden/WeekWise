@@ -1607,6 +1607,9 @@ html.high-contrast.light-mode {
     transition: var(--transition);
 }
 .center-list-item-preview .center-list-item-text { margin-inline-start: 0; }
+/* פתק נפתח בלחיצה על הטקסט; בפנים - מתי נכתב לאחרונה */
+.center-list-item-text.is-openable { cursor: pointer; }
+.center-item-written-at { margin: -4px 2px 0; font-size: 0.74rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .note-color-swatch {
     width: 30px;
     height: 30px;
@@ -8444,6 +8447,17 @@ html.light-mode .wx-stars { display: none; }
 .recipes-chip { flex-shrink: 0; padding: 8px 14px; border-radius: 99px; border: none; background: color-mix(in srgb, var(--text-primary) 8%, transparent); color: var(--text-primary); font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
 .recipes-chip.is-on { background: var(--text-primary); color: var(--bg-sheet); font-weight: 800; }
 .recipes-chip:active { transform: scale(0.95); }
+/* 📷 כמה תמונות למתכון אחד (הכל / מצרכים / הכנה) */
+.recipe-scan-tray { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.recipe-scan-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.recipe-scan-thumb { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: color-mix(in srgb, var(--text-primary) 10%, transparent); color: var(--text-primary); font-size: 0.72rem; font-weight: 800; }
+.recipe-scan-parts { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.recipe-scan-part { padding: 5px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.76rem; font-weight: 700; cursor: pointer; }
+.recipe-scan-part.is-on { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-sheet); }
+.recipe-scan-remove { flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; }
+.recipe-scan-more { align-self: flex-start; padding: 7px 12px; border-radius: 12px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 26%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.recipe-scan-part:focus-visible, .recipe-scan-remove:focus-visible, .recipe-scan-more:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.recipe-scan-run { width: 100%; margin-top: 8px; }
 .recipe-tile { display: flex; flex-direction: column; min-width: 0; padding: 0; border: none; border-radius: 20px; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); text-align: start; font-weight: 400; }
 .recipe-tile:active { transform: scale(0.97); }
 .recipe-tile-art { position: relative; display: grid; place-items: center; height: 84px; overflow: hidden; font-size: 46px; line-height: 1; background: linear-gradient(150deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
@@ -8989,6 +9003,17 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-late { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 14px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); }
 .nm-late-time { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-purple); }
 .nm-late-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--text-primary); }
+/* 🌙 רעיונות לפי הקלוריות שנשארו */
+.nm-late-ideas { margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; }
+/* 🍽️ / ☕ סיכום בסוף התפריט: כל הארוחות + מה נשאר לקפה, וקפה בלחיצה */
+.nm-day-sum { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.nm-day-sum-line { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.nm-coffee-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.nm-coffee-chip { padding: 7px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.nm-coffee-chip bdi { color: var(--text-secondary); font-weight: 600; }
+.nm-coffee-chip.over { opacity: 0.55; }
+.nm-coffee-chip:active { transform: scale(0.96); }
+.nm-coffee-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 .nm-late-ask { flex-direction: column; align-items: stretch; gap: 0; }
 .nm-late-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .nm-late-choice { flex: 1 1 auto; min-height: 40px; padding: 8px 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; z-index: auto; }
@@ -9418,3 +9443,100 @@ html[dir="rtl"] .nmt-bars i { margin-inline-start: auto; }
 .srp-mirror-input { width: 100%; box-sizing: border-box; min-height: 64px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1rem; resize: none; }
 .srp-mirror-input:focus { outline: none; border-color: #5aa9c0; }
 @media (prefers-reduced-motion: reduce) { .sr-turntable-note, .sr-scope-glint, .sr-chest-glow, .srp-pool-q, .sr-chest-gift { animation: none !important; } }
+
+/* ===== 🍲 המתכונים שלי: "פס צבע" על לוח גיר (לפי בחירה מפורשת: עיצוב 1 בלי "הכל" בשילוב הנראות של 15) ===== */
+.recipes-gallery, .recipe-detail-view {
+    --chalk-bg: #27332e; --chalk: #f3f1e8; --chalk-muted: rgba(243, 241, 232, 0.7); --chalk-line: rgba(243, 241, 232, 0.24);
+    --chalk-soft: rgba(243, 241, 232, 0.09); --chalk-yellow: #f7d774; --chalk-font: 'Amatic SC', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; --chalk-scale: 1;
+}
+/* בכתבים שאין להם כתב גיר (ערבית, הודית, תאית, יפנית...) - הכותרות בפונט הרגיל, בגודל רגיל */
+html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="ja"], [lang="zh"], [lang="ko"], [lang="el"], [lang="yo"]) :is(.recipes-gallery, .recipe-detail-view) { --chalk-scale: 0.62; }
+.recipes-gallery { padding: 18px 14px 22px; border-radius: 26px; background: radial-gradient(ellipse at 28% 0%, rgba(255, 255, 255, 0.08), transparent 62%), radial-gradient(ellipse at 85% 100%, rgba(255, 255, 255, 0.04), transparent 55%), var(--chalk-bg); color: var(--chalk); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 16px 32px -20px rgba(0, 0, 0, 0.6); }
+.recipes-gallery .recipes-top-title { font-family: var(--chalk-font); font-size: calc(2.4rem * var(--chalk-scale)); font-weight: 700; line-height: 1; color: var(--chalk); }
+.recipes-gallery .recipes-top-btn { border: 1.5px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
+.recipes-gallery .recipes-top-btn.is-add { border: none; background: var(--chalk-yellow); color: #27332e; box-shadow: none; }
+.recipes-gallery .recipes-search { background: var(--chalk-soft); color: var(--chalk-muted); }
+.recipes-gallery .recipes-search input { color: var(--chalk); }
+.recipes-gallery .recipes-search input::placeholder { color: var(--chalk-muted); }
+.recipes-gallery .recipes-search:focus-within { box-shadow: 0 0 0 2px rgba(247, 215, 116, 0.5); }
+.recipes-gallery .recipes-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--chalk-soft); color: var(--chalk); }
+.recipes-gallery .recipes-chip.is-on { background: var(--chalk); color: var(--chalk-bg); }
+.recipes-chip-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
+.recipes-gallery .recipes-grid { align-items: start; }
+.recipes-gallery .recipe-tile { border: 2px dashed var(--chalk-line); border-radius: 18px; background: transparent; color: var(--chalk); }
+.recipe-tile-band { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 8px 9px; background: linear-gradient(135deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
+.recipe-tile-cat { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 0.68rem; font-weight: 800; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22); }
+.recipe-tile-saved { flex: none; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); color: #27332e; font-size: 0.62rem; font-weight: 900; }
+.recipe-tile-time { flex: none; margin-inline-start: auto; padding: 1px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.2); color: #fff; font-size: 0.66rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.recipe-tile-photo { display: block; height: 92px; overflow: hidden; }
+.recipe-tile-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.recipes-gallery .recipe-tile-body { padding: 9px 11px 12px; }
+.recipes-gallery .recipe-tile-title { font-family: var(--chalk-font); font-size: calc(1.5rem * var(--chalk-scale)); font-weight: 700; line-height: 1.05; }
+html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="ja"], [lang="zh"], [lang="ko"], [lang="el"], [lang="yo"]) .recipes-gallery .recipe-tile-title { line-height: 1.3; }
+.recipe-tile-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--chalk-muted); font-size: 0.72rem; line-height: 1.35; }
+.recipes-gallery .recipe-tile-meta { color: var(--chalk-muted); }
+.recipes-gallery .recipe-tile-new { border: 2px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
+.recipes-gallery .recipe-tile-plus { color: var(--chalk-yellow); }
+.recipes-gallery .recipe-tile-new-sub { color: var(--chalk-muted); }
+.recipes-section-label { grid-column: 1 / -1; margin: 10px 2px 0; font-family: var(--chalk-font); font-size: calc(1.8rem * var(--chalk-scale)); font-weight: 700; line-height: 1; color: var(--chalk); text-align: start; }
+.recipes-gallery .recipes-empty { color: var(--chalk-muted); }
+.recipes-gallery .recipe-tile-skeleton { background: var(--chalk-soft); }
+.recipes-gallery .recipe-tile:focus-visible, .recipes-gallery .recipes-chip:focus-visible, .recipes-gallery .recipes-top-btn:focus-visible { outline: 2px solid var(--chalk-yellow); outline-offset: 2px; }
+/* עמוד המתכון: פס הצבע למעלה, והלוח מתחתיו */
+.recipe-detail-view { background: var(--chalk-bg); }
+.recipe-detail-view .recipe-hero:not(.has-photo) { display: block; height: auto; padding: 76px 18px 44px; }
+.recipe-hero-band { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.recipe-hero.has-photo .recipe-hero-band { position: absolute; inset-inline: 16px; bottom: 40px; }
+.recipe-hero-cat { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 0.92rem; font-weight: 800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.recipe-hero-time { flex: none; margin-inline-start: auto; padding: 3px 11px; border-radius: 999px; background: rgba(0, 0, 0, 0.22); color: #fff; font-size: 0.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.recipe-detail-view .recipe-sheet { background: var(--chalk-bg); color: var(--chalk); }
+.recipe-detail-view .recipe-sheet-cat { display: none; }
+.recipe-detail-view .recipe-sheet-title { font-family: var(--chalk-font); font-size: calc(2.8rem * var(--chalk-scale)); font-weight: 700; line-height: 1; color: var(--chalk); }
+.recipe-detail-view .recipe-sheet-title::after { content: ''; display: block; width: 76px; height: 4px; margin-top: 10px; border-radius: 4px; background: linear-gradient(90deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
+.recipe-sheet-desc { margin: 4px 0 0; color: var(--chalk-muted); font-size: 0.92rem; line-height: 1.45; text-align: start; }
+.recipe-detail-view .recipe-kcal-chip { background: var(--chalk-soft); color: var(--chalk); }
+.recipe-detail-view .recipe-servings { background: var(--chalk-soft); }
+.recipe-detail-view .recipe-servings-btn { background: rgba(243, 241, 232, 0.14); color: var(--chalk); }
+.recipe-detail-view .recipe-servings-value { color: var(--chalk); }
+.recipe-save-example { width: 100%; padding: 13px; border: 0; border-radius: 16px; background: var(--chalk-yellow); color: #27332e; font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
+.recipe-save-example:disabled { background: var(--chalk-soft); color: var(--chalk-muted); cursor: default; }
+.recipe-save-example:not(:disabled):active { transform: scale(0.98); }
+.recipe-save-example:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+/* מצרכים ואופן ההכנה אחד אחרי השני (כמו בעיצוב שנבחר), בלי לשוניות */
+.recipe-detail-view .recipe-seg { display: none; }
+#recipe-detail-view .recipe-pane.hidden { display: flex !important; }
+.recipe-pane-title { margin: 8px 0 0; font-family: var(--chalk-font); font-size: calc(2rem * var(--chalk-scale)); font-weight: 700; line-height: 1; color: var(--chalk); text-align: start; }
+.recipe-detail-view .recipe-have-list > li { border-bottom: 1.5px dashed var(--chalk-line); }
+.recipe-detail-view .recipe-have-row { color: var(--chalk); }
+.recipe-detail-view .recipe-have-box { border-color: rgba(243, 241, 232, 0.55); }
+.recipe-detail-view .recipe-have-row.is-have .recipe-have-box { border-color: var(--chalk-yellow); background: var(--chalk-yellow); color: #27332e; }
+.recipe-detail-view .recipe-have-text b { color: var(--chalk-yellow); }
+.recipe-detail-view .recipe-have-row.is-have .recipe-have-text { color: var(--chalk-muted); }
+.recipe-detail-view .recipe-have-hint { color: var(--chalk-muted); }
+.recipe-detail-view .recipe-steps { padding: 0; list-style: none; counter-reset: rstep; color: var(--chalk); }
+.recipe-detail-view .recipe-steps li { position: relative; padding-inline-start: 34px; counter-increment: rstep; }
+.recipe-detail-view .recipe-steps li::before { content: counter(rstep); position: absolute; inset-inline-start: 0; top: 1px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--chalk-line); color: var(--chalk-yellow); font-size: 0.78rem; font-weight: 800; }
+.recipe-detail-view .recipe-steps.is-single li { padding-inline-start: 0; }
+.recipe-detail-view .recipe-steps.is-single li::before { display: none; }
+.recipe-detail-view .recipe-detail-calories-summary { color: var(--chalk-muted) !important; }
+.recipe-detail-view .recipe-detail-empty-line { color: var(--chalk-muted) !important; }
+.recipe-detail-view .recipe-action-main { background: var(--chalk-yellow); color: #27332e; }
+.recipe-detail-view .recipe-action-main:disabled { background: var(--chalk-soft); color: var(--chalk-muted); }
+.recipe-detail-view .recipe-action-soft { border: 1.5px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
+.recipe-detail-view .recipe-sheet-foot { border-top: 1.5px dashed var(--chalk-line); }
+.recipe-detail-view .recipe-add-preset-btn { border-color: rgba(247, 215, 116, 0.55); background: transparent; color: var(--chalk-yellow); }
+.recipe-detail-view .recipe-delete-link { color: #fda4af; }
+/* טופס המתכון: זמן הכנה + גרם למנה בשורה אחת */
+.recipe-form-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.recipe-form-pair input { min-width: 0; }
+
+/* ⏰ שעה תפוסה בשגרה: להחליף (ולהעביר את השני) / גם וגם */
+.routine-clash { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 16px; border: 1.5px solid color-mix(in srgb, var(--accent-gold) 55%, transparent); background: color-mix(in srgb, var(--accent-gold) 10%, transparent); }
+.routine-clash-title { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); text-align: start; }
+.routine-clash-btn { padding: 11px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; font-size: 0.86rem; font-weight: 700; text-align: start; cursor: pointer; }
+.routine-clash-btn:active { transform: scale(0.98); }
+.routine-clash-btn:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.routine-clash-move { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.routine-clash-move-label { flex: 1 1 100%; font-size: 0.82rem; color: var(--text-secondary); text-align: start; }
+.routine-clash-move .nm-time-btn { flex: none; }
+.routine-clash-move .btn-primary { flex: 1; margin: 0; }

@@ -89,9 +89,11 @@
     <!-- פונט ברירת המחדל של כל האפליקציה (לכל המשתמשים) - Playpen Sans Hebrew.
          display=fallback: המתנה קצרה מאוד לפונט (מהמטמון זה מיידי) במקום הבהוב -->
     <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&display=fallback" rel="stylesheet">
+    <!-- כתב גיר לכותרות "המתכונים שלי" (עיצוב לוח הגיר) -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=545">
+    <link rel="stylesheet" href="theme.css?v=546">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1637,34 +1639,40 @@
                     <div class="recipe-hero" id="recipe-hero">
                         <img id="recipe-detail-photo" class="recipe-hero-photo hidden" alt="">
                         <span class="recipe-hero-emoji" id="recipe-hero-emoji" aria-hidden="true"></span>
+                        <div class="recipe-hero-band"><span class="recipe-hero-cat" id="recipe-hero-cat"></span><span class="recipe-hero-time hidden" id="recipe-hero-time"></span></div>
                         <button type="button" class="recipe-hero-btn recipe-hero-back" onclick="closeRecipeDetail()" data-i18n-title="recipe_back_btn" data-i18n-aria-label="recipe_back_btn" title="Back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
                         <div class="recipe-hero-actions">
                             <button type="button" class="recipe-hero-btn" onclick="shareRecipe()" data-i18n-title="recipe_share_title" data-i18n-aria-label="recipe_share_title" title="Share recipe" aria-label="Share recipe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></button>
-                            <button type="button" class="recipe-hero-btn" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" data-i18n-aria-label="recipe_edit_title" title="Edit recipe" aria-label="Edit recipe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M13 8.6l2.4 2.4"/></svg></button>
+                            <button type="button" class="recipe-hero-btn" id="recipe-edit-btn" onclick="openEditRecipeForm()" data-i18n-title="recipe_edit_title" data-i18n-aria-label="recipe_edit_title" title="Edit recipe" aria-label="Edit recipe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 19.4l1.35-3.75 8.35-8.35a1.7 1.7 0 0 1 2.4 2.4l-8.35 8.35z"/><path d="M13 8.6l2.4 2.4"/></svg></button>
                         </div>
                     </div>
                     <div class="recipe-sheet">
                         <div class="recipe-sheet-head">
                             <span class="recipe-sheet-cat" id="recipe-detail-category"></span>
                             <h2 class="recipe-sheet-title" id="recipe-detail-title"></h2>
+                            <p class="recipe-sheet-desc hidden" id="recipe-detail-desc"></p>
                         </div>
                         <div class="recipe-sheet-meta">
                             <span class="recipe-kcal-chip" id="recipe-detail-calories"></span>
+                            <span class="recipe-kcal-chip hidden" id="recipe-detail-grams"></span>
                             <span class="recipe-servings" id="recipe-servings">
                                 <button type="button" class="recipe-servings-btn" onclick="stepRecipeServings(-1)" data-i18n-aria-label="recipe_servings_less" data-i18n-title="recipe_servings_less" aria-label="Fewer servings" title="Fewer servings">−</button>
                                 <span class="recipe-servings-value" id="recipe-servings-value" aria-live="polite"></span>
                                 <button type="button" class="recipe-servings-btn" onclick="stepRecipeServings(1)" data-i18n-aria-label="recipe_servings_more" data-i18n-title="recipe_servings_more" aria-label="More servings" title="More servings">+</button>
                             </span>
                         </div>
+                        <button type="button" class="recipe-save-example hidden" id="recipe-save-example-btn" onclick="saveExampleRecipe()"></button>
                         <div class="recipe-seg" role="tablist">
                             <button type="button" role="tab" class="recipe-seg-btn is-on" id="recipe-seg-ingredients" onclick="setRecipeTab('ingredients')" aria-selected="true" aria-controls="recipe-pane-ingredients"></button>
                             <button type="button" role="tab" class="recipe-seg-btn" id="recipe-seg-steps" onclick="setRecipeTab('steps')" aria-selected="false" aria-controls="recipe-pane-steps"></button>
                         </div>
                         <div class="recipe-pane" id="recipe-pane-ingredients" role="tabpanel">
+                            <h3 class="recipe-pane-title" id="recipe-pane-ingredients-title"></h3>
                             <ul id="recipe-detail-ingredients" class="recipe-have-list"></ul>
                             <p class="recipe-have-hint" id="recipe-have-hint" data-i18n="recipe_have_hint">✓ = have at home. Whatever isn't checked goes to the shopping list in one tap.</p>
                         </div>
                         <div class="recipe-pane hidden" id="recipe-pane-steps" role="tabpanel">
+                            <h3 class="recipe-pane-title" id="recipe-pane-steps-title"></h3>
                             <div id="recipe-detail-instructions" class="recipe-detail-instructions"></div>
                         </div>
                         <div class="recipe-actions">
@@ -1674,7 +1682,7 @@
                         <div class="recipe-sheet-foot">
                             <!-- ⭐ מתכון → ארוחה קבועה: פותח את "הוספת ארוחה למאגר" ממולא מראש (ר' addRecipeToPresets) -->
                             <button type="button" class="recipe-add-preset-btn" onclick="addRecipeToPresets()" data-i18n="recipe_add_to_presets_btn">⭐ Add to Saved Meals</button>
-                            <button type="button" class="recipe-delete-link" onclick="deleteRecipe()" data-i18n="recipe_delete_title">Delete recipe</button>
+                            <button type="button" class="recipe-delete-link" id="recipe-delete-link" onclick="deleteRecipe()" data-i18n="recipe_delete_title">Delete recipe</button>
                         </div>
                     </div>
                 </div>
@@ -1750,6 +1758,7 @@
                 <h3 id="center-item-modal-title" data-i18n="add_item_title">Add Item</h3>
                 <div class="preset-manager-grid">
                     <textarea id="center-item-input" rows="4" data-i18n-placeholder="add_item_placeholder" placeholder="Type here..." oninput="updateCenterItemPreview()"></textarea>
+                    <p id="center-item-written-at" class="center-item-written-at hidden"></p>
                     <p class="settings-label" data-i18n="note_preview_label">Preview</p>
                     <div id="center-item-preview-row" class="center-list-item-preview">
                         <span id="center-item-preview-text" class="center-list-item-text"></span>
@@ -3668,6 +3677,17 @@
                     <div class="daily-board-hours-chips" id="routine-item-days"></div>
                 </div>
                 <!-- מוצג רק כשהגיעו מ"🌱 להקטין" בכרטיס של 3 ימים בלי ✓ -->
+                <!-- ⏰ השעה תפוסה באותם ימים: להחליף (ולהעביר את השני) / גם וגם -->
+                <div class="routine-clash hidden" id="routine-clash-panel" role="group">
+                    <p class="routine-clash-title" id="routine-clash-title"></p>
+                    <button type="button" class="routine-clash-btn" id="routine-clash-replace" onclick="routineClashReplace()"></button>
+                    <div class="routine-clash-move hidden" id="routine-clash-move">
+                        <span class="routine-clash-move-label" id="routine-clash-move-label"></span>
+                        <button type="button" class="nm-time-btn" id="routine-clash-time-btn" data-time-id="routine-clash" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button>
+                        <button type="button" class="btn-primary" onclick="routineClashMoveAndSave()" data-i18n="routine_clash_move_btn">Move and save</button>
+                    </div>
+                    <button type="button" class="routine-clash-btn" id="routine-clash-both" onclick="routineClashBoth()"></button>
+                </div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-primary" onclick="saveRoutineItem()" data-i18n="save_generic">Save</button>
                     <button type="button" class="btn-clear-specific hidden" id="routine-item-delete-btn" onclick="deleteRoutineItemFromModal()" data-i18n="daily_board_delete_item_btn">Delete</button>
@@ -4104,8 +4124,11 @@
                 <textarea id="recipe-ai-raw-input" rows="4" data-i18n-placeholder="recipe_ai_paste_placeholder" placeholder="Paste a recipe here (from a website, WhatsApp, or notes)..."></textarea>
                 <button type="button" id="btn-recipe-ai-parse" class="btn-secondary" onclick="parseRecipeWithAI()" data-i18n="recipe_ai_parse_btn">✨ Parse with AI</button>
                 <div class="recipe-scan-divider" data-i18n="recipe_scan_or_divider">or</div>
-                <input type="file" id="recipe-image-input" accept="image/*,application/pdf" class="hidden" onchange="handleRecipeImageSelected(event)">
+                <input type="file" id="recipe-image-input" accept="image/*,application/pdf" multiple class="hidden" onchange="handleRecipeImageSelected(event)">
                 <button type="button" id="btn-recipe-scan-image" class="btn-secondary" onclick="document.getElementById('recipe-image-input').click()" data-i18n="recipe_scan_image_btn">📷 Scan or upload a file</button>
+                <!-- כמה תמונות למתכון אחד: לכל תמונה הכל / מצרכים / הכנה, ואז סריקה אחת לכולן -->
+                <div id="recipe-scan-tray" class="recipe-scan-tray hidden"></div>
+                <button type="button" id="btn-recipe-scan-run" class="btn-primary recipe-scan-run hidden" onclick="runRecipeScanTray()" data-i18n="recipe_scan_run_btn">✨ Scan the recipe</button>
                 <div class="recipe-scan-hint" id="recipe-scan-free-hint">5/5 free scans left this month</div>
                 <img id="recipe-image-preview" class="recipe-image-preview hidden" alt="">
                 <input type="hidden" id="recipe-image-url-input">
@@ -4123,6 +4146,7 @@
                         <option value="salads" data-i18n="recipe_category_salads">Salads</option>
                         <option value="soups" data-i18n="recipe_category_soups">Soups</option>
                         <option value="desserts" data-i18n="recipe_category_desserts">Desserts</option>
+                        <option value="vegan" data-i18n="recipe_category_vegan">Vegan</option>
                         <option value="custom" data-i18n="select_other_manual">✏️ Other</option>
                     </select>
                     <input type="text" id="recipe-category-input-custom" class="hidden" maxlength="40" data-i18n-placeholder="select_other_placeholder" placeholder="Type here...">
@@ -4130,6 +4154,10 @@
                     <p id="recipe-calories-estimate-hint" class="recipe-calories-estimate-hint hidden" data-i18n="recipe_calories_estimated_hint">Estimated calories - please double-check and adjust as needed</p>
                     <input type="number" id="recipe-servings-input" data-i18n-placeholder="recipe_servings_placeholder" placeholder="Servings (e.g. 10 slices)" oninput="updateRecipeCaloriesPerServingHint()">
                     <p id="recipe-calories-per-serving-hint" class="recipe-calories-estimate-hint hidden"></p>
+                    <div class="recipe-form-pair">
+                        <input type="number" id="recipe-minutes-input" min="0" inputmode="numeric" data-i18n-placeholder="recipe_minutes_placeholder" placeholder="Prep time (minutes)">
+                        <input type="number" id="recipe-grams-input" min="0" inputmode="numeric" data-i18n-placeholder="recipe_grams_placeholder" placeholder="Grams per serving">
+                    </div>
                     <textarea id="recipe-ingredients-input" rows="4" data-i18n-placeholder="recipe_ingredients_placeholder" placeholder="One ingredient per line"></textarea>
                     <textarea id="recipe-instructions-input" rows="5" data-i18n-placeholder="recipe_instructions_placeholder" placeholder="Step-by-step instructions"></textarea>
                     <div class="action-buttons-wrap">
@@ -4266,14 +4294,14 @@
 
     </div>
 
-    <script src="i18n.js?v=449"></script>
-    <script src="app.js?v=584"></script>
+    <script src="i18n.js?v=450"></script>
+    <script src="app.js?v=585"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
-    <script src="new-me-data.js?v=9"></script>
-    <script src="new-me.js?v=49"></script>
+    <script src="new-me-data.js?v=10"></script>
+    <script src="new-me.js?v=50"></script>
     <script src="new-me-challenges.js?v=6"></script>
     <script src="secret-room.js?v=24"></script>
     <script src="secret-places.js?v=8"></script>

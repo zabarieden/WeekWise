@@ -435,6 +435,8 @@ async function loadCenterItems(type) {
         }
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
+        // "נכתב לאחרונה" (בתוך פתק פתוח) - content_updated_at משתנה רק כשהטקסט משתנה, אז ארכיון ושחזור לא נוגעים בו
+        li.setAttribute('data-written-at', item.content_updated_at || item.created_at || '');
         if (item.text_color) li.setAttribute('data-text-color', item.text_color);
         if (item.glow_color) li.setAttribute('data-glow-color', item.glow_color);
         if (item.bg_color) li.setAttribute('data-bg-color', item.bg_color);
@@ -454,7 +456,7 @@ async function loadCenterItems(type) {
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
-            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}"${colorStyle}>
+            <span class="center-list-item-text${item.is_completed ? ' completed' : ''}${type === 'weekly' ? ' is-openable' : ''}"${colorStyle}${type === 'weekly' ? ` onclick="openCenterItemEditor(this, '${type}')"` : ''}>
                 ${escapeHtmlForReport(item.content)}
             </span>
             <button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">${EDIT_ICON_SVG}</button>
@@ -2994,8 +2996,25 @@ function setCenterItemSaveLabel(isEdit) {
     const btn = document.getElementById('btn-save-center-item');
     if (btn) btn.textContent = t(isEdit ? 'save_generic' : 'add_btn');
 }
+// בתוך פתק פתוח (רק בפתקים, רק כשפותחים פתק קיים): מתי הטקסט נכתב לאחרונה, תאריך ושעה מדויקים -
+// לפי בקשה מפורשת: "בתוך הפתק רק שלוחצים עליו שיראה מתי פעם אחרונה כתבת אותו את התאריך המדויק"
+let editingCenterItemOriginalText = null;
+function formatNoteWrittenAt(iso) {
+    const d = iso ? new Date(iso) : null;
+    if (!d || isNaN(d)) return '';
+    try { return new Intl.DateTimeFormat(currentLang, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d); } catch (e) { return d.toLocaleString(); }
+}
+function setCenterItemWrittenAt(iso) {
+    const el = document.getElementById('center-item-written-at');
+    if (!el) return;
+    const when = formatNoteWrittenAt(iso);
+    el.textContent = when ? t('note_written_at').replace('{date}', when) : '';
+    el.classList.toggle('hidden', !when);
+}
 function openCenterAdder(type) {
     editingCenterItemId = null;
+    editingCenterItemOriginalText = null;
+    setCenterItemWrittenAt('');
     pendingCenterItemType = type;
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
     setCenterItemSaveLabel(false);
@@ -3021,6 +3040,8 @@ function openCenterItemEditor(btn, type) {
     setCenterItemSaveLabel(true);
     const input = document.getElementById('center-item-input');
     input.value = currentText;
+    editingCenterItemOriginalText = currentText;
+    setCenterItemWrittenAt(type === 'weekly' ? li.getAttribute('data-written-at') : '');
     pendingCenterItemColor = li.getAttribute('data-text-color') || null;
     pendingCenterItemGlow = li.getAttribute('data-glow-color') || null;
     pendingCenterItemBg = li.getAttribute('data-bg-color') || null;
@@ -3047,7 +3068,7 @@ const SINGLE_FLIGHT_ACTIONS = [
     'submitRecurringExpense', 'submitSportQuickAdd', 'submitSportSession', 'submitStudyItem', 'submitNotebookItem',
     'saveVisionGoal', 'saveBook', 'saveBookFinish', 'confirmGoalStepSchedule', 'logFoodQuickAdd', 'addCustomWaterLogFromFab',
     'submitContactUs', 'saveGlanceTaskEdit', 'confirmMoveSlotToDay', 'confirmRecurringExpenseImport', 'saveColumnSubModal',
-    'submitRenamePage', 'submitChangePassword',
+    'submitRenamePage', 'submitChangePassword', 'saveExampleRecipe', 'runRecipeScanTray',
 ];
 function installSingleFlightActions() {
     SINGLE_FLIGHT_ACTIONS.forEach(name => {
@@ -3083,6 +3104,7 @@ async function submitCenterItem() {
     const color = pendingCenterItemColor;
     const glow = pendingCenterItemGlow;
     const bg = pendingCenterItemBg;
+    const originalText = editingCenterItemOriginalText;
     if (!text || !type) return;
     centerItemSubmitInFlight = true;
     try {
@@ -3092,7 +3114,8 @@ async function submitCenterItem() {
         pendingCenterItemColor = null;
         pendingCenterItemGlow = null;
         pendingCenterItemBg = null;
-        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg);
+        editingCenterItemOriginalText = null;
+        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg, text !== originalText);
         else await insertCenterItemDirect(type, text, color, glow, bg);
     } finally {
         centerItemSubmitInFlight = false;
@@ -3101,9 +3124,12 @@ async function submitCenterItem() {
 
 // עריכה מראה "השינויים נשמרו" (לא "הפריט נוסף") - ואם הפריט נמחק בזמן שהשמירה עוד רצה
 // (רשת איטית), לא מראים כלום: בעבר הופיע "הפריט נוסף בהצלחה" מיד אחרי מחיקה
-async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor) {
+async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor, contentChanged) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').update({ content, text_color: textColor, glow_color: glowColor, bg_color: bgColor }).eq('id', id);
+    const payload = { content, text_color: textColor, glow_color: glowColor, bg_color: bgColor };
+    // רק שינוי בטקסט עצמו מעדכן את "נכתב לאחרונה" (צבע בלבד - לא)
+    if (contentChanged) payload.content_updated_at = new Date().toISOString();
+    const { error } = await supabaseClient.from('my_center_tasks').update(payload).eq('id', id);
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     await loadCenterItems(type);
     if (!deletedCenterItemIds.has(id)) showAppToast(t('item_updated_success'));
@@ -7002,20 +7028,89 @@ const RECIPE_CATEGORIES = [
     { key: 'snacks', icon: '🍿' },
     { key: 'salads', icon: '🥗' },
     { key: 'soups', icon: '🍲' },
-    { key: 'desserts', icon: '🍰' }
+    { key: 'desserts', icon: '🍰' },
+    { key: 'vegan', icon: '🌱' }
 ];
 
 // צבעי הכרטיס כשאין תמונה - שני גוונים לכל קטגוריה (קטגוריה שהוקלדה ידנית מקבלת סגול-ורוד)
 const RECIPE_CATEGORY_COLORS = {
     appetizers: ['#f97316', '#facc15'], breakfast: ['#fb7185', '#f59e0b'], meat_mains: ['#ef4444', '#f97316'],
     dairy_mains: ['#38bdf8', '#818cf8'], sides: ['#f59e0b', '#84cc16'], snacks: ['#22d3ee', '#6366f1'],
-    salads: ['#34d399', '#22d3ee'], soups: ['#f59e0b', '#ef4444'], desserts: ['#ec4899', '#a855f7'],
+    salads: ['#34d399', '#22d3ee'], soups: ['#f59e0b', '#ef4444'], desserts: ['#ec4899', '#a855f7'], vegan: ['#22c55e', '#84cc16'],
 };
 
 let cachedRecipes = [];
 let recipesFilterCategory = 'all';
 let currentDetailRecipeId = null;
 let editingRecipeId = null;
+
+// --- 🍲 מתכונים לדוגמה (לפי בקשה מפורשת: 18 מתכונים שנבחרו מתוך 20, ועוד 3 טבעוניים - "ותכניס כבר מקסימום אגיד לך
+// למחוק אם לא אהבתי"). כאן רק הנתונים הקבועים: קטגוריה, זמן הכנה, מנות, סך הקלוריות, וכמה גרם מנה אחת ("ואשמח אם
+// תוסיפו כמה גרם בכל דבר נגיד מנה אחת = ככה וככה גרם חשוב"). הטקסטים בכל שפה ב-recipes/ex-<שפה>.js, שנטען רק כשנכנסים
+// למתכונים. "לשמור במתכונים שלי" מעתיק מתכון לדוגמה לטבלת recipes (source_example), ואז אפשר לערוך אותו ---
+const EXAMPLE_RECIPES = [
+    { id: 'ex1', category: 'breakfast', minutes: 25, servings: 2, kcal: 620, grams: 350 },
+    { id: 'ex2', category: 'breakfast', minutes: 20, servings: 2, kcal: 520, grams: 130 },
+    { id: 'ex3', category: 'breakfast', minutes: 35, servings: 4, kcal: 800, grams: 195 },
+    { id: 'ex4', category: 'salads', minutes: 40, servings: 4, kcal: 1140, grams: 200 },
+    { id: 'ex6', category: 'salads', minutes: 15, servings: 4, kcal: 380, grams: 150 },
+    { id: 'ex7', category: 'soups', minutes: 35, servings: 4, kcal: 920, grams: 350 },
+    { id: 'ex8', category: 'soups', minutes: 50, servings: 4, kcal: 400, grams: 350 },
+    { id: 'ex9', category: 'meat_mains', minutes: 70, servings: 4, kcal: 1700, grams: 290 },
+    { id: 'ex10', category: 'meat_mains', minutes: 45, servings: 4, kcal: 1100, grams: 235 },
+    { id: 'ex11', category: 'meat_mains', minutes: 35, servings: 4, kcal: 1060, grams: 165 },
+    { id: 'ex12', category: 'dairy_mains', minutes: 25, servings: 4, kcal: 1680, grams: 350 },
+    { id: 'ex13', category: 'dairy_mains', minutes: 55, servings: 6, kcal: 1110, grams: 160 },
+    { id: 'ex14', category: 'sides', minutes: 40, servings: 4, kcal: 720, grams: 180 },
+    { id: 'ex15', category: 'sides', minutes: 50, servings: 6, kcal: 1920, grams: 215 },
+    { id: 'ex16', category: 'appetizers', minutes: 45, servings: 4, kcal: 480, grams: 160 },
+    { id: 'ex17', category: 'appetizers', minutes: 90, servings: 6, kcal: 510, grams: 110 },
+    { id: 'ex18', category: 'snacks', minutes: 15, servings: 16, kcal: 1280, grams: 20 },
+    { id: 'ex20', category: 'desserts', minutes: 40, servings: 4, kcal: 880, grams: 175 },
+    { id: 'exv1', category: 'vegan', minutes: 35, servings: 2, kcal: 1100, grams: 375 },
+    { id: 'exv2', category: 'vegan', minutes: 30, servings: 4, kcal: 840, grams: 240 },
+    { id: 'exv3', category: 'vegan', minutes: 5, servings: 2, kcal: 400, grams: 200 },
+];
+const EXAMPLE_RECIPES_VERSION = 1;
+const EXAMPLE_RECIPE_LANGS = ['he', 'en', 'es', 'fr', 'ar', 'ru', 'de', 'pt', 'ja', 'zh', 'hi', 'ko', 'tr', 'id', 'it', 'vi', 'pl', 'th', 'ur', 'bn', 'sw', 'uk', 'el', 'nl', 'ca', 'ro', 'yo', 'sv', 'nb', 'da', 'cs', 'hu', 'fi'];
+const exampleRecipeTexts = {};
+const exampleRecipeLoads = {};
+function registerExampleRecipeTexts(lang, texts) { exampleRecipeTexts[lang] = texts; }
+// טוען את קובץ הטקסטים של השפה פעם אחת (ואם נכשל - אנגלית). מחזיר את קוד השפה שנטען, או null
+function ensureExampleRecipeTexts(lang) {
+    const code = EXAMPLE_RECIPE_LANGS.includes(lang) ? lang : 'en';
+    if (exampleRecipeTexts[code]) return Promise.resolve(code);
+    if (!exampleRecipeLoads[code]) {
+        exampleRecipeLoads[code] = new Promise(resolve => {
+            const s = document.createElement('script');
+            s.src = `recipes/ex-${code}.js?v=${EXAMPLE_RECIPES_VERSION}`;
+            s.onload = () => resolve(exampleRecipeTexts[code] ? code : null);
+            s.onerror = () => { delete exampleRecipeLoads[code]; resolve(code === 'en' ? null : ensureExampleRecipeTexts('en')); };
+            document.head.appendChild(s);
+        });
+    }
+    return exampleRecipeLoads[code];
+}
+function exampleRecipeText(id) {
+    const texts = exampleRecipeTexts[currentLang] || exampleRecipeTexts.en;
+    return texts ? texts[id] : null;
+}
+function getExampleRecipes() {
+    return EXAMPLE_RECIPES.map(ex => {
+        const tx = exampleRecipeText(ex.id);
+        if (!tx) return null;
+        return { id: ex.id, is_example: true, title: tx.t, description: tx.d, category: ex.category, calories: ex.kcal, servings: ex.servings, serving_grams: ex.grams, prep_minutes: ex.minutes, ingredients: tx.i.join('\n'), instructions: tx.s.join('\n'), image_url: '' };
+    }).filter(Boolean);
+}
+// מתכון שלי, או מתכון לדוגמה (מזהה שמתחיל ב-ex - מזהי המתכונים בטבלה הם UUID)
+function findRecipeById(id) {
+    if (!id) return null;
+    return cachedRecipes.find(r => r.id === id) || (String(id).startsWith('ex') ? getExampleRecipes().find(r => r.id === id) || null : null);
+}
+// מתכון לדוגמה שכבר נשמר במתכונים שלי (לא שומרים פעמיים)
+function savedCopyOfExample(exampleId) {
+    return cachedRecipes.find(r => r.source_example === exampleId) || null;
+}
 
 // קטגוריות מתכון שהוקלדו ידנית ("אחר") - טקסט חופשי ב-recipes.category
 function getRecipeCategoryList() {
@@ -7040,18 +7135,20 @@ function recipeCategoryColors(key) {
 function recipeServingsLabel(n) {
     return bagPlural('recipe_servings', n);
 }
-// "190 קלוריות למנה · 6 מנות" (או סך הכול כשאין מספר מנות)
+// "310 קלוריות למנה · 350 גר׳" (ובלי גרמים - מספר המנות; וכשאין מספר מנות - סך הקלוריות)
 function recipeMetaLine(recipe) {
     const kcal = Number(recipe.calories) || 0;
     const servings = Number(recipe.servings) || 0;
+    const grams = Number(recipe.serving_grams) || 0;
     const parts = [];
     if (kcal) parts.push(servings > 0 ? `${Math.round(kcal / servings).toLocaleString(currentLang)} ${t('recipe_calories_per_serving_unit')}` : `${kcal.toLocaleString(currentLang)} ${t('calories_unit')}`);
-    if (servings > 0) parts.push(recipeServingsLabel(servings));
+    if (grams) parts.push(t('recipe_meta_grams_short').replace('{n}', grams.toLocaleString(currentLang)));
+    else if (servings > 0) parts.push(recipeServingsLabel(servings));
     return parts.join(' · ');
 }
 function recipeMatchesSearch(recipe, query) {
     if (!query) return true;
-    return String(recipe.title || '').toLowerCase().includes(query) || String(recipe.ingredients || '').toLowerCase().includes(query);
+    return [recipe.title, recipe.ingredients, recipe.description].some(v => String(v || '').toLowerCase().includes(query));
 }
 // התמונה של המתכון, ואם אין - צבע הקטגוריה עם האייקון שלה (בכרטיס בגלריה ובראש עמוד המתכון)
 function paintRecipeArt(el, recipe) {
@@ -7060,73 +7157,117 @@ function paintRecipeArt(el, recipe) {
     el.style.setProperty('--rb', b);
 }
 
+// עיצוב "פס צבע" על לוח גיר (לפי בחירה מפורשת: "אני אקח את 1 בלי ההכל בשילוב של 15"): בלי תווית "הכל" - לחיצה על
+// קטגוריה מסננת, ולחיצה נוספת עליה מחזירה הכול. קודם המתכונים שלי (ו"מתכון חדש"), אחריהם "מתכונים לדוגמה"
+function recipeTileEl(recipe) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'recipe-tile' + (recipe.is_example ? ' is-example' : '');
+    card.dataset.recipeId = recipe.id;
+    card.onclick = () => openRecipeDetail(recipe.id);
+    paintRecipeArt(card, recipe);
+    const band = document.createElement('span');
+    band.className = 'recipe-tile-band';
+    const cat = document.createElement('span');
+    cat.className = 'recipe-tile-cat';
+    cat.textContent = recipeCategoryLabel(recipe.category);
+    band.appendChild(cat);
+    if (recipe.is_example && savedCopyOfExample(recipe.id)) {
+        const saved = document.createElement('span');
+        saved.className = 'recipe-tile-saved';
+        saved.textContent = '✓';
+        saved.title = t('recipe_saved_example');
+        band.appendChild(saved);
+    }
+    const minutes = Number(recipe.prep_minutes) || 0;
+    if (minutes) {
+        const time = document.createElement('span');
+        time.className = 'recipe-tile-time';
+        time.textContent = t('recipe_meta_minutes').replace('{n}', minutes.toLocaleString(currentLang));
+        band.appendChild(time);
+    }
+    card.appendChild(band);
+    if (recipe.image_url) {
+        const photo = document.createElement('span');
+        photo.className = 'recipe-tile-photo';
+        const img = document.createElement('img');
+        img.src = recipe.image_url;
+        img.alt = '';
+        img.loading = 'lazy';
+        // תמונה שלא נטענת (נמחקה מהאחסון) - בלי תמונה
+        img.onerror = () => { photo.remove(); };
+        photo.appendChild(img);
+        card.appendChild(photo);
+    }
+    const body = document.createElement('span');
+    body.className = 'recipe-tile-body';
+    const title = document.createElement('span');
+    title.className = 'recipe-tile-title';
+    title.textContent = recipe.title;
+    body.appendChild(title);
+    if (recipe.description) {
+        const desc = document.createElement('span');
+        desc.className = 'recipe-tile-desc';
+        desc.textContent = recipe.description;
+        body.appendChild(desc);
+    }
+    const metaText = recipeMetaLine(recipe);
+    if (metaText) {
+        const meta = document.createElement('span');
+        meta.className = 'recipe-tile-meta';
+        meta.textContent = metaText;
+        body.appendChild(meta);
+    }
+    card.appendChild(body);
+    return card;
+}
+
 function renderRecipesGallery() {
     const grid = document.getElementById('recipes-grid');
     const chips = document.getElementById('recipes-chips');
     if (!grid || !chips) return;
+    // הטקסטים של המתכונים לדוגמה בשפה הנוכחית - נטענים פעם אחת, ואז מציירים שוב
+    if (!exampleRecipeTexts[EXAMPLE_RECIPE_LANGS.includes(currentLang) ? currentLang : 'en']) {
+        ensureExampleRecipeTexts(currentLang).then(code => { if (code) renderRecipesGallery(); });
+    }
+    const examples = getExampleRecipes();
     const input = document.getElementById('recipes-search-input');
     const query = (input && input.value || '').trim().toLowerCase();
-    const cats = getRecipeCategoryList().filter(c => cachedRecipes.some(r => r.category === c.key));
+    const all = [...cachedRecipes, ...examples];
+    const cats = getRecipeCategoryList().filter(c => all.some(r => r.category === c.key));
     if (recipesFilterCategory !== 'all' && !cats.some(c => c.key === recipesFilterCategory)) recipesFilterCategory = 'all';
 
     chips.innerHTML = '';
-    chips.classList.toggle('hidden', !cachedRecipes.length);
-    const addChip = (key, label) => {
+    chips.classList.toggle('hidden', !cats.length);
+    cats.forEach(c => {
+        const on = recipesFilterCategory === c.key;
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'recipes-chip' + (recipesFilterCategory === key ? ' is-on' : '');
-        b.setAttribute('aria-pressed', recipesFilterCategory === key ? 'true' : 'false');
-        b.textContent = label;
-        b.onclick = () => { recipesFilterCategory = key; renderRecipesGallery(); };
+        b.className = 'recipes-chip' + (on ? ' is-on' : '');
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.dataset.category = c.key;
+        paintRecipeArt(b, { category: c.key });
+        const dot = document.createElement('span');
+        dot.className = 'recipes-chip-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        b.appendChild(dot);
+        b.appendChild(document.createTextNode(recipeCategoryLabel(c.key)));
+        b.onclick = () => { recipesFilterCategory = on ? 'all' : c.key; renderRecipesGallery(); };
         chips.appendChild(b);
-    };
-    addChip('all', `${t('recipes_filter_all')} · ${cachedRecipes.length.toLocaleString(currentLang)}`);
-    cats.forEach(c => addChip(c.key, `${c.icon} ${recipeCategoryLabel(c.key)}`));
+    });
 
-    const list = cachedRecipes.filter(r => (recipesFilterCategory === 'all' || r.category === recipesFilterCategory) && recipeMatchesSearch(r, query));
+    const matches = r => (recipesFilterCategory === 'all' || r.category === recipesFilterCategory) && recipeMatchesSearch(r, query);
+    const mine = cachedRecipes.filter(matches);
+    const exampleList = examples.filter(matches);
     grid.innerHTML = '';
-    if (query && !list.length) {
+    if (query && !mine.length && !exampleList.length) {
         const empty = document.createElement('p');
         empty.className = 'recipes-empty';
         empty.textContent = t('recipes_no_results');
         grid.appendChild(empty);
         return;
     }
-    list.forEach(recipe => {
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.className = 'recipe-tile';
-        card.onclick = () => openRecipeDetail(recipe.id);
-        const art = document.createElement('span');
-        art.className = 'recipe-tile-art';
-        paintRecipeArt(art, recipe);
-        if (recipe.image_url) {
-            const img = document.createElement('img');
-            img.src = recipe.image_url;
-            img.alt = '';
-            img.loading = 'lazy';
-            // תמונה שלא נטענת (נמחקה מהאחסון) - חוזרים לצבע
-            img.onerror = () => { img.remove(); };
-            art.appendChild(img);
-        }
-        // בלי אימוג'י גדול - רק הצבע של סוג המתכון (לפי בקשה מפורשת: "שיהיה רק צבע נחמד כזה"); תמונה שצורפה למתכון נשארת
-        const body = document.createElement('span');
-        body.className = 'recipe-tile-body';
-        const title = document.createElement('span');
-        title.className = 'recipe-tile-title';
-        title.textContent = recipe.title;
-        body.appendChild(title);
-        const metaText = recipeMetaLine(recipe);
-        if (metaText) {
-            const meta = document.createElement('span');
-            meta.className = 'recipe-tile-meta';
-            meta.textContent = metaText;
-            body.appendChild(meta);
-        }
-        card.appendChild(art);
-        card.appendChild(body);
-        grid.appendChild(card);
-    });
+    mine.forEach(recipe => grid.appendChild(recipeTileEl(recipe)));
     if (!query) {
         const add = document.createElement('button');
         add.type = 'button';
@@ -7135,11 +7276,19 @@ function renderRecipesGallery() {
         add.innerHTML = `<span class="recipe-tile-plus" aria-hidden="true">＋</span><span class="recipe-tile-new-title">${escapeHtmlForReport(t('recipes_new_tile'))}</span><span class="recipe-tile-new-sub">${escapeHtmlForReport(t('recipes_new_tile_sub'))}</span>`;
         grid.appendChild(add);
     }
+    if (exampleList.length) {
+        const label = document.createElement('h3');
+        label.className = 'recipes-section-label';
+        label.textContent = t('recipes_examples_title');
+        grid.appendChild(label);
+        exampleList.forEach(recipe => grid.appendChild(recipeTileEl(recipe)));
+    }
 }
 
 async function loadRecipes() {
     if (!supabaseClient || !currentUserId) return;
     showRecipesLoading();
+    ensureExampleRecipeTexts(currentLang);
     const { data } = await supabaseClient.from('recipes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
     cachedRecipes = data || [];
     renderRecipesGallery();
@@ -7171,9 +7320,12 @@ function openAddRecipeForm() {
     setSelectValueWithOther('recipe-category-input', recipesFilterCategory !== 'all' ? recipesFilterCategory : '');
     document.getElementById('recipe-calories-input').value = '';
     document.getElementById('recipe-servings-input').value = '';
+    document.getElementById('recipe-minutes-input').value = '';
+    document.getElementById('recipe-grams-input').value = '';
     document.getElementById('recipe-ingredients-input').value = '';
     document.getElementById('recipe-instructions-input').value = '';
     setRecipeImagePreview('');
+    resetRecipeScanTray();
     setRecipeCaloriesEstimateHint(false);
     updateRecipeCaloriesPerServingHint();
     openModal('modal-add-recipe');
@@ -7183,12 +7335,15 @@ function openEditRecipeForm() {
     const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
     if (!recipe) return;
     editingRecipeId = recipe.id;
+    resetRecipeScanTray();
     document.getElementById('modal-add-recipe-title').textContent = t('recipe_edit_modal_title');
     document.getElementById('recipe-ai-raw-input').value = '';
     document.getElementById('recipe-title-input').value = recipe.title || '';
     setSelectValueWithOther('recipe-category-input', recipe.category || '');
     document.getElementById('recipe-calories-input').value = recipe.calories || '';
     document.getElementById('recipe-servings-input').value = recipe.servings || '';
+    document.getElementById('recipe-minutes-input').value = recipe.prep_minutes || '';
+    document.getElementById('recipe-grams-input').value = recipe.serving_grams || '';
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
     document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
     setRecipeImagePreview(recipe.image_url || '');
@@ -7210,6 +7365,8 @@ async function saveRecipe() {
     const category = getSelectValueWithOther('recipe-category-input');
     const calories = parseInt(document.getElementById('recipe-calories-input').value) || 0;
     const servings = parseInt(document.getElementById('recipe-servings-input').value) || null;
+    const prepMinutes = parseInt(document.getElementById('recipe-minutes-input').value) || null;
+    const servingGrams = parseInt(document.getElementById('recipe-grams-input').value) || null;
     const ingredients = document.getElementById('recipe-ingredients-input').value.trim();
     const instructions = document.getElementById('recipe-instructions-input').value.trim();
     const imageUrl = document.getElementById('recipe-image-url-input').value.trim();
@@ -7217,7 +7374,7 @@ async function saveRecipe() {
     if (!category) { showAppToast(t('recipe_category_required'), 'error'); return; }
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
 
-    const payload = { title, category, calories, servings, ingredients, instructions };
+    const payload = { title, category, calories, servings, ingredients, instructions, prep_minutes: prepMinutes, serving_grams: servingGrams };
     const payloadWithImage = imageUrl ? { ...payload, image_url: imageUrl } : payload;
     let error;
     if (editingRecipeId) {
@@ -7322,7 +7479,7 @@ function toggleRecipeHave(line) {
 }
 
 function openRecipeDetail(id) {
-    const recipe = cachedRecipes.find(r => r.id === id);
+    const recipe = findRecipeById(id);
     if (!recipe) return;
     const sameRecipe = currentDetailRecipeId === id;
     currentDetailRecipeId = id;
@@ -7333,51 +7490,100 @@ function openRecipeDetail(id) {
         recipeViewServings = Number(recipe.servings) || 0;
     }
 
+    const view = document.getElementById('recipe-detail-view');
     const hero = document.getElementById('recipe-hero');
     paintRecipeArt(hero, recipe);
+    // צבע הקטגוריה גם לקו שמתחת לשם המתכון, על הלוח
+    paintRecipeArt(view, recipe);
     const photo = document.getElementById('recipe-detail-photo');
     const emoji = document.getElementById('recipe-hero-emoji');
-    // רק צבע (בלי אימוג'י גדול), כמו בכרטיסים
     emoji.textContent = '';
+    emoji.classList.add('hidden');
     if (recipe.image_url) {
-        photo.onerror = () => { photo.classList.add('hidden'); };
+        photo.onerror = () => { photo.classList.add('hidden'); hero.classList.remove('has-photo'); };
         photo.src = recipe.image_url;
         photo.classList.remove('hidden');
-        emoji.classList.add('hidden');
     } else {
         photo.removeAttribute('src');
         photo.classList.add('hidden');
-        emoji.classList.add('hidden');
     }
-    document.getElementById('recipe-detail-category').textContent = `${recipeCategoryIcon(recipe.category)} ${recipeCategoryLabel(recipe.category)}`;
+    hero.classList.toggle('has-photo', !!recipe.image_url);
+    // פס הצבע: שם הקטגוריה וזמן ההכנה
+    document.getElementById('recipe-hero-cat').textContent = recipeCategoryLabel(recipe.category);
+    const heroTime = document.getElementById('recipe-hero-time');
+    const minutes = Number(recipe.prep_minutes) || 0;
+    heroTime.textContent = minutes ? t('recipe_meta_minutes').replace('{n}', minutes.toLocaleString(currentLang)) : '';
+    heroTime.classList.toggle('hidden', !minutes);
+    document.getElementById('recipe-detail-category').textContent = recipeCategoryLabel(recipe.category);
     document.getElementById('recipe-detail-title').textContent = recipe.title;
+    const desc = document.getElementById('recipe-detail-desc');
+    desc.textContent = recipe.description || '';
+    desc.classList.toggle('hidden', !recipe.description);
+    // מתכון לדוגמה: בלי עריכה ומחיקה - במקומן "לשמור במתכונים שלי"
+    document.getElementById('recipe-edit-btn').classList.toggle('hidden', !!recipe.is_example);
+    document.getElementById('recipe-delete-link').classList.toggle('hidden', !!recipe.is_example);
+    renderRecipeExampleSave();
     renderRecipeMeta();
     renderRecipeIngredients();
     renderRecipeInstructions();
     setRecipeTab(recipeViewTab);
 
-    document.getElementById('recipe-detail-view').classList.add('open');
+    view.classList.add('open');
     if (!sameRecipe) document.getElementById('recipe-page-scroll').scrollTop = 0;
     // חלונות שנפתחים מתוך המתכון (עריכה, הוספה לארוחות הקבועות, בוררים) עולים מעל תצוגת המתכון
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.add('recipe-view-open');
 }
 
+function renderRecipeExampleSave() {
+    const btn = document.getElementById('recipe-save-example-btn');
+    if (!btn) return;
+    const recipe = findRecipeById(currentDetailRecipeId);
+    const isExample = !!(recipe && recipe.is_example);
+    btn.classList.toggle('hidden', !isExample);
+    if (!isExample) return;
+    const saved = !!savedCopyOfExample(recipe.id);
+    btn.disabled = saved;
+    btn.textContent = t(saved ? 'recipe_saved_example' : 'recipe_save_example_btn');
+}
+// 📥 מתכון לדוגמה → המתכונים שלי (עותק שאפשר לערוך). ה-✓ "יש בבית" שסומנו עוברים איתו
+async function saveExampleRecipe() {
+    const recipe = findRecipeById(currentDetailRecipeId);
+    if (!recipe || !recipe.is_example) return;
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    if (savedCopyOfExample(recipe.id)) { renderRecipeExampleSave(); return; }
+    const row = { username: currentUsername, user_id: currentUserId, title: recipe.title, category: recipe.category, calories: recipe.calories, servings: recipe.servings, ingredients: recipe.ingredients, instructions: recipe.instructions, serving_grams: recipe.serving_grams, prep_minutes: recipe.prep_minutes, description: recipe.description || null, source_example: recipe.id };
+    const { error } = await supabaseClient.from('recipes').insert(row);
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    const have = getRecipeHaveSet(recipe.id);
+    await loadRecipes();
+    const copy = savedCopyOfExample(recipe.id);
+    if (copy && have.size) saveRecipeHaveSet(copy.id, have);
+    showAppToast(t('recipe_saved_example_toast'));
+    if (copy) openRecipeDetail(copy.id);
+    else renderRecipeExampleSave();
+}
+
 // 🔥 קלוריות (למנה כשיש מספר מנות) + − N מנות +
 function renderRecipeMeta() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe) return;
     const kcal = Number(recipe.calories) || 0;
     const base = Number(recipe.servings) || 0;
     const kcalEl = document.getElementById('recipe-detail-calories');
     kcalEl.textContent = kcal ? `🔥 ${(base > 0 ? Math.round(kcal / base) : kcal).toLocaleString(currentLang)} ${t(base > 0 ? 'recipe_calories_per_serving_unit' : 'calories_unit')}` : '';
     kcalEl.classList.toggle('hidden', !kcal);
+    // ⚖️ כמה גרם מנה אחת (לפי בקשה מפורשת: "מנה אחת = ככה וככה גרם")
+    const grams = Number(recipe.serving_grams) || 0;
+    const gramsEl = document.getElementById('recipe-detail-grams');
+    gramsEl.textContent = grams ? `⚖️ ${t('recipe_meta_grams').replace('{n}', grams.toLocaleString(currentLang))}` : '';
+    gramsEl.classList.toggle('hidden', !grams);
     const servingsEl = document.getElementById('recipe-servings');
     servingsEl.classList.toggle('hidden', !(base > 0));
     if (base > 0) document.getElementById('recipe-servings-value').textContent = recipeServingsLabel(recipeViewServings);
 }
 function stepRecipeServings(delta) {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe || !(Number(recipe.servings) > 0)) return;
     recipeViewServings = Math.min(99, Math.max(1, recipeViewServings + delta));
     renderRecipeMeta();
@@ -7385,7 +7591,7 @@ function stepRecipeServings(delta) {
 }
 
 function renderRecipeIngredients() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     const list = document.getElementById('recipe-detail-ingredients');
     if (!recipe || !list) return;
     const lines = recipeLines(recipe.ingredients);
@@ -7429,6 +7635,8 @@ function renderRecipeIngredients() {
         list.appendChild(li);
     });
     document.getElementById('recipe-have-hint').classList.toggle('hidden', !lines.length);
+    const ingredientsTitle = document.getElementById('recipe-pane-ingredients-title');
+    if (ingredientsTitle) ingredientsTitle.textContent = recipeLabelNoColon('recipe_ingredients_label');
     document.getElementById('recipe-seg-ingredients').textContent = lines.length ? `${recipeLabelNoColon('recipe_ingredients_label')} · ${lines.length.toLocaleString(currentLang)}` : recipeLabelNoColon('recipe_ingredients_label');
 
     // 🛒 מה שלא סומן ✓ - בלחיצה אחת לרשימת הקניות; "לאכול היום" רק כשיש קלוריות
@@ -7443,7 +7651,7 @@ function renderRecipeIngredients() {
 }
 
 function renderRecipeInstructions() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     const el = document.getElementById('recipe-detail-instructions');
     if (!recipe || !el) return;
     el.innerHTML = '';
@@ -7475,6 +7683,8 @@ function renderRecipeInstructions() {
         el.appendChild(p);
     }
     document.getElementById('recipe-seg-steps').textContent = recipeLabelNoColon('recipe_instructions_label');
+    const stepsTitle = document.getElementById('recipe-pane-steps-title');
+    if (stepsTitle) stepsTitle.textContent = recipeLabelNoColon('recipe_instructions_label');
 }
 
 function setRecipeTab(tab) {
@@ -7491,7 +7701,7 @@ function setRecipeTab(tab) {
 
 // 🛒 מה שחסר: כל שורה שלא סומנה ✓, בכמות של מספר המנות שמוצג. מה שכבר ברשימת הקניות (ולא נקנה) לא נכנס פעמיים
 async function sendRecipeMissingToShopping() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe || !supabaseClient || !currentUserId) return;
     const have = getRecipeHaveSet(recipe.id);
     const factor = recipeViewFactor(recipe);
@@ -7512,7 +7722,7 @@ async function sendRecipeMissingToShopping() {
 // 🍽️ לאכול היום: מנה אחת (קלוריות למנה, או הכול כשאין מספר מנות) נכנסת לארוחות של היום - אותה דרך
 // בדיוק כמו ארוחה קבועה מההוספה המהירה
 async function logRecipeEatToday() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe || !supabaseClient || !currentUserId) return;
     const kcal = Number(recipe.calories) || 0;
     if (!kcal) return;
@@ -7549,9 +7759,9 @@ function closeRecipeDetail() {
 // ⭐ מתכון → ארוחה קבועה (meal_presets), לפי בקשה מפורשת: פותח את "הוספת ארוחה למאגר" עם השם,
 // הקלוריות למנה (או סך הכל כשאין מספר מנות), המרכיבים כתיאור וקטגוריה מתאימה - הכול ממולא,
 // ואפשר לשנות לפני השמירה. אותה מגבלת חינם כמו כל הוספה למאגר
-const RECIPE_TO_PRESET_CATEGORY = { breakfast: 'morning', meat_mains: 'noon', dairy_mains: 'evening', soups: 'soup', snacks: 'snack', desserts: 'dessert', appetizers: 'noon', sides: 'noon', salads: 'noon' };
+const RECIPE_TO_PRESET_CATEGORY = { breakfast: 'morning', meat_mains: 'noon', dairy_mains: 'evening', soups: 'soup', snacks: 'snack', desserts: 'dessert', appetizers: 'noon', sides: 'noon', salads: 'noon', vegan: 'noon' };
 function addRecipeToPresets() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe) return;
     if (!isPremiumUser && cachedPresets.length >= MEAL_PRESET_FREE_LIMIT) {
         showAppToast(t('preset_limit_desc'), 'error');
@@ -7573,7 +7783,7 @@ function addRecipeToPresets() {
 // שיתוף מתכון, דרך אותו תפריט שיתוף קטן (וואטסאפ/מייל/העתקה): שם מודגש, קלוריות
 // (וכמה למנה), מרכיבים כרשימת נקודות, שלבי הכנה ממוספרים, והתמונה אם יש
 function shareRecipe() {
-    const recipe = cachedRecipes.find(r => r.id === currentDetailRecipeId);
+    const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe) return;
     // בחלק מהשפות התווית כבר מסתיימת בנקודתיים ("מרכיבים:") - לא להכפיל
     const label = key => t(key).replace(/[:：]\s*$/, '');
@@ -8698,6 +8908,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'routine_ai', category: 'general' },
     { id: 'routine_exact_time', category: 'general' },
     { id: 'routine_item_days', category: 'general' },
+    { id: 'routine_clash', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
@@ -8708,6 +8919,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_apple', category: 'notes' },
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
+    { id: 'note_written_at', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },
@@ -8756,6 +8968,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_favorites', category: 'nutrition' },
     { id: 'new_me_small_breakfast', category: 'nutrition' },
     { id: 'new_me_month', category: 'nutrition' },
+    { id: 'new_me_coffee', category: 'nutrition' },
     { id: 'new_me_free_meal', category: 'nutrition' },
     { id: 'new_me_journey', category: 'nutrition' },
     { id: 'secret_room', category: 'nutrition' },
@@ -8780,7 +8993,10 @@ const HELP_FAQ_ENTRIES = [
     { id: 'chain_data_source', category: 'nutrition' },
     { id: 'save_meal_preset', category: 'nutrition' },
     { id: 'recipes_gallery', category: 'nutrition' },
+    { id: 'recipe_examples', category: 'nutrition' },
+    { id: 'recipe_grams', category: 'nutrition' },
     { id: 'recipe_to_preset', category: 'nutrition' },
+    { id: 'recipe_scan_multi', category: 'nutrition' },
     { id: 'quick_add_preset_fab', category: 'nutrition' },
     { id: 'quick_add_food_fab', category: 'nutrition' },
     { id: 'food_not_fried_default', category: 'nutrition' },
@@ -11765,12 +11981,100 @@ function fileToBase64(file) {
     });
 }
 
+// --- כמה תמונות למתכון אחד: המצרכים לחוד, אופן ההכנה לחוד, או כמה דפים - לפי בקשה מפורשת ("אפשרות לצלם את
+// המצרכים בנפרד ואת אופן ההכנה בנפרד וגם אם יש 2 דפים למתכון... כמה תמונות למתכון אחד"). התמונות נאספות ברשימה
+// קטנה בטופס, לכל אחת "הכל / מצרכים / הכנה", ו"לסרוק" שולח את כולן יחד בבקשה אחת (סריקה אחת במונה) ---
+const RECIPE_SCAN_MAX_FILES = 6;
+let recipeScanItems = []; // { file, part: 'all' | 'ingredients' | 'steps', url }
+function resetRecipeScanTray() {
+    recipeScanItems.forEach(it => { if (it.url) URL.revokeObjectURL(it.url); });
+    recipeScanItems = [];
+    renderRecipeScanTray();
+}
+function renderRecipeScanTray() {
+    const tray = document.getElementById('recipe-scan-tray');
+    const run = document.getElementById('btn-recipe-scan-run');
+    if (!tray) return;
+    tray.innerHTML = '';
+    tray.classList.toggle('hidden', !recipeScanItems.length);
+    if (run) run.classList.toggle('hidden', !recipeScanItems.length);
+    recipeScanItems.forEach((it, i) => {
+        const row = document.createElement('div');
+        row.className = 'recipe-scan-item';
+        const thumb = document.createElement(it.url ? 'img' : 'span');
+        thumb.className = 'recipe-scan-thumb';
+        if (it.url) { thumb.src = it.url; thumb.alt = ''; } else thumb.textContent = 'PDF';
+        const parts = document.createElement('div');
+        parts.className = 'recipe-scan-parts';
+        parts.setAttribute('role', 'group');
+        ['all', 'ingredients', 'steps'].forEach(p => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'recipe-scan-part' + (it.part === p ? ' is-on' : '');
+            b.setAttribute('aria-pressed', it.part === p ? 'true' : 'false');
+            b.dataset.part = p;
+            b.textContent = t(`recipe_scan_part_${p}`);
+            b.onclick = () => { it.part = p; renderRecipeScanTray(); };
+            parts.appendChild(b);
+        });
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'recipe-scan-remove';
+        del.setAttribute('aria-label', t('recipe_scan_remove_photo'));
+        del.title = t('recipe_scan_remove_photo');
+        del.textContent = '✕';
+        del.onclick = () => { if (it.url) URL.revokeObjectURL(it.url); recipeScanItems.splice(i, 1); renderRecipeScanTray(); };
+        row.append(thumb, parts, del);
+        tray.appendChild(row);
+    });
+    if (recipeScanItems.length && recipeScanItems.length < RECIPE_SCAN_MAX_FILES) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'recipe-scan-more';
+        more.textContent = t('recipe_scan_add_more');
+        more.onclick = () => document.getElementById('recipe-image-input').click();
+        tray.appendChild(more);
+    }
+}
+function addRecipeScanFiles(files) {
+    let tooMany = false;
+    for (const file of files) {
+        if (!file.type.startsWith('image/') && file.type !== 'application/pdf') { showAppToast(t('recipe_scan_unsupported_type'), 'error'); continue; }
+        if (recipeScanItems.length >= RECIPE_SCAN_MAX_FILES) { tooMany = true; break; }
+        recipeScanItems.push({ file, part: 'all', url: file.type.startsWith('image/') ? URL.createObjectURL(file) : '' });
+    }
+    if (tooMany) showAppToast(t('recipe_scan_too_many').replace('{n}', RECIPE_SCAN_MAX_FILES), 'error');
+    renderRecipeScanTray();
+}
 async function handleRecipeImageSelected(event) {
     const input = event.target;
-    const file = input.files && input.files[0];
+    const files = Array.from(input.files || []);
     input.value = ''; // מאפשר לבחור את אותו קובץ שוב בפעם הבאה
-    if (!file) return;
-    await runRecipeImageScan(file);
+    if (!files.length) return;
+    addRecipeScanFiles(files);
+}
+async function runRecipeScanTray() {
+    if (!recipeScanItems.length) return;
+    const done = await runRecipeImageScan(recipeScanItems.map(it => ({ file: it.file, part: it.part })));
+    if (done) resetRecipeScanTray();
+}
+// תמונה מוקטנת לפני השליחה (עד 1600 פיקסלים, JPEG): כמה תמונות טלפון ביחד היו חורגות מגודל הבקשה, וה-AI ממילא מקטין
+async function recipeScanFilePayload(file) {
+    if (!file.type.startsWith('image/') || typeof createImageBitmap !== 'function') return fileToBase64(file);
+    try {
+        const bmp = await createImageBitmap(file);
+        const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+        const w = Math.max(1, Math.round(bmp.width * scale));
+        const h = Math.max(1, Math.round(bmp.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+        const m = canvas.toDataURL('image/jpeg', 0.85).match(/^data:(.*?);base64,(.*)$/);
+        if (m && m[2]) return { mediaType: m[1], base64: m[2] };
+    } catch (e) { /* נופלים לקובץ המקורי */ }
+    return fileToBase64(file);
 }
 
 // מעלה את קובץ התמונה עצמו לאחסון (Supabase Storage, bucket "recipe-photos"),
@@ -11834,12 +12138,19 @@ function looksLikeGarbledOcrBody(text) {
     return (singleCharTokens.length / tokens.length) > 0.12;
 }
 
-async function runLocalRecipeOcrFallback(file) {
-    if (!file.type.startsWith('image/') || typeof Tesseract === 'undefined') return false;
+async function runLocalRecipeOcrFallback(files) {
+    const images = [].concat(files).filter(f => f && f.type.startsWith('image/'));
+    if (!images.length || typeof Tesseract === 'undefined') return false;
     try {
         showRecipeScanLoading();
-        const { data } = await Tesseract.recognize(file, 'heb+eng');
-        const rawText = ((data && data.text) || '').trim();
+        // כמה תמונות: כל אחת בתורה, והטקסטים מחוברים לפי הסדר
+        const texts = [];
+        for (const img of images) {
+            const { data } = await Tesseract.recognize(img, 'heb+eng');
+            const text = ((data && data.text) || '').trim();
+            if (text) texts.push(text);
+        }
+        const rawText = texts.join('\n');
         if (!rawText) return false;
         const parsed = parseRecipeText(rawText);
         if (!parsed || !parsed.title) return false;
@@ -11865,12 +12176,12 @@ async function runLocalRecipeOcrFallback(file) {
 // שולח את התמונה ל-AI האמיתי בענן פעם אחת ומדווחת מה קרה - מנותקת כדי
 // שאפשר יהיה לנסות שוב אוטומטית (ר' הקריאה הכפולה ב-runRecipeImageScan
 // למטה) בלי לשכפל את כל לוגיקת הפענוח של התשובה
-async function attemptRecipeCloudScan(token, base64, mediaType) {
+async function attemptRecipeCloudScan(token, images) {
     try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-recipe-image`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ imageBase64: base64, mediaType })
+            body: JSON.stringify({ images })
         });
         const result = await res.json();
         // limit_reached עם scope='premium_monthly' זה מישהי שכבר פרימיום שהגיעה
@@ -11887,29 +12198,38 @@ async function attemptRecipeCloudScan(token, base64, mediaType) {
 
 // מנותקת מ-handleRecipeImageSelected כדי שגם ה-AI Brain (שמזין קובץ שנבחר
 // דרך קלט קובץ אחר לגמרי) יוכל להריץ בדיוק את אותה לוגיקת סריקה, בלי כפילות
-async function runRecipeImageScan(file) {
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+// מקבלת קובץ אחד (גם מה-AI Brain) או רשימה של { file, part } מהטופס. מחזירה true כשהסריקה הסתיימה (גם בנפילה ל-OCR),
+// false כשלא התחילה בכלל (סוג קובץ, מכסה, חיבור) - ואז התמונות נשארות ברשימה
+async function runRecipeImageScan(fileOrItems) {
+    const items = Array.isArray(fileOrItems) ? fileOrItems : [{ file: fileOrItems, part: 'all' }];
+    if (!items.length) return false;
+    if (items.some(it => !it.file.type.startsWith('image/') && it.file.type !== 'application/pdf')) {
         showAppToast(t('recipe_scan_unsupported_type'), 'error');
-        return;
+        return false;
     }
 
     if (!isPremiumUser && cachedImageScansUsed >= IMAGE_SCAN_FREE_LIMIT) {
         showAppToast(t('recipe_scan_limit_desc'), 'error');
         openPremiumUpgradeModal();
-        return;
+        return false;
     }
-    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return false; }
 
-    // התמונה מועלית ומצורפת בנפרד ובמקביל לניתוח, כדי שתמיד תיקלט גם אם
-    // ניתוח הטקסט למטה נכשל
-    uploadRecipeImage(file).then(url => { if (url) setRecipeImagePreview(url); });
+    // התמונה הראשונה מועלית ומצורפת למתכון בנפרד ובמקביל לניתוח, כדי שתמיד תיקלט גם אם
+    // ניתוח הטקסט למטה נכשל (רק כשעוד אין למתכון תמונה)
+    const firstImage = items.find(it => it.file.type.startsWith('image/'));
+    const currentImage = document.getElementById('recipe-image-url-input');
+    if (firstImage && !(currentImage && currentImage.value)) uploadRecipeImage(firstImage.file).then(url => { if (url) setRecipeImagePreview(url); });
 
     showAppToast(t('recipe_scan_in_progress'));
     // אנימציית טעינה ייעודית מוצגת רק אם הסריקה לוקחת יותר מ-5 שניות, כדי לשמור
     // על ממשק נקי בסריקות מהירות - ה-timeout מבוטל אם הסריקה מסתיימת קודם לכן.
     const loadingTimer = setTimeout(showRecipeScanLoading, 5000);
     try {
-        const { mediaType, base64 } = await fileToBase64(file);
+        const images = await Promise.all(items.map(async it => {
+            const { mediaType, base64 } = await recipeScanFilePayload(it.file);
+            return { base64, mediaType, part: it.part || 'all' };
+        }));
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
 
@@ -11919,15 +12239,15 @@ async function runRecipeImageScan(file) {
             // לסלולרי, חבילת בקשה שאבדה) היא הגורם השכיח ביותר לכישלון -
             // וה-AI האמיתי תמיד מדויק הרבה יותר מה-OCR המקומי (בעיקר לעברית),
             // אז שווה לתת לו הזדמנות שנייה לפני שנופלים לפתרון הפחות טוב
-            let attempt = await attemptRecipeCloudScan(token, base64, mediaType);
-            if (attempt.status === 'retry') attempt = await attemptRecipeCloudScan(token, base64, mediaType);
+            let attempt = await attemptRecipeCloudScan(token, images);
+            if (attempt.status === 'retry') attempt = await attemptRecipeCloudScan(token, images);
 
             if (attempt.status === 'premium_limit') {
                 showAppToast(t('ai_monthly_limit_reached'), 'error');
             } else if (attempt.status === 'limit') {
                 showAppToast(t('recipe_scan_limit_desc'), 'error');
                 openPremiumUpgradeModal();
-                return;
+                return false;
             } else if (attempt.status === 'ok') {
                 recipe = attempt.recipe;
                 if (typeof attempt.scansUsed === 'number') cachedImageScansUsed = attempt.scansUsed;
@@ -11950,15 +12270,16 @@ async function runRecipeImageScan(file) {
             setRecipeCaloriesEstimateHint(false);
             document.getElementById('recipe-ai-raw-input').value = '';
             showAppToast(t('recipe_scan_success'));
-            return;
+            return true;
         }
 
         // ה-AI האמיתי בענן לא זמין/לא הצליח - נופלים בעדינות ל-OCR מקומי
         // (Tesseract.js) על אותה תמונה. אם גם הוא לא מצא כלום שימושי, לא
         // מציגים שגיאה - פשוט משאירים את הטופס (עם התמונה שכבר צורפה) פתוח
         // למילוי ידני, שזה בכל מקרה תמיד עובד
-        const ocrSucceeded = await runLocalRecipeOcrFallback(file);
+        const ocrSucceeded = await runLocalRecipeOcrFallback(items.map(it => it.file));
         if (!ocrSucceeded) showAppToast(t('recipe_scan_manual_hint'));
+        return true;
     } finally {
         clearTimeout(loadingTimer);
         hideRecipeScanLoading();
@@ -21593,7 +21914,8 @@ async function renderDailyBoard() {
     dailyBoardActiveItemCount = (items || []).length;
     dailyBoardItemsCache = items || [];
     const itemsByTime = {};
-    (items || []).forEach(it => { itemsByTime[(it.time || '').slice(0, 5)] = it; });
+    // כמה פריטים באותה שעה ("גם וגם") - כל אחד בשורה משלו
+    (items || []).forEach(it => { const tm = (it.time || '').slice(0, 5); (itemsByTime[tm] = itemsByTime[tm] || []).push(it); });
     routineItemGoalLinks = new Map((items || []).filter(it => it.vision_milestone_id).map(it => [it.id, it.vision_milestone_id]));
     routineItemSmallStepLinks = new Map((items || []).filter(it => it.vision_goal_id).map(it => [it.id, it.vision_goal_id]));
     // מה כבר סומן היום (וי) - רק כשהמעקב דלוק, אחרת אין טעם בשאילתה
@@ -21625,8 +21947,7 @@ async function renderDailyBoard() {
         header.className = 'daily-board-bucket-header';
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
-        bucketTimes.forEach(timeStr => {
-            const item = itemsByTime[timeStr];
+        bucketTimes.forEach(timeStr => (itemsByTime[timeStr] || [null]).forEach(item => {
             // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
             const inNewMe = routineItemInNewMe(item);
             // 📅 פריט שלא היום (ימים לפריט) - חלש יותר, בלי ✓, והימים שלו לידו
@@ -21675,7 +21996,7 @@ async function renderDailyBoard() {
                 row.appendChild(tag);
             }
             section.appendChild(row);
-        });
+        }));
         body.appendChild(section);
     });
 }
@@ -21731,6 +22052,7 @@ function renderRoutineItemDaysChips() {
     });
 }
 function openAddRoutineItemModal(time) {
+    hideRoutineClash();
     if (!activeDailyBoardTabId) return;
     editingRoutineItemId = null;
     routineNudgeEditing = null;
@@ -21747,6 +22069,7 @@ function openAddRoutineItemModal(time) {
 
 // opts.fromNudge: נפתח מכרטיס ה-🌱 (✏️ לשנות) - אחרי שמירה הכרטיס לא שואל שוב 3 ימים
 function openEditRoutineItemModal(item, opts = {}) {
+    hideRoutineClash();
     editingRoutineItemId = item.id;
     routineNudgeEditing = opts.fromNudge ? routineNudge : null;
     pendingRoutineItemTime = (item.time || '').slice(0, 5);
@@ -21759,15 +22082,72 @@ function openEditRoutineItemModal(item, opts = {}) {
     openModalOverDailyBoard('modal-add-routine-item');
 }
 
+// ⏰ שעה תפוסה באותם ימים: במקום הודעת שגיאה - בוחרים (לפי בקשה מפורשת: "לשים אפשרויות - להחליף? ומתי לשים את הדבר
+// השני - או גם וגם"): להחליף ולהעביר את הפריט השני לשעה אחרת, או להשאיר את שניהם באותה שעה (שניהם מוצגים). ימים שונים
+// (א׳–ה׳ מול שישי) - בכלל לא התנגשות
+let routineClashItem = null;
+let routineClashAllowBoth = false;
+let routineClashMoveTime = '';
+function routineItemsOverlap(item, days) { const d = routineItemDays(item); return days.some(x => d.includes(x)); }
+function routineAddMinutes(time, mins) {
+    const [h, m] = String(time || '00:00').split(':').map(Number);
+    const total = (((h || 0) * 60 + (m || 0) + mins) % 1440 + 1440) % 1440;
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+function showRoutineClash(clash) {
+    routineClashItem = clash;
+    const time = String(pendingRoutineItemTime || '').slice(0, 5);
+    document.getElementById('routine-clash-title').textContent = t('routine_clash_title').replace('{time}', time).replace('{title}', clash.title);
+    document.getElementById('routine-clash-replace').textContent = t('routine_clash_replace').replace('{title}', clash.title);
+    document.getElementById('routine-clash-both').textContent = t('routine_clash_both').replace('{time}', time);
+    document.getElementById('routine-clash-move').classList.add('hidden');
+    document.getElementById('routine-clash-panel').classList.remove('hidden');
+}
+function hideRoutineClash() {
+    routineClashItem = null;
+    const panel = document.getElementById('routine-clash-panel');
+    if (panel) panel.classList.add('hidden');
+}
+function routineClashReplace() {
+    if (!routineClashItem) return;
+    document.getElementById('routine-clash-move-label').textContent = t('routine_clash_move_to').replace('{title}', routineClashItem.title);
+    // מוצעת השעה הקודמת של הפריט שעורכים (כך ששניהם פשוט מתחלפים), ואם אין - שעה אחרי
+    const editing = editingRoutineItemId && dailyBoardItemsCache.find(it => it.id === editingRoutineItemId);
+    const prevTime = editing ? String(editing.time || '').slice(0, 5) : '';
+    const here = String(pendingRoutineItemTime || '').slice(0, 5);
+    routineClashMoveTime = prevTime && prevTime !== here ? prevTime : routineAddMinutes(here, 60);
+    document.getElementById('routine-clash-time-btn').querySelector('bdi').textContent = routineClashMoveTime;
+    if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers['routine-clash'] = v => { routineClashMoveTime = v; };
+    document.getElementById('routine-clash-move').classList.remove('hidden');
+}
+async function routineClashMoveAndSave() {
+    if (!routineClashItem) return;
+    if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
+    const newTime = routineClashMoveTime;
+    if (!/^\d{2}:\d{2}$/.test(newTime)) return;
+    await supabaseClient.from('routine_items').update({ time: newTime }).eq('id', routineClashItem.id);
+    const moved = dailyBoardItemsCache.find(it => it.id === routineClashItem.id);
+    if (moved) moved.time = newTime;
+    hideRoutineClash();
+    await saveRoutineItem();
+}
+async function routineClashBoth() {
+    routineClashAllowBoth = true;
+    hideRoutineClash();
+    try { await saveRoutineItem(); } finally { routineClashAllowBoth = false; }
+}
+
 async function saveRoutineItem() {
     const title = document.getElementById('routine-item-title-input').value.trim();
     if (!title) { showAppToast(t('daily_board_item_missing_fields'), 'error'); return; }
     if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
-    // שעה שכבר יש בה פריט אחר בטאב הזה - כל שורה בלוח היא שעה אחת, אז לא שני פריטים באותה שעה
-    const clash = dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId);
-    if (clash) { showAppToast(t('routine_time_taken').replace('{title}', clash.title), 'error'); return; }
     const days = [...pendingRoutineItemDays].filter(d => d >= 0 && d <= 6).sort((a, b) => a - b);
-    const payload = { title, time: pendingRoutineItemTime, days_of_week: (days.length ? days : ROUTINE_ALL_DAYS).join(',') };
+    const itemDays = days.length ? days : ROUTINE_ALL_DAYS;
+    // פריט אחר בטאב הזה באותה שעה ובאחד מאותם ימים - שואלים מה לעשות
+    const clash = routineClashAllowBoth ? null : dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId && routineItemsOverlap(it, itemDays));
+    if (clash) { showRoutineClash(clash); return; }
+    hideRoutineClash();
+    const payload = { title, time: pendingRoutineItemTime, days_of_week: itemDays.join(',') };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
     } else {
