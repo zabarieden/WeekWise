@@ -1883,8 +1883,9 @@ const APP_TOUR_STEPS = [
     { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
     { id: 'focus', ch: 'home', ctx: 'home', icon: '◎', target: '#btn-home-focus', titleKey: 'home_focus_label', text: 'apptour_focus_text', optional: true },
     { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },
-    // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
-    { id: 'peek', ch: 'home', ctx: 'home', icon: '🗓️', target: '#myday-bar', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
+    // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js). מודגשת שורת
+    // הכותרת שלה - החלק התחתון של המגירה נמצא מאחורי הפס הקבוע של כפתורי הסיור
+    { id: 'peek', ch: 'home', ctx: 'home', icon: '🗓️', target: '#myday-bar .myday-bar-top', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
     // העוזר: קודם ההסבר הכללי (על הכפתור), ואז הלשוניות שבפנים - לפי הסדר שלהן (הלו"ז ראשון)
     { id: 'ai', ch: 'ai', ctx: 'home', icon: '🌟', target: '#btn-ai-brain-fab', titleKey: 'ai_brain_fab_title', text: 'apptour_ai_text', link: 'apptour_ai_link', optional: true },
     { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#ai-chat .ai-chat-tool[data-tool="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
@@ -2074,12 +2075,19 @@ function appTourBuildLayer() {
     if (appTourLayer) appTourLayer.remove();
     const layer = document.createElement('div');
     layer.className = 'app-tour-layer';
-    // החץ הקטן (caret) הוא אח של הכרטיס ולא בתוכו - לכרטיס יש גלילה פנימית שהייתה חותכת אותו
+    // כל השכבה היא החלון המודאלי (הכרטיס + הפס הקבוע של הכפתורים)
+    layer.setAttribute('role', 'dialog');
+    layer.setAttribute('aria-modal', 'true');
+    layer.setAttribute('aria-labelledby', 'app-tour-title');
+    layer.setAttribute('aria-describedby', 'app-tour-text');
+    // החץ הקטן (caret) הוא אח של הכרטיס ולא בתוכו - לכרטיס יש גלילה פנימית שהייתה חותכת אותו.
+    // "המשך", "חזרה", המונה ופס ההתקדמות יושבים בפס קבוע בתחתית המסך (לפי בקשה מפורשת, 2026-10-13: "שאני לא
+    // אצטרך להזיז את היד כל פעם במחשב - שההמשך ישאר באותו המקום") - הכרטיס זז ליד מה שמודגש, הכפתורים לא
     layer.innerHTML = `
         <div class="app-tour-block"></div>
         <div class="app-tour-spot is-empty"></div>
         <span class="app-tour-caret hidden" aria-hidden="true"></span>
-        <div class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" aria-describedby="app-tour-text" tabindex="-1">
+        <div class="app-tour-card" tabindex="-1">
             <div class="app-tour-top">
                 <span class="app-tour-chip-wrap"><span class="app-tour-part-icon" aria-hidden="true"></span><span class="app-tour-chapter"></span></span>
                 <button type="button" class="app-tour-skip" onclick="closeAppTour()"><svg ${APP_TOUR_CHEVRON_ATTRS}><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
@@ -2094,14 +2102,16 @@ function appTourBuildLayer() {
                 <div class="app-tour-flows"></div>
                 <div class="app-tour-extra hidden"></div>
             </div>
-            <div class="app-tour-progress" aria-hidden="true"></div>
-            <div class="app-tour-actions">
-                <button type="button" class="app-tour-back" onclick="appTourBack()"></button>
-                <span class="app-tour-count"></span>
-                <button type="button" class="app-tour-next" onclick="appTourNext()"></button>
-            </div>
             <button type="button" class="app-tour-skip-part hidden" onclick="appTourSkipPart()"></button>
             <span class="app-tour-live" aria-live="polite"></span>
+        </div>
+        <div class="app-tour-dock">
+            <button type="button" class="app-tour-back" onclick="appTourBack()"></button>
+            <div class="app-tour-meter">
+                <div class="app-tour-progress" aria-hidden="true"></div>
+                <span class="app-tour-count"></span>
+            </div>
+            <button type="button" class="app-tour-next" onclick="appTourNext()"></button>
         </div>`;
     document.body.appendChild(layer);
     appTourLayer = layer;
@@ -2196,7 +2206,8 @@ async function appTourEnsureContext(step) {
 }
 
 // מגלגל רק את מיכל הגלילה הפנימי (המגירה/החלון) כך שהפריט יהיה באמצע - לא את
-// מסגרת האפליקציה (scrollIntoView הזיז בעבר את כל המעטפת, ר' resetShellScroll)
+// מסגרת האפליקציה (scrollIntoView הזיז בעבר את כל המעטפת, ר' resetShellScroll).
+// "באמצע" = באמצע החלק שמעל הפס הקבוע של הכפתורים, כדי שהפס לא יסתיר את הפריט
 function appTourScrollIntoContainer(el) {
     let p = el.parentElement;
     while (p && p !== document.body) {
@@ -2204,11 +2215,33 @@ function appTourScrollIntoContainer(el) {
         if (/(auto|scroll)/.test(cs.overflowY) && p.scrollHeight > p.clientHeight + 4) {
             const pr = p.getBoundingClientRect();
             const er = el.getBoundingClientRect();
-            if (er.top < pr.top + 40 || er.bottom > pr.bottom - 40) p.scrollTop += (er.top + er.height / 2) - (pr.top + pr.height / 2);
+            const bottom = Math.min(pr.bottom, appTourDockTop());
+            if (er.top < pr.top + 40 || er.bottom > bottom - 40) {
+                const delta = (er.top + er.height / 2) - (pr.top + bottom) / 2;
+                // הפריטים האחרונים ברשימה לא יכולים לעלות מעל הפס הקבוע - מקום זמני בסוף הרשימה (יורד כשהסיור נסגר)
+                const room = p.scrollHeight - p.clientHeight - p.scrollTop;
+                if (delta > room) appTourAddRoom(p, delta - room);
+                p.scrollTop += delta;
+            }
             return;
         }
         p = p.parentElement;
     }
+}
+// הקצה העליון של הפס הקבוע (מה שמתחתיו מוסתר)
+function appTourDockTop() {
+    const dock = appTourLayer && appTourLayer.querySelector('.app-tour-dock');
+    return dock ? dock.getBoundingClientRect().top : window.innerHeight;
+}
+const appTourRoomed = new Map();
+function appTourAddRoom(p, px) {
+    if (!appTourRoomed.has(p)) appTourRoomed.set(p, p.style.paddingBottom);
+    const current = parseFloat(getComputedStyle(p).paddingBottom) || 0;
+    p.style.paddingBottom = `${Math.ceil(current + px + 8)}px`;
+}
+function appTourRemoveRoom() {
+    appTourRoomed.forEach((original, p) => { p.style.paddingBottom = original; });
+    appTourRoomed.clear();
 }
 
 async function appTourShow() {
@@ -2327,13 +2360,15 @@ function buildTourDemoGoalPath() {
     return wrap;
 }
 
-// מיקום: הזרקור סביב האלמנט, הכרטיס מתחתיו או מעליו (איפה שיש מקום), והחץ ביניהם
+// מיקום: הזרקור סביב האלמנט, הכרטיס מתחתיו או מעליו (איפה שיש מקום), והחץ ביניהם.
+// הפס של הכפתורים קבוע בתחתית (אותו מקום בכל שלב) - הכרטיס מסתדר רק בשטח שמעליו
 function appTourPosition() {
     const layer = appTourLayer;
     if (!layer) return;
     const spot = layer.querySelector('.app-tour-spot');
     const card = layer.querySelector('.app-tour-card');
     const caret = layer.querySelector('.app-tour-caret');
+    const dock = layer.querySelector('.app-tour-dock');
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const wrapper = document.querySelector('.phone-wrapper');
@@ -2343,6 +2378,11 @@ function appTourPosition() {
     const M = 12;
     const cardW = Math.min(360, boundR - boundL - M * 2);
     card.style.width = `${cardW}px`;
+    dock.style.width = `${cardW}px`;
+    dock.style.left = `${(boundL + boundR) / 2 - cardW / 2}px`;
+    // התחתית של השטח לכרטיס: מעל הפס הקבוע
+    const floor = dock.getBoundingClientRect().top - M;
+    card.style.maxHeight = `${Math.max(140, floor - M)}px`;
     const cardH = card.offsetHeight;
     const target = appTourTarget && appTourTarget.isConnected ? appTourTarget : null;
     const r = target ? target.getBoundingClientRect() : null;
@@ -2355,7 +2395,7 @@ function appTourPosition() {
         spot.style.height = '0px';
         caret.classList.add('hidden');
         card.style.left = `${(boundL + boundR) / 2 - cardW / 2}px`;
-        card.style.top = `${Math.max(M, (vh - cardH) / 2)}px`;
+        card.style.top = `${Math.max(M, M + (floor - M - cardH) / 2)}px`;
         return;
     }
     const pad = 6;
@@ -2373,16 +2413,16 @@ function appTourPosition() {
     // החץ הקטן הוא ריבוע מסובב שחציו בולט מהכרטיס אל הזרקור
     const CARET = 14;
     const GAP = CARET / 2 + 12;
-    const spaceBelow = vh - (st + sh);
+    const spaceBelow = floor - (st + sh);
     const spaceAbove = st;
     let placement;
-    if (spaceBelow >= cardH + GAP + M) placement = 'below';
+    if (spaceBelow >= cardH + GAP) placement = 'below';
     else if (spaceAbove >= cardH + GAP + M) placement = 'above';
     else placement = spaceBelow >= spaceAbove ? 'bottom' : 'top';
     let top;
     if (placement === 'below') top = st + sh + GAP;
     else if (placement === 'above') top = st - GAP - cardH;
-    else if (placement === 'bottom') top = vh - cardH - M;
+    else if (placement === 'bottom') top = floor - cardH;
     else top = M;
     const cx = r.left + r.width / 2;
     const left = Math.min(Math.max(cx - cardW / 2, boundL + M), boundR - cardW - M);
@@ -2442,14 +2482,14 @@ function appTourKeydown(e) {
     else if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') || (e.key === 'Enter' && !onButton)) { e.preventDefault(); e.stopPropagation(); appTourNext(); }
     else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) { e.preventDefault(); e.stopPropagation(); appTourBack(); }
     else if (e.key === 'Tab') {
-        // המיקוד נשאר בתוך הכרטיס (חלון מודאלי)
+        // המיקוד נשאר בתוך הסיור (חלון מודאלי): הכרטיס ואז הפס הקבוע של הכפתורים
         const card = appTourLayer && appTourLayer.querySelector('.app-tour-card');
         if (!card) return;
-        const items = [...card.querySelectorAll('button')].filter(b => b.offsetParent !== null && !b.classList.contains('invisible'));
+        const items = [...appTourLayer.querySelectorAll('.app-tour-card button, .app-tour-dock button')].filter(b => b.offsetParent !== null && !b.classList.contains('invisible'));
         if (!items.length) return;
         const first = items[0];
         const last = items[items.length - 1];
-        const inside = card.contains(document.activeElement) && document.activeElement !== card;
+        const inside = appTourLayer.contains(document.activeElement) && document.activeElement !== card;
         if (e.shiftKey && (!inside || document.activeElement === first)) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && (!inside || document.activeElement === last)) { e.preventDefault(); first.focus(); }
     }
@@ -2488,6 +2528,7 @@ function closeAppTour() {
     document.removeEventListener('keydown', appTourKeydown, true);
     window.removeEventListener('resize', appTourOnResize);
     clearInterval(appTourTrackTimer);
+    appTourRemoveRoom();
     const layer = appTourLayer;
     appTourLayer = null;
     appTourTarget = null;

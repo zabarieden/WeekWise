@@ -6505,20 +6505,23 @@ html[dir="rtl"] .app-tour-chev { transform: scaleX(-1); }
 .app-tour-card.is-center { text-align: center; }
 .app-tour-card.is-center .app-tour-title { justify-content: center; }
 .app-tour-card.is-center .app-tour-link, .app-tour-card.is-center .app-tour-flows, .app-tour-card.is-center .app-tour-agenda { text-align: start; }
+/* הפס הקבוע של הכפתורים (לפי בקשה מפורשת, 2026-10-13: "שההמשך ישאר באותו המקום"): "חזרה", פס ההתקדמות עם
+   המונה ו"המשך" - תמיד באותו מקום בתחתית המסך, כך שלא צריך להזיז את היד בין שלב לשלב. הכרטיס זז מעליו */
+.app-tour-dock { position: absolute; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 7px; background: var(--tour-card-bg); color: var(--tour-card-fg); border: 1px solid var(--tour-line); border-radius: 999px; box-shadow: var(--tour-shadow); font-family: inherit; }
+.app-tour-meter { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 5px; }
 /* פס ההתקדמות: קטע לכל חלק של הסיור */
-.app-tour-progress { display: flex; gap: 4px; margin: 16px 0 12px; }
+.app-tour-progress { display: flex; gap: 4px; }
 .app-tour-progress:empty { display: none; }
 .app-tour-progress i { flex: 1; height: 4px; border-radius: 999px; background: var(--tour-line); overflow: hidden; }
 .app-tour-progress b { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); transition: width .35s ease; }
-.app-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.app-tour-card.is-agenda .app-tour-actions { margin-top: 16px; }
-.app-tour-count { font-size: .76rem; font-weight: 700; color: var(--tour-muted); font-variant-numeric: tabular-nums; }
+.app-tour-count { font-size: .72rem; font-weight: 700; line-height: 1; text-align: center; color: var(--tour-muted); font-variant-numeric: tabular-nums; }
+.app-tour-count:empty { display: none; }
 .app-tour-back, .app-tour-next { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 700; font-size: .88rem; border-radius: 999px; padding: 9px 16px; min-width: 92px; cursor: pointer; transition: transform .12s ease, filter .15s ease, background .15s ease; }
 .app-tour-back { background: transparent; color: var(--tour-card-fg); border: 1px solid var(--tour-line); }
 .app-tour-back:hover { background: var(--tour-tint); }
 .app-tour-back.invisible { visibility: hidden; }
 .app-tour-back.is-later { min-width: 0; padding-inline: 10px; border-color: transparent; color: var(--tour-muted); }
-.app-tour-next { border: none; color: #fff; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 8px 20px rgba(168, 85, 247, .35); }
+.app-tour-next { min-width: 118px; border: none; color: #fff; background: linear-gradient(135deg, var(--accent-pink, #ec4899), var(--accent-purple, #a855f7)); box-shadow: 0 8px 20px rgba(168, 85, 247, .35); }
 .app-tour-next:hover { filter: brightness(1.06); }
 .app-tour-back .app-tour-chev, .app-tour-next .app-tour-chev { width: 15px; height: 15px; flex-shrink: 0; }
 .app-tour-next:active, .app-tour-back:active { transform: scale(.97); }
