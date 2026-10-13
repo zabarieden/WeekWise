@@ -126,7 +126,8 @@ async function loadWorkoutGoal() {
     try { cached = JSON.parse(localStorage.getItem('weekwise_workout_goal') || 'null'); } catch {}
     if (cached && cached.kind) workoutGoal = cached;
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('workout_goal_kind, workout_goal_value').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_premium').select('workout_goal_kind, workout_goal_value, workout_gcal').eq('user_id', currentUserId).maybeSingle();
+    if (data && typeof data.workout_gcal === 'boolean') setWorkoutGcalLocal(data.workout_gcal);
     if (data && data.workout_goal_kind) {
         workoutGoal = { kind: data.workout_goal_kind === 'minutes' ? 'minutes' : 'count', value: Number(data.workout_goal_value) || null };
         try { localStorage.setItem('weekwise_workout_goal', JSON.stringify(workoutGoal)); } catch {}
@@ -428,6 +429,7 @@ function toggleWorkoutMoreRow(e) {
     const btn = document.getElementById('btn-workout-more');
     if (!row) return;
     renderWorkoutViewBtn();
+    renderWorkoutGcalBtn();
     const open = row.classList.toggle('hidden') === false;
     if (btn) btn.setAttribute('aria-expanded', String(open));
 }
@@ -559,6 +561,7 @@ async function moveWorkoutDay(id, fromDay, toDay) {
     if (w.routine_item_id) await syncWorkoutToRoutine(w, true);
     showAppToast(t('workout_moved').replace('{day}', t(dayNameKeys[toDay])));
     renderMyDayWorkoutChip();
+    scheduleWorkoutGcalSync();
 }
 
 // ---------- 📅 סנכרון עם "השגרה שלי" בשני הכיוונים ("ומשם אפשר גם להוסיף לשגרה ולהפך") ----------
@@ -632,6 +635,7 @@ async function syncRoutineEditToWorkout(itemId, payload) {
     Object.assign(w, updates);
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
+    scheduleWorkoutGcalSync();
 }
 // ✓ בשגרה על פריט שהוא אימון = ✓ באימון (נרשם בהיסטוריה), ולהפך
 async function syncWorkoutFromRoutineCheck(itemId, dateStr, checked) {
@@ -695,6 +699,7 @@ async function routineItemToWorkout() {
     await loadWorkoutPlan();
     showAppToast(t('routine_to_workout_done'));
     renderRoutineItemWorkoutBtn();
+    scheduleWorkoutGcalSync();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
@@ -866,6 +871,7 @@ function chooseWorkoutReadyPlan(key) {
 }
 async function applyWorkoutReadyPlan(plan) {
     if (!supabaseClient || !currentUserId) return;
+    if (workoutPlan.length && workoutGcalOn() && workoutPlan.some(w => w.google_event_id)) await callWorkoutGcal('off');
     if (workoutPlan.length) {
         const routineIds = workoutPlan.map(w => w.routine_item_id).filter(Boolean);
         if (routineIds.length) await supabaseClient.from('routine_items').delete().in('id', routineIds).eq('user_id', currentUserId);
@@ -886,6 +892,7 @@ async function applyWorkoutReadyPlan(plan) {
     await loadWorkoutStreak();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
+    scheduleWorkoutGcalSync();
 }
 
 // ---------- הוספה / עריכה ----------
@@ -1094,11 +1101,13 @@ async function saveWorkoutDraft() {
     await loadWorkoutStreak();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
+    scheduleWorkoutGcalSync();
 }
 async function deleteWorkout(id) {
     if (!supabaseClient || !currentUserId) return;
     const w = workoutPlan.find(x => x.id === id);
     if (w && w.routine_item_id) await supabaseClient.from('routine_items').delete().eq('id', w.routine_item_id).eq('user_id', currentUserId);
+    if (w && w.google_event_id && workoutGcalOn()) await syncWorkoutsToGoogle([id]);
     await supabaseClient.from('workout_plan').delete().eq('id', id).eq('user_id', currentUserId);
     const tm = workoutTimer();
     if (tm && tm.id === id) saveWorkoutTimer(null);
@@ -1431,4 +1440,81 @@ function wkRefreshReminderTexts() {
         Object.assign(w, next);
         supabaseClient.from('workout_plan').update(next).eq('id', w.id).eq('user_id', currentUserId).then(() => {});
     });
+}
+
+// ---------- 📅 Google Calendar (ת14: "כמובן!") ----------
+// מתג אחד ב-⋯: כל אימון עם שעה הופך לאירוע חוזר שבועי ביומן המחובר (google-calendar-workouts). האפליקציה היא היחידה
+// שמזכירה (בגוגל בלי תזכורות), והמשיכה מגוגל מדלגת על האירועים האלה - כך שאימון לא חוזר לאפליקציה כאירוע ביומן.
+// כל שינוי באימון (שמירה, גרירה, מחיקה, תוכנית מוכנה, מהשגרה) מתעדכן ביומן; כיבוי - מוחק רק את האימונים מהיומן
+function workoutGcalOn() { try { return localStorage.getItem('weekwise_workout_gcal') === 'true'; } catch { return false; } }
+function setWorkoutGcalLocal(on) { try { localStorage.setItem('weekwise_workout_gcal', on ? 'true' : 'false'); } catch {} }
+function wkGcalEvents(excludeIds = []) {
+    return workoutPlan.filter(w => !wkIsRest(w) && w.time && wkDays(w).length && !excludeIds.includes(w.id)).map(w => {
+        const lines = [
+            [w.duration_minutes ? `${w.duration_minutes} ${t('sport_minutes_unit')}` : '', w.intensity ? t('workout_int_' + w.intensity) : '', w.place ? wkPlaceLabel(w.place) : ''].filter(Boolean).join(' · '),
+            ...(Array.isArray(w.exercises) && wkHasExercises(w) ? w.exercises.filter(e => e && e.name).map(e => `• ${e.name}${e.sets || e.reps ? ' ' + [e.sets, e.reps].filter(Boolean).join('×') : ''}`) : []),
+            w.notes || '',
+            `— ${t('workout_plan_title')} · NOT10.ai`,
+        ].filter(Boolean);
+        return { id: w.id, summary: `${wkIcon(w)} ${wkName(w)}`, description: lines.join('\n') };
+    });
+}
+async function callWorkoutGcal(action, excludeIds = []) {
+    const token = await getSupabaseAccessToken();
+    if (!token) return { ok: false, error: 'no_session' };
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-workouts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ action, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', events: action === 'sync' ? wkGcalEvents(excludeIds) : [] }),
+        });
+        const out = await res.json().catch(() => ({}));
+        return res.ok ? out : { ok: false, error: out.error || 'server_error' };
+    } catch {
+        return { ok: false, error: 'network' };
+    }
+}
+async function syncWorkoutsToGoogle(excludeIds = []) {
+    if (!workoutGcalOn()) return null;
+    const out = await callWorkoutGcal('sync', excludeIds);
+    if (out && out.error === 'not_connected') showAppToast(t('workout_gcal_not_connected'), 'error');
+    else if (!out || out.ok !== true) showAppToast(t('workout_gcal_error'), 'error');
+    return out;
+}
+let wkGcalTimer = null;
+function scheduleWorkoutGcalSync() {
+    if (!workoutGcalOn()) return;
+    clearTimeout(wkGcalTimer);
+    wkGcalTimer = setTimeout(() => { wkGcalTimer = null; loadWorkoutPlan().then(() => syncWorkoutsToGoogle()); }, 1200);
+}
+async function toggleWorkoutGcal() {
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    const turningOn = !workoutGcalOn();
+    if (turningOn) {
+        setWorkoutGcalLocal(true);
+        const out = await callWorkoutGcal('sync');
+        if (!out || !out.ok) {
+            setWorkoutGcalLocal(false);
+            showAppToast(t(out && out.error === 'not_connected' ? 'workout_gcal_not_connected' : 'workout_gcal_error'), 'error');
+            renderWorkoutGcalBtn();
+            return;
+        }
+        showAppToast(t('workout_gcal_on_toast'));
+    } else {
+        setWorkoutGcalLocal(false);
+        const out = await callWorkoutGcal('off');
+        showAppToast(t(out && out.ok ? 'workout_gcal_off_toast' : 'workout_gcal_error'), out && out.ok ? undefined : 'error');
+    }
+    renderWorkoutGcalBtn();
+    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, workout_gcal: workoutGcalOn() }, { onConflict: 'user_id' });
+    await loadWorkoutPlan();
+}
+function renderWorkoutGcalBtn() {
+    const btn = document.getElementById('btn-workout-gcal');
+    if (!btn) return;
+    const on = workoutGcalOn();
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.innerHTML = `<span aria-hidden="true">📅</span> ${wkEsc(t('workout_gcal_btn'))}${on ? ' <span aria-hidden="true">✓</span>' : ''}`;
 }

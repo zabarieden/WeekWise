@@ -186,6 +186,14 @@ export async function pullDeltaForWatch(supabase: SupabaseClient, conn: GoogleCo
     let syncToken = watch.sync_token || undefined;
     let newSyncToken: string | undefined;
     let needsReseed = false;
+    // אימונים שהאפליקציה עצמה שלחה ליומן (google-calendar-workouts) - לא מייבאים אותם בחזרה כאירועים.
+    // מזוהים לפי extendedProperties.private.not10Workout, או לפי המזהה ששמור ב-workout_plan (גם מופע של
+    // סדרה חוזרת, וגם אירוע שבוטל - שם גוגל לא תמיד שולחת את ה-extendedProperties)
+    const { data: workoutRows } = await supabase.from("workout_plan").select("google_event_id").eq("user_id", conn.user_id).not("google_event_id", "is", null);
+    const workoutEventIds = new Set((workoutRows ?? []).map((r: { google_event_id: string }) => r.google_event_id));
+    const isWorkoutEvent = (ev: { id?: string; recurringEventId?: string; extendedProperties?: { private?: Record<string, string> } }) =>
+        !!(ev.extendedProperties && ev.extendedProperties.private && ev.extendedProperties.private.not10Workout)
+        || (!!ev.id && workoutEventIds.has(ev.id)) || (!!ev.recurringEventId && workoutEventIds.has(ev.recurringEventId));
 
     do {
         const params = new URLSearchParams({ singleEvents: "true", maxResults: "250" });
@@ -210,6 +218,7 @@ export async function pullDeltaForWatch(supabase: SupabaseClient, conn: GoogleCo
 
         for (const ev of data.items || []) {
             checked++;
+            if (isWorkoutEvent(ev)) continue;
             if (ev.status === "cancelled") {
                 // RPC (לא .delete() ישיר) - מגדירה דגל בתוך הטרנזקציה שהטריגר על
                 // calendar_events בודק כדי *לא* להכניס מחיקה-הד לתור-היציאה.

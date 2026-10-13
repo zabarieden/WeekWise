@@ -9501,6 +9501,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_workout_board', category: 'sport_water' },
     { id: 'sport_workout_share', category: 'sport_water' },
     { id: 'sport_workout_reminder', category: 'sport_water' },
+    { id: 'sport_workout_gcal', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
