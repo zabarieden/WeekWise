@@ -43,7 +43,9 @@ html {
     --accent-green: #00e676;
     --accent-cyan: #00d4ff;
     --accent-gold: #f59e0b;
-    --accent-red: #ff453a;
+    /* מאז 2026-10-13 אין אדום באפליקציה (לפי בקשה מפורשת: "כל מה שאדום תשנה לצבע של האפליקציה"): מחיקה, ניתוק,
+       שגיאות, חריגה בתקציב וכו' בצבע של ערכת הנושא. ערכה שהיא אדומה מבחירה (זהב-אדום, וולקני...) נשארת כמו שהיא */
+    --accent-red: var(--accent-purple);
     /* גרסאות "טקסט" של צבעי הניאון (--accent-*-text): במצב כהה זהות בדיוק
        לצבע המקורי (שם הניגודיות כבר טובה על רקע כהה) - html.light-mode
        למטה דורס אותן בגרסה מוכהית יותר, כי אותו גוון פסטלי בהיר שמאיר יפה
@@ -61,7 +63,7 @@ html {
     --accent-green-text: var(--accent-green);
     --accent-cyan-text: var(--accent-cyan);
     --accent-gold-text: var(--accent-gold);
-    --accent-red-text: var(--accent-red);
+    --accent-red-text: var(--accent-purple-text);
     --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
     /* חשוב שזה יוגדר גם ברמת המסמך (לא רק על כל input[type=date] בנפרד,
        ר' למטה) - בכמה גרסאות WebView באנדרואיד הלוח השנה/הבורר הנייטיבי של
@@ -793,7 +795,7 @@ html.light-mode {
     --accent-green-text: color-mix(in srgb, var(--accent-green) 55%, black 45%);
     --accent-cyan-text: color-mix(in srgb, var(--accent-cyan) 55%, black 45%);
     --accent-gold-text: color-mix(in srgb, var(--accent-gold) 65%, black 35%);
-    --accent-red-text: color-mix(in srgb, var(--accent-red) 60%, black 40%);
+    --accent-red-text: var(--accent-purple-text);
 }
 /* אותה ערכת-נושא פרימיום (data-color-theme, ר' למעלה) שולטת גם ברקע/שורות של
    מצב בהיר, לא רק בצבעי הניאון של מצב כהה - כך שבחירה אחת בהגדרות נותנת גם
@@ -1547,7 +1549,7 @@ html.high-contrast {
     --accent-green: #00ff00 !important;
     --accent-cyan: #00ffff !important;
     --accent-gold: #ffff00 !important;
-    --accent-red: #ff3b30 !important;
+    --accent-red: var(--accent-purple) !important;
 }
 html.high-contrast.light-mode {
     --bg-main: #ffffff !important;
@@ -1557,7 +1559,8 @@ html.high-contrast.light-mode {
     --border-color: #000000 !important;
     --text-primary: #000000 !important;
     --text-secondary: #000000 !important;
-    --accent-pink: #b30000 !important;
+    /* סגול כהה ולא אדום כהה (#b30000) - בלי אדום באפליקציה, אותה ניגודיות חזקה על לבן */
+    --accent-pink: #6b00b3 !important;
     --accent-purple: #0000cc !important;
     --accent-purple-light: #0000cc !important;
     --accent-green: #006600 !important;
@@ -2689,7 +2692,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .daily-board-tab-add { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; box-shadow: 0 0 10px rgba(168,85,247,0.4); }
 .daily-board-tab-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 6px; }
 .btn-link-action { background: none; border: none; padding: 4px 2px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
-.daily-board-delete-tab-btn { color: #f87171; }
+.daily-board-delete-tab-btn { color: var(--accent-red-text); }
 .daily-board-body { flex: 1; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 14px; }
 /* ריבוע הוי הקטן ליד כל שורת-שעה ב"השגרה שלי" - קטן בכוונה (לא בגודל
    .btn-complete-item הרגיל), כדי שלא יתחרה בשעה ובכותרת, לפי בקשה מפורשת
@@ -3891,7 +3894,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
        (ימין ב-RTL, שמאל ב-LTR - הוא הילד הראשון ב-flex) - הקו חייב להיות
        באותו קצה כדי בכלל להיות רלוונטי לחישוב המרחק ממנו */
     position: absolute; top: 0; bottom: 0; inset-inline-start: 40px; width: 1px;
-    background: rgba(230, 90, 90, 0.5);
+    background: color-mix(in srgb, var(--accent-red) 50%, transparent);
     pointer-events: none;
 }
 .study-task-item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 2px; }
@@ -4156,7 +4159,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 .btn-move-slot:hover { opacity: 1; }
 .btn-duplicate-slot { flex: 0 0 auto; background: transparent; color: var(--text-secondary); border: none; font-size: 0.7rem; cursor: pointer; opacity: 0.7; }
 .btn-duplicate-slot:hover { opacity: 1; }
-.btn-clear-week { background-color: rgba(255, 69, 58, 0.03); color: var(--accent-red-text); border: 1px solid rgba(255, 69, 58, 0.08); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
+.btn-clear-week { background-color: color-mix(in srgb, var(--accent-red) 3%, transparent); color: var(--accent-red-text); border: 1px solid color-mix(in srgb, var(--accent-red) 8%, transparent); font-size: 0.8rem; border-radius: 10px; padding: 10px; cursor: pointer; width: 100%; font-weight: 600; }
 .btn-add-day-slot { background-color: rgba(168, 85, 247, 0.06); color: var(--accent-purple-light-text); border: 1px solid rgba(168, 85, 247, 0.2); font-size: 0.78rem; border-radius: 8px; padding: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 6px; }
 
 /* מבט ליומן: עכשיו כן ניתן לקיפול כמו כל כרטיס אחר (collapsible-header +
@@ -4455,7 +4458,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
     padding: 0 5px;
     box-sizing: border-box;
     border-radius: 10px;
-    background: linear-gradient(135deg, #ff3b6a, #ff5e3a);
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
     color: #fff;
     font-size: 0.7rem;
     font-weight: 800;
@@ -4740,7 +4743,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .btn-back-home:active { transform: scale(0.95); }
 .btn-recipe-edit, .btn-recipe-delete { border-radius: 20px; padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid; }
 .btn-recipe-edit { background-color: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: var(--accent-purple-light-text); }
-.btn-recipe-delete { background-color: rgba(255, 69, 58, 0.08); border-color: rgba(255, 69, 58, 0.25); color: var(--accent-red-text); }
+.btn-recipe-delete { background-color: color-mix(in srgb, var(--accent-red) 8%, transparent); border-color: color-mix(in srgb, var(--accent-red) 25%, transparent); color: var(--accent-red-text); }
 .btn-recipe-edit:active, .btn-recipe-delete:active { transform: scale(0.95); }
 .recipe-detail-empty-line { color: var(--text-secondary) !important; font-style: italic; }
 .recipe-detail-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 20px 30px 20px; box-sizing: border-box; }
@@ -4772,7 +4775,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 @keyframes caloriesAiEstimatePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 /* מספר קלוריות חריג למנה בודדת (ר' IMPLAUSIBLE_SINGLE_MEAL_CALORIES/
    flagImplausibleCalories) - אזהרה לא-חוסמת (מסגרת+זוהר אדום), לא מונעת שמירה */
-.calories-input.calories-implausible { border-color: var(--accent-red); box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.3); }
+.calories-input.calories-implausible { border-color: var(--accent-red); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-red) 30%, transparent); }
 .protein-input { flex: 0 0 70px; box-sizing: border-box; padding: 8px; background-color: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); color:#fff; border-radius: 6px; font-size: 0.8rem; text-align:center; outline:none; }
 /* שמירת שורת ארוחה שהוקלדה כ"ארוחה קבועה" (meal_presets) בלחיצה אחת -
    בלי לצאת ל"ניהול ארוחות" ולהקליד שוב את מה שכבר הוקלד כאן */
@@ -4821,8 +4824,8 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     font-size: 0.62rem;
     font-weight: 700;
     color: var(--accent-red-text);
-    background-color: rgba(255, 69, 58, 0.1);
-    border: 1px solid rgba(255, 69, 58, 0.25);
+    background-color: color-mix(in srgb, var(--accent-red) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-red) 25%, transparent);
     border-radius: 10px;
     padding: 1px 8px;
 }
@@ -5074,7 +5077,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .progress-day-check:disabled { opacity: 0.35; cursor: not-allowed; }
 .progress-day-check:active:not(:disabled) { transform: scale(0.9); }
 .btn-logout { background-color: transparent; color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.8rem; border-radius: 20px; padding: 10px 20px; cursor: pointer; transition: var(--transition); }
-.btn-logout:hover { color: var(--accent-red-text); border-color: rgba(255, 69, 58, 0.15); }
+.btn-logout:hover { color: var(--accent-red-text); border-color: color-mix(in srgb, var(--accent-red) 15%, transparent); }
 /* align-items:center (לא flex-end) - כל המודלים באפליקציה מרוכזים אנכית
    באמצע המסך במקום להיצמד לתחתית כ"בוטום-שיט", לפי בקשה מפורשת ("שיהיה
    באמצע המסך... גם במחשב וגם בנייד, בכל המודלים") */
@@ -5425,7 +5428,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 
 .app-toast { position: absolute; bottom: -80px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(255, 0, 127, 0.22)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); z-index: 4500; opacity: 0; pointer-events: none; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; }
 .app-toast.show { bottom: 90px; opacity: 1; }
-.app-toast.error { background: linear-gradient(135deg, rgba(255, 69, 58, 0.28), rgba(255, 0, 127, 0.18)); border-color: rgba(255, 69, 58, 0.4); }
+.app-toast.error { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-red) 28%, transparent), color-mix(in srgb, var(--accent-pink) 18%, transparent)); border-color: color-mix(in srgb, var(--accent-red) 40%, transparent); }
 
 .btn-test-chime { flex: 1 1 100%; background-color: rgba(168, 85, 247, 0.08); color: var(--accent-purple-light-text); border: 1px solid rgba(168, 85, 247, 0.25); font-size: 0.8rem; padding: 8px; }
 
@@ -6028,7 +6031,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
 .btn-clear-specific { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); }
 /* פעולות הרסניות (ביטול מנוי, מחיקת חשבון) - מודגשות באדום כדי לבלוט מכל
    שאר כפתורי ההגדרות הרגילים */
-.btn-danger-outline { color: var(--accent-red-text) !important; border-color: rgba(255, 69, 58, 0.3) !important; background-color: rgba(255, 69, 58, 0.06) !important; }
+.btn-danger-outline { color: var(--accent-red-text) !important; border-color: color-mix(in srgb, var(--accent-red) 30%, transparent) !important; background-color: color-mix(in srgb, var(--accent-red) 6%, transparent) !important; }
 /* מחיקת חשבון: קישור טקסט קטן ולא בולט (לא כפתור מלא) - כדי שלא תתחרה
    ויזואלית עם שאר פעולות ניהול המשתמש, אבל עדיין ברור/אדום כפעולה הרסנית */
 .btn-link-danger-small { background: transparent; border: none; color: var(--accent-red-text); opacity: 0.7; font-size: 0.72rem; text-decoration: underline; cursor: pointer; padding: 4px; }
@@ -6037,23 +6040,23 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
    הראשי, בכוונה: זו פעולה לגמרי אופציונלית שאין שום לחץ להשתמש בה */
 .btn-link-subtle { background: transparent; border: none; color: var(--text-secondary); opacity: 0.8; font-size: 0.78rem; text-decoration: underline; cursor: pointer; padding: 4px; }
 .btn-link-subtle:active { opacity: 1; }
-/* מודל אישור מחיקת חשבון - עיצוב "רציני/עגום" ייעודי, לא ברירת המחדל
-   השמחה/הניאון של שאר האפליקציה: גוני אדום-כהה עמוקים, לא צבעי הפרימיום */
+/* מודל אישור מחיקת חשבון - עיצוב "רציני" ייעודי: גוון כהה ושקט של צבע האפליקציה (מאז 2026-10-13 בלי
+   אדום, לפי בקשה מפורשת), לא הניאון השמח של שאר האפליקציה */
 .delete-account-confirm-sheet {
-    background: linear-gradient(165deg, var(--bg-sheet), rgba(80, 12, 12, 0.35));
-    border-top: 1px solid rgba(255, 69, 58, 0.4);
-    box-shadow: 0 -10px 40px rgba(255, 69, 58, 0.12);
+    background: linear-gradient(165deg, var(--bg-sheet), color-mix(in srgb, var(--accent-purple) 14%, var(--bg-sheet)));
+    border-top: 1px solid color-mix(in srgb, var(--accent-red) 40%, transparent);
+    box-shadow: 0 -10px 40px color-mix(in srgb, var(--accent-red) 12%, transparent);
 }
-.delete-account-confirm-icon { text-align: center; font-size: 2.2rem; margin-bottom: 4px; filter: drop-shadow(0 0 10px rgba(255, 69, 58, 0.55)); }
+.delete-account-confirm-icon { text-align: center; font-size: 2.2rem; margin-bottom: 4px; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent-red) 55%, transparent)); }
 .delete-account-confirm-title { text-align: center; color: var(--accent-red-text); }
 .delete-account-confirm-input {
-    display: block; width: 100%; box-sizing: border-box; background-color: rgba(255, 69, 58, 0.07);
-    border: 1px solid rgba(255, 69, 58, 0.35); color: var(--text-primary); border-radius: 10px;
+    display: block; width: 100%; box-sizing: border-box; background-color: color-mix(in srgb, var(--accent-red) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-red) 35%, transparent); color: var(--text-primary); border-radius: 10px;
     padding: 12px; font-size: 0.9rem; outline: none; text-align: center; margin-top: 4px;
 }
 .btn-danger-solid {
-    background: linear-gradient(135deg, #ff453a, #8f1414); color: #fff; border: none; font-weight: 700;
-    box-shadow: 0 4px 16px rgba(255, 69, 58, 0.35); border-radius: 12px; padding: 12px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent-purple), color-mix(in srgb, var(--accent-purple) 55%, black)); color: #fff; border: none; font-weight: 700;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-red) 35%, transparent); border-radius: 12px; padding: 12px; cursor: pointer;
     transition: var(--transition); flex: 1 1 0;
 }
 .btn-danger-solid:disabled { opacity: 0.32; cursor: not-allowed; box-shadow: none; }
@@ -6627,7 +6630,7 @@ html[dir="rtl"] .app-tour-chev { transform: scaleX(-1); }
 .book-plus-btn { border: none; border-radius: 10px; padding: 6px 10px; font: inherit; font-size: .78rem; font-weight: 800; color: var(--accent-purple-light-text); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); cursor: pointer; }
 .book-plus-btn:active { transform: scale(.94); }
 .book-deadline-chip { display: inline-block; margin-top: 8px; border: none; border-radius: 999px; padding: 4px 10px; font: inherit; font-size: .74rem; font-weight: 700; color: var(--text-primary); background: color-mix(in srgb, var(--accent-gold) 20%, transparent); text-align: start; cursor: pointer; }
-.book-deadline-chip.is-late { background: color-mix(in srgb, #ef4444 16%, transparent); }
+.book-deadline-chip.is-late { background: color-mix(in srgb, var(--accent-red) 16%, transparent); }
 .book-deadline-chip.is-empty { background: transparent; color: var(--accent-purple-light-text); border: 1px dashed color-mix(in srgb, var(--accent-purple) 40%, transparent); }
 .book-card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .book-finish-btn { border: none; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: .82rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); cursor: pointer; }
@@ -6674,7 +6677,7 @@ html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7
 .nb-pattern-chip { min-width: 64px; height: 38px; padding: 0 8px; border-radius: 10px; border: 2px solid transparent; background-color: var(--nb-color); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); cursor: pointer; font: inherit; }
 .nb-pattern-chip.selected { border-color: var(--text-primary); }
 .nb-pattern-name { display: inline-block; background: rgba(255, 255, 255, .88); color: #333; border-radius: 4px; padding: 1px 5px; font-size: .68rem; font-weight: 800; }
-.nb-danger-link { align-self: center; border: none; background: none; color: #e5484d; font: inherit; font-size: .85rem; font-weight: 700; padding: 6px 10px; cursor: pointer; }
+.nb-danger-link { align-self: center; border: none; background: none; color: var(--accent-red-text); font: inherit; font-size: .85rem; font-weight: 700; padding: 6px 10px; cursor: pointer; }
 
 /* --- בחירת סוג דף: פיסת נייר קטנה מכל סוג - אותו נייר שמנת כמו בתוך המחברת --- */
 .nb-page-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -6735,7 +6738,7 @@ html[dir="rtl"] .nb-cover { border-radius: 9px 3px 3px 9px; box-shadow: inset -7
     --accent-purple-text: color-mix(in srgb, var(--user-accent, var(--accent-purple)) 65%, black 35%);
     --accent-purple-light-text: color-mix(in srgb, var(--user-accent, var(--accent-purple-light)) 50%, black 50%);
     --accent-green-text: color-mix(in srgb, var(--accent-green) 55%, black 45%);
-    --accent-red-text: color-mix(in srgb, var(--accent-red) 60%, black 40%);
+    --accent-red-text: var(--accent-purple-text);
     --nb-gutter: inset 14px 0 16px -14px rgba(60, 50, 30, .24);
     color-scheme: light;
     position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;
@@ -7213,7 +7216,7 @@ button.nm-letter-card { cursor: pointer; }
 .routine-daysoff-mode-icon { flex: none; font-size: 1.1rem; }
 .routine-ai-input { display: block; width: 100%; box-sizing: border-box; min-height: 110px; margin-top: 10px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .95rem; line-height: 1.55; resize: vertical; }
 .routine-ai-input.hidden { display: none; }
-#routine-daysoff-save.confirm { background: #e5484d; border-color: #e5484d; color: #fff; }
+#routine-daysoff-save.confirm { background: var(--accent-red); border-color: var(--accent-red); color: #fff; }
 .routine-dayoff-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 34px 16px 26px; text-align: center; }
 .routine-dayoff-empty-icon { font-size: 2.2rem; }
 .routine-dayoff-empty p { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
@@ -7834,8 +7837,8 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
 .tbl-pick-text { display: flex; gap: 8px; align-items: center; }
 .tbl-pick-text input { flex: 1; min-width: 0; }
 .tbl-pick-text .btn-primary { flex-shrink: 0; width: auto; margin: 0; padding-inline: 18px; }
-.bag-add-option.is-danger .bag-add-option-name { color: var(--accent-red-text, #e5484d); }
-.bag-add-option.is-danger .bag-add-option-icon { background: color-mix(in srgb, #e5484d 14%, transparent); }
+.bag-add-option.is-danger .bag-add-option-name { color: var(--accent-red-text); }
+.bag-add-option.is-danger .bag-add-option-icon { background: color-mix(in srgb, var(--accent-red) 14%, transparent); }
 
 .tbl-mode:focus-visible, .tbl-chip:focus-visible, .tbl-th:focus-visible, .tbl-check:focus-visible, .tbl-card:focus-visible, .tbl-add-row:focus-visible, .tbl-toggle:focus-visible, .tbl-chip-pick:focus-visible, .tbl-chip-del:focus-visible, .tbl-chip-other:focus-visible, .tbl-date-btn:focus-visible, .tbl-pick-row:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .tbl-card:active { transform: none; } }
@@ -8500,9 +8503,9 @@ html.light-mode .wx-stars { display: none; }
 .dictate-btn { position: absolute; inset-inline-end: 8px; bottom: 10px; z-index: 20; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--accent-pink-text); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); }
 .dictate-btn.hidden { display: none; }
 .dictate-btn svg { width: 18px; height: 18px; }
-.dictate-btn.listening { background: #ff453a; border-color: #ff453a; color: #fff; animation: dictatePulse 1.3s ease-out infinite; }
+.dictate-btn.listening { background: var(--accent-red); border-color: var(--accent-red); color: #fff; animation: dictatePulse 1.3s ease-out infinite; }
 .dictate-btn:focus-visible { outline: 2px solid var(--accent-pink-text); outline-offset: 2px; }
-@keyframes dictatePulse { 0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.55); } 100% { box-shadow: 0 0 0 14px rgba(255, 69, 58, 0); } }
+@keyframes dictatePulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-red) 55%, transparent); } 100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent-red) 0%, transparent); } }
 .nb-dictate { bottom: 16px; inset-inline-end: 16px; width: 46px; height: 46px; background: var(--paper, #fbfaf6); color: var(--accent-pink-text); border-color: rgba(60, 50, 30, 0.16); }
 .nb-dictate svg { width: 20px; height: 20px; }
 .nb-sheet:not([data-paper="write"]) .nb-dictate { display: none; }
@@ -8904,7 +8907,7 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .srp-diary-full { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-sheet); }
 .srp-diary-full p { margin: 0 0 10px; line-height: 1.65; color: var(--text-primary); overflow-wrap: anywhere; }
 .srp-diary-del { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
-.srp-diary-del.confirm { border-color: #e5484d; color: #e5484d; }
+.srp-diary-del.confirm { border-color: var(--accent-red); color: var(--accent-red-text); }
 /* היומן: לוח חודשי מקופל - נקודה בכל יום שכתבו בו, נגיעה ביום פותחת את הדפים שלו */
 .srp-cal { flex-shrink: 0; margin: 14px 0 6px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); overflow: hidden; }
 .srp-cal-fold { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 50px; padding: 8px 14px; border: none; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 800; text-align: start; cursor: pointer; }
@@ -9208,7 +9211,7 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .ai-chat-msg.is-bot { align-self: flex-start; border-end-start-radius: 6px; background: var(--bg-row); color: var(--text-primary); }
 .ai-chat-msg.is-me { align-self: flex-end; border-end-end-radius: 6px; background: linear-gradient(135deg, #ff4fa3, #c06bff); color: #fff; font-weight: 700; }
 .ai-chat-msg.is-ok { border-inline-start: 3px solid #10b981; }
-.ai-chat-msg.is-error { border-inline-start: 3px solid #f87171; }
+.ai-chat-msg.is-error { border-inline-start: 3px solid var(--accent-red); }
 .ai-chat-msg.is-typing { opacity: 0.75; animation: aiChatPulse 1.2s ease-in-out infinite; }
 @keyframes aiChatPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.9; } }
 /* הכפתורים באמצע (לפי בקשה מפורשת: "את הכל במרכז... רק שהשיחה תהיה בצד"); ארבעת הכלים - שתיים בשורה, גדולים */
@@ -9509,7 +9512,7 @@ html[dir="rtl"] .nmt-bars i { margin-inline-start: auto; }
 /* שמות השירים והזמרים נשברים לשורה שנייה ולא נחתכים (בעברית החיתוך אכל את תחילת השם: "...ding Lights") */
 .srp-hit-name b { font-size: 0.8rem; overflow-wrap: anywhere; }
 .srp-hit-name small { font-size: 0.68rem; color: var(--text-secondary); overflow-wrap: anywhere; }
-.srp-hit-yt { flex: none; width: 22px; height: 15px; border-radius: 4px; background: #ff2d2d; color: #fff; font-size: 0.55rem; display: grid; place-items: center; }
+.srp-hit-yt { flex: none; width: 22px; height: 15px; border-radius: 4px; background: #282828; color: #fff; font-size: 0.55rem; display: grid; place-items: center; }
 .sr-roof-hot { cursor: pointer; }
 .sr-roof-hot:focus { outline: none; }
 .sr-roof-hot:focus-visible > ellipse:first-of-type { fill: #ffd27a; opacity: 0.45; }
@@ -9620,7 +9623,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipe-detail-view .recipe-action-soft { border: 1.5px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
 .recipe-detail-view .recipe-sheet-foot { border-top: 1.5px dashed var(--chalk-line); }
 .recipe-detail-view .recipe-add-preset-btn { border-color: rgba(247, 215, 116, 0.55); background: transparent; color: var(--chalk-yellow); }
-.recipe-detail-view .recipe-delete-link { color: #fda4af; }
+.recipe-detail-view .recipe-delete-link { color: var(--accent-purple-light); }
 /* טופס המתכון: זמן הכנה + גרם למנה בשורה אחת */
 .recipe-form-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .recipe-form-pair input { min-width: 0; }
@@ -9685,11 +9688,11 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 #weekly-list > li.note-paper .btn-complete-item.checked { background: var(--accent-purple); border-color: var(--accent-purple); }
 #weekly-list > li.note-paper .btn-delete-item { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: -4px -4px -4px 0; padding: 0; color: color-mix(in srgb, var(--paper-ink) 42%, transparent); }
 #weekly-list > li.note-paper .btn-delete-item svg { width: 15px; height: 15px; }
-#weekly-list > li.note-paper .btn-delete-item:hover { color: #b42318; transform: none; }
+#weekly-list > li.note-paper .btn-delete-item:hover { color: var(--accent-red-text); transform: none; }
 html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper: color-mix(in srgb, var(--text-primary) 8%, transparent); --paper-ink: var(--text-primary); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 9%, transparent); }
 html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 12%, var(--paper)); }
 html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc { color: color-mix(in srgb, var(--tc) 70%, #ffffff); }
-html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { color: #fca5a5; }
+html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { color: var(--accent-purple-light); }
 #weekly-list > li.note-paper .note-drag-handle { color: rgba(59, 50, 22, 0.4); padding: 4px 1px; }
 #weekly-list > li.note-paper .btn-complete-item:focus-visible,
 #weekly-list > li.note-paper .btn-delete-item:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
@@ -9772,7 +9775,7 @@ html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { colo
 .saved-meal-actions { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 6px; }
 .saved-meal-action { padding: 12px; border: none; border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
 .saved-meal-action.is-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
-.saved-meal-action.is-danger { color: var(--accent-red-text, #e11d48); }
+.saved-meal-action.is-danger { color: var(--accent-red-text); }
 .saved-meal-action:active { transform: scale(0.98); }
 @media (prefers-reduced-motion: reduce) {
     .saved-meals-add-btn:active, .saved-meals-rc:active, .saved-meal-today:active, .saved-meal-action:active { transform: none; }
@@ -9824,7 +9827,7 @@ html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { colo
 .sr-wish-paper-text { position: relative; margin: 0; font-size: 1.12rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 @keyframes srWishUnfold { from { transform: scaleY(0.08) rotate(-5deg); opacity: 0.4; } to { transform: none; opacity: 1; } }
 .sr-wish-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.sr-wish-del { color: var(--accent-red-text, #e11d48); }
+.sr-wish-del { color: var(--accent-red-text); }
 .sr-wish-input, .sr-quote-input, .sr-quote-title, .sr-quote-author { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.95rem; line-height: 1.5; resize: vertical; }
 .sr-wish-input { min-height: 120px; }
 .sr-wish-pop { position: relative; display: flex; flex-direction: column; gap: 10px; padding-top: 6px; text-align: center; }

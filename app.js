@@ -471,7 +471,7 @@ async function loadCenterItems(type) {
         const editBtn = isNote ? '' : `<button class="btn-edit-item" onclick="openCenterItemEditor(this, '${type}')" title="${t('edit_btn')}">${EDIT_ICON_SVG}</button>`;
         const deleteBtn = isNote
             ? `<button type="button" class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')" title="${t('note_to_archive_btn')}" aria-label="${t('note_to_archive_btn')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>`
-            : `<button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">❌</button>`;
+            : `<button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">✕</button>`;
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
@@ -1921,12 +1921,12 @@ const APP_TOUR_STEPS = [
     { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
     { id: 'm_receipts', ch: 'menu', ctx: 'menu', target: '[data-tour="m-receipts"]', text: 'apptour_m_receipts_text', link: 'apptour_m_receipts_link' },
     // ⚙️ ההגדרות (לפי בקשה מפורשת: "שיסביר גם על ההגדרות, סופר חשוב"): איפה הן בתפריט, כל אחת מחמש
-    // הקבוצות, ופנימה לשני הדברים החשובים - התראות (בלעדיהן תזכורות לא מגיעות) ו-Google Calendar
+    // הקבוצות, ופנימה ל-Google Calendar. השלב שנכנס להתראות ("התראות תזכורות") הוסר לפי בקשה מפורשת
+    // (2026-10-13: "התראות תזכורת אפשר למחוק בסיור") - קבוצת ההתראות עצמה נשארת
     { id: 's_menu', ch: 'settings', ctx: 'menu', target: '[data-tour="m-settings"]', text: 'apptour_s_menu_text' },
     { id: 's_appearance', ch: 'settings', ctx: 'settings', target: '[data-tour="s-appearance"]', text: 'apptour_s_appearance_text' },
     { id: 's_personalization', ch: 'settings', ctx: 'settings', target: '[data-tour="s-personalization"]', text: 'apptour_s_personalization_text' },
     { id: 's_notifications', ch: 'settings', ctx: 'settings', target: '[data-tour="s-notifications"]', text: 'apptour_s_notifications_text' },
-    { id: 's_notif_inside', ch: 'settings', ctx: 'settings_sub', sub: 'notifications', icon: '🔔', target: '#settings-subscreen-notifications .settings-toggle-row', titleKey: 'settings_notifications_label', text: 'apptour_s_notif_inside_text' },
     { id: 's_account', ch: 'settings', ctx: 'settings', target: '[data-tour="s-account"]', text: 'apptour_s_account_text' },
     { id: 's_gcal_inside', ch: 'settings', ctx: 'settings_sub', sub: 'account', icon: '🗓️', target: () => appTourVisible('#google-calendar-connected-section') || appTourVisible('#google-calendar-disconnected-section'), titleKey: 'settings_google_calendar_title', text: 'apptour_s_gcal_inside_text' },
     { id: 's_support', ch: 'settings', ctx: 'settings', target: '[data-tour="s-support"]', text: 'apptour_s_support_text' },
@@ -3997,7 +3997,7 @@ async function loadWeekOneTimeEvents() {
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.className = 'btn-delete-item';
-            deleteBtn.textContent = '❌';
+            deleteBtn.textContent = '✕';
             deleteBtn.onclick = () => deleteCalendarEvent(item.id);
             row.appendChild(editBtn);
             row.appendChild(deleteBtn);
@@ -5283,7 +5283,7 @@ function renderHoursSettingsRows() {
         row.className = 'hours-settings-row';
         row.innerHTML = `
             <input type="text" class="hours-input" data-index="${idx}" value="${val || ''}" placeholder="#${idx + 1}">
-            <button type="button" class="btn-delete-slot" onclick="removeHoursSettingsRow(${idx})" title="${t('schedule_remove_row_title')}">❌</button>
+            <button type="button" class="btn-delete-slot" onclick="removeHoursSettingsRow(${idx})" title="${t('schedule_remove_row_title')}">✕</button>
         `;
         grid.appendChild(row);
     });
@@ -5369,7 +5369,7 @@ function buildWeeklyScheduleAccordionUI() {
         // הרשת הבסיסית לעולם לא "נעלמת" מיום, לפי הבקשה המפורשת
         const slotNumbers = getDaySlotNumbers(dbDay);
         slotNumbers.forEach(i => {
-            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-actions-wrap"><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="confirmRemoveDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">❌</button></div></div>`;
+            slotsHTML += `<div class="slot-input-group" data-day="${dbDay}" data-slot="${i}"><div class="slot-time-wrap"><span class="slot-drag-handle" title="${t('schedule_drag_handle_title')}">⠿</span><input type="text" value="${defaultHours[i-1] || ''}" class="slot-time" onchange="saveScheduleSlot('${dbDay}', ${i})"></div><div class="slot-task-wrap"><span class="slot-task-icon"></span><input type="text" class="slot-task" onchange="saveScheduleSlot('${dbDay}', ${i})" oninput="updateSlotTaskIcon(this)"></div><div class="slot-actions-wrap"><button class="btn-move-slot" onclick="openMoveSlotToDay('${dbDay}', ${i})" title="${t('schedule_move_slot_title')}">📅</button><button class="btn-duplicate-slot" onclick="duplicateSlotToNextDay('${dbDay}', ${i})" title="${t('schedule_duplicate_slot_title')}">⧉</button><button class="btn-delete-slot" onclick="confirmRemoveDaySlot('${dbDay}', ${i})" title="${t('schedule_remove_row_title')}">✕</button></div></div>`;
         });
         const gridHiddenClass = slotNumbers.length ? '' : ' hidden';
         // day-page-onetime: אירועים חד-פעמיים (calendar_events, כולל תוצרי "פריסה
@@ -6362,7 +6362,7 @@ async function renderSelectedCalendarDay() {
 
     // בנוי עם closures (לא onclick עם מחרוזת מוטמעת) כדי ש-openEditCalendarEvent
     // תקבל את האובייקט המלא (לא רק id) - נוסף כפתור ✏️ עריכה שלא היה קיים כאן
-    // עד היום (היה רק ❌ מחיקה), לפי בקשה מפורשת
+    // עד היום (היה רק ✕ מחיקה), לפי בקשה מפורשת
     data.forEach(item => {
         const row = document.createElement('div');
         row.className = 'today-tasks-row';
@@ -6388,7 +6388,7 @@ async function renderSelectedCalendarDay() {
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
+        deleteBtn.textContent = '✕';
         deleteBtn.onclick = () => deleteCalendarEvent(item.id);
         row.appendChild(dragHandle);
         row.appendChild(checkbox);
@@ -6427,7 +6427,7 @@ async function renderSelectedCalendarDay() {
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
+        deleteBtn.textContent = '✕';
         deleteBtn.onclick = () => deleteRecurringScheduleItem(item.id);
         row.appendChild(editBtn);
         row.appendChild(deleteBtn);
@@ -6861,7 +6861,7 @@ function buildSingleEventRow(item) {
     editBtn.onclick = () => openEditCalendarEvent(item);
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-item';
-    deleteBtn.textContent = '❌';
+    deleteBtn.textContent = '✕';
     deleteBtn.onclick = () => deleteCalendarEvent(item.id);
     row.appendChild(starBtn);
     row.appendChild(dateBadge);
@@ -6946,7 +6946,7 @@ function buildRecurringEventRow(items, groupId) {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-item';
-    deleteBtn.textContent = '❌';
+    deleteBtn.textContent = '✕';
     deleteBtn.onclick = () => deleteRecurringSeries(groupId);
 
     header.appendChild(starBtn);
@@ -6979,13 +6979,13 @@ function buildRecurringEventRow(items, groupId) {
         editSingleBtn.innerHTML = EDIT_ICON_SVG;
         editSingleBtn.title = t('calendar_event_edit_occurrence_title');
         editSingleBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); openEditCalendarEvent(occurrence); };
-        // מחיקת מופע בודד זה בלבד - להבדיל מ-❌ של כל הסדרה למעלה, שמפסיקה
+        // מחיקת מופע בודד זה בלבד - להבדיל מ-✕ של כל הסדרה למעלה, שמפסיקה
         // את כל המופעים העתידיים (ר' deleteRecurringSeries). כאן נשארים כל
         // שאר המופעים העתידיים במקום, נמחק רק התאריך הספציפי הזה
         const deleteSingleBtn = document.createElement('button');
         deleteSingleBtn.type = 'button';
         deleteSingleBtn.className = 'calendar-event-series-date-delete';
-        deleteSingleBtn.textContent = '❌';
+        deleteSingleBtn.textContent = '✕';
         deleteSingleBtn.title = t('calendar_event_delete_occurrence_title');
         deleteSingleBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteSingleSeriesOccurrence(occurrence.id); };
         line.appendChild(checkbox);
@@ -10817,7 +10817,7 @@ async function renderFinanceHistory() {
             </div>
             <span class="finance-history-amount" style="color: ${colorVar};">${sign}${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-edit-item" onclick="editFinanceEntry('${row.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">❌</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteFinanceEntry('${row.id}')">✕</button>
         `;
         list.appendChild(li);
     });
@@ -10835,7 +10835,7 @@ async function renderFinanceHistory() {
             </div>
             <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${row.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-slot" onclick="deleteRecurringExpense('${row.id}')">❌</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteRecurringExpense('${row.id}')">✕</button>
         `;
         list.appendChild(li);
     });
@@ -10931,7 +10931,7 @@ function renderReceiptsList(rows) {
             </div>
             <span class="finance-history-amount" style="color: var(--accent-red);">${Number(row.amount).toLocaleString()}</span>
             <button type="button" class="btn-edit-item" onclick="openEditReceiptModal('${row.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-slot" onclick="deleteReceipt('${row.id}')">❌</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteReceipt('${row.id}')">✕</button>
         `;
         list.appendChild(li);
     });
@@ -11332,7 +11332,7 @@ function buildRecurringExpenseRowEl(item, today) {
         <span class="finance-history-amount" style="color: var(--accent-red);">−${Number(item.amount).toLocaleString()}</span>
         ${pauseBtn}
         <button type="button" class="btn-edit-item" onclick="openEditRecurringExpenseModal('${item.id}')">${EDIT_ICON_SVG}</button>
-        <button type="button" class="btn-delete-item" onclick="deleteRecurringExpense('${item.id}')">❌</button>
+        <button type="button" class="btn-delete-item" onclick="deleteRecurringExpense('${item.id}')">✕</button>
     `;
     return li;
 }
@@ -12165,7 +12165,7 @@ async function renderSportHistory() {
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <button type="button" class="btn-delete-slot" onclick="shareSportSession('${row.id}')">📤</button>
-            <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">❌</button>
+            <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">✕</button>
         `;
         list.appendChild(li);
     });
@@ -16793,7 +16793,7 @@ async function loadNotesArchiveList(type) {
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
-        deleteBtn.textContent = '❌';
+        deleteBtn.textContent = '✕';
         deleteBtn.onclick = () => permanentlyDeleteArchivedNote(item.id, type);
         li.appendChild(textSpan);
         li.appendChild(restoreBtn);
@@ -18156,7 +18156,7 @@ function renderStudyTasksList() {
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}" onclick="toggleStudyItemExpand(this)">${escapeHtmlForReport(item.title)}</span>
             ${pocket ? `<span class="study-task-pocket" style="--pocket:${escapeHtmlForReport(bagPocketColor(pocket))}">${escapeHtmlForReport(bagPocketLabel(pocket))}</span>` : ''}
             <button type="button" class="btn-edit-item" onclick="openEditStudyItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-item" onclick="deleteStudyTask('${item.id}')">❌</button>
+            <button type="button" class="btn-delete-item" onclick="deleteStudyTask('${item.id}')">✕</button>
         `;
         listEl.appendChild(li);
     });
@@ -18366,7 +18366,7 @@ let penColor = '#2b2b2b';
 let currentDrawTool = 'pen';
 let penWidth = 3;
 let notebookCanvasPointerBound = false;
-const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','❌','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
+const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','✕','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
 
 // אייקון וצבע לכל כיס (פרויקט) ב"התיק שלי" - כדי להבחין במבט חטוף בין כיסים (בית, משפחה, עבודה, טיולים...).
 // האמוג'י עצמו הוא גם המזהה וגם התצוגה (ר' renderProjectIconPicker); הצבעים - BAG_POCKET_COLORS ב-bag.js
@@ -18737,7 +18737,7 @@ function renderPendingTableColumns() {
             <span class="pending-column-name">${escapeHtmlForReport(col.name)}</span>
             <span class="pending-column-type-badge">${t('table_column_type_' + col.type)}</span>
             <button type="button" class="btn-edit-item" onclick="openEditColumnSubModal(${index})">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-item" onclick="removePendingTableColumn(${index})">❌</button>
+            <button type="button" class="btn-delete-item" onclick="removePendingTableColumn(${index})">✕</button>
         `;
         list.appendChild(row);
     });
@@ -18850,7 +18850,7 @@ function renderPendingSelectOptionsList() {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-delete-item';
-        removeBtn.textContent = '❌';
+        removeBtn.textContent = '✕';
         removeBtn.onclick = () => removePendingSelectOption(index);
         row.appendChild(removeBtn);
         list.appendChild(row);
@@ -19556,7 +19556,7 @@ function renderPageTabsList() {
         return `
         <li class="notebook-page-tab-item${page.id === currentOpenPageId ? ' active' : ''}">
             <span class="notebook-page-tab-item-main" onclick="selectNotebookPage('${page.id}')"><span class="nb-toc-num">${notebookPagesCache.indexOf(page) + 1}</span><span class="nb-toc-type" aria-hidden="true">${NB_PAGE_TYPE_ICONS[type]}</span><span class="nb-toc-title">${escapeHtmlForReport(page.title)}</span>${marked ? '<span class="nb-toc-mark" aria-hidden="true">🔖</span>' : ''}</span>
-            <button type="button" class="btn-delete-item" onclick="deleteNotebookPage('${page.id}')">❌</button>
+            <button type="button" class="btn-delete-item" onclick="deleteNotebookPage('${page.id}')">✕</button>
         </li>`;
     }).join('');
 }
@@ -19911,7 +19911,7 @@ function renderNotebookItemsList() {
             <button type="button" class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleNotebookItemStatus('${item.id}', ${item.is_completed})">${item.is_completed ? '✓' : ''}</button>
             <span class="center-list-item-text${item.is_completed ? ' completed' : ''}" onclick="toggleStudyItemExpand(this)">${escapeHtmlForReport(item.title)}</span>
             <button type="button" class="btn-edit-item" onclick="openEditNotebookItemModal('${item.id}')">${EDIT_ICON_SVG}</button>
-            <button type="button" class="btn-delete-item" onclick="deleteNotebookItem('${item.id}')">❌</button>
+            <button type="button" class="btn-delete-item" onclick="deleteNotebookItem('${item.id}')">✕</button>
         `;
         listEl.appendChild(li);
     });
@@ -22689,7 +22689,7 @@ async function loadProgressTargets() {
                 <span>${item.target_name}</span>
                 <div class="progress-counter">
                     <span>${checkedCount} / ${item.target_val}</span>
-                    <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')">❌</button>
+                    <button class="btn-delete-item" onclick="deleteProgressTarget('${item.id}')">✕</button>
                 </div>
             </div>
             <div class="progress-days-row">${daysHtml}</div>
@@ -22722,7 +22722,7 @@ async function insertWeightRecord(value, date, note) {
 async function saveNewWeightRecord() { const w = document.getElementById('new-weight-val').value, d = document.getElementById('new-weight-date').value; const noteInput = document.getElementById('new-weight-note'); const note = noteInput ? noteInput.value.trim() : ''; await insertWeightRecord(w, d, note); if (noteInput) noteInput.value = ''; loadWeightHistory(); }
 // note מוצג בצבע ההדגשה של ערכת הנושא (--accent-purple-text, אותו משתנה
 // שכל הדגשה טקסטואלית אחרת באפליקציה משתמשת בו) - לפי בקשה מפורשת
-async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date})${item.note ? ` <span class="weight-note-text">${escapeHtmlForReport(item.note)}</span>` : ''} <button onclick="deleteWeightRecord('${item.id}')">❌</button></li>`); }
+async function loadWeightHistory() { const { data } = await supabaseClient.from('weight_tracker').select('*').eq('user_id', currentUserId).order('weight_date', { ascending: false }); const list = document.getElementById('weight-history-list'); if (!data) return; list.innerHTML = ''; data.forEach(item => list.innerHTML += `<li>${item.weight_value} ק״ג (${item.weight_date})${item.note ? ` <span class="weight-note-text">${escapeHtmlForReport(item.note)}</span>` : ''} <button onclick="deleteWeightRecord('${item.id}')">✕</button></li>`); }
 async function deleteWeightRecord(id) { await supabaseClient.from('weight_tracker').delete().eq('id', id); loadWeightHistory(); }
 
 // --- מד צעדים יומי: תצוגה בלבד, מקור הנתונים יהיה סנכרון אוטומטי עתידי ---
@@ -22878,7 +22878,7 @@ async function loadWaterData() {
                         <span class="finance-history-category">${row.amount_ml} ${t('water_ml_unit')}</span>
                         ${time ? `<span class="water-log-time"><bdi dir="ltr">${time}</bdi></span>` : ''}
                     </div>
-                    <button type="button" class="btn-delete-slot" onclick="deleteWaterLog('${row.id}')">❌</button>
+                    <button type="button" class="btn-delete-slot" onclick="deleteWaterLog('${row.id}')">✕</button>
                 `;
                 list.appendChild(li);
             });
