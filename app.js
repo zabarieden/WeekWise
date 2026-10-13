@@ -1873,12 +1873,16 @@ const APP_TOUR_CHEVRON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentC
 const APP_TOUR_CHEVRON_NEXT = `<svg class="app-tour-chev" ${APP_TOUR_CHEVRON_ATTRS}><path d="M9 5l7 7-7 7"/></svg>`;
 const APP_TOUR_CHEVRON_BACK = `<svg class="app-tour-chev" ${APP_TOUR_CHEVRON_ATTRS}><path d="M15 5l-7 7 7 7"/></svg>`;
 const APP_TOUR_RESUME_KEY = 'weekwise_app_tour_resume';
-// לפי בקשה מפורשת: רק הפיצ'רים הגדולים, מתומצת ומלהיב, ו"דבר בתוך דבר" - מראים פריט
-// בתפריט ואז נכנסים פנימה (היעדים עם כרטיס דוגמה שמתהפך ומראה את הצעדים, המחברות שלי). עוזר ה-AI
-// מוסבר קודם כולו ורק אחר כך כל לשונית. דברים פשוטים (פתקים, קניות, מים, צעדים...) כבר לא בסיור
+// מאז 2026-10-13 הסיור מראה הכול (לפי בקשה מפורשת: "את הסיור יותר טוב לעשות שיראה הכל"): מסך הבית, כל כלי
+// ה-AI, כל פריט בתפריט לפי הסדר שלו וההגדרות - עם "דבר בתוך דבר" (פריט בתפריט ואז פנימה: שביל היעדים, התיק,
+// ההתראות). כל שלב קצר; "לדלג על החלק הזה" ומסך הפתיחה עם החלקים שומרים על סיור ארוך נוח
 const APP_TOUR_STEPS = [
     // מסך הפתיחה: חלקי הסיור (כל אחד - נגיעה קופצת אליו), "להמשיך מאיפה שעצרתי" ו"לא עכשיו"
     { id: 'welcome', ch: 'home', ctx: 'home', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text', agenda: true },
+    // מסך הבית - הכול (לפי בקשה מפורשת, 2026-10-13: "את הסיור יותר טוב לעשות שיראה הכל"): התאריך, מצב פוקוס, הפתק המהיר והיום שלי
+    { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
+    { id: 'focus', ch: 'home', ctx: 'home', icon: '◎', target: '#btn-home-focus', titleKey: 'home_focus_label', text: 'apptour_focus_text', optional: true },
+    { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },
     // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
     { id: 'peek', ch: 'home', ctx: 'home', icon: '🗓️', target: '#myday-bar', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
     // העוזר: קודם ההסבר הכללי (על הכפתור), ואז הלשוניות שבפנים - לפי הסדר שלהן (הלו"ז ראשון)
@@ -1886,22 +1890,36 @@ const APP_TOUR_STEPS = [
     { id: 'ai_schedule', ch: 'ai', ctx: 'ai', tab: 'schedule', target: '#ai-chat .ai-chat-tool[data-tool="schedule"]', titleKey: 'ai_brain_tab_schedule', text: 'apptour_ai_schedule_text', link: 'apptour_ai_schedule_link' },
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#ai-chat .ai-chat-tool[data-tool="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#ai-chat .ai-chat-tool[data-tool="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
+    { id: 'ai_table', ch: 'ai', ctx: 'ai', tab: 'table', target: '#ai-chat .ai-chat-tool[data-tool="table"]', titleKey: 'ai_brain_tab_table', text: 'apptour_ai_table_text' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
-    // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
-    { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
+    // התפריט - כל פריט, לפי הסדר שבו הוא מופיע: למעלה מצב לילה, רשימה/אריחים וחיפוש, ואז הפריטים מלמעלה למטה
+    { id: 'm_night', ch: 'menu', ctx: 'menu', icon: '🌙', target: '#hamburger-drawer-overlay .js-night-btn', titleKey: 'menu_night_mode', text: 'apptour_night_text' },
+    { id: 'm_style', ch: 'menu', ctx: 'menu', icon: '▦', target: '[data-tour="m-style"]', titleKey: 'apptour_m_style_title', text: 'apptour_m_style_text' },
+    { id: 'm_search', ch: 'menu', ctx: 'menu', icon: '🔎', target: '#hamburger-drawer-overlay .hamburger-search', titleKey: 'home_search_aria', text: 'apptour_search_text' },
+    { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
     // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - שביל דוגמה שמצטייר (תחנות, האבן של היום והדגל),
     // הצעדים הקטנים של היום (כשיש יעדים), והוספת יעד
     { id: 'm_vision', ch: 'menu', ctx: 'menu', target: '[data-tour="m-vision"]', text: 'apptour_m_vision_text' },
     { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '👣', titleKey: 'apptour_g_path_title', text: 'apptour_g_path_text', link: 'apptour_m_vision_link', demo: 'goal' },
     { id: 'g_today', ch: 'goals', ctx: 'goals', icon: '✅', target: '#gv-today', titleKey: 'gv_today_title', text: 'apptour_g_today_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
+    { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
+    // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
+    { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
     // 🎒 התיק שלי: הפריט בתפריט, ואז התיק עצמו (הכיסים)
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
     { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#bag-content', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
-    { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
-    { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
+    { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text' },
+    { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
     { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
+    { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
+    { id: 'm_presets', ch: 'menu', ctx: 'menu', target: '[data-tour="m-presets"]', text: 'apptour_m_presets_text' },
+    { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },
+    { id: 'm_calories', ch: 'menu', ctx: 'menu', target: '[data-tour="m-calories"]', text: 'apptour_m_calories_text', link: 'apptour_m_calories_link' },
+    { id: 'm_water', ch: 'menu', ctx: 'menu', target: '[data-tour="m-water"]', text: 'apptour_m_water_text' },
+    { id: 'm_sport', ch: 'menu', ctx: 'menu', target: '[data-tour="m-sport"]', text: 'apptour_m_sport_text', link: 'apptour_m_sport_link' },
     { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
+    { id: 'm_receipts', ch: 'menu', ctx: 'menu', target: '[data-tour="m-receipts"]', text: 'apptour_m_receipts_text', link: 'apptour_m_receipts_link' },
     // ⚙️ ההגדרות (לפי בקשה מפורשת: "שיסביר גם על ההגדרות, סופר חשוב"): איפה הן בתפריט, כל אחת מחמש
     // הקבוצות, ופנימה לשני הדברים החשובים - התראות (בלעדיהן תזכורות לא מגיעות) ו-Google Calendar
     { id: 's_menu', ch: 'settings', ctx: 'menu', target: '[data-tour="m-settings"]', text: 'apptour_s_menu_text' },
@@ -9336,6 +9354,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
+    { id: 'new_me_ai_menu', category: 'nutrition' },
     { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },
@@ -12691,12 +12710,15 @@ async function runRecipeImageScan(fileOrItems) {
 // אותה פונקציה בדיוק שמזינה את מעקב הארוחות היומי - כאן לוקחים רק פריט אחד) ---
 async function handleAiBrainImageSelected(event) {
     const input = event.target;
-    const file = input.files && input.files[0];
+    const files = Array.from(input.files || []);
     input.value = '';
-    if (!file) return;
+    if (!files.length) return;
     closeModal('modal-ai-brain');
     openAddRecipeForm();
-    await runRecipeImageScan(file);
+    // כמה תמונות (לפי בקשה מפורשת: "כמה תמונות? גם למצרכים וגם להוראות הכנה? בAI?") נכנסות לרשימה שבטופס - שם בוחרים
+    // לכל אחת הכל / מצרכים / הכנה ולוחצים "לסרוק" (סריקה אחת). תמונה אחת נסרקת מיד, כמו קודם
+    if (files.length > 1) { addRecipeScanFiles(files); return; }
+    await runRecipeImageScan(files[0]);
 }
 
 function showRecipeScanLoading() {

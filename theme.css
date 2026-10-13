@@ -3485,6 +3485,28 @@ button.nm-cal-cell:focus-visible { outline: 2px solid var(--text-primary); outli
 .nm-times-count { margin: 4px 0 10px; }
 .nm-times-count .nm-chip { min-width: 52px; min-height: 40px; font-size: 0.95rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .nm-times-count .nm-chip.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 16%, var(--bg-row)); }
+/* ✨ מבנה הארוחות, אוכל ושתייה והתפריט האישי מה-AI (2026-10-13) */
+.nm-struct-picks { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
+.nm-struct-pick { min-height: 48px; padding: 10px 14px; border-radius: 16px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 800; line-height: 1.3; text-align: start; cursor: pointer; }
+.nm-struct-pick.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); }
+.nm-struct-pick:focus-visible, .nm-quiz .nm-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-quiz .nm-chip.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 16%, var(--bg-row)); font-weight: 700; }
+.nm-quiz .nm-slot-name + .nm-chip-row { margin-top: 8px; }
+.nm-late-q { margin-top: 16px; }
+.nm-food-other { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.95rem; }
+.nm-food-other:focus { outline: none; border-color: var(--accent-pink); }
+.nm-ai-building { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 34px 12px; text-align: center; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; }
+.nm-slot-time { margin-inline-start: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+.nm-orig-opts > summary { cursor: pointer; padding: 8px 2px; color: var(--accent-purple-light-text); font-weight: 700; font-size: 0.84rem; list-style: none; }
+.nm-orig-opts > summary::-webkit-details-marker { display: none; }
+.nm-orig-opts > summary::before { content: '＋ '; }
+.nm-orig-opts[open] > summary::before { content: '－ '; }
+.nm-orig-list { display: flex; flex-direction: column; gap: 10px; }
+.nm-ai-regen, .nm-ai-retry { width: 100%; margin-top: 4px; }
+.nm-drink-idea { cursor: default; }
+.nm-offer-hero { width: 64px; height: 64px; margin: 6px auto 10px; border-radius: 20px; display: grid; place-items: center; font-size: 1.9rem; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 22%, transparent), color-mix(in srgb, var(--accent-purple) 28%, transparent)); }
+.nm-ai-offer-sheet { text-align: center; }
+.nm-ai-offer-sheet .nm-btn-primary, .nm-ai-offer-sheet .nm-btn-ghost { width: 100%; }
 .nm-times-list { padding: 2px 14px; }
 .nm-times-list .nm-rem-text { flex: 1; }
 .nm-times-hide { margin-top: 10px; }

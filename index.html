@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=552">
+    <link rel="stylesheet" href="theme.css?v=553">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3397,7 +3397,7 @@
 
                 <div class="ai-brain-panel hidden" data-ai-brain-panel="photo">
                     <p class="modal-subtitle" data-i18n="ai_brain_photo_subtitle">Upload a photo of a written recipe (a recipe card, cookbook page, or note) and let AI fill in the details for you.</p>
-                    <input type="file" id="ai-brain-image-input" accept="image/*" class="hidden" onchange="handleAiBrainImageSelected(event)">
+                    <input type="file" id="ai-brain-image-input" accept="image/*,application/pdf" multiple class="hidden" onchange="handleAiBrainImageSelected(event)">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('ai-brain-image-input').click()" data-i18n="ai_brain_upload_btn">📷 Upload photo</button>
                     <div class="action-buttons-wrap">
                         <button class="btn-clear-specific" onclick="closeModal('modal-ai-brain')" data-i18n="cancel_btn">Cancel</button>
@@ -4338,14 +4338,14 @@
 
     </div>
 
-    <script src="i18n.js?v=459"></script>
-    <script src="app.js?v=591"></script>
+    <script src="i18n.js?v=460"></script>
+    <script src="app.js?v=592"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="new-me-data.js?v=12"></script>
-    <script src="new-me.js?v=54"></script>
+    <script src="new-me.js?v=55"></script>
     <script src="new-me-challenges.js?v=6"></script>
     <script src="secret-room.js?v=26"></script>
     <script src="secret-places.js?v=10"></script>
