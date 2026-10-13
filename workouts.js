@@ -1155,3 +1155,233 @@ async function wkRoutineItemDeleted(itemId) {
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
 }
+
+// ---------- 📤 שיתוף כתמונה זכוכיתית (ת15: "כן שיהיה זכוכיתי יפה") ו-📄 PDF להדפסה (ת16) ----------
+// השבוע לפי ימים: מה מתוכנן בכל יום ומה כבר נעשה
+function wkWeekRows() {
+    return wkWeekDates().map(date => {
+        const dayIdx = wkDayIdxOf(date);
+        return { date, dayIdx, items: wkOnDay(dayIdx).map(w => ({ w, done: !wkIsRest(w) && wkIsDone(w.id, date) })) };
+    });
+}
+function wkItemLine(w) {
+    if (wkIsRest(w)) return `🌿 ${wkName(w)}`;
+    return [`${wkIcon(w)} ${wkName(w)}`, w.time || '', w.duration_minutes ? `${w.duration_minutes}′` : ''].filter(Boolean).join(' · ');
+}
+function wkGoalLine() {
+    return `🎯 ${workoutWeekProgress()}/${workoutGoalValue()} ${t(workoutGoal.kind === 'minutes' ? 'workout_week_minutes' : 'workout_week_count')}`;
+}
+function wkShareText() {
+    const lines = [`🏋️ ${shareBold(t('workout_plan_title'))} · ${formatWeekRangeLabel(currentWeekStart())}`, ''];
+    wkWeekRows().forEach(r => {
+        if (!r.items.length) return;
+        lines.push(`${t(weekdayShortKeys[r.dayIdx])} · ${r.items.map(it => wkItemLine(it.w) + (it.done ? ' ✓' : '')).join(' | ')}`);
+    });
+    lines.push('', wkGoalLine());
+    lines.push('', pickShareClosing([['sport_share_closing_1', '💪'], ['sport_share_closing_2', '🙌'], ['sport_share_closing_3', '✨']]));
+    return lines.join('\n');
+}
+// צבע CSS (משתנה של הערכה) → [r, g, b]
+function wkRgb(color, fallback) {
+    const el = document.createElement('span');
+    el.style.color = color;
+    el.style.display = 'none';
+    document.body.appendChild(el);
+    const v = getComputedStyle(el).color;
+    el.remove();
+    let m = v.match(/rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/);
+    if (m) return [+m[1], +m[2], +m[3]];
+    m = v.match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/);
+    if (m) return [m[1] * 255, m[2] * 255, m[3] * 255].map(Math.round);
+    return fallback;
+}
+function wkRgba(c, a) { return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`; }
+function wkRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+function wkFitText(ctx, text, max) {
+    if (ctx.measureText(text).width <= max) return text;
+    let s = text;
+    while (s.length > 1 && ctx.measureText(s + '…').width > max) s = s.slice(0, -1);
+    return s + '…';
+}
+async function wkRenderWeekImage() {
+    try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 800))]); } catch {}
+    const W = 1080, H = 1350, PAD = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    const css = getComputedStyle(document.documentElement);
+    const pink = wkRgb(css.getPropertyValue('--accent-pink').trim() || '#f9a8d4', [249, 168, 212]);
+    const purple = wkRgb(css.getPropertyValue('--accent-purple').trim() || '#c4b5fd', [196, 181, 253]);
+    const light = document.documentElement.classList.contains('light-mode');
+    const ink = light ? '#241830' : '#ffffff';
+    const sub = light ? 'rgba(36, 24, 48, 0.62)' : 'rgba(255, 255, 255, 0.72)';
+    const font = getComputedStyle(document.body).fontFamily || 'sans-serif';
+    const rtl = document.documentElement.dir === 'rtl';
+    // רקע: בסיס כהה (או בהיר), כתמי אור בצבעי הערכה ונצנצים קטנים
+    ctx.fillStyle = light ? '#f7f2ff' : '#1a1030';
+    ctx.fillRect(0, 0, W, H);
+    [[0.12, 0.08, pink, 0.55], [0.92, 0.3, purple, 0.5], [0.3, 0.95, purple, 0.42], [0.85, 0.88, pink, 0.35]].forEach(([fx, fy, c, a]) => {
+        const g = ctx.createRadialGradient(W * fx, H * fy, 0, W * fx, H * fy, W * 0.7);
+        g.addColorStop(0, wkRgba(c, a));
+        g.addColorStop(1, wkRgba(c, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+    });
+    for (let i = 0; i < 70; i++) {
+        const x = (((Math.sin(i * 12.9898) * 43758.5453) % 1) + 1) % 1 * W;
+        const y = (((Math.sin(i * 78.233) * 12345.678) % 1) + 1) % 1 * H;
+        ctx.fillStyle = light ? wkRgba(purple, 0.35) : `rgba(255, 255, 255, ${0.25 + (i % 5) * 0.1})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2 + (i % 3) * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.textBaseline = 'middle';
+    const startX = rtl ? W - PAD : PAD;
+    // כותרת
+    ctx.textAlign = 'start';
+    ctx.fillStyle = ink;
+    ctx.font = `800 64px ${font}`;
+    ctx.fillText(wkFitText(ctx, `🏋️ ${t('workout_plan_title')}`, W - PAD * 2 - 260), startX, 110);
+    ctx.fillStyle = sub;
+    ctx.font = `600 34px ${font}`;
+    ctx.fillText(formatWeekRangeLabel(currentWeekStart()), startX, 172);
+    // המטרה השבועית - גלולה בצד השני
+    const goalTxt = `🎯 ${workoutWeekProgress()}/${workoutGoalValue()}`;
+    ctx.font = `800 36px ${font}`;
+    const gw = ctx.measureText(goalTxt).width + 48;
+    const gx = rtl ? PAD : W - PAD - gw;
+    wkRoundRect(ctx, gx, 112, gw, 64, 32);
+    ctx.fillStyle = light ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.14)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    ctx.fillText(goalTxt, gx + gw / 2, 145);
+    // שבעה כרטיסי זכוכית - יום בכל אחד
+    const today = getLocalDateString();
+    const top = 230, rowH = 132, gap = 12;
+    wkWeekRows().forEach((r, i) => {
+        const y = top + i * (rowH + gap);
+        wkRoundRect(ctx, PAD, y, W - PAD * 2, rowH, 30);
+        ctx.fillStyle = light ? 'rgba(255, 255, 255, 0.62)' : 'rgba(255, 255, 255, 0.11)';
+        ctx.fill();
+        ctx.lineWidth = r.date === today ? 4 : 2;
+        ctx.strokeStyle = r.date === today ? 'rgba(251, 191, 36, 0.95)' : (light ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.24)');
+        ctx.stroke();
+        // היום בשבוע
+        ctx.textAlign = 'center';
+        ctx.fillStyle = ink;
+        ctx.font = `800 40px ${font}`;
+        const dayCx = rtl ? W - PAD - 64 : PAD + 64;
+        ctx.fillText(t(weekdayShortKeys[r.dayIdx]), dayCx, y + rowH / 2);
+        // האימונים של היום (עד שניים, ואחר כך "+N")
+        ctx.textAlign = 'start';
+        const textStart = rtl ? W - PAD - 128 : PAD + 128;
+        const maxW = W - PAD * 2 - 128 - 90;
+        if (!r.items.length) {
+            ctx.fillStyle = sub;
+            ctx.font = `600 32px ${font}`;
+            ctx.fillText('—', textStart, y + rowH / 2);
+        }
+        const shown = r.items.slice(0, 2);
+        shown.forEach((it, k) => {
+            const ly = shown.length === 1 ? y + rowH / 2 : y + 42 + k * 48;
+            ctx.fillStyle = wkIsRest(it.w) ? sub : ink;
+            ctx.font = `${wkIsRest(it.w) ? 600 : 700} 34px ${font}`;
+            let line = wkItemLine(it.w);
+            if (k === 1 && r.items.length > 2) line += `  +${r.items.length - 2}`;
+            ctx.fillText(wkFitText(ctx, line, maxW), textStart, ly);
+        });
+        // ✓ על מה שנעשה
+        if (r.items.some(it => it.done)) {
+            const cx = rtl ? PAD + 52 : W - PAD - 52;
+            ctx.beginPath();
+            ctx.arc(cx, y + rowH / 2, 26, 0, Math.PI * 2);
+            ctx.fillStyle = wkRgba(pink, 0.95);
+            ctx.fill();
+            ctx.fillStyle = '#1b1030';
+            ctx.textAlign = 'center';
+            ctx.font = `900 30px ${font}`;
+            ctx.fillText('✓', cx, y + rowH / 2 + 1);
+        }
+    });
+    // קישור עדין לאפליקציה
+    ctx.textAlign = 'center';
+    ctx.fillStyle = sub;
+    ctx.font = `600 30px ${font}`;
+    ctx.fillText(`✨ ${SHARE_APP_HOST}`, W / 2, H - 48);
+    // JPEG ולא PNG: הנצנצים והמעברים שוקלים ב-PNG פי כמה, ובוואטסאפ זה נראה אותו דבר
+    return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.92));
+}
+async function shareWorkoutWeek() {
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    const blob = await wkRenderWeekImage();
+    openSharePicker(wkShareText(), { imageBlob: blob, imageName: 'my-workouts.jpg', subject: t('workout_plan_title') });
+}
+// דף נקי של השבוע (עם ריבוע לסימון ליד כל אימון) בחלון חדש, ודיאלוג ההדפסה של הדפדפן - "שמירה כ-PDF" היא אחת האפשרויות
+function wkPlanReportHtml() {
+    return wkWeekRows().map(r => {
+        const items = r.items.length ? r.items.map(it => {
+            const w = it.w;
+            const meta = [w.time, w.duration_minutes ? `${w.duration_minutes} ${t('sport_minutes_unit')}` : '', w.intensity ? t('workout_int_' + w.intensity) : '', w.place ? wkPlaceLabel(w.place) : ''].filter(Boolean).join(' · ');
+            const ex = Array.isArray(w.exercises) && wkHasExercises(w) ? w.exercises.filter(e => e && e.name).map(e => `<span class="ex">☐ ${wkEsc(e.name)}${e.sets || e.reps ? ` <bdi dir="ltr">${wkEsc([e.sets, e.reps].filter(Boolean).join('×'))}</bdi>` : ''}</span>`).join('') : '';
+            return `<div class="item${wkIsRest(w) ? ' rest' : ''}"><span class="box">${wkIsRest(w) ? '' : (it.done ? '✓' : '☐')}</span><div><b>${wkIcon(w)} ${wkEsc(wkName(w))}</b>${meta ? `<span class="meta">${wkEsc(meta)}</span>` : ''}${ex ? `<div class="exs">${ex}</div>` : ''}${w.notes && !wkIsRest(w) ? `<div class="note">${wkEsc(w.notes)}</div>` : ''}</div></div>`;
+        }).join('') : '<div class="item empty">—</div>';
+        return `<section class="day"><h3>${wkEsc(t(dayNameKeys[r.dayIdx]))}</h3>${items}</section>`;
+    }).join('');
+}
+function printWorkoutWeek() {
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    const win = window.open('', '_blank');
+    if (!win) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
+    const rtl = document.documentElement.dir === 'rtl';
+    win.document.write(`<!DOCTYPE html><html dir="${rtl ? 'rtl' : 'ltr'}" lang="${currentLang}"><head><meta charset="utf-8"><title>NOT10.ai - ${wkEsc(t('workout_plan_title'))}</title>
+<style>
+    body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; margin: 0; padding: 28px; color: #2b2438; background: #fff; }
+    header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 2px solid #efe3fb; padding-bottom: 10px; margin-bottom: 16px; }
+    h1 { margin: 0; font-size: 1.6rem; color: #7c3aed; }
+    .range { color: #8a8399; font-size: 0.95rem; }
+    .goal { color: #6b6478; font-weight: 700; font-size: 0.9rem; }
+    .week { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .day { border: 1px solid #eadff5; border-radius: 14px; padding: 10px 12px; break-inside: avoid; background: linear-gradient(135deg, #fdf8ff, #fff); }
+    h3 { margin: 0 0 6px; font-size: 1rem; color: #4c3b63; }
+    .item { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-top: 1px dashed #eee5f7; font-size: 0.92rem; }
+    .item:first-of-type { border-top: none; }
+    .item.rest, .item.empty { color: #9a93a8; }
+    .box { flex: none; width: 1.2em; text-align: center; font-weight: 800; color: #7c3aed; }
+    .meta { display: block; color: #8a8399; font-size: 0.82rem; }
+    .exs { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 3px; font-size: 0.82rem; color: #4c3b63; }
+    .note { margin-top: 3px; font-size: 0.8rem; color: #8a8399; font-style: italic; }
+    footer { margin-top: 18px; text-align: center; color: #b0a8bd; font-size: 0.8rem; }
+    @media print { body { padding: 12px; } }
+</style></head><body>
+<header><div><h1>🏋️ ${wkEsc(t('workout_plan_title'))}</h1><div class="range">${wkEsc(formatWeekRangeLabel(currentWeekStart()))}</div></div><div class="goal">${wkEsc(wkGoalLine())}</div></header>
+<div class="week">${wkPlanReportHtml()}</div>
+<footer>NOT10.ai · ${wkEsc(SHARE_APP_HOST)}</footer>
+</body></html>`);
+    win.document.close();
+    setTimeout(() => { try { win.focus(); win.print(); } catch (err) {} }, 400);
+}
+// בדוח הנתונים (הגדרות ← דוח), בחלק של הספורט: גם טבלת האימונים
+async function wkReportSection() {
+    if (!workoutPlanLoaded) await loadWorkoutPlan();
+    if (!workoutPlan.length) return '';
+    if (!workoutWeekLoadedFor) await loadWorkoutWeek();
+    const rows = wkWeekRows().filter(r => r.items.length).map(r => `<div class="entry"><span class="entry-main">${wkEsc(t(dayNameKeys[r.dayIdx]))}</span><span class="entry-value">${wkEsc(r.items.map(it => wkItemLine(it.w)).join(' | '))}</span></div>`).join('');
+    return `<h3 class="wk-report-title">${wkEsc(t('workout_plan_title'))}</h3>${rows}`;
+}

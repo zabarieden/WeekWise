@@ -10366,3 +10366,4 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .wk-card-check { position: absolute; top: 5px; inset-inline-end: 5px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--wk-c) 75%, var(--text-secondary)); background: transparent; color: #1b1030; font: inherit; font-size: 0.66rem; font-weight: 900; line-height: 1; cursor: pointer; }
 .wk-card-check[aria-pressed="true"] { border-color: var(--wk-c); background: var(--wk-c); }
 .wk-card-check:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.share-picker-image { display: block; width: 100%; max-height: 46vh; object-fit: contain; margin: 0 0 12px; border-radius: 18px; box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.55); }

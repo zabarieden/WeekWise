@@ -8897,7 +8897,9 @@ async function exportUserDataReport() {
                 return `<div class="entry"><span class="entry-main">${formatSportDayLabel(row.session_date)} · ${escapeHtmlForReport(typeLabel)}</span><span class="entry-value">${row.duration_minutes || 0} ${escapeHtmlForReport(t('sport_minutes_unit'))}${distancePart}</span></div>`;
             }).join('')
             : `<p class="empty">${escapeHtmlForReport(t('data_report_empty_section'))}</p>`;
-        sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_sport'))}</h2>${sportHtml}`;
+        // 🏋️ גם טבלת האימונים של השבוע (workouts.js), אם יש
+        const planHtml = typeof wkReportSection === 'function' ? await wkReportSection() : '';
+        sectionsHtml += `<h2>${escapeHtmlForReport(t('nav_sport'))}</h2>${sportHtml}${planHtml}`;
     }
     if (includeWater) {
         // מקבצים לפי תאריך (סה"כ מ"ל ליום) - הדוח מיועד לסקירה יומית, לא לוג
@@ -8996,12 +8998,38 @@ const SHARE_BOLD = '\u0001';
 const SHARE_ITALIC = '\u0002';
 const shareBold = s => `${SHARE_BOLD}${String(s).trim()}${SHARE_BOLD}`;
 const shareItalic = s => `${SHARE_ITALIC}${String(s).trim()}${SHARE_ITALIC}`;
-let pendingShare = { text: '', photoUrl: '', footer: 'full', subject: '' };
+let pendingShare = { text: '', photoUrl: '', footer: 'full', subject: '', imageBlob: null, imageName: '' };
 
 // footer: 'full' = קו דק + "נשלח מ-NOT10.ai" + קישור; 'link' = רק הקישור (בהזמנה לאפליקציה עצמה)
 function openSharePicker(text, options = {}) {
-    pendingShare = { text: text || '', photoUrl: options.photoUrl || '', footer: options.footer || 'full', subject: options.subject || '' };
+    pendingShare = { text: text || '', photoUrl: options.photoUrl || '', footer: options.footer || 'full', subject: options.subject || '', imageBlob: options.imageBlob || null, imageName: options.imageName || 'not10.png' };
+    // שיתוף עם תמונה (למשל טבלת האימונים כתמונה זכוכיתית): תצוגה מקדימה וכפתור לשמירת התמונה
+    const preview = document.getElementById('share-picker-image');
+    const saveBtn = document.getElementById('share-picker-save-image');
+    if (preview) {
+        if (preview.dataset.url) { URL.revokeObjectURL(preview.dataset.url); delete preview.dataset.url; }
+        if (pendingShare.imageBlob) { const url = URL.createObjectURL(pendingShare.imageBlob); preview.src = url; preview.dataset.url = url; }
+        preview.classList.toggle('hidden', !pendingShare.imageBlob);
+    }
+    if (saveBtn) saveBtn.classList.toggle('hidden', !pendingShare.imageBlob);
     openModal('modal-share-picker');
+}
+// התמונה כקובץ - לשיתוף דרך חלון השיתוף של הטלפון, או להורדה כשאין
+function shareImageFile() {
+    if (!pendingShare.imageBlob) return null;
+    try { return new File([pendingShare.imageBlob], pendingShare.imageName, { type: pendingShare.imageBlob.type || 'image/png' }); } catch { return null; }
+}
+function saveShareImage(silent) {
+    if (!pendingShare.imageBlob) return;
+    const url = URL.createObjectURL(pendingShare.imageBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pendingShare.imageName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    if (!silent) showAppToast(t('share_image_saved'));
 }
 
 function buildShareMessage(forWhatsapp) {
@@ -9026,12 +9054,27 @@ function buildShareMessage(forWhatsapp) {
     return text;
 }
 
-function shareViaWhatsapp() {
+async function shareViaWhatsapp() {
+    // עם תמונה: בטלפון - חלון השיתוף של המכשיר (תמונה + הטקסט, משם לוואטסאפ); אחרת התמונה נשמרת והטקסט נפתח בוואטסאפ
+    const file = shareImageFile();
+    if (file && navigator.canShare && navigator.share) {
+        try {
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], text: buildShareMessage(true) });
+                closeModal('modal-share-picker');
+                return;
+            }
+        } catch (err) {
+            if (err && err.name === 'AbortError') return;
+        }
+    }
+    if (file) saveShareImage(false);
     window.open(`https://wa.me/?text=${encodeURIComponent(buildShareMessage(true))}`, '_blank');
     closeModal('modal-share-picker');
 }
 
 function shareViaEmail() {
+    if (pendingShare.imageBlob) saveShareImage(false);
     window.location.href = `mailto:?subject=${encodeURIComponent(pendingShare.subject || 'NOT10.ai')}&body=${encodeURIComponent(buildShareMessage(false))}`;
     closeModal('modal-share-picker');
 }
@@ -9456,6 +9499,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_workout_plan', category: 'sport_water' },
     { id: 'sport_workout_today', category: 'sport_water' },
     { id: 'sport_workout_board', category: 'sport_water' },
+    { id: 'sport_workout_share', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
