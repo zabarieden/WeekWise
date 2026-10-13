@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
                     {
                         role: "user",
                         content:
-                            "Design a starter table (like a Notion database) from the short description below, in any " +
+                            "Design a starter table (a small database with typed columns) from the short description below, in any " +
                             "language. There are exactly 5 available column types: 'text' (free-form short text), " +
                             "'number' (quantities/prices/scores/ages/amounts), 'select' (use ONLY when the concept " +
                             "naturally has a small closed set of repeating states/categories - status, priority, a " +
