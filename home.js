@@ -864,6 +864,56 @@ function applyHomeWeather(state) {
     if (toggle) toggle.checked = isHomeWeatherOn();
     const dev = document.getElementById('weather-dev-preview');
     if (dev) dev.classList.toggle('hidden', !(typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount));
+    renderHomeDevWx();
+}
+
+// --- 🛠️ למנהלת המוצר בלבד: פס קטן במסך הבית - כל מזג אוויר, יום / לילה, ובכל ערכת עיצוב, בלי להיכנס להגדרות
+// (לפי בקשה מפורשת, 2026-10-12: "תעשה לי רק לי אפשרות לשנות את הנראות שאני אראה איך זה נראה בכל מקום וכל מזג
+// אוויר"). הכול רק לתצוגה - לא נשמר; ✕ מחזיר את מזג האוויר האמיתי, את הערכה השמורה ואת מצב היום / הלילה השמור
+const HOME_DEV_SKIES = [['clear', '☀️'], ['partly', '⛅'], ['clouds', '☁️'], ['rain', '🌧️'], ['storm', '⛈️'], ['snow', '❄️'], ['fog', '🌫️']];
+let homeDevWxOpen = false;
+let homeDevWxDay = true;
+function homeDevThemes() { return [...new Set([...document.querySelectorAll('.theme-swatch[data-theme]')].map(el => el.dataset.theme))]; }
+function homeDevCurrentTheme() { return document.documentElement.getAttribute('data-color-theme') || 'default'; }
+function renderHomeDevWx() {
+    const isDev = typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount;
+    const host = document.querySelector('.home-hero-panel');
+    let bar = document.getElementById('home-dev-wx');
+    if (!isDev || !host) { if (bar) bar.remove(); return; }
+    if (!bar) { bar = document.createElement('div'); bar.id = 'home-dev-wx'; bar.className = 'home-dev-wx'; host.appendChild(bar); }
+    const cur = homeWeatherPreview;
+    const theme = homeDevCurrentTheme();
+    const sw = document.querySelector(`.theme-swatch[data-theme="${theme}"]`);
+    const night = !document.documentElement.classList.contains('light-mode');
+    bar.classList.toggle('open', homeDevWxOpen);
+    bar.innerHTML = `
+        <button type="button" class="hdw-toggle" aria-expanded="${homeDevWxOpen}">🌦️<b>PM</b></button>
+        <div class="hdw-panel">
+            <div class="hdw-row">${HOME_DEV_SKIES.map(([sky, icon]) => `<button type="button" data-sky="${sky}" class="${cur && cur.sky === sky ? 'on' : ''}" aria-label="${sky}">${icon}</button>`).join('')}
+                <button type="button" data-daynight aria-label="day / night">${homeDevWxDay ? '🌞' : '🌜'}</button></div>
+            <div class="hdw-row"><button type="button" data-theme-step="-1" aria-label="previous theme">‹</button><span class="hdw-theme">${escapeHtmlForReport((sw && sw.getAttribute('title')) || theme)}</span><button type="button" data-theme-step="1" aria-label="next theme">›</button>
+                <button type="button" data-mode aria-label="light / dark">${night ? '🌙' : '☀️'}</button><button type="button" data-reset aria-label="reset">✕</button></div>
+        </div>`;
+    bar.querySelector('.hdw-toggle').addEventListener('click', () => { homeDevWxOpen = !homeDevWxOpen; renderHomeDevWx(); });
+    bar.querySelectorAll('[data-sky]').forEach(b => b.addEventListener('click', () => previewHomeWeather(b.dataset.sky, homeDevWxDay)));
+    bar.querySelector('[data-daynight]').addEventListener('click', () => {
+        homeDevWxDay = !homeDevWxDay;
+        if (homeWeatherPreview) previewHomeWeather(homeWeatherPreview.sky, homeDevWxDay); else renderHomeDevWx();
+    });
+    bar.querySelectorAll('[data-theme-step]').forEach(b => b.addEventListener('click', () => {
+        const list = homeDevThemes();
+        if (!list.length) return;
+        const i = list.indexOf(homeDevCurrentTheme());
+        applyColorTheme(list[(i + Number(b.dataset.themeStep) + list.length) % list.length]);
+        renderHomeDevWx();
+    }));
+    bar.querySelector('[data-mode]').addEventListener('click', () => { applyLightMode(document.documentElement.classList.contains('light-mode') ? false : true); renderHomeDevWx(); });
+    bar.querySelector('[data-reset]').addEventListener('click', () => {
+        try { applyColorTheme(localStorage.getItem(colorThemeKey()) || 'default'); applyLightMode(localStorage.getItem('weekwise_light_mode') !== 'false'); } catch {}
+        homeDevWxDay = true;
+        previewHomeWeather(null);
+        renderHomeDevWx();
+    });
 }
 
 // --- 🛠️ למנהלת המוצר בלבד (חשבון הפיתוח): תצוגה מקדימה של כל סוגי מזג האוויר בשמיים, בלי מיקום.

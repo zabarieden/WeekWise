@@ -8001,60 +8001,80 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
 .home-weather { position: absolute; inset: 0; overflow: hidden; pointer-events: none;
     --wx-cloud-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 90'%3E%3Cg%3E%3Ccircle cx='46' cy='54' r='24'/%3E%3Ccircle cx='80' cy='40' r='32'/%3E%3Ccircle cx='115' cy='54' r='22'/%3E%3Ccircle cx='28' cy='66' r='16'/%3E%3Ccircle cx='134' cy='66' r='15'/%3E%3Crect x='14' y='54' width='134' height='28' rx='14'/%3E%3C/g%3E%3C/svg%3E");
     --wx-bolt-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 50'%3E%3Cpath d='M16 0 2 28h9l-5 22L24 18h-9l7-18z'/%3E%3C/svg%3E");
-    --wx-cloud-fill: linear-gradient(180deg, #ffffff 0%, #ffffff 46%, #e2e9f3 100%);
-    --wx-cloud-dark-fill: linear-gradient(180deg, #c5cfdc 0%, #8d9ab0 100%);
-    --wx-cloud-shadow: drop-shadow(0 6px 12px rgba(30, 41, 59, 0.16));
-    --wx-drop: rgba(59, 130, 246, 0.5);
-    --wx-flake: #9cc3ee;
-    --wx-fog: rgba(255, 255, 255, 0.8);
-    --wx-moon: #e0a526;
+    --wx-cloud-fill: linear-gradient(180deg, #ffffff 0%, #fdfbff 48%, #e8e0f5 100%);
+    --wx-cloud-dark-fill: linear-gradient(180deg, #ddd5ee 0%, #a99cc8 100%);
+    --wx-cloud-shadow: drop-shadow(0 8px 14px rgba(86, 64, 130, 0.2));
+    --wx-cloud-shine: rgba(255, 255, 255, 0.85);
+    --wx-drop: rgba(118, 100, 196, 0.55);
+    --wx-flake: #c4b2ee;
+    --wx-fog: rgba(255, 255, 255, 0.78);
+    --wx-moon: #e8b04a;
+    --wx-star: #e8b04a;
 }
-html:not(.light-mode) .home-weather.wx-night { --wx-cloud-fill: linear-gradient(180deg, #7d889e 0%, #4c576d 100%); }
+html:not(.light-mode) .home-weather.wx-night { --wx-cloud-fill: linear-gradient(180deg, #9488ba 0%, #5a4e84 100%); --wx-cloud-shine: rgba(235, 225, 255, 0.35); }
 html:not(.light-mode) .home-weather {
-    --wx-cloud-fill: linear-gradient(180deg, #e3e8f1 0%, #a1acc0 100%);
-    --wx-cloud-dark-fill: linear-gradient(180deg, #8a95ab 0%, #4f5b72 100%);
-    --wx-cloud-shadow: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
-    --wx-drop: rgba(165, 205, 255, 0.6);
-    --wx-flake: #f1f5fb;
-    --wx-fog: rgba(214, 222, 235, 0.24);
-    --wx-moon: #fef3c7;
+    --wx-cloud-fill: linear-gradient(180deg, #efeafa 0%, #b9add8 100%);
+    --wx-cloud-dark-fill: linear-gradient(180deg, #8f84b4 0%, #4f4573 100%);
+    --wx-cloud-shadow: drop-shadow(0 8px 16px rgba(10, 4, 24, 0.35));
+    --wx-cloud-shine: rgba(255, 255, 255, 0.55);
+    --wx-drop: rgba(206, 196, 255, 0.62);
+    --wx-flake: #f8f3ff;
+    --wx-fog: rgba(222, 212, 245, 0.22);
+    --wx-moon: #fff2d2;
+    --wx-star: #fff4d6;
 }
 .home-weather i { position: absolute; display: block; }
 /* ☀️ שמש עם קרניים שמסתובבות לאט */
-.wx-sun { top: 66px; inset-inline-start: 26%; width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 38% 36%, #fffbea 0%, #fde68a 40%, #fbbf24 74%, #f59e0b 100%); box-shadow: 0 0 0 9px rgba(253, 230, 138, 0.2), 0 0 48px 16px rgba(251, 191, 36, 0.4); }
-.wx-sun::before { content: ''; position: absolute; inset: -24px; border-radius: 50%; background: repeating-conic-gradient(rgba(251, 191, 36, 0.6) 0deg 7deg, transparent 7deg 30deg); -webkit-mask: radial-gradient(circle, transparent 0 47%, #000 48% 70%, transparent 71%); mask: radial-gradient(circle, transparent 0 47%, #000 48% 70%, transparent 71%); animation: wxSpin 80s linear infinite; }
+.wx-sun { top: 66px; inset-inline-start: 26%; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 40% 36%, #fffdf3 0%, #ffeab0 36%, #ffc97a 72%, #ffab78 100%); box-shadow: 0 0 0 10px rgba(255, 222, 165, 0.2), 0 0 0 22px rgba(255, 190, 200, 0.1), 0 0 64px 22px rgba(255, 180, 130, 0.38); }
+.wx-sun::before { content: ''; position: absolute; inset: -46px; border-radius: 50%; background: repeating-conic-gradient(from 6deg, rgba(255, 214, 150, 0.38) 0deg 4deg, transparent 10deg 30deg); -webkit-mask: radial-gradient(circle, transparent 0 34%, #000 42%, transparent 70%); mask: radial-gradient(circle, transparent 0 34%, #000 42%, transparent 70%); filter: blur(1.5px); animation: wxSpin 90s linear infinite; }
+.wx-sun::after { content: ''; position: absolute; inset: -30px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 170, 205, 0.26) 0%, transparent 66%); }
 /* 🌙 ירח (ובמצב כהה גם כוכבים) */
-.wx-moon { top: 72px; inset-inline-start: 28%; width: 38px; height: 38px; border-radius: 50%; box-shadow: inset -10px -4px 0 0 var(--wx-moon); transform: rotate(-20deg); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--wx-moon) 45%, transparent)); }
-.wx-stars { inset: 0 0 auto 0; height: 300px; background-image: radial-gradient(circle at 12% 22%, #fef3c7 0 1.2px, transparent 1.9px), radial-gradient(circle at 34% 9%, #fef3c7 0 1px, transparent 1.6px), radial-gradient(circle at 58% 28%, #fef3c7 0 1.3px, transparent 2px), radial-gradient(circle at 76% 14%, #fef3c7 0 1px, transparent 1.6px), radial-gradient(circle at 88% 35%, #fef3c7 0 1.2px, transparent 1.9px), radial-gradient(circle at 46% 44%, #fef3c7 0 0.9px, transparent 1.5px); opacity: 0.75; animation: wxTwinkle 4s ease-in-out infinite alternate; }
+.wx-moon { top: 70px; inset-inline-start: 28%; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 34% 34%, #fffaf0 0%, var(--wx-moon) 58%, color-mix(in srgb, var(--wx-moon) 70%, #c98a3c) 100%); -webkit-mask: radial-gradient(circle at 74% 28%, transparent 0 44%, #000 46%); mask: radial-gradient(circle at 74% 28%, transparent 0 44%, #000 46%); transform: rotate(-18deg); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--wx-moon) 60%, transparent)) drop-shadow(0 0 26px rgba(214, 170, 255, 0.35)); }
+.wx-stars { inset: 0 0 auto 0; height: 300px; background-image: radial-gradient(circle at 12% 22%, var(--wx-star) 0 1.2px, transparent 1.9px), radial-gradient(circle at 34% 9%, #ffc6e2 0 1px, transparent 1.6px), radial-gradient(circle at 58% 28%, var(--wx-star) 0 1.3px, transparent 2px), radial-gradient(circle at 76% 14%, #d9c8ff 0 1px, transparent 1.6px), radial-gradient(circle at 88% 35%, #ffc6e2 0 1.2px, transparent 1.9px), radial-gradient(circle at 46% 44%, var(--wx-star) 0 0.9px, transparent 1.5px); opacity: 0.75; animation: wxTwinkle 4s ease-in-out infinite alternate; }
 html.light-mode .wx-stars { display: none; }
 /* ☁️ עננים: צורת ענן (מסכה) עם מילוי מלמעלה למטה וצל רך; כהים בגשם ובסערה */
 .wx-cloud { top: 98px; inset-inline-start: 14%; width: 150px; height: 84px; filter: var(--wx-cloud-shadow); animation: wxDrift 80s ease-in-out infinite alternate; }
 .wx-cloud::before { content: ''; position: absolute; inset: 0; background: var(--wx-cloud-fill); -webkit-mask: var(--wx-cloud-shape) center / 100% 100% no-repeat; mask: var(--wx-cloud-shape) center / 100% 100% no-repeat; }
 .wx-cloud.wx-dark::before { background: var(--wx-cloud-dark-fill); }
+.wx-cloud::after { content: ''; position: absolute; inset: 0; background: radial-gradient(58% 52% at 44% 26%, var(--wx-cloud-shine), transparent 72%); -webkit-mask: var(--wx-cloud-shape) center / 100% 100% no-repeat; mask: var(--wx-cloud-shape) center / 100% 100% no-repeat; }
+.wx-cloud.wx-dark::after { opacity: 0.45; }
 .wx-c2 { top: 160px; inset-inline-start: auto; inset-inline-end: 7%; width: 112px; height: 63px; opacity: 0.85; animation-duration: 100s; animation-direction: alternate-reverse; }
 .wx-c3 { top: 50px; inset-inline-start: auto; inset-inline-end: 26%; width: 128px; height: 72px; opacity: 0.92; animation-duration: 120s; }
 /* 🌧️ טיפות / ❄️ פתיתים מתחת לעננים */
 .wx-drops, .wx-flakes { top: 130px; inset-inline: 0; height: 330px; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 55%, transparent 92%); mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 55%, transparent 92%); }
-.wx-drops { background-image: radial-gradient(1.5px 12px at 8% 12%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 31% 47%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 52% 18%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 73% 66%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 91% 34%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 19% 81%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 62% 92%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 44% 73%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.5px 12px at 84% 6%, var(--wx-drop) 0 99%, transparent 100%); background-size: 170px 240px; transform: skewX(-10deg); animation: wxRain 0.9s linear infinite; }
-.wx-flakes { background-image: radial-gradient(circle at 9% 14%, var(--wx-flake) 0 2px, transparent 2.8px), radial-gradient(circle at 36% 52%, var(--wx-flake) 0 1.6px, transparent 2.4px), radial-gradient(circle at 63% 8%, var(--wx-flake) 0 2.6px, transparent 3.4px), radial-gradient(circle at 82% 61%, var(--wx-flake) 0 1.9px, transparent 2.7px), radial-gradient(circle at 21% 79%, var(--wx-flake) 0 2.3px, transparent 3.1px), radial-gradient(circle at 57% 88%, var(--wx-flake) 0 1.5px, transparent 2.3px), radial-gradient(circle at 94% 29%, var(--wx-flake) 0 1.8px, transparent 2.6px); background-size: 210px 210px; animation: wxSnow 10s linear infinite; }
+.wx-drops { background-image: radial-gradient(1.2px 15px at 8% 12%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 31% 47%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 52% 18%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 73% 66%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 91% 34%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 19% 81%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 62% 92%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 44% 73%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1.2px 15px at 84% 6%, var(--wx-drop) 0 99%, transparent 100%); background-size: 170px 240px; transform: skewX(-12deg); animation: wxRain 0.85s linear infinite; }
+.wx-drops::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(1px 9px at 14% 30%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1px 9px at 42% 8%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1px 9px at 66% 40%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1px 9px at 88% 72%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1px 9px at 28% 64%, var(--wx-drop) 0 99%, transparent 100%), radial-gradient(1px 9px at 56% 86%, var(--wx-drop) 0 99%, transparent 100%); background-size: 120px 170px; opacity: 0.55; animation: wxRainFar 1.3s linear infinite; }
+.wx-flakes { background-image: radial-gradient(circle at 9% 14%, var(--wx-flake) 0 2px, transparent 2.8px), radial-gradient(circle at 36% 52%, var(--wx-flake) 0 1.6px, transparent 2.4px), radial-gradient(circle at 63% 8%, var(--wx-flake) 0 2.6px, transparent 3.4px), radial-gradient(circle at 82% 61%, var(--wx-flake) 0 1.9px, transparent 2.7px), radial-gradient(circle at 21% 79%, var(--wx-flake) 0 2.3px, transparent 3.1px), radial-gradient(circle at 57% 88%, var(--wx-flake) 0 1.5px, transparent 2.3px), radial-gradient(circle at 94% 29%, var(--wx-flake) 0 1.8px, transparent 2.6px); background-size: 210px 210px; animation: wxSnow 10s linear infinite, wxSway 3.6s ease-in-out infinite alternate; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--wx-flake) 70%, transparent)); }
+.wx-flakes::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 18% 30%, var(--wx-flake) 0 1.2px, transparent 2px), radial-gradient(circle at 47% 12%, var(--wx-flake) 0 1px, transparent 1.8px), radial-gradient(circle at 71% 46%, var(--wx-flake) 0 1.3px, transparent 2.1px), radial-gradient(circle at 90% 80%, var(--wx-flake) 0 1px, transparent 1.8px), radial-gradient(circle at 33% 70%, var(--wx-flake) 0 1.1px, transparent 1.9px); background-size: 150px 150px; opacity: 0.6; filter: blur(0.6px); animation: wxSnow 16s linear infinite; }
 /* ⚡ ברק שמבזיק מדי פעם */
-.wx-bolt { top: 150px; inset-inline-start: 24%; width: 26px; height: 50px; background: #facc15; -webkit-mask: var(--wx-bolt-shape) center / contain no-repeat; mask: var(--wx-bolt-shape) center / contain no-repeat; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.8)); opacity: 0; animation: wxBolt 9s linear infinite; }
+.wx-bolt { top: 150px; inset-inline-start: 24%; width: 26px; height: 50px; background: linear-gradient(180deg, #fff6c8, #ffd36b); -webkit-mask: var(--wx-bolt-shape) center / contain no-repeat; mask: var(--wx-bolt-shape) center / contain no-repeat; filter: drop-shadow(0 0 8px rgba(255, 214, 110, 0.9)) drop-shadow(0 0 20px rgba(190, 150, 255, 0.65)); opacity: 0; animation: wxBolt 9s linear infinite; }
 .home-weather.wx-storm { animation: wxFlash 9s linear infinite; }
 /* 🌫️ ערפל */
-.wx-mist { top: 130px; inset-inline: -20%; height: 64px; background: linear-gradient(90deg, transparent, var(--wx-fog), transparent); filter: blur(10px); animation: wxDrift 40s ease-in-out infinite alternate; }
+.wx-mist { top: 130px; inset-inline: -20%; height: 70px; border-radius: 50%; background: linear-gradient(90deg, transparent, var(--wx-fog), transparent); filter: blur(14px); animation: wxDrift 40s ease-in-out infinite alternate; }
 .wx-mist2 { top: 214px; opacity: 0.75; animation-direction: alternate-reverse; }
 /* כשמזג האוויר פעיל הוא מצייר את השמיים בעצמו - השמש / הכוכבים הכלליים של הערכה מוסתרים */
 .home-sky-scene .home-sky-topstrip { transition: opacity 0.6s ease; }
 .home-sky-scene.wx-on .home-sky-topstrip { opacity: 0; }
+/* 🛠️ למנהלת המוצר בלבד: הפס הקטן במסך הבית לתצוגה מקדימה של מזג אוויר × יום/לילה × ערכה (ר' renderHomeDevWx ב-home.js) */
+.home-dev-wx { position: absolute; z-index: 70; inset-inline-start: 12px; bottom: 200px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.hdw-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 999px; border: 1px dashed rgba(201, 151, 63, 0.85); background: rgba(20, 14, 30, 0.74); color: #f7dfa0; font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hdw-panel { display: none; flex-direction: column; gap: 8px; padding: 10px; border-radius: 16px; background: rgba(20, 14, 30, 0.84); border: 1px solid rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.8); max-width: calc(100vw - 48px); }
+.home-dev-wx.open .hdw-panel { display: flex; }
+.hdw-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.hdw-row button { min-width: 36px; height: 34px; padding: 0 6px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); color: #f5f0fa; font: inherit; font-size: 0.95rem; cursor: pointer; }
+.hdw-row button.on { border-color: #f7dfa0; background: rgba(247, 223, 160, 0.18); }
+.hdw-theme { min-width: 104px; text-align: center; font-size: 0.78rem; font-weight: 700; color: #f5f0fa; }
 @keyframes wxDrift { from { transform: translateX(-14px); } to { transform: translateX(18px); } }
 @keyframes wxSpin { to { transform: rotate(360deg); } }
 @keyframes wxRain { from { background-position: 0 0; } to { background-position: 0 240px; } }
 @keyframes wxSnow { from { background-position: 0 0; } to { background-position: 0 210px; } }
+@keyframes wxRainFar { from { background-position: 0 0; } to { background-position: 0 170px; } }
+@keyframes wxSway { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
 @keyframes wxBolt { 0%, 90%, 93.5%, 100% { opacity: 0; } 90.5%, 93% { opacity: 1; } }
 @keyframes wxFlash { 0%, 90%, 92%, 100% { box-shadow: none; } 90.5%, 91.5% { box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, 0.08); } }
 @keyframes wxTwinkle { from { opacity: 0.45; } to { opacity: 0.85; } }
 @media (prefers-reduced-motion: reduce) {
-    .home-weather, .home-weather i, .home-weather i::before { animation: none !important; }
+    .home-weather, .home-weather i, .home-weather i::before, .home-weather i::after { animation: none !important; }
     .wx-bolt { opacity: 1; }
 }
 /* מסכים נמוכים: הצ'יפים קטנים יותר, שייכנסו שניים בשורה */
@@ -8202,11 +8222,7 @@ html.light-mode .wx-stars { display: none; }
 .sr-how-key { display: flex; justify-content: center; margin: 2px 0 4px; }
 .sr-how-key .sr-key-ic { width: 38px; height: 38px; color: #e8b84f; }
 .sr-how-line { margin: 2px auto 16px; max-width: 30ch; font-size: 1.02rem; line-height: 1.7; color: var(--text-primary); text-wrap: balance; }
-.sr-how-key .sr-key-hole, .sr-shelf-sheet .sr-key-hole { fill: var(--bg-sheet); }
-.sr-shelf-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
-.sr-shelf-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; cursor: pointer; }
-.sr-shelf-item span { font-size: 1.6rem; }
-.sr-shelf-item b { font-size: 0.8rem; }
+.sr-how-key .sr-key-hole { fill: var(--bg-sheet); }
 
 /* החדר: במה בגודל טלפון (גם במחשב), קיר אחד בכל פעם */
 .sr-overlay { position: absolute; inset: 0; z-index: 2550; display: flex; justify-content: center; background: #07040c; animation: srFadeIn 0.35s ease-out; outline: none; }
@@ -9556,14 +9572,15 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .routine-clash-move .btn-primary { flex: 1; margin: 0; }
 
 /* ===== פתקים: רשימה של פתקים דביקים קטנים (עיצוב 1 של הקנבס בגרסת רשימה - בחירה מ-2026-10-12:
-   "בגדול להשאיר רשימה", פתקים קטנים שרואים בהם את מה שכתוב). נייר צהוב/ורוד/מנטה לסירוגין, הטיה
-   קלה ופינה אחת מעוגלת כמו נייר. צבע רקע שנבחר = צבע הנייר (גוון פסטל שלו); צבע טקסט שנבחר מוכהה
-   קצת כדי שיהיה קריא על נייר בהיר. הסלקטורים עם #id כדי לגבור על כללי ה-li הכלליים של ערכות הנושא.
+   "בגדול להשאיר רשימה", פתקים קטנים שרואים בהם את מה שכתוב). נייר אחד נקי (מאז 2026-10-12, לפי בקשה
+   מפורשת: "משהו מקצועי ופשוט" - בלי צהוב/ורוד/מנטה): לבן חם ביום, כהה ועדין בלילה; הטיה קלה ופינה אחת
+   מעוגלת כמו נייר. צבע רקע שנבחר = פס דק בצד וגוון קל; צבע טקסט שנבחר מוכהה ביום ומובהר בלילה, כדי
+   שיהיה קריא. הסלקטורים עם #id כדי לגבור על כללי ה-li הכלליים של ערכות הנושא.
    אותו עיצוב בתצוגה המקדימה של הפתק הפתוח (#center-item-preview-row) - "דוגמא לאיך זה יראה" ===== */
 #weekly-list { gap: 9px; padding: 2px 3px; }
 :is(#weekly-list > li, #center-item-preview-row).note-paper {
-    --paper: #fef3a8;
-    --paper-ink: #3b3216;
+    --paper: #fffdf9;
+    --paper-ink: #29261f;
     position: relative;
     display: flex;
     align-items: center;
@@ -9575,12 +9592,13 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
     color: var(--paper-ink);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    box-shadow: 0 7px 12px -9px rgba(60, 40, 0, 0.55), 0 1px 1px rgba(60, 40, 0, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(41, 38, 31, 0.07), 0 6px 14px -11px rgba(41, 38, 31, 0.45);
     transform: rotate(-0.4deg);
 }
-#weekly-list > li.note-paper:nth-child(2n) { --paper: #ffd9e8; transform: rotate(0.35deg); }
-#weekly-list > li.note-paper:nth-child(3n) { --paper: #d9f5e4; }
-:is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 34%, #fffdf3); }
+#weekly-list > li.note-paper:nth-child(2n) { transform: rotate(0.35deg); }
+:is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 8%, var(--paper)); }
+/* צבע שנבחר לפתק = פס דק בצד ההתחלה (ולא נייר צבעוני) */
+:is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg::before { content: ''; position: absolute; inset-block: 7px; inset-inline-start: 0; width: 3px; border-radius: 3px; background: var(--note-bg); }
 :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text { margin: 0; color: var(--paper-ink); font-size: 0.88rem; line-height: 1.45; }
 :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc { color: color-mix(in srgb, var(--tc) 68%, #241c0c); }
 :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tg { text-shadow: 0 0 3px var(--tg), 0 0 9px color-mix(in srgb, var(--tg) 55%, transparent); }
@@ -9593,16 +9611,20 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
     margin: 0;
     padding: 0;
     border-radius: 50%;
-    border: 1.5px solid rgba(59, 50, 22, 0.38);
-    background: rgba(255, 255, 255, 0.45);
+    border: 1.5px solid color-mix(in srgb, var(--paper-ink) 30%, transparent);
+    background: transparent;
     color: #fff;
     font-size: 0.7rem;
     box-shadow: none;
 }
 #weekly-list > li.note-paper .btn-complete-item.checked { background: var(--accent-purple); border-color: var(--accent-purple); }
-#weekly-list > li.note-paper .btn-delete-item { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: -4px -4px -4px 0; padding: 0; color: rgba(59, 50, 22, 0.42); }
+#weekly-list > li.note-paper .btn-delete-item { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: -4px -4px -4px 0; padding: 0; color: color-mix(in srgb, var(--paper-ink) 42%, transparent); }
 #weekly-list > li.note-paper .btn-delete-item svg { width: 15px; height: 15px; }
 #weekly-list > li.note-paper .btn-delete-item:hover { color: #b42318; transform: none; }
+html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper: color-mix(in srgb, var(--text-primary) 8%, transparent); --paper-ink: var(--text-primary); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 9%, transparent); }
+html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 12%, var(--paper)); }
+html:not(.light-mode) :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc { color: color-mix(in srgb, var(--tc) 70%, #ffffff); }
+html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { color: #fca5a5; }
 #weekly-list > li.note-paper .note-drag-handle { color: rgba(59, 50, 22, 0.4); padding: 4px 1px; }
 #weekly-list > li.note-paper .btn-complete-item:focus-visible,
 #weekly-list > li.note-paper .btn-delete-item:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
@@ -9693,8 +9715,20 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 
 /* ===== צנצנת המשאלות וציטוטים מספרים - בארון הספרים בחדר הסודי (ר' secret-places.js). הצנצנת עצמה בעיצוב
    שנבחר (SR_JAR_DESIGN); הפתקים והדפים בצבעי נייר קבועים כדי שיהיו קריאים בכל ערכה, בהיר וכהה ===== */
-.sr-shelf-items { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sr-shelf-item span svg { display: block; width: 1.65rem; height: 1.65rem; }
+/* המדף (נגיעה בארון) והציטוטים שנפתחים ממנו - מסך מלא בתוך החדר, כמו הצנצנת והספרייה, בצבעי עולם קסום
+   (שזיף, זוהר ורוד וזהב). הצבעים של ערכת הנושא מוגדרים כאן מחדש כדי שהטקסט והכפתורים יהיו קריאים על הרקע הכהה */
+.sr-shelfview, .sr-quotesview { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; overflow-y: auto; color: #f5f0fa; --text-primary: #f5f0fa; --text-secondary: #cbbcdc; --border-color: rgba(255, 255, 255, 0.18); --bg-row: rgba(255, 255, 255, 0.06); background: radial-gradient(80% 45% at 50% 18%, rgba(255, 159, 200, 0.12), transparent 70%), linear-gradient(180deg, #1d1229, #1b1226 60%, #160e1f); animation: srFadeIn 0.3s ease-out; }
+.sr-shelf-scene { flex: 1; display: flex; align-items: flex-start; justify-content: center; min-height: 0; padding-bottom: 10px; }
+.srs-svg { display: block; width: 100%; max-width: 440px; height: auto; }
+.srs-hot:focus-visible { filter: drop-shadow(0 0 8px #ffd27a); }
+.srs-hot:hover .srs-label rect:first-child { filter: brightness(1.08); }
+.sr-quotesview .sr-quotes-wrap { padding: 12px 22px 28px; gap: 16px; }
+.sr-quotesview .nm-btn-primary { background: linear-gradient(135deg, #f7dfa0, #c9973f); color: #3a230d; box-shadow: 0 10px 22px -14px rgba(201, 151, 63, 0.9); }
+.sr-quotesview .sr-quotes-empty { color: var(--text-secondary); }
+/* כל ציטוט על מדף: נייר במסגרת עץ, וקרש קטן מתחתיו */
+.sr-quotes { gap: 32px; padding: 6px 4px 0; }
+.sr-quote { border: 6px solid #8a6248; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(60, 40, 20, 0.12), 0 12px 18px -14px rgba(0, 0, 0, 0.7); }
+.sr-quote::after { content: ''; position: absolute; inset-inline: -12px; bottom: -22px; height: 10px; border-radius: 3px; background: linear-gradient(180deg, #b48463, #7a5038); box-shadow: 0 7px 9px -5px rgba(0, 0, 0, 0.55); pointer-events: none; }
 .sr-jar { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; overflow-y: auto; color: #f5f5f7; background: radial-gradient(70% 40% at 50% 26%, rgba(255, 196, 120, 0.14), transparent 70%), linear-gradient(180deg, #120b19, #1a1208 70%, #24170c); animation: srFadeIn 0.3s ease-out; }
 .sr-jar-niche { flex: none; width: min(100% - 28px, 340px); aspect-ratio: 240 / 330; margin: 4px auto 0; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #2a1810 0%, #3b2418 55%, #2c1b12 100%); box-shadow: inset 0 14px 30px rgba(0, 0, 0, 0.55), 0 18px 40px -20px rgba(0, 0, 0, 0.7); }
 .sr-jar-svg { display: block; width: 100%; height: 100%; cursor: pointer; }

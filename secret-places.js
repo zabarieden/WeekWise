@@ -1594,14 +1594,26 @@ function srJarSvg(wishes) {
     const notes = def.board ? srjBoardNotes(wishes) : wishes.slice(0, 40).map((w, i) => { const s = srjSlot(def, i); return srjNote(s.x, s.y, s.rot, s.color); }).join('');
     return `<svg class="sr-jar-svg" viewBox="0 0 240 330" role="button" tabindex="0" aria-label="${srEsc(t('room_jar_pull'))}"><defs>${srjDefs(p)}</defs>${def.board ? '' : srjPlank(p)}${def.draw(p, notes)}</svg>`;
 }
+// אותה צנצנת, יושבת על המדף (ר' srShelfSceneSvg): בלי הקרש שלה, מוקטנת כך שהתחתית שלה על הקרש של המדף.
+// cx = מרכז הצנצנת, baseY = גובה הקרש, h = גובה הצנצנת (מהמכסה עד התחתית)
+function srJarShelfSvg(wishes, cx, baseY, h) {
+    const def = SR_JARS[SR_JAR_DESIGN] || SR_JARS[1];
+    if (def.board) return '';
+    const p = 'srjs';
+    const notes = (wishes || []).slice(0, 40).map((w, i) => { const s = srjSlot(def, i); return srjNote(s.x, s.y, s.rot, s.color); }).join('');
+    const s = h / 238;
+    return `<g transform="translate(${(cx - 120 * s).toFixed(1)} ${(baseY - 292 * s).toFixed(1)}) scale(${s.toFixed(3)})"><defs>${srjDefs(p)}</defs>${def.draw(p, notes)}</g>`;
+}
 
 // ---------- הצנצנת (מסך בתוך החדר) ----------
-async function roomOpenJar() {
+// fromShelf: נפתחה מהמדף - "חזרה" מחזירה למדף (שנשאר מתחת), לא לקיר של החדר
+async function roomOpenJar(opts = {}) {
     const stage = srStage();
     if (!stage) return;
     stage.querySelector('.sr-jar')?.remove();
     const box = document.createElement('div');
     box.className = 'sr-jar';
+    if (opts.fromShelf) box.dataset.from = 'shelf';
     stage.appendChild(box);
     srRenderJar(box);
     await roomFetchWishes();
@@ -1611,7 +1623,7 @@ async function roomOpenJar() {
 function srRenderJar(box) {
     const wishes = roomWishes || [];
     box.innerHTML = `
-        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('jar'))}</b><span>${wishes.length ? srEsc(srWishCountText(wishes.length)) : ''}</span></div>
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t(box.dataset.from === 'shelf' ? 'room_back_to_shelf' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName('jar'))}</b><span>${wishes.length ? srEsc(srWishCountText(wishes.length)) : ''}</span></div>
         <div class="sr-jar-niche">${srJarSvg(wishes)}</div>
         ${wishes.length ? '' : `<p class="sr-jar-empty">${srEsc(t('room_jar_empty'))}</p>`}
         <div class="sr-jar-actions">
@@ -1620,7 +1632,11 @@ function srRenderJar(box) {
         </div>
         ${wishes.length ? `<div class="sr-jar-notes">${wishes.slice().reverse().map(w => `<button type="button" class="sr-jar-note" data-wish="${w.id}" style="--paper:${srWishPaper(w)}"><span>${srEsc(srClip(w.text, 40))}</span>${w.goal_id ? '<i aria-hidden="true">🎯</i>' : ''}</button>`).join('')}</div>` : ''}`;
     if (typeof srFitTexts === 'function') srFitTexts(box);
-    box.querySelector('.sr-sub-back').addEventListener('click', () => { box.remove(); if (srIsOpen() && typeof srRenderWall === 'function') srRenderWall(); });
+    box.querySelector('.sr-sub-back').addEventListener('click', () => {
+        box.remove();
+        if (box.dataset.from === 'shelf' && typeof srRefreshShelfView === 'function') srRefreshShelfView();
+        else if (srIsOpen() && typeof srRenderWall === 'function') srRenderWall();
+    });
     box.querySelector('.sr-jar-add').addEventListener('click', () => srNewWish(box));
     const pull = () => srPullWish(box);
     box.querySelector('.sr-jar-pull')?.addEventListener('click', pull);
@@ -1799,12 +1815,30 @@ async function roomFetchQuotes() {
     return roomQuotes;
 }
 
-async function roomOpenQuotes() {
-    // בסגירה - הצ'יפ בפינת הקריאה מתעדכן במספר הציטוטים
-    const ov = nmOpenSheet('<div class="sr-quotes-wrap"></div>', 'sr-quotes-sheet', () => {
-        if (typeof booksQuotesCount !== 'undefined' && Array.isArray(roomQuotes)) booksQuotesCount = roomQuotes.length;
-        if (typeof renderBooksStats === 'function' && typeof isBooksSectionOpen === 'function' && isBooksSectionOpen()) renderBooksStats();
-    });
+// מהמדף בחדר (fromShelf): מסך מלא על רקע המדף, והציטוטים עומדים כמו כרטיסים ממוסגרים על מדפים (לפי בקשה מפורשת,
+// 2026-10-12: "וגם הציטוטים וכל מה שבתוכו - לעשות את זה כמו מדף"). מפינת הקריאה (בלי החדר) - אותו תוכן, בחלונית
+async function roomOpenQuotes(opts = {}) {
+    const stage = opts.fromShelf && typeof srStage === 'function' ? srStage() : null;
+    let ov;
+    if (stage) {
+        stage.querySelector('.sr-quotesview')?.remove();
+        ov = document.createElement('div');
+        ov.className = 'sr-quotesview';
+        ov.dataset.mode = 'shelf';
+        ov.innerHTML = `<div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_shelf'))}</button><b>${srEsc(t('room_shelf_quotes'))}</b><span></span></div><div class="sr-quotes-wrap"></div>`;
+        stage.appendChild(ov);
+        ov.querySelector('.sr-sub-back').addEventListener('click', () => {
+            ov.remove();
+            if (typeof booksQuotesCount !== 'undefined' && Array.isArray(roomQuotes)) booksQuotesCount = roomQuotes.length;
+            if (typeof srRefreshShelfView === 'function') srRefreshShelfView();
+        });
+    } else {
+        // בסגירה - הצ'יפ בפינת הקריאה מתעדכן במספר הציטוטים
+        ov = nmOpenSheet('<div class="sr-quotes-wrap"></div>', 'sr-quotes-sheet', () => {
+            if (typeof booksQuotesCount !== 'undefined' && Array.isArray(roomQuotes)) booksQuotesCount = roomQuotes.length;
+            if (typeof renderBooksStats === 'function' && typeof isBooksSectionOpen === 'function' && isBooksSectionOpen()) renderBooksStats();
+        });
+    }
     const wrap = ov.querySelector('.sr-quotes-wrap');
     srRenderQuotes(wrap, ov);
     await roomFetchQuotes();
@@ -1813,8 +1847,9 @@ async function roomOpenQuotes() {
 
 function srRenderQuotes(wrap, ov) {
     const list = roomQuotes || [];
+    const inShelf = ov.dataset.mode === 'shelf';
     wrap.innerHTML = `
-        <h4>${srEsc(t('room_quotes_title'))}</h4>
+        ${inShelf ? '' : `<h4>${srEsc(t('room_quotes_title'))}</h4>`}
         <div class="sr-quotes">${list.length ? list.map(q => `
             <figure class="sr-quote">
                 <blockquote>${srEsc(q.quote)}</blockquote>
@@ -1822,17 +1857,17 @@ function srRenderQuotes(wrap, ov) {
                 <div class="sr-quote-tools"><button type="button" data-qedit="${q.id}" aria-label="${srEsc(t('edit_btn'))}" title="${srEsc(t('edit_btn'))}">✏️</button><button type="button" data-qdel="${q.id}" aria-label="${srEsc(t('room_quote_delete'))}" title="${srEsc(t('room_quote_delete'))}">🗑️</button></div>
             </figure>`).join('') : `<p class="sr-quotes-empty">${srEsc(t('room_quotes_empty'))}</p>`}</div>
         <button type="button" class="nm-btn-primary" data-qadd>${srEsc(t('room_quotes_add'))}</button>
-        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`;
+        ${inShelf ? '' : `<button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`}`;
     wrap.querySelector('[data-qadd]').addEventListener('click', () => srQuoteForm(wrap, ov, null));
     wrap.querySelectorAll('[data-qedit]').forEach(b => b.addEventListener('click', () => srQuoteForm(wrap, ov, list.find(q => q.id === b.dataset.qedit))));
     wrap.querySelectorAll('[data-qdel]').forEach(b => b.addEventListener('click', () => {
         const q = list.find(x => x.id === b.dataset.qdel);
         if (!q) return;
-        ov.remove();
+        if (!inShelf) ov.remove();
         showDangerConfirm(t('room_quote_delete_title'), t('room_quote_delete_confirm'), async () => {
             await supabaseClient.from('room_quotes').delete().eq('id', q.id).eq('user_id', currentUserId);
             roomQuotes = (roomQuotes || []).filter(x => x.id !== q.id);
-            roomOpenQuotes();
+            if (inShelf) { if (wrap.isConnected) srRenderQuotes(wrap, ov); } else roomOpenQuotes();
         });
     }));
 }

@@ -1604,30 +1604,121 @@ function roomStopGame() {
 }
 
 // ---------- המדף (מהמפתח הראשון): הספרים, המחברות והזיכרונות ----------
+// המדף (נגיעה בארון): לפי בקשה מפורשת, 2026-10-12: "נראות חדשה לכניסה לארון - לא נראה טוב... לעשות את זה כמו מדף
+// והצנצנת פשוט תשב על המדף", בצבעים של עולם קסום (סגול, שזיף, זוהר ורוד וניצוצות זהב). נישה מעץ עם שרשרת אורות,
+// ועל המדפים: הספרים והצנצנת (עם הפתקים והגחליליות שלה), כרטיסי ציטוטים ממוסגרים (תחילת הציטוטים האחרונים),
+// המחברות והזיכרונות - ושלט נחושת קטן מתחת לכל אחד. הספרים = הספרייה (לפי בקשה מפורשת: "פשוט תחבר את זה לארון
+// ההוא"); הספרייה, הציטוטים והצנצנת נפתחים כאן בחדר ו"חזרה" מחזירה למדף; המחברות = התרמיל, הזיכרונות = התמונות
 function roomOpenShelf() {
-    const item = (id, icon, key) => `<button type="button" class="sr-shelf-item" data-go="${id}"><span aria-hidden="true">${icon}</span><b>${srEsc(t(key))}</b></button>`;
-    const ov = nmOpenSheet(`
-        <h4>${srEsc(roomItemName('shelf'))}</h4>
-        <p class="nm-fine">${srEsc(t('room_shelf_hint'))}</p>
-        <div class="sr-shelf-items">
-            ${item('books', '📚', 'room_shelf_books')}
-            ${item('quotes', '💬', 'room_shelf_quotes')}
-            ${item('jar', typeof SR_JAR_ICON !== 'undefined' ? SR_JAR_ICON : '✨', 'room_item_jar')}
-            ${item('notebooks', '📒', 'room_shelf_notebooks')}
-            ${item('photos', '📸', 'room_shelf_memories')}
-        </div>
-        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('room_back_to_room'))}</button>`, 'sr-shelf-sheet');
-    ov.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
-        ov.remove();
-        // הספרים = הספרייה (לפי בקשה מפורשת: "פשוט תחבר את זה לארון ההוא") - הספרים מפינת הקריאה, כאן בחדר
-        if (b.dataset.go === 'books') { roomOpenLibrary(); return; }
-        // ציטוטים מספרים שאהבתי וצנצנת המשאלות - בארון (לפי בקשה מפורשת, 2026-10-12; ר' secret-places.js)
-        if (b.dataset.go === 'quotes') { roomOpenQuotes(); return; }
-        if (b.dataset.go === 'jar') { roomOpenJar(); return; }
-        closeSecretRoom();
-        if (b.dataset.go === 'notebooks' && typeof openBag === 'function') openBag();
-        else if (b.dataset.go === 'photos' && typeof nmGo === 'function') nmGo('photos');
-    }));
+    const stage = srStage();
+    if (!stage) return;
+    stage.querySelector('.sr-shelfview')?.remove();
+    const box = document.createElement('div');
+    box.className = 'sr-shelfview';
+    stage.appendChild(box);
+    srRenderShelfView(box);
+    const loads = [typeof roomFetchWishes === 'function' ? roomFetchWishes() : null, typeof roomFetchQuotes === 'function' ? roomFetchQuotes() : null];
+    Promise.all(loads).then(() => { if (box.isConnected) srRenderShelfView(box); }).catch(() => {});
+}
+function srRefreshShelfView() {
+    const stage = srStage();
+    const box = stage && stage.querySelector('.sr-shelfview');
+    if (box) srRenderShelfView(box);
+}
+function srRenderShelfView(box) {
+    box.innerHTML = `
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('shelf'))}</b><span></span></div>
+        <div class="sr-shelf-scene">${srShelfSceneSvg()}</div>`;
+    if (typeof srFitTexts === 'function') srFitTexts(box);
+    // חזרה לקיר - מצויר מחדש, כדי שהצנצנת הקטנה בארון תראה את הפתקים החדשים
+    box.querySelector('.sr-sub-back').addEventListener('click', () => { box.remove(); if (srIsOpen()) srRenderWall(); });
+    box.querySelectorAll('[data-go]').forEach(g => {
+        const go = () => srShelfGo(g.dataset.go);
+        g.addEventListener('click', go);
+        g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+}
+function srShelfGo(id) {
+    if (id === 'books') { roomOpenLibrary({ fromShelf: true }); return; }
+    if (id === 'quotes') { roomOpenQuotes({ fromShelf: true }); return; }
+    if (id === 'jar') { roomOpenJar({ fromShelf: true }); return; }
+    closeSecretRoom();
+    if (id === 'notebooks' && typeof openBag === 'function') openBag();
+    else if (id === 'photos' && typeof nmGo === 'function') nmGo('photos');
+}
+// עד max שורות של עד n תווים בערך, והאחרונה מקוצרת עם … אם נשאר טקסט (לכרטיסי הציטוטים על המדף)
+function srsWrap(s, n, max) {
+    const words = String(s || '').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    words.forEach(w => { if ((cur + ' ' + w).trim().length > n && cur) { lines.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); });
+    if (cur) lines.push(cur);
+    if (lines.length > max) { lines[max - 1] = srClip(lines.slice(max - 1).join(' '), n); lines.length = max; }
+    return lines;
+}
+// נקודות על שרשרת האורות (עקומה M40 176 C90 60, 300 60, 350 176), נורה אחת לכל עשירית
+const SRS_BULBS = [[59.5, 144.7], [86.6, 120.3], [119.6, 102.9], [156.3, 92.5], [195, 89], [233.7, 92.5], [270.4, 102.9], [303.4, 120.3], [330.5, 144.7]];
+function srShelfSceneSvg() {
+    const p = 'srs';
+    const wishes = typeof roomWishes !== 'undefined' && Array.isArray(roomWishes) ? roomWishes : [];
+    const quotes = typeof roomQuotes !== 'undefined' && Array.isArray(roomQuotes) ? roomQuotes : [];
+    const plank = y => `<rect x="34" y="${y + 13}" width="322" height="12" fill="url(#${p}Drop)"/><rect x="30" y="${y}" width="330" height="13" rx="3" fill="url(#${p}Plank)"/><rect x="30" y="${y}" width="330" height="3" rx="1.5" fill="#e8bf95" opacity="0.5"/>`;
+    const label = (cx, y, w, text) => `<g class="srs-label" aria-hidden="true"><rect x="${cx - w / 2}" y="${y}" width="${w}" height="20" rx="5" fill="url(#${p}Brass)"/><rect x="${cx - w / 2 + 2}" y="${y + 2}" width="${w - 4}" height="16" rx="4" fill="none" stroke="#fff3cf" stroke-opacity="0.5"/><text x="${cx}" y="${y + 14.5}" text-anchor="middle" font-size="11" font-weight="700" fill="#4a2d12" data-fit="${w - 14}">${srEsc(text)}</text></g>`;
+    const hot = (id, name, box, inner) => `<g class="sr-hot srs-hot" data-go="${id}" role="button" tabindex="0" aria-label="${srEsc(name)}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" fill="transparent"/>${inner}</g>`;
+    // הספרים: שורת כריכות, ואחד נשען
+    const spine = (x, w, h, c) => `<rect x="${x}" y="${232 - h}" width="${w}" height="${h}" rx="3" fill="${c}"/><rect x="${x}" y="${232 - h}" width="${w}" height="${h}" rx="3" fill="url(#${p}Spine)"/><rect x="${x + 3}" y="${246 - h}" width="${w - 6}" height="3" rx="1.5" fill="#fff" opacity="0.55"/><rect x="${x + 3}" y="206" width="${w - 6}" height="2.5" rx="1.2" fill="#fff" opacity="0.35"/>`;
+    const books = [[48, 22, 112, '#b7a3e8'], [71, 18, 98, '#f2a7c3'], [90, 25, 124, '#e8c27a'], [116, 20, 104, '#8fb8c9'], [137, 23, 118, '#8e5a9b'], [161, 19, 100, '#e58fa8']].map(b => spine(...b)).join('')
+        + `<g transform="rotate(-14 204 232)">${spine(183, 20, 104, '#efe2c8')}</g>`;
+    // הציטוטים: כרטיסים ממוסגרים עם תחילת הציטוטים האחרונים (או רק סימן ציטוט כשאין עדיין)
+    const frame = (x, w, h, tilt, q) => {
+        const lines = q ? srsWrap(q.quote, Math.max(9, Math.round(w / 7.2)), 3) : [];
+        return `<g transform="rotate(${tilt} ${x + w / 2} 400)"><rect x="${x + 3}" y="${400 - h + 4}" width="${w}" height="${h}" rx="3" fill="#000" opacity="0.22"/><rect x="${x}" y="${400 - h}" width="${w}" height="${h}" rx="3" fill="url(#${p}Frame)"/><rect x="${x + 6}" y="${400 - h + 6}" width="${w - 12}" height="${h - 12}" rx="1.5" fill="#fbf4e6"/>
+            <text x="${x + 13}" y="${400 - h + 30}" font-family="Georgia, 'Times New Roman', serif" font-size="${q ? 22 : 34}" fill="#d9a648">“</text>
+            ${lines.map((l, i) => `<text x="${x + w / 2}" y="${400 - h + 44 + i * 13}" text-anchor="middle" font-size="9.5" fill="#4a3826">${srEsc(l)}</text>`).join('')}
+            ${q ? `<rect x="${x + w / 2 - 12}" y="${400 - 22}" width="24" height="1.6" rx="0.8" fill="#d9a648" opacity="0.7"/>` : ''}</g>`;
+    };
+    const recent = quotes.slice(-3).reverse();
+    const frames = frame(60, 82, 96, -3, recent[0]) + frame(150, 92, 106, 2, recent[1]) + frame(250, 80, 92, -1.5, recent[2]);
+    const plant = `<g aria-hidden="true"><rect x="334" y="378" width="22" height="22" rx="4" fill="#c98a6b"/><rect x="332" y="375" width="26" height="6" rx="2" fill="#dda083"/><path d="M345 377 C340 360 332 356 326 352 M345 377 C350 362 358 356 364 350 M345 378 C344 392 336 404 330 418 M347 378 C352 394 356 410 352 426" stroke="#7fae8c" stroke-width="2.4" fill="none" stroke-linecap="round"/><g fill="#8fc49b"><ellipse cx="326" cy="351" rx="6" ry="3.4" transform="rotate(-30 326 351)"/><ellipse cx="364" cy="349" rx="6" ry="3.4" transform="rotate(25 364 349)"/><ellipse cx="331" cy="414" rx="5" ry="3" transform="rotate(50 331 414)"/><ellipse cx="353" cy="422" rx="5" ry="3" transform="rotate(-50 353 422)"/><ellipse cx="338" cy="398" rx="4.6" ry="2.8" transform="rotate(30 338 398)"/></g></g>`;
+    // המחברות: ערימה שוכבת עם גומייה; הזיכרונות: שתי תמונות ממוסגרות
+    const notebook = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${c}"/><rect x="${x}" y="${y}" width="${w}" height="3" rx="1.5" fill="#fff" opacity="0.28"/><rect x="${x + w - 18}" y="${y}" width="4" height="${h}" fill="#3a2440" opacity="0.35"/><rect x="${x + 4}" y="${y + h - 3}" width="${w - 8}" height="2" fill="#f6efe4" opacity="0.8"/>`;
+    const notebooks = notebook(56, 512, 102, 14, '#8e5a9b') + notebook(62, 526, 96, 12, '#8fb8c9') + notebook(52, 538, 106, 14, '#f2a7c3')
+        + `<g transform="rotate(-8 112 510)"><rect x="72" y="506" width="78" height="5" rx="2.5" fill="#e8c27a"/><path d="M150 506 l9 2.5 l-9 2.5z" fill="#4a3826"/></g>`;
+    const photos = `<g transform="rotate(-2 238 552)"><rect x="202" y="472" width="74" height="80" rx="3" fill="url(#${p}Frame)"/><rect x="208" y="478" width="62" height="68" fill="url(#${p}PicA)"/><circle cx="246" cy="502" r="8" fill="#fff1c7" opacity="0.9"/><path d="M208 532 C222 516 236 520 246 528 C256 518 264 520 270 524 V546 H208Z" fill="#6c4a9a"/><path d="M208 540 C226 530 250 536 270 532 V546 H208Z" fill="#4c3374"/></g>
+        <g transform="rotate(2.5 312 552)"><rect x="288" y="490" width="52" height="62" rx="3" fill="url(#${p}Frame)"/><rect x="293" y="495" width="42" height="52" fill="url(#${p}PicB)"/><circle cx="321" cy="509" r="6.5" fill="#fff4c9"/><circle cx="324" cy="507" r="5.6" fill="#3b2f66"/><g fill="#fff" opacity="0.85"><circle cx="301" cy="503" r="0.9"/><circle cx="308" cy="520" r="0.8"/><circle cx="327" cy="530" r="0.9"/><circle cx="300" cy="536" r="0.7"/></g></g>`;
+    const sparkle = (x, y, s) => `<path d="M${x} ${y - s} L${x + s * 0.3} ${y - s * 0.3} L${x + s} ${y} L${x + s * 0.3} ${y + s * 0.3} L${x} ${y + s} L${x - s * 0.3} ${y + s * 0.3} L${x - s} ${y} L${x - s * 0.3} ${y - s * 0.3}Z"/>`;
+    const bulbs = SRS_BULBS.map(([x, y], i) => { const c = ['#ffd27a', '#ff9fc8', '#c9b6ff'][i % 3]; return `<circle cx="${x}" cy="${y + 7}" r="8" fill="${c}" opacity="0.28"/><circle cx="${x}" cy="${y + 7}" r="3.3" fill="${c}"/><rect x="${x - 1.6}" y="${y + 1}" width="3.2" height="3" rx="1" fill="#5a4636"/>`; }).join('');
+    return `<svg class="srs-svg" viewBox="0 0 390 780" role="group" aria-label="${srEsc(roomItemName('shelf'))}">
+        <defs>
+            <linearGradient id="${p}Back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b5468"/><stop offset="0.45" stop-color="#53364f"/><stop offset="1" stop-color="#2c1c2e"/></linearGradient>
+            <radialGradient id="${p}Glow" cx="0.5" cy="0.18" r="0.62"><stop offset="0" stop-color="#ffd3a8" stop-opacity="0.42"/><stop offset="0.55" stop-color="#ff9fc8" stop-opacity="0.08"/><stop offset="1" stop-color="#ff9fc8" stop-opacity="0"/></radialGradient>
+            <linearGradient id="${p}Plank" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48463"/><stop offset="1" stop-color="#7a5038"/></linearGradient>
+            <linearGradient id="${p}Drop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140a12" stop-opacity="0.45"/><stop offset="1" stop-color="#140a12" stop-opacity="0"/></linearGradient>
+            <linearGradient id="${p}Brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7dfa0"/><stop offset="1" stop-color="#c9973f"/></linearGradient>
+            <linearGradient id="${p}Spine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.24"/><stop offset="0.35" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.2"/></linearGradient>
+            <linearGradient id="${p}Frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a7795a"/><stop offset="1" stop-color="#6b4632"/></linearGradient>
+            <linearGradient id="${p}Cab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5444"/><stop offset="1" stop-color="#4a3028"/></linearGradient>
+            <linearGradient id="${p}PicA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf9e"/><stop offset="0.5" stop-color="#e58fb4"/><stop offset="1" stop-color="#8e6bc4"/></linearGradient>
+            <linearGradient id="${p}PicB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2350"/><stop offset="1" stop-color="#4b3a7a"/></linearGradient>
+        </defs>
+        <rect width="390" height="780" fill="#1b1226"/>
+        <path d="M18 780 V156 A177 146 0 0 1 372 156 V780 Z" fill="#2a1622"/>
+        <path d="M30 780 V160 A165 136 0 0 1 360 160 V780 Z" fill="url(#${p}Back)"/>
+        <path d="M30 780 V160 A165 136 0 0 1 360 160 V780 Z" fill="url(#${p}Glow)"/>
+        <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="2" fill="none" aria-hidden="true"><path d="M88 690 C84 520 96 360 86 140"/><path d="M152 690 C158 500 146 330 156 96"/><path d="M236 690 C230 520 244 340 234 96"/><path d="M304 690 C310 500 298 330 306 140"/></g>
+        <path d="M24 780 V158 A171 141 0 0 1 366 158 V780" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/>
+        <path d="M40 176 C90 60, 300 60, 350 176" fill="none" stroke="#5a4636" stroke-width="1.4"/>
+        <g class="sr-twinkle" aria-hidden="true">${bulbs}</g>
+        <g class="sr-twinkle" fill="#ffd27a" opacity="0.8" aria-hidden="true">${sparkle(72, 292, 4)}${sparkle(334, 276, 3.4)}${sparkle(212, 452, 3)}${sparkle(58, 462, 3.2)}${sparkle(348, 446, 2.6)}</g>
+        ${plank(232)}${plank(400)}${plank(552)}
+        <g aria-hidden="true"><rect x="36" y="604" width="318" height="176" rx="6" fill="url(#${p}Cab)"/><rect x="46" y="616" width="144" height="146" rx="4" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/><rect x="200" y="616" width="144" height="146" rx="4" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/><circle cx="184" cy="690" r="4" fill="url(#${p}Brass)"/><circle cx="206" cy="690" r="4" fill="url(#${p}Brass)"/></g>
+        ${hot('books', t('room_shelf_books'), [40, 96, 176, 170], books + label(125, 250, 110, t('room_shelf_books')))}
+        ${hot('jar', roomItemName('jar'), [238, 92, 116, 174], srJarShelfSvg(wishes, 292, 232, 128) + label(292, 250, 104, roomItemName('jar')))}
+        ${hot('quotes', t('room_shelf_quotes'), [48, 286, 286, 160], frames + label(195, 418, 96, t('room_shelf_quotes')))}
+        ${plant}
+        ${hot('notebooks', t('room_shelf_notebooks'), [44, 496, 128, 104], notebooks + label(106, 570, 96, t('room_shelf_notebooks')))}
+        ${hot('photos', t('room_shelf_memories'), [192, 462, 158, 138], photos + label(270, 570, 96, t('room_shelf_memories')))}
+    </svg>`;
 }
 
 // ---------- הגג (שלב 2) ----------
@@ -2026,7 +2117,7 @@ function roomShootingStar(sky) {
 }
 
 // ---------- הספרייה (בתוך ארון הספרים): הספרים מפינת הקריאה ----------
-async function roomOpenLibrary() {
+async function roomOpenLibrary(opts = {}) {
     const stage = srStage();
     if (!stage) return;
     let books = [];
@@ -2038,7 +2129,7 @@ async function roomOpenLibrary() {
     const box = document.createElement('div');
     box.className = 'sr-library';
     box.innerHTML = `
-        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('library'))}</b><span></span></div>
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t(opts.fromShelf ? 'room_back_to_shelf' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName('library'))}</b><span></span></div>
         <div class="sr-lib-shelves">
             ${books.length ? books.map((b, i) => `<button type="button" class="sr-book" style="--sr-book:${spines[i % spines.length]};height:${120 + ((i * 37) % 40)}px" title="${srEsc(b.title)}"><span>${srEsc(srClip(b.title, 26))}</span></button>`).join('') : `<p class="sr-lib-empty">${srEsc(t('room_library_empty'))}</p>`}
         </div>
