@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=561">
+    <link rel="stylesheet" href="theme.css?v=562">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1186,10 +1186,10 @@
                         </div>
                         <div class="card-body">
                             <div class="ai-brain-tabs" id="sport-type-picker">
-                                <button type="button" class="ai-brain-tab active" data-sport-type="running" onclick="selectSportType('running')" data-i18n="sport_type_running">🏃 Running</button>
-                                <button type="button" class="ai-brain-tab" data-sport-type="cycling" onclick="selectSportType('cycling')" data-i18n="sport_type_cycling">🚴 Cycling</button>
-                                <button type="button" class="ai-brain-tab" data-sport-type="swimming" onclick="selectSportType('swimming')" data-i18n="sport_type_swimming">🏊 Swimming</button>
-                                <button type="button" class="ai-brain-tab" data-sport-type="custom" onclick="selectSportType('custom')" data-i18n="sport_type_custom">✨ Other</button>
+                                <button type="button" class="ai-brain-tab active" data-sport-type="running" onclick="selectSportType('running')"><span class="sport-type-star" data-sport-star="running" aria-hidden="true"></span><span data-i18n="sport_type_running">Running</span></button>
+                                <button type="button" class="ai-brain-tab" data-sport-type="cycling" onclick="selectSportType('cycling')"><span class="sport-type-star" data-sport-star="cycling" aria-hidden="true"></span><span data-i18n="sport_type_cycling">Cycling</span></button>
+                                <button type="button" class="ai-brain-tab" data-sport-type="swimming" onclick="selectSportType('swimming')"><span class="sport-type-star" data-sport-star="swimming" aria-hidden="true"></span><span data-i18n="sport_type_swimming">Swimming</span></button>
+                                <button type="button" class="ai-brain-tab" data-sport-type="custom" onclick="selectSportType('custom')" data-i18n="sport_type_custom">Other</button>
                                 <!-- custom bubbles + "+" injected by renderCustomSportTypeBubbles() -->
                             </div>
                             <div class="preset-manager-grid" id="sport-add-type-row" style="margin-top: 10px;" hidden>
@@ -1211,7 +1211,7 @@
                             </div>
                             <textarea id="sport-notes-input" rows="2" style="margin-top: 10px;" data-i18n-placeholder="sport_notes_placeholder" placeholder="Notes (optional)"></textarea>
                             <input type="file" id="sport-photo-input" accept="image/*" class="hidden" onchange="handleSportPhotoSelected(event)">
-                            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('sport-photo-input').click()" data-i18n="sport_add_photo_btn">📷 Add a photo</button>
+                            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('sport-photo-input').click()" data-i18n="sport_add_photo_btn">Add a photo</button>
                             <img id="sport-photo-preview" class="recipe-image-preview hidden" alt="">
                             <input type="hidden" id="sport-photo-url-input">
                             <label class="settings-label" data-i18n="sport_motivation_label" style="margin-top: 10px;">Why are you doing this? (optional)</label>
@@ -1229,7 +1229,7 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="sport_summary_title">Monthly Summary</h2>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add" onclick="event.stopPropagation(); exportSportSessionsCsv();" data-i18n-title="sport_export_title" title="Export to table">📤</button>
+                                <button class="btn-floating-add sport-export-btn" onclick="event.stopPropagation(); exportSportSessionsCsv();" data-i18n-title="sport_export_title" data-i18n-aria-label="sport_export_title" title="Export to table" aria-label="Export to table"><svg class="sport-share-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></g></svg></button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -1254,7 +1254,7 @@
                                 </div>
                                 <!-- 🔥 שריפה משוערת (סוג × משך × משקל) - נכנסת גם לתקציב הקלוריות היומי -->
                                 <div class="stat-box finance-stat-income">
-                                    <h3 data-i18n="sport_total_kcal">🔥 Burned</h3>
+                                    <h3 data-i18n="sport_total_kcal">Burned</h3>
                                     <div class="stat-number" id="sport-total-kcal">0</div>
                                 </div>
                             </div>
@@ -2429,10 +2429,10 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="sport_add_title">Log a Workout</h3>
                 <div class="ai-brain-tabs" id="sport-quick-type-picker">
-                    <button type="button" class="ai-brain-tab active" data-sport-quick-type="running" onclick="selectSportQuickType('running')" data-i18n="sport_type_running">🏃 Running</button>
-                    <button type="button" class="ai-brain-tab" data-sport-quick-type="cycling" onclick="selectSportQuickType('cycling')" data-i18n="sport_type_cycling">🚴 Cycling</button>
-                    <button type="button" class="ai-brain-tab" data-sport-quick-type="swimming" onclick="selectSportQuickType('swimming')" data-i18n="sport_type_swimming">🏊 Swimming</button>
-                    <button type="button" class="ai-brain-tab" data-sport-quick-type="custom" onclick="selectSportQuickType('custom')" data-i18n="sport_type_custom">✨ Other</button>
+                    <button type="button" class="ai-brain-tab active" data-sport-quick-type="running" onclick="selectSportQuickType('running')"><span class="sport-type-star" data-sport-star="running" aria-hidden="true"></span><span data-i18n="sport_type_running">Running</span></button>
+                    <button type="button" class="ai-brain-tab" data-sport-quick-type="cycling" onclick="selectSportQuickType('cycling')"><span class="sport-type-star" data-sport-star="cycling" aria-hidden="true"></span><span data-i18n="sport_type_cycling">Cycling</span></button>
+                    <button type="button" class="ai-brain-tab" data-sport-quick-type="swimming" onclick="selectSportQuickType('swimming')"><span class="sport-type-star" data-sport-star="swimming" aria-hidden="true"></span><span data-i18n="sport_type_swimming">Swimming</span></button>
+                    <button type="button" class="ai-brain-tab" data-sport-quick-type="custom" onclick="selectSportQuickType('custom')" data-i18n="sport_type_custom">Other</button>
                 </div>
                 <input type="text" id="sport-quick-custom-type-input" class="hidden" style="margin-top: 10px;" data-i18n-placeholder="sport_custom_type_placeholder" placeholder="What sport? (e.g. Yoga, Tennis)">
                 <div class="preset-manager-grid" style="margin-top: 10px;">
@@ -4403,13 +4403,13 @@
 
     </div>
 
-    <script src="i18n.js?v=469"></script>
-    <script src="app.js?v=601"></script>
+    <script src="i18n.js?v=470"></script>
+    <script src="app.js?v=602"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
-    <script src="workouts.js?v=6"></script>
+    <script src="workouts.js?v=7"></script>
     <script src="new-me-data.js?v=12"></script>
     <script src="new-me.js?v=56"></script>
     <script src="new-me-challenges.js?v=6"></script>

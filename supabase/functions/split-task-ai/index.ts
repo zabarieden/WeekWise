@@ -29,7 +29,8 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
-const PREMIUM_SMART_SPLIT_MONTHLY_LIMIT = 5;
+// 30 בחודש (היה 5 - לפי ההמלצה שאושרה 2026-10-13: "קמצני" מול שאר כלי ה-AI, ועדיין זול)
+const PREMIUM_SMART_SPLIT_MONTHLY_LIMIT = 30;
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 

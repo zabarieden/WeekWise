@@ -12136,7 +12136,7 @@ function renderCustomSportTypeBubbles() {
         btn.type = 'button';
         btn.className = 'ai-brain-tab sport-type-custom-bubble';
         btn.setAttribute('data-sport-type', `custom_${item.id}`);
-        btn.innerHTML = `<span class="sport-type-bubble-label">${escapeHtmlForReport(item.name)}</span><span class="sport-type-bubble-delete" onclick="event.stopPropagation(); deleteCustomSportType('${item.id}')">×</span>`;
+        btn.innerHTML = `${typeof wkSportStar === 'function' ? wkSportStar('custom', item.name) : ''}<span class="sport-type-bubble-label">${escapeHtmlForReport(item.name)}</span><span class="sport-type-bubble-delete" onclick="event.stopPropagation(); deleteCustomSportType('${item.id}')">×</span>`;
         btn.addEventListener('click', (e) => { if (!e.target.closest('.sport-type-bubble-delete')) selectSportType(`custom_${item.id}`); });
         picker.appendChild(btn);
     });
@@ -12522,21 +12522,23 @@ async function renderSportHistory() {
         // באזורי זמן עם offset שלילי מ-UTC
         const formattedDate = formatSportDayLabel(row.session_date);
         const distancePart = (row.distance_km ? ` · ${Number(row.distance_km).toLocaleString()} ${t('sport_km_unit')}` : '')
-            + ` · 🔥 ~${sportSessionKcal(row).toLocaleString()} ${t('calories_unit')}`;
+            + ` · ~${sportSessionKcal(row).toLocaleString()} ${t('calories_unit')}`;
         const motivationPart = row.motivation ? `<span class="finance-history-note">${t('sport_history_motivation_prefix')} ${t(`sport_motivation_${row.motivation}`)}</span>` : '';
         const notesPart = row.notes ? `<span class="finance-history-note">${escapeHtmlForReport(row.notes)}</span>` : '';
         const photoPart = row.photo_url ? `<img src="${row.photo_url}" class="sport-history-thumb" alt="">` : '';
         // תג "מהרגל" - רק לרשומות ספורט היסטוריות שנרשמו אוטומטית ממסך ההרגלים
         // הישן (שהוסר) - מותנה בעצם קיום source_habit_id, לא בכך שההרגל עדיין קיים
-        const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
-        // 🏋️ אימון שסומן ✓ בטבלת האימונים - תג, והעצימות (קל / בינוני / קשה) והמקום שנשמרו איתו
+        const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">${t('habit_auto_logged_sport_badge')}</span>` : '';
+        // אימון שסומן ✓ בטבלת האימונים - תג, והעצימות (קל / בינוני / קשה) והמקום שנשמרו איתו
         const workoutBadge = row.source_workout_id ? `<span class="recurring-expense-source-tag">${t('workout_history_badge')}</span>` : '';
         const intensityPart = row.intensity ? `<span class="wk-int wk-int-${escapeHtmlForReport(row.intensity)}">${escapeHtmlForReport(t('workout_int_' + row.intensity))}</span>` : '';
-        const placePart = row.place && typeof wkPlaceLabel === 'function' ? `<span class="finance-history-note">📍 ${escapeHtmlForReport(wkPlaceLabel(row.place))}</span>` : '';
+        const placePart = row.place && typeof wkPlaceLabel === 'function' ? `<span class="finance-history-note">${escapeHtmlForReport(wkPlaceLabel(row.place))}</span>` : '';
+        // בלי אימוג'ים (כמו בטבלת האימונים): כוכב בצבע של סוג הספורט לפני השם
+        const typeStar = typeof wkSessionColor === 'function' ? wkStarSvg(wkSessionColor(row), 'wk-star-inline') : '';
         li.innerHTML = `
             ${photoPart}
             <div class="finance-history-main">
-                <span class="finance-history-category">${sportTypeLabel(row)}</span>
+                <span class="finance-history-category">${typeStar}${escapeHtmlForReport(sportTypeLabel(row))}</span>
                 <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
                 ${intensityPart}
                 ${placePart}
@@ -12546,12 +12548,15 @@ async function renderSportHistory() {
                 ${workoutBadge}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
-            <button type="button" class="btn-delete-slot" onclick="shareSportSession('${row.id}')">📤</button>
+            <button type="button" class="btn-delete-slot sport-share-btn" onclick="shareSportSession('${row.id}')" aria-label="${escapeHtmlForReport(t('share_picker_title'))}" title="${escapeHtmlForReport(t('share_picker_title'))}">${SPORT_SHARE_ICON}</button>
             <button type="button" class="btn-delete-slot" onclick="deleteSportSession('${row.id}')">✕</button>
         `;
         list.appendChild(li);
     });
 }
+
+// שיתוף / ייצוא - חץ שיוצא מהקופסה, מצויר (במקום 📤)
+const SPORT_SHARE_ICON = '<svg class="sport-share-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></g></svg>';
 
 async function deleteSportSession(id) {
     await supabaseClient.from('sport_sessions').delete().eq('id', id);

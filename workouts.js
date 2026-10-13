@@ -72,20 +72,33 @@ function wkDays(row) { return Array.isArray(row && row.days) ? row.days.map(Numb
 function wkKindInfo(row) { return WORKOUT_KINDS.find(k => k.k === (row && row.kind)) || null; }
 function wkIsRest(row) { return !!row && row.kind === 'rest'; }
 function wkHashColor(name) { let h = 0; for (const ch of String(name || '')) h = (h * 31 + ch.codePointAt(0)) >>> 0; return WORKOUT_CUSTOM_COLORS[h % WORKOUT_CUSTOM_COLORS.length]; }
+// "אחר" / סוג ספורט שמור: שם שהוא בעצם סוג מוכר ("יוגה בבוקר") מקבל את הצבע שלו, אחרת צבע קבוע לפי השם
+function wkNameColor(name) {
+    const info = WORKOUT_KINDS.find(k => k.k === wkGuessKind(name));
+    return info ? info.color : wkHashColor(name || '');
+}
 // הצבע של האימון (ליום מנוחה אין)
 function wkColor(row) {
     if (!row || wkIsRest(row)) return null;
     const info = wkKindInfo(row);
-    return info ? info.color : wkHashColor(row.custom_name || '');
+    return info ? info.color : wkNameColor(row.custom_name);
 }
 function wkCVar(row) { const c = wkColor(row); return c ? ` style="--wk-c:${c}"` : ''; }
 // אימון שנרשם השבוע (גם רישום רגיל, לא מהטבלה) - הכוכב שלו בצנצנת בצבע של הסוג
 function wkSessionColor(s) {
     const row = s.source_workout_id ? workoutPlan.find(w => w.id === s.source_workout_id) : null;
     if (row && !wkIsRest(row)) return wkColor(row);
-    const kind = s.sport_type && s.sport_type !== 'custom' ? s.sport_type : wkGuessKind(s.custom_type_name);
-    const info = WORKOUT_KINDS.find(k => k.k === kind);
-    return info ? info.color : wkHashColor(s.custom_type_name || s.sport_type || '');
+    const info = s.sport_type && s.sport_type !== 'custom' ? WORKOUT_KINDS.find(k => k.k === s.sport_type) : null;
+    return info ? info.color : wkNameColor(s.custom_type_name || s.sport_type || '');
+}
+// מסך הספורט ("רישום אימון", הסוגים השמורים, ההיסטוריה): אותו כוכב, באותו צבע כמו בטבלת האימונים
+function wkSportStar(sportType, customName) {
+    if (!sportType || sportType === 'custom' && !customName) return '';
+    return wkStarSvg(wkSessionColor({ sport_type: sportType, custom_type_name: customName || null }), 'wk-star-inline');
+}
+// הבועות הקבועות (ריצה / אופניים / שחייה) - הכוכב נכנס ל-<span data-sport-star> שליד התווית, כך שהחלפת שפה לא מוחקת אותו
+function wkFillSportStars(root) {
+    (root || document).querySelectorAll('[data-sport-star]').forEach(el => { el.innerHTML = wkSportStar(el.dataset.sportStar); });
 }
 // כוכב מעוגל עם ברק קטן - בציר הזמן, בכרטיס של היום, בלוח, בבחירת הסוג ובצ'יפ של היום שלי
 const WK_STAR_D = 'M12 3.2L14.53 9.32L21.13 9.83L16.09 14.13L17.64 20.57L12 17.1L6.36 20.57L7.91 14.13L2.87 9.83L9.47 9.32Z';
@@ -1000,7 +1013,7 @@ function renderWorkoutEditor() {
     const customOn = d.kind === 'custom' && !isSavedType(d.custom_name);
     const kindChips = [
         ...WORKOUT_KINDS.map(k => `<button type="button" class="ai-brain-tab${d.kind === k.k ? ' active' : ''}" data-wk-kind="${k.k}" aria-pressed="${d.kind === k.k}">${wkStarSvg(k.color, 'wk-star-inline')}${wkEsc(t('workout_kind_' + k.k))}</button>`),
-        ...savedTypes.map(s => `<button type="button" class="ai-brain-tab${d.kind === 'custom' && d.custom_name === s.name ? ' active' : ''}" data-wk-saved="${wkEsc(s.name)}" aria-pressed="${d.kind === 'custom' && d.custom_name === s.name}">${wkStarSvg(wkHashColor(s.name), 'wk-star-inline')}${wkEsc(s.name)}</button>`),
+        ...savedTypes.map(s => `<button type="button" class="ai-brain-tab${d.kind === 'custom' && d.custom_name === s.name ? ' active' : ''}" data-wk-saved="${wkEsc(s.name)}" aria-pressed="${d.kind === 'custom' && d.custom_name === s.name}">${wkStarSvg(wkNameColor(s.name), 'wk-star-inline')}${wkEsc(s.name)}</button>`),
         `<button type="button" class="ai-brain-tab${customOn ? ' active' : ''}" data-wk-kind="custom" aria-pressed="${customOn}">${wkEsc(t('workout_kind_custom'))}</button>`,
         `<button type="button" class="ai-brain-tab wk-kind-rest${rest ? ' active' : ''}" data-wk-kind="rest" aria-pressed="${rest}">${wkEsc(t('workout_kind_rest'))}</button>`,
     ].join('');
@@ -1636,3 +1649,7 @@ function renderWorkoutGcalBtn() {
     btn.setAttribute('aria-pressed', String(on));
     btn.innerHTML = `<span>${wkEsc(t('workout_gcal_btn'))}</span>${on ? WK_ICONS.check : ''}`;
 }
+
+// הכוכבים בבועות של "רישום אימון" וברישום המהיר - כשהדף מוכן (התווית בשפה היא span נפרד, כך שהחלפת שפה לא מוחקת אותם)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => wkFillSportStars());
+else wkFillSportStars();
