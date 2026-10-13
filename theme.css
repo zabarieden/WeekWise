@@ -73,6 +73,13 @@ html {
        על ה-input עצמו */
     color-scheme: dark;
 }
+/* מאז 2026-10-13 ("גם פה הכל אדום תשנה את זה"): הגליונות והזכוכית בכל ערכה כהה נצבעים מהצבע של הערכה עצמה -
+   עד עכשיו כל הערכות ירשו את היין של ערכת ברירת המחדל. :where שומר על אותה ספציפיות כמו :root, כך שכל ערכה
+   שמגדירה גליון משלה (וכל גרסת light-mode) עדיין גוברת. ערכת ברירת המחדל (בלי data-color-theme) לא משתנה */
+:root:where([data-color-theme]) {
+    --bg-sheet: color-mix(in srgb, var(--accent-purple) 12%, #0e0a14);
+    --bg-glass: color-mix(in srgb, color-mix(in srgb, var(--accent-purple) 14%, #110c18) 65%, transparent);
+}
 /* גודל האפליקציה (הגדרות > App Size): כמעט כל האפליקציה בנויה ב-rem, אז
    שינוי font-size של html מגדיל/מקטין הכול באופן יחסי בלי לגעת ברכיבים
    בנפרד. הערכים המקוריים (16/18/20px) היו קרובים מדי זה לזה - "קטן" בפועל
@@ -110,6 +117,8 @@ html[data-ui-scale="large"] { font-size: 22px; }
 [data-color-theme="bg_black"] {
     --bg-main: linear-gradient(135deg, #000000, #0d0d0d);
     --bg-row: rgba(255, 255, 255, 0.05);
+    --bg-glass: rgba(26, 26, 28, 0.7);
+    --bg-sheet: #121213;
     --border-color: rgba(255, 255, 255, 0.12);
     --accent-pink: #ff007f;
     --accent-purple: #a855f7;
@@ -130,6 +139,8 @@ html[data-ui-scale="large"] { font-size: 22px; }
 [data-color-theme="bg_dark_grey"] {
     --bg-main: linear-gradient(135deg, #1c1c1e, #29292b);
     --bg-row: rgba(255, 255, 255, 0.05);
+    --bg-glass: rgba(44, 44, 46, 0.7);
+    --bg-sheet: #232325;
     --border-color: rgba(255, 255, 255, 0.1);
     --accent-pink: #ff007f;
     --accent-purple: #a855f7;
@@ -1585,7 +1596,7 @@ html.high-contrast.light-mode {
     cursor: pointer;
     transition: var(--transition);
 }
-.color-filter-option.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.1); color: var(--accent-pink-text); }
+.color-filter-option.active { border-color: var(--accent-pink); background-color: color-mix(in srgb, var(--accent-pink) 10%, transparent); color: var(--accent-pink-text); }
 .color-filter-option:active { transform: scale(0.97); }
 /* עיגולי-צבע לבחירת צבע טקסט לפתק/משימה בודדים (ר' CENTER_ITEM_COLOR_PRESETS
    ב-app.js) - "ברירת מחדל" (חזרה לצבע הטקסט הרגיל של הנושא) הוא עיגול עם
@@ -2485,7 +2496,7 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
     display: flex;
     align-items: center;
     gap: 5px;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(255, 0, 127, 0.18));
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), color-mix(in srgb, var(--accent-pink) 18%, transparent));
     border: 1px solid rgba(245, 158, 11, 0.4);
     color: var(--accent-gold-text);
     font-size: 0.72rem;
@@ -2562,13 +2573,13 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 }
 #my-center-section {
     --tile-accent: var(--accent-pink);
-    --tile-glow-1: rgba(255, 0, 127, 0.5);
+    --tile-glow-1: color-mix(in srgb, var(--accent-pink) 50%, transparent);
     --tile-glow-2: rgba(168, 85, 247, 0.3);
 }
 #finance-section {
     --tile-accent: var(--accent-purple);
     --tile-glow-1: rgba(168, 85, 247, 0.5);
-    --tile-glow-2: rgba(255, 0, 127, 0.22);
+    --tile-glow-2: color-mix(in srgb, var(--accent-pink) 22%, transparent);
 }
 #nutrition-section {
     --tile-accent: #2dd4bf;
@@ -2738,9 +2749,9 @@ html[data-color-theme="cherry_blossom_garden"] .home-sky-scene .home-theme-patte
 .card.expanded .card-toggle-icon { transform: rotate(180deg); }
 h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary); }
 .btn-floating-add {
-    background-color: rgba(255, 0, 127, 0.08);
+    background-color: color-mix(in srgb, var(--accent-pink) 8%, transparent);
     color: var(--accent-pink-text);
-    border: 1px solid rgba(255, 0, 127, 0.25);
+    border: 1px solid color-mix(in srgb, var(--accent-pink) 25%, transparent);
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -2754,7 +2765,7 @@ h2 { font-size: 1.1rem; margin: 0; font-weight: 600; color: var(--text-primary);
     transition: var(--transition);
     z-index: 10;
 }
-.btn-floating-add:active { transform: scale(0.9); background-color: rgba(255, 0, 127, 0.2); }
+.btn-floating-add:active { transform: scale(0.9); background-color: color-mix(in srgb, var(--accent-pink) 20%, transparent); }
 /* עכבר לא יכול "לגלול" רצועה אופקית מוסתרת-פס-גלילה בלי מגע/עכבר-אופקי -
    שני חצים גלויים בשני הצדדים, שתמיד עובדים בלחיצה בלי קשר לדפדפן/התקן,
    לפי דיווח חוזר ("במחשב רואים עד חמישי וזהו") אחרי שניסיון עם גלגלת-עכבר
@@ -3912,7 +3923,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
 /* כפתור-כניסה שקט בתחתית מגירת "לימודים" ל"הפרויקטים שלי" - גבול מקווקו כדי
    שיהיה ברור שזו הזמנה לתכונה נפרדת, לא עוד שורה ברשימה שמעליו */
 .study-drawer-footer-link { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; padding: 10px 12px; background: transparent; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, color 0.2s; }
-.study-drawer-footer-link:hover { border-color: var(--accent-pink-text); border-style: solid; color: var(--text-primary); box-shadow: 0 0 14px var(--tile-glow-1, rgba(255, 0, 127, 0.5)), 0 0 22px var(--tile-glow-2, rgba(168, 85, 247, 0.3)); }
+.study-drawer-footer-link:hover { border-color: var(--accent-pink-text); border-style: solid; color: var(--text-primary); box-shadow: 0 0 14px var(--tile-glow-1, color-mix(in srgb, var(--accent-pink) 50%, transparent)), 0 0 22px var(--tile-glow-2, rgba(168, 85, 247, 0.3)); }
 .study-drawer-footer-link:active { transform: scale(0.98); }
 .study-drawer-footer-link-icon { font-size: 1rem; }
 /* כרטיסי פרויקט/מחברה - רשימת-תיקיות רגילה, לא דף-מחברת (זה רק לתוכן בפועל
@@ -4018,7 +4029,7 @@ html[dir="ltr"] .today-peek-content-panel.open { transform: translateX(0); }
     color: var(--text-primary); padding: 14px; font-size: 0.95rem; font-family: inherit;
     resize: vertical; outline: none; box-sizing: border-box; margin-bottom: 8px;
 }
-.notebook-page-text-content:focus { border-color: var(--accent-pink); box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+.notebook-page-text-content:focus { border-color: var(--accent-pink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent); }
 @media (min-width: 1024px) {
     .notebook-page-text-content { height: min(65vh, 640px); }
 }
@@ -4969,7 +4980,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     background-color: var(--bg-glass);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 0, 127, 0.22);
+    border: 1px solid color-mix(in srgb, var(--accent-pink) 22%, transparent);
     border-radius: 12px;
     padding: 7px 6px;
     text-align: center;
@@ -4992,16 +5003,16 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 35%, rgba(255, 0, 127, 0.28), rgba(168, 85, 247, 0.12));
-    box-shadow: 0 0 10px rgba(255, 0, 127, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent-pink) 28%, transparent), rgba(168, 85, 247, 0.12));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-pink) 30%, transparent), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 /* SortableJS מוסיף .sortable-ghost על הפריט המדומה בזמן גרירה מעל היעד -
    מדגישים את האזור עצמו כשמרחפים מעליו עם פריט נגרר, כולל הגדלה קלה */
 .note-triage-zone:has(.sortable-ghost) {
     border-color: var(--accent-pink);
-    background-color: rgba(255, 0, 127, 0.1);
+    background-color: color-mix(in srgb, var(--accent-pink) 10%, transparent);
     color: var(--accent-pink-text);
-    box-shadow: 0 0 20px rgba(255, 0, 127, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent-pink) 45%, transparent), inset 0 1px 1px rgba(255, 255, 255, 0.12);
     transform: scale(1.04);
 }
 .btn-delete-item { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; transition: var(--transition); z-index: 10;}
@@ -5100,7 +5111,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 #modal-language-picker { z-index: 3500; }
 /* border-radius מלא בכל הפינות (לא רק העליונות) + צל סימטרי - כרטיס
    צף במרכז המסך, לא "בוטום-שיט" צמוד לתחתית */
-.modal-sheet { background-color: var(--bg-sheet); border: 1px solid rgba(255, 0, 127, 0.2); width: 100%; max-width: 520px; border-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(40px); opacity: 0; transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.23s ease-out; max-height: 85vh; overflow-y: auto; overflow-x: hidden; position: relative; }
+.modal-sheet { background-color: var(--bg-sheet); border: 1px solid var(--border-color); width: 100%; max-width: 520px; border-radius: 20px; padding: 10px 20px 30px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); box-sizing: border-box; transform: translateY(40px); opacity: 0; transition: transform 0.23s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.23s ease-out; max-height: 85vh; overflow-y: auto; overflow-x: hidden; position: relative; }
 
 .recipe-scan-loading { display: flex; position: absolute; inset: 0; background-color: rgba(7, 6, 10, 0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-direction: column; align-items: center; justify-content: center; gap: 16px; border-radius: 20px; z-index: 50; }
 .recipe-scan-loading p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; font-weight: 500; }
@@ -5114,7 +5125,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .modal-pull-bar { width: 36px; height: 5px; background-color: rgba(255, 255, 255, 0.12); border-radius: 3px; }
 .modal-sheet h3 { margin: 0 0 15px 0; font-size: 1.05rem; font-weight: 600; text-align: center; color: var(--accent-pink-text); }
 /* כותרת "עוזר AI" זוהרת - ניאון סגול/ורוד, לפי בקשה מפורשת */
-.ai-brain-modal-title { text-shadow: 0 0 10px rgba(255, 0, 127, 0.65), 0 0 18px rgba(168, 85, 247, 0.5); }
+.ai-brain-modal-title { text-shadow: 0 0 10px color-mix(in srgb, var(--accent-pink) 65%, transparent), 0 0 18px rgba(168, 85, 247, 0.5); }
 .modal-subtitle { margin: -8px 0 14px 0; font-size: 0.75rem; color: var(--text-secondary); text-align: center; }
 
 .ai-brain-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
@@ -5381,7 +5392,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 }
 #center-item-input:focus, #study-item-input:focus, #project-item-input:focus, #notebook-item-input:focus, #contact-us-message:focus {
     border-color: var(--accent-pink);
-    box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent);
 }
 #glance-edit-task-title-input, #glance-edit-task-time-input { width: 100%; box-sizing: border-box; }
 #water-daily-goal-input, #calorie-daily-goal-input, #protein-daily-goal-input { width: 100%; box-sizing: border-box; }
@@ -5426,7 +5437,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .reminder-toast-text { font-size: 0.8rem; color: var(--text-secondary); word-break: break-word; }
 .reminder-toast-close { background: transparent; border: none; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer; padding: 2px; flex-shrink: 0; }
 
-.app-toast { position: absolute; bottom: -80px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(255, 0, 127, 0.22)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); z-index: 4500; opacity: 0; pointer-events: none; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; }
+.app-toast { position: absolute; bottom: -80px; left: 16px; right: 16px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), color-mix(in srgb, var(--accent-pink) 22%, transparent)); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); z-index: 4500; opacity: 0; pointer-events: none; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; }
 .app-toast.show { bottom: 90px; opacity: 1; }
 .app-toast.error { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-red) 28%, transparent), color-mix(in srgb, var(--accent-pink) 18%, transparent)); border-color: color-mix(in srgb, var(--accent-red) 40%, transparent); }
 
@@ -5494,7 +5505,7 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
     cursor: pointer;
     transition: var(--transition);
 }
-.language-select:focus, .language-select:hover { border-color: var(--accent-pink); box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+.language-select:focus, .language-select:hover { border-color: var(--accent-pink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent); }
 /* כפתור-טריגר לתפריט-נפתח מותאם (custom-select-trigger) - משתמש ב-.language-select
    הקיים לעיצוב הבסיסי (מסגרת/צבע/חץ), רק צריך לוודא שטקסט ארוך נחתך יפה
    כמו ב-<select> טבעי, ושהיישור/הצבע תמיד תואמים גם כשלא נבחר עדיין ערך */
@@ -5686,7 +5697,7 @@ html[dir="rtl"] .language-select { background-position: right 12px center; paddi
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at 50% 35%, rgba(255, 0, 127, 0.28), rgba(168, 85, 247, 0.12));
+    background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent-pink) 28%, transparent), rgba(168, 85, 247, 0.12));
     box-shadow: 0 0 8px rgba(168, 85, 247, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 .settings-category-label { flex: 1; text-align: start; font-size: 0.85rem; font-weight: 600; }
@@ -5799,7 +5810,7 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .monthly-calendar-cell .sortable-ghost { display: none !important; }
 .monthly-calendar-cell:has(.sortable-ghost) {
     border-color: var(--accent-pink);
-    background-color: rgba(255, 0, 127, 0.16);
+    background-color: color-mix(in srgb, var(--accent-pink) 16%, transparent);
     transform: scale(1.08);
 }
 .calendar-task-drag-handle { cursor: grab; color: var(--text-secondary); font-size: 0.95rem; padding: 0 2px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; flex-shrink: 0; }
@@ -5831,7 +5842,7 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
     margin-top: 12px;
     padding: 10px 12px;
     border-radius: 12px;
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.14), rgba(255, 0, 127, 0.08));
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.14), color-mix(in srgb, var(--accent-pink) 8%, transparent));
     border: 1px solid rgba(234, 179, 8, 0.3);
 }
 /* width/height+flex-center מפורש (לא רק font-size) כי לגליף האימוג'י 🏆
@@ -5892,7 +5903,7 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
     box-sizing: border-box;
 }
 .premium-tier-option.selected { border-color: var(--accent-purple); background-color: rgba(168, 85, 247, 0.1); box-shadow: 0 0 0 1px var(--accent-purple); }
-.premium-tier-option.featured { border-color: rgba(255, 0, 127, 0.3); }
+.premium-tier-option.featured { border-color: color-mix(in srgb, var(--accent-pink) 30%, transparent); }
 .premium-tier-option.featured.selected { border-color: var(--accent-pink); box-shadow: 0 0 0 1px var(--accent-pink); }
 .premium-tier-badge { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; font-size: 0.58rem; font-weight: 700; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
 .premium-tier-name { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
@@ -6027,7 +6038,7 @@ html.light-mode .settings-dev-title { color: #b7791f; }
 .quick-note-dest-mini:active { transform: scale(0.9); }
 button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); border: none; z-index: 10;}
 .btn-primary { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; width: 100%; }
-.btn-secondary { background-color: rgba(255, 255, 255, 0.02); color: var(--text-primary); border: 1px solid rgba(255, 0, 127, 0.1); width: 100%; }
+.btn-secondary { background-color: rgba(255, 255, 255, 0.02); color: var(--text-primary); border: 1px solid color-mix(in srgb, var(--accent-pink) 10%, transparent); width: 100%; }
 .btn-clear-specific { background-color: rgba(255, 255, 255, 0.03); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.04); }
 /* פעולות הרסניות (ביטול מנוי, מחיקת חשבון) - מודגשות באדום כדי לבלוט מכל
    שאר כפתורי ההגדרות הרגילים */
@@ -6199,7 +6210,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
     transition: var(--transition);
 }
 .language-picker-item:active { transform: scale(0.98); }
-.language-picker-item.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.08); }
+.language-picker-item.active { border-color: var(--accent-pink); background-color: color-mix(in srgb, var(--accent-pink) 8%, transparent); }
 .language-picker-item .language-picker-name { flex: 1 1 auto; }
 .language-picker-check { color: var(--accent-pink-text); font-weight: 700; }
 .language-no-results { color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 16px 0; }
@@ -6220,7 +6231,7 @@ button { font-family: inherit; font-weight: 600; border-radius: 10px; padding: 1
     cursor: pointer;
     transition: var(--transition);
 }
-.food-picker-unit-btn.active { border-color: var(--accent-pink); background-color: rgba(255, 0, 127, 0.1); color: var(--accent-pink-text); }
+.food-picker-unit-btn.active { border-color: var(--accent-pink); background-color: color-mix(in srgb, var(--accent-pink) 10%, transparent); color: var(--accent-pink-text); }
 .food-picker-unit-btn:active { transform: scale(0.96); }
 /* בורר מאכלים: שדה כמות + תווית יחידה (גרם/יחידות) לצד תצוגת קלוריות חיה */
 .food-picker-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
@@ -6243,7 +6254,7 @@ input[type="date"] {
     color-scheme: dark; /* מכריח את הדפדפן להציג את לוח השנה הנייטיבי בערכת נושא כהה */
     transition: var(--transition);
 }
-input[type="date"]:focus { border-color: var(--accent-pink) !important; box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.18); }
+input[type="date"]:focus { border-color: var(--accent-pink) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent); }
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(46%) sepia(84%) saturate(2661%) hue-rotate(295deg) brightness(100%) contrast(101%);
     opacity: 0.85;
@@ -8396,7 +8407,7 @@ html.light-mode .wx-stars { display: none; }
 .sr-talk-orb { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.7) 0 10%, transparent 11%), radial-gradient(circle at 30% 35%, #ff86c6, #8b4cf0 72%); box-shadow: 0 0 14px rgba(255, 79, 163, 0.45); }
 .sr-talk-orb.big { width: 64px; height: 64px; animation: srFloat 4s ease-in-out infinite; }
 .sr-talk-body { display: flex; flex-direction: column; gap: 9px; padding: 8px 16px 18px; overflow-y: auto; }
-.sr-msg { align-self: flex-end; max-width: 88%; padding: 10px 13px; border-radius: 18px; border-end-end-radius: 6px; background: rgba(255, 0, 127, 0.14); border: 1px solid rgba(255, 79, 163, 0.3); font-size: 0.92rem; line-height: 1.5; animation: srRowIn 0.35s both; }
+.sr-msg { align-self: flex-end; max-width: 88%; padding: 10px 13px; border-radius: 18px; border-end-end-radius: 6px; background: color-mix(in srgb, var(--accent-pink) 14%, transparent); border: 1px solid rgba(255, 79, 163, 0.3); font-size: 0.92rem; line-height: 1.5; animation: srRowIn 0.35s both; }
 .sr-msg:nth-child(2) { animation-delay: 0.35s; }
 .sr-scale { display: flex; justify-content: space-between; gap: 4px; direction: ltr; }
 .sr-scale button { flex: 1; min-width: 0; height: 40px; padding: 0; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.14); background: transparent; color: #c9c9ce; font: inherit; font-size: 0.85rem; cursor: pointer; }
@@ -10196,15 +10207,17 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 @media (prefers-reduced-motion: reduce) { html[data-quote-look="polaroid"] .sr-quote, html[data-quote-look="polaroid"] .sr-quote:nth-child(2n) { transform: none; } }
 
 /* ===== 🏋️ טבלת האימונים (2026-10-13, לפי בקשה מפורשת): האימון של היום בגדול (16) + ציר הזמן של השבוע (4), צ'יפ בהיום שלי
-   (ה2), טיימר, מטרה שבועית ורצף (workouts.js). צבע לכל סוג אימון (--wk-c), צבע לכל עצימות (--wk-i) - בלי אדום ===== */
-.wk-tone-cardio { --wk-c: #f472b6; }
-.wk-tone-walk { --wk-c: #fbbf24; }
-.wk-tone-water { --wk-c: #60a5fa; }
-.wk-tone-strength { --wk-c: #a78bfa; }
-.wk-tone-flex { --wk-c: #2dd4bf; }
-.wk-tone-custom { --wk-c: var(--accent-purple); }
-.wk-tone-rest { --wk-c: color-mix(in srgb, var(--text-secondary) 70%, transparent); }
-.wk-tone-none { --wk-c: var(--text-secondary); }
+   (ה2), טיימר, מטרה שבועית ורצף (workouts.js). צבע לכל סוג אימון (--wk-c, מגיע מ-workouts.js כ-style - כוכב בצבע לכל
+   סוג, בלי אימוג'ים), צבע לכל עצימות (--wk-i) - בלי אדום. יום מנוחה ו"אין אימון היום" - אפור ===== */
+.wk-row.is-rest, .wk-card.is-rest, .wk-today.is-rest { --wk-c: color-mix(in srgb, var(--text-secondary) 70%, transparent); }
+.wk-today.is-none { --wk-c: var(--text-secondary); }
+/* הכוכב של כל סוג אימון, ואייקוני SVG קטנים בצבע הטקסט (במקום תווים - תמיד במרכז הכפתור) */
+.wk-star { display: inline-block; flex: none; width: 1.1em; height: 1.1em; overflow: visible; }
+.wk-star-shape { fill: var(--wk-c); stroke: var(--wk-c); stroke-width: 2; stroke-linejoin: round; }
+.wk-star-shine { fill: #fff; opacity: 0.55; }
+.wk-star-inline { width: 1em; height: 1em; margin-inline-end: 6px; vertical-align: -0.14em; }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-star-shape { stroke: color-mix(in srgb, var(--wk-c) 70%, #000); stroke-width: 1.3; }
+.wk-ico { display: block; flex: none; width: 1em; height: 1em; }
 .wk-int-easy { --wk-i: #2dd4bf; }
 .wk-int-medium { --wk-i: #fbbf24; }
 .wk-int-hard { --wk-i: var(--accent-purple); }
@@ -10215,17 +10228,37 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 
 /* מטרה שבועית ורצף */
 .wk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
-.wk-goal { display: inline-flex; align-items: center; gap: 10px; padding: 4px 12px 4px 4px; padding-inline: 4px 12px; border: none; border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; cursor: pointer; }
+.wk-goal { display: inline-flex; align-items: center; gap: 12px; padding: 2px 12px 2px 2px; padding-inline: 2px 12px; border: none; border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; cursor: pointer; }
 .wk-goal:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
-.wk-ring { width: 40px; height: 40px; flex: none; }
-.wk-ring circle { fill: none; stroke-width: 3.6; }
-.wk-ring-bg { stroke: color-mix(in srgb, var(--text-primary) 13%, transparent); }
-.wk-ring-fg { stroke: var(--accent-purple); stroke-linecap: round; transition: stroke-dasharray 0.4s ease; }
-.wk-head.is-reached .wk-ring-fg { stroke: var(--accent-pink); }
+/* צנצנת הכוכבים: כל אימון שנרשם השבוע - כוכב בצבע שלו, מלמטה למעלה; המילוי עולה עד המטרה, ובמטרה - זוהרת עם נצנצים */
+.wk-jar { width: 52px; height: 66px; flex: none; overflow: visible; }
+.wk-jar-glass { fill: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.wk-jar-outline { fill: none; stroke: color-mix(in srgb, var(--text-primary) 52%, transparent); stroke-width: 1.7; stroke-linejoin: round; }
+.wk-jar-shine { fill: none; stroke: #fff; stroke-opacity: 0.35; stroke-width: 2.4; stroke-linecap: round; }
+.wk-jar-level { fill: color-mix(in srgb, var(--accent-purple) 20%, transparent); }
+.wk-jar-lid { fill: #e2b45c; }
+.wk-jar-lid-band { fill: #c9973f; }
+.wk-jar-star .wk-star-shape { stroke-width: 1.6; }
+.wk-jar.is-full { filter: drop-shadow(0 0 7px color-mix(in srgb, #fbbf24 55%, transparent)); }
+.wk-jar.is-full .wk-jar-level { fill: color-mix(in srgb, var(--accent-purple) 30%, transparent); }
+.wk-jar-spark { fill: #fde68a; transform-box: fill-box; transform-origin: center; animation: wkJarSpark 2.4s ease-in-out infinite; }
+.wk-jar-spark.is-small { animation-delay: 1.1s; }
+/* כוכב חדש נופל מצוואר הצנצנת לערימה, עם קפיצה קטנה */
+.wk-jar-star.is-new { animation: wkStarDrop 0.85s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+@keyframes wkStarDrop { 0% { transform: translateY(-58px); opacity: 0; } 18% { opacity: 1; } 70% { transform: translateY(1.5px); } 85% { transform: translateY(-1.2px); } 100% { transform: none; } }
+@keyframes wkJarSpark { 0%, 100% { opacity: 0.35; transform: scale(0.75); } 50% { opacity: 1; transform: scale(1.1); } }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-jar-glass { fill: rgba(255, 255, 255, 0.55); }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-jar-outline { stroke: color-mix(in srgb, var(--text-primary) 38%, transparent); }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-jar-shine { stroke-opacity: 0.85; }
+@media (prefers-reduced-motion: reduce) { .wk-jar-star.is-new, .wk-jar-spark { animation: none; } }
 .wk-goal-num { display: flex; flex-direction: column; line-height: 1.15; text-align: start; }
 .wk-goal-num b { font-size: 1.08rem; font-variant-numeric: tabular-nums; }
 .wk-goal-num small { font-size: 0.74rem; color: var(--text-secondary); font-weight: 700; }
-.wk-streak { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: color-mix(in srgb, #fbbf24 16%, transparent); border: 1px solid color-mix(in srgb, #fbbf24 38%, transparent); font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.wk-streak .wk-jar-mini { width: 17px; height: 17px; }
+.wk-jar-mini-lid { fill: #e2b45c; }
+.wk-jar-mini-body { fill: color-mix(in srgb, var(--accent-purple) 55%, transparent); stroke: color-mix(in srgb, var(--text-primary) 55%, transparent); stroke-width: 1.2; }
+.wk-jar-mini-star { fill: #fde68a; }
+.wk-streak { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; background: color-mix(in srgb, var(--accent-purple) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent-purple) 34%, transparent); font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 .wk-panel { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: 16px; background: var(--bg-row); border: 1px solid var(--border-color); }
 .wk-panel-title { font-size: 0.92rem; }
@@ -10240,30 +10273,37 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 /* תוכניות מוכנות (גם במצב הריק) */
 .wk-ready-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wk-ready { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 11px 12px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
-.wk-ready-icon { font-size: 1.3rem; }
+.wk-ready-stars { display: inline-flex; gap: 3px; margin-bottom: 2px; }
+.wk-ready-stars .wk-star { width: 18px; height: 18px; }
 .wk-ready b { font-size: 0.88rem; line-height: 1.25; }
 .wk-ready small { color: var(--text-secondary); font-size: 0.74rem; font-weight: 700; }
 .wk-ready:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 .wk-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 0 2px; text-align: center; }
-.wk-empty-icon { font-size: 2.1rem; line-height: 1; }
+.wk-empty-icon { color: var(--accent-purple-text); }
+.wk-empty-icon .wk-ico { width: 44px; height: 44px; }
 .wk-empty-title { font-size: 1.05rem; }
 .wk-empty .wk-ready-list { width: 100%; }
 
 /* האימון של היום - בגדול */
 .wk-today { --wk-c: var(--accent-purple); display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "when when" "icon name" "icon meta" "ex ex" "list list" "actions actions"; column-gap: 14px; row-gap: 4px; align-items: center; margin: 0 0 14px; padding: 16px; border-radius: 22px; background: linear-gradient(140deg, color-mix(in srgb, var(--wk-c) 26%, var(--bg-row)), color-mix(in srgb, var(--wk-c) 7%, var(--bg-row))); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wk-c) 34%, transparent), 0 14px 28px -20px color-mix(in srgb, var(--wk-c) 70%, #000); }
 .wk-today-when { grid-area: when; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em; }
-.wk-today-icon { grid-area: icon; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 18px; background: color-mix(in srgb, var(--wk-c) 24%, transparent); font-size: 2rem; line-height: 1; }
+.wk-today-icon { grid-area: icon; display: grid; place-items: center; width: 54px; height: 54px; }
+.wk-today-icon .wk-star { width: 48px; height: 48px; filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--wk-c) 45%, transparent)); }
+.wk-today-next .wk-star-inline { margin-inline-end: 4px; }
 .wk-today-name { grid-area: name; font-size: 1.28rem; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
 .wk-today-meta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 0.86rem; font-weight: 600; }
 .wk-today-next { grid-column: 1 / -1; color: var(--text-secondary); font-size: 0.86rem; font-weight: 600; }
-.wk-today.is-none, .wk-today.is-rest { grid-template-areas: "when when" "icon name"; }
+.wk-today.is-rest { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "name"; }
 .wk-today.is-none { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "name" "next"; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px var(--border-color); }
 .wk-today.is-none .wk-today-name { font-size: 1.02rem; }
 .wk-today.is-rest .wk-today-name { font-size: 1.1rem; color: var(--text-secondary); }
 .wk-today-actions { grid-area: actions; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.wk-go { flex: 1; min-height: 46px; padding: 0 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; font: inherit; font-size: 0.98rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px -12px var(--accent-purple); }
-.wk-check-big { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--wk-c) 80%, var(--text-primary)); background: transparent; color: var(--text-primary); font: inherit; font-size: 1.25rem; font-weight: 900; line-height: 1; cursor: pointer; }
-.wk-done-state { flex: 1; min-height: 46px; padding: 0 16px; border: none; border-radius: 999px; background: color-mix(in srgb, var(--wk-c) 26%, transparent); color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; }
+.wk-go { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; font: inherit; font-size: 0.98rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px -12px var(--accent-purple); }
+.wk-check-big { flex: none; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--wk-c) 80%, var(--text-primary)); background: transparent; color: var(--text-primary); font: inherit; font-size: 1.25rem; font-weight: 900; line-height: 1; cursor: pointer; }
+.wk-done-state { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 16px; border: none; border-radius: 999px; background: color-mix(in srgb, var(--wk-c) 26%, transparent); color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; }
+.wk-go .wk-ico { width: 15px; height: 15px; }
+.wk-check-big .wk-ico { width: 22px; height: 22px; }
+.wk-done-state .wk-ico { width: 18px; height: 18px; }
 .wk-go:focus-visible, .wk-check-big:focus-visible, .wk-done-state:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 .wk-ex-toggle { grid-area: ex; justify-self: start; margin-top: 8px; padding: 5px 11px; border: 1px solid color-mix(in srgb, var(--wk-c) 40%, var(--border-color)); border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
 .wk-ex-list { grid-area: list; list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -10272,21 +10312,25 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-ex-list input:checked + span { opacity: 0.6; text-decoration: line-through; }
 .wk-ex-sr { margin-inline-start: auto; color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* ⏱ הטיימר */
+/* הטיימר */
 .wk-timer { flex: 1; display: flex; align-items: center; gap: 8px; }
 .wk-timer-time { min-width: 76px; font-size: 1.55rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 .wk-timer.is-paused .wk-timer-time { opacity: 0.55; }
 .wk-timer .wk-go { min-height: 42px; }
-.wk-timer-btn { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
-.wk-timer-cancel { flex: none; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.wk-timer-btn { flex: none; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
+.wk-timer-cancel { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.wk-timer-btn .wk-ico { width: 18px; height: 18px; }
+.wk-timer-cancel .wk-ico { width: 16px; height: 16px; }
 .wk-timer-btn:focus-visible, .wk-timer-cancel:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 
 /* עצימות */
 .wk-int { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--wk-i) 20%, transparent); border: 1px solid color-mix(in srgb, var(--wk-i) 48%, transparent); color: var(--text-primary); font-size: 0.72rem; font-weight: 800; line-height: 1.5; width: max-content; }
 .finance-history-main .wk-int { margin-top: 2px; }
 .wk-int-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--wk-i); }
+.wk-meta-rem { display: inline-flex; align-items: center; gap: 3px; }
+.wk-meta-rem .wk-ico { width: 0.95em; height: 0.95em; }
 
-/* ציר הזמן של השבוע: קו לאורך הימים, נקודה בצבע של כל אימון, ✓ על מה שנעשה. היום מסומן בזהב */
+/* ציר הזמן של השבוע: קו לאורך הימים, כוכב בצבע של כל אימון (מנוחה / יום ריק - נקודה ריקה), ✓ על מה שנעשה. היום מסומן בזהב */
 .wk-line { position: relative; list-style: none; margin: 0 0 12px; padding: 0; }
 .wk-line::before { content: ''; position: absolute; top: 14px; bottom: 14px; inset-inline-start: 40px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--text-primary) 12%, transparent); }
 .wk-row.is-empty { --wk-c: color-mix(in srgb, var(--text-primary) 22%, transparent); }
@@ -10297,6 +10341,10 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-dot { position: relative; z-index: 1; justify-self: center; width: 12px; height: 12px; border-radius: 50%; background: var(--wk-c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--wk-c) 22%, transparent); }
 .wk-row.is-empty .wk-dot { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text-primary) 22%, transparent); }
 .wk-row.is-today .wk-dot { box-shadow: 0 0 0 3px #fbbf24; }
+.wk-row.is-rest .wk-dot { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text-primary) 28%, transparent); }
+.wk-node { position: relative; z-index: 1; justify-self: center; display: grid; place-items: center; width: 22px; height: 22px; }
+.wk-node .wk-star { width: 19px; height: 19px; }
+.wk-row.is-done .wk-node .wk-star { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--wk-c) 70%, transparent)); }
 .wk-time { color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
 .wk-row-main { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; padding: 0 8px; border: none; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; text-align: start; cursor: pointer; }
 .wk-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -10306,6 +10354,7 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-row.is-rest .wk-row-name { color: var(--text-secondary); }
 .wk-row-check { justify-self: center; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--wk-c) 75%, var(--text-secondary)); background: transparent; color: #1b1030; font: inherit; font-size: 0.85rem; font-weight: 900; line-height: 1; cursor: pointer; }
 .wk-row-check[aria-pressed="true"] { border-color: var(--wk-c); background: var(--wk-c); }
+.wk-row-check .wk-ico { width: 15px; height: 15px; }
 .wk-row-check:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .wk-add-btn { width: 100%; }
 
@@ -10318,28 +10367,35 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-field input { width: 100%; box-sizing: border-box; }
 .wk-time-row { display: flex; align-items: center; gap: 6px; }
 .wk-time-row .nm-time-btn { flex: 1; }
-.wk-time-clear { flex: none; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.wk-time-clear { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.wk-time-clear .wk-ico, .wk-ex-del .wk-ico { width: 15px; height: 15px; }
+.wk-kinds .ai-brain-tab { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.wk-kinds .wk-star-inline { width: 15px; height: 15px; margin: 0; }
 .wk-int-pick.active { border-color: var(--wk-i); background: color-mix(in srgb, var(--wk-i) 24%, transparent); color: var(--text-primary); }
 .wk-ex-edit { display: flex; flex-direction: column; gap: 6px; }
 .wk-ex-row { display: grid; grid-template-columns: minmax(0, 1fr) 62px 72px 30px; gap: 6px; align-items: center; }
 .wk-ex-row input { width: 100%; box-sizing: border-box; margin: 0; }
-.wk-ex-del { width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.wk-ex-del { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
 .wk-ex-add { align-self: flex-start; padding: 7px 12px; border-radius: 999px; border: 1px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 .wk-editor-sheet textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 14px; }
 .wk-editor-actions { margin-top: 16px; }
 .wk-today-sheet .wk-today { margin-top: 6px; }
 .wk-open-table { width: 100%; margin-top: 2px; }
 
-/* 🏋️ הצ'יפ בהיום שלי - ליד המים, באותו גובה */
+/* הצ'יפ בהיום שלי - ליד המים, באותו גובה: הכוכב של האימון והשעה (✓ כשנעשה, נקודה פועמת כשהטיימר רץ) */
 .myday-workout-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 38%, transparent); background: color-mix(in srgb, var(--accent-purple) 13%, transparent); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer; box-sizing: border-box; }
-.myday-workout-chip .myday-workout-time { font-variant-numeric: tabular-nums; }
+.myday-workout-chip .myday-workout-time { display: inline-flex; align-items: center; font-variant-numeric: tabular-nums; }
+.myday-workout-chip .wk-star { width: 17px; height: 17px; }
+.myday-workout-chip .wk-ico { width: 15px; height: 15px; }
+.wk-live-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: wkLiveDot 1.6s ease-out infinite; }
+@keyframes wkLiveDot { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); } 100% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); } }
+@media (prefers-reduced-motion: reduce) { .wk-live-dot { animation: none; } }
 .myday-workout-chip.is-done { border-color: color-mix(in srgb, #2dd4bf 45%, transparent); background: color-mix(in srgb, #2dd4bf 15%, transparent); }
 .myday-workout-chip.is-timing { border-color: transparent; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; }
 .myday-workout-chip:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (max-width: 380px) { .wk-row { grid-template-columns: 26px 20px 44px minmax(0, 1fr) 32px; } .wk-line::before { inset-inline-start: 35px; } }
-@media (prefers-reduced-motion: reduce) { .wk-ring-fg { transition: none; } }
 
-/* 🗂️ הלוח השבועי של האימונים (13): עמודה לכל יום, גוררים אימון ליום אחר (workouts.js wkBoardHtml / wkDragArm) */
+/* הלוח השבועי של האימונים (13): עמודה לכל יום, גוררים אימון ליום אחר (workouts.js wkBoardHtml / wkDragArm) */
 .wk-board { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 10px; margin: 0 -2px 12px; overscroll-behavior-x: contain; scrollbar-width: thin; }
 .wk-col { flex: 0 0 112px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; min-height: 190px; padding: 8px 6px; border-radius: 16px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px var(--border-color); transition: background 0.15s ease, box-shadow 0.15s ease; }
 .wk-col.is-today { background: color-mix(in srgb, #fbbf24 10%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #fbbf24 60%, transparent); }
@@ -10351,7 +10407,9 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-card-name { font-size: 0.8rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; padding-inline-end: 16px; }
 .wk-card-meta { color: var(--text-secondary); font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .wk-card-done { position: absolute; top: 6px; inset-inline-end: 6px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--wk-c); color: #1b1030; font-size: 0.66rem; font-weight: 900; }
-.wk-card-routine { position: absolute; bottom: 5px; inset-inline-end: 6px; font-size: 0.68rem; opacity: 0.8; }
+.wk-card-routine { position: absolute; bottom: 6px; inset-inline-end: 7px; color: var(--text-secondary); }
+.wk-card-routine .wk-ico { width: 12px; height: 12px; }
+.wk-card-name .wk-star-inline { margin-inline-end: 4px; }
 .wk-card.is-rest { border: 1px dashed color-mix(in srgb, var(--text-primary) 25%, transparent); background: transparent; color: var(--text-secondary); }
 .wk-card.is-dragging { opacity: 0.35; }
 .wk-ghost { position: fixed; z-index: 2147483000; margin: 0; pointer-events: none; transform: rotate(-3deg) scale(1.04); box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.55); opacity: 0.95; }
@@ -10361,10 +10419,31 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .wk-card:focus-visible, .wk-col-add:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 .wk-routine-row { margin-top: 12px; }
 .routine-item-to-workout { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 10px; padding: 10px 14px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 50%, var(--border-color)); background: color-mix(in srgb, var(--accent-purple) 8%, transparent); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+.routine-item-to-workout .wk-ico { width: 18px; height: 18px; color: var(--accent-purple-text); }
 .routine-item-to-workout:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .wk-col { transition: none; } .wk-ghost { transform: none; } }
 .wk-card-check { position: absolute; top: 5px; inset-inline-end: 5px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--wk-c) 75%, var(--text-secondary)); background: transparent; color: #1b1030; font: inherit; font-size: 0.66rem; font-weight: 900; line-height: 1; cursor: pointer; }
 .wk-card-check[aria-pressed="true"] { border-color: var(--wk-c); background: var(--wk-c); }
+.wk-card-check .wk-ico { width: 12px; height: 12px; }
 .wk-card-check:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .share-picker-image { display: block; width: 100%; max-height: 46vh; object-fit: contain; margin: 0 0 12px; border-radius: 18px; box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.55); }
 .wk-more-btn.is-on { border-color: var(--accent-purple); box-shadow: 0 0 0 1.5px var(--accent-purple); }
+.wk-more-btn .wk-ico { width: 14px; height: 14px; }
+
+/* שדות בחלון האימון - באותו סגנון כמו שאר השדות באפליקציה (זכוכית, מסגרת עדינה, פינות עגולות), בלי חיצי המספרים של הדפדפן */
+.wk-editor-sheet :is(.wk-custom-name, .wk-place-other, .wk-rem-custom, .wk-ex-row input, textarea) { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--border-color); border-radius: 14px; background-color: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.wk-editor-sheet .wk-ex-row input { padding: 9px 10px; border-radius: 12px; }
+.wk-editor-sheet textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
+.wk-editor-sheet :is(input, textarea)::placeholder { color: var(--text-secondary); opacity: 0.85; }
+.wk-editor-sheet :is(.wk-custom-name, .wk-place-other, .wk-rem-custom, .wk-ex-row input, textarea):focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple) 22%, transparent); }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-editor-sheet :is(.wk-custom-name, .wk-place-other, .wk-rem-custom, .wk-ex-row input, textarea) { background-color: rgba(0, 0, 0, 0.05); }
+.wk-editor-sheet input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.wk-editor-sheet input[type="number"]::-webkit-inner-spin-button, .wk-editor-sheet input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* המשך: גלולה עם − ו-+ (צעדים של 5 דקות), באותו מראה כמו כפתור השעה שלידה */
+.wk-dur { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 40px; padding: 3px; border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--accent-pink) 45%, var(--border-color)); background: color-mix(in srgb, var(--accent-pink) 8%, var(--bg-row)); direction: ltr; box-sizing: border-box; }
+.wk-dur:focus-within { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); }
+.wk-dur-step { flex: none; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: none; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 9%, transparent); color: var(--text-primary); font: inherit; font-size: 1.15rem; font-weight: 800; line-height: 1; cursor: pointer; }
+.wk-dur-step:active { transform: scale(0.94); }
+.wk-dur-step:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 1px; }
+.wk-editor-sheet .wk-dur input { flex: 1; width: auto; min-width: 0; margin: 0; padding: 0; border: none; background: transparent; box-shadow: none; color: var(--text-primary); font: inherit; font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; outline: none; }
+@media (prefers-reduced-motion: reduce) { .wk-dur-step:active { transform: none; } }

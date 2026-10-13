@@ -9497,6 +9497,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'sport_workout_plan', category: 'sport_water' },
+    { id: 'sport_workout_jar', category: 'sport_water' },
     { id: 'sport_workout_today', category: 'sport_water' },
     { id: 'sport_workout_board', category: 'sport_water' },
     { id: 'sport_workout_share', category: 'sport_water' },
@@ -12529,7 +12530,7 @@ async function renderSportHistory() {
         // הישן (שהוסר) - מותנה בעצם קיום source_habit_id, לא בכך שההרגל עדיין קיים
         const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
         // 🏋️ אימון שסומן ✓ בטבלת האימונים - תג, והעצימות (קל / בינוני / קשה) והמקום שנשמרו איתו
-        const workoutBadge = row.source_workout_id ? `<span class="recurring-expense-source-tag">📋 ${t('workout_history_badge')}</span>` : '';
+        const workoutBadge = row.source_workout_id ? `<span class="recurring-expense-source-tag">${t('workout_history_badge')}</span>` : '';
         const intensityPart = row.intensity ? `<span class="wk-int wk-int-${escapeHtmlForReport(row.intensity)}">${escapeHtmlForReport(t('workout_int_' + row.intensity))}</span>` : '';
         const placePart = row.place && typeof wkPlaceLabel === 'function' ? `<span class="finance-history-note">📍 ${escapeHtmlForReport(wkPlaceLabel(row.place))}</span>` : '';
         li.innerHTML = `
