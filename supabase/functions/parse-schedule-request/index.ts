@@ -6,7 +6,7 @@
 // recurring event as {day_of_week, time, task_title}. The frontend then finds an open
 // slot (or adds a new row) for each one in the existing weekly_schedule accordion.
 //
-// Unlike the recipe scanner/text parser, this is gated on user_premium.is_premium alone -
+// Unlike the recipe scanner/text parser, this is gated on Premium alone (user_premium.is_premium, or new_me_purchased since New Me includes Premium) -
 // there's no free-tier fallback count, since the whole feature is a premium perk.
 //
 // Usage limit: a monthly quota of PREMIUM_SCHEDULE_AI_MONTHLY_LIMIT requests
@@ -67,10 +67,11 @@ Deno.serve(async (req) => {
 
         const { data: premiumRow } = await supabase
             .from("user_premium")
-            .select("is_premium")
+            .select("is_premium, new_me_purchased")
             .eq("user_id", userId)
             .maybeSingle();
-        const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
+        // New Me includes Premium (her decision 2026-10-13: "buying New Me unlocks Premium")
+        const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium || !!premiumRow?.new_me_purchased;
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")

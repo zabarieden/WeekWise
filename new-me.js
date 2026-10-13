@@ -720,6 +720,7 @@ function nmRenderSales(root) {
                 <div class="nm-hero-eyebrow">${NM_ICON_SVG} New Me</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
                 <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
+                <span class="nm-sales-premium">${nmEsc(t('nm_sales_premium'))}</span>
             </div>
             ${nmTrailerHtml()}
             ${nmPlanOptionsHtml()}
@@ -1037,6 +1038,8 @@ async function handleNewMeCheckoutReturn() {
         }
     }
     if (hasNewMe) {
+        // New Me כולל את הפרימיום - טוענים מחדש את כל הסטטוס, כדי שגם הפרימיום ייפתח מיד
+        if (typeof loadPremiumStatus === 'function') await loadPremiumStatus();
         updateNewMeShortcut();
         renderNewMe();
         if (typeof celebrateNewMeUnlock === 'function') celebrateNewMeUnlock(); else showAppToast(t('nm_unlocked_toast'));

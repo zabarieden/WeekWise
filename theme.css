@@ -5959,6 +5959,7 @@ html[dir="ltr"] .switch input:checked + .switch-slider::before { transform: tran
 .nm-extras .nm-add-food:active { transform: scale(0.98); }
 .nm-extra-row .nm-extra-x { margin-inline-start: 8px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; line-height: 1; cursor: pointer; }
 .premium-unlock-content p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.78); margin: 0 0 20px 0; line-height: 1.5; }
+.premium-unlock-content p.newme-unlock-premium { margin-top: -12px; color: #f7dfa0; font-weight: 800; }
 /* 💎 חגיגת New Me - אותו מבנה כמו של הפרימיום, בצבעי New Me */
 .newme-unlock-ceremony { background: radial-gradient(circle at 50% 40%, #3b1450, #07040c 72%); }
 .newme-unlock-icon { filter: drop-shadow(0 0 16px rgba(255, 79, 163, 0.7)); }
@@ -7068,6 +7069,8 @@ button.nm-letter-card { cursor: pointer; }
 .nm-sales { display: flex; flex-direction: column; gap: 14px; }
 .nm-sales .nm-hero-title { margin: 8px 0 6px; font-size: 1.45rem; }
 .nm-hero-sub { margin: 0 auto 16px; max-width: 34ch; font-size: .92rem; line-height: 1.55; opacity: .93; }
+/* New Me כולל את כל הפרימיום - תווית זהב קטנה מתחת לכותרת של עמוד המכירה */
+.nm-sales-premium { display: inline-block; margin: -6px auto 14px; padding: 5px 14px; border-radius: 999px; background: linear-gradient(135deg, #f7dfa0, #c9973f); color: #3a230d; font-size: .82rem; font-weight: 800; box-shadow: 0 8px 18px -12px rgba(201, 151, 63, 0.9); }
 .nm-buy-btn { font-size: 1.02rem; }
 .nm-sales-trust { margin: -4px 0 0; text-align: center; font-size: .78rem; color: var(--text-secondary); }
 .nm-sales-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--border-color); background: var(--bg-row); }

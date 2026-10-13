@@ -8011,6 +8011,8 @@ let selectedPremiumTier = 'semiannual';
 let premiumTierFromDb = null;
 let isDevSuperuserAccount = false;
 let hasNewMe = false;
+// הפרימיום מגיע רק מ-New Me (בלי מנוי פרימיום משלו) - בהגדרות: "כלול ב-New Me", בלי "שינוי מסלול" / "ביטול"
+let premiumFromNewMe = false;
 // פרטי המסלול של New Me (לכל החיים / חודשי, סטטוס המנוי ותאריכים) - לתצוגה בהגדרות של New Me
 let newMeBilling = null;
 // --- 🔧 מתג המפתחת (חשבון הפיתוח בלבד): לנעול ולראות בדיוק מה רואה מי שעוד לא קנה, ו"לקנות" כדי לראות איך
@@ -8113,6 +8115,13 @@ function setNmDevLockedPreview(on) {
     // נעילה באמצע השאלון של "הקנייה" - הוא נסגר איתה
     if (on && typeof nmQuiz !== 'undefined' && nmQuiz && nmQuiz.fresh) { nmQuiz = null; nmTimes = null; }
     hasNewMe = !on;
+    // New Me כולל את הפרימיום - "קנייה" / נעילה של New Me במתג פותחת / סוגרת גם אותו (אלא אם הפרימיום פתוח בעצמו)
+    const premiumLocked = devPremiumLockedPreview();
+    isPremiumUser = isRealPremiumUser = !premiumLocked || hasNewMe;
+    premiumFromNewMe = premiumLocked && hasNewMe;
+    updateHomePremiumBadgeVisibility();
+    updateThemeSwatchLocks();
+    renderSettingsSubscriptionSection();
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
     openNewMe('home');
@@ -8141,11 +8150,13 @@ async function loadPremiumStatus() {
         // 🔧 מתג המפתחת: פרימיום ו-New Me יכולים להיות "נעולים", כמו אצל מי שרק נכנס/ה (devSimToggle)
         devSimFirstRun();
         const premiumLocked = devPremiumLockedPreview();
-        isPremiumUser = !premiumLocked;
-        isRealPremiumUser = !premiumLocked;
+        hasNewMe = !nmDevLockedPreview();
+        // New Me כולל את הפרימיום (ר' למטה) - גם במתג של מנהלת המוצר: "קנייה" של New Me פותחת גם את הפרימיום
+        isPremiumUser = !premiumLocked || hasNewMe;
+        isRealPremiumUser = isPremiumUser;
+        premiumFromNewMe = premiumLocked && hasNewMe;
         isDevSuperuserAccount = true;
         premiumTierFromDb = null;
-        hasNewMe = !nmDevLockedPreview();
         newMeBilling = null;
         if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
         updateHomePremiumBadgeVisibility();
@@ -8157,12 +8168,15 @@ async function loadPremiumStatus() {
     // select('*') ולא select('is_premium') בכוונה: כך שאם עמודת tier עוד לא
     // קיימת ב-user_premium, השאילתה לא נכשלת (data.tier פשוט יהיה undefined)
     const { data } = await supabaseClient.from('user_premium').select('*').eq('user_id', currentUserId).maybeSingle();
-    isRealPremiumUser = !!(data && data.is_premium);
+    // New Me (לכל החיים או מנוי חודשי) = פרימיום + משחק ההתקדמות: קנייה של New Me פותחת גם את כל הפרימיום (לפי בקשה
+    // מפורשת, 2026-10-13: "קניה של הNEW ME תפתח את הפרימיום"; גם פונקציות ה-AI בשרת בודקות את new_me_purchased).
+    // בכיוון ההפוך לא: פרימיום ותקופת הניסיון לא פותחים את New Me
+    hasNewMe = !!(data && data.new_me_purchased);
+    premiumFromNewMe = hasNewMe && !(data && data.is_premium);
+    isRealPremiumUser = !!(data && data.is_premium) || hasNewMe;
     isPremiumUser = isRealPremiumUser || isInFreeTrial();
     isDevSuperuserAccount = false;
     premiumTierFromDb = (data && data.tier) || null;
-    // New Me נמכר בנפרד (לכל החיים או מנוי חודשי) - לא נפתח ע"י פרימיום ולא ע"י תקופת הניסיון
-    hasNewMe = !!(data && data.new_me_purchased);
     newMeBilling = data ? { plan: data.new_me_plan || (data.new_me_purchased ? 'lifetime' : null), status: data.new_me_subscription_status || null, renewsAt: data.new_me_renews_at || null, endsAt: data.new_me_ends_at || null } : null;
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
     updateHomePremiumBadgeVisibility();
@@ -8198,7 +8212,12 @@ function renderSettingsSubscriptionSection() {
     if (!section || !statusEl || !changeBtn || !cancelBtn) return;
     if (!isRealPremiumUser) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
-    if (isDevSuperuserAccount) {
+    if (premiumFromNewMe) {
+        // הפרימיום כלול ב-New Me - את המנוי (אם חודשי) מנהלים בהגדרות של New Me
+        statusEl.textContent = t('settings_sub_status_newme');
+        changeBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+    } else if (isDevSuperuserAccount) {
         statusEl.textContent = t('settings_sub_status_dev');
         changeBtn.classList.add('hidden');
         cancelBtn.classList.add('hidden');

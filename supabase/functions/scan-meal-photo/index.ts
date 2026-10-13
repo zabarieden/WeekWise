@@ -5,7 +5,7 @@
 // {items: [{food_name, calories}, ...]}. The frontend drops each item straight into the
 // next empty meal-tracker row for the selected date and saves - no manual typing.
 //
-// Gated on user_premium.is_premium alone (like parse-schedule-request) - no free-tier
+// Gated on Premium alone - is_premium or new_me_purchased (like parse-schedule-request) - no free-tier
 // fallback, since reliable food identification + calorie estimation needs real vision
 // understanding a heuristic can't approximate.
 //
@@ -66,10 +66,11 @@ Deno.serve(async (req) => {
 
         const { data: premiumRow } = await supabase
             .from("user_premium")
-            .select("is_premium")
+            .select("is_premium, new_me_purchased")
             .eq("user_id", userId)
             .maybeSingle();
-        const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium;
+        // New Me includes Premium (her decision 2026-10-13: "buying New Me unlocks Premium")
+        const isPremium = DEV_SUPERUSER_EMAILS.includes(userEmail) || !!premiumRow?.is_premium || !!premiumRow?.new_me_purchased;
 
         const { data: usageRow } = await supabase
             .from("user_ai_usage")
