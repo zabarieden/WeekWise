@@ -1358,7 +1358,7 @@ async function logFoodQuickAddViaAI(text) {
 
         if (attempt.status === 'limit') {
             if (attempt.scope === 'free_lifetime') {
-                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_food_text')), 'error');
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_food_text')), 'error');
                 openPremiumUpgradeModal();
             } else {
                 showAppToast(t('quick_add_ai_limit_toast'), 'error');
@@ -5012,7 +5012,7 @@ async function fetchExistingScheduleItems() {
 async function parseScheduleWithAI() {
     // לא פרימיום עדיין מקבלת עד 5 שימושים חינמיים לכל החיים - ר' loadAiUsage
     if (!isPremiumUser && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
-        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_schedule_ai')), 'error');
         openPremiumUpgradeModal();
         return;
     }
@@ -5051,7 +5051,7 @@ async function parseScheduleWithAI() {
             // משלמת עליה
             if (attempt.status === 'limit') {
                 if (attempt.scope === 'free_lifetime') {
-                    showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+                    showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_schedule_ai')), 'error');
                     openPremiumUpgradeModal();
                 } else {
                     showAppToast(t('ai_monthly_limit_reached'), 'error');
@@ -5277,7 +5277,7 @@ let pendingSmartSplitTask = null;
 function openSmartSplitModal() {
     // לא פרימיום עדיין מקבלת עד 5 שימושים חינמיים לכל החיים - ר' loadAiUsage
     if (!isPremiumUser && cachedSmartSplitLifetimeUsed >= SMART_SPLIT_FREE_LIFETIME_LIMIT) {
-        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_smart_split')), 'error');
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_smart_split')), 'error');
         openPremiumUpgradeModal();
         return;
     }
@@ -5337,7 +5337,7 @@ async function submitSmartSplitClarify() {
         if (attempt.status === 'premium_required') { closeModal('modal-smart-split-clarify'); openPremiumUpgradeModal(); return; }
         if (attempt.status === 'limit') {
             if (attempt.scope === 'free_lifetime') {
-                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_smart_split')), 'error');
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_smart_split')), 'error');
                 closeModal('modal-smart-split-clarify');
                 openPremiumUpgradeModal();
             } else {
@@ -9503,6 +9503,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_workout_share', category: 'sport_water' },
     { id: 'sport_workout_reminder', category: 'sport_water' },
     { id: 'sport_workout_gcal', category: 'sport_water' },
+    { id: 'sport_workout_ai', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
@@ -18059,7 +18060,7 @@ async function routineReleaseDays(days, exceptId) {
 // או כמה, כשיש שגרות שונות לימים שונים - עם ימים ופריטים בשעות עגולות. אותה מכסה כמו לו"ז ה-AI ---
 async function requestRoutineFromAI(text, days, btn) {
     if (!isPremiumUser && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
-        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_schedule_ai')), 'error');
         openPremiumUpgradeModal();
         return null;
     }
@@ -18079,7 +18080,7 @@ async function requestRoutineFromAI(text, days, btn) {
         const result = await res.json().catch(() => ({}));
         if (result.error === 'limit_reached') {
             if (result.scope === 'free_lifetime') {
-                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_schedule_ai')), 'error');
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_schedule_ai')), 'error');
                 openPremiumUpgradeModal();
             } else showAppToast(t('routine_ai_limit'), 'error');
             return null;
@@ -19087,7 +19088,7 @@ async function buildTableWithAI() {
     // openTablesSection לשמור על השער היחיד
     if (!isPremiumUser) { closeModal('modal-ai-brain'); openPremiumUpgradeModal(); return; }
     if (!isPremiumUser && cachedTableAiLifetimeUsed >= TABLE_AI_FREE_LIFETIME_LIMIT) {
-        showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_table_ai')), 'error');
+        showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_table_ai')), 'error');
         openPremiumUpgradeModal();
         return;
     }
@@ -19111,7 +19112,7 @@ async function buildTableWithAI() {
 
         if (attempt.status === 'limit') {
             if (attempt.scope === 'free_lifetime') {
-                showAppToast(t('ai_free_lifetime_limit_toast').replace('{feature}', t('feature_name_table_ai')), 'error');
+                showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_table_ai')), 'error');
                 openPremiumUpgradeModal();
             } else {
                 showAppToast(t('ai_monthly_limit_reached'), 'error');

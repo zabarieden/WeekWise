@@ -114,6 +114,7 @@ const WK_ICONS = {
     x: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M7 7l10 10M17 7L7 17"/></svg>',
     bell: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></g></svg>',
     routine: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></g></svg>',
+    spark: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M11 2.5c.7 4.6 2.6 6.5 7.2 7.2-4.6.7-6.5 2.6-7.2 7.2-.7-4.6-2.6-6.5-7.2-7.2C8.4 9 10.3 7.1 11 2.5z"/><path d="M18.5 14.5c.35 2.1 1.2 2.95 3.3 3.3-2.1.35-2.95 1.2-3.3 3.3-.35-2.1-1.2-2.95-3.3-3.3 2.1-.35 2.95-1.2 3.3-3.3z" opacity="0.75"/></g></svg>',
     // "אימוג'י אחד של כח או משקולות להכל" - משקולת אחת, בצבע של הערכה
     dumbbell: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="5" y="6" width="3.2" height="12" rx="1.3"/><rect x="15.8" y="6" width="3.2" height="12" rx="1.3"/><rect x="1.8" y="8.6" width="2.6" height="6.8" rx="1.1"/><rect x="19.6" y="8.6" width="2.6" height="6.8" rx="1.1"/><rect x="8" y="10.9" width="8" height="2.2" rx="1.1"/></g></svg>',
 };
@@ -367,7 +368,7 @@ function wkReadyChipsHtml() {
         // במקום אייקון: הכוכבים של סוגי האימונים שבתוכנית
         const kinds = [...new Set(p.items.filter(it => it.kind !== 'rest').map(it => it.kind))];
         return `<button type="button" class="wk-ready" data-wk-ready="${p.key}"><span class="wk-ready-stars" aria-hidden="true">${kinds.map(k => wkStarSvg(wkKindInfo({ kind: k }).color)).join('')}</span><b>${wkEsc(t('workout_ready_' + p.key))}</b><small>${wkEsc(t('workout_ready_days').replace('{n}', days))}</small></button>`;
-    }).join('');
+    }).join('') + `<button type="button" class="wk-ready wk-ready-ai" data-wk-ai-open><span class="wk-ready-spark" aria-hidden="true">${WK_ICONS.spark}</span><b>${wkEsc(t('workout_ai_btn'))}</b></button>`;
 }
 
 function wkMetaLine(w, minutesOverride) {
@@ -490,6 +491,7 @@ function wkBindCard(body) {
     body.querySelectorAll('[data-wk-timer-cancel]').forEach(b => b.addEventListener('click', cancelWorkoutTimer));
     body.querySelectorAll('[data-wk-panel]').forEach(b => b.addEventListener('click', () => toggleWorkoutPanel(b.dataset.wkPanel)));
     body.querySelectorAll('[data-wk-ready]').forEach(b => b.addEventListener('click', () => chooseWorkoutReadyPlan(b.dataset.wkReady)));
+    body.querySelectorAll('[data-wk-ai-open]').forEach(b => b.addEventListener('click', openWorkoutAi));
     body.querySelectorAll('[data-wk-goal-kind]').forEach(b => b.addEventListener('click', () => setWorkoutGoal(b.dataset.wkGoalKind, null)));
     body.querySelectorAll('[data-wk-goal-step]').forEach(b => b.addEventListener('click', () => {
         const step = Number(b.dataset.wkGoalStep) * (workoutGoal.kind === 'minutes' ? 15 : 1);
@@ -957,15 +959,18 @@ function chooseWorkoutReadyPlan(key) {
     if (workoutPlan.length) showDangerConfirm(t('workout_ready_replace_title'), t('workout_ready_replace_confirm'), () => applyWorkoutReadyPlan(plan));
     else applyWorkoutReadyPlan(plan);
 }
+// מחיקת הטבלה הנוכחית לפני תוכנית חדשה (מוכנה או עם AI): קודם האירועים שלה מ-Google Calendar והפריטים שלה בשגרה
+async function wkClearPlan() {
+    if (!workoutPlan.length) return;
+    if (workoutGcalOn() && workoutPlan.some(w => w.google_event_id)) await callWorkoutGcal('off');
+    const routineIds = workoutPlan.map(w => w.routine_item_id).filter(Boolean);
+    if (routineIds.length) await supabaseClient.from('routine_items').delete().in('id', routineIds).eq('user_id', currentUserId);
+    await supabaseClient.from('workout_plan').delete().eq('user_id', currentUserId);
+    if (routineIds.length) wkAfterRoutineChange();
+}
 async function applyWorkoutReadyPlan(plan) {
     if (!supabaseClient || !currentUserId) return;
-    if (workoutPlan.length && workoutGcalOn() && workoutPlan.some(w => w.google_event_id)) await callWorkoutGcal('off');
-    if (workoutPlan.length) {
-        const routineIds = workoutPlan.map(w => w.routine_item_id).filter(Boolean);
-        if (routineIds.length) await supabaseClient.from('routine_items').delete().in('id', routineIds).eq('user_id', currentUserId);
-        await supabaseClient.from('workout_plan').delete().eq('user_id', currentUserId);
-        if (routineIds.length) wkAfterRoutineChange();
-    }
+    await wkClearPlan();
     const rows = plan.items.map((it, i) => ({
         user_id: currentUserId, kind: it.kind, custom_name: null, days: it.days, time: null,
         duration_minutes: it.duration || null, intensity: it.intensity || null, place: null,
@@ -975,6 +980,247 @@ async function applyWorkoutReadyPlan(plan) {
     const { error } = await supabaseClient.from('workout_plan').insert(rows);
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
     workoutPanel = null;
+    showAppToast(t('workout_ready_applied'));
+    await loadWorkoutPlan();
+    await loadWorkoutStreak();
+    renderWorkoutPlan();
+    renderMyDayWorkoutChip();
+    scheduleWorkoutGcalSync();
+}
+
+// ---------- תוכנית עם AI (ת9). הבחירות שלה: נגיעות ושורה חופשית אחת ("עדיף תוצאה מדויקת"), ומכסה משותפת עם הלו"ז
+// והשגרה עם AI ("אני חושבת משותפת עדיף"): 5 פעמים חינם, 60 בחודש בפרימיום. workout-plan-ai מחזיר שבוע בצורה של הטבלה;
+// לפני שמשהו נשמר - תצוגה מקדימה: להכניס לטבלה (במקום / בנוסף), הצעה אחרת (עד 3 פעמים), לשנות תשובות ----------
+const WK_AI_FREQ = [2, 3, 4, 5];
+const WK_AI_WHEN = ['morning', 'noon', 'evening'];
+const WK_AI_LEVELS = ['beginner', 'intermediate', 'advanced'];
+const WK_AI_GOALS = ['fitness', 'strength', 'weight_loss', 'flexibility'];
+const WK_AI_MAX_AGAIN = 3;
+const WK_AI_EN_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+let wkAi = null;    // { step: 'form' | 'loading' | 'preview' | 'choose', answers, other: {field: bool}, plan, history: [], again }
+
+function wkAiSavedAnswers() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('weekwise_workout_ai_answers') || 'null'); } catch {}
+    return Object.assign({ per_week: 3, when: '', where: '', level: 'beginner', goal: 'fitness', note: '' }, saved && typeof saved === 'object' ? saved : {});
+}
+function openWorkoutAi() {
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    const answers = wkAiSavedAnswers();
+    // ערך שמור שאינו אחת הבועות - "אחר" עם הטקסט שלו
+    const other = {
+        per_week: !WK_AI_FREQ.includes(Number(answers.per_week)),
+        when: !!answers.when && !WK_AI_WHEN.includes(answers.when),
+        where: !!answers.where && !WORKOUT_PLACES.includes(answers.where),
+        goal: !!answers.goal && !WK_AI_GOALS.includes(answers.goal),
+    };
+    if (!WK_AI_LEVELS.includes(answers.level)) answers.level = 'beginner';
+    wkAi = { step: 'form', answers, other, plan: null, history: [], again: 0 };
+    renderWorkoutAi();
+    openModal('modal-workout-ai');
+}
+// הטקסטים שבשדות נשמרים לפני כל ציור מחדש
+function wkAiCapture() {
+    const box = document.getElementById('workout-ai-body');
+    if (!box || !wkAi || wkAi.step !== 'form') return;
+    const val = id => { const el = box.querySelector('#' + id); return el ? el.value.trim() : ''; };
+    if (wkAi.other.per_week) wkAi.answers.per_week = val('wk-ai-freq-other');
+    if (wkAi.other.when) wkAi.answers.when = val('wk-ai-when-other');
+    if (wkAi.other.where) wkAi.answers.where = val('wk-ai-where-other');
+    if (wkAi.other.goal) wkAi.answers.goal = val('wk-ai-goal-other');
+    wkAi.answers.note = val('wk-ai-note');
+}
+function wkAiChips(field, values, labelOf, opts = {}) {
+    const a = wkAi.answers, o = wkAi.other;
+    const chips = values.map(v => {
+        const on = !o[field] && String(a[field]) === String(v);
+        return `<button type="button" class="color-filter-option${on ? ' active' : ''}" data-wk-ai-field="${field}" data-v="${wkEsc(v)}" aria-pressed="${on}">${wkEsc(labelOf(v))}</button>`;
+    });
+    if (opts.other) chips.push(`<button type="button" class="color-filter-option${o[field] ? ' active' : ''}" data-wk-ai-field="${field}" data-v="__other" aria-pressed="${!!o[field]}">${wkEsc(t('workout_ai_other'))}</button>`);
+    return `<div class="color-filter-picker wk-ai-chips" role="group">${chips.join('')}</div>`;
+}
+function wkAiFormHtml() {
+    const a = wkAi.answers, o = wkAi.other;
+    const otherInput = (field, id, type, ph, extra = '') => `<input type="${type}" id="${id}" class="wk-ai-other${o[field] ? '' : ' hidden'}" ${extra} value="${wkEsc(o[field] ? a[field] : '')}" placeholder="${wkEsc(ph)}" aria-label="${wkEsc(ph)}">`;
+    return `
+        <span class="wk-label">${wkEsc(t('workout_ai_freq_label'))}</span>
+        ${wkAiChips('per_week', WK_AI_FREQ, v => String(v), { other: true })}
+        ${otherInput('per_week', 'wk-ai-freq-other', 'number', t('workout_ai_freq_ph'), 'inputmode="numeric" min="1" max="7"')}
+        <span class="wk-label">${wkEsc(t('workout_ai_when_label'))}</span>
+        ${wkAiChips('when', WK_AI_WHEN, v => t('workout_ai_when_' + v), { other: true })}
+        ${otherInput('when', 'wk-ai-when-other', 'text', t('workout_ai_when_ph'), 'maxlength="60" autocomplete="off"')}
+        <span class="wk-label">${wkEsc(t('workout_place_label'))}</span>
+        ${wkAiChips('where', WORKOUT_PLACES, v => t('workout_place_' + v), { other: true })}
+        ${otherInput('where', 'wk-ai-where-other', 'text', t('workout_place_ph'), 'maxlength="40" autocomplete="off"')}
+        <span class="wk-label">${wkEsc(t('workout_ai_level_label'))}</span>
+        ${wkAiChips('level', WK_AI_LEVELS, v => t('workout_ai_level_' + v))}
+        <span class="wk-label">${wkEsc(t('workout_ai_goal_label'))}</span>
+        ${wkAiChips('goal', WK_AI_GOALS, v => t('workout_ai_goal_' + v), { other: true })}
+        ${otherInput('goal', 'wk-ai-goal-other', 'text', t('workout_ai_goal_ph'), 'maxlength="80" autocomplete="off"')}
+        <textarea id="wk-ai-note" rows="2" maxlength="300" placeholder="${wkEsc(t('workout_ai_note_ph'))}" aria-label="${wkEsc(t('workout_ai_note_ph'))}">${wkEsc(a.note || '')}</textarea>
+        <div class="action-buttons-wrap wk-ai-actions">
+            <button type="button" class="btn-primary" data-wk-ai-go>${wkEsc(t('workout_ai_go'))}</button>
+            <button type="button" class="btn-clear-specific" onclick="closeModal('modal-workout-ai')">${wkEsc(t('close_btn'))}</button>
+        </div>`;
+}
+// התצוגה המקדימה: אותו ציר זמן כמו בכרטיס (כוכב בצבע, שעה, שם · משך, עצימות), בלי לגעת בטבלה
+function wkAiWeekHtml(plan) {
+    const rows = wkWeekDates().map(date => {
+        const dayIdx = wkDayIdxOf(date);
+        const dayLabel = wkEsc(t(weekdayShortKeys[dayIdx]));
+        const items = plan.workouts.filter(w => (w.days || []).includes(dayIdx)).sort(wkSortByTime);
+        if (!items.length) return `<li class="wk-row is-empty"><b class="wk-day">${dayLabel}</b><span class="wk-dot" aria-hidden="true"></span><span class="wk-time"></span><span class="wk-row-main wk-ai-main"></span><span></span></li>`;
+        return items.map((w, i) => {
+            const rest = wkIsRest(w);
+            const ex = Array.isArray(w.exercises) ? w.exercises.length : 0;
+            return `
+                <li class="wk-row${rest ? ' is-rest' : ''}"${wkCVar(w)}>
+                    <b class="wk-day">${i === 0 ? dayLabel : ''}</b>
+                    ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkStar(w)}</span>`}
+                    <span class="wk-time">${w.time && !rest ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : ''}</span>
+                    <span class="wk-row-main wk-ai-main">
+                        <span class="wk-row-name">${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}${ex ? ` <small class="wk-ai-ex">· ${wkEsc(t('workout_ex_count').replace('{n}', ex))}</small>` : ''}</span>
+                        ${!rest && w.intensity ? `<span class="wk-int-dot wk-int-${w.intensity}" title="${wkEsc(t('workout_int_' + w.intensity))}"></span>` : ''}
+                    </span>
+                    <span></span>
+                </li>`;
+        }).join('');
+    }).join('');
+    return `<ol class="wk-line wk-ai-line" aria-label="${wkEsc(t('workout_ai_title'))}">${rows}</ol>`;
+}
+function renderWorkoutAi() {
+    const box = document.getElementById('workout-ai-body');
+    if (!box || !wkAi) return;
+    if (wkAi.step === 'form') {
+        box.innerHTML = wkAiFormHtml();
+    } else if (wkAi.step === 'loading') {
+        box.innerHTML = `<div class="wk-ai-loading" role="status"><div class="chasing-dots-loader" aria-hidden="true"><span></span><span></span><span></span></div><p>${wkEsc(t('workout_ai_working'))}</p></div>`;
+    } else {
+        const plan = wkAi.plan;
+        const choose = wkAi.step === 'choose';
+        box.innerHTML = `
+            ${plan.note ? `<p class="wk-ai-note">${wkEsc(plan.note)}</p>` : ''}
+            ${wkAiWeekHtml(plan)}
+            <div class="action-buttons-wrap wk-ai-actions is-stacked">${choose ? `
+                <button type="button" class="btn-primary" data-wk-ai-apply="replace">${wkEsc(t('workout_ai_replace'))}</button>
+                <button type="button" class="btn-secondary" data-wk-ai-apply="add">${wkEsc(t('workout_ai_add'))}</button>
+                <button type="button" class="btn-clear-specific" data-wk-ai-back>${wkEsc(t('cancel_btn'))}</button>` : `
+                <button type="button" class="btn-primary" data-wk-ai-insert>${wkEsc(t('workout_ai_apply'))}</button>
+                <button type="button" class="btn-secondary" data-wk-ai-again${wkAi.again >= WK_AI_MAX_AGAIN ? ' disabled' : ''}>${wkEsc(t('workout_ai_again'))}</button>
+                <button type="button" class="btn-clear-specific" data-wk-ai-edit>${wkEsc(t('workout_ai_edit'))}</button>`}
+            </div>`;
+    }
+    wkBindAi(box);
+}
+function wkBindAi(box) {
+    box.querySelectorAll('[data-wk-ai-field]').forEach(b => b.addEventListener('click', () => {
+        wkAiCapture();
+        const field = b.dataset.wkAiField, v = b.dataset.v;
+        if (v === '__other') {
+            wkAi.other[field] = true;
+            wkAi.answers[field] = '';
+        } else {
+            const same = !wkAi.other[field] && String(wkAi.answers[field]) === v;
+            wkAi.other[field] = false;
+            // מתי / מקום אפשר גם לא לבחור (= גמיש); השאר - תמיד אחת
+            wkAi.answers[field] = same && (field === 'when' || field === 'where') ? '' : (field === 'per_week' ? Number(v) : v);
+        }
+        renderWorkoutAi();
+        const map = { per_week: 'wk-ai-freq-other', when: 'wk-ai-when-other', where: 'wk-ai-where-other', goal: 'wk-ai-goal-other' };
+        if (v === '__other' && map[field]) { const inp = document.getElementById(map[field]); if (inp) inp.focus(); }
+    }));
+    const go = box.querySelector('[data-wk-ai-go]');
+    if (go) go.addEventListener('click', () => { wkAiCapture(); wkAiBuild(false); });
+    const again = box.querySelector('[data-wk-ai-again]');
+    if (again) again.addEventListener('click', () => { if (wkAi.again < WK_AI_MAX_AGAIN) wkAiBuild(true); });
+    const edit = box.querySelector('[data-wk-ai-edit]');
+    if (edit) edit.addEventListener('click', () => { wkAi.step = 'form'; renderWorkoutAi(); });
+    const insert = box.querySelector('[data-wk-ai-insert]');
+    if (insert) insert.addEventListener('click', () => { if (workoutPlan.length) { wkAi.step = 'choose'; renderWorkoutAi(); } else wkAiApply('replace'); });
+    box.querySelectorAll('[data-wk-ai-apply]').forEach(b => b.addEventListener('click', () => wkAiApply(b.dataset.wkAiApply)));
+    const back = box.querySelector('[data-wk-ai-back]');
+    if (back) back.addEventListener('click', () => { wkAi.step = 'preview'; renderWorkoutAi(); });
+}
+// מה שנשלח: הבועה שנבחרה, או מה שנכתב ב"אחר"
+function wkAiPayload() {
+    const a = wkAi.answers;
+    const perWeek = Math.max(1, Math.min(7, Math.round(Number(a.per_week) || 3)));
+    return { per_week: perWeek, when: a.when || '', where: a.where || '', level: a.level, goal: a.goal || 'fitness', note: a.note || '' };
+}
+// לבקשה של "הצעה אחרת": תקציר קצר של מה שכבר הוצע, כדי שהשבוע הבא יהיה שונה באמת
+function wkAiSummary(plan) {
+    return plan.workouts.filter(w => !wkIsRest(w)).map(w => `${w.kind === 'custom' ? w.custom_name : w.kind} on ${(w.days || []).map(d => WK_AI_EN_DAYS[d]).join('+')}${Array.isArray(w.exercises) && w.exercises.length ? ` (${w.exercises.map(e => e.name).join(', ')})` : ''}`).join(' · ');
+}
+function wkAiLimitFree() {
+    const limit = typeof SCHEDULE_AI_FREE_LIFETIME_LIMIT !== 'undefined' ? SCHEDULE_AI_FREE_LIFETIME_LIMIT : 5;
+    showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', String(limit)).replace('{feature}', t('workout_ai_title')), 'error');
+    if (typeof openPremiumUpgradeModal === 'function') openPremiumUpgradeModal();
+}
+async function wkAiBuild(again) {
+    if (!wkAi || wkAi.step === 'loading') return;
+    if (typeof isPremiumUser !== 'undefined' && !isPremiumUser && typeof cachedScheduleAiLifetimeUsed !== 'undefined'
+        && typeof SCHEDULE_AI_FREE_LIFETIME_LIMIT !== 'undefined' && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) { wkAiLimitFree(); return; }
+    const payload = wkAiPayload();
+    try { localStorage.setItem('weekwise_workout_ai_answers', JSON.stringify(wkAi.answers)); } catch {}
+    const backTo = wkAi.step;
+    wkAi.step = 'loading';
+    renderWorkoutAi();
+    const out = await wkAiRequest(payload, again ? wkAi.history : []);
+    if (!wkAi) return;
+    if (!out) { wkAi.step = backTo === 'loading' ? 'form' : backTo; renderWorkoutAi(); return; }
+    if (again) wkAi.again++;
+    else { wkAi.history = []; wkAi.again = 0; }
+    wkAi.plan = { workouts: out.workouts, note: out.note || '' };
+    wkAi.history.push(wkAiSummary(wkAi.plan));
+    wkAi.step = 'preview';
+    renderWorkoutAi();
+}
+async function wkAiRequest(answers, avoid) {
+    const token = await getSupabaseAccessToken();
+    if (!token) { showAppToast(t('error_not_connected'), 'error'); return null; }
+    try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/workout-plan-ai`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ lang: currentLang, answers, avoid }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (out.error === 'limit_reached') {
+            if (out.scope === 'free_lifetime') wkAiLimitFree();
+            else showAppToast(t('routine_ai_limit'), 'error');
+            return null;
+        }
+        if (!res.ok || out.ok !== true || !Array.isArray(out.workouts) || !out.workouts.some(w => w && w.kind !== 'rest')) { showAppToast(t('workout_ai_failed'), 'error'); return null; }
+        if (typeof isPremiumUser !== 'undefined' && !isPremiumUser && typeof cachedScheduleAiLifetimeUsed !== 'undefined') cachedScheduleAiLifetimeUsed++;
+        return out;
+    } catch {
+        showAppToast(t('workout_ai_failed'), 'error');
+        return null;
+    }
+}
+// להכניס לטבלה: במקום הטבלה (כמו תוכנית מוכנה), או בנוסף לה - אז ימי המנוחה של ההצעה רק בימים שעוד ריקים
+async function wkAiApply(mode) {
+    if (!wkAi || !wkAi.plan || !supabaseClient || !currentUserId) return;
+    const replace = mode !== 'add' || !workoutPlan.length;
+    if (replace) await wkClearPlan();
+    const taken = new Set(replace ? [] : workoutPlan.flatMap(w => wkDays(w)));
+    const base = replace ? 0 : workoutPlan.length;
+    const rows = wkAi.plan.workouts.map(w => {
+        const days = wkIsRest(w) ? (w.days || []).filter(d => !taken.has(d)) : (w.days || []);
+        return days.length ? {
+            user_id: currentUserId, kind: w.kind, custom_name: w.kind === 'custom' ? (w.custom_name || null) : null, days,
+            time: wkIsRest(w) ? null : (w.time || null), duration_minutes: wkIsRest(w) ? null : (w.duration_minutes || null),
+            intensity: wkIsRest(w) ? null : (w.intensity || null), place: wkIsRest(w) ? null : (w.place || null),
+            exercises: Array.isArray(w.exercises) && w.exercises.length && wkHasExercises(w) ? w.exercises.map(e => ({ name: e.name, sets: e.sets || '', reps: e.reps || '' })) : null,
+            notes: null,
+        } : null;
+    }).filter(Boolean).map((r, i) => ({ ...r, sort_order: base + i }));
+    const { error } = await supabaseClient.from('workout_plan').insert(rows);
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    workoutPanel = null;
+    wkAi = null;
+    closeModal('modal-workout-ai');
     showAppToast(t('workout_ready_applied'));
     await loadWorkoutPlan();
     await loadWorkoutStreak();

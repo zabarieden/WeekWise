@@ -10460,3 +10460,27 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .sport-export-btn .sport-share-ico { width: 17px; height: 17px; }
 /* שורת "סוג ספורט חדש" נפתחת רק מה-"+" (ה-display:flex של .preset-manager-grid דרס את התכונה hidden והיא נראתה תמיד) */
 .preset-manager-grid[hidden] { display: none; }
+
+/* תוכנית עם AI (ת9, workouts.js openWorkoutAi): אותן בועות ושדות כמו בחלון האימון; התצוגה המקדימה באותו ציר זמן כמו בכרטיס */
+.wk-ai-sheet #workout-ai-body > .wk-label:first-child { margin-top: 2px; }
+.wk-ai-sheet :is(.wk-ai-other, textarea) { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 11px 12px; border: 1px solid var(--border-color); border-radius: 14px; background-color: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.wk-ai-sheet textarea { display: block; min-height: 64px; margin-top: 14px; resize: vertical; line-height: 1.5; }
+.wk-ai-sheet :is(.wk-ai-other, textarea)::placeholder { color: var(--text-secondary); opacity: 0.85; }
+.wk-ai-sheet :is(.wk-ai-other, textarea):focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple) 22%, transparent); }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .wk-ai-sheet :is(.wk-ai-other, textarea) { background-color: rgba(0, 0, 0, 0.05); }
+.wk-ai-sheet input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.wk-ai-sheet input[type="number"]::-webkit-inner-spin-button, .wk-ai-sheet input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.wk-ai-actions { margin-top: 16px; }
+.wk-ai-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 36px 0 28px; }
+.wk-ai-loading p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; }
+.wk-ai-note { margin: 2px 0 12px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--accent-purple) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); color: var(--text-primary); font-size: 0.86rem; line-height: 1.45; }
+.wk-ai-line { margin-top: 4px; }
+.wk-ai-main { cursor: default; }
+.wk-ai-ex { color: var(--text-secondary); font-size: 0.78rem; font-weight: 600; }
+.wk-ready-ai { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: center; gap: 8px; border-style: dashed; border-color: color-mix(in srgb, var(--accent-purple) 50%, var(--border-color)); background: color-mix(in srgb, var(--accent-purple) 9%, var(--bg-row)); }
+.wk-ready-spark { display: inline-flex; color: var(--accent-purple-text); }
+.wk-ready-spark .wk-ico { width: 20px; height: 20px; }
+/* בתצוגה המקדימה: הכפתור הראשי בשורה משלו, ושני האחרים מתחתיו (בלי שבירת שורה בתוך כפתור) */
+.wk-ai-actions.is-stacked { flex-wrap: wrap; }
+.wk-ai-actions.is-stacked .btn-primary { flex: 1 1 100%; }
+.wk-ai-actions.is-stacked :is(.btn-secondary, .btn-clear-specific) { flex: 1 1 0; min-width: 0; white-space: nowrap; }
