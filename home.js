@@ -30,10 +30,12 @@ async function loadMyDayRoutine(todayStr) {
         const tab = tabs.find(tb => routineTabWeekdays(tb).includes(todayIdx)) || tabs.find(tb => !routineTabWeekdays(tb).length) || null;
         if (!tab) return empty;
         const { data: rows } = await supabaseClient.from('routine_items').select('*').eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
+        // אימון מטבלת האימונים שנמצא גם בשגרה - כבר בצ'יפ ליד המים, לא פעמיים
+        if (typeof workoutPlanLoaded !== 'undefined' && !workoutPlanLoaded && typeof loadWorkoutPlan === 'function') await loadWorkoutPlan();
         // כל פריט עם כותרת - גם בשעה מדויקת (16:10), בדיוק כמו בלוח של "השגרה שלי" (שם פריט לא נעלם לעולם).
         // ארוחות שהוסתרו כי הן כבר בתפריט של New Me - לא מופיעות פעמיים
         // ופריט עם ימים משלו (📅 ימים לפריט) - רק בימים שלו
-        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)) && (typeof routineItemOnDay !== 'function' || routineItemOnDay(it, todayIdx)));
+        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)) && !(typeof routineItemIsWorkout === 'function' && routineItemIsWorkout(it)) && (typeof routineItemOnDay !== 'function' || routineItemOnDay(it, todayIdx)));
         const checksOn = isRoutineGoalsOn();
         let doneIds = new Set();
         if (checksOn && items.length) {

@@ -10338,3 +10338,31 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .myday-workout-chip:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (max-width: 380px) { .wk-row { grid-template-columns: 26px 20px 44px minmax(0, 1fr) 32px; } .wk-line::before { inset-inline-start: 35px; } }
 @media (prefers-reduced-motion: reduce) { .wk-ring-fg { transition: none; } }
+
+/* 🗂️ הלוח השבועי של האימונים (13): עמודה לכל יום, גוררים אימון ליום אחר (workouts.js wkBoardHtml / wkDragArm) */
+.wk-board { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 10px; margin: 0 -2px 12px; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.wk-col { flex: 0 0 112px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; min-height: 190px; padding: 8px 6px; border-radius: 16px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px var(--border-color); transition: background 0.15s ease, box-shadow 0.15s ease; }
+.wk-col.is-today { background: color-mix(in srgb, #fbbf24 10%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #fbbf24 60%, transparent); }
+.wk-col.is-drop { background: color-mix(in srgb, var(--accent-purple) 18%, transparent); box-shadow: inset 0 0 0 2px var(--accent-purple); }
+.wk-col-day { text-align: center; color: var(--text-secondary); font-size: 0.82rem; font-weight: 800; }
+.wk-col.is-today .wk-col-day { color: var(--text-primary); }
+.wk-col-cards { display: flex; flex: 1; flex-direction: column; gap: 6px; }
+.wk-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 8px 8px 8px 9px; border: none; border-inline-start: 3px solid var(--wk-c); border-radius: 12px; background: color-mix(in srgb, var(--wk-c) 20%, var(--bg-row)); color: var(--text-primary); font: inherit; text-align: start; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.wk-card-name { font-size: 0.8rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; padding-inline-end: 16px; }
+.wk-card-meta { color: var(--text-secondary); font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wk-card-done { position: absolute; top: 6px; inset-inline-end: 6px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--wk-c); color: #1b1030; font-size: 0.66rem; font-weight: 900; }
+.wk-card-routine { position: absolute; bottom: 5px; inset-inline-end: 6px; font-size: 0.68rem; opacity: 0.8; }
+.wk-card.is-rest { border: 1px dashed color-mix(in srgb, var(--text-primary) 25%, transparent); background: transparent; color: var(--text-secondary); }
+.wk-card.is-dragging { opacity: 0.35; }
+.wk-ghost { position: fixed; z-index: 2147483000; margin: 0; pointer-events: none; transform: rotate(-3deg) scale(1.04); box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.55); opacity: 0.95; }
+body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
+.wk-col-add { align-self: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px dashed var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; font-size: 1rem; cursor: pointer; opacity: 0.7; }
+.wk-col-add:hover, .wk-col-add:focus-visible { opacity: 1; }
+.wk-card:focus-visible, .wk-col-add:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.wk-routine-row { margin-top: 12px; }
+.routine-item-to-workout { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 10px; padding: 10px 14px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 50%, var(--border-color)); background: color-mix(in srgb, var(--accent-purple) 8%, transparent); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+.routine-item-to-workout:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .wk-col { transition: none; } .wk-ghost { transform: none; } }
+.wk-card-check { position: absolute; top: 5px; inset-inline-end: 5px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--wk-c) 75%, var(--text-secondary)); background: transparent; color: #1b1030; font: inherit; font-size: 0.66rem; font-weight: 900; line-height: 1; cursor: pointer; }
+.wk-card-check[aria-pressed="true"] { border-color: var(--wk-c); background: var(--wk-c); }
+.wk-card-check:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }

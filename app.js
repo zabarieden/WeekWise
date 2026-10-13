@@ -9455,6 +9455,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_photo', category: 'sport_water' },
     { id: 'sport_workout_plan', category: 'sport_water' },
     { id: 'sport_workout_today', category: 'sport_water' },
+    { id: 'sport_workout_board', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
@@ -17222,6 +17223,8 @@ async function toggleRoutineItemCheckin(itemId, btn) {
         routineNudge = null;
         renderRoutineNudge();
     }
+    // פריט שהוא אימון מטבלת האימונים - ✓ גם שם (נרשם בהיסטוריה)
+    if (typeof syncWorkoutFromRoutineCheck === 'function') syncWorkoutFromRoutineCheck(itemId, todayStr, checked);
     // ✓ כאן = ✓ גם ב"היום שלי" (ציר הזמן במסך הבית) ובפינה שגדלה
     loadTodayTasks();
 }
@@ -22822,6 +22825,7 @@ function openAddRoutineItemModal(time) {
     pendingRoutineItemDays = new Set(ROUTINE_ALL_DAYS);
     renderRoutineItemDaysChips();
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
+    if (typeof renderRoutineItemWorkoutBtn === 'function') renderRoutineItemWorkoutBtn();
     openModalOverDailyBoard('modal-add-routine-item');
     setTimeout(() => document.getElementById('routine-item-title-input').focus(), 50);
 }
@@ -22838,6 +22842,7 @@ function openEditRoutineItemModal(item, opts = {}) {
     pendingRoutineItemDays = new Set(routineItemDays(item));
     renderRoutineItemDaysChips();
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
+    if (typeof renderRoutineItemWorkoutBtn === 'function') renderRoutineItemWorkoutBtn();
     openModalOverDailyBoard('modal-add-routine-item');
 }
 
@@ -22909,6 +22914,7 @@ async function saveRoutineItem() {
     const payload = { title, time: pendingRoutineItemTime, days_of_week: itemDays.join(',') };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
+        if (typeof syncRoutineEditToWorkout === 'function') await syncRoutineEditToWorkout(editingRoutineItemId, payload);
     } else {
         await supabaseClient.from('routine_items').insert({ ...payload, tab_id: activeDailyBoardTabId, user_id: currentUserId });
     }
@@ -22928,6 +22934,7 @@ async function saveRoutineItem() {
 async function deleteRoutineItemFromModal() {
     if (!editingRoutineItemId) return;
     await supabaseClient.from('routine_items').delete().eq('id', editingRoutineItemId);
+    if (typeof wkRoutineItemDeleted === 'function') await wkRoutineItemDeleted(editingRoutineItemId);
     closeModal('modal-add-routine-item');
     routineNudgeEditing = null;
     await renderDailyBoard();

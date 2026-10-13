@@ -202,14 +202,32 @@ function renderWorkoutPlan() {
         wkBindCard(body);
         return;
     }
+    const board = workoutView() === 'board';
     body.innerHTML = `
         ${wkHeadHtml()}
         ${workoutPanel ? wkPanelHtml() : ''}
         ${wkTodayHtml()}
-        ${wkTimelineHtml()}
+        ${board ? wkBoardHtml() : wkTimelineHtml()}
         <button type="button" class="btn-secondary wk-add-btn" data-wk-add>${wkEsc(t('workout_add_btn'))}</button>`;
     wkBindCard(body);
+    if (board) wkBindBoard(body.querySelector('.wk-board'));
     wkTickTimer();
+}
+
+// 🗂️ שתי תצוגות לשבוע: ציר זמן (ברירת המחדל) או לוח שבועי שגוררים בו (13) - נבחר מ-⋯, נשמר במכשיר
+function workoutView() { try { return localStorage.getItem('weekwise_workout_view') === 'board' ? 'board' : 'timeline'; } catch { return 'timeline'; } }
+function setWorkoutView(v) {
+    try { localStorage.setItem('weekwise_workout_view', v === 'board' ? 'board' : 'timeline'); } catch {}
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    renderWorkoutPlan();
+}
+function toggleWorkoutView() { setWorkoutView(workoutView() === 'board' ? 'timeline' : 'board'); }
+function renderWorkoutViewBtn() {
+    const btn = document.getElementById('btn-workout-view');
+    if (!btn) return;
+    const board = workoutView() === 'board';
+    btn.innerHTML = `<span aria-hidden="true">${board ? '📋' : '🗂️'}</span> ${wkEsc(t(board ? 'workout_view_timeline' : 'workout_view_board'))}`;
 }
 
 function wkRingSvg(done, goal) {
@@ -407,8 +425,287 @@ function toggleWorkoutMoreRow(e) {
     const row = document.getElementById('workout-more-row');
     const btn = document.getElementById('btn-workout-more');
     if (!row) return;
+    renderWorkoutViewBtn();
     const open = row.classList.toggle('hidden') === false;
     if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+
+// ---------- 🗂️ לוח שבועי (13): כל יום עמודה, וגוררים אימון ליום אחר כשמשהו משתנה. נגיעה בלי גרירה - עריכה ----------
+function wkBoardHtml() {
+    const today = getLocalDateString();
+    const cols = wkWeekDates().map(date => {
+        const dayIdx = wkDayIdxOf(date);
+        const cards = wkOnDay(dayIdx).map(w => {
+            const rest = wkIsRest(w);
+            const done = !rest && wkIsDone(w.id, date);
+            const canCheck = !rest && date <= today;
+            return `
+                <div class="wk-card wk-tone-${wkTone(w)}${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}" role="button" tabindex="0" data-wk-card="${w.id}" data-day="${dayIdx}" aria-label="${wkEsc(wkName(w))}${w.time && !rest ? ' ' + wkEsc(w.time) : ''}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
+                    <span class="wk-card-name">${wkIcon(w)} ${wkEsc(wkName(w))}</span>
+                    ${rest ? '' : `<span class="wk-card-meta">${[w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : '', w.duration_minutes ? `<bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''].filter(Boolean).join(' · ')}</span>`}
+                    ${canCheck ? `<button type="button" class="wk-card-check" data-wk-check="${w.id}" data-wk-date="${date}" aria-pressed="${done}" aria-label="${wkEsc(t('workout_check_aria'))} – ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">${done ? '✓' : ''}</button>` : ''}
+                    ${w.routine_item_id ? '<span class="wk-card-routine" aria-hidden="true">📅</span>' : ''}
+                </div>`;
+        }).join('');
+        return `
+            <div class="wk-col${date === today ? ' is-today' : ''}" data-day="${dayIdx}">
+                <b class="wk-col-day">${wkEsc(t(weekdayShortKeys[dayIdx]))}</b>
+                <div class="wk-col-cards">${cards}</div>
+                <button type="button" class="wk-col-add" data-wk-add-day="${dayIdx}" aria-label="${wkEsc(t('workout_day_add_aria'))} – ${wkEsc(t(dayNameKeys[dayIdx]))}">+</button>
+            </div>`;
+    }).join('');
+    return `<div class="wk-board" aria-label="${wkEsc(t('workout_view_board'))}">${cols}</div>`;
+}
+let wkDrag = null;
+function wkBindBoard(board) {
+    if (!board) return;
+    board.querySelectorAll('.wk-card').forEach(card => card.addEventListener('pointerdown', e => wkDragArm(e, card)));
+    // ✓ / עריכה מהמקלדת: Enter על כרטיס פותח אותו (הגרירה היא רק לעכבר ולמגע)
+    board.querySelectorAll('.wk-card').forEach(card => card.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); openWorkoutEditor(card.dataset.wkCard); } }));
+    const todayCol = board.querySelector('.wk-col.is-today');
+    if (todayCol) board.scrollLeft = todayCol.offsetLeft - (board.clientWidth - todayCol.offsetWidth) / 2;
+}
+// בעכבר הגרירה מתחילה אחרי תזוזה קטנה; במגע - אחרי לחיצה ארוכה, כדי שהחלקה רגילה עדיין תגלול את הלוח
+function wkDragArm(e, card) {
+    if (e.button > 0 || e.target.closest('.wk-card-check')) return;
+    wkDragCleanup();
+    wkDrag = { card, id: card.dataset.wkCard, fromDay: Number(card.dataset.day), x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', started: false, timer: null, ghost: null, over: null };
+    if (wkDrag.touch) wkDrag.timer = setTimeout(() => { if (wkDrag && !wkDrag.started) wkDragBegin(wkDrag.x, wkDrag.y); }, 320);
+    window.addEventListener('pointermove', wkDragMove, { passive: false });
+    window.addEventListener('pointerup', wkDragEnd);
+    window.addEventListener('pointercancel', wkDragCleanup);
+    document.addEventListener('touchmove', wkDragTouchMove, { passive: false });
+}
+function wkDragTouchMove(e) { if (wkDrag && wkDrag.started) e.preventDefault(); }
+function wkDragBegin(x, y) {
+    const d = wkDrag;
+    if (!d) return;
+    d.started = true;
+    const r = d.card.getBoundingClientRect();
+    d.dx = x - r.left;
+    d.dy = y - r.top;
+    const ghost = d.card.cloneNode(true);
+    ghost.classList.add('wk-ghost');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.width = `${r.width}px`;
+    ghost.style.left = `${x - d.dx}px`;
+    ghost.style.top = `${y - d.dy}px`;
+    document.body.appendChild(ghost);
+    d.ghost = ghost;
+    d.card.classList.add('is-dragging');
+    document.body.classList.add('wk-dragging');
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch {}
+}
+function wkColAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    return el ? el.closest('.wk-col') : null;
+}
+function wkDragMove(e) {
+    const d = wkDrag;
+    if (!d) return;
+    if (!d.started) {
+        const dist = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+        if (d.touch) { if (dist > 10) wkDragCleanup(); return; }
+        if (dist < 6) return;
+        wkDragBegin(e.clientX, e.clientY);
+    }
+    e.preventDefault();
+    d.ghost.style.left = `${e.clientX - d.dx}px`;
+    d.ghost.style.top = `${e.clientY - d.dy}px`;
+    const col = wkColAt(e.clientX, e.clientY);
+    if (d.over !== col) {
+        if (d.over) d.over.classList.remove('is-drop');
+        d.over = col;
+        if (col && Number(col.dataset.day) !== d.fromDay) col.classList.add('is-drop');
+    }
+}
+function wkDragEnd(e) {
+    const d = wkDrag;
+    if (!d) return;
+    const col = d.started ? wkColAt(e.clientX, e.clientY) : null;
+    const tap = !d.started;
+    wkDragCleanup();
+    if (tap) { openWorkoutEditor(d.id); return; }
+    if (col && Number(col.dataset.day) !== d.fromDay) moveWorkoutDay(d.id, d.fromDay, Number(col.dataset.day));
+}
+function wkDragCleanup() {
+    const d = wkDrag;
+    wkDrag = null;
+    window.removeEventListener('pointermove', wkDragMove);
+    window.removeEventListener('pointerup', wkDragEnd);
+    window.removeEventListener('pointercancel', wkDragCleanup);
+    document.removeEventListener('touchmove', wkDragTouchMove);
+    document.body.classList.remove('wk-dragging');
+    if (!d) return;
+    clearTimeout(d.timer);
+    if (d.ghost) d.ghost.remove();
+    if (d.over) d.over.classList.remove('is-drop');
+    d.card.classList.remove('is-dragging');
+}
+// גרירה מיום ליום: היום הזה יוצא מהאימון והיום החדש נכנס (גם בשגרה, אם הוא שם)
+async function moveWorkoutDay(id, fromDay, toDay) {
+    const w = workoutPlan.find(x => x.id === id);
+    if (!w || !supabaseClient || !currentUserId) return;
+    const days = new Set(wkDays(w));
+    days.delete(fromDay);
+    days.add(toDay);
+    const next = [...days].sort((a, b) => a - b);
+    w.days = next;
+    renderWorkoutPlan();
+    const { error } = await supabaseClient.from('workout_plan').update({ days: next, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', currentUserId);
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); await loadWorkoutPlan(); renderWorkoutPlan(); return; }
+    if (w.routine_item_id) await syncWorkoutToRoutine(w, true);
+    showAppToast(t('workout_moved').replace('{day}', t(dayNameKeys[toDay])));
+    renderMyDayWorkoutChip();
+}
+
+// ---------- 📅 סנכרון עם "השגרה שלי" בשני הכיוונים ("ומשם אפשר גם להוסיף לשגרה ולהפך") ----------
+// אימון בשגרה = פריט שגרה בשעה ובימים שלו (routine_item_id). שינוי באימון משנה את הפריט, שינוי בפריט (שעה / ימים)
+// משנה את האימון, ✓ באחד מהם נרשם בשניהם. ב"היום שלי" הפריט לא מופיע פעמיים - האימון כבר בצ'יפ
+function wkRoutineTitle(w) { return `${wkIcon(w)} ${wkName(w)}`; }
+function workoutForRoutineItem(itemId) { return workoutPlan.find(w => w.routine_item_id === itemId) || null; }
+function routineItemIsWorkout(item) { return !!(item && workoutForRoutineItem(item.id)); }
+async function wkRoutineTabs() {
+    let tabs = typeof dailyBoardTabs !== 'undefined' && dailyBoardTabs.length ? dailyBoardTabs : null;
+    if (!tabs) {
+        const { data } = await supabaseClient.from('routine_tabs').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+        tabs = data || [];
+    }
+    if (!tabs.length) {
+        // כמו בפתיחה הראשונה של השגרה שלי: שגרה יומית + לימודים
+        const { data: inserted } = await supabaseClient.from('routine_tabs').insert([
+            { user_id: currentUserId, username: currentUsername, name: t('daily_board_default_tab_daily'), sort_order: 0 },
+            { user_id: currentUserId, username: currentUsername, name: t('daily_board_default_tab_study'), sort_order: 1 },
+        ]).select('*');
+        tabs = inserted || [];
+        if (typeof dailyBoardTabs !== 'undefined') dailyBoardTabs = tabs;
+    }
+    return tabs;
+}
+// הטאב שמכסה את כל ימי האימון; אחרת טאב של כל הימים; אחרת הראשון
+async function wkRoutineTabFor(w) {
+    const tabs = await wkRoutineTabs();
+    const days = wkDays(w);
+    return tabs.find(tb => { const td = routineTabWeekdays(tb); return td.length && days.every(d => td.includes(d)); })
+        || tabs.find(tb => !routineTabWeekdays(tb).length) || tabs[0] || null;
+}
+async function syncWorkoutToRoutine(w, on) {
+    if (!supabaseClient || !currentUserId || !w) return;
+    if (on && w.time && !wkIsRest(w)) {
+        const payload = { title: wkRoutineTitle(w), time: w.time, days_of_week: wkDays(w).join(',') };
+        if (w.routine_item_id) {
+            const { data } = await supabaseClient.from('routine_items').update(payload).eq('id', w.routine_item_id).eq('user_id', currentUserId).select('id');
+            if (data && data.length) { wkAfterRoutineChange(); return; }
+        }
+        const tab = await wkRoutineTabFor(w);
+        if (!tab) return;
+        const { data: ins } = await supabaseClient.from('routine_items').insert({ ...payload, kind: 'scheduled', tab_id: tab.id, user_id: currentUserId }).select().single();
+        if (ins) {
+            await supabaseClient.from('workout_plan').update({ routine_item_id: ins.id }).eq('id', w.id).eq('user_id', currentUserId);
+            w.routine_item_id = ins.id;
+        }
+    } else if (w.routine_item_id) {
+        await supabaseClient.from('routine_items').delete().eq('id', w.routine_item_id).eq('user_id', currentUserId);
+        await supabaseClient.from('workout_plan').update({ routine_item_id: null }).eq('id', w.id).eq('user_id', currentUserId);
+        w.routine_item_id = null;
+    }
+    wkAfterRoutineChange();
+}
+function wkAfterRoutineChange() {
+    const board = document.getElementById('modal-daily-board');
+    if (board && board.classList.contains('open') && typeof renderDailyBoard === 'function') renderDailyBoard();
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+}
+// מהשגרה: שינוי שעה / ימים בפריט שהוא אימון - גם באימון (רק בימי הטאב שלו)
+async function syncRoutineEditToWorkout(itemId, payload) {
+    const w = workoutForRoutineItem(itemId);
+    if (!w || !supabaseClient || !currentUserId) return;
+    const item = typeof dailyBoardItemsCache !== 'undefined' ? dailyBoardItemsCache.find(it => it.id === itemId) : null;
+    const tab = item && typeof dailyBoardTabs !== 'undefined' ? dailyBoardTabs.find(tb => tb.id === item.tab_id) : null;
+    const tabDays = routineTabWeekdays(tab);
+    let days = routineItemDays({ days_of_week: payload.days_of_week });
+    if (tabDays.length) days = days.filter(d => tabDays.includes(d));
+    const updates = { time: String(payload.time || '').slice(0, 5) || w.time, days: days.length ? days : wkDays(w), updated_at: new Date().toISOString() };
+    await supabaseClient.from('workout_plan').update(updates).eq('id', w.id).eq('user_id', currentUserId);
+    Object.assign(w, updates);
+    renderWorkoutPlan();
+    renderMyDayWorkoutChip();
+}
+// ✓ בשגרה על פריט שהוא אימון = ✓ באימון (נרשם בהיסטוריה), ולהפך
+async function syncWorkoutFromRoutineCheck(itemId, dateStr, checked) {
+    const w = workoutForRoutineItem(itemId);
+    if (!w) return;
+    if (!workoutWeekLoadedFor) await loadWorkoutWeek();
+    if (checked !== wkIsDone(w.id, dateStr)) await toggleWorkoutDone(w.id, dateStr, { fromRoutine: true });
+}
+async function wkSyncRoutineCheck(w, dateStr, checked) {
+    if (!w.routine_item_id || !supabaseClient) return;
+    if (checked) {
+        const { data } = await supabaseClient.from('routine_item_checkins').select('item_id').eq('item_id', w.routine_item_id).eq('checkin_date', dateStr).limit(1);
+        if (!data || !data.length) await supabaseClient.from('routine_item_checkins').insert({ item_id: w.routine_item_id, user_id: currentUserId, checkin_date: dateStr });
+    } else {
+        await supabaseClient.from('routine_item_checkins').delete().eq('item_id', w.routine_item_id).eq('checkin_date', dateStr);
+    }
+    const board = document.getElementById('modal-daily-board');
+    if (board && board.classList.contains('open') && typeof renderDailyBoard === 'function') renderDailyBoard();
+}
+// ולהפך: מתוך פריט בשגרה - "🏋️ להוסיף לטבלת האימונים" (או לפתוח אותו שם, אם כבר נוסף)
+const WORKOUT_KIND_WORDS = [
+    ['running', /run|jog|ריצ|רץ|corr|cours|lauf|jogg|бег|جري|corrida|koş|lari|chạy|bieg|วิ่ง/i],
+    ['walking', /walk|הליכ|camin|marche|spazier|gehen|ходьб|прогулк|مشي|passeggi|yürü|jalan|đi bộ|spacer|เดิน/i],
+    ['cycling', /bike|cycl|אופני|bici|vélo|velo|rad|велос|دراج|bisiklet|sepeda|đạp xe|rower|จักรยาน/i],
+    ['swimming', /swim|שחי|nata|nage|schwimm|плав|سباح|yüz|renang|bơi|pływ|ว่ายน้ำ/i],
+    ['hiit', /hiit|crossfit|קרוספיט|אינטרוו|interval|tabata|טבטה/i],
+    ['functional', /functional|פונקציונ|funcional|fonction|funktion|функцион/i],
+    ['strength', /gym|weight|strength|כוח|משקולות|חדר כושר|fuerza|pesas|muscu|kraft|силов|тренаж|أثقال|pesi|forza|ağırlık|kuvvet|beban|tạ|siłow|เวท/i],
+    ['pilates', /pilates|פילאטיס|пилатес|بيلاتس/i],
+    ['yoga', /yoga|יוגה|йога|يوغا|ioga|joga/i],
+    ['dance', /danc|ריקוד|זומבה|zumba|baile|danse|tanz|танц|رقص|dança|danza|dans|tari|nhảy|taniec|เต้น/i],
+];
+function wkGuessKind(title) { const hit = WORKOUT_KIND_WORDS.find(([, re]) => re.test(String(title || ''))); return hit ? hit[0] : null; }
+async function routineItemToWorkout() {
+    if (!supabaseClient || !currentUserId || typeof editingRoutineItemId === 'undefined' || !editingRoutineItemId) return;
+    if (!workoutPlanLoaded) await loadWorkoutPlan();
+    const item = (typeof dailyBoardItemsCache !== 'undefined' ? dailyBoardItemsCache : []).find(it => it.id === editingRoutineItemId);
+    if (!item) return;
+    const linked = workoutForRoutineItem(item.id);
+    if (linked) {
+        closeModal('modal-add-routine-item');
+        closeModal('modal-daily-board');
+        if (typeof navigateFromMenu === 'function') navigateFromMenu('sport-section');
+        setTimeout(() => openWorkoutEditor(linked.id), 250);
+        return;
+    }
+    const [, name] = splitLeadingEmoji(item.title || '', '');
+    const kind = wkGuessKind(item.title);
+    const tab = typeof dailyBoardTabs !== 'undefined' ? dailyBoardTabs.find(tb => tb.id === item.tab_id) : null;
+    const tabDays = routineTabWeekdays(tab);
+    let days = routineItemDays(item);
+    if (tabDays.length) days = days.filter(d => tabDays.includes(d));
+    if (!days.length) days = tabDays.length ? tabDays : ROUTINE_ALL_DAYS.slice();
+    const row = {
+        user_id: currentUserId, kind: kind || 'custom', custom_name: kind ? null : (name.trim() || item.title).slice(0, 40), days,
+        time: String(item.time || '').slice(0, 5) || null, duration_minutes: 30, intensity: null, place: null, exercises: null, notes: null,
+        routine_item_id: item.id, sort_order: workoutPlan.length,
+    };
+    const { error } = await supabaseClient.from('workout_plan').insert(row);
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    await loadWorkoutPlan();
+    showAppToast(t('routine_to_workout_done'));
+    renderRoutineItemWorkoutBtn();
+    renderWorkoutPlan();
+    renderMyDayWorkoutChip();
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+}
+// הכפתור בחלון של פריט שגרה: רק בעריכה של פריט קיים; "להוסיף" או "לפתוח" לפי אם הוא כבר אימון
+function renderRoutineItemWorkoutBtn() {
+    const btn = document.getElementById('routine-item-to-workout');
+    if (!btn) return;
+    const id = typeof editingRoutineItemId !== 'undefined' ? editingRoutineItemId : null;
+    btn.classList.toggle('hidden', !id);
+    if (!id) return;
+    const linked = workoutForRoutineItem(id);
+    btn.innerHTML = `<span aria-hidden="true">🏋️</span> ${wkEsc(t(linked ? 'routine_in_workouts_btn' : 'routine_to_workout_btn'))}`;
 }
 
 async function setWorkoutGoal(kind, value) {
@@ -472,6 +769,8 @@ async function toggleWorkoutDone(planId, dateStr, opts = {}) {
     renderMyDayWorkoutChip();
     const sheet = document.getElementById('modal-workout-today');
     if (sheet && sheet.classList.contains('open')) renderWorkoutTodaySheet();
+    // אימון שנמצא גם בשגרה - ✓ גם שם (חוץ מכשה-✓ הגיע מהשגרה עצמה)
+    if (w.routine_item_id && !opts.fromRoutine) wkSyncRoutineCheck(w, dateStr, workoutWeekDone.has(key));
     // מעקב הארוחות (שריפה), New Me (האתגר "שבועיים של תנועה" נספר לבד), המטרה והרצף
     afterSportChanged();
     if (document.getElementById('sport-summary-next-btn')) { renderSportSummary(); renderSportHistory(); }
@@ -565,7 +864,12 @@ function chooseWorkoutReadyPlan(key) {
 }
 async function applyWorkoutReadyPlan(plan) {
     if (!supabaseClient || !currentUserId) return;
-    if (workoutPlan.length) await supabaseClient.from('workout_plan').delete().eq('user_id', currentUserId);
+    if (workoutPlan.length) {
+        const routineIds = workoutPlan.map(w => w.routine_item_id).filter(Boolean);
+        if (routineIds.length) await supabaseClient.from('routine_items').delete().in('id', routineIds).eq('user_id', currentUserId);
+        await supabaseClient.from('workout_plan').delete().eq('user_id', currentUserId);
+        if (routineIds.length) wkAfterRoutineChange();
+    }
     const rows = plan.items.map((it, i) => ({
         user_id: currentUserId, kind: it.kind, custom_name: null, days: it.days, time: null,
         duration_minutes: it.duration || null, intensity: it.intensity || null, place: null,
@@ -590,10 +894,10 @@ function openWorkoutEditor(id, dayIdx) {
         id: row.id, kind: row.kind, custom_name: row.custom_name || '', days: new Set(wkDays(row)), time: row.time || null,
         duration: row.duration_minutes || '', intensity: row.intensity || null, place: row.place || null,
         exercises: Array.isArray(row.exercises) ? row.exercises.map(e => ({ name: e.name || '', sets: e.sets || '', reps: e.reps || '' })) : [],
-        notes: row.notes || '',
+        notes: row.notes || '', inRoutine: !!row.routine_item_id,
     } : {
         id: null, kind: 'running', custom_name: '', days: new Set(dayIdx != null ? [dayIdx] : [new Date().getDay()]), time: null,
-        duration: 30, intensity: null, place: null, exercises: [], notes: '',
+        duration: 30, intensity: null, place: null, exercises: [], notes: '', inRoutine: false,
     };
     // שם מותאם שהוא אחד מסוגי הספורט השמורים - הבועה שלו נבחרת
     renderWorkoutEditor();
@@ -654,7 +958,8 @@ function renderWorkoutEditor() {
             </div>`).join('')}
             <button type="button" class="wk-ex-add" data-wk-ex-add>${wkEsc(t('workout_ex_add'))}</button>
         </div>` : ''}
-        <textarea id="wk-notes" rows="2" maxlength="300" placeholder="${wkEsc(t('workout_notes_ph'))}">${wkEsc(d.notes)}</textarea>`}
+        <textarea id="wk-notes" rows="2" maxlength="300" placeholder="${wkEsc(t('workout_notes_ph'))}">${wkEsc(d.notes)}</textarea>
+        <label class="settings-toggle-row wk-routine-row"><span>📅 ${wkEsc(t('workout_routine_toggle'))}</span><span class="switch"><input type="checkbox" id="wk-in-routine"${d.inRoutine ? ' checked' : ''}><span class="slider"></span></span></label>`}
         <div class="action-buttons-wrap wk-editor-actions">
             <button type="button" class="btn-primary" data-wk-save>${wkEsc(t('save_generic'))}</button>
             ${d.id ? `<button type="button" class="btn-clear-specific wk-delete" data-wk-delete>✕ ${wkEsc(t('workout_delete_btn'))}</button>` : ''}
@@ -712,7 +1017,7 @@ function renderWorkoutEditor() {
     const del = box.querySelector('[data-wk-delete]');
     if (del) del.addEventListener('click', () => {
         closeModal('modal-workout-plan');
-        showDangerConfirm(t('workout_delete_title'), t('workout_delete_confirm'), () => deleteWorkout(d.id));
+        showDangerConfirm(t('workout_delete_title'), t((workoutPlan.find(w => w.id === d.id) || {}).routine_item_id ? 'workout_delete_confirm_routine' : 'workout_delete_confirm'), () => deleteWorkout(d.id));
     });
 }
 // מה שהוקלד נשמר בטיוטה לפני כל ציור מחדש של החלון
@@ -728,6 +1033,8 @@ function wkCaptureDraft() {
     if (po && !po.classList.contains('hidden')) d.place = po.value.trim();
     const notes = val('wk-notes');
     if (notes !== null) d.notes = notes;
+    const inRoutine = document.getElementById('wk-in-routine');
+    if (inRoutine) d.inRoutine = inRoutine.checked;
     const rows = document.querySelectorAll('#workout-editor-body .wk-ex-row');
     if (rows.length) d.exercises = [...rows].map(r => ({ name: r.querySelector('.wk-ex-name').value.trim(), sets: r.querySelector('.wk-ex-sets').value, reps: r.querySelector('.wk-ex-reps').value.trim() }));
 }
@@ -740,6 +1047,7 @@ async function saveWorkoutDraft() {
     const rest = d.kind === 'rest';
     const duration = parseInt(d.duration, 10);
     if (!rest && !(duration > 0)) { showAppToast(t('workout_missing_duration'), 'error'); const inp = document.getElementById('wk-duration'); if (inp) inp.focus(); return; }
+    if (!rest && d.inRoutine && !d.time) { showAppToast(t('workout_routine_need_time'), 'error'); const tb = document.getElementById('wk-time-btn'); if (tb) tb.focus(); return; }
     const exercises = !rest && wkHasExercises({ kind: d.kind })
         ? d.exercises.filter(e => e.name).map(e => ({ name: e.name, sets: parseInt(e.sets, 10) || null, reps: e.reps || null }))
         : [];
@@ -751,10 +1059,19 @@ async function saveWorkoutDraft() {
         notes: rest ? null : (d.notes.trim() || null), updated_at: new Date().toISOString(),
     };
     let error;
+    let savedId = d.id;
     if (d.id) ({ error } = await supabaseClient.from('workout_plan').update(row).eq('id', d.id).eq('user_id', currentUserId));
-    else ({ error } = await supabaseClient.from('workout_plan').insert({ ...row, sort_order: workoutPlan.length }));
+    else {
+        const res = await supabaseClient.from('workout_plan').insert({ ...row, sort_order: workoutPlan.length }).select().single();
+        error = res.error;
+        if (res.data) savedId = res.data.id;
+    }
     if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
     closeModal('modal-workout-plan');
+    // 📅 גם בשגרה שלי - הפריט נוצר / מתעדכן / נמחק לפי המתג
+    const wantRoutine = !rest && d.inRoutine;
+    const prevRoutineId = d.id ? (workoutPlan.find(w => w.id === d.id) || {}).routine_item_id || null : null;
+    if (wantRoutine || prevRoutineId) await syncWorkoutToRoutine({ ...row, id: savedId, routine_item_id: prevRoutineId }, wantRoutine);
     workoutDraft = null;
     await loadWorkoutPlan();
     await loadWorkoutStreak();
@@ -763,6 +1080,8 @@ async function saveWorkoutDraft() {
 }
 async function deleteWorkout(id) {
     if (!supabaseClient || !currentUserId) return;
+    const w = workoutPlan.find(x => x.id === id);
+    if (w && w.routine_item_id) await supabaseClient.from('routine_items').delete().eq('id', w.routine_item_id).eq('user_id', currentUserId);
     await supabaseClient.from('workout_plan').delete().eq('id', id).eq('user_id', currentUserId);
     const tm = workoutTimer();
     if (tm && tm.id === id) saveWorkoutTimer(null);
@@ -770,6 +1089,7 @@ async function deleteWorkout(id) {
     await loadWorkoutStreak();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
+    if (w && w.routine_item_id) wkAfterRoutineChange();
 }
 
 // ---------- "היום שלי": צ'יפ קטן ליד המים עם האימון של היום (ה2). נגיעה - פרטים, ▶ ו-✓ ----------
@@ -825,4 +1145,13 @@ function renderWorkoutTodaySheet() {
         if (typeof navigateFromMenu === 'function') navigateFromMenu('sport-section');
     });
     wkTickTimer();
+}
+// פריט שגרה שהיה אימון נמחק מהשגרה: האימון נשאר בטבלה, רק בלי הקישור (גם ה-FK במסד מאפס אותו)
+async function wkRoutineItemDeleted(itemId) {
+    const w = workoutForRoutineItem(itemId);
+    if (!w || !supabaseClient || !currentUserId) return;
+    w.routine_item_id = null;
+    await supabaseClient.from('workout_plan').update({ routine_item_id: null }).eq('id', w.id).eq('user_id', currentUserId);
+    renderWorkoutPlan();
+    renderMyDayWorkoutChip();
 }
