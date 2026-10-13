@@ -1,8 +1,8 @@
 // Supabase Edge Function: send-due-reminders
 //
 // Runs on a schedule (see the pg_cron SQL in DEPLOY.md) and sends a real Web Push
-// notification for every weekly_schedule / calendar_events reminder that is due right
-// now, for every user's timezone, so reminders fire even when the app is fully closed.
+// notification for every weekly_schedule / calendar_events / workout_plan reminder that is
+// due right now, for every user's timezone, so reminders fire even when the app is fully closed.
 // Also sends the New Me meal reminders (new_me_reminders - one time per meal).
 //
 // Every reminder is delivered ONCE, in ONE place (explicit request - before, the same
@@ -193,9 +193,20 @@ async function handleRequest(): Promise<Response> {
             .eq("event_date", wallClock.dateStr)
             .gt("reminder_minutes", 0);
 
+        // גם אימונים מטבלת האימונים (workout_plan) עם תזכורת - בימים שלהם (0 = ראשון). הכותרת והטקסט נשמרו
+        // באפליקציה בשפת המשתמש/ת. שגיאה כאן לא עוצרת את שאר התזכורות
+        const dayIdx = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].indexOf(wallClock.dbDay);
+        const { data: workoutRows } = await supabase
+            .from("workout_plan")
+            .select("id, reminder_title, reminder_text, reminder_minutes, time, days, last_notified_date")
+            .eq("user_id", userId)
+            .gt("reminder_minutes", 0);
+        const dueWorkouts = (workoutRows ?? []).filter((w) => Array.isArray(w.days) && w.days.map(Number).includes(dayIdx));
+
         const candidates = [
             ...(dueRows ?? []).map((r) => ({ type: "schedule", table: "weekly_schedule", id: r.id, title: r.task_title, body: r.reminder_text, minutes: r.reminder_minutes, time: r.time_of_day, last: r.last_notified_date })),
             ...(dueEvents ?? []).map((r) => ({ type: "event", table: "calendar_events", id: r.id, title: r.event_title, body: r.reminder_text, minutes: r.reminder_minutes, time: r.event_time, last: r.last_notified_date })),
+            ...dueWorkouts.map((r) => ({ type: "workout", table: "workout_plan", id: r.id, title: r.reminder_title, body: r.reminder_text, minutes: r.reminder_minutes, time: r.time, last: r.last_notified_date })),
         ];
         const due = candidates.filter((row) => {
             checked++;
@@ -253,6 +264,13 @@ async function handleRequest(): Promise<Response> {
             if (sn.source_type === "event") {
                 const { data: ev } = await supabase.from("calendar_events").select("is_completed").eq("id", sn.source_id).maybeSingle();
                 done = !ev || !!ev.is_completed;
+            } else if (sn.source_type === "workout") {
+                // אימון - "נעשה" כשנרשם בהיסטוריית הספורט באותו יום (או כשנמחק מהטבלה)
+                const [{ data: logged }, { data: w }] = await Promise.all([
+                    supabase.from("sport_sessions").select("id").eq("source_workout_id", sn.source_id).eq("session_date", sn.source_date).limit(1),
+                    supabase.from("workout_plan").select("id").eq("id", sn.source_id).maybeSingle(),
+                ]);
+                done = (logged ?? []).length > 0 || !w;
             } else {
                 const [{ data: comp }, { data: sched }] = await Promise.all([
                     supabase.from("schedule_completions").select("schedule_id").eq("schedule_id", sn.source_id).eq("completion_date", sn.source_date).maybeSingle(),

@@ -173,6 +173,7 @@ async function loadWorkoutsAll() {
 // נקרא ממסך הספורט (loadSportData)
 async function loadWorkoutSection() {
     await loadWorkoutsAll();
+    wkRefreshReminderTexts();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
 }
@@ -287,6 +288,7 @@ function wkMetaLine(w, minutesOverride) {
     const min = minutesOverride || w.duration_minutes;
     if (min) parts.push(`${min} ${wkEsc(t('sport_minutes_unit'))}`);
     if (w.place) parts.push(wkEsc(wkPlaceLabel(w.place)));
+    if (Number(w.reminder_minutes) > 0) parts.push(`🔔 <bdi dir="ltr">${Number(w.reminder_minutes)}′</bdi>`);
     return parts.join(' · ');
 }
 function wkIntensityChip(intensity) {
@@ -894,10 +896,10 @@ function openWorkoutEditor(id, dayIdx) {
         id: row.id, kind: row.kind, custom_name: row.custom_name || '', days: new Set(wkDays(row)), time: row.time || null,
         duration: row.duration_minutes || '', intensity: row.intensity || null, place: row.place || null,
         exercises: Array.isArray(row.exercises) ? row.exercises.map(e => ({ name: e.name || '', sets: e.sets || '', reps: e.reps || '' })) : [],
-        notes: row.notes || '', inRoutine: !!row.routine_item_id,
+        notes: row.notes || '', inRoutine: !!row.routine_item_id, reminder: row.reminder_minutes || 0,
     } : {
         id: null, kind: 'running', custom_name: '', days: new Set(dayIdx != null ? [dayIdx] : [new Date().getDay()]), time: null,
-        duration: 30, intensity: null, place: null, exercises: [], notes: '', inRoutine: false,
+        duration: 30, intensity: null, place: null, exercises: [], notes: '', inRoutine: false, reminder: 0,
     };
     // שם מותאם שהוא אחד מסוגי הספורט השמורים - הבועה שלו נבחרת
     renderWorkoutEditor();
@@ -958,6 +960,9 @@ function renderWorkoutEditor() {
             </div>`).join('')}
             <button type="button" class="wk-ex-add" data-wk-ex-add>${wkEsc(t('workout_ex_add'))}</button>
         </div>` : ''}
+        <span class="wk-label">${wkEsc(t('workout_reminder_label'))}</span>
+        <div class="color-filter-picker wk-rems">${wkReminderChipsHtml(d)}</div>
+        <input type="number" inputmode="numeric" min="1" max="1440" id="wk-rem-custom" class="wk-rem-custom${wkRemIsCustom(d.reminder) ? '' : ' hidden'}" value="${wkRemIsCustom(d.reminder) && d.reminder !== 'custom' ? wkEsc(d.reminder) : ''}" placeholder="${wkEsc(t('reminder_custom_minutes_placeholder'))}" aria-label="${wkEsc(t('reminder_custom_minutes_placeholder'))}">
         <textarea id="wk-notes" rows="2" maxlength="300" placeholder="${wkEsc(t('workout_notes_ph'))}">${wkEsc(d.notes)}</textarea>
         <label class="settings-toggle-row wk-routine-row"><span>📅 ${wkEsc(t('workout_routine_toggle'))}</span><span class="switch"><input type="checkbox" id="wk-in-routine"${d.inRoutine ? ' checked' : ''}><span class="slider"></span></span></label>`}
         <div class="action-buttons-wrap wk-editor-actions">
@@ -1002,6 +1007,12 @@ function renderWorkoutEditor() {
         renderWorkoutEditor();
         if (p === '__other') { const inp = document.getElementById('wk-place-other'); if (inp) inp.focus(); }
     }));
+    box.querySelectorAll('[data-wk-rem]').forEach(b => b.addEventListener('click', () => {
+        wkCaptureDraft();
+        d.reminder = b.dataset.wkRem === 'custom' ? (wkRemIsCustom(d.reminder) ? d.reminder : 'custom') : Number(b.dataset.wkRem);
+        renderWorkoutEditor();
+        if (b.dataset.wkRem === 'custom') { const inp = document.getElementById('wk-rem-custom'); if (inp) inp.focus(); }
+    }));
     const clear = box.querySelector('[data-wk-time-clear]');
     if (clear) clear.addEventListener('click', () => { wkCaptureDraft(); d.time = null; renderWorkoutEditor(); });
     box.querySelectorAll('[data-wk-ex-del]').forEach(b => b.addEventListener('click', () => { wkCaptureDraft(); d.exercises.splice(Number(b.dataset.wkExDel), 1); renderWorkoutEditor(); }));
@@ -1033,6 +1044,8 @@ function wkCaptureDraft() {
     if (po && !po.classList.contains('hidden')) d.place = po.value.trim();
     const notes = val('wk-notes');
     if (notes !== null) d.notes = notes;
+    const remCustom = document.getElementById('wk-rem-custom');
+    if (remCustom && !remCustom.classList.contains('hidden')) { const v = parseInt(remCustom.value, 10); d.reminder = v > 0 ? v : 'custom'; }
     const inRoutine = document.getElementById('wk-in-routine');
     if (inRoutine) d.inRoutine = inRoutine.checked;
     const rows = document.querySelectorAll('#workout-editor-body .wk-ex-row');
@@ -1047,6 +1060,8 @@ async function saveWorkoutDraft() {
     const rest = d.kind === 'rest';
     const duration = parseInt(d.duration, 10);
     if (!rest && !(duration > 0)) { showAppToast(t('workout_missing_duration'), 'error'); const inp = document.getElementById('wk-duration'); if (inp) inp.focus(); return; }
+    const reminderMinutes = rest ? 0 : (Number(d.reminder) > 0 ? Math.min(1440, Math.round(Number(d.reminder))) : 0);
+    if (reminderMinutes && !d.time) { showAppToast(t('workout_reminder_need_time'), 'error'); const tb = document.getElementById('wk-time-btn'); if (tb) tb.focus(); return; }
     if (!rest && d.inRoutine && !d.time) { showAppToast(t('workout_routine_need_time'), 'error'); const tb = document.getElementById('wk-time-btn'); if (tb) tb.focus(); return; }
     const exercises = !rest && wkHasExercises({ kind: d.kind })
         ? d.exercises.filter(e => e.name).map(e => ({ name: e.name, sets: parseInt(e.sets, 10) || null, reps: e.reps || null }))
@@ -1057,7 +1072,9 @@ async function saveWorkoutDraft() {
         duration_minutes: rest ? null : duration, intensity: rest ? null : (d.intensity || null),
         place: rest ? null : (d.place || null), exercises: exercises.length ? exercises : null,
         notes: rest ? null : (d.notes.trim() || null), updated_at: new Date().toISOString(),
+        reminder_minutes: reminderMinutes,
     };
+    Object.assign(row, wkReminderTexts(row));
     let error;
     let savedId = d.id;
     if (d.id) ({ error } = await supabaseClient.from('workout_plan').update(row).eq('id', d.id).eq('user_id', currentUserId));
@@ -1384,4 +1401,34 @@ async function wkReportSection() {
     if (!workoutWeekLoadedFor) await loadWorkoutWeek();
     const rows = wkWeekRows().filter(r => r.items.length).map(r => `<div class="entry"><span class="entry-main">${wkEsc(t(dayNameKeys[r.dayIdx]))}</span><span class="entry-value">${wkEsc(r.items.map(it => wkItemLine(it.w)).join(' | '))}</span></div>`).join('');
     return `<h3 class="wk-report-title">${wkEsc(t('workout_plan_title'))}</h3>${rows}`;
+}
+
+// ---------- ⏰ תזכורת לפני אימון (ת2: "10 או 30 דקות לפני, באותו צלצול של התזכורות") ----------
+// אותה מערכת בדיוק כמו שאר התזכורות - פעם אחת, במקום אחד (reminder_deliveries, source_type 'workout'): באפליקציה
+// אם היא פתוחה מול העיניים, אחרת send-due-reminders שולח לטלפון. הכותרת והטקסט נשמרים בשורה בשפת המשתמש/ת, כי השרת
+// לא מכיר את התרגומים
+const WORKOUT_REMINDER_PRESETS = [0, 10, 30, 60];
+function wkRemIsCustom(v) { return v === 'custom' || (Number(v) > 0 && !WORKOUT_REMINDER_PRESETS.includes(Number(v))); }
+function wkReminderChipsHtml(d) {
+    const custom = wkRemIsCustom(d.reminder);
+    const label = m => t(m === 0 ? 'reminder_none' : m === 10 ? 'reminder_10min' : m === 30 ? 'workout_reminder_30min' : 'reminder_1hour');
+    return [
+        ...WORKOUT_REMINDER_PRESETS.map(m => { const on = !custom && Number(d.reminder || 0) === m; return `<button type="button" class="color-filter-option${on ? ' active' : ''}" data-wk-rem="${m}" aria-pressed="${on}">${wkEsc(label(m))}</button>`; }),
+        `<button type="button" class="color-filter-option${custom ? ' active' : ''}" data-wk-rem="custom" aria-pressed="${custom}">${wkEsc(t('reminder_custom'))}</button>`,
+    ].join('');
+}
+function wkReminderTexts(w) {
+    if (wkIsRest(w)) return { reminder_title: null, reminder_text: null };
+    const parts = [w.time || '', w.duration_minutes ? `${w.duration_minutes} ${t('sport_minutes_unit')}` : '', w.place ? wkPlaceLabel(w.place) : ''].filter(Boolean);
+    return { reminder_title: `${wkIcon(w)} ${wkName(w)}`, reminder_text: parts.join(' · ') || null };
+}
+// בשפה אחרת (או אחרי שינוי באימון שלא דרך החלון) - הכותרת והטקסט של התזכורת מתעדכנים בשקט
+function wkRefreshReminderTexts() {
+    if (!supabaseClient || !currentUserId) return;
+    workoutPlan.filter(w => Number(w.reminder_minutes) > 0 && !wkIsRest(w)).forEach(w => {
+        const next = wkReminderTexts(w);
+        if (w.reminder_title === next.reminder_title && (w.reminder_text || null) === next.reminder_text) return;
+        Object.assign(w, next);
+        supabaseClient.from('workout_plan').update(next).eq('id', w.id).eq('user_id', currentUserId).then(() => {});
+    });
 }

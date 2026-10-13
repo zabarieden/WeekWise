@@ -285,7 +285,7 @@ function onLanguageChanged() {
     // גם "התיק שלי" (והקלסר) נבנים ב-JS
     if (typeof renderBag === 'function' && isNotebooksSectionOpen()) renderBag();
     // טבלת האימונים והצ'יפ שלה בהיום שלי (workouts.js)
-    if (typeof renderWorkoutPlan === 'function') { renderWorkoutPlan(); renderMyDayWorkoutChip(); }
+    if (typeof renderWorkoutPlan === 'function') { renderWorkoutPlan(); renderMyDayWorkoutChip(); wkRefreshReminderTexts(); }
     // וגם הכותרת, התאריך ופס הדפים של מחברת פתוחה
     if (nbViewMode === 'notebook' && isNotebookViewOpen()) {
         renderNotebookViewTitle();
@@ -9500,6 +9500,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'sport_workout_today', category: 'sport_water' },
     { id: 'sport_workout_board', category: 'sport_water' },
     { id: 'sport_workout_share', category: 'sport_water' },
+    { id: 'sport_workout_reminder', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
@@ -16244,11 +16245,14 @@ function markReminderSeenHere(rem) {
 // התזכורות שהגיע זמנן עכשיו - לא יותר משעה אחרי תחילת המשימה (כמו בשרת): תזכורת על משהו
 // שכבר עבר מזמן היא רק רעש, וזה מה שגרם לה לקפוץ שוב כשפתחו מכשיר אחר שעות אחר כך
 async function collectDueReminders(now, todayStr) {
-    const [{ data: sched }, { data: events }] = await Promise.all([
+    const [{ data: sched }, { data: events }, { data: workouts }] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('id, time_of_day, task_title, reminder_minutes, reminder_text')
             .eq('user_id', currentUserId).eq('day_of_week', dbDaysMap[now.getDay()]).gt('reminder_minutes', 0),
         supabaseClient.from('calendar_events').select('id, event_time, event_title, reminder_minutes, reminder_text')
             .eq('user_id', currentUserId).eq('event_date', todayStr).gt('reminder_minutes', 0),
+        // 🏋️ אימונים מטבלת האימונים עם תזכורת, בימים שלהם (workouts.js)
+        supabaseClient.from('workout_plan').select('id, time, days, reminder_minutes, reminder_title, reminder_text')
+            .eq('user_id', currentUserId).gt('reminder_minutes', 0),
     ]);
     const due = [];
     const consider = (time, minutes, rem) => {
@@ -16264,6 +16268,8 @@ async function collectDueReminders(now, todayStr) {
         { taskTitle: item.task_title, text: item.reminder_text, sourceType: 'schedule', sourceId: item.id, sourceDate: todayStr }));
     (events || []).forEach(item => consider(item.event_time, item.reminder_minutes,
         { taskTitle: item.event_title, text: item.reminder_text, sourceType: 'event', sourceId: item.id, sourceDate: todayStr }));
+    (workouts || []).filter(item => Array.isArray(item.days) && item.days.map(Number).includes(now.getDay())).forEach(item => consider(item.time, item.reminder_minutes,
+        { taskTitle: item.reminder_title || '', text: item.reminder_text || '', sourceType: 'workout', sourceId: item.id, sourceDate: todayStr }));
     return due;
 }
 
@@ -16277,6 +16283,13 @@ async function claimReminderDelivery(rem) {
 }
 
 async function isReminderTaskDone(rem) {
+    if (rem.sourceType === 'workout') {
+        const [{ data: logged }, { data: row }] = await Promise.all([
+            supabaseClient.from('sport_sessions').select('id').eq('source_workout_id', rem.sourceId).eq('session_date', rem.sourceDate).limit(1),
+            supabaseClient.from('workout_plan').select('id').eq('id', rem.sourceId).maybeSingle(),
+        ]);
+        return !!(logged && logged.length) || !row;
+    }
     if (rem.sourceType === 'event') {
         const { data } = await supabaseClient.from('calendar_events').select('is_completed').eq('id', rem.sourceId).maybeSingle();
         return !data || !!data.is_completed;
@@ -16506,6 +16519,10 @@ async function markReminderPopupDone() {
             await toggleScheduleCompletion(source.sourceId, source.sourceDate, true);
         } else if (source.sourceType === 'event') {
             await toggleEventOccurrenceCompletion(source.sourceId, true);
+        } else if (source.sourceType === 'workout' && typeof toggleWorkoutDone === 'function') {
+            if (!workoutPlanLoaded) await loadWorkoutPlan();
+            if (workoutWeekLoadedFor !== currentWeekStart()) await loadWorkoutWeek();
+            if (!wkIsDone(source.sourceId, source.sourceDate)) await toggleWorkoutDone(source.sourceId, source.sourceDate);
         }
         showAppToast(t('reminder_popup_marked_done_toast'));
     }

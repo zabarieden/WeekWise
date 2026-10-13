@@ -37,6 +37,13 @@ function jsonResponse(body: unknown, status = 200) {
 
 // השורה עצמה: למי היא שייכת, הטקסט, ותאריך האירוע (במשימה קבועה התאריך מגיע מההתראה)
 async function loadSource(sourceType: string, sourceId: string) {
+    if (sourceType === "workout") {
+        // אימון מטבלת האימונים - הכותרת והטקסט נשמרו באפליקציה בשפת המשתמש/ת; השאר כדי לרשום אותו ב"בוצע"
+        const { data } = await supabase.from("workout_plan")
+            .select("user_id, reminder_title, reminder_text, kind, custom_name, duration_minutes, intensity, place, notes")
+            .eq("id", sourceId).maybeSingle();
+        return data ? { owner: data.user_id as string, title: data.reminder_title || "", body: data.reminder_text || "", date: null as string | null, workout: data } : null;
+    }
     if (sourceType === "event") {
         const { data } = await supabase.from("calendar_events").select("user_id, event_title, reminder_text, event_date").eq("id", sourceId).maybeSingle();
         return data ? { owner: data.user_id as string, title: data.event_title || "", body: data.reminder_text || "", date: data.event_date as string | null } : null;
@@ -52,7 +59,7 @@ Deno.serve(async (req) => {
     try {
         const { sourceType, sourceId, sourceDate, userId, action = "done" } = await req.json();
         if (!sourceType || !sourceId) return jsonResponse({ error: "missing_fields" }, 400);
-        if (sourceType !== "event" && sourceType !== "schedule") return jsonResponse({ error: "unknown_source_type" }, 400);
+        if (sourceType !== "event" && sourceType !== "schedule" && sourceType !== "workout") return jsonResponse({ error: "unknown_source_type" }, 400);
 
         const src = await loadSource(sourceType, sourceId);
         const date: string | null = (src && src.date) || sourceDate || null;
@@ -107,6 +114,24 @@ Deno.serve(async (req) => {
                 { onConflict: "schedule_id,completion_date" },
             );
             if (error) return jsonResponse({ error: error.message }, 500);
+        } else if (sourceType === "workout") {
+            // "בוצע" על תזכורת אימון = האימון נרשם בהיסטוריית הספורט (כמו ✓ בטבלה), פעם אחת ביום. הבעלים
+            // והפרטים מהשורה עצמה, לא מהבקשה. בלי calories_burned - האפליקציה מעריכה לבד לפי הסוג והמשך
+            if (!sourceDate || !src || !("workout" in src) || !src.workout) return jsonResponse({ error: "missing_fields" }, 400);
+            const w = src.workout as { kind: string; custom_name: string | null; duration_minutes: number | null; intensity: string | null; place: string | null; notes: string | null };
+            const { data: existing } = await supabase.from("sport_sessions").select("id").eq("source_workout_id", sourceId).eq("session_date", sourceDate).limit(1);
+            if (!existing || !existing.length) {
+                const builtIn = ["running", "cycling", "swimming"].includes(w.kind);
+                // השם בלי האייקון שבתחילת הכותרת ("🏃 ריצה" → "ריצה")
+                const plain = String(src.title || "").replace(/^\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*\s*/u, "").trim();
+                const { error } = await supabase.from("sport_sessions").insert({
+                    user_id: src.owner, sport_type: builtIn ? w.kind : "custom",
+                    custom_type_name: builtIn ? null : ((w.kind === "custom" ? w.custom_name : plain) || null),
+                    duration_minutes: w.duration_minutes || 30, distance_km: null, motivation: null, session_date: sourceDate,
+                    notes: w.notes || null, photo_url: null, source_workout_id: sourceId, intensity: w.intensity || null, place: w.place || null,
+                });
+                if (error) return jsonResponse({ error: error.message }, 500);
+            }
         }
 
         return jsonResponse({ ok: true });
