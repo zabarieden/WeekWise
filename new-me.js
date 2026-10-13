@@ -667,6 +667,34 @@ function nmMaybeOfferAiMenu() {
     });
     return true;
 }
+// ✨ העולם הקסום (לפי בקשה מפורשת, 2026-10-13: "בתוך המשחק שיהיה פחות מעצבן ואז יצבע את הכל כמו שצובעים עם מברשת"): 5 ערכות
+// הנושא הקסומות של New Me. נגיעה בערכה - מברשת של נצנצים צובעת את כל החלון בה (magicPaintTheme ב-app.js)
+function nmOpenMagicPicker(invite) {
+    if (typeof MAGIC_COLOR_THEMES === 'undefined') return null;
+    const cur = currentColorThemeName();
+    const tiles = MAGIC_COLOR_THEMES.map(k => `<button type="button" class="nm-magic-tile${cur === k ? ' selected' : ''}" data-theme="${k}" data-color-theme="${k}" aria-pressed="${cur === k}"><span class="home-theme-pattern" aria-hidden="true"></span><span class="nm-magic-name">${nmEsc(t(k + '_name'))}</span></button>`).join('');
+    const ov = nmOpenSheet(`
+        <h4 class="nm-magic-title">✨ ${nmEsc(t('magic_picker_title'))}</h4>
+        <div class="nm-magic-grid">${tiles}</div>
+        ${invite ? `<button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('magic_not_now'))}</button>` : ''}`, 'nm-magic-sheet', invite ? () => nmMarkMagicOffered() : null);
+    ov.querySelectorAll('.nm-magic-tile').forEach(b => b.addEventListener('click', () => {
+        ov.remove();
+        nmMarkMagicOffered();
+        selectColorTheme(b.dataset.theme);
+    }));
+    return ov;
+}
+function nmMagicOfferKey() { return `weekwise_magic_offered_${currentUserId}`; }
+function nmMarkMagicOffered() { try { localStorage.setItem(nmMagicOfferKey(), '1'); } catch {} }
+// פעם אחת (גם מיד אחרי הקנייה, כשנכנסים ל-New Me): הזמנה לבחור עולם קסום - במקום החלפה אוטומטית
+function nmMaybeOfferMagic() {
+    if (!hasNewMe || typeof MAGIC_COLOR_THEMES === 'undefined' || isMagicColorTheme(currentColorThemeName())) return false;
+    let seen = false;
+    try { seen = localStorage.getItem(nmMagicOfferKey()) === '1'; } catch {}
+    if (seen || nmQuiz || document.querySelector('.nm-sheet-overlay, .sr-reveal, .app-tour-layer, .magic-paint')) return false;
+    nmOpenMagicPicker(true);
+    return true;
+}
 async function nmMarkAiOffered() {
     if (!nmProfile || nmProfile.ai_menu_offered_at) return;
     nmProfile.ai_menu_offered_at = new Date().toISOString();
@@ -724,6 +752,8 @@ async function renderNewMe() {
     if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
     // ✨ תפריט אישי - הצעה חד-פעמית למי שכבר מילא את השאלון (היא שואלת גם על שעות האוכל, אז באותה כניסה לא שואלים עליהן)
     if (nmMaybeOfferAiMenu()) return;
+    // ✨ העולם הקסום - הזמנה חד-פעמית לבחור ערכה קסומה (במקום החלפה אוטומטית אחרי הקנייה)
+    if (nmMaybeOfferMagic()) return;
     // שעות האוכל - שואלים פעם אחת (מהשגרה, או כמה ארוחות ומתי); ואחר כך, אם צריך, אם להסתיר ארוחות מהשגרה
     if (!nmProfile.meal_times_set_at) nmMaybeAskMealTimes();
     else if (!nmProfile.routine_meals_checked) nmCheckRoutineMeals();
@@ -768,7 +798,7 @@ function nmPickSalesPlan(plan) {
 const NEW_ME_SALES_GROUPS = [
     ['nm_sales_g_menu', ['nm_sales_f1', 'nm_sales_f5', 'nm_sales_f8', 'nm_sales_f6', 'nm_sales_f4']],
     ['nm_sales_g_track', ['nm_sales_f2', 'nm_sales_f9', 'nm_sales_f10', 'nm_sales_f11', 'nm_sales_f3']],
-    ['nm_sales_g_journey', ['nm_sales_f12', 'nm_sales_f7', 'nm_sales_f13']],
+    ['nm_sales_g_journey', ['nm_sales_f12', 'nm_sales_f7', 'nm_sales_f13', 'nm_sales_f14']],
 ];
 function nmRenderSales(root) {
     const buy = `<button type="button" class="nm-btn-primary nm-buy-btn" onclick="submitNewMePurchase(this)">${nmEsc(nmBuyLabel(nmSalesPlan))}</button>`;
@@ -4527,6 +4557,7 @@ function nmRenderSettings(body) {
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmStartAiMenuQuiz('settings')">✨ ${nmEsc(t('nm_settings_ai_menu'))}</button>
+        <button type="button" class="nm-row-btn" onclick="nmOpenMagicPicker(false)">💎 ${nmEsc(t('nm_settings_magic'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmOpenMealTimes()">🕐 ${nmEsc(t('nm_times_title'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmCheckRoutineMeals(true)">🍽️ ${nmEsc(t('nm_settings_routine'))}</button>

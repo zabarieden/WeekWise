@@ -517,6 +517,15 @@ function renderHomeSearchResults(groups, q) {
 // --- הכתבה: שפות הדיבור ---
 const HOME_SPEECH_LANGS = { he: 'he-IL', en: 'en-US', es: 'es-ES', fr: 'fr-FR', ar: 'ar-SA', ru: 'ru-RU', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', zh: 'zh-CN', hi: 'hi-IN', ko: 'ko-KR', tr: 'tr-TR', id: 'id-ID', it: 'it-IT', vi: 'vi-VN', pl: 'pl-PL', th: 'th-TH', ur: 'ur-PK', bn: 'bn-BD', sw: 'sw-KE', uk: 'uk-UA', el: 'el-GR', nl: 'nl-NL', ca: 'ca-ES', ro: 'ro-RO', yo: 'yo-NG', sv: 'sv-SE', nb: 'nb-NO', da: 'da-DK', cs: 'cs-CZ', hu: 'hu-HU', fi: 'fi-FI' };
 function homeSpeechSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+// הודעה לכל סוג תקלה של ההכתבה (Web Speech API)
+const DICTATION_ERROR_KEYS = {
+    'not-allowed': 'dictation_mic_denied',
+    'service-not-allowed': 'dictation_service_off',
+    'audio-capture': 'dictation_no_mic',
+    'network': 'dictation_network',
+    'no-speech': 'dictation_no_speech',
+    'language-not-supported': 'dictation_lang',
+};
 // --- הכתבה: מדברים והמילים נכתבות תוך כדי (Chrome / אנדרואיד / ספארי באייפון) ---
 // לפי בקשה מפורשת ("שיהיה ממש אפשר לדבר וזה יכתוב במילים"): כפתור מיקרופון בשורת הכתיבה במסך הבית, בפתק המהיר
 // בעמוד כתיבה במחברת ובפתק השבועי. לחיצה מתחילה, לחיצה נוספת עוצרת; הטקסט נכנס במקום הסמן,
@@ -587,9 +596,11 @@ function startDictation(input, btn) {
     rec.onerror = ev => {
         const code = ev && ev.error;
         session.finish();
-        // aborted = עצירה שלנו (סגירת חלון / מעבר דף); "לא נשמע כלום" כן מקבל הודעה, כדי שיהיה ברור מה קרה
+        // aborted = עצירה שלנו (סגירת חלון / מעבר דף). לכל תקלה אחרת - הודעה שאומרת בדיוק מה קרה ומה לעשות (לפי דיווח מפורש,
+        // 2026-10-13: "ההקלטה... לא עובד מהמחשב - כי הוא כן עובד מהנייד"): במחשב זה בדרך כלל מיקרופון שאין / שחסום, או דפדפן
+        // שההכתבה בו לא עובדת
         if (code === 'aborted') return;
-        showAppToast(t(code === 'not-allowed' || code === 'service-not-allowed' ? 'dictation_mic_denied' : 'quick_note_voice_failed'), 'error');
+        showAppToast(t(DICTATION_ERROR_KEYS[code] || 'quick_note_voice_failed'), 'error');
     };
     rec.onend = () => session.finish();
     try { rec.start(); } catch { session.finish(); showAppToast(t('quick_note_voice_failed'), 'error'); }

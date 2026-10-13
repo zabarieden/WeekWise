@@ -57,6 +57,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyQuickNoteAppleSetting();
     applyAiFabCompactSetting();
     applyRoutineGoalsSetting();
+    applyNotesLook(getNotesLook());
+    applyQuotesLook(getQuotesLook());
     updateHomeSkyDayNight();
     if (!homeSkyDayNightIntervalStarted) {
         homeSkyDayNightIntervalStarted = true;
@@ -3899,10 +3901,67 @@ async function switchMenuStyle(style) {
 }
 async function loadMenuStyleSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('menu_style').eq('user_id', currentUserId).maybeSingle();
-    if (!data || !data.menu_style) return;
+    const { data } = await supabaseClient.from('user_premium').select('menu_style, notes_look, quotes_look').eq('user_id', currentUserId).maybeSingle();
+    if (!data) return;
+    // נראות הפתקים והציטוטים - נשמרת בחשבון, כך שהיא אותה נראות בכל מכשיר
+    if (NOTE_LOOKS.includes(data.notes_look)) { try { localStorage.setItem('weekwise_notes_look', data.notes_look); } catch {} applyNotesLook(data.notes_look); }
+    if (QUOTE_LOOKS.includes(data.quotes_look)) { try { localStorage.setItem('weekwise_quotes_look', data.quotes_look); } catch {} applyQuotesLook(data.quotes_look); }
+    if (!data.menu_style) return;
     localStorage.setItem('weekwise_menu_style', data.menu_style);
     applyMenuStyle(data.menu_style);
+}
+
+// 🎨 נראות הפתקים (לפי בקשה מפורשת, 2026-10-13: "פתקים זכוכית מספר 6... אפשרות למי שלא רוצה פתקים שקופים... שיהיה גם את
+// 5 1 2 4 אבל הברירת מחדל יהיה 6"): זכוכית (ברירת המחדל), רשימה נקייה, שורות מחברת, כרטיסיות ופסי סלוטייפ. תמיד רשימה
+// קומפקטית שרואים בה את מה שכתוב. הנראות היא data-note-look על ה-html (גם התצוגה המקדימה של פתק פתוח מקבלת אותה)
+const NOTE_LOOKS = ['glass', 'clean', 'notebook', 'index', 'washi'];
+function getNotesLook() {
+    let v = null;
+    try { v = localStorage.getItem('weekwise_notes_look'); } catch {}
+    return NOTE_LOOKS.includes(v) ? v : 'glass';
+}
+function applyNotesLook(look) {
+    document.documentElement.setAttribute('data-note-look', NOTE_LOOKS.includes(look) ? look : 'glass');
+    renderNotesLookChips();
+}
+async function setNotesLook(look) {
+    if (!NOTE_LOOKS.includes(look)) return;
+    try { localStorage.setItem('weekwise_notes_look', look); } catch {}
+    applyNotesLook(look);
+    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, notes_look: look }, { onConflict: 'user_id' });
+}
+function toggleNotesLookRow(e) {
+    if (e) e.stopPropagation();
+    const row = document.getElementById('notes-look-row');
+    const btn = document.getElementById('btn-notes-look');
+    if (!row) return;
+    const open = row.classList.toggle('hidden') === false;
+    if (btn) btn.setAttribute('aria-expanded', String(open));
+    renderNotesLookChips();
+}
+function renderNotesLookChips() {
+    const row = document.getElementById('notes-look-row');
+    if (!row) return;
+    const cur = document.documentElement.getAttribute('data-note-look') || 'glass';
+    row.innerHTML = NOTE_LOOKS.map(k => `<button type="button" class="notes-look-chip${k === cur ? ' selected' : ''}" aria-pressed="${k === cur}" onclick="setNotesLook('${k}')"><span class="notes-look-swatch nls-${k}" aria-hidden="true"></span>${escapeHtmlForReport(t('notes_look_' + k))}</button>`).join('');
+}
+
+// 🔖 נראות הציטוטים מספרים (לפי בקשה מפורשת, 2026-10-13: "שיהיה בתור סימניות מספר 4 ומי שלא אוהב את הנראות יכול להיות מספר 2
+// או 5"): סימניות (ברירת המחדל), תמונות עם סלוטייפ, או קיר של כרטיסים. data-quote-look על ה-html - גם במדף וגם בפינת הקריאה
+const QUOTE_LOOKS = ['bookmarks', 'polaroid', 'wall'];
+function getQuotesLook() {
+    let v = null;
+    try { v = localStorage.getItem('weekwise_quotes_look'); } catch {}
+    return QUOTE_LOOKS.includes(v) ? v : 'bookmarks';
+}
+function applyQuotesLook(look) {
+    document.documentElement.setAttribute('data-quote-look', QUOTE_LOOKS.includes(look) ? look : 'bookmarks');
+}
+async function setQuotesLook(look) {
+    if (!QUOTE_LOOKS.includes(look)) return;
+    try { localStorage.setItem('weekwise_quotes_look', look); } catch {}
+    applyQuotesLook(look);
+    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, quotes_look: look }, { onConflict: 'user_id' });
 }
 
 function closeHamburgerMenu() {
@@ -9023,9 +9082,13 @@ function updateHomePremiumBadgeVisibility() {
 // הכפתורים עצמם כבר פועלים בלי חסימה (selectColorTheme בודק isPremiumUser),
 // אבל בלי זה המנעול הוויזואלי היה נשאר מוצג גם כשאין יותר שום חסימה בפועל
 function updateThemeSwatchLocks() {
+    premiumStatusKnown = true;
     document.querySelectorAll('.theme-swatch-lock').forEach(el => {
         el.classList.toggle('hidden', isPremiumUser);
     });
+    // 💎 על הערכות הקסומות - למי שאין New Me
+    document.querySelectorAll('.theme-magic-lock').forEach(el => el.classList.toggle('hidden', hasNewMe));
+    magicThemeGuard();
 }
 
 function openPremiumUpgradeModal() {
@@ -9334,6 +9397,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'good_things', category: 'general' },
     { id: 'home_weather', category: 'general' },
     { id: 'theme_mode', category: 'general' },
+    { id: 'new_me_magic_themes', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
     { id: 'routine_day_tabs', category: 'general' },
@@ -9667,9 +9731,35 @@ function normalizeColorTheme(name) { return COLOR_THEME_ALIASES[name] || name; }
 // ערכות שיפות יותר בכהה (לפי בקשה מפורשת: "הנצנצים ומעלה הם יותר יפות כהות תשים אותם כהות כברירת מחדל שלוחצים עליהם
 // כל השאר בהיר", ועל הזוהר הצפוני "וגם זאתי כהה"; החללית בהירה - "הפרימיום הראשון יהיה בהיר הוא ממש יפה בהיר"): בחירה בערכה מעבירה למצב שלה - כהה לאלה, בהיר לכל השאר.
 // שחור ואפור כהה נשארים כהים (בבהיר הם יוצאים אפורים בהירים). 🌙 בתפריט ו"מצב בהיר" בהגדרות עדיין משנים אחר כך
-const DARK_FIRST_THEMES = ['watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey'];
+// ✨ ערכות קסומות של New Me (לפי בקשה מפורשת, 2026-10-13: "5 ערכות נושא שיהיו קסומות לבחירה - כמו זאתי שיש עכשיו רק עם
+// יותר נצנצים בכל מקום"; "כן ערכות נושא של NEW ME"): רק למי שקנה New Me. בוחרים אותן בתוך New Me או בהגדרות, ומברשת של
+// נצנצים צובעת את החלון בערכה - בלי החלפה פתאומית ("שיהיה פחות מעצבן... יראה את החלון ממש נצבע בנצנצים ובערכת נושא שהמשתמש בחר")
+const MAGIC_COLOR_THEMES = ['magic_forest', 'magic_stardust', 'magic_rose', 'magic_aurora', 'magic_dusk'];
+// הצבעים של המברשת - אותם צבעים כמו ב-theme.css: הרקע של הערכה, שני גוונים וצבעי הנצנצים
+const MAGIC_THEME_PAINT = {
+    magic_forest: { bg: ['#1a0f2e', '#2b1a3d', '#3d2156'], tint: ['#f9a8d4', '#c4b5fd'], sparks: ['#ffffff', '#fbbf24', '#f472b6', '#c084fc'] },
+    magic_stardust: { bg: ['#090d2c', '#18195a', '#2b1d66'], tint: ['#a5b4fc', '#e0e7ff'], sparks: ['#ffffff', '#e2e8f0', '#fcd34d', '#a5b4fc'] },
+    magic_rose: { bg: ['#260d22', '#3f1538', '#57204c'], tint: ['#fbcfe8', '#f9a8d4'], sparks: ['#ffffff', '#f7c8a8', '#fde68a', '#f9a8d4'] },
+    magic_aurora: { bg: ['#061a24', '#0f2a3d', '#1e1b4b'], tint: ['#5eead4', '#c4b5fd'], sparks: ['#ffffff', '#99f6e4', '#f0abfc', '#c4b5fd'] },
+    magic_dusk: { bg: ['#1c1030', '#3a1e40', '#4d2f1a'], tint: ['#fcd34d', '#fdba74'], sparks: ['#fff7d6', '#fcd34d', '#fdba74', '#f5d0fe'] },
+};
+function isMagicColorTheme(name) { return MAGIC_COLOR_THEMES.includes(name); }
+function currentColorThemeName() { return document.documentElement.getAttribute('data-color-theme') || 'default'; }
+const DARK_FIRST_THEMES = ['watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey', ...MAGIC_COLOR_THEMES];
 async function selectColorTheme(themeName) {
+    // ערכה קסומה בלי New Me - פותחים את New Me (שם רואים מה כלול וקונים), לא את חלון הפרימיום
+    if (isMagicColorTheme(themeName) && !hasNewMe) {
+        const settings = document.getElementById('modal-settings-drawer');
+        if (settings && settings.classList.contains('open')) closeModal('modal-settings-drawer');
+        openNewMe('home');
+        return;
+    }
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    // ערכה קסומה חדשה נצבעת על המסך במברשת של נצנצים, ונשמרת ברגע שהחלון כולו צבוע
+    if (isMagicColorTheme(themeName) && themeName !== currentColorThemeName()) { magicPaintTheme(themeName); return; }
+    await commitColorTheme(themeName);
+}
+async function commitColorTheme(themeName) {
     applyColorTheme(themeName);
     const light = !DARK_FIRST_THEMES.includes(themeName);
     localStorage.setItem('weekwise_light_mode', light ? 'true' : 'false');
@@ -9711,8 +9801,195 @@ async function loadColorTheme() {
         if (supabaseClient && currentUserId) supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, theme: themeName }, { onConflict: 'user_id' }).then(() => {});
     }
     applyColorTheme(themeName);
+    // גם הבחירה מהחשבון נשמרת במכשיר - magicThemeGuard מחזיר לפיה ערכה קסומה כש-New Me חוזר
+    localStorage.setItem(colorThemeKey(), themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);
+    magicThemeGuard();
 }
+
+// ערכה קסומה בלי New Me (החזר / מנוי שהסתיים / מתג ה-PM): רואים צבעי מים במקומה, בלי לשמור - כך שאם New Me חוזר,
+// הערכה הקסומה שנבחרה חוזרת איתו
+let premiumStatusKnown = false;
+function magicThemeGuard() {
+    if (!premiumStatusKnown) return;
+    let saved = null;
+    try { saved = localStorage.getItem(colorThemeKey()); } catch {}
+    if (!hasNewMe && isMagicColorTheme(currentColorThemeName())) applyColorTheme('watercolor_wash');
+    else if (hasNewMe && isMagicColorTheme(saved) && currentColorThemeName() !== saved) applyColorTheme(saved);
+}
+
+// 🖌️ המברשת: מכחול רחב צובע את החלון בשורות (כמו צביעת קיר), בצבעי הרקע של הערכה החדשה ועם נצנצים, ומתחת לצבע
+// מתחלפת הערכה; אחר כך הצבע מתפוגג ונשארת האפליקציה בערכה החדשה. קצר (בערך שנייה וחצי), ונגיעה מסיימת מיד
+let magicPaintBusy = false;
+function magicPaintTheme(themeName) {
+    const paint = MAGIC_THEME_PAINT[themeName];
+    const wrapper = document.querySelector('.phone-wrapper');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!paint || !wrapper || reduce || magicPaintBusy) { commitColorTheme(themeName); return; }
+    magicPaintBusy = true;
+    const box = wrapper.getBoundingClientRect();
+    const W = Math.max(1, box.width), H = Math.max(1, box.height);
+    const layer = document.createElement('div');
+    layer.className = 'magic-paint';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.left = `${box.left}px`;
+    layer.style.top = `${box.top}px`;
+    layer.style.width = `${W}px`;
+    layer.style.height = `${H}px`;
+    layer.innerHTML = '<canvas class="magic-paint-coat"></canvas><canvas class="magic-paint-fx"></canvas>';
+    document.body.appendChild(layer);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const [coat, fx] = layer.querySelectorAll('canvas');
+    [coat, fx].forEach(c => { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+    const cc = coat.getContext('2d');
+    const fc = fx.getContext('2d');
+    if (!cc || !fc) { layer.remove(); magicPaintBusy = false; commitColorTheme(themeName); return; }
+    cc.scale(dpr, dpr);
+    fc.scale(dpr, dpr);
+    const coatFill = cc.createLinearGradient(0, 0, W * 0.4, H);
+    coatFill.addColorStop(0, paint.bg[0]);
+    coatFill.addColorStop(0.55, paint.bg[1]);
+    coatFill.addColorStop(1, paint.bg[2]);
+    // מסלול המכחול: 5 שורות רחבות, הלוך ושוב, מלמעלה למטה
+    const rows = 5;
+    const rowH = H / rows;
+    const R = rowH * 0.78;
+    const path = [];
+    for (let i = 0; i < rows; i++) {
+        const y = (i + 0.5) * rowH;
+        const ltr = i % 2 === 0;
+        path.push({ x: ltr ? -R * 0.5 : W + R * 0.5, y: y - rowH * 0.16 }, { x: ltr ? W + R * 0.5 : -R * 0.5, y: y + rowH * 0.16 });
+    }
+    const segs = [];
+    let total = 0;
+    for (let i = 1; i < path.length; i++) {
+        const len = Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+        segs.push({ a: path[i - 1], b: path[i], from: total, len });
+        total += len;
+    }
+    const pointAt = d => {
+        const s = segs.find(g => d <= g.from + g.len) || segs[segs.length - 1];
+        const k = s.len ? Math.min(1, Math.max(0, (d - s.from) / s.len)) : 1;
+        return { x: s.a.x + (s.b.x - s.a.x) * k, y: s.a.y + (s.b.y - s.a.y) * k };
+    };
+    const star = (ctx, x, y, s) => {
+        ctx.beginPath();
+        ctx.moveTo(x, y - s);
+        ctx.quadraticCurveTo(x, y, x + s, y);
+        ctx.quadraticCurveTo(x, y, x, y + s);
+        ctx.quadraticCurveTo(x, y, x - s, y);
+        ctx.quadraticCurveTo(x, y, x, y - s);
+        ctx.fill();
+    };
+    // נגיעת מכחול: הצבע עצמו, שערות מכחול בגוונים של הערכה בשוליים, ונצנצים קטנים שנשארים בתוך הצבע
+    const dab = (x, y) => {
+        cc.globalAlpha = 1;
+        cc.fillStyle = coatFill;
+        cc.beginPath();
+        cc.arc(x, y, R, 0, Math.PI * 2);
+        cc.fill();
+        for (let k = 0; k < 3; k++) {
+            cc.globalAlpha = 0.16;
+            cc.fillStyle = paint.tint[k % 2];
+            cc.beginPath();
+            cc.arc(x + (Math.random() - 0.5) * R * 0.4, y + (k === 1 ? 1 : -1) * R * (0.55 + Math.random() * 0.25), R * (0.1 + Math.random() * 0.1), 0, Math.PI * 2);
+            cc.fill();
+        }
+        cc.globalAlpha = 0.9;
+        for (let k = 0; k < 2; k++) {
+            cc.fillStyle = paint.sparks[Math.floor(Math.random() * paint.sparks.length)];
+            star(cc, x + (Math.random() - 0.5) * R * 1.5, y + (Math.random() - 0.5) * R * 1.5, 1.2 + Math.random() * 2.2);
+        }
+        cc.globalAlpha = 1;
+    };
+    const sparks = [];
+    const DURATION = 1150;
+    const STEP = Math.max(6, R * 0.22);
+    let painted = 0;
+    let t0 = 0;
+    let finished = false;
+    let fadeAt = 0;
+    const finishPaint = () => {
+        if (finished) return;
+        finished = true;
+        cc.globalAlpha = 1;
+        cc.fillStyle = coatFill;
+        cc.fillRect(0, 0, W, H);
+        commitColorTheme(themeName);
+        fadeAt = performance.now();
+        layer.classList.add('done');
+        setTimeout(() => { layer.remove(); magicPaintBusy = false; }, 700);
+    };
+    // נגיעה בזמן הצביעה - מסיימים מיד
+    layer.addEventListener('pointerdown', finishPaint);
+    const frame = now => {
+        if (!layer.isConnected) { magicPaintBusy = false; return; }
+        if (!t0) t0 = now;
+        const p = Math.min(1, (now - t0) / DURATION);
+        const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        const target = eased * total;
+        if (!finished) {
+            while (painted < target) {
+                painted = Math.min(target, painted + STEP);
+                const pt = pointAt(painted);
+                dab(pt.x, pt.y);
+            }
+            const head = pointAt(painted);
+            for (let k = 0; k < 3; k++) {
+                sparks.push({ x: head.x + (Math.random() - 0.5) * R, y: head.y + (Math.random() - 0.5) * R, vx: (Math.random() - 0.5) * 1.6, vy: -0.4 - Math.random() * 1.4, life: 1, size: 2 + Math.random() * 4, color: paint.sparks[Math.floor(Math.random() * paint.sparks.length)] });
+            }
+            if (p >= 1) finishPaint();
+        }
+        fc.clearRect(0, 0, W, H);
+        for (let i = sparks.length - 1; i >= 0; i--) {
+            const s = sparks[i];
+            s.x += s.vx;
+            s.y += s.vy;
+            s.vy += 0.03;
+            s.life -= 0.022;
+            if (s.life <= 0) { sparks.splice(i, 1); continue; }
+            fc.globalAlpha = Math.max(0, s.life);
+            fc.fillStyle = s.color;
+            fc.shadowColor = s.color;
+            fc.shadowBlur = 8;
+            star(fc, s.x, s.y, s.size * (0.6 + s.life * 0.4));
+        }
+        fc.globalAlpha = 1;
+        fc.shadowBlur = 0;
+        if (!finished || now - fadeAt < 650) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+}
+
+// ✨ נצנצים קטנים בכל נגיעה - רק בערכה קסומה (ולא למי שביקש/ה פחות תנועה)
+let magicTapAt = 0;
+function magicTapSparkles(e) {
+    if (!isMagicColorTheme(currentColorThemeName())) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const now = Date.now();
+    if (now - magicTapAt < 120) return;
+    magicTapAt = now;
+    let host = document.getElementById('magic-taps');
+    if (!host) {
+        host = document.createElement('div');
+        host.id = 'magic-taps';
+        host.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(host);
+    }
+    for (let i = 0; i < 7; i++) {
+        const s = document.createElement('i');
+        const ang = (i / 7) * Math.PI * 2 + Math.random() * 0.6;
+        const dist = 18 + Math.random() * 22;
+        s.style.left = `${e.clientX}px`;
+        s.style.top = `${e.clientY}px`;
+        s.style.setProperty('--dx', `${(Math.cos(ang) * dist).toFixed(1)}px`);
+        s.style.setProperty('--dy', `${(Math.sin(ang) * dist).toFixed(1)}px`);
+        s.style.setProperty('--c', `var(--magic-${1 + (i % 4)})`);
+        host.appendChild(s);
+        setTimeout(() => s.remove(), 720);
+    }
+}
+document.addEventListener('pointerdown', magicTapSparkles, { passive: true });
 
 // אייקון עוזר ה-AI (הכפתור בפינה) - אותו דפוס בדיוק כמו applyColorTheme/
 // selectColorTheme/loadColorTheme למעלה, על עמודה נפרדת (user_premium.ai_icon).

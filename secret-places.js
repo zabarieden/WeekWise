@@ -1848,8 +1848,12 @@ async function roomOpenQuotes(opts = {}) {
 function srRenderQuotes(wrap, ov) {
     const list = roomQuotes || [];
     const inShelf = ov.dataset.mode === 'shelf';
+    // 🎨 הנראות: סימניות (ברירת המחדל) / תמונות עם סלוטייפ / קיר של כרטיסים (getQuotesLook ב-app.js)
+    const look = document.documentElement.getAttribute('data-quote-look') || (typeof getQuotesLook === 'function' ? getQuotesLook() : 'bookmarks');
+    const looks = typeof QUOTE_LOOKS !== 'undefined' ? QUOTE_LOOKS : [];
     wrap.innerHTML = `
-        ${inShelf ? '' : `<h4>${srEsc(t('room_quotes_title'))}</h4>`}
+        <div class="sr-quotes-head">${inShelf ? '<span></span>' : `<h4>${srEsc(t('room_quotes_title'))}</h4>`}${looks.length && list.length ? `<button type="button" class="sr-quote-look-btn" aria-expanded="false" aria-label="${srEsc(t('quotes_look_title'))}" title="${srEsc(t('quotes_look_title'))}">🎨</button>` : ''}</div>
+        ${looks.length && list.length ? `<div class="sr-quote-looks hidden" role="group" aria-label="${srEsc(t('quotes_look_title'))}">${looks.map(k => `<button type="button" class="sr-quote-look${k === look ? ' selected' : ''}" data-qlook="${k}" aria-pressed="${k === look}">${srEsc(t('quotes_look_' + k))}</button>`).join('')}</div>` : ''}
         <div class="sr-quotes">${list.length ? list.map(q => `
             <figure class="sr-quote">
                 <blockquote>${srEsc(q.quote)}</blockquote>
@@ -1858,6 +1862,16 @@ function srRenderQuotes(wrap, ov) {
             </figure>`).join('') : `<p class="sr-quotes-empty">${srEsc(t('room_quotes_empty'))}</p>`}</div>
         <button type="button" class="nm-btn-primary" data-qadd>${srEsc(t('room_quotes_add'))}</button>
         ${inShelf ? '' : `<button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`}`;
+    const lookBtn = wrap.querySelector('.sr-quote-look-btn');
+    if (lookBtn) lookBtn.addEventListener('click', () => {
+        const row = wrap.querySelector('.sr-quote-looks');
+        const open = row.classList.toggle('hidden') === false;
+        lookBtn.setAttribute('aria-expanded', String(open));
+    });
+    wrap.querySelectorAll('[data-qlook]').forEach(b => b.addEventListener('click', () => {
+        setQuotesLook(b.dataset.qlook);
+        if (wrap.isConnected) srRenderQuotes(wrap, ov);
+    }));
     wrap.querySelector('[data-qadd]').addEventListener('click', () => srQuoteForm(wrap, ov, null));
     wrap.querySelectorAll('[data-qedit]').forEach(b => b.addEventListener('click', () => srQuoteForm(wrap, ov, list.find(q => q.id === b.dataset.qedit))));
     wrap.querySelectorAll('[data-qdel]').forEach(b => b.addEventListener('click', () => {

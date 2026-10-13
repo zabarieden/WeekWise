@@ -9857,3 +9857,340 @@ html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { colo
 @media (prefers-reduced-motion: reduce) {
     .srj-twinkle, .srj-flame, .sr-wish-paper { animation: none; }
 }
+
+/* ===== ✨ ערכות קסומות של New Me (2026-10-13, לפי בקשה מפורשת: "5 ערכות נושא שיהיו קסומות לבחירה - כמו זאתי שיש עכשיו רק עם
+   יותר נצנצים בכל מקום"; "כן ערכות נושא של NEW ME"). יער קסום, אבק כוכבים, פיית ורדים, זוהר קסום ושקיעת זהב - רק למי שקנה
+   New Me (selectColorTheme / magicThemeGuard ב-app.js). נצנצים בכל מקום: שכבה מנצנצת מאחורי כל האפליקציה (.magic-sky), דוגמה
+   מנצנצת במסך הבית, נצנצים בחלונות ובתפריט, ברק שעובר על הכפתורים ונצנצים בכל נגיעה (magicTapSparkles). הצבעים של המברשת
+   (MAGIC_THEME_PAINT ב-app.js) זהים לאלה. בלי אדום ===== */
+[data-color-theme="magic_forest"] {
+    --bg-main: linear-gradient(162deg, #1a0f2e, #2b1a3d 55%, #3d2156);
+    --bg-row: rgba(84, 52, 110, 0.42);
+    --bg-glass: rgba(36, 22, 58, 0.74);
+    --bg-sheet: #21143a;
+    --border-color: rgba(196, 145, 255, 0.28);
+    --text-secondary: #bcaed8;
+    --accent-pink: #f9a8d4;
+    --accent-purple: #c4b5fd;
+    --accent-purple-light: #a5f3fc;
+    --magic-1: #ffffff; --magic-2: #fbbf24; --magic-3: #f472b6; --magic-4: #c084fc;
+}
+[data-color-theme="magic_stardust"] {
+    --bg-main: linear-gradient(162deg, #090d2c, #18195a 55%, #2b1d66);
+    --bg-row: rgba(40, 46, 120, 0.45);
+    --bg-glass: rgba(20, 22, 70, 0.74);
+    --bg-sheet: #15164a;
+    --border-color: rgba(165, 180, 252, 0.28);
+    --text-secondary: #b3badf;
+    --accent-pink: #a5b4fc;
+    --accent-purple: #c7d2fe;
+    --accent-purple-light: #fcd34d;
+    --magic-1: #ffffff; --magic-2: #e2e8f0; --magic-3: #fcd34d; --magic-4: #a5b4fc;
+}
+[data-color-theme="magic_rose"] {
+    --bg-main: linear-gradient(162deg, #260d22, #3f1538 55%, #57204c);
+    --bg-row: rgba(100, 36, 84, 0.42);
+    --bg-glass: rgba(52, 18, 44, 0.74);
+    --bg-sheet: #351230;
+    --border-color: rgba(249, 168, 212, 0.28);
+    --text-secondary: #dab4cc;
+    --accent-pink: #fbcfe8;
+    --accent-purple: #f9a8d4;
+    --accent-purple-light: #fde68a;
+    --magic-1: #ffffff; --magic-2: #f7c8a8; --magic-3: #fde68a; --magic-4: #f9a8d4;
+}
+[data-color-theme="magic_aurora"] {
+    --bg-main: linear-gradient(162deg, #061a24, #0f2a3d 55%, #1e1b4b);
+    --bg-row: rgba(20, 70, 90, 0.42);
+    --bg-glass: rgba(10, 34, 48, 0.76);
+    --bg-sheet: #0f2534;
+    --border-color: rgba(94, 234, 212, 0.26);
+    --text-secondary: #a9c9cf;
+    --accent-pink: #5eead4;
+    --accent-purple: #c4b5fd;
+    --accent-purple-light: #f0abfc;
+    --magic-1: #ffffff; --magic-2: #99f6e4; --magic-3: #f0abfc; --magic-4: #c4b5fd;
+}
+[data-color-theme="magic_dusk"] {
+    --bg-main: linear-gradient(162deg, #1c1030, #3a1e40 55%, #4d2f1a);
+    --bg-row: rgba(96, 58, 40, 0.42);
+    --bg-glass: rgba(44, 24, 40, 0.76);
+    --bg-sheet: #2e1a2c;
+    --border-color: rgba(252, 211, 77, 0.26);
+    --text-secondary: #d6bfa6;
+    --accent-pink: #fcd34d;
+    --accent-purple: #fdba74;
+    --accent-purple-light: #d8b4fe;
+    --magic-1: #fff7d6; --magic-2: #fcd34d; --magic-3: #fdba74; --magic-4: #f5d0fe;
+}
+/* מצב בהיר: אותן ערכות בפסטל, טקסט כהה ונצנצים בצבעים עמוקים יותר (לבן לא נראה על בהיר) */
+html.light-mode[data-color-theme="magic_forest"] { --bg-main: linear-gradient(162deg, #fbf1fb, #efe6ff 60%, #e6f6fb); --bg-row: rgba(196, 145, 255, 0.12); --bg-glass: rgba(253, 246, 255, 0.8); --bg-sheet: #fefaff; --border-color: rgba(168, 120, 230, 0.26); --text-primary: #241830; --text-secondary: #6e5a80; --magic-1: #a78bfa; --magic-2: #f59e0b; --magic-3: #ec4899; --magic-4: #8b5cf6; }
+html.light-mode[data-color-theme="magic_stardust"] { --bg-main: linear-gradient(162deg, #f1f3ff, #e4e8ff 60%, #efe9ff); --bg-row: rgba(129, 140, 248, 0.12); --bg-glass: rgba(245, 247, 255, 0.82); --bg-sheet: #fbfcff; --border-color: rgba(99, 102, 241, 0.22); --text-primary: #1c1f4a; --text-secondary: #5b6290; --magic-1: #6366f1; --magic-2: #94a3b8; --magic-3: #d97706; --magic-4: #818cf8; }
+html.light-mode[data-color-theme="magic_rose"] { --bg-main: linear-gradient(162deg, #fff1f7, #fde4f1 60%, #fff3e6); --bg-row: rgba(244, 114, 182, 0.12); --bg-glass: rgba(255, 245, 250, 0.82); --bg-sheet: #fffafc; --border-color: rgba(236, 72, 153, 0.22); --text-primary: #3a1430; --text-secondary: #85587a; --magic-1: #ec4899; --magic-2: #d97706; --magic-3: #f59e0b; --magic-4: #db2777; }
+html.light-mode[data-color-theme="magic_aurora"] { --bg-main: linear-gradient(162deg, #e8fbf8, #e9f3ff 55%, #f0eaff); --bg-row: rgba(45, 212, 191, 0.12); --bg-glass: rgba(243, 253, 251, 0.82); --bg-sheet: #fafffe; --border-color: rgba(20, 184, 166, 0.22); --text-primary: #10303a; --text-secondary: #4f6f78; --magic-1: #0d9488; --magic-2: #14b8a6; --magic-3: #c026d3; --magic-4: #7c3aed; }
+html.light-mode[data-color-theme="magic_dusk"] { --bg-main: linear-gradient(162deg, #fff7e8, #fdeedd 55%, #f6ebff); --bg-row: rgba(245, 158, 11, 0.12); --bg-glass: rgba(255, 250, 240, 0.84); --bg-sheet: #fffcf6; --border-color: rgba(217, 119, 6, 0.22); --text-primary: #3a2618; --text-secondary: #7f6450; --magic-1: #d97706; --magic-2: #f59e0b; --magic-3: #ea580c; --magic-4: #a855f7; }
+
+/* הנצנצים מאחורי כל האפליקציה: שתי שכבות של נקודות אור שמתחלפות, ועוד אחת של זוהר רך שזז לאט. מתחת לתוכן
+   (#app-container ב-z-index 5), כך שהם נראים בין השורות והכרטיסים ולא מעליהם */
+.magic-sky { display: none; }
+html[data-color-theme^="magic_"] .magic-sky {
+    display: block; position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden;
+    background-image:
+        radial-gradient(3px 3px at 60px 80px, color-mix(in srgb, var(--magic-2) 70%, transparent), transparent),
+        radial-gradient(2.6px 2.6px at 210px 190px, color-mix(in srgb, var(--magic-3) 65%, transparent), transparent),
+        radial-gradient(3.2px 3.2px at 150px 300px, color-mix(in srgb, var(--magic-1) 60%, transparent), transparent);
+    background-size: 300px 360px;
+    animation: magicDrift 80s linear infinite;
+}
+html[data-color-theme^="magic_"] .magic-sky::before,
+html[data-color-theme^="magic_"] .magic-sky::after { content: ''; position: absolute; inset: 0; background-repeat: repeat; animation: magicTwinkle 4.4s ease-in-out infinite; }
+html[data-color-theme^="magic_"] .magic-sky::before {
+    background-image:
+        radial-gradient(1.6px 1.6px at 22px 34px, var(--magic-1), transparent),
+        radial-gradient(1.4px 1.4px at 128px 70px, var(--magic-3), transparent),
+        radial-gradient(2px 2px at 84px 150px, var(--magic-2), transparent),
+        radial-gradient(1.2px 1.2px at 176px 120px, var(--magic-4), transparent),
+        radial-gradient(1.6px 1.6px at 48px 196px, var(--magic-1), transparent);
+    background-size: 220px 220px;
+}
+html[data-color-theme^="magic_"] .magic-sky::after {
+    background-image:
+        radial-gradient(1.4px 1.4px at 64px 18px, var(--magic-4), transparent),
+        radial-gradient(2px 2px at 160px 96px, var(--magic-1), transparent),
+        radial-gradient(1.3px 1.3px at 22px 122px, var(--magic-2), transparent),
+        radial-gradient(1.8px 1.8px at 118px 196px, var(--magic-3), transparent),
+        radial-gradient(1.5px 1.5px at 236px 44px, var(--magic-1), transparent);
+    background-size: 260px 260px;
+    animation-delay: -2.2s;
+}
+html.light-mode[data-color-theme^="magic_"] .magic-sky { opacity: .7; }
+@keyframes magicTwinkle { 0%, 100% { opacity: .14; } 50% { opacity: .95; } }
+@keyframes magicDrift { from { background-position: 0 0, 0 0, 0 0; } to { background-position: 300px 360px, -300px 360px, 0 720px; } }
+/* תוספת לכל ערכה: כוכב נופל, זוהר צפוני, אורות מטושטשים, גחליליות ואבקת זהב */
+.magic-extra { display: none; }
+html[data-color-theme^="magic_"] .magic-extra { display: block; position: absolute; pointer-events: none; }
+html[data-color-theme="magic_stardust"] .magic-extra { top: 16%; left: -30%; width: 90px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #fff); filter: drop-shadow(0 0 4px #fff); animation: magicShoot 7s ease-in 2s infinite; }
+@keyframes magicShoot { 0% { transform: translate(0, 0) rotate(-18deg); opacity: 0; } 3% { opacity: 1; } 13% { transform: translate(140vw, 46vh) rotate(-18deg); opacity: 0; } 100% { transform: translate(140vw, 46vh) rotate(-18deg); opacity: 0; } }
+html[data-color-theme="magic_aurora"] .magic-extra { inset: -20% -30% 50% -30%; background: linear-gradient(100deg, transparent 20%, rgba(94, 234, 212, .26) 35%, rgba(196, 181, 253, .22) 50%, rgba(240, 171, 252, .16) 62%, transparent 78%); filter: blur(22px); animation: magicAurora 12s ease-in-out infinite alternate; }
+@keyframes magicAurora { from { transform: skewY(-12deg) translateX(-8%); } to { transform: skewY(-7deg) translateX(8%); } }
+html[data-color-theme="magic_rose"] .magic-extra { inset: 0; background: radial-gradient(90px 90px at 12% 22%, rgba(251, 207, 232, .22), transparent 70%), radial-gradient(120px 120px at 82% 64%, rgba(249, 168, 212, .18), transparent 70%), radial-gradient(70px 70px at 40% 88%, rgba(253, 230, 138, .14), transparent 70%); animation: magicFloat 9s ease-in-out infinite alternate; }
+html[data-color-theme="magic_forest"] .magic-extra { inset: 0; background: radial-gradient(4px 4px at 18% 70%, rgba(251, 191, 36, .8), transparent), radial-gradient(3px 3px at 72% 40%, rgba(251, 191, 36, .7), transparent), radial-gradient(3.5px 3.5px at 46% 18%, rgba(244, 114, 182, .7), transparent); filter: drop-shadow(0 0 4px rgba(251, 191, 36, .6)); animation: magicFloat 7s ease-in-out infinite alternate; }
+html[data-color-theme="magic_dusk"] .magic-extra { inset: 0; background-image: radial-gradient(1px 1px at 12px 18px, #fcd34d, transparent), radial-gradient(1.2px 1.2px at 52px 60px, #fde68a, transparent), radial-gradient(1px 1px at 90px 30px, #fff7d6, transparent); background-size: 110px 90px; animation: magicTwinkle 3s ease-in-out infinite; }
+@keyframes magicFloat { from { transform: translateY(0); } to { transform: translateY(-16px); } }
+
+/* מסך הבית ואריחי הבחירה: כתמי צבע רכים והרבה נצנצים מבצבצים (כמו צבעי המים, ויותר) */
+html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern,
+[data-color-theme^="magic_"] > .home-theme-pattern {
+    background-image:
+        radial-gradient(circle at 22% 28%, color-mix(in srgb, var(--accent-pink) 26%, transparent) 0%, transparent 46%),
+        radial-gradient(circle at 74% 62%, color-mix(in srgb, var(--accent-purple) 26%, transparent) 0%, transparent 46%),
+        radial-gradient(circle at 44% 84%, color-mix(in srgb, var(--accent-purple-light) 20%, transparent) 0%, transparent 46%);
+    background-size: 100% 100%;
+}
+html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::before,
+html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::after,
+[data-color-theme^="magic_"] > .home-theme-pattern::before,
+[data-color-theme^="magic_"] > .home-theme-pattern::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-repeat: repeat; animation: magicTwinkle 3.6s ease-in-out infinite; }
+html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::before,
+[data-color-theme^="magic_"] > .home-theme-pattern::before {
+    background-image:
+        radial-gradient(2.2px 2.2px at 26px 38px, var(--magic-1), transparent),
+        radial-gradient(1.8px 1.8px at 132px 66px, var(--magic-3), transparent),
+        radial-gradient(2.6px 2.6px at 84px 152px, var(--magic-2), transparent),
+        radial-gradient(1.6px 1.6px at 176px 118px, var(--magic-4), transparent),
+        radial-gradient(2px 2px at 46px 190px, var(--magic-1), transparent);
+    background-size: 200px 200px;
+}
+html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::after,
+[data-color-theme^="magic_"] > .home-theme-pattern::after {
+    background-image:
+        radial-gradient(1.8px 1.8px at 60px 20px, var(--magic-4), transparent),
+        radial-gradient(2.4px 2.4px at 150px 96px, var(--magic-1), transparent),
+        radial-gradient(1.6px 1.6px at 20px 120px, var(--magic-2), transparent),
+        radial-gradient(2.2px 2.2px at 112px 178px, var(--magic-3), transparent),
+        radial-gradient(1.8px 1.8px at 214px 40px, var(--magic-1), transparent);
+    background-size: 230px 230px;
+    animation-delay: -1.8s;
+}
+
+/* נצנצים גם בחלונות, בגיליונות של New Me ובתפריט (נקודות קטנות על הרקע של החלון) */
+html[data-color-theme^="magic_"] .modal-sheet:not(.delete-account-confirm-sheet),
+html[data-color-theme^="magic_"] .nm-sheet,
+html[data-color-theme^="magic_"] .hamburger-drawer {
+    background-image:
+        radial-gradient(1.4px 1.4px at 18px 26px, color-mix(in srgb, var(--magic-1) 70%, transparent), transparent),
+        radial-gradient(1.2px 1.2px at 96px 64px, color-mix(in srgb, var(--magic-2) 70%, transparent), transparent),
+        radial-gradient(1.6px 1.6px at 150px 20px, color-mix(in srgb, var(--magic-3) 60%, transparent), transparent),
+        radial-gradient(1.2px 1.2px at 60px 120px, color-mix(in srgb, var(--magic-4) 70%, transparent), transparent);
+    background-size: 180px 150px;
+}
+
+/* ברק שעובר על הכפתורים הראשיים, וטקסט כהה על הצבעים הבהירים של הערכה */
+html[data-color-theme^="magic_"] :is(.btn-primary, .btn-premium-cta, .app-tour-next, .myday-foot-btn.primary) {
+    color: #1b1030;
+    background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%), linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    background-size: 250% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    animation: magicGlint 4.2s ease-in-out infinite;
+}
+html[data-color-theme^="magic_"] .nm-btn-primary {
+    color: #1b1030;
+    background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%), var(--nm-grad);
+    background-size: 250% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    animation: magicGlint 4.2s ease-in-out infinite;
+}
+@keyframes magicGlint { 0%, 55% { background-position: 200% 0, 0 0; } 90%, 100% { background-position: -100% 0, 0 0; } }
+
+/* נצנצים בכל נגיעה (magicTapSparkles ב-app.js) */
+#magic-taps { position: fixed; inset: 0; z-index: 2147483500; pointer-events: none; overflow: hidden; }
+#magic-taps i { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--c, #fff); box-shadow: 0 0 8px var(--c, #fff); animation: magicTap .7s ease-out forwards; }
+@keyframes magicTap { from { transform: translate(0, 0) scale(1); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+
+/* 🖌️ המברשת (magicPaintTheme): שכבה מעל החלון - הצבע, ומעליו הנצנצים שעפים מהמכחול. בסוף הצבע מתפוגג */
+.magic-paint { position: fixed; z-index: 2147483600; overflow: hidden; touch-action: none; cursor: pointer; }
+.magic-paint canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.magic-paint-coat { transition: opacity .55s ease; }
+.magic-paint.done .magic-paint-coat { opacity: 0; }
+
+/* 💎 הערכות הקסומות בהגדרות: קבוצה משלהן, עם 💎 למי שאין New Me */
+.theme-magic-tile { position: relative; }
+.theme-magic-lock { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; font-size: 15px; background: rgba(10, 6, 20, 0.35); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
+
+/* בורר העולם הקסום בתוך New Me (nmOpenMagicPicker) */
+.nm-magic-title { margin: 2px 0 4px; text-align: center; font-size: 1.15rem; }
+.nm-magic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; margin: 6px 0 10px; }
+.nm-magic-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; min-height: 120px; padding: 10px 8px; border-radius: 22px; border: 2px solid rgba(255, 255, 255, 0.14); background: var(--bg-main); color: var(--text-primary); font: inherit; overflow: hidden; cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
+.nm-magic-tile .home-theme-pattern { position: absolute; inset: 0; }
+.nm-magic-tile:active { transform: scale(.97); }
+.nm-magic-tile.selected { border-color: var(--accent-purple); box-shadow: 0 0 0 2px var(--accent-purple), 0 0 18px color-mix(in srgb, var(--accent-purple) 45%, transparent); }
+.nm-magic-name { position: relative; z-index: 1; padding: 3px 10px; border-radius: 999px; background: rgba(10, 6, 20, 0.45); color: #fff; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.nm-magic-tile:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    html[data-color-theme^="magic_"] .magic-sky, html[data-color-theme^="magic_"] .magic-sky::before, html[data-color-theme^="magic_"] .magic-sky::after,
+    html[data-color-theme^="magic_"] .magic-extra,
+    html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::before, html[data-color-theme^="magic_"] .home-sky-scene .home-theme-pattern::after,
+    [data-color-theme^="magic_"] > .home-theme-pattern::before, [data-color-theme^="magic_"] > .home-theme-pattern::after,
+    html[data-color-theme^="magic_"] :is(.btn-primary, .btn-premium-cta, .app-tour-next, .myday-foot-btn.primary, .nm-btn-primary) { animation: none; }
+    html[data-color-theme^="magic_"] .magic-sky::before, html[data-color-theme^="magic_"] .magic-sky::after { opacity: .6; }
+    html[data-color-theme="magic_stardust"] .magic-extra { display: none; }
+}
+
+/* ===== 🎨 נראות הפתקים (2026-10-13, לפי בקשה מפורשת: "פתקים זכוכית מספר 6... אפשרות למי שלא רוצה פתקים שקופים... 5 1 2 4 אבל
+   הברירת מחדל יהיה 6"): זכוכית (ברירת המחדל), רשימה נקייה, שורות מחברת, כרטיסיות ופסי סלוטייפ - html[data-note-look]
+   (applyNotesLook ב-app.js), נבחר מ-🎨 בכותרת הפתקים. תמיד רשימה קומפקטית שרואים בה את מה שכתוב ===== */
+.notes-look-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.notes-look-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.notes-look-chip.selected { border-color: var(--accent-purple); box-shadow: 0 0 0 1.5px var(--accent-purple); }
+.notes-look-chip:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.notes-look-swatch { flex: none; width: 18px; height: 12px; border-radius: 4px; }
+.nls-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
+.nls-clean { border-radius: 0; border-bottom: 2px solid currentColor; opacity: 0.55; }
+.nls-notebook { background: repeating-linear-gradient(180deg, #fffdf8 0 4px, #c9d6ee 4px 5px); box-shadow: inset 3px 0 0 var(--accent-purple); }
+.nls-index { background: #fffefb; box-shadow: inset 0 3px 0 var(--accent-pink); }
+.nls-washi { border-radius: 0; background: repeating-linear-gradient(45deg, #fde68a 0 3px, #fff3c4 3px 6px); clip-path: polygon(6% 0, 94% 6%, 100% 50%, 94% 94%, 6% 100%, 0 50%); }
+.notes-look-btn { font-size: 0.95rem; }
+#weekly-list > li.note-paper .note-drag-handle { color: color-mix(in srgb, var(--paper-ink) 40%, transparent); }
+
+/* 6 – זכוכית (ברירת המחדל): כרטיס שקוף כמו זכוכית חלבית, והצבעים של הרקע עוברים דרכו */
+:is(html:not([data-note-look]), html[data-note-look="glass"]) :is(#weekly-list > li, #center-item-preview-row).note-paper {
+    --paper-ink: var(--text-primary);
+    border-radius: 16px;
+    transform: none;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--text-primary) 13%, transparent), color-mix(in srgb, var(--text-primary) 4%, transparent));
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 16%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 22px -16px rgba(0, 0, 0, 0.6);
+}
+:is(html:not([data-note-look]), html[data-note-look="glass"]) #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
+:is(html:not([data-note-look]), html[data-note-look="glass"]) :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: linear-gradient(135deg, color-mix(in srgb, var(--note-bg) 30%, transparent), color-mix(in srgb, var(--note-bg) 10%, transparent)); }
+html.light-mode:is(:not([data-note-look]), [data-note-look="glass"]) :is(#weekly-list > li, #center-item-preview-row).note-paper {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.48));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 10px 22px -16px rgba(40, 30, 60, 0.4);
+}
+html.light-mode:is(:not([data-note-look]), [data-note-look="glass"]) :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: linear-gradient(135deg, color-mix(in srgb, var(--note-bg) 24%, rgba(255, 255, 255, 0.82)), color-mix(in srgb, var(--note-bg) 8%, rgba(255, 255, 255, 0.5))); }
+
+/* 5 – רשימה נקייה: שורות דקות בתוך מסגרת אחת, נקודת צבע זוהרת בהתחלה */
+html[data-note-look="clean"] #weekly-list { gap: 0; padding: 2px 0; border-radius: 16px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent); overflow: hidden; }
+html[data-note-look="clean"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: var(--text-primary); transform: none; border-radius: 0; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--text-primary) 9%, transparent); padding: 11px 12px; }
+html[data-note-look="clean"] #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
+html[data-note-look="clean"] #center-item-preview-row.note-paper { border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent); }
+html[data-note-look="clean"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: transparent; }
+html[data-note-look="clean"] :is(#weekly-list > li, #center-item-preview-row).note-paper::before { content: ''; position: static; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--note-bg, var(--accent-purple)); box-shadow: 0 0 8px color-mix(in srgb, var(--note-bg, var(--accent-purple)) 70%, transparent); }
+
+/* 1 – שורות מחברת: דף שורות אחד, קו שוליים בצבע של הערכה ונקודה בצבע של הפתק */
+html[data-note-look="notebook"] #weekly-list { position: relative; gap: 0; padding: 4px 0; border-radius: 14px; overflow: hidden; background: #fffdf8; box-shadow: 0 10px 22px -16px rgba(0, 0, 0, 0.5); }
+html[data-note-look="notebook"] #weekly-list::before { content: ''; position: absolute; top: 0; bottom: 0; inset-inline-start: 30px; width: 2px; background: color-mix(in srgb, var(--accent-purple) 70%, #7c3aed); pointer-events: none; z-index: 1; }
+html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: #24243a; transform: none; border-radius: 0; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 -1px 0 #d9e3f3; padding: 8px 10px; padding-inline-start: 40px; }
+html[data-note-look="notebook"] #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
+html[data-note-look="notebook"] #center-item-preview-row.note-paper { border-radius: 12px; background: #fffdf8; }
+html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: transparent; }
+html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper::before { content: ''; position: absolute; top: 50%; bottom: auto; inset-inline-start: 14px; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--note-bg, transparent); }
+html:not(.light-mode)[data-note-look="notebook"] #weekly-list { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+html:not(.light-mode)[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: var(--text-primary); box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--text-primary) 14%, transparent); }
+html:not(.light-mode)[data-note-look="notebook"] #center-item-preview-row.note-paper { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+
+/* 2 – כרטיסיות: כרטיס לבן עם פס צבע למעלה (הצבע של הפתק, או של הערכה) */
+html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper: #fffefb; --paper-ink: #24243a; transform: none; border-radius: 10px; background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 5px 0 var(--note-bg, var(--accent-purple)), 0 8px 16px -10px rgba(0, 0, 0, 0.45); padding-top: 14px; }
+html[data-note-look="index"] #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
+html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: var(--paper); }
+html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg::before { display: none; }
+
+/* 4 – פסי סלוטייפ: כל פתק פס של נייר דבק מעוטר, בצבעים מתחלפים (או בצבע של הפתק) */
+html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: #2b1d3a; --washi: #fde68a; transform: none; border-radius: 0; background-color: var(--washi); background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.28) 0 5px, transparent 5px 10px); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; clip-path: polygon(1.2% 0, 98.8% 5%, 100% 50%, 98.8% 95%, 1.2% 100%, 0 50%); padding: 10px 18px; }
+html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n+2) { --washi: #fbcfe8; transform: none; }
+html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n+3) { --washi: #ddd6fe; }
+html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n) { --washi: #a7f3d0; transform: none; }
+html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { --washi: color-mix(in srgb, var(--note-bg) 55%, #ffffff); background-color: var(--washi); }
+html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg::before { display: none; }
+/* על נייר בהיר (כרטיסיות, סלוטייפ) צבע טקסט שנבחר מוכהה גם בלילה */
+html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc,
+html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc { color: color-mix(in srgb, var(--tc) 68%, #241c0c); }
+
+/* ===== 🔖 נראות הציטוטים (2026-10-13, לפי בקשה מפורשת: "שיהיה בתור סימניות מספר 4 ומי שלא אוהב את הנראות יכול להיות מספר 2 או 5"):
+   סימניות (ברירת המחדל), תמונות עם סלוטייפ, קיר של כרטיסים - html[data-quote-look] (applyQuotesLook ב-app.js), במדף ובפינת
+   הקריאה. נבחר מ-🎨 בראש הציטוטים ===== */
+.sr-quotes-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sr-quotes-head h4 { margin: 0; }
+.sr-quote-look-btn { flex: none; width: 34px; height: 34px; padding: 0; border: 1px solid var(--border-color); border-radius: 50%; background: var(--bg-row); font-size: 0.95rem; cursor: pointer; }
+.sr-quote-looks { display: flex; flex-wrap: wrap; gap: 6px; }
+.sr-quote-look { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.sr-quote-look.selected { border-color: transparent; background: var(--nm-grad, linear-gradient(135deg, var(--accent-pink), var(--accent-purple))); color: #fff; }
+.sr-quote-look-btn:focus-visible, .sr-quote-look:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
+
+/* 4 – סימניות (ברירת המחדל): שורה שמחליקים בה; כל ציטוט סרט עם פונפון למעלה וחריץ בתחתית */
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quotes { flex-direction: row; align-items: stretch; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 30px 12px 12px; margin-inline: -12px; overscroll-behavior-x: contain; scrollbar-width: none; }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quotes::-webkit-scrollbar { display: none; }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote { --bm: linear-gradient(180deg, #ddd6fe, #a78bfa); flex: none; width: min(72%, 240px); min-height: 320px; scroll-snap-align: center; display: flex; flex-direction: column; justify-content: center; padding: 46px 18px 64px; border: none; border-radius: 0; background: none; color: #1b1030; text-align: center; box-shadow: none; isolation: isolate; filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.35)); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote:nth-child(4n+2) { --bm: linear-gradient(180deg, #cffafe, #2dd4bf); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote:nth-child(4n+3) { --bm: linear-gradient(180deg, #fce7f3, #f472b6); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote:nth-child(4n) { --bm: linear-gradient(180deg, #fef3c7, #fbbf24); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote::after { content: ''; position: absolute; inset: 0; z-index: -1; height: auto; border-radius: 10px 10px 0 0; background: var(--bm); box-shadow: none; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 90%, 0 100%); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote::before { content: ''; position: absolute; top: -26px; left: 50%; right: auto; inset-inline-start: auto; width: 16px; height: 42px; margin-left: -8px; font-size: 0; background: radial-gradient(circle at 50% 7px, #fcd34d 6px, transparent 6.5px), linear-gradient(#fcd34d, #fcd34d) 50% 100% / 2px 30px no-repeat; }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote blockquote { padding-top: 0; font-size: 1.02rem; line-height: 1.6; }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote figcaption { color: rgba(27, 16, 48, 0.7); }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote-tools { position: absolute; bottom: 34px; left: 0; right: 0; justify-content: center; margin: 0; }
+:is(html:not([data-quote-look]), html[data-quote-look="bookmarks"]) .sr-quote-tools button { color: #1b1030; }
+
+/* 2 – תמונות עם סלוטייפ: כרטיס לבן, קצת עקום, עם נייר דבק צבעוני למעלה */
+html[data-quote-look="polaroid"] .sr-quotes { flex-direction: column; align-items: center; gap: 28px; padding: 18px 6px 6px; }
+html[data-quote-look="polaroid"] .sr-quote { width: min(90%, 330px); border: none; border-radius: 4px; background: #ffffff; color: #2b2233; padding: 24px 16px 12px; box-shadow: 0 14px 26px -10px rgba(0, 0, 0, 0.5); transform: rotate(-2deg); }
+html[data-quote-look="polaroid"] .sr-quote:nth-child(2n) { transform: rotate(1.6deg); }
+html[data-quote-look="polaroid"] .sr-quote::before { content: ''; position: absolute; top: -11px; left: 50%; right: auto; inset-inline-start: auto; width: 86px; height: 22px; margin-left: -43px; font-size: 0; background: repeating-linear-gradient(45deg, rgba(249, 168, 212, 0.85) 0 6px, rgba(255, 255, 255, 0.65) 6px 12px); transform: rotate(-3deg); }
+html[data-quote-look="polaroid"] .sr-quote:nth-child(2n)::before { background: repeating-linear-gradient(-45deg, rgba(165, 243, 252, 0.85) 0 6px, rgba(255, 255, 255, 0.65) 6px 12px); transform: rotate(3deg); }
+html[data-quote-look="polaroid"] .sr-quote::after { display: none; }
+html[data-quote-look="polaroid"] .sr-quote figcaption { color: #7a6a88; }
+
+/* 5 – קיר ציטוטים: כרטיסים צבעוניים בשני טורים */
+html[data-quote-look="wall"] .sr-quotes { display: block; columns: 2; column-gap: 10px; padding: 4px 0 0; }
+html[data-quote-look="wall"] .sr-quote { --wall: #fbcfe8; break-inside: avoid; margin: 0 0 10px; border: none; border-radius: 16px; padding: 30px 12px 6px; background: var(--wall); color: #1b1030; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.45); transform: none; }
+html[data-quote-look="wall"] .sr-quote:nth-child(5n+2) { --wall: #ddd6fe; }
+html[data-quote-look="wall"] .sr-quote:nth-child(5n+3) { --wall: #a5f3fc; }
+html[data-quote-look="wall"] .sr-quote:nth-child(5n+4) { --wall: #fde68a; }
+html[data-quote-look="wall"] .sr-quote:nth-child(5n) { --wall: #d9f99d; }
+html[data-quote-look="wall"] .sr-quote::before { top: 2px; color: rgba(27, 16, 48, 0.35); font-size: 2.6rem; }
+html[data-quote-look="wall"] .sr-quote::after { display: none; }
+html[data-quote-look="wall"] .sr-quote blockquote { padding-top: 0; font-size: 0.9rem; }
+html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65); font-size: 0.74rem; }
+@media (prefers-reduced-motion: reduce) { html[data-quote-look="polaroid"] .sr-quote, html[data-quote-look="polaroid"] .sr-quote:nth-child(2n) { transform: none; } }
