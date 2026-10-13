@@ -956,7 +956,7 @@ function wkPaintTimer() {
 function chooseWorkoutReadyPlan(key) {
     const plan = WORKOUT_READY_PLANS.find(p => p.key === key);
     if (!plan) return;
-    if (workoutPlan.length) showDangerConfirm(t('workout_ready_replace_title'), t('workout_ready_replace_confirm'), () => applyWorkoutReadyPlan(plan));
+    if (workoutPlan.length) showDangerConfirm(t('workout_ready_replace_title'), t('workout_ready_replace_confirm'), () => applyWorkoutReadyPlan(plan), t('workout_ready_replace_btn'));
     else applyWorkoutReadyPlan(plan);
 }
 // מחיקת הטבלה הנוכחית לפני תוכנית חדשה (מוכנה או עם AI): קודם האירועים שלה מ-Google Calendar והפריטים שלה בשגרה

@@ -1337,7 +1337,7 @@
                         <!-- תג קלוריות עדין - כבוי כברירת מחדל (ר' toggleHomeCalorieBadge/
                              updateHomeCalorieBadge ב-app.js), לפי בקשה מפורשת: לא לכפות
                              מספר על כל המסך הראשי, רק למי שרוצה זאת דרך הגדרות -->
-                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" aria-label="Today's calories">
+                        <button type="button" class="home-calorie-badge hidden" id="home-calorie-badge" onclick="event.stopPropagation(); navigateFromMenu('nutrition-section', 'calories')" data-i18n-tooltip="home_calorie_badge_title" data-i18n-aria-label="home_calorie_badge_title" aria-label="Today's calories">
                             🔥 <span id="home-calorie-badge-value">0</span>
                         </button>
                         <!-- כפתור סגירה מפורש - לפי בקשה מפורשת ("אין איך לסגור את
@@ -1345,7 +1345,7 @@
                              הרקע המעומעם ל"לחיצה בחוץ" צר מדי במובייל (הפאנל תופס
                              92% מהרוחב) כדי לסמוך עליו כמנגנון היחיד - אותו דפוס
                              בדיוק כמו hamburger-drawer-close בכל שאר המגירות -->
-                        <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()">✕</button>
+                        <button type="button" class="hamburger-drawer-close" onclick="closeTodayPeekPanel()" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                     </div>
                 </div>
                 <!-- 🎯 יעד החודש - שורה קטנה עם התקדמות, לחיצה פותחת את "היעדים שלי" -->
@@ -1372,7 +1372,7 @@
                             <!-- מעבר לתצוגת קוביות - בחירה בין ☰ לבין ▦ (רק אחד מהם מוצג למעלה) -->
                             <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu()" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
                             <button type="button" data-tour="m-style" class="menu-style-switch" onclick="switchMenuStyle('tiles')" data-i18n-title="menu_switch_to_tiles" data-i18n-aria-label="menu_switch_to_tiles" title="Switch to tiles view" aria-label="Switch to tiles view"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" style="fill:currentColor"><rect x="3" y="3" width="8" height="8" rx="2.6"/><rect x="13" y="3" width="8" height="8" rx="2.6"/><rect x="3" y="13" width="8" height="8" rx="2.6"/><rect x="13" y="13" width="8" height="8" rx="2.6"/></svg></button>
-                            <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()">✕</button>
+                            <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                         </div>
                     </div>
 
@@ -2225,7 +2225,7 @@
             <div id="daily-focus-bubble-collapsed" class="daily-focus-bubble-collapsed" onclick="expandDailyFocusBubble()">
                 <div class="daily-focus-bubble-row">
                     <span class="daily-focus-bubble-text" data-i18n="daily_focus_modal_title">🧠 What's the most important thing for you to do today?</span>
-                    <button type="button" class="daily-focus-bubble-close" onclick="event.stopPropagation(); dismissDailyFocusModal()" aria-label="Close">✕</button>
+                    <button type="button" class="daily-focus-bubble-close" onclick="event.stopPropagation(); dismissDailyFocusModal()" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                 </div>
                 <!-- ↻ להמשיך עם מה שהיה חשוב בפעם הקודמת, בלחיצה אחת (מוצג רק כשיש), ר' continueDailyFocus -->
                 <button type="button" id="daily-focus-carry-btn" class="daily-focus-carry hidden" onclick="event.stopPropagation(); continueDailyFocus()"></button>
@@ -2235,7 +2235,7 @@
             <div id="daily-focus-bubble-expanded" class="daily-focus-bubble-expanded hidden">
                 <div class="daily-focus-bubble-row daily-focus-bubble-expanded-header">
                     <span class="daily-focus-bubble-text" data-i18n="daily_focus_modal_title">🧠 What's the most important thing for you to do today?</span>
-                    <button type="button" class="daily-focus-bubble-close" onclick="dismissDailyFocusModal()" aria-label="Close">✕</button>
+                    <button type="button" class="daily-focus-bubble-close" onclick="dismissDailyFocusModal()" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                 </div>
                 <p class="daily-focus-pick-hint" data-i18n="daily_focus_pick_hint">Pick one or a few – no need to do everything</p>
                 <!-- "Daily Mix" - 7 תגיות מוצעות (משפט אחד מכל אחת מ-7 קטגוריות, לפי
@@ -2321,7 +2321,7 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <!-- כפתור סגירה גם למעלה - עם ארכיון של מעל 100 פריטים היה צריך לגלול
                      עד הסוף כדי להגיע לכפתור "סגור" התחתון, לפי דיווח מפורש -->
-                <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-notes-archive')" aria-label="Close">✕</button>
+                <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-notes-archive')" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                 <h3 data-i18n="notes_archive_toggle_label">Archive</h3>
                 <ul id="notes-archive-modal-list" class="center-list notes-archive-list"></ul>
                 <button type="button" class="btn-clear-week" onclick="emptyNotesArchive(currentArchiveType)" data-i18n="notes_archive_empty_btn">Empty archive</button>
@@ -3038,7 +3038,7 @@
                     <!-- ⚖️ שורת זכויות יוצרים מינימליסטית קטנה - כאן בהגדרות בלבד,
                          לא על מסך הבית (שהיה גם מסתיר את זה בטעות בגלל באג DOM
                          לא קשור, וגם זה לא המקום הטבעי לזה) -->
-                    <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; margin-top: 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;">
+                    <div style="text-align: center; font-size: 0.55rem; color: var(--text-secondary); opacity: 0.4; margin-top: 16px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;" data-i18n="settings_copyright_line">
                         © 2026 all rights reserved. app developed by eden zabari.
                     </div>
                 </div>
@@ -3217,7 +3217,7 @@
                 <h3 class="delete-account-confirm-title" id="danger-confirm-title"></h3>
                 <p class="modal-subtitle" id="danger-confirm-message"></p>
                 <div class="action-buttons-wrap" style="margin-top: 14px;">
-                    <button id="btn-danger-confirm-proceed" class="btn-danger-solid" data-i18n="daily_board_delete_tab_btn">Delete</button>
+                    <button id="btn-danger-confirm-proceed" class="btn-danger-solid" data-i18n="daily_board_delete_item_btn">Delete</button>
                     <button class="btn-clear-specific" onclick="closeModal('modal-danger-confirm')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
@@ -3581,14 +3581,14 @@
             <div class="modal-sheet categories-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <div class="categories-header">
-                    <button type="button" class="categories-back hidden" id="categories-menu-back" onclick="closeCategoriesGroup()" aria-label="Back">‹</button>
+                    <button type="button" class="categories-back hidden" id="categories-menu-back" onclick="closeCategoriesGroup()" data-i18n-aria-label="settings_back_btn" aria-label="Back">‹</button>
                     <h3 id="categories-menu-title" data-i18n="categories_menu_title">All Categories</h3>
                     <!-- מעבר לתצוגת רשימה (☰), והגדרות - שאחרת לא נגישות בתצוגת קוביות -->
                     <div class="categories-header-actions">
                         <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu()" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
                         <button type="button" class="menu-style-switch" onclick="closeModal('modal-categories'); openSettingsDrawer();" data-i18n-title="settings_title" data-i18n-aria-label="settings_title" title="Settings" aria-label="Settings">⚙️</button>
                         <button type="button" class="menu-style-switch" onclick="switchMenuStyle('list')" data-i18n-title="menu_switch_to_list" data-i18n-aria-label="menu_switch_to_list" title="Switch to list view" aria-label="Switch to list view">☰</button>
-                        <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" aria-label="Close">✕</button>
+                        <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                     </div>
                 </div>
                 <button type="button" class="hamburger-search" onclick="closeModal('modal-categories'); openHomeSearch();" data-i18n-aria-label="home_search_aria" aria-label="Search the whole app"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span data-i18n="menu_quick_search">Quick search</span></button>
@@ -3635,7 +3635,7 @@
         <div id="modal-daily-board" class="apple-modal">
             <div class="modal-sheet daily-board-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-daily-board')" aria-label="Close">✕</button>
+                <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-daily-board')" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                 <h3 data-i18n="daily_board_title">Daily Agenda</h3>
                 <div class="daily-board-tabs-row">
                     <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
@@ -4412,13 +4412,13 @@
 
     </div>
 
-    <script src="i18n.js?v=471"></script>
-    <script src="app.js?v=603"></script>
+    <script src="i18n.js?v=472"></script>
+    <script src="app.js?v=604"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
-    <script src="workouts.js?v=8"></script>
+    <script src="workouts.js?v=9"></script>
     <script src="new-me-data.js?v=12"></script>
     <script src="new-me.js?v=56"></script>
     <script src="new-me-challenges.js?v=6"></script>

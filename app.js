@@ -263,6 +263,9 @@ function updateLegalLinksForLanguage() {
 // להריץ מחדש את *אותה* רשימת הטעינה המלאה שרצה בכניסה הרגילה לאפליקציה
 // (ר' initAppAfterAuth), כך שכל מסך מתעדכן גם בנתונים וגם בשפה יחד
 function onLanguageChanged() {
+    // התצוגה של כל <select> מותאם מעתיקה את טקסט האפשרות - בלי זה היא נשארת בשפה הקודמת
+    document.querySelectorAll('select').forEach(select => { if (select.id) updateCustomSelectDisplay(select.id); });
+    applyUserCountrySetting();
     updateLanguagePickerTriggers();
     updateLegalLinksForLanguage();
     renderHomeGreeting();
@@ -1012,7 +1015,7 @@ function renderPresetPickerList(filter) {
     const query = (filter || '').trim().toLowerCase();
     const matches = cachedPresets.filter(item => presetMatchesCategory(item, presetPickerCategory) && item.food_name.toLowerCase().includes(query));
     if (!matches.length) {
-        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        list.innerHTML = `<p class="language-no-results">${t('presets_no_results')}</p>`;
         return;
     }
     list.innerHTML = matches.map(item => `
@@ -1782,7 +1785,7 @@ function renderOnboardingStep() {
             <h2 class="onboarding-title">${t('onboarding_country_title')}</h2>
             <button type="button" class="language-select custom-select-trigger" style="max-width:280px;" onclick="openCountryPicker()">
                 <span class="language-picker-flag" id="onboarding-country-flag">${COUNTRY_FLAGS[code] || '🌐'}</span>
-                <span id="onboarding-country-name">${COUNTRY_NAMES[code] || ''}</span>
+                <span id="onboarding-country-name">${countryName(code)}</span>
             </button>
         `;
         nextBtn.textContent = t('onboarding_next_btn');
@@ -1814,7 +1817,7 @@ function refreshOnboardingCountryDisplay() {
     if (!flagEl) return;
     const code = getUserCountry();
     flagEl.textContent = COUNTRY_FLAGS[code] || '🌐';
-    nameEl.textContent = COUNTRY_NAMES[code] || '';
+    nameEl.textContent = countryName(code);
 }
 
 function nextOnboardingStep() {
@@ -9544,6 +9547,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_checkin', category: 'nutrition' },
     { id: 'new_me_body', category: 'nutrition' },
     { id: 'food_variety', category: 'nutrition' },
+    { id: 'food_list_languages', category: 'nutrition', when: () => currentLang !== 'he' },
     { id: 'multi_food_separator', category: 'nutrition' },
     { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
     { id: 'chain_data_source', category: 'nutrition' },
@@ -9697,12 +9701,25 @@ function setUserCountry(code) {
     localStorage.setItem(userCountryKey(), code);
     applyUserCountrySetting();
 }
+// שם המדינה בשפת האפליקציה (Intl.DisplayNames); COUNTRY_NAMES (אנגלית) רק כגיבוי לדפדפן ישן
+let countryDisplayNames = null;
+function countryName(code) {
+    const region = String(code || '').toUpperCase();
+    try {
+        if (!countryDisplayNames || countryDisplayNames.lang !== currentLang) {
+            countryDisplayNames = { lang: currentLang, names: new Intl.DisplayNames([currentLang, 'en'], { type: 'region' }) };
+        }
+        const name = countryDisplayNames.names.of(region);
+        if (name && name !== region) return name;
+    } catch (e) { /* בלי Intl.DisplayNames - האנגלית למטה */ }
+    return COUNTRY_NAMES[code] || code;
+}
 function applyUserCountrySetting() {
     const code = getUserCountry();
     const flagEl = document.getElementById('country-picker-flag');
     const nameEl = document.getElementById('country-picker-name');
     if (flagEl) flagEl.textContent = COUNTRY_FLAGS[code] || '🌐';
-    if (nameEl) nameEl.textContent = COUNTRY_NAMES[code] || code;
+    if (nameEl) nameEl.textContent = countryName(code);
 }
 
 // בורר-חיפוש למדינה - אותו דפוס בדיוק כמו openLanguagePicker/renderLanguagePickerList
@@ -9720,15 +9737,20 @@ function renderCountryPickerList(filter) {
     if (!list) return;
     const query = (filter || '').trim().toLowerCase();
     const current = getUserCountry();
-    const matches = COUNTRY_LIST.filter(code => COUNTRY_NAMES[code].toLowerCase().includes(query));
+    // חיפוש גם בשם המקומי וגם באנגלית; ישראל וארה"ב נשארות ראשונות, השאר לפי הא"ב של השפה
+    const pinned = COUNTRY_LIST.slice(0, 2);
+    let collator = null;
+    try { collator = new Intl.Collator(currentLang); } catch (e) { /* ברירת מחדל */ }
+    const rest = COUNTRY_LIST.slice(2).sort((a, b) => collator ? collator.compare(countryName(a), countryName(b)) : countryName(a).localeCompare(countryName(b)));
+    const matches = [...pinned, ...rest].filter(code => countryName(code).toLowerCase().includes(query) || COUNTRY_NAMES[code].toLowerCase().includes(query));
     if (!matches.length) {
-        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        list.innerHTML = `<p class="language-no-results">${t('help_faq_no_results')}</p>`;
         return;
     }
     list.innerHTML = matches.map(code => `
         <button type="button" class="language-picker-item${code === current ? ' active' : ''}" onclick="selectCountryFromPicker('${code}')">
             <span class="language-picker-flag">${COUNTRY_FLAGS[code] || '🌐'}</span>
-            <span class="language-picker-name">${COUNTRY_NAMES[code]}</span>
+            <span class="language-picker-name">${escapeHtmlForReport(countryName(code))}</span>
             ${code === current ? '<span class="language-picker-check">✓</span>' : ''}
         </button>
     `).join('');
@@ -10306,7 +10328,7 @@ function renderFontPickerList(filter) {
         </button>`;
     }
     if (!matches.length) {
-        list.innerHTML = html || `<p class="language-no-results">${t('language_no_results')}</p>`;
+        list.innerHTML = html || `<p class="language-no-results">${t('help_faq_no_results')}</p>`;
         return;
     }
     html += matches.map(f => `
@@ -11491,7 +11513,7 @@ function isRecurringExpenseActive(item) {
 }
 
 function renderRecurringPremiumHint(container) {
-    container.innerHTML = `<p class="monthly-goal-empty">${t('finance_recurring_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_upgrade_btn')}</button>`;
+    container.innerHTML = `<p class="monthly-goal-empty">${t('finance_recurring_premium_hint')}</p><button class="btn-secondary" onclick="openPremiumUpgradeModal()">${t('settings_go_premium_btn')}</button>`;
 }
 
 // "תשלומים" (installment_total מוגדר) - טבלה נפרדת לגמרי מ"הוראות קבע", לא
@@ -15636,20 +15658,45 @@ function selectFoodPickerUnit(btn) {
     updateFoodPickerCaloriesPreview();
 }
 
+// המאגר נבנה בעברית: בשאר השפות מציגים את הכינוי האנגלי הראשון מתוך ה-re שלו (".*" ו-\s נהיים רווח),
+// מחפשים בכל הכינויים הלטיניים, ופריט עברי בלי כינוי כזה לא מוצג שם בכלל
+function foodLatinAliases(item) {
+    if (item._latinAliases) return item._latinAliases;
+    const parts = [];
+    let depth = 0, cur = '';
+    for (const ch of (item.re ? item.re.source : '')) {
+        if (ch === '(') depth++;
+        if (ch === ')') depth--;
+        if (ch === '|' && depth === 0) { parts.push(cur); cur = ''; continue; }
+        cur += ch;
+    }
+    parts.push(cur);
+    item._latinAliases = parts
+        .map(p => p.replace(/\\b/g, '').replace(/\.\*\??|\\s[*+?]?/g, ' ').replace(/\s+/g, ' ').trim())
+        .filter(p => /^[a-z][a-z '\-]*[a-z]$/i.test(p));
+    return item._latinAliases;
+}
+function foodPickerName(item) {
+    if (currentLang === 'he' || !/[֐-׿]/.test(item.name)) return item.name;
+    const alias = foodLatinAliases(item)[0];
+    return alias ? alias.charAt(0).toUpperCase() + alias.slice(1) : null;
+}
+
 function renderFoodPickerList(filter) {
     const list = document.getElementById('food-picker-list');
     if (!list) return;
     const query = (filter || '').trim().toLowerCase();
     const matches = FOOD_CALORIE_DB
-        .map((item, index) => ({ item, index }))
-        .filter(({ item }) => item.name.toLowerCase().includes(query));
+        .map((item, index) => ({ item, index, name: foodPickerName(item) }))
+        .filter(({ item, name }) => name && (name.toLowerCase().includes(query)
+            || (currentLang !== 'he' && foodLatinAliases(item).some(a => a.toLowerCase().includes(query)))));
     if (!matches.length) {
-        list.innerHTML = `<p class="language-no-results">${t('language_no_results')}</p>`;
+        list.innerHTML = `<p class="language-no-results">${t('help_faq_no_results')}</p>`;
         return;
     }
-    list.innerHTML = matches.map(({ item, index }) => `
+    list.innerHTML = matches.map(({ index, name }) => `
         <button type="button" class="language-picker-item" onclick="selectFoodPickerItem(${index})">
-            <span class="language-picker-name">${item.name}</span>
+            <span class="language-picker-name">${escapeHtmlForReport(name)}</span>
         </button>
     `).join('');
 }
@@ -15658,7 +15705,7 @@ function selectFoodPickerItem(index) {
     foodPickerSelectedItem = FOOD_CALORIE_DB[index];
     if (!foodPickerSelectedItem) return;
     const isPerUnit = foodPickerSelectedItem.kcalPerUnit != null;
-    document.getElementById('food-picker-selected-name').textContent = foodPickerSelectedItem.name;
+    document.getElementById('food-picker-selected-name').textContent = foodPickerName(foodPickerSelectedItem) || foodPickerSelectedItem.name;
     // יחידת "יחידות" (ביצה וכו') לא נמדדת בגרם/כף/כפית/כוס בכלל - מסתירים
     // את שורת בורר-היחידות ומאפסים תמיד לגרם/1 כברירת מחדל לפריט הבא
     const unitRow = document.getElementById('food-picker-unit-row');
@@ -15716,7 +15763,7 @@ function confirmFoodPickerSelection() {
     const proteinInput = foodPickerTargetRow.querySelector('.protein-input');
     const existingFood = foodInput.value.trim();
     const existingCalories = parseInt(caloriesInput.value) || 0;
-    const newEntry = `${foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
+    const newEntry = `${foodPickerName(foodPickerSelectedItem) || foodPickerSelectedItem.name} - ${qty}${unitLabel}`;
     foodInput.value = existingFood ? `${existingFood} + ${newEntry}` : newEntry;
     caloriesInput.value = existingCalories + calories;
     if (proteinInput && protein != null) {
@@ -17473,7 +17520,7 @@ async function toggleDailyBoardHour(bucket, hour) {
             if ((now[bucket] || []).includes(hour)) await toggleDailyBoardHour(bucket, hour);
             else { renderDailyBoardHourSettings(); renderDailyBoard(); }
             if (typeof loadTodayTasks === 'function') loadTodayTasks();
-        });
+        }, t('routine_nudge_remove'));
         return;
     }
     const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
@@ -18430,7 +18477,7 @@ function routineNudgeRemoveGroup(i) {
         await renderDailyBoard();
         showAppToast(t('routine_nudge_removed_toast'));
         renderRoutineNudge();
-    });
+    }, t('routine_nudge_remove'));
 }
 
 // ✏️ לשנות - פותח את הפריט לעריכה (היה גם "🌱 להקטין" שעשה בדיוק אותו דבר - הוסר לפי בקשה מפורשת)
@@ -18458,14 +18505,16 @@ function routineNudgeRemove() {
         await renderDailyBoard();
         showAppToast(t('routine_nudge_removed_toast'));
         refreshRoutineNudge();
-    });
+    }, t('routine_nudge_remove'));
 }
 
-function showDangerConfirm(titleText, messageText, onConfirm) {
+// confirmLabel - כשהפעולה היא לא מחיקה (החלפה, ניקוי, הסרה מהשגרה); בלי - "מחיקה"
+function showDangerConfirm(titleText, messageText, onConfirm, confirmLabel) {
     document.getElementById('danger-confirm-title').textContent = titleText;
     document.getElementById('danger-confirm-message').textContent = messageText;
     const btn = document.getElementById('btn-danger-confirm-proceed');
     const freshBtn = btn.cloneNode(true);
+    freshBtn.textContent = confirmLabel || t('daily_board_delete_item_btn');
     btn.parentNode.replaceChild(freshBtn, btn);
     freshBtn.addEventListener('click', () => { closeModal('modal-danger-confirm'); onConfirm(); });
     // מתוך "השגרה שלי" (למשל מחיקת טאב) - האישור נפתח מעליה ולא סוגר אותה
@@ -20616,7 +20665,7 @@ function clearCanvas() {
         redrawCanvasFromStrokes();
         renderEmojiOverlay();
         saveCanvasData();
-    });
+    }, t('clear_btn'));
 }
 
 // כלי הציור (עט/מרקר-עגול/מרקר-מרובע/מחק) נבחר בנפרד לגמרי מהצבע - בחירת
@@ -22734,7 +22783,7 @@ async function deleteActiveRoutineTab() {
         renderRoutineTabsBar();
         await renderDailyBoard();
         refreshRoutineNudge();
-    });
+    }, t('daily_board_delete_tab_btn'));
 }
 
 async function renderDailyBoard() {
