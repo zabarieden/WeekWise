@@ -284,6 +284,8 @@ function onLanguageChanged() {
     if (newMeSection && newMeSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
     // גם "התיק שלי" (והקלסר) נבנים ב-JS
     if (typeof renderBag === 'function' && isNotebooksSectionOpen()) renderBag();
+    // טבלת האימונים והצ'יפ שלה בהיום שלי (workouts.js)
+    if (typeof renderWorkoutPlan === 'function') { renderWorkoutPlan(); renderMyDayWorkoutChip(); }
     // וגם הכותרת, התאריך ופס הדפים של מחברת פתוחה
     if (nbViewMode === 'notebook' && isNotebookViewOpen()) {
         renderNotebookViewTitle();
@@ -5962,6 +5964,7 @@ async function loadTodayTasks() {
     const checkableItems = dayItems.filter(item => item.checkable);
     todayTasksLoadedFor = todayStr;
     renderMyDay(container, dayItems, focusItems);
+    if (typeof refreshMyDayWorkoutChip === 'function') refreshMyDayWorkoutChip();
     if (!dayItems.length) return;
     const allDone = checkableItems.every(item => item.done);
     // הודעת עידוד קטנה כשהכל בוצע היום - לפי בקשה מפורשת, כדי שהכרטיס לא
@@ -9450,6 +9453,8 @@ const HELP_FAQ_ENTRIES = [
     { id: 'ai_monthly_limits', category: 'ai' },
     { id: 'custom_sport_type', category: 'sport_water' },
     { id: 'sport_photo', category: 'sport_water' },
+    { id: 'sport_workout_plan', category: 'sport_water' },
+    { id: 'sport_workout_today', category: 'sport_water' },
     { id: 'workout_calories', category: 'sport_water' },
     { id: 'steps_in_sport', category: 'sport_water' },
     { id: 'water_month', category: 'sport_water' },
@@ -12149,6 +12154,8 @@ async function loadSportData() {
     document.querySelectorAll('#sport-motivation-picker [data-motivation]').forEach(btn => btn.classList.remove('active'));
     const dateInput = document.getElementById('sport-date-input');
     if (dateInput) { dateInput.value = getLocalDateString(); updateDateFieldDisplay('sport-date-input'); }
+    // 🏋️ טבלת האימונים (workouts.js)
+    if (typeof loadWorkoutSection === 'function') loadWorkoutSection();
     await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 
@@ -12375,6 +12382,8 @@ function afterSportChanged() {
     if (nmSection && nmSection.classList.contains('active-tab') && typeof renderNewMe === 'function') renderNewMe();
     // אתגר "שבועיים של תנועה" ב-New Me: אימון של 20 דקות מסמן את היום לבד
     if (hasNewMe && typeof nmChallengeAutoCheck === 'function') nmChallengeAutoCheck('sport');
+    // טבלת האימונים: ה-✓, המטרה השבועית, הרצף והצ'יפ בהיום שלי
+    if (typeof workoutsAfterSportChanged === 'function') workoutsAfterSportChanged();
 }
 
 function formatSportDayLabel(dateStr) {
@@ -12472,14 +12481,21 @@ async function renderSportHistory() {
         // תג "מהרגל" - רק לרשומות ספורט היסטוריות שנרשמו אוטומטית ממסך ההרגלים
         // הישן (שהוסר) - מותנה בעצם קיום source_habit_id, לא בכך שההרגל עדיין קיים
         const habitSourceBadge = row.source_habit_id ? `<span class="recurring-expense-source-tag">🔁 ${t('habit_auto_logged_sport_badge')}</span>` : '';
+        // 🏋️ אימון שסומן ✓ בטבלת האימונים - תג, והעצימות (קל / בינוני / קשה) והמקום שנשמרו איתו
+        const workoutBadge = row.source_workout_id ? `<span class="recurring-expense-source-tag">📋 ${t('workout_history_badge')}</span>` : '';
+        const intensityPart = row.intensity ? `<span class="wk-int wk-int-${escapeHtmlForReport(row.intensity)}">${escapeHtmlForReport(t('workout_int_' + row.intensity))}</span>` : '';
+        const placePart = row.place && typeof wkPlaceLabel === 'function' ? `<span class="finance-history-note">📍 ${escapeHtmlForReport(wkPlaceLabel(row.place))}</span>` : '';
         li.innerHTML = `
             ${photoPart}
             <div class="finance-history-main">
                 <span class="finance-history-category">${sportTypeLabel(row)}</span>
                 <span class="finance-history-note">${row.duration_minutes} ${t('sport_minutes_unit')}${distancePart}</span>
+                ${intensityPart}
+                ${placePart}
                 ${motivationPart}
                 ${notesPart}
                 ${habitSourceBadge}
+                ${workoutBadge}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <button type="button" class="btn-delete-slot" onclick="shareSportSession('${row.id}')">📤</button>

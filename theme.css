@@ -10194,3 +10194,147 @@ html[data-quote-look="wall"] .sr-quote::after { display: none; }
 html[data-quote-look="wall"] .sr-quote blockquote { padding-top: 0; font-size: 0.9rem; }
 html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65); font-size: 0.74rem; }
 @media (prefers-reduced-motion: reduce) { html[data-quote-look="polaroid"] .sr-quote, html[data-quote-look="polaroid"] .sr-quote:nth-child(2n) { transform: none; } }
+
+/* ===== 🏋️ טבלת האימונים (2026-10-13, לפי בקשה מפורשת): האימון של היום בגדול (16) + ציר הזמן של השבוע (4), צ'יפ בהיום שלי
+   (ה2), טיימר, מטרה שבועית ורצף (workouts.js). צבע לכל סוג אימון (--wk-c), צבע לכל עצימות (--wk-i) - בלי אדום ===== */
+.wk-tone-cardio { --wk-c: #f472b6; }
+.wk-tone-walk { --wk-c: #fbbf24; }
+.wk-tone-water { --wk-c: #60a5fa; }
+.wk-tone-strength { --wk-c: #a78bfa; }
+.wk-tone-flex { --wk-c: #2dd4bf; }
+.wk-tone-custom { --wk-c: var(--accent-purple); }
+.wk-tone-rest { --wk-c: color-mix(in srgb, var(--text-secondary) 70%, transparent); }
+.wk-tone-none { --wk-c: var(--text-secondary); }
+.wk-int-easy { --wk-i: #2dd4bf; }
+.wk-int-medium { --wk-i: #fbbf24; }
+.wk-int-hard { --wk-i: var(--accent-purple); }
+
+.wk-more-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.wk-more-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.wk-more-btn:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+
+/* מטרה שבועית ורצף */
+.wk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
+.wk-goal { display: inline-flex; align-items: center; gap: 10px; padding: 4px 12px 4px 4px; padding-inline: 4px 12px; border: none; border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; cursor: pointer; }
+.wk-goal:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.wk-ring { width: 40px; height: 40px; flex: none; }
+.wk-ring circle { fill: none; stroke-width: 3.6; }
+.wk-ring-bg { stroke: color-mix(in srgb, var(--text-primary) 13%, transparent); }
+.wk-ring-fg { stroke: var(--accent-purple); stroke-linecap: round; transition: stroke-dasharray 0.4s ease; }
+.wk-head.is-reached .wk-ring-fg { stroke: var(--accent-pink); }
+.wk-goal-num { display: flex; flex-direction: column; line-height: 1.15; text-align: start; }
+.wk-goal-num b { font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+.wk-goal-num small { font-size: 0.74rem; color: var(--text-secondary); font-weight: 700; }
+.wk-streak { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: color-mix(in srgb, #fbbf24 16%, transparent); border: 1px solid color-mix(in srgb, #fbbf24 38%, transparent); font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.wk-panel { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 12px; border-radius: 16px; background: var(--bg-row); border: 1px solid var(--border-color); }
+.wk-panel-title { font-size: 0.92rem; }
+.wk-seg { display: inline-grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.wk-seg-btn { padding: 7px 12px; border: none; border-radius: 999px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.85rem; font-weight: 800; cursor: pointer; }
+.wk-seg-btn.on { background: var(--bg-glass); color: var(--text-primary); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); }
+.wk-stepper { display: flex; align-items: center; justify-content: center; gap: 18px; direction: ltr; }
+.wk-step { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1.3rem; font-weight: 800; line-height: 1; cursor: pointer; }
+.wk-step-value { min-width: 54px; text-align: center; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.wk-seg-btn:focus-visible, .wk-step:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+
+/* תוכניות מוכנות (גם במצב הריק) */
+.wk-ready-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.wk-ready { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 11px 12px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.wk-ready-icon { font-size: 1.3rem; }
+.wk-ready b { font-size: 0.88rem; line-height: 1.25; }
+.wk-ready small { color: var(--text-secondary); font-size: 0.74rem; font-weight: 700; }
+.wk-ready:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.wk-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 0 2px; text-align: center; }
+.wk-empty-icon { font-size: 2.1rem; line-height: 1; }
+.wk-empty-title { font-size: 1.05rem; }
+.wk-empty .wk-ready-list { width: 100%; }
+
+/* האימון של היום - בגדול */
+.wk-today { --wk-c: var(--accent-purple); display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "when when" "icon name" "icon meta" "ex ex" "list list" "actions actions"; column-gap: 14px; row-gap: 4px; align-items: center; margin: 0 0 14px; padding: 16px; border-radius: 22px; background: linear-gradient(140deg, color-mix(in srgb, var(--wk-c) 26%, var(--bg-row)), color-mix(in srgb, var(--wk-c) 7%, var(--bg-row))); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wk-c) 34%, transparent), 0 14px 28px -20px color-mix(in srgb, var(--wk-c) 70%, #000); }
+.wk-today-when { grid-area: when; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em; }
+.wk-today-icon { grid-area: icon; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 18px; background: color-mix(in srgb, var(--wk-c) 24%, transparent); font-size: 2rem; line-height: 1; }
+.wk-today-name { grid-area: name; font-size: 1.28rem; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.wk-today-meta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 0.86rem; font-weight: 600; }
+.wk-today-next { grid-column: 1 / -1; color: var(--text-secondary); font-size: 0.86rem; font-weight: 600; }
+.wk-today.is-none, .wk-today.is-rest { grid-template-areas: "when when" "icon name"; }
+.wk-today.is-none { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "name" "next"; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px var(--border-color); }
+.wk-today.is-none .wk-today-name { font-size: 1.02rem; }
+.wk-today.is-rest .wk-today-name { font-size: 1.1rem; color: var(--text-secondary); }
+.wk-today-actions { grid-area: actions; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.wk-go { flex: 1; min-height: 46px; padding: 0 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; font: inherit; font-size: 0.98rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px -12px var(--accent-purple); }
+.wk-check-big { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--wk-c) 80%, var(--text-primary)); background: transparent; color: var(--text-primary); font: inherit; font-size: 1.25rem; font-weight: 900; line-height: 1; cursor: pointer; }
+.wk-done-state { flex: 1; min-height: 46px; padding: 0 16px; border: none; border-radius: 999px; background: color-mix(in srgb, var(--wk-c) 26%, transparent); color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; }
+.wk-go:focus-visible, .wk-check-big:focus-visible, .wk-done-state:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+.wk-ex-toggle { grid-area: ex; justify-self: start; margin-top: 8px; padding: 5px 11px; border: 1px solid color-mix(in srgb, var(--wk-c) 40%, var(--border-color)); border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.wk-ex-list { grid-area: list; list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.wk-ex-list label { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; background: color-mix(in srgb, var(--text-primary) 6%, transparent); font-size: 0.9rem; cursor: pointer; }
+.wk-ex-list input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--accent-purple); }
+.wk-ex-list input:checked + span { opacity: 0.6; text-decoration: line-through; }
+.wk-ex-sr { margin-inline-start: auto; color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ⏱ הטיימר */
+.wk-timer { flex: 1; display: flex; align-items: center; gap: 8px; }
+.wk-timer-time { min-width: 76px; font-size: 1.55rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.wk-timer.is-paused .wk-timer-time { opacity: 0.55; }
+.wk-timer .wk-go { min-height: 42px; }
+.wk-timer-btn { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; }
+.wk-timer-cancel { flex: none; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.wk-timer-btn:focus-visible, .wk-timer-cancel:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+
+/* עצימות */
+.wk-int { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--wk-i) 20%, transparent); border: 1px solid color-mix(in srgb, var(--wk-i) 48%, transparent); color: var(--text-primary); font-size: 0.72rem; font-weight: 800; line-height: 1.5; width: max-content; }
+.finance-history-main .wk-int { margin-top: 2px; }
+.wk-int-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--wk-i); }
+
+/* ציר הזמן של השבוע: קו לאורך הימים, נקודה בצבע של כל אימון, ✓ על מה שנעשה. היום מסומן בזהב */
+.wk-line { position: relative; list-style: none; margin: 0 0 12px; padding: 0; }
+.wk-line::before { content: ''; position: absolute; top: 14px; bottom: 14px; inset-inline-start: 40px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--text-primary) 12%, transparent); }
+.wk-row.is-empty { --wk-c: color-mix(in srgb, var(--text-primary) 22%, transparent); }
+.wk-row { position: relative; display: grid; grid-template-columns: 30px 22px 50px minmax(0, 1fr) 34px; align-items: center; min-height: 42px; border-radius: 14px; }
+.wk-row.is-today { background: color-mix(in srgb, #fbbf24 9%, transparent); }
+.wk-day { text-align: center; color: var(--text-secondary); font-size: 0.82rem; font-weight: 800; }
+.wk-row.is-today .wk-day { color: var(--text-primary); }
+.wk-dot { position: relative; z-index: 1; justify-self: center; width: 12px; height: 12px; border-radius: 50%; background: var(--wk-c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--wk-c) 22%, transparent); }
+.wk-row.is-empty .wk-dot { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text-primary) 22%, transparent); }
+.wk-row.is-today .wk-dot { box-shadow: 0 0 0 3px #fbbf24; }
+.wk-time { color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
+.wk-row-main { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; padding: 0 8px; border: none; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; text-align: start; cursor: pointer; }
+.wk-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-row-main:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: -2px; }
+.wk-row-add { color: var(--text-secondary); font-size: 1.15rem; font-weight: 400; opacity: 0.55; }
+.wk-row-add:hover, .wk-row-add:focus-visible { opacity: 1; }
+.wk-row.is-rest .wk-row-name { color: var(--text-secondary); }
+.wk-row-check { justify-self: center; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--wk-c) 75%, var(--text-secondary)); background: transparent; color: #1b1030; font: inherit; font-size: 0.85rem; font-weight: 900; line-height: 1; cursor: pointer; }
+.wk-row-check[aria-pressed="true"] { border-color: var(--wk-c); background: var(--wk-c); }
+.wk-row-check:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.wk-add-btn { width: 100%; }
+
+/* חלון הוספה / עריכה */
+.wk-editor-sheet .wk-kinds { margin-bottom: 4px; }
+.wk-custom-name, .wk-place-other { margin-top: 8px; }
+.wk-label { display: block; margin: 14px 0 6px; color: var(--text-secondary); font-size: 0.82rem; font-weight: 800; }
+.wk-two.nm-rem-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 0; border-top: none; }
+.wk-field { display: flex; flex-direction: column; min-width: 0; }
+.wk-field input { width: 100%; box-sizing: border-box; }
+.wk-time-row { display: flex; align-items: center; gap: 6px; }
+.wk-time-row .nm-time-btn { flex: 1; }
+.wk-time-clear { flex: none; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.wk-int-pick.active { border-color: var(--wk-i); background: color-mix(in srgb, var(--wk-i) 24%, transparent); color: var(--text-primary); }
+.wk-ex-edit { display: flex; flex-direction: column; gap: 6px; }
+.wk-ex-row { display: grid; grid-template-columns: minmax(0, 1fr) 62px 72px 30px; gap: 6px; align-items: center; }
+.wk-ex-row input { width: 100%; box-sizing: border-box; margin: 0; }
+.wk-ex-del { width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer; }
+.wk-ex-add { align-self: flex-start; padding: 7px 12px; border-radius: 999px; border: 1px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.wk-editor-sheet textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 14px; }
+.wk-editor-actions { margin-top: 16px; }
+.wk-today-sheet .wk-today { margin-top: 6px; }
+.wk-open-table { width: 100%; margin-top: 2px; }
+
+/* 🏋️ הצ'יפ בהיום שלי - ליד המים, באותו גובה */
+.myday-workout-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 38%, transparent); background: color-mix(in srgb, var(--accent-purple) 13%, transparent); color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer; box-sizing: border-box; }
+.myday-workout-chip .myday-workout-time { font-variant-numeric: tabular-nums; }
+.myday-workout-chip.is-done { border-color: color-mix(in srgb, #2dd4bf 45%, transparent); background: color-mix(in srgb, #2dd4bf 15%, transparent); }
+.myday-workout-chip.is-timing { border-color: transparent; background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); color: #fff; }
+.myday-workout-chip:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+@media (max-width: 380px) { .wk-row { grid-template-columns: 26px 20px 44px minmax(0, 1fr) 32px; } .wk-line::before { inset-inline-start: 35px; } }
+@media (prefers-reduced-motion: reduce) { .wk-ring-fg { transition: none; } }
