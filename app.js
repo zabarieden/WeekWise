@@ -1854,13 +1854,31 @@ async function finishOnboarding(startTour) {
 // כל שלב: ctx = איזה מסך צריך להיות פתוח (home/ai/menu/settings), target = האלמנט
 // להדגשה, וטקסטים; קו 🔗 מסביר את החיבור לפיצ'רים אחרים. שלב אופציונלי שהאלמנט שלו
 // לא מוצג (למשל ✨ למי שלא רכש/ה, תג פרימיום למנויים) לא נכלל בסיור ---
-const APP_TOUR_VERSION = 2;
+// גרסה 3 (לפי בקשה מפורשת: "סיור הרבה יותר מקצועי... שיסביר גם על ההגדרות, סופר חשוב"): מסך פתיחה עם
+// חלקי הסיור (נגיעה בחלק קופצת אליו) והמשך מאיפה שעצרו, פרק הגדרות מלא, פס התקדמות לפי חלקים,
+// "לדלג על החלק הזה", חץ קטן שמחובר לכרטיס, מעברים מונפשים, החלקה באצבע והקראה לקוראי מסך
+const APP_TOUR_VERSION = 3;
 const APP_TOUR_CHAPTERS = { home: 'apptour_ch_home', ai: 'ai_brain_fab_title', menu: 'hamburger_menu_title', goals: 'vision_board_title', settings: 'settings_title', summary: 'apptour_ch_summary', newme: 'nm_tour_ch' };
+// חלקי הסיור (מסך הפתיחה, הפס המחולק ו"לדלג על החלק הזה"): היעדים הם חלק מהתפריט
+const APP_TOUR_PART_OF = { goals: 'menu' };
+const APP_TOUR_SVG_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+const APP_TOUR_PART_ICONS = {
+    home: `<svg ${APP_TOUR_SVG_ATTRS}><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.8V20h12V9.8"/><path d="M10 20v-5.5h4V20"/></svg>`,
+    ai: `<svg ${APP_TOUR_SVG_ATTRS}><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>`,
+    menu: `<svg ${APP_TOUR_SVG_ATTRS}><path d="M4 7h16M4 12h16M4 17h10"/></svg>`,
+    settings: `<svg ${APP_TOUR_SVG_ATTRS}><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>`,
+    summary: `<svg ${APP_TOUR_SVG_ATTRS}><path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.6-2.6a4.5 4.5 0 0 0-6.4-6.4l-1.3 1.3"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0L5 12.6a4.5 4.5 0 0 0 6.4 6.4l1.3-1.3"/></svg>`,
+};
+const APP_TOUR_CHEVRON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+const APP_TOUR_CHEVRON_NEXT = `<svg class="app-tour-chev" ${APP_TOUR_CHEVRON_ATTRS}><path d="M9 5l7 7-7 7"/></svg>`;
+const APP_TOUR_CHEVRON_BACK = `<svg class="app-tour-chev" ${APP_TOUR_CHEVRON_ATTRS}><path d="M15 5l-7 7 7 7"/></svg>`;
+const APP_TOUR_RESUME_KEY = 'weekwise_app_tour_resume';
 // לפי בקשה מפורשת: רק הפיצ'רים הגדולים, מתומצת ומלהיב, ו"דבר בתוך דבר" - מראים פריט
 // בתפריט ואז נכנסים פנימה (היעדים עם כרטיס דוגמה שמתהפך ומראה את הצעדים, המחברות שלי). עוזר ה-AI
 // מוסבר קודם כולו ורק אחר כך כל לשונית. דברים פשוטים (פתקים, קניות, מים, צעדים...) כבר לא בסיור
 const APP_TOUR_STEPS = [
-    { id: 'welcome', ch: 'home', ctx: 'home', icon: '🧭', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text' },
+    // מסך הפתיחה: חלקי הסיור (כל אחד - נגיעה קופצת אליו), "להמשיך מאיפה שעצרתי" ו"לא עכשיו"
+    { id: 'welcome', ch: 'home', ctx: 'home', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text', agenda: true },
     // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
     { id: 'peek', ch: 'home', ctx: 'home', icon: '🗓️', target: '#myday-bar', titleKey: 'today_tasks_title', text: 'apptour_peek_text', link: 'apptour_peek_link', optional: true },
     // העוזר: קודם ההסבר הכללי (על הכפתור), ואז הלשוניות שבפנים - לפי הסדר שלהן (הלו"ז ראשון)
@@ -1884,9 +1902,18 @@ const APP_TOUR_STEPS = [
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
     { id: 'm_budget', ch: 'menu', ctx: 'menu', target: '[data-tour="m-budget"]', text: 'apptour_m_budget_text', link: 'apptour_m_budget_link' },
+    // ⚙️ ההגדרות (לפי בקשה מפורשת: "שיסביר גם על ההגדרות, סופר חשוב"): איפה הן בתפריט, כל אחת מחמש
+    // הקבוצות, ופנימה לשני הדברים החשובים - התראות (בלעדיהן תזכורות לא מגיעות) ו-Google Calendar
+    { id: 's_menu', ch: 'settings', ctx: 'menu', target: '[data-tour="m-settings"]', text: 'apptour_s_menu_text' },
     { id: 's_appearance', ch: 'settings', ctx: 'settings', target: '[data-tour="s-appearance"]', text: 'apptour_s_appearance_text' },
+    { id: 's_personalization', ch: 'settings', ctx: 'settings', target: '[data-tour="s-personalization"]', text: 'apptour_s_personalization_text' },
+    { id: 's_notifications', ch: 'settings', ctx: 'settings', target: '[data-tour="s-notifications"]', text: 'apptour_s_notifications_text' },
+    { id: 's_notif_inside', ch: 'settings', ctx: 'settings_sub', sub: 'notifications', icon: '🔔', target: '#settings-subscreen-notifications .settings-toggle-row', titleKey: 'settings_notifications_label', text: 'apptour_s_notif_inside_text' },
+    { id: 's_account', ch: 'settings', ctx: 'settings', target: '[data-tour="s-account"]', text: 'apptour_s_account_text' },
+    { id: 's_gcal_inside', ch: 'settings', ctx: 'settings_sub', sub: 'account', icon: '🗓️', target: () => appTourVisible('#google-calendar-connected-section') || appTourVisible('#google-calendar-disconnected-section'), titleKey: 'settings_google_calendar_title', text: 'apptour_s_gcal_inside_text' },
+    { id: 's_support', ch: 'settings', ctx: 'settings', target: '[data-tour="s-support"]', text: 'apptour_s_support_text' },
     { id: 'connect', ch: 'summary', ctx: 'home', icon: '🔗', titleKey: 'apptour_connect_title', text: 'apptour_connect_text', flows: true },
-    { id: 'done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_done_title', text: 'apptour_done_text' },
+    { id: 'done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_done_title', text: 'apptour_done_text', faq: true },
 ];
 // האייקון של New Me - יהלום (ציור משלנו, לא אימוג'י; בחירה 12 בקנבס). בצבע הטקסט - לבן על הגרדיאנט
 // בתפריט, בקטגוריות, בקיצור בהצצה להיום ובכותרת של New Me; בסיור הוא מופיע בתוך אריח גרדיאנט
@@ -1920,6 +1947,38 @@ let appTourOnFinish = null;
 let appTourResizeRaf = 0;
 let appTourTrackTimer = 0;
 let appTourLastRect = '';
+let appTourDir = 0;          // כיוון המעבר האחרון (1 קדימה, ‎-1 אחורה, 0 קפיצה) - להנפשה של הכרטיס
+let appTourFinished = false; // הגיעו עד הסוף (אז אין "להמשיך מאיפה שעצרתי")
+
+function appTourPartOf(step) { return APP_TOUR_PART_OF[step.ch] || step.ch; }
+function appTourPartIcon(key) { return key === 'newme' ? NM_ICON_SVG : (APP_TOUR_PART_ICONS[key] || ''); }
+// החלקים לפי סדר הסיור, בלי מסך הפתיחה: לכל חלק - המקום הראשון והאחרון שלו בתוכנית
+function appTourParts() {
+    const parts = [];
+    appTourPlan.forEach((idx, pos) => {
+        const step = appTourSteps[idx];
+        if (!step || step.agenda) return;
+        const key = appTourPartOf(step);
+        const last = parts[parts.length - 1];
+        if (last && last.key === key) last.end = pos;
+        else parts.push({ key, start: pos, end: pos });
+    });
+    return parts;
+}
+function appTourAgendaOffset() {
+    const first = appTourSteps[appTourPlan[0]];
+    return first && first.agenda ? 1 : 0;
+}
+// "להמשיך מאיפה שעצרתי" - השלב שבו נסגר הסיור בפעם הקודמת (רק בסיור הראשי, במכשיר הזה)
+function appTourResumePos() {
+    if (appTourSteps !== APP_TOUR_STEPS) return -1;
+    let id = '';
+    try { id = localStorage.getItem(APP_TOUR_RESUME_KEY) || ''; } catch {}
+    return id ? appTourPlan.findIndex(i => appTourSteps[i].id === id) : -1;
+}
+function appTourAgendaHtml() {
+    return appTourParts().map(p => `<button type="button" class="app-tour-agenda-item" onclick="appTourJump(${p.start})"><span class="app-tour-agenda-icon" aria-hidden="true">${appTourPartIcon(p.key)}</span><span class="app-tour-agenda-name">${appTourEsc(t(APP_TOUR_CHAPTERS[p.key] || 'apptour_ch_home'))}</span><span class="app-tour-agenda-go" aria-hidden="true">${APP_TOUR_CHEVRON_NEXT}</span></button>`).join('');
+}
 
 function appTourVisible(selector) {
     const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
@@ -1961,6 +2020,8 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
     appTourActive = true;
     appTourOnFinish = onFinish || null;
     appTourCtx = null;
+    appTourDir = 0;
+    appTourFinished = false;
     appTourSteps = opts.steps || APP_TOUR_STEPS;
     appTourKeepScreen = !!opts.keepScreen;
     if (!opts.steps) markAppTourSeen();
@@ -1995,30 +2056,59 @@ function appTourBuildLayer() {
     if (appTourLayer) appTourLayer.remove();
     const layer = document.createElement('div');
     layer.className = 'app-tour-layer';
+    // החץ הקטן (caret) הוא אח של הכרטיס ולא בתוכו - לכרטיס יש גלילה פנימית שהייתה חותכת אותו
     layer.innerHTML = `
         <div class="app-tour-block"></div>
         <div class="app-tour-spot is-empty"></div>
-        <div class="app-tour-arrow hidden" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v16M5.5 9.5 12 3l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" tabindex="-1">
+        <span class="app-tour-caret hidden" aria-hidden="true"></span>
+        <div class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" aria-describedby="app-tour-text" tabindex="-1">
             <div class="app-tour-top">
-                <span class="app-tour-chapter"></span>
-                <button type="button" class="app-tour-skip" onclick="closeAppTour()"></button>
+                <span class="app-tour-chip-wrap"><span class="app-tour-part-icon" aria-hidden="true"></span><span class="app-tour-chapter"></span></span>
+                <button type="button" class="app-tour-skip" onclick="closeAppTour()"><svg ${APP_TOUR_CHEVRON_ATTRS}><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
             </div>
-            <div class="app-tour-hero" aria-hidden="true"></div>
-            <div class="app-tour-demo hidden"></div>
-            <h3 class="app-tour-title" id="app-tour-title"></h3>
-            <p class="app-tour-text"></p>
-            <div class="app-tour-link"></div>
-            <div class="app-tour-flows"></div>
-            <div class="app-tour-progress"><span></span></div>
+            <div class="app-tour-body">
+                <div class="app-tour-hero" aria-hidden="true"></div>
+                <div class="app-tour-demo hidden"></div>
+                <h3 class="app-tour-title" id="app-tour-title"></h3>
+                <p class="app-tour-text" id="app-tour-text"></p>
+                <div class="app-tour-agenda hidden"></div>
+                <div class="app-tour-link"></div>
+                <div class="app-tour-flows"></div>
+                <div class="app-tour-extra hidden"></div>
+            </div>
+            <div class="app-tour-progress" aria-hidden="true"></div>
             <div class="app-tour-actions">
                 <button type="button" class="app-tour-back" onclick="appTourBack()"></button>
                 <span class="app-tour-count"></span>
                 <button type="button" class="app-tour-next" onclick="appTourNext()"></button>
             </div>
+            <button type="button" class="app-tour-skip-part hidden" onclick="appTourSkipPart()"></button>
+            <span class="app-tour-live" aria-live="polite"></span>
         </div>`;
     document.body.appendChild(layer);
     appTourLayer = layer;
+    // החלקה באצבע על הכרטיס: לכיוון הקריאה - הבא, נגדו - הקודם
+    const card = layer.querySelector('.app-tour-card');
+    let swipeX = 0, swipeY = 0, swiping = false;
+    card.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) { swiping = false; return; }
+        swiping = true;
+        swipeX = e.touches[0].clientX;
+        swipeY = e.touches[0].clientY;
+    }, { passive: true });
+    card.addEventListener('touchend', e => {
+        if (!swiping) return;
+        swiping = false;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - swipeX;
+        const dy = touch.clientY - swipeY;
+        if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+        const forward = (dx < 0) !== (document.documentElement.dir === 'rtl');
+        const step = appTourSteps[appTourPlan[appTourPos]];
+        if (forward) appTourNext();
+        else if (!(step && step.agenda)) appTourBack();
+    }, { passive: true });
+    card.classList.add('pop');
     requestAnimationFrame(() => layer.classList.add('open'));
 }
 
@@ -2035,7 +2125,8 @@ async function appTourEnsureContext(step) {
     if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
     if (ctx !== 'ai' && typeof aiChatIsOpen === 'function' && aiChatIsOpen()) { closeAiChat(); changed = true; }
-    if (ctx !== 'settings' && settingsModal && settingsModal.classList.contains('open')) { closeModal('modal-settings-drawer'); changed = true; }
+    const inSettings = ctx === 'settings' || ctx === 'settings_sub';
+    if (!inSettings && settingsModal && settingsModal.classList.contains('open')) { backToSettingsMain(); closeModal('modal-settings-drawer'); changed = true; }
     if (ctx !== 'menu' && menuOverlay && menuOverlay.classList.contains('open')) { closeHamburgerMenu(); changed = true; }
     if (ctx === 'ai') {
         // העוזר הוא שיחה: פותחים אותה ומסמנים את הכלי של השלב
@@ -2046,9 +2137,16 @@ async function appTourEnsureContext(step) {
         else switchAiBrainTab(step.tab || 'food');
     } else if (ctx === 'menu') {
         if (!menuOverlay.classList.contains('open')) { openHamburgerMenu(); changed = true; }
-    } else if (ctx === 'settings') {
+    } else if (inSettings) {
         if (!settingsModal.classList.contains('open')) { openSettingsDrawer(); changed = true; }
-        else backToSettingsMain();
+        if (ctx === 'settings_sub') {
+            // "דבר בתוך דבר": נכנסים לקבוצה עצמה (התראות / חשבון) ומדגישים את מה שחשוב בה
+            const sub = document.getElementById(`settings-subscreen-${step.sub}`);
+            if (!sub || sub.classList.contains('hidden')) { openSettingsSubscreen(step.sub); changed = true; }
+        } else if (document.getElementById('settings-main-menu').classList.contains('hidden')) {
+            backToSettingsMain();
+            changed = true;
+        }
     } else if (ctx === 'goals' && goalsOverlay && !goalsOverlay.classList.contains('open')) {
         // פותחים מהמטמון בלי טעינה מחדש - רינדור נוסף אחרי הטעינה היה מחליף את האלמנטים המודגשים
         goalsOverlay.classList.add('open');
@@ -2113,10 +2211,17 @@ function appTourRender(step) {
     const title = step.titleKey ? t(step.titleKey) : (fromTarget ? fromTarget.label : '');
     const icon = step.icon || (fromTarget ? fromTarget.icon : '');
     const isCenter = !appTourTarget;
-    layer.querySelector('.app-tour-chapter').textContent = t(APP_TOUR_CHAPTERS[step.ch] || 'apptour_ch_home');
-    layer.querySelector('.app-tour-skip').textContent = t('apptour_skip');
+    const chapterLabel = t(APP_TOUR_CHAPTERS[step.ch] || 'apptour_ch_home');
+    layer.querySelector('.app-tour-chapter').textContent = chapterLabel;
+    layer.querySelector('.app-tour-part-icon').innerHTML = appTourPartIcon(appTourPartOf(step));
+    layer.querySelector('.app-tour-chip-wrap').classList.toggle('invisible', !!step.agenda);
+    const skip = layer.querySelector('.app-tour-skip');
+    skip.setAttribute('aria-label', t('apptour_skip'));
+    skip.title = t('apptour_skip');
+    // מסך הפתיחה מציג את האייקון של האפליקציה; שלב בלי אלמנט מודגש - אייקון גדול באריח
     const hero = layer.querySelector('.app-tour-hero');
-    hero.innerHTML = isCenter ? appTourIconHtml(icon || '✨') : '';
+    hero.innerHTML = step.agenda ? '<img src="icon.png" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
+    hero.classList.toggle('is-brand', !!step.agenda);
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
     clearTimeout(appTourDemoTimer);
@@ -2126,25 +2231,54 @@ function appTourRender(step) {
     const titleEl = layer.querySelector('.app-tour-title');
     titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourIconHtml(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
     layer.querySelector('.app-tour-text').textContent = t(step.text);
+    const agendaEl = layer.querySelector('.app-tour-agenda');
+    agendaEl.innerHTML = step.agenda ? appTourAgendaHtml() : '';
+    agendaEl.classList.toggle('hidden', !step.agenda);
     const linkEl = layer.querySelector('.app-tour-link');
     const linkText = step.link ? t(step.link) : '';
-    linkEl.innerHTML = linkText ? `<span class="app-tour-link-icon" aria-hidden="true">🔗</span><span>${appTourEsc(linkText)}</span>` : '';
+    linkEl.innerHTML = linkText ? `<span class="app-tour-link-icon" aria-hidden="true">${APP_TOUR_PART_ICONS.summary}</span><span>${appTourEsc(linkText)}</span>` : '';
     linkEl.classList.toggle('hidden', !linkText);
     const flowsEl = layer.querySelector('.app-tour-flows');
     flowsEl.innerHTML = step.flows ? appTourFlowsHtml() : '';
     flowsEl.classList.toggle('hidden', !step.flows);
+    // כפתור נוסף: "להמשיך מאיפה שעצרתי" במסך הפתיחה, "עזרה ושאלות נפוצות" בסוף
+    const extraEl = layer.querySelector('.app-tour-extra');
+    let extraHtml = '';
+    const resumePos = step.agenda ? appTourResumePos() : -1;
+    if (resumePos > 0) extraHtml = `<button type="button" class="app-tour-extra-btn" onclick="appTourJump(${resumePos})">${appTourEsc(t('apptour_resume'))}</button>`;
+    else if (step.faq) extraHtml = `<button type="button" class="app-tour-extra-btn" onclick="appTourOpenFaq()">${appTourEsc(t('settings_help_faq_btn'))}</button>`;
+    extraEl.innerHTML = extraHtml;
+    extraEl.classList.toggle('hidden', !extraHtml);
+    // פס התקדמות מחולק לפי חלקים, ומונה שלא סופר את מסך הפתיחה
+    const parts = appTourParts();
+    const current = parts.find(p => appTourPos >= p.start && appTourPos <= p.end) || null;
+    layer.querySelector('.app-tour-progress').innerHTML = parts.map(p => {
+        const fill = appTourPos > p.end ? 1 : appTourPos < p.start ? 0 : (appTourPos - p.start + 1) / (p.end - p.start + 1);
+        return `<i class="${p === current ? 'is-current' : ''}"><b style="width:${Math.round(fill * 100)}%"></b></i>`;
+    }).join('');
     const total = appTourPlan.length;
-    layer.querySelector('.app-tour-progress span').style.width = `${Math.round(((appTourPos + 1) / total) * 100)}%`;
-    layer.querySelector('.app-tour-count').innerHTML = `<bdi dir="ltr">${appTourPos + 1} / ${total}</bdi>`;
+    const offset = appTourAgendaOffset();
+    layer.querySelector('.app-tour-count').innerHTML = step.agenda ? '' : `<bdi dir="ltr">${appTourPos + 1 - offset} / ${total - offset}</bdi>`;
     const backBtn = layer.querySelector('.app-tour-back');
-    backBtn.textContent = t('apptour_back');
-    backBtn.classList.toggle('invisible', appTourPos === 0);
+    backBtn.innerHTML = step.agenda ? `<span>${appTourEsc(t('apptour_later'))}</span>` : `${APP_TOUR_CHEVRON_BACK}<span>${appTourEsc(t('apptour_back'))}</span>`;
+    backBtn.classList.toggle('invisible', appTourPos === 0 && !step.agenda);
+    backBtn.classList.toggle('is-later', !!step.agenda);
+    const isLast = appTourPos === total - 1;
     const nextBtn = layer.querySelector('.app-tour-next');
-    nextBtn.textContent = appTourPos === total - 1 ? t('apptour_finish') : t('apptour_next');
+    nextBtn.innerHTML = `<span>${appTourEsc(step.agenda ? t('apptour_start') : isLast ? t('apptour_finish') : t('apptour_next'))}</span>${isLast ? '' : APP_TOUR_CHEVRON_NEXT}`;
+    // "לדלג על החלק הזה" - כשנשארו בחלק לפחות עוד שני שלבים ויש חלק אחריו
+    const nextPart = current ? parts[parts.indexOf(current) + 1] : null;
+    const skipPart = layer.querySelector('.app-tour-skip-part');
+    skipPart.textContent = t('apptour_skip_part');
+    skipPart.classList.toggle('hidden', !(current && nextPart && current.end - appTourPos >= 2));
     card.classList.toggle('is-center', isCenter);
-    card.classList.remove('pop');
-    void card.offsetWidth;
-    card.classList.add('pop');
+    card.classList.toggle('is-agenda', !!step.agenda);
+    // הכרטיס זז למקום החדש, והתוכן נכנס מהכיוון של המעבר
+    const body = layer.querySelector('.app-tour-body');
+    body.classList.remove('slide-next', 'slide-back', 'fade-in');
+    void body.offsetWidth;
+    body.classList.add(appTourDir > 0 ? 'slide-next' : appTourDir < 0 ? 'slide-back' : 'fade-in');
+    layer.querySelector('.app-tour-live').textContent = step.agenda ? title : `${chapterLabel}: ${title}`;
     appTourPosition();
     // מיקום שני אחרי שהפריסה/האנימציות התייצבו
     setTimeout(() => { if (appTourActive) appTourPosition(); }, 260);
@@ -2181,7 +2315,7 @@ function appTourPosition() {
     if (!layer) return;
     const spot = layer.querySelector('.app-tour-spot');
     const card = layer.querySelector('.app-tour-card');
-    const arrow = layer.querySelector('.app-tour-arrow');
+    const caret = layer.querySelector('.app-tour-caret');
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const wrapper = document.querySelector('.phone-wrapper');
@@ -2201,7 +2335,7 @@ function appTourPosition() {
         spot.style.top = `${vh / 2}px`;
         spot.style.width = '0px';
         spot.style.height = '0px';
-        arrow.classList.add('hidden');
+        caret.classList.add('hidden');
         card.style.left = `${(boundL + boundR) / 2 - cardW / 2}px`;
         card.style.top = `${Math.max(M, (vh - cardH) / 2)}px`;
         return;
@@ -2218,8 +2352,9 @@ function appTourPosition() {
     spot.style.width = `${sw}px`;
     spot.style.height = `${sh}px`;
     spot.style.borderRadius = radius >= Math.min(r.width, r.height) / 2 - 1 ? '999px' : `${Math.max(10, radius + pad)}px`;
-    const ARROW = 34;
-    const GAP = ARROW + 14;
+    // החץ הקטן הוא ריבוע מסובב שחציו בולט מהכרטיס אל הזרקור
+    const CARET = 14;
+    const GAP = CARET / 2 + 12;
     const spaceBelow = vh - (st + sh);
     const spaceAbove = st;
     let placement;
@@ -2233,28 +2368,53 @@ function appTourPosition() {
     else top = M;
     const cx = r.left + r.width / 2;
     const left = Math.min(Math.max(cx - cardW / 2, boundL + M), boundR - cardW - M);
+    const cardTop = Math.max(M, top);
     card.style.left = `${left}px`;
-    card.style.top = `${Math.max(M, top)}px`;
+    card.style.top = `${cardTop}px`;
     if (placement === 'below' || placement === 'above') {
-        arrow.classList.remove('hidden');
-        arrow.dataset.dir = placement === 'below' ? 'up' : 'down';
-        arrow.style.left = `${Math.min(Math.max(cx - ARROW / 2, boundL + M), boundR - M - ARROW)}px`;
-        arrow.style.top = `${placement === 'below' ? st + sh + 7 : st - 7 - ARROW}px`;
+        caret.classList.remove('hidden');
+        caret.dataset.dir = placement === 'below' ? 'up' : 'down';
+        caret.style.left = `${Math.min(Math.max(cx - CARET / 2, left + 18), left + cardW - 18 - CARET)}px`;
+        caret.style.top = `${placement === 'below' ? cardTop - CARET / 2 : cardTop + cardH - CARET / 2}px`;
     } else {
-        arrow.classList.add('hidden');
+        caret.classList.add('hidden');
     }
 }
 
 function appTourNext() {
     if (!appTourActive) return;
-    if (appTourPos >= appTourPlan.length - 1) { closeAppTour(); return; }
+    if (appTourPos >= appTourPlan.length - 1) { appTourFinished = true; closeAppTour(); return; }
+    appTourDir = 1;
     appTourPos++;
     appTourShow();
 }
 function appTourBack() {
-    if (!appTourActive || appTourPos === 0) return;
+    if (!appTourActive) return;
+    // במסך הפתיחה הכפתור הזה הוא "לא עכשיו"
+    const step = appTourSteps[appTourPlan[appTourPos]];
+    if (step && step.agenda) { closeAppTour(); return; }
+    if (appTourPos === 0) return;
+    appTourDir = -1;
     appTourPos--;
     appTourShow();
+}
+// קפיצה לשלב (חלק ממסך הפתיחה, "להמשיך מאיפה שעצרתי", "לדלג על החלק הזה")
+function appTourJump(pos) {
+    if (!appTourActive) return;
+    const target = Math.max(0, Math.min(pos, appTourPlan.length - 1));
+    appTourDir = target >= appTourPos ? 1 : -1;
+    appTourPos = target;
+    appTourShow();
+}
+function appTourSkipPart() {
+    const parts = appTourParts();
+    const index = parts.findIndex(p => appTourPos >= p.start && appTourPos <= p.end);
+    if (index >= 0 && parts[index + 1]) appTourJump(parts[index + 1].start);
+}
+function appTourOpenFaq() {
+    appTourFinished = true;
+    closeAppTour();
+    setTimeout(() => { if (typeof openHelpFaqModal === 'function') openHelpFaqModal(); }, 280);
 }
 function appTourKeydown(e) {
     if (!appTourActive) return;
@@ -2263,6 +2423,18 @@ function appTourKeydown(e) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAppTour(); }
     else if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') || (e.key === 'Enter' && !onButton)) { e.preventDefault(); e.stopPropagation(); appTourNext(); }
     else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) { e.preventDefault(); e.stopPropagation(); appTourBack(); }
+    else if (e.key === 'Tab') {
+        // המיקוד נשאר בתוך הכרטיס (חלון מודאלי)
+        const card = appTourLayer && appTourLayer.querySelector('.app-tour-card');
+        if (!card) return;
+        const items = [...card.querySelectorAll('button')].filter(b => b.offsetParent !== null && !b.classList.contains('invisible'));
+        if (!items.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        const inside = card.contains(document.activeElement) && document.activeElement !== card;
+        if (e.shiftKey && (!inside || document.activeElement === first)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && (!inside || document.activeElement === last)) { e.preventDefault(); first.focus(); }
+    }
 }
 function appTourTrack() {
     if (!appTourActive) return;
@@ -2286,6 +2458,15 @@ function closeAppTour() {
     if (!appTourActive) return;
     appTourActive = false;
     appTourToken++;
+    // "להמשיך מאיפה שעצרתי": נשמר השלב שבו סגרו באמצע (רק בסיור הראשי); הגעה לסוף מוחקת אותו
+    if (appTourSteps === APP_TOUR_STEPS) {
+        const current = appTourSteps[appTourPlan[appTourPos]];
+        try {
+            if (appTourFinished) localStorage.removeItem(APP_TOUR_RESUME_KEY);
+            else if (current && !current.agenda && appTourPos < appTourPlan.length - 1) localStorage.setItem(APP_TOUR_RESUME_KEY, current.id);
+        } catch {}
+    }
+    appTourFinished = false;
     document.removeEventListener('keydown', appTourKeydown, true);
     window.removeEventListener('resize', appTourOnResize);
     clearInterval(appTourTrackTimer);
@@ -2295,7 +2476,7 @@ function closeAppTour() {
     if (layer) { layer.classList.remove('open'); setTimeout(() => layer.remove(), 240); }
     // סוגרים את מה שהסיור פתח וחוזרים למסך הבית
     if (appTourCtx === 'ai') closeModal('modal-ai-brain');
-    if (appTourCtx === 'settings') closeModal('modal-settings-drawer');
+    if (appTourCtx === 'settings' || appTourCtx === 'settings_sub') { backToSettingsMain(); closeModal('modal-settings-drawer'); }
     if (appTourCtx === 'menu') closeHamburgerMenu();
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
     clearTimeout(appTourDemoTimer);
@@ -11414,13 +11595,33 @@ function autoExtractRecurringRow(row) {
     };
 }
 
+// קובץ טקסט מהבנק (CSV / TSV / "xls" שהוא בעצם HTML) נשמר לפעמים בלי סימון קידוד - בעברית בדרך כלל
+// ב-Windows-1255, ש-SheetJS קורא כ-Latin-1 ומשבש את השמות. לכן Excel אמיתי (ZIP או OLE) הולך ישר
+// ל-SheetJS, וטקסט מפוענח קודם: סימון BOM, אחרת UTF-8 תקין, אחרת הקידוד הישן הנפוץ בשפת האפליקציה
+const IMPORT_LEGACY_ENCODINGS = { he: 'windows-1255', ar: 'windows-1256', ur: 'windows-1256', ru: 'windows-1251', uk: 'windows-1251', el: 'windows-1253', tr: 'windows-1254', pl: 'windows-1250', cs: 'windows-1250', hu: 'windows-1250', ro: 'windows-1250', vi: 'windows-1258', th: 'windows-874', ja: 'shift_jis', zh: 'gbk', ko: 'euc-kr' };
+function decodeSpreadsheetText(bytes) {
+    if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return new TextDecoder('utf-8').decode(bytes.subarray(3));
+    if (bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(bytes.subarray(2));
+    if (bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(bytes.subarray(2));
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch {}
+    try { return new TextDecoder(IMPORT_LEGACY_ENCODINGS[currentLang] || 'windows-1252').decode(bytes); } catch {}
+    return new TextDecoder('windows-1252').decode(bytes);
+}
+function readSpreadsheetFile(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const isZip = bytes[0] === 0x50 && bytes[1] === 0x4B;
+    const isOle = bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0;
+    if (isZip || isOle) return XLSX.read(bytes, { type: 'array', cellDates: true });
+    return XLSX.read(decodeSpreadsheetText(bytes), { type: 'string', cellDates: true });
+}
+
 async function handleRecurringImportFileSelected(event) {
     const file = event.target.files && event.target.files[0];
     event.target.value = '';
     if (!file) return;
     try {
         const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const workbook = readSpreadsheetFile(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
         const candidates = [];
