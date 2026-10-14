@@ -341,6 +341,10 @@ function srpPorchScene(keys) {
                 </g>
                 <path class="srp-hit" d="M66 356 L324 356 L300 462 L90 462 Z" fill="transparent"/>
             </g>
+            <!-- 🪔 מנורת אלאדין שעל השולחן (מצוירת): נגיעה - רוח היער יוצאת ממנה בערפל ושואלת מה המשאלה (srpOpenGenie) -->
+            <g class="srp-hot srp-lamp" data-place-hot="lamp" role="button" tabindex="0" aria-label="${srEsc(t('room_genie_aria'))}">
+                <rect class="srp-hit" x="280" y="554" width="110" height="88" fill="transparent"/>
+            </g>
             <!-- הטאבלט מונח על הרצפה של המרפסת (על השולחן הקטן עומדת עכשיו מנורת אלאדין) -->
             <g class="srp-hot srp-tablet${tabletOpen ? ' is-open' : ' locked'}" data-place-hot="tablet" role="button" tabindex="0" aria-label="${srEsc(roomItemName('tablet'))}">
                 <ellipse cx="196" cy="772" rx="46" ry="9" fill="#000" opacity="0.28"/>
@@ -378,7 +382,38 @@ function srpInitPorch(box) {
             srShowTip(t('room_tablet_soon'));
         },
         bottle: el => srpOpenBottle(el),
+        lamp: () => srpOpenGenie(box),
     };
+}
+
+// 🪔 רוח היער ממנורת אלאדין (לפי בקשה מפורשת, 2026-10-14: "שלוחצים עליו זה נפתח... הוא יוצא משם בצורה קסומה כזה עם ערפל
+// ומסתובב... ואז הוא שואל מה המשאלה שלך? או מה תרצה לשנות בחייך? ומשם נפתח את זה אבל בנתיים תעשה את זה"): ערפל עולה
+// מהפיה של המנורה, הרוח (world/genie.png) יוצאת קטנה ומסתובבת בספירלה עד שהיא גדולה באמצע, ואז שואלת. ההמשך - בהמשך
+const SRP_GENIE_FROM = { x: 254 / 390, y: 586 / 844 };   // הפיה של המנורה בציור
+function srpOpenGenie(box) {
+    if (!box || box.querySelector('.srp-genie')) return;
+    const reduce = srpReduce();
+    const r = box.getBoundingClientRect();
+    const layer = document.createElement('div');
+    layer.className = `srp-genie${reduce ? ' is-reduced' : ''}`;
+    layer.style.setProperty('--gx', `${Math.round((SRP_GENIE_FROM.x - 0.5) * r.width)}px`);
+    layer.style.setProperty('--gy', `${Math.round((SRP_GENIE_FROM.y - 0.42) * r.height)}px`);
+    layer.style.setProperty('--fx', `${(SRP_GENIE_FROM.x * 100).toFixed(1)}%`);
+    layer.style.setProperty('--fy', `${(SRP_GENIE_FROM.y * 100).toFixed(1)}%`);
+    layer.innerHTML = `
+        <div class="srp-genie-fog" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div>
+        <div class="srp-genie-swirl" aria-hidden="true"><img class="srp-genie-img" src="${SRP_ART}genie.png" alt=""></div>
+        <div class="srp-genie-ask" role="dialog" aria-label="${srEsc(t('room_genie_q1'))}">
+            <b>${srEsc(t('room_genie_q1'))}</b>
+            <span>${srEsc(t('room_genie_q2'))}</span>
+            <button type="button" class="srp-genie-close">${srEsc(t('close_btn'))}</button>
+        </div>`;
+    box.appendChild(layer);
+    void layer.offsetWidth;
+    layer.classList.add('go');
+    const close = () => { layer.classList.add('bye'); setTimeout(() => layer.remove(), reduce ? 0 : 600); };
+    layer.querySelector('.srp-genie-close').addEventListener('click', close);
+    srpCleanups.push(() => layer.remove());
 }
 
 // הבקבוק מהים (המפתח האחרון): הפקק עף, והמכתב מהעבר נפתח. נרשם שנפתח רק כשהמפתחות אמיתיים -

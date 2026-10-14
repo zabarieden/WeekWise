@@ -9580,6 +9580,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_preview', category: 'nutrition' },
     { id: 'new_me_weight_optional', category: 'nutrition' },
     { id: 'new_me_hall', category: 'nutrition' },
+    { id: 'new_me_game', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
     { id: 'new_me_menu_build', category: 'nutrition' },

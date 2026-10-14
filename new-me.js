@@ -1841,6 +1841,7 @@ function nmAfterTrackerChange() {
     if (typeof loadStats === 'function') loadStats();
     // ✓ / החלפה ב-New Me מתעדכנים גם במסך הבית (האריח וציר הזמן של "היום שלי")
     if (nmHomeDataDay === getLocalDateString()) { nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); }
+    if (typeof nmgRenderHud === 'function') nmgRenderHud();
 }
 
 // ---------- מסע: יום X, רצף, אבני דרך ----------
@@ -1990,7 +1991,9 @@ function nmRenderView(root) {
     if (section) section.classList.toggle('nm-hall-mode', nmView === 'home');
     // כפתור ה-PM של חשבון הפיתוח: במסדרון בתוך הציור, בשאר המסכים בצד
     const devKeys = () => { if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys(); };
-    if (nmView === 'home') { nmRenderHome(root); devKeys(); return; }
+    // 🎮 הכפתורים הקבועים של המשחק (new-me-game.js) - תמיד מעודכנים; במסדרון גם בודקים אם הדמות גדלה (מהפך)
+    const hud = () => { if (typeof nmgRenderHud === 'function') nmgRenderHud(); };
+    if (nmView === 'home') { nmRenderHome(root); devKeys(); hud(); if (typeof nmgCheckEvolve === 'function') setTimeout(nmgCheckEvolve, 300); return; }
     root.innerHTML = `
         <div class="nm-subhead">
             <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}">‹</button>
@@ -2002,6 +2005,7 @@ function nmRenderView(root) {
     renderers[nmView](body);
     if (nmView === 'day') nmRestoreDrinkDrafts();
     devKeys();
+    hud();
 }
 
 function nmGo(view) {
@@ -2124,39 +2128,23 @@ function nmhBagFrontSvg(keys) {
 }
 
 function nmRenderHome(root) {
-    const active = nmActiveOrder().slice(0, NMH_LAMPS.length);
-    const nextSlot = nmNextSlot(active);
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
     const roofAt = typeof roomUnlockAt === 'function' ? roomUnlockAt('roof') : 5;
     const roofOpen = keys >= roofAt;
-    // בלי מנורות (לפי בקשה מפורשת, 2026-10-14: "לא צריך את המנורות שיראה מה אכלתי אפשר לשים את זה בתוך התיק"): מה
-    // שנאכל - בתיק הקסום (הציור שלה, world/bag.png), והציור של השער נשאר בדיוק כמו שהיא שלחה
+    // המסדרון הוא העולם של המשחק (2026-10-14): הציור של השער בדיוק כמו שהיא שלחה, הדלתות, הדרך לגג והדמות (Me) על השביל.
+    // התיק, המפתחות, המשימה הבאה ו-✓ אכלתי - בכפתורים הקבועים (new-me-game.js)
     // הכניסות שבציור (1 = העץ, 2–5 = המקומות) - הציור ב-nmhSceneSvg, כאן אזורי הלחיצה
     const doorBtns = NMH_DOORS.map(d => {
         const [x, y, w, h] = d.hit;
         const lx = nmhMx(x);
         return `<button type="button" class="nmh-door" data-door="${d.n}" style="left:${nmhX(lx)};top:${nmhY(y)};width:${nmhX(w)};height:${nmhY(h)}" onclick="nmhDoorTap(${d.n})" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(d.n)))}"></button>`;
     }).join('');
-    // הפתק של "הבא" (או "כל המנורות דולקות") - תחוב בתרמיל
-    const nextName = !nextSlot ? '' : nmIsFree(nextSlot) ? `🍕 ${t('nm_free_meal')}` : nmItemShort(nmItemInfo(nmTodayKey(nextSlot)));
-    const note = nextSlot ? `
-        <div class="nmh-note" style="left:${nmhX(234)};top:${nmhY(652)};width:${nmhX(132)};height:${nmhY(100)}">
-            <button type="button" class="nmh-note-body" onclick="nmOpenHallMeal('${nextSlot}')">
-                <span class="nmh-note-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
-                <span class="nmh-note-name">${nmEsc(nextName)}</span>
-            </button>
-            <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
-        </div>`
-        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(652)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_done'))}</span></button></div>`;
     root.innerHTML = `
         <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
             ${nmhSceneSvg({ lampsSvg: '', doorOpen: n => nmhDoorOpen(n, keys), roofOpen, bag: false })}
-            <div class="nmh-hud"><span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span></div>
             ${doorBtns}
             <button type="button" class="nmh-hatch-btn" style="left:${nmhX(NMH_ROOF.hit[0])};top:${nmhY(NMH_ROOF.hit[1])};width:${nmhX(NMH_ROOF.hit[2])};height:${nmhY(NMH_ROOF.hit[3])}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
-            ${note}
-            <button type="button" class="nmh-bag nmh-bag-art" style="left:${nmhX(222)};top:${nmhY(690)};width:${nmhX(160)};height:${nmhY(154)}" onclick="nmOpenBackpack()" aria-label="${nmEsc(t('nm_backpack'))}"><img src="world/bag.png" alt=""></button>
-            <button type="button" class="nmh-keys nmh-keys-chip" data-keys="${keys}" style="left:${nmhX(194)};top:${nmhY(802)};width:${nmhX(48)};height:${nmhY(30)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${nmhKeySvg('currentColor')}<bdi dir="ltr">${nmFmt(keys)}</bdi></button>
+            ${typeof nmgMeHallHtml === 'function' ? nmgMeHallHtml() : ''}
             <div class="nmh-tip" role="status" aria-live="polite"></div>
         </div>`;
     // משהו נפתח ועוד לא הגיעו אליו - החץ מראה לאן ללכת (ר' roomGuideHallway)
@@ -4557,10 +4545,17 @@ async function nmSaveFullName(input) {
 // ---------- סיור קטן ב-New Me (לפי בקשה מפורשת: "סיור קטן בפני עצמו אחרי שמשלמים") ----------
 // אותו מנגנון של הסיור באפליקציה (הדגשה + כרטיס הסבר), על המסך של New Me. נפתח לבד פעם אחת -
 // אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
+// הסיור במשחק (לפי בקשה מפורשת, 2026-10-14: "תשנה את הסיור לגמרי בNEW ME ברגע שאתה מסיים"): הפס העליון, המשימה הבאה,
+// ✓ אכלתי, הכלים שבצדדים, התיק הקסום, מפת העולם, הדמות (Me) ודלת 1 לחדר
 const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
-    // המסדרון (המסך הראשי): המנורות = הארוחות, התרמיל = כל New Me, ודלת 1 לחדר
-    { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#new-me-root .nmh-bag', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
+    { id: 'nm_top', ch: 'newme', ctx: 'newme', icon: '⭐', target: '#nm-hud .nmg-top', titleKey: 'nm_tour_top_title', text: 'nm_tour_top_text', optional: true },
+    { id: 'nm_quest', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-hud .nmg-quest', titleKey: 'nm_tour_quest_title', text: 'nm_tour_quest_text', optional: true },
+    { id: 'nm_eat', ch: 'newme', ctx: 'newme', icon: '✓', target: '#nm-hud .nmg-eat', titleKey: 'nm_tour_eat_title', text: 'nm_tour_eat_text', optional: true },
+    { id: 'nm_rails', ch: 'newme', ctx: 'newme', icon: '🧰', target: '#nm-hud .nmg-rr', titleKey: 'nm_tour_rails_title', text: 'nm_tour_rails_text', optional: true },
+    { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
+    { id: 'nm_world', ch: 'newme', ctx: 'newme', icon: '🗺️', target: '#nm-hud [data-hud="world"]', titleKey: 'nm_tour_world_title', text: 'nm_tour_world_text', optional: true },
+    { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
 ];

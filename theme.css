@@ -10635,7 +10635,7 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-b { background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .nmg-b:focus-visible { outline: 2px solid #ffd27a; outline-offset: 3px; border-radius: 14px; }
 .nmg-hx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.nmg-top { position: absolute; top: 12px; right: 12px; left: 12px; height: 44px; display: flex; align-items: center; gap: 7px; }
+.nmg-top { position: absolute; top: 12px; inset-inline-start: 76px; inset-inline-end: 12px; height: 44px; display: flex; align-items: center; gap: 7px; }
 .nmg-day { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; filter: drop-shadow(0 0 6px rgba(201, 182, 255, .55)) drop-shadow(0 6px 6px rgba(0, 0, 0, .45)); }
 .nmg-day .nmg-hx { top: -3px; height: calc(100% + 6px); }
 .nmg-dayt { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; line-height: 1; }
@@ -10650,9 +10650,10 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-fill { display: block; height: 100%; border-radius: 3px; background: linear-gradient(270deg, #c9b6ff, #a7f3d0); }
 .nmg-num { font-size: 12px; font-variant-numeric: tabular-nums; }
 /* המשימה הבאה - "בדיוק ככה רק בצד בקטן" */
-.nmg-quest { position: absolute; top: 64px; inset-inline-start: 10px; width: 156px; padding: 7px 10px 8px; box-sizing: border-box; display: flex; flex-direction: column; gap: 1px; text-align: start; line-height: 1.25; border-radius: 9px; }
+.nmg-quest { position: absolute; top: 74px; inset-inline-start: 10px; width: 156px; padding: 7px 10px 8px; box-sizing: border-box; display: flex; flex-direction: column; gap: 1px; text-align: start; line-height: 1.25; border-radius: 9px; }
 .nmg-quest::after { content: ""; position: absolute; inset: 0; border-radius: 8px; background: linear-gradient(115deg, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, .13) 44%, rgba(255, 255, 255, 0) 54%); pointer-events: none; }
-.nmg-q1 { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #ffd27a; }
+.nmg-q1 { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 10px; font-weight: 700; color: #ffd27a; white-space: nowrap; }
+.nmg-q1 > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .nmg-q1 svg { flex: none; width: 11px; height: 11px; }
 .nmg-q2 { font-size: 12px; font-weight: 700; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .nmg-q3 { font-size: 10.5px; color: #d6cbf3; }
@@ -10662,13 +10663,15 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-rr { inset-inline-start: 6px; }
 .nmg-rl { inset-inline-end: 6px; }
 .nmg-it { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px; font-size: 11px; font-weight: 600; line-height: 1.2; }
-.nmg-lb { white-space: nowrap; color: #f6f0ff; text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 0 8px rgba(120, 90, 210, .6); }
+.nmg-lb { max-width: 74px; text-align: center; font-size: 10.5px; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; color: #f6f0ff; text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 0 8px rgba(120, 90, 210, .6); }
 .nmg-btn { position: relative; width: 50px; height: 50px; display: grid; place-items: center; filter: drop-shadow(0 0 6px rgba(201, 182, 255, .55)) drop-shadow(0 6px 6px rgba(0, 0, 0, .45)); }
 .nmg-btn .nmg-hx { top: -4px; height: calc(100% + 8px); }
 .nmg-i { position: relative; z-index: 1; width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 0 3px rgba(201, 182, 255, .95)); }
 .nmg-tray { position: absolute; right: 8px; left: 8px; bottom: 6px; height: 86px; box-sizing: border-box; border-radius: 12px; background: linear-gradient(160deg, rgba(64, 42, 124, .78), rgba(34, 20, 72, .88)) padding-box, var(--nmg-rim) border-box; }
 .nmg-dock { position: absolute; right: 6px; left: 6px; bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; }
 .nmg-dock .nmg-it { width: 60px; }
+.nmg-dock .nmg-lb { max-width: 62px; font-size: 10px; }
+.nmg-dock .nmg-bagit .nmg-lb { max-width: 76px; }
 .nmg-bagit { width: 66px; }
 .nmg-bagv { position: relative; width: 66px; height: 76px; }
 .nmg-bagv::before { content: ""; position: absolute; left: -4px; right: -4px; top: 4px; height: 70px; border-radius: 50%; background: radial-gradient(circle, rgba(201, 182, 255, .38), transparent 68%); }
@@ -10687,7 +10690,8 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-eat:active .nmg-eatv, .nmg-it:active .nmg-btn { transform: scale(.94); }
 @keyframes nmgGlow { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 /* בחדר ובמקומות: הכותרת והחצים יורדים מתחת לפס העליון, והטיפ מעל הכפתורים שלמטה */
-.phone-wrapper:has(#nm-hud) .sr-close, .phone-wrapper:has(#nm-hud) .sr-tools { top: 70px; }
+.phone-wrapper:has(#nm-hud) .sr-tools { top: 70px; }
+.phone-wrapper:has(#sr-overlay) .nmg-quest { display: none; }
 .phone-wrapper:has(#nm-hud) .sr-title { top: 81px; }
 .phone-wrapper:has(#nm-hud) .sr-topfade { height: 140px; }
 .phone-wrapper:has(#nm-hud) .sr-arrow { top: 66%; }
@@ -10695,6 +10699,22 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .phone-wrapper:has(#nm-hud) .sr-place .sr-sub-head { top: 56px; }
 .phone-wrapper:has(#nm-hud) .sr-roof .sr-sub-head, .phone-wrapper:has(#nm-hud) .sr-shelf .sr-sub-head { padding-top: 72px; }
 .phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode .nmh-tip { bottom: 22%; }
+/* המסדרון הוא מסך המשחק עצמו: הציור מקצה לקצה ומהקצה העליון, מאחורי הכפתורים הקבועים. במקום "חזרה למסך הבית" - 🏠 קטן מתחת לפס העליון */
+.phone-wrapper:has(#nm-hud) .main-scroll-area:has(> #new-me-section.active-tab.nm-hall-mode) { padding: 0 0 96px; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode { margin: 0; padding: 0; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode > .btn-back-home { display: none; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode .nmh { max-width: none; border-radius: 0; box-shadow: none; }
+.nmg-home { display: none; position: absolute; top: 74px; inset-inline-end: 18px; }
+.nmg-home .nmg-btn { width: 40px; height: 40px; }
+.nmg-home .nmg-i { width: 19px; height: 19px; }
+.phone-wrapper:has(#new-me-section.active-tab.nm-hall-mode):not(:has(#sr-overlay)):not(.nmg-map-open) .nmg-home { display: block; }
+.nmg-home:active .nmg-btn { transform: scale(.94); }
+/* במפה - רק המפה: בלי שני הטורים שבצדדים */
+.phone-wrapper.nmg-map-open .nmg-rail { display: none; }
+/* בעולם של המשחק העוזר החכם לא מציץ מתחת לשורה התחתונה (המסדרון, החדר, המקומות והמפה) */
+.phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) #btn-ai-brain-fab, .phone-wrapper:has(#nm-hud):has(#sr-overlay) #btn-ai-brain-fab, .phone-wrapper.nmg-map-open #btn-ai-brain-fab { display: none; }
+/* הכפתור הקטן של המפתחת - מעל השורה התחתונה של המשחק (לא מתחתיה) */
+.phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) .dev-sim-float { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
 /* הדמות של המשתמש/ת על השביל: Me1 / Me2 / Me3 (הציורים שלה), מרחפת קצת */
 .nmh-me { position: absolute; z-index: 3; padding: 0; border: 0; background: none; cursor: pointer; }
 .nmh-me img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 10px 10px rgba(0, 0, 0, .5)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
@@ -10703,7 +10723,7 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 /* מפת העולם - בין הכפתורים הקבועים (הם נשארים) */
 .nmg-map { position: absolute; inset: 0; z-index: 2570; overflow: hidden; background: #120a24 url('world/forest-night.jpg') center / cover; animation: srFadeIn .3s ease-out; }
 .nmg-map::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18, 10, 36, .82), rgba(18, 10, 36, .55) 40%, rgba(18, 10, 36, .85)); pointer-events: none; }
-.nmg-map-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 64px 78px 118px; box-sizing: border-box; }
+.nmg-map-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 64px 26px 128px; box-sizing: border-box; }
 .nmg-map-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0 10px; }
 .nmg-map-head b { font-size: 1.15rem; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(201, 182, 255, .8); }
 .nmg-map-me { display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; color: #ffd27a; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
@@ -10760,3 +10780,39 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-evolve.is-reduced .nmg-ev-from, .nmg-evolve.is-reduced .nmg-ev-flash, .nmg-evolve.is-reduced .nmg-ev-sparks { display: none; }
 .nmg-evolve.is-reduced .nmg-ev-to, .nmg-evolve.is-reduced .nmg-ev-text, .nmg-evolve.is-reduced .nmg-ev-go, .nmg-evolve.is-reduced .nmg-ev-ring { animation: none !important; opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .nmg-eatv::before, .nmh-me img { animation: none; } .nmg-map { animation: none; } }
+
+/* 🪔 רוח היער ממנורת אלאדין (srpOpenGenie): ערפל עולה מהפיה, הרוח מסתובבת בספירלה עד שהיא גדולה באמצע, ואז שואלת */
+.srp-genie { position: absolute; inset: 0; z-index: 8; overflow: hidden; background: rgba(10, 6, 24, 0); }
+.srp-genie.go { animation: srpGenieDim 1.6s ease forwards; }
+.srp-genie.bye { opacity: 0; transition: opacity .55s ease; }
+@keyframes srpGenieDim { to { background: rgba(10, 6, 24, .55); } }
+.srp-genie-fog i { position: absolute; left: var(--fx); top: var(--fy); width: 64px; height: 64px; margin: -32px; border-radius: 50%; background: radial-gradient(circle, rgba(236, 228, 255, .9), rgba(200, 180, 255, .4) 45%, rgba(200, 180, 255, 0) 70%); filter: blur(6px); opacity: 0; pointer-events: none; }
+.srp-genie.go .srp-genie-fog i { animation: srpFog 3.2s ease-out infinite; animation-delay: calc(var(--i) * .32s); }
+.srp-genie.go .srp-genie-fog { animation: srpFogCalm 2s ease 8.4s forwards; }
+@keyframes srpFog { 0% { opacity: 0; transform: translate(0, 0) scale(.3); } 20% { opacity: .9; } 100% { opacity: 0; transform: translate(calc((var(--i) - 5) * 14px - 70px), calc(-130px - var(--i) * 12px)) scale(3.6); } }
+@keyframes srpFogCalm { to { opacity: .35; } }
+.srp-genie-swirl { position: absolute; left: 50%; top: 42%; width: min(80%, 330px); aspect-ratio: 628 / 440; transform: translate(-50%, -50%); opacity: 0; pointer-events: none; }
+.srp-genie-img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 22px rgba(167, 243, 208, .55)) drop-shadow(0 0 12px rgba(201, 182, 255, .6)); }
+.srp-genie.go .srp-genie-swirl { animation: srpGenieSwirl 7.4s cubic-bezier(.4, 0, .2, 1) .5s forwards; }
+.srp-genie.go .srp-genie-img { animation: srpGenieFloat 3.8s ease-in-out 8s infinite; }
+@keyframes srpGenieSwirl {
+    0% { opacity: 0; transform: translate(calc(-50% + var(--gx)), calc(-50% + var(--gy))) scale(.04) rotate(0deg); filter: blur(6px); }
+    10% { opacity: .85; }
+    30% { transform: translate(calc(-50% + var(--gx) * .5 - 40px), calc(-50% + var(--gy) * .45 - 70px)) scale(.26) rotate(250deg); filter: blur(3px); }
+    55% { transform: translate(calc(-50% - 54px), calc(-50% - 24px)) scale(.56) rotate(510deg); filter: blur(1px); }
+    78% { transform: translate(calc(-50% + 42px), calc(-50% + 12px)) scale(.86) rotate(670deg); filter: blur(0); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(720deg); filter: blur(0); }
+}
+@keyframes srpGenieFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.srp-genie-ask { position: absolute; left: 50%; top: 66%; z-index: 2; width: min(250px, calc(100% - 150px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 14px 12px; border-radius: 20px; text-align: center; color: #fff; background: linear-gradient(160deg, rgba(64, 42, 124, .92), rgba(28, 16, 60, .94)); box-shadow: 0 0 0 1.5px rgba(201, 182, 255, .55), 0 0 26px rgba(167, 243, 208, .3), 0 16px 30px -12px rgba(0, 0, 0, .7); transform: translate(-50%, 8px); opacity: 0; }
+.srp-genie-ask b { font-size: 1.12rem; font-weight: 800; color: #ffd27a; text-shadow: 0 0 10px rgba(255, 210, 122, .6); }
+.srp-genie-ask span { font-size: .9rem; color: #e9e1ff; line-height: 1.4; }
+.srp-genie-close { margin-top: 4px; min-height: 40px; padding: 0 22px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .1); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.srp-genie-close:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
+.srp-genie.go .srp-genie-ask { animation: srpGenieAsk .6s ease-out 7.9s forwards; }
+@keyframes srpGenieAsk { to { opacity: 1; transform: translate(-50%, 0); } }
+.srp-genie.is-reduced .srp-genie-fog { display: none; }
+.srp-genie.is-reduced .srp-genie-swirl, .srp-genie.is-reduced .srp-genie-ask { animation: none !important; opacity: 1; }
+.srp-genie.is-reduced .srp-genie-ask { transform: translate(-50%, 0); }
+.srp-genie.is-reduced { background: rgba(10, 6, 24, .55); animation: none; }
+@media (prefers-reduced-motion: reduce) { .srp-genie-img { animation: none !important; } }

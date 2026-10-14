@@ -140,6 +140,8 @@ function roomAfterKeysChange() {
     }
     if (srIsOpen()) srRenderWall();
     roomRenderDevKeys();
+    // 🎮 הכפתורים הקבועים (מפתחות) והדמות (Me) - אם גדלה, המהפך
+    if (typeof nmgRenderHud === 'function') { nmgRenderHud(); nmgCheckEvolve(); }
 }
 
 // מפתח חדש (או כמה) שעוד לא נחשף - חגיגת מפתח, ומשם ישר למה שנפתח
@@ -369,6 +371,7 @@ function openSecretRoom(opts = {}) {
     srApplyStyle();
     srRenderWall();
     srBindSwipe(ov.querySelector('.sr-scene'));
+    if (typeof nmgRenderHud === 'function') nmgRenderHud();
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') closeSecretRoom(); });
     roomRenderDevKeys();
     // פוקוס על החדר עצמו (בשביל Escape / קורא מסך) - בלי טבעת פוקוס על כפתור
@@ -384,6 +387,7 @@ function closeSecretRoom() {
     if (pcState) { pcStopTimers(); pcState = null; }
     document.getElementById('sr-overlay')?.remove();
     roomRenderDevKeys();
+    if (typeof nmgRenderHud === 'function') nmgRenderHud();
 }
 
 function roomTurn(dir) {
