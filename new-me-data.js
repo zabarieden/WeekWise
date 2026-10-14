@@ -36,6 +36,16 @@ const NEW_ME_PLANS = {
 // (הטקסט ב-i18n: nm_pick_<group>_<id>; הדברים הקלים - אותם רעיונות של "משהו קטן" בערב, nm_late_idea_<id>). הבחירה
 // משותפת לכל האפשרויות עם אותה קבוצה, ונשמרת ב-new_me_profile.picks. def = מה שמוצג עד שבוחרים
 const NEW_ME_PICKS_MAX = 3;
+const NM_LIGHT_ITEMS = {
+    chocolate: { kcal: 110, protein: 1.5 }, warm_milk: { kcal: 100, protein: 8 }, banana: { kcal: 100, protein: 1.5 }, cottage_slice: { kcal: 100, protein: 7 },
+    apple: { kcal: 80, protein: 0.5 }, yogurt: { kcal: 70, protein: 8 }, almonds: { kcal: 70, protein: 2.5 }, popcorn: { kcal: 60, protein: 2 },
+    veg: { kcal: 30, protein: 1 }, tea_honey: { kcal: 20, protein: 0 },
+};
+const NM_DRINK_ITEMS = {
+    water: { kcal: 0, protein: 0 }, herbal: { kcal: 0, protein: 0 }, diet: { kcal: 0, protein: 0 }, black: { kcal: 5, protein: 0 },
+    tea_milk: { kcal: 25, protein: 1.5 }, water_milk: { kcal: 50, protein: 3 }, cocoa: { kcal: 100, protein: 6 }, warm_milk: { kcal: 100, protein: 8 },
+    regular: { kcal: 120, protein: 6 },
+};
 const NEW_ME_PICKS = {
     spread: {
         def: ['choc', 'peanut', 'yellow'],
@@ -55,16 +65,22 @@ const NEW_ME_PICKS = {
         def: ['m1', 'm3', 'soy'],
         items: { m1: { kcal: 65, protein: 5 }, m3: { kcal: 60, protein: 3.5 }, lactose: { kcal: 65, protein: 5 }, soy: { kcal: 55, protein: 5 }, almond: { kcal: 30, protein: 1 }, oat: { kcal: 60, protein: 1 } },
     },
-    light: {
-        def: ['banana', 'yogurt', 'popcorn'],
-        items: {
-            chocolate: { kcal: 110, protein: 1.5 }, warm_milk: { kcal: 100, protein: 8 }, banana: { kcal: 100, protein: 1.5 }, cottage_slice: { kcal: 100, protein: 7 },
-            apple: { kcal: 80, protein: 0.5 }, yogurt: { kcal: 70, protein: 8 }, almonds: { kcal: 70, protein: 2.5 }, popcorn: { kcal: 60, protein: 2 },
-            veg: { kcal: 30, protein: 1 }, tea_honey: { kcal: 20, protein: 0 },
-        },
-    },
+    light: { def: ['banana', 'yogurt', 'popcorn'], items: NM_LIGHT_ITEMS },
+    // 🌙 / ☕ (לפי בקשה מפורשת, 2026-10-14: "אפשרויות בחירה לאכול משהו קטן ואפשרויות בחירה ברק לשתות ואז מוסיפים את זה
+    // לארוחה בקלוריות" + "קפה ושתיה גם לשים אפשרויות"): late = מה אוכלים בערב, latedrink = מה שותים בערב - הממוצע של מה
+    // שנבחר הוא הקלוריות של הערב (יורדות מהארוחות, ר' nmLateKcal / nmBalance); drink = הקפה והשתייה של היום (בלחיצה אחת,
+    // בתוך ~150 של השתייה)
+    late: { def: ['banana', 'yogurt', 'chocolate'], items: NM_LIGHT_ITEMS },
+    latedrink: { def: ['herbal', 'tea_milk', 'warm_milk'], items: { herbal: NM_DRINK_ITEMS.herbal, water: NM_DRINK_ITEMS.water, tea_milk: NM_DRINK_ITEMS.tea_milk, black: NM_DRINK_ITEMS.black, warm_milk: NM_DRINK_ITEMS.warm_milk, cocoa: NM_DRINK_ITEMS.cocoa } },
+    drink: { def: ['black', 'water_milk', 'herbal'], items: NM_DRINK_ITEMS },
 };
-function nmPickTextKey(group, id) { return group === 'light' ? 'nm_late_idea_' + id : `nm_pick_${group}_${id}`; }
+// הטקסט של פריט: הדברים הקלים - אותם רעיונות של הערב; משקה - שלושת הקפה הקיימים, החלב החם מהרעיונות, והשאר משלהם
+const NM_DRINK_TEXT = { black: 'nm_coffee_black', water_milk: 'nm_coffee_water_milk', regular: 'nm_coffee_regular', warm_milk: 'nm_late_idea_warm_milk' };
+function nmPickTextKey(group, id) {
+    if (group === 'light' || group === 'late') return 'nm_late_idea_' + id;
+    if (group === 'drink' || group === 'latedrink') return NM_DRINK_TEXT[id] || 'nm_pick_drink_' + id;
+    return `nm_pick_${group}_${id}`;
+}
 // שתייה: לא אפשרויות קבועות - הוספה ידנית (לפחות 3 ביום), כולן יחד עד ~150 קל' בשתי
 // התוכניות (ארוחה גדולה 2 ונשנוש 2 הוקטנו בהתאם, כך שהיום עדיין מסתכם ל-1,300/1,500)
 const NEW_ME_DRINKS_KCAL = 150;
@@ -79,22 +95,25 @@ const NEW_ME_REMINDER_DEFAULTS = ['10:00', '13:00', '16:00', '19:00'];
 const NEW_ME_DEFAULT_ORDER = ['meal1', 'meal2', 'snack1', 'snack2'];
 // השם לפי המקום ביום (מפתחות i18n): בוקר / צהריים / נשנוש / ערב קל
 const NEW_ME_POS_KEYS = ['nm_pos_1', 'nm_pos_3', 'nm_pos_2', 'nm_pos_dinner'];
-// 21:00 לבחירה (לפי בקשה מפורשת): משהו קטן לאכול / רק לשתות / בלי - נשאל בשאלון, אפשר לשנות בתזכורות
+// 21:00 לבחירה (לפי בקשה מפורשת): משהו קטן לאכול / רק לשתות / בלי - נשאל בשאלון, אפשר לשנות בתזכורות - הקלוריות לפי מה שנבחר (late / latedrink)
 const NEW_ME_LATE_TIME = '21:00';
-const NEW_ME_LATE_KCAL = 100;
-// ☕ קפה בלחיצה אחת (לפי בקשה מפורשת: "אמריקנו ללא חלב / שחור", "קפה על בסיס מים עד 100 מל כל סוג חלב או תחליף חלב",
-// "קפה רגיל") - נרשם כשתייה, בתוך תקציב השתייה של היום
-const NEW_ME_COFFEE_OPTIONS = [
-    { id: 'black', kcal: 5, protein: 0 },
-    { id: 'water_milk', kcal: 50, protein: 3 },
-    { id: 'regular', kcal: 120, protein: 6 },
-];
-// 🌙 ב-21:00 "משהו קטן": רעיונות לפי הקלוריות שנשארו להיום (לפי בקשה מפורשת: "ותיתן אפשרויות של מה לאכול לפי הקלוריות שנשארו")
-const NEW_ME_LATE_IDEAS = [
-    { id: 'chocolate', kcal: 110 }, { id: 'warm_milk', kcal: 100 }, { id: 'banana', kcal: 100 }, { id: 'cottage_slice', kcal: 100 },
-    { id: 'apple', kcal: 80 }, { id: 'yogurt', kcal: 70 }, { id: 'almonds', kcal: 70 }, { id: 'popcorn', kcal: 60 },
-    { id: 'veg', kcal: 30 }, { id: 'tea_honey', kcal: 20 },
-];
+// ☕ הקפה והשתייה בלחיצה אחת - מה שנבחר בקבוצה drink (NEW_ME_PICKS), בתוך תקציב השתייה של היום
+// 🕐 ארוחה קטנה נוספת (לפי בקשה מפורשת, 2026-10-14: "בוקר קטן הוא 150 קלוריות... קטן מידי ויש להוסיף לידו עוד נשנוש...
+// לשעה אחרת ולפרק... נגיד ב13:00 עוד ארוחה כזו או דומה בקלוריות עד 200"): כשבוחרים את ארוחת הבוקר הקטנה (small ב-meal1)
+// מופיעה איתה ארוחה קטנה בשעה אחרת - אחת מאלה (new_me_profile.side_choice / side_time). היא נספרת ביום, ומה שנשאר מהיעד
+// מתחלק בין שאר הארוחות (nmBalance). picks - כמו באפשרויות ({spread} / {cereal} / {milk})
+const NEW_ME_SIDE_OPTIONS = {
+    pita: { kcal: 150, protein: 7, picks: ['spread'] },
+    yogurt: { kcal: 180, protein: 16 },
+    rice: { kcal: 160, protein: 7 },
+    cereal: { kcal: 175, protein: 7, picks: ['cereal', 'milk'] },
+    egg: { kcal: 190, protein: 14 },
+};
+const NEW_ME_SIDE_DEFAULT = 'pita';
+// ✓ של הארוחה הנוספת = שורה משלה ב-calorie_tracker (source='new_me'), כמו השתייה
+const NEW_ME_SIDE_MEAL_TYPE = 'nm_side';
+// "2 ארוחות + נשנוש" (לפי בקשה מפורשת, 2026-10-14): ארוחת צהריים ב-11:30, נשנוש ב-16:00 וארוחת ערב ב-19:00
+const NEW_ME_TWO_MEAL_TIMES = { meal1: '11:30', snack1: '16:00', meal2: '19:00' };
 // החלפה: מוצגות קודם האפשרויות מכל התפריט (שתי התוכניות) שבטווח ±15% מיעד הארוחה
 const NEW_ME_SWAP_RANGE = 0.15;
 // אבני הדרך במסע (ימים מאז ההתחלה) - אחרי 90 ממשיכים בלי סוף

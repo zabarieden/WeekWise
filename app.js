@@ -6734,7 +6734,7 @@ async function renderSelectedCalorieDay() {
     const rows = sorted.map(item => {
         dayTotal += Number(item.calories) || 0;
         dayProteinTotal += Number(item.protein_grams) || 0;
-        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type] || (String(item.meal_type).startsWith('nm_drink') ? 'nm_slot_drinks' : String(item.meal_type).startsWith('nm_extra') ? 'nm_extra_label' : null);
+        const labelKey = MEAL_TYPE_LABEL_KEYS[item.meal_type] || (String(item.meal_type).startsWith('nm_drink') ? 'nm_slot_drinks' : String(item.meal_type).startsWith('nm_extra') ? 'nm_extra_label' : item.meal_type === 'nm_side' ? 'nm_side_title' : null);
         const mealLabel = labelKey ? t(labelKey) : item.meal_type;
         const proteinPart = item.protein_grams != null ? ` · ${Number(item.protein_grams)}g` : '';
         return `<div class="today-tasks-row"><span class="today-tasks-text"><strong>${escapeHtmlForReport(mealLabel)}:</strong> ${escapeHtmlForReport(item.food_description || '')}</span><span class="today-tasks-time">${Number(item.calories) || 0}${proteinPart}</span></div>`;
@@ -22814,7 +22814,11 @@ async function renderDailyBoard() {
     dailyBoardItemsCache = items || [];
     const itemsByTime = {};
     // כמה פריטים באותה שעה ("גם וגם") - כל אחד בשורה משלו
-    (items || []).forEach(it => { const tm = (it.time || '').slice(0, 5); (itemsByTime[tm] = itemsByTime[tm] || []).push(it); });
+    // 💎 ארוחות השגרה שהוסתרו בשביל New Me - במקומן הארוחות של New Me, בשעות שלהן ועם ✓ (לפי בקשה מפורשת, 2026-10-14:
+    // "להסתיר את הארוחות של השגרה ולשים את הארוחות של הNEW ME"). כל עוד הארוחות של New Me לא נטענו - כמו קודם (חלשות עם 💎)
+    const nmMeals = await routineNewMeMeals(items || []);
+    const boardItems = (items || []).filter(it => !(nmMeals.length && routineItemInNewMe(it))).concat(nmMeals);
+    boardItems.forEach(it => { const tm = (it.time || '').slice(0, 5); (itemsByTime[tm] = itemsByTime[tm] || []).push(it); });
     routineItemGoalLinks = new Map((items || []).filter(it => it.vision_milestone_id).map(it => [it.id, it.vision_milestone_id]));
     routineItemSmallStepLinks = new Map((items || []).filter(it => it.vision_goal_id).map(it => [it.id, it.vision_goal_id]));
     // מה כבר סומן היום (וי) - רק כשהמעקב דלוק, אחרת אין טעם בשאילתה
@@ -22837,7 +22841,7 @@ async function renderDailyBoard() {
     bucketOrder.forEach(key => {
         // השורות: השעות שנבחרו לטאב + כל שעה שיש בה פריט (גם מדויקת, כמו 16:10) - כך פריט לא נעלם לעולם
         const slots = new Set((customHours[key] || []).map(routineSlotTime));
-        (items || []).forEach(it => { const tm = String(it.time || '').slice(0, 5); if (tm && routineBucketOfHour(tm) === key) slots.add(tm); });
+        boardItems.forEach(it => { const tm = String(it.time || '').slice(0, 5); if (tm && routineBucketOfHour(tm) === key) slots.add(tm); });
         const bucketTimes = [...slots].sort((a, b) => routineSlotMinutes(a) - routineSlotMinutes(b));
         if (!bucketTimes.length) return;
         const section = document.createElement('div');
@@ -22847,6 +22851,7 @@ async function renderDailyBoard() {
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
         bucketTimes.forEach(timeStr => (itemsByTime[timeStr] || [null]).forEach(item => {
+            if (item && item.nmMeal) { section.appendChild(routineNewMeRow(item, checksOn)); return; }
             // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
             const inNewMe = routineItemInNewMe(item);
             // 📅 פריט שלא היום (ימים לפריט) - חלש יותר, בלי ✓, והימים שלו לידו
@@ -22900,6 +22905,41 @@ async function renderDailyBoard() {
     });
 }
 
+// 💎 הארוחות של New Me ל"השגרה שלי" - רק בטאב שיש בו ארוחה שהוסתרה בשבילן (שם הן באות במקומה), ורק כשהסנכרון דלוק
+async function routineNewMeMeals(items) {
+    if (!items.some(routineItemInNewMe) || typeof myDayNewMeItems !== 'function' || typeof nmEnsureHomeData !== 'function') return [];
+    if (!(await nmEnsureHomeData())) return [];
+    return myDayNewMeItems().map(m => ({ ...m, nmMeal: true }));
+}
+function routineNewMeRow(m, checksOn) {
+    const row = document.createElement('div');
+    row.className = 'daily-board-item-row is-newme-meal';
+    if (checksOn) {
+        const checkBtn = document.createElement('button');
+        checkBtn.type = 'button';
+        checkBtn.className = 'btn-complete-item daily-board-item-check' + (m.done ? ' checked' : '');
+        checkBtn.textContent = m.done ? '✓' : '';
+        checkBtn.setAttribute('aria-pressed', m.done ? 'true' : 'false');
+        checkBtn.onclick = async () => { checkBtn.disabled = true; await m.toggle(!m.done); await renderDailyBoard(); };
+        row.appendChild(checkBtn);
+    }
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'daily-board-item-time';
+    timeSpan.textContent = String(m.time || '').slice(0, 5);
+    const titleBtn = document.createElement('button');
+    titleBtn.type = 'button';
+    titleBtn.className = 'daily-board-item-title';
+    titleBtn.textContent = m.text;
+    titleBtn.onclick = () => { if (typeof closeModal === 'function') closeModal('modal-daily-board'); if (typeof openNewMeMenuToday === 'function') openNewMeMenuToday(); };
+    // סמל היהלום של New Me (כמו בתפריט של New Me)
+    const tag = document.createElement('span');
+    tag.className = 'daily-board-newme-tag';
+    tag.innerHTML = typeof NM_ICON_SVG !== 'undefined' ? NM_ICON_SVG : '';
+    tag.title = 'New Me';
+    tag.setAttribute('aria-label', 'New Me');
+    row.append(timeSpan, titleBtn, tag);
+    return row;
+}
 // פריט שגרה שהוסתר כי הוא ארוחה שכבר בתפריט של New Me (ר' nmCheckRoutineMeals) - רק כש-New Me פעיל;
 // בלי New Me הוא חוזר להיות פריט רגיל
 function routineItemInNewMe(item) {

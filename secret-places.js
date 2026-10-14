@@ -1005,6 +1005,11 @@ function srCatNapTap(el) {
 // שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
 // הפנים של המורה בכותרת השיחה - מהציור שלה בעיניים פתוחות
 function ygAvatar() { return `<img src="${SRP_ART}teacher-open.png" alt="">`; }
+// יצורי היער על המזרונים - כל אחד עם השם שלו (לפי בקשה מפורשת, 2026-10-14: לומי, פופי, ניקסי וספארקלט; המורה - פלאורה)
+function ygSitter(img, nameKey, cx, bottom, h, ratio) {
+    const name = srEsc(t(nameKey));
+    return srpSprite(img, cx, bottom, h, ratio, 'yg-sitter').replace('/>', ` role="img" aria-label="${name}"><title>${name}</title></image>`);
+}
 // היוגה (לפי בקשה מפורשת, 2026-10-14): יצורי היער על המזרונים בעיניים עצומות, והמורה על המזרון הבודד שעל הסלע -
 // עיניים עצומות כמו כולם. נגיעה בה: העיניים נפתחות, מתקרבים אליה, ושם מתחילה השיחה (ygTeacherWake)
 const YG_TEACHER = { cx: 199, bottom: 552, h: 126 };
@@ -1018,13 +1023,14 @@ function srpYogaScene(keys) {
                 ${falls ? '' : srpVeil(158, 128, 78, 336) + srLockBadge(197, 290, 'waterfall')}
                 <rect class="srp-hit" x="150" y="120" width="94" height="350" fill="transparent"/>
             </g>
-            <g class="yg-circle" aria-hidden="true">
-                ${srpSprite('yg-blob.png', 40, 616, 62, 328 / 300, 'yg-sitter')}
-                ${srpSprite('yg-spirit.png', 351, 616, 64, 311 / 300, 'yg-sitter')}
-                ${srpSprite('yg-fluffy.png', 127, 640, 70, 396 / 300, 'yg-sitter')}
-                ${srpSprite('yg-baby.png', 256, 640, 72, 404 / 300, 'yg-sitter')}
+            <g class="yg-circle">
+                ${ygSitter('yg-blob.png', 'yg_name_p1', 40, 616, 62, 328 / 300)}
+                ${ygSitter('yg-spirit.png', 'yg_name_p3', 351, 616, 64, 311 / 300)}
+                ${ygSitter('yg-fluffy.png', 'yg_name_p2', 127, 640, 70, 396 / 300)}
+                ${ygSitter('yg-baby.png', 'yg_name_p4', 256, 640, 72, 404 / 300)}
             </g>
             <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
+                <title>${srEsc(t('yg_name_guide'))}</title>
                 ${srpSprite('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
                 ${srpSprite('teacher-open.png', T.cx, T.bottom, T.h, 357 / 400, 'yg-teacher yg-eyes-open')}
                 <rect class="srp-hit" x="${T.cx - 46}" y="${T.bottom - T.h + 8}" width="92" height="${T.h}" fill="transparent"/>

@@ -9161,8 +9161,24 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nm-late { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 14px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); }
 .nm-late-time { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-purple); }
 .nm-late-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--text-primary); }
-/* 🌙 רעיונות לפי הקלוריות שנשארו */
-.nm-late-ideas { margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; }
+/* 🌙 מה שנבחר לערב ("זה או זה או זה" והקלוריות), ואפשר לבחור אחרת */
+.nm-late-picks { margin-top: 4px; }
+.nm-late-picks-text { display: block; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; }
+.nm-late-picks-text bdi { font-weight: 700; color: var(--text-primary); }
+.nm-late-picks .nm-picks { margin: 0; }
+.nm-times-list + .nm-late-picks, .nm-late-card .nm-late-picks { margin-top: 10px; }
+/* 🕐 הארוחה הקטנה הנוספת של ארוחת הבוקר הקטנה: כרטיס בתפריט היום, ובשאלון מתחת לארוחה */
+.nm-meal.nm-side { border-style: dashed; }
+.nm-side .nm-time-btn { min-height: 32px; padding: 4px 10px; font-size: 0.82rem; }
+.nm-side-opts { margin: 8px 0 2px; }
+.nm-side-opts .nm-chip.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); font-weight: 700; }
+.nm-quiz-side { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding: 10px 12px; border-radius: 18px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); }
+.nm-quiz-side .nm-option { margin: 0; }
+/* "אם מתחשק לאכול דברים אחרים..." - שורה קטנה בסוף התפריט */
+.nm-other-food { margin: 10px 4px 0; text-align: center; }
+/* 💎 הארוחות של New Me ב"השגרה שלי" (במקום ארוחות השגרה שהוסתרו) */
+.daily-board-item-row.is-newme-meal .daily-board-newme-tag { cursor: default; display: inline-flex; align-items: center; padding: 5px 8px; color: var(--accent-purple-light-text); }
+.daily-board-item-row.is-newme-meal .daily-board-newme-tag svg { width: 15px; height: 15px; }
 /* 🍽️ / ☕ סיכום בסוף התפריט: כל הארוחות + מה נשאר לקפה, וקפה בלחיצה */
 .nm-day-sum { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
 .nm-day-sum-line { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
