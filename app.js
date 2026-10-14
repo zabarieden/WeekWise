@@ -532,6 +532,22 @@ function buildNoteSomedayDivider(count) {
 // קניות). בכל המקרים הפתק המקורי נמחק (לא מועתק). רלוונטי רק לכרטיס
 // הפתקים (type='weekly') - לרשימת קניות עצמה אין יעדי גרירה משלה ---
 const noteTriageInitialized = {};
+// העותק הצף בזמן גרירה = בדיוק כמו הפתק שנגרר, בכל עיצוב ובכל ערכה (לפי בקשה מפורשת, 2026-10-14: "שגוררים את הפתקים זה
+// שוב יוצר אותם צהובים"): הרקע, הפסים, הצבע והצורה נלקחים מהפתק עצמו - גם צבע שתלוי במקום ברשימה (סלוטייפ), שאחרי שהעותק
+// מצורף ל-body כבר לא חל עליו
+function noteDragMatchLook(src) {
+    if (!src || !src.classList.contains('note-paper')) return;
+    const cs = getComputedStyle(src);
+    const vals = ['background-color', 'background-image', 'background-size', 'color', 'border-radius', 'box-shadow', 'clip-path', 'border', 'padding', 'backdrop-filter', '-webkit-backdrop-filter']
+        .map(p => [p, cs.getPropertyValue(p)]);
+    let tries = 0;
+    const apply = () => {
+        const ghost = document.querySelector('.sortable-fallback.note-triage-drag-clone');
+        if (!ghost) { if (tries++ < 40) requestAnimationFrame(apply); return; }
+        vals.forEach(([p, v]) => { if (v) ghost.style.setProperty(p, v, 'important'); });
+    };
+    apply();
+}
 function initNoteTriageDragDrop(type) {
     if (noteTriageInitialized[type] || typeof Sortable === 'undefined') return;
     const list = document.getElementById(`${type}-list`);
@@ -561,6 +577,7 @@ function initNoteTriageDragDrop(type) {
         // אל יעד אחר לגמרי (עם pull:'clone'), אז חייבים שכפול גלוי שעוקב
         // אחרי האצבע - אחרת נראה כאילו הפריט "נעלם" עד שמשחררים
         dragClass: 'note-triage-drag-clone',
+        onStart: function (evt) { noteDragMatchLook(evt.item); },
         // onEnd (לא onSort/onUpdate) כדי לתפוס גם גרירה שמסתיימת מחוץ לרשימה
         // (evt.from !== evt.to אז) בלי לשמור סדר מיותר - רק סידור-מחדש אמיתי
         // בתוך אותה רשימה (evt.from === evt.to) שומר sort_order חדש. עובר על
@@ -8410,6 +8427,8 @@ function devRenderSettingsPanel() {
             </label>
         </div>`;
     box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', 'New Me', !!hasNewMe)}`;
+    // 🌦️ מזג האוויר והערכות לתצוגה (עבר לכאן ממסך הבית)
+    if (typeof renderHomeDevWx === 'function') renderHomeDevWx();
 }
 function devSettingsToggle(kind) {
     if (!isDevSuperuserAccount) return;

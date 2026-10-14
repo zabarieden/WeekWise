@@ -8157,6 +8157,9 @@ html.light-mode .wx-stars { display: none; }
 .hdw-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 999px; border: 1px dashed rgba(201, 151, 63, 0.85); background: rgba(20, 14, 30, 0.74); color: #f7dfa0; font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .hdw-panel { display: none; flex-direction: column; gap: 8px; padding: 10px; border-radius: 16px; background: rgba(20, 14, 30, 0.84); border: 1px solid rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.8); max-width: calc(100vw - 48px); }
 .home-dev-wx.open .hdw-panel { display: flex; }
+/* בהגדרות (בלוח ה-PM) - לא על מסך הבית */
+.settings-dev-panel .home-dev-wx { position: static; margin-top: 10px; }
+.settings-dev-panel .hdw-panel { max-width: none; }
 .hdw-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .hdw-row button { min-width: 36px; height: 34px; padding: 0 6px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); color: #f5f0fa; font: inherit; font-size: 0.95rem; cursor: pointer; }
 .hdw-row button.on { border-color: #f7dfa0; background: rgba(247, 223, 160, 0.18); }
@@ -8375,6 +8378,10 @@ html.light-mode .wx-stars { display: none; }
 .sr-pulse { animation: srPulse 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes srPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.2); opacity: 0; } }
 .sr-twinkle, .sr-bulb { animation: srTwinkle 2.6s ease-in-out infinite; }
+/* ✨ נצנצים מרחפים בצנצנת, בארון ומסביב (ר' srSparkleField) */
+.sr-spk { transform-box: fill-box; transform-origin: 50% 50%; animation: srSpkFloat 4.2s ease-in-out infinite; opacity: 0; filter: drop-shadow(0 0 2px rgba(255, 220, 140, 0.9)); }
+@keyframes srSpkFloat { 0% { opacity: 0; translate: 0 5px; } 30% { opacity: 1; } 70% { opacity: 0.85; } 100% { opacity: 0; translate: 0 -11px; } }
+@media (prefers-reduced-motion: reduce) { .sr-spk { animation: none; opacity: 0.8; } }
 @keyframes srTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .sr-neon { animation: srNeon 2.4s ease-in-out infinite; }
 @keyframes srNeon { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
@@ -8725,6 +8732,7 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
    בתצוגת "כמו לפני רכישה" - שורה עם פתיחה של New Me */
 .nmh-dev { position: absolute; top: calc(54 * var(--u)); inset-inline-end: calc(12 * var(--u)); z-index: 5; }
 .nmh-dev .sr-dev-keys { position: static; }
+.nm-dev-keys-slot .sr-dev-keys { position: static; justify-content: center; }
 .sr-dev-keys.is-row { flex-direction: row; padding: 6px 10px; }
 
 /* המחשב: כפתור הדלקה (הנורה הירוקה) – המסך מתכווץ לפס ולנקודה ונכבה, ונפתח בחזרה כשמדליקים */
@@ -8812,8 +8820,9 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-cat:focus-visible .sr-cat-hit { stroke: #ffd27a; stroke-width: 1.2; stroke-dasharray: 3 3; }
 /* 🐈 2026-10-14: החתול המצויר על צמרת העץ - יושב על הכרית; קם, הולך אלינו ונשאר לידנו גדול יותר. כל הפעולות - תנועות
    קטנות של הדמות כולה (sr-cat-pose), והלבבות / ה-z מעל הראש */
-.sr-roof-scene .sr-cat-art { transform: translate(196px, 440px) scale(1); }
-.sr-roof-scene .sr-cat-art.is-near { transform: translate(212px, 526px) scale(1.5); }
+/* יושב על הכרית שבציור, קטן יותר (לפי בקשה מפורשת, 2026-10-14) */
+.sr-roof-scene .sr-cat-art { transform: translate(196px, 436px) scale(0.72); }
+.sr-roof-scene .sr-cat-art.is-near { transform: translate(212px, 526px) scale(1.1); }
 .sr-cat-art .sr-cat-pose { transform-box: fill-box; transform-origin: 50% 100%; }
 .sr-cat-art .sr-cat-sit, .sr-cat-art .sr-cat-stand { transition: opacity 0.3s ease; }
 .sr-cat-art .sr-cat-stand { opacity: 0; }
@@ -9228,6 +9237,13 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .nmh-bag { z-index: 4; border-radius: 40% 40% 0 0; }
 .nmh-keys { z-index: 5; display: flex; align-items: flex-end; justify-content: center; }
 .nmh-keys-n { margin-bottom: calc(2 * var(--u)); padding: 0 calc(5 * var(--u)); border-radius: 99px; background: rgba(11, 7, 20, 0.78); color: #ffd27a; font-size: calc(10 * var(--u)); font-weight: 800; }
+/* 🎒 התיק הקסום - הציור שלה (world/bag.png) הוא הכפתור לכל New Me; בלי מנורות במסדרון (2026-10-14) */
+.nmh-bag.nmh-bag-art { border-radius: 30%; }
+.nmh-bag-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 calc(8 * var(--u)) calc(14 * var(--u)) rgba(10, 4, 24, 0.6)); transition: transform 0.2s ease; pointer-events: none; }
+.nmh-bag-art:active img { transform: scale(0.95); }
+.nmh-keys.nmh-keys-chip { display: inline-flex; align-items: center; justify-content: center; gap: calc(3 * var(--u)); border-radius: 99px; background: rgba(11, 7, 20, 0.72); color: #ffd27a; font-size: calc(12 * var(--u)); font-weight: 800; box-shadow: 0 0 0 1px rgba(255, 210, 122, 0.4); }
+.nmh-keys-chip svg { width: calc(15 * var(--u)); height: calc(15 * var(--u)); }
+@media (prefers-reduced-motion: reduce) { .nmh-bag-art img { transition: none; } }
 .nmh-note { position: absolute; z-index: 2; box-sizing: border-box; border-radius: calc(7 * var(--u)); border: 1px solid #dcc9a6; background: #f6ecd9; box-shadow: 0 calc(6 * var(--u)) calc(14 * var(--u)) rgba(0, 0, 0, 0.35); transform: rotate(-7deg); transform-origin: 50% 70%; animation: nmhPeek 3.6s ease-in-out infinite; }
 @keyframes nmhPeek { 0%, 100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(-7deg) translateY(calc(-4 * var(--u))); } }
 .nmh-note-body { display: flex; flex-direction: column; gap: calc(2 * var(--u)); width: 100%; height: 100%; box-sizing: border-box; padding: calc(9 * var(--u)) calc(11 * var(--u)); padding-inline-end: calc(14 * var(--u)); border: none; border-radius: inherit; background: transparent; color: #2a1145; font: inherit; text-align: start; cursor: pointer; z-index: auto; }
@@ -9344,6 +9360,25 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
 .yg-circle .yg-sitter:nth-child(3) { animation-delay: -2.8s; }
 .yg-circle .yg-sitter:nth-child(4) { animation-delay: -4.1s; }
 @keyframes ygBreathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.028); } }
+/* היצורים מרחפים מעל המזרונים (לפי בקשה מפורשת, 2026-10-14): למעלה ולמטה בעדינות, והצל על המזרון גדל וקטן איתם */
+.yg-circle .yg-sitter { animation: ygFloat 4.6s ease-in-out infinite; }
+.yg-circle .yg-sitter:nth-child(2) { animation-delay: -1.2s; }
+.yg-circle .yg-sitter:nth-child(3) { animation-delay: -2.4s; }
+.yg-circle .yg-sitter:nth-child(4) { animation-delay: -3.5s; }
+@keyframes ygFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.yg-float-shadow { fill: #1a0f2e; opacity: 0.32; transform-box: fill-box; transform-origin: 50% 50%; animation: ygShadow 4.6s ease-in-out infinite; }
+.yg-mat-shadows .yg-float-shadow:nth-child(2) { animation-delay: -1.2s; }
+.yg-mat-shadows .yg-float-shadow:nth-child(3) { animation-delay: -2.4s; }
+.yg-mat-shadows .yg-float-shadow:nth-child(4) { animation-delay: -3.5s; }
+@keyframes ygShadow { 0%, 100% { transform: scale(1); opacity: 0.32; } 50% { transform: scale(0.8); opacity: 0.2; } }
+/* בשיחה: ליד כל שורה ציור קטן של מי שמדבר */
+.yg-row { display: flex; align-items: flex-end; gap: 7px; align-self: flex-start; max-width: 92%; }
+.yg-row .yg-line { max-width: none; flex: 1; min-width: 0; }
+.yg-row.is-old { opacity: 0.78; }
+.yg-row.is-old .yg-line.is-old { opacity: 1; }
+.yg-mini { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: rgba(255, 255, 255, 0.16); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.45); }
+.yg-mini img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.yg-mini.is-g img { object-fit: cover; object-position: 50% 0; transform: scale(2.4); transform-origin: 50% 14%; }
 .yg-teacher { transition: opacity 0.6s ease; }
 .yg-eyes-open { opacity: 0; }
 .sr-place-yoga.yg-awake .yg-eyes-open { opacity: 1; }
@@ -9396,6 +9431,7 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
     .srp-ripples-wf ellipse { opacity: 0.4; }
     .yg-breath, .sr-place-yoga .srp-view, .yg-teacher { transition: none; }
     .yg-sitter, .yg-teacher { animation: none; }
+    .yg-circle .yg-sitter, .yg-float-shadow { animation: none; }
 }
 
 /* ===== ✏️ מסך הבית - עיצוב 2 (לפי בחירה מפורשת, 2026-10-11): התאריך, הצ'יפים, ושורת כתיבה במקום הכפתור.
@@ -10240,6 +10276,19 @@ html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n+2) { --wa
 html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n+3) { --washi: #ddd6fe; }
 html[data-note-look="washi"] #weekly-list > li.note-paper:nth-child(4n) { --washi: #a7f3d0; transform: none; }
 html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { --washi: color-mix(in srgb, var(--note-bg) 55%, #ffffff); background-color: var(--washi); }
+/* 🎨 העיצוב של הפתקים משנה את כל הפתקים (לפי בקשה מפורשת, 2026-10-14: "וכפתור של עיצוב תשנה גם הכל בפתקים"): גם אזורי
+   הגרירה (לעשות היום / אחר / תאריך אחר) וחלון הכתיבה של פתק - באותה נראות כמו הרשימה */
+html[data-note-look="clean"] #my-center-section .note-triage-zone { border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent); background-color: transparent; box-shadow: none; border-radius: 12px; }
+html[data-note-look="index"] #my-center-section .note-triage-zone { border: none; border-radius: 10px; background-color: #fffefb; color: #4a4a62; box-shadow: inset 0 4px 0 var(--accent-purple), 0 8px 16px -10px rgba(0, 0, 0, 0.45); padding-top: 12px; }
+html[data-note-look="index"] #my-center-section .note-triage-icon { color: #24243a; }
+html[data-note-look="washi"] #my-center-section .note-triage-zone { border: none; border-radius: 0; color: #2b1d3a; background-color: #fde68a; background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.28) 0 5px, transparent 5px 10px); box-shadow: none; clip-path: polygon(3% 0, 97% 6%, 100% 50%, 97% 94%, 3% 100%, 0 50%); }
+html[data-note-look="washi"] #my-center-section .note-triage-zone:nth-child(3n+2) { background-color: #fbcfe8; }
+html[data-note-look="washi"] #my-center-section .note-triage-zone:nth-child(3n) { background-color: #a7f3d0; }
+html[data-note-look="washi"] #my-center-section .note-triage-icon { color: #2b1d3a; }
+:is(html:not([data-note-look]), html[data-note-look="glass"]) #modal-add-center-item:has(#center-item-preview-row.note-paper) #center-item-input { border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--text-primary) 10%, transparent), color-mix(in srgb, var(--text-primary) 3%, transparent)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+html[data-note-look="clean"] #modal-add-center-item:has(#center-item-preview-row.note-paper) #center-item-input { border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: transparent; box-shadow: none; }
+html[data-note-look="index"] #modal-add-center-item:has(#center-item-preview-row.note-paper) #center-item-input { border: none; border-radius: 10px; background: #fffefb; color: #24243a; box-shadow: inset 0 5px 0 var(--accent-purple), 0 8px 16px -10px rgba(0, 0, 0, 0.45); padding-top: 16px; }
+html[data-note-look="washi"] #modal-add-center-item:has(#center-item-preview-row.note-paper) #center-item-input { border: none; border-radius: 0; background-color: #fde68a; background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.28) 0 5px, transparent 5px 10px); color: #2b1d3a; box-shadow: none; }
 html[data-note-look="washi"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg::before { display: none; }
 /* על נייר בהיר (כרטיסיות, סלוטייפ) צבע טקסט שנבחר מוכהה גם בלילה */
 html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper .center-list-item-text.has-tc,

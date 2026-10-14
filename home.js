@@ -917,7 +917,9 @@ function homeDevThemes() { return [...new Set([...document.querySelectorAll('.th
 function homeDevCurrentTheme() { return document.documentElement.getAttribute('data-color-theme') || 'default'; }
 function renderHomeDevWx() {
     const isDev = typeof isDevSuperuserAccount !== 'undefined' && isDevSuperuserAccount;
-    const host = document.querySelector('.home-hero-panel');
+    // לפי בקשה מפורשת (2026-10-14: "והPM תמחק לי מהמסך הראשי תשים איפה שהכפתורים של הNEW ME והפרימיום"): בהגדרות,
+    // בלוח ה-PM שליד המתגים של New Me והפרימיום - לא על מסך הבית
+    const host = document.getElementById('settings-dev-panel');
     let bar = document.getElementById('home-dev-wx');
     if (!isDev || !host) { if (bar) bar.remove(); return; }
     if (!bar) { bar = document.createElement('div'); bar.id = 'home-dev-wx'; bar.className = 'home-dev-wx'; host.appendChild(bar); }

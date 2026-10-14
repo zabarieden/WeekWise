@@ -320,16 +320,10 @@ function srpPorchScene(keys) {
             </g>` : ''}
             ${bottle ? `<g class="srp-hot srp-bottle" data-place-hot="bottle" role="button" tabindex="0" aria-label="${srEsc(t('room_bottle_aria'))}">
                 <g class="srp-bottle-drift"><g class="srp-bottle-bob">
-                    <circle cx="236" cy="566" r="36" fill="url(#srpPBottle)"/>
-                    <g transform="rotate(-18 236 568)">
-                        <rect x="216" y="560" width="34" height="16" rx="7" fill="#bff5e6" opacity="0.6"/>
-                        <rect x="248" y="564" width="10" height="8" rx="2" fill="#bff5e6" opacity="0.6"/>
-                        <rect class="srp-cork" x="257" y="563.5" width="6" height="9" rx="1.5" fill="#b07b3a"/>
-                        <rect x="222" y="563" width="22" height="10" rx="4" fill="#f6ecd9"/>
-                        <rect x="230" y="562" width="3" height="12" fill="#ff7ab0"/>
-                        <path d="M220 563 h20" stroke="#fff" stroke-opacity="0.75" stroke-width="1.2" stroke-linecap="round"/>
-                    </g>
-                    <ellipse cx="236" cy="581" rx="22" ry="3" fill="none" stroke="#bff5e6" stroke-opacity="0.45"/>
+                    <circle cx="236" cy="562" r="36" fill="url(#srpPBottle)"/>
+                    <!-- הבקבוק עם המכתב שבא מהים - הציור שלה (world/bottle.png, לפי בקשה מפורשת, 2026-10-14) -->
+                    <image class="srp-bottle-art" href="${SRP_ART}bottle.png" x="222" y="526" width="28" height="60" transform="rotate(-14 236 560)"/>
+                    <ellipse cx="236" cy="583" rx="22" ry="3" fill="none" stroke="#bff5e6" stroke-opacity="0.45"/>
                 </g></g>
                 <ellipse class="srp-hit" cx="238" cy="568" rx="38" ry="26" fill="transparent"/>
             </g>` : ''}
@@ -1005,7 +999,16 @@ function srCatNapTap(el) {
 // שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
 // הפנים של המורה בכותרת השיחה - מהציור שלה בעיניים פתוחות
 function ygAvatar() { return `<img src="${SRP_ART}teacher-open.png" alt="">`; }
-// יצורי היער על המזרונים - כל אחד עם השם שלו (לפי בקשה מפורשת, 2026-10-14: לומי, פופי, ניקסי וספארקלט; המורה - פלאורה)
+// יצורי היער - כל אחד עם השם שלו (לפי בקשה מפורשת, 2026-10-14: לומי, פופי, ניקסי וספארקלט; המורה - פלאורה). הם לא יושבים
+// על המזרונים אלא מרחפים מעליהם (YG_FLOAT מעל המזרון, ותנועת ריחוף - ygFloat ב-theme.css), עם צל רך על המזרון.
+// המזרונים בציור בחצי עיגול מול פלאורה, כך שהם מתרגלים איתה. mat = הנקודה על המזרון
+const YG_FLOAT = 16;
+const YG_SITTERS = [
+    { img: 'yg-blob.png', name: 'yg_name_p1', cx: 40, mat: 616, h: 62, ratio: 328 / 300 },
+    { img: 'yg-spirit.png', name: 'yg_name_p3', cx: 351, mat: 616, h: 64, ratio: 311 / 300 },
+    { img: 'yg-fluffy.png', name: 'yg_name_p2', cx: 127, mat: 640, h: 70, ratio: 396 / 300 },
+    { img: 'yg-baby.png', name: 'yg_name_p4', cx: 256, mat: 640, h: 72, ratio: 404 / 300 },
+];
 function ygSitter(img, nameKey, cx, bottom, h, ratio) {
     const name = srEsc(t(nameKey));
     return srpSprite(img, cx, bottom, h, ratio, 'yg-sitter').replace('/>', ` role="img" aria-label="${name}"><title>${name}</title></image>`);
@@ -1023,12 +1026,8 @@ function srpYogaScene(keys) {
                 ${falls ? '' : srpVeil(158, 128, 78, 336) + srLockBadge(197, 290, 'waterfall')}
                 <rect class="srp-hit" x="150" y="120" width="94" height="350" fill="transparent"/>
             </g>
-            <g class="yg-circle">
-                ${ygSitter('yg-blob.png', 'yg_name_p1', 40, 616, 62, 328 / 300)}
-                ${ygSitter('yg-spirit.png', 'yg_name_p3', 351, 616, 64, 311 / 300)}
-                ${ygSitter('yg-fluffy.png', 'yg_name_p2', 127, 640, 70, 396 / 300)}
-                ${ygSitter('yg-baby.png', 'yg_name_p4', 256, 640, 72, 404 / 300)}
-            </g>
+            <g class="yg-mat-shadows" aria-hidden="true">${YG_SITTERS.map(s => `<ellipse class="yg-float-shadow" cx="${s.cx}" cy="${s.mat - 3}" rx="${Math.round(s.h * 0.34)}" ry="5"/>`).join('')}</g>
+            <g class="yg-circle">${YG_SITTERS.map(s => ygSitter(s.img, s.name, s.cx, s.mat - YG_FLOAT, s.h, s.ratio)).join('')}</g>
             <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
                 <title>${srEsc(t('yg_name_guide'))}</title>
                 ${srpSprite('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
@@ -1062,7 +1061,7 @@ function ygTeacherRest(box) {
 }
 // השיחה: עץ קטן כמו במחשב - כל צומת: מה נאמר (המדריכה / נועה / איתי), ואז בחירה, משימה קטנה, תנוחה עם נשימות או סוף
 const YG_TREE = {
-    start: { say: [['g', 'yg_g_start'], ['p1', 'yg_p1_start'], ['p2', 'yg_p2_start']], opts: [['good', 'yg_o_good'], ['hard', 'yg_o_hard'], ['alone', 'yg_o_alone']] },
+    start: { say: [['g', 'yg_g_start'], ['p1', 'yg_p1_start'], ['p2', 'yg_p2_start'], ['p3', 'yg_p3_start'], ['p4', 'yg_p4_start']], opts: [['good', 'yg_o_good'], ['hard', 'yg_o_hard'], ['alone', 'yg_o_alone']] },
     good: { say: [['g', 'yg_g_good']], opts: [['good_x', 'yg_o_friend'], ['good_x', 'yg_o_family'], ['good_x', 'yg_o_partner']] },
     good_x: { say: [['p1', 'yg_p1_good'], ['g', 'yg_g_good_msg']], task: 'yg_task_good', next: 'pose_tree' },
     hard: { say: [['g', 'yg_g_hard']], opts: [['hard_listen', 'yg_o_listen'], ['hard_critic', 'yg_o_critic'], ['hard_used', 'yg_o_used']] },
@@ -1077,7 +1076,9 @@ const YG_TREE = {
     pose_heart: { say: [['g', 'yg_pose_heart']], breath: true, next: 'end' },
     end: { say: [['g', 'yg_g_end']], end: true },
 };
-const YG_WHO = { g: 'yg_name_guide', p1: 'yg_name_p1', p2: 'yg_name_p2' };
+const YG_WHO = { g: 'yg_name_guide', p1: 'yg_name_p1', p2: 'yg_name_p2', p3: 'yg_name_p3', p4: 'yg_name_p4' };
+// מי שמדבר - ציור קטן שלו ליד השורה (לפי בקשה מפורשת, 2026-10-14)
+const YG_PIC = { g: 'teacher-open.png', p1: 'yg-blob.png', p2: 'yg-fluffy.png', p3: 'yg-spirit.png', p4: 'yg-baby.png' };
 let ygState = null;   // { box, path: [{ id, pick }], timers: [] }
 function ygStopTimers() { if (ygState) { ygState.timers.forEach(clearTimeout); ygState.timers = []; } }
 function ygOpenTalk(box) {
@@ -1103,9 +1104,14 @@ function ygOpenTalk(box) {
 function ygBubble(lines, who, text, extra) {
     const el = document.createElement('div');
     el.className = `yg-line is-${who}${extra ? ' ' + extra : ''}`;
-    if (who === 'p1' || who === 'p2') el.innerHTML = `<span class="yg-name">${srEsc(t(YG_WHO[who]))}</span>`;
+    if (YG_WHO[who]) el.innerHTML = `<span class="yg-name">${srEsc(t(YG_WHO[who]))}</span>`;
     el.appendChild(document.createTextNode(text));
-    lines.appendChild(el);
+    if (!YG_PIC[who]) { lines.appendChild(el); return el; }
+    const row = document.createElement('div');
+    row.className = `yg-row is-${who}${extra ? ' ' + extra : ''}`;
+    row.innerHTML = `<span class="yg-mini is-${who}" aria-hidden="true"><img src="${SRP_ART}${YG_PIC[who]}" alt=""></span>`;
+    row.appendChild(el);
+    lines.appendChild(row);
     return el;
 }
 // הכול מחדש לפי המסלול (כמו במחשב): מה שכבר נאמר מופיע מיד, והצומת האחרון נאמר לאט

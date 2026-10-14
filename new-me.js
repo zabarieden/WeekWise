@@ -931,6 +931,14 @@ function nmGoodDayChecks() { return Math.min(3, nmActiveOrder().length); }
 // God Mode - נפתח למי שסיים/ה את כל האתגרים (ר' "אתגרים" למטה); עד אז false
 function nmGodMode() { return typeof nmGodModeActive === 'function' ? nmGodModeActive() : false; }
 
+// מה ש-New Me זוכר במכשיר (סיור שנראה, הזמנות חד-פעמיות, היומן בתפריט) - נמחק כשאין עדיין פרופיל, כך שמי שמתחיל/ה
+// מחדש רואה הכול כמו בפעם הראשונה (המפתחות, המחשב וההעדפות של החדר - ר' roomLoad)
+function nmClearLocalFlags() {
+    const keys = ['weekwise_nm_tour_seen', 'weekwise_nm_ch_seen_ended', 'weekwise_nm_ch_suggest_hidden', 'weekwise_nm_photo_nudge_week'];
+    if (currentUserId) keys.push(nmMagicOfferKey(), nmDiaryMenuKey());
+    try { keys.forEach(k => localStorage.removeItem(k)); } catch {}
+    if (typeof updateDiaryMenuItem === 'function') updateDiaryMenuItem();
+}
 async function renderNewMe() {
     const root = nmRoot();
     if (!root) return;
@@ -948,6 +956,8 @@ async function renderNewMe() {
         const { data } = await supabaseClient.from('new_me_profile').select('*').eq('user_id', currentUserId).maybeSingle();
         nmProfile = data || null;
         nmProfileLoaded = true;
+        // אין עדיין פרופיל = מתחילים מההתחלה, גם במכשיר (לפי בקשה מפורשת, 2026-10-14: "תעשה כאילו אני משתמשת חדשה")
+        if (!nmProfile) nmClearLocalFlags();
     }
     if (!nmProfile || nmQuiz) { if (!nmQuiz) nmStartQuiz(); nmRenderQuiz(root); return; }
     if (nmView === 'menu' || nmView === 'tips') nmView = 'home';
@@ -2074,7 +2084,7 @@ function nmhLampSvg(i, state, cls) {
 }
 // הציור של המסדרון בלי הכפתורים - משותף למסדרון עצמו ולסרטון בעמוד הקנייה, כך שהסרטון תמיד נראה בדיוק
 // כמו New Me. lampsSvg - המנורות; doorOpen(n) - האם דלת n פתוחה; doorCls(n) - קלאס לדלת (הסרטון); roofOpen - הגג
-function nmhSceneSvg({ lampsSvg, doorOpen, doorCls, roofOpen }) {
+function nmhSceneSvg({ lampsSvg, doorOpen, doorCls, roofOpen, bag = true }) {
     const doorsSvg = NMH_DOORS.map(d => nmhDoorSvg(d, doorOpen(d.n), doorCls ? doorCls(d.n) : '')).join('');
     return `
             <svg class="nmh-scene" viewBox="0 0 ${NMH_W} ${NMH_H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -2088,8 +2098,8 @@ function nmhSceneSvg({ lampsSvg, doorOpen, doorCls, roofOpen }) {
                 ${doorsSvg}
                 ${roofOpen ? nmhDoorSvg(NMH_ROOF, true, 'nmh-roof-art') : nmhDoorSvg(NMH_ROOF, false, 'nmh-roof-art')}
                 ${lampsSvg}
-                <ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
-                <path d="M236 764 Q236 714 300 710 Q364 714 364 764 L364 880 L236 880 Z" fill="url(#nmh-bag)"/>
+                ${bag ? `<ellipse cx="300" cy="846" rx="80" ry="14" fill="#000" opacity="0.45"/>
+                <path d="M236 764 Q236 714 300 710 Q364 714 364 764 L364 880 L236 880 Z" fill="url(#nmh-bag)"/>` : ''}
             </svg>`;
 }
 // חזית התרמיל (מעל הפתק) וצרור המפתחות עליו: עד 3 מפתחות (ומספר כשיש יותר - ר' nmh-keys)
@@ -2119,14 +2129,8 @@ function nmRenderHome(root) {
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
     const roofAt = typeof roomUnlockAt === 'function' ? roomUnlockAt('roof') : 5;
     const roofOpen = keys >= roofAt;
-    // מנורות: דולקת (נאכל), ורודה (הבאה), כבויה (אחר כך)
-    const lampsSvg = active.map((slot, i) => nmhLampSvg(i, nmTodayCheckins[slot] ? 'lit' : slot === nextSlot ? 'next' : 'off')).join('');
-    const lampBtns = active.map((slot, i) => {
-        const L = NMH_LAMPS[i];
-        const r = 26 * L.s;
-        const name = nmIsFree(slot) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(slot)));
-        return `<button type="button" class="nmh-lamp${nmTodayCheckins[slot] ? ' is-lit' : ''}${slot === nextSlot ? ' is-next' : ''}" style="left:${nmhX(nmhMx(L.x) - r)};top:${nmhY(L.y - r)};width:${nmhX(r * 2)};height:${nmhY(r * 2)}" onclick="nmOpenHallMeal('${slot}')" aria-label="${nmEsc(`${nmSlotName(slot)} – ${name}${nmTodayCheckins[slot] ? ' ✓' : ''}`)}"></button>`;
-    }).join('');
+    // בלי מנורות (לפי בקשה מפורשת, 2026-10-14: "לא צריך את המנורות שיראה מה אכלתי אפשר לשים את זה בתוך התיק"): מה
+    // שנאכל - בתיק הקסום (הציור שלה, world/bag.png), והציור של השער נשאר בדיוק כמו שהיא שלחה
     // הכניסות שבציור (1 = העץ, 2–5 = המקומות) - הציור ב-nmhSceneSvg, כאן אזורי הלחיצה
     const doorBtns = NMH_DOORS.map(d => {
         const [x, y, w, h] = d.hit;
@@ -2143,19 +2147,16 @@ function nmRenderHome(root) {
             </button>
             <button type="button" class="nmh-note-check" onclick="nmToggleCheck('${nextSlot}', this)" aria-label="${nmEsc(`${t('nm_mark_eaten')} – ${nextName}`)}">${NM_CHECK_SVG}</button>
         </div>`
-        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(652)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_lit'))}</span></button></div>`;
+        : `<div class="nmh-note is-done" style="left:${nmhX(234)};top:${nmhY(652)};width:${nmhX(132)};height:${nmhY(100)}"><button type="button" class="nmh-note-body" onclick="nmOpenBackpack()"><span class="nmh-note-name">${nmEsc(t('nm_hall_all_done'))}</span></button></div>`;
     root.innerHTML = `
         <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
-            ${nmhSceneSvg({ lampsSvg, doorOpen: n => nmhDoorOpen(n, keys), roofOpen })}
+            ${nmhSceneSvg({ lampsSvg: '', doorOpen: n => nmhDoorOpen(n, keys), roofOpen, bag: false })}
             <div class="nmh-hud"><span class="nmh-title">${NM_ICON_SVG}<span>New Me</span></span></div>
-            <div class="nmh-dev"></div>
-            ${lampBtns}
             ${doorBtns}
             <button type="button" class="nmh-hatch-btn" style="left:${nmhX(NMH_ROOF.hit[0])};top:${nmhY(NMH_ROOF.hit[1])};width:${nmhX(NMH_ROOF.hit[2])};height:${nmhY(NMH_ROOF.hit[3])}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
             ${note}
-            ${nmhBagFrontSvg(keys)}
-            <button type="button" class="nmh-bag" style="left:${nmhX(232)};top:${nmhY(704)};width:${nmhX(136)};height:${nmhY(140)}" onclick="nmOpenBackpack()" aria-label="${nmEsc(t('nm_backpack'))}"></button>
-            <button type="button" class="nmh-keys" data-keys="${keys}" style="left:${nmhX(224)};top:${nmhY(780)};width:${nmhX(34)};height:${nmhY(46)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${keys > 3 ? `<span class="nmh-keys-n"><bdi dir="ltr">${nmFmt(keys)}</bdi></span>` : ''}</button>
+            <button type="button" class="nmh-bag nmh-bag-art" style="left:${nmhX(222)};top:${nmhY(690)};width:${nmhX(160)};height:${nmhY(154)}" onclick="nmOpenBackpack()" aria-label="${nmEsc(t('nm_backpack'))}"><img src="world/bag.png" alt=""></button>
+            <button type="button" class="nmh-keys nmh-keys-chip" data-keys="${keys}" style="left:${nmhX(194)};top:${nmhY(802)};width:${nmhX(48)};height:${nmhY(30)}" onclick="nmhKeysTip()" aria-label="${nmEsc(`🔑 ${nmFmt(keys)}`)}">${nmhKeySvg('currentColor')}<bdi dir="ltr">${nmFmt(keys)}</bdi></button>
             <div class="nmh-tip" role="status" aria-live="polite"></div>
         </div>`;
     // משהו נפתח ועוד לא הגיעו אליו - החץ מראה לאן ללכת (ר' roomGuideHallway)
@@ -4533,8 +4534,16 @@ function nmRenderSettings(body) {
         <details class="nm-row-details">
             <summary>⚕️ ${nmEsc(t('nm_settings_disclaimer'))}</summary>
             ${nmDisclaimerHtml()}
-        </details>`;
+        </details>
+        ${nmDevKeysSlotHtml()}`;
+    if (nmDevKeysSlotHtml() && typeof roomRenderDevKeys === 'function') {
+        if (typeof roomLoaded !== 'undefined' && !roomLoaded && typeof roomLoad === 'function') roomLoad().then(roomRenderDevKeys);
+        else roomRenderDevKeys();
+    }
 }
+// 🔑 רק למפתחת (לפי בקשה מפורשת, 2026-10-14: "כפתור קטן בהגדרות של המשחק החדש רק לי כמפתחת לפתוח אתגרים המנעול שיש
+// לי עכשיו רק שם"): + מפתח כמו אחרי אתגר, − סוגר אותו. רק כאן - לא במסדרון ולא בעולמות (ר' roomRenderDevKeys)
+function nmDevKeysSlotHtml() { return typeof roomIsDev === 'function' && roomIsDev() ? '<div class="nm-settings-block nm-dev-keys-slot"></div>' : ''; }
 
 async function nmSaveFullName(input) {
     const name = String(input.value || '').trim().slice(0, 60);
@@ -4551,7 +4560,6 @@ async function nmSaveFullName(input) {
 const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
     // המסדרון (המסך הראשי): המנורות = הארוחות, התרמיל = כל New Me, ודלת 1 לחדר
-    { id: 'nm_lamps', ch: 'newme', ctx: 'newme', icon: '💡', target: '#new-me-root .nmh-lamp', titleKey: 'nm_tour_lamps_title', text: 'nm_tour_lamps_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#new-me-root .nmh-bag', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },

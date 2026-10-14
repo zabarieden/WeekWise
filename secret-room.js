@@ -109,6 +109,8 @@ function roomKeysLeftText(left) { return left === 1 ? t('room_keys_left_one') : 
 async function roomLoad() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('new_me_room').select('*').eq('user_id', currentUserId).maybeSingle();
+    // אין עדיין חדר בחשבון = מתחילים מההתחלה: גם מה שנשמר רק במכשיר (מפתחות ה-PM, המחשב, ההעדפות של המקומות) נמחק
+    if (!data) { try { [roomDevStoreKey(), pcStoreKey(), typeof srpPrefKey === 'function' ? srpPrefKey() : ''].filter(Boolean).forEach(k => localStorage.removeItem(k)); } catch {} }
     roomState = data || { keys_seen: 0, style: 'night', wall_color: null, life_score: null, next_step: null, game_best: 0 };
     roomLoaded = true;
     // המשאלות - כדי שהצנצנת על המדף תראה פתק לכל משאלה (ר' srShelfJarSvg)
@@ -483,6 +485,7 @@ function srHotspot(id, el) {
     if (id === 'friend') { srFriendSays(el); return; }
     if (id === 'catvisit') { srCatNapTap(el); return; }
     if (id === 'computer') { roomOpenComputer(); return; }
+    if (id === 'diary') { if (typeof srpOpenDiary === 'function') srpOpenDiary(); return; }
     if (id === 'game') { roomOpenGame(); return; }
     if (id === 'shelf') { roomOpenShelf(); return; }
     if (id === 'jar') { if (typeof roomOpenJar === 'function') roomOpenJar(); return; }
@@ -590,6 +593,11 @@ function srWallWindow(keys) {
             <circle class="sr-pulse" cx="269" cy="482" r="8" fill="none" stroke="#ffffff" stroke-width="1.6"/>` : srLockBadge(269, 478, 'computer')}
             <rect x="216" y="444" width="96" height="104" fill="transparent"/>
         </g>
+        <!-- 📔 היומן הקסום על השולחן - הציור שלה (world/diary.png), ונגיעה פותחת את היומן האישי (לפי בקשה מפורשת, 2026-10-14) -->
+        <g class="sr-hot sr-diary-art" data-hot="diary" role="button" tabindex="0" aria-label="${srEsc(t('room_diary_title'))}">
+            <image href="world/diary.png" x="176" y="487" width="48" height="61"/>
+            <rect x="170" y="482" width="60" height="70" fill="transparent"/>
+        </g>
         ${srFriend(p, 120, 628, 26, { x: 180, y: 574, text: t('room_friend_hi'), tail: 'M150 585 l-8 12 l18 -10z', shadowY: 742 })}`;
 }
 
@@ -687,7 +695,7 @@ function srWallShelf(keys) {
             <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
         </defs>
         <g class="sr-hot${shelfOpen ? '' : ' locked'}" data-hot="shelf" role="button" tabindex="0" aria-label="${srEsc(roomItemName('shelf'))}">
-            ${shelfOpen ? `<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
+            ${shelfOpen ? `${srSparkleField(313, 472, 70, 132, 14, 1.4, 11)}<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
             <rect x="236" y="328" width="154" height="288" fill="transparent"/>
         </g>
         ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}
@@ -695,6 +703,23 @@ function srWallShelf(keys) {
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+// ✨ נצנצים מרחפים (לפי בקשה מפורשת, 2026-10-14: "הצנצנת תשאיר אותה הקודמת... רק תוסיף בתוכה נצנצים מרחפים בתוך הארון
+// ומסביבה"): כוכבונים קטנים שעולים לאט ונעלמים, כל אחד בזמן אחר. מקום קבוע לכל נצנוץ (לא אקראי בכל ציור)
+function srSparkleField(cx, cy, rx, ry, n, size, seed = 1) {
+    const colors = ['#ffd27a', '#fff6d8', '#ffb8dc', '#d8c8ff'];
+    let s = seed * 9301 + 49297;
+    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const star = 'M0 -3 L0.8 -0.8 L3 0 L0.8 0.8 L0 3 L-0.8 0.8 L-3 0 L-0.8 -0.8 Z';
+    let out = '';
+    for (let i = 0; i < n; i++) {
+        const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd());
+        const x = cx + Math.cos(a) * rx * r, y = cy + Math.sin(a) * ry * r;
+        const k = size * (0.55 + rnd() * 0.6);
+        out += `<path class="sr-spk" d="${star}" fill="${colors[i % colors.length]}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)})" style="animation-delay:-${(rnd() * 4.2).toFixed(2)}s"/>`;
+    }
+    return `<g class="sr-sparkles" aria-hidden="true">${out}</g>`;
+}
 
 // הצנצנת הקטנה על המדף העליון בארון = צנצנת המשאלות (נגיעה פותחת אותה): פתק מקופל קטן לכל משאלה (עד 6),
 // וגחליליות כשהיא עוד ריקה
@@ -709,6 +734,7 @@ function srShelfJarSvg(p) {
         <circle cx="338" cy="232" r="14" fill="url(#${p}Jar)"/>${notes}
         <rect x="324" y="206" width="28" height="40" rx="8" fill="#ffffff" opacity="0.18"/><rect x="326" y="200" width="24" height="8" rx="3" fill="#c9a36b"/>
         <g fill="#ffd27a" class="sr-twinkle">${flies}</g>
+        ${srSparkleField(338, 228, 10, 15, 6, 0.75, 3)}${srSparkleField(338, 224, 28, 32, 8, 1, 7)}
     </g>`;
 }
 function srWrapText(s, n) {
@@ -1626,8 +1652,9 @@ function srShelfSceneSvg() {
             <linearGradient id="${p}Frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a7795a"/><stop offset="1" stop-color="#6b4632"/></linearGradient>
         </defs>
         <image class="sr-art" href="world/shelf-closeup.jpg" x="-22.7" y="0" width="435.4" height="780" preserveAspectRatio="none" aria-hidden="true"/>
+        ${srSparkleField(195, 390, 175, 320, 20, 2, 5)}
         ${hot('books', t('room_shelf_books'), [22, 106, 196, 150], label(118, 258, 110, t('room_shelf_books')))}
-        ${hot('jar', roomItemName('jar'), [240, 100, 126, 156], srJarShelfSvg(wishes, 303, 230, 112) + label(303, 258, 104, roomItemName('jar')))}
+        ${hot('jar', roomItemName('jar'), [240, 100, 126, 156], srJarShelfSvg(wishes, 303, 230, 112) + srSparkleField(303, 236, 26, 34, 9, 1.5, 13) + srSparkleField(303, 214, 66, 66, 9, 1.9, 17) + label(303, 258, 104, roomItemName('jar')))}
         ${hot('quotes', t('room_shelf_quotes'), [40, 330, 270, 134], frames + label(178, 440, 96, t('room_shelf_quotes')))}
         ${hot('notebooks', t('room_shelf_notebooks'), [46, 556, 146, 86], label(118, 645, 96, t('room_shelf_notebooks')))}
         ${hot('photos', t('room_shelf_memories'), [208, 518, 152, 124], label(284, 645, 96, t('room_shelf_memories')))}
@@ -1998,15 +2025,9 @@ function roomOpenDecor(fromStudio) {
 // (חגיגת האתגר הרגילה ואז חגיגת המפתח, בדיוק כמו אצל כולם); − = סוגר את המפתח האחרון כדי לראות שוב
 function roomRenderDevKeys() {
     let el = document.getElementById('sr-dev-keys');
-    const sec = document.getElementById('new-me-section');
-    const secOpen = !!(sec && sec.classList.contains('active-tab'));
-    const inNewMe = secOpen && typeof hasNewMe !== 'undefined' && hasNewMe && typeof nmProfile !== 'undefined' && !!nmProfile;
-    // בתצוגה הנעולה (כמו לפני קנייה) אין כאן כלום - הכפתור הקטן בתחתית New Me "קונה" (devRenderNewMePill ב-app.js)
-    const show = roomIsDev() && roomLoaded && (srIsOpen() || inNewMe);
-    if (!show) { if (el) el.remove(); return; }
-    // במסדרון: בתוך הציור, בשורה מתחת לפס העליון (כדי לא לכסות את ⋯ ולזוז יחד עם המסדרון)
-    const hallSlot = !srIsOpen() ? document.querySelector('#new-me-root .nmh .nmh-dev') : null;
-    const parent = hallSlot || document.querySelector('.phone-wrapper') || document.body;
+    // לפי בקשה מפורשת (2026-10-14): רק בהגדרות של New Me ("המנעול שיש לי עכשיו רק שם") - העולמות והמסדרון נקיים
+    const parent = roomIsDev() && roomLoaded ? document.querySelector('#new-me-root .nm-dev-keys-slot') : null;
+    if (!parent) { if (el) el.remove(); return; }
     if (!el || el.parentNode !== parent) {
         if (el) el.remove();
         el = document.createElement('div');
@@ -2014,7 +2035,7 @@ function roomRenderDevKeys() {
         el.className = 'sr-dev-keys';
         parent.appendChild(el);
     }
-    el.classList.toggle('is-row', !!hallSlot);
+    el.classList.add('is-row');
     el.innerHTML = `
         <span class="sr-dev-tag">PM</span>
         <button type="button" class="sr-dev-add" onclick="roomDevAddKey()" title="${srEsc(t('room_dev_add'))}" aria-label="${srEsc(t('room_dev_add'))}">${SR_KEY_SVG}<b>+</b></button>
