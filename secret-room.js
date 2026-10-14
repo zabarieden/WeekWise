@@ -193,7 +193,7 @@ function roomGuideHallway() {
     if (!u || !hall) return;
     let target;
     if (u.place) target = hall.querySelector(`.nmh-door[data-door="${roomPlaceDoor(u.place)}"]`);
-    else if (u.hatch || u.roof) target = hall.querySelector(hall.classList.contains('is-ladder') ? '.nmh-ladder-btn' : '.nmh-hatch-btn');
+    else if (u.hatch || u.roof) target = hall.querySelector('.nmh-hatch-btn');
     else target = hall.querySelector('.nmh-door[data-door="1"]');
     roomShowArrow(hall, target);
 }
@@ -417,6 +417,8 @@ function srApplyStyle() {
     const s = ROOM_STYLES[style];
     const vars = { '--sr-wall-a': s.wallA, '--sr-wall-b': s.wallB, '--sr-panel-a': s.panelA, '--sr-panel-b': s.panelB, '--sr-line': s.line, '--sr-trim': s.trim, '--sr-ceil': s.ceil, '--sr-ceil-line': s.ceilLine, '--sr-floor-a': s.floorA, '--sr-floor-b': s.floorB, '--sr-base': s.base, '--sr-bg': s.bg };
     if (wallColor) { vars['--sr-wall-a'] = `color-mix(in srgb, ${wallColor} 72%, #000)`; vars['--sr-wall-b'] = wallColor; }
+    // הקירות המצוירים: צבע הקיר צובע את הציור בעדינות (.sr-tint)
+    vars['--sr-tint'] = wallColor || 'transparent';
     Object.entries(vars).forEach(([k, v]) => stage.style.setProperty(k, v));
     stage.dataset.style = style;
 }
@@ -540,35 +542,6 @@ function srLockBadge(x, y, id) {
 }
 
 // ---------- ציורי הקירות (מהעיצובים שאושרו על הקנבס, בצבעי "לעצב את החדר") ----------
-function srShell(p, panels, bulbs, rug) {
-    const floorLines = '<line x1="0" y1="600" x2="-152" y2="844"/><line x1="56" y1="600" x2="-52" y2="844"/><line x1="112" y1="600" x2="47" y2="844"/><line x1="168" y1="600" x2="147" y2="844"/><line x1="224" y1="600" x2="247" y2="844"/><line x1="280" y1="600" x2="346" y2="844"/><line x1="336" y1="600" x2="446" y2="844"/><line x1="0" y1="622" x2="390" y2="622"/><line x1="0" y1="650" x2="390" y2="650"/><line x1="0" y1="688" x2="390" y2="688"/><line x1="0" y1="736" x2="390" y2="736"/><line x1="0" y1="796" x2="390" y2="796"/>';
-    const colors = ['#ffd27a', '#ff9ecf', '#b9a8ff'];
-    const bulbHtml = bulbs.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${colors[i % 3]}" opacity="0.2"/><circle cx="${x}" cy="${y}" r="3.2" fill="${colors[i % 3]}" class="sr-bulb"/>`).join('');
-    const path = `M0 ${bulbs[0][1] - 4} ` + bulbs.map(([x, y]) => `L${x} ${y}`).join(' ') + ` L390 ${bulbs[bulbs.length - 1][1] - 2}`;
-    return `
-        <defs>
-            <linearGradient id="${p}Wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sr-wall-a)"/><stop offset="1" style="stop-color:var(--sr-wall-b)"/></linearGradient>
-            <linearGradient id="${p}Panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sr-panel-a)"/><stop offset="1" style="stop-color:var(--sr-panel-b)"/></linearGradient>
-            <linearGradient id="${p}Floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sr-floor-a)"/><stop offset="1" style="stop-color:var(--sr-floor-b)"/></linearGradient>
-            <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
-            <radialGradient id="${p}Lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.42"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-            <pattern id="${p}Paper" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M14 9 l3 5 -3 5 -3 -5z" fill="#ffffff" opacity="0.045"/></pattern>
-        </defs>
-        <rect width="390" height="600" fill="url(#${p}Wall)"/>
-        <rect width="390" height="470" fill="url(#${p}Paper)"/>
-        <rect width="390" height="86" style="fill:var(--sr-ceil)"/>
-        <rect y="84" width="390" height="6" style="fill:var(--sr-ceil-line)"/>
-        <rect y="466" width="390" height="134" fill="url(#${p}Panel)"/>
-        <rect y="462" width="390" height="6" style="fill:var(--sr-trim)"/>
-        <g fill="none" stroke-width="2" style="stroke:var(--sr-line)">${panels}</g>
-        <path d="${path}" fill="none" stroke="#6b5a48" stroke-width="1.2"/>
-        <g>${bulbHtml}</g>
-        <polygon points="0,600 390,600 390,844 0,844" fill="url(#${p}Floor)"/>
-        <g stroke="#000" stroke-opacity="0.26" stroke-width="1.2">${floorLines}</g>
-        <rect y="592" width="390" height="12" style="fill:var(--sr-base)"/>
-        ${rug}`;
-}
-
 // ניצוץ + בועת דיבור. faceY - מרכז הבועה; say - הטקסט בבועה
 function srFriend(p, cx, cy, r, bubble) {
     const eyeDx = r * 0.31, eyeY = cy + r * 0.12;
@@ -591,65 +564,33 @@ function srFriend(p, cx, cy, r, bubble) {
         </g>`;
 }
 
+// 🎨 2026-10-14 (לפי בקשה מפורשת: "יש את הציורים אתה יכול לשים אותם"): ארבעת הקירות של הבית בעץ הם ציורים -
+// world/tree-desk.jpg (המחשב ליד החלון העגול), tree-bed.jpg (הלוח מעל המיטה - כמו שביקשה), tree-fun.jpg (מכונת המשחק,
+// הפטיפון והכורסה), tree-shelf.jpg (המדף, והחתול על השטיח). מעל הציור: מה שזוהר, נפתח או נוגעים בו. העיצוב בסטודיו
+// צובע את הציור בעדינות (sr-tint) ו"בוקר פסטל" / "עליית גג" משנים את האור שלו (theme.css, [data-style])
+function srArtWall(name) {
+    return `<image class="sr-art" href="world/${name}" x="-40.55" y="0" width="471.1" height="844" preserveAspectRatio="none" aria-hidden="true"/>
+        <rect class="sr-tint" width="390" height="844" aria-hidden="true"/>`;
+}
 function srWallWindow(keys) {
     const p = 'srw0';
     const pcOpen = keys >= roomUnlockAt('computer');
-    const panels = '<rect x="12" y="482" width="70" height="98" rx="4"/><rect x="94" y="482" width="70" height="98" rx="4"/><rect x="176" y="482" width="70" height="98" rx="4"/><rect x="258" y="482" width="70" height="98" rx="4"/><rect x="340" y="482" width="70" height="98" rx="4"/>';
-    const bulbs = [[20, 104], [56, 116], [92, 122], [128, 120], [164, 112], [200, 106], [236, 107], [272, 112], [308, 111], [344, 106], [380, 102]];
-    const rug = '<ellipse cx="200" cy="742" rx="164" ry="50" fill="#5f3470" opacity="0.92"/><ellipse cx="200" cy="742" rx="134" ry="38" fill="none" stroke="#e29ad0" stroke-width="3" opacity="0.8"/><ellipse cx="200" cy="742" rx="120" ry="33" fill="none" stroke="#e29ad0" stroke-width="1.4" opacity="0.56"/><ellipse cx="200" cy="742" rx="92" ry="24" fill="#7d4689"/>';
-    return `${srShell(p, panels, bulbs, rug)}
+    return `${srArtWall('tree-desk.jpg')}
         <defs>
-            <linearGradient id="${p}Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a42"/><stop offset="1" stop-color="#3e2c6a"/></linearGradient>
-            <linearGradient id="${p}Curtain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2639f"/><stop offset="1" stop-color="#9a3369"/></linearGradient>
             <linearGradient id="${p}Screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7ac0"/><stop offset="0.55" stop-color="#9b6bff"/><stop offset="1" stop-color="#5b3bd6"/></linearGradient>
             <radialGradient id="${p}Glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff9ad5" stop-opacity="0.32"/><stop offset="1" stop-color="#ff9ad5" stop-opacity="0"/></radialGradient>
-            <radialGradient id="${p}Moon" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c9" stop-opacity="0.35"/><stop offset="1" stop-color="#fff4c9" stop-opacity="0"/></radialGradient>
+            <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
         </defs>
-        <line x1="24" y1="140" x2="216" y2="140" stroke="#c9a36b" stroke-width="3.5" stroke-linecap="round"/>
-        <rect x="40" y="152" width="160" height="236" rx="8" fill="#e8dcc6"/>
-        <rect x="49" y="161" width="142" height="218" fill="url(#${p}Sky)"/>
-        <circle cx="160" cy="200" r="34" fill="url(#${p}Moon)"/><circle cx="160" cy="200" r="15" fill="#fff4c9"/><circle cx="166" cy="196" r="13" fill="#2c2560" opacity="0.18"/>
-        <g class="sr-twinkle" fill="#fff"><circle cx="70" cy="184" r="1.5"/><circle cx="98" cy="210" r="1.1"/><circle cx="84" cy="244" r="1.3"/><circle cx="178" cy="262" r="1.1"/><circle cx="120" cy="176" r="1"/></g>
-        <g fill="#1e1740"><rect x="49" y="318" width="26" height="61"/><rect x="77" y="300" width="20" height="79"/><rect x="99" y="326" width="30" height="53"/><rect x="131" y="294" width="22" height="85"/><rect x="155" y="314" width="36" height="65"/></g>
-        <g fill="#ffd27a" opacity="0.85"><rect x="55" y="328" width="4" height="5"/><rect x="64" y="342" width="4" height="5"/><rect x="82" y="310" width="4" height="5"/><rect x="88" y="330" width="4" height="5"/><rect x="106" y="336" width="4" height="5"/><rect x="138" y="304" width="4" height="5"/><rect x="144" y="322" width="4" height="5"/><rect x="162" y="326" width="4" height="5"/><rect x="176" y="340" width="4" height="5"/></g>
-        <rect x="117" y="161" width="5" height="218" fill="#e8dcc6"/><rect x="49" y="268" width="142" height="5" fill="#e8dcc6"/>
-        <path d="M26 140 C 40 220, 22 300, 36 398 L 54 398 C 46 300, 62 220, 52 140 Z" fill="url(#${p}Curtain)"/>
-        <path d="M214 140 C 200 220, 218 300, 204 398 L 186 398 C 194 300, 178 220, 188 140 Z" fill="url(#${p}Curtain)"/>
-        <rect x="30" y="296" width="26" height="6" rx="3" fill="#ffd27a"/><rect x="184" y="296" width="26" height="6" rx="3" fill="#ffd27a"/>
-        <rect x="32" y="386" width="176" height="12" rx="3" fill="#e8dcc6"/>
-        <rect x="58" y="360" width="76" height="26" rx="3" fill="#b07b3a"/><rect x="54" y="355" width="84" height="8" rx="2" fill="#d19a4c"/>
-        <path d="M70 355 V332 M84 355 V320 M98 355 V328 M112 355 V316 M124 355 V334" stroke="#6f9a5a" stroke-width="2"/>
-        <circle cx="84" cy="318" r="7" fill="#fff"/><circle cx="84" cy="318" r="2.8" fill="#ffd23f"/>
-        <circle cx="112" cy="314" r="7" fill="#fff"/><circle cx="112" cy="314" r="2.8" fill="#ffd23f"/>
-        <circle cx="98" cy="326" r="7" fill="#fff"/><circle cx="98" cy="326" r="2.8" fill="#ffd23f"/>
-        <ellipse cx="70" cy="330" rx="3.2" ry="5.5" fill="#b388e6"/><ellipse cx="124" cy="332" rx="3.2" ry="5.5" fill="#b388e6"/>
-        <rect x="160" y="368" width="12" height="18" rx="2" fill="#f3e6cf"/><path class="sr-flame" d="M166 368 q-3 -6 0 -11 q3 5 0 11z" fill="#ffb347"/><circle cx="166" cy="360" r="12" fill="#ffd27a" opacity="0.22"/>
-        <circle cx="366" cy="390" r="150" fill="url(#${p}Lamp)"/>
-        ${pcOpen ? `<circle cx="297" cy="420" r="90" fill="url(#${p}Glow)"/>` : ''}
-        <rect x="214" y="486" width="176" height="13" rx="3" fill="#8a5a3c"/>
-        <rect x="222" y="499" width="160" height="64" fill="#6c442e"/>
-        <rect x="290" y="524" width="26" height="5" rx="2.5" fill="#c99b5b"/>
-        <rect x="226" y="563" width="10" height="86" fill="#4f3122"/><rect x="368" y="563" width="10" height="86" fill="#4f3122"/>
+        ${pcOpen ? `<circle cx="269" cy="484" r="80" fill="url(#${p}Glow)" aria-hidden="true"/>` : ''}
         <g class="sr-hot${pcOpen ? '' : ' locked'}" data-hot="computer" role="button" tabindex="0" aria-label="${srEsc(roomItemName('computer'))}">
-            <rect x="240" y="370" width="114" height="104" rx="10" fill="#efe4d0"/>
-            <rect x="251" y="381" width="92" height="70" rx="6" fill="${pcOpen ? `url(#${p}Screen)` : '#1a1424'}"/>
-            ${pcOpen ? `<text x="297" y="406" text-anchor="middle" font-size="11" fill="#ffffff" data-fit="84">${srEsc(t('room_pc_screen'))}</text>
-            <text x="297" y="424" text-anchor="middle" font-size="9" fill="#ffffff" opacity="0.6" data-fit="84">${srEsc(t('room_pc_screen_sub'))}</text>
-            <rect class="sr-blink" x="292" y="432" width="8" height="10" fill="#ffffff"/>
-            <circle class="sr-pulse" cx="297" cy="416" r="10" fill="none" stroke="#ffffff" stroke-width="2"/>` : ''}
-            <rect x="280" y="474" width="34" height="8" fill="#ded1bb"/>
-            <polygon points="252,486 342,486 336,478 258,478" fill="#ded1bb"/>
-            <g stroke="#bfb19a" stroke-width="1"><line x1="262" y1="481" x2="332" y2="481"/><line x1="266" y1="484" x2="328" y2="484"/></g>
-            ${pcOpen ? '' : srLockBadge(297, 412, 'computer')}
+            <rect x="${pcOpen ? 239 : 237}" y="457" width="${pcOpen ? 60 : 64}" height="49" rx="5" fill="${pcOpen ? `url(#${p}Screen)` : '#1a1424'}" opacity="${pcOpen ? 0.92 : 0.9}"/>
+            ${pcOpen ? `<text x="269" y="476" text-anchor="middle" font-size="8.5" fill="#ffffff" data-fit="52">${srEsc(t('room_pc_screen'))}</text>
+            <text x="269" y="488" text-anchor="middle" font-size="6.5" fill="#ffffff" opacity="0.7" data-fit="52">${srEsc(t('room_pc_screen_sub'))}</text>
+            <rect class="sr-blink" x="266" y="493" width="5" height="7" fill="#ffffff"/>
+            <circle class="sr-pulse" cx="269" cy="482" r="8" fill="none" stroke="#ffffff" stroke-width="1.6"/>` : srLockBadge(269, 478, 'computer')}
+            <rect x="216" y="444" width="96" height="104" fill="transparent"/>
         </g>
-        <ellipse cx="370" cy="484" rx="13" ry="4" fill="#2e2018"/>
-        <path d="M370 482 L364 420 L376 384" fill="none" stroke="#2e2018" stroke-width="3" stroke-linecap="round"/>
-        <polygon points="356,386 392,386 384,362 364,362" fill="#ffb85c"/>
-        <rect x="268" y="510" width="62" height="58" rx="14" fill="#4b2d6b"/><rect x="275" y="516" width="48" height="44" rx="10" fill="#8d4fb8"/>
-        <rect x="258" y="566" width="82" height="14" rx="6" fill="#5b3680"/>
-        <rect x="266" y="580" width="7" height="70" fill="#2e1d3e"/><rect x="325" y="580" width="7" height="70" fill="#2e1d3e"/>
-        <g transform="translate(22 520)"><rect x="0" y="80" width="40" height="40" rx="6" fill="#c46b4a"/><ellipse cx="20" cy="60" rx="10" ry="26" fill="#3f8a5c" transform="rotate(-20 20 60)"/><ellipse cx="22" cy="54" rx="9" ry="28" fill="#4fa36c" transform="rotate(12 22 54)"/><ellipse cx="14" cy="66" rx="8" ry="20" fill="#5bb87a" transform="rotate(-48 14 66)"/></g>
-        ${srFriend(p, 130, 548, 32, { x: 198, y: 493, text: t('room_friend_hi'), tail: 'M160 504 l-8 12 l18 -10z' })}`;
+        ${srFriend(p, 120, 628, 26, { x: 180, y: 574, text: t('room_friend_hi'), tail: 'M150 585 l-8 12 l18 -10z', shadowY: 742 })}`;
 }
 
 // הפתקים על הלוח: האתגרים הפעילים (עד 3) + "＋ אתגר חדש". ניצוץ לא שואל שום דבר (לפי בקשה מפורשת, 2026-10-09)
@@ -659,17 +600,15 @@ function srBoardNotes() {
     const palette = [['#fff1a8', '#4a3a10'], ['#ffd1e8', '#4a1d34'], ['#d4f7d9', '#1d4a26']];
     active.slice(0, 3).forEach((c, i) => {
         const st = typeof nmChState === 'function' ? nmChState(c) : null;
-        notes.push({ hot: 'ch-' + c.challenge_key, color: palette[i][0], ink: palette[i][1], title: nmChTitle(c.challenge_key), line: '', sub: st ? t('room_note_day').replace('{d}', srFmt(Math.max(1, st.dayN))).replace('{n}', srFmt(c.days)) : '', progress: st ? Math.min(1, st.done / Math.max(1, st.needed)) : 0 });
+        notes.push({ hot: 'ch-' + c.challenge_key, color: palette[i][0], ink: palette[i][1], title: nmChTitle(c.challenge_key), line: '', sub: st ? t('room_note_day').replace('{d}', srFmt(Math.max(1, st.dayN))).replace('{n}', srFmt(c.days)) : '', progress: st ? Math.min(1, st.done / Math.max(1, c.days)) : null });
     });
     return notes;
 }
 
 function srWallBoard(keys) {
     const p = 'srw1';
-    const panels = '<rect x="-20" y="482" width="70" height="98" rx="4"/><rect x="62" y="482" width="70" height="98" rx="4"/><rect x="144" y="482" width="70" height="98" rx="4"/><rect x="226" y="482" width="70" height="98" rx="4"/><rect x="308" y="482" width="70" height="98" rx="4"/>';
-    const bulbs = [[24, 108], [68, 118], [112, 121], [156, 116], [200, 108], [244, 104], [288, 104], [332, 102], [376, 99]];
-    const rug = '<ellipse cx="196" cy="748" rx="150" ry="46" fill="#2f5a6b" opacity="0.85"/><ellipse cx="196" cy="748" rx="120" ry="34" fill="none" stroke="#9ee0e8" stroke-width="3" opacity="0.6"/><ellipse cx="196" cy="748" rx="106" ry="29" fill="none" stroke="#9ee0e8" stroke-width="1.4" opacity="0.42"/>';
-    const slots = [{ x: 52, y: 186, w: 120, h: 86, rot: -4, pin: '#ff4fa3' }, { x: 222, y: 184, w: 120, h: 86, rot: 3, pin: '#60a5fa' }, { x: 56, y: 296, w: 120, h: 86, rot: 2, pin: '#ff4fa3' }];
+    // לוח השעם שבציור: 89–301 × 316–457 - ארבעה מקומות (3 אתגרים + "＋ אתגר חדש")
+    const slots = [{ x: 96, y: 324, w: 94, h: 60, rot: -3, pin: '#ff4fa3' }, { x: 202, y: 322, w: 94, h: 60, rot: 2.5, pin: '#60a5fa' }, { x: 98, y: 392, w: 94, h: 60, rot: 2, pin: '#ff4fa3' }];
     const notes = srBoardNotes();
     const notesSvg = notes.map((nt, i) => {
         const s = slots[i];
@@ -677,187 +616,82 @@ function srWallBoard(keys) {
         const wrap = srWrapText(nt.line || '', 15);
         return `<g class="sr-hot sr-note" data-hot="${srEsc(nt.hot)}" role="button" tabindex="0" aria-label="${srEsc(nt.title)}" transform="rotate(${s.rot} ${cx} ${s.y + s.h / 2})">
             <rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${nt.color}"/>
-            <text x="${cx}" y="${s.y + 22}" text-anchor="middle" font-size="12" font-weight="800" fill="${nt.ink}" data-fit="${s.w - 14}">${srEsc(srClip(nt.title, 18))}</text>
-            ${wrap.slice(0, 2).map((ln, j) => `<text x="${cx}" y="${s.y + 42 + j * 15}" text-anchor="middle" font-size="11" fill="${nt.ink}" data-fit="${s.w - 14}">${srEsc(ln)}</text>`).join('')}
-            ${nt.progress != null && nt.hot.startsWith('ch-') ? `<rect x="${s.x + 14}" y="${s.y + 44}" width="${s.w - 28}" height="7" rx="3.5" fill="${nt.ink}" opacity="0.18"/><rect x="${s.x + 14}" y="${s.y + 44}" width="${Math.max(7, (s.w - 28) * nt.progress)}" height="7" rx="3.5" fill="${nt.ink}" opacity="0.7"/>` : ''}
-            ${nt.sub ? `<text x="${cx}" y="${s.y + s.h - 12}" text-anchor="middle" font-size="10.5" fill="${nt.ink}" opacity="0.85" data-fit="${s.w - 14}">${srEsc(nt.sub)}</text>` : ''}
-        </g><circle cx="${cx}" cy="${s.y + 2}" r="4" fill="${s.pin}"/>`;
+            <text x="${cx}" y="${s.y + 16}" text-anchor="middle" font-size="9.5" font-weight="800" fill="${nt.ink}" data-fit="${s.w - 10}">${srEsc(srClip(nt.title, 18))}</text>
+            ${wrap.slice(0, 2).map((ln, j) => `<text x="${cx}" y="${s.y + 30 + j * 11}" text-anchor="middle" font-size="8.5" fill="${nt.ink}" data-fit="${s.w - 10}">${srEsc(ln)}</text>`).join('')}
+            ${nt.progress != null && nt.hot.startsWith('ch-') ? `<rect x="${s.x + 10}" y="${s.y + 30}" width="${s.w - 20}" height="5" rx="2.5" fill="${nt.ink}" opacity="0.18"/><rect x="${s.x + 10}" y="${s.y + 30}" width="${Math.max(5, (s.w - 20) * nt.progress)}" height="5" rx="2.5" fill="${nt.ink}" opacity="0.7"/>` : ''}
+            ${nt.sub ? `<text x="${cx}" y="${s.y + s.h - 9}" text-anchor="middle" font-size="8" fill="${nt.ink}" opacity="0.85" data-fit="${s.w - 10}">${srEsc(nt.sub)}</text>` : ''}
+        </g><circle cx="${cx}" cy="${s.y + 2}" r="3" fill="${s.pin}"/>`;
     }).join('');
-    return `${srShell(p, panels, bulbs, rug)}
-        <defs><pattern id="${p}Cork" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#9c7246"/><circle cx="5.5" cy="5" r="0.8" fill="#dcb07c"/></pattern></defs>
-        <circle cx="195" cy="290" r="210" fill="url(#${p}Lamp)" opacity="0.7"/>
-        <rect x="26" y="128" width="338" height="318" rx="10" fill="#6b4630"/>
-        <rect x="35" y="137" width="320" height="300" rx="5" fill="#c4955f"/>
-        <rect x="35" y="137" width="320" height="300" rx="5" fill="url(#${p}Cork)"/>
-        <rect x="120" y="146" width="150" height="26" rx="4" fill="#fbf3e4"/>
-        <text x="195" y="164" text-anchor="middle" font-size="13" font-weight="800" fill="#4a2c1e" data-fit="140">${srEsc(t('room_board_sign'))}</text>
+    return `${srArtWall('tree-bed.jpg')}
+        <rect x="140" y="301" width="110" height="17" rx="3" fill="#fbf3e4" opacity="0.95"/>
+        <text x="195" y="313.5" text-anchor="middle" font-size="9.5" font-weight="800" fill="#4a2c1e" data-fit="102">${srEsc(t('room_board_sign'))}</text>
         ${notesSvg}
         <!-- המכתב מהעבר לא כאן: הוא יחכה ל"חדר הים" שייפתח אחרי הרבה אתגרים (לפי בקשה מפורשת) -->
-        <g class="sr-hot" data-hot="add-challenge" role="button" tabindex="0" aria-label="${srEsc(t('room_board_add'))}" transform="rotate(2 288 340)">
-            <rect x="228" y="300" width="120" height="80" rx="4" fill="rgba(255,255,255,0.08)" stroke="#fff7e6" stroke-width="1.6" stroke-dasharray="5 5"/>
-            <text x="288" y="346" text-anchor="middle" font-size="12" font-weight="800" fill="#fff7e6" data-fit="108">${srEsc(t('room_board_add'))}</text>
-        </g>
-        <!-- בקיר הזה אין מדף ואין ניצוץ (לפי בקשה מפורשת). חדר שינה ("ובחדר הסודי תשנה לחדר שינה"): מיטה מתחת ללוח, כריות, שמיכה עם כוכבים ונעלי בית -->
-        <g class="sr-bed" aria-hidden="true">
-            <ellipse cx="196" cy="716" rx="172" ry="12" fill="#000" opacity="0.24"/>
-            <rect x="42" y="692" width="10" height="24" rx="2" fill="#3e271c"/><rect x="342" y="692" width="10" height="24" rx="2" fill="#3e271c"/>
-            <path d="M28 704 V562 Q28 526 62 526 Q96 526 96 562 V704 Z" fill="#6d4430"/>
-            <path d="M38 704 V568 Q38 538 62 538 Q86 538 86 568 V704 Z" fill="#87573b"/>
-            <circle cx="62" cy="556" r="5" fill="#ffd27a" opacity="0.85"/>
-            <rect x="330" y="616" width="36" height="88" rx="12" fill="#6d4430"/>
-            <rect x="337" y="624" width="22" height="72" rx="8" fill="#87573b"/>
-            <rect x="86" y="640" width="250" height="58" rx="10" fill="#f3e6cf"/>
-            <rect x="86" y="684" width="250" height="14" rx="6" fill="#d8c3a2"/>
-            <path d="M94 606 Q94 588 114 588 H150 Q168 588 168 606 Q168 626 150 628 H112 Q94 628 94 606 Z" fill="#fff6fa" transform="translate(0 15)"/>
-            <path d="M116 616 Q116 600 134 600 H166 Q182 600 182 616 Q182 634 166 636 H132 Q116 636 116 616 Z" fill="#ffc9df" transform="translate(0 11)"/>
-            <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V690 Q344 702 332 702 H162 Q150 702 150 690 Z" fill="#a993f5"/>
-            <path d="M150 632 Q160 618 190 620 H326 Q342 620 344 638 V650 Q300 656 250 652 T150 656 Z" fill="#c8bbff"/>
-            <g fill="#fff4c9" opacity="0.9">
-                <path d="M196 672 l2.2 4.4 4.8 0.7 -3.5 3.4 0.8 4.8 -4.3 -2.3 -4.3 2.3 0.8 -4.8 -3.5 -3.4 4.8 -0.7z"/>
-                <path d="M250 684 l1.6 3.2 3.5 0.5 -2.5 2.5 0.6 3.5 -3.2 -1.7 -3.2 1.7 0.6 -3.5 -2.5 -2.5 3.5 -0.5z"/>
-                <path d="M294 668 l2 4 4.4 0.6 -3.2 3.1 0.8 4.4 -4 -2.1 -4 2.1 0.8 -4.4 -3.2 -3.1 4.4 -0.6z"/>
-                <circle cx="224" cy="664" r="1.6"/><circle cx="318" cy="690" r="1.4"/><circle cx="176" cy="688" r="1.3"/>
-            </g>
-            <g transform="translate(228 756)">
-                <ellipse cx="0" cy="0" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M-4 -5 Q4 -9 12 -3 Q4 2 -4 -1 Z" fill="#fff6fa"/>
-                <ellipse cx="30" cy="7" rx="15" ry="6.5" fill="#ff9ecf"/><path d="M26 2 Q34 -2 42 4 Q34 9 26 6 Z" fill="#fff6fa"/>
-            </g>
+        <g class="sr-hot" data-hot="add-challenge" role="button" tabindex="0" aria-label="${srEsc(t('room_board_add'))}" transform="rotate(2 249 420)">
+            <rect x="202" y="390" width="94" height="60" rx="4" fill="rgba(255,255,255,0.12)" stroke="#fff7e6" stroke-width="1.4" stroke-dasharray="4 4"/>
+            <text x="249" y="424" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fff7e6" data-fit="84">${srEsc(t('room_board_add'))}</text>
         </g>`;
 }
 
 function srWallGame(keys) {
     const p = 'srw2';
     const gameOpen = keys >= roomUnlockAt('game');
-    const panels = '<rect x="4" y="482" width="70" height="98" rx="4"/><rect x="86" y="482" width="70" height="98" rx="4"/><rect x="168" y="482" width="70" height="98" rx="4"/><rect x="250" y="482" width="70" height="98" rx="4"/><rect x="332" y="482" width="70" height="98" rx="4"/>';
-    const bulbs = [[18, 106], [62, 116], [106, 119], [150, 113], [194, 105], [238, 104], [282, 108], [326, 106], [370, 101]];
-    const rug = '<ellipse cx="150" cy="742" rx="140" ry="44" fill="#6b3a50" opacity="0.88"/><ellipse cx="150" cy="742" rx="108" ry="32" fill="none" stroke="#ffc4a8" stroke-width="3" opacity="0.6"/><ellipse cx="150" cy="742" rx="94" ry="27" fill="none" stroke="#ffc4a8" stroke-width="1.4" opacity="0.42"/>';
-    // הפאזל בחלון: כל מפתח = חתיכה
+    // הפאזל = התמונה הממוסגרת שעל הקיר (99–178 × 328–443): כל מפתח = חתיכה, וחתיכה שעוד חסרה - חור עם קו מקווקו
     const filled = Math.min(ROOM_PUZZLE_PIECES, keys);
+    const pw = (178.4 - 99.3) / 4, ph = (442.9 - 328) / 3;
     let holes = '';
     for (let i = filled; i < ROOM_PUZZLE_PIECES; i++) {
         const col = i % 4, row = Math.floor(i / 4);
-        const x = 42 + col * 36, y = 154 + row * 37.3;
-        holes += `<rect x="${x}" y="${y.toFixed(1)}" width="36" height="37.3" fill="#24152f"/><rect x="${x}" y="${y.toFixed(1)}" width="36" height="37.3" fill="none" stroke="#ffd27a" stroke-width="1.3" stroke-dasharray="3 3"/>`;
+        const x = 99.3 + col * pw, y = 328 + row * ph;
+        holes += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" fill="#24152f"/><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" fill="none" stroke="#ffd27a" stroke-width="1" stroke-dasharray="3 3" opacity="0.8"/>`;
     }
-    return `${srShell(p, panels, bulbs, rug)}
+    return `${srArtWall('tree-fun.jpg')}
         <defs>
-            <linearGradient id="${p}Sunrise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ecf"/><stop offset="0.55" stop-color="#ffcf8a"/><stop offset="1" stop-color="#ffe9b0"/></linearGradient>
-            <linearGradient id="${p}Cab" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a1d5a"/><stop offset="0.5" stop-color="#3d2a7a"/><stop offset="1" stop-color="#2a1d5a"/></linearGradient>
-            <linearGradient id="${p}CabSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4fa3"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
             <radialGradient id="${p}Screen" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#7dd3fc" stop-opacity="0.32"/><stop offset="1" stop-color="#7dd3fc" stop-opacity="0"/></radialGradient>
+            <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
         </defs>
-        <circle cx="360" cy="230" r="170" fill="url(#${p}Lamp)"/>
-        <rect x="356" y="236" width="5" height="404" fill="#2e2018"/>
-        <ellipse cx="358" cy="640" rx="20" ry="5" fill="#2e2018"/>
-        <polygon points="336,236 382,236 372,200 346,200" fill="#ffb85c"/>
-        <rect x="34" y="146" width="160" height="128" rx="6" fill="#6b4630"/>
-        <rect x="42" y="154" width="144" height="112" fill="url(#${p}Sunrise)"/>
-        <circle cx="114" cy="226" r="22" fill="#fff4c9"/>
-        <path d="M42 246 Q 80 222 114 240 T 186 236 V266 H42 Z" fill="#c084fc"/>
-        <path d="M42 256 Q 96 240 140 254 T 186 252 V266 H42 Z" fill="#7c3aed"/>
-        <g stroke="#6b4630" stroke-opacity="0.35" stroke-width="1"><line x1="78" y1="154" x2="78" y2="266"/><line x1="114" y1="154" x2="114" y2="266"/><line x1="150" y1="154" x2="150" y2="266"/><line x1="42" y1="191" x2="186" y2="191"/><line x1="42" y1="228" x2="186" y2="228"/></g>
-        ${holes}
+        <g aria-hidden="true">${holes}</g>
         <g class="sr-hot${gameOpen ? '' : ' locked'}" data-hot="game" role="button" tabindex="0" aria-label="${srEsc(roomItemName('game'))}">
-            ${gameOpen ? `<circle cx="286" cy="262" r="96" fill="url(#${p}Screen)"/>` : ''}
-            <polygon points="222,206 350,206 354,640 218,640" fill="url(#${p}Cab)"/>
-            <polygon points="222,206 232,206 228,640 218,640" fill="url(#${p}CabSide)" opacity="0.85"/>
-            <polygon points="340,206 350,206 354,640 344,640" fill="url(#${p}CabSide)" opacity="0.85"/>
-            <rect x="222" y="166" width="128" height="40" rx="6" fill="#1a1238"/>
-            <text class="${gameOpen ? 'sr-neon' : ''}" x="286" y="192" text-anchor="middle" font-size="15" font-weight="800" fill="${gameOpen ? '#ff7ab8' : '#5a4a7a'}" data-fit="118">${srEsc(t('room_game_marquee'))}</text>
-            <rect x="240" y="220" width="92" height="82" rx="6" fill="#0b0b1e"/>
-            ${gameOpen ? `<g fill="#7dd3fc"><rect x="250" y="284" width="30" height="5"/><rect x="290" y="270" width="30" height="5"/><rect x="262" y="252" width="22" height="5"/></g>
-            <g fill="#ffd27a"><circle cx="300" cy="236" r="2"/><circle cx="274" cy="240" r="1.6"/><circle cx="318" cy="252" r="1.6"/></g>
-            <circle cx="266" cy="276" r="7" fill="#ff7ab8"/><circle cx="263.5" cy="275" r="1.6" fill="#fff"/><circle cx="268.5" cy="275" r="1.6" fill="#fff"/>
-            <text x="320" y="232" text-anchor="middle" font-size="9" fill="#fff">${srFmt(roomState.game_best || 0)}</text>
-            <circle class="sr-pulse" cx="286" cy="262" r="10" fill="none" stroke="#7dd3fc" stroke-width="2"/>` : ''}
-            <polygon points="228,314 344,314 352,346 220,346" fill="#2a1d5a"/>
-            <circle cx="256" cy="326" r="8" fill="#151034"/><rect x="254" y="306" width="4" height="20" rx="2" fill="#d4d4e0"/><circle cx="256" cy="304" r="6" fill="#ff4fa3"/>
-            <circle cx="300" cy="330" r="7" fill="#ff4fa3"/><circle cx="322" cy="326" r="7" fill="#22d3ee"/>
-            <rect x="268" y="400" width="36" height="46" rx="4" fill="#1a1238"/><rect x="282" y="414" width="8" height="18" rx="2" fill="#ffd27a"/>
-            ${gameOpen ? '' : srLockBadge(286, 262, 'game')}
+            ${gameOpen ? `<circle cx="291" cy="455" r="74" fill="url(#${p}Screen)"/>
+            <text class="sr-neon" x="281" y="378" text-anchor="middle" font-size="12" font-weight="800" fill="#ff7ab8" data-fit="80">${srEsc(t('room_game_marquee'))}</text>
+            <rect x="256" y="423" width="72" height="64" rx="5" fill="#0b0b1e" opacity="0.88"/>
+            <g fill="#7dd3fc"><rect x="263" y="474" width="22" height="4"/><rect x="293" y="463" width="22" height="4"/><rect x="273" y="449" width="16" height="4"/></g>
+            <g fill="#ffd27a"><circle cx="302" cy="436" r="1.8"/><circle cx="281" cy="440" r="1.4"/><circle cx="316" cy="449" r="1.4"/></g>
+            <circle cx="272" cy="467" r="5.5" fill="#ff7ab8"/><circle cx="270" cy="466" r="1.3" fill="#fff"/><circle cx="274" cy="466" r="1.3" fill="#fff"/>
+            <text x="318" y="434" text-anchor="middle" font-size="7.5" fill="#fff">${srFmt(roomState.game_best || 0)}</text>
+            <circle class="sr-pulse" cx="292" cy="455" r="8" fill="none" stroke="#7dd3fc" stroke-width="1.6"/>` : `${typeof srpVeil === 'function' ? srpVeil(212, 346, 156, 306) : ''}${srLockBadge(289, 456, 'game')}`}
+            <rect x="210" y="344" width="160" height="312" fill="transparent"/>
         </g>
-        <rect x="36" y="440" width="146" height="128" rx="30" fill="#5b3680"/>
-        <rect x="48" y="452" width="122" height="104" rx="22" fill="#8d55b5"/>
-        <rect x="22" y="512" width="40" height="92" rx="18" fill="#5b3680"/>
-        <rect x="156" y="512" width="40" height="92" rx="18" fill="#5b3680"/>
-        <rect x="48" y="556" width="122" height="44" rx="12" fill="#7a46a3"/>
-        <rect x="34" y="604" width="8" height="40" fill="#2e1d3e"/><rect x="176" y="604" width="8" height="40" fill="#2e1d3e"/>
-        <rect x="188" y="600" width="28" height="44" rx="4" fill="#4f3122"/>
-        <rect x="182" y="590" width="40" height="12" rx="3" fill="#8a5a3c"/>
         ${roomTurntableSvg(keys >= roomUnlockAt('vinyl'))}
-        ${srFriend(p, 110, 394, 26, { x: 91, y: 342, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M96 352 l4 14 l8 -14z', shadowY: 570 })}`;
+        ${srFriend(p, 142, 546, 23, { x: 146, y: 494, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M140 505 l4 14 l8 -14z', shadowY: 598 })}`;
 }
 
-// 🎵 הפטיפון - על השולחן הקטן שליד הכורסה, פתוח עם החדר (לפי בקשה מפורשת: "שהפטיפון כבר יהיה בחדר").
+// 🎵 הפטיפון - הפטיפון המצויר שעל הגדם שליד הכורסה, פתוח עם החדר (לפי בקשה מפורשת: "שהפטיפון כבר יהיה בחדר").
 // נגיעה פותחת את התקליטים (srpOpenRecords ב-secret-places.js); כשמתנגן כאן לחן - התקליט מסתובב ותו קטן עולה
 function roomTurntableSvg(open) {
-    if (!open) return '<rect x="188" y="574" width="28" height="16" rx="2" fill="#f3e6cf"/><rect x="192" y="578" width="6" height="6" fill="#ff4fa3"/><rect x="201" y="578" width="6" height="6" fill="#22d3ee"/><rect x="210" y="578" width="4" height="6" fill="#ffd27a"/>';
+    if (!open) return '';
     const on = typeof srpNowPlaying !== 'undefined' && typeof SRP_RECORDS !== 'undefined' && SRP_RECORDS[srpNowPlaying] ? srpNowPlaying : -1;
-    return `<g class="sr-hot srp-vinyl sr-turntable${on >= 0 ? ' is-playing' : ''}" data-hot="vinyl" role="button" tabindex="0" aria-label="${srEsc(roomItemName('vinyl'))}" aria-pressed="${on >= 0}"${on >= 0 ? ` data-song="${on}" style="--rec:${SRP_RECORDS[on].color}"` : ''}>
-            <rect x="180" y="574" width="44" height="16" rx="3" fill="#3a2416"/>
-            <rect x="180" y="586" width="44" height="4" rx="1.5" fill="#24150d"/>
-            <g transform="translate(198 576) scale(1 0.38)"><g class="srp-record"><circle r="15" fill="#141014"/><circle r="11" fill="none" stroke="#2c262c" stroke-width="1.2"/><circle r="5.5" style="fill:var(--rec, #ff6aa5)"/><circle r="1.4" fill="#d9b98a"/></g></g>
-            <g class="srp-arm"><circle cx="219" cy="577" r="2" fill="#c9c9d0"/><path d="M219 577 L208 573" stroke="#c9c9d0" stroke-width="1.6" stroke-linecap="round"/></g>
-            <g class="sr-turntable-note" aria-hidden="true"><path d="M206 562 v-9 l6 -1.5 v9" fill="none" stroke="#ffd27a" stroke-width="1.4"/><circle cx="204.5" cy="562.4" r="2" fill="#ffd27a"/><circle cx="210.5" cy="560.9" r="2" fill="#ffd27a"/></g>
-            <rect class="sr-turntable-hit" x="170" y="544" width="64" height="50" fill="transparent"/>
+    return `<g class="sr-hot srp-vinyl sr-turntable${on >= 0 ? ' is-playing' : ''}" data-hot="vinyl" role="button" tabindex="0" aria-label="${srEsc(roomItemName('vinyl'))}" aria-pressed="${on >= 0}"${on >= 0 ? ` data-song="${on}"` : ''}>
+            <g transform="translate(18 562) scale(1 0.36)"><g class="srp-record"><circle r="17" fill="#141014" opacity="0.55"/><circle r="12" fill="none" stroke="#c9c9d0" stroke-opacity="0.35" stroke-width="1.2"/><circle r="5.5" style="fill:var(--rec-color, #ff6aa5)" opacity="0.9"/><path d="M0 -15 A15 15 0 0 1 13 -7.5" stroke="#fff" stroke-opacity="0.5" stroke-width="1.6" fill="none"/></g></g>
+            <g class="sr-turntable-note" aria-hidden="true"><path d="M30 538 v-9 l6 -1.5 v9" fill="none" stroke="#ffd27a" stroke-width="1.4"/><circle cx="28.5" cy="538.4" r="2" fill="#ffd27a"/><circle cx="34.5" cy="536.9" r="2" fill="#ffd27a"/></g>
+            <rect class="sr-turntable-hit" x="0" y="506" width="74" height="96" fill="transparent"/>
         </g>`;
 }
 
 function srWallShelf(keys) {
     const p = 'srw3';
     const shelfOpen = keys >= roomUnlockAt('shelf');
-    const panels = '<rect x="176" y="482" width="70" height="98" rx="4"/>';
-    const bulbs = [[22, 104], [66, 114], [110, 117], [154, 112], [198, 104], [242, 104], [286, 109], [330, 106], [374, 102]];
-    const rug = '<ellipse cx="236" cy="744" rx="150" ry="46" fill="#5f3470" opacity="0.9"/><ellipse cx="236" cy="744" rx="118" ry="34" fill="none" stroke="#e29ad0" stroke-width="3" opacity="0.75"/><ellipse cx="236" cy="744" rx="104" ry="29" fill="none" stroke="#e29ad0" stroke-width="1.4" opacity="0.52"/>';
-    return `${srShell(p, panels, bulbs, rug)}
+    return `${srArtWall('tree-shelf.jpg')}
         <defs>
-            <linearGradient id="${p}Door" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f3324"/><stop offset="0.5" stop-color="#6d4430"/><stop offset="1" stop-color="#4f3324"/></linearGradient>
-            <linearGradient id="${p}Shelf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4b33"/><stop offset="1" stop-color="#5f3a28"/></linearGradient>
-            <linearGradient id="${p}Gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#d69a2b"/></linearGradient>
-            <linearGradient id="${p}PhotoA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
-            <linearGradient id="${p}PhotoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fda4af"/><stop offset="1" stop-color="#fcd34d"/></linearGradient>
-            <radialGradient id="${p}Port" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a6"/><stop offset="1" stop-color="#c98a3c"/></radialGradient>
             <radialGradient id="${p}Jar" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-            <linearGradient id="${p}Sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121a42"/><stop offset="1" stop-color="#3e2c6a"/></linearGradient>
+            <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
         </defs>
-        <!-- חלון גבוה עם שמי הלילה (עד 2026-10-09 כאן הייתה הדלת לגג; עכשיו עולים לגג רק בסולם שבמסדרון -
-             לפי בקשה מפורשת: "העלייה לגג כבר לא מפה") -->
-        <g aria-hidden="true">
-            <path d="M34 640 V250 A72 72 0 0 1 178 250 V640 Z" fill="#3a2418"/>
-            <path d="M44 630 V252 A62 62 0 0 1 168 252 V630 Z" fill="url(#${p}Sky)"/>
-            <circle cx="132" cy="262" r="16" fill="#fff4c9"/><circle cx="139" cy="257" r="14" fill="#1d1848"/>
-            <g class="sr-twinkle" fill="#fff"><circle cx="72" cy="240" r="1.6"/><circle cx="96" cy="300" r="1.2"/><circle cx="150" cy="340" r="1.4"/><circle cx="70" cy="380" r="1.1"/><circle cx="128" cy="430" r="1.5"/><circle cx="88" cy="480" r="1.2"/><circle cx="150" cy="520" r="1"/></g>
-            <path d="M44 560 Q76 540 106 552 T168 548 V630 H44 Z" fill="#251c4a"/>
-            <rect x="103" y="190" width="6" height="440" fill="#3a2418"/><rect x="44" y="420" width="124" height="6" fill="#3a2418"/>
-            <rect x="28" y="630" width="156" height="12" rx="3" fill="#8a5a3c"/>
-        </g>
-        <rect x="188" y="168" width="8" height="10" fill="#c9a36b"/>
-        <path d="M192 176 C 178 210, 206 240, 186 280 L 200 286 C 214 246, 190 214, 196 178 Z" fill="#ff8fc4"/>
         <g class="sr-hot${shelfOpen ? '' : ' locked'}" data-hot="shelf" role="button" tabindex="0" aria-label="${srEsc(roomItemName('shelf'))}">
-            <rect x="208" y="150" width="166" height="452" rx="6" fill="url(#${p}Shelf)"/>
-            <rect x="218" y="160" width="146" height="432" fill="#3b2418"/>
-            <g fill="#8a5a3c"><rect x="214" y="246" width="154" height="9"/><rect x="214" y="338" width="154" height="9"/><rect x="214" y="430" width="154" height="9"/><rect x="214" y="522" width="154" height="9"/></g>
-            ${shelfOpen ? `<g>
-                <rect x="226" y="186" width="13" height="60" rx="2" fill="#ff7ab8"/><rect x="241" y="196" width="11" height="50" rx="2" fill="#93c5fd"/><rect x="254" y="180" width="15" height="66" rx="2" fill="#fcd34d"/><rect x="271" y="192" width="10" height="54" rx="2" fill="#86efac"/>
-                <rect x="284" y="200" width="12" height="46" rx="2" fill="#c084fc" transform="rotate(-12 290 246)"/>
-                ${srShelfJarSvg(p)}
-                <rect x="228" y="270" width="52" height="66" rx="3" fill="#f3e6cf"/><rect x="233" y="275" width="42" height="44" fill="url(#${p}PhotoA)"/><path d="M233 319 L248 300 L258 310 L266 302 L275 319 Z" fill="#4c1d95" opacity="0.5"/>
-                <rect x="290" y="282" width="44" height="54" rx="3" fill="#f3e6cf"/><rect x="294" y="286" width="36" height="36" fill="url(#${p}PhotoB)"/><circle cx="318" cy="298" r="5" fill="#fff4c9"/>
-                <rect x="340" y="296" width="18" height="40" rx="3" fill="#a855f7"/>
-                <rect x="226" y="368" width="22" height="62" rx="3" fill="#ff4fa3"/><rect x="250" y="368" width="22" height="62" rx="3" fill="#60a5fa"/><rect x="274" y="368" width="22" height="62" rx="3" fill="#fbbf24"/>
-                <g fill="#fff" opacity="0.85"><rect x="231" y="380" width="12" height="3" rx="1.5"/><rect x="255" y="380" width="12" height="3" rx="1.5"/><rect x="279" y="380" width="12" height="3" rx="1.5"/></g>
-                <path d="M318 386 h26 v12 a13 13 0 0 1 -26 0z" fill="url(#${p}Gold)"/><rect x="328" y="410" width="6" height="8" fill="#d69a2b"/><rect x="321" y="417" width="20" height="13" rx="2" fill="#b07b1e"/>
-                <rect x="230" y="474" width="40" height="48" rx="5" fill="#c46b4a"/>
-                <ellipse cx="244" cy="466" rx="8" ry="16" fill="#4fa36c" transform="rotate(-20 244 466)"/><ellipse cx="258" cy="462" rx="8" ry="18" fill="#5bb87a" transform="rotate(14 258 462)"/>
-                <rect x="284" y="486" width="70" height="36" rx="4" fill="#5b3680"/><rect x="290" y="492" width="58" height="24" rx="3" fill="none" stroke="#c9a2ff" stroke-width="1.5"/>
-                <text x="319" y="508" text-anchor="middle" font-size="9" fill="#e9d5ff" data-fit="54">${srEsc(t('room_shelf_memories'))}</text>
-            </g>` : `<g fill="#2a190f"><rect x="226" y="196" width="60" height="50" rx="3"/><rect x="300" y="210" width="50" height="36" rx="3"/><rect x="230" y="290" width="104" height="46" rx="3"/><rect x="226" y="380" width="70" height="50" rx="3"/><rect x="232" y="470" width="110" height="52" rx="3"/></g>
-            ${srLockBadge(291, 376, 'shelf')}`}
-            <rect x="226" y="548" width="138" height="44" rx="4" fill="#4a2c1e"/><rect x="290" y="566" width="12" height="5" rx="2.5" fill="#c99b5b"/>
+            ${shelfOpen ? `<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
+            <rect x="236" y="328" width="154" height="288" fill="transparent"/>
         </g>
-        <ellipse cx="320" cy="660" rx="44" ry="18" fill="#ff8fc4" opacity="0.9"/><ellipse cx="320" cy="652" rx="40" ry="12" fill="#ffb3d6"/>
         ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}
-        ${srFriend(p, 196, 560, 23, { x: 201, y: 509, text: t('room_friend_line_5'), tail: 'M190 518 l4 12 l8 -12z' })}`;
+        ${srFriend(p, 64, 538, 22, { x: 112, y: 486, text: t('room_friend_line_5'), tail: 'M84 497 l-6 12 l14 -10z', shadowY: 640 })}`;
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
@@ -1767,68 +1601,36 @@ function srsWrap(s, n, max) {
     if (lines.length > max) { lines[max - 1] = srClip(lines.slice(max - 1).join(' '), n); lines.length = max; }
     return lines;
 }
-// נקודות על שרשרת האורות (עקומה M40 176 C90 60, 300 60, 350 176), נורה אחת לכל עשירית
-const SRS_BULBS = [[59.5, 144.7], [86.6, 120.3], [119.6, 102.9], [156.3, 92.5], [195, 89], [233.7, 92.5], [270.4, 102.9], [303.4, 120.3], [330.5, 144.7]];
+// 🎨 2026-10-14: המדף מקרוב הוא ציור (world/shelf-closeup.jpg) - הספרים על המדף העליון, המחברות והתמונות למטה, וקיסוס.
+// מעליו: הצנצנת (עם הפתקים והגחליליות שלה) ליד הספרים, כרטיסי הציטוטים על המדף השלישי, ושלט נחושת לכל דבר. 390×780
 function srShelfSceneSvg() {
     const p = 'srs';
     const wishes = typeof roomWishes !== 'undefined' && Array.isArray(roomWishes) ? roomWishes : [];
     const quotes = typeof roomQuotes !== 'undefined' && Array.isArray(roomQuotes) ? roomQuotes : [];
-    const plank = y => `<rect x="34" y="${y + 13}" width="322" height="12" fill="url(#${p}Drop)"/><rect x="30" y="${y}" width="330" height="13" rx="3" fill="url(#${p}Plank)"/><rect x="30" y="${y}" width="330" height="3" rx="1.5" fill="#e8bf95" opacity="0.5"/>`;
     const label = (cx, y, w, text) => `<g class="srs-label" aria-hidden="true"><rect x="${cx - w / 2}" y="${y}" width="${w}" height="20" rx="5" fill="url(#${p}Brass)"/><rect x="${cx - w / 2 + 2}" y="${y + 2}" width="${w - 4}" height="16" rx="4" fill="none" stroke="#fff3cf" stroke-opacity="0.5"/><text x="${cx}" y="${y + 14.5}" text-anchor="middle" font-size="11" font-weight="700" fill="#4a2d12" data-fit="${w - 14}">${srEsc(text)}</text></g>`;
     const hot = (id, name, box, inner) => `<g class="sr-hot srs-hot" data-go="${id}" role="button" tabindex="0" aria-label="${srEsc(name)}"><rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" fill="transparent"/>${inner}</g>`;
-    // הספרים: שורת כריכות, ואחד נשען
-    const spine = (x, w, h, c) => `<rect x="${x}" y="${232 - h}" width="${w}" height="${h}" rx="3" fill="${c}"/><rect x="${x}" y="${232 - h}" width="${w}" height="${h}" rx="3" fill="url(#${p}Spine)"/><rect x="${x + 3}" y="${246 - h}" width="${w - 6}" height="3" rx="1.5" fill="#fff" opacity="0.55"/><rect x="${x + 3}" y="206" width="${w - 6}" height="2.5" rx="1.2" fill="#fff" opacity="0.35"/>`;
-    const books = [[48, 22, 112, '#b7a3e8'], [71, 18, 98, '#f2a7c3'], [90, 25, 124, '#e8c27a'], [116, 20, 104, '#8fb8c9'], [137, 23, 118, '#8e5a9b'], [161, 19, 100, '#e58fa8']].map(b => spine(...b)).join('')
-        + `<g transform="rotate(-14 204 232)">${spine(183, 20, 104, '#efe2c8')}</g>`;
-    // הציטוטים: כרטיסים ממוסגרים עם תחילת הציטוטים האחרונים (או רק סימן ציטוט כשאין עדיין)
+    // הציטוטים: כרטיסים ממוסגרים שעומדים על המדף השלישי (QY), עם תחילת הציטוטים האחרונים (או רק סימן ציטוט כשאין עדיין)
+    const QY = 433;
     const frame = (x, w, h, tilt, q) => {
         const lines = q ? srsWrap(q.quote, Math.max(9, Math.round(w / 7.2)), 3) : [];
-        return `<g transform="rotate(${tilt} ${x + w / 2} 400)"><rect x="${x + 3}" y="${400 - h + 4}" width="${w}" height="${h}" rx="3" fill="#000" opacity="0.22"/><rect x="${x}" y="${400 - h}" width="${w}" height="${h}" rx="3" fill="url(#${p}Frame)"/><rect x="${x + 6}" y="${400 - h + 6}" width="${w - 12}" height="${h - 12}" rx="1.5" fill="#fbf4e6"/>
-            <text x="${x + 13}" y="${400 - h + 30}" font-family="Georgia, 'Times New Roman', serif" font-size="${q ? 22 : 34}" fill="#d9a648">“</text>
-            ${lines.map((l, i) => `<text x="${x + w / 2}" y="${400 - h + 44 + i * 13}" text-anchor="middle" font-size="9.5" fill="#4a3826">${srEsc(l)}</text>`).join('')}
-            ${q ? `<rect x="${x + w / 2 - 12}" y="${400 - 22}" width="24" height="1.6" rx="0.8" fill="#d9a648" opacity="0.7"/>` : ''}</g>`;
+        return `<g transform="rotate(${tilt} ${x + w / 2} ${QY})"><rect x="${x + 3}" y="${QY - h + 4}" width="${w}" height="${h}" rx="3" fill="#000" opacity="0.22"/><rect x="${x}" y="${QY - h}" width="${w}" height="${h}" rx="3" fill="url(#${p}Frame)"/><rect x="${x + 6}" y="${QY - h + 6}" width="${w - 12}" height="${h - 12}" rx="1.5" fill="#fbf4e6"/>
+            <text x="${x + 13}" y="${QY - h + 30}" font-family="Georgia, 'Times New Roman', serif" font-size="${q ? 22 : 34}" fill="#d9a648">“</text>
+            ${lines.map((l, i) => `<text x="${x + w / 2}" y="${QY - h + 44 + i * 13}" text-anchor="middle" font-size="9.5" fill="#4a3826">${srEsc(l)}</text>`).join('')}
+            ${q ? `<rect x="${x + w / 2 - 12}" y="${QY - 22}" width="24" height="1.6" rx="0.8" fill="#d9a648" opacity="0.7"/>` : ''}</g>`;
     };
     const recent = quotes.slice(-3).reverse();
-    const frames = frame(60, 82, 96, -3, recent[0]) + frame(150, 92, 106, 2, recent[1]) + frame(250, 80, 92, -1.5, recent[2]);
-    const plant = `<g aria-hidden="true"><rect x="334" y="378" width="22" height="22" rx="4" fill="#c98a6b"/><rect x="332" y="375" width="26" height="6" rx="2" fill="#dda083"/><path d="M345 377 C340 360 332 356 326 352 M345 377 C350 362 358 356 364 350 M345 378 C344 392 336 404 330 418 M347 378 C352 394 356 410 352 426" stroke="#7fae8c" stroke-width="2.4" fill="none" stroke-linecap="round"/><g fill="#8fc49b"><ellipse cx="326" cy="351" rx="6" ry="3.4" transform="rotate(-30 326 351)"/><ellipse cx="364" cy="349" rx="6" ry="3.4" transform="rotate(25 364 349)"/><ellipse cx="331" cy="414" rx="5" ry="3" transform="rotate(50 331 414)"/><ellipse cx="353" cy="422" rx="5" ry="3" transform="rotate(-50 353 422)"/><ellipse cx="338" cy="398" rx="4.6" ry="2.8" transform="rotate(30 338 398)"/></g></g>`;
-    // המחברות: ערימה שוכבת עם גומייה; הזיכרונות: שתי תמונות ממוסגרות
-    const notebook = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${c}"/><rect x="${x}" y="${y}" width="${w}" height="3" rx="1.5" fill="#fff" opacity="0.28"/><rect x="${x + w - 18}" y="${y}" width="4" height="${h}" fill="#3a2440" opacity="0.35"/><rect x="${x + 4}" y="${y + h - 3}" width="${w - 8}" height="2" fill="#f6efe4" opacity="0.8"/>`;
-    const notebooks = notebook(56, 512, 102, 14, '#8e5a9b') + notebook(62, 526, 96, 12, '#8fb8c9') + notebook(52, 538, 106, 14, '#f2a7c3')
-        + `<g transform="rotate(-8 112 510)"><rect x="72" y="506" width="78" height="5" rx="2.5" fill="#e8c27a"/><path d="M150 506 l9 2.5 l-9 2.5z" fill="#4a3826"/></g>`;
-    const photos = `<g transform="rotate(-2 238 552)"><rect x="202" y="472" width="74" height="80" rx="3" fill="url(#${p}Frame)"/><rect x="208" y="478" width="62" height="68" fill="url(#${p}PicA)"/><circle cx="246" cy="502" r="8" fill="#fff1c7" opacity="0.9"/><path d="M208 532 C222 516 236 520 246 528 C256 518 264 520 270 524 V546 H208Z" fill="#6c4a9a"/><path d="M208 540 C226 530 250 536 270 532 V546 H208Z" fill="#4c3374"/></g>
-        <g transform="rotate(2.5 312 552)"><rect x="288" y="490" width="52" height="62" rx="3" fill="url(#${p}Frame)"/><rect x="293" y="495" width="42" height="52" fill="url(#${p}PicB)"/><circle cx="321" cy="509" r="6.5" fill="#fff4c9"/><circle cx="324" cy="507" r="5.6" fill="#3b2f66"/><g fill="#fff" opacity="0.85"><circle cx="301" cy="503" r="0.9"/><circle cx="308" cy="520" r="0.8"/><circle cx="327" cy="530" r="0.9"/><circle cx="300" cy="536" r="0.7"/></g></g>`;
-    const sparkle = (x, y, s) => `<path d="M${x} ${y - s} L${x + s * 0.3} ${y - s * 0.3} L${x + s} ${y} L${x + s * 0.3} ${y + s * 0.3} L${x} ${y + s} L${x - s * 0.3} ${y + s * 0.3} L${x - s} ${y} L${x - s * 0.3} ${y - s * 0.3}Z"/>`;
-    const bulbs = SRS_BULBS.map(([x, y], i) => { const c = ['#ffd27a', '#ff9fc8', '#c9b6ff'][i % 3]; return `<circle cx="${x}" cy="${y + 7}" r="8" fill="${c}" opacity="0.28"/><circle cx="${x}" cy="${y + 7}" r="3.3" fill="${c}"/><rect x="${x - 1.6}" y="${y + 1}" width="3.2" height="3" rx="1" fill="#5a4636"/>`; }).join('');
-    return `<svg class="srs-svg" viewBox="0 0 390 780" role="group" aria-label="${srEsc(roomItemName('shelf'))}">
+    const frames = frame(46, 80, 90, -3, recent[0]) + frame(134, 88, 98, 2, recent[1]) + frame(228, 74, 86, -1.5, recent[2]);
+    return `<svg class="srs-svg" viewBox="0 0 390 780" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('shelf'))}">
         <defs>
-            <linearGradient id="${p}Back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b5468"/><stop offset="0.45" stop-color="#53364f"/><stop offset="1" stop-color="#2c1c2e"/></linearGradient>
-            <radialGradient id="${p}Glow" cx="0.5" cy="0.18" r="0.62"><stop offset="0" stop-color="#ffd3a8" stop-opacity="0.42"/><stop offset="0.55" stop-color="#ff9fc8" stop-opacity="0.08"/><stop offset="1" stop-color="#ff9fc8" stop-opacity="0"/></radialGradient>
-            <linearGradient id="${p}Plank" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48463"/><stop offset="1" stop-color="#7a5038"/></linearGradient>
-            <linearGradient id="${p}Drop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140a12" stop-opacity="0.45"/><stop offset="1" stop-color="#140a12" stop-opacity="0"/></linearGradient>
             <linearGradient id="${p}Brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7dfa0"/><stop offset="1" stop-color="#c9973f"/></linearGradient>
-            <linearGradient id="${p}Spine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.24"/><stop offset="0.35" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.2"/></linearGradient>
             <linearGradient id="${p}Frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a7795a"/><stop offset="1" stop-color="#6b4632"/></linearGradient>
-            <linearGradient id="${p}Cab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5444"/><stop offset="1" stop-color="#4a3028"/></linearGradient>
-            <linearGradient id="${p}PicA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf9e"/><stop offset="0.5" stop-color="#e58fb4"/><stop offset="1" stop-color="#8e6bc4"/></linearGradient>
-            <linearGradient id="${p}PicB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2350"/><stop offset="1" stop-color="#4b3a7a"/></linearGradient>
         </defs>
-        <rect width="390" height="780" fill="#1b1226"/>
-        <path d="M18 780 V156 A177 146 0 0 1 372 156 V780 Z" fill="#2a1622"/>
-        <path d="M30 780 V160 A165 136 0 0 1 360 160 V780 Z" fill="url(#${p}Back)"/>
-        <path d="M30 780 V160 A165 136 0 0 1 360 160 V780 Z" fill="url(#${p}Glow)"/>
-        <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="2" fill="none" aria-hidden="true"><path d="M88 690 C84 520 96 360 86 140"/><path d="M152 690 C158 500 146 330 156 96"/><path d="M236 690 C230 520 244 340 234 96"/><path d="M304 690 C310 500 298 330 306 140"/></g>
-        <path d="M24 780 V158 A171 141 0 0 1 366 158 V780" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/>
-        <path d="M40 176 C90 60, 300 60, 350 176" fill="none" stroke="#5a4636" stroke-width="1.4"/>
-        <g class="sr-twinkle" aria-hidden="true">${bulbs}</g>
-        <g class="sr-twinkle" fill="#ffd27a" opacity="0.8" aria-hidden="true">${sparkle(72, 292, 4)}${sparkle(334, 276, 3.4)}${sparkle(212, 452, 3)}${sparkle(58, 462, 3.2)}${sparkle(348, 446, 2.6)}</g>
-        ${plank(232)}${plank(400)}${plank(552)}
-        <g aria-hidden="true"><rect x="36" y="604" width="318" height="176" rx="6" fill="url(#${p}Cab)"/><rect x="46" y="616" width="144" height="146" rx="4" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/><rect x="200" y="616" width="144" height="146" rx="4" fill="none" stroke="#c99b7a" stroke-opacity="0.35" stroke-width="1.5"/><circle cx="184" cy="690" r="4" fill="url(#${p}Brass)"/><circle cx="206" cy="690" r="4" fill="url(#${p}Brass)"/></g>
-        ${hot('books', t('room_shelf_books'), [40, 96, 176, 170], books + label(125, 250, 110, t('room_shelf_books')))}
-        ${hot('jar', roomItemName('jar'), [238, 92, 116, 174], srJarShelfSvg(wishes, 292, 232, 128) + label(292, 250, 104, roomItemName('jar')))}
-        ${hot('quotes', t('room_shelf_quotes'), [48, 286, 286, 160], frames + label(195, 418, 96, t('room_shelf_quotes')))}
-        ${plant}
-        ${hot('notebooks', t('room_shelf_notebooks'), [44, 496, 128, 104], notebooks + label(106, 570, 96, t('room_shelf_notebooks')))}
-        ${hot('photos', t('room_shelf_memories'), [192, 462, 158, 138], photos + label(270, 570, 96, t('room_shelf_memories')))}
+        <image class="sr-art" href="world/shelf-closeup.jpg" x="-22.7" y="0" width="435.4" height="780" preserveAspectRatio="none" aria-hidden="true"/>
+        ${hot('books', t('room_shelf_books'), [22, 106, 196, 150], label(118, 258, 110, t('room_shelf_books')))}
+        ${hot('jar', roomItemName('jar'), [240, 100, 126, 156], srJarShelfSvg(wishes, 303, 230, 112) + label(303, 258, 104, roomItemName('jar')))}
+        ${hot('quotes', t('room_shelf_quotes'), [40, 330, 270, 134], frames + label(178, 440, 96, t('room_shelf_quotes')))}
+        ${hot('notebooks', t('room_shelf_notebooks'), [46, 556, 146, 86], label(118, 645, 96, t('room_shelf_notebooks')))}
+        ${hot('photos', t('room_shelf_memories'), [208, 518, 152, 124], label(284, 645, 96, t('room_shelf_memories')))}
     </svg>`;
 }
 
@@ -1836,136 +1638,36 @@ function srShelfSceneSvg() {
 // לפי בקשה מפורשת: כוכבים שהם לא מפתחות - פשוט יפים; נגיעה בכוכב = הוא נופל ככוכב נופל וחוזר למקום;
 // עיר יפה מבצבצת מעל הרעפים, ובאופק הרחוק יער וים. וגם (מהבקשה על הגג): רעפים, מקום לשבת וחתול
 const ROOF_STARS = 24;
+// 🎨 2026-10-14 (לפי בקשה מפורשת: "יש את הציורים אתה יכול לשים אותם"): צמרת העץ - world/treetop.jpg (ירח, אגם, הרים
+// ויער מלמטה, מרפסת עגולה עם תיבה, כרית וטלסקופ). הטלסקופ והתיבה מצוירים: עד שהם נפתחים - צעיף ומנעול. החתול הגזור
+// (world/cat-*.png, "שמתי עוד תמונות של חתול כדי שתוכל לשים אותו בגג") יושב על הכרית. קואורדינטות: 390×780, הקבוצה
+// הפנימית מוזזת 220 למטה (כמו קודם)
 function roomRoofScene() {
-    // עיר: בניינים בגבהים שונים עם חלונות דולקים (מיקומים קבועים, כדי שהעיר תהיה אותה עיר בכל פעם)
-    let seed = 11;
-    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    const blds = [[34, 48], [58, 70], [80, 40], [100, 96], [126, 58], [146, 120], [170, 74], [196, 104], [222, 62], [244, 88], [268, 52], [290, 78], [314, 44], [336, 66]];
-    let city = '';
-    blds.forEach(([x, h], i) => {
-        const w = i % 3 === 1 ? 22 : 20;
-        const top = 418 - h;
-        city += `<rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${i % 2 ? '#1c1538' : '#221a42'}"/>`;
-        for (let wy = top + 7; wy < 404; wy += 11) {
-            for (let wx = x + 4; wx < x + w - 4; wx += 6) {
-                if (rnd() < 0.42) city += `<rect x="${wx}" y="${wy}" width="2.6" height="4" fill="${rnd() < 0.8 ? '#ffd98a' : '#ff9ecf'}" opacity="${(0.55 + rnd() * 0.45).toFixed(2)}"/>`;
-            }
-        }
-    });
-    // מגדל עם אור אדום, וכיפה קטנה
-    city += '<rect x="150" y="262" width="4" height="36" fill="#221a42"/><circle class="sr-roof-beacon" cx="152" cy="260" r="2.6" fill="#ff5a6a"/>';
-    city += '<path d="M200 314 a13 13 0 0 1 26 0 z" fill="#2a2150"/><rect x="211.5" y="296" width="3" height="6" fill="#2a2150"/>';
-    // יער באופק: גבעה ועצי אורן קטנים
-    let pines = '';
-    for (let i = 0; i < 16; i++) {
-        const x = 214 + i * 11 + (i % 2 ? 3 : 0), base = 334 - Math.sin(i / 3) * 6, h = 14 + (i % 3) * 5;
-        pines += `<path d="M${x} ${base} l5 -${h} l5 ${h} z" fill="#0f2c26"/>`;
-    }
-    // הרעפים (לפי בקשה מפורשת: "יותר מלמעלה למטה"): יושבים על הגג ומסתכלים החוצה, והגג יורד מאיתנו אל
-    // השוליים. לכן הרעפים בפרספקטיבה - גדולים למטה (קרוב), קטנים לכיוון השוליים - והקצה המעוגל של כל רעף פונה
-    // אל השוליים (במורד הגג). מציירים מהשורה הרחוקה לקרובה, כך שכל שורה קרובה מכסה את קצה השורה שמעליה
-    const RV = { x: 195, y: 330 }, R_BOTTOM = 560;
-    const rowYs = [0, 1, 2, 3, 4, 5].map(k => RV.y + (R_BOTTOM - RV.y) * Math.pow(0.8, k));
-    const shades = ['#6f2b20', '#7a3124', '#843829'];
-    let tiles = '';
-    for (let r = rowYs.length - 2; r >= 0; r--) {
-        const yb = rowYs[r], yt = rowYs[r + 1];
-        const fb = (yb - RV.y) / (R_BOTTOM - RV.y), ft = (yt - RV.y) / (R_BOTTOM - RV.y);
-        const bulge = (yb - yt) * 0.42, off = r % 2 ? 0.5 : 0;
-        for (let j = -13; j <= 13; j++) {
-            const a = (j + off - 0.5) * 58, b = (j + off + 0.5) * 58;
-            const lbx = RV.x + a * fb, rbx = RV.x + b * fb, ltx = RV.x + a * ft, rtx = RV.x + b * ft;
-            if (rbx < -20 || lbx > 410) continue;
-            const cx = ((ltx + rtx) / 2).toFixed(1), cy = (yt - bulge * 2).toFixed(1);
-            tiles += `<path d="M${lbx.toFixed(1)} ${yb.toFixed(1)} L${rbx.toFixed(1)} ${yb.toFixed(1)} L${rtx.toFixed(1)} ${yt.toFixed(1)} Q${cx} ${cy} ${ltx.toFixed(1)} ${yt.toFixed(1)} Z" fill="${shades[Math.abs(j * 7 + r * 3) % 3]}" stroke="#4f1c14" stroke-width="${(0.4 + fb * 0.6).toFixed(2)}"/>`
-                + `<path d="M${rtx.toFixed(1)} ${yt.toFixed(1)} Q${cx} ${cy} ${ltx.toFixed(1)} ${yt.toFixed(1)}" fill="none" stroke="#c4694a" stroke-width="${(0.6 + fb * 1.2).toFixed(2)}" opacity="0.6"/>`;
-        }
-    }
+    const scopeOpen = roomIsUnlocked('telescope'), chestOpen = roomIsUnlocked('chest');
+    const veil = (x, y, w, h) => (typeof srpVeil === 'function' ? srpVeil(x, y, w, h) : '');
     return `
-        <svg class="sr-roof-scene" viewBox="0 0 390 780" preserveAspectRatio="xMidYMax slice" role="group" aria-label="${srEsc(roomItemName('roof'))}">
-            <defs>
-                <linearGradient id="srRoofSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3a78"/><stop offset="1" stop-color="#121a44"/></linearGradient>
-                <radialGradient id="srRoofGlow" cx="0.5" cy="1" r="0.8"><stop offset="0" stop-color="#ff9ecf" stop-opacity="0.35"/><stop offset="1" stop-color="#ff9ecf" stop-opacity="0"/></radialGradient>
-                <linearGradient id="srRoofFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140a26" stop-opacity="0.6"/><stop offset="1" stop-color="#140a26" stop-opacity="0"/></linearGradient>
-                <clipPath id="srRoofClip"><rect x="0" y="408" width="390" height="152"/></clipPath>
-            </defs>
-            <g aria-hidden="true">
-                <circle cx="104" cy="118" r="24" fill="#fff4c9"/>
-                <circle cx="104" cy="118" r="46" fill="#fff4c9" opacity="0.12"/>
-            </g>
+        <svg class="sr-roof-scene sr-roof-painted" viewBox="0 0 390 780" preserveAspectRatio="xMidYMax slice" role="group" aria-label="${srEsc(roomItemName('roof'))}">
+            <image class="srp-art" href="world/treetop.jpg" x="-22.7" y="0" width="435.4" height="780" preserveAspectRatio="none" aria-hidden="true"/>
             <g transform="translate(0 220)">
-            <g aria-hidden="true">
-                <rect x="0" y="230" width="390" height="140" fill="url(#srRoofGlow)"/>
-                <g class="sr-roof-sea">
-                    <rect x="0" y="330" width="250" height="40" fill="url(#srRoofSea)"/>
-                    <g stroke="#fff4c9" stroke-linecap="round" opacity="0.55"><line x1="56" y1="336" x2="84" y2="336" stroke-width="1.6"/><line x1="60" y1="343" x2="80" y2="343" stroke-width="1.3"/><line x1="64" y1="350" x2="76" y2="350" stroke-width="1"/></g>
-                    <g stroke="#9fb3ff" stroke-linecap="round" opacity="0.35"><line x1="120" y1="340" x2="134" y2="340"/><line x1="180" y1="347" x2="192" y2="347"/><line x1="24" y1="352" x2="34" y2="352"/></g>
-                </g>
-                <g class="sr-roof-forest">
-                    <path d="M200 340 Q260 318 320 326 T390 322 V370 H200 Z" fill="#0d241f"/>
-                    ${pines}
-                </g>
-                <g class="sr-roof-city">${city}</g>
-                <g class="sr-roof-tiles">
-                    <rect x="0" y="408" width="390" height="152" fill="#5a2118"/>
-                    <g clip-path="url(#srRoofClip)">${tiles}</g>
-                    <rect x="0" y="408" width="390" height="64" fill="url(#srRoofFog)"/>
-                    <rect x="0" y="405" width="390" height="5" fill="#3a1510"/>
-                    <path d="M0 405.5 H390" stroke="#a8503a" stroke-width="1.4" opacity="0.8"/>
-                    <rect x="0" y="420" width="390" height="140" fill="url(#srRoofGlow)" opacity="0.25"/>
-                </g>
-                <g class="sr-roof-seat">
-                    <ellipse cx="292" cy="472" rx="30" ry="9" fill="#000" opacity="0.3"/>
-                    <ellipse cx="292" cy="464" rx="28" ry="11" fill="#ff8fc4"/>
-                    <ellipse cx="292" cy="460" rx="24" ry="7" fill="#ffb3d6"/>
-                    <path d="M270 462 q22 8 44 0" stroke="#e86aa6" stroke-width="1.2" fill="none"/>
-                </g>
-            </g>
+            ${scopeOpen ? '' : `${veil(258, 284, 94, 166)}${srLockBadge(304, 352, 'telescope')}`}
+            ${chestOpen ? '' : `${veil(48, 362, 92, 82)}${srLockBadge(93, 392, 'chest')}`}
             ${roomCatSvg()}
             ${roomIsUnlocked('roof') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
-            ${roomIsUnlocked('telescope') ? roomScopeSvg() : ''}
-            ${roomIsUnlocked('chest') ? roomChestSvg() : ''}
+            ${scopeOpen ? roomScopeSvg() : ''}
+            ${chestOpen ? roomChestSvg() : ''}
             </g>
         </svg>`;
 }
-// החתול על הגג (לפי בקשה מפורשת): יושב על שולי הגג עם הגב אלינו. נגיעה - מסתובב, בא אלינו ומתחכך
-// להתלטף, ונשאר לידנו; מכאן כל נגיעה עושה משהו אחר (10 דברים, לפי הסדר). (0,0) = בין הכפות, על הגג
+// החתול על הגג (לפי בקשה מפורשת) - מאז 2026-10-14 החתול המצויר: יושב על הכרית. נגיעה - קם, הולך אלינו ומתחכך,
+// ונשאר לידנו (גדול יותר); מכאן כל נגיעה עושה משהו אחר (10 דברים, לפי הסדר). (0,0) = בין הכפות
 function roomCatSvg() {
-    const F = '#120d1f';
-    return `<g class="sr-cat" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}">
-        <g class="sr-cat-inner">
-            <g class="sr-cat-back">
-                <path class="sr-roof-tail" d="M14 -8 q22 -4 20 -24 q-1 -9 6 -10" stroke="${F}" stroke-width="6" fill="none" stroke-linecap="round"/>
-                <ellipse cx="0" cy="-14" rx="17" ry="14" fill="${F}"/>
-                <circle cx="-2" cy="-34" r="10" fill="${F}"/>
-                <path d="M-10 -40 l-2 -11 l8 6 z M6 -40 l2 -11 l-8 6 z" fill="${F}"/>
-            </g>
-            <g class="sr-cat-front">
-                <path class="sr-roof-tail sr-cat-tail" d="M11 -6 q17 -1 16 -18 q-1 -8 5 -9" stroke="${F}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-                <g class="sr-cat-tailheart"><path d="M11 -6 q12 -1 15 -9" stroke="${F}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 -15 c-1.5 -4.5 -8 -4 -7 1 c0.6 3 4 5.5 7 8 c3 -2.5 6.4 -5 7 -8 c1 -5 -5.5 -5.5 -7 -1 z" fill="#ff7ab0"/></g>
-                <g class="sr-cat-body">
-                    <ellipse cx="0" cy="-14" rx="15" ry="15" fill="${F}"/>
-                    <ellipse cx="0" cy="-12" rx="6.5" ry="9" fill="#2a2042"/>
-                    <ellipse class="sr-cat-paw sr-cat-paw-l" cx="-6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
-                    <ellipse class="sr-cat-paw sr-cat-paw-r" cx="6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
-                </g>
-                <g class="sr-cat-head">
-                    <path d="M-12 -40 l-2.5 -12 l9.5 6.5 z M12 -40 l2.5 -12 l-9.5 6.5 z" fill="${F}"/>
-                    <path d="M-10.6 -42.5 l-1.1 -6 l4.4 3.2 z M10.6 -42.5 l1.1 -6 l-4.4 3.2 z" fill="#ff9ecf" opacity="0.5"/>
-                    <circle cx="0" cy="-35" r="12.5" fill="${F}"/>
-                    <ellipse cx="-4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/><ellipse cx="4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/>
-                    <ellipse cx="-4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/>
-                    <circle cx="-3.8" cy="-38.2" r="0.7" fill="#fff"/><circle cx="5.4" cy="-38.2" r="0.7" fill="#fff"/>
-                    <g class="sr-cat-lids"><ellipse cx="-4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><path d="M-7.4 -36.4 q2.8 2.2 5.6 0 M1.8 -36.4 q2.8 2.2 5.6 0" stroke="#9a8fc4" stroke-width="0.8" fill="none" stroke-linecap="round"/></g>
-                    <path d="M-1.5 -32.2 h3 l-1.5 1.7 z" fill="#ff9ecf"/>
-                    <path d="M0 -30.5 q-1.6 1.7 -3.2 0.4 M0 -30.5 q1.6 1.7 3.2 0.4" stroke="#9a8fc4" stroke-width="0.7" fill="none" stroke-linecap="round"/>
-                    <ellipse class="sr-cat-yawn" cx="0" cy="-29" rx="2.3" ry="2.8" fill="#ff7ab0"/>
-                    <path d="M-6 -31.6 l-8 -1.4 M-6 -30.4 l-8 1.2 M6 -31.6 l8 -1.4 M6 -30.4 l8 1.2" stroke="#9a8fc4" stroke-width="0.6" opacity="0.75" stroke-linecap="round"/>
-                </g>
-            </g>
-            <g class="sr-cat-fx"></g>
+    return `<g class="sr-cat sr-cat-art" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}">
+        <g class="sr-cat-pose">
+            <image class="sr-cat-sit" href="world/cat-sit.png" x="-32.2" y="-80" width="64.4" height="80"/>
+            <image class="sr-cat-stand" href="world/cat-stand.png" x="-46.8" y="-80" width="93.6" height="80"/>
         </g>
-        <ellipse class="sr-cat-hit" cx="2" cy="-24" rx="28" ry="32" fill="transparent"/>
+        <g class="sr-cat-fx"></g>
+        <ellipse class="sr-cat-hit" cx="0" cy="-40" rx="36" ry="44" fill="transparent"/>
     </g>`;
 }
 // הנגיעה הראשונה: מסתובב, בא ומתחכך. אחר כך כל נגיעה - הדבר הבא ברשימה (ושינה נמשכת עד הנגיעה הבאה)
@@ -1986,15 +1688,15 @@ function roomInitCat(cat) {
         fx.appendChild(el);
         setTimeout(() => el.remove(), 1700);
     }, delay);
-    const hearts = n => { for (let i = 0; i < n; i++) float('♥', -8 + i * 8, -52 - (i % 2) * 4, 'is-heart', i * 260); };
+    const hearts = n => { for (let i = 0; i < n; i++) float('♥', -10 + i * 10, -88 - (i % 2) * 5, 'is-heart', i * 260); };
     const play = (name, ms) => {
         busy = true;
         cat.classList.add('do-' + name);
         if (name === 'purr') hearts(3);
-        if (name === 'tailheart') float('♥', 27, -22, 'is-heart', 500);
-        if (name === 'bump') float('✦', 12, -50, 'is-spark', 250);
+        if (name === 'tailheart') float('♥', 30, -30, 'is-heart', 500);
+        if (name === 'bump') float('✦', 16, -86, 'is-spark', 250);
         if (name === 'sleep') {
-            const z = () => { if (!cat.isConnected) { clearInterval(zzz); return; } float('z', 10 + Math.random() * 6, -46, 'is-z'); };
+            const z = () => { if (!cat.isConnected) { clearInterval(zzz); return; } float('z', 14 + Math.random() * 8, -76, 'is-z'); };
             z();
             zzz = setInterval(z, 1100);
             busy = false;
@@ -2089,37 +1791,24 @@ function roomChestStreak() {
 }
 // מנהלת המוצר יכולה לפתוח בכל רגע, כדי לראות איך זה נפתח
 function roomChestReady() { return roomIsDev() || roomChestStreak() >= ROOM_CHEST_DAYS; }
+// הטלסקופ והתיבה מצוירים בציור של הצמרת - כאן רק מה שזוהר ונוגעים בו (ניצוץ בעדשה; הילה כשהתיבה מוכנה, שלוש נקודות
+// של הרצף מעליה והמדבקות שנאספו על החזית שלה)
 function roomScopeSvg() {
     return `<g class="sr-roof-hot sr-scope" data-roof-hot="telescope" role="button" tabindex="0" aria-label="${srEsc(roomItemName('telescope'))}">
-        <ellipse cx="352" cy="503" rx="27" ry="6" fill="#000" opacity="0.32"/>
-        <g stroke="#2e2440" stroke-width="3.2" stroke-linecap="round"><line x1="352" y1="462" x2="333" y2="501"/><line x1="352" y1="462" x2="371" y2="501"/><line x1="352" y1="462" x2="353" y2="503"/></g>
-        <g transform="rotate(32 352 458)">
-            <rect x="326" y="452" width="50" height="12" rx="4" fill="#c9a36b"/>
-            <rect x="314" y="448" width="15" height="20" rx="4" fill="#8a5a3c"/>
-            <rect x="375" y="454" width="9" height="8" rx="2" fill="#5a3a26"/>
-            <rect x="338" y="452" width="3" height="12" fill="#a8824e"/>
-        </g>
-        <circle cx="352" cy="460" r="3.6" fill="#ffd27a"/>
-        <circle class="sr-scope-glint" cx="322" cy="440" r="2.4" fill="#fff3c4"/>
-        <rect x="304" y="418" width="90" height="92" fill="transparent"/>
+        <circle class="sr-scope-glint" cx="273" cy="296" r="3" fill="#fff3c4"/>
+        <rect x="256" y="282" width="96" height="168" fill="transparent"/>
     </g>`;
 }
 function roomChestSvg() {
     const streak = roomChestStreak();
     const ready = roomChestReady();
-    const dots = [0, 1, 2].map(i => `<circle cx="${38 + i * 14}" cy="440" r="4" fill="${ready || i < streak ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-width="1.4"/>`).join('');
-    const stickers = roomChestStickers().map((s, i) => `<text x="${24 + (i % 4) * 9 + (i % 4 > 1 ? 36 : 0)}" y="${489 + Math.floor(i / 4) * 9}" font-size="8" text-anchor="middle">${s}</text>`).join('');
+    const dots = [0, 1, 2].map(i => `<circle cx="${79 + i * 14}" cy="358" r="4" fill="${ready || i < streak ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-width="1.4"/>`).join('');
+    const stickers = roomChestStickers().map((s, i) => `<text x="${70 + (i % 4) * 16}" y="${424 + Math.floor(i / 4) * 10}" font-size="9" text-anchor="middle">${s}</text>`).join('');
     return `<g class="sr-roof-hot sr-chest${ready ? ' is-ready' : ''}" data-roof-hot="chest" role="button" tabindex="0" aria-label="${srEsc(roomItemName('chest'))}">
-        <ellipse class="sr-chest-glow" cx="52" cy="470" rx="46" ry="30" fill="#ffd27a" opacity="${ready ? 0.35 : 0}"/>
-        <ellipse cx="52" cy="502" rx="38" ry="6" fill="#000" opacity="0.32"/>
-        <rect x="16" y="468" width="72" height="33" rx="4" fill="#8a5a3c"/>
-        <rect x="16" y="476" width="72" height="4" fill="#6a3f25"/>
-        <rect x="22" y="468" width="5" height="33" fill="#c9a36b" opacity="0.8"/><rect x="77" y="468" width="5" height="33" fill="#c9a36b" opacity="0.8"/>
-        <g class="sr-chest-lid"><path d="M16 470 Q52 442 88 470 V472 H16 Z" fill="#a56b45"/><path d="M22 466 Q52 446 82 466" fill="none" stroke="#c9a36b" stroke-width="2" opacity="0.8"/></g>
-        <rect x="46" y="474" width="12" height="14" rx="2" fill="#ffd27a"/><circle cx="52" cy="480" r="1.8" fill="#6a3f25"/>
+        <ellipse class="sr-chest-glow" cx="93" cy="404" rx="54" ry="38" fill="#ffd27a" opacity="${ready ? 0.35 : 0}"/>
         ${stickers}
         <g class="sr-chest-dots">${dots}</g>
-        <rect x="8" y="428" width="88" height="80" fill="transparent"/>
+        <rect x="46" y="344" width="96" height="100" fill="transparent"/>
     </g>`;
 }
 // האתגרים שהסתיימו, לפי הסדר (כל אתגר פעם אחת). מנהלת המוצר בלי אתגרים אמיתיים (מפתחות PM) רואה איך זה

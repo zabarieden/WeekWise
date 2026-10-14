@@ -8326,6 +8326,10 @@ html.light-mode .wx-stars { display: none; }
 .sr-stage { position: relative; width: 100%; max-width: 460px; height: 100%; overflow: hidden; isolation: isolate; background: var(--sr-bg, #140c1e); color: #f5f5f7; font-family: inherit; }
 .sr-scene { position: absolute; inset: 0; }
 .sr-svg { display: block; width: 100%; height: 100%; font-family: inherit; }
+/* 🎨 2026-10-14: קירות מצוירים - העיצוב בסטודיו: צבע הקיר צובע את הציור בעדינות, ו"בוקר פסטל" / "עליית גג" משנים את האור */
+.sr-tint { fill: var(--sr-tint, transparent); opacity: 0.28; mix-blend-mode: color; pointer-events: none; }
+.sr-stage[data-style="pastel"] .sr-art { filter: brightness(1.14) saturate(0.82); }
+.sr-stage[data-style="attic"] .sr-art { filter: sepia(0.28) saturate(0.92) brightness(0.96); }
 .sr-scene.turn-next { animation: srTurnFromEnd 0.42s cubic-bezier(0.3, 0.7, 0.3, 1); }
 .sr-scene.turn-prev { animation: srTurnFromStart 0.42s cubic-bezier(0.3, 0.7, 0.3, 1); }
 [dir="rtl"] .sr-scene.turn-next { animation-name: srTurnFromStart; }
@@ -8806,6 +8810,39 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-roof-scene .sr-cat.is-near { transform: translate(138px, 548px) scale(2.1); }
 .sr-cat-hit { pointer-events: all; }
 .sr-cat:focus-visible .sr-cat-hit { stroke: #ffd27a; stroke-width: 1.2; stroke-dasharray: 3 3; }
+/* 🐈 2026-10-14: החתול המצויר על צמרת העץ - יושב על הכרית; קם, הולך אלינו ונשאר לידנו גדול יותר. כל הפעולות - תנועות
+   קטנות של הדמות כולה (sr-cat-pose), והלבבות / ה-z מעל הראש */
+.sr-roof-scene .sr-cat-art { transform: translate(196px, 440px) scale(1); }
+.sr-roof-scene .sr-cat-art.is-near { transform: translate(212px, 526px) scale(1.5); }
+.sr-cat-art .sr-cat-pose { transform-box: fill-box; transform-origin: 50% 100%; }
+.sr-cat-art .sr-cat-sit, .sr-cat-art .sr-cat-stand { transition: opacity 0.3s ease; }
+.sr-cat-art .sr-cat-stand { opacity: 0; }
+.sr-cat-art.is-walking .sr-cat-stand { opacity: 1; }
+.sr-cat-art.is-walking .sr-cat-sit { opacity: 0; }
+.sr-cat-art.is-walking .sr-cat-pose { animation: srCatArtWalk 0.42s ease-in-out infinite; }
+.sr-cat-art.do-rub .sr-cat-pose { animation: srCatArtRub 0.62s ease-in-out 3; }
+.sr-cat-art.do-purr .sr-cat-pose { animation: srCatArtPurr 0.12s linear 14; }
+.sr-cat-art.do-blink .sr-cat-pose { animation: srCatArtBlink 1.6s ease-in-out; }
+.sr-cat-art.do-stretch .sr-cat-pose { animation: srCatArtStretch 1.6s ease-in-out; }
+.sr-cat-art.do-groom .sr-cat-pose { animation: srCatArtTilt 1.8s ease-in-out; }
+.sr-cat-art.do-tailheart .sr-cat-pose { animation: srCatArtSway 2s ease-in-out; }
+.sr-cat-art.do-yawn .sr-cat-pose { animation: srCatArtYawn 1.6s ease-in-out; }
+.sr-cat-art.do-hop .sr-cat-pose { animation: srCatArtHop 1.4s cubic-bezier(0.3, 0, 0.3, 1); }
+.sr-cat-art.do-bump .sr-cat-pose { animation: srCatArtBump 1.1s ease-in-out; }
+.sr-cat-art.do-knead .sr-cat-pose { animation: srCatArtKnead 0.38s ease-in-out 5; }
+.sr-cat-art.do-sleep .sr-cat-pose { transform: rotate(-4deg) scale(1.04, 0.9); filter: brightness(0.82); transition: transform 0.7s ease, filter 0.7s ease; }
+@keyframes srCatArtWalk { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(1deg); } }
+@keyframes srCatArtRub { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg) translateX(-2px); } 70% { transform: rotate(4deg) translateX(2px); } }
+@keyframes srCatArtPurr { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(0.6px); } }
+@keyframes srCatArtBlink { 0%, 100% { transform: scaleY(1); } 45% { transform: scaleY(0.97); } }
+@keyframes srCatArtStretch { 0%, 100% { transform: scale(1, 1); } 40% { transform: scale(1.1, 0.9); } 70% { transform: scale(0.97, 1.05); } }
+@keyframes srCatArtTilt { 0%, 100% { transform: rotate(0); } 30%, 60% { transform: rotate(-7deg); } }
+@keyframes srCatArtSway { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(3deg); } 75% { transform: rotate(-3deg); } }
+@keyframes srCatArtYawn { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.04, 1.07); } }
+@keyframes srCatArtHop { 0%, 100% { transform: translateY(0) scale(1); } 15% { transform: translateY(0) scale(1.06, 0.9); } 45% { transform: translateY(-26px) scale(0.96, 1.05); } 75% { transform: translateY(0) scale(1.05, 0.93); } }
+@keyframes srCatArtBump { 0%, 100% { transform: rotate(0) translateX(0); } 40% { transform: rotate(7deg) translateX(5px); } }
+@keyframes srCatArtKnead { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px) scale(1.01, 0.98); } }
+@media (prefers-reduced-motion: reduce) { .sr-cat-art .sr-cat-pose { animation: none !important; } .sr-roof-scene .sr-cat-art { transition: none; } }
 .sr-cat-front { opacity: 0; transform-origin: 0 0; transition: opacity 0.35s; }
 .sr-cat-back { transition: opacity 0.35s; }
 .sr-cat.is-turned .sr-cat-front { opacity: 1; }
@@ -8915,6 +8952,14 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .srp-guitar.is-strum .srp-guitar-shake { animation: srpStrum 0.4s ease-out; }
 @keyframes srpStrum { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(-1.6deg); } }
 .srp-note-fly { font-size: 18px; font-weight: 800; fill: #ffd27a; animation: srpNoteFly 1.8s ease-out forwards; }
+/* 🎵 2026-10-14: השירים הקסומים - מה שמתנגן (גיטרה / תקליט) זוהר ונושם לאט */
+.srp-rec-halo { opacity: 0; transition: opacity 0.6s ease; transform-box: fill-box; transform-origin: center; }
+.srp-rec.is-playing .srp-rec-halo, .srp-guitar.is-playing .srp-rec-halo { opacity: 1; animation: srpHalo 2.6s ease-in-out infinite; }
+@keyframes srpHalo { 0%, 100% { transform: scale(0.92); } 50% { transform: scale(1.06); } }
+.srp-rec, .srp-guitar { cursor: pointer; }
+.srp-rec:focus-visible, .srp-guitar:focus-visible { outline: none; }
+.srp-rec:focus-visible .srp-rec-halo, .srp-guitar:focus-visible .srp-rec-halo { opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) { .srp-rec.is-playing .srp-rec-halo, .srp-guitar.is-playing .srp-rec-halo { animation: none; } }
 @keyframes srpNoteFly { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--nx, -14px), -72px); } }
 .srp-note-amb { animation: srpNoteAmb 3.2s ease-out infinite; }
 @keyframes srpNoteAmb { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-14px, -50px); opacity: 0; } }
@@ -8970,7 +9015,7 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-place-breath { background: #1f1c45; }
 .srb-sky { fill: url(#srbDusk); }
 .srb-sea { fill: url(#srbSeaDusk); }
-.srb-sun { transform-box: view-box; transform-origin: 195px 472px; animation: srbIdle 7s ease-in-out infinite; }
+.srb-sun { transform-box: view-box; transform-origin: 195px 441px; animation: srbIdle 7s ease-in-out infinite; }
 .sr-place-breath.is-on .srb-sun { animation: srbBreath 14s infinite; }
 @keyframes srbIdle { 0%, 100% { transform: translateY(34px) scale(0.9); } 50% { transform: translateY(26px) scale(0.92); } }
 @keyframes srbBreath { 0% { transform: translateY(48px) scale(0.86); animation-timing-function: ease-in-out; } 43% { transform: translateY(-20px) scale(1); animation-timing-function: ease-in-out; } 100% { transform: translateY(48px) scale(0.86); } }
@@ -8994,7 +9039,7 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-place-breath.is-on .srb-stop { display: flex; }
 /* כותבים בחול (מפתח 17): המילים על החול, וגל גדול עולה ומוחק אותן */
 .srb-word, .srb-word-light { font-size: 32px; font-weight: 800; letter-spacing: 0.02em; }
-.srb-word { fill: #a5774a; }
+.srb-word { fill: #5b3f7a; }
 .srb-word-light { fill: #fff3dd; opacity: 0.7; }
 .srb-bigwave { opacity: 0; transform: translateY(-70px); pointer-events: none; }
 .sr-place-breath.is-washing .srb-bigwave { animation: srbWash 3.4s ease-in-out forwards; }
@@ -9275,11 +9320,26 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
 /* ===== יוגה ביער (מפתח 12) ליד המפל: המעגל נשאר למעלה, והשיחה בחלון "זכוכית רכה" כמו המחשב (לפי בקשה מפורשת:
    "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב"). המפל (מפתח 13) - הקווים זורמים, אדוות וערפל ===== */
 .sr-place-yoga .srp-view { transition: transform 0.5s ease; }
-.sr-place-yoga.is-talking .srp-view { transform: translateY(-41%); }
+/* 2026-10-14: הציור של היער - יצורי היער והמורה (גזורים) נושמים לאט על המזרונים; נגיעה במורה: העיניים נפתחות ומתקרבים
+   אליה (ygTeacherWake קובע את ה-transform), ושם השיחה */
+.sr-place-yoga .srp-view { transition: transform 0.95s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.yg-sitter, .yg-teacher { transform-box: fill-box; transform-origin: 50% 100%; animation: ygBreathe 5.5s ease-in-out infinite; }
+.yg-circle .yg-sitter:nth-child(2) { animation-delay: -1.4s; }
+.yg-circle .yg-sitter:nth-child(3) { animation-delay: -2.8s; }
+.yg-circle .yg-sitter:nth-child(4) { animation-delay: -4.1s; }
+@keyframes ygBreathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.028); } }
+.yg-teacher { transition: opacity 0.6s ease; }
+.yg-eyes-open { opacity: 0; }
+.sr-place-yoga.yg-awake .yg-eyes-open { opacity: 1; }
+.sr-place-yoga.yg-awake .yg-eyes-closed { opacity: 0; }
+.srp-guide { cursor: pointer; }
+.srp-guide:focus-visible { outline: none; }
+.srp-guide:focus-visible .yg-eyes-closed { filter: drop-shadow(0 0 6px #fff1c9); }
 .yg-talk { position: absolute; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 4; max-height: 50%; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 10px; border-radius: 26px; background: radial-gradient(80% 60% at 30% 10%, rgba(255, 122, 192, 0.55), transparent 70%), radial-gradient(70% 60% at 85% 90%, rgba(124, 92, 255, 0.55), transparent 70%), rgba(26, 16, 48, 0.84); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45); color: #fff; font-family: 'Assistant', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; }
 .yg-talk-head { display: flex; align-items: center; gap: 10px; }
 .yg-avatar { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); }
 .yg-avatar svg { display: block; width: 100%; height: 100%; }
+.yg-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; transform: scale(2.4); transform-origin: 50% 14%; }
 .yg-talk-head b { flex: 1; min-width: 0; font-size: 1rem; }
 .yg-x { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.35); background: transparent; color: #fff; cursor: pointer; }
 .yg-x svg { width: 16px; height: 16px; }
@@ -9318,7 +9378,8 @@ body.ai-chat-open .ai-brain-fab, body.ai-chat-open .hamburger-fab { visibility: 
 @media (prefers-reduced-motion: reduce) {
     .srp-fall-lines line, .srp-ripples-wf ellipse, .srp-mist ellipse, .srp-splash-ring { animation: none; }
     .srp-ripples-wf ellipse { opacity: 0.4; }
-    .yg-breath, .sr-place-yoga .srp-view { transition: none; }
+    .yg-breath, .sr-place-yoga .srp-view, .yg-teacher { transition: none; }
+    .yg-sitter, .yg-teacher { animation: none; }
 }
 
 /* ===== ✏️ מסך הבית - עיצוב 2 (לפי בחירה מפורשת, 2026-10-11): התאריך, הצ'יפים, ושורת כתיבה במקום הכפתור.
@@ -9738,12 +9799,18 @@ html:not(.light-mode) #weekly-list > li.note-paper .btn-delete-item:hover { colo
 #my-center-section .note-triage-icon { width: auto; height: auto; border-radius: 0; background: none; box-shadow: none; color: var(--text-primary); }
 #my-center-section .note-triage-icon svg { display: block; width: 18px; height: 18px; }
 #my-center-section .note-triage-zone:has(.sortable-ghost) { border-color: var(--accent-pink); background-color: color-mix(in srgb, var(--accent-pink) 12%, var(--bg-row)); color: var(--accent-pink-text); transform: scale(1.04); }
-/* העותק הצף בזמן גרירה (מצורף ל-body, מחוץ לרשימה) - גם הוא פתק נייר */
-.sortable-fallback.note-triage-drag-clone.note-paper { background: #fef3a8; border: none; border-radius: 3px 3px 14px 3px; color: #3b3216; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 16px 26px -12px rgba(60, 40, 0, 0.6); }
-.sortable-fallback.note-triage-drag-clone.note-paper.has-bg { background: color-mix(in srgb, var(--note-bg) 34%, #fffdf3); }
-.sortable-fallback.note-triage-drag-clone.note-paper .center-list-item-text { margin: 0; color: #3b3216; }
-.sortable-fallback.note-triage-drag-clone.note-paper .btn-complete-item { width: 22px; height: 22px; min-width: 22px; margin: 0; border-radius: 50%; border: 1.5px solid rgba(59, 50, 22, 0.38); background: rgba(255, 255, 255, 0.45); box-shadow: none; }
-.sortable-fallback.note-triage-drag-clone.note-paper .btn-delete-item { color: rgba(59, 50, 22, 0.42); }
+/* העותק הצף בזמן גרירה (מצורף ל-body, מחוץ לרשימה) - באותה נראות ובאותו צבע כמו הפתק עצמו (לפי בקשה מפורשת, 2026-10-14:
+   "כל פעם שגוררים זה הופך לצהוב תשנה את זה שיהיה אותו הצבע שיש שם"). ברירת המחדל = זכוכית */
+.sortable-fallback.note-triage-drag-clone.note-paper { border: none; border-radius: 16px; color: var(--text-primary); background: linear-gradient(135deg, color-mix(in srgb, var(--text-primary) 13%, var(--bg-row)), color-mix(in srgb, var(--text-primary) 4%, var(--bg-row))); -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 16%, transparent), 0 16px 26px -12px rgba(0, 0, 0, 0.6); }
+.sortable-fallback.note-triage-drag-clone.note-paper.has-bg { background: linear-gradient(135deg, color-mix(in srgb, var(--note-bg) 30%, var(--bg-row)), color-mix(in srgb, var(--note-bg) 10%, var(--bg-row))); }
+html.light-mode .sortable-fallback.note-triage-drag-clone.note-paper { background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.74)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 16px 26px -12px rgba(40, 30, 60, 0.45); }
+html.light-mode .sortable-fallback.note-triage-drag-clone.note-paper.has-bg { background: linear-gradient(135deg, color-mix(in srgb, var(--note-bg) 24%, #ffffff), color-mix(in srgb, var(--note-bg) 8%, #ffffff)); }
+html[data-note-look="clean"] .sortable-fallback.note-triage-drag-clone.note-paper { background: var(--bg-row); border-radius: 14px; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-note-look="index"] .sortable-fallback.note-triage-drag-clone.note-paper { background: #fffefb; color: #24243a; border-radius: 10px; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 5px 0 var(--note-bg, var(--accent-purple)), 0 16px 26px -12px rgba(0, 0, 0, 0.5); }
+html[data-note-look="washi"] .sortable-fallback.note-triage-drag-clone.note-paper { background: var(--note-bg, #fde68a); color: #2b1d3a; border-radius: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sortable-fallback.note-triage-drag-clone.note-paper .center-list-item-text { margin: 0; color: inherit; }
+.sortable-fallback.note-triage-drag-clone.note-paper .btn-complete-item { width: 22px; height: 22px; min-width: 22px; margin: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, currentColor 38%, transparent); background: color-mix(in srgb, currentColor 8%, transparent); box-shadow: none; }
+.sortable-fallback.note-triage-drag-clone.note-paper .btn-delete-item { color: color-mix(in srgb, currentColor 45%, transparent); }
 .sortable-fallback.note-triage-drag-clone.note-paper .btn-delete-item svg { width: 15px; height: 15px; }
 @media (prefers-reduced-motion: reduce) {
     :is(#weekly-list > li, #center-item-preview-row).note-paper,
@@ -10085,6 +10152,8 @@ html[data-color-theme^="magic_"] .nm-btn-primary {
 
 /* בורר העולם הקסום בתוך New Me (nmOpenMagicPicker) */
 .nm-magic-title { margin: 2px 0 4px; text-align: center; font-size: 1.15rem; }
+.nm-colors-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 4px 0 12px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent); }
+.nm-colors-grid .theme-swatch { width: 38px; height: 38px; }
 .nm-magic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; margin: 6px 0 10px; }
 .nm-magic-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; min-height: 120px; padding: 10px 8px; border-radius: 22px; border: 2px solid rgba(255, 255, 255, 0.14); background: var(--bg-main); color: var(--text-primary); font: inherit; overflow: hidden; cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
 .nm-magic-tile .home-theme-pattern { position: absolute; inset: 0; }
@@ -10113,7 +10182,6 @@ html[data-color-theme^="magic_"] .nm-btn-primary {
 .notes-look-swatch { flex: none; width: 18px; height: 12px; border-radius: 4px; }
 .nls-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
 .nls-clean { border-radius: 0; border-bottom: 2px solid currentColor; opacity: 0.55; }
-.nls-notebook { background: repeating-linear-gradient(180deg, #fffdf8 0 4px, #c9d6ee 4px 5px); box-shadow: inset 3px 0 0 var(--accent-purple); }
 .nls-index { background: #fffefb; box-shadow: inset 0 3px 0 var(--accent-pink); }
 .nls-washi { border-radius: 0; background: repeating-linear-gradient(45deg, #fde68a 0 3px, #fff3c4 3px 6px); clip-path: polygon(6% 0, 94% 6%, 100% 50%, 94% 94%, 6% 100%, 0 50%); }
 .notes-look-btn { font-size: 0.95rem; }
@@ -10144,19 +10212,6 @@ html[data-note-look="clean"] #weekly-list > li.note-paper:nth-child(2n) { transf
 html[data-note-look="clean"] #center-item-preview-row.note-paper { border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent); }
 html[data-note-look="clean"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: transparent; }
 html[data-note-look="clean"] :is(#weekly-list > li, #center-item-preview-row).note-paper::before { content: ''; position: static; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--note-bg, var(--accent-purple)); box-shadow: 0 0 8px color-mix(in srgb, var(--note-bg, var(--accent-purple)) 70%, transparent); }
-
-/* 1 – שורות מחברת: דף שורות אחד, קו שוליים בצבע של הערכה ונקודה בצבע של הפתק */
-html[data-note-look="notebook"] #weekly-list { position: relative; gap: 0; padding: 4px 0; border-radius: 14px; overflow: hidden; background: #fffdf8; box-shadow: 0 10px 22px -16px rgba(0, 0, 0, 0.5); }
-html[data-note-look="notebook"] #weekly-list::before { content: ''; position: absolute; top: 0; bottom: 0; inset-inline-start: 30px; width: 2px; background: color-mix(in srgb, var(--accent-purple) 70%, #7c3aed); pointer-events: none; z-index: 1; }
-html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: #24243a; transform: none; border-radius: 0; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 -1px 0 #d9e3f3; padding: 8px 10px; padding-inline-start: 40px; }
-html[data-note-look="notebook"] #weekly-list > li.note-paper:nth-child(2n) { transform: none; }
-html[data-note-look="notebook"] #center-item-preview-row.note-paper { border-radius: 12px; background: #fffdf8; }
-html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper.has-bg { background: transparent; }
-html[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper::before { content: ''; position: absolute; top: 50%; bottom: auto; inset-inline-start: 14px; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--note-bg, transparent); }
-html:not(.light-mode)[data-note-look="notebook"] #weekly-list { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
-html:not(.light-mode)[data-note-look="notebook"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper-ink: var(--text-primary); box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--text-primary) 14%, transparent); }
-html:not(.light-mode)[data-note-look="notebook"] #center-item-preview-row.note-paper { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
-
 /* 2 – כרטיסיות: כרטיס לבן עם פס צבע למעלה (הצבע של הפתק, או של הערכה) */
 html[data-note-look="index"] :is(#weekly-list > li, #center-item-preview-row).note-paper { --paper: #fffefb; --paper-ink: #24243a; transform: none; border-radius: 10px; background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 5px 0 var(--note-bg, var(--accent-purple)), 0 8px 16px -10px rgba(0, 0, 0, 0.45); padding-top: 14px; }
 html[data-note-look="index"] #weekly-list > li.note-paper:nth-child(2n) { transform: none; }

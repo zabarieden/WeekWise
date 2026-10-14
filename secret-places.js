@@ -13,6 +13,14 @@ const SRP_DOOR_PLACE = { 2: 'porch', 3: 'music', 4: 'breath', 5: 'outside' };
 const SRP_PLACE_PARENT = { yoga: 'outside', waterfall: 'yoga' };
 const SRP_BACK_KEYS = { outside: 'room_back_to_forest', yoga: 'room_back_to_yoga' };
 const SRP_BREATH_MS = 10 * 60 * 1000;   // סשן של עשר דקות (לא כתוב בשום מקום - לפי בקשה מפורשת)
+// 🎨 הציורים של היער הקסום (לפי בקשה מפורשת, 2026-10-14: "יש את הציורים אתה יכול לשים אותם"): world/*.jpg, 768×1376,
+// ממורכזים על 390×844 - הצדדים נחתכים קצת. מה שזז או נפתח נשאר קוד מעל הציור
+const SRP_ART = 'world/';
+function srpArt(name) { return `<image class="srp-art" href="${SRP_ART}${name}" x="-40.55" y="0" width="471.1" height="844" preserveAspectRatio="none"/>`; }
+// דמות מגזורה (PNG שקוף) שיושבת על נקודה: cx = האמצע, bottom = איפה שהיא יושבת, h = הגובה, ratio = רוחב / גובה
+function srpSprite(name, cx, bottom, h, ratio, cls = '') { const w = h * ratio; return `<image class="${cls}" href="${SRP_ART}${name}" x="${(cx - w / 2).toFixed(1)}" y="${(bottom - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/>`; }
+// מה שעוד נעול בציור: צעיף כהה ורך (מטושטש בשוליים) ומנעול מעליו
+function srpVeil(x, y, w, h) { return `<g class="srp-veil" aria-hidden="true"><filter id="srpVeilBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10"/></filter><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 3}" fill="#120a24" opacity="0.62" filter="url(#srpVeilBlur)"/></g>`; }
 let srpCleanups = [];
 
 // העדפות קטנות של המקום (גשם, יום/לילה, מדורה) - נשמרות במכשיר
@@ -192,11 +200,46 @@ function srpSongEvents(song) {
     return { ev, len };
 }
 let srpNowPlaying = -1;   // התקליט שמתנגן עכשיו בחדר - גם כשמסתובבים לקיר אחר וחוזרים, הפטיפון נשאר "מנגן"
-function srpMusicStart(i) {
+function srpMusicStart(i) { srpPlaySong(SRP_RECORDS[i] || SRP_RECORDS[0]); }
+// 🎵 השירים הקסומים של פינת המוזיקה (לפי בקשה מפורשת, 2026-10-14: "שירים מיוחדים וקסומים שמנגנים ומרגיעים... שנוגעים
+// בגיטרה ובכל פטיפון בנפרד"): לחנים מקוריים ושקטים - אחד לגיטרה ואחד לכל תקליט שתלוי בעץ. נגיעה מנגנת, נגיעה שוב עוצרת
+const SRP_MAGIC_SONGS = {
+    // שיר ערש של היער - פריטה על הגיטרה (רה, סי מינור, סול, לה) ומנגינה רכה מעליה
+    guitar: { color: '#ffd27a', unit: 0.3, voices: [
+        { vol: 0.05, ring: 2.2, notes: 'D3 A3 D4 F#4 A4 F#4 D4 A3 B2 F#3 B3 D4 F#4 D4 B3 F#3 G2 D3 G3 B3 D4 B3 G3 D3 A2 E3 A3 C#4 E4 C#4 A3 E3' },
+        { vol: 0.03, ring: 1.6, type: 'sine', notes: 'A4:4 F#4:2 E4:2 D4:6 -:2 B4:4 A4:2 F#4:2 E4:8' },
+    ] },
+    // תיבת נגינה של כוכבים - ואלס איטי
+    rec1: { color: '#ff9ecf', unit: 0.36, voices: [
+        { vol: 0.04, ring: 1.6, type: 'sine', notes: 'E5 C#5 A4 B4:3 C#5 E5 F#5 E5:3 C#5 B4 A4 F#4:3 A4 B4 C#5 B4:3' },
+        { vol: 0.012, ring: 1.2, type: 'sine', notes: 'E6 C#6 A5 B5:3 C#6 E6 F#6 E6:3 C#6 B5 A5 F#5:3 A5 B5 C#6 B5:3' },
+        { vol: 0.04, ring: 2.4, type: 'sine', notes: 'A2:3 -:3 F#2:3 -:3 D2:3 -:3 E2:3 -:3' },
+        { vol: 0.016, ring: 1.4, type: 'sine', notes: 'A3:6 F#3:6 D3:6 E3:6' },
+    ] },
+    // נבל הירח - ארפג'ים איטיים וצלילים ארוכים מעליהם
+    rec2: { color: '#b9a8ff', unit: 0.28, voices: [
+        { vol: 0.035, ring: 2.6, notes: 'F3 C4 E4 A4 C5 A4 E4 C4 E3 B3 D4 G4 B4 G4 D4 B3 D3 A3 C4 F4 A4 F4 C4 A3 C3 G3 B3 E4 G4 E4 B3 G3' },
+        { vol: 0.022, ring: 1.4, type: 'sine', notes: 'A5:8 G5:8 F5:8 E5:8' },
+    ] },
+    // פעמוני המפל - פעמונים שקטים מעל צליל עמוק
+    rec3: { color: '#7fd6ff', unit: 0.45, voices: [
+        { vol: 0.03, ring: 2.8, type: 'sine', notes: 'E5 G5 A5:2 G5 E5 D5:2 C5 D5 E5:2 G5:2 -:2 A5 C6 A5:2 G5 E5 D5:2 E5:4 -:4' },
+        { vol: 0.035, ring: 1.3, type: 'sine', notes: 'C3:16 A2:16' },
+        { vol: 0.014, ring: 1.3, type: 'sine', notes: 'G3:16 E3:16' },
+    ] },
+};
+let srpMagicNow = null;   // השיר הקסום שמתנגן עכשיו (guitar / rec1 / rec2 / rec3)
+function srpMagicToggle(id) {
+    if (srpMagicNow === id) { srpMusicStop(); return null; }
+    srpPlaySong(SRP_MAGIC_SONGS[id]);
+    srpNowPlaying = -1;
+    srpMagicNow = id;
+    return id;
+}
+function srpPlaySong(song) {
     const a = srpCtx();
-    if (!a) return;
+    if (!a || !song) return;
     srpMusicStop(true);
-    const song = SRP_RECORDS[i] || SRP_RECORDS[0];
     const { ev, len } = srpSongEvents(song);
     if (!ev.length || !len) return;
     const u = song.unit, start = song.start || 0;
@@ -217,7 +260,7 @@ function srpMusicStart(i) {
     schedule();
 }
 function srpMusicStop(quick) {
-    if (!quick) srpNowPlaying = -1;
+    if (!quick) { srpNowPlaying = -1; srpMagicNow = null; }
     if (!srpAudio) return;
     clearTimeout(srpAudio.loop);
     srpAudio.loop = null;
@@ -241,36 +284,29 @@ function srpPorchScene(keys) {
     const rainOpen = keys >= roomUnlockAt('rain');
     let rain = '';
     for (let i = 0; i < 34; i++) {
-        const x = 34 + ((i * 53) % 322), y = 90 + ((i * 97) % 420);
+        const x = 34 + ((i * 53) % 322), y = 160 + ((i * 97) % 470);
         rain += `<line x1="${x}" y1="${y}" x2="${x - 3}" y2="${y + 15}"/>`;
     }
+    // הציור (world/lake-dock.jpg): מרפסת עץ מול אגם קסום, ירח, פנס על הרצפה ומנורת אלאדין על שולחן קטן (המנורה מחכה
+    // לדמות שתצא ממנה - לפי בקשה מפורשת: "בנתיים אל תשים"). מעל הציור: הערסל בין העמודים, הגשם והענן, הבקבוק במים,
+    // והטאבלט שמונח על הרצפה
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('porch'))}">
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('porch'))}">
             <defs>
-                <linearGradient id="srpPSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1030"/><stop offset="0.7" stop-color="#2b2a66"/><stop offset="1" stop-color="#5a3f7a"/></linearGradient>
-                <linearGradient id="srpPSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3a78"/><stop offset="1" stop-color="#0f1640"/></linearGradient>
-                <linearGradient id="srpPDeck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b4630"/><stop offset="1" stop-color="#8a5c3e"/></linearGradient>
-                <radialGradient id="srpPMoon" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c9" stop-opacity="0.5"/><stop offset="1" stop-color="#fff4c9" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpPLantern" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpPTab" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#9fd8ff" stop-opacity="0.3"/><stop offset="1" stop-color="#9fd8ff" stop-opacity="0"/></radialGradient>
+                <radialGradient id="srpPLantern" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+                <radialGradient id="srpPTab" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#9fd8ff" stop-opacity="0.35"/><stop offset="1" stop-color="#9fd8ff" stop-opacity="0"/></radialGradient>
                 <linearGradient id="srpPScreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="0.55" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient>
                 <radialGradient id="srpPBottle" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#bff5e6" stop-opacity="0.55"/><stop offset="1" stop-color="#bff5e6" stop-opacity="0"/></radialGradient>
             </defs>
             <g aria-hidden="true">
-                <rect width="390" height="520" fill="url(#srpPSky)"/>
-                <g class="srp-moon"><circle cx="120" cy="250" r="60" fill="url(#srpPMoon)"/><circle cx="120" cy="250" r="20" fill="#fff4c9"/></g>
-                <g fill="#fff" class="sr-twinkle"><circle cx="40" cy="160" r="1.3"/><circle cx="210" cy="140" r="1.1"/><circle cx="300" cy="190" r="1.4"/><circle cx="350" cy="120" r="1"/><circle cx="250" cy="260" r="1.1"/></g>
-                <rect y="400" width="390" height="140" fill="url(#srpPSea)"/>
-                <g class="srp-waves">
-                    <g stroke="#fff4c9" stroke-linecap="round" opacity="0.6"><line x1="96" y1="412" x2="144" y2="412" stroke-width="2"/><line x1="104" y1="424" x2="136" y2="424" stroke-width="1.6"/><line x1="110" y1="436" x2="130" y2="436" stroke-width="1.2"/><line x1="114" y1="448" x2="126" y2="448" stroke-width="1"/></g>
-                    <g stroke="#9fb3ff" stroke-opacity="0.35" stroke-linecap="round"><line x1="220" y1="420" x2="244" y2="420"/><line x1="300" y1="440" x2="320" y2="440"/><line x1="30" y1="452" x2="48" y2="452"/></g>
-                </g>
-                <path d="M250 400 Q300 372 390 380 V400 Z" fill="#141a3e"/>
+                ${srpArt('lake-dock.jpg')}
+                <circle class="srp-flicker" cx="70" cy="640" r="70" fill="url(#srpPLantern)"/>
+                <g class="srp-waves"><g stroke="#e6dcff" stroke-opacity="0.35" stroke-linecap="round"><line x1="150" y1="540" x2="176" y2="540"/><line x1="240" y1="590" x2="262" y2="590"/><line x1="90" y1="600" x2="110" y2="600"/></g></g>
                 <g class="srp-rain">
-                    <rect width="390" height="540" fill="#0a0f2a" opacity="0.35"/>
+                    <rect width="390" height="700" fill="#0a0f2a" opacity="0.32"/>
                     <g class="srp-rain-a" stroke="#b9c6ff" stroke-opacity="0.55" stroke-width="1.2" stroke-linecap="round">${rain}</g>
                     <g transform="translate(17 30)"><g class="srp-rain-b" stroke="#d8e0ff" stroke-opacity="0.35" stroke-width="1" stroke-linecap="round">${rain}</g></g>
-                    <g class="srp-ripples" fill="none" stroke="#9fb3ff" stroke-opacity="0.55"><ellipse cx="80" cy="430" rx="10" ry="2.5"/><ellipse cx="200" cy="452" rx="12" ry="3" style="animation-delay:.5s"/><ellipse cx="300" cy="424" rx="9" ry="2.2" style="animation-delay:1s"/><ellipse cx="150" cy="462" rx="11" ry="2.6" style="animation-delay:.8s"/></g>
+                    <g class="srp-ripples" fill="none" stroke="#c9d2ff" stroke-opacity="0.55"><ellipse cx="120" cy="560" rx="10" ry="2.5"/><ellipse cx="220" cy="600" rx="12" ry="3" style="animation-delay:.5s"/><ellipse cx="300" cy="570" rx="9" ry="2.2" style="animation-delay:1s"/></g>
                 </g>
             </g>
             ${rainOpen ? `<g class="srp-hot srp-cloud" data-place-hot="rain" role="button" tabindex="0" aria-label="${srEsc(roomItemName('rain'))}" aria-pressed="false">
@@ -284,41 +320,26 @@ function srpPorchScene(keys) {
             </g>` : ''}
             ${bottle ? `<g class="srp-hot srp-bottle" data-place-hot="bottle" role="button" tabindex="0" aria-label="${srEsc(t('room_bottle_aria'))}">
                 <g class="srp-bottle-drift"><g class="srp-bottle-bob">
-                    <circle cx="296" cy="444" r="36" fill="url(#srpPBottle)"/>
-                    <g transform="rotate(-18 296 446)">
-                        <rect x="276" y="438" width="34" height="16" rx="7" fill="#bff5e6" opacity="0.6"/>
-                        <rect x="308" y="442" width="10" height="8" rx="2" fill="#bff5e6" opacity="0.6"/>
-                        <rect class="srp-cork" x="317" y="441.5" width="6" height="9" rx="1.5" fill="#b07b3a"/>
-                        <rect x="282" y="441" width="22" height="10" rx="4" fill="#f6ecd9"/>
-                        <rect x="290" y="440" width="3" height="12" fill="#ff7ab0"/>
-                        <path d="M280 441 h20" stroke="#fff" stroke-opacity="0.75" stroke-width="1.2" stroke-linecap="round"/>
+                    <circle cx="236" cy="566" r="36" fill="url(#srpPBottle)"/>
+                    <g transform="rotate(-18 236 568)">
+                        <rect x="216" y="560" width="34" height="16" rx="7" fill="#bff5e6" opacity="0.6"/>
+                        <rect x="248" y="564" width="10" height="8" rx="2" fill="#bff5e6" opacity="0.6"/>
+                        <rect class="srp-cork" x="257" y="563.5" width="6" height="9" rx="1.5" fill="#b07b3a"/>
+                        <rect x="222" y="563" width="22" height="10" rx="4" fill="#f6ecd9"/>
+                        <rect x="230" y="562" width="3" height="12" fill="#ff7ab0"/>
+                        <path d="M220 563 h20" stroke="#fff" stroke-opacity="0.75" stroke-width="1.2" stroke-linecap="round"/>
                     </g>
-                    <ellipse cx="296" cy="459" rx="22" ry="3" fill="none" stroke="#bff5e6" stroke-opacity="0.45"/>
+                    <ellipse cx="236" cy="581" rx="22" ry="3" fill="none" stroke="#bff5e6" stroke-opacity="0.45"/>
                 </g></g>
-                <ellipse class="srp-hit" cx="298" cy="446" rx="38" ry="26" fill="transparent"/>
+                <ellipse class="srp-hit" cx="238" cy="568" rx="38" ry="26" fill="transparent"/>
             </g>` : ''}
-            <g aria-hidden="true">
-                <polygon points="0,0 390,0 390,74 0,74" fill="#3a2418"/>
-                <line x1="0" y1="74" x2="390" y2="74" stroke="#5a3a26" stroke-width="6"/>
-                <rect x="16" y="74" width="16" height="560" fill="#5a3a26"/>
-                <rect x="358" y="74" width="16" height="560" fill="#5a3a26"/>
-                <path d="M32 96 Q110 128 195 104 T358 98" fill="none" stroke="#c9a36b" stroke-width="1.2"/>
-                <g class="srp-flicker"><circle cx="70" cy="108" r="3" fill="#ffd27a"/><circle cx="130" cy="116" r="3" fill="#ff9ecf"/><circle cx="195" cy="104" r="3" fill="#ffd27a"/><circle cx="260" cy="104" r="3" fill="#ff9ecf"/><circle cx="320" cy="100" r="3" fill="#ffd27a"/></g>
-                <polygon points="0,520 390,520 390,844 0,844" fill="url(#srpPDeck)"/>
-                <g stroke="#4a2f1d" stroke-width="1.4"><line x1="0" y1="560" x2="390" y2="560"/><line x1="0" y1="608" x2="390" y2="608"/><line x1="0" y1="666" x2="390" y2="666"/><line x1="0" y1="734" x2="390" y2="734"/><line x1="0" y1="812" x2="390" y2="812"/></g>
-                <rect x="32" y="470" width="326" height="8" rx="2" fill="#7a5236"/>
-                <g fill="#6b4630"><rect x="44" y="478" width="6" height="44"/><rect x="90" y="478" width="6" height="44"/><rect x="136" y="478" width="6" height="44"/><rect x="182" y="478" width="6" height="44"/><rect x="228" y="478" width="6" height="44"/><rect x="274" y="478" width="6" height="44"/><rect x="320" y="478" width="6" height="44"/></g>
-                <circle cx="32" cy="300" r="5" fill="#c9a36b"/><circle cx="358" cy="300" r="5" fill="#c9a36b"/>
-            </g>
             <g class="srp-hot srp-hammock" data-place-hot="hammock" role="button" tabindex="0" aria-label="${srEsc(t('room_hammock_aria'))}">
-                <!-- החבלים לא זזים; רק הבד מתנדנד מתחת לקו שבו הם מחזיקים אותו - הוא לא מתנתק מהידיות (לפי בקשה מפורשת) -->
-                <g stroke="#e3cfa3" stroke-width="1.3"><line x1="32" y1="304" x2="78" y2="378"/><line x1="358" y1="304" x2="312" y2="378"/></g>
+                <!-- החבלים קשורים לעמודים שבציור ולא זזים; רק הבד מתנדנד מתחת לקו שבו הם מחזיקים אותו (לפי בקשה מפורשת) -->
+                <g stroke="#e3cfa3" stroke-width="1.3"><line x1="12" y1="300" x2="78" y2="378"/><line x1="378" y1="300" x2="312" y2="378"/></g>
                 <g class="srp-swing">
-                    <path d="M78 376 Q195 498 312 376 Q195 438 78 376 Z" fill="#2fa58c"/>
                     <path d="M92 388 Q195 484 298 388" fill="none" stroke="#bff5e6" stroke-width="3"/>
                     <path d="M108 402 Q195 476 282 402" fill="none" stroke="#ffd27a" stroke-width="2.4"/>
                     <g transform="translate(118 398) rotate(18)">
-                        <path d="M-25 -12 Q0 -17 25 -12 Q29 0 25 12 Q0 17 -25 12 Q-29 0 -25 -12 Z" fill="#ff8fb8"/>
                         <g stroke="#ffe3ee" stroke-width="2.2" opacity="0.85"><line x1="-11" y1="-13" x2="-11" y2="13"/><line x1="0" y1="-14.5" x2="0" y2="14.5"/><line x1="11" y1="-13" x2="11" y2="13"/></g>
                         <path d="M-25 -12 Q0 -17 25 -12 Q29 0 25 12 Q0 17 -25 12 Q-29 0 -25 -12 Z" fill="none" stroke="#fff6fa" stroke-width="1.4"/>
                         <g fill="#ffd27a"><circle cx="-26" cy="-12" r="2.4"/><circle cx="26" cy="-12" r="2.4"/><circle cx="-26" cy="12" r="2.4"/><circle cx="26" cy="12" r="2.4"/></g>
@@ -326,34 +347,17 @@ function srpPorchScene(keys) {
                 </g>
                 <path class="srp-hit" d="M66 356 L324 356 L300 462 L90 462 Z" fill="transparent"/>
             </g>
-            <g aria-hidden="true">
-                <circle class="srp-flicker" cx="90" cy="650" r="80" fill="url(#srpPLantern)"/>
-                <g transform="translate(74 618)">
-                    <path d="M6 0 h20 l4 8 v30 l-4 6 h-20 l-4 -6 v-30 z" fill="#2b1a12"/>
-                    <rect class="srp-flicker" x="8" y="10" width="16" height="26" rx="3" fill="#ffcf8a"/>
-                    <path d="M16 30 q-5 -7 0 -14 q5 7 0 14z" fill="#ff8a3d"/>
-                    <path d="M10 0 q6 -10 12 0" fill="none" stroke="#2b1a12" stroke-width="2"/>
-                </g>
-            </g>
-            <!-- הטאבלט מונח על שולחן קטן ועדין - בלי מעמד ובלי ארגז (לפי בקשה מפורשת: "טבלט הוא בלי משהו שמחזיק אותו...
-                 ואפשר לשים אותו על שולחן קטן עדין לבחוץ") -->
+            <!-- הטאבלט מונח על הרצפה של המרפסת (על השולחן הקטן עומדת עכשיו מנורת אלאדין) -->
             <g class="srp-hot srp-tablet${tabletOpen ? ' is-open' : ' locked'}" data-place-hot="tablet" role="button" tabindex="0" aria-label="${srEsc(roomItemName('tablet'))}">
-                <ellipse cx="300" cy="737" rx="36" ry="5" fill="#000" opacity="0.22"/>
-                <g fill="none" stroke="#efe4d0" stroke-width="2.2" stroke-linecap="round">
-                    <path d="M300 670 V734"/><path d="M298 672 C292 698 283 716 272 735"/><path d="M302 672 C308 698 317 716 328 735"/>
-                    <ellipse cx="300" cy="708" rx="13" ry="3" stroke-width="1.5"/>
-                </g>
-                <ellipse cx="300" cy="664" rx="54" ry="24" fill="#cbb994"/>
-                <ellipse cx="300" cy="660" rx="54" ry="24" fill="#f3ece0"/>
-                <ellipse cx="300" cy="660" rx="47" ry="20" fill="none" stroke="#e2d6bf" stroke-width="1"/>
-                ${tabletOpen ? '<ellipse cx="300" cy="652" rx="74" ry="38" fill="url(#srpPTab)"/>' : ''}
-                <g transform="translate(300 657) scale(1 0.45) rotate(-12)">
-                    <rect x="-38" y="-27" width="76" height="54" rx="7" fill="#26262e"/>
-                    <rect x="-34" y="-23" width="68" height="46" rx="4" fill="${tabletOpen ? 'url(#srpPScreen)' : '#0d1424'}"/>
+                <ellipse cx="196" cy="772" rx="46" ry="9" fill="#000" opacity="0.28"/>
+                ${tabletOpen ? '<ellipse cx="196" cy="762" rx="78" ry="34" fill="url(#srpPTab)"/>' : ''}
+                <g transform="translate(196 764) scale(1 0.42) rotate(-10)">
+                    <rect x="-40" y="-29" width="80" height="58" rx="7" fill="#26262e"/>
+                    <rect x="-36" y="-25" width="72" height="50" rx="4" fill="${tabletOpen ? 'url(#srpPScreen)' : '#0d1424'}"/>
                     ${tabletOpen ? '<g fill="#fff"><circle cx="-18" cy="-9" r="7" opacity="0.28"/><rect x="-6" y="-14" width="30" height="5" rx="2.5" opacity="0.5"/><rect x="-6" y="-4" width="22" height="5" rx="2.5" opacity="0.35"/><rect x="-26" y="8" width="52" height="7" rx="3.5" opacity="0.3"/></g>' : ''}
                 </g>
-                ${tabletOpen ? '' : `<g transform="translate(300 630) scale(0.5)">${srLockShape()}</g><text x="300" y="608" text-anchor="middle" font-size="8.5" font-weight="800" fill="#ffe2a6">${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('tablet'))))}</text>`}
-                <rect class="srp-hit" x="240" y="592" width="120" height="152" fill="transparent"/>
+                ${tabletOpen ? '' : `<g transform="translate(196 728) scale(0.5)">${srLockShape()}</g><text x="196" y="706" text-anchor="middle" font-size="8.5" font-weight="800" fill="#ffe2a6">${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('tablet'))))}</text>`}
+                <rect class="srp-hit" x="136" y="694" width="120" height="96" fill="transparent"/>
             </g>
         </svg>`;
 }
@@ -406,78 +410,42 @@ async function srpOpenBottle(el) {
 }
 
 // ---------- דלת 3: הגיטרה והיומן ----------
+// הציור (world/music-hollow.jpg): פינה בתוך שורשי העץ - הגיטרה, שלושה תקליטים תלויים, מנורת פטרייה, הספה והיומן על הגדם.
+// נגיעה בגיטרה או בתקליט מנגנת את השיר הקסום שלו (SRP_MAGIC_SONGS), נגיעה שוב עוצרת
+const SRP_MUSIC_RECS = [
+    { id: 'rec1', x: 33, y: 356, r: 30 },
+    { id: 'rec2', x: 118, y: 316, r: 30 },
+    { id: 'rec3', x: 168, y: 377, r: 24 },
+];
 function srpMusicScene(keys) {
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('music'))}">
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('music'))}">
             <defs>
-                <linearGradient id="srpMWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1d2a"/><stop offset="1" stop-color="#5a2e3a"/></linearGradient>
-                <linearGradient id="srpMFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2416"/><stop offset="1" stop-color="#5e3c27"/></linearGradient>
-                <linearGradient id="srpMWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3a25c"/><stop offset="1" stop-color="#a5622e"/></linearGradient>
-                <radialGradient id="srpMLamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.6"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-                <pattern id="srpMPaper" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1.4" fill="#fff" opacity="0.06"/></pattern>
+                <radialGradient id="srpMLamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffc9b8" stop-opacity="0.5"/><stop offset="1" stop-color="#ffc9b8" stop-opacity="0"/></radialGradient>
+                ${SRP_MUSIC_RECS.map(r => `<radialGradient id="srpMHalo-${r.id}" cx="0.5" cy="0.5" r="0.5"><stop offset="0.45" stop-color="${SRP_MAGIC_SONGS[r.id].color}" stop-opacity="0.75"/><stop offset="1" stop-color="${SRP_MAGIC_SONGS[r.id].color}" stop-opacity="0"/></radialGradient>`).join('')}
             </defs>
             <g aria-hidden="true">
-                <rect width="390" height="610" fill="url(#srpMWall)"/>
-                <rect width="390" height="610" fill="url(#srpMPaper)"/>
-                <rect width="390" height="70" fill="#1e0f18"/>
-                <polygon points="0,610 390,610 390,844 0,844" fill="url(#srpMFloor)"/>
-                <g stroke="#000" stroke-opacity="0.24" stroke-width="1.1"><line x1="0" y1="644" x2="390" y2="644"/><line x1="0" y1="690" x2="390" y2="690"/><line x1="0" y1="748" x2="390" y2="748"/><line x1="0" y1="814" x2="390" y2="814"/></g>
-                <rect y="602" width="390" height="10" fill="#1e0f18"/>
-                <g transform="translate(40 140)"><circle cx="40" cy="40" r="38" fill="#141014"/><circle cx="40" cy="40" r="26" fill="#1f1a1f" stroke="#2c262c" stroke-width="1"/><circle cx="40" cy="40" r="10" fill="#ff6aa5"/><circle cx="40" cy="40" r="2" fill="#141014"/></g>
-                <g transform="translate(130 120)"><circle cx="34" cy="34" r="32" fill="#141014"/><circle cx="34" cy="34" r="21" fill="#1f1a1f"/><circle cx="34" cy="34" r="8" fill="#ffd27a"/><circle cx="34" cy="34" r="2" fill="#141014"/></g>
-                <g transform="translate(206 150)"><circle cx="30" cy="30" r="28" fill="#141014"/><circle cx="30" cy="30" r="18" fill="#1f1a1f"/><circle cx="30" cy="30" r="7" fill="#7fd6ff"/><circle cx="30" cy="30" r="2" fill="#141014"/></g>
-                <g transform="translate(286 110)"><rect x="0" y="0" width="70" height="90" rx="4" fill="#efe4d0"/><rect x="6" y="6" width="58" height="62" fill="#3a5a78"/><path d="M10 60 l14 -18 l10 12 l8 -8 l16 14 z" fill="#5bb87a"/><circle cx="48" cy="22" r="6" fill="#ffd27a"/></g>
-                <circle cx="90" cy="500" r="150" fill="url(#srpMLamp)"/>
-                <path d="M70 610 V470" stroke="#3a2416" stroke-width="3"/>
-                <path class="srp-flicker" d="M48 470 h44 l-10 -34 h-24 z" fill="#ffb85c"/>
-                <ellipse cx="70" cy="612" rx="18" ry="5" fill="#2a1a12"/>
-                <g transform="translate(150 420)">
-                    <path d="M0 60 Q0 0 60 0 H150 Q210 0 210 60 V170 H0 Z" fill="#8a3a4a"/>
-                    <path d="M20 70 Q20 30 60 30 H150 Q190 30 190 70 V150 H20 Z" fill="#a24a5c"/>
-                    <rect x="-14" y="80" width="40" height="110" rx="18" fill="#7a2f3e"/>
-                    <rect x="184" y="80" width="40" height="110" rx="18" fill="#7a2f3e"/>
-                    <rect x="20" y="130" width="170" height="40" rx="10" fill="#b65a6b"/>
-                    <rect x="10" y="190" width="10" height="20" fill="#3a2416"/><rect x="190" y="190" width="10" height="20" fill="#3a2416"/>
-                    <path d="M40 120 q60 -16 120 0 v20 q-60 -10 -120 0 z" fill="#f0c7d1" opacity="0.9"/>
-                </g>
-                <ellipse cx="210" cy="760" rx="150" ry="42" fill="#3f6b5a" opacity="0.9"/>
-                <ellipse cx="210" cy="760" rx="106" ry="27" fill="#4b7c68" opacity="0.7"/>
+                ${srpArt('music-hollow.jpg')}
+                <circle class="srp-flicker" cx="112" cy="418" r="70" fill="url(#srpMLamp)"/>
             </g>
-            <g class="srp-hot srp-guitar" data-place-hot="guitar" role="button" tabindex="0" aria-label="${srEsc(t('room_guitar_aria'))}">
-                <g class="srp-guitar-shake"><g transform="translate(26 488) rotate(-12)">
-                    <rect x="54" y="-118" width="10" height="120" rx="3" fill="#5a3418"/>
-                    <rect x="50" y="-140" width="18" height="26" rx="4" fill="#3a2010"/>
-                    <g fill="#e8e8e8"><circle cx="48" cy="-134" r="2"/><circle cx="48" cy="-124" r="2"/><circle cx="70" cy="-134" r="2"/><circle cx="70" cy="-124" r="2"/></g>
-                    <path d="M59 -10 C20 -10 18 30 36 44 C14 60 22 104 59 104 C96 104 104 60 82 44 C100 30 98 -10 59 -10 Z" fill="url(#srpMWood)"/>
-                    <circle cx="59" cy="44" r="12" fill="#2a1408"/>
-                    <rect x="47" y="76" width="24" height="5" rx="2" fill="#3a2010"/>
-                    <g stroke="#f5f0e0" stroke-width="0.7" opacity="0.8"><line x1="56" y1="-136" x2="56" y2="78"/><line x1="59" y1="-136" x2="59" y2="78"/><line x1="62" y1="-136" x2="62" y2="78"/></g>
-                </g></g>
-                <path d="M60 600 l26 -44 M86 600 l-10 -44" stroke="#3a2416" stroke-width="3"/>
-                <rect class="srp-hit" x="18" y="336" width="124" height="270" fill="transparent"/>
-            </g>
-            <g aria-hidden="true" transform="translate(270 520)">
-                <ellipse cx="44" cy="80" rx="40" ry="8" fill="#000" opacity="0.3"/>
-                <rect x="40" y="20" width="8" height="60" fill="#5a3418"/>
-                <ellipse cx="44" cy="20" rx="44" ry="12" fill="#8a5a3c"/>
+            ${SRP_MUSIC_RECS.map(r => `<g class="srp-hot srp-rec${srpMagicNow === r.id ? ' is-playing' : ''}" data-place-hot="${r.id}" data-song-id="${r.id}" role="button" tabindex="0" aria-pressed="${srpMagicNow === r.id}" aria-label="${srEsc(t('room_magic_song_' + r.id))}">
+                <circle class="srp-rec-halo" cx="${r.x}" cy="${r.y}" r="${r.r * 1.7}" fill="url(#srpMHalo-${r.id})"/>
+                <circle class="srp-hit" cx="${r.x}" cy="${r.y}" r="${r.r + 6}" fill="transparent"/>
+            </g>`).join('')}
+            <g class="srp-hot srp-guitar${srpMagicNow === 'guitar' ? ' is-playing' : ''}" data-place-hot="guitar" data-song-id="guitar" role="button" tabindex="0" aria-pressed="${srpMagicNow === 'guitar'}" aria-label="${srEsc(t('room_guitar_aria'))}">
+                <ellipse class="srp-rec-halo" cx="58" cy="540" rx="58" ry="96" fill="url(#srpMHalo-rec1)" opacity="0.6"/>
+                <rect class="srp-hit" x="6" y="424" width="104" height="218" fill="transparent"/>
             </g>
             <g class="srp-hot srp-diary" data-place-hot="diary" role="button" tabindex="0" aria-label="${srEsc(t('room_diary_title'))}">
-                <g transform="translate(284 516) rotate(-6)">
-                    <rect x="0" y="0" width="64" height="18" rx="3" fill="#6b3fa0"/>
-                    <rect x="2" y="-2" width="30" height="18" rx="2" fill="#f6ecd9"/><rect x="32" y="-2" width="30" height="18" rx="2" fill="#efe2c8"/>
-                    <g stroke="#b9a07a" stroke-width="0.8"><line x1="6" y1="3" x2="28" y2="3"/><line x1="6" y1="7" x2="26" y2="7"/><line x1="36" y1="3" x2="58" y2="3"/><line x1="36" y1="7" x2="54" y2="7"/></g>
-                    <rect x="30" y="-6" width="3" height="24" fill="#ff4fa3"/>
-                </g>
-                <path d="M344 520 l18 -12" stroke="#2a1145" stroke-width="2.4" stroke-linecap="round"/>
-                <rect class="srp-hit" x="276" y="494" width="92" height="46" fill="transparent"/>
+                <ellipse class="srp-flicker" cx="340" cy="568" rx="40" ry="16" fill="#fff1c9" opacity="0.25"/>
+                <rect class="srp-hit" x="298" y="542" width="86" height="52" fill="transparent"/>
             </g>
             <g class="srp-notes" aria-hidden="true">
-                <g class="srp-note-amb"><path d="M110 330 v-18 l12 -3 v18" fill="none" stroke="#ffd27a" stroke-width="2"/><circle cx="107" cy="331" r="3.4" fill="#ffd27a"/><circle cx="119" cy="328" r="3.4" fill="#ffd27a"/></g>
+                <g class="srp-note-amb"><path d="M240 262 v-18 l12 -3 v18" fill="none" stroke="#ffd27a" stroke-width="2"/><circle cx="237" cy="263" r="3.4" fill="#ffd27a"/><circle cx="249" cy="260" r="3.4" fill="#ffd27a"/></g>
             </g>
         </svg>`;
 }
 function srpInitMusic(box) {
-    let chord = 0;
     srpCleanups.push(() => srpMusicStop());
     const floatNotes = (x, y, n) => {
         const g = box.querySelector('.srp-notes');
@@ -495,12 +463,28 @@ function srpInitMusic(box) {
             }, i * 160);
         }
     };
+    // מה מתנגן מסומן (הילה + aria-pressed), וכל עוד משהו מתנגן - תווים עולים ממנו מדי פעם
+    let notesTimer = null;
+    const mark = () => {
+        box.querySelectorAll('[data-song-id]').forEach(el => { const on = el.dataset.songId === srpMagicNow; el.classList.toggle('is-playing', on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+        clearInterval(notesTimer);
+        if (!srpMagicNow || srpReduce()) return;
+        const from = () => { const r = SRP_MUSIC_RECS.find(x => x.id === srpMagicNow); return r ? [r.x - 6, r.y - r.r] : [52, 440]; };
+        notesTimer = setInterval(() => { if (!box.isConnected) { clearInterval(notesTimer); return; } const [x, y] = from(); floatNotes(x, y, 2); }, 2600);
+    };
+    srpCleanups.push(() => clearInterval(notesTimer));
+    const play = (id, el) => {
+        const on = srpMagicToggle(id);
+        if (id === 'guitar' && on) { el.classList.remove('is-strum'); void el.getBoundingClientRect(); el.classList.add('is-strum'); }
+        mark();
+        if (on) { const r = SRP_MUSIC_RECS.find(x => x.id === id); floatNotes(r ? r.x - 6 : 52, r ? r.y - r.r : 440, 3); }
+    };
+    mark();
     return {
-        guitar: el => {
-            srpStrum(chord++);
-            el.classList.remove('is-strum'); void el.getBoundingClientRect(); el.classList.add('is-strum');
-            floatNotes(96, 360, 3);
-        },
+        guitar: el => play('guitar', el),
+        rec1: el => play('rec1', el),
+        rec2: el => play('rec2', el),
+        rec3: el => play('rec3', el),
         diary: () => srpOpenDiary(),
     };
 }
@@ -658,42 +642,32 @@ async function srpOpenDiary() {
 // כותבים בו מה רוצים לשחרר, וגל גדול בא ומוחק. לא נשמר בשום מקום
 function srpBreathScene(keys) {
     const sand = keys >= roomUnlockAt('sand');
+    // הציור (world/lake-sunset.jpg): אגם בשקיעה, בלי שמש - השמש עולה ושוקעת עם הנשימה מאחורי קו האופק (y≈441), הגל
+    // הקטן על קו המים, והמקל הקסום שעל החול הנוצץ הוא המקל לכתיבה
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('breath'))}">
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('breath'))}">
             <defs>
-                <linearGradient id="srbDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f1c45"/><stop offset="0.45" stop-color="#5e3a78"/><stop offset="0.78" stop-color="#d9706d"/><stop offset="1" stop-color="#f6b46c"/></linearGradient>
-                <linearGradient id="srbSeaDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8637a"/><stop offset="0.35" stop-color="#5a4682"/><stop offset="1" stop-color="#2d3468"/></linearGradient>
-                <linearGradient id="srbSand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d0a2"/><stop offset="1" stop-color="#ddb07c"/></linearGradient>
                 <radialGradient id="srbSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6d6"/><stop offset="0.55" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff9f5e"/></radialGradient>
                 <radialGradient id="srbGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb46a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffb46a" stop-opacity="0"/></radialGradient>
+                <linearGradient id="srbHorizonFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="0.88" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+                <mask id="srbAboveHorizon" maskUnits="userSpaceOnUse" x="0" y="0" width="390" height="844"><rect width="390" height="446" fill="url(#srbHorizonFade)"/></mask>
             </defs>
             <g aria-hidden="true">
-                <rect class="srb-sky" width="390" height="474"/>
-                <g class="srb-stars" fill="#fff" opacity="0.7"><circle cx="40" cy="110" r="1.4"/><circle cx="120" cy="80" r="1.1"/><circle cx="250" cy="96" r="1.5"/><circle cx="330" cy="130" r="1.2"/><circle cx="290" cy="60" r="1"/><circle cx="80" cy="170" r="1"/></g>
-                <g fill="#f4a184" opacity="0.55"><ellipse cx="90" cy="372" rx="80" ry="5"/><ellipse cx="300" cy="352" rx="96" ry="6"/><ellipse cx="240" cy="404" rx="60" ry="4"/></g>
-                <g fill="none" stroke="#3a2c55" stroke-width="2" stroke-linecap="round" opacity="0.8"><path d="M86 260 q8 -8 16 0 q8 -8 16 0"/><path d="M130 232 q6 -6 12 0 q6 -6 12 0"/></g>
-                <g class="srb-sun"><circle cx="195" cy="472" r="135" fill="url(#srbGlow)"/><circle cx="195" cy="472" r="85" fill="url(#srbSun)"/></g>
-                <rect class="srb-sea" y="472" width="390" height="190"/>
-                <g fill="#ffcf8a"><rect x="150" y="478" width="90" height="3" rx="1.5" opacity="0.75"/><rect x="160" y="492" width="70" height="3" rx="1.5" opacity="0.65"/><rect x="145" y="508" width="100" height="3" rx="1.5" opacity="0.55"/><rect x="165" y="526" width="60" height="3" rx="1.5" opacity="0.5"/><rect x="140" y="546" width="110" height="3" rx="1.5" opacity="0.4"/><rect x="155" y="568" width="80" height="3" rx="1.5" opacity="0.35"/><rect x="135" y="592" width="120" height="3" rx="1.5" opacity="0.28"/></g>
-                <g stroke="#fff" stroke-opacity="0.18" stroke-width="1.4" stroke-linecap="round"><line x1="30" y1="520" x2="80" y2="520"/><line x1="290" y1="540" x2="350" y2="540"/><line x1="60" y1="590" x2="110" y2="590"/><line x1="300" y1="606" x2="370" y2="606"/></g>
-                <path d="M0 652 Q100 636 195 648 T390 642 V844 H0 Z" fill="url(#srbSand)"/>
-                <path d="M0 652 Q100 636 195 648 T390 642 V662 Q290 668 195 664 T0 670 Z" fill="#c9966a" opacity="0.45"/>
-                <g fill="#c99a6b" opacity="0.5"><ellipse cx="70" cy="800" rx="3" ry="1.6"/><ellipse cx="300" cy="820" rx="3" ry="1.6"/><ellipse cx="340" cy="720" rx="2.4" ry="1.3"/><ellipse cx="40" cy="730" rx="2.4" ry="1.3"/></g>
+                ${srpArt('lake-sunset.jpg')}
+                <g mask="url(#srbAboveHorizon)"><g class="srb-sun"><circle cx="195" cy="441" r="116" fill="url(#srbGlow)"/><circle cx="195" cy="441" r="66" fill="url(#srbSun)"/></g></g>
+                <g fill="#ffcf8a"><rect x="152" y="474" width="86" height="2.6" rx="1.3" opacity="0.5"/><rect x="162" y="488" width="66" height="2.6" rx="1.3" opacity="0.42"/><rect x="148" y="503" width="94" height="2.6" rx="1.3" opacity="0.34"/><rect x="168" y="520" width="54" height="2.6" rx="1.3" opacity="0.26"/></g>
                 <g class="srb-wave">
-                    <path d="M-20 628 H410 V648 Q386 640 362 648 T314 648 T266 648 T218 648 T170 648 T122 648 T74 648 T26 648 T-20 648 Z" fill="#8fa3d4" opacity="0.35"/>
-                    <path d="M-20 648 Q4 640 26 648 T74 648 T122 648 T170 648 T218 648 T266 648 T314 648 T362 648 T410 648 V656 Q386 664 362 656 T314 656 T266 656 T218 656 T170 656 T122 656 T74 656 T26 656 T-20 656 Z" fill="#fff" opacity="0.85"/>
+                    <path d="M-20 648 Q4 640 26 648 T74 648 T122 648 T170 648 T218 648 T266 648 T314 648 T362 648 T410 648 V655 Q386 662 362 655 T314 655 T266 655 T218 655 T170 655 T122 655 T74 655 T26 655 T-20 655 Z" fill="#fff" opacity="0.55"/>
                 </g>
             </g>
-            ${sand ? `<g class="srb-writing" role="button" tabindex="0" aria-label="${srEsc(t('room_sand_erase_aria'))}"><text class="srb-word-light" x="195" y="717" text-anchor="middle"></text><text class="srb-word" x="195" y="716" text-anchor="middle"></text></g>
+            ${sand ? `<g class="srb-writing" role="button" tabindex="0" aria-label="${srEsc(t('room_sand_erase_aria'))}"><text class="srb-word-light" x="195" y="733" text-anchor="middle"></text><text class="srb-word" x="195" y="732" text-anchor="middle"></text></g>
             <g class="srb-bigwave" aria-hidden="true">
-                <path d="M-20 600 H410 V690 Q385 702 360 690 T310 690 T260 690 T210 690 T160 690 T110 690 T60 690 T10 690 T-20 690 Z" fill="#a9bde8" opacity="0.6"/>
-                <path d="M-20 690 Q5 702 30 690 T80 690 T130 690 T180 690 T230 690 T280 690 T330 690 T380 690 T430 690" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+                <path d="M-20 620 H410 V712 Q385 724 360 712 T310 712 T260 712 T210 712 T160 712 T110 712 T60 712 T10 712 T-20 712 Z" fill="#b9c4ee" opacity="0.6"/>
+                <path d="M-20 712 Q5 724 30 712 T80 712 T130 712 T180 712 T230 712 T280 712 T330 712 T380 712 T430 712" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
             </g>
             <g class="srp-hot srb-stick" data-place-hot="sand" role="button" tabindex="0" aria-label="${srEsc(roomItemName('sand'))}">
-                <path d="M292 812 L366 788" stroke="#7a5236" stroke-width="5" stroke-linecap="round"/>
-                <path d="M318 804 l9 -13" stroke="#7a5236" stroke-width="3" stroke-linecap="round"/>
-                <g transform="translate(262 812)"><path d="M0 6 Q9 -12 18 6 Z" fill="#f8dccb"/><path d="M9 -4 V5 M5 -1 L7 5 M13 -1 L11 5" stroke="#e0a98f" stroke-width="0.9" fill="none" stroke-linecap="round"/></g>
-                <rect class="srp-hit" x="252" y="772" width="128" height="58" fill="transparent"/>
+                <ellipse class="srp-flicker" cx="364" cy="694" rx="20" ry="16" fill="#e9c6ff" opacity="0.35"/>
+                <rect class="srp-hit" x="206" y="676" width="184" height="98" fill="transparent"/>
             </g>` : ''}
             <text class="srb-cue srb-cue-in" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_in'))}</text>
             <text class="srb-cue srb-cue-out" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_out'))}</text>
@@ -800,13 +774,13 @@ function srpWriteInSand(box) {
 }
 
 // ---------- דלת 5: השביל ביער ----------
-// לפי בקשה מפורשת: "שילחצו על התאורה היא נכבית ויש יום בחוץ" - הפנסים מחליפים בין לילה ליום
+// לפי בקשה מפורשת: "שילחצו על התאורה היא נכבית ויש יום בחוץ" - הפנסים מחליפים בין לילה ליום. מאז 2026-10-14 שני ציורים
+// (world/forest-night.jpg / forest-day.jpg) - מוזזים קצת שמאלה (x -64) כדי שהשלט שליד הספסל ייכנס למסך.
+// לכל פנס: אור (x, y, r) והמקום שנוגעים בו (hit), בקואורדינטות של הסצנה
 const SRP_LANTERNS = [
-    { x: 88, y: 650, r: 60, post: [86, 660, 4, 96], box: [78, 632, 20, 24], cap: 'M76 632 h24 l-4 -8 h-16 z', hit: [68, 620, 40, 140] },
-    { x: 312, y: 610, r: 52, post: [310, 618, 4, 84], box: [303, 594, 18, 21], cap: 'M301 594 h22 l-4 -7 h-14 z', hit: [294, 582, 36, 124] },
-    { x: 146, y: 520, r: 36, post: [145, 526, 3, 58], box: [140, 508, 13, 15], cap: 'M138 508 h17 l-3 -5 h-11 z', hit: [130, 496, 32, 92] },
-    { x: 180, y: 434, r: 20, post: [179, 438, 2, 32], box: [176, 426, 8, 10], cap: '', hit: [168, 418, 24, 56] },
-    { x: 220, y: 420, r: 17, post: [219, 424, 2, 28], box: [216, 413, 7, 9], cap: '', hit: [208, 404, 24, 52] },
+    { x: 66, y: 578, r: 58, hit: [36, 520, 56, 174] },
+    { x: 129, y: 471, r: 30, hit: [112, 446, 30, 72] },
+    { x: 218, y: 494, r: 34, hit: [202, 466, 32, 96] },
 ];
 function srpOutsideScene(keys) {
     const swing = keys >= roomUnlockAt('swing');
@@ -814,84 +788,55 @@ function srpOutsideScene(keys) {
     const sign = keys >= roomUnlockAt('selfcare');
     const fire = keys >= roomUnlockAt('campfire');
     const L = SRP_LANTERNS;
+    const art = n => `<image class="srp-art" href="${SRP_ART}${n}" x="-64" y="0" width="471.1" height="844" preserveAspectRatio="none"/>`;
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('outside'))}">
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('outside'))}">
             <defs>
-                <linearGradient id="srpOSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o-sky-a)"/><stop offset="0.5" style="stop-color:var(--o-sky-b)"/><stop offset="1" style="stop-color:var(--o-sky-c)"/></linearGradient>
-                <linearGradient id="srpOPath" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--o-path-a)"/><stop offset="1" style="stop-color:var(--o-path-b)"/></linearGradient>
-                <radialGradient id="srpOLight" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpOSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c9" stop-opacity="0.85"/><stop offset="1" stop-color="#fff4c9" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpOFire" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb05c" stop-opacity="0.6"/><stop offset="1" stop-color="#ffb05c" stop-opacity="0"/></radialGradient>
+                <radialGradient id="srpOLight" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+                <radialGradient id="srpOFire" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb05c" stop-opacity="0.55"/><stop offset="1" stop-color="#ffb05c" stop-opacity="0"/></radialGradient>
+                <radialGradient id="srpOAsh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#2a2238" stop-opacity="0.92"/><stop offset="0.7" stop-color="#2a2238" stop-opacity="0.6"/><stop offset="1" stop-color="#2a2238" stop-opacity="0"/></radialGradient>
             </defs>
             <g aria-hidden="true">
-                <rect width="390" height="844" fill="url(#srpOSky)"/>
-                <g class="srp-night-only sr-twinkle" fill="#fff"><circle cx="150" cy="150" r="1.3"/><circle cx="230" cy="120" r="1.1"/><circle cx="196" cy="210" r="1.4"/><circle cx="260" cy="250" r="1"/><circle cx="130" cy="260" r="1.1"/><circle cx="300" cy="190" r="1.2"/></g>
-                <g class="srp-day-only"><circle cx="196" cy="150" r="70" fill="url(#srpOSun)"/><circle cx="196" cy="150" r="24" fill="#ffe9a8"/></g>
-                <g class="srp-day-only" fill="none" stroke="#4a5a6a" stroke-width="1.8" stroke-linecap="round"><path d="M150 224 q7 -7 14 0 q7 -7 14 0"/><path d="M196 196 q5 -5 10 0 q5 -5 10 0"/></g>
-                <g style="fill:var(--o-far)"><rect x="40" y="120" width="10" height="300"/><rect x="120" y="160" width="8" height="260"/><rect x="262" y="150" width="8" height="270"/><rect x="330" y="110" width="10" height="310"/></g>
-                <g style="fill:var(--o-canopy)"><ellipse cx="45" cy="140" rx="46" ry="60"/><ellipse cx="124" cy="176" rx="36" ry="48"/><ellipse cx="266" cy="170" rx="38" ry="50"/><ellipse cx="336" cy="130" rx="50" ry="64"/></g>
-                <path d="M0 400 Q195 380 390 400 V844 H0 Z" style="fill:var(--o-ground)"/>
-                <path d="M100 844 C150 710 236 630 204 530 C190 482 192 436 196 398 L204 398 C204 436 204 482 220 530 C262 630 210 724 300 844 Z" fill="url(#srpOPath)"/>
-                <g style="fill:var(--o-stone)" opacity="0.6"><ellipse cx="190" cy="780" rx="16" ry="5"/><ellipse cx="226" cy="712" rx="12" ry="4"/><ellipse cx="214" cy="640" rx="9" ry="3"/><ellipse cx="206" cy="570" rx="7" ry="2.4"/></g>
-                <g style="fill:var(--o-grass)"><ellipse cx="40" cy="640" rx="70" ry="22"/><ellipse cx="350" cy="600" rx="60" ry="18"/><ellipse cx="120" cy="470" rx="40" ry="10"/><ellipse cx="290" cy="460" rx="36" ry="9"/></g>
-                ${swing ? '<path d="M26 264 Q90 244 162 256" fill="none" style="stroke:var(--o-trunk)" stroke-width="7" stroke-linecap="round"/>' : ''}
+                <g class="srp-night-only">${art('forest-night.jpg')}</g>
+                <g class="srp-day-only">${art('forest-day.jpg')}</g>
             </g>
             ${swing ? `<g class="srp-hot srp-swing-hot" data-place-hot="swing" role="button" tabindex="0" aria-label="${srEsc(roomItemName('swing'))}">
-                <!-- תלויה על הענף (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה - לא לצדדים -->
-                <ellipse class="srp-swing-shadow" cx="101" cy="434" rx="26" ry="4" fill="#000" opacity="0.22"/>
-                <g class="srp-swing-ropes" stroke="#c9b48a" stroke-width="1.6"><line x1="84" y1="254" x2="84" y2="404"/><line x1="118" y1="254" x2="118" y2="404"/></g>
-                <rect class="srp-swing-seat" x="74" y="402" width="54" height="8" rx="2" fill="#8a5e3c"/>
-                <rect class="srp-hit" x="62" y="248" width="78" height="194" fill="transparent"/>
+                <!-- תלויה על הענף הגדול שבציור (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה -->
+                <ellipse class="srp-swing-shadow" cx="77" cy="446" rx="24" ry="4" fill="#000" opacity="0.25"/>
+                <g class="srp-swing-ropes" stroke="#d8c39a" stroke-width="1.6"><line x1="62" y1="283" x2="62" y2="414"/><line x1="92" y1="280" x2="92" y2="414"/></g>
+                <rect class="srp-swing-seat" x="52" y="412" width="50" height="8" rx="2" fill="#a0703f"/>
+                <rect class="srp-hit" x="40" y="276" width="74" height="176" fill="transparent"/>
             </g>` : ''}
             ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
-                <!-- השביל ממשיך - קשת עץ קטנה בסוף השביל, ומאחוריה קרחת היוגה ליד המפל -->
-                <ellipse class="srp-flicker" cx="200" cy="388" rx="40" ry="18" fill="url(#srpOLight)"/>
-                <g fill="none" stroke="#8a5e3c" stroke-width="3" stroke-linecap="round"><path d="M188 400 V378"/><path d="M212 400 V378"/><path d="M185 380 Q200 364 215 380"/></g>
-                <g fill="#ffd27a"><circle cx="200" cy="371" r="1.8"/><circle cx="190" cy="377" r="1.3"/><circle cx="210" cy="377" r="1.3"/></g>
-                <rect class="srp-hit" x="174" y="356" width="52" height="50" fill="transparent"/>
+                <!-- השער בסוף השביל - מאחוריו קרחת היוגה ליד המפל -->
+                <ellipse class="srp-flicker" cx="172" cy="440" rx="44" ry="40" fill="url(#srpOLight)"/>
+                <rect class="srp-hit" x="126" y="378" width="92" height="110" fill="transparent"/>
             </g>` : ''}
             <g class="srp-hot srp-lights" data-place-hot="lights" role="button" tabindex="0" aria-label="${srEsc(t('room_lights_aria'))}" aria-pressed="true">
                 <g class="srp-night-only srp-flicker">${L.map(l => `<circle cx="${l.x}" cy="${l.y}" r="${l.r}" fill="url(#srpOLight)"/>`).join('')}</g>
-                <g fill="#141414">${L.map(l => `<rect x="${l.post[0]}" y="${l.post[1]}" width="${l.post[2]}" height="${l.post[3]}"/>`).join('')}</g>
-                <g class="srp-lamp" style="fill:var(--o-lamp)">${L.map(l => `<rect x="${l.box[0]}" y="${l.box[1]}" width="${l.box[2]}" height="${l.box[3]}" rx="${l.box[2] > 12 ? 4 : 2}"/>`).join('')}</g>
-                <g fill="#141414">${L.filter(l => l.cap).map(l => `<path d="${l.cap}"/>`).join('')}</g>
                 ${L.map(l => `<rect class="srp-hit" x="${l.hit[0]}" y="${l.hit[1]}" width="${l.hit[2]}" height="${l.hit[3]}" fill="transparent"/>`).join('')}
             </g>
             ${sign ? `<g class="srp-hot srp-sign" data-place-hot="selfcare" role="button" tabindex="0" aria-label="${srEsc(t('room_selfcare_title'))}">
-                <rect x="300" y="470" width="4" height="40" fill="#5a3a24"/>
-                <rect x="270" y="438" width="64" height="34" rx="4" fill="#8a5e3c"/>
-                <rect x="275" y="443" width="54" height="24" rx="2" fill="#a8774d"/>
-                <g stroke="#f3e6cf" stroke-width="1.6" stroke-linecap="round" opacity="0.85"><line x1="282" y1="451" x2="312" y2="451"/><line x1="282" y1="459" x2="304" y2="459"/></g>
-                <path d="M318 452 q2.5 -3.5 5 0 q2.5 -3.5 5 0 q0 3.5 -5 6.5 q-5 -3 -5 -6.5z" fill="#ff7ab0"/>
-                <rect class="srp-hit" x="264" y="432" width="76" height="80" fill="transparent"/>
+                <path d="M352 566 q3 -4.4 6 0 q3 -4.4 6 0 q0 4.4 -6 8 q-6 -3.6 -6 -8z" fill="#ff7ab0"/>
+                <g stroke="#f3e6cf" stroke-width="1.6" stroke-linecap="round" opacity="0.8"><line x1="346" y1="582" x2="382" y2="582"/><line x1="346" y1="590" x2="374" y2="590"/></g>
+                <rect class="srp-hit" x="336" y="544" width="56" height="106" fill="transparent"/>
             </g>` : ''}
             <g class="srp-hot srp-bench" data-place-hot="bench" role="button" tabindex="0" aria-label="${srEsc(t('room_bench_aria'))}">
-                <g transform="translate(246 536)">
-                    <rect x="0" y="0" width="84" height="8" rx="2" style="fill:var(--o-bench)"/>
-                    <rect x="0" y="-26" width="84" height="6" rx="2" style="fill:var(--o-bench)"/>
-                    <rect x="0" y="-14" width="84" height="6" rx="2" style="fill:var(--o-bench)"/>
-                    <rect x="4" y="-30" width="5" height="62" fill="#5a3a24"/><rect x="75" y="-30" width="5" height="62" fill="#5a3a24"/>
-                    <rect x="10" y="8" width="5" height="24" fill="#5a3a24"/><rect x="69" y="8" width="5" height="24" fill="#5a3a24"/>
-                </g>
-                <rect class="srp-hit" x="240" y="500" width="96" height="74" fill="transparent"/>
-            </g>
-            <g aria-hidden="true">
-                <g style="fill:var(--o-trunk)"><rect x="-6" y="0" width="40" height="844"/><rect x="360" y="0" width="38" height="844"/></g>
-                <g style="fill:var(--o-canopy-near)"><ellipse cx="10" cy="60" rx="90" ry="90"/><ellipse cx="380" cy="40" rx="96" ry="96"/></g>
+                <rect class="srp-hit" x="234" y="518" width="102" height="108" fill="transparent"/>
             </g>
             ${fire ? `<g class="srp-hot srp-campfire" data-place-hot="campfire" role="button" tabindex="0" aria-label="${srEsc(roomItemName('campfire'))}" aria-pressed="true">
-                <g class="srp-fire-lit"><circle class="srp-flicker" cx="326" cy="778" r="74" fill="url(#srpOFire)"/></g>
-                <g fill="#6f7377"><ellipse cx="300" cy="800" rx="9" ry="6"/><ellipse cx="318" cy="806" rx="9" ry="6"/><ellipse cx="338" cy="806" rx="9" ry="6"/><ellipse cx="354" cy="799" rx="8" ry="6"/></g>
-                <g stroke-linecap="round"><line x1="304" y1="796" x2="348" y2="782" stroke="#6b4426" stroke-width="7"/><line x1="306" y1="782" x2="350" y2="796" stroke="#5a3a20" stroke-width="7"/></g>
-                <g class="srp-fire-lit">
-                    <path class="srp-fire-flame" d="M327 790 C310 772 316 752 326 738 C332 754 344 760 340 776 C338 784 334 788 327 790 Z" fill="#ff8a3d"/>
-                    <path class="srp-fire-flame" d="M327 790 C318 778 322 766 328 756 C332 768 338 772 335 782 C333 786 331 789 327 790 Z" fill="#ffd27a" style="animation-delay:.25s"/>
-                    <g fill="#ffd27a" class="srp-sparks"><circle cx="320" cy="736" r="1.4"/><circle cx="334" cy="728" r="1.2"/><circle cx="328" cy="716" r="1"/></g>
+                <!-- בלילה האש מצוירת (כבויה = אפר מעליה), ביום היא מצוירת כבויה (דולקת = להבות מעליה) -->
+                <g class="srp-fire-lit"><circle class="srp-flicker srp-night-only" cx="322" cy="684" r="66" fill="url(#srpOFire)"/></g>
+                <g class="srp-fire-smoke"><ellipse class="srp-night-only" cx="322" cy="686" rx="26" ry="18" fill="url(#srpOAsh)"/></g>
+                <g class="srp-fire-lit srp-day-only">
+                    <path class="srp-fire-flame" d="M322 692 C306 676 312 657 321 644 C327 659 338 664 334 679 C332 687 328 690 322 692 Z" fill="#ff8a3d"/>
+                    <path class="srp-fire-flame" d="M322 692 C314 681 317 670 323 661 C327 672 332 675 330 684 C328 688 326 691 322 692 Z" fill="#ffd27a" style="animation-delay:.25s"/>
                 </g>
-                <path class="srp-fire-smoke" d="M326 780 q-6 -12 2 -22 q8 -10 0 -22" fill="none" stroke="#c9c9d0" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
-                <rect class="srp-hit" x="286" y="728" width="84" height="88" fill="transparent"/>
+                <g class="srp-fire-lit"><g fill="#ffd27a" class="srp-sparks"><circle cx="316" cy="650" r="1.4"/><circle cx="329" cy="642" r="1.2"/><circle cx="323" cy="630" r="1"/></g></g>
+                <path class="srp-fire-smoke" d="M322 676 q-6 -12 2 -22 q8 -10 0 -22" fill="none" stroke="#c9c9d0" stroke-width="2" opacity="0.45" stroke-linecap="round"/>
+                <rect class="srp-hit" x="266" y="640" width="112" height="86" fill="transparent"/>
             </g>` : ''}
-            <g class="srp-night-only" fill="#ffe48e" aria-hidden="true"><circle class="srp-fly" cx="70" cy="560" r="2"/><circle class="srp-fly" cx="320" cy="690" r="2.2" style="animation-delay:1s"/><circle class="srp-fly" cx="260" cy="380" r="1.6" style="animation-delay:2s"/><circle class="srp-fly" cx="110" cy="380" r="1.6" style="animation-delay:.5s"/><circle class="srp-fly" cx="350" cy="480" r="1.8" style="animation-delay:1.6s"/></g>
+            <g class="srp-night-only" fill="#ffe48e" aria-hidden="true"><circle class="srp-fly" cx="40" cy="520" r="2"/><circle class="srp-fly" cx="300" cy="610" r="2.2" style="animation-delay:1s"/><circle class="srp-fly" cx="250" cy="360" r="1.6" style="animation-delay:2s"/></g>
         </svg>`;
 }
 function srpInitOutside(box, keys, opts = {}) {
@@ -978,7 +923,7 @@ function srpOpenSignView(box) {
 // ---------- פנס המשאלות על הגג ----------
 // נגיעה בפנס: כותבים משאלה (לא נשמרת בשום מקום) והפנס עף לשמיים ונעלם; אחרי רגע מחכה שם פנס חדש
 function roomWishSvg() {
-    return `<g class="sr-wish" role="button" tabindex="0" aria-label="${srEsc(roomItemName('wish'))}" transform="translate(236 452)">
+    return `<g class="sr-wish" role="button" tabindex="0" aria-label="${srEsc(roomItemName('wish'))}" transform="translate(178 356)">
         <defs><radialGradient id="srWishGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.7"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient></defs>
         <g class="sr-wish-inner">
             <circle cx="0" cy="-16" r="28" fill="url(#srWishGlow)"/>
@@ -1022,33 +967,12 @@ function roomInitWish(root) {
 const SR_ROOMCAT_ACTIONS = [['yarn', 2400], ['mouse', 2400], ['butterfly', 3000]];
 function srCatNapSvg() {
     const F = '#120d1f';
-    return `<g class="sr-hot sr-roomcat" data-hot="catvisit" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}" transform="translate(320 656) scale(1.3)">
+    return `<g class="sr-hot sr-roomcat sr-roomcat-art" data-hot="catvisit" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}" transform="translate(196 678) scale(1.3)">
         <g class="rc-yarn" aria-hidden="true"><circle cx="34" cy="-7" r="7" fill="#ff7ab0"/><path d="M28 -10 q6 -4 12 2 M29 -4 q6 3 11 -3 M31 -13 q5 6 1 13" stroke="#ffc4dd" stroke-width="1" fill="none"/><path d="M27 -3 q-8 6 -16 2" stroke="#ff7ab0" stroke-width="1" fill="none"/></g>
         <g class="rc-mouse" aria-hidden="true"><path d="M32 -4 q-7 2 -9 -4" stroke="#b9a8ff" stroke-width="1.2" fill="none"/><ellipse cx="39" cy="-4" rx="7" ry="4.6" fill="#b9a8ff"/><circle cx="45.5" cy="-7" r="2.8" fill="#b9a8ff"/><circle cx="44.5" cy="-9.8" r="1.7" fill="#d9ceff"/><circle cx="47.2" cy="-7.2" r="0.6" fill="${F}"/></g>
-        <g class="rc-all">
-            <path class="rc-tail" d="M11 -6 q17 -1 16 -18 q-1 -8 5 -9" stroke="${F}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-            <g class="rc-body">
-                <ellipse cx="0" cy="-14" rx="15" ry="15" fill="${F}"/>
-                <ellipse cx="0" cy="-12" rx="6.5" ry="9" fill="#2a2042"/>
-                <ellipse class="rc-paw rc-paw-l" cx="-6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
-                <ellipse class="rc-paw rc-paw-r" cx="6" cy="-2" rx="4.6" ry="3" fill="#1d1633"/>
-            </g>
-            <g class="rc-head">
-                <path d="M-12 -40 l-2.5 -12 l9.5 6.5 z M12 -40 l2.5 -12 l-9.5 6.5 z" fill="${F}"/>
-                <path d="M-10.6 -42.5 l-1.1 -6 l4.4 3.2 z M10.6 -42.5 l1.1 -6 l-4.4 3.2 z" fill="#ff9ecf" opacity="0.5"/>
-                <circle cx="0" cy="-35" r="12.5" fill="${F}"/>
-                <ellipse cx="-4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/><ellipse cx="4.6" cy="-37" rx="2.9" ry="3.4" fill="#d8f56a"/>
-                <ellipse class="rc-pupil rc-pupil-l" cx="-4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/><ellipse class="rc-pupil rc-pupil-r" cx="4.6" cy="-37" rx="1" ry="2.6" fill="${F}"/>
-                <circle cx="-3.8" cy="-38.2" r="0.7" fill="#fff"/><circle cx="5.4" cy="-38.2" r="0.7" fill="#fff"/>
-                <g class="rc-lids"><ellipse cx="-4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><ellipse cx="4.6" cy="-37" rx="3.3" ry="3.8" fill="${F}"/><path d="M-7.4 -36.4 q2.8 2.2 5.6 0 M1.8 -36.4 q2.8 2.2 5.6 0" stroke="#9a8fc4" stroke-width="0.8" fill="none" stroke-linecap="round"/></g>
-                <path d="M-1.5 -32.2 h3 l-1.5 1.7 z" fill="#ff9ecf"/>
-                <path d="M0 -30.5 q-1.6 1.7 -3.2 0.4 M0 -30.5 q1.6 1.7 3.2 0.4" stroke="#9a8fc4" stroke-width="0.7" fill="none" stroke-linecap="round"/>
-                <path d="M-6 -31.6 l-8 -1.4 M-6 -30.4 l-8 1.2 M6 -31.6 l8 -1.4 M6 -30.4 l8 1.2" stroke="#9a8fc4" stroke-width="0.6" opacity="0.75" stroke-linecap="round"/>
-            </g>
-        </g>
         <g class="rc-fly" aria-hidden="true"><g class="rc-wings"><path d="M0 0 q-6 -7 -8 -1 q-1 4 8 1 z" fill="#ffd27a"/><path d="M0 0 q6 -7 8 -1 q1 4 -8 1 z" fill="#ffb3d6"/></g><line x1="0" y1="-1.5" x2="0" y2="2" stroke="${F}" stroke-width="0.9" stroke-linecap="round"/></g>
         <g class="rc-fx"></g>
-        <ellipse class="sr-hit" cx="6" cy="-24" rx="38" ry="34" fill="transparent"/>
+        <ellipse class="sr-hit" cx="44" cy="-8" rx="74" ry="48" fill="transparent"/>
     </g>`;
 }
 function srCatNapTap(el) {
@@ -1079,89 +1003,56 @@ function srCatNapTap(el) {
 // ---------- שלב 6: יוגה ביער - קרחת ליד המפל, המדריכה ואנשים טובים במעגל ----------
 // לפי בחירה מפורשת (2026-10-10): המקום = ה (ליד המפל); השיחה = א (מעגל שיתוף), "גזע שנפתח כמו במחשב" לפי מה
 // שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
-const SRP_GUIDE_LOOK = { skin: '#a96f4a', hair: '#2a1a12', band: '#7fd6c0' };   // פני המדריכה - עד שתיבחר אחת מהאפשרויות על הקנבס
-const SRP_SKIN = ['#f1c7a5', '#c98e64', '#8d5a3b', '#e3a982', '#5e3a24'];
-function ygHair(style, x, y, c) {
-    if (style === 'bun') return `<circle cx="${x}" cy="${y - 12}" r="4.6" fill="${c}"/><path d="M${x - 9} ${y} Q${x - 10} ${y - 10} ${x} ${y - 10} Q${x + 10} ${y - 10} ${x + 9} ${y} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 9} ${y} Z" fill="${c}"/>`;
-    if (style === 'curly') return `<g fill="${c}"><circle cx="${x - 6}" cy="${y - 6}" r="4.5"/><circle cx="${x}" cy="${y - 9}" r="5"/><circle cx="${x + 6}" cy="${y - 6}" r="4.5"/><circle cx="${x - 8.5}" cy="${y}" r="3.4"/><circle cx="${x + 8.5}" cy="${y}" r="3.4"/></g>`;
-    if (style === 'long') return `<path d="M${x - 10} ${y + 8} Q${x - 11} ${y - 11} ${x} ${y - 11} Q${x + 11} ${y - 11} ${x + 10} ${y + 8} L${x + 7} ${y + 8} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 7} ${y + 8} Z" fill="${c}"/>`;
-    if (style === 'puff') return `<g fill="${c}"><circle cx="${x}" cy="${y - 15}" r="7"/><path d="M${x - 9} ${y} Q${x - 10} ${y - 10} ${x} ${y - 10} Q${x + 10} ${y - 10} ${x + 9} ${y} Q${x + 6} ${y - 5} ${x} ${y - 5} Q${x - 6} ${y - 5} ${x - 9} ${y} Z"/></g>`;
-    return `<path d="M${x - 9} ${y - 1} Q${x - 9} ${y - 11} ${x} ${y - 11} Q${x + 9} ${y - 11} ${x + 9} ${y - 1} Q${x + 6} ${y - 6} ${x} ${y - 6} Q${x - 6} ${y - 6} ${x - 9} ${y - 1} Z" fill="${c}"/>`;
-}
-function ygFace(x, y) {
-    return `<path d="M${x - 4.6} ${y - 1} q1.4 1.3 2.8 0 M${x + 1.8} ${y - 1} q1.4 1.3 2.8 0" stroke="#2a1d1a" stroke-width="0.9" fill="none" stroke-linecap="round"/><path d="M${x - 2} ${y + 3} q2 1.6 4 0" stroke="#7a3b2e" stroke-width="0.9" fill="none" stroke-linecap="round"/><circle cx="${x - 5}" cy="${y + 2}" r="1.4" fill="#ff9ecf" opacity="0.45"/><circle cx="${x + 5}" cy="${y + 2}" r="1.4" fill="#ff9ecf" opacity="0.45"/>`;
-}
-function ygSit(x, y, s, skin, hair, top, pants, style, heart) {
-    const hands = heart
-        ? `<path d="M-12 -36 Q-9 -24 -2 -24 M12 -36 Q9 -24 2 -24" stroke="${top}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M-2 -30 L0 -22 L2 -30 Z" fill="${skin}"/>`
-        : `<path d="M-12 -36 Q-20 -24 -22 -9 M12 -36 Q20 -24 22 -9" stroke="${top}" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="-22" cy="-8" r="3" fill="${skin}"/><circle cx="22" cy="-8" r="3" fill="${skin}"/>`;
-    return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-5" rx="27" ry="9" fill="${pants}"/><path d="M-14 -8 Q-17 -38 0 -44 Q17 -38 14 -8 Z" fill="${top}"/>${hands}<rect x="-3" y="-50" width="6" height="7" fill="${skin}"/><circle cx="0" cy="-57" r="9.5" fill="${skin}"/>${ygHair(style, 0, -57, hair)}${ygFace(0, -57)}</g>`;
-}
-function ygMat(x, y, w, color) {
-    const h = w * 0.22;
-    return `<path d="M${x - w / 2 + 8} ${y - h} H${x + w / 2 - 8} L${x + w / 2} ${y} H${x - w / 2} Z" fill="${color}"/><path d="M${x - w / 2} ${y} H${x + w / 2} V${y + 3} H${x - w / 2} Z" fill="#000" opacity="0.18"/>`;
-}
-// המדריכה בתנוחת העץ: רגל אחת על הברך, הידיים מעל הראש
-function ygGuide(x, y, s) {
-    const L = SRP_GUIDE_LOOK, top = '#f7efe2', pants = '#cdbb9a';
-    return `<g transform="translate(${x} ${y}) scale(${s})">
-        <path d="M-2 0 L-3 -36" stroke="${pants}" stroke-width="8" stroke-linecap="round"/>
-        <path d="M-3 -34 L14 -26 L-1 -18" stroke="${pants}" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M-12 -38 Q-14 -64 0 -70 Q14 -64 10 -38 Z" fill="${top}"/>
-        <path d="M-9 -64 Q-14 -84 -2 -102 M9 -64 Q14 -84 2 -102" stroke="${top}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-        <path d="M-2.5 -103 L0 -96 L2.5 -103 Z" fill="${L.skin}"/>
-        <rect x="-3" y="-76" width="6" height="7" fill="${L.skin}"/>
-        <circle cx="0" cy="-83" r="9" fill="${L.skin}"/>
-        ${ygHair('puff', 0, -83, L.hair)}
-        <path d="M-8.6 -88 Q0 -93 8.6 -88" stroke="${L.band}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-        ${ygFace(0, -83)}
-    </g>`;
-}
-// הפנים של המדריכה בכותרת השיחה
-function ygAvatar() {
-    const L = SRP_GUIDE_LOOK;
-    return `<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="40" fill="#d9efe6"/><g fill="${L.hair}"><circle cx="40" cy="15" r="11"/><circle cx="31" cy="19" r="7"/><circle cx="49" cy="19" r="7"/></g><path d="M18 80 Q20 62 40 60 Q60 62 62 80 Z" fill="#f7efe2"/><rect x="35" y="50" width="10" height="12" rx="4" fill="${L.skin}"/><ellipse cx="40" cy="40" rx="17" ry="20" fill="${L.skin}"/><path d="M23 36 Q24 22 40 22 Q56 22 57 36 Q52 29 40 29 Q28 29 23 36 Z" fill="${L.hair}"/><path d="M24 31 Q40 22 56 31" stroke="${L.band}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30 40 q3 2.6 6 0 M44 40 q3 2.6 6 0" stroke="#1d130f" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M35 48 q5 4 10 0" stroke="#a8494a" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="29" cy="46" r="3" fill="#ff8fa8" opacity="0.35"/><circle cx="51" cy="46" r="3" fill="#ff8fa8" opacity="0.35"/></svg>`;
-}
+// הפנים של המורה בכותרת השיחה - מהציור שלה בעיניים פתוחות
+function ygAvatar() { return `<img src="${SRP_ART}teacher-open.png" alt="">`; }
+// היוגה (לפי בקשה מפורשת, 2026-10-14): יצורי היער על המזרונים בעיניים עצומות, והמורה על המזרון הבודד שעל הסלע -
+// עיניים עצומות כמו כולם. נגיעה בה: העיניים נפתחות, מתקרבים אליה, ושם מתחילה השיחה (ygTeacherWake)
+const YG_TEACHER = { cx: 199, bottom: 552, h: 126 };
 function srpYogaScene(keys) {
     const falls = keys >= roomUnlockAt('waterfall');
+    const T = YG_TEACHER;
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('yoga'))}">
-            <defs>
-                <linearGradient id="ygSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8e3f0"/><stop offset="1" stop-color="#d8efd2"/></linearGradient>
-                <radialGradient id="ygHalo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff1c9" stop-opacity="0.55"/><stop offset="1" stop-color="#fff1c9" stop-opacity="0"/></radialGradient>
-            </defs>
-            <g aria-hidden="true">
-                <rect width="390" height="844" fill="url(#ygSky)"/>
-                <path d="M0 120 Q60 80 120 130 L150 420 H0 Z" fill="#7a8b8f"/>
-                <path d="M390 110 Q330 70 270 130 L240 420 H390 Z" fill="#6f8287"/>
-                <g fill="#5d8a5f"><ellipse cx="20" cy="110" rx="70" ry="60"/><ellipse cx="372" cy="100" rx="70" ry="58"/></g>
-            </g>
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('yoga'))}">
+            <g aria-hidden="true">${srpArt('yoga.jpg')}</g>
             <g class="srp-hot srp-falls${falls ? '' : ' locked'}" data-place-hot="waterfall" role="button" tabindex="0" aria-label="${srEsc(roomItemName('waterfall'))}">
-                <rect x="150" y="120" width="90" height="300" fill="#e6f6ff"/>
-                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="18 6" opacity="0.85"><line x1="166" y1="124" x2="166" y2="414"/><line x1="186" y1="130" x2="186" y2="408"/><line x1="206" y1="122" x2="206" y2="416"/><line x1="226" y1="128" x2="226" y2="410"/></g>
-                ${falls ? '' : srLockBadge(195, 256, 'waterfall')}
-                <rect class="srp-hit" x="140" y="110" width="110" height="320" fill="transparent"/>
+                ${falls ? '' : srpVeil(158, 128, 78, 336) + srLockBadge(197, 290, 'waterfall')}
+                <rect class="srp-hit" x="150" y="120" width="94" height="350" fill="transparent"/>
             </g>
-            <g aria-hidden="true">
-                <ellipse cx="195" cy="440" rx="150" ry="36" fill="#7fc6d6"/>
-                <ellipse cx="195" cy="430" rx="120" ry="20" fill="#ffffff" opacity="0.5"/>
-                <path d="M0 470 Q195 450 390 470 V844 H0 Z" fill="#8fbf7c"/>
-                <path d="M0 520 Q195 500 390 520 V844 H0 Z" fill="#86b873"/>
-                <g fill="#5f9a5a"><path d="M20 790 q10 -40 20 0 q8 -30 16 0 z"/><path d="M340 800 q10 -40 20 0 q8 -30 16 0 z"/></g>
-                <ellipse cx="195" cy="576" rx="74" ry="12" fill="#9aa5a8"/>
-                <circle cx="195" cy="500" r="80" fill="url(#ygHalo)"/>
-                ${ygMat(195, 576, 104, '#efe2c8')}
-                ${ygMat(95, 640, 76, '#b9a8ff')}${ygMat(295, 640, 76, '#7fd6c0')}${ygMat(145, 704, 82, '#ffb3d6')}${ygMat(245, 704, 82, '#ffd27a')}
-                ${ygSit(95, 634, 0.82, SRP_SKIN[1], '#2a1d1a', '#7c6bd6', '#3d3566', 'curly')}
-                ${ygSit(295, 634, 0.82, SRP_SKIN[3], '#6b3e26', '#2fa58c', '#1f4d44', 'bun', true)}
-                ${ygSit(145, 698, 0.9, SRP_SKIN[0], '#d8b26a', '#ff8fb8', '#6b2f4a', 'long')}
-                ${ygSit(245, 698, 0.9, SRP_SKIN[2], '#111111', '#f6b73c', '#6b4a12', 'short', true)}
+            <g class="yg-circle" aria-hidden="true">
+                ${srpSprite('yg-blob.png', 40, 616, 62, 328 / 300, 'yg-sitter')}
+                ${srpSprite('yg-spirit.png', 351, 616, 64, 311 / 300, 'yg-sitter')}
+                ${srpSprite('yg-fluffy.png', 127, 640, 70, 396 / 300, 'yg-sitter')}
+                ${srpSprite('yg-baby.png', 256, 640, 72, 404 / 300, 'yg-sitter')}
             </g>
             <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
-                ${ygGuide(195, 570, 1.12)}
-                <rect class="srp-hit" x="160" y="440" width="70" height="140" fill="transparent"/>
+                ${srpSprite('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
+                ${srpSprite('teacher-open.png', T.cx, T.bottom, T.h, 357 / 400, 'yg-teacher yg-eyes-open')}
+                <rect class="srp-hit" x="${T.cx - 46}" y="${T.bottom - T.h + 8}" width="92" height="${T.h}" fill="transparent"/>
             </g>
         </svg>`;
+}
+// נגיעה במורה: העיניים נפתחות, המצלמה מתקרבת לפנים שלה (הפנים בערך ברבע העליון של המסך, מעל חלון השיחה), ואז השיחה
+function ygTeacherWake(box) {
+    if (box.querySelector('.yg-talk')) return;
+    const view = box.querySelector('.srp-view');
+    const face = box.querySelector('.yg-eyes-closed');
+    if (!view || !face) { ygOpenTalk(box); return; }
+    const vr = view.getBoundingClientRect(), fr = face.getBoundingClientRect();
+    const s = 2.3;
+    const px = fr.left + fr.width / 2 - vr.left, py = fr.top + fr.height * 0.3 - vr.top;
+    const tx = vr.width / 2 - s * px, ty = vr.height * 0.25 - s * py;
+    box.classList.add('yg-awake');
+    view.style.transformOrigin = '0 0';
+    view.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s})`;
+    box.classList.add('yg-zoomed');
+    const t0 = setTimeout(() => { if (box.isConnected && box.classList.contains('yg-zoomed')) ygOpenTalk(box); }, srpReduce() ? 0 : 950);
+    srpCleanups.push(() => clearTimeout(t0));
+}
+// סוף השיחה: מתרחקים בחזרה, והמורה עוצמת שוב את העיניים
+function ygTeacherRest(box) {
+    const view = box.querySelector('.srp-view');
+    box.classList.remove('yg-zoomed', 'yg-awake');
+    if (view) view.style.transform = '';
 }
 // השיחה: עץ קטן כמו במחשב - כל צומת: מה נאמר (המדריכה / נועה / איתי), ואז בחירה, משימה קטנה, תנוחה עם נשימות או סוף
 const YG_TREE = {
@@ -1196,7 +1087,7 @@ function ygOpenTalk(box) {
     box.appendChild(panel);
     box.classList.add('is-talking');
     ygState = { box, path: [{ id: 'start', pick: null }], timers: [] };
-    const close = () => { ygStopTimers(); ygState = null; panel.remove(); box.classList.remove('is-talking'); };
+    const close = () => { ygStopTimers(); ygState = null; panel.remove(); box.classList.remove('is-talking'); ygTeacherRest(box); };
     panel.querySelector('.yg-x').addEventListener('click', close);
     panel.querySelector('[data-yg="new"]').addEventListener('click', () => { if (!ygState) return; ygState.path = [{ id: 'start', pick: null }]; ygRender(true); });
     panel.querySelector('[data-yg="back"]').addEventListener('click', () => { if (!ygState || ygState.path.length < 2) return; ygState.path.pop(); ygState.path[ygState.path.length - 1].pick = null; ygRender(false); });
@@ -1297,7 +1188,7 @@ function ygBreathe(lines, done) {
 }
 function srpInitYoga(box, keys, opts = {}) {
     return {
-        guide: () => ygOpenTalk(box),
+        guide: () => ygTeacherWake(box),
         waterfall: el => {
             if (el.classList.contains('locked')) { srShowLockTip('waterfall'); return; }
             roomOpenPlace('waterfall', { fromHall: !!opts.fromHall, parent: 'yoga' });
@@ -1308,44 +1199,31 @@ function srpInitYoga(box, keys, opts = {}) {
 // ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
 // יושבים על הסלע: הכפתורים נעלמים, הקשת מתחזקת ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
 function srpWaterfallScene() {
+    // הציור (world/waterfall.jpg); מעליו: קווי מים זורמים שקופים, ערפל, הקשת שמתחזקת כשיושבים, והבריכה (מראה)
     return `
-        <svg class="srp-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('waterfall'))}">
+        <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('waterfall'))}">
             <defs>
-                <linearGradient id="wfBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe9e0"/><stop offset="1" stop-color="#8fc4b0"/></linearGradient>
-                <linearGradient id="wfWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6f6fa"/><stop offset="1" stop-color="#b4e0ec"/></linearGradient>
-                <linearGradient id="wfPool" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4d2"/><stop offset="1" stop-color="#3f8fa3"/></linearGradient>
-                <linearGradient id="wfRain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9a9a"/><stop offset="0.5" stop-color="#ffe08a"/><stop offset="1" stop-color="#9ad6ff"/></linearGradient>
+                <linearGradient id="wfRain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9ad0"/><stop offset="0.5" stop-color="#ffe08a"/><stop offset="1" stop-color="#9ad6ff"/></linearGradient>
+                <linearGradient id="wfStone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a99cc0"/><stop offset="1" stop-color="#5c5274"/></linearGradient>
+                <filter id="wfMistBlur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
             </defs>
             <g aria-hidden="true">
-                <rect width="390" height="844" fill="url(#wfBack)"/>
-                <path d="M70 120 Q100 90 140 100 L250 100 Q296 92 320 124 L340 560 H50 Z" fill="#6b7b78"/>
-                <path d="M90 140 L130 120 L140 200 L110 260 Z M280 130 L310 150 L300 260 L276 220 Z" fill="#5a6967"/>
-                <path d="M70 120 Q100 90 140 100 L250 100 Q296 92 320 124 L316 140 Q290 112 250 116 L140 116 Q102 108 76 134 Z" fill="#4f8f5a"/>
-                <rect x="150" y="104" width="90" height="440" fill="url(#wfWater)"/>
-                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="3" stroke-dasharray="18 6" stroke-linecap="round" opacity="0.9"><line x1="160" y1="104" x2="160" y2="544"/><line x1="178" y1="110" x2="178" y2="544"/><line x1="196" y1="104" x2="196" y2="544"/><line x1="214" y1="110" x2="214" y2="544"/><line x1="230" y1="104" x2="230" y2="544"/></g>
-                <path class="srp-rainbow" d="M120 470 A90 90 0 0 1 280 470" fill="none" stroke="url(#wfRain)" stroke-width="6"/>
-                <g class="srp-mist" fill="#ffffff"><ellipse cx="150" cy="540" rx="80" ry="22" opacity="0.6"/><ellipse cx="250" cy="536" rx="90" ry="20" opacity="0.55"/><ellipse cx="200" cy="520" rx="60" ry="16" opacity="0.5"/></g>
+                ${srpArt('waterfall.jpg')}
+                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="2.2" stroke-dasharray="16 9" stroke-linecap="round" opacity="0.32"><line x1="180" y1="142" x2="180" y2="272"/><line x1="194" y1="146" x2="194" y2="270"/><line x1="208" y1="142" x2="208" y2="272"/><line x1="160" y1="284" x2="160" y2="444"/><line x1="174" y1="290" x2="174" y2="446"/><line x1="214" y1="290" x2="214" y2="446"/><line x1="228" y1="284" x2="228" y2="444"/></g>
+                <path class="srp-rainbow" d="M128 462 A70 62 0 0 1 262 462" fill="none" stroke="url(#wfRain)" stroke-width="5" stroke-linecap="round"/>
+                <g class="srp-mist" fill="#ffffff" filter="url(#wfMistBlur)"><ellipse cx="160" cy="452" rx="70" ry="16" opacity="0.32"/><ellipse cx="236" cy="448" rx="74" ry="15" opacity="0.28"/><ellipse cx="198" cy="438" rx="52" ry="12" opacity="0.26"/></g>
             </g>
             <g class="srp-hot srp-pool" data-place-hot="pool" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_pool_aria'))}">
-                <ellipse cx="195" cy="580" rx="210" ry="80" fill="url(#wfPool)"/>
-                <g class="srp-ripples-wf" fill="none" stroke="#ffffff" stroke-width="2"><ellipse cx="195" cy="560" rx="70" ry="14"/><ellipse cx="195" cy="566" rx="90" ry="18" style="animation-delay:1.2s"/><ellipse cx="195" cy="572" rx="110" ry="22" style="animation-delay:2.4s"/></g>
+                <ellipse class="srp-hit" cx="195" cy="612" rx="236" ry="150" fill="transparent"/>
+                <g class="srp-ripples-wf" fill="none" stroke="#ffffff" stroke-width="2"><ellipse cx="195" cy="586" rx="70" ry="16"/><ellipse cx="195" cy="592" rx="94" ry="21" style="animation-delay:1.2s"/><ellipse cx="195" cy="598" rx="118" ry="26" style="animation-delay:2.4s"/></g>
                 <g class="srp-splash"></g>
-                <text class="srp-pool-q" x="195" y="600" text-anchor="middle" font-size="17" font-weight="800" fill="#effcff" data-fit="320">${srEsc(t('room_pool_q'))}</text>
-            </g>
-            <g aria-hidden="true">
-                <g fill="#5d6a68"><ellipse cx="30" cy="560" rx="60" ry="40"/><ellipse cx="370" cy="556" rx="56" ry="42"/><ellipse cx="90" cy="640" rx="40" ry="20"/></g>
-                <g fill="#77857f"><ellipse cx="24" cy="546" rx="40" ry="18"/><ellipse cx="364" cy="540" rx="36" ry="18"/></g>
-                <path d="M0 640 Q120 610 200 640 T390 630 V844 H0 Z" fill="#2f6b45"/>
-                <path d="M0 700 Q100 680 195 700 T390 694 V844 H0 Z" fill="#245a3a"/>
-                <g stroke="#4f9a5e" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M30 700 q-14 -30 -30 -40"/><path d="M38 700 q-4 -36 -14 -54"/><path d="M46 700 q8 -32 22 -48"/><path d="M54 700 q16 -24 34 -30"/><path d="M340 694 q-16 -26 -32 -34"/><path d="M348 694 q-4 -34 -12 -50"/><path d="M356 694 q8 -30 20 -44"/><path d="M364 694 q14 -22 30 -28"/></g>
-                <path d="M0 0 H390 V62 Q362 92 324 72 Q292 98 254 74 Q222 94 192 72 Q160 96 130 74 Q98 98 68 72 Q38 94 0 68 Z" fill="#1d4a30"/>
-                <g fill="#1d4a30"><rect x="-10" y="0" width="70" height="140" rx="30"/><ellipse cx="20" cy="40" rx="90" ry="70"/><ellipse cx="380" cy="30" rx="96" ry="70"/></g>
+                <text class="srp-pool-q" x="195" y="626" text-anchor="middle" font-size="17" font-weight="800" fill="#f2fdff" data-fit="320">${srEsc(t('room_pool_q'))}</text>
             </g>
             <g class="srp-hot srp-rock" data-place-hot="rock" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_rock_aria'))}">
-                <ellipse cx="292" cy="760" rx="70" ry="24" fill="#6f7a78"/>
-                <ellipse cx="292" cy="752" rx="64" ry="16" fill="#8a9692"/>
-                <ellipse cx="270" cy="748" rx="22" ry="5" fill="#a3aeaa"/>
-                <rect class="srp-hit" x="216" y="724" width="152" height="64" fill="transparent"/>
+                <ellipse cx="300" cy="806" rx="62" ry="12" fill="#1c1430" opacity="0.45"/>
+                <path d="M244 800 Q248 780 280 776 Q320 772 350 782 Q362 790 356 800 Q330 810 296 810 Q258 810 244 800 Z" fill="url(#wfStone)"/>
+                <path d="M258 788 Q284 780 318 781 Q340 783 348 789" stroke="#d9cdf0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+                <rect class="srp-hit" x="232" y="760" width="140" height="60" fill="transparent"/>
             </g>
         </svg>`;
 }
