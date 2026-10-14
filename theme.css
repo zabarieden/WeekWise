@@ -3089,6 +3089,21 @@ html[dir="rtl"] .calories-weight-link-chevron { transform: scaleX(-1); }
 .nm-option-name { font-weight: 700; font-size: .98rem; color: var(--text-primary); }
 .nm-option-text { font-size: .84rem; line-height: 1.5; color: var(--text-secondary); }
 .nm-option-meta { font-size: .76rem; color: var(--accent-purple-light-text); font-variant-numeric: tabular-nums; }
+/* 🧈 "בוחרים עד 3 שאוהבים" - מתקפל, בתוך אפשרות (בשאלון מתחת לאפשרות שנבחרה, ובכרטיס הארוחה של היום) */
+.nm-option-wrap { display: flex; flex-direction: column; border-radius: 16px; border: 1.5px solid var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 8%, transparent); }
+.nm-option-wrap > .nm-option { border: 0; background: transparent; }
+.nm-option-wrap > .nm-picks { margin: 0 15px 12px; }
+.nm-picks { margin: 2px 0 4px; }
+.nm-picks > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; font-size: 0.84rem; font-weight: 700; color: var(--accent-purple-light-text); list-style: none; }
+.nm-picks > summary::-webkit-details-marker { display: none; }
+.nm-picks > summary::after { content: '▾'; font-size: 0.85em; transition: transform 0.15s; }
+.nm-picks[open] > summary::after { transform: rotate(180deg); }
+.nm-picks > summary:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; border-radius: 6px; }
+.nm-pick-group { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 6px; }
+.nm-pick-group + .nm-pick-group { border-top: 1px solid var(--border-color); padding-top: 8px; }
+.nm-pick-chip { white-space: normal; text-align: start; line-height: 1.35; }
+.nm-pick-chip.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 16%, var(--bg-row)); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .nm-picks > summary::after { transition: none; } }
 .nm-slot-name { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
 
 /* לוח */

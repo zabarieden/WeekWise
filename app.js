@@ -9519,7 +9519,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },
     { id: 'new_me_times', category: 'nutrition' },
-    { id: 'new_me_ai_menu', category: 'nutrition' },
+    { id: 'new_me_menu_build', category: 'nutrition' },
     { id: 'new_me_plans', category: 'nutrition' },
     { id: 'new_me_tour', category: 'nutrition' },
     { id: 'new_me_tracking', category: 'nutrition' },

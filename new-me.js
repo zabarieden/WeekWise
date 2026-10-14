@@ -104,7 +104,8 @@ let nmBurnedToday = 0;         // קלוריות שנשרפו באימונים �
 function nmEsc(s) { return escapeHtmlForReport(s == null ? '' : s); }
 function nmFmt(n) { try { return Number(n).toLocaleString(currentLang); } catch { return String(n); } }
 function nmFmtNum(n, digits = 1) { try { return new Intl.NumberFormat(currentLang, { maximumFractionDigits: digits }).format(n); } catch { return String(n); } }
-function nmOptText(plan, slot, opt, short) { return newMeText(`p${plan}_${slot}_${opt}${short ? '_t' : ''}`); }
+// {spread} / {cereal} / {milk} / {light} בטקסט = מה שנבחר בתוך האפשרות ("זה או זה או זה" - ר' nmPicks)
+function nmOptText(plan, slot, opt, short) { return newMeText(`p${plan}_${slot}_${opt}${short ? '_t' : ''}`).replace(/\{(spread|cereal|milk|light)\}/g, (m, g) => nmPicksText(g)); }
 function nmRoot() { return document.getElementById('new-me-root'); }
 function nmDate(ds) { return new Date(ds + 'T12:00:00'); }
 function nmShortDate(ds) { return new Intl.DateTimeFormat(currentLang, { day: 'numeric', month: 'short' }).format(nmDate(ds)); }
@@ -169,7 +170,74 @@ function nmItemInfo(key) {
     const p = nmParseItem(key);
     if (!p) return null;
     const o = NEW_ME_PLANS[p.plan][p.slot].options[p.opt];
-    return { ...p, kcal: o.kcal, protein: o.protein, small: !!o.small };
+    const n = nmOptNutrition(p.plan, p.slot, p.opt);
+    return { ...p, kcal: n.kcal, protein: n.protein, small: !!o.small };
+}
+// 🧈 הבחירות שבתוך אפשרות (NEW_ME_PICKS, לפי בקשה מפורשת, 2026-10-14): בשאלון - מה שנבחר בו, אחרת מה שנשמר בפרופיל,
+// ועד שבוחרים - ברירת המחדל. בטקסט: "זה או זה או זה"
+function nmPicks(group) {
+    const g = NEW_ME_PICKS[group];
+    if (!g) return [];
+    const src = nmQuiz && nmQuiz.picks ? nmQuiz.picks : nmProfile && nmProfile.picks;
+    const list = src && Array.isArray(src[group]) ? src[group].filter(id => g.items[id]).slice(0, NEW_ME_PICKS_MAX) : [];
+    return list.length ? list : g.def.slice();
+}
+function nmPicksText(group) { return nmPicks(group).map(id => nmPickInText(group, id)).join(` ${t('nm_or')} `); }
+// הדברים הקלים כתובים כפריטים בפני עצמם ("A banana") - באמצע משפט האות הראשונה קטנה (לא בגרמנית, ששם שמות עצם באות גדולה)
+function nmPickInText(group, id) {
+    const s = t(nmPickTextKey(group, id));
+    return group === 'light' && currentLang !== 'de' && /^\p{Lu}(?!\p{Lu})/u.test(s) ? s.charAt(0).toLocaleLowerCase(currentLang) + s.slice(1) : s;
+}
+function nmOptPicks(plan, slot, opt) { const s = NEW_ME_PLANS[plan] && NEW_ME_PLANS[plan][slot]; const o = s && s.options[opt]; return (o && o.picks) || []; }
+// הקלוריות והחלבון של אפשרות: מה שכתוב בנתונים (עם ברירת המחדל של הבחירות) + ההפרש בין הממוצע של מה שנבחר לממוצע של ברירת המחדל
+function nmOptNutrition(plan, slot, opt) {
+    const o = NEW_ME_PLANS[plan][slot].options[opt];
+    let kcal = o.kcal, protein = o.protein;
+    (o.picks || []).forEach(group => {
+        const g = NEW_ME_PICKS[group];
+        const avg = (ids, f) => ids.reduce((a, id) => a + (g.items[id][f] || 0), 0) / ids.length;
+        const picked = nmPicks(group);
+        kcal += avg(picked, 'kcal') - avg(g.def, 'kcal');
+        protein += avg(picked, 'protein') - avg(g.def, 'protein');
+    });
+    return { kcal: Math.round(kcal / 5) * 5, protein: Math.round(protein) };
+}
+// "בוחרים עד 3 שאוהבים" - מתקפל. בשאלון פתוח כשבוחרים את האפשרות; בתפריט היום סגור עד שנוגעים בו.
+// נגיעה ברביעי מוציאה את הראשון שנבחר, ולפחות אחד תמיד נשאר
+let nmPicksOpenSlot = null;
+function nmPicksPanelHtml(groups, where, id) {
+    const open = where === 'quiz' ? !(nmQuiz && nmQuiz.picksClosed && nmQuiz.picksClosed[id]) : nmPicksOpenSlot === id;
+    const toggle = where === 'quiz' ? `nmQuizPicksToggle('${id}', this.open)` : `nmPicksOpenSlot = this.open ? '${id}' : (nmPicksOpenSlot === '${id}' ? null : nmPicksOpenSlot)`;
+    return `<details class="nm-picks"${open ? ' open' : ''} ontoggle="${toggle}">
+        <summary>${nmEsc(t('nm_picks_label'))}</summary>
+        ${groups.map(group => {
+            const chosen = nmPicks(group);
+            return `<div class="nm-pick-group" data-group="${group}">${Object.keys(NEW_ME_PICKS[group].items).map(item => {
+                const on = chosen.includes(item);
+                return `<button type="button" class="nm-chip nm-pick-chip${on ? ' selected' : ''}" aria-pressed="${on}" data-pick="${group}:${item}" onclick="nmTogglePick('${group}', '${item}', '${where}')">${nmEsc(t(nmPickTextKey(group, item)))}</button>`;
+            }).join('')}</div>`;
+        }).join('')}
+    </details>`;
+}
+async function nmTogglePick(group, item, where) {
+    if (!NEW_ME_PICKS[group] || !NEW_ME_PICKS[group].items[item]) return;
+    const cur = nmPicks(group);
+    let next = cur.includes(item) ? cur.filter(x => x !== item) : [...cur, item];
+    if (!next.length) return;
+    if (next.length > NEW_ME_PICKS_MAX) next = next.slice(-NEW_ME_PICKS_MAX);
+    if (where === 'quiz') {
+        if (!nmQuiz) return;
+        nmQuiz.picks = { ...(nmQuiz.picks || {}), [group]: next };
+        nmRenderQuiz(nmRoot());
+        return;
+    }
+    if (!nmProfile) return;
+    const prev = nmProfile.picks;
+    nmProfile.picks = { ...(nmProfile.picks || {}), [group]: next };
+    const { error } = await supabaseClient.from('new_me_profile').update({ picks: nmProfile.picks, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { nmProfile.picks = prev; showAppToast(t('nm_save_error'), 'error'); return; }
+    nmRenderView(nmRoot());
+    nmAfterTrackerChange();
 }
 function nmItemShort(it) { return it.custom ? it.name : nmOptText(it.plan, it.slot, it.opt, true); }
 function nmItemFull(it) { return it.custom ? (it.text || t(it.source === 'ai' || it.source === 'ai_menu' ? 'nm_custom_from_ai' : 'nm_custom_from_saved')) : nmOptText(it.plan, it.slot, it.opt); }
@@ -287,14 +355,16 @@ function nmLateChoicesHtml(current, onPick) {
 function nmBudgetBoxHtml(plan, late, menu) {
     const p = NEW_ME_PLANS[plan] ? Number(plan) : 1300;
     const lateKcal = late === 'eat' ? NEW_ME_LATE_KCAL : 0;
+    // השעה של הערב - מה שנבחר (בשאלון או בתזכורות), לא תמיד 21:00
+    const lateTime = nmQuiz ? (nmQuiz.lateTime || NEW_ME_LATE_TIME) : nmLateTime();
     const meals = menu ? menu.chosen + menu.adj : p - NEW_ME_DRINKS_KCAL - lateKcal;
     const row = (label, n) => `<div class="nm-budget-row"><span>${label}</span><b><bdi dir="ltr">~${nmFmt(n)}</bdi></b></div>`;
     return `
         <div class="nm-budget" aria-live="polite">
             ${row(`🍽️ ${nmEsc(t('nm_budget_meals'))}`, meals)}
             ${menu && menu.adj ? `<div class="nm-budget-sub">${nmTpl('nm_budget_chosen', { n: nmFmt(menu.chosen), adj: nmSigned(menu.adj) })}</div>` : ''}
-            ${row(`☕ ${nmEsc(t(late === 'drink' ? 'nm_budget_drinks_drink' : 'nm_budget_drinks'))}`, NEW_ME_DRINKS_KCAL)}
-            ${lateKcal ? row(`🌙 ${nmEsc(t('nm_budget_late'))}`, lateKcal) : ''}
+            ${row(`☕ ${nmEsc(t(late === 'drink' ? 'nm_budget_drinks_drink' : 'nm_budget_drinks').replace('{time}', lateTime))}`, NEW_ME_DRINKS_KCAL)}
+            ${lateKcal ? row(`🌙 ${nmEsc(t('nm_budget_late').replace('{time}', lateTime))}`, lateKcal) : ''}
             <div class="nm-budget-row total"><span>${nmEsc(t('nm_budget_total'))}</span><b><bdi dir="ltr">${nmFmt(meals + NEW_ME_DRINKS_KCAL + lateKcal)}</bdi> ${nmEsc(t('calories_unit'))}</b></div>
         </div>`;
 }
@@ -342,7 +412,7 @@ function nmLateRowHtml() {
     const c = nmLateChoice();
     if (!c) return `
         <div class="nm-late nm-late-ask">
-            <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_ask'))}</div>
+            <div class="nm-slot-name">🌙 ${nmEsc(t('nm_late_ask').replace('{time}', nmLateTime()))}</div>
             ${nmLateChoicesHtml(null, 'nmSetLateChoice')}
         </div>`;
     if (c === 'none') return '';
@@ -666,23 +736,6 @@ async function nmMaybeAskMealTimes() {
     if (!items.length || document.querySelector('.nm-sheet-overlay, .sr-reveal')) { if (!items.length && !nmProfile.routine_meals_checked) nmCheckRoutineMeals(); return; }
     nmOpenMealTimes({ firstTime: true });
 }
-// ✨ חלון חד-פעמי (לפי בקשה מפורשת: "חלון חד-פעמי שמציע") למי שמילא את השאלון לפני שהיה תפריט אישי: לבנות אותו עכשיו
-// (רק הארוחות והשעות, אוכל ושתייה והתפריט - nmStartAiMenuQuiz), או "לא עכשיו". אחר כך - מההגדרות של התוכנית
-function nmMaybeOfferAiMenu() {
-    if (!nmProfile || nmProfile.ai_menu_batch || nmProfile.ai_menu_offered_at || nmQuiz || document.querySelector('.nm-sheet-overlay, .sr-reveal, .app-tour-layer')) return false;
-    const ov = nmOpenSheet(`
-        <div class="nm-offer-hero" aria-hidden="true">✨</div>
-        <h4>${nmEsc(t('nm_ai_offer_title'))}</h4>
-        <p class="nm-fine">${nmEsc(t('nm_ai_offer_text'))}</p>
-        <button type="button" class="nm-btn-primary" data-build>${nmEsc(t('nm_ai_offer_build'))}</button>
-        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_ai_offer_later'))}</button>`, 'nm-ai-offer-sheet', () => nmMarkAiOffered());
-    ov.querySelector('[data-build]').addEventListener('click', () => {
-        ov.remove();
-        nmMarkAiOffered();
-        nmStartAiMenuQuiz('home');
-    });
-    return true;
-}
 // ✨ העולם הקסום (לפי בקשה מפורשת, 2026-10-13: "בתוך המשחק שיהיה פחות מעצבן ואז יצבע את הכל כמו שצובעים עם מברשת"): 5 ערכות
 // הנושא הקסומות של New Me. נגיעה בערכה - מברשת של נצנצים צובעת את כל החלון בה (magicPaintTheme ב-app.js)
 function nmOpenMagicPicker(invite) {
@@ -710,11 +763,6 @@ function nmMaybeOfferMagic() {
     if (seen || nmQuiz || document.querySelector('.nm-sheet-overlay, .sr-reveal, .app-tour-layer, .magic-paint')) return false;
     nmOpenMagicPicker(true);
     return true;
-}
-async function nmMarkAiOffered() {
-    if (!nmProfile || nmProfile.ai_menu_offered_at) return;
-    nmProfile.ai_menu_offered_at = new Date().toISOString();
-    await supabaseClient.from('new_me_profile').update({ ai_menu_offered_at: nmProfile.ai_menu_offered_at }).eq('user_id', currentUserId);
 }
 async function nmTimesMarkAsked() {
     if (!nmProfile || nmProfile.meal_times_set_at) return;
@@ -766,8 +814,6 @@ async function renderNewMe() {
     nmMaybeAutoTour();
     // החדר הסודי: מפתח חדש שעוד לא נחשף (למשל היום השלישי עם New Me) + כפתור המפתח של מנהלת המוצר
     if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
-    // ✨ תפריט אישי - הצעה חד-פעמית למי שכבר מילא את השאלון (היא שואלת גם על שעות האוכל, אז באותה כניסה לא שואלים עליהן)
-    if (nmMaybeOfferAiMenu()) return;
     // ✨ העולם הקסום - הזמנה חד-פעמית לבחור ערכה קסומה (במקום החלפה אוטומטית אחרי הקנייה)
     if (nmMaybeOfferMagic()) return;
     // שעות האוכל - שואלים פעם אחת (מהשגרה, או כמה ארוחות ומתי); ואחר כך, אם צריך, אם להסתיר ארוחות מהשגרה
@@ -1171,8 +1217,9 @@ function nmStartQuiz(fromSettings, fresh) {
         name: (p && p.cert_name) || '',
         late: p ? nmLateChoice() : null,
         lateTime: p ? nmLateTime() : NEW_ME_LATE_TIME,
-        ...nmQuizFoodDefaults(p),
-        ai: null,
+        // 🧈 הבחירות שבתוך אפשרויות (ממרחים, דגני בוקר, חלב, דברים קלים) - ר' NEW_ME_PICKS
+        picks: p && p.picks && typeof p.picks === 'object' ? JSON.parse(JSON.stringify(p.picks)) : {},
+        picksClosed: {},
     };
     // שם מלא: אם עוד לא נשמר - ממלאים מראש מחשבון Google (אפשר לשנות)
     if (!nmQuiz.name && typeof nmCertDefaultName === 'function') nmCertDefaultName().then(def => {
@@ -1182,38 +1229,19 @@ function nmStartQuiz(fromSettings, fresh) {
         if (input && !input.value) input.value = def;
     });
 }
-// השלבים לפי הסדר (לפי בקשה מפורשת, 2026-10-13: "שתהיה האפשרות לשאול לפני התפריט כמה ארוחות... ולפי זה הוא יתן
-// אפשרויות לתפריט ולקפה והכל"): קודם הארוחות והשעות, אחר כך אוכל ושתייה, ורק אז התפריט - שה-AI בונה לפיהם.
-// aiOnly = "תפריט אישי" למי שכבר מילא את השאלון (מההגדרות או מהחלון החד-פעמי): רק שלושת השלבים האלה
+// השלבים לפי הסדר (לפי בקשה מפורשת, 2026-10-14: "תמחוק את הAI בNEW ME... ופשוט תשאל כמה ארוחות לפני התפריט ולפי זה
+// תביא את כל האפשרויות"): קודם הארוחות והשעות (וגם משהו קטן בערב ובאיזו שעה), ואז כל האפשרויות של הארוחות האלה.
+// menuOnly = "בניית התפריט" מההגדרות של התוכנית, למי שכבר מילא את השאלון: רק שני השלבים האלה
 function nmQuizSteps() {
-    if (nmQuiz && nmQuiz.aiOnly) return ['times', 'food', 'menu'];
-    return ['agree', 'about', 'plan', 'times', 'food', 'menu'].concat(nmQuiz && nmQuiz.withLetter ? ['letter'] : []);
+    if (nmQuiz && nmQuiz.menuOnly) return ['times', 'menu'];
+    return ['agree', 'about', 'plan', 'times', 'menu'].concat(nmQuiz && nmQuiz.withLetter ? ['letter'] : []);
 }
 function nmQuizTotal() { return nmQuizSteps().length; }
 function nmQuizStepId() { return nmQuiz ? nmQuizSteps()[nmQuiz.step] : null; }
-// העדפות אוכל ושתייה (לפי בקשה מפורשת: "לשאול גם על העדפות" + קפה): בחירות מהירות ו"אחר" עם כתיבה חופשית
-const NM_FOOD_PREFS = ['vegetarian', 'vegan', 'kosher', 'no_dairy', 'gluten_free', 'no_fish', 'no_eggs', 'no_nuts'];
-const NM_DRINK_CUPS = [0, 1, 2, 3, 4];
-const NM_DRINK_STYLES = ['black', 'milk', 'plant_milk', 'sugar', 'sweetener'];
-function nmParseJson(s) { try { const v = JSON.parse(s || ''); return v && typeof v === 'object' ? v : null; } catch { return null; } }
-function nmQuizFoodDefaults(p) {
-    const fp = p ? nmParseJson(p.food_prefs) : null;
-    const dh = p ? nmParseJson(p.drink_habit) : null;
-    return {
-        prefs: fp && Array.isArray(fp.p) ? fp.p.filter(x => NM_FOOD_PREFS.includes(x)) : [],
-        prefsOther: (fp && fp.o) || '',
-        prefsOtherOn: !!(fp && fp.o),
-        cups: dh && NM_DRINK_CUPS.includes(Number(dh.n)) ? Number(dh.n) : null,
-        styles: dh && Array.isArray(dh.s) ? dh.s.filter(x => NM_DRINK_STYLES.includes(x)) : [],
-        drinkOther: (dh && dh.o) || '',
-        drinkOtherOn: !!(dh && dh.o),
-    };
-}
-// "תפריט אישי" בלי לעבור את כל השאלון (למי שכבר יש פרופיל)
-function nmStartAiMenuQuiz(from) {
+function nmStartMenuQuiz(from) {
     if (!nmProfile) return;
     nmStartQuiz(true);
-    nmQuiz.aiOnly = true;
+    nmQuiz.menuOnly = true;
     nmQuiz.returnTo = from || 'settings';
     nmTimes = null;
     renderNewMe();
@@ -1286,8 +1314,6 @@ function nmRenderQuiz(root) {
             <textarea class="nm-letter-input" rows="8" maxlength="4000" placeholder="${nmEsc(t('nm_letter_ph'))}" aria-label="${nmEsc(t('nm_letter_title'))}" oninput="nmQuiz.letter = this.value">${nmEsc(q.letter)}</textarea>
             <p class="nm-fine">🔒 ${nmEsc(t('nm_letter_seal_note'))}</p>
             <p class="nm-fine">${nmEsc(t('nm_letter_quiz_note'))}</p>`;
-    } else if (id === 'food') {
-        body = nmQuizFoodHtml(q);
     } else {
         const menu = nmQuizMenuHtml(q);
         body = menu.body;
@@ -1309,249 +1335,74 @@ function nmRenderQuiz(root) {
 
 function nmQuizLate(c) { nmQuiz.late = c; nmRenderQuiz(nmRoot()); }
 
-// 🥗 אוכל ושתייה: מה לא אוכלים (בחירות מהירות + "אחר"), וכמה כוסות קפה או תה ביום ואיך
-function nmQuizFoodHtml(q) {
-    const chip = (on, attrs, label) => `<button type="button" class="nm-chip${on ? ' selected' : ''}" aria-pressed="${on}" ${attrs}>${label}</button>`;
-    return `
-        <h3 class="nm-step-title">🥗 ${nmEsc(t('nm_food_title'))}</h3>
-        <div class="nm-slot-name">${nmEsc(t('nm_food_prefs_q'))}</div>
-        <div class="nm-chip-row nm-food-prefs">
-            ${NM_FOOD_PREFS.map(p => chip(q.prefs.includes(p), `data-pref="${p}" onclick="nmQuizTogglePref('${p}')"`, nmEsc(t('nm_pref_' + p)))).join('')}
-            ${chip(q.prefsOtherOn, 'data-pref="other" onclick="nmQuizToggleOther(\'prefs\')"', nmEsc(t('nm_other')))}
-        </div>
-        ${q.prefsOtherOn ? `<input type="text" class="nm-food-other" id="nm-food-other" maxlength="200" placeholder="${nmEsc(t('nm_food_other_ph'))}" aria-label="${nmEsc(t('nm_food_other_ph'))}" value="${nmEsc(q.prefsOther)}" oninput="nmQuiz.prefsOther = this.value">` : ''}
-        <div class="nm-slot-name">☕ ${nmEsc(t('nm_drink_cups_q'))}</div>
-        <div class="nm-chip-row nm-drink-cups" role="radiogroup" aria-label="${nmEsc(t('nm_drink_cups_q'))}">
-            ${NM_DRINK_CUPS.map(n => `<button type="button" role="radio" class="nm-chip${q.cups === n ? ' selected' : ''}" aria-checked="${q.cups === n}" data-cups="${n}" onclick="nmQuizCups(${n})"><bdi dir="ltr">${n === 4 ? '4+' : nmFmt(n)}</bdi></button>`).join('')}
-        </div>
-        ${q.cups ? `
-            <div class="nm-slot-name">${nmEsc(t('nm_drink_style_q'))}</div>
-            <div class="nm-chip-row nm-drink-styles">
-                ${NM_DRINK_STYLES.map(s => chip(q.styles.includes(s), `data-style="${s}" onclick="nmQuizToggleStyle('${s}')"`, nmEsc(t('nm_drink_' + s)))).join('')}
-                ${chip(q.drinkOtherOn, 'data-style="other" onclick="nmQuizToggleOther(\'drink\')"', nmEsc(t('nm_other')))}
-            </div>
-            ${q.drinkOtherOn ? `<input type="text" class="nm-food-other" id="nm-drink-other" maxlength="120" placeholder="${nmEsc(t('nm_drink_other_ph'))}" aria-label="${nmEsc(t('nm_drink_other_ph'))}" value="${nmEsc(q.drinkOther)}" oninput="nmQuiz.drinkOther = this.value">` : ''}` : ''}`;
-}
-function nmQuizTogglePref(p) {
-    const q = nmQuiz;
-    if (!q) return;
-    q.prefs = q.prefs.includes(p) ? q.prefs.filter(x => x !== p) : [...q.prefs, p];
-    nmRenderQuiz(nmRoot());
-}
-function nmQuizToggleStyle(s) {
-    const q = nmQuiz;
-    if (!q) return;
-    q.styles = q.styles.includes(s) ? q.styles.filter(x => x !== s) : [...q.styles, s];
-    nmRenderQuiz(nmRoot());
-}
-function nmQuizToggleOther(which) {
-    const q = nmQuiz;
-    if (!q) return;
-    const key = which === 'drink' ? 'drinkOtherOn' : 'prefsOtherOn';
-    q[key] = !q[key];
-    nmRenderQuiz(nmRoot());
-    const input = document.getElementById(which === 'drink' ? 'nm-drink-other' : 'nm-food-other');
-    if (input) input.focus();
-}
-function nmQuizCups(n) { if (nmQuiz) { nmQuiz.cups = n; nmRenderQuiz(nmRoot()); } }
-
-// ✨ התפריט האישי (לפי בקשה מפורשת, 2026-10-13: "ולפי זה הוא יתן אפשרויות לתפריט ולקפה והכל", ו"תפריט אישי + המקורי
-// נשאר"): ה-AI בונה 3 אפשרויות לכל ארוחה שבתפריט, כל אחת בגודל החלק שלה מהיום (nmQuizTargets), והצעות לשתייה.
-// האפשרויות המקוריות (מה-PDF) נשארות מתחת לכל ארוחה, בלחיצה. כל בחירה מאוזנת מיד (nmBalance), והסה"כ בקופסה
-const NM_AI_REGEN_MAX = 3;
+// 🍽️ התפריט בשאלון (לפי בקשה מפורשת, 2026-10-14 - בלי AI): כל האפשרויות של כל ארוחה שבתפריט, לפי מה שנבחר בשלב הקודם
+// (כמה ארוחות ומתי). בוחרים עד 2 אהובות לכל ארוחה ("זה או זה"), ובאפשרויות עם בחירות (פיתה וממרח, קורנפלקס וחלב, משהו
+// קל) - עד 3 דברים שאוהבים. כל בחירה מאוזנת מיד (nmBalance), והסה"כ בקופסה שלמטה
 function nmQuizTime(slot) { return nmTimes ? nmTimes.times[slot] : nmSlotReminderTime(slot); }
 function nmQuizActive() {
     const active = nmTimes ? nmTimesActive() : (nmProfile && !nmQuiz.fresh ? nmActiveOrder() : NEW_ME_DEFAULT_ORDER.slice());
     return active.slice().sort((a, b) => String(nmQuizTime(a)).localeCompare(String(nmQuizTime(b))) || NEW_ME_DEFAULT_ORDER.indexOf(a) - NEW_ME_DEFAULT_ORDER.indexOf(b));
 }
-// כמה קלוריות מגיעות לכל ארוחה: היעד שלה בתוכנית + החלק שלה ממה שירד (ארוחה שהוסרה, ה-100 של "משהו קטן" בערב)
-function nmQuizTargets(q, active) {
-    const P = NEW_ME_PLANS[q.plan] || NEW_ME_PLANS[1300];
-    const bal = nmBalance(q.plan, active.map(slot => ({ slot, kcal: P[slot].target })), q.late);
-    return Object.fromEntries(active.map(slot => [slot, P[slot].target + (bal[slot] || 0)]));
-}
-function nmQuizAiPayload(q, active, targets) {
-    return {
-        language: currentLang,
-        plan: q.plan,
-        slots: active.map(slot => ({ slot, time: nmQuizTime(slot), kcal: targets[slot] })),
-        prefs: q.prefs.slice(),
-        prefs_other: q.prefsOtherOn ? String(q.prefsOther || '').trim() : '',
-        drinks: { cups: q.cups || 0, style: q.cups ? q.styles.slice() : [], other: q.cups && q.drinkOtherOn ? String(q.drinkOther || '').trim() : '' },
-        late: q.late || 'none',
-        late_time: q.lateTime || NEW_ME_LATE_TIME,
-    };
-}
-// מה שנבחר לארוחה בשאלון: אות של אפשרות מקורית או ארוחה אישית (c_<id>)
+// מה שנבחר לארוחה בשאלון: אות של אפשרות או ארוחה אישית (c_<id>) שכבר נבחרה קודם
 function nmQuizItem(q, slot) {
     const choice = q.choices[slot];
     if (nmIsCustomKey(choice) && nmCustomMeal(choice)) return nmItemInfo(choice);
     const P = NEW_ME_PLANS[q.plan][slot];
     const opt = P.options[choice] ? choice : 'A';
-    const o = P.options[opt];
-    return { key: opt, kcal: o.kcal, protein: o.protein, small: !!o.small };
-}
-async function nmCallMenuAi(payload) {
-    try {
-        const call = async () => {
-            const { data: sessionData } = await supabaseClient.auth.getSession();
-            const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 90000);
-            try {
-                return await fetch(`${SUPABASE_URL}/functions/v1/new-me-menu-ai`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal,
-                });
-            } finally { clearTimeout(timer); }
-        };
-        let res = await call();
-        if (res.status === 401) {
-            await supabaseClient.auth.refreshSession().catch(() => {});
-            res = await call();
-        }
-        const json = await res.json().catch(() => ({}));
-        return res.ok && json.ok ? json : { ok: false, error: json.error || 'http_' + res.status };
-    } catch {
-        return { ok: false, error: 'network' };
-    }
-}
-// בונה (או בונה מחדש - "אפשרויות אחרות") את התפריט. האפשרויות נשמרות כארוחות אישיות (new_me_custom_meals,
-// source 'ai_menu', לפי ארוחה וסבב) - כך הן עובדות בדיוק כמו כל ארוחה אישית: ✓, החלפות, "או", רשימת קניות
-async function nmQuizBuildMenu(sig, payload, avoid, sigBase = sig) {
-    const q = nmQuiz;
-    if (!q) return;
-    const regen = q.ai ? q.ai.regen || 0 : 0;
-    q.ai = { sig, sigBase, status: 'loading', regen };
-    const res = await nmCallMenuAi({ ...payload, avoid: avoid || [] });
-    if (nmQuiz !== q || !q.ai || q.ai.sig !== sig) return;
-    let rows = null;
-    if (res.ok && res.meals) {
-        const batch = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
-        const insert = [];
-        payload.slots.forEach(s => (res.meals[s.slot] || []).forEach(o => insert.push({
-            user_id: currentUserId, name: String(o.name || '').slice(0, 120), description: o.description ? String(o.description).slice(0, 600) : null,
-            kcal: Math.round(Number(o.kcal) || 0), protein: Math.round((Number(o.protein_g) || 0) * 10) / 10, source: 'ai_menu', slot: s.slot, batch,
-        })));
-        if (batch && insert.length) {
-            const { data, error } = await supabaseClient.from('new_me_custom_meals').insert(insert).select();
-            if (!error && Array.isArray(data) && data.length) rows = data;
-        }
-        if (rows) {
-            nmCustomMeals.push(...rows);
-            const bySlot = {};
-            rows.forEach(r => { (bySlot[r.slot] = bySlot[r.slot] || []).push('c_' + r.id); });
-            q.ai = { sig, sigBase, status: 'ready', regen, batch, bySlot, drinks: Array.isArray(res.drinks) ? res.drinks : [] };
-            // ברירת מחדל: האפשרות הראשונה של ה-AI בכל ארוחה (אפשר לבחור אחרת, או אהובה שנייה)
-            Object.keys(bySlot).forEach(slot => { q.choices[slot] = bySlot[slot][0]; q.choices2[slot] = null; });
-        }
-    }
-    if (!rows) q.ai = { sig, sigBase, status: 'error', regen, error: res.error || 'save' };
-    if (nmQuizStepId() === 'menu') nmRenderQuiz(nmRoot());
-}
-function nmQuizRegenMenu() {
-    const q = nmQuiz;
-    if (!q || !q.ai || q.ai.status !== 'ready' || (q.ai.regen || 0) >= NM_AI_REGEN_MAX) return;
-    const avoid = Object.values(q.ai.bySlot).flat().map(k => { const cm = nmCustomMeal(k); return cm ? cm.name : ''; }).filter(Boolean);
-    const active = nmQuizActive();
-    const targets = nmQuizTargets(q, active);
-    q.ai.regen = (q.ai.regen || 0) + 1;
-    const base = nmQuizAiSigOf(q, active, targets);
-    nmQuizBuildMenu(JSON.stringify([base, q.ai.regen]), nmQuizAiPayload(q, active, targets), avoid, base);
-    nmRenderQuiz(nmRoot());
-}
-function nmQuizRetryMenu() { if (nmQuiz) { nmQuiz.ai = null; nmRenderQuiz(nmRoot()); } }
-// התשובות שהתפריט נבנה לפיהן - שינוי באחת מהן (חזרה אחורה ובחירה אחרת) בונה אותו מחדש
-function nmQuizAiSigOf(q, active, targets) {
-    return JSON.stringify([q.plan, active.map(s => [s, nmQuizTime(s), targets[s]]), q.late || 'none', q.lateTime, q.prefs.slice().sort(), q.prefsOtherOn ? String(q.prefsOther || '').trim() : '', q.cups || 0, q.styles.slice().sort(), q.drinkOtherOn ? String(q.drinkOther || '').trim() : '']);
+    const n = nmOptNutrition(q.plan, slot, opt);
+    return { key: opt, kcal: n.kcal, protein: n.protein, small: !!P.options[opt].small };
 }
 function nmQuizOptionHtml(q, slot, key, info) {
     const picked = q.choices[slot] === key || (q.choices2 && q.choices2[slot] === key);
-    return `<button type="button" class="nm-option${picked ? ' selected' : ''}" aria-pressed="${picked}" data-opt="${nmEsc(key)}" onclick="nmQuizPick('${slot}', '${nmEsc(key)}')">
+    const btn = `<button type="button" class="nm-option${picked ? ' selected' : ''}" aria-pressed="${picked}" data-opt="${nmEsc(key)}" onclick="nmQuizPick('${slot}', '${nmEsc(key)}')">
         <span class="nm-option-name">${nmEsc(info.name)}</span>
         ${info.text ? `<span class="nm-option-text">${nmEsc(info.text)}</span>` : ''}
         <span class="nm-option-meta">${nmMeta({ kcal: info.kcal, protein: Math.round(Number(info.protein) || 0) })}</span>
     </button>`;
+    const groups = picked && !nmIsCustomKey(key) ? nmOptPicks(q.plan, slot, key) : [];
+    return groups.length ? `<div class="nm-option-wrap">${btn}${nmPicksPanelHtml(groups, 'quiz', slot + '_' + key)}</div>` : btn;
 }
+function nmQuizPicksToggle(id, open) { if (nmQuiz) nmQuiz.picksClosed[id] = !open; }
 function nmQuizMenuHtml(q) {
     const active = nmQuizActive();
-    const targets = nmQuizTargets(q, active);
-    const base = nmQuizAiSigOf(q, active, targets);
-    // התשובות השתנו (או עוד לא נבנה) - בונים; בזמן הבנייה מוצג רק המסך הממתין
-    if (!q.ai || (q.ai.status !== 'loading' && q.ai.sigBase !== base)) nmQuizBuildMenu(base, nmQuizAiPayload(q, active, targets), []);
-    const title = `<h3 class="nm-step-title">✨ ${nmEsc(t('nm_ai_menu_title'))}</h3>`;
-    if (q.ai.status === 'loading') {
-        return {
-            canContinue: false,
-            body: `${title}
-                <div class="nm-ai-building" role="status">
-                    <div class="chasing-dots-loader" aria-hidden="true"><span></span><span></span><span></span></div>
-                    <p>${nmEsc(t('nm_ai_menu_building'))}</p>
-                </div>`,
-        };
-    }
-    const ready = q.ai.status === 'ready';
     const P = NEW_ME_PLANS[q.plan];
     const qSlots = active.map(slot => { const it = nmQuizItem(q, slot); return { slot, kcal: it.kcal, small: !!it.small }; });
     const qBal = nmBalance(q.plan, qSlots, q.late);
     const qMenu = { chosen: qSlots.reduce((a, s) => a + s.kcal, 0), adj: qSlots.reduce((a, s) => a + (qBal[s.slot] || 0), 0) };
-    const original = slot => nmSlotOpts(q.plan, slot).map(opt => nmQuizOptionHtml(q, slot, opt, { name: nmOptText(q.plan, slot, opt, true), text: nmOptText(q.plan, slot, opt), kcal: P[slot].options[opt].kcal, protein: P[slot].options[opt].protein })).join('');
-    const drinks = ready ? (q.ai.drinks || []) : [];
+    // ארוחה אישית שכבר נבחרה (מהארוחות הקבועות, או מתפריט אישי ישן) נשארת ראשונה ברשימה
+    const custom = slot => [q.choices[slot], q.choices2 && q.choices2[slot]].filter(k => nmIsCustomKey(k) && nmCustomMeal(k));
     return {
         canContinue: true,
-        body: `${title}
-            ${ready ? `<p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>` : `<p class="nm-soft-warn">${nmEsc(t('nm_ai_menu_error'))}</p><button type="button" class="nm-btn-ghost nm-ai-retry" onclick="nmQuizRetryMenu()">${nmEsc(t('nm_ai_menu_retry'))}</button>`}
-            ${active.map(slot => {
-                const personal = ready ? (q.ai.bySlot[slot] || []).filter(k => nmCustomMeal(k)) : [];
-                const origCount = nmSlotOpts(q.plan, slot).length;
-                return `
+        body: `<h3 class="nm-step-title">🍽️ ${nmEsc(t('nm_q_menu_title'))}</h3>
+            <p class="nm-fine">${nmEsc(t('nm_q_menu_hint'))}</p>
+            ${active.map(slot => `
                 <div class="nm-quiz-slot" data-slot="${slot}">
                     <div class="nm-quiz-slot-head"><div class="nm-slot-name">${nmEsc(nmSlotName(slot))} <bdi dir="ltr" class="nm-slot-time">${nmEsc(nmQuizTime(slot) || '')}</bdi></div>${qBal[slot] ? `<span class="nm-adj-chip ${qBal[slot] > 0 ? 'up' : 'down'}" data-adj="${qBal[slot]}">${nmSignedHtml(qBal[slot])}</span>` : ''}</div>
-                    ${personal.map(k => { const it = nmItemInfo(k); return nmQuizOptionHtml(q, slot, k, { name: it.name, text: it.text, kcal: it.kcal, protein: it.protein }); }).join('')}
-                    ${ready ? `<details class="nm-orig-opts"${personal.includes(q.choices[slot]) && !(q.choices2 && q.choices2[slot] && !nmIsCustomKey(q.choices2[slot])) ? '' : ' open'}><summary>${nmEsc(t('nm_ai_menu_original'))} <bdi dir="ltr">(${origCount})</bdi></summary><div class="nm-orig-list">${original(slot)}</div></details>` : original(slot)}
-                </div>`;
-            }).join('')}
-            ${ready && (q.ai.regen || 0) < NM_AI_REGEN_MAX ? `<button type="button" class="nm-btn-ghost nm-ai-regen" onclick="nmQuizRegenMenu()">🔄 ${nmEsc(t('nm_ai_menu_regen'))}</button>` : ''}
-            ${drinks.length ? `
-                <div class="nm-quiz-slot nm-ai-drinks">
-                    <div class="nm-slot-name">☕ ${nmEsc(t('nm_ai_menu_drinks'))}</div>
-                    <div class="nm-chip-row">${drinks.map(d => `<span class="nm-chip nm-drink-idea">${nmEsc(d.name)} · <bdi dir="ltr">~${nmFmt(d.kcal)}</bdi></span>`).join('')}</div>
-                </div>` : ''}
+                    ${custom(slot).map(k => { const it = nmItemInfo(k); return nmQuizOptionHtml(q, slot, k, { name: it.name, text: it.text, kcal: it.kcal, protein: it.protein }); }).join('')}
+                    ${nmSlotOpts(q.plan, slot).map(opt => { const n = nmOptNutrition(q.plan, slot, opt); return nmQuizOptionHtml(q, slot, opt, { name: nmOptText(q.plan, slot, opt, true), text: nmOptText(q.plan, slot, opt), kcal: n.kcal, protein: n.protein }); }).join('')}
+                </div>`).join('')}
             <div class="nm-quiz-slot">${nmBudgetBoxHtml(q.plan, q.late, qMenu)}</div>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>`,
     };
 }
-// מה שנשמר בפרופיל מהשלבים החדשים: העדפות, שתייה, והתפריט האישי שנבנה (הסבב)
-function nmQuizFoodRow(q) {
-    const row = {
-        food_prefs: JSON.stringify({ p: q.prefs, o: q.prefsOtherOn ? String(q.prefsOther || '').trim().slice(0, 200) : '' }),
-        drink_habit: JSON.stringify({ n: q.cups, s: q.styles, o: q.drinkOtherOn ? String(q.drinkOther || '').trim().slice(0, 120) : '' }),
-        ai_menu_offered_at: new Date().toISOString(),
-    };
-    if (q.ai && q.ai.status === 'ready' && q.ai.batch) row.ai_menu_batch = q.ai.batch;
-    return row;
-}
-// אחרי השמירה: השעה של משהו קטן בערב, והמשקאות שה-AI הציע - כמשקאות קבועים (לחיצה אחת בכרטיס השתייה)
+// אחרי השמירה: התזכורת של משהו קטן בערב - בשעה שנבחרה
 async function nmQuizAfterSave(q) {
     if (q.late === 'eat' || q.late === 'drink') await nmSyncReminders({ pos: 4, time: q.lateTime || NEW_ME_LATE_TIME, enabled: true });
-    const drinks = q.ai && q.ai.status === 'ready' ? (q.ai.drinks || []) : [];
-    const have = new Set(nmSavedDrinks.map(d => String(d.name || '').trim()));
-    const add = drinks.filter(d => d && d.name && !have.has(String(d.name).trim())).map(d => ({ user_id: currentUserId, name: String(d.name).slice(0, 60), kcal: Math.max(0, Math.round(Number(d.kcal) || 0)) }));
-    if (add.length) {
-        const { data } = await supabaseClient.from('new_me_saved_drinks').insert(add).select();
-        if (Array.isArray(data)) nmSavedDrinks.push(...data);
-    }
 }
-// "תפריט אישי" בלי השאלון המלא: שומרים רק את מה שנשאל (ארוחות ושעות, ערב, אוכל ושתייה, הבחירות)
-async function nmQuizFinishAiOnly(q) {
+// הבחירות שבתוך אפשרויות - רק הקבוצות שנבחרו בהן (השאר נשארות על ברירת המחדל)
+function nmQuizPicksRow(q) {
+    const picks = {};
+    Object.keys(q.picks || {}).forEach(g => { if (NEW_ME_PICKS[g] && Array.isArray(q.picks[g]) && q.picks[g].length) picks[g] = q.picks[g].slice(0, NEW_ME_PICKS_MAX); });
+    return Object.keys(picks).length ? picks : null;
+}
+// "בניית התפריט" בלי השאלון המלא: שומרים רק את מה שנשאל (ארוחות ושעות, ערב, הבחירות)
+async function nmQuizFinishMenuOnly(q) {
     const timesState = nmTimes && nmTimes.mode ? nmTimes : null;
     if (timesState) {
         const prevHidden = nmHiddenSlots();
         for (const slot of timesState.hidden) if (!prevHidden.includes(slot) && nmTodayCheckins[slot]) await nmUncheck(slot);
     }
-    const row = { ...nmQuizFoodRow(q), updated_at: new Date().toISOString() };
+    const row = { picks: nmQuizPicksRow(q), updated_at: new Date().toISOString() };
     NEW_ME_SLOTS.forEach(slot => { row['choice_' + slot] = q.choices[slot]; row['choice2_' + slot] = (q.choices2 && q.choices2[slot]) || null; });
     if (q.late) row.late_choice = q.late;
     if (timesState) Object.assign(row, nmTimesProfileRow());
@@ -1564,11 +1415,11 @@ async function nmQuizFinishAiOnly(q) {
     nmQuiz = null;
     nmView = 'home';
     await renderNewMe();
-    showAppToast(t('nm_ai_menu_saved'));
+    showAppToast(t('item_updated_success'));
 }
 
 function nmQuizBack() {
-    if (nmQuiz.step === 0) { const back = nmQuiz.aiOnly ? (nmQuiz.returnTo || 'settings') : nmQuiz.fresh ? 'home' : 'settings'; nmQuiz = null; nmTimes = null; nmView = back; renderNewMe(); return; }
+    if (nmQuiz.step === 0) { const back = nmQuiz.menuOnly ? (nmQuiz.returnTo || 'settings') : nmQuiz.fresh ? 'home' : 'settings'; nmQuiz = null; nmTimes = null; nmView = back; renderNewMe(); return; }
     nmQuiz.step--;
     nmRenderQuiz(nmRoot());
 }
@@ -1595,9 +1446,8 @@ async function nmQuizNext() {
         if (String(q.weight || '').trim() && !(w >= 20 && w <= 400)) { showAppToast(t('nm_q_weight_missing'), 'error'); return; }
     }
     if (id === 'times' && !(nmTimes && nmTimes.mode)) return;
-    if (id === 'menu' && q.ai && q.ai.status === 'loading') return;
     if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
-    if (q.aiOnly) { await nmQuizFinishAiOnly(q); return; }
+    if (q.menuOnly) { await nmQuizFinishMenuOnly(q); return; }
     const letter = q.withLetter ? String(q.letter || '').trim().slice(0, 4000) : '';
     if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
     const today = getLocalDateString();
@@ -1619,8 +1469,8 @@ async function nmQuizNext() {
         updated_at: new Date().toISOString(),
     };
     if (q.late) row.late_choice = q.late;
-    // העדפות האוכל והשתייה, והתפריט האישי שנבנה
-    Object.assign(row, nmQuizFoodRow(q));
+    // הבחירות שבתוך אפשרויות (ממרחים, דגני בוקר, חלב, דברים קלים)
+    row.picks = nmQuizPicksRow(q);
     // שאלון חוזר בלי משקל - המשקל ההתחלתי שכבר נשמר נשאר
     if (startWeight == null && nmProfile) delete row.start_weight;
     // שעות האוכל מהשלב שלהן: הארוחות שהוסרו, הסדר לפי השעות, ושנשאל
@@ -1805,7 +1655,7 @@ function nmExtraLineHtml(slot) {
     // תיקון קטן (פחות מ-40) - רק כמה, בלי רעיונות (פרי שלם על 15 קלוריות לא מתאים): החלק שלפני המקף
     let tpl = nmEsc(t(key));
     if (Math.abs(n) < 40 && tpl.includes('–')) tpl = tpl.split('–')[0].trim();
-    return `<div class="nm-extra-line${n < 0 ? ' less' : ''}" data-extra="${n}">${tpl.replace('{n}', nmSignedHtml(n)).replace('{plan}', nmFmt(nmProfile.plan)).replace('{ideas}', nmEsc(ideas))}</div>`;
+    return `<div class="nm-extra-line${n < 0 ? ' less' : ''}" data-extra="${n}">${tpl.replace('{n}', nmSignedHtml(n)).replace('{plan}', nmFmt(nmProfile.plan)).replace('{time}', nmEsc(nmLateTime())).replace('{ideas}', nmEsc(ideas))}</div>`;
 }
 // סה"כ התפריט של היום (כולל החלפות, ארוחה חופשית והתיקונים) + תקציב השתייה + 21:00 - מול יעד התוכנית
 function nmMenuTotal(overrides) {
@@ -2478,6 +2328,7 @@ function nmMealCardHtml(slot) {
             ${head}
             <div class="nm-option-name">${it.custom ? `<span class="nm-custom-tag" title="${nmEsc(t(it.source === 'ai' || it.source === 'ai_menu' ? 'nm_custom_from_ai' : 'nm_custom_from_saved'))}">${it.source === 'ai' || it.source === 'ai_menu' ? '✨' : '⭐'}</span> ` : ''}${nmEsc(nmItemShort(it))}</div>
             <div class="nm-option-text">${nmEsc(nmItemFull(it))}</div>
+            ${!done && !it.custom && nmOptPicks(it.plan, it.slot, it.opt).length ? nmPicksPanelHtml(nmOptPicks(it.plan, it.slot, it.opt), 'day', slot) : ''}
             ${nmAltRowHtml(slot)}
             ${nmExtraLineHtml(slot)}
             ${nmLaterRowHtml(slot)}
@@ -4572,7 +4423,7 @@ function nmRenderSettings(body) {
                 <input type="text" id="nm-settings-name" maxlength="60" autocomplete="name" value="${nmEsc(nmProfile.cert_name || '')}" placeholder="${nmEsc(t('nm_cert_name_ph'))}" onchange="nmSaveFullName(this)"></label>
         </div>
         <button type="button" class="nm-row-btn" onclick="nmStartTour()">🧭 ${nmEsc(t('nm_settings_tour'))}</button>
-        <button type="button" class="nm-row-btn" onclick="nmStartAiMenuQuiz('settings')">✨ ${nmEsc(t('nm_settings_ai_menu'))}</button>
+        <button type="button" class="nm-row-btn" onclick="nmStartMenuQuiz('settings')">🍽️ ${nmEsc(t('nm_q_menu_title'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmOpenMagicPicker(false)">💎 ${nmEsc(t('nm_settings_magic'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmOpenMealTimes()">🕐 ${nmEsc(t('nm_times_title'))}</button>
         <button type="button" class="nm-row-btn" onclick="nmGo('reminders')">⏰ ${nmEsc(t('nm_tile_reminders'))}</button>
