@@ -2645,6 +2645,7 @@ async function initAppAfterAuth(user) {
         loadMenuStyleSetting(),
         loadAiFabCompactSetting(),
         loadHomeCalorieBadgeSetting(),
+        typeof loadMyDayWaterSetting === 'function' ? loadMyDayWaterSetting() : null,
         loadDailyFocusPromptSetting(),
         loadRoutineGoalsSetting(),
         loadGlobalTextColor(),
@@ -2663,7 +2664,7 @@ async function initAppAfterAuth(user) {
     applyPwaShortcutDeepLink();
     initFixedAiBrainFab();
     // מסך הבית החדש ("היום שלי", פוקוס, לחיצה ארוכה על פתק מהיר) + כוס המים במגירה (ר' home.js)
-    if (typeof initHomeV2 === 'function') { initHomeV2(); loadMyDayWater(); }
+    if (typeof initHomeV2 === 'function') { initHomeV2(); loadMyDayWater(); applyMyDayWaterSetting(); }
     // שלב 2: שם בברכה, רצף, משפט ליום, ספירה לאחור, "3 דברים טובים", השבועות הקודמים, מזג אוויר
     if (typeof initHomePhase2 === 'function') initHomePhase2();
     document.getElementById('btn-save-nutrition').onclick = saveNutrition;
@@ -3191,6 +3192,7 @@ function openSettingsDrawer() {
     renderReminderRingSettings();
     const badgeToggle = document.getElementById('home-calorie-badge-toggle');
     if (badgeToggle) badgeToggle.checked = isHomeCalorieBadgeOn();
+    if (typeof applyMyDayWaterSetting === 'function') applyMyDayWaterSetting();
     const dailyBoardTabToggle = document.getElementById('daily-board-peek-tab-toggle');
     if (dailyBoardTabToggle) dailyBoardTabToggle.checked = isDailyBoardPeekTabOn();
     const todayTabToggle = document.getElementById('today-peek-tab-toggle');
@@ -9457,6 +9459,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'routine_clash', category: 'general' },
     { id: 'data_export_report', category: 'general' },
     { id: 'home_calorie_badge', category: 'general' },
+    { id: 'myday_water_toggle', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
     { id: 'categories_menu', category: 'general' },
     { id: 'share_whatsapp', category: 'general' },
@@ -9544,6 +9547,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_shopping', category: 'nutrition' },
     { id: 'new_me_reminders', category: 'nutrition' },
     { id: 'new_me_routine_meals', category: 'nutrition' },
+    { id: 'routine_newme_sync', category: 'nutrition', when: () => typeof hasNewMe !== 'undefined' && hasNewMe },
     { id: 'new_me_checkin', category: 'nutrition' },
     { id: 'new_me_body', category: 'nutrition' },
     { id: 'food_variety', category: 'nutrition' },
@@ -17559,9 +17563,23 @@ function toggleDailyBoardHoursPanel() {
     if (willShow) renderDailyBoardHourSettings();
 }
 
+// 🔗 סנכרון עם New Me - רק למי שרכש/ה (ר' nmSetRoutineSync ב-new-me.js)
+async function toggleRoutineNewMeSync(input) {
+    const ok = typeof nmSetRoutineSync === 'function' && await nmSetRoutineSync(input.checked);
+    if (!ok) input.checked = !input.checked;
+}
+function renderRoutineNewMeSyncRow() {
+    const row = document.getElementById('routine-newme-sync-row');
+    if (!row) return;
+    const show = typeof hasNewMe !== 'undefined' && hasNewMe && typeof nmRoutineSyncOn === 'function';
+    row.classList.toggle('hidden', !show);
+    if (show) document.getElementById('routine-newme-sync-toggle').checked = nmRoutineSyncOn();
+}
 function renderDailyBoardHourSettings() {
     const panel = document.getElementById('daily-board-hours-panel');
     if (!panel || panel.classList.contains('hidden')) return;
+    renderRoutineNewMeSyncRow();
+    if (typeof nmEnsureHomeData === 'function' && typeof hasNewMe !== 'undefined' && hasNewMe) nmEnsureHomeData().then(renderRoutineNewMeSyncRow);
     renderRoutineTabDaysChips();
     const hours = getDailyBoardCustomHours(activeDailyBoardTabId);
     Object.keys(DAILY_BOARD_BUCKET_RANGES).forEach(bucket => {
@@ -22884,7 +22902,7 @@ async function renderDailyBoard() {
 // פריט שגרה שהוסתר כי הוא ארוחה שכבר בתפריט של New Me (ר' nmCheckRoutineMeals) - רק כש-New Me פעיל;
 // בלי New Me הוא חוזר להיות פריט רגיל
 function routineItemInNewMe(item) {
-    return !!(item && item.hidden_by_new_me && typeof hasNewMe !== 'undefined' && hasNewMe);
+    return !!(item && item.hidden_by_new_me && typeof hasNewMe !== 'undefined' && hasNewMe && (typeof nmRoutineSyncOn !== 'function' || nmRoutineSyncOn()));
 }
 async function restoreRoutineItemFromNewMe(id) {
     const { error } = await supabaseClient.from('routine_items').update({ hidden_by_new_me: false }).eq('id', id).eq('user_id', currentUserId);

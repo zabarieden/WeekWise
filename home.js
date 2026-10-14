@@ -377,6 +377,33 @@ async function loadMyDayWater() {
     const value = document.getElementById('myday-water-value');
     if (value) value.textContent = `${myDayWaterState.glasses}/${myDayWaterState.goal}`;
 }
+// מתג "הצגת המים ב'היום שלי'" בהגדרות > התאמה אישית ויומן (לפי בקשה מפורשת, 2026-10-14) - דלוק כברירת מחדל,
+// נשמר ב-user_premium.myday_water_enabled כדי שיהיה אותו דבר בכל המכשירים
+function isMyDayWaterOn() {
+    try { return localStorage.getItem('weekwise_myday_water') !== 'false'; } catch (e) { return true; }
+}
+function applyMyDayWaterSetting() {
+    const on = isMyDayWaterOn();
+    const tile = document.getElementById('myday-water-tile');
+    if (tile) tile.classList.toggle('hidden', !on);
+    const toggle = document.getElementById('myday-water-toggle');
+    if (toggle) toggle.checked = on;
+}
+async function loadMyDayWaterSetting() {
+    if (!supabaseClient || !currentUserId) return;
+    const { data } = await supabaseClient.from('user_premium').select('myday_water_enabled').eq('user_id', currentUserId).maybeSingle();
+    if (!data || data.myday_water_enabled === null || data.myday_water_enabled === undefined) return;
+    try { localStorage.setItem('weekwise_myday_water', String(data.myday_water_enabled)); } catch (e) { /* בלי אחסון מקומי - רק מה-DB */ }
+    applyMyDayWaterSetting();
+}
+async function toggleMyDayWater() {
+    const enabled = document.getElementById('myday-water-toggle').checked;
+    try { localStorage.setItem('weekwise_myday_water', String(enabled)); } catch (e) { /* כנ"ל */ }
+    applyMyDayWaterSetting();
+    if (supabaseClient && currentUserId) {
+        await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, myday_water_enabled: enabled }, { onConflict: 'user_id' });
+    }
+}
 // ⓘ קטן ליד "מים": כמה זה 8 כוסות (לפי בקשה מפורשת - "משהו שפותחים")
 function toggleMyDayWaterInfo(e) {
     if (e) e.stopPropagation();

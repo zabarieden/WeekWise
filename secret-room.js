@@ -1066,10 +1066,80 @@ const PCX_HINTS = {
     pcx_back_resume: 'להמשיך המשך נמשיך חזרה continue resume back',
     pcx_new: 'חדשה חדש מההתחלה new start over',
 };
-function pcFold(s) { return String(s || '').toLowerCase().replace(/[֑-ׇ]/g, '').replace(/ך/g, 'כ').replace(/ם/g, 'מ').replace(/ן/g, 'נ').replace(/ף/g, 'פ').replace(/ץ/g, 'צ'); }
+// מילים נרדפות בשאר 31 השפות (העברית והאנגלית שלמעלה נספרות תמיד, גם כי יש מי שכותבים באנגלית בכל שפה).
+// n = מילות שלילה ("לא טוב" ≠ טוב), s = מילים בלי משמעות שלא נספרות. ביפנית, סינית ותאית אין רווחים - שם הרמזים
+// נמצאים בתוך הטקסט ומילים מופרדות עם Intl.Segmenter
+const PCX_HINT_KEYS = { pcx_o_good: 'good', pcx_o_busy: 'busy', pcx_o_hard: 'hard', pcx_task_today: 'today', pcx_when_0: 'now', pcx_when_1: 'half', pcx_when_2: 'hour', pcx_back_resume: 'resume', pcx_new: 'fresh' };
+const PCX_HINTS_LANG = {
+    es: { good: 'bien bueno buena genial excelente feliz contento contenta tranquilo tranquila productivo productiva energía increíble estupendo estupenda fenomenal guay', busy: 'ocupado ocupada estresado estresada agobiado agobiada lleno llena mucho muchas prisa corriendo trabajo tareas loco locura caos tiempo', hard: 'mal malo mala triste cansado cansada agotado agotada difícil duro dura pesado pesada horrible terrible fatal llorando lloré enfadado enfadada enojado enojada deprimido deprimida', today: 'añadir agregar hoy agenda lista calendario', now: 'ahora ya enseguida', half: 'media 30 mitad', hour: 'hora 60', resume: 'seguir continuar volver retomar', fresh: 'nueva nuevo empezar inicio', n: 'no nada nunca ni', s: 'el la los las un una unos unas de del y e o u que en al mi mis me te se es son fue era muy pero por para con sin lo le les su sus este esta esto eso día he ha estoy estaba estar soy poco' },
+    fr: { good: 'bien bon bonne super génial excellent excellente heureux heureuse content contente calme serein sereine productif productive énergie top cool formidable', busy: 'occupé occupée chargé chargée stressé stressée débordé débordée plein pleine beaucoup course courir travail tâches fou folle chaos temps', hard: 'mal mauvais mauvaise triste fatigué fatiguée épuisé épuisée difficile dur dure lourd lourde horrible terrible pleure pleuré énervé énervée fâché fâchée déprimé déprimée nul', today: 'ajouter aujourd agenda liste calendrier', now: 'maintenant immédiatement direct', half: 'demi demie 30', hour: 'heure 60', resume: 'continuer reprendre retour revenir', fresh: 'nouvelle nouveau recommencer début', n: 'pas ne non jamais rien', s: 'le la les un une des de du et ou que qui en au aux mon ma mes me te se je tu il elle est suis était très mais pour par avec sans ce cet cette ça ai été être peu journée jour' },
+    ar: { good: 'جيد جيدة جميل رائع رائعة ممتاز ممتازة سعيد سعيدة مبسوط مبسوطة تمام بخير منتج منتجة طاقة هادئ هادئة حلو حلوة كويس كويسة', busy: 'مشغول مشغولة مضغوط مضغوطة ضغط كثير مليء مزدحم زحمة ركض عمل شغل مهام مجنون فوضى وقت', hard: 'صعب صعبة سيء سيئة سيئ حزين حزينة تعبان تعبانة متعب متعبة مرهق مرهقة منهك منهكة ثقيل ثقيلة بكيت غاضب غاضبة زعلان زعلانة مكتئب مكتئبة فظيع', today: 'اضف أضف اضافة اليوم القائمة التقويم', now: 'الآن حالا فورا', half: 'نصف 30', hour: 'ساعة 60', resume: 'متابعة استمرار إكمال رجوع', fresh: 'جديد جديدة البداية', n: 'لا ليس لست مش مو غير', s: 'في من إلى على عن مع او أو ثم ان أن انا أنا انت أنت هو هي هذا هذه ذلك كان كانت يوم جدا لكن قد كل بعض شوية' },
+    ru: { good: 'хорошо хороший хорошая отлично отличный отличная прекрасно супер класс счастлив счастлива рад рада доволен довольна спокойно спокоен спокойна продуктивно продуктивный энергия бодро бодрый', busy: 'занят занята загружен загружена много стресс напряжённо беготня бегаю работа работы задачи дела безумный безумие хаос время некогда', hard: 'плохо плохой плохая грустно грустный грустная устал устала усталость измотан измотана тяжело тяжёлый трудно ужасно плакала плакал плачу злой злая злюсь депрессия подавлен подавлена паршиво', today: 'добавить добавь сегодня список календарь', now: 'сейчас сразу немедленно', half: 'полчаса половина 30', hour: 'час 60', resume: 'продолжить продолжаем назад вернуться', fresh: 'новый новая заново сначала', n: 'не нет ни', s: 'и в во на с со по к ко от до у о об за из это что как но а или же бы был была было я ты он она мне меня мой моя очень так уже ещё день просто немного' },
+    de: { good: 'gut super toll prima klasse glücklich froh zufrieden ruhig entspannt produktiv energie wunderbar großartig spitze', busy: 'beschäftigt voll stress gestresst hektisch viel viele arbeit aufgaben verrückt chaos zeit eilig gehetzt', hard: 'schlecht schlimm traurig müde erschöpft kaputt schwer schwierig furchtbar schrecklich geweint weine wütend sauer deprimiert niedergeschlagen mies', today: 'hinzufügen heute liste kalender eintragen', now: 'jetzt sofort gleich', half: 'halbe halb 30', hour: 'stunde 60', resume: 'weiter fortsetzen zurück', fresh: 'neu neues neuer neustart anfang', n: 'nicht kein keine nein nie', s: 'der die das den dem des ein eine einen einem und oder aber in im an am auf mit von zu zum zur ich du er sie es mir mich mein meine ist bin war sehr so schon noch tag einfach etwas bisschen' },
+    pt: { good: 'bem bom boa ótimo ótima excelente feliz contente tranquilo tranquila produtivo produtiva energia incrível maravilhoso maravilhosa legal', busy: 'ocupado ocupada estressado estressada corrido corrida cheio cheia muito muita pressa correndo trabalho tarefas louco louca caos tempo', hard: 'mal ruim triste cansado cansada exausto exausta esgotado esgotada difícil pesado pesada horrível terrível chorei chorando bravo brava irritado irritada deprimido deprimida péssimo péssima', today: 'adicionar hoje agenda lista calendário', now: 'agora já', half: 'meia 30 metade', hour: 'hora 60', resume: 'continuar voltar retomar', fresh: 'nova novo recomeçar começo', n: 'não nada nunca nem', s: 'o a os as um uma de do da dos das e ou que em no na nos nas ao meu minha me te se é foi era mas por para com sem isso isto esse essa este esta dia estou estava sou pouco' },
+    ja: { good: '良い 良かった 良く いい よかった よく 最高 楽しい 嬉しい うれしい 元気 順調 幸せ 穏やか 落ち着 はかど 充実 好調', busy: '忙し バタバタ 慌ただし 余裕がない 時間がない 仕事 タスク 追われ ストレス 大変 いっぱい', hard: '悪い 最悪 つらい 辛い 疲れ くたくた へとへと しんどい 重い 悲しい 泣 怒 落ち込 だるい ひどい 苦し', today: '追加 今日 予定 リスト カレンダー', now: '今 すぐ', half: '30 半', hour: '1時間 60 時間', resume: '続け 戻', fresh: '新しい 最初 はじめから', n: 'ない なかった じゃない ません', s: 'は が を に で と も の か よ ね な て た だ です ます でした した する ちょっと とても すごく' },
+    zh: { good: '好 不错 很棒 棒 开心 高兴 快乐 顺利 轻松 平静 高效 精神 精力 满意 舒服', busy: '忙 忙碌 很多 事情多 压力 紧张 赶 工作 任务 没时间 时间不够 乱 疯狂', hard: '不好 糟糕 难过 伤心 累 疲惫 疲倦 辛苦 难 沉重 哭 生气 郁闷 抑郁 烦 崩溃 差', today: '添加 加入 今天 日程 清单 日历', now: '现在 马上 立刻', half: '半 30', hour: '小时 60', resume: '继续 返回 回到', fresh: '新的 重新 从头', n: '不 没 没有 别', s: '的 了 是 我 你 他 她 很 也 都 在 和 有 就 还 吧 吗 呢 啊 一 个 这 那' },
+    hi: { good: 'अच्छा अच्छी बढ़िया शानदार खुश मज़ा मजा मस्त शांत ठीक उत्पादक ऊर्जा बेहतरीन', busy: 'व्यस्त भागदौड़ ज़्यादा ज्यादा तनाव दबाव काम टास्क कार्य समय पागल अफरातफरी', hard: 'बुरा बुरी खराब ख़राब दुखी उदास थका थकी थकान मुश्किल कठिन भारी रोया रोई गुस्सा परेशान निराश बेकार', today: 'जोड़ें जोड़ो आज सूची कैलेंडर', now: 'अभी तुरंत', half: 'आधा आधे 30', hour: 'घंटा घंटे 60', resume: 'जारी आगे वापस', fresh: 'नई नया शुरू', n: 'नहीं मत', s: 'है हैं था थी थे मैं मेरा मेरी मुझे तुम आप का की के को में से पर और या भी तो बहुत ही यह वह दिन' },
+    ko: { good: '좋아 좋았 좋은 좋다 좋고 좋지 좋네 괜찮 최고 행복 기뻐 기쁘 즐거 신나 평온 차분 생산적 에너지 상쾌', busy: '바빠 바쁘 바빴 정신없 할일 많아 많았 스트레스 급해 시간없', hard: '힘들 힘든 나빠 나쁘 나빴 슬퍼 슬프 피곤 지쳐 지친 무거 우울 화나 화가 짜증 울었 최악 별로', today: '추가 오늘 목록 캘린더 일정', now: '지금 바로', half: '30 반', hour: '시간 60', resume: '계속 돌아', fresh: '새로 처음', n: '안 않 못 아니', s: '나 저 너 그 이 그리고 그런데 하지만 정말 너무 진짜 좀 조금 아주 그냥' },
+    tr: { good: 'iyi güzel harika süper mutlu keyifli sakin huzurlu verimli enerji enerjik müthiş şahane', busy: 'yoğun meşgul koşturma koşuşturma stres stresli telaş iş işler görev görevler deli kaos zaman vakit', hard: 'kötü berbat üzgün mutsuz yorgun bitkin tükenmiş zor ağır ağladım ağlıyorum kızgın sinirli depresif moral bozuk', today: 'ekle bugün liste takvim', now: 'şimdi hemen', half: 'yarım 30', hour: 'saat 60', resume: 'devam geri', fresh: 'yeni baştan', n: 'değil yok hiç', s: 've veya ile ama ben sen bir bu şu da de çok gün biraz gibi için mi mı' },
+    id: { good: 'baik bagus senang gembira hebat mantap asyik tenang santai produktif energi semangat keren', busy: 'sibuk padat stres tertekan banyak buru kerja pekerjaan tugas gila kacau waktu', hard: 'buruk jelek sedih capek lelah letih berat sulit susah parah menangis nangis marah kesal depresi', today: 'tambah tambahkan daftar kalender', now: 'sekarang langsung segera', half: 'setengah 30', hour: 'jam 60', resume: 'lanjut lanjutkan kembali', fresh: 'baru ulang awal', n: 'tidak tak bukan enggak nggak gak', s: 'dan atau tapi yang di ke dari ini itu aku saya kamu dia sangat sekali sudah juga hari agak' },
+    it: { good: 'bene buono buona benissimo ottimo ottima felice contento contenta tranquillo tranquilla produttivo produttiva energia fantastico fantastica splendido splendida', busy: 'impegnato impegnata pieno piena stressato stressata tanto tanta tanti fretta correre corsa lavoro compiti pazzesco caos tempo', hard: 'male brutto brutta triste stanco stanca esausto esausta difficile duro dura pesante orribile terribile pianto piango arrabbiato arrabbiata depresso depressa giù', today: 'aggiungi aggiungere oggi agenda lista calendario', now: 'adesso subito', half: 'mezz mezza mezzo 30', hour: 'ora 60', resume: 'continuare continua riprendere tornare', fresh: 'nuova nuovo ricominciare inizio', n: 'non niente mai', s: 'il lo la gli le un uno una di del della e o che in al mi me ti si è sono era ero molto ma per con senza questo questa quello giornata giorno' },
+    vi: { good: 'tốt tuyệt vui hạnh phúc ổn khỏe thoải mái bình yên năng suất năng lượng', busy: 'bận rộn căng thẳng áp lực nhiều việc vội gấp hỗn loạn thời gian', hard: 'tệ xấu buồn mệt mỏi kiệt sức khó nặng nề khóc giận bực chán', today: 'thêm hôm nay danh sách lịch', now: 'ngay liền bây', half: 'nửa 30 rưỡi', hour: 'tiếng giờ 60', resume: 'tiếp tục quay lại', fresh: 'mới đầu', n: 'không chẳng chưa', s: 'tôi mình bạn là của và hoặc nhưng thì có một những các rất quá đã đang này đó ngày hơi' },
+    pl: { good: 'dobrze dobry dobra super świetnie świetny świetna szczęśliwy szczęśliwa zadowolony zadowolona spokojnie spokojny spokojna produktywnie produktywny energia wspaniale fajnie', busy: 'zajęty zajęta zabiegany zabiegana dużo stres zestresowany zestresowana napięty gonitwa praca pracy zadania szalony chaos czas', hard: 'źle zły zła smutno smutny smutna zmęczony zmęczona wyczerpany wyczerpana ciężko ciężki trudno okropnie strasznie płakałam płakałem płaczę wściekły wściekła przygnębiony przygnębiona kiepsko', today: 'dodaj dodać dzisiaj dziś lista kalendarz', now: 'teraz zaraz natychmiast', half: 'pół połowa 30', hour: 'godzina godzinę 60', resume: 'dalej kontynuuj wróć powrót', fresh: 'nowa nowy początek', n: 'nie nic nigdy', s: 'w we na z ze do od o u za po ale lub czy to że jak a ja ty mi mnie mój moja jest był była bardzo już jeszcze dzień trochę się' },
+    th: { good: 'ดี สบาย มีความสุข สุข สนุก เยี่ยม สุดยอด ผ่อนคลาย สงบ มีพลัง ราบรื่น', busy: 'ยุ่ง วุ่น งานเยอะ เยอะ เครียด กดดัน รีบ งาน ไม่มีเวลา', hard: 'แย่ ไม่ดี เศร้า เหนื่อย เพลีย หมดแรง หนัก ยาก ร้องไห้ โกรธ หงุดหงิด ท้อ', today: 'เพิ่ม วันนี้ รายการ ปฏิทิน', now: 'ตอนนี้ เดี๋ยวนี้ ทันที', half: 'ครึ่ง 30', hour: 'ชั่วโมง 60', resume: 'ต่อ กลับ', fresh: 'ใหม่ เริ่ม', n: 'ไม่', s: '' },
+    ur: { good: 'اچھا اچھی بہترین زبردست خوش مزہ مزے پرسکون سکون ٹھیک توانائی شاندار', busy: 'مصروف بھاگ دوڑ زیادہ دباؤ ٹینشن کام کاموں وقت پاگل افراتفری', hard: 'برا بری خراب اداس دکھی تھکا تھکی تھکن مشکل بھاری رویا روئی غصہ پریشان مایوس بیکار', today: 'شامل آج فہرست کیلنڈر', now: 'ابھی فوراً', half: 'آدھا آدھے 30', hour: 'گھنٹا گھنٹے 60', resume: 'جاری آگے واپس', fresh: 'نئی نیا شروع', n: 'نہیں نہ مت', s: 'ہے ہیں تھا تھی تھے میں میرا میری مجھے تم آپ کا کی کے کو سے پر اور یا بھی تو بہت ہی یہ وہ دن' },
+    bn: { good: 'ভালো ভাল দারুণ চমৎকার খুশি আনন্দ মজা শান্ত ঠিক শক্তি অসাধারণ', busy: 'ব্যস্ত দৌড়ঝাঁপ অনেক চাপ টেনশন কাজ সময় পাগল বিশৃঙ্খল', hard: 'খারাপ দুঃখ দুঃখী ক্লান্ত কঠিন ভারী কেঁদেছি কান্না রাগ বিরক্ত হতাশ বাজে', today: 'যোগ আজ তালিকা ক্যালেন্ডার', now: 'এখন এখনই', half: 'আধা আধ 30', hour: 'ঘণ্টা 60', resume: 'চালিয়ে ফিরে', fresh: 'নতুন শুরু', n: 'না নয় নেই', s: 'আমি আমার আমাকে তুমি আপনি এবং বা কিন্তু এই সেই খুব ছিল আছে দিন একটু' },
+    sw: { good: 'nzuri vizuri poa safi furaha nimefurahi mzuri tulivu salama nguvu bora', busy: 'shughuli mengi msongo haraka kazi majukumu wazimu fujo muda', hard: 'mbaya vibaya huzuni nimechoka uchovu choka ngumu mzito nzito nililia lia hasira nimekasirika', today: 'ongeza leo orodha kalenda', now: 'sasa hivi', half: 'nusu 30', hour: 'saa 60', resume: 'endelea rudi', fresh: 'mpya upya mwanzo', n: 'si sio hapana sikuwa haikuwa', s: 'na ya wa za la kwa ni katika mimi wewe yeye hii hiyo sana siku kidogo' },
+    uk: { good: 'добре добрий добра чудово чудовий чудова супер клас щасливий щаслива радий рада задоволений задоволена спокійно спокійний спокійна продуктивно продуктивний енергія бадьоро', busy: 'зайнятий зайнята завантажений завантажена багато стрес напружено біганина робота роботи завдання справи шалений хаос час ніколи', hard: 'погано поганий погана сумно сумний сумна втомився втомилася втома виснажений виснажена важко важкий жахливо плакала плакав плачу злий зла злюся депресія пригнічений пригнічена', today: 'додати додай сьогодні список календар', now: 'зараз одразу негайно', half: 'півгодини половина 30', hour: 'година годину 60', resume: 'продовжити далі назад повернутися', fresh: 'новий нова заново спочатку', n: 'не ні', s: 'і й та в у на з із зі по до від о за це що як але а або ж б був була було я ти він вона мені мене мій моя дуже так вже ще день просто трохи' },
+    el: { good: 'καλά καλή καλός ωραία υπέροχα υπέροχη χαρούμενος χαρούμενη ευτυχισμένος ευτυχισμένη ήρεμος ήρεμη παραγωγικός παραγωγική ενέργεια φανταστικά', busy: 'απασχολημένος απασχολημένη πιεσμένος πιεσμένη πολλά άγχος τρέξιμο τρέχω δουλειά δουλειές εργασίες τρελό χάος χρόνος', hard: 'άσχημα κακά κακή κακός λυπημένος λυπημένη στενοχωρημένος στενοχωρημένη κουρασμένος κουρασμένη εξαντλημένος εξαντλημένη δύσκολα δύσκολη βαρύ βαριά έκλαψα κλαίω θυμωμένος θυμωμένη θλίψη χάλια', today: 'πρόσθεσε προσθήκη σήμερα λίστα ημερολόγιο', now: 'τώρα αμέσως', half: 'μισή μισό 30', hour: 'ώρα 60', resume: 'συνέχεια συνέχισε πίσω', fresh: 'νέα νέο καινούργια αρχή', n: 'δεν όχι μην', s: 'ο η το οι τα τον την του της των ένα μια και ή αλλά σε στο στη στην με από για να που είναι ήταν είμαι εγώ εσύ μου σου πολύ ήδη μέρα λίγο' },
+    nl: { good: 'goed prima super fijn top geweldig blij gelukkig tevreden rustig ontspannen productief energie heerlijk', busy: 'druk bezig vol stress gestrest gehaast veel werk taken gek chaos tijd hectisch', hard: 'slecht rot verdrietig moe uitgeput kapot zwaar moeilijk vreselijk verschrikkelijk gehuild huil boos kwaad somber depressief', today: 'toevoegen vandaag lijst agenda kalender', now: 'nu meteen direct', half: 'half halfuur 30', hour: 'uur 60', resume: 'verder doorgaan terug', fresh: 'nieuw nieuwe opnieuw begin', n: 'niet geen nee nooit', s: 'de het een en of maar in op aan met van voor naar ik jij je hij zij mij me mijn is ben was erg zo al nog dag gewoon beetje' },
+    ca: { good: 'bé bo bona genial feliç content contenta tranquil productiu productiva energia increïble fantàstic fantàstica', busy: 'ocupat ocupada estressat estressada atabalat atabalada ple plena molta pressa corrent feina tasques boig boja caos temps', hard: 'malament mal dolent dolenta trist cansat cansada esgotat esgotada difícil dur dura pesat pesada horrible terrible plorant plorat enfadat enfadada deprimit deprimida fatal', today: 'afegir avui agenda llista calendari', now: 'ara seguida', half: 'mitja 30 meitat', hour: 'hora 60', resume: 'continuar seguir tornar', fresh: 'nova nou començar inici', n: 'no res mai ni', s: 'el la els les un una de del i o que en al em et es és era molt però per amb sense això aquest aquesta dia estic estava sóc mica' },
+    ro: { good: 'bine bun bună super grozav minunat minunată fericit fericită mulțumit mulțumită liniștit liniștită productiv productivă energie excelent', busy: 'ocupat ocupată aglomerat stres stresat stresată mult multe grabă alergat muncă sarcini nebun haos timp', hard: 'rău rea prost proastă trist tristă obosit obosită epuizat epuizată greu grea groaznic teribil plâns plâng supărat supărată nervos deprimat deprimată', today: 'adaugă azi astăzi listă calendar', now: 'acum imediat', half: 'jumătate 30', hour: 'oră 60', resume: 'continuă înapoi', fresh: 'nouă nou început', n: 'nu nimic niciodată', s: 'și sau dar în la cu de din pe pentru că un o eu tu el ea mi mă meu mea este sunt era foarte deja zi puțin' },
+    yo: { good: 'dára dáadáa ayọ̀ dídùn àlàáfíà agbára', busy: 'iṣẹ́ púpọ̀ wàhálà kíákíá àkókò', hard: 'burú búburú ìbànújẹ́ àárẹ̀ nira wúwo sunkún bínú', today: 'kún òní àkójọ kàlẹ́ńdà', now: 'nísinsìnyí báyìí', half: 'ààbọ̀ ìdajì 30', hour: 'wákàtí 60', resume: 'tẹ̀síwájú padà', fresh: 'tuntun ìbẹ̀rẹ̀', n: 'kò kì', s: 'mo mi ni ti àti tàbí ṣùgbọ́n wà sí fún pẹ̀lú yìí náà gan ọjọ́' },
+    sv: { good: 'bra toppen super kul glad lycklig nöjd lugn avslappnad produktiv energi härlig underbar fantastisk', busy: 'upptagen stressad stressig hektisk fullt mycket jobb arbete uppgifter galet kaos tid bråttom', hard: 'dåligt dålig ledsen trött utmattad slut tungt tung svårt svår hemskt fruktansvärt grät gråter arg sur deppig nedstämd', today: 'lägg lägga idag lista listan kalender', now: 'nu direkt genast', half: 'halvtimme halv 30', hour: 'timme 60', resume: 'fortsätt fortsätta tillbaka', fresh: 'ny nytt början', n: 'inte ingen inget nej aldrig', s: 'och eller men på med av för till från jag du han hon mig mitt min är var väldigt så redan dag bara lite' },
+    nb: { good: 'bra fint supert kjempebra glad lykkelig fornøyd rolig avslappet produktiv energi herlig fantastisk', busy: 'opptatt stresset hektisk fullt mye jobb arbeid oppgaver gal kaos tid travelt travel', hard: 'dårlig lei trist sliten utslitt tungt tung vanskelig fælt forferdelig gråt gråter sint deppa nedfor', today: 'legg legge idag liste listen kalender', now: 'nå straks', half: 'halvtime halv 30', hour: 'time 60', resume: 'fortsett tilbake', fresh: 'ny nytt start begynnelse', n: 'ikke ingen nei aldri', s: 'og eller men på med av for til fra jeg du han hun meg mitt min er var veldig så allerede dag bare litt' },
+    da: { good: 'godt god fint super dejligt glad lykkelig tilfreds rolig afslappet produktiv energi skønt fantastisk', busy: 'travl travlt optaget stresset hektisk fuldt meget arbejde opgaver vildt kaos tid', hard: 'dårligt dårlig ked trist træt udmattet tungt tung svært hårdt forfærdeligt græd græder vred sur deprimeret nedtrykt', today: 'tilføj tilføje idag liste kalender', now: 'nu straks', half: 'halv halvtime 30', hour: 'time 60', resume: 'fortsæt tilbage', fresh: 'ny nyt start begyndelse', n: 'ikke ingen nej aldrig', s: 'og eller men på med af for til fra jeg du han hun mig mit min er var så allerede dag bare lidt' },
+    cs: { good: 'dobře dobrý dobrá skvěle skvělý skvělá super šťastný šťastná spokojený spokojená klidný klidná produktivní energie výborně báječně', busy: 'zaneprázdněný zaneprázdněná vytížený vytížená hodně stres napjatý honička práce úkoly šílený chaos čas', hard: 'špatně špatný špatná smutně smutný smutná unavený unavená vyčerpaný vyčerpaná těžko těžký náročný hrozně strašně plakala plakal pláču naštvaný naštvaná deprese mizerně', today: 'přidat přidej dnes seznam kalendář', now: 'teď hned ihned', half: 'půl polovina 30', hour: 'hodina hodinu 60', resume: 'pokračovat zpět vrátit', fresh: 'nový nová znovu začátek', n: 'ne není nebyl nebyla nic nikdy', s: 'v ve na s se z ze do od o u za po ale nebo že jak to já ty mi mě můj moje je jsem byl byla velmi už ještě den trochu' },
+    hu: { good: 'jó jól remek szuper nagyszerű boldog vidám elégedett nyugodt nyugis produktív energia csodás fantasztikus', busy: 'elfoglalt zsúfolt stressz stresszes rohanás rohanok sok munka feladat feladatok őrült káosz idő', hard: 'rossz szomorú fáradt kimerült nehéz borzasztó szörnyű sírtam sírok dühös ideges lehangolt depressziós pocsék', today: 'hozzáad hozzáadás lista naptár', now: 'most azonnal', half: 'fél 30', hour: 'óra 60', resume: 'folytat folytatás vissza', fresh: 'új újra kezdés', n: 'nem nincs sem', s: 'az egy és vagy de hogy is én te ő nekem engem nagyon már még nap kicsit' },
+    fi: { good: 'hyvä hyvin mahtava loistava kiva iloinen onnellinen tyytyväinen rauhallinen tuottelias energia upea ihana', busy: 'kiireinen kiire stressi stressaava hektinen paljon työ töitä tehtävät hullu kaaos aika', hard: 'huono huonosti surullinen väsy väsynyt uupunut poikki raskas vaikea kamala kauhea itkin itken vihainen ärsyttää masentunut', today: 'lisää tänään lista kalenteri', now: 'nyt heti', half: 'puoli 30', hour: 'tunti tunnin 60', resume: 'jatka jatkaa takaisin', fresh: 'uusi alusta alku', n: 'ei en et eikä', s: 'ja tai mutta että on oli olen minä sinä hän minulle minua minun jo vielä päivä vähän' },
+};
+// ניקוי לפני השוואה: אותיות קטנות, בלי ניקוד/טעמים/סימני הטעמה (גם "dia" = "día"), אותיות סופיות בעברית וצורות האלף בערבית
+function pcFold(s) {
+    const low = String(s || '').toLowerCase();
+    // וייטנאמית: הטונים הם חלק מהמילה ("bận" עמוס, "bạn" את/ה) - שם לא מוחקים אותם (ור' pcWordScore)
+    const f = typeof currentLang !== 'undefined' && currentLang === 'vi' ? low.normalize('NFC') : pcStripMarks(low);
+    return f.replace(/[\u0591-\u05C7]/g, '').replace(/ך/g, 'כ').replace(/ם/g, 'מ').replace(/ן/g, 'נ').replace(/ף/g, 'פ').replace(/ץ/g, 'צ')
+        .replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+}
+function pcStripMarks(s) { return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC'); }
 const PCX_STOP = new Set(('אני את אתה אתם לי לך לו לה לנו זה זאת זו של שלי עם על אל גם כן רק כל היה היתה הייתה היו יש אבל או כי אז מה איך כמו עוד ממש קצת יותר מאוד הכי די פשוט ' +
     'the a an and or but to of in on at is am are was were be been it its this that i im my me you your so just very really quite some').split(' ').map(pcFold));
-function pcWords(s) { return pcFold(s).replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 1 && !PCX_STOP.has(w)); }
+const PCX_DENSE = /[぀-ヿ㐀-鿿가-힯฀-๿]/;      // כתבים שבהם 2 תווים כבר מילה
+const PCX_NOSPACE = /[぀-ヿ㐀-鿿฀-๿]/;                 // יפנית, סינית, תאית - בלי רווחים
+const pcLangData = () => PCX_HINTS_LANG[currentLang] || {};
+let pcStopLang = null, pcStopSet = PCX_STOP, pcKeepSet = new Set();
+function pcStop() {
+    if (pcStopLang !== currentLang) {
+        pcStopLang = currentLang;
+        const d = pcLangData();
+        pcStopSet = new Set([...PCX_STOP, ...String(d.s || '').split(' ').map(pcFold).filter(Boolean)]);
+        // רמז בשפה הזו לא נזרק גם כשהוא נראה כמו מילה בלי משמעות באנגלית ("iş" → "is", "bé" → "be")
+        pcKeepSet = new Set(Object.values(PCX_HINT_KEYS).flatMap(k => String(d[k] || '').split(' ').map(pcFold)).filter(Boolean));
+    }
+    return pcStopSet;
+}
+function pcSplit(f) {
+    if (PCX_NOSPACE.test(f) && typeof Intl !== 'undefined' && Intl.Segmenter) {
+        try {
+            return Array.from(new Intl.Segmenter(currentLang, { granularity: 'word' }).segment(f)).filter(x => x.isWordLike).map(x => x.segment.trim()).filter(Boolean);
+        } catch (e) { /* בלי פילוח - נשארים עם החיפוש בתוך הטקסט */ }
+    }
+    return f.split(/\s+/);
+}
+function pcWords(s) {
+    const stop = pcStop();
+    return pcSplit(pcFold(s).replace(/[^\p{L}\p{N}\p{M}\s]/gu, ' ')).filter(w => (w.length > 1 || /[㐀-鿿]/.test(w)) && (!stop.has(w) || pcKeepSet.has(w)));
+}
 function pcVariants(w) {
     const v = [w];
     const pre = 'ובלמשהכ';
@@ -1077,32 +1147,73 @@ function pcVariants(w) {
         if (w.length >= 4 && pre.includes(w[0])) v.push(w.slice(1));
         if (w.length >= 5 && pre.includes(w[0]) && pre.includes(w[1])) v.push(w.slice(2));
     }
+    // ערבית: ו/ف בהתחלה, ואחריהם ال (גם بال/لل/كال)
+    if (/^[ء-ي]/.test(w)) {
+        let x = w;
+        if (x.length >= 4 && /^[وف]/.test(x)) { x = x.slice(1); v.push(x); }
+        if (x.length >= 5 && /^(ال|بال|لل|كال)/.test(x)) v.push(x.replace(/^(ال|بال|لل|كال)/, ''));
+    }
     return v;
 }
 function pcWordScore(a, b) {
     const va = pcVariants(a), vb = pcVariants(b);
     if (va.some(x => vb.includes(x))) return 1;
+    // וייטנאמית בלי טונים ("ban" = "bận") - קרוב, לא זהה
+    if (currentLang === 'vi' && pcStripMarks(a) === pcStripMarks(b)) return 0.7;
     for (const x of va) for (const y of vb) {
         const [s, l] = x.length <= y.length ? [x, y] : [y, x];
-        if (s.length >= 3 && l.startsWith(s)) return 0.7;
+        const dense = PCX_DENSE.test(s);
+        // מילה של 3 אותיות - רק עם סיומת קצרה ("gut" / "gute", לא "bra" / "bråttom")
+        if (l.startsWith(s) && (dense ? s.length >= 2 : s.length >= 4 || (s.length === 3 && l.length <= 5))) return 0.7;
+        // אותו שורש עם סיומת אחרת: "cansado" / "cansada", "устал" / "усталость"
+        if (!dense && s.length >= 5) {
+            let p = 0;
+            while (p < s.length && s[p] === l[p]) p++;
+            if (p >= 4 && p >= s.length * 0.75) return 0.7;
+        }
     }
     return 0;
 }
+// הרמזים נשארים שלמים: פילוח של יפנית/תאית יוצר חלקי מילים ("มี" מתוך "มีความสุข" = טוב, ואז "ไม่มีเวลา" נראה כמו "לא טוב")
+function pcHintWords(key) {
+    const raw = (PCX_HINTS[key] || '') + ' ' + (PCX_HINT_KEYS[key] ? pcLangData()[PCX_HINT_KEYS[key]] || '' : '');
+    return pcFold(raw).replace(/[^\p{L}\p{N}\p{M}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 1 || /[㐀-鿿]/.test(w));
+}
+// יפנית: "楽しい" נמצא גם ב-"楽しかった" (בלי הסיומת)
+const pcStem = h => /^[぀-ヿ㐀-鿿]{2,}[いるたくだ]$/.test(h) ? h.slice(0, -1) : null;
 // choices: [{ key, value }] → הערך של התשובה הכי קרובה, או null כשאין שום רמז
 function pcMatch(text, choices) {
     const words = pcWords(text);
-    if (!words.length) return null;
+    const flat = pcFold(text).replace(/[^\p{L}\p{N}\p{M}]/gu, '');
+    const nospace = PCX_NOSPACE.test(flat);
+    // "よかった" לבד - הפילוח לא משאיר מילים, אבל החיפוש בתוך הטקסט כן מוצא
+    if (!words.length && !(nospace && flat)) return null;
     const best1 = (list, w) => list.reduce((m, x) => Math.max(m, pcWordScore(w, x)), 0);
-    const neg = /(^|\s)(לא|not|no)(\s|$)/.test(pcFold(text));
-    const goodHints = pcWords(PCX_HINTS.pcx_o_good);
-    const negGood = neg && words.some(w => best1(goodHints, w) === 1);
+    // בלי רווחים: רמז שמופיע בתוך הטקסט נחשב מילה שנמצאה
+    const inText = list => nospace ? new Set(list.filter(h => flat.includes(h) || (pcStem(h) && flat.includes(pcStem(h))))).size : 0;
+    const negs = ['לא', 'not', 'no', ...String(pcLangData().n || '').split(' ').map(pcFold).filter(Boolean)];
+    const goodHints = pcHintWords('pcx_o_good');
+    // "不错" (לא רע = טוב) הוא רמז לטוב שיש בו מילת שלילה - לא סופרים אותו כשלילה
+    let negText = flat;
+    goodHints.filter(h => negs.some(n => h.includes(n))).forEach(h => { negText = negText.split(h).join(''); });
+    const neg = words.some(w => negs.includes(w) || (currentLang === 'ko' && /^(않|못|아니)/.test(w))) || (nospace && negs.some(n => negText.includes(n)));
+    const negGood = neg && (words.some(w => best1(goodHints, w) >= 0.7) || inText(goodHints.filter(h => !negs.some(n => h.includes(n)))) > 0);
+    // מילה שמתאימה לכל התשובות לא אומרת כלום על הבחירה ("de", "la")
+    const labels = choices.map(c => pcWords(t(c.key)));
+    const shared = w => choices.length > 1 && labels.every(l => best1(l, w) > 0);
+    const useful = words.filter(w => !shared(w));
     // הדירוג מחלק באורך התשובה (תשובה ארוכה לא מנצחת רק כי יש בה הרבה מילים); מספיקה מילה משותפת אחת
     let best = null, bestScore = 0, bestRaw = 0;
-    choices.forEach(c => {
-        const label = pcWords(t(c.key));
-        const hints = PCX_HINTS[c.key] ? pcWords(PCX_HINTS[c.key]) : [];
+    choices.forEach((c, i) => {
+        const label = labels[i];
+        const hints = pcHintWords(c.key);
         let ls = 0, hs = 0;
-        words.forEach(w => { ls += best1(label, w); hs += best1(hints, w); });
+        useful.forEach(w => { ls += best1(label, w); });
+        words.forEach(w => { hs += best1(hints, w); });
+        if (nospace) {
+            ls = Math.max(ls, inText(label.filter(w => !shared(w))));
+            hs = Math.max(hs, inText(hints));
+        }
         let score = (label.length ? ls / Math.sqrt(label.length) : 0) + hs * 0.8;
         let raw = ls + hs;
         // "לא טוב" ≠ יום טוב

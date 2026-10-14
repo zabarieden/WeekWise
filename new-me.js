@@ -368,9 +368,9 @@ function nmMealWordsRe() {
     }));
     return new RegExp([...words].filter(w => w.length >= 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 }
-async function nmCheckRoutineMeals(fromSettings) {
+async function nmCheckRoutineMeals(fromSettings, ask) {
     if (!nmProfile || !supabaseClient || !currentUserId) return;
-    if (!fromSettings && nmProfile.routine_meals_checked) return;
+    if (!fromSettings && !ask && nmProfile.routine_meals_checked) return;
     const [{ data: items }, { data: tabs }] = await Promise.all([
         supabaseClient.from('routine_items').select('id, tab_id, title, time, hidden_by_new_me').eq('user_id', currentUserId).eq('kind', 'scheduled'),
         supabaseClient.from('routine_tabs').select('id, name').eq('user_id', currentUserId),
@@ -414,6 +414,22 @@ async function nmMarkRoutineChecked() {
     if (!nmProfile || nmProfile.routine_meals_checked) return;
     nmProfile.routine_meals_checked = true;
     await supabaseClient.from('new_me_profile').update({ routine_meals_checked: true, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+}
+// 🔗 "סנכרון עם New Me" - מתג בהגדרות של "השגרה שלי" (לפי בקשה מפורשת, 2026-10-14). דלוק (ברירת המחדל): הארוחות של
+// New Me ב"היום שלי", וארוחות השגרה שסומנו נשארות מוסתרות. כבוי: הארוחות של New Me יוצאות מ"היום שלי" וארוחות השגרה
+// חוזרות. כלום לא נמחק - הדלקה מחדש מחזירה הכול, ושואלת אילו ארוחות בשגרה להסתיר
+function nmRoutineSyncOn() { return !(nmProfile && nmProfile.routine_sync === false); }
+async function nmSetRoutineSync(on) {
+    if (!hasNewMe || !(await nmEnsureHomeData()) || !nmProfile) return false;
+    const prev = nmProfile.routine_sync;
+    nmProfile.routine_sync = !!on;
+    const { error } = await supabaseClient.from('new_me_profile').update({ routine_sync: !!on, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { nmProfile.routine_sync = prev; showAppToast(t('nm_save_error'), 'error'); return false; }
+    showAppToast(t(on ? 'routine_newme_sync_on_toast' : 'routine_newme_sync_off_toast'));
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    if (typeof renderDailyBoard === 'function') renderDailyBoard();
+    if (on) nmCheckRoutineMeals(false, true);
+    return true;
 }
 
 // ---------- בורר שעה מעוצב ----------
@@ -3675,8 +3691,8 @@ async function nmEnsureHomeData() {
     return true;
 }
 // הארוחות של היום לציר הזמן: { time, text, done, toggle(checked) } - רק כשהנתונים כבר טעונים
-function myDayNewMeItems() {
-    if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString()) return [];
+function myDayNewMeItems(evenWithoutSync) {
+    if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString() || (!evenWithoutSync && !nmRoutineSyncOn())) return [];
     return nmActiveOrder().map(slot => {
         const free = nmIsFree(slot);
         const text = free ? `🍕 ${t('nm_free_meal')}` : `${nmSlotName(slot)} · ${nmItemShort(nmItemInfo(nmTodayKey(slot)))}`;
@@ -3693,7 +3709,7 @@ function nmRenderHomeTile() {
     if (!btn) return;
     btn.classList.toggle('hidden', !hasNewMe);
     if (!hasNewMe) return;
-    const next = myDayNewMeItems().find(m => !m.done);
+    const next = myDayNewMeItems(true).find(m => !m.done);
     const label = next ? `${t('nm_shortcut_title')} · ${next.time} ${next.text}` : t('nm_shortcut_title');
     btn.setAttribute('aria-label', label);
     btn.title = label;
