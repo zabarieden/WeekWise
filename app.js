@@ -36,6 +36,35 @@ let authMode = 'login';
 
 function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 
+// 🔐 הכניסה נשמרת (לפי בקשה מפורשת, 2026-10-14: "למה זה כל הזמן יוצא מהאפליקציה למרות שלא עשיתי ניתוק... קרה לי איזה 20
+// פעם בשבוע"): כשהאפליקציה נפתחת אחרי זמן, אישור הכניסה כבר פג ו-Supabase מחדש אותו ברשת. אם הרשת עוד לא מוכנה (טלפון
+// שהתעורר, מעבר בין Wi-Fi לסלולר) getSession מחזיר רגע בלי session - וזה הציג את מסך הכניסה, כאילו היה ניתוק. עכשיו: כל
+// עוד יש כניסה שמורה במכשיר מנסים שוב (עם הפסקות קצרות, ושוב כשהרשת חוזרת), ובינתיים במקום הטופס - "מתחברים...".
+// מסך הכניסה מופיע רק כשבאמת אין כניסה (יציאה, או כניסה ש-Supabase ביטל)
+function hasStoredAuthSession() {
+    try { return Object.keys(localStorage).some(k => /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k)); } catch { return false; }
+}
+async function restoreSessionWithRetry() {
+    const overlay = document.getElementById('login-overlay');
+    const restoring = hasStoredAuthSession();
+    if (overlay && restoring) overlay.classList.add('is-restoring');
+    try {
+        for (const wait of [0, 800, 1600, 3200, 5000]) {
+            if (wait) await new Promise(r => setTimeout(r, wait));
+            try {
+                const { data } = await supabaseClient.auth.getSession();
+                if (data && data.session) return data.session;
+                // אין כניסה שמורה (יציאה, או ש-Supabase ביטל אותה) - באמת לא מחוברים
+                if (!hasStoredAuthSession()) return null;
+                const r = await supabaseClient.auth.refreshSession().catch(() => null);
+                if (r && r.data && r.data.session) return r.data.session;
+            } catch { /* הרשת עוד לא מוכנה - מנסים שוב */ }
+        }
+        return null;
+    } finally {
+        if (overlay) overlay.classList.remove('is-restoring');
+    }
+}
 function initSupabase() {
     if (window.supabase) {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -85,8 +114,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('pagehide', () => updateReminderPresence(false));
 
     if (supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const session = await restoreSessionWithRetry();
         if (session) initAppAfterAuth(session.user);
+        // הכניסה חזרה אחר כך (הרשת התעוררה ו-Supabase חידש אותה לבד) - פותחים את האפליקציה במקום להשאיר את מסך הכניסה.
+        // רק TOKEN_REFRESHED: כניסה / הרשמה מהטופס פותחות את האפליקציה (או את האשף) בעצמן
+        supabaseClient.auth.onAuthStateChange((event, s) => {
+            if (s && !currentUserId && event === 'TOKEN_REFRESHED') initAppAfterAuth(s.user);
+        });
+        window.addEventListener('online', async () => {
+            if (currentUserId || !hasStoredAuthSession()) return;
+            const s = await restoreSessionWithRetry();
+            if (s && !currentUserId) initAppAfterAuth(s.user);
+        });
         // "שכחתי סיסמה": הקישור שנשלח במייל (resetPasswordForEmail) מחזיר את
         // המשתמשת לכתובת האפליקציה עם session תקף מסוג recovery ב-URL -
         // ה-SDK של Supabase מזהה את זה אוטומטית ויורה את האירוע הזה. פותחים
@@ -2605,7 +2644,11 @@ async function maybeAutoStartAppTour() {
         await appTourWait(600);
     }
 }
+let appAuthInitUserId = null;
 async function initAppAfterAuth(user) {
+    // פעם אחת בכל טעינה (גם אם הכניסה חזרה כמה פעמים - ר' restoreSessionWithRetry)
+    if (appAuthInitUserId === user.id) return;
+    appAuthInitUserId = user.id;
     currentUserId = user.id;
     currentUsername = user.email;
     currentUserCreatedAt = user.created_at;
