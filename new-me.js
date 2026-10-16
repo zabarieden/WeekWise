@@ -4549,6 +4549,7 @@ const NEW_ME_TOUR_STEPS = [
     { id: 'nm_top', ch: 'newme', ctx: 'newme', icon: '⭐', target: '#nm-hud .nmg-top', titleKey: 'nm_tour_top_title', text: 'nm_tour_top_text', optional: true },
     { id: 'nm_quest', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-hud .nmg-quest', titleKey: 'nm_tour_quest_title', text: 'nm_tour_quest_text', optional: true },
     { id: 'nm_rails', ch: 'newme', ctx: 'newme', icon: '🧰', target: '#nm-hud .nmg-rr', titleKey: 'nm_tour_rails_title', text: 'nm_tour_rails_text', optional: true },
+    { id: 'nm_week', ch: 'newme', ctx: 'newme', icon: '🌱', target: '#nm-hud .nmg-week', titleKey: 'nm_week_ch_label', text: 'nm_tour_week_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
     { id: 'nm_world', ch: 'newme', ctx: 'newme', icon: '🗺️', target: '#nm-hud [data-hud="world"]', titleKey: 'nm_tour_world_title', text: 'nm_tour_world_text', optional: true },
     { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
