@@ -10715,11 +10715,30 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) #btn-ai-brain-fab, .phone-wrapper:has(#nm-hud):has(#sr-overlay) #btn-ai-brain-fab, .phone-wrapper.nmg-map-open #btn-ai-brain-fab { display: none; }
 /* הכפתור הקטן של המפתחת - מעל השורה התחתונה של המשחק (לא מתחתיה) */
 .phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) .dev-sim-float { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
-/* הדמות של המשתמש/ת על השביל: Me1 / Me2 / Me3 (הציורים שלה), מרחפת קצת */
-.nmh-me { position: absolute; z-index: 3; padding: 0; border: 0; background: none; cursor: pointer; }
-.nmh-me img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 10px 10px rgba(0, 0, 0, .5)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
+/* הדמות של המשתמש/ת: Me1 / Me2 / Me3 (הציורים שלה) - מרחפת מעל השביל (הצל שעל הקרקע קטן כשהיא עולה), וגוררים אותה
+   לכניסות (new-me-game.js nmgMeDown). רחוקה = קטנה יותר (--mes), נוטה לכיוון התנועה (--tilt) */
+.nmh-me { position: absolute; z-index: 3; padding: 0; border: 0; background: none; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transform-origin: 50% 80%; transform: scale(var(--mes, 1)) rotate(var(--tilt, 0deg)); transition: transform .3s ease, left .35s ease, top .35s ease; }
+.nmh-me img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; pointer-events: none; -webkit-user-drag: none; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
+.nmh-me::after { content: ""; position: absolute; left: 24%; right: 24%; bottom: -9%; height: 9%; border-radius: 50%; background: radial-gradient(ellipse, rgba(10, 4, 24, .55), rgba(10, 4, 24, 0) 70%); animation: nmgMeShadow 4.4s ease-in-out infinite; pointer-events: none; }
 .nmh-me:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; border-radius: 16px; }
-@keyframes nmgMeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes nmgMeFloat { 0%, 100% { transform: translateY(-4px); } 50% { transform: translateY(-16px); } }
+@keyframes nmgMeShadow { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(.72); opacity: .55; } }
+/* עפה עם האצבע: עולה גבוה יותר, זוהרת, בלי השהיה */
+.nmh-me.is-flying { z-index: 6; cursor: grabbing; transition: transform .15s ease; }
+.nmh-me.is-flying img { animation: none; transform: translateY(-24px); filter: drop-shadow(0 0 14px rgba(255, 210, 122, .75)) drop-shadow(0 0 28px rgba(201, 182, 255, .6)); }
+.nmh-me.is-flying::after { animation: none; transform: scale(.6); opacity: .45; }
+/* נכנסת: נבלעת בכניסה */
+.nmh-me.is-entering { pointer-events: none; opacity: 0; transform: scale(.12) rotate(0deg); transition: left .42s ease-in, top .42s ease-in, transform .42s ease-in, opacity .42s ease-in; }
+/* הכניסה שהדמות נוגעת בה נדלקת; נעולה - רועדת */
+.nmh-door.is-near, .nmh-hatch-btn.is-near { border-radius: 40%; background: radial-gradient(ellipse, rgba(255, 228, 160, .42), rgba(255, 210, 122, 0) 70%); box-shadow: 0 0 34px 10px rgba(255, 210, 122, .45); }
+.nmh-door.is-bump, .nmh-hatch-btn.is-bump { animation: nmgDoorNo .45s ease; }
+@keyframes nmgDoorNo { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.nmg-spark { position: absolute; z-index: 5; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: #fff6d6; box-shadow: 0 0 8px #ffd27a, 0 0 3px #fff; pointer-events: none; animation: nmgSpark .9s ease-out forwards; }
+.nmg-spark:nth-of-type(3n) { background: #ffe0f0; box-shadow: 0 0 8px #ff9ecf; }
+.nmg-spark:nth-of-type(3n+1) { background: #ece4ff; box-shadow: 0 0 8px #c9b6ff; }
+@keyframes nmgSpark { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(14px) scale(.3); } }
+@media (prefers-reduced-motion: reduce) { .nmh-me, .nmh-me.is-entering { transition: none; } .nmh-me::after { animation: none; } }
 /* מפת העולם - בין הכפתורים הקבועים (הם נשארים) */
 .nmg-map { position: absolute; inset: 0; z-index: 2570; overflow: hidden; background: #120a24 url('world/forest-night.jpg') center / cover; animation: srFadeIn .3s ease-out; }
 .nmg-map::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18, 10, 36, .82), rgba(18, 10, 36, .55) 40%, rgba(18, 10, 36, .85)); pointer-events: none; }

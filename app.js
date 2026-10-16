@@ -8389,14 +8389,26 @@ let newMeBilling = null;
 // ברכישות אמיתיות. "קנייה" = אותה חזרה מהתשלום כמו אצל כולם (חגיגת הפרימיום / פתיחת New Me), בלי תשלום ---
 function nmDevLockedPreview() { try { return localStorage.getItem('weekwise_nm_dev_locked') === '1'; } catch { return false; } }
 function devPremiumLockedPreview() { try { return localStorage.getItem('weekwise_dev_premium_locked') === '1'; } catch { return false; } }
-// פעם אחת בכל מכשיר: הכול נעול, כמו מי שרק נכנס/ה לאפליקציה (לפי בקשה מפורשת: "ותנעל לי הכל הכל כדי שאראה
-// איך זה כברירת מחדל")
-function devSimFirstRun() {
+// המתג מסונכרן בכל המכשירים (לפי בקשה מפורשת, 2026-10-16: "New Me פתוח בנייד אבל במחשב... עדיין לא נפתח, אני רוצה
+// שגם זה יהיה מסונכרן בכל המכשירים"): המצב נשמר ב-user_premium (dev_premium_locked / dev_nm_locked), וה-localStorage
+// הוא רק העותק של המכשיר. עמודה ריקה = פתוח
+async function devSimLoadFromDb() {
+    if (!supabaseClient || !currentUserId) return;
     try {
-        if (localStorage.getItem('weekwise_dev_sim_v1')) return;
-        localStorage.setItem('weekwise_dev_sim_v1', '1');
-        localStorage.setItem('weekwise_dev_premium_locked', '1');
-        localStorage.setItem('weekwise_nm_dev_locked', '1');
+        const { data, error } = await supabaseClient.from('user_premium').select('dev_premium_locked, dev_nm_locked').eq('user_id', currentUserId).maybeSingle();
+        if (error) return;
+        const keep = (k, on) => { if (on) localStorage.setItem(k, '1'); else localStorage.removeItem(k); };
+        keep('weekwise_dev_premium_locked', !!(data && data.dev_premium_locked));
+        keep('weekwise_nm_dev_locked', !!(data && data.dev_nm_locked));
+    } catch {}
+}
+async function devSimSaveToDb() {
+    if (!supabaseClient || !currentUserId) return;
+    try {
+        await supabaseClient.from('user_premium').upsert(
+            { user_id: currentUserId, username: currentUsername, dev_premium_locked: devPremiumLockedPreview(), dev_nm_locked: nmDevLockedPreview() },
+            { onConflict: 'user_id' },
+        );
     } catch {}
 }
 // חשבון הפיתוח כשהפרימיום "נעול" - כמו מי שרק נכנס/ה (גם בלי שימושים קודמים ב-AI)
@@ -8417,7 +8429,8 @@ function devSimToggle(kind) {
     const url = new URL(window.location.href);
     url.searchParams.delete('checkout');
     if (locked) url.searchParams.set('checkout', 'success');
-    devSimReload(url.toString());
+    // קודם נשמר (כדי שגם שאר המכשירים יראו אותו דבר), ואז הדף נטען מחדש
+    devSimSaveToDb().finally(() => devSimReload(url.toString()));
 }
 // "קנייה" של New Me בתצוגה הנעולה: כמו החזרה מהתשלום (מאמתים… ואז נפתח), בלי תשלום אמיתי
 function devSimBuyNewMe() {
@@ -8482,6 +8495,7 @@ function devSettingsToggle(kind) {
 function setNmDevLockedPreview(on) {
     try { if (on) localStorage.setItem('weekwise_nm_dev_locked', '1'); else localStorage.removeItem('weekwise_nm_dev_locked'); } catch {}
     if (!isDevSuperuserAccount) return;
+    devSimSaveToDb();
     // נעילה באמצע השאלון של "הקנייה" - הוא נסגר איתה
     if (on && typeof nmQuiz !== 'undefined' && nmQuiz && nmQuiz.fresh) { nmQuiz = null; nmTimes = null; }
     hasNewMe = !on;
@@ -8517,8 +8531,9 @@ function isInFreeTrial() {
 async function loadPremiumStatus() {
     if (!supabaseClient || !currentUserId) return;
     if (DEV_SUPERUSER_EMAILS.includes((currentUsername || '').toLowerCase())) {
-        // 🔧 מתג המפתחת: פרימיום ו-New Me יכולים להיות "נעולים", כמו אצל מי שרק נכנס/ה (devSimToggle)
-        devSimFirstRun();
+        // 🔧 מתג המפתחת: פרימיום ו-New Me יכולים להיות "נעולים", כמו אצל מי שרק נכנס/ה (devSimToggle).
+        // המצב מגיע מהשרת - אותו דבר בכל המכשירים (במקום "נעול" אוטומטי בכל מכשיר חדש)
+        await devSimLoadFromDb();
         const premiumLocked = devPremiumLockedPreview();
         hasNewMe = !nmDevLockedPreview();
         // New Me כולל את הפרימיום (ר' למטה) - גם במתג של מנהלת המוצר: "קנייה" של New Me פותחת גם את הפרימיום

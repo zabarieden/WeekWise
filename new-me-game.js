@@ -192,10 +192,122 @@ async function nmgSetMeSeen(n) {
     try { localStorage.setItem(nmgMeSeenKey(), String(n)); } catch {}
     if (typeof roomSave === 'function') await roomSave({ me_seen: n });
 }
-// הדמות במסדרון, על השביל (נגיעה - "הדמות שלי": כל התמונות, ומה הבא)
+// הדמות במסדרון מרחפת, והולכים איתה (לפי בקשה מפורשת, 2026-10-16: "אני אלך איתה ממקום למקום באמצעות העכבר/אצבע
+// והדלתות שהיא תיגע בהם ממש אעבור לשם כמו מפת עולם"): גוררים אותה, כניסה שהיא נוגעת בה נדלקת, ואחרי רגע (או כשעוזבים
+// עליה) נכנסים. נעולה - רק אומרת כמה מפתחות חסרים והדמות נהדפת אחורה. נגיעה בלי לגרור - "הדמות שלי" (כל השלבים)
+const NMG_ME_W = 124, NMG_ME_H = 150, NMG_ME_HOME = { x: 195, y: 595 };
+let nmgMePos = null;     // מרכז הדמות ביחידות של הציור (390×844); null = המקום שלה על השביל
+let nmgMeDragged = false;
+function nmgMeScale(y) { return Math.max(0.6, Math.min(1, 0.6 + (y - 380) / 260 * 0.4)); }
+function nmgMeClamp(p) { return { x: Math.max(45, Math.min(NMH_W - 45, p.x)), y: Math.max(360, Math.min(650, p.y)) }; }
+function nmgMeStyle(p) { return `left:${nmhX(p.x - NMG_ME_W / 2)};top:${nmhY(p.y - NMG_ME_H / 2)};width:${nmhX(NMG_ME_W)};height:${nmhY(NMG_ME_H)};--mes:${nmgMeScale(p.y).toFixed(3)}`; }
 function nmgMeHallHtml() {
     const s = nmgStage();
-    return `<button type="button" class="nmh-me nmg-me-${s.n}" style="left:${nmhX(195 - 62)};top:${nmhY(520)};width:${nmhX(124)};height:${nmhY(150)}" onclick="nmgOpenMe()" aria-label="${nmEsc(t('nm_me_aria').replace('{name}', 'Me' + s.n))}"><img src="world/${s.img}" alt=""></button>`;
+    return `<button type="button" class="nmh-me nmg-me-${s.n}" style="${nmgMeStyle(nmgMePos || NMG_ME_HOME)}" onpointerdown="nmgMeDown(event)" onclick="nmgMeClick()" aria-label="${nmEsc(t('nm_me_aria').replace('{name}', 'Me' + s.n))}"><img src="world/${s.img}" alt="" draggable="false"></button>`;
+}
+function nmgMeClick() { if (nmgMeDragged) { nmgMeDragged = false; return; } nmgOpenMe(); }
+// הכניסות שאפשר לגעת בהן: דלתות 1–5 וקשת הפרחים לגג. hit = אזור הכניסה, front = איפה הדמות עומדת כשחוזרים משם
+function nmgMeTargets() {
+    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
+    const front = ([x, y, w, h]) => nmgMeClamp({ x: x + w / 2, y: y + h + 46 });
+    const doors = NMH_DOORS.map(d => ({ sel: `.nmh-door[data-door="${d.n}"]`, hit: d.hit, front: front(d.hit), open: nmhDoorOpen(d.n, keys), go: () => nmhDoorTap(d.n) }));
+    const roofOpen = typeof roomUnlockAt === 'function' && keys >= roomUnlockAt('roof');
+    return doors.concat([{ sel: '.nmh-hatch-btn', hit: NMH_ROOF.hit, front: front(NMH_ROOF.hit), open: roofOpen, go: () => nmhHatchTap() }]);
+}
+function nmgMeHit(p, targets) {
+    return targets.find(({ hit: [x, y, w, h] }) => p.x > x - 8 && p.x < x + w + 8 && p.y > y - 8 && p.y < y + h + 8) || null;
+}
+function nmgMeDown(e) {
+    if (e.button > 0) return;
+    const me = e.currentTarget;
+    const hall = me.closest('.nmh');
+    if (!hall) return;
+    const r = hall.getBoundingClientRect();
+    const kx = NMH_W / r.width, ky = NMH_H / r.height;
+    const start = nmgMePos || NMG_ME_HOME;
+    const x0 = e.clientX, y0 = e.clientY;
+    const targets = nmgMeTargets();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let pos = { ...start }, moved = false, near = null, timer = 0, lastX = x0, bumped = null, lastSpark = 0;
+    nmgMeDragged = false;
+    try { me.setPointerCapture(e.pointerId); } catch {}
+    const glow = tg => {
+        hall.querySelectorAll('.is-near').forEach(el => el.classList.remove('is-near'));
+        const el = tg && hall.querySelector(tg.sel);
+        if (el) el.classList.add('is-near');
+    };
+    const place = (p, tilt = 0) => { me.style.cssText = `${nmgMeStyle(p)};--tilt:${tilt}deg`; };
+    const stop = () => {
+        clearTimeout(timer);
+        me.removeEventListener('pointermove', move);
+        me.removeEventListener('pointerup', up);
+        me.removeEventListener('pointercancel', up);
+        me.classList.remove('is-flying');
+        glow(null);
+    };
+    // נכנסים: הדמות נבלעת בכניסה, וכשחוזרים למסדרון היא עומדת מולה
+    const enter = tg => {
+        if (!tg.open) {
+            if (bumped === tg) return;
+            bumped = tg;
+            const door = hall.querySelector(tg.sel);
+            if (door) { door.classList.remove('is-bump'); void door.offsetWidth; door.classList.add('is-bump'); }
+            tg.go();
+            if (!document.querySelector('#new-me-root .nmh-me') || document.querySelector('.nm-sheet-overlay')) { stop(); return; }
+            return;
+        }
+        stop();
+        const [x, y, w, h] = tg.hit;
+        nmgMePos = tg.front;
+        me.classList.add('is-entering');
+        place({ x: x + w / 2, y: y + h * 0.6 });
+        setTimeout(() => {
+            tg.go();
+            // החדר / המקום נפתח מעליה; כשחוזרים - היא כבר עומדת מול הכניסה
+            setTimeout(() => { me.classList.remove('is-entering'); place(nmgMePos); }, 400);
+        }, reduce ? 0 : 420);
+    };
+    const move = ev => {
+        if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return;
+        if (!moved) { moved = true; nmgMeDragged = true; me.classList.add('is-flying'); }
+        pos = nmgMeClamp({ x: start.x + (ev.clientX - x0) * kx, y: start.y + (ev.clientY - y0) * ky });
+        const tilt = Math.max(-12, Math.min(12, (ev.clientX - lastX) * 1.6));
+        lastX = ev.clientX;
+        place(pos, tilt);
+        if (!reduce && Date.now() - lastSpark > 70) { lastSpark = Date.now(); nmgMeSpark(hall, pos); }
+        const tg = nmgMeHit(pos, targets);
+        if (tg !== near) {
+            near = tg;
+            clearTimeout(timer);
+            glow(tg);
+            if (bumped && bumped !== tg) bumped = null;
+            if (tg) timer = setTimeout(() => enter(tg), 450);
+        }
+    };
+    const up = () => {
+        if (near) { enter(near); if (!near.open) { stop(); nmgMePushBack(me, pos, near); } return; }
+        stop();
+        if (moved) { nmgMePos = pos; place(pos); }
+    };
+    me.addEventListener('pointermove', move);
+    me.addEventListener('pointerup', up);
+    me.addEventListener('pointercancel', up);
+}
+// כניסה נעולה: הדמות מתרחקת קצת ממנה
+function nmgMePushBack(me, pos, tg) {
+    const [x, y, w, h] = tg.hit;
+    const away = nmgMeClamp({ x: pos.x + (pos.x < x + w / 2 ? -30 : 30), y: Math.max(pos.y, y + h) + 40 });
+    nmgMePos = away;
+    me.style.cssText = `${nmgMeStyle(away)};--tilt:0deg`;
+}
+// אבקת כוכבים קטנה מאחורי הדמות כשהיא עפה
+function nmgMeSpark(hall, p) {
+    const s = document.createElement('i');
+    s.className = 'nmg-spark';
+    s.style.left = nmhX(p.x + (Math.random() * 30 - 15));
+    s.style.top = nmhY(p.y + 30 + Math.random() * 20);
+    hall.appendChild(s);
+    setTimeout(() => s.remove(), 900);
 }
 function nmgOpenMe() {
     const keys = nmgKeys();
