@@ -21,7 +21,6 @@ const ROOM_UNLOCKS = [
     { n: 1, id: 'game', wall: 2 },
     { n: 1, id: 'vinyl', wall: 2 },
     { n: 1, id: 'shelf', wall: 3 },
-    { n: 1, id: 'catvisit', wall: 3 },
     { n: 2, id: 'roof', hatch: true },
     { n: 3, id: 'porch', place: 'porch' },
     { n: 3, id: 'rain', place: 'porch' },
@@ -362,6 +361,9 @@ function openSecretRoom(opts = {}) {
     srBindSwipe(ov.querySelector('.sr-scene'));
     if (typeof nmgRenderHud === 'function') nmgRenderHud();
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') closeSecretRoom(); });
+    // אחרי נגיעה - בלי קווים מקווקווים סביב מה שנגעו בו (לפי בקשה מפורשת, 2026-10-16); במקלדת יש הדגשה רכה
+    ov.addEventListener('pointerdown', () => ov.classList.add('is-pointer'), true);
+    ov.addEventListener('keydown', e => { if (e.key === 'Tab') ov.classList.remove('is-pointer'); }, true);
     roomRenderDevKeys();
     // פוקוס על החדר עצמו (בשביל Escape / קורא מסך) - בלי טבעת פוקוס על כפתור
     ov.tabIndex = -1;
@@ -455,7 +457,6 @@ function srFitTexts(root) {
 function srHotspot(id, el) {
     const locked = el && el.classList.contains('locked');
     if (locked) { srShowLockTip(id); return; }
-    if (id === 'catvisit') { srCatNapTap(el); return; }
     if (id === 'drawer') { const open = el.classList.toggle('is-open'); el.setAttribute('aria-pressed', open ? 'true' : 'false'); return; }
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'diary') { if (typeof srpOpenDiary === 'function') srpOpenDiary(); return; }
@@ -651,8 +652,7 @@ function srWallShelf(keys) {
         <g class="sr-hot${shelfOpen ? '' : ' locked'}" data-hot="shelf" role="button" tabindex="0" aria-label="${srEsc(roomItemName('shelf'))}">
             ${shelfOpen ? `${srSparkleField(313, 472, 70, 132, 14, 1.4, 11)}<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
             <rect x="236" y="328" width="154" height="288" fill="transparent"/>
-        </g>
-        ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}`;
+        </g>`;
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
@@ -1750,25 +1750,8 @@ function roomOpenRoof(opts = {}) {
 // הטלסקופ: מסתכלים דרכו ורואים קבוצת כוכבים שמצטיירת מהאתגרים שהסתיימו - כל אתגר הוא כוכב, ונגיעה בכוכב אומרת
 // איזה אתגר זה היה. התיבה: נעולה; 3 ימים ברצף עם ✓ על ארוחה - והיא נפתחת: בפנים מכתב קטן, מדבקה למכסה או כוכב
 // חדש לשמיים (לפי הסדר), ואז נסגרת ל-3 הימים הבאים. נשמר ב-new_me_room (chest_gifts, chest_opened_on)
-const ROOM_CHEST_DAYS = 3;
-const ROOM_CHEST_LETTERS = 8;
-const ROOM_CHEST_STICKERS = ['🌟', '🌙', '🦋', '🌸', '💛', '🍀', '🌈', '🐚'];
 function roomChestGifts() { return Math.max(0, Number(roomState && roomState.chest_gifts) || 0); }
-function roomChestStickers() { return ROOM_CHEST_STICKERS.slice(0, Math.min(ROOM_CHEST_STICKERS.length, Math.floor((roomChestGifts() + 1) / 3))); }
 function roomChestStars() { return Math.floor(roomChestGifts() / 3); }
-// ימים ברצף עם ✓ על ארוחה (מסיכומי המסע של New Me), רק אחרי הפעם האחרונה שהתיבה נפתחה. היום עוד בלי ✓ - סופרים עד אתמול
-function roomChestStreak() {
-    const stats = typeof nmStats !== 'undefined' && Array.isArray(nmStats) ? nmStats : [];
-    const checked = new Set(stats.filter(r => Number(r.checks) > 0).map(r => String(r.day).slice(0, 10)));
-    const after = roomState && roomState.chest_opened_on ? String(roomState.chest_opened_on).slice(0, 10) : '';
-    let day = getLocalDateString();
-    if (!checked.has(day)) day = addDaysToDateStr(day, -1);
-    let n = 0;
-    while (n < ROOM_CHEST_DAYS && checked.has(day) && day > after) { n++; day = addDaysToDateStr(day, -1); }
-    return n;
-}
-// מנהלת המוצר יכולה לפתוח בכל רגע, כדי לראות איך זה נפתח
-function roomChestReady() { return roomIsDev() || roomChestStreak() >= ROOM_CHEST_DAYS; }
 // הטלסקופ והתיבה מצוירים בציור של הצמרת - כאן רק מה שזוהר ונוגעים בו (ניצוץ בעדשה; הילה כשהתיבה מוכנה, שלוש נקודות
 // של הרצף מעליה והמדבקות שנאספו על החזית שלה)
 function roomScopeSvg() {
@@ -1777,16 +1760,19 @@ function roomScopeSvg() {
         <rect x="256" y="282" width="96" height="168" fill="transparent"/>
     </g>`;
 }
+const ROOM_CHEST_LID = 'M54 403 V382 Q54 369 70 369 H113 Q129 369 129 382 V403 Z';
 function roomChestSvg() {
-    const streak = roomChestStreak();
-    const ready = roomChestReady();
-    const dots = [0, 1, 2].map(i => `<circle cx="${79 + i * 14}" cy="358" r="4" fill="${ready || i < streak ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-width="1.4"/>`).join('');
-    const stickers = roomChestStickers().map((s, i) => `<text x="${70 + (i % 4) * 16}" y="${424 + Math.floor(i / 4) * 10}" font-size="9" text-anchor="middle">${s}</text>`).join('');
-    return `<g class="sr-roof-hot sr-chest${ready ? ' is-ready' : ''}" data-roof-hot="chest" role="button" tabindex="0" aria-label="${srEsc(roomItemName('chest'))}">
-        ${stickers}
-        <g class="sr-chest-dots">${dots}</g>
-        <rect x="46" y="344" width="96" height="100" fill="transparent"/>
-    </g>`;
+    return `<defs><clipPath id="srChestLidClip"><path d="${ROOM_CHEST_LID}"/></clipPath>
+            <linearGradient id="srChestIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c0f08"/><stop offset="0.6" stop-color="#3a2214"/><stop offset="1" stop-color="#5a3620"/></linearGradient></defs>
+        <g class="sr-roof-hot sr-chest" data-roof-hot="chest" role="button" tabindex="0" aria-pressed="false" aria-label="${srEsc(roomItemName('chest'))}">
+            <g class="sr-chest-inside">
+                <path d="${ROOM_CHEST_LID}" fill="url(#srChestIn)"/>
+                <path d="M58 398 H125" stroke="#8a5a34" stroke-width="2" stroke-linecap="round"/>
+                <path d="M58 403 H125" stroke="#c9a46a" stroke-width="2.4" stroke-linecap="round"/>
+            </g>
+            <g class="sr-chest-lid2"><g clip-path="url(#srChestLidClip)"><image href="world/treetop.jpg" x="-22.7" y="-220" width="435.4" height="780" preserveAspectRatio="none"/></g></g>
+            <rect x="46" y="344" width="96" height="100" fill="transparent"/>
+        </g>`;
 }
 // האתגרים שהסתיימו, לפי הסדר (כל אתגר פעם אחת). מנהלת המוצר בלי אתגרים אמיתיים (מפתחות PM) רואה איך זה
 // ייראה - כוכב לכל מפתח שאחרי הדלת
@@ -1805,70 +1791,80 @@ function roomScopePoint(i) {
     const a = i * 2.39996 + 0.6, r = 18 + 78 * Math.sqrt((i + 1) / 21);
     return { x: 120 + Math.cos(a) * r, y: 120 + Math.sin(a) * r };
 }
+// 🔭 מסתכלים דרך הטלסקופ (לפי בקשה מפורשת, 2026-10-16: "לעשות שיהיה אפשר לראות דרך זה"): העדשה העגולה מראה את שמי
+// הלילה שבציור של הצמרת, מקרוב - גוררים כדי להסתכל מסביב (גם בחצים), וקבוצת הכוכבים של האתגרים שהסתיימו מעליהם
 function roomOpenTelescope() {
+    const stage = srStage();
+    if (!stage) return;
+    stage.querySelector('.sr-scopev')?.remove();
     const done = roomDoneChallenges();
     const pts = done.map((_, i) => roomScopePoint(i));
-    let seed = 5;
-    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    const dust = Array.from({ length: 40 }, () => `<circle cx="${(rnd() * 240).toFixed(1)}" cy="${(rnd() * 240).toFixed(1)}" r="${(0.4 + rnd() * 0.9).toFixed(2)}" fill="#fff" opacity="${(0.3 + rnd() * 0.5).toFixed(2)}"/>`).join('');
     const lines = pts.slice(1).map((p, i) => `<line x1="${pts[i].x.toFixed(1)}" y1="${pts[i].y.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}"/>`).join('');
-    const stars = pts.map((p, i) => `<g class="sr-scope-star" data-i="${i}" role="button" tabindex="0" aria-label="${srEsc(done[i].title)}"><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="url(#srScopeGlow)"/><circle class="sr-scope-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.4" fill="#fff3c4"/></g>`).join('');
-    const ov = nmOpenSheet(`
-        <h4>${srEsc(t('room_scope_title'))}</h4>
-        <div class="sr-scope-lens">
-            <svg viewBox="0 0 240 240" role="group" aria-label="${srEsc(t('room_scope_title'))}">
-                <defs>
-                    <radialGradient id="srScopeSky" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="#1d2a6b"/><stop offset="1" stop-color="#070a1f"/></radialGradient>
-                    <radialGradient id="srScopeGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.9"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></radialGradient>
-                </defs>
-                <circle cx="120" cy="120" r="118" fill="url(#srScopeSky)"/>
-                ${dust}
-                <g stroke="#9ad6ff" stroke-width="1.2" opacity="0.7" stroke-linecap="round">${lines}</g>
+    const stars = pts.map((p, i) => `<g class="sr-scope-star" data-i="${i}" role="button" tabindex="0" aria-label="${srEsc(done[i].title)}"><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="transparent"/><circle class="sr-scope-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.6" fill="#fff6d8"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="url(#srScopevGlow)"/></g>`).join('');
+    const twinkle = Array.from({ length: 22 }, (_, i) => `<i style="--x:${(i * 41) % 100}%;--y:${(i * 67) % 100}%;--d:${(i % 6) * 0.5}s"></i>`).join('');
+    const box = document.createElement('div');
+    box.className = 'sr-scopev';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', t('room_scope_title'));
+    box.innerHTML = `
+        <button type="button" class="sr-sub-back sr-scopev-back">${SR_CHEVRON.prev}${srEsc(t('nm_back'))}</button>
+        <div class="sr-scopev-lens" tabindex="0" aria-label="${srEsc(t('room_scope_title'))}">
+            <div class="sr-scopev-sky"></div>
+            <div class="sr-scopev-twinkle" aria-hidden="true">${twinkle}</div>
+            <svg class="sr-scopev-const" viewBox="0 0 240 240">
+                <defs><radialGradient id="srScopevGlow"><stop offset="0" stop-color="#fff3c4" stop-opacity="0.85"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></radialGradient></defs>
+                <g stroke="#cfe6ff" stroke-width="1" opacity="0.6" stroke-linecap="round">${lines}</g>
                 ${stars}
-                <circle cx="120" cy="120" r="117" fill="none" stroke="#c9a36b" stroke-width="5"/>
             </svg>
         </div>
-        <p class="sr-scope-name" aria-live="polite">${srEsc(done.length ? t('room_scope_hint').replace('{n}', srFmt(done.length)) : t('room_scope_empty'))}</p>
-        <button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`, 'sr-scope-sheet');
-    const name = ov.querySelector('.sr-scope-name');
-    ov.querySelectorAll('.sr-scope-star').forEach(s => {
+        <p class="sr-scopev-name" aria-live="polite">${srEsc(done.length ? t('room_scope_hint').replace('{n}', srFmt(done.length)) : t('room_scope_empty'))}</p>`;
+    stage.appendChild(box);
+    const lens = box.querySelector('.sr-scopev-lens');
+    const sky = box.querySelector('.sr-scopev-sky');
+    // מתחילים מול הירח; גוררים כדי להסתכל מסביב
+    const pos = { x: 15, y: 40 };
+    const paint = () => { sky.style.backgroundPosition = `${pos.x.toFixed(2)}% ${pos.y.toFixed(2)}%`; };
+    paint();
+    let drag = null;
+    lens.addEventListener('pointerdown', e => { if (e.target.closest('.sr-scope-star')) return; drag = { x: e.clientX, y: e.clientY, px: pos.x, py: pos.y }; try { lens.setPointerCapture(e.pointerId); } catch {} });
+    lens.addEventListener('pointermove', e => {
+        if (!drag) return;
+        const w = lens.clientWidth;
+        pos.x = Math.max(0, Math.min(100, drag.px - (e.clientX - drag.x) / (w * 2.3) * 100));
+        pos.y = Math.max(0, Math.min(62, drag.py - (e.clientY - drag.y) / (w * 4.1) * 100));
+        paint();
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => lens.addEventListener(ev, () => { drag = null; }));
+    lens.addEventListener('keydown', e => {
+        const step = { ArrowLeft: [-4, 0], ArrowRight: [4, 0], ArrowUp: [0, -3], ArrowDown: [0, 3] }[e.key];
+        if (!step) return;
+        e.preventDefault();
+        pos.x = Math.max(0, Math.min(100, pos.x + step[0]));
+        pos.y = Math.max(0, Math.min(62, pos.y + step[1]));
+        paint();
+    });
+    const name = box.querySelector('.sr-scopev-name');
+    box.querySelectorAll('.sr-scope-star').forEach(st => {
         const pick = () => {
-            ov.querySelectorAll('.sr-scope-star.on').forEach(x => x.classList.remove('on'));
-            s.classList.add('on');
-            const c = done[Number(s.dataset.i)];
+            box.querySelectorAll('.sr-scope-star.on').forEach(x => x.classList.remove('on'));
+            st.classList.add('on');
+            const c = done[Number(st.dataset.i)];
             name.textContent = c.date && typeof nmShortDate === 'function' ? `${c.title} · ${nmShortDate(c.date)}` : c.title;
         };
-        s.addEventListener('click', pick);
-        s.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+        st.addEventListener('click', pick);
+        st.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
     });
+    const close = () => box.remove();
+    box.querySelector('.sr-scopev-back').addEventListener('click', close);
+    box.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+    setTimeout(() => lens.focus({ preventScroll: true }), 200);
 }
-async function roomOpenChest(el) {
-    if (!roomChestReady()) { srShowTip(t('room_chest_locked').replace('{n}', srFmt(roomChestStreak()))); return; }
-    if (el.classList.contains('is-open')) return;
-    el.classList.add('is-open');
-    const g = roomChestGifts();
-    const kind = ['letter', 'sticker', 'star'][g % 3];
-    const round = Math.floor(g / 3);
-    await roomSave({ chest_gifts: g + 1, chest_opened_on: getLocalDateString() });
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    await new Promise(r => setTimeout(r, reduce ? 0 : 650));
-    const gift = kind === 'letter'
-        ? `<div class="nm-letter-paper sr-chest-letter"><p class="nm-letter-body">${srEsc(t(`room_chest_letter_${(round % ROOM_CHEST_LETTERS) + 1}`))}</p></div>`
-        : `<div class="sr-chest-gift${kind === 'star' ? ' is-star' : ''}" aria-hidden="true">${kind === 'star' ? '✦' : ROOM_CHEST_STICKERS[round % ROOM_CHEST_STICKERS.length]}</div>`;
-    nmOpenSheet(`
-        <h4>${srEsc(t(`room_chest_${kind}`))}</h4>
-        ${gift}
-        <p class="sr-chest-next">${srEsc(t('room_chest_next'))}</p>
-        <button type="button" class="nm-btn-primary" data-close>${srEsc(t('nm_continue'))}</button>`, 'sr-chest-sheet', () => roomRefreshRoof());
+// 🧳 התיבה בגג נפתחת (לפי בקשה מפורשת, 2026-10-16: "שהמזוודה תיפתח - לא יהיה פה עוד כלום, אבל בנתיים"): המכסה המצויר
+// (עותק של הציור, חתוך לצורת המכסה) עולה ונוטה אחורה, ומבפנים - תיבה ריקה. נגיעה שוב סוגרת
+function roomOpenChest(el) {
+    const open = el.classList.toggle('is-open');
+    el.setAttribute('aria-pressed', open ? 'true' : 'false');
 }
-// אחרי שנפתחה התיבה: הגג מצויר מחדש - המדבקה על המכסה, הכוכב בשמיים
-function roomRefreshRoof() {
-    const box = document.querySelector('.sr-roof');
-    const opts = (box && box._opts) || {};
-    if (box) box.remove();
-    if (srIsOpen()) roomOpenRoof(opts);
-}
-
 // כוכב נופל (לפי בקשה מפורשת: "שייפלו ממש, שיהיה יפה"; ואחר כך: "הולכים אחורה במקום קדימה... קדימה, בלי
 // הכמה נקודות"): הבזק ושובל ארוך וזוהר מאחוריו, תמיד קדימה - בכיוון הקריאה (שמאלה בעברית, ימינה ב-LTR) -
 // ואז הכוכב חוזר למקומו

@@ -149,7 +149,14 @@ function nmgKeysTip() { if (typeof nmhKeysTip === 'function' && nmView === 'home
 // ---------- התיק הקסום: מסך משלו, בסגנון המשחק ----------
 // (לפי בקשה מפורשת, 2026-10-16: "תפתח מסך חדש גם שיראה כמו המשחק ועם ציורי יהלומים לכל דבר לכל קטגוריה"). כל קטגוריה -
 // יהלום קריסטל עם ציור משלו. בלי הארוחות, בלי "כל היום" ובלי האתגרים (הם בצד); הכפתורים הקבועים נשארים מסביב
-function nmgBagItems() { return nmTiles().filter(k => k !== 'challenges').concat('settings'); }
+// ההגדרות - למטה בצד, קטנות יותר (לפי בקשה מפורשת, 2026-10-16)
+function nmgBagItems() { return nmTiles().filter(k => k !== 'challenges'); }
+function nmgBagItemHtml(k, i, cls = '') {
+    return `<button type="button" class="nmg-b nmg-bag-item${cls}" data-tile="${k}" style="--i:${i}">
+        <span class="nmg-btn">${NMG_SVG.hex}${nmgIcon(k)}</span>
+        <span class="nmg-lb">${nmEsc(t(NEW_ME_VIEW_TITLES[k]))}</span>
+    </button>`;
+}
 function nmgOpenBag() {
     nmgCloseMap();
     nmgCloseBag();
@@ -161,12 +168,8 @@ function nmgOpenBag() {
     box.innerHTML = `${NMG_SVG.defs}
         <div class="nmg-bag-scroll">
             <div class="nmg-bag-head"><img src="world/bag.png" alt=""><b>${nmEsc(t('nm_hud_bag'))}</b></div>
-            <div class="nmg-bag-grid">${nmgBagItems().map((k, i) => `
-                <button type="button" class="nmg-b nmg-bag-item" data-tile="${k}" style="--i:${i}">
-                    <span class="nmg-btn">${NMG_SVG.hex}${nmgIcon(k)}</span>
-                    <span class="nmg-lb">${nmEsc(t(NEW_ME_VIEW_TITLES[k]))}</span>
-                </button>`).join('')}
-            </div>
+            <div class="nmg-bag-grid">${nmgBagItems().map((k, i) => nmgBagItemHtml(k, i)).join('')}</div>
+            <div class="nmg-bag-foot">${nmgBagItemHtml('settings', nmgBagItems().length, ' is-small')}</div>
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(box);
     document.querySelector('.phone-wrapper')?.classList.add('nmg-bag-open');
