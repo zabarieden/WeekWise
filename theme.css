@@ -7048,6 +7048,19 @@ div.nm-ch-head-text { cursor: default; }
 .nm-ch-section-sub { margin-top: -6px !important; }
 /* האתגרים לבחירה - קוביות קטנות (3 בשורה, 2 במסך צר מאוד) */
 .nm-ch-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* 🌱 התפתחות אישית: לשוניות התחומים, ורשימת האתגרים בגיליון "על מה רוצים לעבוד השבוע?" */
+.nm-growth-tabs { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.nm-growth-tab { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.nm-growth-tab.on { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); }
+.nm-growth-eyebrow { font-size: 0.8rem; font-weight: 800; color: var(--accent-purple-light-text); }
+.nm-growth-list { display: flex; flex-direction: column; gap: 8px; }
+.nm-growth-opt { flex: none; flex-direction: row; align-items: center; gap: 12px; }
+.nm-growth-opt-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--accent-purple) 14%, transparent); font-size: 1.3rem; line-height: 1; }
+.nm-growth-opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.nm-growth-opt-text b { color: var(--text-primary); }
+.nm-growth-opt-text span { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; }
+.nm-growth-opt-done { flex: none; color: #d9a521; font-weight: 900; }
+.nm-keep-sheet .nm-date { width: 100%; }
 @media (max-width: 340px) { .nm-ch-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .nm-ch-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; min-height: 118px; padding: 12px 6px 10px; border-radius: 18px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: center; cursor: pointer; box-sizing: border-box; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
 .nm-ch-tile:hover { border-color: color-mix(in srgb, var(--accent-pink) 35%, var(--border-color)); }
@@ -10223,7 +10236,15 @@ html[data-color-theme^="magic_"] .nm-btn-primary {
 .nls-clean { border-radius: 0; border-bottom: 2px solid currentColor; opacity: 0.55; }
 .nls-index { background: #fffefb; box-shadow: inset 0 3px 0 var(--accent-pink); }
 .nls-washi { border-radius: 0; background: repeating-linear-gradient(45deg, #fde68a 0 3px, #fff3c4 3px 6px); clip-path: polygon(6% 0, 94% 6%, 100% 50%, 94% 94%, 6% 100%, 0 50%); }
-.notes-look-btn { font-size: 0.95rem; }
+/* 📖 הספר במסך הבית + הנעיצה בפינת הקריאה */
+.home-chip-book span { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.book-home-pin { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.book-home-pin.on { border-color: var(--accent-purple); color: var(--text-primary); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); }
+.book-quick-row { display: flex; align-items: center; gap: 10px; }
+.book-quick-input { flex: 1; min-height: 52px; font-size: 1.4rem; font-weight: 800; text-align: center; }
+.book-quick-of { color: var(--text-secondary); font-weight: 700; white-space: nowrap; }
+.notes-look-btn { font-size: 0.95rem; display: inline-grid; place-items: center; color: var(--accent-purple-light-text); }
+.notes-look-btn .notes-look-ico { display: block; }
 #weekly-list > li.note-paper .note-drag-handle { color: color-mix(in srgb, var(--paper-ink) 40%, transparent); }
 
 /* 6 – זכוכית (ברירת המחדל): כרטיס שקוף כמו זכוכית חלבית, והצבעים של הרקע עוברים דרכו */
@@ -10682,7 +10703,7 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 @keyframes nmgGlow { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 /* בחדר ובמקומות: הכותרת והחצים יורדים מתחת לפס העליון, והטיפ מעל הכפתורים שלמטה */
 .phone-wrapper:has(#nm-hud) .sr-tools { top: 70px; }
-.phone-wrapper:has(#sr-overlay) .nmg-quest { display: none; }
+.phone-wrapper:has(#sr-overlay) .nmg-quest, .phone-wrapper:has(#sr-overlay) .nmg-week { display: none; }
 .phone-wrapper:has(#nm-hud) .sr-title { top: 81px; }
 .phone-wrapper:has(#nm-hud) .sr-topfade { height: 140px; }
 .phone-wrapper:has(#nm-hud) .sr-arrow { top: 66%; }
@@ -10703,7 +10724,7 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 #nm-hud { right: auto; left: 50%; width: min(100%, 460px); transform: translateX(-50%); }
 .nmg-map .nmg-map-head, .nmg-map .nmg-path { max-width: 420px; margin-inline: auto; }
 /* במשחק, במחשב ובשאר המסכים המלאים שבחדר - הכפתורים מפנים את המקום (שלא יכסו את המשחק ואת "חזרה") */
-.phone-wrapper:has(:is(.sr-game, .sr-pc, .sr-library, .sr-decor, .sr-jar, .sr-quotesview, .srp-signview, .sr-shelfview, .sr-reveal, .sr-scopev)) #nm-hud { display: none !important; }
+.phone-wrapper:has(:is(.sr-game, .sr-pc, .sr-library, .sr-decor, .sr-jar, .sr-quotesview, .srp-signview, .sr-shelfview, .sr-reveal, .sr-scopev, .srp-genie)) #nm-hud { display: none !important; }
 .nmg-home { display: none; position: absolute; top: 74px; inset-inline-end: 18px; }
 .nmg-home .nmg-btn { width: 40px; height: 40px; }
 .nmg-home .nmg-i { width: 19px; height: 19px; }
@@ -10770,7 +10791,27 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-node-lock svg { width: 20px; height: 20px; }
 .nmg-node-lock b { font-size: 12px; }
 .nmg-node:focus-visible .nmg-node-pic { box-shadow: 0 0 0 3px #ffd27a, 0 0 0 7px rgba(201, 182, 255, .5); }
-.phone-wrapper.nmg-map-open .nmg-quest, .phone-wrapper.nmg-bag-open .nmg-quest { display: none; }
+.phone-wrapper.nmg-map-open .nmg-quest, .phone-wrapper.nmg-bag-open .nmg-quest, .phone-wrapper.nmg-map-open .nmg-week, .phone-wrapper.nmg-bag-open .nmg-week { display: none; }
+/* ✨ אתגר השבוע - כרטיס קריסטל גדול במסדרון, מתחת למשימה הבאה ולצד הכפתורים שבצד */
+.nmg-week { position: absolute; top: 152px; inset-inline-start: 82px; inset-inline-end: 12px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; box-sizing: border-box; border-radius: 16px; border: 1.5px solid transparent; background: linear-gradient(160deg, rgba(88, 56, 168, .92), rgba(40, 22, 86, .94)) padding-box, var(--nmg-rim) border-box; box-shadow: 0 0 22px rgba(201, 182, 255, .35), 0 10px 18px -8px rgba(0, 0, 0, .6); color: #fbf6ff; text-align: start; }
+.nmg-week::after { content: ""; position: absolute; inset: 0; border-radius: 15px; background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .14) 42%, rgba(255, 255, 255, 0) 54%); pointer-events: none; }
+.nmg-week.is-empty { flex-direction: column; align-items: flex-start; gap: 4px; cursor: pointer; animation: nmgWeekGlow 3.4s ease-in-out infinite; }
+@keyframes nmgWeekGlow { 0%, 100% { box-shadow: 0 0 18px rgba(201, 182, 255, .3), 0 10px 18px -8px rgba(0, 0, 0, .6); } 50% { box-shadow: 0 0 30px rgba(255, 210, 122, .45), 0 10px 18px -8px rgba(0, 0, 0, .6); } }
+.nmg-week-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; }
+.nmg-week-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .02em; color: #ffd27a; text-shadow: 0 0 8px rgba(255, 210, 122, .6); }
+.nmg-week-title { font-size: 15px; font-weight: 800; line-height: 1.3; color: #fff; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.nmg-week-cta { margin-top: 4px; padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #ffd27a, #ff9ecf); color: #2a1145; font-size: 12px; font-weight: 800; }
+.nmg-week-dots { display: flex; gap: 5px; margin-top: 4px; }
+.nmg-week-dot { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid rgba(201, 182, 255, .55); box-sizing: border-box; }
+.nmg-week-dot.done { border-color: #ffd27a; background: radial-gradient(circle, #fff6d8, #ffd27a 60%); box-shadow: 0 0 6px rgba(255, 210, 122, .8); }
+.nmg-week-dot.free { border-color: #ff9ecf; background: rgba(255, 158, 207, .45); }
+.nmg-week-dot.missed { border-color: rgba(201, 182, 255, .25); background: rgba(201, 182, 255, .12); }
+.nmg-week-dot.today { box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
+.nmg-week-check { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255, 210, 122, .7); background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .55); font-size: 22px; font-weight: 900; }
+.nmg-week-check.on { background: radial-gradient(circle at 40% 35%, #fff3c4, #ffd27a 55%, #e8a33a); color: #2a1145; border-color: #fff3c4; box-shadow: 0 0 16px rgba(255, 210, 122, .8); }
+.nmg-week-check:active, .nmg-week.is-empty:active { transform: scale(.96); }
+.nmg-week.is-scheduled .nmg-week-dots { opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .nmg-week.is-empty { animation: none; } }
 /* 🎒 התיק הקסום - מסך משלו בסגנון המשחק: שער היער מטושטש ומוחשך מאחור, והתיק למעלה. כל קטגוריה - יהלום קריסטל עם ציור.
    הכפתורים הקבועים נשארים (התיק שלמטה זוהר - נגיעה בו סוגרת) */
 .nmg-bagview { position: absolute; inset: 0; z-index: 2570; overflow: hidden; background: #120a24 url('world/forest-gate.jpg') center / cover; animation: srFadeIn .3s ease-out; }
@@ -10863,11 +10904,39 @@ button.nmg-me-card:active { transform: scale(.97); }
     100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(1440deg); filter: blur(0); }
 }
 @keyframes srpGenieFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+/* 🧞 השיחה: הרוח עולה ומתכווצת למעלה, והכרטיס עם השאלה, התשובה והכפתורים יורד למטה (בלי כפתורי המשחק מסביב) */
+.srp-genie.is-talking .srp-genie-swirl { top: 21%; width: min(46%, 190px); transition: top .6s ease, width .6s ease; }
+.srp-genie.is-talking .srp-genie-ask { top: 36%; width: min(360px, calc(100% - 28px)); max-height: 62%; }
+.srp-genie-ask { overflow-y: auto; }
+.srp-genie-x { position: absolute; top: 8px; inset-inline-end: 8px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .1); color: #fff; font: inherit; cursor: pointer; }
+.srp-genie-react { font-size: .82rem; color: #a7f3d0; font-weight: 700; }
+.srp-genie-q { display: block; padding-inline: 30px; font-size: 1.05rem; font-weight: 800; line-height: 1.4; color: #ffd27a; text-shadow: 0 0 10px rgba(255, 210, 122, .5); }
+.srp-genie-sub { font-size: .86rem; color: #e9e1ff; line-height: 1.45; }
+.srp-genie-input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .28); background: rgba(10, 6, 24, .45); color: #fff; font: inherit; font-size: .95rem; line-height: 1.5; resize: none; text-align: start; }
+.srp-genie-input::placeholder { color: rgba(233, 225, 255, .55); }
+.srp-genie-input:focus { outline: none; border-color: #ffd27a; box-shadow: 0 0 0 2px rgba(255, 210, 122, .25); }
+.srp-genie-input.is-empty { border-color: #ff9ecf; }
+.srp-genie-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.srp-genie-chip { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .08); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.srp-genie-chip.on { border-color: #ffd27a; background: rgba(255, 210, 122, .2); }
+.srp-genie-dots { display: flex; justify-content: center; gap: 5px; }
+.srp-genie-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .25); }
+.srp-genie-dots i.done { background: #a7f3d0; }
+.srp-genie-dots i.on { background: #ffd27a; box-shadow: 0 0 6px #ffd27a; }
+.srp-genie-acts { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+.srp-genie-btn { min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .1); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+.srp-genie-btn.is-main { border: 0; background: linear-gradient(135deg, #ffd27a, #ff9ecf); color: #2a1145; }
+.srp-genie-btn.is-ghost { background: transparent; border-color: transparent; color: #e9e1ff; font-weight: 700; }
+.srp-genie-btn:disabled { opacity: .75; cursor: default; }
+.srp-genie-scroll { width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: start; }
+.srp-genie-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, .07); }
+.srp-genie-row-k { font-size: .78rem; font-weight: 800; color: #ffd27a; }
+.srp-genie-row-v { font-size: .9rem; color: #fff; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .srp-genie-ask { position: absolute; left: 50%; top: 66%; z-index: 2; width: min(250px, calc(100% - 150px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 14px 12px; border-radius: 20px; text-align: center; color: #fff; background: linear-gradient(160deg, rgba(64, 42, 124, .92), rgba(28, 16, 60, .94)); box-shadow: 0 0 0 1.5px rgba(201, 182, 255, .55), 0 0 26px rgba(167, 243, 208, .3), 0 16px 30px -12px rgba(0, 0, 0, .7); transform: translate(-50%, 8px); opacity: 0; }
 .srp-genie-ask b { font-size: 1.12rem; font-weight: 800; color: #ffd27a; text-shadow: 0 0 10px rgba(255, 210, 122, .6); }
 .srp-genie-ask span { font-size: .9rem; color: #e9e1ff; line-height: 1.4; }
 .srp-genie-close { margin-top: 4px; min-height: 40px; padding: 0 22px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .1); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-.srp-genie-close:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
+.srp-genie-close:focus-visible, .srp-genie-x:focus-visible, .srp-genie-btn:focus-visible, .srp-genie-chip:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
 .srp-genie.go .srp-genie-ask { animation: srpGenieAsk .6s ease-out 5.5s forwards; }
 @keyframes srpGenieAsk { to { opacity: 1; transform: translate(-50%, 0); } }
 .srp-genie.is-reduced .srp-genie-fog { display: none; }

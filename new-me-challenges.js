@@ -33,6 +33,27 @@ const NEW_ME_CHALLENGES = [
     { key: 'slow_meal', kind: 'mini', days: 7, icon: '🐢' },
     { key: 'morning_stretch', kind: 'mini', days: 7, icon: '🧘' }
 ];
+// 🌱 התפתחות אישית - אתגר השבוע: אתגרים קטנים של שבוע, מחולקים לתחומים (עם עצמי, עם אחרים, ללמוד ולגדול, רוגע,
+// אומץ, סדר ושגרה). כל אחד 7 ימים עם יום חופשי אחד; אחד בכל פעם (kind 'week'); כל אתגר שבוע שהסתיים = מפתח. נוסחו כאן
+// במקור, מתוך רעיונות מוכרים של צמיחה אישית (לא מועתקים מאף מקום)
+const NEW_ME_GROWTH_AREAS = [
+    { id: 'self', icon: '💗' }, { id: 'others', icon: '🤝' }, { id: 'mind', icon: '📚' },
+    { id: 'calm', icon: '🌿' }, { id: 'brave', icon: '🦋' }, { id: 'home', icon: '🏡' },
+];
+const NEW_ME_GROWTH = [
+    ['self', 'g_self_good', '✍️'], ['self', 'g_self_mirror', '🪞'], ['self', 'g_self_nocompare', '🙈'], ['self', 'g_self_no', '✋'],
+    ['self', 'g_self_me_time', '🛋️'], ['self', 'g_self_feel', '💭'], ['self', 'g_self_proud', '🏅'], ['self', 'g_self_forgive', '🕊️'],
+    ['others', 'g_oth_message', '💌'], ['others', 'g_oth_listen', '👂'], ['others', 'g_oth_thanks', '🙏'], ['others', 'g_oth_compliment', '🌼'],
+    ['others', 'g_oth_call', '📞'], ['others', 'g_oth_kind_act', '🤲'], ['others', 'g_oth_quality', '🫶'], ['others', 'g_oth_ask_help', '🙋'],
+    ['mind', 'read_2_pages', '📖', 'read'], ['mind', 'g_mind_word', '🔤'], ['mind', 'g_mind_learn', '🎧'], ['mind', 'g_mind_question', '❓'],
+    ['mind', 'g_mind_journal', '📓'], ['mind', 'g_mind_hobby', '🎨'], ['mind', 'g_mind_slow_morning', '🌅'], ['mind', 'g_mind_plan', '📝'],
+    ['calm', 'g_calm_breath', '🌬️'], ['calm', 'g_calm_walk', '🚶'], ['calm', 'g_calm_three_good', '✨'], ['calm', 'g_calm_sky', '☁️'],
+    ['calm', 'g_calm_screen_night', '🌙'], ['calm', 'g_calm_cup', '🍵'], ['calm', 'g_calm_song', '🎵'], ['calm', 'g_calm_tidy', '🧺'],
+    ['brave', 'g_brave_new', '🌱'], ['brave', 'g_brave_start', '⏱️'], ['brave', 'g_brave_speak', '🗣️'], ['brave', 'g_brave_hello', '👋'],
+    ['brave', 'g_brave_mistake', '🎯'], ['brave', 'g_brave_dream', '🌠'], ['brave', 'g_brave_alone', '☕'], ['brave', 'g_brave_ask', '💡'],
+    ['home', 'g_home_bed', '🛏️'], ['home', 'g_home_sleep', '😴'], ['home', 'g_home_let_go', '📦'], ['home', 'g_home_calm_morning', '🌄'],
+    ['home', 'g_home_plant', '🪴'], ['home', 'g_home_sink', '🍽️'], ['home', 'g_home_money', '💰'], ['home', 'g_home_sun', '☀️'],
+].map(([area, key, icon, auto]) => ({ key, kind: 'week', days: 7, area, icon, ...(auto ? { auto } : {}) }));
 const NEW_ME_CH_SPORT_MIN = 20;      // "שבועיים של תנועה": אימון של 20 דקות לפחות מסמן את היום לבד
 const NEW_ME_CH_START_AHEAD = 14;    // אפשר לתזמן התחלה עד שבועיים קדימה
 // משימה יומית משותפת (ובמיני-אתגרים השם עצמו הוא המשימה)
@@ -66,7 +87,7 @@ let nmChallenges = [];          // new_me_challenges - כל ההיסטוריה
 let nmChallengeDays = [];       // new_me_challenge_days של האתגרים הפעילים
 let nmChallengesLoaded = false;
 
-function nmChDef(key) { return NEW_ME_CHALLENGES.find(c => c.key === key) || null; }
+function nmChDef(key) { return NEW_ME_CHALLENGES.find(c => c.key === key) || NEW_ME_GROWTH.find(c => c.key === key) || null; }
 function nmChTitle(key) { return t('nm_ch_' + key + '_title'); }
 function nmChTask(key) {
     const k = 'nm_ch_' + (NEW_ME_CH_TASK_KEYS[key] || key) + '_task';
@@ -75,13 +96,17 @@ function nmChTask(key) {
 }
 function nmChFreeDays(days) { return Math.floor(days / 7); }
 function nmChEnd(c) { return nmAddDays(c.start_date, c.days - 1); }
-function nmChKindLabel(kind) { return t(kind === 'big' ? 'nm_ch_big_one' : 'nm_ch_mini_one'); }
-function nmChActive() { return nmChallenges.filter(c => c.status === 'active' && nmChDef(c.challenge_key)).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'big' ? -1 : 1)); }
+function nmChKindLabel(kind) { return t(kind === 'big' ? 'nm_ch_big_one' : kind === 'week' ? 'nm_week_ch_label' : 'nm_ch_mini_one'); }
+const NM_CH_KIND_ORDER = { week: 0, big: 1, mini: 2 };
+function nmChActive() { return nmChallenges.filter(c => c.status === 'active' && nmChDef(c.challenge_key)).sort((a, b) => (NM_CH_KIND_ORDER[a.kind] ?? 3) - (NM_CH_KIND_ORDER[b.kind] ?? 3)); }
 function nmChActiveOfKind(kind) { return nmChActive().find(c => c.kind === kind) || null; }
 function nmChActiveOfKey(key) { return nmChActive().find(c => c.challenge_key === key) || null; }
 function nmChDoneKeys() { return new Set(nmChallenges.filter(c => c.status === 'done' && nmChDef(c.challenge_key)).map(c => c.challenge_key)); }
+// כל אתגר שהסתיים (גם אתגרי השבוע) = מפתח; "X/20" והמתנה בסוף - רק 20 האתגרים
 function nmChDoneCount() { return nmChDoneKeys().size; }
-function nmChAllDone() { return nmChDoneCount() >= NEW_ME_CHALLENGES.length; }
+function nmChDoneMainCount() { const d = nmChDoneKeys(); return NEW_ME_CHALLENGES.filter(c => d.has(c.key)).length; }
+function nmChAllDone() { return nmChDoneMainCount() >= NEW_ME_CHALLENGES.length; }
+function nmChAutoNoteKey(auto) { return auto === 'menu' ? 'nm_ch_auto_menu_note' : auto === 'read' ? 'nm_ch_auto_read_note' : 'nm_ch_auto_sport_note'; }
 function nmChLastDone(key) {
     return nmChallenges.filter(c => c.challenge_key === key && c.status === 'done').sort((a, b) => String(b.completed_at || '').localeCompare(String(a.completed_at || '')))[0] || null;
 }
@@ -133,6 +158,7 @@ async function nmLoadChallenges() {
     nmChallengeDays = days;
     nmChallengesLoaded = true;
     await nmSettleChallenges();
+    if (typeof nmgRenderHud === 'function') nmgRenderHud();
 }
 
 // אתגר שכבר לא אפשרי להשלים (נוצלו יותר ימים חופשיים מהמותר) - מסומן "הסתיים"
@@ -236,6 +262,10 @@ async function nmChallengeAutoCheck(trigger) {
         if (!st.canToday || st.marks[today]) continue;
         let ok = false;
         if (def.auto === 'menu') ok = !!nmProfile && nmActiveOrder().filter(s => nmTodayCheckins[s]).length >= nmGoodDayChecks();
+        else if (def.auto === 'read') {
+            const { data } = await supabaseClient.from('book_reading_log').select('pages').eq('user_id', currentUserId).eq('log_date', today);
+            ok = (data || []).reduce((a, r) => a + (Number(r.pages) || 0), 0) >= 2;
+        }
         else if (def.auto === 'sport') {
             const { data } = await supabaseClient.from('sport_sessions').select('duration_minutes').eq('user_id', currentUserId).eq('session_date', today);
             ok = (data || []).reduce((a, r) => a + (Number(r.duration_minutes) || 0), 0) >= NEW_ME_CH_SPORT_MIN;
@@ -250,15 +280,17 @@ async function nmChallengeAutoCheck(trigger) {
 // אחרי הסגירה - חגיגת המפתח של החדר הסודי (ר' roomCheckNewKeys ב-secret-room.js)
 function nmCelebrateChallenge(c, opts = {}) {
     const def = nmChDef(c.challenge_key);
-    const n = opts.n != null ? opts.n : nmChDoneCount(), total = NEW_ME_CHALLENGES.length;
-    const all = !opts.simulated && n >= total;
+    const week = c.kind === 'week';
+    const n = opts.n != null ? opts.n : nmChDoneMainCount(), total = NEW_ME_CHALLENGES.length;
+    const all = !week && !opts.simulated && n >= total;
     const afterClose = () => { if (typeof roomCheckNewKeys === 'function') setTimeout(roomCheckNewKeys, 260); };
     const ov = nmOpenSheet(`
         <div class="nm-celebrate-eyebrow">🏆 ${nmEsc(nmChKindLabel(c.kind))}</div>
         <div class="nm-medal big" aria-hidden="true"><span>${def.icon}</span></div>
         <h3 class="nm-celebrate-title">${nmEsc(t('nm_ch_complete_title'))}</h3>
         <p class="nm-celebrate-desc"><b>${nmEsc(nmChTitle(c.challenge_key))}</b></p>
-        <p class="nm-celebrate-desc">${all ? nmEsc(t('nm_ch_all_done_desc')) : nmTpl('nm_ch_complete_desc', { n: nmFmt(n), total: nmFmt(total) })}</p>
+        <p class="nm-celebrate-desc">${week ? `🔑 ${nmEsc(t('nm_week_done_desc'))}` : all ? nmEsc(t('nm_ch_all_done_desc')) : nmTpl('nm_ch_complete_desc', { n: nmFmt(n), total: nmFmt(total) })}</p>
+        ${week ? `<button type="button" class="nm-row-btn" data-keep>📌 ${nmEsc(t('nm_week_keep_btn'))}</button>` : ''}
         <div class="nm-celebrate-actions">
             <button type="button" class="nm-btn-ghost" data-share>${nmEsc(t('nm_share'))}</button>
             <button type="button" class="nm-btn-primary" data-ok>${nmEsc(all ? t('nm_gift_open') : t('nm_celebrate_ok'))}</button>
@@ -266,9 +298,11 @@ function nmCelebrateChallenge(c, opts = {}) {
     const sheet = ov.querySelector('.nm-sheet');
     ov.querySelector('[data-share]').addEventListener('click', () => {
         ov.remove();
-        openSharePicker(`${shareBold(t('nm_ch_share_text'))}\n\n${def.icon} ${nmChTitle(c.challenge_key)}\n✨ ${t('nm_ch_complete_desc').replace('{n}', n).replace('{total}', total)}`);
+        openSharePicker(`${shareBold(t('nm_ch_share_text'))}\n\n${def.icon} ${nmChTitle(c.challenge_key)}${week ? '' : `\n✨ ${t('nm_ch_complete_desc').replace('{n}', n).replace('{total}', total)}`}`);
     });
     ov.querySelector('[data-ok]').addEventListener('click', () => { ov.remove(); if (all) nmGo('gift'); else afterClose(); });
+    const keep = ov.querySelector('[data-keep]');
+    if (keep) keep.addEventListener('click', () => { ov.remove(); nmKeepAsDaily(c.challenge_key, afterClose); });
     if (typeof spawnGentleConfettiBurst === 'function') {
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 60 : 40), 150);
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 40 : 24), 550);
@@ -289,7 +323,7 @@ function getPeekChallengeItems() {
             tag: nmChTitle(c.challenge_key),
             done: !!mark,
             toggle: checked => nmMarkChallengeDay(c.id, st.today, checked ? 'done' : null),
-            info: () => nmOpenChallengeHelp(c.challenge_key),
+            info: c.kind === 'week' ? null : () => nmOpenChallengeHelp(c.challenge_key),
             infoLabel: t('nm_ch_help_btn'),
         };
     }).filter(Boolean);
@@ -360,7 +394,7 @@ function nmChallengeCardHtml(c, mode) {
         const w = nmChWeightChange(c);
         if (w) extra.push(`<div class="nm-ch-extra">⚖️ ${nmTpl('nm_ch_weight_line', { n: (w > 0 ? '+' : '−') + nmFmtNum(Math.abs(w), 1) })}</div>`);
     }
-    if (def.auto && full) extra.push(`<div class="nm-ch-extra">🤖 ${nmEsc(t(def.auto === 'menu' ? 'nm_ch_auto_menu_note' : 'nm_ch_auto_sport_note'))}</div>`);
+    if (def.auto && full) extra.push(`<div class="nm-ch-extra">🤖 ${nmEsc(t(nmChAutoNoteKey(def.auto)))}</div>`);
     const yesterdayOpen = st.canYesterday && !st.marks[st.yesterday];
     return `
         <div class="nm-ch-card kind-${c.kind}" data-ch="${c.id}">
@@ -453,7 +487,7 @@ function nmHideChallengeSuggest() {
 
 // ---------- מסך האתגרים ----------
 function nmRenderChallenges(body) {
-    const n = nmChDoneCount(), total = NEW_ME_CHALLENGES.length;
+    const n = nmChDoneMainCount(), total = NEW_ME_CHALLENGES.length;
     const done = nmChDoneKeys();
     const active = nmChActive();
     const shelf = kind => NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(c => `<span class="nm-ch-medal${done.has(c.key) ? ' on' : ''}" title="${nmEsc(nmChTitle(c.key))}">${c.icon}</span>`).join('');
@@ -482,6 +516,7 @@ function nmRenderChallenges(body) {
             <p class="nm-fine nm-ch-section-sub">${nmEsc(t(kind === 'big' ? 'nm_ch_kind_big_sub' : 'nm_ch_kind_mini_sub'))}</p>
             <div class="nm-ch-tiles">${NEW_ME_CHALLENGES.filter(c => c.kind === kind).map(nmChTileHtml).join('')}</div>
         </section>`).join('')}
+        ${nmGrowthSectionHtml()}
         <p class="nm-fine nm-rule">${nmEsc(t('nm_ch_rule'))}</p>
         ${nmLetterCardHtml()}`;
 }
@@ -525,7 +560,7 @@ function nmOpenChallenge(key) {
             <div class="nm-ch-facts">
                 <span>📅 ${nmEsc(t('nm_ch_days_n').replace('{n}', nmFmt(def.days)))}</span>
                 <span>🍕 ${nmEsc(nmChFreeLine(free))}</span>
-                ${def.auto ? `<span>🤖 ${nmEsc(t(def.auto === 'menu' ? 'nm_ch_auto_menu_note' : 'nm_ch_auto_sport_note'))}</span>` : ''}
+                ${def.auto ? `<span>🤖 ${nmEsc(t(nmChAutoNoteKey(def.auto)))}</span>` : ''}
             </div>`;
         let main;
         if (act) {
@@ -540,13 +575,14 @@ function nmOpenChallenge(key) {
             if (nextWeek > tomorrow) opts.push(['week', nextWeek, `${t('nm_ch_start_next_week')} · ${nmShortDate(nextWeek)}`]);
             main = `
                 ${last ? `<p class="nm-fine nm-ch-done-before">✓ ${nmEsc(t('nm_ch_done_on').replace('{date}', nmLongDate(String(last.completed_at || '').slice(0, 10) || today)))}</p>` : ''}
+                ${last && def.kind === 'week' ? `<button type="button" class="nm-row-btn" data-keep>📌 ${nmEsc(t('nm_week_keep_btn'))}</button>` : ''}
                 <div class="nm-sheet-label">${nmEsc(t('nm_ch_start_title'))}</div>
                 <div class="nm-chip-row">
                     ${opts.map(([k, d, label]) => `<button type="button" class="nm-pick${!other && sel === d ? ' on' : ''}" data-start-day="${d}">${nmEsc(label)}</button>`).join('')}
                     <button type="button" class="nm-pick${other ? ' on' : ''}" data-start-other>${nmEsc(t('nm_ch_start_other'))}</button>
                 </div>
                 ${other ? `<input type="date" class="nm-date" data-start-date value="${otherDate}" min="${today}" max="${nmAddDays(today, NEW_ME_CH_START_AHEAD)}" aria-label="${nmEsc(t('nm_ch_start_other'))}">` : ''}
-                ${sameKind ? `<p class="nm-soft-warn">${nmEsc(t(def.kind === 'big' ? 'nm_ch_replace_big' : 'nm_ch_replace_mini').replace('{title}', nmChTitle(sameKind.challenge_key)))}</p>` : ''}
+                ${sameKind ? `<p class="nm-soft-warn">${nmEsc(t(def.kind === 'big' ? 'nm_ch_replace_big' : def.kind === 'week' ? 'nm_week_replace' : 'nm_ch_replace_mini').replace('{title}', nmChTitle(sameKind.challenge_key)))}</p>` : ''}
                 <button type="button" class="nm-btn-primary" data-start ${other || sel ? '' : 'disabled'}>${nmEsc(t('nm_ch_start_btn'))}</button>`;
         }
         sheet.innerHTML = `
@@ -556,7 +592,7 @@ function nmOpenChallenge(key) {
                 <div><span class="nm-ch-kind">${nmEsc(nmChKindLabel(def.kind))}</span><h4>${nmEsc(nmChTitle(key))}</h4></div>
             </div>
             <p class="nm-ch-desc">${nmEsc(t('nm_ch_' + key + '_desc'))}</p>
-            <details class="nm-ch-help-details"${helpOpen ? ' open' : ''}><summary>ⓘ ${nmEsc(t('nm_ch_help_btn'))}</summary>${nmChHelpHtml(key)}</details>
+            ${def.kind === 'week' ? '' : `<details class="nm-ch-help-details"${helpOpen ? ' open' : ''}><summary>ⓘ ${nmEsc(t('nm_ch_help_btn'))}</summary>${nmChHelpHtml(key)}</details>`}
             ${key === 'lose5_month' ? `<p class="nm-soft-warn">💛 ${nmEsc(t('nm_ch_lose5_note'))}</p>` : ''}
             ${act ? '' : facts}
             ${main}
@@ -574,6 +610,8 @@ function nmOpenChallenge(key) {
             const ok = await nmStartChallenge(key, other ? otherDate : sel);
             if (ok) ov.remove(); else sb.disabled = false;
         });
+        const kb = sheet.querySelector('[data-keep]');
+        if (kb) kb.addEventListener('click', () => { ov.remove(); nmKeepAsDaily(key); });
         const cb = sheet.querySelector('[data-cancel]');
         if (cb) cb.addEventListener('click', () => { confirmCancel = true; render(); });
         const cy = sheet.querySelector('[data-cancel-yes]');
@@ -588,6 +626,89 @@ function nmOpenChallenge(key) {
         render();
     };
     render();
+}
+
+// ---------- 🌱 אתגר השבוע: קטגוריית התפתחות אישית ----------
+let nmGrowthArea = 'self';
+function nmGrowthAreaName(id) { return t('nm_growth_area_' + id); }
+function nmChActiveWeek() { return nmChActiveOfKind('week'); }
+function nmGrowthTabsHtml(cur, attr) {
+    return `<div class="nm-growth-tabs" role="tablist">${NEW_ME_GROWTH_AREAS.map(a => `<button type="button" role="tab" class="nm-growth-tab${a.id === cur ? ' on' : ''}" aria-selected="${a.id === cur}" ${attr}="${a.id}"><span aria-hidden="true">${a.icon}</span>${nmEsc(nmGrowthAreaName(a.id))}</button>`).join('')}</div>`;
+}
+function nmGrowthSectionHtml() {
+    const list = NEW_ME_GROWTH.filter(c => c.area === nmGrowthArea);
+    return `
+        <section class="nm-ch-section nm-growth-section" id="nm-growth-section">
+            <div class="nm-section-head"><h3>🌱 ${nmEsc(t('nm_growth_title'))}</h3></div>
+            <p class="nm-fine nm-ch-section-sub">${nmEsc(t('nm_growth_sub'))}</p>
+            ${nmGrowthTabsHtml(nmGrowthArea, 'data-growth-area')}
+            <div class="nm-ch-tiles">${list.map(nmChTileHtml).join('')}</div>
+        </section>`;
+}
+// לשונית אחרת במסך האתגרים - רק החלק הזה מתרענן (בלי לקפוץ לראש המסך)
+document.addEventListener('click', e => {
+    const b = e.target.closest('[data-growth-area]');
+    if (!b) return;
+    nmGrowthArea = b.dataset.growthArea;
+    const sec = document.getElementById('nm-growth-section');
+    if (sec) sec.outerHTML = nmGrowthSectionHtml();
+});
+// "על מה רוצים לעבוד השבוע?" - התחומים, ובכל תחום האתגרים שלו; נגיעה - הגיליון של האתגר (מתי מתחילים)
+function nmOpenGrowthPicker(area) {
+    let cur = area || nmGrowthArea;
+    const ov = nmOpenSheet('', 'nm-growth-sheet');
+    const sheet = ov.querySelector('.nm-sheet');
+    const render = () => {
+        const done = nmChDoneKeys();
+        sheet.innerHTML = `
+            <span class="nm-sheet-grip" aria-hidden="true"></span>
+            <div class="nm-growth-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}</div>
+            <h4>${nmEsc(t('nm_week_pick_q'))}</h4>
+            ${nmGrowthTabsHtml(cur, 'data-pick-area')}
+            <div class="nm-growth-list">${NEW_ME_GROWTH.filter(c => c.area === cur).map(c => `
+                <button type="button" class="nm-option nm-growth-opt${done.has(c.key) ? ' is-done' : ''}" data-pick="${c.key}">
+                    <span class="nm-growth-opt-icon" aria-hidden="true">${c.icon}</span>
+                    <span class="nm-growth-opt-text"><b>${nmEsc(nmChTitle(c.key))}</b><span>${nmEsc(t('nm_ch_' + c.key + '_desc'))}</span></span>
+                    ${done.has(c.key) ? '<span class="nm-growth-opt-done" aria-hidden="true">✓</span>' : ''}
+                </button>`).join('')}</div>
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+        sheet.querySelectorAll('[data-pick-area]').forEach(b => b.addEventListener('click', () => { cur = b.dataset.pickArea; nmGrowthArea = cur; render(); sheet.scrollTop = 0; }));
+        sheet.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => { ov.remove(); nmOpenChallenge(b.dataset.pick); }));
+    };
+    render();
+}
+// 📌 להשאיר כמשימה יומית קבועה: שורה ב"השגרה שלי" (בטאב הראשון, כל הימים, עם ✓ כמו כל שורה שם) - בשעה שבוחרים
+function nmKeepAsDaily(key, after) {
+    const ov = nmOpenSheet(`
+        <h4>📌 ${nmEsc(t('nm_week_keep_btn'))}</h4>
+        <p class="nm-ch-desc"><b>${nmEsc(nmChTask(key))}</b></p>
+        <label class="nm-sheet-label" for="nm-keep-time">${nmEsc(t('nm_week_keep_time'))}</label>
+        <input type="time" id="nm-keep-time" class="nm-date" value="20:00">
+        <button type="button" class="nm-btn-primary" data-save>${nmEsc(t('nm_week_keep_save'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-keep-sheet', after);
+    ov.querySelector('[data-save]').addEventListener('click', async e => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        const time = ov.querySelector('#nm-keep-time').value || '20:00';
+        const ok = await nmAddDailyRoutineItem(`${nmChDef(key).icon} ${nmChTask(key)}`, time);
+        if (!ok) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
+        ov.remove();
+        showAppToast(t('nm_week_keep_done'));
+        if (typeof loadTodayTasks === 'function') loadTodayTasks();
+        if (after) after();
+    });
+}
+async function nmAddDailyRoutineItem(title, time) {
+    if (!supabaseClient || !currentUserId) return false;
+    let { data: tabs } = await supabaseClient.from('routine_tabs').select('id').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }).limit(1);
+    let tabId = tabs && tabs[0] && tabs[0].id;
+    if (!tabId) {
+        const { data: tab } = await supabaseClient.from('routine_tabs').insert({ user_id: currentUserId, username: currentUsername, name: t('daily_board_default_tab_daily'), sort_order: 0 }).select('id').single();
+        tabId = tab && tab.id;
+    }
+    if (!tabId) return false;
+    const { error } = await supabaseClient.from('routine_items').insert({ tab_id: tabId, user_id: currentUserId, title, time, days_of_week: '0,1,2,3,4,5,6' });
+    return !error;
 }
 
 // ---------- מכתב מהעבר ----------
@@ -683,7 +804,7 @@ function nmGiftStats() {
     const meals = nmStats.reduce((a, r) => a + (Number(r.checks) || 0), 0);
     return [
         { n: nmFmt(nmJourneyDay()), label: t('nm_cert_stat_days') },
-        { n: `${nmFmt(nmChDoneCount())}/${nmFmt(NEW_ME_CHALLENGES.length)}`, label: t('nm_cert_stat_challenges') },
+        { n: `${nmFmt(nmChDoneMainCount())}/${nmFmt(NEW_ME_CHALLENGES.length)}`, label: t('nm_cert_stat_challenges') },
         kg > 0 ? { n: '−' + nmFmtNum(kg, 1), label: t('nm_cert_stat_kg') } : { n: nmFmt(st.best), label: t('nm_cert_stat_streak') },
         { n: nmFmt(st.good), label: t('nm_cert_stat_good') },
         { n: nmFmt(badges), label: t('nm_cert_stat_badges') },
@@ -710,7 +831,7 @@ function nmRenderGift(body) {
         body.innerHTML = `
             <div class="nm-gift-locked">
                 <div class="nm-medal big locked" aria-hidden="true"><span>🎁</span></div>
-                <p class="nm-celebrate-desc">${nmTpl('nm_gift_locked_view', { n: nmFmt(total), left: nmFmt(total - nmChDoneCount()) })}</p>
+                <p class="nm-celebrate-desc">${nmTpl('nm_gift_locked_view', { n: nmFmt(total), left: nmFmt(total - nmChDoneMainCount()) })}</p>
                 <button type="button" class="nm-btn-ghost" onclick="nmGo('challenges')">🏆 ${nmEsc(t('nm_tile_challenges'))}</button>
             </div>`;
         return;

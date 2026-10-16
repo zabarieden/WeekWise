@@ -793,6 +793,7 @@ function renderHomeChips() {
     if (homeCountdown) {
         chips.push(`<button type="button" class="home-chip home-chip-countdown" onclick="openHomeCountdown()">${HOME_HOURGLASS_SVG}<span>${myDayEsc(homeCountdownText(homeCountdown))}</span></button>`);
     }
+    if (typeof bookHomeChipHtml === 'function') { const bc = bookHomeChipHtml(); if (bc) chips.push(bc); }
     if (goodThingsChipVisible()) {
         const saved = goodThingsSaved();
         chips.push(`<button type="button" class="home-chip home-chip-good${saved ? ' is-saved' : ''}" onclick="openGoodThings()">${HOME_MOON_SVG}<span>${myDayEsc(t(saved ? 'good_things_chip_done' : 'good_things_chip'))}</span></button>`);

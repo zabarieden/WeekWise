@@ -94,6 +94,7 @@ function nmgRenderHud() {
             <span class="nmg-q2">${nmEsc(nmSlotName(next))}: ${nmEsc(nextName)}</span>
             ${nextKcal ? `<span class="nmg-q3"><bdi dir="ltr">~${nmFmt(nextKcal)}</bdi> ${nmEsc(t('calories_unit'))}</span>` : ''}
         </button>` : `<button type="button" class="nmg-b nmg-quest is-done" onclick="nmgGo('day')"><span class="nmg-q2">${nmEsc(t('nm_hall_all_done'))}</span></button>`}
+        ${nmgWeekCardHtml()}
         <div class="nmg-rail nmg-rr">${['day', 'challenges'].map(k => nmgButton(k, title(k))).join('')}</div>
         <div class="nmg-dock">
             ${nmgButton('world', t('nm_hud_world'))}
@@ -119,6 +120,37 @@ function nmgFitLabels(hud) {
         while (el.scrollWidth > el.clientWidth + 1 && size > 7.5) { size -= 0.5; el.style.fontSize = `${size}px`; }
         if (el.scrollWidth > el.clientWidth + 1) el.style.overflowWrap = '';
     });
+}
+// ✨ אתגר השבוע - כרטיס גדול במסדרון (לפי בקשה מפורשת, 2026-10-16: "אתגר השבוע שיהיה בגדול"): האתגר של השבוע, שבעת
+// הימים שלו ו-✓ להיום; בלי אתגר - "על מה רוצים לעבוד השבוע?" (הבחירה של המשתמש/ת, לא של האפליקציה)
+function nmgWeekCardHtml() {
+    if (typeof nmChActiveWeek !== 'function' || typeof nmChallengesLoaded === 'undefined' || !nmChallengesLoaded) return '';
+    const c = nmChActiveWeek();
+    if (!c) {
+        return `<button type="button" class="nmg-b nmg-week is-empty" onclick="nmOpenGrowthPicker()">
+            <span class="nmg-week-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}</span>
+            <b class="nmg-week-title">${nmEsc(t('nm_week_pick_q'))}</b>
+            <span class="nmg-week-cta">${nmEsc(t('nm_week_pick_btn'))}</span>
+        </button>`;
+    }
+    const def = nmChDef(c.challenge_key);
+    const st = nmChState(c);
+    const lastFinal = nmAddDays(st.today, -2);
+    const dots = Array.from({ length: c.days }, (_, i) => {
+        const d = nmAddDays(c.start_date, i);
+        const m = st.marks[d];
+        const cls = m === 'done' ? 'done' : m === 'free' ? 'free' : d > st.today ? 'future' : d <= lastFinal ? 'missed' : 'open';
+        return `<i class="nmg-week-dot ${cls}${d === st.today ? ' today' : ''}"></i>`;
+    }).join('');
+    const mark = st.marks[st.today];
+    return `<div class="nmg-week${st.scheduled ? ' is-scheduled' : ''}">
+        <button type="button" class="nmg-b nmg-week-main" onclick="nmOpenChallenge('${c.challenge_key}')">
+            <span class="nmg-week-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}${st.scheduled ? ` · ⏳ ${nmEsc(nmShortDate(c.start_date))}` : ''}</span>
+            <b class="nmg-week-title"><span aria-hidden="true">${def.icon}</span> ${nmEsc(nmChTitle(c.challenge_key))}</b>
+            <span class="nmg-week-dots" aria-label="${nmEsc(t('nm_ch_progress_line').replace('{done}', st.done).replace('{needed}', st.needed))}">${dots}</span>
+        </button>
+        ${st.canToday ? `<button type="button" class="nmg-b nmg-week-check${mark === 'done' ? ' on' : ''}" onclick="nmMarkChallengeDay('${c.id}', '${st.today}', 'done')" aria-pressed="${mark === 'done'}" aria-label="${nmEsc(t('nm_ch_mark_today'))}">✓</button>` : ''}
+    </div>`;
 }
 // כפתור בשכבה: מסך של New Me (החדר / המקום / המפה נסגרים קודם), התיק, או המפה
 function nmgGo(view) {

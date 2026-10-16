@@ -2306,7 +2306,7 @@ function nmRenderDay(root) {
 function nmTileSub(k) {
     // ה-PDF בנוי ל-4 ארוחות ביום (לפי בקשה מפורשת: "תרשום הPDF הזה מתאים לככה ארוחות")
     if (k === 'pdf') return nmEsc(t('nm_pdf_meals'));
-    if (k === 'challenges') return `<bdi dir="ltr">${nmChDoneCount()}/${NEW_ME_CHALLENGES.length}</bdi>`;
+    if (k === 'challenges') return `<bdi dir="ltr">${nmChDoneMainCount()}/${NEW_ME_CHALLENGES.length}</bdi>`;
     if (k === 'gift') return nmGodMode() ? '👑' : '';
     if (k === 'journey') return nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())));
     if (k === 'badges') return `<bdi dir="ltr">${NEW_ME_BADGES.filter(b => nmBadges[b.key]).length}/${NEW_ME_BADGES.length}</bdi>`;

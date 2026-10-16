@@ -25,6 +25,42 @@ function bookEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
 function bookStatusMeta(key) { return BOOK_STATUSES.find(s => s.key === key) || BOOK_STATUSES[1]; }
 function bookFmt(n) { return Number(n || 0).toLocaleString(currentLang); }
 
+// 📖 הספר במסך הבית: "איזה עמוד אני?" - נגיעה, מספר חדש, וזה עוקב (user_premium.home_book_id, בכל המכשירים)
+let booksHomeId = null;
+function bookHomeBook() { return booksHomeId ? booksCache.find(b => b.id === booksHomeId && b.status === 'reading') || null : null; }
+function bookHomeChipHtml() {
+    const b = bookHomeBook();
+    if (!b) return '';
+    const page = t('books_home_chip').replace('{title}', b.title).replace('{page}', bookFmt(Number(b.current_page) || 0));
+    return `<button type="button" class="home-chip home-chip-book" onclick="openBookPageQuick()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/></svg><span>${bookEsc(page)}</span></button>`;
+}
+function openBookPageQuick() {
+    const b = bookHomeBook();
+    if (!b || typeof nmOpenSheet !== 'function') return;
+    const total = Number(b.total_pages) || 0;
+    const ov = nmOpenSheet(`
+        <h4>📖 ${bookEsc(b.title)}</h4>
+        <label class="nm-sheet-label" for="book-quick-page">${bookEsc(t('books_home_q'))}</label>
+        <div class="book-quick-row">
+            <input type="number" id="book-quick-page" class="book-page-input book-quick-input" inputmode="numeric" min="0" ${total ? `max="${total}"` : ''} value="${Number(b.current_page) || 0}">
+            ${total ? `<span class="book-quick-of">${bookEsc(t('books_home_of').replace('{total}', bookFmt(total)))}</span>` : ''}
+        </div>
+        <button type="button" class="nm-btn-primary" data-save>${bookEsc(t('books_home_save'))}</button>
+        <button type="button" class="nm-btn-ghost" data-close>${bookEsc(t('close_btn'))}</button>`, 'book-quick-sheet');
+    const input = ov.querySelector('#book-quick-page');
+    const save = async () => { ov.remove(); await setBookPage(b.id, input.value); renderHomeChips(); };
+    ov.querySelector('[data-save]').addEventListener('click', save);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+    setTimeout(() => { input.focus(); input.select(); }, 120);
+}
+async function toggleBookOnHome(bookId) {
+    booksHomeId = booksHomeId === bookId ? null : bookId;
+    renderBooks();
+    if (typeof renderHomeChips === 'function') renderHomeChips();
+    showAppToast(t(booksHomeId ? 'books_home_on_toast' : 'books_home_off_toast'));
+    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, home_book_id: booksHomeId }, { onConflict: 'user_id' });
+}
+
 async function loadBooks() {
     if (!supabaseClient || !currentUserId) return;
     const since = new Date();
@@ -32,12 +68,14 @@ async function loadBooks() {
     const [booksRes, logRes, prefRes, quotesRes] = await Promise.all([
         supabaseClient.from('books').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabaseClient.from('book_reading_log').select('book_id, log_date, pages, source, created_at').eq('user_id', currentUserId).gte('log_date', getLocalDateString(since)).order('created_at', { ascending: true }),
-        supabaseClient.from('user_premium').select('books_goal_id').eq('user_id', currentUserId).maybeSingle(),
+        supabaseClient.from('user_premium').select('books_goal_id, home_book_id').eq('user_id', currentUserId).maybeSingle(),
         supabaseClient.from('room_quotes').select('id').eq('user_id', currentUserId),
     ]);
     booksCache = booksRes.data || [];
     bookLogCache = logRes.data || [];
     booksGoalId = prefRes && prefRes.data ? prefRes.data.books_goal_id : null;
+    booksHomeId = prefRes && prefRes.data ? prefRes.data.home_book_id || null : null;
+    if (typeof renderHomeChips === 'function') renderHomeChips();
     booksQuotesCount = quotesRes && Array.isArray(quotesRes.data) ? quotesRes.data.length : 0;
     if (isBooksSectionOpen()) renderBooks();
     // משימת הקריאה היומית מופיעה בהצצה להיום, ויום הסיום (📖) בלוח החודשי
@@ -266,6 +304,13 @@ function buildReadingBookCard(book) {
     card.querySelectorAll('.book-plus-btn').forEach(btn => { btn.onclick = () => addBookPages(book.id, Number(btn.dataset.add)); });
     card.querySelector('[data-act="deadline"]').onclick = () => openBookModal(book.id, true);
     card.querySelector('.book-finish-btn').onclick = () => openBookFinish(book.id);
+    const pin = document.createElement('button');
+    pin.type = 'button';
+    pin.className = 'book-home-pin' + (booksHomeId === book.id ? ' on' : '');
+    pin.setAttribute('aria-pressed', booksHomeId === book.id ? 'true' : 'false');
+    pin.textContent = `📌 ${t('books_home_pin')}`;
+    pin.onclick = () => toggleBookOnHome(book.id);
+    card.querySelector('.book-card-actions').appendChild(pin);
     card.querySelector('.book-card-actions').appendChild(buildBookEditButton(book));
     return card;
 }
@@ -344,6 +389,8 @@ async function logBookPages(bookId, delta, source) {
         .insert({ user_id: currentUserId, book_id: bookId, log_date: getLocalDateString(), pages: delta, source })
         .select('book_id, log_date, pages, source, created_at').single();
     if (data) bookLogCache.push(data);
+    // 📖 אתגר השבוע "לקרוא 2 עמודים ביום" (New Me) - היום מסומן לבד
+    if (delta > 0 && typeof nmChallengeAutoCheck === 'function') nmChallengeAutoCheck('read');
 }
 
 async function setBookPage(bookId, newPage, source = 'manual') {
@@ -359,6 +406,7 @@ async function setBookPage(bookId, newPage, source = 'manual') {
     book.current_page = page;
     await logBookPages(bookId, delta, source);
     renderBooks();
+    if (typeof renderHomeChips === 'function') renderHomeChips();
     loadTodayTasks();
     // הגיע לעמוד האחרון - חגיגת "סיימתי" (עם העמוד שממנו הגיע, למקרה שיחזירו את הספר לקריאה)
     if (book.total_pages && page >= book.total_pages && delta > 0) openBookFinish(bookId, before);

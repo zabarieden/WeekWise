@@ -389,17 +389,121 @@ function srpOpenGenie(box) {
     layer.innerHTML = `
         <div class="srp-genie-fog" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div>
         <div class="srp-genie-swirl" aria-hidden="true"><img class="srp-genie-img" src="${SRP_ART}genie.png" alt=""></div>
-        <div class="srp-genie-ask" role="dialog" aria-label="${srEsc(t('room_genie_q1'))}">
-            <b>${srEsc(t('room_genie_q1'))}</b>
-            <span>${srEsc(t('room_genie_q2'))}</span>
-            <button type="button" class="srp-genie-close">${srEsc(t('close_btn'))}</button>
-        </div>`;
+        <div class="srp-genie-ask" role="dialog" aria-label="${srEsc(t('room_genie_q1'))}"></div>`;
     box.appendChild(layer);
     void layer.offsetWidth;
     layer.classList.add('go');
     const close = () => { layer.classList.add('bye'); setTimeout(() => layer.remove(), reduce ? 0 : 600); };
-    layer.querySelector('.srp-genie-close').addEventListener('click', close);
+    srpGenieTalk(layer, close);
     srpCleanups.push(() => layer.remove());
+}
+
+// 🧞 השיחה עם רוח היער: משאלה → איך זה ירגיש → מה קשה → איך הופכים את הקושי לטובה → כמה זמן → צעד ראשון → עוד שני
+// צעדים → "אם… אז…" → המשאלה מסוכמת על מגילה, ואפשר להפוך אותה ליעד ב"היעדים שלי" (הצעדים = התחנות בשביל) או לשמור
+// ביומן. בלי AI ובלי לשמור כלום עד שבוחרים (דרך WOOP הידועה: משאלה, תוצאה, מכשול, תוכנית)
+const SRP_GENIE_STEPS = [
+    { k: 'wish', q: 'room_genie_q1', sub: 'room_genie_q2', ph: 'room_genie_ph_wish', need: true },
+    { k: 'feel', q: 'room_genie_feel_q', react: 'room_genie_react_wish' },
+    { k: 'hard', q: 'room_genie_hard_q', react: 'room_genie_react_feel' },
+    { k: 'turn', q: 'room_genie_turn_q', sub: 'room_genie_turn_ex', react: 'room_genie_react_hard' },
+    { k: 'time', q: 'room_genie_time_q', react: 'room_genie_react_turn', chips: ['week', 'month', 'months', 'year', 'more'] },
+    { k: 'step1', q: 'room_genie_step1_q', react: 'room_genie_react_time' },
+    { k: 'steps', q: 'room_genie_steps_q', react: 'room_genie_react_step1', two: ['step2', 'step3'] },
+    { k: 'plan', q: 'room_genie_plan_q', react: 'room_genie_react_steps', two: ['if', 'then'] },
+];
+const SRP_GENIE_DAYS = { week: 7, month: 30, months: 90, year: 365 };
+function srpGenieTalk(layer, close) {
+    const card = layer.querySelector('.srp-genie-ask');
+    const a = {};
+    let i = 0, saved = { goal: false, diary: false };
+    const val = k => String(a[k] || '').trim();
+    const field = (k, ph, multi) => multi
+        ? `<textarea class="srp-genie-input" data-k="${k}" rows="3" maxlength="400" placeholder="${srEsc(t(ph))}">${srEsc(a[k] || '')}</textarea>`
+        : `<input type="text" class="srp-genie-input" data-k="${k}" maxlength="160" placeholder="${srEsc(ph)}" value="${srEsc(a[k] || '')}">`;
+    const summaryRows = () => [
+        ['✨', 'room_genie_sum_wish', val('wish')], ['🌈', 'room_genie_sum_feel', val('feel')], ['🪨', 'room_genie_sum_hard', val('hard')],
+        ['💡', 'room_genie_sum_turn', val('turn')], ['⏳', 'room_genie_sum_time', a.time ? t('room_genie_time_' + a.time) : ''],
+        ['🪜', 'room_genie_sum_steps', [val('step1'), val('step2'), val('step3')].filter(Boolean).map((x, j) => `${j + 1}. ${x}`).join('\n')],
+        ['🛡️', 'room_genie_sum_plan', val('if') || val('then') ? `${t('room_genie_if_ph')} ${val('if')} – ${t('room_genie_then_ph')} ${val('then')}` : ''],
+    ].filter(r => r[2]);
+    const render = () => {
+        layer.classList.toggle('is-talking', true);
+        if (i >= SRP_GENIE_STEPS.length) {
+            card.innerHTML = `
+                <button type="button" class="srp-genie-x" data-close aria-label="${srEsc(t('close_btn'))}">✕</button>
+                <b class="srp-genie-q">${srEsc(t('room_genie_sum_title'))}</b>
+                <div class="srp-genie-scroll">${summaryRows().map(([ic, k, v]) => `<div class="srp-genie-row"><span class="srp-genie-row-k">${ic} ${srEsc(t(k))}</span><span class="srp-genie-row-v">${srEsc(v)}</span></div>`).join('')}</div>
+                <div class="srp-genie-acts">
+                    <button type="button" class="srp-genie-btn is-main" data-goal ${saved.goal ? 'disabled' : ''}>${saved.goal ? '✓ ' + srEsc(t('room_genie_goal_done')) : srEsc(t('room_genie_to_goal'))}</button>
+                    <button type="button" class="srp-genie-btn" data-diary ${saved.diary ? 'disabled' : ''}>${saved.diary ? '✓ ' + srEsc(t('room_genie_diary_done')) : srEsc(t('room_genie_to_diary'))}</button>
+                    <button type="button" class="srp-genie-btn is-ghost" data-back>${srEsc(t('nm_back'))}</button>
+                </div>`;
+        } else {
+            const st = SRP_GENIE_STEPS[i];
+            let body;
+            if (st.chips) body = `<div class="srp-genie-chips">${st.chips.map(c => `<button type="button" class="srp-genie-chip${a.time === c ? ' on' : ''}" data-chip="${c}" aria-pressed="${a.time === c}">${srEsc(t('room_genie_time_' + c))}</button>`).join('')}</div>`;
+            else if (st.two) body = st.two.map((k, j) => field(k, st.k === 'plan' ? t(k === 'if' ? 'room_genie_if_ph' : 'room_genie_then_ph') : t('room_genie_step_ph').replace('{n}', j + 2), false)).join('');
+            else body = field(st.k, st.ph || 'room_genie_ph_answer', true);
+            card.innerHTML = `
+                <button type="button" class="srp-genie-x" data-close aria-label="${srEsc(t('close_btn'))}">✕</button>
+                ${st.react ? `<span class="srp-genie-react">${srEsc(t(st.react))}</span>` : ''}
+                <b class="srp-genie-q">${srEsc(t(st.q))}</b>
+                ${st.sub ? `<span class="srp-genie-sub">${srEsc(t(st.sub))}</span>` : ''}
+                ${body}
+                <div class="srp-genie-dots" aria-hidden="true">${SRP_GENIE_STEPS.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div>
+                <div class="srp-genie-acts">
+                    <button type="button" class="srp-genie-btn is-main" data-next>${srEsc(t('room_genie_next'))}</button>
+                    ${i > 0 ? `<button type="button" class="srp-genie-btn is-ghost" data-back>${srEsc(t('nm_back'))}</button>` : ''}
+                </div>`;
+            const inp = card.querySelector('.srp-genie-input');
+            if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 80);
+        }
+        bind();
+    };
+    const collect = () => card.querySelectorAll('[data-k]').forEach(el => { a[el.dataset.k] = el.value; });
+    const bind = () => {
+        card.querySelector('[data-close]').addEventListener('click', close);
+        card.querySelectorAll('[data-chip]').forEach(b => b.addEventListener('click', () => { a.time = b.dataset.chip; i++; render(); }));
+        const next = card.querySelector('[data-next]');
+        if (next) next.addEventListener('click', () => {
+            collect();
+            const st = SRP_GENIE_STEPS[i];
+            if (st.need && !val(st.k)) { const inp = card.querySelector('.srp-genie-input'); if (inp) { inp.classList.add('is-empty'); inp.focus(); } return; }
+            i++; render();
+        });
+        const back = card.querySelector('[data-back]');
+        if (back) back.addEventListener('click', () => { collect(); i = Math.max(0, i - 1); render(); });
+        const goal = card.querySelector('[data-goal]');
+        if (goal) goal.addEventListener('click', async () => { goal.disabled = true; if (await srpGenieToGoal(a)) { saved.goal = true; showAppToast(t('room_genie_goal_done')); } render(); });
+        const diary = card.querySelector('[data-diary]');
+        if (diary) diary.addEventListener('click', async () => { diary.disabled = true; if (await srpGenieToDiary(summaryRows())) { saved.diary = true; showAppToast(t('room_genie_diary_done')); } render(); });
+    };
+    // השאלה הראשונה מופיעה אחרי שהרוח הסתובבה ויצאה מהערפל
+    setTimeout(() => { if (layer.isConnected) render(); }, srpReduce() ? 0 : 5400);
+    card.innerHTML = `<b class="srp-genie-q">${srEsc(t('room_genie_q1'))}</b><span class="srp-genie-sub">${srEsc(t('room_genie_q2'))}</span>`;
+}
+// יעד ב"היעדים שלי": המשאלה = היעד, הצעדים = התחנות בשביל, תאריך לפי "כמה זמן"
+async function srpGenieToGoal(a) {
+    if (!supabaseClient || !currentUserId) return false;
+    const days = SRP_GENIE_DAYS[a.time];
+    let target = null;
+    if (days) { const d = new Date(); d.setDate(d.getDate() + days); target = getLocalDateString(d); }
+    const steps = [a.step1, a.step2, a.step3].map(x => String(x || '').trim()).filter(Boolean);
+    const { data: goal, error } = await supabaseClient.from('vision_goals').insert({
+        user_id: currentUserId, title: String(a.wish || '').trim().slice(0, 140), icon: '🧞', category: 'personal',
+        track_type: 'steps', target_date: target,
+    }).select().single();
+    if (error || !goal) { showAppToast(t('nm_save_error'), 'error'); return false; }
+    if (steps.length) await supabaseClient.from('vision_goal_milestones').insert(steps.map((title, j) => ({ goal_id: goal.id, user_id: currentUserId, title: title.slice(0, 140), is_done: false, sort_order: (j + 1) * 10 })));
+    if (typeof loadVisionGoals === 'function') loadVisionGoals();
+    return true;
+}
+async function srpGenieToDiary(rows) {
+    if (!supabaseClient || !currentUserId) return false;
+    const body = `🧞 ${t('room_genie_sum_title')}\n\n` + rows.map(([ic, k, v]) => `${ic} ${t(k)}\n${v}`).join('\n\n');
+    const { error } = await supabaseClient.from('new_me_diary').insert({ user_id: currentUserId, body: body.slice(0, 8000) });
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return false; }
+    return true;
 }
 
 // הבקבוק מהים (המפתח האחרון): הפקק עף, והמכתב מהעבר נפתח. נרשם שנפתח רק כשהמפתחות אמיתיים -
@@ -1603,6 +1707,8 @@ async function roomLinkWishToGoal(goal) {
     if (supabaseClient && currentUserId) await supabaseClient.from('room_wishes').update({ goal_id: goal.id }).eq('id', link.wishId).eq('user_id', currentUserId);
     const w = (roomWishes || []).find(x => x.id === link.wishId);
     if (w) w.goal_id = goal.id;
+    // קודם הרשימה מתעדכנת - אחרת "היעדים שלי" נפתח מהמטמון בלי היעד החדש ובוחר יעד אחר שכבר קיים
+    if (typeof loadVisionGoals === 'function') await loadVisionGoals();
     if (typeof openGoalsVisionDrawer === 'function' && !document.getElementById('vision-drawer-overlay')?.classList.contains('open')) openGoalsVisionDrawer(goal.id);
 }
 
