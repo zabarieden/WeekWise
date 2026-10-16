@@ -327,20 +327,6 @@ function srpPorchScene(keys) {
                 </g></g>
                 <ellipse class="srp-hit" cx="238" cy="568" rx="38" ry="26" fill="transparent"/>
             </g>` : ''}
-            <g class="srp-hot srp-hammock" data-place-hot="hammock" role="button" tabindex="0" aria-label="${srEsc(t('room_hammock_aria'))}">
-                <!-- החבלים קשורים לעמודים שבציור ולא זזים; רק הבד מתנדנד מתחת לקו שבו הם מחזיקים אותו (לפי בקשה מפורשת) -->
-                <g stroke="#e3cfa3" stroke-width="1.3"><line x1="12" y1="300" x2="78" y2="378"/><line x1="378" y1="300" x2="312" y2="378"/></g>
-                <g class="srp-swing">
-                    <path d="M92 388 Q195 484 298 388" fill="none" stroke="#bff5e6" stroke-width="3"/>
-                    <path d="M108 402 Q195 476 282 402" fill="none" stroke="#ffd27a" stroke-width="2.4"/>
-                    <g transform="translate(118 398) rotate(18)">
-                        <g stroke="#ffe3ee" stroke-width="2.2" opacity="0.85"><line x1="-11" y1="-13" x2="-11" y2="13"/><line x1="0" y1="-14.5" x2="0" y2="14.5"/><line x1="11" y1="-13" x2="11" y2="13"/></g>
-                        <path d="M-25 -12 Q0 -17 25 -12 Q29 0 25 12 Q0 17 -25 12 Q-29 0 -25 -12 Z" fill="none" stroke="#fff6fa" stroke-width="1.4"/>
-                        <g fill="#ffd27a"><circle cx="-26" cy="-12" r="2.4"/><circle cx="26" cy="-12" r="2.4"/><circle cx="-26" cy="12" r="2.4"/><circle cx="26" cy="12" r="2.4"/></g>
-                    </g>
-                </g>
-                <path class="srp-hit" d="M66 356 L324 356 L300 462 L90 462 Z" fill="transparent"/>
-            </g>
             <!-- 🪔 מנורת אלאדין שעל השולחן (מצוירת): נגיעה - רוח היער יוצאת ממנה בערפל ושואלת מה המשאלה (srpOpenGenie) -->
             <g class="srp-hot srp-lamp" data-place-hot="lamp" role="button" tabindex="0" aria-label="${srEsc(t('room_genie_aria'))}">
                 <rect class="srp-hit" x="280" y="554" width="110" height="88" fill="transparent"/>
@@ -370,12 +356,6 @@ function srpInitPorch(box) {
     };
     if (cloud) setRain(srpPrefs().rain !== false, false);
     return {
-        // נגיעה בערסל - הוא מתנדנד חזק כמה שניות ונרגע (לפי בקשה מפורשת: בלי "להתקרב סתם למסך")
-        hammock: el => {
-            if (el.classList.contains('is-rocking')) return;
-            el.classList.add('is-rocking');
-            setTimeout(() => el.classList.remove('is-rocking'), srpReduce() ? 300 : 5200);
-        },
         rain: () => setRain(!box.classList.contains('is-rain'), true),
         tablet: el => {
             if (el.classList.contains('locked')) { srShowLockTip('tablet'); return; }
@@ -671,70 +651,30 @@ async function srpOpenDiary() {
 // כותבים בו מה רוצים לשחרר, וגל גדול בא ומוחק. לא נשמר בשום מקום
 function srpBreathScene(keys) {
     const sand = keys >= roomUnlockAt('sand');
-    // הציור (world/lake-sunset.jpg): אגם בשקיעה, בלי שמש - השמש עולה ושוקעת עם הנשימה מאחורי קו האופק (y≈441), הגל
-    // הקטן על קו המים, והמקל הקסום שעל החול הנוצץ הוא המקל לכתיבה
+    // הציור (world/lake-sunset.jpg): אגם בשקיעה. מאז 2026-10-16 מקום שקט בלבד (לפי בקשה מפורשת): בלי השמש שעולה ויורדת
+    // ובלי "להתחיל"; הגל הקטן על קו המים, והמקל הקסום שעל החול (בלי נצנוץ) הוא המקל לכתיבה
     return `
         <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('breath'))}">
-            <defs>
-                <radialGradient id="srbSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6d6"/><stop offset="0.55" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff9f5e"/></radialGradient>
-                <radialGradient id="srbGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb46a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffb46a" stop-opacity="0"/></radialGradient>
-                <linearGradient id="srbHorizonFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="0.88" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-                <mask id="srbAboveHorizon" maskUnits="userSpaceOnUse" x="0" y="0" width="390" height="844"><rect width="390" height="446" fill="url(#srbHorizonFade)"/></mask>
-            </defs>
             <g aria-hidden="true">
                 ${srpArt('lake-sunset.jpg')}
-                <g mask="url(#srbAboveHorizon)"><g class="srb-sun"><circle cx="195" cy="441" r="116" fill="url(#srbGlow)"/><circle cx="195" cy="441" r="66" fill="url(#srbSun)"/></g></g>
-                <g fill="#ffcf8a"><rect x="152" y="474" width="86" height="2.6" rx="1.3" opacity="0.5"/><rect x="162" y="488" width="66" height="2.6" rx="1.3" opacity="0.42"/><rect x="148" y="503" width="94" height="2.6" rx="1.3" opacity="0.34"/><rect x="168" y="520" width="54" height="2.6" rx="1.3" opacity="0.26"/></g>
                 <g class="srb-wave">
                     <path d="M-20 648 Q4 640 26 648 T74 648 T122 648 T170 648 T218 648 T266 648 T314 648 T362 648 T410 648 V655 Q386 662 362 655 T314 655 T266 655 T218 655 T170 655 T122 655 T74 655 T26 655 T-20 655 Z" fill="#fff" opacity="0.55"/>
                 </g>
             </g>
             ${sand ? `<g class="srb-writing" role="button" tabindex="0" aria-label="${srEsc(t('room_sand_erase_aria'))}"><text class="srb-word-light" x="195" y="733" text-anchor="middle"></text><text class="srb-word" x="195" y="732" text-anchor="middle"></text></g>
+            ${roomWishSvg()}
             <g class="srb-bigwave" aria-hidden="true">
                 <path d="M-20 620 H410 V712 Q385 724 360 712 T310 712 T260 712 T210 712 T160 712 T110 712 T60 712 T10 712 T-20 712 Z" fill="#b9c4ee" opacity="0.6"/>
                 <path d="M-20 712 Q5 724 30 712 T80 712 T130 712 T180 712 T230 712 T280 712 T330 712 T380 712 T430 712" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
             </g>
             <g class="srp-hot srb-stick" data-place-hot="sand" role="button" tabindex="0" aria-label="${srEsc(roomItemName('sand'))}">
-                <ellipse class="srp-flicker" cx="364" cy="694" rx="20" ry="16" fill="#e9c6ff" opacity="0.35"/>
                 <rect class="srp-hit" x="206" y="676" width="184" height="98" fill="transparent"/>
             </g>` : ''}
-            <text class="srb-cue srb-cue-in" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_in'))}</text>
-            <text class="srb-cue srb-cue-out" x="195" y="252" text-anchor="middle">${srEsc(t('room_breath_out'))}</text>
-        </svg>
-        <div class="srb-panel srb-start">
-            <p>${srEsc(t('room_breath_line'))}</p>
-            <button type="button" class="srb-btn" data-breath="start">${srEsc(t('room_breath_start'))}</button>
-        </div>
-        <div class="srb-panel srb-stop"><button type="button" class="srb-btn ghost" data-breath="stop">${srEsc(t('room_breath_end'))}</button></div>`;
+        </svg>`;
 }
-let srpWake = null;
-async function srpWakeOn() { try { if (navigator.wakeLock && navigator.wakeLock.request) srpWake = await navigator.wakeLock.request('screen'); } catch {} }
-function srpWakeOff() { try { if (srpWake) srpWake.release(); } catch {} srpWake = null; }
 function srpInitBreath(box) {
     srpInitSandErase(box);
-    let timer = null;
-    // המסך נשאר דולק כל הסשן; יציאה קצרה מהאפליקציה משחררת את זה - בחזרה מבקשים שוב
-    const onVisible = () => { if (document.visibilityState === 'visible' && box.classList.contains('is-on') && box.isConnected) srpWakeOn(); };
-    document.addEventListener('visibilitychange', onVisible);
-    const stop = done => {
-        clearTimeout(timer);
-        timer = null;
-        if (!box.classList.contains('is-on')) return;
-        box.classList.remove('is-on');
-        srpWakeOff();
-        if (done) showAppToast(t('room_breath_done'));
-        const start = box.querySelector('[data-breath="start"]');
-        if (start && box.isConnected) start.focus({ preventScroll: true });
-    };
-    box.querySelector('[data-breath="start"]').addEventListener('click', () => {
-        box.classList.add('is-on');
-        srpWakeOn();
-        clearTimeout(timer);
-        timer = setTimeout(() => stop(true), SRP_BREATH_MS);
-        box.querySelector('[data-breath="stop"]').focus({ preventScroll: true });
-    });
-    box.querySelector('[data-breath="stop"]').addEventListener('click', () => stop(false));
-    srpCleanups.push(() => { stop(false); document.removeEventListener('visibilitychange', onVisible); });
+    roomInitWish(box);
     return { sand: () => srpWriteInSand(box) };
 }
 
@@ -815,15 +755,12 @@ function srpOutsideScene(keys) {
     const swing = keys >= roomUnlockAt('swing');
     const yoga = keys >= roomUnlockAt('yoga');
     const sign = keys >= roomUnlockAt('selfcare');
-    const fire = keys >= roomUnlockAt('campfire');
     const L = SRP_LANTERNS;
     const art = n => `<image class="srp-art" href="${SRP_ART}${n}" x="-64" y="0" width="471.1" height="844" preserveAspectRatio="none"/>`;
     return `
         <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('outside'))}">
             <defs>
                 <radialGradient id="srpOLight" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpOFire" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb05c" stop-opacity="0.55"/><stop offset="1" stop-color="#ffb05c" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpOAsh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#2a2238" stop-opacity="0.92"/><stop offset="0.7" stop-color="#2a2238" stop-opacity="0.6"/><stop offset="1" stop-color="#2a2238" stop-opacity="0"/></radialGradient>
             </defs>
             <g aria-hidden="true">
                 <g class="srp-night-only">${art('forest-night.jpg')}</g>
@@ -853,18 +790,6 @@ function srpOutsideScene(keys) {
             <g class="srp-hot srp-bench" data-place-hot="bench" role="button" tabindex="0" aria-label="${srEsc(t('room_bench_aria'))}">
                 <rect class="srp-hit" x="234" y="518" width="102" height="108" fill="transparent"/>
             </g>
-            ${fire ? `<g class="srp-hot srp-campfire" data-place-hot="campfire" role="button" tabindex="0" aria-label="${srEsc(roomItemName('campfire'))}" aria-pressed="true">
-                <!-- בלילה האש מצוירת (כבויה = אפר מעליה), ביום היא מצוירת כבויה (דולקת = להבות מעליה) -->
-                <g class="srp-fire-lit"><circle class="srp-flicker srp-night-only" cx="322" cy="684" r="66" fill="url(#srpOFire)"/></g>
-                <g class="srp-fire-smoke"><ellipse class="srp-night-only" cx="322" cy="686" rx="26" ry="18" fill="url(#srpOAsh)"/></g>
-                <g class="srp-fire-lit srp-day-only">
-                    <path class="srp-fire-flame" d="M322 692 C306 676 312 657 321 644 C327 659 338 664 334 679 C332 687 328 690 322 692 Z" fill="#ff8a3d"/>
-                    <path class="srp-fire-flame" d="M322 692 C314 681 317 670 323 661 C327 672 332 675 330 684 C328 688 326 691 322 692 Z" fill="#ffd27a" style="animation-delay:.25s"/>
-                </g>
-                <g class="srp-fire-lit"><g fill="#ffd27a" class="srp-sparks"><circle cx="316" cy="650" r="1.4"/><circle cx="329" cy="642" r="1.2"/><circle cx="323" cy="630" r="1"/></g></g>
-                <path class="srp-fire-smoke" d="M322 676 q-6 -12 2 -22 q8 -10 0 -22" fill="none" stroke="#c9c9d0" stroke-width="2" opacity="0.45" stroke-linecap="round"/>
-                <rect class="srp-hit" x="266" y="640" width="112" height="86" fill="transparent"/>
-            </g>` : ''}
             <g class="srp-night-only" fill="#ffe48e" aria-hidden="true"><circle class="srp-fly" cx="40" cy="520" r="2"/><circle class="srp-fly" cx="300" cy="610" r="2.2" style="animation-delay:1s"/><circle class="srp-fly" cx="250" cy="360" r="1.6" style="animation-delay:2s"/></g>
         </svg>`;
 }
@@ -881,12 +806,6 @@ function srpInitOutside(box, keys, opts = {}) {
         }
     };
     setDay(!!prefs.day, false);
-    const fire = box.querySelector('.srp-campfire');
-    if (fire) {
-        const lit = prefs.campfire !== false;
-        fire.classList.toggle('is-lit', lit);
-        fire.setAttribute('aria-pressed', lit ? 'true' : 'false');
-    }
     return {
         lights: () => setDay(!box.classList.contains('is-day'), true),
         bench: () => srpRest(box),
@@ -896,12 +815,6 @@ function srpInitOutside(box, keys, opts = {}) {
             if (el.classList.contains('is-swinging')) return;
             el.classList.add('is-swinging');
             setTimeout(() => el.classList.remove('is-swinging'), srpReduce() ? 300 : 4300);
-        },
-        campfire: el => {
-            const lit = !el.classList.contains('is-lit');
-            el.classList.toggle('is-lit', lit);
-            el.setAttribute('aria-pressed', lit ? 'true' : 'false');
-            srpSetPref('campfire', lit);
         },
     };
 }
@@ -951,17 +864,30 @@ function srpOpenSignView(box) {
 
 // ---------- פנס המשאלות על הגג ----------
 // נגיעה בפנס: כותבים משאלה (לא נשמרת בשום מקום) והפנס עף לשמיים ונעלם; אחרי רגע מחכה שם פנס חדש
+// 🪷 פנס הלוטוס על האגם של חדר הנשימה (הבחירה שלה מעמוד האפשרויות, 2026-10-16). (0,0) = קו המים מתחת לפרח
 function roomWishSvg() {
-    return `<g class="sr-wish" role="button" tabindex="0" aria-label="${srEsc(roomItemName('wish'))}" transform="translate(178 356)">
-        <defs><radialGradient id="srWishGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.7"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient></defs>
+    return `<g class="sr-wish srp-lotus" role="button" tabindex="0" aria-label="${srEsc(roomItemName('wish'))}" transform="translate(206 590)">
+        <defs>
+            <radialGradient id="srpLotusGlow"><stop offset="0" stop-color="#ffd6ec" stop-opacity="0.7"/><stop offset="1" stop-color="#ffd6ec" stop-opacity="0"/></radialGradient>
+            <linearGradient id="srpLotusPet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0f8"/><stop offset="0.6" stop-color="#ffb3d6"/><stop offset="1" stop-color="#e87bb5"/></linearGradient>
+            <linearGradient id="srpLotusPet2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe3f1"/><stop offset="1" stop-color="#f497c6"/></linearGradient>
+            <radialGradient id="srpLotusCore"><stop offset="0" stop-color="#fffbe6"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g class="srp-lotus-ripples" aria-hidden="true"><ellipse cx="0" cy="1" rx="22" ry="4.5" fill="none" stroke="#f3eaff" stroke-width="1.2"/><ellipse cx="0" cy="1" rx="22" ry="4.5" fill="none" stroke="#f3eaff" stroke-width="1"/></g>
         <g class="sr-wish-inner">
-            <circle cx="0" cy="-16" r="28" fill="url(#srWishGlow)"/>
-            <path d="M-10 0 L-14 -30 Q0 -37 14 -30 L10 0 Z" fill="#ffcf8a"/>
-            <path d="M-10 0 L-14 -30 Q0 -37 14 -30 L10 0" fill="none" stroke="#e8a058" stroke-width="0.9"/>
-            <path d="M-4 -33 L-3 0 M4 -33 L3 0" stroke="#e8a058" stroke-width="0.7" opacity="0.8"/>
-            <path d="M-3.5 -2 q3.5 -7 7 0 z" fill="#ff8a3d"/>
+            <circle cx="0" cy="-14" r="30" fill="url(#srpLotusGlow)"/>
+            <g transform="scale(0.5) translate(-60 -112)">
+                <ellipse cx="60" cy="112" rx="40" ry="9" fill="#7cc7a0" opacity="0.85"/>
+                <ellipse cx="60" cy="110" rx="36" ry="6" fill="#a7f3d0" opacity="0.55"/>
+                <path d="M60 112 C36 108 24 92 28 72 C42 80 52 92 60 112 Z" fill="url(#srpLotusPet2)"/>
+                <path d="M60 112 C84 108 96 92 92 72 C78 80 68 92 60 112 Z" fill="url(#srpLotusPet2)"/>
+                <path d="M60 112 C44 100 38 78 46 56 C56 70 60 90 60 112 Z" fill="url(#srpLotusPet)"/>
+                <path d="M60 112 C76 100 82 78 74 56 C64 70 60 90 60 112 Z" fill="url(#srpLotusPet)"/>
+                <path d="M60 110 C52 92 52 66 60 46 C68 66 68 92 60 110 Z" fill="url(#srpLotusPet)"/>
+                <circle cx="60" cy="96" r="18" fill="url(#srpLotusCore)"/>
+            </g>
         </g>
-        <ellipse class="sr-wish-hit" cx="0" cy="-16" rx="24" ry="28" fill="transparent"/>
+        <ellipse class="sr-wish-hit" cx="0" cy="-16" rx="30" ry="26" fill="transparent"/>
     </g>`;
 }
 function roomInitWish(root) {
@@ -979,8 +905,8 @@ function roomInitWish(root) {
             ov.remove();
             w.classList.remove('is-back', 'srp-new');
             w.classList.add('is-flying');
-            // פנס חדש עולה במקומו אחרי שהקודם נעלם בשמיים - בלי לצאת מהגג (לפי בקשה מפורשת, 2026-10-11)
-            setTimeout(() => { if (!w.isConnected) return; w.classList.remove('is-flying'); w.classList.add('is-back'); }, srpReduce() ? 600 : 4800);
+            // הלוטוס שוקע לאט באגם עם המשאלה, ואחרי רגע לוטוס חדש עולה מהמים במקומו
+            setTimeout(() => { if (!w.isConnected) return; w.classList.remove('is-flying'); w.classList.add('is-back'); }, srpReduce() ? 600 : 5200);
         };
         ov.querySelector('[data-fly]').addEventListener('click', fly);
         input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fly(); } });

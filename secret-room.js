@@ -31,7 +31,6 @@ const ROOM_UNLOCKS = [
     { n: 6, id: 'outside', place: 'outside' },
     { n: 6, id: 'selfcare', place: 'outside' },
     { n: 6, id: 'swing', place: 'outside' },
-    { n: 6, id: 'campfire', place: 'outside' },
     { n: 6, id: 'yoga', place: 'yoga' },
     { n: 7, id: 'waterfall', place: 'waterfall' },
     { n: 8, id: 'telescope', roof: true },
@@ -457,6 +456,7 @@ function srHotspot(id, el) {
     const locked = el && el.classList.contains('locked');
     if (locked) { srShowLockTip(id); return; }
     if (id === 'catvisit') { srCatNapTap(el); return; }
+    if (id === 'drawer') { const open = el.classList.toggle('is-open'); el.setAttribute('aria-pressed', open ? 'true' : 'false'); return; }
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'diary') { if (typeof srpOpenDiary === 'function') srpOpenDiary(); return; }
     if (id === 'game') { roomOpenGame(); return; }
@@ -594,7 +594,7 @@ function srWallGame(keys) {
         <g aria-hidden="true">${holes}</g>
         <g class="sr-hot${gameOpen ? '' : ' locked'}" data-hot="game" role="button" tabindex="0" aria-label="${srEsc(roomItemName('game'))}">
             ${gameOpen ? `<circle cx="291" cy="455" r="74" fill="url(#${p}Screen)"/>
-            <text class="sr-magic-script" x="281" y="380" text-anchor="middle" font-size="13" fill="url(#${p}Gold)" data-fit="80">${srEsc(t('room_game_marquee'))}</text>
+            <text class="sr-magic-script" x="281" y="379" text-anchor="middle" font-size="10.5" fill="url(#${p}Gold)" data-fit="80">${srEsc(t('room_game_marquee'))}</text>
             ${srSparkleField(281, 375, 48, 11, 6, 1.1, 3)}
             <rect x="256" y="423" width="72" height="64" rx="5" fill="url(#${p}Night)"/>
             <path d="M309 432 a7 7 0 1 0 5 12 a5.5 5.5 0 1 1 -5 -12z" fill="#ffe7a8" opacity="0.9"/>
@@ -608,7 +608,24 @@ function srWallGame(keys) {
             <circle class="sr-pulse" cx="292" cy="455" r="8" fill="none" stroke="#ffd27a" stroke-width="1.4"/>` : `${typeof srpVeil === 'function' ? srpVeil(212, 346, 156, 306) : ''}${srLockBadge(289, 456, 'game')}`}
             <rect x="210" y="344" width="160" height="312" fill="transparent"/>
         </g>
+        ${gameOpen ? roomDrawerSvg(p) : ''}
         ${roomTurntableSvg(keys >= roomUnlockAt('vinyl'))}`;
+}
+
+// 🗄️ הדלתית שבתחתית מכונת המשחק נפתחת (לפי בקשה מפורשת, 2026-10-16): הדלת המצוירת עצמה (עותק של הציור, חתוך לצורת
+// הדלת) מסתובבת על הציר שבצד, ומאחוריה ארונית קטנה - בינתיים ריקה. נגיעה שוב סוגרת
+function roomDrawerSvg(p) {
+    return `<defs><clipPath id="${p}DoorClip"><rect x="248" y="556" width="61" height="76" rx="5"/></clipPath>
+            <linearGradient id="${p}Cab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a170f"/><stop offset="1" stop-color="#4a2c1c"/></linearGradient></defs>
+        <g class="sr-hot sr-drawer" data-hot="drawer" role="button" tabindex="0" aria-pressed="false" aria-label="${srEsc(t('room_drawer_aria'))}">
+            <g class="sr-drawer-inside">
+                <rect x="248" y="556" width="61" height="76" rx="5" fill="url(#${p}Cab)"/>
+                <rect x="252" y="592" width="53" height="3" rx="1.5" fill="#6b4630"/>
+                <rect x="248" y="556" width="61" height="76" rx="5" fill="none" stroke="#1a0d07" stroke-opacity="0.6" stroke-width="3"/>
+            </g>
+            <g class="sr-drawer-door"><g clip-path="url(#${p}DoorClip)">${srArtWall('tree-fun.jpg').split('\n')[0]}</g></g>
+            <rect x="240" y="549" width="77" height="90" fill="transparent"/>
+        </g>`;
 }
 
 // 🎵 הפטיפון - הפטיפון המצויר שעל הגדם שליד הכורסה, פתוח עם החדר (לפי בקשה מפורשת: "שהפטיפון כבר יהיה בחדר").
@@ -1421,7 +1438,20 @@ function pcUpdateNav() {
     if (back) back.disabled = atStart;
 }
 
-// ---------- המשחק (מהמפתח הראשון): לתפוס ניצוצות, דקה אחת ----------
+// ---------- המשחק (מהמפתח הראשון): לאסוף גחליליות, דקה אחת ----------
+// (הבחירה שלה מעמוד האפשרויות, 2026-10-16: "משחק לאסוף גחליליות - לרשום בקטן: בדרך - עוצרים ליהנות"). גחליליות מרחפות
+// ביער בלילה ויורדות לאט, ומזיזים את הצנצנת (אצבע / עכבר בכל השדה, או החצים) כדי לאסוף אותן. מה שנאסף נדלק בתוך הצנצנת
+const ROOM_FF_MAX_DOTS = 18;
+function roomJarSvg(cls = '') {
+    return `<svg class="sr-ffjar-art ${cls}" viewBox="0 0 64 80" aria-hidden="true">
+        <defs><linearGradient id="srFfGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="0.4" stop-color="#ffffff" stop-opacity="0.08"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.24"/></linearGradient></defs>
+        <rect x="18" y="2" width="28" height="10" rx="3" fill="#a0714a"/>
+        <path d="M16 15 Q14 13 18 13 H46 Q50 13 48 15 Q56 23 56 38 V68 Q56 78 46 78 H18 Q8 78 8 68 V38 Q8 23 16 15 Z" fill="url(#srFfGlass)" stroke="#e7e0ff" stroke-opacity="0.75" stroke-width="1.6"/>
+        <path d="M18 13 Q32 18 46 13" fill="none" stroke="#c9a77a" stroke-width="2"/>
+        <g class="sr-ffjar-dots"></g>
+        <path d="M14 34 Q12 54 15 70" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>`;
+}
 function roomOpenGame() {
     const stage = srStage();
     if (!stage) return;
@@ -1431,9 +1461,10 @@ function roomOpenGame() {
     box.innerHTML = `
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(t('room_game_title'))}</b><span class="sr-game-best">${srEsc(t('room_game_best').replace('{n}', srFmt(roomState.game_best || 0)))}</span></div>
         <div class="sr-game-hud"><span class="sr-game-score">${srEsc(t('room_game_score').replace('{n}', srFmt(0)))}</span><span class="sr-game-time">${srEsc(t('room_game_time').replace('{s}', srFmt(ROOM_GAME_SECONDS)))}</span></div>
-        <div class="sr-game-field">
+        <div class="sr-game-field" tabindex="0">
             <div class="sr-game-intro">
-                <span class="sr-talk-orb big" aria-hidden="true"></span>
+                ${roomJarSvg('big')}
+                <small class="sr-game-tag">${srEsc(t('room_game_tag'))}</small>
                 <p>${srEsc(t('room_game_how'))}</p>
                 <button type="button" class="sr-game-start">${srEsc(t('room_game_start'))}</button>
             </div>
@@ -1445,35 +1476,79 @@ function roomOpenGame() {
 
 function roomStartGame(box) {
     const field = box.querySelector('.sr-game-field');
-    field.innerHTML = '';
-    const g = { score: 0, left: ROOM_GAME_SECONDS, timers: [], box };
+    field.innerHTML = `<div class="sr-ff-layer"></div><div class="sr-ffjar">${roomJarSvg()}</div>`;
+    const layer = field.querySelector('.sr-ff-layer');
+    const jar = field.querySelector('.sr-ffjar');
+    const dots = jar.querySelector('.sr-ffjar-dots');
+    const w = () => field.clientWidth, h = () => field.clientHeight;
+    const g = { score: 0, left: ROOM_GAME_SECONDS, timers: [], box, flies: [], jarX: w() / 2, jarW: 64, jarH: 80 };
+    g.mouthY = () => h() - g.jarH - 8;
     roomGame = g;
     const scoreEl = box.querySelector('.sr-game-score');
     const timeEl = box.querySelector('.sr-game-time');
-    const colors = ['#ff86c6', '#ffd27a', '#7dd3fc', '#b9a8ff', '#86efac'];
+    const placeJar = x => { g.jarX = Math.max(g.jarW / 2, Math.min(w() - g.jarW / 2, x)); jar.style.left = `${g.jarX - g.jarW / 2}px`; };
+    placeJar(g.jarX);
+    // הצנצנת זזה עם האצבע / העכבר בכל השדה, ובחצים
+    const toX = e => e.clientX - field.getBoundingClientRect().left;
+    const onMove = e => { if (roomGame === g && (e.pointerType !== 'mouse' || e.buttons || e.type === 'pointerdown')) placeJar(toX(e)); };
+    const onHover = e => { if (roomGame === g && e.pointerType === 'mouse') placeJar(toX(e)); };
+    field.addEventListener('pointerdown', onMove);
+    field.addEventListener('pointermove', e => { onMove(e); onHover(e); });
+    field.addEventListener('keydown', e => {
+        if (roomGame !== g) return;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); placeJar(g.jarX + (e.key === 'ArrowLeft' ? -28 : 28)); }
+    });
+    field.focus({ preventScroll: true });
+    const colors = ['#ffe46b', '#fff3a6', '#ffd27a', '#c8ffb0'];
     const spawn = () => {
         if (roomGame !== g) return;
-        const w = field.clientWidth, h = field.clientHeight;
-        const size = 44 + Math.round(Math.random() * 14);
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'sr-spark';
-        b.setAttribute('aria-label', t('room_game_spark_aria'));
-        b.style.cssText = `width:${size}px;height:${size}px;left:${Math.round(Math.random() * Math.max(10, w - size))}px;top:${Math.round(Math.random() * Math.max(10, h - size))}px;--sr-spark:${colors[Math.floor(Math.random() * colors.length)]}`;
-        const life = Math.max(900, 1700 - (ROOM_GAME_SECONDS - g.left) * 12);
-        b.style.animationDuration = `${life}ms`;
-        b.addEventListener('pointerdown', e => {
-            e.preventDefault();
-            if (b.classList.contains('caught')) return;
-            b.classList.add('caught');
-            g.score++;
-            scoreEl.textContent = t('room_game_score').replace('{n}', srFmt(g.score));
-            setTimeout(() => b.remove(), 260);
-        });
-        field.appendChild(b);
-        setTimeout(() => { if (!b.classList.contains('caught')) b.remove(); }, life);
-        g.timers.push(setTimeout(spawn, Math.max(380, 720 - (ROOM_GAME_SECONDS - g.left) * 5)));
+        const el = document.createElement('i');
+        el.className = 'sr-ff';
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        el.style.setProperty('--ff', c);
+        layer.appendChild(el);
+        const speed = 1 + (ROOM_GAME_SECONDS - g.left) / ROOM_GAME_SECONDS * 0.8;
+        g.flies.push({ el, c, x: 20 + Math.random() * Math.max(20, w() - 40), y: -10 - Math.random() * 30, vx: (Math.random() - 0.5) * 50, vy: (34 + Math.random() * 30) * speed, ph: Math.random() * 6.28 });
+        g.timers.push(setTimeout(spawn, Math.max(380, 760 - (ROOM_GAME_SECONDS - g.left) * 5)));
     };
+    const catchFly = f => {
+        g.score++;
+        scoreEl.textContent = t('room_game_score').replace('{n}', srFmt(g.score));
+        f.el.classList.add('caught');
+        f.el.style.left = `${g.jarX}px`;
+        f.el.style.top = `${h() - g.jarH / 2}px`;
+        setTimeout(() => f.el.remove(), 380);
+        if (g.score <= ROOM_FF_MAX_DOTS) {
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('cx', String(16 + Math.random() * 32));
+            dot.setAttribute('cy', String(72 - Math.random() * Math.min(50, 8 + g.score * 3)));
+            dot.setAttribute('r', '2.6');
+            dot.setAttribute('fill', f.c);
+            dot.setAttribute('class', 'sr-ffjar-dot');
+            dots.appendChild(dot);
+        }
+        jar.style.setProperty('--glow', String(Math.min(1, g.score / 14)));
+    };
+    let last = performance.now();
+    const step = () => {
+        if (roomGame !== g) return;
+        const now = performance.now();
+        const dt = Math.min(0.1, (now - last) / 1000);
+        last = now;
+        const W = w(), H = h(), mouth = g.mouthY();
+        g.flies = g.flies.filter(f => {
+            f.ph += dt * 3;
+            f.x += (f.vx + Math.sin(f.ph) * 28) * dt;
+            f.y += (f.vy + Math.cos(f.ph * 0.7) * 12) * dt;
+            if (f.x < 8 || f.x > W - 8) { f.vx = -f.vx; f.x = Math.max(8, Math.min(W - 8, f.x)); }
+            if (f.y >= mouth - 6 && f.y <= mouth + 26 && Math.abs(f.x - g.jarX) <= g.jarW / 2 - 4) { catchFly(f); return false; }
+            if (f.y > H + 12) { f.el.remove(); return false; }
+            f.el.style.left = `${f.x}px`;
+            f.el.style.top = `${f.y}px`;
+            return true;
+        });
+    };
+    g.loop = setInterval(step, 33);
     spawn();
     g.clock = setInterval(() => {
         g.left--;
@@ -1490,7 +1565,7 @@ async function roomEndGame(g) {
     const field = g.box.querySelector('.sr-game-field');
     field.innerHTML = `
         <div class="sr-game-intro">
-            <span class="sr-talk-orb big" aria-hidden="true"></span>
+            ${roomJarSvg('big is-full')}
             <h4>${srEsc(t('room_game_done').replace('{n}', srFmt(g.score)))}</h4>
             <p>${srEsc(record ? t('room_game_record') : t('room_game_best').replace('{n}', srFmt(best)))}</p>
             <button type="button" class="sr-game-start">${srEsc(t('room_game_again'))}</button>
@@ -1498,7 +1573,7 @@ async function roomEndGame(g) {
     field.querySelector('.sr-game-start').addEventListener('click', () => roomStartGame(g.box));
     g.box.querySelector('.sr-game-best').textContent = t('room_game_best').replace('{n}', srFmt(best));
     if (record) {
-        if (typeof spawnGentleConfettiBurst === 'function') spawnGentleConfettiBurst(field, 30, undefined, undefined, ['#ffd27a', '#ff86c6', '#7dd3fc']);
+        if (typeof spawnGentleConfettiBurst === 'function') spawnGentleConfettiBurst(field, 30, undefined, undefined, ['#ffd27a', '#ffe46b', '#c8ffb0']);
         await roomSave({ game_best: best });
     }
 }
@@ -1507,6 +1582,7 @@ function roomStopGame() {
     if (!roomGame) return;
     roomGame.timers.forEach(clearTimeout);
     clearInterval(roomGame.clock);
+    clearInterval(roomGame.loop);
     roomGame = null;
 }
 
@@ -1615,7 +1691,6 @@ function roomRoofScene() {
             ${scopeOpen ? '' : `${veil(258, 284, 94, 166)}${srLockBadge(304, 352, 'telescope')}`}
             ${chestOpen ? '' : `${veil(48, 362, 92, 82)}${srLockBadge(93, 392, 'chest')}`}
             ${roomCatSvg()}
-            ${roomIsUnlocked('roof') && typeof roomWishSvg === 'function' ? roomWishSvg() : ''}
             ${scopeOpen ? roomScopeSvg() : ''}
             ${chestOpen ? roomChestSvg() : ''}
             </g>
@@ -1654,7 +1729,6 @@ function roomOpenRoof(opts = {}) {
             ${stars}
         </div>`;
     stage.appendChild(box);
-    if (typeof roomInitWish === 'function') roomInitWish(box);
     const guided = roomGuideUnlock();
     if (guided && guided.id === 'roof') roomGuideDone();
     else if (guided && guided.roof) roomShowArrow(box, box.querySelector(`[data-roof-hot="${guided.id}"]`) || box.querySelector('.sr-wish'), roomGuideDone);
@@ -1709,7 +1783,6 @@ function roomChestSvg() {
     const dots = [0, 1, 2].map(i => `<circle cx="${79 + i * 14}" cy="358" r="4" fill="${ready || i < streak ? '#ffd27a' : 'none'}" stroke="#ffd27a" stroke-width="1.4"/>`).join('');
     const stickers = roomChestStickers().map((s, i) => `<text x="${70 + (i % 4) * 16}" y="${424 + Math.floor(i / 4) * 10}" font-size="9" text-anchor="middle">${s}</text>`).join('');
     return `<g class="sr-roof-hot sr-chest${ready ? ' is-ready' : ''}" data-roof-hot="chest" role="button" tabindex="0" aria-label="${srEsc(roomItemName('chest'))}">
-        <ellipse class="sr-chest-glow" cx="93" cy="404" rx="54" ry="38" fill="#ffd27a" opacity="${ready ? 0.35 : 0}"/>
         ${stickers}
         <g class="sr-chest-dots">${dots}</g>
         <rect x="46" y="344" width="96" height="100" fill="transparent"/>

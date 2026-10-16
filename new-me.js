@@ -20,7 +20,7 @@ const NEW_ME_PRESET_CATEGORY_BY_POS = ['morning', 'snack', 'noon', 'snack'];
 const NEW_ME_TILE_ICONS = { day: '📋', challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
 // אתגרים, מכתב מהעבר והמתנה בסוף (תעודה, מצב מתקדם וסטטיסטיקות) - new-me-challenges.js
 const NEW_ME_TILES = ['challenges', 'journey', 'shop', 'badges', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
-const NEW_ME_VIEW_TITLES = { day: 'nm_hall_day', challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_tile_settings' };
+const NEW_ME_VIEW_TITLES = { day: 'nm_hall_day', challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_hud_settings' };
 // אחרי כל האתגרים: אריח למתנה, ובמצב מתקדם - גם לסטטיסטיקות
 function nmTiles() {
     const extra = [];
@@ -1996,7 +1996,7 @@ function nmRenderView(root) {
     if (nmView === 'home') { nmRenderHome(root); devKeys(); hud(); if (typeof nmgCheckEvolve === 'function') setTimeout(nmgCheckEvolve, 300); return; }
     root.innerHTML = `
         <div class="nm-subhead">
-            <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}">‹</button>
+            <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
             <h3>${NEW_ME_TILE_ICONS[nmView] || ''} ${nmEsc(t(NEW_ME_VIEW_TITLES[nmView]))}</h3>
         </div>
         <div id="nm-view-body" class="nm-view-body"></div>`;
@@ -2231,24 +2231,8 @@ function nmhHatchTap() {
 }
 function nmhLadderTap() { nmhHatchTap(); }
 
-// התיק הקסום (מאז 2026-10-16, לפי בקשה מפורשת): בלי הארוחות ובלי "כל היום" - הארוחות נשארות ב"היום שלי" במסך הראשי
-// (וב"כל היום" שבצד). בפנים: הפס (⚡ 🔥 🔑) וכל ה"כיסים" - האריחים וההגדרות
-function nmOpenBackpack() {
-    const plan = nmProfile.plan;
-    const eaten = nmEatenToday();
-    const left = Math.round(plan + nmBurnedToday - eaten.kcal);
-    const st = nmStreaks();
-    const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
-    const ov = nmOpenSheet(`
-        <div class="nmb-band">
-            <span class="nmb-title">${NM_ICON_SVG}<span>New Me</span></span>
-            <span class="nmb-chip${left < 0 ? ' is-over' : ''}" title="${nmEsc(t(left < 0 ? 'nm_over' : 'nm_left'))}">⚡ <bdi dir="ltr">${left < 0 ? '+' : ''}${nmFmt(Math.abs(left))}</bdi></span>
-            ${st.current > 0 ? `<span class="nmb-chip is-streak">🔥 <bdi dir="ltr">${nmFmt(st.current)}</bdi></span>` : ''}
-            <span class="nmb-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
-        </div>
-        <div class="nmb-pockets">${[...nmTiles(), 'settings'].map(nmTileHtml).join('')}</div>`, 'nm-backpack-sheet');
-    ov.querySelectorAll('.nm-tile').forEach(b => b.addEventListener('click', () => ov.remove()));
-}
+// התיק הקסום - מסך משלו בסגנון המשחק (nmgOpenBag ב-new-me-game.js)
+function nmOpenBackpack() { nmgOpenBag(); }
 // ⋯ של המסדרון הקודם = התרמיל
 function nmOpenHallMore() { nmOpenBackpack(); }
 
@@ -2314,7 +2298,7 @@ function nmRenderDay(root) {
                 </span>
             </button>
             <p class="nm-ai-note">${nmEsc(t('nm_ai_note'))}</p>
-            <button type="button" class="nm-gear" onclick="nmGo('settings')" title="${nmEsc(t('nm_tile_settings'))}" aria-label="${nmEsc(t('nm_tile_settings'))}">⚙️</button>
+            <button type="button" class="nm-gear" onclick="nmGo('settings')" title="${nmEsc(t('nm_hud_settings'))}" aria-label="${nmEsc(t('nm_hud_settings'))}">⚙️</button>
         </div>`;
     nmInitDrag(document.getElementById('nm-menu-list'));
 }
@@ -3628,7 +3612,7 @@ function openNewMeFromHome() {
     if (hasNewMe) openNewMeMenuToday();
     else openNewMe();
 }
-// ---------- 📔 היומן בתפריט הראשי ----------
+// ---------- 🪶 היומן בתפריט הראשי ----------
 // לפי בקשה מפורשת: "שבNEW ME תהיה אפשרות להוסיף אך ורק את היומן לתפריט הראשי בבחירת המשתמש" - "ברגע שהוא נפתח כמובן":
 // המתג מופיע רק כשהיומן כבר פתוח בחדר (ביומן עצמו ובהגדרות של New Me). נשמר בחשבון (new_me_room.diary_in_menu) ובמכשיר -
 // שהפריט יופיע בתפריט מיד, עוד לפני שהחדר נטען
@@ -3650,7 +3634,7 @@ async function nmSetDiaryInMenu(on) {
 }
 function nmDiaryMenuRowHtml() {
     if (typeof roomIsUnlocked !== 'function' || !roomIsUnlocked('music')) return '';
-    return `<label class="nm-switch-row nm-diary-menu-row"><span>📔 ${nmEsc(t('nm_diary_in_menu'))}</span><input type="checkbox" class="nm-switch" ${nmDiaryInMenu() ? 'checked' : ''} onchange="nmSetDiaryInMenu(this.checked)"></label>`;
+    return `<label class="nm-switch-row nm-diary-menu-row"><span>🪶 ${nmEsc(t('nm_diary_in_menu'))}</span><input type="checkbox" class="nm-switch" ${nmDiaryInMenu() ? 'checked' : ''} onchange="nmSetDiaryInMenu(this.checked)"></label>`;
 }
 function openDiaryFromMenu() {
     if (!hasNewMe) { openNewMe(); return; }
