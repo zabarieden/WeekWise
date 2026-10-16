@@ -2231,31 +2231,14 @@ function nmhHatchTap() {
 }
 function nmhLadderTap() { nmhHatchTap(); }
 
-// התרמיל: כל New Me בפנים - הארוחה הבאה (✓ / 🔄), שאר הארוחות של היום, וה"כיסים" (כל האריחים וההגדרות)
+// התיק הקסום (מאז 2026-10-16, לפי בקשה מפורשת): בלי הארוחות ובלי "כל היום" - הארוחות נשארות ב"היום שלי" במסך הראשי
+// (וב"כל היום" שבצד). בפנים: הפס (⚡ 🔥 🔑) וכל ה"כיסים" - האריחים וההגדרות
 function nmOpenBackpack() {
     const plan = nmProfile.plan;
     const eaten = nmEatenToday();
     const left = Math.round(plan + nmBurnedToday - eaten.kcal);
     const st = nmStreaks();
     const keys = typeof roomKeys === 'function' ? roomKeys() : 0;
-    const active = nmActiveOrder();
-    const nextSlot = nmNextSlot(active);
-    const info = slot => (nmIsFree(slot) ? null : nmItemInfo(nmTodayKey(slot)));
-    const name = slot => { const it = info(slot); return it ? nmItemShort(it) : `🍕 ${t('nm_free_meal')}`; };
-    const next = nextSlot ? `
-        <div class="nmb-next">
-            <span class="nmb-eyebrow">${nmEsc(t('nm_hall_next').replace('{slot}', nmSlotName(nextSlot)))}</span>
-            <span class="nmb-next-name">${nmEsc(name(nextSlot))}</span>
-            <span class="nmb-meta">${info(nextSlot) ? nmMeta(info(nextSlot)) : `<bdi dir="ltr">~${nmFmt(nmFreeKcal())}</bdi> ${nmEsc(t('calories_unit'))}`}</span>
-            <div class="nmb-next-actions">
-                <button type="button" class="nm-btn-primary" data-ate>${nmEsc(t('nm_hall_ate'))}</button>
-                ${info(nextSlot) ? `<button type="button" class="nmb-swap" data-swap aria-label="${nmEsc(t('nm_swap'))}" title="${nmEsc(t('nm_swap'))}">🔄</button>` : ''}
-            </div>
-        </div>` : `<div class="nmb-next is-done">${nmEsc(t('nm_hall_all_lit'))}</div>`;
-    const rows = active.filter(s => s !== nextSlot).map(slot => {
-        const done = !!nmTodayCheckins[slot];
-        return `<button type="button" class="nmb-meal${done ? ' is-done' : ''}" data-slot="${slot}"><span class="nmb-check" aria-hidden="true">${done ? '✓' : ''}</span><span class="nmb-pos">${nmEsc(nmSlotName(slot))}</span><span class="nmb-name">${nmEsc(name(slot))}</span></button>`;
-    }).join('');
     const ov = nmOpenSheet(`
         <div class="nmb-band">
             <span class="nmb-title">${NM_ICON_SVG}<span>New Me</span></span>
@@ -2263,14 +2246,7 @@ function nmOpenBackpack() {
             ${st.current > 0 ? `<span class="nmb-chip is-streak">🔥 <bdi dir="ltr">${nmFmt(st.current)}</bdi></span>` : ''}
             <span class="nmb-chip is-keys">${nmhKeySvg('#ffd27a')}<bdi dir="ltr">${nmFmt(keys)}</bdi></span>
         </div>
-        ${next}
-        ${rows ? `<div class="nmb-meals">${rows}</div>` : ''}
-        <div class="nmb-pockets">${['day', ...nmTiles(), 'settings'].map(nmTileHtml).join('')}</div>`, 'nm-backpack-sheet');
-    const ate = ov.querySelector('[data-ate]');
-    if (ate) ate.addEventListener('click', async e => { ov.remove(); await nmToggleCheck(nextSlot, e.currentTarget); });
-    const swap = ov.querySelector('[data-swap]');
-    if (swap) swap.addEventListener('click', () => { ov.remove(); nmOpenSwap(nextSlot); });
-    ov.querySelectorAll('.nmb-meal').forEach(b => b.addEventListener('click', () => { ov.remove(); nmOpenHallMeal(b.dataset.slot); }));
+        <div class="nmb-pockets">${[...nmTiles(), 'settings'].map(nmTileHtml).join('')}</div>`, 'nm-backpack-sheet');
     ov.querySelectorAll('.nm-tile').forEach(b => b.addEventListener('click', () => ov.remove()));
 }
 // ⋯ של המסדרון הקודם = התרמיל
@@ -3625,13 +3601,13 @@ function myDayNewMeItems(evenWithoutSync) {
         const free = nmIsFree(slot);
         const text = free ? `🍕 ${t('nm_free_meal')}` : `${nmSlotName(slot)} · ${nmItemShort(nmItemInfo(nmTodayKey(slot)))}`;
         return {
-            time: nmSlotReminderTime(slot), text, done: !!nmTodayCheckins[slot],
+            slot, time: nmSlotReminderTime(slot), text, done: !!nmTodayCheckins[slot],
             toggle: async checked => { if (!!nmTodayCheckins[slot] !== checked) await nmToggleCheck(slot); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
         };
     });
     // 🕐 הארוחה הקטנה הנוספת - בשעה שלה
     if (nmSideOn()) items.push({
-        time: nmSideTime(), text: `${t('nm_side_title')} · ${nmSideInfo().name}`, done: !!nmSideRow(),
+        slot: 'side', time: nmSideTime(), text: `${t('nm_side_title')} · ${nmSideInfo().name}`, done: !!nmSideRow(),
         toggle: async checked => { if (!!nmSideRow() !== checked) await nmToggleSide(); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
     });
     return items;
@@ -3700,6 +3676,41 @@ function updateNewMeShortcut() {
 function openNewMeMenuToday() {
     openNewMe('home');
 }
+// ארוחה אחרת ישר מ"השגרה שלי" - בחלון רגיל של החלפה, בלי להיכנס למשחק (לפי בקשה מפורשת, 2026-10-16: "בשגרה שלי
+// ה-New Me שיהיה אפשר לבחור ארוחה אחרת - מסך רגיל, לא משחק התקדמות"). הארוחה הקטנה הנוספת - בחירה מבין האפשרויות שלה.
+// onDone - כשהחלון נסגר (השגרה מתרעננת)
+function nmOpenMealFromOutside(slot, onDone) {
+    if (!hasNewMe || !nmProfile) return;
+    let ov;
+    if (slot === 'side') {
+        const cur = nmSideInfo();
+        ov = nmOpenSheet(`
+            <h4>🕐 ${nmEsc(t('nm_side_title'))}</h4>
+            ${Object.keys(NEW_ME_SIDE_OPTIONS).map(id => {
+                const it = nmSideInfo(id);
+                return `<button type="button" class="nm-option${id === cur.id ? ' selected' : ''}" data-side-pick="${id}" aria-pressed="${id === cur.id}">
+                    <span class="nm-option-top"><span class="nm-option-name">${nmEsc(it.name)}</span></span>
+                    <span class="nm-option-text">${nmEsc(it.text)}</span>
+                    <span class="nm-option-meta">${nmMeta(it)}</span>
+                </button>`;
+            }).join('')}
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-swap-sheet');
+        ov.querySelectorAll('[data-side-pick]').forEach(b => b.addEventListener('click', async () => {
+            ov.remove();
+            if (b.dataset.sidePick !== cur.id) { await nmSetSide({ side_choice: b.dataset.sidePick }); showAppToast(t('nm_swap_done_permanent')); }
+            if (onDone) onDone();
+        }));
+    } else {
+        nmOpenSwap(slot);
+        const sw = document.querySelectorAll('.nm-swap-sheet');
+        ov = sw.length ? sw[sw.length - 1].closest('.nm-sheet-overlay') : null;
+    }
+    if (!onDone || !ov) return;
+    // החלון נסגר (בחירה, "חזרה" או נגיעה בחוץ) - מרעננים
+    const wrap = ov.parentNode;
+    const mo = new MutationObserver(() => { if (!document.querySelector('.nm-sheet-overlay')) { mo.disconnect(); setTimeout(onDone, 400); } });
+    mo.observe(wrap, { childList: true });
+}
 
 // ---------- המסע שלי ----------
 function nmRenderJourney(body) {
@@ -3721,7 +3732,6 @@ function nmRenderJourney(body) {
     body.innerHTML = `
         <div class="nm-journey-hero">
             ${nmDayHtml(day, 'nm-journey-day')}
-            <div class="nm-fine">${nmEsc(t('nm_journey_since').replace('{date}', nmLongDate(nmStartDay())))}</div>
         </div>
         <div class="nm-milestones">${nodes}</div>
         <div class="nm-stat-grid">
@@ -3733,6 +3743,8 @@ function nmRenderJourney(body) {
         ${nmWeightCardHtml()}`;
 }
 
+// המשקל מקופל בתוך "המסע שלי" (2026-10-16, לפי בקשה מפורשת) - נשאר פתוח אחרי שמוסיפים שקילה
+let nmWeightOpen = false;
 function nmWeightCardHtml() {
     const profileStart = Number(nmProfile.start_weight) || null;
     const start = nmStartWeight();
@@ -3745,8 +3757,9 @@ function nmWeightCardHtml() {
     const kg = v => v ? `<bdi dir="ltr">${nmFmtNum(v, 1)}</bdi>` : '—';
     const recent = nmWeights.slice(-7).reverse();
     return `
-        <div class="nm-weight">
-            <div class="nm-weight-head"><h4>⚖️ ${nmEsc(t('nm_weight_title'))}</h4>${goal ? `<span class="nm-fine">${nmEsc(t('nm_goal_weight_line').replace('{w}', nmFmtNum(goal, 1)))}</span>` : ''}</div>
+        <details class="nm-weight"${nmWeightOpen ? ' open' : ''} ontoggle="nmWeightOpen = this.open">
+            <summary class="nm-weight-head"><h4>⚖️ ${nmEsc(t('nm_weight_title'))}</h4><span class="nm-fine">${latest ? kg(latest) : goal ? nmEsc(t('nm_goal_weight_line').replace('{w}', nmFmtNum(goal, 1))) : ''}</span></summary>
+            ${goal && latest ? `<span class="nm-fine">${nmEsc(t('nm_goal_weight_line').replace('{w}', nmFmtNum(goal, 1)))}</span>` : ''}
             <div class="nm-weight-trio">
                 <div><span>${nmEsc(t('nm_weight_start'))}</span><b>${kg(start)}</b></div>
                 <div class="now"><span>${nmEsc(t('nm_weight_now'))}</span><b>${kg(latest)}</b></div>
@@ -3760,7 +3773,7 @@ function nmWeightCardHtml() {
                 <button type="button" class="nm-btn-primary nm-btn-small" onclick="nmAddWeight(this)">${nmEsc(t('nm_add_weight'))}</button>
             </div>
             ${recent.length ? `<ul class="nm-weight-list">${recent.map(w => `<li><span>${nmEsc(nmShortDate(w.weight_date))}</span><span class="nm-num"><bdi dir="ltr">${nmEsc(nmFmtNum(Number(w.weight_value), 1))}</bdi></span></li>`).join('')}</ul>` : `<p class="nm-empty">${nmEsc(t('nm_weight_empty'))}</p>`}
-        </div>`;
+        </details>`;
 }
 
 function nmWeightChart(list) {
@@ -4551,7 +4564,6 @@ const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
     { id: 'nm_top', ch: 'newme', ctx: 'newme', icon: '⭐', target: '#nm-hud .nmg-top', titleKey: 'nm_tour_top_title', text: 'nm_tour_top_text', optional: true },
     { id: 'nm_quest', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-hud .nmg-quest', titleKey: 'nm_tour_quest_title', text: 'nm_tour_quest_text', optional: true },
-    { id: 'nm_eat', ch: 'newme', ctx: 'newme', icon: '✓', target: '#nm-hud .nmg-eat', titleKey: 'nm_tour_eat_title', text: 'nm_tour_eat_text', optional: true },
     { id: 'nm_rails', ch: 'newme', ctx: 'newme', icon: '🧰', target: '#nm-hud .nmg-rr', titleKey: 'nm_tour_rails_title', text: 'nm_tour_rails_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
     { id: 'nm_world', ch: 'newme', ctx: 'newme', icon: '🗺️', target: '#nm-hud [data-hud="world"]', titleKey: 'nm_tour_world_title', text: 'nm_tour_world_text', optional: true },

@@ -3192,6 +3192,13 @@ button.nm-cal-cell:focus-visible { outline: 2px solid var(--text-primary); outli
 .nm-weight { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-row); }
 .nm-weight-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .nm-weight-head h4 { margin: 0; color: var(--text-primary); }
+details.nm-weight { display: block; }
+details.nm-weight > * + * { margin-top: 10px; }
+summary.nm-weight-head { list-style: none; cursor: pointer; align-items: center; }
+summary.nm-weight-head::-webkit-details-marker { display: none; }
+summary.nm-weight-head::after { content: ""; flex: none; width: 8px; height: 8px; margin-inline-start: 4px; border-right: 2px solid var(--text-secondary); border-bottom: 2px solid var(--text-secondary); transform: rotate(45deg); transition: transform .2s ease; }
+details.nm-weight[open] > summary.nm-weight-head::after { transform: rotate(-135deg); }
+summary.nm-weight-head .nm-fine { margin-inline-start: auto; }
 .nm-chart { width: 100%; height: 90px; }
 .nm-chart-line { fill: none; stroke: var(--accent-pink); stroke-width: 2.2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .nm-chart-area { fill: color-mix(in srgb, var(--accent-pink) 14%, transparent); stroke: none; }
@@ -8389,6 +8396,17 @@ html.light-mode .wx-stars { display: none; }
 @media (prefers-reduced-motion: reduce) { .sr-spk { animation: none; opacity: 0.8; } }
 @keyframes srTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .sr-neon { animation: srNeon 2.4s ease-in-out infinite; }
+/* 🪄 מכונת המשחק קסומה (2026-10-16: "תשנה למשהו קסום יותר... אפשר לרשום את זה בכתב קסום"): השלט בכתב יד זהוב שזוהר,
+   ובמסך - שמי לילה עם ירח, כוכבים וגחליליות במקום משחק הפיקסלים */
+.sr-magic-script { font-family: 'Playpen Sans Hebrew', 'Segoe Script', cursive; font-weight: 600; letter-spacing: 0.02em; filter: drop-shadow(0 0 2px rgba(255, 214, 140, 0.95)) drop-shadow(0 0 7px rgba(255, 158, 207, 0.6)); animation: srMagicGlow 3.4s ease-in-out infinite; }
+@keyframes srMagicGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.78; } }
+.sr-game-stars circle { animation: srTwinkle 2.2s ease-in-out infinite; }
+.sr-game-stars circle:nth-child(2n) { animation-delay: -1.1s; }
+.sr-game-flies circle { transform-box: fill-box; transform-origin: 50% 50%; animation: srGameFly 3.6s ease-in-out infinite; }
+.sr-game-flies circle:nth-child(2) { animation-delay: -1.2s; }
+.sr-game-flies circle:nth-child(3) { animation-delay: -2.4s; }
+@keyframes srGameFly { 0%, 100% { translate: 0 0; opacity: 0.95; } 50% { translate: 2px -4px; opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) { .sr-magic-script, .sr-game-stars circle, .sr-game-flies circle { animation: none; } }
 @keyframes srNeon { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 .sr-flame { animation: srFlame 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
 @keyframes srFlame { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1, 0.92); } }
@@ -8477,16 +8495,17 @@ html.light-mode .wx-stars { display: none; }
 .sr-crt-brand i { width: 10px; height: 10px; border-radius: 50%; background: #5effc6; box-shadow: 0 0 8px #5effc6; }
 .sr-crt-private { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 14px 16px 18px; font-size: 0.8rem; color: #d7d7dc; }
 .sr-crt-private svg { width: 16px; height: 16px; color: #ffd27a; }
-.sr-game { background: radial-gradient(80% 60% at 50% 30%, rgba(125, 211, 252, 0.12), transparent 70%), linear-gradient(180deg, #120c2a, #1a1238); }
+/* המשחק עצמו - ביער הקסום (הציור שלה של היער בלילה), והניצוצות הם אורות פיות זוהרים עם נצנוץ */
+.sr-game { background: linear-gradient(180deg, rgba(14, 8, 34, 0.55), rgba(14, 8, 34, 0.8)), #120a24 url('world/forest-night.jpg') center / cover; }
 .sr-game-hud { display: flex; justify-content: space-between; padding: 4px 18px 8px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .sr-game-score { color: #ffd27a; }
 .sr-game-time { color: #7dd3fc; }
-.sr-game-field { position: relative; flex: 1; min-height: 340px; margin: 0 14px 18px; border-radius: 24px; overflow: hidden; border: 1px solid rgba(125, 211, 252, 0.25); background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06) 0 1px, transparent 2px) 0 0 / 34px 34px, #0b0b1e; touch-action: manipulation; }
+.sr-game-field { position: relative; flex: 1; min-height: 340px; margin: 0 14px 18px; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255, 214, 140, 0.3); background: radial-gradient(circle at 50% 30%, rgba(201, 182, 255, 0.16), transparent 65%), rgba(10, 6, 26, 0.32); box-shadow: inset 0 0 44px rgba(201, 182, 255, 0.2); touch-action: manipulation; }
 .sr-game-intro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; }
 .sr-game-intro p { margin: 0; font-size: 0.92rem; line-height: 1.5; color: #d9cfee; }
 .sr-game-intro h4 { margin: 0; font-size: 1.2rem; color: #fff; }
 .sr-game-start { min-height: 48px; padding: 0 28px; border-radius: 99px; border: none; background: linear-gradient(135deg, #ff7ab8, #7c3aed); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
-.sr-spark { position: absolute; padding: 0; border: none; border-radius: 50%; cursor: pointer; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9) 0 12%, transparent 13%), radial-gradient(circle at 40% 40%, var(--sr-spark), color-mix(in srgb, var(--sr-spark) 40%, #3b0764) 75%); box-shadow: 0 0 18px var(--sr-spark); animation-name: srSparkLife; animation-timing-function: ease-in; animation-fill-mode: forwards; }
+.sr-spark { position: absolute; padding: 0; border: none; border-radius: 50%; cursor: pointer; background: linear-gradient(90deg, transparent 47%, rgba(255, 255, 255, 0.85) 50%, transparent 53%) center / 100% 2px no-repeat, linear-gradient(0deg, transparent 47%, rgba(255, 255, 255, 0.85) 50%, transparent 53%) center / 2px 100% no-repeat, radial-gradient(circle, #fff 0 12%, var(--sr-spark) 28%, color-mix(in srgb, var(--sr-spark) 35%, transparent) 52%, transparent 70%); box-shadow: none; filter: drop-shadow(0 0 8px var(--sr-spark)); animation-name: srSparkLife; animation-timing-function: ease-in; animation-fill-mode: forwards; }
 @keyframes srSparkLife { 0% { transform: scale(0.3); opacity: 0; } 15% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(0.2); opacity: 0; } }
 .sr-spark.caught { animation: srSparkPop 0.26s ease-out forwards !important; }
 @keyframes srSparkPop { to { transform: scale(1.8); opacity: 0; } }
@@ -8823,40 +8842,8 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .sr-roof-scene .sr-cat.is-near { transform: translate(138px, 548px) scale(2.1); }
 .sr-cat-hit { pointer-events: all; }
 .sr-cat:focus-visible .sr-cat-hit { stroke: #ffd27a; stroke-width: 1.2; stroke-dasharray: 3 3; }
-/* 🐈 2026-10-14: החתול המצויר על צמרת העץ - יושב על הכרית; קם, הולך אלינו ונשאר לידנו גדול יותר. כל הפעולות - תנועות
-   קטנות של הדמות כולה (sr-cat-pose), והלבבות / ה-z מעל הראש */
-/* יושב על הכרית שבציור, קטן יותר (לפי בקשה מפורשת, 2026-10-14) */
-.sr-roof-scene .sr-cat-art { transform: translate(196px, 436px) scale(0.72); }
-.sr-roof-scene .sr-cat-art.is-near { transform: translate(212px, 526px) scale(1.1); }
-.sr-cat-art .sr-cat-pose { transform-box: fill-box; transform-origin: 50% 100%; }
-.sr-cat-art .sr-cat-sit, .sr-cat-art .sr-cat-stand { transition: opacity 0.3s ease; }
-.sr-cat-art .sr-cat-stand { opacity: 0; }
-.sr-cat-art.is-walking .sr-cat-stand { opacity: 1; }
-.sr-cat-art.is-walking .sr-cat-sit { opacity: 0; }
-.sr-cat-art.is-walking .sr-cat-pose { animation: srCatArtWalk 0.42s ease-in-out infinite; }
-.sr-cat-art.do-rub .sr-cat-pose { animation: srCatArtRub 0.62s ease-in-out 3; }
-.sr-cat-art.do-purr .sr-cat-pose { animation: srCatArtPurr 0.12s linear 14; }
-.sr-cat-art.do-blink .sr-cat-pose { animation: srCatArtBlink 1.6s ease-in-out; }
-.sr-cat-art.do-stretch .sr-cat-pose { animation: srCatArtStretch 1.6s ease-in-out; }
-.sr-cat-art.do-groom .sr-cat-pose { animation: srCatArtTilt 1.8s ease-in-out; }
-.sr-cat-art.do-tailheart .sr-cat-pose { animation: srCatArtSway 2s ease-in-out; }
-.sr-cat-art.do-yawn .sr-cat-pose { animation: srCatArtYawn 1.6s ease-in-out; }
-.sr-cat-art.do-hop .sr-cat-pose { animation: srCatArtHop 1.4s cubic-bezier(0.3, 0, 0.3, 1); }
-.sr-cat-art.do-bump .sr-cat-pose { animation: srCatArtBump 1.1s ease-in-out; }
-.sr-cat-art.do-knead .sr-cat-pose { animation: srCatArtKnead 0.38s ease-in-out 5; }
-.sr-cat-art.do-sleep .sr-cat-pose { transform: rotate(-4deg) scale(1.04, 0.9); filter: brightness(0.82); transition: transform 0.7s ease, filter 0.7s ease; }
-@keyframes srCatArtWalk { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(1deg); } }
-@keyframes srCatArtRub { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg) translateX(-2px); } 70% { transform: rotate(4deg) translateX(2px); } }
-@keyframes srCatArtPurr { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(0.6px); } }
-@keyframes srCatArtBlink { 0%, 100% { transform: scaleY(1); } 45% { transform: scaleY(0.97); } }
-@keyframes srCatArtStretch { 0%, 100% { transform: scale(1, 1); } 40% { transform: scale(1.1, 0.9); } 70% { transform: scale(0.97, 1.05); } }
-@keyframes srCatArtTilt { 0%, 100% { transform: rotate(0); } 30%, 60% { transform: rotate(-7deg); } }
-@keyframes srCatArtSway { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(3deg); } 75% { transform: rotate(-3deg); } }
-@keyframes srCatArtYawn { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.04, 1.07); } }
-@keyframes srCatArtHop { 0%, 100% { transform: translateY(0) scale(1); } 15% { transform: translateY(0) scale(1.06, 0.9); } 45% { transform: translateY(-26px) scale(0.96, 1.05); } 75% { transform: translateY(0) scale(1.05, 0.93); } }
-@keyframes srCatArtBump { 0%, 100% { transform: rotate(0) translateX(0); } 40% { transform: rotate(7deg) translateX(5px); } }
-@keyframes srCatArtKnead { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px) scale(1.01, 0.98); } }
-@media (prefers-reduced-motion: reduce) { .sr-cat-art .sr-cat-pose { animation: none !important; } .sr-roof-scene .sr-cat-art { transition: none; } }
+/* 🐈 החתול המצויר על צמרת העץ - יושב על הכרית, קטן יותר. מאז 2026-10-16 רק ציור: בלי תנועות ובלי נגיעות */
+.sr-roof-scene .sr-cat-art { transform: translate(196px, 436px) scale(0.72); pointer-events: none; cursor: default; transition: none; }
 .sr-cat-front { opacity: 0; transform-origin: 0 0; transition: opacity 0.35s; }
 .sr-cat-back { transition: opacity 0.35s; }
 .sr-cat.is-turned .sr-cat-front { opacity: 1; }
@@ -8968,6 +8955,9 @@ html[dir="ltr"] .nmh-say { border-radius: 12px 12px 12px 4px; }
 .srp-note-fly { font-size: 18px; font-weight: 800; fill: #ffd27a; animation: srpNoteFly 1.8s ease-out forwards; }
 /* 🎵 2026-10-14: השירים הקסומים - מה שמתנגן (גיטרה / תקליט) זוהר ונושם לאט */
 .srp-rec-halo { opacity: 0; transition: opacity 0.6s ease; transform-box: fill-box; transform-origin: center; }
+/* הגיטרה והיומן: נצנצים מרחפים במקום העיגול (2026-10-16) - ליד הגיטרה הם מופיעים כשהיא מנגנת */
+.srp-guitar-spk { opacity: 0; transition: opacity 0.6s ease; }
+.srp-guitar.is-playing .srp-guitar-spk, .srp-guitar:focus-visible .srp-guitar-spk { opacity: 1; }
 .srp-rec.is-playing .srp-rec-halo, .srp-guitar.is-playing .srp-rec-halo { opacity: 1; animation: srpHalo 2.6s ease-in-out infinite; }
 @keyframes srpHalo { 0%, 100% { transform: scale(0.92); } 50% { transform: scale(1.06); } }
 .srp-rec, .srp-guitar { cursor: pointer; }
@@ -10631,17 +10621,16 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
     --nmg-rim: linear-gradient(135deg, #ffffff, #c9b6ff 30%, #a7f3d0 50%, #ff9ecf 70%, #ffffff); }
 .phone-wrapper:has(#new-me-section.active-tab.nm-hall-mode) #nm-hud, .phone-wrapper:has(#sr-overlay) #nm-hud, .phone-wrapper.nmg-map-open #nm-hud { display: block; }
 #nm-hud > * { pointer-events: auto; }
-#nm-hud .nmg-tray { pointer-events: none; }
 .nmg-b { background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .nmg-b:focus-visible { outline: 2px solid #ffd27a; outline-offset: 3px; border-radius: 14px; }
 .nmg-hx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.nmg-top { position: absolute; top: 12px; inset-inline-start: 76px; inset-inline-end: 12px; height: 44px; display: flex; align-items: center; gap: 7px; }
+.nmg-top { position: absolute; top: 12px; inset-inline-start: 12px; inset-inline-end: 12px; height: 44px; display: flex; align-items: center; gap: 7px; }
 .nmg-day { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; filter: drop-shadow(0 0 6px rgba(201, 182, 255, .55)) drop-shadow(0 6px 6px rgba(0, 0, 0, .45)); }
 .nmg-day .nmg-hx { top: -3px; height: calc(100% + 6px); }
 .nmg-dayt { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .nmg-dayt small { font-size: 9px; font-weight: 600; color: #efe6ff; }
 .nmg-dayt b { font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 6px rgba(201, 182, 255, .9); }
-.nmg-pill, .nmg-quest, .nmg-tray, .nmg-plinth { border: 1.5px solid transparent; background: linear-gradient(160deg, rgba(64, 42, 124, .9), rgba(34, 20, 72, .92)) padding-box, var(--nmg-rim) border-box; box-shadow: 0 0 10px rgba(201, 182, 255, .25), 0 8px 14px -6px rgba(0, 0, 0, .6); }
+.nmg-pill, .nmg-quest, .nmg-plinth { border: 1.5px solid transparent; background: linear-gradient(160deg, rgba(64, 42, 124, .9), rgba(34, 20, 72, .92)) padding-box, var(--nmg-rim) border-box; box-shadow: 0 0 10px rgba(201, 182, 255, .25), 0 8px 14px -6px rgba(0, 0, 0, .6); }
 .nmg-pill { position: relative; flex: none; display: flex; align-items: center; gap: 5px; height: 34px; padding: 0 9px; box-sizing: border-box; border-radius: 7px; color: #f3edff; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .nmg-pill svg { flex: none; width: 15px; height: 15px; color: #d9c8ff; }
 .nmg-fire svg, .nmg-en svg { color: #ffd27a; }
@@ -10667,7 +10656,6 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-btn { position: relative; width: 50px; height: 50px; display: grid; place-items: center; filter: drop-shadow(0 0 6px rgba(201, 182, 255, .55)) drop-shadow(0 6px 6px rgba(0, 0, 0, .45)); }
 .nmg-btn .nmg-hx { top: -4px; height: calc(100% + 8px); }
 .nmg-i { position: relative; z-index: 1; width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 0 3px rgba(201, 182, 255, .95)); }
-.nmg-tray { position: absolute; right: 8px; left: 8px; bottom: 6px; height: 86px; box-sizing: border-box; border-radius: 12px; background: linear-gradient(160deg, rgba(64, 42, 124, .78), rgba(34, 20, 72, .88)) padding-box, var(--nmg-rim) border-box; }
 .nmg-dock { position: absolute; right: 6px; left: 6px; bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; }
 .nmg-dock .nmg-it { width: 60px; }
 .nmg-dock .nmg-lb { max-width: 62px; font-size: 10px; }
@@ -10677,6 +10665,17 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-bagv::before { content: ""; position: absolute; left: -4px; right: -4px; top: 4px; height: 70px; border-radius: 50%; background: radial-gradient(circle, rgba(201, 182, 255, .38), transparent 68%); }
 .nmg-plinth { position: absolute; bottom: 0; left: 50%; width: 54px; height: 14px; margin-left: -27px; border-radius: 50%; box-sizing: border-box; background: radial-gradient(ellipse at 50% 35%, rgba(214, 198, 255, .75), rgba(110, 80, 200, .6) 70%) padding-box, var(--nmg-rim) border-box; }
 .nmg-bag { position: absolute; z-index: 2; bottom: 8px; left: 0; width: 66px; height: 64px; object-fit: contain; filter: drop-shadow(0 0 9px rgba(201, 182, 255, .8)) drop-shadow(0 4px 5px rgba(0, 0, 0, .5)); }
+/* התיק הגדול באמצע (במקום ✓ אכלתי): עמודה ימנית - העולם, באמצע - התיק, משמאל - ריק לאיזון */
+.nmg-dock { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; }
+.nmg-dock > [data-hud="world"] { justify-self: start; }
+.nmg-dock-space { justify-self: end; }
+.nmg-bagit.is-big { width: 112px; }
+.nmg-bagit.is-big .nmg-bagv { width: 112px; height: 118px; }
+.nmg-bagit.is-big .nmg-bagv::before { left: -10px; right: -10px; top: 0; height: 120px; animation: nmgGlow 3.2s ease-in-out infinite; }
+.nmg-bagit.is-big .nmg-plinth { width: 92px; height: 20px; margin-left: -46px; }
+.nmg-bagit.is-big .nmg-bag { bottom: 12px; width: 112px; height: 104px; }
+.nmg-bagit.is-big .nmg-lb { max-width: 112px; font-size: 12px; font-weight: 700; }
+.nmg-bagit.is-big:active .nmg-bagv { transform: scale(.95); }
 .nmg-eat { margin-bottom: 10px; border-radius: 50%; }
 .nmg-eatv { position: relative; width: 96px; height: 96px; display: grid; place-items: center; filter: drop-shadow(0 0 14px rgba(201, 182, 255, .7)) drop-shadow(0 10px 10px rgba(0, 0, 0, .5)); }
 .nmg-eatv .nmg-hx { top: -7px; height: calc(100% + 14px); }
@@ -10700,15 +10699,37 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .phone-wrapper:has(#nm-hud) .sr-roof .sr-sub-head, .phone-wrapper:has(#nm-hud) .sr-shelf .sr-sub-head { padding-top: 72px; }
 .phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode .nmh-tip { bottom: 22%; }
 /* המסדרון הוא מסך המשחק עצמו: הציור מקצה לקצה ומהקצה העליון, מאחורי הכפתורים הקבועים. במקום "חזרה למסך הבית" - 🏠 קטן מתחת לפס העליון */
-.phone-wrapper:has(#nm-hud) .main-scroll-area:has(> #new-me-section.active-tab.nm-hall-mode) { padding: 0 0 96px; }
-.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode { margin: 0; padding: 0; }
+/* כל המסדרון נראה בבת אחת, בכל מסך (2026-10-16: "שכל המסך יהיה פתוח בלי גרירה למטה ולמעלה"): הציור נכנס לגובה, באמצע,
+   ובצדדים (במחשב / טאבלט) עותק מטושטש ורך שלו - בלי גלילה */
+.phone-wrapper:has(#nm-hud) .main-scroll-area:has(> #new-me-section.active-tab.nm-hall-mode) { padding: 0; overflow: hidden; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode { position: relative; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #0b0714; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode::before { content: ""; position: absolute; inset: -40px; background: url('world/forest-gate.jpg') center / cover; filter: blur(22px) brightness(0.5) saturate(1.15); pointer-events: none; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode > #new-me-root { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
 .phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode > .btn-back-home { display: none; }
-.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode .nmh { max-width: none; border-radius: 0; box-shadow: none; }
+.phone-wrapper:has(#nm-hud) #new-me-section.nm-hall-mode .nmh { flex: none; width: min(100cqw, 100cqh * 390 / 844); max-width: none; margin: 0; border-radius: 0; box-shadow: 0 0 60px rgba(0, 0, 0, 0.45); }
+/* מסך רחב: הכפתורים בטור באמצע, כמו בטלפון (לא פרושים על כל רוחב המחשב), והמפה באותו רוחב */
+#nm-hud { right: auto; left: 50%; width: min(100%, 460px); transform: translateX(-50%); }
+.nmg-map .nmg-map-head, .nmg-map .nmg-path { max-width: 420px; margin-inline: auto; }
+/* במשחק, במחשב ובשאר המסכים המלאים שבחדר - הכפתורים מפנים את המקום (שלא יכסו את המשחק ואת "חזרה") */
+.phone-wrapper:has(:is(.sr-game, .sr-pc, .sr-library, .sr-decor, .sr-jar, .sr-quotesview, .srp-signview, .sr-shelfview, .sr-reveal)) #nm-hud { display: none !important; }
 .nmg-home { display: none; position: absolute; top: 74px; inset-inline-end: 18px; }
 .nmg-home .nmg-btn { width: 40px; height: 40px; }
 .nmg-home .nmg-i { width: 19px; height: 19px; }
 .phone-wrapper:has(#new-me-section.active-tab.nm-hall-mode):not(:has(#sr-overlay)):not(.nmg-map-open) .nmg-home { display: block; }
 .nmg-home:active .nmg-btn { transform: scale(.94); }
+/* בתוך New Me אין המבורגר (2026-10-16, לפי בקשה מפורשת) - יוצאים ב-🏠 שבמסדרון */
+.phone-wrapper:has(#new-me-section.active-tab) .hamburger-fab, .phone-wrapper:has(#sr-overlay) .hamburger-fab { display: none !important; }
+/* "למסדרון" - באותה פינה, בכל חדר / מקום / במפה (במסדרון עצמו - ה-🏠) */
+.nmg-hall { display: none; position: absolute; top: 70px; inset-inline-end: 12px; flex-direction: column; align-items: center; gap: 3px; }
+.nmg-hall .nmg-btn { width: 44px; height: 44px; }
+.nmg-hall .nmg-i { width: 20px; height: 20px; }
+.nmg-hall .nmg-lb { max-width: 64px; font-size: 10px; }
+.phone-wrapper:has(#sr-overlay) .nmg-hall, .phone-wrapper.nmg-map-open .nmg-hall { display: flex; }
+/* כפתור "למסדרון" הקבוע מחליף את זה שבכותרת המקום (לא פעמיים), ומכחול העיצוב של החדר עובר לפינה השנייה */
+.phone-wrapper:has(#nm-hud) .sr-sub-back.is-to-hall { visibility: hidden; }
+.phone-wrapper:has(#nm-hud) .sr-close { display: none; }
+.phone-wrapper:has(#nm-hud) .sr-tools { inset-inline-end: auto; inset-inline-start: 14px; }
+.nmg-hall:active .nmg-btn { transform: scale(.94); }
 /* במפה - רק המפה: בלי שני הטורים שבצדדים */
 .phone-wrapper.nmg-map-open .nmg-rail { display: none; }
 /* בעולם של המשחק העוזר החכם לא מציץ מתחת לשורה התחתונה (המסדרון, החדר, המקומות והמפה) */
@@ -10768,6 +10789,9 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-me-card.is-now { box-shadow: 0 0 0 2px var(--accent-purple), 0 0 18px -4px var(--accent-purple); }
 .nmg-me-card.is-now small { color: var(--accent-purple-light-text); font-weight: 800; }
 .nmg-me-card.is-next img { filter: saturate(.5) brightness(.8); opacity: .75; }
+button.nmg-me-card { border: 0; font: inherit; color: inherit; cursor: pointer; }
+button.nmg-me-card.is-past small { color: var(--accent-purple-light-text); font-weight: 700; }
+button.nmg-me-card:active { transform: scale(.97); }
 /* ✨ המהפך: הדמות הקודמת זוהרת ורועדת, נצנצים מסתחררים, הבזק - והחדשה מופיעה */
 .nmg-evolve { position: absolute; inset: 0; z-index: 2700; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; box-sizing: border-box; background: radial-gradient(circle at 50% 42%, rgba(80, 50, 150, .96), rgba(10, 6, 22, .98) 70%); color: #fff; text-align: center; }
 .nmg-ev-stage { position: relative; width: 240px; height: 240px; display: grid; place-items: center; }

@@ -46,7 +46,7 @@ function roomOpenPlace(id, opts = {}) {
     const box = document.createElement('div');
     box.className = `sr-place sr-place-${id}`;
     box.innerHTML = `
-        <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t(opts.parent ? SRP_BACK_KEYS[opts.parent] : opts.fromHall ? 'room_back_to_hall' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName(id))}</b><span class="srp-tools"></span></div>
+        <div class="sr-sub-head"><button type="button" class="sr-sub-back${!opts.parent && opts.fromHall ? ' is-to-hall' : ''}">${SR_CHEVRON.prev}${srEsc(t(opts.parent ? SRP_BACK_KEYS[opts.parent] : opts.fromHall ? 'room_back_to_hall' : 'room_back_to_room'))}</button><b>${srEsc(roomItemName(id))}</b><span class="srp-tools"></span></div>
         <div class="srp-view">${P[0](keys)}</div>
         <button type="button" class="srp-rest-exit" aria-label="${srEsc(t('room_rest_aria'))}"></button>`;
     stage.appendChild(box);
@@ -462,11 +462,11 @@ function srpMusicScene(keys) {
                 <circle class="srp-hit" cx="${r.x}" cy="${r.y}" r="${r.r + 6}" fill="transparent"/>
             </g>`).join('')}
             <g class="srp-hot srp-guitar${srpMagicNow === 'guitar' ? ' is-playing' : ''}" data-place-hot="guitar" data-song-id="guitar" role="button" tabindex="0" aria-pressed="${srpMagicNow === 'guitar'}" aria-label="${srEsc(t('room_guitar_aria'))}">
-                <ellipse class="srp-rec-halo" cx="58" cy="540" rx="58" ry="96" fill="url(#srpMHalo-rec1)" opacity="0.6"/>
+                <g class="srp-guitar-spk">${typeof srSparkleField === 'function' ? srSparkleField(58, 530, 52, 90, 14, 1.9, 8) : ''}</g>
                 <rect class="srp-hit" x="6" y="424" width="104" height="218" fill="transparent"/>
             </g>
             <g class="srp-hot srp-diary" data-place-hot="diary" role="button" tabindex="0" aria-label="${srEsc(t('room_diary_title'))}">
-                <ellipse class="srp-flicker" cx="340" cy="568" rx="40" ry="16" fill="#fff1c9" opacity="0.25"/>
+                ${typeof srSparkleField === 'function' ? srSparkleField(340, 556, 46, 30, 10, 1.7, 5) : ''}
                 <rect class="srp-hit" x="298" y="542" width="86" height="52" fill="transparent"/>
             </g>
             <g class="srp-notes" aria-hidden="true">

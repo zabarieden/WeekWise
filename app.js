@@ -8451,16 +8451,11 @@ function devSimPillHtml(kind) {
     return `<button type="button" class="dev-sim-pill${locked ? ' is-locked' : ''}" data-kind="${kind}" onclick="devSimToggle('${kind}')" aria-label="${label}" title="${label}"><b>PM</b><span aria-hidden="true">${locked ? '🔓' : '🔒'}</span></button>`;
 }
 // בתחתית New Me (בפינה שמול התרמיל) - מוצג רק כש-New Me על המסך (theme.css)
+// מאז 2026-10-16 המנעול של New Me רק בהגדרות (לוח ה-PM - devRenderSettingsPanel), לא צף בתוך New Me (לפי בקשה מפורשת:
+// "המנעול שהוא רק שלי PM להעביר להגדרות")
 function devRenderNewMePill() {
-    let el = document.getElementById('dev-sim-newme');
-    if (!isDevSuperuserAccount) { if (el) el.remove(); return; }
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'dev-sim-newme';
-        el.className = 'dev-sim-float';
-        (document.querySelector('.phone-wrapper') || document.body).appendChild(el);
-    }
-    el.innerHTML = devSimPillHtml('new_me');
+    const el = document.getElementById('dev-sim-newme');
+    if (el) el.remove();
 }
 // הפרימיום: בחלון "שדרוג לפרימיום" ובהגדרות > חשבון
 function devRenderPremiumPills() {
@@ -23008,7 +23003,8 @@ function routineNewMeRow(m, checksOn) {
     titleBtn.type = 'button';
     titleBtn.className = 'daily-board-item-title';
     titleBtn.textContent = m.text;
-    titleBtn.onclick = () => { if (typeof closeModal === 'function') closeModal('modal-daily-board'); if (typeof openNewMeMenuToday === 'function') openNewMeMenuToday(); };
+    // נגיעה - ארוחה אחרת בחלון רגיל, מעל השגרה (בלי להיכנס למשחק של New Me)
+    titleBtn.onclick = () => { if (typeof nmOpenMealFromOutside === 'function' && m.slot) nmOpenMealFromOutside(m.slot, () => renderDailyBoard()); };
     // סמל היהלום של New Me (כמו בתפריט של New Me)
     const tag = document.createElement('span');
     tag.className = 'daily-board-newme-tag';

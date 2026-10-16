@@ -43,11 +43,18 @@ const NMG_ICONS = {
     world: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
     reminders: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
     home: '<path d="M4 11.5L12 4l8 7.5"/><path d="M6.5 10v10h11V10"/><path d="M10 20v-5h4v5"/>',
+    gate: '<path d="M5 21V11a7 7 0 0 1 14 0v10"/><path d="M3 21h18"/><path d="M9 21v-7a3 3 0 0 1 6 0v7"/><path d="M12 4v-1.5"/>',
     settings: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
 };
 function nmgIcon(k) { return `<svg class="nmg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NMG_ICONS[k]}</svg>`; }
 function nmgKeys() { return typeof roomKeys === 'function' && typeof roomLoaded !== 'undefined' && roomLoaded ? roomKeys() : 0; }
 function nmgStage(keys = nmgKeys()) { return NMG_STAGES.slice().reverse().find(s => keys >= s.at) || NMG_STAGES[0]; }
+// הדמות שמוצגת: מי שרוצה יכול להחזיר דמות קודמת (2026-10-16, לפי בקשה מפורשת) - new_me_room.me_pick; ריק = השלב שהמפתחות הגיעו אליו
+function nmgShownStage(keys = nmgKeys()) {
+    const cur = nmgStage(keys);
+    const pick = typeof roomState !== 'undefined' && roomState ? Number(roomState.me_pick) || 0 : 0;
+    return pick >= 1 && pick < cur.n ? NMG_STAGES[pick - 1] : cur;
+}
 function nmgNextSlot() { return typeof nmNextSlot === 'function' && nmProfile ? nmNextSlot(nmActiveOrder()) : null; }
 
 // ---------- הכפתורים הקבועים ----------
@@ -67,6 +74,8 @@ function nmgRenderHud() {
     const nextName = next ? (nmIsFree(next) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(next)))) : '';
     const nextKcal = next && !nmIsFree(next) ? nmItemInfo(nmTodayKey(next)).kcal + nmSlotExtra(next) : 0;
     const title = k => t(NEW_ME_VIEW_TITLES[k]);
+    // למטה (2026-10-16, לפי בקשה מפורשת): התיק הקסום גדול באמצע, ולצידו מפת העולם. ✓ אכלתי - במשימה הבאה; תזכורות
+    // והגדרות - בתוך התיק
     hud.innerHTML = `${NMG_SVG.defs}
         <div class="nmg-top">
             <button type="button" class="nmg-b nmg-day" onclick="nmgGo('journey')" aria-label="${nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())))}">${NMG_SVG.hex}<span class="nmg-dayt"><small>${nmEsc(t('nm_hud_day'))}</small><b>${nmFmt(nmJourneyDay())}</b></span></button>
@@ -75,6 +84,7 @@ function nmgRenderHud() {
             <button type="button" class="nmg-b nmg-pill nmg-en" onclick="nmgGo('day')" aria-label="${nmEsc(t('nm_eaten'))} ${nmFmt(eaten.kcal)} / ${nmFmt(goal)}">${NMG_SVG.bolt}<span class="nmg-track"><span class="nmg-fill" style="width:${pct}%"></span></span><span class="nmg-num"><bdi dir="ltr">${nmFmt(eaten.kcal)} / ${nmFmt(goal)}</bdi></span></button>
         </div>
         <button type="button" class="nmg-b nmg-home" onclick="goHome()" aria-label="${nmEsc(t('back_to_home_btn'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('home')}</span></button>
+        <button type="button" class="nmg-b nmg-hall" onclick="nmgBackToHall()" aria-label="${nmEsc(t('room_back_to_hall'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('gate')}</span><span class="nmg-lb">${nmEsc(t('room_back_to_hall'))}</span></button>
         ${next ? `<button type="button" class="nmg-b nmg-quest" onclick="nmOpenHallMeal('${next}')">
             <span class="nmg-q1">${NMG_SVG.meal}<span>${nmEsc(t('nm_hud_next').replace('{time}', nmSlotReminderTime(next)))}</span></span>
             <span class="nmg-q2">${nmEsc(nmSlotName(next))}: ${nmEsc(nextName)}</span>
@@ -82,13 +92,10 @@ function nmgRenderHud() {
         </button>` : `<button type="button" class="nmg-b nmg-quest is-done" onclick="nmgGo('day')"><span class="nmg-q2">${nmEsc(t('nm_hall_all_done'))}</span></button>`}
         <div class="nmg-rail nmg-rr">${['day', 'challenges', 'journey', 'shop'].map(k => nmgButton(k, title(k))).join('')}</div>
         <div class="nmg-rail nmg-rl">${['badges', 'measure', 'photos', 'month'].map(k => nmgButton(k, title(k))).join('')}</div>
-        <div class="nmg-tray" aria-hidden="true"></div>
         <div class="nmg-dock">
             ${nmgButton('world', t('nm_hud_world'))}
-            <button type="button" class="nmg-b nmg-it nmg-bagit" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
-            <button type="button" class="nmg-b nmg-eat${next ? '' : ' is-done'}" data-hud="eat" onclick="nmgEat(this)" aria-label="${nmEsc(next ? `${t('nm_mark_eaten')} – ${nextName}` : t('nm_hall_all_done'))}"><span class="nmg-eatv">${NMG_SVG.hex}<span class="nmg-eatc"><span class="nmg-chk">✓</span><span class="nmg-eatt">${nmEsc(t('nm_hud_ate'))}</span><span class="nmg-bar"><span class="nmg-barf" style="width:${pct}%"></span></span></span></span></button>
-            ${nmgButton('reminders', t('nm_hud_reminders'))}
-            ${nmgButton('settings', t('nm_hud_settings'))}
+            <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
+            <span class="nmg-dock-space" aria-hidden="true"></span>
         </div>`;
     nmgFitLabels(hud);
 }
@@ -126,6 +133,12 @@ async function nmgEat(btn) {
     await nmToggleCheck(next);
     nmgRenderHud();
 }
+// "למסדרון" - מכל חדר ומכל מקום, באותו מקום תמיד (לפי בקשה מפורשת, 2026-10-16: "שיהיה אפשר לחזור מכל חדר למסדרון בצורה קלה")
+function nmgBackToHall() {
+    nmgCloseMap();
+    if (typeof srIsOpen === 'function' && srIsOpen() && typeof closeSecretRoom === 'function') closeSecretRoom();
+    nmGo('home');
+}
 function nmgKeysTip() { if (typeof nmhKeysTip === 'function' && nmView === 'home' && !(typeof srIsOpen === 'function' && srIsOpen())) nmhKeysTip(); else showAppToast(t('nm_keys_tip')); }
 
 // ---------- מפת העולם ----------
@@ -137,7 +150,7 @@ function nmgPlaceOpen(p, keys) {
 function nmgOpenMap() {
     nmgCloseMap();
     const keys = nmgKeys();
-    const stage = nmgStage(keys);
+    const stage = nmgShownStage(keys);
     const box = document.createElement('div');
     box.id = 'nmg-map';
     box.className = 'nmg-map';
@@ -202,7 +215,7 @@ function nmgMeScale(y) { return Math.max(0.6, Math.min(1, 0.6 + (y - 380) / 260 
 function nmgMeClamp(p) { return { x: Math.max(45, Math.min(NMH_W - 45, p.x)), y: Math.max(360, Math.min(650, p.y)) }; }
 function nmgMeStyle(p) { return `left:${nmhX(p.x - NMG_ME_W / 2)};top:${nmhY(p.y - NMG_ME_H / 2)};width:${nmhX(NMG_ME_W)};height:${nmhY(NMG_ME_H)};--mes:${nmgMeScale(p.y).toFixed(3)}`; }
 function nmgMeHallHtml() {
-    const s = nmgStage();
+    const s = nmgShownStage();
     return `<button type="button" class="nmh-me nmg-me-${s.n}" style="${nmgMeStyle(nmgMePos || NMG_ME_HOME)}" onpointerdown="nmgMeDown(event)" onclick="nmgMeClick()" aria-label="${nmEsc(t('nm_me_aria').replace('{name}', 'Me' + s.n))}"><img src="world/${s.img}" alt="" draggable="false"></button>`;
 }
 function nmgMeClick() { if (nmgMeDragged) { nmgMeDragged = false; return; } nmgOpenMe(); }
@@ -309,27 +322,47 @@ function nmgMeSpark(hall, p) {
     hall.appendChild(s);
     setTimeout(() => s.remove(), 900);
 }
+// "הדמות שלי": שלושת השלבים. כל דמות שכבר הגיעו אליה - נגיעה בוחרת אותה (גם להחזיר דמות קודמת), והמוצגת עם מסגרת
 function nmgOpenMe() {
     const keys = nmgKeys();
     const cur = nmgStage(keys);
+    const shown = nmgShownStage(keys);
     const ov = nmOpenSheet(`
         <h4>${nmEsc(t('nm_me_title'))}</h4>
         <div class="nmg-me-row">${NMG_STAGES.map(s => {
-            const state = s.n < cur.n ? 'is-past' : s.n === cur.n ? 'is-now' : 'is-next';
-            return `<div class="nmg-me-card ${state}">
-                <span class="nmg-me-pic"><img src="world/${s.img}" alt=""></span>
+            const reached = s.n <= cur.n;
+            const state = !reached ? 'is-next' : s.n === shown.n ? 'is-now' : 'is-past';
+            const body = `<span class="nmg-me-pic"><img src="world/${s.img}" alt=""></span>
                 <b>Me${s.n}</b>
-                <small>${state === 'is-now' ? nmEsc(t('nm_me_now')) : state === 'is-past' ? '✓' : nmEsc(t('nm_me_next').replace('{n}', nmFmt(s.at - keys)))}</small>
-            </div>`;
+                <small>${state === 'is-now' ? nmEsc(t('nm_me_on_screen')) : state === 'is-past' ? nmEsc(t('nm_me_choose')) : nmEsc(t('nm_me_next').replace('{n}', nmFmt(s.at - keys)))}</small>`;
+            return reached
+                ? `<button type="button" class="nmg-me-card ${state}" data-me-pick="${s.n}" aria-pressed="${state === 'is-now'}">${body}</button>`
+                : `<div class="nmg-me-card ${state}">${body}</div>`;
         }).join('')}</div>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nmg-me-sheet');
+    ov.querySelectorAll('[data-me-pick]').forEach(b => b.addEventListener('click', async () => {
+        const n = Number(b.dataset.mePick);
+        if (n === shown.n) return;
+        ov.remove();
+        await nmgSetMePick(n >= cur.n ? null : n);
+    }));
     return ov;
+}
+async function nmgSetMePick(n) {
+    if (typeof roomState !== 'undefined' && roomState) roomState.me_pick = n;
+    if (typeof roomSave === 'function') await roomSave({ me_pick: n });
+    if (typeof nmView !== 'undefined' && nmView === 'home' && typeof nmRenderView === 'function') nmRenderView(nmRoot());
+    const map = document.getElementById('nmg-map');
+    if (map) nmgOpenMap();
 }
 // המהפך: הדמות הקודמת זוהרת, נצנצים מסתחררים, הבזק - והחדשה מופיעה (לפי בקשה מפורשת: "שהוא יעשה כמו מהפך כזה ושממש
 // יראו את זה קורה"). פעם אחת לכל שלב (new_me_room.me_seen)
 let nmgEvolving = false;
 function nmgCheckEvolve() {
     if (nmgEvolving || typeof hasNewMe === 'undefined' || !hasNewMe || !nmProfile || typeof roomLoaded === 'undefined' || !roomLoaded) return;
+    // רק כשבאמת בתוך העולם (לא כשארוחה מוחלפת מ"השגרה שלי" וכדומה)
+    const sec = document.getElementById('new-me-section');
+    if (!(sec && sec.classList.contains('active-tab')) && !(typeof srIsOpen === 'function' && srIsOpen())) return;
     const cur = nmgStage().n, seen = nmgMeSeen();
     if (cur > seen) nmgPlayEvolve(NMG_STAGES[seen - 1] || NMG_STAGES[0], NMG_STAGES[cur - 1]);
     else if (cur < seen) nmgSetMeSeen(cur);
@@ -355,7 +388,7 @@ function nmgPlayEvolve(from, to) {
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
     void ov.offsetWidth;
     ov.classList.add('go');
-    const done = () => { ov.remove(); nmgEvolving = false; nmgSetMeSeen(to.n); if (nmView === 'home' && typeof nmRenderView === 'function') nmRenderView(nmRoot()); };
+    const done = () => { ov.remove(); nmgEvolving = false; nmgSetMeSeen(to.n); if (roomState && roomState.me_pick) nmgSetMePick(null); if (nmView === 'home' && typeof nmRenderView === 'function') nmRenderView(nmRoot()); };
     ov.querySelector('.nmg-ev-go').addEventListener('click', done);
     if (reduce) ov.classList.add('is-reduced');
     if (typeof spawnGentleConfettiBurst === 'function') setTimeout(() => { if (ov.isConnected) spawnGentleConfettiBurst(ov.querySelector('.nmg-ev-stage'), 36); }, reduce ? 0 : 2300);

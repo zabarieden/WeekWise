@@ -22,7 +22,6 @@ const ROOM_UNLOCKS = [
     { n: 1, id: 'vinyl', wall: 2 },
     { n: 1, id: 'shelf', wall: 3 },
     { n: 1, id: 'catvisit', wall: 3 },
-    { n: 1, id: 'studio', tool: 'decor' },
     { n: 2, id: 'roof', hatch: true },
     { n: 3, id: 'porch', place: 'porch' },
     { n: 3, id: 'rain', place: 'porch' },
@@ -51,20 +50,16 @@ const ROOM_STYLES = {
     pastel: { wallA: '#f7d3e3', wallB: '#eeb3cd', panelA: '#e59ec0', panelB: '#d98cb2', line: '#cf7fa8', trim: '#fbe4ee', ceil: '#fbe4ee', ceilLine: '#f3c6d8', floorA: '#d9b48a', floorB: '#c49668', base: '#f7cfe0', bg: '#f3dbe6' },
     attic: { wallA: '#5a3826', wallB: '#8a5a3c', panelA: '#4a2c1e', panelB: '#3e2418', line: '#2e1a10', trim: '#a87a50', ceil: '#2b1a12', ceilLine: '#4a2c1e', floorA: '#4a2c1e', floorB: '#6c442e', base: '#24150e', bg: '#24150e' },
 };
-const ROOM_WALL_COLORS = ['#3d2858', '#f2bcd4', '#a8c3a0', '#1e2a5a', '#f3e6cf', '#c4b5fd'];
-const ROOM_FRIEND_LINES = 6;
 
 const SR_KEY_SVG = '<svg class="sr-key-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="4.5" fill="currentColor"/><rect x="11" y="10.8" width="10" height="2.4" rx="1.2" fill="currentColor"/><rect x="17" y="12" width="2.2" height="4" rx="1" fill="currentColor"/><circle cx="8" cy="12" r="1.6" class="sr-key-hole"/></svg>';
 const SR_KEY_OUTLINE_SVG = '<svg class="sr-key-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="12" r="4.5"/><path d="M12.5 12H21M18 12v3.5"/></svg>';
 const SR_LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const SR_CLOSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-const SR_BRUSH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c4 0 5-2 5-4a3 3 0 0 0-3-3c-2 0-3 1.5-2 7z"/><path d="M9 14l10-10 1 1-10 10"/></svg>';
 const SR_CHEVRON = { next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>', prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' };
 
 let roomState = null;        // שורת new_me_room (או ברירת מחדל עד השמירה הראשונה)
 let roomLoaded = false;
 let roomWall = 0;
-let roomPreview = null;      // מראה שנבחר ב"לעצב את החדר" ועוד לא נשמר
 let roomGame = null;
 
 function srEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
@@ -201,13 +196,12 @@ function roomGuideHallway() {
     else target = hall.querySelector('.nmh-door[data-door="1"]');
     roomShowArrow(hall, target);
 }
-// בחדר הסודי: פעם אחת מסתובבים לקיר הנכון, והחץ מצביע על מה שנפתח (או על כפתור המברשת - הסטודיו)
+// בחדר הסודי: פעם אחת מסתובבים לקיר הנכון, והחץ מצביע על מה שנפתח
 function roomGuideRoom() {
     const u = roomGuideUnlock();
     const stage = srStage();
     if (!u || !stage) return;
     if (u.id === 'door') { roomGuideDone(); return; }
-    if (u.tool) { roomShowArrow(stage, stage.querySelector(`.sr-tools [data-tool="${u.tool}"]`), roomGuideDone); return; }
     if (!Number.isInteger(u.wall)) return;
     if (roomWall !== u.wall) {
         if (roomGuide.turned) return;
@@ -345,7 +339,6 @@ function openSecretRoom(opts = {}) {
     if (!roomLoaded || !roomState) { roomLoad().then(() => openSecretRoom(opts)); return; }
     if (roomKeys() < 1) { roomOpenHowItWorks(); return; }
     document.getElementById('sr-overlay')?.remove();
-    roomPreview = null;
     roomWall = Number.isInteger(opts.wall) ? opts.wall : roomWall;
     const ov = document.createElement('div');
     ov.id = 'sr-overlay';
@@ -359,9 +352,6 @@ function openSecretRoom(opts = {}) {
             <div class="sr-topfade" aria-hidden="true"></div>
             <button type="button" class="sr-btn sr-close" onclick="closeSecretRoom()" aria-label="${srEsc(t('room_close_aria'))}">${SR_CLOSE_SVG}</button>
             <span class="sr-title">${srEsc(t('room_title'))}</span>
-            <div class="sr-tools">
-                <button type="button" class="sr-btn" data-tool="decor" onclick="roomOpenDecor()" aria-label="${srEsc(t('room_decor_title'))}" title="${srEsc(t('room_decor_title'))}">${SR_BRUSH_SVG}</button>
-            </div>
             <button type="button" class="sr-arrow sr-arrow-next" onclick="roomTurn(1)" aria-label="${srEsc(t('room_turn_next'))}">${srIsRtl() ? SR_CHEVRON.prev : SR_CHEVRON.next}</button>
             <button type="button" class="sr-arrow sr-arrow-prev" onclick="roomTurn(-1)" aria-label="${srEsc(t('room_turn_prev'))}">${srIsRtl() ? SR_CHEVRON.next : SR_CHEVRON.prev}</button>
             <div class="sr-caption" id="sr-caption" aria-live="polite"></div><!-- מוסתר: רק לקורא מסך -->
@@ -410,10 +400,9 @@ function srBindSwipe(el) {
     }, { passive: true });
 }
 
+// עיצוב אחד לכולם (מאז 2026-10-16): לילה, בלי צבע קירות - גם אם נשמר פעם משהו אחר
 function srCurrentStyle() {
-    const style = (roomPreview && roomPreview.style) || roomState.style || 'night';
-    const wallColor = roomPreview ? roomPreview.wall_color : roomState.wall_color;
-    return { style: ROOM_STYLES[style] ? style : 'night', wallColor: wallColor || null };
+    return { style: 'night', wallColor: null };
 }
 
 function srApplyStyle() {
@@ -444,7 +433,6 @@ function srRenderWall(dir) {
     if (cap) cap.textContent = t('room_wall_' + ROOM_WALL_IDS[roomWall] + '_title');
     srHideTip();
     srFitTexts(scene);
-    srFitBubbles(scene.querySelector('svg'));
     scene.querySelectorAll('[data-hot]').forEach(el => {
         // נקודה בתוך נקודה (הצנצנת על המדף בארון) - רק הפנימית מגיבה
         el.addEventListener('click', e => { if (e.target.closest('[data-hot]') !== el) return; srHotspot(el.dataset.hot, el); });
@@ -465,28 +453,9 @@ function srFitTexts(root) {
     });
 }
 
-// בועות הדיבור במידה של הטקסט (בכל שפה)
-function srFitBubbles(svg) {
-    if (!svg) return;
-    svg.querySelectorAll('.sr-say').forEach(g => {
-        const text = g.querySelector('text');
-        const rect = g.querySelector('rect');
-        if (!text || !rect || typeof text.getComputedTextLength !== 'function') return;
-        let len = 0;
-        try { len = text.getComputedTextLength(); } catch { return; }
-        if (!len) return;
-        const w = Math.min(300, Math.max(70, len + 28));
-        const cx = Number(text.getAttribute('x'));
-        const minX = 8, maxX = 382 - w;
-        rect.setAttribute('width', w.toFixed(1));
-        rect.setAttribute('x', Math.min(maxX, Math.max(minX, cx - w / 2)).toFixed(1));
-    });
-}
-
 function srHotspot(id, el) {
     const locked = el && el.classList.contains('locked');
     if (locked) { srShowLockTip(id); return; }
-    if (id === 'friend') { srFriendSays(el); return; }
     if (id === 'catvisit') { srCatNapTap(el); return; }
     if (id === 'computer') { roomOpenComputer(); return; }
     if (id === 'diary') { if (typeof srpOpenDiary === 'function') srpOpenDiary(); return; }
@@ -515,26 +484,6 @@ function srShowTip(text) {
 }
 function srHideTip() { const tip = document.getElementById('sr-tip'); if (tip) tip.classList.add('hidden'); }
 
-let srFriendIdx = 0;
-// לפי בקשה מפורשת: ניצוץ מדבר רק כשנוגעים בו. הנגיעה הראשונה בכל קיר = המשפט של הקיר; אחר כך המשפטים מתחלפים.
-// הבועה נעלמת לבד אחרי כמה שניות
-let srFriendHideTimer = null;
-function srFriendSays(el) {
-    const svg = el.closest('svg');
-    const g = svg && svg.querySelector('.sr-say');
-    if (!g) return;
-    if (!g.dataset.said) g.dataset.said = '1';
-    else {
-        srFriendIdx = (srFriendIdx % ROOM_FRIEND_LINES) + 1;
-        g.querySelector('text').textContent = t('room_friend_line_' + srFriendIdx);
-    }
-    g.classList.remove('is-quiet');
-    srFitBubbles(svg);
-    g.classList.remove('pop'); void g.getBoundingClientRect(); g.classList.add('pop');
-    clearTimeout(srFriendHideTimer);
-    srFriendHideTimer = setTimeout(() => { if (g.isConnected) g.classList.add('is-quiet'); }, 4500);
-}
-
 function srLockShape() {
     return `<circle r="22" fill="rgba(10,6,16,0.78)" stroke="#ffd27a" stroke-opacity="0.7" stroke-width="1.5"/>
         <g transform="translate(-9 -12)" fill="none" stroke="#ffd27a" stroke-width="2.4" stroke-linecap="round">
@@ -549,28 +498,6 @@ function srLockBadge(x, y, id) {
 }
 
 // ---------- ציורי הקירות (מהעיצובים שאושרו על הקנבס, בצבעי "לעצב את החדר") ----------
-// ניצוץ + בועת דיבור. faceY - מרכז הבועה; say - הטקסט בבועה
-function srFriend(p, cx, cy, r, bubble) {
-    const eyeDx = r * 0.31, eyeY = cy + r * 0.12;
-    return `
-        <ellipse cx="${cx}" cy="${bubble.shadowY || cy + r * 4.4}" rx="${r * 1.05}" ry="${r * 0.24}" fill="#000" opacity="0.26"/>
-        <g class="sr-hot sr-friend" data-hot="friend" role="button" tabindex="0" aria-label="${srEsc(t('room_friend_name'))}">
-            <g class="sr-float">
-                <circle cx="${cx}" cy="${cy}" r="${r * 1.44}" fill="#ff4fa3" opacity="0.14"/>
-                <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${p}Orb)"/>
-                <ellipse cx="${cx - r * 0.34}" cy="${cy - r * 0.44}" rx="${r * 0.28}" ry="${r * 0.16}" fill="#fff" opacity="0.65"/>
-                <ellipse class="sr-eye" cx="${cx - eyeDx}" cy="${eyeY}" rx="${r * 0.144}" ry="${r * 0.2}" fill="#fff"/><ellipse class="sr-eye" cx="${cx + eyeDx}" cy="${eyeY}" rx="${r * 0.144}" ry="${r * 0.2}" fill="#fff"/>
-                <circle cx="${cx - eyeDx + 1}" cy="${eyeY + 1.5}" r="${r * 0.08}" fill="#2a1240"/><circle cx="${cx + eyeDx + 1}" cy="${eyeY + 1.5}" r="${r * 0.08}" fill="#2a1240"/>
-                <ellipse cx="${cx - r * 0.53}" cy="${cy + r * 0.44}" rx="${r * 0.125}" ry="${r * 0.075}" fill="#ff9ecf" opacity="0.8"/><ellipse cx="${cx + r * 0.53}" cy="${cy + r * 0.44}" rx="${r * 0.125}" ry="${r * 0.075}" fill="#ff9ecf" opacity="0.8"/>
-            </g>
-        </g>
-        <g class="sr-say is-quiet">
-            <rect x="${bubble.x - 60}" y="${bubble.y - 22}" width="120" height="34" rx="15" fill="#fff"/>
-            <path d="${bubble.tail}" fill="#fff"/>
-            <text x="${bubble.x}" y="${bubble.y}" text-anchor="middle" font-size="12.5" font-weight="800" fill="#2a1240">${srEsc(bubble.text)}</text>
-        </g>`;
-}
-
 // 🎨 2026-10-14 (לפי בקשה מפורשת: "יש את הציורים אתה יכול לשים אותם"): ארבעת הקירות של הבית בעץ הם ציורים -
 // world/tree-desk.jpg (המחשב ליד החלון העגול), tree-bed.jpg (הלוח מעל המיטה - כמו שביקשה), tree-fun.jpg (מכונת המשחק,
 // הפטיפון והכורסה), tree-shelf.jpg (המדף, והחתול על השטיח). מעל הציור: מה שזוהר, נפתח או נוגעים בו. העיצוב בסטודיו
@@ -601,8 +528,7 @@ function srWallWindow(keys) {
         <g class="sr-hot sr-diary-art" data-hot="diary" role="button" tabindex="0" aria-label="${srEsc(t('room_diary_title'))}">
             <image href="world/diary.png" x="176" y="487" width="48" height="61"/>
             <rect x="170" y="482" width="60" height="70" fill="transparent"/>
-        </g>
-        ${srFriend(p, 120, 628, 26, { x: 180, y: 574, text: t('room_friend_hi'), tail: 'M150 585 l-8 12 l18 -10z', shadowY: 742 })}`;
+        </g>`;
 }
 
 // הפתקים על הלוח: האתגרים הפעילים (עד 3) + "＋ אתגר חדש". ניצוץ לא שואל שום דבר (לפי בקשה מפורשת, 2026-10-09)
@@ -661,21 +587,28 @@ function srWallGame(keys) {
         <defs>
             <radialGradient id="${p}Screen" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#7dd3fc" stop-opacity="0.32"/><stop offset="1" stop-color="#7dd3fc" stop-opacity="0"/></radialGradient>
             <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
+            <linearGradient id="${p}Gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe7a8"/><stop offset="0.5" stop-color="#ffd27a"/><stop offset="1" stop-color="#ffb8dc"/></linearGradient>
+            <linearGradient id="${p}Night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1450"/><stop offset="1" stop-color="#4a2580"/></linearGradient>
+            <radialGradient id="${p}Fly" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff"/><stop offset="0.35" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
         </defs>
         <g aria-hidden="true">${holes}</g>
         <g class="sr-hot${gameOpen ? '' : ' locked'}" data-hot="game" role="button" tabindex="0" aria-label="${srEsc(roomItemName('game'))}">
             ${gameOpen ? `<circle cx="291" cy="455" r="74" fill="url(#${p}Screen)"/>
-            <text class="sr-neon" x="281" y="378" text-anchor="middle" font-size="12" font-weight="800" fill="#ff7ab8" data-fit="80">${srEsc(t('room_game_marquee'))}</text>
-            <rect x="256" y="423" width="72" height="64" rx="5" fill="#0b0b1e" opacity="0.88"/>
-            <g fill="#7dd3fc"><rect x="263" y="474" width="22" height="4"/><rect x="293" y="463" width="22" height="4"/><rect x="273" y="449" width="16" height="4"/></g>
-            <g fill="#ffd27a"><circle cx="302" cy="436" r="1.8"/><circle cx="281" cy="440" r="1.4"/><circle cx="316" cy="449" r="1.4"/></g>
-            <circle cx="272" cy="467" r="5.5" fill="#ff7ab8"/><circle cx="270" cy="466" r="1.3" fill="#fff"/><circle cx="274" cy="466" r="1.3" fill="#fff"/>
-            <text x="318" y="434" text-anchor="middle" font-size="7.5" fill="#fff">${srFmt(roomState.game_best || 0)}</text>
-            <circle class="sr-pulse" cx="292" cy="455" r="8" fill="none" stroke="#7dd3fc" stroke-width="1.6"/>` : `${typeof srpVeil === 'function' ? srpVeil(212, 346, 156, 306) : ''}${srLockBadge(289, 456, 'game')}`}
+            <text class="sr-magic-script" x="281" y="380" text-anchor="middle" font-size="13" fill="url(#${p}Gold)" data-fit="80">${srEsc(t('room_game_marquee'))}</text>
+            ${srSparkleField(281, 375, 48, 11, 6, 1.1, 3)}
+            <rect x="256" y="423" width="72" height="64" rx="5" fill="url(#${p}Night)"/>
+            <path d="M309 432 a7 7 0 1 0 5 12 a5.5 5.5 0 1 1 -5 -12z" fill="#ffe7a8" opacity="0.9"/>
+            <g class="sr-game-stars" fill="#fff6d8"><circle cx="266" cy="433" r="0.9"/><circle cx="279" cy="429" r="0.7"/><circle cx="293" cy="437" r="0.8"/><circle cx="321" cy="458" r="0.7"/><circle cx="262" cy="452" r="0.6"/></g>
+            <g class="sr-game-flies">
+                <circle cx="272" cy="467" r="6" fill="url(#${p}Fly)" style="color:#ff86c6"/>
+                <circle cx="296" cy="452" r="5" fill="url(#${p}Fly)" style="color:#ffd27a"/>
+                <circle cx="313" cy="474" r="4.5" fill="url(#${p}Fly)" style="color:#a7f3d0"/>
+            </g>
+            <text x="318" y="485" text-anchor="middle" font-size="7" fill="#ffd27a">✦ ${srFmt(roomState.game_best || 0)}</text>
+            <circle class="sr-pulse" cx="292" cy="455" r="8" fill="none" stroke="#ffd27a" stroke-width="1.4"/>` : `${typeof srpVeil === 'function' ? srpVeil(212, 346, 156, 306) : ''}${srLockBadge(289, 456, 'game')}`}
             <rect x="210" y="344" width="160" height="312" fill="transparent"/>
         </g>
-        ${roomTurntableSvg(keys >= roomUnlockAt('vinyl'))}
-        ${srFriend(p, 142, 546, 23, { x: 146, y: 494, text: t(gameOpen ? 'room_friend_game' : 'room_friend_game_locked'), tail: 'M140 505 l4 14 l8 -14z', shadowY: 598 })}`;
+        ${roomTurntableSvg(keys >= roomUnlockAt('vinyl'))}`;
 }
 
 // 🎵 הפטיפון - הפטיפון המצויר שעל הגדם שליד הכורסה, פתוח עם החדר (לפי בקשה מפורשת: "שהפטיפון כבר יהיה בחדר").
@@ -702,8 +635,7 @@ function srWallShelf(keys) {
             ${shelfOpen ? `${srSparkleField(313, 472, 70, 132, 14, 1.4, 11)}<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
             <rect x="236" y="328" width="154" height="288" fill="transparent"/>
         </g>
-        ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}
-        ${srFriend(p, 64, 538, 22, { x: 112, y: 486, text: t('room_friend_line_5'), tail: 'M84 497 l-6 12 l14 -10z', shadowY: 640 })}`;
+        ${keys >= roomUnlockAt('catvisit') && typeof srCatNapSvg === 'function' ? srCatNapSvg() : ''}`;
 }
 
 function srClip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
@@ -1689,70 +1621,12 @@ function roomRoofScene() {
             </g>
         </svg>`;
 }
-// החתול על הגג (לפי בקשה מפורשת) - מאז 2026-10-14 החתול המצויר: יושב על הכרית. נגיעה - קם, הולך אלינו ומתחכך,
-// ונשאר לידנו (גדול יותר); מכאן כל נגיעה עושה משהו אחר (10 דברים, לפי הסדר). (0,0) = בין הכפות
+// החתול על הגג (לפי בקשה מפורשת) - החתול המצויר יושב על הכרית. מאז 2026-10-16 רק ציור, בלי תנועות ובלי נגיעות (לפי בקשה
+// מפורשת: "תמחק את כל מה שהוא עושה כי זה לא נראה טוב שיהיה בנתיים ציור עד שנבין איך לתקן את זה"). (0,0) = בין הכפות
 function roomCatSvg() {
-    return `<g class="sr-cat sr-cat-art" role="button" tabindex="0" aria-label="${srEsc(t('room_cat_aria'))}">
-        <g class="sr-cat-pose">
-            <image class="sr-cat-sit" href="world/cat-sit.png" x="-32.2" y="-80" width="64.4" height="80"/>
-            <image class="sr-cat-stand" href="world/cat-stand.png" x="-46.8" y="-80" width="93.6" height="80"/>
-        </g>
-        <g class="sr-cat-fx"></g>
-        <ellipse class="sr-cat-hit" cx="0" cy="-40" rx="36" ry="44" fill="transparent"/>
+    return `<g class="sr-cat sr-cat-art" aria-hidden="true">
+        <image class="sr-cat-sit" href="world/cat-sit.png" x="-32.2" y="-80" width="64.4" height="80"/>
     </g>`;
-}
-// הנגיעה הראשונה: מסתובב, בא ומתחכך. אחר כך כל נגיעה - הדבר הבא ברשימה (ושינה נמשכת עד הנגיעה הבאה)
-const ROOM_CAT_ACTIONS = [['purr', 1800], ['blink', 1700], ['stretch', 1700], ['groom', 1900], ['tailheart', 2000], ['yawn', 1700], ['hop', 1500], ['bump', 1200], ['knead', 1900], ['sleep', 0]];
-function roomInitCat(cat) {
-    if (!cat) return;
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const fx = cat.querySelector('.sr-cat-fx');
-    let near = false, busy = false, idx = 0, zzz = null;
-    const float = (ch, x, y, cls, delay = 0) => setTimeout(() => {
-        if (!cat.isConnected) return;
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        el.setAttribute('x', x);
-        el.setAttribute('y', y);
-        el.setAttribute('text-anchor', 'middle');
-        el.setAttribute('class', `sr-cat-float ${cls}`);
-        el.textContent = ch;
-        fx.appendChild(el);
-        setTimeout(() => el.remove(), 1700);
-    }, delay);
-    const hearts = n => { for (let i = 0; i < n; i++) float('♥', -10 + i * 10, -88 - (i % 2) * 5, 'is-heart', i * 260); };
-    const play = (name, ms) => {
-        busy = true;
-        cat.classList.add('do-' + name);
-        if (name === 'purr') hearts(3);
-        if (name === 'tailheart') float('♥', 30, -30, 'is-heart', 500);
-        if (name === 'bump') float('✦', 16, -86, 'is-spark', 250);
-        if (name === 'sleep') {
-            const z = () => { if (!cat.isConnected) { clearInterval(zzz); return; } float('z', 14 + Math.random() * 8, -76, 'is-z'); };
-            z();
-            zzz = setInterval(z, 1100);
-            busy = false;
-            return;
-        }
-        setTimeout(() => { cat.classList.remove('do-' + name); busy = false; }, reduce ? 300 : ms);
-    };
-    const tap = () => {
-        if (busy) return;
-        if (!near) {
-            near = true;
-            busy = true;
-            cat.classList.add('is-turned');
-            setTimeout(() => cat.classList.add('is-near', 'is-walking'), reduce ? 0 : 380);
-            setTimeout(() => { cat.classList.remove('is-walking'); cat.classList.add('do-rub'); hearts(3); }, reduce ? 0 : 2150);
-            setTimeout(() => { cat.classList.remove('do-rub'); busy = false; }, reduce ? 200 : 4100);
-            return;
-        }
-        if (cat.classList.contains('do-sleep')) { cat.classList.remove('do-sleep'); clearInterval(zzz); zzz = null; return; }
-        const [name, ms] = ROOM_CAT_ACTIONS[idx];
-        idx = (idx + 1) % ROOM_CAT_ACTIONS.length;
-        play(name, ms);
-    };
-    cat.addEventListener('click', tap);
-    cat.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
 }
 function roomOpenRoof(opts = {}) {
     const stage = srStage();
@@ -1780,7 +1654,6 @@ function roomOpenRoof(opts = {}) {
             ${stars}
         </div>`;
     stage.appendChild(box);
-    roomInitCat(box.querySelector('.sr-cat'));
     if (typeof roomInitWish === 'function') roomInitWish(box);
     const guided = roomGuideUnlock();
     if (guided && guided.id === 'roof') roomGuideDone();
@@ -1970,58 +1843,6 @@ async function roomOpenLibrary(opts = {}) {
     const open = () => { closeSecretRoom(); if (typeof openBooksSection === 'function') openBooksSection(); };
     box.querySelector('.sr-lib-open').addEventListener('click', open);
     box.querySelectorAll('.sr-book').forEach(b => b.addEventListener('click', open));
-}
-
-// ---------- לעצב את החדר: סגנון מוכן + צבע קירות ("עליית גג" נפתחת עם הסטודיו) ----------
-function roomOpenDecor(fromStudio) {
-    const stage = srStage();
-    if (!stage) return;
-    stage.querySelector('.sr-decor')?.remove();
-    const cur = srCurrentStyle();
-    roomPreview = { style: cur.style, wall_color: cur.wallColor };
-    const studioOpen = roomIsUnlocked('studio');
-    const styleBtn = (id) => {
-        const locked = id === 'attic' && !studioOpen;
-        return `<button type="button" class="sr-style sr-style-${id}${cur.style === id ? ' on' : ''}${locked ? ' locked' : ''}" data-style="${id}" aria-pressed="${cur.style === id}">${locked ? SR_LOCK_SVG : ''}<span>${srEsc(t('room_style_' + id))}</span></button>`;
-    };
-    const box = document.createElement('div');
-    box.className = 'sr-decor';
-    box.innerHTML = `
-        <div class="sr-decor-sheet">
-            <div class="sr-decor-head"><b>${srEsc(fromStudio ? roomItemName('studio') : t('room_decor_title'))}</b><button type="button" class="sr-decor-x" aria-label="${srEsc(t('close_btn'))}">${SR_CLOSE_SVG}</button></div>
-            ${fromStudio ? `<p class="sr-decor-hint">${srEsc(t('room_studio_hint'))}</p>` : ''}
-            <span class="sr-decor-label">${srEsc(t('room_decor_styles'))}</span>
-            <div class="sr-styles">${['night', 'pastel', 'attic'].map(styleBtn).join('')}</div>
-            <span class="sr-decor-label">${srEsc(t('room_decor_walls'))}</span>
-            <div class="sr-swatches">
-                <button type="button" class="sr-swatch none${cur.wallColor ? '' : ' on'}" data-color="" aria-label="${srEsc(t('room_decor_wall_default'))}" title="${srEsc(t('room_decor_wall_default'))}"></button>
-                ${ROOM_WALL_COLORS.map((c, i) => `<button type="button" class="sr-swatch${cur.wallColor === c ? ' on' : ''}" data-color="${c}" style="--sr-swatch:${c}" aria-label="${srEsc(t('room_decor_wall_' + (i + 1)))}" title="${srEsc(t('room_decor_wall_' + (i + 1)))}"></button>`).join('')}
-            </div>
-            <button type="button" class="sr-decor-save">${srEsc(t('room_decor_save'))}</button>
-        </div>`;
-    stage.appendChild(box);
-    const cancel = () => { roomPreview = null; srApplyStyle(); box.remove(); };
-    box.querySelector('.sr-decor-x').addEventListener('click', cancel);
-    box.addEventListener('click', e => { if (e.target === box) cancel(); });
-    box.querySelectorAll('[data-style]').forEach(b => b.addEventListener('click', () => {
-        if (b.classList.contains('locked')) { srShowLockTip('studio'); return; }
-        roomPreview.style = b.dataset.style;
-        box.querySelectorAll('[data-style]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        srApplyStyle();
-    }));
-    box.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
-        roomPreview.wall_color = b.dataset.color || null;
-        box.querySelectorAll('[data-color]').forEach(x => x.classList.toggle('on', x === b));
-        srApplyStyle();
-    }));
-    box.querySelector('.sr-decor-save').addEventListener('click', async () => {
-        const fields = { style: roomPreview.style, wall_color: roomPreview.wall_color || null };
-        roomPreview = null;
-        const ok = await roomSave(fields);
-        srApplyStyle();
-        box.remove();
-        showAppToast(t(ok ? 'room_decor_saved' : 'nm_save_error'), ok ? undefined : 'error');
-    });
 }
 
 // ---------- כפתור המפתח של מנהלת המוצר (חשבון המפתחים בלבד) ----------
