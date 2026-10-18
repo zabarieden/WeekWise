@@ -17,10 +17,10 @@ function nmPdfEnabled() { return true; }
 const NEW_ME_TRACKER_SLOT = { meal1: 'meal_1', snack1: 'meal_4', meal2: 'meal_2', snack2: 'snack' };
 // קטגוריית "ארוחה שמורה" לפי שעת היום של המיקום (בוקר / נשנוש / צהריים / נשנוש ערב)
 const NEW_ME_PRESET_CATEGORY_BY_POS = ['morning', 'snack', 'noon', 'snack'];
-const NEW_ME_TILE_ICONS = { day: '📋', challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
+const NEW_ME_TILE_ICONS = { day: '📋', challenges: '🏆', gift: '🎁', stats: '📊', journey: '📈', shop: '🛒', badges: '🏅', chjournal: '📓', measure: '📏', photos: '📸', month: '📅', table: '📋', reminders: '⏰', pdf: '📄', settings: '⚙️', bonus: '📰' };
 // אתגרים, מכתב מהעבר והמתנה בסוף (תעודה, מצב מתקדם וסטטיסטיקות) - new-me-challenges.js
-const NEW_ME_TILES = ['challenges', 'journey', 'shop', 'badges', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
-const NEW_ME_VIEW_TITLES = { day: 'nm_hall_day', challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_hud_settings' };
+const NEW_ME_TILES = ['challenges', 'journey', 'shop', 'badges', 'chjournal', 'measure', 'photos', 'month', 'table', 'reminders', 'pdf'];
+const NEW_ME_VIEW_TITLES = { day: 'nm_hall_day', challenges: 'nm_tile_challenges', gift: 'nm_gift_title', stats: 'nm_stats_title', journey: 'nm_tile_journey', shop: 'nm_tile_shop', badges: 'nm_tile_badges', chjournal: 'nm_chj_title', measure: 'nm_tile_measure', photos: 'nm_tile_photos', month: 'nm_tile_calendar', table: 'nm_tile_table', reminders: 'nm_tile_reminders', pdf: 'nm_tile_pdf', settings: 'nm_hud_settings' };
 // אחרי כל האתגרים: אריח למתנה, ובמצב מתקדם - גם לסטטיסטיקות
 function nmTiles() {
     const extra = [];
@@ -2001,7 +2001,7 @@ function nmRenderView(root) {
         </div>
         <div id="nm-view-body" class="nm-view-body"></div>`;
     const body = document.getElementById('nm-view-body');
-    const renderers = { day: nmRenderDay, challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
+    const renderers = { day: nmRenderDay, challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, chjournal: nmRenderChJournal, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
     renderers[nmView](body);
     if (nmView === 'day') nmRestoreDrinkDrafts();
     devKeys();
@@ -2309,6 +2309,7 @@ function nmTileSub(k) {
     if (k === 'challenges') return `<bdi dir="ltr">${nmChDoneMainCount()}/${NEW_ME_CHALLENGES.length}</bdi>`;
     if (k === 'gift') return nmGodMode() ? '👑' : '';
     if (k === 'journey') return nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())));
+    if (k === 'chjournal') return typeof nmChDone === 'function' ? `<bdi dir="ltr">${nmChDone().length}</bdi>` : '';
     if (k === 'badges') return `<bdi dir="ltr">${NEW_ME_BADGES.filter(b => nmBadges[b.key]).length}/${NEW_ME_BADGES.length}</bdi>`;
     if (k === 'reminders') return nmEsc(t(nmProfile.reminders_on ? 'nm_on' : 'nm_off'));
     if (k === 'photos' && nmLastPhotoDay) return nmEsc(nmShortDate(nmLastPhotoDay));
@@ -2583,6 +2584,7 @@ function nmOpenSwap(slot, startTab, opts) {
     let aiText = opts && opts.edit ? nmItemFull(cur) : '', aiResult = null, aiBusy = false;
     const ov = nmOpenSheet('', 'nm-swap-sheet');
     const sheet = ov.querySelector('.nm-sheet');
+    if (opts && opts.timeRow) nmBindMealTimeRow(sheet, slot);
     const optHtml = c => `
         <button type="button" class="nm-option" data-key="${c.key}">
             <span class="nm-option-top"><span class="nm-option-name">${nmEsc(nmItemShort(c))}</span>${nmDiffChip(c.kcal - cur.kcal)}</span>
@@ -2593,6 +2595,7 @@ function nmOpenSwap(slot, startTab, opts) {
     const headHtml = () => `
         <span class="nm-sheet-grip" aria-hidden="true"></span>
         <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmSlotName(slot)))}</h4>
+        ${opts && opts.timeRow ? nmMealTimeRowHtml(slot) : ''}
         <div class="nm-swap-current"><span>${nmEsc(t('nm_swap_now'))}</span> <b>${nmEsc(nmItemShort(cur))}</b> · <bdi dir="ltr">~${cur.kcal}</bdi> ${nmEsc(t('calories_unit'))}</div>
         <div class="nm-swap-tabs" role="tablist">${TABS.map(([k, icon, label]) => `<button type="button" role="tab" class="nm-swap-tab${tab === k ? ' on' : ''}" aria-selected="${tab === k}" data-tab="${k}">${icon} ${nmEsc(t(label))}</button>`).join('')}</div>
         ${room >= 40 && !god ? `<div class="nm-swap-budget">${nmTpl('nm_swap_budget', { n: nmFmt(budget) })}</div>` : ''}`;
@@ -3663,6 +3666,23 @@ function openNewMeMenuToday() {
 // ארוחה אחרת ישר מ"השגרה שלי" - בחלון רגיל של החלפה, בלי להיכנס למשחק (לפי בקשה מפורשת, 2026-10-16: "בשגרה שלי
 // ה-New Me שיהיה אפשר לבחור ארוחה אחרת - מסך רגיל, לא משחק התקדמות"). הארוחה הקטנה הנוספת - בחירה מבין האפשרויות שלה.
 // onDone - כשהחלון נסגר (השגרה מתרעננת)
+// 🕐 השעה של הארוחה, בראש החלון שנפתח מ"השגרה שלי" (לפי בקשה מפורשת, 2026-10-18). אותה שעה כמו בשעות האוכל ובתזכורות
+// של New Me - נשמרת שם (ארוחה רגילה: new_me_reminders דרך nmSyncReminders; הארוחה הקטנה: side_time בפרופיל)
+function nmMealTimeRowHtml(slot) {
+    const time = slot === 'side' ? nmSideTime() : nmSlotReminderTime(slot);
+    return `<label class="nm-meal-time-row"><span>🕐 ${nmEsc(t('nm_swap_time'))}</span><input type="time" data-slot-time="${slot}" value="${nmEsc(time || '')}"></label>`;
+}
+function nmBindMealTimeRow(sheet, slot) {
+    if (!sheet) return;
+    sheet.addEventListener('change', async e => {
+        const inp = e.target.closest && e.target.closest('[data-slot-time]');
+        if (!inp || !/^([01]\d|2[0-3]):[0-5]\d$/.test(inp.value || '')) return;
+        if (slot === 'side') await nmSetSide({ side_time: inp.value });
+        else await nmSyncReminders({ times: { [slot]: inp.value } });
+        showAppToast(t('nm_times_saved'));
+        if (typeof nmAfterTrackerChange === 'function') nmAfterTrackerChange();
+    });
+}
 function nmOpenMealFromOutside(slot, onDone) {
     if (!hasNewMe || !nmProfile) return;
     let ov;
@@ -3670,6 +3690,7 @@ function nmOpenMealFromOutside(slot, onDone) {
         const cur = nmSideInfo();
         ov = nmOpenSheet(`
             <h4>🕐 ${nmEsc(t('nm_side_title'))}</h4>
+            ${nmMealTimeRowHtml('side')}
             ${Object.keys(NEW_ME_SIDE_OPTIONS).map(id => {
                 const it = nmSideInfo(id);
                 return `<button type="button" class="nm-option${id === cur.id ? ' selected' : ''}" data-side-pick="${id}" aria-pressed="${id === cur.id}">
@@ -3679,13 +3700,14 @@ function nmOpenMealFromOutside(slot, onDone) {
                 </button>`;
             }).join('')}
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-swap-sheet');
+        nmBindMealTimeRow(ov.querySelector('.nm-sheet'), 'side');
         ov.querySelectorAll('[data-side-pick]').forEach(b => b.addEventListener('click', async () => {
             ov.remove();
             if (b.dataset.sidePick !== cur.id) { await nmSetSide({ side_choice: b.dataset.sidePick }); showAppToast(t('nm_swap_done_permanent')); }
             if (onDone) onDone();
         }));
     } else {
-        nmOpenSwap(slot);
+        nmOpenSwap(slot, null, { timeRow: true });
         const sw = document.querySelectorAll('.nm-swap-sheet');
         ov = sw.length ? sw[sw.length - 1].closest('.nm-sheet-overlay') : null;
     }
@@ -3806,7 +3828,8 @@ function nmRenderBadges(body) {
                 <span class="nm-badge-title">${nmEsc(nmBadgeTitle(b))}</span>
                 <span class="nm-badge-sub">${at ? nmEsc(nmShortDate(at.slice(0, 10))) : '&nbsp;'}</span>
             </button>`;
-        }).join('')}</div>`;
+        }).join('')}</div>
+        ${typeof nmChBadgesSectionHtml === 'function' ? nmChBadgesSectionHtml() : ''}`;
 }
 function nmShowBadge(key) {
     const b = NEW_ME_BADGES.find(x => x.key === key);

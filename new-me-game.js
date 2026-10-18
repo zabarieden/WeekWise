@@ -32,6 +32,8 @@ const NMG_SVG = {
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
 };
 const NMG_ICONS = {
+    // 📓 יומן האתגרים - ספר עם ✓
+    chjournal: '<path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v12H8.5A3.5 3.5 0 0 1 5 16.5z"/><path d="M5 16.5A3.5 3.5 0 0 1 8.5 13H19"/><path d="m9 7.8 1.9 1.9L14.6 6"/>',
     day: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
     challenges: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
     journey: '<path d="M4 20c4 0 4-5 8-5s4-6 8-6"/><circle cx="4" cy="20" r="1.5"/><circle cx="20" cy="9" r="1.5"/>',

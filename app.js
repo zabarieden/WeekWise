@@ -9613,6 +9613,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'new_me_weight_optional', category: 'nutrition' },
     { id: 'new_me_hall', category: 'nutrition' },
     { id: 'new_me_week_challenge', category: 'nutrition' },
+    { id: 'new_me_challenge_journal', category: 'nutrition' },
     { id: 'room_genie', category: 'nutrition' },
     { id: 'new_me_game', category: 'nutrition' },
     { id: 'new_me_home_btn', category: 'nutrition' },

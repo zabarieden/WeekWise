@@ -290,6 +290,7 @@ function nmCelebrateChallenge(c, opts = {}) {
         <h3 class="nm-celebrate-title">${nmEsc(t('nm_ch_complete_title'))}</h3>
         <p class="nm-celebrate-desc"><b>${nmEsc(nmChTitle(c.challenge_key))}</b></p>
         <p class="nm-celebrate-desc">${week ? `🔑 ${nmEsc(t('nm_week_done_desc'))}` : all ? nmEsc(t('nm_ch_all_done_desc')) : nmTpl('nm_ch_complete_desc', { n: nmFmt(n), total: nmFmt(total) })}</p>
+        ${c.id && !opts.simulated ? `<button type="button" class="nm-row-btn" data-reflect>📝 ${nmEsc(t('nm_chj_reflect_btn'))}</button>` : ''}
         ${week ? `<button type="button" class="nm-row-btn" data-keep>📌 ${nmEsc(t('nm_week_keep_btn'))}</button>` : ''}
         <div class="nm-celebrate-actions">
             <button type="button" class="nm-btn-ghost" data-share>${nmEsc(t('nm_share'))}</button>
@@ -303,10 +304,105 @@ function nmCelebrateChallenge(c, opts = {}) {
     ov.querySelector('[data-ok]').addEventListener('click', () => { ov.remove(); if (all) nmGo('gift'); else afterClose(); });
     const keep = ov.querySelector('[data-keep]');
     if (keep) keep.addEventListener('click', () => { ov.remove(); nmKeepAsDaily(c.challenge_key, afterClose); });
+    // 📝 איך עבר - דף ביומן האתגרים; אחריו ממשיכים כרגיל (המפתח, או המתנה כשכל ה-20 הסתיימו)
+    const reflect = ov.querySelector('[data-reflect]');
+    if (reflect) reflect.addEventListener('click', () => { ov.remove(); nmOpenChallengeReflect(c.id, all ? () => nmGo('gift') : afterClose); });
     if (typeof spawnGentleConfettiBurst === 'function') {
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 60 : 40), 150);
         setTimeout(() => spawnGentleConfettiBurst(sheet, all ? 40 : 24), 550);
     }
+}
+
+// ---------- יומן האתגרים: איך עבר כל אתגר שהסתיים ----------
+// לפי בקשה מפורשת (2026-10-18): "בסוף כל אתגר… שירשם בהישגים פלוס שיפתח יומן צדדי חוץ מהיומן הרגיל שיהיה אפשר
+// לשתף איך עבר האתגר ושישמר בהיסטוריה". הבחירות שלה: הדף נפתח מחגיגת הסיום (עם "אחר כך"), היומן - יהלום בתיק
+// הקסום, ובדף דירוג + 3 שאלות קצרות (אף אחת לא חובה). נשמר בשורת האתגר עצמה (reflect_* ב-new_me_challenges)
+const NM_CHJ_MOODS = ['😣', '😕', '😐', '🙂', '😄'];
+function nmChDone() { return nmChallenges.filter(c => c.status === 'done' && nmChDef(c.challenge_key)).sort((a, b) => String(b.completed_at || '').localeCompare(String(a.completed_at || ''))); }
+function nmChDoneDate(c) { return String(c.completed_at || '').slice(0, 10) || getLocalDateString(); }
+function nmChReflected(c) { return !!(c && (c.reflect_mood || c.reflect_helped || c.reflect_hard || c.reflect_take)); }
+const NM_CHJ_FIELDS = [['helped', 'nm_chj_helped', '💡'], ['hard', 'nm_chj_hard', '🪨'], ['take', 'nm_chj_take', '🌱']];
+
+function nmOpenChallengeReflect(id, onClose) {
+    const c = nmChallenges.find(x => x.id === id);
+    if (!c || !nmChDef(c.challenge_key)) { if (onClose) onClose(); return; }
+    const def = nmChDef(c.challenge_key);
+    let mood = Number(c.reflect_mood) || 0;
+    const ov = nmOpenSheet(`
+        <div class="nm-chj-head">
+            <span class="nm-medal" aria-hidden="true"><span>${def.icon}</span></span>
+            <span class="nm-chj-head-text"><b>${nmEsc(nmChTitle(c.challenge_key))}</b><small>${nmEsc(t('nm_ch_done_on').replace('{date}', nmLongDate(nmChDoneDate(c))))}</small></span>
+        </div>
+        <h4>${nmEsc(t('nm_chj_q'))}</h4>
+        <div class="nm-chj-moods" role="radiogroup" aria-label="${nmEsc(t('nm_chj_q'))}">${NM_CHJ_MOODS.map((m, i) => `<button type="button" class="nm-chj-mood${mood === i + 1 ? ' on' : ''}" data-mood="${i + 1}" role="radio" aria-checked="${mood === i + 1}" aria-label="${nmEsc(t('nm_chj_mood_' + (i + 1)))}">${m}</button>`).join('')}</div>
+        ${NM_CHJ_FIELDS.map(([k, label, icon]) => `<label class="nm-field nm-chj-field"><span>${icon} ${nmEsc(t(label))}</span><textarea data-k="${k}" rows="2" maxlength="600">${nmEsc(c['reflect_' + k] || '')}</textarea></label>`).join('')}
+        <button type="button" class="nm-btn-primary" data-save>${nmEsc(t('nm_chj_save'))}</button>
+        <div class="nm-celebrate-actions">
+            <button type="button" class="nm-btn-ghost" data-share>${nmEsc(t('nm_share'))}</button>
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_chj_later'))}</button>
+        </div>`, 'nm-chj-sheet', onClose);
+    const sheet = ov.querySelector('.nm-sheet');
+    const vals = () => { const o = {}; sheet.querySelectorAll('[data-k]').forEach(el => { o[el.dataset.k] = el.value.trim(); }); return o; };
+    sheet.querySelectorAll('[data-mood]').forEach(b => b.addEventListener('click', () => {
+        mood = mood === Number(b.dataset.mood) ? 0 : Number(b.dataset.mood);
+        sheet.querySelectorAll('[data-mood]').forEach(x => { const on = Number(x.dataset.mood) === mood; x.classList.toggle('on', on); x.setAttribute('aria-checked', on); });
+    }));
+    sheet.querySelector('[data-save]').addEventListener('click', async e => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        const v = vals();
+        const fields = { reflect_mood: mood || null, reflect_helped: v.helped || null, reflect_hard: v.hard || null, reflect_take: v.take || null, reflected_at: new Date().toISOString() };
+        const { error } = await supabaseClient.from('new_me_challenges').update(fields).eq('id', c.id).eq('user_id', currentUserId);
+        if (error) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
+        Object.assign(c, fields);
+        showAppToast(t('nm_chj_saved'));
+        ov.remove();
+        if (onClose) onClose();
+    });
+    sheet.querySelector('[data-share]').addEventListener('click', () => {
+        const v = vals();
+        const lines = [`${def.icon} ${nmChTitle(c.challenge_key)}${mood ? ' ' + NM_CHJ_MOODS[mood - 1] : ''}`];
+        NM_CHJ_FIELDS.forEach(([k, label, icon]) => { if (v[k]) lines.push(`${icon} ${t(label)}\n${v[k]}`); });
+        openSharePicker(`${shareBold(t('nm_chj_share_text'))}\n\n${lines.join('\n\n')}`);
+    });
+}
+// מתוך היומן או מההישגים - הדף של האתגר; אחרי שמירה/סגירה המסך מתרענן
+document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-chj]');
+    if (!b) return;
+    nmOpenChallengeReflect(b.dataset.chj, () => { if (typeof nmView !== 'undefined' && (nmView === 'chjournal' || nmView === 'badges')) nmRenderView(nmRoot()); });
+});
+// 📓 יומן האתגרים (יהלום בתיק הקסום): כל האתגרים שהסתיימו, האחרון למעלה
+function nmRenderChJournal(body) {
+    const list = nmChDone();
+    if (!list.length) { body.innerHTML = `<p class="nm-fine nm-chj-empty">${nmEsc(t('nm_chj_empty'))}</p>`; return; }
+    body.innerHTML = `<div class="nm-chj-list">${list.map(c => {
+        const def = nmChDef(c.challenge_key);
+        const first = NM_CHJ_FIELDS.map(([k]) => c['reflect_' + k]).find(Boolean);
+        const sub = nmChReflected(c)
+            ? `${c.reflect_mood ? `<span class="nm-chj-row-mood">${NM_CHJ_MOODS[c.reflect_mood - 1]}</span>` : ''}${first ? `<span class="nm-chj-row-text">${nmEsc(first)}</span>` : ''}`
+            : `<span class="nm-chj-row-write">📝 ${nmEsc(t('nm_chj_write'))}</span>`;
+        return `<button type="button" class="nm-option nm-chj-row" data-chj="${c.id}">
+            <span class="nm-medal" aria-hidden="true"><span>${def.icon}</span></span>
+            <span class="nm-chj-row-main">
+                <b>${nmEsc(nmChTitle(c.challenge_key))}</b>
+                <small>${nmEsc(nmChKindLabel(c.kind))} · ${nmEsc(t('nm_ch_days_n').replace('{n}', nmFmt(c.days || 7)))} · ${nmEsc(nmShortDate(nmChDoneDate(c)))}</small>
+                <span class="nm-chj-row-sub">${sub}</span>
+            </span>
+        </button>`;
+    }).join('')}</div>`;
+}
+// 🏆 בהישגים: "אתגרים שהשלמתי" - מדליה לכל אתגר שהסתיים (נגיעה - הדף שלו ביומן האתגרים)
+function nmChBadgesSectionHtml() {
+    const list = nmChDone();
+    if (!list.length) return '';
+    return `<h3 class="nm-chj-badges-title">🏆 ${nmEsc(t('nm_badges_challenges'))}</h3>
+        <div class="nm-badges-grid">${list.map(c => `
+            <button type="button" class="nm-badge earned" data-chj="${c.id}">
+                <span class="nm-medal" aria-hidden="true"><span>${nmChDef(c.challenge_key).icon}</span></span>
+                <span class="nm-badge-title">${nmEsc(nmChTitle(c.challenge_key))}</span>
+                <span class="nm-badge-sub">${nmEsc(nmShortDate(nmChDoneDate(c)))}</span>
+            </button>`).join('')}</div>`;
 }
 
 // ---------- הצצה להיום / לוח השנה ----------
