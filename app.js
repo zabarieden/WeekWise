@@ -6039,7 +6039,15 @@ async function loadTodayTasks() {
     // לפי בקשה מפורשת נוספת ("שלא ירשום כלום"). הפתקים הנפרדים ("מה חשוב לך
     // היום") לא נספרים כמשימה כאן - populated/events הם רק weekly_schedule
     // ו-calendar_events בפועל
-    if (allDone) {
+    // יום שיש בו רק ארוחות של New Me (בלי משימות) - לפי בקשה מפורשת (2026-10-18): בלי "כל הכבוד, סיימת את כל
+    // המשימות" ובלי נצנצים, רק שורה שקטה שכל הארוחות סומנו
+    const onlyMeals = checkableItems.length > 0 && checkableItems.every(item => item.kind === 'newme');
+    if (allDone && onlyMeals) {
+        const note = document.createElement('p');
+        note.className = 'today-tasks-celebration';
+        note.textContent = t('myday_meals_all_done');
+        container.appendChild(note);
+    } else if (allDone) {
         if (checkableItems.length > 0) {
             const celebration = document.createElement('p');
             celebration.className = 'today-tasks-celebration';

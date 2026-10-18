@@ -307,7 +307,9 @@ function renderMyDayBar(items) {
     if (!nextEl) return;
     const pick = myDayPickNow(items);
     if (!pick) {
-        nextEl.innerHTML = `<span class="myday-bar-empty">${myDayEsc(total ? t('today_tasks_all_done_message') : t('myday_bar_empty'))}</span>`;
+        // רק ארוחות של New Me (בלי משימות) - שורה שקטה במקום "כל הכבוד, סיימת את כל המשימות" (ר' loadTodayTasks)
+        const onlyMeals = total > 0 && items.every(it => !it.checkable || it.kind === 'newme');
+        nextEl.innerHTML = `<span class="myday-bar-empty">${myDayEsc(!total ? t('myday_bar_empty') : onlyMeals ? t('myday_meals_all_done') : t('today_tasks_all_done_message'))}</span>`;
         return;
     }
     const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');

@@ -2840,7 +2840,7 @@ async function nmToggleCheck(slot, btn) {
     // "21 ימים לפי התפריט": 3 ארוחות מסומנות = היום באתגר מסומן לבד
     if (!wasChecked) nmChallengeAutoCheck('menu');
     // ✓ ביום השלישי עם New Me = המפתח הראשון לחדר הסודי
-    if (!wasChecked && typeof roomCheckNewKeys === 'function') roomCheckNewKeys();
+    if (!wasChecked && typeof roomCheckNewKeys === 'function') roomCheckNewKeys('meal');
 }
 
 async function nmCheck(slot) {

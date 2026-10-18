@@ -546,7 +546,7 @@ function nmOpenChallenge(key) {
     if (!def) return;
     const today = getLocalDateString();
     const tomorrow = nmAddDays(today, 1);
-    const nextWeek = nmAddDays(nmWeekStart(), 7);
+    const nextWeek = nmChNextWeekStart();
     // בלי יום התחלה שנבחר מראש - המשתמש/ת בוחר/ת מתי מתחילים (הכפתור נפתח רק אחרי הבחירה)
     let sel = null, other = false, otherDate = nmAddDays(today, 2), confirmCancel = false, helpOpen = false;
     const ov = nmOpenSheet('', 'nm-ch-sheet');
@@ -635,6 +635,21 @@ function nmChActiveWeek() { return nmChActiveOfKind('week'); }
 function nmGrowthTabsHtml(cur, attr) {
     return `<div class="nm-growth-tabs" role="tablist">${NEW_ME_GROWTH_AREAS.map(a => `<button type="button" role="tab" class="nm-growth-tab${a.id === cur ? ' on' : ''}" aria-selected="${a.id === cur}" ${attr}="${a.id}"><span aria-hidden="true">${a.icon}</span>${nmEsc(nmGrowthAreaName(a.id))}</button>`).join('')}</div>`;
 }
+// "בשבוע הבא" = היום הראשון בשבוע הבא לפי המדינה של המכשיר (ראשון בישראל ובארה״ב, שני באירופה…) - לפי בקשה
+// מפורשת (2026-10-18): "כל אחד והמדינה שלו". השבוע של האתגר עצמו מתחיל ביום שבוחרים ונמשך 7 ימים
+function nmChNextWeekStart() {
+    let first = 7;
+    try {
+        const loc = new Intl.Locale(navigator.language || 'he-IL');
+        const wi = typeof loc.getWeekInfo === 'function' ? loc.getWeekInfo() : loc.weekInfo;
+        if (wi && wi.firstDay) first = wi.firstDay;
+    } catch {}
+    const d = new Date();
+    let add = ((first % 7) - d.getDay() + 7) % 7;
+    if (!add) add = 7;
+    d.setDate(d.getDate() + add);
+    return getLocalDateString(d);
+}
 function nmGrowthSectionHtml() {
     const list = NEW_ME_GROWTH.filter(c => c.area === nmGrowthArea);
     return `
@@ -653,6 +668,31 @@ document.addEventListener('click', e => {
     const sec = document.getElementById('nm-growth-section');
     if (sec) sec.outerHTML = nmGrowthSectionHtml();
 });
+// התחומים בשורה אחת שזזה לצדדים - בטלפון בהחלקה, ובמחשב גם בגלגלת ובגרירה עם העכבר (לפי בקשה מפורשת,
+// 2026-10-18: "אני לא יכולה לראות מה יש עוד… שיהיה אפשר להזיז לצדדים"). גרירה לא נחשבת לחיצה על תחום
+let nmTabsDrag = null, nmTabsDragged = false;
+document.addEventListener('wheel', e => {
+    const row = e.target.closest && e.target.closest('.nm-growth-tabs');
+    if (!row || row.scrollWidth <= row.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    row.scrollBy({ left: (getComputedStyle(row).direction === 'rtl' ? -1 : 1) * e.deltaY });
+}, { passive: false });
+document.addEventListener('pointerdown', e => {
+    const row = e.pointerType === 'mouse' && e.button === 0 && e.target.closest && e.target.closest('.nm-growth-tabs');
+    if (row) nmTabsDrag = { row, x: e.clientX, left: row.scrollLeft, moved: false };
+});
+document.addEventListener('pointermove', e => {
+    if (!nmTabsDrag) return;
+    const dx = e.clientX - nmTabsDrag.x;
+    if (Math.abs(dx) > 5) nmTabsDrag.moved = true;
+    if (nmTabsDrag.moved) nmTabsDrag.row.scrollLeft = nmTabsDrag.left - dx;
+});
+document.addEventListener('pointerup', () => { if (nmTabsDrag) { nmTabsDragged = nmTabsDrag.moved; nmTabsDrag = null; } });
+document.addEventListener('click', e => {
+    if (!nmTabsDragged) return;
+    nmTabsDragged = false;
+    if (e.target.closest && e.target.closest('.nm-growth-tabs')) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 // "על מה רוצים לעבוד השבוע?" - התחומים, ובכל תחום האתגרים שלו; נגיעה - הגיליון של האתגר (מתי מתחילים)
 function nmOpenGrowthPicker(area) {
     let cur = area || nmGrowthArea;

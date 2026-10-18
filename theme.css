@@ -7049,7 +7049,15 @@ div.nm-ch-head-text { cursor: default; }
 /* האתגרים לבחירה - קוביות קטנות (3 בשורה, 2 במסך צר מאוד) */
 .nm-ch-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 /* 🌱 התפתחות אישית: לשוניות התחומים, ורשימת האתגרים בגיליון "על מה רוצים לעבוד השבוע?" */
-.nm-growth-tabs { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+/* השורה זזה לצדדים (החלקה, גלגלת, גרירה - ר' nmTabsDrag); דהייה רכה בקצוות מראה שיש עוד. הריווח בצדדים
+   מבטל את הדהייה מהתחום הראשון והאחרון כשהשורה בקצה */
+.nm-growth-tabs {
+    flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 2px 16px 10px; margin-inline: -16px; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+.nm-growth-tabs::-webkit-scrollbar { display: none; }
+@media (hover: hover) and (pointer: fine) { .nm-growth-tabs { cursor: grab; } }
 .nm-growth-tab { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 .nm-growth-tab.on { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); }
 .nm-growth-eyebrow { font-size: 0.8rem; font-weight: 800; color: var(--accent-purple-light-text); }
@@ -10233,7 +10241,16 @@ html[data-color-theme^="magic_"] .nm-btn-primary {
 .notes-look-chip:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 .notes-look-swatch { flex: none; width: 18px; height: 12px; border-radius: 4px; }
 .nls-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
-.nls-clean { border-radius: 0; border-bottom: 2px solid currentColor; opacity: 0.55; }
+/* רשימה נקייה: רשימה קטנה מצוירת - שלוש שורות, נקודה לפני כל אחת */
+.nls-clean {
+    border-radius: 0; opacity: 0.75;
+    background:
+        radial-gradient(circle, currentColor 0 1.2px, transparent 1.5px) left 0 top 0 / 3px 4px repeat-y,
+        linear-gradient(currentColor, currentColor) left 5px top 1.25px / 13px 1.5px no-repeat,
+        linear-gradient(currentColor, currentColor) left 5px top 5.25px / 9px 1.5px no-repeat,
+        linear-gradient(currentColor, currentColor) left 5px top 9.25px / 11px 1.5px no-repeat;
+}
+[dir="rtl"] .nls-clean { background-position: right 0 top 0, right 5px top 1.25px, right 5px top 5.25px, right 5px top 9.25px; }
 .nls-index { background: #fffefb; box-shadow: inset 0 3px 0 var(--accent-pink); }
 .nls-washi { border-radius: 0; background: repeating-linear-gradient(45deg, #fde68a 0 3px, #fff3c4 3px 6px); clip-path: polygon(6% 0, 94% 6%, 100% 50%, 94% 94%, 6% 100%, 0 50%); }
 /* 📖 הספר במסך הבית + הנעיצה בפינת הקריאה */

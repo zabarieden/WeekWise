@@ -71,6 +71,7 @@ function applyTranslations() {
 
 const translations = {
 en: {
+    myday_meals_all_done: "All of today's meals are checked 🍽️",
     nm_tour_week_text: "A small challenge for the whole week, in an area you choose. The dots are the week's days – tap ✓ every day, and a finished week brings a key.",
     books_home_chip: "{title} · p. {page}",
     books_home_of: "of {total}",
@@ -3782,6 +3783,7 @@ en: {
     preset_select_placeholder: "📋 Saved meal...",
 },
 he: {
+    myday_meals_all_done: "כל הארוחות של היום סומנו 🍽️",
     nm_tour_week_text: "אתגר קטן לכל השבוע, בתחום שבוחרים. הנקודות הן ימי השבוע – נוגעים ב-✓ כל יום, ושבוע שהסתיים מביא מפתח.",
     books_home_chip: "{title} · עמ׳ {page}",
     books_home_of: "מתוך {total}",
@@ -7493,6 +7495,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
+    myday_meals_all_done: "Todas las comidas de hoy están marcadas 🍽️",
     nm_tour_week_text: "Un pequeño reto para toda la semana, en el área que elijas. Los puntos son los días de la semana: toca ✓ cada día, y una semana completada trae una llave.",
     books_home_chip: "{title} · pág. {page}",
     books_home_of: "de {total}",
@@ -11213,6 +11216,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla. Se elimina todo, incluidas las fotos que subiste. Si Google Calendar está conectado, la App lo desconecta primero: no se elimina nada de tu propio Google Calendar.",
 },
 fr: {
+    myday_meals_all_done: "Tous les repas du jour sont cochés 🍽️",
     nm_tour_week_text: "Un petit défi pour toute la semaine, dans le domaine de votre choix. Les points sont les jours de la semaine – touchez ✓ chaque jour, et une semaine terminée apporte une clé.",
     books_home_chip: "{title} · p. {page}",
     books_home_of: "sur {total}",
@@ -14933,6 +14937,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer. Tout est supprimé, y compris les photos que vous avez importées. Si Google Calendar est connecté, l'app le déconnecte d'abord – rien n'est supprimé de votre Google Calendar lui-même.",
 },
 ar: {
+    myday_meals_all_done: "تم تسجيل كل وجبات اليوم 🍽️",
     nm_tour_week_text: "تحدٍّ صغير للأسبوع كله، في مجال تختاره. النقاط هي أيام الأسبوع – المس ✓ كل يوم، والأسبوع المكتمل يجلب مفتاحًا.",
     books_home_chip: "{title} · ص {page}",
     books_home_of: "من {total}",
@@ -18658,6 +18663,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده. يُحذف كل شيء، بما في ذلك الصور التي تم رفعها. وإذا كان تقويم جوجل متصلًا، يفصله التطبيق أولًا – ولا يُحذف أي شيء من تقويم جوجل نفسه.",
 },
 ru: {
+    myday_meals_all_done: "Все приёмы пищи на сегодня отмечены 🍽️",
     nm_tour_week_text: "Небольшой челлендж на всю неделю в выбранной вами области. Точки – это дни недели: нажимайте ✓ каждый день, и завершённая неделя принесёт ключ.",
     books_home_chip: "{title} · стр. {page}",
     books_home_of: "из {total}",
@@ -22384,6 +22390,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'. Удаляется всё, включая загруженные фото. Если подключён Google Calendar, приложение сначала отключает его – из самого Google Calendar ничего не удаляется.",
 },
 de: {
+    myday_meals_all_done: "Alle Mahlzeiten von heute sind abgehakt 🍽️",
     nm_tour_week_text: "Eine kleine Challenge für die ganze Woche, in einem Bereich deiner Wahl. Die Punkte sind die Tage der Woche – tippe jeden Tag auf ✓, und eine geschaffte Woche bringt einen Schlüssel.",
     books_home_chip: "{title} · S. {page}",
     books_home_of: "von {total}",
@@ -26104,6 +26111,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben. Dabei wird alles gelöscht, auch die hochgeladenen Fotos. Ist Google Calendar verbunden, trennt die App die Verbindung zuerst – aus deinem Google Calendar selbst wird nichts gelöscht.",
 },
 pt: {
+    myday_meals_all_done: "Todas as refeições de hoje estão marcadas 🍽️",
     nm_tour_week_text: "Um pequeno desafio para a semana inteira, na área que você escolher. Os pontos são os dias da semana – toque em ✓ todo dia, e uma semana concluída traz uma chave.",
     books_home_chip: "{title} · pág. {page}",
     books_home_of: "de {total}",
@@ -29824,6 +29832,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar. Tudo é excluído, inclusive as fotos que você enviou. Se o Google Calendar estiver conectado, o app o desconecta primeiro – nada é excluído do seu próprio Google Calendar.",
 },
 ja: {
+    myday_meals_all_done: "今日の食事はすべてチェック済み 🍽️",
     nm_tour_week_text: "好きな分野で取り組む、1週間の小さなチャレンジ。点は1週間の各日です。毎日✓をタップして、1週間やり終えるとカギがもらえます。",
     books_home_chip: "{title} · {page}ページ",
     books_home_of: "/ 全{total}ページ",
@@ -33544,6 +33553,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。アップロードした写真も含めて、すべてが削除されます。Googleカレンダーが連携されている場合は、先に連携が解除されます。Googleカレンダー自体からは何も削除されません。",
 },
 zh: {
+    myday_meals_all_done: "今天的餐食都已打卡 🍽️",
     nm_tour_week_text: "一个为期一整周的小挑战，领域由你来选。圆点代表这周的每一天——每天点 ✓，完成一周就能得到一把钥匙。",
     books_home_chip: "{title} · 第{page}页",
     books_home_of: "共 {total} 页",
@@ -37264,6 +37274,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。所有内容都会被删除，包括上传的照片。如果已连接 Google Calendar，应用会先断开连接 – Google Calendar 本身中的内容不会被删除。",
 },
 hi: {
+    myday_meals_all_done: "आज के सभी भोजन चिह्नित हो गए 🍽️",
     nm_tour_week_text: "पूरे हफ़्ते के लिए एक छोटी चुनौती, आपके चुने क्षेत्र में। बिंदु हफ़्ते के दिन हैं – हर दिन ✓ पर टैप करें, और पूरा हुआ हफ़्ता एक चाबी लाता है।",
     books_home_chip: "{title} · पृ. {page}",
     books_home_of: "कुल {total} में से",
@@ -40984,6 +40995,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा। इसमें सब कुछ हट जाता है, अपलोड की गई तस्वीरें भी। अगर Google Calendar जुड़ा है, तो ऐप पहले उसे डिस्कनेक्ट करता है – आपके Google Calendar से कुछ भी नहीं हटता।",
 },
 ko: {
+    myday_meals_all_done: "오늘 식사를 모두 체크했어요 🍽️",
     nm_tour_week_text: "직접 고른 영역에서 일주일 동안 하는 작은 챌린지예요. 점은 그 주의 하루하루예요 – 날마다 ✓를 누르고, 한 주를 마치면 열쇠가 생겨요.",
     books_home_chip: "{title} · {page}쪽",
     books_home_of: "/ {total}쪽",
@@ -44704,6 +44716,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다. 업로드한 사진을 포함해 모든 것이 삭제됩니다. Google Calendar가 연결되어 있으면 앱이 먼저 연결을 해제하며, Google Calendar 자체에서는 아무것도 삭제되지 않습니다.",
 },
 tr: {
+    myday_meals_all_done: "Bugünün tüm öğünleri işaretlendi 🍽️",
     nm_tour_week_text: "Bütün hafta için, seçtiğin bir alanda küçük bir görev. Noktalar haftanın günleri – her gün ✓ simgesine dokun; biten bir hafta bir anahtar getirir.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "/ {total}",
@@ -48424,6 +48437,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir. Yüklediğin fotoğraflar dahil her şey silinir. Google Calendar bağlıysa uygulama önce bağlantıyı keser – Google Calendar'ın kendisinden hiçbir şey silinmez.",
 },
 id: {
+    myday_meals_all_done: "Semua makan hari ini sudah dicentang 🍽️",
     nm_tour_week_text: "Tantangan kecil untuk seminggu penuh, di bidang yang kamu pilih. Titik-titiknya adalah hari-hari dalam minggu itu – ketuk ✓ setiap hari, dan minggu yang selesai membawa satu kunci.",
     books_home_chip: "{title} · hlm. {page}",
     books_home_of: "dari {total}",
@@ -52144,6 +52158,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya. Semuanya dihapus, termasuk foto yang Anda unggah. Jika Google Calendar terhubung, aplikasi memutuskannya terlebih dahulu – tidak ada yang dihapus dari Google Calendar Anda sendiri.",
 },
 it: {
+    myday_meals_all_done: "Tutti i pasti di oggi sono spuntati 🍽️",
     nm_tour_week_text: "Una piccola sfida per tutta la settimana, nell'area che scegli. I puntini sono i giorni della settimana – tocca ✓ ogni giorno, e una settimana completata porta una chiave.",
     books_home_chip: "{title} · pag. {page}",
     books_home_of: "di {total}",
@@ -55864,6 +55879,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla. Viene eliminato tutto, comprese le foto caricate. Se Google Calendar è collegato, l'app prima lo scollega: dal tuo Google Calendar non viene eliminato nulla.",
 },
 vi: {
+    myday_meals_all_done: "Đã đánh dấu tất cả các bữa ăn hôm nay 🍽️",
     nm_tour_week_text: "Một thử thách nhỏ cho cả tuần, trong lĩnh vực bạn chọn. Các chấm là các ngày trong tuần – chạm ✓ mỗi ngày, và một tuần hoàn thành sẽ mang về một chiếc chìa khóa.",
     books_home_chip: "{title} · tr. {page}",
     books_home_of: "trên {total}",
@@ -59584,6 +59600,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận. Mọi thứ đều bị xóa, kể cả ảnh bạn đã tải lên. Nếu Google Calendar đang được kết nối, ứng dụng sẽ ngắt kết nối trước – không có gì bị xóa khỏi chính Google Calendar của bạn.",
 },
 pl: {
+    myday_meals_all_done: "Wszystkie dzisiejsze posiłki są odhaczone 🍽️",
     nm_tour_week_text: "Małe wyzwanie na cały tydzień, w wybranym przez ciebie obszarze. Kropki to dni tygodnia – dotykaj ✓ każdego dnia, a ukończony tydzień przyniesie klucz.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "z {total}",
@@ -63311,6 +63328,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'. Usuwane jest wszystko, także przesłane zdjęcia. Jeśli Google Calendar jest połączony, aplikacja najpierw go odłącza – z samego Google Calendar nic nie jest usuwane.",
 },
 th: {
+    myday_meals_all_done: "ทำเครื่องหมายมื้ออาหารของวันนี้ครบแล้ว 🍽️",
     nm_tour_week_text: "ชาเลนจ์เล็กๆ สำหรับทั้งสัปดาห์ ในหมวดที่คุณเลือก จุดต่างๆ คือวันในสัปดาห์ – แตะ ✓ ทุกวัน แล้วสัปดาห์ที่ทำครบจะได้กุญแจหนึ่งดอก",
     books_home_chip: "{title} · หน้า {page}",
     books_home_of: "จาก {total}",
@@ -67033,6 +67051,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน ทุกอย่างจะถูกลบ รวมถึงรูปภาพที่อัปโหลดไว้ หากเชื่อมต่อ Google Calendar อยู่ แอปจะยกเลิกการเชื่อมต่อก่อน – จะไม่มีอะไรถูกลบออกจาก Google Calendar เอง",
 },
 ur: {
+    myday_meals_all_done: "آج کے تمام کھانوں پر نشان لگ گیا 🍽️",
     nm_tour_week_text: "پورے ہفتے کے لیے ایک چھوٹا چیلنج، آپ کے چنے ہوئے شعبے میں۔ نقطے ہفتے کے دن ہیں – ہر روز ✓ پر ٹیپ کریں، اور ختم ہونے والا ہفتہ ایک چابی لاتا ہے۔",
     books_home_chip: "{title} · ص {page}",
     books_home_of: "{total} میں سے",
@@ -70755,6 +70774,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔ اس میں سب کچھ حذف ہو جاتا ہے، اپ لوڈ کی گئی تصاویر بھی۔ اگر Google Calendar جڑا ہوا ہو تو ایپ پہلے اسے منقطع کرتی ہے – خود Google Calendar سے کچھ بھی حذف نہیں ہوتا۔",
 },
 bn: {
+    myday_meals_all_done: "আজকের সব খাবারে টিক দেওয়া হয়েছে 🍽️",
     nm_tour_week_text: "পুরো সপ্তাহের জন্য একটি ছোট চ্যালেঞ্জ, আপনার বেছে নেওয়া ক্ষেত্রে। বিন্দুগুলো সপ্তাহের দিন – প্রতিদিন ✓-এ ট্যাপ করুন, আর শেষ হওয়া সপ্তাহ একটি চাবি আনে।",
     books_home_chip: "{title} · পৃ. {page}",
     books_home_of: "মোট {total}",
@@ -74477,6 +74497,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে। আপলোড করা ছবিসহ সবকিছু মুছে যায়। Google Calendar সংযুক্ত থাকলে অ্যাপ আগে সেটির সংযোগ বিচ্ছিন্ন করে – Google Calendar থেকে নিজে কিছুই মোছা হয় না।",
 },
 sw: {
+    myday_meals_all_done: "Milo yote ya leo imewekewa alama 🍽️",
     nm_tour_week_text: "Changamoto ndogo kwa wiki nzima, katika eneo unalochagua. Vitone ni siku za wiki – gusa ✓ kila siku, na wiki iliyokamilika huleta ufunguo.",
     books_home_chip: "{title} · uk. {page}",
     books_home_of: "kati ya {total}",
@@ -78199,6 +78220,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha. Kila kitu hufutwa, ikiwa ni pamoja na picha ulizopakia. Ikiwa Google Calendar imeunganishwa, programu huitenganisha kwanza – hakuna kinachofutwa kwenye Google Calendar yenyewe.",
 },
 uk: {
+    myday_meals_all_done: "Усі прийоми їжі на сьогодні позначено 🍽️",
     nm_tour_week_text: "Маленький челендж на весь тиждень у напрямі, який ви обираєте. Крапки – це дні тижня: торкайтеся ✓ щодня, і завершений тиждень принесе ключ.",
     books_home_chip: "{title} · стор. {page}",
     books_home_of: "із {total}",
@@ -81927,6 +81949,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'. Видаляється все, зокрема завантажені фото. Якщо Google Calendar підключено, застосунок спершу відключає його – із самого Google Calendar нічого не видаляється.",
 },
 el: {
+    myday_meals_all_done: "Όλα τα γεύματα της ημέρας έχουν τσεκαριστεί 🍽️",
     nm_tour_week_text: "Μια μικρή πρόκληση για όλη την εβδομάδα, σε έναν τομέα που διαλέγετε. Οι τελείες είναι οι μέρες της εβδομάδας – πατήστε ✓ κάθε μέρα, και μια εβδομάδα που ολοκληρώνεται φέρνει ένα κλειδί.",
     books_home_chip: "{title} · σ. {page}",
     books_home_of: "από {total}",
@@ -85649,6 +85672,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε. Διαγράφονται τα πάντα, μαζί και οι φωτογραφίες που ανεβάσατε. Αν το Google Calendar είναι συνδεδεμένο, η εφαρμογή το αποσυνδέει πρώτα – τίποτα δεν διαγράφεται από το ίδιο το Google Calendar.",
 },
 nl: {
+    myday_meals_all_done: "Alle maaltijden van vandaag zijn afgevinkt 🍽️",
     nm_tour_week_text: "Een kleine uitdaging voor de hele week, in een gebied dat je zelf kiest. De stippen zijn de dagen van de week – tik elke dag op ✓, en een afgeronde week levert een sleutel op.",
     books_home_chip: "{title} · blz. {page}",
     books_home_of: "van {total}",
@@ -89371,6 +89395,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen. Alles wordt verwijderd, ook de foto's die je hebt geüpload. Als Google Calendar gekoppeld is, ontkoppelt de app die eerst – uit je Google Calendar zelf wordt niets verwijderd.",
 },
 ca: {
+    myday_meals_all_done: "Tots els àpats d'avui estan marcats 🍽️",
     nm_tour_week_text: "Un petit repte per a tota la setmana, en un àmbit que tries tu. Els punts són els dies de la setmana – toca ✓ cada dia, i una setmana acabada porta una clau.",
     books_home_chip: "{title} · pàg. {page}",
     books_home_of: "de {total}",
@@ -93093,6 +93118,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho. S'elimina tot, incloses les fotos que has pujat. Si Google Calendar està connectat, l'app primer el desconnecta: no s'elimina res del teu Google Calendar.",
 },
 ro: {
+    myday_meals_all_done: "Toate mesele de azi sunt bifate 🍽️",
     nm_tour_week_text: "O provocare mică pentru toată săptămâna, într-un domeniu pe care îl alegi. Punctele sunt zilele săptămânii – atinge ✓ în fiecare zi, iar o săptămână încheiată aduce o cheie.",
     books_home_chip: "{title} · pag. {page}",
     books_home_of: "din {total}",
@@ -96818,6 +96844,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare. Se șterge totul, inclusiv fotografiile încărcate. Dacă Google Calendar este conectat, aplicația îl deconectează mai întâi – nu se șterge nimic din Google Calendar-ul tău.",
 },
 yo: {
+    myday_meals_all_done: "A ti sàmì sí gbogbo oúnjẹ òní 🍽️",
     nm_tour_week_text: "Ìpèníjà kékeré fún gbogbo ọ̀sẹ̀, ní ẹ̀ka tí o yàn. Àwọn àmì kékeré náà ni àwọn ọjọ́ ọ̀sẹ̀ – tẹ ✓ lójoojúmọ́, ọ̀sẹ̀ tí ó bá parí sì ń mú kọ́kọ́rọ́ wá.",
     books_home_chip: "{title} · ojú ìwé {page}",
     books_home_of: "nínú {total}",
@@ -100541,6 +100568,7 @@ yo: {
 },
 
 sv: {
+    myday_meals_all_done: "Alla dagens måltider är avbockade 🍽️",
     nm_tour_week_text: "En liten utmaning för hela veckan, inom ett område du väljer. Prickarna är veckans dagar – tryck på ✓ varje dag, så ger en avklarad vecka en nyckel.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "av {total}",
@@ -104263,6 +104291,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta. Allt raderas, även foton du har laddat upp. Om Google Calendar är anslutet kopplar appen först bort det – inget raderas från själva Google Calendar.",
 },
 nb: {
+    myday_meals_all_done: "Alle dagens måltider er krysset av 🍽️",
     nm_tour_week_text: "En liten utfordring for hele uken, innen et område du velger. Prikkene er ukens dager – trykk på ✓ hver dag, så gir en fullført uke en nøkkel.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "av {total}",
@@ -107985,6 +108014,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte. Alt slettes, også bilder du har lastet opp. Hvis Google Calendar er tilkoblet, kobler appen det fra først – ingenting slettes fra selve Google Calendar.",
 },
 da: {
+    myday_meals_all_done: "Alle dagens måltider er krydset af 🍽️",
     nm_tour_week_text: "En lille udfordring for hele ugen, inden for et område, du vælger. Prikkerne er ugens dage – tryk på ✓ hver dag, så giver en gennemført uge en nøgle.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "af {total}",
@@ -111707,6 +111737,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte. Alt slettes, også billeder, du har uploadet. Hvis Google Calendar er forbundet, afbryder appen forbindelsen først – intet slettes fra selve Google Calendar.",
 },
 cs: {
+    myday_meals_all_done: "Všechna dnešní jídla jsou odškrtnutá 🍽️",
     nm_tour_week_text: "Malá výzva na celý týden v oblasti, kterou si vyberete. Tečky jsou dny v týdnu – každý den klepněte na ✓ a dokončený týden přinese klíč.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "z {total}",
@@ -115433,6 +115464,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'. Smaže se vše, včetně nahraných fotek. Pokud je připojen Google Calendar, aplikace ho nejprve odpojí – ze samotného Google Calendar se nic nesmaže.",
 },
 hu: {
+    myday_meals_all_done: "A mai összes étkezés ki van pipálva 🍽️",
     nm_tour_week_text: "Egy apró kihívás az egész hétre, egy általad választott területen. A pöttyök a hét napjai – koppints minden nap a ✓-re, és a teljesített hét egy kulcsot hoz.",
     books_home_chip: "{title} · {page}. o.",
     books_home_of: "/ {total}",
@@ -119155,6 +119187,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'. Minden törlődik, a feltöltött fotók is. Ha a Google Calendar csatlakoztatva van, az app előbb leválasztja – magából a Google Calendarból semmi nem törlődik.",
 },
 fi: {
+    myday_meals_all_done: "Kaikki tämän päivän ateriat on merkitty 🍽️",
     nm_tour_week_text: "Pieni haaste koko viikoksi, valitsemallasi alueella. Pisteet ovat viikon päivät – napauta ✓ joka päivä, niin päättynyt viikko tuo avaimen.",
     books_home_chip: "{title} · s. {page}",
     books_home_of: "/ {total}",

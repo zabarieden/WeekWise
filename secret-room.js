@@ -137,15 +137,30 @@ function roomAfterKeysChange() {
     if (typeof nmgRenderHud === 'function') { nmgRenderHud(); nmgCheckEvolve(); }
 }
 
-// מפתח חדש (או כמה) שעוד לא נחשף - חגיגת מפתח, ומשם ישר למה שנפתח
-async function roomCheckNewKeys() {
+// מפתח חדש (או כמה) שעוד לא נחשף - חגיגת מפתח, ומשם ישר למה שנפתח. reason = 'meal' כשזה אחרי ✓ על ארוחה
+let roomKeysChecking = false;
+async function roomCheckNewKeys(reason) {
     if (typeof hasNewMe === 'undefined' || !hasNewMe || typeof nmProfile === 'undefined' || !nmProfile) return;
-    if (!roomLoaded) await roomLoad();
-    if (!roomState) return;
-    const keys = roomKeys();
-    const seen = Number(roomState.keys_seen) || 0;
-    if (keys <= seen || document.querySelector('.sr-reveal')) return;
-    roomShowKeyReveal(seen, keys);
+    if (roomKeysChecking) return;
+    roomKeysChecking = true;
+    try {
+        if (!roomLoaded) await roomLoad();
+        else await roomRefreshSeen();
+        if (!roomState) return;
+        const keys = roomKeys();
+        const seen = Number(roomState.keys_seen) || 0;
+        if (keys <= seen || document.querySelector('.sr-reveal')) return;
+        roomShowKeyReveal(seen, keys, reason);
+    } finally { roomKeysChecking = false; }
+}
+// מכשיר אחר אולי כבר הראה את המפתח (ושמר) - לפי בקשה מפורשת (2026-10-18): החגיגה הופיעה פעמיים. לוקחים מהחשבון
+// כמה מפתחות כבר נחשפו, ואת מפתחות ה-PM
+async function roomRefreshSeen() {
+    if (!supabaseClient || !currentUserId || !roomState) return;
+    const { data } = await supabaseClient.from('new_me_room').select('keys_seen, dev_keys').eq('user_id', currentUserId).maybeSingle();
+    if (!data) return;
+    if ((Number(data.keys_seen) || 0) > (Number(roomState.keys_seen) || 0)) roomState.keys_seen = data.keys_seen;
+    if (data.dev_keys != null) roomState.dev_keys = data.dev_keys;
 }
 
 // ---------- חץ שמוביל למה שנפתח ----------
@@ -275,11 +290,12 @@ function roomOpenHowItWorks() {
 }
 
 // ---------- חגיגת מפתח ("כאילו הסתיים אתגר" - אותו דבר בדיוק אצל כולם) ----------
-function roomShowKeyReveal(from, to) {
+function roomShowKeyReveal(from, to, reason) {
     const opened = ROOM_UNLOCKS.filter(u => u.n > from && u.n <= to);
     const next = roomNextUnlock(to);
     const many = to - from > 1;
-    const first = from === 0;
+    // המפתח הראשון (3 ימים עם ✓ על ארוחה) - גם כשמפתחות ה-PM דלוקים ו-from כבר לא 0, לא "אתגר הסתיים"
+    const first = from === 0 || (reason === 'meal' && !many && roomRealKeys() === 1);
     const eyebrow = first ? t('room_reveal_first_eyebrow') : (many ? t('room_reveal_many_eyebrow').replace('{n}', srFmt(to - from)) : t('room_reveal_eyebrow'));
     const title = opened.some(u => u.id === 'door') ? t('room_reveal_door_title') : t('room_reveal_key_title').replace('{n}', srFmt(to));
     const openedHtml = opened.filter(u => u.id !== 'door').map(u => `<li>${SR_KEY_SVG}<span>${srEsc(t('room_reveal_opened').replace('{item}', roomItemName(u.id)))}</span></li>`).join('');
