@@ -3582,19 +3582,52 @@ async function nmEnsureHomeData() {
     return true;
 }
 // הארוחות של היום לציר הזמן: { time, text, done, toggle(checked) } - רק כשהנתונים כבר טעונים
+// 🍽️ מה בדיוק אוכלים בארוחה של היום (לפי בקשה מפורשת, 2026-10-18: "שלוחצים על הארוחה… או שעושים HOVER מעל אז שירשום
+// בדיוק מה אפשר לאכול"): ב"היום שלי" ובשגרה - מעבר עכבר מראה את כל הטקסט, ונגיעה פותחת חלון קטן עם ✓ והחלפה
+function nmMealFullText(slot) {
+    if (slot === 'side') return nmSideInfo().text;
+    if (nmIsFree(slot)) return `🍕 ${t('nm_free_meal')}`;
+    return nmItemFull(nmItemInfo(nmTodayKey(slot)));
+}
+function nmOpenMealDetails(slot, onDone) {
+    if (!hasNewMe || !nmProfile) return;
+    const side = slot === 'side';
+    const free = !side && nmIsFree(slot);
+    const info = side ? nmSideInfo() : nmItemInfo(nmTodayKey(slot));
+    const done = side ? !!nmSideRow() : !!nmTodayCheckins[slot];
+    const time = side ? nmSideTime() : nmSlotReminderTime(slot);
+    const refresh = () => { nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); if (onDone) onDone(); };
+    const ov = nmOpenSheet(`
+        <h4 class="nm-meal-det-head"><span>${nmEsc(side ? t('nm_side_title') : nmSlotName(slot))}</span><bdi class="nm-meal-det-time" dir="ltr">${nmEsc(time || '')}</bdi></h4>
+        <p class="nm-meal-det-text">${nmEsc(nmMealFullText(slot))}</p>
+        ${free ? '' : `<p class="nm-option-meta">${nmMeta(info)}</p>`}
+        ${done ? `<p class="nm-meal-det-done">✓ ${nmEsc(t('nm_hud_ate'))}</p>` : `<button type="button" class="nm-btn-primary" data-eat>${nmEsc(t('nm_hall_ate'))}</button>`}
+        <div class="nm-celebrate-actions">
+            <button type="button" class="nm-btn-ghost" data-swap>🔄 ${nmEsc(t('nm_swap'))}</button>
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>
+        </div>`, 'nm-meal-det-sheet');
+    const eat = ov.querySelector('[data-eat]');
+    if (eat) eat.addEventListener('click', async () => {
+        eat.disabled = true;
+        if (side) await nmToggleSide(); else await nmToggleCheck(slot);
+        ov.remove();
+        refresh();
+    });
+    ov.querySelector('[data-swap]').addEventListener('click', () => { ov.remove(); nmOpenMealFromOutside(slot, refresh); });
+}
 function myDayNewMeItems(evenWithoutSync) {
     if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString() || (!evenWithoutSync && !nmRoutineSyncOn())) return [];
     const items = nmActiveOrder().map(slot => {
         const free = nmIsFree(slot);
         const text = free ? `🍕 ${t('nm_free_meal')}` : `${nmSlotName(slot)} · ${nmItemShort(nmItemInfo(nmTodayKey(slot)))}`;
         return {
-            slot, time: nmSlotReminderTime(slot), text, done: !!nmTodayCheckins[slot],
+            slot, time: nmSlotReminderTime(slot), text, full: nmMealFullText(slot), done: !!nmTodayCheckins[slot],
             toggle: async checked => { if (!!nmTodayCheckins[slot] !== checked) await nmToggleCheck(slot); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
         };
     });
     // 🕐 הארוחה הקטנה הנוספת - בשעה שלה
     if (nmSideOn()) items.push({
-        slot: 'side', time: nmSideTime(), text: `${t('nm_side_title')} · ${nmSideInfo().name}`, done: !!nmSideRow(),
+        slot: 'side', time: nmSideTime(), text: `${t('nm_side_title')} · ${nmSideInfo().name}`, full: nmMealFullText('side'), done: !!nmSideRow(),
         toggle: async checked => { if (!!nmSideRow() !== checked) await nmToggleSide(); nmRenderHomeTile(); if (typeof loadTodayTasks === 'function') loadTodayTasks(); },
     });
     return items;
@@ -3668,21 +3701,24 @@ function openNewMeMenuToday() {
 // onDone - כשהחלון נסגר (השגרה מתרעננת)
 // 🕐 השעה של הארוחה, בראש החלון שנפתח מ"השגרה שלי" (לפי בקשה מפורשת, 2026-10-18). אותה שעה כמו בשעות האוכל ובתזכורות
 // של New Me - נשמרת שם (ארוחה רגילה: new_me_reminders דרך nmSyncReminders; הארוחה הקטנה: side_time בפרופיל)
+// הבורר המעוצב של האפליקציה (nmTimeBtnHtml - אותו בורר כמו בשעות האוכל ובתזכורות), לא בורר השעה של הדפדפן -
+// לפי בקשה מפורשת (2026-10-18): "שיהיה אותו עיצוב בהכל". שעה ואז דקות = שמירה אחת
+const nmMealTimeTimers = {};
 function nmMealTimeRowHtml(slot) {
     const time = slot === 'side' ? nmSideTime() : nmSlotReminderTime(slot);
-    return `<label class="nm-meal-time-row"><span>🕐 ${nmEsc(t('nm_swap_time'))}</span><input type="time" data-slot-time="${slot}" value="${nmEsc(time || '')}"></label>`;
+    return `<div class="nm-meal-time-row"><span>🕐 ${nmEsc(t('nm_swap_time'))}</span>${nmTimeBtnHtml('meal-' + slot, time || '12:00', t('nm_swap_time'), v => nmQueueMealTime(slot, v))}</div>`;
 }
-function nmBindMealTimeRow(sheet, slot) {
-    if (!sheet) return;
-    sheet.addEventListener('change', async e => {
-        const inp = e.target.closest && e.target.closest('[data-slot-time]');
-        if (!inp || !/^([01]\d|2[0-3]):[0-5]\d$/.test(inp.value || '')) return;
-        if (slot === 'side') await nmSetSide({ side_time: inp.value });
-        else await nmSyncReminders({ times: { [slot]: inp.value } });
+function nmQueueMealTime(slot, value) {
+    clearTimeout(nmMealTimeTimers[slot]);
+    nmMealTimeTimers[slot] = setTimeout(async () => {
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value || '')) return;
+        if (slot === 'side') await nmSetSide({ side_time: value });
+        else await nmSyncReminders({ times: { [slot]: value } });
         showAppToast(t('nm_times_saved'));
         if (typeof nmAfterTrackerChange === 'function') nmAfterTrackerChange();
-    });
+    }, 650);
 }
+function nmBindMealTimeRow() {}
 function nmOpenMealFromOutside(slot, onDone) {
     if (!hasNewMe || !nmProfile) return;
     let ov;

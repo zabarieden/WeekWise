@@ -23028,6 +23028,8 @@ function routineNewMeRow(m, checksOn) {
     titleBtn.type = 'button';
     titleBtn.className = 'daily-board-item-title';
     titleBtn.textContent = m.text;
+    // מעבר עכבר - בדיוק מה אוכלים (לפי בקשה מפורשת, 2026-10-18)
+    if (m.full) titleBtn.title = m.full;
     // נגיעה - ארוחה אחרת בחלון רגיל, מעל השגרה (בלי להיכנס למשחק של New Me)
     titleBtn.onclick = () => { if (typeof nmOpenMealFromOutside === 'function' && m.slot) nmOpenMealFromOutside(m.slot, () => renderDailyBoard()); };
     // סמל היהלום של New Me (כמו בתפריט של New Me)

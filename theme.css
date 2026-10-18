@@ -10994,3 +10994,8 @@ button.nmg-me-card:active { transform: scale(.97); }
 .nm-meal-time-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px 8px 14px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); font-weight: 700; color: var(--text-primary); }
 .nm-meal-time-row input { border: 1px solid var(--border-color); background: var(--bg-glass); color: var(--text-primary); border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 1rem; font-variant-numeric: tabular-nums; direction: ltr; }
 .nm-meal-time-row input:focus { outline: none; border-color: var(--accent-purple); }
+/* 🍽️ מה בדיוק אוכלים - החלון מ"היום שלי" (2026-10-18) */
+.nm-meal-det-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.nm-meal-det-time { font-size: .9rem; font-weight: 800; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.nm-meal-det-text { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--bg-row); border: 1px solid var(--border-color); line-height: 1.65; color: var(--text-primary); }
+.nm-meal-det-done { margin: 0; text-align: center; font-weight: 800; color: var(--accent-purple-light-text); }

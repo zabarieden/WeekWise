@@ -829,14 +829,14 @@ function nmKeepAsDaily(key, after) {
     const ov = nmOpenSheet(`
         <h4>📌 ${nmEsc(t('nm_week_keep_btn'))}</h4>
         <p class="nm-ch-desc"><b>${nmEsc(nmChTask(key))}</b></p>
-        <label class="nm-sheet-label" for="nm-keep-time">${nmEsc(t('nm_week_keep_time'))}</label>
-        <input type="time" id="nm-keep-time" class="nm-date" value="20:00">
+        <div class="nm-meal-time-row"><span>🕐 ${nmEsc(t('nm_week_keep_time'))}</span>${nmTimeBtnHtml('keep-time', '20:00', t('nm_week_keep_time'), () => {})}</div>
         <button type="button" class="nm-btn-primary" data-save>${nmEsc(t('nm_week_keep_save'))}</button>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`, 'nm-keep-sheet', after);
     ov.querySelector('[data-save]').addEventListener('click', async e => {
         const btn = e.currentTarget;
         btn.disabled = true;
-        const time = ov.querySelector('#nm-keep-time').value || '20:00';
+        const tb = ov.querySelector('.nm-time-btn[data-time-id="keep-time"]');
+        const time = (tb && /^\d{2}:\d{2}$/.test(tb.textContent.trim())) ? tb.textContent.trim() : '20:00';
         const ok = await nmAddDailyRoutineItem(`${nmChDef(key).icon} ${nmChTask(key)}`, time);
         if (!ok) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
         ov.remove();

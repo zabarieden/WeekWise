@@ -151,14 +151,17 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
     (newMeItems || []).forEach(nm => {
         items.push({
             kind: 'newme', group: null, minutes: scheduleTimeToMinutes(nm.time), done: !!nm.done, checkable: true, title: nm.text, toggle: checked => nm.toggle(checked),
-            build: () => myDayRow({ done: !!nm.done, time: nm.time, text: nm.text, tag: 'New Me', kindClass: 'newme', onchange: checked => nm.toggle(checked) }),
+            build: () => myDayRow({
+                done: !!nm.done, time: nm.time, text: nm.text, tag: 'New Me', kindClass: 'newme', onchange: checked => nm.toggle(checked), hint: nm.full,
+                onopen: typeof nmOpenMealDetails === 'function' ? () => nmOpenMealDetails(nm.slot) : null,
+            }),
         });
     });
     return items;
 }
 
 // שורה אחת בציר: [שעה] [נקודה] [טקסט + תגית] [✓]
-function myDayRow({ done, time, text, withName, tag, kindClass, onchange, onopen }) {
+function myDayRow({ done, time, text, withName, tag, kindClass, onchange, onopen, hint }) {
     const row = document.createElement('div');
     row.className = `today-tasks-row myday-row myday-kind-${kindClass || 'task'}${done ? ' is-done' : ''}`;
     const timeEl = document.createElement('span');
@@ -170,6 +173,8 @@ function myDayRow({ done, time, text, withName, tag, kindClass, onchange, onopen
     const main = document.createElement(onopen ? 'button' : 'span');
     main.className = 'myday-main';
     if (onopen) { main.type = 'button'; main.onclick = onopen; }
+    // מעבר עכבר - כל הטקסט (למשל בדיוק מה אוכלים בארוחה של New Me)
+    if (hint) main.title = hint;
     const textEl = document.createElement('span');
     textEl.className = 'today-tasks-text' + (done ? ' completed' : '');
     textEl.textContent = text;
