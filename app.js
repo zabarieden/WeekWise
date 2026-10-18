@@ -4776,6 +4776,14 @@ function parseScheduleTextLocally(text) {
 // זה בדיוק ההבדל בין "שיעור גיטרה בימי שני" (חוזר) ל"שבוע הבא ביום שני
 // שיעור גיטרה" (פעם אחת, תאריך ספציפי) - שתי הבקשות נשמעות דומות אבל
 // אמורות לנחות במקומות שונים לגמרי באפליקציה
+// תזכורת שנכתבה בטקסט עצמו ("תעשה לי התראה שעה לפני") - ה-AI מחזיר אותה לכל אירוע (reminder_minutes = דקות לפני).
+// לפי בקשה מפורשת (2026-10-18): "רשמתי תעשה לי התראה שעה לפני ולא עשה כלום". מה שנכתב בטקסט קובע; אחרת - שדה
+// התזכורת שליד תיבת הטקסט
+function aiEventReminderMinutes(ev, fieldMinutes) {
+    const m = Math.round(Number(ev && ev.reminder_minutes));
+    if (m > 0) return Math.min(40320, m);
+    return fieldMinutes > 0 ? fieldMinutes : 0;
+}
 async function applyOneTimeScheduleEvents(events) {
     if (!supabaseClient || !currentUserId) return [];
     // אותו שדה-תזכורת משותף מ-reminder-fields-wrap כמו applyParsedScheduleEvents
@@ -4787,10 +4795,13 @@ async function applyOneTimeScheduleEvents(events) {
     const aiReminderText = document.getElementById('ai-schedule-reminder-text')?.value.trim() || '';
     const rows = events.filter(ev => ev.event_date).map(ev => ({
         username: currentUsername, user_id: currentUserId,
-        event_title: ev.time ? `${ev.time} ${ev.task_title}` : ev.task_title,
+        // השעה בשדה משלה (כמו באירוע שנוצר ידנית) ולא בתחילת הכותרת - שרת התזכורות קורא רק את event_time,
+        // ואירוע עם השעה בכותרת לא קיבל אף פעם התראה
+        event_title: ev.task_title,
+        event_time: ev.time || null,
         event_date: ev.event_date,
         source: 'calendar',
-        reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+        reminder_minutes: aiEventReminderMinutes(ev, aiReminderMinutes) || null,
         reminder_text: aiReminderText || null,
     }));
     if (!rows.length) return [];
@@ -4844,7 +4855,7 @@ async function applyBoundedRecurringScheduleEvents(events) {
                     username: currentUsername, user_id: currentUserId,
                     event_title: ev.task_title, event_date: eventDate, event_time: ev.time || null,
                     recurrence_group_id: groupId, source: 'calendar',
-                    reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+                    reminder_minutes: aiEventReminderMinutes(ev, aiReminderMinutes) || null,
                     reminder_text: aiReminderText || null,
                 });
             });
@@ -4900,7 +4911,7 @@ async function applyParsedScheduleEvents(allEvents) {
         const rows = byDay[day].map(ev => ({
             username: currentUsername, user_id: currentUserId, day_of_week: day,
             slot_number: nextSlot++, time_of_day: ev.time || null, task_title: ev.task_title,
-            reminder_minutes: aiReminderMinutes > 0 ? aiReminderMinutes : null,
+            reminder_minutes: aiEventReminderMinutes(ev, aiReminderMinutes) || null,
             reminder_text: aiReminderText || null,
         }));
         await supabaseClient.from('weekly_schedule').insert(rows);
@@ -4940,7 +4951,8 @@ async function applyScheduleEditsAndDeletes(events) {
             deleted++;
         } else if (ev.intent === 'update') {
             const existingItem = lastFetchedExistingItems.find(item => item.id === ev.target_id);
-            const reminderMinutes = aiReminderMinutes > 0 ? aiReminderMinutes : (existingItem?.reminder_minutes || 0);
+            const askedMinutes = aiEventReminderMinutes(ev, aiReminderMinutes);
+            const reminderMinutes = askedMinutes > 0 ? askedMinutes : (existingItem?.reminder_minutes || 0);
             const reminderText = aiReminderMinutes > 0 ? aiReminderText : (existingItem?.reminder_text || '');
             if (ev.target_table === 'weekly_schedule') {
                 editingGlanceTaskId = ev.target_id;
@@ -9580,6 +9592,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'ai_phrasing_tips', category: 'ai' },
     { id: 'ai_mixed_request', category: 'ai' },
     { id: 'ai_bounded_duration', category: 'ai' },
+    { id: 'ai_reminder_in_text', category: 'ai' },
     { id: 'ai_local_fallback', category: 'ai' },
     { id: 'ai_monthly_limits', category: 'ai' },
     { id: 'custom_sport_type', category: 'sport_water' },

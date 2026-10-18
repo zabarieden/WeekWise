@@ -7057,7 +7057,11 @@ div.nm-ch-head-text { cursor: default; }
     mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
 }
 .nm-growth-tabs::-webkit-scrollbar { display: none; }
-@media (hover: hover) and (pointer: fine) { .nm-growth-tabs { cursor: grab; } }
+/* במחשב (עכבר) - כל התחומים גלויים בבת אחת, בשתי שורות; בטלפון שורה אחת שמחליקים */
+@media (hover: hover) and (pointer: fine) {
+    .nm-growth-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; -webkit-mask-image: none; mask-image: none; }
+    .nm-growth-tab { flex-direction: column; justify-content: center; gap: 2px; text-align: center; padding: 7px 8px; line-height: 1.2; border-radius: 16px; }
+}
 .nm-growth-tab { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 .nm-growth-tab.on { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); }
 .nm-growth-eyebrow { font-size: 0.8rem; font-weight: 800; color: var(--accent-purple-light-text); }

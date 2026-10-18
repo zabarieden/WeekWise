@@ -200,15 +200,18 @@ Deno.serve(async (req) => {
                             "needsMatchClarification false.\n\n" +
                             "A phrase asking to be reminded/notified/alerted about something ALREADY described " +
                             "earlier in the same message (e.g. \"also remind me\", \"create a reminder/notification " +
-                            "for it too\", \"תזכיר לי גם\", \"תייצר התראה ומשימה\", \"עם תזכורת\") is NOT a request " +
-                            "for a separate new activity - never output an event whose task_title is just a bare " +
-                            "notification-mechanism word with no real activity content of its own (English: " +
+                            "for it too\", \"תזכיר לי גם\", \"תייצר התראה ומשימה\", \"עם תזכורת\", \"תעשה לי התראה שעה לפני\") is NOT " +
+                            "a request for a separate new activity - never output an event whose task_title is just a " +
+                            "bare notification-mechanism word with no real activity content of its own (English: " +
                             "\"reminder\"/\"task\"/\"notification\"/\"alert\"; Hebrew: \"תזכורת\"/\"התראה\"/" +
-                            "\"משימה\", alone or combined like \"התראה ומשימה\"). The app already has a separate " +
-                            "reminder control outside this text box that the user sets herself - so when the only " +
-                            "new information in a phrase is \"remind me about the thing I just described\", leave " +
-                            "it out entirely instead of inventing a placeholder event for it, even if a day/date " +
-                            "like \"the day before\" was mentioned for it." +
+                            "\"משימה\", alone or combined like \"התראה ומשימה\"). Instead, set reminder_minutes on " +
+                            "the event it refers to: how many minutes BEFORE the event the reminder should come " +
+                            "(\"an hour before\"/\"שעה לפני\" = 60, \"half an hour before\"/\"חצי שעה לפני\" = 30, " +
+                            "\"a quarter of an hour\"/\"רבע שעה\" = 15, \"two hours before\"/\"שעתיים לפני\" = 120, " +
+                            "\"the day before\"/\"a day before\"/\"יום לפני\" = 1440, \"a week before\"/\"שבוע לפני\" " +
+                            "= 10080). If a reminder was asked for without saying how long before, use 10. When no " +
+                            "reminder was asked for an event, reminder_minutes is null. Never put reminder words in " +
+                            "task_title." +
                             existingItemsContext +
                             "\n\nText: " + text,
                     },
@@ -236,8 +239,9 @@ Deno.serve(async (req) => {
                                             target_table: { type: ["string", "null"], enum: ["weekly_schedule", "calendar_events", null], description: "Which table target_id belongs to - null for intent='create'" },
                                             needsMatchClarification: { type: "boolean", description: "true when intent is update/delete but you're not confident which single existing item is meant - never guess, ask instead" },
                                             matchCandidateIds: { type: "array", items: { type: "string" }, description: "2-4 most likely existing item ids, only when needsMatchClarification is true" },
+                                            reminder_minutes: { type: ["number", "null"], description: "Minutes BEFORE this event to remind, only when the text asks for a reminder/notification/alert for it (e.g. 'an hour before' = 60, 'the day before' = 1440; asked without an amount = 10). Null when no reminder was asked." },
                                         },
-                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date", "recurring_duration_months", "intent", "target_id", "target_table", "needsMatchClarification"],
+                                        required: ["day_of_week", "time", "task_title", "recurring", "event_date", "recurring_duration_months", "intent", "target_id", "target_table", "needsMatchClarification", "reminder_minutes"],
                                     },
                                 },
                             },

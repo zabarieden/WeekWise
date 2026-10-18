@@ -666,11 +666,16 @@ document.addEventListener('click', e => {
     if (!b) return;
     nmGrowthArea = b.dataset.growthArea;
     const sec = document.getElementById('nm-growth-section');
-    if (sec) sec.outerHTML = nmGrowthSectionHtml();
+    if (!sec) return;
+    const prevRow = sec.querySelector('.nm-growth-tabs');
+    const keepLeft = prevRow ? prevRow.scrollLeft : 0;
+    sec.outerHTML = nmGrowthSectionHtml();
+    const row = document.querySelector('#nm-growth-section .nm-growth-tabs');
+    if (row) row.scrollLeft = keepLeft;
 });
 // התחומים בשורה אחת שזזה לצדדים - בטלפון בהחלקה, ובמחשב גם בגלגלת ובגרירה עם העכבר (לפי בקשה מפורשת,
 // 2026-10-18: "אני לא יכולה לראות מה יש עוד… שיהיה אפשר להזיז לצדדים"). גרירה לא נחשבת לחיצה על תחום
-let nmTabsDrag = null, nmTabsDragged = false;
+let nmTabsDrag = null, nmTabsDragEnd = 0;
 document.addEventListener('wheel', e => {
     const row = e.target.closest && e.target.closest('.nm-growth-tabs');
     if (!row || row.scrollWidth <= row.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
@@ -687,19 +692,24 @@ document.addEventListener('pointermove', e => {
     if (Math.abs(dx) > 5) nmTabsDrag.moved = true;
     if (nmTabsDrag.moved) nmTabsDrag.row.scrollLeft = nmTabsDrag.left - dx;
 });
-document.addEventListener('pointerup', () => { if (nmTabsDrag) { nmTabsDragged = nmTabsDrag.moved; nmTabsDrag = null; } });
+document.addEventListener('pointerup', () => { if (nmTabsDrag) { if (nmTabsDrag.moved) nmTabsDragEnd = Date.now(); nmTabsDrag = null; } });
+// הלחיצה שהדפדפן שולח בסוף גרירה - בשום מקום: לא על תחום, וגם לא על הרקע שמאחורי החלון (שם היא סגרה את החלון,
+// כשהעכבר שוחרר מחוץ לשורה - 2026-10-18: "שאני גוררת הצידה זה נסגר")
 document.addEventListener('click', e => {
-    if (!nmTabsDragged) return;
-    nmTabsDragged = false;
-    if (e.target.closest && e.target.closest('.nm-growth-tabs')) { e.preventDefault(); e.stopPropagation(); }
+    if (Date.now() - nmTabsDragEnd > 400) return;
+    nmTabsDragEnd = 0;
+    e.preventDefault(); e.stopPropagation();
 }, true);
 // "על מה רוצים לעבוד השבוע?" - התחומים, ובכל תחום האתגרים שלו; נגיעה - הגיליון של האתגר (מתי מתחילים)
 function nmOpenGrowthPicker(area) {
     let cur = area || nmGrowthArea;
     const ov = nmOpenSheet('', 'nm-growth-sheet');
     const sheet = ov.querySelector('.nm-sheet');
+    // שורת התחומים נשארת בדיוק איפה שהייתה כשבוחרים תחום (בלי לקפוץ חזרה להתחלה) - לפי בקשה מפורשת (2026-10-18)
     const render = () => {
         const done = nmChDoneKeys();
+        const prevRow = sheet.querySelector('.nm-growth-tabs');
+        const keepLeft = prevRow ? prevRow.scrollLeft : null;
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>
             <div class="nm-growth-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}</div>
@@ -712,6 +722,7 @@ function nmOpenGrowthPicker(area) {
                     ${done.has(c.key) ? '<span class="nm-growth-opt-done" aria-hidden="true">✓</span>' : ''}
                 </button>`).join('')}</div>
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+        if (keepLeft != null) { const row = sheet.querySelector('.nm-growth-tabs'); if (row) row.scrollLeft = keepLeft; }
         sheet.querySelectorAll('[data-pick-area]').forEach(b => b.addEventListener('click', () => { cur = b.dataset.pickArea; nmGrowthArea = cur; render(); sheet.scrollTop = 0; }));
         sheet.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => { ov.remove(); nmOpenChallenge(b.dataset.pick); }));
     };
