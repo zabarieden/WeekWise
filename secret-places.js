@@ -956,8 +956,6 @@ function srpInitOutside(box, keys, opts = {}) {
 // השלט ליד הספסל (מתוך הרעיונות שלה ליער: "לדאוג לעצמך – בדיקה"). לפי בקשה מפורשת: נגיעה בשלט מושיבה על הספסל -
 // מתקרבים, והשלט גדול: לוח עץ ובתוכו שישה פוסטרים מנייר, כל אחד שאלה קטנה. ✓ על פוסטר - רק להיום, רק במכשיר
 const SRP_CARE_ICONS = ['💭', '😴', '⏳', '💗', '🤸', '🌬️'];
-const SRP_CARE_PAPER = ['#fff3c4', '#dff1ff', '#ffe1ec', '#e3fbe6', '#efe6ff', '#ffe9d6'];
-const SRP_CARE_TILT = [-2.5, 1.8, 2.2, -1.6, -2, 2.6];
 function srpOpenSignView(box) {
     box.querySelector('.srp-signview')?.remove();
     const key = `weekwise_room_care_${currentUserId || 'me'}`;
@@ -965,21 +963,30 @@ function srpOpenSignView(box) {
     let st = {};
     try { st = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch {}
     if (st.day !== today || !Array.isArray(st.on)) st = { day: today, on: [] };
+    // יושבים על הספסל והשלט מולנו (לפי בקשה מפורשת, 2026-10-20: "כאילו התיישבנו על הספסל וזה מולנו ושיהיה יותר קסום"):
+    // היער מאחור קצת מטושטש (כמו מצלמה שמתמקדת קרוב), למטה העץ של הספסל שיושבים עליו, ומולנו לוח קסום עם קשת של
+    // גפנים מאירים - ושש השאלות הן פנסים קטנים שתלויים על חוטים ומתנדנדים ברוח. ✓ מדליק את הפנס בזהב וגחלילית עפה ממנו
     const view = document.createElement('div');
-    view.className = 'srp-signview';
+    view.className = 'srp-signview srp-care-view';
     view.innerHTML = `
-        <div class="srp-signview-sky" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--y:${(i * 53) % 92}%;--d:${(i % 7) * 0.45}s;--s:${0.6 + (i % 4) * 0.35}"></i>`).join('')}</div>
+        <div class="srp-care-dof" aria-hidden="true"></div>
+        <div class="srp-signview-sky" aria-hidden="true">${Array.from({ length: 30 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--y:${(i * 53) % 88}%;--d:${(i % 7) * 0.45}s;--s:${0.6 + (i % 4) * 0.35}"></i>`).join('')}</div>
         <button type="button" class="sr-sub-back srp-signview-back">${SR_CHEVRON.prev}${srEsc(t('nm_back'))}</button>
-        <div class="srp-signview-board" role="group" aria-label="${srEsc(t('room_selfcare_title'))}">
-            <div class="srp-signview-plank">${srEsc(t('room_selfcare_title'))}</div>
-            <div class="srp-signview-posters">${[1, 2, 3, 4, 5, 6].map(i => `
-                <button type="button" class="srp-poster${st.on.includes(i) ? ' on' : ''}" data-care="${i}" aria-pressed="${st.on.includes(i)}" style="--paper:${SRP_CARE_PAPER[i - 1]};--tilt:${SRP_CARE_TILT[i - 1]}deg">
-                    <span class="srp-poster-pin" aria-hidden="true">✦</span>
-                    <span class="srp-poster-icon" aria-hidden="true">${SRP_CARE_ICONS[i - 1]}</span>
-                    <span class="srp-poster-text">${srEsc(t('room_selfcare_' + i))}</span>
-                    <span class="srp-poster-stamp" aria-hidden="true">✓</span>
-                </button>`).join('')}</div>
+        <div class="srp-care-scene">
+            <div class="srp-care-sign" role="group" aria-label="${srEsc(t('room_selfcare_title'))}">
+                <div class="srp-care-arch" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="srp-care-title">${srEsc(t('room_selfcare_title'))}</div>
+                <div class="srp-care-tags">${[1, 2, 3, 4, 5, 6].map(i => `
+                    <button type="button" class="srp-care-tag${st.on.includes(i) ? ' on' : ''}" data-care="${i}" aria-pressed="${st.on.includes(i)}" style="--i:${i}">
+                        <span class="srp-care-rope" aria-hidden="true"></span>
+                        <span class="srp-care-icon" aria-hidden="true">${SRP_CARE_ICONS[i - 1]}</span>
+                        <span class="srp-care-text">${srEsc(t('room_selfcare_' + i))}</span>
+                        <span class="srp-care-check" aria-hidden="true">✦</span>
+                    </button>`).join('')}</div>
+            </div>
+            <div class="srp-care-post" aria-hidden="true"></div>
         </div>
+        <div class="srp-care-bench" aria-hidden="true"><svg viewBox="0 0 400 130" preserveAspectRatio="xMidYMax meet"><defs><linearGradient id="srpBenchWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a6840"/><stop offset=".5" stop-color="#6a4226"/><stop offset="1" stop-color="#3a2314"/></linearGradient><linearGradient id="srpBenchArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a2c18"/><stop offset=".5" stop-color="#8a5a36"/><stop offset="1" stop-color="#4a2c18"/></linearGradient><radialGradient id="srpJarGlow"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#ffd27a" stop-opacity=".8"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs><path d="M-300 80 Q200 70 700 80 L700 95 Q200 86 -300 95 Z" fill="url(#srpBenchWood)"/><path d="M-300 100 Q200 91 700 100 L700 117 Q200 108 -300 117 Z" fill="url(#srpBenchWood)"/><path d="M-300 121 Q200 113 700 121 L700 150 L-300 150 Z" fill="#33200f"/><path d="M-300 81 Q200 71 700 81 M-300 101 Q200 92 700 101" stroke="#d9a06a" stroke-opacity=".55" stroke-width="1.6" fill="none"/><path d="M8 140 L10 56 Q8 30 34 28 Q58 28 58 48 Q58 64 42 64 Q30 64 30 53 Q30 44 40 44 Q46 44 46 50 L44 140 Z" fill="url(#srpBenchArm)"/><path d="M14 132 L16 58 Q16 36 34 34" stroke="#d9a06a" stroke-opacity=".45" stroke-width="1.5" fill="none"/><g class="srp-care-steam" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"><path d="M300 52 q-6 -8 0 -16 q6 -8 0 -16"/><path d="M312 54 q-6 -8 0 -16 q6 -8 0 -16"/></g><ellipse cx="306" cy="83" rx="26" ry="5" fill="#e9dcff" opacity=".9"/><path d="M288 60 L291 80 Q306 86 321 80 L324 60 Z" fill="#c9b6ff"/><path d="M288 60 Q306 66 324 60 Q306 55 288 60 Z" fill="#5b3b8c"/><path d="M324 64 q12 0 10 9 q-2 6 -12 5" stroke="#c9b6ff" stroke-width="3.5" fill="none"/><circle class="srp-care-jarglow" cx="362" cy="66" r="26" fill="url(#srpJarGlow)"/><rect x="350" y="54" width="24" height="28" rx="7" fill="rgba(255,240,210,.22)" stroke="rgba(255,240,210,.6)" stroke-width="1.5"/><rect x="352" y="49" width="20" height="6" rx="2" fill="#8a5a36"/><circle class="srp-care-jarfly" cx="361" cy="68" r="2.6" fill="#fff6c8"/></svg></div>
 `;
     box.appendChild(view);
     box.classList.add('is-sign');
@@ -993,8 +1000,16 @@ function srpOpenSignView(box) {
         b.classList.toggle('on', on);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
         try { localStorage.setItem(key, JSON.stringify(st)); } catch {}
+        // פנס שנדלק - גחלילית קטנה עפה ממנו למעלה
+        if (on && !srpReduce()) {
+            const fly = document.createElement('span');
+            fly.className = 'srp-care-fly';
+            fly.setAttribute('aria-hidden', 'true');
+            b.appendChild(fly);
+            setTimeout(() => fly.remove(), 1700);
+        }
     }));
-    setTimeout(() => { const first = view.querySelector('.srp-poster'); if (first) first.focus({ preventScroll: true }); }, 400);
+    setTimeout(() => { const first = view.querySelector('.srp-care-tag'); if (first) first.focus({ preventScroll: true }); }, 400);
 }
 
 // ---------- פנס המשאלות על הגג ----------
