@@ -82,7 +82,6 @@ function shopDeptOf(it) { return (it.shop_dept && String(it.shop_dept).trim()) |
 function shopDeptName(key) { return SHOP_DEPTS.includes(key) ? t(`shop_dept_${key}`) : key === 'other' ? t('shop_dept_other_name') : key; }
 // סדר המחלקות: לפי סדר הסופר, מחלקה שכתבו בעצמם - אחריהן, ו"אחר" בסוף
 function shopDeptRank(key) { const i = SHOP_DEPTS.indexOf(key); return i >= 0 ? i : key === 'other' ? 999 : 500; }
-function shopDeptColor(key) { return SHOP_DEPT_COLORS[key] || SHOP_DEPT_COLORS.other; }
 function shopGroups(items) {
     const groups = new Map();
     items.forEach(it => { const d = shopDeptOf(it); if (!groups.has(d)) groups.set(d, []); groups.get(d).push(it); });
@@ -108,11 +107,12 @@ function renderShoppingList(data) {
         if (heads) {
             const h = document.createElement('li');
             h.className = 'shop-dept-head';
-            h.innerHTML = `<span class="shop-dept-dot" style="background:${shopDeptColor(g.dept)}" aria-hidden="true"></span>${shopEsc(shopDeptName(g.dept))}`;
+            h.textContent = shopDeptName(g.dept);
             ul.appendChild(h);
         }
         g.items.forEach(it => ul.appendChild(shopRow(it)));
     });
+    renderShopHoliday();
     renderShopTransit();
     renderShopAgain();
     document.getElementById('shop-btn-share')?.classList.toggle('hidden', !active.length);
@@ -491,4 +491,102 @@ function shopMyDayItems() {
         kind: 'shop', group: 'tasks', minutes: null, done: false, checkable: false, title: text,
         build: () => myDayRow({ done: false, text: `🚚 ${text}`, kindClass: 'shop', onopen: openShopArrival }),
     }];
+}
+
+// ---------- 🎉 מה לקנות לחג (shop-holidays.js) ----------
+// כפתור המתנה בכותרת: החגים של המדינה לפי הסדר; נגיעה בחג - רשימה מוכנה (הכל מסומן, מה שכבר ברשימה - לא), ו"להוסיף
+// לרשימה". שבועיים לפני חג מופיע כרטיס קטן בראש הרשימה (✕ = לא עכשיו, עד החג הבא)
+const SHOP_GIFT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v7.5h14v-7.5M12 8.5V20"/><path d="M12 8.5c-1.6-3.6-6-4-6-1.6 0 1.2 1.6 1.6 6 1.6zM12 8.5c1.6-3.6 6-4 6-1.6 0 1.2-1.6 1.6-6 1.6z"/></svg>';
+const shopHolLoading = {};
+function shopEnsureHolLang(lang) {
+    if (!lang || typeof SHOP_HOLIDAY_TEXT === 'undefined' || SHOP_HOLIDAY_TEXT[lang]) return Promise.resolve(true);
+    if (!shopHolLoading[lang]) {
+        shopHolLoading[lang] = new Promise(resolve => {
+            const s = document.createElement('script');
+            s.src = `shop-holidays/${lang}.js?v=1`;
+            s.onload = () => resolve(!!SHOP_HOLIDAY_TEXT[lang]);
+            s.onerror = () => resolve(false);
+            document.head.appendChild(s);
+        });
+    }
+    return shopHolLoading[lang];
+}
+function shopHolLangText() { return (typeof SHOP_HOLIDAY_TEXT !== 'undefined' && (SHOP_HOLIDAY_TEXT[currentLang] || SHOP_HOLIDAY_TEXT.en)) || { names: {}, items: {} }; }
+function shopHolName(id) { const L = shopHolLangText(); return (L.names && L.names[id]) || SHOP_HOLIDAY_TEXT.en.names[id] || id; }
+function shopHolItems(id) { const L = shopHolLangText(); return String((L.items && L.items[id]) || SHOP_HOLIDAY_TEXT.en.items[id] || '').split('|').map(s => s.trim()).filter(Boolean); }
+function shopHolWhen(date) {
+    const today = getLocalDateString();
+    const d = new Date(`${today}T12:00:00`);
+    d.setDate(d.getDate() + 1);
+    if (date === today) return t('shop_when_today');
+    if (date === getLocalDateString(d)) return t('shop_when_tomorrow');
+    return new Date(`${date}T12:00:00`).toLocaleDateString(currentLang, { weekday: 'short', day: 'numeric', month: 'numeric' });
+}
+function shopHolKey(id, date) { return `weekwise_shop_hol_${id}_${date}`; }
+function shopHolDone(id, date) { try { return localStorage.getItem(shopHolKey(id, date)) === '1'; } catch { return false; } }
+function shopHolMarkDone(id, date) { try { localStorage.setItem(shopHolKey(id, date), '1'); } catch {} }
+function shopHolList() { return typeof shopHolidaysForCountry === 'function' ? shopHolidaysForCountry(typeof getUserCountry === 'function' ? getUserCountry() : 'il') : []; }
+// החג הקרוב, אם הוא בעוד שבועיים לכל היותר ועוד לא טיפלו בו
+function shopHolSoon() {
+    const h = shopHolList()[0];
+    if (!h) return null;
+    const days = Math.round((new Date(`${h.date}T12:00:00`) - new Date(`${getLocalDateString()}T12:00:00`)) / 86400000);
+    return days <= 14 && !shopHolDone(h.id, h.date) ? h : null;
+}
+function renderShopHoliday() {
+    const box = document.getElementById('shop-holiday');
+    if (!box) return;
+    if (typeof SHOP_HOLIDAY_TEXT !== 'undefined' && !SHOP_HOLIDAY_TEXT[currentLang]) shopEnsureHolLang(currentLang).then(ok => { if (ok) renderShopHoliday(); });
+    const h = shopHolSoon();
+    box.classList.toggle('hidden', !h);
+    if (!h) { box.innerHTML = ''; return; }
+    box.innerHTML = `
+        <button type="button" class="shop-hol-open" onclick="openShopHolidayItems('${h.id}', '${h.date}')">
+            <span class="shop-hol-icon">${SHOP_GIFT_ICON}</span>
+            <span class="shop-hol-text"><b>${shopEsc(shopHolName(h.id))}</b> · ${shopEsc(shopHolWhen(h.date))}<small>${shopEsc(t('shop_hol_btn'))}</small></span>
+        </button>
+        <button type="button" class="shop-hol-x" onclick="shopHolMarkDone('${h.id}', '${h.date}'); renderShopHoliday()" aria-label="${shopEsc(t('shop_hol_not_now'))}" title="${shopEsc(t('shop_hol_not_now'))}">${SHOP_ICONS.once}</button>`;
+}
+async function openShopHolidays() {
+    await shopEnsureHolLang(currentLang);
+    const list = shopHolList();
+    shopSheet(`
+        <h3>${shopEsc(t('shop_hol_btn'))}</h3>
+        <div class="shop-hol-list">${list.map(h => `<button type="button" class="shop-hol-row" onclick="openShopHolidayItems('${h.id}', '${h.date}')"><b>${shopEsc(shopHolName(h.id))}</b><span>${shopEsc(shopHolWhen(h.date))}</span></button>`).join('')}</div>
+        <div class="action-buttons-wrap"><button type="button" class="btn-clear-specific" onclick="closeShopSheet()">${shopEsc(t('close_btn'))}</button></div>`);
+}
+async function openShopHolidayItems(id, date) {
+    await shopEnsureHolLang(currentLang);
+    const inList = new Set(shopItemsCache.filter(it => !it.is_completed).map(it => shopNorm(it.content)));
+    const items = shopHolItems(id);
+    const picked = new Set(items.filter(x => !inList.has(shopNorm(x))));
+    const body = shopSheet(`
+        <h3>${shopEsc(t('shop_hol_items_title').replace('{holiday}', shopHolName(id)))}</h3>
+        <div class="shop-pick-list">${items.map((x, i) => {
+            const has = inList.has(shopNorm(x));
+            return `<button type="button" class="shop-pick${has ? ' is-have' : ' on'}" data-i="${i}" aria-pressed="${has ? 'false' : 'true'}"${has ? ' disabled' : ''}><span class="shop-pick-box" aria-hidden="true">✓</span><span>${shopEsc(x)}</span>${has ? `<small>${shopEsc(t('shop_dup_hint'))}</small>` : ''}</button>`;
+        }).join('')}</div>
+        <div class="action-buttons-wrap">
+            <button type="button" class="btn-primary" data-add></button>
+            <button type="button" class="btn-clear-specific" data-back>${shopEsc(t('recipe_back_btn'))}</button>
+        </div>`);
+    if (!body) return;
+    const add = body.querySelector('[data-add]');
+    const sync = () => {
+        body.querySelectorAll('.shop-pick:not(.is-have)').forEach(b => { const on = picked.has(items[b.dataset.i]); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+        add.textContent = t('shop_hol_add').replace('{n}', picked.size.toLocaleString(currentLang));
+        add.disabled = !picked.size;
+    };
+    body.querySelectorAll('.shop-pick:not(.is-have)').forEach(b => b.addEventListener('click', () => { const x = items[b.dataset.i]; picked.has(x) ? picked.delete(x) : picked.add(x); sync(); }));
+    body.querySelector('[data-back]').addEventListener('click', openShopHolidays);
+    add.addEventListener('click', async () => {
+        add.disabled = true;
+        const res = await shopAddMany(items.filter(x => picked.has(x)), { source_ref: `holiday:${id}` });
+        if (res.error) { add.disabled = false; return; }
+        shopHolMarkDone(id, date);
+        closeShopSheet();
+        await loadCenterItems('general');
+        showAppToast(t('shop_hol_added').replace('{n}', res.added.toLocaleString(currentLang)));
+    });
+    sync();
 }

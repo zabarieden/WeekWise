@@ -11278,7 +11278,6 @@ html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
 .shop-head-btn:active { transform: scale(.9); }
 #general-list.shop-list li.shop-dept-head { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 2px 6px 0; border: none; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: .76rem; font-weight: 800; letter-spacing: .02em; color: var(--text-secondary); }
 #general-list.shop-list li.shop-dept-head:first-child { margin-top: 0; }
-.shop-dept-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
 .shop-list .shop-row { align-items: center; gap: 6px; padding: 7px 10px 7px 12px; }
 .shop-row .shop-text { margin-inline-start: 2px; cursor: pointer; -webkit-line-clamp: 2; }
 .shop-row .shop-text:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; border-radius: 6px; }
@@ -11333,3 +11332,77 @@ html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
 .shop-sheet-body .shop-transit-items { margin: 0 0 14px; text-align: center; }
 .shop-sheet-body .btn-primary:disabled { opacity: .45; }
 .myday-kind-shop .myday-dot { background: var(--accent-purple); }
+/* 🛒 רשימה נקייה יותר (לפי בקשה מפורשת, 2026-10-20: "שיהיה רשימה יותר נקייה פחות נקודות בקניות"): בלי נקודות צבע
+   במחלקות, שורות שטוחות עם קו דק במקום כרטיס לכל פריט, וכפתורים בלי עיגולים מסביב */
+#general-list.shop-list { gap: 0; }
+#general-list.shop-list li.shop-row { padding: 10px 4px; border: none; border-bottom: 1px solid color-mix(in srgb, var(--text-secondary) 16%, transparent); border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+#general-list.shop-list li.shop-row[data-bg-color] { border-radius: 12px; border-bottom-color: transparent; padding-inline: 10px; }
+#general-list.shop-list li.shop-dept-head { margin-top: 18px; padding: 0 4px 2px; font-size: .78rem; color: var(--accent-purple-light-text); }
+#general-list.shop-list li.shop-dept-head:first-child { margin-top: 2px; }
+#general-list.shop-list .shop-qty-btn { width: 26px; height: 26px; border: none; background: none; color: var(--text-secondary); font-size: 1.15rem; font-weight: 600; opacity: .75; }
+#general-list.shop-list .shop-btn { width: 30px; height: 30px; background: none; }
+#general-list.shop-list .shop-btn-again { color: var(--accent-purple-light-text); }
+#general-list.shop-list .shop-btn-once { color: var(--text-secondary); opacity: .7; }
+/* 🎉 מה לקנות לחג: כרטיס קטן שבועיים לפני חג, ורשימת החגים */
+.shop-holiday { display: flex; align-items: center; gap: 4px; margin-bottom: 10px; padding: 4px 4px 4px 10px; border-radius: 18px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent-purple) 18%, transparent), color-mix(in srgb, var(--accent-pink) 12%, transparent)); }
+.shop-hol-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 6px; border: none; background: none; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.shop-hol-icon { flex: none; display: flex; color: var(--accent-purple-light-text); }
+.shop-hol-icon svg { width: 24px; height: 24px; }
+.shop-hol-text { display: flex; flex-direction: column; gap: 1px; font-size: .9rem; }
+.shop-hol-text small { font-size: .8rem; color: var(--accent-purple-light-text); font-weight: 700; }
+.shop-hol-x { flex: none; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 50%; background: none; color: var(--text-secondary); cursor: pointer; opacity: .7; }
+.shop-hol-x svg { width: 14px; height: 14px; }
+.shop-hol-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.shop-hol-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent-purple) 22%, transparent); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .95rem; text-align: start; cursor: pointer; }
+.shop-hol-row span { flex: none; font-size: .82rem; color: var(--text-secondary); }
+.shop-pick.is-have { opacity: .55; cursor: default; }
+.shop-pick small { margin-inline-start: auto; font-size: .74rem; color: var(--text-secondary); }
+/* הדמויות ביוגה ובגג - תמונות שצולמו מהדגמים (2026-10-20) */
+img.yg-3d-mv { display: block; object-fit: fill; }
+img.yg-3d-mv.is-contain { object-fit: contain; }
+.sr-cat-3d img { width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; transform-origin: 50% 100%; animation: yg3dBreathe 4.8s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(201, 182, 255, .45)); }
+@media (prefers-reduced-motion: reduce) { .sr-cat-3d img { animation: none; } }
+/* 🎒 התיק לבד למטה: בלי בסיס מתחתיו, רק זוהר רך מסביב (2026-10-20); המסע שלי עבר לעמודה שבצד, מתחת לאתגרים */
+.nmg-plinth { display: none; }
+.nmg-dock { grid-template-columns: 1fr; }
+.nmg-dock > .nmg-bagit { justify-self: end; }
+.nmg-bagit.is-big .nmg-bag { bottom: 4px; filter: drop-shadow(0 0 14px rgba(201, 182, 255, .75)) drop-shadow(0 0 26px rgba(255, 158, 207, .35)); }
+/* 🔮 חלון שנפתח - רואים רק אותו (לפי בקשה מפורשת, 2026-10-20: "שיהיה זכוכיתי ויפה אבל שמשהו נפתח רואים רק אותו שלא
+   יהיה רקע"): העולם מאחור נעלם כמעט לגמרי בטשטוש עמוק וכהה, הכפתורים של המשחק מתחבאים, והחלון זכוכית סגולה עמוקה */
+.phone-wrapper:has(#new-me-section.active-tab) > .nm-sheet-overlay,
+.phone-wrapper:has(#sr-overlay) > .nm-sheet-overlay,
+.phone-wrapper.nmg-bag-open > .nm-sheet-overlay,
+.phone-wrapper.nmg-map-open > .nm-sheet-overlay {
+    background: radial-gradient(ellipse at 50% 40%, rgba(46, 26, 92, .82), rgba(8, 4, 20, .94));
+    -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2);
+}
+.phone-wrapper:has(#new-me-section.active-tab) > .nm-sheet-overlay > .nm-sheet,
+.phone-wrapper:has(#sr-overlay) > .nm-sheet-overlay > .nm-sheet,
+.phone-wrapper.nmg-bag-open > .nm-sheet-overlay > .nm-sheet,
+.phone-wrapper.nmg-map-open > .nm-sheet-overlay > .nm-sheet {
+    background: linear-gradient(155deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .06) 42%, rgba(201, 182, 255, .08)), rgba(36, 20, 72, .55);
+}
+.phone-wrapper:has(> .nm-sheet-overlay) #nm-hud { visibility: hidden; }
+/* ✨ Me בא איתי לכל מקום (לפי בקשה מפורשת, 2026-10-20: "הME1 לא משנה לאן אני הולכת הוא יבוא איתי"): בכל חדר ובכל מקום Me
+   מרחף בפינה למטה (הדמות שלו בתלת־ממד), ולא חוסם שום נגיעה במה שמתחתיו. במסדרון Me כבר על השביל */
+.nmg-follow { display: none; position: absolute; bottom: 44px; inset-inline-start: 14px; width: 132px; height: 124px; pointer-events: none; }
+.nmg-follow img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
+.phone-wrapper:has(#sr-overlay):not(.nmg-map-open):not(.nmg-bag-open) .nmg-follow { display: block; }
+@media (prefers-reduced-motion: reduce) { .nmg-follow img { animation: none; } }
+/* 🧞 רוח היער ענק, על כל המסך, ומסתובב מהר יותר ונראה יותר בסיבוב (לפי בקשה מפורשת, 2026-10-20: "ממש ממש תגדיל את הגיני
+   שיראו אותו על כל המסך וגם הסיבוב שלו שיראו אותו טיפה יותר ושיהיה יותר מהיר"). בשיחה הוא נשאר גדול מאחור והחלון למטה */
+.srp-genie-x { display: flex; align-items: center; justify-content: center; padding: 0; }
+.srp-genie-x svg { width: 16px; height: 16px; }
+.srp-genie.has-3d .srp-genie-swirl { width: 100%; height: 94%; top: 50%; }
+.srp-genie.has-3d .srp-genie-3d { left: 0; right: 0; top: 0; bottom: 0; opacity: .45; }
+.srp-genie.has-3d .srp-genie-sparks { left: -2%; right: -2%; top: 0; bottom: 0; }
+.srp-genie.has-3d.go .srp-genie-swirl { animation-duration: 3.2s; animation-delay: .2s; }
+.srp-genie.has-3d.go .srp-genie-3d { animation: srpGenie3dShow2 3.2s ease-in .2s forwards, srpGenieFloat 3.8s ease-in-out 3.5s infinite; }
+@keyframes srpGenie3dShow2 { 0%, 55% { opacity: .45; } 100% { opacity: 1; } }
+.srp-genie.has-3d.go .srp-genie-sparks { animation: srpGenieSparksSpin 3.4s linear .1s forwards, srpGenieSparksOut 1.2s ease 2.6s forwards; }
+.srp-genie.has-3d .srp-genie-haze { animation-name: srpGenieHaze2; }
+@keyframes srpGenieHaze2 { 0%, 100% { opacity: .3; transform: scale(.94); } 50% { opacity: .5; transform: scale(1.04); } }
+.srp-genie.has-3d.go .srp-genie-ask { animation-delay: 3.4s; }
+.srp-genie.has-3d.go .srp-genie-fog { animation-delay: 3.6s; }
+.srp-genie.has-3d.is-talking .srp-genie-swirl { top: 38%; width: 100%; height: 76%; }
+.srp-genie.has-3d.is-talking .srp-genie-ask { top: auto; bottom: 12px; max-height: 52%; }

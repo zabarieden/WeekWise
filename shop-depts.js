@@ -3,10 +3,6 @@
 // מנצחת - כך ש"שוקולד חלב" הוא חטיף ולא חלב, ו"מיץ תפוזים" הוא משקה. בודקים את שפת האפליקציה, עברית ואנגלית.
 // הסדר כאן = סדר ההליכה בסופר (וגם שובר שוויון). מחלקה שהמשתמש בחר בעצמו נשמרת ב-shop_dept
 const SHOP_DEPTS = ['produce', 'bakery', 'dairy', 'meat', 'pantry', 'frozen', 'drinks', 'snacks', 'cleaning', 'care', 'baby', 'pets'];
-const SHOP_DEPT_COLORS = {
-    produce: '#6fdc8c', bakery: '#f5b65b', dairy: '#8fd3ff', meat: '#f29ac0', pantry: '#d9b38c', frozen: '#9fe7f5',
-    drinks: '#7aa8ff', snacks: '#c79bff', cleaning: '#7ee0c8', care: '#ffb3d9', baby: '#ffe28a', pets: '#c9a37a', other: '#b8b0c8',
-};
 // מילים לכל מחלקה, מופרדות ב-| (התחלה של מילה מספיקה: "עגבני" תופס עגבנייה ועגבניות)
 const SHOP_DEPT_WORDS = {
     he: {

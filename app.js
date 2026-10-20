@@ -3838,6 +3838,11 @@ function resetShellScroll() {
 
 function switchToTab(targetId) {
     showTabSection(targetId);
+    // הפתקים ורשימת הקניות בלי מסך ביניים (2026-10-20) - בלי בחירה נפתחים הפתקים
+    if (targetId === 'my-center-section') {
+        const section = document.getElementById(targetId);
+        if (section && !section.querySelector('.subview-panel.open')) openSubTile(targetId, 'notes');
+    }
 }
 
 // --- רמה 2 של הניווט: תוך כדי מסך ראשי, "תת-קוביה" פותחת תצוגה ממוקדת של
@@ -9663,6 +9668,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'shop_delivery', category: 'notes' },
     { id: 'shop_departments', category: 'notes' },
     { id: 'shop_share_qty', category: 'notes' },
+    { id: 'shop_holidays', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },

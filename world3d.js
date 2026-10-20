@@ -187,7 +187,7 @@ async function nmg3dUpgradeMap(box, keys) {
 // הוא אותו חתול בכל ציור חדש של המסדרון (לא נטען מחדש), ממשיך מאיפה שהיה. בלי הקובץ / WebGL / עם "פחות תנועה" - אין חתול
 const NMG3D_CAT = {
     url: 'world/3d/cat.glb',
-    feetY: 722, w: 150, h: 104, // במידות הציור (390 × 844): איפה הרגליים, וגודל החתול
+    feetY: 730, w: 196, h: 136, // במידות הציור (390 × 844): איפה הרגליים, וגודל החתול
     speed: 40,                  // יחידות ציור בשנייה
     timeScale: 0.6,             // קצב הצעדים (שהרגליים לא "יחליקו")
     rest: [6000, 15000],        // הפסקה בין מעבר למעבר (מ"ש)
@@ -211,8 +211,8 @@ async function nmg3dMakeCat() {
     const mv = document.createElement('model-viewer');
     const attrs = {
         src: C.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0.8', 'shadow-softness': '1', exposure: '1.45', 'environment-image': 'neutral',
-        'camera-orbit': '-90deg 80deg auto', 'field-of-view': '22deg', loading: 'eager',
+        'shadow-intensity': '0.8', 'shadow-softness': '1', exposure: '1.75', 'environment-image': 'neutral',
+        'camera-orbit': '-62deg 76deg auto', 'field-of-view': '22deg', loading: 'eager',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     wrap.appendChild(mv);
@@ -221,8 +221,8 @@ async function nmg3dMakeCat() {
     const startWalk = () => {
         st.phase = 'walk';
         st.x = st.dir > 0 ? -C.w : 390;
-        // פונה לכיוון ההליכה: מהצד (-90° = ימינה, 90° = שמאלה)
-        mv.cameraOrbit = `${st.dir > 0 ? -90 : 90}deg 80deg auto`;
+        // פונה לכיוון ההליכה, בשלושה רבעים כדי שיראו את הפנים (2026-10-20: "מה קרה לחתול??" - מהצד הוא נראה צללית): -62° = ימינה, 62° = שמאלה
+        mv.cameraOrbit = `${st.dir > 0 ? -62 : 62}deg 76deg auto`;
         if (st.walk) mv.animationName = st.walk;
         mv.timeScale = C.timeScale;
         mv.play();
@@ -287,16 +287,16 @@ const NMG3D_YOGA_MATS = {
     'yg-spirit': { cx: 350, y: 614, w: 100 },
 };
 const NMG3D_MAT_IN_FRAME = { w: 0.61, y: 0.71, aspect: 260 / 300, phi: 62 };
+// מ-2026-10-20: הדמויות ביוגה (ובגג) הן תמונות שצולמו מהדגמים בתלת־ממד (world/3d/<שם>.png), באותה מצלמה ובאותו יחס
+// של המסגרת - בדיוק מה שהדגם החי הראה, אבל עובד בכל מסך (דגם חי בתוך החדר צויר במקום הלא נכון במסך רחב) ונטען מהר
 function nmg3dYogaViewer(url, cls) {
-    const mv = document.createElement('model-viewer');
-    mv.className = cls;
-    const attrs = {
-        src: url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral',
-        'camera-orbit': '0deg 76deg auto', 'field-of-view': '24deg', loading: 'eager', 'aria-hidden': 'true',
-    };
-    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
-    return mv;
+    const img = document.createElement('img');
+    img.className = cls;
+    img.src = url;
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+    img.decoding = 'async';
+    return img;
 }
 // מלבן של <image> בציור (viewBox 390×844, slice) בפיקסלים של המסגרת, בלי טרנספורמציות (גם באמצע זום/אנימציה)
 function nmg3dSceneScale(frame) {
@@ -331,16 +331,15 @@ const NMG3D_YOGA_TUNE = { 'teacher-closed': { dy: 22 } };
 // בודקים מראש אילו דמויות יש בתלת־ממד (נקרא מהמסדרון), כך שבכניסה ליוגה הציורים מוסתרים מיד - בלי הבזק של הגרסה הישנה
 const NMG3D_YOGA_NAMES = ['yg-blob', 'yg-fluffy', 'yg-spirit', 'yg-baby', 'teacher-closed', 'teacher-open'];
 function nmg3dPrefetchYoga() {
-    if (nmg3dReduced() || !nmg3dWebgl()) return;
-    NMG3D_YOGA_NAMES.forEach(n => nmg3dExists(`world/3d/${n}.glb`));
+    NMG3D_YOGA_NAMES.forEach(n => nmg3dExists(`world/3d/${n}.png`).then(ok => { if (ok) new Image().src = `world/3d/${n}.png`; }));
 }
 async function nmg3dUpgradeYoga(box) {
-    if (!box || nmg3dReduced() || !nmg3dWebgl()) return;
+    if (!box) return;
     const view = box.querySelector('.srp-view');
     const svg = view && view.querySelector('svg.srp-scene');
     if (!svg) return;
     const base = img => (img.getAttribute('href') || '').split('/').pop().replace(/\.(png|jpe?g|webp)$/i, '');
-    const glb = img => `world/3d/${base(img)}.glb`;
+    const glb = img => `world/3d/${base(img)}.png`;
     const imgs = [...svg.querySelectorAll('image.yg-sitter, image.yg-eyes-closed')];
     const open = svg.querySelector('image.yg-eyes-open');
     const has = await Promise.all(imgs.concat(open ? [open] : []).map(img => nmg3dExists(glb(img))));
@@ -351,11 +350,7 @@ async function nmg3dUpgradeYoga(box) {
     // דבר"), והדגם נכנס בעדינות כשהוא נטען. רק אם התלת־ממד לא נטען בכלל - הציור חוזר
     sitters.forEach(img => img.classList.add('has-3d'));
     if (openUrl) open.classList.add('has-3d');
-    if (!(await nmg3dLoadViewer()) || !box.isConnected) {
-        sitters.forEach(img => img.classList.remove('has-3d'));
-        if (open) open.classList.remove('has-3d');
-        return;
-    }
+    if (!box.isConnected) return;
     // היצורים (והמורה בעיניים עצומות): מעל התמונה, באותו מקום בדיוק (התמונה ממלאת את המקום כולו). בזום של השיחה הם
     // נחים (הזום מתמקד במורה, והם נשארים מחוץ למסגרת / מתחת לחלון השיחה)
     const placed = sitters.map((img, i) => {
@@ -365,7 +360,6 @@ async function nmg3dUpgradeYoga(box) {
         wrap.className = `yg-3d${mat ? ' is-mat' : ''}${img.classList.contains('yg-eyes-closed') ? ' is-guide' : ''}`;
         wrap.style.setProperty('--d', `${(-1.2 * i).toFixed(1)}s`);
         const mv = nmg3dYogaViewer(glb(img), 'yg-3d-mv');
-        if (mat) mv.setAttribute('camera-orbit', `0deg ${NMG3D_MAT_IN_FRAME.phi}deg auto`);
         mv.addEventListener('load', () => { wrap.dataset.ready = '1'; wrap.classList.add('is-ready'); }, { once: true });
         mv.addEventListener('error', () => { wrap.remove(); img.classList.remove('has-3d'); }, { once: true });
         wrap.appendChild(mv);
@@ -396,7 +390,7 @@ async function nmg3dUpgradeYoga(box) {
     if (openUrl) {
         teacher = document.createElement('div');
         teacher.className = 'yg-3d yg-3d-teacher';
-        const mv = nmg3dYogaViewer(openUrl, 'yg-3d-mv');
+        const mv = nmg3dYogaViewer(openUrl, 'yg-3d-mv is-contain');
         mv.addEventListener('load', () => { teacher.dataset.ready = '1'; showTeacher(); }, { once: true });
         mv.addEventListener('error', () => { teacher.remove(); teacher = null; open.classList.remove('has-3d'); }, { once: true });
         teacher.appendChild(mv);
@@ -421,7 +415,7 @@ async function nmg3dUpgradeYoga(box) {
 // world/3d/genie.glb (2026-10-20, לפי בקשה מפורשת: "זה הגיני החדש שיצא מהבקבוק" / "שהוא מסתובב מהבקבוק תן לו מלא
 // נצנצים שבקושי יראו"): עולה מהמנורה באותה ספירלה, מסתובב סביב עצמו (כמו רקדן, לא כמו גלגל) בתוך ענן צפוף של
 // נצנצים שכמעט מסתיר אותו, ובסוף הנצנצים נמוגים והוא עומד מולנו לשאלות. נטען מראש כשנכנסים למרפסת
-const NMG3D_GENIE = { url: 'world/3d/genie.glb', spinFrom: 1080, start: 400, spin: 5000, sparks: 110 };
+const NMG3D_GENIE = { url: 'world/3d/genie.glb', spinFrom: 1080, start: 200, spin: 3200, sparks: 70 };
 const nmg3dGenieState = { ok: null };
 function nmg3dPrepGenie() {
     if (nmg3dGenieState.ok !== null || nmg3dReduced() || !nmg3dWebgl()) return;
@@ -475,24 +469,18 @@ function nmg3dMountGenie(layer) {
 // ---------- 🐈 החתול על הגג בתלת־ממד ----------
 // world/3d/cat-roof.glb (החתול העומד שלה מ-Meshy) במקום החתול המצויר על הכרית (לפי בקשה מפורשת, 2026-10-20: "שים לב
 // שלא רואים גרסאות ישנות לשום דבר"). עומד על הכרית ונושם בעדינות, לא תופס לחיצות. הציור מוסתר מיד, וחוזר רק אם אין תלת־ממד
-const NMG3D_ROOF_CAT = { url: 'world/3d/cat-roof.glb', x: 165.4, y: 580, w: 61.2, h: 76, fw: 3.1, fh: 1.95, drop: 0.08 };
+const NMG3D_ROOF_CAT = { url: 'world/3d/cat-roof.png', x: 165.4, y: 580, w: 61.2, h: 76, fw: 3.1, fh: 1.95, drop: 0.08 };
 async function nmg3dUpgradeRoofCat(sky) {
-    if (!sky || nmg3dReduced() || !nmg3dWebgl()) return;
+    if (!sky) return;
     const C = NMG3D_ROOF_CAT;
     const svg = sky.querySelector('svg.sr-roof-scene');
     const art = sky.querySelector('.sr-cat-art');
     if (!svg || !art || !(await nmg3dExists(C.url)) || !sky.isConnected) return;
     art.classList.add('has-3d');
-    if (!(await nmg3dLoadViewer()) || !sky.isConnected) { art.classList.remove('has-3d'); return; }
     const wrap = document.createElement('div');
     wrap.className = 'sr-cat-3d';
-    const mv = document.createElement('model-viewer');
-    const attrs = {
-        src: C.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0.6', 'shadow-softness': '1', exposure: '1.5', 'environment-image': 'neutral',
-        'camera-orbit': '-32deg 80deg auto', loading: 'eager', 'aria-hidden': 'true',
-    };
-    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    // תמונה שצולמה מהדגם (אותה מצלמה: -32°/80°, אותו יחס מסגרת) - ר' nmg3dYogaViewer
+    const mv = nmg3dYogaViewer(C.url, '');
     mv.addEventListener('load', () => wrap.classList.add('is-ready'), { once: true });
     mv.addEventListener('error', () => { wrap.remove(); art.classList.remove('has-3d'); }, { once: true });
     wrap.appendChild(mv);

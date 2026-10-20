@@ -84,7 +84,7 @@ function nmgRenderHud() {
     const nextKcal = next && !nmIsFree(next) ? nmItemInfo(nmTodayKey(next)).kcal + nmSlotExtra(next) : 0;
     const title = k => t(NEW_ME_VIEW_TITLES[k]);
     // למטה (2026-10-20, לפי בקשה מפורשת: "מפת העולם שים בתוך התיק ואת התיק שים מצד שמאל ואת המסע שלי מצד ימין"):
-    // המסע שלי בצד אחד והתיק הקסום בצד השני (בעברית: המסע מימין, התיק משמאל), והאמצע פנוי לשביל. ✓ אכלתי - במשימה הבאה;
+    // התיק הקסום לבד למטה (בלי בסיס מתחתיו, רק זוהר), והמסע שלי למעלה מתחת לאתגרים (לפי בקשה מפורשת, 2026-10-20). ✓ אכלתי - במשימה הבאה;
     // מפת העולם, הישגים, תזכורות, הגדרות, קניות, מדידות, תמונות ולוח חודשי - בתוך התיק (בצד נשארו כל היום ואתגרים)
     hud.innerHTML = `${NMG_SVG.defs}
         <div class="nmg-top">
@@ -94,6 +94,7 @@ function nmgRenderHud() {
             <button type="button" class="nmg-b nmg-pill nmg-en" onclick="nmgGo('day')" aria-label="${nmEsc(t('nm_eaten'))} ${nmFmt(eaten.kcal)} / ${nmFmt(goal)}">${NMG_SVG.bolt}<span class="nmg-track"><span class="nmg-fill" style="width:${pct}%"></span></span><span class="nmg-num"><bdi dir="ltr">${nmFmt(eaten.kcal)} / ${nmFmt(goal)}</bdi></span></button>
         </div>
         <button type="button" class="nmg-b nmg-home" onclick="goHome()" aria-label="${nmEsc(t('back_to_home_btn'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('home')}</span></button>
+        <span class="nmg-follow" aria-hidden="true"><img src="world/${nmgShownStage().img}" alt=""></span>
         <button type="button" class="nmg-b nmg-hall" onclick="nmgBackToHall()" aria-label="${nmEsc(t('room_back_to_hall'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('gate')}</span><span class="nmg-lb">${nmEsc(t('room_back_to_hall'))}</span></button>
         ${next ? `<button type="button" class="nmg-b nmg-quest" onclick="nmOpenHallMeal('${next}')">
             <span class="nmg-q1">${NMG_SVG.meal}<span>${nmEsc(t('nm_hud_next').replace('{time}', nmSlotReminderTime(next)))}</span></span>
@@ -101,9 +102,8 @@ function nmgRenderHud() {
             ${nextKcal ? `<span class="nmg-q3"><bdi dir="ltr">~${nmFmt(nextKcal)}</bdi> ${nmEsc(t('calories_unit'))}</span>` : ''}
         </button>` : `<button type="button" class="nmg-b nmg-quest is-done" onclick="nmgGo('day')"><span class="nmg-q2">${nmEsc(t('nm_hall_all_done'))}</span></button>`}
         ${nmgWeekCardHtml()}
-        <div class="nmg-rail nmg-rr">${['day', 'challenges'].map(k => nmgButton(k, title(k))).join('')}</div>
+        <div class="nmg-rail nmg-rr">${['day', 'challenges', 'journey'].map(k => nmgButton(k, title(k))).join('')}</div>
         <div class="nmg-dock">
-            ${nmgButton('journey', title('journey'))}
             <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/3d/ava-bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
         </div>`;
     nmgFitLabels(hud);
@@ -480,3 +480,70 @@ function nmgPlayEvolve(from, to) {
     if (reduce) ov.classList.add('is-reduced');
     if (typeof spawnGentleConfettiBurst === 'function') setTimeout(() => { if (ov.isConnected) spawnGentleConfettiBurst(ov.querySelector('.nmg-ev-stage'), 36); }, reduce ? 0 : 2300);
 }
+
+// ⌨️ במחשב: הולכים עם Me בחיצים (או W A S D) - אותה הליכה כמו בגרירה באצבע/בעכבר: הכניסה שהיא מגיעה אליה נדלקת,
+// Enter (או לעמוד עליה רגע) נכנס, ונעולה רועדת ומראה כמה מפתחות חסרים (לפי בקשה מפורשת, 2026-10-20: "שאם זה במחשב
+// אפשר ללכת עם המקשים")
+const NMG_KEY_STEP = 14;
+const nmgKey = { near: null, timer: 0, idle: 0, bumped: null };
+function nmgKeyEnter(me, hall, tg) {
+    clearTimeout(nmgKey.timer);
+    hall.querySelectorAll('.is-near').forEach(el => el.classList.remove('is-near'));
+    if (!tg.open) {
+        if (nmgKey.bumped === tg) return;
+        nmgKey.bumped = tg;
+        const door = hall.querySelector(tg.sel);
+        if (door) { door.classList.remove('is-bump'); void door.offsetWidth; door.classList.add('is-bump'); }
+        tg.go();
+        return;
+    }
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const [x, y, w, h] = tg.hit;
+    nmgMePos = tg.front;
+    nmgKey.near = null;
+    me.classList.remove('is-flying');
+    me.classList.add('is-entering');
+    me.style.cssText = nmgMeStyle({ x: x + w / 2, y: y + h * 0.6 });
+    setTimeout(() => {
+        tg.go();
+        setTimeout(() => { me.classList.remove('is-entering'); me.style.cssText = nmgMeStyle(nmgMePos); }, 400);
+    }, reduce ? 0 : 420);
+}
+document.addEventListener('keydown', e => {
+    const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1], a: [-1, 0], d: [1, 0], w: [0, -1], s: [0, 1] };
+    const k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (!dirs[k] && k !== 'Enter') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    // בתוך שדה כתיבה - לא; Enter על כפתור אחר נשאר של הכפתור
+    if (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+    if (k === 'Enter' && e.target && e.target.closest && e.target.closest('button:not(.nmh-me), a')) return;
+    const me = document.querySelector('#new-me-root .nmh-me');
+    if (!me || !me.offsetParent || document.querySelector('.nm-sheet-overlay, #sr-overlay, #nmg-map, #nmg-bag, .app-tour-layer')) return;
+    const hall = me.closest('.nmh');
+    if (!hall) return;
+    if (k === 'Enter') {
+        if (!nmgKey.near) return;
+        e.preventDefault();
+        nmgKeyEnter(me, hall, nmgKey.near);
+        return;
+    }
+    e.preventDefault();
+    const [dx, dy] = dirs[k];
+    const pos = nmgMeClamp({ x: (nmgMePos || NMG_ME_HOME).x + dx * NMG_KEY_STEP, y: (nmgMePos || NMG_ME_HOME).y + dy * NMG_KEY_STEP });
+    nmgMePos = pos;
+    me.classList.add('is-flying');
+    me.style.cssText = `${nmgMeStyle(pos)};--tilt:${dx * 10}deg`;
+    if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) nmgMeSpark(hall, pos);
+    clearTimeout(nmgKey.idle);
+    nmgKey.idle = setTimeout(() => { me.classList.remove('is-flying'); me.style.cssText = nmgMeStyle(nmgMePos || NMG_ME_HOME); }, 320);
+    const tg = nmgMeHit(pos, nmgMeTargets());
+    if (tg !== nmgKey.near) {
+        nmgKey.near = tg;
+        clearTimeout(nmgKey.timer);
+        hall.querySelectorAll('.is-near').forEach(el => el.classList.remove('is-near'));
+        const el = tg && hall.querySelector(tg.sel);
+        if (el) el.classList.add('is-near');
+        if (nmgKey.bumped && nmgKey.bumped !== tg) nmgKey.bumped = null;
+        if (tg) nmgKey.timer = setTimeout(() => { if (nmgKey.near === tg && document.contains(me)) nmgKeyEnter(me, hall, tg); }, 650);
+    }
+});

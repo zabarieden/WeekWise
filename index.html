@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=589">
+    <link rel="stylesheet" href="theme.css?v=590">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -353,7 +353,7 @@
                          הפגישות כתובות עם שעה, מקום או עם מי; לחיצה על פגישה פותחת אותה לעריכה -->
                     <div class="card meetings-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="meetings_card_title">🤝 Meetings</h2>
+                            <h2 data-i18n="meetings_card_title">Meetings</h2>
                             <div class="card-header-actions">
                                 <button class="btn-floating-add" onclick="event.stopPropagation(); openAddMeeting()" data-i18n-title="calendar_add_meeting_title" title="Add a meeting">＋</button>
                                 <span class="card-toggle-icon">▼</span>
@@ -766,19 +766,10 @@
                 <!-- חלונית 3: פתקים -->
                 <section class="tab-content" id="my-center-section">
                     <button class="btn-back-home" onclick="goHome()"><span aria-hidden="true">←</span> <span data-i18n="back_to_home_btn">Back to Home</span></button>
-                    <div class="sub-tile-grid">
-                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'notes')">
-                            <span class="sub-tile-icon">📝</span>
-                            <span class="sub-tile-title" data-i18n="notes_title">Notes</span>
-                        </div>
-                        <div class="sub-tile" onclick="openSubTile('my-center-section', 'shopping')">
-                            <span class="sub-tile-icon">🛒</span>
-                            <span class="sub-tile-title" data-i18n="general_title">Shopping List</span>
-                        </div>
-                    </div>
+                    <!-- הפתקים ורשימת הקניות - כל אחד נפתח ישר מהתפריט, בלי מסך ביניים עם שני עיגולים (לפי בקשה מפורשת,
+                         2026-10-20: "הם לא ביחד כבר"); בלי בחירה (קיצור דרך של האפליקציה) נפתחים הפתקים - ר' switchToTab -->
 
                     <div class="subview-panel" data-subview="notes">
-                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <div class="card expanded">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="notes_title">Notes</h2><div class="card-header-actions"><button type="button" class="btn-floating-add notes-look-btn" id="btn-notes-look" onclick="toggleNotesLookRow(event)" aria-expanded="false" data-i18n-title="notes_look_title" data-i18n-aria-label="notes_look_title" title="Notes look" aria-label="Notes look"><svg class="notes-look-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c-4.9 0-8.5 3.4-8.5 7.9 0 3.7 2.9 6.4 6.1 6.4 1.3 0 1.9-.8 1.9-1.7 0-.6-.3-1-.3-1.6 0-.9.7-1.6 1.7-1.6h2.1c2.9 0 5.5-2 5.5-5C20.5 6.4 16.8 3.5 12 3.5z"/><circle cx="7.9" cy="10.6" r="1.05" fill="currentColor" stroke="none"/><circle cx="10.9" cy="7.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="15" cy="7.6" r="1.05" fill="currentColor" stroke="none"/><path d="M19.2 15.2l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z" fill="currentColor" stroke="none"/></svg></button><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('weekly')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body">
@@ -826,11 +817,11 @@
                     </div>
 
                     <div class="subview-panel" data-subview="shopping">
-                    <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <div class="card expanded">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button type="button" class="shop-head-btn hidden" id="shop-btn-share" onclick="event.stopPropagation(); shareShoppingList()" data-i18n-title="shop_share_btn" data-i18n-aria-label="shop_share_btn" title="Share the list" aria-label="Share the list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg></button><button type="button" class="shop-head-btn hidden" id="shop-btn-order" onclick="event.stopPropagation(); openShopOrder()" data-i18n-title="shop_order_btn" data-i18n-aria-label="shop_order_btn" title="I ordered a delivery" aria-label="I ordered a delivery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9h-11z"/><path d="M13.5 9.5h4l3 3.2v2.8h-7"/><circle cx="6.5" cy="17.2" r="1.7"/><circle cx="17" cy="17.2" r="1.7"/></svg></button><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button type="button" class="shop-head-btn" id="shop-btn-holiday" onclick="event.stopPropagation(); openShopHolidays()" data-i18n-title="shop_hol_btn" data-i18n-aria-label="shop_hol_btn" title="What to buy for the holiday" aria-label="What to buy for the holiday"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v7.5h14v-7.5M12 8.5V20"/><path d="M12 8.5c-1.6-3.6-6-4-6-1.6 0 1.2 1.6 1.6 6 1.6zM12 8.5c1.6-3.6 6-4 6-1.6 0 1.2-1.6 1.6-6 1.6z"/></svg></button><button type="button" class="shop-head-btn hidden" id="shop-btn-share" onclick="event.stopPropagation(); shareShoppingList()" data-i18n-title="shop_share_btn" data-i18n-aria-label="shop_share_btn" title="Share the list" aria-label="Share the list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg></button><button type="button" class="shop-head-btn hidden" id="shop-btn-order" onclick="event.stopPropagation(); openShopOrder()" data-i18n-title="shop_order_btn" data-i18n-aria-label="shop_order_btn" title="I ordered a delivery" aria-label="I ordered a delivery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9h-11z"/><path d="M13.5 9.5h4l3 3.2v2.8h-7"/><circle cx="6.5" cy="17.2" r="1.7"/><circle cx="17" cy="17.2" r="1.7"/></svg></button><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body">
                             <!-- 🛒 רשימת קניות חכמה (2026-10-20, shop.js): "בדרך" למעלה, המחלקות עם ↺/✕ וכמות, ו"קונים שוב" למטה -->
+                            <div id="shop-holiday" class="shop-holiday hidden"></div>
                             <div id="shop-transit" class="shop-transit hidden"></div>
                             <ul id="general-list" class="center-list"></ul>
                             <div id="shop-again" class="shop-again hidden"></div>
@@ -4474,8 +4465,8 @@
 
     </div>
 
-    <script src="i18n.js?v=492"></script>
-    <script src="app.js?v=620"></script>
+    <script src="i18n.js?v=493"></script>
+    <script src="app.js?v=621"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
@@ -4485,12 +4476,13 @@
     <script src="new-me.js?v=72"></script>
     <script src="new-me-challenges.js?v=12"></script>
     <script src="secret-room.js?v=35"></script>
-    <script src="secret-places.js?v=24"></script>
-    <script src="new-me-game.js?v=11"></script>
-    <script src="world3d.js?v=7"></script>
+    <script src="secret-places.js?v=25"></script>
+    <script src="new-me-game.js?v=12"></script>
+    <script src="world3d.js?v=8"></script>
     <script src="books.js?v=8"></script>
     <script src="home.js?v=25"></script>
-    <script src="shop-depts.js?v=1"></script>
-    <script src="shop.js?v=1"></script>
+    <script src="shop-depts.js?v=2"></script>
+    <script src="shop-holidays.js?v=1"></script>
+    <script src="shop.js?v=2"></script>
 </body>
 </html>
