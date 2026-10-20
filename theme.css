@@ -11253,3 +11253,5 @@ button.nmg-me-card:active { transform: scale(.97); }
 .home-lists-menu .home-lists-pick:active { transform: scale(.92); }
 html.light-mode .home-lists-menu .home-lists-pick { color: var(--accent-purple); border-color: color-mix(in srgb, var(--accent-purple) 22%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); }
 html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
+/* יצור שהגיע עם מזרון משלו יושב עליו - בלי ריחוף ובלי "נשימה" (שהמזרון לא יזוז) */
+.yg-3d.is-mat, .yg-3d.is-mat .yg-3d-mv { animation: none; }

@@ -272,6 +272,14 @@ async function nmg3dMakeCat() {
 // כמה גדול המודל מהציור שהוא מחליף (המודל ממוסגר עם שוליים): יצור על מזרון, והמורה בזום של השיחה
 const NMG3D_YOGA_FRAME = { w: 1.8, h: 1.8, drop: 0.1 };
 const NMG3D_TEACHER_FRAME = { w: 1.55, h: 1.3, drop: 0.04 };
+// יצורים שהגיעו עם מזרון משלהם (2026-10-20): המזרון של הדגם יושב בדיוק על המזרון שבציור - מרכז (cx, y) ורוחב (w)
+// של המזרון בציור (390×844). המזרון של דגם מ-Meshy תופס בערך 61% מרוחב המסגרת ומרכזו ב-71% מגובהה, כשהמצלמה גבוהה כמו בציור (62°)
+const NMG3D_YOGA_MATS = {
+    'yg-fluffy': { cx: 128, y: 640, w: 118 },
+    'yg-blob': { cx: 44, y: 614, w: 100 },
+    'yg-spirit': { cx: 350, y: 614, w: 100 },
+};
+const NMG3D_MAT_IN_FRAME = { w: 0.61, y: 0.71, aspect: 260 / 300, phi: 62 };
 function nmg3dYogaViewer(url, cls) {
     const mv = document.createElement('model-viewer');
     mv.className = cls;
@@ -284,11 +292,25 @@ function nmg3dYogaViewer(url, cls) {
     return mv;
 }
 // מלבן של <image> בציור (viewBox 390×844, slice) בפיקסלים של המסגרת, בלי טרנספורמציות (גם באמצע זום/אנימציה)
-function nmg3dSvgRect(svg, img, frame) {
+function nmg3dSceneScale(frame) {
     const W = frame.clientWidth, H = frame.clientHeight;
-    const s = Math.max(W / 390, H / 844), ox = (W - 390 * s) / 2, oy = (H - 844 * s) / 2;
+    const s = Math.max(W / 390, H / 844);
+    return { s, ox: (W - 390 * s) / 2, oy: (H - 844 * s) / 2 };
+}
+function nmg3dSvgRect(svg, img, frame) {
+    const { s, ox, oy } = nmg3dSceneScale(frame);
     const x = +img.getAttribute('x'), y = +img.getAttribute('y'), w = +img.getAttribute('width'), h = +img.getAttribute('height');
     return { left: ox + x * s, top: oy + y * s, width: w * s, height: h * s };
+}
+// מסגרת לדגם עם מזרון: כך שהמזרון שלו נופל בדיוק על המזרון שבציור
+function nmg3dPlaceOnMat(el, mat, frame) {
+    const { s, ox, oy } = nmg3dSceneScale(frame);
+    const M = NMG3D_MAT_IN_FRAME;
+    const w = mat.w / M.w, h = w * M.aspect;
+    Object.assign(el.style, {
+        left: `${(ox + (mat.cx - w / 2) * s).toFixed(1)}px`, top: `${(oy + (mat.y - h * M.y) * s).toFixed(1)}px`,
+        width: `${(w * s).toFixed(1)}px`, height: `${(h * s).toFixed(1)}px`,
+    });
 }
 function nmg3dPlace(el, r, F = NMG3D_YOGA_FRAME) {
     const w = r.width * F.w, h = r.height * F.h;
@@ -311,16 +333,19 @@ async function nmg3dUpgradeYoga(box) {
     // היצורים (ו/או המורה בעיניים עצומות): מעל התמונה, באותו מקום בדיוק (התמונה ממלאת את המקום כולו). בזום של השיחה
     // הם מתחלפים חזרה לציורים, שזזים יחד עם הזום
     const placed = sitters.map((img, i) => {
+        const name = (img.getAttribute('href') || '').split('/').pop().replace(/\.(png|jpe?g|webp)$/i, '');
+        const mat = NMG3D_YOGA_MATS[name] || null;
         const wrap = document.createElement('div');
-        wrap.className = 'yg-3d';
+        wrap.className = `yg-3d${mat ? ' is-mat' : ''}`;
         wrap.style.setProperty('--d', `${(-1.2 * i).toFixed(1)}s`);
         const mv = nmg3dYogaViewer(glb(img), 'yg-3d-mv');
+        if (mat) mv.setAttribute('camera-orbit', `0deg ${NMG3D_MAT_IN_FRAME.phi}deg auto`);
         mv.addEventListener('load', () => { wrap.dataset.ready = '1'; wrap.classList.add('is-ready'); if (!box.classList.contains('yg-zoomed')) img.classList.add('has-3d'); }, { once: true });
         wrap.appendChild(mv);
         box.appendChild(wrap);
-        return { wrap, img };
+        return { wrap, img, mat };
     });
-    const layout = () => placed.forEach(p => nmg3dPlace(p.wrap, nmg3dSvgRect(svg, p.img, view)));
+    const layout = () => placed.forEach(p => { if (p.mat) nmg3dPlaceOnMat(p.wrap, p.mat, view); else nmg3dPlace(p.wrap, nmg3dSvgRect(svg, p.img, view)); });
     layout();
     // המורה בעיניים פקוחות: מחוץ לתמונה (שלא תימתח בזום) - מופיעה במקום שלה אחרי שהזום נגמר, ונעלמת כשמתרחקים
     let teacher = null;
