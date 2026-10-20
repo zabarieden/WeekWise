@@ -1271,6 +1271,7 @@ function ygBreathe(lines, done) {
     tick();
 }
 function srpInitYoga(box, keys, opts = {}) {
+    if (typeof nmg3dUpgradeYoga === 'function') nmg3dUpgradeYoga(box);
     return {
         guide: () => ygTeacherWake(box),
         waterfall: el => {
@@ -1281,20 +1282,17 @@ function srpInitYoga(box, keys, opts = {}) {
 }
 
 // ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
-// יושבים על הסלע: הכפתורים נעלמים, הקשת מתחזקת ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
+// יושבים על הסלע: הכפתורים נעלמים ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
 function srpWaterfallScene() {
-    // הציור (world/waterfall.jpg); מעליו: קווי מים זורמים שקופים, ערפל, הקשת שמתחזקת כשיושבים, והבריכה (מראה)
+    // הציור (world/waterfall.jpg); מעליו רק ערפל והבריכה (מראה). בלי פסי מים ובלי קשת (לפי בקשה מפורשת, 2026-10-20: "תוריד את הפסים מהמפל ואת הקשת")
     return `
         <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('waterfall'))}">
             <defs>
-                <linearGradient id="wfRain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9ad0"/><stop offset="0.5" stop-color="#ffe08a"/><stop offset="1" stop-color="#9ad6ff"/></linearGradient>
                 <linearGradient id="wfStone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a99cc0"/><stop offset="1" stop-color="#5c5274"/></linearGradient>
                 <filter id="wfMistBlur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
             </defs>
             <g aria-hidden="true">
                 ${srpArt('waterfall.jpg')}
-                <g class="srp-fall-lines" stroke="#ffffff" stroke-width="2.2" stroke-dasharray="16 9" stroke-linecap="round" opacity="0.32"><line x1="180" y1="142" x2="180" y2="272"/><line x1="194" y1="146" x2="194" y2="270"/><line x1="208" y1="142" x2="208" y2="272"/><line x1="160" y1="284" x2="160" y2="444"/><line x1="174" y1="290" x2="174" y2="446"/><line x1="214" y1="290" x2="214" y2="446"/><line x1="228" y1="284" x2="228" y2="444"/></g>
-                <path class="srp-rainbow" d="M128 462 A70 62 0 0 1 262 462" fill="none" stroke="url(#wfRain)" stroke-width="5" stroke-linecap="round"/>
                 <g class="srp-mist" fill="#ffffff" filter="url(#wfMistBlur)"><ellipse cx="160" cy="452" rx="70" ry="16" opacity="0.32"/><ellipse cx="236" cy="448" rx="74" ry="15" opacity="0.28"/><ellipse cx="198" cy="438" rx="52" ry="12" opacity="0.26"/></g>
             </g>
             <g class="srp-hot srp-pool" data-place-hot="pool" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_pool_aria'))}">

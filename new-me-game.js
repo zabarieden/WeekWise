@@ -80,8 +80,9 @@ function nmgRenderHud() {
     const nextName = next ? (nmIsFree(next) ? t('nm_free_meal') : nmItemShort(nmItemInfo(nmTodayKey(next)))) : '';
     const nextKcal = next && !nmIsFree(next) ? nmItemInfo(nmTodayKey(next)).kcal + nmSlotExtra(next) : 0;
     const title = k => t(NEW_ME_VIEW_TITLES[k]);
-    // למטה (2026-10-16, לפי בקשה מפורשת): התיק הקסום גדול באמצע, מצד אחד מפת העולם ומהצד השני המסע שלי. ✓ אכלתי - במשימה
-    // הבאה; הישגים, תזכורות, הגדרות, קניות, מדידות, תמונות ולוח חודשי - בתוך התיק (בצד נשארו כל היום ואתגרים)
+    // למטה (2026-10-20, לפי בקשה מפורשת: "מפת העולם שים בתוך התיק ואת התיק שים מצד שמאל ואת המסע שלי מצד ימין"):
+    // המסע שלי בצד אחד והתיק הקסום בצד השני (בעברית: המסע מימין, התיק משמאל), והאמצע פנוי לשביל. ✓ אכלתי - במשימה הבאה;
+    // מפת העולם, הישגים, תזכורות, הגדרות, קניות, מדידות, תמונות ולוח חודשי - בתוך התיק (בצד נשארו כל היום ואתגרים)
     hud.innerHTML = `${NMG_SVG.defs}
         <div class="nmg-top">
             <button type="button" class="nmg-b nmg-day" onclick="nmgGo('journey')" aria-label="${nmEsc(t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay())))}">${NMG_SVG.hex}<span class="nmg-dayt"><small>${nmEsc(t('nm_hud_day'))}</small><b>${nmFmt(nmJourneyDay())}</b></span></button>
@@ -99,9 +100,8 @@ function nmgRenderHud() {
         ${nmgWeekCardHtml()}
         <div class="nmg-rail nmg-rr">${['day', 'challenges'].map(k => nmgButton(k, title(k))).join('')}</div>
         <div class="nmg-dock">
-            ${nmgButton('world', t('nm_hud_world'))}
-            <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
             ${nmgButton('journey', title('journey'))}
+            <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
         </div>`;
     nmgFitLabels(hud);
 }
@@ -184,11 +184,12 @@ function nmgKeysTip() { if (typeof nmhKeysTip === 'function' && nmView === 'home
 // (לפי בקשה מפורשת, 2026-10-16: "תפתח מסך חדש גם שיראה כמו המשחק ועם ציורי יהלומים לכל דבר לכל קטגוריה"). כל קטגוריה -
 // יהלום קריסטל עם ציור משלו. בלי הארוחות, בלי "כל היום" ובלי האתגרים (הם בצד); הכפתורים הקבועים נשארים מסביב
 // ההגדרות - למטה בצד, קטנות יותר (לפי בקשה מפורשת, 2026-10-16)
-function nmgBagItems() { return nmTiles().filter(k => k !== 'challenges'); }
+// מפת העולם - הראשונה בתיק (2026-10-20, לפי בקשה מפורשת: "מפת העולם שים בתוך התיק")
+function nmgBagItems() { return ['world'].concat(nmTiles().filter(k => k !== 'challenges')); }
 function nmgBagItemHtml(k, i, cls = '') {
     return `<button type="button" class="nmg-b nmg-bag-item${cls}" data-tile="${k}" style="--i:${i}">
         <span class="nmg-btn">${NMG_SVG.hex}${nmgIcon(k)}</span>
-        <span class="nmg-lb">${nmEsc(t(NEW_ME_VIEW_TITLES[k]))}</span>
+        <span class="nmg-lb">${nmEsc(t(k === 'world' ? 'nm_map_title' : NEW_ME_VIEW_TITLES[k]))}</span>
     </button>`;
 }
 function nmgOpenBag() {
@@ -210,7 +211,8 @@ function nmgOpenBag() {
     box.querySelectorAll('[data-tile]').forEach(b => b.addEventListener('click', () => {
         const k = b.dataset.tile;
         nmgCloseBag();
-        if (k === 'pdf') nmOpenPdf(b);
+        if (k === 'world') nmgOpenMap();
+        else if (k === 'pdf') nmOpenPdf(b);
         else nmGo(k);
     }));
     nmgFitLabels(box);

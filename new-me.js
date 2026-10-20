@@ -4748,7 +4748,7 @@ async function nmSaveFullName(input) {
 // אותו מנגנון של הסיור באפליקציה (הדגשה + כרטיס הסבר), על המסך של New Me. נפתח לבד פעם אחת -
 // אחרי הרכישה והשאלון (או בכניסה הראשונה של מי שכבר רכש/ה), ומההגדרות של New Me בכל רגע
 // הסיור במשחק (לפי בקשה מפורשת, 2026-10-14: "תשנה את הסיור לגמרי בNEW ME ברגע שאתה מסיים"): הפס העליון, המשימה הבאה,
-// ✓ אכלתי, הכלים שבצדדים, התיק הקסום, מפת העולם, הדמות (Me) ודלת 1 לחדר
+// ✓ אכלתי, הכלים שבצדדים, התיק הקסום (ובתוכו מפת העולם, מ-2026-10-20), הדמות (Me) ודלת 1 לחדר
 const NEW_ME_TOUR_STEPS = [
     { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
     { id: 'nm_top', ch: 'newme', ctx: 'newme', icon: '⭐', target: '#nm-hud .nmg-top', titleKey: 'nm_tour_top_title', text: 'nm_tour_top_text', optional: true },
@@ -4756,7 +4756,6 @@ const NEW_ME_TOUR_STEPS = [
     { id: 'nm_rails', ch: 'newme', ctx: 'newme', icon: '🧰', target: '#nm-hud .nmg-rr', titleKey: 'nm_tour_rails_title', text: 'nm_tour_rails_text', optional: true },
     { id: 'nm_week', ch: 'newme', ctx: 'newme', icon: '🌱', target: '#nm-hud .nmg-week', titleKey: 'nm_week_ch_label', text: 'nm_tour_week_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
-    { id: 'nm_world', ch: 'newme', ctx: 'newme', icon: '🗺️', target: '#nm-hud [data-hud="world"]', titleKey: 'nm_tour_world_title', text: 'nm_tour_world_text', optional: true },
     { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
     { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },

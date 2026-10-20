@@ -227,6 +227,9 @@ async function nmg3dMakeCat() {
         if (!wrap.isConnected || !wrap.offsetParent) { mv.pause(); return; }  // המסדרון לא על המסך - נח עד wake
         const dt = Math.min(0.1, (now - (st.last || now)) / 1000);
         st.last = now;
+        // בתוך חדר / מקום (המסדרון מתחתיו): עומד במקום ולא מצייר, עד שחוזרים
+        if (document.getElementById('sr-overlay')) { mv.pause(); st.away = true; st.raf = requestAnimationFrame(tick); return; }
+        if (st.away) { st.away = false; if (st.phase !== 'rest') mv.play(); }
         if (st.phase === 'rest' && now >= st.until) startWalk();
         else if (st.phase === 'walk') {
             st.x += st.dir * C.speed * dt;
@@ -259,4 +262,98 @@ async function nmg3dMakeCat() {
     }, { once: true });
     place();
     return { wrap, mv, wake };
+}
+
+// ---------- 🧘 היוגה בתלת־ממד ----------
+// (2026-10-20, לפי בקשה מפורשת: "היצורים של היער בתלת מימד אתה יכול לשים אותם" / "מורת יוגה עיניים פקוחות שמתקרבים
+// לדבר איתם לשים שם"). world/3d/<שם הציור>.glb מחליף את הציור של אותו יצור על המזרון (yg-baby.glb, yg-blob.glb,
+// yg-fluffy.glb, yg-spirit.glb) - מרחף ונושם כמו הציורים. teacher-open.glb = המורה בעיניים פקוחות: מופיעה כשמתקרבים
+// לדבר איתה, בגודל המלא של הזום (חד, לא מתיחה של תמונה קטנה). teacher-closed.glb, אם יגיע - המורה במדיטציה
+// כמה גדול המודל מהציור שהוא מחליף (המודל ממוסגר עם שוליים): יצור על מזרון, והמורה בזום של השיחה
+const NMG3D_YOGA_FRAME = { w: 1.8, h: 1.8, drop: 0.1 };
+const NMG3D_TEACHER_FRAME = { w: 1.55, h: 1.3, drop: 0.04 };
+function nmg3dYogaViewer(url, cls) {
+    const mv = document.createElement('model-viewer');
+    mv.className = cls;
+    const attrs = {
+        src: url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
+        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral',
+        'camera-orbit': '0deg 76deg auto', 'field-of-view': '24deg', loading: 'eager', 'aria-hidden': 'true',
+    };
+    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    return mv;
+}
+// מלבן של <image> בציור (viewBox 390×844, slice) בפיקסלים של המסגרת, בלי טרנספורמציות (גם באמצע זום/אנימציה)
+function nmg3dSvgRect(svg, img, frame) {
+    const W = frame.clientWidth, H = frame.clientHeight;
+    const s = Math.max(W / 390, H / 844), ox = (W - 390 * s) / 2, oy = (H - 844 * s) / 2;
+    const x = +img.getAttribute('x'), y = +img.getAttribute('y'), w = +img.getAttribute('width'), h = +img.getAttribute('height');
+    return { left: ox + x * s, top: oy + y * s, width: w * s, height: h * s };
+}
+function nmg3dPlace(el, r, F = NMG3D_YOGA_FRAME) {
+    const w = r.width * F.w, h = r.height * F.h;
+    Object.assign(el.style, {
+        left: `${(r.left + r.width / 2 - w / 2).toFixed(1)}px`, top: `${(r.top + r.height * (1 + F.drop) - h).toFixed(1)}px`,
+        width: `${w.toFixed(1)}px`, height: `${h.toFixed(1)}px`,
+    });
+}
+async function nmg3dUpgradeYoga(box) {
+    if (!box || nmg3dReduced() || !nmg3dWebgl()) return;
+    const view = box.querySelector('.srp-view');
+    const svg = view && view.querySelector('svg.srp-scene');
+    if (!svg) return;
+    const glb = img => `world/3d/${(img.getAttribute('href') || '').split('/').pop().replace(/\.(png|jpe?g|webp)$/i, '')}.glb`;
+    const sitters = [];
+    for (const img of svg.querySelectorAll('image.yg-sitter, image.yg-eyes-closed')) if (await nmg3dExists(glb(img))) sitters.push(img);
+    const open = svg.querySelector('image.yg-eyes-open');
+    const openUrl = open && (await nmg3dExists(glb(open))) ? glb(open) : null;
+    if ((!sitters.length && !openUrl) || !(await nmg3dLoadViewer()) || !box.isConnected) return;
+    // היצורים (ו/או המורה בעיניים עצומות): מעל התמונה, באותו מקום בדיוק (התמונה ממלאת את המקום כולו). בזום של השיחה
+    // הם מתחלפים חזרה לציורים, שזזים יחד עם הזום
+    const placed = sitters.map((img, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'yg-3d';
+        wrap.style.setProperty('--d', `${(-1.2 * i).toFixed(1)}s`);
+        const mv = nmg3dYogaViewer(glb(img), 'yg-3d-mv');
+        mv.addEventListener('load', () => { wrap.dataset.ready = '1'; wrap.classList.add('is-ready'); if (!box.classList.contains('yg-zoomed')) img.classList.add('has-3d'); }, { once: true });
+        wrap.appendChild(mv);
+        box.appendChild(wrap);
+        return { wrap, img };
+    });
+    const layout = () => placed.forEach(p => nmg3dPlace(p.wrap, nmg3dSvgRect(svg, p.img, view)));
+    layout();
+    // המורה בעיניים פקוחות: מחוץ לתמונה (שלא תימתח בזום) - מופיעה במקום שלה אחרי שהזום נגמר, ונעלמת כשמתרחקים
+    let teacher = null;
+    if (openUrl) {
+        teacher = document.createElement('div');
+        teacher.className = 'yg-3d yg-3d-teacher';
+        const mv = nmg3dYogaViewer(openUrl, 'yg-3d-mv');
+        mv.addEventListener('load', () => { teacher.dataset.ready = '1'; }, { once: true });
+        teacher.appendChild(mv);
+        box.appendChild(teacher);
+        // גודל אמיתי מההתחלה (מודל בגודל 0 תוקע את הציור של כל שאר המודלים בעמוד)
+        nmg3dPlace(teacher, nmg3dSvgRect(svg, open, view), NMG3D_TEACHER_FRAME);
+    }
+    let showT = 0;
+    const sync = () => {
+        if (!box.isConnected) { ro.disconnect(); mo.disconnect(); return; }
+        const zoomed = box.classList.contains('yg-zoomed') && box.classList.contains('yg-awake');
+        placed.forEach(p => { p.wrap.classList.toggle('is-away', zoomed); p.img.classList.toggle('has-3d', !zoomed && !!p.wrap.dataset.ready); });
+        if (!teacher) return;
+        clearTimeout(showT);
+        if (!zoomed) { teacher.classList.remove('is-on'); open.classList.remove('has-3d'); return; }
+        showT = setTimeout(() => {
+            if (!box.isConnected || !box.classList.contains('yg-zoomed') || !teacher.dataset.ready) return;
+            const br = box.getBoundingClientRect(), vr = view.getBoundingClientRect();
+            const r = nmg3dSvgRect(svg, open, view);
+            const k = vr.width / view.clientWidth;  // הזום (scale) של התמונה
+            nmg3dPlace(teacher, { left: vr.left - br.left + r.left * k, top: vr.top - br.top + r.top * k, width: r.width * k, height: r.height * k }, NMG3D_TEACHER_FRAME);
+            teacher.classList.add('is-on');
+            open.classList.add('has-3d');
+        }, nmg3dReduced() ? 0 : 1000);
+    };
+    const ro = new ResizeObserver(() => { layout(); sync(); });
+    ro.observe(view);
+    const mo = new MutationObserver(sync);
+    mo.observe(box, { attributes: true, attributeFilter: ['class'] });
 }
