@@ -467,6 +467,12 @@ async function loadCenterItems(type) {
     const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', false).order('is_someday', { ascending: true }).order('is_urgent', { ascending: false }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false });
     if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
+    // 🛒 רשימת הקניות - מחלקות, ↺/✕, כמות, "בדרך" ו"קונים שוב" (shop.js, 2026-10-20)
+    if (type === 'general' && typeof renderShoppingList === 'function') {
+        renderShoppingList(data);
+        refreshNotesArchiveCount(type);
+        return;
+    }
     const listUl = document.getElementById(`${type}-list`);
     listUl.innerHTML = '';
     // קטע "להגיע לזה" (רק לפתקים, לא לרשימת קניות) - לא תיבת גרירה נפרדת
@@ -3527,6 +3533,7 @@ function openCenterAdder(type) {
     const input = document.getElementById('center-item-input');
     input.value = '';
     resetCenterItemColorPickers();
+    if (typeof shopModalOpen === 'function') shopModalOpen(type, null);
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -3557,6 +3564,7 @@ function openCenterItemEditor(btn, type) {
     renderCenterItemGlowSwatches();
     renderCenterItemBgSwatches();
     updateCenterItemPreview();
+    if (typeof shopModalOpen === 'function') shopModalOpen(type, editingCenterItemId);
     openModal('modal-add-center-item');
     setTimeout(() => input.focus(), 150);
 }
@@ -3614,6 +3622,8 @@ async function submitCenterItem() {
     const bg = pendingCenterItemBg;
     const originalText = editingCenterItemOriginalText;
     if (!text || !type) return;
+    // המחלקה בסופר (רק בעריכת פריט ברשימת הקניות) - נקראת לפני שהחלון נסגר
+    const shopDept = type === 'general' && editId && typeof shopDeptFromModal === 'function' ? shopDeptFromModal() : undefined;
     centerItemSubmitInFlight = true;
     try {
         closeModal('modal-add-center-item');
@@ -3623,7 +3633,7 @@ async function submitCenterItem() {
         pendingCenterItemGlow = null;
         pendingCenterItemBg = null;
         editingCenterItemOriginalText = null;
-        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg, text !== originalText);
+        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg, text !== originalText, shopDept);
         else await insertCenterItemDirect(type, text, color, glow, bg);
     } finally {
         centerItemSubmitInFlight = false;
@@ -3632,9 +3642,10 @@ async function submitCenterItem() {
 
 // עריכה מראה "השינויים נשמרו" (לא "הפריט נוסף") - ואם הפריט נמחק בזמן שהשמירה עוד רצה
 // (רשת איטית), לא מראים כלום: בעבר הופיע "הפריט נוסף בהצלחה" מיד אחרי מחיקה
-async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor, contentChanged) {
+async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor, contentChanged, shopDept) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const payload = { content, text_color: textColor, glow_color: glowColor, bg_color: bgColor };
+    if (shopDept !== undefined) payload.shop_dept = shopDept;
     // רק שינוי בטקסט עצמו מעדכן את "נכתב לאחרונה" (צבע בלבד - לא)
     if (contentChanged) payload.content_updated_at = new Date().toISOString();
     const { error } = await supabaseClient.from('my_center_tasks').update(payload).eq('id', id);
@@ -3651,6 +3662,15 @@ async function updateCenterItemDirect(id, type, content, textColor, glowColor, b
 // חזותית - נראה כאילו הכול תקין בזמן שבפועל שום דבר לא נשמר
 async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor, skipSuccessToast) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return false; }
+    // 🛒 רשימת הקניות: בלי כפילויות - מה שכבר ברשימה נהיה ×2, מה שב"קונים שוב" חוזר לרשימה (shop.js)
+    if (type === 'general' && typeof shopAddSmart === 'function') {
+        const res = await shopAddSmart(content, { row: { text_color: textColor, glow_color: glowColor, bg_color: bgColor } });
+        if (res.status === 'error' || res.status === 'none') return false;
+        await loadCenterItems(type);
+        expandCardForList(`${type}-list`);
+        if (!skipSuccessToast) showAppToast(res.status === 'bumped' ? t('shop_dup_toast').replace('{n}', res.qty) : res.status === 'revived' ? t('shop_revived') : res.status === 'exists' ? t('shop_dup_hint') : t('item_added_success'));
+        return true;
+    }
     const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor, glow_color: glowColor, bg_color: bgColor });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return false; }
     await loadCenterItems(type);
@@ -6063,7 +6083,8 @@ async function loadTodayTasks() {
     // של היום וארוחות New Me – בציר זמן אחד. התשובות ל"מה חשוב לך היום" הן בועות תזכורת ולא משימות,
     // ולא נספרות בחגיגת "הכל בוצע" למטה
     const newMeItems = typeof myDayNewMeItems === 'function' ? myDayNewMeItems() : [];
-    const dayItems = buildMyDayItems({ todayStr, schedule: populated, completedScheduleIds, events, goalItems, routine, newMeItems });
+    // 🚚 "המשלוח הגיע?" ביום שהמשלוח אמור להגיע (shop.js)
+    const dayItems = buildMyDayItems({ todayStr, schedule: populated, completedScheduleIds, events, goalItems, routine, newMeItems }).concat(typeof shopMyDayItems === 'function' ? shopMyDayItems() : []);
     const checkableItems = dayItems.filter(item => item.checkable);
     todayTasksLoadedFor = todayStr;
     renderMyDay(container, dayItems, focusItems);
@@ -8346,15 +8367,11 @@ async function sendRecipeMissingToShopping() {
     const factor = recipeViewFactor(recipe);
     const wanted = recipeLines(recipe.ingredients).filter(l => !have.has(l)).map(l => recipeScaledLine(l, factor));
     if (!wanted.length) return;
-    const norm = s => String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
-    const { data: current } = await supabaseClient.from('my_center_tasks').select('content').eq('user_id', currentUserId).eq('task_type', 'general').eq('is_deleted', false).eq('is_completed', false);
-    const inList = new Set((current || []).map(it => norm(it.content)));
-    const toAdd = [];
-    wanted.forEach(line => { const k = norm(line); if (!inList.has(k)) { inList.add(k); toAdd.push(line); } });
-    if (!toAdd.length) { showAppToast(t('tbl_shop_already')); return; }
-    const { error } = await supabaseClient.from('my_center_tasks').insert(toAdd.map(content => ({ username: currentUsername, user_id: currentUserId, task_type: 'general', content, source_ref: `recipe:${recipe.id}`, is_completed: false, is_deleted: false })));
-    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
-    showAppToast(t('recipe_shopping_added').replace('{n}', toAdd.length.toLocaleString(currentLang)));
+    // מה שכבר ברשימה (או בדרך) לא נוסף שוב; מה שמחכה ב"קונים שוב" חוזר לרשימה (shopAddMany ב-shop.js)
+    const res = await shopAddMany(wanted, { source_ref: `recipe:${recipe.id}` });
+    if (res.error) return;
+    if (!res.added) { showAppToast(t('tbl_shop_already')); return; }
+    showAppToast(t('recipe_shopping_added').replace('{n}', res.added.toLocaleString(currentLang)));
     if (typeof loadCenterItems === 'function') loadCenterItems('general');
 }
 
@@ -9641,6 +9658,11 @@ const HELP_FAQ_ENTRIES = [
     { id: 'note_written_at', category: 'notes' },
     { id: 'notes_sticky_look', category: 'notes' },
     { id: 'home_lists_btn', category: 'notes' },
+    // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
+    { id: 'shop_two_buttons', category: 'notes' },
+    { id: 'shop_delivery', category: 'notes' },
+    { id: 'shop_departments', category: 'notes' },
+    { id: 'shop_share_qty', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },

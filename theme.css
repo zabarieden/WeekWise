@@ -11271,3 +11271,65 @@ html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
 /* Me בתלת־ממד: הדגם יושב בדיוק על התמונה שלו ומרחף כמוה, עם אותו זוהר */
 .nmh-me.has-3d .nmg-me3d { animation: nmgMeFloat 4.4s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); }
 @media (prefers-reduced-motion: reduce) { .nmh-me.has-3d .nmg-me3d { animation: none; } }
+
+/* ===== 🛒 רשימת קניות חכמה (2026-10-20, shop.js): מחלקות, ↺/✕, כמות, "בדרך" ו"קונים שוב" ===== */
+.shop-head-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; margin-inline-end: 6px; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent-purple) 25%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, transparent); color: var(--accent-purple-light-text); cursor: pointer; transition: var(--transition); }
+.shop-head-btn svg { width: 17px; height: 17px; }
+.shop-head-btn:active { transform: scale(.9); }
+#general-list.shop-list li.shop-dept-head { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 2px 6px 0; border: none; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: .76rem; font-weight: 800; letter-spacing: .02em; color: var(--text-secondary); }
+#general-list.shop-list li.shop-dept-head:first-child { margin-top: 0; }
+.shop-dept-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.shop-list .shop-row { align-items: center; gap: 6px; padding: 7px 10px 7px 12px; }
+.shop-row .shop-text { margin-inline-start: 2px; cursor: pointer; -webkit-line-clamp: 2; }
+.shop-row .shop-text:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; border-radius: 6px; }
+.shop-qty { flex: none; display: inline-flex; align-items: center; gap: 2px; }
+.shop-qty-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-secondary) 30%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-size: 1rem; font-weight: 700; line-height: 1; cursor: pointer; }
+.shop-qty-n { min-width: 26px; text-align: center; font-size: .84rem; font-weight: 800; color: var(--accent-purple-light-text); }
+.shop-btn { flex: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 50%; cursor: pointer; transition: transform .12s ease; }
+.shop-btn svg { width: 16px; height: 16px; }
+.shop-btn:active, .shop-qty-btn:active { transform: scale(.88); }
+.shop-btn-again { background: color-mix(in srgb, var(--accent-purple) 16%, transparent); color: var(--accent-purple-light-text); }
+.shop-btn-once { background: transparent; color: var(--text-secondary); }
+.shop-btn:focus-visible, .shop-qty-btn:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+/* 🚚 בדרך */
+.shop-transit { margin-bottom: 10px; padding: 10px 12px; border-radius: 18px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 9%, transparent); }
+.shop-transit-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.shop-transit-icon { display: flex; color: var(--accent-purple-light-text); }
+.shop-transit-icon svg { width: 22px; height: 22px; }
+.shop-transit-head b { font-size: .95rem; }
+.shop-transit-due { font-size: .78rem; color: var(--text-secondary); }
+.shop-transit-due.is-due { color: var(--accent-purple-light-text); font-weight: 700; }
+.shop-transit-btn { margin-inline-start: auto; padding: 6px 14px; border: none; border-radius: 999px; background: var(--accent-purple); color: #fff; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.shop-transit-items { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--text-secondary); text-align: start; }
+/* ↺ קונים שוב */
+.shop-again { margin-top: 14px; }
+.shop-again-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.shop-again-title, .shop-suggest-label { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 800; color: var(--text-secondary); }
+.shop-again-title svg, .shop-suggest-label svg { width: 14px; height: 14px; }
+.shop-again-manage { padding: 3px 10px; border: none; border-radius: 999px; background: none; color: var(--accent-purple-light-text); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.shop-again-chips, .shop-suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 6px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 28%, transparent); background: color-mix(in srgb, var(--accent-purple) 7%, transparent); color: var(--text-primary); font: inherit; font-size: .84rem; cursor: pointer; }
+.shop-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-chip i { font-style: normal; font-weight: 800; color: var(--accent-purple-light-text); }
+.shop-chip.is-remove { border-style: dashed; }
+.shop-chip:active { transform: scale(.95); }
+.shop-suggest { align-items: center; margin-top: -2px; }
+.shop-suggest-label { flex-basis: 100%; }
+.shop-dup { margin: -2px 2px 0; font-size: .82rem; font-weight: 700; color: var(--accent-purple-light-text); text-align: start; }
+/* חלון המשלוח */
+.shop-sheet-body h3 { margin: 0 0 12px; text-align: center; }
+.shop-pick-tools { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
+.shop-pick-tools button { padding: 4px 10px; border: none; border-radius: 999px; background: none; color: var(--accent-purple-light-text); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.shop-pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 42vh; overflow-y: auto; margin-bottom: 12px; }
+.shop-pick { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-secondary) 20%, transparent); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .92rem; text-align: start; cursor: pointer; }
+.shop-pick-box { flex: none; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 7px; border: 1.5px solid color-mix(in srgb, var(--text-secondary) 45%, transparent); color: transparent; font-size: .8rem; font-weight: 900; }
+.shop-pick.on { border-color: color-mix(in srgb, var(--accent-purple) 55%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, var(--bg-row)); }
+.shop-pick.on .shop-pick-box { border-color: var(--accent-purple); background: var(--accent-purple); color: #fff; }
+.shop-pick.is-missing-pick.on { opacity: .85; }
+.shop-pick.is-missing-pick.on span:last-child { text-decoration: line-through; }
+.shop-when { display: flex; gap: 8px; margin-bottom: 14px; }
+.shop-when button { flex: 1; padding: 9px 6px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent-purple) 28%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; }
+.shop-when button.on { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+.shop-sheet-body .shop-transit-items { margin: 0 0 14px; text-align: center; }
+.shop-sheet-body .btn-primary:disabled { opacity: .45; }
+.myday-kind-shop .myday-dot { background: var(--accent-purple); }

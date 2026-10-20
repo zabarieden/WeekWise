@@ -4124,20 +4124,15 @@ async function nmAddShopToList(btn) {
     const items = nmShopItems(nmShopDays).filter(x => !nmShopOff.has(`${x.ing}|${x.unit}`));
     if (!items.length) return;
     btn.disabled = true;
-    // מה שכבר נמצא ברשימה בדיוק באותו נוסח - לא מוסיפים פעמיים
-    const { data: existing } = await supabaseClient.from('my_center_tasks').select('content').eq('user_id', currentUserId).eq('task_type', 'general');
-    const have = new Set((existing || []).map(r => String(r.content || '').trim()));
-    const rows = items.map(nmShopLine).filter(line => !have.has(line)).map(content => ({ username: currentUsername, user_id: currentUserId, task_type: 'general', content }));
-    if (rows.length) {
-        const { error } = await supabaseClient.from('my_center_tasks').insert(rows);
-        if (error) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
-    }
+    // מה שכבר ברשימה (או בדרך) - לא מוסיפים פעמיים; מה שמחכה ב"קונים שוב" חוזר לרשימה (shopAddMany ב-shop.js)
+    const res = await shopAddMany(items.map(nmShopLine));
+    if (res.error) { btn.disabled = false; showAppToast(t('nm_save_error'), 'error'); return; }
     if (typeof loadCenterItems === 'function') loadCenterItems('general');
     nmShopOff = new Set();
     const ov = nmOpenSheet(`
         <div class="nm-medal big" aria-hidden="true"><span>🛒</span></div>
         <h3 class="nm-celebrate-title">${nmEsc(t('nm_shop_added_title'))}</h3>
-        <p class="nm-celebrate-desc">${nmEsc(t('nm_shop_added_desc').replace('{n}', rows.length))}</p>
+        <p class="nm-celebrate-desc">${nmEsc(t('nm_shop_added_desc').replace('{n}', res.added))}</p>
         <div class="nm-celebrate-actions">
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_celebrate_ok'))}</button>
             <button type="button" class="nm-btn-primary" data-open>${nmEsc(t('nm_shop_open_list'))}</button>

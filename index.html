@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=588">
+    <link rel="stylesheet" href="theme.css?v=589">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -828,9 +828,12 @@
                     <div class="subview-panel" data-subview="shopping">
                     <button class="btn-subview-back" onclick="closeSubView('my-center-section')"><span aria-hidden="true">←</span> <span data-i18n="recipe_back_btn">Back</span></button>
                     <div class="card expanded">
-                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)"><h2 data-i18n="general_title">Shopping List</h2><div class="card-header-actions"><button type="button" class="shop-head-btn hidden" id="shop-btn-share" onclick="event.stopPropagation(); shareShoppingList()" data-i18n-title="shop_share_btn" data-i18n-aria-label="shop_share_btn" title="Share the list" aria-label="Share the list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg></button><button type="button" class="shop-head-btn hidden" id="shop-btn-order" onclick="event.stopPropagation(); openShopOrder()" data-i18n-title="shop_order_btn" data-i18n-aria-label="shop_order_btn" title="I ordered a delivery" aria-label="I ordered a delivery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5h11v9h-11z"/><path d="M13.5 9.5h4l3 3.2v2.8h-7"/><circle cx="6.5" cy="17.2" r="1.7"/><circle cx="17" cy="17.2" r="1.7"/></svg></button><button class="btn-floating-add" onclick="event.stopPropagation(); openCenterAdder('general')">➕</button><span class="card-toggle-icon">▼</span></div></div>
                         <div class="card-body">
+                            <!-- 🛒 רשימת קניות חכמה (2026-10-20, shop.js): "בדרך" למעלה, המחלקות עם ↺/✕ וכמות, ו"קונים שוב" למטה -->
+                            <div id="shop-transit" class="shop-transit hidden"></div>
                             <ul id="general-list" class="center-list"></ul>
+                            <div id="shop-again" class="shop-again hidden"></div>
 
                             <!-- ארכיון פריטים מחוקים ברשימת קניות - אותו מנגנון בדיוק כמו בפתקים -->
                             <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-general" onclick="openNotesArchiveModal('general')" data-i18n-title="notes_archive_toggle_label" title="Archive">
@@ -1841,6 +1844,15 @@
                 <h3 id="center-item-modal-title" data-i18n="add_item_title">Add Item</h3>
                 <div class="preset-manager-grid">
                     <textarea id="center-item-input" rows="4" data-i18n-placeholder="add_item_placeholder" placeholder="Type here..." oninput="updateCenterItemPreview()"></textarea>
+                    <!-- 🛒 רק ברשימת הקניות (shop.js): "כבר ברשימה", הצעות ממה שכבר קנו, והמחלקה בעריכה (כולל "אחר…") -->
+                    <p id="center-item-shop-dup" class="shop-dup hidden" role="status"></p>
+                    <div id="center-item-shop-suggest" class="shop-suggest hidden"></div>
+                    <div id="center-item-dept-wrap" class="shop-dept-field hidden">
+                        <p class="settings-label" data-i18n="shop_dept_label">Department</p>
+                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('center-item-dept')"><span id="center-item-dept-display"></span></button>
+                        <select id="center-item-dept" class="hidden"></select>
+                        <input type="text" id="center-item-dept-custom" class="hidden" maxlength="40" autocomplete="off" data-i18n-placeholder="shop_dept_other_ph" placeholder="Department name">
+                    </div>
                     <p id="center-item-written-at" class="center-item-written-at hidden"></p>
                     <p class="settings-label" data-i18n="note_preview_label">Preview</p>
                     <div id="center-item-preview-row" class="center-list-item-preview">
@@ -1854,6 +1866,14 @@
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-center-item')" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 🚚 חלון לרשימת הקניות (shop.js): מה במשלוח ומתי מגיע / הכל הגיע? / מה לא הגיע -->
+        <div id="modal-shop-sheet" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <div id="shop-sheet-body" class="shop-sheet-body"></div>
             </div>
         </div>
 
@@ -4454,15 +4474,15 @@
 
     </div>
 
-    <script src="i18n.js?v=491"></script>
-    <script src="app.js?v=619"></script>
+    <script src="i18n.js?v=492"></script>
+    <script src="app.js?v=620"></script>
     <script src="ai-chat.js?v=5"></script>
     <script src="goals-library.js?v=2"></script>
     <script src="bag.js?v=4"></script>
     <script src="tables.js?v=2"></script>
     <script src="workouts.js?v=10"></script>
     <script src="new-me-data.js?v=16"></script>
-    <script src="new-me.js?v=71"></script>
+    <script src="new-me.js?v=72"></script>
     <script src="new-me-challenges.js?v=12"></script>
     <script src="secret-room.js?v=35"></script>
     <script src="secret-places.js?v=24"></script>
@@ -4470,5 +4490,7 @@
     <script src="world3d.js?v=7"></script>
     <script src="books.js?v=8"></script>
     <script src="home.js?v=25"></script>
+    <script src="shop-depts.js?v=1"></script>
+    <script src="shop.js?v=1"></script>
 </body>
 </html>
