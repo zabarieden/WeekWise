@@ -328,8 +328,8 @@ function srpPorchScene(keys) {
             ${bottle ? `<g class="srp-hot srp-bottle" data-place-hot="bottle" role="button" tabindex="0" aria-label="${srEsc(t('room_bottle_aria'))}">
                 <g class="srp-bottle-drift"><g class="srp-bottle-bob">
                     <circle cx="236" cy="562" r="36" fill="url(#srpPBottle)"/>
-                    <!-- הבקבוק עם המכתב שבא מהים - הציור שלה (world/bottle.png, לפי בקשה מפורשת, 2026-10-14) -->
-                    <image class="srp-bottle-art" href="${SRP_ART}bottle.png" x="222" y="526" width="28" height="60" transform="rotate(-14 236 560)"/>
+                    <!-- הבקבוק עם המכתב שבא מהים - מ-2026-10-20 הבקבוק שלה בתלת־ממד (world/3d/bottle.png, לפי בקשה מפורשת); קודם הציור world/bottle.png -->
+                    <image class="srp-bottle-art" href="${SRP_ART}3d/bottle.png" x="223.2" y="526" width="25.6" height="60" transform="rotate(-14 236 560)"/>
                     <ellipse cx="236" cy="583" rx="22" ry="3" fill="none" stroke="#bff5e6" stroke-opacity="0.45"/>
                 </g></g>
                 <ellipse class="srp-hit" cx="238" cy="568" rx="38" ry="26" fill="transparent"/>
@@ -370,7 +370,7 @@ function srpInitPorch(box) {
             srShowTip(t('room_tablet_soon'));
         },
         bottle: el => srpOpenBottle(el),
-        lamp: () => srpOpenGenie(box),
+        lamp: () => srpLampTap(box),
     };
 }
 
@@ -378,7 +378,23 @@ function srpInitPorch(box) {
 // ומסתובב... ואז הוא שואל מה המשאלה שלך? או מה תרצה לשנות בחייך? ומשם נפתח את זה אבל בנתיים תעשה את זה"): ערפל עולה
 // מהפיה של המנורה, הרוח (world/genie.png) יוצאת קטנה ומסתובבת בספירלה עד שהיא גדולה באמצע, ואז שואלת. ההמשך - בהמשך
 const SRP_GENIE_FROM = { x: 254 / 390, y: 586 / 844 };   // הפיה של המנורה בציור
-function srpOpenGenie(box) {
+// פעם ביום (לפי בקשה מפורשת, 2026-10-20: "באותו היום אי אפשר שוב לחזור לגיני אחרי שרשמנו מה שרשמנו"): אחרי שמשאלה
+// נשמרה (ליעד / ליומן) או שענו "לא" - הרוח נחה עד מחר. מהפעם השנייה היא שואלת קודם "רוצים לשנות עוד משהו בחיים?"
+// (new_me_room.genie_last_at)
+function srpGenieLastDay() {
+    const at = typeof roomState !== 'undefined' && roomState && roomState.genie_last_at;
+    return at ? getLocalDateString(new Date(at)) : '';
+}
+function srpGenieMarkDone() {
+    if (typeof roomSave === 'function') roomSave({ genie_last_at: new Date().toISOString() });
+    else if (typeof roomState !== 'undefined' && roomState) roomState.genie_last_at = new Date().toISOString();
+}
+function srpLampTap(box) {
+    const last = srpGenieLastDay();
+    if (last && last === getLocalDateString()) { showAppToast(t('room_genie_rest')); return; }
+    srpOpenGenie(box, { again: !!last });
+}
+function srpOpenGenie(box, opts = {}) {
     if (!box || box.querySelector('.srp-genie')) return;
     const reduce = srpReduce();
     const r = box.getBoundingClientRect();
@@ -398,7 +414,7 @@ function srpOpenGenie(box) {
     void layer.offsetWidth;
     layer.classList.add('go');
     const close = () => { layer.classList.add('bye'); setTimeout(() => layer.remove(), reduce ? 0 : 600); };
-    srpGenieTalk(layer, close);
+    srpGenieTalk(layer, close, opts);
     srpCleanups.push(() => layer.remove());
 }
 
@@ -416,7 +432,7 @@ const SRP_GENIE_STEPS = [
     { k: 'plan', q: 'room_genie_plan_q', react: 'room_genie_react_steps', two: ['if', 'then'] },
 ];
 const SRP_GENIE_DAYS = { week: 7, month: 30, months: 90, year: 365 };
-function srpGenieTalk(layer, close) {
+function srpGenieTalk(layer, close, opts = {}) {
     const card = layer.querySelector('.srp-genie-ask');
     const a = {};
     let i = 0, saved = { goal: false, diary: false };
@@ -478,13 +494,36 @@ function srpGenieTalk(layer, close) {
         if (back) back.addEventListener('click', () => { collect(); i = Math.max(0, i - 1); render(); });
         const goal = card.querySelector('[data-goal]');
         // נשמר - הרוח נסגרת (לא חוזרים לענות שוב; את היעד אפשר לשנות ב"היעדים שלי")
-        if (goal) goal.addEventListener('click', async () => { goal.disabled = true; if (await srpGenieToGoal(a)) { saved.goal = true; showAppToast(t('room_genie_goal_done')); close(); return; } render(); });
+        if (goal) goal.addEventListener('click', async () => { goal.disabled = true; if (await srpGenieToGoal(a)) { saved.goal = true; srpGenieMarkDone(); showAppToast(t('room_genie_goal_done')); close(); return; } render(); });
         const diary = card.querySelector('[data-diary]');
-        if (diary) diary.addEventListener('click', async () => { diary.disabled = true; if (await srpGenieToDiary(summaryRows())) { saved.diary = true; showAppToast(t('room_genie_diary_done')); close(); return; } render(); });
+        if (diary) diary.addEventListener('click', async () => { diary.disabled = true; if (await srpGenieToDiary(summaryRows())) { saved.diary = true; srpGenieMarkDone(); showAppToast(t('room_genie_diary_done')); close(); return; } render(); });
+    };
+    // מהפעם השנייה: קודם "רוצים לשנות עוד משהו בחיים?" - כן = אותה שיחה; לא = "קודם להגשים את היעדים שכבר הצבתם…"
+    const ask = () => {
+        layer.classList.toggle('is-talking', true);
+        card.innerHTML = `
+            <button type="button" class="srp-genie-x" data-close aria-label="${srEsc(t('close_btn'))}">${SR_CLOSE_SVG}</button>
+            <b class="srp-genie-q">${srEsc(t('room_genie_again_q'))}</b>
+            <div class="srp-genie-acts">
+                <button type="button" class="srp-genie-btn is-main" data-yes>${srEsc(t('room_genie_again_yes'))}</button>
+                <button type="button" class="srp-genie-btn is-ghost" data-no>${srEsc(t('room_genie_again_no'))}</button>
+            </div>`;
+        card.querySelector('[data-close]').addEventListener('click', close);
+        card.querySelector('[data-yes]').addEventListener('click', () => { i = 0; render(); });
+        card.querySelector('[data-no]').addEventListener('click', () => {
+            srpGenieMarkDone();
+            card.innerHTML = `
+                <b class="srp-genie-q">${srEsc(t('room_genie_again_no_msg'))}</b>
+                <div class="srp-genie-acts"><button type="button" class="srp-genie-btn is-main" data-bye>${srEsc(t('room_genie_bye'))}</button></div>`;
+            card.querySelector('[data-bye]').addEventListener('click', close);
+        });
     };
     // השאלה הראשונה מופיעה אחרי שהרוח הסתובבה ויצאה מהערפל
-    setTimeout(() => { if (layer.isConnected) render(); }, srpReduce() ? 0 : 5400);
-    card.innerHTML = `<b class="srp-genie-q">${srEsc(t('room_genie_q1'))}</b><span class="srp-genie-sub">${srEsc(t('room_genie_q2'))}</span>`;
+    const wait = srpReduce() ? 0 : layer.classList.contains('has-3d') ? 3500 : 5400;
+    setTimeout(() => { if (layer.isConnected) (opts.again ? ask : render)(); }, wait);
+    card.innerHTML = opts.again
+        ? `<b class="srp-genie-q">${srEsc(t('room_genie_again_q'))}</b>`
+        : `<b class="srp-genie-q">${srEsc(t('room_genie_q1'))}</b><span class="srp-genie-sub">${srEsc(t('room_genie_q2'))}</span>`;
 }
 // יעד ב"היעדים שלי": המשאלה = היעד, הצעדים = התחנות בשביל, תאריך לפי "כמה זמן"
 async function srpGenieToGoal(a) {
@@ -885,36 +924,13 @@ function srpOutsideScene(keys) {
             </g>
             ${swing ? `<g class="srp-hot srp-swing-hot" data-place-hot="swing" role="button" tabindex="0" aria-label="${srEsc(roomItemName('swing'))}">
                 <!-- תלויה על הענף הגדול שבציור (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה -->
-                <!-- נדנדה שנראית חלק מהציור (לפי בקשה מפורשת, 2026-10-20: "ואת הנדנדה תסדר שתראה חלק מהאפליקציה"): חבלים חומים
-                     שזורים עם קשרים על הענף, מעט קיסוס ופרחים קטנים, ומושב קרש עץ עם סיבים וצל רך - בצבעים ובאור של הציור -->
-                <defs>
-                    <linearGradient id="srpSwRope" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3a20"/><stop offset="0.5" stop-color="#b48654"/><stop offset="1" stop-color="#4f321b"/></linearGradient>
-                    <linearGradient id="srpSwWoodTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2ae72"/><stop offset="1" stop-color="#b07a43"/></linearGradient>
-                    <linearGradient id="srpSwWoodFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e5d33"/><stop offset="1" stop-color="#5b391d"/></linearGradient>
-                    <radialGradient id="srpSwFlower"><stop offset="0" stop-color="#fffbe6"/><stop offset="0.45" stop-color="#ffd8a0"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-                    <filter id="srpSwShadow" x="-40%" y="-20%" width="180%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="1.8" flood-color="#1a0b20" flood-opacity="0.6"/></filter>
-                </defs>
-                <g class="srp-swing-ropes" filter="url(#srpSwShadow)">
-                    <path d="M62 284 C60 320 64 360 62 412 M92 281 C94 318 90 362 92 412" fill="none" stroke="url(#srpSwRope)" stroke-width="3.2" stroke-linecap="round"/>
-                    <path d="M62 284 C60 320 64 360 62 412 M92 281 C94 318 90 362 92 412" fill="none" stroke="#ecc790" stroke-opacity="0.5" stroke-width="1.2" stroke-dasharray="2.2 3"/>
-                    <ellipse cx="62" cy="285" rx="4.6" ry="3.2" fill="#4f321b"/><ellipse cx="92" cy="282" rx="4.6" ry="3.2" fill="#4f321b"/>
-                    <path d="M58.5 284 q3.5 -3 7 0 M88.5 281 q3.5 -3 7 0" stroke="#c9985f" stroke-opacity="0.6" stroke-width="0.9" fill="none"/>
-                    <g fill="#5e8f4c">
-                        <path d="M62 306 q-7 -2 -9 4 q6 2 9 -4z"/><path d="M63 350 q7 -3 9 3 q-6 3 -9 -3z"/><path d="M62 386 q-7 -2 -8 4 q6 1 8 -4z"/>
-                        <path d="M92 300 q7 -2 9 4 q-6 2 -9 -4z"/><path d="M91 338 q-7 -3 -9 3 q6 3 9 -3z"/><path d="M92 378 q7 -2 8 4 q-6 1 -8 -4z"/>
-                    </g>
-                    <g fill="none" stroke="#a3cf86" stroke-opacity="0.55" stroke-width="0.6"><path d="M62 306 l-6 2.5M63 350 l6 1.5M62 386 l-5 2.5M92 300 l6 2.5M91 338 l-6 1.5M92 378 l5 2.5"/></g>
-                    <g class="srp-swing-glow"><circle cx="61" cy="328" r="3.4" fill="url(#srpSwFlower)"/><circle cx="93" cy="358" r="3.4" fill="url(#srpSwFlower)"/><circle cx="62" cy="400" r="3" fill="url(#srpSwFlower)"/></g>
-                    <g><circle cx="61" cy="328" r="1.6" fill="#ffd6e6"/><circle cx="93" cy="358" r="1.6" fill="#fff2d6"/><circle cx="62" cy="400" r="1.4" fill="#e9dcff"/></g>
+                <!-- הנדנדה הקסומה שלה בתלת־ממד (world/3d/swing.png, תמונה מהדגם; לפי בקשה מפורשת, 2026-10-20: "תחליף אותה
+                     במקום הנדנדה שנמצאת עכשיו ושתתנדנד בעדינות וגם... שהיצור יעמוד עליה ויתנדנד איתה בכל פעם שמתקרבים לנדנדה").
+                     מתנדנדת בעדינות כל הזמן; נגיעה (או כש-Me מרחף לידה) - Me עומד על המושב והם מתנדנדים יחד -->
+                <g class="srp-swing-3d">
+                    <image class="srp-swing-art" href="${SRP_ART}3d/swing.png" x="44.4" y="272" width="65.3" height="156" preserveAspectRatio="none"/>
+                    ${typeof nmgShownStage === 'function' ? (() => { const st = nmgShownStage(); const h = st.n === 3 ? 50 : st.n === 2 ? 64 : 68; const w = h * st.ratio; return `<image class="srp-swing-me" href="${SRP_ART}${st.img}" x="${(80.5 - w / 2).toFixed(1)}" y="${(411 - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/>`; })() : ''}
                 </g>
-                <g class="srp-swing-seat" filter="url(#srpSwShadow)">
-                    <path d="M45 409.5 h64 l-3.5 6 h-57 z" fill="url(#srpSwWoodTop)"/>
-                    <rect x="48.5" y="415.5" width="57" height="7" rx="1.6" fill="url(#srpSwWoodFront)"/>
-                    <path d="M51 412.5 h17 M74 411.6 h26 M55 418.5 h38" stroke="#6b4426" stroke-opacity="0.45" stroke-width="0.7" stroke-linecap="round"/>
-                    <rect x="59.5" y="406" width="5" height="18" rx="2" fill="url(#srpSwRope)"/><rect x="89.5" y="406" width="5" height="18" rx="2" fill="url(#srpSwRope)"/>
-                    <g>${[[68, 422, '#ffb3cf'], [76, 423, '#fff2d6'], [84, 422, '#e2d4ff']].map(([x, y, c]) => `<g transform="translate(${x} ${y})"><path d="M-3 0 q-2 2 0 3.4" stroke="#5e8f4c" stroke-width="0.9" fill="none"/><circle r="2.1" fill="${c}"/><circle r="0.8" fill="#ffd27a"/></g>`).join('')}</g>
-                </g>
-                ${typeof srSparkleField === 'function' ? srSparkleField(77, 372, 34, 58, 5, 1.2, 6) : ''}
                 <rect class="srp-hit" x="40" y="276" width="74" height="176" fill="transparent"/>
             </g>` : ''}
             ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
@@ -960,11 +976,7 @@ function srpInitOutside(box, keys, opts = {}) {
         bench: () => srpRest(box),
         selfcare: () => srpOpenSignView(box),
         yoga: () => roomOpenPlace('yoga', { fromHall: !!opts.fromHall, parent: 'outside' }),
-        swing: el => {
-            if (el.classList.contains('is-swinging')) return;
-            el.classList.add('is-swinging');
-            setTimeout(() => el.classList.remove('is-swinging'), srpReduce() ? 300 : 4300);
-        },
+        swing: el => srpSwingRide(el),
     };
 }
 
@@ -1297,6 +1309,21 @@ function srpInitYoga(box, keys, opts = {}) {
     };
 }
 
+// 🪢 Me עולה על הנדנדה: עומד על המושב, והם מתנדנדים יחד כמה שניות; ה-Me המרחף נעלם בינתיים וחוזר אחרי (נקרא מנגיעה
+// בנדנדה, וגם מ-world3d.js כש-Me מרחף לידה). פעם בכל רגע - נגיעות נוספות בזמן הנדנוד לא עושות כלום
+let srpSwingRideAt = 0;
+function srpSwingRide(el) {
+    el = el || document.querySelector('.srp-swing-hot');
+    if (!el || el.classList.contains('is-riding')) return false;
+    srpSwingRideAt = Date.now();
+    const ms = srpReduce() ? 2600 : 6200;
+    el.classList.add('is-riding');
+    document.querySelector('.phone-wrapper')?.classList.add('nmg-me-riding');
+    const done = () => { el.classList.remove('is-riding'); document.querySelector('.phone-wrapper')?.classList.remove('nmg-me-riding'); };
+    const tm = setTimeout(done, ms);
+    srpCleanups.push(() => { clearTimeout(tm); done(); });
+    return true;
+}
 // ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
 // יושבים על הסלע: הכפתורים נעלמים ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
 function srpWaterfallScene() {

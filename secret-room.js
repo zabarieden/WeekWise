@@ -541,9 +541,9 @@ function srWallWindow(keys) {
             <circle class="sr-pulse" cx="269" cy="482" r="8" fill="none" stroke="#ffffff" stroke-width="1.6"/>` : srLockBadge(269, 478, 'computer')}
             <rect x="216" y="444" width="96" height="104" fill="transparent"/>
         </g>
-        <!-- 📔 היומן הקסום על השולחן - הציור שלה (world/diary.png), ונגיעה פותחת את היומן האישי (לפי בקשה מפורשת, 2026-10-14) -->
+        <!-- 📔 היומן הקסום על השולחן - מ-2026-10-20 תמונה של היומן שלה בתלת־ממד (world/3d/diary.png, לפי בקשה מפורשת: "הנה היומן החדש"); קודם הציור world/diary.png, ונגיעה פותחת את היומן האישי (לפי בקשה מפורשת, 2026-10-14) -->
         <g class="sr-hot sr-diary-art" data-hot="diary" role="button" tabindex="0" aria-label="${srEsc(t('room_diary_title'))}">
-            <image href="world/diary.png" x="176" y="487" width="48" height="61"/>
+            <image href="world/3d/diary.png" x="176" y="479.3" width="48" height="68.8"/>
             <rect x="170" y="482" width="60" height="70" fill="transparent"/>
         </g>`;
 }

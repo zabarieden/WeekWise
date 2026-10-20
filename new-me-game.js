@@ -94,7 +94,6 @@ function nmgRenderHud() {
             <button type="button" class="nmg-b nmg-pill nmg-en" onclick="nmgGo('day')" aria-label="${nmEsc(t('nm_eaten'))} ${nmFmt(eaten.kcal)} / ${nmFmt(goal)}">${NMG_SVG.bolt}<span class="nmg-track"><span class="nmg-fill" style="width:${pct}%"></span></span><span class="nmg-num"><bdi dir="ltr">${nmFmt(eaten.kcal)} / ${nmFmt(goal)}</bdi></span></button>
         </div>
         <button type="button" class="nmg-b nmg-home" onclick="goHome()" aria-label="${nmEsc(t('back_to_home_btn'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('home')}</span></button>
-        <span class="nmg-follow" aria-hidden="true"><img src="world/${nmgShownStage().img}" alt=""></span>
         <button type="button" class="nmg-b nmg-hall" onclick="nmgBackToHall()" aria-label="${nmEsc(t('room_back_to_hall'))}"><span class="nmg-btn">${NMG_SVG.hex}${nmgIcon('gate')}</span><span class="nmg-lb">${nmEsc(t('room_back_to_hall'))}</span></button>
         ${next ? `<button type="button" class="nmg-b nmg-quest" onclick="nmOpenHallMeal('${next}')">
             <span class="nmg-q1">${NMG_SVG.meal}<span>${nmEsc(t('nm_hud_next').replace('{time}', nmSlotReminderTime(next)))}</span></span>
@@ -106,6 +105,7 @@ function nmgRenderHud() {
         <div class="nmg-dock">
             <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/3d/ava-bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
         </div>`;
+    if (typeof nmg3dFollowSync === 'function') nmg3dFollowSync();
     nmgFitLabels(hud);
 }
 // מילה ארוכה בשם של כפתור (Einstellungen, Fortschrittsfotos): הגופן קטן קצת עד שהיא נכנסת; רק אם גם אז לא - נשברת

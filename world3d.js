@@ -500,3 +500,87 @@ async function nmg3dUpgradeRoofCat(sky) {
     const ro = new ResizeObserver(() => { if (!wrap.isConnected) { ro.disconnect(); return; } place(); });
     ro.observe(svg);
 }
+
+// ---------- ✨ Me מרחף איתי בכל מקום ----------
+// (לפי בקשה מפורשת, 2026-10-20: "הME1 לא משנה לאן אני הולכת הוא יבוא איתי" / "שירחף בכל מפה ויותר בתזוזתיות 360 ממש חלק").
+// בכל חדר ובכל מקום Me (הדמות החיה בתלת־ממד) מרחף לאט בחלק התחתון של המסך במסלול רך ומשתנה, פונה לכיוון שאליו הוא
+// מרחף, ומדי פעם מסתובב סיבוב שלם סביב עצמו. לא תופס נגיעות. בלי WebGL / "פחות תנועה" - התמונה שלו מרחפת בפינה
+const nmgFollow = { layer: null, el: null, img: null, mv: null, stage: 0, raf: 0, watch: 0, t0: 0, spinAt: 0, theta: 0, lastX: null };
+function nmg3dFollowSync() {
+    if (typeof nmgShownStage !== 'function') return;
+    const wrap = document.querySelector('.phone-wrapper');
+    if (!wrap) return;
+    if (!nmgFollow.layer || !nmgFollow.layer.isConnected) {
+        const layer = document.createElement('div');
+        layer.id = 'nmg-follow-layer';
+        layer.setAttribute('aria-hidden', 'true');
+        layer.innerHTML = '<div class="nmg-follow"><img alt=""></div>';
+        wrap.appendChild(layer);
+        Object.assign(nmgFollow, { layer, el: layer.firstElementChild, img: layer.querySelector('img'), mv: null, stage: 0 });
+    }
+    const s = nmgShownStage();
+    if (nmgFollow.stage !== s.n) {
+        nmgFollow.stage = s.n;
+        nmgFollow.img.src = `world/${s.img}`;
+        if (nmgFollow.mv) { nmgFollow.mv.remove(); nmgFollow.mv = null; nmgFollow.el.classList.remove('has-3d'); }
+        nmg3dFollowLive(s.n);
+    }
+    if (!nmgFollow.watch) nmgFollow.watch = setInterval(nmg3dFollowWatch, 500);
+}
+async function nmg3dFollowLive(n) {
+    if (nmg3dReduced() || !nmg3dWebgl()) return;
+    const url = `world/3d/me${n}.glb`;
+    if (!(await nmg3dExists(url)) || !(await nmg3dLoadViewer()) || nmgFollow.stage !== n || nmgFollow.mv) return;
+    const mv = document.createElement('model-viewer');
+    const attrs = {
+        src: url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
+        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral', 'camera-orbit': '0deg 80deg auto', loading: 'eager',
+    };
+    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    mv.addEventListener('load', () => nmgFollow.el.classList.add('has-3d'), { once: true });
+    nmgFollow.el.appendChild(mv);
+    nmgFollow.mv = mv;
+}
+// רץ רק כשהשכבה גלויה (בתוך חדר / מקום)
+function nmg3dFollowWatch() {
+    const on = !!(nmgFollow.layer && nmgFollow.layer.isConnected && nmgFollow.layer.offsetParent && getComputedStyle(nmgFollow.layer).visibility !== 'hidden');
+    // מרחף ליד הנדנדה (בשביל ביער) - עולה עליה ומתנדנד איתה
+    const sw = on && document.querySelector('.srp-swing-hot:not(.is-riding)');
+    if (sw && typeof srpSwingRide === 'function' && Date.now() - (typeof srpSwingRideAt !== 'undefined' ? srpSwingRideAt : 0) > 40000) {
+        const a = sw.getBoundingClientRect(), b = nmgFollow.el.getBoundingClientRect();
+        const dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height * 0.75) - (b.top + b.height / 2);
+        if (Math.hypot(dx, dy) < Math.max(90, a.width * 1.3)) srpSwingRide(sw);
+    }
+    if (on && !nmgFollow.raf && !nmg3dReduced()) { nmgFollow.t0 = performance.now() - Math.random() * 20000; nmgFollow.spinAt = performance.now() + 5000; nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick); }
+}
+function nmg3dFollowTick(now) {
+    nmgFollow.raf = 0;
+    const L = nmgFollow.layer, el = nmgFollow.el;
+    if (!L || !L.isConnected || !L.offsetParent) { nmgFollow.lastX = null; return; }
+    const W = L.clientWidth, H = L.clientHeight, w = el.offsetWidth, h = el.offsetHeight;
+    const t = (now - nmgFollow.t0) / 1000;
+    // מסלול רך שלא חוזר על עצמו (סכום של גלים בתדרים שונים), בחלק התחתון - מעל התיק והכפתורים
+    const nx = 0.5 + 0.34 * Math.sin(t * 0.13) + 0.12 * Math.sin(t * 0.31 + 1.7);
+    const ny = 0.5 + 0.32 * Math.sin(t * 0.17 + 0.6) + 0.14 * Math.sin(t * 0.43 + 2.1);
+    const x = 10 + nx * Math.max(0, W - w - 20);
+    const top = H * 0.46, bottom = H - h - 130;
+    const y = top + ny * Math.max(0, bottom - top) + Math.sin(t * 1.6) * 6;
+    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    // פונה לכיוון התנועה, ומדי פעם סיבוב שלם (360°) רך
+    const vx = nmgFollow.lastX === null ? 0 : x - nmgFollow.lastX;
+    nmgFollow.lastX = x;
+    const face = Math.max(-1, Math.min(1, vx * 2.2)) * -50;
+    nmgFollow.theta += (face - nmgFollow.theta) * 0.04;
+    let spin = 0;
+    if (now >= nmgFollow.spinAt) {
+        const p = (now - nmgFollow.spinAt) / 2600;
+        if (p >= 1) nmgFollow.spinAt = now + 11000 + Math.random() * 8000;
+        else spin = 360 * (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+    }
+    const mv = nmgFollow.mv;
+    if (mv && el.classList.contains('has-3d')) {
+        mv.cameraOrbit = `${(nmgFollow.theta + spin).toFixed(1)}deg 80deg auto`;
+        if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+    }
+    nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick);
+}
