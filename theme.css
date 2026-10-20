@@ -11204,3 +11204,7 @@ button.nmg-me-card:active { transform: scale(.97); }
 .srp-care-tag::before { content: ''; position: absolute; top: -6px; left: 50%; width: 34px; height: 9px; margin-left: -17px; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, #e8c27a, #8a6230); box-shadow: 0 2px 4px rgba(0, 0, 0, .35); }
 .srp-care-rope { top: -24px; height: 18px; }
 @media (prefers-reduced-motion: reduce) { .srp-care-steam path, .srp-care-jarglow, .srp-care-jarfly { animation: none; } }
+/* 🐈 החתול של הכוכבים (תלת־ממד) מטייל על השביל במסדרון - מאחורי התיק, לפני Me, ולא תופס לחיצות */
+.nmg3d-cat { position: absolute; left: 0; top: calc(var(--u) * var(--top)); z-index: 4; width: calc(var(--u) * var(--w)); height: calc(var(--u) * var(--h)); transform: translateX(calc(var(--u) * var(--x, -200))); pointer-events: none; opacity: 0; transition: opacity .6s; }
+.nmg3d-cat.is-on { opacity: 1; }
+.nmg3d-cat model-viewer { width: 100%; height: 100%; background: transparent; --poster-color: transparent; --progress-bar-color: transparent; pointer-events: none; filter: drop-shadow(0 0 6px rgba(201, 182, 255, .85)) drop-shadow(0 0 16px rgba(167, 243, 208, .3)); }

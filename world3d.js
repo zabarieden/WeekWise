@@ -45,6 +45,8 @@ function nmg3dLoadViewer() {
 // העמידה/הריחוף, והליכה/תעופה בזמן גרירה, ופונה לכיוון התנועה. התמונה נשארת עד שהמודל נטען (ואם לא נטען - נשארת)
 function nmg3dAfterHallRender() {
     const btn = document.querySelector('#new-me-root .nmh-me');
+    const hall = document.querySelector('#new-me-root .nmh');
+    if (hall) nmg3dAddCat(hall);
     if (!btn || typeof nmgShownStage !== 'function') return;
     nmg3dUpgradeMe(btn, nmgShownStage().n);
 }
@@ -168,4 +170,93 @@ async function nmg3dUpgradeMap(box, keys) {
         requestAnimationFrame(breathe);
     }
     return true;
+}
+
+// ---------- 🐈 החתול של הכוכבים ----------
+// world/3d/cat.glb (מ-Meshy, 2026-10-20, לפי בקשה מפורשת: "פה הוא הולך… אם אתה רוצה להשתמש בזה כבר עכשיו אפשר"):
+// מטייל לאט על השביל במסדרון - נכנס מצד אחד, עובר ונעלם, ואחרי הפסקה חוזר מהצד השני. לא חוסם שום לחיצה.
+// אם בקובץ יש גם אנימציה של ליקוק (lick / groom) - לפעמים עוצר באמצע הדרך ומלקק את עצמו, ואז ממשיך.
+// הוא אותו חתול בכל ציור חדש של המסדרון (לא נטען מחדש), ממשיך מאיפה שהיה. בלי הקובץ / WebGL / עם "פחות תנועה" - אין חתול
+const NMG3D_CAT = {
+    url: 'world/3d/cat.glb',
+    feetY: 722, w: 150, h: 104, // במידות הציור (390 × 844): איפה הרגליים, וגודל החתול
+    speed: 40,                  // יחידות ציור בשנייה
+    timeScale: 0.6,             // קצב הצעדים (שהרגליים לא "יחליקו")
+    rest: [6000, 15000],        // הפסקה בין מעבר למעבר (מ"ש)
+};
+let nmg3dCatReady = null;
+async function nmg3dAddCat(hall) {
+    if (!hall || nmg3dReduced() || !nmg3dWebgl()) return;
+    if (!nmg3dCatReady) nmg3dCatReady = nmg3dMakeCat();
+    const cat = await nmg3dCatReady;
+    if (!cat || !hall.isConnected) return;
+    if (cat.wrap.parentNode !== hall) hall.appendChild(cat.wrap);
+    cat.wake();
+}
+async function nmg3dMakeCat() {
+    const C = NMG3D_CAT;
+    if (!(await nmg3dExists(C.url)) || !(await nmg3dLoadViewer())) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'nmg3d-cat';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.style.cssText = `--w:${C.w};--h:${C.h};--top:${C.feetY - C.h}`;
+    const mv = document.createElement('model-viewer');
+    const attrs = {
+        src: C.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
+        'shadow-intensity': '0.8', 'shadow-softness': '1', exposure: '1.45', 'environment-image': 'neutral',
+        'camera-orbit': '-90deg 80deg auto', 'field-of-view': '22deg', loading: 'eager',
+    };
+    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    wrap.appendChild(mv);
+    const st = { dir: 1, x: -C.w, phase: 'rest', until: performance.now() + 1500, lickAt: null, walk: '', lick: '', last: 0, raf: 0 };
+    const place = () => { wrap.style.setProperty('--x', st.x.toFixed(1)); };
+    const startWalk = () => {
+        st.phase = 'walk';
+        st.x = st.dir > 0 ? -C.w : 390;
+        // פונה לכיוון ההליכה: מהצד (-90° = ימינה, 90° = שמאלה)
+        mv.cameraOrbit = `${st.dir > 0 ? -90 : 90}deg 80deg auto`;
+        if (st.walk) mv.animationName = st.walk;
+        mv.timeScale = C.timeScale;
+        mv.play();
+        st.lickAt = st.lick && Math.random() < 0.5 ? 110 + Math.random() * 130 : null;
+        wrap.classList.add('is-on');
+        place();
+    };
+    const tick = now => {
+        st.raf = 0;
+        if (!wrap.isConnected || !wrap.offsetParent) { mv.pause(); return; }  // המסדרון לא על המסך - נח עד wake
+        const dt = Math.min(0.1, (now - (st.last || now)) / 1000);
+        st.last = now;
+        if (st.phase === 'rest' && now >= st.until) startWalk();
+        else if (st.phase === 'walk') {
+            st.x += st.dir * C.speed * dt;
+            const mid = st.x + C.w / 2;
+            if (st.lickAt !== null && (st.dir > 0 ? mid >= st.lickAt : mid <= 390 - st.lickAt)) {
+                // עוצר ומלקק את עצמו (פעמיים), ואז ממשיך ללכת
+                st.lickAt = null; st.phase = 'lick';
+                mv.animationName = st.lick; mv.timeScale = 1;
+                st.until = now + Math.max(1500, (mv.duration || 2) * 2000);
+            } else if (st.x > 390 + 4 || st.x < -C.w - 4) {
+                st.phase = 'rest'; st.dir = -st.dir;
+                st.until = now + C.rest[0] + Math.random() * (C.rest[1] - C.rest[0]);
+                wrap.classList.remove('is-on');
+                mv.pause();
+            }
+            place();
+        } else if (st.phase === 'lick' && now >= st.until) {
+            st.phase = 'walk';
+            if (st.walk) mv.animationName = st.walk;
+            mv.timeScale = C.timeScale;
+        }
+        st.raf = requestAnimationFrame(tick);
+    };
+    const wake = () => { if (!st.raf) { st.last = 0; if (st.phase !== 'rest') mv.play(); st.raf = requestAnimationFrame(tick); } };
+    mv.addEventListener('load', () => {
+        const names = mv.availableAnimations || [];
+        st.walk = names.find(n => /walk|run|move/i.test(n)) || names.find(n => !/lick|groom|clean|wash|idle/i.test(n)) || names[0] || '';
+        st.lick = names.find(n => /lick|groom|clean|wash/i.test(n)) || '';
+        if (st.walk) mv.animationName = st.walk;
+    }, { once: true });
+    place();
+    return { wrap, mv, wake };
 }
