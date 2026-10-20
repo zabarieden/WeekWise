@@ -9676,8 +9676,10 @@ html[dir="rtl"] .nmt-bars i { margin-inline-start: auto; }
 @media (prefers-reduced-motion: reduce) { .sr-turntable-note, .sr-scope-glint, .srp-pool-q, .sr-chest-gift { animation: none !important; } }
 
 /* ===== 🍲 המתכונים שלי: "פס צבע" על לוח גיר (לפי בחירה מפורשת: עיצוב 1 בלי "הכל" בשילוב הנראות של 15) ===== */
+/* הלוח: סגול לילה עמוק בגוון של האפליקציה, במקום הירוק־אפור הדהוי (לפי בקשה מפורשת, 2026-10-20: "הכל יפה חוץ מהרקע הכחול ירוק
+   אפור דהוי הזה תשנה אותו") - נגזר מצבע הערכה, כך שהוא מתאים לכל ערכת צבעים */
 .recipes-gallery, .recipe-detail-view {
-    --chalk-bg: #27332e; --chalk: #f3f1e8; --chalk-muted: rgba(243, 241, 232, 0.7); --chalk-line: rgba(243, 241, 232, 0.24);
+    --chalk-bg: color-mix(in srgb, var(--accent-purple, #a855f7) 20%, #14101e); --chalk-ink: color-mix(in srgb, var(--accent-purple, #a855f7) 22%, #110c1a); --chalk: #f3f1e8; --chalk-muted: rgba(243, 241, 232, 0.7); --chalk-line: rgba(243, 241, 232, 0.24);
     --chalk-soft: rgba(243, 241, 232, 0.09); --chalk-yellow: #f7d774; --chalk-font: 'Amatic SC', var(--user-font, 'Playpen Sans Hebrew'), sans-serif; --chalk-scale: 1;
 }
 /* בכתבים שאין להם כתב גיר (ערבית, הודית, תאית, יפנית...) - הכותרות בפונט הרגיל, בגודל רגיל */
@@ -9685,7 +9687,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipes-gallery { padding: 18px 14px 22px; border-radius: 26px; background: radial-gradient(ellipse at 28% 0%, rgba(255, 255, 255, 0.08), transparent 62%), radial-gradient(ellipse at 85% 100%, rgba(255, 255, 255, 0.04), transparent 55%), var(--chalk-bg); color: var(--chalk); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 16px 32px -20px rgba(0, 0, 0, 0.6); }
 .recipes-gallery .recipes-top-title { font-family: var(--chalk-font); font-size: calc(2.4rem * var(--chalk-scale)); font-weight: 700; line-height: 1; color: var(--chalk); }
 .recipes-gallery .recipes-top-btn { border: 1.5px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
-.recipes-gallery .recipes-top-btn.is-add { border: none; background: var(--chalk-yellow); color: #27332e; box-shadow: none; }
+.recipes-gallery .recipes-top-btn.is-add { border: none; background: var(--chalk-yellow); color: var(--chalk-ink); box-shadow: none; }
 .recipes-gallery .recipes-search { background: var(--chalk-soft); color: var(--chalk-muted); }
 .recipes-gallery .recipes-search input { color: var(--chalk); }
 .recipes-gallery .recipes-search input::placeholder { color: var(--chalk-muted); }
@@ -9697,7 +9699,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipes-gallery .recipe-tile { border: 2px dashed var(--chalk-line); border-radius: 18px; background: transparent; color: var(--chalk); }
 .recipe-tile-band { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 8px 9px; background: linear-gradient(135deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }
 .recipe-tile-cat { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 0.68rem; font-weight: 800; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22); }
-.recipe-tile-saved { flex: none; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); color: #27332e; font-size: 0.62rem; font-weight: 900; }
+.recipe-tile-saved { flex: none; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); color: var(--chalk-ink); font-size: 0.62rem; font-weight: 900; }
 .recipe-tile-time { flex: none; margin-inline-start: auto; padding: 1px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.2); color: #fff; font-size: 0.66rem; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .recipe-tile-photo { display: block; height: 92px; overflow: hidden; }
 .recipe-tile-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -9729,7 +9731,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipe-detail-view .recipe-servings { background: var(--chalk-soft); }
 .recipe-detail-view .recipe-servings-btn { background: rgba(243, 241, 232, 0.14); color: var(--chalk); }
 .recipe-detail-view .recipe-servings-value { color: var(--chalk); }
-.recipe-save-example { width: 100%; padding: 13px; border: 0; border-radius: 16px; background: var(--chalk-yellow); color: #27332e; font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
+.recipe-save-example { width: 100%; padding: 13px; border: 0; border-radius: 16px; background: var(--chalk-yellow); color: var(--chalk-ink); font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
 .recipe-save-example:disabled { background: var(--chalk-soft); color: var(--chalk-muted); cursor: default; }
 .recipe-save-example:not(:disabled):active { transform: scale(0.98); }
 .recipe-save-example:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
@@ -9740,7 +9742,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipe-detail-view .recipe-have-list > li { border-bottom: 1.5px dashed var(--chalk-line); }
 .recipe-detail-view .recipe-have-row { color: var(--chalk); }
 .recipe-detail-view .recipe-have-box { border-color: rgba(243, 241, 232, 0.55); }
-.recipe-detail-view .recipe-have-row.is-have .recipe-have-box { border-color: var(--chalk-yellow); background: var(--chalk-yellow); color: #27332e; }
+.recipe-detail-view .recipe-have-row.is-have .recipe-have-box { border-color: var(--chalk-yellow); background: var(--chalk-yellow); color: var(--chalk-ink); }
 .recipe-detail-view .recipe-have-text b { color: var(--chalk-yellow); }
 .recipe-detail-view .recipe-have-row.is-have .recipe-have-text { color: var(--chalk-muted); }
 .recipe-detail-view .recipe-have-hint { color: var(--chalk-muted); }
@@ -9751,7 +9753,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="bn"], [lang="th"], [lang="
 .recipe-detail-view .recipe-steps.is-single li::before { display: none; }
 .recipe-detail-view .recipe-detail-calories-summary { color: var(--chalk-muted) !important; }
 .recipe-detail-view .recipe-detail-empty-line { color: var(--chalk-muted) !important; }
-.recipe-detail-view .recipe-action-main { background: var(--chalk-yellow); color: #27332e; }
+.recipe-detail-view .recipe-action-main { background: var(--chalk-yellow); color: var(--chalk-ink); }
 .recipe-detail-view .recipe-action-main:disabled { background: var(--chalk-soft); color: var(--chalk-muted); }
 .recipe-detail-view .recipe-action-soft { border: 1.5px dashed var(--chalk-line); background: transparent; color: var(--chalk); }
 .recipe-detail-view .recipe-sheet-foot { border-top: 1.5px dashed var(--chalk-line); }

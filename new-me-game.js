@@ -6,7 +6,8 @@
 // מתי השכבה מוצגת - ב-CSS (#nm-hud מוצג רק כש-New Me במסדרון או כשהחדר / מקום פתוחים); כאן רק התוכן שלה
 
 // מ-2026-10-20 (לפי בקשה מפורשת: "שלא רואים גרסאות ישנות לשום דבר") התמונות של Me הן צילומים של הדמויות שלה בתלת־ממד
-// (world/3d/ava-me1–3.png, מהדגמים world/3d/me1–3.glb) - במסדרון, במפה, בכרטיסים של "הדמות שלי" ובמהפך
+// (world/3d/ava-me1–3.png, מהדגמים world/3d/me1–3.glb) - במסדרון, במפה, בכרטיסים של "הדמות שלי" ובמהפך. גם התיק הקסום
+// (בכפתור ובמסך התיק) הוא צילום של התיק שלה בתלת־ממד: world/3d/ava-bag.png
 const NMG_STAGES = [
     { n: 1, img: '3d/ava-me1.png', at: 0, ratio: 327 / 403 },
     { n: 2, img: '3d/ava-me2.png', at: 4, ratio: 399 / 365 },
@@ -103,7 +104,7 @@ function nmgRenderHud() {
         <div class="nmg-rail nmg-rr">${['day', 'challenges'].map(k => nmgButton(k, title(k))).join('')}</div>
         <div class="nmg-dock">
             ${nmgButton('journey', title('journey'))}
-            <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
+            <button type="button" class="nmg-b nmg-it nmg-bagit is-big" data-hud="bag" onclick="nmgGo('bag')" aria-label="${nmEsc(t('nm_backpack'))}"><span class="nmg-bagv"><span class="nmg-plinth"></span><img class="nmg-bag" src="world/3d/ava-bag.png" alt=""></span><span class="nmg-lb">${nmEsc(t('nm_hud_bag'))}</span></button>
         </div>`;
     nmgFitLabels(hud);
 }
@@ -204,7 +205,7 @@ function nmgOpenBag() {
     box.setAttribute('aria-label', t('nm_hud_bag'));
     box.innerHTML = `${NMG_SVG.defs}
         <div class="nmg-bag-scroll">
-            <div class="nmg-bag-head"><img src="world/bag.png" alt=""><b>${nmEsc(t('nm_hud_bag'))}</b></div>
+            <div class="nmg-bag-head"><img src="world/3d/ava-bag.png" alt=""><b>${nmEsc(t('nm_hud_bag'))}</b></div>
             <div class="nmg-bag-grid">${nmgBagItems().map((k, i) => nmgBagItemHtml(k, i)).join('')}</div>
             <div class="nmg-bag-foot">${nmgBagItemHtml('settings', nmgBagItems().length, ' is-small')}</div>
         </div>`;
