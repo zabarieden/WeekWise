@@ -80,7 +80,7 @@ en: {
     nm_demo_saved_2: "Yogurt with granola and fruit",
     nm_demo_title: "How a swap works",
     note_urgent: "Urgent",
-    faq_a_home_lists_btn: "At the top of the home screen, next to focus mode, there is a small list button (three lines with dots). A tap opens a little menu: 📝 Notes or 🛒 Shopping List.",
+    faq_a_home_lists_btn: "At the top of the home screen, next to focus mode, there is a small list button (three lines with dots). A tap opens a little menu: Notes or Shopping List.",
     faq_q_home_lists_btn: "How do I get to my notes or the shopping list quickly?",
     home_lists_label: "Notes and shopping list",
     faq_a_weekly_table: "Next to the Monthly Overview in Calendar View there is a Weekly Table – it starts folded, and a tap on its title opens it. It shows every day of the week with its events and tasks and the fixed weekly tasks, by time; ‹ › move between weeks, and a tap on an item opens it for editing.",
@@ -3846,7 +3846,7 @@ he: {
     nm_demo_saved_2: "יוגורט עם גרנולה ופרי",
     nm_demo_title: "ככה מחליפים ארוחה",
     note_urgent: "דחוף",
-    faq_a_home_lists_btn: "בראש מסך הבית, ליד מצב הפוקוס, יש כפתור קטן של רשימה (שלוש שורות עם נקודות). נגיעה פותחת תפריט קטן: 📝 פתקים או 🛒 רשימת קניות.",
+    faq_a_home_lists_btn: "בראש מסך הבית, ליד מצב הפוקוס, יש כפתור קטן של רשימה (שלוש שורות עם נקודות). נגיעה פותחת תפריט קטן: פתקים או רשימת קניות.",
     faq_q_home_lists_btn: "איך מגיעים מהר לפתקים או לרשימת הקניות?",
     home_lists_label: "פתקים ורשימת קניות",
     faq_a_weekly_table: "ליד המבט החודשי ב״מבט ליומן״ יש טבלה שבועית – היא מקופלת, ונגיעה בכותרת פותחת אותה. רואים בה כל יום בשבוע עם האירועים והמשימות שלו והמשימות הקבועות, לפי שעה; ‹ › עוברים בין שבועות, ונגיעה בפריט פותחת אותו לעריכה.",
@@ -7603,7 +7603,7 @@ he: {
     preset_select_placeholder: "📋 ארוחה קבועה...",
 },
 es: {
-    faq_a_home_lists_btn: "Arriba en la pantalla de inicio, junto al modo enfoque, hay un pequeño botón de lista (tres líneas con puntos). Un toque abre un menú pequeño: 📝 Notas o 🛒 Lista de Compras.",
+    faq_a_home_lists_btn: "Arriba en la pantalla de inicio, junto al modo enfoque, hay un pequeño botón de lista (tres líneas con puntos). Un toque abre un menú pequeño: Notas o Lista de Compras.",
     faq_a_weekly_table: "Junto a Vista Mensual, en Vista de Calendario, hay una Tabla Semanal: empieza plegada y un toque en su título la abre. Muestra cada día de la semana con sus eventos y tareas y las tareas semanales recurrentes, por hora; ‹ › pasan de una semana a otra, y un toque en un elemento lo abre para editarlo.",
     faq_q_home_lists_btn: "¿Cómo llego rápido a mis notas o a la lista de compras?",
     faq_q_weekly_table: "¿Qué es la Tabla Semanal en Vista de Calendario?",
@@ -11378,7 +11378,7 @@ es: {
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla. Se elimina todo, incluidas las fotos que subiste. Si Google Calendar está conectado, la App lo desconecta primero: no se elimina nada de tu propio Google Calendar.",
 },
 fr: {
-    faq_a_home_lists_btn: "En haut de l'écran d'accueil, à côté du mode concentration, il y a un petit bouton liste (trois lignes avec des points). Un toucher ouvre un petit menu : 📝 Notes ou 🛒 Liste de Courses.",
+    faq_a_home_lists_btn: "En haut de l'écran d'accueil, à côté du mode concentration, il y a un petit bouton liste (trois lignes avec des points). Un toucher ouvre un petit menu : Notes ou Liste de Courses.",
     faq_a_weekly_table: "À côté de Vue Mensuelle, dans Vue Calendrier, il y a un Tableau Hebdomadaire – il est replié au départ, et toucher son titre l'ouvre. Il montre chaque jour de la semaine avec ses événements et ses tâches, ainsi que les tâches hebdomadaires récurrentes, par heure ; ‹ › passent d'une semaine à l'autre, et toucher un élément l'ouvre pour le modifier.",
     faq_q_home_lists_btn: "Comment accéder vite à mes notes ou à la liste de courses ?",
     faq_q_weekly_table: "Qu'est-ce que le Tableau Hebdomadaire dans Vue Calendrier ?",
@@ -15153,7 +15153,7 @@ fr: {
     faq_q_delete_account: "Comment supprimer définitivement mon compte ?", faq_a_delete_account: "En bas de Paramètres > Compte et sécurité, il y a l'option Supprimer le Compte. C'est définitif et irréversible, vous devez donc taper 'SUPPRIMER' pour confirmer. Tout est supprimé, y compris les photos que vous avez importées. Si Google Calendar est connecté, l'app le déconnecte d'abord – rien n'est supprimé de votre Google Calendar lui-même.",
 },
 ar: {
-    faq_a_home_lists_btn: "في أعلى الشاشة الرئيسية، بجانب وضع التركيز، يوجد زر قائمة صغير (ثلاثة أسطر مع نقاط). الضغط عليه يفتح قائمة صغيرة: 📝 الملاحظات أو 🛒 قائمة التسوق.",
+    faq_a_home_lists_btn: "في أعلى الشاشة الرئيسية، بجانب وضع التركيز، يوجد زر قائمة صغير (ثلاثة أسطر مع نقاط). الضغط عليه يفتح قائمة صغيرة: الملاحظات أو قائمة التسوق.",
     faq_a_weekly_table: "بجانب نظرة شهرية في عرض التقويم يوجد جدول أسبوعي – يكون مطويًا في البداية، والضغط على عنوانه يفتحه. يعرض كل يوم من أيام الأسبوع مع أحداثه ومهامه والمهام الأسبوعية المتكررة، حسب الوقت؛ و‹ › للتنقل بين الأسابيع، والضغط على عنصر يفتحه للتعديل.",
     faq_q_home_lists_btn: "كيف أصل بسرعة إلى ملاحظاتي أو قائمة التسوق؟",
     faq_q_weekly_table: "ما هو الجدول الأسبوعي في عرض التقويم؟",
@@ -18933,7 +18933,7 @@ ar: {
     faq_q_delete_account: "كيف يمكن حذف الحساب نهائيًا؟", faq_a_delete_account: "في أسفل الإعدادات > الحساب والأمان يوجد خيار حذف الحساب - وهو نهائي ولا رجعة فيه، لذا يجب كتابة 'حذف' لتأكيده. يُحذف كل شيء، بما في ذلك الصور التي تم رفعها. وإذا كان تقويم جوجل متصلًا، يفصله التطبيق أولًا – ولا يُحذف أي شيء من تقويم جوجل نفسه.",
 },
 ru: {
-    faq_a_home_lists_btn: "Вверху главного экрана, рядом с режимом фокуса, есть маленькая кнопка списка (три линии с точками). Нажатие открывает небольшое меню: 📝 Заметки или 🛒 Список покупок.",
+    faq_a_home_lists_btn: "Вверху главного экрана, рядом с режимом фокуса, есть маленькая кнопка списка (три линии с точками). Нажатие открывает небольшое меню: Заметки или Список покупок.",
     faq_a_weekly_table: "Рядом с «Обзором месяца» в «Виде календаря» есть «Недельная таблица» – сначала она свёрнута, а нажатие на заголовок открывает её. В ней видны все дни недели с событиями и задачами, а также повторяющиеся еженедельные задачи, по времени; ‹ › переключают недели, а нажатие на элемент открывает его для редактирования.",
     faq_q_home_lists_btn: "Как быстро открыть заметки или список покупок?",
     faq_q_weekly_table: "Что такое «Недельная таблица» в «Виде календаря»?",
@@ -22714,7 +22714,7 @@ ru: {
     faq_q_delete_account: "Как навсегда удалить аккаунт?", faq_a_delete_account: "Внизу раздела Настройки > Аккаунт и безопасность есть пункт Удалить аккаунт - это окончательно и необратимо, поэтому для подтверждения нужно ввести 'УДАЛИТЬ'. Удаляется всё, включая загруженные фото. Если подключён Google Calendar, приложение сначала отключает его – из самого Google Calendar ничего не удаляется.",
 },
 de: {
-    faq_a_home_lists_btn: "Oben auf dem Startbildschirm, neben dem Fokusmodus, gibt es einen kleinen Listen-Button (drei Linien mit Punkten). Ein Tipp öffnet ein kleines Menü: 📝 Notizen oder 🛒 Einkaufsliste.",
+    faq_a_home_lists_btn: "Oben auf dem Startbildschirm, neben dem Fokusmodus, gibt es einen kleinen Listen-Button (drei Linien mit Punkten). Ein Tipp öffnet ein kleines Menü: Notizen oder Einkaufsliste.",
     faq_a_weekly_table: "Neben der Monatsübersicht gibt es in der Kalenderansicht eine Wochentabelle – sie ist zuerst eingeklappt, und ein Tipp auf ihren Titel öffnet sie. Sie zeigt jeden Tag der Woche mit seinen Terminen und Aufgaben und den wiederkehrenden wöchentlichen Aufgaben, nach Uhrzeit; ‹ › wechseln zwischen den Wochen, und ein Tipp auf einen Eintrag öffnet ihn zum Bearbeiten.",
     faq_q_home_lists_btn: "Wie komme ich schnell zu meinen Notizen oder zur Einkaufsliste?",
     faq_q_weekly_table: "Was ist die Wochentabelle in der Kalenderansicht?",
@@ -26489,7 +26489,7 @@ de: {
     faq_q_delete_account: "Wie lösche ich mein Konto dauerhaft?", faq_a_delete_account: "Ganz unten unter Einstellungen > Konto & Sicherheit gibt es die Option Konto löschen - das ist endgültig und nicht rückgängig zu machen, deshalb musst du zur Bestätigung 'LÖSCHEN' eingeben. Dabei wird alles gelöscht, auch die hochgeladenen Fotos. Ist Google Calendar verbunden, trennt die App die Verbindung zuerst – aus deinem Google Calendar selbst wird nichts gelöscht.",
 },
 pt: {
-    faq_a_home_lists_btn: "No alto da tela inicial, ao lado do modo foco, há um pequeno botão de lista (três linhas com pontos). Um toque abre um menuzinho: 📝 Notas ou 🛒 Lista de Compras.",
+    faq_a_home_lists_btn: "No alto da tela inicial, ao lado do modo foco, há um pequeno botão de lista (três linhas com pontos). Um toque abre um menuzinho: Notas ou Lista de Compras.",
     faq_a_weekly_table: "Ao lado da Visão Geral Mensal, na Visão do Calendário, há uma Tabela Semanal – ela começa recolhida, e um toque no título a abre. Ela mostra cada dia da semana com seus eventos e tarefas e as tarefas semanais recorrentes, por horário; ‹ › passam de uma semana para outra, e um toque em um item o abre para edição.",
     faq_q_home_lists_btn: "Como chego rápido às minhas notas ou à lista de compras?",
     faq_q_weekly_table: "O que é a Tabela Semanal na Visão do Calendário?",
@@ -30264,7 +30264,7 @@ pt: {
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar. Tudo é excluído, inclusive as fotos que você enviou. Se o Google Calendar estiver conectado, o app o desconecta primeiro – nada é excluído do seu próprio Google Calendar.",
 },
 ja: {
-    faq_a_home_lists_btn: "ホーム画面の上、集中モードの横に、小さなリストボタン（点のついた3本線）があります。タップすると小さなメニューが開きます：📝 メモ または 🛒 買い物リスト。",
+    faq_a_home_lists_btn: "ホーム画面の上、集中モードの横に、小さなリストボタン（点のついた3本線）があります。タップすると小さなメニューが開きます：メモ または 買い物リスト。",
     faq_a_weekly_table: "カレンダー表示の月間概要の横に、週間表があります。最初は折りたたまれていて、タイトルをタップすると開きます。週の毎日の予定とタスク、繰り返しの週間タスクが時間順に表示されます。‹ › で週を切り替え、項目をタップすると編集画面が開きます。",
     faq_q_home_lists_btn: "メモや買い物リストにすばやく行くには？",
     faq_q_weekly_table: "カレンダー表示の「週間表」とは？",
@@ -34039,7 +34039,7 @@ ja: {
     faq_q_delete_account: "アカウントを完全に削除するには？", faq_a_delete_account: "設定 > アカウントとセキュリティの一番下に「アカウントを削除」があります。これは最終的な操作で元に戻せないため、確認のために「削除」と入力する必要があります。アップロードした写真も含めて、すべてが削除されます。Googleカレンダーが連携されている場合は、先に連携が解除されます。Googleカレンダー自体からは何も削除されません。",
 },
 zh: {
-    faq_a_home_lists_btn: "在主屏幕顶部、专注模式旁边，有一个小小的列表按钮（三条带圆点的线）。点一下会打开一个小菜单：📝 笔记 或 🛒 购物清单。",
+    faq_a_home_lists_btn: "在主屏幕顶部、专注模式旁边，有一个小小的列表按钮（三条带圆点的线）。点一下会打开一个小菜单：笔记 或 购物清单。",
     faq_a_weekly_table: "在日历视图中，月度概览旁边有一个每周表格——它默认是折叠的，点一下标题即可展开。它按时间显示一周中每一天的事件和任务，以及每周重复任务；‹ › 可以切换周，点一下某一项即可打开编辑。",
     faq_q_home_lists_btn: "怎样快速打开我的笔记或购物清单？",
     faq_q_weekly_table: "日历视图中的每周表格是什么？",
@@ -37814,7 +37814,7 @@ zh: {
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。所有内容都会被删除，包括上传的照片。如果已连接 Google Calendar，应用会先断开连接 – Google Calendar 本身中的内容不会被删除。",
 },
 hi: {
-    faq_a_home_lists_btn: "होम स्क्रीन के ऊपर, फ़ोकस मोड के पास, सूची का एक छोटा बटन है (बिंदुओं वाली तीन लाइनें)। टैप करने पर एक छोटा मेन्यू खुलता है: 📝 नोट्स या 🛒 खरीदारी सूची।",
+    faq_a_home_lists_btn: "होम स्क्रीन के ऊपर, फ़ोकस मोड के पास, सूची का एक छोटा बटन है (बिंदुओं वाली तीन लाइनें)। टैप करने पर एक छोटा मेन्यू खुलता है: नोट्स या खरीदारी सूची।",
     faq_a_weekly_table: "कैलेंडर दृश्य में मासिक अवलोकन के पास एक साप्ताहिक तालिका है – शुरू में यह सिमटी रहती है, और इसके शीर्षक पर टैप करने से खुलती है। इसमें सप्ताह का हर दिन अपने इवेंट और कामों के साथ, और आवर्ती साप्ताहिक कार्य, समय के हिसाब से दिखते हैं; ‹ › से सप्ताह बदलते हैं, और किसी आइटम पर टैप करने से वह बदलाव के लिए खुल जाता है।",
     faq_q_home_lists_btn: "अपने नोट्स या खरीदारी सूची तक जल्दी कैसे पहुँचें?",
     faq_q_weekly_table: "कैलेंडर दृश्य में साप्ताहिक तालिका क्या है?",
@@ -41589,7 +41589,7 @@ hi: {
     faq_q_delete_account: "अपना खाता हमेशा के लिए कैसे हटाएं?", faq_a_delete_account: "सेटिंग्स > खाता और सुरक्षा में सबसे नीचे खाता हटाएं का विकल्प है - यह अंतिम है और वापस नहीं लिया जा सकता, इसलिए पुष्टि के लिए 'हटाएं' टाइप करना होगा। इसमें सब कुछ हट जाता है, अपलोड की गई तस्वीरें भी। अगर Google Calendar जुड़ा है, तो ऐप पहले उसे डिस्कनेक्ट करता है – आपके Google Calendar से कुछ भी नहीं हटता।",
 },
 ko: {
-    faq_a_home_lists_btn: "홈 화면 위쪽, 집중 모드 옆에 작은 목록 버튼(점이 있는 세 줄)이 있어요. 누르면 작은 메뉴가 열려요: 📝 메모 또는 🛒 쇼핑 목록.",
+    faq_a_home_lists_btn: "홈 화면 위쪽, 집중 모드 옆에 작은 목록 버튼(점이 있는 세 줄)이 있어요. 누르면 작은 메뉴가 열려요: 메모 또는 쇼핑 목록.",
     faq_a_weekly_table: "캘린더 보기에서 월간 개요 옆에 주간 표가 있어요 – 처음에는 접혀 있고, 제목을 누르면 열려요. 한 주의 하루하루를 일정과 할 일, 반복되는 주간 작업과 함께 시간순으로 보여 줘요. ‹ ›로 주를 넘기고, 항목을 누르면 편집할 수 있게 열려요.",
     faq_q_home_lists_btn: "메모나 쇼핑 목록으로 빨리 가려면 어떻게 하나요?",
     faq_q_weekly_table: "캘린더 보기의 주간 표는 무엇인가요?",
@@ -45364,7 +45364,7 @@ ko: {
     faq_q_delete_account: "계정을 영구적으로 삭제하려면 어떻게 하나요?", faq_a_delete_account: "설정 > 계정 및 보안 맨 아래에 계정 삭제 옵션이 있습니다. 이 작업은 최종적이며 되돌릴 수 없으므로, 확인을 위해 '삭제'를 입력해야 합니다. 업로드한 사진을 포함해 모든 것이 삭제됩니다. Google Calendar가 연결되어 있으면 앱이 먼저 연결을 해제하며, Google Calendar 자체에서는 아무것도 삭제되지 않습니다.",
 },
 tr: {
-    faq_a_home_lists_btn: "Ana ekranın üstünde, odak modunun yanında küçük bir liste düğmesi (noktalı üç çizgi) var. Dokununca küçük bir menü açılır: 📝 Notlar veya 🛒 Alışveriş Listesi.",
+    faq_a_home_lists_btn: "Ana ekranın üstünde, odak modunun yanında küçük bir liste düğmesi (noktalı üç çizgi) var. Dokununca küçük bir menü açılır: Notlar veya Alışveriş Listesi.",
     faq_a_weekly_table: "Takvim Görünümü'nde Aylık Genel Bakış'ın yanında bir Haftalık Tablo var – başta katlanmış durur, başlığına dokununca açılır. Haftanın her gününü etkinlikleri ve görevleriyle, tekrarlayan haftalık görevlerle birlikte saate göre gösterir; ‹ › haftalar arasında geçiş yapar, bir öğeye dokunmak onu düzenlemek için açar.",
     faq_q_home_lists_btn: "Notlarıma veya alışveriş listesine hızlıca nasıl ulaşırım?",
     faq_q_weekly_table: "Takvim Görünümü'ndeki Haftalık Tablo nedir?",
@@ -49139,7 +49139,7 @@ tr: {
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir. Yüklediğin fotoğraflar dahil her şey silinir. Google Calendar bağlıysa uygulama önce bağlantıyı keser – Google Calendar'ın kendisinden hiçbir şey silinmez.",
 },
 id: {
-    faq_a_home_lists_btn: "Di bagian atas layar utama, di samping mode fokus, ada tombol daftar kecil (tiga garis bertitik). Mengetuknya membuka menu kecil: 📝 Catatan atau 🛒 Daftar Belanja.",
+    faq_a_home_lists_btn: "Di bagian atas layar utama, di samping mode fokus, ada tombol daftar kecil (tiga garis bertitik). Mengetuknya membuka menu kecil: Catatan atau Daftar Belanja.",
     faq_a_weekly_table: "Di samping Ikhtisar Bulanan di Tampilan Kalender ada Tabel Mingguan – awalnya terlipat, dan mengetuk judulnya akan membukanya. Tabel ini menampilkan setiap hari dalam seminggu dengan acara dan tugasnya serta tugas mingguan berulang, menurut jam; ‹ › berpindah antarminggu, dan mengetuk sebuah item membukanya untuk diedit.",
     faq_q_home_lists_btn: "Bagaimana cara cepat membuka catatan atau daftar belanja?",
     faq_q_weekly_table: "Apa itu Tabel Mingguan di Tampilan Kalender?",
@@ -52914,7 +52914,7 @@ id: {
     faq_q_delete_account: "Bagaimana cara menghapus akun saya secara permanen?", faq_a_delete_account: "Di bagian bawah Pengaturan > Akun & Keamanan ada opsi Hapus Akun - tindakan ini final dan tidak dapat dibatalkan, jadi Anda perlu mengetik 'HAPUS' untuk mengonfirmasinya. Semuanya dihapus, termasuk foto yang Anda unggah. Jika Google Calendar terhubung, aplikasi memutuskannya terlebih dahulu – tidak ada yang dihapus dari Google Calendar Anda sendiri.",
 },
 it: {
-    faq_a_home_lists_btn: "In alto nella schermata Home, accanto alla modalità focus, c'è un piccolo pulsante lista (tre linee con puntini). Un tocco apre un piccolo menu: 📝 Note o 🛒 Lista della Spesa.",
+    faq_a_home_lists_btn: "In alto nella schermata Home, accanto alla modalità focus, c'è un piccolo pulsante lista (tre linee con puntini). Un tocco apre un piccolo menu: Note o Lista della Spesa.",
     faq_a_weekly_table: "Accanto alla Panoramica Mensile, in Vista Calendario, c'è una Tabella Settimanale – all'inizio è chiusa, e un tocco sul titolo la apre. Mostra ogni giorno della settimana con i suoi eventi e le sue attività e le attività settimanali ricorrenti, per orario; ‹ › passano da una settimana all'altra, e un tocco su una voce la apre per modificarla.",
     faq_q_home_lists_btn: "Come arrivo velocemente alle mie note o alla lista della spesa?",
     faq_q_weekly_table: "Cos'è la Tabella Settimanale in Vista Calendario?",
@@ -56689,7 +56689,7 @@ it: {
     faq_q_delete_account: "Come elimino definitivamente il mio account?", faq_a_delete_account: "In fondo a Impostazioni > Account e sicurezza c'è l'opzione Elimina Account - è un'azione definitiva e irreversibile, quindi devi scrivere 'ELIMINA' per confermarla. Viene eliminato tutto, comprese le foto caricate. Se Google Calendar è collegato, l'app prima lo scollega: dal tuo Google Calendar non viene eliminato nulla.",
 },
 vi: {
-    faq_a_home_lists_btn: "Ở đầu màn hình chính, cạnh chế độ tập trung, có một nút danh sách nhỏ (ba gạch có chấm). Chạm vào sẽ mở một menu nhỏ: 📝 Ghi Chú hoặc 🛒 Danh Sách Mua Sắm.",
+    faq_a_home_lists_btn: "Ở đầu màn hình chính, cạnh chế độ tập trung, có một nút danh sách nhỏ (ba gạch có chấm). Chạm vào sẽ mở một menu nhỏ: Ghi Chú hoặc Danh Sách Mua Sắm.",
     faq_a_weekly_table: "Cạnh Tổng Quan Tháng trong Xem Lịch có một Bảng Tuần – ban đầu bảng được thu gọn, và chạm vào tiêu đề sẽ mở ra. Bảng hiện từng ngày trong tuần cùng sự kiện và công việc của ngày đó, và các công việc lặp lại hàng tuần, theo giờ; ‹ › chuyển giữa các tuần, và chạm vào một mục sẽ mở mục đó để chỉnh sửa.",
     faq_q_home_lists_btn: "Làm sao để vào nhanh ghi chú hoặc danh sách mua sắm?",
     faq_q_weekly_table: "Bảng Tuần trong Xem Lịch là gì?",
@@ -60464,7 +60464,7 @@ vi: {
     faq_q_delete_account: "Làm sao để xóa vĩnh viễn tài khoản của tôi?", faq_a_delete_account: "Ở cuối Cài đặt > Tài Khoản & Bảo Mật có tùy chọn Xóa Tài Khoản - thao tác này là vĩnh viễn và không thể hoàn tác, nên bạn cần gõ 'XÓA' để xác nhận. Mọi thứ đều bị xóa, kể cả ảnh bạn đã tải lên. Nếu Google Calendar đang được kết nối, ứng dụng sẽ ngắt kết nối trước – không có gì bị xóa khỏi chính Google Calendar của bạn.",
 },
 pl: {
-    faq_a_home_lists_btn: "U góry ekranu głównego, obok trybu skupienia, jest mały przycisk listy (trzy linie z kropkami). Dotknięcie otwiera małe menu: 📝 Notatki albo 🛒 Lista Zakupów.",
+    faq_a_home_lists_btn: "U góry ekranu głównego, obok trybu skupienia, jest mały przycisk listy (trzy linie z kropkami). Dotknięcie otwiera małe menu: Notatki albo Lista Zakupów.",
     faq_a_weekly_table: "Obok Przeglądu Miesięcznego w Widoku Kalendarza jest Tabela Tygodniowa – na początku jest zwinięta, a dotknięcie jej tytułu ją rozwija. Pokazuje każdy dzień tygodnia z jego wydarzeniami i zadaniami oraz powtarzające się zadania tygodniowe, według godzin; ‹ › przełączają tygodnie, a dotknięcie pozycji otwiera ją do edycji.",
     faq_q_home_lists_btn: "Jak szybko dostać się do notatek albo listy zakupów?",
     faq_q_weekly_table: "Czym jest Tabela Tygodniowa w Widoku Kalendarza?",
@@ -64246,7 +64246,7 @@ pl: {
     faq_q_delete_account: "Jak trwale usunąć konto?", faq_a_delete_account: "Na dole Ustawienia > Konto i bezpieczeństwo jest opcja Usuń Konto - to ostateczne i nieodwracalne, więc aby to potwierdzić, trzeba wpisać 'USUŃ'. Usuwane jest wszystko, także przesłane zdjęcia. Jeśli Google Calendar jest połączony, aplikacja najpierw go odłącza – z samego Google Calendar nic nie jest usuwane.",
 },
 th: {
-    faq_a_home_lists_btn: "ที่ด้านบนของหน้าจอหลัก ข้างโหมดโฟกัส มีปุ่มรายการเล็กๆ (สามเส้นมีจุด) แตะแล้วจะเปิดเมนูเล็กๆ: 📝 บันทึก หรือ 🛒 รายการซื้อของ",
+    faq_a_home_lists_btn: "ที่ด้านบนของหน้าจอหลัก ข้างโหมดโฟกัส มีปุ่มรายการเล็กๆ (สามเส้นมีจุด) แตะแล้วจะเปิดเมนูเล็กๆ: บันทึก หรือ รายการซื้อของ",
     faq_a_weekly_table: "ข้างภาพรวมรายเดือนในมุมมองปฏิทินมีตารางรายสัปดาห์ – ตอนแรกจะพับไว้ และแตะที่หัวข้อเพื่อเปิด ตารางแสดงทุกวันในสัปดาห์พร้อมกิจกรรมและงานของวันนั้น รวมถึงงานประจำสัปดาห์ที่เกิดซ้ำ เรียงตามเวลา ‹ › ใช้เลื่อนไปมาระหว่างสัปดาห์ และแตะที่รายการเพื่อเปิดแก้ไข",
     faq_q_home_lists_btn: "จะไปที่บันทึกหรือรายการซื้อของได้เร็วๆ อย่างไร?",
     faq_q_weekly_table: "ตารางรายสัปดาห์ในมุมมองปฏิทินคืออะไร?",
@@ -68023,7 +68023,7 @@ th: {
     faq_q_delete_account: "จะลบบัญชีถาวรได้อย่างไร?", faq_a_delete_account: "ที่ด้านล่างของการตั้งค่า > บัญชีและความปลอดภัย มีตัวเลือก ลบบัญชี - การกระทำนี้เป็นการถาวรและย้อนกลับไม่ได้ จึงต้องพิมพ์ 'ลบ' เพื่อยืนยัน ทุกอย่างจะถูกลบ รวมถึงรูปภาพที่อัปโหลดไว้ หากเชื่อมต่อ Google Calendar อยู่ แอปจะยกเลิกการเชื่อมต่อก่อน – จะไม่มีอะไรถูกลบออกจาก Google Calendar เอง",
 },
 ur: {
-    faq_a_home_lists_btn: "ہوم اسکرین کے اوپر، فوکس موڈ کے ساتھ، فہرست کا ایک چھوٹا بٹن ہے (نقطوں کے ساتھ تین لکیریں)۔ ٹیپ کرنے سے ایک چھوٹا مینو کھلتا ہے: 📝 نوٹس یا 🛒 خریداری کی فہرست۔",
+    faq_a_home_lists_btn: "ہوم اسکرین کے اوپر، فوکس موڈ کے ساتھ، فہرست کا ایک چھوٹا بٹن ہے (نقطوں کے ساتھ تین لکیریں)۔ ٹیپ کرنے سے ایک چھوٹا مینو کھلتا ہے: نوٹس یا خریداری کی فہرست۔",
     faq_a_weekly_table: "کیلنڈر ویو میں ماہانہ جائزہ کے ساتھ ایک ہفتہ وار جدول ہے – یہ شروع میں بند ہوتا ہے، اور اس کے عنوان پر ٹیپ کرنے سے کھل جاتا ہے۔ اس میں ہفتے کا ہر دن اپنے ایونٹس اور کاموں اور ہفتہ وار دہرائے جانے والے کاموں کے ساتھ، وقت کے لحاظ سے، نظر آتا ہے؛ ‹ › ایک ہفتے سے دوسرے ہفتے پر لے جاتے ہیں، اور کسی آئٹم پر ٹیپ کرنے سے وہ ترمیم کے لیے کھل جاتا ہے۔",
     faq_q_home_lists_btn: "اپنے نوٹس یا خریداری کی فہرست تک جلدی کیسے پہنچیں؟",
     faq_q_weekly_table: "کیلنڈر ویو میں ہفتہ وار جدول کیا ہے؟",
@@ -71800,7 +71800,7 @@ ur: {
     faq_q_delete_account: "میں اپنا اکاؤنٹ مستقل طور پر کیسے حذف کروں؟", faq_a_delete_account: "ترتیبات > اکاؤنٹ اور سیکیورٹی کے سب سے نیچے اکاؤنٹ حذف کریں کا آپشن ہے - یہ حتمی اور ناقابلِ واپسی ہے، اس لیے تصدیق کے لیے 'حذف کریں' لکھنا ہوگا۔ اس میں سب کچھ حذف ہو جاتا ہے، اپ لوڈ کی گئی تصاویر بھی۔ اگر Google Calendar جڑا ہوا ہو تو ایپ پہلے اسے منقطع کرتی ہے – خود Google Calendar سے کچھ بھی حذف نہیں ہوتا۔",
 },
 bn: {
-    faq_a_home_lists_btn: "হোম স্ক্রিনের ওপরে, ফোকাস মোডের পাশে, তালিকার একটি ছোট বোতাম আছে (বিন্দুসহ তিনটি লাইন)। ট্যাপ করলে একটি ছোট মেনু খোলে: 📝 নোট বা 🛒 কেনাকাটার তালিকা।",
+    faq_a_home_lists_btn: "হোম স্ক্রিনের ওপরে, ফোকাস মোডের পাশে, তালিকার একটি ছোট বোতাম আছে (বিন্দুসহ তিনটি লাইন)। ট্যাপ করলে একটি ছোট মেনু খোলে: নোট বা কেনাকাটার তালিকা।",
     faq_a_weekly_table: "ক্যালেন্ডার ভিউ-তে মাসিক ওভারভিউ-এর পাশে একটি সাপ্তাহিক টেবিল আছে – শুরুতে এটি ভাঁজ করা থাকে, আর শিরোনামে ট্যাপ করলে খুলে যায়। এতে সপ্তাহের প্রতিটি দিন তার ইভেন্ট ও কাজ এবং সাপ্তাহিক পুনরাবৃত্ত কাজসহ, সময় অনুযায়ী দেখা যায়; ‹ › দিয়ে এক সপ্তাহ থেকে অন্য সপ্তাহে যাওয়া যায়, আর কোনো আইটেমে ট্যাপ করলে সেটি সম্পাদনার জন্য খোলে।",
     faq_q_home_lists_btn: "আমার নোট বা কেনাকাটার তালিকায় দ্রুত কীভাবে যাব?",
     faq_q_weekly_table: "ক্যালেন্ডার ভিউ-তে সাপ্তাহিক টেবিল কী?",
@@ -75577,7 +75577,7 @@ bn: {
     faq_q_delete_account: "কীভাবে আমার অ্যাকাউন্ট স্থায়ীভাবে মুছব?", faq_a_delete_account: "সেটিংস > অ্যাকাউন্ট ও নিরাপত্তা-র একদম নিচে অ্যাকাউন্ট মুছুন অপশন আছে - এটি চূড়ান্ত এবং অপরিবর্তনীয়, তাই নিশ্চিত করতে 'মুছুন' লিখতে হবে। আপলোড করা ছবিসহ সবকিছু মুছে যায়। Google Calendar সংযুক্ত থাকলে অ্যাপ আগে সেটির সংযোগ বিচ্ছিন্ন করে – Google Calendar থেকে নিজে কিছুই মোছা হয় না।",
 },
 sw: {
-    faq_a_home_lists_btn: "Juu ya skrini ya mwanzo, kando ya hali ya umakini, kuna kitufe kidogo cha orodha (mistari mitatu yenye vitone). Kukigusa hufungua menyu ndogo: 📝 Maelezo au 🛒 Orodha ya Ununuzi.",
+    faq_a_home_lists_btn: "Juu ya skrini ya mwanzo, kando ya hali ya umakini, kuna kitufe kidogo cha orodha (mistari mitatu yenye vitone). Kukigusa hufungua menyu ndogo: Maelezo au Orodha ya Ununuzi.",
     faq_a_weekly_table: "Kando ya Muhtasari wa Mwezi katika Mwonekano wa Kalenda kuna Jedwali la Wiki – mwanzoni limekunjwa, na kugusa kichwa chake hulifungua. Linaonyesha kila siku ya wiki pamoja na matukio na kazi zake na kazi zinazojirudia kila wiki, kwa saa; ‹ › huhamisha kati ya wiki, na kugusa kipengele hukifungua ili kukihariri.",
     faq_q_home_lists_btn: "Ninafikaje haraka kwenye maelezo yangu au orodha ya ununuzi?",
     faq_q_weekly_table: "Jedwali la Wiki katika Mwonekano wa Kalenda ni nini?",
@@ -79354,7 +79354,7 @@ sw: {
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha. Kila kitu hufutwa, ikiwa ni pamoja na picha ulizopakia. Ikiwa Google Calendar imeunganishwa, programu huitenganisha kwanza – hakuna kinachofutwa kwenye Google Calendar yenyewe.",
 },
 uk: {
-    faq_a_home_lists_btn: "Угорі головного екрана, поруч із режимом фокусу, є маленька кнопка списку (три рядки з крапками). Дотик відкриває невелике меню: 📝 Нотатки або 🛒 Список Покупок.",
+    faq_a_home_lists_btn: "Угорі головного екрана, поруч із режимом фокусу, є маленька кнопка списку (три рядки з крапками). Дотик відкриває невелике меню: Нотатки або Список Покупок.",
     faq_a_weekly_table: "Поруч із «Місячним Оглядом» у «Вигляді Календаря» є Тижнева Таблиця – спершу вона згорнута, а дотик до її заголовка розгортає її. У ній видно кожен день тижня з його подіями й завданнями та повторюваними щотижневими завданнями, за часом; ‹ › перемикають тижні, а дотик до елемента відкриває його для редагування.",
     faq_q_home_lists_btn: "Як швидко перейти до нотаток або списку покупок?",
     faq_q_weekly_table: "Що таке Тижнева Таблиця у «Вигляді Календаря»?",
@@ -83137,7 +83137,7 @@ uk: {
     faq_q_delete_account: "Як остаточно видалити мій обліковий запис?", faq_a_delete_account: "Унизу розділу Налаштування > Обліковий запис і безпека є опція Видалити Обліковий Запис - це остаточно й незворотно, тому для підтвердження потрібно ввести 'ВИДАЛИТИ'. Видаляється все, зокрема завантажені фото. Якщо Google Calendar підключено, застосунок спершу відключає його – із самого Google Calendar нічого не видаляється.",
 },
 el: {
-    faq_a_home_lists_btn: "Στο πάνω μέρος της αρχικής οθόνης, δίπλα στη λειτουργία εστίασης, υπάρχει ένα μικρό κουμπί λίστας (τρεις γραμμές με τελείες). Ένα πάτημα ανοίγει ένα μικρό μενού: 📝 Σημειώσεις ή 🛒 Λίστα Αγορών.",
+    faq_a_home_lists_btn: "Στο πάνω μέρος της αρχικής οθόνης, δίπλα στη λειτουργία εστίασης, υπάρχει ένα μικρό κουμπί λίστας (τρεις γραμμές με τελείες). Ένα πάτημα ανοίγει ένα μικρό μενού: Σημειώσεις ή Λίστα Αγορών.",
     faq_a_weekly_table: "Δίπλα στη Μηνιαία Επισκόπηση, στην Προβολή Ημερολογίου, υπάρχει ένας Εβδομαδιαίος Πίνακας – ξεκινά διπλωμένος, και ένα πάτημα στον τίτλο του τον ανοίγει. Δείχνει κάθε μέρα της εβδομάδας με τα γεγονότα και τις εργασίες της και τις επαναλαμβανόμενες εβδομαδιαίες εργασίες, κατά ώρα· τα ‹ › αλλάζουν εβδομάδα, και ένα πάτημα σε ένα στοιχείο το ανοίγει για επεξεργασία.",
     faq_q_home_lists_btn: "Πώς πηγαίνω γρήγορα στις σημειώσεις μου ή στη λίστα αγορών;",
     faq_q_weekly_table: "Τι είναι ο Εβδομαδιαίος Πίνακας στην Προβολή Ημερολογίου;",
@@ -86914,7 +86914,7 @@ el: {
     faq_q_delete_account: "Πώς διαγράφω οριστικά τον λογαριασμό μου;", faq_a_delete_account: "Στο κάτω μέρος των Ρυθμίσεων > Λογαριασμός & Ασφάλεια υπάρχει η επιλογή Διαγραφή Λογαριασμού - είναι οριστική και μη αναστρέψιμη, γι' αυτό πρέπει να πληκτρολογήσετε 'ΔΙΑΓΡΑΦΗ' για να την επιβεβαιώσετε. Διαγράφονται τα πάντα, μαζί και οι φωτογραφίες που ανεβάσατε. Αν το Google Calendar είναι συνδεδεμένο, η εφαρμογή το αποσυνδέει πρώτα – τίποτα δεν διαγράφεται από το ίδιο το Google Calendar.",
 },
 nl: {
-    faq_a_home_lists_btn: "Bovenaan het startscherm, naast de focusmodus, staat een kleine lijstknop (drie lijntjes met puntjes). Een tik opent een klein menu: 📝 Notities of 🛒 Boodschappenlijst.",
+    faq_a_home_lists_btn: "Bovenaan het startscherm, naast de focusmodus, staat een kleine lijstknop (drie lijntjes met puntjes). Een tik opent een klein menu: Notities of Boodschappenlijst.",
     faq_a_weekly_table: "Naast het Maandoverzicht in Kalenderweergave staat een Weektabel – die is eerst ingeklapt, en een tik op de titel klapt hem open. Je ziet er elke dag van de week in met de afspraken en taken van die dag en de terugkerende wekelijkse taken, op tijd; ‹ › gaan naar een andere week, en een tik op een item opent het om te bewerken.",
     faq_q_home_lists_btn: "Hoe kom ik snel bij mijn notities of de boodschappenlijst?",
     faq_q_weekly_table: "Wat is de Weektabel in Kalenderweergave?",
@@ -90691,7 +90691,7 @@ nl: {
     faq_q_delete_account: "Hoe verwijder ik mijn account definitief?", faq_a_delete_account: "Onderaan Instellingen > Account en beveiliging staat de optie Account Verwijderen - dit is definitief en onomkeerbaar, dus je moet 'VERWIJDEREN' typen om te bevestigen. Alles wordt verwijderd, ook de foto's die je hebt geüpload. Als Google Calendar gekoppeld is, ontkoppelt de app die eerst – uit je Google Calendar zelf wordt niets verwijderd.",
 },
 ca: {
-    faq_a_home_lists_btn: "A dalt de la pantalla d'inici, al costat del mode concentració, hi ha un petit botó de llista (tres línies amb punts). Un toc obre un menú petit: 📝 Notes o 🛒 Llista de Compres.",
+    faq_a_home_lists_btn: "A dalt de la pantalla d'inici, al costat del mode concentració, hi ha un petit botó de llista (tres línies amb punts). Un toc obre un menú petit: Notes o Llista de Compres.",
     faq_a_weekly_table: "Al costat del Resum Mensual, a la Vista de Calendari, hi ha una Taula Setmanal – comença plegada, i un toc al títol l'obre. Mostra cada dia de la setmana amb els seus esdeveniments i tasques i les tasques setmanals recurrents, per hora; ‹ › canvien de setmana, i un toc en un element l'obre per editar-lo.",
     faq_q_home_lists_btn: "Com arribo ràpidament a les meves notes o a la llista de compres?",
     faq_q_weekly_table: "Què és la Taula Setmanal a la Vista de Calendari?",
@@ -94468,7 +94468,7 @@ ca: {
     faq_q_delete_account: "Com elimino el meu compte de manera permanent?", faq_a_delete_account: "A la part inferior de Configuració > Compte i seguretat hi ha l'opció Eliminar Compte - és definitiva i irreversible, així que has d'escriure 'ELIMINAR' per confirmar-ho. S'elimina tot, incloses les fotos que has pujat. Si Google Calendar està connectat, l'app primer el desconnecta: no s'elimina res del teu Google Calendar.",
 },
 ro: {
-    faq_a_home_lists_btn: "Sus pe ecranul principal, lângă modul concentrare, există un buton mic de listă (trei linii cu puncte). O atingere deschide un meniu mic: 📝 Notițe sau 🛒 Listă de Cumpărături.",
+    faq_a_home_lists_btn: "Sus pe ecranul principal, lângă modul concentrare, există un buton mic de listă (trei linii cu puncte). O atingere deschide un meniu mic: Notițe sau Listă de Cumpărături.",
     faq_a_weekly_table: "Lângă Prezentarea Generală Lunară din Vizualizare Calendar există un Tabel Săptămânal – la început e pliat, iar o atingere pe titlu îl deschide. Arată fiecare zi a săptămânii cu evenimentele și sarcinile ei și sarcinile săptămânale recurente, după oră; ‹ › trec de la o săptămână la alta, iar o atingere pe un element îl deschide pentru editare.",
     faq_q_home_lists_btn: "Cum ajung repede la notițele mele sau la lista de cumpărături?",
     faq_q_weekly_table: "Ce este Tabelul Săptămânal din Vizualizare Calendar?",
@@ -98248,7 +98248,7 @@ ro: {
     faq_q_delete_account: "Cum îmi șterg definitiv contul?", faq_a_delete_account: "În partea de jos a Setări > Cont și securitate există opțiunea Șterge Contul - acțiunea este definitivă și ireversibilă, așa că trebuie să scrii 'ȘTERGE' pentru confirmare. Se șterge totul, inclusiv fotografiile încărcate. Dacă Google Calendar este conectat, aplicația îl deconectează mai întâi – nu se șterge nimic din Google Calendar-ul tău.",
 },
 yo: {
-    faq_a_home_lists_btn: "Ní òkè ojú-ìwé ilé, lẹ́gbẹ̀ẹ́ ipò àfojúsùn, bọ́tìnnì àtòjọ kékeré kan wà (ìlà mẹ́ta pẹ̀lú àwọn àmì kékeré). Títẹ̀ ẹ́ ń ṣí mẹ́nù kékeré kan: 📝 Àkọsílẹ̀ tàbí 🛒 Àtòjọ Ọjà.",
+    faq_a_home_lists_btn: "Ní òkè ojú-ìwé ilé, lẹ́gbẹ̀ẹ́ ipò àfojúsùn, bọ́tìnnì àtòjọ kékeré kan wà (ìlà mẹ́ta pẹ̀lú àwọn àmì kékeré). Títẹ̀ ẹ́ ń ṣí mẹ́nù kékeré kan: Àkọsílẹ̀ tàbí Àtòjọ Ọjà.",
     faq_a_weekly_table: "Lẹ́gbẹ̀ẹ́ Ìwòye Oṣooṣù nínú Ìwòye Kàlẹ́ńdà, Tábìlì Ọ̀sẹ̀ kan wà – ó máa ń ká pọ̀ ní ìbẹ̀rẹ̀, títẹ àkọlé rẹ̀ sì máa ń ṣí i. Ó ń fi gbogbo ọjọ́ ọ̀sẹ̀ hàn pẹ̀lú àwọn ìṣẹ̀lẹ̀ àti iṣẹ́ rẹ̀ àti àwọn iṣẹ́ ọ̀sọ̀ọ̀sẹ̀ tí ń tún ṣẹlẹ̀, ní ìbámu pẹ̀lú àkókò; ‹ › ń lọ láti ọ̀sẹ̀ kan sí òmíràn, títẹ ohun kan sì ń ṣí i fún àtúnṣe.",
     faq_q_home_lists_btn: "Báwo ni mo ṣe lè dé ibi àkọsílẹ̀ mi tàbí àtòjọ ọjà kíákíá?",
     faq_q_weekly_table: "Kí ni Tábìlì Ọ̀sẹ̀ nínú Ìwòye Kàlẹ́ńdà?",
@@ -102026,7 +102026,7 @@ yo: {
 },
 
 sv: {
-    faq_a_home_lists_btn: "Högst upp på hemskärmen, bredvid fokusläget, finns en liten listknapp (tre linjer med prickar). Ett tryck öppnar en liten meny: 📝 Anteckningar eller 🛒 Inköpslista.",
+    faq_a_home_lists_btn: "Högst upp på hemskärmen, bredvid fokusläget, finns en liten listknapp (tre linjer med prickar). Ett tryck öppnar en liten meny: Anteckningar eller Inköpslista.",
     faq_a_weekly_table: "Bredvid Månadsöversikt i Kalendervy finns en Veckotabell – den är hopfälld från början, och ett tryck på rubriken öppnar den. Den visar varje dag i veckan med dess händelser och uppgifter och de återkommande veckouppgifterna, efter tid; ‹ › byter vecka, och ett tryck på en post öppnar den för redigering.",
     faq_q_home_lists_btn: "Hur kommer jag snabbt till mina anteckningar eller inköpslistan?",
     faq_q_weekly_table: "Vad är Veckotabellen i Kalendervy?",
@@ -105803,7 +105803,7 @@ sv: {
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta. Allt raderas, även foton du har laddat upp. Om Google Calendar är anslutet kopplar appen först bort det – inget raderas från själva Google Calendar.",
 },
 nb: {
-    faq_a_home_lists_btn: "Øverst på startskjermen, ved siden av fokusmodus, er det en liten listeknapp (tre linjer med prikker). Et trykk åpner en liten meny: 📝 Notater eller 🛒 Handleliste.",
+    faq_a_home_lists_btn: "Øverst på startskjermen, ved siden av fokusmodus, er det en liten listeknapp (tre linjer med prikker). Et trykk åpner en liten meny: Notater eller Handleliste.",
     faq_a_weekly_table: "Ved siden av Månedsoversikt i Kalendervisning finnes en Uketabell – den er sammenfoldet fra start, og et trykk på tittelen åpner den. Den viser hver dag i uken med hendelsene og oppgavene sine og de gjentakende ukeoppgavene, etter klokkeslett; ‹ › bytter uke, og et trykk på et element åpner det for redigering.",
     faq_q_home_lists_btn: "Hvordan kommer jeg raskt til notatene mine eller handlelisten?",
     faq_q_weekly_table: "Hva er Uketabellen i Kalendervisning?",
@@ -109580,7 +109580,7 @@ nb: {
     faq_q_delete_account: "Hvordan sletter jeg kontoen min permanent?", faq_a_delete_account: "Nederst under Innstillinger > Konto og sikkerhet finnes valget Slett Konto - dette er endelig og kan ikke angres, så du må skrive 'DELETE' for å bekrefte. Alt slettes, også bilder du har lastet opp. Hvis Google Calendar er tilkoblet, kobler appen det fra først – ingenting slettes fra selve Google Calendar.",
 },
 da: {
-    faq_a_home_lists_btn: "Øverst på startskærmen, ved siden af fokustilstand, er der en lille listeknap (tre linjer med prikker). Et tryk åbner en lille menu: 📝 Noter eller 🛒 Indkøbsliste.",
+    faq_a_home_lists_btn: "Øverst på startskærmen, ved siden af fokustilstand, er der en lille listeknap (tre linjer med prikker). Et tryk åbner en lille menu: Noter eller Indkøbsliste.",
     faq_a_weekly_table: "Ved siden af Månedsoversigt i Kalendervisning er der en Ugetabel – den er foldet sammen fra start, og et tryk på titlen åbner den. Den viser hver dag i ugen med dens begivenheder og opgaver og de tilbagevendende ugentlige opgaver, efter klokkeslæt; ‹ › skifter uge, og et tryk på et element åbner det til redigering.",
     faq_q_home_lists_btn: "Hvordan kommer jeg hurtigt til mine noter eller indkøbslisten?",
     faq_q_weekly_table: "Hvad er Ugetabellen i Kalendervisning?",
@@ -113357,7 +113357,7 @@ da: {
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto - det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte. Alt slettes, også billeder, du har uploadet. Hvis Google Calendar er forbundet, afbryder appen forbindelsen først – intet slettes fra selve Google Calendar.",
 },
 cs: {
-    faq_a_home_lists_btn: "Nahoře na domovské obrazovce, vedle režimu soustředění, je malé tlačítko seznamu (tři čárky s tečkami). Klepnutí otevře malou nabídku: 📝 Poznámky nebo 🛒 Nákupní Seznam.",
+    faq_a_home_lists_btn: "Nahoře na domovské obrazovce, vedle režimu soustředění, je malé tlačítko seznamu (tři čárky s tečkami). Klepnutí otevře malou nabídku: Poznámky nebo Nákupní Seznam.",
     faq_a_weekly_table: "Vedle Měsíčního Přehledu v Zobrazení Kalendáře je Týdenní Tabulka – na začátku je sbalená a klepnutí na její nadpis ji rozbalí. Ukazuje každý den v týdnu s jeho událostmi a úkoly a s opakujícími se týdenními úkoly, podle času; ‹ › přepínají mezi týdny a klepnutí na položku ji otevře k úpravě.",
     faq_q_home_lists_btn: "Jak se rychle dostanu k poznámkám nebo nákupnímu seznamu?",
     faq_q_weekly_table: "Co je Týdenní Tabulka v Zobrazení Kalendáře?",
@@ -117138,7 +117138,7 @@ cs: {
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'. Smaže se vše, včetně nahraných fotek. Pokud je připojen Google Calendar, aplikace ho nejprve odpojí – ze samotného Google Calendar se nic nesmaže.",
 },
 hu: {
-    faq_a_home_lists_btn: "A kezdőképernyő tetején, a fókusz mód mellett van egy kis lista gomb (három vonal pöttyökkel). Egy koppintás megnyit egy kis menüt: 📝 Jegyzetek vagy 🛒 Bevásárlólista.",
+    faq_a_home_lists_btn: "A kezdőképernyő tetején, a fókusz mód mellett van egy kis lista gomb (három vonal pöttyökkel). Egy koppintás megnyit egy kis menüt: Jegyzetek vagy Bevásárlólista.",
     faq_a_weekly_table: "A Naptárnézetben a Havi Áttekintés mellett van egy Heti Táblázat – kezdetben össze van csukva, és a címére koppintva kinyílik. A hét minden napját mutatja az eseményeivel és feladataival, valamint az ismétlődő heti feladatokkal, időrendben; a ‹ › hétről hétre lapoz, és egy elemre koppintva megnyílik szerkesztésre.",
     faq_q_home_lists_btn: "Hogyan érem el gyorsan a jegyzeteimet vagy a bevásárlólistát?",
     faq_q_weekly_table: "Mi az a Heti Táblázat a Naptárnézetben?",
@@ -120915,7 +120915,7 @@ hu: {
     faq_q_delete_account: "Hogyan törölhetem véglegesen a fiókomat?", faq_a_delete_account: "A Beállítások > Fiók és biztonság rész alján található a Fiók Törlése lehetőség - ez végleges és visszafordíthatatlan, ezért a megerősítéshez be kell írnod, hogy 'DELETE'. Minden törlődik, a feltöltött fotók is. Ha a Google Calendar csatlakoztatva van, az app előbb leválasztja – magából a Google Calendarból semmi nem törlődik.",
 },
 fi: {
-    faq_a_home_lists_btn: "Aloitusnäytön yläreunassa, keskittymistilan vieressä, on pieni listapainike (kolme viivaa pisteineen). Napautus avaa pienen valikon: 📝 Muistiinpanot tai 🛒 Ostoslista.",
+    faq_a_home_lists_btn: "Aloitusnäytön yläreunassa, keskittymistilan vieressä, on pieni listapainike (kolme viivaa pisteineen). Napautus avaa pienen valikon: Muistiinpanot tai Ostoslista.",
     faq_a_weekly_table: "Kalenterinäkymässä Kuukausikatsauksen vieressä on Viikkotaulukko – se on aluksi suljettuna, ja sen otsikon napauttaminen avaa sen. Siinä näkyy viikon jokainen päivä tapahtumineen ja tehtävineen sekä toistuvat viikoittaiset tehtävät, kellonajan mukaan; ‹ › vaihtavat viikkoa, ja kohteen napauttaminen avaa sen muokattavaksi.",
     faq_q_home_lists_btn: "Miten pääsen nopeasti muistiinpanoihini tai ostoslistaan?",
     faq_q_weekly_table: "Mikä on Viikkotaulukko Kalenterinäkymässä?",

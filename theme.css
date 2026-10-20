@@ -11246,3 +11246,10 @@ button.nmg-me-card:active { transform: scale(.97); }
 /* ענן אור רך מול הרוח בזמן הסיבוב - יחד עם הנצנצים כמעט לא רואים אותו, עד שהכול נמוג */
 .srp-genie-haze { position: absolute; left: 14%; right: 14%; top: 12%; bottom: 8%; border-radius: 50%; background: radial-gradient(ellipse, rgba(255, 255, 255, .85), rgba(255, 214, 236, .55) 38%, rgba(167, 243, 208, .3) 62%, transparent 76%); filter: blur(6px); animation: srpGenieHaze 1.6s ease-in-out infinite; }
 @keyframes srpGenieHaze { 0%, 100% { opacity: .75; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
+/* 📝🛒 התפריט הקטן ליד הפוקוס: שני כפתורים עגולים קטנים עם ציורים סגולים (כמו היהלום), בלי כיתוב (2026-10-20) */
+.home-lists-menu { flex-direction: row; gap: 8px; min-width: 0; padding: 6px; border-radius: 999px; }
+.home-lists-menu .home-lists-pick { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: #f5c6ff; }
+.home-lists-menu .home-lists-pick svg { display: block; filter: drop-shadow(0 0 6px rgba(245, 198, 255, .35)); }
+.home-lists-menu .home-lists-pick:active { transform: scale(.92); }
+html.light-mode .home-lists-menu .home-lists-pick { color: var(--accent-purple); border-color: color-mix(in srgb, var(--accent-purple) 22%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); }
+html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
