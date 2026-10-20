@@ -1,4 +1,4 @@
-// --- 📚 ספריית יעדים (לפי בקשה מפורשת: "מלא מלא קטגוריות... קטגוריה בתוך קטגוריה"): 12 נושאים, בכל
+// --- 📚 ספריית יעדים (לפי בקשה מפורשת: "מלא מלא קטגוריות... קטגוריה בתוך קטגוריה"): 13 נושאים, בכל
 // נושא תחומים, ובכל תחום תוכניות מוכנות - תחנות / אתגר ימים / ספירה / משקל - כל אחת עם צעד קטן יומי.
 // 2 התוכניות הראשונות בכל נושא בחינם (רק תחנות או אתגר ימים, שאינם פרימיום ממילא), הכול בפרימיום ⭐.
 // מסך מלא מעל "היעדים שלי" (z-index 1950, ר' theme.css). הטקסטים: glib_* ב-i18n.js ---
@@ -14,6 +14,10 @@ const GLIB_TOPICS = [
     { id: 'buy', icon: '🛍️', hue: 330, sat: 65, category: 'finance', subs: [['buy_big', '🚗'], ['buy_wants', '🎁'], ['buy_smart', '🛒']] },
     { id: 'mind', icon: '🧘', hue: 172, sat: 55, category: 'personal', subs: [['mind_calm', '🌬️'], ['mind_screen', '📵'], ['mind_thanks', '🙏'], ['mind_conf', '✨']] },
     { id: 'family', icon: '❤️', hue: 355, sat: 60, category: 'relationships', subs: [['family_time', '👨‍👩‍👧'], ['family_couple', '💑'], ['family_friends', '🤝']] },
+    // 🤝 חברים וקרבה (לפי בקשה מפורשת, 2026-10-20: "להוסיף למצוא חברים או משהו יותר נעים ביעדים - שיהיה קטגוריה גם על זה ואיך /
+    // שיהיה גם אפשר לקשר את זה לספר של כיצד לרכוש ידידים והשפעה לא להעתיק אפשר לקחת משם דבר או שניים"). מהספר רק שני רעיונות:
+    // לזכור שמות, ולהתעניין באמת (לשאול ולהקשיב) - השאר מנוסח מחדש. book: כרטיס הספר בנושא ובתוכניות שלו
+    { id: 'friends', icon: '🤝', hue: 42, sat: 72, category: 'relationships', book: true, subs: [['friends_new', '🌱'], ['friends_close', '💛'], ['friends_warm', '😊']] },
     { id: 'home', icon: '🏠', hue: 28, sat: 38, category: 'personal', subs: [['home_tidy', '🧹'], ['home_projects', '🛠️'], ['home_routine', '🗓️']] },
     { id: 'travel', icon: '✈️', hue: 222, sat: 65, category: 'travel', subs: [['travel_trips', '🧳'], ['travel_exp', '🌟']] },
     { id: 'habits', icon: '🌱', hue: 85, sat: 55, category: 'personal', subs: [['habits_morning', '🌅'], ['habits_quit', '🚭'], ['habits_kids', '🧒'], ['habits_daily', '📆']] },
@@ -88,6 +92,13 @@ const GLIB_TEMPLATES = [
     { id: 'family_evening', sub: 'family_time', icon: '🎲', track: 'number', target: 12, unit: 'evenings', freq: 'weekly' },
     { id: 'date_night', sub: 'family_couple', icon: '💑', track: 'number', target: 6, unit: 'dates', freq: 'weekly' },
     { id: 'call_friend', sub: 'family_friends', icon: '📞', track: 'number', target: 12, unit: 'calls', freq: 'weekly' },
+
+    { id: 'new_friends', sub: 'friends_new', icon: '🌱', track: 'steps', weeks: 8, stations: 4 },
+    { id: 'listen_more', sub: 'friends_warm', icon: '👂', track: 'days', days: 21, tasks: 1 },
+    { id: 'reconnect', sub: 'friends_close', icon: '💌', track: 'steps', weeks: 4, stations: 3 },
+    { id: 'friends_meetups', sub: 'friends_close', icon: '🏡', track: 'number', target: 6, unit: 'meetups', freq: 'weekly' },
+    { id: 'warm_words', sub: 'friends_warm', icon: '💬', track: 'days', days: 21, tasks: 1 },
+    { id: 'smile_hello', sub: 'friends_warm', icon: '😊', track: 'days', days: 21, tasks: 1 },
 
     { id: 'declutter', sub: 'home_tidy', icon: '📦', track: 'steps', weeks: 8, stations: 4 },
     { id: 'daily_tidy', sub: 'home_tidy', icon: '🧺', track: 'days', days: 30, tasks: 1, minutes: 10 },
@@ -323,11 +334,44 @@ function glibBuildTopicPage(tp) {
     list.className = 'glib-list';
     all.filter(tpl => !glibState.sub || tpl.sub === glibState.sub).forEach(tpl => list.appendChild(glibBuildTemplateCard(tpl, 'topic')));
     page.appendChild(list);
+    if (tp.book) page.appendChild(glibBookCard());
     const foot = document.createElement('div');
     foot.className = 'glib-foot';
     foot.appendChild(glibOwnGoalButton(tp.category));
     page.appendChild(foot);
     return page;
+}
+
+// 📖 הספר שנתן השראה לנושא: כרטיס קטן, ונגיעה מוסיפה אותו ל"הספרים שלי" (לקריאה) - פעם אחת
+function glibBookCard() {
+    const card = document.createElement('div');
+    card.className = 'glib-book';
+    card.innerHTML = `<span class="glib-book-cover" aria-hidden="true">📖</span><span class="glib-book-text"><strong>${glibEsc(t('glib_friends_book_title'))}</strong><small>${glibEsc(t('glib_friends_book_author'))}</small></span>`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'glib-book-add';
+    btn.textContent = t('glib_book_add');
+    btn.onclick = () => glibAddBook(btn);
+    card.appendChild(btn);
+    return card;
+}
+async function glibAddBook(btn) {
+    if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
+    const title = t('glib_friends_book_title');
+    btn.disabled = true;
+    const { data: have, error: readError } = await supabaseClient.from('books').select('id, title, sort_order').eq('user_id', currentUserId);
+    if (readError) { btn.disabled = false; showAppToast(t('error_adding_item') + readError.message, 'error'); return; }
+    if ((have || []).some(b => String(b.title || '').trim().toLowerCase() === title.toLowerCase())) {
+        btn.textContent = `✓ ${t('glib_book_added_btn')}`;
+        showAppToast(t('glib_book_already'));
+        return;
+    }
+    const maxOrder = (have || []).reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
+    const { data, error } = await supabaseClient.from('books').insert({ user_id: currentUserId, title, author: t('glib_friends_book_author'), status: 'to_read', sort_order: maxOrder + 10 }).select().single();
+    if (error) { btn.disabled = false; showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    if (typeof booksCache !== 'undefined' && Array.isArray(booksCache) && booksCache.length && data) booksCache.push(data);
+    btn.textContent = `✓ ${t('glib_book_added_btn')}`;
+    showAppToast(t('glib_book_added'));
 }
 
 function glibBuildTemplateCard(tpl, from) {
@@ -385,6 +429,8 @@ function glibBuildTemplatePage(tpl) {
         const when = tpl.freq === 'weekly' ? t('glib_weekly_label') : t('glib_daily_label');
         body.insertAdjacentHTML('beforeend', `<div class="glib-daily"><span class="glib-daily-icon" aria-hidden="true">👣</span><span><strong>${glibEsc(when)}</strong> ${glibEsc(daily)} <em>${glibEsc(t('glib_daily_counts'))}</em></span></div>`);
     }
+    const tplTopic = glibTopic(tpl.topic);
+    if (tplTopic && tplTopic.book) body.appendChild(glibBookCard());
 
     // ➕ לשגרה שלי: צעד קטן יומי (או המשימות היומיות של אתגר ימים) בשעה פנויה - לא במשקל ולא בצעד שבועי
     const canRoutine = glibCanUse(tpl) && tpl.track !== 'weight' && tpl.freq !== 'weekly';

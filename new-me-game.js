@@ -424,11 +424,18 @@ function nmgOpenMe() {
             const body = `<span class="nmg-me-pic"><img src="world/${s.img}" alt=""></span>
                 <b>Me${s.n}</b>
                 <small>${state === 'is-now' ? nmEsc(t('nm_me_on_screen')) : state === 'is-past' ? nmEsc(t('nm_me_choose')) : nmEsc(t('nm_me_next').replace('{n}', nmFmt(s.at - keys)))}</small>`;
+            // 💎 לכל Me שנפתח - כפתור קטן לשיתוף הכרטיס שלו (תמונה)
             return reached
-                ? `<button type="button" class="nmg-me-card ${state}" data-me-pick="${s.n}" aria-pressed="${state === 'is-now'}">${body}</button>`
-                : `<div class="nmg-me-card ${state}">${body}</div>`;
+                ? `<div class="nmg-me-slot"><button type="button" class="nmg-me-card ${state}" data-me-pick="${s.n}" aria-pressed="${state === 'is-now'}">${body}</button><button type="button" class="nmg-me-share" data-me-share="${s.n}" aria-label="${nmEsc(t('nm_card_share'))} – Me${s.n}" title="${nmEsc(t('nm_card_share'))}">${NMG_SHARE_SVG}</button></div>`
+                : `<div class="nmg-me-slot"><div class="nmg-me-card ${state}">${body}</div></div>`;
         }).join('')}</div>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nmg-me-sheet');
+    ov.querySelectorAll('[data-me-share]').forEach(b => b.addEventListener('click', async () => {
+        if (b.disabled) return;
+        b.disabled = true;
+        await nmgShareCard(Number(b.dataset.meShare));
+        b.disabled = false;
+    }));
     ov.querySelectorAll('[data-me-pick]').forEach(b => b.addEventListener('click', async () => {
         const n = Number(b.dataset.mePick);
         if (n === shown.n) return;
@@ -795,4 +802,147 @@ function nm1Heart() {
         if (typeof nmMaybeOfferMagic === 'function' && typeof nmView !== 'undefined' && nmView === 'home') nmMaybeOfferMagic();
     }));
     setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch {} }, 60);
+}
+
+
+// ---------- 💎 כרטיס Me לשיתוף ----------
+// (לפי בקשה מפורשת, 2026-10-20: "לעשות כרטיס לכל ME שנפתח ושיהיה אפשר לשלוח את זה בוואטסאפ שיהיה כמו כרטיס מגנט זכוכית
+// שאפשר יהיה להראות לחברים... שאי אפשר יהיה להעתיק רק להראות שיש כמו תמונה כזו שלי עם השם או משהו מעניין"). תמונה (לא קישור
+// ולא קובץ של הדמות): הדמות על כרטיס זכוכית בשמי לילה, בצבע של השלב, השם הפרטי, היום במסע והמפתחות, והמשפט של העולם הקסום
+const NMG_CARD_HUES = { 1: ['#a7f3d0', '#5eead4'], 2: ['#d8b4fe', '#a78bfa'], 3: ['#fde68a', '#f9a8d4'] };
+const NMG_SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+function nmgLoadImg(src) { return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }); }
+function nmgHexA(hex, a) { const v = parseInt(hex.slice(1), 16); return `rgba(${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}, ${a})`; }
+function nmgRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+// שורות לפי רוחב (גם בשפות בלי רווחים - Intl.Segmenter), לכל היותר max שורות
+function nmgWrapLines(ctx, text, maxW, max) {
+    let parts;
+    try { parts = Array.from(new Intl.Segmenter(typeof currentLang === 'string' ? currentLang : undefined, { granularity: 'word' }).segment(String(text || '')), x => x.segment); }
+    catch { parts = String(text || '').split(/(\s+)/); }
+    const lines = [];
+    let line = '';
+    parts.forEach(p => {
+        const next = line + p;
+        if (line && ctx.measureText(next.trim()).width > maxW) { lines.push(line.trim()); line = p.trimStart(); }
+        else line = next;
+    });
+    if (line.trim()) lines.push(line.trim());
+    return lines.slice(0, max);
+}
+async function nmgCardImage(n) {
+    const stage = NMG_STAGES.find(s => s.n === n) || NMG_STAGES[0];
+    const W = 1080, H = 1350;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    try { await document.fonts.ready; } catch { /* בלי */ }
+    const font = getComputedStyle(document.body).fontFamily || 'sans-serif';
+    ctx.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
+    const [c1, c2] = NMG_CARD_HUES[stage.n] || NMG_CARD_HUES[1];
+    // שמי הלילה, כוכבים (תמיד אותם כוכבים לכל שלב) והילה בצבע של השלב
+    const sky = ctx.createRadialGradient(W / 2, H * 0.36, 60, W / 2, H * 0.46, H * 0.85);
+    sky.addColorStop(0, '#3b2572'); sky.addColorStop(0.5, '#1e1142'); sky.addColorStop(1, '#0c0720');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    let seed = 7 + stage.n * 131;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 150; i++) { ctx.globalAlpha = 0.18 + rnd() * 0.7; ctx.beginPath(); ctx.arc(rnd() * W, rnd() * H, 0.7 + rnd() * 1.9, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    const aura = ctx.createRadialGradient(W / 2, H * 0.4, 30, W / 2, H * 0.4, 560);
+    aura.addColorStop(0, nmgHexA(c1, 0.42)); aura.addColorStop(0.55, nmgHexA(c2, 0.12)); aura.addColorStop(1, nmgHexA(c2, 0));
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, W, H);
+    // כרטיס הזכוכית: מילוי שקוף, ברק אלכסוני, מסגרת לבנה ופס דק בצבע השלב
+    const cx = 100, cy = 96, cw = W - 200, ch = H - 210, r = 76;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 24;
+    nmgRoundRect(ctx, cx, cy, cw, ch, r);
+    ctx.fillStyle = 'rgba(40, 24, 80, 0.35)';
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    nmgRoundRect(ctx, cx, cy, cw, ch, r);
+    ctx.clip();
+    const glass = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+    glass.addColorStop(0, 'rgba(255, 255, 255, 0.22)'); glass.addColorStop(0.45, 'rgba(255, 255, 255, 0.06)'); glass.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
+    ctx.fillStyle = glass;
+    ctx.fillRect(cx, cy, cw, ch);
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + ch * 0.16); ctx.lineTo(cx + cw * 0.5, cy); ctx.lineTo(cx + cw * 0.72, cy); ctx.lineTo(cx, cy + ch * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    nmgRoundRect(ctx, cx, cy, cw, ch, r);
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.stroke();
+    nmgRoundRect(ctx, cx + 20, cy + 20, cw - 40, ch - 40, r - 16);
+    ctx.lineWidth = 2; ctx.strokeStyle = nmgHexA(c1, 0.55); ctx.stroke();
+    // הדמות, זוהרת
+    const img = await nmgLoadImg(`world/${stage.img}`);
+    let y = cy + 70;
+    if (img) {
+        const maxW = cw * 0.8, maxH = ch * 0.46;
+        const s = Math.min(maxW / img.width, maxH / img.height);
+        const iw = img.width * s, ih = img.height * s;
+        ctx.save();
+        ctx.shadowColor = nmgHexA(c1, 0.85); ctx.shadowBlur = 70;
+        ctx.drawImage(img, (W - iw) / 2, y + (maxH - ih) / 2, iw, ih);
+        ctx.restore();
+        y += maxH;
+    } else y += ch * 0.46;
+    // השם, השלב, השם הפרטי, היום במסע והמפתחות
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.save();
+    ctx.shadowColor = nmgHexA(c1, 0.75); ctx.shadowBlur = 34;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `800 132px ${font}`;
+    ctx.fillText(`Me${stage.n}`, W / 2, y + 140);
+    ctx.restore();
+    ctx.fillStyle = c1;
+    ctx.font = `700 48px ${font}`;
+    ctx.fillText(t(`nm_card_stage_${stage.n}`), W / 2, y + 214);
+    const first = String((typeof nmProfile !== 'undefined' && nmProfile && nmProfile.cert_name) || '').trim().split(/\s+/)[0];
+    let ly = y + 296;
+    if (first) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `700 54px ${font}`;
+        ctx.fillText(`✦ ${first} ✦`, W / 2, ly);
+        ly += 84;
+    }
+    const stats = `${t('nm_day_n').replace('{n}', nmFmt(nmJourneyDay()))}  ·  🔑 ${nmFmt(nmgKeys())}`;
+    ctx.font = `600 40px ${font}`;
+    const sw = ctx.measureText(stats).width + 70;
+    nmgRoundRect(ctx, (W - sw) / 2, ly - 50, sw, 70, 35);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)'; ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.fillText(stats, W / 2, ly - 3);
+    // המשפט של העולם הקסום, בתחתית הכרטיס, וקישור עדין לאפליקציה מתחתיו
+    ctx.font = `500 36px ${font}`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+    const tag = nmgWrapLines(ctx, t('nm_card_tagline'), cw - 160, 2);
+    tag.forEach((line, i) => ctx.fillText(line, W / 2, cy + ch - 70 - (tag.length - 1 - i) * 48));
+    ctx.font = `600 30px ${font}`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fillText(typeof SHARE_APP_HOST === 'string' ? SHARE_APP_HOST : 'app.not10.ai', W / 2, H - 48);
+    return new Promise(res => { try { canvas.toBlob(b => res(b), 'image/jpeg', 0.92); } catch { res(null); } });
+}
+async function nmgShareCard(n) {
+    const blob = await nmgCardImage(n);
+    if (!blob) { showAppToast(t('nm_save_error'), 'error'); return; }
+    if (typeof openSharePicker === 'function') openSharePicker(t('nm_card_share_text').replace('{n}', `Me${n}`), { imageBlob: blob, imageName: `me${n}.jpg`, subject: `Me${n}` });
 }

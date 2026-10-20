@@ -919,7 +919,8 @@ const BAG_EXAMPLES = [
         key: 'family', icon: '👨‍👩‍👧', color: '#a855f7',
         notebooks: [
             { key: 'moments', emoji: '📸', color: '#b39ddb', pattern: 'plain', type: 'write' },
-            { key: 'birthday', emoji: '🎂', color: '#f48fb1', pattern: 'gingham', type: 'list', items: [['birthday_1', true], ['birthday_2', false], ['birthday_3', false]] },
+            // "להוסיף לפה מלא דברים" (לפי בקשה מפורשת, 2026-10-20) - השורות שמסומנות 2 נוספו בגרסה 2 (גם לתיק קיים)
+            { key: 'birthday', emoji: '🎂', color: '#f48fb1', pattern: 'gingham', type: 'list', items: [['birthday_1', true], ['birthday_2', false], ['birthday_3', false]].concat(Array.from({ length: 13 }, (_, i) => [`birthday_${i + 4}`, false, 2])) },
         ],
         tables: [{
             key: 'activities', icon: '⚽',
@@ -932,9 +933,29 @@ const BAG_EXAMPLES = [
         notebooks: [
             { key: 'weekend', emoji: '💡', color: '#f3d36b', pattern: 'grid', type: 'list', items: [['weekend_1', false], ['weekend_2', false], ['weekend_3', false], ['weekend_4', false]] },
         ],
+        // 🎁 רעיונות למתנות - למי (אישה / גבר / לכולם), גיל וכמה קרוב (לפי בקשה מפורשת, 2026-10-20: "רעיונות לקנות לגבר או אישה...
+        // לפי גילאים ולמי זה מיועד וכמה קרוב זה")
+        tables: [{
+            key: 'gifts', icon: '🎁', v2: true,
+            cols: [
+                { key: 'idea', type: 'text' },
+                { key: 'for', type: 'select', options: [['woman', '#f472b6'], ['man', '#60a5fa'], ['anyone', '#34d399']] },
+                { key: 'age', type: 'select', options: [['age_kids', '#fbbf24'], ['age_teen', '#a78bfa'], ['age_20', '#22d3ee'], ['age_40', '#60a5fa'], ['age_60', '#f59e0b'], ['age_any', '#34d399']] },
+                { key: 'closeness', type: 'select', options: [['partner', '#f472b6'], ['family_close', '#a855f7'], ['friend', '#22d3ee'], ['colleague', '#60a5fa'], ['acquaintance', '#94a3b8']] },
+            ],
+            // [רעיון, למי, גיל, קרבה] - אינדקסים לאפשרויות שלמעלה
+            rows: () => [[1, 2, 5, 2], [2, 0, 2, 2], [3, 1, 3, 1], [4, 2, 2, 0], [5, 2, 2, 0], [6, 2, 4, 1], [7, 2, 4, 1], [8, 2, 1, 2], [9, 2, 0, 1], [10, 2, 1, 1],
+                [11, 2, 5, 3], [12, 0, 5, 3], [13, 2, 2, 2], [14, 2, 2, 2], [15, 1, 3, 2], [16, 2, 5, 4], [17, 0, 4, 1], [18, 1, 2, 0]]
+                .map(([g, f, a, c]) => [t(`bag_ex_gift_${g}`), f, a, c]),
+        }],
     },
     {
         key: 'trips', icon: '🧳', color: '#f59e0b',
+        // 🏨 ציוד לבית מלון + ✈️ טיסה לחו״ל (לפי בקשה מפורשת, 2026-10-20)
+        notebooks: [
+            { key: 'hotel', emoji: '🏨', color: '#93c5fd', pattern: 'dots', type: 'list', v2: true, items: Array.from({ length: 15 }, (_, i) => [`hotel_${i + 1}`, false]) },
+            { key: 'flight', emoji: '✈️', color: '#c4b5fd', pattern: 'grid', type: 'list', v2: true, items: Array.from({ length: 17 }, (_, i) => [`flight_${i + 1}`, false]) },
+        ],
         tables: [{
             key: 'packing', icon: '🧳',
             cols: [{ key: 'item', type: 'text' }, { key: 'type', type: 'select', options: [['clothes', '#22d3ee'], ['gear', '#a855f7'], ['food', '#34d399']] }, { key: 'packed', type: 'checkbox' }],
@@ -952,21 +973,23 @@ function bagExTime(h, m) { return new Date(2026, 0, 5, h, m).toLocaleTimeString(
 async function bagMaybeSeedExamples() {
     if (!isPremiumUser || bagSeedChecked || bagSeeding || !supabaseClient || !currentUserId) return false;
     const uid = currentUserId;
-    const localKey = `weekwise_bag_seeded_${uid}`;
+    // גרסה 2 של הדוגמאות (2026-10-20): מי שכבר קיבל/ה את הראשונות מקבל/ת פעם אחת רק את החדשות (מתנות, בית מלון, טיסה, יום הולדת)
+    const localKey = `weekwise_bag_seeded2_${uid}`;
     try { if (localStorage.getItem(localKey) === '1') { bagSeedChecked = true; return false; } } catch { /* פרטי */ }
     try {
-        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded').eq('user_id', uid).maybeSingle();
+        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2').eq('user_id', uid).maybeSingle();
         if (error || uid !== currentUserId) return false;
         bagSeedChecked = true;
-        if (data && data.bag_examples_seeded) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
+        if (data && data.bag_examples_seeded && data.bag_examples_v2) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
+        const onlyNew = !!(data && data.bag_examples_seeded);
         // קודם הסימון ואז הדוגמאות - כדי ששני מכשירים שנפתחים באותו רגע לא ימלאו את התיק פעמיים
-        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true }, { onConflict: 'user_id' });
+        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true }, { onConflict: 'user_id' });
         if (flagError) return false;
         try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ }
         bagSeeding = true;
         bagRenderOverview();
-        await bagSeedExamples(uid);
-        showAppToast(t('bag_examples_toast'));
+        await bagSeedExamples(uid, onlyNew);
+        showAppToast(t(onlyNew ? 'bag_examples_v2_toast' : 'bag_examples_toast'));
         return true;
     } catch {
         return false;
@@ -975,16 +998,48 @@ async function bagMaybeSeedExamples() {
     }
 }
 
-// 8 בקשות בסך הכול: כיסים, מחברות, דפים, שורות, טבלאות, עמודות, שורות טבלה ומשימות
-async function bagSeedExamples(uid) {
+// 8 בקשות בסך הכול: כיסים, מחברות, דפים, שורות, טבלאות, עמודות, שורות טבלה ומשימות.
+// onlyNew = תיק שכבר קיבל את הדוגמאות הראשונות: רק מה שמסומן v2 (לכיס הקיים, או לכיס חדש אם הוא נמחק), ושורות v2 למחברת קיימת
+async function bagSeedExamples(uid, onlyNew) {
     const base = { user_id: uid, username: currentUsername };
-    const { data: pockets } = await supabaseClient.from('projects').insert(BAG_EXAMPLES.map((ex, i) => ({ ...base, title: t(`bag_ex_${ex.key}`), icon: ex.icon, color: ex.color, sort_order: i + 1 }))).select();
-    if (!pockets || !pockets.length) return;
-    const pocketOf = ex => pockets.find(p => p.title === t(`bag_ex_${ex.key}`) && p.icon === ex.icon);
+    const newLines = nb => (nb.items || []).some(it => it[2] === 2);
+    const exList = onlyNew ? BAG_EXAMPLES.filter(ex => (ex.notebooks || []).some(nb => nb.v2 || newLines(nb)) || (ex.tables || []).some(tb => tb.v2)) : BAG_EXAMPLES;
+    const same = ex => p => p.title === t(`bag_ex_${ex.key}`) && p.icon === ex.icon;
+    let pockets = [];
+    if (onlyNew) {
+        const { data: mine } = await supabaseClient.from('projects').select('id, title, icon').eq('user_id', uid);
+        pockets = mine || [];
+        const missing = exList.filter(ex => !pockets.some(same(ex)));
+        if (missing.length) {
+            const { data: made } = await supabaseClient.from('projects').insert(missing.map((ex, i) => ({ ...base, title: t(`bag_ex_${ex.key}`), icon: ex.icon, color: ex.color, sort_order: 100 + i }))).select();
+            pockets = pockets.concat(made || []);
+        }
+    } else {
+        const { data } = await supabaseClient.from('projects').insert(BAG_EXAMPLES.map((ex, i) => ({ ...base, title: t(`bag_ex_${ex.key}`), icon: ex.icon, color: ex.color, sort_order: i + 1 }))).select();
+        pockets = data || [];
+    }
+    if (!pockets.length) return;
+    const pocketOf = ex => pockets.find(same(ex));
     const nbDefs = [];
-    BAG_EXAMPLES.forEach(ex => { const p = pocketOf(ex); if (p) (ex.notebooks || []).forEach((nb, i) => nbDefs.push({ nb, p, sort: i + 1 })); });
+    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.notebooks || []).forEach((nb, i) => { if (!onlyNew || nb.v2) nbDefs.push({ nb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
     const tblDefs = [];
-    BAG_EXAMPLES.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tables || []).forEach((tb, i) => tblDefs.push({ tb, p, sort: i + 1 })); });
+    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tables || []).forEach((tb, i) => { if (!onlyNew || tb.v2) tblDefs.push({ tb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
+    // השורות החדשות למחברת שכבר קיימת (יום הולדת) - לדף הראשון שלה, אם היא עוד שם
+    const extraLines = [];
+    if (onlyNew) {
+        for (const ex of exList) {
+            const p = pocketOf(ex);
+            if (!p) continue;
+            for (const nb of (ex.notebooks || []).filter(n => !n.v2 && newLines(n))) {
+                const { data: nbs } = await supabaseClient.from('project_notebooks').select('id, title').eq('project_id', p.id);
+                const n = (nbs || []).find(x => x.title === t(`bag_ex_nb_${nb.key}`));
+                if (!n) continue;
+                const { data: pgs } = await supabaseClient.from('notebook_pages').select('id, sort_order').eq('notebook_id', n.id).order('sort_order', { ascending: true }).limit(1);
+                const pg = pgs && pgs[0];
+                if (pg) nb.items.filter(it => it[2] === 2).forEach(([key, done]) => extraLines.push({ ...base, notebook_id: n.id, page_id: pg.id, title: t(`bag_ex_li_${key}`), is_completed: done }));
+            }
+        }
+    }
     const [nbRes, tblRes] = await Promise.all([
         nbDefs.length ? supabaseClient.from('project_notebooks').insert(nbDefs.map(d => ({ ...base, project_id: d.p.id, title: t(`bag_ex_nb_${d.nb.key}`), cover_color: d.nb.color, cover_pattern: d.nb.pattern, cover_emoji: d.nb.emoji, sort_order: d.sort }))).select() : { data: [] },
         tblDefs.length ? supabaseClient.from('custom_tables').insert(tblDefs.map(d => ({ ...base, project_id: d.p.id, name: t(`bag_ex_tb_${d.tb.key}`), icon: d.tb.icon, sort_order: d.sort }))).select() : { data: [] },
@@ -992,7 +1047,7 @@ async function bagSeedExamples(uid) {
     const notebooks = nbRes.data || [];
     const tables = tblRes.data || [];
     const tasks = [];
-    BAG_EXAMPLES.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tasks || []).forEach(([key, done]) => tasks.push({ ...base, project_id: p.id, title: t(`bag_ex_${key}`), is_completed: done })); });
+    if (!onlyNew) BAG_EXAMPLES.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tasks || []).forEach(([key, done]) => tasks.push({ ...base, project_id: p.id, title: t(`bag_ex_${key}`), is_completed: done })); });
     const pageDefs = nbDefs.map(d => ({ d, n: notebooks.find(n => n.project_id === d.p.id && n.title === t(`bag_ex_nb_${d.nb.key}`)) })).filter(x => x.n);
     const colDefs = [];
     const tableOf = d => tables.find(x => x.project_id === d.p.id && x.name === t(`bag_ex_tb_${d.tb.key}`));
@@ -1013,7 +1068,7 @@ async function bagSeedExamples(uid) {
     ]);
     const pages = pagesRes.data || [];
     const cols = colsRes.data || [];
-    const lines = [];
+    const lines = extraLines.slice();
     pageDefs.forEach(({ d, n }) => {
         const page = pages.find(pg => pg.notebook_id === n.id);
         if (page) (d.nb.items || []).forEach(([key, done]) => lines.push({ ...base, notebook_id: n.id, page_id: page.id, title: t(`bag_ex_li_${key}`), is_completed: done }));
