@@ -11255,3 +11255,14 @@ html.light-mode .home-lists-menu .home-lists-pick { color: var(--accent-purple);
 html.light-mode .home-lists-menu .home-lists-pick svg { filter: none; }
 /* יצור שהגיע עם מזרון משלו יושב עליו - בלי ריחוף ובלי "נשימה" (שהמזרון לא יזוז) */
 .yg-3d.is-mat, .yg-3d.is-mat .yg-3d-mv { animation: none; }
+/* המורה בעיניים עצומות (תלת־ממד) יושבת על הסלע: נושמת, לא מרחפת - כמו הציור שלה */
+.yg-3d.is-guide { animation: none; }
+/* המורה בעיניים פקוחות נכנסת בעדינות כשהזום כבר בדרך (במקום שבו הוא ייגמר) */
+.yg-3d-teacher.is-on { transition-delay: .25s; }
+.yg-mini.is-g img.is-3d, .yg-avatar img.is-3d { transform: none; object-fit: cover; object-position: 50% 40%; }
+/* 🐈 החתול על הכרית בגג - בתלת־ממד, נושם; הציור הישן מוסתר */
+.sr-cat-art.has-3d { opacity: 0; }
+.sr-cat-3d { position: absolute; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .6s; }
+.sr-cat-3d.is-ready { opacity: 1; }
+.sr-cat-3d model-viewer { width: 100%; height: 100%; background: transparent; --poster-color: transparent; --progress-bar-color: transparent; pointer-events: none; transform-origin: 50% 100%; animation: yg3dBreathe 4.8s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(201, 182, 255, .45)); }
+@media (prefers-reduced-motion: reduce) { .sr-cat-3d model-viewer { animation: none; } }

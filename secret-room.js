@@ -1750,6 +1750,8 @@ function roomOpenRoof(opts = {}) {
     else if (guided && guided.roof) roomShowArrow(box, box.querySelector(`[data-roof-hot="${guided.id}"]`) || box.querySelector('.sr-wish'), roomGuideDone);
     box.querySelector('.sr-sub-back').addEventListener('click', () => { if (opts.fromHall) closeSecretRoom(); else box.remove(); });
     const sky = box.querySelector('.sr-roof-sky');
+    // 🐈 החתול על הכרית בתלת־ממד, אם יש (world3d.js) - במקום הציור הישן
+    if (typeof nmg3dUpgradeRoofCat === 'function') nmg3dUpgradeRoofCat(sky);
     box.querySelectorAll('.sr-star').forEach(s => s.addEventListener('click', () => roomStarFall(s)));
     // 🔭 הטלסקופ ו-🧰 תיבת האוצר (שלב 8)
     box.querySelectorAll('[data-roof-hot]').forEach(h => {

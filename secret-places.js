@@ -1073,8 +1073,9 @@ function roomInitWish(root) {
 // ---------- שלב 6: יוגה ביער - קרחת ליד המפל, המדריכה ואנשים טובים במעגל ----------
 // לפי בחירה מפורשת (2026-10-10): המקום = ה (ליד המפל); השיחה = א (מעגל שיתוף), "גזע שנפתח כמו במחשב" לפי מה
 // שעונים, עם כל המסלולים; "המעגל יראה עם האנשים אבל הנראות תהיה כמו במחשב" (זכוכית רכה, ערכה 10)
-// הפנים של המורה בכותרת השיחה - מהציור שלה בעיניים פתוחות
-function ygAvatar() { return `<img src="${SRP_ART}teacher-open.png" alt="">`; }
+// הפנים של המורה בכותרת השיחה - תמונה של הדמות בתלת־ממד בעיניים פתוחות (מ-2026-10-20, לפי בקשה מפורשת: "שים לב שלא
+// רואים גרסאות ישנות לשום דבר"; world/3d/ava-*.png צולמו מהדגמים)
+function ygAvatar() { return `<img class="is-3d" src="${SRP_ART}3d/ava-teacher-open.png" alt="">`; }
 // יצורי היער - כל אחד עם השם שלו (לפי בקשה מפורשת, 2026-10-14: לומי, פופי, ניקסי וספארקלט; המורה - פלאורה). הם לא יושבים
 // על המזרונים אלא מרחפים מעליהם (YG_FLOAT מעל המזרון, ותנועת ריחוף - ygFloat ב-theme.css), עם צל רך על המזרון.
 // המזרונים בציור בחצי עיגול מול פלאורה, כך שהם מתרגלים איתה. mat = הנקודה על המזרון
@@ -1154,7 +1155,7 @@ const YG_TREE = {
 };
 const YG_WHO = { g: 'yg_name_guide', p1: 'yg_name_p1', p2: 'yg_name_p2', p3: 'yg_name_p3', p4: 'yg_name_p4' };
 // מי שמדבר - ציור קטן שלו ליד השורה (לפי בקשה מפורשת, 2026-10-14)
-const YG_PIC = { g: 'teacher-open.png', p1: 'yg-blob.png', p2: 'yg-fluffy.png', p3: 'yg-spirit.png', p4: 'yg-baby.png' };
+const YG_PIC = { g: '3d/ava-teacher-open.png', p1: '3d/ava-yg-blob.png', p2: '3d/ava-yg-fluffy.png', p3: '3d/ava-yg-spirit.png', p4: '3d/ava-yg-baby.png' };
 let ygState = null;   // { box, path: [{ id, pick }], timers: [] }
 function ygStopTimers() { if (ygState) { ygState.timers.forEach(clearTimeout); ygState.timers = []; } }
 function ygOpenTalk(box) {
@@ -1185,7 +1186,7 @@ function ygBubble(lines, who, text, extra) {
     if (!YG_PIC[who]) { lines.appendChild(el); return el; }
     const row = document.createElement('div');
     row.className = `yg-row is-${who}${extra ? ' ' + extra : ''}`;
-    row.innerHTML = `<span class="yg-mini is-${who}" aria-hidden="true"><img src="${SRP_ART}${YG_PIC[who]}" alt=""></span>`;
+    row.innerHTML = `<span class="yg-mini is-${who}" aria-hidden="true"><img class="is-3d" src="${SRP_ART}${YG_PIC[who]}" alt=""></span>`;
     row.appendChild(el);
     lines.appendChild(row);
     return el;
