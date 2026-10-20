@@ -51,6 +51,9 @@ function nmg3dAfterHallRender() {
     if (!btn || typeof nmgShownStage !== 'function') return;
     nmg3dUpgradeMe(btn, nmgShownStage().n);
 }
+// התמונות של Me (world/3d/ava-me{n}.png) צולמו מהדגמים בריבוע של 512 (מצלמה 0°/80°): [x, y, רוחב, גובה] של הדמות בתוך
+// הריבוע. כך הדגם החי יושב בדיוק על התמונה (אותו גודל, אותו מקום) - בלי קפיצה כשהוא נטען
+const NMG3D_ME_FRAMES = { 1: [90, 42, 327, 403], 2: [62, 72, 399, 365], 3: [42, 132, 425, 245] };
 async function nmg3dUpgradeMe(btn, stageN) {
     if (!btn || btn.querySelector('model-viewer') || nmg3dReduced() || !nmg3dWebgl()) return;
     const url = `world/3d/me${stageN}.glb`;
@@ -59,10 +62,15 @@ async function nmg3dUpgradeMe(btn, stageN) {
     mv.className = 'nmg-me3d';
     const attrs = {
         src: url, alt: '', autoplay: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0.7', 'shadow-softness': '1', exposure: '1.05', 'environment-image': 'neutral',
-        'camera-orbit': '0deg 78deg auto', 'field-of-view': '30deg', loading: 'eager', 'aria-hidden': 'true',
+        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral',
+        'camera-orbit': '0deg 80deg auto', loading: 'eager', 'aria-hidden': 'true',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    const F = NMG3D_ME_FRAMES[stageN];
+    if (F) {
+        const [x, y, w, h] = F;
+        Object.assign(mv.style, { left: `${(-x / w * 100).toFixed(2)}%`, top: `${(-y / h * 100).toFixed(2)}%`, width: `${(512 / w * 100).toFixed(2)}%`, height: `${(512 / h * 100).toFixed(2)}%`, right: 'auto', bottom: 'auto' });
+    }
     mv.addEventListener('load', () => {
         const names = mv.availableAnimations || [];
         const pick = re => names.find(n => re.test(n)) || '';
@@ -72,16 +80,15 @@ async function nmg3dUpgradeMe(btn, stageN) {
         btn.classList.add('has-3d');
     }, { once: true });
     btn.appendChild(mv);
-    // הגרירה כבר כותבת is-flying ו---tilt על הכפתור - מקשיבים להם
+    // הגרירה כבר כותבת is-flying ו---tilt על הכפתור - מקשיבים להם (גם דגם בלי אנימציות פונה לכיוון התנועה)
     const sync = () => {
         if (!mv.isConnected) { obs.disconnect(); return; }
-        if (!mv.dataset.idle) return;
         const flying = btn.classList.contains('is-flying');
         const want = flying ? mv.dataset.walk : mv.dataset.idle;
         if (want && mv.animationName !== want) mv.animationName = want;
         const tilt = parseFloat(btn.style.getPropertyValue('--tilt')) || 0;
         const theta = flying && Math.abs(tilt) > 1 ? (tilt > 0 ? -55 : 55) : 0;
-        if (Number(mv.dataset.theta || 0) !== theta) { mv.dataset.theta = String(theta); mv.cameraOrbit = `${theta}deg 78deg auto`; }
+        if (Number(mv.dataset.theta || 0) !== theta) { mv.dataset.theta = String(theta); mv.cameraOrbit = `${theta}deg 80deg auto`; }
     };
     const obs = new MutationObserver(sync);
     obs.observe(btn, { attributes: true, attributeFilter: ['class', 'style'] });
