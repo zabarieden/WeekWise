@@ -1498,7 +1498,9 @@ function renderMyDayWorkoutChip() {
         chip.innerHTML = `<span class="wk-live-dot" aria-hidden="true"></span><span class="myday-workout-time" data-wk-timer><bdi dir="ltr">${wkFormatElapsed(workoutTimerElapsed(tm))}</bdi></span>`;
         wkTickTimer();
     } else {
-        chip.innerHTML = `${wkStar(main)}${allDone ? `<span class="myday-workout-time">${WK_ICONS.check}</span>` : (main.time ? `<span class="myday-workout-time"><bdi dir="ltr">${wkEsc(main.time)}</bdi></span>` : '')}`;
+        // כמה אימונים ביום - צ'יפ אחד קטן: הבא בתור ו"+1" (לפי בקשה מפורשת, 2026-10-20: שלא יתנגש עם הכותרת)
+        const more = workouts.filter(w => !wkIsDone(w.id, today) && w !== main).length;
+        chip.innerHTML = `${wkStar(main)}${allDone ? `<span class="myday-workout-time">${WK_ICONS.check}</span>` : (main.time ? `<span class="myday-workout-time"><bdi dir="ltr">${wkEsc(main.time)}</bdi></span>` : '')}${!allDone && more ? `<span class="myday-workout-more"><bdi dir="ltr">+${more}</bdi></span>` : ''}`;
     }
     chip.setAttribute('aria-label', `${t('myday_workout_aria')}: ${wkName(main)}${main.time ? ' ' + main.time : ''}${allDone ? ' ✓' : ''}`);
 }

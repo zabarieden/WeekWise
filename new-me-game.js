@@ -252,6 +252,8 @@ function nmgOpenMap() {
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(box);
     document.querySelector('.phone-wrapper')?.classList.add('nmg-map-open');
+    // 🗺️ מפה מצוירת עם עומק, אם יש שכבות ב-world/map (world3d.js); אחרת - השביל עם המקומות
+    if (typeof nmg3dUpgradeMap === 'function') nmg3dUpgradeMap(box, keys);
 }
 function nmgCloseMap() {
     document.getElementById('nmg-map')?.remove();

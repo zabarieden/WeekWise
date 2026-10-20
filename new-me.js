@@ -1027,6 +1027,7 @@ function nmRenderSales(root) {
                 <span class="nm-sales-premium">${nmEsc(t('nm_sales_premium'))}</span>
             </div>
             ${nmTrailerHtml()}
+            ${nmSwapDemoHtml()}
             ${nmPlanOptionsHtml()}
             ${buy}
             <p class="nm-sales-trust">${nmEsc(t('nm_sales_trust'))}</p>
@@ -1048,6 +1049,52 @@ function nmRenderSales(root) {
             ${buy}
         </div>`;
     nmTrailerInit(root.querySelector('.nmt'));
+    nmSwapDemoInit(root.querySelector('.nm-demo'));
+}
+
+// ---------- 🔄 ככה מחליפים ארוחה - הדגמה חיה בעמוד הקנייה ----------
+// לפי בקשה מפורשת (2026-10-20): "במסך הגדול למי שקונה שיראה את האיי איי ואת הארוחות הקבועות והתחליפים שאנשים יבינו
+// מה הם קונים". אותו חלון החלפה כמו בתוך New Me (אותן מחלקות), עם דוגמאות אמיתיות מהתפריט; מתחלף לבד בין 3 הלשוניות
+// (לא כשמבקשים פחות תנועה), ונגיעה בלשונית עוצרת ועוברת אליה
+const NM_DEMO_TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', '✨', 'nm_swap_tab_ai']];
+function nmSwapDemoPane(tab) {
+    if (tab === 'menu') {
+        return ['A', 'B', 'C'].map(o => {
+            const it = nmItemInfo(`p1300_meal1_${o}`);
+            return it ? `<div class="nm-option nm-demo-row"><span class="nm-option-top"><span class="nm-option-name">${nmEsc(nmItemShort(it))}</span></span><span class="nm-option-meta">${nmMeta(it)}</span></div>` : '';
+        }).join('');
+    }
+    if (tab === 'saved') {
+        return [['nm_demo_saved_1', 310, 18], ['nm_demo_saved_2', 260, 14]].map(([k, kcal, protein]) => `<div class="nm-option nm-demo-row"><span class="nm-option-top"><span class="nm-option-name">⭐ ${nmEsc(t(k))}</span></span><span class="nm-option-meta">${nmMeta({ kcal, protein })}</span></div>`).join('');
+    }
+    return `<div class="nm-ai-input nm-demo-typed">${nmEsc(t('nm_demo_ai_text'))}</div>
+        <div class="nm-swap-pick nm-ai-result nm-demo-result"><span class="nm-option-name">✨ ${nmEsc(t('nm_demo_ai_name'))}</span><span class="nm-option-meta">${nmMeta({ kcal: 320, protein: 12 })}</span></div>`;
+}
+function nmSwapDemoHtml() {
+    return `<section class="nm-sales-card nm-demo" aria-label="${nmEsc(t('nm_demo_title'))}">
+        <h3>🔄 ${nmEsc(t('nm_demo_title'))}</h3>
+        <div class="nm-swap-tabs nm-demo-tabs" role="tablist">${NM_DEMO_TABS.map(([k, icon, label], i) => `<button type="button" role="tab" class="nm-swap-tab${i === 0 ? ' on' : ''}" aria-selected="${i === 0}" data-demo-tab="${k}">${icon} ${nmEsc(t(label))}</button>`).join('')}</div>
+        <p class="nm-fine nm-demo-cap">${nmEsc(t('nm_demo_cap_menu'))}</p>
+        <div class="nm-demo-pane">${nmSwapDemoPane('menu')}</div>
+    </section>`;
+}
+function nmSwapDemoInit(box) {
+    if (!box) return;
+    let i = 0, timer = null;
+    const show = k => {
+        box.querySelectorAll('[data-demo-tab]').forEach(b => { const on = b.dataset.demoTab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+        box.querySelector('.nm-demo-cap').textContent = t('nm_demo_cap_' + k);
+        const pane = box.querySelector('.nm-demo-pane');
+        pane.innerHTML = nmSwapDemoPane(k);
+        pane.classList.remove('is-in'); void pane.offsetWidth; pane.classList.add('is-in');
+    };
+    box.querySelectorAll('[data-demo-tab]').forEach(b => b.addEventListener('click', () => { clearInterval(timer); timer = null; show(b.dataset.demoTab); }));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    timer = setInterval(() => {
+        if (!box.isConnected) { clearInterval(timer); return; }
+        i = (i + 1) % NM_DEMO_TABS.length;
+        show(NM_DEMO_TABS[i][0]);
+    }, 3600);
 }
 
 // ---------- 🎬 סרטון קצר בעמוד הקנייה ----------
@@ -1834,6 +1881,7 @@ function nmMenuTotal(overrides) {
 }
 // כמה קלוריות פנויות בתפריט של היום עד סך התוכנית (אחרי שהוסרה ארוחה או נבחרה ארוחה קטנה יותר)
 function nmMenuRoom() { return Math.max(0, nmProfile.plan - nmMenuTotal()); }
+function nmRound5(n) { return Math.max(5, Math.round((Number(n) || 0) / 5) * 5); }
 
 // אחרי כל שינוי - מרעננים את מעקב הארוחות/ההצצה להיום (אותו סכום בכל מקום)
 function nmAfterTrackerChange() {
@@ -1993,7 +2041,8 @@ function nmRenderView(root) {
     const devKeys = () => { if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys(); };
     // 🎮 הכפתורים הקבועים של המשחק (new-me-game.js) - תמיד מעודכנים; במסדרון גם בודקים אם הדמות גדלה (מהפך)
     const hud = () => { if (typeof nmgRenderHud === 'function') nmgRenderHud(); };
-    if (nmView === 'home') { nmRenderHome(root); devKeys(); hud(); if (typeof nmgCheckEvolve === 'function') setTimeout(nmgCheckEvolve, 300); return; }
+    // 🧊 Me בתלת־ממד, אם יש קובץ GLB (world3d.js) - התמונה נשארת עד שהמודל נטען
+    if (nmView === 'home') { nmRenderHome(root); devKeys(); hud(); if (typeof nmgCheckEvolve === 'function') setTimeout(nmgCheckEvolve, 300); if (typeof nmg3dAfterHallRender === 'function') nmg3dAfterHallRender(); return; }
     root.innerHTML = `
         <div class="nm-subhead">
             <button type="button" class="nm-back" onclick="nmGo('home')" aria-label="${nmEsc(t('nm_back'))}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
@@ -2371,8 +2420,9 @@ function nmMealCardHtml(slot) {
             ${nmExtraLineHtml(slot)}
             ${nmLaterRowHtml(slot)}
             <div class="nm-meal-foot">
-                <span class="nm-option-meta">${nmMeta(it)}${crossed && Math.abs(diff) >= 5 ? ' ' + nmDiffChip(diff) : ''}</span>
+                <span class="nm-option-meta">${nmMeta(it)}${crossed && Math.abs(diff) >= 5 ? ' ' + nmDiffChip(diff) : ''}${done && nmTodayCheckins[slot].partial_kcal ? ` · <span class="nm-partial-tag">${nmTpl('nm_partial_eaten', { n: nmFmt(nmTodayCheckins[slot].kcal) })}</span>` : ''}</span>
                 <span class="nm-meal-actions">
+                    ${done ? `<button type="button" class="nm-chip" onclick="nmOpenPartial('${slot}')">🍽️ ${nmEsc(t('nm_partial_btn'))}</button>` : ''}
                     <button type="button" class="nm-chip" onclick="nmOpenSwap('${slot}')">🔄 ${nmEsc(t('nm_swap'))}</button>
                     <button type="button" class="nm-chip" data-edit onclick="nmOpenSwap('${slot}', 'ai', { edit: true })">✏️ ${nmEsc(t('nm_edit_meal'))}</button>
                     ${nmIsOverride(slot) ? `<button type="button" class="nm-chip" onclick="nmRevertToday('${slot}')">↩ ${nmEsc(t('nm_swap_revert'))}</button>` : ''}
@@ -2657,7 +2707,10 @@ function nmOpenSwap(slot, startTab, opts) {
                 <span class="nm-option-name">✨ ${nmEsc(aiResult.name)}</span>
                 ${aiResult.description ? `<span class="nm-option-text">${nmEsc(aiResult.description)}</span>` : ''}
                 <span class="nm-option-meta">${nmMeta({ kcal: aiResult.kcal, protein: Math.round(aiResult.protein) })}${aiResult.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
-                ${fits ? `<button type="button" class="nm-btn-primary" data-use>${nmEsc(t('nm_swap_ai_use'))}</button>` : `<p class="nm-soft-warn">${nmTpl('nm_swap_ai_too_big', { n: nmFmt(budget) })}</p>`}
+                ${fits ? `<button type="button" class="nm-btn-primary" data-use>${nmEsc(t('nm_swap_ai_use'))}</button>` : `
+                    <p class="nm-soft-warn">${nmTpl('nm_swap_ai_too_big', { n: nmFmt(budget) })}</p>
+                    <button type="button" class="nm-btn-primary" data-use>${nmEsc(t('nm_swap_ai_anyway'))}</button>
+                    ${budget >= 60 ? `<button type="button" class="nm-btn-ghost" data-use-smaller>${nmTpl('nm_swap_ai_smaller', { n: nmFmt(nmRound5(budget)) })}</button>` : ''}`}
             </div>`;
     };
     const renderAi = () => {
@@ -2678,10 +2731,19 @@ function nmOpenSwap(slot, startTab, opts) {
             aiBusy = false;
             if (ov.isConnected && tab === 'ai') render();
         });
+        // גם כשזה יותר ממה שנשאר: "כבר אכלתי / לאכול בכל זאת" - היום מתאזן מחדש (שאר הארוחות קטנות, ר' nmBalance)
         const use = sheet.querySelector('[data-use]');
         if (use) use.addEventListener('click', async () => {
             use.disabled = true;
             const key = await nmCreateCustomMeal({ name: aiResult.name, description: aiResult.description || null, kcal: aiResult.kcal, protein: aiResult.protein, source: 'ai' });
+            if (key && ov.isConnected) renderConfirm(key);
+        });
+        // או מנה קטנה יותר - אותה ארוחה, בגודל של מה שנשאר להיום (החלבון קטן באותו יחס)
+        const smaller = sheet.querySelector('[data-use-smaller]');
+        if (smaller) smaller.addEventListener('click', async () => {
+            smaller.disabled = true;
+            const k = nmRound5(budget), ratio = aiResult.kcal ? k / aiResult.kcal : 1;
+            const key = await nmCreateCustomMeal({ name: `${aiResult.name} · ${t('nm_swap_ai_smaller_tag')}`, description: aiResult.description || null, kcal: k, protein: Math.round(aiResult.protein * ratio * 10) / 10, source: 'ai' });
             if (key && ov.isConnected) renderConfirm(key);
         });
     };
@@ -2846,6 +2908,88 @@ async function nmToggleCheck(slot, btn) {
     if (!wasChecked && typeof roomCheckNewKeys === 'function') roomCheckNewKeys('meal');
 }
 
+// ---------- "לא אכלתי הכל" (לפי בקשה מפורשת, 2026-10-20) ----------
+// מתחת לארוחה מסומנת: רבע / חצי / שלושה רבעים מהמנה, או לכתוב מה לא נאכל (חישוב AI). הקלוריות והחלבון יורדים מהארוחה
+// עצמה - ב-new_me_checkins (partial_kcal = כמה ירד) וב"יומן הארוחות" (calorie_tracker), כך שגם "היום שלי" ושאר האפליקציה
+// רואים את מה שנאכל באמת. ביטול ה-✓ מוחק את הכל כרגיל, וסימון מחדש = המנה המלאה
+function nmOpenPartial(slot, onDone) {
+    const row = nmTodayCheckins[slot];
+    if (!row) return;
+    const full = (Number(row.kcal) || 0) + (Number(row.partial_kcal) || 0);
+    const fullP = (Number(row.protein_g) || 0) + (Number(row.partial_protein) || 0);
+    let minus = 0, minusP = 0, what = '', busy = false;
+    const ov = nmOpenSheet('', 'nm-partial-sheet', onDone);
+    const sheet = ov.querySelector('.nm-sheet');
+    const render = () => {
+        sheet.innerHTML = `
+            <span class="nm-sheet-grip" aria-hidden="true"></span>
+            <h4>🍽️ ${nmEsc(t('nm_partial_title'))}</h4>
+            <p class="nm-fine">${nmEsc(nmSlotName(slot))} · <bdi dir="ltr">~${nmFmt(full)}</bdi> ${nmEsc(t('calories_unit'))}</p>
+            <div class="nm-partial-chips">${[['quarter', 0.25], ['half', 0.5], ['three', 0.75]].map(([k, f]) => `<button type="button" class="nm-chip nm-partial-chip${what === t('nm_partial_' + k) ? ' on' : ''}" data-frac="${f}" data-label="${nmEsc(t('nm_partial_' + k))}">${nmEsc(t('nm_partial_' + k))}</button>`).join('')}</div>
+            <div class="nm-sheet-label">${nmEsc(t('nm_partial_or'))}</div>
+            <textarea class="nm-ai-input" rows="2" maxlength="200" placeholder="${nmEsc(t('nm_partial_ph'))}" aria-label="${nmEsc(t('nm_partial_or'))}"></textarea>
+            <button type="button" class="nm-btn-ghost" data-calc ${busy ? 'disabled' : ''}>${nmEsc(t(busy ? 'nm_swap_ai_busy' : 'nm_swap_ai_go'))}</button>
+            ${minus ? `<p class="nm-partial-minus">${nmTpl('nm_partial_minus', { n: nmFmt(minus) })}</p>` : ''}
+            <button type="button" class="nm-btn-primary" data-save ${minus ? '' : 'disabled'}>${nmEsc(t('nm_partial_save'))}</button>
+            <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
+        sheet.querySelectorAll('[data-frac]').forEach(b => b.addEventListener('click', () => {
+            const f = Number(b.dataset.frac);
+            minus = nmRound5(full * f); minusP = Math.round(fullP * f * 10) / 10; what = b.dataset.label;
+            render();
+        }));
+        sheet.querySelector('[data-calc]').addEventListener('click', async () => {
+            const text = sheet.querySelector('textarea').value.trim();
+            if (text.length < 2) { showAppToast(t('quick_add_missing_text'), 'error'); return; }
+            busy = true; render();
+            sheet.querySelector('textarea').value = text;
+            const r = await nmEstimateMeal(text, full);
+            busy = false;
+            if (!ov.isConnected) return;
+            minus = Math.min(full, nmRound5(r.kcal)); minusP = Math.min(fullP, Math.round((Number(r.protein) || 0) * 10) / 10); what = text.slice(0, 80);
+            render();
+            sheet.querySelector('textarea').value = text;
+        });
+        sheet.querySelector('[data-save]').addEventListener('click', async e => {
+            e.currentTarget.disabled = true;
+            const ok = await nmReduceMeal(slot, minus, minusP, what);
+            if (!ok) { showAppToast(t('nm_save_error'), 'error'); render(); return; }
+            ov.remove();
+            showAppToast(nmTpl('nm_partial_done', { n: nmFmt(minus) }));
+            await Promise.all([nmLoadToday(), nmLoadJourney()]);
+            if (typeof nmRoot === 'function' && nmRoot()) nmRenderView(nmRoot());
+            nmAfterTrackerChange();
+            if (typeof loadTodayTasks === 'function') loadTodayTasks();
+            if (onDone) onDone();
+        });
+    };
+    render();
+}
+async function nmReduceMeal(slot, minus, minusP, what) {
+    const row = nmTodayCheckins[slot];
+    if (!row || !(minus > 0)) return false;
+    const today = getLocalDateString();
+    const full = (Number(row.kcal) || 0) + (Number(row.partial_kcal) || 0);
+    const fullP = (Number(row.protein_g) || 0) + (Number(row.partial_protein) || 0);
+    const kcal = Math.max(0, full - minus), protein = Math.max(0, Math.round((fullP - minusP) * 10) / 10);
+    const baseText = String(row.mirror_text || '').split(` − `)[0];
+    const text = `${baseText} − ${what}`.slice(0, 300);
+    const mealType = NEW_ME_TRACKER_SLOT[slot];
+    const { data: existing } = await supabaseClient.from('calorie_tracker').select('id, food_description, calories, protein_grams').eq('user_id', currentUserId).eq('date', today).eq('meal_type', mealType).maybeSingle();
+    if (existing) {
+        const desc = String(existing.food_description || '').includes(row.mirror_text || '\u0000') ? String(existing.food_description).replace(row.mirror_text, text) : existing.food_description;
+        const { error: e1 } = await supabaseClient.from('calorie_tracker').update({
+            food_description: desc,
+            calories: Math.max(0, (existing.calories || 0) - (Number(row.kcal) - kcal)),
+            protein_grams: Math.max(0, Math.round(((Number(existing.protein_grams) || 0) - (Number(row.protein_g) - protein)) * 10) / 10),
+        }).eq('id', existing.id);
+        if (e1) return false;
+    }
+    const fields = { kcal, protein_g: protein, mirror_text: text, partial_kcal: full - kcal, partial_protein: Math.round((fullP - protein) * 10) / 10 };
+    const { error } = await supabaseClient.from('new_me_checkins').update(fields).eq('user_id', currentUserId).eq('checkin_date', today).eq('slot', slot);
+    if (error) return false;
+    Object.assign(row, fields);
+    return true;
+}
 async function nmCheck(slot) {
     const today = getLocalDateString();
     let kcal, protein, text, optionId, plan = nmProfile.plan;
@@ -2882,7 +3026,7 @@ async function nmCheck(slot) {
     }
     const { data } = await supabaseClient.from('new_me_checkins').upsert({
         user_id: currentUserId, checkin_date: today, slot, option_id: optionId, plan,
-        kcal, protein_g: protein, mirror_mode: mode, mirror_text: text,
+        kcal, protein_g: protein, mirror_mode: mode, mirror_text: text, partial_kcal: null, partial_protein: null,
     }, { onConflict: 'user_id,checkin_date,slot' }).select().maybeSingle();
     nmTodayCheckins[slot] = data || { slot, option_id: optionId, kcal, protein_g: protein, mirror_mode: mode, mirror_text: text };
 }
@@ -3601,7 +3745,7 @@ function nmOpenMealDetails(slot, onDone) {
         <h4 class="nm-meal-det-head"><span>${nmEsc(side ? t('nm_side_title') : nmSlotName(slot))}</span><bdi class="nm-meal-det-time" dir="ltr">${nmEsc(time || '')}</bdi></h4>
         <p class="nm-meal-det-text">${nmEsc(nmMealFullText(slot))}</p>
         ${free ? '' : `<p class="nm-option-meta">${nmMeta(info)}</p>`}
-        ${done ? `<p class="nm-meal-det-done">✓ ${nmEsc(t('nm_hud_ate'))}</p>` : `<button type="button" class="nm-btn-primary" data-eat>${nmEsc(t('nm_hall_ate'))}</button>`}
+        ${done ? `<p class="nm-meal-det-done">✓ ${nmEsc(t('nm_hud_ate'))}${!side && nmTodayCheckins[slot] && nmTodayCheckins[slot].partial_kcal ? ` · ${nmTpl('nm_partial_eaten', { n: nmFmt(nmTodayCheckins[slot].kcal) })}` : ''}</p>${side ? '' : `<button type="button" class="nm-btn-ghost" data-partial>🍽️ ${nmEsc(t('nm_partial_btn'))}</button>`}` : `<button type="button" class="nm-btn-primary" data-eat>${nmEsc(t('nm_hall_ate'))}</button>`}
         <div class="nm-celebrate-actions">
             <button type="button" class="nm-btn-ghost" data-swap>🔄 ${nmEsc(t('nm_swap'))}</button>
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>
@@ -3614,6 +3758,8 @@ function nmOpenMealDetails(slot, onDone) {
         refresh();
     });
     ov.querySelector('[data-swap]').addEventListener('click', () => { ov.remove(); nmOpenMealFromOutside(slot, refresh); });
+    const partial = ov.querySelector('[data-partial]');
+    if (partial) partial.addEventListener('click', () => { ov.remove(); nmOpenPartial(slot, refresh); });
 }
 function myDayNewMeItems(evenWithoutSync) {
     if (!hasNewMe || !nmProfile || nmHomeDataDay !== getLocalDateString() || (!evenWithoutSync && !nmRoutineSyncOn())) return [];

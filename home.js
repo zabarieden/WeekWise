@@ -307,7 +307,10 @@ function renderMyDayBar(items) {
     const countEl = document.getElementById('myday-bar-count');
     const total = items.filter(it => it.checkable).length;
     const done = items.filter(it => it.checkable && it.done).length;
-    if (countEl) countEl.textContent = total ? t('myday_count').replace('{done}', done).replace('{total}', total) : '';
+    // כמה בוצע - רק כשפותחים את "היום שלי" (לפי בקשה מפורשת, 2026-10-20: המספרים בפס הסגור התנגשו עם האימון)
+    const sheetCount = document.getElementById('myday-sheet-count');
+    if (sheetCount) sheetCount.textContent = total ? t('myday_count').replace('{done}', done).replace('{total}', total) : '';
+    if (countEl) countEl.textContent = '';
     const nextEl = document.getElementById('myday-bar-next');
     if (!nextEl) return;
     const pick = myDayPickNow(items);
@@ -1100,3 +1103,25 @@ async function saveHomeNoteLine() {
         if (send) send.disabled = false;
     }
 }
+
+// 📝🛒 הכפתור הקטן ליד הפוקוס: תפריט קטן - פתקים / רשימת קניות (לפי בקשה מפורשת, 2026-10-20)
+function toggleHomeListsMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('home-lists-menu');
+    const btn = document.getElementById('btn-home-lists');
+    if (!menu || !btn) return;
+    const open = menu.classList.contains('hidden');
+    menu.classList.toggle('hidden', !open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) { const first = menu.querySelector('button'); if (first) first.focus({ preventScroll: true }); }
+}
+function closeHomeListsMenu() {
+    const menu = document.getElementById('home-lists-menu');
+    if (menu && !menu.classList.contains('hidden')) { menu.classList.add('hidden'); document.getElementById('btn-home-lists')?.setAttribute('aria-expanded', 'false'); }
+}
+function openHomeList(which) {
+    closeHomeListsMenu();
+    navigateFromMenu('my-center-section', which === 'shopping' ? 'shopping' : 'notes');
+}
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#home-lists-menu, #btn-home-lists')) closeHomeListsMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHomeListsMenu(); });

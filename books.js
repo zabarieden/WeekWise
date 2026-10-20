@@ -25,17 +25,18 @@ function bookEsc(s) { return escapeHtmlForReport(s == null ? '' : String(s)); }
 function bookStatusMeta(key) { return BOOK_STATUSES.find(s => s.key === key) || BOOK_STATUSES[1]; }
 function bookFmt(n) { return Number(n || 0).toLocaleString(currentLang); }
 
-// 📖 הספר במסך הבית: "איזה עמוד אני?" - נגיעה, מספר חדש, וזה עוקב (user_premium.home_book_id, בכל המכשירים)
-let booksHomeId = null;
-function bookHomeBook() { return booksHomeId ? booksCache.find(b => b.id === booksHomeId && b.status === 'reading') || null : null; }
+// 📖 הספרים במסך הבית: "איזה עמוד אני?" - נגיעה, מספר חדש, וזה עוקב. כמה ספרים יחד (לפי בקשה מפורשת, 2026-10-20) -
+// כפתור קטן לכל אחד (user_premium.home_book_ids, בכל המכשירים; home_book_id = הראשון, לגרסאות ישנות)
+let booksHomeIds = [];
+function bookHomeBooks() { return booksHomeIds.map(id => booksCache.find(b => b.id === id && b.status === 'reading')).filter(Boolean); }
 function bookHomeChipHtml() {
-    const b = bookHomeBook();
-    if (!b) return '';
-    const page = t('books_home_chip').replace('{title}', b.title).replace('{page}', bookFmt(Number(b.current_page) || 0));
-    return `<button type="button" class="home-chip home-chip-book" onclick="openBookPageQuick()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/></svg><span>${bookEsc(page)}</span></button>`;
+    return bookHomeBooks().map(b => {
+        const page = t('books_home_chip').replace('{title}', b.title).replace('{page}', bookFmt(Number(b.current_page) || 0));
+        return `<button type="button" class="home-chip home-chip-book" onclick="openBookPageQuick('${bookEsc(b.id)}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/></svg><span>${bookEsc(page)}</span></button>`;
+    }).join('');
 }
-function openBookPageQuick() {
-    const b = bookHomeBook();
+function openBookPageQuick(id) {
+    const b = bookHomeBooks().find(x => x.id === id) || bookHomeBooks()[0];
     if (!b || typeof nmOpenSheet !== 'function') return;
     const total = Number(b.total_pages) || 0;
     const ov = nmOpenSheet(`
@@ -54,11 +55,12 @@ function openBookPageQuick() {
     setTimeout(() => { input.focus(); input.select(); }, 120);
 }
 async function toggleBookOnHome(bookId) {
-    booksHomeId = booksHomeId === bookId ? null : bookId;
+    const on = !booksHomeIds.includes(bookId);
+    booksHomeIds = on ? [...booksHomeIds, bookId] : booksHomeIds.filter(id => id !== bookId);
     renderBooks();
     if (typeof renderHomeChips === 'function') renderHomeChips();
-    showAppToast(t(booksHomeId ? 'books_home_on_toast' : 'books_home_off_toast'));
-    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, home_book_id: booksHomeId }, { onConflict: 'user_id' });
+    showAppToast(t(on ? 'books_home_on_toast' : 'books_home_off_toast'));
+    if (supabaseClient && currentUserId) await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, home_book_ids: booksHomeIds.join(',') || null, home_book_id: booksHomeIds[0] || null }, { onConflict: 'user_id' });
 }
 
 async function loadBooks() {
@@ -68,13 +70,14 @@ async function loadBooks() {
     const [booksRes, logRes, prefRes, quotesRes] = await Promise.all([
         supabaseClient.from('books').select('*').eq('user_id', currentUserId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabaseClient.from('book_reading_log').select('book_id, log_date, pages, source, created_at').eq('user_id', currentUserId).gte('log_date', getLocalDateString(since)).order('created_at', { ascending: true }),
-        supabaseClient.from('user_premium').select('books_goal_id, home_book_id').eq('user_id', currentUserId).maybeSingle(),
+        supabaseClient.from('user_premium').select('books_goal_id, home_book_id, home_book_ids').eq('user_id', currentUserId).maybeSingle(),
         supabaseClient.from('room_quotes').select('id').eq('user_id', currentUserId),
     ]);
     booksCache = booksRes.data || [];
     bookLogCache = logRes.data || [];
     booksGoalId = prefRes && prefRes.data ? prefRes.data.books_goal_id : null;
-    booksHomeId = prefRes && prefRes.data ? prefRes.data.home_book_id || null : null;
+    const pref = prefRes && prefRes.data ? prefRes.data : {};
+    booksHomeIds = pref.home_book_ids ? String(pref.home_book_ids).split(',').filter(Boolean) : (pref.home_book_id ? [pref.home_book_id] : []);
     if (typeof renderHomeChips === 'function') renderHomeChips();
     booksQuotesCount = quotesRes && Array.isArray(quotesRes.data) ? quotesRes.data.length : 0;
     if (isBooksSectionOpen()) renderBooks();
@@ -306,8 +309,8 @@ function buildReadingBookCard(book) {
     card.querySelector('.book-finish-btn').onclick = () => openBookFinish(book.id);
     const pin = document.createElement('button');
     pin.type = 'button';
-    pin.className = 'book-home-pin' + (booksHomeId === book.id ? ' on' : '');
-    pin.setAttribute('aria-pressed', booksHomeId === book.id ? 'true' : 'false');
+    pin.className = 'book-home-pin' + (booksHomeIds.includes(book.id) ? ' on' : '');
+    pin.setAttribute('aria-pressed', booksHomeIds.includes(book.id) ? 'true' : 'false');
     pin.textContent = `📌 ${t('books_home_pin')}`;
     pin.onclick = () => toggleBookOnHome(book.id);
     card.querySelector('.book-card-actions').appendChild(pin);

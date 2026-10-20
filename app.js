@@ -464,7 +464,7 @@ async function loadCenterItems(type) {
     // פריטים בלי אחד עדיין (חדשים/מלפני התכונה) נופלים אחריהם, ממויינים לפי
     // created_at יורד כדי שמשימה חדשה שנרשמת תופיע ראשונה בתוך הקבוצה הזו -
     // לפי בקשה מפורשת ("שכל משימה שאני רושמת תבוא ראשונה")
-    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', false).order('is_someday', { ascending: true }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient.from('my_center_tasks').select('*').eq('user_id', currentUserId).eq('task_type', type).eq('is_deleted', false).order('is_someday', { ascending: true }).order('is_urgent', { ascending: false }).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false });
     if (error) { showAppToast(t('error_loading_list') + error.message, 'error'); return; }
     if (!data) return;
     const listUl = document.getElementById(`${type}-list`);
@@ -486,7 +486,7 @@ async function loadCenterItems(type) {
         }
         const li = document.createElement('li');
         li.setAttribute('data-item-id', item.id);
-        if (isNote) li.className = 'note-paper';
+        if (isNote) li.className = `note-paper${item.is_urgent ? ' is-urgent' : ''}`;
         // "נכתב לאחרונה" (בתוך פתק פתוח) - content_updated_at משתנה רק כשהטקסט משתנה, אז ארכיון ושחזור לא נוגעים בו
         li.setAttribute('data-written-at', item.content_updated_at || item.created_at || '');
         if (item.text_color) li.setAttribute('data-text-color', item.text_color);
@@ -518,15 +518,19 @@ async function loadCenterItems(type) {
         const deleteBtn = isNote
             ? `<button type="button" class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')" title="${t('note_to_archive_btn')}" aria-label="${t('note_to_archive_btn')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>`
             : `<button class="btn-delete-item" onclick="deleteCenterItem('${item.id}', '${type}')">✕</button>`;
+        // "!" = דחוף (לפי בקשה מפורשת, 2026-10-20) - פתק דחוף עולה בעדינות לשורות הראשונות
+        const urgentBtn = isNote ? `<button type="button" class="btn-urgent-item${item.is_urgent ? ' on' : ''}" onclick="toggleNoteUrgent('${item.id}', ${item.is_urgent ? 'true' : 'false'}, '${type}')" aria-pressed="${item.is_urgent ? 'true' : 'false'}" title="${escapeHtmlForReport(t('note_urgent'))}" aria-label="${escapeHtmlForReport(t('note_urgent'))}">!</button>` : '';
+        const urgentTag = isNote && item.is_urgent ? `<span class="note-urgent-tag">${escapeHtmlForReport(t('note_urgent'))}</span> ` : '';
         li.innerHTML = `
             ${dragHandle}
             <button class="btn-complete-item${item.is_completed ? ' checked' : ''}" onclick="toggleTaskStatus('${item.id}', ${item.is_completed}, '${type}')">
                 ${item.is_completed ? '✓' : ''}
             </button>
             <span class="${textClass}"${colorStyle}${isNote ? ` onclick="openCenterItemEditor(this, '${type}')"` : ''}>
-                ${escapeHtmlForReport(item.content)}
+                ${urgentTag}${escapeHtmlForReport(item.content)}
             </span>
             ${editBtn}
+            ${urgentBtn}
             ${deleteBtn}
         `;
         listUl.appendChild(li);
@@ -534,6 +538,35 @@ async function loadCenterItems(type) {
     if (isNote && !dividerInserted) listUl.appendChild(buildNoteSomedayDivider(0));
     initNoteTriageDragDrop(type);
     refreshNotesArchiveCount(type);
+}
+
+// דחוף / לא דחוף: הפתק "נדחף" בעדינות למעלה (או חוזר למקומו) - FLIP: המקום הישן, הרשימה החדשה, ומעבר רך ביניהם.
+// פתק מ"להגיע לזה" שמסמנים כדחוף - חוזר לרשימה הרגילה
+async function toggleNoteUrgent(id, cur, type) {
+    const listUl = document.getElementById(`${type}-list`);
+    const before = {};
+    if (listUl) listUl.querySelectorAll('li[data-item-id]').forEach(li => { before[li.dataset.itemId] = li.getBoundingClientRect().top; });
+    const payload = { is_urgent: !cur };
+    if (!cur) payload.is_someday = false;
+    const { error } = await supabaseClient.from('my_center_tasks').update(payload).eq('id', id).eq('user_id', currentUserId);
+    if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+    await loadCenterItems(type);
+    if (!listUl || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    listUl.querySelectorAll('li[data-item-id]').forEach(li => {
+        const was = before[li.dataset.itemId];
+        if (was == null) return;
+        const dy = was - li.getBoundingClientRect().top;
+        if (!dy) return;
+        li.style.transition = 'none';
+        li.style.transform = `translateY(${dy}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            li.style.transition = 'transform .55s cubic-bezier(.22, 1, .36, 1)';
+            li.style.transform = '';
+            setTimeout(() => { li.style.transition = ''; }, 600);
+        }));
+    });
+    const moved = listUl.querySelector(`li[data-item-id="${id}"]`);
+    if (moved && !cur) { moved.classList.add('urgent-pulse'); setTimeout(() => moved.classList.remove('urgent-pulse'), 1200); }
 }
 
 // מתקפל, מכווץ כברירת מחדל (לא פתוח) - לפי בקשה מפורשת. כל הפתקים
@@ -2935,12 +2968,7 @@ function renderDailyFocusTags() {
     const phase = getDailyFocusPhase();
     const day = getDailyFocusRotationDay();
     const shown = new Set();
-    // ↻ מה שנבחר בפעם הקודמת - למעלה, אפשר לסמן יחד עם הצעות אחרות
-    dailyFocusCarryItems.map(localizeDailyFocusTitle).forEach(text => {
-        if (shown.has(text)) return;
-        shown.add(text);
-        container.appendChild(buildDailyFocusChip(`↻ ${text}`, text, 'daily-focus-tag-chip-carry'));
-    });
+    // בלי "להמשיך עם מה שהיה אתמול" - כל יום מתחילים מחדש (לפי בקשה מפורשת, 2026-10-20)
     const personal = getDailyFocusPersonalSuggestion();
     if (personal && !shown.has(personal)) {
         shown.add(personal);
@@ -3025,15 +3053,12 @@ function openDailyFocusBubble() {
     const bubble = document.getElementById('daily-focus-bubble');
     const input = document.getElementById('daily-focus-input');
     if (input) { input.value = ''; input.classList.add('hidden'); }
-    document.getElementById('daily-focus-bubble-collapsed').classList.remove('hidden');
-    document.getElementById('daily-focus-bubble-expanded').classList.add('hidden');
-    // "↻ להמשיך עם: ..." - מה שהיה חשוב בפעם הקודמת, בלחיצה אחת
+    // נפתח ישר עם כל ההצעות (בלי שלב "לחצו על הבועה"), ובלי "להמשיך עם מה שהיה אתמול" - לפי בקשה מפורשת (2026-10-20)
+    document.getElementById('daily-focus-bubble-collapsed').classList.add('hidden');
+    document.getElementById('daily-focus-bubble-expanded').classList.remove('hidden');
     const carryBtn = document.getElementById('daily-focus-carry-btn');
-    if (carryBtn) {
-        const items = dailyFocusCarryItems.map(localizeDailyFocusTitle);
-        carryBtn.classList.toggle('hidden', !items.length);
-        carryBtn.textContent = items.length ? t('daily_focus_carry_btn').replace('{text}', items[0]) + (items.length > 1 ? ` (+${items.length - 1})` : '') : '';
-    }
+    if (carryBtn) carryBtn.classList.add('hidden');
+    renderDailyFocusTags();
     if (bubble) bubble.classList.remove('hidden');
     const badge = document.getElementById('ai-brain-fab-badge');
     if (badge) badge.classList.add('hidden');
@@ -6377,6 +6402,7 @@ async function loadMonthlyCalendarGrid() {
     grid.innerHTML = html;
     refreshCalendarDeadlineMarks();
     initCalendarGridDropTargets();
+    renderWeeklyTable();
 
     if (selectedCalendarDay && (selectedCalendarDay < firstStr || selectedCalendarDay > lastStr)) {
         selectedCalendarDay = null;
@@ -6386,6 +6412,57 @@ async function loadMonthlyCalendarGrid() {
     }
 }
 
+// --- 🗓️ טבלה שבועית ב"מבט ליומן" (לפי בקשה מפורשת, 2026-10-20) ---
+// כל יום בשבוע: האירועים והמשימות של התאריך (calendar_events) והמשימות הקבועות של אותו יום (weekly_schedule), לפי שעה.
+// נגיעה בפריט פותחת אותו לעריכה. מקופלת כברירת מחדל; נבנית רק כשהיא פתוחה
+let viewedWeeklyTableStart = null;
+function toggleWeeklyTableCard(headerEl) {
+    toggleCardSection(headerEl);
+    if (document.getElementById('weekly-table-card')?.classList.contains('expanded')) renderWeeklyTable();
+}
+function navigateWeeklyTable(delta) {
+    viewedWeeklyTableStart = addDaysToDateStr(viewedWeeklyTableStart || currentWeekStart(), delta * 7);
+    renderWeeklyTable();
+}
+let weeklyTableItems = {};
+async function renderWeeklyTable() {
+    const card = document.getElementById('weekly-table-card');
+    const grid = document.getElementById('weekly-table-grid');
+    const label = document.getElementById('weekly-table-label');
+    if (!grid || !label || !card || !card.classList.contains('expanded') || !supabaseClient || !currentUserId) return;
+    if (!viewedWeeklyTableStart) viewedWeeklyTableStart = currentWeekStart();
+    const start = viewedWeeklyTableStart, end = addDaysToDateStr(start, 6);
+    const fmt = (s, opts) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(currentLang, opts); };
+    label.textContent = `${fmt(start, { day: 'numeric', month: 'short' })} – ${fmt(end, { day: 'numeric', month: 'short' })}`;
+    const [{ data: events }, { data: fixed }] = await Promise.all([
+        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', start).lte('event_date', end).not('source', 'in', '(today_celebrated,daily_focus,daily_focus_dismissed)'),
+        supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId),
+    ]);
+    const today = getLocalDateString();
+    weeklyTableItems = {};
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+        const dateStr = addDaysToDateStr(start, i);
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const wd = new Date(y, m - 1, d).getDay();
+        const items = [
+            ...(events || []).filter(e => e.event_date === dateStr).map(e => ({ kind: 'event', id: e.id, time: e.event_time || (String(e.event_title || '').match(/^(\d{1,2}:\d{2})\s/) || [])[1] || '', title: `${calendarKindIcon(e) ? calendarKindIcon(e) + ' ' : ''}${stripLeadingTimeFromTitle(e.event_title)}`, done: !!e.is_completed, row: e })),
+            ...(fixed || []).filter(r => r.day_of_week === dbDaysMap[wd] && String(r.task_title || '').trim()).map(r => ({ kind: 'fixed', id: r.id, time: r.time_of_day || '', title: r.task_title, done: false, row: r })),
+        ].sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+        items.forEach(it => { weeklyTableItems[`${it.kind}:${it.id}:${dateStr}`] = it; });
+        html += `<div class="weekly-table-day${dateStr === today ? ' today' : ''}">
+            <div class="weekly-table-day-head"><span>${escapeHtmlForReport(t(dayNameKeys[wd]))}</span><small>${escapeHtmlForReport(fmt(dateStr, { day: 'numeric', month: 'numeric' }))}</small></div>
+            <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}">${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+    grid.querySelectorAll('[data-wt]').forEach(b => b.addEventListener('click', () => {
+        const it = weeklyTableItems[b.dataset.wt];
+        if (!it) return;
+        if (it.kind === 'event') openEditCalendarEvent(it.row);
+        else openGlanceTaskEditor(it.row.id, it.row.task_title, it.row.time_of_day, it.row.day_of_week, it.row.reminder_minutes, it.row.reminder_text);
+    }));
+}
 // --- 🎯📖 יעדים וקריאה במבט החודשי (לפי בחירה מפורשת - "א"): בפירוט של כל יום מופיעות משימות
 // היעדים והקריאה של אותו יום (אתגר ימים, תזכורות, "לקרוא N עמודים") בקבוצה נפרדת, ובלוח עצמו
 // סימן קטן רק בימים מיוחדים - תאריך יעד (🎯) ויום הסיום של ספר (📖). משימות שחוזרות כל יום
@@ -9563,6 +9640,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'note_written_at', category: 'notes' },
     { id: 'notes_sticky_look', category: 'notes' },
+    { id: 'home_lists_btn', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },
@@ -9577,6 +9655,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'reminder_snooze', category: 'myweek' },
     { id: 'move_task_between_days', category: 'myweek' },
     { id: 'calendar_goals_reading', category: 'myweek' },
+    { id: 'weekly_table', category: 'myweek' },
     { id: 'task_not_done_by_eod', category: 'myweek' },
     { id: 'daily_focus_prompt', category: 'glance' },
     { id: 'what_is_glance', category: 'glance' },
