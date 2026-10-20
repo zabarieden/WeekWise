@@ -80,18 +80,41 @@ async function nmg3dUpgradeMe(btn, stageN) {
         btn.classList.add('has-3d');
     }, { once: true });
     btn.appendChild(mv);
-    // הגרירה כבר כותבת is-flying ו---tilt על הכפתור - מקשיבים להם (גם דגם בלי אנימציות פונה לכיוון התנועה)
+    // הגרירה כותבת is-flying על הכפתור (אנימציית הליכה, אם יש); הכיוון - nmg3dMeFace (הגב למעלה, הפנים למטה, הצד לצדדים)
     const sync = () => {
         if (!mv.isConnected) { obs.disconnect(); return; }
         const flying = btn.classList.contains('is-flying');
         const want = flying ? mv.dataset.walk : mv.dataset.idle;
         if (want && mv.animationName !== want) mv.animationName = want;
-        const tilt = parseFloat(btn.style.getPropertyValue('--tilt')) || 0;
-        const theta = flying && Math.abs(tilt) > 1 ? (tilt > 0 ? -55 : 55) : 0;
-        if (Number(mv.dataset.theta || 0) !== theta) { mv.dataset.theta = String(theta); mv.cameraOrbit = `${theta}deg 80deg auto`; }
     };
     const obs = new MutationObserver(sync);
-    obs.observe(btn, { attributes: true, attributeFilter: ['class', 'style'] });
+    obs.observe(btn, { attributes: true, attributeFilter: ['class'] });
+    nmg3dFaceLoop(btn, mv);
+}
+// 🧭 לאן Me פונה (כמו בכל משחק בתלת־ממד): הולכים למעלה - רואים את הגב, למטה - את הפנים, לצדדים - את הצד. אחרי שעוצרים,
+// כעבור רגע הוא חוזר לאט להסתכל עלינו. dx/dy - כיוון התנועה על המסך
+function nmg3dHeading(dx, dy) { return -Math.atan2(dx, dy) * 180 / Math.PI; }
+function nmg3dMeFace(el, dx, dy) {
+    if (!el || Math.hypot(dx, dy) < 1.5) return;
+    el.dataset.heading = String(nmg3dHeading(dx, dy));
+    el.dataset.headAt = String(Date.now());
+}
+function nmg3dTurnToward(cur, target, k) { const d = ((((target - cur) % 360) + 540) % 360) - 180; return cur + d * k; }
+function nmg3dFaceLoop(el, mv) {
+    let theta = 0;
+    const step = () => {
+        if (!mv.isConnected) return;
+        const recent = Date.now() - Number(el.dataset.headAt || 0) < 2600;
+        const target = recent ? Number(el.dataset.heading || 0) : 0;
+        const next = nmg3dTurnToward(theta, target, recent ? 0.22 : 0.06);
+        if (Math.abs(next - theta) > 0.05) {
+            theta = next;
+            mv.cameraOrbit = `${theta.toFixed(1)}deg 80deg auto`;
+            if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+        }
+        requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
 }
 
 // ---------- 🗺️ מפת העולם עם עומק ----------
@@ -501,11 +524,14 @@ async function nmg3dUpgradeRoofCat(sky) {
     ro.observe(svg);
 }
 
-// ---------- ✨ Me מרחף איתי בכל מקום ----------
-// (לפי בקשה מפורשת, 2026-10-20: "הME1 לא משנה לאן אני הולכת הוא יבוא איתי" / "שירחף בכל מפה ויותר בתזוזתיות 360 ממש חלק").
-// בכל חדר ובכל מקום Me (הדמות החיה בתלת־ממד) מרחף לאט בחלק התחתון של המסך במסלול רך ומשתנה, פונה לכיוון שאליו הוא
-// מרחף, ומדי פעם מסתובב סיבוב שלם סביב עצמו. לא תופס נגיעות. בלי WebGL / "פחות תנועה" - התמונה שלו מרחפת בפינה
-const nmgFollow = { layer: null, el: null, img: null, mv: null, stage: 0, raf: 0, watch: 0, t0: 0, spinAt: 0, theta: 0, lastX: null };
+
+// ---------- ✨ Me איתי בכל מקום ----------
+// (לפי בקשה מפורשת, 2026-10-20: "הME1 לא משנה לאן אני הולכת הוא יבוא איתי", ואז: "למה הוא סתם מתעופף? אני רוצה לשלוט לאן
+// הוא הולך ואהבתי שהוא מסתובב תעשה שיהיה אפשרות שהוא יסתובב אם נסובב אותו עם האצבע"). בכל חדר ובכל מקום Me (הדמות החיה
+// בתלת־ממד) מרחף במקום שבו השארנו אותו, ורק זז כשמזיזים אותו: גוררים אותו (באצבע / בעכבר / בחיצים) לכל מקום, ומסובבים
+// אותו סביב עצמו בגרירה על הטבעת הזוהרת שמתחת לרגליים (Q / E במקלדת) - סיבוב חלק עם תנופה, 360 מעלות.
+// בלי WebGL / "פחות תנועה" - התמונה שלו (בלי סיבוב). המיקום נשמר בין המקומות (באותה הפעלה)
+const nmgFollow = { layer: null, el: null, ring: null, img: null, mv: null, stage: 0, raf: 0, watch: 0, pos: null, theta: 0, spinV: 0, dragging: false, face: null };
 function nmg3dFollowSync() {
     if (typeof nmgShownStage !== 'function') return;
     const wrap = document.querySelector('.phone-wrapper');
@@ -513,74 +539,134 @@ function nmg3dFollowSync() {
     if (!nmgFollow.layer || !nmgFollow.layer.isConnected) {
         const layer = document.createElement('div');
         layer.id = 'nmg-follow-layer';
-        layer.setAttribute('aria-hidden', 'true');
-        layer.innerHTML = '<div class="nmg-follow"><img alt=""></div>';
+        layer.innerHTML = `<div class="nmg-follow" role="img" aria-label="${(typeof nmEsc === 'function' ? nmEsc : String)(t('nm_me_title'))}"><img alt="" draggable="false"><span class="nmg-follow-ring" aria-hidden="true"></span></div>`;
         wrap.appendChild(layer);
-        Object.assign(nmgFollow, { layer, el: layer.firstElementChild, img: layer.querySelector('img'), mv: null, stage: 0 });
+        Object.assign(nmgFollow, { layer, el: layer.firstElementChild, ring: layer.querySelector('.nmg-follow-ring'), img: layer.querySelector('img'), mv: null, stage: 0 });
+        nmg3dFollowBind();
     }
     const s = nmgShownStage();
     if (nmgFollow.stage !== s.n) {
         nmgFollow.stage = s.n;
         nmgFollow.img.src = `world/${s.img}`;
-        if (nmgFollow.mv) { nmgFollow.mv.remove(); nmgFollow.mv = null; nmgFollow.el.classList.remove('has-3d'); }
-        nmg3dFollowLive(s.n);
+        nmg3dFollowDrop();
     }
     if (!nmgFollow.watch) nmgFollow.watch = setInterval(nmg3dFollowWatch, 500);
+}
+// דגם חי שמוסתר (display:none, גודל 0×0) עוצר את הציור של כל שאר הדגמים בעמוד (החתול ו-Me במסדרון) - לכן הדגם של Me
+// כאן קיים רק כשמקום פתוח, ונמחק כשיוצאים
+function nmg3dFollowDrop() {
+    if (nmgFollow.mv) { nmgFollow.mv.remove(); nmgFollow.mv = null; }
+    if (nmgFollow.el) nmgFollow.el.classList.remove('has-3d');
 }
 async function nmg3dFollowLive(n) {
     if (nmg3dReduced() || !nmg3dWebgl()) return;
     const url = `world/3d/me${n}.glb`;
-    if (!(await nmg3dExists(url)) || !(await nmg3dLoadViewer()) || nmgFollow.stage !== n || nmgFollow.mv) return;
+    if (!(await nmg3dExists(url)) || !(await nmg3dLoadViewer()) || nmgFollow.stage !== n || nmgFollow.mv || !nmgFollow.layer || !nmgFollow.layer.offsetParent) return;
     const mv = document.createElement('model-viewer');
     const attrs = {
         src: url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral', 'camera-orbit': '0deg 80deg auto', loading: 'eager',
+        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral', 'camera-orbit': `${nmgFollow.theta}deg 80deg auto`, loading: 'eager',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     mv.addEventListener('load', () => nmgFollow.el.classList.add('has-3d'), { once: true });
-    nmgFollow.el.appendChild(mv);
+    nmgFollow.el.insertBefore(mv, nmgFollow.ring);
     nmgFollow.mv = mv;
 }
-// רץ רק כשהשכבה גלויה (בתוך חדר / מקום)
 function nmg3dFollowWatch() {
-    const on = !!(nmgFollow.layer && nmgFollow.layer.isConnected && nmgFollow.layer.offsetParent && getComputedStyle(nmgFollow.layer).visibility !== 'hidden');
-    // מרחף ליד הנדנדה (בשביל ביער) - עולה עליה ומתנדנד איתה
-    const sw = on && document.querySelector('.srp-swing-hot:not(.is-riding)');
-    if (sw && typeof srpSwingRide === 'function' && Date.now() - (typeof srpSwingRideAt !== 'undefined' ? srpSwingRideAt : 0) > 40000) {
-        const a = sw.getBoundingClientRect(), b = nmgFollow.el.getBoundingClientRect();
-        const dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height * 0.75) - (b.top + b.height / 2);
-        if (Math.hypot(dx, dy) < Math.max(90, a.width * 1.3)) srpSwingRide(sw);
-    }
-    if (on && !nmgFollow.raf && !nmg3dReduced()) { nmgFollow.t0 = performance.now() - Math.random() * 20000; nmgFollow.spinAt = performance.now() + 5000; nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick); }
+    const shown = !!(nmgFollow.layer && nmgFollow.layer.isConnected && nmgFollow.layer.offsetParent);
+    if (shown && !nmgFollow.mv) nmg3dFollowLive(nmgFollow.stage);
+    else if (!shown && nmgFollow.mv) nmg3dFollowDrop();
+    if (shown) { nmg3dFollowPlace(); if (!nmgFollow.raf) nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick); }
 }
-function nmg3dFollowTick(now) {
-    nmgFollow.raf = 0;
+// המיקום (פיקסלים בתוך השכבה), תמיד בתוך המסך; ברירת המחדל - למטה בצד, מעל התיק
+function nmg3dFollowClamp(p) {
     const L = nmgFollow.layer, el = nmgFollow.el;
-    if (!L || !L.isConnected || !L.offsetParent) { nmgFollow.lastX = null; return; }
-    const W = L.clientWidth, H = L.clientHeight, w = el.offsetWidth, h = el.offsetHeight;
-    const t = (now - nmgFollow.t0) / 1000;
-    // מסלול רך שלא חוזר על עצמו (סכום של גלים בתדרים שונים), בחלק התחתון - מעל התיק והכפתורים
-    const nx = 0.5 + 0.34 * Math.sin(t * 0.13) + 0.12 * Math.sin(t * 0.31 + 1.7);
-    const ny = 0.5 + 0.32 * Math.sin(t * 0.17 + 0.6) + 0.14 * Math.sin(t * 0.43 + 2.1);
-    const x = 10 + nx * Math.max(0, W - w - 20);
-    const top = H * 0.46, bottom = H - h - 130;
-    const y = top + ny * Math.max(0, bottom - top) + Math.sin(t * 1.6) * 6;
-    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-    // פונה לכיוון התנועה, ומדי פעם סיבוב שלם (360°) רך
-    const vx = nmgFollow.lastX === null ? 0 : x - nmgFollow.lastX;
-    nmgFollow.lastX = x;
-    const face = Math.max(-1, Math.min(1, vx * 2.2)) * -50;
-    nmgFollow.theta += (face - nmgFollow.theta) * 0.04;
-    let spin = 0;
-    if (now >= nmgFollow.spinAt) {
-        const p = (now - nmgFollow.spinAt) / 2600;
-        if (p >= 1) nmgFollow.spinAt = now + 11000 + Math.random() * 8000;
-        else spin = 360 * (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
-    }
+    const W = L.clientWidth, H = L.clientHeight, w = el.offsetWidth || 128, h = el.offsetHeight || 140;
+    return { x: Math.max(4, Math.min(W - w - 4, p.x)), y: Math.max(60, Math.min(H - h - 96, p.y)) };
+}
+function nmg3dFollowPlace() {
+    const L = nmgFollow.layer;
+    if (!L || !L.offsetParent) return;
+    if (!nmgFollow.pos) nmgFollow.pos = { x: L.clientWidth * 0.08, y: L.clientHeight * 0.58 };
+    nmgFollow.pos = nmg3dFollowClamp(nmgFollow.pos);
+    nmgFollow.el.style.setProperty('--fx', `${nmgFollow.pos.x.toFixed(1)}px`);
+    nmgFollow.el.style.setProperty('--fy', `${nmgFollow.pos.y.toFixed(1)}px`);
+}
+// הסיבוב: תנופה שנרגעת לאט (אחרי שעוזבים את הטבעת הוא ממשיך להסתובב עוד קצת). כשמזיזים אותו - פונה לאן שהולך (למעלה -
+// רואים את הגב, למטה - את הפנים, כמו בכל משחק בתלת־ממד), ונשאר כך כשעוצרים
+function nmg3dFollowTick() {
+    nmgFollow.raf = 0;
+    if (!nmgFollow.layer || !nmgFollow.layer.offsetParent) return;
+    if (nmgFollow.face !== null) {
+        nmgFollow.spinV = 0;
+        nmgFollow.theta = nmg3dTurnToward(nmgFollow.theta, nmgFollow.face, 0.2);
+        if (Math.abs(nmg3dTurnToward(nmgFollow.theta, nmgFollow.face, 1) - nmgFollow.theta) < 0.4) nmgFollow.face = null;
+    } else if (!nmgFollow.dragging && Math.abs(nmgFollow.spinV) > 0.05) { nmgFollow.theta += nmgFollow.spinV; nmgFollow.spinV *= 0.94; }
+    else if (!nmgFollow.dragging) nmgFollow.spinV = 0;
     const mv = nmgFollow.mv;
-    if (mv && el.classList.contains('has-3d')) {
-        mv.cameraOrbit = `${(nmgFollow.theta + spin).toFixed(1)}deg 80deg auto`;
+    if (mv && nmgFollow.el.classList.contains('has-3d')) {
+        mv.cameraOrbit = `${nmgFollow.theta.toFixed(1)}deg 80deg auto`;
         if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
     }
-    nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick);
+    if (nmgFollow.dragging || nmgFollow.face !== null || Math.abs(nmgFollow.spinV) > 0.05) nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick);
+}
+function nmg3dFollowSpinKick() { if (!nmgFollow.raf) nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick); }
+// לאן הוא פונה כשמזיזים אותו (dx/dy על המסך)
+function nmg3dFollowFace(dx, dy) { if (Math.hypot(dx, dy) < 1.5) return; nmgFollow.face = nmg3dHeading(dx, dy); nmg3dFollowSpinKick(); }
+function nmg3dFollowBind() {
+    const el = nmgFollow.el, ring = nmgFollow.ring;
+    // גרירה על Me = הזזה; גרירה על הטבעת = סיבוב
+    el.addEventListener('pointerdown', e => {
+        if (e.button > 0) return;
+        const rotate = e.target === ring;
+        const x0 = e.clientX, y0 = e.clientY, start = { ...(nmgFollow.pos || { x: 0, y: 0 }) };
+        let lastX = x0, lastY = y0, lastT = performance.now();
+        nmgFollow.dragging = true;
+        el.classList.add(rotate ? 'is-spinning' : 'is-moving');
+        if (rotate) nmgFollow.face = null;
+        try { el.setPointerCapture(e.pointerId); } catch {}
+        e.preventDefault();
+        nmg3dFollowSpinKick();
+        const move = ev => {
+            if (rotate) {
+                const dx = ev.clientX - lastX, now = performance.now();
+                nmgFollow.theta -= dx * 1.4;
+                nmgFollow.spinV = -dx * 1.4 / Math.max(1, (now - lastT) / 16);
+                lastX = ev.clientX; lastT = now;
+            } else {
+                nmgFollow.pos = nmg3dFollowClamp({ x: start.x + ev.clientX - x0, y: start.y + ev.clientY - y0 });
+                el.style.setProperty('--fx', `${nmgFollow.pos.x.toFixed(1)}px`);
+                el.style.setProperty('--fy', `${nmgFollow.pos.y.toFixed(1)}px`);
+                el.style.setProperty('--tilt', `${Math.max(-10, Math.min(10, (ev.clientX - lastX) * 1.5))}deg`);
+                if (Math.hypot(ev.clientX - lastX, ev.clientY - lastY) >= 3) { nmg3dFollowFace(ev.clientX - lastX, ev.clientY - lastY); lastX = ev.clientX; lastY = ev.clientY; }
+            }
+        };
+        const up = () => {
+            nmgFollow.dragging = false;
+            el.classList.remove('is-spinning', 'is-moving');
+            el.style.setProperty('--tilt', '0deg');
+            el.removeEventListener('pointermove', move);
+            el.removeEventListener('pointerup', up);
+            el.removeEventListener('pointercancel', up);
+            nmg3dFollowSpinKick();
+        };
+        el.addEventListener('pointermove', move);
+        el.addEventListener('pointerup', up);
+        el.addEventListener('pointercancel', up);
+    });
+    // במקלדת (בתוך מקום): חיצים / W A S D מזיזים, Q / E מסובבים
+    document.addEventListener('keydown', e => {
+        if (!nmgFollow.layer || !nmgFollow.layer.offsetParent || getComputedStyle(nmgFollow.layer).visibility === 'hidden') return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+        const k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1], a: [-1, 0], d: [1, 0], w: [0, -1], s: [0, 1] };
+        if (k === 'q' || k === 'e') { e.preventDefault(); nmgFollow.face = null; nmgFollow.spinV += k === 'q' ? 6 : -6; nmg3dFollowSpinKick(); return; }
+        if (!dirs[k]) return;
+        e.preventDefault();
+        const [dx, dy] = dirs[k];
+        nmgFollow.pos = nmg3dFollowClamp({ x: (nmgFollow.pos || { x: 0 }).x + dx * 16, y: (nmgFollow.pos || { y: 0 }).y + dy * 16 });
+        nmg3dFollowPlace();
+        nmg3dFollowFace(dx * 10, dy * 10);
+    });
 }

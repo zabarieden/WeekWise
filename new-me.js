@@ -898,7 +898,7 @@ function nmMaybeOfferMagic() {
     if (!hasNewMe || typeof MAGIC_COLOR_THEMES === 'undefined' || isMagicColorTheme(currentColorThemeName())) return false;
     let seen = false;
     try { seen = localStorage.getItem(nmMagicOfferKey()) === '1'; } catch {}
-    if (seen || nmQuiz || document.querySelector('.nm-sheet-overlay, .sr-reveal, .app-tour-layer, .magic-paint')) return false;
+    if (seen || nmQuiz || document.querySelector('.nm-sheet-overlay, .sr-reveal, .app-tour-layer, .magic-paint, .nm1-stage')) return false;
     nmOpenMagicPicker(true);
     return true;
 }
@@ -934,7 +934,7 @@ function nmGodMode() { return typeof nmGodModeActive === 'function' ? nmGodModeA
 // מה ש-New Me זוכר במכשיר (סיור שנראה, הזמנות חד-פעמיות, היומן בתפריט) - נמחק כשאין עדיין פרופיל, כך שמי שמתחיל/ה
 // מחדש רואה הכול כמו בפעם הראשונה (המפתחות, המחשב וההעדפות של החדר - ר' roomLoad)
 function nmClearLocalFlags() {
-    const keys = ['weekwise_nm_tour_seen', 'weekwise_nm_ch_seen_ended', 'weekwise_nm_ch_suggest_hidden', 'weekwise_nm_photo_nudge_week'];
+    const keys = ['weekwise_nm_tour_seen', 'weekwise_nm_me1_intro_seen', 'weekwise_nm_ch_seen_ended', 'weekwise_nm_ch_suggest_hidden', 'weekwise_nm_photo_nudge_week'];
     if (currentUserId) keys.push(nmMagicOfferKey(), nmDiaryMenuKey());
     try { keys.forEach(k => localStorage.removeItem(k)); } catch {}
     if (typeof updateDiaryMenuItem === 'function') updateDiaryMenuItem();
@@ -959,10 +959,21 @@ async function renderNewMe() {
         // אין עדיין פרופיל = מתחילים מההתחלה, גם במכשיר (לפי בקשה מפורשת, 2026-10-14: "תעשה כאילו אני משתמשת חדשה")
         if (!nmProfile) nmClearLocalFlags();
     }
-    if (!nmProfile || nmQuiz) { if (!nmQuiz) nmStartQuiz(); nmRenderQuiz(root); return; }
+    if (!nmProfile || nmQuiz) {
+        // השאלון לא במסדרון - בלי הכפתורים של המשחק מעליו (גם ב"קנייה" של מנהלת המוצר, כשכבר יש תוכנית)
+        const sec = document.getElementById('new-me-section');
+        if (sec) sec.classList.remove('nm-hall-mode');
+        if (!nmQuiz) nmStartQuiz();
+        nmRenderQuiz(root);
+        // ✨ Me1 פותח את הכניסה לעולם החדש (new-me-game.js)
+        if (typeof nm1MaybeIntro === 'function') nm1MaybeIntro();
+        return;
+    }
     if (nmView === 'menu' || nmView === 'tips') nmView = 'home';
     await Promise.all([nmLoadToday(), nmLoadJourney(), nmLoadChallenges(), typeof roomLoad === 'function' ? roomLoad() : null]);
     nmRenderView(root);
+    // ✨ סיימו את השאלון בפעם הראשונה - Me1 שמח, ומשם לסיור (new-me-game.js)
+    if (typeof nm1JoyPending !== 'undefined' && nm1JoyPending) { nm1JoyPending = false; nm1Joy(); }
     nmAwardBadges();
     if (nmProfile.reminders_on) nmSyncReminders();
     nmMaybeAutoTour();
@@ -1529,6 +1540,7 @@ function nmRenderQuiz(root) {
             <div class="nm-steps" aria-label="${nmEsc(t('nm_step_of').replace('{n}', q.step + 1).replace('{total}', total))}">
                 ${Array.from({ length: total }, (_, i) => `<span class="nm-step-dot${i <= q.step ? ' on' : ''}"></span>`).join('')}
             </div>
+            ${typeof nm1HelpHtml === 'function' ? nm1HelpHtml(q, id) : ''}
             ${body}
             <div class="nm-quiz-actions">
                 ${q.step > 0 || q.fromSettings || (q.fresh && nmProfile) ? `<button type="button" class="nm-btn-ghost" onclick="nmQuizBack()">${nmEsc(t('nm_back'))}</button>` : ''}
@@ -1658,6 +1670,8 @@ async function nmQuizNext() {
     if (id === 'times' && !(nmTimes && nmTimes.mode)) return;
     if (q.step < nmQuizTotal() - 1) { q.step++; nmRenderQuiz(nmRoot()); nmScrollTop(); return; }
     if (q.menuOnly) { await nmQuizFinishMenuOnly(q); return; }
+    // בפעם הראשונה (קונה חדש/ה, או "קנייה" של מנהלת המוצר) - בסוף Me1 שמח ומשם לסיור
+    const firstTime = !q.fromSettings && (q.fresh || !nmProfile);
     const letter = q.withLetter ? String(q.letter || '').trim().slice(0, 4000) : '';
     if (letter && letter.length < NEW_ME_LETTER_MIN) { showAppToast(t('nm_letter_too_short'), 'error'); return; }
     const today = getLocalDateString();
@@ -1702,6 +1716,7 @@ async function nmQuizNext() {
     await nmSyncCalorieGoal();
     nmQuiz = null;
     nmView = 'home';
+    if (firstTime && typeof nm1Joy === 'function') nm1JoyPending = true;
     renderNewMe();
     if (letter) showAppToast(t('nm_letter_sealed_toast'));
 }
@@ -4753,24 +4768,27 @@ const NEW_ME_TOUR_STEPS = [
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
     { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
-    { id: 'nm_done', ch: 'newme', ctx: 'newme', icon: '💪', titleKey: 'nm_tour_done_title', text: 'nm_tour_done_text' },
 ];
 function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }
 function nmStartTour() {
     try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
     // השלבים נבחרים לפי מה שמוצג במסך הראשי של New Me - חוזרים אליו קודם (למשל כשנפתח מההגדרות)
     if (nmView !== 'home') nmGo('home');
-    if (typeof openAppTour === 'function') openAppTour(true, null, { steps: NEW_ME_TOUR_STEPS, keepScreen: true });
+    // בסוף הסיור (במקום כרטיס הסיום) - Me1 עם הלב: "נעשה את הדרך הזו ביחד" (לפי בקשה מפורשת, 2026-10-20)
+    if (typeof openAppTour === 'function') openAppTour(true, () => { if (typeof nm1Heart === 'function') nm1Heart(); }, { steps: NEW_ME_TOUR_STEPS, keepScreen: true });
 }
 function nmMaybeAutoTour() {
     if (nmTourSeen() || nmView !== 'home' || nmQuiz) return;
     try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
-    // מחכים שחגיגת הישג (אם קופצת) תיסגר, ושהמסך של New Me עדיין פתוח
+    nmQueueTour();
+}
+// מחכים שחגיגת הישג (אם קופצת) או רגע של Me1 ייסגרו, ושהמסך של New Me עדיין פתוח
+function nmQueueTour() {
     let tries = 0;
     const attempt = () => {
         const sec = document.getElementById('new-me-section');
         if (!sec || !sec.classList.contains('active-tab') || nmView !== 'home' || (typeof appTourActive !== 'undefined' && appTourActive)) return;
-        if (document.querySelector('.nm-sheet-overlay') && ++tries < 40) { setTimeout(attempt, 500); return; }
+        if (document.querySelector('.nm-sheet-overlay, .nm1-stage') && ++tries < 40) { setTimeout(attempt, 500); return; }
         nmStartTour();
     };
     setTimeout(attempt, 700);

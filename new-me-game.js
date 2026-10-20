@@ -372,6 +372,8 @@ function nmgMeDown(e) {
         if (!moved) { moved = true; nmgMeDragged = true; me.classList.add('is-flying'); }
         pos = nmgMeClamp({ x: start.x + (ev.clientX - x0) * kx, y: start.y + (ev.clientY - y0) * ky });
         const tilt = Math.max(-12, Math.min(12, (ev.clientX - lastX) * 1.6));
+        if (typeof nmg3dMeFace === 'function') nmg3dMeFace(me, ev.clientX - lastX, ev.clientY - (me.__lastY ?? ev.clientY));
+        me.__lastY = ev.clientY;
         lastX = ev.clientX;
         place(pos, tilt);
         if (!reduce && Date.now() - lastSpark > 70) { lastSpark = Date.now(); nmgMeSpark(hall, pos); }
@@ -518,7 +520,7 @@ document.addEventListener('keydown', e => {
     if (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('button:not(.nmh-me), a')) return;
     const me = document.querySelector('#new-me-root .nmh-me');
-    if (!me || !me.offsetParent || document.querySelector('.nm-sheet-overlay, #sr-overlay, #nmg-map, #nmg-bag, .app-tour-layer')) return;
+    if (!me || !me.offsetParent || document.querySelector('.nm-sheet-overlay, #sr-overlay, #nmg-map, #nmg-bag, .app-tour-layer, .nm1-stage')) return;
     const hall = me.closest('.nmh');
     if (!hall) return;
     if (k === 'Enter') {
@@ -529,6 +531,7 @@ document.addEventListener('keydown', e => {
     }
     e.preventDefault();
     const [dx, dy] = dirs[k];
+    if (typeof nmg3dMeFace === 'function') nmg3dMeFace(me, dx * 10, dy * 10);
     const pos = nmgMeClamp({ x: (nmgMePos || NMG_ME_HOME).x + dx * NMG_KEY_STEP, y: (nmgMePos || NMG_ME_HOME).y + dy * NMG_KEY_STEP });
     nmgMePos = pos;
     me.classList.add('is-flying');
@@ -547,3 +550,249 @@ document.addEventListener('keydown', e => {
         if (tg) nmgKey.timer = setTimeout(() => { if (nmgKey.near === tg && document.contains(me)) nmgKeyEnter(me, hall, tg); }, 650);
     }
 });
+
+
+// ---------- ✨ Me1 מלווה את הכניסה ל-New Me ----------
+// (לפי בקשה מפורשת, 2026-10-20: "אני רוצה שתכניס אותו לתוך מי שקונה והוא יהיה העוזר שלו לכתוב את הארוחות והכל... שתהיה כניסה
+// מרשימה שיראו שהן לא סתם קנו והן עכשיו נכנסות לעולם חדש"). הציורים שלה, גזורים מהרקע: me1-hello (עומד ומחייך ומסביר הכל),
+// me1-dreams (כותב בספר - בבחירת הארוחות: "נכתוב ביחד את החלומות ונגשים אותם ביחד"), me1-joy (שמח - כשמסיימים) ו-me1-heart
+// (הלב - "נעשה את הדרך הזו ביחד", אחרי הסיור). 1. פתיחה: פורטל של אור נפתח, Me1 עף ממנו ומסביר בכמה נגיעות, ובסוף עף למקום שלו
+// בשאלון → 2. בשאלון Me1 ליד כל שאלה (בבחירת הארוחות כותב בספר, ונגיעה בעצה שלו - עוד עצה: "הוא אוהב אורז... זה לא משנה איזה
+// מאכל אם אוהבים אותו להשאיר אותו בתפריט ואפשר גם להשתמש באיי איי") → 3. בסוף - Me1 שמח, זיקוקים, ומשם לסיור → 4. אחרי הסיור - הלב.
+// Me1 מדבר בלי פעלים בהווה (לא "אני אוהב/ת") - כדי שיתאים בכל שפה; למשתמש/ת - תמיד בלשון שמתאימה לכולם
+const NM1_ART = { hello: 'world/me1-hello.webp', dreams: 'world/me1-dreams.webp', joy: 'world/me1-joy.webp', heart: 'world/me1-heart.webp' };
+const NM1_INTRO = [['nm_m1_hi_title', 'nm_m1_hi_text'], [null, 'nm_m1_menu_text'], [null, 'nm_m1_day_text'], [null, 'nm_m1_magic_text'], [null, 'nm_m1_ready_text']];
+const NM1_STEP_LINES = { agree: 'nm_m1_q_agree', about: 'nm_m1_q_about', plan: 'nm_m1_q_plan', times: 'nm_m1_q_times', menu: 'nm_m1_q_menu', letter: 'nm_m1_q_letter' };
+const NM1_TIPS = ['nm_m1_tip_rice', 'nm_m1_tip_love', 'nm_m1_tip_ai'];
+const NM1_SEEN_KEY = 'weekwise_nm_me1_intro_seen';
+const NM1_HEART_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.4-4.5-9.5-9.1C1 8.4 3.1 5 6.5 5c2.2 0 3.6 1.3 4.5 2.7C12 6.3 13.3 5 15.5 5 18.9 5 21 8.4 19.5 11.9 17.4 16.5 12 21 12 21z"/></svg>';
+let nm1JoyPending = false;
+
+function nm1Reduce() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function nm1Preload() { Object.values(NM1_ART).forEach(src => { const im = new Image(); im.src = src; }); }
+// המילים נכנסות אחת אחרי השנייה (Intl.Segmenter מחלק נכון גם סינית, יפנית ותאית - בלי רווחים)
+function nm1WordsHtml(text) {
+    const s = String(text || '');
+    let parts;
+    try { parts = Array.from(new Intl.Segmenter(typeof currentLang === 'string' ? currentLang : undefined, { granularity: 'word' }).segment(s), x => x.segment); }
+    catch { parts = s.split(/(\s+)/); }
+    let i = 0;
+    return parts.map(p => (/^\s+$/.test(p) ? p : `<span class="nm1-w" style="--i:${i++}">${nmEsc(p)}</span>`)).join('');
+}
+function nm1Stars(n) {
+    let s = '';
+    for (let i = 0; i < n; i++) s += `<i style="left:${(Math.random() * 100).toFixed(1)}%;top:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * 4).toFixed(2)}s;--s:${(1 + Math.random() * 1.8).toFixed(1)}px"></i>`;
+    return s;
+}
+function nm1Motes(n) {
+    let s = '';
+    for (let i = 0; i < n; i++) s += `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--y:${(30 + Math.random() * 65).toFixed(1)}%;--mx:${(Math.random() * 60 - 30).toFixed(0)}px;--my:${(-40 - Math.random() * 80).toFixed(0)}px;--t:${(5 + Math.random() * 5).toFixed(1)}s;--d:${(Math.random() * 6).toFixed(1)}s"></i>`;
+    return s;
+}
+// מסך מלא אחד לכל הרגעים של Me1 (מעל הכל, גם מעל הכפתורים של המשחק)
+function nm1Stage(kind, html) {
+    document.querySelectorAll('.nm1-stage').forEach(s => s.remove());
+    const wrap = document.querySelector('.phone-wrapper') || document.body;
+    const st = document.createElement('div');
+    st.className = `nm1-stage nm1-${kind}`;
+    st.setAttribute('role', 'dialog');
+    st.setAttribute('aria-modal', 'true');
+    st.setAttribute('aria-label', 'Me');
+    st.setAttribute('dir', document.documentElement.dir || 'rtl');
+    st.innerHTML = `<div class="nm1-sky" aria-hidden="true">${nm1Stars(48)}</div><div class="nm1-motes" aria-hidden="true">${nm1Motes(16)}</div>${html}`;
+    wrap.appendChild(st);
+    requestAnimationFrame(() => st.classList.add('on'));
+    return st;
+}
+function nm1Close(st, then) {
+    if (!st || st.classList.contains('off')) return;
+    st.classList.remove('on');
+    st.classList.add('off');
+    setTimeout(() => { st.remove(); if (then) then(); }, nm1Reduce() ? 0 : 520);
+}
+function nm1TalkHtml(titleKey, textKey, btnKey, dots) {
+    return `<div class="nm1-talk">
+            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">Me</span><div class="nm1-say">${titleKey ? `<h2 class="nm1-title">${nm1WordsHtml(t(titleKey))}</h2>` : ''}${textKey ? `<p class="nm1-text">${nm1WordsHtml(t(textKey))}</p>` : ''}</div></div>
+            <div class="nm1-foot">${dots ? `<div class="nm1-dots" aria-hidden="true">${'<i></i>'.repeat(dots)}</div>` : ''}<button type="button" class="nm1-next${btnKey ? ' is-go' : ''}">${btnKey ? nmEsc(t(btnKey)) : ''}</button></div>
+        </div>`;
+}
+// ניצוצות זהב שמתפזרים מ-Me1 (ברגע של "עולם קסום")
+function nm1Burst(st) {
+    if (nm1Reduce()) return;
+    const me = st.querySelector('.nm1-me');
+    if (!me) return;
+    const box = document.createElement('div');
+    box.className = 'nm1-burst';
+    box.setAttribute('aria-hidden', 'true');
+    let s = '';
+    for (let i = 0; i < 26; i++) {
+        const a = (i / 26) * Math.PI * 2 + Math.random() * 0.3, d = 90 + Math.random() * 90;
+        s += `<i style="--bx:${(Math.cos(a) * d).toFixed(0)}px;--by:${(Math.sin(a) * d).toFixed(0)}px;--bd:${(Math.random() * 0.25).toFixed(2)}s"></i>`;
+    }
+    box.innerHTML = s;
+    me.appendChild(box);
+    setTimeout(() => box.remove(), 1800);
+}
+
+// 1. הפתיחה - פעם אחת, לקונה חדש/ה (אין עדיין תוכנית) או ל"קנייה" של מנהלת המוצר; בשלב הראשון של השאלון
+function nm1MaybeIntro() {
+    const q = typeof nmQuiz !== 'undefined' ? nmQuiz : null;
+    if (!q || q.step !== 0 || q.menuOnly || q.fromSettings || q.m1Intro || document.querySelector('.nm1-stage')) return;
+    if (!q.fresh && nmProfile) return;
+    q.m1Intro = true;
+    let seen = false;
+    try { seen = localStorage.getItem(NM1_SEEN_KEY) === '1'; } catch {}
+    if (seen && !q.fresh) return;
+    nm1Preload();
+    // אחרי הקנייה - קודם החגיגה (זיקוקים); הפתיחה מתחילה כשהיא נסגרת
+    const start = () => {
+        if (nmQuiz !== q || q.step !== 0) return;
+        const cer = document.getElementById('newme-unlock-ceremony');
+        if (cer && cer.classList.contains('open')) { setTimeout(start, 350); return; }
+        nm1Intro();
+    };
+    start();
+}
+function nm1Intro() {
+    let i = 0;
+    const st = nm1Stage('intro', `
+        <button type="button" class="nm1-skip">${nmEsc(t('nm_m1_skip'))}</button>
+        <div class="nm1-scene">
+            <div class="nm1-portal" aria-hidden="true"><span class="nm1-core"></span><span class="nm1-ring"></span><span class="nm1-ring nm1-ring2"></span></div>
+            <p class="nm1-portal-text">${nmEsc(t('nm_m1_portal'))}</p>
+            <figure class="nm1-me"><img src="${NM1_ART.hello}" alt="" draggable="false"></figure>
+        </div>
+        ${nm1TalkHtml(null, null, null, NM1_INTRO.length)}`);
+    st.classList.add('is-opening');
+    const say = st.querySelector('.nm1-say'), next = st.querySelector('.nm1-next'), me = st.querySelector('.nm1-me');
+    const show = () => {
+        const [tk, xk] = NM1_INTRO[i];
+        const last = i === NM1_INTRO.length - 1;
+        say.innerHTML = `${tk ? `<h2 class="nm1-title">${nm1WordsHtml(t(tk))}</h2>` : ''}<p class="nm1-text">${nm1WordsHtml(t(xk))}</p>`;
+        say.classList.remove('in');
+        void say.offsetWidth;
+        say.classList.add('in');
+        st.querySelectorAll('.nm1-dots i').forEach((d, k) => d.classList.toggle('on', k <= i));
+        next.textContent = t(last ? 'nm_m1_go' : 'nm_continue');
+        next.classList.toggle('is-go', last);
+        st.dataset.slide = String(i);
+        if (i > 0) { me.classList.remove('hop'); void me.offsetWidth; me.classList.add('hop'); }
+        if (xk === 'nm_m1_magic_text') nm1Burst(st);
+    };
+    const talking = () => st.classList.contains('is-talking') && !st.classList.contains('off');
+    const finish = () => {
+        document.removeEventListener('keydown', onKey, true);
+        try { localStorage.setItem(NM1_SEEN_KEY, '1'); } catch {}
+        nm1FlyToHelper(st, me);
+    };
+    const advance = () => { if (!talking()) return; if (i < NM1_INTRO.length - 1) { i++; show(); } else finish(); };
+    const onKey = e => {
+        if (!st.isConnected) { document.removeEventListener('keydown', onKey, true); return; }
+        if (e.key === 'Escape') { e.preventDefault(); finish(); return; }
+        if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !(e.target && e.target.closest && e.target.closest('.nm1-skip'))) { e.preventDefault(); advance(); }
+    };
+    next.addEventListener('click', e => { e.stopPropagation(); advance(); });
+    st.querySelector('.nm1-skip').addEventListener('click', e => { e.stopPropagation(); finish(); });
+    st.querySelector('.nm1-scene').addEventListener('click', advance);
+    document.addEventListener('keydown', onKey, true);
+    // הפורטל נפתח, Me1 עף ממנו - ואז הבועה
+    setTimeout(() => {
+        if (!st.isConnected || st.classList.contains('off')) return;
+        st.classList.remove('is-opening');
+        st.classList.add('is-talking');
+        show();
+        try { next.focus({ preventScroll: true }); } catch {}
+    }, nm1Reduce() ? 0 : 2400);
+}
+// בסוף הפתיחה Me1 עף למקום שלו ליד השאלה הראשונה
+function nm1FlyToHelper(st, me) {
+    const img = me && me.querySelector('img');
+    const target = document.querySelector('#new-me-root .nm1-help-me img');
+    const tr = target && target.getBoundingClientRect();
+    if (nm1Reduce() || !img || !tr || !tr.width) { nm1Close(st); return; }
+    const a = img.getBoundingClientRect();
+    const fly = document.createElement('img');
+    fly.className = 'nm1-fly';
+    fly.src = img.src;
+    fly.alt = '';
+    Object.assign(fly.style, { left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px` });
+    document.body.appendChild(fly);
+    me.style.visibility = 'hidden';
+    target.style.opacity = '0';
+    nm1Close(st);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        fly.style.transform = `translate(${(tr.left - a.left).toFixed(1)}px, ${(tr.top - a.top).toFixed(1)}px) scale(${(tr.width / a.width).toFixed(3)}, ${(tr.height / a.height).toFixed(3)})`;
+    }));
+    setTimeout(() => { fly.remove(); target.style.opacity = ''; }, 820);
+}
+
+// 2. Me1 ליד כל שאלה בשאלון. הכניסה שלו רק כשהשלב מתחלף; בחירה באותו שלב = קפיצה קטנה של שמחה
+function nm1HelpHtml(q, id) {
+    const line = NM1_STEP_LINES[id];
+    if (!q || !line) return '';
+    const anim = q.m1Step !== id ? ' is-enter' : ' is-hop';
+    q.m1Step = id;
+    if (id === 'menu') {
+        const k = q.m1Tip || 0;
+        return `<div class="nm1-help is-dreams${anim}">
+            <img class="nm1-help-art" src="${NM1_ART.dreams}" alt="" draggable="false">
+            <p class="nm1-help-line">${nmEsc(t(line))}</p>
+            <button type="button" class="nm1-tip" onclick="nm1NextTip(this)">
+                <span class="nm1-tip-ic" aria-hidden="true">💡</span>
+                <span class="nm1-tip-text" aria-live="polite">${nmEsc(t(NM1_TIPS[k]))}</span>
+                <span class="nm1-tip-dots" aria-hidden="true">${NM1_TIPS.map((_, j) => `<i${j === k ? ' class="on"' : ''}></i>`).join('')}</span>
+            </button>
+        </div>`;
+    }
+    return `<div class="nm1-help${anim}">
+            <span class="nm1-help-me"><img src="${NM1_ART.hello}" alt="" draggable="false"></span>
+            <p class="nm1-help-bubble">${nmEsc(t(line))}</p>
+        </div>`;
+}
+function nm1NextTip(btn) {
+    if (!nmQuiz || !btn) return;
+    nmQuiz.m1Tip = ((nmQuiz.m1Tip || 0) + 1) % NM1_TIPS.length;
+    const k = nmQuiz.m1Tip;
+    btn.querySelector('.nm1-tip-text').textContent = t(NM1_TIPS[k]);
+    btn.querySelectorAll('.nm1-tip-dots i').forEach((d, j) => d.classList.toggle('on', j === k));
+    btn.classList.remove('flip');
+    void btn.offsetWidth;
+    btn.classList.add('flip');
+}
+
+// 3. סיימו את השאלון - Me1 שמח, וזיקוקים; משם לסיור
+function nm1Joy() {
+    // הסיור נפתח מכאן (ולא לבד)
+    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
+    const st = nm1Stage('joy', `
+        <div class="nm1-scene"><div class="nm1-halo" aria-hidden="true"></div><figure class="nm1-me"><img src="${NM1_ART.joy}" alt="" draggable="false"></figure></div>
+        ${nm1TalkHtml('nm_m1_joy_title', 'nm_m1_joy_text', 'nm_m1_joy_btn', 0)}`);
+    st.querySelector('.nm1-say').classList.add('in');
+    const btn = st.querySelector('.nm1-next');
+    btn.addEventListener('click', () => nm1Close(st, () => { if (typeof nmQueueTour === 'function') nmQueueTour(); }));
+    setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch {} }, 60);
+    if (!nm1Reduce() && typeof spawnGentleConfettiBurst === 'function') {
+        const colors = ['#ffd27a', '#c9b6ff', '#a7f3d0', '#fff3c4', '#f7b8ff'];
+        setTimeout(() => { if (st.isConnected) spawnGentleConfettiBurst(st, 46, st.clientWidth / 2, st.clientHeight * 0.36, colors); }, 350);
+        setTimeout(() => { if (st.isConnected) spawnGentleConfettiBurst(st, 28, st.clientWidth * 0.28, st.clientHeight * 0.3, colors); }, 900);
+        setTimeout(() => { if (st.isConnected) spawnGentleConfettiBurst(st, 28, st.clientWidth * 0.72, st.clientHeight * 0.3, colors); }, 1300);
+    }
+}
+
+// 4. אחרי הסיור - הלב: "נעשה את הדרך הזו ביחד"
+function nm1Heart() {
+    let hearts = '';
+    for (let i = 0; i < 9; i++) hearts += `<i style="--x:${(30 + Math.random() * 40).toFixed(1)}%;--s:${(10 + Math.random() * 12).toFixed(0)}px;--d:${(i * 0.7 + Math.random() * 0.4).toFixed(2)}s;--sx:${(Math.random() * 60 - 30).toFixed(0)}px">${NM1_HEART_SVG}</i>`;
+    const st = nm1Stage('heart', `
+        <div class="nm1-scene"><div class="nm1-halo is-warm" aria-hidden="true"></div>
+            <figure class="nm1-me"><img src="${NM1_ART.heart}" alt="" draggable="false"><span class="nm1-heartglow" aria-hidden="true"></span></figure>
+            <div class="nm1-hearts" aria-hidden="true">${hearts}</div></div>
+        ${nm1TalkHtml('nm_m1_heart_title', 'nm_m1_heart_text', 'nm_m1_heart_btn', 0)}`);
+    st.querySelector('.nm1-say').classList.add('in');
+    const btn = st.querySelector('.nm1-next');
+    btn.addEventListener('click', () => nm1Close(st, () => {
+        // ההזמנה החד־פעמית לבחור ערכה קסומה - אחרי הרגע הזה, לא באמצעו
+        if (typeof nmMaybeOfferMagic === 'function' && typeof nmView !== 'undefined' && nmView === 'home') nmMaybeOfferMagic();
+    }));
+    setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch {} }, 60);
+}

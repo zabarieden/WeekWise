@@ -11398,23 +11398,182 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 .phone-wrapper:has(#sr-overlay):not(.nmg-map-open):not(.nmg-bag-open) #nmg-follow-layer { display: block; }
 .phone-wrapper:has(:is(.sr-game, .sr-pc, .sr-library, .sr-decor, .sr-jar, .sr-quotesview, .srp-signview, .sr-shelfview, .sr-reveal, .sr-scopev, .srp-genie, .yg-talk)) #nmg-follow-layer,
 .phone-wrapper:has(> .nm-sheet-overlay) #nmg-follow-layer { visibility: hidden; }
-#nmg-follow-layer .nmg-follow { display: block; position: absolute; left: 0; top: 0; width: 128px; height: 128px; transform: translate3d(14px, calc(100vh - 300px), 0); will-change: transform; }
+#nmg-follow-layer .nmg-follow { display: block; position: absolute; left: 0; top: 0; width: 128px; height: 128px; will-change: transform; }
 #nmg-follow-layer .nmg-follow img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
 #nmg-follow-layer .nmg-follow model-viewer { position: absolute; inset: -10%; width: auto; height: auto; background: transparent; --poster-color: transparent; --progress-bar-color: transparent; pointer-events: none; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); }
 #nmg-follow-layer .nmg-follow.has-3d img { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { #nmg-follow-layer .nmg-follow img { animation: none; } }
-/* 🪢 הנדנדה הקסומה בתלת־ממד (2026-10-20): מתנדנדת בעדינות סביב הקשרים שעל הענף; כש-Me עולה עליה (נגיעה, או כשהוא מרחף
-   לידה) הוא עומד על המושב והם מתנדנדים יחד חזק יותר ואז נרגעים. ה-Me המרחף נעלם בינתיים */
-.srp-swing-3d { transform-box: view-box; transform-origin: 77px 276px; animation: srpSwing3d 4.6s ease-in-out infinite; }
-@keyframes srpSwing3d { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-.srp-swing-art { filter: drop-shadow(0 0 6px rgba(167, 243, 208, .45)) drop-shadow(0 6px 6px rgba(20, 8, 30, .45)); }
-.srp-swing-me { opacity: 0; transition: opacity .45s ease; filter: drop-shadow(0 0 8px rgba(201, 182, 255, .65)); }
-.srp-swing-hot.is-riding .srp-swing-me { opacity: 1; }
-.srp-swing-hot.is-riding .srp-swing-3d { animation: srpSwingRide 6.2s ease-in-out; }
-@keyframes srpSwingRide {
-    0% { transform: rotate(0deg); } 9% { transform: rotate(10deg); } 22% { transform: rotate(-13deg); } 36% { transform: rotate(13deg); }
-    50% { transform: rotate(-11deg); } 64% { transform: rotate(9deg); } 78% { transform: rotate(-5deg); } 90% { transform: rotate(2deg); } 100% { transform: rotate(0deg); }
+/* 🪢 הנדנדה הקסומה בתלת־ממד (2026-10-20): מתנדנדת בעדינות קדימה ואחורה - המושב מתקרב (גדל ויורד קצת) ומתרחק (קטן ועולה),
+   סביב הקשרים שעל הענף (לפי בקשה מפורשת: "הנדנדה צריכה להתנדנד קדימה ואחורה"); נגיעה - נדנוד חזק יותר שנרגע לאט */
+.srp-swing-3d { transform-box: view-box; transform-origin: 77px 276px; animation: srpSwingFB 4.4s ease-in-out infinite; }
+@keyframes srpSwingFB { 0%, 100% { transform: scale(.955) translateY(-1.5px); } 50% { transform: scale(1.05) translateY(2.5px); } }
+.srp-swing-hot.is-swinging .srp-swing-3d { animation: srpSwingFBBig 4.4s ease-in-out; }
+@keyframes srpSwingFBBig {
+    0% { transform: scale(1) translateY(0); } 12% { transform: scale(1.12) translateY(6px); } 27% { transform: scale(.9) translateY(-4px); }
+    43% { transform: scale(1.09) translateY(4.5px); } 59% { transform: scale(.93) translateY(-3px); } 74% { transform: scale(1.05) translateY(2.5px); }
+    88% { transform: scale(.97) translateY(-1px); } 100% { transform: scale(.955) translateY(-1.5px); }
 }
-.phone-wrapper.nmg-me-riding #nmg-follow-layer .nmg-follow { opacity: 0; transition: opacity .35s ease; }
-#nmg-follow-layer .nmg-follow { transition: opacity .5s ease; }
-@media (prefers-reduced-motion: reduce) { .srp-swing-3d, .srp-swing-hot.is-riding .srp-swing-3d { animation: none; } }
+.srp-swing-art { filter: drop-shadow(0 0 6px rgba(167, 243, 208, .45)) drop-shadow(0 6px 6px rgba(20, 8, 30, .45)); }
+@media (prefers-reduced-motion: reduce) { .srp-swing-3d, .srp-swing-hot.is-swinging .srp-swing-3d { animation: none; } }
+/* ✨ Me במקומות (2026-10-20: "אני רוצה לשלוט לאן הוא הולך... שיסתובב אם נסובב אותו עם האצבע"): עומד איפה שהשארנו אותו,
+   גוררים אותו לכל מקום, ומסובבים בגרירה על הטבעת הזוהרת שמתחת לרגליים */
+#nmg-follow-layer .nmg-follow { width: 124px; height: 140px; transform: translate3d(var(--fx, 14px), var(--fy, 58vh), 0) rotate(var(--tilt, 0deg)); pointer-events: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: opacity .5s ease, transform .2s ease-out; }
+#nmg-follow-layer .nmg-follow.is-moving { cursor: grabbing; transition: opacity .5s ease; }
+#nmg-follow-layer .nmg-follow img { height: 124px; -webkit-user-drag: none; pointer-events: none; }
+#nmg-follow-layer .nmg-follow model-viewer { inset: -8% -8% 4% -8%; }
+.nmg-follow-ring { position: absolute; left: 50%; bottom: 0; width: 92px; height: 26px; transform: translateX(-50%); border-radius: 50%; cursor: ew-resize; touch-action: none;
+    border: 1.5px solid rgba(201, 182, 255, .5); background: radial-gradient(closest-side, rgba(167, 243, 208, .22), rgba(201, 182, 255, .08) 70%, transparent);
+    box-shadow: 0 0 10px rgba(201, 182, 255, .35), inset 0 0 8px rgba(167, 243, 208, .25); transition: border-color .25s ease, box-shadow .25s ease; }
+.nmg-follow-ring::before, .nmg-follow-ring::after { content: ''; position: absolute; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-top: 1.5px solid rgba(240, 232, 255, .8); border-left: 1.5px solid rgba(240, 232, 255, .8); }
+.nmg-follow-ring::before { left: 7px; transform: rotate(-45deg); }
+.nmg-follow-ring::after { right: 7px; transform: rotate(135deg); }
+#nmg-follow-layer .nmg-follow:hover .nmg-follow-ring, #nmg-follow-layer .nmg-follow.is-spinning .nmg-follow-ring { border-color: rgba(167, 243, 208, .85); box-shadow: 0 0 16px rgba(167, 243, 208, .6), inset 0 0 10px rgba(167, 243, 208, .4); }
+/* ↺ "קונים שוב" - כפתור קטן ליד הפח בתחתית הרשימה, נפתח רק כשרוצים (2026-10-20) */
+.shop-foot { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.shop-foot .notes-archive-icon-btn { margin: 0; }
+.shop-again-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 28%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.shop-again-toggle svg { width: 13px; height: 13px; }
+.shop-again-toggle b { min-width: 18px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent-purple) 16%, transparent); color: var(--accent-purple-light-text); font-size: .74rem; }
+.shop-again-toggle.is-open { color: var(--accent-purple-light-text); border-color: color-mix(in srgb, var(--accent-purple) 50%, transparent); }
+.shop-again { margin-top: 8px; }
+.shop-again .shop-again-head { justify-content: flex-end; margin-bottom: 6px; }
+/* 🚚 בדרך - מסודר (2026-10-20): משאית, "בדרך", מתי ובאיזה שעות, ומתחת הפריטים כתגיות; בחירת שעות בחלון ההזמנה */
+.shop-transit-when { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.shop-transit-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.shop-transit-tags span { padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent-purple) 12%, transparent); font-size: .78rem; color: var(--text-primary); }
+.shop-win button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; }
+.shop-win button small { font-size: .7rem; font-weight: 600; opacity: .75; }
+.shop-win-custom { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; font-size: .88rem; color: var(--text-secondary); }
+.shop-win-custom + .nm-time-picker, .shop-win-custom .nm-time-picker { flex-basis: 100%; }
+/* 🧺 רשימה בסיסית להתחלה - כשהרשימה ריקה לגמרי */
+.shop-basics { margin: 2px 0 6px; padding: 12px; border-radius: 18px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 35%, transparent); }
+.shop-basics-title { margin: 0 0 10px; font-size: .9rem; font-weight: 800; color: var(--text-primary); text-align: start; }
+.shop-basics-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-basics-all { display: block; margin: 12px auto 0; padding: 8px 18px; border: none; border-radius: 999px; background: var(--accent-purple); color: #fff; font: inherit; font-size: .86rem; font-weight: 800; cursor: pointer; }
+/* ✨ אתגר השבוע - קטן יותר (לפי בקשה מפורשת, 2026-10-20: "ואתגר השבוע שיהיה יותר קטן") */
+.nmg-week { top: 154px; inset-inline-start: auto; inset-inline-end: 84px; width: min(210px, calc(100% - 172px)); gap: 7px; padding: 7px 10px; border-radius: 13px; }
+.nmg-week::after { border-radius: 12px; }
+.nmg-week.is-empty { gap: 2px; }
+.nmg-week-main { gap: 2px; }
+.nmg-week-eyebrow { font-size: 9.5px; }
+.nmg-week-title { font-size: 12.5px; line-height: 1.25; -webkit-line-clamp: 1; }
+.nmg-week-cta { margin-top: 2px; padding: 3px 10px; font-size: 10.5px; }
+.nmg-week-dots { gap: 4px; margin-top: 2px; }
+.nmg-week-dot { width: 9px; height: 9px; border-width: 1.2px; }
+.nmg-week-check { width: 34px; height: 34px; font-size: 16px; }
+/* ⚙️ ההגדרות בתיק - בצד שמול התיק הגדול שלמטה, כדי שלא יסתתרו מאחוריו (2026-10-20: "משהו שם מוסתר למטה") */
+.nmg-bag-foot { justify-content: flex-start; }
+/* ✨ אתגר השבוע - הרבה יותר קטן (לפי בקשה מפורשת, 2026-10-20: "שיהיה הרבה הרבה יותר קטן"): תגית קטנה בצד, מתחת לכפתור הבית.
+   בלי שאלה כתובה - רק "אתגר השבוע" וכפתור קטן; כשיש אתגר - שורה אחת, הנקודות של השבוע ו-✓ קטן */
+.nmg-week { top: 130px; inset-inline-start: auto; inset-inline-end: 12px; width: 150px; padding: 5px 8px; gap: 5px; border-radius: 11px; }
+.nmg-week::after { border-radius: 10px; }
+.nmg-week.is-empty { flex-direction: row; align-items: center; justify-content: space-between; gap: 6px; }
+.nmg-week.is-empty .nmg-week-title { display: none; }
+.nmg-week-eyebrow { font-size: 9.5px; white-space: nowrap; }
+.nmg-week-title { font-size: 11px; }
+.nmg-week-cta { margin-top: 0; padding: 2px 8px; font-size: 9.5px; white-space: nowrap; }
+.nmg-week-dots { gap: 3px; margin-top: 1px; }
+.nmg-week-dot { width: 7px; height: 7px; border-width: 1px; }
+.nmg-week-check { width: 26px; height: 26px; font-size: 13px; border-width: 1.5px; }
+
+/* ✨ Me1 מלווה את הכניסה ל-New Me (2026-10-20): פורטל של אור בשמי לילה, Me1 עף ממנו ומדבר בבועת זכוכית; אחר כך ליד כל שאלה,
+   שמח בסוף, והלב אחרי הסיור. עולם אחד קבוע (לילה קסום) בכל ערכת צבעים - כמו המשחק */
+.nm1-stage { position: absolute; inset: 0; z-index: 3300; display: flex; flex-direction: column; align-items: center; overflow: hidden; color: #fbf6ff;
+    background: radial-gradient(120% 70% at 50% 34%, #3b2572 0%, #1e1142 46%, #0c0720 100%); opacity: 0; transition: opacity .5s ease; -webkit-user-select: none; user-select: none; }
+.nm1-stage.on { opacity: 1; }
+.nm1-stage.off { opacity: 0; pointer-events: none; }
+.nm1-sky, .nm1-motes { position: absolute; inset: 0; pointer-events: none; }
+.nm1-sky i { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; background: #fff; opacity: .2; animation: nm1Twinkle 3.6s ease-in-out var(--d) infinite; }
+@keyframes nm1Twinkle { 0%, 100% { opacity: .14; } 50% { opacity: .9; } }
+.nm1-motes i { position: absolute; left: var(--x); top: var(--y); width: 5px; height: 5px; border-radius: 50%; background: #fff3c4; box-shadow: 0 0 8px 2px rgba(255, 220, 140, .65); opacity: 0; animation: nm1Mote var(--t) ease-in-out var(--d) infinite; }
+@keyframes nm1Mote { 0% { opacity: 0; transform: translate(0, 0); } 20% { opacity: .9; } 80% { opacity: .6; } 100% { opacity: 0; transform: translate(var(--mx), var(--my)); } }
+.nm1-scene { position: relative; flex: 1 1 auto; min-height: 0; width: 100%; max-width: 480px; display: flex; align-items: center; justify-content: center; padding: max(52px, env(safe-area-inset-top)) 16px 18px; cursor: pointer; }
+/* הפורטל */
+.nm1-portal { position: absolute; left: 50%; top: 50%; width: min(94%, 420px); aspect-ratio: 1; transform: translate(-50%, -50%); opacity: .92; pointer-events: none; }
+.nm1-intro .nm1-portal { animation: nm1PortalOpen 1.5s cubic-bezier(.2, .9, .2, 1) .2s both; }
+@keyframes nm1PortalOpen { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.12); } 55% { opacity: 1; } 100% { opacity: .92; transform: translate(-50%, -50%) scale(1); } }
+.nm1-core { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 244, 214, .5), rgba(201, 182, 255, .22) 46%, rgba(167, 243, 208, .08) 62%, transparent 72%); animation: nm1Breathe 4.5s ease-in-out infinite; }
+.nm1-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255, 226, 160, .8); box-shadow: 0 0 26px rgba(255, 214, 130, .55), inset 0 0 32px rgba(201, 182, 255, .45); animation: nm1Breathe 4.5s ease-in-out infinite; }
+.nm1-ring2 { inset: 8%; border: 1.5px dashed rgba(167, 243, 208, .55); box-shadow: 0 0 16px rgba(167, 243, 208, .35); animation: nm1Spin 18s linear infinite; }
+@keyframes nm1Breathe { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.035); opacity: 1; } }
+@keyframes nm1Spin { to { transform: rotate(360deg); } }
+.nm1-portal-text { position: absolute; left: 0; right: 0; top: 50%; margin: 0; transform: translateY(-50%); text-align: center; font-size: 1.15rem; font-weight: 700; color: #fff3d6; text-shadow: 0 0 18px rgba(255, 214, 130, .8), 0 0 4px rgba(255, 255, 255, .6); opacity: 0; pointer-events: none; }
+.nm1-intro .nm1-portal-text { animation: nm1PortalText 1.9s ease .5s both; }
+@keyframes nm1PortalText { 0% { opacity: 0; transform: translateY(-50%) scale(.96); } 30%, 70% { opacity: 1; transform: translateY(-50%) scale(1); } 100% { opacity: 0; transform: translateY(-50%) scale(1.04); } }
+/* Me1 */
+.nm1-me { position: relative; margin: 0; width: min(86%, 390px); display: flex; justify-content: center; }
+.nm1-me img { display: block; width: 100%; height: auto; max-height: 50vh; max-height: 50dvh; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255, 220, 150, .3)) drop-shadow(0 14px 22px rgba(0, 0, 0, .35)); animation: nm1Float 4.2s ease-in-out infinite; }
+.nm1-intro .nm1-me { animation: nm1Arrive 1.3s cubic-bezier(.2, .8, .2, 1.05) 1.75s both; }
+@keyframes nm1Arrive { 0% { opacity: 0; transform: scale(.1) rotate(-16deg); filter: blur(6px) brightness(2.2); } 55% { opacity: 1; transform: scale(1.06) rotate(4deg); filter: blur(0) brightness(1.25); } 100% { opacity: 1; transform: scale(1) rotate(0); filter: none; } }
+@keyframes nm1Float { 0%, 100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-10px) rotate(1.2deg); } }
+.nm1-me.hop img { animation: nm1Hop .55s ease, nm1Float 4.2s ease-in-out .55s infinite; }
+@keyframes nm1Hop { 0% { transform: translateY(0) scale(1); } 35% { transform: translateY(-18px) scale(1.04, .97); } 70% { transform: translateY(2px) scale(.98, 1.03); } 100% { transform: translateY(0) scale(1); } }
+.nm1-joy .nm1-me, .nm1-heart .nm1-me { width: min(100%, 460px); animation: nm1Pop .75s cubic-bezier(.2, .9, .3, 1.25) .1s both; }
+@keyframes nm1Pop { from { opacity: 0; transform: scale(.6) translateY(30px); } to { opacity: 1; transform: none; } }
+.nm1-halo { position: absolute; left: 50%; top: 50%; width: min(100%, 470px); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(201, 182, 255, .3), rgba(167, 243, 208, .1) 46%, transparent 70%); animation: nm1Breathe 4s ease-in-out infinite; }
+.nm1-halo.is-warm { background: radial-gradient(circle, rgba(255, 214, 130, .34), rgba(247, 184, 255, .12) 48%, transparent 70%); }
+/* הלב שבידיים - פועם ומאיר */
+.nm1-heartglow { position: absolute; left: 50.4%; top: 89%; width: 30%; aspect-ratio: 1.15; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(255, 214, 130, .8), rgba(255, 190, 100, .28) 45%, transparent 70%); animation: nm1HeartBeat 1.7s ease-in-out infinite; }
+@keyframes nm1HeartBeat { 0%, 100% { transform: translate(-50%, -50%) scale(.92); opacity: .65; } 15% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; } 30% { transform: translate(-50%, -50%) scale(.96); opacity: .75; } 45% { transform: translate(-50%, -50%) scale(1.04); opacity: .95; } }
+.nm1-hearts { position: absolute; inset: 0; pointer-events: none; }
+.nm1-hearts i { position: absolute; left: var(--x); bottom: 26%; width: var(--s); height: var(--s); opacity: 0; animation: nm1HeartUp 6.3s ease-in var(--d) infinite; }
+.nm1-hearts svg { width: 100%; height: 100%; fill: #ffd27a; filter: drop-shadow(0 0 6px rgba(255, 210, 120, .8)); }
+@keyframes nm1HeartUp { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 15% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--sx), -260px) scale(1.1); } }
+/* ניצוצות "עולם קסום" */
+.nm1-burst { position: absolute; left: 50%; top: 45%; width: 0; height: 0; pointer-events: none; }
+.nm1-burst i { position: absolute; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #ffe3a3; box-shadow: 0 0 10px 2px rgba(255, 214, 130, .8); animation: nm1Spark 1.3s cubic-bezier(.15, .7, .3, 1) var(--bd) both; }
+@keyframes nm1Spark { 0% { opacity: 1; transform: translate(0, 0) scale(.4); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(1); } }
+/* הבועה */
+.nm1-talk { position: relative; width: 100%; max-width: 460px; padding: 0 16px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; transition: opacity .5s ease, transform .5s ease; }
+.nm1-stage.is-opening .nm1-talk { opacity: 0; transform: translateY(16px); pointer-events: none; }
+.nm1-bubble { position: relative; min-height: 84px; padding: 18px 18px 16px; border-radius: 22px; text-align: start;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .06)); border: 1px solid rgba(255, 255, 255, .24);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); box-shadow: 0 16px 40px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .25); }
+.nm1-name { position: absolute; top: -11px; inset-inline-start: 16px; padding: 2px 11px; border-radius: 999px; font-size: .74rem; font-weight: 800; color: #2a1640; background: linear-gradient(135deg, #ffe7b0, #d9c8ff); box-shadow: 0 2px 12px rgba(255, 214, 130, .45); }
+.nm1-title { margin: 2px 0 6px; font-size: 1.45rem; font-weight: 800; line-height: 1.25; color: #fff; text-wrap: balance; }
+.nm1-text { margin: 2px 0 0; font-size: 1.05rem; line-height: 1.55; color: rgba(255, 255, 255, .9); text-wrap: pretty; }
+.nm1-say.in .nm1-w { animation: nm1Word .45s ease both; animation-delay: calc(var(--i) * 55ms); }
+@keyframes nm1Word { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+.nm1-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.nm1-dots { display: flex; gap: 6px; }
+.nm1-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, .25); transition: background .3s ease, transform .3s ease; }
+.nm1-dots i.on { background: #ffe3a3; transform: scale(1.15); }
+.nm1-next { flex: 0 0 auto; min-width: 132px; padding: 14px 24px; border: none; border-radius: 999px; font: inherit; font-weight: 800; font-size: 1rem; color: #2a1640; cursor: pointer;
+    background: linear-gradient(135deg, #fff2cc, #ffd27a 55%, #f4c1ff); box-shadow: 0 8px 26px rgba(255, 200, 120, .35), inset 0 1px 0 rgba(255, 255, 255, .7); transition: transform .15s ease; }
+.nm1-next.is-go { flex: 1 1 auto; }
+.nm1-next:active { transform: scale(.97); }
+.nm1-skip { position: absolute; top: max(14px, env(safe-area-inset-top)); inset-inline-end: 14px; z-index: 2; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .78); font: inherit; font-size: .82rem; cursor: pointer; }
+.nm1-stage :is(.nm1-next, .nm1-skip):focus-visible, .nm1-tip:focus-visible { outline: 2px solid #ffe3a3; outline-offset: 3px; }
+/* Me1 עף מהפתיחה למקום שלו בשאלון */
+.nm1-fly { position: fixed; z-index: 5000; margin: 0; pointer-events: none; object-fit: contain; transform-origin: 0 0; transition: transform .75s cubic-bezier(.45, 0, .2, 1); filter: drop-shadow(0 0 14px rgba(255, 220, 150, .45)); }
+/* 2. ליד כל שאלה */
+.nm1-help { display: flex; align-items: flex-end; gap: 8px; margin: 4px 0 -2px; }
+.nm1-help-me { flex: 0 0 auto; width: 96px; height: 100px; display: block; }
+.nm1-help-me img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 220, 150, .35)); animation: nm1Float 4.2s ease-in-out infinite; transition: opacity .2s ease; }
+.nm1-help-bubble { position: relative; flex: 1 1 auto; margin: 0 0 16px; padding: 11px 14px; border-radius: 18px; border-end-start-radius: 5px; font-size: .97rem; font-weight: 600; line-height: 1.4; color: #fff; text-align: start;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .06)); border: 1px solid rgba(255, 255, 255, .22); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 8px 22px rgba(0, 0, 0, .22); }
+.nm1-help.is-enter .nm1-help-me { animation: nm1HelpIn .6s cubic-bezier(.2, .9, .3, 1.25) both; }
+.nm1-help.is-enter .nm1-help-bubble, .nm1-help.is-enter .nm1-help-line, .nm1-help.is-enter .nm1-tip { animation: nm1BubbleIn .45s ease .25s both; }
+.nm1-help.is-hop .nm1-help-me img, .nm1-help.is-hop .nm1-help-art { animation: nm1Hop .5s ease; }
+@keyframes nm1HelpIn { from { opacity: 0; transform: translateY(14px) scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes nm1BubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* בבחירת הארוחות - Me1 כותב בספר */
+.nm1-help.is-dreams { flex-direction: column; align-items: stretch; gap: 8px; }
+.nm1-help-art { display: block; width: 100%; max-height: 200px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(255, 220, 150, .25)) drop-shadow(0 10px 16px rgba(0, 0, 0, .3)); }
+.nm1-help.is-enter .nm1-help-art { animation: nm1HelpIn .7s cubic-bezier(.2, .9, .3, 1.2) both; }
+.nm1-help-line { margin: -2px 0 0; text-align: center; font-size: 1.14rem; font-weight: 800; line-height: 1.35; color: #fff; text-wrap: balance; text-shadow: 0 0 18px rgba(255, 220, 150, .35); }
+.nm1-tip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 16px; border: 1px dashed rgba(255, 226, 160, .45); background: rgba(255, 226, 160, .08); color: #fff; font: inherit; font-size: .93rem; line-height: 1.45; text-align: start; cursor: pointer; }
+.nm1-tip-ic { flex: 0 0 auto; font-size: 1.1rem; }
+.nm1-tip-text { flex: 1 1 auto; }
+.nm1-tip-dots { flex: 0 0 auto; display: flex; gap: 4px; }
+.nm1-tip-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .3); }
+.nm1-tip-dots i.on { background: #ffe3a3; }
+.nm1-tip.flip .nm1-tip-text { animation: nm1Word .4s ease; }
+/* השאלון לא במסדרון - בלי כפתורי המשחק מעליו */
+.phone-wrapper:has(#new-me-root > .nm-quiz) #nm-hud { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+    .nm1-stage *, .nm1-help, .nm1-help * { animation: none !important; transition: none !important; }
+    .nm1-portal-text, .nm1-motes, .nm1-hearts { display: none !important; }
+}

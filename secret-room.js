@@ -34,10 +34,11 @@ const ROOM_UNLOCKS = [
     { n: 7, id: 'waterfall', place: 'waterfall' },
     { n: 8, id: 'telescope', roof: true },
     { n: 8, id: 'chest', roof: true },
-    { n: 9, id: 'tablet', place: 'porch' },
-    { n: 10, id: 'bottle', place: 'porch' },
+    // הטאבלט במרפסת נמחק (לפי בקשה מפורשת, 2026-10-20: "למחוק את הטאבלט מהמרפסת... לגמרי לגמרי"), והבקבוק עלה למפתח 9;
+    // מהמפתח ה-10 והלאה כל מפתח = כוכב בטלסקופ (בחירתה)
+    { n: 9, id: 'bottle', place: 'porch' },
 ];
-const ROOM_STAGES = 10;
+const ROOM_STAGES = 9;
 const ROOM_STARTER_DAYS = 3;
 
 const ROOM_WALLS = 4;
@@ -662,9 +663,17 @@ function srWallShelf(keys) {
     const shelfOpen = keys >= roomUnlockAt('shelf');
     return `${srArtWall('tree-shelf.jpg')}
         <defs>
+            <linearGradient id="${p}Sky" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#1f2c66"/><stop offset="0.6" stop-color="#4a3a8e"/><stop offset="1" stop-color="#7a5aa8"/></linearGradient>
             <radialGradient id="${p}Jar" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
             <radialGradient id="${p}Orb" cx="0.32" cy="0.35" r="0.75"><stop offset="0" stop-color="#ff86c6"/><stop offset="0.55" stop-color="#d45ddb"/><stop offset="1" stop-color="#8b4cf0"/></radialGradient>
         </defs>
+        <!-- בתוך המסגרת שעל המדף - במקום הדיוקן שבציור, לילה קטן עם ירח וכוכבים (לפי בקשה מפורשת, 2026-10-20: "תמחק את התמונה הזו") -->
+        <g aria-hidden="true">
+            <rect x="285.2" y="407.8" width="23" height="21" rx="0.8" fill="url(#${p}Sky)"/>
+            <path d="M301.5 412.5 a3.4 3.4 0 1 0 2.6 5.6 a2.7 2.7 0 1 1 -2.6 -5.6z" fill="#fff3c4"/>
+            <g fill="#fff6d8"><circle cx="289" cy="411.5" r="0.55"/><circle cx="293.5" cy="415" r="0.4"/><circle cx="290.5" cy="420.5" r="0.5"/><circle cx="296.5" cy="410.5" r="0.35"/><circle cx="305" cy="424" r="0.45"/></g>
+            <path d="M285.2 425 q6 -3.5 11.5 -1 t11.5 -0.5 v5.3 h-23z" fill="#2b1f4a" opacity="0.85"/>
+        </g>
         <g class="sr-hot${shelfOpen ? '' : ' locked'}" data-hot="shelf" role="button" tabindex="0" aria-label="${srEsc(roomItemName('shelf'))}">
             ${shelfOpen ? `${srSparkleField(313, 472, 70, 132, 14, 1.4, 11)}<g transform="translate(261 420) scale(0.92) translate(-338 -228)">${srShelfJarSvg(p)}</g>` : `${typeof srpVeil === 'function' ? srpVeil(238, 330, 152, 286) : ''}${srLockBadge(312, 450, 'shelf')}`}
             <rect x="236" y="328" width="154" height="288" fill="transparent"/>
@@ -1052,11 +1061,16 @@ function pcMatch(text, choices) {
     });
     return bestRaw >= 0.7 ? best : null;
 }
+// במחשב בלי אימוג'ים, ובכל כפתור לכל היותר 2 אפשרויות ("טוב / פרודוקטיבי", לא "עמוס / עמוס מדי / זורם") - לפי בקשה
+// מפורשת, 2026-10-20: "להוריד במחשב את האימוגים - ולתת רק 2 אפשרויות מכל דבר". עובד על כל 33 השפות כמו שהן
+const PC_EMOJI_RE = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}⃣️‍])+/gu;
+function pcNoEmoji(s) { return String(s || '').replace(PC_EMOJI_RE, '').replace(/\s{2,}/g, ' ').replace(/\s+([!?.,،؟])/g, '$1').trim(); }
+function pcTwo(s) { const parts = pcNoEmoji(s).split(/\s*[\/／]\s*/).filter(Boolean); return parts.slice(0, 2).join(' / '); }
 function pcLine(text, who, cls) {
     const el = document.createElement('span');
     el.className = (who === 'me' ? 'sr-crt-me' : 'sr-crt-bot') + (cls ? ' ' + cls : '');
     // מראה הניאון: בועות - מי מדבר רואים לפי הצד והצבע, בלי חיצים
-    el.textContent = text;
+    el.textContent = pcNoEmoji(text) || text;
     pcState.lines.appendChild(el);
     return el;
 }
@@ -1079,7 +1093,7 @@ function pcMeText(entry) {
     if (entry.said) return entry.said;
     const node = PCX[entry.node];
     const opts = pcOpts(entry);
-    if (opts && typeof entry.pick === 'number' && opts[entry.pick]) return t(opts[entry.pick][0]);
+    if (opts && typeof entry.pick === 'number' && opts[entry.pick]) return pcTwo(t(opts[entry.pick][0]));
     if (node.task && entry.pick) return t(entry.pick === 'today' ? 'pcx_task_today' : 'pcx_task_ok');
     if (node.when && typeof entry.pick === 'number') return t('pcx_when_' + entry.pick);
     return null;
@@ -1242,14 +1256,14 @@ function pcShowControls(entry) {
         const b = document.createElement('button');
         b.type = 'button';
         if (cls) b.className = cls;
-        b.textContent = label;
+        b.textContent = pcNoEmoji(label) || label;
         b.addEventListener('click', onClick);
         box.appendChild(b);
         return b;
     };
     const opts = pcOpts(entry);
     if (opts) {
-        opts.forEach(([key], i) => btn(t(key), () => pcPick(i)));
+        opts.forEach(([key], i) => btn(pcTwo(t(key)), () => pcPick(i)));
     } else if (node.task) {
         btn(t('pcx_task_ok'), () => pcPick('ok'));
         btn(t('pcx_task_today'), async () => {

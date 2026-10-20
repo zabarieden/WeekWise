@@ -287,7 +287,6 @@ function srpMusicStop(quick) {
 
 // ---------- דלת 2: המרפסת מול הים ----------
 function srpPorchScene(keys) {
-    const tabletOpen = keys >= roomUnlockAt('tablet');
     const bottle = keys >= roomUnlockAt('bottle');
     const rainOpen = keys >= roomUnlockAt('rain');
     let rain = '';
@@ -302,8 +301,6 @@ function srpPorchScene(keys) {
         <svg class="srp-scene srp-painted" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" role="group" aria-label="${srEsc(roomItemName('porch'))}">
             <defs>
                 <radialGradient id="srpPLantern" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf8a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-                <radialGradient id="srpPTab" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#9fd8ff" stop-opacity="0.35"/><stop offset="1" stop-color="#9fd8ff" stop-opacity="0"/></radialGradient>
-                <linearGradient id="srpPScreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="0.55" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/></linearGradient>
                 <radialGradient id="srpPBottle" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#bff5e6" stop-opacity="0.55"/><stop offset="1" stop-color="#bff5e6" stop-opacity="0"/></radialGradient>
             </defs>
             <g aria-hidden="true">
@@ -338,18 +335,6 @@ function srpPorchScene(keys) {
             <g class="srp-hot srp-lamp" data-place-hot="lamp" role="button" tabindex="0" aria-label="${srEsc(t('room_genie_aria'))}">
                 <rect class="srp-hit" x="280" y="554" width="110" height="88" fill="transparent"/>
             </g>
-            <!-- הטאבלט מונח על הרצפה של המרפסת (על השולחן הקטן עומדת עכשיו מנורת אלאדין) -->
-            <g class="srp-hot srp-tablet${tabletOpen ? ' is-open' : ' locked'}" data-place-hot="tablet" role="button" tabindex="0" aria-label="${srEsc(roomItemName('tablet'))}">
-                <ellipse cx="196" cy="772" rx="46" ry="9" fill="#000" opacity="0.28"/>
-                ${tabletOpen ? '<ellipse cx="196" cy="762" rx="78" ry="34" fill="url(#srpPTab)"/>' : ''}
-                <g transform="translate(196 764) scale(1 0.42) rotate(-10)">
-                    <rect x="-40" y="-29" width="80" height="58" rx="7" fill="#26262e"/>
-                    <rect x="-36" y="-25" width="72" height="50" rx="4" fill="${tabletOpen ? 'url(#srpPScreen)' : '#0d1424'}"/>
-                    ${tabletOpen ? '<g fill="#fff"><circle cx="-18" cy="-9" r="7" opacity="0.28"/><rect x="-6" y="-14" width="30" height="5" rx="2.5" opacity="0.5"/><rect x="-6" y="-4" width="22" height="5" rx="2.5" opacity="0.35"/><rect x="-26" y="8" width="52" height="7" rx="3.5" opacity="0.3"/></g>' : ''}
-                </g>
-                ${tabletOpen ? '' : `<g transform="translate(196 728) scale(0.5)">${srLockShape()}</g><text x="196" y="706" text-anchor="middle" font-size="8.5" font-weight="800" fill="#ffe2a6">${srEsc(t('room_key_n').replace('{n}', srFmt(roomUnlockAt('tablet'))))}</text>`}
-                <rect class="srp-hit" x="136" y="694" width="120" height="96" fill="transparent"/>
-            </g>
         </svg>`;
 }
 function srpInitPorch(box) {
@@ -365,10 +350,6 @@ function srpInitPorch(box) {
     if (cloud) setRain(false);
     return {
         rain: () => setRain(!box.classList.contains('is-rain')),
-        tablet: el => {
-            if (el.classList.contains('locked')) { srShowLockTip('tablet'); return; }
-            srShowTip(t('room_tablet_soon'));
-        },
         bottle: el => srpOpenBottle(el),
         lamp: () => srpLampTap(box),
     };
@@ -926,10 +907,10 @@ function srpOutsideScene(keys) {
                 <!-- תלויה על הענף הגדול שבציור (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה -->
                 <!-- הנדנדה הקסומה שלה בתלת־ממד (world/3d/swing.png, תמונה מהדגם; לפי בקשה מפורשת, 2026-10-20: "תחליף אותה
                      במקום הנדנדה שנמצאת עכשיו ושתתנדנד בעדינות וגם... שהיצור יעמוד עליה ויתנדנד איתה בכל פעם שמתקרבים לנדנדה").
-                     מתנדנדת בעדינות כל הזמן; נגיעה (או כש-Me מרחף לידה) - Me עומד על המושב והם מתנדנדים יחד -->
+                     מתנדנדת בעדינות קדימה ואחורה כל הזמן (המושב מתקרב ומתרחק); נגיעה - נדנוד חזק יותר שנרגע. Me שעולה עליה -
+                     רק במפת העומק, כשמתקרבים ממש ונוגעים בה (לפי בקשה מפורשת, 2026-10-20) -->
                 <g class="srp-swing-3d">
                     <image class="srp-swing-art" href="${SRP_ART}3d/swing.png" x="44.4" y="272" width="65.3" height="156" preserveAspectRatio="none"/>
-                    ${typeof nmgShownStage === 'function' ? (() => { const st = nmgShownStage(); const h = st.n === 3 ? 50 : st.n === 2 ? 64 : 68; const w = h * st.ratio; return `<image class="srp-swing-me" href="${SRP_ART}${st.img}" x="${(80.5 - w / 2).toFixed(1)}" y="${(411 - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/>`; })() : ''}
                 </g>
                 <rect class="srp-hit" x="40" y="276" width="74" height="176" fill="transparent"/>
             </g>` : ''}
@@ -976,7 +957,7 @@ function srpInitOutside(box, keys, opts = {}) {
         bench: () => srpRest(box),
         selfcare: () => srpOpenSignView(box),
         yoga: () => roomOpenPlace('yoga', { fromHall: !!opts.fromHall, parent: 'outside' }),
-        swing: el => srpSwingRide(el),
+        swing: el => srpSwingPush(el),
     };
 }
 
@@ -1309,20 +1290,12 @@ function srpInitYoga(box, keys, opts = {}) {
     };
 }
 
-// 🪢 Me עולה על הנדנדה: עומד על המושב, והם מתנדנדים יחד כמה שניות; ה-Me המרחף נעלם בינתיים וחוזר אחרי (נקרא מנגיעה
-// בנדנדה, וגם מ-world3d.js כש-Me מרחף לידה). פעם בכל רגע - נגיעות נוספות בזמן הנדנוד לא עושות כלום
-let srpSwingRideAt = 0;
-function srpSwingRide(el) {
-    el = el || document.querySelector('.srp-swing-hot');
-    if (!el || el.classList.contains('is-riding')) return false;
-    srpSwingRideAt = Date.now();
-    const ms = srpReduce() ? 2600 : 6200;
-    el.classList.add('is-riding');
-    document.querySelector('.phone-wrapper')?.classList.add('nmg-me-riding');
-    const done = () => { el.classList.remove('is-riding'); document.querySelector('.phone-wrapper')?.classList.remove('nmg-me-riding'); };
-    const tm = setTimeout(done, ms);
-    srpCleanups.push(() => { clearTimeout(tm); done(); });
-    return true;
+// 🪢 נגיעה בנדנדה: נדנוד חזק יותר קדימה ואחורה, שנרגע לאט (נגיעות נוספות בזמן הנדנוד לא עושות כלום)
+function srpSwingPush(el) {
+    if (!el || el.classList.contains('is-swinging')) return;
+    el.classList.add('is-swinging');
+    const tm = setTimeout(() => el.classList.remove('is-swinging'), srpReduce() ? 300 : 4400);
+    srpCleanups.push(() => clearTimeout(tm));
 }
 // ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
 // יושבים על הסלע: הכפתורים נעלמים ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות

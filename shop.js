@@ -9,6 +9,7 @@
 
 let shopItemsCache = [];
 let shopAgainManage = false;
+let shopAgainOpen = false;
 let shopDueKey = '';
 const SHOP_ICONS = {
     again: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4.5v4.2h4.2"/></svg>',
@@ -115,8 +116,10 @@ function renderShoppingList(data) {
     renderShopHoliday();
     renderShopTransit();
     renderShopAgain();
+    renderShopBasics();
     document.getElementById('shop-btn-share')?.classList.toggle('hidden', !active.length);
-    document.getElementById('shop-btn-order')?.classList.toggle('hidden', !active.length);
+    // המשאית תמיד שם (2026-10-20: "ונעלם המשלוח") - כשהרשימה ריקה ויש משהו בדרך, היא פותחת את "הגיע?"
+    document.getElementById('shop-btn-order')?.classList.remove('hidden');
     // משלוח שהיום שלו הגיע - "המשלוח הגיע?" ב"היום שלי" (מרעננים את היום שלי רק כשזה משתנה)
     const due = shopDeliveryDue();
     const key = due ? `${due.length}:${due.map(x => x.id).join(',')}` : '';
@@ -130,12 +133,10 @@ function shopRow(it) {
     li.className = 'shop-row';
     li.setAttribute('data-item-id', it.id);
     li.setAttribute('data-written-at', it.content_updated_at || it.created_at || '');
+    // רק צבע טקסט אחד (לפי בקשה מפורשת, 2026-10-20: "שלא יהיה את כל הצבעים והזוהר והכל רק צבעים אחד השורה הראשונה")
     if (it.text_color) li.setAttribute('data-text-color', it.text_color);
-    if (it.glow_color) li.setAttribute('data-glow-color', it.glow_color);
-    if (it.bg_color) { li.setAttribute('data-bg-color', it.bg_color); li.style.backgroundColor = hexToRgba(it.bg_color, 0.18); }
     const style = [];
     if (it.text_color) style.push(`color: ${it.text_color}`);
-    if (it.glow_color) style.push(`text-shadow: 0 0 4px ${it.glow_color}, 0 0 10px ${it.glow_color}, 0 0 18px ${it.glow_color}`);
     const q = shopQtyOf(it);
     li.innerHTML = `
         <span class="center-list-item-text shop-text"${style.length ? ` style="${style.join('; ')};"` : ''} onclick="openCenterItemEditor(this, 'general')" role="button" tabindex="0">${shopEsc(it.content)}</span>
@@ -168,26 +169,59 @@ function renderShopTransit() {
     if (!transit.length) { box.innerHTML = ''; return; }
     const due = transit.map(x => x.transit_due).filter(Boolean).sort()[0] || '';
     const isDue = !due || due <= getLocalDateString();
+    const win = (transit.find(x => x.transit_window) || {}).transit_window || '';
+    // מסודר (2026-10-20): משאית, "בדרך", מתי ובאיזה שעות - ומתחת הפריטים כתגיות קטנות
     box.innerHTML = `
         <div class="shop-transit-head">
             <span class="shop-transit-icon" aria-hidden="true">${SHOP_ICONS.truck}</span>
-            <b>${shopEsc(t('shop_transit_title'))}</b>
-            ${due ? `<span class="shop-transit-due${isDue ? ' is-due' : ''}">${shopEsc(shopDueLabel(due))}</span>` : ''}
+            <span class="shop-transit-when"><b>${shopEsc(t('shop_transit_title'))}</b>${due ? `<span class="shop-transit-due${isDue ? ' is-due' : ''}">${shopEsc(shopDueLabel(due))}${win ? ` · <bdi dir="ltr">${shopEsc(win)}</bdi>` : ''}</span>` : ''}</span>
             <button type="button" class="shop-transit-btn" onclick="openShopArrival()">${shopEsc(t('shop_arrived_btn'))}</button>
         </div>
-        <p class="shop-transit-items">${transit.map(x => shopEsc(x.content) + (shopQtyOf(x) > 1 ? ` <bdi dir="ltr">×${shopQtyOf(x)}</bdi>` : '')).join(' · ')}</p>`;
+        <div class="shop-transit-tags">${transit.map(x => `<span>${shopEsc(x.content)}${shopQtyOf(x) > 1 ? ` <bdi dir="ltr">×${shopQtyOf(x)}</bdi>` : ''}</span>`).join('')}</div>`;
 }
+// 🧺 רשימה ריקה לגמרי (משתמש/ת חדש/ה): רשימה בסיסית להתחלה - נגיעה בפריט מוסיפה אותו, או "להוסיף הכל"
+// (לפי בקשה מפורשת, 2026-10-20: "אפשר כהתחלה לעשות רשימות בסיסיות תחשוב שאני משתמשת חדשה")
+function shopBasicItems() { return String(t('shop_basics_items') || '').split('|').map(s => s.trim()).filter(Boolean); }
+function renderShopBasics() {
+    const box = document.getElementById('shop-basics');
+    if (!box) return;
+    const empty = !shopItemsCache.length;
+    box.classList.toggle('hidden', !empty);
+    if (!empty) { box.innerHTML = ''; return; }
+    box.innerHTML = `
+        <p class="shop-basics-title">${shopEsc(t('shop_basics_title'))}</p>
+        <div class="shop-basics-chips">${shopBasicItems().map((x, i) => `<button type="button" class="shop-chip" data-basic="${i}"><i aria-hidden="true">+</i><span>${shopEsc(x)}</span></button>`).join('')}</div>
+        <button type="button" class="shop-basics-all" data-basics-all>${shopEsc(t('shop_basics_all'))}</button>`;
+    box.querySelectorAll('[data-basic]').forEach(b => b.addEventListener('click', async () => {
+        b.disabled = true;
+        await shopAddSmart(shopBasicItems()[Number(b.dataset.basic)]);
+        await loadCenterItems('general');
+    }));
+    box.querySelector('[data-basics-all]').addEventListener('click', async e => {
+        e.currentTarget.disabled = true;
+        await shopAddMany(shopBasicItems());
+        await loadCenterItems('general');
+    });
+}
+function toggleShopAgainPanel() { shopAgainOpen = !shopAgainOpen; if (!shopAgainOpen) shopAgainManage = false; renderShopAgain(); }
 function renderShopAgain() {
     const box = document.getElementById('shop-again');
     if (!box) return;
     const again = shopItemsCache.filter(shopIsAgain)
         .sort((a, b) => (Number(b.bought_count) || 0) - (Number(a.bought_count) || 0) || String(b.last_bought_at || '').localeCompare(String(a.last_bought_at || '')));
-    box.classList.toggle('hidden', !again.length);
-    if (!again.length) { box.innerHTML = ''; shopAgainManage = false; return; }
+    const toggle = document.getElementById('shop-again-toggle');
+    if (toggle) {
+        toggle.classList.toggle('hidden', !again.length);
+        toggle.classList.toggle('is-open', shopAgainOpen && !!again.length);
+        toggle.setAttribute('aria-expanded', shopAgainOpen ? 'true' : 'false');
+        toggle.innerHTML = `${SHOP_ICONS.again}<span>${shopEsc(t('shop_again_title'))}</span><b><bdi dir="ltr">${again.length.toLocaleString(currentLang)}</bdi></b>`;
+    }
+    box.classList.toggle('hidden', !again.length || !shopAgainOpen);
+    if (!again.length) { box.innerHTML = ''; shopAgainManage = false; shopAgainOpen = false; return; }
     box.classList.toggle('is-manage', shopAgainManage);
     box.innerHTML = `
         <div class="shop-again-head">
-            <span class="shop-again-title">${SHOP_ICONS.again}${shopEsc(t('shop_again_title'))}</span>
+            <span></span>
             <button type="button" class="shop-again-manage" onclick="toggleShopAgainManage()">${shopEsc(t(shopAgainManage ? 'shop_again_done' : 'shop_again_manage'))}</button>
         </div>
         <div class="shop-again-chips">${again.map(it => shopAgainManage
@@ -208,7 +242,7 @@ async function shopUpdate(ids, patch) {
 }
 function shopRowOut(id) { document.querySelector(`#general-list li[data-item-id="${id}"]`)?.classList.add('is-removing'); }
 function shopBoughtPatch(it) {
-    return { is_completed: true, shop_state: 'again', transit_due: null, quantity: 1, bought_count: (Number(it && it.bought_count) || 0) + 1, last_bought_at: new Date().toISOString() };
+    return { is_completed: true, shop_state: 'again', transit_due: null, transit_window: null, quantity: 1, bought_count: (Number(it && it.bought_count) || 0) + 1, last_bought_at: new Date().toISOString() };
 }
 // ↺ נקנה - לשמור לפעם הבאה
 async function shopMarkAgain(id) {
@@ -290,6 +324,8 @@ async function shopAddMany(lines, row = {}) {
 // בהוספה: הצעות ממה שכבר קנו ("קונים שוב") ו"כבר ברשימה"; בעריכה: המחלקה (כולל "אחר…" וכתיבה חופשית)
 function shopModalOpen(type, editId) {
     const isShop = type === 'general';
+    // ברשימת הקניות רק שורת צבע הטקסט - בלי זוהר ובלי צבע רקע
+    ['center-item-glow-swatches', 'center-item-bg-swatches'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', isShop));
     const sug = document.getElementById('center-item-shop-suggest');
     const dup = document.getElementById('center-item-shop-dup');
     const deptWrap = document.getElementById('center-item-dept-wrap');
@@ -371,13 +407,18 @@ function shopSheet(html) {
     return body;
 }
 function closeShopSheet() { closeModal('modal-shop-sheet'); }
+const SHOP_WINDOWS = [['morning', '08:00', '12:00'], ['noon', '12:00', '16:00'], ['evening', '16:00', '21:00']];
 function openShopOrder() {
     const active = shopItemsCache.filter(shopIsActive);
-    if (!active.length) return;
+    if (!active.length) {
+        if (shopItemsCache.some(shopIsTransit)) openShopArrival();
+        else showAppToast(t('shop_order_empty'));
+        return;
+    }
     const today = getLocalDateString();
     const d = new Date(`${today}T12:00:00`);
     d.setDate(d.getDate() + 1);
-    const st = { picked: new Set(active.map(x => String(x.id))), when: 'tomorrow', date: getLocalDateString(d) };
+    const st = { picked: new Set(active.map(x => String(x.id))), when: 'tomorrow', date: getLocalDateString(d), win: '', from: '08:00', to: '12:00' };
     const tomorrow = st.date;
     const body = shopSheet(`
         <h3>${shopEsc(t('shop_order_title'))}</h3>
@@ -388,6 +429,15 @@ function openShopOrder() {
             <button type="button" data-when="today">${shopEsc(t('shop_when_today'))}</button>
             <button type="button" data-when="tomorrow" class="on">${shopEsc(t('shop_when_tomorrow'))}</button>
             <button type="button" data-when="other">${shopEsc(t('shop_when_other'))}</button>
+        </div>
+        <p class="settings-label">${shopEsc(t('shop_order_hours'))}</p>
+        <div class="shop-when shop-win">
+            ${SHOP_WINDOWS.map(([k, a, b]) => `<button type="button" data-win="${k}"><span>${shopEsc(t('shop_win_' + k))}</span><small><bdi dir="ltr">${a}–${b}</bdi></small></button>`).join('')}
+            <button type="button" data-win="other"><span>${shopEsc(t('shop_win_other'))}</span><small>&nbsp;</small></button>
+        </div>
+        <div class="shop-win-custom hidden">
+            <span>${shopEsc(t('shop_win_from'))}</span>${typeof nmTimeBtnHtml === 'function' ? nmTimeBtnHtml('shop-win-from', st.from, t('shop_win_from'), v => { st.from = v; }) : ''}
+            <span>${shopEsc(t('shop_win_to'))}</span>${typeof nmTimeBtnHtml === 'function' ? nmTimeBtnHtml('shop-win-to', st.to, t('shop_win_to'), v => { st.to = v; }) : ''}
         </div>
         <div class="action-buttons-wrap">
             <button type="button" class="btn-primary" data-go>${shopEsc(t('shop_order_go'))}</button>
@@ -415,12 +465,25 @@ function openShopOrder() {
         }
         markWhen();
     }));
+    // באיזה שעות (לא חובה): בוקר / צהריים / ערב, או "אחר…" - מ-… עד… בבורר השעה של האפליקציה. נגיעה שנייה מבטלת
+    const winBtns = body.querySelectorAll('[data-win]');
+    winBtns.forEach(b => b.addEventListener('click', () => {
+        st.win = st.win === b.dataset.win ? '' : b.dataset.win;
+        winBtns.forEach(x => x.classList.toggle('on', x.dataset.win === st.win));
+        body.querySelector('.shop-win-custom').classList.toggle('hidden', st.win !== 'other');
+    }));
+    const windowText = () => {
+        if (!st.win) return null;
+        if (st.win === 'other') return st.from && st.to ? `${st.from}–${st.to}` : null;
+        const w = SHOP_WINDOWS.find(x => x[0] === st.win);
+        return w ? `${w[1]}–${w[2]}` : null;
+    };
     body.querySelector('[data-cancel]').addEventListener('click', closeShopSheet);
     body.querySelector('[data-go]').addEventListener('click', async e => {
         const ids = [...st.picked];
         if (!ids.length) { showAppToast(t('shop_order_pick_one')); return; }
         e.currentTarget.disabled = true;
-        if (await shopUpdate(ids, { shop_state: 'transit', transit_due: st.date })) closeShopSheet();
+        if (await shopUpdate(ids, { shop_state: 'transit', transit_due: st.date, transit_window: windowText() })) closeShopSheet();
         else e.currentTarget.disabled = false;
         await loadCenterItems('general');
     });
@@ -469,7 +532,7 @@ async function shopApplyArrival(transit, missing) {
     const back = transit.filter(it => missing.has(String(it.id)));
     const came = transit.filter(it => !missing.has(String(it.id)));
     const results = await Promise.all(came.map(it => shopUpdate(it.id, shopBoughtPatch(it)))
-        .concat(back.length ? [shopUpdate(back.map(x => x.id), { shop_state: null, transit_due: null })] : []));
+        .concat(back.length ? [shopUpdate(back.map(x => x.id), { shop_state: null, transit_due: null, transit_window: null })] : []));
     closeShopSheet();
     await Promise.all(came.map(it => syncShopItemToTable(it.id, true)));
     await loadCenterItems('general');
