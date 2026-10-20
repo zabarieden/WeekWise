@@ -357,3 +357,58 @@ async function nmg3dUpgradeYoga(box) {
     const mo = new MutationObserver(sync);
     mo.observe(box, { attributes: true, attributeFilter: ['class'] });
 }
+
+// ---------- 🧞 רוח היער בתלת־ממד ----------
+// world/3d/genie.glb (2026-10-20, לפי בקשה מפורשת: "זה הגיני החדש שיצא מהבקבוק" / "שהוא מסתובב מהבקבוק תן לו מלא
+// נצנצים שבקושי יראו"): עולה מהמנורה באותה ספירלה, מסתובב סביב עצמו (כמו רקדן, לא כמו גלגל) בתוך ענן צפוף של
+// נצנצים שכמעט מסתיר אותו, ובסוף הנצנצים נמוגים והוא עומד מולנו לשאלות. נטען מראש כשנכנסים למרפסת
+const NMG3D_GENIE = { url: 'world/3d/genie.glb', spinFrom: 1080, start: 400, spin: 5000, sparks: 110 };
+const nmg3dGenieState = { ok: null };
+function nmg3dPrepGenie() {
+    if (nmg3dGenieState.ok !== null || nmg3dReduced() || !nmg3dWebgl()) return;
+    nmg3dGenieState.ok = false;
+    nmg3dExists(NMG3D_GENIE.url).then(ok => {
+        if (!ok) return;
+        nmg3dLoadViewer().then(v => {
+            if (!v) return;
+            nmg3dGenieState.ok = true;
+            fetch(NMG3D_GENIE.url).catch(() => {});  // מחמם את המטמון - הדגם מוכן כשנוגעים במנורה
+        });
+    });
+}
+function nmg3dGenieOk() { return nmg3dGenieState.ok === true && !!(window.customElements && customElements.get('model-viewer')); }
+function nmg3dMountGenie(layer) {
+    const G = NMG3D_GENIE;
+    const swirl = layer.querySelector('.srp-genie-swirl');
+    if (!swirl) return;
+    const colors = ['#fff6c8', '#ffd27a', '#ff9ecf', '#a7f3d0', '#c9b6ff', '#ffffff'];
+    const sparks = document.createElement('div');
+    sparks.className = 'srp-genie-sparks';
+    sparks.setAttribute('aria-hidden', 'true');
+    sparks.innerHTML = Array.from({ length: G.sparks }, (_, i) => {
+        const a = i * 137.5 * Math.PI / 180, rr = 14 + (i * 53 % 38);  // פיזור "חמנייה" בתוך אליפסה
+        const x = 50 + Math.cos(a) * rr, y = 46 + Math.sin(a) * rr * 1.25;
+        return `<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--s:${(0.7 + (i % 6) * 0.3).toFixed(2)};--c:${colors[i % colors.length]};--d:${((i * 0.137) % 1.2).toFixed(2)}s;--t:${(0.6 + (i % 4) * 0.2).toFixed(2)}s"></i>`;
+    }).join('') + '<b class="srp-genie-haze"></b>';
+    const mv = document.createElement('model-viewer');
+    mv.className = 'srp-genie-3d';
+    const attrs = {
+        src: G.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
+        'shadow-intensity': '0', exposure: '1.15', 'environment-image': 'neutral',
+        'camera-orbit': `${G.spinFrom}deg 82deg auto`, 'interpolation-decay': '1', loading: 'eager', 'aria-hidden': 'true',
+    };
+    Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
+    swirl.appendChild(mv);
+    swirl.appendChild(sparks);
+    // הסיבוב: מ-3 סיבובים ועד שהוא פונה אלינו, לאט יותר ויותר (יחד עם הספירלה של ה-CSS)
+    const t0 = performance.now() + G.start;
+    const step = now => {
+        if (!mv.isConnected) return;
+        const p = Math.max(0, Math.min(1, (now - t0) / G.spin));
+        const e = 1 - Math.pow(1 - p, 3);
+        mv.cameraOrbit = `${(G.spinFrom * (1 - e)).toFixed(1)}deg 82deg auto`;
+        if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+        if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}

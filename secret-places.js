@@ -353,6 +353,8 @@ function srpPorchScene(keys) {
         </svg>`;
 }
 function srpInitPorch(box) {
+    // רוח היער בתלת־ממד (world3d.js) - נטענת מראש כבר כשנכנסים למרפסת, כך שנגיעה במנורה מיידית
+    if (typeof nmg3dPrepGenie === 'function') nmg3dPrepGenie();
     // הגשם: בכל כניסה בלי גשם (לפי בקשה מפורשת, 2026-10-16: "שהברירת מחדל לא תהיה גשם - תמיד שנכנסים שוב אז שמשי");
     // הענן הקטן בשמיים מדליק אותו ומכבה (לא נזכר בפעם הבאה)
     const cloud = box.querySelector('.srp-cloud');
@@ -381,7 +383,8 @@ function srpOpenGenie(box) {
     const reduce = srpReduce();
     const r = box.getBoundingClientRect();
     const layer = document.createElement('div');
-    layer.className = `srp-genie${reduce ? ' is-reduced' : ''}`;
+    const g3d = !reduce && typeof nmg3dGenieOk === 'function' && nmg3dGenieOk();
+    layer.className = `srp-genie${reduce ? ' is-reduced' : ''}${g3d ? ' has-3d' : ''}`;
     layer.style.setProperty('--gx', `${Math.round((SRP_GENIE_FROM.x - 0.5) * r.width)}px`);
     layer.style.setProperty('--gy', `${Math.round((SRP_GENIE_FROM.y - 0.42) * r.height)}px`);
     layer.style.setProperty('--fx', `${(SRP_GENIE_FROM.x * 100).toFixed(1)}%`);
@@ -391,6 +394,7 @@ function srpOpenGenie(box) {
         <div class="srp-genie-swirl" aria-hidden="true"><img class="srp-genie-img" src="${SRP_ART}genie.png" alt=""></div>
         <div class="srp-genie-ask" role="dialog" aria-label="${srEsc(t('room_genie_q1'))}"></div>`;
     box.appendChild(layer);
+    if (g3d) nmg3dMountGenie(layer);
     void layer.offsetWidth;
     layer.classList.add('go');
     const close = () => { layer.classList.add('bye'); setTimeout(() => layer.remove(), reduce ? 0 : 600); };

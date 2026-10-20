@@ -11218,3 +11218,31 @@ button.nmg-me-card:active { transform: scale(.97); }
 .yg-3d.is-ready:not(.is-away) { opacity: 1; }
 /* בשיחה עם המורה ביוגה התיק והמסע שלי לא מכסים את הכפתורים שבתחתית החלון */
 .phone-wrapper:has(.yg-talk) .nmg-dock { display: none; }
+/* 🧞 רוח היער בתלת־ממד: אותה ספירלה בלי הסיבוב במישור (הוא מסתובב סביב עצמו בתוך הדגם), כמעט מוסתר בענן נצנצים
+   שנמוג כשהוא נעצר; הציור מוסתר */
+.srp-genie.has-3d .srp-genie-img { visibility: hidden; }
+.srp-genie.has-3d.go .srp-genie-swirl { animation-name: srpGenieSwirl3d; }
+@keyframes srpGenieSwirl3d {
+    0% { opacity: 0; transform: translate(calc(-50% + var(--gx)), calc(-50% + var(--gy))) scale(.06); }
+    8% { opacity: 1; }
+    25% { transform: translate(calc(-50% + var(--gx) * .6 - 30px), calc(-50% + var(--gy) * .6 - 50px)) scale(.3); }
+    50% { transform: translate(calc(-50% - 40px), calc(-50% - 20px)) scale(.56); }
+    75% { transform: translate(calc(-50% + 34px), calc(-50% + 8px)) scale(.82); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.srp-genie-3d { position: absolute; left: 8%; right: 8%; top: -52%; bottom: -6%; width: auto; height: auto; background: transparent; --poster-color: transparent; --progress-bar-color: transparent; pointer-events: none; filter: drop-shadow(0 0 18px rgba(167, 243, 208, .5)) drop-shadow(0 0 10px rgba(201, 182, 255, .55)); opacity: .14; }
+.srp-genie.go .srp-genie-3d { animation: srpGenie3dShow 5.2s ease-in .4s forwards, srpGenieFloat 3.8s ease-in-out 5.6s infinite; }
+@keyframes srpGenie3dShow { 0%, 78% { opacity: .14; } 100% { opacity: 1; } }
+.srp-genie-sparks { position: absolute; left: -12%; right: -12%; top: -58%; bottom: -14%; pointer-events: none; }
+.srp-genie-sparks i { position: absolute; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; background: radial-gradient(circle, #fff 0 22%, var(--c) 40%, transparent 72%); box-shadow: 0 0 10px var(--c), 0 0 22px var(--c); transform: scale(var(--s)); animation: srpGenieSpark var(--t) ease-in-out infinite; animation-delay: calc(var(--d) * -1); }
+.srp-genie-sparks i:nth-child(4n) { width: 16px; height: 16px; margin: -8px; border-radius: 0; background: var(--c); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); box-shadow: none; filter: drop-shadow(0 0 6px var(--c)); }
+@keyframes srpGenieSpark { 0%, 100% { opacity: .25; transform: scale(calc(var(--s) * .6)); } 50% { opacity: 1; transform: scale(calc(var(--s) * 1.25)); } }
+.srp-genie.go .srp-genie-sparks { animation: srpGenieSparksSpin 5.4s linear .2s forwards, srpGenieSparksOut 1.5s ease 4.4s forwards; }
+@keyframes srpGenieSparksSpin { to { rotate: 220deg; } }
+@keyframes srpGenieSparksOut { to { opacity: 0; } }
+.srp-genie.has-3d.is-reduced .srp-genie-sparks { display: none; }
+.srp-genie.has-3d.is-reduced .srp-genie-3d { animation: none; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .srp-genie-3d, .srp-genie-sparks, .srp-genie-sparks i { animation: none !important; } .srp-genie-sparks { display: none; } .srp-genie-3d { opacity: 1; } }
+/* ענן אור רך מול הרוח בזמן הסיבוב - יחד עם הנצנצים כמעט לא רואים אותו, עד שהכול נמוג */
+.srp-genie-haze { position: absolute; left: 14%; right: 14%; top: 12%; bottom: 8%; border-radius: 50%; background: radial-gradient(ellipse, rgba(255, 255, 255, .85), rgba(255, 214, 236, .55) 38%, rgba(167, 243, 208, .3) 62%, transparent 76%); filter: blur(6px); animation: srpGenieHaze 1.6s ease-in-out infinite; }
+@keyframes srpGenieHaze { 0%, 100% { opacity: .75; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
