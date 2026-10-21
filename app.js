@@ -266,8 +266,8 @@ function selectLanguageFromPicker(lang) {
 async function loadUserLanguage() {
     if (!supabaseClient || !currentUserId) return;
     const { data } = await supabaseClient.from('user_premium').select('language').eq('user_id', currentUserId).maybeSingle();
-    if (data && data.language && translations[data.language] && data.language !== currentLang) {
-        setLanguage(data.language);
+    if (data && data.language && SUPPORTED_LANGUAGES.includes(data.language) && data.language !== currentLang) {
+        await setLanguage(data.language);
         return;
     }
     // אין ערך שרתי בכלל (חשבון שמעולם לא נגע בבורר-השפה בפועל - השפה
@@ -3028,16 +3028,19 @@ function buildDailyFocusBanner(focusItems) {
     focusItems.forEach(item => {
         const line = document.createElement('span');
         line.className = 'daily-focus-banner-text';
-        line.textContent = localizeDailyFocusTitle(item.event_title);
+        line.textContent = localizeDailyFocusTitle(item.event_title, line);
         body.appendChild(line);
     });
     banner.appendChild(body);
     return banner;
 }
 
-function localizeDailyFocusTitle(title) {
-    if (!dailyFocusTitleIndex) {
+let dailyFocusTitleIndexLangs = 0;
+function localizeDailyFocusTitle(title, el) {
+    // האינדקס נבנה מהשפות שכבר טעונות (כל שפה בקובץ משלה) ונבנה מחדש כשנטענת עוד שפה
+    if (!dailyFocusTitleIndex || dailyFocusTitleIndexLangs !== Object.keys(translations).length) {
         dailyFocusTitleIndex = new Map();
+        dailyFocusTitleIndexLangs = Object.keys(translations).length;
         Object.values(translations).forEach(dict => {
             Object.keys(dict).forEach(k => {
                 if (/^daily_focus_p\d+_d\d+_s\d+$/.test(k) && !dailyFocusTitleIndex.has(dict[k])) dailyFocusTitleIndex.set(dict[k], k);
@@ -3045,7 +3048,12 @@ function localizeDailyFocusTitle(title) {
         });
     }
     const key = dailyFocusTitleIndex.get(title);
-    return key ? t(key) : title;
+    if (key) return t(key);
+    // נשמר בשפה שלא טעונה עכשיו: האינדקס של כל השפות נטען רק עכשיו, והשורה מתעדכנת כשהוא מגיע
+    if (el && typeof i18nFocusIndex === 'function') {
+        i18nFocusIndex().then(idx => { const k = idx && idx[title]; if (k && el.isConnected) el.textContent = t(k); });
+    }
+    return title;
 }
 
 function toggleDailyFocusTag(text, chipEl) {
@@ -9684,6 +9692,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'shop_basics', category: 'notes' },
     { id: 'my_bag', category: 'notes' },
     { id: 'bag_examples_list', category: 'notes' },
+    { id: 'bag_task_today', category: 'notes' },
     { id: 'bag_pockets', category: 'notes' },
     { id: 'my_notebooks', category: 'notes' },
     { id: 'nb_shopping_link', category: 'notes' },

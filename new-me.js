@@ -543,10 +543,7 @@ function nmQuizSideRow(q) {
 // ואפשר להחזיר כל אחת מ"השגרה שלי" (💎) או מההגדרות של New Me. כש-New Me לא פעיל - הן חוזרות לבד
 function nmMealWordsRe() {
     const words = new Set(['ארוחה', 'ארוחת', 'נשנוש', 'breakfast', 'lunch', 'dinner', 'supper', 'brunch', 'meal', 'snack']);
-    ['nm_pos_1', 'nm_pos_2', 'nm_pos_3', 'nm_pos_4', 'nm_pos_dinner'].forEach(k => Object.keys(translations).forEach(l => {
-        const v = translations[l] && translations[l][k];
-        if (v) words.add(String(v).toLowerCase());
-    }));
+    ['nm_pos_1', 'nm_pos_2', 'nm_pos_3', 'nm_pos_4', 'nm_pos_dinner'].forEach(k => i18nAllValues(k).forEach(v => words.add(String(v).toLowerCase())));
     return new RegExp([...words].filter(w => w.length >= 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 }
 async function nmCheckRoutineMeals(fromSettings, ask) {
@@ -701,7 +698,7 @@ function nmStructureId(hidden) {
 let nmTimes = null;   // { mode: null | 'routine' | 'manual', hidden: [], times: { slot: 'HH:MM' }, found: [], hide, firstTime, inQuiz }
 function nmWordsRe(keys, extra) {
     const words = new Set(extra);
-    keys.forEach(k => Object.keys(translations).forEach(l => { const v = translations[l] && translations[l][k]; if (v) words.add(String(v).toLowerCase()); }));
+    keys.forEach(k => i18nAllValues(k).forEach(v => words.add(String(v).toLowerCase())));
     return new RegExp([...words].filter(w => w.length >= 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 }
 // הארוחות שבשגרה - בטאב של היום (ואם אין בו ארוחות, בטאב הראשון שיש בו) → { times: { slot: 'HH:MM' }, items }

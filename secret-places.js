@@ -1063,9 +1063,12 @@ const YG_SITTERS = [
     { img: 'yg-fluffy.png', name: 'yg_name_p2', cx: 127, mat: 640, h: 70, ratio: 396 / 300 },
     { img: 'yg-baby.png', name: 'yg_name_p4', cx: 256, mat: 640, h: 72, ratio: 404 / 300 },
 ];
+// מקום בלבד, בלי href: הציורים הישנים של היוגה לא נטענים בכלל (לפי בקשה מפורשת, 2026-10-21: "תנקה את זה עכשיו"). ה-<image>
+// נשאר רק בשביל המקום והגודל, והדמות בתלת־ממד נכנסת בדיוק שם (nmg3dUpgradeYoga ב-world3d.js, לפי data-yg-art)
+function ygSlot(img, cx, bottom, h, ratio, cls) { return srpSprite(img, cx, bottom, h, ratio, cls).replace(/ href="[^"]*"/, ` data-yg-art="${img.replace(/\.png$/, '')}"`); }
 function ygSitter(img, nameKey, cx, bottom, h, ratio) {
     const name = srEsc(t(nameKey));
-    return srpSprite(img, cx, bottom, h, ratio, 'yg-sitter').replace('/>', ` role="img" aria-label="${name}"><title>${name}</title></image>`);
+    return ygSlot(img, cx, bottom, h, ratio, 'yg-sitter').replace('/>', ` role="img" aria-label="${name}"><title>${name}</title></image>`);
 }
 // היוגה (לפי בקשה מפורשת, 2026-10-14): יצורי היער על המזרונים בעיניים עצומות, והמורה על המזרון הבודד שעל הסלע -
 // עיניים עצומות כמו כולם. נגיעה בה: העיניים נפתחות, מתקרבים אליה, ושם מתחילה השיחה (ygTeacherWake)
@@ -1083,8 +1086,8 @@ function srpYogaScene(keys) {
             <!-- המורה מאחור והיצורים לפניה - כך היא לא מסתירה את מי שיושב מולה (נגיעה במורה עוברת דרך היצורים) -->
             <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
                 <title>${srEsc(t('yg_name_guide'))}</title>
-                ${srpSprite('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
-                ${srpSprite('teacher-open.png', T.cx, T.bottom, T.h, 357 / 400, 'yg-teacher yg-eyes-open')}
+                ${ygSlot('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
+                ${ygSlot('teacher-open.png', T.cx, T.bottom, T.h, 357 / 400, 'yg-teacher yg-eyes-open')}
                 <rect class="srp-hit" x="${T.cx - 46}" y="${T.bottom - T.h + 8}" width="92" height="${T.h}" fill="transparent"/>
             </g>
             <g class="yg-mat-shadows" aria-hidden="true">${YG_SITTERS.map(s => `<ellipse class="yg-float-shadow" cx="${s.cx}" cy="${s.mat - 3}" rx="${Math.round(s.h * 0.34)}" ry="5"/>`).join('')}</g>

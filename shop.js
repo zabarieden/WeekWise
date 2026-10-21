@@ -566,7 +566,7 @@ function shopEnsureHolLang(lang) {
     if (!shopHolLoading[lang]) {
         shopHolLoading[lang] = new Promise(resolve => {
             const s = document.createElement('script');
-            s.src = `shop-holidays/${lang}.js?v=2`;
+            s.src = `shop-holidays/${lang}.js?v=3`;
             s.onload = () => resolve(!!SHOP_HOLIDAY_TEXT[lang]);
             s.onerror = () => resolve(false);
             document.head.appendChild(s);

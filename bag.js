@@ -455,7 +455,50 @@ function bagBuildTaskRow(x) {
     title.textContent = x.title;
     title.onclick = () => openEditStudyItemModal(x.id);
     li.append(check, title);
+    if (!x.is_completed) li.appendChild(bagBuildTodayBtn(x));
     return li;
+}
+// ☀️ "להיום" ליד כל משימה פתוחה (לפי בקשה מפורשת, 2026-10-21: "כן אפשר"): המשימה נכנסת ל"היום שלי" של היום. נשמר
+// במכשיר מה כבר נוסף היום, כך שהכפתור לא מוסיף פעמיים
+const BAG_SUN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"></path></svg>';
+function bagTodayKey() { return `weekwise_bag_today_${currentUserId || 'me'}`; }
+function bagTodayMap() { try { return JSON.parse(localStorage.getItem(bagTodayKey()) || '{}') || {}; } catch { return {}; } }
+function bagTodayHas(id) { return bagTodayMap()[id] === getLocalDateString(); }
+function bagTodaySet(id, on) {
+    const today = getLocalDateString();
+    const m = Object.fromEntries(Object.entries(bagTodayMap()).filter(([, d]) => d === today));
+    if (on) m[id] = today; else delete m[id];
+    try { localStorage.setItem(bagTodayKey(), JSON.stringify(m)); } catch {}
+}
+function bagPaintTodayBtn(btn, on) {
+    btn.classList.toggle('is-on', on);
+    btn.disabled = on;
+    btn.innerHTML = on ? `${BAG_CHECK_SVG}<span>${bagEsc(t('bag_task_today_on'))}</span>` : `${BAG_SUN_SVG}<span>${bagEsc(t('bag_task_today'))}</span>`;
+    btn.setAttribute('aria-label', t(on ? 'bag_task_today_on' : 'bag_task_today_aria'));
+}
+function bagBuildTodayBtn(x) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bag-task-today';
+    bagPaintTodayBtn(btn, bagTodayHas(x.id));
+    btn.onclick = () => bagTaskToToday(x, btn);
+    return btn;
+}
+async function bagTaskToToday(x, btn) {
+    if (!supabaseClient || !currentUserId || bagTodayHas(x.id)) return;
+    bagTodaySet(x.id, true);
+    bagPaintTodayBtn(btn, true);
+    // source: 'note_task' - כמו פתק שעובר להיום: מופיע ב"היום שלי" ובלוח החודשי (ערך שכבר מותר ב-CHECK של הטבלה)
+    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: x.title, event_date: getLocalDateString(), source: 'note_task' });
+    if (error) {
+        bagTodaySet(x.id, false);
+        bagPaintTodayBtn(btn, false);
+        showAppToast(t('error_adding_item') + error.message, 'error');
+        return;
+    }
+    showAppToast(t('bag_task_today_toast'));
+    if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    if (typeof loadMonthlyCalendarGrid === 'function') loadMonthlyCalendarGrid();
 }
 async function bagToggleTask(id) {
     const item = studyTasksCache.find(x => x.id === id);

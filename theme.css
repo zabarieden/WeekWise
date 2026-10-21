@@ -11639,3 +11639,9 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
     background: radial-gradient(closest-side, rgba(201, 182, 255, .32), rgba(167, 243, 208, .1) 62%, rgba(167, 243, 208, 0)); }
 /* ⚡ הג'יני: גם בלי מסנן צל על הדגם החי (הזוהר נשאר מהנצנצים ומהערפל) - נפתח חלק גם בטלפון */
 .srp-genie-3d { filter: none; }
+
+/* ☀️ "להיום" ליד משימה פתוחה בתיק (2026-10-21) */
+.bag-task-today { flex-shrink: 0; align-self: center; display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); color: var(--accent-purple); font: inherit; font-size: .72rem; font-weight: 800; line-height: 1.2; max-width: 42%; text-align: center; cursor: pointer; }
+.bag-task-today svg { flex: none; }
+.bag-task-today.is-on { border-color: transparent; background: transparent; color: var(--text-secondary); cursor: default; }
+.bag-page-tasks .bag-task-today.is-on { color: #8a7d55; }

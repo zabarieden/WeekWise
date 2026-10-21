@@ -403,7 +403,7 @@ let tblShopItems = new Map();
 let tblShopNameSetCache = null;
 // עמודה שלא נקבע לה במפורש (shop_link ריק) - מחוברת אם השם שלה הוא שם עמודת הדוגמה "יש מצרכים" באחת השפות
 function tblShopNameSet() {
-    if (!tblShopNameSetCache) tblShopNameSetCache = new Set(SUPPORTED_LANGUAGES.map(l => translations[l] && translations[l].bag_ex_col_groceries).filter(Boolean));
+    if (!tblShopNameSetCache) tblShopNameSetCache = new Set(i18nAllValues('bag_ex_col_groceries'));
     return tblShopNameSetCache;
 }
 function tblIsShopCol(col) {

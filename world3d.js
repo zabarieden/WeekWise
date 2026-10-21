@@ -20,6 +20,9 @@ async function nmg3dFirstExisting(urls) {
     for (const u of urls) if (await nmg3dExists(u)) return u;
     return null;
 }
+// חיבור איטי או חיסכון בנתונים (2026-10-21, "שיעבוד חלק גם בחיבור איטי"): Me נשאר בתמונה שצולמה מהדגם (אותו מראה, בלי
+// תנועה) והחתול הקישוטי לא נטען - חוסך כמה מגה. הג'יני נשאר בתלת־ממד (הציור הישן שלו לא חוזר אף פעם)
+function nmg3dSlowNet() { const c = typeof navigator !== 'undefined' && navigator.connection; return !!(c && (c.saveData || /2g|3g/.test(c.effectiveType || ''))); }
 function nmg3dReduced() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
 function nmg3dWebgl() {
     try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
@@ -55,7 +58,7 @@ function nmg3dAfterHallRender() {
 // הריבוע. כך הדגם החי יושב בדיוק על התמונה (אותו גודל, אותו מקום) - בלי קפיצה כשהוא נטען
 const NMG3D_ME_FRAMES = { 1: [90, 42, 327, 403], 2: [62, 72, 399, 365], 3: [42, 132, 425, 245] };
 async function nmg3dUpgradeMe(btn, stageN) {
-    if (!btn || btn.querySelector('model-viewer') || nmg3dReduced() || !nmg3dWebgl()) return;
+    if (!btn || btn.querySelector('model-viewer') || nmg3dReduced() || nmg3dSlowNet() || !nmg3dWebgl()) return;
     const url = `world/3d/me${stageN}.glb`;
     if (!(await nmg3dExists(url)) || !(await nmg3dLoadViewer()) || !btn.isConnected || btn.querySelector('model-viewer')) return;
     const mv = document.createElement('model-viewer');
@@ -68,8 +71,14 @@ async function nmg3dUpgradeMe(btn, stageN) {
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     const F = NMG3D_ME_FRAMES[stageN];
     if (F) {
+        // ריבוע הצילום (512) בקנה מידה אחד, והדמות יושבת בדיוק כמו התמונה: באמצע ולמטה (contain, 50% 100%). קודם הריבוע
+        // נמתח למלבן, והדגם זז הצידה ולמעלה (לפי בקשה מפורשת, 2026-10-21: "היא לא באמצע")
         const [x, y, w, h] = F;
-        Object.assign(mv.style, { left: `${(-x / w * 100).toFixed(2)}%`, top: `${(-y / h * 100).toFixed(2)}%`, width: `${(512 / w * 100).toFixed(2)}%`, height: `${(512 / h * 100).toFixed(2)}%`, right: 'auto', bottom: 'auto' });
+        const BW = typeof NMG_ME_W === 'number' ? NMG_ME_W : 124, BH = typeof NMG_ME_H === 'number' ? NMG_ME_H : 150;
+        const k = Math.min(BW / w, BH / h), S = 512 * k;
+        const left = (BW - w * k) / 2 - x * k, top = BH - h * k - y * k;
+        const pct = v => `${(v * 100).toFixed(2)}%`;
+        Object.assign(mv.style, { left: pct(left / BW), top: pct(top / BH), width: pct(S / BW), height: pct(S / BH), right: 'auto', bottom: 'auto' });
     }
     mv.addEventListener('load', () => {
         const names = mv.availableAnimations || [];
@@ -217,7 +226,7 @@ const NMG3D_CAT = {
 };
 let nmg3dCatReady = null;
 async function nmg3dAddCat(hall) {
-    if (!hall || nmg3dReduced() || !nmg3dWebgl()) return;
+    if (!hall || nmg3dReduced() || nmg3dSlowNet() || !nmg3dWebgl()) return;
     if (!nmg3dCatReady) nmg3dCatReady = nmg3dMakeCat();
     const cat = await nmg3dCatReady;
     if (!cat || !hall.isConnected) return;
@@ -355,23 +364,29 @@ const NMG3D_YOGA_TUNE = { 'teacher-closed': { dy: 22 } };
 // בודקים מראש אילו דמויות יש בתלת־ממד (נקרא מהמסדרון), כך שבכניסה ליוגה הציורים מוסתרים מיד - בלי הבזק של הגרסה הישנה
 const NMG3D_YOGA_NAMES = ['yg-blob', 'yg-fluffy', 'yg-spirit', 'yg-baby', 'teacher-closed', 'teacher-open'];
 function nmg3dPrefetchYoga() {
-    NMG3D_YOGA_NAMES.forEach(n => nmg3dExists(`world/3d/${n}.png`).then(ok => { if (ok) new Image().src = `world/3d/${n}.png`; }));
+    // רק בחיבור טוב ובזמן פנוי (2026-10-21, "שיעבוד חלק גם בחיבור איטי"): בחיבור איטי / חסכון בנתונים התמונות נטענות רק
+    // כשנכנסים ליוגה, כדי לא להתחרות במה שצריך עכשיו
+    if (nmg3dSlowNet()) return;
+    const go = () => NMG3D_YOGA_NAMES.forEach(n => { const im = new Image(); im.fetchPriority = 'low'; im.src = `world/3d/${n}.png`; });
+    if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 6000 }); else setTimeout(go, 3000);
 }
 async function nmg3dUpgradeYoga(box) {
     if (!box) return;
     const view = box.querySelector('.srp-view');
     const svg = view && view.querySelector('svg.srp-scene');
     if (!svg) return;
-    const base = img => (img.getAttribute('href') || '').split('/').pop().replace(/\.(png|jpe?g|webp)$/i, '');
+    const base = img => img.getAttribute('data-yg-art') || (img.getAttribute('href') || '').split('/').pop().replace(/\.(png|jpe?g|webp)$/i, '');
     const glb = img => `world/3d/${base(img)}.png`;
     const imgs = [...svg.querySelectorAll('image.yg-sitter, image.yg-eyes-closed')];
     const open = svg.querySelector('image.yg-eyes-open');
-    const has = await Promise.all(imgs.concat(open ? [open] : []).map(img => nmg3dExists(glb(img))));
+    // התמונות של התלת־ממד תמיד באות עם האפליקציה (world/3d/<שם>.png) - בלי בדיקת HEAD מראש (חוסך 6 בקשות בחיבור איטי, ואין
+    // מצב שבדיקה שנכשלה משאירה מזרונים ריקים); קובץ שלא נטען מסיר את עצמו (error למטה)
+    const has = imgs.concat(open ? [open] : []).map(img => !!base(img));
     const sitters = imgs.filter((_, i) => has[i]);
     const openUrl = open && has[imgs.length] ? glb(open) : null;
     if ((!sitters.length && !openUrl) || !box.isConnected) return;
     // הציורים של מי שיש לו גרסה בתלת־ממד נעלמים מיד (לפי בקשה מפורשת, 2026-10-20: "שים לב שלא רואים גרסאות ישנות לשום
-    // דבר"), והדגם נכנס בעדינות כשהוא נטען. רק אם התלת־ממד לא נטען בכלל - הציור חוזר
+    // דבר"), והדגם נכנס בעדינות כשהוא נטען. (מ-2026-10-21 הציורים הישנים של היוגה לא נטענים בכלל - ב-<image> יש רק מקום, data-yg-art)
     sitters.forEach(img => img.classList.add('has-3d'));
     if (openUrl) open.classList.add('has-3d');
     if (!box.isConnected) return;
@@ -571,7 +586,7 @@ function nmg3dFollowDrop() {
     if (nmgFollow.el) nmgFollow.el.classList.remove('has-3d');
 }
 async function nmg3dFollowLive(n) {
-    if (nmg3dReduced() || !nmg3dWebgl()) return;
+    if (nmg3dReduced() || nmg3dSlowNet() || !nmg3dWebgl()) return;
     const url = `world/3d/me${n}.glb`;
     if (!(await nmg3dExists(url)) || !(await nmg3dLoadViewer()) || nmgFollow.stage !== n || nmgFollow.mv || !nmgFollow.layer || !nmgFollow.layer.offsetParent) return;
     const mv = document.createElement('model-viewer');
