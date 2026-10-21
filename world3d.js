@@ -234,7 +234,8 @@ async function nmg3dMakeCat() {
     const mv = document.createElement('model-viewer');
     const attrs = {
         src: C.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0.8', 'shadow-softness': '1', exposure: '1.75', 'environment-image': 'neutral',
+        // בלי צל תלת־ממדי: בדגם שהולך הוא מחושב מחדש בכל פריים וכבד במובייל (2026-10-20: "החתול במסדרון... יש תקיעות") - צל מצויר ב-CSS
+        'shadow-intensity': '0', exposure: '1.75', 'environment-image': 'neutral',
         'camera-orbit': '-62deg 76deg auto', 'field-of-view': '22deg', loading: 'eager',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
@@ -448,7 +449,18 @@ function nmg3dPrepGenie() {
         nmg3dLoadViewer().then(v => {
             if (!v) return;
             nmg3dGenieState.ok = true;
-            fetch(NMG3D_GENIE.url).catch(() => {});  // מחמם את המטמון - הדגם מוכן כשנוגעים במנורה
+            // מחממים את הדגם עצמו (לא רק את הקובץ): דגם זעיר ושקוף (2×2, לא 0×0 - דגם בגודל 0 תוקע את כל השאר) טוען ומפענח אותו
+            // כבר עכשיו, ו-model-viewer שומר אותו - כשנוגעים במנורה הג'יני מופיע מיד ולא בסוף. נמחק כשהוא נטען
+            const warm = document.createElement('model-viewer');
+            warm.setAttribute('src', NMG3D_GENIE.url);
+            warm.setAttribute('loading', 'eager');
+            warm.setAttribute('aria-hidden', 'true');
+            warm.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1';
+            const done = () => setTimeout(() => warm.remove(), 400);
+            warm.addEventListener('load', done, { once: true });
+            warm.addEventListener('error', done, { once: true });
+            setTimeout(() => warm.remove(), 20000);
+            document.body.appendChild(warm);
         });
     });
 }

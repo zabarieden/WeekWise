@@ -288,12 +288,7 @@ function srpMusicStop(quick) {
 // ---------- דלת 2: המרפסת מול הים ----------
 function srpPorchScene(keys) {
     const bottle = keys >= roomUnlockAt('bottle');
-    const rainOpen = keys >= roomUnlockAt('rain');
-    let rain = '';
-    for (let i = 0; i < 34; i++) {
-        const x = 34 + ((i * 53) % 322), y = 160 + ((i * 97) % 470);
-        rain += `<line x1="${x}" y1="${y}" x2="${x - 3}" y2="${y + 15}"/>`;
-    }
+    // הענן והגשם נמחקו (לפי בקשה מפורשת, 2026-10-20: "ואת הגשם במרפסת למחוק את הענן")
     // הציור (world/lake-dock.jpg): מרפסת עץ מול אגם קסום, ירח, פנס על הרצפה ומנורת אלאדין על שולחן קטן (המנורה מחכה
     // לדמות שתצא ממנה - לפי בקשה מפורשת: "בנתיים אל תשים"). מעל הציור: הערסל בין העמודים, הגשם והענן, הבקבוק במים,
     // והטאבלט שמונח על הרצפה
@@ -307,21 +302,8 @@ function srpPorchScene(keys) {
                 ${srpArt('lake-dock.jpg')}
                 <circle class="srp-flicker" cx="70" cy="640" r="70" fill="url(#srpPLantern)"/>
                 <g class="srp-waves"><g stroke="#e6dcff" stroke-opacity="0.35" stroke-linecap="round"><line x1="150" y1="540" x2="176" y2="540"/><line x1="240" y1="590" x2="262" y2="590"/><line x1="90" y1="600" x2="110" y2="600"/></g></g>
-                <g class="srp-rain">
-                    <rect width="390" height="700" fill="#0a0f2a" opacity="0.32"/>
-                    <g class="srp-rain-a" stroke="#b9c6ff" stroke-opacity="0.55" stroke-width="1.2" stroke-linecap="round">${rain}</g>
-                    <g transform="translate(17 30)"><g class="srp-rain-b" stroke="#d8e0ff" stroke-opacity="0.35" stroke-width="1" stroke-linecap="round">${rain}</g></g>
-                    <g class="srp-ripples" fill="none" stroke="#c9d2ff" stroke-opacity="0.55"><ellipse cx="120" cy="560" rx="10" ry="2.5"/><ellipse cx="220" cy="600" rx="12" ry="3" style="animation-delay:.5s"/><ellipse cx="300" cy="570" rx="9" ry="2.2" style="animation-delay:1s"/></g>
-                </g>
             </g>
-            ${rainOpen ? `<g class="srp-hot srp-cloud" data-place-hot="rain" role="button" tabindex="0" aria-label="${srEsc(roomItemName('rain'))}" aria-pressed="false">
-                <!-- ענן קטן בשמיים: נגיעה עוצרת את הגשם ומחזירה אותו (לפי בקשה מפורשת: "אולי ענן קטן?") -->
-                <g class="srp-cloud-float">
-                    <path class="srp-cloud-body" d="M252 222 a17 17 0 0 1 12 -29 a23 23 0 0 1 43 -7 a16 16 0 0 1 27 16 a14 14 0 0 1 -5 29 h-69 a14 14 0 0 1 -8 -9 z"/>
-                    <path class="srp-cloud-shine" d="M272 196 a17 17 0 0 1 26 -6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-                </g>
-                <rect class="srp-hit" x="240" y="170" width="112" height="88" fill="transparent"/>
-            </g>` : ''}
+
             ${bottle ? `<g class="srp-hot srp-bottle" data-place-hot="bottle" role="button" tabindex="0" aria-label="${srEsc(t('room_bottle_aria'))}">
                 <g class="srp-bottle-drift"><g class="srp-bottle-bob">
                     <circle cx="236" cy="562" r="36" fill="url(#srpPBottle)"/>
@@ -340,16 +322,7 @@ function srpPorchScene(keys) {
 function srpInitPorch(box) {
     // רוח היער בתלת־ממד (world3d.js) - נטענת מראש כבר כשנכנסים למרפסת, כך שנגיעה במנורה מיידית
     if (typeof nmg3dPrepGenie === 'function') nmg3dPrepGenie();
-    // הגשם: בכל כניסה בלי גשם (לפי בקשה מפורשת, 2026-10-16: "שהברירת מחדל לא תהיה גשם - תמיד שנכנסים שוב אז שמשי");
-    // הענן הקטן בשמיים מדליק אותו ומכבה (לא נזכר בפעם הבאה)
-    const cloud = box.querySelector('.srp-cloud');
-    const setRain = (on, save) => {
-        box.classList.toggle('is-rain', on);
-        if (cloud) cloud.setAttribute('aria-pressed', on ? 'true' : 'false');
-    };
-    if (cloud) setRain(false);
     return {
-        rain: () => setRain(!box.classList.contains('is-rain')),
         bottle: el => srpOpenBottle(el),
         lamp: () => srpLampTap(box),
     };
@@ -1107,14 +1080,15 @@ function srpYogaScene(keys) {
                 ${falls ? '' : srpVeil(158, 128, 78, 336) + srLockBadge(197, 290, 'waterfall')}
                 <rect class="srp-hit" x="150" y="120" width="94" height="350" fill="transparent"/>
             </g>
-            <g class="yg-mat-shadows" aria-hidden="true">${YG_SITTERS.map(s => `<ellipse class="yg-float-shadow" cx="${s.cx}" cy="${s.mat - 3}" rx="${Math.round(s.h * 0.34)}" ry="5"/>`).join('')}</g>
-            <g class="yg-circle">${YG_SITTERS.map(s => ygSitter(s.img, s.name, s.cx, s.mat - YG_FLOAT, s.h, s.ratio)).join('')}</g>
+            <!-- המורה מאחור והיצורים לפניה - כך היא לא מסתירה את מי שיושב מולה (נגיעה במורה עוברת דרך היצורים) -->
             <g class="srp-hot srp-guide" data-place-hot="guide" role="button" tabindex="0" aria-label="${srEsc(t('room_yoga_guide_aria'))}">
                 <title>${srEsc(t('yg_name_guide'))}</title>
                 ${srpSprite('teacher-closed.png', T.cx, T.bottom, T.h, 359 / 400, 'yg-teacher yg-eyes-closed')}
                 ${srpSprite('teacher-open.png', T.cx, T.bottom, T.h, 357 / 400, 'yg-teacher yg-eyes-open')}
                 <rect class="srp-hit" x="${T.cx - 46}" y="${T.bottom - T.h + 8}" width="92" height="${T.h}" fill="transparent"/>
             </g>
+            <g class="yg-mat-shadows" aria-hidden="true">${YG_SITTERS.map(s => `<ellipse class="yg-float-shadow" cx="${s.cx}" cy="${s.mat - 3}" rx="${Math.round(s.h * 0.34)}" ry="5"/>`).join('')}</g>
+            <g class="yg-circle">${YG_SITTERS.map(s => ygSitter(s.img, s.name, s.cx, s.mat - YG_FLOAT, s.h, s.ratio)).join('')}</g>
         </svg>`;
 }
 // נגיעה במורה: העיניים נפתחות, המצלמה מתקרבת לפנים שלה (הפנים בערך ברבע העליון של המסך, מעל חלון השיחה), ואז השיחה
@@ -1142,13 +1116,16 @@ function ygTeacherRest(box) {
 }
 // השיחה: עץ קטן כמו במחשב - כל צומת: מה נאמר (המדריכה / נועה / איתי), ואז בחירה, משימה קטנה, תנוחה עם נשימות או סוף
 const YG_TREE = {
-    start: { say: [['g', 'yg_g_start'], ['p1', 'yg_p1_start'], ['p2', 'yg_p2_start'], ['p3', 'yg_p3_start'], ['p4', 'yg_p4_start']], opts: [['good', 'yg_o_good'], ['hard', 'yg_o_hard'], ['alone', 'yg_o_alone']] },
+    // (לפי בקשה מפורשת, 2026-10-20: "את השיחה צריך שהיא תשאל והמשתמש יוכל לקרוא ואז כל אחד יענה והכל ילך יותר לאט... ואז היא תשאל
+    // אותך את השאלה הזו אולי השאלה הראשונה תהיה יותר כללית כמו מה שלום כולם")
+    start: { say: [['g', 'yg_g_hello'], ['p1', 'yg_p1_hello'], ['p2', 'yg_p2_hello'], ['p3', 'yg_p3_hello'], ['p4', 'yg_p4_hello'], ['g', 'yg_g_start']], opts: [['good', 'yg_o_good'], ['hard', 'yg_o_hard'], ['alone', 'yg_o_alone']] },
     good: { say: [['g', 'yg_g_good']], opts: [['good_x', 'yg_o_friend'], ['good_x', 'yg_o_family'], ['good_x', 'yg_o_partner']] },
     good_x: { say: [['p1', 'yg_p1_good'], ['g', 'yg_g_good_msg']], task: 'yg_task_good', next: 'pose_tree' },
     hard: { say: [['g', 'yg_g_hard']], opts: [['hard_listen', 'yg_o_listen'], ['hard_critic', 'yg_o_critic'], ['hard_used', 'yg_o_used']] },
-    hard_listen: { say: [['g', 'yg_g_listen'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
-    hard_critic: { say: [['g', 'yg_g_critic'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
-    hard_used: { say: [['g', 'yg_g_used'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', next: 'pose_child' },
+    // write: במשימה יש מקום לכתוב את המשפט, והוא נשמר ביומן הקסום (לפי בקשה מפורשת, 2026-10-20: "ופה אני לא יכולה לכתוב משפט")
+    hard_listen: { say: [['g', 'yg_g_listen'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', write: true, next: 'pose_child' },
+    hard_critic: { say: [['g', 'yg_g_critic'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', write: true, next: 'pose_child' },
+    hard_used: { say: [['g', 'yg_g_used'], ['p2', 'yg_p2_hard'], ['g', 'yg_g_gate']], task: 'yg_task_hard', write: true, next: 'pose_child' },
     alone: { say: [['g', 'yg_g_alone'], ['p1', 'yg_p1_alone'], ['g', 'yg_g_alone_q']], opts: [['alone_old', 'yg_o_old'], ['alone_new', 'yg_o_new'], ['pose_heart', 'yg_o_breathe']] },
     alone_old: { say: [['g', 'yg_g_old']], task: 'yg_task_old', next: 'pose_heart' },
     alone_new: { say: [['g', 'yg_g_new']], task: 'yg_task_new', next: 'pose_heart' },
@@ -1208,18 +1185,36 @@ function ygRender(animateLast) {
     ygState.path.forEach((entry, i) => {
         const node = YG_TREE[entry.id];
         const last = i === ygState.path.length - 1;
-        const step = last && animateLast && !reduce ? 650 : 0;
-        node.say.forEach(([who, key], j) => {
-            const show = () => { if (!ygState) return; ygBubble(lines, who, t(key), last ? '' : 'is-old'); ygScroll(); };
-            if (step) ygState.timers.push(setTimeout(show, j * step)); else show();
+        const slow = last && animateLast && !reduce;
+        // לאט, שיהיה זמן לקרוא: לפני כל משפט "מקלידים…", וכל משפט נשאר לבד לפי האורך שלו
+        let at = 0;
+        node.say.forEach(([who, key]) => {
+            const text = t(key);
+            const show = () => { if (!ygState) return; const dots = lines.querySelector('.yg-typing'); if (dots) dots.remove(); ygBubble(lines, who, text, last ? '' : 'is-old'); ygScroll(); };
+            if (!slow) { show(); return; }
+            const when = at;
+            ygState.timers.push(setTimeout(() => { if (!ygState) return; ygTyping(lines, who); ygScroll(); }, when));
+            ygState.timers.push(setTimeout(show, when + YG_TYPING_MS));
+            at += YG_TYPING_MS + ygReadMs(text);
         });
         if (!last) {
             if (entry.pick) ygBubble(lines, 'me', entry.pick, 'is-old');
             return;
         }
         const after = () => { if (ygState) ygControls(entry, node); };
-        if (step) ygState.timers.push(setTimeout(after, node.say.length * step)); else after();
+        if (slow) ygState.timers.push(setTimeout(after, Math.max(0, at - 400))); else after();
     });
+}
+const YG_TYPING_MS = 750;
+function ygReadMs(text) { return Math.min(4200, Math.max(1500, String(text || '').length * 48)); }
+// "מקלידים…" - שלוש נקודות בבועה של מי שעומד לדבר
+function ygTyping(lines, who) {
+    const old = lines.querySelector('.yg-typing');
+    if (old) old.remove();
+    const el = ygBubble(lines, who, '', 'yg-typing-line');
+    const row = el.closest('.yg-row') || el;
+    row.classList.add('yg-typing');
+    el.insertAdjacentHTML('beforeend', '<span class="yg-dots" aria-hidden="true"><i></i><i></i><i></i></span>');
 }
 function ygScroll() { const sc = ygState && ygState.box.querySelector('.yg-screen'); if (sc) sc.scrollTop = sc.scrollHeight; }
 function ygGo(next, pickText) {
@@ -1240,8 +1235,26 @@ function ygControls(entry, node) {
         card.className = 'yg-task';
         card.innerHTML = `<b>🎯</b><span>${srEsc(t(node.task))}</span>`;
         lines.appendChild(card);
-        btn(t('pcx_task_ok'), () => ygGo(node.next, t('pcx_task_ok')));
+        // משימת כתיבה: כותבים כאן, והמשפט נשמר ביומן הקסום כשממשיכים
+        let area = null;
+        if (node.write) {
+            area = document.createElement('textarea');
+            area.className = 'yg-write';
+            area.rows = 3;
+            area.maxLength = 600;
+            area.placeholder = t('yg_write_ph');
+            area.setAttribute('aria-label', t(node.task));
+            lines.appendChild(area);
+        }
+        const saveWritten = async () => {
+            const text = area ? area.value.trim() : '';
+            if (!text || !supabaseClient || !currentUserId) return;
+            const { error } = await supabaseClient.from('new_me_diary').insert({ user_id: currentUserId, body: `${t(node.task)}\n${text}`.slice(0, 8000) });
+            if (!error) showAppToast(t('yg_write_saved'));
+        };
+        btn(t('pcx_task_ok'), async () => { await saveWritten(); ygGo(node.next, area && area.value.trim() ? area.value.trim() : t('pcx_task_ok')); });
         btn(t('pcx_task_today'), async () => {
+            await saveWritten();
             const ok = typeof pcAddTodayTask === 'function' ? await pcAddTodayTask(t(node.task)) : false;
             if (ok) showAppToast(t('pcx_task_added'));
             ygGo(node.next, t('pcx_task_today'));

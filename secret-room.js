@@ -23,7 +23,6 @@ const ROOM_UNLOCKS = [
     { n: 1, id: 'shelf', wall: 3 },
     { n: 2, id: 'roof', hatch: true },
     { n: 3, id: 'porch', place: 'porch' },
-    { n: 3, id: 'rain', place: 'porch' },
     { n: 4, id: 'music', place: 'music' },
     { n: 5, id: 'breath', place: 'breath' },
     { n: 5, id: 'sand', place: 'breath' },

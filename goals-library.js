@@ -334,7 +334,7 @@ function glibBuildTopicPage(tp) {
     list.className = 'glib-list';
     all.filter(tpl => !glibState.sub || tpl.sub === glibState.sub).forEach(tpl => list.appendChild(glibBuildTemplateCard(tpl, 'topic')));
     page.appendChild(list);
-    if (tp.book) page.appendChild(glibBookCard());
+    if (tp.book && !glibBookAdded()) page.appendChild(glibBookCard());
     const foot = document.createElement('div');
     foot.className = 'glib-foot';
     foot.appendChild(glibOwnGoalButton(tp.category));
@@ -342,7 +342,20 @@ function glibBuildTopicPage(tp) {
     return page;
 }
 
-// 📖 הספר שנתן השראה לנושא: כרטיס קטן, ונגיעה מוסיפה אותו ל"הספרים שלי" (לקריאה) - פעם אחת
+// 📖 הספר שנתן השראה לנושא: כרטיס קטן, ונגיעה מוסיפה אותו לפינת הקריאה (לקריאה) - פעם אחת, ואז הכרטיס נעלם מהיעדים
+function glibBookKey() { return `weekwise_glib_book_${currentUserId || 'x'}`; }
+function glibBookAdded() {
+    try { if (localStorage.getItem(glibBookKey()) === '1') return true; } catch { /* פרטי */ }
+    const title = t('glib_friends_book_title').trim().toLowerCase();
+    return typeof booksCache !== 'undefined' && Array.isArray(booksCache) && booksCache.some(b => String(b.title || '').trim().toLowerCase() === title);
+}
+function glibBookDone(btn) {
+    try { localStorage.setItem(glibBookKey(), '1'); } catch { /* פרטי */ }
+    const card = btn && btn.closest('.glib-book');
+    if (!card) return;
+    card.classList.add('is-gone');
+    setTimeout(() => card.remove(), 450);
+}
 function glibBookCard() {
     const card = document.createElement('div');
     card.className = 'glib-book';
@@ -364,6 +377,7 @@ async function glibAddBook(btn) {
     if ((have || []).some(b => String(b.title || '').trim().toLowerCase() === title.toLowerCase())) {
         btn.textContent = `✓ ${t('glib_book_added_btn')}`;
         showAppToast(t('glib_book_already'));
+        glibBookDone(btn);
         return;
     }
     const maxOrder = (have || []).reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
@@ -372,6 +386,7 @@ async function glibAddBook(btn) {
     if (typeof booksCache !== 'undefined' && Array.isArray(booksCache) && booksCache.length && data) booksCache.push(data);
     btn.textContent = `✓ ${t('glib_book_added_btn')}`;
     showAppToast(t('glib_book_added'));
+    glibBookDone(btn);
 }
 
 function glibBuildTemplateCard(tpl, from) {
@@ -430,7 +445,7 @@ function glibBuildTemplatePage(tpl) {
         body.insertAdjacentHTML('beforeend', `<div class="glib-daily"><span class="glib-daily-icon" aria-hidden="true">👣</span><span><strong>${glibEsc(when)}</strong> ${glibEsc(daily)} <em>${glibEsc(t('glib_daily_counts'))}</em></span></div>`);
     }
     const tplTopic = glibTopic(tpl.topic);
-    if (tplTopic && tplTopic.book) body.appendChild(glibBookCard());
+    if (tplTopic && tplTopic.book && !glibBookAdded()) body.appendChild(glibBookCard());
 
     // ➕ לשגרה שלי: צעד קטן יומי (או המשימות היומיות של אתגר ימים) בשעה פנויה - לא במשקל ולא בצעד שבועי
     const canRoutine = glibCanUse(tpl) && tpl.track !== 'weight' && tpl.freq !== 'weekly';

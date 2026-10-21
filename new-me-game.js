@@ -591,6 +591,12 @@ function nm1Stars(n) {
     for (let i = 0; i < n; i++) s += `<i style="left:${(Math.random() * 100).toFixed(1)}%;top:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * 4).toFixed(2)}s;--s:${(1 + Math.random() * 1.8).toFixed(1)}px"></i>`;
     return s;
 }
+// ✨ נצנצים - כוכבים קטנים של ארבע קרניים שמנצנצים ומסתובבים בכל המסך (לפי בקשה מפורשת, 2026-10-20: "שהכניסה תהיה עם נצנצים כאלה")
+function nm1Glitter(n) {
+    let s = '';
+    for (let i = 0; i < n; i++) s += `<i style="--x:${(4 + Math.random() * 92).toFixed(1)}%;--y:${(4 + Math.random() * 80).toFixed(1)}%;--z:${(8 + Math.random() * 16).toFixed(0)}px;--d:${(Math.random() * 4).toFixed(2)}s;--t:${(2.2 + Math.random() * 2.4).toFixed(1)}s"></i>`;
+    return s;
+}
 function nm1Motes(n) {
     let s = '';
     for (let i = 0; i < n; i++) s += `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--y:${(30 + Math.random() * 65).toFixed(1)}%;--mx:${(Math.random() * 60 - 30).toFixed(0)}px;--my:${(-40 - Math.random() * 80).toFixed(0)}px;--t:${(5 + Math.random() * 5).toFixed(1)}s;--d:${(Math.random() * 6).toFixed(1)}s"></i>`;
@@ -606,7 +612,7 @@ function nm1Stage(kind, html) {
     st.setAttribute('aria-modal', 'true');
     st.setAttribute('aria-label', 'Me');
     st.setAttribute('dir', document.documentElement.dir || 'rtl');
-    st.innerHTML = `<div class="nm1-sky" aria-hidden="true">${nm1Stars(48)}</div><div class="nm1-motes" aria-hidden="true">${nm1Motes(16)}</div>${html}`;
+    st.innerHTML = `<div class="nm1-sky" aria-hidden="true">${nm1Stars(48)}</div><div class="nm1-motes" aria-hidden="true">${nm1Motes(16)}</div><div class="nm1-glitter" aria-hidden="true">${nm1Glitter(26)}</div>${html}`;
     wrap.appendChild(st);
     requestAnimationFrame(() => st.classList.add('on'));
     return st;
@@ -702,7 +708,8 @@ function nm1Intro() {
     st.querySelector('.nm1-skip').addEventListener('click', e => { e.stopPropagation(); finish(); });
     st.querySelector('.nm1-scene').addEventListener('click', advance);
     document.addEventListener('keydown', onKey, true);
-    // הפורטל נפתח, Me1 עף ממנו - ואז הבועה
+    // הפורטל נפתח, Me1 עף ממנו (פרץ של ניצוצות כשהוא מגיע) - ואז הבועה
+    setTimeout(() => { if (st.isConnected && !st.classList.contains('off')) nm1Burst(st); }, nm1Reduce() ? 0 : 2300);
     setTimeout(() => {
         if (!st.isConnected || st.classList.contains('off')) return;
         st.classList.remove('is-opening');
@@ -769,8 +776,8 @@ function nm1NextTip(btn) {
 
 // 3. סיימו את השאלון - Me1 שמח, וזיקוקים; משם לסיור
 function nm1Joy() {
-    // הסיור נפתח מכאן (ולא לבד)
-    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
+    // הסיור נפתח מכאן (ולא לבד); אם יוצאים לפני שהוא מתחיל - בכניסה הבאה Me1 שואל אם ממשיכים
+    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); localStorage.setItem('weekwise_nm_tour_at', 'start'); } catch {}
     const st = nm1Stage('joy', `
         <div class="nm1-scene"><div class="nm1-halo" aria-hidden="true"></div><figure class="nm1-me"><img src="${NM1_ART.joy}" alt="" draggable="false"></figure></div>
         ${nm1TalkHtml('nm_m1_joy_title', 'nm_m1_joy_text', 'nm_m1_joy_btn', 0)}`);
@@ -797,11 +804,41 @@ function nm1Heart() {
         ${nm1TalkHtml('nm_m1_heart_title', 'nm_m1_heart_text', 'nm_m1_heart_btn', 0)}`);
     st.querySelector('.nm1-say').classList.add('in');
     const btn = st.querySelector('.nm1-next');
-    btn.addEventListener('click', () => nm1Close(st, () => {
-        // ההזמנה החד־פעמית לבחור ערכה קסומה - אחרי הרגע הזה, לא באמצעו
-        if (typeof nmMaybeOfferMagic === 'function' && typeof nmView !== 'undefined' && nmView === 'home') nmMaybeOfferMagic();
-    }));
+    // ההזמנות האחרות (ערכה קסומה, מפתח חדש) מחכות לכניסה הבאה - הכניסה נגמרת ברגע הזה
+    btn.addEventListener('click', () => nm1Close(st));
     setTimeout(() => { try { btn.focus({ preventScroll: true }); } catch {} }, 60);
+}
+
+// 5. יצאו באמצע (השאלון או הסיור) - Me1 שמח לראות אותך שוב ושואל אם ממשיכים (לפי בקשה מפורשת, 2026-10-20: "זה יחזיר אותה לאותו
+// מקום והme1 שואל שנמשיך? בהתלהבות")
+function nm1Resume(kind) {
+    if (document.querySelector('.nm1-stage')) return;
+    const st = nm1Stage('resume', `
+        <div class="nm1-scene"><div class="nm1-halo" aria-hidden="true"></div><figure class="nm1-me"><img src="${NM1_ART.joy}" alt="" draggable="false"></figure></div>
+        <div class="nm1-talk">
+            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">Me</span><div class="nm1-say in"><h2 class="nm1-title">${nm1WordsHtml(t('nm_m1_resume_title'))}</h2><p class="nm1-text">${nm1WordsHtml(t(kind === 'tour' ? 'nm_m1_resume_tour' : 'nm_m1_resume_quiz'))}</p></div></div>
+            <div class="nm1-foot"><button type="button" class="nm1-later">${nmEsc(t(kind === 'tour' ? 'nm_m1_resume_later' : 'nm_m1_resume_restart'))}</button><button type="button" class="nm1-next is-go">${nmEsc(t('nm_m1_resume_yes'))}</button></div>
+        </div>`);
+    const yes = st.querySelector('.nm1-next'), later = st.querySelector('.nm1-later');
+    yes.addEventListener('click', () => nm1Close(st, () => {
+        if (kind !== 'tour') return;
+        let at = null;
+        try { at = localStorage.getItem('weekwise_nm_tour_at'); } catch {}
+        if (typeof nmStartTour === 'function') nmStartTour(at && at !== 'start' ? at : null);
+    }));
+    later.addEventListener('click', () => nm1Close(st, () => {
+        if (kind === 'tour') { try { localStorage.removeItem('weekwise_nm_tour_at'); } catch {} return; }
+        // להתחיל את השאלון מההתחלה
+        const fresh = !!(nmQuiz && nmQuiz.fresh);
+        if (typeof nmQuizClearDraft === 'function') nmQuizClearDraft();
+        nmStartQuiz(false, fresh);
+        nmQuiz.m1Intro = true;
+        nmTimes = null;
+        nmRenderQuiz(nmRoot());
+        if (typeof nmScrollTop === 'function') nmScrollTop();
+    }));
+    if (!nm1Reduce() && typeof spawnGentleConfettiBurst === 'function') setTimeout(() => { if (st.isConnected) spawnGentleConfettiBurst(st, 30, st.clientWidth / 2, st.clientHeight * 0.36, ['#ffd27a', '#c9b6ff', '#a7f3d0', '#fff3c4', '#f7b8ff']); }, 300);
+    setTimeout(() => { try { yes.focus({ preventScroll: true }); } catch {} }, 60);
 }
 
 

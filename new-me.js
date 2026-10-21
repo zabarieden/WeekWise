@@ -959,14 +959,22 @@ async function renderNewMe() {
         // אין עדיין פרופיל = מתחילים מההתחלה, גם במכשיר (לפי בקשה מפורשת, 2026-10-14: "תעשה כאילו אני משתמשת חדשה")
         if (!nmProfile) nmClearLocalFlags();
     }
+    // יצאו מהאפליקציה באמצע השאלון (לפי בקשה מפורשת, 2026-10-20: "אם מישהי בטעות יוצאת מהאפליקציה ולא סיימה את אחד השלבים...
+    // זה יחזיר אותה לאותו מקום והme1 שואל שנמשיך? בהתלהבות") - חוזרים לאותו שלב, ו-Me1 שואל אם ממשיכים
+    let resumed = false;
+    if (!nmQuiz) {
+        const draft = nmQuizLoadDraft();
+        if (draft && (!nmProfile || draft.q.fresh)) { nmStartQuiz(false, !!draft.q.fresh); Object.assign(nmQuiz, draft.q); nmTimes = draft.times || null; resumed = true; }
+    }
     if (!nmProfile || nmQuiz) {
         // השאלון לא במסדרון - בלי הכפתורים של המשחק מעליו (גם ב"קנייה" של מנהלת המוצר, כשכבר יש תוכנית)
         const sec = document.getElementById('new-me-section');
         if (sec) sec.classList.remove('nm-hall-mode');
         if (!nmQuiz) nmStartQuiz();
         nmRenderQuiz(root);
+        if (resumed && typeof nm1Resume === 'function') nm1Resume('quiz');
         // ✨ Me1 פותח את הכניסה לעולם החדש (new-me-game.js)
-        if (typeof nm1MaybeIntro === 'function') nm1MaybeIntro();
+        else if (typeof nm1MaybeIntro === 'function') nm1MaybeIntro();
         return;
     }
     if (nmView === 'menu' || nmView === 'tips') nmView = 'home';
@@ -974,11 +982,18 @@ async function renderNewMe() {
     nmRenderView(root);
     // ✨ סיימו את השאלון בפעם הראשונה - Me1 שמח, ומשם לסיור (new-me-game.js)
     if (typeof nm1JoyPending !== 'undefined' && nm1JoyPending) { nm1JoyPending = false; nm1Joy(); }
-    nmAwardBadges();
+    // הסיור נקטע באמצע (או שיצאו לפני שהתחיל) - Me1 שואל אם ממשיכים
+    else if (nmTourPending() && !(typeof appTourActive !== 'undefined' && appTourActive) && typeof nm1Resume === 'function') nm1Resume('tour');
+    // בזמן הכניסה (Me1, הסיור, הלב) - בלי חגיגות שלא קשורות אליה (לפי בקשה מפורשת, 2026-10-20: "והכניסה לא תראה עברתי אתגר זה
+    // לא קשור"); הן מחכות לכניסה הבאה
+    const entryBusy = !!document.querySelector('.nm1-stage') || nmTourPending() || (typeof appTourActive !== 'undefined' && appTourActive);
+    if (!entryBusy) nmAwardBadges();
     if (nmProfile.reminders_on) nmSyncReminders();
     nmMaybeAutoTour();
+    if (typeof roomRenderDevKeys === 'function') roomRenderDevKeys();
+    if (entryBusy) return;
     // החדר הסודי: מפתח חדש שעוד לא נחשף (למשל היום השלישי עם New Me) + כפתור המפתח של מנהלת המוצר
-    if (typeof roomCheckNewKeys === 'function') { roomCheckNewKeys(); roomRenderDevKeys(); }
+    if (typeof roomCheckNewKeys === 'function') roomCheckNewKeys();
     // ✨ העולם הקסום - הזמנה חד-פעמית לבחור ערכה קסומה (במקום החלפה אוטומטית אחרי הקנייה)
     if (nmMaybeOfferMagic()) return;
     // שעות האוכל - שואלים פעם אחת (מהשגרה, או כמה ארוחות ומתי); ואחר כך, אם צריך, אם להסתיר ארוחות מהשגרה
@@ -1467,7 +1482,30 @@ function nmStartMenuQuiz(from) {
 function nmStartQuizFresh() {
     nmStartQuiz(false, true);
     nmTimes = null;
+    // כמו קונה חדש/ה: Me1 על השביל, במקום שלו (לפי בקשה מפורשת, 2026-10-20 - בסיור אחרי "קנייה" הופיעה Me3). אפשר לבחור שוב
+    // דמות אחרת ב"הדמות שלי"
+    if (typeof roomState !== 'undefined' && roomState) { roomState.me_pick = 1; if (typeof roomSave === 'function') roomSave({ me_pick: 1 }); }
+    if (typeof nmgMePos !== 'undefined') nmgMePos = null;
 }
+// 💾 טיוטת השאלון במכשיר - אם יוצאים באמצע, חוזרים לאותו שלב (לא לשאלון מההגדרות / "בניית התפריט")
+function nmQuizDraftKey() { return `weekwise_nm_quiz_draft_${currentUserId || 'x'}`; }
+function nmQuizSaveDraft() {
+    const q = nmQuiz;
+    if (!q || q.menuOnly || q.fromSettings) return;
+    const keep = ['step', 'agreed', 'weight', 'goal', 'plan', 'choices', 'choices2', 'fresh', 'withLetter', 'letter', 'name', 'late', 'lateTime', 'picks', 'side', 'sideTime', 'm1Intro', 'm1Tip'];
+    const data = { at: Date.now(), q: Object.fromEntries(keep.map(k => [k, q[k]])), times: nmTimes && nmTimes.inQuiz ? nmTimes : null };
+    try { localStorage.setItem(nmQuizDraftKey(), JSON.stringify(data)); } catch { /* פרטי */ }
+}
+function nmQuizLoadDraft() {
+    try {
+        const d = JSON.parse(localStorage.getItem(nmQuizDraftKey()) || 'null');
+        // רק טיוטה מהשבועיים האחרונים, ורק אם כבר עברו את השלב הראשון או ענו על משהו
+        if (!d || !d.q || Date.now() - (d.at || 0) > 14 * 86400000) return null;
+        if (!(d.q.step > 0 || d.q.agreed)) return null;
+        return d;
+    } catch { return null; }
+}
+function nmQuizClearDraft() { try { localStorage.removeItem(nmQuizDraftKey()); } catch { /* פרטי */ } }
 
 function nmDisclaimerHtml() {
     const suffix = currentLang === 'he' ? '' : (currentLang === 'es' ? '-es' : '-en');
@@ -1535,6 +1573,7 @@ function nmRenderQuiz(root) {
         canContinue = menu.canContinue;
     }
     const isLast = q.step === total - 1;
+    nmQuizSaveDraft();
     root.innerHTML = `
         <div class="nm-quiz">
             <div class="nm-steps" aria-label="${nmEsc(t('nm_step_of').replace('{n}', q.step + 1).replace('{total}', total))}">
@@ -1715,6 +1754,7 @@ async function nmQuizNext() {
     if (typeof loadWeightHistory === 'function') loadWeightHistory();
     await nmSyncCalorieGoal();
     nmQuiz = null;
+    nmQuizClearDraft();
     nmView = 'home';
     if (firstTime && typeof nm1Joy === 'function') nm1JoyPending = true;
     renderNewMe();
@@ -4760,22 +4800,30 @@ async function nmSaveFullName(input) {
 // הסיור במשחק (לפי בקשה מפורשת, 2026-10-14: "תשנה את הסיור לגמרי בNEW ME ברגע שאתה מסיים"): הפס העליון, המשימה הבאה,
 // ✓ אכלתי, הכלים שבצדדים, התיק הקסום (ובתוכו מפת העולם, מ-2026-10-20), הדמות (Me) ודלת 1 לחדר
 const NEW_ME_TOUR_STEPS = [
-    { id: 'nm_welcome', ch: 'newme', ctx: 'newme', icon: NM_ICON_SVG, titleKey: 'nm_tour_welcome_title', text: 'nm_tour_welcome_text' },
+
     { id: 'nm_top', ch: 'newme', ctx: 'newme', icon: '⭐', target: '#nm-hud .nmg-top', titleKey: 'nm_tour_top_title', text: 'nm_tour_top_text', optional: true },
     { id: 'nm_quest', ch: 'newme', ctx: 'newme', icon: '🍽️', target: '#nm-hud .nmg-quest', titleKey: 'nm_tour_quest_title', text: 'nm_tour_quest_text', optional: true },
-    { id: 'nm_rails', ch: 'newme', ctx: 'newme', icon: '🧰', target: '#nm-hud .nmg-rr', titleKey: 'nm_tour_rails_title', text: 'nm_tour_rails_text', optional: true },
+
     { id: 'nm_week', ch: 'newme', ctx: 'newme', icon: '🌱', target: '#nm-hud .nmg-week', titleKey: 'nm_week_ch_label', text: 'nm_tour_week_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
     { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
 ];
 function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }
-function nmStartTour() {
-    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); } catch {}
+// הסיור קצר וממוקד (לפי בקשה מפורשת, 2026-10-20: "הסיור שיהיה יותר קצר הסברים קצרים וממוקדים יותר"): בלי "ברוכים הבאים"
+// (Me1 כבר קיבל את הפנים) ובלי "בצד". איפה עצרו נשמר במכשיר - אם יוצאים באמצע, בכניסה הבאה Me1 שואל אם ממשיכים
+const NM_TOUR_AT_KEY = 'weekwise_nm_tour_at';
+function nmTourPending() { try { return !!localStorage.getItem(NM_TOUR_AT_KEY); } catch { return false; } }
+function nmTourTrack(step) { if (step && NEW_ME_TOUR_STEPS.includes(step)) { try { localStorage.setItem(NM_TOUR_AT_KEY, step.id); } catch { /* פרטי */ } } }
+function nmStartTour(startId) {
+    try { localStorage.setItem('weekwise_nm_tour_seen', '1'); localStorage.setItem(NM_TOUR_AT_KEY, startId || 'start'); } catch {}
     // השלבים נבחרים לפי מה שמוצג במסך הראשי של New Me - חוזרים אליו קודם (למשל כשנפתח מההגדרות)
     if (nmView !== 'home') nmGo('home');
     // בסוף הסיור (במקום כרטיס הסיום) - Me1 עם הלב: "נעשה את הדרך הזו ביחד" (לפי בקשה מפורשת, 2026-10-20)
-    if (typeof openAppTour === 'function') openAppTour(true, () => { if (typeof nm1Heart === 'function') nm1Heart(); }, { steps: NEW_ME_TOUR_STEPS, keepScreen: true });
+    if (typeof openAppTour === 'function') openAppTour(true, () => {
+        try { localStorage.removeItem(NM_TOUR_AT_KEY); } catch {}
+        if (typeof nm1Heart === 'function') nm1Heart();
+    }, { steps: NEW_ME_TOUR_STEPS, keepScreen: true, startId: startId && startId !== 'start' ? startId : null });
 }
 function nmMaybeAutoTour() {
     if (nmTourSeen() || nmView !== 'home' || nmQuiz) return;

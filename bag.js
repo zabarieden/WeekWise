@@ -936,33 +936,52 @@ const BAG_EXAMPLES = [
         // 🎁 רעיונות למתנות - למי (אישה / גבר / לכולם), גיל וכמה קרוב (לפי בקשה מפורשת, 2026-10-20: "רעיונות לקנות לגבר או אישה...
         // לפי גילאים ולמי זה מיועד וכמה קרוב זה")
         tables: [{
-            key: 'gifts', icon: '🎁', v2: true,
+            // רק רעיון וכמה קרוב (לפי בקשה מפורשת, 2026-10-20: "רעיונות למתנות תמחק למי ותמחק את הגיל")
+            key: 'gifts', icon: '🎁', v: 2,
             cols: [
                 { key: 'idea', type: 'text' },
-                { key: 'for', type: 'select', options: [['woman', '#f472b6'], ['man', '#60a5fa'], ['anyone', '#34d399']] },
-                { key: 'age', type: 'select', options: [['age_kids', '#fbbf24'], ['age_teen', '#a78bfa'], ['age_20', '#22d3ee'], ['age_40', '#60a5fa'], ['age_60', '#f59e0b'], ['age_any', '#34d399']] },
                 { key: 'closeness', type: 'select', options: [['partner', '#f472b6'], ['family_close', '#a855f7'], ['friend', '#22d3ee'], ['colleague', '#60a5fa'], ['acquaintance', '#94a3b8']] },
             ],
-            // [רעיון, למי, גיל, קרבה] - אינדקסים לאפשרויות שלמעלה
-            rows: () => [[1, 2, 5, 2], [2, 0, 2, 2], [3, 1, 3, 1], [4, 2, 2, 0], [5, 2, 2, 0], [6, 2, 4, 1], [7, 2, 4, 1], [8, 2, 1, 2], [9, 2, 0, 1], [10, 2, 1, 1],
-                [11, 2, 5, 3], [12, 0, 5, 3], [13, 2, 2, 2], [14, 2, 2, 2], [15, 1, 3, 2], [16, 2, 5, 4], [17, 0, 4, 1], [18, 1, 2, 0]]
-                .map(([g, f, a, c]) => [t(`bag_ex_gift_${g}`), f, a, c]),
+            // [רעיון, קרבה] - אינדקס לאפשרויות שלמעלה
+            rows: () => [[1, 2], [2, 2], [3, 1], [4, 0], [5, 0], [6, 1], [7, 1], [8, 2], [9, 1], [10, 1], [11, 3], [12, 3], [13, 2], [14, 2], [15, 2], [16, 4], [17, 1], [18, 0]]
+                .map(([g, c]) => [t(`bag_ex_gift_${g}`), c]),
+        }, {
+            // 🐷 מה לעשות עם כסף שחסכתי (לפי בקשה מפורשת, 2026-10-20: "לעשות טבלת רעיונות ברגע שאני חוסכת כסף מה לעשות איתו")
+            key: 'savings', icon: '🐷', v: 3,
+            cols: [
+                { key: 'idea', type: 'text' },
+                { key: 'cost', type: 'text' },
+                { key: 'when', type: 'select', options: [['soon', '#34d399'], ['this_year', '#22d3ee'], ['dream', '#a855f7']] },
+                { key: 'done', type: 'checkbox' },
+            ],
+            rows: () => Array.from({ length: 12 }, (_, i) => [t(`bag_ex_save_${i + 1}`), '', [0, 0, 1, 1, 0, 1, 2, 1, 2, 0, 1, 2][i], false]),
         }],
     },
     {
         key: 'trips', icon: '🧳', color: '#f59e0b',
         // 🏨 ציוד לבית מלון + ✈️ טיסה לחו״ל (לפי בקשה מפורשת, 2026-10-20)
         notebooks: [
-            { key: 'hotel', emoji: '🏨', color: '#93c5fd', pattern: 'dots', type: 'list', v2: true, items: Array.from({ length: 15 }, (_, i) => [`hotel_${i + 1}`, false]) },
-            { key: 'flight', emoji: '✈️', color: '#c4b5fd', pattern: 'grid', type: 'list', v2: true, items: Array.from({ length: 17 }, (_, i) => [`flight_${i + 1}`, false]) },
+            { key: 'hotel', emoji: '🏨', color: '#93c5fd', pattern: 'dots', type: 'list', v: 2, items: Array.from({ length: 15 }, (_, i) => [`hotel_${i + 1}`, false]) },
+            { key: 'flight', emoji: '✈️', color: '#c4b5fd', pattern: 'grid', type: 'list', v: 2, items: Array.from({ length: 17 }, (_, i) => [`flight_${i + 1}`, false]) },
         ],
         tables: [{
+            // 📍 מקומות לרשום - לאן רוצים ללכת (לפי בקשה מפורשת, 2026-10-20: "וגם מקומות לרשום")
+            key: 'places', icon: '📍', v: 3,
+            cols: [
+                { key: 'place', type: 'text' },
+                { key: 'where', type: 'text' },
+                { key: 'kind', type: 'select', options: [['food', '#f59e0b'], ['nature', '#34d399'], ['culture', '#a855f7'], ['fun', '#22d3ee'], ['abroad', '#60a5fa']] },
+                { key: 'visited', type: 'checkbox' },
+            ],
+            rows: () => Array.from({ length: 6 }, (_, i) => [t(`bag_ex_place_${i + 1}`), '', [0, 1, 2, 3, 4, 1][i], false]),
+        }, {
             key: 'packing', icon: '🧳',
             cols: [{ key: 'item', type: 'text' }, { key: 'type', type: 'select', options: [['clothes', '#22d3ee'], ['gear', '#a855f7'], ['food', '#34d399']] }, { key: 'packed', type: 'checkbox' }],
             rows: () => [[t('bag_ex_pack_1'), 1, true], [t('bag_ex_pack_2'), 0, true], [t('bag_ex_pack_3'), 1, false], [t('bag_ex_pack_4'), 2, false]],
         }],
     },
 ];
+const BAG_EXAMPLES_VERSION = 3;
 // שמות ימים ושעות בפורמט של השפה; בעברית ובערבית השבוע מתחיל ביום ראשון
 function bagExDay(i, fromMonday) {
     const start = !fromMonday && ['he', 'ar'].includes(currentLang) ? 4 : 5; // 4.1.2026 = יום ראשון
@@ -973,23 +992,24 @@ function bagExTime(h, m) { return new Date(2026, 0, 5, h, m).toLocaleTimeString(
 async function bagMaybeSeedExamples() {
     if (!isPremiumUser || bagSeedChecked || bagSeeding || !supabaseClient || !currentUserId) return false;
     const uid = currentUserId;
-    // גרסה 2 של הדוגמאות (2026-10-20): מי שכבר קיבל/ה את הראשונות מקבל/ת פעם אחת רק את החדשות (מתנות, בית מלון, טיסה, יום הולדת)
-    const localKey = `weekwise_bag_seeded2_${uid}`;
+    // גרסאות של הדוגמאות (2026-10-20): 2 = מתנות, בית מלון, טיסה, יום הולדת; 3 = מה לעשות עם כסף שחסכתי, מקומות.
+    // תיק שכבר קיבל גרסה קודמת מקבל פעם אחת רק את מה שחדש לו
+    const localKey = `weekwise_bag_seeded${BAG_EXAMPLES_VERSION}_${uid}`;
     try { if (localStorage.getItem(localKey) === '1') { bagSeedChecked = true; return false; } } catch { /* פרטי */ }
     try {
-        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2').eq('user_id', uid).maybeSingle();
+        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2, bag_examples_v3').eq('user_id', uid).maybeSingle();
         if (error || uid !== currentUserId) return false;
         bagSeedChecked = true;
-        if (data && data.bag_examples_seeded && data.bag_examples_v2) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
-        const onlyNew = !!(data && data.bag_examples_seeded);
+        const level = !(data && data.bag_examples_seeded) ? 0 : data.bag_examples_v3 ? 3 : data.bag_examples_v2 ? 2 : 1;
+        if (level >= BAG_EXAMPLES_VERSION) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
         // קודם הסימון ואז הדוגמאות - כדי ששני מכשירים שנפתחים באותו רגע לא ימלאו את התיק פעמיים
-        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true }, { onConflict: 'user_id' });
+        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true, bag_examples_v3: true }, { onConflict: 'user_id' });
         if (flagError) return false;
         try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ }
         bagSeeding = true;
         bagRenderOverview();
-        await bagSeedExamples(uid, onlyNew);
-        showAppToast(t(onlyNew ? 'bag_examples_v2_toast' : 'bag_examples_toast'));
+        await bagSeedExamples(uid, level);
+        showAppToast(t(level ? 'bag_examples_new_toast' : 'bag_examples_toast'));
         return true;
     } catch {
         return false;
@@ -999,11 +1019,14 @@ async function bagMaybeSeedExamples() {
 }
 
 // 8 בקשות בסך הכול: כיסים, מחברות, דפים, שורות, טבלאות, עמודות, שורות טבלה ומשימות.
-// onlyNew = תיק שכבר קיבל את הדוגמאות הראשונות: רק מה שמסומן v2 (לכיס הקיים, או לכיס חדש אם הוא נמחק), ושורות v2 למחברת קיימת
-async function bagSeedExamples(uid, onlyNew) {
+// level = הגרסה שהתיק כבר קיבל (0 = תיק חדש - הכל). אחרת רק מה שגרסתו (v, ובשורות - המספר השלישי) גבוהה ממנה: לכיס הקיים, או
+// לכיס חדש אם הוא נמחק, ושורות חדשות למחברת קיימת
+async function bagSeedExamples(uid, level = 0) {
+    const onlyNew = level > 0;
     const base = { user_id: uid, username: currentUsername };
-    const newLines = nb => (nb.items || []).some(it => it[2] === 2);
-    const exList = onlyNew ? BAG_EXAMPLES.filter(ex => (ex.notebooks || []).some(nb => nb.v2 || newLines(nb)) || (ex.tables || []).some(tb => tb.v2)) : BAG_EXAMPLES;
+    const isNew = x => (x.v || 1) > level;
+    const newLines = nb => (nb.items || []).some(it => (it[2] || 1) > level);
+    const exList = onlyNew ? BAG_EXAMPLES.filter(ex => (ex.notebooks || []).some(nb => isNew(nb) || newLines(nb)) || (ex.tables || []).some(isNew)) : BAG_EXAMPLES;
     const same = ex => p => p.title === t(`bag_ex_${ex.key}`) && p.icon === ex.icon;
     let pockets = [];
     if (onlyNew) {
@@ -1021,22 +1044,22 @@ async function bagSeedExamples(uid, onlyNew) {
     if (!pockets.length) return;
     const pocketOf = ex => pockets.find(same(ex));
     const nbDefs = [];
-    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.notebooks || []).forEach((nb, i) => { if (!onlyNew || nb.v2) nbDefs.push({ nb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
+    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.notebooks || []).forEach((nb, i) => { if (!onlyNew || isNew(nb)) nbDefs.push({ nb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
     const tblDefs = [];
-    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tables || []).forEach((tb, i) => { if (!onlyNew || tb.v2) tblDefs.push({ tb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
+    exList.forEach(ex => { const p = pocketOf(ex); if (p) (ex.tables || []).forEach((tb, i) => { if (!onlyNew || isNew(tb)) tblDefs.push({ tb, p, sort: (onlyNew ? 50 : 0) + i + 1 }); }); });
     // השורות החדשות למחברת שכבר קיימת (יום הולדת) - לדף הראשון שלה, אם היא עוד שם
     const extraLines = [];
     if (onlyNew) {
         for (const ex of exList) {
             const p = pocketOf(ex);
             if (!p) continue;
-            for (const nb of (ex.notebooks || []).filter(n => !n.v2 && newLines(n))) {
+            for (const nb of (ex.notebooks || []).filter(n => !isNew(n) && newLines(n))) {
                 const { data: nbs } = await supabaseClient.from('project_notebooks').select('id, title').eq('project_id', p.id);
                 const n = (nbs || []).find(x => x.title === t(`bag_ex_nb_${nb.key}`));
                 if (!n) continue;
                 const { data: pgs } = await supabaseClient.from('notebook_pages').select('id, sort_order').eq('notebook_id', n.id).order('sort_order', { ascending: true }).limit(1);
                 const pg = pgs && pgs[0];
-                if (pg) nb.items.filter(it => it[2] === 2).forEach(([key, done]) => extraLines.push({ ...base, notebook_id: n.id, page_id: pg.id, title: t(`bag_ex_li_${key}`), is_completed: done }));
+                if (pg) nb.items.filter(it => (it[2] || 1) > level).forEach(([key, done]) => extraLines.push({ ...base, notebook_id: n.id, page_id: pg.id, title: t(`bag_ex_li_${key}`), is_completed: done }));
             }
         }
     }

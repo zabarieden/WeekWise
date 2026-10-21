@@ -1997,7 +1997,7 @@ const APP_TOUR_STEPS = [
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
     // התפריט - כל פריט, לפי הסדר שבו הוא מופיע: למעלה מצב לילה, רשימה/אריחים וחיפוש, ואז הפריטים מלמעלה למטה
     { id: 'm_night', ch: 'menu', ctx: 'menu', icon: '🌙', target: '#hamburger-drawer-overlay .js-night-btn', titleKey: 'menu_night_mode', text: 'apptour_night_text' },
-    { id: 'm_style', ch: 'menu', ctx: 'menu', icon: '▦', target: '[data-tour="m-style"]', titleKey: 'apptour_m_style_title', text: 'apptour_m_style_text' },
+    // (the ▦ tiles-view step was removed together with the tiles view, 2026-10-20)
     { id: 'm_search', ch: 'menu', ctx: 'menu', icon: '🔎', target: '#hamburger-drawer-overlay .hamburger-search', titleKey: 'home_search_aria', text: 'apptour_search_text' },
     { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
     // 🎯 היעדים שלי: הפריט בתפריט, ואז פנימה - שביל דוגמה שמצטייר (תחנות, האבן של היום והדגל),
@@ -2006,6 +2006,8 @@ const APP_TOUR_STEPS = [
     { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '👣', titleKey: 'apptour_g_path_title', text: 'apptour_g_path_text', link: 'apptour_m_vision_link', demo: 'goal' },
     { id: 'g_today', ch: 'goals', ctx: 'goals', icon: '✅', target: '#gv-today', titleKey: 'gv_today_title', text: 'apptour_g_today_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
+    // 📚 ספריית היעדים עצמה - נפתחת בסיור ומראה את הנושאים (לפי בקשה מפורשת, 2026-10-20)
+    { id: 'g_lib', ch: 'goals', ctx: 'goals', glib: true, icon: '📚', target: '#goals-library .glib-grid .glib-tile', titleKey: 'glib_title', text: 'apptour_g_lib_text' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
     { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
@@ -2070,6 +2072,7 @@ let appTourTrackTimer = 0;
 let appTourLastRect = '';
 let appTourDir = 0;          // כיוון המעבר האחרון (1 קדימה, ‎-1 אחורה, 0 קפיצה) - להנפשה של הכרטיס
 let appTourFinished = false; // הגיעו עד הסוף (אז אין "להמשיך מאיפה שעצרתי")
+let appTourStartId = null;   // להתחיל משלב מסוים (סיור של New Me שנקטע באמצע - Me1 שואל "נמשיך?")
 
 function appTourPartOf(step) { return APP_TOUR_PART_OF[step.ch] || step.ch; }
 function appTourPartIcon(key) { return key === 'newme' ? NM_ICON_SVG : (APP_TOUR_PART_ICONS[key] || ''); }
@@ -2145,6 +2148,7 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
     appTourFinished = false;
     appTourSteps = opts.steps || APP_TOUR_STEPS;
     appTourKeepScreen = !!opts.keepScreen;
+    appTourStartId = opts.startId || null;
     if (!opts.steps) markAppTourSeen();
     // מתחילים ממסך בית נקי - סוגרים כל חלון/מגירה שפתוחים
     document.querySelectorAll('.apple-modal.open').forEach(m => closeModal(m.id));
@@ -2168,7 +2172,10 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
             .filter(({ step }) => !(step.optional && (step.ctx === 'home' || step.ctx === 'newme') && !appTourResolveTarget(step)))
             .filter(({ step }) => !step.when || step.when())
             .map(({ index }) => index);
-        appTourPos = 0;
+        // שלב שכבר לא מוצג (למשל כפתור שנעלם) - ממשיכים מהשלב הבא שקיים אחריו
+        const startIdx = appTourStartId ? appTourSteps.findIndex(s => s.id === appTourStartId) : -1;
+        appTourPos = startIdx < 0 ? 0 : appTourPlan.findIndex(i => i >= startIdx);
+        if (appTourPos < 0) appTourPos = Math.max(0, appTourPlan.length - 1);
         appTourShow();
     });
 }
@@ -2277,7 +2284,13 @@ async function appTourEnsureContext(step) {
             backToSettingsMain();
             changed = true;
         }
-    } else if (ctx === 'goals' && goalsOverlay && !goalsOverlay.classList.contains('open')) {
+    }
+    // ספריית היעדים: פתוחה רק בשלב שלה
+    if (ctx === 'goals' && typeof isGoalsLibraryOpen === 'function') {
+        if (step.glib && !isGoalsLibraryOpen()) { openGoalsLibrary(); changed = true; }
+        else if (!step.glib && isGoalsLibraryOpen()) { closeGoalsLibrary(); changed = true; }
+    }
+    if (ctx === 'goals' && goalsOverlay && !goalsOverlay.classList.contains('open')) {
         // פותחים מהמטמון בלי טעינה מחדש - רינדור נוסף אחרי הטעינה היה מחליף את האלמנטים המודגשים
         goalsOverlay.classList.add('open');
         goalsOverlay.setAttribute('aria-hidden', 'false');
@@ -2354,6 +2367,7 @@ async function appTourShow() {
     if (token !== appTourToken || !appTourActive) return;
     appTourTarget = appTourResolveTarget(step);
     appTourRender(step);
+    if (appTourSteps !== APP_TOUR_STEPS && typeof nmTourTrack === 'function') nmTourTrack(step);
 }
 
 function appTourRender(step) {
@@ -3999,9 +4013,10 @@ function openNewMe(view = 'home') {
 // --- בחירה בין תפריט רשימה (☰) לתפריט קוביות (▦) - רק אחד מוצג למעלה, לפי
 // בקשה מפורשת ("או המבורגר או קוביות ולא גם וגם"). ברירת מחדל: רשימה. מעבר מתוך
 // כל אחד מהם (כפתור בכותרת), נשמר במכשיר + בחשבון (user_premium.menu_style) ---
-function getMenuStyle() { return localStorage.getItem('weekwise_menu_style') === 'tiles' ? 'tiles' : 'list'; }
-function applyMenuStyle(style) {
-    document.documentElement.classList.toggle('menu-style-tiles', style === 'tiles');
+// תצוגת הקוביות של התפריט הוסרה (לפי בקשה מפורשת, 2026-10-20: "תמחק את הקוביות בהמבורגר") - תמיד הרשימה
+function getMenuStyle() { return 'list'; }
+function applyMenuStyle() {
+    document.documentElement.classList.remove('menu-style-tiles');
 }
 async function switchMenuStyle(style) {
     localStorage.setItem('weekwise_menu_style', style);
@@ -4023,9 +4038,7 @@ async function loadMenuStyleSetting() {
     // נראות הפתקים והציטוטים - נשמרת בחשבון, כך שהיא אותה נראות בכל מכשיר
     if (NOTE_LOOKS.includes(data.notes_look)) { try { localStorage.setItem('weekwise_notes_look', data.notes_look); } catch {} applyNotesLook(data.notes_look); }
     if (QUOTE_LOOKS.includes(data.quotes_look)) { try { localStorage.setItem('weekwise_quotes_look', data.quotes_look); } catch {} applyQuotesLook(data.quotes_look); }
-    if (!data.menu_style) return;
-    localStorage.setItem('weekwise_menu_style', data.menu_style);
-    applyMenuStyle(data.menu_style);
+    if (data.menu_style) { try { localStorage.removeItem('weekwise_menu_style'); } catch {} applyMenuStyle(); }
 }
 
 // 🎨 נראות הפתקים (לפי בקשה מפורשת, 2026-10-13: "פתקים זכוכית מספר 6... אפשרות למי שלא רוצה פתקים שקופים... שיהיה גם את
@@ -9653,7 +9666,6 @@ const HELP_FAQ_ENTRIES = [
     { id: 'home_calorie_badge', category: 'general' },
     { id: 'myday_water_toggle', category: 'general' },
     { id: 'quick_date_peek', category: 'general' },
-    { id: 'categories_menu', category: 'general' },
     { id: 'share_whatsapp', category: 'general' },
     { id: 'drag_note_to_schedule', category: 'notes' },
     { id: 'quick_note_shopping_list', category: 'notes' },
