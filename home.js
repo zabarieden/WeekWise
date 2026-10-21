@@ -111,9 +111,24 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
             }),
         });
     });
+    // צעד של יעד שמקושר גם לשגרה (routine_items.vision_goal_id / vision_milestone_id) מופיע פעם אחת בלבד: שורת היעד, בשעה
+    // שלו בשגרה (לפי בקשה מפורשת, 2026-10-21: "תשים אותו רק במקום אחד"). ✓ עליה מסמן גם בשגרה (הסנכרון של היעדים)
+    const goalLinkKey = (goalId, milestoneId) => (milestoneId ? `m:${milestoneId}` : `g:${goalId}`);
+    const goalKeys = new Set(goalItems.filter(gi => gi.goalId).map(gi => goalLinkKey(gi.goalId, gi.milestoneId)));
+    const routineLinked = new Map();
+    (routine.items || []).forEach(it => {
+        const k = it.vision_milestone_id ? `m:${it.vision_milestone_id}` : it.vision_goal_id ? `g:${it.vision_goal_id}` : null;
+        if (k && goalKeys.has(k) && !routineLinked.has(k)) routineLinked.set(k, it);
+    });
+    const routineLinkedIds = new Set((routine.items || []).filter(it => {
+        const k = it.vision_milestone_id ? `m:${it.vision_milestone_id}` : it.vision_goal_id ? `g:${it.vision_goal_id}` : null;
+        return k && routineLinked.has(k);
+    }).map(it => it.id));
     goalItems.forEach(gi => {
+        const linked = gi.goalId ? routineLinked.get(goalLinkKey(gi.goalId, gi.milestoneId)) : null;
+        const linkedTime = linked ? String(linked.time || '').slice(0, 5) : '';
         items.push({
-            kind: 'task', group: 'tasks', minutes: null, done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
+            kind: 'task', group: 'tasks', minutes: linkedTime ? scheduleTimeToMinutes(linkedTime) : null, done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
             build: () => {
                 // אותה שורה של הצצה להיום (✓ / תגית היעד / ⓘ), מסודרת מחדש לעמודות של הציר:
                 // [שעה] [נקודה] [טקסט + תגית] [ⓘ] [✓]
@@ -127,6 +142,7 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
                 row.querySelectorAll('.today-tasks-text, .today-goal-task-tag').forEach(el => main.appendChild(el));
                 const time = document.createElement('span');
                 time.className = 'myday-time';
+                time.textContent = linkedTime;
                 const dot = document.createElement('span');
                 dot.className = 'myday-dot';
                 dot.setAttribute('aria-hidden', 'true');
@@ -137,6 +153,7 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
         });
     });
     (routine.items || []).forEach(it => {
+        if (routineLinkedIds.has(it.id)) return;
         const done = routine.doneIds.has(it.id);
         const time = String(it.time || '').slice(0, 5);
         items.push({

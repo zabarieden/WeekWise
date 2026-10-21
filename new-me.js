@@ -4803,7 +4803,6 @@ const NEW_ME_TOUR_STEPS = [
 
     { id: 'nm_week', ch: 'newme', ctx: 'newme', icon: '🌱', target: '#nm-hud .nmg-week', titleKey: 'nm_week_ch_label', text: 'nm_tour_week_text', optional: true },
     { id: 'nm_bag', ch: 'newme', ctx: 'newme', icon: '🎒', target: '#nm-hud .nmg-bagit', titleKey: 'nm_tour_bag_title', text: 'nm_tour_bag_text', optional: true },
-    { id: 'nm_me', ch: 'newme', ctx: 'newme', icon: '✨', target: '#new-me-root .nmh-me', titleKey: 'nm_tour_me_title', text: 'nm_tour_me_text', optional: true },
     { id: 'nm_room', ch: 'newme', ctx: 'newme', icon: '🗝️', target: '#new-me-root .nmh-door[data-door="1"]', titleKey: 'room_title', text: 'room_tour_text', optional: true },
 ];
 function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen') === '1'; } catch { return true; } }

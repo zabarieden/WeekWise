@@ -8,6 +8,9 @@
 // מ-2026-10-20 (לפי בקשה מפורשת: "שלא רואים גרסאות ישנות לשום דבר") התמונות של Me הן צילומים של הדמויות שלה בתלת־ממד
 // (world/3d/ava-me1–3.png, מהדגמים world/3d/me1–3.glb) - במסדרון, במפה, בכרטיסים של "הדמות שלי" ובמהפך. גם התיק הקסום
 // (בכפתור ובמסך התיק) הוא צילום של התיק שלה בתלת־ממד: world/3d/ava-bag.png
+// שם הדמות (לפי בקשה מפורשת, 2026-10-21: "מעכשיו בכל השפות קוראים לו Sky") - אותו שם בכל השפות; השלבים: Sky 1/2/3
+const NM_CHAR_NAME = 'Sky';
+function nmCharName(n) { return n ? `${NM_CHAR_NAME} ${n}` : NM_CHAR_NAME; }
 const NMG_STAGES = [
     { n: 1, img: '3d/ava-me1.png', at: 0, ratio: 327 / 403 },
     { n: 2, img: '3d/ava-me2.png', at: 4, ratio: 399 / 365 },
@@ -252,7 +255,7 @@ function nmgOpenMap() {
     }).join('');
     box.innerHTML = `
         <div class="nmg-map-scroll">
-            <div class="nmg-map-head"><b>${nmEsc(t('nm_map_title'))}</b><button type="button" class="nmg-map-me" onclick="nmgOpenMe()" aria-label="${nmEsc(t('nm_me_title'))}"><img src="world/${stage.img}" alt=""><span>Me${stage.n}</span></button></div>
+            <div class="nmg-map-head"><b>${nmEsc(t('nm_map_title'))}</b><button type="button" class="nmg-map-me" onclick="nmgOpenMe()" aria-label="${nmEsc(t('nm_me_title'))}"><img src="world/${stage.img}" alt=""><span>${nmEsc(nmCharName(stage.n))}</span></button></div>
             <div class="nmg-path">${nodes}</div>
         </div>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(box);
@@ -303,7 +306,7 @@ function nmgMeClamp(p) { return { x: Math.max(45, Math.min(NMH_W - 45, p.x)), y:
 function nmgMeStyle(p) { return `left:${nmhX(p.x - NMG_ME_W / 2)};top:${nmhY(p.y - NMG_ME_H / 2)};width:${nmhX(NMG_ME_W)};height:${nmhY(NMG_ME_H)};--mes:${nmgMeScale(p.y).toFixed(3)}`; }
 function nmgMeHallHtml() {
     const s = nmgShownStage();
-    return `<button type="button" class="nmh-me nmg-me-${s.n}" style="${nmgMeStyle(nmgMePos || NMG_ME_HOME)}" onpointerdown="nmgMeDown(event)" onclick="nmgMeClick()" aria-label="${nmEsc(t('nm_me_aria').replace('{name}', 'Me' + s.n))}"><img src="world/${s.img}" alt="" draggable="false"></button>`;
+    return `<button type="button" class="nmh-me nmg-me-${s.n}" style="${nmgMeStyle(nmgMePos || NMG_ME_HOME)}" onpointerdown="nmgMeDown(event)" onclick="nmgMeClick()" aria-label="${nmEsc(t('nm_me_aria').replace('{name}', nmCharName(s.n)))}"><img src="world/${s.img}" alt="" draggable="false"></button>`;
 }
 function nmgMeClick() { if (nmgMeDragged) { nmgMeDragged = false; return; } nmgOpenMe(); }
 // הכניסות שאפשר לגעת בהן: דלתות 1–5 וקשת הפרחים לגג. hit = אזור הכניסה, front = איפה הדמות עומדת כשחוזרים משם
@@ -422,11 +425,11 @@ function nmgOpenMe() {
             const reached = s.n <= cur.n;
             const state = !reached ? 'is-next' : s.n === shown.n ? 'is-now' : 'is-past';
             const body = `<span class="nmg-me-pic"><img src="world/${s.img}" alt=""></span>
-                <b>Me${s.n}</b>
+                <b>${nmEsc(nmCharName(s.n))}</b>
                 <small>${state === 'is-now' ? nmEsc(t('nm_me_on_screen')) : state === 'is-past' ? nmEsc(t('nm_me_choose')) : nmEsc(t('nm_me_next').replace('{n}', nmFmt(s.at - keys)))}</small>`;
             // 💎 לכל Me שנפתח - כפתור קטן לשיתוף הכרטיס שלו (תמונה)
             return reached
-                ? `<div class="nmg-me-slot"><button type="button" class="nmg-me-card ${state}" data-me-pick="${s.n}" aria-pressed="${state === 'is-now'}">${body}</button><button type="button" class="nmg-me-share" data-me-share="${s.n}" aria-label="${nmEsc(t('nm_card_share'))} – Me${s.n}" title="${nmEsc(t('nm_card_share'))}">${NMG_SHARE_SVG}</button></div>`
+                ? `<div class="nmg-me-slot"><button type="button" class="nmg-me-card ${state}" data-me-pick="${s.n}" aria-pressed="${state === 'is-now'}">${body}</button><button type="button" class="nmg-me-share" data-me-share="${s.n}" aria-label="${nmEsc(t('nm_card_share'))} – ${nmEsc(nmCharName(s.n))}" title="${nmEsc(t('nm_card_share'))}">${NMG_SHARE_SVG}</button></div>`
                 : `<div class="nmg-me-slot"><div class="nmg-me-card ${state}">${body}</div></div>`;
         }).join('')}</div>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('close_btn'))}</button>`, 'nmg-me-sheet');
@@ -479,7 +482,7 @@ function nmgPlayEvolve(from, to) {
             <img class="nmg-ev-to" src="world/${to.img}" alt="">
             <div class="nmg-ev-flash" aria-hidden="true"></div>
         </div>
-        <div class="nmg-ev-text"><b>Me${to.n}</b><span>${nmEsc(t('nm_me_evolved'))}</span></div>
+        <div class="nmg-ev-text"><b>${nmEsc(nmCharName(to.n))}</b><span>${nmEsc(t('nm_me_evolved'))}</span></div>
         <button type="button" class="nm-btn-primary nmg-ev-go">${nmEsc(t('nm_continue'))}</button>`;
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
     void ov.offsetWidth;
@@ -571,6 +574,9 @@ const NM1_ART = { hello: 'world/me1-hello.webp', dreams: 'world/me1-dreams.webp'
 const NM1_INTRO = [['nm_m1_hi_title', 'nm_m1_hi_text'], [null, 'nm_m1_menu_text'], [null, 'nm_m1_day_text'], [null, 'nm_m1_magic_text'], [null, 'nm_m1_ready_text']];
 const NM1_STEP_LINES = { agree: 'nm_m1_q_agree', about: 'nm_m1_q_about', plan: 'nm_m1_q_plan', times: 'nm_m1_q_times', menu: 'nm_m1_q_menu', letter: 'nm_m1_q_letter' };
 const NM1_TIPS = ['nm_m1_tip_rice', 'nm_m1_tip_love', 'nm_m1_tip_ai'];
+// בלי אימוג'י בשורות של Sky (לפי בקשה מפורשת, 2026-10-21): נורה מצוירת, וחץ קטן שמראה שיש עוד עצה (נגיעה = הבאה)
+const NM1_BULB_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>';
+const NM1_NEXT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
 const NM1_SEEN_KEY = 'weekwise_nm_me1_intro_seen';
 const NM1_HEART_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.4-4.5-9.5-9.1C1 8.4 3.1 5 6.5 5c2.2 0 3.6 1.3 4.5 2.7C12 6.3 13.3 5 15.5 5 18.9 5 21 8.4 19.5 11.9 17.4 16.5 12 21 12 21z"/></svg>';
 let nm1JoyPending = false;
@@ -610,7 +616,7 @@ function nm1Stage(kind, html) {
     st.className = `nm1-stage nm1-${kind}`;
     st.setAttribute('role', 'dialog');
     st.setAttribute('aria-modal', 'true');
-    st.setAttribute('aria-label', 'Me');
+    st.setAttribute('aria-label', NM_CHAR_NAME);
     st.setAttribute('dir', document.documentElement.dir || 'rtl');
     st.innerHTML = `<div class="nm1-sky" aria-hidden="true">${nm1Stars(48)}</div><div class="nm1-motes" aria-hidden="true">${nm1Motes(16)}</div><div class="nm1-glitter" aria-hidden="true">${nm1Glitter(26)}</div>${html}`;
     wrap.appendChild(st);
@@ -625,7 +631,7 @@ function nm1Close(st, then) {
 }
 function nm1TalkHtml(titleKey, textKey, btnKey, dots) {
     return `<div class="nm1-talk">
-            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">Me</span><div class="nm1-say">${titleKey ? `<h2 class="nm1-title">${nm1WordsHtml(t(titleKey))}</h2>` : ''}${textKey ? `<p class="nm1-text">${nm1WordsHtml(t(textKey))}</p>` : ''}</div></div>
+            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">${NM_CHAR_NAME}</span><div class="nm1-say">${titleKey ? `<h2 class="nm1-title">${nm1WordsHtml(t(titleKey))}</h2>` : ''}${textKey ? `<p class="nm1-text">${nm1WordsHtml(t(textKey))}</p>` : ''}</div></div>
             <div class="nm1-foot">${dots ? `<div class="nm1-dots" aria-hidden="true">${'<i></i>'.repeat(dots)}</div>` : ''}<button type="button" class="nm1-next${btnKey ? ' is-go' : ''}">${btnKey ? nmEsc(t(btnKey)) : ''}</button></div>
         </div>`;
 }
@@ -669,7 +675,6 @@ function nm1MaybeIntro() {
 function nm1Intro() {
     let i = 0;
     const st = nm1Stage('intro', `
-        <button type="button" class="nm1-skip">${nmEsc(t('nm_m1_skip'))}</button>
         <div class="nm1-scene">
             <div class="nm1-portal" aria-hidden="true"><span class="nm1-core"></span><span class="nm1-ring"></span><span class="nm1-ring nm1-ring2"></span></div>
             <p class="nm1-portal-text">${nmEsc(t('nm_m1_portal'))}</p>
@@ -701,11 +706,9 @@ function nm1Intro() {
     const advance = () => { if (!talking()) return; if (i < NM1_INTRO.length - 1) { i++; show(); } else finish(); };
     const onKey = e => {
         if (!st.isConnected) { document.removeEventListener('keydown', onKey, true); return; }
-        if (e.key === 'Escape') { e.preventDefault(); finish(); return; }
-        if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !(e.target && e.target.closest && e.target.closest('.nm1-skip'))) { e.preventDefault(); advance(); }
+        if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(e.key)) { e.preventDefault(); advance(); }
     };
     next.addEventListener('click', e => { e.stopPropagation(); advance(); });
-    st.querySelector('.nm1-skip').addEventListener('click', e => { e.stopPropagation(); finish(); });
     st.querySelector('.nm1-scene').addEventListener('click', advance);
     document.addEventListener('keydown', onKey, true);
     // הפורטל נפתח, Me1 עף ממנו (פרץ של ניצוצות כשהוא מגיע) - ואז הבועה
@@ -752,9 +755,10 @@ function nm1HelpHtml(q, id) {
             <img class="nm1-help-art" src="${NM1_ART.dreams}" alt="" draggable="false">
             <p class="nm1-help-line">${nmEsc(t(line))}</p>
             <button type="button" class="nm1-tip" onclick="nm1NextTip(this)">
-                <span class="nm1-tip-ic" aria-hidden="true">💡</span>
+                <span class="nm1-tip-ic" aria-hidden="true">${NM1_BULB_SVG}</span>
                 <span class="nm1-tip-text" aria-live="polite">${nmEsc(t(NM1_TIPS[k]))}</span>
                 <span class="nm1-tip-dots" aria-hidden="true">${NM1_TIPS.map((_, j) => `<i${j === k ? ' class="on"' : ''}></i>`).join('')}</span>
+                <span class="nm1-tip-more" aria-hidden="true">${NM1_NEXT_SVG}</span>
             </button>
         </div>`;
     }
@@ -816,7 +820,7 @@ function nm1Resume(kind) {
     const st = nm1Stage('resume', `
         <div class="nm1-scene"><div class="nm1-halo" aria-hidden="true"></div><figure class="nm1-me"><img src="${NM1_ART.joy}" alt="" draggable="false"></figure></div>
         <div class="nm1-talk">
-            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">Me</span><div class="nm1-say in"><h2 class="nm1-title">${nm1WordsHtml(t('nm_m1_resume_title'))}</h2><p class="nm1-text">${nm1WordsHtml(t(kind === 'tour' ? 'nm_m1_resume_tour' : 'nm_m1_resume_quiz'))}</p></div></div>
+            <div class="nm1-bubble" aria-live="polite"><span class="nm1-name">${NM_CHAR_NAME}</span><div class="nm1-say in"><h2 class="nm1-title">${nm1WordsHtml(t('nm_m1_resume_title'))}</h2><p class="nm1-text">${nm1WordsHtml(t(kind === 'tour' ? 'nm_m1_resume_tour' : 'nm_m1_resume_quiz'))}</p></div></div>
             <div class="nm1-foot"><button type="button" class="nm1-later">${nmEsc(t(kind === 'tour' ? 'nm_m1_resume_later' : 'nm_m1_resume_restart'))}</button><button type="button" class="nm1-next is-go">${nmEsc(t('nm_m1_resume_yes'))}</button></div>
         </div>`);
     const yes = st.querySelector('.nm1-next'), later = st.querySelector('.nm1-later');
@@ -947,7 +951,7 @@ async function nmgCardImage(n) {
     ctx.shadowColor = nmgHexA(c1, 0.75); ctx.shadowBlur = 34;
     ctx.fillStyle = '#ffffff';
     ctx.font = `800 132px ${font}`;
-    ctx.fillText(`Me${stage.n}`, W / 2, y + 140);
+    ctx.fillText(nmCharName(stage.n), W / 2, y + 140);
     ctx.restore();
     ctx.fillStyle = c1;
     ctx.font = `700 48px ${font}`;
@@ -981,5 +985,5 @@ async function nmgCardImage(n) {
 async function nmgShareCard(n) {
     const blob = await nmgCardImage(n);
     if (!blob) { showAppToast(t('nm_save_error'), 'error'); return; }
-    if (typeof openSharePicker === 'function') openSharePicker(t('nm_card_share_text').replace('{n}', `Me${n}`), { imageBlob: blob, imageName: `me${n}.jpg`, subject: `Me${n}` });
+    if (typeof openSharePicker === 'function') openSharePicker(t('nm_card_share_text').replace('{n}', nmCharName(n)), { imageBlob: blob, imageName: `sky${n}.jpg`, subject: nmCharName(n) });
 }

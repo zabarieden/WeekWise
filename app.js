@@ -22199,7 +22199,7 @@ function getPeekGoalTaskItems() {
         if (goal.track_type === 'days') {
             const tasks = visionSortedMilestones(goal.id);
             if (tasks.length) {
-                tasks.forEach(m => items.push({ goalId: goal.id, icon, text: m.title, tag: goal.title, done: visionCheckedToday(goal.id, m.id), toggle: checked => toggleVisionDayCheck(goal.id, m.id, checked) }));
+                tasks.forEach(m => items.push({ goalId: goal.id, milestoneId: m.id, icon, text: m.title, tag: goal.title, done: visionCheckedToday(goal.id, m.id), toggle: checked => toggleVisionDayCheck(goal.id, m.id, checked) }));
             } else {
                 items.push({ goalId: goal.id, icon, text: goal.title, tag: null, done: visionCheckedToday(goal.id, null), toggle: checked => toggleVisionDayCheck(goal.id, null, checked) });
             }

@@ -14,7 +14,16 @@ let aiChatAsk = null;         // השאלה של הכלי שנבחר (ועוד �
 const AI_CHAT_SVG = {
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+    // המראה בזכוכית (לפי בחירה מפורשת, 2026-10-21: "העוזר האישי - 6 זכוכית"): ניצוץ במקום הכדור, וציורים קטנים לכלים
+    spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15.5l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z"/></svg>',
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+    schedule: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    food: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c-3-2-8-1-8 5 0 4 3 8 5 8 1 0 2-.6 3-.6s2 .6 3 .6c2 0 5-4 5-8 0-6-5-7-8-5z"/><path d="M12 8c0-2 1-4 3-5"/></svg>',
+    photo: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+    table: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg>',
 };
+// הכיתוב של כלי בלי האימוג'י שבתחילתו (בזכוכית יש ציור במקומו)
+function aiChatPlainLabel(s) { return String(s || '').replace(/^\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*\s*/u, ''); }
 
 function aiChatEl() { return document.getElementById('ai-chat'); }
 function aiChatIsOpen() { return !!aiChatEl(); }
@@ -33,13 +42,14 @@ function openAiChat(tool) {
     wrap.innerHTML = `
         <div class="ai-chat-sheet">
             <div class="ai-chat-head">
-                <span class="ai-chat-orb" aria-hidden="true"></span>
+                <span class="ai-chat-orb" aria-hidden="true">${AI_CHAT_SVG.spark}</span>
                 <span class="ai-chat-titles"><b>${aiChatEsc(t('ai_chat_title'))}</b><small>${aiChatEsc(t('ai_chat_sub'))}</small></span>
                 <button type="button" class="ai-chat-x" aria-label="${aiChatEsc(t('close_btn'))}">${AI_CHAT_SVG.x}</button>
             </div>
             <div class="ai-chat-body" aria-live="polite"></div>
             <form class="ai-chat-input">
-                <input type="text" maxlength="600" enterkeyhint="send" placeholder="${aiChatEsc(t('ai_chat_placeholder'))}" aria-label="${aiChatEsc(t('ai_chat_placeholder'))}">
+                <input type="text" id="ai-chat-field" maxlength="600" enterkeyhint="send" placeholder="${aiChatEsc(t('ai_chat_placeholder'))}" aria-label="${aiChatEsc(t('ai_chat_placeholder'))}">
+                <button type="button" class="ai-chat-mic dictate-btn${typeof homeSpeechSupported === 'function' && homeSpeechSupported() ? '' : ' hidden'}" aria-pressed="false" aria-label="${aiChatEsc(t('dictation_btn_aria'))}" title="${aiChatEsc(t('dictation_btn_aria'))}">${AI_CHAT_SVG.mic}</button>
                 <button type="submit" class="ai-chat-send" aria-label="${aiChatEsc(t('ai_chat_send'))}">${AI_CHAT_SVG.send}</button>
                 <p class="ai-chat-note">${aiChatEsc(t('ai_disclaimer_caption'))}</p>
             </form>
@@ -49,19 +59,22 @@ function openAiChat(tool) {
     wrap.addEventListener('click', e => { if (e.target === wrap) closeAiChat(); });
     wrap.addEventListener('keydown', e => { if (e.key === 'Escape') closeAiChat(); });
     wrap.querySelector('.ai-chat-x').addEventListener('click', () => closeAiChat());
-    wrap.querySelector('.ai-chat-input').addEventListener('submit', e => { e.preventDefault(); aiChatSend(); });
+    wrap.querySelector('.ai-chat-input').addEventListener('submit', e => { e.preventDefault(); if (typeof stopDictation === 'function') stopDictation(); aiChatSend(); });
+    // 🎙️ לדבר במקום להקליד (לפי בקשה מפורשת, 2026-10-21) - אותה הכתבה כמו בפתקים, בכל הכלים של העוזר
+    wrap.querySelector('.ai-chat-mic').addEventListener('click', e => { if (typeof toggleDictation === 'function') toggleDictation('ai-chat-field', e.currentTarget); });
     aiChatHookToasts();
     aiChatTool = null;
     aiChatMode = 'onetime';
     aiChatBusy = false;
     aiChatAsk = null;
-    aiChatSay(t('ai_chat_hi'), aiChatToolChips());
+    aiChatSay(t('ai_chat_hi'), aiChatToolChips(), 'is-hello');
     if (tool && tool !== 'photo') aiChatPickTool(tool);
     setTimeout(() => { const i = wrap.querySelector('.ai-chat-input input'); if (i) i.focus(); }, 80);
 }
 
 function closeAiChat() {
     const el = aiChatEl();
+    if (el && typeof stopDictation === 'function') stopDictation();
     if (el) el.remove();
     document.body.classList.remove('ai-chat-open');
     aiChatUnhookToasts();
@@ -88,7 +101,7 @@ function aiChatChips(chips) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `ai-chat-chip${c.cls ? ' ' + c.cls : ''}${c.on ? ' is-on' : ''}`;
-        btn.textContent = c.label;
+        if (c.icon) { btn.innerHTML = c.icon; const sp = document.createElement('span'); sp.textContent = c.label; btn.appendChild(sp); } else btn.textContent = c.label;
         if (c.tool) btn.dataset.tool = c.tool;
         if (c.mode) btn.dataset.mode = c.mode;
         btn.addEventListener('click', c.onClick);
@@ -105,7 +118,7 @@ function aiChatSay(text, chips, cls) {
 }
 function aiChatToolChips() {
     return [['schedule', 'ai_chat_tool_schedule'], ['food', 'ai_chat_tool_food'], ['photo', 'ai_chat_tool_photo'], ['table', 'ai_chat_tool_table']]
-        .map(([tool, key]) => ({ label: t(key), tool, cls: 'ai-chat-tool', onClick: () => (tool === 'photo' ? aiChatPhoto() : aiChatPickTool(tool)) }));
+        .map(([tool, key]) => ({ label: aiChatPlainLabel(t(key)), icon: AI_CHAT_SVG[tool], tool, cls: 'ai-chat-tool', onClick: () => (tool === 'photo' ? aiChatPhoto() : aiChatPickTool(tool)) }));
 }
 function aiChatModeChips() {
     return [['onetime', 'ai_chat_mode_onetime'], ['recurring', 'ai_chat_mode_recurring'], ['recurring-daily', 'ai_chat_mode_daily']]

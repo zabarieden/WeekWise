@@ -56,6 +56,11 @@ function nmg3dAfterHallRender() {
 }
 // התמונות של Me (world/3d/ava-me{n}.png) צולמו מהדגמים בריבוע של 512 (מצלמה 0°/80°): [x, y, רוחב, גובה] של הדמות בתוך
 // הריבוע. כך הדגם החי יושב בדיוק על התמונה (אותו גודל, אותו מקום) - בלי קפיצה כשהוא נטען
+// מסגרת עם מקום לסיבוב (לפי בקשה מפורשת, 2026-10-21: "נחתך לו הזנב… בעצם לכל מקום שהוא מסתכל"): הצילום מתוכנן לפנים בלבד,
+// אז כשהוא מסתובב (צד, גב) כנפיים וזנב יצאו מהמסגרת. המצלמה רחוקה פי 140/105 והמסגרת גדולה באותו יחס - אותו גודל בדיוק,
+// עם מקום מכל הצדדים
+const NMG3D_ROOM = 140 / 105;
+const NMG3D_RADIUS = '140%';
 const NMG3D_ME_FRAMES = { 1: [90, 42, 327, 403], 2: [62, 72, 399, 365], 3: [42, 132, 425, 245] };
 async function nmg3dUpgradeMe(btn, stageN) {
     if (!btn || btn.querySelector('model-viewer') || nmg3dReduced() || nmg3dSlowNet() || !nmg3dWebgl()) return;
@@ -66,7 +71,7 @@ async function nmg3dUpgradeMe(btn, stageN) {
     const attrs = {
         src: url, alt: '', autoplay: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
         'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral',
-        'camera-orbit': '0deg 80deg auto', loading: 'eager', 'aria-hidden': 'true',
+        'camera-orbit': `0deg 80deg ${NMG3D_RADIUS}`, 'max-camera-orbit': 'auto auto 300%', loading: 'eager', 'aria-hidden': 'true',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     const F = NMG3D_ME_FRAMES[stageN];
@@ -75,8 +80,8 @@ async function nmg3dUpgradeMe(btn, stageN) {
         // נמתח למלבן, והדגם זז הצידה ולמעלה (לפי בקשה מפורשת, 2026-10-21: "היא לא באמצע")
         const [x, y, w, h] = F;
         const BW = typeof NMG_ME_W === 'number' ? NMG_ME_W : 124, BH = typeof NMG_ME_H === 'number' ? NMG_ME_H : 150;
-        const k = Math.min(BW / w, BH / h), S = 512 * k;
-        const left = (BW - w * k) / 2 - x * k, top = BH - h * k - y * k;
+        const k = Math.min(BW / w, BH / h), S0 = 512 * k, S = S0 * NMG3D_ROOM;
+        const left = (BW - w * k) / 2 - x * k - (S - S0) / 2, top = BH - h * k - y * k - (S - S0) / 2;
         const pct = v => `${(v * 100).toFixed(2)}%`;
         Object.assign(mv.style, { left: pct(left / BW), top: pct(top / BH), width: pct(S / BW), height: pct(S / BH), right: 'auto', bottom: 'auto' });
     }
@@ -118,7 +123,7 @@ function nmg3dFaceLoop(el, mv) {
         const next = nmg3dTurnToward(theta, target, recent ? 0.22 : 0.06);
         if (Math.abs(next - theta) > 0.05) {
             theta = next;
-            mv.cameraOrbit = `${theta.toFixed(1)}deg 80deg auto`;
+            mv.cameraOrbit = `${theta.toFixed(1)}deg 80deg ${NMG3D_RADIUS}`;
             if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
         }
         requestAnimationFrame(step);
@@ -585,6 +590,9 @@ function nmg3dFollowDrop() {
     if (nmgFollow.mv) { nmgFollow.mv.remove(); nmgFollow.mv = null; }
     if (nmgFollow.el) nmgFollow.el.classList.remove('has-3d');
 }
+// הסיבוב סביב החזה והראש של כל שלב (נמדד מהדגמים) ולא סביב מרכז הקופסה (שהזנב והכנפיים מזיזים) - כך הגוף נשאר בדיוק מעל
+// הטבעת מכל צד (לפי בקשה מפורשת, 2026-10-21: "והעיגול לא מתחתיו")
+const NMG3D_BODY = { 1: '0.01m auto 0.13m', 2: '0.18m auto 0.05m', 3: '0.10m auto -0.03m' };
 async function nmg3dFollowLive(n) {
     if (nmg3dReduced() || nmg3dSlowNet() || !nmg3dWebgl()) return;
     const url = `world/3d/me${n}.glb`;
@@ -592,7 +600,7 @@ async function nmg3dFollowLive(n) {
     const mv = document.createElement('model-viewer');
     const attrs = {
         src: url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
-        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral', 'camera-orbit': `${nmgFollow.theta}deg 80deg auto`, loading: 'eager',
+        'shadow-intensity': '0', exposure: '1.1', 'environment-image': 'neutral', 'camera-orbit': `${nmgFollow.theta}deg 80deg ${NMG3D_RADIUS}`, 'max-camera-orbit': 'auto auto 300%', 'camera-target': NMG3D_BODY[n] || 'auto auto auto', loading: 'eager',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     mv.addEventListener('load', () => nmgFollow.el.classList.add('has-3d'), { once: true });
@@ -632,7 +640,7 @@ function nmg3dFollowTick() {
     else if (!nmgFollow.dragging) nmgFollow.spinV = 0;
     const mv = nmgFollow.mv;
     if (mv && nmgFollow.el.classList.contains('has-3d')) {
-        mv.cameraOrbit = `${nmgFollow.theta.toFixed(1)}deg 80deg auto`;
+        mv.cameraOrbit = `${nmgFollow.theta.toFixed(1)}deg 80deg ${NMG3D_RADIUS}`;
         if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
     }
     if (nmgFollow.dragging || nmgFollow.face !== null || Math.abs(nmgFollow.spinV) > 0.05) nmgFollow.raf = requestAnimationFrame(nmg3dFollowTick);

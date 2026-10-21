@@ -11420,11 +11420,12 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 #nmg-follow-layer .nmg-follow { width: 124px; height: 140px; transform: translate3d(var(--fx, 14px), var(--fy, 58vh), 0) rotate(var(--tilt, 0deg)); pointer-events: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: opacity .5s ease, transform .2s ease-out; }
 #nmg-follow-layer .nmg-follow.is-moving { cursor: grabbing; transition: opacity .5s ease; }
 #nmg-follow-layer .nmg-follow img { height: 124px; -webkit-user-drag: none; pointer-events: none; }
-#nmg-follow-layer .nmg-follow model-viewer { inset: -8% -8% 4% -8%; }
+/* מקום לסיבוב (2026-10-21): פי 140/105 מהמסגרת הקודמת, סביב אותו מרכז (המצלמה רחוקה באותו יחס - ר' NMG3D_ROOM) */
+#nmg-follow-layer .nmg-follow model-viewer { inset: -25.3% -27.4% -13.3% -27.4%; }
 .nmg-follow-ring { position: absolute; left: 50%; bottom: 0; width: 92px; height: 26px; transform: translateX(-50%); border-radius: 50%; cursor: ew-resize; touch-action: none;
     border: 1.5px solid rgba(201, 182, 255, .5); background: radial-gradient(closest-side, rgba(167, 243, 208, .22), rgba(201, 182, 255, .08) 70%, transparent);
     box-shadow: 0 0 10px rgba(201, 182, 255, .35), inset 0 0 8px rgba(167, 243, 208, .25); transition: border-color .25s ease, box-shadow .25s ease; }
-.nmg-follow-ring::before, .nmg-follow-ring::after { content: ''; position: absolute; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-top: 1.5px solid rgba(240, 232, 255, .8); border-left: 1.5px solid rgba(240, 232, 255, .8); }
+.nmg-follow-ring::before, .nmg-follow-ring::after { display: none; content: ''; position: absolute; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-top: 1.5px solid rgba(240, 232, 255, .8); border-left: 1.5px solid rgba(240, 232, 255, .8); }
 .nmg-follow-ring::before { left: 7px; transform: rotate(-45deg); }
 .nmg-follow-ring::after { right: 7px; transform: rotate(135deg); }
 #nmg-follow-layer .nmg-follow:hover .nmg-follow-ring, #nmg-follow-layer .nmg-follow.is-spinning .nmg-follow-ring { border-color: rgba(167, 243, 208, .85); box-shadow: 0 0 16px rgba(167, 243, 208, .6), inset 0 0 10px rgba(167, 243, 208, .4); }
@@ -11544,8 +11545,7 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
     background: linear-gradient(135deg, #fff2cc, #ffd27a 55%, #f4c1ff); box-shadow: 0 8px 26px rgba(255, 200, 120, .35), inset 0 1px 0 rgba(255, 255, 255, .7); transition: transform .15s ease; }
 .nm1-next.is-go { flex: 1 1 auto; }
 .nm1-next:active { transform: scale(.97); }
-.nm1-skip { position: absolute; top: max(14px, env(safe-area-inset-top)); inset-inline-end: 14px; z-index: 2; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .78); font: inherit; font-size: .82rem; cursor: pointer; }
-.nm1-stage :is(.nm1-next, .nm1-skip):focus-visible, .nm1-tip:focus-visible { outline: 2px solid #ffe3a3; outline-offset: 3px; }
+.nm1-stage .nm1-next:focus-visible, .nm1-tip:focus-visible { outline: 2px solid #ffe3a3; outline-offset: 3px; }
 /* Me1 עף מהפתיחה למקום שלו בשאלון */
 .nm1-fly { position: fixed; z-index: 5000; margin: 0; pointer-events: none; object-fit: contain; transform-origin: 0 0; transition: transform .75s cubic-bezier(.45, 0, .2, 1); filter: drop-shadow(0 0 14px rgba(255, 220, 150, .45)); }
 /* 2. ליד כל שאלה */
@@ -11564,9 +11564,14 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 .nm1-help-art { display: block; width: 100%; max-height: 200px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(255, 220, 150, .25)) drop-shadow(0 10px 16px rgba(0, 0, 0, .3)); }
 .nm1-help.is-enter .nm1-help-art { animation: nm1HelpIn .7s cubic-bezier(.2, .9, .3, 1.2) both; }
 .nm1-help-line { margin: -2px 0 0; text-align: center; font-size: 1.14rem; font-weight: 800; line-height: 1.35; color: #fff; text-wrap: balance; text-shadow: 0 0 18px rgba(255, 220, 150, .35); }
-.nm1-tip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 16px; border: 1px dashed rgba(255, 226, 160, .45); background: rgba(255, 226, 160, .08); color: #fff; font: inherit; font-size: .93rem; line-height: 1.45; text-align: start; cursor: pointer; }
-.nm1-tip-ic { flex: 0 0 auto; font-size: 1.1rem; }
-.nm1-tip-text { flex: 1 1 auto; }
+.nm1-tip { box-sizing: border-box; max-width: 100%; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 16px; border: 1px dashed rgba(255, 226, 160, .45); background: rgba(255, 226, 160, .08); color: #fff; font: inherit; font-size: .93rem; line-height: 1.45; text-align: start; cursor: pointer; }
+.nm1-tip-ic { flex: 0 0 auto; display: grid; place-items: center; width: 20px; height: 20px; color: #ffe3a3; }
+.nm1-tip-ic svg { width: 20px; height: 20px; }
+.nm1-tip-text { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+.nm1-tip-more { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 226, 160, .16); color: #ffe3a3; }
+.nm1-tip-more svg { width: 16px; height: 16px; }
+[dir="ltr"] .nm1-tip-more svg { transform: scaleX(-1); }
+.nm1-tip:hover .nm1-tip-more { background: rgba(255, 226, 160, .28); }
 .nm1-tip-dots { flex: 0 0 auto; display: flex; gap: 4px; }
 .nm1-tip-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .3); }
 .nm1-tip-dots i.on { background: #ffe3a3; }
@@ -11645,3 +11650,34 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 .bag-task-today svg { flex: none; }
 .bag-task-today.is-on { border-color: transparent; background: transparent; color: var(--text-secondary); cursor: default; }
 .bag-page-tasks .bag-task-today.is-on { color: #8a7d55; }
+
+/* 🪟 העוזר בזכוכית (לפי בחירה מפורשת, 2026-10-21: "העוזר האישי - 6 זכוכית"): גיליון שקוף-חלבי מעל האפליקציה, כותרת
+   "במה אפשר לעזור", כלים עם ציור קטן, הבועה שלי והשליחה בצבע הערכה, ו-🎙️ לדבר במקום להקליד. טשטוש אחד בלבד (על
+   הגיליון) - בלי טשטוש לכל בועה, כדי שיהיה קל גם למכשירים חלשים */
+.ai-chat { background: rgba(0, 0, 0, 0.22); }
+.ai-chat-sheet { background: color-mix(in srgb, var(--bg-sheet) 62%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.35); backdrop-filter: blur(22px) saturate(1.35); border-top: 1px solid color-mix(in srgb, #fff 38%, transparent); box-shadow: 0 -18px 46px rgba(0, 0, 0, 0.26), inset 0 1px 0 color-mix(in srgb, #fff 20%, transparent); }
+.ai-chat-head { justify-content: flex-start; padding: 20px 64px 8px 16px; padding-inline: 16px 64px; border-bottom: 0; }
+.ai-chat-head::before { background: color-mix(in srgb, var(--text-primary) 22%, transparent); }
+.ai-chat-orb { width: 34px; height: 34px; display: grid; place-items: center; background: var(--accent-purple-text); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-purple-text) 42%, transparent); }
+.ai-chat-orb svg { width: 18px; height: 18px; }
+.ai-chat-titles { text-align: start; }
+.ai-chat-titles small { display: none; }
+.ai-chat-x { background: color-mix(in srgb, var(--text-primary) 9%, transparent); }
+.ai-chat-body { padding-top: 6px; }
+.ai-chat-msg.is-hello { align-self: stretch; max-width: none; padding: 4px 4px 6px; border-radius: 0; background: none; border: 0; font-size: 1.3rem; font-weight: 800; line-height: 1.3; text-align: center; color: var(--text-primary); }
+.ai-chat-msg.is-bot:not(.is-hello) { background: color-mix(in srgb, var(--bg-sheet) 55%, transparent); border: 1px solid color-mix(in srgb, #fff 24%, transparent); }
+.ai-chat-msg.is-me { background: var(--accent-purple-text); }
+.ai-chat-chip { background: color-mix(in srgb, var(--bg-sheet) 48%, transparent); border: 1px solid color-mix(in srgb, #fff 30%, transparent); }
+.ai-chat-chips.is-tools .ai-chat-chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 16px; }
+.ai-chat-ic { flex: none; width: 18px; height: 18px; color: var(--accent-purple-text); }
+.ai-chat-chip.is-on { border-color: var(--accent-purple-text); background: color-mix(in srgb, var(--accent-purple-text) 16%, transparent); }
+.ai-chat-input { border-top: 0; }
+.ai-chat-input input { background: color-mix(in srgb, var(--bg-sheet) 52%, transparent); border: 1px solid color-mix(in srgb, #fff 30%, transparent); }
+.ai-chat-input input.is-listening { border-color: var(--accent-purple-text); }
+.ai-chat-send { background: var(--accent-purple-text); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-purple-text) 40%, transparent); }
+.ai-chat-mic { position: static; inset: auto; z-index: auto; flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, #fff 30%, transparent); background: color-mix(in srgb, var(--bg-sheet) 52%, transparent); color: var(--text-primary); cursor: pointer; }
+.ai-chat-mic svg { width: 21px; height: 21px; }
+.ai-chat-mic.listening { border-color: transparent; background: var(--accent-purple-text); color: #fff; animation: aiChatMicPulse 1.4s ease-in-out infinite; }
+.ai-chat-mic:focus-visible { outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent); outline-offset: 2px; }
+@keyframes aiChatMicPulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-purple-text) 45%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-purple-text) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .ai-chat-mic.listening { animation: none; } }
