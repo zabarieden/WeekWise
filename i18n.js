@@ -63,25 +63,43 @@ function i18nFocusIndex() {
     return i18nFocusPromise;
 }
 let i18nEnAsked = false;
+let i18nApplied = false;   // שפה כבר הוחלה על המסך (setLanguage הגיעה עד הסוף)
+let i18nWanted = null;     // השפה האחרונה שביקשו - בשתי החלפות מהירות רק האחרונה מוחלת
 function t(key) {
-    const dict = translations[currentLang] || translations.en || {};
-    if (dict[key] !== undefined) return dict[key];
+    const cur = translations[currentLang];
+    if (cur && cur[key] !== undefined) return cur[key];
     const en = translations.en;
-    if (!en && !i18nEnAsked) { i18nEnAsked = true; i18nLoad('en'); }
-    return en && en[key] !== undefined ? en[key] : key;
+    if (en && en[key] !== undefined) return en[key];
+    // בכל קובץ שפה יש כל המפתחות (build-i18n.pl משלים מאנגלית), אז אנגלית נטענת רק כששום שפה לא הגיעה
+    if (!cur && !en && !i18nEnAsked && !Object.keys(translations).length) { i18nEnAsked = true; i18nLoad('en'); }
+    return key;
+}
+// השפות שהמשתמש השתמש בהן במכשיר הזה (רק אז שווה לטעון את הכותרות של כל השפות, i18n/focus.js)
+function i18nLangsSeen() {
+    try { return JSON.parse(localStorage.getItem('weekwise_langs_seen') || '[]'); } catch (e) { return []; }
 }
 
-function setLanguage(lang) {
+function setLanguage(lang, opts) {
     if (!SUPPORTED_LANGUAGES.includes(lang)) lang = 'en';
+    i18nWanted = lang;
     if (!translations[lang]) {
-        // השפה עוד לא נטענה: טוענים את הקובץ שלה ואז מחליפים (אם הטעינה נכשלה - אנגלית, ובלי לולאה)
+        // השפה עוד לא נטענה: טוענים את הקובץ שלה ואז מחליפים. אם הטעינה נכשלה ועוד אין שפה על המסך - אנגלית
+        // בינתיים, בלי לשכוח את השפה השמורה (תקלה רגעית ברשת לא מחליפה למישהו את השפה)
         return i18nLoad(lang).then(ok => {
-            if (ok) return setLanguage(lang);
-            if (lang !== 'en' && translations[currentLang] === undefined) return setLanguage('en');
+            if (i18nWanted !== lang) return;
+            if (ok) return setLanguage(lang, opts);
+            if (lang !== 'en' && !i18nApplied) return setLanguage('en', { keepSaved: true });
         });
     }
     currentLang = lang;
-    localStorage.setItem('weekwise_lang', lang);
+    i18nApplied = true;
+    if (!(opts && opts.keepSaved)) {
+        try {
+            localStorage.setItem('weekwise_lang', lang);
+            const seen = i18nLangsSeen();
+            if (!seen.includes(lang)) localStorage.setItem('weekwise_langs_seen', JSON.stringify(seen.concat(lang)));
+        } catch (e) { /* אין אחסון (גלישה פרטית) - השפה פשוט לא נשמרת */ }
+    }
     document.documentElement.lang = lang;
     document.documentElement.dir = isRTL(lang) ? 'rtl' : 'ltr';
     applyTranslations();
@@ -89,7 +107,8 @@ function setLanguage(lang) {
 }
 
 function loadSavedLanguage() {
-    const saved = localStorage.getItem('weekwise_lang');
+    let saved = null;
+    try { saved = localStorage.getItem('weekwise_lang'); } catch (e) { /* אין אחסון - אנגלית */ }
     return setLanguage(saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : 'en');
 }
 

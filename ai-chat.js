@@ -59,7 +59,7 @@ function openAiChat(tool) {
     wrap.addEventListener('click', e => { if (e.target === wrap) closeAiChat(); });
     wrap.addEventListener('keydown', e => { if (e.key === 'Escape') closeAiChat(); });
     wrap.querySelector('.ai-chat-x').addEventListener('click', () => closeAiChat());
-    wrap.querySelector('.ai-chat-input').addEventListener('submit', e => { e.preventDefault(); if (typeof stopDictation === 'function') stopDictation(); aiChatSend(); });
+    wrap.querySelector('.ai-chat-input').addEventListener('submit', e => { e.preventDefault(); if (aiChatBusy) return; if (typeof stopDictation === 'function') stopDictation(); aiChatSend(); });
     // 🎙️ לדבר במקום להקליד (לפי בקשה מפורשת, 2026-10-21) - אותה הכתבה כמו בפתקים, בכל הכלים של העוזר
     wrap.querySelector('.ai-chat-mic').addEventListener('click', e => { if (typeof toggleDictation === 'function') toggleDictation('ai-chat-field', e.currentTarget); });
     aiChatHookToasts();
@@ -207,7 +207,9 @@ function aiChatHookToasts() {
     const orig = aiChatToastOrig;
     const hooked = function (msg, type, ...rest) {
         if (aiChatIsOpen() && msg) {
-            aiChatAnswered = true;
+            // הודעה של המיקרופון ("לא שמעתי") היא לא התשובה לבקשה - ה"✓ בוצע" עדיין מגיע
+            const fromMic = typeof DICTATION_ERROR_KEYS !== 'undefined' && Object.values(DICTATION_ERROR_KEYS).concat('quick_note_voice_failed').some(k => t(k) === String(msg));
+            if (!fromMic) aiChatAnswered = true;
             const err = type === 'error';
             // גם כשההודעה היא אזהרה (כמו "נראה הרבה") - אם האוכל כבר נרשם, אפשר לתקן אותו
             const fixable = err && aiChatTool === 'food' && aiChatFoodEntry();

@@ -115,10 +115,13 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
     // שלו בשגרה (לפי בקשה מפורשת, 2026-10-21: "תשים אותו רק במקום אחד"). ✓ עליה מסמן גם בשגרה (הסנכרון של היעדים)
     const goalLinkKey = (goalId, milestoneId) => (milestoneId ? `m:${milestoneId}` : `g:${goalId}`);
     const goalKeys = new Set(goalItems.filter(gi => gi.goalId).map(gi => goalLinkKey(gi.goalId, gi.milestoneId)));
+    // כמה שורות בשגרה לאותו צעד (שכפול לשונית / פריט): השעה המוקדמת ביותר
     const routineLinked = new Map();
+    const routineTimeOf = it => String(it.time || '99:99');
     (routine.items || []).forEach(it => {
         const k = it.vision_milestone_id ? `m:${it.vision_milestone_id}` : it.vision_goal_id ? `g:${it.vision_goal_id}` : null;
-        if (k && goalKeys.has(k) && !routineLinked.has(k)) routineLinked.set(k, it);
+        const cur = k && routineLinked.get(k);
+        if (k && goalKeys.has(k) && (!cur || routineTimeOf(it) < routineTimeOf(cur))) routineLinked.set(k, it);
     });
     const routineLinkedIds = new Set((routine.items || []).filter(it => {
         const k = it.vision_milestone_id ? `m:${it.vision_milestone_id}` : it.vision_goal_id ? `g:${it.vision_goal_id}` : null;
@@ -128,7 +131,8 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
         const linked = gi.goalId ? routineLinked.get(goalLinkKey(gi.goalId, gi.milestoneId)) : null;
         const linkedTime = linked ? String(linked.time || '').slice(0, 5) : '';
         items.push({
-            kind: 'task', group: 'tasks', minutes: linkedTime ? scheduleTimeToMinutes(linkedTime) : null, done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
+            // גם בסינון "שגרה" - הוא חלק מהשגרה (בלי זה הפריט נעלם שם לגמרי)
+            kind: 'task', group: 'tasks', alsoGroup: linked ? 'routine' : null, minutes: linkedTime ? scheduleTimeToMinutes(linkedTime) : null, done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
             build: () => {
                 // אותה שורה של הצצה להיום (✓ / תגית היעד / ⓘ), מסודרת מחדש לעמודות של הציר:
                 // [שעה] [נקודה] [טקסט + תגית] [ⓘ] [✓]
@@ -254,7 +258,7 @@ function renderMyDayTimeline(container, items, focusItems) {
         container.insertAdjacentHTML('beforeend', `<p class="today-tasks-empty">${myDayEsc(t('today_tasks_empty_hint'))}</p>`);
         return;
     }
-    const shown = items.filter(it => myDayFilter === 'all' || it.group === myDayFilter);
+    const shown = items.filter(it => myDayFilter === 'all' || it.group === myDayFilter || it.alsoGroup === myDayFilter);
     if (!shown.length) {
         container.insertAdjacentHTML('beforeend', `<p class="today-tasks-empty">${myDayEsc(t('myday_filter_empty'))}</p>`);
         return;
@@ -296,7 +300,7 @@ function myDayNowMarker(now) {
 // סינון שאין בו כלום היום לא מוצג (במקום מסך "אין כאן כלום"); אם הוא היה הבחירה - חוזרים ל"הכול".
 // כשיש רק סוג אחד של דברים היום, כל שורת הסינון מוסתרת
 function syncMyDayFilterChips(items) {
-    const groups = new Set(items.map(it => it.group).filter(Boolean));
+    const groups = new Set(items.flatMap(it => [it.group, it.alsoGroup]).filter(Boolean));
     let current = myDayFilter;
     document.querySelectorAll('#myday-filters .myday-filter').forEach(btn => {
         const f = btn.dataset.filter;
@@ -616,6 +620,7 @@ function startDictation(input, btn) {
     const before = input.value.slice(0, start), after = input.value.slice(end);
     const sep = before && !/\s$/.test(before) ? ' ' : '';
     let finalText = '';
+    let lastInterim = '';   // מה שכבר מופיע בשדה ועוד לא "סופי" - נשאר גם כשעוצרים באמצע (למשל לוחצים "שלח")
     let heard = false;
     const render = interim => {
         const spoken = [finalText, interim].map(s => s.trim()).filter(Boolean).join(' ');
@@ -637,7 +642,7 @@ function startDictation(input, btn) {
         input.placeholder = placeholder;
         input.classList.remove('is-listening');
         if (btn) { btn.classList.remove('listening'); btn.setAttribute('aria-pressed', 'false'); }
-        if (heard) { render(''); input.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (heard) { render(lastInterim); input.dispatchEvent(new Event('change', { bubbles: true })); }
     };
     dictationSession = session;
     rec.onresult = e => {
@@ -647,6 +652,7 @@ function startDictation(input, btn) {
             if (r.isFinal) finalText = [finalText, r[0].transcript].map(s => s.trim()).filter(Boolean).join(' ');
             else interim += r[0].transcript;
         }
+        lastInterim = interim;
         render(interim);
     };
     rec.onerror = ev => {
@@ -1076,6 +1082,7 @@ function homeNoteSuggest() {
 function homeNoteInput() { if (homeNoteDest === 'meal') homeNoteSuggest(); }
 // אין ארוחה קבועה כזו: העוזר מחשב את מה שנכתב (לשונית "מזון" בצ'אט) ורושם אותו להיום
 function homeNoteAskAi(text) {
+    if (typeof stopDictation === 'function') stopDictation();
     const input = document.getElementById('home-note-input');
     if (input) { input.value = ''; input.blur(); }
     homeNoteHideSuggest();

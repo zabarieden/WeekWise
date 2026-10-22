@@ -24,8 +24,18 @@ async function nmg3dFirstExisting(urls) {
 // תנועה) והחתול הקישוטי לא נטען - חוסך כמה מגה. הג'יני נשאר בתלת־ממד (הציור הישן שלו לא חוזר אף פעם)
 function nmg3dSlowNet() { const c = typeof navigator !== 'undefined' && navigator.connection; return !!(c && (c.saveData || /2g|3g/.test(c.effectiveType || ''))); }
 function nmg3dReduced() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+// נבדק פעם אחת (כל בדיקה יוצרת הקשר גרפי, ויש לדפדפן מעט כאלה) - וההקשר של הבדיקה משתחרר מיד
+let nmg3dWebglOk = null;
 function nmg3dWebgl() {
-    try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
+    if (nmg3dWebglOk !== null) return nmg3dWebglOk;
+    try {
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl2') || c.getContext('webgl');
+        nmg3dWebglOk = !!gl;
+        const lose = gl && gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+    } catch { nmg3dWebglOk = false; }
+    return nmg3dWebglOk;
 }
 let nmg3dViewerPromise = null;
 function nmg3dLoadViewer() {
@@ -368,10 +378,14 @@ function nmg3dPlace(el, r, F = NMG3D_YOGA_FRAME) {
 const NMG3D_YOGA_TUNE = { 'teacher-closed': { dy: 22 } };
 // בודקים מראש אילו דמויות יש בתלת־ממד (נקרא מהמסדרון), כך שבכניסה ליוגה הציורים מוסתרים מיד - בלי הבזק של הגרסה הישנה
 const NMG3D_YOGA_NAMES = ['yg-blob', 'yg-fluffy', 'yg-spirit', 'yg-baby', 'teacher-closed', 'teacher-open'];
+let nmg3dYogaPrefetched = false;
 function nmg3dPrefetchYoga() {
+    // פעם אחת, ורק כשהיוגה כבר פתוחה (לפני כן אין טעם להוריד את הדמויות שלה)
+    if (nmg3dYogaPrefetched || typeof roomUnlockAt !== 'function' || typeof roomKeys !== 'function' || roomKeys() < roomUnlockAt('yoga')) return;
     // רק בחיבור טוב ובזמן פנוי (2026-10-21, "שיעבוד חלק גם בחיבור איטי"): בחיבור איטי / חסכון בנתונים התמונות נטענות רק
     // כשנכנסים ליוגה, כדי לא להתחרות במה שצריך עכשיו
     if (nmg3dSlowNet()) return;
+    nmg3dYogaPrefetched = true;
     const go = () => NMG3D_YOGA_NAMES.forEach(n => { const im = new Image(); im.fetchPriority = 'low'; im.src = `world/3d/${n}.png`; });
     if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 6000 }); else setTimeout(go, 3000);
 }

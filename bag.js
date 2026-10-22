@@ -50,7 +50,7 @@ function bagNum(n) { return Number(n || 0).toLocaleString(currentLang); }
 function bagPlural(base, n) {
     let cat = 'other';
     try { cat = new Intl.PluralRules(currentLang).select(n); } catch { /* דפדפן ישן - "other" */ }
-    const dict = translations[currentLang] || translations.en;
+    const dict = translations[currentLang] || translations.en || {};
     const key = dict[`${base}_${cat}`] !== undefined ? `${base}_${cat}` : `${base}_other`;
     return t(key).replace('{n}', bagNum(n));
 }
@@ -460,17 +460,44 @@ function bagBuildTaskRow(x) {
     if (!x.is_completed) li.appendChild(bagBuildTodayBtn(x));
     return li;
 }
-// ☀️ "להיום" ליד כל משימה פתוחה (לפי בקשה מפורשת, 2026-10-21: "כן אפשר"): המשימה נכנסת ל"היום שלי" של היום. נשמר
-// במכשיר מה כבר נוסף היום, כך שהכפתור לא מוסיף פעמיים
+// ☀️ "להיום" ליד כל משימה פתוחה (לפי בקשה מפורשת, 2026-10-21: "כן אפשר"): המשימה נכנסת ל"היום שלי" של היום. מה שכבר שם
+// היום נבדק בחשבון (שורות note_task של היום) - כך שהכפתור לא מוסיף פעמיים גם ממכשיר אחר, וחוזר אם מחקו אותה מ"היום שלי"
 const BAG_SUN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"></path></svg>';
-function bagTodayKey() { return `weekwise_bag_today_${currentUserId || 'me'}`; }
-function bagTodayMap() { try { return JSON.parse(localStorage.getItem(bagTodayKey()) || '{}') || {}; } catch { return {}; } }
-function bagTodayHas(id) { return bagTodayMap()[id] === getLocalDateString(); }
-function bagTodaySet(id, on) {
-    const today = getLocalDateString();
-    const m = Object.fromEntries(Object.entries(bagTodayMap()).filter(([, d]) => d === today));
-    if (on) m[id] = today; else delete m[id];
-    try { localStorage.setItem(bagTodayKey(), JSON.stringify(m)); } catch {}
+let bagTodayTitles = null;          // { day, at, set } - הכותרות שכבר ב"היום שלי" היום (מהחשבון)
+let bagTodayLoading = null;
+const bagTodayPending = new Set();  // נשמרות עכשיו (בין הלחיצה לתשובה מהשרת)
+const bagTodayAddedAt = new Map();  // כותרת → מתי נוספה כאן (בדיקה שיצאה לפני ההוספה לא מוחקת אותה)
+function bagTodayTitle(x) { return String((x && x.title) || '').trim(); }
+function bagTodayHas(x) {
+    const title = bagTodayTitle(x);
+    if (bagTodayPending.has(title)) return true;
+    return !!(bagTodayTitles && bagTodayTitles.day === getLocalDateString() && bagTodayTitles.set.has(title));
+}
+function bagTodayRefresh(force) {
+    if (!supabaseClient || !currentUserId) return Promise.resolve();
+    const day = getLocalDateString();
+    if (!force && bagTodayTitles && bagTodayTitles.day === day && Date.now() - bagTodayTitles.at < 30000) return Promise.resolve();
+    if (bagTodayLoading) return bagTodayLoading;
+    const startedAt = Date.now();
+    bagTodayLoading = Promise.resolve(supabaseClient.from('calendar_events').select('event_title').eq('user_id', currentUserId).eq('event_date', day).eq('source', 'note_task'))
+        .then(res => {
+            if (res && !res.error) {
+                const set = new Set((res.data || []).map(r => String(r.event_title || '').trim()));
+                bagTodayAddedAt.forEach((at, title) => { if (at >= startedAt) set.add(title); });
+                bagTodayTitles = { day, at: Date.now(), set };
+            }
+            bagRepaintTodayBtns();
+        })
+        .catch(() => {})
+        .finally(() => { bagTodayLoading = null; });
+    return bagTodayLoading;
+}
+// כל העותקים של הכפתור (סקירה / תוך מחברת) - כולם מתעדכנים יחד
+function bagRepaintTodayBtns() {
+    document.querySelectorAll('.bag-task-today[data-id]').forEach(b => {
+        const x = studyTasksCache.find(s => String(s.id) === b.dataset.id);
+        if (x) bagPaintTodayBtn(b, bagTodayHas(x));
+    });
 }
 function bagPaintTodayBtn(btn, on) {
     btn.classList.toggle('is-on', on);
@@ -482,22 +509,37 @@ function bagBuildTodayBtn(x) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'bag-task-today';
-    bagPaintTodayBtn(btn, bagTodayHas(x.id));
+    btn.dataset.id = String(x.id);
+    bagPaintTodayBtn(btn, bagTodayHas(x));
     btn.onclick = () => bagTaskToToday(x, btn);
+    bagTodayRefresh();
     return btn;
 }
 async function bagTaskToToday(x, btn) {
-    if (!supabaseClient || !currentUserId || bagTodayHas(x.id)) return;
-    bagTodaySet(x.id, true);
+    if (!supabaseClient || !currentUserId || bagTodayHas(x)) return;
+    const title = bagTodayTitle(x);
+    const day = getLocalDateString();
+    bagTodayPending.add(title);
     bagPaintTodayBtn(btn, true);
-    // source: 'note_task' - כמו פתק שעובר להיום: מופיע ב"היום שלי" ובלוח החודשי (ערך שכבר מותר ב-CHECK של הטבלה)
-    const { error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: x.title, event_date: getLocalDateString(), source: 'note_task' });
+    bagRepaintTodayBtns();
+    // אולי כבר נוסף היום ממכשיר אחר - אז לא מוסיפים שוב
+    const had = await supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', day).eq('source', 'note_task').eq('event_title', x.title).limit(1);
+    let error = had && had.error;
+    if (!error && !(had.data && had.data.length)) {
+        // source: 'note_task' - כמו פתק שעובר להיום: מופיע ב"היום שלי" ובלוח החודשי (ערך שכבר מותר ב-CHECK של הטבלה)
+        ({ error } = await supabaseClient.from('calendar_events').insert({ username: currentUsername, user_id: currentUserId, event_title: x.title, event_date: day, source: 'note_task' }));
+    }
+    bagTodayPending.delete(title);
     if (error) {
-        bagTodaySet(x.id, false);
         bagPaintTodayBtn(btn, false);
+        bagRepaintTodayBtns();
         showAppToast(t('error_adding_item') + error.message, 'error');
         return;
     }
+    if (!bagTodayTitles || bagTodayTitles.day !== day) bagTodayTitles = { day, at: Date.now(), set: new Set() };
+    bagTodayTitles.set.add(title);
+    bagTodayAddedAt.set(title, Date.now());
+    bagRepaintTodayBtns();
     showAppToast(t('bag_task_today_toast'));
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
     if (typeof loadMonthlyCalendarGrid === 'function') loadMonthlyCalendarGrid();

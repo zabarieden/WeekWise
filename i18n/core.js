@@ -64,25 +64,43 @@ function i18nFocusIndex() {
     return i18nFocusPromise;
 }
 let i18nEnAsked = false;
+let i18nApplied = false;   // שפה כבר הוחלה על המסך (setLanguage הגיעה עד הסוף)
+let i18nWanted = null;     // השפה האחרונה שביקשו - בשתי החלפות מהירות רק האחרונה מוחלת
 function t(key) {
-    const dict = translations[currentLang] || translations.en || {};
-    if (dict[key] !== undefined) return dict[key];
+    const cur = translations[currentLang];
+    if (cur && cur[key] !== undefined) return cur[key];
     const en = translations.en;
-    if (!en && !i18nEnAsked) { i18nEnAsked = true; i18nLoad('en'); }
-    return en && en[key] !== undefined ? en[key] : key;
+    if (en && en[key] !== undefined) return en[key];
+    // בכל קובץ שפה יש כל המפתחות (build-i18n.pl משלים מאנגלית), אז אנגלית נטענת רק כששום שפה לא הגיעה
+    if (!cur && !en && !i18nEnAsked && !Object.keys(translations).length) { i18nEnAsked = true; i18nLoad('en'); }
+    return key;
+}
+// השפות שהמשתמש השתמש בהן במכשיר הזה (רק אז שווה לטעון את הכותרות של כל השפות, i18n/focus.js)
+function i18nLangsSeen() {
+    try { return JSON.parse(localStorage.getItem('weekwise_langs_seen') || '[]'); } catch (e) { return []; }
 }
 
-function setLanguage(lang) {
+function setLanguage(lang, opts) {
     if (!SUPPORTED_LANGUAGES.includes(lang)) lang = 'en';
+    i18nWanted = lang;
     if (!translations[lang]) {
-        // השפה עוד לא נטענה: טוענים את הקובץ שלה ואז מחליפים (אם הטעינה נכשלה - אנגלית, ובלי לולאה)
+        // השפה עוד לא נטענה: טוענים את הקובץ שלה ואז מחליפים. אם הטעינה נכשלה ועוד אין שפה על המסך - אנגלית
+        // בינתיים, בלי לשכוח את השפה השמורה (תקלה רגעית ברשת לא מחליפה למישהו את השפה)
         return i18nLoad(lang).then(ok => {
-            if (ok) return setLanguage(lang);
-            if (lang !== 'en' && translations[currentLang] === undefined) return setLanguage('en');
+            if (i18nWanted !== lang) return;
+            if (ok) return setLanguage(lang, opts);
+            if (lang !== 'en' && !i18nApplied) return setLanguage('en', { keepSaved: true });
         });
     }
     currentLang = lang;
-    localStorage.setItem('weekwise_lang', lang);
+    i18nApplied = true;
+    if (!(opts && opts.keepSaved)) {
+        try {
+            localStorage.setItem('weekwise_lang', lang);
+            const seen = i18nLangsSeen();
+            if (!seen.includes(lang)) localStorage.setItem('weekwise_langs_seen', JSON.stringify(seen.concat(lang)));
+        } catch (e) { /* אין אחסון (גלישה פרטית) - השפה פשוט לא נשמרת */ }
+    }
     document.documentElement.lang = lang;
     document.documentElement.dir = isRTL(lang) ? 'rtl' : 'ltr';
     applyTranslations();
@@ -90,7 +108,8 @@ function setLanguage(lang) {
 }
 
 function loadSavedLanguage() {
-    const saved = localStorage.getItem('weekwise_lang');
+    let saved = null;
+    try { saved = localStorage.getItem('weekwise_lang'); } catch (e) { /* אין אחסון - אנגלית */ }
     return setLanguage(saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : 'en');
 }
 
@@ -118,7 +137,7 @@ function applyTranslations() {
     if (langSelect) langSelect.value = currentLang;
 }
 
-const I18N_V = '500';
+const I18N_V = '501';
 const I18N_CROSS = {
     nm_pos_1: { en: "Breakfast", he: "ארוחת בוקר", es: "Desayuno", fr: "Petit-déjeuner", ar: "الفطور", ru: "Завтрак", de: "Frühstück", pt: "Café da manhã", ja: "朝食", zh: "早餐", hi: "नाश्ता", ko: "아침 식사", tr: "Kahvaltı", id: "Sarapan", it: "Colazione", vi: "Bữa sáng", pl: "Śniadanie", th: "มื้อเช้า", ur: "ناشتہ", bn: "সকালের নাশতা", sw: "Kifungua kinywa", uk: "Сніданок", el: "Πρωινό", nl: "Ontbijt", ca: "Esmorzar", ro: "Mic dejun", yo: "Oúnjẹ àárọ̀", sv: "Frukost", nb: "Frokost", da: "Morgenmad", cs: "Snídaně", hu: "Reggeli", fi: "Aamiainen" },
     nm_pos_2: { en: "Snack", he: "נשנוש", es: "Tentempié", fr: "Collation", ar: "وجبة خفيفة", ru: "Перекус", de: "Snack", pt: "Lanche", ja: "間食", zh: "加餐", hi: "स्नैक", ko: "간식", tr: "Ara öğün", id: "Camilan", it: "Spuntino", vi: "Bữa phụ", pl: "Przekąska", th: "ของว่าง", ur: "اسنیک", bn: "নাশতা", sw: "Kitafunio", uk: "Перекус", el: "Σνακ", nl: "Tussendoortje", ca: "Refrigeri", ro: "Gustare", yo: "Ìpanu", sv: "Mellanmål", nb: "Mellommåltid", da: "Mellemmåltid", cs: "Svačina", hu: "Nasi", fi: "Välipala" },

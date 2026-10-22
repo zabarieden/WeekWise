@@ -4812,7 +4812,10 @@ function nmTourSeen() { try { return localStorage.getItem('weekwise_nm_tour_seen
 const NM_TOUR_AT_KEY = 'weekwise_nm_tour_at';
 function nmTourPending() { try { return !!localStorage.getItem(NM_TOUR_AT_KEY); } catch { return false; } }
 function nmTourTrack(step) { if (step && NEW_ME_TOUR_STEPS.includes(step)) { try { localStorage.setItem(NM_TOUR_AT_KEY, step.id); } catch { /* פרטי */ } } }
+// שלבים שהוסרו מהסיור: מי שעצר באחד מהם ממשיך מהשלב שבא אחריו (ולא מתחיל מההתחלה)
+const NM_TOUR_MOVED = { nm_welcome: 'nm_top', nm_rails: 'nm_week', nm_me: 'nm_room' };
 function nmStartTour(startId) {
+    if (startId && NM_TOUR_MOVED[startId]) startId = NM_TOUR_MOVED[startId];
     try { localStorage.setItem('weekwise_nm_tour_seen', '1'); localStorage.setItem(NM_TOUR_AT_KEY, startId || 'start'); } catch {}
     // השלבים נבחרים לפי מה שמוצג במסך הראשי של New Me - חוזרים אליו קודם (למשל כשנפתח מההגדרות)
     if (nmView !== 'home') nmGo('home');

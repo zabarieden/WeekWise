@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderHomeGreeting();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') { checkReminders(); refreshTodayIfNewDay(); }
+        if (document.visibilityState === 'visible') { checkReminders(); refreshTodayIfNewDay(); recordAppOpen(); }
         else updateReminderPresence(false);
     });
     // תזכורות: האפליקציה "מול העיניים" רק כשהחלון בפוקוס - ר' updateReminderPresence
@@ -242,9 +242,11 @@ function renderLanguagePickerList(filter) {
     `).join('');
 }
 
-function selectLanguageFromPicker(lang) {
-    setLanguage(lang);
+async function selectLanguageFromPicker(lang) {
     closeModal('modal-language-picker');
+    // קודם הקובץ של השפה (כל שפה בקובץ משלה) - נשמר לחשבון רק אם השפה באמת הוחלה, אחרת הפתיחה הבאה הייתה מחליפה פתאום
+    await setLanguage(lang);
+    if (currentLang !== lang) { if (i18nWanted === lang) showAppToast(t('auth_server_error'), 'error'); return; }
     // upsert אחד אטומי, אותו דפוס בדיוק כמו selectColorTheme/toggleLightMode -
     // עד עכשיו השפה נשמרה רק ב-localStorage (מכשיר-לוקאלי בלבד), אז שינוי
     // שפה במחשב לא היה משפיע בכלל על הנייד (וגם לא שרד התקנה מחדש של ה-PWA,
@@ -3051,8 +3053,9 @@ function localizeDailyFocusTitle(title, el) {
     const key = dailyFocusTitleIndex.get(title);
     if (key) return t(key);
     // נשמר בשפה שלא טעונה עכשיו: האינדקס של כל השפות נטען רק עכשיו, והשורה מתעדכנת כשהוא מגיע
-    if (el && typeof i18nFocusIndex === 'function') {
-        i18nFocusIndex().then(idx => { const k = idx && idx[title]; if (k && el.isConnected) el.textContent = t(k); });
+    // (רק אצל מי שהשתמש ביותר משפה אחת במכשיר - אחרת כל משפט חופשי היה מוריד את הקובץ הגדול לחינם)
+    if (el && typeof i18nFocusIndex === 'function' && typeof i18nLangsSeen === 'function' && i18nLangsSeen().length > 1) {
+        i18nFocusIndex().then(idx => { const k = idx && Object.prototype.hasOwnProperty.call(idx, title) ? idx[title] : null; if (k && el.isConnected) el.textContent = t(k); });
     }
     return title;
 }
@@ -3142,7 +3145,7 @@ async function dismissDailyFocusModal() {
 // בלחיצה אחת - נשמר בדיוק כמו בחירה רגילה (שורות daily_focus של היום)
 let dailyFocusCarryInFlight = false;
 async function continueDailyFocus() {
-    const items = [...new Set(dailyFocusCarryItems.map(localizeDailyFocusTitle))];
+    const items = [...new Set(dailyFocusCarryItems.map(x => localizeDailyFocusTitle(x)))];
     if (dailyFocusCarryInFlight || dailyFocusState === 'answered' || !items.length || !supabaseClient || !currentUserId) return;
     dailyFocusCarryInFlight = true;
     const todayStr = getLocalDateString();
@@ -8625,9 +8628,14 @@ function devRenderSettingsPanel() {
 }
 // 📈 שימור (לפי בקשה מפורשת, 2026-10-22: "כן תבנה בבקשה"): נשמר רק התאריך שבו האפליקציה נפתחה - פעם ביום במכשיר, בלי
 // שום תוכן (app_opens). הסיכום (admin_retention) נפתח רק לחשבון שלה, מלוח ה-PM שבהגדרות
+// היום לפי שעון ישראל - כמו תאריך ההרשמה בחישוב (מי שגר רחוק נספר באותו "יום" בשני הצדדים). השרת קובע אותו בעצמו (trigger),
+// כאן הוא רק כדי לא לשלוח יותר מפעם ביום. נקרא גם כשהאפליקציה חוזרת מהרקע (PWA שנשארה פתוחה מאתמול)
+function appOpenDay() {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); } catch { return getLocalDateString(); }
+}
 function recordAppOpen() {
     if (!supabaseClient || !currentUserId) return;
-    const day = getLocalDateString();
+    const day = appOpenDay();
     const key = `weekwise_open_${currentUserId}`;
     try { if (localStorage.getItem(key) === day) return; } catch {}
     try {
@@ -9567,7 +9575,7 @@ async function loadLightModeSetting() {
     const { data } = await supabaseClient.from('user_premium').select('light_mode').eq('user_id', currentUserId).maybeSingle();
     if (!data || data.light_mode === null || data.light_mode === undefined) return;
     localStorage.setItem('weekwise_light_mode', data.light_mode ? 'true' : 'false');
-    applyLightMode(data.light_mode);
+    applyLightMode(magicFallbackLight !== null && isMagicColorTheme(localStorage.getItem(colorThemeKey())) ? magicFallbackLight : data.light_mode);
 }
 
 async function toggleLightMode() {
@@ -10129,7 +10137,7 @@ async function selectColorTheme(themeName) {
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
     // הערכה הרגילה שהייתה לפני הקסומה נשמרת - אליה חוזרים אם New Me נגמר (magicThemeGuard)
     if (isMagicColorTheme(themeName) && !isMagicColorTheme(currentColorThemeName())) {
-        try { localStorage.setItem(magicBeforeKey(), currentColorThemeName()); } catch {}
+        try { localStorage.setItem(magicBeforeKey(), JSON.stringify({ theme: currentColorThemeName(), light: isLightModeOn() })); } catch {}
     }
     // ערכה קסומה חדשה נצבעת על המסך במברשת של נצנצים, ונשמרת ברגע שהחלון כולו צבוע
     if (isMagicColorTheme(themeName) && themeName !== currentColorThemeName()) { magicPaintTheme(themeName); return; }
@@ -10188,18 +10196,35 @@ async function loadColorTheme() {
 // שנראתה כמעט כמו הקסומה). לא נשמר - כך שאם New Me חוזר, הערכה הקסומה שנבחרה חוזרת איתו
 let premiumStatusKnown = false;
 function magicBeforeKey() { return `weekwise_theme_before_magic_${currentUserId || 'me'}`; }
-function magicFallbackTheme() {
-    let before = null;
-    try { before = localStorage.getItem(magicBeforeKey()); } catch {}
-    if (before && !isMagicColorTheme(before) && (FREE_COLOR_THEMES.includes(before) || isPremiumUser)) return before;
-    return 'mint_fresh';
+// { theme, light }: הערכה שהייתה לפני הקסומה וגם אם היא הייתה בהירה או כהה (הקסומות כהות - בלי זה הערכה הבהירה חזרה כהה).
+// ערך ישן (רק שם הערכה) - בהיר/כהה לפי הערכה עצמה
+function magicBefore() {
+    let raw = null;
+    try { raw = localStorage.getItem(magicBeforeKey()); } catch {}
+    let theme = raw, light = null;
+    if (raw && raw.charAt(0) === '{') {
+        try { const o = JSON.parse(raw); theme = o.theme; light = typeof o.light === 'boolean' ? o.light : null; } catch { theme = null; }
+    }
+    theme = theme ? normalizeColorTheme(theme) : null;
+    if (!theme || isMagicColorTheme(theme) || !(FREE_COLOR_THEMES.includes(theme) || isPremiumUser)) return { theme: 'mint_fresh', light: true };
+    return { theme, light: light === null ? !DARK_FIRST_THEMES.includes(theme) : light };
 }
+function magicFallbackTheme() { return magicBefore().theme; }
+let magicFallbackLight = null;   // בזמן שהערכה הרגילה מוצגת במקום הקסומה: בהיר/כהה שלה (גם אם ההגדרה מהחשבון נטענת אחרי)
 function magicThemeGuard() {
     if (!premiumStatusKnown) return;
     let saved = null;
     try { saved = localStorage.getItem(colorThemeKey()); } catch {}
-    if (!hasNewMe && isMagicColorTheme(currentColorThemeName())) applyColorTheme(magicFallbackTheme());
-    else if (hasNewMe && isMagicColorTheme(saved) && currentColorThemeName() !== saved) applyColorTheme(saved);
+    if (!hasNewMe && isMagicColorTheme(currentColorThemeName())) {
+        const b = magicBefore();
+        magicFallbackLight = b.light;
+        applyColorTheme(b.theme);
+        applyLightMode(b.light);
+    } else if (hasNewMe && isMagicColorTheme(saved) && currentColorThemeName() !== saved) {
+        magicFallbackLight = null;
+        applyColorTheme(saved);
+        applyLightMode(isLightModeOn());
+    }
 }
 
 // 🖌️ המברשת: מכחול רחב צובע את החלון בשורות (כמו צביעת קיר), בצבעי הרקע של הערכה החדשה ועם נצנצים, ומתחת לצבע

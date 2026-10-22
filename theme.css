@@ -11734,3 +11734,23 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 .ret-table th { font-size: .72rem; color: var(--text-secondary); font-weight: 700; }
 .ret-table td small { display: block; font-size: .68rem; color: var(--text-secondary); }
 .ret-note { margin: 0; font-size: .74rem; line-height: 1.5; color: var(--text-secondary); }
+
+/* 🔎 בדיקת באגים (2026-10-22) */
+/* החתול במסדרון: המסגרת גדלה ביחס של המצלמה (140/105), אחרת הוא קטן ברבע ומרחף מעל הצל שלו */
+.nmg3d-cat model-viewer { position: absolute; inset: -16.67%; width: auto; height: auto; }
+/* Sky: במקלדת - הצל מתחתיו זוהר (בלי ריבוע) */
+.nmh-me:focus-visible::after { background: radial-gradient(ellipse, rgba(255, 220, 140, .85), rgba(255, 220, 140, 0) 70%); }
+/* המחשב השחור-זהב: גם המסגרת הפנימית וגם עיגול הנשימה בזהב (לא לבן) */
+.sr-pc .sr-crt-screen { box-shadow: inset 0 0 0 1px rgba(201, 162, 74, .32); }
+@media (prefers-reduced-motion: reduce) { .sr-pc .sr-crt-breath.in { background: rgba(201, 162, 74, .18); } }
+/* העוזר: טקסט על צבע הערכה - כהה כשהצבע בהיר (צהוב, טורקיז, פסטל...), לבן כשהוא כהה; ופס ההצלחה/השגיאה חוזר */
+@supports (color: lch(from red l c h)) {
+    .ai-chat-msg.is-me, .ai-chat-send, .ai-chat-orb, .ai-chat-mic.listening { color: lch(from var(--accent-purple-text) calc((70 - l) * 1000) 0 0); }
+    html:not(.light-mode) .ai-chat-ic { color: lch(from var(--accent-purple-text) max(l, 62) c h); }
+    html:not(.light-mode) .ai-chat-chip.is-on { border-color: lch(from var(--accent-purple-text) max(l, 62) c h); }
+}
+.ai-chat-msg.is-bot.is-ok:not(.is-hello) { border-inline-start: 3px solid #10b981; }
+.ai-chat-msg.is-bot.is-error:not(.is-hello) { border-inline-start: 3px solid var(--accent-red); }
+html.high-contrast .ai-chat-sheet { background: var(--bg-sheet); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* טבלאות בכרטיסים / לוח: כל הטקסט (בלי "..." שנשפך על השורה הבאה) */
+.tbl-card-value .tbl-td-text { display: block; -webkit-line-clamp: unset; }
