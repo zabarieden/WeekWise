@@ -2726,6 +2726,7 @@ async function initAppAfterAuth(user) {
     // isPremiumUser עוד false (הערך ההתחלתי) כש-loadGlobalFont כבר קורא אותו
     await loadPremiumStatus();
     handleCheckoutReturn();
+    recordAppOpen();
     // loadFinanceCycleSetting מחוץ ל-Promise.all שלמטה ומחכה לו קודם: loadFinanceData
     // (בפנים ה-Promise.all) קורא ל-getFinanceCycleStartDay באופן סינכרוני כדי לחשב
     // את טווח התאריכים - אם שניהם היו רצים במקביל, היה מרוץ-תזמון שבו הערך עדיין
@@ -8617,9 +8618,68 @@ function devRenderSettingsPanel() {
                 <span class="switch-slider"></span>
             </label>
         </div>`;
-    box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', 'New Me', !!hasNewMe)}`;
+    const retLabel = RETENTION_TEXT[currentLang === 'he' ? 'he' : 'en'].title;
+    box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', 'New Me', !!hasNewMe)}<button type="button" class="settings-dev-retention" onclick="closeModal('modal-settings-drawer'); openRetentionSheet();">📈 ${esc(retLabel)}</button>`;
     // 🌦️ מזג האוויר והערכות לתצוגה (עבר לכאן ממסך הבית)
     if (typeof renderHomeDevWx === 'function') renderHomeDevWx();
+}
+// 📈 שימור (לפי בקשה מפורשת, 2026-10-22: "כן תבנה בבקשה"): נשמר רק התאריך שבו האפליקציה נפתחה - פעם ביום במכשיר, בלי
+// שום תוכן (app_opens). הסיכום (admin_retention) נפתח רק לחשבון שלה, מלוח ה-PM שבהגדרות
+function recordAppOpen() {
+    if (!supabaseClient || !currentUserId) return;
+    const day = getLocalDateString();
+    const key = `weekwise_open_${currentUserId}`;
+    try { if (localStorage.getItem(key) === day) return; } catch {}
+    try {
+        Promise.resolve(supabaseClient.from('app_opens').upsert({ user_id: currentUserId, day }, { onConflict: 'user_id,day', ignoreDuplicates: true }))
+            .then(r => { if (!(r && r.error)) { try { localStorage.setItem(key, day); } catch {} } })
+            .catch(() => {});
+    } catch { /* לעולם לא עוצר את הפתיחה של האפליקציה */ }
+}
+const RETENTION_TEXT = {
+    he: { title: 'שימור משתמשים', users: 'רשומים', new7: 'חדשים השבוע', dau: 'פעילים היום', wau: 'פעילים השבוע', mau: 'פעילים החודש',
+        d1: 'חזרו למחרת', d7: 'חזרו בשבוע השני', d30: 'חזרו אחרי חודש', of: 'מתוך', early: 'עוד מוקדם', week: 'שבוע הרשמה', joined: 'נרשמו',
+        note: 'נספר רק התאריך שבו פתחו את האפליקציה – בלי תוכן ובלי שמות. מעקב מדויק מ-{d}; לפני כן לפי פעילות.', noteNone: 'נספר רק התאריך שבו פתחו את האפליקציה – בלי תוכן ובלי שמות. עד שיתחיל המעקב – לפי פעילות.',
+        error: 'לא הצלחתי לטעון את הנתונים', close: 'סגירה' },
+    en: { title: 'Retention', users: 'Signed up', new7: 'New this week', dau: 'Active today', wau: 'Active this week', mau: 'Active this month',
+        d1: 'Came back the next day', d7: 'Came back in week 2', d30: 'Came back after a month', of: 'of', early: 'Too early', week: 'Signup week', joined: 'Joined',
+        note: 'Only the date the app was opened is counted – no content, no names. Exact tracking since {d}; before that, by activity.', noteNone: 'Only the date the app was opened is counted – no content, no names. Until tracking starts – by activity.',
+        error: 'Could not load the numbers', close: 'Close' },
+};
+async function openRetentionSheet() {
+    if (!isDevSuperuserAccount || !supabaseClient) return;
+    const L = RETENTION_TEXT[currentLang === 'he' ? 'he' : 'en'];
+    const esc = escapeHtmlForReport;
+    document.querySelectorAll('.ret-overlay').forEach(o => o.remove());
+    const ov = document.createElement('div');
+    ov.className = 'ret-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', L.title);
+    ov.innerHTML = `<div class="ret-sheet"><div class="ret-head"><b>📈 ${esc(L.title)}</b><button type="button" class="ret-x" aria-label="${esc(L.close)}">✕</button></div><div class="ret-body"><p class="ret-loading">…</p></div></div>`;
+    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
+    const close = () => ov.remove();
+    ov.querySelector('.ret-x').addEventListener('click', close);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    const body = ov.querySelector('.ret-body');
+    const { data, error } = await supabaseClient.rpc('admin_retention');
+    if (!ov.isConnected) return;
+    if (error || !data) { body.innerHTML = `<p class="ret-loading">${esc(L.error)}</p>`; return; }
+    const pct = (back, el) => (el ? `${Math.round(back / el * 100)}%` : '—');
+    const tile = (n, label) => `<div class="ret-tile"><b>${esc(String(n))}</b><span>${esc(label)}</span></div>`;
+    const big = (k, label) => {
+        const r = data[k] || { back: 0, eligible: 0 };
+        return `<div class="ret-big"><b>${r.eligible ? pct(r.back, r.eligible) : esc(L.early)}</b><span>${esc(label)}</span><small>${r.eligible ? `${r.back} ${esc(L.of)} ${r.eligible}` : ''}</small></div>`;
+    };
+    const cell = (b, e) => (e ? `${pct(b, e)}<small>${b}/${e}</small>` : '—');
+    const fmtDay = s => { try { return new Date(`${s}T12:00:00`).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return s; } };
+    body.innerHTML = `
+        <div class="ret-tiles">${tile(data.users, L.users)}${tile(data.new_7, L.new7)}${tile(data.dau, L.dau)}${tile(data.wau, L.wau)}${tile(data.mau, L.mau)}</div>
+        <div class="ret-bigs">${big('d1', L.d1)}${big('d7', L.d7)}${big('d30', L.d30)}</div>
+        <div class="ret-table-wrap"><table class="ret-table"><thead><tr><th>${esc(L.week)}</th><th>${esc(L.joined)}</th><th>D1</th><th>D7</th><th>D30</th></tr></thead><tbody>
+        ${(data.cohorts || []).map(c => `<tr><td>${esc(fmtDay(c.week))}</td><td>${c.users}</td><td>${cell(c.d1, c.d1_e)}</td><td>${cell(c.d7, c.d7_e)}</td><td>${cell(c.d30, c.d30_e)}</td></tr>`).join('')}
+        </tbody></table></div>
+        <p class="ret-note">${esc(data.tracking_since ? L.note.replace('{d}', fmtDay(data.tracking_since)) : L.noteNone)}</p>`;
 }
 function devSettingsToggle(kind) {
     if (!isDevSuperuserAccount) return;
@@ -10067,6 +10127,10 @@ async function selectColorTheme(themeName) {
         return;
     }
     if (!FREE_COLOR_THEMES.includes(themeName) && !isPremiumUser) { openPremiumUpgradeModal(); return; }
+    // הערכה הרגילה שהייתה לפני הקסומה נשמרת - אליה חוזרים אם New Me נגמר (magicThemeGuard)
+    if (isMagicColorTheme(themeName) && !isMagicColorTheme(currentColorThemeName())) {
+        try { localStorage.setItem(magicBeforeKey(), currentColorThemeName()); } catch {}
+    }
     // ערכה קסומה חדשה נצבעת על המסך במברשת של נצנצים, ונשמרת ברגע שהחלון כולו צבוע
     if (isMagicColorTheme(themeName) && themeName !== currentColorThemeName()) { magicPaintTheme(themeName); return; }
     await commitColorTheme(themeName);
@@ -10119,14 +10183,22 @@ async function loadColorTheme() {
     magicThemeGuard();
 }
 
-// ערכה קסומה בלי New Me (החזר / מנוי שהסתיים / מתג ה-PM): רואים צבעי מים במקומה, בלי לשמור - כך שאם New Me חוזר,
-// הערכה הקסומה שנבחרה חוזרת איתו
+// ערכה קסומה בלי New Me (החזר / מנוי שהסתיים / מתג ה-PM): חוזרים לערכה הרגילה שהייתה לפניה (או לברירת המחדל) - בלי
+// נצנצים ובלי ערכה שנראית אותו דבר (לפי בקשה מפורשת, 2026-10-22: "לוודא שהיא בלי הנצנצים... זו אותה ערכה"; קודם - צבעי מים,
+// שנראתה כמעט כמו הקסומה). לא נשמר - כך שאם New Me חוזר, הערכה הקסומה שנבחרה חוזרת איתו
 let premiumStatusKnown = false;
+function magicBeforeKey() { return `weekwise_theme_before_magic_${currentUserId || 'me'}`; }
+function magicFallbackTheme() {
+    let before = null;
+    try { before = localStorage.getItem(magicBeforeKey()); } catch {}
+    if (before && !isMagicColorTheme(before) && (FREE_COLOR_THEMES.includes(before) || isPremiumUser)) return before;
+    return 'mint_fresh';
+}
 function magicThemeGuard() {
     if (!premiumStatusKnown) return;
     let saved = null;
     try { saved = localStorage.getItem(colorThemeKey()); } catch {}
-    if (!hasNewMe && isMagicColorTheme(currentColorThemeName())) applyColorTheme('watercolor_wash');
+    if (!hasNewMe && isMagicColorTheme(currentColorThemeName())) applyColorTheme(magicFallbackTheme());
     else if (hasNewMe && isMagicColorTheme(saved) && currentColorThemeName() !== saved) applyColorTheme(saved);
 }
 

@@ -28,7 +28,6 @@ const ROOM_UNLOCKS = [
     { n: 5, id: 'sand', place: 'breath' },
     { n: 6, id: 'outside', place: 'outside' },
     { n: 6, id: 'selfcare', place: 'outside' },
-    { n: 6, id: 'swing', place: 'outside' },
     { n: 6, id: 'yoga', place: 'yoga' },
     { n: 7, id: 'waterfall', place: 'waterfall' },
     { n: 8, id: 'telescope', roof: true },
@@ -1116,12 +1115,12 @@ function roomOpenComputer() {
     const stage = srStage();
     if (!stage) return;
     if (pcState) { pcStopTimers(); pcState = null; }
-    // הגופן של מראה "זכוכית רכה" (ערכה 10) - נטען רק כשפותחים את המחשב
+    // הגופן של מראה "שחור וזהב" (לפי בחירה מפורשת, 2026-10-22: "המחשב הסודי - 30") - נטען רק כשפותחים את המחשב
     if (!document.getElementById('sr-pc-font')) {
         const fl = document.createElement('link');
         fl.id = 'sr-pc-font';
         fl.rel = 'stylesheet';
-        fl.href = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap';
+        fl.href = 'https://fonts.googleapis.com/css2?family=Bellefair&family=Frank+Ruhl+Libre:wght@500;700&display=swap';
         document.head.appendChild(fl);
     }
     const pc = document.createElement('div');
@@ -1129,6 +1128,7 @@ function roomOpenComputer() {
     pc.innerHTML = `
         <div class="sr-sub-head"><button type="button" class="sr-sub-back">${SR_CHEVRON.prev}${srEsc(t('room_back_to_room'))}</button><b>${srEsc(roomItemName('computer'))}</b><span></span></div>
         <div class="sr-crt">
+            <span class="sr-crt-orn o1" aria-hidden="true"></span><span class="sr-crt-orn o2" aria-hidden="true"></span>
             <div class="sr-crt-screen">
                 <div class="sr-crt-on">
                     <div class="sr-crt-lines" aria-live="polite"></div>

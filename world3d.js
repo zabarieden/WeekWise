@@ -250,7 +250,7 @@ async function nmg3dMakeCat() {
         src: C.url, alt: '', 'disable-zoom': '', 'disable-pan': '', 'disable-tap': '', 'interaction-prompt': 'none',
         // בלי צל תלת־ממדי: בדגם שהולך הוא מחושב מחדש בכל פריים וכבד במובייל (2026-10-20: "החתול במסדרון... יש תקיעות") - צל מצויר ב-CSS
         'shadow-intensity': '0', exposure: '1.75', 'environment-image': 'neutral',
-        'camera-orbit': '-62deg 76deg auto', 'field-of-view': '22deg', loading: 'eager',
+        'camera-orbit': `-62deg 76deg ${NMG3D_RADIUS}`, 'max-camera-orbit': 'auto auto 300%', 'field-of-view': '22deg', loading: 'eager',
     };
     Object.entries(attrs).forEach(([k, v]) => mv.setAttribute(k, v));
     wrap.appendChild(mv);
@@ -260,7 +260,7 @@ async function nmg3dMakeCat() {
         st.phase = 'walk';
         st.x = st.dir > 0 ? -C.w : 390;
         // פונה לכיוון ההליכה, בשלושה רבעים כדי שיראו את הפנים (2026-10-20: "מה קרה לחתול??" - מהצד הוא נראה צללית): -62° = ימינה, 62° = שמאלה
-        mv.cameraOrbit = `${st.dir > 0 ? -62 : 62}deg 76deg auto`;
+        mv.cameraOrbit = `${st.dir > 0 ? -62 : 62}deg 76deg ${NMG3D_RADIUS}`;
         if (st.walk) mv.animationName = st.walk;
         mv.timeScale = C.timeScale;
         mv.play();

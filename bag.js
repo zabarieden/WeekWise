@@ -17,17 +17,19 @@ const BAG_SEARCH_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="no
 const BAG_CLOSE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>';
 const BAG_CHEVRON_SVG = '<svg class="bag-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
 const BAG_CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
-// התיק עצמו: מחברת, דף משבצות ועיפרון מציצים מתוכו. הצבעים של התיק מגיעים מערכת הנושא (theme.css)
+// התיק עצמו: סאצ'ל מזכוכית בגוון של ערכת הנושא (לפי בחירה מפורשת, 2026-10-22: "התיק - 29"), כתמי צבע מאחוריו (קופצים
+// בכניסה ובנגיעה), רצועות לבנות ואבזמי זהב. הצבעים - מערכת הנושא (theme.css, .bag-art)
 const BAG_ART_SVG = `<svg class="bag-art" viewBox="0 0 300 150" aria-hidden="true">
-<g class="bag-art-pop bag-art-pop-1"><g transform="rotate(-10 120 51)"><rect x="98" y="22" width="44" height="58" rx="5" fill="#8ab4f8"></rect><rect x="100" y="24" width="6" height="54" rx="2" fill="#5f8fe0"></rect><rect x="111" y="33" width="24" height="9" rx="2" fill="rgba(255,255,255,.78)"></rect></g></g>
-<g class="bag-art-pop bag-art-pop-2"><g transform="rotate(8 175 48)"><rect x="150" y="18" width="50" height="60" rx="4" fill="#f8f8fb"></rect><path d="M156 32h38M156 42h38M156 52h38M170 26v48M184 26v48" stroke="#c9c9d6" stroke-width="1.6"></path><rect x="157" y="34" width="11" height="6" rx="3" fill="#10b981"></rect><rect x="171" y="44" width="11" height="6" rx="3" fill="#f59e0b"></rect></g></g>
-<g class="bag-art-pop bag-art-pop-3"><g transform="rotate(16 207 46)"><rect x="203" y="20" width="9" height="52" rx="3" fill="#f59e0b"></rect><rect x="203" y="20" width="9" height="7" rx="2" fill="#ff7ab8"></rect><path d="M203 70l4.5 9 4.5-9z" fill="#f5d0a9"></path><path d="M206 76.2l1.5 2.8 1.5-2.8z" fill="#3b3b3b"></path></g></g>
-<path class="bag-art-handle" d="M106 64 C104 2, 196 2, 194 64" fill="none" stroke-width="7" stroke-linecap="round"></path>
-<path class="bag-art-body" d="M70 58 h160 l-14 84 a8 8 0 0 1 -8 7 h-116 a8 8 0 0 1 -8 -7 z"></path>
-<path class="bag-art-rim" d="M70 58 h160 l-2 12 h-156 z"></path>
-<path class="bag-art-pocket" d="M96 92 h108 v30 a8 8 0 0 1 -8 8 h-92 a8 8 0 0 1 -8 -8 z"></path>
-<path class="bag-art-stitch" d="M100 96 h100 v24 a6 6 0 0 1 -6 6 h-88 a6 6 0 0 1 -6 -6 z" fill="none" stroke-width="1.5" stroke-dasharray="4 4"></path>
-<circle class="bag-art-button" cx="150" cy="92" r="5"></circle>
+<defs><linearGradient id="bagGlassBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="bag-art-stop-light" stop-opacity=".9"></stop><stop offset="1" class="bag-art-stop-main" stop-opacity=".38"></stop></linearGradient><linearGradient id="bagGlassFlap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="bag-art-stop-light" stop-opacity=".95"></stop><stop offset="1" class="bag-art-stop-main" stop-opacity=".55"></stop></linearGradient></defs>
+<g class="bag-art-pop bag-art-pop-1"><circle class="bag-art-gold" cx="122" cy="116" r="22" opacity=".9"></circle></g>
+<g class="bag-art-pop bag-art-pop-2"><circle class="bag-art-deep" cx="186" cy="92" r="24" opacity=".7"></circle></g>
+<g class="bag-art-pop bag-art-pop-3"><circle cx="150" cy="70" r="14" fill="#ffffff" opacity=".6"></circle></g>
+<path d="M134 52C134 34 166 34 166 52" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity=".85"></path>
+<rect x="82" y="50" width="136" height="94" rx="10" fill="url(#bagGlassBody)" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.5"></rect>
+<path d="M82 58a8 8 0 0 1 8-8h120a8 8 0 0 1 8 8v50a12 12 0 0 1-12 12H94a12 12 0 0 1-12-12z" fill="url(#bagGlassFlap)" stroke="#ffffff" stroke-opacity=".85" stroke-width="1.2"></path>
+<rect x="110" y="86" width="12" height="52" rx="2" fill="#ffffff" fill-opacity=".55"></rect><rect x="178" y="86" width="12" height="52" rx="2" fill="#ffffff" fill-opacity=".55"></rect>
+<rect class="bag-art-buckle" x="106" y="104" width="20" height="13" rx="2" fill="none" stroke-width="3"></rect><rect class="bag-art-buckle" x="174" y="104" width="20" height="13" rx="2" fill="none" stroke-width="3"></rect>
+<path d="M92 62h30" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".8"></path>
 </svg>`;
 
 let bagFilter = 'all';
@@ -976,19 +978,22 @@ const BAG_EXAMPLES = [
         notebooks: [
             { key: 'weekend', emoji: '💡', color: '#f3d36b', pattern: 'grid', type: 'list', items: [['weekend_1', false], ['weekend_2', false], ['weekend_3', false], ['weekend_4', false]] },
         ],
-        // 🎁 רעיונות למתנות - למי (אישה / גבר / לכולם), גיל וכמה קרוב (לפי בקשה מפורשת, 2026-10-20: "רעיונות לקנות לגבר או אישה...
-        // לפי גילאים ולמי זה מיועד וכמה קרוב זה")
+        // 🎁 מתנות לפי קטגוריות (לפי בקשה מפורשת, 2026-10-22: "תוסיף עוד מתנות עוד לפחות 30... ובלי הלמי - טבלת מתנות לפי
+        // קטגוריות"): רעיון + קטגוריה, 48 רעיונות. מחליפה את טבלת "רעיון + כמה קרוב" (v2) בתיקים חדשים; תיק קיים מקבל אותה פעם אחת
         tables: [{
-            // רק רעיון וכמה קרוב (לפי בקשה מפורשת, 2026-10-20: "רעיונות למתנות תמחק למי ותמחק את הגיל")
-            key: 'gifts', icon: '🎁', v: 2,
+            key: 'gifts_cat', icon: '🎁', v: 4,
             cols: [
                 { key: 'idea', type: 'text' },
-                { key: 'closeness', type: 'select', options: [['partner', '#f472b6'], ['family_close', '#a855f7'], ['friend', '#22d3ee'], ['colleague', '#60a5fa'], ['acquaintance', '#94a3b8']] },
+                { key: 'category', type: 'select', options: [['g_experience', '#a855f7'], ['g_home', '#f59e0b'], ['g_selfcare', '#f472b6'], ['g_books', '#60a5fa'], ['g_tech', '#22d3ee'], ['g_food', '#fb923c'], ['g_kids', '#34d399'], ['g_sport', '#84cc16'], ['g_fashion', '#c084fc'], ['g_handmade', '#eab308']] },
             ],
-            // [רעיון, קרבה] - אינדקס לאפשרויות שלמעלה
-            rows: () => [[1, 2], [2, 2], [3, 1], [4, 0], [5, 0], [6, 1], [7, 1], [8, 2], [9, 1], [10, 1], [11, 3], [12, 3], [13, 2], [14, 2], [15, 2], [16, 4], [17, 1], [18, 0]]
-                .map(([g, c]) => [t(`bag_ex_gift_${g}`), c]),
+            // [רעיון, קטגוריה] - אינדקס לאפשרויות שלמעלה; 1–18 הרעיונות הקיימים, 19–48 חדשים
+            rows: () => [
+                [1, 3], [2, 2], [3, 8], [4, 4], [5, 0], [6, 1], [7, 9], [8, 6], [9, 6], [10, 4], [11, 5], [12, 1], [13, 0], [14, 0], [15, 1], [16, 0], [17, 8], [18, 2],
+                [19, 0], [20, 0], [21, 0], [22, 0], [23, 1], [24, 1], [25, 1], [26, 2], [27, 2], [28, 2], [29, 3], [30, 3], [31, 3], [32, 4], [33, 4], [34, 4],
+                [35, 5], [36, 5], [37, 5], [38, 6], [39, 6], [40, 6], [41, 7], [42, 7], [43, 7], [44, 8], [45, 8], [46, 8], [47, 9], [48, 9],
+            ].map(([g, c]) => [t(`bag_ex_gift_${g}`), c]),
         }, {
+
             // 🐷 מה לעשות עם כסף שחסכתי (לפי בקשה מפורשת, 2026-10-20: "לעשות טבלת רעיונות ברגע שאני חוסכת כסף מה לעשות איתו")
             key: 'savings', icon: '🐷', v: 3,
             cols: [
@@ -1024,7 +1029,7 @@ const BAG_EXAMPLES = [
         }],
     },
 ];
-const BAG_EXAMPLES_VERSION = 3;
+const BAG_EXAMPLES_VERSION = 4;
 // שמות ימים ושעות בפורמט של השפה; בעברית ובערבית השבוע מתחיל ביום ראשון
 function bagExDay(i, fromMonday) {
     const start = !fromMonday && ['he', 'ar'].includes(currentLang) ? 4 : 5; // 4.1.2026 = יום ראשון
@@ -1035,18 +1040,19 @@ function bagExTime(h, m) { return new Date(2026, 0, 5, h, m).toLocaleTimeString(
 async function bagMaybeSeedExamples() {
     if (!isPremiumUser || bagSeedChecked || bagSeeding || !supabaseClient || !currentUserId) return false;
     const uid = currentUserId;
-    // גרסאות של הדוגמאות (2026-10-20): 2 = מתנות, בית מלון, טיסה, יום הולדת; 3 = מה לעשות עם כסף שחסכתי, מקומות.
+    // גרסאות של הדוגמאות (2026-10-20): 2 = מתנות, בית מלון, טיסה, יום הולדת; 3 = מה לעשות עם כסף שחסכתי, מקומות;
+    // 4 (2026-10-22) = מתנות לפי קטגוריות.
     // תיק שכבר קיבל גרסה קודמת מקבל פעם אחת רק את מה שחדש לו
     const localKey = `weekwise_bag_seeded${BAG_EXAMPLES_VERSION}_${uid}`;
     try { if (localStorage.getItem(localKey) === '1') { bagSeedChecked = true; return false; } } catch { /* פרטי */ }
     try {
-        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2, bag_examples_v3').eq('user_id', uid).maybeSingle();
+        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2, bag_examples_v3, bag_examples_v4').eq('user_id', uid).maybeSingle();
         if (error || uid !== currentUserId) return false;
         bagSeedChecked = true;
-        const level = !(data && data.bag_examples_seeded) ? 0 : data.bag_examples_v3 ? 3 : data.bag_examples_v2 ? 2 : 1;
+        const level = !(data && data.bag_examples_seeded) ? 0 : data.bag_examples_v4 ? 4 : data.bag_examples_v3 ? 3 : data.bag_examples_v2 ? 2 : 1;
         if (level >= BAG_EXAMPLES_VERSION) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
         // קודם הסימון ואז הדוגמאות - כדי ששני מכשירים שנפתחים באותו רגע לא ימלאו את התיק פעמיים
-        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true, bag_examples_v3: true }, { onConflict: 'user_id' });
+        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true, bag_examples_v3: true, bag_examples_v4: true }, { onConflict: 'user_id' });
         if (flagError) return false;
         try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ }
         bagSeeding = true;

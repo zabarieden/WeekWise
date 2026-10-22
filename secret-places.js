@@ -376,7 +376,8 @@ function srpOpenGenie(box, opts = {}) {
 // צעדים → "אם… אז…" → המשאלה מסוכמת על מגילה, ואפשר להפוך אותה ליעד ב"היעדים שלי" (הצעדים = התחנות בשביל) או לשמור
 // ביומן. בלי AI ובלי לשמור כלום עד שבוחרים (דרך WOOP הידועה: משאלה, תוצאה, מכשול, תוכנית)
 const SRP_GENIE_STEPS = [
-    { k: 'wish', q: 'room_genie_q1', sub: 'room_genie_q2', ph: 'room_genie_ph_wish', need: true },
+    // שאלה אחת (לפי בקשה מפורשת, 2026-10-22: "אני רוצה שהשאלות יהיו ביחד - תסנכרן אותם למשהו אחד נורמלי")
+    { k: 'wish', q: 'room_genie_q1', ph: 'room_genie_ph_wish', need: true },
     { k: 'feel', q: 'room_genie_feel_q', react: 'room_genie_react_wish' },
     { k: 'hard', q: 'room_genie_hard_q', react: 'room_genie_react_feel' },
     { k: 'turn', q: 'room_genie_turn_q', sub: 'room_genie_turn_ex', react: 'room_genie_react_hard' },
@@ -477,7 +478,7 @@ function srpGenieTalk(layer, close, opts = {}) {
     setTimeout(() => { if (layer.isConnected) (opts.again ? ask : render)(); }, wait);
     card.innerHTML = opts.again
         ? `<b class="srp-genie-q">${srEsc(t('room_genie_again_q'))}</b>`
-        : `<b class="srp-genie-q">${srEsc(t('room_genie_q1'))}</b><span class="srp-genie-sub">${srEsc(t('room_genie_q2'))}</span>`;
+        : `<b class="srp-genie-q">${srEsc(t('room_genie_q1'))}</b>`;
 }
 // יעד ב"היעדים שלי": המשאלה = היעד, הצעדים = התחנות בשביל, תאריך לפי "כמה זמן"
 async function srpGenieToGoal(a) {
@@ -862,7 +863,6 @@ const SRP_LANTERNS = [
     { x: 218, y: 494, r: 34, hit: [202, 466, 32, 96] },
 ];
 function srpOutsideScene(keys) {
-    const swing = keys >= roomUnlockAt('swing');
     const yoga = keys >= roomUnlockAt('yoga');
     const sign = keys >= roomUnlockAt('selfcare');
     const L = SRP_LANTERNS;
@@ -876,20 +876,6 @@ function srpOutsideScene(keys) {
                 <g class="srp-night-only">${art('forest-night.jpg')}</g>
                 <g class="srp-day-only">${art('forest-day.jpg')}</g>
             </g>
-            ${swing ? `<g class="srp-hot srp-swing-hot srp-day-only" data-place-hot="swing" role="button" tabindex="0" aria-label="${srEsc(roomItemName('swing'))}">
-                <!-- תלויה על הענף הגדול שבציור (לפי בקשה מפורשת: "אל תמחוק את הענף יש נדנדה בדרך"), ומתנדנדת קדימה ואחורה -->
-                <!-- הנדנדה הקסומה שלה בתלת־ממד (world/3d/swing.png, תמונה מהדגם; לפי בקשה מפורשת, 2026-10-20: "תחליף אותה
-                     במקום הנדנדה שנמצאת עכשיו ושתתנדנד בעדינות וגם... שהיצור יעמוד עליה ויתנדנד איתה בכל פעם שמתקרבים לנדנדה").
-                     מתנדנדת בעדינות קדימה ואחורה כל הזמן (המושב מתקרב ומתרחק); נגיעה - נדנוד חזק יותר שנרגע. Me שעולה עליה -
-                     רק במפת העומק, כשמתקרבים ממש ונוגעים בה (לפי בקשה מפורשת, 2026-10-20) -->
-                <g class="srp-swing-3d">
-                    <image class="srp-swing-art" href="${SRP_ART}3d/swing.png" x="44.4" y="272" width="65.3" height="156" preserveAspectRatio="none"/>
-                </g>
-                <!-- עלים ירוקים על הענף, במקום שבו החבלים קשורים - כך הנדנדה מתחברת לעץ; והנדנדה רק ביום (לפי בקשה מפורשת,
-                     2026-10-21: "שהנדנדה תהיה רק ביום ושהעץ יהיה קצת ירוק למעלה שזה יתחבר עם הנדנדה") -->
-                <g class="srp-swing-leaves" aria-hidden="true"><defs><linearGradient id="srpLeafG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f8a4b"/><stop offset="1" stop-color="#8fd06f"/></linearGradient><linearGradient id="srpLeafG2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a9a52"/><stop offset="1" stop-color="#a7dc7c"/></linearGradient><linearGradient id="srpLeafGD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a5c35"/><stop offset="1" stop-color="#4f9a55"/></linearGradient><g id="srpLeaf0"><path d="M0 0C4-5.5 11-6 16 0C11 6 4 5.5 0 0Z" fill="url(#srpLeafG)" stroke="#2f6e3d" stroke-width=".5"/><path d="M1.5 0H13" stroke="#d6f2bd" stroke-width=".45" opacity=".7"/></g><g id="srpLeaf1"><path d="M0 0C4-5 12-5.5 17 0C12 5.5 4 5 0 0Z" fill="url(#srpLeafG2)" stroke="#336f40" stroke-width=".5"/><path d="M1.5 0H14" stroke="#e0f6c8" stroke-width=".45" opacity=".7"/></g><path id="srpLeafD" d="M0 0C4-5.5 11-6 16 0C11 6 4 5.5 0 0Z" fill="url(#srpLeafGD)" stroke="#244f2d" stroke-width=".5"/></defs><use href="#srpLeafD" transform="translate(50 266) rotate(-140) scale(0.9)"/><use href="#srpLeafD" transform="translate(64 265) rotate(-45) scale(0.9)"/><use href="#srpLeafD" transform="translate(93 261) rotate(-140) scale(0.9)"/><use href="#srpLeafD" transform="translate(107 260) rotate(-45) scale(0.9)"/><use href="#srpLeafD" transform="translate(30 273) rotate(-70) scale(0.6)"/><use href="#srpLeaf1" transform="translate(54 265) rotate(-110) scale(1)"/><use href="#srpLeaf0" transform="translate(60 264) rotate(-75) scale(1.05)"/><use href="#srpLeaf0" transform="translate(46 268) rotate(-165) scale(0.8)"/><use href="#srpLeaf1" transform="translate(68 267) rotate(-20) scale(0.8)"/><use href="#srpLeaf1" transform="translate(97 260) rotate(-105) scale(1.05)"/><use href="#srpLeaf0" transform="translate(103 259) rotate(-72) scale(1)"/><use href="#srpLeaf0" transform="translate(89 263) rotate(-165) scale(0.8)"/><use href="#srpLeaf1" transform="translate(111 262) rotate(-20) scale(0.8)"/><use href="#srpLeaf1" transform="translate(78 263) rotate(-95) scale(0.6)"/><use href="#srpLeaf1" transform="translate(83 262) rotate(-60) scale(0.55)"/><use href="#srpLeaf0" transform="translate(24 276) rotate(-110) scale(0.65)"/><use href="#srpLeaf0" transform="translate(52 272) rotate(110) scale(0.75)"/><use href="#srpLeaf1" transform="translate(62 273) rotate(65) scale(0.7)"/><use href="#srpLeaf1" transform="translate(57 276) rotate(95) scale(0.6)"/><use href="#srpLeaf0" transform="translate(95 267) rotate(110) scale(0.75)"/><use href="#srpLeaf1" transform="translate(105 268) rotate(70) scale(0.7)"/><use href="#srpLeaf1" transform="translate(100 271) rotate(92) scale(0.6)"/></g>
-                <rect class="srp-hit" x="40" y="276" width="74" height="176" fill="transparent"/>
-            </g>` : ''}
             ${yoga ? `<g class="srp-hot srp-yoga" data-place-hot="yoga" role="button" tabindex="0" aria-label="${srEsc(roomItemName('yoga'))}">
                 <!-- השער בסוף השביל - מאחוריו קרחת היוגה ליד המפל -->
                 <ellipse class="srp-flicker" cx="172" cy="440" rx="44" ry="40" fill="url(#srpOLight)"/>
@@ -933,7 +919,6 @@ function srpInitOutside(box, keys, opts = {}) {
         bench: () => srpRest(box),
         selfcare: () => srpOpenSignView(box),
         yoga: () => roomOpenPlace('yoga', { fromHall: !!opts.fromHall, parent: 'outside' }),
-        swing: el => srpSwingPush(el),
     };
 }
 
@@ -1310,12 +1295,6 @@ function srpInitYoga(box, keys, opts = {}) {
 }
 
 // 🪢 נגיעה בנדנדה: נדנוד חזק יותר קדימה ואחורה, שנרגע לאט (נגיעות נוספות בזמן הנדנוד לא עושות כלום)
-function srpSwingPush(el) {
-    if (!el || el.classList.contains('is-swinging')) return;
-    el.classList.add('is-swinging');
-    const tm = setTimeout(() => el.classList.remove('is-swinging'), srpReduce() ? 300 : 4400);
-    srpCleanups.push(() => clearTimeout(tm));
-}
 // ---------- שלב 7: המפל - קרחת יער עם מפל (ה' של דלת 5, לפי בחירה מפורשת), מגיעים אליו דרך היוגה ----------
 // יושבים על הסלע: הכפתורים נעלמים ונשמע קול של מים (נוצר במקום, בלי קבצים); נגיעה במים - אדוות
 function srpWaterfallScene() {

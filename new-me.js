@@ -1066,8 +1066,9 @@ function nmRenderSales(root) {
                 <h3>${nmEsc(t('nm_sales_how_title'))}</h3>
                 <ol class="nm-sales-steps">${[1, 2, 3].map(i => `<li><span class="nm-step-num" aria-hidden="true">${nmFmt(i)}</span><span>${nmEsc(t('nm_sales_how' + i))}</span></li>`).join('')}</ol>
             </section>
+            <!-- בלי "זה מתאים לי?" (לפי בקשה מפורשת, 2026-10-22: "לפני שקונים למחוק את הלמי זה מתאים והכל") -->
             <section class="nm-sales-card nm-sales-faq">
-                ${[1, 2, 3].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i).replace('{monthly}', NEW_ME_PRICES.monthly).replace('{life}', NEW_ME_PRICES.life))}</p></details>`).join('')}
+                ${[1, 2].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i).replace('{monthly}', NEW_ME_PRICES.monthly).replace('{life}', NEW_ME_PRICES.life))}</p></details>`).join('')}
             </section>
             ${buy}
         </div>`;

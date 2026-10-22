@@ -7625,12 +7625,13 @@ html[dir="rtl"] .bag-chevron { transform: scaleX(-1); }
 .bag-hero { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: -6px; }
 .bag-art-wrap { width: min(250px, 70vw); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .bag-art { display: block; width: 100%; height: auto; overflow: visible; }
-.bag-art-handle { stroke: color-mix(in srgb, var(--accent-purple) 80%, #000); }
-.bag-art-body { fill: color-mix(in srgb, var(--accent-purple) 70%, #1a0030); }
-.bag-art-rim { fill: color-mix(in srgb, var(--accent-purple) 88%, #fff); }
-.bag-art-pocket { fill: color-mix(in srgb, var(--accent-purple) 50%, #12001f); }
-.bag-art-stitch { stroke: color-mix(in srgb, var(--accent-purple) 50%, #fff); }
-.bag-art-button { fill: var(--accent-gold); }
+/* התיק בזכוכית בגוון הערכה (2026-10-22, בחירה 29) */
+.bag-art-stop-main { stop-color: var(--accent-purple); }
+.bag-art-stop-light { stop-color: color-mix(in srgb, var(--accent-purple) 32%, #fff); }
+.bag-art-deep { fill: color-mix(in srgb, var(--accent-purple) 62%, #10131a); }
+.bag-art-gold { fill: var(--accent-gold); }
+.bag-art-buckle { stroke: var(--accent-gold); }
+.bag-art { filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--accent-purple) 32%, transparent)) drop-shadow(0 1px 1px rgba(0, 0, 0, .18)); }
 .bag-art-wrap.intro .bag-art-pop { animation: bagPopIn .7s cubic-bezier(.2, .9, .3, 1.25) both; }
 .bag-art-wrap.intro .bag-art-pop-2 { animation-delay: .08s; }
 .bag-art-wrap.intro .bag-art-pop-3 { animation-delay: .16s; }
@@ -10749,7 +10750,7 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
     transform-origin: 50% 80%; transform: scale(var(--mes, 1)) rotate(var(--tilt, 0deg)); transition: transform .3s ease, left .35s ease, top .35s ease; }
 .nmh-me img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; pointer-events: none; -webkit-user-drag: none; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); animation: nmgMeFloat 4.4s ease-in-out infinite; }
 .nmh-me::after { content: ""; position: absolute; left: 24%; right: 24%; bottom: -9%; height: 9%; border-radius: 50%; background: radial-gradient(ellipse, rgba(10, 4, 24, .55), rgba(10, 4, 24, 0) 70%); animation: nmgMeShadow 4.4s ease-in-out infinite; pointer-events: none; }
-.nmh-me:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; border-radius: 16px; }
+.nmh-me:focus-visible { outline: none; } /* בלי ריבוע סביבו (לפי בקשה מפורשת, 2026-10-22: "תוריד את הריבוע סביבו") */
 @keyframes nmgMeFloat { 0%, 100% { transform: translateY(-4px); } 50% { transform: translateY(-16px); } }
 @keyframes nmgMeShadow { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(.72); opacity: .55; } }
 /* עפה עם האצבע: עולה גבוה יותר, זוהרת, בלי השהיה */
@@ -11403,18 +11404,6 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 #nmg-follow-layer .nmg-follow model-viewer { position: absolute; inset: -10%; width: auto; height: auto; background: transparent; --poster-color: transparent; --progress-bar-color: transparent; pointer-events: none; filter: drop-shadow(0 0 10px rgba(201, 182, 255, .6)) drop-shadow(0 0 22px rgba(167, 243, 208, .25)); }
 #nmg-follow-layer .nmg-follow.has-3d img { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { #nmg-follow-layer .nmg-follow img { animation: none; } }
-/* 🪢 הנדנדה הקסומה בתלת־ממד (2026-10-20): מתנדנדת בעדינות קדימה ואחורה - המושב מתקרב (גדל ויורד קצת) ומתרחק (קטן ועולה),
-   סביב הקשרים שעל הענף (לפי בקשה מפורשת: "הנדנדה צריכה להתנדנד קדימה ואחורה"); נגיעה - נדנוד חזק יותר שנרגע לאט */
-.srp-swing-3d { transform-box: view-box; transform-origin: 77px 276px; animation: srpSwingFB 4.4s ease-in-out infinite; }
-@keyframes srpSwingFB { 0%, 100% { transform: scale(.955) translateY(-1.5px); } 50% { transform: scale(1.05) translateY(2.5px); } }
-.srp-swing-hot.is-swinging .srp-swing-3d { animation: srpSwingFBBig 4.4s ease-in-out; }
-@keyframes srpSwingFBBig {
-    0% { transform: scale(1) translateY(0); } 12% { transform: scale(1.12) translateY(6px); } 27% { transform: scale(.9) translateY(-4px); }
-    43% { transform: scale(1.09) translateY(4.5px); } 59% { transform: scale(.93) translateY(-3px); } 74% { transform: scale(1.05) translateY(2.5px); }
-    88% { transform: scale(.97) translateY(-1px); } 100% { transform: scale(.955) translateY(-1.5px); }
-}
-.srp-swing-art { filter: drop-shadow(0 0 6px rgba(167, 243, 208, .45)) drop-shadow(0 6px 6px rgba(20, 8, 30, .45)); }
-@media (prefers-reduced-motion: reduce) { .srp-swing-3d, .srp-swing-hot.is-swinging .srp-swing-3d { animation: none; } }
 /* ✨ Me במקומות (2026-10-20: "אני רוצה לשלוט לאן הוא הולך... שיסתובב אם נסובב אותו עם האצבע"): עומד איפה שהשארנו אותו,
    גוררים אותו לכל מקום, ומסובבים בגרירה על הטבעת הזוהרת שמתחת לרגליים */
 #nmg-follow-layer .nmg-follow { width: 124px; height: 140px; transform: translate3d(var(--fx, 14px), var(--fy, 58vh), 0) rotate(var(--tilt, 0deg)); pointer-events: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: opacity .5s ease, transform .2s ease-out; }
@@ -11422,7 +11411,7 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 #nmg-follow-layer .nmg-follow img { height: 124px; -webkit-user-drag: none; pointer-events: none; }
 /* מקום לסיבוב (2026-10-21): פי 140/105 מהמסגרת הקודמת, סביב אותו מרכז (המצלמה רחוקה באותו יחס - ר' NMG3D_ROOM) */
 #nmg-follow-layer .nmg-follow model-viewer { inset: -25.3% -27.4% -13.3% -27.4%; }
-.nmg-follow-ring { position: absolute; left: 50%; bottom: 0; width: 92px; height: 26px; transform: translateX(-50%); border-radius: 50%; cursor: ew-resize; touch-action: none;
+.nmg-follow-ring { position: absolute; left: 50%; bottom: 8px; width: 92px; height: 26px; transform: translateX(-50%); border-radius: 50%; cursor: ew-resize; touch-action: none;
     border: 1.5px solid rgba(201, 182, 255, .5); background: radial-gradient(closest-side, rgba(167, 243, 208, .22), rgba(201, 182, 255, .08) 70%, transparent);
     box-shadow: 0 0 10px rgba(201, 182, 255, .35), inset 0 0 8px rgba(167, 243, 208, .25); transition: border-color .25s ease, box-shadow .25s ease; }
 .nmg-follow-ring::before, .nmg-follow-ring::after { display: none; content: ''; position: absolute; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-top: 1.5px solid rgba(240, 232, 255, .8); border-left: 1.5px solid rgba(240, 232, 255, .8); }
@@ -11681,3 +11670,67 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 .ai-chat-mic:focus-visible { outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent); outline-offset: 2px; }
 @keyframes aiChatMicPulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-purple-text) 45%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-purple-text) 0%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .ai-chat-mic.listening { animation: none; } }
+
+/* 🖤 המחשב בחדר הסודי בשחור וזהב (לפי בחירה מפורשת, 2026-10-22: "המחשב הסודי - 30"): מסגרת זהב כפולה, יהלומי זהב
+   בפינות, גופן קלאסי, כפתורים במסגרת זהב */
+.sr-pc { background: radial-gradient(60% 40% at 50% 30%, rgba(201, 162, 74, .1), transparent 70%), #0b0b0c; }
+.sr-pc .sr-sub-head b { color: #efe2bf; font-family: 'Bellefair', 'Frank Ruhl Libre', serif; letter-spacing: .02em; }
+.sr-pc .sr-sub-back { border: 1px solid #c9a24a; background: transparent; color: #e6c873; }
+.sr-pc .sr-crt { position: relative; background: #111113; -webkit-backdrop-filter: none; backdrop-filter: none; border: 3px double #c9a24a; border-radius: 6px; box-shadow: 0 18px 40px rgba(0, 0, 0, .5); }
+.sr-pc .sr-crt-orn { position: absolute; z-index: 2; width: 14px; height: 14px; border: 1px solid #c9a24a; transform: rotate(45deg); pointer-events: none; }
+.sr-pc .sr-crt-orn.o1 { top: 7px; inset-inline-start: 7px; }
+.sr-pc .sr-crt-orn.o2 { bottom: 7px; inset-inline-end: 7px; }
+.sr-pc .sr-crt-screen { font-family: 'Bellefair', 'Frank Ruhl Libre', serif; color: #efe2bf; background: transparent; border-radius: 2px; border-color: rgba(201, 162, 74, .32); }
+.sr-pc .sr-crt-meta { color: rgba(239, 226, 191, .6); }
+.sr-pc .sr-crt-bot:not(.sr-crt-meta) { background: rgba(239, 226, 191, .06); border-radius: 2px; color: #efe2bf; }
+.sr-pc .sr-crt-me { background: transparent; border: 1px solid #c9a24a; border-radius: 2px; color: #e6c873; }
+.sr-pc .sr-crt-task { border: 0; border-top: 1px solid rgba(201, 162, 74, .6); border-bottom: 1px solid rgba(201, 162, 74, .6); border-radius: 0; background: transparent; color: #efe2bf; }
+.sr-pc .sr-crt-ctrl button { border: 1px solid #c9a24a; border-radius: 2px; background: transparent; color: #efe2bf; font-family: inherit; }
+.sr-pc .sr-crt-ctrl button:hover, .sr-pc .sr-crt-ctrl button:focus-visible { background: rgba(201, 162, 74, .14); }
+.sr-pc .sr-crt-ctrl.is-end button { border-color: #c9a24a; color: #e6c873; }
+.sr-pc .sr-crt-navbtn { border: 1px solid rgba(201, 162, 74, .6); border-radius: 2px; color: #e6c873; font-family: inherit; }
+.sr-pc .sr-crt-navbtn:focus-visible { outline-color: #e6c873; }
+.sr-pc .sr-crt-input { border: 1px solid rgba(201, 162, 74, .5); border-radius: 2px; background: transparent; }
+.sr-pc .sr-crt-input input { color: #efe2bf; font-family: inherit; }
+.sr-pc .sr-crt-input input::placeholder { color: rgba(239, 226, 191, .45); }
+.sr-pc .sr-crt-input button { color: #e6c873; }
+.sr-pc .sr-crt-brand { color: #c9a24a; font-family: 'Bellefair', serif; letter-spacing: .2em; }
+.sr-pc .sr-crt-power::before { background: #e6c873; box-shadow: 0 0 8px rgba(230, 200, 115, .8); }
+.sr-pc .sr-crt-power.is-off::before { background: rgba(201, 162, 74, .3); box-shadow: none; }
+.sr-pc .sr-crt-screen.pc-off { background: rgba(0, 0, 0, .6); }
+.sr-pc .sr-crt-screen.pc-off::before { background: #e6c873; box-shadow: 0 0 16px 6px rgba(201, 162, 74, .5); }
+.sr-pc .sr-crt-breath { border-color: #c9a24a; box-shadow: 0 0 18px rgba(201, 162, 74, .35), inset 0 0 14px rgba(201, 162, 74, .25); }
+.sr-pc .sr-crt-private { color: rgba(239, 226, 191, .6); }
+
+/* 📋 בטבלאות רואים את כל מה שכתוב (לפי בקשה מפורשת, 2026-10-22: "שיראו הכל שיהיה יותר מסודר ושכל מה שרשום שיראו"):
+   טקסט, אפשרויות וכותרות יורדים שורה במקום "...", והשורה גדלה לפי התוכן */
+.tbl-td, .tbl-th { padding-block: 8px; }
+.tbl-td-text { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.35; }
+.tbl-th-name { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.25; }
+.tbl-opt { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.25; text-align: center; }
+.tbl-card-label, .tbl-lane-name { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.tbl-card-value { overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+
+/* 📈 שימור משתמשים - מסך קטן רק לחשבון שלה (2026-10-22) */
+.settings-dev-retention { width: 100%; margin-top: 8px; min-height: 42px; border-radius: 12px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.ret-overlay { position: absolute; inset: 0; z-index: 3000; display: flex; align-items: flex-end; background: rgba(0, 0, 0, .45); }
+.ret-sheet { width: 100%; max-height: 88%; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; background: var(--bg-sheet); color: var(--text-primary); box-shadow: 0 -16px 40px rgba(0, 0, 0, .35); }
+.ret-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; font-size: 1.05rem; }
+.ret-x { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--bg-row); color: var(--text-primary); font: inherit; cursor: pointer; }
+.ret-body { overflow-y: auto; padding: 0 16px calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.ret-loading { margin: 24px 0; text-align: center; color: var(--text-secondary); }
+.ret-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.ret-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 14px; background: var(--bg-row); }
+.ret-tile b { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.ret-tile span { font-size: .76rem; color: var(--text-secondary); }
+.ret-bigs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ret-big { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 16px; text-align: center; background: color-mix(in srgb, var(--accent-purple) 12%, var(--bg-row)); }
+.ret-big b { font-size: 1.5rem; font-variant-numeric: tabular-nums; color: var(--accent-purple-light-text); }
+.ret-big span { font-size: .78rem; font-weight: 700; }
+.ret-big small { font-size: .7rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.ret-table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-color); }
+.ret-table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.ret-table th, .ret-table td { padding: 8px 10px; text-align: start; border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent); white-space: nowrap; }
+.ret-table th { font-size: .72rem; color: var(--text-secondary); font-weight: 700; }
+.ret-table td small { display: block; font-size: .68rem; color: var(--text-secondary); }
+.ret-note { margin: 0; font-size: .74rem; line-height: 1.5; color: var(--text-secondary); }
