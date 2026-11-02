@@ -452,8 +452,13 @@ async function addMyDayWaterGlass(btn) {
 }
 
 // --- ◎ מצב פוקוס: מסתיר הכול חוץ מהדבר האחד של עכשיו (ופתק מהיר) ---
-// המראה = 46 "מהצד בניאון" (בחירה 2026-11-02): כרטיס זכוכית עם קו ניאון, ומה שבא אחריו מציץ מהצד
+// המראה = 46 "מהצד בניאון" (בחירה 2026-11-02): כרטיס זכוכית עם קו ניאון, ומה שבא אחריו מציץ מהצד.
+// הכרטיסים שמאחור הם חפיסה: נגיעה בהם, החלקה של הכרטיס הצידה או חץ במקלדת מביאים את הבא קדימה, ואחרי
+// האחרון חוזרים לעכשיו (לפי שאלה מפורשת: "איך אני רואה את הכרטיסיה הבאה?")
 let homeFocusShownKey = '';
+let homeFocusPeekKey = '';   // הכרטיס שהובא קדימה בדפדוף ('' = הדבר של עכשיו)
+let homeFocusDeck = [];
+function homeFocusKey(item) { return `${item.title}|${item.minutes}`; }
 function isHomeFocusOn() { return document.body.classList.contains('home-focus-on'); }
 function toggleHomeFocus(force) {
     const on = typeof force === 'boolean' ? force : !isHomeFocusOn();
@@ -461,7 +466,7 @@ function toggleHomeFocus(force) {
     try { sessionStorage.setItem('weekwise_home_focus', on ? '1' : '0'); } catch {}
     const layer = document.getElementById('home-focus-layer');
     if (layer) layer.classList.toggle('hidden', !on);
-    if (on) { homeFocusShownKey = ''; renderHomeFocus(); }
+    if (on) { homeFocusShownKey = ''; homeFocusPeekKey = ''; renderHomeFocus(); }
 }
 function renderHomeFocus() {
     const body = document.getElementById('home-focus-body');
@@ -469,37 +474,75 @@ function renderHomeFocus() {
     const pick = myDayPickNow(myDayItems);
     if (!pick) {
         homeFocusShownKey = '';
+        homeFocusPeekKey = '';
+        homeFocusDeck = [];
         body.innerHTML = `<div class="home-focus-stack"><div class="home-focus-card is-empty"><p class="home-focus-empty">${myDayEsc(t('home_focus_empty'))}</p></div></div>`;
         return;
     }
-    const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');
-    const time = myDayFormatMinutes(pick.item.minutes);
     const after = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes);
-    const rest = after[0];
-    // כרטיס מאחור לכל דבר שבא אחר כך (עד שניים), והבא בתור כתוב לאורכם
-    const backs = Math.min(after.length, 2);
+    const deck = [pick.item, ...after];
+    homeFocusDeck = deck;
+    let at = homeFocusPeekKey ? deck.findIndex(it => homeFocusKey(it) === homeFocusPeekKey) : 0;
+    // הכרטיס שדפדפו אליו סומן או ירד מהיום - חוזרים לעכשיו
+    if (at < 0) { at = 0; homeFocusPeekKey = ''; }
+    const item = deck[at];
+    const next = deck.length > 1 ? deck[(at + 1) % deck.length] : null;
+    const time = myDayFormatMinutes(item.minutes);
+    const when = at === 0
+        ? `${t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later')}${time ? ` · ${time}` : ''}`
+        : t('home_focus_then').replace('{item}', time);
+    // כרטיס מאחור לכל דבר נוסף בחפיסה (עד שניים), והבא בתור כתוב לאורכם
+    const backs = Math.min(deck.length - 1, 2);
     // הכרטיס נכנס מהצד רק כשהוא באמת חדש, לא בכל רענון של היום
-    const key = `${pick.item.title}|${pick.item.minutes}`;
+    const key = homeFocusKey(item);
     const isNew = key !== homeFocusShownKey;
     homeFocusShownKey = key;
-    const then = rest ? `${myDayFormatMinutes(rest.minutes)} ${rest.title}` : '';
+    const then = next ? `${myDayFormatMinutes(next.minutes)} ${next.title}` : '';
     body.innerHTML = `
         <div class="home-focus-stack${backs ? ` has-back-${backs}` : ''}${isNew ? ' is-new' : ''}">
             ${backs > 1 ? '<span class="home-focus-back b2" aria-hidden="true"></span>' : ''}${backs ? '<span class="home-focus-back b1" aria-hidden="true"></span>' : ''}
             <div class="home-focus-card">
                 <div class="home-focus-head">
-                    <span class="home-focus-when">${myDayEsc(label)}${time ? ` · ${myDayEsc(time)}` : ''}</span>
+                    <span class="home-focus-when">${myDayEsc(when)}</span>
                     <button type="button" class="home-focus-done" aria-label="${myDayEsc(t('home_focus_done_aria'))}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
-                <span class="home-focus-title">${myDayEsc(pick.item.title)}</span>
+                <span class="home-focus-title">${myDayEsc(item.title)}</span>
             </div>
-            ${rest ? `<span class="home-focus-then"><span class="home-focus-sr">${myDayEsc(t('home_focus_then').replace('{item}', then))}</span><span aria-hidden="true">${myDayEsc(then)}</span></span>` : ''}
+            ${next ? `<span class="home-focus-then" aria-hidden="true">${myDayEsc(then)}</span><button type="button" class="home-focus-peek" aria-label="${myDayEsc(t('home_focus_then').replace('{item}', then))}"></button>` : ''}
         </div>`;
     body.querySelector('.home-focus-done').onclick = e => {
         e.currentTarget.disabled = true;
-        pick.item.toggle(true);
+        item.toggle(true);
+    };
+    if (!next) return;
+    body.querySelector('.home-focus-peek').onclick = () => homeFocusStep(1);
+    // החלקה של הכרטיס הצידה (לכל כיוון) = הבא בתור
+    const card = body.querySelector('.home-focus-card');
+    let swipe = null;
+    card.onpointerdown = e => { swipe = { x: e.clientX, y: e.clientY }; };
+    card.onpointercancel = () => { swipe = null; };
+    card.onpointerup = e => {
+        if (!swipe) return;
+        const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+        swipe = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) homeFocusStep(1);
     };
 }
+function homeFocusStep(dir) {
+    const n = homeFocusDeck.length;
+    if (n < 2) return;
+    const at = Math.max(0, homeFocusDeck.findIndex(it => homeFocusKey(it) === homeFocusPeekKey));
+    const to = (at + dir + n) % n;
+    homeFocusPeekKey = to === 0 ? '' : homeFocusKey(homeFocusDeck[to]);
+    renderHomeFocus();
+}
+// במחשב: החץ לכיוון שממנו הכרטיסים מציצים מביא את הבא (שמאלה בעברית, ימינה באנגלית), והחץ השני חוזר
+document.addEventListener('keydown', e => {
+    if (!isHomeFocusOn() || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    if (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"], .modal.open')) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    homeFocusStep((e.key === 'ArrowLeft') === rtl ? 1 : -1);
+});
 
 // --- 🔍 חיפוש בכל האפליקציה: פתקים, רשימת קניות, יומן, מתכונים, מחברות, יעדים, טבלאות וספרים ---
 let homeSearchTimer = 0;

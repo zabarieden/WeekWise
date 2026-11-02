@@ -8144,13 +8144,16 @@ body.home-focus-on .hamburger-fab, body.home-focus-on .ai-brain-fab { visibility
 /* חלונית העציץ / התפריט של הפתק המהיר פתוחים - בועת העוזר לא מסתירה אותם */
 .home-focus-exit { position: absolute; top: 16px; inset-inline-end: 16px; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--focus-glass-line); background: var(--focus-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text-primary); font: inherit; font-size: 0.85rem; cursor: pointer; }
 .home-focus-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 380px; }
-.home-focus-stack { position: relative; width: 100%; }
-.home-focus-stack.has-back-1 { width: calc(100% - 34px); margin-inline-end: 34px; }
+.home-focus-stack { --then-gap: -46px; position: relative; width: 100%; }
+.home-focus-stack.has-back-1 { --then-gap: -34px; width: calc(100% - 34px); margin-inline-end: 34px; }
 .home-focus-stack.has-back-2 { width: calc(100% - 46px); margin-inline-end: 46px; }
-.home-focus-back { position: absolute; inset: 0; border-radius: 26px; background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.home-focus-back { position: absolute; inset: 0; border-radius: 26px; background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: transform 0.2s ease; }
 .home-focus-back.b1 { transform: translateX(calc(var(--focus-side) * 22px)) scale(0.94); }
 .home-focus-back.b2 { transform: translateX(calc(var(--focus-side) * 44px)) scale(0.88); opacity: 0.7; }
-.home-focus-card { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 26px; border-radius: 26px; text-align: start; background: var(--focus-glass); border: 1px solid var(--focus-glass-line); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 22px 44px -24px rgba(0, 0, 0, 0.7); }
+/* עכבר מעל הכרטיסים שמאחור - הם זזים קצת החוצה, כמו להזמין לדפדף */
+.home-focus-stack:has(.home-focus-peek:hover) .home-focus-back.b1 { transform: translateX(calc(var(--focus-side) * 28px)) scale(0.94); }
+.home-focus-stack:has(.home-focus-peek:hover) .home-focus-back.b2 { transform: translateX(calc(var(--focus-side) * 52px)) scale(0.88); }
+.home-focus-card { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 26px; border-radius: 26px; text-align: start; background: var(--focus-glass); border: 1px solid var(--focus-glass-line); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 22px 44px -24px rgba(0, 0, 0, 0.7); touch-action: pan-y; }
 .home-focus-card::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 2px; border-radius: 2px; background: var(--focus-neon); box-shadow: 0 0 8px var(--focus-neon), 0 0 18px color-mix(in srgb, var(--focus-neon) 45%, transparent); }
 .home-focus-stack.is-new .home-focus-card { animation: home-focus-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1); }
 @keyframes home-focus-in { from { opacity: 0; transform: translateX(calc(var(--focus-side) * 34px)) scale(0.94); } }
@@ -8161,10 +8164,12 @@ body.home-focus-on .hamburger-fab, body.home-focus-on .ai-brain-fab { visibility
 .home-focus-done { flex: none; width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0; display: grid; place-items: center; background: var(--text-primary); color: var(--accent-purple); box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6); cursor: pointer; }
 .home-focus-done:disabled { opacity: 0.6; }
 /* הבא בתור - לאורך הכרטיסים שמאחור. צד פיזי (left/right) ולא inset-inline: בכתב אנכי ה"inline" של האלמנט הוא למעלה-למטה */
-.home-focus-then { --then-gap: -46px; position: absolute; top: 50%; right: var(--then-gap); max-height: calc(100% - 24px); writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); font-size: 0.72rem; font-weight: 600; line-height: 16px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-focus-then { position: absolute; top: 50%; right: var(--then-gap); max-height: calc(100% - 24px); writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg); font-size: 0.72rem; font-weight: 600; line-height: 16px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[dir="rtl"] .home-focus-then { right: auto; left: var(--then-gap); }
-.home-focus-stack.has-back-1 .home-focus-then { --then-gap: -34px; }
-.home-focus-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* מה שנוגעים בו כדי לדפדף: כל הרצועה של הכרטיסים שמאחור והכיתוב, ועוד קצת לתוך הכרטיס */
+.home-focus-peek { position: absolute; top: 0; bottom: 0; right: var(--then-gap); z-index: 2; width: calc(10px - var(--then-gap)); padding: 0; border: none; border-radius: 22px; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+html[dir="rtl"] .home-focus-peek { right: auto; left: var(--then-gap); }
+.home-focus-peek:focus-visible { outline: 2px solid var(--focus-neon); outline-offset: 2px; }
 .home-focus-card.is-empty { align-items: center; text-align: center; padding: 26px 22px 28px; }
 .home-focus-empty { margin: 0; font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; }
 .home-focus-note { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--focus-glass-line); background: var(--focus-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
