@@ -1790,6 +1790,10 @@ input, textarea, select {
     border-right: 1px solid rgba(255, 255, 255, 0.02);
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
 }
+/* הכדורים בולטים מחוץ למסך (left:-15% / right:-20% + האנימציה) - כשהם ישבו ישר בתוך .phone-wrapper הם הפכו
+   אותה לרחבה מהמסך (56px בעברית, 113px באנגלית), וכל גלילה/פוקוס יכלו להזיז את כל האפליקציה הצידה (דווח 2026-11-02).
+   clip (לא hidden) = השכבה לא ניתנת לגלילה בכלל; hidden נשאר לדפדפנים ישנים */
+.ambient-layer { position: absolute; inset: 0; z-index: 1; overflow: hidden; overflow: clip; pointer-events: none; }
 .ambient-glow {
     position: absolute;
     border-radius: 50%;

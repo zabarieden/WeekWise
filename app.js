@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTodayPeekDrag();
     initSupabase();
     initCubesNavigation();
+    guardShellSideScroll();
     renderHomeGreeting();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
@@ -3860,6 +3861,16 @@ function resetShellScroll() {
         if (el && (el.scrollTop || el.scrollLeft)) { el.scrollTop = 0; el.scrollLeft = 0; }
     });
     if (document.scrollingElement && document.scrollingElement.scrollTop) document.scrollingElement.scrollTop = 0;
+}
+
+// הצידה המסגרת לא זזה אף פעם, גם לא לרגע ובלי לחכות למעבר מסך ("פעם אחת זה היה עקום... לא פעם אחת ולא לאף משתמש",
+// 2026-11-02): כל גלילה אופקית שלה (פוקוס, scrollIntoView, המקלדת באנדרואיד) מתאפסת מיד. גלילה אנכית לא נוגעים כאן
+function guardShellSideScroll() {
+    ['.phone-wrapper', '#app-container'].forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) el.addEventListener('scroll', () => { if (el.scrollLeft) el.scrollLeft = 0; }, { passive: true });
+    });
+    window.addEventListener('scroll', () => { if (window.scrollX) window.scrollTo(0, window.scrollY); }, { passive: true });
 }
 
 function switchToTab(targetId) {
