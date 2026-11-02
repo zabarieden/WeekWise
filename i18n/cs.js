@@ -1890,7 +1890,7 @@ translations.cs = {
     nb_strip_label: "Stránky sešitu",
     nb_tools_color_title: "Barva a tloušťka",
     nb_tools_label: "Kreslicí nástroje",
-    faq_a_table_views: "V tabulce přepínáte nahoře mezi třemi zobrazeními: Tabulka (první sloupec zůstává na místě, když posouváte do strany, a poslední řádek sečte čísla a spočítá ✓), Karty (každý řádek jako karta) a Nástěnka (karty seskupené podle sloupce Výběr, třeba Stav – přetažením karty do jiného sloupce změníte její hodnotu). Klepnutím na název sloupce nebo na ↕ Řadit řadíte a Filtr ukáže jen některé řádky; tabulka si obojí pamatuje. Klepnutím na libovolný řádek ho upravíte jako celou kartu a ＋ Sloupec hned přidá sloupec. V ⋯ najdete seznam sloupců, název, ikonu a kapsu a smazání tabulky.",
+    faq_a_table_views: "V tabulce přepínáte nahoře mezi třemi zobrazeními: Tabulka (první sloupec zůstává na místě, když posouváte do strany, a poslední řádek sečte čísla a spočítá ✓), Karty (každý řádek jako karta) a Nástěnka (karty seskupené podle sloupce Výběr, třeba Stav – tažením do strany uvidíte všechny sloupce; hodnotu karty změníte tak, že ji chvíli podržíte a přetáhnete do jiného sloupce). Klepnutím na název sloupce nebo na ↕ Řadit řadíte a Filtr ukáže jen některé řádky; tabulka si obojí pamatuje. Klepnutím na libovolný řádek ho upravíte jako celou kartu a ＋ Sloupec hned přidá sloupec. V ⋯ najdete seznam sloupců, název, ikonu a kapsu a smazání tabulky.",
     faq_q_table_views: "Jak fungují zobrazení, řazení a filtry v tabulce?",
     tbl_actions_columns_desc: "Přidat, přejmenovat, seřadit nebo smazat sloupce",
     tbl_actions_delete: "Smazat tabulku",

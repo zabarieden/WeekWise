@@ -1888,7 +1888,7 @@ translations.sw = {
     nb_strip_label: "Kurasa za daftari",
     nb_tools_color_title: "Rangi na unene",
     nb_tools_label: "Zana za kuchora",
-    faq_a_table_views: "Ndani ya jedwali, badilisha kati ya mionekano mitatu juu: Jedwali (safu ya kwanza hubaki mahali pake unaposogeza pembeni, na mstari wa chini kabisa hujumlisha namba na kuhesabu ✓), Kadi (kila mstari kama kadi) na Ubao (kadi zimepangwa kwa safu ya Chagua, kama Hali – buruta kadi kwenda safu nyingine ili kuibadilisha). Gusa kichwa cha safu au ↕ Panga ili kupanga, na Chuja ili kuonyesha baadhi ya mistari tu; jedwali hukumbuka vyote viwili. Gusa mstari wowote ili kuuhariri kama kadi kamili, na ＋ Safu huongeza safu papo hapo. Ndani ya ⋯ kuna orodha ya safu, jina, ikoni na mfuko, na kufuta jedwali.",
+    faq_a_table_views: "Ndani ya jedwali, badilisha kati ya mionekano mitatu juu: Jedwali (safu ya kwanza hubaki mahali pake unaposogeza pembeni, na mstari wa chini kabisa hujumlisha namba na kuhesabu ✓), Kadi (kila mstari kama kadi) na Ubao (kadi zimepangwa kwa safu ya Chagua, kama Hali – buruta pembeni ili kuona safu zote; ili kubadilisha kadi, ibonyeze kwa muda mfupi kisha iburute kwenda safu nyingine). Gusa kichwa cha safu au ↕ Panga ili kupanga, na Chuja ili kuonyesha baadhi ya mistari tu; jedwali hukumbuka vyote viwili. Gusa mstari wowote ili kuuhariri kama kadi kamili, na ＋ Safu huongeza safu papo hapo. Ndani ya ⋯ kuna orodha ya safu, jina, ikoni na mfuko, na kufuta jedwali.",
     faq_q_table_views: "Mionekano, mpangilio na vichujio vya jedwali hufanyaje kazi?",
     tbl_actions_columns_desc: "Ongeza, badilisha jina, panga au futa safu",
     tbl_actions_delete: "Futa jedwali",

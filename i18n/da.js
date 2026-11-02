@@ -1888,7 +1888,7 @@ translations.da = {
     nb_strip_label: "Notesbogens sider",
     nb_tools_color_title: "Farve og tykkelse",
     nb_tools_label: "Tegneværktøjer",
-    faq_a_table_views: "Inde i en tabel skifter du mellem tre visninger øverst: Tabel (første kolonne bliver stående, når du scroller til siden, og nederste række lægger tal sammen og tæller ✓), Kort (hver række som et kort) og Tavle (kort grupperet efter en Valg-kolonne, fx Status – træk et kort til en anden kolonne for at ændre det). Tryk på en kolonnetitel eller ↕ Sortér for at sortere, og Filter for kun at vise nogle rækker; tabellen husker begge dele. Tryk på en række for at redigere den som et helt kort, og ＋ Kolonne tilføjer en kolonne med det samme. Under ⋯ finder du kolonnelisten, navn, ikon og lomme samt sletning af tabellen.",
+    faq_a_table_views: "Inde i en tabel skifter du mellem tre visninger øverst: Tabel (første kolonne bliver stående, når du scroller til siden, og nederste række lægger tal sammen og tæller ✓), Kort (hver række som et kort) og Tavle (kort grupperet efter en Valg-kolonne, fx Status – træk til siden for at se alle kolonner; for at ændre et kort holder du det nede et øjeblik og trækker det til en anden kolonne). Tryk på en kolonnetitel eller ↕ Sortér for at sortere, og Filter for kun at vise nogle rækker; tabellen husker begge dele. Tryk på en række for at redigere den som et helt kort, og ＋ Kolonne tilføjer en kolonne med det samme. Under ⋯ finder du kolonnelisten, navn, ikon og lomme samt sletning af tabellen.",
     faq_q_table_views: "Hvordan virker visninger, sortering og filtre i en tabel?",
     tbl_actions_columns_desc: "Tilføj, omdøb, flyt eller slet kolonner",
     tbl_actions_delete: "Slet tabel",

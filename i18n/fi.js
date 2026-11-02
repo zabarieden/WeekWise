@@ -1888,7 +1888,7 @@ translations.fi = {
     nb_strip_label: "Vihon sivut",
     nb_tools_color_title: "Väri ja paksuus",
     nb_tools_label: "Piirtotyökalut",
-    faq_a_table_views: "Taulukossa vaihdat ylhäällä kolmen näkymän välillä: Taulukko (ensimmäinen sarake pysyy paikallaan, kun vierität sivulle, ja alin rivi laskee luvut yhteen ja ✓-merkit), Kortit (jokainen rivi korttina) ja Taulu (kortit ryhmiteltynä Valinta-sarakkeen, kuten Tilan, mukaan – raahaa kortti toiseen sarakkeeseen muuttaaksesi sen). Napauta sarakkeen otsikkoa tai ↕ Lajittele lajitellaksesi, ja Suodata näyttääksesi vain osan riveistä; taulukko muistaa molemmat. Napauta mitä tahansa riviä muokataksesi sitä kokonaisena korttina, ja ＋ Sarake lisää sarakkeen heti. ⋯-valikosta löytyvät sarakelista, nimi, kuvake ja tasku sekä taulukon poisto.",
+    faq_a_table_views: "Taulukossa vaihdat ylhäällä kolmen näkymän välillä: Taulukko (ensimmäinen sarake pysyy paikallaan, kun vierität sivulle, ja alin rivi laskee luvut yhteen ja ✓-merkit), Kortit (jokainen rivi korttina) ja Taulu (kortit ryhmiteltynä Valinta-sarakkeen, kuten Tilan, mukaan – raahaa sivulle nähdäksesi kaikki sarakkeet; muuttaaksesi korttia paina sitä hetken ja raahaa se toiseen sarakkeeseen). Napauta sarakkeen otsikkoa tai ↕ Lajittele lajitellaksesi, ja Suodata näyttääksesi vain osan riveistä; taulukko muistaa molemmat. Napauta mitä tahansa riviä muokataksesi sitä kokonaisena korttina, ja ＋ Sarake lisää sarakkeen heti. ⋯-valikosta löytyvät sarakelista, nimi, kuvake ja tasku sekä taulukon poisto.",
     faq_q_table_views: "Miten taulukon näkymät, lajittelu ja suodatus toimivat?",
     tbl_actions_columns_desc: "Lisää, nimeä, järjestä tai poista sarakkeita",
     tbl_actions_delete: "Poista taulukko",

@@ -1888,7 +1888,7 @@ translations.tr = {
     nb_strip_label: "Defterin sayfaları",
     nb_tools_color_title: "Renk ve kalınlık",
     nb_tools_label: "Çizim araçları",
-    faq_a_table_views: "Bir tablonun içinde üstte üç görünüm arasında geçiş yapabilirsiniz: Tablo (yana kaydırırken ilk sütun yerinde kalır, en alttaki satır sayıları toplar ve ✓ sayısını gösterir), Kartlar (her satır bir kart) ve Pano (kartlar bir Seçim sütununa, ör. Durum'a göre gruplanır – bir kartı başka bir sütuna sürükleyince değeri değişir). Sıralamak için bir sütun başlığına veya ↕ Sırala'ya, yalnızca bazı satırları göstermek için Filtre'ye dokunun; tablo ikisini de hatırlar. Herhangi bir satıra dokunarak onu tam bir kart olarak düzenleyebilirsiniz; ＋ Sütun hemen bir sütun ekler. ⋯ içinde sütun listesi, ad, simge ve cep ile tabloyu silme yer alır.",
+    faq_a_table_views: "Bir tablonun içinde üstte üç görünüm arasında geçiş yapabilirsiniz: Tablo (yana kaydırırken ilk sütun yerinde kalır, en alttaki satır sayıları toplar ve ✓ sayısını gösterir), Kartlar (her satır bir kart) ve Pano (kartlar bir Seçim sütununa, ör. Durum'a göre gruplanır – tüm sütunları görmek için yana sürükleyin; bir kartın değerini değiştirmek için ona bir an basılı tutup başka bir sütuna sürükleyin). Sıralamak için bir sütun başlığına veya ↕ Sırala'ya, yalnızca bazı satırları göstermek için Filtre'ye dokunun; tablo ikisini de hatırlar. Herhangi bir satıra dokunarak onu tam bir kart olarak düzenleyebilirsiniz; ＋ Sütun hemen bir sütun ekler. ⋯ içinde sütun listesi, ad, simge ve cep ile tabloyu silme yer alır.",
     faq_q_table_views: "Tablonun görünümleri, sıralama ve filtreler nasıl çalışır?",
     tbl_actions_columns_desc: "Sütun ekleme, yeniden adlandırma, sıralama veya silme",
     tbl_actions_delete: "Tabloyu sil",

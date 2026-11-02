@@ -1889,7 +1889,7 @@ translations.ro = {
     nb_strip_label: "Paginile caietului",
     nb_tools_color_title: "Culoare și grosime",
     nb_tools_label: "Instrumente de desen",
-    faq_a_table_views: "Într-un tabel, schimbi sus între trei vizualizări: Tabel (prima coloană rămâne pe loc când derulezi lateral, iar ultimul rând adună numerele și numără ✓), Carduri (fiecare rând ca un card) și Panou (carduri grupate după o coloană Selecție, de exemplu Stare – trage un card în altă coloană ca să-l schimbi). Atinge titlul unei coloane sau ↕ Sortează ca să sortezi, și Filtru ca să arăți doar o parte din rânduri; tabelul le ține minte pe amândouă. Atinge orice rând ca să-l editezi ca un card întreg, iar ＋ Coloană adaugă imediat o coloană. În ⋯ găsești lista de coloane, numele, pictograma și buzunarul, și ștergerea tabelului.",
+    faq_a_table_views: "Într-un tabel, schimbi sus între trei vizualizări: Tabel (prima coloană rămâne pe loc când derulezi lateral, iar ultimul rând adună numerele și numără ✓), Carduri (fiecare rând ca un card) și Panou (carduri grupate după o coloană Selecție, de exemplu Stare – trage în lateral ca să vezi toate coloanele; ca să schimbi un card, ține-l apăsat o clipă și trage-l în altă coloană). Atinge titlul unei coloane sau ↕ Sortează ca să sortezi, și Filtru ca să arăți doar o parte din rânduri; tabelul le ține minte pe amândouă. Atinge orice rând ca să-l editezi ca un card întreg, iar ＋ Coloană adaugă imediat o coloană. În ⋯ găsești lista de coloane, numele, pictograma și buzunarul, și ștergerea tabelului.",
     faq_q_table_views: "Cum funcționează vizualizările, sortarea și filtrele unui tabel?",
     tbl_actions_columns_desc: "Adaugă, redenumește, reordonează sau șterge coloane",
     tbl_actions_delete: "Șterge tabelul",

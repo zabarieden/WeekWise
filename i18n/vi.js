@@ -1888,7 +1888,7 @@ translations.vi = {
     nb_strip_label: "Các trang của sổ",
     nb_tools_color_title: "Màu và độ dày",
     nb_tools_label: "Công cụ vẽ",
-    faq_a_table_views: "Trong một bảng, chuyển giữa ba chế độ xem ở trên cùng: Bảng (cột đầu tiên đứng yên khi cuộn ngang, và hàng dưới cùng cộng các số và đếm ✓), Thẻ (mỗi hàng là một thẻ) và Bảng thẻ (thẻ được nhóm theo một cột Lựa chọn, như Trạng thái – kéo thẻ sang cột khác để đổi giá trị). Nhấn tiêu đề cột hoặc ↕ Sắp xếp để sắp xếp, và Lọc để chỉ hiện một số hàng; bảng nhớ cả hai. Nhấn vào bất kỳ hàng nào để sửa như một thẻ đầy đủ, và ＋ Cột thêm cột ngay lập tức. Trong ⋯ có danh sách cột, tên, biểu tượng và ngăn, và xóa bảng.",
+    faq_a_table_views: "Trong một bảng, chuyển giữa ba chế độ xem ở trên cùng: Bảng (cột đầu tiên đứng yên khi cuộn ngang, và hàng dưới cùng cộng các số và đếm ✓), Thẻ (mỗi hàng là một thẻ) và Bảng thẻ (thẻ được nhóm theo một cột Lựa chọn, như Trạng thái – kéo sang ngang để xem tất cả các cột; để đổi giá trị một thẻ, nhấn giữ thẻ một chút rồi kéo sang cột khác). Nhấn tiêu đề cột hoặc ↕ Sắp xếp để sắp xếp, và Lọc để chỉ hiện một số hàng; bảng nhớ cả hai. Nhấn vào bất kỳ hàng nào để sửa như một thẻ đầy đủ, và ＋ Cột thêm cột ngay lập tức. Trong ⋯ có danh sách cột, tên, biểu tượng và ngăn, và xóa bảng.",
     faq_q_table_views: "Chế độ xem, sắp xếp và bộ lọc của bảng hoạt động thế nào?",
     tbl_actions_columns_desc: "Thêm, đổi tên, sắp xếp hoặc xóa cột",
     tbl_actions_delete: "Xóa bảng",

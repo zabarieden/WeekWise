@@ -386,13 +386,42 @@ function tblBuildBoard(rows) {
         lists.push(list);
     });
     wrap.appendChild(board);
+    tblDragScroll(board);
     if (typeof Sortable !== 'undefined') {
+        // גם בעכבר: כרטיס זז לטור אחר רק אחרי לחיצה קצרה ממושכת (כמו באצבע) - גרירה מהירה גוללת את הלוח
         lists.forEach(list => new Sortable(list, {
-            group: 'tbl-board', animation: 150, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+            group: 'tbl-board', animation: 150, delay: 150, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
             onAdd: e => tblSetCell(e.item.dataset.rowId, boardCol.id, e.to.dataset.laneId || null),
         }));
     }
     return wrap;
+}
+
+// גרירה לצדדים בלוח, בלי פס גלילה (לפי בקשה מפורשת, 2026-11-02: "שתהיה גרירה (בלי נראית) עם העכבר במחשב ועם האצבע
+// במובייל כי לא רואים את ההמשך"): באצבע הלוח נגלל לבד; בעכבר לוחצים בכל מקום וגוררים. גרירה שגללה לא פותחת כרטיס
+function tblDragScroll(el) {
+    let start = null, moved = false;
+    el.addEventListener('pointerdown', e => {
+        moved = false;
+        start = e.pointerType === 'mouse' && e.button === 0 && !e.target.closest('button, input, select, textarea, a') ? { x: e.clientX, left: el.scrollLeft, id: e.pointerId } : null;
+    });
+    el.addEventListener('pointermove', e => {
+        if (!start || e.pointerId !== start.id) return;
+        // כרטיס שכבר "הורם" (לחיצה ממושכת) - זו גרירה של הכרטיס, לא של הלוח
+        if (el.querySelector('.sortable-chosen')) { start = null; return; }
+        const dx = e.clientX - start.x;
+        if (!moved && Math.abs(dx) < 6) return;
+        if (!moved) {
+            moved = true;
+            el.classList.add('is-drag-scrolling');
+            try { el.setPointerCapture(e.pointerId); } catch { /* כבר לא לחוץ */ }
+        }
+        el.scrollLeft = start.left - dx;
+    });
+    // אחרי גרירה בעכבר הלוח נשאר איפה שעזבו (no-snap) - ההצמדה לטור (בשביל האצבע) הקפיצה אותו חזרה בגרירה קצרה
+    const end = () => { if (moved) el.classList.add('no-snap'); start = null; el.classList.remove('is-drag-scrolling'); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => el.addEventListener(type, end));
+    el.addEventListener('click', e => { if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); } }, true);
 }
 
 // --- 🛒 עמודת ✓ שמחוברת לרשימת הקניות (למשל "יש מצרכים" בארוחות השבוע, לפי בקשה מפורשת): בשורה שלא

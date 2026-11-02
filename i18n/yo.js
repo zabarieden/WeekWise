@@ -1888,7 +1888,7 @@ translations.yo = {
     nb_strip_label: "Àwọn ojú-ìwé ìwé náà",
     nb_tools_color_title: "Àwọ̀ àti nínípọn",
     nb_tools_label: "Àwọn irinṣẹ́ yíyàwòrán",
-    faq_a_table_views: "Nínú tábìlì, yí padà láàárín ìwò mẹ́ta ní òkè: Tábìlì (kọ́lọ́mù àkọ́kọ́ máa ń dúró sí ààyè rẹ̀ nígbà tí o bá ń yí lọ sí ẹ̀gbẹ́, ìlà ìsàlẹ̀ pátápátá sì ń ṣe àpapọ̀ nọ́mbà, ó sì ń ka ✓), Àwọn káàdì (ìlà kọ̀ọ̀kan bí káàdì) àti Pátákó (àwọn káàdì tí a kó jọ gẹ́gẹ́ bí kọ́lọ́mù Yíyàn kan, bí Ipò – fa káàdì lọ sí kọ́lọ́mù míì láti yí i padà). Tẹ àkọlé kọ́lọ́mù tàbí ↕ Tò láti tò wọ́n, àti Àlẹ̀mọ́ láti fi àwọn ìlà kan nìkan hàn; tábìlì ń rántí méjèèjì. Tẹ ìlà èyíkéyìí láti ṣàtúnṣe rẹ̀ bí káàdì kíkún, ＋ Kọ́lọ́mù sì ń fi kọ́lọ́mù kún un lẹ́sẹ̀kẹsẹ̀. Nínú ⋯ ni àtòjọ àwọn kọ́lọ́mù wà, orúkọ, àmì àti àpò kékeré, àti pípa tábìlì rẹ́.",
+    faq_a_table_views: "Nínú tábìlì, yí padà láàárín ìwò mẹ́ta ní òkè: Tábìlì (kọ́lọ́mù àkọ́kọ́ máa ń dúró sí ààyè rẹ̀ nígbà tí o bá ń yí lọ sí ẹ̀gbẹ́, ìlà ìsàlẹ̀ pátápátá sì ń ṣe àpapọ̀ nọ́mbà, ó sì ń ka ✓), Àwọn káàdì (ìlà kọ̀ọ̀kan bí káàdì) àti Pátákó (àwọn káàdì tí a kó jọ gẹ́gẹ́ bí kọ́lọ́mù Yíyàn kan, bí Ipò – fa sí ẹ̀gbẹ́ láti rí gbogbo kọ́lọ́mù; láti yí káàdì padà, tẹ̀ ẹ́ mọ́lẹ̀ díẹ̀ kí o sì fa á lọ sí kọ́lọ́mù míì). Tẹ àkọlé kọ́lọ́mù tàbí ↕ Tò láti tò wọ́n, àti Àlẹ̀mọ́ láti fi àwọn ìlà kan nìkan hàn; tábìlì ń rántí méjèèjì. Tẹ ìlà èyíkéyìí láti ṣàtúnṣe rẹ̀ bí káàdì kíkún, ＋ Kọ́lọ́mù sì ń fi kọ́lọ́mù kún un lẹ́sẹ̀kẹsẹ̀. Nínú ⋯ ni àtòjọ àwọn kọ́lọ́mù wà, orúkọ, àmì àti àpò kékeré, àti pípa tábìlì rẹ́.",
     faq_q_table_views: "Báwo ni àwọn ìwò, ìtòlẹ́sẹẹsẹ àti àlẹ̀mọ́ tábìlì ṣe ń ṣiṣẹ́?",
     tbl_actions_columns_desc: "Fi kún, yí orúkọ padà, tò tàbí pa àwọn kọ́lọ́mù rẹ́",
     tbl_actions_delete: "Pa tábìlì rẹ́",

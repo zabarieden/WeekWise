@@ -1888,7 +1888,7 @@ translations.en = {
     nb_strip_label: "Notebook pages",
     nb_tools_color_title: "Color and thickness",
     nb_tools_label: "Drawing tools",
-    faq_a_table_views: "Inside a table, switch between three views at the top: Table (the first column stays in place while you scroll sideways, and the bottom row adds up numbers and counts ✓), Cards (each row as a card) and Board (cards grouped by a Select column, like Status – drag a card to another column to change it). Tap a column title or ↕ Sort to sort, and Filter to show only some rows; the table remembers both. Tap any row to edit it as a full card, and ＋ Column adds a column right away. ⋯ holds the columns list, the name, icon and pocket, and deleting the table.",
+    faq_a_table_views: "Inside a table, switch between three views at the top: Table (the first column stays in place while you scroll sideways, and the bottom row adds up numbers and counts ✓), Cards (each row as a card) and Board (cards grouped by a Select column, like Status – drag sideways to see all the columns; to change a card, press it for a moment and drag it to another column). Tap a column title or ↕ Sort to sort, and Filter to show only some rows; the table remembers both. Tap any row to edit it as a full card, and ＋ Column adds a column right away. ⋯ holds the columns list, the name, icon and pocket, and deleting the table.",
     faq_q_table_views: "How do table views, sorting and filters work?",
     tbl_actions_columns_desc: "Add, rename, reorder or delete columns",
     tbl_actions_delete: "Delete table",

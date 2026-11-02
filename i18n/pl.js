@@ -1890,7 +1890,7 @@ translations.pl = {
     nb_strip_label: "Strony zeszytu",
     nb_tools_color_title: "Kolor i grubość",
     nb_tools_label: "Narzędzia do rysowania",
-    faq_a_table_views: "W tabeli przełączasz u góry trzy widoki: Tabela (pierwsza kolumna zostaje na miejscu, gdy przewijasz w bok, a ostatni wiersz sumuje liczby i liczy ✓), Karty (każdy wiersz jako karta) i Tablica (karty pogrupowane według kolumny Wybór, np. Status – przeciągnij kartę do innej kolumny, aby ją zmienić). Dotknij tytułu kolumny lub ↕ Sortuj, aby posortować, i Filtr, aby pokazać tylko część wierszy; tabela zapamiętuje jedno i drugie. Dotknij dowolnego wiersza, aby edytować go jako całą kartę, a ＋ Kolumna od razu dodaje kolumnę. W ⋯ znajdziesz listę kolumn, nazwę, ikonę i kieszeń oraz usuwanie tabeli.",
+    faq_a_table_views: "W tabeli przełączasz u góry trzy widoki: Tabela (pierwsza kolumna zostaje na miejscu, gdy przewijasz w bok, a ostatni wiersz sumuje liczby i liczy ✓), Karty (każdy wiersz jako karta) i Tablica (karty pogrupowane według kolumny Wybór, np. Status – przeciągnij w bok, aby zobaczyć wszystkie kolumny; aby zmienić kartę, przytrzymaj ją chwilę i przeciągnij do innej kolumny). Dotknij tytułu kolumny lub ↕ Sortuj, aby posortować, i Filtr, aby pokazać tylko część wierszy; tabela zapamiętuje jedno i drugie. Dotknij dowolnego wiersza, aby edytować go jako całą kartę, a ＋ Kolumna od razu dodaje kolumnę. W ⋯ znajdziesz listę kolumn, nazwę, ikonę i kieszeń oraz usuwanie tabeli.",
     faq_q_table_views: "Jak działają widoki, sortowanie i filtry w tabeli?",
     tbl_actions_columns_desc: "Dodawanie, zmiana nazwy, kolejności lub usuwanie kolumn",
     tbl_actions_delete: "Usuń tabelę",

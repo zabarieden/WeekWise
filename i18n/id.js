@@ -1888,7 +1888,7 @@ translations.id = {
     nb_strip_label: "Halaman buku catatan",
     nb_tools_color_title: "Warna dan ketebalan",
     nb_tools_label: "Alat gambar",
-    faq_a_table_views: "Di dalam tabel, ganti di antara tiga tampilan di bagian atas: Tabel (kolom pertama tetap di tempat saat menggeser ke samping, dan baris paling bawah menjumlahkan angka serta menghitung ✓), Kartu (setiap baris sebagai kartu), dan Papan (kartu dikelompokkan menurut kolom Pilihan, misalnya Status – seret kartu ke kolom lain untuk mengubahnya). Ketuk judul kolom atau ↕ Urutkan untuk mengurutkan, dan Filter untuk menampilkan sebagian baris saja; tabel mengingat keduanya. Ketuk baris mana pun untuk mengeditnya sebagai kartu penuh, dan ＋ Kolom langsung menambah kolom. Di ⋯ ada daftar kolom, nama, ikon, dan kantong, serta menghapus tabel.",
+    faq_a_table_views: "Di dalam tabel, ganti di antara tiga tampilan di bagian atas: Tabel (kolom pertama tetap di tempat saat menggeser ke samping, dan baris paling bawah menjumlahkan angka serta menghitung ✓), Kartu (setiap baris sebagai kartu), dan Papan (kartu dikelompokkan menurut kolom Pilihan, misalnya Status – geser ke samping untuk melihat semua kolom; untuk mengubah kartu, tekan sebentar lalu seret ke kolom lain). Ketuk judul kolom atau ↕ Urutkan untuk mengurutkan, dan Filter untuk menampilkan sebagian baris saja; tabel mengingat keduanya. Ketuk baris mana pun untuk mengeditnya sebagai kartu penuh, dan ＋ Kolom langsung menambah kolom. Di ⋯ ada daftar kolom, nama, ikon, dan kantong, serta menghapus tabel.",
     faq_q_table_views: "Bagaimana cara kerja tampilan, urutan, dan filter di tabel?",
     tbl_actions_columns_desc: "Tambah, ganti nama, urutkan, atau hapus kolom",
     tbl_actions_delete: "Hapus tabel",

@@ -1888,7 +1888,7 @@ translations.it = {
     nb_strip_label: "Pagine del quaderno",
     nb_tools_color_title: "Colore e spessore",
     nb_tools_label: "Strumenti di disegno",
-    faq_a_table_views: "In una tabella passi da una vista all'altra in alto: Tabella (la prima colonna resta ferma quando scorri di lato, e l'ultima riga somma i numeri e conta le ✓), Schede (ogni riga come scheda) e Bacheca (schede raggruppate per una colonna Selezione, come Stato – trascina una scheda in un'altra colonna per cambiarla). Tocca il titolo di una colonna o ↕ Ordina per ordinare, e Filtro per mostrare solo alcune righe; la tabella ricorda entrambi. Tocca una riga qualsiasi per modificarla come scheda completa, e ＋ Colonna aggiunge subito una colonna. In ⋯ trovi l'elenco delle colonne, nome, icona e tasca, e l'eliminazione della tabella.",
+    faq_a_table_views: "In una tabella passi da una vista all'altra in alto: Tabella (la prima colonna resta ferma quando scorri di lato, e l'ultima riga somma i numeri e conta le ✓), Schede (ogni riga come scheda) e Bacheca (schede raggruppate per una colonna Selezione, come Stato – trascina di lato per vedere tutte le colonne; per cambiare una scheda, tienila premuta un attimo e trascinala in un'altra colonna). Tocca il titolo di una colonna o ↕ Ordina per ordinare, e Filtro per mostrare solo alcune righe; la tabella ricorda entrambi. Tocca una riga qualsiasi per modificarla come scheda completa, e ＋ Colonna aggiunge subito una colonna. In ⋯ trovi l'elenco delle colonne, nome, icona e tasca, e l'eliminazione della tabella.",
     faq_q_table_views: "Come funzionano viste, ordinamento e filtri in una tabella?",
     tbl_actions_columns_desc: "Aggiungi, rinomina, riordina o elimina colonne",
     tbl_actions_delete: "Elimina tabella",

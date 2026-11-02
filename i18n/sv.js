@@ -1888,7 +1888,7 @@ translations.sv = {
     nb_strip_label: "Anteckningsbokens sidor",
     nb_tools_color_title: "Färg och tjocklek",
     nb_tools_label: "Ritverktyg",
-    faq_a_table_views: "I en tabell växlar du mellan tre vyer högst upp: Tabell (första kolumnen står kvar när du skrollar åt sidan, och nedersta raden summerar tal och räknar ✓), Kort (varje rad som ett kort) och Tavla (kort grupperade efter en Val-kolumn, t.ex. Status – dra ett kort till en annan kolumn för att ändra det). Tryck på en kolumnrubrik eller ↕ Sortera för att sortera, och Filter för att bara visa vissa rader; tabellen minns båda. Tryck på en rad för att redigera den som ett helt kort, och ＋ Kolumn lägger till en kolumn direkt. Under ⋯ finns kolumnlistan, namn, ikon och fack, och att ta bort tabellen.",
+    faq_a_table_views: "I en tabell växlar du mellan tre vyer högst upp: Tabell (första kolumnen står kvar när du skrollar åt sidan, och nedersta raden summerar tal och räknar ✓), Kort (varje rad som ett kort) och Tavla (kort grupperade efter en Val-kolumn, t.ex. Status – dra åt sidan för att se alla kolumner; för att ändra ett kort håller du kvar på det en stund och drar det till en annan kolumn). Tryck på en kolumnrubrik eller ↕ Sortera för att sortera, och Filter för att bara visa vissa rader; tabellen minns båda. Tryck på en rad för att redigera den som ett helt kort, och ＋ Kolumn lägger till en kolumn direkt. Under ⋯ finns kolumnlistan, namn, ikon och fack, och att ta bort tabellen.",
     faq_q_table_views: "Hur fungerar vyer, sortering och filter i en tabell?",
     tbl_actions_columns_desc: "Lägg till, byt namn, ordna eller ta bort kolumner",
     tbl_actions_delete: "Ta bort tabell",

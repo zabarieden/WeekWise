@@ -7869,6 +7869,10 @@ html[dir="rtl"] .bag-item-cover { box-shadow: inset -4px 0 0 rgba(0, 0, 0, .14);
 .tbl-board-by { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; font-size: .8rem; font-weight: 700; color: var(--text-secondary); }
 .tbl-board { display: flex; gap: 10px; margin: 0 -14px; padding: 0 14px 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
 .tbl-board::-webkit-scrollbar { display: none; }
+/* גרירה בעכבר (tblDragScroll): בלי הצמדה לטור בזמן הגרירה, כדי שהלוח יזוז חלק אחרי היד */
+.tbl-board.is-drag-scrolling, .tbl-board.no-snap { scroll-snap-type: none; }
+.tbl-board.is-drag-scrolling { cursor: grabbing; }
+.tbl-board.is-drag-scrolling * { cursor: grabbing !important; }
 .tbl-lane { --lane: var(--text-secondary); flex: 0 0 min(250px, 78%); display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--lane) 30%, transparent); background: color-mix(in srgb, var(--lane) 9%, var(--bg-row)); scroll-snap-align: start; }
 .tbl-lane-head { display: flex; align-items: center; gap: 8px; font-size: .86rem; font-weight: 800; color: var(--text-primary); }
 .tbl-lane-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--lane); }
