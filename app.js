@@ -2982,19 +2982,9 @@ let selectedDailyFocusTags = [];
 
 // בונה את 5 התגיות של היום (כל 5 המשפטים של הסבב+יום הנוכחיים, בלי בחירה
 // אקראית מתוך מאגר גדול יותר - כל 5 מוצגות תמיד) + תגית "אחר" חופשית בסוף.
-// בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags
-// הצעה אחת "מהחיים שלך" - לפי בקשה מפורשת: במקום אחת מ-5 ההצעות הכלליות, משהו מהנתונים
-// עצמם - הצעד הבא ביעד של החודש (או ביעד פעיל אחר), או משימת הקריאה של היום. כשיש כמה, הן
-// מתחלפות לפי היום. אין נתונים מתאימים - נשארות 5 הצעות כלליות
-// בלי היעדים (לפי בקשה מפורשת, 2026-11-02: "במה חשוב לך לעשות היום להוריד את היעדים")
-function getDailyFocusPersonalSuggestion() {
-    const options = [];
-    if (typeof getPeekBookTaskItems === 'function') {
-        const reading = getPeekBookTaskItems().find(item => !item.done);
-        if (reading) options.push(`${reading.icon} ${reading.text} · ${reading.tag}`);
-    }
-    return options.length ? options[getDailyFocusRotationDay() % options.length] : null;
-}
+// בחירה מרובה - כל תגית שנבחרת מתווספת ל-selectedDailyFocusTags.
+// בלי הצעה "מהחיים שלך" (הצעד ביעד / הקריאה של היום) - רק 5 ההצעות הכלליות (לפי בקשה מפורשת, 2026-11-02:
+// "להוריד את היעדים... כן הקריאה של היום והיעדים להוריד")
 
 function buildDailyFocusChip(label, saveText, extraClass) {
     const chip = document.createElement('button');
@@ -3015,12 +3005,7 @@ function renderDailyFocusTags() {
     const day = getDailyFocusRotationDay();
     const shown = new Set();
     // בלי "להמשיך עם מה שהיה אתמול" - כל יום מתחילים מחדש (לפי בקשה מפורשת, 2026-10-20)
-    const personal = getDailyFocusPersonalSuggestion();
-    if (personal && !shown.has(personal)) {
-        shown.add(personal);
-        container.appendChild(buildDailyFocusChip(personal, personal, 'daily-focus-tag-chip-personal'));
-    }
-    for (let slot = 1; slot <= (personal ? 4 : 5); slot++) {
+    for (let slot = 1; slot <= 5; slot++) {
         const text = t(`daily_focus_p${phase}_d${day}_s${slot}`);
         if (shown.has(text)) continue;
         shown.add(text);
@@ -3571,12 +3556,29 @@ function setCenterItemWrittenAt(iso) {
     el.textContent = when ? t('note_written_at').replace('{date}', when) : '';
     el.classList.toggle('hidden', !when);
 }
+// ❗ "חשוב" כבר בחלון של הפתק - בהוספה ב-+ ובעריכה (לפי בקשה מפורשת, 2026-11-02: "שתהיה אפשרות לסמן אותו כחשוב
+// ב+ של הפתקים"). אותו is_urgent כמו ה-! שליד כל פתק ברשימה
+let pendingCenterItemUrgent = false;
+let editingCenterItemOriginalUrgent = false;
+function syncCenterItemUrgent() {
+    const btn = document.getElementById('center-item-urgent');
+    if (!btn) return;
+    btn.classList.toggle('hidden', pendingCenterItemType !== 'weekly');
+    btn.classList.toggle('on', pendingCenterItemUrgent);
+    btn.setAttribute('aria-pressed', pendingCenterItemUrgent ? 'true' : 'false');
+}
+function toggleCenterItemUrgent() {
+    pendingCenterItemUrgent = !pendingCenterItemUrgent;
+    syncCenterItemUrgent();
+}
 function openCenterAdder(type) {
     editingCenterItemId = null;
     editingCenterItemOriginalText = null;
     centerItemPreviewPaper = '';
     setCenterItemWrittenAt('');
     pendingCenterItemType = type;
+    pendingCenterItemUrgent = false;
+    syncCenterItemUrgent();
     document.getElementById('center-item-modal-title').textContent = t('add_item_title');
     setCenterItemSaveLabel(false);
     const input = document.getElementById('center-item-input');
@@ -3597,6 +3599,8 @@ function openCenterItemEditor(btn, type) {
     if (!li) return;
     editingCenterItemId = li.getAttribute('data-item-id');
     pendingCenterItemType = type;
+    pendingCenterItemUrgent = editingCenterItemOriginalUrgent = type === 'weekly' && li.classList.contains('is-urgent');
+    syncCenterItemUrgent();
     // התצוגה המקדימה באותו צבע נייר כמו הפתק ברשימה (צהוב/ורוד/מנטה לפי המקום שלו)
     centerItemPreviewPaper = type === 'weekly' ? getComputedStyle(li).getPropertyValue('--paper').trim() : '';
     const currentText = li.querySelector('.center-list-item-text').textContent.trim();
@@ -3670,6 +3674,8 @@ async function submitCenterItem() {
     const glow = pendingCenterItemGlow;
     const bg = pendingCenterItemBg;
     const originalText = editingCenterItemOriginalText;
+    const urgent = type === 'weekly' && pendingCenterItemUrgent;
+    const urgentChanged = type === 'weekly' && urgent !== editingCenterItemOriginalUrgent;
     if (!text || !type) return;
     // המחלקה בסופר (רק בעריכת פריט ברשימת הקניות) - נקראת לפני שהחלון נסגר
     const shopDept = type === 'general' && editId && typeof shopDeptFromModal === 'function' ? shopDeptFromModal() : undefined;
@@ -3682,8 +3688,9 @@ async function submitCenterItem() {
         pendingCenterItemGlow = null;
         pendingCenterItemBg = null;
         editingCenterItemOriginalText = null;
-        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg, text !== originalText, shopDept);
-        else await insertCenterItemDirect(type, text, color, glow, bg);
+        pendingCenterItemUrgent = editingCenterItemOriginalUrgent = false;
+        if (editId) await updateCenterItemDirect(editId, type, text, color, glow, bg, text !== originalText, shopDept, urgentChanged ? urgent : undefined);
+        else await insertCenterItemDirect(type, text, color, glow, bg, false, urgent ? { is_urgent: true } : undefined);
     } finally {
         centerItemSubmitInFlight = false;
     }
@@ -3691,10 +3698,12 @@ async function submitCenterItem() {
 
 // עריכה מראה "השינויים נשמרו" (לא "הפריט נוסף") - ואם הפריט נמחק בזמן שהשמירה עוד רצה
 // (רשת איטית), לא מראים כלום: בעבר הופיע "הפריט נוסף בהצלחה" מיד אחרי מחיקה
-async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor, contentChanged, shopDept) {
+async function updateCenterItemDirect(id, type, content, textColor, glowColor, bgColor, contentChanged, shopDept, urgent) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
     const payload = { content, text_color: textColor, glow_color: glowColor, bg_color: bgColor };
     if (shopDept !== undefined) payload.shop_dept = shopDept;
+    // פתק שמסמנים כחשוב חוזר מ"להגיע לזה" לרשימה הרגילה (כמו ב-toggleNoteUrgent)
+    if (urgent !== undefined) { payload.is_urgent = urgent; if (urgent) payload.is_someday = false; }
     // רק שינוי בטקסט עצמו מעדכן את "נכתב לאחרונה" (צבע בלבד - לא)
     if (contentChanged) payload.content_updated_at = new Date().toISOString();
     const { error } = await supabaseClient.from('my_center_tasks').update(payload).eq('id', id);
@@ -3709,7 +3718,7 @@ async function updateCenterItemDirect(id, type, content, textColor, glowColor, b
 // להיעלם בשקט כשההוספה נכשלה (למשל עמודה חסרה בטבלה): הקריאה הראתה טוסט
 // שגיאה, אבל מיד אחריה הקוד הממשיך הראה טוסט "נוסף בהצלחה" שדרס אותו
 // חזותית - נראה כאילו הכול תקין בזמן שבפועל שום דבר לא נשמר
-async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor, skipSuccessToast) {
+async function insertCenterItemDirect(type, content, textColor, glowColor, bgColor, skipSuccessToast, extra) {
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return false; }
     // 🛒 רשימת הקניות: בלי כפילויות - מה שכבר ברשימה נהיה ×2, מה שב"קונים שוב" חוזר לרשימה (shop.js)
     if (type === 'general' && typeof shopAddSmart === 'function') {
@@ -3720,7 +3729,7 @@ async function insertCenterItemDirect(type, content, textColor, glowColor, bgCol
         if (!skipSuccessToast) showAppToast(res.status === 'bumped' ? t('shop_dup_toast').replace('{n}', res.qty) : res.status === 'revived' ? t('shop_revived') : res.status === 'exists' ? t('shop_dup_hint') : t('item_added_success'));
         return true;
     }
-    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor, glow_color: glowColor, bg_color: bgColor });
+    const { error } = await supabaseClient.from('my_center_tasks').insert({ username: currentUsername, user_id: currentUserId, task_type: type, content: content, text_color: textColor, glow_color: glowColor, bg_color: bgColor, ...(extra || {}) });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return false; }
     await loadCenterItems(type);
     expandCardForList(`${type}-list`);
@@ -9777,6 +9786,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'quick_note_view_full_lists', category: 'notes' },
     { id: 'restore_deleted_note', category: 'notes' },
     { id: 'note_written_at', category: 'notes' },
+    { id: 'note_important', category: 'notes' },
     { id: 'notes_sticky_look', category: 'notes' },
     { id: 'home_lists_btn', category: 'notes' },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף

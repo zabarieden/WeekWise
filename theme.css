@@ -11023,6 +11023,13 @@ button.nmg-me-card:active { transform: scale(.97); }
 .btn-urgent-item.on { opacity: 1; border-color: transparent; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
 .note-urgent-tag { display: inline-block; margin-inline-end: 4px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent-purple) 20%, transparent); color: var(--accent-purple-light-text); font-size: .72rem; font-weight: 800; vertical-align: 1px; }
 .note-paper.is-urgent { box-shadow: inset 3px 0 0 var(--accent-purple); }
+/* ❗ "חשוב" בחלון ההוספה / העריכה של פתק (toggleCenterItemUrgent) */
+.note-urgent-toggle { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 0 12px 0 5px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+[dir="rtl"] .note-urgent-toggle { padding: 0 5px 0 12px; }
+.note-urgent-mark { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--accent-purple) 40%, transparent); color: var(--accent-purple-light-text); font-weight: 900; font-size: .8rem; }
+.note-urgent-toggle.on { color: var(--text-primary); border-color: color-mix(in srgb, var(--accent-purple) 60%, transparent); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); }
+.note-urgent-toggle.on .note-urgent-mark { border-color: transparent; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; }
+.note-urgent-toggle:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 [dir="rtl"] .note-paper.is-urgent { box-shadow: inset -3px 0 0 var(--accent-purple); }
 @keyframes noteUrgentPulse { 0% { filter: brightness(1.25); } 100% { filter: none; } }
 .note-paper.urgent-pulse { animation: noteUrgentPulse 1.1s ease-out; }

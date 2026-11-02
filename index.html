@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=602">
+    <link rel="stylesheet" href="theme.css?v=603">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1842,6 +1842,8 @@
                 <h3 id="center-item-modal-title" data-i18n="add_item_title">Add Item</h3>
                 <div class="preset-manager-grid">
                     <textarea id="center-item-input" rows="4" data-i18n-placeholder="add_item_placeholder" placeholder="Type here..." oninput="updateCenterItemPreview()"></textarea>
+                    <!-- ❗ רק בפתקים: לסמן "חשוב" כבר בהוספה (ר' toggleCenterItemUrgent) -->
+                    <button type="button" id="center-item-urgent" class="note-urgent-toggle hidden" onclick="toggleCenterItemUrgent()" aria-pressed="false"><span class="note-urgent-mark" aria-hidden="true">!</span><span data-i18n="note_urgent">Important</span></button>
                     <!-- 🛒 רק ברשימת הקניות (shop.js): "כבר ברשימה", הצעות ממה שכבר קנו, והמחלקה בעריכה (כולל "אחר…") -->
                     <p id="center-item-shop-dup" class="shop-dup hidden" role="status"></p>
                     <div id="center-item-shop-suggest" class="shop-suggest hidden"></div>
@@ -4473,9 +4475,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=503"></script>
+    <script src="i18n/core.js?v=504"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=630"></script>
+    <script src="app.js?v=631"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>
