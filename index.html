@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=603">
+    <link rel="stylesheet" href="theme.css?v=604">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -261,7 +261,7 @@
 
             <!-- ◎ מצב פוקוס - רק הדבר האחד של עכשיו (ופתק מהיר); כל השאר מוסתר (home.js) -->
             <div class="home-focus-layer hidden" id="home-focus-layer">
-                <button type="button" class="home-focus-exit" onclick="toggleHomeFocus(false)" data-i18n-aria-label="home_focus_exit_aria" aria-label="Exit focus mode"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg><span data-i18n="home_focus_label">Focus mode</span><span class="home-focus-x" aria-hidden="true">✕</span></button>
+                <button type="button" class="home-focus-exit" onclick="toggleHomeFocus(false)" data-i18n-aria-label="home_focus_exit_aria" aria-label="Exit focus mode"><span aria-hidden="true">✕</span></button>
                 <div class="home-focus-body" id="home-focus-body"></div>
                 <button type="button" class="home-focus-note" onclick="setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add');"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v4h4M8 11h8M8 14.5h8"/></svg><span data-i18n="notes_ai_title">Quick Note</span></button>
             </div>
@@ -2736,16 +2736,20 @@
                          קטנה, לפי בקשה מפורשת ("בלי יותר מידי כרטיסיות... בשורה ביחד"). כל אריח
                          הוא .theme-preview-tile עם data-color-theme משלו - מציג את דוגמת הרקע
                          האמיתית של הערכה, לא רק גרדיאנט צבעים -->
-                    <!-- החללית ראשונה וצבעי המים שנייה (לפי בקשה מפורשת: "תעשה שזה יהיה הראשון במיוחדים הוא כלכך יפה";
-                         "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני"), והזוהר הצפוני שלישי ("ושתהיה השלישית בתור") -->
+                    <!-- ערכות הנצנצים ראשונות, עם זיקוקים בכל נגיעה ונצנוץ אחרי העכבר / האצבע (לפי בקשה מפורשת, 2026-11-02:
+                         "שהנצנצים האלה יהיו הראשונים שמשלמים על הפרימיום ואחריהם עוד 2 צבעים כאלה") - זהובים, ורודים, סגולים
+                         וטורקיז. אחריהן החללית, צבעי המים והזוהר הצפוני (הסדר הקודם: "תעשה שזה יהיה הראשון במיוחדים הוא כלכך יפה";
+                         "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני"; "ושתהיה השלישית בתור") -->
                     <div class="theme-special-divider"><span class="theme-special-sparkle">✨</span><span data-i18n="theme_special_section_label">Special Themes</span><span class="theme-special-sparkle">✨</span></div>
                     <div class="theme-picker-grid">
+                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="gold_sparkle" data-color-theme="gold_sparkle" onclick="selectColorTheme('gold_sparkle')" data-i18n-title="theme_name_gold_sparkle" data-i18n-aria-label="theme_name_gold_sparkle" title="Gold Sparkle" aria-label="Gold Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="pink_sparkle" data-color-theme="pink_sparkle" onclick="selectColorTheme('pink_sparkle')" data-i18n-title="theme_name_pink_sparkle" data-i18n-aria-label="theme_name_pink_sparkle" title="Pink Sparkle" aria-label="Pink Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="purple_sparkle" data-color-theme="purple_sparkle" onclick="selectColorTheme('purple_sparkle')" data-i18n-title="theme_name_purple_sparkle" data-i18n-aria-label="theme_name_purple_sparkle" title="Purple Sparkle" aria-label="Purple Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="turquoise_sparkle" data-color-theme="turquoise_sparkle" onclick="selectColorTheme('turquoise_sparkle')" data-i18n-title="theme_name_turquoise_sparkle" data-i18n-aria-label="theme_name_turquoise_sparkle" title="Turquoise Sparkle" aria-label="Turquoise Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="space_rocket" data-color-theme="space_rocket" onclick="selectColorTheme('space_rocket')" data-i18n-title="theme_name_space_rocket" data-i18n-aria-label="theme_name_space_rocket" title="Space Rocket" aria-label="Space Rocket"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="watercolor_wash" data-color-theme="watercolor_wash" onclick="selectColorTheme('watercolor_wash')" data-i18n-title="theme_name_watercolor_wash" data-i18n-aria-label="theme_name_watercolor_wash" title="Watercolor" aria-label="Watercolor"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="aurora_borealis" data-color-theme="aurora_borealis" onclick="selectColorTheme('aurora_borealis')" data-i18n-title="theme_name_aurora_borealis" data-i18n-aria-label="theme_name_aurora_borealis" title="Aurora Borealis" aria-label="Aurora Borealis"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="barbie_dream" data-color-theme="barbie_dream" onclick="selectColorTheme('barbie_dream')" data-i18n-title="theme_name_barbie_dream" data-i18n-aria-label="theme_name_barbie_dream" title="Barbie" aria-label="Barbie"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="gold_sparkle" data-color-theme="gold_sparkle" onclick="selectColorTheme('gold_sparkle')" data-i18n-title="theme_name_gold_sparkle" data-i18n-aria-label="theme_name_gold_sparkle" title="Gold Sparkle" aria-label="Gold Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch theme-preview-tile" data-theme="pink_sparkle" data-color-theme="pink_sparkle" onclick="selectColorTheme('pink_sparkle')" data-i18n-title="theme_name_pink_sparkle" data-i18n-aria-label="theme_name_pink_sparkle" title="Pink Sparkle" aria-label="Pink Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="star_map" data-color-theme="star_map" onclick="selectColorTheme('star_map')" data-i18n-title="theme_name_star_map" data-i18n-aria-label="theme_name_star_map" title="Star Map" aria-label="Star Map"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="botanical_greenhouse" data-color-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" data-i18n-title="theme_name_botanical_greenhouse" data-i18n-aria-label="theme_name_botanical_greenhouse" title="Botanical Greenhouse" aria-label="Botanical Greenhouse"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="bull_run" data-color-theme="bull_run" onclick="selectColorTheme('bull_run')" data-i18n-title="theme_name_bull_run" data-i18n-aria-label="theme_name_bull_run" title="Bull Run" aria-label="Bull Run"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -4475,9 +4479,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=504"></script>
+    <script src="i18n/core.js?v=505"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=631"></script>
+    <script src="app.js?v=632"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>
@@ -4491,7 +4495,7 @@
     <script src="new-me-game.js?v=17"></script>
     <script src="world3d.js?v=15"></script>
     <script src="books.js?v=8"></script>
-    <script src="home.js?v=28"></script>
+    <script src="home.js?v=29"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=7"></script>

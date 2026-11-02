@@ -452,6 +452,8 @@ async function addMyDayWaterGlass(btn) {
 }
 
 // --- ◎ מצב פוקוס: מסתיר הכול חוץ מהדבר האחד של עכשיו (ופתק מהיר) ---
+// המראה = 46 "מהצד בניאון" (בחירה 2026-11-02): כרטיס זכוכית עם קו ניאון, ומה שבא אחריו מציץ מהצד
+let homeFocusShownKey = '';
 function isHomeFocusOn() { return document.body.classList.contains('home-focus-on'); }
 function toggleHomeFocus(force) {
     const on = typeof force === 'boolean' ? force : !isHomeFocusOn();
@@ -459,24 +461,40 @@ function toggleHomeFocus(force) {
     try { sessionStorage.setItem('weekwise_home_focus', on ? '1' : '0'); } catch {}
     const layer = document.getElementById('home-focus-layer');
     if (layer) layer.classList.toggle('hidden', !on);
-    if (on) renderHomeFocus();
+    if (on) { homeFocusShownKey = ''; renderHomeFocus(); }
 }
 function renderHomeFocus() {
     const body = document.getElementById('home-focus-body');
     if (!body) return;
     const pick = myDayPickNow(myDayItems);
     if (!pick) {
-        body.innerHTML = `<p class="home-focus-empty">${myDayEsc(t('home_focus_empty'))}</p>`;
+        homeFocusShownKey = '';
+        body.innerHTML = `<div class="home-focus-stack"><div class="home-focus-card is-empty"><p class="home-focus-empty">${myDayEsc(t('home_focus_empty'))}</p></div></div>`;
         return;
     }
     const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');
     const time = myDayFormatMinutes(pick.item.minutes);
-    const rest = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes)[0];
+    const after = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes);
+    const rest = after[0];
+    // כרטיס מאחור לכל דבר שבא אחר כך (עד שניים), והבא בתור כתוב לאורכם
+    const backs = Math.min(after.length, 2);
+    // הכרטיס נכנס מהצד רק כשהוא באמת חדש, לא בכל רענון של היום
+    const key = `${pick.item.title}|${pick.item.minutes}`;
+    const isNew = key !== homeFocusShownKey;
+    homeFocusShownKey = key;
+    const then = rest ? `${myDayFormatMinutes(rest.minutes)} ${rest.title}` : '';
     body.innerHTML = `
-        <span class="home-focus-when">${myDayEsc(label)}${time ? ` · ${myDayEsc(time)}` : ''}</span>
-        <span class="home-focus-title">${myDayEsc(pick.item.title)}</span>
-        <button type="button" class="home-focus-done" aria-label="${myDayEsc(t('home_focus_done_aria'))}"><svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        ${rest ? `<span class="home-focus-then">${myDayEsc(t('home_focus_then').replace('{item}', `${myDayFormatMinutes(rest.minutes)} ${rest.title}`))}</span>` : ''}`;
+        <div class="home-focus-stack${backs ? ` has-back-${backs}` : ''}${isNew ? ' is-new' : ''}">
+            ${backs > 1 ? '<span class="home-focus-back b2" aria-hidden="true"></span>' : ''}${backs ? '<span class="home-focus-back b1" aria-hidden="true"></span>' : ''}
+            <div class="home-focus-card">
+                <div class="home-focus-head">
+                    <span class="home-focus-when">${myDayEsc(label)}${time ? ` · ${myDayEsc(time)}` : ''}</span>
+                    <button type="button" class="home-focus-done" aria-label="${myDayEsc(t('home_focus_done_aria'))}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                </div>
+                <span class="home-focus-title">${myDayEsc(pick.item.title)}</span>
+            </div>
+            ${rest ? `<span class="home-focus-then"><span class="home-focus-sr">${myDayEsc(t('home_focus_then').replace('{item}', then))}</span><span aria-hidden="true">${myDayEsc(then)}</span></span>` : ''}
+        </div>`;
     body.querySelector('.home-focus-done').onclick = e => {
         e.currentTarget.disabled = true;
         pick.item.toggle(true);

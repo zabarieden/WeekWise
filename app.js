@@ -9766,6 +9766,7 @@ const HELP_FAQ_ENTRIES = [
     { id: 'good_things', category: 'general' },
     { id: 'home_weather', category: 'general' },
     { id: 'theme_mode', category: 'general' },
+    { id: 'sparkle_themes', category: 'general' },
     { id: 'new_me_magic_themes', category: 'general' },
     { id: 'daily_board', category: 'general' },
     { id: 'routine_add_templates', category: 'general' },
@@ -10163,7 +10164,7 @@ const MAGIC_THEME_PAINT = {
 };
 function isMagicColorTheme(name) { return MAGIC_COLOR_THEMES.includes(name); }
 function currentColorThemeName() { return document.documentElement.getAttribute('data-color-theme') || 'default'; }
-const DARK_FIRST_THEMES = ['watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'bg_black', 'bg_dark_grey', ...MAGIC_COLOR_THEMES];
+const DARK_FIRST_THEMES = ['watercolor_wash', 'aurora_borealis', 'barbie_dream', 'gold_sparkle', 'pink_sparkle', 'purple_sparkle', 'turquoise_sparkle', 'bg_black', 'bg_dark_grey', ...MAGIC_COLOR_THEMES];
 async function selectColorTheme(themeName) {
     // ערכה קסומה בלי New Me - פותחים את New Me (שם רואים מה כלול וקונים), לא את חלון הפרימיום
     if (isMagicColorTheme(themeName) && !hasNewMe) {
@@ -10437,6 +10438,71 @@ function magicTapSparkles(e) {
     }
 }
 document.addEventListener('pointerdown', magicTapSparkles, { passive: true });
+
+// 🎆 ערכות הנצנצים של הפרימיום (זהובים, ורודים, סגולים, טורקיז): בכל נגיעה זיקוקים כמו בחגיגת הפרימיום, ונצנוץ קטן
+// שעוקב אחרי העכבר / האצבע (לפי בקשה מפורשת, 2026-11-02: "עם הנגיעה והנצנוץ של העכבר שכל לחיצה יש זיקוקים כאלה ולא
+// מהניו מי"). פרימיום רגיל, לא New Me. לא למי שביקש/ה פחות תנועה
+const SPARKLE_FX_COLORS = {
+    gold_sparkle: ['#fbbf24', '#fef08a', '#fff7d6', '#f59e0b'],
+    pink_sparkle: ['#ec4899', '#fbcfe8', '#ffffff', '#f472b6'],
+    purple_sparkle: ['#a855f7', '#e9d5ff', '#ffffff', '#c084fc'],
+    turquoise_sparkle: ['#22d3ee', '#a5f3fc', '#ffffff', '#5eead4'],
+};
+let sparkleTrailAt = 0, sparkleTrailX = 0, sparkleTrailY = 0;
+function sparkleFxColors() {
+    const colors = SPARKLE_FX_COLORS[currentColorThemeName()];
+    if (!colors || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return null;
+    // על רקע בהיר ניצוץ לבן לא נראה
+    return isLightModeOn() ? colors.filter(c => c !== '#ffffff' && c !== '#fff7d6') : colors;
+}
+function sparkleFxHost() {
+    let host = document.getElementById('sparkle-fx');
+    if (!host) {
+        host = document.createElement('div');
+        host.id = 'sparkle-fx';
+        host.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(host);
+    }
+    return host;
+}
+function sparkleTapFirework(e) {
+    const colors = sparkleFxColors();
+    if (!colors) return;
+    const fw = document.createElement('div');
+    fw.className = 'unlock-firework sparkle-tap-firework';
+    fw.style.left = `${e.clientX}px`;
+    fw.style.top = `${e.clientY}px`;
+    let sparks = '';
+    for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2, d = 34 + Math.random() * 26;
+        sparks += `<i style="--dx:${(Math.cos(a) * d).toFixed(1)}px;--dy:${(Math.sin(a) * d).toFixed(1)}px;--c:${colors[i % colors.length]}"></i>`;
+    }
+    fw.innerHTML = sparks;
+    sparkleFxHost().appendChild(fw);
+    setTimeout(() => fw.remove(), 1050);
+}
+function sparkleTrail(x, y) {
+    const now = performance.now();
+    const dx = x - sparkleTrailX, dy = y - sparkleTrailY;
+    if (now - sparkleTrailAt < 24 || dx * dx + dy * dy < 64) return;
+    const colors = sparkleFxColors();
+    if (!colors) return;
+    sparkleTrailAt = now;
+    sparkleTrailX = x;
+    sparkleTrailY = y;
+    const s = document.createElement('i');
+    s.className = 'sparkle-trail';
+    s.style.left = `${(x + (Math.random() - 0.5) * 10).toFixed(1)}px`;
+    s.style.top = `${(y + (Math.random() - 0.5) * 10).toFixed(1)}px`;
+    s.style.setProperty('--c', colors[Math.floor(Math.random() * colors.length)]);
+    s.style.setProperty('--s', (0.6 + Math.random() * 0.7).toFixed(2));
+    sparkleFxHost().appendChild(s);
+    setTimeout(() => s.remove(), 750);
+}
+document.addEventListener('pointerdown', sparkleTapFirework, { passive: true });
+// עכבר ועט דרך pointermove; אצבע דרך touchmove (בגלילה הדפדפן מפסיק לשלוח pointermove)
+document.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') sparkleTrail(e.clientX, e.clientY); }, { passive: true });
+document.addEventListener('touchmove', e => { const touch = e.touches[0]; if (touch) sparkleTrail(touch.clientX, touch.clientY); }, { passive: true });
 
 // אייקון עוזר ה-AI (הכפתור בפינה) - אותו דפוס בדיוק כמו applyColorTheme/
 // selectColorTheme/loadColorTheme למעלה, על עמודה נפרדת (user_premium.ai_icon).
