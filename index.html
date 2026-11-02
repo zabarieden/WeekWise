@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=601">
+    <link rel="stylesheet" href="theme.css?v=602">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -132,10 +132,10 @@
                 </button>
                 <h2 class="brand-wordmark">NOT10.ai</h2>
                 <p id="auth-mode-subtitle" data-i18n="auth_login_subtitle">Log in to your account:</p>
-                <input type="email" id="auth-email-input" data-i18n-placeholder="auth_email_placeholder" placeholder="Email" autocomplete="email" autofocus>
+                <input type="email" id="auth-email-input" data-i18n-placeholder="auth_email_placeholder" placeholder="Email" autocomplete="username" autofocus>
                 <div class="password-input-wrap" id="auth-password-wrap">
                     <input type="password" id="auth-password-input" data-i18n-placeholder="auth_password_placeholder_login" placeholder="Password" autocomplete="current-password">
-                    <button type="button" class="btn-toggle-password" id="btn-toggle-password" onclick="togglePasswordVisibility()" data-i18n-title="toggle_password_title" title="Show/hide password">🙈</button>
+                    <button type="button" class="btn-toggle-password" id="btn-toggle-password" onmousedown="event.preventDefault()" onclick="togglePasswordVisibility()" aria-pressed="false" data-i18n-title="toggle_password_title" data-i18n-aria-label="toggle_password_title" title="Show/hide password" aria-label="Show/hide password">🙈</button>
                 </div>
                 <!-- הסכמה אקטיבית (clickwrap) להרשמה בלבד: תיבה ריקה שחייבים לסמן בעצמך,
                      עם קישורים חיים לתנאי השימוש ולמדיניות הפרטיות + אישור גיל 16+ -->
@@ -4473,9 +4473,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=502"></script>
+    <script src="i18n/core.js?v=503"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=629"></script>
+    <script src="app.js?v=630"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>
@@ -4489,9 +4489,9 @@
     <script src="new-me-game.js?v=17"></script>
     <script src="world3d.js?v=15"></script>
     <script src="books.js?v=8"></script>
-    <script src="home.js?v=27"></script>
+    <script src="home.js?v=28"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
-    <script src="shop.js?v=6"></script>
+    <script src="shop.js?v=7"></script>
 </body>
 </html>

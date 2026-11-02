@@ -320,6 +320,110 @@ async function shopAddMany(lines, row = {}) {
     return { added: toInsert.length + revive.length, error: false };
 }
 
+// ---------- 🍲 ממתכון לרשימה: רק הפריט הראשי, וכל שורה ניתנת לעריכה לפני ההוספה ----------
+// (לפי בקשה מפורשת, 2026-11-02: "שירשום רק את הפריט הראשי... וכל פריט שיהיה אפשרות לערוך לפני העברה לרשימה")
+// "2 כוסות קמח מנופה" ← "קמח": המילה המוכרת הראשונה ממילון המחלקות, ואלה שצמודות אליה ("שמן זית", "חזה עוף"); בלי
+// כמות, יחידה ומה שאחרי פסיק / סוגריים. אין מילה מוכרת - השורה בלי הכמות והיחידה
+const SHOP_UNITS = {
+    he: 'כוס|כוסות|כף|כפות|כפית|כפיות|גרם|גר|גר\'|ג|ג\'|ק"ג|קג|קילו|ליטר|ל|מ"ל|מל|יחידה|יחידות|חבילה|חבילות|חבילת|קופסה|קופסת|קופסאות|פחית|פחיות|שקית|שקיות|צרור|צרורות|קורט|שן|שיני|פרוסה|פרוסות|חופן|מעט|קצת|חצי|רבע|בערך|כ',
+    en: 'cup|cups|tablespoon|tablespoons|tbsp|tbs|teaspoon|teaspoons|tsp|gram|grams|kilo|kilos|liter|liters|litre|litres|ounce|ounces|pound|pounds|pinch|dash|clove|cloves|slice|slices|can|cans|tin|tins|jar|jars|package|packages|pack|packs|bunch|bunches|handful|piece|pieces|stick|sticks|of|a|an|about|half',
+};
+const SHOP_UNITS_ANY = 'g|gr|kg|mg|ml|l|dl|cl|oz|lb|lbs|tsp|tbsp|el|tl|cs|cc';
+const SHOP_CJK_UNITS = '大さじ|小さじ|カップ|個|本|枚|杯|克|毫升|升|勺|汤匙|茶匙|개|큰술|작은술|컵|กรัม|ช้อนโต๊ะ|ช้อนชา|ถ้วย';
+const shopItemMatchers = {};
+function shopItemMatchersFor(lang) {
+    if (shopItemMatchers[lang]) return shopItemMatchers[lang];
+    const words = (typeof SHOP_DEPT_WORDS !== 'undefined' && SHOP_DEPT_WORDS[lang]) || null;
+    const pre = lang === 'he' ? '([והבלמשכ]{0,2})' : (lang === 'ar' || lang === 'ur') ? '(و?(?:ال|ل|ب)?)' : '()';
+    const list = [];
+    if (words) SHOP_DEPTS.forEach(dept => String(words[dept] || '').split('|').map(w => shopNormFor(w, lang)).filter(Boolean).forEach(w => {
+        list.push({ re: new RegExp(`^${pre}${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u'), words: w.split(' ').length, len: w.length });
+    }));
+    return (shopItemMatchers[lang] = list);
+}
+function shopMainItem(line) {
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'he';
+    const s = String(line || '').normalize('NFC').split(/[(（,，;:]| [-–—] /)[0].trim();
+    if (['ja', 'zh', 'ko', 'th'].includes(lang)) {
+        return s.replace(new RegExp(`(?:${SHOP_CJK_UNITS})?\\s*[\\d.,/½⅓⅔¼¾⅛]+\\s*(?:${SHOP_CJK_UNITS}|kg|g|ml|l|cc)?`, 'giu'), ' ').trim().replace(/\s+/g, ' ') || s;
+    }
+    const units = new Set(`${SHOP_UNITS[lang] || ''}|${SHOP_UNITS_ANY}`.split('|').filter(Boolean));
+    const clean = tok => shopNormFor(tok, lang).replace(/״/g, '"').replace(/׳/g, '\'').replace(/[.,;:!]+$/, '');
+    const keep = s.split(/\s+/).filter(tok => { const k = clean(tok); return k && !/[\d½⅓⅔¼¾⅛]/.test(k) && !units.has(k) && /\p{L}/u.test(k); });
+    const norm = keep.map(clean);
+    for (const L of [...new Set([lang, 'he', 'en'])]) {
+        const list = shopItemMatchersFor(L);
+        let start = -1, end = -1, pre = '';
+        for (let i = 0; i < norm.length; i++) {
+            const joined = norm.slice(i, i + 3).join(' ');
+            let best = null;
+            list.forEach(m => { const r = m.re.exec(joined); if (r && (!best || m.len > best.len)) best = { words: m.words, len: m.len, pre: r[1] || '' }; });
+            if (!best) { if (start >= 0) break; continue; }
+            if (start < 0) { start = i; pre = best.pre; }
+            end = i + best.words - 1;
+            i = end;
+        }
+        if (start >= 0) {
+            const out = keep.slice(start, end + 1);
+            if (pre && out[0].length > pre.length) out[0] = out[0].slice(pre.length);
+            return out.join(' ').replace(/[.,;:!]+$/, '');
+        }
+    }
+    return keep.join(' ').replace(/[.,;:!]+$/, '') || s;
+}
+async function openRecipeShopReview(recipe, lines) {
+    await shopEnsureDeptLang(currentLang);
+    const items = [...new Set(lines.map(shopMainItem).filter(Boolean))];
+    const inList = new Set((await shopFetchLive()).filter(r => !r.is_completed).map(r => shopNorm(r.content)));
+    const on = items.map(x => !inList.has(shopNorm(x)));
+    const body = shopSheet(`
+        <h3>${shopEsc(t('shop_hol_items_title').replace('{holiday}', recipe.title || t('general_title')))}</h3>
+        <div class="shop-pick-list">${items.map((x, i) => `<div class="shop-pick shop-pick-edit" data-i="${i}"><button type="button" class="shop-pick-box">✓</button><input type="text" class="shop-pick-input" maxlength="80" enterkeyhint="done" value="${shopEsc(x)}"><small hidden>${shopEsc(t('shop_dup_hint'))}</small></div>`).join('')}</div>
+        <div class="action-buttons-wrap">
+            <button type="button" class="btn-primary" data-add></button>
+            <button type="button" class="btn-clear-specific" onclick="closeShopSheet()">${shopEsc(t('cancel_btn'))}</button>
+        </div>`);
+    if (!body) return;
+    const rows = [...body.querySelectorAll('.shop-pick-edit')];
+    const add = body.querySelector('[data-add]');
+    const value = i => rows[i].querySelector('input').value.trim();
+    const isHave = i => inList.has(shopNorm(value(i)));
+    const picked = () => rows.map((_, i) => i).filter(i => on[i] && value(i) && !isHave(i));
+    const sync = () => {
+        rows.forEach((row, i) => {
+            const have = !!value(i) && isHave(i);
+            const lit = on[i] && !!value(i) && !have;
+            row.classList.toggle('on', lit);
+            row.classList.toggle('is-have', have);
+            row.querySelector('small').hidden = !have;
+            const box = row.querySelector('.shop-pick-box');
+            box.setAttribute('aria-pressed', lit ? 'true' : 'false');
+            box.setAttribute('aria-label', value(i));
+        });
+        const n = picked().length;
+        add.textContent = t('shop_hol_add').replace('{n}', n.toLocaleString(currentLang));
+        add.disabled = !n;
+    };
+    rows.forEach((row, i) => {
+        row.querySelector('.shop-pick-box').addEventListener('click', () => { on[i] = !on[i]; sync(); });
+        const input = row.querySelector('input');
+        // עריכה = רוצים את הפריט
+        input.addEventListener('input', () => { on[i] = true; sync(); });
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
+    });
+    add.addEventListener('click', async () => {
+        const values = picked().map(value);
+        if (!values.length) return;
+        add.disabled = true;
+        const res = await shopAddMany(values, { source_ref: `recipe:${recipe.id}` });
+        if (res.error) { sync(); return; }
+        closeShopSheet();
+        showAppToast(res.added ? t('recipe_shopping_added').replace('{n}', res.added.toLocaleString(currentLang)) : t('tbl_shop_already'));
+        if (typeof loadCenterItems === 'function') loadCenterItems('general');
+    });
+    sync();
+}
+
 // ---------- חלון ההוספה / העריכה (המשותף לפתקים) ----------
 // בהוספה: הצעות ממה שכבר קנו ("קונים שוב") ו"כבר ברשימה"; בעריכה: המחלקה (כולל "אחר…" וכתיבה חופשית)
 function shopModalOpen(type, editId) {

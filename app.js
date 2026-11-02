@@ -44,10 +44,10 @@ function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 function hasStoredAuthSession() {
     try { return Object.keys(localStorage).some(k => /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k)); } catch { return false; }
 }
-async function restoreSessionWithRetry() {
+async function restoreSessionWithRetry(quiet = false) {
     const overlay = document.getElementById('login-overlay');
     const restoring = hasStoredAuthSession();
-    if (overlay && restoring) overlay.classList.add('is-restoring');
+    if (overlay && restoring && !quiet) overlay.classList.add('is-restoring');
     try {
         for (const wait of [0, 800, 1600, 3200, 5000]) {
             if (wait) await new Promise(r => setTimeout(r, wait));
@@ -62,8 +62,25 @@ async function restoreSessionWithRetry() {
         }
         return null;
     } finally {
-        if (overlay) overlay.classList.remove('is-restoring');
+        if (overlay && !quiet) overlay.classList.remove('is-restoring');
     }
+}
+// עוד 10 שניות לא הספיקו (קליטה חלשה, טלפון שהתעורר) אבל הכניסה עדיין שמורה במכשיר - ממשיכים לנסות ברקע (בלי להסתיר
+// את הטופס) וגם בכל חזרה לאפליקציה, והאפליקציה נפתחת לבד כשהרשת מוכנה (דווח שוב 2026-11-02: "וזה שוב מוציא אותי למסך
+// ההתחברות"). כניסה ש-Supabase באמת ביטל נמחקת מהמכשיר - ואז מפסיקים
+let storedSessionRetryTimer = null;
+let storedSessionRetryCount = 0;
+let storedSessionRetryBusy = false;
+async function retryStoredSession() {
+    clearTimeout(storedSessionRetryTimer);
+    storedSessionRetryTimer = null;
+    if (storedSessionRetryBusy || currentUserId || !supabaseClient || !hasStoredAuthSession()) return;
+    storedSessionRetryBusy = true;
+    const s = await restoreSessionWithRetry(true);
+    storedSessionRetryBusy = false;
+    if (currentUserId) return;
+    if (s) { initAppAfterAuth(s.user); return; }
+    if (hasStoredAuthSession() && ++storedSessionRetryCount < 40) storedSessionRetryTimer = setTimeout(retryStoredSession, 15000);
 }
 function initSupabase() {
     if (window.supabase) {
@@ -117,6 +134,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (supabaseClient) {
         const session = await restoreSessionWithRetry();
         if (session) initAppAfterAuth(session.user);
+        else if (hasStoredAuthSession()) storedSessionRetryTimer = setTimeout(retryStoredSession, 4000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && !currentUserId && hasStoredAuthSession()) { storedSessionRetryCount = 0; retryStoredSession(); }
+        });
         // הכניסה חזרה אחר כך (הרשת התעוררה ו-Supabase חידש אותה לבד) - פותחים את האפליקציה במקום להשאיר את מסך הכניסה.
         // רק TOKEN_REFRESHED: כניסה / הרשמה מהטופס פותחות את האפליקציה (או את האשף) בעצמן
         supabaseClient.auth.onAuthStateChange((event, s) => {
@@ -1685,14 +1706,22 @@ async function confirmFoodClarify() {
     }
 }
 
+// הקוף לא לוקח את הפוקוס מהשדה (onmousedown ב-index.html): בטלפון הנגיעה הראשונה בו הורידה את המקלדת, הכרטיס
+// קפץ למקום אחר והנגיעה "פספסה" - הסיסמה לא הוצגה בהתחלה (דווח 2026-11-02). השדה נשאר בפוקוס, והסמן בסוף
 function togglePasswordVisibility() {
     const input = document.getElementById('auth-password-input');
     const btn = document.getElementById('btn-toggle-password');
     const showing = input.type === 'text';
+    const hadFocus = document.activeElement === input;
     input.type = showing ? 'password' : 'text';
     // קוף שמכסה עיניים (🙈) = הסיסמה מוסתרת (ברירת המחדל) - עין פקוחה (👁️) =
     // הסיסמה גלויה כרגע. לפי בקשה מפורשת ("שהעין תהיה קוף... כמו שהיה לפני כן")
     btn.textContent = showing ? '🙈' : '👁️';
+    btn.setAttribute('aria-pressed', showing ? 'false' : 'true');
+    if (hadFocus) {
+        input.focus();
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch { /* דפדפן ישן */ }
+    }
 }
 
 function updateAuthUI() {
@@ -1710,6 +1739,8 @@ function updateAuthUI() {
     // זה סתם מבלבל, כי כבר יש סיסמה קיימת שיכולה להיות בכל אורך - דווח:
     // "אין צורך לרשום את זה, זה רק במסך ההרשמה"
     if (passwordInput) passwordInput.placeholder = t(authMode === 'signup' ? 'auth_password_placeholder' : 'auth_password_placeholder_login');
+    // הדפדפן מציע את הסיסמה השמורה בכניסה, וסיסמה חדשה בהרשמה
+    if (passwordInput) passwordInput.autocomplete = authMode === 'signup' ? 'new-password' : 'current-password';
     renderAuthConsent();
     if (authMode === 'forgot') {
         // מצב "שכחתי סיסמה" - אין שדה סיסמה בכלל כאן (רק אימייל), אין החלפת
@@ -2955,18 +2986,9 @@ let selectedDailyFocusTags = [];
 // הצעה אחת "מהחיים שלך" - לפי בקשה מפורשת: במקום אחת מ-5 ההצעות הכלליות, משהו מהנתונים
 // עצמם - הצעד הבא ביעד של החודש (או ביעד פעיל אחר), או משימת הקריאה של היום. כשיש כמה, הן
 // מתחלפות לפי היום. אין נתונים מתאימים - נשארות 5 הצעות כלליות
+// בלי היעדים (לפי בקשה מפורשת, 2026-11-02: "במה חשוב לך לעשות היום להוריד את היעדים")
 function getDailyFocusPersonalSuggestion() {
     const options = [];
-    const goals = (typeof visionGoalsCache !== 'undefined' ? visionGoalsCache : []).filter(g => !g.is_achieved);
-    const goal = goals.find(g => typeof visionIsFocus === 'function' && visionIsFocus(g))
-        || goals.find(g => (typeof visionMilestonesCache !== 'undefined' ? visionMilestonesCache : []).some(m => m.goal_id === g.id && !m.is_done));
-    if (goal) {
-        const step = (typeof visionMilestonesCache !== 'undefined' ? visionMilestonesCache : [])
-            .filter(m => m.goal_id === goal.id && !m.is_done)
-            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0];
-        // רק הצעד עצמו, בלי שם היעד אחריו (לפי בקשה מפורשת: "ה-50 K?" - שם היעד בסוף רק בלבל)
-        options.push(step ? `🎯 ${step.title}` : t('daily_focus_personal_goal').replace('{goal}', goal.title));
-    }
     if (typeof getPeekBookTaskItems === 'function') {
         const reading = getPeekBookTaskItems().find(item => !item.done);
         if (reading) options.push(`${reading.icon} ${reading.text} · ${reading.tag}`);
@@ -8400,20 +8422,15 @@ function setRecipeTab(tab) {
     });
 }
 
-// 🛒 מה שחסר: כל שורה שלא סומנה ✓, בכמות של מספר המנות שמוצג. מה שכבר ברשימת הקניות (ולא נקנה) לא נכנס פעמיים
+// 🛒 מה שחסר: כל שורה שלא סומנה ✓ - נפתח חלון עם הפריט הראשי בלבד ("קמח", בלי כמות), כל שורה ניתנת לעריכה
+// ולהורדה, ורק אז נכנס לרשימה (openRecipeShopReview ב-shop.js). מה שכבר ברשימה לא נכנס פעמיים
 async function sendRecipeMissingToShopping() {
     const recipe = findRecipeById(currentDetailRecipeId);
     if (!recipe || !supabaseClient || !currentUserId) return;
     const have = getRecipeHaveSet(recipe.id);
-    const factor = recipeViewFactor(recipe);
-    const wanted = recipeLines(recipe.ingredients).filter(l => !have.has(l)).map(l => recipeScaledLine(l, factor));
+    const wanted = recipeLines(recipe.ingredients).filter(l => !have.has(l));
     if (!wanted.length) return;
-    // מה שכבר ברשימה (או בדרך) לא נוסף שוב; מה שמחכה ב"קונים שוב" חוזר לרשימה (shopAddMany ב-shop.js)
-    const res = await shopAddMany(wanted, { source_ref: `recipe:${recipe.id}` });
-    if (res.error) return;
-    if (!res.added) { showAppToast(t('tbl_shop_already')); return; }
-    showAppToast(t('recipe_shopping_added').replace('{n}', res.added.toLocaleString(currentLang)));
-    if (typeof loadCenterItems === 'function') loadCenterItems('general');
+    await openRecipeShopReview(recipe, wanted);
 }
 
 // 🍽️ לאכול היום: מנה אחת (קלוריות למנה, או הכול כשאין מספר מנות) נכנסת לארוחות של היום - אותה דרך

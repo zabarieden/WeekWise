@@ -828,8 +828,12 @@ function renderHomeChips() {
     }
     if (typeof bookHomeChipHtml === 'function') { const bc = bookHomeChipHtml(); if (bc) chips.push(bc); }
     if (goodThingsChipVisible()) {
-        const saved = goodThingsSaved();
-        chips.push(`<button type="button" class="home-chip home-chip-good${saved ? ' is-saved' : ''}" onclick="openGoodThings()">${HOME_MOON_SVG}<span>${myDayEsc(t(saved ? 'good_things_chip_done' : 'good_things_chip'))}</span></button>`);
+        // באותו מקום, אבל קודם שאלה (לפי בקשה מפורשת, 2026-11-02): "כן" פותח את החלון, "לא" סוגר עד מחר
+        if (goodThingsSaved()) {
+            chips.push(`<button type="button" class="home-chip home-chip-good is-saved" onclick="openGoodThings()">${HOME_MOON_SVG}<span>${myDayEsc(t('good_things_chip_done'))}</span></button>`);
+        } else {
+            chips.push(`<div class="home-chip home-chip-good home-chip-ask" role="group" aria-label="${myDayEsc(t('good_things_ask'))}">${HOME_MOON_SVG}<span>${myDayEsc(t('good_things_ask'))}</span><button type="button" class="home-chip-ask-btn is-yes" onclick="openGoodThings()">${myDayEsc(t('good_things_yes'))}</button><button type="button" class="home-chip-ask-btn" onclick="skipGoodThingsTonight()">${myDayEsc(t('good_things_no'))}</button></div>`);
+        }
     }
     box.innerHTML = chips.join('');
     box.classList.toggle('hidden', !chips.length);
