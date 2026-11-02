@@ -1071,6 +1071,8 @@ function nmRenderSales(root) {
                 ${[1, 2].map(i => `<details><summary>${nmEsc(t('nm_sales_q' + i))}</summary><p>${nmEsc(t('nm_sales_a' + i).replace('{monthly}', NEW_ME_PRICES.monthly).replace('{life}', NEW_ME_PRICES.life))}</p></details>`).join('')}
             </section>
             ${buy}
+            <!-- "לא ייעוץ רפואי" לפני הקנייה - שורה קטנה בתחתית (אושר 2026-10-29), הטקסט של "זה מתאים לי?" שנמחקה -->
+            <p class="nm-sales-medical">${nmEsc(t('nm_sales_a3'))}</p>
         </div>`;
     nmTrailerInit(root.querySelector('.nmt'));
     nmSwapDemoInit(root.querySelector('.nm-demo'));

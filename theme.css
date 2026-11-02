@@ -7204,6 +7204,7 @@ button.nm-letter-card { cursor: pointer; }
 .nm-sales-premium { display: inline-block; margin: -6px auto 14px; padding: 5px 14px; border-radius: 999px; background: linear-gradient(135deg, #f7dfa0, #c9973f); color: #3a230d; font-size: .82rem; font-weight: 800; box-shadow: 0 8px 18px -12px rgba(201, 151, 63, 0.9); }
 .nm-buy-btn { font-size: 1.02rem; }
 .nm-sales-trust { margin: -4px 0 0; text-align: center; font-size: .78rem; color: var(--text-secondary); }
+.nm-sales-medical { margin: -2px auto 0; max-width: 40ch; text-align: center; font-size: .72rem; line-height: 1.5; color: var(--text-secondary); opacity: .85; }
 .nm-sales-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--border-color); background: var(--bg-row); }
 .nm-sales-card h3 { margin: 0; font-size: 1.05rem; color: var(--text-primary); }
 .nm-sales-group { display: flex; flex-direction: column; gap: 8px; }
