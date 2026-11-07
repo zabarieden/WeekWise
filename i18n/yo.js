@@ -4049,7 +4049,7 @@ translations.yo = {
     nav_recipes_subtitle: "Àwọn ìlànà tí a fi pamọ́",
     monthly_goal_tile_title: "Góńgó Oṣooṣù",
     back_to_home_btn: "Padà sí Ilé",
-    notes_ai_title: "Àkọsílẹ̀ Kíákíá", dock_fab_label_notes: "Àkọsílẹ̀", dock_fab_label_food: "Oúnjẹ", dock_fab_label_water: "Omi", dock_fab_label_sport: "Eré-ìdárayá", dock_fab_label_finance: "Ìṣúná", notes_ai_placeholder: "Èrò kan, ìránnilétí kan, tàbí ìmọ̀ràn kan",
+    notes_ai_title: "Àkọsílẹ̀ Kíákíá", dock_fab_label_notes: "Àkọsílẹ̀", dock_fab_label_food: "Oúnjẹ", dock_fab_label_water: "Omi", dock_fab_label_sport: "Eré-ìdárayá", dock_fab_label_finance: "Ìṣúná", notes_ai_placeholder: "Èrò, ìránnilétí tàbí ìmọ̀ràn",
     notes_ai_btn: "Fi Kún",
     notes_ai_added: "A ti fi kún àkọsílẹ̀ rẹ",
     notes_ai_empty: "Jọ̀wọ́ kọ́kọ́ tẹ ọ̀rọ̀ kan sí",

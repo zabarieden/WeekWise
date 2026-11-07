@@ -4049,7 +4049,7 @@ translations.es = {
     nav_recipes_subtitle: "Recetas guardadas",
     monthly_goal_tile_title: "Meta Mensual",
     back_to_home_btn: "Volver al Inicio",
-    notes_ai_title: "Nota Rápida", dock_fab_label_notes: "Notas", dock_fab_label_food: "Comida", dock_fab_label_water: "Agua", dock_fab_label_sport: "Deporte", dock_fab_label_finance: "Presupuesto", notes_ai_placeholder: "Un pensamiento, un recordatorio o una idea",
+    notes_ai_title: "Nota Rápida", dock_fab_label_notes: "Notas", dock_fab_label_food: "Comida", dock_fab_label_water: "Agua", dock_fab_label_sport: "Deporte", dock_fab_label_finance: "Presupuesto", notes_ai_placeholder: "Pensamiento, recordatorio o idea",
     notes_ai_btn: "Añadir",
     notes_ai_added: "Añadido a tus notas",
     notes_ai_empty: "Por favor escribe algún texto primero",

@@ -325,6 +325,27 @@ function updateLegalLinksForLanguage() {
 // ידנית כל פונקציית-רינדור בודדת באפליקציה (בדיוק הבאג שכבר קרה) - הוא
 // להריץ מחדש את *אותה* רשימת הטעינה המלאה שרצה בכניסה הרגילה לאפליקציה
 // (ר' initAppAfterAuth), כך שכל מסך מתעדכן גם בנתונים וגם בשפה יחד
+// הרמז האפור בשדה (placeholder) ארוך מהשדה בשפה הזו, בטלפון צר - מקטינים רק אותו עד שהוא נכנס שלם, לכל היותר עד 70%
+// (לפי בקשה מפורשת, 2026-11-07: "לוודא שזה לא יחתוך... בכל שפה"). הטקסט שמקלידים נשאר בגודל הרגיל
+function fitInputHint(input) {
+    if (!input || !input.placeholder || !input.clientWidth) return;
+    input.style.removeProperty('--hint-size');
+    const cs = getComputedStyle(input), hint = getComputedStyle(input, '::placeholder');
+    const ctx = fitTileWords.ctx || (fitTileWords.ctx = document.createElement('canvas').getContext('2d'));
+    ctx.font = `${hint.fontWeight} ${hint.fontSize} ${hint.fontFamily}`;
+    const room = input.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+    const width = ctx.measureText(input.placeholder).width;
+    if (width > room) input.style.setProperty('--hint-size', `${(parseFloat(hint.fontSize) * Math.max(0.7, room / width)).toFixed(2)}px`);
+}
+function fitHomeHints() { fitInputHint(document.getElementById('home-note-input')); }
+// הרמז מתחלף בהחלפת שפה, במעבר פתק / קניות / ארוחה ובהכתבה; והשדה משנה גודל כשחוזרים לבית או מסובבים את הטלפון
+const homeNoteHintEl = document.getElementById('home-note-input');
+if (homeNoteHintEl) {
+    new MutationObserver(fitHomeHints).observe(homeNoteHintEl, { attributes: true, attributeFilter: ['placeholder'] });
+    if (window.ResizeObserver) new ResizeObserver(fitHomeHints).observe(homeNoteHintEl);
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHomeHints);
+
 function onLanguageChanged() {
     // התצוגה של כל <select> מותאם מעתיקה את טקסט האפשרות - בלי זה היא נשארת בשפה הקודמת
     document.querySelectorAll('select').forEach(select => { if (select.id) updateCustomSelectDisplay(select.id); });
@@ -1835,11 +1856,12 @@ async function submitAuthForm() {
             // התחברות רגילה (לא, גם אם עדיין false משום מה ברשומה ישנה)
             // ברירות המחדל של משתמש/ת חדש/ה = בדיוק המראה של האפליקציה כפי שהמפתחת
             // הגדירה אותה (לפי בקשה מפורשת: "כל משתמש שמוריד זה מה שהוא רואה"):
-            // רקע מנטה במצב בהיר (לפי בקשה מפורשת), רובוט קטן, תג קלוריות בהצצה, פתק ורוד,
+            // ערכת "ברירת מחדל" (הוורוד-סגול) במצב בהיר (לפי בקשה מפורשת, 2026-11-07: "זה קצת ריסקי כי זה ורוד אבל מאמינה שיותר
+            // בחורות ישתמשו וגברים יכולים לשנות בקלות"; עד אז מנטה), רובוט קטן, תג קלוריות בהצצה, פתק ורוד,
             // צליל תזכורת wind_chime
             await supabaseClient.from('user_premium').insert({
                 user_id: data.user.id, username: email, light_mode: true, onboarding_completed: false,
-                theme: 'mint_fresh', ai_fab_compact: true, home_calorie_badge_enabled: true,
+                theme: 'default', ai_fab_compact: true, home_calorie_badge_enabled: true,
                 reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
                 // השפה = מה שנבחר במסך ההרשמה (ברירת מחדל: אנגלית) - לא העברית של המפתחת
                 language: currentLang || 'en',
@@ -4032,6 +4054,7 @@ function renderCategoriesMenu() {
             }));
         });
         body.appendChild(grid);
+        requestAnimationFrame(() => fitTileWords(body));
         return;
     }
     grid.className = 'categories-grid';
@@ -4054,6 +4077,35 @@ function renderCategoriesMenu() {
         newMeTile.setAttribute('aria-label', `New Me – ${t('nm_locked_label')}`);
     }
     body.appendChild(newMeTile);
+    requestAnimationFrame(() => fitTileWords(body));
+}
+
+// מילה אחת ארוכה מהמקום שלה (Planification, Trainingsregistratie...) - במקום שתישבר באמצע (לפי בקשה מפורשת, 2026-11-07:
+// "לוודא שזה לא יחתוך... בכל שפה"): קבוצת אריחים שמילה בה ארוכה מדי עוברת לשתי עמודות, ומה שעדיין לא נכנס (גם הכותרת)
+// מקבל גופן קצת יותר קטן, עד 72%. ביפנית, סינית ותאילנדית אין רווחים בין מילים - שם השבירה בין אותיות היא הרגילה
+const FIT_WORDS_SKIP_LANGS = /^(ja|zh|th)/;
+function fitTileWords(root) {
+    if (!root || FIT_WORDS_SKIP_LANGS.test(currentLang || '')) return;
+    const ctx = fitTileWords.ctx || (fitTileWords.ctx = document.createElement('canvas').getContext('2d'));
+    // כמה המילה הכי ארוכה גדולה מהמקום (1 = נכנסת בדיוק). מילה עם מקף יכולה לרדת שורה אחרי המקף
+    const need = el => {
+        el.style.fontSize = '';
+        const box = el.clientWidth;
+        if (!box) return 1;
+        const cs = getComputedStyle(el);
+        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const spacing = parseFloat(cs.letterSpacing) || 0;
+        return Math.max(...el.textContent.split(/\s+|(?<=-)/).filter(Boolean).map(w => ctx.measureText(w).width + spacing * w.length)) / (box - 3);
+    };
+    root.querySelectorAll('.categories-grid').forEach(grid => {
+        grid.classList.remove('categories-grid--two');
+        if (Math.max(1, ...[...grid.querySelectorAll('.categories-tile-label')].map(need)) > 1.15) grid.classList.add('categories-grid--two');
+    });
+    [...root.querySelectorAll('.categories-tile-label'), document.getElementById('categories-menu-title')].forEach(el => {
+        if (!el) return;
+        const n = need(el);
+        if (n > 1) el.style.fontSize = `${(parseFloat(getComputedStyle(el).fontSize) * Math.max(0.72, 1 / n)).toFixed(2)}px`;
+    });
 }
 
 // מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
@@ -10212,7 +10264,7 @@ async function commitColorTheme(themeName) {
 }
 
 async function loadColorTheme() {
-    // הברירת מחדל האמיתית (חשבון חדש/מי שלא בחר/ה בכלל) היא "מנטה" (mint_fresh) -
+    // הברירת מחדל האמיתית (חשבון חדש/מי שלא בחר/ה בכלל) היא "ברירת מחדל" (default, מאז 2026-11-07; לפני כן מנטה) -
     // לפי בקשה מפורשת. אותו שינוי בדיוק בהיישום-המוקדם הסינכרוני ב-index.html.
     // themeName נשאר null עד שנמצא ערך אמיתי - כדי לא לבלבל בין "לא נבחר שום
     // דבר" (נופל לברירת המחדל) לבין בחירה אמיתית (לא אמורה להידרס בחזרה
@@ -10223,7 +10275,7 @@ async function loadColorTheme() {
         if (data && data.theme) themeName = data.theme;
     }
     if (!themeName) {
-        themeName = localStorage.getItem(colorThemeKey()) || 'mint_fresh';
+        themeName = localStorage.getItem(colorThemeKey()) || 'default';
     }
     // ערכה שהוצאה - עוברים לקרובה ושומרים, כדי שגם במכשיר הבא זו תהיה הבחירה
     const mapped = normalizeColorTheme(themeName);
@@ -10254,7 +10306,7 @@ function magicBefore() {
         try { const o = JSON.parse(raw); theme = o.theme; light = typeof o.light === 'boolean' ? o.light : null; } catch { theme = null; }
     }
     theme = theme ? normalizeColorTheme(theme) : null;
-    if (!theme || isMagicColorTheme(theme) || !(FREE_COLOR_THEMES.includes(theme) || isPremiumUser)) return { theme: 'mint_fresh', light: true };
+    if (!theme || isMagicColorTheme(theme) || !(FREE_COLOR_THEMES.includes(theme) || isPremiumUser)) return { theme: 'default', light: true };
     return { theme, light: light === null ? !DARK_FIRST_THEMES.includes(theme) : light };
 }
 function magicFallbackTheme() { return magicBefore().theme; }

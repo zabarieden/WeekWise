@@ -4049,7 +4049,7 @@ translations.nl = {
     nav_recipes_subtitle: "Opgeslagen recepten",
     monthly_goal_tile_title: "Maandelijks Doel",
     back_to_home_btn: "Terug naar Home",
-    notes_ai_title: "Snelle Notities", dock_fab_label_notes: "Notities", dock_fab_label_food: "Eten", dock_fab_label_water: "Water", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Budget", notes_ai_placeholder: "Een gedachte, een herinnering of een idee",
+    notes_ai_title: "Snelle Notities", dock_fab_label_notes: "Notities", dock_fab_label_food: "Eten", dock_fab_label_water: "Water", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Budget", notes_ai_placeholder: "Gedachte, herinnering of idee",
     notes_ai_btn: "Toevoegen",
     notes_ai_added: "Toegevoegd aan je notities",
     notes_ai_empty: "Voer eerst wat tekst in",

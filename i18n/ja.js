@@ -4049,7 +4049,7 @@ translations.ja = {
     nav_recipes_subtitle: "保存済みレシピ",
     monthly_goal_tile_title: "月間目標",
     back_to_home_btn: "ホームに戻る",
-    notes_ai_title: "クイックメモ", dock_fab_label_notes: "メモ", dock_fab_label_food: "食べ物", dock_fab_label_water: "水", dock_fab_label_sport: "スポーツ", dock_fab_label_finance: "予算", notes_ai_placeholder: "思いつき、リマインダー、またはアイデア",
+    notes_ai_title: "クイックメモ", dock_fab_label_notes: "メモ", dock_fab_label_food: "食べ物", dock_fab_label_water: "水", dock_fab_label_sport: "スポーツ", dock_fab_label_finance: "予算", notes_ai_placeholder: "思いつき、リマインダー、アイデア",
     notes_ai_btn: "追加",
     notes_ai_added: "メモに追加しました",
     notes_ai_empty: "先にテキストを入力してください",

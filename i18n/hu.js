@@ -4049,7 +4049,7 @@ translations.hu = {
     nav_recipes_subtitle: "Mentett receptek",
     monthly_goal_tile_title: "Havi Cél",
     back_to_home_btn: "Vissza a Főoldalra",
-    notes_ai_title: "Gyors Jegyzet", dock_fab_label_notes: "Jegyzetek", dock_fab_label_food: "Étel", dock_fab_label_water: "Víz", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Költségvetés", notes_ai_placeholder: "Egy gondolat, egy emlékeztető vagy egy ötlet",
+    notes_ai_title: "Gyors Jegyzet", dock_fab_label_notes: "Jegyzetek", dock_fab_label_food: "Étel", dock_fab_label_water: "Víz", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Költségvetés", notes_ai_placeholder: "Gondolat, emlékeztető vagy ötlet",
     notes_ai_btn: "Hozzáadás",
     notes_ai_added: "Hozzáadva a jegyzeteidhez",
     notes_ai_empty: "Kérjük, írj be előbb némi szöveget",

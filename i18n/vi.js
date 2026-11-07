@@ -4049,7 +4049,7 @@ translations.vi = {
     nav_recipes_subtitle: "Công thức đã lưu",
     monthly_goal_tile_title: "Mục Tiêu Tháng",
     back_to_home_btn: "Về Trang Chủ",
-    notes_ai_title: "Ghi Chú Nhanh", dock_fab_label_notes: "Ghi Chú", dock_fab_label_food: "Đồ Ăn", dock_fab_label_water: "Nước", dock_fab_label_sport: "Thể Thao", dock_fab_label_finance: "Ngân Sách", notes_ai_placeholder: "Một suy nghĩ, lời nhắc, hoặc một ý tưởng",
+    notes_ai_title: "Ghi Chú Nhanh", dock_fab_label_notes: "Ghi Chú", dock_fab_label_food: "Đồ Ăn", dock_fab_label_water: "Nước", dock_fab_label_sport: "Thể Thao", dock_fab_label_finance: "Ngân Sách", notes_ai_placeholder: "Suy nghĩ, lời nhắc hoặc ý tưởng",
     notes_ai_btn: "Thêm",
     notes_ai_added: "Đã thêm vào ghi chú của bạn",
     notes_ai_empty: "Vui lòng nhập văn bản trước",

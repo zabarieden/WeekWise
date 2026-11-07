@@ -3048,11 +3048,12 @@ html[dir="ltr"] .hamburger-fab { right: auto; left: 22px; }
 html[dir="ltr"] .hamburger-fab.categories-fab { right: auto; left: 74px; }
 .hamburger-newme-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 2px 0 10px; padding: 9px 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-weight: 700; font-size: .9rem; letter-spacing: .02em; cursor: pointer; }
 .modal-sheet.categories-sheet { max-width: 380px; }
-/* כותרת ממורכזת באמת: 3 עמודות (חזרה | כותרת | פעולות) כך שהכפתורים לא דוחפים אותה הצידה */
-.categories-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 16px; }
-.categories-header .categories-back { grid-column: 1; justify-self: start; }
-.categories-header h3 { grid-column: 2; }
-.categories-header-actions { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 6px; }
+/* חזרה | כותרת | פעולות: הכותרת מקבלת את מה שנשאר ויורדת שורה כשהיא ארוכה, והכפתורים תמיד נשארים בפנים
+   (היה ממורכז ב-3 עמודות שוות, ובשפות עם כותרת ארוכה - צרפתית, ספרדית, פולנית... - ה-✕ נדחף מחוץ למסך) */
+.categories-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.categories-header .categories-back { flex: none; }
+.categories-header h3 { flex: 1 1 auto; min-width: 0; }
+.categories-header-actions { flex: none; display: flex; align-items: center; gap: 6px; }
 /* בחירה בין ☰ (רשימה) ל-▦ (קוביות): רק אחד מוצג למעלה, תמיד בפינה של ההמבורגר */
 html.menu-style-tiles #btn-hamburger-menu { display: none; }
 html:not(.menu-style-tiles) #btn-categories-menu { display: none; }
@@ -3061,7 +3062,7 @@ html.menu-style-tiles[dir="ltr"] .hamburger-fab.categories-fab { right: auto; le
 html.menu-style-tiles .hamburger-fab.categories-fab .categories-fab-icon { width: 1.2em; height: 1.2em; }
 .menu-style-switch { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font-size: 1rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; transition: var(--transition); }
 .menu-style-switch:active { transform: scale(0.92); }
-.modal-sheet.categories-sheet .categories-header h3 { margin: 0; text-align: center; font-size: 1.02rem; font-weight: 700; color: var(--text-primary); -webkit-text-fill-color: currentColor; background: none; letter-spacing: .01em; white-space: nowrap; line-height: 1.2; }
+.modal-sheet.categories-sheet .categories-header h3 { margin: 0; text-align: start; font-size: 1.02rem; font-weight: 700; color: var(--text-primary); -webkit-text-fill-color: currentColor; background: none; letter-spacing: .01em; white-space: normal; overflow-wrap: break-word; text-wrap: balance; line-height: 1.2; }
 .categories-back { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0; }
 html[dir="rtl"] .categories-back { transform: scaleX(-1); }
 .categories-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -8195,8 +8196,9 @@ html[dir="rtl"] .home-focus-peek { right: auto; left: var(--then-gap); }
 /* ✨ משפט קטן ליום ו-צ'יפים: רצף, ספירה לאחור, "3 דברים טובים" בערב */
 .home-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; max-width: min(380px, 100%); }
 .home-chips.hidden { display: none; }
-.home-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; max-width: 100%; padding: 0 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); font: inherit; font-size: 0.78rem; font-weight: 600; line-height: 1.2; white-space: nowrap; box-sizing: border-box; }
-.home-chip span { overflow: hidden; text-overflow: ellipsis; }
+.home-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; max-width: 100%; padding: 4px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); font: inherit; font-size: 0.78rem; font-weight: 600; line-height: 1.2; white-space: nowrap; box-sizing: border-box; }
+/* טקסט ארוך (שפות עם מילים ארוכות) יורד לשורה שנייה בתוך הצ'יפ ולא נחתך (לפי בקשה מפורשת, 2026-11-07: "זה חותך אותו מהמסך") */
+.home-chip span { min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: start; }
 .home-chip svg { flex: none; }
 button.home-chip { cursor: pointer; }
 button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
@@ -8207,7 +8209,7 @@ button.home-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-
 .home-chip-good.is-saved { opacity: 0.8; }
 /* שאלה עם כן / לא בתוך הצ'יפ (renderHomeChips) */
 .home-chip-ask { padding-inline-end: 4px; }
-.home-chip-ask-btn { flex: none; min-height: 22px; padding: 0 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent); background: none; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.home-chip-ask-btn { flex: none; white-space: nowrap; min-height: 22px; padding: 0 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent); background: none; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
 .home-chip-ask-btn.is-yes { border-color: transparent; background: color-mix(in srgb, var(--accent-purple) 55%, transparent); color: #fff; }
 .home-chip-ask-btn:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 
@@ -9559,7 +9561,8 @@ html:not(.light-mode) .home-note-send { background: transparent; border: 1.5px s
 
 /* New Me - שעות האוכל: טיפ קטן מתחת לשעות; שורת הכתיבה בבית - הטקסט המנחה נכנס כולו גם במסך צר */
 .nm-times-tip { margin: 6px 4px 0; font-size: 0.78rem; line-height: 1.5; color: var(--text-secondary); }
-.home-note-input::placeholder { font-size: 0.9rem; }
+/* --hint-size: הרמז ארוך מהשדה בשפה הזו - fitInputHint ב-app.js מקטינה רק אותו עד שהוא נכנס שלם (2026-11-07) */
+.home-note-input::placeholder { font-size: var(--hint-size, 0.9rem); }
 .home-note-line { width: min(100%, 372px); gap: 4px; }
 .home-greeting-row.home-greeting-center { padding: 0 8px; }
 
@@ -9582,6 +9585,8 @@ html.light-mode .home-newme-btn { color: var(--accent-purple); }
 
 /* ▦ תפריט הקוביות - קוביות קטנות ויפות יותר (לפי בקשה מפורשת): 3 בשורה, ולכל קטגוריה עיגול אייקון בגוון משלה */
 .categories-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* קבוצה שמילה באחד האריחים שלה ארוכה מדי לשליש רוחב (fitTileWords ב-app.js) - שתי עמודות, והמילה נכנסת שלמה */
+.categories-grid.categories-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .categories-grid .categories-tile { --cat-hue: var(--accent-purple); gap: 7px; min-height: 86px; padding: 12px 6px 10px; border-radius: 18px; background: color-mix(in srgb, var(--cat-hue) 6%, var(--bg-row)); border-color: color-mix(in srgb, var(--cat-hue) 18%, var(--border-color)); }
 .categories-grid .categories-tile:nth-child(6n+2) { --cat-hue: var(--accent-pink); }
 .categories-grid .categories-tile:nth-child(6n+3) { --cat-hue: #2dd4bf; }

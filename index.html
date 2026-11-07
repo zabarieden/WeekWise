@@ -21,8 +21,8 @@
             try {
                 var theme = localStorage.getItem('weekwise_last_color_theme');
                 // ברירת המחדל האמיתית (מי שעדיין לא בחר/ה בכלל, כולל חשבון חדש)
-                // היא "מנטה" (mint_fresh) במצב בהיר - לפי בקשה מפורשת
-                if (!theme) theme = 'mint_fresh';
+                // היא "ברירת מחדל" (default, הוורוד-סגול) במצב בהיר - לפי בקשה מפורשת, 2026-11-07 (עד אז מנטה)
+                if (!theme) theme = 'default';
                 // ערכות שהוצאו (סבב 2) - כמו COLOR_THEME_ALIASES ב-app.js
                 var themeAliases = { sherbet_sky: 'cotton_candy', aurora_pastel: 'rainbow_mist', neon_glass: 'default', ocean_teal: 'blue_teal', arctic_frost: 'blue_teal', volcanic_ember: 'gold_red', royal_amethyst: 'lavender_dream', graphite_steel: 'bg_dark_grey', copper_bronze: 'gold_red', silver_sparkle: 'gold_sparkle', starlight_glam: 'star_map', diamond_sparkle: 'gold_sparkle', blueprint_draft: 'star_map', vaporwave_neon: 'pink_sparkle', neon_trading_chart: 'bull_run', market_data_glow: 'bull_run', bear_crash: 'bull_run', rocket_ship: 'space_rocket' };
                 if (themeAliases[theme]) theme = themeAliases[theme];
@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=606">
+    <link rel="stylesheet" href="theme.css?v=607">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2711,7 +2711,7 @@
 
                     <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
                     <div class="theme-picker-grid">
-                        <!-- מנטה - ראשונה, חינמית וברירת המחדל (לפי בקשה מפורשת). אחריה "כחול וטורקיז" (התכלת) ו"פריחת הדובדבן" (הוורוד), ואז כל השאר בסדר הקודם
+                        <!-- מנטה - ראשונה וחינמית (ברירת המחדל לחשבון חדש היא "ברירת מחדל" מאז 2026-11-07). אחריה "כחול וטורקיז" (התכלת) ו"פריחת הדובדבן" (הוורוד), ואז כל השאר בסדר הקודם
                              (לפי בקשה מפורשת, 2026-11-07: "התכלת שיש עכשיו יהיה שני - ולאחריו ורוד ואז כל הסדר שיש"). מי חינמית ומי פרימיום - FREE_COLOR_THEMES ב-app.js -->
                         <button type="button" class="theme-swatch theme-swatch-mint" data-theme="mint_fresh" onclick="selectColorTheme('mint_fresh')" data-i18n-title="theme_name_mint_fresh" data-i18n-aria-label="theme_name_mint_fresh" title="Mint Fresh" aria-label="Mint Fresh"></button>
                         <button type="button" class="theme-swatch theme-swatch-blue" data-theme="blue_teal" onclick="selectColorTheme('blue_teal')" data-i18n-title="theme_name_blue_teal" data-i18n-aria-label="theme_name_blue_teal" title="Blue & Teal" aria-label="Blue & Teal"><span class="theme-swatch-lock">🔒</span></button>
@@ -4483,9 +4483,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=507"></script>
+    <script src="i18n/core.js?v=508"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=633"></script>
+    <script src="app.js?v=634"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>

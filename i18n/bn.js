@@ -4049,7 +4049,7 @@ translations.bn = {
     nav_recipes_subtitle: "সংরক্ষিত রেসিপি",
     monthly_goal_tile_title: "মাসিক লক্ষ্য",
     back_to_home_btn: "হোমে ফিরে যান",
-    notes_ai_title: "দ্রুত নোট", dock_fab_label_notes: "নোট", dock_fab_label_food: "খাবার", dock_fab_label_water: "পানি", dock_fab_label_sport: "খেলাধুলা", dock_fab_label_finance: "বাজেট", notes_ai_placeholder: "একটি চিন্তা, একটি অনুস্মারক, অথবা একটি ধারণা",
+    notes_ai_title: "দ্রুত নোট", dock_fab_label_notes: "নোট", dock_fab_label_food: "খাবার", dock_fab_label_water: "পানি", dock_fab_label_sport: "খেলাধুলা", dock_fab_label_finance: "বাজেট", notes_ai_placeholder: "চিন্তা, অনুস্মারক বা ধারণা",
     notes_ai_btn: "যোগ করুন",
     notes_ai_added: "আপনার নোটে যোগ করা হয়েছে",
     notes_ai_empty: "অনুগ্রহ করে প্রথমে কিছু টেক্সট লিখুন",

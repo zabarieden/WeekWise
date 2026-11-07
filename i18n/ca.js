@@ -4049,7 +4049,7 @@ translations.ca = {
     nav_recipes_subtitle: "Receptes desades",
     monthly_goal_tile_title: "Objectiu Mensual",
     back_to_home_btn: "Tornar a l'Inici",
-    notes_ai_title: "Notes Ràpides", dock_fab_label_notes: "Notes", dock_fab_label_food: "Menjar", dock_fab_label_water: "Aigua", dock_fab_label_sport: "Esport", dock_fab_label_finance: "Pressupost", notes_ai_placeholder: "Un pensament, un recordatori o una idea",
+    notes_ai_title: "Notes Ràpides", dock_fab_label_notes: "Notes", dock_fab_label_food: "Menjar", dock_fab_label_water: "Aigua", dock_fab_label_sport: "Esport", dock_fab_label_finance: "Pressupost", notes_ai_placeholder: "Pensament, recordatori o idea",
     notes_ai_btn: "Afegir",
     notes_ai_added: "Afegit a les teves notes",
     notes_ai_empty: "Introdueix primer algun text",

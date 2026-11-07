@@ -4049,7 +4049,7 @@ translations.tr = {
     nav_recipes_subtitle: "Kayıtlı tarifler",
     monthly_goal_tile_title: "Aylık Hedef",
     back_to_home_btn: "Ana Sayfaya Dön",
-    notes_ai_title: "Hızlı Not", dock_fab_label_notes: "Notlar", dock_fab_label_food: "Yemek", dock_fab_label_water: "Su", dock_fab_label_sport: "Spor", dock_fab_label_finance: "Bütçe", notes_ai_placeholder: "Bir düşünce, bir hatırlatma ya da bir fikir",
+    notes_ai_title: "Hızlı Not", dock_fab_label_notes: "Notlar", dock_fab_label_food: "Yemek", dock_fab_label_water: "Su", dock_fab_label_sport: "Spor", dock_fab_label_finance: "Bütçe", notes_ai_placeholder: "Düşünce, hatırlatma ya da fikir",
     notes_ai_btn: "Ekle",
     notes_ai_added: "Notlarınıza eklendi",
     notes_ai_empty: "Lütfen önce bir metin yazın",

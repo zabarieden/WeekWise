@@ -4049,7 +4049,7 @@ translations.de = {
     nav_recipes_subtitle: "Gespeicherte Rezepte",
     monthly_goal_tile_title: "Monatsziel",
     back_to_home_btn: "Zurück zur Startseite",
-    notes_ai_title: "Schnelle Notiz", dock_fab_label_notes: "Notizen", dock_fab_label_food: "Essen", dock_fab_label_water: "Wasser", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Budget", notes_ai_placeholder: "Ein Gedanke, eine Erinnerung oder eine Idee",
+    notes_ai_title: "Schnelle Notiz", dock_fab_label_notes: "Notizen", dock_fab_label_food: "Essen", dock_fab_label_water: "Wasser", dock_fab_label_sport: "Sport", dock_fab_label_finance: "Budget", notes_ai_placeholder: "Gedanke, Erinnerung oder Idee",
     notes_ai_btn: "Hinzufügen",
     notes_ai_added: "Zu deinen Notizen hinzugefügt",
     notes_ai_empty: "Bitte zuerst etwas Text eingeben",
