@@ -9853,269 +9853,161 @@ async function submitContactUs() {
     }
 }
 
-// --- עזרה ושאלות נפוצות: רשימה סטטית מקובצת לפי קטגוריה, מהקל למורכב
-// (לפי בקשה מפורשת). כל שאלה/תשובה היא מפתח i18n משלה (faq_q_<id>/
-// faq_a_<id>) - לא טקסט קבוע - כדי שיתורגם כמו כל שאר האפליקציה. בכל
-// פיצ'ר/תיקון חדש שנוסף לאפליקציה, אמור להתווסף גם ערך מתאים כאן ---
-const HELP_FAQ_ENTRIES = [
-    { id: 'welcome', category: 'general' },
-    { id: 'app_tour', category: 'general' },
-    { id: 'change_language', category: 'general' },
-    { id: 'switch_daily_weekly_monthly', category: 'general' },
-    { id: 'multi_device_login', category: 'general' },
-    { id: 'app_stuck_loading', category: 'general' },
-    { id: 'refresh_data', category: 'general' },
-    { id: 'other_manual_option', category: 'general' },
-    // מסך הבית החדש: "היום שלי", חיפוש, פוקוס, לחיצה ארוכה על פתק מהיר, העציץ (ר' home.js)
-    { id: 'my_day', category: 'general' },
-    { id: 'home_search', category: 'general' },
-    { id: 'home_note_line', category: 'general' },
-    { id: 'night_mode', category: 'general' },
-    { id: 'home_focus', category: 'general' },
-    { id: 'dictation', category: 'general' },
-    // שלב 2 של מסך הבית: נגיעות אישיות (ר' home.js)
-    { id: 'home_countdown', category: 'general' },
-    { id: 'good_things', category: 'general' },
-    { id: 'home_weather', category: 'general' },
-    { id: 'theme_mode', category: 'general' },
-    { id: 'sparkle_themes', category: 'general' },
-    { id: 'new_me_magic_themes', category: 'general' },
-    { id: 'daily_board', category: 'general' },
-    { id: 'routine_add_templates', category: 'general' },
-    { id: 'routine_day_tabs', category: 'general' },
-    { id: 'routine_daysoff', category: 'general' },
-    { id: 'routine_ai', category: 'general' },
-    { id: 'routine_exact_time', category: 'general' },
-    { id: 'routine_item_days', category: 'general' },
-    { id: 'routine_clash', category: 'general' },
-    { id: 'data_export_report', category: 'general' },
-    { id: 'home_calorie_badge', category: 'general' },
-    { id: 'myday_water_toggle', category: 'general' },
-    { id: 'quick_date_peek', category: 'general' },
-    { id: 'share_whatsapp', category: 'general' },
-    { id: 'drag_note_to_schedule', category: 'notes' },
-    { id: 'quick_note_shopping_list', category: 'notes' },
-    { id: 'quick_note_apple', category: 'notes' },
-    { id: 'quick_note_view_full_lists', category: 'notes' },
-    { id: 'restore_deleted_note', category: 'notes' },
-    { id: 'note_written_at', category: 'notes' },
-    { id: 'note_important', category: 'notes' },
-    { id: 'notes_sticky_look', category: 'notes' },
-    { id: 'home_lists_btn', category: 'notes' },
+// --- עזרה ושאלות נפוצות: ארבע לשוניות (לפי בקשה מפורשת, 2026-11-07: "4 קטגוריות -
+// אחד כללי האפליקציה, אחד פרימיום, אחד ניו מי ואחד להגדרות"), ובתוך כל לשונית
+// כותרות קטנות לפי נושא, מהקל למורכב. כל שאלה/תשובה היא מפתח i18n משלה
+// (faq_q_<id>/faq_a_<id>) - לא טקסט קבוע - כדי שיתורגם כמו כל שאר האפליקציה.
+// בכל פיצ'ר/תיקון חדש שנוסף לאפליקציה, אמור להתווסף גם ערך מתאים כאן ---
+const HELP_FAQ_TABS = ['general', 'premium', 'new_me', 'settings'];
+// head = מפתח הכותרת הקטנה (null = הקבוצה הראשונה של לשונית שהשם שלה כבר אומר הכול: הכותרת שלה
+// היא שם הלשונית, והיא מופיעה רק בחיפוש, כשתוצאות מכל הלשוניות מוצגות יחד).
+// בלשונית ההגדרות הכותרות הן שמות הקבוצות של מסך ההגדרות עצמו
+const HELP_FAQ_GROUPS = [
+    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp'] },
+    // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
+    { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
+    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
-    { id: 'shop_two_buttons', category: 'notes' },
-    { id: 'shop_delivery', category: 'notes' },
-    { id: 'shop_departments', category: 'notes' },
-    { id: 'shop_share_qty', category: 'notes' },
-    { id: 'shop_holidays', category: 'notes' },
-    { id: 'shop_basics', category: 'notes' },
-    { id: 'my_bag', category: 'notes' },
-    { id: 'bag_examples_list', category: 'notes' },
-    { id: 'bag_task_today', category: 'notes' },
-    { id: 'bag_pockets', category: 'notes' },
-    { id: 'my_notebooks', category: 'notes' },
-    { id: 'nb_shopping_link', category: 'notes' },
-    { id: 'smart_split', category: 'notes' },
-    { id: 'books_what', category: 'books' },
-    { id: 'books_deadline', category: 'books' },
-    { id: 'books_home_chip', category: 'books' },
-    { id: 'book_quotes', category: 'books' },
-    { id: 'add_myweek_task', category: 'myweek' },
-    { id: 'myweek_reminder', category: 'myweek' },
-    { id: 'reminder_snooze', category: 'myweek' },
-    { id: 'move_task_between_days', category: 'myweek' },
-    { id: 'calendar_goals_reading', category: 'myweek' },
-    { id: 'weekly_table', category: 'myweek' },
-    { id: 'task_not_done_by_eod', category: 'myweek' },
-    { id: 'daily_focus_prompt', category: 'glance' },
-    { id: 'what_is_glance', category: 'glance' },
-    { id: 'add_onetime_event', category: 'glance' },
-    { id: 'meetings', category: 'glance' },
-    { id: 'delete_series_history', category: 'glance' },
-    { id: 'edit_single_occurrence', category: 'glance' },
-    { id: 'which_ai_button', category: 'ai' },
-    { id: 'ai_icon', category: 'ai' },
-    { id: 'ai_chat', category: 'ai' },
-    { id: 'ai_chat_food_fix', category: 'ai' },
-    { id: 'ai_edit_or_delete', category: 'ai' },
-    { id: 'ai_phrasing_tips', category: 'ai' },
-    { id: 'ai_mixed_request', category: 'ai' },
-    { id: 'ai_bounded_duration', category: 'ai' },
-    { id: 'ai_reminder_in_text', category: 'ai' },
-    { id: 'ai_local_fallback', category: 'ai' },
-    { id: 'ai_monthly_limits', category: 'ai' },
-    { id: 'custom_sport_type', category: 'sport_water' },
-    { id: 'sport_photo', category: 'sport_water' },
-    { id: 'sport_workout_plan', category: 'sport_water' },
-    { id: 'sport_workout_jar', category: 'sport_water' },
-    { id: 'sport_workout_today', category: 'sport_water' },
-    { id: 'sport_workout_board', category: 'sport_water' },
-    { id: 'sport_workout_share', category: 'sport_water' },
-    { id: 'sport_workout_reminder', category: 'sport_water' },
-    { id: 'sport_workout_gcal', category: 'sport_water' },
-    { id: 'sport_workout_ai', category: 'sport_water' },
-    { id: 'workout_calories', category: 'sport_water' },
-    { id: 'steps_in_sport', category: 'sport_water' },
-    { id: 'water_month', category: 'sport_water' },
-    { id: 'new_me_what', category: 'nutrition' },
-    { id: 'new_me_preview', category: 'nutrition' },
-    { id: 'new_me_weight_optional', category: 'nutrition' },
-    { id: 'new_me_hall', category: 'nutrition' },
-    { id: 'new_me_week_challenge', category: 'nutrition' },
-    { id: 'new_me_challenge_journal', category: 'nutrition' },
-    { id: 'room_genie', category: 'nutrition' },
-    { id: 'new_me_game', category: 'nutrition' },
-    { id: 'nm_me1_guide', category: 'nutrition' },
-    { id: 'nm_me_card', category: 'nutrition' },
-    { id: 'new_me_home_btn', category: 'nutrition' },
-    { id: 'new_me_times', category: 'nutrition' },
-    { id: 'new_me_menu_build', category: 'nutrition' },
-    { id: 'new_me_plans', category: 'nutrition' },
-    { id: 'new_me_tour', category: 'nutrition' },
-    { id: 'new_me_tracking', category: 'nutrition' },
-    { id: 'new_me_swap', category: 'nutrition' },
-    { id: 'new_me_flexible_menu', category: 'nutrition' },
-    { id: 'new_me_favorites', category: 'nutrition' },
-    { id: 'new_me_small_breakfast', category: 'nutrition' },
-    { id: 'new_me_month', category: 'nutrition' },
-    { id: 'new_me_coffee', category: 'nutrition' },
-    { id: 'new_me_day_total', category: 'nutrition' },
-    { id: 'new_me_free_meal', category: 'nutrition' },
-    { id: 'new_me_journey', category: 'nutrition' },
-    { id: 'secret_room', category: 'nutrition' },
-    { id: 'secret_room_places', category: 'nutrition' },
-    { id: 'secret_room_yoga', category: 'nutrition' },
-    { id: 'secret_room_diary', category: 'nutrition' },
-    { id: 'room_computer', category: 'nutrition' },
-    { id: 'room_records', category: 'nutrition' },
-    { id: 'room_roof_gifts', category: 'nutrition' },
-    { id: 'room_wish_jar', category: 'nutrition' },
-    { id: 'new_me_challenges', category: 'nutrition' },
-    { id: 'new_me_letter_gift', category: 'nutrition' },
-    // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה
-    { id: 'new_me_advanced', category: 'nutrition', when: () => typeof nmChAllDone === 'function' && nmChAllDone() },
-    { id: 'new_me_shopping', category: 'nutrition' },
-    { id: 'new_me_reminders', category: 'nutrition' },
-    { id: 'new_me_routine_meals', category: 'nutrition' },
-    { id: 'routine_newme_sync', category: 'nutrition', when: () => typeof hasNewMe !== 'undefined' && hasNewMe },
-    { id: 'new_me_checkin', category: 'nutrition' },
-    { id: 'new_me_body', category: 'nutrition' },
-    { id: 'food_variety', category: 'nutrition' },
-    { id: 'food_list_languages', category: 'nutrition', when: () => currentLang !== 'he' },
-    { id: 'multi_food_separator', category: 'nutrition' },
-    { id: 'restaurant_calorie_accuracy', category: 'nutrition' },
-    { id: 'chain_data_source', category: 'nutrition' },
-    { id: 'save_meal_preset', category: 'nutrition' },
-    { id: 'saved_meals_page', category: 'nutrition' },
-    { id: 'recipes_gallery', category: 'nutrition' },
-    { id: 'recipe_examples', category: 'nutrition' },
-    { id: 'recipe_grams', category: 'nutrition' },
-    { id: 'recipe_to_preset', category: 'nutrition' },
-    { id: 'recipe_scan_multi', category: 'nutrition' },
-    { id: 'quick_add_preset_fab', category: 'nutrition' },
-    { id: 'quick_add_food_fab', category: 'nutrition' },
-    { id: 'food_not_fried_default', category: 'nutrition' },
-    { id: 'photo_scan_recipe', category: 'nutrition' },
-    { id: 'edit_delete_nutrition_entry', category: 'nutrition' },
-    { id: 'daily_nutrition_goals', category: 'nutrition' },
-    { id: 'calorie_monthly_view', category: 'nutrition' },
-    { id: 'calorie_stats_total_vs_average', category: 'nutrition' },
-    { id: 'weight_note', category: 'nutrition' },
-    { id: 'habits_streaks', category: 'habits' },
-    { id: 'routine_nudge', category: 'habits' },
-    { id: 'finance_ai_add', category: 'finance' },
-    { id: 'finance_cycle_day', category: 'finance' },
-    { id: 'finance_recurring', category: 'finance' },
-    { id: 'finance_custom_categories', category: 'finance' },
-    { id: 'receipts_feature', category: 'finance' },
-    { id: 'receipts_total', category: 'finance' },
-    { id: 'finance_monthly_balance', category: 'finance' },
-    { id: 'goal_small_steps', category: 'goals' },
-    { id: 'goal_library', category: 'goals' },
-    { id: 'glib_friends', category: 'goals' },
-    { id: 'monthly_goal_explain', category: 'goals' },
-    { id: 'vision_board_today', category: 'goals' },
-    { id: 'goal_days_challenge', category: 'goals' },
-    { id: 'goal_tasks_peek', category: 'goals' },
-    { id: 'notifications_not_arriving', category: 'settings_a11y' },
-    { id: 'reminder_chime', category: 'settings_a11y' },
-    { id: 'notification_action_buttons', category: 'settings_a11y' },
-    { id: 'reminders_one_place', category: 'settings_a11y' },
-    { id: 'premium_benefits', category: 'premium' },
-    { id: 'cancel_subscription', category: 'premium' },
-    { id: 'what_are_tables', category: 'tables' },
-    { id: 'table_views', category: 'tables' },
-    { id: 'table_shopping_link', category: 'tables' },
-    { id: 'table_column_types', category: 'tables' },
-    { id: 'table_select_colors', category: 'tables' },
-    { id: 'table_ai_builder', category: 'tables' },
-    { id: 'google_calendar_sync', category: 'account' },
-    { id: 'google_calendar_reconnect', category: 'account' },
-    { id: 'forgot_password', category: 'account' },
-    { id: 'report_bug_feature', category: 'account' },
-    { id: 'contact_support', category: 'account' },
-    { id: 'delete_account', category: 'account' },
+    { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
+    { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
+    { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
+    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'task_not_done_by_eod'] },
+    { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
+    { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
+    { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
+    { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
+    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
+    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes'] },
+    // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
+    { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'routine_ai', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
+    { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_weight_optional', 'new_me_magic_themes'] },
+    { tab: 'new_me', head: 'faq_cat_nm_menu', ids: ['new_me_times', 'new_me_menu_build', 'new_me_tracking', 'new_me_swap', 'new_me_flexible_menu', 'new_me_favorites', 'new_me_small_breakfast', 'new_me_coffee', 'new_me_day_total', 'new_me_free_meal', 'new_me_month', 'new_me_journey', 'new_me_checkin', 'new_me_body', 'new_me_shopping', 'new_me_reminders', 'new_me_routine_meals', 'routine_newme_sync'] },
+    { tab: 'new_me', head: 'faq_cat_nm_world', ids: ['new_me_hall', 'new_me_game', 'nm_me_card', 'new_me_week_challenge', 'new_me_challenges', 'new_me_challenge_journal', 'new_me_letter_gift', 'new_me_advanced', 'secret_room', 'secret_room_places', 'room_genie', 'secret_room_yoga', 'secret_room_diary', 'room_computer', 'room_records', 'room_roof_gifts', 'room_wish_jar'] },
+    { tab: 'settings', head: 'settings_cat_appearance', ids: ['change_language', 'night_mode', 'theme_mode', 'ai_icon'] },
+    { tab: 'settings', head: 'settings_cat_personalization', ids: ['myday_water_toggle'] },
+    { tab: 'settings', head: 'settings_cat_notifications', ids: ['notifications_not_arriving', 'reminder_chime', 'notification_action_buttons', 'reminders_one_place'] },
+    { tab: 'settings', head: 'settings_cat_account', ids: ['multi_device_login', 'forgot_password', 'google_calendar_sync', 'google_calendar_reconnect', 'data_export_report', 'delete_account'] },
+    { tab: 'settings', head: 'settings_cat_support', ids: ['app_stuck_loading', 'refresh_data', 'report_bug_feature', 'contact_support'] },
 ];
+// שאלות שמופיעות רק כשהן רלוונטיות
+const HELP_FAQ_WHEN = {
+    // מה שיש במתנה בסוף האתגרים הוא הפתעה (לפי בקשה מפורשת) - השאלה מופיעה רק אחרי שהמתנה נפתחה
+    new_me_advanced: () => typeof nmChAllDone === 'function' && nmChAllDone(),
+    routine_newme_sync: () => typeof hasNewMe !== 'undefined' && hasNewMe,
+    food_list_languages: () => currentLang !== 'he',
+};
+let helpFaqTab = 'general';
+
+function helpFaqTabLabel(tab) {
+    if (tab === 'new_me') return 'New Me';
+    return t(tab === 'settings' ? 'settings_title' : `faq_cat_${tab}`);
+}
 
 function renderHelpFaqList() {
+    const tabs = document.getElementById('help-faq-tabs');
+    if (tabs) {
+        tabs.innerHTML = '';
+        HELP_FAQ_TABS.forEach(tab => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'help-faq-tab';
+            b.setAttribute('role', 'tab');
+            b.dataset.tab = tab;
+            b.textContent = helpFaqTabLabel(tab);
+            b.onclick = () => pickHelpFaqTab(tab);
+            tabs.appendChild(b);
+        });
+    }
     const list = document.getElementById('help-faq-list');
     if (!list) return;
     list.innerHTML = '';
-    let currentCategory = null;
-    HELP_FAQ_ENTRIES.forEach(entry => {
-        if (entry.when && !entry.when()) return;
-        if (entry.category !== currentCategory) {
-            currentCategory = entry.category;
-            const header = document.createElement('div');
-            header.className = 'help-faq-category-header';
-            header.textContent = t(`faq_cat_${currentCategory}`);
-            list.appendChild(header);
-        }
-        const item = document.createElement('div');
-        item.className = 'help-faq-item';
-        item.setAttribute('data-faq-id', entry.id);
-        const qBtn = document.createElement('button');
-        qBtn.type = 'button';
-        qBtn.className = 'help-faq-question';
-        const qText = document.createElement('span');
-        qText.textContent = t(`faq_q_${entry.id}`);
-        const arrow = document.createElement('span');
-        arrow.className = 'help-faq-arrow';
-        arrow.textContent = '▾';
-        qBtn.appendChild(qText);
-        qBtn.appendChild(arrow);
-        qBtn.onclick = () => item.classList.toggle('open');
-        const answer = document.createElement('div');
-        answer.className = 'help-faq-answer';
-        answer.textContent = t(`faq_a_${entry.id}`);
-        item.appendChild(qBtn);
-        item.appendChild(answer);
-        list.appendChild(item);
+    HELP_FAQ_GROUPS.forEach(group => {
+        const ids = group.ids.filter(id => !HELP_FAQ_WHEN[id] || HELP_FAQ_WHEN[id]());
+        if (!ids.length) return;
+        const header = document.createElement('div');
+        header.className = 'help-faq-category-header';
+        if (!group.head) header.classList.add('is-tab-name');
+        header.textContent = group.head ? t(group.head) : helpFaqTabLabel(group.tab);
+        list.appendChild(header);
+        ids.forEach(id => {
+            const item = document.createElement('div');
+            item.className = 'help-faq-item';
+            item.setAttribute('data-faq-id', id);
+            item.dataset.tab = group.tab;
+            const qBtn = document.createElement('button');
+            qBtn.type = 'button';
+            qBtn.className = 'help-faq-question';
+            const qText = document.createElement('span');
+            qText.textContent = t(`faq_q_${id}`);
+            const arrow = document.createElement('span');
+            arrow.className = 'help-faq-arrow';
+            arrow.textContent = '▾';
+            qBtn.appendChild(qText);
+            qBtn.appendChild(arrow);
+            qBtn.onclick = () => item.classList.toggle('open');
+            const answer = document.createElement('div');
+            answer.className = 'help-faq-answer';
+            answer.textContent = t(`faq_a_${id}`);
+            item.appendChild(qBtn);
+            item.appendChild(answer);
+            list.appendChild(item);
+        });
     });
 }
 
+function pickHelpFaqTab(tab) {
+    helpFaqTab = tab;
+    const search = document.getElementById('help-faq-search');
+    if (search) search.value = '';
+    filterHelpFaq();
+    const list = document.getElementById('help-faq-list');
+    if (list) list.scrollTop = 0;
+}
+
 function openHelpFaqModal() {
+    helpFaqTab = 'general';
     renderHelpFaqList();
     const search = document.getElementById('help-faq-search');
     if (search) search.value = '';
     filterHelpFaq();
     openModal('modal-help-faq');
+    requestAnimationFrame(fitHelpFaqTabs);
 }
 
-// חיפוש חופשי בטקסט השאלה *וגם* התשובה (לא רק הכותרת) - כדי שמישהו
-// שמחפש מילה שמופיעה רק בתוך התשובה עדיין ימצא אותה. תוצאה תואמת נפתחת
-// אוטומטית (בלי צורך ללחוץ שוב), וקטגוריה שאין בה אף תוצאה תואמת מוסתרת כולה
+// הלשוניות בשורה אחת: אם בשפה מסוימת הן רחבות מהחלון, כולן קטנות יחד באותה מידה (לכל היותר עד 72%)
+function fitHelpFaqTabs() {
+    const row = document.getElementById('help-faq-tabs');
+    if (!row) return;
+    const tabs = [...row.querySelectorAll('.help-faq-tab')];
+    tabs.forEach(b => { b.style.fontSize = ''; });
+    // הריפוד והרווחים לא קטנים עם הגופן, אז מקטינים בכמה צעדים קטנים עד שהשורה נכנסת
+    const smallest = parseFloat(getComputedStyle(tabs[0] || row).fontSize) * 0.72;
+    for (let i = 0; i < 8 && row.scrollWidth > row.clientWidth + 1; i++) {
+        const k = row.clientWidth / row.scrollWidth * 0.98;
+        tabs.forEach(b => { b.style.fontSize = `${Math.max(smallest, parseFloat(getComputedStyle(b).fontSize) * k).toFixed(2)}px`; });
+    }
+}
+
+// בלי חיפוש - רק הלשונית שנבחרה. עם חיפוש - בכל ארבע הלשוניות, בטקסט השאלה *וגם*
+// התשובה (לא רק הכותרת), כדי שמישהו שמחפש מילה שמופיעה רק בתוך התשובה עדיין ימצא
+// אותה. תוצאה תואמת נפתחת אוטומטית (בלי צורך ללחוץ שוב), וכותרת שאין תחתיה אף
+// תוצאה תואמת מוסתרת כולה
 function filterHelpFaq() {
     const searchInput = document.getElementById('help-faq-search');
     const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
     const list = document.getElementById('help-faq-list');
     if (!list) return;
+    document.querySelectorAll('#help-faq-tabs .help-faq-tab').forEach(b => {
+        const on = !term && b.dataset.tab === helpFaqTab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
     let anyVisible = false;
     list.querySelectorAll('.help-faq-item').forEach(item => {
         const id = item.getAttribute('data-faq-id');
         const q = t(`faq_q_${id}`).toLowerCase();
         const a = t(`faq_a_${id}`).toLowerCase();
-        const match = !term || q.includes(term) || a.includes(term);
+        const match = term ? q.includes(term) || a.includes(term) : item.dataset.tab === helpFaqTab;
         item.classList.toggle('hidden', !match);
         item.classList.toggle('open', !!term && match);
         if (!term) item.classList.remove('open');
@@ -10123,16 +10015,17 @@ function filterHelpFaq() {
     });
     let currentHeader = null;
     let currentHeaderHasVisible = false;
+    const closeHeader = () => { if (currentHeader) currentHeader.classList.toggle('hidden', !currentHeaderHasVisible || (!term && currentHeader.classList.contains('is-tab-name'))); };
     Array.from(list.children).forEach(child => {
         if (child.classList.contains('help-faq-category-header')) {
-            if (currentHeader) currentHeader.classList.toggle('hidden', !currentHeaderHasVisible);
+            closeHeader();
             currentHeader = child;
             currentHeaderHasVisible = false;
         } else if (!child.classList.contains('hidden')) {
             currentHeaderHasVisible = true;
         }
     });
-    if (currentHeader) currentHeader.classList.toggle('hidden', !currentHeaderHasVisible);
+    closeHeader();
     const emptyHint = document.getElementById('help-faq-empty');
     if (emptyHint) emptyHint.classList.toggle('hidden', anyVisible);
 }

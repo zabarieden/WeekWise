@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=608">
+    <link rel="stylesheet" href="theme.css?v=609">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2386,6 +2386,7 @@
                 <button type="button" class="settings-back-btn" onclick="closeModal('modal-help-faq'); openModal('modal-settings-drawer'); openSettingsSubscreen('support');">🔙 <span data-i18n="settings_back_btn">Back</span></button>
                 <h3 data-i18n="settings_help_faq_btn">❓ Help &amp; FAQ</h3>
                 <input type="text" id="help-faq-search" class="help-faq-search-input" oninput="filterHelpFaq()" data-i18n-placeholder="help_faq_search_placeholder" placeholder="Search a word...">
+                <div id="help-faq-tabs" class="help-faq-tabs" role="tablist"></div>
                 <div id="help-faq-list" class="help-faq-list"></div>
                 <p id="help-faq-empty" class="today-tasks-empty hidden" data-i18n="help_faq_no_results">No results found</p>
                 <button type="button" class="btn-clear-specific" onclick="closeModal('modal-help-faq')" data-i18n="close_btn">Close</button>
@@ -4485,9 +4486,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=509"></script>
+    <script src="i18n/core.js?v=510"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=635"></script>
+    <script src="app.js?v=636"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>

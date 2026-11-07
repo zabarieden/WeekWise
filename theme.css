@@ -5051,6 +5051,11 @@ html[dir="ltr"] .btn-back-home span[aria-hidden="true"] {
 .help-faq-sheet { max-height: 92vh; display: flex; flex-direction: column; }
 #help-faq-search { width: 100%; box-sizing: border-box; margin-bottom: 10px; flex-shrink: 0; }
 .help-faq-list { overflow-y: auto; }
+/* ארבע הלשוניות (כללי / פרימיום / New Me / הגדרות) - בשורה אחת גם בטלפון צר: כל לשונית ברוחב
+   של המילה שלה (ב"Einstellungen" ארוכה יותר), ואם השורה עדיין לא נכנסת, הגופן קטן (fitHelpFaqTabs) - בלי לחתוך מילה */
+.help-faq-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
+.help-faq-tab { flex: 1 1 auto; padding: 8px 6px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--accent-purple) 18%, transparent); background: color-mix(in srgb, var(--accent-purple) 6%, transparent); color: var(--text-secondary); font: inherit; font-size: 0.78rem; font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+.help-faq-tab.active { background: color-mix(in srgb, var(--accent-purple) 16%, transparent); border-color: var(--accent-purple); color: var(--text-primary); }
 .help-faq-category-header { font-size: 0.72rem; font-weight: 700; color: var(--tile-accent, var(--accent-gold)); text-transform: uppercase; letter-spacing: 0.03em; margin: 16px 0 6px; }
 .help-faq-category-header:first-child { margin-top: 0; }
 .help-faq-item { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
