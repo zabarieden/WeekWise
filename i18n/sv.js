@@ -341,7 +341,7 @@ translations.sv = {
     shop_when_today: "Idag",
     shop_when_tomorrow: "Imorgon",
     faq_a_home_lists_btn: "Högst upp på hemskärmen, bredvid fokusläget, finns en liten listknapp (tre linjer med prickar). Ett tryck öppnar en liten meny: Anteckningar eller Inköpslista.",
-    faq_a_weekly_table: "Bredvid Månadsöversikt i Kalendervy finns en Veckotabell – den är hopfälld från början, och ett tryck på rubriken öppnar den. Den visar varje dag i veckan med dess händelser och uppgifter och de återkommande veckouppgifterna, efter tid; ‹ › byter vecka, och ett tryck på en post öppnar den för redigering.",
+    faq_a_weekly_table: "Bredvid Månadsöversikt i Kalendervy finns en Veckotabell – den är hopfälld från början, och ett tryck på rubriken öppnar den. Den visar varje dag i veckan med dess händelser och uppgifter och de återkommande veckouppgifterna, efter tid; ‹ › byter vecka, och ett tryck på en post öppnar den för redigering. ＋ bredvid varje dag lägger till något direkt på det datumet, och ＋ högst upp lägger till på idag.",
     faq_q_home_lists_btn: "Hur kommer jag snabbt till mina anteckningar eller inköpslistan?",
     faq_q_weekly_table: "Vad är Veckotabellen i Kalendervy?",
     home_lists_label: "Anteckningar och inköpslista",

@@ -341,7 +341,7 @@ translations.fr = {
     shop_when_today: "Aujourd'hui",
     shop_when_tomorrow: "Demain",
     faq_a_home_lists_btn: "En haut de l'écran d'accueil, à côté du mode concentration, il y a un petit bouton liste (trois lignes avec des points). Un toucher ouvre un petit menu : Notes ou Liste de Courses.",
-    faq_a_weekly_table: "À côté de Vue Mensuelle, dans Vue Calendrier, il y a un Tableau Hebdomadaire – il est replié au départ, et toucher son titre l'ouvre. Il montre chaque jour de la semaine avec ses événements et ses tâches, ainsi que les tâches hebdomadaires récurrentes, par heure ; ‹ › passent d'une semaine à l'autre, et toucher un élément l'ouvre pour le modifier.",
+    faq_a_weekly_table: "À côté de Vue Mensuelle, dans Vue Calendrier, il y a un Tableau Hebdomadaire – il est replié au départ, et toucher son titre l'ouvre. Il montre chaque jour de la semaine avec ses événements et ses tâches, ainsi que les tâches hebdomadaires récurrentes, par heure ; ‹ › passent d'une semaine à l'autre, et toucher un élément l'ouvre pour le modifier. Le ＋ à côté de chaque jour ajoute quelque chose directement à cette date, et le ＋ en haut l’ajoute à aujourd’hui.",
     faq_q_home_lists_btn: "Comment accéder vite à mes notes ou à la liste de courses ?",
     faq_q_weekly_table: "Qu'est-ce que le Tableau Hebdomadaire dans Vue Calendrier ?",
     home_lists_label: "Notes et liste de courses",

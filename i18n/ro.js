@@ -341,7 +341,7 @@ translations.ro = {
     shop_when_today: "Azi",
     shop_when_tomorrow: "Mâine",
     faq_a_home_lists_btn: "Sus pe ecranul principal, lângă modul concentrare, există un buton mic de listă (trei linii cu puncte). O atingere deschide un meniu mic: Notițe sau Listă de Cumpărături.",
-    faq_a_weekly_table: "Lângă Prezentarea Generală Lunară din Vizualizare Calendar există un Tabel Săptămânal – la început e pliat, iar o atingere pe titlu îl deschide. Arată fiecare zi a săptămânii cu evenimentele și sarcinile ei și sarcinile săptămânale recurente, după oră; ‹ › trec de la o săptămână la alta, iar o atingere pe un element îl deschide pentru editare.",
+    faq_a_weekly_table: "Lângă Prezentarea Generală Lunară din Vizualizare Calendar există un Tabel Săptămânal – la început e pliat, iar o atingere pe titlu îl deschide. Arată fiecare zi a săptămânii cu evenimentele și sarcinile ei și sarcinile săptămânale recurente, după oră; ‹ › trec de la o săptămână la alta, iar o atingere pe un element îl deschide pentru editare. ＋ de lângă fiecare zi adaugă ceva direct la acea dată, iar ＋ de sus adaugă la ziua de azi.",
     faq_q_home_lists_btn: "Cum ajung repede la notițele mele sau la lista de cumpărături?",
     faq_q_weekly_table: "Ce este Tabelul Săptămânal din Vizualizare Calendar?",
     home_lists_label: "Notițe și listă de cumpărături",

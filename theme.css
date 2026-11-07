@@ -11106,6 +11106,11 @@ button.nmg-me-card:active { transform: scale(.97); }
 .weekly-table-day { display: grid; grid-template-columns: 74px 1fr; gap: 10px; align-items: start; padding: 9px 10px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-row); }
 .weekly-table-day.today { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 9%, var(--bg-row)); }
 .weekly-table-day-head { display: flex; flex-direction: column; gap: 1px; font-weight: 800; font-size: .88rem; color: var(--text-primary); }
+/* ＋ קטן בפינה של כל יום - מוסיף אירוע / משימה לתאריך הזה (2026-11-07). בטלפון השורה שומרת לו מקום בצד */
+.weekly-table-day { position: relative; padding-inline-end: 44px; }
+.weekly-table-add { position: absolute; top: 8px; inset-inline-end: 8px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); color: var(--accent-purple-light-text, var(--accent-purple)); font: inherit; font-size: .9rem; font-weight: 700; line-height: 1; cursor: pointer; }
+.weekly-table-add:hover { background: color-mix(in srgb, var(--accent-purple) 22%, transparent); }
+.weekly-table-add:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 .weekly-table-day-head small { font-weight: 600; font-size: .74rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .weekly-table-items { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .weekly-table-item { display: flex; align-items: baseline; gap: 7px; width: 100%; padding: 4px 6px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); font: inherit; font-size: .86rem; text-align: start; cursor: pointer; min-width: 0; }
@@ -11117,7 +11122,7 @@ button.nmg-me-card:active { transform: scale(.97); }
 .weekly-table-empty { color: var(--text-secondary); opacity: .6; padding: 4px 6px; }
 @media (min-width: 900px) {
     .weekly-table-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-    .weekly-table-day { grid-template-columns: 1fr; min-height: 120px; }
+    .weekly-table-day { grid-template-columns: 1fr; min-height: 120px; padding-inline-end: 10px; }
 }
 /* 📝🛒 הכפתור הקטן ליד הפוקוס - תפריט קטן (2026-10-20) */
 .home-top-tools { position: absolute; }

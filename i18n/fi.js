@@ -341,7 +341,7 @@ translations.fi = {
     shop_when_today: "Tänään",
     shop_when_tomorrow: "Huomenna",
     faq_a_home_lists_btn: "Aloitusnäytön yläreunassa, keskittymistilan vieressä, on pieni listapainike (kolme viivaa pisteineen). Napautus avaa pienen valikon: Muistiinpanot tai Ostoslista.",
-    faq_a_weekly_table: "Kalenterinäkymässä Kuukausikatsauksen vieressä on Viikkotaulukko – se on aluksi suljettuna, ja sen otsikon napauttaminen avaa sen. Siinä näkyy viikon jokainen päivä tapahtumineen ja tehtävineen sekä toistuvat viikoittaiset tehtävät, kellonajan mukaan; ‹ › vaihtavat viikkoa, ja kohteen napauttaminen avaa sen muokattavaksi.",
+    faq_a_weekly_table: "Kalenterinäkymässä Kuukausikatsauksen vieressä on Viikkotaulukko – se on aluksi suljettuna, ja sen otsikon napauttaminen avaa sen. Siinä näkyy viikon jokainen päivä tapahtumineen ja tehtävineen sekä toistuvat viikoittaiset tehtävät, kellonajan mukaan; ‹ › vaihtavat viikkoa, ja kohteen napauttaminen avaa sen muokattavaksi. Kunkin päivän vieressä oleva ＋ lisää jotain suoraan sille päivälle, ja ylhäällä oleva ＋ lisää tälle päivälle.",
     faq_q_home_lists_btn: "Miten pääsen nopeasti muistiinpanoihini tai ostoslistaan?",
     faq_q_weekly_table: "Mikä on Viikkotaulukko Kalenterinäkymässä?",
     home_lists_label: "Muistiinpanot ja ostoslista",

@@ -6439,8 +6439,11 @@ let selectedCalendarDay = null;
 // ב"כל האירועים", רק ממולא מראש עם היום שנבחר בלוח (או היום אם עדיין לא
 // נבחר יום) - לפי בקשה מפורשת
 function openAddEventForSelectedDay() {
+    openAddEventForDate(selectedCalendarDay || getLocalDateString());
+}
+function openAddEventForDate(dateStr) {
     resetCalendarEventModal();
-    document.getElementById('calendar-event-date-input').value = selectedCalendarDay || getLocalDateString();
+    document.getElementById('calendar-event-date-input').value = dateStr;
     updateDateFieldDisplay('calendar-event-date-input');
     openModal('modal-add-calendar-event');
 }
@@ -6517,6 +6520,11 @@ function navigateWeeklyTable(delta) {
     viewedWeeklyTableStart = addDaysToDateStr(viewedWeeklyTableStart || currentWeekStart(), delta * 7);
     renderWeeklyTable();
 }
+// ה-＋ בכותרת: היום אם הוא בשבוע שמוצג, אחרת היום הראשון של השבוע (אחרי השמירה הטבלה מתרעננת דרך loadMonthlyCalendarGrid)
+function openAddEventForWeeklyTable() {
+    const start = viewedWeeklyTableStart || currentWeekStart(), today = getLocalDateString();
+    openAddEventForDate(today >= start && today <= addDaysToDateStr(start, 6) ? today : start);
+}
 let weeklyTableItems = {};
 async function renderWeeklyTable() {
     const card = document.getElementById('weekly-table-card');
@@ -6544,11 +6552,12 @@ async function renderWeeklyTable() {
         ].sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
         items.forEach(it => { weeklyTableItems[`${it.kind}:${it.id}:${dateStr}`] = it; });
         html += `<div class="weekly-table-day${dateStr === today ? ' today' : ''}">
-            <div class="weekly-table-day-head"><span>${escapeHtmlForReport(t(dayNameKeys[wd]))}</span><small>${escapeHtmlForReport(fmt(dateStr, { day: 'numeric', month: 'numeric' }))}</small></div>
+            <div class="weekly-table-day-head"><span>${escapeHtmlForReport(t(dayNameKeys[wd]))}</span><small>${escapeHtmlForReport(fmt(dateStr, { day: 'numeric', month: 'numeric' }))}</small><button type="button" class="weekly-table-add" data-wt-add="${dateStr}" aria-label="${escapeHtmlForReport(`${t('calendar_event_add_title')} · ${t(dayNameKeys[wd])} ${fmt(dateStr, { day: 'numeric', month: 'numeric' })}`)}">＋</button></div>
             <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}">${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
         </div>`;
     }
     grid.innerHTML = html;
+    grid.querySelectorAll('[data-wt-add]').forEach(b => b.addEventListener('click', () => openAddEventForDate(b.dataset.wtAdd)));
     grid.querySelectorAll('[data-wt]').forEach(b => b.addEventListener('click', () => {
         const it = weeklyTableItems[b.dataset.wt];
         if (!it) return;

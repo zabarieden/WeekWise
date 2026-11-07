@@ -341,7 +341,7 @@ translations.de = {
     shop_when_today: "Heute",
     shop_when_tomorrow: "Morgen",
     faq_a_home_lists_btn: "Oben auf dem Startbildschirm, neben dem Fokusmodus, gibt es einen kleinen Listen-Button (drei Linien mit Punkten). Ein Tipp öffnet ein kleines Menü: Notizen oder Einkaufsliste.",
-    faq_a_weekly_table: "Neben der Monatsübersicht gibt es in der Kalenderansicht eine Wochentabelle – sie ist zuerst eingeklappt, und ein Tipp auf ihren Titel öffnet sie. Sie zeigt jeden Tag der Woche mit seinen Terminen und Aufgaben und den wiederkehrenden wöchentlichen Aufgaben, nach Uhrzeit; ‹ › wechseln zwischen den Wochen, und ein Tipp auf einen Eintrag öffnet ihn zum Bearbeiten.",
+    faq_a_weekly_table: "Neben der Monatsübersicht gibt es in der Kalenderansicht eine Wochentabelle – sie ist zuerst eingeklappt, und ein Tipp auf ihren Titel öffnet sie. Sie zeigt jeden Tag der Woche mit seinen Terminen und Aufgaben und den wiederkehrenden wöchentlichen Aufgaben, nach Uhrzeit; ‹ › wechseln zwischen den Wochen, und ein Tipp auf einen Eintrag öffnet ihn zum Bearbeiten. Das ＋ neben jedem Tag fügt direkt etwas zu diesem Datum hinzu, das ＋ oben fügt es zu heute hinzu.",
     faq_q_home_lists_btn: "Wie komme ich schnell zu meinen Notizen oder zur Einkaufsliste?",
     faq_q_weekly_table: "Was ist die Wochentabelle in der Kalenderansicht?",
     home_lists_label: "Notizen und Einkaufsliste",

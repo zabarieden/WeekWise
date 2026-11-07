@@ -341,7 +341,7 @@ translations.pl = {
     shop_when_today: "Dziś",
     shop_when_tomorrow: "Jutro",
     faq_a_home_lists_btn: "U góry ekranu głównego, obok trybu skupienia, jest mały przycisk listy (trzy linie z kropkami). Dotknięcie otwiera małe menu: Notatki albo Lista Zakupów.",
-    faq_a_weekly_table: "Obok Przeglądu Miesięcznego w Widoku Kalendarza jest Tabela Tygodniowa – na początku jest zwinięta, a dotknięcie jej tytułu ją rozwija. Pokazuje każdy dzień tygodnia z jego wydarzeniami i zadaniami oraz powtarzające się zadania tygodniowe, według godzin; ‹ › przełączają tygodnie, a dotknięcie pozycji otwiera ją do edycji.",
+    faq_a_weekly_table: "Obok Przeglądu Miesięcznego w Widoku Kalendarza jest Tabela Tygodniowa – na początku jest zwinięta, a dotknięcie jej tytułu ją rozwija. Pokazuje każdy dzień tygodnia z jego wydarzeniami i zadaniami oraz powtarzające się zadania tygodniowe, według godzin; ‹ › przełączają tygodnie, a dotknięcie pozycji otwiera ją do edycji. ＋ obok każdego dnia dodaje coś od razu na tę datę, a ＋ na górze – na dziś.",
     faq_q_home_lists_btn: "Jak szybko dostać się do notatek albo listy zakupów?",
     faq_q_weekly_table: "Czym jest Tabela Tygodniowa w Widoku Kalendarza?",
     home_lists_label: "Notatki i lista zakupów",

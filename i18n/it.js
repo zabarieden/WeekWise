@@ -341,7 +341,7 @@ translations.it = {
     shop_when_today: "Oggi",
     shop_when_tomorrow: "Domani",
     faq_a_home_lists_btn: "In alto nella schermata Home, accanto alla modalità focus, c'è un piccolo pulsante lista (tre linee con puntini). Un tocco apre un piccolo menu: Note o Lista della Spesa.",
-    faq_a_weekly_table: "Accanto alla Panoramica Mensile, in Vista Calendario, c'è una Tabella Settimanale – all'inizio è chiusa, e un tocco sul titolo la apre. Mostra ogni giorno della settimana con i suoi eventi e le sue attività e le attività settimanali ricorrenti, per orario; ‹ › passano da una settimana all'altra, e un tocco su una voce la apre per modificarla.",
+    faq_a_weekly_table: "Accanto alla Panoramica Mensile, in Vista Calendario, c'è una Tabella Settimanale – all'inizio è chiusa, e un tocco sul titolo la apre. Mostra ogni giorno della settimana con i suoi eventi e le sue attività e le attività settimanali ricorrenti, per orario; ‹ › passano da una settimana all'altra, e un tocco su una voce la apre per modificarla. Il ＋ accanto a ogni giorno aggiunge qualcosa direttamente a quella data, e il ＋ in alto lo aggiunge a oggi.",
     faq_q_home_lists_btn: "Come arrivo velocemente alle mie note o alla lista della spesa?",
     faq_q_weekly_table: "Cos'è la Tabella Settimanale in Vista Calendario?",
     home_lists_label: "Note e lista della spesa",

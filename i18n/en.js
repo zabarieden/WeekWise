@@ -352,7 +352,7 @@ translations.en = {
     faq_a_home_lists_btn: "At the top of the home screen, next to focus mode, there is a small list button (three lines with dots). A tap opens a little menu: Notes or Shopping List.",
     faq_q_home_lists_btn: "How do I get to my notes or the shopping list quickly?",
     home_lists_label: "Notes and shopping list",
-    faq_a_weekly_table: "Next to the Monthly Overview in Calendar View there is a Weekly Table – it starts folded, and a tap on its title opens it. It shows every day of the week with its events and tasks and the fixed weekly tasks, by time; ‹ › move between weeks, and a tap on an item opens it for editing.",
+    faq_a_weekly_table: "Next to the Monthly Overview in Calendar View there is a Weekly Table – it starts folded, and a tap on its title opens it. It shows every day of the week with its events and tasks and the fixed weekly tasks, by time; ‹ › move between weeks, and a tap on an item opens it for editing. The ＋ next to each day adds something straight to that date, and the ＋ at the top adds to today.",
     faq_q_weekly_table: "What is the Weekly Table in Calendar View?",
     weekly_table_next: "Next week",
     weekly_table_prev: "Previous week",

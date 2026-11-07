@@ -341,7 +341,7 @@ translations.cs = {
     shop_when_today: "Dnes",
     shop_when_tomorrow: "Zítra",
     faq_a_home_lists_btn: "Nahoře na domovské obrazovce, vedle režimu soustředění, je malé tlačítko seznamu (tři čárky s tečkami). Klepnutí otevře malou nabídku: Poznámky nebo Nákupní Seznam.",
-    faq_a_weekly_table: "Vedle Měsíčního Přehledu v Zobrazení Kalendáře je Týdenní Tabulka – na začátku je sbalená a klepnutí na její nadpis ji rozbalí. Ukazuje každý den v týdnu s jeho událostmi a úkoly a s opakujícími se týdenními úkoly, podle času; ‹ › přepínají mezi týdny a klepnutí na položku ji otevře k úpravě.",
+    faq_a_weekly_table: "Vedle Měsíčního Přehledu v Zobrazení Kalendáře je Týdenní Tabulka – na začátku je sbalená a klepnutí na její nadpis ji rozbalí. Ukazuje každý den v týdnu s jeho událostmi a úkoly a s opakujícími se týdenními úkoly, podle času; ‹ › přepínají mezi týdny a klepnutí na položku ji otevře k úpravě. ＋ vedle každého dne přidá něco rovnou k tomu datu a ＋ nahoře přidá na dnešek.",
     faq_q_home_lists_btn: "Jak se rychle dostanu k poznámkám nebo nákupnímu seznamu?",
     faq_q_weekly_table: "Co je Týdenní Tabulka v Zobrazení Kalendáře?",
     home_lists_label: "Poznámky a nákupní seznam",

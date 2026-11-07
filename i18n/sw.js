@@ -341,7 +341,7 @@ translations.sw = {
     shop_when_today: "Leo",
     shop_when_tomorrow: "Kesho",
     faq_a_home_lists_btn: "Juu ya skrini ya mwanzo, kando ya hali ya umakini, kuna kitufe kidogo cha orodha (mistari mitatu yenye vitone). Kukigusa hufungua menyu ndogo: Maelezo au Orodha ya Ununuzi.",
-    faq_a_weekly_table: "Kando ya Muhtasari wa Mwezi katika Mwonekano wa Kalenda kuna Jedwali la Wiki – mwanzoni limekunjwa, na kugusa kichwa chake hulifungua. Linaonyesha kila siku ya wiki pamoja na matukio na kazi zake na kazi zinazojirudia kila wiki, kwa saa; ‹ › huhamisha kati ya wiki, na kugusa kipengele hukifungua ili kukihariri.",
+    faq_a_weekly_table: "Kando ya Muhtasari wa Mwezi katika Mwonekano wa Kalenda kuna Jedwali la Wiki – mwanzoni limekunjwa, na kugusa kichwa chake hulifungua. Linaonyesha kila siku ya wiki pamoja na matukio na kazi zake na kazi zinazojirudia kila wiki, kwa saa; ‹ › huhamisha kati ya wiki, na kugusa kipengele hukifungua ili kukihariri. Kitufe ＋ kando ya kila siku kinaongeza kitu moja kwa moja kwenye tarehe hiyo, na ＋ cha juu kinaongeza kwa leo.",
     faq_q_home_lists_btn: "Ninafikaje haraka kwenye maelezo yangu au orodha ya ununuzi?",
     faq_q_weekly_table: "Jedwali la Wiki katika Mwonekano wa Kalenda ni nini?",
     home_lists_label: "Maelezo na orodha ya ununuzi",

@@ -341,7 +341,7 @@ translations.ca = {
     shop_when_today: "Avui",
     shop_when_tomorrow: "Demà",
     faq_a_home_lists_btn: "A dalt de la pantalla d'inici, al costat del mode concentració, hi ha un petit botó de llista (tres línies amb punts). Un toc obre un menú petit: Notes o Llista de Compres.",
-    faq_a_weekly_table: "Al costat del Resum Mensual, a la Vista de Calendari, hi ha una Taula Setmanal – comença plegada, i un toc al títol l'obre. Mostra cada dia de la setmana amb els seus esdeveniments i tasques i les tasques setmanals recurrents, per hora; ‹ › canvien de setmana, i un toc en un element l'obre per editar-lo.",
+    faq_a_weekly_table: "Al costat del Resum Mensual, a la Vista de Calendari, hi ha una Taula Setmanal – comença plegada, i un toc al títol l'obre. Mostra cada dia de la setmana amb els seus esdeveniments i tasques i les tasques setmanals recurrents, per hora; ‹ › canvien de setmana, i un toc en un element l'obre per editar-lo. El ＋ al costat de cada dia hi afegeix alguna cosa directament, i el ＋ de dalt l’afegeix a avui.",
     faq_q_home_lists_btn: "Com arribo ràpidament a les meves notes o a la llista de compres?",
     faq_q_weekly_table: "Què és la Taula Setmanal a la Vista de Calendari?",
     home_lists_label: "Notes i llista de compres",

@@ -341,7 +341,7 @@ translations.id = {
     shop_when_today: "Hari ini",
     shop_when_tomorrow: "Besok",
     faq_a_home_lists_btn: "Di bagian atas layar utama, di samping mode fokus, ada tombol daftar kecil (tiga garis bertitik). Mengetuknya membuka menu kecil: Catatan atau Daftar Belanja.",
-    faq_a_weekly_table: "Di samping Ikhtisar Bulanan di Tampilan Kalender ada Tabel Mingguan – awalnya terlipat, dan mengetuk judulnya akan membukanya. Tabel ini menampilkan setiap hari dalam seminggu dengan acara dan tugasnya serta tugas mingguan berulang, menurut jam; ‹ › berpindah antarminggu, dan mengetuk sebuah item membukanya untuk diedit.",
+    faq_a_weekly_table: "Di samping Ikhtisar Bulanan di Tampilan Kalender ada Tabel Mingguan – awalnya terlipat, dan mengetuk judulnya akan membukanya. Tabel ini menampilkan setiap hari dalam seminggu dengan acara dan tugasnya serta tugas mingguan berulang, menurut jam; ‹ › berpindah antarminggu, dan mengetuk sebuah item membukanya untuk diedit. Tombol ＋ di samping setiap hari langsung menambahkan sesuatu ke tanggal itu, dan ＋ di atas menambahkan ke hari ini.",
     faq_q_home_lists_btn: "Bagaimana cara cepat membuka catatan atau daftar belanja?",
     faq_q_weekly_table: "Apa itu Tabel Mingguan di Tampilan Kalender?",
     home_lists_label: "Catatan dan daftar belanja",

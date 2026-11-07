@@ -341,7 +341,7 @@ translations.hu = {
     shop_when_today: "Ma",
     shop_when_tomorrow: "Holnap",
     faq_a_home_lists_btn: "A kezdőképernyő tetején, a fókusz mód mellett van egy kis lista gomb (három vonal pöttyökkel). Egy koppintás megnyit egy kis menüt: Jegyzetek vagy Bevásárlólista.",
-    faq_a_weekly_table: "A Naptárnézetben a Havi Áttekintés mellett van egy Heti Táblázat – kezdetben össze van csukva, és a címére koppintva kinyílik. A hét minden napját mutatja az eseményeivel és feladataival, valamint az ismétlődő heti feladatokkal, időrendben; a ‹ › hétről hétre lapoz, és egy elemre koppintva megnyílik szerkesztésre.",
+    faq_a_weekly_table: "A Naptárnézetben a Havi Áttekintés mellett van egy Heti Táblázat – kezdetben össze van csukva, és a címére koppintva kinyílik. A hét minden napját mutatja az eseményeivel és feladataival, valamint az ismétlődő heti feladatokkal, időrendben; a ‹ › hétről hétre lapoz, és egy elemre koppintva megnyílik szerkesztésre. Az egyes napok melletti ＋ egyenesen arra a napra ad hozzá valamit, a fenti ＋ pedig a mai napra.",
     faq_q_home_lists_btn: "Hogyan érem el gyorsan a jegyzeteimet vagy a bevásárlólistát?",
     faq_q_weekly_table: "Mi az a Heti Táblázat a Naptárnézetben?",
     home_lists_label: "Jegyzetek és bevásárlólista",

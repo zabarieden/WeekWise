@@ -341,7 +341,7 @@ translations.yo = {
     shop_when_today: "Lónìí",
     shop_when_tomorrow: "Ọ̀la",
     faq_a_home_lists_btn: "Ní òkè ojú-ìwé ilé, lẹ́gbẹ̀ẹ́ ipò àfojúsùn, bọ́tìnnì àtòjọ kékeré kan wà (ìlà mẹ́ta pẹ̀lú àwọn àmì kékeré). Títẹ̀ ẹ́ ń ṣí mẹ́nù kékeré kan: Àkọsílẹ̀ tàbí Àtòjọ Ọjà.",
-    faq_a_weekly_table: "Lẹ́gbẹ̀ẹ́ Ìwòye Oṣooṣù nínú Ìwòye Kàlẹ́ńdà, Tábìlì Ọ̀sẹ̀ kan wà – ó máa ń ká pọ̀ ní ìbẹ̀rẹ̀, títẹ àkọlé rẹ̀ sì máa ń ṣí i. Ó ń fi gbogbo ọjọ́ ọ̀sẹ̀ hàn pẹ̀lú àwọn ìṣẹ̀lẹ̀ àti iṣẹ́ rẹ̀ àti àwọn iṣẹ́ ọ̀sọ̀ọ̀sẹ̀ tí ń tún ṣẹlẹ̀, ní ìbámu pẹ̀lú àkókò; ‹ › ń lọ láti ọ̀sẹ̀ kan sí òmíràn, títẹ ohun kan sì ń ṣí i fún àtúnṣe.",
+    faq_a_weekly_table: "Lẹ́gbẹ̀ẹ́ Ìwòye Oṣooṣù nínú Ìwòye Kàlẹ́ńdà, Tábìlì Ọ̀sẹ̀ kan wà – ó máa ń ká pọ̀ ní ìbẹ̀rẹ̀, títẹ àkọlé rẹ̀ sì máa ń ṣí i. Ó ń fi gbogbo ọjọ́ ọ̀sẹ̀ hàn pẹ̀lú àwọn ìṣẹ̀lẹ̀ àti iṣẹ́ rẹ̀ àti àwọn iṣẹ́ ọ̀sọ̀ọ̀sẹ̀ tí ń tún ṣẹlẹ̀, ní ìbámu pẹ̀lú àkókò; ‹ › ń lọ láti ọ̀sẹ̀ kan sí òmíràn, títẹ ohun kan sì ń ṣí i fún àtúnṣe. ＋ tó wà lẹ́gbẹ̀ẹ́ ọjọ́ kọ̀ọ̀kan máa ń fi nǹkan kún ọjọ́ yẹn tààrà, ＋ tó wà lókè sì máa ń fi kún òní.",
     faq_q_home_lists_btn: "Báwo ni mo ṣe lè dé ibi àkọsílẹ̀ mi tàbí àtòjọ ọjà kíákíá?",
     faq_q_weekly_table: "Kí ni Tábìlì Ọ̀sẹ̀ nínú Ìwòye Kàlẹ́ńdà?",
     home_lists_label: "Àkọsílẹ̀ àti àtòjọ ọjà",

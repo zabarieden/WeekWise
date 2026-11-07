@@ -341,7 +341,7 @@ translations.es = {
     shop_when_today: "Hoy",
     shop_when_tomorrow: "Mañana",
     faq_a_home_lists_btn: "Arriba en la pantalla de inicio, junto al modo enfoque, hay un pequeño botón de lista (tres líneas con puntos). Un toque abre un menú pequeño: Notas o Lista de Compras.",
-    faq_a_weekly_table: "Junto a Vista Mensual, en Vista de Calendario, hay una Tabla Semanal: empieza plegada y un toque en su título la abre. Muestra cada día de la semana con sus eventos y tareas y las tareas semanales recurrentes, por hora; ‹ › pasan de una semana a otra, y un toque en un elemento lo abre para editarlo.",
+    faq_a_weekly_table: "Junto a Vista Mensual, en Vista de Calendario, hay una Tabla Semanal: empieza plegada y un toque en su título la abre. Muestra cada día de la semana con sus eventos y tareas y las tareas semanales recurrentes, por hora; ‹ › pasan de una semana a otra, y un toque en un elemento lo abre para editarlo. El ＋ junto a cada día añade algo directamente a esa fecha, y el ＋ de arriba lo añade a hoy.",
     faq_q_home_lists_btn: "¿Cómo llego rápido a mis notas o a la lista de compras?",
     faq_q_weekly_table: "¿Qué es la Tabla Semanal en Vista de Calendario?",
     home_lists_label: "Notas y lista de compras",

@@ -341,7 +341,7 @@ translations.tr = {
     shop_when_today: "Bugün",
     shop_when_tomorrow: "Yarın",
     faq_a_home_lists_btn: "Ana ekranın üstünde, odak modunun yanında küçük bir liste düğmesi (noktalı üç çizgi) var. Dokununca küçük bir menü açılır: Notlar veya Alışveriş Listesi.",
-    faq_a_weekly_table: "Takvim Görünümü'nde Aylık Genel Bakış'ın yanında bir Haftalık Tablo var – başta katlanmış durur, başlığına dokununca açılır. Haftanın her gününü etkinlikleri ve görevleriyle, tekrarlayan haftalık görevlerle birlikte saate göre gösterir; ‹ › haftalar arasında geçiş yapar, bir öğeye dokunmak onu düzenlemek için açar.",
+    faq_a_weekly_table: "Takvim Görünümü'nde Aylık Genel Bakış'ın yanında bir Haftalık Tablo var – başta katlanmış durur, başlığına dokununca açılır. Haftanın her gününü etkinlikleri ve görevleriyle, tekrarlayan haftalık görevlerle birlikte saate göre gösterir; ‹ › haftalar arasında geçiş yapar, bir öğeye dokunmak onu düzenlemek için açar. Her günün yanındaki ＋ doğrudan o tarihe bir şey ekler, üstteki ＋ ise bugüne ekler.",
     faq_q_home_lists_btn: "Notlarıma veya alışveriş listesine hızlıca nasıl ulaşırım?",
     faq_q_weekly_table: "Takvim Görünümü'ndeki Haftalık Tablo nedir?",
     home_lists_label: "Notlar ve alışveriş listesi",

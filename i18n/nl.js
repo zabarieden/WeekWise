@@ -341,7 +341,7 @@ translations.nl = {
     shop_when_today: "Vandaag",
     shop_when_tomorrow: "Morgen",
     faq_a_home_lists_btn: "Bovenaan het startscherm, naast de focusmodus, staat een kleine lijstknop (drie lijntjes met puntjes). Een tik opent een klein menu: Notities of Boodschappenlijst.",
-    faq_a_weekly_table: "Naast het Maandoverzicht in Kalenderweergave staat een Weektabel – die is eerst ingeklapt, en een tik op de titel klapt hem open. Je ziet er elke dag van de week in met de afspraken en taken van die dag en de terugkerende wekelijkse taken, op tijd; ‹ › gaan naar een andere week, en een tik op een item opent het om te bewerken.",
+    faq_a_weekly_table: "Naast het Maandoverzicht in Kalenderweergave staat een Weektabel – die is eerst ingeklapt, en een tik op de titel klapt hem open. Je ziet er elke dag van de week in met de afspraken en taken van die dag en de terugkerende wekelijkse taken, op tijd; ‹ › gaan naar een andere week, en een tik op een item opent het om te bewerken. Met de ＋ naast elke dag voeg je iets direct aan die datum toe, en de ＋ bovenaan voegt het aan vandaag toe.",
     faq_q_home_lists_btn: "Hoe kom ik snel bij mijn notities of de boodschappenlijst?",
     faq_q_weekly_table: "Wat is de Weektabel in Kalenderweergave?",
     home_lists_label: "Notities en boodschappenlijst",

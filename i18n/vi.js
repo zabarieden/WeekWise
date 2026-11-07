@@ -341,7 +341,7 @@ translations.vi = {
     shop_when_today: "Hôm nay",
     shop_when_tomorrow: "Ngày mai",
     faq_a_home_lists_btn: "Ở đầu màn hình chính, cạnh chế độ tập trung, có một nút danh sách nhỏ (ba gạch có chấm). Chạm vào sẽ mở một menu nhỏ: Ghi Chú hoặc Danh Sách Mua Sắm.",
-    faq_a_weekly_table: "Cạnh Tổng Quan Tháng trong Xem Lịch có một Bảng Tuần – ban đầu bảng được thu gọn, và chạm vào tiêu đề sẽ mở ra. Bảng hiện từng ngày trong tuần cùng sự kiện và công việc của ngày đó, và các công việc lặp lại hàng tuần, theo giờ; ‹ › chuyển giữa các tuần, và chạm vào một mục sẽ mở mục đó để chỉnh sửa.",
+    faq_a_weekly_table: "Cạnh Tổng Quan Tháng trong Xem Lịch có một Bảng Tuần – ban đầu bảng được thu gọn, và chạm vào tiêu đề sẽ mở ra. Bảng hiện từng ngày trong tuần cùng sự kiện và công việc của ngày đó, và các công việc lặp lại hàng tuần, theo giờ; ‹ › chuyển giữa các tuần, và chạm vào một mục sẽ mở mục đó để chỉnh sửa. Nút ＋ cạnh mỗi ngày thêm việc thẳng vào ngày đó, còn ＋ ở trên cùng thêm vào hôm nay.",
     faq_q_home_lists_btn: "Làm sao để vào nhanh ghi chú hoặc danh sách mua sắm?",
     faq_q_weekly_table: "Bảng Tuần trong Xem Lịch là gì?",
     home_lists_label: "Ghi chú và danh sách mua sắm",

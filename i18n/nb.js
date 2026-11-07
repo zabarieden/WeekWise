@@ -341,7 +341,7 @@ translations.nb = {
     shop_when_today: "I dag",
     shop_when_tomorrow: "I morgen",
     faq_a_home_lists_btn: "Øverst på startskjermen, ved siden av fokusmodus, er det en liten listeknapp (tre linjer med prikker). Et trykk åpner en liten meny: Notater eller Handleliste.",
-    faq_a_weekly_table: "Ved siden av Månedsoversikt i Kalendervisning finnes en Uketabell – den er sammenfoldet fra start, og et trykk på tittelen åpner den. Den viser hver dag i uken med hendelsene og oppgavene sine og de gjentakende ukeoppgavene, etter klokkeslett; ‹ › bytter uke, og et trykk på et element åpner det for redigering.",
+    faq_a_weekly_table: "Ved siden av Månedsoversikt i Kalendervisning finnes en Uketabell – den er sammenfoldet fra start, og et trykk på tittelen åpner den. Den viser hver dag i uken med hendelsene og oppgavene sine og de gjentakende ukeoppgavene, etter klokkeslett; ‹ › bytter uke, og et trykk på et element åpner det for redigering. ＋ ved siden av hver dag legger til noe rett på den datoen, og ＋ øverst legger til i dag.",
     faq_q_home_lists_btn: "Hvordan kommer jeg raskt til notatene mine eller handlelisten?",
     faq_q_weekly_table: "Hva er Uketabellen i Kalendervisning?",
     home_lists_label: "Notater og handleliste",

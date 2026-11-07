@@ -341,7 +341,7 @@ translations.da = {
     shop_when_today: "I dag",
     shop_when_tomorrow: "I morgen",
     faq_a_home_lists_btn: "Øverst på startskærmen, ved siden af fokustilstand, er der en lille listeknap (tre linjer med prikker). Et tryk åbner en lille menu: Noter eller Indkøbsliste.",
-    faq_a_weekly_table: "Ved siden af Månedsoversigt i Kalendervisning er der en Ugetabel – den er foldet sammen fra start, og et tryk på titlen åbner den. Den viser hver dag i ugen med dens begivenheder og opgaver og de tilbagevendende ugentlige opgaver, efter klokkeslæt; ‹ › skifter uge, og et tryk på et element åbner det til redigering.",
+    faq_a_weekly_table: "Ved siden af Månedsoversigt i Kalendervisning er der en Ugetabel – den er foldet sammen fra start, og et tryk på titlen åbner den. Den viser hver dag i ugen med dens begivenheder og opgaver og de tilbagevendende ugentlige opgaver, efter klokkeslæt; ‹ › skifter uge, og et tryk på et element åbner det til redigering. ＋ ved siden af hver dag tilføjer noget direkte på den dato, og ＋ øverst tilføjer til i dag.",
     faq_q_home_lists_btn: "Hvordan kommer jeg hurtigt til mine noter eller indkøbslisten?",
     faq_q_weekly_table: "Hvad er Ugetabellen i Kalendervisning?",
     home_lists_label: "Noter og indkøbsliste",

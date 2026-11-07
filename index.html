@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=605">
+    <link rel="stylesheet" href="theme.css?v=606">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -320,6 +320,9 @@
                         <div class="card-title-row collapsible-header" onclick="toggleWeeklyTableCard(this)">
                             <h2 data-i18n="weekly_table_title">Weekly Table</h2>
                             <div class="card-header-actions">
+                                <!-- ＋ כמו במבט החודשי (לפי בקשה מפורשת, 2026-11-07: "שיהיה ליד פלוס קטן וגם תהיה אפשרות להוסיף") -
+                                     מוסיף להיום אם הוא בשבוע שמוצג, אחרת ליום הראשון של השבוע. לכל יום בטבלה יש גם ＋ משלו -->
+                                <button class="btn-floating-add" onclick="event.stopPropagation(); openAddEventForWeeklyTable()" data-i18n-title="calendar_event_add_title" title="Add event">＋</button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -4480,9 +4483,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=506"></script>
+    <script src="i18n/core.js?v=507"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=632"></script>
+    <script src="app.js?v=633"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>
