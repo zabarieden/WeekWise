@@ -82,12 +82,36 @@ async function retryStoredSession() {
     if (s) { initAppAfterAuth(s.user); return; }
     if (hasStoredAuthSession() && ++storedSessionRetryCount < 40) storedSessionRetryTimer = setTimeout(retryStoredSession, 15000);
 }
+// Supabase מחזיר לכל היותר 1,000 שורות בבקשה אחת, ושאילתה של "הכול" נחתכת שם בשקט. מביאים בדפים של 500 לפי הסדר
+// של השאילתה (ועוד id, כדי ששתי שורות באותו תאריך לא יקפצו בין דפים) עד שדף חוזר קצר. לרשימה שמוצגת למשתמש
+// עדיף דף אחד ו"עוד" - זה לשאילתות שבאמת צריכות הכול (דוח הנתונים, האירועים שמוצגים ביומן)
+async function fetchAllRows(query, pageSize = 500, maxRows = 20000) {
+    const ordered = query.order('id', { ascending: true });
+    const rows = [];
+    for (let from = 0; from < maxRows; from += pageSize) {
+        const { data, error } = await ordered.range(from, from + pageSize - 1);
+        if (error) return { data: rows.length ? rows : null, error };
+        rows.push(...(data || []));
+        if (!data || data.length < pageSize) break;
+    }
+    return { data: rows, error: null };
+}
+
 function initSupabase() {
     if (window.supabase) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // הכניסה נשמרת במכשיר ומתחדשת לבד לפני שהיא פגה (כך גם כברירת מחדל - כתוב במפורש כדי שאף שינוי לא יכבה את זה).
+        // בדפדפן ה-SDK מתאם את החידוש בין כמה לשוניות פתוחות, כך ששתיהן לא "שורפות" את אותו מפתח חידוש ונזרקות החוצה
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage },
+        });
         return true;
     }
     return false;
+}
+// מבקשים מהדפדפן לא למחוק את הנתונים של האפליקציה כשחסר מקום בטלפון - בלי זה הכניסה השמורה יכולה להימחק בשקט.
+// באייפון זה עובד בעיקר כשהאפליקציה מותקנת למסך הבית
+function requestPersistentStorage() {
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch { /* לא נתמך */ }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -142,6 +166,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // רק TOKEN_REFRESHED: כניסה / הרשמה מהטופס פותחות את האפליקציה (או את האשף) בעצמן
         supabaseClient.auth.onAuthStateChange((event, s) => {
             if (s && !currentUserId && event === 'TOKEN_REFRESHED') initAppAfterAuth(s.user);
+            // הכניסה באמת נמחקה (לא יציאה שלנו) בזמן שהאפליקציה פתוחה - חוזרים למסך הכניסה במקום להישאר במסך שכבר לא נשמר
+            if (event === 'SIGNED_OUT' && currentUserId && !loggingOut && !hasStoredAuthSession()) location.reload();
         });
         window.addEventListener('online', async () => {
             if (currentUserId || !hasStoredAuthSession()) return;
@@ -2761,6 +2787,7 @@ async function initAppAfterAuth(user) {
     currentUserId = user.id;
     currentUsername = user.email;
     currentUserCreatedAt = user.created_at;
+    requestPersistentStorage();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     requestAnimationFrame(repositionPeekTabStack);
@@ -3282,8 +3309,12 @@ function triggerDailyGreetingSparkles() {
     }, 4000);
 }
 
+// יציאה רק מהמכשיר הזה. signOut() בלי scope יוצא מכל המכשירים - יציאה מהמחשב הוציאה גם מהטלפון
+// (דווח כ"זה שוב מוציא אותי למסך ההתחברות")
+let loggingOut = false;
 async function logoutUser() {
-    if (supabaseClient) await supabaseClient.auth.signOut();
+    loggingOut = true;
+    if (supabaseClient) await supabaseClient.auth.signOut({ scope: 'local' });
     location.reload();
 }
 // כל ה-.apple-modal חולקים בדיוק אותו z-index (2000) - אם שניים פתוחים בו-
@@ -4084,29 +4115,44 @@ function renderCategoriesMenu() {
 // "לוודא שזה לא יחתוך... בכל שפה"): קבוצת אריחים שמילה בה ארוכה מדי עוברת לשתי עמודות, ומה שעדיין לא נכנס (גם הכותרת)
 // מקבל גופן קצת יותר קטן, עד 72%. ביפנית, סינית ותאילנדית אין רווחים בין מילים - שם השבירה בין אותיות היא הרגילה
 const FIT_WORDS_SKIP_LANGS = /^(ja|zh|th)/;
-function fitTileWords(root) {
-    if (!root || FIT_WORDS_SKIP_LANGS.test(currentLang || '')) return;
-    const ctx = fitTileWords.ctx || (fitTileWords.ctx = document.createElement('canvas').getContext('2d'));
-    // כמה המילה הכי ארוכה גדולה מהמקום (1 = נכנסת בדיוק). מילה עם מקף יכולה לרדת שורה אחרי המקף
-    const need = el => {
-        el.style.fontSize = '';
-        const box = el.clientWidth;
-        if (!box) return 1;
-        const cs = getComputedStyle(el);
-        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-        const spacing = parseFloat(cs.letterSpacing) || 0;
-        return Math.max(...el.textContent.split(/\s+|(?<=-)/).filter(Boolean).map(w => ctx.measureText(w).width + spacing * w.length)) / (box - 3);
-    };
-    root.querySelectorAll('.categories-grid').forEach(grid => {
-        grid.classList.remove('categories-grid--two');
-        if (Math.max(1, ...[...grid.querySelectorAll('.categories-tile-label')].map(need)) > 1.15) grid.classList.add('categories-grid--two');
-    });
-    [...root.querySelectorAll('.categories-tile-label'), document.getElementById('categories-menu-title')].forEach(el => {
+// כמה המילה הכי ארוכה גדולה מהמקום שלה (1 = נכנסת בדיוק). מילה עם מקף או לוכסן יכולה לרדת שורה אחריהם
+function longWordNeed(el) {
+    el.style.fontSize = '';
+    const cs = getComputedStyle(el);
+    const box = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (box <= 3) return 1;
+    const ctx = longWordNeed.ctx || (longWordNeed.ctx = document.createElement('canvas').getContext('2d'));
+    ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const spacing = parseFloat(cs.letterSpacing) || 0;
+    return Math.max(...el.textContent.split(/\s+|(?<=[-/])/).filter(Boolean).map(w => ctx.measureText(w).width + spacing * w.length)) / (box - 3);
+}
+// מקטינים את הגופן של כל אחד מהם רק כמה שצריך כדי שהמילה הכי ארוכה תיכנס שלמה, לכל היותר עד 72%
+function fitLongWords(elements) {
+    if (FIT_WORDS_SKIP_LANGS.test(currentLang || '')) return;
+    elements.forEach(el => {
         if (!el) return;
-        const n = need(el);
+        const n = longWordNeed(el);
         if (n > 1) el.style.fontSize = `${(parseFloat(getComputedStyle(el).fontSize) * Math.max(0.72, 1 / n)).toFixed(2)}px`;
     });
 }
+function fitTileWords(root) {
+    if (!root || FIT_WORDS_SKIP_LANGS.test(currentLang || '')) return;
+    root.querySelectorAll('.categories-grid').forEach(grid => {
+        grid.classList.remove('categories-grid--two');
+        if (Math.max(1, ...[...grid.querySelectorAll('.categories-tile-label')].map(longWordNeed)) > 1.15) grid.classList.add('categories-grid--two');
+    });
+    fitLongWords([...root.querySelectorAll('.categories-tile-label'), document.getElementById('categories-menu-title')]);
+}
+// לשוניות של New Me (החלפת ארוחה, וגם הדוגמה בדף המכירה) - מתאימים כשהן נכנסות למסך, בכל מקום שהן נבנות
+const FIT_WORDS_SELECTOR = '.nm-swap-tab';
+new MutationObserver(records => {
+    for (const r of records) for (const n of r.addedNodes) {
+        if (n.nodeType === 1 && (n.matches(FIT_WORDS_SELECTOR) || n.querySelector(FIT_WORDS_SELECTOR))) {
+            requestAnimationFrame(() => fitLongWords([...document.querySelectorAll(FIT_WORDS_SELECTOR)]));
+            return;
+        }
+    }
+}).observe(document.documentElement, { childList: true, subtree: true });
 
 // מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
 // פתוחה); רק הקיצור של New Me (💎) פותח ישר את "התפריט שלי היום" (openNewMeMenuToday)
@@ -7186,7 +7232,16 @@ async function loadCalendarEvents() {
     // חוזרת עדיין פעילה (יש לה לפחות מופע עתידי אחד), רוצים את *כל* התאריכים
     // שלה כולל עבר, כדי שאפשר יהיה לסמן וי גם על מופעים ישנים שהושלמו בפועל -
     // לא רק על הבא בתור. בלי זה, מופע שכבר עבר "נעלם" ואי אפשר לסמן אותו
-    const { data, error } = await supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar');
+    // רק מה שבאמת מוצג (2026-11-07): קודם כל מה שמהיום והלאה, ואז את העבר רק של סדרות חוזרות שעדיין פעילות.
+    // פעם נשלפו כל האירועים שהיו אי פעם - רשימה שגדלה כל שנה (ונחתכה ב-1,000 שורות)
+    const eventsBase = () => supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('source', 'calendar');
+    const upcoming = await fetchAllRows(eventsBase().gte('event_date', today).order('event_date'));
+    let { data, error } = upcoming;
+    const activeSeries = [...new Set((data || []).map(e => e.recurrence_group_id).filter(Boolean))];
+    if (!error && activeSeries.length) {
+        const past = await fetchAllRows(eventsBase().lt('event_date', today).in('recurrence_group_id', activeSeries).order('event_date'));
+        if (!past.error && past.data) data = data.concat(past.data);
+    }
     container.innerHTML = '';
     if (error || !data || !data.length) {
         const empty = document.createElement('div');
@@ -8614,7 +8669,7 @@ function deleteRecipe() {
 // לבטל)
 let isPremiumUser = false;
 let isRealPremiumUser = false;
-let selectedPremiumTier = 'semiannual';
+let selectedPremiumTier = 'yearly';
 // tier שנקרא בפועל מ-user_premium.tier (אם העמודה קיימת) - null כשאין את
 // העמודה עדיין או שאין לה ערך. isDevSuperuserAccount מבדיל בין פרימיום אמיתי
 // (רשומה ב-DB, ניתן לביטול) לבין עקיפת-פיתוח קבועה (אין מה לבטל)
@@ -9233,14 +9288,10 @@ async function exportUserDataReport() {
         if (calorieQuery) calorieQuery = calorieQuery.gte('date', rangeStart).lt('date', rangeEndExclusive);
     }
 
+    // "כל הזמן" יכול להיות יותר מ-1,000 שורות (למשל שנים של ארוחות) - מביאים בדפים עד הסוף
+    const all = q => (q ? fetchAllRows(q) : Promise.resolve({ data: null }));
     const [{ data: weightRows }, { data: goalRows }, { data: financeRows }, { data: recurringRows }, { data: sportRows }, { data: waterRows }, { data: calorieRows }] = await Promise.all([
-        weightQuery || Promise.resolve({ data: null }),
-        goalsQuery || Promise.resolve({ data: null }),
-        financeQuery || Promise.resolve({ data: null }),
-        recurringQuery || Promise.resolve({ data: null }),
-        sportQuery || Promise.resolve({ data: null }),
-        waterQuery || Promise.resolve({ data: null }),
-        calorieQuery || Promise.resolve({ data: null }),
+        all(weightQuery), all(goalsQuery), all(financeQuery), all(recurringQuery), all(sportQuery), all(waterQuery), all(calorieQuery),
     ]);
 
     let sectionsHtml = '';

@@ -7046,7 +7046,8 @@ html:not(.light-mode) .book-lookup-powered img { background: #fff; border-radius
 .nm-restore-row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .nm-custom-tag { font-size: .85em; }
 .nm-swap-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--bg-row); }
-.nm-swap-tab { flex: 1 1 0; min-width: 0; padding: 8px 6px; border: none; border-radius: 11px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* שם לשונית ארוך ("⭐ Saved meals", "✨ Kirjoita itse") יורד לשורה שנייה ולא נחתך (2026-11-07, בדיקת כל השפות) */
+.nm-swap-tab { flex: 1 1 0; min-width: 0; padding: 8px 6px; border: none; border-radius: 11px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .82rem; font-weight: 700; line-height: 1.2; cursor: pointer; white-space: normal; overflow-wrap: break-word; hyphens: auto; }
 .nm-swap-tab.on { background: var(--nm-grad, linear-gradient(135deg, var(--accent-purple), var(--accent-pink))); color: #fff; box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-pink) 30%, transparent); }
 .nm-swap-tab:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 .nm-swap-budget { font-size: .8rem; font-weight: 700; color: var(--accent-purple-light-text, var(--accent-purple)); }
@@ -7297,7 +7298,7 @@ button.nm-letter-card { cursor: pointer; }
 .hamburger-newme-item.locked .nm-lock-badge, .categories-newme-tile.locked .nm-lock-badge { display: inline; }
 
 /* ---------- New Me: שני מסלולים בעמוד הרכישה (לכל החיים / חודשי) + "המסלול שלך" בהגדרות ---------- */
-.nm-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.nm-plans { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; margin-top: 6px; }
 .nm-plan-opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 20px 10px 14px; border-radius: 20px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: center; cursor: pointer; box-sizing: border-box; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .nm-plan-opt.selected { border-color: var(--accent-pink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pink) 18%, transparent), 0 10px 24px color-mix(in srgb, var(--accent-purple) 14%, transparent); }
 .nm-plan-opt:active { transform: scale(.98); }
@@ -11901,3 +11902,6 @@ img.yg-3d-mv.is-contain { object-fit: contain; }
 html.high-contrast .ai-chat-sheet { background: var(--bg-sheet); -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* טבלאות בכרטיסים / לוח: כל הטקסט (בלי "..." שנשפך על השורה הבאה) */
 .tbl-card-value .tbl-td-text { display: block; -webkit-line-clamp: unset; }
+
+/* קוריאנית: שוברים שורה רק בין מילים, לא באמצע מילה בין הברות (כך כותבים קוריאנית; 2026-11-07, בדיקת כל השפות) */
+html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }

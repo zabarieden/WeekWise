@@ -17,6 +17,7 @@
 // Deploy + configure this via the Supabase CLI - see DEPLOY.md in this folder.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { aiRateOk } from "../_shared/rate-limit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -100,6 +101,8 @@ Deno.serve(async (req) => {
         const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
         const userId = userData.user.id;
+        // הגבלת קצב נגד שימוש לרעה (מעבר למכסה החודשית) - ר' _shared/rate-limit.ts
+        if (!(await aiRateOk(supabase, userId, "send-feedback", 5))) return jsonResponse({ error: "rate_limited" }, 429);
         const userEmail = userData.user.email || "";
 
         const body = await req.json();

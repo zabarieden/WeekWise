@@ -12,6 +12,7 @@
 // Deploy: supabase functions deploy new-me-drink-kcal
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { aiRateOk } from "../_shared/rate-limit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -44,6 +45,8 @@ Deno.serve(async (req) => {
         const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
         if (userError || !userData?.user) return jsonResponse({ error: "unauthorized" }, 401);
         const userId = userData.user.id;
+        // הגבלת קצב נגד שימוש לרעה (מעבר למכסה החודשית) - ר' _shared/rate-limit.ts
+        if (!(await aiRateOk(supabase, userId, "new-me-drink-kcal", 20))) return jsonResponse({ error: "rate_limited" }, 429);
         const userEmail = (userData.user.email || "").toLowerCase();
 
         const { data: premiumRow } = await supabase.from("user_premium").select("new_me_purchased").eq("user_id", userId).maybeSingle();

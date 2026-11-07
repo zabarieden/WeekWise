@@ -15,10 +15,14 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LEMONSQUEEZY_WEBHOOK_SECRET = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET")!;
 const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
 const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+// Premium yearly (since 2026-11-07). Without its own variant, the old semi-annual variant (edited in place
+// in Lemon Squeezy to bill yearly) counts as yearly
+const LEMONSQUEEZY_VARIANT_ID_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") || "";
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
-// New Me has two plans: lifetime (one-time order, LEMONSQUEEZY_VARIANT_ID_NEW_ME) and
-// monthly (a subscription, this variant). Neither ever touches is_premium/tier.
+// New Me has three plans: lifetime (one-time order, LEMONSQUEEZY_VARIANT_ID_NEW_ME), monthly and yearly
+// (subscriptions, the two variants below). None of them ever touches is_premium/tier.
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY") || "";
 const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -27,10 +31,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // ("expired"), past_due gets the retry grace period
 const ACCESS_STATUSES = ["active", "on_trial", "past_due", "cancelled"];
 
-function isNewMeMonthly(variantId: string, productName: string): boolean {
-    if (LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && variantId === LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY) return true;
-    // fallback for the first minutes after a new product is created, before the secret is set
-    return !LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && /new\s*me/i.test(productName || "");
+// Which New Me subscription plan a variant is ("monthly" / "yearly"), or null for anything else
+function newMeSubscriptionPlan(variantId: string, productName: string): "monthly" | "yearly" | null {
+    if (LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && variantId === LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY) return "monthly";
+    if (LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY && variantId === LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY) return "yearly";
+    // fallback for the first minutes after a new product is created, before its secret is set
+    if (!/new\s*me/i.test(productName || "")) return null;
+    if (/year|annual/i.test(productName) && !LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY) return "yearly";
+    if (!LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && !/year|annual/i.test(productName)) return "monthly";
+    return null;
 }
 
 async function newMeRow(userId: string) {
@@ -57,7 +66,8 @@ async function cancelNewMeMonthly(subscriptionId: string) {
 // body (before JSON.parse), and compare in constant time to avoid a timing
 // side-channel on the comparison itself.
 async function verifySignature(rawBody: string, signature: string): Promise<boolean> {
-    if (!signature) return false;
+    // Without the secret anyone could sign with an empty key and fake an upgrade - refuse everything instead
+    if (!signature || !LEMONSQUEEZY_WEBHOOK_SECRET) return false;
     const key = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(LEMONSQUEEZY_WEBHOOK_SECRET),
@@ -74,8 +84,9 @@ async function verifySignature(rawBody: string, signature: string): Promise<bool
 }
 
 function tierFromVariantId(variantId: string): string | null {
+    if (!variantId) return null;
     if (variantId === LEMONSQUEEZY_VARIANT_ID_MONTHLY) return "monthly";
-    if (variantId === LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL) return "semiannual";
+    if (variantId === LEMONSQUEEZY_VARIANT_ID_YEARLY || variantId === LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL) return "yearly";
     return null;
 }
 
@@ -118,21 +129,23 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ received: true, ignored: true }), { status: 200 });
         }
         const row: any = await newMeRow(orderUserId);
-        const monthlyRunning = ACCESS_STATUSES.includes(row.new_me_subscription_status || "");
+        // a monthly or yearly New Me subscription that still gives access
+        const subscriptionRunning = ACCESS_STATUSES.includes(row.new_me_subscription_status || "");
+        const subscriptionPlan = row.new_me_plan === "yearly" ? "yearly" : "monthly";
         if (eventName === "order_created" && orderAttrs.status === "paid") {
             await supabase.from("user_premium").upsert(
                 { user_id: orderUserId, new_me_purchased: true, new_me_order_id: String(payload.data.id), new_me_plan: "lifetime" },
                 { onConflict: "user_id" },
             );
-            if (monthlyRunning && row.new_me_subscription_status !== "cancelled") await cancelNewMeMonthly(row.new_me_subscription_id);
+            if (subscriptionRunning && row.new_me_subscription_status !== "cancelled") await cancelNewMeMonthly(row.new_me_subscription_id);
             return new Response(JSON.stringify({ received: true, new_me: true }), { status: 200 });
         }
-        // refund (or an unpaid order): back to the monthly plan if one still runs, otherwise no access
+        // refund (or an unpaid order): back to the subscription if one still runs, otherwise no access
         await supabase.from("user_premium").upsert(
-            { user_id: orderUserId, new_me_purchased: monthlyRunning, new_me_order_id: String(payload.data.id), new_me_plan: monthlyRunning ? "monthly" : null },
+            { user_id: orderUserId, new_me_purchased: subscriptionRunning, new_me_order_id: String(payload.data.id), new_me_plan: subscriptionRunning ? subscriptionPlan : null },
             { onConflict: "user_id" },
         );
-        return new Response(JSON.stringify({ received: true, new_me: monthlyRunning }), { status: 200 });
+        return new Response(JSON.stringify({ received: true, new_me: subscriptionRunning }), { status: 200 });
     }
 
     // subscription_payment_* events carry an invoice (data.type "subscription-invoices"),
@@ -157,8 +170,9 @@ Deno.serve(async (req) => {
     const status: string = attrs.status;
     const variantId = String(attrs.variant_id ?? "");
 
-    // New Me monthly - its own columns; a lifetime purchase always keeps access
-    if (isNewMeMonthly(variantId, attrs.product_name)) {
+    // New Me monthly / yearly - its own columns; a lifetime purchase always keeps access
+    const newMePlan = newMeSubscriptionPlan(variantId, attrs.product_name);
+    if (newMePlan) {
         const row: any = await newMeRow(userId);
         const lifetime = row.new_me_plan === "lifetime";
         const access = ACCESS_STATUSES.includes(status);
@@ -166,7 +180,7 @@ Deno.serve(async (req) => {
             {
                 user_id: userId,
                 new_me_purchased: lifetime || access,
-                new_me_plan: lifetime ? "lifetime" : (access ? "monthly" : null),
+                new_me_plan: lifetime ? "lifetime" : (access ? newMePlan : null),
                 new_me_subscription_id: String(payload.data.id),
                 new_me_subscription_status: status,
                 new_me_renews_at: attrs.renews_at || null,
@@ -174,7 +188,7 @@ Deno.serve(async (req) => {
             },
             { onConflict: "user_id" },
         );
-        return new Response(JSON.stringify({ received: true, new_me_monthly: access }), { status: 200 });
+        return new Response(JSON.stringify({ received: true, new_me_subscription: newMePlan, access }), { status: 200 });
     }
 
     // Premium - only its own variants. Anything else (a product this webhook doesn't know)

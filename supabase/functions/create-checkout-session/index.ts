@@ -23,8 +23,12 @@ const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY")!;
 const LEMONSQUEEZY_STORE_ID = Deno.env.get("LEMONSQUEEZY_STORE_ID")!;
 const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
 const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+// Premium yearly ($29.99, since 2026-11-07). If no separate yearly variant is set, the old
+// semi-annual variant is used - it was edited in place in Lemon Squeezy to bill yearly
+const LEMONSQUEEZY_VARIANT_ID_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") || LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL;
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY") || "";
 const SITE_URL = Deno.env.get("SITE_URL")!;
 
 const CORS_HEADERS = {
@@ -56,17 +60,20 @@ Deno.serve(async (req) => {
 
         const body = await req.json().catch(() => ({}));
         const tier = body?.tier;
-        if (tier !== "monthly" && tier !== "semiannual" && tier !== "new_me" && tier !== "new_me_monthly") {
+        // "semiannual" is still accepted from app versions cached before 2026-11-07 - it is now the yearly plan
+        const TIERS = ["monthly", "yearly", "semiannual", "new_me", "new_me_monthly", "new_me_yearly"];
+        if (!TIERS.includes(tier)) {
             return jsonResponse({ error: "invalid_tier" }, 400);
         }
-        // "new_me" = the New Me program for life (one-time order), "new_me_monthly" = New Me
-        // as a monthly subscription. Neither touches is_premium - see lemonsqueezy-webhook
+        // "new_me" = the New Me program for life (one-time order), "new_me_monthly" / "new_me_yearly" = New Me
+        // as a subscription. None of them touches is_premium - see lemonsqueezy-webhook
         const variantId = tier === "monthly" ? LEMONSQUEEZY_VARIANT_ID_MONTHLY
-            : tier === "semiannual" ? LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL
+            : tier === "yearly" || tier === "semiannual" ? LEMONSQUEEZY_VARIANT_ID_YEARLY
             : tier === "new_me_monthly" ? LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY
+            : tier === "new_me_yearly" ? LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY
             : LEMONSQUEEZY_VARIANT_ID_NEW_ME;
         if (!variantId) return jsonResponse({ error: "not_configured" }, 503);
-        const redirectParam = tier === "new_me" || tier === "new_me_monthly" ? "newme_success" : "success";
+        const redirectParam = tier.startsWith("new_me") ? "newme_success" : "success";
 
         // Lemon Squeezy Checkouts API - JSON:API shape. custom_data.supabase_user_id
         // is how the webhook resolves which user_premium row to update later

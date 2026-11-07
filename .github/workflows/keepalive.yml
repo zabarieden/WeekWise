@@ -1,0 +1,40 @@
+# Keeps the backend warm: every 10 minutes it touches the database (so the Supabase project is never
+# paused for inactivity) and wakes the Edge Functions people call, with a CORS preflight (OPTIONS) that
+# boots the function without running any AI or touching any data.
+#
+# The key below is the PUBLIC publishable key - the same one already shipped in app.js - so there is no
+# secret here. GitHub runs scheduled jobs a few minutes late at busy times, and pauses them after 60 days
+# without any commit to the repository (one click on "Enable workflow" under Actions brings it back).
+name: Keep backend warm
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      SUPABASE_URL: https://fncssznyigwlltoqlfwh.supabase.co
+      SUPABASE_KEY: sb_publishable_llIogquCGjxu5uFLst-frg_RH0-vYnt
+    steps:
+      - name: Database
+        run: |
+          curl -s -o /dev/null -m 20 -w "keepalive rpc: %{http_code} in %{time_total}s\n" -X POST "$SUPABASE_URL/rest/v1/rpc/keepalive" \
+            -H "apikey: $SUPABASE_KEY" -H "Content-Type: application/json" -d '{}' || true
+          curl -s -o /dev/null -m 20 -w "auth health: %{http_code} in %{time_total}s\n" "$SUPABASE_URL/auth/v1/health" \
+            -H "apikey: $SUPABASE_KEY" || true
+
+      - name: Edge Functions
+        run: |
+          for f in estimate-food-text scan-meal-photo scan-recipe-image scan-homework-photo \
+                   parse-schedule-request parse-routine-request parse-table-request split-task-ai \
+                   workout-plan-ai new-me-meal-kcal new-me-drink-kcal new-me-pdf-url weather book-lookup \
+                   mark-reminder-done create-checkout-session create-billing-portal-session google-calendar-status; do
+            curl -s -o /dev/null -m 20 -w "$f: %{http_code} in %{time_total}s\n" -X OPTIONS "$SUPABASE_URL/functions/v1/$f" \
+              -H "Origin: https://app.not10.ai" -H "Access-Control-Request-Method: POST" -H "apikey: $SUPABASE_KEY" || true
+          done

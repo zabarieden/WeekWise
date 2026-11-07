@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=607">
+    <link rel="stylesheet" href="theme.css?v=608">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -4372,13 +4372,15 @@
                 <div class="premium-tiers-grid">
                     <div class="premium-tier-option" data-tier="monthly" onclick="selectPremiumTier(this)">
                         <div class="premium-tier-name" data-i18n="premium_tier_monthly">Monthly</div>
-                        <div class="premium-tier-price-main">$8.99<span class="premium-tier-period" data-i18n="premium_tier_per_month">/mo</span></div>
+                        <div class="premium-tier-price-main">$4.99<span class="premium-tier-period" data-i18n="premium_tier_per_month">/mo</span></div>
                     </div>
-                    <div class="premium-tier-option featured" data-tier="semiannual" onclick="selectPremiumTier(this)">
-                        <div class="premium-tier-badge" data-i18n="premium_tier_save_badge">Save 26%</div>
-                        <div class="premium-tier-name" data-i18n="premium_tier_semiannual">Semi-Annual</div>
-                        <div class="premium-tier-price-main">$6.67<span class="premium-tier-period" data-i18n="premium_tier_per_month">/mo</span></div>
-                        <div class="premium-tier-price-sub" data-i18n="premium_tier_semiannual_billed">Billed $39.99 every 6 months</div>
+                    <!-- מחירים מ-2026-11-07 (לפי החלטה מפורשת): $4.99 לחודש, $29.99 לשנה (במקום $8.99 / $39.99 לחצי שנה). מפתחות ה-i18n
+                         נשארו premium_tier_semiannual* אבל הטקסט שלהם הוא עכשיו "שנתי" -->
+                    <div class="premium-tier-option featured" data-tier="yearly" onclick="selectPremiumTier(this)">
+                        <div class="premium-tier-badge" data-i18n="premium_tier_save_badge">Save 50%</div>
+                        <div class="premium-tier-name" data-i18n="premium_tier_semiannual">Yearly</div>
+                        <div class="premium-tier-price-main">$2.50<span class="premium-tier-period" data-i18n="premium_tier_per_month">/mo</span></div>
+                        <div class="premium-tier-price-sub" data-i18n="premium_tier_semiannual_billed">Billed $29.99 a year</div>
                     </div>
                 </div>
                 <button class="btn-primary btn-premium-cta" onclick="submitPremiumUpgrade(this)" data-i18n="premium_upgrade_cta">Upgrade Now</button>
@@ -4483,16 +4485,16 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=508"></script>
+    <script src="i18n/core.js?v=509"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=634"></script>
+    <script src="app.js?v=635"></script>
     <script src="ai-chat.js?v=7"></script>
     <script src="goals-library.js?v=4"></script>
     <script src="bag.js?v=9"></script>
     <script src="tables.js?v=4"></script>
     <script src="workouts.js?v=10"></script>
     <script src="new-me-data.js?v=18"></script>
-    <script src="new-me.js?v=79"></script>
+    <script src="new-me.js?v=80"></script>
     <script src="new-me-challenges.js?v=12"></script>
     <script src="secret-room.js?v=39"></script>
     <script src="secret-places.js?v=31"></script>
