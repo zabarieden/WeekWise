@@ -11,8 +11,8 @@ self.addEventListener('push', (event) => {
     const title = payload.title || 'NOT10.ai';
     const options = {
         body: payload.body || '',
-        icon: 'icon.png',
-        badge: 'icon.png',
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
         tag: payload.tag || 'weekwise-push-reminder'
     };
     // actions/data: כפתורי בוצע/עוד-לא ישירות על התראת-המערכת - מגיעים

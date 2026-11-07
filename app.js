@@ -2469,7 +2469,7 @@ function appTourRender(step) {
     skip.title = t('apptour_skip');
     // מסך הפתיחה מציג את האייקון של האפליקציה; שלב בלי אלמנט מודגש - אייקון גדול באריח
     const hero = layer.querySelector('.app-tour-hero');
-    hero.innerHTML = step.agenda ? '<img src="icon.png" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
+    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=6" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
     hero.classList.toggle('is-brand', !!step.agenda);
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
