@@ -114,7 +114,48 @@ function requestPersistentStorage() {
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch { /* לא נתמך */ }
 }
 
+// 🐞 דיווח שגיאות ל-Sentry (לפי בקשה מפורשת, 2026-11-07: "נתחיל בזה Sentry"): כשמשהו נשבר אצל משתמש, השגיאה מגיעה
+// אלינו עם הדפדפן, המכשיר ושורת הקוד - בלי תוכן (פתקים, אוכל, כסף), בלי מייל ובלי IP. רק שגיאות, בלי הקלטת מסך.
+// כבוי כל עוד SENTRY_DSN ריק, וגם בבדיקות מקומיות. ה-DSN ציבורי בכוונה (Sentry > Project Settings > Client Keys)
+const SENTRY_DSN = '';
+function initErrorReporting() {
+    const key = (SENTRY_DSN.match(/^https:\/\/([0-9a-f]+)@/) || [])[1];
+    if (!key || /^(localhost|127\.)/.test(location.hostname)) return;
+    const release = (document.querySelector('script[src^="app.js?v="]')?.getAttribute('src') || '').split('v=')[1] || 'dev';
+    // כתובת בלי ? ו-# - שם יכולים להיות מפתחות כניסה (קישור איפוס סיסמה, חזרה מגוגל)
+    const bare = url => String(url || '').split(/[?#]/)[0];
+    // ה-SDK עצמו נטען רק כשיש שגיאה ראשונה (Loader של Sentry), ואז זה רץ
+    window.sentryOnLoad = () => { Sentry.init({
+        release: `app@${release}`,
+        environment: 'production',
+        sendDefaultPii: false,
+        ignoreErrors: ['ResizeObserver loop', 'Non-Error promise rejection captured', 'Failed to fetch', 'Load failed', 'NetworkError when attempting to fetch resource'],
+        denyUrls: [/^(chrome|moz|safari(-web)?)-extension:/i, /^chrome:\/\//i],
+        beforeSend(event) {
+            if (event.user) event.user = { id: event.user.id };
+            if (event.request) { event.request.url = bare(event.request.url); delete event.request.headers; delete event.request.cookies; }
+            return event;
+        },
+        beforeBreadcrumb(crumb) {
+            if (crumb.data?.url) crumb.data.url = bare(crumb.data.url);
+            if (crumb.data?.from) crumb.data.from = bare(crumb.data.from);
+            if (crumb.data?.to) crumb.data.to = bare(crumb.data.to);
+            // הודעות console יכולות להכיל נתונים - לא שולחים אותן
+            return crumb.category === 'console' ? null : crumb;
+        },
+    }); setErrorReportingUser(currentUserId); };
+    const s = document.createElement('script');
+    s.src = `https://js.sentry-cdn.com/${key}.min.js`;
+    s.crossOrigin = 'anonymous';
+    document.head.appendChild(s);
+}
+// מזהה החשבון בלבד (לא מייל), כדי לדעת אם אותה תקלה חוזרת אצל אותו אדם
+function setErrorReportingUser(id) {
+    try { if (window.Sentry && Sentry.setUser) Sentry.setUser(id ? { id } : null); } catch { /* עוד לא נטען */ }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    initErrorReporting();
     loadSavedLanguage();
     applyLightMode(isLightModeOn());
     applyHighContrast(isHighContrastOn());
@@ -2788,6 +2829,7 @@ async function initAppAfterAuth(user) {
     currentUsername = user.email;
     currentUserCreatedAt = user.created_at;
     requestPersistentStorage();
+    setErrorReportingUser(user.id);
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     requestAnimationFrame(repositionPeekTabStack);
