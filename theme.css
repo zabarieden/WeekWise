@@ -10873,8 +10873,8 @@ body.wk-dragging, body.wk-dragging * { cursor: grabbing !important; -webkit-user
 .nmg-hall:active .nmg-btn { transform: scale(.94); }
 /* במפה - רק המפה: בלי שני הטורים שבצדדים */
 .phone-wrapper.nmg-map-open .nmg-rail, .phone-wrapper.nmg-bag-open .nmg-rail { display: none; }
-/* בעולם של המשחק העוזר החכם לא מציץ מתחת לשורה התחתונה (המסדרון, החדר, המקומות והמפה) */
-.phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) #btn-ai-brain-fab, .phone-wrapper:has(#nm-hud):has(#sr-overlay) #btn-ai-brain-fab, .phone-wrapper.nmg-map-open #btn-ai-brain-fab { display: none; }
+/* בכל New Me (התפריט, האתגרים, המשחק, החדר והמפה) עוזר ה-AI לא מופיע בכלל - לפי בקשה ("בNEW ME שלא יראו את העוזר האישי בכלל") */
+.phone-wrapper:has(#new-me-section.active-tab) #btn-ai-brain-fab, .phone-wrapper:has(#sr-overlay) #btn-ai-brain-fab, .phone-wrapper.nmg-map-open #btn-ai-brain-fab { display: none; }
 /* הכפתור הקטן של המפתחת - מעל השורה התחתונה של המשחק (לא מתחתיה) */
 .phone-wrapper:has(#nm-hud):has(#new-me-section.active-tab.nm-hall-mode) .dev-sim-float { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
 /* הדמות של המשתמש/ת: Me1 / Me2 / Me3 (הציורים שלה) - מרחפת מעל השביל (הצל שעל הקרקע קטן כשהיא עולה), וגוררים אותה

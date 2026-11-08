@@ -1269,6 +1269,8 @@ translations.vi = {
     ai_chat_food_updated: "Đã cập nhật:",
     faq_a_ai_chat_food_fix: "Có. Bên dưới câu trả lời trong cuộc trò chuyện, chạm ✏️ Sửa calo / đạm, đổi số rồi chạm Lưu. Chỉ phần vừa thêm thay đổi – kể cả khi nó đã được gộp vào một bữa phụ có sẵn. AI có thể sai, nên xem lại nhanh một chút là tốt.",
     faq_a_new_me_home_btn: "Nếu bạn có New Me, một 💎 nhỏ cạnh chế độ tập trung ở đầu màn hình chính sẽ mở thực đơn hôm nay. Các bữa ăn hôm nay cũng hiện trong Ngày Của Tôi, mỗi bữa có một ✓.",
+    faq_q_new_me_no_ai: "Trợ lý AI ở đâu trong New Me?",
+    faq_a_new_me_no_ai: "Trong New Me, bong bóng trợ lý AI không xuất hiện để màn hình luôn yên tĩnh và gọn gàng. Bạn có thể tìm thấy nó ở màn hình chính.",
     faq_a_routine_item_days: "Có. Chạm vào mục trong Thói Quen Của Tôi và chọn ngày của nó ở 📅 Ngày – ví dụ chỉ từ thứ Hai đến thứ Sáu. Những ngày khác nó không hiện trong Ngày Của Tôi và không có ✓; trong Thói Quen Của Tôi nó vẫn ở đó, mờ hơn, kèm các ngày bên cạnh. Thẻ hỏi về một mục sau 3 ngày không có ✓ cũng chỉ đếm các ngày của mục đó.",
     faq_q_ai_chat_food_fix: "Có thể sửa calo hoặc đạm sau khi trợ lý ghi món ăn không?",
     faq_q_new_me_home_btn: "New Me nằm ở đâu trên màn hình chính?",

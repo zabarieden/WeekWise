@@ -1269,6 +1269,8 @@ translations.ca = {
     ai_chat_food_updated: "Actualitzat:",
     faq_a_ai_chat_food_fix: "Sí. Sota la resposta al xat, toca ✏️ Corregir calories / proteïna, canvia els números i toca Desar. Només canvia el que s'acaba d'afegir – encara que s'hagi sumat a un berenar que ja hi era. La IA es pot equivocar, així que val la pena revisar-ho.",
     faq_a_new_me_home_btn: "Amb New Me, un petit 💎 al costat del mode concentració, a dalt de la pantalla d'inici, obre el menú d'avui. Els àpats d'avui també surten a El Meu Dia, cadascun amb la seva ✓.",
+    faq_q_new_me_no_ai: "On és l'assistent d'IA a New Me?",
+    faq_a_new_me_no_ai: "Dins de New Me la bombolla de l'assistent d'IA no apareix, perquè la pantalla quedi tranquil·la i neta. La trobes a la pantalla d'inici.",
     faq_a_routine_item_days: "Sí. Toca l'element a La Meva Rutina i tria'n els dies a 📅 Dies – per exemple, només de dilluns a divendres. Els altres dies no surt a El Meu Dia i no té ✓; a La Meva Rutina s'hi queda, més pàl·lid, amb els dies al costat. La targeta que pregunta per un element després de 3 dies sense ✓ només compta els dies d'aquest element.",
     faq_q_ai_chat_food_fix: "Puc corregir les calories o la proteïna després que l'assistent registri menjar?",
     faq_q_new_me_home_btn: "On és New Me a la pantalla d'inici?",

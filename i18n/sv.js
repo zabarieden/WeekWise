@@ -1269,6 +1269,8 @@ translations.sv = {
     ai_chat_food_updated: "Uppdaterat:",
     faq_a_ai_chat_food_fix: "Ja. Under svaret i chatten trycker du på ✏️ Rätta kalorier / protein, ändrar siffrorna och trycker på Spara. Bara det som just lades till ändras – även om det slogs ihop med ett mellanmål som redan fanns. AI kan göra misstag, så det lönar sig att kolla snabbt.",
     faq_a_new_me_home_btn: "Med New Me öppnar en liten 💎 bredvid fokusläget, högst upp på hemskärmen, dagens meny. Dagens måltider syns också i Min Dag, var och en med en ✓.",
+    faq_q_new_me_no_ai: "Var finns AI-assistenten i New Me?",
+    faq_a_new_me_no_ai: "Inne i New Me syns inte AI-assistentens bubbla, så att skärmen förblir lugn och luftig. Den finns på startskärmen.",
     faq_a_routine_item_days: "Ja. Tryck på punkten i Min Rutin och välj dess dagar under 📅 Dagar – till exempel bara måndag till fredag. Övriga dagar syns den inte i Min Dag och har ingen ✓; i Min Rutin finns den kvar, blekare, med sina dagar bredvid. Kortet som frågar om en punkt efter 3 dagar utan ✓ räknar bara punktens egna dagar.",
     faq_q_ai_chat_food_fix: "Kan jag rätta kalorier eller protein efter att assistenten har loggat mat?",
     faq_q_new_me_home_btn: "Var finns New Me på hemskärmen?",

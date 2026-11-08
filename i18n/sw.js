@@ -1269,6 +1269,8 @@ translations.sw = {
     ai_chat_food_updated: "Imesasishwa:",
     faq_a_ai_chat_food_fix: "Ndiyo. Chini ya jibu kwenye gumzo, gusa ✏️ Rekebisha kalori / protini, badilisha namba kisha gusa Hifadhi. Kinachobadilika ni kile kilichoongezwa sasa hivi tu – hata kama kiliunganishwa na kitafunio kilichokuwepo. AI inaweza kukosea, kwa hiyo ni vizuri kuangalia haraka.",
     faq_a_new_me_home_btn: "Ukiwa na New Me, 💎 ndogo kando ya hali ya umakini juu ya skrini ya mwanzo hufungua menyu ya leo. Milo ya leo pia inaonekana katika Siku Yangu, kila mmoja ukiwa na ✓.",
+    faq_q_new_me_no_ai: "Msaidizi wa AI yuko wapi ndani ya New Me?",
+    faq_a_new_me_no_ai: "Ndani ya New Me kiputo cha msaidizi wa AI hakionekani, ili skrini ibaki tulivu na safi. Kinapatikana kwenye skrini ya mwanzo.",
     faq_a_routine_item_days: "Ndiyo. Gusa kipengele katika Ratiba Yangu na uchague siku zake chini ya 📅 Siku – kwa mfano Jumatatu hadi Ijumaa tu. Siku nyingine hakionekani katika Siku Yangu na hakina ✓; katika Ratiba Yangu kinabaki, kikiwa hafifu zaidi, na siku zake kando yake. Kadi inayouliza kuhusu kipengele baada ya siku 3 bila ✓ huhesabu siku za kipengele hicho tu.",
     faq_q_ai_chat_food_fix: "Je, naweza kurekebisha kalori au protini baada ya msaidizi kurekodi chakula?",
     faq_q_new_me_home_btn: "New Me iko wapi kwenye skrini ya mwanzo?",

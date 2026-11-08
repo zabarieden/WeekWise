@@ -1269,6 +1269,8 @@ translations.fi = {
     ai_chat_food_updated: "Päivitetty:",
     faq_a_ai_chat_food_fix: "Voi. Napauta keskustelussa vastauksen alla ✏️ Korjaa kalorit / proteiini, muuta lukuja ja napauta Tallenna. Vain juuri lisätty osa muuttuu – vaikka se olisi liitetty jo olemassa olleeseen välipalaan. Tekoäly voi erehtyä, joten nopea tarkistus kannattaa.",
     faq_a_new_me_home_btn: "Jos sinulla on New Me, pieni 💎 keskittymistilan vieressä aloitusnäytön yläreunassa avaa tämän päivän ruokalistan. Tämän päivän ateriat näkyvät myös Päiväni-näkymässä, jokaisella oma ✓.",
+    faq_q_new_me_no_ai: "Missä tekoälyavustaja on New Messä?",
+    faq_a_new_me_no_ai: "New Me -osiossa tekoälyavustajan kupla ei näy, jotta näkymä pysyy rauhallisena ja selkeänä. Se löytyy aloitusnäytöltä.",
     faq_a_routine_item_days: "Voi. Napauta kohtaa Rutiinini-näkymässä ja valitse sen päivät kohdasta 📅 Päivät – esimerkiksi vain maanantaista perjantaihin. Muina päivinä se ei näy Päiväni-näkymässä eikä siinä ole ✓:aa; Rutiinini-näkymässä se pysyy, haaleampana, päivät vieressään. Kortti, joka kysyy kohdasta 3 päivän ilman ✓:aa jälkeen, laskee vain kohdan omat päivät.",
     faq_q_ai_chat_food_fix: "Voiko kaloreita tai proteiinia korjata, kun avustaja on kirjannut ruoan?",
     faq_q_new_me_home_btn: "Missä New Me on aloitusnäytöllä?",

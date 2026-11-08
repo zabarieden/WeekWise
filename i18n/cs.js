@@ -1269,6 +1269,8 @@ translations.cs = {
     ai_chat_food_updated: "Aktualizováno:",
     faq_a_ai_chat_food_fix: "Ano. Pod odpovědí v chatu klepněte na ✏️ Opravit kalorie / bílkoviny, změňte čísla a klepněte na Uložit. Změní se jen to, co se právě přidalo – i když se to připojilo ke svačině, která už tam byla. AI se může mýlit, proto se vyplatí to rychle zkontrolovat.",
     faq_a_new_me_home_btn: "S New Me otevře malý 💎 vedle režimu soustředění, nahoře na domovské obrazovce, dnešní menu. Dnešní jídla jsou vidět i v Mém Dni, každé s ✓.",
+    faq_q_new_me_no_ai: "Kde je AI asistent v New Me?",
+    faq_a_new_me_no_ai: "Uvnitř New Me se bublina AI asistenta nezobrazuje, aby obrazovka zůstala klidná a přehledná. Najdete ji na domovské obrazovce.",
     faq_a_routine_item_days: "Ano. Klepněte na položku v Moje Rutina a vyberte její dny v 📅 Dny – například jen pondělí až pátek. V ostatní dny se v Můj Den neukazuje a nemá ✓; v Moje Rutina zůstává, bledší, s dny vedle sebe. Karta, která se po 3 dnech bez ✓ ptá na položku, počítá jen dny té položky.",
     faq_q_ai_chat_food_fix: "Dají se opravit kalorie nebo bílkoviny poté, co asistent zapíše jídlo?",
     faq_q_new_me_home_btn: "Kde je New Me na domovské obrazovce?",

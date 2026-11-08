@@ -1269,6 +1269,8 @@ translations.nb = {
     ai_chat_food_updated: "Oppdatert:",
     faq_a_ai_chat_food_fix: "Ja. Under svaret i chatten trykker du på ✏️ Rett kalorier / protein, endrer tallene og trykker på Lagre. Bare det som nettopp ble lagt til endres – også om det ble slått sammen med et mellommåltid som allerede var der. KI kan ta feil, så det lønner seg å sjekke raskt.",
     faq_a_new_me_home_btn: "Med New Me åpner en liten 💎 ved siden av fokusmodus, øverst på startskjermen, dagens meny. Dagens måltider vises også i Min Dag, hvert med en ✓.",
+    faq_q_new_me_no_ai: "Hvor er KI-assistenten i New Me?",
+    faq_a_new_me_no_ai: "Inne i New Me vises ikke boblen til KI-assistenten, slik at skjermen holder seg rolig og ryddig. Den finner du på startskjermen.",
     faq_a_routine_item_days: "Ja. Trykk på punktet i Min Rutine og velg dagene under 📅 Dager – for eksempel bare mandag til fredag. De andre dagene vises det ikke i Min Dag og har ingen ✓; i Min Rutine blir det stående, blekere, med dagene ved siden av. Kortet som spør om et punkt etter 3 dager uten ✓, teller bare punktets egne dager.",
     faq_q_ai_chat_food_fix: "Kan jeg rette kalorier eller protein etter at assistenten har ført opp mat?",
     faq_q_new_me_home_btn: "Hvor er New Me på startskjermen?",

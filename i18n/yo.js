@@ -1269,6 +1269,8 @@ translations.yo = {
     ai_chat_food_updated: "A ti ṣe àtúnṣe:",
     faq_a_ai_chat_food_fix: "Bẹ́ẹ̀ ni. Ní ìsàlẹ̀ ìdáhùn nínú ìjíròrò, tẹ ✏️ Ṣàtúnṣe kálórì / protein, yí àwọn nọ́ńbà padà kí o sì tẹ Fi Pamọ́. Ohun tí a ṣẹ̀ṣẹ̀ fi kún nìkan ló ń yí padà – kódà bí ó bá ti dara pọ̀ mọ́ ìpanu tó ti wà tẹ́lẹ̀. AI lè ṣe àṣìṣe, nítorí náà ó dára láti yẹ̀ ẹ́ wò kíákíá.",
     faq_a_new_me_home_btn: "Tí o bá ní New Me, 💎 kékeré kan lẹ́gbẹ̀ẹ́ ipò àfojúsùn ní òkè ojú-ìwé ilé ń ṣí àkójọ oúnjẹ ti òní. Àwọn oúnjẹ òní tún ń hàn nínú Ọjọ́ Mi, ọ̀kọ̀ọ̀kan pẹ̀lú ✓.",
+    faq_q_new_me_no_ai: "Níbo ni olùrànlọ́wọ́ AI wà nínú New Me?",
+    faq_a_new_me_no_ai: "Nínú New Me, àmì olùrànlọ́wọ́ AI kò ní hàn, kí ojú-ìwé lè dákẹ́ kí ó sì wà ní mímọ́. Ó wà lórí ojú-ìwé ilé.",
     faq_a_routine_item_days: "Bẹ́ẹ̀ ni. Tẹ ohun náà nínú Ìlànà Mi, kí o sì yan àwọn ọjọ́ rẹ̀ ní 📅 Àwọn ọjọ́ – fún àpẹẹrẹ Ọjọ́ Ajé sí Ọjọ́ Ẹtì nìkan. Ní àwọn ọjọ́ yòókù kò ní hàn nínú Ọjọ́ Mi, kò sì ní ✓; nínú Ìlànà Mi ó ṣì wà, ó rẹ̀wẹ̀sì díẹ̀, pẹ̀lú àwọn ọjọ́ rẹ̀ lẹ́gbẹ̀ẹ́ rẹ̀. Káàdì tó ń béèrè nípa ohun kan lẹ́yìn ọjọ́ 3 láìsí ✓ ń ka àwọn ọjọ́ ti ohun náà nìkan.",
     faq_q_ai_chat_food_fix: "Ṣé mo lè ṣàtúnṣe kálórì tàbí protein lẹ́yìn tí olùrànlọ́wọ́ bá kọ oúnjẹ sílẹ̀?",
     faq_q_new_me_home_btn: "Níbo ni New Me wà lórí ojú-ìwé ilé?",

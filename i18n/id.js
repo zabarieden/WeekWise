@@ -1269,6 +1269,8 @@ translations.id = {
     ai_chat_food_updated: "Diperbarui:",
     faq_a_ai_chat_food_fix: "Bisa. Di bawah jawaban di obrolan, ketuk ✏️ Perbaiki kalori / protein, ubah angkanya, lalu ketuk Simpan. Hanya yang baru ditambahkan yang berubah – meski sudah tergabung ke camilan yang sudah ada. AI bisa salah, jadi ada baiknya dicek sebentar.",
     faq_a_new_me_home_btn: "Jika punya New Me, 💎 kecil di samping mode fokus di bagian atas layar utama membuka menu hari ini. Makanan hari ini juga muncul di Hariku, masing-masing dengan ✓.",
+    faq_q_new_me_no_ai: "Di mana asisten AI di New Me?",
+    faq_a_new_me_no_ai: "Di dalam New Me gelembung asisten AI tidak muncul, supaya layar tetap tenang dan rapi. Asisten itu ada di layar utama.",
     faq_a_routine_item_days: "Bisa. Ketuk item di Rutinitas Saya dan pilih harinya di 📅 Hari – misalnya hanya Senin sampai Jumat. Di hari lain item itu tidak muncul di Hariku dan tidak punya ✓; di Rutinitas Saya item tetap ada, lebih pudar, dengan harinya di sebelahnya. Kartu yang bertanya tentang item setelah 3 hari tanpa ✓ hanya menghitung hari milik item itu.",
     faq_q_ai_chat_food_fix: "Bisakah memperbaiki kalori atau protein setelah asisten mencatat makanan?",
     faq_q_new_me_home_btn: "Di mana New Me di layar utama?",

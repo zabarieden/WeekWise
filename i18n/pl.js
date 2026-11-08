@@ -1269,6 +1269,8 @@ translations.pl = {
     ai_chat_food_updated: "Zaktualizowano:",
     faq_a_ai_chat_food_fix: "Tak. Pod odpowiedzią na czacie dotknij ✏️ Popraw kalorie / białko, zmień liczby i dotknij Zapisz. Zmienia się tylko to, co właśnie dodano – nawet jeśli dołączyło do przekąski, która już była. AI może się mylić, więc warto szybko sprawdzić.",
     faq_a_new_me_home_btn: "Przy New Me mały 💎 obok trybu skupienia, u góry ekranu głównego, otwiera dzisiejsze menu. Dzisiejsze posiłki widać też w Moim Dniu, każdy z ✓.",
+    faq_q_new_me_no_ai: "Gdzie jest asystent AI w New Me?",
+    faq_a_new_me_no_ai: "W New Me bańka asystenta AI się nie pojawia, żeby ekran był spokojny i przejrzysty. Znajdziesz ją na ekranie głównym.",
     faq_a_routine_item_days: "Tak. Dotknij punktu w Mojej Rutynie i wybierz jego dni w 📅 Dni – na przykład tylko od poniedziałku do piątku. W pozostałe dni nie pojawia się w Moim Dniu i nie ma ✓; w Mojej Rutynie zostaje, bledszy, z dniami obok. Karta, która pyta o punkt po 3 dniach bez ✓, liczy tylko jego dni.",
     faq_q_ai_chat_food_fix: "Czy można poprawić kalorie lub białko, gdy asystent zapisze jedzenie?",
     faq_q_new_me_home_btn: "Gdzie jest New Me na ekranie głównym?",

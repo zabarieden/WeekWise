@@ -1269,6 +1269,8 @@ translations.en = {
     ai_chat_food_updated: "Updated:",
     faq_a_ai_chat_food_fix: "Yes. Under the answer in the chat, tap ✏️ Fix calories / protein, change the numbers and tap Save. Only what was just added changes – even if it joined a snack that was already there. AI can make mistakes, so it's worth a quick check.",
     faq_a_new_me_home_btn: "If you have New Me, a small 💎 next to focus mode at the top of the home screen opens today's menu. Today's meals also appear in My Day, each with a ✓.",
+    faq_q_new_me_no_ai: "Where is the AI assistant in New Me?",
+    faq_a_new_me_no_ai: "Inside New Me the AI assistant bubble doesn't appear, so the screen stays calm and uncluttered. It's on the home screen.",
     faq_a_routine_item_days: "Yes. Tap the item in My Routine and choose its days under 📅 Days – for example only Monday to Friday. On its other days it doesn't show in My Day and has no ✓; in My Routine it stays, faded, with its days next to it. The card that asks about an item after 3 days without ✓ counts only the item's own days.",
     faq_q_ai_chat_food_fix: "Can I fix the calories or protein after the assistant logs food?",
     faq_q_new_me_home_btn: "Where is New Me on the home screen?",

@@ -1269,6 +1269,8 @@ translations.ro = {
     ai_chat_food_updated: "Actualizat:",
     faq_a_ai_chat_food_fix: "Da. Sub răspunsul din chat, atinge ✏️ Corectează calorii / proteine, schimbă numerele și atinge Salvează. Se schimbă doar ce tocmai a fost adăugat – chiar dacă s-a alăturat unei gustări care exista deja. AI poate greși, așa că merită o verificare rapidă.",
     faq_a_new_me_home_btn: "Cu New Me, un mic 💎 lângă modul concentrare, sus pe ecranul principal, deschide meniul de azi. Mesele de azi apar și în Ziua Mea, fiecare cu ✓.",
+    faq_q_new_me_no_ai: "Unde este asistentul AI în New Me?",
+    faq_a_new_me_no_ai: "În New Me bula asistentului AI nu apare, ca ecranul să rămână liniștit și aerisit. O găsești pe ecranul principal.",
     faq_a_routine_item_days: "Da. Atinge elementul în Rutina Mea și alege-i zilele la 📅 Zile – de exemplu doar de luni până vineri. În celelalte zile nu apare în Ziua Mea și nu are ✓; în Rutina Mea rămâne, mai estompat, cu zilele lui alături. Cardul care întreabă despre un element după 3 zile fără ✓ numără doar zilele acelui element.",
     faq_q_ai_chat_food_fix: "Se pot corecta caloriile sau proteinele după ce asistentul notează mâncarea?",
     faq_q_new_me_home_btn: "Unde este New Me pe ecranul principal?",

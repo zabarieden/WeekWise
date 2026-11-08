@@ -1269,6 +1269,8 @@ translations.hu = {
     ai_chat_food_updated: "Frissítve:",
     faq_a_ai_chat_food_fix: "Igen. A csevegésben a válasz alatt koppints a ✏️ Kalória / fehérje javítása gombra, írd át a számokat, és koppints a Mentésre. Csak az változik, amit most adtál hozzá – akkor is, ha egy már meglévő nassoláshoz került. Az AI hibázhat, ezért érdemes gyorsan ránézni.",
     faq_a_new_me_home_btn: "Ha van New Me-d, a kezdőképernyő tetején, a fókusz mód mellett egy kis 💎 nyitja meg a mai menüt. A mai étkezések A Napomban is látszanak, mindegyik ✓-val.",
+    faq_q_new_me_no_ai: "Hol van az AI asszisztens a New Me-ben?",
+    faq_a_new_me_no_ai: "A New Me-n belül az AI asszisztens buboréka nem jelenik meg, hogy a képernyő nyugodt és letisztult maradjon. A kezdőképernyőn találod.",
     faq_a_routine_item_days: "Igen. Koppints az elemre a Rutinomban, és válaszd ki a napjait a 📅 Napok alatt – például csak hétfőtől péntekig. A többi napon nem jelenik meg A Napomban, és nincs ✓-ja; a Rutinomban halványabban ott marad, mellette a napjaival. A kártya, amely 3 ✓ nélküli nap után rákérdez egy elemre, csak az elem saját napjait számolja.",
     faq_q_ai_chat_food_fix: "Javítható a kalória vagy a fehérje, miután az asszisztens rögzítette az ételt?",
     faq_q_new_me_home_btn: "Hol van a New Me a kezdőképernyőn?",

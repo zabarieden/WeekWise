@@ -1269,6 +1269,8 @@ translations.tr = {
     ai_chat_food_updated: "Güncellendi:",
     faq_a_ai_chat_food_fix: "Evet. Sohbetteki yanıtın altında ✏️ Kalori / proteini düzelt'e dokun, sayıları değiştir ve Kaydet'e dokun. Yalnızca az önce eklenen kısım değişir – zaten var olan bir ara öğüne eklenmiş olsa bile. Yapay zeka hata yapabilir, kısa bir kontrol iyi olur.",
     faq_a_new_me_home_btn: "New Me'n varsa, ana ekranın üstünde odak modunun yanındaki küçük 💎 bugünün menüsünü açar. Bugünün öğünleri Günüm'de de her biri bir ✓ ile görünür.",
+    faq_q_new_me_no_ai: "New Me'de AI asistan nerede?",
+    faq_a_new_me_no_ai: "New Me'nin içinde AI asistan baloncuğu görünmez; ekran sakin ve sade kalsın diye. Ana ekranda bulabilirsin.",
     faq_a_routine_item_days: "Evet. Rutinim'de öğeye dokun ve 📅 Günler altında günlerini seç – örneğin yalnızca pazartesiden cumaya. Diğer günlerde Günüm'de görünmez ve ✓ almaz; Rutinim'de ise daha soluk olarak, yanında günleriyle kalır. 3 gün ✓ olmayınca bir öğe hakkında soran kart da yalnızca o öğenin günlerini sayar.",
     faq_q_ai_chat_food_fix: "Asistan yemeği kaydettikten sonra kaloriyi veya proteini düzeltebilir miyim?",
     faq_q_new_me_home_btn: "Ana ekranda New Me nerede?",

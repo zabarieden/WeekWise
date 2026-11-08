@@ -1269,6 +1269,8 @@ translations.nl = {
     ai_chat_food_updated: "Bijgewerkt:",
     faq_a_ai_chat_food_fix: "Ja. Tik onder het antwoord in de chat op ✏️ Calorieën / eiwit aanpassen, verander de getallen en tik op Opslaan. Alleen wat net is toegevoegd verandert – ook als het bij een tussendoortje kwam dat er al stond. AI kan fouten maken, dus even controleren is slim.",
     faq_a_new_me_home_btn: "Met New Me opent een kleine 💎 naast de focusmodus, bovenaan het startscherm, het menu van vandaag. De maaltijden van vandaag staan ook in Mijn Dag, elk met een ✓.",
+    faq_q_new_me_no_ai: "Waar is de AI-assistent in New Me?",
+    faq_a_new_me_no_ai: "In New Me verschijnt de bubbel van de AI-assistent niet, zodat het scherm rustig en overzichtelijk blijft. Je vindt hem op het startscherm.",
     faq_a_routine_item_days: "Ja. Tik op het onderdeel in Mijn Routine en kies de dagen onder 📅 Dagen – bijvoorbeeld alleen maandag tot en met vrijdag. Op de andere dagen staat het niet in Mijn Dag en heeft het geen ✓; in Mijn Routine blijft het staan, vager, met de dagen ernaast. De kaart die na 3 dagen zonder ✓ naar een onderdeel vraagt, telt alleen de eigen dagen van dat onderdeel.",
     faq_q_ai_chat_food_fix: "Kan ik calorieën of eiwit aanpassen nadat de assistent eten heeft genoteerd?",
     faq_q_new_me_home_btn: "Waar staat New Me op het startscherm?",

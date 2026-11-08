@@ -1269,6 +1269,8 @@ translations.fr = {
     ai_chat_food_updated: "Mis à jour :",
     faq_a_ai_chat_food_fix: "Oui. Sous la réponse dans la conversation, touchez ✏️ Corriger calories / protéines, modifiez les chiffres et touchez Enregistrer. Seul ce qui vient d'être ajouté change – même si cela a rejoint une collation déjà présente. L'IA peut se tromper : mieux vaut vérifier.",
     faq_a_new_me_home_btn: "Avec New Me, un petit 💎 à côté du mode concentration, en haut de l'écran d'accueil, ouvre le menu du jour. Les repas du jour apparaissent aussi dans Ma Journée, chacun avec un ✓.",
+    faq_q_new_me_no_ai: "Où est l'assistant IA dans New Me ?",
+    faq_a_new_me_no_ai: "Dans New Me, la bulle de l'assistant IA n'apparaît pas, pour que l'écran reste calme et épuré. Vous la trouvez sur l'écran d'accueil.",
     faq_a_routine_item_days: "Oui. Touchez l'élément dans Ma Routine et choisissez ses jours sous 📅 Jours – par exemple seulement du lundi au vendredi. Les autres jours, il n'apparaît pas dans Ma Journée et n'a pas de ✓ ; dans Ma Routine il reste, plus pâle, avec ses jours à côté. La carte qui pose une question sur un élément après 3 jours sans ✓ ne compte que les jours de cet élément.",
     faq_q_ai_chat_food_fix: "Peut-on corriger les calories ou les protéines après que l'assistant a noté un repas ?",
     faq_q_new_me_home_btn: "Où est New Me sur l'écran d'accueil ?",

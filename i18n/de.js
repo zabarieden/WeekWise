@@ -1269,6 +1269,8 @@ translations.de = {
     ai_chat_food_updated: "Aktualisiert:",
     faq_a_ai_chat_food_fix: "Ja. Tippe unter der Antwort im Chat auf ✏️ Kalorien / Protein korrigieren, ändere die Zahlen und tippe auf Speichern. Es ändert sich nur, was gerade hinzugefügt wurde – auch wenn es zu einem schon vorhandenen Snack dazukam. KI kann sich irren, ein kurzer Blick lohnt sich.",
     faq_a_new_me_home_btn: "Wenn du New Me hast, öffnet ein kleines 💎 neben dem Fokusmodus oben auf dem Startbildschirm das Menü von heute. Die heutigen Mahlzeiten stehen auch in Mein Tag, jede mit einem ✓.",
+    faq_q_new_me_no_ai: "Wo ist der KI-Assistent in New Me?",
+    faq_a_new_me_no_ai: "In New Me erscheint die Blase des KI-Assistenten nicht, damit der Bildschirm ruhig und aufgeräumt bleibt. Du findest sie auf dem Startbildschirm.",
     faq_a_routine_item_days: "Ja. Tippe in Meine Routine auf den Punkt und wähle unter 📅 Tage seine Tage – zum Beispiel nur Montag bis Freitag. An den anderen Tagen erscheint er nicht in Mein Tag und hat kein ✓; in Meine Routine bleibt er, blasser, mit seinen Tagen daneben. Die Karte, die nach 3 Tagen ohne ✓ nach einem Punkt fragt, zählt nur seine eigenen Tage.",
     faq_q_ai_chat_food_fix: "Kann ich Kalorien oder Protein korrigieren, nachdem der Assistent Essen eingetragen hat?",
     faq_q_new_me_home_btn: "Wo ist New Me auf dem Startbildschirm?",
