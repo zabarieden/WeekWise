@@ -9660,7 +9660,7 @@ circle.nmt-fresh { transform-box: fill-box; transform-origin: center; animation:
 .nmt-plan { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 18px 6px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.05); transition: border-color 0.3s, background 0.3s, transform 0.3s; }
 .nmt-plan b { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
 .nmt-plan small { font-size: 0.74rem; opacity: 0.8; }
-.nmt-plan.is-on { border-color: #ff7ac0; background: rgba(255, 122, 192, 0.16); transform: scale(1.03); }
+.nmt-plan.is-on { border-color: #c4b0ff; background: rgba(196, 176, 255, 0.14); transform: scale(1.03); }
 .nmt-menu { display: flex; flex-direction: column; gap: 7px; }
 .nmt-menu-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); animation: nmtRowIn 0.4s ease-out both; animation-delay: calc(var(--i) * 0.18s); }
 @keyframes nmtRowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -9684,7 +9684,7 @@ circle.nmt-fresh { transform-box: fill-box; transform-origin: center; animation:
 .nmt-ch-dots { display: flex; gap: 6px; }
 .nmt-ch-dots i { width: 13px; height: 13px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid rgba(255, 210, 122, 0.6); transition: background 0.2s, transform 0.2s; }
 .nmt-ch-dots i.on { background: #ffd27a; transform: scale(1.1); }
-.nmt-ch-done { position: absolute; top: -10px; inset-inline-end: -10px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #ff7ac0; color: #fff; font-weight: 900; transform: scale(0); transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.nmt-ch-done { position: absolute; top: -10px; inset-inline-end: -10px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #b7a1f5; color: #fff; font-weight: 900; transform: scale(0); transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .nmt-challenge.is-done .nmt-ch-done { transform: scale(1); }
 .nmt-keyfly { position: absolute; z-index: 5; left: 50%; top: 26%; width: 30px; height: 30px; margin: -15px 0 0 -15px; opacity: 0; pointer-events: none; transition: left 0.85s cubic-bezier(0.5, 0, 0.3, 1), top 0.85s cubic-bezier(0.5, 0, 0.3, 1), transform 0.85s, opacity 0.3s; filter: drop-shadow(0 0 6px rgba(255, 210, 122, 0.8)); }
 .nmt-keyfly.is-on { opacity: 1; }
@@ -9694,7 +9694,7 @@ circle.nmt-fresh { transform-box: fill-box; transform-origin: center; animation:
 @keyframes nmtSpark { 0% { opacity: 0; transform: scale(0.3); } 30% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: translateY(-14px) scale(0.6); } }
 .nmt-end { position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; color: #fff; background: radial-gradient(circle at 50% 45%, rgba(94, 61, 88, 0.94), rgba(12, 7, 23, 0.97) 70%); opacity: 0; transition: opacity 0.6s; pointer-events: none; }
 .nmt-end.is-on { opacity: 1; }
-.nmt-end-mark { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: #f5c6ff; background: rgba(255, 122, 192, 0.14); box-shadow: 0 0 30px rgba(255, 122, 192, 0.35); }
+.nmt-end-mark { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: #e9dcff; background: rgba(196, 176, 255, 0.14); box-shadow: 0 0 30px rgba(196, 176, 255, 0.32); }
 .nmt-end-mark .nm-icon { width: 28px; height: 28px; }
 .nmt-end b { font-size: 1.5rem; letter-spacing: 0.02em; }
 .nmt-end-line { font-size: 0.95rem; opacity: 0.9; max-width: 26ch; text-wrap: balance; }
@@ -10367,6 +10367,8 @@ html[data-color-theme^="magic_"] .nm-btn-primary {
 .nls-washi { border-radius: 0; background: repeating-linear-gradient(45deg, #fde68a 0 3px, #fff3c4 3px 6px); clip-path: polygon(6% 0, 94% 6%, 100% 50%, 94% 94%, 6% 100%, 0 50%); }
 /* 📖 הספר במסך הבית + הנעיצה בפינת הקריאה */
 .home-chip-book span { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* הספרים במסך הבית - אחד מתחת לשני, עד 3 (2026-11-08) */
+.home-books { flex-basis: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .book-home-pin { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 .book-home-pin.on { border-color: var(--accent-purple); color: var(--text-primary); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); }
 .book-quick-row { display: flex; align-items: center; gap: 10px; }

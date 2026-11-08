@@ -28,12 +28,15 @@ function bookFmt(n) { return Number(n || 0).toLocaleString(currentLang); }
 // 📖 הספרים במסך הבית: "איזה עמוד אני?" - נגיעה, מספר חדש, וזה עוקב. כמה ספרים יחד (לפי בקשה מפורשת, 2026-10-20) -
 // כפתור קטן לכל אחד (user_premium.home_book_ids, בכל המכשירים; home_book_id = הראשון, לגרסאות ישנות)
 let booksHomeIds = [];
-function bookHomeBooks() { return booksHomeIds.map(id => booksCache.find(b => b.id === id && b.status === 'reading')).filter(Boolean); }
+// עד 3, אחד מתחת לשני (לפי בקשה מפורשת, 2026-11-08: "הספרים יהיו אחד מתחת לשני במסך הראשי... אפשר עד 3")
+const BOOKS_HOME_MAX = 3;
+function bookHomeBooks() { return booksHomeIds.map(id => booksCache.find(b => b.id === id && b.status === 'reading')).filter(Boolean).slice(0, BOOKS_HOME_MAX); }
 function bookHomeChipHtml() {
-    return bookHomeBooks().map(b => {
+    const chips = bookHomeBooks().map(b => {
         const page = t('books_home_chip').replace('{title}', b.title).replace('{page}', bookFmt(Number(b.current_page) || 0));
         return `<button type="button" class="home-chip home-chip-book" onclick="openBookPageQuick('${bookEsc(b.id)}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/></svg><span>${bookEsc(page)}</span></button>`;
     }).join('');
+    return chips ? `<div class="home-books">${chips}</div>` : '';
 }
 function openBookPageQuick(id) {
     const b = bookHomeBooks().find(x => x.id === id) || bookHomeBooks()[0];
@@ -56,6 +59,7 @@ function openBookPageQuick(id) {
 }
 async function toggleBookOnHome(bookId) {
     const on = !booksHomeIds.includes(bookId);
+    if (on && bookHomeBooks().length >= BOOKS_HOME_MAX) { showAppToast(t('books_home_max')); return; }
     booksHomeIds = on ? [...booksHomeIds, bookId] : booksHomeIds.filter(id => id !== bookId);
     renderBooks();
     if (typeof renderHomeChips === 'function') renderHomeChips();
