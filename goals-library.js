@@ -36,9 +36,10 @@ const GLIB_TEMPLATES = [
     { id: 'water', sub: 'health_body', icon: '💧', track: 'days', days: 30, tasks: 1 },
     { id: 'checkups', sub: 'health_check', icon: '🩺', track: 'steps', weeks: 8, stations: 3 },
 
+    // לרדת במשקל ראשון בנושא - שיראו אותו מיד (לפי בקשה מפורשת, 2026-11-08: "ביעדים להוסיף לרדת במשקל")
+    { id: 'lose_weight', sub: 'weight_lose', icon: '⚖️', track: 'weight', direction: 'lose' },
     { id: 'less_sugar', sub: 'weight_lose', icon: '🍬', track: 'days', days: 21, tasks: 2 },
     { id: 'more_veggies', sub: 'weight_eat', icon: '🥦', track: 'days', days: 30, tasks: 1 },
-    { id: 'lose_weight', sub: 'weight_lose', icon: '⚖️', track: 'weight', direction: 'lose' },
     { id: 'gain_weight', sub: 'weight_gain', icon: '💪', track: 'weight', direction: 'gain' },
     { id: 'regular_meals', sub: 'weight_gain', icon: '🍽️', track: 'days', days: 21, tasks: 3, at: [8, 13, 19] },
     { id: 'cook_home', sub: 'weight_eat', icon: '🍲', track: 'steps', weeks: 6, stations: 3 },
@@ -72,6 +73,8 @@ const GLIB_TEMPLATES = [
     { id: 'save_trip', sub: 'money_save', icon: '🏝️', track: 'steps', weeks: 16, stations: 4 },
     { id: 'track_expenses', sub: 'money_budget', icon: '🧾', track: 'days', days: 30, tasks: 1 },
     { id: 'cut_expense', sub: 'money_budget', icon: '✂️', track: 'steps', weeks: 3, stations: 3 },
+    // 💳 לצאת מהמינוס (לפי בקשה מפורשת, 2026-11-08: "ולהוסיף לצאת מהמינוס")
+    { id: 'out_of_minus', sub: 'money_debt', icon: '🏦', track: 'steps', weeks: 12, stations: 4 },
     { id: 'pay_debt', sub: 'money_debt', icon: '💳', track: 'steps', weeks: 24, stations: 4 },
 
     { id: 'buy_car', sub: 'buy_big', icon: '🚗', track: 'steps', weeks: 24, stations: 4 },
