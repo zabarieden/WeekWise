@@ -8180,6 +8180,13 @@ html[dir="rtl"] .home-focus-peek { right: auto; left: var(--then-gap); }
 .home-focus-peek:focus-visible { outline: 2px solid var(--focus-neon); outline-offset: 2px; }
 .home-focus-card.is-empty { align-items: center; text-align: center; padding: 26px 22px 28px; }
 .home-focus-empty { margin: 0; font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; }
+/* מצב מנוחה כשאין כלום פתוח: כוכבים שמנצנצים, בלי טקסט (2026-11-08, אפשרות 8). בצבע הערכה, כדי שיראו אותם גם בבהיר */
+.home-focus-rest { width: min(100%, 320px); aspect-ratio: 240 / 190; margin: 0 auto; }
+.home-focus-rest svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.hf-star { fill: var(--focus-neon); animation: hfTwinkle 2.8s ease-in-out infinite; }
+.hf-star.is-gold { fill: var(--accent-gold, #f5c76b); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-gold, #f5c76b) 70%, transparent)); }
+@keyframes hfTwinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hf-star { animation: none; opacity: .7; } }
 .home-focus-note { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--focus-glass-line); background: var(--focus-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 
 /* --- 🔍 חיפוש --- */

@@ -2110,7 +2110,7 @@ const APP_TOUR_STEPS = [
     { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
     { id: 'focus', ch: 'home', ctx: 'home', icon: '◎', target: '#btn-home-focus', titleKey: 'home_focus_label', text: 'apptour_focus_text', optional: true },
     // בתוך מצב הפוקוס עצמו (לפי בקשה מפורשת, 2026-11-08: "שהסיור יסביר על הפוקוס"): הכרטיס, פתק באמצע, יציאה
-    { id: 'f_card', ch: 'home', ctx: 'focus', icon: '◎', target: '#home-focus-body .home-focus-stack', titleKey: 'apptour_f_card_title', text: 'apptour_f_card_text', when: appTourFocusAvailable },
+    { id: 'f_card', ch: 'home', ctx: 'focus', icon: '◎', target: '#home-focus-body', titleKey: 'apptour_f_card_title', text: 'apptour_f_card_text', when: appTourFocusAvailable },
     { id: 'f_note', ch: 'home', ctx: 'focus', icon: '📝', target: '#home-focus-layer .home-focus-note', titleKey: 'apptour_f_note_title', text: 'apptour_f_note_text', when: appTourFocusAvailable },
     { id: 'f_exit', ch: 'home', ctx: 'focus', icon: '✕', target: '#home-focus-layer .home-focus-exit', titleKey: 'home_focus_exit_aria', text: 'apptour_f_exit_text', when: appTourFocusAvailable },
     { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },

@@ -460,6 +460,8 @@ let homeFocusPeekKey = '';   // הכרטיס שהובא קדימה בדפדוף 
 let homeFocusDeck = [];
 function homeFocusKey(item) { return `${item.title}|${item.minutes}`; }
 function isHomeFocusOn() { return document.body.classList.contains('home-focus-on'); }
+// [x, y, רדיוס, השהיה בשניות, זהב] - הכוכבים של מצב המנוחה בפוקוס
+const HOME_FOCUS_STARS = [[40, 40, 2.2, 0], [200, 30, 2.2, 0.9], [180, 150, 2.2, 1.7], [60, 150, 2.2, 0.9], [120, 24, 2.2, 1.7], [90, 96, 3, 0, true], [150, 80, 2.6, 0.9, true], [132, 120, 2, 1.7]];
 function toggleHomeFocus(force) {
     const on = typeof force === 'boolean' ? force : !isHomeFocusOn();
     document.body.classList.toggle('home-focus-on', on);
@@ -476,7 +478,14 @@ function renderHomeFocus() {
         homeFocusShownKey = '';
         homeFocusPeekKey = '';
         homeFocusDeck = [];
-        body.innerHTML = `<div class="home-focus-stack"><div class="home-focus-card is-empty"><p class="home-focus-empty">${myDayEsc(t('home_focus_empty'))}</p></div></div>`;
+        // אין כלום פתוח: מנוחה - כוכבים שמנצנצים בשקט, בלי טקסט (לפי בחירה מפורשת, 2026-11-08: אפשרות 8 "כוכבים"
+        // מתוך 20); המשפט נשאר רק לקורא מסך
+        // כוכב בעל 4 קצוות (נצנוץ), לא נקודה
+        const stars = HOME_FOCUS_STARS.map(([x, y, r, d, gold]) => {
+            const s = r * 2.6;
+            return `<path d="M${x} ${y - s}Q${x} ${y} ${x + s} ${y}Q${x} ${y} ${x} ${y + s}Q${x} ${y} ${x - s} ${y}Q${x} ${y} ${x} ${y - s}Z" class="hf-star${gold ? ' is-gold' : ''}" style="animation-delay:${d}s"/>`;
+        }).join('');
+        body.innerHTML = `<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
         return;
     }
     const after = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes);
