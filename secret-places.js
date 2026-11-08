@@ -1739,16 +1739,18 @@ async function roomLinkWishToGoal(goal) {
     if (typeof openGoalsVisionDrawer === 'function' && !document.getElementById('vision-drawer-overlay')?.classList.contains('open')) openGoalsVisionDrawer(goal.id);
 }
 
-// ---------- פעם בשבוע: משאלה אקראית מהצנצנת, בעדינות (פעם אחת, במכשיר אחד) ----------
+// ---------- פעם בשבוע: משאלה אקראית מהצנצנת, בעדינות (פעם אחת בשבוע, בכל המכשירים יחד) ----------
+// רק בתוך העולם (המסדרון של NOT10 Nourish+), לא במסך הבית: שם היא קפצה "סתם כך" באמצע האפליקציה, ו"לצנצנת" פתח את
+// החדר והחזיר למשחק (לפי בקשה מפורשת, 2026-11-08: "למה הצנצנת נפתחת כל הזמן... ואז זה מחזיר אותי למשחק")
 function roomWishPopupSoon() {
     if (roomWishPopupScheduled) return;
     roomWishPopupScheduled = true;
     let tries = 0;
     const attempt = async () => {
         tries++;
-        // רק במסך הבית, כשאין שום חלון פתוח (גם לא הסיור באפליקציה)
-        const busy = document.visibilityState === 'hidden' || (typeof appTourActive !== 'undefined' && appTourActive) || document.querySelector('.apple-modal.open, .nm-sheet-overlay, #sr-overlay, .tab-content.active-tab, .app-tour-layer');
-        if (busy) { if (tries < 12) setTimeout(attempt, 20000); return; }
+        const inWorld = document.querySelector('#new-me-section.active-tab .nmh');
+        const busy = !inWorld || document.visibilityState === 'hidden' || (typeof appTourActive !== 'undefined' && appTourActive) || document.querySelector('.apple-modal.open, .nm-sheet-overlay, #sr-overlay, .app-tour-layer');
+        if (busy) { if (tries < 180) setTimeout(attempt, 10000); return; }
         await roomWishPopupCheck();
     };
     setTimeout(attempt, 5000);
