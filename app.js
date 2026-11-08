@@ -2101,12 +2101,18 @@ const APP_TOUR_RESUME_KEY = 'weekwise_app_tour_resume';
 // מאז 2026-10-13 הסיור מראה הכול (לפי בקשה מפורשת: "את הסיור יותר טוב לעשות שיראה הכל"): מסך הבית, כל כלי
 // ה-AI, כל פריט בתפריט לפי הסדר שלו וההגדרות - עם "דבר בתוך דבר" (פריט בתפריט ואז פנימה: שביל היעדים, התיק,
 // ההתראות). כל שלב קצר; "לדלג על החלק הזה" ומסך הפתיחה עם החלקים שומרים על סיור ארוך נוח
+// שלבי הפוקוס בסיור - רק כשכפתור הפוקוס מוצג במסך הבית
+function appTourFocusAvailable() { const b = document.getElementById('btn-home-focus'); return !!(b && b.offsetParent !== null); }
 const APP_TOUR_STEPS = [
     // מסך הפתיחה: חלקי הסיור (כל אחד - נגיעה קופצת אליו), "להמשיך מאיפה שעצרתי" ו"לא עכשיו"
     { id: 'welcome', ch: 'home', ctx: 'home', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text', agenda: true },
     // מסך הבית - הכול (לפי בקשה מפורשת, 2026-10-13: "את הסיור יותר טוב לעשות שיראה הכל"): התאריך, מצב פוקוס, הפתק המהיר והיום שלי
     { id: 'date', ch: 'home', ctx: 'home', icon: '📅', target: '#home-greeting-date', titleKey: 'apptour_date_title', text: 'apptour_date_text', optional: true },
     { id: 'focus', ch: 'home', ctx: 'home', icon: '◎', target: '#btn-home-focus', titleKey: 'home_focus_label', text: 'apptour_focus_text', optional: true },
+    // בתוך מצב הפוקוס עצמו (לפי בקשה מפורשת, 2026-11-08: "שהסיור יסביר על הפוקוס"): הכרטיס, פתק באמצע, יציאה
+    { id: 'f_card', ch: 'home', ctx: 'focus', icon: '◎', target: '#home-focus-body .home-focus-stack', titleKey: 'apptour_f_card_title', text: 'apptour_f_card_text', when: appTourFocusAvailable },
+    { id: 'f_note', ch: 'home', ctx: 'focus', icon: '📝', target: '#home-focus-layer .home-focus-note', titleKey: 'apptour_f_note_title', text: 'apptour_f_note_text', when: appTourFocusAvailable },
+    { id: 'f_exit', ch: 'home', ctx: 'focus', icon: '✕', target: '#home-focus-layer .home-focus-exit', titleKey: 'home_focus_exit_aria', text: 'apptour_f_exit_text', when: appTourFocusAvailable },
     { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },
     // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js). מודגשת שורת
     // הכותרת שלה - החלק התחתון של המגירה נמצא מאחורי הפס הקבוע של כפתורי הסיור
@@ -2137,6 +2143,11 @@ const APP_TOUR_STEPS = [
     // 🎒 התיק שלי: הפריט בתפריט, ואז התיק עצמו (הכיסים)
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
     { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#bag-content', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
+    // כל מה שיש בתיק (לפי בקשה מפורשת, 2026-11-08: "חשוב להדגיש בסיור שלי את כל מה שיש בתיק שלי"). חיפוש וכיס חדש - רק בפרימיום
+    { id: 'nb_add', ch: 'menu', ctx: 'notebooks', icon: '📓', target: '#notebooks-section .bag-add-btn', titleKey: 'apptour_nb_add_title', text: 'apptour_nb_add_text' },
+    { id: 'nb_examples', ch: 'menu', ctx: 'notebooks', icon: '🎁', target: '#bag-content', titleKey: 'apptour_nb_examples_title', text: 'apptour_nb_examples_text' },
+    { id: 'nb_search', ch: 'menu', ctx: 'notebooks', icon: '🔍', target: '#notebooks-section .bag-search-btn', titleKey: 'bag_search_title', text: 'apptour_nb_search_text', when: () => !!isPremiumUser },
+    { id: 'nb_pocket', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#notebooks-section .bag-new-pocket', titleKey: 'nb_add_shelf_btn', text: 'apptour_nb_pocket_text', when: () => !!isPremiumUser },
     { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text' },
     { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
     { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
@@ -2384,6 +2395,10 @@ async function appTourEnsureContext(step) {
     const goalsOverlay = document.getElementById('vision-drawer-overlay');
     const notebooksSection = document.getElementById('notebooks-section');
     let changed = false;
+    // מצב הפוקוס: פתוח רק בשלבים שלו
+    const focusOn = typeof isHomeFocusOn === 'function' && isHomeFocusOn();
+    if (ctx !== 'focus' && focusOn) { toggleHomeFocus(false); changed = true; }
+    if (ctx === 'focus' && !focusOn && typeof toggleHomeFocus === 'function') { toggleHomeFocus(true); changed = true; }
     if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
     if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
@@ -2780,6 +2795,7 @@ function closeAppTour() {
     if (appTourCtx === 'settings' || appTourCtx === 'settings_sub') { backToSettingsMain(); closeModal('modal-settings-drawer'); }
     if (appTourCtx === 'menu') closeHamburgerMenu();
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
+    if (appTourCtx === 'focus' && typeof toggleHomeFocus === 'function') toggleHomeFocus(false);
     clearTimeout(appTourDemoTimer);
     appTourCtx = null;
     // הסיור של New Me נשאר במסך של New Me (גלילה חזרה למעלה)
