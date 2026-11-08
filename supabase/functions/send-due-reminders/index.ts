@@ -325,7 +325,7 @@ async function handleRequest(): Promise<Response> {
                 }
                 const body = r.today_date === wallClock.dateStr && r.today_body ? r.today_body : (r.body || "");
                 const tag = `weekwise-newme-meal-${r.position}-${wallClock.dateStr}`;
-                const delivered = await pushToUser(targets, { title: r.title || "🍽️ New Me", body, tag, data: { open: "newme" } }, { urgency: "high", TTL: 1800 });
+                const delivered = await pushToUser(targets, { title: r.title || "🍽️ NOT10 Nourish+", body, tag, data: { open: "newme" } }, { urgency: "high", TTL: 1800 });
                 if (delivered) {
                     await supabase.from("new_me_reminders").update({ last_sent_date: wallClock.dateStr }).eq("user_id", userId).eq("position", r.position);
                 }

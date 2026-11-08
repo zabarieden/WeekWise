@@ -1184,8 +1184,8 @@ async function nmDrawCertificate(name) {
     ctx.fillStyle = line; ctx.fillRect(cx - 300, 532, 600, 2.5);
     // הסיבה - שבירת שורות לפי מילים, ומילה ארוכה מדי (יפנית, סינית, תאית - בלי רווחים) לפי תווים.
     // עד 2 שורות: אם לא נכנס - הגופן קטן
-    // "New Me" לא נשבר בין שורות (רווח בלתי שביר; השבירה רק ברווח רגיל)
-    const reason = t('nm_cert_reason').replace('{n}', nmFmt(NEW_ME_CHALLENGES.length)).replace(/New Me/g, 'New Me');
+    // "NOT10 Nourish+" לא נשבר בין שורות (רווח בלתי שביר; השבירה רק ברווח רגיל)
+    const reason = t('nm_cert_reason').replace('{n}', nmFmt(NEW_ME_CHALLENGES.length)).replace(/NOT10 Nourish\+/g, 'NOT10 Nourish+');
     const wrap = (text, maxW) => {
         const out = [];
         let cur = '';
@@ -1275,7 +1275,7 @@ async function nmDrawCertificate(name) {
     ctx.font = `500 30px ${serif}`;
     ctx.fillStyle = 'rgba(246, 230, 196, 0.9)';
     const dateFull = new Intl.DateTimeFormat(currentLang, { day: 'numeric', month: 'long', year: 'numeric' }).format(nmDate(nmChAllDoneDate()));
-    ctx.fillText(`${dateFull} · New Me`, cx, 1226);
+    ctx.fillText(`${dateFull} · ${NM_NAME}`, cx, 1226);
     ctx.direction = 'ltr';
     ctx.font = `500 24px ${sans}`;
     ctx.fillStyle = 'rgba(243, 212, 138, 0.75)';

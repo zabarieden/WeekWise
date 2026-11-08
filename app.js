@@ -2163,6 +2163,9 @@ const APP_TOUR_STEPS = [
 ];
 // האייקון של New Me - יהלום (ציור משלנו, לא אימוג'י; בחירה 12 בקנבס). בצבע הטקסט - לבן על הגרדיאנט
 // בתפריט, בקטגוריות, בקיצור בהצצה להיום ובכותרת של New Me; בסיור הוא מופיע בתוך אריח גרדיאנט
+// The program's name (her decision 2026-11-08: "NOT10 Nourish+ זה השם החדש במקום NEW ME"). The LRM after the "+" keeps the plus
+// at the end of the name inside Hebrew/Arabic text; it is invisible everywhere else. Inside the code it is still "new me" (nm_*, new_me_*)
+const NM_NAME = 'NOT10 Nourish+‎';
 const NM_ICON_SVG = '<svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg>';
 function appTourIconHtml(icon) {
     return String(icon).startsWith('<svg') ? `<span class="app-tour-svg-icon">${icon}</span>` : appTourEsc(icon);
@@ -2173,8 +2176,8 @@ const APP_TOUR_FLOWS = [
     [['🤖', 'ai_brain_fab_title'], ['🎯', 'vision_board_title'], ['🪄', ['study_title', 'smart_split_tile_title']], '>', ['📅', 'apptour_flow_calendar'], '>', ['👀', 'today_tasks_title']],
     [['📚', 'books_menu_label'], '>', ['👀', 'today_tasks_title'], ['🎯', 'vision_board_title']],
     [['📅', 'apptour_flow_calendar'], '<>', ['🗓️', null, 'Google Calendar']],
-    [[NM_ICON_SVG, null, 'New Me'], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
-    [['⚖️', 'apptour_flow_weight'], '<>', [NM_ICON_SVG, null, 'New Me'], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
+    [[NM_ICON_SVG, null, NM_NAME], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
+    [['⚖️', 'apptour_flow_weight'], '<>', [NM_ICON_SVG, null, NM_NAME], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
     [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
     [['🔁', 'apptour_flow_recurring'], '>', ['📊', 'bottom_tab_finance']],
 ];
@@ -4139,7 +4142,7 @@ function renderCategoriesMenu() {
         }));
     });
     body.appendChild(grid);
-    const newMeTile = makeCategoryTile('categories-tile categories-newme-tile', NM_ICON_SVG, 'New Me', () => {
+    const newMeTile = makeCategoryTile('categories-tile categories-newme-tile', NM_ICON_SVG, NM_NAME, () => {
         closeModal('modal-categories');
         openNewMe();
     });
@@ -4147,7 +4150,7 @@ function renderCategoriesMenu() {
     if (!hasNewMe) {
         newMeTile.classList.add('locked');
         newMeTile.insertAdjacentHTML('beforeend', '<span class="nm-lock-badge" aria-hidden="true">🔒</span>');
-        newMeTile.setAttribute('aria-label', `New Me – ${t('nm_locked_label')}`);
+        newMeTile.setAttribute('aria-label', `${NM_NAME} – ${t('nm_locked_label')}`);
     }
     body.appendChild(newMeTile);
     requestAnimationFrame(() => fitTileWords(body));
@@ -8817,7 +8820,7 @@ function devRenderSettingsPanel() {
             </label>
         </div>`;
     const retLabel = RETENTION_TEXT[currentLang === 'he' ? 'he' : 'en'].title;
-    box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', 'New Me', !!hasNewMe)}<button type="button" class="settings-dev-retention" onclick="closeModal('modal-settings-drawer'); openRetentionSheet();">📈 ${esc(retLabel)}</button>`;
+    box.innerHTML = `<p class="settings-dev-title">🛠 ${esc(t('dev_sim_panel_title'))}</p>${row('premium', 'Premium', !devPremiumLockedPreview())}${row('new_me', NM_NAME, !!hasNewMe)}<button type="button" class="settings-dev-retention" onclick="closeModal('modal-settings-drawer'); openRetentionSheet();">📈 ${esc(retLabel)}</button>`;
     // 🌦️ מזג האוויר והערכות לתצוגה (עבר לכאן ממסך הבית)
     if (typeof renderHomeDevWx === 'function') renderHomeDevWx();
 }
@@ -9941,7 +9944,7 @@ const HELP_FAQ_WHEN = {
 let helpFaqTab = 'general';
 
 function helpFaqTabLabel(tab) {
-    if (tab === 'new_me') return 'New Me';
+    if (tab === 'new_me') return NM_NAME;
     return t(tab === 'settings' ? 'settings_title' : `faq_cat_${tab}`);
 }
 
@@ -23417,8 +23420,8 @@ function routineNewMeRow(m, checksOn) {
     const tag = document.createElement('span');
     tag.className = 'daily-board-newme-tag';
     tag.innerHTML = typeof NM_ICON_SVG !== 'undefined' ? NM_ICON_SVG : '';
-    tag.title = 'New Me';
-    tag.setAttribute('aria-label', 'New Me');
+    tag.title = NM_NAME;
+    tag.setAttribute('aria-label', NM_NAME);
     row.append(timeSpan, titleBtn, tag);
     return row;
 }

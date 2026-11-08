@@ -33,7 +33,8 @@ const ACCESS_STATUSES = ["active", "on_trial", "past_due", "cancelled"];
 function isNewMeMonthly(variantId: string, productName: string): boolean {
     if (LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && variantId === LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY) return true;
     // fallback for the first minutes after a new product is created, before the secret is set
-    return !LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && /new\s*me/i.test(productName || "");
+    // (the product is now called "NOT10 Nourish+", the old name "New Me" is still recognised)
+    return !LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY && /new\s*me|nourish/i.test(productName || "");
 }
 
 async function newMeRow(userId: string) {

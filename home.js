@@ -173,7 +173,7 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
         items.push({
             kind: 'newme', group: null, minutes: scheduleTimeToMinutes(nm.time), done: !!nm.done, checkable: true, title: nm.text, toggle: checked => nm.toggle(checked),
             build: () => myDayRow({
-                done: !!nm.done, time: nm.time, text: nm.text, tag: 'New Me', kindClass: 'newme', onchange: checked => nm.toggle(checked), hint: nm.full,
+                done: !!nm.done, time: nm.time, text: nm.text, tag: NM_NAME, kindClass: 'newme', onchange: checked => nm.toggle(checked), hint: nm.full,
                 onopen: typeof nmOpenMealDetails === 'function' ? () => nmOpenMealDetails(nm.slot) : null,
             }),
         });

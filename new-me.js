@@ -1045,7 +1045,7 @@ function nmRenderSales(root) {
     root.innerHTML = `
         <div class="nm-sales">
             <div class="nm-hero">
-                <div class="nm-hero-eyebrow">${NM_ICON_SVG} New Me</div>
+                <div class="nm-hero-eyebrow">${NM_ICON_SVG} ${NM_NAME}</div>
                 <h2 class="nm-hero-title">${nmEsc(t('nm_sales_title'))}</h2>
                 <p class="nm-hero-sub">${nmEsc(t('nm_sales_subtitle'))}</p>
                 <span class="nm-sales-premium">${nmEsc(t('nm_sales_premium'))}</span>
@@ -1200,7 +1200,7 @@ function nmTrailerHtml() {
                 <div class="nmt-card nmt-challenge" aria-hidden="true"><span class="nmt-ch-title">🔥 ${nmEsc(t('nm_tile_challenges'))}</span><span class="nmt-ch-dots">${dots}</span><span class="nmt-ch-done">✓</span></div>
                 <span class="nmt-keyfly" aria-hidden="true">${nmhKeySvg('#ffd27a')}</span>
                 <div class="nmt-spark" aria-hidden="true">${[0, 1, 2, 3, 4, 5].map(i => `<i style="--d:${(i * 0.27).toFixed(2)}"></i>`).join('')}</div>
-                <div class="nmt-end" aria-hidden="true"><span class="nmt-end-mark">${NM_ICON_SVG}</span><b>New Me</b><span class="nmt-end-line">${nmEsc(t('nm_trailer_end'))}</span></div>
+                <div class="nmt-end" aria-hidden="true"><span class="nmt-end-mark">${NM_ICON_SVG}</span><b>${NM_NAME}</b><span class="nmt-end-line">${nmEsc(t('nm_trailer_end'))}</span></div>
                 <span class="nmt-finger" aria-hidden="true"></span>
                 <div class="nmt-bars" aria-hidden="true">${NMT_SCENES.map(() => '<span><i></i></span>').join('')}</div>
                 <p class="nmt-cap" aria-live="polite"></p>
@@ -1751,7 +1751,7 @@ async function nmQuizNext() {
     await nmQuizAfterSave(q);
     nmTimes = null;
     // המשקל ההתחלתי נכנס גם למעקב המשקל הקיים (אותה טבלה בדיוק)
-    if (startWeight) await insertWeightRecord(startWeight, today, 'New Me');
+    if (startWeight) await insertWeightRecord(startWeight, today, NM_NAME);
     if (typeof loadWeightHistory === 'function') loadWeightHistory();
     await nmSyncCalorieGoal();
     nmQuiz = null;
@@ -2245,7 +2245,7 @@ function nmRenderHome(root) {
         return `<button type="button" class="nmh-door" data-door="${d.n}" style="left:${nmhX(lx)};top:${nmhY(y)};width:${nmhX(w)};height:${nmhY(h)}" onclick="nmhDoorTap(${d.n})" aria-label="${nmEsc(t('nm_door_label').replace('{n}', nmFmt(d.n)))}"></button>`;
     }).join('');
     root.innerHTML = `
-        <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="New Me">
+        <div class="nmh${roofOpen ? ' is-roof' : ''}" role="group" aria-label="${NM_NAME}">
             ${nmhSceneSvg({ lampsSvg: '', doorOpen: n => nmhDoorOpen(n, keys), roofOpen, bag: false })}
             ${doorBtns}
             <button type="button" class="nmh-hatch-btn" style="left:${nmhX(NMH_ROOF.hit[0])};top:${nmhY(NMH_ROOF.hit[1])};width:${nmhX(NMH_ROOF.hit[2])};height:${nmhY(NMH_ROOF.hit[3])}" onclick="nmhHatchTap()" aria-label="${nmEsc(t('nm_hatch_label'))}"></button>
@@ -2361,7 +2361,7 @@ function nmRenderDay(root) {
                 <div class="nm-dash-top">
                     ${nmRingHtml(eaten.kcal, plan + nmBurnedToday)}
                     <div class="nm-dash-stats">
-                        <div class="nm-eyebrow">${NM_ICON_SVG} New Me · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
+                        <div class="nm-eyebrow">${NM_ICON_SVG} ${NM_NAME} · ${nmFmt(plan)} ${nmEsc(t('calories_unit'))}</div>
                         <button type="button" class="nm-day-chip" onclick="nmGo('journey')">${nmDayHtml(day)}${st.current > 0 ? `<span class="nm-day-streak">🔥 ${nmFmt(st.current)}</span>` : ''}</button>
                         <div class="nm-stat"><span class="nm-num">${nmFmt(eaten.kcal)}</span> ${nmEsc(t('nm_eaten'))} · <span class="nm-num">${nmFmt(Math.round(eaten.protein))}</span> ${nmEsc(t('nm_protein_unit'))}</div>
                         <div class="nm-split">${nmEsc(t('nm_split_line').replace('{plan}', nmFmt(eaten.plan)).replace('{drinks}', nmFmt(eaten.drinks)).replace('{extra}', nmFmt(eaten.extra)))}</div>
@@ -4913,7 +4913,7 @@ function nmOpenStories() {
                 <button type="button" class="nm-story-close" aria-label="${nmEsc(t('close_btn'))}">✕</button>
                 <div class="nm-story-body">
                     <svg class="nm-story-art" viewBox="0 0 160 160" aria-hidden="true">${NEW_ME_STORY_ART[k] || NEW_ME_STORY_ART.cover}</svg>
-                    ${k === 'cover' ? `<div class="nm-story-eyebrow">🎁 ${nmEsc(t('nm_bonus_label'))} · New Me</div>` : ''}
+                    ${k === 'cover' ? `<div class="nm-story-eyebrow">🎁 ${nmEsc(t('nm_bonus_label'))} · ${NM_NAME}</div>` : ''}
                     <h3 class="nm-story-title">${nmEsc(c.title)}</h3>
                     <p class="nm-story-text">${nmEsc(c.text)}</p>
                     ${k === 'cover' ? `<p class="nm-story-hint">${nmEsc(t('nm_story_hint'))}</p>` : ''}
