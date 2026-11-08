@@ -1004,14 +1004,12 @@ async function renderNewMe() {
 // שאלות קצרות וכפתור שוב (ההצצה ליום ירדה - לפי בקשה מפורשת: "ההצצה הזו גרועה תמחוק אותה"). המחירים עצמם נקבעים ב-Lemon Squeezy - כאן רק התוויות שמוצגות
 // מאז 2026-10-13 New Me כולל את כל הפרימיום ("פרימיום + משחק התקדמות"), ולכן מעל מחיר הפרימיום (8.99 לחודש) -
 // לפי אישור מפורש: 11.99 לחודש / 99.99 לכל החיים (ב-Lemon Squeezy: אותם מוצרים, אותם מזהים)
-// מחירים מ-2026-11-07 (לפי החלטה מפורשת): $7.99 לחודש, $49.99 לשנה (מסלול חדש), $69.99 לכל החיים.
-// המסלול השנתי מוצג רק כשהמוצר שלו קיים ב-Lemon Squeezy והסוד LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY הוגדר
-const NEW_ME_PRICES = { life: '$69.99', yearly: '$49.99', monthly: '$7.99' };
-const NEW_ME_YEARLY_READY = false;
+// מחירים מ-2026-11-07 (לפי החלטה מפורשת): $7.99 לחודש, $69.99 לכל החיים.
+// מסלול שנתי ירד ב-2026-11-08 לפי בקשה מפורשת ("מסלול שנתי לא צריך כרגע תמחוק")
+const NEW_ME_PRICES = { life: '$69.99', monthly: '$7.99' };
 let nmSalesPlan = 'life';
 function nmBuyLabel(plan) {
     if (plan === 'monthly') return t('nm_buy_btn_monthly').replace('{price}', NEW_ME_PRICES.monthly);
-    if (plan === 'yearly') return t('nm_buy_btn_yearly').replace('{price}', NEW_ME_PRICES.yearly);
     return t('nm_buy_btn_price').replace('{price}', NEW_ME_PRICES.life);
 }
 function nmPlanOptionsHtml() {
@@ -1024,13 +1022,12 @@ function nmPlanOptionsHtml() {
         </button>`;
     return `<div class="nm-plans" role="radiogroup" aria-label="${nmEsc(t('nm_bill_title'))}">
         ${opt('life', t('nm_plan_life'), NEW_ME_PRICES.life, '', t('nm_plan_life_sub'), t('nm_plan_best'))}
-        ${NEW_ME_YEARLY_READY ? opt('yearly', t('nm_plan_yearly'), NEW_ME_PRICES.yearly, t('nm_plan_per_year'), t('nm_plan_monthly_sub'), '') : ''}
         ${opt('monthly', t('nm_plan_monthly'), NEW_ME_PRICES.monthly, t('nm_plan_per_month'), t('nm_plan_monthly_sub'), '')}
     </div>`;
 }
 // בחירת מסלול: מעדכנים במקום (בלי לצייר מחדש - שהגלילה והשאלות הפתוחות יישארו)
 function nmPickSalesPlan(plan) {
-    nmSalesPlan = plan === 'monthly' ? 'monthly' : plan === 'yearly' && NEW_ME_YEARLY_READY ? 'yearly' : 'life';
+    nmSalesPlan = plan === 'monthly' ? 'monthly' : 'life';
     document.querySelectorAll('#new-me-root .nm-plan-opt').forEach(b => {
         const on = b.dataset.plan === nmSalesPlan;
         b.classList.toggle('selected', on);
@@ -1395,7 +1392,7 @@ async function submitNewMePurchase(btn, plan = nmSalesPlan) {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ tier: plan === 'monthly' ? 'new_me_monthly' : plan === 'yearly' ? 'new_me_yearly' : 'new_me' }),
+            body: JSON.stringify({ tier: plan === 'monthly' ? 'new_me_monthly' : 'new_me' }),
         });
         const result = await res.json().catch(() => ({}));
         if (!res.ok || !result.url) { showAppToast(t('settings_billing_error_toast'), 'error'); return; }
@@ -4730,11 +4727,10 @@ function nmBillingHtml() {
     const day = iso => (iso ? nmLongDate(getLocalDateString(new Date(iso))) : '');
     let status = `⭐ ${t('nm_bill_life')}`;
     let actions = '';
-    if (b.plan === 'monthly' || b.plan === 'yearly') {
-        const p = b.plan;
-        if (b.status === 'cancelled') status = t(`nm_bill_${p}_ends`).replace('{date}', day(b.endsAt));
-        else if (b.status === 'past_due' || b.status === 'unpaid') status = t(`nm_bill_${p}_issue`);
-        else status = b.renewsAt ? t(`nm_bill_${p}_renews`).replace('{date}', day(b.renewsAt)) : t(`nm_plan_${p}`);
+    if (b.plan === 'monthly') {
+        if (b.status === 'cancelled') status = t('nm_bill_monthly_ends').replace('{date}', day(b.endsAt));
+        else if (b.status === 'past_due' || b.status === 'unpaid') status = t('nm_bill_monthly_issue');
+        else status = b.renewsAt ? t('nm_bill_monthly_renews').replace('{date}', day(b.renewsAt)) : t('nm_plan_monthly');
         actions = `
             <button type="button" class="nm-row-btn" onclick="openLemonSqueezyPortal('new_me')">💳 ${nmEsc(t('nm_bill_manage'))}</button>
             <button type="button" class="nm-row-btn nm-bill-upgrade" onclick="submitNewMePurchase(this, 'life')">⭐ ${nmEsc(t('nm_bill_upgrade').replace('{price}', NEW_ME_PRICES.life))}</button>

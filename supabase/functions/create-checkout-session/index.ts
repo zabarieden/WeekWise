@@ -28,7 +28,6 @@ const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID
 const LEMONSQUEEZY_VARIANT_ID_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") || LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL;
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
 const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
-const LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY") || "";
 const SITE_URL = Deno.env.get("SITE_URL")!;
 
 const CORS_HEADERS = {
@@ -61,16 +60,15 @@ Deno.serve(async (req) => {
         const body = await req.json().catch(() => ({}));
         const tier = body?.tier;
         // "semiannual" is still accepted from app versions cached before 2026-11-07 - it is now the yearly plan
-        const TIERS = ["monthly", "yearly", "semiannual", "new_me", "new_me_monthly", "new_me_yearly"];
+        const TIERS = ["monthly", "yearly", "semiannual", "new_me", "new_me_monthly"];
         if (!TIERS.includes(tier)) {
             return jsonResponse({ error: "invalid_tier" }, 400);
         }
-        // "new_me" = the New Me program for life (one-time order), "new_me_monthly" / "new_me_yearly" = New Me
-        // as a subscription. None of them touches is_premium - see lemonsqueezy-webhook
+        // "new_me" = the New Me program for life (one-time order), "new_me_monthly" = New Me
+        // as a monthly subscription. Neither touches is_premium - see lemonsqueezy-webhook
         const variantId = tier === "monthly" ? LEMONSQUEEZY_VARIANT_ID_MONTHLY
             : tier === "yearly" || tier === "semiannual" ? LEMONSQUEEZY_VARIANT_ID_YEARLY
             : tier === "new_me_monthly" ? LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY
-            : tier === "new_me_yearly" ? LEMONSQUEEZY_VARIANT_ID_NEW_ME_YEARLY
             : LEMONSQUEEZY_VARIANT_ID_NEW_ME;
         if (!variantId) return jsonResponse({ error: "not_configured" }, 503);
         const redirectParam = tier.startsWith("new_me") ? "newme_success" : "success";
