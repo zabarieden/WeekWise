@@ -987,6 +987,28 @@ function bagCloseOverlays() {
 
 // --- דוגמאות לתיק חדש: לבית, למשפחה, רעיונות וטיולים - לילדים ולהורים, אף פעם לא בית ספר. נכתבות פעם
 // אחת בשפה של אותו רגע, ואפשר לשנות או למחוק אותן כמו כל דבר אחר ---
+// 🎁 קטגוריות המתנות; 0–9 מגרסה 4, 10–14 מגרסה 5 (2026-11-08)
+const BAG_GIFT_CATS = [['g_experience', '#a855f7'], ['g_home', '#f59e0b'], ['g_selfcare', '#f472b6'], ['g_books', '#60a5fa'], ['g_tech', '#22d3ee'], ['g_food', '#fb923c'], ['g_kids', '#34d399'], ['g_sport', '#84cc16'], ['g_fashion', '#c084fc'], ['g_handmade', '#eab308'],
+    ['g_art', '#e879f9'], ['g_kitchen', '#b45309'], ['g_games', '#6366f1'], ['g_travel', '#0ea5e9'], ['g_small', '#2dd4bf']];
+// [רעיון, קטגוריה] - 1–18 הרעיונות הראשונים, 19–48 מגרסה 4
+const BAG_GIFTS_V4 = [
+    [1, 3], [2, 2], [3, 8], [4, 4], [5, 0], [6, 1], [7, 9], [8, 6], [9, 6], [10, 4], [11, 5], [12, 1], [13, 0], [14, 0], [15, 1], [16, 0], [17, 8], [18, 2],
+    [19, 0], [20, 0], [21, 0], [22, 0], [23, 1], [24, 1], [25, 1], [26, 2], [27, 2], [28, 2], [29, 3], [30, 3], [31, 3], [32, 4], [33, 4], [34, 4],
+    [35, 5], [36, 5], [37, 5], [38, 6], [39, 6], [40, 6], [41, 7], [42, 7], [43, 7], [44, 8], [45, 8], [46, 8], [47, 9], [48, 9],
+];
+// גרסה 5 (לפי בקשה מפורשת, 2026-11-08: "עדכן והוסף אליה את הרשימה המעודכנת... אל תשתמש בסוגריים כלל"): 93 רעיונות,
+// כל קבוצה [קטגוריה, מהרעיון, כמה]. 140–141 = 13 ו-21 בלי הסוגריים
+const BAG_GIFTS_V5 = [[10, 49, 6], [11, 55, 8], [4, 63, 10], [2, 73, 9], [7, 82, 10], [3, 92, 8], [1, 100, 10], [12, 110, 10], [13, 120, 10], [14, 130, 10], [0, 140, 2]]
+    .flatMap(([c, from, n]) => Array.from({ length: n }, (_, i) => [from + i, c]));
+// רעיון חדש -> הרעיון הישן הדומה שהוא מחליף (בתיק חדש בא במקומו; בטבלה קיימת מעדכן את השורה הישנה אם היא עוד שם)
+const BAG_GIFT_REPLACES = { 70: 33, 71: 25, 76: 2, 77: 27, 78: 12, 82: 43, 83: 41, 86: 42, 100: 6, 110: 40, 111: 8, 135: 36, 140: 13, 141: 21 };
+function bagGiftRows() {
+    const swap = Object.fromEntries(Object.entries(BAG_GIFT_REPLACES).map(([k, old]) => [old, +k]));
+    const cat = Object.fromEntries(BAG_GIFTS_V5);
+    return BAG_GIFTS_V4.map(([g, c]) => (swap[g] ? [swap[g], cat[swap[g]]] : [g, c]))
+        .concat(BAG_GIFTS_V5.filter(([g]) => !BAG_GIFT_REPLACES[g]));
+}
+
 const BAG_EXAMPLES = [
     {
         key: 'home', icon: '🏠', color: '#ff4f9a',
@@ -1026,14 +1048,9 @@ const BAG_EXAMPLES = [
             key: 'gifts_cat', icon: '🎁', v: 4,
             cols: [
                 { key: 'idea', type: 'text' },
-                { key: 'category', type: 'select', options: [['g_experience', '#a855f7'], ['g_home', '#f59e0b'], ['g_selfcare', '#f472b6'], ['g_books', '#60a5fa'], ['g_tech', '#22d3ee'], ['g_food', '#fb923c'], ['g_kids', '#34d399'], ['g_sport', '#84cc16'], ['g_fashion', '#c084fc'], ['g_handmade', '#eab308']] },
+                { key: 'category', type: 'select', options: BAG_GIFT_CATS },
             ],
-            // [רעיון, קטגוריה] - אינדקס לאפשרויות שלמעלה; 1–18 הרעיונות הקיימים, 19–48 חדשים
-            rows: () => [
-                [1, 3], [2, 2], [3, 8], [4, 4], [5, 0], [6, 1], [7, 9], [8, 6], [9, 6], [10, 4], [11, 5], [12, 1], [13, 0], [14, 0], [15, 1], [16, 0], [17, 8], [18, 2],
-                [19, 0], [20, 0], [21, 0], [22, 0], [23, 1], [24, 1], [25, 1], [26, 2], [27, 2], [28, 2], [29, 3], [30, 3], [31, 3], [32, 4], [33, 4], [34, 4],
-                [35, 5], [36, 5], [37, 5], [38, 6], [39, 6], [40, 6], [41, 7], [42, 7], [43, 7], [44, 8], [45, 8], [46, 8], [47, 9], [48, 9],
-            ].map(([g, c]) => [t(`bag_ex_gift_${g}`), c]),
+            rows: () => bagGiftRows().map(([g, c]) => [t(`bag_ex_gift_${g}`), c]),
         }, {
 
             // 🐷 מה לעשות עם כסף שחסכתי (לפי בקשה מפורשת, 2026-10-20: "לעשות טבלת רעיונות ברגע שאני חוסכת כסף מה לעשות איתו")
@@ -1071,7 +1088,7 @@ const BAG_EXAMPLES = [
         }],
     },
 ];
-const BAG_EXAMPLES_VERSION = 4;
+const BAG_EXAMPLES_VERSION = 5;
 // שמות ימים ושעות בפורמט של השפה; בעברית ובערבית השבוע מתחיל ביום ראשון
 function bagExDay(i, fromMonday) {
     const start = !fromMonday && ['he', 'ar'].includes(currentLang) ? 4 : 5; // 4.1.2026 = יום ראשון
@@ -1083,18 +1100,18 @@ async function bagMaybeSeedExamples() {
     if (!isPremiumUser || bagSeedChecked || bagSeeding || !supabaseClient || !currentUserId) return false;
     const uid = currentUserId;
     // גרסאות של הדוגמאות (2026-10-20): 2 = מתנות, בית מלון, טיסה, יום הולדת; 3 = מה לעשות עם כסף שחסכתי, מקומות;
-    // 4 (2026-10-22) = מתנות לפי קטגוריות.
+    // 4 (2026-10-22) = מתנות לפי קטגוריות; 5 (2026-11-08) = 93 רעיונות מתנה ו-5 קטגוריות חדשות.
     // תיק שכבר קיבל גרסה קודמת מקבל פעם אחת רק את מה שחדש לו
     const localKey = `weekwise_bag_seeded${BAG_EXAMPLES_VERSION}_${uid}`;
     try { if (localStorage.getItem(localKey) === '1') { bagSeedChecked = true; return false; } } catch { /* פרטי */ }
     try {
-        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2, bag_examples_v3, bag_examples_v4').eq('user_id', uid).maybeSingle();
+        const { data, error } = await supabaseClient.from('user_premium').select('bag_examples_seeded, bag_examples_v2, bag_examples_v3, bag_examples_v4, bag_examples_v5').eq('user_id', uid).maybeSingle();
         if (error || uid !== currentUserId) return false;
         bagSeedChecked = true;
-        const level = !(data && data.bag_examples_seeded) ? 0 : data.bag_examples_v4 ? 4 : data.bag_examples_v3 ? 3 : data.bag_examples_v2 ? 2 : 1;
+        const level = !(data && data.bag_examples_seeded) ? 0 : data.bag_examples_v5 ? 5 : data.bag_examples_v4 ? 4 : data.bag_examples_v3 ? 3 : data.bag_examples_v2 ? 2 : 1;
         if (level >= BAG_EXAMPLES_VERSION) { try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ } return false; }
         // קודם הסימון ואז הדוגמאות - כדי ששני מכשירים שנפתחים באותו רגע לא ימלאו את התיק פעמיים
-        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true, bag_examples_v3: true, bag_examples_v4: true }, { onConflict: 'user_id' });
+        const { error: flagError } = await supabaseClient.from('user_premium').upsert({ user_id: uid, username: currentUsername, bag_examples_seeded: true, bag_examples_v2: true, bag_examples_v3: true, bag_examples_v4: true, bag_examples_v5: true }, { onConflict: 'user_id' });
         if (flagError) return false;
         try { localStorage.setItem(localKey, '1'); } catch { /* פרטי */ }
         bagSeeding = true;
@@ -1109,11 +1126,49 @@ async function bagMaybeSeedExamples() {
     }
 }
 
+// גרסה 5 לטבלת מתנות שכבר קיימת: 5 הקטגוריות החדשות נוספות לעמודה, רעיון שמחליף רעיון ישן מעדכן את השורה שלו
+// (רק אם היא עוד שם עם הטקסט המקורי), וכל השאר נוספים בסוף
+async function bagGiftsUpgrade(uid) {
+    const { data: tbls } = await supabaseClient.from('custom_tables').select('id').eq('user_id', uid).eq('name', t('bag_ex_tb_gifts_cat')).limit(1);
+    const tb = tbls && tbls[0];
+    if (!tb) return;
+    const [{ data: cols }, { data: rows }] = await Promise.all([
+        supabaseClient.from('custom_table_columns').select('id, type, sort_order, select_options').eq('table_id', tb.id).order('sort_order', { ascending: true }),
+        supabaseClient.from('custom_table_rows').select('id, data, sort_order').eq('table_id', tb.id),
+    ]);
+    const textCol = (cols || []).find(c => c.type === 'text');
+    const catCol = (cols || []).find(c => c.type === 'select');
+    if (!textCol) return;
+    let opts = (catCol && catCol.select_options) || [];
+    if (catCol) {
+        const added = BAG_GIFT_CATS.slice(10).filter(([key]) => !opts.some(o => o.label === t(`bag_ex_opt_${key}`)))
+            .map(([key, color]) => ({ id: crypto.randomUUID(), label: t(`bag_ex_opt_${key}`), color }));
+        if (added.length) {
+            opts = opts.concat(added);
+            await supabaseClient.from('custom_table_columns').update({ select_options: opts }).eq('id', catCol.id);
+        }
+    }
+    // קטגוריה לפי השם שלה; קטגוריה ישנה ששמה שונה - לפי המקום המקורי שלה
+    const optId = c => (opts.find(o => o.label === t(`bag_ex_opt_${BAG_GIFT_CATS[c][0]}`)) || (c < 10 ? opts[c] : null) || {}).id || null;
+    const cell = (g, c) => ({ [textCol.id]: t(`bag_ex_gift_${g}`), ...(catCol ? { [catCol.id]: optId(c) } : {}) });
+    const updates = [];
+    const inserts = [];
+    let sort = Math.max(0, ...(rows || []).map(r => r.sort_order || 0));
+    BAG_GIFTS_V5.forEach(([g, c]) => {
+        const old = BAG_GIFT_REPLACES[g];
+        if (!old) { inserts.push({ table_id: tb.id, user_id: uid, data: cell(g, c), sort_order: ++sort }); return; }
+        const row = (rows || []).find(r => r.data && r.data[textCol.id] === t(`bag_ex_gift_${old}`));
+        if (row) updates.push(supabaseClient.from('custom_table_rows').update({ data: { ...row.data, ...cell(g, c) } }).eq('id', row.id));
+    });
+    await Promise.all([...updates, inserts.length ? supabaseClient.from('custom_table_rows').insert(inserts) : null]);
+}
+
 // 8 בקשות בסך הכול: כיסים, מחברות, דפים, שורות, טבלאות, עמודות, שורות טבלה ומשימות.
 // level = הגרסה שהתיק כבר קיבל (0 = תיק חדש - הכל). אחרת רק מה שגרסתו (v, ובשורות - המספר השלישי) גבוהה ממנה: לכיס הקיים, או
 // לכיס חדש אם הוא נמחק, ושורות חדשות למחברת קיימת
 async function bagSeedExamples(uid, level = 0) {
     const onlyNew = level > 0;
+    if (level === 4) await bagGiftsUpgrade(uid);
     const base = { user_id: uid, username: currentUsername };
     const isNew = x => (x.v || 1) > level;
     const newLines = nb => (nb.items || []).some(it => (it[2] || 1) > level);
