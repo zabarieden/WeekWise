@@ -188,11 +188,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderHomeGreeting();
     document.addEventListener('click', unlockReminderAudio);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') { checkReminders(); refreshTodayIfNewDay(); recordAppOpen(); }
+        if (document.visibilityState === 'visible') { checkReminders(); refreshTodayIfNewDay(); recordAppOpen(); syncThemeFromAccount(); }
         else updateReminderPresence(false);
     });
     // תזכורות: האפליקציה "מול העיניים" רק כשהחלון בפוקוס - ר' updateReminderPresence
-    window.addEventListener('focus', () => checkReminders());
+    window.addEventListener('focus', () => { checkReminders(); syncThemeFromAccount(); });
     window.addEventListener('blur', () => updateReminderPresence(false));
     window.addEventListener('pagehide', () => updateReminderPresence(false));
 
@@ -10260,8 +10260,10 @@ async function loadColorTheme() {
     // מ-localStorage ישן)
     let themeName = null;
     if (supabaseClient && currentUserId) {
-        const { data } = await supabaseClient.from('user_premium').select('theme').eq('user_id', currentUserId).maybeSingle();
+        const { data } = await supabaseClient.from('user_premium').select('theme, light_mode').eq('user_id', currentUserId).maybeSingle();
         if (data && data.theme) themeName = data.theme;
+        // נקודת ההשוואה של syncThemeFromAccount - מה שבחשבון ברגע הטעינה
+        if (data) themeSyncSeen = `${data.theme || ''}|${data.light_mode}`;
     }
     if (!themeName) {
         themeName = localStorage.getItem(colorThemeKey()) || 'default';
@@ -10278,6 +10280,23 @@ async function loadColorTheme() {
     localStorage.setItem(colorThemeKey(), themeName);
     localStorage.setItem('weekwise_last_color_theme', themeName);
     magicThemeGuard();
+}
+
+// ערכה שהוחלפה במכשיר אחר (במחשב) מגיעה גם לאפליקציה שכבר פתוחה בטלפון - בכל חזרה לאפליקציה בודקים בחשבון
+// (לפי בקשה מפורשת, 2026-11-08: "לוודא שאם במחשב משנים את הערכת נושא זה ישתנה גם במובייל"). לכל היותר פעם ב-15 שניות
+// משווים למה שנראה בחשבון בפעם הקודמת (לא למה שמוצג - ערכה קסומה בלי New Me מוצגת אחרת ממה ששמור, וזה לא שינוי)
+let themeSyncAt = 0, themeSyncSeen = null;
+async function syncThemeFromAccount() {
+    if (!supabaseClient || !currentUserId || Date.now() - themeSyncAt < 15000) return;
+    themeSyncAt = Date.now();
+    const { data } = await supabaseClient.from('user_premium').select('theme, light_mode').eq('user_id', currentUserId).maybeSingle();
+    if (!data) return;
+    const seen = `${data.theme || ''}|${data.light_mode}`;
+    const changed = themeSyncSeen !== null && seen !== themeSyncSeen;
+    themeSyncSeen = seen;
+    if (!changed) return;
+    await loadColorTheme();
+    await loadLightModeSetting();
 }
 
 // ערכה קסומה בלי New Me (החזר / מנוי שהסתיים / מתג ה-PM): חוזרים לערכה הרגילה שהייתה לפניה (או לברירת המחדל) - בלי
