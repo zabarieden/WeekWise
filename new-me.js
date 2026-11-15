@@ -2011,11 +2011,24 @@ function nmBadgeDesc(b) {
     if (b.kind === 'kg') return t('nm_badge_kg_desc').replace('{n}', b.n);
     return t('nm_badge_' + b.key + '_desc');
 }
+// ימים ברציפות עם ✓ על ארוחות - "שבוע ראשון" / "חודש ראשון" / 60 / 90 הם ימים אמיתיים ברצף, לא סתם ימים מאז ההרשמה
+// (לפי בקשה מפורשת, 2026-11-15: "הייתי צריכה הישג של 30 יום ברציפות וזה בטוח לא היה")
+function nmActiveRunBest() {
+    const today = getLocalDateString();
+    let best = 0, run = 0, last = null;
+    nmStats.filter(r => r.day >= nmStartDay() && r.day <= today).forEach(r => {
+        if (!((Number(r.checks) || 0) > 0)) { run = 0; last = null; return; }
+        run = last && nmDaysBetween(last, r.day) === 1 ? run + 1 : 1;
+        last = r.day;
+        best = Math.max(best, run);
+    });
+    return best;
+}
 // מה כבר הושג לפי הנתונים (קניות / החלפה / ארוחה חופשית מוענקים ברגע הפעולה עצמה)
 function nmComputeEarned() {
     const out = new Set();
     const s = nmStreaks();
-    const day = nmJourneyDay();
+    const activeRun = nmActiveRunBest();
     const lost = nmKgLost();
     const latest = nmLatestWeight();
     const start = nmStartWeight() || 0, goal = Number(nmProfile.goal_weight);
@@ -2023,7 +2036,7 @@ function nmComputeEarned() {
     if (s.perfect > 0) out.add('perfect_day');
     NEW_ME_BADGES.forEach(b => {
         if (b.kind === 'streak' && s.best >= b.n) out.add(b.key);
-        if (b.kind === 'day' && day >= b.n) out.add(b.key);
+        if (b.kind === 'day' && activeRun >= b.n) out.add(b.key);
         if (b.kind === 'kg' && lost >= b.n) out.add(b.key);
     });
     if (goal > 0 && start > goal && latest && latest <= goal) out.add('goal_reached');
@@ -2036,7 +2049,14 @@ async function nmAwardBadges(extra = []) {
     if (!nmJourneyLoaded || !nmProfile) return;
     const earned = nmComputeEarned();
     extra.forEach(k => earned.add(k));
-    const fresh = NEW_ME_BADGES.map(b => b.key).filter(k => earned.has(k) && !nmBadges[k]);
+    // הישגי "ימים" שניתנו פעם רק לפי הזמן שעבר ולא לפי ימים ברצף - יורדים (לפי בקשה מפורשת, 2026-11-15)
+    const wrong = NEW_ME_BADGES.filter(b => b.kind === 'day' && nmBadges[b.key] && !earned.has(b.key)).map(b => b.key);
+    if (wrong.length) {
+        wrong.forEach(k => { delete nmBadges[k]; });
+        try { await supabaseClient.from('new_me_achievements').delete().eq('user_id', currentUserId).in('badge', wrong); } catch {}
+        if (nmView === 'home' || nmView === 'badges') nmRefreshTileSubs();
+    }
+    const fresh =NEW_ME_BADGES.map(b => b.key).filter(k => earned.has(k) && !nmBadges[k]);
     if (!fresh.length) return;
     const now = new Date().toISOString();
     fresh.forEach(k => { nmBadges[k] = now; });
