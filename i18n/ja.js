@@ -1462,6 +1462,7 @@ translations.ja = {
     ai_chat_tool_photo: "📷 レシピの写真",
     ai_chat_tool_schedule: "📅 カレンダーに入れる",
     ai_chat_tool_table: "🗂️ 新しい表",
+    ai_chat_tool_money: "💰 わたしの予算", ai_money_q_income: "毎月だいたいいくら入りますか？複数の数字も書けます（例：「給料9000とベビーシッター600」）。", ai_money_need_number: "数字が必要です。毎月いくら入りますか？", ai_money_use_buttons: "ボタンをタップするか、入力欄を埋めてください", ai_money_q_cats: "毎月お金は何に使いますか？当てはまるものをすべて選んでください。", ai_money_next: "次へ", ai_money_pick_one: "1つ以上選んでください", ai_money_q_amounts: "それぞれ月にだいたいいくらですか？", ai_money_summary_intro: "まとめるとこうなります：", ai_money_sum_in: "入る", ai_money_sum_out: "予定", ai_money_sum_left: "残り", ai_money_sum_over: "オーバー", ai_money_save: "✓ 予算に入れる", ai_money_change: "変更する", ai_money_done: "おわり", ai_money_saved: "予算に入れました。各カテゴリにガラスの試験管と「今日」が表示されます。", ai_money_open_budget: "予算を開く", faq_q_ai_money: "アシスタントで1か月の予算を立てるには？", faq_a_ai_money: "アシスタントで「💰 わたしの予算」をタップします（または「今月の予算を立てる」と書きます）。いくら入るか、お金を何に使うか、それぞれいくらくらいか、の3つを短く聞いて、入る・予定・残りのまとめを表示します。「予算に入れる」で、見込み収入、予定の予算、カテゴリごとの金額が保存されます。「おわり」でいつでも会話を終えられます。「スーパーで50使った」のような一文は予算にそのまま記録され、表を作ったあとの次のメッセージは、また自動で判断されます。",
     ai_chat_working_food: "少々お待ちください、カロリーを計算中…",
     ai_chat_working_schedule: "少々お待ちください、カレンダーに追加中…",
     ai_chat_working_table: "少々お待ちください、表を作成中…",

@@ -1462,6 +1462,7 @@ translations.ko = {
     ai_chat_tool_photo: "📷 레시피 사진",
     ai_chat_tool_schedule: "📅 캘린더에 넣을 것",
     ai_chat_tool_table: "🗂️ 새 표",
+    ai_chat_tool_money: "💰 내 예산", ai_money_q_income: "매달 대략 얼마가 들어오나요? 숫자를 여러 개 써도 돼요. 예: \"월급 9000이랑 베이비시터 600\"", ai_money_need_number: "숫자가 필요해요 – 매달 얼마가 들어오나요?", ai_money_use_buttons: "버튼을 누르거나 칸을 채워 주세요", ai_money_q_cats: "매달 돈이 어디에 나가나요? 해당하는 걸 모두 골라 주세요.", ai_money_next: "다음", ai_money_pick_one: "하나 이상 골라 주세요", ai_money_q_amounts: "각각 한 달에 대략 얼마인가요?", ai_money_summary_intro: "이렇게 나왔어요:", ai_money_sum_in: "들어옴", ai_money_sum_out: "계획", ai_money_sum_left: "남음", ai_money_sum_over: "초과", ai_money_save: "✓ 내 예산에 넣기", ai_money_change: "바꾸기", ai_money_done: "끝", ai_money_saved: "예산에 넣었어요 – 이제 카테고리마다 유리 시험관과 '오늘'이 있어요.", ai_money_open_budget: "내 예산 열기", faq_q_ai_money: "도우미로 한 달 계획은 어떻게 세우나요?", faq_a_ai_money: "도우미에서 '💰 내 예산'을 누르세요(또는 '이번 달 계획 세우기'라고 쓰세요). 얼마가 들어오는지, 돈이 어디에 나가는지, 각각 대략 얼마인지 세 가지를 짧게 묻고, 들어옴·계획·남음 요약을 보여줘요. '내 예산에 넣기'는 예상 수입, 계획 예산, 카테고리별 금액을 저장해요. '끝'을 누르면 언제든 대화가 끝나요. '마트에서 50 썼어' 같은 문장은 예산에 바로 기록되고, 표를 만든 뒤 다음 메시지는 다시 알아서 판단해요.",
     ai_chat_working_food: "잠시만요, 칼로리를 계산하고 있어요…",
     ai_chat_working_schedule: "잠시만요, 캘린더에 추가하고 있어요…",
     ai_chat_working_table: "잠시만요, 표를 만들고 있어요…",

@@ -12029,3 +12029,12 @@ html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
 .nm-review-pick.selected { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, var(--bg-row)); }
 .nm-review-actions { display: flex; gap: 10px; margin-top: 16px; }
 .nm-review-actions > * { flex: 1; }
+
+/* 💰 money conversation in the assistant: the summary card */
+.ai-money-sum { display: flex; flex-direction: column; gap: 6px; min-width: min(100%, 240px); font-variant-numeric: tabular-nums; }
+.ai-money-sum div { display: flex; justify-content: space-between; gap: 14px; }
+.ai-money-sum b { font-weight: 800; }
+.ai-money-sum .is-left b { color: var(--accent-purple-light-text, var(--accent-purple)); }
+.ai-money-sum .is-over b { color: var(--accent-purple); }
+.ai-money-form label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ai-money-form input { width: 96px; }

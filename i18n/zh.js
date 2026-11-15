@@ -1462,6 +1462,7 @@ translations.zh = {
     ai_chat_tool_photo: "📷 食谱照片",
     ai_chat_tool_schedule: "📅 加到日历的事",
     ai_chat_tool_table: "🗂️ 新表格",
+    ai_chat_tool_money: "💰 我的预算", ai_money_q_income: "每个月大概进账多少？可以写好几个数字，比如“工资 9000，带孩子 600”。", ai_money_need_number: "需要一个数字——每个月进账多少？", ai_money_use_buttons: "点一个按钮或填写输入框", ai_money_q_cats: "每个月钱都花在哪些地方？选出所有符合的。", ai_money_next: "下一步", ai_money_pick_one: "至少选一个", ai_money_q_amounts: "每一项每月大概多少？", ai_money_summary_intro: "结果是这样的：", ai_money_sum_in: "进账", ai_money_sum_out: "计划", ai_money_sum_left: "剩余", ai_money_sum_over: "超出", ai_money_save: "✓ 放进我的预算", ai_money_change: "改一下", ai_money_done: "就这样", ai_money_saved: "已放进预算——每个分类现在都有自己的玻璃试管和“今天可用”。", ai_money_open_budget: "打开我的预算", faq_q_ai_money: "怎样用助手规划这个月？", faq_a_ai_money: "在助手里点“💰 我的预算”（或写“规划这个月”）。它会问三个简短的问题——进账多少、钱花在哪、每项大概多少——然后显示汇总：进账、计划和剩余。“放进我的预算”会保存预计收入、计划预算和每个分类的金额。“就这样”随时结束对话。像“超市花了 50”这样的一句话会直接记进预算；建好表格后，下一条消息又会自动识别。",
     ai_chat_working_food: "稍等，正在计算热量…",
     ai_chat_working_schedule: "稍等，正在加入日历…",
     ai_chat_working_table: "稍等，正在建表…",
