@@ -2075,8 +2075,20 @@ function nmCelebrate(keys) {
     const list = keys.map(k => NEW_ME_BADGES.find(b => b.key === k)).filter(Boolean);
     if (!list.length) return;
     const first = list[0];
+    const eyebrow = list.length > 1 ? t('nm_badges_new_many').replace('{n}', list.length) : t('nm_badge_new');
+    const lines = list.map(b => `${b.icon} ${nmBadgeTitle(b)}`).join('\n');
+    // כרטיס הזכוכית עם הנצנצים (הבחירה שלה, 2026-11-15: "חלון הישג 2") - גם החלון וגם התמונה לשיתוף
+    if (typeof openGlassAchievement === 'function') {
+        openGlassAchievement({
+            eyebrow, icon: first.icon, title: nmBadgeTitle(first), desc: nmBadgeDesc(first),
+            more: list.slice(1).map(b => ({ icon: b.icon, title: nmBadgeTitle(b) })),
+            shareText: `🏅 ${t('nm_share_badge_text')}\n\n${lines}`, file: 'not10-nourish-achievement.png',
+            shareLabel: t('nm_share'), okLabel: t('nm_celebrate_ok'),
+        });
+        return;
+    }
     const ov = nmOpenSheet(`
-        <div class="nm-celebrate-eyebrow">${nmEsc(list.length > 1 ? t('nm_badges_new_many').replace('{n}', list.length) : t('nm_badge_new'))}</div>
+        <div class="nm-celebrate-eyebrow">${nmEsc(eyebrow)}</div>
         <div class="nm-medal big" aria-hidden="true"><span>${first.icon}</span></div>
         <h3 class="nm-celebrate-title">${nmEsc(nmBadgeTitle(first))}</h3>
         <p class="nm-celebrate-desc">${nmEsc(nmBadgeDesc(first))}</p>
@@ -2088,7 +2100,6 @@ function nmCelebrate(keys) {
     const sheet = ov.querySelector('.nm-sheet');
     ov.querySelector('[data-share]').addEventListener('click', () => {
         ov.remove();
-        const lines = list.map(b => `${b.icon} ${nmBadgeTitle(b)}`).join('\n');
         if (typeof openSharePicker === 'function') openSharePicker(`🏅 ${t('nm_share_badge_text')}\n\n${lines}`);
     });
     if (typeof spawnGentleConfettiBurst === 'function') {

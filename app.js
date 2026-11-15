@@ -6407,6 +6407,130 @@ async function loadTodayTasks() {
 // בבת אחת), כל אחד נעלם לבד בסוף האנימציה שלו (animationend). מוגבל ל.phone-wrapper
 // (position:relative + overflow:hidden כבר קיימים שם) כדי שלא יגלשו החוצה
 // על מסכי דסקטופ רחבים
+// ---------- 🏅 חלון הישג מזכוכית (הבחירה שלה, 2026-11-15: "חלון הישג 2" - כרטיס זכוכית שזז כמו הולוגרמה ונצנצים
+// זהובים יורדים בתוכו). משותף ל-NOT10 Nourish+ ולתג ההתמדה של הפרימיום, והתמונה לשיתוף מצוירת באותו מראה.
+// o: { eyebrow, icon, title, desc, more: [{ icon, title }], shareText, file, okLabel, shareLabel, onClose } ----------
+function glassAchEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function glassAchDate() {
+    try { return new Date().toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return new Date().toLocaleDateString(); }
+}
+function openGlassAchievement(o) {
+    const ov = document.createElement('div');
+    ov.className = 'glass-ach-overlay';
+    const glitter = Array.from({ length: 18 }, (_, i) => `<i style="left:${(i * 37 + 7) % 94}%;animation-delay:${(-(i * 0.43)).toFixed(2)}s;animation-duration:${(2.6 + (i % 5) * 0.45).toFixed(2)}s"></i>`).join('');
+    ov.innerHTML = `<div class="glass-ach" role="dialog" aria-modal="true" aria-label="${glassAchEsc(o.title)}">
+        ${o.eyebrow ? `<div class="glass-ach-eyebrow">${glassAchEsc(o.eyebrow)}</div>` : ''}
+        <div class="glass-ach-card">
+            <div class="glass-ach-glitter" aria-hidden="true">${glitter}</div><span class="glass-ach-shine" aria-hidden="true"></span>
+            <div class="glass-ach-icon" aria-hidden="true">${glassAchEsc(o.icon || '')}</div>
+            <h3 class="glass-ach-title">${glassAchEsc(o.title)}</h3>
+            ${o.desc ? `<p class="glass-ach-desc">${glassAchEsc(o.desc)}</p>` : ''}
+            ${o.more && o.more.length ? `<ul class="glass-ach-more">${o.more.map(m => `<li><span aria-hidden="true">${glassAchEsc(m.icon)}</span>${glassAchEsc(m.title)}</li>`).join('')}</ul>` : ''}
+            <span class="glass-ach-brand">NOT10.ai · ${glassAchEsc(glassAchDate())}</span>
+        </div>
+        <div class="glass-ach-actions">
+            <button type="button" class="glass-ach-btn is-ghost" data-share>${glassAchEsc(o.shareLabel || t('nm_share'))}</button>
+            <button type="button" class="glass-ach-btn" data-close>${glassAchEsc(o.okLabel || t('nm_celebrate_ok'))}</button>
+        </div>
+    </div>`;
+    const close = () => { ov.remove(); if (o.onClose) o.onClose(); };
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-close]')) close(); });
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    ov.querySelector('[data-share]').addEventListener('click', async e => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        try { await shareGlassAchievement(o); } finally { btn.disabled = false; }
+    });
+    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
+    const ok = ov.querySelector('[data-close]');
+    if (ok) ok.focus();
+    return ov;
+}
+// התמונה לשיתוף (1080×1350): אותו כרטיס זכוכית על רקע בצבעי הערכה, עם נצנצים, הסמל, השם, התיאור והתאריך
+async function drawGlassAchievement(o) {
+    const W = 1080, H = 1350;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+    const cs = getComputedStyle(document.documentElement);
+    const col = (name, fb) => (cs.getPropertyValue(name) || '').trim() || fb;
+    const a1 = col('--accent-purple', '#9b5de5'), a2 = col('--accent-pink', '#e0739f');
+    const font = getComputedStyle(document.body).fontFamily || 'system-ui, sans-serif';
+    const rtl = document.documentElement.dir === 'rtl';
+    const bg = g.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#2a1846'); bg.addColorStop(1, '#100a1b');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const blob = (x, y, r, color) => {
+        g.save(); g.globalAlpha = 0.75; g.fillStyle = color;
+        g.filter = 'blur(120px)';
+        g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+        g.restore();
+    };
+    blob(320, 430, 330, a1); blob(780, 930, 330, a2);
+    const X = 150, Y = 190, CW = 780, CH = 940, R = 60;
+    const rr = () => { g.beginPath(); g.moveTo(X + R, Y); g.arcTo(X + CW, Y, X + CW, Y + CH, R); g.arcTo(X + CW, Y + CH, X, Y + CH, R); g.arcTo(X, Y + CH, X, Y, R); g.arcTo(X, Y, X + CW, Y, R); g.closePath(); };
+    const glass = g.createLinearGradient(X, Y, X + CW, Y + CH);
+    glass.addColorStop(0, 'rgba(255,255,255,0.30)'); glass.addColorStop(1, 'rgba(255,255,255,0.07)');
+    g.save(); g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 60; g.shadowOffsetY = 24; rr(); g.fillStyle = glass; g.fill(); g.restore();
+    rr(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.6)'; g.stroke();
+    // glitter inside the card
+    g.save(); rr(); g.clip();
+    for (let i = 0; i < 70; i++) {
+        const x = X + 20 + ((i * 137) % (CW - 40)), y = Y + 20 + ((i * 271) % (CH - 40)), s = 4 + (i % 4) * 2;
+        g.save(); g.translate(x, y); g.rotate((i * 37) % 90 * Math.PI / 180);
+        g.shadowColor = '#ffd27a'; g.shadowBlur = 14; g.fillStyle = i % 3 ? '#fff3c4' : '#ffffff';
+        g.globalAlpha = 0.45 + (i % 5) * 0.1; g.fillRect(-s / 2, -s / 2, s, s); g.restore();
+    }
+    const shine = g.createLinearGradient(X, Y, X + CW * 0.6, Y + CH * 0.5);
+    shine.addColorStop(0, 'rgba(255,255,255,0.18)'); shine.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = shine; g.fillRect(X, Y, CW, CH * 0.55);
+    g.restore();
+    g.textAlign = 'center';
+    try { g.direction = rtl ? 'rtl' : 'ltr'; } catch {}
+    g.fillStyle = '#ffffff';
+    if (o.eyebrow) { g.font = `700 38px ${font}`; g.globalAlpha = 0.8; g.fillText(o.eyebrow, W / 2, Y + 110); g.globalAlpha = 1; }
+    g.beginPath(); g.arc(W / 2, Y + 330, 150, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(255,255,255,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.5)'; g.stroke();
+    g.font = `150px ${font}`; g.textBaseline = 'middle'; g.fillStyle = '#ffffff';
+    g.fillText(o.icon || '', W / 2, Y + 340);
+    g.textBaseline = 'alphabetic';
+    const wrap = (text, size, weight, y, maxLines, alpha) => {
+        g.font = `${weight} ${size}px ${font}`; g.globalAlpha = alpha;
+        const words = String(text || '').split(/\s+/); let line = '', lines = [];
+        words.forEach(w => { const tryL = line ? line + ' ' + w : w; if (g.measureText(tryL).width > CW - 120 && line) { lines.push(line); line = w; } else line = tryL; });
+        if (line) lines.push(line);
+        lines.slice(0, maxLines).forEach((l, i) => g.fillText(l, W / 2, y + i * size * 1.3));
+        g.globalAlpha = 1;
+        return y + Math.min(lines.length, maxLines) * size * 1.3;
+    };
+    const after = wrap(o.title, 84, 800, Y + 620, 2, 1);
+    if (o.desc) wrap(o.desc, 44, 500, after + 20, 3, 0.85);
+    g.font = `600 32px ${font}`; g.globalAlpha = 0.7;
+    g.fillText(`NOT10.ai · ${glassAchDate()}`, W / 2, Y + CH - 60);
+    g.globalAlpha = 1;
+    return c;
+}
+async function shareGlassAchievement(o) {
+    let blob = null;
+    try { const canvas = await drawGlassAchievement(o); blob = await new Promise(r => canvas.toBlob(r, 'image/png')); } catch {}
+    const text = `${o.shareText || o.title}\nhttps://${typeof SHARE_APP_HOST !== 'undefined' ? SHARE_APP_HOST : 'app.not10.ai'}`;
+    if (blob) {
+        const file = new File([blob], o.file || 'not10-achievement.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
+            try { await navigator.share({ files: [file], text }); } catch {}
+            return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = file.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+    if (typeof openSharePicker === 'function') openSharePicker(o.shareText || o.title);
+}
+
 // קונפטי עדין (מלבנים קטנים בצבעי המותג) - כל חלקיק "קופץ" מנקודת המוצא
 // (originX/originY, בפיקסלים יחסית ל-container) לכיוון/מרחק אקראיים
 // (--tx/--ty/--rot). בלי origin - נופל חזרה למרכז ה-container עצמו (ברירת

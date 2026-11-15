@@ -11963,3 +11963,32 @@ html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
 #daily-board-ai-btn .ic-spark, .app-tour-svg-icon .ic-spark-svg { filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px rgba(255, 255, 255, .85)); }
 #daily-board-ai-btn .ic-spark { width: 1.25em; height: 1.25em; }
 .ic-spark-svg { width: 1em; height: 1em; }
+
+/* ---------- 🏅 glass achievement window (her pick 2026-11-15, "חלון הישג 2"): a glass card that moves like a hologram,
+   golden glitter falling inside it; Nourish+ badges and the Premium persistence badge ---------- */
+.glass-ach-overlay { position: absolute; inset: 0; z-index: 4300; display: grid; place-items: center; padding: 20px; box-sizing: border-box; background: radial-gradient(ellipse 70% 50% at 30% 35%, color-mix(in srgb, var(--accent-purple) 55%, transparent), transparent 70%), radial-gradient(ellipse 70% 50% at 70% 70%, color-mix(in srgb, var(--accent-pink) 45%, transparent), transparent 70%), rgba(12, 7, 22, .78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: glassAchFade .35s ease both; }
+@keyframes glassAchFade { from { opacity: 0; } }
+.glass-ach { width: min(100%, 330px); display: flex; flex-direction: column; align-items: center; gap: 14px; color: #fff; text-align: center; }
+.glass-ach-eyebrow { font-size: .8rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+.glass-ach-card { position: relative; width: 100%; box-sizing: border-box; padding: 26px 20px 18px; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 8px; background: linear-gradient(140deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06)); border: 1px solid rgba(255, 255, 255, .55); box-shadow: 0 24px 50px rgba(0, 0, 0, .45), inset 0 0 26px rgba(255, 255, 255, .14); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); animation: glassAchIn .6s cubic-bezier(.2, .9, .3, 1.2) both, glassAchTilt 6s ease-in-out .6s infinite; transform-style: preserve-3d; }
+@keyframes glassAchIn { from { opacity: 0; transform: perspective(700px) rotateX(18deg) scale(.82); } }
+@keyframes glassAchTilt { 0%, 100% { transform: perspective(700px) rotateY(-9deg) rotateX(2deg); } 50% { transform: perspective(700px) rotateY(9deg) rotateX(-2deg); } }
+.glass-ach-shine { position: absolute; inset: -40% -60%; pointer-events: none; background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .28) 50%, transparent 58%); animation: glassAchShine 6s ease-in-out .6s infinite; }
+@keyframes glassAchShine { 0%, 100% { transform: translateX(-30%); } 50% { transform: translateX(30%); } }
+.glass-ach-glitter { position: absolute; inset: 0; pointer-events: none; }
+.glass-ach-glitter i { position: absolute; top: -8px; width: 5px; height: 5px; border-radius: 1.5px; background: #fff3c4; box-shadow: 0 0 6px 1px rgba(255, 210, 122, .9); opacity: .9; animation: glassAchFall 3s linear infinite; }
+.glass-ach-glitter i:nth-child(3n) { background: #fff; width: 4px; height: 4px; }
+.glass-ach-glitter i:nth-child(4n) { border-radius: 50%; }
+@keyframes glassAchFall { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: .95; } 100% { transform: translateY(380px) rotate(220deg); opacity: .15; } }
+.glass-ach-icon { position: relative; width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font-size: 3rem; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .5); box-shadow: 0 0 30px rgba(255, 220, 150, .35); }
+.glass-ach-title { position: relative; margin: 6px 0 0; font-size: 1.45rem; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; color: #fff; }
+.glass-ach-desc { position: relative; margin: 0; font-size: .92rem; line-height: 1.45; color: rgba(255, 255, 255, .82); text-wrap: balance; }
+.glass-ach-more { position: relative; margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: .86rem; color: rgba(255, 255, 255, .85); }
+.glass-ach-more li { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.glass-ach-brand { position: relative; margin-top: 8px; font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: rgba(255, 255, 255, .6); }
+.glass-ach-actions { width: 100%; display: flex; gap: 10px; }
+.glass-ach-btn { flex: 1; min-height: 48px; border-radius: 16px; border: none; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; background: #fff; color: #21143a; }
+.glass-ach-btn.is-ghost { background: rgba(255, 255, 255, .14); color: #fff; border: 1px solid rgba(255, 255, 255, .45); }
+.glass-ach-btn:focus-visible { outline: 3px solid #ffd27a; outline-offset: 2px; }
+.glass-ach-btn:disabled { opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .glass-ach-card, .glass-ach-shine, .glass-ach-glitter i, .glass-ach-overlay { animation: none; } }
