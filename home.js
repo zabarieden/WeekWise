@@ -848,18 +848,27 @@ async function saveGoodThings() {
     if (!supabaseClient || !currentUserId) return;
     const items = [...document.querySelectorAll('#good-things-inputs input')].map(input => input.value.trim()).filter(Boolean);
     const day = goodThingsDay();
-    let error = null;
-    if (items.length) {
-        ({ error } = await supabaseClient.from('good_things').upsert({ user_id: currentUserId, day, items, updated_at: new Date().toISOString() }, { onConflict: 'user_id,day' }));
-    } else if (goodThingsSaved()) {
-        ({ error } = await supabaseClient.from('good_things').delete().eq('user_id', currentUserId).eq('day', day));
-    }
-    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    const prev = goodThingsToday, hadSaved = goodThingsSaved();
+    // the window closes at once and the chip shows the result; the server catches up behind (her report 2026-11-15:
+    // "נתקע ל-2 שניות על המסך אחרי שכבר... סגרתי" - it used to wait for the save before closing). On an error it goes back
     goodThingsToday = items.length ? items : null;
     goodThingsLoadedFor = day;
     closeModal('modal-good-things');
     if (items.length) showAppToast(t('good_things_saved_toast'));
     renderHomeChips();
+    let error = null;
+    try {
+        if (items.length) {
+            ({ error } = await supabaseClient.from('good_things').upsert({ user_id: currentUserId, day, items, updated_at: new Date().toISOString() }, { onConflict: 'user_id,day' }));
+        } else if (hadSaved) {
+            ({ error } = await supabaseClient.from('good_things').delete().eq('user_id', currentUserId).eq('day', day));
+        }
+    } catch (e) { error = e; }
+    if (error) {
+        goodThingsToday = prev;
+        renderHomeChips();
+        showAppToast(t('error_adding_item') + (error.message || ''), 'error');
+    }
 }
 function skipGoodThingsTonight() {
     try { localStorage.setItem(`weekwise_good_things_skip_${currentUserId}`, goodThingsDay()); } catch {}
