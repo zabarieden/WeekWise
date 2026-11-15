@@ -12055,7 +12055,7 @@ html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
 .ach-level-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ach-level-text b { font-size: 1.1rem; font-weight: 800; overflow-wrap: anywhere; }
 .ach-level-text span { font-size: .85rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.ach-bar { height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 10%, transparent); overflow: hidden; }
+.ach-bar { display: flex; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 10%, transparent); overflow: hidden; }
 .ach-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
 .ach-next { margin: -4px 0 0; font-size: .85rem; color: var(--text-secondary); }
 .ach-ladder { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
